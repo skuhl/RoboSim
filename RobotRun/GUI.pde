@@ -2321,7 +2321,7 @@ public void activateLiveMotion(int joint, int dir, int axis) {
     }
   } else if (curCoordFrame == COORD_WORLD) {
     switch (axis) {
-      // account for different axes in native Processing vs. RoboSim world coordinate systems
+      // account for different axes in native Processing vs. RobotRun world coordinate systems
       case 0: 
         if (armModel.linearMoveSpeeds[0] == 0) armModel.linearMoveSpeeds[0] =  1;
         else armModel.linearMoveSpeeds[0] = 0;
@@ -2851,4 +2851,3 @@ void loadPrograms() {
       contents.add(temp);
    }
 }
-

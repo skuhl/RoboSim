@@ -193,5 +193,3 @@ void applyCamera() {
   rotateX(myRotX); // for rotate button
   rotateY(myRotY); // for rotate button /* */
 }
-
-

@@ -109,7 +109,7 @@ void showMainDisplayText() {
 
 
 /**
- * Converts from RoboSim-defined world coordinates into
+ * Converts from RobotRun-defined world coordinates into
  * Processing's coordinate system.
  * Assumes that the robot starts out facing toward the LEFT.
  */
@@ -125,7 +125,7 @@ PVector convertWorldToNative(PVector in) {
 
 /**
  * Converts from Processing's native coordinate system to
- * RoboSim-defined world coordinates.
+ * RobotRun-defined world coordinates.
  */
 PVector convertNativeToWorld(PVector in) {
   pushMatrix();
