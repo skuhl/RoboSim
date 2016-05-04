@@ -107,7 +107,7 @@ void gui(){
    g1 = cp5.addGroup("DISPLAY")
                  .setPosition(g1_px, g1_py)
                  .setBackgroundColor(color(127,127,127,50))
-                 ;            
+                 ;
    
    myTextarea = cp5.addTextarea("txt")
       .setPosition(display_px,display_py)
@@ -312,8 +312,9 @@ void gui(){
        .setSize(LARGE_BUTTON, LARGE_BUTTON)
        .setCaptionLabel("SHIFT")
        .setColorBackground(color(127,127,255))
+       .setColorActive(color(0))
        .setColorCaptionLabel(color(255,255,255))  
-       .moveTo(g1);       
+       .moveTo(g1);
        
     int ne_px = sf_px ;
     int ne_py = sf_py + LARGE_BUTTON + 2;   
@@ -1358,14 +1359,27 @@ public void rt(int theValue){
    }
 }
 
+//toggle shift state and button highlight
 public void sf(int theValue){
-   if (shift == OFF) shift = ON;
-   else shift = OFF;
+   if (shift == OFF){ 
+     shift = ON;
+     ((Button)cp5.get("sf")).setColorBackground(color(0, 127, 255));
+   }
+   else{
+     shift = OFF;
+     ((Button)cp5.get("sf")).setColorBackground(color(127, 127, 255));
+   }
 }
 
 public void st(int theValue) {
-  if (step == OFF) step = ON;
-  else step = OFF;
+     if (step == OFF){ 
+     step = ON;
+     ((Button)cp5.get("st")).setColorBackground(color(0, 127, 255));
+   }
+   else{
+     step = OFF;
+     ((Button)cp5.get("st")).setColorBackground(color(127, 127, 255));
+   }
 }
 
 public void pr(int theValue){

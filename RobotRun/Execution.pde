@@ -86,10 +86,13 @@ void showMainDisplayText() {
   textAlign(RIGHT, TOP);
   text("Coordinate Frame: " + (curCoordFrame == COORD_JOINT ? "Joint" : "World"), width-20, 20);
   text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
+  String s;
+  
   if (curCoordFrame == COORD_JOINT) {
     float j[] = armModel.getJointRotations();
-    text("Joints: J1: " + j[0] + " J2: " + j[1] + " J3: " + j[2] +
-                " J4: " + j[3] + " J5: " + j[4] + " J6: " + j[5], width-20, 60);
+    s = String.format("Joints: J1-%5.4f J2-%5.4f J3-%5.4f J4-%5.4f J5-%5.4f J6-%5.4f", 
+                      j[0], j[1], j[2], j[3], j[4], j[5]);
+    text(s, width-20, 60);
   } else {
     PVector eep = calculateEndEffectorPosition(armModel, false);
     PVector concor = convertNativeToWorld(eep);
