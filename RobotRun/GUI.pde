@@ -1359,13 +1359,23 @@ public void rt(int theValue){
 }
 
 public void sf(int theValue){
-   if (shift == OFF) shift = ON;
-   else shift = OFF;
+   if (shift == OFF) {
+     shift = ON;
+     cp5.getController("sf").setColorBackground(color(45,45,255));
+   } else {
+     shift = OFF;
+     cp5.getController("sf").setColorBackground(color(127,127,255));
+   }
 }
 
 public void st(int theValue) {
-  if (step == OFF) step = ON;
-  else step = OFF;
+  if (step == OFF) {
+    step = ON;
+    cp5.getController("st").setColorBackground(color(45,45,255));
+  } else {
+    step = OFF;
+    cp5.getController("st").setColorBackground(color(127,127,255));
+  }
 }
 
 public void pr(int theValue){
