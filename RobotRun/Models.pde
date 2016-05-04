@@ -84,6 +84,13 @@ public class Model {
   }
 } // end Model class
 
+public class CubeModel {
+  Model base = new Model("40mmcube.stl", color(40));
+  
+  public void draw(){
+   base.draw(); 
+  }
+}
 
 final int ARM_TEST = 0, ARM_STANDARD = 1;
 
