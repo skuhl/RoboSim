@@ -70,7 +70,6 @@ public void setup() {
   gui();
   for (int n = 0; n < pr.length; n++) pr[n] = new Point();
   armModel = new ArmModel(ARM_STANDARD);
-  cube = new CubeModel();
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
@@ -110,10 +109,6 @@ public void draw() {
 
   pushMatrix();
   armModel.draw();
-  popMatrix();
-  
-  pushMatrix();
-  cube.draw();
   popMatrix();
 
   noLights();
