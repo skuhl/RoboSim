@@ -2229,8 +2229,18 @@ public void zoomin_normal(int theValue){
    myscale *= 1.1;
 }
 
+// zoomin button when interface is minimized
+public void zoomin_shrink(int theValue){
+   myscale *= 1.1;
+}
+
 // zoomout button when interface is at full size
 public void zoomout_normal(int theValue){
+   myscale *= 0.9;
+}
+
+// zoomout button when interface is minimized
+public void zoomout_shrink(int theValue){
    myscale *= 0.9;
 }
 
