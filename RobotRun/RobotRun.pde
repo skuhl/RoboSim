@@ -98,7 +98,6 @@ public void draw() {
   
   armModel.executeLiveMotion(); // respond to manual movement from J button presses
   
-  cursor(cursorMode);
   hint(ENABLE_DEPTH_TEST);
   background(255);
   noStroke();
