@@ -429,7 +429,12 @@ void calculateJacobian(){
   float[][] jPos = new float[6][3];
   float[][] jNeg = new float[6][3];
   
-  
+  //examine each segment of the arm
+  for(Model m: armModel.segments){
+    for(int i = 0; i < 3; i += 1){
+      
+    }
+  }
 }
 
 /**

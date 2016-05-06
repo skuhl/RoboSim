@@ -28,6 +28,12 @@ public class Model {
     loadSTLModel(filename, col);
   }
   
+  void resetRot(){
+    currentRotations[0] = 0;
+    currentRotations[1] = 0;
+    currentRotations[2] = 0;
+  }
+  
   void loadSTLModel(String filename, color col) {
     ArrayList<Triangle> triangles = new ArrayList<Triangle>();
     byte[] data = loadBytes(filename);
@@ -286,6 +292,12 @@ public class ArmModel {
       }
     }
   }// end draw arm model
+  
+  public void resetRot(){
+    for(Model m: segments){
+      m.resetRot();
+    }
+  }
   
   public PVector getWpr() {
     PVector out = new PVector(0,0,0);
