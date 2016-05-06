@@ -419,6 +419,17 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
   } else return EXEC_PROCESSING;
 } // end calculateIK
 
+/**
+ * Calculate the Jacobian matrix for the robotic arm at its
+ * current position for a certian angular offset of each joint.
+ */
+void calculateJacobian(){
+  float dAngle = 0.5;
+  float[][] jPos = new float[6][3];
+  float[][] jNeg = new float[6][3];
+  
+  
+}
 
 /**
  * Determine how close together intermediate points between two points

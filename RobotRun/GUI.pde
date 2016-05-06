@@ -945,14 +945,12 @@ public void keyPressed(){
     updateScreen(color(0), color(0));
     
     return;
-  }
-  
-  if(key == 'R'){
-    println("Arrrr");
-    translate(width/1.5,height/1.5);
-    scale(1);
-    rotateX(0);
-    rotateY(0);
+  } else if(key == 'r'){
+    panX = 0;
+    panY = 0;
+    myscale = 0.5;
+    myRotX = 0;
+    myRotY = 0;
   }
   
    /* click spacebar once to activate pan button
