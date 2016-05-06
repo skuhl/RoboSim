@@ -60,6 +60,17 @@ int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 
 /*******************************/
 
+/*******************************/
+/*        Shape Stuff          */
+
+/* The Y corrdinate of the ground plane */
+public static final float PLANE_Y = 200.5f;
+private Shape floor;
+
+public Object[] objects;
+
+/*******************************/
+
 // for store or load program state
 FileInputStream in = null;
 FileOutputStream out = null;
@@ -78,7 +89,15 @@ public void setup() {
   for (int n = 0; n < toolFrames.length; n++) {
     toolFrames[n] = new Frame();
     userFrames[n] = new Frame();
-  }  
+  }
+  
+  // Create the floor of the environment
+  floor = new Polygon(new PVector[] { new PVector(-1000000, 200.5, -10000000), new PVector(-1000000, 200.5, 10000000), new PVector(10000000, 200.5, 10000000), new PVector(10000000, 200.5, -10000000) },
+                                          color(160, 160, 160), color(160, 160, 160));
+  // Intialize world objects
+  Shape box = new Box(new PVector(0, -200, 0), 35, color(0, 0, 255), color(0, 0, 0));
+  objects = new Object[1];
+  objects[0] = new Object(box, new Box(new PVector(0, -200, 0), 35, color(0, 255, 0)));
 }
 
 boolean doneMoving = true;
@@ -176,6 +195,14 @@ public void draw() {
   sphere(15);
   popMatrix(); /* */
   // END TESTING CODE
+  
+  // Create ground plane under the robot's base
+  floor.draw();
+  
+  for (Object s : objects) {
+    s.draw();
+    s.applyGravity();
+  }
   
   popMatrix();
 
