@@ -120,28 +120,35 @@ public class ArmModel {
     } else if (type == ARM_STANDARD) {
       // TODO: FILL IN PROPER JOINT RESTRICTION VALUES.
       motorSpeed = 4000.0; // speed in mm
+      // Joint 1
       Model base = new Model("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
       base.rotations[1] = true;
       base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       base.rotationSpeed = radians(350)/60.0;
+      // Joint 2
       Model axis1 = new Model("ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
       axis1.rotations[2] = true;
       axis1.jointRanges[2].add(new PVector(0, 2.01));
       axis1.jointRanges[2].add(new PVector(4.34, TWO_PI));
       axis1.rotationSpeed = radians(350)/60.0;
+      // Joint 3
       Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
       axis2.rotations[2] = true;
-      axis2.jointRanges[2].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
+      axis2.jointRanges[2].add(new PVector(0, 3f * PI / 10f));
+      axis2.jointRanges[2].add(new PVector(7f * PI / 10f, TWO_PI));
       axis2.rotationSpeed = radians(400)/60.0;
+      // Joint 4
       Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
       axis3.rotations[0] = true;
       axis3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
       axis3.rotationSpeed = radians(450)/60.0;
+      // Joint 5
       Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
       axis4.rotations[2] = true;
-      axis4.jointRanges[2].add(new PVector(0, 1.8));
-      axis4.jointRanges[2].add(new PVector(4.62, TWO_PI));
+      axis4.jointRanges[2].add(new PVector(0, 11f * PI / 20f));
+      axis4.jointRanges[2].add(new PVector(59f * PI / 40f, TWO_PI));
       axis4.rotationSpeed = radians(450)/60.0;
+      // Joint 6
       Model axis5 = new Model("ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0));
       axis5.rotations[0] = true;
       axis5.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
@@ -334,16 +341,46 @@ public class ArmModel {
   }
   
   void executeLiveMotion() {
+    
     if (curCoordFrame == COORD_JOINT) {
       for (Model model : segments) {
+        
         for (int n = 0; n < 3; n++) {
           if (model.rotations[n]) {
             float trialAngle = model.currentRotations[n] +
               model.rotationSpeed * model.jointsMoving[n] * liveSpeed;
             trialAngle = clampAngle(trialAngle);
-            if (model.anglePermitted(n, trialAngle))
-              model.currentRotations[n] = trialAngle;
-            else model.jointsMoving[n] = 0;
+            
+            if (model.anglePermitted(n, trialAngle)) {
+              
+              // Caculate the distance that the end effector is from the center of the robot's base
+              PVector ee_pos = calculateEndEffectorPosition(armModel, false);
+              PVector base_center = new PVector(405, 137, -203);
+              float dist = PVector.dist(ee_pos, base_center);
+              
+              
+              /* If the End Effector is within a certain distance from the robot's base,
+               * then determine if the given angle will bring the robot closer to the
+               * base; if so then end the robot's movement, otherwise allow the robot to
+               * continue moving. */
+              if (dist < 425f) {
+                
+                float old_angle = model.currentRotations[n];
+                model.currentRotations[n] = trialAngle;
+                
+                // Caculate the distance that the end effector is from the center of the robot's base for the test angle
+                PVector new_ee_pos = calculateEndEffectorPosition(armModel, false);
+                float new_dist = PVector.dist(new_ee_pos, base_center);
+                
+                if (new_dist < dist) {
+                  // end robot arm movement
+                  model.currentRotations[n] = old_angle;
+                  model.jointsMoving[n] = 0;
+                }
+              } else {
+                model.currentRotations[n] = trialAngle;
+              }  
+            } else model.jointsMoving[n] = 0;
           }
         }
       }
@@ -370,9 +407,48 @@ public class ArmModel {
     }
   } // end execute live motion
   
+  /* Detemines if the given angle will bring the robot's End Effector towards the
+   * base of the robot. For this reason, this method will only check the second
+   * and third joints.
+   *
+   * @param seg    the index for the segment of the robot to check the angle of
+   * @param angle  the angle that the given segment will possibly move to
+   *
+   * @return       if the given angle brings the given segment closer to the
+   *               robot's base
+   */
+  boolean isCloserToBase(int seg, float angle) {
+    // Only checks second and third joints
+    if (seg == 1 || seg == 2) {
+      float j2_rotation_y;
+      float j3_rotation_z;
+      
+      if (seg == 1) {
+        j2_rotation_y = angle;
+        j3_rotation_z = segments.get(2).currentRotations[2];
+      } else {
+        j2_rotation_y = segments.get(1).currentRotations[2];
+        j3_rotation_z = angle;
+      }
+      
+      // Checks if joints 2 and 3 are within a certian area of their ranges
+      if ((j2_rotation_y > PI/ 6f && j2_rotation_y < PI / 2f) &&
+          (j3_rotation_z > PI / 6f && j3_rotation_z < PI / 2f)) {
+          
+          // case 1
+          return (segments.get(seg).currentRotations[2] > angle);
+      } else if ((j2_rotation_y > PI / 2f && j2_rotation_y < 2f * PI) &&
+                 (j3_rotation_z > PI / 2f && j3_rotation_z < PI)) {
+          
+          // case 2
+          return (segments.get(seg).currentRotations[2] < angle);
+      }
+    }
+    
+    return false;
+  }
+
 } // end ArmModel class
-
-
 
 void printCurrentModelCoordinates(String msg) {
   print(msg + ": " );

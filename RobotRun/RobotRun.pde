@@ -12,7 +12,7 @@ import java.io.IOException;
 final int OFF = 0, ON = 1;
 
 ArmModel armModel;
-CubeModel cube;
+//CubeModel cube;
 Model eeModelSuction;
 Model eeModelClaw;
 Model eeModelClawPincer;
@@ -95,9 +95,9 @@ public void draw() {
   else if (singleInstruction != null) {
     if (executeSingleInstruction(singleInstruction)) singleInstruction = null;    
   }
-
+  
   armModel.executeLiveMotion(); // respond to manual movement from J button presses
-
+  
   cursor(cursorMode);
   hint(ENABLE_DEPTH_TEST);
   background(255);
@@ -177,14 +177,13 @@ public void draw() {
   sphere(15);
   popMatrix(); /* */
   // END TESTING CODE
-
+  
   popMatrix();
 
   hint(DISABLE_DEPTH_TEST);
   
   showMainDisplayText();
 //  println(frameRate + " fps");
-  
 }
 
 void applyCamera() {

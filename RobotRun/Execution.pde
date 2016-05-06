@@ -1,4 +1,3 @@
-
 ArrayList<PVector> intermediatePositions;
 int motionFrameCounter = 0;
 float distanceBetweenPoints = 5.0;
@@ -102,6 +101,11 @@ void showMainDisplayText() {
   }
   text((shift == ON ? "Shift ON" : "Shift OFF"), width-120, 80);
   text((step == ON ? "Step ON" : "Step OFF"), width-20, 80);
+  
+  // Display the distance between the end effector and the center of the base of the robot (rough center)
+  PVector ee = calculateEndEffectorPosition(armModel, false);
+  String ee_dist = String.format("DIST: %4.5f", PVector.dist(ee, new PVector(405, 137, -203) ));
+  text(ee_dist, width - 20, 100);
   
   if (errorCounter > 0) {
     errorCounter--;
@@ -248,6 +252,7 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
     modelX(0, 0, 0),
     modelY(0, 0, 0),
     modelZ(0, 0, 0));
+  
   popMatrix();
   return ret;
 } // end calculateEndEffectorPosition
