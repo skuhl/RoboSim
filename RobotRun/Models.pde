@@ -355,6 +355,7 @@ public class ArmModel {
               
               // Caculate the distance that the end effector is from the center of the robot's base
               PVector ee_pos = calculateEndEffectorPosition(armModel, false);
+              // This is not the exact center, it is a rough estimate 
               PVector base_center = new PVector(405, 137, -203);
               float dist = PVector.dist(ee_pos, base_center);
               
@@ -406,47 +407,6 @@ public class ArmModel {
       }
     }
   } // end execute live motion
-  
-  /* Detemines if the given angle will bring the robot's End Effector towards the
-   * base of the robot. For this reason, this method will only check the second
-   * and third joints.
-   *
-   * @param seg    the index for the segment of the robot to check the angle of
-   * @param angle  the angle that the given segment will possibly move to
-   *
-   * @return       if the given angle brings the given segment closer to the
-   *               robot's base
-   */
-  boolean isCloserToBase(int seg, float angle) {
-    // Only checks second and third joints
-    if (seg == 1 || seg == 2) {
-      float j2_rotation_y;
-      float j3_rotation_z;
-      
-      if (seg == 1) {
-        j2_rotation_y = angle;
-        j3_rotation_z = segments.get(2).currentRotations[2];
-      } else {
-        j2_rotation_y = segments.get(1).currentRotations[2];
-        j3_rotation_z = angle;
-      }
-      
-      // Checks if joints 2 and 3 are within a certian area of their ranges
-      if ((j2_rotation_y > PI/ 6f && j2_rotation_y < PI / 2f) &&
-          (j3_rotation_z > PI / 6f && j3_rotation_z < PI / 2f)) {
-          
-          // case 1
-          return (segments.get(seg).currentRotations[2] > angle);
-      } else if ((j2_rotation_y > PI / 2f && j2_rotation_y < 2f * PI) &&
-                 (j3_rotation_z > PI / 2f && j3_rotation_z < PI)) {
-          
-          // case 2
-          return (segments.get(seg).currentRotations[2] < angle);
-      }
-    }
-    
-    return false;
-  }
 
 } // end ArmModel class
 
