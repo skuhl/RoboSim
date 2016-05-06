@@ -35,6 +35,7 @@ final int NONE = 0,
           SET_FRAME_INSTRUCTION = 26,
           EDIT_MENU = 27,
           CONFIRM_DELETE = 28;
+static int STOP_MOVEMENT = 0;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -926,6 +927,12 @@ public void mouseWheel(MouseEvent event){
 }
 
 public void keyPressed(){
+  
+  // Stops robot movement
+  if (key == 'q') {
+    hd(0);
+    return;
+  }
   
   if (mode == ENTER_TEXT) {
     
@@ -1937,8 +1944,18 @@ public void f5(int theValue) {
   
 }
 
-public void hd(int theValue){
-
+/* Stops all joint movement */
+public void hd(int theValue) {
+  STOP_MOVEMENT = 1;
+  
+  for (Model model : armModel.segments) {
+    model.jointsMoving[0] = 0;
+    model.jointsMoving[1] = 0;
+    model.jointsMoving[2] = 0;
+    armModel.linearMoveSpeeds[0] = 0;
+    armModel.linearMoveSpeeds[1] = 0;
+    armModel.linearMoveSpeeds[2] = 0;
+  }
 }
 
 public void fd(int theValue) {

@@ -1,4 +1,3 @@
-
 //To-do list:
 //Collision detection
 
@@ -343,8 +342,8 @@ public class ArmModel {
   void executeLiveMotion() {
     
     if (curCoordFrame == COORD_JOINT) {
+      
       for (Model model : segments) {
-        
         for (int n = 0; n < 3; n++) {
           if (model.rotations[n]) {
             float trialAngle = model.currentRotations[n] +
