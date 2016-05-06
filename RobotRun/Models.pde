@@ -134,8 +134,8 @@ public class ArmModel {
       // Joint 3
       Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
       axis2.rotations[2] = true;
-      axis2.jointRanges[2].add(new PVector(0, 3f * PI / 10f));
-      axis2.jointRanges[2].add(new PVector(7f * PI / 10f, TWO_PI));
+      axis2.jointRanges[2].add(new PVector(0, 8f * PI / 20f));
+      axis2.jointRanges[2].add(new PVector(12f * PI / 20f, TWO_PI));
       axis2.rotationSpeed = radians(400)/60.0;
       // Joint 4
       Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
@@ -356,7 +356,7 @@ public class ArmModel {
               // Caculate the distance that the end effector is from the center of the robot's base
               PVector ee_pos = calculateEndEffectorPosition(armModel, false);
               // This is not the exact center, it is a rough estimate 
-              PVector base_center = new PVector(405, 137, -203);
+              PVector base_center = new PVector(404, 137, -212);
               float dist = PVector.dist(ee_pos, base_center);
               
               
@@ -364,7 +364,7 @@ public class ArmModel {
                * then determine if the given angle will bring the robot closer to the
                * base; if so then end the robot's movement, otherwise allow the robot to
                * continue moving. */
-              if (dist < 425f) {
+              if (dist < 405f) {
                 
                 float old_angle = model.currentRotations[n];
                 model.currentRotations[n] = trialAngle;

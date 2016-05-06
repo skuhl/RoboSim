@@ -102,10 +102,14 @@ void showMainDisplayText() {
   text((shift == ON ? "Shift ON" : "Shift OFF"), width-120, 80);
   text((step == ON ? "Step ON" : "Step OFF"), width-20, 80);
   
-  // Display the distance between the end effector and the center of the base of the robot (rough center)
+  
   PVector ee = calculateEndEffectorPosition(armModel, false);
-  String ee_dist = String.format("DIST: %4.5f", PVector.dist(ee, new PVector(405, 137, -203) ));
-  text(ee_dist, width - 20, 100);
+  String ee_pos = String.format("EE:  x: %4.5f  y: %4.5f  z: %4.5f", ee.x, ee.y, ee.z);
+  String ee_dist = String.format("DIST: %4.5f", PVector.dist(ee, new PVector(404, 137, -212) ));
+  // Display the current position of the End Effector in the Plane
+  //text(ee_pos, width -20, 100);
+  // Display the distance between the end effector and the center of the base of the robot (rough center)
+  text(ee_dist, width - 20, 120);
   
   if (errorCounter > 0) {
     errorCounter--;
