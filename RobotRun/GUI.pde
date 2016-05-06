@@ -947,6 +947,14 @@ public void keyPressed(){
     return;
   }
   
+  if(key == 'R'){
+    println("Arrrr");
+    translate(width/1.5,height/1.5);
+    scale(1);
+    rotateX(0);
+    rotateY(0);
+  }
+  
    /* click spacebar once to activate pan button
     * click spacebar again to deactivate pan button
     */ 
