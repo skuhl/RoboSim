@@ -954,6 +954,14 @@ public void keyPressed(){
     return;
   }
   
+  if(key == 'R'){
+    println("Arrrr");
+    translate(width/1.5,height/1.5);
+    scale(1);
+    rotateX(0);
+    rotateY(0);
+  }
+  
    /* click spacebar once to activate pan button
     * click spacebar again to deactivate pan button
     */ 
@@ -982,11 +990,14 @@ public void keyPressed(){
          }
          doPan = false;   
       }
+      
+      cursor(cursorMode);
    }
    
    if (keyCode == SHIFT){ 
       clickRotate += 1;
       if ((clickRotate % 2) == 1){
+         cursorMode = MOVE;
          PImage[] pressed = {loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png")};
          if (bt_show.isVisible()){
             cp5.getController("rotate_shrink")
@@ -997,6 +1008,7 @@ public void keyPressed(){
          }
         
       }else{
+         cursorMode = ARROW;
          PImage[] released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
          if (bt_show.isVisible()){
             cp5.getController("rotate_shrink")
@@ -1007,6 +1019,8 @@ public void keyPressed(){
          }
          doRotate = false;   
       }
+      
+      cursor(cursorMode);
    }
 }
 
@@ -1037,7 +1051,6 @@ public void hide(int theValue){
       .setImages(pan_released);   
    doPan = false;    
 
-   cursorMode = ARROW;
    PImage[] rotate_released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
    cp5.getController("rotate_normal")
       .setImages(rotate_released);
@@ -1045,6 +1058,7 @@ public void hide(int theValue){
       .setImages(rotate_released);   
    doRotate = false;   
    
+   cursor(cursorMode);
 }
 
 public void show(int theValue){
@@ -1064,11 +1078,12 @@ public void show(int theValue){
       .setImages(pan_released);
    doPan = false;    
 
-   cursorMode = ARROW;
    PImage[] rotate_released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
    cp5.getController("rotate_normal")
       .setImages(rotate_released);
-   doRotate = false;  
+   doRotate = false;
+   
+   cursor(cursorMode);
 }
 
 
@@ -2296,6 +2311,8 @@ public void pan_normal(int theValue){
         .setImages(released);
      doPan = false;   
   }
+  
+  cursor(cursorMode);
 }
 
 // pan button when interface is minimized
@@ -2313,6 +2330,8 @@ public void pan_shrink(int theValue){
         .setImages(released);
      doPan = false;   
   }
+  
+  cursor(cursorMode);
 }
 
 // rotate button when interface is at full size
@@ -2330,6 +2349,8 @@ public void rotate_normal(int theValue){
         .setImages(released);
      doRotate = false;   
   }
+  
+  cursor(cursorMode);
 }
 
 // rotate button when interface is minized
@@ -2347,6 +2368,8 @@ public void rotate_shrink(int theValue){
         .setImages(released);
      doRotate = false;   
   }
+  
+  cursor(cursorMode);
 }
 
 public void record_normal(int theValue){
