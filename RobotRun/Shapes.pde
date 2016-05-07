@@ -168,7 +168,7 @@ public class Object {
   // Used when an object is held by the robot
   private boolean disable_gravity;
   
-  public Object(Shape f, Shape hb) {
+  public Object(Shape f, Box hb) {
     form = f;
     hit_box = hb;
     disable_gravity = false;

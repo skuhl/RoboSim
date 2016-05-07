@@ -885,6 +885,8 @@ void gui(){
 
 /* mouse events */
 public void mousePressed(){
+  
+  
    if ((clickPan % 2) == 1 ) { // pan button is pressed
       if (doPan) {
          doPan = false;
