@@ -91,6 +91,8 @@ public class Model {
 
 final int ARM_TEST = 0, ARM_STANDARD = 1;
 
+// The apporximate center of the base of the robot
+public static final PVector base_center = new PVector(404, 137, -212);
 
 public class ArmModel {
   
@@ -291,6 +293,7 @@ public class ArmModel {
         }
       }
     }
+    
   }// end draw arm model
   
   public void resetRot(){
@@ -367,9 +370,7 @@ public class ArmModel {
               // Caculate the distance that the end effector is from the center of the robot's base
               PVector ee_pos = calculateEndEffectorPosition(armModel, false);
               // This is not the exact center, it is a rough estimate 
-              PVector base_center = new PVector(404, 137, -212);
               float dist = PVector.dist(ee_pos, base_center);
-              
               
               /* If the End Effector is within a certain distance from the robot's base,
                * then determine if the given angle will bring the robot closer to the

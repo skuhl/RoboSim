@@ -92,9 +92,12 @@ public void setup() {
   }
   
   // Create the floor of the environment
-  floor = new Polygon(new PVector[] { new PVector(-1000000, 200.5, -10000000), new PVector(-1000000, 200.5, 10000000), new PVector(10000000, 200.5, 10000000), new PVector(10000000, 200.5, -10000000) },
-                                          color(160, 160, 160), color(160, 160, 160));
+  floor = new Polygon(new PVector[] { new PVector(base_center.x - 50000, PLANE_Y, base_center.z - 50000), new PVector(base_center.x - 50000, PLANE_Y, base_center.z + 50000),
+                                      new PVector(base_center.x + 50000, PLANE_Y, base_center.z + 50000), new PVector(base_center.x + 50000, PLANE_Y, base_center.z - 50000) },
+                      color(205, 205, 205), color(205, 205, 205));
+  
   // Intialize world objects
+  // Create a small, blue cube
   Shape box = new Box(new PVector(0, -200, 0), 35, color(0, 0, 255), color(0, 0, 0));
   objects = new Object[1];
   objects[0] = new Object(box, new Box(new PVector(0, -200, 0), 35, color(0, 255, 0)));
@@ -126,7 +129,7 @@ public void draw() {
   applyCamera();
 
   pushMatrix();
-  armModel.draw();
+  armModel.draw();  
   popMatrix();
 
   noLights();
@@ -196,9 +199,27 @@ public void draw() {
   popMatrix(); /* */
   // END TESTING CODE
   
+  
   // Create ground plane under the robot's base
   floor.draw();
   
+  // Draw x, z origin lines
+  stroke(255, 0, 0);
+  line(0, PLANE_Y, -50000, 0, PLANE_Y, 50000);
+  line(-50000, PLANE_Y, 0, 50000, PLANE_Y, 0);
+  
+  // Draw grid lines every 250 units in the xz plane, on the floor plane
+  stroke(25, 25, 25);
+  for (int l = 1; l < 200; ++l) {
+    line(250 * l, PLANE_Y, -50000, 250 * l, PLANE_Y, 50000);
+    line(-50000, PLANE_Y, 250 * l, 50000, PLANE_Y, 250 * l);
+    
+    line(-250 * l, PLANE_Y, -50000, -250 * l, PLANE_Y, 50000);
+    line(-50000, PLANE_Y, -250 * l, 50000, PLANE_Y, -250 * l);
+  }
+  
+  
+  // Draw alll world objects and apply gravity upon them as well
   for (Object s : objects) {
     s.draw();
     s.applyGravity();

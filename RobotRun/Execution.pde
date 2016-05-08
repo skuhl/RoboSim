@@ -105,7 +105,7 @@ void showMainDisplayText() {
   
   PVector ee = calculateEndEffectorPosition(armModel, false);
   String ee_pos = String.format("EE:  x: %4.5f  y: %4.5f  z: %4.5f", ee.x, ee.y, ee.z);
-  String ee_dist = String.format("DIST: %4.5f", PVector.dist(ee, new PVector(404, 137, -212) ));
+  String ee_dist = String.format("DIST: %4.5f", PVector.dist(ee, base_center));
   // Display the current position of the End Effector in the Plane
   text(ee_pos, width -20, 100);
   // Display the distance between the end effector and the center of the base of the robot (rough center)
