@@ -2165,9 +2165,9 @@ public void ENTER(int theValue){
          break;
       case ENTER_TEXT:
          if (workingText.length() > 0) {
-           programs.add(new Program(workingText));
+           int new_prog = addProgram(new Program(workingText));
            workingText = "";
-           select_program = active_program = programs.size()-1;
+           select_program = active_program = new_prog;
            select_instruction = active_instruction = 0;
            mode = INSTRUCTION_NAV;
            saveState();

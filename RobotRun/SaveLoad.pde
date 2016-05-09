@@ -112,15 +112,7 @@ int loadPrograms(Path path){
                      s.next(); // consume token: </ToolInstruction>
                   }else{ // has scanned </Program>
                      // that's the end of program
-                     
-                     if (programs.size() < 1) {
-                       programs.add(aProgram);
-                     } else {
-                       int idx = 0;
-                       while (idx < programs.size() && programs.get(idx).name.compareTo(aProgram.name) < 0) { ++idx; }
-                       programs.add(idx, aProgram);
-                     }
-                     
+                     addProgram(aProgram);
                      break;
                      
                   }

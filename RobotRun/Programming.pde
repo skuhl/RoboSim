@@ -189,6 +189,23 @@ public class Program  {
 } // end Program class
 
 
+public int addProgram(Program p) {
+  if (p == null) {
+    return -1;
+  } else {
+    int idx = 0;
+    
+    if (programs.size() < 1) {
+       programs.add(p);
+     } else {
+       while (idx < programs.size() && programs.get(idx).name.compareTo(p.name) < 0) { ++idx; }
+       programs.add(idx, p);
+     }
+    
+    return idx;
+  }
+}
+
 public  class Instruction  {
 }
 
@@ -424,4 +441,3 @@ public class RecordScreen implements Runnable{
         
     }
 }
-
