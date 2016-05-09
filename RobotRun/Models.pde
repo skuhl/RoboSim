@@ -28,12 +28,6 @@ public class Model {
     loadSTLModel(filename, col);
   }
   
-  void resetRot(){
-    currentRotations[0] = 0;
-    currentRotations[1] = 0;
-    currentRotations[2] = 0;
-  }
-  
   void loadSTLModel(String filename, color col) {
     ArrayList<Triangle> triangles = new ArrayList<Triangle>();
     byte[] data = loadBytes(filename);
@@ -124,7 +118,7 @@ public class ArmModel {
       segments.add(link3);
     } else if (type == ARM_STANDARD) {
       // TODO: FILL IN PROPER JOINT RESTRICTION VALUES.
-      motorSpeed = 4000.0; // speed in mm
+      motorSpeed = 4000.0; // speed in mm/sec
       // Joint 1
       Model base = new Model("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
       base.rotations[1] = true;
@@ -291,13 +285,7 @@ public class ArmModel {
         }
       }
     }
-  }// end draw arm model
-  
-  public void resetRot(){
-    for(Model m: segments){
-      m.resetRot();
-    }
-  }
+  }//end draw arm model
   
   public PVector getWpr() {
     PVector out = new PVector(0,0,0);
@@ -311,20 +299,32 @@ public class ArmModel {
     out.y = clampAngle(tmp.z);
     out.z = clampAngle(tmp.x);
     return out;
-  } // end get WPR
+  }//end get WPR
   
+  //returns the rotational values for each arm joint
   public float[] getJointRotations() {
-    float[] j = new float[6];
-    for (int n = 0; n < 6; n++) {
-      for (int r = 0; r < 3; r++) {
-        if (segments.get(n).rotations[r]) {
-          j[n] = segments.get(n).currentRotations[r];
+    float[] rot = new float[6];
+    for (int i = 0; i < 6; i += 1) {
+      for (int j = 0; j < 3; j += 1) {
+        if (segments.get(i).rotations[j]) {
+          rot[i] = segments.get(i).currentRotations[j];
           break;
         }
       }
     }
-    return j;
-  } // end get joint rotations
+    return rot;
+  }//end get joint rotations
+  
+  //convenience method to set all joint rotation values of the robot arm
+  public void setJointRotations(float[] rot){
+    for(int i = 0; i < 6; i += 1){
+      for(int j = 0; j < 3; j += 1){
+        if(segments.get(i).rotations[j]){
+          segments.get(i).currentRotations[j] = rot[i];
+        }
+      }
+    }
+  }//end set joint rotations 
   
   public boolean interpolateRotation(float speed) {
     boolean allDone = true;
@@ -397,23 +397,32 @@ public class ArmModel {
         }
       }
     } else if (curCoordFrame == COORD_WORLD) {
+      //only move if our movement vector is non-zero
       if (linearMoveSpeeds[0] != 0 || linearMoveSpeeds[1] != 0 || linearMoveSpeeds[2] != 0) {
         PVector startFrom = new PVector(0,0,0);
-        if (intermediatePositions.size() == 1) startFrom = intermediatePositions.get(0);
-        else startFrom = calculateEndEffectorPosition(armModel, false);
+        
+        //determine movement start point
+        if (intermediatePositions.size() == 1){
+          startFrom = intermediatePositions.get(0);
+        } else{
+          startFrom = calculateEndEffectorPosition(armModel, false);
+        }
+        
         PVector move = new PVector(linearMoveSpeeds[0], linearMoveSpeeds[1], linearMoveSpeeds[2]);
+        //convert to user frame coordinates if currently in a user frame
         if (activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
           PVector[] frame = userFrames[activeUserFrame].axes;
           move.y = -move.y;
           move.z = -move.z;
           move = vectorConvertTo(move, frame[0], frame[1], frame[2]);
         }
+        
         intermediatePositions.clear();
         float distance = motorSpeed/60.0 * liveSpeed;
         intermediatePositions.add(new PVector(startFrom.x + move.x * distance,
                                               startFrom.y + move.y * distance,
                                               startFrom.z + move.z * distance));
-        attemptIK(this, 0);
+        calculateIKJacobian(intermediatePositions.get(0));
         instantRotation();
       }
     }

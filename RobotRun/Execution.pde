@@ -104,7 +104,7 @@ void showMainDisplayText() {
   
   
   PVector ee = calculateEndEffectorPosition(armModel, false);
-  String ee_pos = String.format("EE:  x: %4.5f  y: %4.5f  z: %4.5f", ee.x, ee.y, ee.z);
+  String ee_pos = String.format("EE:  x: %4.5f  y: %4.5f  z: %4.5f", -ee.x, ee.z, -ee.y);
   String ee_dist = String.format("DIST: %4.5f", PVector.dist(ee, new PVector(404, 137, -212) ));
   // Display the current position of the End Effector in the Plane
   text(ee_pos, width -20, 100);
@@ -420,21 +420,81 @@ int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
   } else return EXEC_PROCESSING;
 } // end calculateIK
 
+void calculateIKJacobian(PVector tgt){
+  float dist = 10;
+  long m = millis();
+  while(true){
+    
+    if(dist < 0.01) break;
+    
+    println("distance from target = " + dist);
+    PVector cPos = calculateEndEffectorPosition(armModel, false);
+    float[][] j = calculateJacobian();
+    float[] angles = armModel.getJointRotations();
+    float[] delta = calculateVectorDelta(cPos, tgt);
+    float[] dAngle = new float[6];
+        
+    for(int i = 0; i < 6; i += 1){
+      dAngle[i] = j[i][0]*delta[0] + j[i][1]*delta[1] + j[i][2]*delta[2];
+      angles[i] += (dAngle[i]*0.0174533);
+    }
+    
+    armModel.setJointRotations(angles);
+    PVector nPos = calculateEndEffectorPosition(armModel, false);
+    dist = calculateVectorDistance(cPos, nPos);
+  }
+  
+  while(millis() != m + 2000);
+  println("IK success!");
+  println();
+}
+
 /**
  * Calculate the Jacobian matrix for the robotic arm at its
  * current position for a certian angular offset of each joint.
  */
-void calculateJacobian(){
-  float dAngle = 0.5;
-  float[][] jPos = new float[6][3];
-  float[][] jNeg = new float[6][3];
+float[][] calculateJacobian(){
+  float dAngle = 0.035;
+  float[][] jacobian = new float[6][3];
+  PVector oPos = calculateEndEffectorPosition(armModel, false);
+  PVector nPos = new PVector(0, 0, 0);
   
   //examine each segment of the arm
-  for(Model m: armModel.segments){
-    for(int i = 0; i < 3; i += 1){
-      
+  for(int i = 0; i < 6; i += 1){
+    Model segment = armModel.segments.get(i);
+    //get the rotational axis for each joint
+    for(int j = 0; j < 3; j += 1){
+      if(segment.rotations[j]){
+        //test angular offset
+        segment.currentRotations[j] += dAngle;
+        nPos = calculateEndEffectorPosition(armModel, false);
+        jacobian[i][0] = nPos.x - oPos.x;
+        jacobian[i][1] = nPos.y - oPos.y;
+        jacobian[i][2] = nPos.z - oPos.z;
+        
+        //replace the original rotational value
+        segment.currentRotations[j] -= dAngle;
+        break;
+      }
     }
   }
+  
+  return jacobian;
+}//end calculate jacobian
+
+//calculate the distance between two points represented as point vectors
+float calculateVectorDistance(PVector p1, PVector p2){
+  float dx = p1.x - p2.x;
+  float dy = p1.y - p2.y;
+  float dz = p1.z - p2.z;
+  float dist = sqrt(dx*dx + dy*dy + dz*dz);
+  return dist;
+}
+
+//calculates the change in each coordinate to obtain p2 from p1
+float[] calculateVectorDelta(PVector p1, PVector p2){
+  float[] d = {p1.x - p2.x, p1.y - p2.y, p1.z - p2.z};
+  return d;
 }
 
 /**

@@ -953,7 +953,8 @@ public void keyPressed(){
     myRotX = 0;
     myRotY = 0;
   } else if(key == 't'){
-    armModel.resetRot();
+    float[] rot = {0, 0, 0, 0, 0, 0};
+    armModel.setJointRotations(rot);
   } else if (key == 'q') {
     hd(0);
     return;

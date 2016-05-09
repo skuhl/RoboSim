@@ -209,7 +209,7 @@ public void draw() {
   hint(DISABLE_DEPTH_TEST);
   
   showMainDisplayText();
-//  println(frameRate + " fps");
+  //println(frameRate + " fps");
 }
 
 void applyCamera() {
