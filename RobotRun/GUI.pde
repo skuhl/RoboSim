@@ -1,4 +1,3 @@
-
 final int FRAME_JOINT = 0, 
           FRAME_JGFRM = 1, 
           FRAME_WORLD = 2, 
@@ -2028,7 +2027,24 @@ public void fd(int theValue) {
 }
 
 public void bd(int theValue){
-
+  
+  if (shift == ON && step == ON && active_instruction > 0) {
+    
+    currentProgram = programs.get(select_program);
+    Instruction ins = programs.get(active_program).getInstructions().get(active_instruction - 1);
+    
+    if (ins instanceof MotionInstruction) {
+      
+      singleInstruction = (MotionInstruction)ins;
+      setUpInstruction(programs.get(active_program), armModel, singleInstruction);
+      
+      if (active_instruction > 0)
+        select_instruction = active_instruction = (active_instruction-1);
+      
+      loadInstructions(select_program);
+      updateScreen(color(255,0,0), color(0));
+    }
+  }
 }
 
 public void ENTER(int theValue){
