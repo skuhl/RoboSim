@@ -899,12 +899,12 @@ public void updateButtonColors() {
     
     Model j = armModel.segments.get(seg);
     
-    if (j.jointsMoving[0] < 0 || j.jointsMoving[1] < 0 || j.jointsMoving[2] < 0) {
+    if ((j.jointsMoving[0] < 0 || j.jointsMoving[1] < 0 || j.jointsMoving[2] < 0) || (seg < 3 && armModel.linearMoveSpeeds[seg] < 0)) {
       
       // Moving in negative direction
       ((Button)cp5.get("JOINT" + (seg + 1) + "_NEG")).setColorBackground(highlighted);
       ((Button)cp5.get("JOINT" + (seg + 1) + "_POS")).setColorBackground(regular);
-    } else if (j.jointsMoving[0] > 0 || j.jointsMoving[1] > 0 || j.jointsMoving[2] > 0) {
+    } else if ((j.jointsMoving[0] > 0 || j.jointsMoving[1] > 0 || j.jointsMoving[2] > 0) || (seg < 3 && armModel.linearMoveSpeeds[seg] > 0)) {
       
       // Moving in positive direction
       ((Button)cp5.get("JOINT" + (seg + 1) + "_NEG")).setColorBackground(regular);
