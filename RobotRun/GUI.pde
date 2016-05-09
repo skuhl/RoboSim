@@ -758,10 +758,10 @@ void gui(){
       .setPosition(JOINT1_NEG_px, JOINT1_NEG_py)
       .setSize(LARGE_BUTTON, SMALL_BUTTON)
       .setCaptionLabel("-X (J1)")
-      .setColorBackground(color(127,127,255))
+      .setColorBackground(color(127, 127, 255))
       .setColorCaptionLabel(color(255,255,255))  
-      .moveTo(g2);    
-     
+      .moveTo(g2);
+   
    int JOINT1_POS_px = JOINT1_NEG_px + LARGE_BUTTON + 1;
    int JOINT1_POS_py = JOINT1_NEG_py;
    cp5.addButton("JOINT1_POS")
@@ -881,7 +881,43 @@ void gui(){
       .setColorBackground(color(127,127,255))
       .setColorCaptionLabel(color(255,255,255))  
       .moveTo(g2);      
-}   
+} 
+
+/* Highlight the buttons in the pendant corresponding to the motion of the robot
+ * for which its corresponding joint in the robot is in motion.
+ *
+ * TODO: handle linear coordinate motion */
+public void updateButtonColors() {
+  
+  color highlighted = color(255, 0, 0);
+  color regular = color(127, 127, 255);
+  
+  /* Loop through each joint of the robot and highlight the button in the pendant
+   * corresponding to the motion of each joint (i.e. +, -, or stationary)
+   *
+   * NOTE: There are one less joints then segments */
+  for (int seg = 0; seg < armModel.segments.size() - 1; ++seg) {
+    
+    Model j = armModel.segments.get(seg);
+    
+    if (j.jointsMoving[0] < 0 || j.jointsMoving[1] < 0 || j.jointsMoving[2] < 0) {
+      
+      // Moving in negative direction
+      ((Button)cp5.get("JOINT" + (seg + 1) + "_NEG")).setColorBackground(highlighted);
+      ((Button)cp5.get("JOINT" + (seg + 1) + "_POS")).setColorBackground(regular);
+    } else if (j.jointsMoving[0] > 0 || j.jointsMoving[1] > 0 || j.jointsMoving[2] > 0) {
+      
+      // Moving in positive direction
+      ((Button)cp5.get("JOINT" + (seg + 1) + "_NEG")).setColorBackground(regular);
+      ((Button)cp5.get("JOINT" + (seg + 1) + "_POS")).setColorBackground(highlighted);
+    } else {
+      
+      // Stationary
+      ((Button)cp5.get("JOINT" + (seg + 1) + "_NEG")).setColorBackground(regular);
+      ((Button)cp5.get("JOINT" + (seg + 1) + "_POS")).setColorBackground(regular);
+    }
+  }
+}
 
 /* mouse events */
 public void mousePressed(){
@@ -1405,7 +1441,7 @@ public void rt(int theValue){
 public void sf(int theValue){
    if (shift == OFF){ 
 	 shift = ON;
-     ((Button)cp5.get("sf")).setColorBackground(color(0, 127, 255));
+     ((Button)cp5.get("sf")).setColorBackground(color(255, 0, 0));
    }
    else{
      shift = OFF;
@@ -1416,7 +1452,7 @@ public void sf(int theValue){
 public void st(int theValue) {
      if (step == OFF){ 
      step = ON;
-     ((Button)cp5.get("st")).setColorBackground(color(0, 127, 255));
+     ((Button)cp5.get("st")).setColorBackground(color(255, 0, 0));
    }
    else{
      step = OFF;
