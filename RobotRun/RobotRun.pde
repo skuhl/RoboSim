@@ -76,6 +76,7 @@ FileInputStream in = null;
 FileOutputStream out = null;
 
 public void setup() {
+  ortho();
   size(1200, 800, P3D);
   cp5 = new ControlP5(this);
   gui();
@@ -92,9 +93,12 @@ public void setup() {
   }
   
   // Create the floor of the environment
-  floor = new Polygon(new PVector[] { new PVector(-1000000, 200.5, -10000000), new PVector(-1000000, 200.5, 10000000), new PVector(10000000, 200.5, 10000000), new PVector(10000000, 200.5, -10000000) },
-                                          color(160, 160, 160), color(160, 160, 160));
+  floor = new Polygon(new PVector[] { new PVector(base_center.x - 50000, PLANE_Y, base_center.z - 50000), new PVector(base_center.x - 50000, PLANE_Y, base_center.z + 50000),
+                                      new PVector(base_center.x + 50000, PLANE_Y, base_center.z + 50000), new PVector(base_center.x + 50000, PLANE_Y, base_center.z - 50000) },
+                      color(205, 205, 205), color(205, 205, 205));
+  
   // Intialize world objects
+  // Create a small, blue cube
   Shape box = new Box(new PVector(0, -200, 0), 35, color(0, 0, 255), color(0, 0, 0));
   objects = new Object[1];
   objects[0] = new Object(box, new Box(new PVector(0, -200, 0), 35, color(0, 255, 0)));
@@ -103,7 +107,7 @@ public void setup() {
 boolean doneMoving = true;
 
 public void draw() {
-  
+  ortho();
   //lights();
   directionalLight(255, 255, 255, 1, 1, 0);
   ambientLight(150, 150, 150);
@@ -123,12 +127,15 @@ public void draw() {
   noFill();
   pushMatrix();
   
+  PVector ee_pos = calculateEndEffectorPosition(armModel, false);
+  
   applyCamera();
 
   pushMatrix();
-  armModel.draw();
+  armModel.draw(); 
   popMatrix();
-
+  
+  updateButtonColors();
   noLights();
   
   // TESTING CODE: DRAW INTERMEDIATE POINTS
@@ -196,16 +203,37 @@ public void draw() {
   popMatrix(); /* */
   // END TESTING CODE
   
-  // Create ground plane under the robot's base
-  floor.draw();
+  // Draw End Effector mapping to the grid plane
+  stroke(255, 0, 255);
+  line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
   
+  // Create ground plane under the robot's base
+  //floor.draw();
+  
+  // Draw x, z origin lines
+  stroke(255, 0, 0);
+  line(0, PLANE_Y, -50000, 0, PLANE_Y, 50000);
+  line(-50000, PLANE_Y, 0, 50000, PLANE_Y, 0);
+  
+  // Draw grid lines every 100 units in the xz plane, on the floor plane
+  stroke(25, 25, 25);
+  for (int l = 1; l < 500; ++l) {
+    line(100 * l, PLANE_Y, -50000, 100 * l, PLANE_Y, 50000);
+    line(-50000, PLANE_Y, 100 * l, 50000, PLANE_Y, 100 * l);
+    
+    line(-100 * l, PLANE_Y, -50000, -100 * l, PLANE_Y, 50000);
+    line(-50000, PLANE_Y, -100 * l, 50000, PLANE_Y, -100 * l);
+  }
+  
+  
+  // Draw alll world objects and apply gravity upon them as well
   for (Object s : objects) {
     s.draw();
     s.applyGravity();
   }
   
   popMatrix();
-
+  
   hint(DISABLE_DEPTH_TEST);
   
   showMainDisplayText();

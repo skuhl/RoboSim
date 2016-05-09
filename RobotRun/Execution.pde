@@ -99,17 +99,31 @@ void showMainDisplayText() {
     text("Coordinates: X: " + concor.x + " Y: " + concor.y + " Z: " + concor.z +
                      " W: " + wpr.x + " P: " + wpr.y + " R: " + wpr.z, width-20, 60);
   }
+  
   text((shift == ON ? "Shift ON" : "Shift OFF"), width-120, 80);
   text((step == ON ? "Step ON" : "Step OFF"), width-20, 80);
   
-  
+  /* Test code */
   PVector ee = calculateEndEffectorPosition(armModel, false);
-  String ee_pos = String.format("EE:  x: %4.5f  y: %4.5f  z: %4.5f", -ee.x, ee.z, -ee.y);
-  String ee_dist = String.format("DIST: %4.5f", PVector.dist(ee, new PVector(404, 137, -212) ));
+  String ee_pos = String.format("EE:  x: %4.5f  y: %4.5f  z: %4.5f", ee.x, ee.y, ee.z);
+  String ee_dist = String.format("DIST: %4.5f", PVector.dist(ee, base_center));
   // Display the current position of the End Effector in the Plane
   text(ee_pos, width -20, 100);
   // Display the distance between the end effector and the center of the base of the robot (rough center)
   text(ee_dist, width - 20, 120);
+  
+  // Display message for camera pan-lock mode
+  if (clickPan % 2 == 1) {
+    textSize(14);
+    fill(215, 0, 0);
+    text("Press space on the keyboard to disable camera paning", 392, height / 2 + 15);
+  }
+  // Display message for camera rotation-lock mode
+  if (clickRotate % 2 == 1) {
+    textSize(14);
+    fill(215, 0, 0);
+    text("Press shift on the keyboard to disable camera rotation", 390, height / 2 + 40);
+  }
   
   if (errorCounter > 0) {
     errorCounter--;
