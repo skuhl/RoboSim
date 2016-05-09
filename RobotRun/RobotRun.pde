@@ -127,10 +127,12 @@ public void draw() {
   noFill();
   pushMatrix();
   
+  PVector ee_pos = calculateEndEffectorPosition(armModel, false);
+  
   applyCamera();
 
   pushMatrix();
-  armModel.draw();  
+  armModel.draw(); 
   popMatrix();
   
   updateButtonColors();
@@ -201,15 +203,19 @@ public void draw() {
   popMatrix(); /* */
   // END TESTING CODE
   
+  // Draw End Effector mapping to the grid plane
+  stroke(255, 0, 255);
+  line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
+  
   // Create ground plane under the robot's base
-  floor.draw();
+  //floor.draw();
   
   // Draw x, z origin lines
   stroke(255, 0, 0);
   line(0, PLANE_Y, -50000, 0, PLANE_Y, 50000);
   line(-50000, PLANE_Y, 0, 50000, PLANE_Y, 0);
   
-  // Draw grid lines every 250 units in the xz plane, on the floor plane
+  // Draw grid lines every 100 units in the xz plane, on the floor plane
   stroke(25, 25, 25);
   for (int l = 1; l < 500; ++l) {
     line(100 * l, PLANE_Y, -50000, 100 * l, PLANE_Y, 50000);
@@ -227,7 +233,7 @@ public void draw() {
   }
   
   popMatrix();
-
+  
   hint(DISABLE_DEPTH_TEST);
   
   showMainDisplayText();
