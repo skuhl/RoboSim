@@ -76,6 +76,7 @@ FileInputStream in = null;
 FileOutputStream out = null;
 
 public void setup() {
+  ortho();
   size(1200, 800, P3D);
   cp5 = new ControlP5(this);
   gui();
@@ -106,7 +107,7 @@ public void setup() {
 boolean doneMoving = true;
 
 public void draw() {
-  
+  ortho();
   //lights();
   directionalLight(255, 255, 255, 1, 1, 0);
   ambientLight(150, 150, 150);
@@ -199,7 +200,6 @@ public void draw() {
   popMatrix(); /* */
   // END TESTING CODE
   
-  
   // Create ground plane under the robot's base
   floor.draw();
   
@@ -210,12 +210,12 @@ public void draw() {
   
   // Draw grid lines every 250 units in the xz plane, on the floor plane
   stroke(25, 25, 25);
-  for (int l = 1; l < 200; ++l) {
-    line(250 * l, PLANE_Y, -50000, 250 * l, PLANE_Y, 50000);
-    line(-50000, PLANE_Y, 250 * l, 50000, PLANE_Y, 250 * l);
+  for (int l = 1; l < 500; ++l) {
+    line(100 * l, PLANE_Y, -50000, 100 * l, PLANE_Y, 50000);
+    line(-50000, PLANE_Y, 100 * l, 50000, PLANE_Y, 100 * l);
     
-    line(-250 * l, PLANE_Y, -50000, -250 * l, PLANE_Y, 50000);
-    line(-50000, PLANE_Y, -250 * l, 50000, PLANE_Y, -250 * l);
+    line(-100 * l, PLANE_Y, -50000, -100 * l, PLANE_Y, 50000);
+    line(-50000, PLANE_Y, -100 * l, 50000, PLANE_Y, -100 * l);
   }
   
   
