@@ -997,7 +997,7 @@ public void keyPressed(){
     hd(0);
     return;
   } else if (key == 'e') {
-    EE_MAPPING = (EE_MAPPING + 1) % 2;
+    EE_MAPPING = (EE_MAPPING + 1) % 3;
   }
   
    /* click spacebar once to activate pan button
