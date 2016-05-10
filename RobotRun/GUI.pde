@@ -34,7 +34,8 @@ final int NONE = 0,
           SET_FRAME_INSTRUCTION = 26,
           EDIT_MENU = 27,
           CONFIRM_DELETE = 28;
-static int STOP_MOVEMENT = 0;
+static boolean STOP_MOVEMENT = false;
+static int     EE_MAPPING = 0;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -995,6 +996,8 @@ public void keyPressed(){
   } else if (key == 'q') {
     hd(0);
     return;
+  } else if (key == 'e') {
+    EE_MAPPING = (EE_MAPPING + 1) % 2;
   }
   
    /* click spacebar once to activate pan button
@@ -1996,7 +1999,7 @@ public void f5(int theValue) {
 
 /* Stops all joint movement */
 public void hd(int theValue) {
-  STOP_MOVEMENT = 1;
+  STOP_MOVEMENT = true;
   
   for (Model model : armModel.segments) {
     model.jointsMoving[0] = 0;

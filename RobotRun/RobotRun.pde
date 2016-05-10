@@ -127,9 +127,11 @@ public void draw() {
   noFill();
   pushMatrix();
   
-  PVector ee_pos = calculateEndEffectorPosition(armModel, false);
+  //PVector ee_pos = calculateEndEffectorPosition(armModel, false);
   
   applyCamera();
+  
+  PVector ee_pos = calculateEndEffectorPosition(armModel, false);
 
   pushMatrix();
   armModel.draw(); 
@@ -203,9 +205,29 @@ public void draw() {
   popMatrix(); /* */
   // END TESTING CODE
   
-  // Draw End Effector mapping to the grid plane
-  stroke(255, 0, 255);
-  line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
+  // Change color of EE mapping based on if the EE is below or above the ground plane
+  color c = (ee_pos.y <= 0) ? color(255, 0, 0) : color(150, 0, 255);
+  
+  // Toggle EE mapping type with 'e'
+  switch (EE_MAPPING) {
+    
+    case 0:
+      stroke(c);
+      // Draw a line, which maps the End Effector mapping to the grid in the xz plane
+      line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
+      break;
+    
+    case 1:
+      noStroke();
+      fill(c);
+      // Draw a point, which maps the End Effector's position to the grid in the xz plane
+      pushMatrix();
+      rotateX(PI / 2);
+      translate(0, 0, -PLANE_Y);
+      ellipse(ee_pos.x, ee_pos.z, 10, 10);
+      popMatrix();
+      break;
+  }
   
   // Create ground plane under the robot's base
   //floor.draw();
@@ -215,7 +237,7 @@ public void draw() {
   line(0, PLANE_Y, -50000, 0, PLANE_Y, 50000);
   line(-50000, PLANE_Y, 0, 50000, PLANE_Y, 0);
   
-  // Draw grid lines every 100 units in the xz plane, on the floor plane
+  // Draw grid lines every 100 units in the x and z plane, on the floor plane
   stroke(25, 25, 25);
   for (int l = 1; l < 500; ++l) {
     line(100 * l, PLANE_Y, -50000, 100 * l, PLANE_Y, 50000);

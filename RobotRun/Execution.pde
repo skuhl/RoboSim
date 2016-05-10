@@ -196,6 +196,7 @@ PVector computePerpendicular(PVector in, PVector second) {
  */
 PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
   pushMatrix();
+  resetMatrix();
   if (model.type == ARM_TEST) {
     if (!test) rotateY(model.segments.get(0).currentRotations[1]);
     else rotateY(model.segments.get(0).testRotations[1]);
