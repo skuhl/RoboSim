@@ -127,11 +127,7 @@ public void draw() {
   noFill();
   pushMatrix();
   
-  //PVector ee_pos = calculateEndEffectorPosition(armModel, false);
-  
   applyCamera();
-  
-  PVector ee_pos = calculateEndEffectorPosition(armModel, false);
 
   pushMatrix();
   armModel.draw(); 
@@ -205,29 +201,7 @@ public void draw() {
   popMatrix(); /* */
   // END TESTING CODE
   
-  // Change color of EE mapping based on if the EE is below or above the ground plane
-  color c = (ee_pos.y <= 0) ? color(255, 0, 0) : color(150, 0, 255);
-  
-  // Toggle EE mapping type with 'e'
-  switch (EE_MAPPING) {
-    
-    case 0:
-      stroke(c);
-      // Draw a line, which maps the End Effector mapping to the grid in the xz plane
-      line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
-      break;
-    
-    case 1:
-      noStroke();
-      fill(c);
-      // Draw a point, which maps the End Effector's position to the grid in the xz plane
-      pushMatrix();
-      rotateX(PI / 2);
-      translate(0, 0, -PLANE_Y);
-      ellipse(ee_pos.x, ee_pos.z, 10, 10);
-      popMatrix();
-      break;
-  }
+  drawEndEffectorGridMapping();
   
   // Create ground plane under the robot's base
   //floor.draw();
@@ -248,10 +222,10 @@ public void draw() {
   }
   
   
-  // Draw alll world objects and apply gravity upon them as well
+  // Draw all world objects and apply gravity upon them as well
   for (Object s : objects) {
     s.draw();
-    s.applyGravity();
+    //s.applyGravity();
   }
   
   popMatrix();

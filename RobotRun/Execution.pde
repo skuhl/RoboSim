@@ -276,6 +276,42 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
   return ret;
 } // end calculateEndEffectorPosition
 
+/* This method will draw the End Effector grid mapping based on the value of EE_MAPPING:
+ *
+ *  0 -> a line is drawn between the EE and the grid plane
+ *  1 -> a point is drawn on the grid plane that corresponds to the EE's xz coordinates
+ *  For any other value, nothing is drawn
+ */
+public void drawEndEffectorGridMapping() {
+  
+  PVector ee_pos = calculateEndEffectorPosition(armModel, false);
+  // Change color of the EE mapping based on if it lies below or above the ground plane
+  color c = (ee_pos.y <= 0) ? color(255, 0, 0) : color(150, 0, 255);
+  
+  // Toggle EE mapping type with 'e'
+  switch (EE_MAPPING) {
+    
+    case 0:
+      stroke(c);
+      // Draw a line, from the EE to the grid in the xz plane, parallel to the y plane
+      line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
+      break;
+    
+    case 1:
+      noStroke();
+      fill(c);
+      // Draw a point, which maps the EE's position to the grid in the xz plane
+      pushMatrix();
+      rotateX(PI / 2);
+      translate(0, 0, -PLANE_Y);
+      ellipse(ee_pos.x, ee_pos.z, 10, 10);
+      popMatrix();
+      break;
+      
+    default:
+      // No EE grid mapping
+  }
+}
 
 /**
  * Performs rotations and translations to reach the end effector
@@ -1038,7 +1074,19 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
         for (Model a : model.segments) {
           for (int r = 0; r < 3; r++) {
             if (a.rotations[r]) {
-              float blueAngle = a.targetRotations[r] - a.currentRotations[r];
+              
+              /*float blueAngle = minimumDistance(a.targetRotations[r], a.currentRotations[r]);
+              float dist_boundx = minimumDistance(a.jointRanges[r].x, a.currentRotations[r]);
+              float dist_boundy = minimumDistance(a.jointRanges[r].y, a.currentRotations[r]);
+              
+              if ( blueAngle <= 0 && (dist_boundx <= 0 || (dist_boundx > 0 && dist_boundx > blueAngle))
+                                 && (dist_boundy <= 0 || (dist_boundy > 0 && dist_boundy > blueAngle))) {
+                a.rotationDirections[r] = 1;
+              } else {
+                a.rotationDirections[r] = -1;
+              }*/
+              
+             float blueAngle = a.targetRotations[r] - a.currentRotations[r];
               blueAngle = clampAngle(blueAngle);
               if (blueAngle < PI) a.rotationDirections[r] = 1;
               else a.rotationDirections[r] = -1;
@@ -1082,6 +1130,19 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
       return false;
 } // end setUpInstruction
 
+/* Returns the angle with the smallest magnitude that lies
+ * between the two given angles on the Unit Circle */
+public float minimumDistance(float angle1, float angle2) {
+  float dist = clampAngle(angle1 - angle2);
+  
+  if (dist > PI) {
+    dist = PI - dist;
+  } else if (dist < -PI) {
+    dist = PI + dist;
+  }
+  
+  return dist;
+}
 
 
 void setError(String text) {
@@ -1094,5 +1155,7 @@ void setError(String text) {
 float clampAngle(float angle) {
   while (angle > TWO_PI) angle -= (TWO_PI);
   while (angle < 0) angle += (TWO_PI);
+  // angles range: [0, TWO_PI)
+  if (angle == TWO_PI) angle = 0;
   return angle;
 }

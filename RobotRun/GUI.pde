@@ -2111,7 +2111,10 @@ public void ENTER(int theValue){
          break;
       case SET_INSTRUCTION_SPEED:
          float tempSpeed = Float.parseFloat(workingText);
-         if (speedInPercentage) tempSpeed /= 100.0;
+         if (speedInPercentage) {
+           if (tempSpeed > 100) tempSpeed = 10; 
+           tempSpeed /= 100.0;
+         }
          else if (tempSpeed > armModel.motorSpeed) tempSpeed = armModel.motorSpeed;
          MotionInstruction castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
          castIns.setSpeed(tempSpeed);
