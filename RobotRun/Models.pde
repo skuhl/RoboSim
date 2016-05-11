@@ -8,6 +8,7 @@ public class Triangle {
 
 public class Model {
   public PShape mesh;
+  public String name;
   public boolean[] rotations = new boolean[3]; // is rotating on this joint valid?
   public ArrayList<PVector>[] jointRanges = (ArrayList<PVector>[])new ArrayList[3];
   public float[] currentRotations = new float[3]; // current rotation value
@@ -25,6 +26,7 @@ public class Model {
       jointRanges[n] = new ArrayList<PVector>();
     }
     rotationSpeed = 0.01;
+    name = filename;
     loadSTLModel(filename, col);
   }
   
@@ -32,7 +34,7 @@ public class Model {
     ArrayList<Triangle> triangles = new ArrayList<Triangle>();
     byte[] data = loadBytes(filename);
     int n = 84; // skip header and number of triangles
-  
+    
     while (n < data.length) {
       Triangle t = new Triangle();
       for (int m = 0; m < 4; m++) {
@@ -69,8 +71,7 @@ public class Model {
     }
     mesh.endShape();
   } // end loadSTLModel
-  
-  
+    
   public boolean anglePermitted(int idx, float angle) {
     for (PVector range : jointRanges[idx]) {
       if (angle >= range.x && angle <= range.y) return true;
@@ -95,6 +96,7 @@ public class ArmModel {
   //public boolean calculatingArms = false, movingArms = false;
   public float motorSpeed;
   public float[] linearMoveSpeeds = new float[3];
+  //public final float[] maxArmRange;
   
   public ArmModel(int in) {
     type = in;
@@ -170,23 +172,27 @@ public class ArmModel {
       noStroke();
       rotateY(segments.get(0).currentRotations[1]);
       segments.get(0).draw();
+      
       translate(0, -200, 0);
       rotateZ(PI);
       //rotateY(PI/2.0);
       segments.get(1).draw();
+      
       rotateZ(-PI);
       translate(-25, -130, 0);
       rotateZ(segments.get(1).currentRotations[2]);
       translate(-25, -130, 0);
       rotateZ(PI);
       segments.get(2).draw();
+      
       rotateZ(-PI);
       translate(0, -120, 0); 
       rotateZ(segments.get(2).currentRotations[2]);
       translate(0, -120, 0);
       rotateZ(PI);
       segments.get(3).draw();
-    } else if (type == ARM_STANDARD) {
+    } 
+    else if (type == ARM_STANDARD) {
       noStroke();
       fill(200, 200, 0);
       
@@ -289,7 +295,7 @@ public class ArmModel {
     }
   }//end draw arm model
   
-  public PVector getWpr() {
+  public PVector getRot() {
     PVector out = new PVector(0,0,0);
     PVector tmp = new PVector(0,0,0);
     for (Model a : segments) {
@@ -306,7 +312,7 @@ public class ArmModel {
   //returns the rotational values for each arm joint
   public float[] getJointRotations() {
     float[] rot = new float[6];
-    for (int i = 0; i < 6; i += 1) {
+    for (int i = 0; i < segments.size(); i += 1) {
       for (int j = 0; j < 3; j += 1) {
         if (segments.get(i).rotations[j]) {
           rot[i] = segments.get(i).currentRotations[j];
@@ -319,14 +325,14 @@ public class ArmModel {
   
   //convenience method to set all joint rotation values of the robot arm
   public void setJointRotations(float[] rot){
-    for(int i = 0; i < 6; i += 1){
+    for(int i = 0; i < segments.size(); i += 1){
       for(int j = 0; j < 3; j += 1){
         if(segments.get(i).rotations[j]){
           segments.get(i).currentRotations[j] = rot[i];
         }
       }
     }
-  }//end set joint rotations 
+  }//end set joint rotations
   
   public boolean interpolateRotation(float speed) {
     boolean allDone = true;
@@ -367,7 +373,7 @@ public class ArmModel {
             if (model.anglePermitted(n, trialAngle)) {
               
               // Caculate the distance that the end effector is from the center of the robot's base
-              PVector ee_pos = calculateEndEffectorPosition(armModel, false);
+              PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
               // This is not the exact center, it is a rough estimate 
               float dist = PVector.dist(ee_pos, base_center);
               
@@ -381,7 +387,7 @@ public class ArmModel {
                 model.currentRotations[n] = trialAngle;
                 
                 // Caculate the distance that the end effector is from the center of the robot's base for the test angle
-                PVector new_ee_pos = calculateEndEffectorPosition(armModel, false);
+                PVector new_ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
                 float new_dist = PVector.dist(new_ee_pos, base_center);
                 
                 if (new_dist < dist) {
@@ -405,7 +411,7 @@ public class ArmModel {
         if (intermediatePositions.size() == 1){
           startFrom = intermediatePositions.get(0);
         } else{
-          startFrom = calculateEndEffectorPosition(armModel, false);
+          startFrom = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
         }
         
         PVector move = new PVector(linearMoveSpeeds[0], linearMoveSpeeds[1], linearMoveSpeeds[2]);
@@ -422,8 +428,14 @@ public class ArmModel {
         intermediatePositions.add(new PVector(startFrom.x + move.x * distance,
                                               startFrom.y + move.y * distance,
                                               startFrom.z + move.z * distance));
-        calculateIKJacobian(intermediatePositions.get(0));
-        instantRotation();
+        
+        int r = calculateIKJacobian(intermediatePositions.get(0));
+        if(r == EXEC_FAILURE){
+          intermediatePositions.clear();
+          linearMoveSpeeds[0] = 0;
+          linearMoveSpeeds[1] = 0;
+          linearMoveSpeeds[2] = 0;
+        }
       }
     }
   } // end execute live motion

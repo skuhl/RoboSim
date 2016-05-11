@@ -85,28 +85,27 @@ void showMainDisplayText() {
   textAlign(RIGHT, TOP);
   text("Coordinate Frame: " + (curCoordFrame == COORD_JOINT ? "Joint" : "World"), width-20, 20);
   text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
-  String s;
+  
+  PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+  //eep = convertNativeToWorld(eep);
+  String ee_pos = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f", eep.x, eep.y, eep.z);
+  String ee_dist = String.format("Dist %4.5f", PVector.dist(eep, base_center));
   
   if (curCoordFrame == COORD_JOINT) {
     float j[] = armModel.getJointRotations();
-    s = String.format("Joints: J1-%5.4f J2-%5.4f J3-%5.4f J4-%5.4f J5-%5.4f J6-%5.4f", 
+    String s = String.format("Joints  J1: %5.4f J2: %5.4f J3: %5.4f J4: %5.4f J5: %5.4f J6: %5.4f", 
                       j[0], j[1], j[2], j[3], j[4], j[5]);
+                      
     text(s, width-20, 60);
   } else {
-    PVector eep = calculateEndEffectorPosition(armModel, false);
-    PVector concor = convertNativeToWorld(eep);
-    PVector wpr = armModel.getWpr();
-    text("Coordinates: X: " + concor.x + " Y: " + concor.y + " Z: " + concor.z +
-                     " W: " + wpr.x + " P: " + wpr.y + " R: " + wpr.z, width-20, 60);
+    PVector wpr = armModel.getRot();
+    String ee_rot = String.format("  W: %5.4f  P: %5.4f  R: %5.4f", wpr.x, wpr.y, wpr.z);
+    text(ee_pos + ee_rot, width-20, 60);
   }
   
   text((shift == ON ? "Shift ON" : "Shift OFF"), width-120, 80);
   text((step == ON ? "Step ON" : "Step OFF"), width-20, 80);
-  
-  /* Test code */
-  PVector ee = calculateEndEffectorPosition(armModel, false);
-  String ee_pos = String.format("EE:  x: %4.5f  y: %4.5f  z: %4.5f", ee.x, ee.y, ee.z);
-  String ee_dist = String.format("DIST: %4.5f", PVector.dist(ee, base_center));
+
   // Display the current position of the End Effector in the Plane
   text(ee_pos, width -20, 100);
   // Display the distance between the end effector and the center of the base of the robot (rough center)
@@ -194,37 +193,39 @@ PVector computePerpendicular(PVector in, PVector second) {
  *             rotation values or if we're checking trial rotations
  * @return The current end effector position
  */
-PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
+PVector calculateEndEffectorPosition(ArmModel model, float[] rot) {
   pushMatrix();
   if (model.type == ARM_TEST) {
-    if (!test) rotateY(model.segments.get(0).currentRotations[1]);
-    else rotateY(model.segments.get(0).testRotations[1]);
+    rotateY(rot[0]);
     translate(0, -200, 0);
     translate(-25, -130, 0);
-    if (!test) rotateZ(model.segments.get(1).currentRotations[2]);
-    else rotateZ(model.segments.get(1).testRotations[2]);
+    
+    rotateZ(rot[1]);
     translate(-25, -130, 0);
     translate(0, -120, 0);
-    if (!test) rotateZ(model.segments.get(2).currentRotations[2]);
-    else rotateZ(model.segments.get(2).testRotations[2]);
+    
+    rotateZ(rot[2]);
     translate(0, -120, 0);
     rotateZ(PI);
     translate(0, 102, 0);
-  } else if (model.type == ARM_STANDARD) {
+  } 
+  else if (model.type == ARM_STANDARD) {
     translate(600, 200, 0);
     translate(-50, -166, -358); // -115, -213, -413
     rotateZ(PI);
     translate(150, 0, 150);
-    if (!test) rotateY(model.segments.get(0).currentRotations[1]);
-    else rotateY(model.segments.get(0).testRotations[1]);
+    
+    rotateY(rot[0]);
+    
     translate(-150, 0, -150);
     rotateZ(-PI);    
     translate(-115, -85, 180);
     rotateZ(PI);
     rotateY(PI/2);
     translate(0, 62, 62);
-    if (!test) rotateX(model.segments.get(1).currentRotations[2]);
-    else rotateX(model.segments.get(1).testRotations[2]);
+    
+    rotateX(rot[1]);
+    
     translate(0, -62, -62);
     rotateY(-PI/2);
     rotateZ(-PI);   
@@ -232,8 +233,9 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
     rotateZ(PI);
     rotateY(PI/2);
     translate(0, 75, 75);
-    if (!test) rotateX(model.segments.get(2).currentRotations[2]);
-    else rotateX(model.segments.get(2).testRotations[2]);
+    
+    rotateX(rot[2]);
+    
     translate(0, -75, -75);
     rotateY(PI/2);
     rotateZ(-PI);
@@ -241,8 +243,9 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
     rotateZ(PI/2);
     rotateY(PI/2);
     translate(70, 0, 70);
-    if (!test) rotateY(model.segments.get(3).currentRotations[0]);
-    else rotateY(model.segments.get(3).testRotations[0]);
+    
+    rotateY(rot[3]);
+    
     translate(-70, 0, -70);
     rotateY(-PI/2);
     rotateZ(-PI/2);    
@@ -250,8 +253,9 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
     rotateZ(PI);
     rotateY(-PI/2);
     translate(0, 50, 50);
-    if (!test) rotateX(model.segments.get(4).currentRotations[2]);
-    else rotateX(model.segments.get(4).testRotations[2]);
+    
+    rotateX(rot[4]);
+    
     translate(0, -50, -50);
     rotateY(PI/2);
     rotateZ(-PI);    
@@ -259,8 +263,9 @@ PVector calculateEndEffectorPosition(ArmModel model, boolean test) {
     rotateY(-PI/2);
     rotateZ(PI);
     translate(45, 45, 0);
-    if (!test) rotateZ(model.segments.get(5).currentRotations[0]);
-    else rotateZ(model.segments.get(5).testRotations[0]);
+    
+    rotateZ(rot[5]);
+    
     if (activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
       PVector tr = toolFrames[activeToolFrame].getOrigin();
       translate(tr.x, tr.y, tr.z);
@@ -349,166 +354,84 @@ void applyModelRotation(ArmModel model) {
   }
 } // end apply model rotations
 
-
 /**
- * Tries to perform inverse kinematics and aborts if it's taking too long.
- * @param model Arm model to attempt IK with
- * @param idx Index of intermediatePositions array to target
- * @return Success or failure
+ * Calculate the Jacobian matrix for the robotic arm for
+ * a given set of joint rotational values.
  */
-int attemptIK(ArmModel model, int idx) {
-  // if the size is 0 and idx is 0 that means we're already there so there's nothing to do
-  if (intermediatePositions.size() == 0 && idx == 0) return EXEC_SUCCESS;
-  int iter = 0;
-  int slices = 540, closeEnough = 10;
-  int result = EXEC_PROCESSING;
-  while (result != EXEC_SUCCESS) {
-    result = calculateIK(model, intermediatePositions.get(idx), slices, closeEnough);
-    if (result == EXEC_SUCCESS) break;
-    iter++;
-    if (iter > 10) return EXEC_FAILURE;
-    slices += 36;
-    closeEnough++;
-  }
-  
-  return EXEC_SUCCESS;
-}
-
-
-
-/**
- * Calculate joint rotations on an arm model necessary to get the end
- * effector to a given point.
- * @param model Arm model to calculate IK with
- * @param eedp Destination point (end effector destination position)
- * @param slices Granularity of IK attempt
- * @param closeEnough Acceptable distance to destination point
- * @return Success or failure
- */
-int calculateIK(ArmModel model, PVector eedp, int slices, float closeEnough) {
-  
-  float checkAngle = (2*PI)/(float)slices;
-  
-  // loop through each arm segment in turn
-  for (int a = 0; a < model.segments.size(); a++) {
-    Model segment = model.segments.get(a);
-    // loop through each permissible joint rotation of each segment
-    for (int r = 0; r < 3; r++) {
-      if (segment.rotations[r]) {
-        segment.testRotations[r] = segment.currentRotations[r];
-        PVector eetp = calculateEndEffectorPosition(model, true);
-        float closest = dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z);
-        float bestAngle = segment.testRotations[r];
-        for (int n = 0; n < slices; n++) {
-          segment.testRotations[r] += checkAngle;
-          if (segment.anglePermitted(r, checkAngle)) {
-            eetp = calculateEndEffectorPosition(model, true);
-            if (dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z) < closest) {
-              closest = dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z);
-              bestAngle = segment.testRotations[r];
-            }
-          }
-        } // end loop through slices (try all the different angles)
-        bestAngle = clampAngle(bestAngle);
-        segment.testRotations[r] = segment.targetRotations[r] = bestAngle;
-      }
-    } // end loop through permissible joint rotations
-  } // end loop through arm segments
-  
-  // figure out where the end of all the arms is and compare that
-  // to where we want it to be
-  PVector eetp = calculateEndEffectorPosition(model, true);
-  if (dist(eetp.x, eetp.y, eetp.z, eedp.x, eedp.y, eedp.z) < closeEnough) {
-    // calculate whether it's faster to turn CW or CCW
-    for (Model a : model.segments) {
-      for (int r = 0; r < 3; r++) {
-        if (a.rotations[r]) {
-          float blueAngle = a.targetRotations[r] - a.currentRotations[r];
-          blueAngle = clampAngle(blueAngle);
-          if (blueAngle < PI) a.rotationDirections[r] = 1;
-          else a.rotationDirections[r] = -1;
-        }
-      }
-    }
-    return EXEC_SUCCESS;
-  } else return EXEC_PROCESSING;
-} // end calculateIK
-
-void calculateIKJacobian(PVector tgt){
-  float dist = 10;
-  long m = millis();
-  while(true){
-    
-    if(dist < 0.01) break;
-    
-    println("distance from target = " + dist);
-    PVector cPos = calculateEndEffectorPosition(armModel, false);
-    float[][] j = calculateJacobian();
-    float[] angles = armModel.getJointRotations();
-    float[] delta = calculateVectorDelta(cPos, tgt);
-    float[] dAngle = new float[6];
-        
-    for(int i = 0; i < 6; i += 1){
-      dAngle[i] = j[i][0]*delta[0] + j[i][1]*delta[1] + j[i][2]*delta[2];
-      angles[i] += (dAngle[i]*0.0174533);
-    }
-    
-    armModel.setJointRotations(angles);
-    PVector nPos = calculateEndEffectorPosition(armModel, false);
-    dist = calculateVectorDistance(cPos, nPos);
-  }
-  
-  while(millis() != m + 2000);
-  println("IK success!");
-  println();
-}
-
-/**
- * Calculate the Jacobian matrix for the robotic arm at its
- * current position for a certian angular offset of each joint.
- */
-float[][] calculateJacobian(){
-  float dAngle = 0.035;
+float[][] calculateJacobian(float[] angles){
+  float dAngle = 0.0174553;
   float[][] jacobian = new float[6][3];
-  PVector oPos = calculateEndEffectorPosition(armModel, false);
+  PVector oPos = calculateEndEffectorPosition(armModel, angles);
   PVector nPos = new PVector(0, 0, 0);
   
   //examine each segment of the arm
   for(int i = 0; i < 6; i += 1){
-    Model segment = armModel.segments.get(i);
-    //get the rotational axis for each joint
-    for(int j = 0; j < 3; j += 1){
-      if(segment.rotations[j]){
-        //test angular offset
-        segment.currentRotations[j] += dAngle;
-        nPos = calculateEndEffectorPosition(armModel, false);
-        jacobian[i][0] = nPos.x - oPos.x;
-        jacobian[i][1] = nPos.y - oPos.y;
-        jacobian[i][2] = nPos.z - oPos.z;
-        
-        //replace the original rotational value
-        segment.currentRotations[j] -= dAngle;
-        break;
-      }
-    }
+    //test angular offset
+    angles[i] += dAngle;
+    nPos = calculateEndEffectorPosition(armModel, angles);
+    jacobian[i] = calculateVectorDelta(nPos, oPos);
+    //replace the original rotational value
+    angles[i] -= dAngle;
   }
   
   return jacobian;
 }//end calculate jacobian
 
-//calculate the distance between two points represented as point vectors
-float calculateVectorDistance(PVector p1, PVector p2){
-  float dx = p1.x - p2.x;
-  float dy = p1.y - p2.y;
-  float dz = p1.z - p2.z;
-  float dist = sqrt(dx*dx + dy*dy + dz*dz);
-  return dist;
+int calculateIKJacobian(PVector tgt){
+  float[] angles = armModel.getJointRotations();
+  int count = 0;
+  
+  while(count < 1000){
+    PVector cPos = calculateEndEffectorPosition(armModel, angles);
+    float[] delta = calculateVectorDelta(tgt, cPos);
+    float dist = PVector.dist(cPos, tgt);
+    
+    if(dist < 1) break;
+    
+    float[][] jacobian = calculateJacobian(angles);
+    float[] dAngle = new float[6];
+    
+    for(int i = 0; i < 6; i += 1){
+      dAngle[i] = calculateVectorDot(jacobian[i], delta);
+    }
+    
+    float expectedChange[] = {0, 0, 0};
+    for(int i = 0; i < 3; i += 1){
+      for(int j = 0; j < 6; j += 1){
+        expectedChange[i] += dAngle[j] * jacobian[j][i];
+      }
+    }
+    
+    float alpha = calculateVectorDot(expectedChange, delta)/
+                  calculateVectorDot(expectedChange, expectedChange);
+    
+    for(int i = 0; i < 6; i += 1){
+      angles[i] += alpha*dAngle[i]*0.0174553;
+      angles[i] %= TWO_PI;
+    }
+    
+    count += 1;
+  }
+  
+  if(count >= 1000){
+    return EXEC_FAILURE;
+  }
+  else{
+    armModel.setJointRotations(angles);
+    return EXEC_SUCCESS;
+  }
 }
 
 //calculates the change in each coordinate to obtain p2 from p1
 float[] calculateVectorDelta(PVector p1, PVector p2){
   float[] d = {p1.x - p2.x, p1.y - p2.y, p1.z - p2.z};
   return d;
+}
+
+//calculate the dot product of two vectors represented by float arrays
+float calculateVectorDot(float[] v1, float[] v2){
+  float dot = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
+  return dot;
 }
 
 /**
@@ -524,8 +447,6 @@ void calculateDistanceBetweenPoints() {
     distanceBetweenPoints = armModel.motorSpeed * liveSpeed / 60.0;
   else distanceBetweenPoints = 5.0;
 }
-
-
 
 /**
  * Calculate a "path" (series of intermediate positions) between two
@@ -549,7 +470,6 @@ void calculateIntermediatePositions(PVector start, PVector end) {
   }
   interMotionIdx = 0;
 } // end calculate intermediate positions
-
 
 /**
  * Calculate a "path" (series of intermediate positions) between two
@@ -620,7 +540,6 @@ void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float perc
   interMotionIdx = 0;
 } // end calculate continuous positions
 
-
 /**
  * Initiate a new continuous (curved) motion instruction.
  * @param model Arm model to use
@@ -634,9 +553,8 @@ void beginNewContinuousMotion(ArmModel model, PVector start, PVector end,
 {
   calculateContinuousPositions(start, end, next, percentage);
   motionFrameCounter = 0;
-  attemptIK(model, interMotionIdx);
+  calculateIKJacobian(intermediatePositions.get(interMotionIdx));
 }
-
 
 /**
  * Initiate a new fine (linear) motion instruction.
@@ -646,9 +564,8 @@ void beginNewContinuousMotion(ArmModel model, PVector start, PVector end,
 void beginNewLinearMotion(ArmModel model, PVector start, PVector end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
-  attemptIK(model, interMotionIdx);
+  calculateIKJacobian(intermediatePositions.get(interMotionIdx));
 }
-
 
 /**
  * Initiate a new circular motion instruction according to FANUC methodology.
@@ -662,13 +579,10 @@ void beginNewCircularMotion(ArmModel model, PVector p1, PVector p2, PVector p3) 
   intermediatePositions = createArc(createCircleCircumference(p1, p2, p3, 180), p1, p2, p3);
   interMotionIdx = 0;
   motionFrameCounter = 0;
-  attemptIK(model, interMotionIdx);
+  calculateIKJacobian(intermediatePositions.get(interMotionIdx));
 }
 
-
-
 boolean executingInstruction = false;
-
 
 /**
  * Prepare a new program for execution.
@@ -678,7 +592,6 @@ void readyProgram() {
   executingInstruction = false;
   doneMoving = false;
 }
-
 
 /**
  * Move the arm model between two points according to its current speed.
@@ -698,7 +611,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
       interMotionIdx = -1;
       return true;
     }
-    attemptIK(model, interMotionIdx);
+    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
   return false;
 } // end execute linear motion
@@ -1024,7 +937,7 @@ boolean executeSingleInstruction(Instruction ins) {
  * @return Returns true on failure (invalid instruction), false on success
  */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
-      PVector start = calculateEndEffectorPosition(model, false);
+      PVector start = calculateEndEffectorPosition(model, armModel.getJointRotations());
       if (instruction.getMotionType() == MTYPE_JOINT) {
         float[] j = instruction.getVector(program).j;
         for (int n = 0; n < j.length; n++) {

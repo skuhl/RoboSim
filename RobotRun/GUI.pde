@@ -992,71 +992,71 @@ public void keyPressed(){
   } else if(key == 't'){
     float[] rot = {0, 0, 0, 0, 0, 0};
     armModel.setJointRotations(rot);
+    intermediatePositions.clear();
   } else if (key == 'q') {
     hd(0);
     return;
   }
   
-   /* click spacebar once to activate pan button
-    * click spacebar again to deactivate pan button
-    */ 
-   if (key == ' '){ 
-      clickPan += 1;
-      if ((clickPan % 2) == 1){
-         cursorMode = HAND;
-         PImage[] pressed = {loadImage("images/pan_down.png"), loadImage("images/pan_down.png"), loadImage("images/pan_down.png")};
-         if (bt_show.isVisible()){
-              cp5.getController("pan_shrink")
-                 .setImages(pressed);
-         }else{
-              cp5.getController("pan_normal")
-                 .setImages(pressed);
-         }
-            
-      }else{
-         cursorMode = ARROW;
-         PImage[] released = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")}; 
-         if (bt_show.isVisible()){
-              cp5.getController("pan_shrink")
-                 .setImages(released);
-         }else{
-              cp5.getController("pan_normal")
-                 .setImages(released);
-         }
-         doPan = false;   
-      }
-      
-      cursor(cursorMode);
+  /* click spacebar once to activate pan button
+   * click spacebar again to deactivate pan button */ 
+  if (key == ' '){ 
+    clickPan += 1;
+    if ((clickPan % 2) == 1){
+       cursorMode = HAND;
+       PImage[] pressed = {loadImage("images/pan_down.png"), loadImage("images/pan_down.png"), loadImage("images/pan_down.png")};
+       if (bt_show.isVisible()){
+            cp5.getController("pan_shrink")
+               .setImages(pressed);
+       }else{
+            cp5.getController("pan_normal")
+               .setImages(pressed);
+       }
+          
+    }else{
+       cursorMode = ARROW;
+       PImage[] released = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")}; 
+       if (bt_show.isVisible()){
+            cp5.getController("pan_shrink")
+               .setImages(released);
+       }else{
+            cp5.getController("pan_normal")
+               .setImages(released);
+       }
+       doPan = false;   
+    }
+    
+    cursor(cursorMode);
    }
    
-   if (keyCode == SHIFT){ 
-      clickRotate += 1;
-      if ((clickRotate % 2) == 1){
-         cursorMode = MOVE;
-         PImage[] pressed = {loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png")};
-         if (bt_show.isVisible()){
-            cp5.getController("rotate_shrink")
-               .setImages(pressed); 
-         }else{
-            cp5.getController("rotate_normal")
-               .setImages(pressed); 
-         }
-        
-      }else{
-         cursorMode = ARROW;
-         PImage[] released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
-         if (bt_show.isVisible()){
-            cp5.getController("rotate_shrink")
-               .setImages(released); 
-         }else{
-            cp5.getController("rotate_normal")
-               .setImages(released); 
-         }
-         doRotate = false;   
-      }
-      
-      cursor(cursorMode);
-   }
+  if (keyCode == SHIFT){ 
+  clickRotate += 1;
+  if ((clickRotate % 2) == 1){
+     cursorMode = MOVE;
+     PImage[] pressed = {loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png")};
+     if (bt_show.isVisible()){
+        cp5.getController("rotate_shrink")
+           .setImages(pressed); 
+     }else{
+        cp5.getController("rotate_normal")
+           .setImages(pressed); 
+     }
+    
+  }else{
+     cursorMode = ARROW;
+     PImage[] released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
+     if (bt_show.isVisible()){
+        cp5.getController("rotate_shrink")
+           .setImages(released); 
+     }else{
+        cp5.getController("rotate_normal")
+           .setImages(released); 
+     }
+     doRotate = false;   
+  }
+  
+  cursor(cursorMode);
+  }
 }
 
 /* buttons event */
@@ -1498,11 +1498,11 @@ public void f1(int theValue){
            mode = PICK_INSTRUCTION;
            updateScreen(color(255,0,0), color(0));
          } else { // shift+f1 = add new motion instruction
-           PVector eep = calculateEndEffectorPosition(armModel, false);
+           PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
            eep = convertNativeToWorld(eep);
            Program prog = programs.get(select_program);
            int reg = prog.nextRegister();
-           PVector r = armModel.getWpr();
+           PVector r = armModel.getRot();
            float[] j = armModel.getJointRotations();
            prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
                                       j[0], j[1], j[2], j[3], j[4], j[5]), reg);
@@ -1825,11 +1825,11 @@ public void f5(int theValue) {
       }
     } else {
       // overwrite current instruction
-      PVector eep = calculateEndEffectorPosition(armModel, false);
+      PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
       eep = convertNativeToWorld(eep);
       Program prog = programs.get(select_program);
       int reg = prog.nextRegister();
-      PVector r = armModel.getWpr();
+      PVector r = armModel.getRot();
       float[] j = armModel.getJointRotations();
       prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
                                  j[0], j[1], j[2], j[3], j[4], j[5]), reg);
@@ -1868,12 +1868,12 @@ public void f5(int theValue) {
     if (shift == ON) {
       if (inFrame == NAV_USER_FRAMES) {
         if (teachingWhichPoint == 1) { // teaching origin
-          PVector eep = calculateEndEffectorPosition(armModel, false);
+          PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
           currentFrame.setOrigin(convertNativeToWorld(eep));
           teachingWhichPoint++;
           loadThreePointMethod();
         } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
-          PVector eep = calculateEndEffectorPosition(armModel, false);
+          PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
           PVector second = convertNativeToWorld(eep);
           PVector first = currentFrame.getOrigin();
           PVector vec = new PVector(second.x-first.x, second.y-first.y, second.z-first.z);
@@ -2456,32 +2456,42 @@ public void activateLiveMotion(int joint, int dir, int axis) {
       }
     }
   } else if (curCoordFrame == COORD_WORLD) {
-    switch (axis) {
-      // account for different axes in native Processing vs. RobotRun world coordinate systems
-      case 0: 
-        if (armModel.linearMoveSpeeds[0] == 0) armModel.linearMoveSpeeds[0] =  1;
-        else armModel.linearMoveSpeeds[0] = 0;
-        break;
-      case 1:
-        if (armModel.linearMoveSpeeds[0] == 0) armModel.linearMoveSpeeds[0] = -1;
-        else armModel.linearMoveSpeeds[0] = 0;
-        break;
-      case 2:
-        if (armModel.linearMoveSpeeds[2] == 0) armModel.linearMoveSpeeds[2] = -1;
-        else armModel.linearMoveSpeeds[2] = 0;
-        break;
-      case 3:
-        if (armModel.linearMoveSpeeds[2] == 0) armModel.linearMoveSpeeds[2] =  1;
-        else armModel.linearMoveSpeeds[2] = 0;
-        break;
-      case 4:
-        if (armModel.linearMoveSpeeds[1] == 0) armModel.linearMoveSpeeds[1] =  1;
-        else armModel.linearMoveSpeeds[1] = 0;
-        break;
-      case 5:
-        if (armModel.linearMoveSpeeds[1] == 0) armModel.linearMoveSpeeds[1] = -1;
-        else armModel.linearMoveSpeeds[1] = 0;
-        break;
+      //panning coordinates (x/y/z)
+      if(axis >= 0 && axis < 6){
+        //account for different axes in native Processing vs. RobotRun world coordinate systems
+        switch (axis) {
+          //pan -x
+          case 0: 
+            //if(calculateEndEffectorPosition)
+            if (armModel.linearMoveSpeeds[0] == 0) armModel.linearMoveSpeeds[0] =  1;
+            else armModel.linearMoveSpeeds[0] = 0;
+            break;
+          //pan +x
+          case 1:
+            if (armModel.linearMoveSpeeds[0] == 0) armModel.linearMoveSpeeds[0] = -1;
+            else armModel.linearMoveSpeeds[0] = 0;
+            break;
+          //pan -y
+          case 2:
+            if (armModel.linearMoveSpeeds[2] == 0) armModel.linearMoveSpeeds[2] = -1;
+            else armModel.linearMoveSpeeds[2] = 0;
+            break;
+          //pan +y
+          case 3:
+            if (armModel.linearMoveSpeeds[2] == 0) armModel.linearMoveSpeeds[2] =  1;
+            else armModel.linearMoveSpeeds[2] = 0;
+            break;
+          //pan -z
+          case 4:
+            if (armModel.linearMoveSpeeds[1] == 0) armModel.linearMoveSpeeds[1] =  1;
+            else armModel.linearMoveSpeeds[1] = 0;
+            break;
+          //pan +z
+          case 5:
+            if (armModel.linearMoveSpeeds[1] == 0) armModel.linearMoveSpeeds[1] = -1;
+            else armModel.linearMoveSpeeds[1] = 0;
+            break;
+      }
     }
   }
 } // end activateLiveMotion
