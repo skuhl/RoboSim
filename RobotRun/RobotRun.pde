@@ -130,7 +130,6 @@ public void draw() {
   noFill();
   pushMatrix();
   
-  PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
   applyCamera();
 
   pushMatrix();
@@ -225,11 +224,10 @@ public void draw() {
     line(-50000, PLANE_Y, -100 * l, 50000, PLANE_Y, -100 * l);
   }
   
-  
   // Draw all world objects and apply gravity upon them as well
   for (Object s : objects) {
     s.draw();
-    //s.applyGravity();
+    s.applyGravity();
   }
   
   popMatrix();
