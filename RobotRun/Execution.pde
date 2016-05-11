@@ -289,7 +289,7 @@ PVector calculateEndEffectorPosition(ArmModel model, float[] rot) {
  */
 public void drawEndEffectorGridMapping() {
   
-  PVector ee_pos = calculateEndEffectorPosition(armModel, false);
+  PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
   // Change color of the EE mapping based on if it lies below or above the ground plane
   color c = (ee_pos.y <= 0) ? color(255, 0, 0) : color(150, 0, 255);
   
