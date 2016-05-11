@@ -1074,22 +1074,51 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
         for (Model a : model.segments) {
           for (int r = 0; r < 3; r++) {
             if (a.rotations[r]) {
-              
-              /*float blueAngle = minimumDistance(a.targetRotations[r], a.currentRotations[r]);
-              float dist_boundx = minimumDistance(a.jointRanges[r].x, a.currentRotations[r]);
-              float dist_boundy = minimumDistance(a.jointRanges[r].y, a.currentRotations[r]);
-              
-              if ( blueAngle <= 0 && (dist_boundx <= 0 || (dist_boundx > 0 && dist_boundx > blueAngle))
-                                 && (dist_boundy <= 0 || (dist_boundy > 0 && dist_boundy > blueAngle))) {
-                a.rotationDirections[r] = 1;
-              } else {
-                a.rotationDirections[r] = -1;
-              }*/
-              
-             float blueAngle = a.targetRotations[r] - a.currentRotations[r];
+             
+             // The minimum distance between the current and target joint angles
+             float dist_t = minimumDistance(a.currentRotations[r], a.targetRotations[r]);
+             
+             if (a.jointRanges[r].x == 0 && a.jointRanges[r].y == TWO_PI) {
+               
+               // Joint has full range of motion
+               a.rotationDirections[r] = (dist_t < 0) ? -1 : 1;
+             } else {
+               
+               /* Determine if at least one bound lies within the range of the shortest angle
+                * between the current joint angle and the target angle. If so, then take the
+                * longer angle, otherwise choose the shortest angle path. */
+                
+               // The minimum distance from the current joint angle to the lower bound of the joint's range
+               float dist_lb = minimumDistance(a.currentRotations[r], a.jointRanges[r].x);
+               
+               // The minimum distance from the current joint angle to the upper bound of the joint's range
+               float dist_ub = minimumDistance(a.currentRotations[r], a.jointRanges[r].y);
+               
+               if (dist_t < 0) {
+               
+                 if ( (dist_lb < 0 && dist_lb > dist_t) || (dist_ub < 0 && dist_ub > dist_t) ) {
+                   
+                   // One or both bounds lie within the shortest path
+                   a.rotationDirections[r] = 1;
+                 } else {
+                   a.rotationDirections[r] = -1;
+                 }
+               } else if (dist_t > 0) {
+               
+                 if ( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {
+                   
+                   // One or both bounds lie within the shortest path
+                   a.rotationDirections[r] = -1;
+                 } else {
+                   a.rotationDirections[r] = 1;
+                 }
+               }
+             }
+             
+             /*float blueAngle = a.targetRotations[r] - a.currentRotations[r];
               blueAngle = clampAngle(blueAngle);
               if (blueAngle < PI) a.rotationDirections[r] = 1;
-              else a.rotationDirections[r] = -1;
+              else a.rotationDirections[r] = -1;*/
             }
           }
         }
@@ -1130,15 +1159,15 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
       return false;
 } // end setUpInstruction
 
-/* Returns the angle with the smallest magnitude that lies
- * between the two given angles on the Unit Circle */
+/* Returns the angle with the smallest magnitude between
+ * the two given angles on the Unit Circle */
 public float minimumDistance(float angle1, float angle2) {
-  float dist = clampAngle(angle1 - angle2);
+  float dist = clampAngle(angle2) - clampAngle(angle1);
   
   if (dist > PI) {
-    dist = PI - dist;
+    dist -= TWO_PI;
   } else if (dist < -PI) {
-    dist = PI + dist;
+    dist += TWO_PI;
   }
   
   return dist;
