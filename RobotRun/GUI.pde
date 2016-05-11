@@ -34,7 +34,8 @@ final int NONE = 0,
           SET_FRAME_INSTRUCTION = 26,
           EDIT_MENU = 27,
           CONFIRM_DELETE = 28;
-static int STOP_MOVEMENT = 0;
+static boolean STOP_MOVEMENT = false;
+static int     EE_MAPPING = 0;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -996,6 +997,8 @@ public void keyPressed(){
   } else if (key == 'q') {
     hd(0);
     return;
+  } else if (key == 'e') {
+    EE_MAPPING = (EE_MAPPING + 1) % 3;
   }
   
   /* click spacebar once to activate pan button
@@ -1996,7 +1999,7 @@ public void f5(int theValue) {
 
 /* Stops all joint movement */
 public void hd(int theValue) {
-  STOP_MOVEMENT = 1;
+  STOP_MOVEMENT = true;
   
   for (Model model : armModel.segments) {
     model.jointsMoving[0] = 0;
@@ -2108,7 +2111,10 @@ public void ENTER(int theValue){
          break;
       case SET_INSTRUCTION_SPEED:
          float tempSpeed = Float.parseFloat(workingText);
-         if (speedInPercentage) tempSpeed /= 100.0;
+         if (speedInPercentage) {
+           if (tempSpeed > 100) tempSpeed = 10; 
+           tempSpeed /= 100.0;
+         }
          else if (tempSpeed > armModel.motorSpeed) tempSpeed = armModel.motorSpeed;
          MotionInstruction castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
          castIns.setSpeed(tempSpeed);

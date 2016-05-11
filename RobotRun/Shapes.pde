@@ -166,7 +166,7 @@ public class Object {
   // The area around an object used for collision handling
   public final Shape hit_box;
   // Used when an object is held by the robot
-  private boolean disable_gravity;
+  public boolean disable_gravity;
   
   public Object(Shape f, Box hb) {
     form = f;
@@ -183,9 +183,9 @@ public class Object {
       if (bottom.y < PLANE_Y) {
         
         // Move the object downward
-        float new_y = min(50f, PLANE_Y - bottom.y);
-        form.move(0, new_y, 0);
-        hit_box.move(0, new_y, 0);
+        float delta_y = min(20f, PLANE_Y - bottom.y);
+        form.move(0, delta_y, 0);
+        hit_box.move(0, delta_y, 0);
       }
     }
   }

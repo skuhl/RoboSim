@@ -88,10 +88,10 @@ public void setup() {
   intermediatePositions = new ArrayList<PVector>();
   int loadit = loadState();
   
-  for (int n = 0; n < toolFrames.length; n++) {
+  /*for (int n = 0; n < toolFrames.length; n++) {
     toolFrames[n] = new Frame();
     userFrames[n] = new Frame();
-  }
+  }*/
   
   // Create the floor of the environment
   floor = new Polygon(new PVector[] { new PVector(base_center.x - 50000, PLANE_Y, base_center.z - 50000), 
@@ -131,7 +131,6 @@ public void draw() {
   pushMatrix();
   
   PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
-  
   applyCamera();
 
   pushMatrix();
@@ -206,9 +205,7 @@ public void draw() {
   popMatrix(); /* */
   // END TESTING CODE
   
-  // Draw End Effector mapping to the grid plane
-  stroke(255, 0, 255);
-  line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
+  drawEndEffectorGridMapping();
   
   // Create ground plane under the robot's base
   //floor.draw();
@@ -218,7 +215,7 @@ public void draw() {
   line(0, PLANE_Y, -50000, 0, PLANE_Y, 50000);
   line(-50000, PLANE_Y, 0, 50000, PLANE_Y, 0);
   
-  // Draw grid lines every 100 units in the xz plane, on the floor plane
+  // Draw grid lines every 100 units in the x and z plane, on the floor plane
   stroke(25, 25, 25);
   for (int l = 1; l < 500; ++l) {
     line(100 * l, PLANE_Y, -50000, 100 * l, PLANE_Y, 50000);
@@ -229,10 +226,10 @@ public void draw() {
   }
   
   
-  // Draw alll world objects and apply gravity upon them as well
+  // Draw all world objects and apply gravity upon them as well
   for (Object s : objects) {
     s.draw();
-    s.applyGravity();
+    //s.applyGravity();
   }
   
   popMatrix();

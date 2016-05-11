@@ -71,6 +71,17 @@ public class Frame {
     for (int n = 0; n < axes.length; n++) axes[n] = new PVector(0,0,0);
   }
   
+  /* Used for loading Frames from a file */
+  public Frame(PVector origin, PVector wpr, PVector[] axes) {
+    this.origin = origin;
+    this.wpr = wpr;
+    this.axes = new PVector[axes.length];
+    
+    for (int idx = 0; idx < this.axes.length; ++idx) {
+      this.axes[idx] = axes[idx];
+     }
+  }
+  
   public PVector getOrigin() { return origin; }
   public void setOrigin(PVector in) { origin = in; }
   public PVector getWpr() { return wpr; }
@@ -84,6 +95,21 @@ public class Frame {
   public void setAxis(int idx, PVector in) {
     if (idx >= 0 && idx < axes.length) axes[idx] = in;
     if (idx == 2) wpr = vectorConvertTo(new PVector(1,1,1), axes[0], axes[1], axes[2]);
+  }
+  
+  public String toExport() {
+    String str = "<Frame>";
+    str += " ";
+    
+    str += Float.toString(origin.x) + " " + Float.toString(origin.y) + " " + Float.toString(origin.z) + " ";
+    str += Float.toString(wpr.x) + " " + Float.toString(wpr.y) + " "  + Float.toString(wpr.z) + " ";
+    
+    for (int idx = 0; idx < axes.length; ++idx) {
+      str += Float.toString(axes[idx].x) + " " + Float.toString(axes[idx].y) + " "  + Float.toString(axes[idx].z) + " ";
+    }
+    
+    str+= "</Frame>";
+    return str;
   }
 } // end Frame class
 
