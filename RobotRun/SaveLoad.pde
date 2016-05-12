@@ -91,10 +91,14 @@ int loadState() {
   if (!Files.exists(p1)) return 0;
   if(loadPrograms(p1)==0) return 0;
   
+  // If loading fails that create all new Frames
   Path p2 = Paths.get(sketchPath("tmp/frames.ser"));
   if (!Files.exists(p2)) {
     
-    for (int n = 0; n < toolFrames.length; n++) {
+    toolFrames = new Frame[10];
+    userFrames = new Frame[10];
+    
+    for (int n = 0; n < toolFrames.length; ++n) {
       toolFrames[n] = new Frame();
       userFrames[n] = new Frame();
     }

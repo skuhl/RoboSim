@@ -97,6 +97,7 @@ public class Frame {
     if (idx == 2) wpr = vectorConvertTo(new PVector(1,1,1), axes[0], axes[1], axes[2]);
   }
   
+  /* Used for saving the Frame to a file */
   public String toExport() {
     String str = "<Frame>";
     str += " ";

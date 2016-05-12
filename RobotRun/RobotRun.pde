@@ -87,10 +87,6 @@ public void setup() {
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   intermediatePositions = new ArrayList<PVector>();
   int loadit = loadState();
-  /*for (int n = 0; n < toolFrames.length; n++) {
-    toolFrames[n] = new Frame();
-    userFrames[n] = new Frame();
-  }*/
   
   // Create the floor of the environment
   floor = new Polygon(new PVector[] { new PVector(base_center.x - 50000, PLANE_Y, base_center.z - 50000), new PVector(base_center.x - 50000, PLANE_Y, base_center.z + 50000),
