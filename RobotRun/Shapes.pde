@@ -24,10 +24,7 @@ public abstract class Shape {
   
   /* Define how a shape is drawn in the window */
   public abstract void draw();
-  
-  /* Return the point of the shape that has the highest z-value
-   * (the z plane extends positively downward) */
-  public abstract PVector lowestPointY();
+
 }
 
 /**
@@ -49,19 +46,6 @@ public class Polygon extends Shape {
       v.y += y;
       v.z += z;
     }
-  }
-  
-  public PVector lowestPointY() {
-    PVector lowest = vertices[0];
-    
-    // Find vertex with the lowest y value
-    for (PVector v : vertices) {
-      if (v.y < lowest.y) {
-        lowest = v;
-      }
-    }
-    
-    return new PVector(lowest.x, lowest.y, lowest.z);
   }
   
   public void draw() {
@@ -138,10 +122,6 @@ public class Box extends Shape {
     center.z += z;
   }
   
-  public PVector lowestPointY() {
-    return new PVector(center.x, center.y + hgt / 2, center.z);
-  }
-  
   public void draw() {
     pushMatrix();
     
@@ -172,22 +152,6 @@ public class Object {
     form = f;
     hit_box = hb;
     disable_gravity = false;
-  }
-  
-  /* Apply a linear form of gravity on world objects */
-  public void applyGravity() {
-    
-    if (!disable_gravity) {
-      PVector bottom = form.lowestPointY();
-      
-      if (bottom.y < PLANE_Y) {
-        
-        // Move the object downward
-        float delta_y = min(20f, PLANE_Y - bottom.y);
-        form.move(0, delta_y, 0);
-        hit_box.move(0, delta_y, 0);
-      }
-    }
   }
   
   public void draw() {

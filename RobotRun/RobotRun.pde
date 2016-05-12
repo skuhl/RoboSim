@@ -87,14 +87,11 @@ public void setup() {
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   intermediatePositions = new ArrayList<PVector>();
   int loadit = loadState();
-<<<<<<< HEAD
-=======
   
   /*for (int n = 0; n < toolFrames.length; n++) {
     toolFrames[n] = new Frame();
     userFrames[n] = new Frame();
   }*/
->>>>>>> 551f9aeb2545a82e97effc5d644266f85054c235
   
   // Create the floor of the environment
   floor = new Polygon(new PVector[] { new PVector(base_center.x - 50000, PLANE_Y, base_center.z - 50000), 
@@ -131,9 +128,22 @@ public void draw() {
   background(255);
   noStroke();
   noFill();
+  
   pushMatrix();
   
   applyCamera();
+  
+  /*pushMatrix();
+  // Display EE axies
+  applyModelRotation(armModel);
+  stroke(0, 255, 0);
+  line(5000, 0, 0, -50000, 0, 0);
+  stroke(255, 0, 0);
+  line(0, 50000, 0, 0, -50000, 0);
+  stroke(0, 0, 255);
+  line(0, 0, 50000, 0, 0, -50000);
+  
+  popMatrix();*/
 
   pushMatrix();
   armModel.draw(); 
@@ -217,7 +227,7 @@ public void draw() {
   line(0, PLANE_Y, -50000, 0, PLANE_Y, 50000);
   line(-50000, PLANE_Y, 0, 50000, PLANE_Y, 0);
   
-  // Draw grid lines every 100 units in the x and z plane, on the floor plane
+  // Draw grid lines every 100 units, from -50000 to 50000, in the x and z plane, on the floor plane
   stroke(25, 25, 25);
   for (int l = 1; l < 500; ++l) {
     line(100 * l, PLANE_Y, -50000, 100 * l, PLANE_Y, 50000);
@@ -230,7 +240,6 @@ public void draw() {
   // Draw all world objects and apply gravity upon them as well
   for (Object s : objects) {
     s.draw();
-    s.applyGravity();
   }
   
   popMatrix();

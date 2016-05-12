@@ -67,6 +67,8 @@ Button bt_show, bt_hide,
        ;
 Textlabel fn_info, num_info;
 
+Scrollbar sb = null;
+
 String workingText; // when entering text or a number
 String workingTextSuffix;
 boolean speedInPercentage;
@@ -880,7 +882,9 @@ void gui(){
       .setCaptionLabel("COORD")
       .setColorBackground(color(127,127,255))
       .setColorCaptionLabel(color(255,255,255))  
-      .moveTo(g2);      
+      .moveTo(g2); 
+      
+    // SCROLLBAR
 } 
 
 /* Highlight the buttons in the pendant corresponding to the motion of the robot
@@ -921,7 +925,9 @@ public void updateButtonColors() {
 
 /* mouse events */
 public void mousePressed(){
-  
+   if (sb != null) {
+     sb.focus = mouseX >= sb.POS_X && mouseX <= (sb.POS_X + sb.S_LEN) && mouseY >= sb.slider_pos_y && mouseY <= (sb.slider_pos_y + sb.S_LEN);
+   } 
   
    if ((clickPan % 2) == 1 ) { // pan button is pressed
       if (doPan) {
@@ -940,6 +946,11 @@ public void mousePressed(){
    }
 }
 
+public void mouseDragged() {
+  if (sb != null) {
+    sb.update();
+  }
+}
 
 public void mouseMoved(){
    if (doPan){
@@ -953,15 +964,26 @@ public void mouseMoved(){
 }
 
 
-// scroll mouse to zoom in / out
+
 public void mouseWheel(MouseEvent event){
-   float e = event.getCount();
-   if (e > 0 ) {
-      myscale *= 1.1;
-   }
-   if (e < 0){
-      myscale *= 0.9; 
-   }
+  // TODO add textarea check for scrolling
+  if (sb != null && sb.focus) {
+    sb.increment_slider(event.getCount() / 2f);
+  } else {
+    // scroll mouse to zoom in / out
+    float e = event.getCount();
+    if (e > 0 ) {
+       myscale *= 1.1;
+    }
+    if (e < 0){
+       myscale *= 0.9; 
+    }
+  }
+}
+
+public void mouseReleased() {
+  // Remove focus from the Scrollbar
+  if (sb != null) { sb.focus = false; }
 }
 
 public void keyPressed(){

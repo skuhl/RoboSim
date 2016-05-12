@@ -291,7 +291,7 @@ public void drawEndEffectorGridMapping() {
   
   PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
   // Change color of the EE mapping based on if it lies below or above the ground plane
-  color c = (ee_pos.y <= 0) ? color(255, 0, 0) : color(150, 0, 255);
+  color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);
   
   // Toggle EE mapping type with 'e'
   switch (EE_MAPPING) {
