@@ -87,11 +87,21 @@ public void setup() {
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   intermediatePositions = new ArrayList<PVector>();
   int loadit = loadState();
+<<<<<<< HEAD
+=======
+  
+  /*for (int n = 0; n < toolFrames.length; n++) {
+    toolFrames[n] = new Frame();
+    userFrames[n] = new Frame();
+  }*/
+>>>>>>> 551f9aeb2545a82e97effc5d644266f85054c235
   
   // Create the floor of the environment
-  floor = new Polygon(new PVector[] { new PVector(base_center.x - 50000, PLANE_Y, base_center.z - 50000), new PVector(base_center.x - 50000, PLANE_Y, base_center.z + 50000),
-                                      new PVector(base_center.x + 50000, PLANE_Y, base_center.z + 50000), new PVector(base_center.x + 50000, PLANE_Y, base_center.z - 50000) },
-                      color(205, 205, 205), color(205, 205, 205));
+  floor = new Polygon(new PVector[] { new PVector(base_center.x - 50000, PLANE_Y, base_center.z - 50000), 
+                                      new PVector(base_center.x - 50000, PLANE_Y, base_center.z + 50000),
+                                      new PVector(base_center.x + 50000, PLANE_Y, base_center.z + 50000), 
+                                      new PVector(base_center.x + 50000, PLANE_Y, base_center.z - 50000) },
+                                      color(205, 205, 205), color(205, 205, 205));
   
   // Intialize world objects
   // Create a small, blue cube
@@ -217,11 +227,10 @@ public void draw() {
     line(-50000, PLANE_Y, -100 * l, 50000, PLANE_Y, -100 * l);
   }
   
-  
   // Draw all world objects and apply gravity upon them as well
   for (Object s : objects) {
     s.draw();
-    //s.applyGravity();
+    s.applyGravity();
   }
   
   popMatrix();
