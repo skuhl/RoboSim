@@ -58,6 +58,7 @@ void saveState() {
       out.write(size.getBytes("UTF-8"));
       
       for (int idx = 0; idx < toolFrames.length; ++idx) {
+        println(idx);
         out.write( toolFrames[idx].toExport().getBytes( Charset.forName("UTF-8") ) );
         out.write( (" ").getBytes( Charset.forName("UTF-8") ) );
       }

@@ -15,7 +15,6 @@ public class Model {
   // Joint ranges follow a clockwise format running from the PVector.x to PVector.y, where PVector.x and PVector.y range from [0, TWO_PI]
   public PVector[] jointRanges = new PVector[3];
   public float[] currentRotations = new float[3]; // current rotation value
-  public float[] testRotations = new float[3]; // used while performing IK
   public float[] targetRotations = new float[3]; // we want to be rotated to this value
   public int[] rotationDirections = new int[3]; // control rotation direction so we
                                                 // don't "take the long way around"

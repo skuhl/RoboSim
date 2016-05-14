@@ -2005,16 +2005,16 @@ public void f5(int theValue) {
       } // end if inFrame == NAV_TOOL_FRAMES
     }
   } else if (mode == CONFIRM_DELETE) {
-         Program prog = programs.get(select_program);
-         if (select_instruction >= prog.getInstructions().size()) {
-           select_instruction = active_instruction = prog.getInstructions().size()-1;
-         }
-         active_row = 0;
-         active_col = 0;
-         loadInstructions(select_program);
-         mode = INSTRUCTION_NAV;
-         options.clear();
-         updateScreen(color(255,0,0), color(0,0,0));
+     Program prog = programs.get(select_program);
+     if (select_instruction >= prog.getInstructions().size()) {
+       select_instruction = active_instruction = prog.getInstructions().size()-1;
+     }
+     active_row = 0;
+     active_col = 0;
+     loadInstructions(select_program);
+     mode = INSTRUCTION_NAV;
+     options.clear();
+     updateScreen(color(255,0,0), color(0,0,0));
   }
   
 }
@@ -2036,14 +2036,24 @@ public void hd(int theValue) {
 public void fd(int theValue) {
   if (shift == ON) {
     currentProgram = programs.get(select_program);
-    if (step == OFF) readyProgram();
+    if (step == OFF){
+      readyProgram();
+    }
     else {
+      println("active prog: " + active_program);
+      println("selected instruct: " + select_instruction);
+      println("active instruct: " + active_instruction);
       Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
+      currentInstruction = select_instruction;
+      
       if (ins instanceof MotionInstruction) {
         singleInstruction = (MotionInstruction)ins;
         setUpInstruction(programs.get(active_program), armModel, singleInstruction);
-        if (active_instruction < programs.get(active_program).getInstructions().size()-1)
+        
+        if (active_instruction < programs.get(active_program).getInstructions().size()-1){
           select_instruction = active_instruction = (active_instruction+1);
+        }
+        
         loadInstructions(select_program);
         updateScreen(color(255,0,0), color(0));
       }

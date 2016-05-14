@@ -69,10 +69,10 @@ void createTestProgram() {
   programs.add(program4);
   //currentProgram = program4;
   
-  for (int n = 0; n < 22; n++) {
+  /*for (int n = 0; n < 22; n++) {
      programs.add(new Program("Xtra" + Integer.toString(n)));
      
-  }
+  }*/
   saveState();
 } // end createTestProgram()
 
@@ -423,7 +423,7 @@ int calculateIKJacobian(PVector tgt){
     float[] delta = calculateVectorDelta(tgt, cPos);
     float dist = PVector.dist(cPos, tgt);
     
-    if(dist < 1) break;
+    if(dist < 0.5) break;
     
     float[][] jacobian = calculateJacobian(angles);
     float[] dAngle = new float[6];
@@ -564,7 +564,15 @@ void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float perc
   int secondaryIdx = 0; // accessor for secondary targets
   mu = 0;
   increment /= 2.0;
-  PVector currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
+  
+  PVector currentPoint;
+  if(intermediatePositions.size() > 0){
+    currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
+  }
+  else{
+    currentPoint = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+  }
+  
   for (int n = transitionPoint; n < numberOfPoints; n++) {
     mu += increment;
     intermediatePositions.add(new PVector(
@@ -590,7 +598,8 @@ void beginNewContinuousMotion(ArmModel model, PVector start, PVector end,
 {
   calculateContinuousPositions(start, end, next, percentage);
   motionFrameCounter = 0;
-  calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+  if(intermediatePositions.size() > 0)
+    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
 }
 
 /**
@@ -601,7 +610,8 @@ void beginNewContinuousMotion(ArmModel model, PVector start, PVector end,
 void beginNewLinearMotion(ArmModel model, PVector start, PVector end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
-  calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+  if(intermediatePositions.size() > 0)
+    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
 }
 
 /**
@@ -616,7 +626,8 @@ void beginNewCircularMotion(ArmModel model, PVector p1, PVector p2, PVector p3) 
   intermediatePositions = createArc(createCircleCircumference(p1, p2, p3, 180), p1, p2, p3);
   interMotionIdx = 0;
   motionFrameCounter = 0;
-  calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+  if(intermediatePositions.size() > 0)
+    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
 }
 
 boolean executingInstruction = false;
@@ -641,7 +652,6 @@ boolean executeMotion(ArmModel model, float speedMult) {
   // which is contained in the motion instruction
   float currentSpeed = model.motorSpeed * speedMult;
   if (currentSpeed * motionFrameCounter > distanceBetweenPoints) {
-    model.instantRotation();
     interMotionIdx++;
     motionFrameCounter = 0;
     if (interMotionIdx >= intermediatePositions.size()) {
@@ -900,8 +910,9 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
  * @return Finished yet (false=no, true=yes)
  */
 boolean executeProgram(Program program, ArmModel model) {
-  if (program == null || currentInstruction >= program.getInstructions().size())
+  if (program == null || currentInstruction >= program.getInstructions().size()){
     return true;
+  }
   Instruction ins = program.getInstructions().get(currentInstruction);
   if (ins instanceof MotionInstruction) {
     MotionInstruction instruction = (MotionInstruction)ins;
@@ -953,7 +964,9 @@ boolean executeSingleInstruction(Instruction ins) {
         return true;
       }
       return executeMotion(armModel, instruction.getSpeedForExec(armModel));
-    } else return armModel.interpolateRotation(instruction.getSpeedForExec(armModel));
+    } else {
+      return armModel.interpolateRotation(instruction.getSpeedForExec(armModel));
+    }
   } else if (ins instanceof ToolInstruction) {
     ToolInstruction instruction = (ToolInstruction)ins;
     instruction.execute();

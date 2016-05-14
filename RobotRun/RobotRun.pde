@@ -117,10 +117,18 @@ public void draw() {
 
   background(127);
   
-  if (!doneMoving) doneMoving = executeProgram(currentProgram, armModel);
-  else if (singleInstruction != null) {
-    if (executeSingleInstruction(singleInstruction)) singleInstruction = null;    
+  if (!doneMoving){
+    doneMoving = executeProgram(currentProgram, armModel);
   }
+  else if (singleInstruction != null) {
+    if (executeSingleInstruction(singleInstruction)){
+      singleInstruction = null;
+    }
+  }
+  else{
+    intermediatePositions.clear();
+  }
+
   
   armModel.executeLiveMotion(); // respond to manual movement from J button presses
   
@@ -153,17 +161,17 @@ public void draw() {
   noLights();
   
   // TESTING CODE: DRAW INTERMEDIATE POINTS
-  /*noStroke();
+  noStroke();
   pushMatrix();
   if (intermediatePositions != null) {
     for (PVector v : intermediatePositions) {
       pushMatrix();
       translate(v.x, v.y, v.z);
-      sphere(10);
+      sphere(5);
       popMatrix();
     }
   }
-  popMatrix(); /* */
+  popMatrix(); 
   // TESTING CODE: DRAW END EFFECTOR POSITION
   /*pushMatrix();
   //applyCamera();
@@ -174,7 +182,7 @@ public void draw() {
   translate(0, 0, -400);
   stroke(0, 255, 0);
   sphere(50);
-  popMatrix(); /* */
+  popMatrix(); */
   // END TESTING CODE
   // TESTING CODE: DRAW USER FRAME 0
   /*PVector ufo = convertWorldToNative(userFrames[0].getOrigin());
@@ -214,7 +222,7 @@ public void draw() {
   pushMatrix();
   translate(ufz.x, ufz.y, ufz.z);
   sphere(15);
-  popMatrix(); /* */
+  popMatrix(); */
   // END TESTING CODE
   
   drawEndEffectorGridMapping();
