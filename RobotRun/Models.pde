@@ -373,7 +373,8 @@ public class ArmModel {
     
     if (curCoordFrame == COORD_JOINT) {
       
-      for (Model model : segments) {
+      for (int i = 0; i < segments.size(); i += 1) {
+        Model model = segments.get(i);
         for (int n = 0; n < 3; n++) {
           if (model.rotations[n]) {
             float trialAngle = model.currentRotations[n] +
@@ -408,10 +409,13 @@ public class ArmModel {
               } else {
                 model.currentRotations[n] = trialAngle;
               }  
-            } else model.jointsMoving[n] = 0;
+            } else {
+              model.jointsMoving[n] = 0;
+            }
           }
         }
       }
+      updateButtonColors();
     } else if (curCoordFrame == COORD_WORLD) {
       //only move if our movement vector is non-zero
       if (linearMoveSpeeds[0] != 0 || linearMoveSpeeds[1] != 0 || linearMoveSpeeds[2] != 0) {
@@ -442,6 +446,7 @@ public class ArmModel {
         int r = calculateIKJacobian(intermediatePositions.get(0));
         if(r == EXEC_FAILURE){
           intermediatePositions.clear();
+          updateButtonColors();
           linearMoveSpeeds[0] = 0;
           linearMoveSpeeds[1] = 0;
           linearMoveSpeeds[2] = 0;

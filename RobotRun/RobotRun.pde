@@ -157,7 +157,6 @@ public void draw() {
   armModel.draw(); 
   popMatrix();
   
-  updateButtonColors();
   noLights();
   
   // TESTING CODE: DRAW INTERMEDIATE POINTS
