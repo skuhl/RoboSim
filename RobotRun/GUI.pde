@@ -34,6 +34,8 @@ final int NONE = 0,
           SET_FRAME_INSTRUCTION = 26,
           EDIT_MENU = 27,
           CONFIRM_DELETE = 28;
+final int COLOR_DEFAULT = -8421377,
+          COLOR_ACTIVE = -65536;
 static boolean STOP_MOVEMENT = false;
 static int     EE_MAPPING = 0;
 
@@ -881,6 +883,7 @@ void gui(){
       .setColorBackground(color(127,127,255))
       .setColorCaptionLabel(color(255,255,255))  
       .moveTo(g2); 
+<<<<<<< HEAD
 } 
 
 /* Highlight the buttons in the pendant corresponding to the motion of the robot
@@ -917,6 +920,10 @@ public void updateButtonColors() {
       ((Button)cp5.get("JOINT" + (seg + 1) + "_POS")).setColorBackground(regular);
     }
   }
+=======
+      
+    // SCROLLBAR
+>>>>>>> f4992118306087bcfc62db56e4c0d9cabac89fd6
 }
 
 /* mouse events */
@@ -2000,16 +2007,16 @@ public void f5(int theValue) {
       } // end if inFrame == NAV_TOOL_FRAMES
     }
   } else if (mode == CONFIRM_DELETE) {
-         Program prog = programs.get(select_program);
-         if (select_instruction >= prog.getInstructions().size()) {
-           select_instruction = active_instruction = prog.getInstructions().size()-1;
-         }
-         active_row = 0;
-         active_col = 0;
-         loadInstructions(select_program);
-         mode = INSTRUCTION_NAV;
-         options.clear();
-         updateScreen(color(255,0,0), color(0,0,0));
+     Program prog = programs.get(select_program);
+     if (select_instruction >= prog.getInstructions().size()) {
+       select_instruction = active_instruction = prog.getInstructions().size()-1;
+     }
+     active_row = 0;
+     active_col = 0;
+     loadInstructions(select_program);
+     mode = INSTRUCTION_NAV;
+     options.clear();
+     updateScreen(color(255,0,0), color(0,0,0));
   }
   
 }
@@ -2031,14 +2038,24 @@ public void hd(int theValue) {
 public void fd(int theValue) {
   if (shift == ON) {
     currentProgram = programs.get(select_program);
-    if (step == OFF) readyProgram();
+    if (step == OFF){
+      readyProgram();
+    }
     else {
+      println("active prog: " + active_program);
+      println("selected instruct: " + select_instruction);
+      println("active instruct: " + active_instruction);
       Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
+      currentInstruction = select_instruction;
+      
       if (ins instanceof MotionInstruction) {
         singleInstruction = (MotionInstruction)ins;
         setUpInstruction(programs.get(active_program), armModel, singleInstruction);
-        if (active_instruction < programs.get(active_program).getInstructions().size()-1)
+        
+        if (active_instruction < programs.get(active_program).getInstructions().size()-1){
           select_instruction = active_instruction = (active_instruction+1);
+        }
+        
         loadInstructions(select_program);
         updateScreen(color(255,0,0), color(0));
       }
@@ -2522,52 +2539,204 @@ public void activateLiveMotion(int joint, int dir, int axis) {
 
 public void JOINT1_NEG(int theValue) {
   activateLiveMotion(0, -1, 0);
+  int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
+  int c2 = ((Button)cp5.get("JOINT1_POS")).getColor().getBackground();
+  
+  if(c1 == COLOR_DEFAULT && c2 == COLOR_DEFAULT){
+    //both buttons have the default color, set this one to highlight
+    ((Button)cp5.get("JOINT1_NEG")).setColorBackground(COLOR_ACTIVE);
+  }
+  else{
+    ((Button)cp5.get("JOINT1_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT1_POS")).setColorBackground(COLOR_DEFAULT);
+  }
 }
 
 public void JOINT1_POS(int theValue) {
   activateLiveMotion(0, 1, 1);
+  int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
+  int c2 = ((Button)cp5.get("JOINT1_POS")).getColor().getBackground();
+  
+  if(c1 == COLOR_DEFAULT && c2 == COLOR_DEFAULT){
+    //both buttons have the default color, set this one to highlight
+    ((Button)cp5.get("JOINT1_POS")).setColorBackground(COLOR_ACTIVE);
+  }
+  else{
+    //stopping movement, set both buttons to default
+    ((Button)cp5.get("JOINT1_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT1_POS")).setColorBackground(COLOR_DEFAULT);
+  }
 }
 
 public void JOINT2_NEG(int theValue) {
   activateLiveMotion(1, -1, 2);
+  int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
+  int c2 = ((Button)cp5.get("JOINT2_POS")).getColor().getBackground();
+  
+  if(c1 == COLOR_DEFAULT && c2 == COLOR_DEFAULT){
+    //both buttons have the default color, set this one to highlight
+    ((Button)cp5.get("JOINT2_NEG")).setColorBackground(COLOR_ACTIVE);
+  }
+  else{
+    ((Button)cp5.get("JOINT2_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT2_POS")).setColorBackground(COLOR_DEFAULT);
+  }
 }
 
 public void JOINT2_POS(int theValue) {
   activateLiveMotion(1, 1, 3);
+  int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
+  int c2 = ((Button)cp5.get("JOINT2_POS")).getColor().getBackground();
+  
+  if(c1 == COLOR_DEFAULT && c2 == COLOR_DEFAULT){
+    //both buttons have the default color, set this one to highlight
+    ((Button)cp5.get("JOINT2_POS")).setColorBackground(COLOR_ACTIVE);
+  }
+  else{
+    ((Button)cp5.get("JOINT2_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT2_POS")).setColorBackground(COLOR_DEFAULT);
+  }
 }
 
 public void JOINT3_NEG(int theValue) {
   activateLiveMotion(2, -1, 4);
+  int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
+  int c2 = ((Button)cp5.get("JOINT3_POS")).getColor().getBackground();
+  
+  if(c1 == COLOR_DEFAULT && c2 == COLOR_DEFAULT){
+    //both buttons have the default color, set this one to highlight
+    ((Button)cp5.get("JOINT3_NEG")).setColorBackground(COLOR_ACTIVE);
+  }
+  else{
+    ((Button)cp5.get("JOINT3_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT3_POS")).setColorBackground(COLOR_DEFAULT);
+  }
 }
 
 public void JOINT3_POS(int theValue) {
   activateLiveMotion(2, 1, 5);
+  int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
+  int c2 = ((Button)cp5.get("JOINT3_POS")).getColor().getBackground();
+  
+  if(c1 == COLOR_DEFAULT && c2 == COLOR_DEFAULT){
+    //both buttons have the default color, set this one to highlight
+    ((Button)cp5.get("JOINT3_POS")).setColorBackground(COLOR_ACTIVE);
+  }
+  else{
+    ((Button)cp5.get("JOINT3_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT3_POS")).setColorBackground(COLOR_DEFAULT);
+  }
 }
 
 public void JOINT4_NEG(int theValue) {
   activateLiveMotion(3, -1, 0);
+  int c1 = ((Button)cp5.get("JOINT4_NEG")).getColor().getBackground();
+  int c2 = ((Button)cp5.get("JOINT4_POS")).getColor().getBackground();
+  
+  if(c1 == COLOR_DEFAULT && c2 == COLOR_DEFAULT){
+    //both buttons have the default color, set this one to highlight
+    ((Button)cp5.get("JOINT4_NEG")).setColorBackground(COLOR_ACTIVE);
+  }
+  else{
+    ((Button)cp5.get("JOINT4_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT4_POS")).setColorBackground(COLOR_DEFAULT);
+  }
 }
 
 public void JOINT4_POS(int theValue) {
   activateLiveMotion(3, 1, 1);
+  int c1 = ((Button)cp5.get("JOINT4_NEG")).getColor().getBackground();
+  int c2 = ((Button)cp5.get("JOINT4_POS")).getColor().getBackground();
+  
+  if(c1 == COLOR_DEFAULT && c2 == COLOR_DEFAULT){
+    //both buttons have the default color, set this one to highlight
+    ((Button)cp5.get("JOINT4_POS")).setColorBackground(COLOR_ACTIVE);
+  }
+  else{
+    ((Button)cp5.get("JOINT4_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT4_POS")).setColorBackground(COLOR_DEFAULT);
+  }
 }
 
 public void JOINT5_NEG(int theValue) {
   activateLiveMotion(4, -1, 2);
+  int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
+  int c2 = ((Button)cp5.get("JOINT5_POS")).getColor().getBackground();
+  
+  if(c1 == COLOR_DEFAULT && c2 == COLOR_DEFAULT){
+    //both buttons have the default color, set this one to highlight
+    ((Button)cp5.get("JOINT5_NEG")).setColorBackground(COLOR_ACTIVE);
+  }
+  else{
+    ((Button)cp5.get("JOINT5_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT5_POS")).setColorBackground(COLOR_DEFAULT);
+  }
 }
 
 public void JOINT5_POS(int theValue) {
   activateLiveMotion(4, 1, 3);
+  int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
+  int c2 = ((Button)cp5.get("JOINT5_POS")).getColor().getBackground();
+  
+  if(c1 == COLOR_DEFAULT && c2 == COLOR_DEFAULT){
+    //both buttons have the default color, set this one to highlight
+    ((Button)cp5.get("JOINT5_POS")).setColorBackground(COLOR_ACTIVE);
+  }
+  else{
+    ((Button)cp5.get("JOINT5_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT5_POS")).setColorBackground(COLOR_DEFAULT);
+  }
 }
 
 public void JOINT6_NEG(int theValue) {
   activateLiveMotion(5, -1, 4);
+  int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
+  int c2 = ((Button)cp5.get("JOINT6_POS")).getColor().getBackground();
+  
+  if(c1 == COLOR_DEFAULT && c2 == COLOR_DEFAULT){
+    //both buttons have the default color, set this one to highlight
+    ((Button)cp5.get("JOINT6_NEG")).setColorBackground(COLOR_ACTIVE);
+  }
+  else{
+    ((Button)cp5.get("JOINT6_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT6_POS")).setColorBackground(COLOR_DEFAULT);
+  }
 }
 
 public void JOINT6_POS(int theValue) {
   activateLiveMotion(5, 1, 5);
+  int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
+  int c2 = ((Button)cp5.get("JOINT6_POS")).getColor().getBackground();
+  
+  if(c1 == COLOR_DEFAULT && c2 == COLOR_DEFAULT){
+    //both buttons have the default color, set this one to highlight
+    ((Button)cp5.get("JOINT6_POS")).setColorBackground(COLOR_ACTIVE);
+  }
+  else{
+    ((Button)cp5.get("JOINT6_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT6_POS")).setColorBackground(COLOR_DEFAULT);
+  }
 }
 
+//turn of highlighting on all active movement buttons
+public void resetButtonColors(){
+  for(int i = 1; i <= 6; i += 1){
+    ((Button)cp5.get("JOINT"+i+"_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT"+i+"_POS")).setColorBackground(COLOR_DEFAULT);
+  }
+}
+
+public void updateButtonColors(){
+  for(int i = 0; i < 6; i += 1){
+    Model m = armModel.segments.get(i);
+    for(int j = 0; j < 3; j += 1){
+      if(m.rotations[j] && m.jointsMoving[j] == 0){
+        ((Button)cp5.get("JOINT"+(i+1)+"_NEG")).setColorBackground(COLOR_DEFAULT);
+        ((Button)cp5.get("JOINT"+(i+1)+"_POS")).setColorBackground(COLOR_DEFAULT);
+      }
+    }
+  }
+}
 
 // update what displayed on screen
 public void updateScreen(color active, color normal){
