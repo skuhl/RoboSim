@@ -883,54 +883,13 @@ void gui(){
       .setColorBackground(color(127,127,255))
       .setColorCaptionLabel(color(255,255,255))  
       .moveTo(g2); 
-<<<<<<< HEAD
 } 
-
-/* Highlight the buttons in the pendant corresponding to the motion of the robot
- * for which its corresponding joint in the robot is in motion.
- *
- * TODO: handle linear coordinate motion */
-public void updateButtonColors() {
-  
-  color highlighted = color(255, 0, 0);
-  color regular = color(127, 127, 255);
-  
-  /* Loop through each joint of the robot and highlight the button in the pendant
-   * corresponding to the motion of each joint (i.e. +, -, or stationary)
-   *
-   * NOTE: There are one less joints then segments */
-  for (int seg = 0; seg < armModel.segments.size() - 1; ++seg) {
-    
-    Model j = armModel.segments.get(seg);
-    
-    if ((j.jointsMoving[0] < 0 || j.jointsMoving[1] < 0 || j.jointsMoving[2] < 0) || (seg < 3 && armModel.linearMoveSpeeds[seg] < 0)) {
-      
-      // Moving in negative direction
-      ((Button)cp5.get("JOINT" + (seg + 1) + "_NEG")).setColorBackground(highlighted);
-      ((Button)cp5.get("JOINT" + (seg + 1) + "_POS")).setColorBackground(regular);
-    } else if ((j.jointsMoving[0] > 0 || j.jointsMoving[1] > 0 || j.jointsMoving[2] > 0) || (seg < 3 && armModel.linearMoveSpeeds[seg] > 0)) {
-      
-      // Moving in positive direction
-      ((Button)cp5.get("JOINT" + (seg + 1) + "_NEG")).setColorBackground(regular);
-      ((Button)cp5.get("JOINT" + (seg + 1) + "_POS")).setColorBackground(highlighted);
-    } else {
-      
-      // Stationary
-      ((Button)cp5.get("JOINT" + (seg + 1) + "_NEG")).setColorBackground(regular);
-      ((Button)cp5.get("JOINT" + (seg + 1) + "_POS")).setColorBackground(regular);
-    }
-  }
-=======
-      
-    // SCROLLBAR
->>>>>>> f4992118306087bcfc62db56e4c0d9cabac89fd6
-}
 
 /* mouse events */
 public void mousePressed(){
-   if (sb != null) {
+   /*if (sb != null) {
      sb.checkMousePosition(mouseX, mouseY);
-   } 
+   }*/
   
    if ((clickPan % 2) == 1 ) { // pan button is pressed
       if (doPan) {
@@ -950,9 +909,9 @@ public void mousePressed(){
 }
 
 public void mouseDragged() {
-  if (sb != null) {
+  /*if (sb != null) {
     sb.update();
-  }
+  }*/
 }
 
 public void mouseMoved(){
@@ -2021,7 +1980,7 @@ public void f5(int theValue) {
   
 }
 
-/* Stops all joint movement */
+/* Stops all of the Robot's movement */
 public void hd(int theValue) {
   STOP_MOVEMENT = true;
   
@@ -2029,9 +1988,14 @@ public void hd(int theValue) {
     model.jointsMoving[0] = 0;
     model.jointsMoving[1] = 0;
     model.jointsMoving[2] = 0;
-    armModel.linearMoveSpeeds[0] = 0;
-    armModel.linearMoveSpeeds[1] = 0;
-    armModel.linearMoveSpeeds[2] = 0;
+  }
+  
+  for (int idx = 0; idx < armModel.linearMoveSpeeds.length; ++idx) {
+    armModel.linearMoveSpeeds[idx] = 0;
+  }
+  
+  for (int idx = 0; idx < armModel.angularMoveSpeeds.length; ++idx) {
+    armModel.angularMoveSpeeds[idx] = 0;
   }
 }
 
@@ -2483,62 +2447,76 @@ public void EE(int theValue){
   if (activeEndEffector > ENDEF_CLAW) activeEndEffector = 0;
 }
 
-// axis: 0 = -x, 1= +x, 2 = -y, 3 = +y, 4 = -z, 5 = +z
-public void activateLiveMotion(int joint, int dir, int axis) {
-  if (curCoordFrame == COORD_JOINT) {
-    if (armModel.segments.size() >= joint+1) {
-      Model model = armModel.segments.get(joint);
-      for (int n = 0; n < 3; n++) {
-        if (model.rotations[n]) {
-          if (model.jointsMoving[n] == 0) model.jointsMoving[n] = dir;
-          else model.jointsMoving[n] = 0;
+/**
+ * Updates the motion of one of the Robot's joints based on
+ * the joint index given and the value of dir (-/+ 1). The
+ * Robot's joint indices range from 0 to 5. If the joint
+ * Associate with the given index is already in motion,
+ * in either direction, then calling this method for that
+ * joint index will stop that joint's motion.
+ */
+public void activateLiveJointMotion(int joint, int dir) {
+  
+  if (armModel.segments.size() >= joint+1) {
+
+    Model model = armModel.segments.get(joint);
+    // Checks all rotational axes
+    for (int n = 0; n < 3; n++) {
+    
+      if (model.rotations[n]) {
+      
+        if (model.jointsMoving[n] == 0) {
+          model.jointsMoving[n] = dir;
+        } else {
+          model.jointsMoving[n] = 0;
         }
       }
     }
-  } else if (curCoordFrame == COORD_WORLD) {
-      //panning coordinates (x/y/z)
-      if(axis >= 0 && axis < 6){
-        //account for different axes in native Processing vs. RobotRun world coordinate systems
-        switch (axis) {
-          //pan -x
-          case 0: 
-            //if(calculateEndEffectorPosition)
-            if (armModel.linearMoveSpeeds[0] == 0) armModel.linearMoveSpeeds[0] =  1;
-            else armModel.linearMoveSpeeds[0] = 0;
-            break;
-          //pan +x
-          case 1:
-            if (armModel.linearMoveSpeeds[0] == 0) armModel.linearMoveSpeeds[0] = -1;
-            else armModel.linearMoveSpeeds[0] = 0;
-            break;
-          //pan -y
-          case 2:
-            if (armModel.linearMoveSpeeds[2] == 0) armModel.linearMoveSpeeds[2] = -1;
-            else armModel.linearMoveSpeeds[2] = 0;
-            break;
-          //pan +y
-          case 3:
-            if (armModel.linearMoveSpeeds[2] == 0) armModel.linearMoveSpeeds[2] =  1;
-            else armModel.linearMoveSpeeds[2] = 0;
-            break;
-          //pan -z
-          case 4:
-            if (armModel.linearMoveSpeeds[1] == 0) armModel.linearMoveSpeeds[1] =  1;
-            else armModel.linearMoveSpeeds[1] = 0;
-            break;
-          //pan +z
-          case 5:
-            if (armModel.linearMoveSpeeds[1] == 0) armModel.linearMoveSpeeds[1] = -1;
-            else armModel.linearMoveSpeeds[1] = 0;
-            break;
-      }
+  }
+}
+
+/**
+ * Updates the motion of the Robot with respect to one of the World axes for
+ * either linear or rotational motion around the axis. Similiar to the
+ * activateLiveJointMotion() method, calling this method for an axis, in which
+ * the Robot is already moving, will result in the termination of the Robot's
+ * motion in that axis. Though, rotational and linear motion for an axis are
+ * mutually independent in this regard.
+ * 
+ * @param axis        The axis, in which to move the Robot (0 -> X, 2 -> Y, and
+ *                    1 -> Z)
+ * @pararm dir        +1 or -1: indicating the direction of motion
+ * @param rotational  Whether to rotate the Robot around the axis or move the
+ *                    Robot linearly along the axis
+ *
+ */
+public void activateLiveWorldMotion(int axis, int dir, boolean rotational) {
+
+  // Translation Axes: X(0), Y(2), and Z(1)
+  if (axis >= 0 && axis < 3) {
+    // Execute rotational or linear movement based on the rotational parameter
+    float[] movementSpeeds = (rotational) ? armModel.angularMoveSpeeds : armModel.linearMoveSpeeds;
+  
+    if (movementSpeeds[axis] == 0) {
+      // Apply movement on the robot in the given axis, in the given direction (+1 or -1)
+      movementSpeeds[axis] = dir;
+    } else {
+      // Halt movement
+      movementSpeeds[axis] = 0;
     }
   }
-} // end activateLiveMotion
-
+}
 
 public void JOINT1_NEG(int theValue) {
-  activateLiveMotion(0, -1, 0);
+  
+  if (curCoordFrame == COORD_JOINT) {
+    // Move single joint
+    activateLiveJointMotion(0, -1);
+  } else if (curCoordFrame == COORD_WORLD) {
+    // Move entire robot in a single axis plane
+    activateLiveWorldMotion(0, -1, false);
+  }
+  
   int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT1_POS")).getColor().getBackground();
   
@@ -2553,7 +2531,15 @@ public void JOINT1_NEG(int theValue) {
 }
 
 public void JOINT1_POS(int theValue) {
-  activateLiveMotion(0, 1, 1);
+  
+  if (curCoordFrame == COORD_JOINT) {
+    // Move single joint
+    activateLiveJointMotion(0, 1);
+  } else if (curCoordFrame == COORD_WORLD) {
+    // Move entire robot in a single axis plane
+    activateLiveWorldMotion(0, 1, false);
+  }
+  
   int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT1_POS")).getColor().getBackground();
   
@@ -2569,7 +2555,15 @@ public void JOINT1_POS(int theValue) {
 }
 
 public void JOINT2_NEG(int theValue) {
-  activateLiveMotion(1, -1, 2);
+  
+  if (curCoordFrame == COORD_JOINT) {
+    // Move single joint
+    activateLiveJointMotion(1, -1);
+  } else if (curCoordFrame == COORD_WORLD) {
+    // Move entire robot in a single axis plane
+    activateLiveWorldMotion(2, -1, false);
+  }
+  
   int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT2_POS")).getColor().getBackground();
   
@@ -2584,7 +2578,15 @@ public void JOINT2_NEG(int theValue) {
 }
 
 public void JOINT2_POS(int theValue) {
-  activateLiveMotion(1, 1, 3);
+  
+  if (curCoordFrame == COORD_JOINT) {
+    // Move single joint
+    activateLiveJointMotion(1, 1);
+  } else if (curCoordFrame == COORD_WORLD) {
+    // Move entire robot in a single axis plane
+    activateLiveWorldMotion(2, 1, false);
+  }
+  
   int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT2_POS")).getColor().getBackground();
   
@@ -2599,7 +2601,15 @@ public void JOINT2_POS(int theValue) {
 }
 
 public void JOINT3_NEG(int theValue) {
-  activateLiveMotion(2, -1, 4);
+  
+  if (curCoordFrame == COORD_JOINT) {
+    // Move single joint
+    activateLiveJointMotion(2, -1);
+  } else if (curCoordFrame == COORD_WORLD) {
+    // Move entire robot in a single axis plane
+    activateLiveWorldMotion(1, -1, false);
+  }
+  
   int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT3_POS")).getColor().getBackground();
   
@@ -2614,7 +2624,15 @@ public void JOINT3_NEG(int theValue) {
 }
 
 public void JOINT3_POS(int theValue) {
-  activateLiveMotion(2, 1, 5);
+  
+  if (curCoordFrame == COORD_JOINT) {
+    // Move single joint
+    activateLiveJointMotion(2, 1);
+  } else if (curCoordFrame == COORD_WORLD) {
+    // Move entire robot in a single axis plane
+    activateLiveWorldMotion(1, 1, false);
+  }
+  
   int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT3_POS")).getColor().getBackground();
   
@@ -2629,7 +2647,15 @@ public void JOINT3_POS(int theValue) {
 }
 
 public void JOINT4_NEG(int theValue) {
-  activateLiveMotion(3, -1, 0);
+  
+  if (curCoordFrame == COORD_JOINT) {
+    // Move single joint
+    activateLiveJointMotion(3, -1);
+  } else if (curCoordFrame == COORD_WORLD) {
+    // Move entire robot in a single axis plane
+    activateLiveWorldMotion(0, -1, true);
+  }
+  
   int c1 = ((Button)cp5.get("JOINT4_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT4_POS")).getColor().getBackground();
   
@@ -2644,7 +2670,15 @@ public void JOINT4_NEG(int theValue) {
 }
 
 public void JOINT4_POS(int theValue) {
-  activateLiveMotion(3, 1, 1);
+  
+  if (curCoordFrame == COORD_JOINT) {
+    // Move single joint
+    activateLiveJointMotion(3, 1);
+  } else if (curCoordFrame == COORD_WORLD) {
+    // Move entire robot in a single axis plane
+    activateLiveWorldMotion(0, 1, true);
+  }
+  
   int c1 = ((Button)cp5.get("JOINT4_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT4_POS")).getColor().getBackground();
   
@@ -2659,7 +2693,15 @@ public void JOINT4_POS(int theValue) {
 }
 
 public void JOINT5_NEG(int theValue) {
-  activateLiveMotion(4, -1, 2);
+  
+  if (curCoordFrame == COORD_JOINT) {
+    // Move single joint
+    activateLiveJointMotion(4, -1);
+  } else if (curCoordFrame == COORD_WORLD) {
+    // Move entire robot in a single axis plane
+    activateLiveWorldMotion(2, -1, true);
+  }
+  
   int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT5_POS")).getColor().getBackground();
   
@@ -2674,7 +2716,15 @@ public void JOINT5_NEG(int theValue) {
 }
 
 public void JOINT5_POS(int theValue) {
-  activateLiveMotion(4, 1, 3);
+  
+  if (curCoordFrame == COORD_JOINT) {
+    // Move single joint
+    activateLiveJointMotion(4, 1);
+  } else if (curCoordFrame == COORD_WORLD) {
+    // Move entire robot in a single axis plane
+    activateLiveWorldMotion(2, 1, true);
+  }
+  
   int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT5_POS")).getColor().getBackground();
   
@@ -2689,7 +2739,15 @@ public void JOINT5_POS(int theValue) {
 }
 
 public void JOINT6_NEG(int theValue) {
-  activateLiveMotion(5, -1, 4);
+  
+  if (curCoordFrame == COORD_JOINT) {
+    // Move single joint
+    activateLiveJointMotion(5, -1);
+  } else if (curCoordFrame == COORD_WORLD) {
+    // Move entire robot in a single axis plane
+    activateLiveWorldMotion(1, -1, true);
+  }
+  
   int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT6_POS")).getColor().getBackground();
   
@@ -2704,7 +2762,15 @@ public void JOINT6_NEG(int theValue) {
 }
 
 public void JOINT6_POS(int theValue) {
-  activateLiveMotion(5, 1, 5);
+  
+  if (curCoordFrame == COORD_JOINT) {
+    // Move single joint
+    activateLiveJointMotion(5, 1);
+  } else if (curCoordFrame == COORD_WORLD) {
+    // Move entire robot in a single axis plane
+    activateLiveWorldMotion(1, 1, true);
+  }
+  
   int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT6_POS")).getColor().getBackground();
   

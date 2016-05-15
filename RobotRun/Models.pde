@@ -102,7 +102,10 @@ public class ArmModel {
   public int type;
   //public boolean calculatingArms = false, movingArms = false;
   public float motorSpeed;
+  // Indicates translational motion in the World Frame
   public float[] linearMoveSpeeds = new float[3];
+  // Indicates rotational motion in the World Frame
+  public float[] angularMoveSpeeds = new float[3];
   //public final float[] maxArmRange;
   
   public ArmModel(int in) {
@@ -175,6 +178,15 @@ public class ArmModel {
       segments.add(axis5);
       segments.add(axis6);
     }
+    
+    for (int idx = 0; idx < angularMoveSpeeds.length; ++idx) {
+      angularMoveSpeeds[idx] = 0;
+    }
+    
+    for (int idx = 0; idx < angularMoveSpeeds.length; ++idx) {
+      angularMoveSpeeds[idx] = 0;
+    }
+    
   } // end ArmModel constructor
   
   public void draw() {
