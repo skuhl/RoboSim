@@ -391,7 +391,7 @@ public class ArmModel {
           if (model.rotations[n]) {
             float trialAngle = model.currentRotations[n] +
               model.rotationSpeed * model.jointsMoving[n] * liveSpeed;
-            trialAngle = clampAngle(trialAngle);
+              trialAngle = clampAngle(trialAngle);
             
             if (model.anglePermitted(n, trialAngle)) {
               

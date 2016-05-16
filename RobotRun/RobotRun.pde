@@ -66,7 +66,6 @@ int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 
 /* The Y corrdinate of the ground plane */
 public static final float PLANE_Y = 200.5f;
-private Shape floor;
 
 public Object[] objects;
 
@@ -93,13 +92,6 @@ public void setup() {
     toolFrames[n] = new Frame();
     userFrames[n] = new Frame();
   }
-  
-  // Create the floor of the environment
-  floor = new Polygon(new PVector[] { new PVector(base_center.x - 50000, PLANE_Y, base_center.z - 50000), 
-                                      new PVector(base_center.x - 50000, PLANE_Y, base_center.z + 50000),
-                                      new PVector(base_center.x + 50000, PLANE_Y, base_center.z + 50000), 
-                                      new PVector(base_center.x + 50000, PLANE_Y, base_center.z - 50000) },
-                                      color(205, 205, 205), color(205, 205, 205));
   
   // Intialize world objects
   // Create a small, blue cube
@@ -142,8 +134,10 @@ public void draw() {
   
   applyCamera();
   
+  PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+  
   /*pushMatrix();
-  // Display EE axies
+  // Display EE axes at the EE position
   applyModelRotation(armModel);
   stroke(0, 255, 0);
   line(5000, 0, 0, -50000, 0, 0);
@@ -152,10 +146,25 @@ public void draw() {
   stroke(0, 0, 255);
   line(0, 0, 50000, 0, 0, -50000);
   
-  popMatrix();*/
+  popMatrix();
+  
+  // Display world axes at the EE position
+  stroke(0, 0, 255);
+  line(5000, ee_pos.y, ee_pos.z, -50000, ee_pos.y, ee_pos.z);
+  stroke(255, 0, 0);
+  line(ee_pos.x, 50000, ee_pos.z, ee_pos.x, -50000, ee_pos.z);
+  stroke(0, 255, 0);
+  line(ee_pos.x, ee_pos.y, 50000, ee_pos.x, ee_pos.y, -50000);/**/
 
   pushMatrix();
-  armModel.draw(); 
+  armModel.draw();
+  popMatrix();
+  
+  pushMatrix();
+  applyModelRotation(armModel);
+  stroke(0, 255, 0);
+  noFill();
+  box(90, 90, 20);
   popMatrix();
   
   noLights();
@@ -226,9 +235,6 @@ public void draw() {
   // END TESTING CODE
   
   drawEndEffectorGridMapping();
-  
-  // Create ground plane under the robot's base
-  //floor.draw();
   
   // Draw x, z origin lines
   stroke(255, 0, 0);
