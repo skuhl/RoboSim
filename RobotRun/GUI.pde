@@ -43,10 +43,8 @@ int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
 
  
-int active_program = -1; // which program is on focus when in PROGRAM_NAV mode?
-int select_program = -1; // which program is being edited when in INSTRUCTION_NAV or INSTRUCTION_EDIT mode?
-int active_instruction = -1; // which motion instruction is on focus when in INSTRUCTION_NAV mode?
-int select_instruction = -1; // which motion instruction is being edited when in INSTRUCTION_EDIT mode?
+int active_program = -1; // the currently selected program
+int active_instruction = -1; // the currently selected instruction
 int mode = NONE; 
 int NUM_MODE; // When NUM_MODE is ON, allows for entering numbers
 int shift = OFF; // Is shift button pressed or not?
@@ -983,7 +981,7 @@ public void keyPressed(){
     armModel.setJointRotations(rot);
     intermediatePositions.clear();
   } else if (key == 'q') {
-    hd(0);
+    hd();
     return;
   } else if (key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
@@ -1050,15 +1048,7 @@ public void keyPressed(){
   }
 }
 
-/* buttons event */
-
-// need this function to call buttons' event
-public void controlEvent(ControlEvent theEvent){
-   //println(theEvent.getController().getName());
-   
-}
-
-public void hide(int theValue){
+public void hide(){
    g1.remove();
    bt_show.show();
    bt_zoomin_shrink.show();
@@ -1087,7 +1077,7 @@ public void hide(int theValue){
    cursor(cursorMode);
 }
 
-public void show(int theValue){
+public void show(){
    g1.show();
    bt_show.remove();
    bt_zoomin_shrink.remove();
@@ -1113,7 +1103,7 @@ public void show(int theValue){
 }
 
 
-public void mu(int theValue) {
+public void mu() {
   contents = new ArrayList<ArrayList<String>>();
   ArrayList<String> line = new ArrayList<String>();
   line.add("1 UTILITIES (NA)");
@@ -1142,43 +1132,43 @@ public void mu(int theValue) {
 }
 
 
-public void NUM0(int theValue){
+public void NUM0(){
    addNumber("0");
 }
 
-public void NUM1(int theValue){
+public void NUM1(){
    addNumber("1");
 }
 
-public void NUM2(int theValue){
+public void NUM2(){
    addNumber("2");
 }
 
-public void NUM3(int theValue){
+public void NUM3(){
    addNumber("3");
 }
 
-public void NUM4(int theValue){
+public void NUM4(){
    addNumber("4");
 }
 
-public void NUM5(int theValue){
+public void NUM5(){
    addNumber("5");
 }
 
-public void NUM6(int theValue){
+public void NUM6(){
    addNumber("6");
 }
 
-public void NUM7(int theValue){
+public void NUM7(){
    addNumber("7");
 }
 
-public void NUM8(int theValue){
+public void NUM8(){
    addNumber("8");
 }
 
-public void NUM9(int theValue){
+public void NUM9(){
    addNumber("9");
 }
 
@@ -1198,14 +1188,14 @@ public void addNumber(String number) {
   }
 }
 
-public void PERIOD(int theValue){
+public void PERIOD(){
    if (NUM_MODE == ON){
       nums.add(-1);
    }
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
-public void se(int theValue){
+public void se(){
    active_program = 0;
    active_instruction = 0;
    active_row = 0;
@@ -1215,14 +1205,13 @@ public void se(int theValue){
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
-public void up(int theValue){
+public void up(){
    switch (mode){
       case PROGRAM_NAV:
          options = new ArrayList<String>();
          clearOptions();
          if (active_program > 0) {
            active_program--;
-           select_program = active_program;
            //saveState(); 
            active_col = 0;
          }
@@ -1233,10 +1222,9 @@ public void up(int theValue){
          clearOptions();
          if (active_instruction > 0) {
            active_instruction--;
-           select_instruction = active_instruction;
            active_col = 0;
          }
-         loadInstructions(select_program);
+         loadInstructions(active_program);
          break;
       case INSTRUCTION_EDIT:
       case PICK_FRAME_MODE:
@@ -1267,14 +1255,13 @@ public void up(int theValue){
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
-public void dn(int theValue){
+public void dn(){
    switch (mode){
       case PROGRAM_NAV:
          options = new ArrayList<String>();
          clearOptions();
          if (active_program < programs.size()-1) {
            active_program++;
-           select_program = active_program;
            //saveState();
            active_col = 0;
          }
@@ -1283,13 +1270,12 @@ public void dn(int theValue){
       case INSTRUCTION_NAV:
          options = new ArrayList<String>();
          clearOptions();
-         int size = programs.get(select_program).getInstructions().size();
+         int size = programs.get(active_program).getInstructions().size();
          if (active_instruction < size-1) {
            active_instruction++;
-           select_instruction = active_instruction;
            active_col = 0;
          }
-         loadInstructions(select_program);
+         loadInstructions(active_program);
          break;
       case INSTRUCTION_EDIT:
       case PICK_FRAME_MODE:
@@ -1317,7 +1303,7 @@ public void dn(int theValue){
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
-public void lt(int theValue){
+public void lt(){
    switch (mode){
       case PROGRAM_NAV:
           break;
@@ -1333,14 +1319,14 @@ public void lt(int theValue){
           break;
       case INSTRUCTION_EDIT:
           mode = INSTRUCTION_NAV;
-          lt(1);
+          lt();
           break;
    }
    
 }
 
 
-public void rt(int theValue){
+public void rt(){
   switch (mode){
       case PROGRAM_NAV:
           break;
@@ -1356,7 +1342,7 @@ public void rt(int theValue){
           break;
       case INSTRUCTION_EDIT:
           mode = INSTRUCTION_NAV;
-          rt(1);
+          rt();
           break;
       case MENU_NAV:
           if (active_row == 5) { // SETUP
@@ -1429,7 +1415,7 @@ public void rt(int theValue){
 }
 
 //toggle shift state and button highlight
-public void sf(int theValue){
+public void sf(){
    if (shift == OFF){ 
 	 shift = ON;
      ((Button)cp5.get("sf")).setColorBackground(color(255, 0, 0));
@@ -1440,7 +1426,7 @@ public void sf(int theValue){
    }
 }
 
-public void st(int theValue) {
+public void st() {
      if (step == OFF){ 
      step = ON;
      ((Button)cp5.get("st")).setColorBackground(color(255, 0, 0));
@@ -1451,8 +1437,8 @@ public void st(int theValue) {
    }
 }
 
-public void pr(int theValue){
-   se(1);
+public void pr(){
+   se();
 }
 
 
@@ -1470,7 +1456,7 @@ public void goToEnterTextMode() {
 }
 
 
-public void f1(int theValue){
+public void f1(){
    switch (mode){
       case PROGRAM_NAV:
          //shift = OFF;
@@ -1491,9 +1477,9 @@ public void f1(int theValue){
          } else { // shift+f1 = add new motion instruction
            PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
            eep = convertNativeToWorld(eep);
-           Program prog = programs.get(select_program);
+           Program prog = programs.get(active_program);
            int reg = prog.nextRegister();
-           PVector r = armModel.getRot();
+           PVector r = armModel.getWpr();
            float[] j = armModel.getJointRotations();
            prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
                                       j[0], j[1], j[2], j[3], j[4], j[5]), reg);
@@ -1506,9 +1492,9 @@ public void f1(int theValue){
              activeUserFrame,
              activeToolFrame);
            prog.addInstruction(insert);
-           active_instruction = select_instruction = prog.getInstructions().size()-1;
+           active_instruction = prog.getInstructions().size()-1;
            active_col = 0;
-           loadInstructions(select_program);
+           loadInstructions(active_program);
            active_row = contents.size()-1;
            updateScreen(color(255,0,0), color(0,0,0));
            saveState();
@@ -1562,7 +1548,7 @@ public void f1(int theValue){
 }
 
 
-public void f2(int theValue) {
+public void f2() {
   if (mode == PROGRAM_NAV) {
     workingText = "";
     goToEnterTextMode();
@@ -1627,7 +1613,7 @@ public void f2(int theValue) {
 }
 
 
-public void f3(int theValue) {
+public void f3() {
   if (mode == ENTER_TEXT) {
     /*clearScreen();
     options = new ArrayList<String>();
@@ -1665,10 +1651,10 @@ public void f3(int theValue) {
 }
 
 
-public void f4(int theValue){
+public void f4(){
    switch (mode){
       case INSTRUCTION_NAV:
-         Instruction ins = programs.get(select_program).getInstructions().get(active_instruction);
+         Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
          if (ins instanceof MotionInstruction) {
            switch (active_col){
              case 1: // motion type
@@ -1677,7 +1663,6 @@ public void f4(int theValue){
                 options.add("2.LINEAR");
                 options.add("3.CIRCULAR");
                 //NUM_MODE = ON;
-                select_instruction = active_instruction;
                 mode = INSTRUCTION_EDIT;
                 which_option = 0;
                 break;
@@ -1686,12 +1671,10 @@ public void f4(int theValue){
                 options.add("1.LOCAL(P)");
                 options.add("2.GLOBAL(PR)");
                 //NUM_MODE = ON;
-                select_instruction = active_instruction;
                 mode = INSTRUCTION_EDIT;
                 which_option = 0;
                 break;
              case 3: // register
-                select_instruction = active_instruction;
                 options = new ArrayList<String>();
                 options.add("Use number keys to enter a register number (0-999)");
                 workingText = "";
@@ -1700,10 +1683,9 @@ public void f4(int theValue){
                 which_option = 0;
                 break;
              case 4: // speed
-                select_instruction = active_instruction;
                 options = new ArrayList<String>();
                 options.add("Use number keys to enter a new speed");
-                MotionInstruction castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
+                MotionInstruction castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
                 if (castIns.getMotionType() == MTYPE_JOINT) {
                   speedInPercentage = true;
                   workingTextSuffix = "%";
@@ -1717,7 +1699,6 @@ public void f4(int theValue){
                 which_option = 0;
                 break;
              case 5: // termination type
-                select_instruction = active_instruction;
                 options = new ArrayList<String>();
                 options.add("Use number keys to enter termination percentage (0-100; 0=FINE)");
                 workingText = "";
@@ -1752,14 +1733,14 @@ public void f4(int theValue){
          }*/
          return;
      case CONFIRM_DELETE:
-         Program prog = programs.get(select_program);
-         prog.getInstructions().remove(select_instruction);
-         if (select_instruction >= prog.getInstructions().size()) {
-           select_instruction = active_instruction = prog.getInstructions().size()-1;
+         Program prog = programs.get(active_program);
+         prog.getInstructions().remove(active_instruction);
+         if (active_instruction >= prog.getInstructions().size()) {
+           active_instruction = prog.getInstructions().size()-1;
          }
          active_row = 0;
          active_col = 0;
-         loadInstructions(select_program);
+         loadInstructions(active_program);
          mode = INSTRUCTION_NAV;
          options.clear();
          updateScreen(color(255,0,0), color(0,0,0));
@@ -1769,7 +1750,7 @@ public void f4(int theValue){
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
-public void f5(int theValue) {
+public void f5() {
   if (mode == INSTRUCTION_NAV) {
     if (shift == OFF) {
       if (active_col == 0) { // if you're on the line number, bring up a list of instruction editing options
@@ -1795,10 +1776,10 @@ public void f5(int theValue) {
         mode = EDIT_MENU;
         updateScreen(color(255,0,0), color(0));
       } else if (active_col == 2 || active_col == 3) { // show register contents if you're highlighting a register
-        Instruction ins = programs.get(select_program).getInstructions().get(select_instruction);
+        Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
          if (ins instanceof MotionInstruction) {
          MotionInstruction castIns = (MotionInstruction)ins;
-          Point p = castIns.getVector(programs.get(select_program));
+          Point p = castIns.getVector(programs.get(active_program));
           options = new ArrayList<String>();
           options.add("Data of the point in this register (press ENTER to exit):");
           if (castIns.getMotionType() != MTYPE_JOINT) {
@@ -1810,7 +1791,7 @@ public void f5(int theValue) {
           }
           mode = VIEW_REGISTER;
           which_option = 0;
-          loadInstructions(select_program);
+          loadInstructions(active_program);
           updateScreen(color(255,0,0), color(0,0,0));
         }
       }
@@ -1818,9 +1799,9 @@ public void f5(int theValue) {
       // overwrite current instruction
       PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
       eep = convertNativeToWorld(eep);
-      Program prog = programs.get(select_program);
+      Program prog = programs.get(active_program);
       int reg = prog.nextRegister();
-      PVector r = armModel.getRot();
+      PVector r = armModel.getWpr();
       float[] j = armModel.getJointRotations();
       prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
                                  j[0], j[1], j[2], j[3], j[4], j[5]), reg);
@@ -1834,7 +1815,7 @@ public void f5(int theValue) {
         activeToolFrame);
       prog.overwriteInstruction(active_instruction, insert);
       active_col = 0;
-      loadInstructions(select_program);
+      loadInstructions(active_program);
       updateScreen(color(255,0,0), color(0,0,0));
     }
   } else if (mode == ENTER_TEXT) {
@@ -1971,13 +1952,13 @@ public void f5(int theValue) {
       } // end if inFrame == NAV_TOOL_FRAMES
     }
   } else if (mode == CONFIRM_DELETE) {
-     Program prog = programs.get(select_program);
-     if (select_instruction >= prog.getInstructions().size()) {
-       select_instruction = active_instruction = prog.getInstructions().size()-1;
+     Program prog = programs.get(active_program);
+     if (active_instruction >= prog.getInstructions().size()) {
+       active_instruction = prog.getInstructions().size()-1;
      }
      active_row = 0;
      active_col = 0;
-     loadInstructions(select_program);
+     loadInstructions(active_program);
      mode = INSTRUCTION_NAV;
      options.clear();
      updateScreen(color(255,0,0), color(0,0,0));
@@ -1986,7 +1967,7 @@ public void f5(int theValue) {
 }
 
 /* Stops all joint movement */
-public void hd(int theValue) {
+public void hd() {
   STOP_MOVEMENT = true;
   
   for (Model model : armModel.segments) {
@@ -1999,28 +1980,25 @@ public void hd(int theValue) {
   }
 }
 
-public void fd(int theValue) {
+public void fd() {
   if (shift == ON) {
-    currentProgram = programs.get(select_program);
+    currentProgram = programs.get(active_program);
     if (step == OFF){
       readyProgram();
     }
     else {
-      println("active prog: " + active_program);
-      println("selected instruct: " + select_instruction);
-      println("active instruct: " + active_instruction);
       Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
-      currentInstruction = select_instruction;
+      currentInstruction = active_instruction;
       
       if (ins instanceof MotionInstruction) {
         singleInstruction = (MotionInstruction)ins;
         setUpInstruction(programs.get(active_program), armModel, singleInstruction);
         
         if (active_instruction < programs.get(active_program).getInstructions().size()-1){
-          select_instruction = active_instruction = (active_instruction+1);
+          active_instruction = (active_instruction+1);
         }
         
-        loadInstructions(select_program);
+        loadInstructions(active_program);
         updateScreen(color(255,0,0), color(0));
       }
     }
@@ -2028,11 +2006,11 @@ public void fd(int theValue) {
   //shift = OFF;
 }
 
-public void bd(int theValue){
+public void bd(){
   
   if (shift == ON && step == ON && active_instruction > 0) {
     
-    currentProgram = programs.get(select_program);
+    currentProgram = programs.get(active_program);
     Instruction ins = programs.get(active_program).getInstructions().get(active_instruction - 1);
     
     if (ins instanceof MotionInstruction) {
@@ -2041,38 +2019,36 @@ public void bd(int theValue){
       setUpInstruction(programs.get(active_program), armModel, singleInstruction);
       
       if (active_instruction > 0)
-        select_instruction = active_instruction = (active_instruction-1);
+        active_instruction = (active_instruction-1);
       
-      loadInstructions(select_program);
+      loadInstructions(active_program);
       updateScreen(color(255,0,0), color(0));
     }
   }
 }
 
-public void ENTER(int theValue){
+public void ENTER(){
    switch (mode){
       case NONE:
          break;
       case PROGRAM_NAV:
-         select_program = active_program;
          //saveState();
-         select_instruction = active_instruction = 0;
+         active_instruction = 0;
          mode = INSTRUCTION_NAV;
          clearScreen();
-         loadInstructions(select_program);
+         loadInstructions(active_program);
          updateScreen(color(255,0,0), color(0,0,0));
          break;
       case INSTRUCTION_NAV:
          if (active_col == 2 || active_col == 3){
-            select_instruction = active_instruction;
             mode = INSTRUCTION_EDIT;
             NUM_MODE = ON;
             num_info.setText(" ");
          }
          break;
       case INSTRUCTION_EDIT:
-         Program current_p = programs.get(select_program);
-         MotionInstruction m = (MotionInstruction)current_p.getInstructions().get(select_instruction);
+         Program current_p = programs.get(active_program);
+         MotionInstruction m = (MotionInstruction)current_p.getInstructions().get(active_instruction);
          switch (active_col){
             case 1: // motion type
                if (which_option == 0){
@@ -2114,7 +2090,7 @@ public void ENTER(int theValue){
            tempSpeed /= 100.0;
          }
          else if (tempSpeed > armModel.motorSpeed) tempSpeed = armModel.motorSpeed;
-         MotionInstruction castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
+         MotionInstruction castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
          castIns.setSpeed(tempSpeed);
          loadInstructions(active_program);
          mode = INSTRUCTION_NAV;
@@ -2126,7 +2102,7 @@ public void ENTER(int theValue){
       case SET_INSTRUCTION_REGISTER:
          int tempRegister = Integer.parseInt(workingText);
          if (tempRegister >= 0 && tempRegister < pr.length) {
-           castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
+           castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
            castIns.setRegister(tempRegister);
          }
          loadInstructions(active_program);
@@ -2139,7 +2115,7 @@ public void ENTER(int theValue){
       case SET_INSTRUCTION_TERMINATION:
          float tempTerm = Float.parseFloat(workingText);
          tempTerm /= 100.0;
-         castIns = (MotionInstruction)(programs.get(select_program).getInstructions().get(select_instruction));
+         castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
          castIns.setTermination(tempTerm);
          loadInstructions(active_program);
          mode = INSTRUCTION_NAV;
@@ -2151,13 +2127,13 @@ public void ENTER(int theValue){
       case JUMP_TO_LINE:
          active_instruction = Integer.parseInt(workingText)-1;
          if (active_instruction < 0) active_instruction = 0;
-         if (active_instruction >= programs.get(select_program).getInstructions().size())
-           active_instruction = programs.get(select_program).getInstructions().size()-1;
+         if (active_instruction >= programs.get(active_program).getInstructions().size())
+           active_instruction = programs.get(active_program).getInstructions().size()-1;
          mode = INSTRUCTION_NAV;
          options = new ArrayList<String>();
          which_option = -1;
          clearOptions();
-         loadInstructions(select_program);
+         loadInstructions(active_program);
          updateScreen(color(255,0,0), color(0,0,0));
          break;
       case VIEW_REGISTER:
@@ -2165,20 +2141,20 @@ public void ENTER(int theValue){
          options = new ArrayList<String>();
          which_option = -1;
          clearOptions();
-         loadInstructions(select_program);
+         loadInstructions(active_program);
          updateScreen(color(255,0,0), color(0,0,0));
          break;
       case ENTER_TEXT:
          if (workingText.length() > 0) {
            int new_prog = addProgram(new Program(workingText));
            workingText = "";
-           select_program = active_program = new_prog;
-           select_instruction = active_instruction = 0;
+           active_program = new_prog;
+           active_instruction = 0;
            mode = INSTRUCTION_NAV;
            saveState();
            clearScreen();
            options = new ArrayList<String>();
-           loadInstructions(select_program);
+           loadInstructions(active_program);
            updateScreen(color(255,0,0), color(0,0,0));
          }
          
@@ -2243,15 +2219,15 @@ public void ENTER(int theValue){
       case SET_DO_STATUS:
       case SET_RO_STATUS:
          int bracketNum = Integer.parseInt(workingText);
-         Program prog = programs.get(select_program);
+         Program prog = programs.get(active_program);
          ToolInstruction insert = new ToolInstruction(
             (mode == SET_DO_STATUS ? "DO" : "RO"),
             bracketNum,
             (which_option == 0 ? ON : OFF));
          prog.addInstruction(insert);
-         active_instruction = select_instruction = prog.getInstructions().size()-1;
+         active_instruction = prog.getInstructions().size()-1;
          active_col = 0;
-         loadInstructions(select_program);
+         loadInstructions(active_program);
          active_row = contents.size()-1;
          mode = INSTRUCTION_NAV;
          options.clear();
@@ -2262,14 +2238,14 @@ public void ENTER(int theValue){
          num = Integer.parseInt(workingText)-1;
          if (num < -1) num = -1;
          else if (num >= userFrames.length) num = userFrames.length-1;
-         prog = programs.get(select_program);
+         prog = programs.get(active_program);
          int type = 0;
          if (active_row == 0) type = FTYPE_TOOL;
          else if (active_row == 1) type = FTYPE_USER;
          prog.addInstruction(new FrameInstruction(type, num));
-         active_instruction = select_instruction = prog.getInstructions().size()-1;
+         active_instruction = prog.getInstructions().size()-1;
          active_col = 0;
-         loadInstructions(select_program);
+         loadInstructions(active_program);
          active_row = contents.size()-1;
          mode = INSTRUCTION_NAV;
          options.clear();
@@ -2289,7 +2265,7 @@ public void ENTER(int theValue){
 }
 
 
-public void ITEM(int theValue) {
+public void ITEM() {
   if (mode == INSTRUCTION_NAV) {
     options = new ArrayList<String>();
     options.add("Use number keys to enter line number to jump to");
@@ -2302,7 +2278,7 @@ public void ITEM(int theValue) {
 }
 
 
-public void COORD(int theValue) {
+public void COORD() {
   if (shift == ON) {
     active_row = 1;
     active_col = 0;
@@ -2317,14 +2293,14 @@ public void COORD(int theValue) {
 
 
 
-public void SPEEDUP(int theValue) {
+public void SPEEDUP() {
   if (liveSpeed < 0.5) liveSpeed += 0.05;
   else if (liveSpeed < 1) liveSpeed += 0.1;
   if (liveSpeed > 1) liveSpeed = 1;
 }
 
 
-public void SLOWDOWN(int theValue) {
+public void SLOWDOWN() {
   if (liveSpeed > 0.5) liveSpeed -= 0.1;
   else if (liveSpeed > 0) liveSpeed -= 0.05;
   if (liveSpeed < 0.05) liveSpeed = 0.05;
@@ -2333,27 +2309,27 @@ public void SLOWDOWN(int theValue) {
 
 /* navigation buttons */
 // zoomin button when interface is at full size
-public void zoomin_normal(int theValue){
+public void zoomin_normal(){
    myscale *= 1.1;
 }
 
 // zoomin button when interface is minimized
-public void zoomin_shrink(int theValue){
+public void zoomin_shrink(){
    myscale *= 1.1;
 }
 
 // zoomout button when interface is at full size
-public void zoomout_normal(int theValue){
+public void zoomout_normal(){
    myscale *= 0.9;
 }
 
 // zoomout button when interface is minimized
-public void zoomout_shrink(int theValue){
+public void zoomout_shrink(){
    myscale *= 0.9;
 }
 
 // pan button when interface is at full size
-public void pan_normal(int theValue){
+public void pan_normal(){
   clickPan += 1;
   if ((clickPan % 2) == 1){
      cursorMode = HAND;
@@ -2372,7 +2348,7 @@ public void pan_normal(int theValue){
 }
 
 // pan button when interface is minimized
-public void pan_shrink(int theValue){
+public void pan_shrink(){
   clickPan += 1;
   if ((clickPan % 2) == 1){
      cursorMode = HAND;
@@ -2391,7 +2367,7 @@ public void pan_shrink(int theValue){
 }
 
 // rotate button when interface is at full size
-public void rotate_normal(int theValue){
+public void rotate_normal(){
    clickRotate += 1;
    if ((clickRotate % 2) == 1){
      cursorMode = MOVE;
@@ -2410,7 +2386,7 @@ public void rotate_normal(int theValue){
 }
 
 // rotate button when interface is minized
-public void rotate_shrink(int theValue){
+public void rotate_shrink(){
    clickRotate += 1;
    if ((clickRotate % 2) == 1){
      cursorMode = MOVE;
@@ -2428,7 +2404,7 @@ public void rotate_shrink(int theValue){
   cursor(cursorMode);
 }
 
-public void record_normal(int theValue){
+public void record_normal(){
    if (record == OFF){
       record = ON;
       PImage[] record = {loadImage("images/record-on.png"), loadImage("images/record-on.png"), loadImage("images/record-on.png")};   
@@ -2442,7 +2418,7 @@ public void record_normal(int theValue){
    }
 }
 
-public void EE(int theValue){
+public void EE(){
   activeEndEffector++;
   if (activeEndEffector > ENDEF_CLAW) activeEndEffector = 0;
 }
@@ -2501,7 +2477,7 @@ public void activateLiveMotion(int joint, int dir, int axis) {
 } // end activateLiveMotion
 
 
-public void JOINT1_NEG(int theValue) {
+public void JOINT1_NEG() {
   activateLiveMotion(0, -1, 0);
   int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT1_POS")).getColor().getBackground();
@@ -2516,7 +2492,7 @@ public void JOINT1_NEG(int theValue) {
   }
 }
 
-public void JOINT1_POS(int theValue) {
+public void JOINT1_POS() {
   activateLiveMotion(0, 1, 1);
   int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT1_POS")).getColor().getBackground();
@@ -2532,7 +2508,7 @@ public void JOINT1_POS(int theValue) {
   }
 }
 
-public void JOINT2_NEG(int theValue) {
+public void JOINT2_NEG() {
   activateLiveMotion(1, -1, 2);
   int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT2_POS")).getColor().getBackground();
@@ -2547,7 +2523,7 @@ public void JOINT2_NEG(int theValue) {
   }
 }
 
-public void JOINT2_POS(int theValue) {
+public void JOINT2_POS() {
   activateLiveMotion(1, 1, 3);
   int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT2_POS")).getColor().getBackground();
@@ -2562,7 +2538,7 @@ public void JOINT2_POS(int theValue) {
   }
 }
 
-public void JOINT3_NEG(int theValue) {
+public void JOINT3_NEG() {
   activateLiveMotion(2, -1, 4);
   int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT3_POS")).getColor().getBackground();
@@ -2577,7 +2553,7 @@ public void JOINT3_NEG(int theValue) {
   }
 }
 
-public void JOINT3_POS(int theValue) {
+public void JOINT3_POS() {
   activateLiveMotion(2, 1, 5);
   int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT3_POS")).getColor().getBackground();
@@ -2592,7 +2568,7 @@ public void JOINT3_POS(int theValue) {
   }
 }
 
-public void JOINT4_NEG(int theValue) {
+public void JOINT4_NEG() {
   activateLiveMotion(3, -1, 0);
   int c1 = ((Button)cp5.get("JOINT4_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT4_POS")).getColor().getBackground();
@@ -2607,7 +2583,7 @@ public void JOINT4_NEG(int theValue) {
   }
 }
 
-public void JOINT4_POS(int theValue) {
+public void JOINT4_POS() {
   activateLiveMotion(3, 1, 1);
   int c1 = ((Button)cp5.get("JOINT4_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT4_POS")).getColor().getBackground();
@@ -2622,7 +2598,7 @@ public void JOINT4_POS(int theValue) {
   }
 }
 
-public void JOINT5_NEG(int theValue) {
+public void JOINT5_NEG() {
   activateLiveMotion(4, -1, 2);
   int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT5_POS")).getColor().getBackground();
@@ -2637,7 +2613,7 @@ public void JOINT5_NEG(int theValue) {
   }
 }
 
-public void JOINT5_POS(int theValue) {
+public void JOINT5_POS() {
   activateLiveMotion(4, 1, 3);
   int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT5_POS")).getColor().getBackground();
@@ -2652,7 +2628,7 @@ public void JOINT5_POS(int theValue) {
   }
 }
 
-public void JOINT6_NEG(int theValue) {
+public void JOINT6_NEG() {
   activateLiveMotion(5, -1, 4);
   int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT6_POS")).getColor().getBackground();
@@ -2667,7 +2643,7 @@ public void JOINT6_NEG(int theValue) {
   }
 }
 
-public void JOINT6_POS(int theValue) {
+public void JOINT6_POS() {
   activateLiveMotion(5, 1, 5);
   int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
   int c2 = ((Button)cp5.get("JOINT6_POS")).getColor().getBackground();
@@ -2713,7 +2689,7 @@ public void updateScreen(color active, color normal){
    switch (mode){
       case INSTRUCTION_NAV:
          cp5.addTextlabel("-1")
-            .setText(programs.get(select_program).getName())
+            .setText(programs.get(active_program).getName())
             .setPosition(next_px, next_py)
             .setColorValue(normal)
             .show()
@@ -2727,7 +2703,7 @@ public void updateScreen(color active, color normal){
       case SET_INSTRUCTION_REGISTER:
       case SET_INSTRUCTION_TERMINATION:
          cp5.addTextlabel("-1")
-            .setText(programs.get(select_program).getName()) 
+            .setText(programs.get(active_program).getName()) 
             .setPosition(next_px, next_py)
             .setColorValue(normal)
             .show()

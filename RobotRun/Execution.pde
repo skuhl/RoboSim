@@ -98,7 +98,7 @@ void showMainDisplayText() {
                       
     text(s, width-20, 60);
   } else {
-    PVector wpr = armModel.getRot();
+    PVector wpr = armModel.getWpr();
     String ee_rot = String.format("  W: %5.4f  P: %5.4f  R: %5.4f", wpr.x, wpr.y, wpr.z);
     text(ee_pos + ee_rot, width-20, 60);
   }
@@ -397,18 +397,30 @@ void applyModelRotation(ArmModel model) {
  */
 float[][] calculateJacobian(float[] angles){
   float dAngle = 0.0174553;
-  float[][] jacobian = new float[6][3];
+  float[][] jacobian = new float[6][6];
   PVector oPos = calculateEndEffectorPosition(armModel, angles);
   PVector nPos = new PVector(0, 0, 0);
+  PVector oRot = armModel.getWpr();
+  PVector nRot = new PVector(0, 0, 0);
   
   //examine each segment of the arm
   for(int i = 0; i < 6; i += 1){
     //test angular offset
     angles[i] += dAngle;
+    armModel.setJointRotations(angles);
     nPos = calculateEndEffectorPosition(armModel, angles);
-    jacobian[i] = calculateVectorDelta(nPos, oPos);
+    nRot = armModel.getWpr();
+    //get translational delta
+    jacobian[i][0] = calculateVectorDelta(nPos, oPos)[0];
+    jacobian[i][1] = calculateVectorDelta(nPos, oPos)[1];
+    jacobian[i][2] = calculateVectorDelta(nPos, oPos)[2];
+    //get rotational delta
+    jacobian[i][3] = calculateRotationalDelta(nRot, oRot)[0];
+    jacobian[i][4] = calculateRotationalDelta(nRot, oRot)[1];
+    jacobian[i][5] = calculateRotationalDelta(nRot, oRot)[2];
     //replace the original rotational value
     angles[i] -= dAngle;
+    armModel.setJointRotations(angles);
   }
   
   return jacobian;
@@ -421,6 +433,7 @@ int calculateIKJacobian(PVector tgt){
   while(count < 1000){
     PVector cPos = calculateEndEffectorPosition(armModel, angles);
     float[] delta = calculateVectorDelta(tgt, cPos);
+    
     float dist = PVector.dist(cPos, tgt);
     
     if(dist < 0.5) break;
@@ -432,7 +445,9 @@ int calculateIKJacobian(PVector tgt){
       dAngle[i] = calculateVectorDot(jacobian[i], delta);
     }
     
+    //expected change in end effector position
     float expectedChange[] = {0, 0, 0};
+    //calculate expected translational change in ee position
     for(int i = 0; i < 3; i += 1){
       for(int j = 0; j < 6; j += 1){
         expectedChange[i] += dAngle[j] * jacobian[j][i];
@@ -469,6 +484,14 @@ float[] calculateVectorDelta(PVector p1, PVector p2){
 float calculateVectorDot(float[] v1, float[] v2){
   float dot = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
   return dot;
+}
+
+float[] calculateRotationalDelta(PVector p1, PVector p2){
+  float[] d = new float[3];
+  d[0] = minimumDistance(p1.x, p2.x);
+  d[1] = minimumDistance(p1.y, p2.y);
+  d[2] = minimumDistance(p1.z, p2.z);
+  return d;
 }
 
 /**
@@ -593,7 +616,7 @@ void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float perc
  * @param next Point after the destination
  * @param percentage Intensity of the curve
  */
-void beginNewContinuousMotion(ArmModel model, PVector start, PVector end,
+void beginNewContinuousMotion(PVector start, PVector end,
                               PVector next, float percentage)
 {
   calculateContinuousPositions(start, end, next, percentage);
@@ -607,7 +630,7 @@ void beginNewContinuousMotion(ArmModel model, PVector start, PVector end,
  * @param start Start point
  * @param end Destination point
  */
-void beginNewLinearMotion(ArmModel model, PVector start, PVector end) {
+void beginNewLinearMotion(PVector start, PVector end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0)
@@ -620,7 +643,7 @@ void beginNewLinearMotion(ArmModel model, PVector start, PVector end) {
  * @param p2 Point 2
  * @param p3 Point 3
  */
-void beginNewCircularMotion(ArmModel model, PVector p1, PVector p2, PVector p3) {
+void beginNewCircularMotion(PVector p1, PVector p2, PVector p3) {
   // Generate the circle circumference,
   // then turn it into an arc from the current point to the end point
   intermediatePositions = createArc(createCircleCircumference(p1, p2, p3, 180), p1, p2, p3);
@@ -658,7 +681,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
       interMotionIdx = -1;
       return true;
     }
-    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+    //calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
   return false;
 } // end execute linear motion
@@ -720,7 +743,7 @@ PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {
   n1.normalize();
   PVector n2 = new PVector(a.x-c.x, a.y-c.y, a.z-c.z);
   n2.normalize();
-  PVector x = n1.get();
+  PVector x = n1.copy();
   PVector z = n1.cross(n2);
   PVector y = x.cross(z);
   y.normalize();
@@ -780,7 +803,6 @@ ArrayList<PVector> createCircleCircumference(PVector a,
   float angle = 0;
   float angleInc = (TWO_PI)/(float)numPoints;
   ArrayList<PVector> points = new ArrayList<PVector>();
-  boolean start = false, grace = false;
   for (int iter = 0; iter < numPoints; iter++) {
     PVector inter1 = PVector.mult(u, r * cos(angle));
     PVector inter2 =  n.cross(u);
@@ -1050,7 +1072,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
         }
       } else if (instruction.getMotionType() == MTYPE_LINEAR) {
         if (instruction.getTermination() == 0) {
-          beginNewLinearMotion(model, start, instruction.getVector(program).c);
+          beginNewLinearMotion(start, instruction.getVector(program).c);
         } else {
           Point nextPoint = null;
           for (int n = currentInstruction+1; n < program.getInstructions().size(); n++) {
@@ -1062,8 +1084,8 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
             }
           }
           if (nextPoint == null) {
-            beginNewLinearMotion(model, start, instruction.getVector(program).c);
-          } else beginNewContinuousMotion(model, start, instruction.getVector(program).c,
+            beginNewLinearMotion(start, instruction.getVector(program).c);
+          } else beginNewContinuousMotion(start, instruction.getVector(program).c,
                                           nextPoint.c, instruction.getTermination());
         } // end if termination type is continuous
       } else if (instruction.getMotionType() == MTYPE_CIRCULAR) {
@@ -1079,7 +1101,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
             nextPoint = castIns.getVector(program);
           }
         } else return true; // invalid instruction
-        beginNewCircularMotion(model, start, instruction.getVector(program).c, nextPoint.c);
+        beginNewCircularMotion(start, instruction.getVector(program).c, nextPoint.c);
         
       } // end if motion type is circular
       return false;
@@ -1099,13 +1121,10 @@ public float minimumDistance(float angle1, float angle2) {
   return dist;
 }
 
-
 void setError(String text) {
   errorText = text;
   errorCounter = 600;
 }
-
-
 
 float clampAngle(float angle) {
   while (angle > TWO_PI) angle -= (TWO_PI);

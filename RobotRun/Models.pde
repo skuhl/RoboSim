@@ -305,7 +305,7 @@ public class ArmModel {
     }
   }//end draw arm model
   
-  public PVector getRot() {
+  public PVector getWpr() {
     PVector out = new PVector(0,0,0);
     PVector tmp = new PVector(0,0,0);
     for (Model a : segments) {

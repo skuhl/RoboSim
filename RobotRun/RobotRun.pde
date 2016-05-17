@@ -65,9 +65,8 @@ int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 
 /* The Y corrdinate of the ground plane */
 public static final float PLANE_Y = 200.5f;
-private Shape floor;
-
 public Object[] objects;
+private Shape floor;
 
 /*******************************/
 
@@ -128,7 +127,6 @@ public void draw() {
   else{
     intermediatePositions.clear();
   }
-
   
   armModel.executeLiveMotion(); // respond to manual movement from J button presses
   
