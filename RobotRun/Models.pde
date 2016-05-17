@@ -106,6 +106,8 @@ public class ArmModel {
   public float[] angularMoveSpeeds = new float[3];
   //public final float[] maxArmRange;
   
+  public Object held;
+  
   public ArmModel() {
     
     motorSpeed = 4000.0; // speed in mm/sec
@@ -161,6 +163,8 @@ public class ArmModel {
     for (int idx = 0; idx < angularMoveSpeeds.length; ++idx) {
       angularMoveSpeeds[idx] = 0;
     }
+    
+    held = null;
     
   } // end ArmModel constructor
   
