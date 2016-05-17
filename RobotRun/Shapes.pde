@@ -134,9 +134,23 @@ public class Box extends Shape {
       fill(fill);
     }
     
-    box(len, wdh, hgt);
+    box(wdh, hgt, len);
     
     popMatrix();
+  }
+  
+  /* Check if the given point is within the dimensions of the box */
+  public boolean within(PVector pos) {
+    pushMatrix();
+    resetMatrix();
+    
+    boolean is_inside = pos.x >= (center.x - wdh / 2f) && pos.x <= (center.x + wdh / 2f)
+                     && pos.y >= (center.y - hgt / 2f) && pos.y <= (center.y + hgt / 2f)
+                     && pos.z >= (center.z - len / 2f) && pos.z <= (center.z + len / 2f);
+    
+    popMatrix();
+    
+    return is_inside;
   }
 }
 
@@ -156,5 +170,9 @@ public class Object {
   
   public void draw() {
     form.draw();
+  }
+  
+  public boolean collision(PVector pos) {
+    return ((Box)hit_box).within(pos);
   }
 }

@@ -1,3 +1,4 @@
+
 import controlP5.*;
 
 import java.util.*;
@@ -67,7 +68,6 @@ int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 public static final float PLANE_Y = 200.5f;
 public Object[] objects;
 private Shape floor;
-
 /*******************************/
 
 // for store or load program state
@@ -80,30 +80,23 @@ public void setup() {
   cp5 = new ControlP5(this);
   gui();
   for (int n = 0; n < pr.length; n++) pr[n] = new Point();
-  armModel = new ArmModel(ARM_STANDARD);
+  armModel = new ArmModel();
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   intermediatePositions = new ArrayList<PVector>();
   int loadit = loadState();
   
-  /*for (int n = 0; n < toolFrames.length; n++) {
+  for (int n = 0; n < toolFrames.length; n++) {
     toolFrames[n] = new Frame();
     userFrames[n] = new Frame();
-  }*/
-  
-  // Create the floor of the environment
-  floor = new Polygon(new PVector[] { new PVector(base_center.x - 50000, PLANE_Y, base_center.z - 50000), 
-                                      new PVector(base_center.x - 50000, PLANE_Y, base_center.z + 50000),
-                                      new PVector(base_center.x + 50000, PLANE_Y, base_center.z + 50000), 
-                                      new PVector(base_center.x + 50000, PLANE_Y, base_center.z - 50000) },
-                                      color(205, 205, 205), color(205, 205, 205));
+  }
   
   // Intialize world objects
   // Create a small, blue cube
   Shape box = new Box(new PVector(0, -200, 0), 35, color(0, 0, 255), color(0, 0, 0));
   objects = new Object[1];
-  objects[0] = new Object(box, new Box(new PVector(0, -200, 0), 35, color(0, 255, 0)));
+  objects[0] = new Object(box, new Box(new PVector(0, -200, 0), 75, 125, 40, color(0, 255, 0)));
 }
 
 boolean doneMoving = true;
@@ -136,24 +129,18 @@ public void draw() {
   noFill();
   
   pushMatrix();
-  
+   
   applyCamera();
-  
-  /*pushMatrix();
-  // Display EE axies
-  applyModelRotation(armModel);
-  stroke(0, 255, 0);
-  line(5000, 0, 0, -50000, 0, 0);
-  stroke(255, 0, 0);
-  line(0, 50000, 0, 0, -50000, 0);
-  stroke(0, 0, 255);
-  line(0, 0, 50000, 0, 0, -50000);
-  
-  popMatrix();*/
 
   pushMatrix();
-  armModel.draw(); 
+  armModel.draw();
   popMatrix();
+  
+  // Draw all world objects and apply gravity upon them as well
+  for (Object s : objects) {
+    s.draw();
+    s.hit_box.draw();
+  }
   
   noLights();
   
@@ -224,30 +211,34 @@ public void draw() {
   
   drawEndEffectorGridMapping();
   
-  // Create ground plane under the robot's base
-  //floor.draw();
-  
   // Draw x, z origin lines
   stroke(255, 0, 0);
-  line(0, PLANE_Y, -50000, 0, PLANE_Y, 50000);
-  line(-50000, PLANE_Y, 0, 50000, PLANE_Y, 0);
+  line(0, PLANE_Y, -5000, 0, PLANE_Y, 5000);
+  line(-5000, PLANE_Y, 0, 5000, PLANE_Y, 0);
   
-  // Draw grid lines every 100 units, from -50000 to 50000, in the x and z plane, on the floor plane
+  // Draw grid lines every 100 units, from -5000 to 5000, in the x and z plane, on the floor plane
   stroke(25, 25, 25);
-  for (int l = 1; l < 500; ++l) {
-    line(100 * l, PLANE_Y, -50000, 100 * l, PLANE_Y, 50000);
-    line(-50000, PLANE_Y, 100 * l, 50000, PLANE_Y, 100 * l);
+  for (int l = 1; l < 50; ++l) {
+    line(100 * l, PLANE_Y, -5000, 100 * l, PLANE_Y, 5000);
+    line(-5000, PLANE_Y, 100 * l, 5000, PLANE_Y, 100 * l);
     
-    line(-100 * l, PLANE_Y, -50000, -100 * l, PLANE_Y, 50000);
-    line(-50000, PLANE_Y, -100 * l, 50000, PLANE_Y, -100 * l);
-  }
-  
-  // Draw all world objects and apply gravity upon them as well
-  for (Object s : objects) {
-    s.draw();
+    line(-100 * l, PLANE_Y, -5000, -100 * l, PLANE_Y, 5000);
+    line(-5000, PLANE_Y, -100 * l, 5000, PLANE_Y, -100 * l);
   }
   
   popMatrix();
+  
+  PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+  
+  for (Object s : objects) {
+    if (s.collision(ee_pos)) {
+      // Change hit box color
+      s.hit_box.outline = color(255, 0, 0);
+    } else {
+      // Resort to normal
+      s.hit_box.outline = color(0, 255, 0);
+    }
+  }
   
   hint(DISABLE_DEPTH_TEST);
   

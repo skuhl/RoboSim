@@ -124,6 +124,15 @@ void showMainDisplayText() {
     text("Press shift on the keyboard to disable camera rotation", 390, height / 2 + 40);
   }
   
+  /*textSize(12);
+  fill(0, 0, 0);
+  
+  for (int idx = 0; idx < armModel.segments.size(); ++idx) {
+    float[] orientation = armModel.segments.get(idx).currentRotations;
+    String s = String.format("Joint %d - w:%f p:%f r:%f", idx, orientation[1], orientation[2], orientation[0]);
+    text(s, 380, height / 2 + 55 + idx * 15);
+  }/**/
+  
   if (errorCounter > 0) {
     errorCounter--;
     fill(255, 0, 0);
@@ -196,81 +205,66 @@ PVector computePerpendicular(PVector in, PVector second) {
 PVector calculateEndEffectorPosition(ArmModel model, float[] rot) {
   pushMatrix();
   resetMatrix();
-  if (model.type == ARM_TEST) {
-    rotateY(rot[0]);
-    translate(0, -200, 0);
-    translate(-25, -130, 0);
-    
-    rotateZ(rot[1]);
-    translate(-25, -130, 0);
-    translate(0, -120, 0);
-    
-    rotateZ(rot[2]);
-    translate(0, -120, 0);
-    rotateZ(PI);
-    translate(0, 102, 0);
-  } 
-  else if (model.type == ARM_STANDARD) {
-    translate(600, 200, 0);
-    translate(-50, -166, -358); // -115, -213, -413
-    rotateZ(PI);
-    translate(150, 0, 150);
-    
-    rotateY(rot[0]);
-    
-    translate(-150, 0, -150);
-    rotateZ(-PI);    
-    translate(-115, -85, 180);
-    rotateZ(PI);
-    rotateY(PI/2);
-    translate(0, 62, 62);
-    
-    rotateX(rot[1]);
-    
-    translate(0, -62, -62);
-    rotateY(-PI/2);
-    rotateZ(-PI);   
-    translate(0, -500, -50);
-    rotateZ(PI);
-    rotateY(PI/2);
-    translate(0, 75, 75);
-    
-    rotateX(rot[2]);
-    
-    translate(0, -75, -75);
-    rotateY(PI/2);
-    rotateZ(-PI);
-    translate(745, -150, 150);
-    rotateZ(PI/2);
-    rotateY(PI/2);
-    translate(70, 0, 70);
-    
-    rotateY(rot[3]);
-    
-    translate(-70, 0, -70);
-    rotateY(-PI/2);
-    rotateZ(-PI/2);    
-    translate(-115, 130, -124);
-    rotateZ(PI);
-    rotateY(-PI/2);
-    translate(0, 50, 50);
-    
-    rotateX(rot[4]);
-    
-    translate(0, -50, -50);
-    rotateY(PI/2);
-    rotateZ(-PI);    
-    translate(150, -10, 95);
-    rotateY(-PI/2);
-    rotateZ(PI);
-    translate(45, 45, 0);
-    
-    rotateZ(rot[5]);
-    
-    if (activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
-      PVector tr = toolFrames[activeToolFrame].getOrigin();
-      translate(tr.x, tr.y, tr.z);
-    }
+  
+  translate(600, 200, 0);
+  translate(-50, -166, -358); // -115, -213, -413
+  rotateZ(PI);
+  translate(150, 0, 150);
+  
+  rotateY(rot[0]);
+  
+  translate(-150, 0, -150);
+  rotateZ(-PI);    
+  translate(-115, -85, 180);
+  rotateZ(PI);
+  rotateY(PI/2);
+  translate(0, 62, 62);
+  
+  rotateX(rot[1]);
+  
+  translate(0, -62, -62);
+  rotateY(-PI/2);
+  rotateZ(-PI);   
+  translate(0, -500, -50);
+  rotateZ(PI);
+  rotateY(PI/2);
+  translate(0, 75, 75);
+  
+  rotateX(rot[2]);
+  
+  translate(0, -75, -75);
+  rotateY(PI/2);
+  rotateZ(-PI);
+  translate(745, -150, 150);
+  rotateZ(PI/2);
+  rotateY(PI/2);
+  translate(70, 0, 70);
+  
+  rotateY(rot[3]);
+  
+  translate(-70, 0, -70);
+  rotateY(-PI/2);
+  rotateZ(-PI/2);    
+  translate(-115, 130, -124);
+  rotateZ(PI);
+  rotateY(-PI/2);
+  translate(0, 50, 50);
+  
+  rotateX(rot[4]);
+  
+  translate(0, -50, -50);
+  rotateY(PI/2);
+  rotateZ(-PI);    
+  translate(150, -10, 95);
+  rotateY(-PI/2);
+  rotateZ(PI);
+  translate(45, 45, 0);
+  
+  rotateZ(rot[5]);
+  
+  if (activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
+    PVector tr = toolFrames[activeToolFrame].getOrigin();
+    translate(tr.x, tr.y, tr.z);
   }
   PVector ret = new PVector(
     modelX(0, 0, 0),
@@ -290,6 +284,27 @@ PVector calculateEndEffectorPosition(ArmModel model, float[] rot) {
 public void drawEndEffectorGridMapping() {
   
   PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+  
+  /*pushMatrix();
+  // Display EE axes at the EE position
+  applyModelRotation(armModel);
+  stroke(0, 0, 255);
+  line(50000, 0, 0, -50000, 0, 0);
+  stroke(255, 0, 0);
+  line(0, 50000, 0, 0, -50000, 0);
+  stroke(0, 255, 0);
+  line(0, 0, 50000, 0, 0, -50000);
+  popMatrix();
+  
+  // Display world axes at the EE position
+  stroke(0, 0, 255);
+  line(50000, ee_pos.y, ee_pos.z, -50000, ee_pos.y, ee_pos.z);
+  stroke(255, 0, 0);
+  line(ee_pos.x, 50000, ee_pos.z, ee_pos.x, -50000, ee_pos.z);
+  stroke(0, 255, 0);
+  line(ee_pos.x, ee_pos.y, 50000, ee_pos.x, ee_pos.y, -50000);/**/
+  
+  
   // Change color of the EE mapping based on if it lies below or above the ground plane
   color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);
   
@@ -328,66 +343,54 @@ public void drawEndEffectorGridMapping() {
  * @param model The arm model whose transformations to apply
  */
 void applyModelRotation(ArmModel model) {
-  if (model.type == ARM_TEST) {
-    rotateY(model.segments.get(0).currentRotations[1]);
-    translate(0, -200, 0);
-    translate(-25, -130, 0);
-    rotateZ(model.segments.get(1).currentRotations[2]);
-    translate(-25, -130, 0);
-    translate(0, -120, 0);
-    rotateZ(model.segments.get(2).currentRotations[2]);
-    translate(0, -120, 0);
-    rotateZ(PI);
-    translate(0, 102, 0);
-  } else if (model.type == ARM_STANDARD) {
-    translate(600, 200, 0);
-    translate(-50, -166, -358); // -115, -213, -413
-    rotateZ(PI);
-    translate(150, 0, 150);
-    rotateY(model.segments.get(0).currentRotations[1]);
-    translate(-150, 0, -150);
-    rotateZ(-PI);    
-    translate(-115, -85, 180);
-    rotateZ(PI);
-    rotateY(PI/2);
-    translate(0, 62, 62);
-    rotateX(model.segments.get(1).currentRotations[2]);
-    translate(0, -62, -62);
-    rotateY(-PI/2);
-    rotateZ(-PI);   
-    translate(0, -500, -50);
-    rotateZ(PI);
-    rotateY(PI/2);
-    translate(0, 75, 75);
-    rotateX(model.segments.get(2).currentRotations[2]);
-    translate(0, -75, -75);
-    rotateY(PI/2);
-    rotateZ(-PI);
-    translate(745, -150, 150);
-    rotateZ(PI/2);
-    rotateY(PI/2);
-    translate(70, 0, 70);
-    rotateY(model.segments.get(3).currentRotations[0]);
-    translate(-70, 0, -70);
-    rotateY(-PI/2);
-    rotateZ(-PI/2);    
-    translate(-115, 130, -124);
-    rotateZ(PI);
-    rotateY(-PI/2);
-    translate(0, 50, 50);
-    rotateX(model.segments.get(4).currentRotations[2]);
-    translate(0, -50, -50);
-    rotateY(PI/2);
-    rotateZ(-PI);    
-    translate(150, -10, 95);
-    rotateY(-PI/2);
-    rotateZ(PI);
-    translate(45, 45, 0);
-    rotateZ(model.segments.get(5).currentRotations[0]);
-    if (activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
-      PVector tr = toolFrames[activeToolFrame].getOrigin();
-      translate(tr.x, tr.y, tr.z);
-    }
+  
+  translate(600, 200, 0);
+  translate(-50, -166, -358); // -115, -213, -413
+  rotateZ(PI);
+  translate(150, 0, 150);
+  rotateY(model.segments.get(0).currentRotations[1]);
+  translate(-150, 0, -150);
+  rotateZ(-PI);    
+  translate(-115, -85, 180);
+  rotateZ(PI);
+  rotateY(PI/2);
+  translate(0, 62, 62);
+  rotateX(model.segments.get(1).currentRotations[2]);
+  translate(0, -62, -62);
+  rotateY(-PI/2);
+  rotateZ(-PI);   
+  translate(0, -500, -50);
+  rotateZ(PI);
+  rotateY(PI/2);
+  translate(0, 75, 75);
+  rotateX(model.segments.get(2).currentRotations[2]);
+  translate(0, -75, -75);
+  rotateY(PI/2);
+  rotateZ(-PI);
+  translate(745, -150, 150);
+  rotateZ(PI/2);
+  rotateY(PI/2);
+  translate(70, 0, 70);
+  rotateY(model.segments.get(3).currentRotations[0]);
+  translate(-70, 0, -70);
+  rotateY(-PI/2);
+  rotateZ(-PI/2);    
+  translate(-115, 130, -124);
+  rotateZ(PI);
+  rotateY(-PI/2);
+  translate(0, 50, 50);
+  rotateX(model.segments.get(4).currentRotations[2]);
+  translate(0, -50, -50);
+  rotateY(PI/2);
+  rotateZ(-PI);    
+  translate(150, -10, 95);
+  rotateY(-PI/2);
+  rotateZ(PI);
+  translate(45, 45, 0);
+  rotateZ(model.segments.get(5).currentRotations[0]);
+  if (activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
+    PVector tr = toolFrames[activeToolFrame].getOrigin();
+    translate(tr.x, tr.y, tr.z);
   }
 } // end apply model rotations
 

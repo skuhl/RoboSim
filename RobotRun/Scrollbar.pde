@@ -7,9 +7,9 @@
  */
 public class Scrollbar {
   // The position of the top-left corner of the scroll bar
-  public final float POS_X, POS_Y,
-                    // The length and height of the scrolbar
-                     S_LEN, S_HEIGHT;
+  public float pos_x, pos_y,
+               // The length and height of the scrolbar
+               s_len, s_height;
   // The current position of the slider on the scroll bar
   private float slider_pos_y;
   // If the scroll bar is selected by the mouse
@@ -19,16 +19,13 @@ public class Scrollbar {
   // The color of the scroll bar when selected by the mouse
                 h_outline, h_fill;
   
-  /**
-   * Creates a scroll bar of the given x-position, y-position,
-   * lenght, and height
-   */
-  public Scrollbar(float x, float y, float len, float hgt) {
-    POS_X = x;
-    POS_Y = y;
-    slider_pos_y = POS_Y;
-    S_LEN = len;
-    S_HEIGHT = hgt;
+  /* Creates a scroll bar */
+  public Scrollbar() {
+    pos_x = 0;
+    pos_y = 0;
+    slider_pos_y = pos_y;
+    s_len = 5;
+    s_height = 25;
     
     focus = false;
     // default colors
@@ -36,6 +33,22 @@ public class Scrollbar {
     n_fill = color(255, 255, 255);
     h_outline = color(255, 255, 255);
     h_fill = color(0, 0, 0);
+  }
+  
+  /* Set the position of the scroll bar's top-left corner */
+  public void setPosition(float x, float y) {
+    pos_x = x;
+    pos_y = y;
+    // Keep the slider within the bounds of the scroll bar
+    slider_pos_y = max( pos_y, min( (pos_y + s_height - 1), slider_pos_y ) );
+  }
+  
+  /* Define the scroll bar's length and height */
+  public void setDim(float len, float hgt) {
+    s_len = len;
+    s_height = hgt;
+    // Keep the slider within the bounds of the scroll bar
+    slider_pos_y = max( pos_y, min( (pos_y + s_height - 1), slider_pos_y ) );
   }
   
   /**
@@ -62,21 +75,25 @@ public class Scrollbar {
       
       slider_pos_y = mouseY;
       // Keep the slider within the bounds of the scroll bar
-      slider_pos_y = max( POS_Y, min( (POS_Y + S_HEIGHT - 1), slider_pos_y ) );
+      slider_pos_y = max( pos_y, min( (pos_y + s_height - 1), slider_pos_y ) );
       
       updateScreen(color(255,0,0), color(0,0,0));
     }
+  }
+  
+  public void checkMousePosition(int mx, int my) {
+    focus = mouseX >= pos_x && mouseX <= (pos_x + s_len) && mouseY >= slider_pos_y && mouseY <= (slider_pos_y + s_len);
   }
   
   /* Draw the scrollbar on the screen */
   public void draw() {
     // Draw midline of the scroll bar
     stroke(n_outline);
-    line(POS_X + (S_LEN / 2), POS_Y + (S_LEN / 2), POS_X + (S_LEN / 2), POS_Y + S_HEIGHT);
+    line(pos_x + (s_len / 2), pos_y + (s_len / 2), pos_x + (s_len / 2), pos_y + s_height);
     // Draw slider
     stroke( (focus) ? h_outline : n_outline );
     fill( (focus) ? h_fill : n_fill );
-    rect(POS_X, slider_pos_y, S_LEN, S_LEN);
+    rect(pos_x, slider_pos_y, s_len, s_len);
   }
   
   /* Given the size of the list of contents to display and the maximum
@@ -96,7 +113,7 @@ public class Scrollbar {
       // Number of elements display is less than the display cap
       return 0;
     } else {
-      return (int)( ((slider_pos_y - POS_Y) / (S_HEIGHT - 1)) * (size - display_cap) );
+      return (int)( ((slider_pos_y - pos_y) / (s_height - 1)) * (size - display_cap) );
     }
   }
   
@@ -109,6 +126,6 @@ public class Scrollbar {
   public void increment_slider(float value) {
     slider_pos_y += value;
     // Keep the slider within the bounds of the scroll bar
-    slider_pos_y = max( POS_Y, min( (POS_Y + S_HEIGHT - 1), slider_pos_y ) );
+    slider_pos_y = max( pos_y, min( (pos_y + s_height - 1), slider_pos_y ) );
   }
 }
