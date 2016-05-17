@@ -906,9 +906,9 @@ public void mousePressed(){
 }
 
 public void mouseDragged() {
-  if (sb != null) {
-    sb.update();
-  }
+  //if (sb != null) {
+  //  sb.update();
+  //}
 }
 
 public void mouseMoved(){
@@ -926,9 +926,9 @@ public void mouseMoved(){
 
 public void mouseWheel(MouseEvent event){
   // TODO add textarea check for scrolling
-  if (sb != null && sb.focus) {
-    sb.increment_slider(event.getCount() / 2f);
-  } else {
+  //if (sb != null && sb.focus) {
+  //  sb.increment_slider(event.getCount() / 2f);
+  //} else {
     // scroll mouse to zoom in / out
     float e = event.getCount();
     if (e > 0 ) {
@@ -937,12 +937,12 @@ public void mouseWheel(MouseEvent event){
     if (e < 0){
        myscale *= 0.9; 
     }
-  }
+  //}
 }
 
 public void mouseReleased() {
   // Remove focus from the Scrollbar
-  if (sb != null) { sb.focus = false; }
+  //if (sb != null) { sb.focus = false; }
 }
 
 public void keyPressed(){
@@ -1422,7 +1422,7 @@ public void sf(){
 }
 
 public void st() {
-     if (step == OFF){ 
+   if (step == OFF){ 
      step = ON;
      ((Button)cp5.get("st")).setColorBackground(color(255, 0, 0));
    }
@@ -1984,23 +1984,28 @@ public void fd() {
   if (shift == ON) {
     currentProgram = programs.get(active_program);
     if (step == OFF){
-      readyProgram();
+      currentInstruction = 0;
+      executingInstruction = false;
+      execSingleInst = false;
+      doneMoving = false;
     }
     else {
-      Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
       currentInstruction = active_instruction;
-      
-      if (ins instanceof MotionInstruction) {
-        singleInstruction = (MotionInstruction)ins;
-        setUpInstruction(programs.get(active_program), armModel, singleInstruction);
+      executingInstruction = false;
+      execSingleInst = true;
+      doneMoving = false;
+      //Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
+      //if (ins instanceof MotionInstruction) {
+      //  singleInstruction = (MotionInstruction)ins;
+      //  setUpInstruction(programs.get(active_program), armModel, singleInstruction);
         
-        if (active_instruction < programs.get(active_program).getInstructions().size()-1){
-          active_instruction = (active_instruction+1);
-        }
+      //  if (active_instruction < programs.get(active_program).getInstructions().size()-1){
+      //    active_instruction = (active_instruction+1);
+      //  }
         
-        loadInstructions(active_program);
-        updateScreen(color(255,0,0), color(0));
-      }
+      //  loadInstructions(active_program);
+      //  updateScreen(color(255,0,0), color(0));
+      //}
     }
   }
   //shift = OFF;

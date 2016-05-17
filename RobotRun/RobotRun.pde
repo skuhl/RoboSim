@@ -13,7 +13,6 @@ import java.io.IOException;
 final int OFF = 0, ON = 1;
 
 ArmModel armModel;
-//CubeModel cube;
 Model eeModelSuction;
 Model eeModelClaw;
 Model eeModelClawPincer;
@@ -55,6 +54,7 @@ float myscale = 0.5;
 
 // for Execution
 Program currentProgram;
+boolean execSingleInst = false;
 MotionInstruction singleInstruction = null;
 int currentInstruction;
 int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
@@ -85,7 +85,7 @@ public void setup() {
   eeModelClaw = new Model("GRIPPER.STL", color(40));
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   intermediatePositions = new ArrayList<PVector>();
-  int loadit = loadState();
+  loadState();
   
   for (int n = 0; n < toolFrames.length; n++) {
     toolFrames[n] = new Frame();
@@ -110,12 +110,7 @@ public void draw() {
   background(127);
   
   if (!doneMoving){
-    doneMoving = executeProgram(currentProgram, armModel);
-  }
-  else if (singleInstruction != null) {
-    if (executeSingleInstruction(singleInstruction)){
-      singleInstruction = null;
-    }
+    doneMoving = executeProgram(currentProgram, armModel, execSingleInst);
   }
   else{
     intermediatePositions.clear();

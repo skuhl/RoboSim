@@ -659,15 +659,6 @@ void beginNewCircularMotion(PVector p1, PVector p2, PVector p3) {
 boolean executingInstruction = false;
 
 /**
- * Prepare a new program for execution.
- */
-void readyProgram() {
-  currentInstruction = 0;
-  executingInstruction = false;
-  doneMoving = false;
-}
-
-/**
  * Move the arm model between two points according to its current speed.
  * @param model The arm model
  * @param speedMult Speed multiplier
@@ -934,45 +925,64 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
  * @param model Arm model to use
  * @return Finished yet (false=no, true=yes)
  */
-boolean executeProgram(Program program, ArmModel model) {
+boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
+  //stop executing if no valid program is selected or we reach the end of the program
   if (program == null || currentInstruction >= program.getInstructions().size()){
+    println("end of program");
     return true;
   }
+  
+  //get the next program instruction
   Instruction ins = program.getInstructions().get(currentInstruction);
-  if (ins instanceof MotionInstruction) {
+  
+  //motion instructions
+  if (ins instanceof MotionInstruction){
     MotionInstruction instruction = (MotionInstruction)ins;
-    if (instruction.getUserFrame() != activeUserFrame) {
+    if (instruction.getUserFrame() != activeUserFrame){
       setError("ERROR: Instruction's user frame is different from currently active user frame.");
+      println("bad user frame");
       return true;
     }
-    if (!executingInstruction) { // start executing new instruction
-      if (setUpInstruction(program, model, instruction)) return true;
-      executingInstruction = true;
-      
-    } else { // continue executing current instruction
-      
-      if (instruction.getMotionType() != MTYPE_JOINT)
+    //start a new instruction
+    if (!executingInstruction){
+      boolean setup = setUpInstruction(program, model, instruction);
+      if(!setup){ println("bad instruction"); return true; }
+      else executingInstruction = true;
+    }
+    //continue current instruction
+    else {
+      if (instruction.getMotionType() == MTYPE_JOINT){
+        executingInstruction = !(model.interpolateRotation(instruction.getSpeedForExec(model)));
+      }
+      else{
         executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
-      else executingInstruction =
-        !(model.interpolateRotation(instruction.getSpeedForExec(model)));
-      if (!executingInstruction) {
+      }
+      
+      //move to next instruction after current is finished
+      if (!executingInstruction){
         currentInstruction++;
-        if (currentInstruction >= program.getInstructions().size()) return true;
+        if(singleInst){
+          println("executing single instruction");
+          return true;
+        }
       }
     }
-  } else if (ins instanceof ToolInstruction) {
+  }
+  //tool instructions
+  else if (ins instanceof ToolInstruction){
     ToolInstruction instruction = (ToolInstruction)ins;
     instruction.execute();
     currentInstruction++;
-    if (currentInstruction >= program.getInstructions().size()) return true;
-  } else if (ins instanceof FrameInstruction) {
+  }
+  //frame instructions
+  else if (ins instanceof FrameInstruction){
     FrameInstruction instruction = (FrameInstruction)ins;
     instruction.execute();
     currentInstruction++;
-    if (currentInstruction >= program.getInstructions().size()) return true;
-  } // end of instruction type check
+  }//end of instruction type check
+  
   return false;
-} // end executeProgram
+}//end executeProgram
 
 
 /**
@@ -1012,102 +1022,117 @@ boolean executeSingleInstruction(Instruction ins) {
  * @return Returns true on failure (invalid instruction), false on success
  */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
-      PVector start = calculateEndEffectorPosition(model, armModel.getJointRotations());
-      if (instruction.getMotionType() == MTYPE_JOINT) {
-        float[] j = instruction.getVector(program).j;
-        for (int n = 0; n < j.length; n++) {
-          for (int r = 0; r < 3; r++) {
-            if (model.segments.get(n).rotations[r])
-              model.segments.get(n).targetRotations[r] = j[n];
-          }
-        }
-        // calculate whether it's faster to turn CW or CCW
-        for (Model a : model.segments) {
-          for (int r = 0; r < 3; r++) {
-            if (a.rotations[r]) {
-             
-             // The minimum distance between the current and target joint angles
-             float dist_t = minimumDistance(a.currentRotations[r], a.targetRotations[r]);
-             
-             if (a.jointRanges[r].x == 0 && a.jointRanges[r].y == TWO_PI) {
+  PVector start = calculateEndEffectorPosition(model, armModel.getJointRotations());
+  if (instruction.getMotionType() == MTYPE_JOINT) {
+    float[] j = instruction.getVector(program).j;
+    for (int n = 0; n < j.length; n++) {
+      for (int r = 0; r < 3; r++) {
+        if (model.segments.get(n).rotations[r])
+          model.segments.get(n).targetRotations[r] = j[n];
+      }
+    }
+    // calculate whether it's faster to turn CW or CCW
+    for (Model a : model.segments) {
+      for (int r = 0; r < 3; r++) {
+        if (a.rotations[r]) {
+         
+         // The minimum distance between the current and target joint angles
+         float dist_t = minimumDistance(a.currentRotations[r], a.targetRotations[r]);
+         
+         if (a.jointRanges[r].x == 0 && a.jointRanges[r].y == TWO_PI) {
+           
+           // Joint has full range of motion
+           a.rotationDirections[r] = (dist_t < 0) ? -1 : 1;
+         } else {
+           
+           /* Determine if at least one bound lies within the range of the shortest angle
+            * between the current joint angle and the target angle. If so, then take the
+            * longer angle, otherwise choose the shortest angle path. */
+            
+           // The minimum distance from the current joint angle to the lower bound of the joint's range
+           float dist_lb = minimumDistance(a.currentRotations[r], a.jointRanges[r].x);
+           
+           // The minimum distance from the current joint angle to the upper bound of the joint's range
+           float dist_ub = minimumDistance(a.currentRotations[r], a.jointRanges[r].y);
+           
+           if (dist_t < 0) {
+           
+             if ( (dist_lb < 0 && dist_lb > dist_t) || (dist_ub < 0 && dist_ub > dist_t) ) {
                
-               // Joint has full range of motion
-               a.rotationDirections[r] = (dist_t < 0) ? -1 : 1;
+               // One or both bounds lie within the shortest path
+               a.rotationDirections[r] = 1;
              } else {
-               
-               /* Determine if at least one bound lies within the range of the shortest angle
-                * between the current joint angle and the target angle. If so, then take the
-                * longer angle, otherwise choose the shortest angle path. */
-                
-               // The minimum distance from the current joint angle to the lower bound of the joint's range
-               float dist_lb = minimumDistance(a.currentRotations[r], a.jointRanges[r].x);
-               
-               // The minimum distance from the current joint angle to the upper bound of the joint's range
-               float dist_ub = minimumDistance(a.currentRotations[r], a.jointRanges[r].y);
-               
-               if (dist_t < 0) {
-               
-                 if ( (dist_lb < 0 && dist_lb > dist_t) || (dist_ub < 0 && dist_ub > dist_t) ) {
-                   
-                   // One or both bounds lie within the shortest path
-                   a.rotationDirections[r] = 1;
-                 } else {
-                   a.rotationDirections[r] = -1;
-                 }
-               } else if (dist_t > 0) {
-               
-                 if ( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {
-                   
-                   // One or both bounds lie within the shortest path
-                   a.rotationDirections[r] = -1;
-                 } else {
-                   a.rotationDirections[r] = 1;
-                 }
-               }
+               a.rotationDirections[r] = -1;
              }
-             
-             /*float blueAngle = a.targetRotations[r] - a.currentRotations[r];
-              blueAngle = clampAngle(blueAngle);
-              if (blueAngle < PI) a.rotationDirections[r] = 1;
-              else a.rotationDirections[r] = -1;*/
-            }
-          }
+           } else if (dist_t > 0) {
+           
+             if ( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {
+               
+               // One or both bounds lie within the shortest path
+               a.rotationDirections[r] = -1;
+             } else {
+               a.rotationDirections[r] = 1;
+             }
+           }
+         }
+         
+         /*float blueAngle = a.targetRotations[r] - a.currentRotations[r];
+          blueAngle = clampAngle(blueAngle);
+          if (blueAngle < PI) a.rotationDirections[r] = 1;
+          else a.rotationDirections[r] = -1;*/
         }
-      } else if (instruction.getMotionType() == MTYPE_LINEAR) {
-        if (instruction.getTermination() == 0) {
-          beginNewLinearMotion(start, instruction.getVector(program).c);
-        } else {
-          Point nextPoint = null;
-          for (int n = currentInstruction+1; n < program.getInstructions().size(); n++) {
-            Instruction nextIns = program.getInstructions().get(n);
-            if (nextIns instanceof MotionInstruction) {
-              MotionInstruction castIns = (MotionInstruction)nextIns;
-              nextPoint = castIns.getVector(program);
-              break;
-            }
-          }
-          if (nextPoint == null) {
-            beginNewLinearMotion(start, instruction.getVector(program).c);
-          } else beginNewContinuousMotion(start, instruction.getVector(program).c,
-                                          nextPoint.c, instruction.getTermination());
-        } // end if termination type is continuous
-      } else if (instruction.getMotionType() == MTYPE_CIRCULAR) {
-        // If it is a circular instruction, the current instruction holds the intermediate point.
-        // There must be another instruction after this that holds the end point.
-        // If this isn't the case, the instruction is invalid, so return immediately.
-        Point nextPoint = null;
-        if (program.getInstructions().size() >= currentInstruction + 2) {
-          Instruction nextIns = program.getInstructions().get(currentInstruction+1);
-          if (!(nextIns instanceof MotionInstruction)) return true;
-          else {
-            MotionInstruction castIns = (MotionInstruction)nextIns;
-            nextPoint = castIns.getVector(program);
-          }
-        } else return true; // invalid instruction
-        beginNewCircularMotion(start, instruction.getVector(program).c, nextPoint.c);
-        
-      } // end if motion type is circular
-      return false;
+      }
+    }
+  } 
+  else if (instruction.getMotionType() == MTYPE_LINEAR) {
+    if (instruction.getTermination() == 0) {
+      beginNewLinearMotion(start, instruction.getVector(program).c);
+    } 
+    else {
+      Point nextPoint = null;
+      for (int n = currentInstruction+1; n < program.getInstructions().size(); n++) {
+        Instruction nextIns = program.getInstructions().get(n);
+        if (nextIns instanceof MotionInstruction) {
+          MotionInstruction castIns = (MotionInstruction)nextIns;
+          nextPoint = castIns.getVector(program);
+          break;
+        }
+      }
+      if (nextPoint == null) {
+        beginNewLinearMotion(start, instruction.getVector(program).c);
+      } 
+      else{
+        beginNewContinuousMotion(start, 
+                                 instruction.getVector(program).c,
+                                 nextPoint.c, 
+                                 instruction.getTermination());
+      }
+    } // end if termination type is continuous
+  } 
+  else if (instruction.getMotionType() == MTYPE_CIRCULAR) {
+    // If it is a circular instruction, the current instruction holds the intermediate point.
+    // There must be another instruction after this that holds the end point.
+    // If this isn't the case, the instruction is invalid, so return immediately.
+    Point nextPoint = null;
+    if (program.getInstructions().size() >= currentInstruction + 2) {
+      Instruction nextIns = program.getInstructions().get(currentInstruction+1);
+      //make sure next instruction is of valid type
+      if (nextIns instanceof MotionInstruction){
+        MotionInstruction castIns = (MotionInstruction)nextIns;
+        nextPoint = castIns.getVector(program);
+      }
+      else{
+        return false;
+      }
+    } 
+    // invalid instruction
+    else{
+      return false; 
+    }
+    
+    beginNewCircularMotion(start, instruction.getVector(program).c, nextPoint.c);
+  } // end if motion type is circular
+  return true;
 } // end setUpInstruction
 
 /* Returns the angle with the smallest magnitude between
