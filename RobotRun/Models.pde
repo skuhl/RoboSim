@@ -91,8 +91,6 @@ public class Model {
   
 } // end Model class
 
-final int ARM_TEST = 0, ARM_STANDARD = 1;
-
 // The apporximate center of the base of the robot
 public static final PVector base_center = new PVector(404, 137, -212);
 
@@ -108,76 +106,53 @@ public class ArmModel {
   public float[] angularMoveSpeeds = new float[3];
   //public final float[] maxArmRange;
   
-  public ArmModel(int in) {
-    type = in;
-    if (type == ARM_TEST) {
-      motorSpeed = 255.0; // speed in mm
-      Model base = new Model("Base.STL", color(180, 180, 180));
-      base.rotations[1] = true;
-      base.jointRanges[1].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      Model link1 = new Model("Link1.STL", color(180, 180, 180));
-      link1.rotations[2] = true;
-      link1.jointRanges[2].add(new PVector(0, 2.4));
-      link1.jointRanges[2].add(new PVector(3.88, PI*2));
-      Model link2 = new Model("Link2.STL", color(180, 180, 180));
-      link2.rotations[2] = true;
-      link2.jointRanges[2].add(new PVector(0, 2));
-      link2.jointRanges[2].add(new PVector(4.28, PI*2));
-      Model link3 = new Model("Link3.STL", color(180, 180, 180));
-      link3.rotations[0] = true;
-      link3.jointRanges[0].add(new PVector(Float.MIN_VALUE, Float.MAX_VALUE));
-      segments.add(base);
-      segments.add(link1);
-      segments.add(link2);
-      segments.add(link3);
-    } else if (type == ARM_STANDARD) {
-      // TODO: FILL IN PROPER JOINT RESTRICTION VALUES.
-      motorSpeed = 4000.0; // speed in mm/sec
-      // Joint 1
-      Model base = new Model("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
-      base.rotations[1] = true;
-      base.jointRanges[1] = new PVector(0, TWO_PI);
-      base.rotationSpeed = radians(350)/60.0;
-      // Joint 2
-      Model axis1 = new Model("ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
-      axis1.rotations[2] = true;
-      //axis1.jointRanges[2].add(new PVector(0, 2.01));
-      //axis1.jointRanges[2].add(new PVector(4.34, TWO_PI));
-      axis1.jointRanges[2] = new PVector(4.34, 2.01);
-      axis1.rotationSpeed = radians(350)/60.0;
-      // Joint 3
-      Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
-      axis2.rotations[2] = true;
-      //axis2.jointRanges[2].add(new PVector(0, 8f * PI / 20f));
-      //axis2.jointRanges[2].add(new PVector(12f * PI / 20f, TWO_PI));
-      axis2.jointRanges[2] = new PVector(12f * PI / 20f, 8f * PI / 20f);
-      axis2.rotationSpeed = radians(400)/60.0;
-      // Joint 4
-      Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
-      axis3.rotations[0] = true;
-      axis3.jointRanges[0] = new PVector(0, TWO_PI);
-      axis3.rotationSpeed = radians(450)/60.0;
-      // Joint 5
-      Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
-      axis4.rotations[2] = true;
-      //axis4.jointRanges[2].add(new PVector(0, 11f * PI / 20f));
-      //axis4.jointRanges[2].add(new PVector(59f * PI / 40f, TWO_PI));
-      axis4.jointRanges[2] = new PVector(59f * PI / 40f, 11f * PI / 20f);
-      axis4.rotationSpeed = radians(450)/60.0;
-      // Joint 6
-      Model axis5 = new Model("ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0));
-      axis5.rotations[0] = true;
-      axis5.jointRanges[0] = new PVector(0, TWO_PI);
-      axis5.rotationSpeed = radians(720)/60.0;
-      Model axis6 = new Model("ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40));
-      segments.add(base);
-      segments.add(axis1);
-      segments.add(axis2);
-      segments.add(axis3);
-      segments.add(axis4);
-      segments.add(axis5);
-      segments.add(axis6);
-    }
+  public ArmModel() {
+    
+    motorSpeed = 4000.0; // speed in mm/sec
+    // Joint 1
+    Model base = new Model("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
+    base.rotations[1] = true;
+    base.jointRanges[1] = new PVector(0, TWO_PI);
+    base.rotationSpeed = radians(350)/60.0;
+    // Joint 2
+    Model axis1 = new Model("ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
+    axis1.rotations[2] = true;
+    //axis1.jointRanges[2].add(new PVector(0, 2.01));
+    //axis1.jointRanges[2].add(new PVector(4.34, TWO_PI));
+    axis1.jointRanges[2] = new PVector(4.34, 2.01);
+    axis1.rotationSpeed = radians(350)/60.0;
+    // Joint 3
+    Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
+    axis2.rotations[2] = true;
+    //axis2.jointRanges[2].add(new PVector(0, 8f * PI / 20f));
+    //axis2.jointRanges[2].add(new PVector(12f * PI / 20f, TWO_PI));
+    axis2.jointRanges[2] = new PVector(12f * PI / 20f, 8f * PI / 20f);
+    axis2.rotationSpeed = radians(400)/60.0;
+    // Joint 4
+    Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
+    axis3.rotations[0] = true;
+    axis3.jointRanges[0] = new PVector(0, TWO_PI);
+    axis3.rotationSpeed = radians(450)/60.0;
+    // Joint 5
+    Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
+    axis4.rotations[2] = true;
+    //axis4.jointRanges[2].add(new PVector(0, 11f * PI / 20f));
+    //axis4.jointRanges[2].add(new PVector(59f * PI / 40f, TWO_PI));
+    axis4.jointRanges[2] = new PVector(59f * PI / 40f, 11f * PI / 20f);
+    axis4.rotationSpeed = radians(450)/60.0;
+    // Joint 6
+    Model axis5 = new Model("ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0));
+    axis5.rotations[0] = true;
+    axis5.jointRanges[0] = new PVector(0, TWO_PI);
+    axis5.rotationSpeed = radians(720)/60.0;
+    Model axis6 = new Model("ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40));
+    segments.add(base);
+    segments.add(axis1);
+    segments.add(axis2);
+    segments.add(axis3);
+    segments.add(axis4);
+    segments.add(axis5);
+    segments.add(axis6);
     
     for (int idx = 0; idx < angularMoveSpeeds.length; ++idx) {
       angularMoveSpeeds[idx] = 0;
@@ -190,129 +165,104 @@ public class ArmModel {
   } // end ArmModel constructor
   
   public void draw() {
-    if (type == ARM_TEST) {
-      noStroke();
-      rotateY(segments.get(0).currentRotations[1]);
-      segments.get(0).draw();
-      
-      translate(0, -200, 0);
-      rotateZ(PI);
-      //rotateY(PI/2.0);
-      segments.get(1).draw();
-      
-      rotateZ(-PI);
-      translate(-25, -130, 0);
-      rotateZ(segments.get(1).currentRotations[2]);
-      translate(-25, -130, 0);
-      rotateZ(PI);
-      segments.get(2).draw();
-      
-      rotateZ(-PI);
-      translate(0, -120, 0); 
-      rotateZ(segments.get(2).currentRotations[2]);
-      translate(0, -120, 0);
-      rotateZ(PI);
-      segments.get(3).draw();
-    } 
-    else if (type == ARM_STANDARD) {
-      noStroke();
-      fill(200, 200, 0);
-      
-      translate(600, 200, 0);
+    
+    noStroke();
+    fill(200, 200, 0);
+    
+    translate(600, 200, 0);
 
-      rotateZ(PI);
-      rotateY(PI/2);
-      segments.get(0).draw();
-      rotateY(-PI/2);
-      rotateZ(-PI);
-      
-      fill(50);
+    rotateZ(PI);
+    rotateY(PI/2);
+    segments.get(0).draw();
+    rotateY(-PI/2);
+    rotateZ(-PI);
     
-      translate(-50, -166, -358); // -115, -213, -413
-      rotateZ(PI);
-      translate(150, 0, 150);
-      rotateY(segments.get(0).currentRotations[1]);
-      translate(-150, 0, -150);
-      segments.get(1).draw();
-      rotateZ(-PI);
-    
-      fill(200, 200, 0);
-    
-      translate(-115, -85, 180);
-      rotateZ(PI);
-      rotateY(PI/2);
-      translate(0, 62, 62);
-      rotateX(segments.get(1).currentRotations[2]);
-      translate(0, -62, -62);
-      segments.get(2).draw();
-      rotateY(-PI/2);
-      rotateZ(-PI);
-    
-      fill(50);
-   
-      translate(0, -500, -50);
-      rotateZ(PI);
-      rotateY(PI/2);
-      translate(0, 75, 75);
-      rotateX(segments.get(2).currentRotations[2]);
-      translate(0, -75, -75);
-      segments.get(3).draw();
-      rotateY(PI/2);
-      rotateZ(-PI);
-    
-      translate(745, -150, 150);
+    fill(50);
+  
+    translate(-50, -166, -358); // -115, -213, -413
+    rotateZ(PI);
+    translate(150, 0, 150);
+    rotateY(segments.get(0).currentRotations[1]);
+    translate(-150, 0, -150);
+    segments.get(1).draw();
+    rotateZ(-PI);
+  
+    fill(200, 200, 0);
+  
+    translate(-115, -85, 180);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 62, 62);
+    rotateX(segments.get(1).currentRotations[2]);
+    translate(0, -62, -62);
+    segments.get(2).draw();
+    rotateY(-PI/2);
+    rotateZ(-PI);
+  
+    fill(50);
+ 
+    translate(0, -500, -50);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 75, 75);
+    rotateX(segments.get(2).currentRotations[2]);
+    translate(0, -75, -75);
+    segments.get(3).draw();
+    rotateY(PI/2);
+    rotateZ(-PI);
+  
+    translate(745, -150, 150);
+    rotateZ(PI/2);
+    rotateY(PI/2);
+    translate(70, 0, 70);
+    rotateY(segments.get(3).currentRotations[0]);
+    translate(-70, 0, -70);
+    segments.get(4).draw();
+    rotateY(-PI/2);
+    rotateZ(-PI/2);
+  
+    fill(200, 200, 0);
+  
+    translate(-115, 130, -124);
+    rotateZ(PI);
+    rotateY(-PI/2);
+    translate(0, 50, 50);
+    rotateX(segments.get(4).currentRotations[2]);
+    translate(0, -50, -50);
+    segments.get(5).draw();
+    rotateY(PI/2);
+    rotateZ(-PI);
+  
+    fill(50);
+  
+    translate(150, -10, 95);
+    rotateY(-PI/2);
+    rotateZ(PI);
+    translate(45, 45, 0);
+    rotateZ(segments.get(5).currentRotations[0]);
+    translate(-45, -45, 0);
+    segments.get(6).draw();
+          
+    // next, the end effector
+    if (activeEndEffector == ENDEF_SUCTION) {
+      rotateY(PI);
+      translate(-88, -37, 0);
+      eeModelSuction.draw();
+    } else if (activeEndEffector == ENDEF_CLAW) {
+      rotateY(PI);
+      translate(-88, 0, 0);
+      eeModelClaw.draw();
       rotateZ(PI/2);
-      rotateY(PI/2);
-      translate(70, 0, 70);
-      rotateY(segments.get(3).currentRotations[0]);
-      translate(-70, 0, -70);
-      segments.get(4).draw();
-      rotateY(-PI/2);
-      rotateZ(-PI/2);
-    
-      fill(200, 200, 0);
-    
-      translate(-115, 130, -124);
-      rotateZ(PI);
-      rotateY(-PI/2);
-      translate(0, 50, 50);
-      rotateX(segments.get(4).currentRotations[2]);
-      translate(0, -50, -50);
-      segments.get(5).draw();
-      rotateY(PI/2);
-      rotateZ(-PI);
-    
-      fill(50);
-    
-      translate(150, -10, 95);
-      rotateY(-PI/2);
-      rotateZ(PI);
-      translate(45, 45, 0);
-      rotateZ(segments.get(5).currentRotations[0]);
-      translate(-45, -45, 0);
-      segments.get(6).draw();
-            
-      // next, the end effector
-      if (activeEndEffector == ENDEF_SUCTION) {
-        rotateY(PI);
-        translate(-88, -37, 0);
-        eeModelSuction.draw();
-      } else if (activeEndEffector == ENDEF_CLAW) {
-        rotateY(PI);
-        translate(-88, 0, 0);
-        eeModelClaw.draw();
-        rotateZ(PI/2);
-        if (endEffectorStatus == OFF) {
-          translate(10, -85, 30);
-          eeModelClawPincer.draw();
-          translate(55, 0, 0);
-          eeModelClawPincer.draw();
-        } else if (endEffectorStatus == ON) {
-          translate(28, -85, 30);
-          eeModelClawPincer.draw();
-          translate(20, 0, 0);
-          eeModelClawPincer.draw();
-        }
+      if (endEffectorStatus == OFF) {
+        translate(10, -85, 30);
+        eeModelClawPincer.draw();
+        translate(55, 0, 0);
+        eeModelClawPincer.draw();
+      } else if (endEffectorStatus == ON) {
+        translate(28, -85, 30);
+        eeModelClawPincer.draw();
+        translate(20, 0, 0);
+        eeModelClawPincer.draw();
       }
     }
   }//end draw arm model

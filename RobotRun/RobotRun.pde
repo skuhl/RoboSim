@@ -81,7 +81,7 @@ public void setup() {
   cp5 = new ControlP5(this);
   gui();
   for (int n = 0; n < pr.length; n++) pr[n] = new Point();
-  armModel = new ArmModel(ARM_STANDARD);
+  armModel = new ArmModel();
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
@@ -212,7 +212,7 @@ public void draw() {
   line(0, PLANE_Y, -5000, 0, PLANE_Y, 5000);
   line(-5000, PLANE_Y, 0, 5000, PLANE_Y, 0);
   
-  // Draw grid lines every 100 units, from -50000 to 50000, in the x and z plane, on the floor plane
+  // Draw grid lines every 100 units, from -5000 to 5000, in the x and z plane, on the floor plane
   stroke(25, 25, 25);
   for (int l = 1; l < 50; ++l) {
     line(100 * l, PLANE_Y, -5000, 100 * l, PLANE_Y, 5000);
