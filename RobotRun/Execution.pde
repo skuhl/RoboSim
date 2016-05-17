@@ -124,6 +124,15 @@ void showMainDisplayText() {
     text("Press shift on the keyboard to disable camera rotation", 390, height / 2 + 40);
   }
   
+  /*textSize(12);
+  fill(0, 0, 0);
+  
+  for (int idx = 0; idx < armModel.segments.size(); ++idx) {
+    float[] orientation = armModel.segments.get(idx).currentRotations;
+    String s = String.format("Joint %d - w:%f p:%f r:%f", idx, orientation[1], orientation[2], orientation[0]);
+    text(s, 380, height / 2 + 55 + idx * 15);
+  }/**/
+  
   if (errorCounter > 0) {
     errorCounter--;
     fill(255, 0, 0);
@@ -290,6 +299,27 @@ PVector calculateEndEffectorPosition(ArmModel model, float[] rot) {
 public void drawEndEffectorGridMapping() {
   
   PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+  
+  /*pushMatrix();
+  // Display EE axes at the EE position
+  applyModelRotation(armModel);
+  stroke(0, 0, 255);
+  line(50000, 0, 0, -50000, 0, 0);
+  stroke(255, 0, 0);
+  line(0, 50000, 0, 0, -50000, 0);
+  stroke(0, 255, 0);
+  line(0, 0, 50000, 0, 0, -50000);
+  popMatrix();
+  
+  // Display world axes at the EE position
+  stroke(0, 0, 255);
+  line(50000, ee_pos.y, ee_pos.z, -50000, ee_pos.y, ee_pos.z);
+  stroke(255, 0, 0);
+  line(ee_pos.x, 50000, ee_pos.z, ee_pos.x, -50000, ee_pos.z);
+  stroke(0, 255, 0);
+  line(ee_pos.x, ee_pos.y, 50000, ee_pos.x, ee_pos.y, -50000);/**/
+  
+  
   // Change color of the EE mapping based on if it lies below or above the ground plane
   color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);
   

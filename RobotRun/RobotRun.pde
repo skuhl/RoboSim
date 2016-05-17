@@ -131,40 +131,11 @@ public void draw() {
   noFill();
   
   pushMatrix();
-  
+   
   applyCamera();
-  
-  PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
-  
-  /*pushMatrix();
-  // Display EE axes at the EE position
-  applyModelRotation(armModel);
-  stroke(0, 255, 0);
-  line(5000, 0, 0, -50000, 0, 0);
-  stroke(255, 0, 0);
-  line(0, 50000, 0, 0, -50000, 0);
-  stroke(0, 0, 255);
-  line(0, 0, 50000, 0, 0, -50000);
-  
-  popMatrix();
-  
-  // Display world axes at the EE position
-  stroke(0, 0, 255);
-  line(5000, ee_pos.y, ee_pos.z, -50000, ee_pos.y, ee_pos.z);
-  stroke(255, 0, 0);
-  line(ee_pos.x, 50000, ee_pos.z, ee_pos.x, -50000, ee_pos.z);
-  stroke(0, 255, 0);
-  line(ee_pos.x, ee_pos.y, 50000, ee_pos.x, ee_pos.y, -50000);/**/
 
   pushMatrix();
   armModel.draw();
-  popMatrix();
-  
-  pushMatrix();
-  applyModelRotation(armModel);
-  stroke(0, 255, 0);
-  noFill();
-  box(90, 90, 20);
   popMatrix();
   
   noLights();
@@ -238,17 +209,17 @@ public void draw() {
   
   // Draw x, z origin lines
   stroke(255, 0, 0);
-  line(0, PLANE_Y, -50000, 0, PLANE_Y, 50000);
-  line(-50000, PLANE_Y, 0, 50000, PLANE_Y, 0);
+  line(0, PLANE_Y, -5000, 0, PLANE_Y, 5000);
+  line(-5000, PLANE_Y, 0, 5000, PLANE_Y, 0);
   
   // Draw grid lines every 100 units, from -50000 to 50000, in the x and z plane, on the floor plane
   stroke(25, 25, 25);
-  for (int l = 1; l < 500; ++l) {
-    line(100 * l, PLANE_Y, -50000, 100 * l, PLANE_Y, 50000);
-    line(-50000, PLANE_Y, 100 * l, 50000, PLANE_Y, 100 * l);
+  for (int l = 1; l < 50; ++l) {
+    line(100 * l, PLANE_Y, -5000, 100 * l, PLANE_Y, 5000);
+    line(-5000, PLANE_Y, 100 * l, 5000, PLANE_Y, 100 * l);
     
-    line(-100 * l, PLANE_Y, -50000, -100 * l, PLANE_Y, 50000);
-    line(-50000, PLANE_Y, -100 * l, 50000, PLANE_Y, -100 * l);
+    line(-100 * l, PLANE_Y, -5000, -100 * l, PLANE_Y, 5000);
+    line(-5000, PLANE_Y, -100 * l, 5000, PLANE_Y, -100 * l);
   }
   
   // Draw all world objects and apply gravity upon them as well
