@@ -980,6 +980,16 @@ public void keyPressed(){
     return;
   } else if (key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
+  } else if (key == ENTER && activeEndEffector == ENDEF_CLAW) {
+    ToolInstruction claw;
+    
+    if (endEffectorStatus == ON) {
+      claw = new ToolInstruction("RO", 4, OFF);
+    } else {
+      claw = new ToolInstruction("RO", 4, ON);
+    }
+    
+    claw.execute();
   }
   
   /* click spacebar once to activate pan button
@@ -2427,7 +2437,7 @@ public void EE(){
   activeEndEffector++;
   if (activeEndEffector > ENDEF_CLAW) activeEndEffector = 0;
   // Drop an object if held by the Robot currently
-  armModel.held = null;
+  armModel.releaseHeldObject();
   // TODO collision checking if an object was held by the Robot
 }
 

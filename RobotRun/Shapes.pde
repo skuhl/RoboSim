@@ -22,51 +22,16 @@ public abstract class Shape {
   /* Define what happens to a shape when it is moved */
   public abstract void move(float x, float y, float z);
   
+  /* Returns the center pooint of the shape */
+  public abstract PVector center();
+  
+  /* Redefine the center point of the shape */
+  public abstract void set_center_point(float x, float y, float z);
+  
   /* Define how a shape is drawn in the window */
   public abstract void draw();
 
 }
-
-/**
- * A shape that is defined by a number of vertices
- */
-public class Polygon extends Shape {
-  private PVector[] vertices;
-  
-  /* Create a shpae with the given set of vertices and outline/fill colors */
-  public Polygon(PVector[] v_set, color f, color o) {
-    super(f, o);
-    vertices = v_set;
-  }
-  
-  /* Shift all the vertices for the shape by the given offset values */
-  public void move(float x, float y, float z) {
-    for (PVector v : vertices) {
-      v.x += x;
-      v.y += y;
-      v.z += z;
-    }
-  }
-  
-  public void draw() {
-    beginShape();
-    stroke(outline);
-    
-    if (no_fill) {
-      noFill();
-    } else {
-      fill(fill);
-    }
-    
-    // draw each vertex
-    for (PVector v : vertices) {
-      vertex(v.x, v.y, v.z);
-    }
-    
-    endShape();
-  }
-}
-
 
 /**
  * A shape that resembles a cube or rectangle
@@ -120,6 +85,16 @@ public class Box extends Shape {
     center.x += x;
     center.y += y;
     center.z += z;
+  }
+  
+  public PVector center() {
+    return new PVector(center.x, center.y, center.z);
+  }
+  
+  public void set_center_point(float x, float y, float z) {
+    center.x = x;
+    center.y = y;
+    center.z = z;
   }
   
   public void draw() {

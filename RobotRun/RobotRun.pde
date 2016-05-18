@@ -136,6 +136,17 @@ public void draw() {
     
     if (armModel.held == s) {
       // Draw object within the claw of the Robot
+      pushMatrix();
+      
+      //applyModelRotation(armModel);
+      PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+      
+      armModel.held.form.set_center_point(ee_pos.x + armModel.held_offset.x, ee_pos.y + armModel.held_offset.y, ee_pos.z + armModel.held_offset.z);
+      armModel.held.hit_box.set_center_point(ee_pos.x + armModel.held_offset.x, ee_pos.y + armModel.held_offset.y, ee_pos.z + armModel.held_offset.z);
+      s.draw();
+      s.hit_box.draw();
+      
+      popMatrix();
     } else {
       s.draw();
       s.hit_box.draw();
@@ -212,7 +223,7 @@ public void draw() {
   drawEndEffectorGridMapping();
   
   // Draw x, z origin lines
-  /*stroke(255, 0, 0);
+  stroke(255, 0, 0);
   line(0, PLANE_Y, -5000, 0, PLANE_Y, 5000);
   line(-5000, PLANE_Y, 0, 5000, PLANE_Y, 0);
   
@@ -224,7 +235,7 @@ public void draw() {
     
     line(-100 * l, PLANE_Y, -5000, -100 * l, PLANE_Y, 5000);
     line(-5000, PLANE_Y, -100 * l, 5000, PLANE_Y, -100 * l);
-  }*/
+  }
   
   popMatrix();
   

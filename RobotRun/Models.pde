@@ -107,6 +107,7 @@ public class ArmModel {
   //public final float[] maxArmRange;
   
   public Object held;
+  public PVector held_offset;
   
   public ArmModel() {
     
@@ -452,6 +453,18 @@ public class ArmModel {
       }
     }
   } // end execute live motion
+  
+  /* If an object is currently being held by the Robot arm, then release it */
+  public void releaseHeldObject() {
+    
+    PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+    PVector obj_center = new PVector(armModel.held_offset.x + ee_pos.x, armModel.held_offset.y + ee_pos.y, armModel.held_offset.z + ee_pos.z);
+    
+    armModel.held.form.set_center_point(obj_center.x, obj_center.y, obj_center.z);
+    armModel.held.hit_box.set_center_point(obj_center.x, obj_center.y, obj_center.z);
+    armModel.held = null;
+    armModel.held_offset = null;
+  }
   
 } // end ArmModel class
 
