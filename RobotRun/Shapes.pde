@@ -134,20 +134,39 @@ public class Object {
   public final Shape form;
   // The area around an object used for collision handling
   public final Shape hit_box;
-  // Used when an object is held by the robot
-  public boolean disable_gravity;
+  private float[] orientation;
   
   public Object(Shape f, Box hb) {
     form = f;
     hit_box = hb;
-    disable_gravity = false;
+    orientation = new float[] {0f, 0f, 0f, 0f, 0f, 0f};
   }
   
   public void draw() {
+    pushMatrix();
+    
+    rotateY(orientation[0]);
+    rotateX(orientation[1]);
+    rotateX(orientation[2]);
+    rotateY(orientation[3]);
+    rotateZ(orientation[4]);
+    rotateX(orientation[5]);
+    
     form.draw();
+    hit_box.draw();
+    
+    popMatrix();
   }
   
   public boolean collision(PVector pos) {
     return ((Box)hit_box).within(pos);
+  }
+  
+  /* Define the rotations necessary to draw the Object */
+  public void setOrientation(float[] angles) {
+    
+    for (int idx = 0; idx < angles.length && idx < orientation.length; ++idx) {
+      orientation[idx] = angles[idx];
+    }
   }
 }
