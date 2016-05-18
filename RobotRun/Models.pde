@@ -271,7 +271,7 @@ public class ArmModel {
     }
   }//end draw arm model
   
-  public PVector getRot() {
+  public PVector getWpr() {
     PVector out = new PVector(0,0,0);
     PVector tmp = new PVector(0,0,0);
     for (Model a : segments) {
@@ -312,11 +312,10 @@ public class ArmModel {
   
   public boolean interpolateRotation(float speed) {
     boolean allDone = true;
-    for (Model a : segments) {
-      for (int r = 0; r < 3; r++) {
-        if (a.rotations[r]) {
-          if (abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeed*2)
-          {
+    for (Model a : segments){
+      for (int r = 0; r < 3; r++){
+        if (a.rotations[r]){
+          if (abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeed*2){
             allDone = false;
             a.currentRotations[r] += a.rotationSpeed * a.rotationDirections[r] * speed;
             a.currentRotations[r] = clampAngle(a.currentRotations[r]);
