@@ -10,6 +10,8 @@ float liveSpeed = 0.1;
 int errorCounter;
 String errorText;
 
+public static final boolean PRINT_EXTRA_TEXT = true;
+
 /**
  * Creates some programs for testing purposes.
  */
@@ -86,64 +88,77 @@ void showMainDisplayText() {
   text("Coordinate Frame: " + (curCoordFrame == COORD_JOINT ? "Joint" : "World"), width-20, 20);
   text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
   
-  PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
-  //eep = convertNativeToWorld(eep);
-  String ee_pos = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f", eep.x, eep.y, eep.z);
-  String ee_dist = String.format("Dist %4.5f", PVector.dist(eep, base_center));
+  // Display the Current position and orientation of the Robot in the World Frame
+  PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+  PVector wpr = armModel.getWPR();
+  String dis_world = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f  W: %5.4f  P: %5.4f  R: %5.4f", ee_pos.x, ee_pos.y, ee_pos.z, wpr.x, wpr.y, wpr.z);
   
-  if (curCoordFrame == COORD_JOINT) {
-    float j[] = armModel.getJointRotations();
-    String s = String.format("Joints  J1: %5.4f J2: %5.4f J3: %5.4f J4: %5.4f J5: %5.4f J6: %5.4f", 
-                      j[0], j[1], j[2], j[3], j[4], j[5]);
-                      
-    text(s, width-20, 60);
+  // Display the Robot's joint angles
+  float j[] = armModel.getJointRotations();
+  String dis_joint = String.format("Joints  J1: %5.4f J2: %5.4f J3: %5.4f J4: %5.4f J5: %5.4f J6: %5.4f", j[0], j[1], j[2], j[3], j[4], j[5]);
+  
+  // Display the distance between the End Effector and the Based of the Robot
+  float dist_base = PVector.dist(ee_pos, base_center);
+  String dis_dist = String.format("Distance from EE to Robot Base: %f", dist_base);
+  
+  // Show the coordinates of the End Effector for the current Coordinate Frame
+  if (curCoordFrame == COORD_JOINT) {          
+    text(dis_joint, width - 20, 60);
+    
+    if (PRINT_EXTRA_TEXT) {
+      text(dis_dist, width - 20, 80);
+      text(dis_world, width - 20, 100);
+    }
   } else {
-    PVector wpr = armModel.getWPR();
-    String ee_rot = String.format("  W: %5.4f  P: %5.4f  R: %5.4f", wpr.x, wpr.y, wpr.z);
-    text(ee_pos + ee_rot, width-20, 60);
+    text(dis_world, width - 20, 60);
+    
+    if (PRINT_EXTRA_TEXT) {
+      text(dis_dist, width - 20, 80);
+      text(dis_joint, width - 20, 100);
+    }
   }
   
-  text((shift == ON ? "Shift ON" : "Shift OFF"), width-120, 80);
-  text((step == ON ? "Step ON" : "Step OFF"), width-20, 80);
-
-  // Display the current position of the End Effector in the Plane
-  text(ee_pos, width -20, 100);
-  // Display the distance between the end effector and the center of the base of the robot (rough center)
-  text(ee_dist, width - 20, 120);
+  // Display a message while the robot is carrying an object
+  if (armModel.held != null) {
+    fill(200, 0, 0);
+    text("Object held", width - 20, 120);
+  }
+  
+  textAlign(LEFT);
   
   // Display message for camera pan-lock mode
   if (clickPan % 2 == 1) {
     textSize(14);
     fill(215, 0, 0);
-    text("Press space on the keyboard to disable camera paning", 392, height / 2 + 15);
+    text("Press space on the keyboard to disable camera paning", 20, height / 2 + 30);
   }
   // Display message for camera rotation-lock mode
   if (clickRotate % 2 == 1) {
     textSize(14);
     fill(215, 0, 0);
-    text("Press shift on the keyboard to disable camera rotation", 390, height / 2 + 40);
+    text("Press shift on the keyboard to disable camera rotation", 20, height / 2 + 55);
   }
   
-  textSize(12);
-  fill(0, 0, 0);
+  if (PRINT_EXTRA_TEXT) {
+    textSize(12);
+    fill(0, 0, 0);
+    
+    float[][] vectorMatrix = EEAxesVectorsMatrix();
+    String row = String.format("[  %f  %f  %f  ]", vectorMatrix[0][0], vectorMatrix[0][1], vectorMatrix[0][2]);
+    text(row, 20, height / 2 + 80);
+    row = String.format("[  %f  %f  %f  ]", vectorMatrix[1][0], vectorMatrix[1][1], vectorMatrix[1][2]);
+    text(row, 20, height / 2 + 94);
+    row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
+    text(row, 20, height / 2 + 108);
+    
+    for (int idx = 0; idx < armModel.segments.size(); ++idx) {
+      float[] orientation = armModel.segments.get(idx).currentRotations;
+      String s = String.format("Joint %d - w:%f p:%f r:%f", idx, orientation[1], orientation[2], orientation[0]);
+      text(s, 20, height / 2 + 138 + idx * 15);
+    }
+  }
   
-  /*for (int idx = 0; idx < armModel.segments.size(); ++idx) {
-    float[] orientation = armModel.segments.get(idx).currentRotations;
-    String s = String.format("Joint %d - w:%f p:%f r:%f", idx, orientation[1], orientation[2], orientation[0]);
-    text(s, 380, height / 2 + 55 + idx * 15);
-  }/**/
-  
-  /*float[][] vectorMatrix = EEAxesVectorsMatrix();
-  String row = String.format("[  %f  %f  %f  ]", vectorMatrix[0][0], vectorMatrix[0][1], vectorMatrix[0][2]);
-  text(row, 300, height / 2 + 60);
-  row = String.format("[  %f  %f  %f  ]", vectorMatrix[1][0], vectorMatrix[1][1], vectorMatrix[1][2]);
-  text(row, 300, height / 2 + 74);
-  row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
-  text(row, 300, height / 2 + 88);/**/
-  
-  /*PVector angles = armModel.getWPR();
-  String wpr = String.format("W: %f P: %f R: %f", angles.x, angles.y, angles.z);
-  text(wpr, 315, height / 2 + 120);/**/
+  textAlign(RIGHT);
   
   if (errorCounter > 0) {
     errorCounter--;
@@ -350,7 +365,7 @@ public void drawEndEffectorGridMapping() {
   popMatrix();/**/
   
   // Display world axes at the EE position
-  stroke(0, 255, 0);
+  /*stroke(0, 255, 0);
   line(50000, ee_pos.y, ee_pos.z, -50000, ee_pos.y, ee_pos.z);
   stroke(255, 0, 0);
   line(ee_pos.x, 50000, ee_pos.z, ee_pos.x, -50000, ee_pos.z);
