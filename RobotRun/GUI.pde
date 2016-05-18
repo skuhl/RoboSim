@@ -2445,6 +2445,9 @@ public void record_normal(int theValue){
 public void EE(int theValue){
   activeEndEffector++;
   if (activeEndEffector > ENDEF_CLAW) activeEndEffector = 0;
+  // Drop an object if held by the Robot currently
+  armModel.held = null;
+  // TODO collision checking if an object was held by the Robot
 }
 
 /**

@@ -98,8 +98,9 @@ void showMainDisplayText() {
                       
     text(s, width-20, 60);
   } else {
-    PVector wpr = armModel.getRot();
-    String ee_rot = String.format("  W: %5.4f  P: %5.4f  R: %5.4f", wpr.x, wpr.y, wpr.z);
+    //PVector wpr = armModel.getRot();
+    float[] wpr = EulerAngles(eeAxesMatrix());
+    String ee_rot = String.format("  W: %5.4f  P: %5.4f  R: %5.4f", wpr[0], wpr[1], wpr[2]);
     text(ee_pos + ee_rot, width-20, 60);
   }
   
@@ -132,6 +133,10 @@ void showMainDisplayText() {
     String s = String.format("Joint %d - w:%f p:%f r:%f", idx, orientation[1], orientation[2], orientation[0]);
     text(s, 380, height / 2 + 55 + idx * 15);
   }/**/
+  
+  float[] angles = EulerAngles(eeAxesMatrix());
+  String wpr = String.format("W: %f P: %f R: %f", angles[0], angles[1], angles[2]);
+  text(wpr, 350, height / 2 + 55);
   
   if (errorCounter > 0) {
     errorCounter--;
@@ -274,6 +279,56 @@ PVector calculateEndEffectorPosition(ArmModel model, float[] rot) {
   popMatrix();
   return ret;
 } // end calculateEndEffectorPosition
+
+/* Returns a 3x3 matrix whose columns are the axes vectors for the End Effector's
+ * origin. */
+public float[][] eeAxesMatrix() {
+  pushMatrix();
+  resetMatrix();
+  applyModelRotation(armModel);
+  // Define points { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, and { 0, 0, 1}
+  PVector origin = new PVector(modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0)),
+          x = new PVector(modelX(1, 0, 0), modelY(1, 0, 0), modelZ(1, 0, 0)),
+          y = new PVector(modelX(0, 1, 0), modelY(0, 1, 0), modelZ(0, 1, 0)),
+          z = new PVector(modelX(0, 0, 1), modelY(0, 0, 1), modelZ(0, 0, 1));
+  
+  float[][] eeAxes = new float[3][3];
+  // Take the difference between the coordinates of one of the unit vectors and the origin
+  eeAxes[0][0] = x.x - origin.x;
+  eeAxes[1][0] = x.y - origin.y;
+  eeAxes[2][0] = x.z - origin.z;
+  eeAxes[0][1] = y.x - origin.x;
+  eeAxes[1][1] = y.y - origin.y;
+  eeAxes[2][1] = y.z - origin.z;
+  eeAxes[0][2] = z.x - origin.x;
+  eeAxes[1][2] = z.y - origin.y;
+  eeAxes[2][2] = z.z - origin.z;
+  
+  popMatrix();
+  
+  return eeAxes;
+}
+
+// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToEuler/
+public float[] EulerAngles(float[][] axesMatrix) {
+   float[] euler_angles = new float[3];
+   
+   if (axesMatrix[1][0] > 0.998) {
+     euler_angles[0] = atan2(axesMatrix[0][2], axesMatrix[2][2]);
+     euler_angles[1] = PI / 2f;
+     euler_angles[2] = 0f;
+   } else if (axesMatrix[1][0] < -1.998) {
+     euler_angles[0] = atan2(axesMatrix[0][2], axesMatrix[2][2]);
+     euler_angles[1] = -PI / 2;
+     euler_angles[2] = 0f;
+   } else {
+     euler_angles[0] = atan2(-axesMatrix[2][0], axesMatrix[0][0]);
+     euler_angles[1] = atan2(-axesMatrix[1][2], axesMatrix[1][1]);
+     euler_angles[2] = asin(axesMatrix[1][0]);
+   }
+   
+   return euler_angles;
+}
 
 /* This method will draw the End Effector grid mapping based on the value of EE_MAPPING:
  *

@@ -97,7 +97,7 @@ public void setup() {
   // Create a small, blue cube
   Shape box = new Box(new PVector(0, -200, 0), 35, color(0, 0, 255), color(0, 0, 0));
   objects = new Object[1];
-  objects[0] = new Object(box, new Box(new PVector(0, -200, 0), 75, 125, 40, color(0, 255, 0)));
+  objects[0] = new Object(box, new Box(new PVector(0, -200, 0), 125, 125, 125, color(0, 255, 0)));
 }
 
 boolean doneMoving = true;
@@ -140,8 +140,13 @@ public void draw() {
   
   // Draw all world objects and apply gravity upon them as well
   for (Object s : objects) {
-    s.draw();
-    s.hit_box.draw();
+    
+    if (armModel.held == s) {
+      // Draw object within the claw of the Robot
+    } else {
+      s.draw();
+      s.hit_box.draw();
+    }
   }
   
   noLights();
