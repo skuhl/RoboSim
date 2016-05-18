@@ -411,7 +411,7 @@ public class ToolInstruction extends Instruction {
         
         if (setToolStatus == ON & armModel.held == null) {
           
-          PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+          PVector ee_pos = armModel.getEEPos();
           
           // Determine if an object in the world can be picked up by the Robot
           for (Object s : objects) {

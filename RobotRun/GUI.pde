@@ -1480,7 +1480,7 @@ public void f1(){
            mode = PICK_INSTRUCTION;
            updateScreen(color(255,0,0), color(0));
          } else { // shift+f1 = add new motion instruction
-           PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+           PVector eep = armModel.getEEPos();
            eep = convertNativeToWorld(eep);
            Program prog = programs.get(active_program);
            int reg = prog.nextRegister();
@@ -1802,7 +1802,7 @@ public void f5() {
       }
     } else {
       // overwrite current instruction
-      PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+      PVector eep = armModel.getEEPos();
       eep = convertNativeToWorld(eep);
       Program prog = programs.get(active_program);
       int reg = prog.nextRegister();
@@ -1846,12 +1846,12 @@ public void f5() {
     if (shift == ON) {
       if (inFrame == NAV_USER_FRAMES) {
         if (teachingWhichPoint == 1) { // teaching origin
-          PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+          PVector eep = armModel.getEEPos();
           currentFrame.setOrigin(convertNativeToWorld(eep));
           teachingWhichPoint++;
           loadThreePointMethod();
         } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
-          PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+          PVector eep = armModel.getEEPos();
           PVector second = convertNativeToWorld(eep);
           PVector first = currentFrame.getOrigin();
           PVector vec = new PVector(second.x-first.x, second.y-first.y, second.z-first.z);

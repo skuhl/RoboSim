@@ -141,7 +141,7 @@ public void draw() {
       pushMatrix();
       
       //applyModelRotation(armModel);
-      PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+      PVector ee_pos = armModel.getEEPos();
       
       armModel.held.form.set_center_point(ee_pos.x + armModel.held_offset.x, ee_pos.y + armModel.held_offset.y, ee_pos.z + armModel.held_offset.z);
       armModel.held.hit_box.set_center_point(ee_pos.x + armModel.held_offset.x, ee_pos.y + armModel.held_offset.y, ee_pos.z + armModel.held_offset.z);
@@ -242,7 +242,7 @@ public void draw() {
   
   popMatrix();
   
-  PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+  PVector ee_pos = armModel.getEEPos();
   
   for (Object s : objects) {
     if (s.collision(ee_pos)) {

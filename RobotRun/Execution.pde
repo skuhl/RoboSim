@@ -88,14 +88,16 @@ void showMainDisplayText() {
   text("Coordinate Frame: " + (curCoordFrame == COORD_JOINT ? "Joint" : "World"), width-20, 20);
   text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
   
-  PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
-  eep = convertNativeToWorld(eep);
-  String ee_pos = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f", eep.x, eep.y, eep.z);
-  String ee_dist = String.format("Dist %4.5f", PVector.dist(eep, base_center));
+  // Display the Current position and orientation of the Robot in the World Frame
+  PVector ee_pos = armModel.getEEPos();
+  PVector wpr = armModel.getWPR();
+  String dis_world = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f  W: %5.4f  P: %5.4f  R: %5.4f", 
+                     ee_pos.x, ee_pos.y, ee_pos.z, wpr.x, wpr.y, wpr.z);
   
   // Display the Robot's joint angles
   float j[] = armModel.getJointRotations();
-  String dis_joint = String.format("Joints  J1: %5.4f J2: %5.4f J3: %5.4f J4: %5.4f J5: %5.4f J6: %5.4f", j[0], j[1], j[2], j[3], j[4], j[5]);
+  String dis_joint = String.format("Joints  J1: %5.4f J2: %5.4f J3: %5.4f J4: %5.4f J5: %5.4f J6: %5.4f", 
+                     j[0], j[1], j[2], j[3], j[4], j[5]);
   
   // Display the distance between the End Effector and the Based of the Robot
   float dist_base = PVector.dist(ee_pos, base_center);
@@ -220,88 +222,6 @@ PVector computePerpendicular(PVector in, PVector second) {
   else return vectorConvertFrom(perp2, plane[0], plane[1], plane[2]);
 }
 
-
-/**
- * Gives the current position of the end effector in
- * Processing native coordinates.
- * @param model Arm model whose end effector position to calculate
- * @param test Determines whether to use arm segments' actual
- *             rotation values or if we're checking trial rotations
- * @return The current end effector position
- */
-PVector calculateEndEffectorPosition(ArmModel model, float[] rot) {
-  pushMatrix();
-  resetMatrix();
-  
-  translate(600, 200, 0);
-  translate(-50, -166, -358); // -115, -213, -413
-  rotateZ(PI);
-  translate(150, 0, 150);
-  
-  rotateY(rot[0]);
-  
-  translate(-150, 0, -150);
-  rotateZ(-PI);    
-  translate(-115, -85, 180);
-  rotateZ(PI);
-  rotateY(PI/2);
-  translate(0, 62, 62);
-  
-  rotateX(rot[1]);
-  
-  translate(0, -62, -62);
-  rotateY(-PI/2);
-  rotateZ(-PI);   
-  translate(0, -500, -50);
-  rotateZ(PI);
-  rotateY(PI/2);
-  translate(0, 75, 75);
-  
-  rotateX(rot[2]);
-  
-  translate(0, -75, -75);
-  rotateY(PI/2);
-  rotateZ(-PI);
-  translate(745, -150, 150);
-  rotateZ(PI/2);
-  rotateY(PI/2);
-  translate(70, 0, 70);
-  
-  rotateY(rot[3]);
-  
-  translate(-70, 0, -70);
-  rotateY(-PI/2);
-  rotateZ(-PI/2);    
-  translate(-115, 130, -124);
-  rotateZ(PI);
-  rotateY(-PI/2);
-  translate(0, 50, 50);
-  
-  rotateX(rot[4]);
-  
-  translate(0, -50, -50);
-  rotateY(PI/2);
-  rotateZ(-PI);    
-  translate(150, -10, 95);
-  rotateY(-PI/2);
-  rotateZ(PI);
-  translate(45, 45, 0);
-  
-  rotateZ(rot[5]);
-  
-  if (activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
-    PVector tr = toolFrames[activeToolFrame].getOrigin();
-    translate(tr.x, tr.y, tr.z);
-  }
-  PVector ret = new PVector(
-    modelX(0, 0, 0),
-    modelY(0, 0, 0),
-    modelZ(0, 0, 0));
-  
-  popMatrix();
-  return ret;
-} // end calculateEndEffectorPosition
-
 /* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
  * the End Effector's x, y, z axes in respect to the World Frame. */
 public float[][] EEAxesVectorsMatrix() {
@@ -347,7 +267,7 @@ public float[][] EEAxesVectorsMatrix() {
  */
 public void drawEndEffectorGridMapping() {
   
-  PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+  PVector ee_pos = armModel.getEEPos();
   
   /*pushMatrix();
   // x-axis : green
@@ -468,7 +388,7 @@ void applyModelRotation(ArmModel model) {
 float[][] calculateJacobian(float[] angles){
   float dAngle = 0.0174553;
   float[][] jacobian = new float[6][6];
-  PVector oPos = calculateEndEffectorPosition(armModel, angles);
+  PVector oPos = armModel.getEEPos(angles);
   PVector nPos = new PVector(0, 0, 0);
   PVector oRot = armModel.getWPR();
   PVector nRot = new PVector(0, 0, 0);
@@ -477,9 +397,8 @@ float[][] calculateJacobian(float[] angles){
   for(int i = 0; i < 6; i += 1){
     //test angular offset
     angles[i] += dAngle;
-    armModel.setJointRotations(angles);
-    nPos = calculateEndEffectorPosition(armModel, angles);
-    nRot = armModel.getWPR();
+    nPos = armModel.getEEPos(angles);
+    nRot = armModel.getWPR(angles);
     //get translational delta
     jacobian[i][0] = calculateVectorDelta(nPos, oPos)[0];
     jacobian[i][1] = calculateVectorDelta(nPos, oPos)[1];
@@ -490,7 +409,6 @@ float[][] calculateJacobian(float[] angles){
     jacobian[i][5] = calculateRotationalDelta(nRot, oRot)[2];
     //replace the original rotational value
     angles[i] -= dAngle;
-    armModel.setJointRotations(angles);
   }
   
   return jacobian;
@@ -501,7 +419,7 @@ int calculateIKJacobian(PVector tgt){
   int count = 0;
   
   while(count < 1000){
-    PVector cPos = calculateEndEffectorPosition(armModel, angles);
+    PVector cPos = armModel.getEEPos(angles);
     float[] delta = calculateVectorDelta(tgt, cPos);
     
     float dist = PVector.dist(cPos, tgt);
@@ -663,7 +581,7 @@ void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float perc
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
   }
   else{
-    currentPoint = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+    currentPoint = armModel.getEEPos();
   }
   
   for (int n = transitionPoint; n < numberOfPoints; n++) {
@@ -1084,7 +1002,7 @@ boolean executeSingleInstruction(Instruction ins) {
  * @return Returns true on failure (invalid instruction), false on success
  */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
-  PVector start = calculateEndEffectorPosition(model, armModel.getJointRotations());
+  PVector start = armModel.getEEPos();
   
   if (instruction.getMotionType() == MTYPE_JOINT) {
     float[] j = instruction.getVector(program).j;
