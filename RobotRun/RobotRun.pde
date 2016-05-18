@@ -67,7 +67,7 @@ int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 // The Y corrdinate of the ground plane
 public static final float PLANE_Y = 200.5f;
 public Object[] objects;
-private Shape floor;
+
 
 /*******************************/
 
@@ -95,9 +95,9 @@ public void setup() {
   
   // Intialize world objects
   // Create a small, blue cube
-  Shape box = new Box(new PVector(0, -200, 0), 35, color(0, 0, 255), color(0, 0, 0));
+  Shape box = new Box(new PVector(0, 0, 0), 35, color(0, 0, 255), color(0, 0, 0));
   objects = new Object[1];
-  objects[0] = new Object(box, new Box(new PVector(0, -200, 0), 75, 125, 40, color(0, 255, 0)));
+  objects[0] = new Object(box, new Box(new PVector(0, 0, 0), 125, 125, 125, color(0, 255, 0)));
 }
 
 boolean doneMoving = true;
@@ -135,10 +135,24 @@ public void draw() {
   // Draw all world objects and apply gravity upon them as well
   pushMatrix();
   for (Object s : objects) {
-    pushMatrix();
-    s.draw();
-    //s.hit_box.draw();
-    popMatrix();
+    
+    if (armModel.held == s) {
+      // Draw object within the claw of the Robot
+      pushMatrix();
+      
+      //applyModelRotation(armModel);
+      PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+      
+      armModel.held.form.set_center_point(ee_pos.x + armModel.held_offset.x, ee_pos.y + armModel.held_offset.y, ee_pos.z + armModel.held_offset.z);
+      armModel.held.hit_box.set_center_point(ee_pos.x + armModel.held_offset.x, ee_pos.y + armModel.held_offset.y, ee_pos.z + armModel.held_offset.z);
+      s.draw();
+      s.hit_box.draw();
+      
+      popMatrix();
+    } else {
+      s.draw();
+      s.hit_box.draw();
+    }
   }
   popMatrix();
   

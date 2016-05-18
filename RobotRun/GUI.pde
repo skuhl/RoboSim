@@ -980,6 +980,16 @@ public void keyPressed(){
     return;
   } else if (key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
+  } else if (key == ENTER && activeEndEffector == ENDEF_CLAW) {
+    ToolInstruction claw;
+    
+    if (endEffectorStatus == ON) {
+      claw = new ToolInstruction("RO", 4, OFF);
+    } else {
+      claw = new ToolInstruction("RO", 4, ON);
+    }
+    
+    claw.execute();
   }
   
   /* click spacebar once to activate pan button
@@ -1474,7 +1484,7 @@ public void f1(){
            eep = convertNativeToWorld(eep);
            Program prog = programs.get(active_program);
            int reg = prog.nextRegister();
-           PVector r = armModel.getWpr();
+           PVector r = armModel.getWPR();
            float[] j = armModel.getJointRotations();
            prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
                                       j[0], j[1], j[2], j[3], j[4], j[5]), reg);
@@ -1796,7 +1806,7 @@ public void f5() {
       eep = convertNativeToWorld(eep);
       Program prog = programs.get(active_program);
       int reg = prog.nextRegister();
-      PVector r = armModel.getWpr();
+      PVector r = armModel.getWPR();
       float[] j = armModel.getJointRotations();
       prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
                                  j[0], j[1], j[2], j[3], j[4], j[5]), reg);
@@ -2427,6 +2437,9 @@ public void record_normal(){
 public void EE(){
   activeEndEffector++;
   if (activeEndEffector > ENDEF_CLAW) activeEndEffector = 0;
+  // Drop an object if held by the Robot currently
+  armModel.releaseHeldObject();
+  // TODO collision checking if an object was held by the Robot
 }
 
 /**

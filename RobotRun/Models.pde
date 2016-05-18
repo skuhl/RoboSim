@@ -107,6 +107,7 @@ public class ArmModel {
   //public final float[] maxArmRange;
   
   public Object held;
+  public PVector held_offset;
   
   public ArmModel() {
     
@@ -119,15 +120,11 @@ public class ArmModel {
     // Joint 2
     Model axis1 = new Model("ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
     axis1.rotations[2] = true;
-    //axis1.jointRanges[2].add(new PVector(0, 2.01));
-    //axis1.jointRanges[2].add(new PVector(4.34, TWO_PI));
     axis1.jointRanges[2] = new PVector(4.34, 2.01);
     axis1.rotationSpeed = radians(350)/60.0;
     // Joint 3
     Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
     axis2.rotations[2] = true;
-    //axis2.jointRanges[2].add(new PVector(0, 8f * PI / 20f));
-    //axis2.jointRanges[2].add(new PVector(12f * PI / 20f, TWO_PI));
     axis2.jointRanges[2] = new PVector(12f * PI / 20f, 8f * PI / 20f);
     axis2.rotationSpeed = radians(400)/60.0;
     // Joint 4
@@ -138,8 +135,6 @@ public class ArmModel {
     // Joint 5
     Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
     axis4.rotations[2] = true;
-    //axis4.jointRanges[2].add(new PVector(0, 11f * PI / 20f));
-    //axis4.jointRanges[2].add(new PVector(59f * PI / 40f, TWO_PI));
     axis4.jointRanges[2] = new PVector(59f * PI / 40f, 11f * PI / 20f);
     axis4.rotationSpeed = radians(450)/60.0;
     // Joint 6
@@ -271,20 +266,6 @@ public class ArmModel {
     }
   }//end draw arm model
   
-  public PVector getWpr() {
-    PVector out = new PVector(0,0,0);
-    PVector tmp = new PVector(0,0,0);
-    for (Model a : segments) {
-      tmp.x += a.currentRotations[0];
-      tmp.y += a.currentRotations[1];
-      tmp.z += a.currentRotations[2];
-    }
-    out.x = clampAngle(tmp.y);
-    out.y = clampAngle(tmp.z);
-    out.z = clampAngle(tmp.x);
-    return out;
-  }//end get WPR
-  
   //returns the rotational values for each arm joint
   public float[] getJointRotations() {
     float[] rot = new float[6];
@@ -298,6 +279,59 @@ public class ArmModel {
     }
     return rot;
   }//end get joint rotations
+  
+ /* This method calculates the Euler angular rotations: roll, pitch and yaw of the Robot's
+  * End Effector in the form of a vector array.
+  *
+  * @param axesMatrix  A 3x3 matrix containing unti vectors representing the Robot's End
+  *                    Effector's x, y, z axes in respect of the World Coordinate Frame;
+  * @returning         A array containing the End Effector's roll, pitch, and yaw, in that
+  *                    order
+  *
+  *  Method based off of procedure outlined in the pdf at this location:
+  *     http://www.staff.city.ac.uk/~sbbh653/publications/euler.pdf
+  *     z - phi, y - theta, x - psi
+  */
+  public PVector getWPR() {
+    PVector wpr = new PVector();
+    
+   float[][] axesVectors = EEAxesVectorsMatrix();
+   
+   if (axesVectors[2][0] > 0.998) {
+     // Special case for arcsin(1)
+     wpr.z = 0f;
+     wpr.y = -PI / 2f;
+     wpr.x = atan2(-axesVectors[0][1], -axesVectors[0][2]);
+   } else if (axesVectors[2][0] < -0.998) {
+     // Special case for arcsin(-1)
+     wpr.z = 0f;
+     wpr.y = PI / 2f;
+     wpr.x = atan2(axesVectors[0][1], axesVectors[0][2]);
+   } else {
+     wpr.y = -asin(axesVectors[2][0]);
+     wpr.x = atan2(axesVectors[2][1] / cos(wpr.y), axesVectors[2][2] / cos(wpr.y));
+     wpr.z = atan2(axesVectors[1][0] / cos(wpr.y), axesVectors[0][0] / cos(wpr.y));
+   }
+   
+   // Offset roll and yaw from range [-PI, PI] to [0, TWO_PI]
+   wpr.x = PI - wpr.x;
+   wpr.z = PI -  wpr.z;
+   
+   // Offset ptich from [-PI / 2, PI / 2] and [PI/2, -PI / 2] to [0. TWO_PI]
+   if (axesVectors[0][0] > 0) {
+     wpr.y = PI + wpr.y;
+   } else if (axesVectors[0][0] < 0) {
+     
+     if (axesVectors[2][0] > 0) {
+       wpr.y *= -1;
+     } else if (axesVectors[2][0] < 0) {
+       wpr.y = TWO_PI - wpr.y;
+     }
+     
+   }
+    
+    return wpr;
+  }
   
   //convenience method to set all joint rotation values of the robot arm
   public void setJointRotations(float[] rot){
@@ -419,6 +453,18 @@ public class ArmModel {
       }
     }
   } // end execute live motion
+  
+  /* If an object is currently being held by the Robot arm, then release it */
+  public void releaseHeldObject() {
+    
+    PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+    PVector obj_center = new PVector(armModel.held_offset.x + ee_pos.x, armModel.held_offset.y + ee_pos.y, armModel.held_offset.z + ee_pos.z);
+    
+    armModel.held.form.set_center_point(obj_center.x, obj_center.y, obj_center.z);
+    armModel.held.hit_box.set_center_point(obj_center.x, obj_center.y, obj_center.z);
+    armModel.held = null;
+    armModel.held_offset = null;
+  }
   
 } // end ArmModel class
 

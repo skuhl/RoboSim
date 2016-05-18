@@ -403,7 +403,38 @@ public class ToolInstruction extends Instruction {
     if ((type.equals("RO") && bracket == 4 && activeEndEffector == ENDEF_CLAW) ||
         (type.equals("DO") && bracket == 101 && activeEndEffector == ENDEF_SUCTION))
     {
+      
       endEffectorStatus = setToolStatus;
+      
+      // Check if the Robot is placing an object or picking up and object
+      if (activeEndEffector == ENDEF_CLAW) {
+        
+        if (setToolStatus == ON & armModel.held == null) {
+          
+          PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+          
+          // Determine if an object in the world can be picked up by the Robot
+          for (Object s : objects) {
+            
+            if (s.collision(ee_pos)) {
+              armModel.held = s;
+              
+              pushMatrix();
+              resetMatrix();
+              
+              PVector obj_center = s.form.center();
+              armModel.held_offset = new PVector(obj_center.x - ee_pos.x, obj_center.y - ee_pos.y, obj_center.z - ee_pos.z);
+              
+              popMatrix();
+              
+              break;
+            }
+          }
+        } else if (setToolStatus == OFF && armModel.held != null) {
+          // Release the object
+          armModel.releaseHeldObject();
+        }
+      }
     }
   }
   
