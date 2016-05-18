@@ -98,14 +98,8 @@ void showMainDisplayText() {
                       
     text(s, width-20, 60);
   } else {
-<<<<<<< HEAD
-    //PVector wpr = armModel.getRot();
-    float[] wpr = EulerAngles(eeAxesMatrix());
-    String ee_rot = String.format("  W: %5.4f  P: %5.4f  R: %5.4f", wpr[0], wpr[1], wpr[2]);
-=======
-    PVector wpr = armModel.getWpr();
+    PVector wpr = armModel.getWPR();
     String ee_rot = String.format("  W: %5.4f  P: %5.4f  R: %5.4f", wpr.x, wpr.y, wpr.z);
->>>>>>> d9033d2c3dd8e8244cc2e3d81831743c7d164081
     text(ee_pos + ee_rot, width-20, 60);
   }
   
@@ -130,18 +124,26 @@ void showMainDisplayText() {
     text("Press shift on the keyboard to disable camera rotation", 390, height / 2 + 40);
   }
   
-  /*textSize(12);
+  textSize(12);
   fill(0, 0, 0);
   
-  for (int idx = 0; idx < armModel.segments.size(); ++idx) {
+  /*for (int idx = 0; idx < armModel.segments.size(); ++idx) {
     float[] orientation = armModel.segments.get(idx).currentRotations;
     String s = String.format("Joint %d - w:%f p:%f r:%f", idx, orientation[1], orientation[2], orientation[0]);
     text(s, 380, height / 2 + 55 + idx * 15);
   }/**/
   
-  float[] angles = EulerAngles(eeAxesMatrix());
-  String wpr = String.format("W: %f P: %f R: %f", angles[0], angles[1], angles[2]);
-  text(wpr, 350, height / 2 + 55);
+  /*float[][] vectorMatrix = EEAxesVectorsMatrix();
+  String row = String.format("[  %f  %f  %f  ]", vectorMatrix[0][0], vectorMatrix[0][1], vectorMatrix[0][2]);
+  text(row, 300, height / 2 + 60);
+  row = String.format("[  %f  %f  %f  ]", vectorMatrix[1][0], vectorMatrix[1][1], vectorMatrix[1][2]);
+  text(row, 300, height / 2 + 74);
+  row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
+  text(row, 300, height / 2 + 88);/**/
+  
+  /*PVector angles = armModel.getWPR();
+  String wpr = String.format("W: %f P: %f R: %f", angles.x, angles.y, angles.z);
+  text(wpr, 315, height / 2 + 120);/**/
   
   if (errorCounter > 0) {
     errorCounter--;
@@ -285,54 +287,41 @@ PVector calculateEndEffectorPosition(ArmModel model, float[] rot) {
   return ret;
 } // end calculateEndEffectorPosition
 
-/* Returns a 3x3 matrix whose columns are the axes vectors for the End Effector's
- * origin. */
-public float[][] eeAxesMatrix() {
+/* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
+ * the End Effector's x, y, z axes in respect to the World Frame. */
+public float[][] EEAxesVectorsMatrix() {
   pushMatrix();
   resetMatrix();
+  // Switch to End Effector reference Frame
   applyModelRotation(armModel);
-  // Define points { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, and { 0, 0, 1}
-  PVector origin = new PVector(modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0)),
-          x = new PVector(modelX(1, 0, 0), modelY(1, 0, 0), modelZ(1, 0, 0)),
-          y = new PVector(modelX(0, 1, 0), modelY(0, 1, 0), modelZ(0, 1, 0)),
-          z = new PVector(modelX(0, 0, 1), modelY(0, 0, 1), modelZ(0, 0, 1));
-  
+  /* Define vectors { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, and { 0, 0, 1 }
+   * Swap y and z coordinates, negating the original y coordinate
+   * Swap vectors:
+   *   x' = z
+   *   y' = x
+   *   z' = y
+   */
+  PVector origin = new PVector(modelX(0, 0, 0), modelZ(0, 0, 0), -modelY(0, 0, 0)),
+          
+          x = new PVector(modelX(0, 0, 1), modelZ(0, 0, 1), -modelY(0, 0, 1)),
+          y = new PVector(modelX(1, 0, 0), modelZ(1, 0, 0), -modelY(1, 0, 0)),
+          z = new PVector(modelX(0, 1, 0), modelZ(0, 1, 0), -modelY(0, 1, 0));
+          
   float[][] eeAxes = new float[3][3];
-  // Take the difference between the coordinates of one of the unit vectors and the origin
+  // Calcualte Unit Vectors form difference between each axis vector and the origin
   eeAxes[0][0] = x.x - origin.x;
-  eeAxes[1][0] = x.y - origin.y;
-  eeAxes[2][0] = x.z - origin.z;
-  eeAxes[0][1] = y.x - origin.x;
+  eeAxes[0][1] = x.y - origin.y;
+  eeAxes[0][2] = x.z - origin.z;
+  eeAxes[1][0] = y.x - origin.x;
   eeAxes[1][1] = y.y - origin.y;
-  eeAxes[2][1] = y.z - origin.z;
-  eeAxes[0][2] = z.x - origin.x;
-  eeAxes[1][2] = z.y - origin.y;
+  eeAxes[1][2] = y.z - origin.z;
+  eeAxes[2][0] = z.x - origin.x;
+  eeAxes[2][1] = z.y - origin.y;
   eeAxes[2][2] = z.z - origin.z;
   
   popMatrix();
   
   return eeAxes;
-}
-
-// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToEuler/
-public float[] EulerAngles(float[][] axesMatrix) {
-   float[] euler_angles = new float[3];
-   
-   if (axesMatrix[1][0] > 0.998) {
-     euler_angles[0] = atan2(axesMatrix[0][2], axesMatrix[2][2]);
-     euler_angles[1] = PI / 2f;
-     euler_angles[2] = 0f;
-   } else if (axesMatrix[1][0] < -1.998) {
-     euler_angles[0] = atan2(axesMatrix[0][2], axesMatrix[2][2]);
-     euler_angles[1] = -PI / 2;
-     euler_angles[2] = 0f;
-   } else {
-     euler_angles[0] = atan2(-axesMatrix[2][0], axesMatrix[0][0]);
-     euler_angles[1] = atan2(-axesMatrix[1][2], axesMatrix[1][1]);
-     euler_angles[2] = asin(axesMatrix[1][0]);
-   }
-   
-   return euler_angles;
 }
 
 /* This method will draw the End Effector grid mapping based on the value of EE_MAPPING:
@@ -346,24 +335,27 @@ public void drawEndEffectorGridMapping() {
   PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
   
   /*pushMatrix();
+  // x-axis : green
+  // y-axis : blue
+  // z-axis : red
+  
   // Display EE axes at the EE position
-  applyModelRotation(armModel);
+  /*applyModelRotation(armModel);
   stroke(0, 0, 255);
   line(50000, 0, 0, -50000, 0, 0);
   stroke(255, 0, 0);
   line(0, 50000, 0, 0, -50000, 0);
   stroke(0, 255, 0);
   line(0, 0, 50000, 0, 0, -50000);
-  popMatrix();
+  popMatrix();/**/
   
   // Display world axes at the EE position
-  stroke(0, 0, 255);
+  stroke(0, 255, 0);
   line(50000, ee_pos.y, ee_pos.z, -50000, ee_pos.y, ee_pos.z);
   stroke(255, 0, 0);
   line(ee_pos.x, 50000, ee_pos.z, ee_pos.x, -50000, ee_pos.z);
-  stroke(0, 255, 0);
+  stroke(0, 0, 255);
   line(ee_pos.x, ee_pos.y, 50000, ee_pos.x, ee_pos.y, -50000);/**/
-  
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
   color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);
@@ -463,7 +455,7 @@ float[][] calculateJacobian(float[] angles){
   float[][] jacobian = new float[6][6];
   PVector oPos = calculateEndEffectorPosition(armModel, angles);
   PVector nPos = new PVector(0, 0, 0);
-  PVector oRot = armModel.getWpr();
+  PVector oRot = armModel.getWPR();
   PVector nRot = new PVector(0, 0, 0);
   
   //examine each segment of the arm
@@ -472,7 +464,7 @@ float[][] calculateJacobian(float[] angles){
     angles[i] += dAngle;
     armModel.setJointRotations(angles);
     nPos = calculateEndEffectorPosition(armModel, angles);
-    nRot = armModel.getWpr();
+    nRot = armModel.getWPR();
     //get translational delta
     jacobian[i][0] = calculateVectorDelta(nPos, oPos)[0];
     jacobian[i][1] = calculateVectorDelta(nPos, oPos)[1];

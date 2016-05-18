@@ -1474,7 +1474,7 @@ public void f1(){
            eep = convertNativeToWorld(eep);
            Program prog = programs.get(active_program);
            int reg = prog.nextRegister();
-           PVector r = armModel.getWpr();
+           PVector r = armModel.getWPR();
            float[] j = armModel.getJointRotations();
            prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
                                       j[0], j[1], j[2], j[3], j[4], j[5]), reg);
@@ -1796,7 +1796,7 @@ public void f5() {
       eep = convertNativeToWorld(eep);
       Program prog = programs.get(active_program);
       int reg = prog.nextRegister();
-      PVector r = armModel.getWpr();
+      PVector r = armModel.getWPR();
       float[] j = armModel.getJointRotations();
       prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
                                  j[0], j[1], j[2], j[3], j[4], j[5]), reg);

@@ -67,7 +67,7 @@ int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 /* The Y corrdinate of the ground plane */
 public static final float PLANE_Y = 200.5f;
 public Object[] objects;
-private Shape floor;
+
 /*******************************/
 
 // for store or load program state
@@ -94,9 +94,9 @@ public void setup() {
   
   // Intialize world objects
   // Create a small, blue cube
-  Shape box = new Box(new PVector(0, -200, 0), 35, color(0, 0, 255), color(0, 0, 0));
+  Shape box = new Box(new PVector(0, 0, 0), 35, color(0, 0, 255), color(0, 0, 0));
   objects = new Object[1];
-  objects[0] = new Object(box, new Box(new PVector(0, -200, 0), 125, 125, 125, color(0, 255, 0)));
+  objects[0] = new Object(box, new Box(new PVector(0, 0, 0), 125, 125, 125, color(0, 255, 0)));
 }
 
 boolean doneMoving = true;
@@ -212,7 +212,7 @@ public void draw() {
   drawEndEffectorGridMapping();
   
   // Draw x, z origin lines
-  stroke(255, 0, 0);
+  /*stroke(255, 0, 0);
   line(0, PLANE_Y, -5000, 0, PLANE_Y, 5000);
   line(-5000, PLANE_Y, 0, 5000, PLANE_Y, 0);
   
@@ -224,7 +224,7 @@ public void draw() {
     
     line(-100 * l, PLANE_Y, -5000, -100 * l, PLANE_Y, 5000);
     line(-5000, PLANE_Y, -100 * l, 5000, PLANE_Y, -100 * l);
-  }
+  }*/
   
   popMatrix();
   
