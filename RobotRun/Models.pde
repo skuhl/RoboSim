@@ -457,13 +457,22 @@ public class ArmModel {
   /* If an object is currently being held by the Robot arm, then release it */
   public void releaseHeldObject() {
     
-    PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
-    PVector obj_center = new PVector(armModel.held_offset.x + ee_pos.x, armModel.held_offset.y + ee_pos.y, armModel.held_offset.z + ee_pos.z);
-    
-    armModel.held.form.set_center_point(obj_center.x, obj_center.y, obj_center.z);
-    armModel.held.hit_box.set_center_point(obj_center.x, obj_center.y, obj_center.z);
-    armModel.held = null;
-    armModel.held_offset = null;
+    if (armModel.held != null) {
+      pushMatrix();
+      resetMatrix();
+      applyModelRotation(armModel);
+      
+      armModel.held.form.set_center_point( modelX(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z),
+                                           modelY(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z),
+                                           modelZ(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z) );
+      
+      armModel.held.hit_box.set_center_point(armModel.held.form.center().x, armModel.held.form.center().y, armModel.held.form.center().z);
+      armModel.held.setOrientation(armModel.getJointRotations());
+      armModel.held = null;
+      armModel.held_offset = null;
+      
+      popMatrix();
+    }
   }
   
 } // end ArmModel class

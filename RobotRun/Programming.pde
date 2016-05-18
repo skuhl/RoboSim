@@ -421,9 +421,12 @@ public class ToolInstruction extends Instruction {
               
               pushMatrix();
               resetMatrix();
-              
               PVector obj_center = s.form.center();
-              armModel.held_offset = new PVector(obj_center.x - ee_pos.x, obj_center.y - ee_pos.y, obj_center.z - ee_pos.z);
+              
+              applyModelRotation(armModel);
+              armModel.held_offset = new PVector( modelX(obj_center.x, obj_center.y, obj_center.z),
+                                                  modelY(obj_center.x, obj_center.y, obj_center.z),
+                                                  modelZ(obj_center.x, obj_center.y, obj_center.z) );
               
               popMatrix();
               

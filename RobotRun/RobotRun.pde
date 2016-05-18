@@ -95,8 +95,10 @@ public void setup() {
   // Intialize world objects
   // Create a small, blue cube
   Shape box = new Box(new PVector(0, 0, 0), 35, color(0, 0, 255), color(0, 0, 0));
-  objects = new Object[1];
-  objects[0] = new Object(box, new Box(new PVector(0, 0, 0), 125, 125, 125, color(0, 255, 0)));
+  Shape box2 = new Box(new PVector(-200, -200, -200), 105, color(255, 0, 0), color(255, 0, 255));
+  objects = new Object[2];
+  objects[0] = new Object(box, new Box(box.center(), 80, color(0, 255, 0)));
+  objects[1] = new Object(box2, new Box(box2.center(), 140, color(0, 255, 0)));
 }
 
 boolean doneMoving = true;
@@ -138,18 +140,16 @@ public void draw() {
       // Draw object within the claw of the Robot
       pushMatrix();
       
-      //applyModelRotation(armModel);
-      PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+      applyModelRotation(armModel);
       
-      armModel.held.form.set_center_point(ee_pos.x + armModel.held_offset.x, ee_pos.y + armModel.held_offset.y, ee_pos.z + armModel.held_offset.z);
-      armModel.held.hit_box.set_center_point(ee_pos.x + armModel.held_offset.x, ee_pos.y + armModel.held_offset.y, ee_pos.z + armModel.held_offset.z);
-      s.draw();
+      armModel.held.form.set_center_point(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z);
+      armModel.held.hit_box.set_center_point(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z);
+      s.form.draw();
       s.hit_box.draw();
       
       popMatrix();
     } else {
       s.draw();
-      s.hit_box.draw();
     }
   }
   
