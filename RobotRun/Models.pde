@@ -311,19 +311,19 @@ public class ArmModel {
   }//end set joint rotations
   
   public boolean interpolateRotation(float speed) {
-    boolean allDone = true;
+    boolean done = true;
     for (Model a : segments){
       for (int r = 0; r < 3; r++){
         if (a.rotations[r]){
-          if (abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeed*2){
-            allDone = false;
+          if (abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeed*speed){
+            done = false;
             a.currentRotations[r] += a.rotationSpeed * a.rotationDirections[r] * speed;
             a.currentRotations[r] = clampAngle(a.currentRotations[r]);
           }
         }
       } // end loop through rotation axes
     } // end loop through arm segments
-    return allDone;
+    return done;
   } // end interpolate rotation
   
   public void instantRotation() {
@@ -334,12 +334,11 @@ public class ArmModel {
     }
   }
   
-  void executeLiveMotion() {
-    
+  void executeLiveMotion() {    
     if (curCoordFrame == COORD_JOINT) {
-      
       for (int i = 0; i < segments.size(); i += 1) {
         Model model = segments.get(i);
+        
         for (int n = 0; n < 3; n++) {
           if (model.rotations[n]) {
             float trialAngle = model.currentRotations[n] +
@@ -347,7 +346,6 @@ public class ArmModel {
               trialAngle = clampAngle(trialAngle);
             
             if (model.anglePermitted(n, trialAngle)) {
-              
               // Caculate the distance that the end effector is from the center of the robot's base
               PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
               // This is not the exact center, it is a rough estimate 
@@ -371,10 +369,12 @@ public class ArmModel {
                   model.currentRotations[n] = old_angle;
                   model.jointsMoving[n] = 0;
                 }
-              } else {
+              } 
+              else {
                 model.currentRotations[n] = trialAngle;
               }  
-            } else {
+            } 
+            else {
               model.jointsMoving[n] = 0;
             }
           }

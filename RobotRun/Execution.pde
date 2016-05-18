@@ -87,7 +87,7 @@ void showMainDisplayText() {
   text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
   
   PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
-  //eep = convertNativeToWorld(eep);
+  eep = convertNativeToWorld(eep);
   String ee_pos = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f", eep.x, eep.y, eep.z);
   String ee_dist = String.format("Dist %4.5f", PVector.dist(eep, base_center));
   
@@ -675,7 +675,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
       interMotionIdx = -1;
       return true;
     }
-    //calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
   return false;
 } // end execute linear motion
@@ -928,7 +928,6 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
 boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   //stop executing if no valid program is selected or we reach the end of the program
   if (program == null || currentInstruction >= program.getInstructions().size()){
-    println("end of program");
     return true;
   }
   
@@ -940,13 +939,12 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
     MotionInstruction instruction = (MotionInstruction)ins;
     if (instruction.getUserFrame() != activeUserFrame){
       setError("ERROR: Instruction's user frame is different from currently active user frame.");
-      println("bad user frame");
       return true;
     }
     //start a new instruction
     if (!executingInstruction){
       boolean setup = setUpInstruction(program, model, instruction);
-      if(!setup){ println("bad instruction"); return true; }
+      if(!setup){ return true; }
       else executingInstruction = true;
     }
     //continue current instruction
@@ -961,10 +959,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
       //move to next instruction after current is finished
       if (!executingInstruction){
         currentInstruction++;
-        if(singleInst){
-          println("executing single instruction");
-          return true;
-        }
+        if(singleInst){ return true; }
       }
     }
   }
@@ -1023,28 +1018,31 @@ boolean executeSingleInstruction(Instruction ins) {
  */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
   PVector start = calculateEndEffectorPosition(model, armModel.getJointRotations());
+  
   if (instruction.getMotionType() == MTYPE_JOINT) {
     float[] j = instruction.getVector(program).j;
+    
+    //set target rotational value for each joint
     for (int n = 0; n < j.length; n++) {
       for (int r = 0; r < 3; r++) {
         if (model.segments.get(n).rotations[r])
           model.segments.get(n).targetRotations[r] = j[n];
+          println("target rotation for joint " + n + ": " + j[n]);
       }
     }
+    
     // calculate whether it's faster to turn CW or CCW
     for (Model a : model.segments) {
       for (int r = 0; r < 3; r++) {
         if (a.rotations[r]) {
-         
          // The minimum distance between the current and target joint angles
          float dist_t = minimumDistance(a.currentRotations[r], a.targetRotations[r]);
          
+         // check joint movement range
          if (a.jointRanges[r].x == 0 && a.jointRanges[r].y == TWO_PI) {
-           
-           // Joint has full range of motion
            a.rotationDirections[r] = (dist_t < 0) ? -1 : 1;
-         } else {
-           
+         }
+         else {  
            /* Determine if at least one bound lies within the range of the shortest angle
             * between the current joint angle and the target angle. If so, then take the
             * longer angle, otherwise choose the shortest angle path. */
@@ -1056,34 +1054,28 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
            float dist_ub = minimumDistance(a.currentRotations[r], a.jointRanges[r].y);
            
            if (dist_t < 0) {
-           
              if ( (dist_lb < 0 && dist_lb > dist_t) || (dist_ub < 0 && dist_ub > dist_t) ) {
-               
                // One or both bounds lie within the shortest path
                a.rotationDirections[r] = 1;
-             } else {
+             } 
+             else {
                a.rotationDirections[r] = -1;
              }
-           } else if (dist_t > 0) {
-           
-             if ( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {
-               
+           } 
+           else if (dist_t > 0){
+             if ( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {  
                // One or both bounds lie within the shortest path
                a.rotationDirections[r] = -1;
-             } else {
+             } 
+             else {
                a.rotationDirections[r] = 1;
              }
            }
          }
-         
-         /*float blueAngle = a.targetRotations[r] - a.currentRotations[r];
-          blueAngle = clampAngle(blueAngle);
-          if (blueAngle < PI) a.rotationDirections[r] = 1;
-          else a.rotationDirections[r] = -1;*/
         }
       }
     }
-  } 
+  } // end joint movement setup
   else if (instruction.getMotionType() == MTYPE_LINEAR) {
     if (instruction.getTermination() == 0) {
       beginNewLinearMotion(start, instruction.getVector(program).c);
@@ -1108,7 +1100,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
                                  instruction.getTermination());
       }
     } // end if termination type is continuous
-  } 
+  } // end linear movement setup
   else if (instruction.getMotionType() == MTYPE_CIRCULAR) {
     // If it is a circular instruction, the current instruction holds the intermediate point.
     // There must be another instruction after this that holds the end point.
@@ -1131,7 +1123,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
     }
     
     beginNewCircularMotion(start, instruction.getVector(program).c, nextPoint.c);
-  } // end if motion type is circular
+  } // end circular movement setup
   return true;
 } // end setUpInstruction
 

@@ -1812,6 +1812,7 @@ public void f5() {
       active_col = 0;
       loadInstructions(active_program);
       updateScreen(color(255,0,0), color(0,0,0));
+      saveState();
     }
   } else if (mode == ENTER_TEXT) {
       /*clearScreen();
@@ -2495,7 +2496,7 @@ public void JOINT1_NEG() {
     activateLiveJointMotion(0, -1);
   } else if (curCoordFrame == COORD_WORLD) {
     // Move entire robot in a single axis plane
-    activateLiveWorldMotion(0, -1, false);
+    activateLiveWorldMotion(0, 1, false);
   }
   
   int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
@@ -2518,7 +2519,7 @@ public void JOINT1_POS() {
     activateLiveJointMotion(0, 1);
   } else if (curCoordFrame == COORD_WORLD) {
     // Move entire robot in a single axis plane
-    activateLiveWorldMotion(0, 1, false);
+    activateLiveWorldMotion(0, -1, false);
   }
   
   int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
@@ -2588,7 +2589,7 @@ public void JOINT3_NEG() {
     activateLiveJointMotion(2, -1);
   } else if (curCoordFrame == COORD_WORLD) {
     // Move entire robot in a single axis plane
-    activateLiveWorldMotion(1, -1, false);
+    activateLiveWorldMotion(1, 1, false);
   }
   
   int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
@@ -2611,7 +2612,7 @@ public void JOINT3_POS() {
     activateLiveJointMotion(2, 1);
   } else if (curCoordFrame == COORD_WORLD) {
     // Move entire robot in a single axis plane
-    activateLiveWorldMotion(1, 1, false);
+    activateLiveWorldMotion(1, -1, false);
   }
   
   int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
