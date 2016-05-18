@@ -48,8 +48,8 @@ float myRotY = 0.0;
 boolean doRotate = false;
 
 float myscale = 0.5;
-/*******************************/
 
+/*******************************/
 /* other global variables      */
 
 // for Execution
@@ -64,9 +64,10 @@ int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 /*******************************/
 /*        Shape Stuff          */
 
-/* The Y corrdinate of the ground plane */
+// The Y corrdinate of the ground plane
 public static final float PLANE_Y = 200.5f;
 public Object[] objects;
+
 
 /*******************************/
 
@@ -134,6 +135,7 @@ public void draw() {
   popMatrix();
   
   // Draw all world objects and apply gravity upon them as well
+  pushMatrix();
   for (Object s : objects) {
     
     if (armModel.held == s) {
@@ -152,6 +154,7 @@ public void draw() {
       s.draw();
     }
   }
+  popMatrix();
   
   noLights();
   
@@ -162,7 +165,7 @@ public void draw() {
     for (PVector v : intermediatePositions) {
       pushMatrix();
       translate(v.x, v.y, v.z);
-      sphere(5);
+      sphere(10);
       popMatrix();
     }
   }
