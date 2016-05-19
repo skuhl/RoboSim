@@ -160,7 +160,7 @@ public class ArmModel {
     }
     
     held = null;
-    
+    held_offset = null;
   } // end ArmModel constructor
   
   public void draw() {
@@ -558,20 +558,8 @@ public class ArmModel {
   public void releaseHeldObject() {
     
     if (armModel.held != null) {
-      pushMatrix();
-      //resetMatrix();
-      applyModelRotation(armModel);
-      
-      armModel.held.form.set_center_point( modelX(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z),
-                                           modelY(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z),
-                                           modelZ(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z) );
-      
-      armModel.held.hit_box.set_center_point(armModel.held.form.center().x, armModel.held.form.center().y, armModel.held.form.center().z);
-      armModel.held.setOrientation(armModel.getWPR());
+      // TODO
       armModel.held = null;
-      armModel.held_offset = null;
-      
-      popMatrix();
     }
   }
   

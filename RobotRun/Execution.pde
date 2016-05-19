@@ -89,16 +89,11 @@ void showMainDisplayText() {
   text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
   
   // Display the Current position and orientation of the Robot in the World Frame
-<<<<<<< HEAD
-  PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
-  PVector wpr = armModel.getWPR();
-  String dis_world = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f  W: %5.4f  P: %5.4f  R: %5.4f", ee_pos.x, ee_pos.y, ee_pos.z, wpr.x, wpr.y, wpr.z);
-=======
   PVector ee_pos = armModel.getEEPos();
+  //ee_pos = convertNativeToWorld(ee_pos);
   PVector wpr = armModel.getWPR();
   String dis_world = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f  W: %5.4f  P: %5.4f  R: %5.4f", 
                      ee_pos.x, ee_pos.y, ee_pos.z, wpr.x, wpr.y, wpr.z);
->>>>>>> 8c90dd85e75ef21c0a69004fa002787e9bfdec6b
   
   // Display the Robot's joint angles
   float j[] = armModel.getJointRotations();
@@ -299,24 +294,24 @@ public void drawEndEffectorGridMapping() {
   line(ee_pos.x, ee_pos.y, 50000, ee_pos.x, ee_pos.y, -50000);/**/
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
-  color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);
+  color c = (ee_pos.y <= PLANE_Z) ? color(255, 0, 0) : color(150, 0, 255);
   
   // Toggle EE mapping type with 'e'
   switch (EE_MAPPING) {
     
     case 0:
       stroke(c);
-      // Draw a line, from the EE to the grid in the xz plane, parallel to the y plane
-      line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
+      // Draw a line, from the EE to the grid in the xy plane, parallel to the z plane
+      line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Z, ee_pos.z);
       break;
     
     case 1:
       noStroke();
       fill(c);
-      // Draw a point, which maps the EE's position to the grid in the xz plane
+      // Draw a point, which maps the EE's position to the grid in the xy plane
       pushMatrix();
       rotateX(PI / 2);
-      translate(0, 0, -PLANE_Y);
+      translate(0, 0, -PLANE_Z);
       ellipse(ee_pos.x, ee_pos.z, 10, 10);
       popMatrix();
       break;

@@ -36,7 +36,6 @@ final int NONE = 0,
           CONFIRM_DELETE = 28;
 final int COLOR_DEFAULT = -8421377,
           COLOR_ACTIVE = -65536;
-static boolean STOP_MOVEMENT = false;
 static int     EE_MAPPING = 0;
 
 int frame = FRAME_JOINT; // current frame
@@ -1926,7 +1925,6 @@ public void f5() {
 
 /* Stops all of the Robot's movement */
 public void hd() {
-  STOP_MOVEMENT = true;
   
   for (Model model : armModel.segments) {
     model.jointsMoving[0] = 0;

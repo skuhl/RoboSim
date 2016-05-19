@@ -411,16 +411,9 @@ public class ToolInstruction extends Instruction {
             
             if (s.collision(ee_pos)) {
               armModel.held = s;
-              
-              pushMatrix();
-              PVector obj_center = s.form.center();
-              
-              applyModelRotation(armModel);
-              armModel.held_offset = new PVector( modelX(obj_center.x, obj_center.z, -obj_center.y),
-                                                  modelY(obj_center.x, obj_center.z, -obj_center.y),
-                                                  modelZ(obj_center.x, obj_center.z, -obj_center.y) );
-              
-              popMatrix();
+              s.form.setOrientation(0f, 0f, 0f);
+              s.hit_box.setOrientation(0f, 0f, 0f);
+              // TODO
               
               break;
             }
