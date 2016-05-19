@@ -100,6 +100,8 @@ public void setup(){
   objects = new Object[2];
   objects[0] = new Object(box, new Box(box.center(), 80, color(0, 255, 0)));
   objects[1] = new Object(box2, new Box(box2.center(), 140, color(0, 255, 0)));
+  
+  //createTestProgram();
 }
 
 boolean doneMoving = true;

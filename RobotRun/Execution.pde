@@ -69,12 +69,12 @@ void createTestProgram() {
   instruction4 = new MotionInstruction(MTYPE_LINEAR, 6, true, 1.0, 0);
   program4.addInstruction(instruction4);
   programs.add(program4);
-  //currentProgram = program4;
+  currentProgram = program4;
   
-  /*for (int n = 0; n < 22; n++) {
+  for (int n = 0; n < 22; n++) {
      programs.add(new Program("Xtra" + Integer.toString(n)));
      
-  }*/
+  }
   saveState();
 } // end createTestProgram()
 
