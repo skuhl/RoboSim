@@ -155,10 +155,10 @@ void showMainDisplayText() {
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
     text(row, 20, height / 2 + 108);
     
-    for (int idx = 0; idx < armModel.segments.size(); ++idx) {
-      float[] orientation = armModel.segments.get(idx).currentRotations;
-      String s = String.format("Joint %d - w:%f p:%f r:%f", idx, orientation[1], orientation[2], orientation[0]);
-      text(s, 20, height / 2 + 138 + idx * 15);
+    // Held object
+    if (armModel.held_offset != null) {
+      String obj_offset = String.format("obj_off : [ %f, %f, %f ]", armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z);
+      text(obj_offset, 20, height / 2 + 138);
     }
   }
   
@@ -295,24 +295,24 @@ public void drawEndEffectorGridMapping() {
   line(ee_pos.x, ee_pos.y, 50000, ee_pos.x, ee_pos.y, -50000);/**/
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
-  color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);
+  color c = (ee_pos.y <= PLANE_Z) ? color(255, 0, 0) : color(150, 0, 255);
   
   // Toggle EE mapping type with 'e'
   switch (EE_MAPPING) {
     
     case 0:
       stroke(c);
-      // Draw a line, from the EE to the grid in the xz plane, parallel to the y plane
-      line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
+      // Draw a line, from the EE to the grid in the xy plane, parallel to the z plane
+      line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Z, ee_pos.z);
       break;
     
     case 1:
       noStroke();
       fill(c);
-      // Draw a point, which maps the EE's position to the grid in the xz plane
+      // Draw a point, which maps the EE's position to the grid in the xy plane
       pushMatrix();
       rotateX(PI / 2);
-      translate(0, 0, -PLANE_Y);
+      translate(0, 0, -PLANE_Z);
       ellipse(ee_pos.x, ee_pos.z, 10, 10);
       popMatrix();
       break;

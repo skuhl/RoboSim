@@ -65,7 +65,7 @@ int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 /*        Shape Stuff          */
 
 // The Y corrdinate of the ground plane
-public static final float PLANE_Y = 200.5f;
+public static final float PLANE_Z = 200.5f;
 public Object[] objects;
 
 
@@ -94,12 +94,16 @@ public void setup(){
   }
   
   // Intialize world objects
-  // Create a small, blue cube
-  Shape box = new Box(new PVector(0, 0, 0), 35, color(0, 0, 255), color(0, 0, 0));
-  Shape box2 = new Box(new PVector(-200, -200, -200), 105, color(255, 0, 0), color(255, 0, 255));
+  // Create a medium, red cube
+  Shape box = new Box(convertWorldToNative(new PVector(50, 125, 35)), 85, color(255, 0, 0), color(255, 0, 255));
+  Shape box2 = new Box(box.center(), 105, color(255, 0, 255), color(255, 255, 255));
   objects = new Object[2];
-  objects[0] = new Object(box, new Box(box.center(), 80, color(0, 255, 0)));
-  objects[1] = new Object(box2, new Box(box2.center(), 140, color(0, 255, 0)));
+
+  objects[0] = new Object(box, new Box(box.center(), 125, color(0, 255, 0)));
+  objects[1] = new Object(box2, new Box(box2.center(), 135, color(0, 255, 0)));
+  
+  objects[1].form.setOrientation(0, 4 * PI / 3, 0);
+  objects[1].hit_box.setOrientation(0, 4 * PI / 3, 0);
   
   //createTestProgram();
 }
@@ -136,13 +140,14 @@ public void draw(){
   armModel.draw();
   popMatrix();
   
-  // Draw all world objects and apply gravity upon them as well
-  pushMatrix();
-  for (Object s : objects){
-    if (armModel.held == s){
+  // Draw all world objects
+   for (Object s : objects) {
+     
+    if (armModel.held == s) {
+      // Change hit box color
+      s.hit_box.outline = color(255, 0, 0);
       // Draw object within the claw of the Robot
       pushMatrix();
-      
       applyModelRotation(armModel);
       
       armModel.held.form.set_center_point(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z);
@@ -152,10 +157,14 @@ public void draw(){
       
       popMatrix();
     } else {
+      // Restore to normal
+      s.hit_box.outline = color(0, 255, 0);
+      
+      pushMatrix();
       s.draw();
+      popMatrix();
     }
   }
-  popMatrix();
   
   noLights();
   
@@ -232,34 +241,23 @@ public void draw(){
   
   drawEndEffectorGridMapping();
   
-  // Draw x, z origin lines
   stroke(255, 0, 0);
-  line(0, PLANE_Y, -5000, 0, PLANE_Y, 5000);
-  line(-5000, PLANE_Y, 0, 5000, PLANE_Y, 0);
+  // Draw x origin line
+  line( -5000, PLANE_Z, 0, 5000, PLANE_Z, 0 );
+  // Draw y origin line
+  line( 0, PLANE_Z, 5000, 0, PLANE_Z, -5000 );
   
-  // Draw grid lines every 100 units, from -5000 to 5000, in the x and z plane, on the floor plane
+  // Draw grid lines every 100 units, from -5000 to 5000, in the x and y plane, on the floor plane
   stroke(25, 25, 25);
   for (int l = 1; l < 50; ++l) {
-    line(100 * l, PLANE_Y, -5000, 100 * l, PLANE_Y, 5000);
-    line(-5000, PLANE_Y, 100 * l, 5000, PLANE_Y, 100 * l);
+    line(100 * l, PLANE_Z, -5000, 100 * l, PLANE_Z, 5000);
+    line(-5000, PLANE_Z, 100 * l, 5000, PLANE_Z, 100 * l);
     
-    line(-100 * l, PLANE_Y, -5000, -100 * l, PLANE_Y, 5000);
-    line(-5000, PLANE_Y, -100 * l, 5000, PLANE_Y, -100 * l);
+    line(-100 * l, PLANE_Z, -5000, -100 * l, PLANE_Z, 5000);
+    line(-5000, PLANE_Z, -100 * l, 5000, PLANE_Z, -100 * l);
   }
   
   popMatrix();
-  
-  PVector ee_pos = armModel.getEEPos();
-  
-  for (Object s : objects) {
-    if (s.collision(ee_pos)) {
-      // Change hit box color
-      s.hit_box.outline = color(255, 0, 0);
-    } else {
-      // Resort to normal
-      s.hit_box.outline = color(0, 255, 0);
-    }
-  }
   
   hint(DISABLE_DEPTH_TEST);
   
