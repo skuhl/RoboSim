@@ -90,7 +90,6 @@ void showMainDisplayText() {
   
   // Display the Current position and orientation of the Robot in the World Frame
   PVector ee_pos = armModel.getEEPos();
-  println("native coords: " + ee_pos);
   ee_pos = convertNativeToWorld(ee_pos);
   PVector wpr = armModel.getWPR();
   String dis_world = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f  W: %5.4f  P: %5.4f  R: %5.4f", 

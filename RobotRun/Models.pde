@@ -293,42 +293,48 @@ public class ArmModel {
   *     z - phi, y - theta, x - psi
   */
   public PVector getWPR() {
-    PVector wpr = new PVector();
+    PVector wpr;
     
-   float[][] axesVectors = EEAxesVectorsMatrix();
+   float[][] r = EEAxesVectorsMatrix();
    
-   if (axesVectors[2][0] > 0.998) {
-     // Special case for arcsin(1)
-     wpr.z = 0f;
-     wpr.y = -PI / 2f;
-     wpr.x = atan2(-axesVectors[0][1], -axesVectors[0][2]);
-   } else if (axesVectors[2][0] < -0.998) {
-     // Special case for arcsin(-1)
-     wpr.z = 0f;
-     wpr.y = PI / 2f;
-     wpr.x = atan2(axesVectors[0][1], axesVectors[0][2]);
-   } else {
-     wpr.y = -asin(axesVectors[2][0]);
-     wpr.x = atan2(axesVectors[2][1] / cos(wpr.y), axesVectors[2][2] / cos(wpr.y));
-     wpr.z = atan2(axesVectors[1][0] / cos(wpr.y), axesVectors[0][0] / cos(wpr.y));
-   }
+   float alpha = atan2(r[2][1], r[2][2]);
+   float beta = atan2(-r[2][0], sqrt(r[2][1]*r[2][1] + r[2][2]*r[2][2]))+PI/2;
+   float gamma = atan2(r[1][0], r[0][0]);
    
-   // Offset roll and yaw from range [-PI, PI] to [0, TWO_PI]
-   wpr.x = PI - wpr.x;
-   wpr.z = PI -  wpr.z;
+   wpr = new PVector(abs(alpha)*57.2958, beta*57.2958, abs(gamma)*57.2958);
    
-   // Offset ptich from [-PI / 2, PI / 2] and [PI/2, -PI / 2] to [0. TWO_PI]
-   if (axesVectors[0][0] > 0) {
-     wpr.y = PI + wpr.y;
-   } else if (axesVectors[0][0] < 0) {
+   //if (axesVectors[2][0] > 0.998) {
+   //  // Special case for arcsin(1)
+   //  wpr.z = 0f;
+   //  wpr.y = -PI / 2f;
+   //  wpr.x = atan2(-axesVectors[0][1], -axesVectors[0][2]);
+   //} else if (axesVectors[2][0] < -0.998) {
+   //  // Special case for arcsin(-1)
+   //  wpr.z = 0f;
+   //  wpr.y = PI / 2f;
+   //  wpr.x = atan2(axesVectors[0][1], axesVectors[0][2]);
+   //} else {
+   //  wpr.y = -asin(axesVectors[2][0]);
+   //  wpr.x = atan2(axesVectors[2][1] / cos(wpr.y), axesVectors[2][2] / cos(wpr.y));
+   //  wpr.z = atan2(axesVectors[1][0] / cos(wpr.y), axesVectors[0][0] / cos(wpr.y));
+   //}
+   
+   //// Offset roll and yaw from range [-PI, PI] to [0, TWO_PI]
+   //wpr.x = PI - wpr.x;
+   //wpr.z = PI -  wpr.z;
+   
+   //// Offset ptich from [-PI / 2, PI / 2] and [PI/2, -PI / 2] to [0. TWO_PI]
+   //if (axesVectors[0][0] > 0) {
+   //  wpr.y = PI + wpr.y;
+   //} else if (axesVectors[0][0] < 0) {
      
-     if (axesVectors[2][0] > 0) {
-       wpr.y *= -1;
-     } else if (axesVectors[2][0] < 0) {
-       wpr.y = TWO_PI - wpr.y;
-     }
+   //  if (axesVectors[2][0] > 0) {
+   //    wpr.y *= -1;
+   //  } else if (axesVectors[2][0] < 0) {
+   //    wpr.y = TWO_PI - wpr.y;
+   //  }
      
-   }
+   //}
     
     return wpr;
   }
