@@ -333,8 +333,108 @@ public class ArmModel {
     return wpr;
   }
   
+  public PVector getWPR(float[] testAngles){
+    float[] origAngles = getJointRotations();
+    setJointRotations(testAngles);
+    
+    PVector ret = getWPR();
+    setJointRotations(origAngles);
+    return ret;
+  }
+  
+  /**
+   * Gives the current position of the end effector in
+   * Processing native coordinates.
+   * @param model Arm model whose end effector position to calculate
+   * @param test Determines whether to use arm segments' actual
+   *             rotation values or if we're checking trial rotations
+   * @return The current end effector position
+   */
+  public PVector getEEPos() {
+    pushMatrix();
+    resetMatrix();
+    
+    translate(600, 200, 0);
+    translate(-50, -166, -358); // -115, -213, -413
+    rotateZ(PI);
+    translate(150, 0, 150);
+    
+    rotateY(getJointRotations()[0]);
+    
+    translate(-150, 0, -150);
+    rotateZ(-PI);    
+    translate(-115, -85, 180);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 62, 62);
+    
+    rotateX(getJointRotations()[1]);
+    
+    translate(0, -62, -62);
+    rotateY(-PI/2);
+    rotateZ(-PI);   
+    translate(0, -500, -50);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 75, 75);
+    
+    rotateX(getJointRotations()[2]);
+    
+    translate(0, -75, -75);
+    rotateY(PI/2);
+    rotateZ(-PI);
+    translate(745, -150, 150);
+    rotateZ(PI/2);
+    rotateY(PI/2);
+    translate(70, 0, 70);
+    
+    rotateY(getJointRotations()[3]);
+    
+    translate(-70, 0, -70);
+    rotateY(-PI/2);
+    rotateZ(-PI/2);    
+    translate(-115, 130, -124);
+    rotateZ(PI);
+    rotateY(-PI/2);
+    translate(0, 50, 50);
+    
+    rotateX(getJointRotations()[4]);
+    
+    translate(0, -50, -50);
+    rotateY(PI/2);
+    rotateZ(-PI);    
+    translate(150, -10, 95);
+    rotateY(-PI/2);
+    rotateZ(PI);
+    translate(45, 45, 0);
+    
+    rotateZ(getJointRotations()[5]);
+    
+    if (activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
+      PVector tr = toolFrames[activeToolFrame].getOrigin();
+      translate(tr.x, tr.y, tr.z);
+    }
+    PVector ret = new PVector(
+      modelX(0, 0, 0),
+      modelY(0, 0, 0),
+      modelZ(0, 0, 0));
+    
+    popMatrix();
+    return ret;
+  } // end calculateEndEffectorPosition
+  
+  public PVector getEEPos(float[] testAngles){
+    float[] origAngles = getJointRotations();
+    setJointRotations(testAngles);
+    
+    PVector ret = getEEPos();
+    setJointRotations(origAngles);
+    return ret;
+    
+  }
+  
   //convenience method to set all joint rotation values of the robot arm
-  public void setJointRotations(float[] rot){
+      public void setJointRotations(float[] rot){
     for(int i = 0; i < segments.size(); i += 1){
       for(int j = 0; j < 3; j += 1){
         if(segments.get(i).rotations[j]){
@@ -381,7 +481,7 @@ public class ArmModel {
             
             if (model.anglePermitted(n, trialAngle)) {
               // Caculate the distance that the end effector is from the center of the robot's base
-              PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+              PVector ee_pos = armModel.getEEPos();
               // This is not the exact center, it is a rough estimate 
               float dist = PVector.dist(ee_pos, base_center);
               
@@ -395,7 +495,7 @@ public class ArmModel {
                 model.currentRotations[n] = trialAngle;
                 
                 // Caculate the distance that the end effector is from the center of the robot's base for the test angle
-                PVector new_ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+                PVector new_ee_pos = armModel.getEEPos();
                 float new_dist = PVector.dist(new_ee_pos, base_center);
                 
                 if (new_dist < dist) {
@@ -424,7 +524,7 @@ public class ArmModel {
         if (intermediatePositions.size() == 1){
           startFrom = intermediatePositions.get(0);
         } else{
-          startFrom = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+          startFrom = armModel.getEEPos();
         }
         
         PVector move = new PVector(linearMoveSpeeds[0], linearMoveSpeeds[1], linearMoveSpeeds[2]);

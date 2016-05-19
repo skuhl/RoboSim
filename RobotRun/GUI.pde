@@ -41,9 +41,6 @@ static int     EE_MAPPING = 0;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
-
- 
-
 int active_program = -1; // the currently selected program
 int active_instruction = -1; // the currently selected instruction
 int mode = NONE; 
@@ -91,6 +88,7 @@ ArrayList<Integer> nums = new ArrayList<Integer>(); // store numbers pressed by 
 int active_row = 0, active_col = 0; // which element is on focus now?
 int which_option = -1; // which option is on focus now?
 int index_contents = 0, index_options = 100, index_nums = 1000; // how many textlabels have been created for display
+int mouseDown = 0;
 
 void gui(){
    g1_px = 0;
@@ -107,9 +105,8 @@ void gui(){
    
    // group 1: display and function buttons
    g1 = cp5.addGroup("DISPLAY")
-                 .setPosition(g1_px, g1_py)
-                 .setBackgroundColor(color(127,127,127,50))
-                 ;
+      .setPosition(g1_px, g1_py)
+      .setBackgroundColor(color(127,127,127,50));
    
    myTextarea = cp5.addTextarea("txt")
       .setPosition(display_px,display_py)
@@ -126,10 +123,10 @@ void gui(){
    
    // text label to show how to use F1 - F5 keys
    fn_info = cp5.addTextlabel("fn_info")
-                .hide()
-                ;    
+       .hide();
+       
    num_info = cp5.addTextlabel("num_info")
-                .hide();   
+       .hide();   
    // button to show g1
    int bt_show_px = 1;
    int bt_show_py = 1;
@@ -886,29 +883,26 @@ void gui(){
 
 /* mouse events */
 public void mousePressed(){
-
-  
-   if ((clickPan % 2) == 1 ) { // pan button is pressed
-      if (doPan) {
-         doPan = false;
-      } else {
-         doPan = true;
-      }
-   }
-   
-   if ((clickRotate % 2) == 1 ) { // rotate button is pressed
-      if (doRotate) {
-         doRotate = false;
-      } else {
-         doRotate = true;
-      }
-   }
+  mouseDown += 1;
+  if(mouseButton == LEFT){
+    if(clickRotate%2 == 1){
+      doRotate = !doRotate;
+    }
+    else if(clickPan%2 == 1){
+      doPan = !doPan;
+    }
+  }
 }
 
-public void mouseDragged() {
-  //if (sb != null) {
-  //  sb.update();
-  //}
+public void mouseDragged(MouseEvent e) {
+   if (mouseDown == 2){
+      panX += mouseX - pmouseX;
+      panY += mouseY - pmouseY;
+   }
+   if (mouseDown == 1 && mouseButton == RIGHT){
+      myRotX += (mouseY - pmouseY) * 0.01;
+      myRotY += (mouseX - pmouseX) * 0.01;
+   }
 }
 
 public void mouseMoved(){
@@ -941,12 +935,10 @@ public void mouseWheel(MouseEvent event){
 }
 
 public void mouseReleased() {
-  // Remove focus from the Scrollbar
-  //if (sb != null) { sb.focus = false; }
+  mouseDown -= 1;
 }
 
 public void keyPressed(){
-  
   if (mode == ENTER_TEXT) {
     
     if (workingText.length() < 10 && ( (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') )) {
@@ -992,69 +984,17 @@ public void keyPressed(){
     claw.execute();
   }
   
-  /* click spacebar once to activate pan button
-   * click spacebar again to deactivate pan button */ 
   if (key == ' '){ 
-    clickPan += 1;
-    if ((clickPan % 2) == 1){
-       cursorMode = HAND;
-       PImage[] pressed = {loadImage("images/pan_down.png"), loadImage("images/pan_down.png"), loadImage("images/pan_down.png")};
-       if (bt_show.isVisible()){
-            cp5.getController("pan_shrink")
-               .setImages(pressed);
-       }else{
-            cp5.getController("pan_normal")
-               .setImages(pressed);
-       }
-          
-    }else{
-       cursorMode = ARROW;
-       PImage[] released = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")}; 
-       if (bt_show.isVisible()){
-            cp5.getController("pan_shrink")
-               .setImages(released);
-       }else{
-            cp5.getController("pan_normal")
-               .setImages(released);
-       }
-       doPan = false;   
-    }
-    
-    cursor(cursorMode);
-   }
+    pan_normal();
+  }
    
   if (keyCode == SHIFT){ 
-  clickRotate += 1;
-  if ((clickRotate % 2) == 1){
-     cursorMode = MOVE;
-     PImage[] pressed = {loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png")};
-     if (bt_show.isVisible()){
-        cp5.getController("rotate_shrink")
-           .setImages(pressed); 
-     }else{
-        cp5.getController("rotate_normal")
-           .setImages(pressed); 
-     }
-    
-  }else{
-     cursorMode = ARROW;
-     PImage[] released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
-     if (bt_show.isVisible()){
-        cp5.getController("rotate_shrink")
-           .setImages(released); 
-     }else{
-        cp5.getController("rotate_normal")
-           .setImages(released); 
-     }
-     doRotate = false;   
-  }
-  
-  cursor(cursorMode);
+    rotate_normal();
   }
 }
 
 public void hide(){
-   g1.remove();
+   g1.hide();
    bt_show.show();
    bt_zoomin_shrink.show();
    bt_zoomout_shrink.show();
@@ -1065,14 +1005,20 @@ public void hide(){
    clickPan = 0;
    clickRotate = 0;
    cursorMode = ARROW;
-   PImage[] pan_released = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")}; 
+   PImage[] pan_released = {loadImage("images/pan_35x20.png"), 
+                            loadImage("images/pan_over.png"), 
+                            loadImage("images/pan_down.png")};
+                            
    cp5.getController("pan_normal")
       .setImages(pan_released);
    cp5.getController("pan_shrink")
       .setImages(pan_released);   
    doPan = false;    
 
-   PImage[] rotate_released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
+   PImage[] rotate_released = {loadImage("images/rotate_35x20.png"), 
+                               loadImage("images/rotate_over.png"), 
+                               loadImage("images/rotate_down.png")};
+                               
    cp5.getController("rotate_normal")
       .setImages(rotate_released);
    cp5.getController("rotate_shrink")
@@ -1084,22 +1030,28 @@ public void hide(){
 
 public void show(){
    g1.show();
-   bt_show.remove();
-   bt_zoomin_shrink.remove();
-   bt_zoomout_shrink.remove();
-   bt_pan_shrink.remove();
-   bt_rotate_shrink.remove();
+   bt_show.hide();
+   bt_zoomin_shrink.hide();
+   bt_zoomout_shrink.hide();
+   bt_pan_shrink.hide();
+   bt_rotate_shrink.hide();
    
    // release buttons of pan and rotate
    clickPan = 0;
    clickRotate = 0;
    cursorMode = ARROW;
-   PImage[] pan_released = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")}; 
+   PImage[] pan_released = {loadImage("images/pan_35x20.png"), 
+                            loadImage("images/pan_over.png"), 
+                            loadImage("images/pan_down.png")}; 
+                            
    cp5.getController("pan_normal")
       .setImages(pan_released);
    doPan = false;    
 
-   PImage[] rotate_released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
+   PImage[] rotate_released = {loadImage("images/rotate_35x20.png"), 
+                               loadImage("images/rotate_over.png"),
+                               loadImage("images/rotate_down.png")}; 
+                               
    cp5.getController("rotate_normal")
       .setImages(rotate_released);
    doRotate = false;
@@ -1480,7 +1432,7 @@ public void f1(){
            mode = PICK_INSTRUCTION;
            updateScreen(color(255,0,0), color(0));
          } else { // shift+f1 = add new motion instruction
-           PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+           PVector eep = armModel.getEEPos();
            eep = convertNativeToWorld(eep);
            Program prog = programs.get(active_program);
            int reg = prog.nextRegister();
@@ -1802,7 +1754,7 @@ public void f5() {
       }
     } else {
       // overwrite current instruction
-      PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+      PVector eep = armModel.getEEPos();
       eep = convertNativeToWorld(eep);
       Program prog = programs.get(active_program);
       int reg = prog.nextRegister();
@@ -1846,12 +1798,12 @@ public void f5() {
     if (shift == ON) {
       if (inFrame == NAV_USER_FRAMES) {
         if (teachingWhichPoint == 1) { // teaching origin
-          PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+          PVector eep = armModel.getEEPos();
           currentFrame.setOrigin(convertNativeToWorld(eep));
           teachingWhichPoint++;
           loadThreePointMethod();
         } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
-          PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+          PVector eep = armModel.getEEPos();
           PVector second = convertNativeToWorld(eep);
           PVector first = currentFrame.getOrigin();
           PVector vec = new PVector(second.x-first.x, second.y-first.y, second.z-first.z);
@@ -2331,7 +2283,7 @@ public void zoomin_normal(){
 
 // zoomin button when interface is minimized
 public void zoomin_shrink(){
-   myscale *= 1.1;
+   zoomin_normal();
 }
 
 // zoomout button when interface is at full size
@@ -2341,20 +2293,31 @@ public void zoomout_normal(){
 
 // zoomout button when interface is minimized
 public void zoomout_shrink(){
-   myscale *= 0.9;
+   zoomout_normal();
 }
 
 // pan button when interface is at full size
 public void pan_normal(){
   clickPan += 1;
   if ((clickPan % 2) == 1){
+     if((clickRotate % 2) == 1){
+       rotate_normal();
+     }
+     
      cursorMode = HAND;
-     PImage[] pressed = {loadImage("images/pan_down.png"), loadImage("images/pan_down.png"), loadImage("images/pan_down.png")};
+     PImage[] pressed = {loadImage("images/pan_down.png"), 
+                         loadImage("images/pan_down.png"), 
+                         loadImage("images/pan_down.png")};
+                         
      cp5.getController("pan_normal")
-        .setImages(pressed);   
-  }else{
+        .setImages(pressed);
+  }
+  else{
      cursorMode = ARROW;
-     PImage[] released = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")}; 
+     PImage[] released = {loadImage("images/pan_35x20.png"), 
+                          loadImage("images/pan_over.png"), 
+                          loadImage("images/pan_down.png")};
+                          
      cp5.getController("pan_normal")
         .setImages(released);
      doPan = false;   
@@ -2365,34 +2328,31 @@ public void pan_normal(){
 
 // pan button when interface is minimized
 public void pan_shrink(){
-  clickPan += 1;
-  if ((clickPan % 2) == 1){
-     cursorMode = HAND;
-     PImage[] pressed = {loadImage("images/pan_down.png"), loadImage("images/pan_down.png"), loadImage("images/pan_down.png")};
-     cp5.getController("pan_shrink")
-        .setImages(pressed);   
-  }else{
-     cursorMode = ARROW;
-     PImage[] released = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")}; 
-     cp5.getController("pan_shrink")
-        .setImages(released);
-     doPan = false;   
-  }
-  
-  cursor(cursorMode);
+  pan_normal();
 }
 
 // rotate button when interface is at full size
 public void rotate_normal(){
    clickRotate += 1;
    if ((clickRotate % 2) == 1){
+     if((clickPan % 2) == 1){
+       pan_normal();
+     }
+     
      cursorMode = MOVE;
-     PImage[] pressed = {loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png")};
+     PImage[] pressed = {loadImage("images/rotate_down.png"), 
+                         loadImage("images/rotate_down.png"), 
+                         loadImage("images/rotate_down.png")};
+                         
      cp5.getController("rotate_normal")
-        .setImages(pressed);   
-  }else{
+        .setImages(pressed);
+  }
+  else{
      cursorMode = ARROW;
-     PImage[] released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
+     PImage[] released = {loadImage("images/rotate_35x20.png"), 
+                          loadImage("images/rotate_over.png"), 
+                          loadImage("images/rotate_down.png")};
+                          
      cp5.getController("rotate_normal")
         .setImages(released);
      doRotate = false;   
@@ -2403,32 +2363,22 @@ public void rotate_normal(){
 
 // rotate button when interface is minized
 public void rotate_shrink(){
-   clickRotate += 1;
-   if ((clickRotate % 2) == 1){
-     cursorMode = MOVE;
-     PImage[] pressed = {loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png"), loadImage("images/rotate_down.png")};
-     cp5.getController("rotate_shrink")
-        .setImages(pressed);   
-  }else{
-     cursorMode = ARROW;
-     PImage[] released = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")}; 
-     cp5.getController("rotate_shrink")
-        .setImages(released);
-     doRotate = false;   
-  }
-  
-  cursor(cursorMode);
+  rotate_normal();
 }
 
 public void record_normal(){
    if (record == OFF){
       record = ON;
-      PImage[] record = {loadImage("images/record-on.png"), loadImage("images/record-on.png"), loadImage("images/record-on.png")};   
+      PImage[] record = {loadImage("images/record-on.png"), 
+                         loadImage("images/record-on.png"),
+                         loadImage("images/record-on.png")};   
       bt_record_normal.setImages(record);
       new Thread(new RecordScreen()).start();
    }else{
       record = OFF;
-      PImage[] record = {loadImage("images/record-35x20.png"), loadImage("images/record-over.png"), loadImage("images/record-on.png")};   
+      PImage[] record = {loadImage("images/record-35x20.png"), 
+                         loadImage("images/record-over.png"), 
+                         loadImage("images/record-on.png")};   
       bt_record_normal.setImages(record);
       
    }

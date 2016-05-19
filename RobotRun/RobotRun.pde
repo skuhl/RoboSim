@@ -75,7 +75,7 @@ public Object[] objects;
 FileInputStream in = null;
 FileOutputStream out = null;
 
-public void setup() {
+public void setup(){
   ortho();
   size(1200, 800, P3D);
   cp5 = new ControlP5(this);
@@ -104,7 +104,7 @@ public void setup() {
 
 boolean doneMoving = true;
 
-public void draw() {
+public void draw(){
   ortho();
   //lights();
   directionalLight(255, 255, 255, 1, 1, 0);
@@ -136,9 +136,8 @@ public void draw() {
   
   // Draw all world objects and apply gravity upon them as well
   pushMatrix();
-  for (Object s : objects) {
-    
-    if (armModel.held == s) {
+  for (Object s : objects){
+    if (armModel.held == s){
       // Draw object within the claw of the Robot
       pushMatrix();
       applyModelRotation(armModel);
@@ -241,7 +240,7 @@ public void draw() {
   
   popMatrix();
   
-  PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+  PVector ee_pos = armModel.getEEPos();
   
   for (Object s : objects) {
     if (s.collision(ee_pos)) {

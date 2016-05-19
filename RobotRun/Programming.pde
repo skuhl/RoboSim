@@ -57,7 +57,6 @@ public class Point  {
      ret += "</Point>";     
      return ret;
   }
-  
 } // end Point class
 
 public class Frame {
@@ -113,8 +112,6 @@ public class Frame {
     return str;
   }
 } // end Frame class
-
-
 
 public class Program  {
   private String name;
@@ -177,7 +174,6 @@ public class Program  {
   }
   /**** end ****/
   
-  
   public void addInstruction(Instruction i) {
     instructions.add(i);
     if (i instanceof MotionInstruction ) {
@@ -210,9 +206,6 @@ public class Program  {
     if (idx >= 0 && idx < p.length) return p[idx];
     else return null;
   }
-  
-  
-  
 } // end Program class
 
 
@@ -411,7 +404,7 @@ public class ToolInstruction extends Instruction {
         
         if (setToolStatus == ON & armModel.held == null) {
           
-          PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+          PVector ee_pos = armModel.getEEPos();
           
           // Determine if an object in the world can be picked up by the Robot
           for (Object s : objects) {
