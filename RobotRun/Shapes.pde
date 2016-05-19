@@ -139,18 +139,24 @@ public class Object {
   public Object(Shape f, Box hb) {
     form = f;
     hit_box = hb;
-    orientation = new float[] {0f, 0f, 0f, 0f, 0f, 0f};
+    orientation = new float[] {0f, 0f, 0f};
   }
   
   public void draw() {
     pushMatrix();
     
-    rotateY(orientation[0]);
+    /*rotateY(orientation[0]);
     rotateX(orientation[1]);
     rotateX(orientation[2]);
     rotateY(orientation[3]);
     rotateZ(orientation[4]);
-    rotateX(orientation[5]);
+    rotateX(orientation[5]);*/
+    
+    rotateX(orientation[0]);
+    rotateY(orientation[1]);
+    rotateZ(orientation[2]);
+    
+    
     
     form.draw();
     hit_box.draw();
@@ -163,10 +169,14 @@ public class Object {
   }
   
   /* Define the rotations necessary to draw the Object */
-  public void setOrientation(float[] angles) {
+  public void setOrientation(PVector angles) {
     
-    for (int idx = 0; idx < angles.length && idx < orientation.length; ++idx) {
+    orientation[0] = angles.x;
+    orientation[1] = angles.y;
+    orientation[2] = angles.z;
+    
+    /*for (int idx = 0; idx < angles.length && idx < orientation.length; ++idx) {
       orientation[idx] = angles[idx];
-    }
+    }*/
   }
 }

@@ -141,7 +141,6 @@ public void draw() {
     if (armModel.held == s) {
       // Draw object within the claw of the Robot
       pushMatrix();
-      
       applyModelRotation(armModel);
       
       armModel.held.form.set_center_point(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z);

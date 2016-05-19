@@ -88,10 +88,10 @@ void showMainDisplayText() {
   text("Coordinate Frame: " + (curCoordFrame == COORD_JOINT ? "Joint" : "World"), width-20, 20);
   text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
   
-  PVector eep = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
-  eep = convertNativeToWorld(eep);
-  String ee_pos = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f", eep.x, eep.y, eep.z);
-  String ee_dist = String.format("Dist %4.5f", PVector.dist(eep, base_center));
+  // Display the Current position and orientation of the Robot in the World Frame
+  PVector ee_pos = calculateEndEffectorPosition(armModel, armModel.getJointRotations());
+  PVector wpr = armModel.getWPR();
+  String dis_world = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f  W: %5.4f  P: %5.4f  R: %5.4f", ee_pos.x, ee_pos.y, ee_pos.z, wpr.x, wpr.y, wpr.z);
   
   // Display the Robot's joint angles
   float j[] = armModel.getJointRotations();
@@ -151,10 +151,10 @@ void showMainDisplayText() {
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
     text(row, 20, height / 2 + 108);
     
-    for (int idx = 0; idx < armModel.segments.size(); ++idx) {
-      float[] orientation = armModel.segments.get(idx).currentRotations;
-      String s = String.format("Joint %d - w:%f p:%f r:%f", idx, orientation[1], orientation[2], orientation[0]);
-      text(s, 20, height / 2 + 138 + idx * 15);
+    // Held object
+    if (armModel.held_offset != null) {
+      String obj_offset = String.format("obj_off : [ %f, %f, %f ]", armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z);
+      text(obj_offset, 20, height / 2 + 138);
     }
   }
   

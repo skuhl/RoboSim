@@ -459,7 +459,7 @@ public class ArmModel {
     
     if (armModel.held != null) {
       pushMatrix();
-      resetMatrix();
+      //resetMatrix();
       applyModelRotation(armModel);
       
       armModel.held.form.set_center_point( modelX(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z),
@@ -467,7 +467,7 @@ public class ArmModel {
                                            modelZ(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z) );
       
       armModel.held.hit_box.set_center_point(armModel.held.form.center().x, armModel.held.form.center().y, armModel.held.form.center().z);
-      armModel.held.setOrientation(armModel.getJointRotations());
+      armModel.held.setOrientation(armModel.getWPR());
       armModel.held = null;
       armModel.held_offset = null;
       
