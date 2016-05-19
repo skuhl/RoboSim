@@ -98,11 +98,14 @@ public void setup(){
   Shape box = new Box(convertWorldToNative(new PVector(50, 125, 35)), 85, color(255, 0, 0), color(255, 0, 255));
   Shape box2 = new Box(box.center(), 105, color(255, 0, 255), color(255, 255, 255));
   objects = new Object[2];
+
   objects[0] = new Object(box, new Box(box.center(), 125, color(0, 255, 0)));
   objects[1] = new Object(box2, new Box(box2.center(), 135, color(0, 255, 0)));
   
   objects[1].form.setOrientation(0, 4 * PI / 3, 0);
   objects[1].hit_box.setOrientation(0, 4 * PI / 3, 0);
+  
+  //createTestProgram();
 }
 
 boolean doneMoving = true;
@@ -178,16 +181,22 @@ public void draw(){
   }
   popMatrix(); 
   // TESTING CODE: DRAW END EFFECTOR POSITION
-  /*pushMatrix();
+  pushMatrix();
   //applyCamera();
   noFill();
   stroke(255, 0, 0);
   applyModelRotation(armModel);
-  sphere(50);
-  translate(0, 0, -400);
+  sphere(20);
+  translate(0, 0, -100);
   stroke(0, 255, 0);
-  sphere(50);
-  popMatrix(); */
+  sphere(10);
+  translate(0, -100, 100);
+  stroke(0, 255, 0);
+  sphere(10);
+  translate(-100, 100, 0);
+  stroke(0, 255, 0);
+  sphere(10);
+  popMatrix();
   // END TESTING CODE
   // TESTING CODE: DRAW USER FRAME 0
   /*PVector ufo = convertWorldToNative(userFrames[0].getOrigin());

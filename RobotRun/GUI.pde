@@ -67,8 +67,7 @@ Textlabel fn_info, num_info;
 String workingText; // when entering text or a number
 String workingTextSuffix;
 boolean speedInPercentage;
-final int ITEMS_TO_SHOW = 8; // how many instructions to show onscreen at a time
-final int PROGRAMS_TO_SHOW = 16; // how many programs to show onscreen at a time
+final int ITEMS_TO_SHOW = 16; // how many programs/ instructions to display on screen
 int letterSet; // which letter group to enter
 Frame currentFrame;
 int inFrame;
@@ -85,6 +84,7 @@ ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>(); // d
 ArrayList<String> options = new ArrayList<String>(); // display options for an element in a motion instruction
 ArrayList<Integer> nums = new ArrayList<Integer>(); // store numbers pressed by the user
 int active_row = 0, active_col = 0; // which element is on focus now?
+int text_render_start = 0;
 int which_option = -1; // which option is on focus now?
 int index_contents = 0, index_options = 100, index_nums = 1000; // how many textlabels have been created for display
 int mouseDown = 0;
@@ -926,9 +926,15 @@ public void mouseWheel(MouseEvent event){
     float e = event.getCount();
     if (e > 0 ) {
        myscale *= 1.1;
+       if(myscale > 2){
+         myscale = 2;
+       }
     }
     if (e < 0){
-       myscale *= 0.9; 
+       myscale *= 0.9;
+       if(myscale < 0.25){
+         myscale = 0.25;
+       }
     }
   //}
 }
@@ -989,6 +995,11 @@ public void keyPressed(){
    
   if (keyCode == SHIFT){ 
     rotate_normal();
+  }
+  
+  if(key == 'w'){
+    PVector wpr = armModel.getWPR();
+    println(wpr);
   }
 }
 
@@ -1155,6 +1166,7 @@ public void se(){
    active_program = 0;
    active_instruction = 0;
    active_row = 0;
+   text_render_start = 0;
    mode = PROGRAM_NAV;
    clearScreen();
    loadPrograms();
@@ -1167,8 +1179,11 @@ public void up(){
          options = new ArrayList<String>();
          clearOptions();
          if (active_program > 0) {
+           if(active_program == text_render_start)
+             text_render_start--;
+           else
+             active_row--;
            active_program--;
-           //saveState(); 
            active_col = 0;
          }
          loadPrograms();
@@ -1177,6 +1192,10 @@ public void up(){
          options = new ArrayList<String>();
          clearOptions();
          if (active_instruction > 0) {
+           if(active_instruction == text_render_start)
+             text_render_start--; 
+           else
+             active_row--;
            active_instruction--;
            active_col = 0;
          }
@@ -1217,8 +1236,12 @@ public void dn(){
          options = new ArrayList<String>();
          clearOptions();
          if (active_program < programs.size()-1) {
+           if(active_program - text_render_start == ITEMS_TO_SHOW - 1)
+             text_render_start++;
+           else
+             active_row++;
+           
            active_program++;
-           //saveState();
            active_col = 0;
          }
          loadPrograms();
@@ -1228,6 +1251,10 @@ public void dn(){
          clearOptions();
          int size = programs.get(active_program).getInstructions().size();
          if (active_instruction < size-1) {
+           if(active_instruction - text_render_start == ITEMS_TO_SHOW - 1)
+             text_render_start++;
+           else
+             active_row++;
            active_instruction++;
            active_col = 0;
          }
@@ -2000,6 +2027,7 @@ public void ENTER(){
       case PROGRAM_NAV:
          //saveState();
          active_instruction = 0;
+         text_render_start = 0;
          mode = INSTRUCTION_NAV;
          clearScreen();
          loadInstructions(active_program);
@@ -2784,7 +2812,7 @@ public void updateScreen(color active, color normal){
    }
    
    // clear main list
-   for (int i = 0; i < PROGRAMS_TO_SHOW*7; i++) {
+   for (int i = 0; i < ITEMS_TO_SHOW*7; i++) {
      if (cp5.getController(Integer.toString(i)) != null){
            cp5.getController(Integer.toString(i))
               .remove()
@@ -3096,8 +3124,8 @@ public void loadInstructions(int programID){
    contents = new ArrayList<ArrayList<String>>();
    int size = p.getInstructions().size();
    
-   int start = active_instruction;
-   int end = start + ITEMS_TO_SHOW;
+   int start = text_render_start;
+   int end = min(start + ITEMS_TO_SHOW, size);
    if (end >= size) end = size;
    for(int i=start;i<end;i++){
       ArrayList<String> m = new ArrayList<String>();
@@ -3178,12 +3206,10 @@ void loadPrograms() {
    }/* */
    
    active_instruction = 0;
-   active_row = 0;
    
    contents.clear();  
-   int start = active_program;
-   int end = start + PROGRAMS_TO_SHOW;
-   if (end >= size) end = size;
+   int start = text_render_start;
+   int end = min(start + ITEMS_TO_SHOW, size);
    for(int i=start;i<end;i++){
       ArrayList<String> temp = new ArrayList<String>();
       temp.add(programs.get(i).getName());
