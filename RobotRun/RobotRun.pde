@@ -181,10 +181,10 @@ public void draw(){
   translate(0, 0, -100);
   stroke(0, 255, 0);
   sphere(10);
-  translate(0, -100, 100);
+  translate(0, 100, 100);
   stroke(0, 255, 0);
   sphere(10);
-  translate(-100, 100, 0);
+  translate(100, -100, 0);
   stroke(0, 255, 0);
   sphere(10);
   popMatrix();

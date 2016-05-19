@@ -90,6 +90,8 @@ void showMainDisplayText() {
   
   // Display the Current position and orientation of the Robot in the World Frame
   PVector ee_pos = armModel.getEEPos();
+  println("native coords: " + ee_pos);
+  ee_pos = convertNativeToWorld(ee_pos);
   PVector wpr = armModel.getWPR();
   String dis_world = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f  W: %5.4f  P: %5.4f  R: %5.4f", 
                      ee_pos.x, ee_pos.y, ee_pos.z, wpr.x, wpr.y, wpr.z);
@@ -236,21 +238,21 @@ public float[][] EEAxesVectorsMatrix() {
    *   y' = x
    *   z' = y
    */
-  PVector origin = new PVector(modelX(0, 0, 0), modelZ(0, 0, 0), -modelY(0, 0, 0)),
+  PVector origin = new PVector(-modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0)),
           
-          x = new PVector(modelX(0, 0, 1), modelZ(0, 0, 1), -modelY(0, 0, 1)),
-          y = new PVector(modelX(1, 0, 0), modelZ(1, 0, 0), -modelY(1, 0, 0)),
-          z = new PVector(modelX(0, 1, 0), modelZ(0, 1, 0), -modelY(0, 1, 0));
+          x = new PVector(-modelX(0, 0, 1), modelY(0, 0, 1), modelZ(0, 0, 1)),
+          y = new PVector(-modelX(0, 1, 0), modelY(0, 1, 0), modelZ(0, 1, 0)),
+          z = new PVector(-modelX(1, 0, 0), modelY(1, 0, 0), modelZ(1, 0, 0));
           
   float[][] eeAxes = new float[3][3];
   // Calcualte Unit Vectors form difference between each axis vector and the origin
   eeAxes[0][0] = x.x - origin.x;
-  eeAxes[0][1] = x.y - origin.y;
-  eeAxes[0][2] = x.z - origin.z;
-  eeAxes[1][0] = y.x - origin.x;
+  eeAxes[0][1] = -(x.y - origin.y);
+  eeAxes[0][2] = -(x.z - origin.z);
+  eeAxes[1][0] = -(y.x - origin.x);
   eeAxes[1][1] = y.y - origin.y;
   eeAxes[1][2] = y.z - origin.z;
-  eeAxes[2][0] = z.x - origin.x;
+  eeAxes[2][0] = -(z.x - origin.x);
   eeAxes[2][1] = z.y - origin.y;
   eeAxes[2][2] = z.z - origin.z;
   
@@ -414,6 +416,9 @@ float[][] calculateJacobian(float[] angles){
   return jacobian;
 }//end calculate jacobian
 
+//attempts to calculate the joint rotation values
+//required to move the end effector to the point specified
+//by 'tgt'
 int calculateIKJacobian(PVector tgt){
   float[] angles = armModel.getJointRotations();
   int count = 0;
