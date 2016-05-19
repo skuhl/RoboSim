@@ -172,16 +172,22 @@ public void draw(){
   }
   popMatrix(); 
   // TESTING CODE: DRAW END EFFECTOR POSITION
-  /*pushMatrix();
+  pushMatrix();
   //applyCamera();
   noFill();
   stroke(255, 0, 0);
   applyModelRotation(armModel);
-  sphere(50);
-  translate(0, 0, -400);
+  sphere(20);
+  translate(0, 0, -100);
   stroke(0, 255, 0);
-  sphere(50);
-  popMatrix(); */
+  sphere(10);
+  translate(0, -100, 100);
+  stroke(0, 255, 0);
+  sphere(10);
+  translate(-100, 100, 0);
+  stroke(0, 255, 0);
+  sphere(10);
+  popMatrix();
   // END TESTING CODE
   // TESTING CODE: DRAW USER FRAME 0
   /*PVector ufo = convertWorldToNative(userFrames[0].getOrigin());

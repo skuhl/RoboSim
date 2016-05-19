@@ -927,9 +927,15 @@ public void mouseWheel(MouseEvent event){
     float e = event.getCount();
     if (e > 0 ) {
        myscale *= 1.1;
+       if(myscale > 2){
+         myscale = 2;
+       }
     }
     if (e < 0){
-       myscale *= 0.9; 
+       myscale *= 0.9;
+       if(myscale < 0.25){
+         myscale = 0.25;
+       }
     }
   //}
 }
@@ -990,6 +996,11 @@ public void keyPressed(){
    
   if (keyCode == SHIFT){ 
     rotate_normal();
+  }
+  
+  if(key == 'w'){
+    PVector wpr = armModel.getWPR();
+    println(wpr);
   }
 }
 
