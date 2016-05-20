@@ -93,6 +93,18 @@ public void setup(){
     userFrames[n] = new Frame();
   }
   
+  PVector v = new PVector(10, 0, -10);
+  
+  pushMatrix();
+  resetMatrix();
+  
+  applyModelRotation(armModel);
+  PVector u = transform(v, getTransformationMatrix());
+  println(v);
+  println(u);
+  
+  popMatrix();
+  
   // Intialize world objects
   // Create a medium, red cube
   Shape box = new Box(convertWorldToNative(new PVector(50, 125, 35)), 85, color(255, 0, 0), color(255, 0, 255));

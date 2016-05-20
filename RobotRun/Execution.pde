@@ -90,7 +90,7 @@ void showMainDisplayText() {
   
   // Display the Current position and orientation of the Robot in the World Frame
   PVector ee_pos = armModel.getEEPos();
-  ee_pos = convertNativeToWorld(ee_pos);
+  //ee_pos = convertNativeToWorld(ee_pos);
   PVector wpr = armModel.getWPR();
   String dis_world = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f  W: %5.4f  P: %5.4f  R: %5.4f", 
                      ee_pos.x, ee_pos.y, ee_pos.z, wpr.x, wpr.y, wpr.z);
@@ -221,43 +221,6 @@ PVector computePerpendicular(PVector in, PVector second) {
       dist(orig.x, orig.y, orig.z, p2.x, p2.y, p2.z))
     return vectorConvertFrom(perp1, plane[0], plane[1], plane[2]);
   else return vectorConvertFrom(perp2, plane[0], plane[1], plane[2]);
-}
-
-/* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
- * the End Effector's x, y, z axes in respect to the World Frame. */
-public float[][] EEAxesVectorsMatrix() {
-  pushMatrix();
-  resetMatrix();
-  // Switch to End Effector reference Frame
-  applyModelRotation(armModel);
-  /* Define vectors { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, and { 0, 0, 1 }
-   * Swap y and z coordinates, negating the original y coordinate
-   * Swap vectors:
-   *   x' = z
-   *   y' = x
-   *   z' = y
-   */
-  PVector origin = new PVector(-modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0)),
-          
-          x = new PVector(-modelX(0, 0, 1), modelY(0, 0, 1), modelZ(0, 0, 1)),
-          y = new PVector(-modelX(0, 1, 0), modelY(0, 1, 0), modelZ(0, 1, 0)),
-          z = new PVector(-modelX(1, 0, 0), modelY(1, 0, 0), modelZ(1, 0, 0));
-          
-  float[][] eeAxes = new float[3][3];
-  // Calcualte Unit Vectors form difference between each axis vector and the origin
-  eeAxes[0][0] = x.x - origin.x;
-  eeAxes[0][1] = -(x.y - origin.y);
-  eeAxes[0][2] = -(x.z - origin.z);
-  eeAxes[1][0] = -(y.x - origin.x);
-  eeAxes[1][1] = y.y - origin.y;
-  eeAxes[1][2] = y.z - origin.z;
-  eeAxes[2][0] = -(z.x - origin.x);
-  eeAxes[2][1] = z.y - origin.y;
-  eeAxes[2][2] = z.z - origin.z;
-  
-  popMatrix();
-  
-  return eeAxes;
 }
 
 /* This method will draw the End Effector grid mapping based on the value of EE_MAPPING:
@@ -464,26 +427,6 @@ int calculateIKJacobian(PVector tgt){
     armModel.setJointRotations(angles);
     return EXEC_SUCCESS;
   }
-}
-
-//calculates the change in each coordinate to obtain p2 from p1
-float[] calculateVectorDelta(PVector p1, PVector p2){
-  float[] d = {p1.x - p2.x, p1.y - p2.y, p1.z - p2.z};
-  return d;
-}
-
-//calculate the dot product of two vectors represented by float arrays
-float calculateVectorDot(float[] v1, float[] v2){
-  float dot = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
-  return dot;
-}
-
-float[] calculateRotationalDelta(PVector p1, PVector p2){
-  float[] d = new float[3];
-  d[0] = minimumDistance(p1.x, p2.x);
-  d[1] = minimumDistance(p1.y, p2.y);
-  d[2] = minimumDistance(p1.z, p2.z);
-  return d;
 }
 
 /**
