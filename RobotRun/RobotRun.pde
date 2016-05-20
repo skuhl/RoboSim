@@ -92,30 +92,18 @@ public void setup(){
     toolFrames[n] = new Frame();
     userFrames[n] = new Frame();
   }
-  
-  PVector v = new PVector(10, 0, -10);
-  
-  pushMatrix();
-  resetMatrix();
-  
-  applyModelRotation(armModel);
-  PVector u = transform(v, getTransformationMatrix());
-  println(v);
-  println(u);
-  
-  popMatrix();
-  
+   
   // Intialize world objects
   // Create a medium, red cube
   Shape box = new Box(convertWorldToNative(new PVector(50, 125, 35)), 85, color(255, 0, 0), color(255, 0, 255));
-  Shape box2 = new Box(box.center(), 105, color(255, 0, 255), color(255, 255, 255));
+  Shape box2 = new Box(PVector.add(armModel.getEEPos(), new PVector(-300, 0, 0)), 105, color(255, 0, 255), color(255, 255, 255));
   objects = new Object[2];
 
   objects[0] = new Object(box, new Box(box.center(), 125, color(0, 255, 0)));
   objects[1] = new Object(box2, new Box(box2.center(), 135, color(0, 255, 0)));
   
-  objects[1].form.setOrientation(0, 4 * PI / 3, 0);
-  objects[1].hit_box.setOrientation(0, 4 * PI / 3, 0);
+  objects[1].form.setOrientation(0, 0, 0);
+  objects[1].hit_box.setOrientation(0, 0, 0);
   
   //createTestProgram();
 }
@@ -153,7 +141,7 @@ public void draw(){
   popMatrix();
   
   // Draw all world objects
-   for (Object s : objects) {
+  /*for (Object s : objects) {
      
     if (armModel.held == s) {
       // Change hit box color
@@ -176,7 +164,7 @@ public void draw(){
       s.draw();
       popMatrix();
     }
-  }
+  }*/
   
   noLights();
   
@@ -253,7 +241,7 @@ public void draw(){
   
   drawEndEffectorGridMapping();
   
-  stroke(255, 0, 0);
+  /*stroke(255, 0, 0);
   // Draw x origin line
   line( -5000, PLANE_Z, 0, 5000, PLANE_Z, 0 );
   // Draw y origin line
@@ -267,7 +255,7 @@ public void draw(){
     
     line(-100 * l, PLANE_Z, -5000, -100 * l, PLANE_Z, 5000);
     line(-5000, PLANE_Z, -100 * l, 5000, PLANE_Z, -100 * l);
-  }
+  }*/
   
   popMatrix();
   

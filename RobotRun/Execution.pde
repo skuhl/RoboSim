@@ -170,7 +170,6 @@ void showMainDisplayText() {
   }
 }
 
-
 /**
  * Converts from RobotRun-defined world coordinates into
  * Processing's coordinate system.
@@ -233,28 +232,64 @@ public void drawEndEffectorGridMapping() {
   
   PVector ee_pos = armModel.getEEPos();
   
+  // x-axis : red
+  // y-axis : green
+  // z-axis : blue
   /*pushMatrix();
-  // x-axis : green
-  // y-axis : blue
-  // z-axis : red
-  
+  //resetMatrix();
   // Display EE axes at the EE position
-  /*applyModelRotation(armModel);
-  stroke(0, 0, 255);
-  line(50000, 0, 0, -50000, 0, 0);
+  applyModelRotation(armModel);
+  /*float[][] tMatrix = getTransformationMatrix();
+  popMatrix();/
+  
+  PVector x_vector = new PVector(5000, 0, 0);//transform(new PVector(0, 0, 5000), tMatrix);
+  PVector y_vector = new PVector(0, 5000, 0);//transform(new PVector(0, -5000, 0), tMatrix);
+  PVector z_vector = new PVector(0, 0, 5000);//transform(new PVector(5000, 0, 0), tMatrix);
+  
   stroke(255, 0, 0);
-  line(0, 50000, 0, 0, -50000, 0);
+  line(x_vector.x, x_vector.y, x_vector.z, -x_vector.x, x_vector.y, x_vector.z);
   stroke(0, 255, 0);
-  line(0, 0, 50000, 0, 0, -50000);
+  line(y_vector.x, y_vector.y, y_vector.z, y_vector.x, -y_vector.y, y_vector.z);
+  stroke(0, 0, 255);
+  line(z_vector.x, z_vector.y, z_vector.z, z_vector.x, z_vector.y, -z_vector.z);
+  //popMatrix();
+  
+  // Draw spheres on each of the positive portions of the EE's axes
+  noFill();
+  stroke(0,255,0);
+  translate(100, 0, 0);
+  sphere(10);
+  translate(-100, 100, 0);
+  sphere(10);
+  stroke(255, 0, 0);
+  translate(0, -100, 100);
+  sphere(10);
+  translate(0, 0, -100);
   popMatrix();/**/
   
-  // Display world axes at the EE position
-  /*stroke(0, 255, 0);
-  line(50000, ee_pos.y, ee_pos.z, -50000, ee_pos.y, ee_pos.z);
+  /*pushMatrix();
+  // Display native axes
   stroke(255, 0, 0);
-  line(ee_pos.x, 50000, ee_pos.z, ee_pos.x, -50000, ee_pos.z);
+  line(5000, ee_pos.y, ee_pos.z, -50000, ee_pos.y, ee_pos.z);
+  stroke(0, 255, 0);
+  line(ee_pos.x, 5000, ee_pos.z, ee_pos.x, -5000, ee_pos.z);
   stroke(0, 0, 255);
-  line(ee_pos.x, ee_pos.y, 50000, ee_pos.x, ee_pos.y, -50000);/**/
+  line(ee_pos.x, ee_pos.y, 5000, ee_pos.x, ee_pos.y, -5000);
+  
+  // Draw black spheres on each of the positive portions of the native axes
+  noFill();
+  translate(ee_pos.x, ee_pos.y, ee_pos.z);
+  stroke(0,0,0);
+  translate(100, 0, 0);
+  sphere(10);
+  translate(-100, 100, 0);
+  sphere(10);
+  stroke(0, 0, 0);
+  
+  translate(0, -100, 100);
+  sphere(10);
+  translate(0, 0, -100);
+  popMatrix();/**/
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
   color c = (ee_pos.y <= PLANE_Z) ? color(255, 0, 0) : color(150, 0, 255);
