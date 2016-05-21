@@ -5,32 +5,19 @@ public abstract class Shape {
   protected color fill;
   protected color outline;
   protected final boolean no_fill;
-  // The roll, pitch and yaw of the object in the world space
-  protected final float[] orientation;
   
   /* Create a shpae with the given outline/fill colors */
   public Shape(color f, color o) {
     fill = f;
     outline = o;
     no_fill = false;
-    
-    orientation = new float[] { 0f, 0f, 0f };
   }
   
   /* Creates a shape with no fill */
   public Shape(color o) {
     outline = o;
     no_fill = true;
-    
-    orientation = new float[] { 0f, 0f, 0f };
-  }
-  
-  /* Set the roll, pitch and yaw rotations of the shape in space. */
-  public void setOrientation(float w, float p, float r) {
-    orientation[0] = w;
-    orientation[1] = p;
-    orientation[2] = r;
-  }
+  } 
   
   /* Returns the center pooint of the shape */
   public abstract PVector center();
@@ -102,9 +89,6 @@ public class Box extends Shape {
   
   public void draw() {
     pushMatrix();
-    rotateX(orientation[0]);
-    rotateY(orientation[2]);
-    rotateZ(orientation[1]);
     
     translate(center.x, center.y, center.z);
     stroke(outline);
@@ -122,14 +106,10 @@ public class Box extends Shape {
   
   /* Check if the given point is within the dimensions of the box */
   public boolean within(PVector pos) {
-    pushMatrix();
-    resetMatrix();
     
     boolean is_inside = pos.x >= (center.x - wdh / 2f) && pos.x <= (center.x + wdh / 2f)
                      && pos.y >= (center.y - hgt / 2f) && pos.y <= (center.y + hgt / 2f)
                      && pos.z >= (center.z - len / 2f) && pos.z <= (center.z + len / 2f);
-    
-    popMatrix();
     
     return is_inside;
   }
@@ -140,18 +120,51 @@ public class Object {
   public final Shape form;
   // The area around an object used for collision handling
   public final Shape hit_box;
+  // The roll, pitch and yaw of the object in the world space
+  protected final float[] orientation;
   
   public Object(Shape f, Box hb) {
     form = f;
     hit_box = hb;
+    orientation = new float[] {0f, 0f, 0f};
   }
   
   public void draw() {
+    pushMatrix();
+    
+    rotateZ(orientation[2]);
+    rotateY(orientation[1]);
+    rotateX(orientation[0]);
+    
     form.draw();
     hit_box.draw();
+    
+    popMatrix();
   }
   
   public boolean collision(PVector pos) {
-    return ((Box)hit_box).within(pos);
+    pushMatrix();
+    resetMatrix();
+    
+    // Switch to the Object's corrdinate system
+    rotateZ(orientation[2]);
+    rotateY(orientation[1]);
+    rotateX(orientation[0]);
+    // Convert the point to the current reference frame
+    pos = transform(pos, invertHCMatrix(getTransformationMatrix()));
+    
+    
+    boolean collided = ((Box)hit_box).within(pos);
+    
+    popMatrix();
+    
+    return collided;
+  }
+  
+  /* Set the roll, pitch and yaw rotations of the shape in space. */
+  public void setOrientation(float w, float p, float r) {
+    orientation[0] = w;
+    orientation[1] = p;
+    orientation[2] = r;
   }
 }

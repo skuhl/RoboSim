@@ -102,8 +102,7 @@ public void setup(){
   objects[0] = new Object(box, new Box(box.center(), 125, color(0, 255, 0)));
   objects[1] = new Object(box2, new Box(box2.center(), 135, color(0, 255, 0)));
   
-  objects[1].form.setOrientation(0, 0, 0);
-  objects[1].hit_box.setOrientation(0, 0, 0);
+  //objects[1].setOrientation(PI / 3, 2 * PI/ 5, 11 * PI / 13);
   
   //createTestProgram();
 }
@@ -141,11 +140,18 @@ public void draw(){
   popMatrix();
   
   // Draw all world objects
-  /*for (Object s : objects) {
-     
-    if (armModel.held == s) {
+  for (Object s : objects) {
+    
+    if (s.collision(armModel.getEEPos())) {
       // Change hit box color
       s.hit_box.outline = color(255, 0, 0);
+    } else {
+      // Restore to normal
+      s.hit_box.outline = color(0, 255, 0);
+    }
+    
+    if (armModel.held == s) {
+      
       // Draw object within the claw of the Robot
       pushMatrix();
       applyModelRotation(armModel);
@@ -157,14 +163,12 @@ public void draw(){
       
       popMatrix();
     } else {
-      // Restore to normal
-      s.hit_box.outline = color(0, 255, 0);
       
       pushMatrix();
       s.draw();
       popMatrix();
     }
-  }*/
+  }
   
   noLights();
   
@@ -181,7 +185,7 @@ public void draw(){
   }
   popMatrix(); 
   // TESTING CODE: DRAW END EFFECTOR POSITION
-  pushMatrix();
+  /*pushMatrix();
   //applyCamera();
   noFill();
   stroke(255, 0, 0);
@@ -196,7 +200,7 @@ public void draw(){
   translate(100, -100, 0);
   stroke(0, 255, 0);
   sphere(10);
-  popMatrix();
+  popMatrix();*/
   // END TESTING CODE
   // TESTING CODE: DRAW USER FRAME 0
   /*PVector ufo = convertWorldToNative(userFrames[0].getOrigin());
@@ -241,7 +245,7 @@ public void draw(){
   
   drawEndEffectorGridMapping();
   
-  /*stroke(255, 0, 0);
+  stroke(255, 0, 0);
   // Draw x origin line
   line( -5000, PLANE_Z, 0, 5000, PLANE_Z, 0 );
   // Draw y origin line
@@ -255,7 +259,7 @@ public void draw(){
     
     line(-100 * l, PLANE_Z, -5000, -100 * l, PLANE_Z, 5000);
     line(-5000, PLANE_Z, -100 * l, 5000, PLANE_Z, -100 * l);
-  }*/
+  }
   
   popMatrix();
   

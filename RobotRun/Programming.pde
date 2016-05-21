@@ -411,8 +411,7 @@ public class ToolInstruction extends Instruction {
             
             if (s.collision(ee_pos)) {
               armModel.held = s;
-              s.form.setOrientation(0f, 0f, 0f);
-              s.hit_box.setOrientation(0f, 0f, 0f);
+              s.setOrientation(0f, 0f, 0f);
               
               // TODO
               
