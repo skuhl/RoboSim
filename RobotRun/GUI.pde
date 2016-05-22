@@ -972,6 +972,10 @@ public void keyPressed(){
     float[] rot = {0, 0, 0, 0, 0, 0};
     armModel.setJointRotations(rot);
     intermediatePositions.clear();
+  } else if(key == 'T'){
+    float[] rot = {PI*3/2, 0, 0, 0, 0, PI*3/2};
+    armModel.setJointRotations(rot);
+    intermediatePositions.clear();
   } else if (key == 'q') {
     hd();
     return;
