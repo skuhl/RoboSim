@@ -110,22 +110,22 @@ public float[][] EEAxesVectorsMatrix() {
    *   y' = x
    *   z' = y
    */
-  PVector origin = new PVector(-modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0)),
+  PVector origin = new PVector(modelZ(0, 0, 0), -modelY(0, 0, 0), modelX(0, 0, 0)),
           
-          x = new PVector(-modelX(0, 0, 1), modelY(0, 0, 1), modelZ(0, 0, 1)),
-          y = new PVector(-modelX(0, 1, 0), modelY(0, 1, 0), modelZ(0, 1, 0)),
-          z = new PVector(-modelX(1, 0, 0), modelY(1, 0, 0), modelZ(1, 0, 0));
+          x = new PVector(modelZ(1, 0, 0), -modelY(1, 0, 0), modelX(1, 0, 0)),
+          y = new PVector(modelZ(0, 1, 0), -modelY(0, 1, 0), modelX(0, 1, 0)),
+          z = new PVector(modelZ(0, 0, 1), -modelY(0, 0, 1), modelX(0, 0, 1));
           
   float[][] eeAxes = new float[3][3];
   // Calcualte Unit Vectors form difference between each axis vector and the origin
   eeAxes[0][0] = x.x - origin.x;
-  eeAxes[0][1] = -(x.y - origin.y);
-  eeAxes[0][2] = -(x.z - origin.z);
-  eeAxes[1][0] = -(y.x - origin.x);
+  eeAxes[1][0] = x.y - origin.y;
+  eeAxes[2][0] = x.z - origin.z;
+  eeAxes[0][1] = y.x - origin.x;
   eeAxes[1][1] = y.y - origin.y;
-  eeAxes[1][2] = y.z - origin.z;
-  eeAxes[2][0] = -(z.x - origin.x);
-  eeAxes[2][1] = z.y - origin.y;
+  eeAxes[2][1] = y.z - origin.z;
+  eeAxes[0][2] = z.x - origin.x;
+  eeAxes[1][2] = z.y - origin.y;
   eeAxes[2][2] = z.z - origin.z;
   
   popMatrix();
