@@ -290,51 +290,44 @@ public class ArmModel {
   *
   *  Method based off of procedure outlined in the pdf at this location:
   *     http://www.staff.city.ac.uk/~sbbh653/publications/euler.pdf
-  *     z - phi, y - theta, x - psi
+  *     rotation about: x - psi, y - theta, z - phi
   */
   public PVector getWPR() {
-    PVector wpr;
+    float theta1, theta2, psi1, psi2, phi1, phi2;
+    PVector wpr, wpr2;
     
-   float[][] r = EEAxesVectorsMatrix();
-   
-   float alpha = atan2(r[2][1], r[2][2]);
-   float beta = atan2(-r[2][0], sqrt(r[2][1]*r[2][1] + r[2][2]*r[2][2]))+PI/2;
-   float gamma = atan2(r[1][0], r[0][0]);
-   
-   wpr = new PVector(abs(alpha)*57.2958, beta*57.2958, abs(gamma)*57.2958);
-   
-   //if (axesVectors[2][0] > 0.998) {
-   //  // Special case for arcsin(1)
-   //  wpr.z = 0f;
-   //  wpr.y = -PI / 2f;
-   //  wpr.x = atan2(-axesVectors[0][1], -axesVectors[0][2]);
-   //} else if (axesVectors[2][0] < -0.998) {
-   //  // Special case for arcsin(-1)
-   //  wpr.z = 0f;
-   //  wpr.y = PI / 2f;
-   //  wpr.x = atan2(axesVectors[0][1], axesVectors[0][2]);
-   //} else {
-   //  wpr.y = -asin(axesVectors[2][0]);
-   //  wpr.x = atan2(axesVectors[2][1] / cos(wpr.y), axesVectors[2][2] / cos(wpr.y));
-   //  wpr.z = atan2(axesVectors[1][0] / cos(wpr.y), axesVectors[0][0] / cos(wpr.y));
-   //}
-   
-   //// Offset roll and yaw from range [-PI, PI] to [0, TWO_PI]
-   //wpr.x = PI - wpr.x;
-   //wpr.z = PI -  wpr.z;
-   
-   //// Offset ptich from [-PI / 2, PI / 2] and [PI/2, -PI / 2] to [0. TWO_PI]
-   //if (axesVectors[0][0] > 0) {
-   //  wpr.y = PI + wpr.y;
-   //} else if (axesVectors[0][0] < 0) {
-     
-   //  if (axesVectors[2][0] > 0) {
-   //    wpr.y *= -1;
-   //  } else if (axesVectors[2][0] < 0) {
-   //    wpr.y = TWO_PI - wpr.y;
-   //  }
-     
-   //}
+    float[][] r = EEAxesVectorsMatrix();
+    
+    if(r[2][0] != 1 && r[2][0] != -1){
+      //rotation about y-axis
+      theta1 = -asin(r[2][0]);
+      theta2 = PI - theta1;
+      //rotation about x-axis
+      psi1 = atan2(r[2][1]/cos(theta1), r[2][2]/cos(theta1));
+      psi2 = atan2(r[2][1]/cos(theta2), r[2][2]/cos(theta2));
+      //rotation about z-axis
+      phi1 = atan2(r[1][0]/cos(theta1), r[0][0]/cos(theta1));
+      phi2 = atan2(r[1][0]/cos(theta2), r[0][0]/cos(theta2));
+    }
+    else{
+      phi1 = phi2 = 0;
+      if(r[2][0] == -1){
+        theta1 = theta2 = PI/2;
+        psi1 = psi2 = phi1 + atan2(r[0][1], r[0][2]);
+      }
+      else{
+        theta1 = theta2 = -PI/2;
+        psi1 = psi2 = -phi1 + atan2(-r[0][1], -r[0][2]);
+      }
+    }
+    
+    wpr = new PVector(abs(psi1)*57.2958, abs(theta1)*57.2958, abs(phi1)*57.2958);
+    wpr2 = new PVector(abs(psi2)*57.2958, abs(theta2)*57.2958, abs(phi2)*57.2958);
+    
+    //println("rotation vectors: ");
+    //println(wpr);
+    //println(wpr2);
+    //println();
     
     return wpr;
   }
@@ -346,6 +339,29 @@ public class ArmModel {
     PVector ret = getWPR();
     setJointRotations(origAngles);
     return ret;
+  }
+  
+  //returns the rotational value of the robot as a quaternion
+  public float[] getQuaternion(){
+    float q[] = new float[4];
+    float r[][] = EEAxesVectorsMatrix();
+    //our Euler vector will be the 'x' axis of the robotic arm end
+    //effector reference frame; this is the direction the EE is "facing"
+    PVector e = new PVector(r[0][0], r[0][1], r[0][2]);
+    //this is the roll value for the EE, the rotation about 'e' that the
+    //EE is currently experiencing
+    float sigma = atan2(r[2][1], r[2][2]);
+    
+    println("vector: " + e + ", rotation:" + sigma*57.2958);
+    
+    q[0] = cos(sigma/2);
+    q[1] = e.x*sin(sigma/2);
+    q[2] = e.y*sin(sigma/2);
+    q[3] = e.z*sin(sigma/2);
+    
+    println("quat: " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
+    println();
+    return q;
   }
   
   /**

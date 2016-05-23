@@ -972,9 +972,12 @@ public void keyPressed(){
     float[] rot = {0, 0, 0, 0, 0, 0};
     armModel.setJointRotations(rot);
     intermediatePositions.clear();
+  } else if(key == 'y'){
+    float[] rot = {PI, 0, 0, 0, 0, PI};
+    armModel.setJointRotations(rot);
+    intermediatePositions.clear();
   } else if (key == 'q') {
-    hd();
-    return;
+    armModel.getQuaternion();
   } else if (key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
   } else if (key == ENTER && activeEndEffector == ENDEF_CLAW) {
