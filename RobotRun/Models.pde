@@ -321,13 +321,13 @@ public class ArmModel {
       }
     }
     
-    wpr = new PVector(abs(psi1)*57.2958, abs(theta1+PI/2)*57.2958, abs(phi1)*57.2958);
-    wpr2 = new PVector(abs(psi2)*57.2958, abs(theta2-PI/2)*57.2958, abs(phi2)*57.2958);
+    wpr = new PVector(abs(psi1)*57.2958, abs(theta1)*57.2958, abs(phi1)*57.2958);
+    wpr2 = new PVector(abs(psi2)*57.2958, abs(theta2)*57.2958, abs(phi2)*57.2958);
     
-    println("rotation vectors: ");
-    println(wpr);
-    println(wpr2);
-    println();
+    //println("rotation vectors: ");
+    //println(wpr);
+    //println(wpr2);
+    //println();
     
     return wpr;
   }
@@ -339,6 +339,29 @@ public class ArmModel {
     PVector ret = getWPR();
     setJointRotations(origAngles);
     return ret;
+  }
+  
+  //returns the rotational value of the robot as a quaternion
+  public float[] getQuaternion(){
+    float q[] = new float[4];
+    float r[][] = EEAxesVectorsMatrix();
+    //our Euler vector will be the 'x' axis of the robotic arm end
+    //effector reference frame; this is the direction the EE is "facing"
+    PVector e = new PVector(r[0][0], r[0][1], r[0][2]);
+    //this is the roll value for the EE, the rotation about 'e' that the
+    //EE is currently experiencing
+    float sigma = atan2(r[2][1], r[2][2]);
+    
+    println("vector: " + e + ", rotation:" + sigma*57.2958);
+    
+    q[0] = cos(sigma/2);
+    q[1] = e.x*sin(sigma/2);
+    q[2] = e.y*sin(sigma/2);
+    q[3] = e.z*sin(sigma/2);
+    
+    println("quat: " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
+    println();
+    return q;
   }
   
   /**
