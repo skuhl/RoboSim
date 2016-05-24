@@ -97,8 +97,8 @@ public PVector getCoordFromMatrix(float x, float y, float z) {
 }
 
 /* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
- * the End Effector's x, y, z axes in respect to the World Frame. */
-public float[][] EEAxesVectorsMatrix() {
+ * the End Effector's x, y, z axes with respect to the World Frame. */
+public float[][] calculateRotationMatrix() {
   pushMatrix();
   resetMatrix();
   // Switch to End Effector reference Frame
@@ -116,32 +116,53 @@ public float[][] EEAxesVectorsMatrix() {
           y = new PVector(-modelX(0, 1, 0), modelY(0, 1, 0), modelZ(0, 1, 0)),
           z = new PVector(-modelX(1, 0, 0), modelY(1, 0, 0), modelZ(1, 0, 0));
           
-  float[][] eeAxes = new float[3][3];
+  float[][] matrix = new float[3][3];
   // Calcualte Unit Vectors form difference between each axis vector and the origin
-  eeAxes[0][0] = x.x - origin.x;
-  eeAxes[0][1] = -(x.y - origin.y);
-  eeAxes[0][2] = -(x.z - origin.z);
-  eeAxes[1][0] = -(y.x - origin.x);
-  eeAxes[1][1] = y.y - origin.y;
-  eeAxes[1][2] = y.z - origin.z;
-  eeAxes[2][0] = -(z.x - origin.x);
-  eeAxes[2][1] = z.y - origin.y;
-  eeAxes[2][2] = z.z - origin.z;
+  matrix[0][0] = x.x - origin.x;
+  matrix[0][1] = -(x.y - origin.y);
+  matrix[0][2] = -(x.z - origin.z);
+  matrix[1][0] = -(y.x - origin.x);
+  matrix[1][1] = y.y - origin.y;
+  matrix[1][2] = y.z - origin.z;
+  matrix[2][0] = -(z.x - origin.x);
+  matrix[2][1] = z.y - origin.y;
+  matrix[2][2] = z.z - origin.z;
   
   popMatrix();
   
-  return eeAxes;
+  return matrix;
 }
 
-//calculates the change in each coordinate to obtain p2 from p1
+public float[][] calculateRotationMatrix(PVector wpr){
+  float[][] matrix = new float[6][9];
+  float phi = wpr.x;
+  float theta = wpr.y;
+  float psi = wpr.z;
+  
+  matrix[0][0] = cos(theta)*cos(psi);
+  matrix[0][1] = sin(phi)*sin(theta)*cos(psi) - cos(phi)*sin(psi);
+  matrix[0][2] = cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi);
+  matrix[1][0] = cos(theta)*sin(psi);
+  matrix[1][1] = sin(phi)*sin(theta)*sin(psi) + cos(phi)*cos(psi);
+  matrix[1][2] = cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi);
+  matrix[2][0] = -sin(theta);
+  matrix[2][1] = sin(phi)*cos(theta);
+  matrix[2][2] = cos(phi)*cos(theta);
+  
+  return matrix;
+}
+
+//calculates the change in x, y, and z from p1 to p2
 float[] calculateVectorDelta(PVector p1, PVector p2){
   float[] d = {p1.x - p2.x, p1.y - p2.y, p1.z - p2.z};
   return d;
 }
 
-//calculate the dot product of two vectors represented by float arrays
-float calculateVectorDot(float[] v1, float[] v2){
-  float dot = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
+//calculate the dot product of two 9 element vectors represented by float arrays
+float calculateVectorDot9(float[] v1, float[] v2){
+  float dot = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2]
+            + v1[3]*v2[3] + v1[4]*v2[4] + v1[5]*v2[5]
+            + v1[6]*v2[6] + v1[7]*v2[7] + v1[8]*v2[8];
   return dot;
 }
 

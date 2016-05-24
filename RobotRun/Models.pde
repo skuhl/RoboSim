@@ -296,7 +296,7 @@ public class ArmModel {
     float theta1, theta2, psi1, psi2, phi1, phi2;
     PVector wpr, wpr2;
     
-    float[][] r = EEAxesVectorsMatrix();
+    float[][] r = calculateRotationMatrix();
     
     if(r[2][0] != 1 && r[2][0] != -1){
       //rotation about y-axis
@@ -321,8 +321,8 @@ public class ArmModel {
       }
     }
     
-    wpr = new PVector(abs(psi1)*57.2958, abs(theta1)*57.2958, abs(phi1)*57.2958);
-    wpr2 = new PVector(abs(psi2)*57.2958, abs(theta2)*57.2958, abs(phi2)*57.2958);
+    wpr = new PVector(psi1, theta1, phi1);
+    wpr2 = new PVector(psi2, theta2, phi2);
     
     //println("rotation vectors: ");
     //println(wpr);
@@ -344,7 +344,7 @@ public class ArmModel {
   //returns the rotational value of the robot as a quaternion
   public float[] getQuaternion(){
     float q[] = new float[4];
-    float r[][] = EEAxesVectorsMatrix();
+    float r[][] = calculateRotationMatrix();
     //our Euler vector will be the 'x' axis of the robotic arm end
     //effector reference frame; this is the direction the EE is "facing"
     PVector e = new PVector(r[0][0], r[0][1], r[0][2]);
@@ -564,7 +564,7 @@ public class ArmModel {
                                               startFrom.y + move.y * distance,
                                               startFrom.z + move.z * distance));
         
-        int r = calculateIKJacobian(intermediatePositions.get(0));
+        int r = calculateIKJacobian(intermediatePositions.get(0), new PVector(0, 0, PI));
         if(r == EXEC_FAILURE){
           intermediatePositions.clear();
           updateButtonColors();

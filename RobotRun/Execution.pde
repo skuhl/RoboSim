@@ -146,7 +146,7 @@ void showMainDisplayText() {
     textSize(12);
     fill(0, 0, 0);
     
-    float[][] vectorMatrix = EEAxesVectorsMatrix();
+    float[][] vectorMatrix = calculateRotationMatrix();
     String row = String.format("[  %f  %f  %f  ]", vectorMatrix[0][0], vectorMatrix[0][1], vectorMatrix[0][2]);
     text(row, 20, height / 2 + 80);
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[1][0], vectorMatrix[1][1], vectorMatrix[1][2]);
@@ -386,29 +386,50 @@ void applyModelRotation(ArmModel model) {
  */
 float[][] calculateJacobian(float[] angles){
   float dAngle = 0.0174553;
-  float[][] jacobian = new float[6][6];
+  float[][] jacobian = new float[6][9];
+  //current ee position
   PVector oPos = armModel.getEEPos(angles);
-  PVector nPos = new PVector(0, 0, 0);
-  PVector oRot = armModel.getWPR();
-  PVector nRot = new PVector(0, 0, 0);
+  //rotational matrix
+  float[][] oMatrix = calculateRotationMatrix();
+  //current ee position offset by unit vectors x, z
+  PVector ox = new PVector(oPos.x + oMatrix[0][0], oPos.y + oMatrix[0][1], oPos.z + oMatrix[0][2]);
+  PVector oz = new PVector(oPos.x + oMatrix[1][0], oPos.y + oMatrix[1][1], oPos.z + oMatrix[1][2]);
   
   //examine each segment of the arm
   for(int i = 0; i < 6; i += 1){
     //test angular offset
     angles[i] += dAngle;
-    nPos = armModel.getEEPos(angles);
-    nRot = armModel.getWPR(angles);
+    //ee position at new angle
+    PVector nPos = armModel.getEEPos(angles);
+    //ee rotation values at new angle
+    PVector nRot = armModel.getWPR(angles);
+    //new rotation matrix and x, z axes
+    float[][] nMatrix = calculateRotationMatrix(nRot);
+    PVector nx = new PVector(nPos.x + nMatrix[0][0], nPos.y + nMatrix[0][1], nPos.z + nMatrix[0][2]);
+    PVector nz = new PVector(nPos.x + nMatrix[1][0], nPos.y + nMatrix[1][1], nPos.z + nMatrix[1][2]);
     //get translational delta
     jacobian[i][0] = calculateVectorDelta(nPos, oPos)[0];
     jacobian[i][1] = calculateVectorDelta(nPos, oPos)[1];
     jacobian[i][2] = calculateVectorDelta(nPos, oPos)[2];
     //get rotational delta
-    jacobian[i][3] = calculateRotationalDelta(nRot, oRot)[0];
-    jacobian[i][4] = calculateRotationalDelta(nRot, oRot)[1];
-    jacobian[i][5] = calculateRotationalDelta(nRot, oRot)[2];
+    jacobian[i][3] = calculateVectorDelta(ox, nx)[0];
+    jacobian[i][4] = calculateVectorDelta(ox, nx)[1];
+    jacobian[i][5] = calculateVectorDelta(ox, nx)[2];
+    jacobian[i][6] = calculateVectorDelta(oz, nz)[0];
+    jacobian[i][7] = calculateVectorDelta(oz, nz)[1];
+    jacobian[i][8] = calculateVectorDelta(oz, nz)[2];
     //replace the original rotational value
     angles[i] -= dAngle;
   }
+  
+  //println("jacobian: ");
+  //for(int i = 0; i < 6; i += 1){
+  // for(int j = 0; j < 6; j += 1){
+  //   print(String.format("  %5.4f", jacobian[i][j]));
+  // }
+  // println();
+  //}
+  //println();
   
   return jacobian;
 }//end calculate jacobian
@@ -416,36 +437,62 @@ float[][] calculateJacobian(float[] angles){
 //attempts to calculate the joint rotation values
 //required to move the end effector to the point specified
 //by 'tgt'
-int calculateIKJacobian(PVector tgt){
+int calculateIKJacobian(PVector tgt, PVector rot){
   float[] angles = armModel.getJointRotations();
+  float[][] tgtMatrix = calculateRotationMatrix(rot);
+  
+  PVector tx = new PVector(tgt.x + tgtMatrix[0][0], tgt.y + tgtMatrix[0][1], tgt.z + tgtMatrix[0][2]);
+  PVector tz = new PVector(tgt.x + tgtMatrix[1][0], tgt.y + tgtMatrix[1][1], tgt.z + tgtMatrix[1][2]);
   int count = 0;
   
-  while(count < 1000){
+  while(count < 5000){
     PVector cPos = armModel.getEEPos(angles);
-    float[] delta = calculateVectorDelta(tgt, cPos);
+    PVector cRot = armModel.getWPR(angles);
+    float[][] cMatrix = calculateRotationMatrix(cRot);
     
-    float dist = PVector.dist(cPos, tgt);
+    PVector x = new PVector(cPos.x + cMatrix[0][0], cPos.y + cMatrix[0][1], cPos.z + cMatrix[0][2]);
+    PVector z = new PVector(cPos.x + cMatrix[1][0], cPos.y + cMatrix[1][1], cPos.z + cMatrix[1][2]);
     
-    if(dist < 0.5) break;
+    float[] tDelta = calculateVectorDelta(tgt, cPos);
+    float[] xDelta = calculateVectorDelta(tx, x);
+    float[] zDelta = calculateVectorDelta(tz, z);
+    float[] delta = new float[9];
+    
+    delta[0] = tDelta[0];
+    delta[1] = tDelta[1];
+    delta[2] = tDelta[2];
+    delta[3] = xDelta[0];
+    delta[4] = xDelta[1];
+    delta[5] = xDelta[2];
+    delta[6] = zDelta[0];
+    delta[7] = zDelta[1];
+    delta[8] = zDelta[2];
+    
+    float tDist = PVector.dist(cPos, tgt);
+    float xDist = PVector.dist(x, tx);
+    float zDist = PVector.dist(z, tz);
+    println("distances: " + tDist + ", " + xDist + ", " + zDist);
+    
+    if(tDist < 0.5 && xDist < 0.5 && zDist < 0.5) break;
     
     float[][] jacobian = calculateJacobian(angles);
     float[] dAngle = new float[6];
     
     for(int i = 0; i < 6; i += 1){
-      dAngle[i] = calculateVectorDot(jacobian[i], delta);
+      dAngle[i] = calculateVectorDot9(jacobian[i], delta);
     }
     
     //expected change in end effector position
-    float expectedChange[] = {0, 0, 0};
+    float expectedChange[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     //calculate expected translational change in ee position
-    for(int i = 0; i < 3; i += 1){
+    for(int i = 0; i < 9; i += 1){
       for(int j = 0; j < 6; j += 1){
         expectedChange[i] += dAngle[j] * jacobian[j][i];
       }
     }
     
-    float alpha = calculateVectorDot(expectedChange, delta)/
-                  calculateVectorDot(expectedChange, expectedChange);
+    float alpha = calculateVectorDot9(expectedChange, delta)/
+                  calculateVectorDot9(expectedChange, expectedChange);
     
     for(int i = 0; i < 6; i += 1){
       angles[i] += alpha*dAngle[i]*0.0174553;
@@ -455,7 +502,7 @@ int calculateIKJacobian(PVector tgt){
     count += 1;
   }
   
-  if(count >= 1000){
+  if(count >= 5000){
     return EXEC_FAILURE;
   }
   else{
@@ -591,8 +638,8 @@ void beginNewContinuousMotion(PVector start, PVector end,
 {
   calculateContinuousPositions(start, end, next, percentage);
   motionFrameCounter = 0;
-  if(intermediatePositions.size() > 0)
-    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+  if(intermediatePositions.size() > 0);
+    //calculateIKJacobian(intermediatePositions.get(interMotionIdx));
 }
 
 /**
@@ -603,8 +650,8 @@ void beginNewContinuousMotion(PVector start, PVector end,
 void beginNewLinearMotion(PVector start, PVector end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
-  if(intermediatePositions.size() > 0)
-    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+  if(intermediatePositions.size() > 0);
+    //calculateIKJacobian(intermediatePositions.get(interMotionIdx));
 }
 
 /**
@@ -619,8 +666,8 @@ void beginNewCircularMotion(PVector p1, PVector p2, PVector p3) {
   intermediatePositions = createArc(createCircleCircumference(p1, p2, p3, 180), p1, p2, p3);
   interMotionIdx = 0;
   motionFrameCounter = 0;
-  if(intermediatePositions.size() > 0)
-    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+  if(intermediatePositions.size() > 0);
+    //calculateIKJacobian(intermediatePositions.get(interMotionIdx));
 }
 
 boolean executingInstruction = false;
@@ -642,7 +689,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
       interMotionIdx = -1;
       return true;
     }
-    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+    //calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
   return false;
 } // end execute linear motion
