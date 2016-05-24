@@ -110,14 +110,15 @@ public float[][] calculateRotationMatrix() {
    *   y' = x
    *   z' = y
    */
-  PVector origin = new PVector(-modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0)),
+  PVector origin = new PVector(modelZ(0, 0, 0), -modelY(0, 0, 0), modelX(0, 0, 0)),
           
-          x = new PVector(-modelX(0, 0, 1), modelY(0, 0, 1), modelZ(0, 0, 1)),
-          y = new PVector(-modelX(0, 1, 0), modelY(0, 1, 0), modelZ(0, 1, 0)),
-          z = new PVector(-modelX(1, 0, 0), modelY(1, 0, 0), modelZ(1, 0, 0));
+          x = new PVector(modelZ(1, 0, 0), -modelY(1, 0, 0), modelX(1, 0, 0)),
+          y = new PVector(modelZ(0, 1, 0), -modelY(0, 1, 0), modelX(0, 1, 0)),
+          z = new PVector(modelZ(0, 0, 1), -modelY(0, 0, 1), modelX(0, 0, 1));
           
   float[][] matrix = new float[3][3];
   // Calcualte Unit Vectors form difference between each axis vector and the origin
+
   matrix[0][0] = x.x - origin.x;
   matrix[0][1] = -(x.y - origin.y);
   matrix[0][2] = -(x.z - origin.z);
