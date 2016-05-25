@@ -159,11 +159,16 @@ float[] calculateVectorDelta(PVector p1, PVector p2){
   return d;
 }
 
-//calculate the dot product of two 9 element vectors represented by float arrays
-float calculateVectorDot9(float[] v1, float[] v2){
+//calculate the dot product of two 3 element vectors represented by float arrays
+float calculateVectorDot3(float[] v1, float[] v2){
+  float dot = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
+  return dot;
+}
+
+//calculate the dot product of two 6 element vectors represented by float arrays
+float calculateVectorDot6(float[] v1, float[] v2){
   float dot = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2]
-            + v1[3]*v2[3] + v1[4]*v2[4] + v1[5]*v2[5]
-            + v1[6]*v2[6] + v1[7]*v2[7] + v1[8]*v2[8];
+            + v1[3]*v2[3] + v1[4]*v2[4] + v1[5]*v2[5];
   return dot;
 }
 

@@ -564,7 +564,7 @@ public class ArmModel {
                                               startFrom.y + move.y * distance,
                                               startFrom.z + move.z * distance));
         
-        int r = calculateIKJacobian(intermediatePositions.get(0), new PVector(0, 0, PI));
+        int r = calculateIKJacobian(intermediatePositions.get(0), new PVector(0, 0, 0));
         if(r == EXEC_FAILURE){
           intermediatePositions.clear();
           updateButtonColors();
