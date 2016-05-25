@@ -94,13 +94,11 @@ public void setup(){
   }
    
   // Intialize world objects
-  // Create a medium, red cube
-  Shape box = new Box(convertWorldToNative(new PVector(50, 125, 35)), 85, color(255, 0, 0), color(255, 0, 255));
-  Shape box2 = new Box(PVector.add(armModel.getEEPos(), new PVector(-300, 0, 0)), 105, color(255, 0, 255), color(255, 255, 255));
   objects = new Object[2];
 
-  objects[0] = new Object(box, new Box(box.center(), 125, color(0, 255, 0)));
-  objects[1] = new Object(box2, new Box(box2.center(), 135, color(0, 255, 0)));
+  objects[0] = new Object(50, 125, 35, 85, 85, 85, color(255, 0, 0), color(255, 0, 255));
+  PVector pos = PVector.add(armModel.getEEPos(), new PVector(-300, 0, 0));
+  objects[1] = new Object(pos.x, pos.y, pos.z, 105, 105, 105, color(255, 0, 255), color(255, 255, 255));
   
   //objects[1].setOrientation(PI / 3, 2 * PI/ 5, 11 * PI / 13);
   
@@ -156,8 +154,8 @@ public void draw(){
       pushMatrix();
       applyModelRotation(armModel);
       
-      armModel.held.form.set_center_point(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z);
-      armModel.held.hit_box.set_center_point(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z);
+      armModel.held.form.setCenter(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z);
+      armModel.held.hit_box.setCenter(armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z);
       s.form.draw();
       s.hit_box.draw();
       

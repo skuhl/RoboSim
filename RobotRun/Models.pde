@@ -586,8 +586,8 @@ public class ArmModel {
       applyModelRotation(armModel);
     
       PVector obj_center = transform(new PVector(held_offset.x, held_offset.y, held_offset.z), getTransformationMatrix());
-      held.form.set_center_point(obj_center.x, obj_center.y, obj_center.z);
-      held.hit_box.set_center_point(obj_center.x, obj_center.y, obj_center.z);
+      held.form.setCenter(obj_center.x, obj_center.y, obj_center.z);
+      held.hit_box.setCenter(obj_center.x, obj_center.y, obj_center.z);
       
       // TODO store orientation
       

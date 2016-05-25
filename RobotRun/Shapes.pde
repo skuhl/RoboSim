@@ -19,78 +19,73 @@ public abstract class Shape {
     no_fill = true;
   } 
   
-  /* Returns the center pooint of the shape */
-  public abstract PVector center();
+   /* Redefine the center point of the shape */
+  public abstract void setCenter(float x, float y, float z);
   
-  /* Redefine the center point of the shape */
-  public abstract void set_center_point(float x, float y, float z);
+  /* Returns the x, y, z values of the shape's center point */
+  public abstract float[] getCenter();
+  
+  /* Define the x, y, z rotations of the shape */
+  public abstract void setOrientation(float rot_x, float rot_y, float rot_z);
+  
+  /* Returns the vector contatining the x, y, z rotations of the Shape in radians. */
+  public abstract float[] getOrientation();
+  
+  /* Applies necessary rotations and translations to convert the Native cooridinate
+   * system into the cooridnate system relative to the center of the Shape */
+  public abstract void applyRelativeAxes();
+  
+  /* Returns a 3x3 matrix, whose rows contain the x, y, z axes of the Shape's relative
+   * coordinate frame in native coordinates */
+  public abstract float[][] getRelativeAxes();
   
   /* Define how a shape is drawn in the window */
   public abstract void draw();
-
 }
 
 /**
  * A shape that resembles a cube or rectangle
  */
 public class Box extends Shape {
-  public final PVector center;
-  public final float len, wdh, hgt;
+  public final PVector center, dimensions, orientation;
   
-  /* Create an normal box */
-  public Box(PVector c, float l, float w, float h, color f, color o) {
+  /* Create a normal box */
+  public Box(float x, float y, float z, float wdh, float hgt, float dph, color f, color o) {
     super(f, o);
     
-    center = c;
-    len = l;
-    wdh = w;
-    hgt = h;
+    center = new PVector(x, y, z);
+    dimensions = new PVector(wdh, hgt, dph);
+    orientation = new PVector(0, 0, 0);
   }
   
   /* Create an empty box */
-  public Box(PVector c, float l, float w, float h, color o) {
+  public Box(float x, float y, float z, float wdh, float hgt, float dph, color o) {
     super(o);
     
-    center = c;
-    len = l;
-    wdh = w;
-    hgt = h;
+    center = new PVector(x, y, z);
+    dimensions = new PVector(wdh, hgt, dph);
+    orientation = new PVector(0, 0, 0);
   }
   
-  /* Create a normal cube */
-  public Box(PVector c, float edge_len, color f, color o) {
-    super(f, o);
-    
-    center = c;
-    len = edge_len;
-    wdh = edge_len;
-    hgt = edge_len;
-  }
-  
-  /* Create a empty cube */
-  public Box(PVector c, float edge_len,  color o) {
-    super(o);
-    
-    center = c;
-    len = edge_len;
-    wdh = edge_len;
-    hgt = edge_len;
-  }
-  
-  public PVector center() {
-    return new PVector(center.x, center.y, center.z);
-  }
-  
-  public void set_center_point(float x, float y, float z) {
+  public void setCenter(float x, float y, float z) {
     center.x = x;
     center.y = y;
     center.z = z;
   }
   
+  public float[] getCenter() {
+    return new float[] { center.x, center.y, center.z };
+  }
+  
+  public void setOrientation(float rot_x, float rot_y, float rot_z) {
+    orientation.x = rot_x;
+    orientation.y = rot_y;
+    orientation.z = rot_z;
+  }
+  
+  public float[] getOrientation() { return new float[] { orientation.x, orientation.y, orientation.z }; }
+  
   public void draw() {
-    pushMatrix();
-    
-    translate(center.x, center.y, center.z);
     stroke(outline);
     
     if (no_fill) {
@@ -99,17 +94,45 @@ public class Box extends Shape {
       fill(fill);
     }
     
-    box(wdh, hgt, len);
+    box(dimensions.x, dimensions.y, dimensions.z);
+  }
+  
+  public float[][] getRelativeAxes() {
+    float[][] Axes = new float[3][3];
+    
+    pushMatrix();
+    resetMatrix();
+    applyRelativeAxes();
+    // Each ROW is a vector
+    Axes[0][0] = modelX(1, 0, 0) - modelX(0, 0, 0);
+    Axes[0][1] = modelY(1, 0, 0) - modelY(0, 0, 0);
+    Axes[0][2] = modelZ(1, 0, 0) - modelZ(0, 0, 0);
+    Axes[1][0] = modelX(0, 1, 0) - modelX(0, 0, 0);
+    Axes[1][1] = modelY(0, 1, 0) - modelY(0, 0, 0);
+    Axes[1][2] = modelZ(0, 1, 0) - modelZ(0, 0, 0);
+    Axes[2][0] = modelX(0, 0, 1) - modelX(0, 0, 0);
+    Axes[2][1] = modelY(0, 0, 1) - modelY(0, 0, 0);
+    Axes[2][2] = modelZ(0, 0, 1) - modelZ(0, 0, 0);
     
     popMatrix();
+    
+    return Axes;
+  }
+  
+  /* This method modifies the transform matrix! */
+  public void applyRelativeAxes() {
+    rotateZ(orientation.z);
+    rotateY(orientation.y);
+    rotateZ(orientation.x);
+    translate(center.x, center.y, center.z);
   }
   
   /* Check if the given point is within the dimensions of the box */
   public boolean within(PVector pos) {
     
-    boolean is_inside = pos.x >= (center.x - wdh / 2f) && pos.x <= (center.x + wdh / 2f)
-                     && pos.y >= (center.y - hgt / 2f) && pos.y <= (center.y + hgt / 2f)
-                     && pos.z >= (center.z - len / 2f) && pos.z <= (center.z + len / 2f);
+    boolean is_inside = pos.x >= (center.x - dimensions.x / 2f) && pos.x <= (center.x + dimensions.x / 2f)
+                     && pos.y >= (center.y - dimensions.y / 2f) && pos.y <= (center.y + dimensions.y / 2f)
+                     && pos.z >= (center.z - dimensions.z / 2f) && pos.z <= (center.z + dimensions.z / 2f);
     
     return is_inside;
   }
@@ -120,21 +143,17 @@ public class Object {
   public final Shape form;
   // The area around an object used for collision handling
   public final Shape hit_box;
-  // The roll, pitch and yaw of the object in the world space
-  protected final float[] orientation;
   
-  public Object(Shape f, Box hb) {
-    form = f;
-    hit_box = hb;
-    orientation = new float[] {0f, 0f, 0f};
+  public Object(float x, float y, float z, float wdh, float hgt, float dph, color f, color o) {
+    form = new Box(x, y, z, wdh, hgt, dph, f, o);
+    // green outline for hitboxes
+    hit_box = new Box(x, y, z, wdh + 15f, hgt + 15f, dph + 15f, color(0, 255, 0));
   }
   
   public void draw() {
     pushMatrix();
     
-    rotateZ(orientation[2]);
-    rotateY(orientation[1]);
-    rotateX(orientation[0]);
+    form.applyRelativeAxes();
     
     form.draw();
     hit_box.draw();
@@ -147,9 +166,7 @@ public class Object {
     resetMatrix();
     
     // Switch to the Object's corrdinate system
-    rotateZ(orientation[2]);
-    rotateY(orientation[1]);
-    rotateX(orientation[0]);
+    form.applyRelativeAxes();
     // Convert the point to the current reference frame
     pos = transform(pos, invertHCMatrix(getTransformationMatrix()));
     
@@ -161,10 +178,16 @@ public class Object {
     return collided;
   }
   
-  /* Set the roll, pitch and yaw rotations of the shape in space. */
-  public void setOrientation(float w, float p, float r) {
-    orientation[0] = w;
-    orientation[1] = p;
-    orientation[2] = r;
+  /* Determines if the collider boxes of this object
+   * and the given object intersect. */
+  public boolean collision(Object obj) {
+    Box A = (Box)hit_box;
+    Box B = (Box)obj.hit_box;
+    
+    return collision3D(A, B);
   }
+}
+
+public boolean collision3D(Box A, Box B) {
+  return true;
 }

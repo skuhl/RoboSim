@@ -411,11 +411,14 @@ public class ToolInstruction extends Instruction {
             
             if (s.collision(ee_pos)) {
               armModel.held = s;
-              s.setOrientation(0f, 0f, 0f);
+              s.form.setOrientation(0f, 0f, 0f);
+              s.hit_box.setOrientation(0f, 0f, 0f);
               
               // TODO
               
-              armModel.held_offset = transform(new PVector(s.form.center().x, s.form.center().y, s.form.center().z), invertHCMatrix(getTransformationMatrix()));
+              float[] c = s.form.getCenter();
+              PVector v_c = new PVector(c[0], c[1], c[2]);
+              armModel.held_offset = transform(v_c, invertHCMatrix(getTransformationMatrix()));
               
               break;
             }
