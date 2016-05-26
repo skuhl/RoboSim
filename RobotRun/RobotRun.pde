@@ -100,6 +100,37 @@ public void setup(){
   PVector pos = PVector.add(armModel.getEEPos(), new PVector(-300, 0, 0));
   objects[1] = new Object(pos.x, pos.y, pos.z, 105, 85, 55, color(255, 0, 255), color(255, 255, 255));
   
+  /*PVector v = new PVector (0, 0, 0);
+  PVector u = transform(v, invert4x4Matrix(objects[1].form.getTransform()));
+  PVector w = transform(u, objects[1].form.getTransform());
+  
+  println(v);
+  println(u);
+  println(w);*/
+  
+  pushMatrix();
+  rotateX(PI / 3);
+  rotateY(PI);
+  rotateZ(4 * PI/ 3);
+  
+  translate(219, -384, 108);
+  
+  float[][] tMatrix = getTransformationMatrix();
+  
+  println();
+  printMatrix();
+  
+  resetMatrix();
+  
+  //tMatrix = invert4x4Matrix(tMatrix);
+  applyMatrix(tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], tMatrix[0][3],
+              tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], tMatrix[1][3],
+              tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], tMatrix[2][3],
+              tMatrix[3][0], tMatrix[3][1], tMatrix[3][2], tMatrix[3][3]);
+  
+  printMatrix();
+  popMatrix();
+  
   //createTestProgram();
 }
 

@@ -193,7 +193,7 @@ public class Object {
     // Switch to the Object's corrdinate system
     form.applyRelativeAxes();
     // Convert the point to the current reference frame
-    pos = transform(pos, invertHCMatrix(getTransformationMatrix()));
+    pos = transform(pos, invert4x4Matrix(getTransformationMatrix()));
     
     
     boolean collided = ((Box)hit_box).within(pos);

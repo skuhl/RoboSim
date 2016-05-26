@@ -417,7 +417,7 @@ public class ToolInstruction extends Instruction {
               
               applyModelRotation(armModel);
               
-              float[][] invObjTransform = invertHCMatrix(getTransformationMatrix());
+              float[][] invObjTransform = invert4x4Matrix(getTransformationMatrix());
               applyMatrix(invObjTransform[0][0], invObjTransform[0][1], invObjTransform[0][2], invObjTransform[0][3],
                           invObjTransform[1][0], invObjTransform[1][1], invObjTransform[1][2], invObjTransform[1][3],
                           invObjTransform[2][0], invObjTransform[2][1], invObjTransform[2][2], invObjTransform[2][3],
