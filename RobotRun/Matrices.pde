@@ -96,6 +96,59 @@ public PVector getCoordFromMatrix(float x, float y, float z) {
   return vector;
 }
 
+public PVector[] clampWPR() {
+  float theta1, theta2, psi1, psi2, phi1, phi2;
+    PVector wpr, wpr2;
+    
+    float[][] r = calculateRotationMatrix();
+    
+    if(r[2][0] != 1 && r[2][0] != -1){
+      //rotation about y-axis
+      theta1 = -asin(r[2][0]);
+      theta2 = PI - theta1;
+      //rotation about x-axis
+      psi1 = atan2(r[2][1]/cos(theta1), r[2][2]/cos(theta1));
+      psi2 = atan2(r[2][1]/cos(theta2), r[2][2]/cos(theta2));
+      //rotation about z-axis
+      phi1 = atan2(r[1][0]/cos(theta1), r[0][0]/cos(theta1));
+      phi2 = atan2(r[1][0]/cos(theta2), r[0][0]/cos(theta2));
+    }
+    else{
+      phi1 = phi2 = 0;
+      if(r[2][0] == -1){
+        theta1 = theta2 = PI/2;
+        psi1 = psi2 = phi1 + atan2(r[0][1], r[0][2]);
+      }
+      else{
+        theta1 = theta2 = -PI/2;
+        psi1 = psi2 = -phi1 + atan2(-r[0][1], -r[0][2]);
+      }
+    }
+    
+    wpr = new PVector(psi1, theta1, phi1);
+    wpr2 = new PVector(psi2, theta2, phi2);
+    
+    wpr2.x = clampAngle(-wpr.x);
+    wpr2.z = clampAngle(wpr.z);
+    
+    /*if (r[0][0] >= 0) {
+      if (r[2][0] >= 0) {
+        wpr2.y = wpr2.y - PI;
+      } else {
+        wpr2.y += PI;
+      }
+    } else {
+      wpr2.y = TWO_PI - wpr2.y;
+    }*/
+    
+    /*if (wpr.y > PI / 2 && wpr.y < (3f * PI / 2f) ) {
+      wpr.x -= PI;
+      wpr.z -= PI;
+    }*/
+    
+    return new PVector[] { wpr, wpr2 };
+}
+
 /* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
  * the End Effector's x, y, z axes with respect to the World Frame. */
 public float[][] calculateRotationMatrix() {

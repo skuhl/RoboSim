@@ -121,18 +121,18 @@ public class Box extends Shape {
   
   /* This method modifies the transform matrix! */
   public void applyRelativeAxes() {
+    translate(center.x, center.y, center.z);
     rotateZ(orientation.z);
     rotateY(orientation.y);
-    rotateZ(orientation.x);
-    translate(center.x, center.y, center.z);
+    rotateX(orientation.x);
   }
   
   /* Check if the given point is within the dimensions of the box */
   public boolean within(PVector pos) {
     
-    boolean is_inside = pos.x >= (center.x - dimensions.x / 2f) && pos.x <= (center.x + dimensions.x / 2f)
-                     && pos.y >= (center.y - dimensions.y / 2f) && pos.y <= (center.y + dimensions.y / 2f)
-                     && pos.z >= (center.z - dimensions.z / 2f) && pos.z <= (center.z + dimensions.z / 2f);
+    boolean is_inside = pos.x >= -(dimensions.x / 2f) && pos.x <= (dimensions.x / 2f)
+                     && pos.y >= -(dimensions.y / 2f) && pos.y <= (dimensions.y / 2f)
+                     && pos.z >= -(dimensions.z / 2f) && pos.z <= (dimensions.z / 2f);
     
     return is_inside;
   }
@@ -147,7 +147,7 @@ public class Object {
   public Object(float x, float y, float z, float wdh, float hgt, float dph, color f, color o) {
     form = new Box(x, y, z, wdh, hgt, dph, f, o);
     // green outline for hitboxes
-    hit_box = new Box(x, y, z, wdh + 15f, hgt + 15f, dph + 15f, color(0, 255, 0));
+    hit_box = new Box(x, y, z, wdh + 20f, hgt + 20f, dph + 20f, color(0, 255, 0));
   }
   
   public void draw() {
@@ -164,7 +164,6 @@ public class Object {
   public boolean collision(PVector pos) {
     pushMatrix();
     resetMatrix();
-    
     // Switch to the Object's corrdinate system
     form.applyRelativeAxes();
     // Convert the point to the current reference frame

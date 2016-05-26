@@ -98,9 +98,9 @@ public void setup(){
 
   objects[0] = new Object(50, 125, 35, 85, 85, 85, color(255, 0, 0), color(255, 0, 255));
   PVector pos = PVector.add(armModel.getEEPos(), new PVector(-300, 0, 0));
-  objects[1] = new Object(pos.x, pos.y, pos.z, 105, 105, 105, color(255, 0, 255), color(255, 255, 255));
+  objects[1] = new Object(pos.x, pos.y, pos.z, 105, 85, 55, color(255, 0, 255), color(255, 255, 255));
   
-  //objects[1].setOrientation(PI / 3, 2 * PI/ 5, 11 * PI / 13);
+  //objects[1].form.setOrientation(0f, 0f, PI / 5f);\
   
   //createTestProgram();
 }
@@ -137,12 +137,17 @@ public void draw(){
   armModel.draw();
   popMatrix();
   
+  /*PVector wpr = clampWPR();
+  objects[1].form.setOrientation(wpr.z, wpr.y, wpr.x);
+  objects[1].hit_box.setOrientation(wpr.z, wpr.y, wpr.x);*/
+  
   // Draw all world objects
   for (Object s : objects) {
     
     if (s.collision(armModel.getEEPos())) {
       // Change hit box color
       s.hit_box.outline = color(255, 0, 0);
+      hd();
     } else {
       // Restore to normal
       s.hit_box.outline = color(0, 255, 0);
@@ -183,7 +188,7 @@ public void draw(){
   }
   popMatrix(); 
   // TESTING CODE: DRAW END EFFECTOR POSITION
-  pushMatrix();
+  /*pushMatrix();
   //applyCamera();
   noFill();
   stroke(0, 0, 0);
@@ -198,7 +203,7 @@ public void draw(){
   translate(100, -100, 0);
   stroke(0, 0, 255);
   sphere(10);
-  popMatrix();
+  popMatrix();*/
   // END TESTING CODE
   // TESTING CODE: DRAW USER FRAME 0
   /*PVector ufo = convertWorldToNative(userFrames[0].getOrigin());
