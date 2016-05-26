@@ -28,6 +28,10 @@ public abstract class Shape {
   /* Define the transformation matrix for the coordinate system of the shape */
   public abstract void setTransform(float[][] tMatrix);
   
+  /* Returns the Homogeneous Coordinate Matrix repesenting the conversion from
+   * the object's coordinate frame to the Native coordinate frame */
+  public abstract float[][] getTransform();
+  
   /* Applies necessary rotations and translations to convert the Native cooridinate
    * system into the cooridnate system relative to the center of the Shape */
   public abstract void applyRelativeAxes();
@@ -86,9 +90,9 @@ public class Box extends Shape {
     return new float[] { transform[0][3], transform[1][3], transform[2][3] };
   }
   
-  public void setTransform(float[][] tMatrix) {
-    transform = tMatrix;
-  }
+  public void setTransform(float[][] tMatrix) { transform = tMatrix.clone(); }
+  
+  public float[][] getTransform() {return transform.clone(); }
   
   public void draw() {
     stroke(outline);
@@ -193,5 +197,5 @@ public class Object {
 }
 
 public boolean collision3D(Box A, Box B) {
-  return true;
+  return false;
 }

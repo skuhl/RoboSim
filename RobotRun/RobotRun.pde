@@ -135,38 +135,33 @@ public void draw(){
   armModel.draw();
   popMatrix();
   
-  /*PVector wpr = clampWPR();
-  objects[1].form.setOrientation(wpr.z, wpr.y, wpr.x);
-  objects[1].hit_box.setOrientation(wpr.z, wpr.y, wpr.x);*/
   
-  // Draw all world objects
   for (Object s : objects) {
     
-    if (s != armModel.held && s.collision(armModel.getEEPos())) {
-      // Change hit box color
-      s.hit_box.outline = color(255, 0, 0);
+    if ( s != armModel.held && s.collision(armModel.getEEPos()) ) {
+      // Change hit box color to indicate End Effector collision
+      s.hit_box.outline = color(0, 0, 255);
     } else {
-      // Restore to normal
-      s.hit_box.outline = color(0, 255, 0);
+      
+      // Detect collision with other objects
+      for (Object r : objects) {
+        
+        if (r != s && s.collision(r)) {
+          // Change hit box color to indeicate Object collision
+          s.hit_box.outline = color(255, 0, 0);
+          break;
+        } else {
+          // Restore to normal
+          s.hit_box.outline = color(0, 255, 0);
+        }
+      }
     }
     
-    if (armModel.held == s) {
-      
-      // Draw object within the claw of the Robot
-      pushMatrix();
-      applyModelRotation(armModel);
-      armModel.held.form.applyRelativeAxes();
-      
-      s.form.draw();
-      s.hit_box.draw();
-      
-      popMatrix();
-    } else {
-      
-      pushMatrix();
-      s.draw();
-      popMatrix();
-    }
+    pushMatrix();
+    if (s == armModel.held) { applyModelRotation(armModel); }
+    // Draw world object
+    s.draw();
+    popMatrix();
   }
   
   noLights();

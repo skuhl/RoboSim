@@ -412,12 +412,19 @@ public class ToolInstruction extends Instruction {
             if (s.collision(ee_pos)) {
               armModel.held = s;
               
-              // TODO
+              pushMatrix();
+              resetMatrix();
+              applyModelRotation(armModel);
               
+              float[][] invObjTransform = invertHCMatrix(armModel.held.form.getTransform());
+              applyMatrix(invObjTransform[0][0], invObjTransform[0][1], invObjTransform[0][2], invObjTransform[0][3],
+                          invObjTransform[1][0], invObjTransform[1][1], invObjTransform[1][2], invObjTransform[1][3],
+                          invObjTransform[2][0], invObjTransform[2][1], invObjTransform[2][2], invObjTransform[2][3],
+                          invObjTransform[3][0], invObjTransform[3][1], invObjTransform[3][2], invObjTransform[3][3]);
               
-              float[] c = s.form.getCenter();
-              PVector v_c = new PVector(c[0], c[1], c[2]);
-              armModel.held_offset = transform(v_c, invertHCMatrix(getTransformationMatrix()));
+              armModel.held.form.setTransform(getTransformationMatrix());
+              
+              popMatrix();
               
               break;
             }

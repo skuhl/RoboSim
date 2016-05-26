@@ -107,7 +107,7 @@ public class ArmModel {
   //public final float[] maxArmRange;
   
   public Object held;
-  public PVector held_offset;
+  //public PVector held_offset;
   
   public ArmModel() {
     
@@ -160,7 +160,7 @@ public class ArmModel {
     }
     
     held = null;
-    held_offset = null;
+    //held_offset = null;
   } // end ArmModel constructor
   
   public void draw() {
@@ -585,7 +585,9 @@ public class ArmModel {
       resetMatrix();
       applyModelRotation(armModel);
       armModel.held.form.applyRelativeAxes();
-      
+      /* Create a new transformation matrix for the object in order to preserve its orientation;
+       * this matrix comes from the product of the Robot's End Effector transformation and the
+       * object's current transformation matrices. */
       float[][] tMatrix = getTransformationMatrix();
       held.form.setTransform(tMatrix);
       

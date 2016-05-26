@@ -10,7 +10,7 @@ float liveSpeed = 0.1;
 int errorCounter;
 String errorText;
 
-public static final boolean PRINT_EXTRA_TEXT = true;
+public static final boolean PRINT_EXTRA_TEXT = false;
 public static final float RAD_PER_DEG = 0.0174553;
 
 /**
@@ -154,15 +154,6 @@ void showMainDisplayText() {
     text(row, 20, height / 2 + 94);
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
     text(row, 20, height / 2 + 108);
-    
-    // Held object
-    if (armModel.held_offset != null) {
-      String obj_offset = String.format("obj_off : [ %f, %f, %f ]", armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z);
-      text(obj_offset, 20, height / 2 + 138);
-    } else {
-      
-      
-    }/**/
   }
   
   textAlign(RIGHT);
