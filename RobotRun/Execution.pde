@@ -92,10 +92,9 @@ void showMainDisplayText() {
   // Display the Current position and orientation of the Robot in the World Frame
   PVector ee_pos = armModel.getEEPos();
   //ee_pos = convertNativeToWorld(ee_pos);
-  //PVector wpr = armModel.getWPR();
-  PVector[] wpr = clampWPR();
+  PVector wpr = armModel.getWPR();
   String dis_world = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f  W: %5.4f  P: %5.4f  R: %5.4f", 
-                     ee_pos.x, ee_pos.y, ee_pos.z, wpr[0].x, wpr[0].y, wpr[0].z);
+                     ee_pos.x, ee_pos.y, ee_pos.z, wpr.x, wpr.y, wpr.z);
   
   // Display the Robot's joint angles
   float j[] = armModel.getJointRotations();
@@ -161,8 +160,8 @@ void showMainDisplayText() {
       String obj_offset = String.format("obj_off : [ %f, %f, %f ]", armModel.held_offset.x, armModel.held_offset.y, armModel.held_offset.z);
       text(obj_offset, 20, height / 2 + 138);
     } else {
-      String wpr2 = String.format("W: %5.4f  P: %5.4f  R: %5.4f", wpr[1].x, wpr[1].y, wpr[1].z);
-      text(wpr2, 20, height / 2 + 138);
+      
+      
     }/**/
   }
   
@@ -267,14 +266,14 @@ public void drawEndEffectorGridMapping() {
   translate(-100, 100, 0);
   sphere(10);
   stroke(255, 0, 0);
-  translate(0, -100, 100);
+  translate(0, -100, -100);
   sphere(10);
-  translate(0, 0, -100);
+  translate(0, 0, 100);
   popMatrix();/**/
   
-  pushMatrix();
+  //pushMatrix();
   // Display native axes
-  stroke(255, 0, 0);
+  /*stroke(255, 0, 0);
   line(5000, ee_pos.y, ee_pos.z, -50000, ee_pos.y, ee_pos.z);
   stroke(0, 255, 0);
   line(ee_pos.x, 5000, ee_pos.z, ee_pos.x, -5000, ee_pos.z);

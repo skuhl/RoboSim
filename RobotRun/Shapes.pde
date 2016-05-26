@@ -25,11 +25,8 @@ public abstract class Shape {
   /* Returns the x, y, z values of the shape's center point */
   public abstract float[] getCenter();
   
-  /* Define the x, y, z rotations of the shape */
-  public abstract void setOrientation(float rot_x, float rot_y, float rot_z);
-  
-  /* Returns the vector contatining the x, y, z rotations of the Shape in radians. */
-  public abstract float[] getOrientation();
+  /* Define the transformation matrix for the coordinate system of the shape */
+  public abstract void setTransform(float[][] tMatrix);
   
   /* Applies necessary rotations and translations to convert the Native cooridinate
    * system into the cooridnate system relative to the center of the Shape */
@@ -47,43 +44,51 @@ public abstract class Shape {
  * A shape that resembles a cube or rectangle
  */
 public class Box extends Shape {
-  public final PVector center, dimensions, orientation;
+  public final PVector dimensions;
+  public float[][] transform;
   
   /* Create a normal box */
   public Box(float x, float y, float z, float wdh, float hgt, float dph, color f, color o) {
     super(f, o);
     
-    center = new PVector(x, y, z);
+    transform = new float[4][4];
+    transform[0][3] = x;
+    transform[1][3] = y;
+    transform[2][3] = z;
+    transform[0][0] = transform[1][1] = transform[2][2] = transform[3][3] = 1f;
+    transform[3][0] = transform[3][1] = transform[3][2] = 0f;
+    
     dimensions = new PVector(wdh, hgt, dph);
-    orientation = new PVector(0, 0, 0);
   }
   
   /* Create an empty box */
   public Box(float x, float y, float z, float wdh, float hgt, float dph, color o) {
     super(o);
     
-    center = new PVector(x, y, z);
+    transform = new float[4][4];
+    transform[0][3] = x;
+    transform[1][3] = y;
+    transform[2][3] = z;
+    transform[0][0] = transform[1][1] = transform[2][2] = 1f;
+    transform[3][3] = 1f;
+    transform[3][0] = transform[3][1] = transform[3][2] = transform[3][3] = x;
+    
     dimensions = new PVector(wdh, hgt, dph);
-    orientation = new PVector(0, 0, 0);
   }
   
   public void setCenter(float x, float y, float z) {
-    center.x = x;
-    center.y = y;
-    center.z = z;
+    transform[0][3] = x;
+    transform[1][3] = y;
+    transform[2][3] = z;
   }
   
   public float[] getCenter() {
-    return new float[] { center.x, center.y, center.z };
+    return new float[] { transform[0][3], transform[1][3], transform[2][3] };
   }
   
-  public void setOrientation(float rot_x, float rot_y, float rot_z) {
-    orientation.x = rot_x;
-    orientation.y = rot_y;
-    orientation.z = rot_z;
+  public void setTransform(float[][] tMatrix) {
+    transform = tMatrix;
   }
-  
-  public float[] getOrientation() { return new float[] { orientation.x, orientation.y, orientation.z }; }
   
   public void draw() {
     stroke(outline);
@@ -121,10 +126,10 @@ public class Box extends Shape {
   
   /* This method modifies the transform matrix! */
   public void applyRelativeAxes() {
-    translate(center.x, center.y, center.z);
-    rotateZ(orientation.z);
-    rotateY(orientation.y);
-    rotateX(orientation.x);
+    applyMatrix(transform[0][0], transform[0][1], transform[0][2], transform[0][3],
+                transform[1][0], transform[1][1], transform[1][2], transform[1][3],
+                transform[2][0], transform[2][1], transform[2][2], transform[2][3],
+                transform[3][0], transform[3][1], transform[3][2], transform[3][3]);
   }
   
   /* Check if the given point is within the dimensions of the box */
@@ -147,7 +152,7 @@ public class Object {
   public Object(float x, float y, float z, float wdh, float hgt, float dph, color f, color o) {
     form = new Box(x, y, z, wdh, hgt, dph, f, o);
     // green outline for hitboxes
-    hit_box = new Box(x, y, z, wdh + 20f, hgt + 20f, dph + 20f, color(0, 255, 0));
+    hit_box = new Box(0, 0, 0, wdh + 20f, hgt + 20f, dph + 20f, color(0, 255, 0));
   }
   
   public void draw() {

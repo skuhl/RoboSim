@@ -96,59 +96,6 @@ public PVector getCoordFromMatrix(float x, float y, float z) {
   return vector;
 }
 
-public PVector[] clampWPR() {
-  float theta1, theta2, psi1, psi2, phi1, phi2;
-    PVector wpr, wpr2;
-    
-    float[][] r = calculateRotationMatrix();
-    
-    if(r[2][0] != 1 && r[2][0] != -1){
-      //rotation about y-axis
-      theta1 = -asin(r[2][0]);
-      theta2 = PI - theta1;
-      //rotation about x-axis
-      psi1 = atan2(r[2][1]/cos(theta1), r[2][2]/cos(theta1));
-      psi2 = atan2(r[2][1]/cos(theta2), r[2][2]/cos(theta2));
-      //rotation about z-axis
-      phi1 = atan2(r[1][0]/cos(theta1), r[0][0]/cos(theta1));
-      phi2 = atan2(r[1][0]/cos(theta2), r[0][0]/cos(theta2));
-    }
-    else{
-      phi1 = phi2 = 0;
-      if(r[2][0] == -1){
-        theta1 = theta2 = PI/2;
-        psi1 = psi2 = phi1 + atan2(r[0][1], r[0][2]);
-      }
-      else{
-        theta1 = theta2 = -PI/2;
-        psi1 = psi2 = -phi1 + atan2(-r[0][1], -r[0][2]);
-      }
-    }
-    
-    wpr = new PVector(psi1, theta1, phi1);
-    wpr2 = new PVector(psi2, theta2, phi2);
-    
-    wpr2.x = clampAngle(-wpr.x);
-    wpr2.z = clampAngle(wpr.z);
-    
-    /*if (r[0][0] >= 0) {
-      if (r[2][0] >= 0) {
-        wpr2.y = wpr2.y - PI;
-      } else {
-        wpr2.y += PI;
-      }
-    } else {
-      wpr2.y = TWO_PI - wpr2.y;
-    }*/
-    
-    /*if (wpr.y > PI / 2 && wpr.y < (3f * PI / 2f) ) {
-      wpr.x -= PI;
-      wpr.z -= PI;
-    }*/
-    
-    return new PVector[] { wpr, wpr2 };
-}
-
 /* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
  * the End Effector's x, y, z axes with respect to the World Frame. */
 public float[][] calculateRotationMatrix() {
@@ -160,29 +107,27 @@ public float[][] calculateRotationMatrix() {
    * Swap y and z coordinates, negating the original y coordinate
    * Swap vectors:
    *   x' = z
-   *   y' = x
-   *   z' = y
+   *   y' = -y
+   *   z' = x
    */
-  PVector origin = new PVector(modelZ(0, 0, 0), -modelY(0, 0, 0), modelX(0, 0, 0)),
-          
-          x = new PVector(modelZ(1, 0, 0), -modelY(1, 0, 0), modelX(1, 0, 0)),
-          y = new PVector(modelZ(0, 1, 0), -modelY(0, 1, 0), modelX(0, 1, 0)),
-          z = new PVector(modelZ(0, 0, 1), -modelY(0, 0, 1), modelX(0, 0, 1));
-          
-  float[][] matrix = new float[3][3];
-  // Calcualte Unit Vectors form difference between each axis vector and the origin
-
-  matrix[0][0] = x.x - origin.x;
-  matrix[0][1] = -(x.y - origin.y);
-  matrix[0][2] = -(x.z - origin.z);
-  matrix[1][0] = -(y.x - origin.x);
-  matrix[1][1] = y.y - origin.y;
-  matrix[1][2] = y.z - origin.z;
-  matrix[2][0] = -(z.x - origin.x);
-  matrix[2][1] = z.y - origin.y;
-  matrix[2][2] = z.z - origin.z;
+  PVector origin = new PVector(modelZ(0, 0, 0), modelY(0, 0, 0), modelX(0, 0, 0)),
+               x = new PVector(modelZ(1, 0, 0), modelY(-1, 0, 0), modelX(1, 0, 0)),
+               y = new PVector(modelZ(0, 1, 0), modelY(0, -1, 0), modelX(0, 1, 0)),
+               z = new PVector(modelZ(0, 0, 1), modelY(0, 0, -1), modelX(0, 0, 1));
   
   popMatrix();
+  
+  float[][] matrix = new float[3][3];
+  // Calcualte Unit Vectors form difference between each axis vector and the origin
+  matrix[0][0] = x.x - origin.x;
+  matrix[1][0] = x.y - origin.y;
+  matrix[2][0] = x.z - origin.z;
+  matrix[0][1] = y.x - origin.x;
+  matrix[1][1] = y.y - origin.y;
+  matrix[2][1] = y.z - origin.z;
+  matrix[0][2] = z.x - origin.x;
+  matrix[1][2] = z.y - origin.y;
+  matrix[2][2] = z.z - origin.z;
   
   return matrix;
 }

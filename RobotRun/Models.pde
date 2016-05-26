@@ -584,12 +584,10 @@ public class ArmModel {
       pushMatrix();
       resetMatrix();
       applyModelRotation(armModel);
-    
-      PVector obj_center = transform(new PVector(held_offset.x, held_offset.y, held_offset.z), getTransformationMatrix());
-      held.form.setCenter(obj_center.x, obj_center.y, obj_center.z);
-      held.hit_box.setCenter(obj_center.x, obj_center.y, obj_center.z);
+      armModel.held.form.applyRelativeAxes();
       
-      // TODO store orientation
+      float[][] tMatrix = getTransformationMatrix();
+      held.form.setTransform(tMatrix);
       
       armModel.held = null;
       
