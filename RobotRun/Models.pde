@@ -590,6 +590,7 @@ public class ArmModel {
        * object's current transformation matrices. */
       float[][] tMatrix = getTransformationMatrix();
       held.form.setTransform(tMatrix);
+      held.hit_box.setTransform(tMatrix);
       
       armModel.held = null;
       

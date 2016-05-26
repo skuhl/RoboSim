@@ -86,7 +86,7 @@ public class Box extends Shape {
     transform[2][3] = z;
   }
   
-  public float[] getCenter() {
+  public float[] getCenter() { 
     return new float[] { transform[0][3], transform[1][3], transform[2][3] };
   }
   
@@ -136,6 +136,23 @@ public class Box extends Shape {
                 transform[3][0], transform[3][1], transform[3][2], transform[3][3]);
   }
   
+  /* Returns the dimension of the box corresponding to the
+   * axes index given; the axi indices are as follows:
+   * 
+   * 0 -> x
+   * 1 -> y
+   * 2 -> z
+   */
+  public float getDim(int axes) {
+    
+    switch (axes) {
+      case 0:   return dimensions.x;
+      case 1:   return dimensions.y;
+      case 2:   return dimensions.z;
+      default:  return -1f;
+    }
+  }
+  
   /* Check if the given point is within the dimensions of the box */
   public boolean within(PVector pos) {
     
@@ -156,7 +173,7 @@ public class Object {
   public Object(float x, float y, float z, float wdh, float hgt, float dph, color f, color o) {
     form = new Box(x, y, z, wdh, hgt, dph, f, o);
     // green outline for hitboxes
-    hit_box = new Box(0, 0, 0, wdh + 20f, hgt + 20f, dph + 20f, color(0, 255, 0));
+    hit_box = new Box(x, y, z, wdh + 20f, hgt + 20f, dph + 20f, color(0, 255, 0));
   }
   
   public void draw() {
@@ -196,6 +213,104 @@ public class Object {
   }
 }
 
+/*
+ * This algorithm uses the Separating Axis Theorm to project radi of each Box on to several axes to determine if a there is any overlap between the boxes.
+ * The method strongy resembles the method outlined in Section 4.4 of "Real Time Collision Detection" by Christer Ericson
+ */
 public boolean collision3D(Box A, Box B) {
-  return false;
+  // Rows are x, y, z axi vectors for A and B: Ax, Ay, Az, Bx, By, and Bz
+  float[][] axes_A = A.getRelativeAxes();
+  float[][] axes_B = B.getRelativeAxes();
+  
+  // Rotation matrices to convert B into A's coordinate system
+  float[][] rotMatrix = new float[3][3],
+            absRotMatrix = new float[3][3];
+  
+  for (int v = 0; v < axes_A.length; ++v) {
+    for (int u = 0; u < axes_B.length; ++u) {
+      rotMatrix[v][u] = dotProduct(axes_A[v], axes_B[u]);
+      // Add offset for calculations with parallel vector cross products
+      absRotMatrix[v][u] = abs(rotMatrix[v][u]) + 0.00000000175f;
+    }
+  }
+  
+  // T = B's position - A's 
+  float[] limbo = sum( B.getCenter(), negate(A.getCenter()) );
+  // Convert T into A's coordinate frame
+  float[] T = new float[] { dotProduct(limbo, axes_A[0]), dotProduct(limbo, axes_A[1]), dotProduct(limbo, axes_A[2]) };
+  
+  float radiA, radiB;
+  
+  for (int idx = 0; idx < absRotMatrix.length; ++idx) {
+    radiA = (A.getDim(idx) / 2);
+    radiB = (B.getDim(0) / 2) * absRotMatrix[idx][0] + (B.getDim(1) / 2) * absRotMatrix[idx][1] + (B.getDim(2) / 2) * absRotMatrix[idx][2];
+    
+    // Check Ax, Ay, and Az
+    if ( abs(T[idx]) > (radiA + radiB) ) { return false; }
+  }
+  
+  for (int idx = 0; idx < absRotMatrix[0].length; ++idx) {
+    radiA = (A.getDim(0) / 2) * absRotMatrix[0][idx] + (A.getDim(1) / 2) * absRotMatrix[1][idx] + (A.getDim(2) / 2) * absRotMatrix[2][idx];
+    radiB = (B.getDim(idx) / 2);
+    
+    // Check Bx, By, and Bz
+    if ( abs( T[0] * rotMatrix[0][idx] + T[1] * rotMatrix[1][idx] + T[2] * rotMatrix[2][idx] ) > (radiA + radiB)) { return false; }
+  }
+  
+  
+  radiA = (A.getDim(1) / 2) * absRotMatrix[2][0] + (A.getDim(2) / 2) * absRotMatrix[1][0];
+  radiB = (B.getDim(1) / 2) * absRotMatrix[0][2] + (B.getDim(2) / 2) * absRotMatrix[0][1];
+  // Check axes Ax x Bx
+  if ( abs(T[2] * rotMatrix[1][0] - T[1] * rotMatrix[2][0]) > (radiA + radiB) ) { return false; }
+  
+  
+  radiA = (A.getDim(1) / 2) * absRotMatrix[2][1] + (A.getDim(2) / 2) * absRotMatrix[1][1];
+  radiB = (B.getDim(0) / 2) * absRotMatrix[0][2] + (B.getDim(2) / 2) * absRotMatrix[0][0];
+  // Check axes Ax x By
+  if ( abs(T[2] * rotMatrix[1][1] - T[1] * rotMatrix[2][1]) > (radiA + radiB) ) { return false; }
+  
+  
+  radiA = (A.getDim(1) / 2) * absRotMatrix[2][2] + (A.getDim(2) / 2) * absRotMatrix[1][2];
+  radiB = (B.getDim(0) / 2) * absRotMatrix[0][1] + (B.getDim(1) / 2) * absRotMatrix[0][0];
+  // Check axes Ax x Bz
+  if ( abs(T[2] * rotMatrix[1][2] - T[1] * rotMatrix[2][2]) > (radiA + radiB) ) { return false; }
+  
+  
+  radiA = (A.getDim(0) / 2) * absRotMatrix[2][0] + (A.getDim(2) / 2) * absRotMatrix[0][0];
+  radiB = (B.getDim(1) / 2) * absRotMatrix[1][2] + (B.getDim(2) / 2) * absRotMatrix[1][1];
+  // Check axes Ay x Bx
+  if ( abs(T[0] * rotMatrix[2][0] - T[2] * rotMatrix[0][0]) > (radiA + radiB) ) { return false; }
+  
+  
+  radiA = (A.getDim(0) / 2) * absRotMatrix[2][1] + (A.getDim(2) / 2) * absRotMatrix[0][1];
+  radiB = (B.getDim(0) / 2) * absRotMatrix[1][2] + (B.getDim(2) / 2) * absRotMatrix[1][0];
+  // Check axes Ay x By
+  if ( abs(T[0] * rotMatrix[2][1] - T[2] * rotMatrix[0][1]) > (radiA + radiB) ) { return false; }
+  
+  
+  radiA = (A.getDim(0) / 2) * absRotMatrix[2][2] + (A.getDim(2) / 2) * absRotMatrix[0][2];
+  radiB = (B.getDim(0) / 2) * absRotMatrix[1][1] + (B.getDim(1) / 2) * absRotMatrix[1][0];
+  // Check axes Ay x Bz
+  if ( abs(T[0] * rotMatrix[2][2] - T[2] * rotMatrix[0][2]) > (radiA + radiB) ) { return false; }
+  
+  
+  radiA = (A.getDim(0) / 2) * absRotMatrix[1][0] + (A.getDim(1) / 2) * absRotMatrix[0][0];
+  radiB = (B.getDim(1) / 2) * absRotMatrix[2][2] + (B.getDim(2) / 2) * absRotMatrix[2][1];
+  // Check axes Az x Bx
+  if ( abs(T[1] * rotMatrix[0][0] - T[0] * rotMatrix[1][0]) > (radiA + radiB) ) { return false; }
+  
+  
+  radiA = (A.getDim(0) / 2) * absRotMatrix[1][1] + (A.getDim(1) / 2) * absRotMatrix[0][1];
+  radiB = (B.getDim(0) / 2) * absRotMatrix[2][2] + (B.getDim(2) / 2) * absRotMatrix[2][0];
+  // Check axes Az x By
+  if ( abs(T[1] * rotMatrix[0][1] - T[0] * rotMatrix[1][1]) > (radiA + radiB) ) { return false; }
+  
+  
+  radiA = (A.getDim(0) / 2) * absRotMatrix[1][2] + (A.getDim(1) / 2) * absRotMatrix[0][2];
+  radiB = (B.getDim(0) / 2) * absRotMatrix[2][1] + (B.getDim(1) / 2) * absRotMatrix[2][0];
+  // Check axes Az x Bz
+  if ( abs(T[1] * rotMatrix[0][2] - T[0] * rotMatrix[1][2]) > (radiA + radiB) ) { return false; }
+  
+  
+  return true;
 }

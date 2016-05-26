@@ -151,6 +151,45 @@ public float[][] calculateRotationMatrix(PVector wpr){
   return matrix;
 }
 
+/* Computes the dot product of the two given vectors */
+public float dotProduct(float[] v1, float[] v2) {
+  if (v1.length != v2.length) { return 0f; }
+  
+  float product = 0f;
+  
+  for (int idx = 0; idx < v1.length; ++idx) {
+    product += v1[idx] * v2[idx];
+  }
+  
+  return product;
+}
+
+/* Returns a vector, whose components are the respective
+ * sums of the components of the given vectors. */
+public float[] sum(float[] v1, float[] v2) {
+  if (v1.length != v2.length) { return null; }
+  
+  float[] s = new float[v1.length];
+  
+  for (int idx = 0; idx < s.length; ++idx) {
+    s[idx] = v1[idx] + v2[idx];
+  }
+  
+  return s;
+}
+
+/* Returns a vector, whose components are of the
+ * opposite sign of the given vector. */
+public float[] negate(float[] v) {
+  float[] opp = new float[v.length];
+  
+  for (int idx = 0; idx < opp.length; ++idx) {
+    opp[idx] = -v[idx];
+  }
+  
+  return opp;
+}
+
 //calculates the change in x, y, and z from p1 to p2
 float[] calculateVectorDelta(PVector p1, PVector p2){
   float[] d = {p1.x - p2.x, p1.y - p2.y, p1.z - p2.z};

@@ -414,15 +414,21 @@ public class ToolInstruction extends Instruction {
               
               pushMatrix();
               resetMatrix();
+              
               applyModelRotation(armModel);
               
-              float[][] invObjTransform = invertHCMatrix(armModel.held.form.getTransform());
+              float[][] invObjTransform = invertHCMatrix(getTransformationMatrix());
               applyMatrix(invObjTransform[0][0], invObjTransform[0][1], invObjTransform[0][2], invObjTransform[0][3],
                           invObjTransform[1][0], invObjTransform[1][1], invObjTransform[1][2], invObjTransform[1][3],
                           invObjTransform[2][0], invObjTransform[2][1], invObjTransform[2][2], invObjTransform[2][3],
                           invObjTransform[3][0], invObjTransform[3][1], invObjTransform[3][2], invObjTransform[3][3]);
+                          
+              armModel.held.form.applyRelativeAxes();
               
-              armModel.held.form.setTransform(getTransformationMatrix());
+              
+              float[][] tMatrix = getTransformationMatrix();
+              armModel.held.form.setTransform(tMatrix);
+              armModel.held.hit_box.setTransform(tMatrix);
               
               popMatrix();
               

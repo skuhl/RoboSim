@@ -136,31 +136,35 @@ public void draw(){
   popMatrix();
   
   
-  for (Object s : objects) {
+  for (Object o : objects) {
     
-    if ( s != armModel.held && s.collision(armModel.getEEPos()) ) {
+    if (o == armModel.held) {
+      
+    }
+    
+    if ( o != armModel.held && o.collision(armModel.getEEPos()) ) {
       // Change hit box color to indicate End Effector collision
-      s.hit_box.outline = color(0, 0, 255);
+      o.hit_box.outline = color(0, 0, 255);
     } else {
       
       // Detect collision with other objects
-      for (Object r : objects) {
+      for (Object p : objects) {
         
-        if (r != s && s.collision(r)) {
+        if (o != p && o.collision(p)) {
           // Change hit box color to indeicate Object collision
-          s.hit_box.outline = color(255, 0, 0);
+          o.hit_box.outline = color(255, 0, 0);
           break;
         } else {
           // Restore to normal
-          s.hit_box.outline = color(0, 255, 0);
+          o.hit_box.outline = color(0, 255, 0);
         }
       }
     }
     
     pushMatrix();
-    if (s == armModel.held) { applyModelRotation(armModel); }
+    if (o == armModel.held) { applyModelRotation(armModel); }
     // Draw world object
-    s.draw();
+    o.draw();
     popMatrix();
   }
   

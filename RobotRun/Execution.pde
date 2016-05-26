@@ -10,7 +10,7 @@ float liveSpeed = 0.1;
 int errorCounter;
 String errorText;
 
-public static final boolean PRINT_EXTRA_TEXT = false;
+public static final boolean PRINT_EXTRA_TEXT = true;
 public static final float RAD_PER_DEG = 0.0174553;
 
 /**
@@ -155,6 +155,10 @@ void showMainDisplayText() {
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
     text(row, 20, height / 2 + 108);
   }
+  
+  float[] c = objects[1].form.getCenter();
+  String obj1_c = String.format("Object 1: (%f, %f Z, %f)", c[0], c[1], c[2]);
+  text(obj1_c, 20, height / 2 + 148);
   
   textAlign(RIGHT);
   
