@@ -20,76 +20,80 @@ public PVector transform(PVector v, float[][] tMatrix) {
  * This method is based off of the algorithm found on this webpage:
  *    https://web.archive.org/web/20130806093214/http://www-graphics.stanford.edu/courses/cs248-98-fall/Final/q4.html
  */
-public float[][] invert4x4Matrix(float[][] m) {
+public float[][] invertHCMatrix(float[][] m) {
   if (m.length != 4 || m[0].length != 4) {
     return null;
   }
   
-  float[][] inv = new float[4][4];
-  
-  insertInto4x4(0, inv, indexInto4x4(5, m) * indexInto4x4(10, m) * indexInto4x4(15, m) - indexInto4x4(5, m) * indexInto4x4(11, m) * indexInto4x4(14, m) -
-                        indexInto4x4(9, m) * indexInto4x4(6, m) * indexInto4x4(15, m) + indexInto4x4(9, m) * indexInto4x4(7, m) * indexInto4x4(14, m) +
-                        indexInto4x4(13, m) * indexInto4x4(6, m) * indexInto4x4(11, m) - indexInto4x4(13, m) * indexInto4x4(7, m) * indexInto4x4(10, m) );
-  
-  insertInto4x4(4, inv, -indexInto4x4(4, m) * indexInto4x4(10, m) * indexInto4x4(15, m) + indexInto4x4(4, m) * indexInto4x4(11, m) * indexInto4x4(14, m) +
-                         indexInto4x4(8, m) * indexInto4x4(6, m) * indexInto4x4(15, m) - indexInto4x4(8, m) * indexInto4x4(7, m) * indexInto4x4(14, m) -
-                         indexInto4x4(12, m) * indexInto4x4(6, m) * indexInto4x4(11, m) + indexInto4x4(12, m) * indexInto4x4(7, m) * indexInto4x4(10, m) );
-  
-  insertInto4x4(8, inv, indexInto4x4(4, m) * indexInto4x4(9, m) * indexInto4x4(15, m) - indexInto4x4(4, m) * indexInto4x4(11, m) * indexInto4x4(13, m) -
-                        indexInto4x4(8, m) * indexInto4x4(5, m) * indexInto4x4(15, m) + indexInto4x4(8, m) * indexInto4x4(7, m) * indexInto4x4(13, m) +
-                        indexInto4x4(12, m) * indexInto4x4(5, m) * indexInto4x4(11, m) - indexInto4x4(12, m) * indexInto4x4(7, m) * indexInto4x4(9, m) );
-  
-  insertInto4x4(12, inv, -indexInto4x4(4, m) * indexInto4x4(9, m) * indexInto4x4(15, m) + indexInto4x4(4, m) * indexInto4x4(10, m) * indexInto4x4(13, m) +
-                         indexInto4x4(8, m) * indexInto4x4(5, m) * indexInto4x4(14, m) - indexInto4x4(8, m) * indexInto4x4(6, m) * indexInto4x4(13, m) -
-                         indexInto4x4(12, m) * indexInto4x4(5, m) * indexInto4x4(10, m) + indexInto4x4(12, m) * indexInto4x4(6, m) * indexInto4x4(9, m) );
-  
-  // TOD finish inversion process
-  
-  // Calculate determinate
-  float det = indexInto4x4(0, m) * indexInto4x4(0, inv) + indexInto4x4(1, m) * indexInto4x4(4, inv) + indexInto4x4(2, m) * indexInto4x4(8, inv) + indexInto4x4(3, m) * indexInto4x4(12, inv);
-  
-  if (det == 0) { return null; }
-  
   float[][] inverse = new float[4][4];
-  // Multiply inverse by the determinate
-  for (int idx = 0; idx < 16; ++idx) {
-    insertInto4x4(idx, inverse, indexInto4x4(idx, inv) * det);
-  }
+  
+  /* [ ux vx wx tx ] -1       [ ux uy uz -dot(u, t) ]
+   * [ uy vy wy ty ]     =    [ vx vy vz -dot(v, t) ]
+   * [ uz vz wz tz ]          [ wx wy wz -dot(w, t) ]
+   * [  0  0  0  1 ]          [  0  0  0      1     ]
+   */
+  inverse[0][0] = m[0][0];
+  inverse[0][1] = m[1][0];
+  inverse[0][2] = m[2][0];
+  inverse[0][3] = -(m[0][0] * m[0][3] + m[1][0] * m[1][3] + m[2][0] * m[2][3]);
+  inverse[1][0] = m[0][1];
+  inverse[1][1] = m[1][1];
+  inverse[1][2] = m[2][1];
+  inverse[1][3] = -(m[0][1] * m[0][3] + m[1][1] * m[1][3] + m[2][1] * m[2][3]);
+  inverse[2][0] = m[0][2];
+  inverse[2][1] = m[1][2];
+  inverse[2][2] = m[2][2];
+  inverse[2][3] = -(m[0][2] * m[0][3] + m[1][2] * m[1][3] + m[2][2] * m[2][3]);
+  inverse[3][0] = 0;
+  inverse[3][1] = 0;
+  inverse[3][2] = 0;
+  inverse[3][3] = 1;
   
   return inverse;
 }
 
-/* Convets a single value index into a two index value
- * for a 4x4 matrix. Row major order. */
-public float indexInto4x4(int index, float[][] m) {
-  int[] indices = new int[2];
+/**
+ * Find the inverse of the given 4x4 Matrix, if the inverse exists. If not inverse exists, then null is returned. 
+ * 
+ * This method is based off of the algorithm found on this Github repository:
+ *    https://github.com/skuhl/opengl-examples/blob/master/lib/vecmat.c
+ *      Method hader: int mat4f_invert_new(float out[16], const float m[16])
+ */
+public float[][] invert4x4Matrix(float[][] m) {
   
-  indices[0] = 0;
-  indices[1] = index;
+  float[][] limbo = new float[4][4];
+  // Calculate the entries of the inverse matrix
+  limbo[0][0] =    m[1][1] * m[2][2] * m[3][3]   -   m[1][1] * m[2][3] * m[3][2]   -   m[2][1] * m[1][2] * m[3][3]   +   m[2][1] * m[1][3] * m[3][2]   +   m[3][1] * m[1][2] * m[2][3]   -   m[3][1] * m[1][3] * m[2][2];
+  limbo[1][0] =  - m[1][0] * m[2][2] * m[3][3]   +   m[1][0] * m[2][3] * m[3][2]   +   m[2][0] * m[1][2] * m[3][3]   -   m[2][0] * m[1][3] * m[3][2]   -   m[3][0] * m[1][2] * m[2][3]   +   m[3][0] * m[1][3] * m[2][2];
+  limbo[2][0] =    m[1][0] * m[2][1] * m[3][3]   -   m[1][0] * m[2][3] * m[3][1]   -   m[2][0] * m[1][1] * m[3][3]   +   m[2][0] * m[1][3] * m[3][1]   +   m[3][0] * m[1][1] * m[2][3]   -   m[3][0] * m[1][3] * m[2][1];
+  limbo[3][0] =  - m[1][0] * m[2][1] * m[3][2]   +   m[1][0] * m[2][2] * m[3][1]   +   m[2][0] * m[1][1] * m[3][2]   -   m[2][0] * m[1][2] * m[3][1]   -   m[3][0] * m[1][1] * m[2][2]   +   m[3][0] * m[1][2] * m[2][1];
+  limbo[0][1] =  - m[0][1] * m[2][2] * m[3][3]   +   m[0][1] * m[2][3] * m[3][2]   +   m[2][1] * m[0][2] * m[3][3]   -   m[2][1] * m[0][3] * m[3][2]   -   m[3][1] * m[0][2] * m[2][3]   +   m[3][1] * m[0][3] * m[2][2];
+  limbo[1][1] =    m[0][0] * m[2][2] * m[3][3]   -   m[0][0] * m[2][3] * m[3][2]   -   m[2][0] * m[0][2] * m[3][3]   +   m[2][0] * m[0][3] * m[3][2]   +   m[3][0] * m[0][2] * m[2][3]   -   m[3][0] * m[0][3] * m[2][2];
+  limbo[2][1] =  - m[0][0] * m[2][1] * m[3][3]   +   m[0][0] * m[2][3] * m[3][1]   +   m[2][0] * m[0][1] * m[3][3]   -   m[2][0] * m[0][3] * m[3][1]   -   m[3][0] * m[0][1] * m[2][3]   +   m[3][0] * m[0][3] * m[2][1];
+  limbo[3][1] =    m[0][0] * m[2][1] * m[3][2]   -   m[0][0] * m[2][2] * m[3][1]   -   m[2][0] * m[0][1] * m[3][2]   +   m[2][0] * m[0][2] * m[3][1]   +   m[3][0] * m[0][1] * m[2][2]   -   m[3][0] * m[0][2] * m[2][1];
+  limbo[0][2] =    m[0][1] * m[1][2] * m[3][3]   -   m[0][1] * m[1][3] * m[3][2]   -   m[1][1] * m[0][2] * m[3][3]   +   m[1][1] * m[0][3] * m[3][2]   +   m[3][1] * m[0][2] * m[1][3]   -   m[3][1] * m[0][3] * m[1][2];
+  limbo[1][2] =  - m[0][0] * m[1][2] * m[3][3]   +   m[0][0] * m[1][3] * m[3][2]   +   m[1][0] * m[0][2] * m[3][3]   -   m[1][0] * m[0][3] * m[3][2]   -   m[3][0] * m[0][2] * m[1][3]   +   m[3][0] * m[0][3] * m[1][2];
+  limbo[2][2] =    m[0][0] * m[1][1] * m[3][3]   -   m[0][0] * m[1][3] * m[3][1]   -   m[1][0] * m[0][1] * m[3][3]   +   m[1][0] * m[0][3] * m[3][1]   +   m[3][0] * m[0][1] * m[1][3]   -   m[3][0] * m[0][3] * m[1][1];
+  limbo[3][2] =  - m[0][0] * m[1][1] * m[3][2]   +   m[0][0] * m[1][2] * m[3][1]   +   m[1][0] * m[0][1] * m[3][2]   -   m[1][0] * m[0][2] * m[3][1]   -   m[3][0] * m[0][1] * m[1][2]   +   m[3][0] * m[0][2] * m[1][1];
+  limbo[0][3] =  - m[0][1] * m[1][2] * m[2][3]   +   m[0][1] * m[1][3] * m[2][2]   +   m[1][1] * m[0][2] * m[2][3]   -   m[1][1] * m[0][3] * m[2][2]   -   m[2][1] * m[0][2] * m[1][3]   +   m[2][1] * m[0][3] * m[1][2];
+  limbo[1][3] =    m[0][0] * m[1][2] * m[2][3]   -   m[0][0] * m[1][3] * m[2][2]   -   m[1][0] * m[0][2] * m[2][3]   +   m[1][0] * m[0][3] * m[2][2]   +   m[2][0] * m[0][2] * m[1][3]   -   m[2][0] * m[0][3] * m[1][2];
+  limbo[2][3] =  - m[0][0] * m[1][1] * m[2][3]   +   m[0][0] * m[1][3] * m[2][1]   +   m[1][0] * m[0][1] * m[2][3]   -   m[1][0] * m[0][3] * m[2][1]   -   m[2][0] * m[0][1] * m[1][3]   +   m[2][0] * m[0][3] * m[1][1];
+  limbo[3][3] =    m[0][0] * m[1][1] * m[2][2]   -   m[0][0] * m[1][2] * m[2][1]   -   m[1][0] * m[0][1] * m[2][2]   +   m[1][0] * m[0][2] * m[2][1]   +   m[2][0] * m[0][1] * m[1][2]   -   m[2][0] * m[0][2] * m[1][1];
   
-  while (indices[1] >= 4) {
-    indices[1] -= 4;
-    ++indices[0];
+  // Calculate the determinate of m
+  float det = m[0][0] * limbo[0][0] + m[0][1] * limbo[1][0] + m[0][2] * limbo[2][0] + m[0][3] * limbo[3][0];
+  
+  // No inverse exists
+  if (det == 0) { return null; }
+  
+  // Multiply each entry by the inverse of the determinate
+  for (int r = 0; r < limbo.length; ++r) {
+    for (int c = 0; c < limbo[0].length; ++c) {
+      limbo[r][c] /= det;
+    }
   }
   
-  return m[ indices[0] ][ indices[1] ];
-}
-
-/* Given a single index; that index is converted into two indices
- * (row major order) to insert the given value, v, into the given
- * 4x4 matrix, m. */
-public void insertInto4x4(int index, float[][] m, float v) {
-  int[] indices = new int[2];
-  
-  indices[0] = 0;
-  indices[1] = index;
-  
-  while (indices[1] >= 4) {
-    indices[1] -= 4;
-    ++indices[0];
-  }
-  
-  m[ indices[0] ][ indices[1] ] = v;
+  return limbo;
 }
 
 /* Returns a 4x4 vector array which reflects the current transform matrix on the top
@@ -255,4 +259,14 @@ float[] calculateRotationalDelta(PVector p1, PVector p2){
   d[1] = minimumDistance(p1.y, p2.y);
   d[2] = minimumDistance(p1.z, p2.z);
   return d;
+}
+
+/* Displays the contents of a 4x4 matrix in the command line */
+public void printHCMatrix(float[][] m) {
+  if (m.length != 4 || m[0].length != 4) { return; }
+  
+  for (int r = 0; r < m.length; ++r) {
+    String row = String.format("[ %5.4f %5.4f %5.4f %5.4f ]\n", m[r][0], m[r][1], m[r][2], m[r][3]);
+    print(row);
+  }
 }

@@ -107,7 +107,7 @@ public class ArmModel {
   //public final float[] maxArmRange;
   
   public Object held;
-  //public PVector held_offset;
+  public float[][] oldEETMatrix;
   
   public ArmModel() {
     
@@ -160,7 +160,11 @@ public class ArmModel {
     }
     
     held = null;
-    //held_offset = null;
+    // Initializes the old transformation matrix for the arm model
+    pushMatrix();
+    applyModelRotation(this);
+    oldEETMatrix = getTransformationMatrix();
+    popMatrix();
   } // end ArmModel constructor
   
   public void draw() {
@@ -578,24 +582,7 @@ public class ArmModel {
   
   /* If an object is currently being held by the Robot arm, then release it */
   public void releaseHeldObject() {
-    
-    
-    if (armModel.held != null) {
-      pushMatrix();
-      resetMatrix();
-      applyModelRotation(armModel);
-      armModel.held.form.applyRelativeAxes();
-      /* Create a new transformation matrix for the object in order to preserve its orientation;
-       * this matrix comes from the product of the Robot's End Effector transformation and the
-       * object's current transformation matrices. */
-      float[][] tMatrix = getTransformationMatrix();
-      held.form.setTransform(tMatrix);
-      held.hit_box.setTransform(tMatrix);
-      
-      armModel.held = null;
-      
-      popMatrix();  
-    }
+    armModel.held = null;
   }
   
 } // end ArmModel class

@@ -68,7 +68,6 @@ int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
 public static final float PLANE_Z = 200.5f;
 public Object[] objects;
 
-
 /*******************************/
 
 // for store or load program state
@@ -76,8 +75,9 @@ FileInputStream in = null;
 FileOutputStream out = null;
 
 public void setup(){
-  ortho();
   size(1200, 800, P3D);
+  ortho();
+  
   cp5 = new ControlP5(this);
   gui();
   for (int n = 0; n < pr.length; n++) pr[n] = new Point();
@@ -100,37 +100,6 @@ public void setup(){
   PVector pos = PVector.add(armModel.getEEPos(), new PVector(-300, 0, 0));
   objects[1] = new Object(pos.x, pos.y, pos.z, 105, 85, 55, color(255, 0, 255), color(255, 255, 255));
   
-  /*PVector v = new PVector (0, 0, 0);
-  PVector u = transform(v, invert4x4Matrix(objects[1].form.getTransform()));
-  PVector w = transform(u, objects[1].form.getTransform());
-  
-  println(v);
-  println(u);
-  println(w);*/
-  
-  pushMatrix();
-  rotateX(PI / 3);
-  rotateY(PI);
-  rotateZ(4 * PI/ 3);
-  
-  translate(219, -384, 108);
-  
-  float[][] tMatrix = getTransformationMatrix();
-  
-  println();
-  printMatrix();
-  
-  resetMatrix();
-  
-  //tMatrix = invert4x4Matrix(tMatrix);
-  applyMatrix(tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], tMatrix[0][3],
-              tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], tMatrix[1][3],
-              tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], tMatrix[2][3],
-              tMatrix[3][0], tMatrix[3][1], tMatrix[3][2], tMatrix[3][3]);
-  
-  printMatrix();
-  popMatrix();
-  
   //createTestProgram();
 }
 
@@ -138,6 +107,7 @@ boolean doneMoving = true;
 
 public void draw(){
   ortho();
+  
   //lights();
   directionalLight(255, 255, 255, 1, 1, 0);
   ambientLight(150, 150, 150);
@@ -151,6 +121,13 @@ public void draw(){
     intermediatePositions.clear();
   }
   
+  pushMatrix();
+  resetMatrix();
+  applyModelRotation(armModel);
+  // Keep track of the old coordinate frame of the armModel
+  armModel.oldEETMatrix = getTransformationMatrix();
+  popMatrix();
+  
   armModel.executeLiveMotion(); // respond to manual movement from J button presses
   
   hint(ENABLE_DEPTH_TEST);
@@ -162,16 +139,12 @@ public void draw(){
    
   applyCamera();
 
-  pushMatrix();
+  pushMatrix(); 
   armModel.draw();
   popMatrix();
   
   
   for (Object o : objects) {
-    
-    if (o == armModel.held) {
-      
-    }
     
     if ( o != armModel.held && o.collision(armModel.getEEPos()) ) {
       // Change hit box color to indicate End Effector collision
@@ -193,7 +166,29 @@ public void draw(){
     }
     
     pushMatrix();
-    if (o == armModel.held) { applyModelRotation(armModel); }
+    
+    /* Update the */
+    if (o == armModel.held) {
+      pushMatrix();
+      resetMatrix();
+      
+      applyModelRotation(armModel);
+      
+      float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
+      applyMatrix(invEETMatrix[0][0], invEETMatrix[0][1], invEETMatrix[0][2], invEETMatrix[0][3],
+                  invEETMatrix[1][0], invEETMatrix[1][1], invEETMatrix[1][2], invEETMatrix[1][3],
+                  invEETMatrix[2][0], invEETMatrix[2][1], invEETMatrix[2][2], invEETMatrix[2][3],
+                  invEETMatrix[3][0], invEETMatrix[3][1], invEETMatrix[3][2], invEETMatrix[3][3]);
+      
+      armModel.held.form.applyRelativeAxes();
+       
+      float[][] newObjTMatrix = getTransformationMatrix();
+      armModel.held.form.setTransform(newObjTMatrix);
+      armModel.held.hit_box.setTransform(newObjTMatrix);
+      
+      popMatrix();
+    }
+    
     // Draw world object
     o.draw();
     popMatrix();
