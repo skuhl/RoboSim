@@ -585,6 +585,18 @@ public class ArmModel {
     armModel.held = null;
   }
   
+  public boolean modelInMotion() {
+    for (Model m : segments) {
+      for (int idx = 0; idx < m.jointsMoving.length; ++idx) {
+        if (m.jointsMoving[idx] != 0) {
+          return true;
+        }
+      }
+    }
+    
+    return linearMoveSpeeds[0] != 0 && linearMoveSpeeds[1] != 0 && linearMoveSpeeds[2] != 0;
+  }
+  
 } // end ArmModel class
 
 void printCurrentModelCoordinates(String msg) {

@@ -99,13 +99,13 @@ public void setup(){
   resetMatrix();
   translate(-250, -250, -200);
   
-  objects[0] = new Object(300, 25, 300, color(255, 0, 0), color(255, 0, 255));
+  objects[0] = new Object(800, 10, 800, color(255, 0, 0), color(255, 0, 255));
   
   resetMatrix();
   applyModelRotation(armModel);
   translate(0, 0, -200);
   
-  objects[1] = new Object(15, 400, 15, color(255, 0, 255), color(255, 255, 255));
+  objects[1] = new Object(5, 1200, 5, color(255, 0, 255), color(255, 255, 255));
   
   popMatrix();
   //createTestProgram();
@@ -267,7 +267,7 @@ public void dealWithWorldObjects() {
   for (Object o : objects) {
     
     /* Update the transformation matrix of an object held by the Robotic arm */
-    if (o == armModel.held) {
+    if (o == armModel.held && armModel.modelInMotion()) {
       pushMatrix();
       resetMatrix();
       
