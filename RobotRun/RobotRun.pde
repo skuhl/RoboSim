@@ -95,11 +95,19 @@ public void setup(){
    
   // Intialize world objects
   objects = new Object[2];
-
-  objects[0] = new Object(50, 125, 35, 85, 85, 85, color(255, 0, 0), color(255, 0, 255));
-  PVector pos = PVector.add(armModel.getEEPos(), new PVector(-300, 0, 0));
-  objects[1] = new Object(pos.x, pos.y, pos.z, 105, 85, 55, color(255, 0, 255), color(255, 255, 255));
+  pushMatrix();
+  resetMatrix();
+  translate(-250, -250, -200);
   
+  objects[0] = new Object(300, 25, 300, color(255, 0, 0), color(255, 0, 255));
+  
+  resetMatrix();
+  applyModelRotation(armModel);
+  translate(0, 0, -200);
+  
+  objects[1] = new Object(15, 400, 15, color(255, 0, 255), color(255, 255, 255));
+  
+  popMatrix();
   //createTestProgram();
 }
 
@@ -143,56 +151,7 @@ public void draw(){
   armModel.draw();
   popMatrix();
   
-  
-  for (Object o : objects) {
-    
-    if ( o != armModel.held && o.collision(armModel.getEEPos()) ) {
-      // Change hit box color to indicate End Effector collision
-      o.hit_box.outline = color(0, 0, 255);
-    } else {
-      
-      // Detect collision with other objects
-      for (Object p : objects) {
-        
-        if (o != p && o.collision(p)) {
-          // Change hit box color to indeicate Object collision
-          o.hit_box.outline = color(255, 0, 0);
-          break;
-        } else {
-          // Restore to normal
-          o.hit_box.outline = color(0, 255, 0);
-        }
-      }
-    }
-    
-    pushMatrix();
-    
-    /* Update the */
-    if (o == armModel.held) {
-      pushMatrix();
-      resetMatrix();
-      
-      applyModelRotation(armModel);
-      
-      float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
-      applyMatrix(invEETMatrix[0][0], invEETMatrix[0][1], invEETMatrix[0][2], invEETMatrix[0][3],
-                  invEETMatrix[1][0], invEETMatrix[1][1], invEETMatrix[1][2], invEETMatrix[1][3],
-                  invEETMatrix[2][0], invEETMatrix[2][1], invEETMatrix[2][2], invEETMatrix[2][3],
-                  invEETMatrix[3][0], invEETMatrix[3][1], invEETMatrix[3][2], invEETMatrix[3][3]);
-      
-      armModel.held.form.applyRelativeAxes();
-       
-      float[][] newObjTMatrix = getTransformationMatrix();
-      armModel.held.form.setTransform(newObjTMatrix);
-      armModel.held.hit_box.setTransform(newObjTMatrix);
-      
-      popMatrix();
-    }
-    
-    // Draw world object
-    o.draw();
-    popMatrix();
-  }
+  dealWithWorldObjects();
   
   noLights();
   
@@ -299,4 +258,60 @@ void applyCamera() {
   scale(myscale);
   rotateX(myRotX); // for rotate button
   rotateY(myRotY); // for rotate button /* */
+}
+
+/* Handles the drawing of world objects as well as collision detection of world objects and the
+ * Robot Arm model. */
+public void dealWithWorldObjects() {
+  
+  for (Object o : objects) {
+    
+    /* Update the transformation matrix of an object held by the Robotic arm */
+    if (o == armModel.held) {
+      pushMatrix();
+      resetMatrix();
+      
+      // new object transform = EE transform x (old EE transform) ^ -1 x current object transform
+      
+      applyModelRotation(armModel);
+      
+      float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
+      applyMatrix(invEETMatrix[0][0], invEETMatrix[0][1], invEETMatrix[0][2], invEETMatrix[0][3],
+                  invEETMatrix[1][0], invEETMatrix[1][1], invEETMatrix[1][2], invEETMatrix[1][3],
+                  invEETMatrix[2][0], invEETMatrix[2][1], invEETMatrix[2][2], invEETMatrix[2][3],
+                  invEETMatrix[3][0], invEETMatrix[3][1], invEETMatrix[3][2], invEETMatrix[3][3]);
+      
+      armModel.held.form.applyTransform();
+       
+      float[][] newObjTMatrix = getTransformationMatrix();
+      armModel.held.form.setTransform(newObjTMatrix);
+      armModel.held.hit_box.setTransform(newObjTMatrix);
+      
+      popMatrix();
+    }
+    
+    /* Collision Detection */
+    if ( o != armModel.held && o.collision(armModel.getEEPos()) ) {
+      // Change hit box color to indicate End Effector collision
+      o.hit_box.outline = color(0, 0, 255);
+    } else {
+      
+      // Detect collision with other objects
+      for (Object p : objects) {
+        
+        if (o != p && o.collision(p)) {
+          // Change hit box color to indeicate Object collision
+          o.hit_box.outline = color(255, 0, 0);
+          break;
+        } else {
+          // Restore to normal
+          o.hit_box.outline = color(0, 255, 0);
+        }
+      }
+    }
+    
+    
+    // Draw world object
+    o.draw();
+  }
 }

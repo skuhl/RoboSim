@@ -19,11 +19,12 @@ public abstract class Shape {
     no_fill = true;
   } 
   
-   /* Redefine the center point of the shape */
-  public abstract void setCenter(float x, float y, float z);
-  
   /* Returns the x, y, z values of the shape's center point */
-  public abstract float[] getCenter();
+  public abstract float[] position();
+  
+  /* Applies necessary rotations and translations to convert the Native cooridinate
+   * system into the cooridnate system relative to the center of the Shape */
+  public abstract void applyTransform();
   
   /* Define the transformation matrix for the coordinate system of the shape */
   public abstract void setTransform(float[][] tMatrix);
@@ -31,10 +32,6 @@ public abstract class Shape {
   /* Returns the Homogeneous Coordinate Matrix repesenting the conversion from
    * the object's coordinate frame to the Native coordinate frame */
   public abstract float[][] getTransform();
-  
-  /* Applies necessary rotations and translations to convert the Native cooridinate
-   * system into the cooridnate system relative to the center of the Shape */
-  public abstract void applyRelativeAxes();
   
   /* Returns a 3x3 matrix, whose rows contain the x, y, z axes of the Shape's relative
    * coordinate frame in native coordinates */
@@ -52,42 +49,37 @@ public class Box extends Shape {
   public float[][] transform;
   
   /* Create a normal box */
-  public Box(float x, float y, float z, float wdh, float hgt, float dph, color f, color o) {
+  public Box(float wdh, float hgt, float dph, color f, color o) {
     super(f, o);
     
-    transform = new float[4][4];
-    transform[0][3] = x;
-    transform[1][3] = y;
-    transform[2][3] = z;
-    transform[0][0] = transform[1][1] = transform[2][2] = transform[3][3] = 1f;
-    transform[3][0] = transform[3][1] = transform[3][2] = 0f;
-    
+    transform = getTransformationMatrix();
     dimensions = new PVector(wdh, hgt, dph);
   }
   
   /* Create an empty box */
-  public Box(float x, float y, float z, float wdh, float hgt, float dph, color o) {
+  public Box(float wdh, float hgt, float dph, color o) {
     super(o);
     
-    transform = new float[4][4];
-    transform[0][3] = x;
-    transform[1][3] = y;
-    transform[2][3] = z;
-    transform[0][0] = transform[1][1] = transform[2][2] = 1f;
-    transform[3][3] = 1f;
-    transform[3][0] = transform[3][1] = transform[3][2] = transform[3][3] = x;
-    
+    transform = getTransformationMatrix();
     dimensions = new PVector(wdh, hgt, dph);
   }
   
-  public void setCenter(float x, float y, float z) {
-    transform[0][3] = x;
-    transform[1][3] = y;
-    transform[2][3] = z;
+  public float[] position() {
+    pushMatrix();
+    resetMatrix();
+    applyTransform();
+    float[] origin = new float[] { modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0) };
+    popMatrix();
+    
+    return origin;
   }
   
-  public float[] getCenter() { 
-    return new float[] { transform[0][3], transform[1][3], transform[2][3] };
+  /* This method modifies the transform matrix! */
+  public void applyTransform() {
+    applyMatrix(transform[0][0], transform[0][1], transform[0][2], transform[0][3],
+                transform[1][0], transform[1][1], transform[1][2], transform[1][3],
+                transform[2][0], transform[2][1], transform[2][2], transform[2][3],
+                transform[3][0], transform[3][1], transform[3][2], transform[3][3]);
   }
   
   public void setTransform(float[][] tMatrix) { transform = tMatrix.clone(); }
@@ -109,31 +101,13 @@ public class Box extends Shape {
   public float[][] getRelativeAxes() {
     float[][] Axes = new float[3][3];
     
-    pushMatrix();
-    resetMatrix();
-    applyRelativeAxes();
-    // Each ROW is a vector
-    Axes[0][0] = modelX(1, 0, 0) - modelX(0, 0, 0);
-    Axes[0][1] = modelY(1, 0, 0) - modelY(0, 0, 0);
-    Axes[0][2] = modelZ(1, 0, 0) - modelZ(0, 0, 0);
-    Axes[1][0] = modelX(0, 1, 0) - modelX(0, 0, 0);
-    Axes[1][1] = modelY(0, 1, 0) - modelY(0, 0, 0);
-    Axes[1][2] = modelZ(0, 1, 0) - modelZ(0, 0, 0);
-    Axes[2][0] = modelX(0, 0, 1) - modelX(0, 0, 0);
-    Axes[2][1] = modelY(0, 0, 1) - modelY(0, 0, 0);
-    Axes[2][2] = modelZ(0, 0, 1) - modelZ(0, 0, 0);
-    
-    popMatrix();
+    for (int r = 0; r < Axes[0].length; ++r) {
+      for (int c = 0; c < Axes.length; ++c) {
+        Axes[c][r] = transform[r][c];
+      }
+    }
     
     return Axes;
-  }
-  
-  /* This method modifies the transform matrix! */
-  public void applyRelativeAxes() {
-    applyMatrix(transform[0][0], transform[0][1], transform[0][2], transform[0][3],
-                transform[1][0], transform[1][1], transform[1][2], transform[1][3],
-                transform[2][0], transform[2][1], transform[2][2], transform[2][3],
-                transform[3][0], transform[3][1], transform[3][2], transform[3][3]);
   }
   
   /* Returns the dimension of the box corresponding to the
@@ -170,16 +144,16 @@ public class Object {
   // The area around an object used for collision handling
   public final Shape hit_box;
   
-  public Object(float x, float y, float z, float wdh, float hgt, float dph, color f, color o) {
-    form = new Box(x, y, z, wdh, hgt, dph, f, o);
+  public Object(float wdh, float hgt, float dph, color f, color o) {
+    form = new Box(wdh, hgt, dph, f, o);
     // green outline for hitboxes
-    hit_box = new Box(x, y, z, wdh + 20f, hgt + 20f, dph + 20f, color(0, 255, 0));
+    hit_box = new Box(wdh + 20f, hgt + 20f, dph + 20f, color(0, 255, 0));
   }
   
   public void draw() {
     pushMatrix();
     
-    form.applyRelativeAxes();
+    form.applyTransform();
     
     form.draw();
     hit_box.draw();
@@ -188,19 +162,10 @@ public class Object {
   }
   
   public boolean collision(PVector pos) {
-    pushMatrix();
-    resetMatrix();
-    // Switch to the Object's corrdinate system
-    form.applyRelativeAxes();
     // Convert the point to the current reference frame
-    pos = transform(pos, invert4x4Matrix(getTransformationMatrix()));
+    pos = transform(pos, invertHCMatrix(hit_box.getTransform()));
     
-    
-    boolean collided = ((Box)hit_box).within(pos);
-    
-    popMatrix();
-    
-    return collided;
+    return ((Box)hit_box).within(pos);
   }
   
   /* Determines if the collider boxes of this object
@@ -235,7 +200,7 @@ public boolean collision3D(Box A, Box B) {
   }
   
   // T = B's position - A's 
-  float[] limbo = sum( B.getCenter(), negate(A.getCenter()) );
+  float[] limbo = sum( B.position(), negate(A.position()) );
   // Convert T into A's coordinate frame
   float[] T = new float[] { dotProduct(limbo, axes_A[0]), dotProduct(limbo, axes_A[1]), dotProduct(limbo, axes_A[2]) };
   
