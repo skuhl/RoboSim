@@ -599,7 +599,7 @@ public class ArmModel {
       }
     }
     
-    return linearMoveSpeeds[0] != 0 && linearMoveSpeeds[1] != 0 && linearMoveSpeeds[2] != 0;
+    return moveLinear[0] != 0 && moveLinear[1] != 0 && moveLinear[2] != 0;
   }
   
 } // end ArmModel class

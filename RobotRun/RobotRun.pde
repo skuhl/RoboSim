@@ -151,15 +151,15 @@ public void draw(){
   armModel.draw();
   popMatrix();
   
-  dealWithWorldObjects();
+  handleWorldObjects();
   
   noLights();
   
-  // TESTING CODE: DRAW INTERMEDIATE POINTS
+  //TESTING CODE: DRAW INTERMEDIATE POINTS
   noStroke();
   pushMatrix();
-  if (intermediatePositions != null) {
-    for (PVector v : intermediatePositions) {
+  if(intermediatePositions != null){
+    for(PVector v : intermediatePositions){
       pushMatrix();
       translate(v.x, v.y, v.z);
       sphere(10);
@@ -167,9 +167,8 @@ public void draw(){
     }
   }
   popMatrix(); 
-  // TESTING CODE: DRAW END EFFECTOR POSITION
+  //TESTING CODE: DRAW END EFFECTOR POSITION
   pushMatrix();
-  //applyCamera();
   noFill();
   stroke(0, 0, 0);
   applyModelRotation(armModel);
@@ -184,7 +183,7 @@ public void draw(){
   stroke(0, 0, 255);
   sphere(10);
   popMatrix();
-  // END TESTING CODE
+  //END TESTING CODE
   // TESTING CODE: DRAW USER FRAME 0
   /*PVector ufo = convertWorldToNative(userFrames[0].getOrigin());
   
@@ -223,7 +222,7 @@ public void draw(){
   pushMatrix();
   translate(ufz.x, ufz.y, ufz.z);
   sphere(15);
-  popMatrix(); */
+  popMatrix();*/
   // END TESTING CODE
   
   drawEndEffectorGridMapping();
@@ -262,7 +261,7 @@ void applyCamera() {
 
 /* Handles the drawing of world objects as well as collision detection of world objects and the
  * Robot Arm model. */
-public void dealWithWorldObjects() {
+public void handleWorldObjects() {
   for (Object o : objects) {
     
     /* Update the transformation matrix of an object held by the Robotic arm */

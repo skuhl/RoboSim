@@ -165,6 +165,19 @@ double[][] floatToDouble(float[][] m, int l, int w){
   return r;
 }
 
+//converts a double array to a float array
+float[][] doubleToFloat(double[][] m, int l, int w){
+  float[][] r = new float[l][w];
+  
+  for(int i = 0; i < l; i += 1){
+    for(int j = 0; j < w; j += 1){
+      r[i][j] = (float)m[i][j];
+    }
+  }
+  
+  return r;
+}
+
 //calculates the change in x, y, and z from p1 to p2
 float[] calculateVectorDelta(PVector p1, PVector p2){
   float[] d = {p1.x - p2.x, p1.y - p2.y, p1.z - p2.z};

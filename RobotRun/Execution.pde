@@ -238,7 +238,7 @@ public void drawEndEffectorGridMapping() {
   // Display EE axes at the EE position
   applyModelRotation(armModel);
   float[][] tMatrix = getTransformationMatrix();
-  popMatrix();/
+  popMatrix();
   
   PVector x_vector = new PVector(5000, 0, 0);//transform(new PVector(0, 0, 5000), tMatrix);
   PVector y_vector = new PVector(0, 5000, 0);//transform(new PVector(0, -5000, 0), tMatrix);
@@ -250,51 +250,12 @@ public void drawEndEffectorGridMapping() {
   line(y_vector.x, y_vector.y, y_vector.z, y_vector.x, -y_vector.y, y_vector.z);
   stroke(0, 0, 255);
   line(z_vector.x, z_vector.y, z_vector.z, z_vector.x, z_vector.y, -z_vector.z);
-  //popMatrix();
-  
-  // Draw spheres on each of the positive portions of the EE's axes
-  noFill();
-  stroke(0,255,0);
-  translate(100, 0, 0);
-  sphere(10);
-  translate(-100, 100, 0);
-  sphere(10);
-  stroke(255, 0, 0);
-  translate(0, -100, 100);
-  sphere(10);
-  translate(0, 0, -100);
-  popMatrix();
-  
-  /*pushMatrix();
-  // Display native axes
-  stroke(255, 0, 0);
-  line(5000, ee_pos.y, ee_pos.z, -50000, ee_pos.y, ee_pos.z);
-  stroke(0, 255, 0);
-  line(ee_pos.x, 5000, ee_pos.z, ee_pos.x, -5000, ee_pos.z);
-  stroke(0, 0, 255);
-  line(ee_pos.x, ee_pos.y, 5000, ee_pos.x, ee_pos.y, -5000);
-  
-  // Draw black spheres on each of the positive portions of the native axes
-  noFill();
-  translate(ee_pos.x, ee_pos.y, ee_pos.z);
-  stroke(0,0,0);
-  translate(100, 0, 0);
-  sphere(10);
-  translate(-100, 100, 0);
-  sphere(10);
-  stroke(0, 0, 0);
-  
-  translate(0, -100, 100);
-  sphere(10);
-  translate(0, 0, -100);
-  popMatrix();/**/
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
   color c = (ee_pos.y <= PLANE_Z) ? color(255, 0, 0) : color(150, 0, 255);
   
   // Toggle EE mapping type with 'e'
   switch (EE_MAPPING) {
-    
     case 0:
       stroke(c);
       // Draw a line, from the EE to the grid in the xy plane, parallel to the z plane
