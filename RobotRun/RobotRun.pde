@@ -1,5 +1,5 @@
-
 import controlP5.*;
+import org.apache.commons.math3.linear.*;
 
 import java.util.*;
 import java.nio.*;
@@ -263,7 +263,6 @@ void applyCamera() {
 /* Handles the drawing of world objects as well as collision detection of world objects and the
  * Robot Arm model. */
 public void dealWithWorldObjects() {
-  
   for (Object o : objects) {
     
     /* Update the transformation matrix of an object held by the Robotic arm */
@@ -309,7 +308,6 @@ public void dealWithWorldObjects() {
         }
       }
     }
-    
     
     // Draw world object
     o.draw();

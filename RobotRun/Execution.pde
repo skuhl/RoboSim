@@ -11,7 +11,6 @@ int errorCounter;
 String errorText;
 
 public static final boolean PRINT_EXTRA_TEXT = true;
-public static final float RAD_PER_DEG = 0.0174553;
 
 /**
  * Creates some programs for testing purposes.
@@ -234,11 +233,11 @@ public void drawEndEffectorGridMapping() {
   // x-axis : red
   // y-axis : green
   // z-axis : blue
-  /*pushMatrix();
-  //resetMatrix();
+  pushMatrix();
+  resetMatrix();
   // Display EE axes at the EE position
   applyModelRotation(armModel);
-  /*float[][] tMatrix = getTransformationMatrix();
+  float[][] tMatrix = getTransformationMatrix();
   popMatrix();/
   
   PVector x_vector = new PVector(5000, 0, 0);//transform(new PVector(0, 0, 5000), tMatrix);
@@ -261,14 +260,14 @@ public void drawEndEffectorGridMapping() {
   translate(-100, 100, 0);
   sphere(10);
   stroke(255, 0, 0);
-  translate(0, -100, -100);
+  translate(0, -100, 100);
   sphere(10);
-  translate(0, 0, 100);
-  popMatrix();/**/
+  translate(0, 0, -100);
+  popMatrix();
   
-  //pushMatrix();
+  /*pushMatrix();
   // Display native axes
-  /*stroke(255, 0, 0);
+  stroke(255, 0, 0);
   line(5000, ee_pos.y, ee_pos.z, -50000, ee_pos.y, ee_pos.z);
   stroke(0, 255, 0);
   line(ee_pos.x, 5000, ee_pos.z, ee_pos.x, -5000, ee_pos.z);
@@ -327,8 +326,7 @@ public void drawEndEffectorGridMapping() {
  * the end effector position as your start point.
  * @param model The arm model whose transformations to apply
  */
-void applyModelRotation(ArmModel model) {
-  
+void applyModelRotation(ArmModel model){   
   translate(600, 200, 0);
   translate(-50, -166, -358); // -115, -213, -413
   rotateZ(PI);
@@ -381,11 +379,14 @@ void applyModelRotation(ArmModel model) {
 
 /**
  * Calculate the Jacobian matrix for the robotic arm for
- * a given set of joint rotational values.
+ * a given set of joint rotational values using a 1 DEGREE
+ * offset for each joint rotation value. Each cell of the
+ * resulting matrix will describe the linear approximation
+ * of the robot's motion for each joint in units per radian. 
  */
-float[][] calculateJacobian(float[] angles){
-  float dAngle = RAD_PER_DEG;
-  float[][] jacobian = new float[6][6];
+public float[][] calculateJacobian(float[] angles){
+  float dAngle = DEG_TO_RAD;
+  float[][] J = new float[6][6];
   //get current ee position
   PVector cPos = armModel.getEEPos(angles);
   PVector cRot = armModel.getWPR(angles);
@@ -399,45 +400,36 @@ float[][] calculateJacobian(float[] angles){
     PVector nRot = armModel.getWPR(angles);
 
     //get translational delta
-    jacobian[i][0] = (nPos.x - cPos.x)/RAD_PER_DEG;
-    jacobian[i][1] = (nPos.y - cPos.y)/RAD_PER_DEG;
-    jacobian[i][2] = (nPos.z- cPos.z)/RAD_PER_DEG;
+    J[0][i] = (nPos.x - cPos.x)/DEG_TO_RAD;
+    J[1][i] = (nPos.y - cPos.y)/DEG_TO_RAD;
+    J[2][i] = (nPos.z - cPos.z)/DEG_TO_RAD;
     //get rotational delta
-    jacobian[i][3] = (nRot.x - cRot.x)/RAD_PER_DEG;
-    jacobian[i][4] = (nRot.y - cRot.y)/RAD_PER_DEG;
-    jacobian[i][5] = (nRot.z - cRot.z)/RAD_PER_DEG;
+    J[3][i] = minimumDistance(nRot.x, cRot.x)/DEG_TO_RAD;
+    J[4][i] = minimumDistance(nRot.y, cRot.y)/DEG_TO_RAD;
+    J[5][i] = minimumDistance(nRot.z, cRot.z)/DEG_TO_RAD;
     //replace the original rotational value
     angles[i] -= dAngle;
   }
   
-  //println("jacobian: ");
-  //for(int i = 0; i < 6; i += 1){
-  //for(int j = 0; j < 6; j += 1){
-  //  print(String.format("  %5.4f", jacobian[i][j]));
-  //}
-  //println();
-  //}
-  //println();
-  
-  return jacobian;
+  return J;
 }//end calculate jacobian
 
 //attempts to calculate the joint rotation values
 //required to move the end effector to the point specified
-//by 'tgt'
+//by 'tgt' and the Euler angle orientation 'rot'
 int calculateIKJacobian(PVector tgt, PVector rot){
   float[] angles = armModel.getJointRotations();
+  final int limit = 100;  //max number of times to loop
   int count = 0;
   
-  while(count < 5000){
+  while(count < limit){
     PVector cPos = armModel.getEEPos(angles);
     PVector cRot = armModel.getWPR(angles);
     
-    //calculate our translational distance from target
+    //calculate our translational offset from target
     float[] tDelta = calculateVectorDelta(tgt, cPos);
-    //calculate our rotational distance from target
-    float[] rDelta = calculateVectorDelta(rot, cRot);
-    PVector rDeltaVect = new PVector(rDelta[0], rDelta[1], rDelta[2]);
+    //calculate our rotational offset from target
+    float[] rDelta = calculateRotationalDelta(rot, cRot);
     float[] delta = new float[6];
     
     delta[0] = tDelta[0];
@@ -448,38 +440,33 @@ int calculateIKJacobian(PVector tgt, PVector rot){
     delta[5] = rDelta[2];
     
     float dist = PVector.dist(cPos, tgt);
-    println(rDeltaVect);
-    if(dist < 0.25 && rDelta[0] < 0.017 && rDelta[1] < 0.017 && rDelta[2] < 0.017) break;
+    float rDist = PVector.dist(cRot, rot);
+    //check whether our current position is within tolerance
+    println("distances:" + dist + ", " + rDist);
+    if(dist < 0.5 && rDist < DEG_TO_RAD) break;
     
-    //calculate jacobian, 'J'
-    float[][] jacobian = calculateJacobian(angles);
-    float[] dAngle = new float[6];
-    
-    //calculate joint angular changes via J*delta
-    for(int i = 0; i < 6; i += 1){
-      dAngle[i] = calculateVectorDot6(jacobian[i], delta);
-    }
-    
-    //calculate expected change in end effector position
-    float expectedChange[] = {0, 0, 0, 0, 0, 0};
+    //calculate jacobian, 'J', and its inverse 
+    float[][] J = calculateJacobian(angles);
+    RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 6, 6));
+    RealMatrix JInverse = MatrixUtils.inverse(m);
+        
+    //calculate and apply joint angular changes
+    float[] dAngle = {0, 0, 0, 0, 0, 0};
     for(int i = 0; i < 6; i += 1){
       for(int j = 0; j < 6; j += 1){
-        expectedChange[i] += dAngle[j] * jacobian[j][i];
+        dAngle[i] += JInverse.getEntry(i, j)*delta[j];
       }
-    }
-    
-    float alpha = calculateVectorDot3(expectedChange, delta)/
-                  calculateVectorDot3(expectedChange, expectedChange);
-    
-    for(int i = 0; i < 6; i += 1){
-      angles[i] += 0.0001*dAngle[i]*0.0174553;
+      //update joint angles
+      angles[i] += dAngle[i];
       angles[i] %= TWO_PI;
     }
     
     count += 1;
   }
-  println(count);
-  if(count >= 5000){
+  println("IK done");
+  //did we successfully find the desired angles?
+  if(count >= limit){
+    println("IK fail");
     return EXEC_FAILURE;
   }
   else{

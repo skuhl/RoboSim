@@ -101,11 +101,12 @@ public class ArmModel {
   //public boolean calculatingArms = false, movingArms = false;
   public float motorSpeed;
   // Indicates translational motion in the World Frame
-  public float[] linearMoveSpeeds = new float[3];
+  public float[] moveLinear = new float[3];
   // Indicates rotational motion in the World Frame
-  public float[] angularMoveSpeeds = new float[3];
-  //public final float[] maxArmRange;
-  
+  public float[] moveOrientation = new float[3];
+  public PVector lockPosition;
+  public PVector lockOrientation;
+    
   public Object held;
   public float[][] oldEETMatrix;
   
@@ -151,12 +152,12 @@ public class ArmModel {
     segments.add(axis5);
     segments.add(axis6);
     
-    for (int idx = 0; idx < angularMoveSpeeds.length; ++idx) {
-      angularMoveSpeeds[idx] = 0;
+    for (int idx = 0; idx < moveLinear.length; ++idx) {
+      moveLinear[idx] = 0;
     }
     
-    for (int idx = 0; idx < angularMoveSpeeds.length; ++idx) {
-      angularMoveSpeeds[idx] = 0;
+    for (int idx = 0; idx < moveOrientation.length; ++idx) {
+      moveOrientation[idx] = 0;
     }
     
     held = null;
@@ -465,6 +466,10 @@ public class ArmModel {
       for(int j = 0; j < 3; j += 1){
         if(segments.get(i).rotations[j]){
           segments.get(i).currentRotations[j] = rot[i];
+          segments.get(i).currentRotations[j] %= TWO_PI;
+          if(segments.get(i).currentRotations[j] < 0){
+            segments.get(i).currentRotations[j] += TWO_PI;
+          }
         }
       }
     }
@@ -485,15 +490,7 @@ public class ArmModel {
     } // end loop through arm segments
     return done;
   } // end interpolate rotation
-  
-  public void instantRotation() {
-    for (Model a : segments) {
-      for (int r = 0; r < 3; r++) {
-        a.currentRotations[r] = a.targetRotations[r];
-      }
-    }
-  }
-  
+
   void executeLiveMotion() {    
     if (curCoordFrame == COORD_JOINT) {
       for (int i = 0; i < segments.size(); i += 1) {
@@ -543,17 +540,9 @@ public class ArmModel {
       updateButtonColors();
     } else if (curCoordFrame == COORD_WORLD) {
       //only move if our movement vector is non-zero
-      if (linearMoveSpeeds[0] != 0 || linearMoveSpeeds[1] != 0 || linearMoveSpeeds[2] != 0) {
-        PVector startFrom = new PVector(0,0,0);
-        
-        //determine movement start point
-        if (intermediatePositions.size() == 1){
-          startFrom = intermediatePositions.get(0);
-        } else{
-          startFrom = armModel.getEEPos();
-        }
-        
-        PVector move = new PVector(linearMoveSpeeds[0], linearMoveSpeeds[1], linearMoveSpeeds[2]);
+      if (moveLinear[0] != 0 || moveLinear[1] != 0 || moveLinear[2] != 0
+          || moveOrientation[0] != 0 || moveOrientation[1] != 0 || moveOrientation[2] != 0) {
+        PVector move = new PVector(moveLinear[0], moveLinear[1], moveLinear[2]);
         //convert to user frame coordinates if currently in a user frame
         if (activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
           PVector[] frame = userFrames[activeUserFrame].axes;
@@ -562,19 +551,35 @@ public class ArmModel {
           move = vectorConvertTo(move, frame[0], frame[1], frame[2]);
         }
         
-        intermediatePositions.clear();
         float distance = motorSpeed/60.0 * liveSpeed;
-        intermediatePositions.add(new PVector(startFrom.x + move.x * distance,
-                                              startFrom.y + move.y * distance,
-                                              startFrom.z + move.z * distance));
+        lockPosition.x += move.x * distance;
+        lockPosition.y += move.y * distance;
+        lockPosition.z += move.z * distance;
+        lockOrientation.x += moveOrientation[0] * DEG_TO_RAD;
+        lockOrientation.z += moveOrientation[2] * DEG_TO_RAD;
+        lockOrientation.x -= lockOrientation.x > PI ? TWO_PI : 0;
+        lockOrientation.z -= lockOrientation.z > PI ? TWO_PI : 0;
+        lockOrientation.x += lockOrientation.x < -PI ? TWO_PI : 0;
+        lockOrientation.z += lockOrientation.z < -PI ? TWO_PI : 0;
+        //keep y orientation within [-PI, PI]
+        if(lockOrientation.y <= PI - DEG_TO_RAD && lockOrientation.y >= -PI + DEG_TO_RAD){
+          lockOrientation.y += moveOrientation[2] * DEG_TO_RAD;
+        }
+        else if(true){
+          
+        }
         
-        int r = calculateIKJacobian(intermediatePositions.get(0), new PVector(0, 0, 0));
+        
+        //println(lockOrientation);
+        int r = calculateIKJacobian(lockPosition, lockOrientation);
         if(r == EXEC_FAILURE){
-          intermediatePositions.clear();
           updateButtonColors();
-          linearMoveSpeeds[0] = 0;
-          linearMoveSpeeds[1] = 0;
-          linearMoveSpeeds[2] = 0;
+          moveLinear[0] = 0;
+          moveLinear[1] = 0;
+          moveLinear[2] = 0;
+          moveOrientation[0] = 0;
+          moveOrientation[1] = 0;
+          moveOrientation[2] = 0;
         }
       }
     }

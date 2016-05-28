@@ -52,50 +52,6 @@ public float[][] invertHCMatrix(float[][] m) {
   return inverse;
 }
 
-/**
- * Find the inverse of the given 4x4 Matrix, if the inverse exists. If not inverse exists, then null is returned. 
- * 
- * This method is based off of the algorithm found on this Github repository:
- *    https://github.com/skuhl/opengl-examples/blob/master/lib/vecmat.c
- *      Method hader: int mat4f_invert_new(float out[16], const float m[16])
- */
-public float[][] invert4x4Matrix(float[][] m) {
-  
-  float[][] limbo = new float[4][4];
-  // Calculate the entries of the inverse matrix
-  limbo[0][0] =    m[1][1] * m[2][2] * m[3][3]   -   m[1][1] * m[2][3] * m[3][2]   -   m[2][1] * m[1][2] * m[3][3]   +   m[2][1] * m[1][3] * m[3][2]   +   m[3][1] * m[1][2] * m[2][3]   -   m[3][1] * m[1][3] * m[2][2];
-  limbo[1][0] =  - m[1][0] * m[2][2] * m[3][3]   +   m[1][0] * m[2][3] * m[3][2]   +   m[2][0] * m[1][2] * m[3][3]   -   m[2][0] * m[1][3] * m[3][2]   -   m[3][0] * m[1][2] * m[2][3]   +   m[3][0] * m[1][3] * m[2][2];
-  limbo[2][0] =    m[1][0] * m[2][1] * m[3][3]   -   m[1][0] * m[2][3] * m[3][1]   -   m[2][0] * m[1][1] * m[3][3]   +   m[2][0] * m[1][3] * m[3][1]   +   m[3][0] * m[1][1] * m[2][3]   -   m[3][0] * m[1][3] * m[2][1];
-  limbo[3][0] =  - m[1][0] * m[2][1] * m[3][2]   +   m[1][0] * m[2][2] * m[3][1]   +   m[2][0] * m[1][1] * m[3][2]   -   m[2][0] * m[1][2] * m[3][1]   -   m[3][0] * m[1][1] * m[2][2]   +   m[3][0] * m[1][2] * m[2][1];
-  limbo[0][1] =  - m[0][1] * m[2][2] * m[3][3]   +   m[0][1] * m[2][3] * m[3][2]   +   m[2][1] * m[0][2] * m[3][3]   -   m[2][1] * m[0][3] * m[3][2]   -   m[3][1] * m[0][2] * m[2][3]   +   m[3][1] * m[0][3] * m[2][2];
-  limbo[1][1] =    m[0][0] * m[2][2] * m[3][3]   -   m[0][0] * m[2][3] * m[3][2]   -   m[2][0] * m[0][2] * m[3][3]   +   m[2][0] * m[0][3] * m[3][2]   +   m[3][0] * m[0][2] * m[2][3]   -   m[3][0] * m[0][3] * m[2][2];
-  limbo[2][1] =  - m[0][0] * m[2][1] * m[3][3]   +   m[0][0] * m[2][3] * m[3][1]   +   m[2][0] * m[0][1] * m[3][3]   -   m[2][0] * m[0][3] * m[3][1]   -   m[3][0] * m[0][1] * m[2][3]   +   m[3][0] * m[0][3] * m[2][1];
-  limbo[3][1] =    m[0][0] * m[2][1] * m[3][2]   -   m[0][0] * m[2][2] * m[3][1]   -   m[2][0] * m[0][1] * m[3][2]   +   m[2][0] * m[0][2] * m[3][1]   +   m[3][0] * m[0][1] * m[2][2]   -   m[3][0] * m[0][2] * m[2][1];
-  limbo[0][2] =    m[0][1] * m[1][2] * m[3][3]   -   m[0][1] * m[1][3] * m[3][2]   -   m[1][1] * m[0][2] * m[3][3]   +   m[1][1] * m[0][3] * m[3][2]   +   m[3][1] * m[0][2] * m[1][3]   -   m[3][1] * m[0][3] * m[1][2];
-  limbo[1][2] =  - m[0][0] * m[1][2] * m[3][3]   +   m[0][0] * m[1][3] * m[3][2]   +   m[1][0] * m[0][2] * m[3][3]   -   m[1][0] * m[0][3] * m[3][2]   -   m[3][0] * m[0][2] * m[1][3]   +   m[3][0] * m[0][3] * m[1][2];
-  limbo[2][2] =    m[0][0] * m[1][1] * m[3][3]   -   m[0][0] * m[1][3] * m[3][1]   -   m[1][0] * m[0][1] * m[3][3]   +   m[1][0] * m[0][3] * m[3][1]   +   m[3][0] * m[0][1] * m[1][3]   -   m[3][0] * m[0][3] * m[1][1];
-  limbo[3][2] =  - m[0][0] * m[1][1] * m[3][2]   +   m[0][0] * m[1][2] * m[3][1]   +   m[1][0] * m[0][1] * m[3][2]   -   m[1][0] * m[0][2] * m[3][1]   -   m[3][0] * m[0][1] * m[1][2]   +   m[3][0] * m[0][2] * m[1][1];
-  limbo[0][3] =  - m[0][1] * m[1][2] * m[2][3]   +   m[0][1] * m[1][3] * m[2][2]   +   m[1][1] * m[0][2] * m[2][3]   -   m[1][1] * m[0][3] * m[2][2]   -   m[2][1] * m[0][2] * m[1][3]   +   m[2][1] * m[0][3] * m[1][2];
-  limbo[1][3] =    m[0][0] * m[1][2] * m[2][3]   -   m[0][0] * m[1][3] * m[2][2]   -   m[1][0] * m[0][2] * m[2][3]   +   m[1][0] * m[0][3] * m[2][2]   +   m[2][0] * m[0][2] * m[1][3]   -   m[2][0] * m[0][3] * m[1][2];
-  limbo[2][3] =  - m[0][0] * m[1][1] * m[2][3]   +   m[0][0] * m[1][3] * m[2][1]   +   m[1][0] * m[0][1] * m[2][3]   -   m[1][0] * m[0][3] * m[2][1]   -   m[2][0] * m[0][1] * m[1][3]   +   m[2][0] * m[0][3] * m[1][1];
-  limbo[3][3] =    m[0][0] * m[1][1] * m[2][2]   -   m[0][0] * m[1][2] * m[2][1]   -   m[1][0] * m[0][1] * m[2][2]   +   m[1][0] * m[0][2] * m[2][1]   +   m[2][0] * m[0][1] * m[1][2]   -   m[2][0] * m[0][2] * m[1][1];
-  
-  // Calculate the determinate of m
-  float det = m[0][0] * limbo[0][0] + m[0][1] * limbo[1][0] + m[0][2] * limbo[2][0] + m[0][3] * limbo[3][0];
-  
-  // No inverse exists
-  if (det == 0) { return null; }
-  
-  // Multiply each entry by the inverse of the determinate
-  for (int r = 0; r < limbo.length; ++r) {
-    for (int c = 0; c < limbo[0].length; ++c) {
-      limbo[r][c] /= det;
-    }
-  }
-  
-  return limbo;
-}
-
 /* Returns a 4x4 vector array which reflects the current transform matrix on the top
  * of the stack */
 public float[][] getTransformationMatrix() {
@@ -148,30 +104,31 @@ public float[][] calculateRotationMatrix() {
   // Switch to End Effector reference Frame
   applyModelRotation(armModel);
   /* Define vectors { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, and { 0, 0, 1 }
-   * Swap y and z coordinates, negating the original y coordinate
    * Swap vectors:
    *   x' = z
-   *   y' = -y
-   *   z' = x
+   *   y' = x
+   *   z' = y
    */
-  PVector origin = new PVector(modelZ(0, 0, 0), modelY(0, 0, 0), modelX(0, 0, 0)),
-               x = new PVector(modelZ(1, 0, 0), modelY(-1, 0, 0), modelX(1, 0, 0)),
-               y = new PVector(modelZ(0, 1, 0), modelY(0, -1, 0), modelX(0, 1, 0)),
-               z = new PVector(modelZ(0, 0, 1), modelY(0, 0, -1), modelX(0, 0, 1));
-  
-  popMatrix();
-  
+  PVector origin = new PVector(modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0)),
+          
+          x = new PVector(modelX(0, 0, -1), modelY(0, 0, -1), modelZ(0, 0, -1)),
+          y = new PVector(modelX(0, 1, 0), modelY(0, 1, 0), modelZ(0, 1, 0)),
+          z = new PVector(modelX(1, 0, 0), modelY(1, 0, 0), modelZ(1, 0, 0));
+          
   float[][] matrix = new float[3][3];
   // Calcualte Unit Vectors form difference between each axis vector and the origin
+
   matrix[0][0] = x.x - origin.x;
-  matrix[1][0] = x.y - origin.y;
-  matrix[2][0] = x.z - origin.z;
-  matrix[0][1] = y.x - origin.x;
+  matrix[0][1] = x.y - origin.y;
+  matrix[0][2] = x.z - origin.z;
+  matrix[1][0] = y.x - origin.x;
   matrix[1][1] = y.y - origin.y;
-  matrix[2][1] = y.z - origin.z;
-  matrix[0][2] = z.x - origin.x;
-  matrix[1][2] = z.y - origin.y;
+  matrix[1][2] = y.z - origin.z;
+  matrix[2][0] = z.x - origin.x;
+  matrix[2][1] = z.y - origin.y;
   matrix[2][2] = z.z - origin.z;
+  
+  popMatrix();
   
   return matrix;
 }
@@ -195,62 +152,23 @@ public float[][] calculateRotationMatrix(PVector wpr){
   return matrix;
 }
 
-/* Computes the dot product of the two given vectors */
-public float dotProduct(float[] v1, float[] v2) {
-  if (v1.length != v2.length) { return 0f; }
+//converts a float array to a double array
+double[][] floatToDouble(float[][] m, int l, int w){
+  double[][] r = new double[l][w];
   
-  float product = 0f;
-  
-  for (int idx = 0; idx < v1.length; ++idx) {
-    product += v1[idx] * v2[idx];
+  for(int i = 0; i < l; i += 1){
+    for(int j = 0; j < w; j += 1){
+      r[i][j] = (double)m[i][j];
+    }
   }
   
-  return product;
-}
-
-/* Returns a vector, whose components are the respective
- * sums of the components of the given vectors. */
-public float[] sum(float[] v1, float[] v2) {
-  if (v1.length != v2.length) { return null; }
-  
-  float[] s = new float[v1.length];
-  
-  for (int idx = 0; idx < s.length; ++idx) {
-    s[idx] = v1[idx] + v2[idx];
-  }
-  
-  return s;
-}
-
-/* Returns a vector, whose components are of the
- * opposite sign of the given vector. */
-public float[] negate(float[] v) {
-  float[] opp = new float[v.length];
-  
-  for (int idx = 0; idx < opp.length; ++idx) {
-    opp[idx] = -v[idx];
-  }
-  
-  return opp;
+  return r;
 }
 
 //calculates the change in x, y, and z from p1 to p2
 float[] calculateVectorDelta(PVector p1, PVector p2){
   float[] d = {p1.x - p2.x, p1.y - p2.y, p1.z - p2.z};
   return d;
-}
-
-//calculate the dot product of two 3 element vectors represented by float arrays
-float calculateVectorDot3(float[] v1, float[] v2){
-  float dot = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
-  return dot;
-}
-
-//calculate the dot product of two 6 element vectors represented by float arrays
-float calculateVectorDot6(float[] v1, float[] v2){
-  float dot = v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2]
-            + v1[3]*v2[3] + v1[4]*v2[4] + v1[5]*v2[5];
-  return dot;
 }
 
 float[] calculateRotationalDelta(PVector p1, PVector p2){
