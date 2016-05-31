@@ -98,7 +98,6 @@ public void setup(){
   pushMatrix();
   resetMatrix();
   translate(-250, -250, -200);
-  printHCMatrix(getTransformationMatrix());
   
   objects[0] = new Object(800, 10, 800, color(255, 0, 0), color(255, 0, 255));
   
@@ -145,11 +144,14 @@ public void draw(){
   noFill();
   
   pushMatrix();
-   
+  
   applyCamera();
 
   pushMatrix(); 
   armModel.draw();
+  popMatrix();
+  pushMatrix();
+  armModel.drawBoxes();
   popMatrix();
   
   handleWorldObjects();
@@ -226,9 +228,9 @@ public void draw(){
   popMatrix();*/
   // END TESTING CODE
   
-  /*drawEndEffectorGridMapping();
+  drawEndEffectorGridMapping();
   
-  stroke(255, 0, 0);
+  /*stroke(255, 0, 0);
   // Draw x origin line
   line( -5000, PLANE_Z, 0, 5000, PLANE_Z, 0 );
   // Draw y origin line
@@ -265,7 +267,7 @@ void applyCamera() {
 public void handleWorldObjects() {
   for (Object o : objects) {
     
-    /* Update the transformation matrix of an object held by the Robotic arm */
+    /* Update the transformation matrix of an object held by the Robotic Arm */
     if (o == armModel.held && armModel.modelInMotion()) {
       pushMatrix();
       resetMatrix();
@@ -299,7 +301,7 @@ public void handleWorldObjects() {
       for (Object p : objects) {
         
         if (o != p && o.collision(p)) {
-          // Change hit box color to indeicate Object collision
+          // Change hit box color to indicate Object collision
           o.hit_box.outline = color(255, 0, 0);
           break;
         } else {

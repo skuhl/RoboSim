@@ -271,6 +271,119 @@ public class ArmModel {
     }
   }//end draw arm model
   
+ public void drawBoxes() { 
+    noFill();
+    stroke(0, 255, 0);
+    
+    translate(600, 200, 0);
+
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(200, 90, 200);
+    // Segment 0
+    box(420, 210, 420);
+    translate(-200, -90, -200);
+    
+    rotateY(-PI/2);
+    rotateZ(-PI);
+  
+    translate(-50, -166, -358); // -115, -213, -413
+    rotateZ(PI);
+    translate(150, 0, 150);
+    rotateY(segments.get(0).currentRotations[1]);
+    translate(10, 95, 0);
+    rotateZ(-0.1f * PI);
+    // Segment 1
+    box(130, 185, 170);
+    rotateZ(0.1f * PI);
+    translate(-160, -95, -150);
+    
+    rotateZ(-PI);
+  
+    translate(-115, -85, 180);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 62, 62);
+    rotateX(segments.get(1).currentRotations[2]);
+    translate(30, 240, 0);
+    // Segment 2
+    box(80, 610, 145);
+    translate(-30, -302, -62);
+    
+    rotateY(-PI/2);
+    rotateZ(-PI);
+    
+    translate(0, -500, -50);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 75, 75);
+    rotateX(segments.get(2).currentRotations[2]);
+    translate(75, 0, 0);
+    // Segment 3
+    box(165, 165, 165);
+    
+    translate(-75, -75, -75);
+    
+    rotateY(PI/2);
+    rotateZ(-PI);
+  
+    translate(745, -150, 150);
+    rotateZ(PI/2);
+    rotateY(PI/2);
+    translate(70, 0, 70);
+    rotateY(segments.get(3).currentRotations[0]);
+    translate(5, 75, 5);
+    // Segment 4
+    box(160);
+    
+    translate(0, 295, 0);
+    
+    box(128, 430, 128);
+    
+    translate(-75, -370, -75);
+    
+    rotateY(-PI/2);
+    rotateZ(-PI/2);
+  
+    translate(-115, 130, -124);
+    rotateZ(PI);
+    rotateY(-PI/2);
+    translate(0, 50, 50);
+    rotateX(segments.get(4).currentRotations[2]);
+    translate(0, -50, -50);
+    // Segment 5
+    rotateY(PI/2);
+    rotateZ(-PI);
+  
+    translate(150, -10, 95);
+    rotateY(-PI/2);
+    rotateZ(PI);
+    translate(45, 45, 0);
+    rotateZ(segments.get(5).currentRotations[0]);
+    
+    // Segment 6
+    if (activeEndEffector == ENDEF_NONE) {
+      translate(0, 0, 10);
+      box(102, 102, 36);
+      translate(0, 0, -10);
+    } else if (activeEndEffector == ENDEF_CLAW) {
+      box(102, 102, 46);
+      
+      if (endEffectorStatus == ON) {
+      
+      } else {
+      
+      }
+    } else if (activeEndEffector == ENDEF_SUCTION) {
+    
+    }
+    
+    translate(-45, -45, 0);
+    
+          
+    // End Effector
+  }
+  
   //returns the rotational values for each arm joint
   public float[] getJointRotations() {
     float[] rot = new float[6];

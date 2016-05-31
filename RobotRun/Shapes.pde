@@ -154,14 +154,14 @@ public class Object {
     pushMatrix();
     
     form.applyTransform();
-    
-    noFill();
+    // Display the Shape's relative axes
+    /*noFill();
     stroke(255, 0, 0);
     line(5000, 0, 0, -5000, 0, 0);
     stroke(0, 255, 0);
     line(0, 5000, 0, 0, -5000, 0);
     stroke(0, 0, 255);
-    line(0, 0, 5000, 0, 0, -5000);
+    line(0, 0, 5000, 0, 0, -5000);*/
     
     form.draw();
     hit_box.draw();
@@ -204,7 +204,7 @@ public boolean collision3D(Box A, Box B) {
     for (int u = 0; u < axes_B.length; u += 1) {
       // PLEASE do not change to matrix mutliplication
       rotMatrix[v][u] = axes_A[v][0] * axes_B[u][0] +  axes_A[v][1] * axes_B[u][1] +  axes_A[v][2] * axes_B[u][2];
-      // Add offset for valeus close to zero (parallel axes)
+      // Add offset for values close to zero (parallel axes)
       absRotMatrix[v][u] = abs(rotMatrix[v][u]) + 0.00000000175f;
     }
   }
