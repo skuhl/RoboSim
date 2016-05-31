@@ -969,6 +969,13 @@ public void keyPressed(){
     myRotX = 0;
     myRotY = 0;
   } else if(key == 't'){
+    // Release an object if it is currently being held
+    if (activeEndEffector == ENDEF_CLAW && endEffectorStatus == ON) {
+      ToolInstruction claw;
+      claw = new ToolInstruction("RO", 4, OFF);
+      claw.execute();
+    }
+    
     float[] rot = {0, 0, 0, 0, 0, 0};
     armModel.setJointRotations(rot);
     intermediatePositions.clear();
