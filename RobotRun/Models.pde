@@ -590,6 +590,7 @@ public class ArmModel {
     armModel.held = null;
   }
   
+  /* Indicates that the Robot Arm is in Motion */
   public boolean modelInMotion() {
     for (Model m : segments) {
       for (int idx = 0; idx < m.jointsMoving.length; ++idx) {
@@ -599,7 +600,8 @@ public class ArmModel {
       }
     }
     
-    return moveLinear[0] != 0 && moveLinear[1] != 0 && moveLinear[2] != 0;
+    return moveLinear[0] != 0 || moveLinear[1] != 0 || moveLinear[2] != 0 ||
+           moveOrientation[0] != 0 || moveOrientation[1] != 0 || moveOrientation[2] != 0;
   }
   
 } // end ArmModel class

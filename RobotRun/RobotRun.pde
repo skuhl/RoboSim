@@ -98,6 +98,7 @@ public void setup(){
   pushMatrix();
   resetMatrix();
   translate(-250, -250, -200);
+  printHCMatrix(getTransformationMatrix());
   
   objects[0] = new Object(800, 10, 800, color(255, 0, 0), color(255, 0, 255));
   
@@ -225,7 +226,7 @@ public void draw(){
   popMatrix();*/
   // END TESTING CODE
   
-  drawEndEffectorGridMapping();
+  /*drawEndEffectorGridMapping();
   
   stroke(255, 0, 0);
   // Draw x origin line
@@ -241,7 +242,7 @@ public void draw(){
     
     line(-100 * l, PLANE_Z, -5000, -100 * l, PLANE_Z, 5000);
     line(-5000, PLANE_Z, -100 * l, 5000, PLANE_Z, -100 * l);
-  }
+  }*/
   
   popMatrix();
   
