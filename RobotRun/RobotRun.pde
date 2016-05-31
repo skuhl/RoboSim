@@ -150,9 +150,9 @@ public void draw(){
   pushMatrix(); 
   armModel.draw();
   popMatrix();
-  pushMatrix();
+  /*pushMatrix();
   armModel.drawBoxes();
-  popMatrix();
+  popMatrix();*/
   
   handleWorldObjects();
   
@@ -230,7 +230,7 @@ public void draw(){
   
   drawEndEffectorGridMapping();
   
-  /*stroke(255, 0, 0);
+  stroke(255, 0, 0);
   // Draw x origin line
   line( -5000, PLANE_Z, 0, 5000, PLANE_Z, 0 );
   // Draw y origin line
@@ -244,7 +244,7 @@ public void draw(){
     
     line(-100 * l, PLANE_Z, -5000, -100 * l, PLANE_Z, 5000);
     line(-5000, PLANE_Z, -100 * l, 5000, PLANE_Z, -100 * l);
-  }*/
+  }
   
   popMatrix();
   

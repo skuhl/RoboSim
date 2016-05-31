@@ -10,7 +10,7 @@ float liveSpeed = 0.1;
 int errorCounter;
 String errorText;
 
-public static final boolean PRINT_EXTRA_TEXT = true;
+public static final boolean PRINT_EXTRA_TEXT = false;
 
 /**
  * Creates some programs for testing purposes.
@@ -250,14 +250,6 @@ public void drawEndEffectorGridMapping() {
   line(y_vector.x, y_vector.y, y_vector.z, y_vector.x, -y_vector.y, y_vector.z);
   stroke(0, 0, 255);
   line(z_vector.x, z_vector.y, z_vector.z, z_vector.x, z_vector.y, -z_vector.z);*/
-  
-  // Display native axes
-  stroke(255, 0, 0);
-  line(5000, 0, 0, -5000, 0, 0);
-  stroke(0, 255, 0);
-  line(0, 5000, 0, 0, -5000, 0);
-  stroke(0, 0, 255);
-  line(0, 0, 5000, 0, 0, -5000);
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
   color c = (ee_pos.y <= PLANE_Z) ? color(255, 0, 0) : color(150, 0, 255);

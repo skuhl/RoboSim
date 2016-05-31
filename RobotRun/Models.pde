@@ -363,19 +363,35 @@ public class ArmModel {
     
     // Segment 6
     if (activeEndEffector == ENDEF_NONE) {
+      // Face Plate EE
       translate(0, 0, 10);
       box(102, 102, 36);
       translate(0, 0, -10);
     } else if (activeEndEffector == ENDEF_CLAW) {
+      // Claw Gripper EE
       box(102, 102, 46);
-      
+      // Hit box differs depending on whether the claw is opened or closed
       if (endEffectorStatus == ON) {
-      
+        translate(-2, 0, -54);
+        box(89, 43, 31);
+        translate(2, 0, 54);
       } else {
-      
+        
+        translate(-2, 27, -54);
+        box(89, 21, 31);
+        translate(0, -54, 0);
+        box(89, 21, 31);
+        translate(2, 27, 54);
       }
     } else if (activeEndEffector == ENDEF_SUCTION) {
-    
+      // Suction EE
+      box(102, 102, 46);
+      
+      translate(-2, 0, -66);
+      box(37, 37, 87);
+      translate(0, -52, 21);
+      box(37, 67, 37);
+      translate(2, 52, 35);
     }
     
     translate(-45, -45, 0);
