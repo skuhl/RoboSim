@@ -150,10 +150,11 @@ public void draw(){
   pushMatrix(); 
   armModel.draw();
   popMatrix();
-  armModel.checkSelfCollisions();
-  armModel.drawBoxes();
   
+  armModel.checkSelfCollisions();
   handleWorldObjects();
+  
+  armModel.drawBoxes();
   
   noLights();
   
@@ -297,10 +298,8 @@ public void handleWorldObjects() {
     }
     
     /* Collision Detection */
-    if ( objects[idx] != armModel.held && objects[idx].collision(armModel.getEEPos()) ) {
-      // Change hit box color to indicate End Effector collision
-      objects[idx].hit_box.outline = color(0, 0, 255);
-    }
+    
+    armModel.checkObjectCollision(objects[idx]);
       
     // Detect collision with other objects
     for (int cdx = idx + 1; cdx < objects.length; ++cdx) {
@@ -311,6 +310,11 @@ public void handleWorldObjects() {
         objects[cdx].hit_box.outline = color(255, 0, 0);
         break;
       }
+    }
+    
+    if ( objects[idx] != armModel.held && objects[idx].collision(armModel.getEEPos()) ) {
+      // Change hit box color to indicate End Effector collision
+      objects[idx].hit_box.outline = color(0, 0, 255);
     }
     
     // Draw world object

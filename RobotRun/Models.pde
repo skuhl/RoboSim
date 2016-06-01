@@ -463,13 +463,15 @@ public class ArmModel {
     boolean collision = false;
     
     // Pairs of indices corresponding to two of the Arm body hit boxes, for which to check collisions
-    int[] check_pairs = new int[] { 0, 3, 0, 4, 0, 5, 0, 6, 1, 3, 1, 5, 1, 6, 2, 5, 2, 6, 3, 5 };
+    int[] check_pairs = new int[] { 0, 3, 0, 4, 0, 5, 0, 6, 1, 5, 1, 6, 2, 5, 2, 6, 3, 5 };
     
-    /* TODO coment this
-     * 0 -> 3, 4, 5, 6, ee
-     * 1 -> 3, 5, 6, ee
-     * 2 -> 5, 6, ee
-     * 3 -> 5, ee
+    /* Check select collisions between the body segments of the Arm:
+     * The base segment and the four upper arm segments
+     * The base rotating segment and lower long arm segment as well as the upper long arm and
+     *   upper rotating end segment
+     * The second base rotating hit box and the upper long arm segment as well as the upper
+     *   rotating end segment
+     * The lower long arm segment and the upper rotating end segment
      */
     for (int idx = 0; idx < check_pairs.length - 1; idx += 2) {
       if ( collision3D(bodyHitBoxes[ check_pairs[idx] ], bodyHitBoxes[ check_pairs[idx + 1] ]) ) {
@@ -496,19 +498,30 @@ public class ArmModel {
   /* Determine if the given ojbect is collding with any part of the Robot. */
   public boolean checkObjectCollision(Object obj) {
     Box ohb = (Box)obj.hit_box;
+    boolean collision = false;
     
     for (Box b : bodyHitBoxes) {
-      if ( collision3D(ohb, b) ) { return true; }
+      if ( collision3D(ohb, b) ) {
+        
+        ohb.outline = color(255, 0, 0);
+        b.outline = color(255, 0, 0);
+        collision = true;
+      }
     }
     
     ArrayList<Box> eeHBs = currentEEHitBoxList();
     
     for (Box b : eeHBs) {
-      // TODO  Special case for held objects
-      if ( collision3D(ohb, b) ) { return true; }
+      // Special case for held objects
+      if ( (activeEndEffector != ENDEF_CLAW || endEffectorStatus != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
+        
+        ohb.outline = color(255, 0, 0);
+        b.outline = color(255, 0, 0);
+        collision = true;
+      }
     }
     
-    return false;
+    return collision;
   }
   
   /* Draws the Robot Arm's hit boxes in the world */
