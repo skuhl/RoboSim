@@ -745,9 +745,9 @@ public class ArmModel {
   
  //convenience method to set all joint rotation values of the robot arm
  public void setJointRotations(float[] rot){
-   for(int i = 0; i < segments.size(); i += 1){
-     for(int j = 0; j < 3; j += 1){
-       if(segments.get(i).rotations[j]){
+   for(int i = 0; i < segments.size(); i += 1) {
+     for(int j = 0; j < 3; j += 1) {
+       if(segments.get(i).rotations[j]) {
          segments.get(i).currentRotations[j] = rot[i];
          segments.get(i).currentRotations[j] %= TWO_PI;
          if(segments.get(i).currentRotations[j] < 0){
@@ -755,7 +755,8 @@ public class ArmModel {
          }
        }
      }
-  }
+   }
+   
    updateBoxes();
  }//end set joint rotations
   
@@ -854,6 +855,38 @@ public class ArmModel {
       }
     }
   } // end execute live motion
+  
+  public boolean checkAngles(float[] angles) {
+    float[] oldAngles = new float[6];
+    /* Save the original angles of the Robot and apply the new set of angles */
+    for(int i = 0; i < segments.size(); i += 1) {
+      for(int j = 0; j < 3; j += 1) {
+        if (segments.get(i).rotations[j]) {
+          oldAngles[i] = segments.get(i).currentRotations[j];
+          segments.get(i).currentRotations[j] = angles[i];
+        }
+      }
+    }
+    
+    updateBoxes();
+    // Check a collision of the Robot with itself
+    boolean collision = checkSelfCollisions();
+    
+    /* Check for a collision between the Robot Arm and any world object as well as an object
+     * held by the Robot Arm and any other world object */
+    for (Object obj : objects) {
+      if (checkObjectCollision(obj) || (held != null && held != obj && held.collision(obj))) {
+        collision = true;
+      }
+    }
+    
+    if (collision) {
+      // Reset the original position in the case of a collision
+      setJointRotations(oldAngles);
+    }
+    
+    return collision;
+  }
   
   /* If an object is currently being held by the Robot arm, then release it */
   public void releaseHeldObject() {
