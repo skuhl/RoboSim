@@ -150,9 +150,8 @@ public void draw(){
   pushMatrix(); 
   armModel.draw();
   popMatrix();
-  /*pushMatrix();
+  
   armModel.drawBoxes();
-  popMatrix();*/
   
   handleWorldObjects();
   

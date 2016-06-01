@@ -106,7 +106,9 @@ public class ArmModel {
   public float[] moveOrientation = new float[3];
   public PVector lockPosition;
   public PVector lockOrientation;
-    
+  
+  private Box[] bodyHitBoxes;
+  private ArrayList<Box>[] eeHitBoxes;
   public Object held;
   public float[][] oldEETMatrix;
   
@@ -160,6 +162,36 @@ public class ArmModel {
       moveOrientation[idx] = 0;
     }
     
+    /* Initialies dimensions of the Robot Arm's hit boxes */
+    bodyHitBoxes = new Box[6];
+    
+    bodyHitBoxes[0] = new Box(420, 210, 420, color(0, 255, 0));
+    bodyHitBoxes[1] = new Box(130, 185, 170, color(0, 255, 0));
+    bodyHitBoxes[2] = new Box(80, 610, 145, color(0, 255, 0));
+    bodyHitBoxes[3] = new Box(165, 165, 165, color(0, 255, 0));
+    bodyHitBoxes[4] = new Box(160, 160, 160, color(0, 255, 0));
+    bodyHitBoxes[5] = new Box(128, 430, 128/*218*/, color(0, 255, 0));
+    
+    eeHitBoxes = (ArrayList<Box>[])new ArrayList[4];
+    // Face plate
+    eeHitBoxes[0] = new ArrayList<Box>();
+    eeHitBoxes[0].add( new Box(102, 102, 36, color(0, 255, 0)) );
+    // Claw Gripper (closed)
+    eeHitBoxes[1] = new ArrayList<Box>();
+    eeHitBoxes[1].add( new Box(102, 102, 46, color(0, 255, 0)) );
+    eeHitBoxes[1].add( new Box(89, 43, 31, color(0, 255, 0)) );
+    // Claw Gripper (open)
+    eeHitBoxes[2] = new ArrayList<Box>();
+    eeHitBoxes[2].add( new Box(102, 102, 46, color(0, 255, 0)) );
+    eeHitBoxes[2].add( new Box(89, 21, 31, color(0, 255, 0)) );
+    eeHitBoxes[2].add( new Box(89, 21, 31, color(0, 255, 0)) );
+    // Suction
+    eeHitBoxes[3] = new ArrayList<Box>();
+    eeHitBoxes[3].add( new Box(102, 102, 46, color(0, 255, 0)) );
+    eeHitBoxes[3].add( new Box(37, 37, 87, color(0, 255, 0)) );
+    eeHitBoxes[3].add( new Box(37, 67, 37, color(0, 255, 0)) );
+    
+    
     held = null;
     // Initializes the old transformation matrix for the arm model
     pushMatrix();
@@ -178,6 +210,8 @@ public class ArmModel {
     rotateZ(PI);
     rotateY(PI/2);
     segments.get(0).draw();
+    // Update and draw the hit box
+    //bodyHitBoxes.get(0).setTransform(getTransformationMatrix());
     rotateY(-PI/2);
     rotateZ(-PI);
     
@@ -187,6 +221,7 @@ public class ArmModel {
     rotateZ(PI);
     translate(150, 0, 150);
     rotateY(segments.get(0).currentRotations[1]);
+    //bodyHitBoxes.get(1).setTransform(getTransformationMatrix());
     translate(-150, 0, -150);
     segments.get(1).draw();
     rotateZ(-PI);
@@ -269,35 +304,42 @@ public class ArmModel {
         eeModelClawPincer.draw();
       }
     }
+    
+    updateBoxes();
   }//end draw arm model
   
- public void drawBoxes() { 
+  /* Updates the position and orientation of the hit boxes related
+   * to the Robot Arm. */
+  private void updateBoxes() { 
     noFill();
     stroke(0, 255, 0);
     
+    pushMatrix();
+    resetMatrix();
     translate(600, 200, 0);
 
     rotateZ(PI);
     rotateY(PI/2);
     translate(200, 90, 200);
     // Segment 0
-    box(420, 210, 420);
+    bodyHitBoxes[0].setTransform(getTransformationMatrix());
+    
     translate(-200, -90, -200);
     
     rotateY(-PI/2);
     rotateZ(-PI);
   
-    translate(-50, -166, -358); // -115, -213, -413
+    translate(-50, -166, -358);
     rotateZ(PI);
     translate(150, 0, 150);
     rotateY(segments.get(0).currentRotations[1]);
     translate(10, 95, 0);
     rotateZ(-0.1f * PI);
     // Segment 1
-    box(130, 185, 170);
+    bodyHitBoxes[1].setTransform(getTransformationMatrix());
+    
     rotateZ(0.1f * PI);
     translate(-160, -95, -150);
-    
     rotateZ(-PI);
   
     translate(-115, -85, 180);
@@ -307,9 +349,9 @@ public class ArmModel {
     rotateX(segments.get(1).currentRotations[2]);
     translate(30, 240, 0);
     // Segment 2
-    box(80, 610, 145);
-    translate(-30, -302, -62);
+    bodyHitBoxes[2].setTransform(getTransformationMatrix());
     
+    translate(-30, -302, -62);
     rotateY(-PI/2);
     rotateZ(-PI);
     
@@ -320,10 +362,9 @@ public class ArmModel {
     rotateX(segments.get(2).currentRotations[2]);
     translate(75, 0, 0);
     // Segment 3
-    box(165, 165, 165);
+    bodyHitBoxes[3].setTransform(getTransformationMatrix());
     
     translate(-75, -75, -75);
-    
     rotateY(PI/2);
     rotateZ(-PI);
   
@@ -334,11 +375,10 @@ public class ArmModel {
     rotateY(segments.get(3).currentRotations[0]);
     translate(5, 75, 5);
     // Segment 4
-    box(160);
+    bodyHitBoxes[4].setTransform(getTransformationMatrix());
     
     translate(0, 295, 0);
-    
-    box(128, 430, 128);
+    bodyHitBoxes[5].setTransform(getTransformationMatrix());
     
     translate(-75, -370, -75);
     
@@ -361,43 +401,67 @@ public class ArmModel {
     translate(45, 45, 0);
     rotateZ(segments.get(5).currentRotations[0]);
     
-    // Segment 6
-    if (activeEndEffector == ENDEF_NONE) {
-      // Face Plate EE
-      translate(0, 0, 10);
-      box(102, 102, 36);
-      translate(0, 0, -10);
-    } else if (activeEndEffector == ENDEF_CLAW) {
-      // Claw Gripper EE
-      box(102, 102, 46);
-      // Hit box differs depending on whether the claw is opened or closed
-      if (endEffectorStatus == ON) {
-        translate(-2, 0, -54);
-        box(89, 43, 31);
-        translate(2, 0, 54);
-      } else {
-        
-        translate(-2, 27, -54);
-        box(89, 21, 31);
-        translate(0, -54, 0);
-        box(89, 21, 31);
-        translate(2, 27, 54);
-      }
-    } else if (activeEndEffector == ENDEF_SUCTION) {
-      // Suction EE
-      box(102, 102, 46);
-      
-      translate(-2, 0, -66);
-      box(37, 37, 87);
-      translate(0, -52, 21);
-      box(37, 67, 37);
-      translate(2, 52, 35);
-    }
+    // End Effector
+    // Face Plate EE
+    translate(0, 0, 10);
+    eeHitBoxes[0].get(0).setTransform(getTransformationMatrix());
+    translate(0, 0, -10);
+    
+    // Claw Gripper EE
+    float[][] transform = getTransformationMatrix();
+    eeHitBoxes[1].get(0).setTransform(transform);
+    eeHitBoxes[2].get(0).setTransform(transform);
+    eeHitBoxes[3].get(0).setTransform(transform);
+    
+    translate(-2, 0, -54);
+    eeHitBoxes[1].get(1).setTransform(getTransformationMatrix());
+    translate(2, 0, 54);
+    // The Claw EE has two separate hit box lists: one for the open claw and another for the closed claw
+    translate(-2, 27, -54);
+    eeHitBoxes[2].get(1).setTransform(getTransformationMatrix());
+    translate(0, -54, 0);
+    eeHitBoxes[2].get(2).setTransform(getTransformationMatrix());
+    translate(2, 27, 54);
+    
+    // Suction EE
+    translate(-2, 0, -66);
+    eeHitBoxes[3].get(1).setTransform(getTransformationMatrix());
+    translate(0, -52, 21);
+    eeHitBoxes[3].get(2).setTransform(getTransformationMatrix());
+    translate(2, 52, 35);
     
     translate(-45, -45, 0);
+    popMatrix();
+  }
+  
+  /* Draws the Robot Arm's hit boxes in the world */
+  public void drawBoxes() {
+    // Draw hit boxes of the body poriotn of the Robot Arm
+    for (Box b : bodyHitBoxes) {
+      pushMatrix();
+      b.applyTransform();
+      b.draw();
+      popMatrix();
+    }
     
-          
-    // End Effector
+    int eeIdx = 0;
+    // Determine which set of hit boxes to display based on the active End Effector
+    if (activeEndEffector == ENDEF_CLAW) {
+      if (endEffectorStatus == ON) {
+        eeIdx = 1;
+      } else {
+        eeIdx = 2;
+      }
+    } else if (activeEndEffector == ENDEF_SUCTION) {
+      eeIdx = 3;
+    }
+    // Draw End Effector hit boxes
+    for (Box b : eeHitBoxes[eeIdx]) {
+      pushMatrix();
+      b.applyTransform();
+      b.draw();
+      popMatrix();
+    }
   }
   
   //returns the rotational values for each arm joint

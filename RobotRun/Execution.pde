@@ -153,11 +153,11 @@ void showMainDisplayText() {
     text(row, 20, height / 2 + 94);
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
     text(row, 20, height / 2 + 108);
+    
+    float[] c = objects[1].form.position();
+    String obj1_c = String.format("Object 1: (%f, %f Z, %f)", c[0], c[1], c[2]);
+    text(obj1_c, 20, height / 2 + 148);
   }
-  
-  float[] c = objects[1].form.position();
-  String obj1_c = String.format("Object 1: (%f, %f Z, %f)", c[0], c[1], c[2]);
-  text(obj1_c, 20, height / 2 + 148);
   
   textAlign(RIGHT);
   
