@@ -107,7 +107,7 @@ public class ArmModel {
   public PVector lockPosition;
   public PVector lockOrientation;
   
-  private Box[] bodyHitBoxes;
+  public Box[] bodyHitBoxes;
   private ArrayList<Box>[] eeHitBoxes;
   public Object held;
   public float[][] oldEETMatrix;
@@ -163,14 +163,15 @@ public class ArmModel {
     }
     
     /* Initialies dimensions of the Robot Arm's hit boxes */
-    bodyHitBoxes = new Box[6];
+    bodyHitBoxes = new Box[7];
     
-    bodyHitBoxes[0] = new Box(420, 210, 420, color(0, 255, 0));
-    bodyHitBoxes[1] = new Box(130, 185, 170, color(0, 255, 0));
-    bodyHitBoxes[2] = new Box(80, 610, 145, color(0, 255, 0));
-    bodyHitBoxes[3] = new Box(165, 165, 165, color(0, 255, 0));
-    bodyHitBoxes[4] = new Box(160, 160, 160, color(0, 255, 0));
-    bodyHitBoxes[5] = new Box(128, 430, 128/*218*/, color(0, 255, 0));
+    bodyHitBoxes[0] = new Box(420, 115, 420, color(0, 255, 0));
+    bodyHitBoxes[1] = new Box(317, 85, 317, color(0, 255, 0));
+    bodyHitBoxes[2] = new Box(130, 185, 170, color(0, 255, 0));
+    bodyHitBoxes[3] = new Box(74, 610, 135, color(0, 255, 0));
+    bodyHitBoxes[4] = new Box(165, 165, 165, color(0, 255, 0));
+    bodyHitBoxes[5] = new Box(160, 160, 160, color(0, 255, 0));
+    bodyHitBoxes[6] = new Box(128, 430, 128, color(0, 255, 0));
     
     eeHitBoxes = (ArrayList<Box>[])new ArrayList[4];
     // Face plate
@@ -210,8 +211,6 @@ public class ArmModel {
     rotateZ(PI);
     rotateY(PI/2);
     segments.get(0).draw();
-    // Update and draw the hit box
-    //bodyHitBoxes.get(0).setTransform(getTransformationMatrix());
     rotateY(-PI/2);
     rotateZ(-PI);
     
@@ -221,7 +220,6 @@ public class ArmModel {
     rotateZ(PI);
     translate(150, 0, 150);
     rotateY(segments.get(0).currentRotations[1]);
-    //bodyHitBoxes.get(1).setTransform(getTransformationMatrix());
     translate(-150, 0, -150);
     segments.get(1).draw();
     rotateZ(-PI);
@@ -305,7 +303,7 @@ public class ArmModel {
       }
     }
     
-    updateBoxes();
+    //updateBoxes();
   }//end draw arm model
   
   /* Updates the position and orientation of the hit boxes related
@@ -320,11 +318,14 @@ public class ArmModel {
 
     rotateZ(PI);
     rotateY(PI/2);
-    translate(200, 90, 200);
+    translate(200, 50, 200);
     // Segment 0
     bodyHitBoxes[0].setTransform(getTransformationMatrix());
     
-    translate(-200, -90, -200);
+    translate(0, 100, 0);
+    bodyHitBoxes[1].setTransform(getTransformationMatrix());
+    
+    translate(-200, -150, -200);
     
     rotateY(-PI/2);
     rotateZ(-PI);
@@ -336,7 +337,7 @@ public class ArmModel {
     translate(10, 95, 0);
     rotateZ(-0.1f * PI);
     // Segment 1
-    bodyHitBoxes[1].setTransform(getTransformationMatrix());
+    bodyHitBoxes[2].setTransform(getTransformationMatrix());
     
     rotateZ(0.1f * PI);
     translate(-160, -95, -150);
@@ -349,7 +350,7 @@ public class ArmModel {
     rotateX(segments.get(1).currentRotations[2]);
     translate(30, 240, 0);
     // Segment 2
-    bodyHitBoxes[2].setTransform(getTransformationMatrix());
+    bodyHitBoxes[3].setTransform(getTransformationMatrix());
     
     translate(-30, -302, -62);
     rotateY(-PI/2);
@@ -362,7 +363,7 @@ public class ArmModel {
     rotateX(segments.get(2).currentRotations[2]);
     translate(75, 0, 0);
     // Segment 3
-    bodyHitBoxes[3].setTransform(getTransformationMatrix());
+    bodyHitBoxes[4].setTransform(getTransformationMatrix());
     
     translate(-75, -75, -75);
     rotateY(PI/2);
@@ -375,10 +376,10 @@ public class ArmModel {
     rotateY(segments.get(3).currentRotations[0]);
     translate(5, 75, 5);
     // Segment 4
-    bodyHitBoxes[4].setTransform(getTransformationMatrix());
+    bodyHitBoxes[5].setTransform(getTransformationMatrix());
     
     translate(0, 295, 0);
-    bodyHitBoxes[5].setTransform(getTransformationMatrix());
+    bodyHitBoxes[6].setTransform(getTransformationMatrix());
     
     translate(-75, -370, -75);
     
@@ -432,6 +433,82 @@ public class ArmModel {
     
     translate(-45, -45, 0);
     popMatrix();
+  }
+  
+  /* Returns one of the Arraylists for the End Effector hit boxes depending on the
+   * current active End Effector and the status of the End Effector. */
+  public ArrayList<Box> currentEEHitBoxList() {
+    // Determine which set of hit boxes to display based on the active End Effector
+    if (activeEndEffector == ENDEF_CLAW) {
+        return (endEffectorStatus == ON) ? eeHitBoxes[1] : eeHitBoxes[2];
+    } else if (activeEndEffector == ENDEF_SUCTION) {
+      return eeHitBoxes[3];
+    }
+    
+    return eeHitBoxes[0];
+  }
+  
+  /* Determine if select pairs of hit boxes of the Robot Arm are colliding */
+  public boolean checkSelfCollisions() {
+    for (Box b : bodyHitBoxes) {
+      b.outline = color(0, 255, 0);
+    }
+    
+    ArrayList<Box> eeHB = currentEEHitBoxList();
+    
+    for (Box b : eeHB) {
+      b.outline = color(0, 255, 0);
+    }
+    
+    boolean collision = false;
+    
+    // Pairs of indices corresponding to two of the Arm body hit boxes, for which to check collisions
+    int[] check_pairs = new int[] { 0, 3, 0, 4, 0, 5, 0, 6, 1, 3, 1, 5, 1, 6, 2, 5, 2, 6, 3, 5 };
+    
+    /* TODO coment this
+     * 0 -> 3, 4, 5, 6, ee
+     * 1 -> 3, 5, 6, ee
+     * 2 -> 5, 6, ee
+     * 3 -> 5, ee
+     */
+    for (int idx = 0; idx < check_pairs.length - 1; idx += 2) {
+      if ( collision3D(bodyHitBoxes[ check_pairs[idx] ], bodyHitBoxes[ check_pairs[idx + 1] ]) ) {
+        bodyHitBoxes[ check_pairs[idx] ].outline = color(255, 0, 0);
+        bodyHitBoxes[ check_pairs[idx + 1] ].outline = color(255, 0, 0);
+        collision = true;
+      }
+    }
+    
+    // Check collisions between all EE hit boxes and base as well as the first long arm hit boxes
+    for (Box hb : eeHB) {
+      for (int idx = 0; idx < 4; ++idx) {
+        if (collision3D(hb, bodyHitBoxes[idx]) ) {
+          hb.outline = color(255, 0, 0);
+          bodyHitBoxes[idx].outline = color(255, 0, 0);
+          collision = true;
+        }
+      }
+    }
+    
+    return collision;
+  }
+  
+  /* Determine if the given ojbect is collding with any part of the Robot. */
+  public boolean checkObjectCollision(Object obj) {
+    Box ohb = (Box)obj.hit_box;
+    
+    for (Box b : bodyHitBoxes) {
+      if ( collision3D(ohb, b) ) { return true; }
+    }
+    
+    ArrayList<Box> eeHBs = currentEEHitBoxList();
+    
+    for (Box b : eeHBs) {
+      // TODO  Special case for held objects
+      if ( collision3D(ohb, b) ) { return true; }
+    }
+    
+    return false;
   }
   
   /* Draws the Robot Arm's hit boxes in the world */
@@ -653,20 +730,21 @@ public class ArmModel {
     
   }
   
-  //convenience method to set all joint rotation values of the robot arm
-      public void setJointRotations(float[] rot){
-    for(int i = 0; i < segments.size(); i += 1){
-      for(int j = 0; j < 3; j += 1){
-        if(segments.get(i).rotations[j]){
-          segments.get(i).currentRotations[j] = rot[i];
-          segments.get(i).currentRotations[j] %= TWO_PI;
-          if(segments.get(i).currentRotations[j] < 0){
-            segments.get(i).currentRotations[j] += TWO_PI;
-          }
-        }
-      }
-    }
-  }//end set joint rotations
+ //convenience method to set all joint rotation values of the robot arm
+ public void setJointRotations(float[] rot){
+   for(int i = 0; i < segments.size(); i += 1){
+     for(int j = 0; j < 3; j += 1){
+       if(segments.get(i).rotations[j]){
+         segments.get(i).currentRotations[j] = rot[i];
+         segments.get(i).currentRotations[j] %= TWO_PI;
+         if(segments.get(i).currentRotations[j] < 0){
+           segments.get(i).currentRotations[j] += TWO_PI;
+         }
+       }
+     }
+  }
+   updateBoxes();
+ }//end set joint rotations
   
   public boolean interpolateRotation(float speed) {
     boolean done = true;
@@ -681,6 +759,8 @@ public class ArmModel {
         }
       } // end loop through rotation axes
     } // end loop through arm segments
+    
+    updateBoxes();
     return done;
   } // end interpolate rotation
 
@@ -696,33 +776,17 @@ public class ArmModel {
               trialAngle = clampAngle(trialAngle);
             
             if (model.anglePermitted(n, trialAngle)) {
-              // Caculate the distance that the end effector is from the center of the robot's base
-              PVector ee_pos = armModel.getEEPos();
-              // This is not the exact center, it is a rough estimate 
-              float dist = PVector.dist(ee_pos, base_center);
               
-              /* If the End Effector is within a certain distance from the robot's base,
-               * then determine if the given angle will bring the robot closer to the
-               * base; if so then end the robot's movement, otherwise allow the robot to
-               * continue moving. */
-              if (dist < 405f) {
-                
-                float old_angle = model.currentRotations[n];
-                model.currentRotations[n] = trialAngle;
-                
-                // Caculate the distance that the end effector is from the center of the robot's base for the test angle
-                PVector new_ee_pos = armModel.getEEPos();
-                float new_dist = PVector.dist(new_ee_pos, base_center);
-                
-                if (new_dist < dist) {
-                  // end robot arm movement
-                  model.currentRotations[n] = old_angle;
-                  model.jointsMoving[n] = 0;
-                }
-              } 
-              else {
-                model.currentRotations[n] = trialAngle;
-              }  
+              //float old_angle = model.currentRotations[n];
+              model.currentRotations[n] = trialAngle;
+              updateBoxes();
+              
+              /*if (armModel.checkSelfCollisions()) {
+                // end robot arm movement
+                model.currentRotations[n] = old_angle;
+                updateBoxes();
+                model.jointsMoving[n] = 0;
+              }*/
             } 
             else {
               model.jointsMoving[n] = 0;

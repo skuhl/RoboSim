@@ -150,7 +150,7 @@ public void draw(){
   pushMatrix(); 
   armModel.draw();
   popMatrix();
-  
+  armModel.checkSelfCollisions();
   armModel.drawBoxes();
   
   handleWorldObjects();
@@ -264,10 +264,16 @@ void applyCamera() {
 /* Handles the drawing of world objects as well as collision detection of world objects and the
  * Robot Arm model. */
 public void handleWorldObjects() {
+  
   for (Object o : objects) {
+    // reset all hit_box colors
+    o.hit_box.outline = color(0, 255, 0);
+  }
+  
+  for (int idx = 0; idx < objects.length; ++idx) {
     
     /* Update the transformation matrix of an object held by the Robotic Arm */
-    if (o == armModel.held && armModel.modelInMotion()) {
+    if (objects[idx] == armModel.held && armModel.modelInMotion()) {
       pushMatrix();
       resetMatrix();
       
@@ -291,26 +297,23 @@ public void handleWorldObjects() {
     }
     
     /* Collision Detection */
-    if ( o != armModel.held && o.collision(armModel.getEEPos()) ) {
+    if ( objects[idx] != armModel.held && objects[idx].collision(armModel.getEEPos()) ) {
       // Change hit box color to indicate End Effector collision
-      o.hit_box.outline = color(0, 0, 255);
-    } else {
+      objects[idx].hit_box.outline = color(0, 0, 255);
+    }
       
-      // Detect collision with other objects
-      for (Object p : objects) {
-        
-        if (o != p && o.collision(p)) {
-          // Change hit box color to indicate Object collision
-          o.hit_box.outline = color(255, 0, 0);
-          break;
-        } else {
-          // Restore to normal
-          o.hit_box.outline = color(0, 255, 0);
-        }
+    // Detect collision with other objects
+    for (int cdx = idx + 1; cdx < objects.length; ++cdx) {
+      
+      if (objects[idx].collision(objects[cdx])) {
+        // Change hit box color to indicate Object collision
+        objects[idx].hit_box.outline = color(255, 0, 0);
+        objects[cdx].hit_box.outline = color(255, 0, 0);
+        break;
       }
     }
     
     // Draw world object
-    o.draw();
+    objects[idx].draw();
   }
 }
