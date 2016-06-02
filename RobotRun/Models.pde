@@ -96,6 +96,9 @@ public static final PVector base_center = new PVector(404, 137, -212);
 
 public class ArmModel {
   
+  public int activeEndEffector = ENDEF_NONE;
+  public int endEffectorStatus = OFF;
+
   public ArrayList<Model> segments = new ArrayList<Model>();
   public int type;
   //public boolean calculatingArms = false, movingArms = false;

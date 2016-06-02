@@ -18,8 +18,6 @@ Model eeModelClaw;
 Model eeModelClawPincer;
 
 final int ENDEF_NONE = 0, ENDEF_SUCTION = 1, ENDEF_CLAW = 2;
-int activeEndEffector = ENDEF_NONE;
-int endEffectorStatus = OFF;
 
 float lastMouseX, lastMouseY;
 float cameraTX = 0, cameraTY = 0, cameraTZ = 0;

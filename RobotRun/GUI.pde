@@ -972,7 +972,7 @@ public void keyPressed(){
     // Release an object if it is currently being held
     if (armModel.held != null) {
       armModel.releaseHeldObject();
-      endEffectorStatus = OFF;
+      armModel.endEffectorStatus = OFF;
     }
     
     float[] rot = {0, 0, 0, 0, 0, 0};
@@ -986,14 +986,14 @@ public void keyPressed(){
     armModel.getQuaternion();
   } else if (key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
-  } else if (key == ENTER && (activeEndEffector == ENDEF_CLAW || activeEndEffector == ENDEF_SUCTION)) { 
+  } else if (key == ENTER && (armModel.activeEndEffector == ENDEF_CLAW || armModel.activeEndEffector == ENDEF_SUCTION)) { 
     // Pick up an object within reach of the EE when the 'ENTER' button is pressed for either the suction or claw EE
     ToolInstruction pickup;
     
-    if (endEffectorStatus == ON) {
-      pickup = (activeEndEffector == ENDEF_CLAW) ? new ToolInstruction("RO", 4, OFF) : new ToolInstruction("DO", 101, OFF);
+    if (armModel.endEffectorStatus == ON) {
+      pickup = (armModel.activeEndEffector == ENDEF_CLAW) ? new ToolInstruction("RO", 4, OFF) : new ToolInstruction("DO", 101, OFF);
     } else {
-      pickup = (activeEndEffector == ENDEF_CLAW) ? new ToolInstruction("RO", 4, ON) : new ToolInstruction("DO", 101, ON);
+      pickup = (armModel.activeEndEffector == ENDEF_CLAW) ? new ToolInstruction("RO", 4, ON) : new ToolInstruction("DO", 101, ON);
     }
     
     pickup.execute();
@@ -2454,8 +2454,8 @@ public void record_normal(){
 }
 
 public void EE(){
-  activeEndEffector++;
-  if (activeEndEffector > ENDEF_CLAW) activeEndEffector = 0;
+  armModel.activeEndEffector++;
+  if (armModel.activeEndEffector > ENDEF_CLAW) armModel.activeEndEffector = 0;
   // Drop an object if held by the Robot currently
   armModel.releaseHeldObject();
   // TODO collision checking if an object was held by the Robot
