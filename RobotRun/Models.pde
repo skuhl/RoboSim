@@ -513,7 +513,7 @@ public class ArmModel {
     
     for (Box b : eeHBs) {
       // Special case for held objects
-      if ( (activeEndEffector != ENDEF_CLAW || endEffectorStatus != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
+      if ( (activeEndEffector != ENDEF_CLAW || activeEndEffector != ENDEF_SUCTION || endEffectorStatus != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
         
         ohb.outline = color(255, 0, 0);
         b.outline = color(255, 0, 0);
