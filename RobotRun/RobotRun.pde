@@ -18,8 +18,6 @@ Model eeModelClaw;
 Model eeModelClawPincer;
 
 final int ENDEF_NONE = 0, ENDEF_SUCTION = 1, ENDEF_CLAW = 2;
-int activeEndEffector = ENDEF_NONE;
-int endEffectorStatus = OFF;
 
 float lastMouseX, lastMouseY;
 float cameraTX = 0, cameraTY = 0, cameraTZ = 0;
@@ -88,10 +86,10 @@ public void setup(){
   intermediatePositions = new ArrayList<PVector>();
   loadState();
   
-  for (int n = 0; n < toolFrames.length; n++) {
+  /*for (int n = 0; n < toolFrames.length; n++) {
     toolFrames[n] = new Frame();
     userFrames[n] = new Frame();
-  }
+  }*/
    
   // Intialize world objects
   objects = new Object[2];
@@ -100,13 +98,13 @@ public void setup(){
   translate(-250, -250, -200);
   //printHCMatrix(getTransformationMatrix());
   
-  objects[0] = new Object(800, 10, 800, color(255, 0, 0), color(255, 0, 255));
+  objects[0] = new Object(125, 60, 300, color(255, 0, 0), color(255, 0, 255));
   
   resetMatrix();
   applyModelRotation(armModel);
   translate(0, 0, -200);
   
-  objects[1] = new Object(5, 1200, 5, color(255, 0, 255), color(255, 255, 255));
+  objects[1] = new Object(500, 250, 125, color(255, 0, 255), color(255, 255, 255));
   
   popMatrix();
   //createTestProgram();

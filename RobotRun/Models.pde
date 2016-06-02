@@ -96,6 +96,9 @@ public static final PVector base_center = new PVector(404, 137, -212);
 
 public class ArmModel {
   
+  public int activeEndEffector = ENDEF_NONE;
+  public int endEffectorStatus = OFF;
+
   public ArrayList<Model> segments = new ArrayList<Model>();
   public int type;
   //public boolean calculatingArms = false, movingArms = false;
@@ -270,6 +273,254 @@ public class ArmModel {
       }
     }
   }//end draw arm model
+  
+  /* Updates the position and orientation of the hit boxes related
+   * to the Robot Arm. */
+  private void updateBoxes() { 
+    noFill();
+    stroke(0, 255, 0);
+    
+    pushMatrix();
+    resetMatrix();
+    translate(600, 200, 0);
+
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(200, 50, 200);
+    // Segment 0
+    bodyHitBoxes[0].setTransform(getTransformationMatrix());
+    
+    translate(0, 100, 0);
+    bodyHitBoxes[1].setTransform(getTransformationMatrix());
+    
+    translate(-200, -150, -200);
+    
+    rotateY(-PI/2);
+    rotateZ(-PI);
+  
+    translate(-50, -166, -358);
+    rotateZ(PI);
+    translate(150, 0, 150);
+    rotateY(segments.get(0).currentRotations[1]);
+    translate(10, 95, 0);
+    rotateZ(-0.1f * PI);
+    // Segment 1
+    bodyHitBoxes[2].setTransform(getTransformationMatrix());
+    
+    rotateZ(0.1f * PI);
+    translate(-160, -95, -150);
+    rotateZ(-PI);
+  
+    translate(-115, -85, 180);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 62, 62);
+    rotateX(segments.get(1).currentRotations[2]);
+    translate(30, 240, 0);
+    // Segment 2
+    bodyHitBoxes[3].setTransform(getTransformationMatrix());
+    
+    translate(-30, -302, -62);
+    rotateY(-PI/2);
+    rotateZ(-PI);
+    
+    translate(0, -500, -50);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 75, 75);
+    rotateX(segments.get(2).currentRotations[2]);
+    translate(75, 0, 0);
+    // Segment 3
+    bodyHitBoxes[4].setTransform(getTransformationMatrix());
+    
+    translate(-75, -75, -75);
+    rotateY(PI/2);
+    rotateZ(-PI);
+  
+    translate(745, -150, 150);
+    rotateZ(PI/2);
+    rotateY(PI/2);
+    translate(70, 0, 70);
+    rotateY(segments.get(3).currentRotations[0]);
+    translate(5, 75, 5);
+    // Segment 4
+    bodyHitBoxes[5].setTransform(getTransformationMatrix());
+    
+    translate(0, 295, 0);
+    bodyHitBoxes[6].setTransform(getTransformationMatrix());
+    
+    translate(-75, -370, -75);
+    
+    rotateY(-PI/2);
+    rotateZ(-PI/2);
+  
+    translate(-115, 130, -124);
+    rotateZ(PI);
+    rotateY(-PI/2);
+    translate(0, 50, 50);
+    rotateX(segments.get(4).currentRotations[2]);
+    translate(0, -50, -50);
+    // Segment 5
+    rotateY(PI/2);
+    rotateZ(-PI);
+  
+    translate(150, -10, 95);
+    rotateY(-PI/2);
+    rotateZ(PI);
+    translate(45, 45, 0);
+    rotateZ(segments.get(5).currentRotations[0]);
+    
+    // End Effector
+    // Face Plate EE
+    translate(0, 0, 10);
+    eeHitBoxes[0].get(0).setTransform(getTransformationMatrix());
+    translate(0, 0, -10);
+    
+    // Claw Gripper EE
+    float[][] transform = getTransformationMatrix();
+    eeHitBoxes[1].get(0).setTransform(transform);
+    eeHitBoxes[2].get(0).setTransform(transform);
+    eeHitBoxes[3].get(0).setTransform(transform);
+    
+    translate(-2, 0, -54);
+    eeHitBoxes[1].get(1).setTransform(getTransformationMatrix());
+    translate(2, 0, 54);
+    // The Claw EE has two separate hit box lists: one for the open claw and another for the closed claw
+    translate(-2, 27, -54);
+    eeHitBoxes[2].get(1).setTransform(getTransformationMatrix());
+    translate(0, -54, 0);
+    eeHitBoxes[2].get(2).setTransform(getTransformationMatrix());
+    translate(2, 27, 54);
+    
+    // Suction EE
+    translate(-2, 0, -66);
+    eeHitBoxes[3].get(1).setTransform(getTransformationMatrix());
+    translate(0, -52, 21);
+    eeHitBoxes[3].get(2).setTransform(getTransformationMatrix());
+    translate(2, 52, 35);
+    
+    translate(-45, -45, 0);
+    popMatrix();
+  }
+  
+  /* Returns one of the Arraylists for the End Effector hit boxes depending on the
+   * current active End Effector and the status of the End Effector. */
+  public ArrayList<Box> currentEEHitBoxList() {
+    // Determine which set of hit boxes to display based on the active End Effector
+    if (activeEndEffector == ENDEF_CLAW) {
+        return (endEffectorStatus == ON) ? eeHitBoxes[1] : eeHitBoxes[2];
+    } else if (activeEndEffector == ENDEF_SUCTION) {
+      return eeHitBoxes[3];
+    }
+    
+    return eeHitBoxes[0];
+  }
+  
+  /* Determine if select pairs of hit boxes of the Robot Arm are colliding */
+  public boolean checkSelfCollisions() {
+    for (Box b : bodyHitBoxes) {
+      b.outline = color(0, 255, 0);
+    }
+    
+    ArrayList<Box> eeHB = currentEEHitBoxList();
+    
+    for (Box b : eeHB) {
+      b.outline = color(0, 255, 0);
+    }
+    
+    boolean collision = false;
+    
+    // Pairs of indices corresponding to two of the Arm body hit boxes, for which to check collisions
+    int[] check_pairs = new int[] { 0, 3, 0, 4, 0, 5, 0, 6, 1, 5, 1, 6, 2, 5, 2, 6, 3, 5 };
+    
+    /* Check select collisions between the body segments of the Arm:
+     * The base segment and the four upper arm segments
+     * The base rotating segment and lower long arm segment as well as the upper long arm and
+     *   upper rotating end segment
+     * The second base rotating hit box and the upper long arm segment as well as the upper
+     *   rotating end segment
+     * The lower long arm segment and the upper rotating end segment
+     */
+    for (int idx = 0; idx < check_pairs.length - 1; idx += 2) {
+      if ( collision3D(bodyHitBoxes[ check_pairs[idx] ], bodyHitBoxes[ check_pairs[idx + 1] ]) ) {
+        bodyHitBoxes[ check_pairs[idx] ].outline = color(255, 0, 0);
+        bodyHitBoxes[ check_pairs[idx + 1] ].outline = color(255, 0, 0);
+        collision = true;
+      }
+    }
+    
+    // Check collisions between all EE hit boxes and base as well as the first long arm hit boxes
+    for (Box hb : eeHB) {
+      for (int idx = 0; idx < 4; ++idx) {
+        if (collision3D(hb, bodyHitBoxes[idx]) ) {
+          hb.outline = color(255, 0, 0);
+          bodyHitBoxes[idx].outline = color(255, 0, 0);
+          collision = true;
+        }
+      }
+    }
+    
+    return collision;
+  }
+  
+  /* Determine if the given ojbect is collding with any part of the Robot. */
+  public boolean checkObjectCollision(Object obj) {
+    Box ohb = (Box)obj.hit_box;
+    boolean collision = false;
+    
+    for (Box b : bodyHitBoxes) {
+      if ( collision3D(ohb, b) ) {
+        
+        ohb.outline = color(255, 0, 0);
+        b.outline = color(255, 0, 0);
+        collision = true;
+      }
+    }
+    
+    ArrayList<Box> eeHBs = currentEEHitBoxList();
+    
+    for (Box b : eeHBs) {
+      // Special case for held objects
+      if ( (activeEndEffector != ENDEF_CLAW || activeEndEffector != ENDEF_SUCTION || endEffectorStatus != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
+        
+        ohb.outline = color(255, 0, 0);
+        b.outline = color(255, 0, 0);
+        collision = true;
+      }
+    }
+    
+    return collision;
+  }
+  
+  /* Draws the Robot Arm's hit boxes in the world */
+  public void drawBoxes() {
+    // Draw hit boxes of the body poriotn of the Robot Arm
+    for (Box b : bodyHitBoxes) {
+      pushMatrix();
+      b.applyTransform();
+      b.draw();
+      popMatrix();
+    }
+    
+    int eeIdx = 0;
+    // Determine which set of hit boxes to display based on the active End Effector
+    if (activeEndEffector == ENDEF_CLAW) {
+      if (endEffectorStatus == ON) {
+        eeIdx = 1;
+      } else {
+        eeIdx = 2;
+      }
+    } else if (activeEndEffector == ENDEF_SUCTION) {
+      eeIdx = 3;
+    }
+    // Draw End Effector hit boxes
+    for (Box b : eeHitBoxes[eeIdx]) {
+      pushMatrix();
+      b.applyTransform();
+      b.draw();
+      popMatrix();
+    }
+  }
   
   //returns the rotational values for each arm joint
   public float[] getJointRotations() {

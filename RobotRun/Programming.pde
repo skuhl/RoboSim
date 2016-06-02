@@ -393,14 +393,14 @@ public class ToolInstruction extends Instruction {
   }
   
   public void execute() {
-    if ((type.equals("RO") && bracket == 4 && activeEndEffector == ENDEF_CLAW) ||
-        (type.equals("DO") && bracket == 101 && activeEndEffector == ENDEF_SUCTION))
+    if ((type.equals("RO") && bracket == 4 && armModel.activeEndEffector == ENDEF_CLAW) ||
+        (type.equals("DO") && bracket == 101 && armModel.activeEndEffector == ENDEF_SUCTION))
     {
       
-      endEffectorStatus = setToolStatus;
+      armModel.endEffectorStatus = setToolStatus;
       
       // Check if the Robot is placing an object or picking up and object
-      if (activeEndEffector == ENDEF_CLAW) {
+      if (armModel.activeEndEffector == ENDEF_CLAW || armModel.activeEndEffector == ENDEF_SUCTION) {
         
         if (setToolStatus == ON & armModel.held == null) {
           
