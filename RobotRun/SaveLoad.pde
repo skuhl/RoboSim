@@ -54,25 +54,25 @@ void saveState() {
       out = new FileOutputStream(sketchPath("tmp/frames.ser"));
       
       // Save Tool Frames
-      //out.write( ("<FrameSet> ").getBytes( Charset.forName("UTF-8") ) );
-      //String size = toolFrames.length + " ";
-      //out.write(size.getBytes("UTF-8"));
+      out.write( ("<FrameSet> ").getBytes( Charset.forName("UTF-8") ) );
+      String size = toolFrames.length + " ";
+      out.write(size.getBytes("UTF-8"));
       
-      //for (int idx = 0; idx < toolFrames.length; ++idx) {
-      //  println(idx);
-      //  out.write( toolFrames[idx].toExport().getBytes( Charset.forName("UTF-8") ) );
-      //  out.write( (" ").getBytes( Charset.forName("UTF-8") ) );
-      //}
+      for (int idx = 0; idx < toolFrames.length; ++idx) {
+        println(idx);
+        out.write( toolFrames[idx].toExport().getBytes( Charset.forName("UTF-8") ) );
+        out.write( (" ").getBytes( Charset.forName("UTF-8") ) );
+      }
       
       // Save User Frames
-      //out.write( ("</FrameSet> <FrameSet> ").getBytes( Charset.forName("UTF-8") ) );
-      //size = userFrames.length + " ";
-      //out.write(size.getBytes("UTF-8"));
+      out.write( ("</FrameSet> <FrameSet> ").getBytes( Charset.forName("UTF-8") ) );
+      size = userFrames.length + " ";
+      out.write(size.getBytes("UTF-8"));
       
-      //for (int idx = 0; idx < userFrames.length; ++idx) {
-      //  out.write( userFrames[idx].toExport().getBytes( Charset.forName("UTF-8") ) );
-      //  out.write( (" ").getBytes( Charset.forName("UTF-8") ) );
-      //}
+      for (int idx = 0; idx < userFrames.length; ++idx) {
+        out.write( userFrames[idx].toExport().getBytes( Charset.forName("UTF-8") ) );
+        out.write( (" ").getBytes( Charset.forName("UTF-8") ) );
+      }
       
       out.write( ("</FrameSet>").getBytes( Charset.forName("UTF-8") ) );
       out.close();
@@ -107,7 +107,7 @@ int loadState() {
     
     return 0;
   }
-  //if (loadFrames(p2) == 0) return 0;
+  if (loadFrames(p2) == 0) return 0;
   
   return 1;
 }
