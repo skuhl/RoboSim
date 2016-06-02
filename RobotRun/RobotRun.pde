@@ -98,6 +98,7 @@ public void setup(){
   pushMatrix();
   resetMatrix();
   translate(-250, -250, -200);
+  //printHCMatrix(getTransformationMatrix());
   
   objects[0] = new Object(800, 10, 800, color(255, 0, 0), color(255, 0, 255));
   
@@ -144,17 +145,17 @@ public void draw(){
   noFill();
   
   pushMatrix();
-  
+   
   applyCamera();
 
   pushMatrix(); 
   armModel.draw();
   popMatrix();
   
-  armModel.checkSelfCollisions();
-  handleWorldObjects();
+  float[] q = armModel.getQuaternion();
+  //println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
   
-  armModel.drawBoxes();
+  //handleWorldObjects();
   
   noLights();
   
@@ -175,15 +176,19 @@ public void draw(){
   noFill();
   stroke(0, 0, 0);
   applyModelRotation(armModel);
+  //EE position
   sphere(20);
   translate(0, 0, -100);
   stroke(255, 0, 0);
+  //EE x axis
   sphere(10);
   translate(0, 100, 100);
   stroke(0, 255, 0);
+  //EE y axis
   sphere(10);
   translate(100, -100, 0);
   stroke(0, 0, 255);
+  //EE z axis
   sphere(10);
   popMatrix();
   //END TESTING CODE
@@ -228,7 +233,7 @@ public void draw(){
   popMatrix();*/
   // END TESTING CODE
   
-  drawEndEffectorGridMapping();
+  /*drawEndEffectorGridMapping();
   
   stroke(255, 0, 0);
   // Draw x origin line
@@ -244,7 +249,7 @@ public void draw(){
     
     line(-100 * l, PLANE_Z, -5000, -100 * l, PLANE_Z, 5000);
     line(-5000, PLANE_Z, -100 * l, 5000, PLANE_Z, -100 * l);
-  }
+  }*/
   
   popMatrix();
   
@@ -265,16 +270,10 @@ void applyCamera() {
 /* Handles the drawing of world objects as well as collision detection of world objects and the
  * Robot Arm model. */
 public void handleWorldObjects() {
-  
   for (Object o : objects) {
-    // reset all hit_box colors
-    o.hit_box.outline = color(0, 255, 0);
-  }
-  
-  for (int idx = 0; idx < objects.length; ++idx) {
     
-    /* Update the transformation matrix of an object held by the Robotic Arm */
-    if (objects[idx] == armModel.held && armModel.modelInMotion()) {
+    /* Update the transformation matrix of an object held by the Robotic arm */
+    if (o == armModel.held && armModel.modelInMotion()) {
       pushMatrix();
       resetMatrix();
       
@@ -298,26 +297,26 @@ public void handleWorldObjects() {
     }
     
     /* Collision Detection */
-    
-    armModel.checkObjectCollision(objects[idx]);
+    if ( o != armModel.held && o.collision(armModel.getEEPos()) ) {
+      // Change hit box color to indicate End Effector collision
+      o.hit_box.outline = color(0, 0, 255);
+    } else {
       
-    // Detect collision with other objects
-    for (int cdx = idx + 1; cdx < objects.length; ++cdx) {
-      
-      if (objects[idx].collision(objects[cdx])) {
-        // Change hit box color to indicate Object collision
-        objects[idx].hit_box.outline = color(255, 0, 0);
-        objects[cdx].hit_box.outline = color(255, 0, 0);
-        break;
+      // Detect collision with other objects
+      for (Object p : objects) {
+        
+        if (o != p && o.collision(p)) {
+          // Change hit box color to indeicate Object collision
+          o.hit_box.outline = color(255, 0, 0);
+          break;
+        } else {
+          // Restore to normal
+          o.hit_box.outline = color(0, 255, 0);
+        }
       }
     }
     
-    if ( objects[idx] != armModel.held && objects[idx].collision(armModel.getEEPos()) ) {
-      // Change hit box color to indicate End Effector collision
-      objects[idx].hit_box.outline = color(0, 0, 255);
-    }
-    
     // Draw world object
-    objects[idx].draw();
+    o.draw();
   }
 }

@@ -10,7 +10,7 @@ float liveSpeed = 0.1;
 int errorCounter;
 String errorText;
 
-public static final boolean PRINT_EXTRA_TEXT = false;
+public static final boolean PRINT_EXTRA_TEXT = true;
 
 /**
  * Creates some programs for testing purposes.
@@ -92,7 +92,7 @@ void showMainDisplayText() {
   PVector ee_pos = armModel.getEEPos();
   //ee_pos = convertNativeToWorld(ee_pos);
   PVector wpr = armModel.getWPR();
-  String dis_world = String.format("Coord  X: %5.4f  Y: %5.4f  Z: %5.4f  W: %5.4f  P: %5.4f  R: %5.4f", 
+  String dis_world = String.format("Coord  X: %8.4f  Y: %8.4f  Z: %8.4f  W: %8.4f  P: %8.4f  R: %8.4f", 
                      ee_pos.x, ee_pos.y, ee_pos.z, wpr.x, wpr.y, wpr.z);
   
   // Display the Robot's joint angles
@@ -146,18 +146,22 @@ void showMainDisplayText() {
     textSize(12);
     fill(0, 0, 0);
     
-    float[][] vectorMatrix = calculateRotationMatrix();
+    float[][] vectorMatrix = armModel.getRotationMatrix();
     String row = String.format("[  %f  %f  %f  ]", vectorMatrix[0][0], vectorMatrix[0][1], vectorMatrix[0][2]);
     text(row, 20, height / 2 + 80);
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[1][0], vectorMatrix[1][1], vectorMatrix[1][2]);
     text(row, 20, height / 2 + 94);
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
     text(row, 20, height / 2 + 108);
-    
-    float[] c = objects[1].form.position();
-    String obj1_c = String.format("Object 1: (%f, %f Z, %f)", c[0], c[1], c[2]);
-    text(obj1_c, 20, height / 2 + 148);
   }
+  
+  float[] q = armModel.getQuaternion();
+  String quat = String.format("q: [%4.3f, %4.3f, %4.3f, %4.3f]", q[0], q[1], q[2], q[3]);
+  text(quat, 20, height/2 + 148);
+  
+  float[] c = objects[1].form.position();
+  String obj1_c = String.format("Object 1: (%f, %f Z, %f)", c[0], c[1], c[2]);
+  text(obj1_c, 20, height / 2 + 168);
   
   textAlign(RIGHT);
   
@@ -233,7 +237,7 @@ public void drawEndEffectorGridMapping() {
   // x-axis : red
   // y-axis : green
   // z-axis : blue
-  /*pushMatrix();
+  pushMatrix();
   resetMatrix();
   // Display EE axes at the EE position
   applyModelRotation(armModel);
@@ -245,11 +249,11 @@ public void drawEndEffectorGridMapping() {
   PVector z_vector = new PVector(0, 0, 5000);//transform(new PVector(5000, 0, 0), tMatrix);
   
   stroke(255, 0, 0);
-  line(x_vector.x, x_vector.y, x_vector.z, -x_vector.x, x_vector.y, x_vector.z);
+  //line(x_vector.x, x_vector.y, x_vector.z, -x_vector.x, x_vector.y, x_vector.z);
   stroke(0, 255, 0);
-  line(y_vector.x, y_vector.y, y_vector.z, y_vector.x, -y_vector.y, y_vector.z);
+  //line(y_vector.x, y_vector.y, y_vector.z, y_vector.x, -y_vector.y, y_vector.z);
   stroke(0, 0, 255);
-  line(z_vector.x, z_vector.y, z_vector.z, z_vector.x, z_vector.y, -z_vector.z);*/
+  //line(z_vector.x, z_vector.y, z_vector.z, z_vector.x, z_vector.y, -z_vector.z);
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
   color c = (ee_pos.y <= PLANE_Z) ? color(255, 0, 0) : color(150, 0, 255);
@@ -347,10 +351,11 @@ void applyModelRotation(ArmModel model){
  */
 public float[][] calculateJacobian(float[] angles){
   float dAngle = DEG_TO_RAD;
-  float[][] J = new float[6][6];
+  float[][] J = new float[7][6];
   //get current ee position
   PVector cPos = armModel.getEEPos(angles);
   PVector cRot = armModel.getWPR(angles);
+  float[] cRotQ = armModel.getQuaternion(angles);
   
   //examine each segment of the arm
   for(int i = 0; i < 6; i += 1){
@@ -359,15 +364,17 @@ public float[][] calculateJacobian(float[] angles){
     //get updated ee position
     PVector nPos = armModel.getEEPos(angles);
     PVector nRot = armModel.getWPR(angles);
+    float[] nRotQ = armModel.getQuaternion(angles);
 
     //get translational delta
     J[0][i] = (nPos.x - cPos.x)/DEG_TO_RAD;
     J[1][i] = (nPos.y - cPos.y)/DEG_TO_RAD;
     J[2][i] = (nPos.z - cPos.z)/DEG_TO_RAD;
     //get rotational delta
-    J[3][i] = minimumDistance(nRot.x, cRot.x)/DEG_TO_RAD;
-    J[4][i] = minimumDistance(nRot.y, cRot.y)/DEG_TO_RAD;
-    J[5][i] = minimumDistance(nRot.z, cRot.z)/DEG_TO_RAD;
+    J[3][i] = (nRotQ[0] - cRotQ[0])/DEG_TO_RAD;
+    J[4][i] = (nRotQ[1] - cRotQ[1])/DEG_TO_RAD;
+    J[5][i] = (nRotQ[2] - cRotQ[2])/DEG_TO_RAD;
+    J[6][i] = (nRotQ[3] - cRotQ[3])/DEG_TO_RAD;
     //replace the original rotational value
     angles[i] -= dAngle;
   }
@@ -378,20 +385,22 @@ public float[][] calculateJacobian(float[] angles){
 //attempts to calculate the joint rotation values
 //required to move the end effector to the point specified
 //by 'tgt' and the Euler angle orientation 'rot'
-int calculateIKJacobian(PVector tgt, PVector rot){
+int calculateIKJacobian(PVector tgt, float[] rot){
   float[] angles = armModel.getJointRotations();
-  final int limit = 100;  //max number of times to loop
+  final int limit = 1000;  //max number of times to loop
   int count = 0;
   
   while(count < limit){
     PVector cPos = armModel.getEEPos(angles);
     PVector cRot = armModel.getWPR(angles);
+    float[] cRotQ = armModel.getQuaternion(angles);
     
     //calculate our translational offset from target
     float[] tDelta = calculateVectorDelta(tgt, cPos);
     //calculate our rotational offset from target
-    float[] rDelta = calculateRotationalDelta(rot, cRot);
-    float[] delta = new float[6];
+    //float[] rDelta = calculateVectorDelta(rot, cRotQ, 4);
+    float[] rDelta = calculateVectorDelta(rot, cRotQ, 4);
+    float[] delta = new float[7];
     
     delta[0] = tDelta[0];
     delta[1] = tDelta[1];
@@ -399,22 +408,28 @@ int calculateIKJacobian(PVector tgt, PVector rot){
     delta[3] = rDelta[0];
     delta[4] = rDelta[1];
     delta[5] = rDelta[2];
+    delta[6] = rDelta[3];
     
     float dist = PVector.dist(cPos, tgt);
-    float rDist = PVector.dist(cRot, rot);
+    float rDist = sqrt(pow(rDelta[0], 2) + 
+                       pow(rDelta[1], 2) + 
+                       pow(rDelta[2], 2) + 
+                       pow(rDelta[3], 2));
+                       
     //check whether our current position is within tolerance
     println("distances:" + dist + ", " + rDist);
-    if(dist < 0.5 && rDist < DEG_TO_RAD) break;
+    if(dist < 0.5 && rDist < 0.05) break;
     
     //calculate jacobian, 'J', and its inverse 
     float[][] J = calculateJacobian(angles);
-    RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 6, 6));
-    RealMatrix JInverse = MatrixUtils.inverse(m);
+    RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
+    //RealMatrix JInverse = MatrixUtils.inverse(m);
+    RealMatrix JInverse = new SingularValueDecomposition(m).getSolver().getInverse();
         
     //calculate and apply joint angular changes
     float[] dAngle = {0, 0, 0, 0, 0, 0};
     for(int i = 0; i < 6; i += 1){
-      for(int j = 0; j < 6; j += 1){
+      for(int j = 0; j < 7; j += 1){
         dAngle[i] += JInverse.getEntry(i, j)*delta[j];
       }
       //update joint angles
@@ -424,7 +439,7 @@ int calculateIKJacobian(PVector tgt, PVector rot){
     
     count += 1;
   }
-  println("IK done");
+  println(count);
   //did we successfully find the desired angles?
   if(count >= limit){
     println("IK fail");

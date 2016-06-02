@@ -96,45 +96,9 @@ public PVector getCoordFromMatrix(float x, float y, float z) {
   return vector;
 }
 
-/* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
- * the End Effector's x, y, z axes with respect to the World Frame. */
-public float[][] calculateRotationMatrix() {
-  pushMatrix();
-  resetMatrix();
-  // Switch to End Effector reference Frame
-  applyModelRotation(armModel);
-  /* Define vectors { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, and { 0, 0, 1 }
-   * Swap vectors:
-   *   x' = z
-   *   y' = x
-   *   z' = y
-   */
-  PVector origin = new PVector(modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0)),
-          
-          x = new PVector(modelX(0, 0, -1), modelY(0, 0, -1), modelZ(0, 0, -1)),
-          y = new PVector(modelX(0, 1, 0), modelY(0, 1, 0), modelZ(0, 1, 0)),
-          z = new PVector(modelX(1, 0, 0), modelY(1, 0, 0), modelZ(1, 0, 0));
-          
-  float[][] matrix = new float[3][3];
-  // Calcualte Unit Vectors form difference between each axis vector and the origin
-
-  matrix[0][0] = x.x - origin.x;
-  matrix[0][1] = x.y - origin.y;
-  matrix[0][2] = x.z - origin.z;
-  matrix[1][0] = y.x - origin.x;
-  matrix[1][1] = y.y - origin.y;
-  matrix[1][2] = y.z - origin.z;
-  matrix[2][0] = z.x - origin.x;
-  matrix[2][1] = z.y - origin.y;
-  matrix[2][2] = z.z - origin.z;
-  
-  popMatrix();
-  
-  return matrix;
-}
-
+//produce a rotation matrix corresponding to a given set of Euler angles
 public float[][] calculateRotationMatrix(PVector wpr){
-  float[][] matrix = new float[6][9];
+  float[][] matrix = new float[3][3];
   float phi = wpr.x;
   float theta = wpr.y;
   float psi = wpr.z;
@@ -150,6 +114,92 @@ public float[][] calculateRotationMatrix(PVector wpr){
   matrix[2][2] = cos(phi)*cos(theta);
   
   return matrix;
+}
+
+float[] matrixToQuat(float[][] m){
+  float[] q = new float[4];
+  float tr = m[0][0] + m[1][1] + m[2][2];
+  
+  if(tr > 0){ 
+    float S = sqrt(tr+1.0) * 2; // S=4*q[0] 
+    q[0] = 0.25 * S;
+    q[1] = (m[2][1] - m[1][2]) / S;
+    q[2] = (m[0][2] - m[2][0]) / S; 
+    q[3] = (m[1][0] - m[0][1]) / S; 
+  } else if((m[0][0] > m[1][1]) & (m[0][0] > m[2][2])){ 
+    float S = sqrt(1.0 + m[0][0] - m[1][1] - m[2][2]) * 2; // S=4*q[1] 
+    q[0] = (m[2][1] - m[1][2]) / S;
+    q[1] = 0.25 * S;
+    q[2] = (m[0][1] + m[1][0]) / S; 
+    q[3] = (m[0][2] + m[2][0]) / S; 
+  } else if(m[1][1] > m[2][2]){ 
+    float S = sqrt(1.0 + m[1][1] - m[0][0] - m[2][2]) * 2; // S=4*q[2]
+    q[0] = (m[0][2] - m[2][0]) / S;
+    q[1] = (m[0][1] + m[1][0]) / S; 
+    q[2] = 0.25 * S;
+    q[3] = (m[1][2] + m[2][1]) / S; 
+  } else { 
+    float S = sqrt(1.0 + m[2][2] - m[0][0] - m[1][1]) * 2; // S=4*q[3]
+    q[0] = (m[1][0] - m[0][1]) / S;
+    q[1] = (m[0][2] + m[2][0]) / S;
+    q[2] = (m[1][2] + m[2][1]) / S;
+    q[3] = 0.25 * S;
+  }
+  
+  return q;
+}
+
+PVector quatToEuler(float[] q){
+  PVector wpr = new PVector();
+  wpr.x = atan2(2*(q[0]*q[1] + q[2]*q[3]), 1 - 2*(q[1]*q[1] + q[2]*q[2]));
+  wpr.y = asin(2*(q[0]*q[2] - q[3]*q[1]));
+  wpr.z = atan2(2*(q[0]*q[3] + q[1]*q[2]), 1 - 2*(q[2]*q[2] + q[3]*q[3]));
+  
+  return wpr;  
+}
+
+float[][] quatToMatrix(float[] q){
+  float[][] m = new float[3][3];
+  
+  m[0][0] = 1 - 2*(q[2]*q[2] + q[3]*q[3]);
+  m[0][1] = 2*(q[1]*q[2] - q[0]*q[3]);
+  m[0][2] = 2*(q[0]*q[2] + q[1]*q[3]);
+  m[1][0] = 2*(q[1]*q[2] + q[0]*q[3]);
+  m[1][1] = 1 - 2*(q[1]*q[1] + q[3]*q[3]);
+  m[1][2] = 2*(q[2]*q[3] - q[0]*q[1]);
+  m[2][0] = 2*(q[1]*q[3] - q[0]*q[2]);
+  m[2][1] = 2*(q[0]*q[1] + q[2]*q[3]);
+  m[2][2] = 1 - 2*(q[1]*q[1] + q[2]*q[2]);
+  
+  println("matrix: ");
+  for(int i = 0; i < 3; i += 1){
+    for(int j = 0; j < 3; j += 1){
+      print(String.format("  %4.3f", m[i][j]));
+    }
+    println();
+  }
+  println();
+  
+  return m;
+}
+
+float[] eulerToQuat(PVector wpr){
+  float[] q = new float[4];
+  float s1, s2, s3, c1, c2, c3;
+  
+  s1 = sin(wpr.x/2);
+  s2 = sin(wpr.y/2);
+  s3 = sin(wpr.z/2);
+  c1 = cos(wpr.x/2);
+  c2 = cos(wpr.y/2);
+  c3 = cos(wpr.z/2);
+  
+  q[0] = c1*c2*c3 + s1*s2*s3;
+  q[1] = s1*c2*c3 - c1*s2*s3;
+  q[2] = c1*s2*c3 + s1*c2*s3;
+  q[3] = c1*c2*s3 - s1*s2*c3;
+  
+  return q;
 }
 
 //converts a float array to a double array
@@ -184,12 +234,77 @@ float[] calculateVectorDelta(PVector p1, PVector p2){
   return d;
 }
 
-float[] calculateRotationalDelta(PVector p1, PVector p2){
-  float[] d = new float[3];
-  d[0] = minimumDistance(p1.x, p2.x);
-  d[1] = minimumDistance(p1.y, p2.y);
-  d[2] = minimumDistance(p1.z, p2.z);
+//calculates the difference between each corresponding pair of
+//elements for two vectors of n elements
+float[] calculateVectorDelta(float[] v1, float[] v2, int n){
+  float[] d = new float[n];
+  for(int i = 0; i < n; i += 1){
+    d[i] = v1[i] - v2[i];
+  }
+  
   return d;
+}
+
+//produces a rotation matrix given a rotation 'theta' around
+//a given axis
+float[][] rotateAxisVector(float theta, PVector axis){
+  float[][] m = new float[3][3];
+  float s = sin(theta);
+  float c = cos(theta);
+  float t = 1-c;
+  
+  if(c > 0.9)
+    t = 2*sin(theta/2)*sin(theta/2);
+    
+  float x = axis.x;
+  float y = axis.y;
+  float z = axis.z;
+    
+  m[0][1] = x*x*t+c;
+  m[0][2] = x*y*t-z*s;
+  m[0][3] = x*z*t+y*s;
+  m[1][1] = y*x*t+z*s;
+  m[1][2] = y*y*t+c;
+  m[1][3] = y*z*t-x*s;
+  m[2][1] = z*x*t-y*s;
+  m[2][2] = z*y*t+x*s;
+  m[2][3] = z*z*t+c;
+  
+  return m;
+}
+
+//calculates the result of a rotation of quaternion 'p'
+//about axis 'u' by 'theta' degrees
+float[] rotateQuat(float[] p, float theta, PVector u){
+  u.normalize();
+  
+  float[] q = new float[4];
+  q[0] = cos(theta/2);
+  q[1] = sin(theta/2)*u.x;
+  q[2] = sin(theta/2)*u.y;
+  q[3] = sin(theta/2)*u.z;
+  
+  float[] q_star = new float[4];
+  q_star[0] = q[0];
+  q_star[1] = -q[1];
+  q_star[2] = -q[2];
+  q_star[3] = -q[3];
+  
+  float[] p_prime = new float[4];
+  p_prime = quaternionMult(q, p);
+  p_prime = quaternionMult(p_prime, q_star);
+  
+  return p_prime;
+}
+
+float[] quaternionMult(float[] q1, float[] q2){
+  float[] r = new float[4];
+  r[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
+  r[1] = q1[0]*q2[1] + q1[1]*q2[0] + q1[2]*q2[3] - q1[3]*q2[2];
+  r[2] = q1[0]*q2[2] - q1[1]*q2[3] + q1[2]*q2[0] + q1[3]*q2[1];
+  r[3] = q1[0]*q2[3] + q1[1]*q2[2] - q1[2]*q2[2] + q1[3]*q2[0];
+  
+  return r;
 }
 
 /* Displays the contents of a 4x4 matrix in the command line */

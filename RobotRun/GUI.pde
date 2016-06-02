@@ -962,6 +962,10 @@ public void keyPressed(){
     updateScreen(color(0), color(0));
     
     return;
+  } else if (key == 'e') {
+    EE_MAPPING = (EE_MAPPING + 1) % 3;
+  } else if (key == 'q') {
+    armModel.getQuaternion();
   } else if(key == 'r'){
     panX = 0;
     panY = 0;
@@ -979,14 +983,18 @@ public void keyPressed(){
     float[] rot = {0, 0, 0, 0, 0, 0};
     armModel.setJointRotations(rot);
     intermediatePositions.clear();
+  } else if(key == 'w'){
+    float[] q = rotateQuat(armModel.getQuaternion(), DEG_TO_RAD/2, new PVector(1, 0, 0));
+    println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
+    PVector wpr = quatToEuler(q);
+    println("ee = " + wpr);
+    println();
+    armModel.updateOrientation();
+    //quatToMatrix(q);
   } else if(key == 'y'){
     float[] rot = {PI, 0, 0, 0, 0, PI};
     armModel.setJointRotations(rot);
     intermediatePositions.clear();
-  } else if (key == 'q') {
-    armModel.getQuaternion();
-  } else if (key == 'e') {
-    EE_MAPPING = (EE_MAPPING + 1) % 3;
   } else if (key == ENTER && activeEndEffector == ENDEF_CLAW) {
     ToolInstruction claw;
     
@@ -1038,11 +1046,6 @@ public void keyPressed(){
    
   if (keyCode == SHIFT){ 
     rotate_normal();
-  }
-  
-  if(key == 'w'){
-    PVector wpr = armModel.getWPR();
-    println(wpr);
   }
 }
 
@@ -2002,12 +2005,12 @@ public void hd() {
     model.jointsMoving[2] = 0;
   }
   
-  for (int idx = 0; idx < armModel.moveLinear.length; ++idx) {
-    armModel.moveLinear[idx] = 0;
+  for (int idx = 0; idx < armModel.mvLinear.length; ++idx) {
+    armModel.mvLinear[idx] = 0;
   }
   
-  for (int idx = 0; idx < armModel.moveOrientation.length; ++idx) {
-    armModel.moveOrientation[idx] = 0;
+  for (int idx = 0; idx < armModel.mvRot.length; ++idx) {
+    armModel.mvRot[idx] = 0;
   }
 }
 
@@ -2503,25 +2506,25 @@ public void activateLiveJointMotion(int joint, int dir) {
  *
  */
 public void activateLiveWorldMotion(int axis, int dir) {
-  armModel.lockPosition = armModel.getEEPos();
-  armModel.lockOrientation = armModel.getWPR();
+  armModel.tgtPos = armModel.getEEPos();
+  armModel.tgtRot = armModel.getQuaternion();
   
   if (axis >= 0 && axis < 3) {
-    if (armModel.moveLinear[axis] == 0) {
+    if (armModel.mvLinear[axis] == 0) {
       //Begin movement on the given axis in the given direction
-      armModel.moveLinear[axis] = dir;
+      armModel.mvLinear[axis] = dir;
     } else {
       //Halt movement
-      armModel.moveLinear[axis] = 0;
+      armModel.mvLinear[axis] = 0;
     }
   }
   else if(axis >= 3 && axis < 6){
     axis -= 3;
-    if(armModel.moveOrientation[axis] == 0){
-      armModel.moveOrientation[axis] = dir;
+    if(armModel.mvRot[axis] == 0){
+      armModel.mvRot[axis] = dir;
     }
     else{
-      armModel.moveOrientation[axis] = 0;
+      armModel.mvRot[axis] = 0;
     }
   }
 }
