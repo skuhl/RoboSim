@@ -1527,47 +1527,16 @@ public void f1(){
          }
          //shift = OFF;
          break;
+      case NAV_TOOL_FRAMES:
+        // Set the current tool frame
+        if (active_row >= 0) activeToolFrame = active_row;
+        break;
+      case NAV_USER_FRAMES:
+        // Set the current user frame
+        if (active_row >= 0) activeUserFrame = active_row;
+        break;
       case INSTRUCTION_EDIT:
          //shift = OFF;
-         break;
-      case ENTER_TEXT:
-         /*clearScreen();
-         options = new ArrayList<String>();
-         options.add("F1: A");
-         options.add("F2: B");
-         options.add("F3: C");
-         options.add("F4: D");
-         options.add("F5: E");
-         options.add("");
-         options.add(workingText);
-         letterSet = 1;
-         mode = PICK_LETTER;
-         which_option = 0;
-         updateScreen(color(0), color(0));*/
-         break;
-      case PICK_LETTER:
-         /*switch (letterSet) {
-            case 1: workingText += "A"; goToEnterTextMode(); break;
-            case 2: workingText += "F"; goToEnterTextMode(); break;
-            case 3: workingText += "K"; goToEnterTextMode(); break;
-            case 4: workingText += "P"; goToEnterTextMode(); break;
-            case 5: break;
-            case 6: workingText += "U"; goToEnterTextMode(); break;
-            case 7: workingText += "X"; goToEnterTextMode(); break;
-         }
-         if (letterSet == 5) {
-           clearScreen();
-           options = new ArrayList<String>();
-           options.add("F1: U");
-           options.add("F2: V");
-           options.add("F3: W");
-           options.add("");
-           options.add(workingText);
-           letterSet = 6;
-           mode = PICK_LETTER;
-           which_option = 0;
-           updateScreen(color(0), color(0));
-         }*/
          break;
    }
     
@@ -1578,43 +1547,6 @@ public void f2() {
   if (mode == PROGRAM_NAV) {
     workingText = "";
     goToEnterTextMode();
-  } else if (mode == ENTER_TEXT) {
-    /*clearScreen();
-    options = new ArrayList<String>();
-    options.add("F1: F");
-    options.add("F2: G");
-    options.add("F3: H");
-    options.add("F4: I");
-    options.add("F5: J");
-    options.add("");
-    options.add(workingText);
-    letterSet = 2;
-    mode = PICK_LETTER;
-    which_option = 0;
-    updateScreen(color(0), color(0));*/
-  } else if (mode == PICK_LETTER) {
-    /*switch (letterSet) {
-      case 1: workingText += "B"; goToEnterTextMode(); break;
-      case 2: workingText += "G"; goToEnterTextMode(); break;
-      case 3: workingText += "L"; goToEnterTextMode(); break;
-      case 4: workingText += "Q"; goToEnterTextMode(); break;
-      case 5: break;
-      case 6: workingText += "V"; goToEnterTextMode(); break;
-      case 7: workingText += "Y"; goToEnterTextMode(); break;
-    }
-    if (letterSet == 5) {
-      clearScreen();
-      options = new ArrayList<String>();
-      options.add("F1: X");
-      options.add("F2: Y");
-      options.add("F3: Z");
-      options.add("");
-      options.add(workingText);
-      letterSet = 7;
-      mode = PICK_LETTER;
-      which_option = 0;
-      updateScreen(color(0), color(0));
-    }*/
   } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
     inFrame = mode;
     if (inFrame == NAV_TOOL_FRAMES) currentFrame = toolFrames[active_row];
@@ -1640,32 +1572,7 @@ public void f2() {
 
 
 public void f3() {
-  if (mode == ENTER_TEXT) {
-    /*clearScreen();
-    options = new ArrayList<String>();
-    options.add("F1: K");
-    options.add("F2: L");
-    options.add("F3: M");
-    options.add("F4: N");
-    options.add("F5: O");
-    options.add("");
-    options.add(workingText);
-    letterSet = 3;
-    mode = PICK_LETTER;
-    which_option = 0;
-    updateScreen(color(0), color(0));*/
-  } else if (mode == PICK_LETTER) {
-    /*switch (letterSet) {
-      case 1: workingText += "C"; goToEnterTextMode(); break;
-      case 2: workingText += "H"; goToEnterTextMode(); break;
-      case 3: workingText += "M"; goToEnterTextMode(); break;
-      case 4: workingText += "R"; goToEnterTextMode(); break;
-      case 5: break;
-      case 6: workingText += "W"; goToEnterTextMode(); break;
-      case 7: workingText += "Z"; goToEnterTextMode(); break;
-    }
-    goToEnterTextMode();*/
-  } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
+  if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
     options = new ArrayList<String>();
     options.add("1.Tool Frame");
     options.add("2.Jog Frame");
@@ -1677,7 +1584,7 @@ public void f3() {
 }
 
 
-public void f4(){
+public void f4() {
    switch (mode){
       case INSTRUCTION_NAV:
          Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
@@ -1734,30 +1641,7 @@ public void f4(){
                 break;
            }
          } 
-         break;  
-     case ENTER_TEXT:
-         /*clearScreen();
-         options = new ArrayList<String>();
-         options.add("F1: P");
-         options.add("F2: Q");
-         options.add("F3: R");
-         options.add("F4: S");
-         options.add("F5: T");
-         options.add("");
-         options.add(workingText);
-         letterSet = 4;
-         mode = PICK_LETTER;
-         which_option = 0;
-         updateScreen(color(0), color(0));*/
-         return;
-     case PICK_LETTER:
-         /*switch (letterSet) {
-           case 1: workingText += "D"; goToEnterTextMode(); break;
-           case 2: workingText += "I"; goToEnterTextMode(); break;
-           case 3: workingText += "N"; goToEnterTextMode(); break;
-           case 4: workingText += "S"; goToEnterTextMode(); break;
-         }*/
-         return;
+         break;
      case CONFIRM_DELETE:
          Program prog = programs.get(active_program);
          prog.getInstructions().remove(active_instruction);
@@ -1771,6 +1655,20 @@ public void f4(){
          options.clear();
          updateScreen(color(255,0,0), color(0,0,0));
          break;
+     case NAV_TOOL_FRAMES:
+       // Reset the highlighted frame in the tool frame list
+       if (active_row >= 0) {
+          toolFrames[active_row] = new Frame();
+          saveState();
+        }
+        break;
+     case NAV_USER_FRAMES:
+       // Reset the highlighted frame in the user frames list
+       if (active_row >= 0) {
+         userFrames[active_row] = new Frame();
+         saveState();
+       }
+       break;
    }
    //println("mode="+mode+" active_col"+active_col);
    updateScreen(color(255,0,0), color(0,0,0));
@@ -1845,24 +1743,6 @@ public void f5() {
       updateScreen(color(255,0,0), color(0,0,0));
       saveState();
     }
-  } else if (mode == ENTER_TEXT) {
-      /*clearScreen();
-      options = new ArrayList<String>();
-      /*options.add("F1: UVW");
-      options.add("F2: XYZ");
-      options.add("");
-      options.add(workingText);
-      letterSet = 5;
-      mode = PICK_LETTER;
-      which_option = 0;
-      updateScreen(color(0), color(0));*/
-  } else if (mode == PICK_LETTER) {
-    /*switch (letterSet) {
-      case 1: workingText += "E"; goToEnterTextMode(); break;
-      case 2: workingText += "J"; goToEnterTextMode(); break;
-      case 3: workingText += "O"; goToEnterTextMode(); break;
-      case 4: workingText += "T"; goToEnterTextMode(); break;
-    }*/
   } else if (mode == THREE_POINT_MODE) {
     if (shift == ON) {
       if (inFrame == NAV_USER_FRAMES) {
@@ -1872,6 +1752,7 @@ public void f5() {
           teachingWhichPoint++;
           loadThreePointMethod();
         } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
+          
           PVector eep = armModel.getEEPos();
           PVector second = convertNativeToWorld(eep);
           PVector first = currentFrame.getOrigin();
@@ -1989,8 +1870,12 @@ public void f5() {
      mode = INSTRUCTION_NAV;
      options.clear();
      updateScreen(color(255,0,0), color(0,0,0));
+  } else if (mode == NAV_TOOL_FRAMES) {
+    // TODO reset current tool frame to the default for the given end effector
+    if (armModel.activeEndEffector == ENDEF_NONE) {
+    
+    }
   }
-  
 }
 
 /* Stops all of the Robot's movement */
@@ -2973,7 +2858,7 @@ public void updateScreen(color active, color normal){
                  .moveTo(g1)
                  ;
    } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
-     fn_info.setText("F2: DETAIL     F3: OTHER")
+     fn_info.setText("F1: SET     F2: DETAIL     F3: OTHER     F4: RESET     F5: DEFAULT")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
