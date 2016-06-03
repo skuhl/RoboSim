@@ -1546,12 +1546,13 @@ public void f1(){
          //shift = OFF;
          break;
       case ACTIVE_FRAMES:
-        // Reset the active frames for the User and Tool Coordinate Frames
+        // Reset the active frames for the User or Tool Coordinate Frames
         if (active_row == 2) {
           activeUserFrame = -1;
         } else if (active_row == 3) {
           activeToolFrame = -1;
         }
+        loadActiveFrames();
         break;
    }
     
