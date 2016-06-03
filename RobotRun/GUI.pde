@@ -1545,6 +1545,14 @@ public void f1(){
       case INSTRUCTION_EDIT:
          //shift = OFF;
          break;
+      case ACTIVE_FRAMES:
+        // Reset the active frames for the User and Tool Coordinate Frames
+        if (active_row == 2) {
+          activeUserFrame = -1;
+        } else if (active_row == 3) {
+          activeToolFrame = -1;
+        }
+        break;
    }
     
 }
@@ -2889,6 +2897,13 @@ public void updateScreen(color active, color normal){
                  ;
    } else if (mode == THREE_POINT_MODE) {
      fn_info.setText("SHIFT+F5: RECORD")
+                 .setPosition(next_px, display_py+display_height-15)
+                 .setColorValue(normal)
+                 .show()
+                 .moveTo(g1)
+                 ;
+   } else if (mode == ACTIVE_FRAMES) {
+     fn_info.setText("F1: RESET")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
