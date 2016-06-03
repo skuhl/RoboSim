@@ -109,6 +109,9 @@ public class ArmModel {
   public float[] mvRot = new float[3];
   public float[] tgtRot = new float[4];
   public PVector tgtPos = new PVector();
+  
+  public Box[] bodyHitBoxes;
+  private ArrayList<Box>[] eeHitBoxes;
       
   public Object held;
   public float[][] oldEETMatrix;
@@ -163,6 +166,36 @@ public class ArmModel {
       mvRot[idx] = 0;
     }
     
+    /* Initialies dimensions of the Robot Arm's hit boxes */
+    bodyHitBoxes = new Box[7];
+    
+    bodyHitBoxes[0] = new Box(420, 115, 420, color(0, 255, 0));
+    bodyHitBoxes[1] = new Box(317, 85, 317, color(0, 255, 0));
+    bodyHitBoxes[2] = new Box(130, 185, 170, color(0, 255, 0));
+    bodyHitBoxes[3] = new Box(74, 610, 135, color(0, 255, 0));
+    bodyHitBoxes[4] = new Box(165, 165, 165, color(0, 255, 0));
+    bodyHitBoxes[5] = new Box(160, 160, 160, color(0, 255, 0));
+    bodyHitBoxes[6] = new Box(128, 430, 128, color(0, 255, 0));
+    
+    eeHitBoxes = (ArrayList<Box>[])new ArrayList[4]; 
+    // Face plate
+    eeHitBoxes[0] = new ArrayList<Box>();
+    eeHitBoxes[0].add( new Box(102, 102, 36, color(0, 255, 0)) );
+    // Claw Gripper (closed)
+    eeHitBoxes[1] = new ArrayList<Box>();
+    eeHitBoxes[1].add( new Box(102, 102, 46, color(0, 255, 0)) );
+    eeHitBoxes[1].add( new Box(89, 43, 31, color(0, 255, 0)) );
+    // Claw Gripper (open)
+    eeHitBoxes[2] = new ArrayList<Box>();
+    eeHitBoxes[2].add( new Box(102, 102, 46, color(0, 255, 0)) );
+    eeHitBoxes[2].add( new Box(89, 21, 31, color(0, 255, 0)) );
+    eeHitBoxes[2].add( new Box(89, 21, 31, color(0, 255, 0)) );
+    // Suction 
+    eeHitBoxes[3] = new ArrayList<Box>();
+    eeHitBoxes[3].add( new Box(102, 102, 46, color(0, 255, 0)) );
+    eeHitBoxes[3].add( new Box(37, 37, 87, color(0, 255, 0)) );
+    eeHitBoxes[3].add( new Box(37, 67, 37, color(0, 255, 0)) );
+     
     held = null;
     // Initializes the old transformation matrix for the arm model
     pushMatrix();
@@ -416,8 +449,8 @@ public class ArmModel {
     return eeHitBoxes[0];
   }
   
-  /* Determine if select pairs of hit boxes of the Robot Arm are colliding */
-  public boolean checkSelfCollisions() {
+  /* Changes all the Robot Arm's hit boxes to green */
+  public void resetBoxColors() {
     for (Box b : bodyHitBoxes) {
       b.outline = color(0, 255, 0);
     }
@@ -427,7 +460,10 @@ public class ArmModel {
     for (Box b : eeHB) {
       b.outline = color(0, 255, 0);
     }
-    
+  }
+  
+  /* Determine if select pairs of hit boxes of the Robot Arm are colliding */
+  public boolean checkSelfCollisions() {
     boolean collision = false;
     
     // Pairs of indices corresponding to two of the Arm body hit boxes, for which to check collisions
@@ -448,6 +484,8 @@ public class ArmModel {
         collision = true;
       }
     }
+    
+    ArrayList<Box> eeHB = currentEEHitBoxList();
     
     // Check collisions between all EE hit boxes and base as well as the first long arm hit boxes
     for (Box hb : eeHB) {
@@ -470,8 +508,6 @@ public class ArmModel {
     
     for (Box b : bodyHitBoxes) {
       if ( collision3D(ohb, b) ) {
-        
-        ohb.outline = color(255, 0, 0);
         b.outline = color(255, 0, 0);
         collision = true;
       }
@@ -482,8 +518,6 @@ public class ArmModel {
     for (Box b : eeHBs) {
       // Special case for held objects
       if ( (activeEndEffector != ENDEF_CLAW || activeEndEffector != ENDEF_SUCTION || endEffectorStatus != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
-        
-        ohb.outline = color(255, 0, 0);
         b.outline = color(255, 0, 0);
         collision = true;
       }
@@ -778,6 +812,8 @@ public class ArmModel {
         }
       }
     }
+    
+    if (COLLISION_DISPLAY) { updateBoxes(); }
   }//end set joint rotations
   
   public boolean interpolateRotation(float speed) {
@@ -793,6 +829,7 @@ public class ArmModel {
         }
       } // end loop through rotation axes
     } // end loop through arm segments
+    if (COLLISION_DISPLAY) { updateBoxes(); }
     return done;
   } // end interpolate rotation
   
@@ -816,33 +853,17 @@ public class ArmModel {
               trialAngle = clampAngle(trialAngle);
             
             if (model.anglePermitted(n, trialAngle)) {
-              // Caculate the distance that the end effector is from the center of the robot's base
-              PVector ee_pos = armModel.getEEPos();
-              // This is not the exact center, it is a rough estimate 
-              float dist = PVector.dist(ee_pos, base_center);
               
-              /* If the End Effector is within a certain distance from the robot's base,
-               * then determine if the given angle will bring the robot closer to the
-               * base; if so then end the robot's movement, otherwise allow the robot to
-               * continue moving. */
-              if (dist < 405f) {
-                
-                float old_angle = model.currentRotations[n];
-                model.currentRotations[n] = trialAngle;
-                
-                // Caculate the distance that the end effector is from the center of the robot's base for the test angle
-                PVector new_ee_pos = armModel.getEEPos();
-                float new_dist = PVector.dist(new_ee_pos, base_center);
-                
-                if (new_dist < dist) {
-                  // end robot arm movement
-                  model.currentRotations[n] = old_angle;
-                  model.jointsMoving[n] = 0;
-                }
-              } 
-              else {
-                model.currentRotations[n] = trialAngle;
-              }  
+              //float old_angle = model.currentRotations[n];
+              model.currentRotations[n] = trialAngle;
+              if (COLLISION_DISPLAY) { updateBoxes(); }
+              
+              /*if (armModel.checkSelfCollisions()) {
+                // end robot arm movement
+                model.currentRotations[n] = old_angle;
+                updateBoxes();
+                model.jointsMoving[n] = 0;
+              }*/
             } 
             else {
               model.jointsMoving[n] = 0;
@@ -884,6 +905,39 @@ public class ArmModel {
       }
     }
   } // end execute live motion
+  
+  public boolean checkAngles(float[] angles) {
+    float[] oldAngles = new float[6];
+    /* Save the original angles of the Robot and apply the new set of angles */
+    for(int i = 0; i < segments.size(); i += 1) {
+      for(int j = 0; j < 3; j += 1) {
+        if (segments.get(i).rotations[j]) {
+          oldAngles[i] = segments.get(i).currentRotations[j];
+          segments.get(i).currentRotations[j] = angles[i];
+        }
+      }
+    }
+    
+    updateBoxes();
+    // Check a collision of the Robot with itself
+    boolean collision = checkSelfCollisions();
+    
+    /* Check for a collision between the Robot Arm and any world object as well as an object
+     * held by the Robot Arm and any other world object */
+    for (Object obj : objects) {
+      if (checkObjectCollision(obj) || (held != null && held != obj && held.collision(obj))) {
+        collision = true;
+      }
+    }
+    
+    if (collision) {
+      // Reset the original position in the case of a collision
+      setJointRotations(oldAngles);
+    }
+    
+    return collision;
+  }
+  
   
   /* If an object is currently being held by the Robot arm, then release it */
   public void releaseHeldObject() {

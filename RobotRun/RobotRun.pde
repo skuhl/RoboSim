@@ -150,6 +150,15 @@ public void draw(){
   armModel.draw();
   popMatrix();
   
+  if (COLLISION_DISPLAY) {
+    armModel.resetBoxColors();
+    armModel.checkSelfCollisions();
+  }
+  
+  handleWorldObjects();
+  
+  if (COLLISION_DISPLAY) { armModel.drawBoxes(); }
+  
   float[] q = armModel.getQuaternion();
   //println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
   
@@ -269,9 +278,14 @@ void applyCamera() {
  * Robot Arm model. */
 public void handleWorldObjects() {
   for (Object o : objects) {
+    // reset all world the object's hit box colors
+    o.hit_box.outline = color(0, 255, 0);
+  }
+  
+  for (int idx = 0; idx < objects.length; ++idx) {
     
-    /* Update the transformation matrix of an object held by the Robotic arm */
-    if (o == armModel.held && armModel.modelInMotion()) {
+    /* Update the transformation matrix of an object held by the Robotic Arm */
+    if (objects[idx] == armModel.held && armModel.modelInMotion()) {
       pushMatrix();
       resetMatrix();
       
@@ -295,26 +309,29 @@ public void handleWorldObjects() {
     }
     
     /* Collision Detection */
-    if ( o != armModel.held && o.collision(armModel.getEEPos()) ) {
-      // Change hit box color to indicate End Effector collision
-      o.hit_box.outline = color(0, 0, 255);
-    } else {
-      
-      // Detect collision with other objects
-      for (Object p : objects) {
+    if (COLLISION_DISPLAY) {
+      if ( armModel.checkObjectCollision(objects[idx]) ) {
+        objects[idx].hit_box.outline = color(255, 0, 0);
+      }
         
-        if (o != p && o.collision(p)) {
-          // Change hit box color to indeicate Object collision
-          o.hit_box.outline = color(255, 0, 0);
+      // Detect collision with other objects
+      for (int cdx = idx + 1; cdx < objects.length; ++cdx) {
+        
+        if (objects[idx].collision(objects[cdx])) {
+          // Change hit box color to indicate Object collision
+          objects[idx].hit_box.outline = color(255, 0, 0);
+          objects[cdx].hit_box.outline = color(255, 0, 0);
           break;
-        } else {
-          // Restore to normal
-          o.hit_box.outline = color(0, 255, 0);
         }
+      }
+      
+      if ( objects[idx] != armModel.held && objects[idx].collision(armModel.getEEPos()) ) {
+        // Change hit box color to indicate End Effector collision
+        objects[idx].hit_box.outline = color(0, 0, 255);
       }
     }
     
     // Draw world object
-    o.draw();
+    objects[idx].draw();
   }
 }

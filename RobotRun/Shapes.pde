@@ -164,7 +164,7 @@ public class Object {
     //line(0, 0, 5000, 0, 0, -5000);
     
     form.draw();
-    hit_box.draw();
+    if (COLLISION_DISPLAY) { hit_box.draw(); }
     
     popMatrix();
   }
