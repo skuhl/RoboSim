@@ -776,7 +776,7 @@ public class ArmModel {
     
     rotateZ(getJointRotations()[5]);
     
-    applyToolFrame(activeToolFrame, this);
+    if (curCoordFrame == COORD_TOOL) { applyToolFrame(activeToolFrame); }
     
     PVector ret = new PVector(
       modelX(0, 0, 0),
@@ -786,6 +786,26 @@ public class ArmModel {
     popMatrix();
     return ret;
   } // end calculateEndEffectorPosition
+  
+  /* Applies the transformation for the current tool frame.
+   * NOTE: This method only works in the TOOL or WORLD frame! */
+  public void applyToolFrame(int list_idx) {
+    // If a tool Frame is active, then it overrides the World Frame
+    if (list_idx >= 0 && list_idx < toolFrames.length) {
+      
+      // Apply a custom tool frame
+      PVector tr = toolFrames[list_idx].getOrigin();
+      translate(tr.x, tr.y, tr.z);
+    } else {
+      
+      // Apply a default tool frame based on the current EE
+      if (activeEndEffector == ENDEF_CLAW) {
+        translate(0, 0, -54);
+      } else if (activeEndEffector == ENDEF_SUCTION) {
+        translate(0, 0, -105);
+      }
+    }
+  }
   
   public PVector getEEPos(float[] testAngles) {
     float[] origAngles = getJointRotations();
@@ -870,7 +890,7 @@ public class ArmModel {
         }
       }
       updateButtonColors();
-    } else if (curCoordFrame == COORD_WORLD) {
+    } else {
       //only move if our movement vector is non-zero
       if(mvLinear[0] != 0 || mvLinear[1] != 0 || mvLinear[2] != 0 || 
          mvRot[0] != 0 || mvRot[1] != 0 || mvRot[2] != 0) {
