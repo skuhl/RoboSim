@@ -95,16 +95,14 @@ public void setup(){
   objects = new Object[2];
   pushMatrix();
   resetMatrix();
-  translate(-250, -250, -200);
+  translate(-100, 100, -350);
   //printHCMatrix(getTransformationMatrix());
   
   objects[0] = new Object(125, 60, 300, color(255, 0, 0), color(255, 0, 255));
+ 
+ translate(-250, 0, 0);
   
-  resetMatrix();
-  applyModelRotation(armModel);
-  translate(0, 0, -200);
-  
-  objects[1] = new Object(500, 250, 125, color(255, 0, 255), color(255, 255, 255));
+  objects[1] = new Object(250, 125, 500, color(255, 0, 255), color(255, 255, 255));
   
   popMatrix();
   //createTestProgram();
@@ -240,7 +238,7 @@ public void draw(){
   popMatrix();*/
   // END TESTING CODE
   
-  /*drawEndEffectorGridMapping();
+  drawEndEffectorGridMapping();
   
   stroke(255, 0, 0);
   // Draw x origin line
@@ -256,7 +254,7 @@ public void draw(){
     
     line(-100 * l, PLANE_Z, -5000, -100 * l, PLANE_Z, 5000);
     line(-5000, PLANE_Z, -100 * l, 5000, PLANE_Z, -100 * l);
-  }*/
+  }
   
   popMatrix();
   

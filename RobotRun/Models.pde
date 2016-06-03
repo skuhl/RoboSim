@@ -776,10 +776,8 @@ public class ArmModel {
     
     rotateZ(getJointRotations()[5]);
     
-    if (activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
-      PVector tr = toolFrames[activeToolFrame].getOrigin();
-      translate(tr.x, tr.y, tr.z);
-    }
+    applyToolFrame(activeToolFrame, this);
+    
     PVector ret = new PVector(
       modelX(0, 0, 0),
       modelY(0, 0, 0),
@@ -789,7 +787,7 @@ public class ArmModel {
     return ret;
   } // end calculateEndEffectorPosition
   
-  public PVector getEEPos(float[] testAngles){
+  public PVector getEEPos(float[] testAngles) {
     float[] origAngles = getJointRotations();
     setJointRotations(testAngles);
     
@@ -800,7 +798,7 @@ public class ArmModel {
   }
   
   //convenience method to set all joint rotation values of the robot arm
-      public void setJointRotations(float[] rot){
+  public void setJointRotations(float[] rot){
     for(int i = 0; i < segments.size(); i += 1){
       for(int j = 0; j < 3; j += 1){
         if(segments.get(i).rotations[j]){

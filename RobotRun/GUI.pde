@@ -36,7 +36,7 @@ final int NONE = 0,
           CONFIRM_DELETE = 28;
 final int COLOR_DEFAULT = -8421377,
           COLOR_ACTIVE = -65536;
-static int     EE_MAPPING = 0;
+static int     EE_MAPPING = 2;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -1859,6 +1859,7 @@ public void f5() {
                 )
             );
           loadToolFrames();
+          saveState();
         }
       } // end if inFrame == NAV_TOOL_FRAMES
     }
@@ -1874,10 +1875,9 @@ public void f5() {
      options.clear();
      updateScreen(color(255,0,0), color(0,0,0));
   } else if (mode == NAV_TOOL_FRAMES) {
-    // TODO reset current tool frame to the default for the given end effector
-    if (armModel.activeEndEffector == ENDEF_NONE) {
-    
-    }
+    activeToolFrame = -1;
+  } else if (mode == NAV_USER_FRAMES) {
+    activeUserFrame = -1;
   }
 }
 

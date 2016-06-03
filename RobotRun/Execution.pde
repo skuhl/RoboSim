@@ -238,7 +238,7 @@ public void drawEndEffectorGridMapping() {
   // x-axis : red
   // y-axis : green
   // z-axis : blue
-  pushMatrix();
+  /*pushMatrix();
   resetMatrix();
   // Display EE axes at the EE position
   applyModelRotation(armModel);
@@ -250,11 +250,11 @@ public void drawEndEffectorGridMapping() {
   PVector z_vector = new PVector(0, 0, 5000);//transform(new PVector(5000, 0, 0), tMatrix);
   
   stroke(255, 0, 0);
-  //line(x_vector.x, x_vector.y, x_vector.z, -x_vector.x, x_vector.y, x_vector.z);
+  line(x_vector.x, x_vector.y, x_vector.z, -x_vector.x, x_vector.y, x_vector.z);
   stroke(0, 255, 0);
-  //line(y_vector.x, y_vector.y, y_vector.z, y_vector.x, -y_vector.y, y_vector.z);
+  line(y_vector.x, y_vector.y, y_vector.z, y_vector.x, -y_vector.y, y_vector.z);
   stroke(0, 0, 255);
-  //line(z_vector.x, z_vector.y, z_vector.z, z_vector.x, z_vector.y, -z_vector.z);
+  line(z_vector.x, z_vector.y, z_vector.z, z_vector.x, z_vector.y, -z_vector.z);*/
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
   color c = (ee_pos.y <= PLANE_Z) ? color(255, 0, 0) : color(150, 0, 255);
@@ -280,6 +280,26 @@ public void drawEndEffectorGridMapping() {
       
     default:
       // No EE grid mapping
+  }
+}
+
+/*  Applies necessary transformations for the given toolFrame
+ * index on the given model. If the given index is outside
+ * the bounds of the list of custom tool frames, then the
+ * default tool frame for the model's current EE is applied. */
+public void applyToolFrame(int list_idx, ArmModel model) {
+  
+  if (list_idx >= 0 && list_idx < toolFrames.length) {
+    // Apply a custom tool frame
+    PVector tr = toolFrames[list_idx].getOrigin();
+    translate(tr.x, tr.y, tr.z);
+  } else {
+    // Apply a default tool frame based on the current EE
+    if (model.activeEndEffector == ENDEF_CLAW) {
+      translate(0, 0, -54);
+    } else if (model.activeEndEffector == ENDEF_SUCTION) {
+      translate(0, 0, -105);
+    }
   }
 }
 
@@ -337,10 +357,8 @@ void applyModelRotation(ArmModel model){
   rotateZ(PI);
   translate(45, 45, 0);
   rotateZ(model.segments.get(5).currentRotations[0]);
-  if (activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
-    PVector tr = toolFrames[activeToolFrame].getOrigin();
-    translate(tr.x, tr.y, tr.z);
-  }
+  
+  applyToolFrame(activeToolFrame, model);
 } // end apply model rotations
 
 /**
