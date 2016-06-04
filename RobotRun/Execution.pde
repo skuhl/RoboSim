@@ -11,7 +11,7 @@ int errorCounter;
 String errorText;
 
 public static final boolean PRINT_EXTRA_TEXT = true;
-public static final boolean COLLISION_DISPLAY = false;
+public static final boolean COLLISION_DISPLAY = true;
 
 /**
  * Creates some programs for testing purposes.
@@ -86,7 +86,23 @@ void createTestProgram() {
 void showMainDisplayText() {
   fill(0);
   textAlign(RIGHT, TOP);
-  text("Coordinate Frame: " + (curCoordFrame == COORD_JOINT ? "Joint" : "World"), width-20, 20);
+  String coordFrame = "CoordinateFrame: ";
+  
+  switch(curCoordFrame) {
+    case COORD_JOINT:
+      coordFrame += "Joint";
+      break;
+    case COORD_WORLD:
+      coordFrame += "World";
+      break;
+    case COORD_TOOL:
+      coordFrame += "Tool";
+      break;
+    case COORD_USER:
+      coordFrame += "User";
+  }
+  
+  text(coordFrame, width-20, 20);
   text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
   
   // Display the Current position and orientation of the Robot in the World Frame
@@ -173,6 +189,29 @@ void showMainDisplayText() {
   }
 }
 
+/* Updates the curCoordFrame variable based on the current value of curCoordFrame, activeToolFrame,
+ * activeUserFrame, and the current End Effector. If the new coordinate frame is user or tool and
+ * no current tool or user frames are active, then the next coordinate frame is selected instead.
+ *
+ * @param model  The Robot Arm, for which to switch coordinate frames
+ */
+public void updateCoordinateMode(ArmModel model) {
+  // Increment the current coordinate frame
+  curCoordFrame = (curCoordFrame + 1) % 3;
+  
+  // Skip the tool frame, if there is no current active tool frame
+  if (curCoordFrame == COORD_TOOL && !((activeToolFrame >= 0 && activeToolFrame < toolFrames.length)
+                                       || model.activeEndEffector == ENDEF_SUCTION
+                                       ||  model.activeEndEffector == ENDEF_CLAW)) {
+    curCoordFrame = COORD_USER;
+  }
+  
+  // Skip the user frame, if there is no current active user frame
+  if (curCoordFrame == COORD_USER && !(activeUserFrame >= 0 && activeUserFrame < userFrames.length)) {
+    curCoordFrame = COORD_JOINT;
+  }
+}
+
 /**
  * Converts from RobotRun-defined world coordinates into
  * Processing's coordinate system.
@@ -186,7 +225,6 @@ PVector convertWorldToNative(PVector in) {
   popMatrix();
   return new PVector(outx, outy, outz);
 }
-
 
 /**
  * Converts from Processing's native coordinate system to
@@ -283,25 +321,7 @@ public void drawEndEffectorGridMapping() {
   }
 }
 
-/*  Applies necessary transformations for the given toolFrame
- * index on the given model. If the given index is outside
- * the bounds of the list of custom tool frames, then the
- * default tool frame for the model's current EE is applied. */
-public void applyToolFrame(int list_idx, ArmModel model) {
-  
-  if (list_idx >= 0 && list_idx < toolFrames.length) {
-    // Apply a custom tool frame
-    PVector tr = toolFrames[list_idx].getOrigin();
-    translate(tr.x, tr.y, tr.z);
-  } else {
-    // Apply a default tool frame based on the current EE
-    if (model.activeEndEffector == ENDEF_CLAW) {
-      translate(0, 0, -54);
-    } else if (model.activeEndEffector == ENDEF_SUCTION) {
-      translate(0, 0, -105);
-    }
-  }
-}
+
 
 /**
  * Performs rotations and translations to reach the end effector
@@ -358,7 +378,7 @@ void applyModelRotation(ArmModel model){
   translate(45, 45, 0);
   rotateZ(model.segments.get(5).currentRotations[0]);
   
-  applyToolFrame(activeToolFrame, model);
+  if (curCoordFrame == COORD_TOOL) { armModel.applyToolFrame(activeToolFrame); }
 } // end apply model rotations
 
 /**

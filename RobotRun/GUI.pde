@@ -1531,15 +1531,28 @@ public void f1(){
          break;
       case NAV_TOOL_FRAMES:
         // Set the current tool frame
-        if (active_row >= 0) activeToolFrame = active_row;
+        if (active_row >= 0) {
+          activeToolFrame = active_row;
+        }
         break;
       case NAV_USER_FRAMES:
         // Set the current user frame
-        if (active_row >= 0) activeUserFrame = active_row;
+        if (active_row >= 0) {
+          activeUserFrame = active_row;
+        }
         break;
       case INSTRUCTION_EDIT:
          //shift = OFF;
          break;
+      case ACTIVE_FRAMES:
+        // Reset the active frames for the User or Tool Coordinate Frames
+        if (active_row == 2) {
+          activeUserFrame = -1;
+        } else if (active_row == 3) {
+          activeToolFrame = -1;
+        }
+        loadActiveFrames();
+        break;
    }
     
 }
@@ -1746,7 +1759,20 @@ public void f5() {
       saveState();
     }
   } else if (mode == THREE_POINT_MODE) {
-    if (shift == ON) {
+    
+    if (teachingWhichPoint < 3) {
+      teachingWhichPoint++;
+      
+      pushMatrix();
+      resetMatrix();
+      applyModelRotation(armModel);
+      float[][] tMatrix = getTransformationMatrix();
+      popMatrix();
+      
+      printHCMatrix(tMatrix);
+    }
+    
+    /*if (shift == ON) {
       if (inFrame == NAV_USER_FRAMES) {
         if (teachingWhichPoint == 1) { // teaching origin
           PVector eep = armModel.getEEPos();
@@ -1861,7 +1887,8 @@ public void f5() {
           saveState();
         }
       } // end if inFrame == NAV_TOOL_FRAMES
-    }
+    }*/
+    loadToolFrames();
   } else if (mode == CONFIRM_DELETE) {
      Program prog = programs.get(active_program);
      if (active_instruction >= prog.getInstructions().size()) {
@@ -1873,10 +1900,6 @@ public void f5() {
      mode = INSTRUCTION_NAV;
      options.clear();
      updateScreen(color(255,0,0), color(0,0,0));
-  } else if (mode == NAV_TOOL_FRAMES) {
-    activeToolFrame = -1;
-  } else if (mode == NAV_USER_FRAMES) {
-    activeUserFrame = -1;
   }
 }
 
@@ -2204,18 +2227,17 @@ public void ITEM() {
 
 public void COORD() {
   if (shift == ON) {
+    // Show frame indices in the pendant window
     active_row = 1;
     active_col = 0;
     workingText = "";
     loadActiveFrames();
-    return;
-  }  
-  curCoordFrame++;
-  if (curCoordFrame > COORD_WORLD) curCoordFrame = COORD_JOINT;
-  liveSpeed = 0.1;
+  } else {  
+    // Update the coordinate mode
+    updateCoordinateMode(armModel);
+    liveSpeed = 0.1;
+  }
 }
-
-
 
 public void SPEEDUP() {
   if (liveSpeed < 0.5) liveSpeed += 0.05;
@@ -2418,7 +2440,7 @@ public void JOINT1_NEG() {
   if (curCoordFrame == COORD_JOINT) {
     // Move single joint
     activateLiveJointMotion(0, -1);
-  } else if (curCoordFrame == COORD_WORLD) {
+  } else {
     // Move entire robot in a single axis plane
     activateLiveWorldMotion(0, 1);
   }
@@ -2441,7 +2463,7 @@ public void JOINT1_POS() {
   if (curCoordFrame == COORD_JOINT) {
     // Move single joint
     activateLiveJointMotion(0, 1);
-  } else if (curCoordFrame == COORD_WORLD) {
+  } else  {
     // Move entire robot in a single axis plane
     activateLiveWorldMotion(0, -1);
   }
@@ -2465,7 +2487,7 @@ public void JOINT2_NEG() {
   if (curCoordFrame == COORD_JOINT) {
     // Move single joint
     activateLiveJointMotion(1, -1);
-  } else if (curCoordFrame == COORD_WORLD) {
+  } else  {
     // Move entire robot in a single axis plane
     activateLiveWorldMotion(2, -1);
   }
@@ -2488,7 +2510,7 @@ public void JOINT2_POS() {
   if (curCoordFrame == COORD_JOINT) {
     // Move single joint
     activateLiveJointMotion(1, 1);
-  } else if (curCoordFrame == COORD_WORLD) {
+  } else  {
     // Move entire robot in a single axis plane
     activateLiveWorldMotion(2, 1);
   }
@@ -2511,7 +2533,7 @@ public void JOINT3_NEG() {
   if (curCoordFrame == COORD_JOINT) {
     // Move single joint
     activateLiveJointMotion(2, -1);
-  } else if (curCoordFrame == COORD_WORLD) {
+  } else  {
     // Move entire robot in a single axis plane
     activateLiveWorldMotion(1, 1);
   }
@@ -2534,7 +2556,7 @@ public void JOINT3_POS() {
   if (curCoordFrame == COORD_JOINT) {
     // Move single joint
     activateLiveJointMotion(2, 1);
-  } else if (curCoordFrame == COORD_WORLD) {
+  } else  {
     // Move entire robot in a single axis plane
     activateLiveWorldMotion(1, -1);
   }
@@ -2557,7 +2579,7 @@ public void JOINT4_NEG() {
   if (curCoordFrame == COORD_JOINT) {
     // Move single joint
     activateLiveJointMotion(3, -1);
-  } else if (curCoordFrame == COORD_WORLD) {
+  } else  {
     // Move entire robot in a single axis plane
     activateLiveWorldMotion(3, -1);
   }
@@ -2569,7 +2591,7 @@ public void JOINT4_NEG() {
     //both buttons have the default color, set this one to highlight
     ((Button)cp5.get("JOINT4_NEG")).setColorBackground(COLOR_ACTIVE);
   }
-  else{
+  else {
     ((Button)cp5.get("JOINT4_NEG")).setColorBackground(COLOR_DEFAULT);
     ((Button)cp5.get("JOINT4_POS")).setColorBackground(COLOR_DEFAULT);
   }
@@ -2580,7 +2602,7 @@ public void JOINT4_POS() {
   if (curCoordFrame == COORD_JOINT) {
     // Move single joint
     activateLiveJointMotion(3, 1);
-  } else if (curCoordFrame == COORD_WORLD) {
+  } else {
     // Move entire robot in a single axis plane
     activateLiveWorldMotion(3, 1);
   }
@@ -2603,7 +2625,7 @@ public void JOINT5_NEG() {
   if (curCoordFrame == COORD_JOINT) {
     // Move single joint
     activateLiveJointMotion(4, -1);
-  } else if (curCoordFrame == COORD_WORLD) {
+  } else {
     // Move entire robot in a single axis plane
     activateLiveWorldMotion(5, -1);
   }
@@ -2626,7 +2648,7 @@ public void JOINT5_POS() {
   if (curCoordFrame == COORD_JOINT) {
     // Move single joint
     activateLiveJointMotion(4, 1);
-  } else if (curCoordFrame == COORD_WORLD) {
+  } else {
     // Move entire robot in a single axis plane
     activateLiveWorldMotion(5, 1);
   }
@@ -2649,7 +2671,7 @@ public void JOINT6_NEG() {
   if (curCoordFrame == COORD_JOINT) {
     // Move single joint
     activateLiveJointMotion(5, -1);
-  } else if (curCoordFrame == COORD_WORLD) {
+  } else {
     // Move entire robot in a single axis plane
     activateLiveWorldMotion(4, -1);
   }
@@ -2672,7 +2694,7 @@ public void JOINT6_POS() {
   if (curCoordFrame == COORD_JOINT) {
     // Move single joint
     activateLiveJointMotion(5, 1);
-  } else if (curCoordFrame == COORD_WORLD) {
+  } else {
     // Move entire robot in a single axis plane
     activateLiveWorldMotion(4, 1);
   }
@@ -2860,7 +2882,7 @@ public void updateScreen(color active, color normal){
                  .moveTo(g1)
                  ;
    } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
-     fn_info.setText("F1: SET     F2: DETAIL     F3: OTHER     F4: RESET     F5: DEFAULT")
+     fn_info.setText("F1: SET     F2: DETAIL     F3: SWITCH     F4: RESET")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
@@ -2875,6 +2897,13 @@ public void updateScreen(color active, color normal){
                  ;
    } else if (mode == THREE_POINT_MODE) {
      fn_info.setText("SHIFT+F5: RECORD")
+                 .setPosition(next_px, display_py+display_height-15)
+                 .setColorValue(normal)
+                 .show()
+                 .moveTo(g1)
+                 ;
+   } else if (mode == ACTIVE_FRAMES) {
+     fn_info.setText("F1: RESET")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
