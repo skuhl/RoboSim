@@ -11,7 +11,7 @@ int errorCounter;
 String errorText;
 
 public static final boolean PRINT_EXTRA_TEXT = true;
-public static final boolean COLLISION_DISPLAY = true;
+public static final boolean COLLISION_DISPLAY = false;
 
 /**
  * Creates some programs for testing purposes.
