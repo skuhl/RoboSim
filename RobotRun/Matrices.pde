@@ -187,12 +187,12 @@ float[] eulerToQuat(PVector wpr){
   float[] q = new float[4];
   float s1, s2, s3, c1, c2, c3;
   
-  s1 = sin(wpr.x/2);
+  s1 = sin(wpr.z/2);
   s2 = sin(wpr.y/2);
-  s3 = sin(wpr.z/2);
-  c1 = cos(wpr.x/2);
+  s3 = sin(wpr.x/2);
+  c1 = cos(wpr.z/2);
   c2 = cos(wpr.y/2);
-  c3 = cos(wpr.z/2);
+  c3 = cos(wpr.x/2);
   
   q[0] = c1*c2*c3 + s1*s2*s3;
   q[1] = s1*c2*c3 - c1*s2*s3;
@@ -277,13 +277,15 @@ float[][] rotateAxisVector(float theta, PVector axis){
 //about axis 'u' by 'theta' degrees
 float[] rotateQuat(float[] p, float theta, PVector u){
   u.normalize();
-  
+  println(u);
   float[] q = new float[4];
   q[0] = cos(theta/2);
   q[1] = sin(theta/2)*u.x;
   q[2] = sin(theta/2)*u.y;
   q[3] = sin(theta/2)*u.z;
   
+  println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
+  println();
   float[] q_star = new float[4];
   q_star[0] = q[0];
   q_star[1] = -q[1];
@@ -302,7 +304,7 @@ float[] quaternionMult(float[] q1, float[] q2){
   r[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
   r[1] = q1[0]*q2[1] + q1[1]*q2[0] + q1[2]*q2[3] - q1[3]*q2[2];
   r[2] = q1[0]*q2[2] - q1[1]*q2[3] + q1[2]*q2[0] + q1[3]*q2[1];
-  r[3] = q1[0]*q2[3] + q1[1]*q2[2] - q1[2]*q2[2] + q1[3]*q2[0];
+  r[3] = q1[0]*q2[3] + q1[1]*q2[2] - q1[2]*q2[1] + q1[3]*q2[0];
   
   return r;
 }

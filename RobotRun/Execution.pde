@@ -94,7 +94,7 @@ void showMainDisplayText() {
   //ee_pos = convertNativeToWorld(ee_pos);
   PVector wpr = armModel.getWPR();
   String dis_world = String.format("Coord  X: %8.4f  Y: %8.4f  Z: %8.4f  W: %8.4f  P: %8.4f  R: %8.4f", 
-                     ee_pos.x, ee_pos.y, ee_pos.z, wpr.x, wpr.y, wpr.z);
+                     ee_pos.x, ee_pos.y, ee_pos.z, wpr.x*RAD_TO_DEG, wpr.y*RAD_TO_DEG, wpr.z*RAD_TO_DEG);
   
   // Display the Robot's joint angles
   float j[] = armModel.getJointRotations();
@@ -407,6 +407,7 @@ public float[][] calculateJacobian(float[] angles){
 int calculateIKJacobian(PVector tgt, float[] rot){
   float[] angles = armModel.getJointRotations();
   final int limit = 1000;  //max number of times to loop
+  long time = System.nanoTime();
   int count = 0;
   
   while(count < limit){
@@ -429,15 +430,28 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     delta[5] = rDelta[2];
     delta[6] = rDelta[3];
     
+    if(count == 0){
+      println("current rot = " + cRotQ[0] + ", " + cRotQ[1] + ", " + cRotQ[2] + ", " + cRotQ[3]);
+      println("tartet rot = " + rot[0] + ", " + rot[1] + ", " + rot[2] + ", " + rot[3]);
+      println("delta = " + rDelta[0] + ", " + rDelta[1] + ", " + rDelta[2] + ", " + rDelta[3]);
+      println(eulerToQuat(armModel.getWPR()));
+      println();
+    }
+    
     float dist = PVector.dist(cPos, tgt);
     float rDist = sqrt(pow(rDelta[0], 2) + 
                        pow(rDelta[1], 2) + 
                        pow(rDelta[2], 2) + 
                        pow(rDelta[3], 2));
-                       
+    float dTotal = 0;
+    for(int i = 0; i < 7; i += 1)
+      dTotal += delta[i];
+                           
     //check whether our current position is within tolerance
-    println("distances:" + dist + ", " + rDist);
-    if(dist < 0.5 && rDist < 0.05) break;
+    //println("distances:" + dist + ", " + rDist);
+    //println();
+    if(dTotal == 0) return EXEC_PROCESSING;
+    else if(dist < 0.5 && rDist < 0.01) break;
     
     //calculate jacobian, 'J', and its inverse 
     float[][] J = calculateJacobian(angles);
@@ -459,9 +473,11 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     count += 1;
   }
   println(count);
+  //println(System.nanoTime() - time);
+  println();
   //did we successfully find the desired angles?
   if(count >= limit){
-    println("IK fail");
+    //println("IK fail");
     return EXEC_FAILURE;
   }
   else{

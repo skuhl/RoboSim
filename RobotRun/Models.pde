@@ -649,7 +649,7 @@ public class ArmModel {
       }
     }
     
-    wpr = new PVector(psi1, theta1, phi1);
+    wpr = new PVector(-psi1, -theta1, -phi1);
     wpr2 = new PVector(psi2, theta2, phi2);
     
     return wpr;
@@ -833,7 +833,7 @@ public class ArmModel {
   
   void updateOrientation(){
     PVector u = new PVector(mvRot[0], mvRot[1], mvRot[2]);
-    
+    println(u);
     if(u.x != 0 || u.y != 0 || u.z != 0){
       tgtRot = rotateQuat(tgtRot, DEG_TO_RAD, u);
     }
@@ -891,7 +891,7 @@ public class ArmModel {
         
         //println(lockOrientation);
         int r = calculateIKJacobian(tgtPos, tgtRot);
-        if(r == EXEC_FAILURE){
+        if(r == EXEC_FAILURE || r == EXEC_PROCESSING){
           updateButtonColors();
           mvLinear[0] = 0;
           mvLinear[1] = 0;

@@ -983,12 +983,11 @@ public void keyPressed(){
     armModel.setJointRotations(rot);
     intermediatePositions.clear();
   } else if(key == 'w'){
-    float[] q = rotateQuat(armModel.getQuaternion(), DEG_TO_RAD/2, new PVector(1, 0, 0));
+    float[] q = rotateQuat(armModel.getQuaternion(), DEG_TO_RAD*90, new PVector(0, 0, 1));
     println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
     PVector wpr = quatToEuler(q);
     println("ee = " + wpr);
     println();
-    armModel.updateOrientation();
     //quatToMatrix(q);
   } else if(key == 'y'){
     float[] rot = {PI, 0, 0, 0, 0, PI};

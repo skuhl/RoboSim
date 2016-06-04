@@ -148,18 +148,8 @@ public void draw(){
   armModel.draw();
   popMatrix();
   
-  if (COLLISION_DISPLAY) {
-    armModel.resetBoxColors();
-    armModel.checkSelfCollisions();
-  }
-  
-  handleWorldObjects();
-  
-  if (COLLISION_DISPLAY) { armModel.drawBoxes(); }
-  
-  float[] q = armModel.getQuaternion();
-  //println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
-  
+  float[] q = eulerToQuat(armModel.getWPR());
+  println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
   //handleWorldObjects();
   
   noLights();
