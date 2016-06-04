@@ -621,36 +621,8 @@ public class ArmModel {
   *     rotation about: x - psi, y - theta, z - phi
   */
   public PVector getWPR() {
-    float theta1, theta2, psi1, psi2, phi1, phi2;
-    PVector wpr, wpr2;
-    
-    float[][] r = getRotationMatrix();
-    
-    if(r[2][0] != 1 && r[2][0] != -1){
-      //rotation about y-axis
-      theta1 = -asin(r[2][0]);
-      theta2 = PI - theta1;
-      //rotation about x-axis
-      psi1 = atan2(r[2][1]/cos(theta1), r[2][2]/cos(theta1));
-      psi2 = atan2(r[2][1]/cos(theta2), r[2][2]/cos(theta2));
-      //rotation about z-axis
-      phi1 = atan2(r[1][0]/cos(theta1), r[0][0]/cos(theta1));
-      phi2 = atan2(r[1][0]/cos(theta2), r[0][0]/cos(theta2));
-    }
-    else{
-      phi1 = phi2 = 0;
-      if(r[2][0] == -1){
-        theta1 = theta2 = PI/2;
-        psi1 = psi2 = phi1 + atan2(r[0][1], r[0][2]);
-      }
-      else{
-        theta1 = theta2 = -PI/2;
-        psi1 = psi2 = -phi1 + atan2(-r[0][1], -r[0][2]);
-      }
-    }
-    
-    wpr = new PVector(-psi1, -theta1, -phi1);
-    wpr2 = new PVector(psi2, theta2, phi2);
+    float[][] m = getRotationMatrix();
+    PVector wpr = matrixToEuler(m);
     
     return wpr;
   }
@@ -667,34 +639,7 @@ public class ArmModel {
   //returns the rotational value of the robot as a quaternion
   public float[] getQuaternion(){
     float[][] m = getRotationMatrix();
-    float[] q = new float[4];
-    float tr = m[0][0] + m[1][1] + m[2][2];
-    
-    if(tr > 0){ 
-      float S = sqrt(tr+1.0) * 2; // S=4*q[0] 
-      q[0] = 0.25 * S;
-      q[1] = (m[2][1] - m[1][2]) / S;
-      q[2] = (m[0][2] - m[2][0]) / S; 
-      q[3] = (m[1][0] - m[0][1]) / S; 
-    } else if((m[0][0] > m[1][1]) & (m[0][0] > m[2][2])){ 
-      float S = sqrt(1.0 + m[0][0] - m[1][1] - m[2][2]) * 2; // S=4*q[1] 
-      q[0] = (m[2][1] - m[1][2]) / S;
-      q[1] = 0.25 * S;
-      q[2] = (m[0][1] + m[1][0]) / S; 
-      q[3] = (m[0][2] + m[2][0]) / S; 
-    } else if(m[1][1] > m[2][2]){ 
-      float S = sqrt(1.0 + m[1][1] - m[0][0] - m[2][2]) * 2; // S=4*q[2]
-      q[0] = (m[0][2] - m[2][0]) / S;
-      q[1] = (m[0][1] + m[1][0]) / S; 
-      q[2] = 0.25 * S;
-      q[3] = (m[1][2] + m[2][1]) / S; 
-    } else { 
-      float S = sqrt(1.0 + m[2][2] - m[0][0] - m[1][1]) * 2; // S=4*q[3]
-      q[0] = (m[1][0] - m[0][1]) / S;
-      q[1] = (m[0][2] + m[2][0]) / S;
-      q[2] = (m[1][2] + m[2][1]) / S;
-      q[3] = 0.25 * S;
-    }
+    float[] q = matrixToQuat(m);
     
     return q;
   }

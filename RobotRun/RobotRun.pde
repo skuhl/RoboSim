@@ -158,7 +158,7 @@ public void draw(){
   if (COLLISION_DISPLAY) { armModel.drawBoxes(); }
   
   float[] q = eulerToQuat(armModel.getWPR());
-  println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
+  //println(String.format("q = %4.3f, %4.3f, %4.3f, %4.3f", q[0], q[1], q[2], q[3]));
   
   noLights();
   

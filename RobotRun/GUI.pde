@@ -983,12 +983,21 @@ public void keyPressed(){
     armModel.setJointRotations(rot);
     intermediatePositions.clear();
   } else if(key == 'w'){
-    float[] q = rotateQuat(armModel.getQuaternion(), DEG_TO_RAD*90, new PVector(0, 0, 1));
-    println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
-    PVector wpr = quatToEuler(q);
-    println("ee = " + wpr);
+    /*------------Test Quaternion Rotation-------------------*/
+    //float[] q = rotateQuat(armModel.getQuaternion(), DEG_TO_RAD*90, new PVector(0, 0, 1));
+    //println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
+    //PVector wpr = quatToEuler(q);
+    //println("ee = " + wpr);
+    /*------------Test Conversion Functions------------------*/
+    float[] q = armModel.getQuaternion();
+    PVector wpr = armModel.getWPR();
+    float[] qP = eulerToQuat(wpr);
+    PVector wprP = quatToEuler(q);
+    
+    println("converted values:");
+    println(qP);
+    println(wprP.mult(RAD_TO_DEG));
     println();
-    //quatToMatrix(q);
   } else if(key == 'y'){
     float[] rot = {PI, 0, 0, 0, 0, PI};
     armModel.setJointRotations(rot);

@@ -454,7 +454,6 @@ int calculateIKJacobian(PVector tgt, float[] rot){
       println("current rot = " + cRotQ[0] + ", " + cRotQ[1] + ", " + cRotQ[2] + ", " + cRotQ[3]);
       println("tartet rot = " + rot[0] + ", " + rot[1] + ", " + rot[2] + ", " + rot[3]);
       println("delta = " + rDelta[0] + ", " + rDelta[1] + ", " + rDelta[2] + ", " + rDelta[3]);
-      println(eulerToQuat(armModel.getWPR()));
       println();
     }
     
@@ -492,9 +491,9 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     
     count += 1;
   }
-  println(count);
+  //println(count);
   //println(System.nanoTime() - time);
-  println();
+  //println();
   //did we successfully find the desired angles?
   if(count >= limit){
     //println("IK fail");
