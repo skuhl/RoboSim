@@ -393,7 +393,6 @@ public float[][] calculateJacobian(float[] angles){
   float[][] J = new float[7][6];
   //get current ee position
   PVector cPos = armModel.getEEPos(angles);
-  PVector cRot = armModel.getWPR(angles);
   float[] cRotQ = armModel.getQuaternion(angles);
   
   //examine each segment of the arm
@@ -402,7 +401,6 @@ public float[][] calculateJacobian(float[] angles){
     angles[i] += dAngle;
     //get updated ee position
     PVector nPos = armModel.getEEPos(angles);
-    PVector nRot = armModel.getWPR(angles);
     float[] nRotQ = armModel.getQuaternion(angles);
 
     //get translational delta
@@ -425,14 +423,13 @@ public float[][] calculateJacobian(float[] angles){
 //required to move the end effector to the point specified
 //by 'tgt' and the Euler angle orientation 'rot'
 int calculateIKJacobian(PVector tgt, float[] rot){
-  float[] angles = armModel.getJointRotations();
   final int limit = 1000;  //max number of times to loop
+  float[] angles = armModel.getJointRotations();
   long time = System.nanoTime();
   int count = 0;
   
   while(count < limit){
     PVector cPos = armModel.getEEPos(angles);
-    PVector cRot = armModel.getWPR(angles);
     float[] cRotQ = armModel.getQuaternion(angles);
     
     //calculate our translational offset from target
@@ -450,13 +447,6 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     delta[5] = rDelta[2];
     delta[6] = rDelta[3];
     
-    if(count == 0){
-      println("current rot = " + cRotQ[0] + ", " + cRotQ[1] + ", " + cRotQ[2] + ", " + cRotQ[3]);
-      println("tartet rot = " + rot[0] + ", " + rot[1] + ", " + rot[2] + ", " + rot[3]);
-      println("delta = " + rDelta[0] + ", " + rDelta[1] + ", " + rDelta[2] + ", " + rDelta[3]);
-      println();
-    }
-    
     float dist = PVector.dist(cPos, tgt);
     float rDist = sqrt(pow(rDelta[0], 2) + 
                        pow(rDelta[1], 2) + 
@@ -467,11 +457,8 @@ int calculateIKJacobian(PVector tgt, float[] rot){
       dTotal += delta[i];
                            
     //check whether our current position is within tolerance
-    //println("distances:" + dist + ", " + rDist);
-    //println();
-    if(dTotal == 0) return EXEC_PROCESSING;
+    if(dTotal == 0) return EXEC_FAILURE;
     else if(dist < 0.5 && rDist < 0.01) break;
-    
     //calculate jacobian, 'J', and its inverse 
     float[][] J = calculateJacobian(angles);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
@@ -490,13 +477,20 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     }
     
     count += 1;
+    if(count == limit/2){
+      angles = armModel.getJointRotations();
+      rot[0] = -rot[0];
+      rot[1] = -rot[1];
+      rot[2] = -rot[2];
+      rot[3] = -rot[3];
+    }
   }
+  
   //println(count);
   //println(System.nanoTime() - time);
   //println();
   //did we successfully find the desired angles?
   if(count >= limit){
-    //println("IK fail");
     return EXEC_FAILURE;
   }
   else{

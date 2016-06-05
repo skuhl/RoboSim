@@ -127,17 +127,21 @@ float[][] eulerToMatrix(PVector wpr){
 
 //calculates quaternion from euler angles
 float[] eulerToQuat(PVector wpr){
-  //float[][] r = eulerToMatrix(wpr);
-  //float[] q = matrixToQuat(r);
-  float[] q = new float[4];
-  float xRot = wpr.x;
-  float yRot = wpr.y;
-  float zRot = wpr.z;
+  float[][] r = eulerToMatrix(wpr);
+  float[] q = matrixToQuat(r);
   
-  q[0] = sin(zRot/2)*sin(yRot/2)*sin(xRot/2) + cos(zRot/2)*cos(yRot/2)*cos(xRot/2);
-  q[1] = -sin(zRot/2)*sin(yRot/2)*cos(xRot/2) + sin(xRot/2)*cos(zRot/2)*cos(yRot/2);
-  q[2] = sin(zRot/2)*sin(xRot/2)*cos(yRot/2) + sin(yRot/2)*cos(zRot/2)*cos(zRot/2);
-  q[3] = sin(zRot/2)*cos(yRot/2)*cos(xRot/2) - sin(yRot/2)*sin(xRot/2)*cos(xRot/2);
+  /*Alternate computation method; produces equivalent result to above, but may
+   *not have the same sign (certain quaternions are equivalent when negated).
+   */
+  //float[] q = new float[4];
+  //float xRot = wpr.x;
+  //float yRot = wpr.y;
+  //float zRot = wpr.z;
+  
+  //q[0] = sin(zRot/2)*sin(yRot/2)*sin(xRot/2) + cos(zRot/2)*cos(yRot/2)*cos(xRot/2);
+  //q[1] = -sin(zRot/2)*sin(yRot/2)*cos(xRot/2) + sin(xRot/2)*cos(zRot/2)*cos(yRot/2);
+  //q[2] = sin(zRot/2)*sin(xRot/2)*cos(yRot/2) + sin(yRot/2)*cos(zRot/2)*cos(zRot/2);
+  //q[3] = sin(zRot/2)*cos(yRot/2)*cos(xRot/2) - sin(yRot/2)*sin(xRot/2)*cos(xRot/2);
   
   return q;
 }
@@ -325,19 +329,9 @@ float[] rotateQuat(float[] p, float theta, PVector u){
   q[2] = sin(theta/2)*u.y;
   q[3] = sin(theta/2)*u.z;
   
-  println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
-  println();
-  float[] q_star = new float[4];
-  q_star[0] = q[0];
-  q_star[1] = -q[1];
-  q_star[2] = -q[2];
-  q_star[3] = -q[3];
+  float[] pq = quaternionMult(p, q);
   
-  float[] p_prime = new float[4];
-  p_prime = quaternionMult(q, p);
-  p_prime = quaternionMult(p_prime, q_star);
-  
-  return p_prime;
+  return pq;
 }
 
 float[] quaternionMult(float[] q1, float[] q2){
