@@ -817,16 +817,16 @@ public class ArmModel {
             
             if (model.anglePermitted(n, trialAngle)) {
               
-              //float old_angle = model.currentRotations[n];
+              float old_angle = model.currentRotations[n];
               model.currentRotations[n] = trialAngle;
               if (COLLISION_DISPLAY) { updateBoxes(); }
               
-              /*if (armModel.checkSelfCollisions()) {
+              if (armModel.checkSelfCollisions()) {
                 // end robot arm movement
                 model.currentRotations[n] = old_angle;
                 updateBoxes();
                 model.jointsMoving[n] = 0;
-              }*/
+              }
             } 
             else {
               model.jointsMoving[n] = 0;

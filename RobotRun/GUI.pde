@@ -71,9 +71,10 @@ final int ITEMS_TO_SHOW = 16; // how many programs/ instructions to display on s
 int letterSet; // which letter group to enter
 Frame currentFrame;
 int inFrame;
-int teachingWhichPoint;
+/*int teachingWhichPoint = 0;
 PVector[] tempPoints = new PVector[3];
-PVector[] tempVectors = new PVector[3];
+PVector[] tempVectors = new PVector[3];*/
+ArrayList<float[][]> teachPointTMatrices = null;
 int activeUserFrame = -1;
 int activeJogFrame = -1;
 int activeToolFrame = -1;
@@ -1769,16 +1770,45 @@ public void f5() {
     }
   } else if (mode == THREE_POINT_MODE) {
     
-    if (teachingWhichPoint < 3) {
-      teachingWhichPoint++;
-      
+    if (teachPointTMatrices != null) {
+      // Save current position of the EE
       pushMatrix();
       resetMatrix();
       applyModelRotation(armModel);
+      
       float[][] tMatrix = getTransformationMatrix();
+      teachPointTMatrices.add(tMatrix);
+      
       popMatrix();
       
-      printHCMatrix(tMatrix);
+      // Calculate the Frame transformation from the 3 recorded points
+      if (teachPointTMatrices.size() == 3) {
+          
+          for (float[][] T : teachPointTMatrices) {
+            println();
+            printHCMatrix(T);
+          }
+          println();
+          
+          // TODO implement 3 Point method
+          
+          teachPointTMatrices = null;
+          // Leave Three Point Method menu
+          if (inFrame == NAV_TOOL_FRAMES) {
+            mode = NAV_TOOL_FRAMES;
+            loadToolFrames();
+          } else if (inFrame == NAV_USER_FRAMES) {
+            mode = NAV_USER_FRAMES;
+            loadUserFrames();
+          } else {
+            mode = MENU_NAV;
+            mu();
+          }
+          
+          return;
+      }
+      
+      loadThreePointMethod();
     }
     
     /*if (shift == ON) {
@@ -1897,7 +1927,6 @@ public void f5() {
         }
       } // end if inFrame == NAV_TOOL_FRAMES
     }*/
-    loadToolFrames();
   } else if (mode == CONFIRM_DELETE) {
      Program prog = programs.get(active_program);
      if (active_instruction >= prog.getInstructions().size()) {
@@ -2130,7 +2159,7 @@ public void ENTER(){
          if (which_option == 1 || which_option == 2) return; // not implemented
          options = new ArrayList<String>();
          which_option = -1;
-         teachingWhichPoint = 1;
+         teachPointTMatrices = new ArrayList<float[][]>();
          loadThreePointMethod();
          break;
       case ACTIVE_FRAMES:
@@ -3016,39 +3045,42 @@ public void loadUserFrames() {
 public void loadThreePointMethod() {
   contents = new ArrayList<ArrayList<String>>();
   
-  ArrayList<String> line = new ArrayList<String>();
-  String str = "";
-  if (inFrame == NAV_USER_FRAMES) {
-    if (teachingWhichPoint > 1) str = "Orient Origin Point: RECORDED";
-    else str = "Orient Origin Point: UNINIT";
-  } else if (inFrame == NAV_TOOL_FRAMES) {
-    if (teachingWhichPoint > 1) str = "First Approach Point: RECORDED";
-    else str = "First Approach Point: UNINIT";
-  }
-  line.add(str);
-  contents.add(line);
+  contents.add(new ArrayList<String>());
   
-  line = new ArrayList<String>();
-  if (inFrame == NAV_USER_FRAMES) {
-    if (teachingWhichPoint > 2) str = "X Direction Point: RECORDED";
-    else str = "X Direction Point: UNINIT";
-  } else if (inFrame == NAV_TOOL_FRAMES) {
-    if (teachingWhichPoint > 2) str = "Second Approach Point: RECORDED";
-    else str = "Second Approach Point: UNINIT";
-  }
-  line.add(str);
-  contents.add(line);
+  if (teachPointTMatrices != null) {
+    
+    contents.add(new ArrayList<String>());
+    contents.add(new ArrayList<String>());
   
-  line = new ArrayList<String>();
-  if (inFrame == NAV_USER_FRAMES) {
-    if (teachingWhichPoint > 3) str = "Y Direction Point: RECORDED";
-    else str = "Y Direction Point: UNINIT";
-  } else if (inFrame == NAV_TOOL_FRAMES) {
-    if (teachingWhichPoint > 3) str = "Third Approach Point: RECORDED";
-    else str = "Third Approach Point: UNINIT";
+    String[] limbo = new String[3];
+    
+    if (inFrame == NAV_TOOL_FRAMES) {
+      
+      limbo[0] = "First Approach Point: ";
+      limbo[1] = "Second Approach Point: ";
+      limbo[2] = "Third Approach Point: ";
+    } else if (inFrame == NAV_TOOL_FRAMES) {
+      
+      limbo[0] = "Orient Origin Point: ";
+      limbo[1] = "X Direction Point: ";
+      limbo[2] = "Y Direction Point: ";
+    } else {
+      
+      for (int idx = 0; idx < limbo.length; ++idx) { limbo[idx] = ""; }
+      return;
+    }
+    
+    int size = teachPointTMatrices.size();
+    
+    for (int idx = 0; idx < limbo.length; ++idx) {
+      // Add each line to contents
+      limbo[idx] += ((size > idx) ? "RECORDED" : "UNINIT");
+      contents.get(idx).add(limbo[idx]);
+    }
+  } else {
+    // ArrayList is null
+    contents.get(0).add("Error: teachPointTMatrices not set!");
   }
-  line.add(str);
-  contents.add(line);
   
   mode = THREE_POINT_MODE;
   updateScreen(color(0), color(0));
