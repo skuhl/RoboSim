@@ -1788,6 +1788,21 @@ public void f5() {
             println();
             printHCMatrix(T);
           }
+          
+          printHCMatrix(invertHCMatrix(teachPointTMatrices.get(2)));
+          
+          println();
+          /* Multiply the Second point transform by the inverse of the Third point's transform */
+          RealMatrix T2 = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(1), 4, 4));
+          RealMatrix iT3 = new Array2DRowRealMatrix(floatToDouble(invertHCMatrix(teachPointTMatrices.get(2)), 4, 4));
+          RealMatrix P = T2.multiply(iT3);
+          
+          float[][] p = doubleToFloat(P.getData(), 4, 4);
+          
+          /* Subtract p from the identity matrix */
+          for (int idx = 0; idx < p.length; ++idx) { p[idx][idx] = 1 - p[idx][idx]; }
+          
+          printHCMatrix(p);
           println();
           
           // TODO implement 3 Point method
