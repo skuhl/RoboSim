@@ -984,11 +984,11 @@ public void keyPressed(){
     intermediatePositions.clear();
   } else if(key == 'w'){
     /*------------Test Quaternion Rotation-------------------*/
-    float[] q = rotateQuat(armModel.getQuaternion(), DEG_TO_RAD*90, new PVector(0, 0, 1));
-    println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
-    PVector wpr = quatToEuler(q).mult(RAD_TO_DEG);
-    println("ee = " + wpr);
-    println();
+    //float[] q = rotateQuat(armModel.getQuaternion(), 0, new PVector(1, 1, 1));
+    //println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
+    //PVector wpr = quatToEuler(q).mult(RAD_TO_DEG);
+    //println("ee = " + wpr);
+    //println();
     /*------------Test Conversion Functions------------------*/
     //float[] q = armModel.getQuaternion();
     //PVector wpr = armModel.getWPR();
@@ -998,6 +998,11 @@ public void keyPressed(){
     //println(qP);
     //println(wprP.mult(RAD_TO_DEG));
     //println();
+    /*------------Test Matrix Offset------------------------*/
+    float[][] m = {{ 1, 0, 0 },
+                   { 0, 1, 0 }, 
+                   { 0, 0, 1 }};
+    armModel.getRotationMatrix(m);
   } else if(key == 'y'){
     float[] rot = {PI, 0, 0, 0, 0, PI};
     armModel.setJointRotations(rot);

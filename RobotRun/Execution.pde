@@ -423,9 +423,8 @@ public float[][] calculateJacobian(float[] angles){
 //required to move the end effector to the point specified
 //by 'tgt' and the Euler angle orientation 'rot'
 int calculateIKJacobian(PVector tgt, float[] rot){
-  final int limit = 1000;  //max number of times to loop
+  final int limit = 500;  //max number of times to loop
   float[] angles = armModel.getJointRotations();
-  long time = System.nanoTime();
   int count = 0;
   
   while(count < limit){
@@ -435,7 +434,6 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     //calculate our translational offset from target
     float[] tDelta = calculateVectorDelta(tgt, cPos);
     //calculate our rotational offset from target
-    //float[] rDelta = calculateVectorDelta(rot, cRotQ, 4);
     float[] rDelta = calculateVectorDelta(rot, cRotQ, 4);
     float[] delta = new float[7];
     
@@ -452,13 +450,9 @@ int calculateIKJacobian(PVector tgt, float[] rot){
                        pow(rDelta[1], 2) + 
                        pow(rDelta[2], 2) + 
                        pow(rDelta[3], 2));
-    float dTotal = 0;
-    for(int i = 0; i < 7; i += 1)
-      dTotal += delta[i];
                            
     //check whether our current position is within tolerance
-    if(dTotal == 0) return EXEC_FAILURE;
-    else if(dist < 0.5 && rDist < 0.01) break;
+    if(dist < 0.5 && rDist < 0.01) break;
     //calculate jacobian, 'J', and its inverse 
     float[][] J = calculateJacobian(angles);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
@@ -486,9 +480,6 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     }
   }
   
-  //println(count);
-  //println(System.nanoTime() - time);
-  //println();
   //did we successfully find the desired angles?
   if(count >= limit){
     return EXEC_FAILURE;

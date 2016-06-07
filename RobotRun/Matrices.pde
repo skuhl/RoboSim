@@ -127,21 +127,21 @@ float[][] eulerToMatrix(PVector wpr){
 
 //calculates quaternion from euler angles
 float[] eulerToQuat(PVector wpr){
-  float[][] r = eulerToMatrix(wpr);
-  float[] q = matrixToQuat(r);
+  //float[][] r = eulerToMatrix(wpr);
+  //float[] q = matrixToQuat(r);
   
   /*Alternate computation method; produces equivalent result to above, but may
    *not have the same sign (certain quaternions are equivalent when negated).
    */
-  //float[] q = new float[4];
-  //float xRot = wpr.x;
-  //float yRot = wpr.y;
-  //float zRot = wpr.z;
+  float[] q = new float[4];
+  float xRot = wpr.x;
+  float yRot = wpr.y;
+  float zRot = wpr.z;
   
-  //q[0] = sin(zRot/2)*sin(yRot/2)*sin(xRot/2) + cos(zRot/2)*cos(yRot/2)*cos(xRot/2);
-  //q[1] = -sin(zRot/2)*sin(yRot/2)*cos(xRot/2) + sin(xRot/2)*cos(zRot/2)*cos(yRot/2);
-  //q[2] = sin(zRot/2)*sin(xRot/2)*cos(yRot/2) + sin(yRot/2)*cos(zRot/2)*cos(zRot/2);
-  //q[3] = sin(zRot/2)*cos(yRot/2)*cos(xRot/2) - sin(yRot/2)*sin(xRot/2)*cos(xRot/2);
+  q[0] = sin(zRot/2)*sin(yRot/2)*sin(xRot/2) + cos(zRot/2)*cos(yRot/2)*cos(xRot/2);
+  q[1] = -sin(zRot/2)*sin(yRot/2)*cos(xRot/2) + sin(xRot/2)*cos(zRot/2)*cos(yRot/2);
+  q[2] = sin(zRot/2)*sin(xRot/2)*cos(yRot/2) + sin(yRot/2)*cos(zRot/2)*cos(zRot/2);
+  q[3] = sin(zRot/2)*cos(yRot/2)*cos(xRot/2) - sin(yRot/2)*sin(xRot/2)*cos(xRot/2);
   
   return q;
 }
@@ -185,25 +185,25 @@ float[] matrixToQuat(float[][] r){
   float[] q = new float[4];
   float tr = r[0][0] + r[1][1] + r[2][2];
   
-  if(tr > 0){ 
+  if(tr > 0){
     float S = sqrt(1.0 + tr) * 2; // S=4*q[0] 
     q[0] = S / 4;
     q[1] = (r[2][1] - r[1][2]) / S;
     q[2] = (r[0][2] - r[2][0]) / S; 
     q[3] = (r[1][0] - r[0][1]) / S; 
-  } else if((r[0][0] > r[1][1]) & (r[0][0] > r[2][2])){ 
+  } else if((r[0][0] > r[1][1]) & (r[0][0] > r[2][2])){
     float S = sqrt(1.0 + r[0][0] - r[1][1] - r[2][2]) * 2; // S=4*q[1] 
     q[0] = (r[2][1] - r[1][2]) / S;
     q[1] = S / 4;
     q[2] = (r[0][1] + r[1][0]) / S; 
     q[3] = (r[0][2] + r[2][0]) / S; 
-  } else if(r[1][1] > r[2][2]){ 
+  } else if(r[1][1] > r[2][2]){
     float S = sqrt(1.0 + r[1][1] - r[0][0] - r[2][2]) * 2; // S=4*q[2]
     q[0] = (r[0][2] - r[2][0]) / S;
     q[1] = (r[0][1] + r[1][0]) / S; 
     q[2] = S / 4;
     q[3] = (r[1][2] + r[2][1]) / S; 
-  } else { 
+  } else {
     float S = sqrt(1.0 + r[2][2] - r[0][0] - r[1][1]) * 2; // S=4*q[3]
     q[0] = (r[1][0] - r[0][1]) / S;
     q[1] = (r[0][2] + r[2][0]) / S;
@@ -292,8 +292,7 @@ float[] calculateVectorDelta(float[] v1, float[] v2, int n){
 
 //produces a rotation matrix given a rotation 'theta' around
 //a given axis
-float[][] rotateAxisVector(float theta, PVector axis){
-  float[][] m = new float[3][3];
+float[][] rotateAxisVector(float[][] m, float theta, PVector axis){
   float s = sin(theta);
   float c = cos(theta);
   float t = 1-c;
@@ -305,15 +304,15 @@ float[][] rotateAxisVector(float theta, PVector axis){
   float y = axis.y;
   float z = axis.z;
     
-  m[0][1] = x*x*t+c;
-  m[0][2] = x*y*t-z*s;
-  m[0][3] = x*z*t+y*s;
-  m[1][1] = y*x*t+z*s;
-  m[1][2] = y*y*t+c;
-  m[1][3] = y*z*t-x*s;
-  m[2][1] = z*x*t-y*s;
-  m[2][2] = z*y*t+x*s;
-  m[2][3] = z*z*t+c;
+  m[0][0] += x*x*t+c;
+  m[0][1] += x*y*t-z*s;
+  m[0][2] += x*z*t+y*s;
+  m[1][0] += y*x*t+z*s;
+  m[1][1] += y*y*t+c;
+  m[1][2] += y*z*t-x*s;
+  m[2][0] += z*x*t-y*s;
+  m[2][1] += z*y*t+x*s;
+  m[2][2] += z*z*t+c;
   
   return m;
 }
@@ -322,7 +321,8 @@ float[][] rotateAxisVector(float theta, PVector axis){
 //about axis 'u' by 'theta' degrees
 float[] rotateQuat(float[] p, float theta, PVector u){
   u.normalize();
-  println(u);
+  float r2 = 0.707106781;
+  
   float[] q = new float[4];
   q[0] = cos(theta/2);
   q[1] = sin(theta/2)*u.x;

@@ -585,7 +585,6 @@ public class ArmModel {
      *   z' = y
      */
     PVector origin = new PVector(modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0)),
-            
             x = new PVector(modelX(0, 0, -1), modelY(0, 0, -1), modelZ(0, 0, -1)),
             y = new PVector(modelX(0, 1, 0), modelY(0, 1, 0), modelZ(0, 1, 0)),
             z = new PVector(modelX(1, 0, 0), modelY(1, 0, 0), modelZ(1, 0, 0));
@@ -606,6 +605,28 @@ public class ArmModel {
     popMatrix();
     
     return matrix;
+  }
+  
+  /* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
+   * the end effector's current x, y, z axes with respect to an arbitrary coordinate
+   * system specified by the rotation matrix 'frame.'
+   */
+  public float[][] getRotationMatrix(float[][] frame){
+    float[][] m = getRotationMatrix();
+    RealMatrix A = new Array2DRowRealMatrix(floatToDouble(m, 3, 3));
+    RealMatrix B = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
+    RealMatrix AB = A.transpose().multiply(B);
+    
+    println("matrix offset:");
+    for(int i = 0; i < 3; i += 1){
+      for(int j = 0; j < 3; j += 1){
+        print(String.format("   %5.4f", AB.getEntry(i, j)));
+      }
+      println();
+    }
+    println();
+    
+    return doubleToFloat(AB.getData(), 3, 3);
   }
   
  /* This method calculates the Euler angular rotations: roll, pitch and yaw of the Robot's
@@ -798,8 +819,11 @@ public class ArmModel {
   
   void updateOrientation(){
     PVector u = new PVector(mvRot[0], mvRot[1], mvRot[2]);
-    println(u);
+    
     if(u.x != 0 || u.y != 0 || u.z != 0){
+      //float[][] m = getRotationMatrix();
+      //m = rotateAxisVector(m, DEG_TO_RAD, u);
+      //tgtRot = matrixToQuat(m);
       tgtRot = rotateQuat(tgtRot, DEG_TO_RAD, u);
     }
   }
