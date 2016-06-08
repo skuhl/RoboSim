@@ -1774,7 +1774,7 @@ public void f5() {
       // Save current position of the EE
       pushMatrix();
       resetMatrix();
-      applyModelRotation(armModel);
+      applyModelRotation(armModel, false);
       
       float[][] tMatrix = getTransformationMatrix();
       teachPointTMatrices.add(tMatrix);
@@ -1789,21 +1789,38 @@ public void f5() {
             printHCMatrix(T);
           }
           
+          println();
           printHCMatrix(invertHCMatrix(teachPointTMatrices.get(2)));
           
-          println();
           /* Multiply the Second point transform by the inverse of the Third point's transform */
-          RealMatrix T2 = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(1), 4, 4));
-          RealMatrix iT3 = new Array2DRowRealMatrix(floatToDouble(invertHCMatrix(teachPointTMatrices.get(2)), 4, 4));
-          RealMatrix P = T2.multiply(iT3);
+          RealMatrix T2 = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(1), 3, 4));
+          RealMatrix T3 = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(2), 3, 4));
+          RealMatrix invT3 = (new SingularValueDecomposition(T3)).getSolver().getInverse();
           
-          float[][] p = doubleToFloat(P.getData(), 4, 4);
+          RealMatrix P = T2.multiply(invT3);
           
-          /* Subtract p from the identity matrix */
-          for (int idx = 0; idx < p.length; ++idx) { p[idx][idx] = 1 - p[idx][idx]; }
+          /* Subtract P from the identity matrix */
+          for (int row = 0; row < 3; ++row) {
+            for (int col = 0; col < 3; ++col) {
+              double newEntry;
+              
+              if (row == col) {
+                newEntry = 1 - P.getEntry(row, col);
+              } else {
+                newEntry = -P.getEntry(row, col);
+              }
+              
+              P.setEntry(row, col, newEntry);
+            }
+          }
+          // Invert the matrix
+          /*SingularValueDecomposition svd = new SingularValueDecomposition(P);
+          RealMatrix Inv = svd.getSolver().getInverse();*/
           
-          printHCMatrix(p);
+          float[][] p = doubleToFloat(P.getData(), 3, 3);
+          
           println();
+          printNxMMatrix(p, 3, 3);
           
           // TODO implement 3 Point method
           
@@ -1854,7 +1871,7 @@ public void f5() {
         }
       } else if (inFrame == NAV_TOOL_FRAMES) {
         pushMatrix();
-        applyModelRotation(armModel);
+        applyModelRotation(armModel, true);
         PVector one = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
         translate(0, 0, -100);
         PVector two = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));

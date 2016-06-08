@@ -128,7 +128,7 @@ public void draw(){
   
   pushMatrix();
   resetMatrix();
-  applyModelRotation(armModel);
+  applyModelRotation(armModel, true);
   // Keep track of the old coordinate frame of the armModel
   armModel.oldEETMatrix = getTransformationMatrix();
   popMatrix();
@@ -178,7 +178,7 @@ public void draw(){
   pushMatrix();
   noFill();
   stroke(0, 0, 0);
-  applyModelRotation(armModel);
+  applyModelRotation(armModel, true);
   //EE position
   sphere(20);
   translate(0, 0, -100);
@@ -302,7 +302,7 @@ public void handleWorldObjects() {
       
       // new object transform = EE transform x (old EE transform) ^ -1 x current object transform
       
-      applyModelRotation(armModel);
+      applyModelRotation(armModel, true);
       
       float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
       applyMatrix(invEETMatrix[0][0], invEETMatrix[0][1], invEETMatrix[0][2], invEETMatrix[0][3],

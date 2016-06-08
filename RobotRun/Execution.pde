@@ -279,7 +279,7 @@ public void drawEndEffectorGridMapping() {
   /*pushMatrix();
   resetMatrix();
   // Display EE axes at the EE position
-  applyModelRotation(armModel);
+  applyModelRotation(armModel, true);
   float[][] tMatrix = getTransformationMatrix();
   popMatrix();
   
@@ -330,9 +330,12 @@ public void drawEndEffectorGridMapping() {
  * the matrix after performing the transformations. Useful when
  * you're doing some graphical manipulation and you want to use
  * the end effector position as your start point.
- * @param model The arm model whose transformations to apply
+ * 
+ * @param model        The arm model whose transformations to apply
+ * @param applyOffset  Whether to apply the Tool Frame End
+ *                     Effector offset (if it exists)
  */
-void applyModelRotation(ArmModel model){   
+void applyModelRotation(ArmModel model, boolean applyOffset){   
   translate(600, 200, 0);
   translate(-50, -166, -358); // -115, -213, -413
   rotateZ(PI);
@@ -378,7 +381,7 @@ void applyModelRotation(ArmModel model){
   translate(45, 45, 0);
   rotateZ(model.segments.get(5).currentRotations[0]);
   
-  if (curCoordFrame == COORD_TOOL) { armModel.applyToolFrame(activeToolFrame); }
+  if (applyOffset && curCoordFrame == COORD_TOOL) { armModel.applyToolFrame(activeToolFrame); }
 } // end apply model rotations
 
 /**

@@ -199,7 +199,7 @@ public class ArmModel {
     held = null;
     // Initializes the old transformation matrix for the arm model
     pushMatrix();
-    applyModelRotation(this);
+    applyModelRotation(this, false);
     oldEETMatrix = getTransformationMatrix();
     popMatrix();
   } // end ArmModel constructor
@@ -577,7 +577,7 @@ public class ArmModel {
     pushMatrix();
     resetMatrix();
     // Switch to End Effector reference Frame
-    applyModelRotation(armModel);
+    applyModelRotation(armModel, true);
     /* Define vectors { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, and { 0, 0, 1 }
      * Swap vectors:
      *   x' = z
