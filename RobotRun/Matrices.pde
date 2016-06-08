@@ -353,3 +353,17 @@ public void printHCMatrix(float[][] m) {
     print(row);
   }
 }
+
+public void printNxMMatrix(float[][] matrix, int n, int m) {
+  
+  for (int row = 0; row < n; ++row) {
+    String rowStr = "[ ";
+    
+    for (int col = 0; col < m; ++col) {
+      rowStr += String.format(" %5.4f", matrix[row][col]);
+    }
+    
+    rowStr += " ]\n";
+    System.out.print(rowStr);
+  }
+}
