@@ -90,6 +90,8 @@ int which_option = -1; // which option is on focus now?
 int index_contents = 0, index_options = 100, index_nums = 1000; // how many textlabels have been created for display
 int mouseDown = 0;
 
+private static final boolean DISPLAY_TEST_OUTPUT = true;
+
 void gui(){
    g1_px = 0;
    g1_py = 0;
@@ -1215,7 +1217,10 @@ public void addNumber(String number) {
 public void PERIOD(){
    if (NUM_MODE == ON){
       nums.add(-1);
+   } else {
+     workingText += ".";
    }
+   
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
@@ -1257,6 +1262,12 @@ public void up(){
            active_col = 0;
          }
          loadInstructions(active_program);
+         
+         if (DISPLAY_TEST_OUTPUT) {
+           System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
+                             active_row, active_col, active_instruction, text_render_start);
+         }
+         
          break;
       case INSTRUCTION_EDIT:
       case PICK_FRAME_MODE:
@@ -1308,7 +1319,7 @@ public void dn(){
          clearOptions();
          int size = programs.get(active_program).getInstructions().size();
          if (active_instruction < size-1) {
-           if(active_instruction - text_render_start == ITEMS_TO_SHOW - 1)
+           if(active_instruction - text_render_start == ITEMS_TO_SHOW - 4)
              text_render_start++;
            else
              active_row++;
@@ -1316,6 +1327,12 @@ public void dn(){
            active_col = 0;
          }
          loadInstructions(active_program);
+         
+         if (DISPLAY_TEST_OUTPUT) {
+           System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
+                             active_row, active_col, active_instruction, text_render_start);
+         }
+         
          break;
       case INSTRUCTION_EDIT:
       case PICK_FRAME_MODE:
@@ -1532,10 +1549,14 @@ public void f1(){
              activeUserFrame,
              activeToolFrame);
            prog.addInstruction(insert);
-           active_instruction = prog.getInstructions().size()-1;
+           
+           active_instruction = prog.getInstructions().size() - 1;
            active_col = 0;
+           /* 13 is the maximum number of instructions that can be displayed at one point in time */
+           active_row = min(active_instruction, ITEMS_TO_SHOW - 4);
+           text_render_start = active_instruction - active_row;
+           
            loadInstructions(active_program);
-           active_row = contents.size()-1;
            updateScreen(color(255,0,0), color(0,0,0));
            saveState();
          }
@@ -1672,15 +1693,9 @@ public void f4() {
      case CONFIRM_DELETE:
          Program prog = programs.get(active_program);
          prog.getInstructions().remove(active_instruction);
-         if (active_instruction >= prog.getInstructions().size()) {
-           active_instruction = prog.getInstructions().size()-1;
-         }
-         active_row = 0;
-         active_col = 0;
-         loadInstructions(active_program);
-         mode = INSTRUCTION_NAV;
-         options.clear();
-         updateScreen(color(255,0,0), color(0,0,0));
+         
+         deleteInstEpilogue();
+         saveState();
          break;
      case NAV_TOOL_FRAMES:
        // Reset the highlighted frame in the tool frame list
@@ -1793,6 +1808,22 @@ public void f5() {
           
           System.out.printf("\nPoint 2 inverse:\n\n");
           printHCMatrix(invertHCMatrix(teachPointTMatrices.get(2)));
+          
+          /* TODO
+             
+             Ax = Bx = Cx
+             Ax = (Ar)x + At
+             
+             
+             (A - B)x = 0
+             (Ar - Br)x + At - Bt = 0
+             
+             
+             Ax + Bx - 2Cx = 0
+             (Ar + Br - 2Cr)x + At + Bt - 2Ct = 0
+             (Ar + Br - 2Cr)x = 2Ct - At - Bt
+             x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
+           */
           
           /* Multiply the Second point transform by the inverse of the Third point's transform */
           RealMatrix T2 = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(1), 3, 4));
@@ -1962,16 +1993,7 @@ public void f5() {
       } // end if inFrame == NAV_TOOL_FRAMES
     }*/
   } else if (mode == CONFIRM_DELETE) {
-     Program prog = programs.get(active_program);
-     if (active_instruction >= prog.getInstructions().size()) {
-       active_instruction = prog.getInstructions().size()-1;
-     }
-     active_row = 0;
-     active_col = 0;
-     loadInstructions(active_program);
-     mode = INSTRUCTION_NAV;
-     options.clear();
-     updateScreen(color(255,0,0), color(0,0,0));
+     deleteInstEpilogue();
   }
 }
 
@@ -2119,11 +2141,14 @@ public void ENTER(){
          updateScreen(color(255,0,0), color(0,0,0));
          break;
       case SET_INSTRUCTION_REGISTER:
-         int tempRegister = Integer.parseInt(workingText);
-         if (tempRegister >= 0 && tempRegister < pr.length) {
-           castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
-           castIns.setRegister(tempRegister);
-         }
+         try {
+           int tempRegister = Integer.parseInt(workingText);
+           if (tempRegister >= 0 && tempRegister < pr.length) {
+             castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
+             castIns.setRegister(tempRegister);
+           }
+         } catch (NumberFormatException NFEx){ /* Ignore invalid numbers */ }
+         
          loadInstructions(active_program);
          mode = INSTRUCTION_NAV;
          options = new ArrayList<String>();
@@ -2197,12 +2222,16 @@ public void ENTER(){
          loadThreePointMethod();
          break;
       case ACTIVE_FRAMES:
-         int num = Integer.parseInt(workingText);
-         if (num < 0) num = 0;
-         else if (num > userFrames.length) num = userFrames.length;
-         if (active_row == 1) activeUserFrame = num-1;
-         else if (active_row == 2) ; // jog not implemented
-         else if (active_row == 3) activeToolFrame = num-1;
+         int num;
+         try {
+           num = Integer.parseInt(workingText);
+           if (num < 0) num = 0;
+           else if (num > userFrames.length) num = userFrames.length;
+           if (active_row == 1) activeUserFrame = num-1;
+           else if (active_row == 2) ; // jog not implemented
+           else if (active_row == 3) activeToolFrame = num-1;
+         } catch (NumberFormatException NREx) { /* Ignore invalid numbers */ }
+         
          workingText = "";
          loadActiveFrames();
          break;
@@ -2237,13 +2266,18 @@ public void ENTER(){
          break;
       case SET_DO_STATUS:
       case SET_RO_STATUS:
-         int bracketNum = Integer.parseInt(workingText);
          Program prog = programs.get(active_program);
-         ToolInstruction insert = new ToolInstruction(
-            (mode == SET_DO_STATUS ? "DO" : "RO"),
-            bracketNum,
-            (which_option == 0 ? ON : OFF));
-         prog.addInstruction(insert);
+         
+         try {
+           int bracketNum = Integer.parseInt(workingText);
+           ToolInstruction insert = new ToolInstruction(
+              (mode == SET_DO_STATUS ? "DO" : "RO"),
+              bracketNum,
+              (which_option == 0 ? ON : OFF));
+           prog.addInstruction(insert);
+           saveState();
+         } catch (NumberFormatException NFEx) { /* Ignore invalid numbers */ }
+         
          active_instruction = prog.getInstructions().size()-1;
          active_col = 0;
          loadInstructions(active_program);
@@ -2251,25 +2285,32 @@ public void ENTER(){
          mode = INSTRUCTION_NAV;
          options.clear();
          updateScreen(color(255,0,0), color(0,0,0));
-         saveState();
          break;
       case SET_FRAME_INSTRUCTION:
-         num = Integer.parseInt(workingText)-1;
-         if (num < -1) num = -1;
-         else if (num >= userFrames.length) num = userFrames.length-1;
          prog = programs.get(active_program);
-         int type = 0;
-         if (active_row == 0) type = FTYPE_TOOL;
-         else if (active_row == 1) type = FTYPE_USER;
-         prog.addInstruction(new FrameInstruction(type, num));
+         
+         try {
+           num = Integer.parseInt(workingText)-1;
+           if (num < -1) num = -1;
+           else if (num >= userFrames.length) num = userFrames.length-1;
+           
+           int type = 0;
+           if (active_row == 0) type = FTYPE_TOOL;
+           else if (active_row == 1) type = FTYPE_USER;
+           prog.addInstruction(new FrameInstruction(type, num));
+           saveState();
+         } catch (NumberFormatException NFEx) { /* Ignore invalid numbers */ }
+         
          active_instruction = prog.getInstructions().size()-1;
          active_col = 0;
          loadInstructions(active_program);
          active_row = contents.size()-1;
          mode = INSTRUCTION_NAV;
+         which_option = -1;
+         active_row = 0;
+         active_col = 0;
          options.clear();
          updateScreen(color(255,0,0), color(0,0,0));
-         saveState();
          break;
       case EDIT_MENU:
          if (active_row == 1) { // delete
@@ -3164,7 +3205,7 @@ public void loadInstructions(int programID){
    int size = p.getInstructions().size();
    
    int start = text_render_start;
-   int end = min(start + ITEMS_TO_SHOW, size);
+   int end = min(start + ITEMS_TO_SHOW - 3, size);
    if (end >= size) end = size;
    for(int i=start;i<end;i++){
       ArrayList<String> m = new ArrayList<String>();
@@ -3200,6 +3241,22 @@ public void loadInstructions(int programID){
         contents.add(m);
       }
    } 
+}
+
+/* Deals with updating the UI after confirming/canceling a deletion */
+public void deleteInstEpilogue() {
+  Program prog = programs.get(active_program);
+  
+  active_instruction = min(active_instruction,  prog.getInstructions().size() - 1);
+  /* 13 is the maximum number of instructions that can be displayed at one point in time */
+  active_row = min(active_instruction, ITEMS_TO_SHOW - 4);
+  active_col = 0;
+  text_render_start = active_instruction - active_row;
+  
+  loadInstructions(active_program);
+  mode = INSTRUCTION_NAV;
+  options.clear();
+  updateScreen(color(255,0,0), color(0,0,0));
 }
 
 void loadActiveFrames() {
