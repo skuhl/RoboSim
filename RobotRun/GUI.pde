@@ -1789,12 +1789,12 @@ public void f5() {
       // Calculate the Frame transformation from the 3 recorded points
       if (teachPointTMatrices.size() == 3) {
           
-          for (float[][] T : teachPointTMatrices) {
-            println();
-            printHCMatrix(T);
+          for (int pt = 0; pt < teachPointTMatrices.size(); ++pt) {
+            System.out.printf("\nPoint %d:\n\n", pt);
+            printHCMatrix(teachPointTMatrices.get(pt));
           }
           
-          println();
+          System.out.printf("\nPoint 2 inverse:\n\n");
           printHCMatrix(invertHCMatrix(teachPointTMatrices.get(2)));
           
           /* Multiply the Second point transform by the inverse of the Third point's transform */
@@ -1824,10 +1824,10 @@ public void f5() {
           
           float[][] p = doubleToFloat(P.getData(), 3, 3);
           
-          println();
+          System.out.printf("\nI - T2 * inv(T3):\n\n");
           printNxMMatrix(p, 3, 3);
           
-          // TODO implement 3 Point method
+          // TODO Fix Three Point Method implementation
           
           teachPointTMatrices = null;
           // Leave Three Point Method menu
