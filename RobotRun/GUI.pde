@@ -1552,10 +1552,14 @@ public void f1(){
              activeUserFrame,
              activeToolFrame);
            prog.addInstruction(insert);
-           active_instruction = prog.getInstructions().size()-1;
+           
+           active_instruction = prog.getInstructions().size() - 1;
            active_col = 0;
+           /* 13 is the maximum number of instructions that can be displayed at one point in time */
+           active_row = min(active_instruction, ITEMS_TO_SHOW - 4);
+           text_render_start = active_instruction - active_row;
+           
            loadInstructions(active_program);
-           active_row = contents.size()-1;
            updateScreen(color(255,0,0), color(0,0,0));
            saveState();
          }
@@ -1692,15 +1696,8 @@ public void f4() {
      case CONFIRM_DELETE:
          Program prog = programs.get(active_program);
          prog.getInstructions().remove(active_instruction);
-         if (active_instruction >= prog.getInstructions().size()) {
-           active_instruction = prog.getInstructions().size()-1;
-         }
          
-         active_row = active_col = active_instruction = text_render_start = 0;
-         loadInstructions(active_program);
-         mode = INSTRUCTION_NAV;
-         options.clear();
-         updateScreen(color(255,0,0), color(0,0,0));
+         deleteInstEpilogue();
          saveState();
          break;
      case NAV_TOOL_FRAMES:
@@ -1999,16 +1996,7 @@ public void f5() {
       } // end if inFrame == NAV_TOOL_FRAMES
     }*/
   } else if (mode == CONFIRM_DELETE) {
-     Program prog = programs.get(active_program);
-     if (active_instruction >= prog.getInstructions().size()) {
-       active_instruction = prog.getInstructions().size() - 1;
-     }
-     
-     active_row = active_col = active_instruction = text_render_start = 0;
-     loadInstructions(active_program);
-     mode = INSTRUCTION_NAV;
-     options.clear();
-     updateScreen(color(255,0,0), color(0,0,0));
+     deleteInstEpilogue();
   }
 }
 
@@ -3256,6 +3244,22 @@ public void loadInstructions(int programID){
         contents.add(m);
       }
    } 
+}
+
+/* Deals with updating the UI after confirming/canceling a deletion */
+public void deleteInstEpilogue() {
+  Program prog = programs.get(active_program);
+  
+  active_instruction = min(active_instruction,  prog.getInstructions().size() - 1);
+  /* 13 is the maximum number of instructions that can be displayed at one point in time */
+  active_row = min(active_instruction, ITEMS_TO_SHOW - 4);
+  active_col = 0;
+  text_render_start = active_instruction - active_row;
+  
+  loadInstructions(active_program);
+  mode = INSTRUCTION_NAV;
+  options.clear();
+  updateScreen(color(255,0,0), color(0,0,0));
 }
 
 void loadActiveFrames() {
