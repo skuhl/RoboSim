@@ -42,7 +42,9 @@ int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
 int active_program = -1; // the currently selected program
 int active_instruction = -1; // the currently selected instruction
-int mode = NONE; 
+int mode = NONE;
+// Used by some modes to refer to a previous mode
+int super_mode = NONE;
 int NUM_MODE; // When NUM_MODE is ON, allows for entering numbers
 int shift = OFF; // Is shift button pressed or not?
 int step = OFF; // Is step button pressed or not?
@@ -70,7 +72,6 @@ boolean speedInPercentage;
 final int ITEMS_TO_SHOW = 16; // how many programs/ instructions to display on screen
 int letterSet; // which letter group to enter
 Frame currentFrame;
-int inFrame;
 /*int teachingWhichPoint = 0;
 PVector[] tempPoints = new PVector[3];
 PVector[] tempVectors = new PVector[3];*/
@@ -1158,6 +1159,8 @@ public void mu() {
   active_col = active_row = 0;
   mode = MENU_NAV;
   updateScreen(color(255,0,0), color(0));
+  
+  if (mode == INSTRUCTION_NAV) { saveState(); }
 }
 
 
@@ -1217,7 +1220,7 @@ public void addNumber(String number) {
   }
 }
 
-public void PERIOD(){
+public void PERIOD() {
    if (NUM_MODE == ON){
       nums.add(-1);
    } else {
@@ -1225,6 +1228,19 @@ public void PERIOD(){
    }
    
    updateScreen(color(255,0,0), color(0,0,0));
+}
+
+public void LINE() {
+  if (workingText != null && workingText.length() > 0) {
+    // Mutliply current number by -1
+    if (workingText.charAt(0) == '-') {
+      workingText = workingText.substring(1);
+    } else {
+      workingText = "-" + workingText;
+    }
+    
+    updateScreen(color(255,0,0), color(0,0,0));
+  }
 }
 
 public void se(){
@@ -1236,6 +1252,8 @@ public void se(){
    clearScreen();
    loadPrograms();
    updateScreen(color(255,0,0), color(0,0,0));
+   // Save when exiting a program
+   if (mode == INSTRUCTION_NAV) { saveState(); }
 }
 
 public void up(){
@@ -1252,6 +1270,12 @@ public void up(){
            active_col = 0;
          }
          loadPrograms();
+         
+         if (DISPLAY_TEST_OUTPUT) {
+           System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
+                             active_row, active_col, active_program, text_render_start);
+         }
+         
          break;
       case INSTRUCTION_NAV:
          options = new ArrayList<String>();
@@ -1316,6 +1340,12 @@ public void dn(){
            active_col = 0;
          }
          loadPrograms();
+         
+         if (DISPLAY_TEST_OUTPUT) {
+           System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
+                             active_row, active_col, active_program, text_render_start);
+         }
+         
          break;
       case INSTRUCTION_NAV:
          options = new ArrayList<String>();
@@ -1510,6 +1540,7 @@ public void goToEnterTextMode() {
     options.add("");
     options.add("");
     options.add("Program Name:   " + workingText);
+    super_mode = mode;
     mode = ENTER_TEXT;
     which_option = 0;
     updateScreen(color(0), color(0));
@@ -1561,7 +1592,6 @@ public void f1(){
            
            loadInstructions(active_program);
            updateScreen(color(255,0,0), color(0,0,0));
-           saveState();
          }
          //shift = OFF;
          break;
@@ -1597,19 +1627,20 @@ public void f1(){
 public void f2() {
   if (mode == PROGRAM_NAV) {
     workingText = "";
+    active_program = -1;
     goToEnterTextMode();
   } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
-    inFrame = mode;
-    if (inFrame == NAV_TOOL_FRAMES) currentFrame = toolFrames[active_row];
-    else if (inFrame == NAV_USER_FRAMES) currentFrame = userFrames[active_row];
+    super_mode = mode;
+    if (super_mode == NAV_TOOL_FRAMES) currentFrame = toolFrames[active_row];
+    else if (super_mode == NAV_USER_FRAMES) currentFrame = userFrames[active_row];
     loadFrameDetails();
   } else if (mode == FRAME_DETAIL) {
-    if (inFrame == NAV_USER_FRAMES) {
+    if (super_mode == NAV_USER_FRAMES) {
       options = new ArrayList<String>();
       options.add("1.Three Point");
       options.add("2.Four Point");
       options.add("3.Direct Entry");
-    } else if (inFrame == NAV_TOOL_FRAMES) {
+    } else if (super_mode == NAV_TOOL_FRAMES) {
       options = new ArrayList<String>();
       options.add("1.Three Point");
       options.add("2.Six Point");
@@ -1623,7 +1654,23 @@ public void f2() {
 
 
 public void f3() {
-  if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
+  if (mode == PROGRAM_NAV) {
+    int progIdx = active_program;
+    if (progIdx >= 0 && progIdx < programs.size()) {
+      programs.remove(progIdx);
+      
+      if (active_program >= programs.size()) {
+        active_program = programs.size() - 1;
+        /* 13 is the maximum number of instructions that can be displayed at one point in time */
+        active_row = min(active_program, ITEMS_TO_SHOW - 4);
+        text_render_start = active_program - active_row;
+      }
+      
+      loadPrograms();
+      updateScreen(color(255,0,0), color(0));
+      saveState();
+    }
+  } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
     options = new ArrayList<String>();
     options.add("1.Tool Frame");
     options.add("2.Jog Frame");
@@ -1696,9 +1743,7 @@ public void f4() {
      case CONFIRM_DELETE:
          Program prog = programs.get(active_program);
          prog.getInstructions().remove(active_instruction);
-         
          deleteInstEpilogue();
-         saveState();
          break;
      case NAV_TOOL_FRAMES:
        // Reset the highlighted frame in the tool frame list
@@ -1862,10 +1907,10 @@ public void f5() {
           
           teachPointTMatrices = null;
           // Leave Three Point Method menu
-          if (inFrame == NAV_TOOL_FRAMES) {
+          if (super_mode == NAV_TOOL_FRAMES) {
             mode = NAV_TOOL_FRAMES;
             loadToolFrames();
-          } else if (inFrame == NAV_USER_FRAMES) {
+          } else if (super_mode == NAV_USER_FRAMES) {
             mode = NAV_USER_FRAMES;
             loadUserFrames();
           } else {
@@ -2075,7 +2120,6 @@ public void ENTER(){
       case NONE:
          break;
       case PROGRAM_NAV:
-         //saveState();
          active_instruction = 0;
          text_render_start = 0;
          mode = INSTRUCTION_NAV;
@@ -2129,13 +2173,17 @@ public void ENTER(){
          break;
       case SET_INSTRUCTION_SPEED:
          float tempSpeed = Float.parseFloat(workingText);
-         if (speedInPercentage) {
-           if (tempSpeed > 100) tempSpeed = 10; 
-           tempSpeed /= 100.0;
+         if (tempSpeed >= 5.0) {
+           if (speedInPercentage) {
+             if (tempSpeed > 100) tempSpeed = 10; 
+             tempSpeed /= 100.0;
+           } else if (tempSpeed > armModel.motorSpeed) {
+             tempSpeed = armModel.motorSpeed;
+           }
+           MotionInstruction castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
+           castIns.setSpeed(tempSpeed);
+           saveState();
          }
-         else if (tempSpeed > armModel.motorSpeed) tempSpeed = armModel.motorSpeed;
-         MotionInstruction castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
-         castIns.setSpeed(tempSpeed);
          loadInstructions(active_program);
          mode = INSTRUCTION_NAV;
          options = new ArrayList<String>();
@@ -2147,7 +2195,7 @@ public void ENTER(){
          try {
            int tempRegister = Integer.parseInt(workingText);
            if (tempRegister >= 0 && tempRegister < pr.length) {
-             castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
+             MotionInstruction castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
              castIns.setRegister(tempRegister);
            }
          } catch (NumberFormatException NFEx){ /* Ignore invalid numbers */ }
@@ -2161,9 +2209,11 @@ public void ENTER(){
          break;
       case SET_INSTRUCTION_TERMINATION:
          float tempTerm = Float.parseFloat(workingText);
-         tempTerm /= 100.0;
-         castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
-         castIns.setTermination(tempTerm);
+         if (tempTerm > 0.0) {
+           tempTerm /= 100.0;
+           MotionInstruction castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
+           castIns.setTermination(tempTerm);
+         }
          loadInstructions(active_program);
          mode = INSTRUCTION_NAV;
          options = new ArrayList<String>();
@@ -2198,10 +2248,17 @@ public void ENTER(){
            active_program = new_prog;
            active_instruction = 0;
            mode = INSTRUCTION_NAV;
-           saveState();
+           super_mode = NONE;
            clearScreen();
            options = new ArrayList<String>();
            loadInstructions(active_program);
+           updateScreen(color(255,0,0), color(0,0,0));
+         } else {
+           mode = super_mode;
+           super_mode = NONE;
+           clearScreen();
+           options = new ArrayList<String>();
+           loadPrograms();
            updateScreen(color(255,0,0), color(0,0,0));
          }
          
@@ -2273,16 +2330,21 @@ public void ENTER(){
          
          try {
            int bracketNum = Integer.parseInt(workingText);
-           ToolInstruction insert = new ToolInstruction(
-              (mode == SET_DO_STATUS ? "DO" : "RO"),
-              bracketNum,
-              (which_option == 0 ? ON : OFF));
-           prog.addInstruction(insert);
-           saveState();
+           if (bracketNum >= 0) {
+             ToolInstruction insert = new ToolInstruction(
+                (mode == SET_DO_STATUS ? "DO" : "RO"),
+                bracketNum,
+                (which_option == 0 ? ON : OFF));
+             prog.addInstruction(insert);
+           }
          } catch (NumberFormatException NFEx) { /* Ignore invalid numbers */ }
          
-         active_instruction = prog.getInstructions().size()-1;
+         active_instruction = prog.getInstructions().size() - 1;
          active_col = 0;
+         /* 13 is the maximum number of instructions that can be displayed at one point in time */
+         active_row = min(active_instruction, ITEMS_TO_SHOW - 4);
+         text_render_start = active_instruction - active_row;
+         
          loadInstructions(active_program);
          active_row = contents.size()-1;
          mode = INSTRUCTION_NAV;
@@ -2301,13 +2363,15 @@ public void ENTER(){
            if (active_row == 0) type = FTYPE_TOOL;
            else if (active_row == 1) type = FTYPE_USER;
            prog.addInstruction(new FrameInstruction(type, num));
-           saveState();
          } catch (NumberFormatException NFEx) { /* Ignore invalid numbers */ }
          
-         active_instruction = prog.getInstructions().size()-1;
+         active_instruction = prog.getInstructions().size() - 1;
          active_col = 0;
+         /* 13 is the maximum number of instructions that can be displayed at one point in time */
+         active_row = min(active_instruction, ITEMS_TO_SHOW - 4);
+         text_render_start = active_instruction - active_row;
+         
          loadInstructions(active_program);
-         active_row = contents.size()-1;
          mode = INSTRUCTION_NAV;
          which_option = -1;
          active_row = 0;
@@ -2984,7 +3048,7 @@ public void updateScreen(color active, color normal){
    // display hints for function keys
    next_py += 100;
    if (mode == PROGRAM_NAV) {
-          fn_info.setText("F2: CREATE")
+          fn_info.setText("F2: CREATE     F3: DELETE")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
@@ -3132,12 +3196,12 @@ public void loadThreePointMethod() {
   
     String[] limbo = new String[3];
     
-    if (inFrame == NAV_TOOL_FRAMES) {
+    if (super_mode == NAV_TOOL_FRAMES) {
       
       limbo[0] = "First Approach Point: ";
       limbo[1] = "Second Approach Point: ";
       limbo[2] = "Third Approach Point: ";
-    } else if (inFrame == NAV_TOOL_FRAMES) {
+    } else if (super_mode == NAV_TOOL_FRAMES) {
       
       limbo[0] = "Orient Origin Point: ";
       limbo[1] = "X Direction Point: ";
@@ -3168,8 +3232,8 @@ public void loadFrameDetails() {
   contents = new ArrayList<ArrayList<String>>();
   ArrayList<String> line = new ArrayList<String>();
   String str = "";
-  if (inFrame == NAV_TOOL_FRAMES) str = "TOOL FRAME " + (active_row+1);
-  else if (inFrame == NAV_USER_FRAMES) str = "USER FRAME " + (active_row+1);
+  if (super_mode == NAV_TOOL_FRAMES) str = "TOOL FRAME " + (active_row+1);
+  else if (super_mode == NAV_USER_FRAMES) str = "USER FRAME " + (active_row+1);
   line.add(str);
   contents.add(line);
   
@@ -3301,7 +3365,6 @@ void loadPrograms() {
    int size = programs.size();
    /*if (size <= 0){
       programs.add(new Program("My Program 1"));
-      saveState();
    }/* */
    
    active_instruction = 0;
