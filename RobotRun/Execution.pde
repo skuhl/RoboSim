@@ -173,7 +173,7 @@ void showMainDisplayText() {
   }
   
   float[] q = armModel.getQuaternion();
-  String quat = String.format("q: [%4.3f, %4.3f, %4.3f, %4.3f]", q[0], q[1], q[2], q[3]);
+  String quat = String.format("q: [%8.6f, %8.6f, %8.6f, %8.6f]", q[0], q[1], q[2], q[3]);
   text(quat, 20, height/2 + 148);
   
   float[] c = objects[1].form.position();
@@ -453,9 +453,9 @@ int calculateIKJacobian(PVector tgt, float[] rot){
                        pow(rDelta[1], 2) + 
                        pow(rDelta[2], 2) + 
                        pow(rDelta[3], 2));
-                           
+                                                  
     //check whether our current position is within tolerance
-    if(dist < 0.5 && rDist < 0.01) break;
+    if(dist < 0.5 && rDist < 0.005) break;
     //calculate jacobian, 'J', and its inverse 
     float[][] J = calculateJacobian(angles);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
@@ -474,13 +474,13 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     }
     
     count += 1;
-    if(count == limit/2){
-      angles = armModel.getJointRotations();
-      rot[0] = -rot[0];
-      rot[1] = -rot[1];
-      rot[2] = -rot[2];
-      rot[3] = -rot[3];
-    }
+    //if(count == limit/2){
+    //  angles = armModel.getJointRotations();
+    //  rot[0] = -rot[0];
+    //  rot[1] = -rot[1];
+    //  rot[2] = -rot[2];
+    //  rot[3] = -rot[3];
+    //}
   }
   
   //did we successfully find the desired angles?
