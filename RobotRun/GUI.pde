@@ -91,7 +91,7 @@ int which_option = -1; // which option is on focus now?
 int index_contents = 0, index_options = 100, index_nums = 1000; // how many textlabels have been created for display
 int mouseDown = 0;
 
-private static final boolean DISPLAY_TEST_OUTPUT = true;
+private static final boolean DISPLAY_TEST_OUTPUT = false;
 
 void gui(){
    g1_px = 0;
@@ -1855,11 +1855,11 @@ public void f5() {
           
           for (int pt = 0; pt < teachPointTMatrices.size(); ++pt) {
             System.out.printf("\nPoint %d:\n\n", pt);
-            printHCMatrix(teachPointTMatrices.get(pt));
+            println( matrixToString(teachPointTMatrices.get(pt)) );
           }
           
           System.out.printf("\nPoint 2 inverse:\n\n");
-          printHCMatrix(invertHCMatrix(teachPointTMatrices.get(2)));
+          println( matrixToString(invertHCMatrix(teachPointTMatrices.get(2))) );
           
           /* TODO
              
@@ -1905,7 +1905,7 @@ public void f5() {
           float[][] p = doubleToFloat(P.getData(), 3, 3);
           
           System.out.printf("\nI - T2 * inv(T3):\n\n");
-          printNxMMatrix(p, 3, 3);
+          println( matrixToString(p) );
           
           // TODO Fix Three Point Method implementation
           

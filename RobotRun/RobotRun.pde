@@ -96,7 +96,7 @@ public void setup(){
   pushMatrix();
   resetMatrix();
   translate(-100, 100, -350);
-  //printHCMatrix(getTransformationMatrix());
+  //print( matrixToString(getTransformationMatrix()) );
   
   objects[0] = new Object(125, 60, 300, color(255, 0, 0), color(255, 0, 255));
  

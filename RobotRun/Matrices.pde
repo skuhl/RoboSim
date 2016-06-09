@@ -345,28 +345,25 @@ float[] quaternionMult(float[] q1, float[] q2) {
   return r;
 }
 
-/* Displays the contents of a 4x4 matrix in the command line */
-public void printHCMatrix(float[][] m) {
-  if (m.length != 4 || m[0].length != 4) { 
-    return;
-  }
+/* Returns a string represenation of the given matrix.
+ * 
+ * @param matrixx  A non-null matrix
+ */
+public String matrixToString(float[][] matrix) {
+  String mStr = "";
+  
+  for (int row = 0; row < matrix.length; ++row) {
+    mStr += "\n[";
 
-  for (int r = 0; r < m.length; ++r) {
-    String row = String.format("[ %5.4f %5.4f %5.4f %5.4f ]\n", m[r][0], m[r][1], m[r][2], m[r][3]);
-    print(row);
-  }
-}
-
-public void printNxMMatrix(float[][] matrix, int n, int m) {
-
-  for (int row = 0; row < n; ++row) {
-    String rowStr = "[ ";
-
-    for (int col = 0; col < m; ++col) {
-      rowStr += String.format(" %5.4f", matrix[row][col]);
+    for (int col = 0; col < matrix[0].length; ++col) {
+      // Account for the negative sign character
+      if (matrix[row][col] >= 0) { mStr += " "; }
+      
+      mStr += String.format(" %5.6f", matrix[row][col]);
     }
 
-    rowStr += " ]\n";
-    System.out.print(rowStr);
+    mStr += "  ]";
   }
+  
+  return (mStr + "\n");
 }
