@@ -1852,13 +1852,6 @@ public void f5() {
       
       /* Calculate the New Tool Frame after the third point has been recorded */
       if (teachPointTMatrices.size() == 3) {
-          
-          for (int pt = 0; pt < teachPointTMatrices.size(); ++pt) {
-            // Print out each matrix
-            System.out.printf("Point %d:\n", pt);
-            println( matrixToString(teachPointTMatrices.get(pt)) );
-          }
-          
           /****************************************************************
              Three Point Method Calculation
              
@@ -1881,33 +1874,49 @@ public void f5() {
              x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
              
            ****************************************************************/
-          RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(0), 3, 3));
-          RealMatrix Br = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(1), 3, 3));
-          RealMatrix Cr = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(2), 3, 3));
+          RealVector avg_TCP = new ArrayRealVector(new double[] {0.0, 0.0, 0.0} , false);
           
-          System.out.printf("Ar:\n%s\n", matrixToString( doubleToFloat(Ar.getData(), 3, 3) ));
-          System.out.printf("Br:\n%s\n", matrixToString( doubleToFloat(Br.getData(), 3, 3) ));
-          System.out.printf("Cr:\n%s\n", matrixToString( doubleToFloat(Cr.getData(), 3, 3) ));
-          
-          double [] t = new double[3];
-          for (int idx = 0; idx < 3; ++idx) {
-            // Build a double from the result of the translation portions of the transformation matrices
-            t[idx] = 2 * teachPointTMatrices.get(2)[idx][2] - teachPointTMatrices.get(1)[idx][2] - teachPointTMatrices.get(0)[idx][2];
+          for (int idxC = 0; idxC < teachPointTMatrices.size(); ++idxC) {
+            
+            int idxA = (idxC + 1) % teachPointTMatrices.size(),
+                idxB = (idxA + 1) % teachPointTMatrices.size();
+            System.out.printf("\nA = %d\nB = %d\nC = %d\n\n", idxA, idxB, idxC);
+            
+            RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxA), 3, 3));
+            RealMatrix Br = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxB), 3, 3));
+            RealMatrix Cr = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxC), 3, 3));
+            
+            double [] t = new double[3];
+            for (int idx = 0; idx < 3; ++idx) {
+              // Build a double from the result of the translation portions of the transformation matrices
+              t[idx] = 2 * teachPointTMatrices.get(idxC)[idx][3] - ( teachPointTMatrices.get(idxA)[idx][3] + teachPointTMatrices.get(idxB)[idx][3] );
+            }
+            
+            /* 2Ct - At - Bt */
+            RealVector b = new ArrayRealVector(t, false);
+            /* Ar + Br - 2Cr */
+            RealMatrix R = ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) );
+            
+            /*System.out.printf("R:\n%s\n", matrixToString( doubleToFloat(R.getData(), 3, 3) ));
+            System.out.printf("t:\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", b.getEntry(0), b.getEntry(1), b.getEntry(2));*/
+            
+            /* (R ^ -1) * b */
+            avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
           }
           
-          System.out.printf("t:\n%s\n", t);
-          
-          /* 2Ct - At - Bt */
-          RealVector b = new ArrayRealVector(t, false);
-          /* Ar + Br - 2Cr */
-          RealMatrix R = (Ar.add(Br)).subtract(Cr.scalarMultiply(2));
-          /* Solve Rx = b for x */
-          RealVector x = (new SingularValueDecomposition(R)).getSolver().solve(b);
+           /* Take the average of the three cases: where C = the first point, the second point, and the third point */
+          avg_TCP = avg_TCP.mapMultiply( 1.0 / 3.0 );
           
           /* Build a 3x1 matrix for the result vector x */
           float[][] tcp = new float[3][];
           for (int row = 0; row < tcp.length; ++row) {
-            tcp[row] = new float[] { (float)x.getEntry(row) };
+            tcp[row] = new float[] { (float)avg_TCP.getEntry(row) };
+          }
+          
+          for (int pt = 0; pt < teachPointTMatrices.size(); ++pt) {
+            // Print out each matrix
+            System.out.printf("Point %d:\n", pt);
+            println( matrixToString(teachPointTMatrices.get(pt)) );
           }
           
           System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n");
