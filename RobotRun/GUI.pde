@@ -80,14 +80,19 @@ int activeJogFrame = -1;
 int activeToolFrame = -1;
 PVector[] teachingPts = new PVector[3];
 
-// display on screen
-ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>(); // display list of programs or motion instructions
-ArrayList<String> options = new ArrayList<String>(); // display options for an element in a motion instruction
-ArrayList<Integer> nums = new ArrayList<Integer>(); // store numbers pressed by the user
-int active_row = 0, active_col = 0; // which element is on focus now?
+// display list of programs or motion instructions
+ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>();
+// display options for an element in a motion instruction
+ArrayList<String> options = new ArrayList<String>();
+// store numbers pressed by the user
+ArrayList<Integer> nums = new ArrayList<Integer>(); 
+// which element is on focus now?
+int active_row = 0, active_col = 0; 
 int text_render_start = 0;
-int which_option = -1; // which option is on focus now?
-int index_contents = 0, index_options = 100, index_nums = 1000; // how many textlabels have been created for display
+// which option is on focus now?
+int which_option = -1; 
+// how many textlabels have been created for display
+int index_contents = 0, index_options = 100, index_nums = 1000; 
 int mouseDown = 0;
 
 private static final boolean DISPLAY_TEST_OUTPUT = true;
@@ -143,7 +148,9 @@ void gui(){
        
     int zoomin_shrink_px =  bt_show_px + LARGE_BUTTON;
     int zoomin_shrink_py = bt_show_py;
-    PImage[] zoomin_shrink = {loadImage("images/zoomin_35x20.png"), loadImage("images/zoomin_over.png"), loadImage("images/zoomin_down.png")};   
+    PImage[] zoomin_shrink = {loadImage("images/zoomin_35x20.png"), 
+                              loadImage("images/zoomin_over.png"), 
+                              loadImage("images/zoomin_down.png")};   
     bt_zoomin_shrink = cp5.addButton("zoomin_shrink")
        .setPosition(zoomin_shrink_px, zoomin_shrink_py)
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -154,7 +161,9 @@ void gui(){
        
     int zoomout_shrink_px = zoomin_shrink_px + LARGE_BUTTON ;
     int zoomout_shrink_py = zoomin_shrink_py;   
-    PImage[] zoomout_shrink = {loadImage("images/zoomout_35x20.png"), loadImage("images/zoomout_over.png"), loadImage("images/zoomout_down.png")};   
+    PImage[] zoomout_shrink = {loadImage("images/zoomout_35x20.png"), 
+                               loadImage("images/zoomout_over.png"), 
+                               loadImage("images/zoomout_down.png")};   
     bt_zoomout_shrink = cp5.addButton("zoomout_shrink")
        .setPosition(zoomout_shrink_px, zoomout_shrink_py)
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -165,7 +174,9 @@ void gui(){
    
     int pan_shrink_px = zoomout_shrink_px + LARGE_BUTTON;
     int pan_shrink_py = zoomout_shrink_py ;
-    PImage[] pan_shrink = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")};   
+    PImage[] pan_shrink = {loadImage("images/pan_35x20.png"), 
+                           loadImage("images/pan_over.png"), 
+                           loadImage("images/pan_down.png")};   
     bt_pan_shrink = cp5.addButton("pan_shrink")
        .setPosition(pan_shrink_px, pan_shrink_py)
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -176,7 +187,9 @@ void gui(){
        
     int rotate_shrink_px = pan_shrink_px + LARGE_BUTTON;
     int rotate_shrink_py = pan_shrink_py;   
-    PImage[] rotate_shrink = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")};   
+    PImage[] rotate_shrink = {loadImage("images/rotate_35x20.png"), 
+                              loadImage("images/rotate_over.png"), 
+                              loadImage("images/rotate_down.png")};   
     bt_rotate_shrink = cp5.addButton("rotate_shrink")
        .setPosition(rotate_shrink_px, rotate_shrink_py)
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -198,7 +211,9 @@ void gui(){
      
     int zoomin_normal_px =  hide_px + LARGE_BUTTON + 1;
     int zoomin_normal_py = hide_py;
-    PImage[] zoomin_normal = {loadImage("images/zoomin_35x20.png"), loadImage("images/zoomin_over.png"), loadImage("images/zoomin_down.png")};   
+    PImage[] zoomin_normal = {loadImage("images/zoomin_35x20.png"), 
+                              loadImage("images/zoomin_over.png"), 
+                              loadImage("images/zoomin_down.png")};   
     bt_zoomin_normal = cp5.addButton("zoomin_normal")
        .setPosition(zoomin_normal_px, zoomin_normal_py)
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -208,7 +223,9 @@ void gui(){
        
     int zoomout_normal_px = zoomin_normal_px + LARGE_BUTTON + 1;
     int zoomout_normal_py = zoomin_normal_py;   
-    PImage[] zoomout_normal = {loadImage("images/zoomout_35x20.png"), loadImage("images/zoomout_over.png"), loadImage("images/zoomout_down.png")};   
+    PImage[] zoomout_normal = {loadImage("images/zoomout_35x20.png"), 
+                               loadImage("images/zoomout_over.png"), 
+                               loadImage("images/zoomout_down.png")};   
     bt_zoomout_normal = cp5.addButton("zoomout_normal")
        .setPosition(zoomout_normal_px, zoomout_normal_py)
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -218,7 +235,9 @@ void gui(){
    
     int pan_normal_px = zoomout_normal_px + LARGE_BUTTON + 1;
     int pan_normal_py = zoomout_normal_py ;
-    PImage[] pan = {loadImage("images/pan_35x20.png"), loadImage("images/pan_over.png"), loadImage("images/pan_down.png")};   
+    PImage[] pan = {loadImage("images/pan_35x20.png"), 
+                    loadImage("images/pan_over.png"), 
+                    loadImage("images/pan_down.png")};   
     bt_pan_normal = cp5.addButton("pan_normal")
        .setPosition(pan_normal_px, pan_normal_py)
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -228,7 +247,9 @@ void gui(){
        
     int rotate_normal_px = pan_normal_px + LARGE_BUTTON + 1;
     int rotate_normal_py = pan_normal_py;   
-    PImage[] rotate = {loadImage("images/rotate_35x20.png"), loadImage("images/rotate_over.png"), loadImage("images/rotate_down.png")};   
+    PImage[] rotate = {loadImage("images/rotate_35x20.png"), 
+                       loadImage("images/rotate_over.png"), 
+                       loadImage("images/rotate_down.png")};   
     bt_rotate_normal = cp5.addButton("rotate_normal")
        .setPosition(rotate_normal_px, rotate_normal_py)
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -238,7 +259,9 @@ void gui(){
        
     int record_normal_px = rotate_normal_px + LARGE_BUTTON + 1;
     int record_normal_py = rotate_normal_py;   
-    PImage[] record = {loadImage("images/record-35x20.png"), loadImage("images/record-over.png"), loadImage("images/record-on.png")};   
+    PImage[] record = {loadImage("images/record-35x20.png"), 
+                       loadImage("images/record-over.png"), 
+                       loadImage("images/record-on.png")};   
     bt_record_normal = cp5.addButton("record_normal")
        .setPosition(record_normal_px, record_normal_py)
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -248,7 +271,9 @@ void gui(){
       
     int EE_normal_px = record_normal_px + LARGE_BUTTON + 1;
     int EE_normal_py = record_normal_py;   
-    PImage[] EE = {loadImage("images/EE_35x20.png"), loadImage("images/EE_over.png"), loadImage("images/EE_down.png")};   
+    PImage[] EE = {loadImage("images/EE_35x20.png"), 
+                   loadImage("images/EE_over.png"), 
+                   loadImage("images/EE_down.png")};   
     bt_ee_normal = cp5.addButton("EE")
        .setPosition(EE_normal_px, EE_normal_py)
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -256,7 +281,9 @@ void gui(){
        .updateSize()
        .moveTo(g1) ;    
        
-   PImage[] imgs_arrow_up = {loadImage("images/arrow-up.png"), loadImage("images/arrow-up_over.png"), loadImage("images/arrow-up_down.png")};   
+   PImage[] imgs_arrow_up = {loadImage("images/arrow-up.png"), 
+                             loadImage("images/arrow-up_over.png"), 
+                             loadImage("images/arrow-up_down.png")};   
    int up_px = display_px+display_width + 2;
    int up_py = display_py;
    cp5.addButton("up")
@@ -266,7 +293,9 @@ void gui(){
        .updateSize()
        .moveTo(g1) ;     
    
-    PImage[] imgs_arrow_down = {loadImage("images/arrow-down.png"), loadImage("images/arrow-down_over.png"), loadImage("images/arrow-down_down.png")};   
+    PImage[] imgs_arrow_down = {loadImage("images/arrow-down.png"), 
+                                loadImage("images/arrow-down_over.png"), 
+                                loadImage("images/arrow-down_down.png")};   
     int dn_px = up_px;
     int dn_py = up_py + LARGE_BUTTON + 2;
     cp5.addButton("dn")
@@ -276,7 +305,9 @@ void gui(){
        .updateSize()
        .moveTo(g1) ;    
    
-    PImage[] imgs_arrow_l = {loadImage("images/arrow-l.png"), loadImage("images/arrow-l_over.png"), loadImage("images/arrow-l_down.png")};
+    PImage[] imgs_arrow_l = {loadImage("images/arrow-l.png"), 
+                             loadImage("images/arrow-l_over.png"), 
+                             loadImage("images/arrow-l_down.png")};
     int lt_px = dn_px;
     int lt_py = dn_py + LARGE_BUTTON + 2;
     cp5.addButton("lt")
@@ -286,7 +317,9 @@ void gui(){
        .updateSize()
        .moveTo(g1) ;  
     
-    PImage[] imgs_arrow_r = {loadImage("images/arrow-r.png"), loadImage("images/arrow-r_over.png"), loadImage("images/arrow-r_down.png")};
+    PImage[] imgs_arrow_r = {loadImage("images/arrow-r.png"), 
+                             loadImage("images/arrow-r_over.png"), 
+                             loadImage("images/arrow-r_down.png")};
     int rt_px = lt_px;
     int rt_py = lt_py + LARGE_BUTTON + 2;;
     cp5.addButton("rt")
@@ -504,7 +537,9 @@ void gui(){
  
    int LEFT_px = RESET_px + LARGE_BUTTON + 1;
    int LEFT_py = RESET_py;
-   PImage[] imgs_LEFT = {loadImage("images/LEFT.png"), loadImage("images/LEFT.png"), loadImage("images/LEFT.png")};  
+   PImage[] imgs_LEFT = {loadImage("images/LEFT.png"), 
+                         loadImage("images/LEFT.png"), 
+                         loadImage("images/LEFT.png")};  
    cp5.addButton("LEFT")
       .setPosition(LEFT_px, LEFT_py)
       .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -967,6 +1002,10 @@ public void keyPressed(){
     return;
   } else if (key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
+  } else if(key == 'f'){
+    armModel.currentFrame = armModel.getRotationMatrix();
+  } else if(key == 'g'){
+    armModel.resetFrame();
   } else if (key == 'q') {
     armModel.getQuaternion();
   } else if(key == 'r'){
@@ -988,11 +1027,11 @@ public void keyPressed(){
   } else if(key == 'w'){
     /*------------Test Quaternion Rotation-------------------*/
     //armModel.currentFrame = armModel.getRotationMatrix();
-    float[] q = rotateQuat(armModel.getQuaternion(), 0, new PVector(1, 1, 1));
-    println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
-    PVector wpr = quatToEuler(q).mult(RAD_TO_DEG);
-    println("ee = " + wpr);
-    println();
+    //float[] q = rotateQuat(armModel.getQuaternion(), 0, new PVector(1, 1, 1));
+    //println("q = " + q[0] + ", " + q[1] + ", " + q[2] + ", " + q[3]);
+    //PVector wpr = quatToEuler(q).mult(RAD_TO_DEG);
+    //println("ee = " + wpr);
+    //println();
     //armModel.resetFrame(); 
     /*------------Test Conversion Functions------------------*/
     //float[] q = armModel.getQuaternion();
@@ -1007,14 +1046,20 @@ public void keyPressed(){
     float[] rot = {PI, 0, 0, 0, 0, PI};
     armModel.setJointRotations(rot);
     intermediatePositions.clear();
-  } else if (key == ENTER && (armModel.activeEndEffector == ENDEF_CLAW || armModel.activeEndEffector == ENDEF_SUCTION)) { 
-    // Pick up an object within reach of the EE when the 'ENTER' button is pressed for either the suction or claw EE
+  } else if (key == ENTER && (armModel.activeEndEffector == ENDEF_CLAW || 
+                              armModel.activeEndEffector == ENDEF_SUCTION)) { 
+    // Pick up an object within reach of the EE when the 'ENTER' button is pressed for either
+    // the suction or claw EE
     ToolInstruction pickup;
     
     if (armModel.endEffectorStatus == ON) {
-      pickup = (armModel.activeEndEffector == ENDEF_CLAW) ? new ToolInstruction("RO", 4, OFF) : new ToolInstruction("DO", 101, OFF);
+      pickup = (armModel.activeEndEffector == ENDEF_CLAW) ? 
+                new ToolInstruction("RO", 4, OFF) : 
+                new ToolInstruction("DO", 101, OFF);
     } else {
-      pickup = (armModel.activeEndEffector == ENDEF_CLAW) ? new ToolInstruction("RO", 4, ON) : new ToolInstruction("DO", 101, ON);
+      pickup = (armModel.activeEndEffector == ENDEF_CLAW) ? 
+                new ToolInstruction("RO", 4, ON) : 
+                new ToolInstruction("DO", 101, ON);
     }
     
     pickup.execute();
@@ -1666,7 +1711,7 @@ public void f4() {
              case 4: // speed
                 options = new ArrayList<String>();
                 options.add("Use number keys to enter a new speed");
-                MotionInstruction castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
+                MotionInstruction castIns = getActiveMotionInstruct();
                 if (castIns.getMotionType() == MTYPE_JOINT) {
                   speedInPercentage = true;
                   workingTextSuffix = "%";
@@ -1719,7 +1764,8 @@ public void f4() {
 public void f5() {
   if (mode == INSTRUCTION_NAV) {
     if (shift == OFF) {
-      if (active_col == 0) { // if you're on the line number, bring up a list of instruction editing options
+      if (active_col == 0) {
+        // if you're on the line number, bring up a list of instruction editing options
         contents = new ArrayList<ArrayList<String>>();
         ArrayList<String> line = new ArrayList<String>();
         line.add("1 Insert (NA)");
@@ -1741,7 +1787,8 @@ public void f5() {
         active_col = active_row = 0;
         mode = EDIT_MENU;
         updateScreen(color(255,0,0), color(0));
-      } else if (active_col == 2 || active_col == 3) { // show register contents if you're highlighting a register
+      } else if (active_col == 2 || active_col == 3) { 
+        // show register contents if you're highlighting a register
         Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
          if (ins instanceof MotionInstruction) {
          MotionInstruction castIns = (MotionInstruction)ins;
@@ -1917,7 +1964,8 @@ public void f5() {
           teachingWhichPoint++;
           loadThreePointMethod();
         } else {
-          // calculate approx. intersection pt. of the provided vectors to get the tool end effector position
+          // calculate approx. intersection pt. of the provided vectors to get the tool 
+          // end effector position
           PVector[] last = new PVector[3];
           PVector[] curr = new PVector[3];
           for (int n = 0; n < 3; n++)
@@ -1982,9 +2030,12 @@ public void f5() {
           // distance from the 3 end effector positions when setting the approaches
           currentFrame.setOrigin(
               new PVector(0, 0,
-                -(dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[0].x, teachingPts[0].y, teachingPts[0].z) +
-                 dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[1].x, teachingPts[1].y, teachingPts[1].z) +
-                 dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[2].x, teachingPts[2].y, teachingPts[2].z))/3.0
+                -(dist(closestPt.x, closestPt.y, closestPt.z, 
+                       teachingPts[0].x, teachingPts[0].y, teachingPts[0].z) +
+                 dist(closestPt.x, closestPt.y, closestPt.z, 
+                      teachingPts[1].x, teachingPts[1].y, teachingPts[1].z) +
+                 dist(closestPt.x, closestPt.y, closestPt.z, 
+                      teachingPts[2].x, teachingPts[2].y, teachingPts[2].z))/3.0
                 )
             );
           loadToolFrames();
@@ -2088,8 +2139,7 @@ public void ENTER(){
          }
          break;
       case INSTRUCTION_EDIT:
-         Program current_p = programs.get(active_program);
-         MotionInstruction m = (MotionInstruction)current_p.getInstructions().get(active_instruction);
+         MotionInstruction m = getActiveMotionInstruct();
          switch (active_col){
             case 1: // motion type
                if (which_option == 0){
@@ -2131,7 +2181,7 @@ public void ENTER(){
            tempSpeed /= 100.0;
          }
          else if (tempSpeed > armModel.motorSpeed) tempSpeed = armModel.motorSpeed;
-         MotionInstruction castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
+         MotionInstruction castIns = getActiveMotionInstruct();
          castIns.setSpeed(tempSpeed);
          loadInstructions(active_program);
          mode = INSTRUCTION_NAV;
@@ -2144,7 +2194,7 @@ public void ENTER(){
          try {
            int tempRegister = Integer.parseInt(workingText);
            if (tempRegister >= 0 && tempRegister < pr.length) {
-             castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
+             castIns = getActiveMotionInstruct();
              castIns.setRegister(tempRegister);
            }
          } catch (NumberFormatException NFEx){ /* Ignore invalid numbers */ }
@@ -2159,7 +2209,7 @@ public void ENTER(){
       case SET_INSTRUCTION_TERMINATION:
          float tempTerm = Float.parseFloat(workingText);
          tempTerm /= 100.0;
-         castIns = (MotionInstruction)(programs.get(active_program).getInstructions().get(active_instruction));
+         castIns = getActiveMotionInstruct();
          castIns.setTermination(tempTerm);
          loadInstructions(active_program);
          mode = INSTRUCTION_NAV;
@@ -2353,7 +2403,8 @@ public void COORD() {
 }
 
 public void SPEEDUP() {
-  if (liveSpeed < 0.5) liveSpeed += 0.05;
+  if (liveSpeed == 0.01) liveSpeed += 0.04; 
+  else if (liveSpeed < 0.5) liveSpeed += 0.05;
   else if (liveSpeed < 1) liveSpeed += 0.1;
   if (liveSpeed > 1) liveSpeed = 1;
 }
@@ -2362,7 +2413,7 @@ public void SPEEDUP() {
 public void SLOWDOWN() {
   if (liveSpeed > 0.5) liveSpeed -= 0.1;
   else if (liveSpeed > 0) liveSpeed -= 0.05;
-  if (liveSpeed < 0.05) liveSpeed = 0.05;
+  if (liveSpeed < 0.01) liveSpeed = 0.01;
 }
 
 

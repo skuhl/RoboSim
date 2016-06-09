@@ -18,7 +18,8 @@ public PVector transform(PVector v, float[][] tMatrix) {
  * Find the inverse of the given 4x4 Homogeneous Coordinate Matrix. 
  * 
  * This method is based off of the algorithm found on this webpage:
- *    https://web.archive.org/web/20130806093214/http://www-graphics.stanford.edu/courses/cs248-98-fall/Final/q4.html
+ *    https://web.archive.org/web/20130806093214/http://www-graphics.stanford.edu/
+ *      courses/cs248-98-fall/Final/q4.html
  */
 public float[][] invertHCMatrix(float[][] m) {
   if (m.length != 4 || m[0].length != 4) {
@@ -321,18 +322,42 @@ float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
   return doubleToFloat(MR.getData(), 3, 3);
 }
 
-//calculates the result of a rotation of quaternion 'p'
-//about axis 'u' by 'theta' degrees
+/* Calculates the result of a rotation of quaternion 'p'
+ * about axis 'u' by 'theta' degrees
+ */
 float[] rotateQuat(float[] p, float theta, PVector u) {
   float[] q = new float[4];
+  
   q[0] = cos(theta/2);
   q[1] = sin(theta/2)*u.x;
   q[2] = sin(theta/2)*u.y;
   q[3] = sin(theta/2)*u.z;
+  
+  float[] qp = quaternionMult(q, p);
 
-  float[] pq = quaternionMult(p, q);
+  return qp;
+}
 
-  return pq;
+/* Given 2 quaternions, calculates the quaternion representing the 
+ * rotation from 'q1' to 'q2' such that 'qr'*'q1' = 'q2'. Note that 
+ * the multiply operation should be taken to mean quaternion
+ * multiplication, which is non-commutative.
+ */
+float[] calculateQuatOffset(float[] q1, float[] q2){
+  float[] q1_inv = new float[4];
+  q1_inv[0] = q1[0];
+  q1_inv[1] = -q1[1];
+  q1_inv[2] = -q1[2];
+  q1_inv[3] = -q1[3];
+  
+  float[] qr = quaternionMult(q2, q1_inv);
+  
+  for(int i = 0; i < 4; i += 1){
+    if(qr[i] < 0.00001)
+      qr[i] = 0;
+  }
+  
+  return qr;
 }
 
 float[] quaternionMult(float[] q1, float[] q2) {
@@ -343,6 +368,11 @@ float[] quaternionMult(float[] q1, float[] q2) {
   r[3] = q1[0]*q2[3] + q1[1]*q2[2] - q1[2]*q2[1] + q1[3]*q2[0];
 
   return r;
+}
+
+//returns the magnitude of the input quaternion 'q'
+float calculateQuatMag(float[] q){
+  return sqrt(pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2));
 }
 
 /* Displays the contents of a 4x4 matrix in the command line */

@@ -163,7 +163,7 @@ void showMainDisplayText() {
     textSize(12);
     fill(0, 0, 0);
     
-    float[][] vectorMatrix = armModel.getRotationMatrix();
+    float[][] vectorMatrix = armModel.getRotationMatrix(armModel.currentFrame);
     String row = String.format("[  %f  %f  %f  ]", vectorMatrix[0][0], vectorMatrix[0][1], vectorMatrix[0][2]);
     text(row, 20, height / 2 + 80);
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[1][0], vectorMatrix[1][1], vectorMatrix[1][2]);
@@ -410,7 +410,7 @@ public float[][] calculateJacobian(float[] angles){
     J[0][i] = (nPos.x - cPos.x)/DEG_TO_RAD;
     J[1][i] = (nPos.y - cPos.y)/DEG_TO_RAD;
     J[2][i] = (nPos.z - cPos.z)/DEG_TO_RAD;
-    //get rotational delta
+    //get rotational delta        
     J[3][i] = (nRotQ[0] - cRotQ[0])/DEG_TO_RAD;
     J[4][i] = (nRotQ[1] - cRotQ[1])/DEG_TO_RAD;
     J[5][i] = (nRotQ[2] - cRotQ[2])/DEG_TO_RAD;
@@ -428,6 +428,16 @@ public float[][] calculateJacobian(float[] angles){
 int calculateIKJacobian(PVector tgt, float[] rot){
   final int limit = 500;  //max number of times to loop
   float[] angles = armModel.getJointRotations();
+  float[][] frame = armModel.currentFrame;
+  float[][] nFrame = armModel.getRotationMatrix();
+  float[][] rMatrix = quatToMatrix(rot);
+  armModel.currentFrame = nFrame;
+  //translate target rotation to new ref frame
+  RealMatrix M = new Array2DRowRealMatrix(floatToDouble(nFrame, 3, 3));
+  RealMatrix R = new Array2DRowRealMatrix(floatToDouble(rMatrix, 3, 3));
+  RealMatrix MR = R.multiply(MatrixUtils.inverse(M));
+  rot = matrixToQuat(doubleToFloat(MR.getData(), 3, 3));
+  
   int count = 0;
   
   while(count < limit){
@@ -455,7 +465,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
                        pow(rDelta[3], 2));
                                                   
     //check whether our current position is within tolerance
-    if(dist < 0.5 && rDist < 0.005) break;
+    if(dist < 0.5 && rDist < 0.00005) break;
     //calculate jacobian, 'J', and its inverse 
     float[][] J = calculateJacobian(angles);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
@@ -474,15 +484,9 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     }
     
     count += 1;
-    //if(count == limit/2){
-    //  angles = armModel.getJointRotations();
-    //  rot[0] = -rot[0];
-    //  rot[1] = -rot[1];
-    //  rot[2] = -rot[2];
-    //  rot[3] = -rot[3];
-    //}
   }
   
+  armModel.currentFrame = frame;
   //did we successfully find the desired angles?
   if(count >= limit){
     return EXEC_FAILURE;
@@ -676,6 +680,18 @@ boolean executeMotion(ArmModel model, float speedMult) {
   return false;
 } // end execute linear motion
 
+MotionInstruction getActiveMotionInstruct(){
+  Instruction inst = new Instruction();
+  Program p = programs.get(active_program);
+  
+  if(p != null && p.getInstructions().size() != 0)
+    inst = p.getInstructions().get(active_instruction);
+  else return null;
+  
+  if(inst instanceof MotionInstruction)
+    return (MotionInstruction)inst;
+  else return null;
+}
 
 /**
  * Convert a point based on a coordinate system defined as

@@ -635,7 +635,7 @@ public class ArmModel {
     float[][] m = getRotationMatrix();
     RealMatrix A = new Array2DRowRealMatrix(floatToDouble(m, 3, 3));
     RealMatrix B = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
-    RealMatrix AB = A.multiply(B);
+    RealMatrix AB = A.multiply(B.transpose());
     
     //println(AB);
     
@@ -831,12 +831,21 @@ public class ArmModel {
   } // end interpolate rotation
   
   void updateOrientation(){
-    PVector u = new PVector(mvRot[0], mvRot[1], mvRot[2]);
-    u.normalize();
+    PVector u = new PVector(0, 0, 0);
+    RealMatrix frameInverse = new Array2DRowRealMatrix(floatToDouble(currentFrame, 3, 3));
+    frameInverse = MatrixUtils.inverse(frameInverse);
+    float theta = DEG_TO_RAD*10*liveSpeed;
+    
+    //if not in user frame mode
+    for(int i = 0; i < 3; i += 1){
+      u.x += mvRot[i]*frameInverse.getEntry(i, 0);
+      u.y += mvRot[i]*frameInverse.getEntry(i, 1);
+      u.z += mvRot[i]*frameInverse.getEntry(i, 2);
+    }
     
     if(u.x != 0 || u.y != 0 || u.z != 0){
       //tgtRot = rotateQuat(tgtRot, DEG_TO_RAD, u);
-      float[][] tgtMatrix = rotateAxisVector(getRotationMatrix(), DEG_TO_RAD, u);
+      float[][] tgtMatrix = rotateAxisVector(getRotationMatrix(currentFrame), theta, u.normalize());
       tgtRot = matrixToQuat(tgtMatrix);
     }
   }
