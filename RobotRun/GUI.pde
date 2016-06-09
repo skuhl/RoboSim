@@ -24,16 +24,17 @@ final int NONE = 0,
           FRAME_DETAIL = 16,
           PICK_FRAME_METHOD = 17,
           THREE_POINT_MODE = 18,
-          ACTIVE_FRAMES = 19,
-          PICK_INSTRUCTION = 20,
-          IO_SUBMENU = 21,
-          SET_DO_BRACKET = 22,
-          SET_DO_STATUS = 23,
-          SET_RO_BRACKET = 24,
-          SET_RO_STATUS = 25,
-          SET_FRAME_INSTRUCTION = 26,
-          EDIT_MENU = 27,
-          CONFIRM_DELETE = 28;
+          DIRECT_ENTRY_MODE = 19,
+          ACTIVE_FRAMES = 20,
+          PICK_INSTRUCTION = 21,
+          IO_SUBMENU = 22,
+          SET_DO_BRACKET = 23,
+          SET_DO_STATUS = 24,
+          SET_RO_BRACKET = 25,
+          SET_RO_STATUS = 26,
+          SET_FRAME_INSTRUCTION = 27,
+          EDIT_MENU = 28,
+          CONFIRM_DELETE = 29;
 final int COLOR_DEFAULT = -8421377,
           COLOR_ACTIVE = -65536;
 static int     EE_MAPPING = 2;
@@ -1259,6 +1260,8 @@ public void addNumber(String number) {
     updateScreen(color(255,0,0), color(0,0,0));
   } else if (mode == SET_FRAME_INSTRUCTION) {
     workingText += number;
+  } else if (mode == DIRECT_ENTRY_MODE) {
+    // TODO add 
   }
 }
 
@@ -1887,76 +1890,91 @@ public void f5() {
   } else if (mode == THREE_POINT_MODE) {
     
     if (teachPointTMatrices != null) {
-      // Save current position of the EE
+      
       pushMatrix();
       resetMatrix();
       applyModelRotation(armModel, false);
-      
+      // Save current position of the EE
       float[][] tMatrix = getTransformationMatrix();
       teachPointTMatrices.add(tMatrix);
       
       popMatrix();
       
-      // Calculate the Frame transformation from the 3 recorded points
+      /* Calculate the New Tool Frame after the third point has been recorded */
       if (teachPointTMatrices.size() == 3) {
-          
-          for (int pt = 0; pt < teachPointTMatrices.size(); ++pt) {
-            System.out.printf("\nPoint %d:\n\n", pt);
-            println( matrixToString(teachPointTMatrices.get(pt)) );
-          }
-          
-          System.out.printf("\nPoint 2 inverse:\n\n");
-          println( matrixToString(invertHCMatrix(teachPointTMatrices.get(2))) );
-          
-          /* TODO
+          /****************************************************************
+             Three Point Method Calculation
+             
+             ------------------------------------------------------------
+             A, B, C      transformation matrices
+             Ar, Br, Cr   rotational portions of A, B, C respectively
+             At, Bt, Ct   translational portions of A, B, C repectively
+             x            TCP point with respect to the EE
+             ------------------------------------------------------------
              
              Ax = Bx = Cx
              Ax = (Ar)x + At
              
-             
              (A - B)x = 0
              (Ar - Br)x + At - Bt = 0
-             
              
              Ax + Bx - 2Cx = 0
              (Ar + Br - 2Cr)x + At + Bt - 2Ct = 0
              (Ar + Br - 2Cr)x = 2Ct - At - Bt
              x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
-           */
+             
+           ****************************************************************/
+          RealVector avg_TCP = new ArrayRealVector(new double[] {0.0, 0.0, 0.0} , false);
           
-          /* Multiply the Second point transform by the inverse of the Third point's transform */
-          RealMatrix T2 = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(1), 3, 4));
-          RealMatrix T3 = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(2), 3, 4));
-          RealMatrix invT3 = (new SingularValueDecomposition(T3)).getSolver().getInverse();
-          
-          RealMatrix P = T2.multiply(invT3);
-          
-          /* Subtract P from the identity matrix */
-          for (int row = 0; row < 3; ++row) {
-            for (int col = 0; col < 3; ++col) {
-              double newEntry;
-              
-              if (row == col) {
-                newEntry = 1 - P.getEntry(row, col);
-              } else {
-                newEntry = -P.getEntry(row, col);
-              }
-              
-              P.setEntry(row, col, newEntry);
+          for (int idxC = 0; idxC < teachPointTMatrices.size(); ++idxC) {
+            
+            int idxA = (idxC + 1) % teachPointTMatrices.size(),
+                idxB = (idxA + 1) % teachPointTMatrices.size();
+            System.out.printf("\nA = %d\nB = %d\nC = %d\n\n", idxA, idxB, idxC);
+            
+            RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxA), 3, 3));
+            RealMatrix Br = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxB), 3, 3));
+            RealMatrix Cr = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxC), 3, 3));
+            
+            double [] t = new double[3];
+            for (int idx = 0; idx < 3; ++idx) {
+              // Build a double from the result of the translation portions of the transformation matrices
+              t[idx] = 2 * teachPointTMatrices.get(idxC)[idx][3] - ( teachPointTMatrices.get(idxA)[idx][3] + teachPointTMatrices.get(idxB)[idx][3] );
             }
+            
+            /* 2Ct - At - Bt */
+            RealVector b = new ArrayRealVector(t, false);
+            /* Ar + Br - 2Cr */
+            RealMatrix R = ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) );
+            
+            /*System.out.printf("R:\n%s\n", matrixToString( doubleToFloat(R.getData(), 3, 3) ));
+            System.out.printf("t:\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", b.getEntry(0), b.getEntry(1), b.getEntry(2));*/
+            
+            /* (R ^ -1) * b */
+            avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
           }
-          // Invert the matrix
-          /*SingularValueDecomposition svd = new SingularValueDecomposition(P);
-          RealMatrix Inv = svd.getSolver().getInverse();*/
           
-          float[][] p = doubleToFloat(P.getData(), 3, 3);
+           /* Take the average of the three cases: where C = the first point, the second point, and the third point */
+          avg_TCP = avg_TCP.mapMultiply( 1.0 / 3.0 );
           
-          System.out.printf("\nI - T2 * inv(T3):\n\n");
-          println( matrixToString(p) );
+          for (int pt = 0; pt < teachPointTMatrices.size(); ++pt) {
+            // Print out each matrix
+            System.out.printf("Point %d:\n", pt);
+            println( matrixToString(teachPointTMatrices.get(pt)) );
+          }
           
-          // TODO Fix Three Point Method implementation
+          System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
           
-          teachPointTMatrices = null;
+          PVector origin = new PVector((float)avg_TCP.getEntry(0), (float)avg_TCP.getEntry(1), (float)avg_TCP.getEntry(2)),
+                  wpr = new PVector(0.0f, 0.0f, 0.0f);
+          
+          if (active_row >= 0 && active_row < toolFrames.length) {
+            println("Frame set");
+            toolFrames[active_row] = new Frame();
+            toolFrames[active_row].setOrigin(origin);
+            toolFrames[active_row].setWpr(wpr);
+          }
+          
           // Leave Three Point Method menu
           if (super_mode == NAV_TOOL_FRAMES) {
             loadFrames(COORD_TOOL);
@@ -1967,11 +1985,13 @@ public void f5() {
             mu();
           }
           
+          saveState();
           return;
       }
       
       loadThreePointMethod();
     }
+<<<<<<< HEAD
     
     /*if (shift == ON) {
       if (inFrame == NAV_USER_FRAMES) {
@@ -2093,6 +2113,8 @@ public void f5() {
         }
       } // end if inFrame == NAV_TOOL_FRAMES
     }*/
+=======
+>>>>>>> dev2
   } else if (mode == CONFIRM_DELETE) {
      deleteInstEpilogue();
   }
@@ -2347,11 +2369,18 @@ public void ENTER(){
          which_option = -1;
          break;
       case PICK_FRAME_METHOD:
-         if (which_option == 1 || which_option == 2) return; // not implemented
-         options = new ArrayList<String>();
-         which_option = -1;
-         teachPointTMatrices = new ArrayList<float[][]>();
-         loadThreePointMethod();
+         if (which_option == 0) {
+           options = new ArrayList<String>();
+           which_option = -1;
+           teachPointTMatrices = new ArrayList<float[][]>();
+           loadThreePointMethod();
+         } else if (which_option == 1) {
+           /* 6-Point Method not implemented */
+         } else if (which_option == 2) {
+           // TODO direct entry setup
+           //loadDirectEntryMethod();
+         }
+         
          break;
       case IO_SUBMENU:
          if (active_row == 2) { // digital

@@ -180,19 +180,19 @@ public void draw(){
   stroke(0, 0, 0);
   applyModelRotation(armModel, true);
   //EE position
-  sphere(20);
+  sphere(5);
   translate(0, 0, -100);
   stroke(255, 0, 0);
   //EE x axis
-  sphere(10);
+  sphere(6);
   translate(0, 100, 100);
   stroke(0, 255, 0);
   //EE y axis
-  sphere(10);
+  sphere(6);
   translate(100, -100, 0);
   stroke(0, 0, 255);
   //EE z axis
-  sphere(10);
+  sphere(6);
   popMatrix();
   //END TESTING CODE
   // TESTING CODE: DRAW USER FRAME 0
@@ -236,7 +236,7 @@ public void draw(){
   popMatrix();*/
   // END TESTING CODE
   
-  if (teachPointTMatrices != null) {
+  if (mode == THREE_POINT_MODE && teachPointTMatrices != null) {
     for (float[][] T : teachPointTMatrices) {
       pushMatrix();
       applyMatrix(T[0][0], T[0][1], T[0][2], T[0][3],
@@ -245,7 +245,7 @@ public void draw(){
                   T[3][0], T[3][1], T[3][2], T[3][3]);
       noFill();
       stroke(255, 0, 0);
-      sphere(15);
+      sphere(3);
       
       popMatrix();
     }
