@@ -109,6 +109,9 @@ public class ArmModel {
   public float[] mvRot = new float[3];
   public float[] tgtRot = new float[4];
   public PVector tgtPos = new PVector();
+  public float[][] currentFrame = {{ 1, 0, 0},
+                                   { 0, 1, 0},
+                                   { 0, 0, 1}};
   
   public Box[] bodyHitBoxes;
   private ArrayList<Box>[] eeHitBoxes;
@@ -158,11 +161,11 @@ public class ArmModel {
     segments.add(axis5);
     segments.add(axis6);
     
-    for (int idx = 0; idx < mvLinear.length; ++idx) {
+    for(int idx = 0; idx < mvLinear.length; ++idx){
       mvLinear[idx] = 0;
     }
     
-    for (int idx = 0; idx < mvRot.length; ++idx) {
+    for(int idx = 0; idx < mvRot.length; ++idx){
       mvRot[idx] = 0;
     }
     
@@ -570,8 +573,25 @@ public class ArmModel {
     return rot;
   }//end get joint rotations
   
+  /* Resets the robot's current reference frame to that of the
+   * default world frame.
+   */
+  public void resetFrame(){
+    currentFrame[0][0] = 1;
+    currentFrame[0][1] = 0;
+    currentFrame[0][2] = 0;
+    
+    currentFrame[1][0] = 0;
+    currentFrame[1][1] = 1;
+    currentFrame[1][2] = 0;
+    
+    currentFrame[2][0] = 0;
+    currentFrame[2][1] = 0;
+    currentFrame[2][2] = 1;
+  }
+  
   /* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
-   * the end effector's current x, y, z axes with respect to the world frame.
+   * the end effector's current x, y, z axes with respect to the current frame.
    */
   public float[][] getRotationMatrix() {
     pushMatrix();
@@ -615,18 +635,31 @@ public class ArmModel {
     float[][] m = getRotationMatrix();
     RealMatrix A = new Array2DRowRealMatrix(floatToDouble(m, 3, 3));
     RealMatrix B = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
-    RealMatrix AB = A.transpose().multiply(B);
+    RealMatrix AB = A.multiply(B);
     
-    println("matrix offset:");
-    for(int i = 0; i < 3; i += 1){
-      for(int j = 0; j < 3; j += 1){
-        print(String.format("   %5.4f", AB.getEntry(i, j)));
-      }
-      println();
-    }
-    println();
+    //println(AB);
     
     return doubleToFloat(AB.getData(), 3, 3);
+  }
+  
+  /* Applies the transformation for the current tool frame.
+   * NOTE: This method only works in the TOOL or WORLD frame! */
+  public void applyToolFrame(int list_idx) {
+    // If a tool Frame is active, then it overrides the World Frame
+    if (list_idx >= 0 && list_idx < toolFrames.length) {
+      
+      // Apply a custom tool frame
+      PVector tr = toolFrames[list_idx].getOrigin();
+      translate(tr.x, tr.y, tr.z);
+    } else {
+      
+      // Apply a default tool frame based on the current EE
+      if (activeEndEffector == ENDEF_CLAW) {
+        translate(0, 0, -54);
+      } else if (activeEndEffector == ENDEF_SUCTION) {
+        translate(0, 0, -105);
+      }
+    }
   }
   
  /* This method calculates the Euler angular rotations: roll, pitch and yaw of the Robot's
@@ -642,7 +675,7 @@ public class ArmModel {
   *     rotation about: x - psi, y - theta, z - phi
   */
   public PVector getWPR() {
-    float[][] m = getRotationMatrix();
+    float[][] m = getRotationMatrix(currentFrame);
     PVector wpr = matrixToEuler(m);
     
     return wpr;
@@ -659,7 +692,7 @@ public class ArmModel {
   
   //returns the rotational value of the robot as a quaternion
   public float[] getQuaternion(){
-    float[][] m = getRotationMatrix();
+    float[][] m = getRotationMatrix(currentFrame);
     float[] q = matrixToQuat(m);
     
     return q;
@@ -753,26 +786,6 @@ public class ArmModel {
     return ret;
   } // end calculateEndEffectorPosition
   
-  /* Applies the transformation for the current tool frame.
-   * NOTE: This method only works in the TOOL or WORLD frame! */
-  public void applyToolFrame(int list_idx) {
-    // If a tool Frame is active, then it overrides the World Frame
-    if (list_idx >= 0 && list_idx < toolFrames.length) {
-      
-      // Apply a custom tool frame
-      PVector tr = toolFrames[list_idx].getOrigin();
-      translate(tr.x, tr.y, tr.z);
-    } else {
-      
-      // Apply a default tool frame based on the current EE
-      if (activeEndEffector == ENDEF_CLAW) {
-        translate(0, 0, -54);
-      } else if (activeEndEffector == ENDEF_SUCTION) {
-        translate(0, 0, -105);
-      }
-    }
-  }
-  
   public PVector getEEPos(float[] testAngles) {
     float[] origAngles = getJointRotations();
     setJointRotations(testAngles);
@@ -819,12 +832,12 @@ public class ArmModel {
   
   void updateOrientation(){
     PVector u = new PVector(mvRot[0], mvRot[1], mvRot[2]);
+    u.normalize();
     
     if(u.x != 0 || u.y != 0 || u.z != 0){
-      //float[][] m = getRotationMatrix();
-      //m = rotateAxisVector(m, DEG_TO_RAD, u);
-      //tgtRot = matrixToQuat(m);
-      tgtRot = rotateQuat(tgtRot, DEG_TO_RAD, u);
+      //tgtRot = rotateQuat(tgtRot, DEG_TO_RAD, u);
+      float[][] tgtMatrix = rotateAxisVector(getRotationMatrix(), DEG_TO_RAD, u);
+      tgtRot = matrixToQuat(tgtMatrix);
     }
   }
 
@@ -880,7 +893,7 @@ public class ArmModel {
         
         //println(lockOrientation);
         int r = calculateIKJacobian(tgtPos, tgtRot);
-        if(r == EXEC_FAILURE || r == EXEC_PROCESSING){
+        if(r == EXEC_FAILURE){
           updateButtonColors();
           mvLinear[0] = 0;
           mvLinear[1] = 0;
