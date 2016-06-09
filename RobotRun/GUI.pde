@@ -1840,76 +1840,79 @@ public void f5() {
   } else if (mode == THREE_POINT_MODE) {
     
     if (teachPointTMatrices != null) {
-      // Save current position of the EE
+      
       pushMatrix();
       resetMatrix();
       applyModelRotation(armModel, false);
-      
+      // Save current position of the EE
       float[][] tMatrix = getTransformationMatrix();
       teachPointTMatrices.add(tMatrix);
       
       popMatrix();
       
-      // Calculate the Frame transformation from the 3 recorded points
+      /* Calculate the New Tool Frame after the third point has been recorded */
       if (teachPointTMatrices.size() == 3) {
           
           for (int pt = 0; pt < teachPointTMatrices.size(); ++pt) {
-            System.out.printf("\nPoint %d:\n\n", pt);
+            // Print out each matrix
+            System.out.printf("Point %d:\n", pt);
             println( matrixToString(teachPointTMatrices.get(pt)) );
           }
           
-          System.out.printf("\nPoint 2 inverse:\n\n");
-          println( matrixToString(invertHCMatrix(teachPointTMatrices.get(2))) );
-          
-          /* TODO
+          /****************************************************************
+             Three Point Method Calculation
+             
+             ------------------------------------------------------------
+             A, B, C      transformation matrices
+             Ar, Br, Cr   rotational portions of A, B, C respectively
+             At, Bt, Ct   translational portions of A, B, C repectively
+             x            TCP point with respect to the EE
+             ------------------------------------------------------------
              
              Ax = Bx = Cx
              Ax = (Ar)x + At
              
-             
              (A - B)x = 0
              (Ar - Br)x + At - Bt = 0
-             
              
              Ax + Bx - 2Cx = 0
              (Ar + Br - 2Cr)x + At + Bt - 2Ct = 0
              (Ar + Br - 2Cr)x = 2Ct - At - Bt
              x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
-           */
+             
+           ****************************************************************/
+          RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(0), 3, 3));
+          RealMatrix Br = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(1), 3, 3));
+          RealMatrix Cr = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(2), 3, 3));
           
-          /* Multiply the Second point transform by the inverse of the Third point's transform */
-          RealMatrix T2 = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(1), 3, 4));
-          RealMatrix T3 = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(2), 3, 4));
-          RealMatrix invT3 = (new SingularValueDecomposition(T3)).getSolver().getInverse();
+          System.out.printf("Ar:\n%s\n", matrixToString( doubleToFloat(Ar.getData(), 3, 3) ));
+          System.out.printf("Br:\n%s\n", matrixToString( doubleToFloat(Br.getData(), 3, 3) ));
+          System.out.printf("Cr:\n%s\n", matrixToString( doubleToFloat(Cr.getData(), 3, 3) ));
           
-          RealMatrix P = T2.multiply(invT3);
-          
-          /* Subtract P from the identity matrix */
-          for (int row = 0; row < 3; ++row) {
-            for (int col = 0; col < 3; ++col) {
-              double newEntry;
-              
-              if (row == col) {
-                newEntry = 1 - P.getEntry(row, col);
-              } else {
-                newEntry = -P.getEntry(row, col);
-              }
-              
-              P.setEntry(row, col, newEntry);
-            }
+          double [] t = new double[3];
+          for (int idx = 0; idx < 3; ++idx) {
+            // Build a double from the result of the translation portions of the transformation matrices
+            t[idx] = 2 * teachPointTMatrices.get(2)[idx][2] - teachPointTMatrices.get(1)[idx][2] - teachPointTMatrices.get(0)[idx][2];
           }
-          // Invert the matrix
-          /*SingularValueDecomposition svd = new SingularValueDecomposition(P);
-          RealMatrix Inv = svd.getSolver().getInverse();*/
           
-          float[][] p = doubleToFloat(P.getData(), 3, 3);
+          System.out.printf("t:\n%s\n", t);
           
-          System.out.printf("\nI - T2 * inv(T3):\n\n");
-          println( matrixToString(p) );
+          /* 2Ct - At - Bt */
+          RealVector b = new ArrayRealVector(t, false);
+          /* Ar + Br - 2Cr */
+          RealMatrix R = (Ar.add(Br)).subtract(Cr.scalarMultiply(2));
+          /* Solve Rx = b for x */
+          RealVector x = (new SingularValueDecomposition(R)).getSolver().solve(b);
           
-          // TODO Fix Three Point Method implementation
+          /* Build a 3x1 matrix for the result vector x */
+          float[][] tcp = new float[3][];
+          for (int row = 0; row < tcp.length; ++row) {
+            tcp[row] = new float[] { (float)x.getEntry(row) };
+          }
           
-          teachPointTMatrices = null;
+          System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n");
+          println( matrixToString(tcp) );
+          
           // Leave Three Point Method menu
           if (super_mode == NAV_TOOL_FRAMES) {
             loadFrames(COORD_TOOL);
