@@ -24,16 +24,17 @@ final int NONE = 0,
           FRAME_DETAIL = 16,
           PICK_FRAME_METHOD = 17,
           THREE_POINT_MODE = 18,
-          ACTIVE_FRAMES = 19,
-          PICK_INSTRUCTION = 20,
-          IO_SUBMENU = 21,
-          SET_DO_BRACKET = 22,
-          SET_DO_STATUS = 23,
-          SET_RO_BRACKET = 24,
-          SET_RO_STATUS = 25,
-          SET_FRAME_INSTRUCTION = 26,
-          EDIT_MENU = 27,
-          CONFIRM_DELETE = 28;
+          DIRECT_ENTRY_MODE = 19,
+          ACTIVE_FRAMES = 20,
+          PICK_INSTRUCTION = 21,
+          IO_SUBMENU = 22,
+          SET_DO_BRACKET = 23,
+          SET_DO_STATUS = 24,
+          SET_RO_BRACKET = 25,
+          SET_RO_STATUS = 26,
+          SET_FRAME_INSTRUCTION = 27,
+          EDIT_MENU = 28,
+          CONFIRM_DELETE = 29;
 final int COLOR_DEFAULT = -8421377,
           COLOR_ACTIVE = -65536;
 static int     EE_MAPPING = 2;
@@ -1214,6 +1215,8 @@ public void addNumber(String number) {
     updateScreen(color(255,0,0), color(0,0,0));
   } else if (mode == SET_FRAME_INSTRUCTION) {
     workingText += number;
+  } else if (mode == DIRECT_ENTRY_MODE) {
+    // TODO add 
   }
 }
 
@@ -1907,20 +1910,23 @@ public void f5() {
            /* Take the average of the three cases: where C = the first point, the second point, and the third point */
           avg_TCP = avg_TCP.mapMultiply( 1.0 / 3.0 );
           
-          /* Build a 3x1 matrix for the result vector x */
-          float[][] tcp = new float[3][];
-          for (int row = 0; row < tcp.length; ++row) {
-            tcp[row] = new float[] { (float)avg_TCP.getEntry(row) };
-          }
-          
           for (int pt = 0; pt < teachPointTMatrices.size(); ++pt) {
             // Print out each matrix
             System.out.printf("Point %d:\n", pt);
             println( matrixToString(teachPointTMatrices.get(pt)) );
           }
           
-          System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n");
-          println( matrixToString(tcp) );
+          System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
+          
+          PVector origin = new PVector((float)avg_TCP.getEntry(0), (float)avg_TCP.getEntry(1), (float)avg_TCP.getEntry(2)),
+                  wpr = new PVector(0.0f, 0.0f, 0.0f);
+          
+          if (active_row >= 0 && active_row < toolFrames.length) {
+            println("Frame set");
+            toolFrames[active_row] = new Frame();
+            toolFrames[active_row].setOrigin(origin);
+            toolFrames[active_row].setWpr(wpr);
+          }
           
           // Leave Three Point Method menu
           if (super_mode == NAV_TOOL_FRAMES) {
@@ -1932,128 +1938,12 @@ public void f5() {
             mu();
           }
           
+          saveState();
           return;
       }
       
       loadThreePointMethod();
     }
-    
-    /*if (shift == ON) {
-      if (inFrame == NAV_USER_FRAMES) {
-        if (teachingWhichPoint == 1) { // teaching origin
-          PVector eep = armModel.getEEPos();
-          currentFrame.setOrigin(convertNativeToWorld(eep));
-          teachingWhichPoint++;
-          loadThreePointMethod();
-        } else if (teachingWhichPoint == 2 || teachingWhichPoint == 3) { // x,y axis
-          
-          PVector eep = armModel.getEEPos();
-          PVector second = convertNativeToWorld(eep);
-          PVector first = currentFrame.getOrigin();
-          PVector vec = new PVector(second.x-first.x, second.y-first.y, second.z-first.z);
-          vec.normalize();
-          if (teachingWhichPoint == 2) { // x axis
-            currentFrame.setAxis(0, vec);
-            teachingWhichPoint++;
-            loadThreePointMethod();
-          } else { // y axis
-            PVector xvec = currentFrame.getAxis(0);
-            PVector yvec = computePerpendicular(xvec, vec);
-            currentFrame.setAxis(1, yvec.normalize(null));
-            currentFrame.setAxis(2, xvec.cross(yvec).normalize(null));
-            loadFrames(COORD_USER);
-          }
-        }
-      } else if (inFrame == NAV_TOOL_FRAMES) {
-        pushMatrix();
-        applyModelRotation(armModel, true);
-        PVector one = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
-        translate(0, 0, -100);
-        PVector two = new PVector(modelX(0,0,0), modelY(0,0,0), modelZ(0,0,0));
-        popMatrix();
-        tempPoints[teachingWhichPoint-1] = one;
-        teachingPts[teachingWhichPoint-1] = one;
-        tempVectors[teachingWhichPoint-1] = new PVector(
-          two.x-one.x, two.y-one.y, two.z-one.z).normalize(null);
-        if (teachingWhichPoint < 3) {
-          teachingWhichPoint++;
-          loadThreePointMethod();
-        } else {
-          // calculate approx. intersection pt. of the provided vectors to get the tool end effector position
-          PVector[] last = new PVector[3];
-          PVector[] curr = new PVector[3];
-          for (int n = 0; n < 3; n++)
-            last[n] = new PVector(
-              tempPoints[n].x + tempVectors[n].x,
-              tempPoints[n].y + tempVectors[n].y,
-              tempPoints[n].z + tempVectors[n].z
-            );
-          float lastDist =
-            dist(last[0].x, last[0].y, last[0].z, last[1].x, last[1].y, last[1].z) +
-            dist(last[0].x, last[0].y, last[0].z, last[2].x, last[2].y, last[2].z) +
-            dist(last[2].x, last[2].y, last[2].z, last[1].x, last[1].y, last[1].z);
-          float currentDist = lastDist;
-          int iter = 0;
-          while (true) {
-            iter++;
-            if (iter > 10000) { // FAIL CHECK
-              loadFrames(COORD_TOOL);
-              return;
-            }
-            for (int n = 0; n < 3; n++)
-              curr[n] = new PVector(
-                last[n].x + tempVectors[n].x,
-                last[n].y + tempVectors[n].y,
-                last[n].z + tempVectors[n].z
-              );
-            currentDist =
-              dist(curr[0].x, curr[0].y, curr[0].z, curr[1].x, curr[1].y, curr[1].z) +
-              dist(curr[0].x, curr[0].y, curr[0].z, curr[2].x, curr[2].y, curr[2].z) +
-              dist(curr[2].x, curr[2].y, curr[2].z, curr[1].x, curr[1].y, curr[1].z);
-            if (currentDist > lastDist) break; // we've passed each other so we're near the closest approach
-            for (int n = 0; n < 3; n++) {
-              last[n].x = curr[n].x; last[n].y = curr[n].y; last[n].z = curr[n].z;
-              lastDist = currentDist;
-            }
-          }
-          // create a cube of dense points around approx. closest approach and check each one
-          PVector approx = new PVector(
-              (last[0].x+last[1].x+last[2].x)/3.0,
-              (last[0].y+last[1].y+last[2].y)/3.0,
-              (last[0].z+last[1].z+last[2].z)/3.0
-            );
-          float leastDiff = Float.MAX_VALUE;
-          PVector closestPt = new PVector(0,0,0);
-          for (float x = approx.x-1; x <= approx.x+1; x += 0.05) {
-            for (float y = approx.y-1; y <= approx.y+1; y += 0.05) {
-              for (float z = approx.z-1; z <= approx.z+1; z += 0.05) {
-                float dist1 = dist(x, y, z, tempPoints[0].x, tempPoints[0].y, tempPoints[0].z);
-                float dist2 = dist(x, y, z, tempPoints[1].x, tempPoints[1].y, tempPoints[1].z);
-                float dist3 = dist(x, y, z, tempPoints[2].x, tempPoints[2].y, tempPoints[2].z);
-                float mx = max(dist1, dist2, dist3);
-                float mn = min(dist1, dist2, dist3);
-                float diff = mx - mn;
-                if (diff < leastDiff) {
-                  leastDiff = diff;
-                  closestPt.x = x; closestPt.y = y; closestPt.z = z;
-                }
-              }
-            }
-          }
-          // now set the tool frame origin's Z offset as average of closest point's
-          // distance from the 3 end effector positions when setting the approaches
-          currentFrame.setOrigin(
-              new PVector(0, 0,
-                -(dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[0].x, teachingPts[0].y, teachingPts[0].z) +
-                 dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[1].x, teachingPts[1].y, teachingPts[1].z) +
-                 dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[2].x, teachingPts[2].y, teachingPts[2].z))/3.0
-                )
-            );
-          loadFrames(COORD_TOOL);
-          saveState();
-        }
-      } // end if inFrame == NAV_TOOL_FRAMES
-    }*/
   } else if (mode == CONFIRM_DELETE) {
      deleteInstEpilogue();
   }
@@ -2308,11 +2198,18 @@ public void ENTER(){
          which_option = -1;
          break;
       case PICK_FRAME_METHOD:
-         if (which_option == 1 || which_option == 2) return; // not implemented
-         options = new ArrayList<String>();
-         which_option = -1;
-         teachPointTMatrices = new ArrayList<float[][]>();
-         loadThreePointMethod();
+         if (which_option == 0) {
+           options = new ArrayList<String>();
+           which_option = -1;
+           teachPointTMatrices = new ArrayList<float[][]>();
+           loadThreePointMethod();
+         } else if (which_option == 1) {
+           /* 6-Point Method not implemented */
+         } else if (which_option == 2) {
+           // TODO direct entry setup
+           //loadDirectEntryMethod();
+         }
+         
          break;
       case IO_SUBMENU:
          if (active_row == 2) { // digital
