@@ -1215,7 +1215,7 @@ public void addNumber(String number) {
     workingText += number;
     options.set(1, workingText + workingTextSuffix);
     updateScreen(color(255,0,0), color(0,0,0));
-  } else if (mode == ACTIVE_FRAMES || mode == SET_FRAME_INSTRUCTION) {
+  } else if (mode == SET_FRAME_INSTRUCTION) {
     workingText += number;
   }
 }
@@ -1301,11 +1301,7 @@ public void up(){
       case PICK_FRAME_METHOD:
       case SET_DO_STATUS:
       case SET_RO_STATUS:
-         if (which_option == 0){
-            // does nothing
-         }else{
-            which_option -= 1;
-         }
+         which_option = max(0, which_option - 1);
          break;
       case MENU_NAV:
       case SETUP_NAV:
@@ -1315,10 +1311,10 @@ public void up(){
       case IO_SUBMENU:
       case SET_FRAME_INSTRUCTION:
       case EDIT_MENU:
-         if (active_row > 0) active_row--;
+         active_row = max(0, active_row - 1);
          break;
       case ACTIVE_FRAMES:
-         if (active_row > 1) active_row--;
+         active_row = max(1, active_row - 1);
          break;
    }
    
@@ -1372,11 +1368,7 @@ public void dn(){
       case PICK_FRAME_METHOD:
       case SET_DO_STATUS:
       case SET_RO_STATUS:
-         if (which_option == options.size() - 1){
-            // does nothing
-         }else{
-            which_option += 1;
-         }
+         which_option = min(which_option + 1, options.size() - 1);
          break;
       case MENU_NAV:
       case SETUP_NAV:
@@ -1387,7 +1379,7 @@ public void dn(){
       case IO_SUBMENU:
       case SET_FRAME_INSTRUCTION:
       case EDIT_MENU:
-         if (active_row < contents.size()-1) active_row++;
+         active_row = min(active_row  + 1, contents.size() - 1);
          break;
    }  
    updateScreen(color(255,0,0), color(0,0,0));
@@ -1400,11 +1392,9 @@ public void lt(){
       case INSTRUCTION_NAV:
           options = new ArrayList<String>();
           clearOptions();
-          if (active_col == 0){
-              // does nothing
-          }else{
-              active_col -= 1;
-          }
+          
+          active_col = max(0, active_col - 1);
+          
           updateScreen(color(255,0,0), color(0,0,0));
           break;
       case INSTRUCTION_EDIT:
@@ -1423,11 +1413,9 @@ public void rt(){
       case INSTRUCTION_NAV:
           options = new ArrayList<String>();
           clearOptions();
-          if (active_col == contents.get(active_row).size()-1){
-             // does nothing
-          }else{
-             active_col += 1;
-          }
+          
+          active_col = min(active_col + 1, contents.get(active_row).size() - 1);
+          
           updateScreen(color(255,0,0), color(0,0,0));
           break;
       case INSTRUCTION_EDIT:
@@ -1548,7 +1536,33 @@ public void goToEnterTextMode() {
 
 
 public void f1(){
-   switch (mode){
+   if (shift == ON) {
+     
+     if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
+        
+       super_mode = mode;
+        if (super_mode == NAV_TOOL_FRAMES) {
+          currentFrame = toolFrames[active_row];
+        } else if (super_mode == NAV_USER_FRAMES) {
+          currentFrame = userFrames[active_row];
+        }
+        
+        loadFrameDetails();
+      } else if ( mode == ACTIVE_FRAMES) {
+        
+       if (active_row == 1) {
+         loadFrames(COORD_TOOL);
+       } else if (active_row == 2) {
+         loadFrames(COORD_USER);
+       }
+       
+       updateScreen(color(255,0,0), color(0));
+     }
+     
+     return;
+   }
+   
+   switch (mode) {
       case PROGRAM_NAV:
          //shift = OFF;
          break;
@@ -1610,45 +1624,60 @@ public void f1(){
       case INSTRUCTION_EDIT:
          //shift = OFF;
          break;
-      case ACTIVE_FRAMES:
-        // Reset the active frames for the User or Tool Coordinate Frames
-        if (active_row == 2) {
-          activeUserFrame = -1;
-        } else if (active_row == 3) {
-          activeToolFrame = -1;
-        }
-        loadActiveFrames();
-        break;
    }
-    
 }
 
 
 public void f2() {
-  if (mode == PROGRAM_NAV) {
-    workingText = "";
-    active_program = -1;
-    goToEnterTextMode();
-  } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
-    super_mode = mode;
-    if (super_mode == NAV_TOOL_FRAMES) currentFrame = toolFrames[active_row];
-    else if (super_mode == NAV_USER_FRAMES) currentFrame = userFrames[active_row];
-    loadFrameDetails();
-  } else if (mode == FRAME_DETAIL) {
-    if (super_mode == NAV_USER_FRAMES) {
-      options = new ArrayList<String>();
-      options.add("1.Three Point");
-      options.add("2.Four Point");
-      options.add("3.Direct Entry");
-    } else if (super_mode == NAV_TOOL_FRAMES) {
-      options = new ArrayList<String>();
-      options.add("1.Three Point");
-      options.add("2.Six Point");
-      options.add("3.Direct Entry");
+  if (shift == ON) {
+    
+    if (mode == ACTIVE_FRAMES) {
+      // Reset the active frames for the User or Tool Coordinate Frames
+      if (active_row == 1) {
+        activeToolFrame = -1;
+      } else if (active_row == 2) {
+        activeUserFrame = -1;
+      }
+      
+      loadActiveFrames();
+      updateScreen(color(255,0,0), color(0));
     }
-    mode = PICK_FRAME_METHOD;
-    which_option = 0;
-    updateScreen(color(255,0,0), color(0));
+  } else {
+    
+    if (mode == PROGRAM_NAV) {
+      workingText = "";
+      active_program = -1;
+      goToEnterTextMode();
+    } else if (mode == FRAME_DETAIL) {
+      options = new ArrayList<String>();
+      
+      if (super_mode == NAV_USER_FRAMES) {
+        options.add("1.Three Point");
+        options.add("2.Four Point");
+        options.add("3.Direct Entry");
+      } else if (super_mode == NAV_TOOL_FRAMES) {
+        options.add("1.Three Point");
+        options.add("2.Six Point");
+        options.add("3.Direct Entry");
+      }
+      mode = PICK_FRAME_METHOD;
+      which_option = 0;
+      updateScreen(color(255,0,0), color(0));
+    } if (mode == NAV_TOOL_FRAMES) {
+       
+       // Reset the highlighted frame in the tool frame list
+       if (active_row >= 0) {
+          toolFrames[active_row] = new Frame();
+          saveState();
+        }
+     } else if (mode == NAV_USER_FRAMES) {
+       
+       // Reset the highlighted frame in the user frames list
+       if (active_row >= 0) {
+         userFrames[active_row] = new Frame();
+         saveState();
+       }
+     } 
   }
 }
 
@@ -1670,14 +1699,6 @@ public void f3() {
       updateScreen(color(255,0,0), color(0));
       saveState();
     }
-  } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
-    options = new ArrayList<String>();
-    options.add("1.Tool Frame");
-    options.add("2.Jog Frame");
-    options.add("3.User Frame");
-    mode = PICK_FRAME_MODE;
-    which_option = 0;
-    updateScreen(color(255,0,0), color(0));
   }
 }
 
@@ -1745,20 +1766,6 @@ public void f4() {
          prog.getInstructions().remove(active_instruction);
          deleteInstEpilogue();
          break;
-     case NAV_TOOL_FRAMES:
-       // Reset the highlighted frame in the tool frame list
-       if (active_row >= 0) {
-          toolFrames[active_row] = new Frame();
-          saveState();
-        }
-        break;
-     case NAV_USER_FRAMES:
-       // Reset the highlighted frame in the user frames list
-       if (active_row >= 0) {
-         userFrames[active_row] = new Frame();
-         saveState();
-       }
-       break;
    }
    //println("mode="+mode+" active_col"+active_col);
    updateScreen(color(255,0,0), color(0,0,0));
@@ -1908,11 +1915,9 @@ public void f5() {
           teachPointTMatrices = null;
           // Leave Three Point Method menu
           if (super_mode == NAV_TOOL_FRAMES) {
-            mode = NAV_TOOL_FRAMES;
-            loadToolFrames();
+            loadFrames(COORD_TOOL);
           } else if (super_mode == NAV_USER_FRAMES) {
-            mode = NAV_USER_FRAMES;
-            loadUserFrames();
+            loadFrames(COORD_USER);
           } else {
             mode = MENU_NAV;
             mu();
@@ -1947,7 +1952,7 @@ public void f5() {
             PVector yvec = computePerpendicular(xvec, vec);
             currentFrame.setAxis(1, yvec.normalize(null));
             currentFrame.setAxis(2, xvec.cross(yvec).normalize(null));
-            loadUserFrames();
+            loadFrames(COORD_USER);
           }
         }
       } else if (inFrame == NAV_TOOL_FRAMES) {
@@ -1983,7 +1988,7 @@ public void f5() {
           while (true) {
             iter++;
             if (iter > 10000) { // FAIL CHECK
-              loadToolFrames();
+              loadFrames(COORD_TOOL);
               return;
             }
             for (int n = 0; n < 3; n++)
@@ -2035,7 +2040,7 @@ public void f5() {
                  dist(closestPt.x, closestPt.y, closestPt.z, teachingPts[2].x, teachingPts[2].y, teachingPts[2].z))/3.0
                 )
             );
-          loadToolFrames();
+          loadFrames(COORD_TOOL);
           saveState();
         }
       } // end if inFrame == NAV_TOOL_FRAMES
@@ -2264,14 +2269,33 @@ public void ENTER(){
          
          break;
       case SETUP_NAV:
-         if (active_row == 3) loadToolFrames();
+         options = new ArrayList<String>();
+         options.add("1.Tool Frame");
+         options.add("2.User Frame");
+         //options.add("3.Jog Frame");
+         mode = PICK_FRAME_MODE;
+         which_option = 0;
+         updateScreen(color(255,0,0), color(0));
+         /*if (active_row == 3) {
+           if (curCoordFrame == COORD_TOOL) {
+             loadFrames(COORD_TOOL);
+           } else if (curCoordFrame == COORD_USER) {
+             loadFrames(COORD_USER);
+           } else {
+             loadActiveFrames();
+           }
+         }*/
          break;
       case PICK_FRAME_MODE:
-         if (which_option == 1) return; // not implemented
          options = new ArrayList<String>();
          clearOptions();
-         if (which_option == 0) loadToolFrames();
-         else if (which_option == 2) loadUserFrames();
+         
+         if (which_option == 0) {
+           loadFrames(COORD_TOOL);
+         } else if (which_option == 1) {
+           loadFrames(COORD_USER);
+         } // Jog Frame not implemented
+         
          which_option = -1;
          break;
       case PICK_FRAME_METHOD:
@@ -2280,20 +2304,6 @@ public void ENTER(){
          which_option = -1;
          teachPointTMatrices = new ArrayList<float[][]>();
          loadThreePointMethod();
-         break;
-      case ACTIVE_FRAMES:
-         int num;
-         try {
-           num = Integer.parseInt(workingText);
-           if (num < 0) num = 0;
-           else if (num > userFrames.length) num = userFrames.length;
-           if (active_row == 1) activeUserFrame = num-1;
-           else if (active_row == 2) ; // jog not implemented
-           else if (active_row == 3) activeToolFrame = num-1;
-         } catch (NumberFormatException NREx) { /* Ignore invalid numbers */ }
-         
-         workingText = "";
-         loadActiveFrames();
          break;
       case IO_SUBMENU:
          if (active_row == 2) { // digital
@@ -2355,7 +2365,7 @@ public void ENTER(){
          prog = programs.get(active_program);
          
          try {
-           num = Integer.parseInt(workingText)-1;
+           int num = Integer.parseInt(workingText)-1;
            if (num < -1) num = -1;
            else if (num >= userFrames.length) num = userFrames.length-1;
            
@@ -3062,7 +3072,7 @@ public void updateScreen(color active, color normal){
                  .moveTo(g1)
                  ;
    } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
-     fn_info.setText("F1: SET     F2: DETAIL     F3: SWITCH     F4: RESET")
+     fn_info.setText("F1: SET     SHIFT+F1: DETAIL     F2: RESET")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
@@ -3083,7 +3093,7 @@ public void updateScreen(color active, color normal){
                  .moveTo(g1)
                  ;
    } else if (mode == ACTIVE_FRAMES) {
-     fn_info.setText("F1: RESET")
+     fn_info.setText("SHIFT+F1: LIST     SHIFT+F2: RESET")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
@@ -3150,38 +3160,40 @@ public void clearNums(){
    index_nums = 1000;
 }
 
-public void loadToolFrames() {
-  contents = new ArrayList<ArrayList<String>>();
-  for (int n = 0; n < toolFrames.length; n++) {
-    Frame f = toolFrames[n];
-    ArrayList<String> line = new ArrayList<String>();
-    String str = "";
-    str += (n+1);
-    str += "   " + "Orig: " + f.getOrigin()/* + "   X: " + f.getAxis(0)*/;
-//    str += "   Y: " + f.getAxis(1);
-    line.add(str);
-    contents.add(line);
+/* Loads the set of Frames that correspond to the given coordinate frame.
+ * Only COORD_TOOL and COOR_USER have Frames sets as of now.
+ * 
+ * @param coorFrame  the integer value representing the coordinate frame
+ *                   of te desired frame set
+ */
+public void loadFrames(int coordFrame) {
+  
+  Frame[] frames = null;
+  
+  if (coordFrame == COORD_TOOL) {
+    frames = toolFrames;
+    mode = NAV_TOOL_FRAMES;
+  } else if (coordFrame == COORD_USER) {
+    frames = userFrames;
+    mode = NAV_USER_FRAMES;
   }
-  active_col = active_row = 0;
-  mode = NAV_TOOL_FRAMES;
-  updateScreen(color(255,0,0), color(0));
-}
-
-public void loadUserFrames() {
-  contents = new ArrayList<ArrayList<String>>();
-  for (int n = 0; n < userFrames.length; n++) {
-    Frame f = userFrames[n];
-    ArrayList<String> line = new ArrayList<String>();
-    String str = "";
-    str += (n+1);
-    str += "   " + "Orig: " + f.getOrigin()/* + "   X: " + f.getAxis(0)*/;
-//    str += "   Y: " + f.getAxis(1);
-    line.add(str);
-    contents.add(line);
+  // Only the Tool and User Frame lists have been implemented
+  if (frames != null) {
+    contents = new ArrayList<ArrayList<String>>();
+    
+    for (int idx = 0; idx < frames.length; ++idx) {
+      // Display each frame on its own line
+      Frame frame = frames[idx];
+      ArrayList<String> line = new ArrayList<String>();
+      String str = String.format("%d) %s", idx + 1, frame.getOrigin());
+      
+      line.add(str);
+      contents.add(line);
+    }
+    
+    active_col = active_row = 0;
+    updateScreen(color(255,0,0), color(0));
   }
-  active_col = active_row = 0;
-  mode = NAV_USER_FRAMES;
-  updateScreen(color(255,0,0), color(0));
 }
 
 public void loadThreePointMethod() {
@@ -3330,26 +3342,23 @@ void loadActiveFrames() {
   options = new ArrayList<String>();
   contents = new ArrayList<ArrayList<String>>();
   ArrayList<String> line = new ArrayList<String>();
-  String str = "";
+  active_row = 1;
   
-  str = "ACTIVE FRAMES";
-  line.add(str);
+  line.add("ACTIVE FRAMES");
   contents.add(line);
   
   line = new ArrayList<String>();
-  str = "User: " + (activeUserFrame+1);
-  line.add(str);
+  line.add("Tool: " + (activeToolFrame + 1));
   contents.add(line);
   
   line = new ArrayList<String>();
-  str = "Jog: " + (activeJogFrame+1);
-  line.add(str);
+  line.add("User: " + (activeUserFrame + 1));
   contents.add(line);
   
-  line = new ArrayList<String>();
-  str = "Tool: " + (activeToolFrame+1);
-  line.add(str);
-  contents.add(line);
+  // Currently not implemented
+  /*line = new ArrayList<String>();
+  line.add("Jog:  " + (activeJogFrame + 1));
+  contents.add(line);*/
   
   mode = ACTIVE_FRAMES;
   updateScreen(color(255,0,0), color(0));
