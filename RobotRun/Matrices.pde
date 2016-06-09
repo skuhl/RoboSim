@@ -387,16 +387,25 @@ public void printHCMatrix(float[][] m) {
   }
 }
 
-public void printNxMMatrix(float[][] matrix, int n, int m) {
+/* Returns a string represenation of the given matrix.
+ * 
+ * @param matrixx  A non-null matrix
+ */
+public String matrixToString(float[][] matrix) {
+  String mStr = "";
+  
+  for (int row = 0; row < matrix.length; ++row) {
+    mStr += "\n[";
 
-  for (int row = 0; row < n; ++row) {
-    String rowStr = "[ ";
-
-    for (int col = 0; col < m; ++col) {
-      rowStr += String.format(" %5.4f", matrix[row][col]);
+    for (int col = 0; col < matrix[0].length; ++col) {
+      // Account for the negative sign character
+      if (matrix[row][col] >= 0) { mStr += " "; }
+      
+      mStr += String.format(" %5.6f", matrix[row][col]);
     }
 
-    rowStr += " ]\n";
-    System.out.print(rowStr);
+    mStr += "  ]";
   }
+  
+  return (mStr + "\n");
 }
