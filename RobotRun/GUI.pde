@@ -2247,7 +2247,7 @@ public void ENTER(){
          try {
            int tempRegister = Integer.parseInt(workingText);
            if (tempRegister >= 0 && tempRegister < pr.length) {
-             castIns = getActiveMotionInstruct();
+             MotionInstruction castIns = getActiveMotionInstruct();
              castIns.setRegister(tempRegister);
            }
          } catch (NumberFormatException NFEx){ /* Ignore invalid numbers */ }
