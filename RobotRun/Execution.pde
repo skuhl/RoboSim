@@ -426,7 +426,7 @@ public float[][] calculateJacobian(float[] angles){
 //required to move the end effector to the point specified
 //by 'tgt' and the Euler angle orientation 'rot'
 int calculateIKJacobian(PVector tgt, float[] rot){
-  final int limit = 500;  //max number of times to loop
+  final int limit = 1000;  //max number of times to loop
   float[] angles = armModel.getJointRotations();
   float[][] frame = armModel.currentFrame;
   float[][] nFrame = armModel.getRotationMatrix();
@@ -465,7 +465,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
                        pow(rDelta[3], 2));
                                                   
     //check whether our current position is within tolerance
-    if(dist < 0.5 && rDist < 0.00005) break;
+    if(dist < 0.5 && rDist < 0.0005) break;
     //calculate jacobian, 'J', and its inverse 
     float[][] J = calculateJacobian(angles);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
@@ -480,6 +480,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
       }
       //update joint angles
       angles[i] += dAngle[i];
+      angles[i] += TWO_PI;
       angles[i] %= TWO_PI;
     }
     
@@ -492,6 +493,18 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     return EXEC_FAILURE;
   }
   else{
+    for(int i = 0; i < 6; i += 1){
+      Model s = armModel.segments.get(i);
+      if(angles[i] > -0.000001 && angles[i] < 0.000001)
+        angles[i] = 0;
+        
+      for(int j = 0; j < 3; j += 1){
+        if(s.rotations[j] && !s.anglePermitted(j, angles[i])){
+          return EXEC_FAILURE;
+        }
+      }
+    }
+    
     armModel.setJointRotations(angles);
     return EXEC_SUCCESS;
   }
