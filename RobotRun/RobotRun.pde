@@ -177,7 +177,7 @@ public void draw(){
   //TESTING CODE: DRAW END EFFECTOR POSITION
   pushMatrix();
   noFill();
-  stroke(0, 0, 0);
+  stroke(255, 0, 255);
   applyModelRotation(armModel, true);
   //EE position
   sphere(5);
@@ -252,6 +252,18 @@ public void draw(){
   }
   
   drawEndEffectorGridMapping();
+  
+  /* Draw a point in space */
+  if (ref_point != null) {
+    pushMatrix();
+    translate(ref_point.x, ref_point.y, ref_point.z);
+    
+    noFill();
+    stroke(0, 115, 165);
+    sphere(5);
+    
+    popMatrix();
+  }
   
   stroke(255, 0, 0);
   // Draw x origin line

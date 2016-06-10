@@ -176,10 +176,10 @@ void showMainDisplayText() {
   String quat = String.format("q: [%8.6f, %8.6f, %8.6f, %8.6f]", q[0], q[1], q[2], q[3]);
   text(quat, 20, height/2 + 148);
   
-  float[] c = objects[1].form.position();
-  String obj1_c = String.format("Object 1: (%f, %f Z, %f)", c[0], c[1], c[2]);
-  text(obj1_c, 20, height / 2 + 168);
-  
+  if (ref_point != null) {
+    String obj1_c = String.format("Ref Point: [%f, %f Z, %f]", ref_point.x, ref_point.y, ref_point.z);
+    text(obj1_c, 20, height / 2 + 168);
+  }
   textAlign(RIGHT);
   
   if (errorCounter > 0) {
@@ -201,8 +201,8 @@ public void updateCoordinateMode(ArmModel model) {
   
   // Skip the tool frame, if there is no current active tool frame
   if (curCoordFrame == COORD_TOOL && !((activeToolFrame >= 0 && activeToolFrame < toolFrames.length)
-                                       || model.activeEndEffector == ENDEF_SUCTION
-                                       ||  model.activeEndEffector == ENDEF_CLAW)) {
+                                  || model.activeEndEffector == ENDEF_SUCTION
+                                  || model.activeEndEffector == ENDEF_CLAW)) {
     curCoordFrame = COORD_USER;
   }
   
@@ -381,7 +381,7 @@ void applyModelRotation(ArmModel model, boolean applyOffset){
   translate(45, 45, 0);
   rotateZ(model.segments.get(5).currentRotations[0]);
   
-  if (applyOffset && curCoordFrame == COORD_TOOL) { armModel.applyToolFrame(activeToolFrame); }
+  if (applyOffset && (curCoordFrame == COORD_TOOL || curCoordFrame == COORD_WORLD)) { armModel.applyToolFrame(activeToolFrame); }
 } // end apply model rotations
 
 /**
