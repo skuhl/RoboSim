@@ -775,7 +775,7 @@ public class ArmModel {
     
     rotateZ(getJointRotations()[5]);
     
-    if (curCoordFrame == COORD_TOOL) { applyToolFrame(activeToolFrame); }
+    if (curCoordFrame == COORD_TOOL || curCoordFrame == COORD_WORLD) { applyToolFrame(activeToolFrame); }
     
     PVector ret = new PVector(
       modelX(0, 0, 0),

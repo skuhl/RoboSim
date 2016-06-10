@@ -24,17 +24,18 @@ final int NONE = 0,
           FRAME_DETAIL = 16,
           PICK_FRAME_METHOD = 17,
           THREE_POINT_MODE = 18,
-          DIRECT_ENTRY_MODE = 19,
-          ACTIVE_FRAMES = 20,
-          PICK_INSTRUCTION = 21,
-          IO_SUBMENU = 22,
-          SET_DO_BRACKET = 23,
-          SET_DO_STATUS = 24,
-          SET_RO_BRACKET = 25,
-          SET_RO_STATUS = 26,
-          SET_FRAME_INSTRUCTION = 27,
-          EDIT_MENU = 28,
-          CONFIRM_DELETE = 29;
+          SIX_POINT_METHOD = 19,
+          DIRECT_ENTRY_MODE = 20,
+          ACTIVE_FRAMES = 21,
+          PICK_INSTRUCTION = 22,
+          IO_SUBMENU = 23,
+          SET_DO_BRACKET = 24,
+          SET_DO_STATUS = 25,
+          SET_RO_BRACKET = 26,
+          SET_RO_STATUS = 27,
+          SET_FRAME_INSTRUCTION = 28,
+          EDIT_MENU = 29,
+          CONFIRM_DELETE = 30;
 final int COLOR_DEFAULT = -8421377,
           COLOR_ACTIVE = -65536;
 static int     EE_MAPPING = 2;
@@ -73,14 +74,12 @@ boolean speedInPercentage;
 final int ITEMS_TO_SHOW = 16; // how many programs/ instructions to display on screen
 int letterSet; // which letter group to enter
 Frame currentFrame;
-/*int teachingWhichPoint = 0;
-PVector[] tempPoints = new PVector[3];
-PVector[] tempVectors = new PVector[3];*/
+// Used to keep track a specific point in space
+PVector ref_point;
 ArrayList<float[][]> teachPointTMatrices = null;
 int activeUserFrame = -1;
 int activeJogFrame = -1;
 int activeToolFrame = -1;
-PVector[] teachingPts = new PVector[3];
 
 // display list of programs or motion instructions
 ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>();
@@ -97,7 +96,7 @@ int which_option = -1;
 int index_contents = 0, index_options = 100, index_nums = 1000; 
 int mouseDown = 0;
 
-private static final boolean DISPLAY_TEST_OUTPUT = false;
+private static final boolean DISPLAY_TEST_OUTPUT = true;
 
 void gui(){
    g1_px = 0;
@@ -1344,6 +1343,7 @@ public void up(){
       case INSTRUCTION_EDIT:
       case PICK_FRAME_MODE:
       case PICK_FRAME_METHOD:
+      case THREE_POINT_MODE:
       case SET_DO_STATUS:
       case SET_RO_STATUS:
          which_option = max(0, which_option - 1);
@@ -1411,6 +1411,7 @@ public void dn(){
       case INSTRUCTION_EDIT:
       case PICK_FRAME_MODE:
       case PICK_FRAME_METHOD:
+      case THREE_POINT_MODE:
       case SET_DO_STATUS:
       case SET_RO_STATUS:
          which_option = min(which_option + 1, options.size() - 1);
@@ -1592,7 +1593,7 @@ public void f1(){
           currentFrame = userFrames[active_row];
         }
         
-        loadFrameDetails();
+        loadFrameDetails(false);
       } else if ( mode == ACTIVE_FRAMES) {
         
        if (active_row == 1) {
@@ -1602,6 +1603,8 @@ public void f1(){
        }
        
        updateScreen(color(255,0,0), color(0));
+     } else if (mode == THREE_POINT_MODE) {
+       ref_point = null;
      }
      
      return;
@@ -1668,6 +1671,9 @@ public void f1(){
         break;
       case INSTRUCTION_EDIT:
          //shift = OFF;
+         break;
+      case THREE_POINT_MODE:
+         ref_point = armModel.getEEPos();
          break;
    }
 }
@@ -1743,6 +1749,38 @@ public void f3() {
       loadPrograms();
       updateScreen(color(255,0,0), color(0));
       saveState();
+    }
+  } else if (mode == THREE_POINT_MODE) {
+    
+    if (teachPointTMatrices.size() == 3) {
+      // Calculate TCP via the 3-Point Method
+      double[] tcp = calculateTCPFromThreePoints(teachPointTMatrices);
+      
+      if (tcp == null) {
+        // Invalid point set
+        mode = FRAME_DETAIL;
+        which_option = 0;
+        loadFrameDetails(true);
+      } else {
+        // Save new Tool Frame
+        PVector origin = new PVector((float)tcp[0], (float)tcp[1], (float)tcp[2]),
+                wpr = new PVector(0.0f, 0.0f, 0.0f);
+        
+        if (active_row >= 0 && active_row < toolFrames.length) {
+          if (DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", active_row); }
+          
+          toolFrames[active_row] = new Frame();
+          toolFrames[active_row].setOrigin(origin);
+          toolFrames[active_row].setWpr(wpr);
+          saveState();
+          
+          activeToolFrame = active_row;
+        }
+        
+        mode = FRAME_DETAIL;
+        which_option = 0;
+        loadFrameDetails(false);
+      }
     }
   }
 }
@@ -1896,101 +1934,23 @@ public void f5() {
       applyModelRotation(armModel, false);
       // Save current position of the EE
       float[][] tMatrix = getTransformationMatrix();
-      teachPointTMatrices.add(tMatrix);
       
-      popMatrix();
-      
-      /* Calculate the New Tool Frame after the third point has been recorded */
-      if (teachPointTMatrices.size() == 3) {
-          /****************************************************************
-             Three Point Method Calculation
-             
-             ------------------------------------------------------------
-             A, B, C      transformation matrices
-             Ar, Br, Cr   rotational portions of A, B, C respectively
-             At, Bt, Ct   translational portions of A, B, C repectively
-             x            TCP point with respect to the EE
-             ------------------------------------------------------------
-             
-             Ax = Bx = Cx
-             Ax = (Ar)x + At
-             
-             (A - B)x = 0
-             (Ar - Br)x + At - Bt = 0
-             
-             Ax + Bx - 2Cx = 0
-             (Ar + Br - 2Cr)x + At + Bt - 2Ct = 0
-             (Ar + Br - 2Cr)x = 2Ct - At - Bt
-             x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
-             
-           ****************************************************************/
-          RealVector avg_TCP = new ArrayRealVector(new double[] {0.0, 0.0, 0.0} , false);
-          
-          for (int idxC = 0; idxC < teachPointTMatrices.size(); ++idxC) {
-            
-            int idxA = (idxC + 1) % teachPointTMatrices.size(),
-                idxB = (idxA + 1) % teachPointTMatrices.size();
-            System.out.printf("\nA = %d\nB = %d\nC = %d\n\n", idxA, idxB, idxC);
-            
-            RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxA), 3, 3));
-            RealMatrix Br = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxB), 3, 3));
-            RealMatrix Cr = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxC), 3, 3));
-            
-            double [] t = new double[3];
-            for (int idx = 0; idx < 3; ++idx) {
-              // Build a double from the result of the translation portions of the transformation matrices
-              t[idx] = 2 * teachPointTMatrices.get(idxC)[idx][3] - ( teachPointTMatrices.get(idxA)[idx][3] + teachPointTMatrices.get(idxB)[idx][3] );
-            }
-            
-            /* 2Ct - At - Bt */
-            RealVector b = new ArrayRealVector(t, false);
-            /* Ar + Br - 2Cr */
-            RealMatrix R = ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) );
-            
-            /*System.out.printf("R:\n%s\n", matrixToString( doubleToFloat(R.getData(), 3, 3) ));
-            System.out.printf("t:\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", b.getEntry(0), b.getEntry(1), b.getEntry(2));*/
-            
-            /* (R ^ -1) * b */
-            avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
-          }
-          
-           /* Take the average of the three cases: where C = the first point, the second point, and the third point */
-          avg_TCP = avg_TCP.mapMultiply( 1.0 / 3.0 );
-          
-          for (int pt = 0; pt < teachPointTMatrices.size(); ++pt) {
-            // Print out each matrix
-            System.out.printf("Point %d:\n", pt);
-            println( matrixToString(teachPointTMatrices.get(pt)) );
-          }
-          
-          System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
-          
-          PVector origin = new PVector((float)avg_TCP.getEntry(0), (float)avg_TCP.getEntry(1), (float)avg_TCP.getEntry(2)),
-                  wpr = new PVector(0.0f, 0.0f, 0.0f);
-          
-          if (active_row >= 0 && active_row < toolFrames.length) {
-            println("Frame set");
-            toolFrames[active_row] = new Frame();
-            toolFrames[active_row].setOrigin(origin);
-            toolFrames[active_row].setWpr(wpr);
-          }
-          
-          // Leave Three Point Method menu
-          if (super_mode == NAV_TOOL_FRAMES) {
-            loadFrames(COORD_TOOL);
-          } else if (super_mode == NAV_USER_FRAMES) {
-            loadFrames(COORD_USER);
-          } else {
-            mode = MENU_NAV;
-            mu();
-          }
-          
-          saveState();
-          return;
+      // Add the current teach point to the running list of teach points
+      if (which_option >= 0 && which_option < teachPointTMatrices.size()) {
+        // Override a currently taught point
+        teachPointTMatrices.set(which_option, tMatrix);
+      } else if (teachPointTMatrices.size() < 3) {
+        // Add a new point as long as it does not exceed 3 points total
+        teachPointTMatrices.add(tMatrix);
+        // increment which_option
+        which_option = min(which_option + 1, options.size() - 1);
       }
       
-      loadThreePointMethod();
+      popMatrix();
     }
+    
+    loadFrameDetails(false);
+    loadThreePointMethod();
   } else if (mode == CONFIRM_DELETE) {
      deleteInstEpilogue();
   }
@@ -2222,15 +2182,6 @@ public void ENTER(){
          mode = PICK_FRAME_MODE;
          which_option = 0;
          updateScreen(color(255,0,0), color(0));
-         /*if (active_row == 3) {
-           if (curCoordFrame == COORD_TOOL) {
-             loadFrames(COORD_TOOL);
-           } else if (curCoordFrame == COORD_USER) {
-             loadFrames(COORD_USER);
-           } else {
-             loadActiveFrames();
-           }
-         }*/
          break;
       case PICK_FRAME_MODE:
          options = new ArrayList<String>();
@@ -2246,17 +2197,18 @@ public void ENTER(){
          break;
       case PICK_FRAME_METHOD:
          if (which_option == 0) {
-           options = new ArrayList<String>();
-           which_option = -1;
+           which_option = 0;
            teachPointTMatrices = new ArrayList<float[][]>();
+           loadFrameDetails(false);
            loadThreePointMethod();
          } else if (which_option == 1) {
+           which_option = 0;
+           teachPointTMatrices = new ArrayList<float[][]>();
            /* 6-Point Method not implemented */
          } else if (which_option == 2) {
            // TODO direct entry setup
            //loadDirectEntryMethod();
          }
-         
          break;
       case IO_SUBMENU:
          if (active_row == 2) { // digital
@@ -3040,7 +2992,7 @@ public void updateScreen(color active, color normal){
                  .moveTo(g1)
                  ;
    } else if (mode == THREE_POINT_MODE) {
-     fn_info.setText("SHIFT+F5: RECORD")
+     fn_info.setText("F1: SAV REF PT     SHIFT+F1: RMV REF PT     F3: CONFIRM     SHIFT+F5: RECORD")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
@@ -3151,55 +3103,148 @@ public void loadFrames(int coordFrame) {
 }
 
 public void loadThreePointMethod() {
-  contents = new ArrayList<ArrayList<String>>();
-  
-  contents.add(new ArrayList<String>());
+  options = new ArrayList<String>();
   
   if (teachPointTMatrices != null) {
-    
-    contents.add(new ArrayList<String>());
-    contents.add(new ArrayList<String>());
   
-    String[] limbo = new String[3];
+    ArrayList<String> limbo = new ArrayList<String>();
     
     if (super_mode == NAV_TOOL_FRAMES) {
       
-      limbo[0] = "First Approach Point: ";
-      limbo[1] = "Second Approach Point: ";
-      limbo[2] = "Third Approach Point: ";
-    } else if (super_mode == NAV_TOOL_FRAMES) {
+      limbo.add("First Approach Point: ");
+      limbo.add("Second Approach Point: ");
+      limbo.add("Third Approach Point: ");
+    } else if (super_mode == NAV_USER_FRAMES || mode == SIX_POINT_METHOD) {
       
-      limbo[0] = "Orient Origin Point: ";
-      limbo[1] = "X Direction Point: ";
-      limbo[2] = "Y Direction Point: ";
+      limbo.add("Orient Origin Point: ");
+      limbo.add("X Direction Point: ");
+      limbo.add("Y Direction Point: ");
     } else {
-      
-      for (int idx = 0; idx < limbo.length; ++idx) { limbo[idx] = ""; }
       return;
     }
     
     int size = teachPointTMatrices.size();
     
-    for (int idx = 0; idx < limbo.length; ++idx) {
-      // Add each line to contents
-      limbo[idx] += ((size > idx) ? "RECORDED" : "UNINIT");
-      contents.get(idx).add(limbo[idx]);
+    for (int idx = 0; idx < limbo.size(); ++idx) {
+      // Add each line to options
+      options.add( limbo.get(idx) + ((size > idx) ? "RECORDED" : "UNINIT") );
     }
   } else {
-    // ArrayList is null
-    contents.get(0).add("Error: teachPointTMatrices not set!");
+    // No teach points
+    options.add("Error: teachPointTMatrices not set!");
   }
   
   mode = THREE_POINT_MODE;
-  updateScreen(color(0), color(0));
+  updateScreen(color(255,0,0), color(0));
 }
 
-public void loadFrameDetails() {
+/**
+ * Given a valid set of at least 3 points, this method will return the average
+ * TCP point. If more than three points exist in the list then, only the first
+ * three are used. If the list contains less than 3 points, then null is returned.
+ * If an avergae TCP cannot be calculated from the given points then null is
+ * returned as well.
+ *
+ * @param points  a set of at least 3 4x4 transformation matrices representating
+ *                the position and orientation of three points in space
+ */
+public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
+  
+  if (points != null && points.size() >= 3) {
+      /****************************************************************
+         Three Point Method Calculation
+         
+         ------------------------------------------------------------
+         A, B, C      transformation matrices
+         Ar, Br, Cr   rotational portions of A, B, C respectively
+         At, Bt, Ct   translational portions of A, B, C repectively
+         x            TCP point with respect to the EE
+         ------------------------------------------------------------
+         
+         Ax = Bx = Cx
+         Ax = (Ar)x + At
+         
+         (A - B)x = 0
+         (Ar - Br)x + At - Bt = 0
+         
+         Ax + Bx - 2Cx = 0
+         (Ar + Br - 2Cr)x + At + Bt - 2Ct = 0
+         (Ar + Br - 2Cr)x = 2Ct - At - Bt
+         x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
+         
+       ****************************************************************/
+      RealVector avg_TCP = new ArrayRealVector(new double[] {0.0, 0.0, 0.0} , false);
+      
+      for (int idxC = 0; idxC < teachPointTMatrices.size(); ++idxC) {
+        
+        int idxA = (idxC + 1) % teachPointTMatrices.size(),
+            idxB = (idxA + 1) % teachPointTMatrices.size();
+        System.out.printf("\nA = %d\nB = %d\nC = %d\n\n", idxA, idxB, idxC);
+        
+        RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxA), 3, 3));
+        RealMatrix Br = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxB), 3, 3));
+        RealMatrix Cr = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxC), 3, 3));
+        
+        double [] t = new double[3];
+        for (int idx = 0; idx < 3; ++idx) {
+          // Build a double from the result of the translation portions of the transformation matrices
+          t[idx] = 2 * points.get(idxC)[idx][3] - ( points.get(idxA)[idx][3] + points.get(idxB)[idx][3] );
+        }
+        
+        /* 2Ct - At - Bt */
+        RealVector b = new ArrayRealVector(t, false);
+        /* Ar + Br - 2Cr */
+        RealMatrix R = ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) );
+        
+        /*System.out.printf("R:\n%s\n", matrixToString( doubleToFloat(R.getData(), 3, 3) ));
+        System.out.printf("t:\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", b.getEntry(0), b.getEntry(1), b.getEntry(2));*/
+        
+        /* (R ^ -1) * b */
+        avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
+      }
+      
+      /* Take the average of the three cases: where C = the first point, the second point, and the third point */
+      avg_TCP = avg_TCP.mapMultiply( 1.0 / 3.0 );
+      
+      if (DISPLAY_TEST_OUTPUT) {
+        for (int pt = 0; pt < points.size(); ++pt) {
+          // Print out each matrix
+          System.out.printf("Point %d:\n", pt);
+          println( matrixToString(points.get(pt)) );
+        }
+        
+        System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
+      }
+      
+      for (int idx = 0 ; idx < avg_TCP.getDimension(); ++idx) {
+        if (abs((float)avg_TCP.getEntry(idx)) > 1000.0) {
+          return null;
+        }
+      }
+      
+      return avg_TCP.toArray();
+  }
+  
+  return null;
+}
+
+/* 
+ * @param fault  Used to determine whether to print an error message as a
+ *               result of an error when calculating the origin in the
+ *               3-Point and 6-Point Methods. */
+public void loadFrameDetails(boolean fault) {
   contents = new ArrayList<ArrayList<String>>();
+ 
   ArrayList<String> line = new ArrayList<String>();
   String str = "";
-  if (super_mode == NAV_TOOL_FRAMES) str = "TOOL FRAME " + (active_row+1);
-  else if (super_mode == NAV_USER_FRAMES) str = "USER FRAME " + (active_row+1);
+  if (super_mode == NAV_TOOL_FRAMES) {
+    str = "TOOL FRAME ";
+    if (mode == FRAME_DETAIL) { str += (active_row + 1); }
+  } else if (super_mode == NAV_USER_FRAMES) {
+    str = "USER FRAME ";
+    if (mode == FRAME_DETAIL) { str += (active_row + 1); }
+  }
+  
   line.add(str);
   contents.add(line);
   
@@ -3228,7 +3273,14 @@ public void loadFrameDetails() {
   line.add(str);
   contents.add(line);  
   mode = FRAME_DETAIL;
-  updateScreen(color(0), color(0));
+  
+  if (fault) {
+    which_option = 0;
+    options = new ArrayList<String>();
+    options.add("Error: Invalid input values!");
+  }
+  
+  updateScreen(color(255,0,0), color(0));
 }
 
 // prepare for displaying motion instructions on screen
