@@ -1606,69 +1606,70 @@ public void f1(){
      
      return;
    }
-   
-   switch (mode) {
-      case PROGRAM_NAV:
-         //shift = OFF;
-         break;
-      case INSTRUCTION_NAV:
-         if (shift == OFF) {
-           contents = new ArrayList<ArrayList<String>>();
-           ArrayList<String> line = new ArrayList<String>();
-           line.add("1 I/O");
-           contents.add(line);
-           line = new ArrayList<String>(); line.add("2 Offset/Frames");
-           contents.add(line);
-           line = new ArrayList<String>(); line.add("(Others not yet implemented)");
-           contents.add(line);
-           active_col = active_row = 0;
-           mode = PICK_INSTRUCTION;
-           updateScreen(color(255,0,0), color(0));
-         } else { // shift+f1 = add new motion instruction
-           PVector eep = armModel.getEEPos();
-           eep = convertNativeToWorld(eep);
-           Program prog = programs.get(active_program);
-           int reg = prog.nextRegister();
-           PVector r = armModel.getWPR();
-           float[] j = armModel.getJointRotations();
-           prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
-                                      j[0], j[1], j[2], j[3], j[4], j[5]), reg);
-           MotionInstruction insert = new MotionInstruction(
-             (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
-             reg,
-             false,
-             (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
-             0,
-             activeUserFrame,
-             activeToolFrame);
-           prog.addInstruction(insert);
-           
-           active_instruction = prog.getInstructions().size() - 1;
-           active_col = 0;
-           /* 13 is the maximum number of instructions that can be displayed at one point in time */
-           active_row = min(active_instruction, ITEMS_TO_SHOW - 4);
-           text_render_start = active_instruction - active_row;
-           
-           loadInstructions(active_program);
-           updateScreen(color(255,0,0), color(0,0,0));
-         }
-         //shift = OFF;
-         break;
-      case NAV_TOOL_FRAMES:
-        // Set the current tool frame
-        if (active_row >= 0) {
-          activeToolFrame = active_row;
-        }
-        break;
-      case NAV_USER_FRAMES:
-        // Set the current user frame
-        if (active_row >= 0) {
-          activeUserFrame = active_row;
-        }
-        break;
-      case INSTRUCTION_EDIT:
-         //shift = OFF;
-         break;
+   else {
+     switch (mode) {
+        case PROGRAM_NAV:
+           //shift = OFF;
+           break;
+        case INSTRUCTION_NAV:
+           if (shift == OFF) {
+             contents = new ArrayList<ArrayList<String>>();
+             ArrayList<String> line = new ArrayList<String>();
+             line.add("1 I/O");
+             contents.add(line);
+             line = new ArrayList<String>(); line.add("2 Offset/Frames");
+             contents.add(line);
+             line = new ArrayList<String>(); line.add("(Others not yet implemented)");
+             contents.add(line);
+             active_col = active_row = 0;
+             mode = PICK_INSTRUCTION;
+             updateScreen(color(255,0,0), color(0));
+           } else { // shift+f1 = add new motion instruction
+             PVector eep = armModel.getEEPos();
+             eep = convertNativeToWorld(eep);
+             Program prog = programs.get(active_program);
+             int reg = prog.nextRegister();
+             PVector r = armModel.getWPR();
+             float[] j = armModel.getJointRotations();
+             prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
+                                        j[0], j[1], j[2], j[3], j[4], j[5]), reg);
+             MotionInstruction insert = new MotionInstruction(
+               (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
+               reg,
+               false,
+               (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
+               0,
+               activeUserFrame,
+               activeToolFrame);
+             prog.addInstruction(insert);
+             
+             active_instruction = prog.getInstructions().size() - 1;
+             active_col = 0;
+             /* 13 is the maximum number of instructions that can be displayed at one point in time */
+             active_row = min(active_instruction, ITEMS_TO_SHOW - 4);
+             text_render_start = active_instruction - active_row;
+             
+             loadInstructions(active_program);
+             updateScreen(color(255,0,0), color(0,0,0));
+           }
+           //shift = OFF;
+           break;
+        case NAV_TOOL_FRAMES:
+          // Set the current tool frame
+          if (active_row >= 0) {
+            activeToolFrame = active_row;
+          }
+          break;
+        case NAV_USER_FRAMES:
+          // Set the current user frame
+          if (active_row >= 0) {
+            activeUserFrame = active_row;
+          }
+          break;
+        case INSTRUCTION_EDIT:
+           //shift = OFF;
+           break;
+     }
    }
 }
 
@@ -2032,11 +2033,11 @@ public void fd() {
       //if (ins instanceof MotionInstruction) {
       //  singleInstruction = (MotionInstruction)ins;
       //  setUpInstruction(programs.get(active_program), armModel, singleInstruction);
-        
+      
       //  if (active_instruction < programs.get(active_program).getInstructions().size()-1){
       //    active_instruction = (active_instruction+1);
       //  }
-        
+      
       //  loadInstructions(active_program);
       //  updateScreen(color(255,0,0), color(0));
       //}

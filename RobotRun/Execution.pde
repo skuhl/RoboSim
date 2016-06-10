@@ -1004,36 +1004,6 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   return false;
 }//end executeProgram
 
-
-/**
- * Executes a single instruction. Returns true when done.
- * @param ins Instruction to execute.
- * @return Finished yet (false=no, true=yes)
- */
-boolean executeSingleInstruction(Instruction ins) {
-  if (ins instanceof MotionInstruction) {
-    MotionInstruction instruction = (MotionInstruction)ins;
-    if (instruction.getMotionType() != MTYPE_JOINT) {
-      if (instruction.getUserFrame() != activeUserFrame) {
-        setError("ERROR: Instruction's user frame is different from currently active user frame.");
-        return true;
-      }
-      return executeMotion(armModel, instruction.getSpeedForExec(armModel));
-    } else {
-      return armModel.interpolateRotation(instruction.getSpeedForExec(armModel));
-    }
-  } else if (ins instanceof ToolInstruction) {
-    ToolInstruction instruction = (ToolInstruction)ins;
-    instruction.execute();
-    return true;
-  } else if (ins instanceof FrameInstruction) {
-    FrameInstruction instruction = (FrameInstruction)ins;
-    instruction.execute();
-    return true;
-  }
-  return true;
-}
-
 /**
  * Sets up an instruction for execution.
  * @param program Program that the instruction belongs to
