@@ -1176,6 +1176,8 @@ public void show(){
 
 
 public void mu() {
+  if (mode == INSTRUCTION_NAV || mode == INSTRUCTION_EDIT) { saveState(); }
+  
   contents = new ArrayList<ArrayList<String>>();
   ArrayList<String> line = new ArrayList<String>();
   line.add("1 UTILITIES (NA)");
@@ -1201,8 +1203,6 @@ public void mu() {
   active_col = active_row = 0;
   mode = MENU_NAV;
   updateScreen(color(255,0,0), color(0));
-  
-  if (mode == INSTRUCTION_NAV) { saveState(); }
 }
 
 
@@ -1288,6 +1288,9 @@ public void LINE() {
 }
 
 public void se(){
+  // Save when exiting a program
+   if (mode == INSTRUCTION_NAV || mode == INSTRUCTION_EDIT) { saveState(); }
+   
    active_program = 0;
    active_instruction = 0;
    active_row = 0;
@@ -1296,8 +1299,6 @@ public void se(){
    clearScreen();
    loadPrograms();
    updateScreen(color(255,0,0), color(0,0,0));
-   // Save when exiting a program
-   if (mode == INSTRUCTION_NAV) { saveState(); }
 }
 
 public void up(){
@@ -1583,17 +1584,44 @@ public void goToEnterTextMode() {
 
 public void f1(){
    if (shift == ON) {
-     
-     if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
+     if (mode == INSTRUCTION_NAV) {
+       // shift+f1 = add new motion instruction
+       PVector eep = armModel.getEEPos();
+       eep = convertNativeToWorld(eep);
+       Program prog = programs.get(active_program);
+       int reg = prog.nextRegister();
+       PVector r = armModel.getWPR();
+       float[] j = armModel.getJointRotations();
+       prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
+                                  j[0], j[1], j[2], j[3], j[4], j[5]), reg);
+       MotionInstruction insert = new MotionInstruction(
+         (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
+         reg,
+         false,
+         (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
+         0,
+         activeUserFrame,
+         activeToolFrame);
+       prog.addInstruction(insert);
+       
+       active_instruction = prog.getInstructions().size() - 1;
+       active_col = 0;
+       /* 13 is the maximum number of instructions that can be displayed at one point in time */
+       active_row = min(active_instruction, ITEMS_TO_SHOW - 4);
+       text_render_start = active_instruction - active_row;
+       
+       loadInstructions(active_program);
+       updateScreen(color(255,0,0), color(0,0,0));
+     } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
         
        super_mode = mode;
-        if (super_mode == NAV_TOOL_FRAMES) {
-          currentFrame = toolFrames[active_row];
-        } else if (super_mode == NAV_USER_FRAMES) {
-          currentFrame = userFrames[active_row];
-        }
-        
-        loadFrameDetails(false);
+       if (super_mode == NAV_TOOL_FRAMES) {
+         currentFrame = toolFrames[active_row];
+       } else if (super_mode == NAV_USER_FRAMES) {
+         currentFrame = userFrames[active_row];
+       }
+       
+       loadFrameDetails(false);
       } else if ( mode == ACTIVE_FRAMES) {
         
        if (active_row == 1) {
@@ -1609,73 +1637,42 @@ public void f1(){
      
      return;
    }
-   else {
-     switch (mode) {
-        case PROGRAM_NAV:
-           //shift = OFF;
-           break;
-        case INSTRUCTION_NAV:
-           if (shift == OFF) {
-             contents = new ArrayList<ArrayList<String>>();
-             ArrayList<String> line = new ArrayList<String>();
-             line.add("1 I/O");
-             contents.add(line);
-             line = new ArrayList<String>(); line.add("2 Offset/Frames");
-             contents.add(line);
-             line = new ArrayList<String>(); line.add("(Others not yet implemented)");
-             contents.add(line);
-             active_col = active_row = 0;
-             mode = PICK_INSTRUCTION;
-             updateScreen(color(255,0,0), color(0));
-           } else { // shift+f1 = add new motion instruction
-             PVector eep = armModel.getEEPos();
-             eep = convertNativeToWorld(eep);
-             Program prog = programs.get(active_program);
-             int reg = prog.nextRegister();
-             PVector r = armModel.getWPR();
-             float[] j = armModel.getJointRotations();
-             prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
-                                        j[0], j[1], j[2], j[3], j[4], j[5]), reg);
-             MotionInstruction insert = new MotionInstruction(
-               (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
-               reg,
-               false,
-               (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
-               0,
-               activeUserFrame,
-               activeToolFrame);
-             prog.addInstruction(insert);
-             
-             active_instruction = prog.getInstructions().size() - 1;
-             active_col = 0;
-             /* 13 is the maximum number of instructions that can be displayed at one point in time */
-             active_row = min(active_instruction, ITEMS_TO_SHOW - 4);
-             text_render_start = active_instruction - active_row;
-             
-             loadInstructions(active_program);
-             updateScreen(color(255,0,0), color(0,0,0));
-           }
-           //shift = OFF;
-           break;
-        case NAV_TOOL_FRAMES:
-          // Set the current tool frame
-          if (active_row >= 0) {
-            activeToolFrame = active_row;
-          }
-          break;
-        case NAV_USER_FRAMES:
-          // Set the current user frame
-          if (active_row >= 0) {
-            activeUserFrame = active_row;
-          }
-          break;
-        case INSTRUCTION_EDIT:
-           //shift = OFF;
-           break;
-     }
-      case THREE_POINT_MODE:
-         ref_point = armModel.getEEPos();
+   
+   switch (mode) {
+      case PROGRAM_NAV:
+         //shift = OFF;
          break;
+      case INSTRUCTION_NAV:
+         contents = new ArrayList<ArrayList<String>>();
+         ArrayList<String> line = new ArrayList<String>();
+         line.add("1 I/O");
+         contents.add(line);
+         line = new ArrayList<String>(); line.add("2 Offset/Frames");
+         contents.add(line);
+         line = new ArrayList<String>(); line.add("(Others not yet implemented)");
+         contents.add(line);
+         active_col = active_row = 0;
+         mode = PICK_INSTRUCTION;
+         updateScreen(color(255,0,0), color(0));
+         break;
+      case NAV_TOOL_FRAMES:
+        // Set the current tool frame
+        if (active_row >= 0) {
+          activeToolFrame = active_row;
+        }
+        break;
+      case NAV_USER_FRAMES:
+        // Set the current user frame
+        if (active_row >= 0) {
+          activeUserFrame = active_row;
+        }
+        break;
+      case INSTRUCTION_EDIT:
+         //shift = OFF;
+         break;
+    case THREE_POINT_MODE:
+       ref_point = armModel.getEEPos();
+       break;
    }
 }
 
@@ -1924,7 +1921,6 @@ public void f5() {
       active_col = 0;
       loadInstructions(active_program);
       updateScreen(color(255,0,0), color(0,0,0));
-      saveState();
     }
   } else if (mode == THREE_POINT_MODE) {
     
@@ -2093,7 +2089,6 @@ public void ENTER(){
            }
            MotionInstruction castIns = getActiveMotionInstruct();
            castIns.setSpeed(tempSpeed);
-           saveState();
          }
          loadInstructions(active_program);
          mode = INSTRUCTION_NAV;
