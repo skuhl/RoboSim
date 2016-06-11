@@ -465,7 +465,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
                        pow(rDelta[3], 2));
                                                   
     //check whether our current position is within tolerance
-    if(dist < 0.5 && rDist < 0.0005) break;
+    if(dist < liveSpeed && rDist < 0.005*liveSpeed) break;
     //calculate jacobian, 'J', and its inverse 
     float[][] J = calculateJacobian(angles);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
@@ -488,8 +488,10 @@ int calculateIKJacobian(PVector tgt, float[] rot){
   }
   
   armModel.currentFrame = frame;
+  println(count);
   //did we successfully find the desired angles?
   if(count >= limit){
+    println("IK failure");
     return EXEC_FAILURE;
   }
   else{
@@ -500,7 +502,8 @@ int calculateIKJacobian(PVector tgt, float[] rot){
         
       for(int j = 0; j < 3; j += 1){
         if(s.rotations[j] && !s.anglePermitted(j, angles[i])){
-          return EXEC_FAILURE;
+          println("illegal joint angle on j" + i);
+          //return EXEC_FAILURE;
         }
       }
     }
@@ -637,8 +640,10 @@ void beginNewContinuousMotion(PVector start, PVector end,
 {
   calculateContinuousPositions(start, end, next, percentage);
   motionFrameCounter = 0;
-  if(intermediatePositions.size() > 0);
-    //calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+  if(intermediatePositions.size() > 0){
+    float[] q = {0, 0, 0, 1};
+    calculateIKJacobian(intermediatePositions.get(interMotionIdx), q);
+  }
 }
 
 /**
@@ -649,8 +654,10 @@ void beginNewContinuousMotion(PVector start, PVector end,
 void beginNewLinearMotion(PVector start, PVector end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
-  if(intermediatePositions.size() > 0);
-    //calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+  if(intermediatePositions.size() > 0){
+    float[] q = {0, 0, 0, 1};
+    calculateIKJacobian(intermediatePositions.get(interMotionIdx), q);
+  }
 }
 
 /**
@@ -665,8 +672,10 @@ void beginNewCircularMotion(PVector p1, PVector p2, PVector p3) {
   intermediatePositions = createArc(createCircleCircumference(p1, p2, p3, 180), p1, p2, p3);
   interMotionIdx = 0;
   motionFrameCounter = 0;
-  if(intermediatePositions.size() > 0);
-    //calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+ if(intermediatePositions.size() > 0){
+    float[] q = {0, 0, 0, 1};
+    calculateIKJacobian(intermediatePositions.get(interMotionIdx), q);
+  }
 }
 
 boolean executingInstruction = false;
@@ -688,8 +697,18 @@ boolean executeMotion(ArmModel model, float speedMult) {
       interMotionIdx = -1;
       return true;
     }
-    //calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+    
+    int ret = EXEC_SUCCESS;
+    if(intermediatePositions.size() > 0){
+      float[] q = {0, 0, 0, 1};
+      calculateIKJacobian(intermediatePositions.get(interMotionIdx), q);
+    }
+      
+    if(ret == EXEC_FAILURE){
+      doneMoving = true;
+    }
   }
+  
   return false;
 } // end execute linear motion
 
@@ -857,7 +876,10 @@ int cycleNumber(int number) {
  */
 ArrayList<PVector> createArc(ArrayList<PVector> points, PVector a, PVector b, PVector c) {
   float CHKDIST = 15.0;
+  //CHECK 4 GREMBLINS HERE
+  int count1 = 0, count2 = 0;
   while (true) {
+    //count2++; println("c2: " + count2);
     int seenA = 0, seenB = 0, seenC = 0, currentSee = 1;
     for (int n = 0; n < points.size(); n++) {
       PVector pt = points.get(n);
@@ -869,6 +891,7 @@ ArrayList<PVector> createArc(ArrayList<PVector> points, PVector a, PVector b, PV
       seenA = cycleNumber(seenA);
       seenB = cycleNumber(seenB);
       seenC = cycleNumber(seenC);
+      //count1++; println("c1: " + count1);
     }
     // detect reverse case: if b > c then we're going the wrong way, so reverse
     if (seenB > seenC) {
@@ -1022,7 +1045,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
       for (int r = 0; r < 3; r++) {
         if (model.segments.get(n).rotations[r])
           model.segments.get(n).targetRotations[r] = j[n];
-          println("target rotation for joint " + n + ": " + j[n]);
+          //println("target rotation for joint " + n + ": " + j[n]);
       }
     }
     

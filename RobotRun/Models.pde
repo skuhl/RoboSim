@@ -121,37 +121,37 @@ public class ArmModel {
   
   public ArmModel() {
     
-    motorSpeed = 4000.0; // speed in mm/sec
+    motorSpeed = 1000.0; // speed in mm/sec
     // Joint 1
     Model base = new Model("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
     base.rotations[1] = true;
     base.jointRanges[1] = new PVector(0, TWO_PI);
-    base.rotationSpeed = radians(350)/60.0;
+    base.rotationSpeed = radians(150)/60.0;
     // Joint 2
     Model axis1 = new Model("ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
     axis1.rotations[2] = true;
     axis1.jointRanges[2] = new PVector(4.34, 2.01);
-    axis1.rotationSpeed = radians(350)/60.0;
+    axis1.rotationSpeed = radians(150)/60.0;
     // Joint 3
     Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
     axis2.rotations[2] = true;
     axis2.jointRanges[2] = new PVector(12f * PI / 20f, 8f * PI / 20f);
-    axis2.rotationSpeed = radians(400)/60.0;
+    axis2.rotationSpeed = radians(200)/60.0;
     // Joint 4
     Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
     axis3.rotations[0] = true;
     axis3.jointRanges[0] = new PVector(0, TWO_PI);
-    axis3.rotationSpeed = radians(450)/60.0;
+    axis3.rotationSpeed = radians(250)/60.0;
     // Joint 5
     Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
     axis4.rotations[2] = true;
     axis4.jointRanges[2] = new PVector(59f * PI / 40f, 11f * PI / 20f);
-    axis4.rotationSpeed = radians(450)/60.0;
+    axis4.rotationSpeed = radians(250)/60.0;
     // Joint 6
     Model axis5 = new Model("ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0));
     axis5.rotations[0] = true;
     axis5.jointRanges[0] = new PVector(0, TWO_PI);
-    axis5.rotationSpeed = radians(720)/60.0;
+    axis5.rotationSpeed = radians(420)/60.0;
     Model axis6 = new Model("ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40));
     segments.add(base);
     segments.add(axis1);
@@ -834,7 +834,7 @@ public class ArmModel {
     PVector u = new PVector(0, 0, 0);
     RealMatrix frameInverse = new Array2DRowRealMatrix(floatToDouble(currentFrame, 3, 3));
     frameInverse = MatrixUtils.inverse(frameInverse);
-    float theta = DEG_TO_RAD*10*liveSpeed;
+    float theta = DEG_TO_RAD*2.5*liveSpeed;
     
     //if not in user frame mode
     for(int i = 0; i < 3; i += 1){
@@ -894,19 +894,13 @@ public class ArmModel {
           move = vectorConvertTo(move, frame[0], frame[1], frame[2]);
         }
         
-        if(intermediatePositions.size() == 0){
-          //respond to user defined movement
-          float distance = motorSpeed/60.0 * liveSpeed;
-          tgtPos.x += move.x * distance;
-          tgtPos.y += move.y * distance;
-          tgtPos.z += move.z * distance;
-          updateOrientation();
-        }
-        else{
-          //execute linear/ circular instruction
-          tgtPos = intermediatePositions.get(0);
-          intermediatePositions.remove(0);
-        }
+       
+        //respond to user defined movement
+        float distance = motorSpeed/60.0 * liveSpeed;
+        tgtPos.x += move.x * distance;
+        tgtPos.y += move.y * distance;
+        tgtPos.z += move.z * distance;
+        updateOrientation();
         
         //println(lockOrientation);
         int r = calculateIKJacobian(tgtPos, tgtRot);

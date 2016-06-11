@@ -55,7 +55,7 @@ Program currentProgram;
 boolean execSingleInst = false;
 MotionInstruction singleInstruction = null;
 int currentInstruction;
-int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
+int EXEC_SUCCESS = 0, EXEC_FAILURE = 1;
 
 /*******************************/
 
@@ -119,11 +119,15 @@ public void draw(){
 
   background(127);
   
+  //execute arm movement
   if (!doneMoving){
+    //run program
     doneMoving = executeProgram(currentProgram, armModel, execSingleInst);
   }
   else{
+    //respond to manual movement from J button presses
     intermediatePositions.clear();
+    armModel.executeLiveMotion();
   }
   
   pushMatrix();
@@ -132,8 +136,6 @@ public void draw(){
   // Keep track of the old coordinate frame of the armModel
   armModel.oldEETMatrix = getTransformationMatrix();
   popMatrix();
-  
-  armModel.executeLiveMotion(); // respond to manual movement from J button presses
   
   hint(ENABLE_DEPTH_TEST);
   background(255);
