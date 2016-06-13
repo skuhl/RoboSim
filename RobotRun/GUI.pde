@@ -24,8 +24,8 @@ final int NONE = 0,
           FRAME_DETAIL = 16,
           PICK_FRAME_METHOD = 17,
           THREE_POINT_MODE = 18,
-          SIX_POINT_ORIGIN = 19,
-          SIX_POINT_AXES = 20,
+          FOUR_POINT_MODE = 19,
+          SIX_POINT_MODE = 20,
           DIRECT_ENTRY_MODE = 21,
           ACTIVE_FRAMES = 22,
           PICK_INSTRUCTION = 23,
@@ -1346,6 +1346,8 @@ public void up(){
       case PICK_FRAME_MODE:
       case PICK_FRAME_METHOD:
       case THREE_POINT_MODE:
+      case SIX_POINT_MODE:
+      case FOUR_POINT_MODE:
       case SET_DO_STATUS:
       case SET_RO_STATUS:
          which_option = max(0, which_option - 1);
@@ -1414,6 +1416,8 @@ public void dn(){
       case PICK_FRAME_MODE:
       case PICK_FRAME_METHOD:
       case THREE_POINT_MODE:
+      case SIX_POINT_MODE:
+      case FOUR_POINT_MODE:
       case SET_DO_STATUS:
       case SET_RO_STATUS:
          which_option = min(which_option + 1, options.size() - 1);
@@ -1639,7 +1643,7 @@ public void f1(){
       
       updateScreen(color(255,0,0), color(0));
     } 
-    else if (mode == THREE_POINT_MODE) {
+    else if (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE || mode == FOUR_POINT_MODE) {
       ref_point = null;
     }
     
@@ -1680,6 +1684,8 @@ public void f1(){
         //shift = OFF;
         break;
       case THREE_POINT_MODE:
+      case SIX_POINT_MODE:
+      case FOUR_POINT_MODE:
         ref_point = armModel.getEEPos();
         break;
     }
@@ -1758,9 +1764,14 @@ public void f3() {
       updateScreen(color(255,0,0), color(0));
       saveState();
     }
-  } else if (mode == THREE_POINT_MODE) {
+  } else if ((mode == THREE_POINT_MODE && teachPointTMatrices.size() == 3) ||
+        (mode == FOUR_POINT_MODE && teachPointTMatrices.size() == 4) ||
+        (mode == SIX_POINT_MODE && teachPointTMatrices.size() == 6)) {
     
-    if (teachPointTMatrices.size() == 3) {
+    PVector origin = new PVector(0f, 0f, 0f), wpr = new PVector(0f, 0f, 0f);
+    float[][] axes = null;
+    
+    if (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE) {
       // Calculate TCP via the 3-Point Method
       double[] tcp = calculateTCPFromThreePoints(teachPointTMatrices);
       
@@ -1769,27 +1780,84 @@ public void f3() {
         mode = FRAME_DETAIL;
         which_option = 0;
         loadFrameDetails(true);
+        return;
       } else {
-        // Save new Tool Frame
-        PVector origin = new PVector((float)tcp[0], (float)tcp[1], (float)tcp[2]),
-                wpr = new PVector(0.0f, 0.0f, 0.0f);
-        
-        if (active_row >= 0 && active_row < toolFrames.length) {
-          if (DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", active_row); }
-          
-          toolFrames[active_row] = new Frame();
-          toolFrames[active_row].setOrigin(origin);
-          toolFrames[active_row].setWpr(wpr);
-          saveState();
-          
-          activeToolFrame = active_row;
-        }
-        
-        mode = FRAME_DETAIL;
-        which_option = 0;
-        loadFrameDetails(false);
+        origin = new PVector((float)tcp[0], (float)tcp[1], (float)tcp[2]);
       }
+    } else {
+      // TODO Four point mode offset
     }
+    
+    if (mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE) {
+      
+      ArrayList<float[][]> axesPoints = new ArrayList<float[][]>();
+      // Use the last three points to calculate the axes vectors
+      if (mode == FOUR_POINT_MODE) {
+        axesPoints.add(teachPointTMatrices.get(1));
+        axesPoints.add(teachPointTMatrices.get(2));
+        axesPoints.add(teachPointTMatrices.get(3));
+      } else if (mode == SIX_POINT_MODE) {
+        axesPoints.add(teachPointTMatrices.get(3));
+        axesPoints.add(teachPointTMatrices.get(4));
+        axesPoints.add(teachPointTMatrices.get(5));
+      }
+      
+      axes = createAxesFromThreePoints(axesPoints);
+      
+      println(matrixToString(axes));
+      // TODO actually save the axes ...
+      wpr = new PVector(0.0f, 0.0f, 0.0f);
+    }
+      
+    Frame[] frames = null;
+    // Determine to which frame set (user or tool) to add the new frame
+    if (super_mode == NAV_TOOL_FRAMES) {
+      frames = toolFrames;
+    } else if (super_mode == NAV_USER_FRAMES) {
+      frames = userFrames;
+    }
+    
+    if (frames != null) {
+      
+      if (active_row >= 0 && active_row < frames.length) {
+        if (DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", active_row); }
+        
+        frames[active_row] = new Frame();
+        frames[active_row].setOrigin(origin);
+        frames[active_row].setWpr(wpr);
+        saveState();
+        
+        // Set new Frame 
+        if (super_mode == NAV_TOOL_FRAMES) {
+          activeToolFrame = active_row;
+        } else if (super_mode == NAV_USER_FRAMES) {
+          activeUserFrame = active_row;
+        }
+      } else {
+        System.out.printf("Error invalid index %d!\n", active_row);
+      }
+      
+    } else {
+      System.out.printf("Error: invalid frame list for mode: %d!\n", mode);
+    }
+    
+    teachPointTMatrices = null;
+    which_option = 0;
+    options.clear();
+    active_row = 0;
+    
+    if (super_mode == NAV_TOOL_FRAMES) {
+      loadFrames(COORD_TOOL);
+    } else if (super_mode == NAV_USER_FRAMES) {
+      loadFrames(COORD_USER);
+    } else {
+      super_mode = MENU_NAV;
+      mu();
+    }
+    
+    mode = super_mode;
+    super_mode = NONE;
+    options.clear();
   }
 }
 
@@ -1932,7 +2000,7 @@ public void f5() {
       loadInstructions(active_program);
       updateScreen(color(255,0,0), color(0,0,0));
     }
-  } else if (mode == THREE_POINT_MODE) {
+  } else if (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE || mode == FOUR_POINT_MODE) {
     
     if (teachPointTMatrices != null) {
       
@@ -1944,10 +2012,13 @@ public void f5() {
       
       // Add the current teach point to the running list of teach points
       if (which_option >= 0 && which_option < teachPointTMatrices.size()) {
-        // Override a currently taught point
+        // Cannot override the origin once it is calculated for the six point method
         teachPointTMatrices.set(which_option, tMatrix);
-      } else if (teachPointTMatrices.size() < 3) {
-        // Add a new point as long as it does not exceed 3 points total
+      } else if ((mode == THREE_POINT_MODE && teachPointTMatrices.size() < 3) ||
+                 (mode == FOUR_POINT_MODE && teachPointTMatrices.size() < 4) ||
+                 (mode == SIX_POINT_MODE && teachPointTMatrices.size() < 6)) {
+        
+        // Add a new point as long as it does not exceed number of points for a specific method
         teachPointTMatrices.add(tMatrix);
         // increment which_option
         which_option = min(which_option + 1, options.size() - 1);
@@ -1956,8 +2027,10 @@ public void f5() {
       popMatrix();
     }
     
+    int limbo = mode;
     loadFrameDetails(false);
-    loadThreePointMethod();
+    mode = limbo;
+    loadPointList();
   } else if (mode == CONFIRM_DELETE) {
      deleteInstEpilogue();
   }
@@ -2208,14 +2281,16 @@ public void ENTER(){
          which_option = 0;
          teachPointTMatrices = new ArrayList<float[][]>();
          loadFrameDetails(false);
-         loadThreePointMethod();
+         mode = THREE_POINT_MODE;
+         loadPointList();
        } else if (which_option == 1) {
          which_option = 0;
          teachPointTMatrices = new ArrayList<float[][]>();
-         /* 6-Point Method not implemented */
+         loadFrameDetails(false);
+         mode = (super_mode == NAV_TOOL_FRAMES) ? SIX_POINT_MODE : FOUR_POINT_MODE;
+         loadPointList();
        } else if (which_option == 2) {
          // TODO direct entry setup
-         //loadDirectEntryMethod();
        }
        break;
     case IO_SUBMENU:
@@ -2999,7 +3074,7 @@ public void updateScreen(color active, color normal){
                  .show()
                  .moveTo(g1)
                  ;
-   } else if (mode == THREE_POINT_MODE) {
+   } else if (mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE) {
      fn_info.setText("F1: SAV REF PT     SHIFT+F1: RMV REF PT     F3: CONFIRM     SHIFT+F5: RECORD")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
@@ -3109,29 +3184,32 @@ public void loadFrames(int coordFrame) {
   }
 }
 
-public void loadThreePointMethod() {
+public void loadPointList() {
   options = new ArrayList<String>();
   
   if (teachPointTMatrices != null) {
   
     ArrayList<String> limbo = new ArrayList<String>();
     
-    if (super_mode == NAV_TOOL_FRAMES) {
-      
+    if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
       limbo.add("First Approach Point: ");
       limbo.add("Second Approach Point: ");
       limbo.add("Third Approach Point: ");
-    } else if (super_mode == NAV_USER_FRAMES || mode == SIX_POINT_ORIGIN || mode == SIX_POINT_AXES) {
+    }
+    
+    if ((super_mode == NAV_USER_FRAMES && mode == THREE_POINT_MODE) || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE) {
       
       limbo.add("Orient Origin Point: ");
       limbo.add("X Direction Point: ");
       limbo.add("Y Direction Point: ");
-    } else {
-      return;
+    }
+    
+    if (super_mode == NAV_USER_FRAMES && mode == FOUR_POINT_MODE) {
+      limbo.add("TODO: ");
     }
     
     int size = teachPointTMatrices.size();
-    
+    // Determine if the point has been set yet
     for (int idx = 0; idx < limbo.size(); ++idx) {
       // Add each line to options
       options.add( limbo.get(idx) + ((size > idx) ? "RECORDED" : "UNINIT") );
@@ -3141,7 +3219,6 @@ public void loadThreePointMethod() {
     options.add("Error: teachPointTMatrices not set!");
   }
   
-  mode = THREE_POINT_MODE;
   updateScreen(color(255,0,0), color(0));
 }
 
@@ -3182,10 +3259,11 @@ public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
        ****************************************************************/
       RealVector avg_TCP = new ArrayRealVector(new double[] {0.0, 0.0, 0.0} , false);
       
-      for (int idxC = 0; idxC < teachPointTMatrices.size(); ++idxC) {
+      for (int idxC = 0; idxC < 3; ++idxC) {
         
-        int idxA = (idxC + 1) % teachPointTMatrices.size(),
-            idxB = (idxA + 1) % teachPointTMatrices.size();
+        int idxA = (idxC + 1) % 3,
+            idxB = (idxA + 1) % 3;
+        
         System.out.printf("\nA = %d\nB = %d\nC = %d\n\n", idxA, idxB, idxC);
         
         RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxA), 3, 3));
@@ -3214,13 +3292,13 @@ public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
       avg_TCP = avg_TCP.mapMultiply( 1.0 / 3.0 );
       
       if (DISPLAY_TEST_OUTPUT) {
-        for (int pt = 0; pt < points.size(); ++pt) {
+        /*for (int pt = 0; pt < 3 && pt < points.size(); ++pt) {
           // Print out each matrix
           System.out.printf("Point %d:\n", pt);
           println( matrixToString(points.get(pt)) );
         }
         
-        System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
+        System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));*/
       }
       
       for (int idx = 0 ; idx < avg_TCP.getDimension(); ++idx) {
@@ -3253,7 +3331,7 @@ public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
     // From preliminary x and y axis vectors
     for (int row = 0; row < 3; ++row) {
       x_dir[row] = points.get(1)[row][3] - points.get(0)[row][3];
-      x_dir[row] = points.get(2)[row][3] - points.get(0)[row][3];
+      y_dir[row] = points.get(2)[row][3] - points.get(0)[row][3];
     }
     
     // Form axes

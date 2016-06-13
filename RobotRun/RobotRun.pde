@@ -238,15 +238,31 @@ public void draw(){
   popMatrix();*/
   // END TESTING CODE
   
-  if (mode == THREE_POINT_MODE && teachPointTMatrices != null) {
-    for (float[][] T : teachPointTMatrices) {
+  if (teachPointTMatrices != null && (mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE)) {
+    // Display points in the taching point set
+    for (int idx = 0; idx < teachPointTMatrices.size(); ++idx) {
+      float[][] T = teachPointTMatrices.get(idx);
+      
       pushMatrix();
       applyMatrix(T[0][0], T[0][1], T[0][2], T[0][3],
                   T[1][0], T[1][1], T[1][2], T[1][3],
                   T[2][0], T[2][1], T[2][2], T[2][3],
                   T[3][0], T[3][1], T[3][2], T[3][3]);
+      
+      // Draw each sphere a different color
+      if (idx < 3) {
+        stroke(70, 70, 70);
+      } else if (idx == 3) {
+        stroke(255, 130, 0);
+      } else if (idx == 4) {
+        stroke(255, 0, 0);
+      } else if (idx == 5) {
+        stroke(0, 255, 0);
+      } else {
+        stroke(0, 0, 0);
+      }
+      
       noFill();
-      stroke(255, 0, 0);
       sphere(3);
       
       popMatrix();
