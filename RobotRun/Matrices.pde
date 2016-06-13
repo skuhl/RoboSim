@@ -97,6 +97,19 @@ public PVector getCoordFromMatrix(float x, float y, float z) {
   return vector;
 }
 
+/* Calculate v x v */
+public float[] crossProduct(float[] v, float[] u) {
+  if (v.length != 3 && v.length != u.length) { return null; }
+  
+  float[] w = new float[v.length];
+  // [a, b, c] x [d, e, f] = [ bf - ce, cd - af, ae - bd ]
+  w[0] = v[1] * u[2] - v[2] * u[1];
+  w[1] = v[2] * u[0] - v[0] * u[2];
+  w[2] = v[0] * u[1] - v[1] * u[0];
+  
+  return w;
+}
+
 //calculates rotation matrix from euler angles
 float[][] eulerToMatrix(PVector wpr) {
   float[][] r = new float[3][3];

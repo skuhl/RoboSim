@@ -24,18 +24,19 @@ final int NONE = 0,
           FRAME_DETAIL = 16,
           PICK_FRAME_METHOD = 17,
           THREE_POINT_MODE = 18,
-          SIX_POINT_METHOD = 19,
-          DIRECT_ENTRY_MODE = 20,
-          ACTIVE_FRAMES = 21,
-          PICK_INSTRUCTION = 22,
-          IO_SUBMENU = 23,
-          SET_DO_BRACKET = 24,
-          SET_DO_STATUS = 25,
-          SET_RO_BRACKET = 26,
-          SET_RO_STATUS = 27,
-          SET_FRAME_INSTRUCTION = 28,
-          EDIT_MENU = 29,
-          CONFIRM_DELETE = 30;
+          SIX_POINT_ORIGIN = 19,
+          SIX_POINT_AXES = 20,
+          DIRECT_ENTRY_MODE = 21,
+          ACTIVE_FRAMES = 22,
+          PICK_INSTRUCTION = 23,
+          IO_SUBMENU = 24,
+          SET_DO_BRACKET = 25,
+          SET_DO_STATUS = 26,
+          SET_RO_BRACKET = 27,
+          SET_RO_STATUS = 28,
+          SET_FRAME_INSTRUCTION = 29,
+          EDIT_MENU = 30,
+          CONFIRM_DELETE = 31;
 final int COLOR_DEFAULT = -8421377,
           COLOR_ACTIVE = -65536;
 static int     EE_MAPPING = 2;
@@ -3110,7 +3111,7 @@ public void loadThreePointMethod() {
       limbo.add("First Approach Point: ");
       limbo.add("Second Approach Point: ");
       limbo.add("Third Approach Point: ");
-    } else if (super_mode == NAV_USER_FRAMES || mode == SIX_POINT_METHOD) {
+    } else if (super_mode == NAV_USER_FRAMES || mode == SIX_POINT_ORIGIN || mode == SIX_POINT_AXES) {
       
       limbo.add("Orient Origin Point: ");
       limbo.add("X Direction Point: ");
@@ -3219,6 +3220,38 @@ public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
       }
       
       return avg_TCP.toArray();
+  }
+  
+  return null;
+}
+
+/**
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
+  // 3 points are necessary for the creation of the axes
+  if (points.size() >= 3) {
+    float[][] axes = new float[3][];
+    float[] x_dir = new float[3],
+            y_dir = new float[3];
+            
+    // From preliminary x and y axis vectors
+    for (int row = 0; row < 3; ++row) {
+      x_dir[row] = points.get(1)[row][3] - points.get(0)[row][3];
+      x_dir[row] = points.get(2)[row][3] - points.get(0)[row][3];
+    }
+    
+    // Form axes
+    axes[0] = x_dir;                         // X axis
+    axes[2] = crossProduct(x_dir, y_dir);    // Z axis
+    axes[1] = crossProduct(x_dir, axes[2]);  // Y axis
+    
+    return axes;
   }
   
   return null;
