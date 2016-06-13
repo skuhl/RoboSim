@@ -228,9 +228,7 @@ public int addProgram(Program p) {
   }
 }
 
-public  class Instruction  {
-}
-
+public  class Instruction  {}
 
 public final class MotionInstruction extends Instruction  {
   private int motionType;
