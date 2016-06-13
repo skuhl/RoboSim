@@ -1803,10 +1803,9 @@ public void f3() {
       }
       
       axes = createAxesFromThreePoints(axesPoints);
-      
       println(matrixToString(axes));
       // TODO actually save the axes ...
-      wpr = new PVector(0.0f, 0.0f, 0.0f);
+      wpr = matrixToEuler(axes);
     }
       
     Frame[] frames = null;
@@ -1825,6 +1824,7 @@ public void f3() {
         frames[active_row] = new Frame();
         frames[active_row].setOrigin(origin);
         frames[active_row].setWpr(wpr);
+        frames[active_row].setAxes(axes);
         saveState();
         
         // Set new Frame 
@@ -3264,7 +3264,7 @@ public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
         int idxA = (idxC + 1) % 3,
             idxB = (idxA + 1) % 3;
         
-        System.out.printf("\nA = %d\nB = %d\nC = %d\n\n", idxA, idxB, idxC);
+        //if (DISPLAY_TEST_OUTPUT) { System.out.printf("\nA = %d\nB = %d\nC = %d\n\n", idxA, idxB, idxC); }
         
         RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxA), 3, 3));
         RealMatrix Br = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxB), 3, 3));
@@ -3314,12 +3314,20 @@ public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
 }
 
 /**
+ * Creates a 3x3 rotation matrix based off of two vectors defined by the
+ * given set of three transformation matrices representing points in space.
+ * If the list contains more than three points, then only the first three
+ * points will be used.
+ * The three points are used to form two vectors. The first vector is treated
+ * as the x-axis and the second one is the psuedo-y-axis. These vectors are
+ * crossed to form the z-axis. The z-axis is then crossed with the first
+ * x-axis to form the true y-axis.
+ * 
+ * TODO error checking for invalid arguments
  *
- *
- *
- *
- *
- *
+ * @param points  a set of at least three 4x4 transformation matrices
+ * @return        a set of three unit vectors (down the columns) that
+ *                represent an axes
  */
 public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
   // 3 points are necessary for the creation of the axes
@@ -3338,6 +3346,30 @@ public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
     axes[0] = x_dir;                         // X axis
     axes[2] = crossProduct(x_dir, y_dir);    // Z axis
     axes[1] = crossProduct(x_dir, axes[2]);  // Y axis
+    
+    // Transpose the matrix
+    for (int row = 0; row < 3; ++row) {
+      for (int col = row + 1; col < 3; ++col) {
+        float limbo = axes[row][col];
+        axes[row][col] = axes[col][row];
+        axes[col][row] = limbo;
+      }
+    }
+    
+    float[] magnitudes = new float[axes[0].length];
+    
+    for (int v = 0; v < axes[0].length; ++v) {
+      // Find the magnitude of each axis vector
+      for (int e = 0; e < axes.length; ++e) {
+        magnitudes[v] += pow(axes[e][v], 2);
+      }
+      
+      magnitudes[v] = sqrt(magnitudes[v]);
+      // Normalize each vector
+      for (int e = 0; e < axes.length; ++e) {
+        axes[e][v] /= magnitudes[v];
+      }
+    }
     
     return axes;
   }

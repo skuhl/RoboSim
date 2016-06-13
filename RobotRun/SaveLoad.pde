@@ -229,17 +229,13 @@ public int loadFrames(Path path) {
       // Create w, p, and r
       PVector wpr = new PVector(x, y ,z);
       
-      PVector[] axes = new PVector[3];
+      float[][] axes = new float[3][3];
       // Create axes points
-      for (int a = 0; a < axes.length; ++a) {
-        token = reader.next();
-        x = Float.parseFloat(token);
-        token = reader.next();
-        y = Float.parseFloat(token);
-        token = reader.next();
-        z = Float.parseFloat(token);
-        
-        axes[a] = new PVector(x, y, z);
+      
+      for (int col = 0; col < 3; ++col) {
+        for (int row = 0; row < 3; ++row) {
+          axes[row][col] = Float.parseFloat(reader.next());;
+        }  
       }
       
       toolFrames[idx] = new Frame(o, wpr, axes);
@@ -278,17 +274,13 @@ public int loadFrames(Path path) {
       // Create w, p, and r
       PVector wpr = new PVector(x, y ,z);
       
-      PVector[] axes = new PVector[3];
+      float[][] axes = new float[3][3];
       // Create axes points
-      for (int a = 0; a < axes.length; ++a) {
-        token = reader.next();
-        x = Float.parseFloat(token);
-        token = reader.next();
-        y = Float.parseFloat(token);
-        token = reader.next();
-        z = Float.parseFloat(token);
-        
-        axes[a] = new PVector(x, y, z);
+      
+      for (int col = 0; col < 3; ++col) {
+        for (int row = 0; row < 3; ++row) {
+          axes[row][col] = Float.parseFloat(reader.next());;
+        }  
       }
       
       userFrames[idx] = new Frame(o, wpr, axes);

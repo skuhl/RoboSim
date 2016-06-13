@@ -269,6 +269,26 @@ public void draw(){
     }
   }
   
+  if (activeToolFrame != -1) {
+    float[][] axes = toolFrames[activeToolFrame].getAxes();
+    PVector origin = toolFrames[activeToolFrame].getOrigin();
+    
+    pushMatrix();
+    applyMatrix(axes[0][0], axes[0][1], axes[0][2], origin.x,
+                axes[1][0], axes[1][1], axes[1][2],  origin.y,
+                axes[2][0], axes[2][1], axes[2][2],  origin.z,
+                0, 0, 0, 1);
+    
+    stroke(255, 0, 0);
+    line(-5000, 0, 0, 5000, 0, 0);
+    stroke(0, 255, 0);
+    line(0, -5000, 0, 0, 5000, 0);
+    stroke(0, 0, 255);
+    line(0, 0, -5000, 0, 0, 5000);
+    
+    popMatrix();
+  }
+  
   drawEndEffectorGridMapping();
   
   /* Draw a point in space */
@@ -283,7 +303,7 @@ public void draw(){
     popMatrix();
   }
   
-  stroke(255, 0, 0);
+  /*stroke(255, 0, 0);
   // Draw x origin line
   line( -5000, PLANE_Z, 0, 5000, PLANE_Z, 0 );
   // Draw y origin line
@@ -297,7 +317,7 @@ public void draw(){
     
     line(-100 * l, PLANE_Z, -5000, -100 * l, PLANE_Z, 5000);
     line(-5000, PLANE_Z, -100 * l, 5000, PLANE_Z, -100 * l);
-  }
+  }*/
   
   popMatrix();
   
