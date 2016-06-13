@@ -1771,7 +1771,7 @@ public void f3() {
     PVector origin = new PVector(0f, 0f, 0f), wpr = new PVector(0f, 0f, 0f);
     float[][] axes = null;
     
-    if (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE) {
+    if (super_mode == NAV_TOOL_FRAMES && (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE)) {
       // Calculate TCP via the 3-Point Method
       double[] tcp = calculateTCPFromThreePoints(teachPointTMatrices);
       
@@ -1788,7 +1788,7 @@ public void f3() {
       // TODO Four point mode offset
     }
     
-    if (mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE) {
+    if (super_mode == NAV_USER_FRAMES || mode == SIX_POINT_MODE) {
       
       ArrayList<float[][]> axesPoints = new ArrayList<float[][]>();
       // Use the last three points to calculate the axes vectors
