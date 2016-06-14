@@ -10,7 +10,10 @@ void saveState() {
     Path p2 = Paths.get(sketchPath("tmp/currentProgram.ser"));
     Path p3 = Paths.get(sketchPath("tmp/singleInstruction.ser"));
     Path p4 = Paths.get(sketchPath("tmp/frames"));
-    
+    //create tmp directory if not present
+    File f = new File(sketchPath("tmp/"));
+    f.mkdirs();
+        
     println("Path: " + Paths.get(sketchPath("tmp/programs.ser")).toString());
     if (Files.exists(p1)) Files.delete(p1);
     if (Files.exists(p2)) Files.delete(p2);

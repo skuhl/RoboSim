@@ -17,6 +17,7 @@ public class Point  {
     for (int n = 0; n < j.length; n++) j[n] = 0;
   }
   
+  //create a new point with position, orientation, and associated joint angles
   public Point(float x, float y, float z, float w, float p, float r,
                float j1, float j2, float j3, float j4, float j5, float j6)
   {
@@ -28,6 +29,17 @@ public class Point  {
     j[3] = j4;
     j[4] = j5;
     j[5] = j6;
+  }
+  
+  //create a new point with position and orientation only
+  public Point(float x, float y, float z, float w, float p, float r){
+    c = new PVector(x,y,z);
+    a = new PVector(w,p,r);
+  }
+  
+  public Point(PVector position, PVector orientation){
+    c = position;
+    a = orientation;
   }
   
   public Point clone() {

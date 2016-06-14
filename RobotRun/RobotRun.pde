@@ -83,7 +83,7 @@ public void setup(){
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
-  intermediatePositions = new ArrayList<PVector>();
+  intermediatePositions = new ArrayList<Point>();
   loadState();
   
   /*for (int n = 0; n < toolFrames.length; n++) {
@@ -168,9 +168,9 @@ public void draw(){
   noStroke();
   pushMatrix();
   if(intermediatePositions != null){
-    for(PVector v : intermediatePositions){
+    for(Point p : intermediatePositions){
       pushMatrix();
-      translate(v.x, v.y, v.z);
+      translate(p.c.x, p.c.y, p.c.z);
       sphere(10);
       popMatrix();
     }

@@ -361,9 +361,9 @@ float[] rotateQuat(float[] p, float theta, PVector u) {
   q[2] = sin(theta/2)*u.y;
   q[3] = sin(theta/2)*u.z;
   
-  float[] qp = quaternionMult(q, p);
+  float[] pq = quaternionMult(p, q);
 
-  return qp;
+  return pq;
 }
 
 /* Given 2 quaternions, calculates the quaternion representing the 

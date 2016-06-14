@@ -1,4 +1,4 @@
-ArrayList<PVector> intermediatePositions;
+ArrayList<Point> intermediatePositions;
 int motionFrameCounter = 0;
 float distanceBetweenPoints = 5.0;
 int interMotionIdx = -1;
@@ -466,7 +466,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
   }
   
   armModel.currentFrame = frame;
-  println(count);
+  
   //did we successfully find the desired angles?
   if(count >= limit){
     println("IK failure");
@@ -480,7 +480,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
         
       for(int j = 0; j < 3; j += 1){
         if(s.rotations[j] && !s.anglePermitted(j, angles[i])){
-          println("illegal joint angle on j" + i);
+          //println("illegal joint angle on j" + i);
           //return EXEC_FAILURE;
         }
       }
@@ -489,6 +489,13 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     armModel.setJointRotations(angles);
     return EXEC_SUCCESS;
   }
+}
+
+int calculateIKJacobian(Point p){
+  PVector pos = p.c;
+  float[] rot = eulerToQuat(p.a);
+  println(rot);
+  return calculateIKJacobian(pos, rot);
 }
 
 /**
@@ -520,10 +527,11 @@ void calculateIntermediatePositions(PVector start, PVector end) {
   float increment = 1.0 / (float)numberOfPoints;
   for (int n = 0; n < numberOfPoints; n++) {
     mu += increment;
-    intermediatePositions.add(new PVector(
+    intermediatePositions.add(new Point(new PVector(
       start.x * (1 - mu) + (end.x * mu),
       start.y * (1 - mu) + (end.y * mu),
-      start.z * (1 - mu) + (end.z * mu)));
+      start.z * (1 - mu) + (end.z * mu)),
+      quatToEuler(armModel.tgtRot)));
   }
   interMotionIdx = 0;
 } // end calculate intermediate positions
@@ -576,29 +584,31 @@ void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float perc
   int transitionPoint = (int)((float)numberOfPoints * percentage);
   for (int n = 0; n < transitionPoint; n++) {
     mu += increment;
-    intermediatePositions.add(new PVector(
+    intermediatePositions.add(new Point(new PVector(
       p1.x * (1 - mu) + (p2.x * mu),
       p1.y * (1 - mu) + (p2.y * mu),
-      p1.z * (1 - mu) + (p2.z * mu)));
+      p1.z * (1 - mu) + (p2.z * mu)),
+      armModel.getWPR()));
   }
   int secondaryIdx = 0; // accessor for secondary targets
   mu = 0;
   increment /= 2.0;
   
-  PVector currentPoint;
+  Point currentPoint;
   if(intermediatePositions.size() > 0){
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
   }
   else{
-    currentPoint = armModel.getEEPos();
+    currentPoint = new Point(armModel.getEEPos(), armModel.getWPR());
   }
   
   for (int n = transitionPoint; n < numberOfPoints; n++) {
     mu += increment;
-    intermediatePositions.add(new PVector(
-      currentPoint.x * (1 - mu) + (secondaryTargets.get(secondaryIdx).x * mu),
-      currentPoint.y * (1 - mu) + (secondaryTargets.get(secondaryIdx).y * mu),
-      currentPoint.z * (1 - mu) + (secondaryTargets.get(secondaryIdx).z * mu)));
+    intermediatePositions.add(new Point(new PVector(
+      currentPoint.c.x * (1 - mu) + (secondaryTargets.get(secondaryIdx).x * mu),
+      currentPoint.c.y * (1 - mu) + (secondaryTargets.get(secondaryIdx).y * mu),
+      currentPoint.c.z * (1 - mu) + (secondaryTargets.get(secondaryIdx).z * mu)), 
+      armModel.getWPR()));
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
     secondaryIdx++;
   }
@@ -619,8 +629,7 @@ void beginNewContinuousMotion(PVector start, PVector end,
   calculateContinuousPositions(start, end, next, percentage);
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0){
-    float[] q = {0, 0, 0, 1};
-    calculateIKJacobian(intermediatePositions.get(interMotionIdx), q);
+    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
 }
 
@@ -633,8 +642,7 @@ void beginNewLinearMotion(PVector start, PVector end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0){
-    float[] q = {0, 0, 0, 1};
-    calculateIKJacobian(intermediatePositions.get(interMotionIdx), q);
+    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
 }
 
@@ -651,8 +659,7 @@ void beginNewCircularMotion(PVector p1, PVector p2, PVector p3) {
   interMotionIdx = 0;
   motionFrameCounter = 0;
  if(intermediatePositions.size() > 0){
-    float[] q = {0, 0, 0, 1};
-    calculateIKJacobian(intermediatePositions.get(interMotionIdx), q);
+    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
 }
 
@@ -678,8 +685,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
     
     int ret = EXEC_SUCCESS;
     if(intermediatePositions.size() > 0){
-      float[] q = {0, 0, 0, 1};
-      calculateIKJacobian(intermediatePositions.get(interMotionIdx), q);
+      calculateIKJacobian(intermediatePositions.get(interMotionIdx));
     }
       
     if(ret == EXEC_FAILURE){
@@ -852,7 +858,7 @@ int cycleNumber(int number) {
  * @param c Point C
  * @return List of points describing the arc from A to B to C
  */
-ArrayList<PVector> createArc(ArrayList<PVector> points, PVector a, PVector b, PVector c) {
+ArrayList<Point> createArc(ArrayList<PVector> points, PVector a, PVector b, PVector c) {
   float CHKDIST = 15.0;
   //CHECK 4 GREMBLINS HERE
   int count1 = 0, count2 = 0;
@@ -880,10 +886,10 @@ ArrayList<PVector> createArc(ArrayList<PVector> points, PVector a, PVector b, PV
   } // end while loop
   
   // now we're going in the right direction, so remove unnecessary points
-  ArrayList<PVector> newPoints = new ArrayList<PVector>();
+  ArrayList<Point> newPoints = new ArrayList<Point>();
   boolean seenA = false, seenC = false;
   for (PVector pt : points) {
-    if (seenA && !seenC) newPoints.add(pt);
+    if (seenA && !seenC) newPoints.add(new Point(pt, armModel.getWPR()));
     if (dist(pt.x, pt.y, pt.z, a.x, a.y, a.z) <= CHKDIST) seenA = true;
     if (seenA && dist(pt.x, pt.y, pt.z, c.x, c.y, c.z) <= CHKDIST) {
       seenC = true;
@@ -893,12 +899,12 @@ ArrayList<PVector> createArc(ArrayList<PVector> points, PVector a, PVector b, PV
   // might have to go through a second time
   if (seenA && !seenC) {
     for (PVector pt : points) {
-      newPoints.add(pt);
+      newPoints.add(new Point(pt, armModel.getWPR()));
       if (dist(pt.x, pt.y, pt.z, c.x, c.y, c.z) <= CHKDIST) break;
     }
   }
   if (newPoints.size() > 0) newPoints.remove(0);
-  newPoints.add(c);
+  newPoints.add(new Point(c, armModel.getWPR()));
   return newPoints;
 } // end createArc
 
