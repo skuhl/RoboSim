@@ -1672,10 +1672,10 @@ public void f1(){
         case INSTRUCTION_EDIT:
            //shift = OFF;
            break;
-     }
-      case THREE_POINT_MODE:
+       case THREE_POINT_MODE:
          ref_point = armModel.getEEPos();
          break;
+     }
    }
 }
 

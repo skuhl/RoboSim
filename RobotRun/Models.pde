@@ -894,20 +894,13 @@ public class ArmModel {
           move = vectorConvertTo(move, frame[0], frame[1], frame[2]);
         }
         
-        if(intermediatePositions.size() == 0){
-          //respond to user defined movement
-          float distance = motorSpeed/60.0 * liveSpeed;
-          tgtPos.x += move.x * distance;
-          tgtPos.y += move.y * distance;
-          tgtPos.z += move.z * distance;
-          updateOrientation();
-        }
-        else{
-          //execute linear/ circular instruction
-          tgtPos = intermediatePositions.get(0);
-          intermediatePositions.remove(0);
-        }
-        
+        //respond to user defined movement
+        float distance = motorSpeed/60.0 * liveSpeed;
+        tgtPos.x += move.x * distance;
+        tgtPos.y += move.y * distance;
+        tgtPos.z += move.z * distance;
+        updateOrientation();
+                
         //println(lockOrientation);
         int r = calculateIKJacobian(tgtPos, tgtRot);
         if(r == EXEC_FAILURE){
