@@ -488,7 +488,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
   }
   
   armModel.currentFrame = frame;
-  println(count);
+  
   //did we successfully find the desired angles?
   if(count >= limit){
     println("IK failure");
@@ -502,7 +502,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
         
       for(int j = 0; j < 3; j += 1){
         if(s.rotations[j] && !s.anglePermitted(j, angles[i])){
-          println("illegal joint angle on j" + i);
+          //println("illegal joint angle on j" + i);
           //return EXEC_FAILURE;
         }
       }
@@ -516,7 +516,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
 int calculateIKJacobian(Point p){
   PVector pos = p.c;
   float[] rot = eulerToQuat(p.a);
-  
+  println(rot);
   return calculateIKJacobian(pos, rot);
 }
 
