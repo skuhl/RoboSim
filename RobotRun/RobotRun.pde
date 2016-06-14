@@ -238,69 +238,13 @@ public void draw(){
   popMatrix();*/
   // END TESTING CODE
   
-  if (teachPointTMatrices != null && (mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE)) {
-    // Display points in the taching point set
-    for (int idx = 0; idx < teachPointTMatrices.size(); ++idx) {
-      float[][] T = teachPointTMatrices.get(idx);
-      
-      pushMatrix();
-      applyMatrix(T[0][0], T[0][1], T[0][2], T[0][3],
-                  T[1][0], T[1][1], T[1][2], T[1][3],
-                  T[2][0], T[2][1], T[2][2], T[2][3],
-                  T[3][0], T[3][1], T[3][2], T[3][3]);
-      
-      // Draw each sphere a different color
-      if (idx < 3) {
-        stroke(70, 70, 70);
-      } else if (idx == 3) {
-        stroke(255, 130, 0);
-      } else if (idx == 4) {
-        stroke(255, 0, 0);
-      } else if (idx == 5) {
-        stroke(0, 255, 0);
-      } else {
-        stroke(0, 0, 0);
-      }
-      
-      noFill();
-      sphere(3);
-      
-      popMatrix();
-    }
-  }
-  
-  if (activeToolFrame != -1) {
-    /* Draw the axes of the selected tool frame */
-    float[][] axes = toolFrames[activeToolFrame].getAxes();
-    PVector origin = toolFrames[activeToolFrame].getOrigin();
-    
-    pushMatrix();
-    applyMatrix(axes[0][0], axes[0][1], axes[0][2], origin.x,
-                axes[1][0], axes[1][1], axes[1][2],  origin.y,
-                axes[2][0], axes[2][1], axes[2][2],  origin.z,
-                0, 0, 0, 1);
-    // X axis
-    stroke(255, 0, 0);
-    line(-5000, 0, 0, 5000, 0, 0);
-    // Y axis
-    stroke(0, 255, 0);
-    line(0, -5000, 0, 0, 5000, 0);
-    // Z axis
-    stroke(0, 0, 255);
-    line(0, 0, -5000, 0, 0, 5000);
-    
-    popMatrix();
-  }
-  
-  drawEndEffectorGridMapping();
-  
   /* Draw a point in space */
   if (ref_point != null) {
     pushMatrix();
     translate(ref_point.x, ref_point.y, ref_point.z);
     
     noFill();
-    stroke(0, 115, 165);
+    stroke(0, 150, 200);
     sphere(5);
     
     popMatrix();
@@ -320,7 +264,11 @@ public void draw(){
     
     line(-100 * l, PLANE_Z, -5000, -100 * l, PLANE_Z, 5000);
     line(-5000, PLANE_Z, -100 * l, 5000, PLANE_Z, -100 * l);
-  }*/
+  }
+  
+  drawEndEffectorGridMapping();*/
+  displayFrameAxes();
+  displayTeachPoints();
   
   popMatrix();
   
@@ -397,5 +345,118 @@ public void handleWorldObjects() {
     
     // Draw world object
     objects[idx].draw();
+  }
+}
+
+public void displayTeachPoints() {
+  // Teach points are displayed only while the Robot is being taught a frame
+  if (teachPointTMatrices != null && (mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE)) {
+    
+    color[] pt_colors = new color[teachPointTMatrices.size()];
+    
+    // First point
+    if (teachPointTMatrices.size() >= 1) {
+      if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
+        pt_colors[0] = color(130, 130, 130);
+      } else {
+        pt_colors[0] = color(255, 130, 0);
+      }
+      // Second point
+      if (teachPointTMatrices.size() >= 2) {
+        if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
+          pt_colors[1] = color(130, 130, 130);
+        } else {
+          pt_colors[1] = color(125, 0, 0);
+        }
+        // Thrid point
+        if (teachPointTMatrices.size() >= 3) {
+          if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
+            pt_colors[2] = color(130, 130, 130);
+          } else {
+            pt_colors[2] = color(0, 125, 0);
+          }
+          // Fourth point
+          if (teachPointTMatrices.size() >= 4) {
+            if (mode == SIX_POINT_MODE) {
+              pt_colors[3] = color(255, 130, 0);
+            } else {
+              pt_colors[3] = color(0, 0, 125);
+            }
+            // Fifth point
+            if (teachPointTMatrices.size() >= 5) {
+              pt_colors[4] = color(125, 0, 0);
+              // Sixth point
+              if (teachPointTMatrices.size() == 6) {
+                pt_colors[5] = color(0, 125, 0);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Display points in the teaching point set
+    for (int idx = 0; idx < teachPointTMatrices.size(); ++idx) {
+      float[][] T = teachPointTMatrices.get(idx);
+      
+      pushMatrix();
+      applyMatrix(T[0][0], T[0][1], T[0][2], T[0][3],
+                  T[1][0], T[1][1], T[1][2], T[1][3],
+                  T[2][0], T[2][1], T[2][2], T[2][3],
+                  T[3][0], T[3][1], T[3][2], T[3][3]);
+      
+      // Draw color-coded spheres for each point
+      noFill();
+      stroke(pt_colors[idx]);
+      sphere(3);
+      
+      popMatrix();
+    }
+  }
+}
+
+public void displayFrameAxes() {
+  if (curCoordFrame == COORD_TOOL && activeToolFrame != -1) {
+    /* Draw the axes of the active tool frame */
+    float[][] axes = toolFrames[activeToolFrame].getAxes();
+    PVector origin = armModel.getEEPos();
+    
+    pushMatrix();
+    applyMatrix(axes[0][0], axes[0][1], axes[0][2], origin.x,
+                axes[1][0], axes[1][1], axes[1][2],  origin.y,
+                axes[2][0], axes[2][1], axes[2][2],  origin.z,
+                0, 0, 0, 1);
+    // X axis
+    stroke(255, 0, 0);
+    line(-5000, 0, 0, 5000, 0, 0);
+    // Y axis
+    stroke(0, 255, 0);
+    line(0, -5000, 0, 0, 5000, 0);
+    // Z axis
+    stroke(0, 0, 255);
+    line(0, 0, -5000, 0, 0, 5000);
+    
+    popMatrix();
+  } else if (curCoordFrame == COORD_USER && activeUserFrame != -1) {
+    /* Draw the axes of the active user frame */
+    float[][] axes = userFrames[activeUserFrame].getAxes();
+    PVector origin = userFrames[activeUserFrame].getOrigin();
+    
+    pushMatrix();
+    applyMatrix(axes[0][0], axes[0][1], axes[0][2], origin.x,
+                axes[1][0], axes[1][1], axes[1][2],  origin.y,
+                axes[2][0], axes[2][1], axes[2][2],  origin.z,
+                0, 0, 0, 1);
+    // X axis
+    stroke(255, 0, 0);
+    line(-5000, 0, 0, 5000, 0, 0);
+    // Y axis
+    stroke(0, 255, 0);
+    line(0, -5000, 0, 0, 5000, 0);
+    // Z axis
+    stroke(0, 0, 255);
+    line(0, 0, -5000, 0, 0, 5000);
+    
+    popMatrix();
   }
 }

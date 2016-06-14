@@ -74,7 +74,7 @@ String workingTextSuffix;
 boolean speedInPercentage;
 final int ITEMS_TO_SHOW = 16; // how many programs/ instructions to display on screen
 int letterSet; // which letter group to enter
-Frame currentFrame;
+int curFrameIdx = -1;
 // Used to keep track a specific point in space
 PVector ref_point;
 ArrayList<float[][]> teachPointTMatrices = null;
@@ -97,7 +97,7 @@ int which_option = -1;
 int index_contents = 0, index_options = 100, index_nums = 1000; 
 int mouseDown = 0;
 
-private static final boolean DISPLAY_TEST_OUTPUT = true;
+public static final boolean DISPLAY_TEST_OUTPUT = true;
 
 void gui(){
    g1_px = 0;
@@ -1670,10 +1670,10 @@ public void f1(){
         
       super_mode = mode;
       if (super_mode == NAV_TOOL_FRAMES) {
-        currentFrame = toolFrames[active_row];
+        curFrameIdx = active_row;
       } 
       else if (super_mode == NAV_USER_FRAMES) {
-        currentFrame = userFrames[active_row];
+        curFrameIdx = active_row;
       }
         
       loadFrameDetails(false);
@@ -1733,6 +1733,33 @@ public void f1(){
       case FOUR_POINT_MODE:
         ref_point = armModel.getEEPos();
         break;
+      case DIRECT_ENTRY_MODE:
+        // Delete a digit from the being of the number entry
+        if (active_row >= 0 && active_row < contents.size()) {
+          String entry = contents.get(active_row).get(0),
+                 new_entry = "";
+          
+           if (entry.length() > 3) {
+             new_entry = entry.substring(0, 3);
+             
+             if (entry.charAt(3) == '-') {
+               if (entry.length() > 5) {
+                 // Keep negative sign until the last digit is removed
+                 new_entry += "-" + entry.substring(5, entry.length());
+               }
+             } else if (entry.length() > 4) {
+               new_entry += entry.substring(4, entry.length());
+             }
+           } else {
+             // Blank entry
+             new_entry = entry;
+           }
+           
+           contents.get(active_row).set(0, new_entry);
+        }
+        
+        updateScreen(color(255, 0, 0), color(0));
+        break;
     }
   }
 }
@@ -1778,14 +1805,14 @@ public void f2() {
        // Reset the highlighted frame in the tool frame list
        if (active_row >= 0) {
           toolFrames[active_row] = new Frame();
-          saveState();
+          saveFrames(sketchPath("tmp/frames.ser"));
         }
      } else if (mode == NAV_USER_FRAMES) {
        
        // Reset the highlighted frame in the user frames list
        if (active_row >= 0) {
          userFrames[active_row] = new Frame();
-         saveState();
+         saveFrames(sketchPath("tmp/frames.ser"));
        }
      } else if (mode == DIRECT_ENTRY_MODE) {
        // backspace function for current row
@@ -1844,7 +1871,7 @@ public void f3() {
       } else {
         origin = new PVector((float)tcp[0], (float)tcp[1], (float)tcp[2]);
       }
-    } else {
+    } else if (mode == FOUR_POINT_MODE) {
       // TODO Four point mode offset
     }
     
@@ -1879,22 +1906,22 @@ public void f3() {
     if (frames != null) {
       
       if (active_row >= 0 && active_row < frames.length) {
-        if (DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", active_row); }
+        if (DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
         
-        frames[active_row] = new Frame();
-        frames[active_row].setOrigin(origin);
-        frames[active_row].setWpr(wpr);
-        frames[active_row].setAxes(axes);
-        saveState();
+        frames[curFrameIdx] = new Frame();
+        frames[curFrameIdx].setOrigin(origin);
+        frames[curFrameIdx].setWpr(wpr);
+        frames[curFrameIdx].setAxes(axes);
+        saveFrames(sketchPath("tmp/frames.ser"));
         
         // Set new Frame 
         if (super_mode == NAV_TOOL_FRAMES) {
-          activeToolFrame = active_row;
+          activeToolFrame = curFrameIdx;
         } else if (super_mode == NAV_USER_FRAMES) {
-          activeUserFrame = active_row;
+          activeUserFrame = curFrameIdx;
         }
       } else {
-        System.out.printf("Error invalid index %d!\n", active_row);
+        System.out.printf("Error invalid index %d!\n", curFrameIdx);
       }
       
     } else {
@@ -1919,7 +1946,9 @@ public void f3() {
     super_mode = NONE;
     options.clear();
   } else if (mode == DIRECT_ENTRY_MODE) {
-    
+    options = new ArrayList<String>();
+    which_option = -1;
+      
     boolean error = false;
     float[] inputs = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
     
@@ -1944,7 +1973,6 @@ public void f3() {
     }
     
     if (error) {
-      options = new ArrayList<String>();
       which_option = 0;
       options.add("Inputs must be real numbers!");
       updateScreen(color(255, 0, 0) , color(0));
@@ -1980,9 +2008,35 @@ public void f3() {
               wpr = new PVector(inputs[3], inputs[4], inputs[5]);
       float[][] axesVectors = eulerToMatrix(wpr);
       
-      if (DISPLAY_TEST_OUTPUT) { System.out.printf("\n%s\n%s\n%s\n", origin.toString(), wpr.toString(), matrixToString(axesVectors)); }
+      if (DISPLAY_TEST_OUTPUT) { System.out.printf("\n\n%s\n%s\n%s\n", origin.toString(), wpr.toString(), matrixToString(axesVectors)); }
       
-      // TODO save x, y, z, w, p, r entries and create axes for the frame
+      Frame[] frames = null;
+      // Determine to which frame set (user or tool) to add the new frame
+      if (super_mode == NAV_TOOL_FRAMES) {
+        frames = toolFrames;
+      } else if (super_mode == NAV_USER_FRAMES) {
+        frames = userFrames;
+      }
+    
+      // Create axes vector and save the new frame
+      if (frames != null && text_render_start >= 0 && text_render_start < frames.length) {
+        if (DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
+        
+        frames[curFrameIdx] = new Frame(origin, wpr, axesVectors);
+        saveFrames(sketchPath("tmp/frames.ser"));
+        
+        // Set new Frame 
+        if (super_mode == NAV_TOOL_FRAMES) {
+          activeToolFrame = curFrameIdx;
+        } else if (super_mode == NAV_USER_FRAMES) {
+          activeUserFrame = curFrameIdx;
+        }
+        
+        active_row = curFrameIdx;
+        active_col = 0;
+        mode = FRAME_DETAIL;
+        loadFrameDetails(false);
+      }
     }
     
   }
@@ -3211,7 +3265,7 @@ public void updateScreen(color active, color normal){
                  .moveTo(g1)
                  ;
    } else if (mode == DIRECT_ENTRY_MODE) {
-     fn_info.setText("F2: BACKSPACE     F3: CONFIRM")
+     fn_info.setText("F1: DELETE     F2: BACKSPACE     F3: CONFIRM")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
@@ -3342,7 +3396,7 @@ public void loadPointList() {
     
     if (super_mode == NAV_USER_FRAMES && mode == FOUR_POINT_MODE) {
       // Name of fourth point for the four point method?
-      limbo.add("TODO: ");
+      limbo.add("Origin: ");
     }
     
     int size = teachPointTMatrices.size();
@@ -3361,11 +3415,9 @@ public void loadPointList() {
 
 public void loadDirectEntryMethod() {
   contents = new ArrayList<ArrayList<String>>();
-  active_row = 1;
-  active_col = text_render_start = 0;
-  
   ArrayList<String> line = new ArrayList<String>();
   String str = "";
+  
   if (super_mode == NAV_TOOL_FRAMES) {
     str = "TOOL FRAME ";
   } else if (super_mode == NAV_USER_FRAMES) {
@@ -3399,6 +3451,7 @@ public void loadDirectEntryMethod() {
   line.add("R: 0.0");
   contents.add(line);
   
+  active_row = active_col = 0;
   mode = DIRECT_ENTRY_MODE;
   updateScreen(color(255, 0, 0), color(0));
 }
@@ -3445,7 +3498,7 @@ public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
         int idxA = (idxC + 1) % 3,
             idxB = (idxA + 1) % 3;
         
-        //if (DISPLAY_TEST_OUTPUT) { System.out.printf("\nA = %d\nB = %d\nC = %d\n\n", idxA, idxB, idxC); }
+        if (DISPLAY_TEST_OUTPUT) { System.out.printf("\nA = %d\nB = %d\nC = %d\n\n", idxA, idxB, idxC); }
         
         RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxA), 3, 3));
         RealMatrix Br = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxB), 3, 3));
@@ -3473,13 +3526,13 @@ public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
       avg_TCP = avg_TCP.mapMultiply( 1.0 / 3.0 );
       
       if (DISPLAY_TEST_OUTPUT) {
-        /*for (int pt = 0; pt < 3 && pt < points.size(); ++pt) {
+        for (int pt = 0; pt < 3 && pt < points.size(); ++pt) {
           // Print out each matrix
           System.out.printf("Point %d:\n", pt);
           println( matrixToString(points.get(pt)) );
         }
         
-        System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));*/
+        System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
       }
       
       for (int idx = 0 ; idx < avg_TCP.getDimension(); ++idx) {
@@ -3564,53 +3617,56 @@ public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
  *               3-Point and 6-Point Methods. */
 public void loadFrameDetails(boolean fault) {
   contents = new ArrayList<ArrayList<String>>();
- 
   ArrayList<String> line = new ArrayList<String>();
-  String str = "";
+  Frame[] frames = null;
+  
   if (super_mode == NAV_TOOL_FRAMES) {
-    str = "TOOL FRAME ";
-    if (mode == FRAME_DETAIL) { str += (active_row + 1); }
+    frames = toolFrames;
+    line.add(String.format("TOOL FRAME: %d", curFrameIdx + 1));
   } else if (super_mode == NAV_USER_FRAMES) {
-    str = "USER FRAME ";
-    if (mode == FRAME_DETAIL) { str += (active_row + 1); }
+    frames = userFrames;
+    line.add(String.format("USER FRAME: %d", curFrameIdx + 1));
   }
   
-  line.add(str);
-  contents.add(line);
-  
-  line = new ArrayList<String>();
-  str = "X: " + currentFrame.getOrigin().x;
-  line.add(str);
-  contents.add(line);
-  line = new ArrayList<String>();
-  str = "Y: " + currentFrame.getOrigin().y;
-  line.add(str);
-  contents.add(line);
-  line = new ArrayList<String>();
-  str = "Z: " + currentFrame.getOrigin().z;
-  line.add(str);
-  contents.add(line);
-  line = new ArrayList<String>();
-  str = "W: " + currentFrame.getWpr().x;
-  line.add(str);
-  contents.add(line);
-  line = new ArrayList<String>();
-  str = "P: " + currentFrame.getWpr().y;
-  line.add(str);
-  contents.add(line);
-  line = new ArrayList<String>();
-  str = "R: " + currentFrame.getWpr().z;
-  line.add(str);
-  contents.add(line);  
-  mode = FRAME_DETAIL;
-  
-  if (fault) {
-    which_option = 0;
-    options = new ArrayList<String>();
-    options.add("Error: Invalid input values!");
+  if (frames != null) {
+    contents.add(line);
+    
+    line = new ArrayList<String>();
+    line.add(String.format("X: %8.4f", frames[curFrameIdx].getOrigin().x));
+    contents.add(line);
+    
+    line = new ArrayList<String>();
+    line.add(String.format("Y: %8.4f", frames[curFrameIdx].getOrigin().y));
+    contents.add(line);
+    
+    line = new ArrayList<String>();
+    line.add(String.format("Z: %8.4f", frames[curFrameIdx].getOrigin().z));
+    contents.add(line);
+    
+    line = new ArrayList<String>();
+    line.add(String.format("W: %8.4f", frames[curFrameIdx].getWpr().x));
+    contents.add(line);
+    
+    line = new ArrayList<String>();
+    line.add(String.format("P: %8.4f", frames[curFrameIdx].getWpr().y));
+    contents.add(line);
+    
+    line = new ArrayList<String>();
+    line.add(String.format("R: %8.4f", frames[curFrameIdx].getWpr().z));
+    contents.add(line);
+    
+    if (fault) {
+      which_option = 0;
+      options = new ArrayList<String>();
+      options.add("Error: Invalid input values!");
+    }
+    
+    active_row = -1;
+    mode = FRAME_DETAIL;
+    updateScreen(color(255,0,0), color(0));
   }
   
-  updateScreen(color(255,0,0), color(0));
+
 }
 
 // prepare for displaying motion instructions on screen
