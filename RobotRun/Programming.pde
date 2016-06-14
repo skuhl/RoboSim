@@ -62,13 +62,16 @@ public class Point  {
 public class Frame {
   private PVector origin;
   private PVector wpr;
-  //private PVector[] axes = new PVector[3];
   private float[][] axes;
   
   public Frame() {
     origin = new PVector(0,0,0);
     wpr = new PVector(0,0,0);
     axes = new float[3][3];
+    // Create identity matrix
+    for (int diag = 0; diag < 3; ++diag) {
+      axes[diag][diag] = 1f;
+    }
   }
   
   /* Used for loading Frames from a file */
@@ -115,12 +118,10 @@ public class Frame {
     str += Float.toString(wpr.x) + " " + Float.toString(wpr.y) + " "  + Float.toString(wpr.z) + " ";
     
     for (int col = 0; col < 3; ++col) {
-      for (int row = 0; row < 3; ++row) {
-        str += Float.toString(axes[row][col]) + " " + Float.toString(axes[row][col]) + " "  + Float.toString(axes[row][col]) + " ";
-      }
+        str += Float.toString(axes[0][col]) + " " + Float.toString(axes[1][col]) + " "  + Float.toString(axes[2][col]) + " ";
     }
     
-    str+= "</Frame>";
+    str += "</Frame>";
     return str;
   }
 } // end Frame class

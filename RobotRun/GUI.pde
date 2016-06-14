@@ -1253,30 +1253,74 @@ public void addNumber(String number) {
   {
     workingText += number;
     options.set(1, workingText);
-    updateScreen(color(255,0,0), color(0,0,0));
   } else if (mode == SET_INSTRUCTION_SPEED) {
     workingText += number;
     options.set(1, workingText + workingTextSuffix);
-    updateScreen(color(255,0,0), color(0,0,0));
   } else if (mode == SET_FRAME_INSTRUCTION) {
     workingText += number;
   } else if (mode == DIRECT_ENTRY_MODE) {
-    // TODO add 
+    if (active_row >= 0 && active_row < contents.size()) {
+      String line = contents.get(active_row).get(0) + number;
+      
+      if (line.length() > 12) {
+        // Max length of a line is 15 characters
+        line = line.substring(0, 13);
+      }
+      
+      // Concatenate the new digit
+      contents.get(active_row).set(0, line);
+    }
   }
+  
+  updateScreen(color(255, 0, 0), color(0));
 }
 
 public void PERIOD() {
    if (NUM_MODE == ON){
       nums.add(-1);
-   } else {
+   } else if (mode == DIRECT_ENTRY_MODE) {
+     
+    if (active_row >= 0 && active_row < contents.size()) {
+      // Add decimal point
+      String line = contents.get(active_row).get(0) + ".";
+      
+      if (line.length() > 12) {
+        // Max length of a line is 15 characters
+        line = line.substring(0, 13);
+      }
+      
+      contents.get(active_row).set(0, line);
+    }
+  } else {
      workingText += ".";
-   }
+  }
    
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
 public void LINE() {
-  if (workingText != null && workingText.length() > 0) {
+  if (mode == DIRECT_ENTRY_MODE) {
+    
+    if (active_row >= 0 && active_row < contents.size()) {
+      String line = contents.get(active_row).get(0);
+      
+      // Mutliply current number by -1
+      if (line.length() > 4 && line.charAt(3) == '-') {
+        line = line.substring(0, 3) + line.substring(4, line.length());
+      } else if (line.length() > 3) {
+        line = line.substring(0, 3) + "-" + line.substring(3, line.length());
+      }
+      
+      if (line.length() > 12) {
+        // Max length of a line is 15 characters
+        line = line.substring(0, 13);
+      }
+      
+      contents.get(active_row).set(0, line);
+    }
+    
+    updateScreen(color(255, 0, 0), color(0));
+  } else if (workingText != null && workingText.length() > 0) {
     // Mutliply current number by -1
     if (workingText.charAt(0) == '-') {
       workingText = workingText.substring(1);
@@ -1363,6 +1407,7 @@ public void up(){
          active_row = max(0, active_row - 1);
          break;
       case ACTIVE_FRAMES:
+      case DIRECT_ENTRY_MODE:
          active_row = max(1, active_row - 1);
          break;
    }
@@ -1427,6 +1472,7 @@ public void dn(){
       case NAV_TOOL_FRAMES:
       case NAV_USER_FRAMES:
       case ACTIVE_FRAMES:
+      case DIRECT_ENTRY_MODE:
       case PICK_INSTRUCTION:
       case IO_SUBMENU:
       case SET_FRAME_INSTRUCTION:
@@ -1632,7 +1678,7 @@ public void f1(){
         
       loadFrameDetails(false);
     } 
-    else if ( mode == ACTIVE_FRAMES) {
+    else if (mode == ACTIVE_FRAMES) {
       
       if (active_row == 1) {
         loadFrames(COORD_TOOL);
@@ -1641,7 +1687,6 @@ public void f1(){
         loadFrames(COORD_USER);
       }
       
-      updateScreen(color(255,0,0), color(0));
     } 
     else if (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE || mode == FOUR_POINT_MODE) {
       ref_point = null;
@@ -1742,7 +1787,18 @@ public void f2() {
          userFrames[active_row] = new Frame();
          saveState();
        }
-     } 
+     } else if (mode == DIRECT_ENTRY_MODE) {
+       // backspace function for current row
+       
+       if (active_row >= 0 && active_row < contents.size()) {
+         String line = contents.get(active_row).get(0);
+         // Do not remove line prefix
+         if (line.length() > 3) {
+           contents.get(active_row).set(0, line.substring(0, line.length() - 1));
+           updateScreen(color(255, 0, 0) , color(0));
+         }
+       }
+     }
   }
 }
 
@@ -1769,7 +1825,11 @@ public void f3() {
         (mode == SIX_POINT_MODE && teachPointTMatrices.size() == 6)) {
     
     PVector origin = new PVector(0f, 0f, 0f), wpr = new PVector(0f, 0f, 0f);
-    float[][] axes = null;
+    float[][] axes = new float[3][3];
+    // Create identity matrix
+    for (int diag = 0; diag < 3; ++diag) {
+      axes[diag][diag] = 1f;
+    }
     
     if (super_mode == NAV_TOOL_FRAMES && (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE)) {
       // Calculate TCP via the 3-Point Method
@@ -1803,9 +1863,9 @@ public void f3() {
       }
       
       axes = createAxesFromThreePoints(axesPoints);
-      println(matrixToString(axes));
-      // TODO actually save the axes ...
       wpr = matrixToEuler(axes);
+      
+      if (DISPLAY_TEST_OUTPUT) { println(matrixToString(axes)); }
     }
       
     Frame[] frames = null;
@@ -1858,6 +1918,73 @@ public void f3() {
     mode = super_mode;
     super_mode = NONE;
     options.clear();
+  } else if (mode == DIRECT_ENTRY_MODE) {
+    
+    boolean error = false;
+    float[] inputs = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+    
+    try {
+      // Parse each input value
+      for (int val = 0; val < inputs.length; ++val) {
+        String str = contents.get(val + 1).get(0);
+        
+        if (str.length() < 4) {
+          // No value entered
+          error = true;
+          break;
+        }
+        //System.out.printf("_%s_\n", str.substring(3));
+        // Remove prefix
+        inputs[val] = Float.parseFloat(str.substring(3));
+      }
+    
+    } catch (NumberFormatException NFEx) {
+      // Invalid number
+      error = true;
+    }
+    
+    if (error) {
+      options = new ArrayList<String>();
+      which_option = 0;
+      options.add("Inputs must be real numbers!");
+      updateScreen(color(255, 0, 0) , color(0));
+    } else {
+      // Bring w within the range [-PI, PI]
+      inputs[3] = inputs[3] % (TWO_PI);
+      
+      if (inputs[3] > PI) {
+        inputs[3] = PI - inputs[3];
+      }
+      
+      // Bring p within the range [-PI / 2, PI / 2]
+      inputs[4] = inputs[4] % (TWO_PI);
+      
+      if (inputs[4] < 0f) { inputs[4] += TWO_PI; }
+      
+      if (inputs[4] > (3f * PI / 2f)) {
+        inputs[4] -= TWO_PI;
+      } else if (inputs[4] > PI) {
+        inputs[4] = PI - inputs[4];
+      } else if (inputs[4] > (PI / 2f)) {
+        inputs[4] -= PI;
+      }
+      
+      // Bring r within the range [-PI, PI]
+      inputs[5] = inputs[5] % (TWO_PI);
+      
+      if (inputs[5] > PI) {
+        inputs[5] = PI - inputs[5];
+      }
+      
+      PVector origin = new PVector(inputs[0], inputs[1], inputs[2]),
+              wpr = new PVector(inputs[3], inputs[4], inputs[5]);
+      float[][] axesVectors = eulerToMatrix(wpr);
+      
+      if (DISPLAY_TEST_OUTPUT) { System.out.printf("\n%s\n%s\n%s\n", origin.toString(), wpr.toString(), matrixToString(axesVectors)); }
+      
+      // TODO save x, y, z, w, p, r entries and create axes for the frame
+    }
+    
   }
 }
 
@@ -2290,7 +2417,9 @@ public void ENTER(){
          mode = (super_mode == NAV_TOOL_FRAMES) ? SIX_POINT_MODE : FOUR_POINT_MODE;
          loadPointList();
        } else if (which_option == 2) {
-         // TODO direct entry setup
+         options = new ArrayList<String>();
+         which_option = -1;
+         loadDirectEntryMethod();
        }
        break;
     case IO_SUBMENU:
@@ -3081,6 +3210,13 @@ public void updateScreen(color active, color normal){
                  .show()
                  .moveTo(g1)
                  ;
+   } else if (mode == DIRECT_ENTRY_MODE) {
+     fn_info.setText("F2: BACKSPACE     F3: CONFIRM")
+                 .setPosition(next_px, display_py+display_height-15)
+                 .setColorValue(normal)
+                 .show()
+                 .moveTo(g1)
+                 ;
    } else if (mode == ACTIVE_FRAMES) {
      fn_info.setText("SHIFT+F1: LIST     SHIFT+F2: RESET")
                  .setPosition(next_px, display_py+display_height-15)
@@ -3205,6 +3341,7 @@ public void loadPointList() {
     }
     
     if (super_mode == NAV_USER_FRAMES && mode == FOUR_POINT_MODE) {
+      // Name of fourth point for the four point method?
       limbo.add("TODO: ");
     }
     
@@ -3220,6 +3357,50 @@ public void loadPointList() {
   }
   
   updateScreen(color(255,0,0), color(0));
+}
+
+public void loadDirectEntryMethod() {
+  contents = new ArrayList<ArrayList<String>>();
+  active_row = 1;
+  active_col = text_render_start = 0;
+  
+  ArrayList<String> line = new ArrayList<String>();
+  String str = "";
+  if (super_mode == NAV_TOOL_FRAMES) {
+    str = "TOOL FRAME ";
+  } else if (super_mode == NAV_USER_FRAMES) {
+    str = "USER FRAME ";
+  }
+  
+  line.add(str);
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  line.add("X: 0.0");
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  line.add("Y: 0.0");
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  line.add("Z: 0.0");
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  line.add("W: 0.0");
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  line.add("P: 0.0");
+  contents.add(line);
+  
+  line = new ArrayList<String>();
+  line.add("R: 0.0");
+  contents.add(line);
+  
+  mode = DIRECT_ENTRY_MODE;
+  updateScreen(color(255, 0, 0), color(0));
 }
 
 /**

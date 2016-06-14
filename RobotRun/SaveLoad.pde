@@ -53,9 +53,20 @@ void saveState() {
     out.close();
     */
     
+    saveFrames(sketchPath("tmp/frames.ser"));
+    
+  }catch(IOException e){
+     e.printStackTrace();
+     println("which class caused the exception? " + e.getClass().toString());
+  }
+}
+
+public int saveFrames(String path) {
+  try {
+    FileOutputStream out = new FileOutputStream(path);
+    
     // Save the Tool and User Frames to the path /tmp/frames.ser
-    if(toolFrames != null){
-      out = new FileOutputStream(sketchPath("tmp/frames.ser"));
+    if (toolFrames != null) {
       
       // Save Tool Frames
       out.write( ("<FrameSet> ").getBytes( Charset.forName("UTF-8") ) );
@@ -69,9 +80,9 @@ void saveState() {
         }
       }
     }
-     
-    // Save User Frames
-    if(userFrames != null){
+    
+    if (userFrames != null) {
+      // Save User Frames
       out.write( ("</FrameSet> <FrameSet> ").getBytes( Charset.forName("UTF-8") ) );
       String size = userFrames.length + " ";
       out.write(size.getBytes("UTF-8"));
@@ -84,11 +95,14 @@ void saveState() {
       }
       
       out.write( ("</FrameSet>").getBytes( Charset.forName("UTF-8") ) );
-      out.close();
-    } 
-  }catch(IOException e){
-     e.printStackTrace();
-     println("which class caused the exception? " + e.getClass().toString());
+    }
+    
+    out.close();
+    
+    return 1;
+  } catch (Exception Ex) {
+    Ex.printStackTrace();
+    return 0;
   }
 }
 
@@ -104,7 +118,8 @@ int loadState() {
   
   // If loading fails that create all new Frames
   Path p2 = Paths.get(sketchPath("tmp/frames.ser"));
-  if (!Files.exists(p2)) {
+  
+  if (!Files.exists(p2) || loadFrames(p2) == 0) {
     
     toolFrames = new Frame[10];
     userFrames = new Frame[10];
@@ -114,9 +129,10 @@ int loadState() {
       userFrames[n] = new Frame();
     }
     
+    saveFrames(sketchPath("tmp/frames.ser"));
+    
     return 0;
   }
-  if (loadFrames(p2) == 0) return 0;
   
   return 1;
 }
