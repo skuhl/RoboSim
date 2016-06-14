@@ -540,20 +540,25 @@ void calculateDistanceBetweenPoints() {
  * @param start Start point
  * @param end Destination point
  */
-void calculateIntermediatePositions(PVector start, PVector end) {
+void calculateIntermediatePositions(Point start, Point end) {
   calculateDistanceBetweenPoints();
   intermediatePositions.clear();
+  
+  PVector p1 = start.c;
+  PVector p2 = end.c;
+  PVector o1 = start.a;
+  PVector o2 = end.a;
+  
   float mu = 0;
-  int numberOfPoints = (int)
-    (dist(start.x, start.y, start.z, end.x, end.y, end.z) / distanceBetweenPoints);
+  int numberOfPoints = (int)(dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) / distanceBetweenPoints);
   float increment = 1.0 / (float)numberOfPoints;
   for (int n = 0; n < numberOfPoints; n++) {
     mu += increment;
     intermediatePositions.add(new Point(new PVector(
-      start.x * (1 - mu) + (end.x * mu),
-      start.y * (1 - mu) + (end.y * mu),
-      start.z * (1 - mu) + (end.z * mu)),
-      quatToEuler(armModel.tgtRot)));
+      p1.x * (1 - mu) + (p2.x * mu),
+      p1.y * (1 - mu) + (p2.y * mu),
+      p1.z * (1 - mu) + (p2.z * mu)),
+      o1));
   }
   interMotionIdx = 0;
 } // end calculate intermediate positions
@@ -575,13 +580,18 @@ void calculateIntermediatePositions(PVector start, PVector end) {
  * @param p3 Third point, needed to figure out how to curve the path
  * @param percentage Intensity of the curve
  */
-void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float percentage) {
+void calculateContinuousPositions(Point start, Point end, Point next, float percentage) {
   //percentage /= 2;
   calculateDistanceBetweenPoints();
   percentage /= 1.5;
   percentage = 1 - percentage;
   percentage = constrain(percentage, 0, 1);
   intermediatePositions.clear();
+  
+  PVector p1 = start.c;
+  PVector p2 = end.c;
+  PVector p3 = next.c;
+  
   ArrayList<PVector> secondaryTargets = new ArrayList<PVector>();
   float mu = 0;
   int numberOfPoints = 0;
@@ -645,10 +655,9 @@ void calculateContinuousPositions(PVector p1, PVector p2, PVector p3, float perc
  * @param next Point after the destination
  * @param percentage Intensity of the curve
  */
-void beginNewContinuousMotion(PVector start, PVector end,
-                              PVector next, float percentage)
+void beginNewContinuousMotion(Point start, Point end, Point next, float p)
 {
-  calculateContinuousPositions(start, end, next, percentage);
+  calculateContinuousPositions(start, end, next, p);
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0){
     calculateIKJacobian(intermediatePositions.get(interMotionIdx));
@@ -660,7 +669,7 @@ void beginNewContinuousMotion(PVector start, PVector end,
  * @param start Start point
  * @param end Destination point
  */
-void beginNewLinearMotion(PVector start, PVector end) {
+void beginNewLinearMotion(Point start, Point end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0){
@@ -674,9 +683,13 @@ void beginNewLinearMotion(PVector start, PVector end) {
  * @param p2 Point 2
  * @param p3 Point 3
  */
-void beginNewCircularMotion(PVector p1, PVector p2, PVector p3) {
+void beginNewCircularMotion(Point start, Point inter, Point end) {
   // Generate the circle circumference,
   // then turn it into an arc from the current point to the end point
+  PVector p1 = start.c;
+  PVector p2 = inter.c;
+  PVector p3 = end.c;
+  
   intermediatePositions = createArc(createCircleCircumference(p1, p2, p3, 180), p1, p2, p3);
   interMotionIdx = 0;
   motionFrameCounter = 0;
@@ -810,11 +823,7 @@ PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {
  * @return List of points comprising a circle circumference that intersects
  *         the three input points.
  */
-ArrayList<PVector> createCircleCircumference(PVector a,
-                                      PVector b,
-                                      PVector c,
-                                      int numPoints)
-{  
+ArrayList<PVector> createCircleCircumference(PVector a, PVector b, PVector c, int numPoints){  
   // First, we need to compute the value of some variables that we'll
   // use in a parametric equation to get our answer.
   // First up is computing the circle center. This is much easier to
@@ -1041,7 +1050,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
  * @return Returns true on failure (invalid instruction), false on success
  */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
-  PVector start = armModel.getEEPos();
+  Point start = new Point(armModel.getEEPos(), armModel.getWPR());
   
   if (instruction.getMotionType() == MTYPE_JOINT) {
     float[] j = instruction.getVector(program).j;
@@ -1102,7 +1111,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
   } // end joint movement setup
   else if (instruction.getMotionType() == MTYPE_LINEAR) {
     if (instruction.getTermination() == 0) {
-      beginNewLinearMotion(start, instruction.getVector(program).c);
+      beginNewLinearMotion(start, instruction.getVector(program));
     } 
     else {
       Point nextPoint = null;
@@ -1115,12 +1124,12 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
         }
       }
       if (nextPoint == null) {
-        beginNewLinearMotion(start, instruction.getVector(program).c);
+        beginNewLinearMotion(start, instruction.getVector(program));
       } 
       else{
         beginNewContinuousMotion(start, 
-                                 instruction.getVector(program).c,
-                                 nextPoint.c, 
+                                 instruction.getVector(program),
+                                 nextPoint, 
                                  instruction.getTermination());
       }
     } // end if termination type is continuous
@@ -1146,7 +1155,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
       return false; 
     }
     
-    beginNewCircularMotion(start, instruction.getVector(program).c, nextPoint.c);
+    beginNewCircularMotion(start, instruction.getVector(program), nextPoint);
   } // end circular movement setup
   return true;
 } // end setUpInstruction

@@ -66,7 +66,7 @@ public class Point  {
      }
      ret += Float.toString(j[j.length-1]);
      ret += " ";
-     ret += "</Point>";     
+     ret += "</Point>";  
      return ret;
   }
 } // end Point class
@@ -168,25 +168,26 @@ public class Program  {
      ret += " ";
      ret += Integer.toString(nextRegister);
      ret += " ";
-     for(int i=0; i<1000; i++){
-        ret += p[i].toExport();
-        ret += " ";
+     ret += "\n";
+     for(int i = 0; i < p.length; i += 1){
+       ret += "  "; 
+       ret += p[i].toExport();
+       ret += "\n"; 
      }
-     for(int i=0;i<instructions.size();i++){
+     for(int i = 0; i < instructions.size(); i += 1){
         Instruction ins = instructions.get(i);
+        ret += "  ";
         if (ins instanceof MotionInstruction){
            MotionInstruction tmp = (MotionInstruction) ins;
            ret += tmp.toExport();
-           ret += " ";
         }else if (ins instanceof FrameInstruction){
            FrameInstruction tmp = (FrameInstruction) ins;
            ret += tmp.toExport();
-           ret += " ";
         }else if (ins instanceof ToolInstruction){
            ToolInstruction tmp = (ToolInstruction) ins;
            ret += tmp.toExport();
-           ret += " ";
         }
+        ret += "\n";
      }
      ret += "</Program> ";
      return ret;

@@ -1036,14 +1036,14 @@ public void keyPressed(){
     //println();
     //armModel.resetFrame(); 
     /*------------Test Conversion Functions------------------*/
-    //float[] q = armModel.getQuaternion();
-    //PVector wpr = armModel.getWPR();
-    //float[] qP = eulerToQuat(wpr);
-    //PVector wprP = quatToEuler(q);
-    //println("converted values:");
-    //println(qP);
-    //println(wprP.mult(RAD_TO_DEG));
-    //println();
+    float[] q = armModel.getQuaternion();
+    PVector wpr = armModel.getWPR();
+    float[] qP = eulerToQuat(wpr);
+    PVector wprP = quatToEuler(qP);
+    println("converted values:");
+    println(qP);
+    println(wprP.mult(RAD_TO_DEG));
+    println();
   } else if(key == 'y'){
     float[] rot = {PI, 0, 0, 0, 0, PI};
     armModel.setJointRotations(rot);
