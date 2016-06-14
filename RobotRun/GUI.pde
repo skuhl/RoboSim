@@ -3342,7 +3342,7 @@ public void clearNums(){
  * Only COORD_TOOL and COOR_USER have Frames sets as of now.
  * 
  * @param coorFrame  the integer value representing the coordinate frame
- *                   of te desired frame set
+ *                   of the desired frame set
  */
 public void loadFrames(int coordFrame) {
   
