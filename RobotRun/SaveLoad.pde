@@ -115,9 +115,9 @@ public int saveFrames(String path) {
  * @return: 1 if sucess, otherwise return 0;
  */
 int loadState() {
-  Path p1 = Paths.get(sketchPath("tmp/programs.ser")); 
+  /*Path p1 = Paths.get(sketchPath("tmp/programs.ser")); 
   if (!Files.exists(p1)) return 0;
-  if(loadPrograms(p1)==0) return 0;
+  if(loadPrograms(p1)==0) return 0;*/
   
   // If loading fails that create all new Frames
   Path p2 = Paths.get(sketchPath("tmp/frames.ser"));
@@ -133,10 +133,11 @@ int loadState() {
     }
     
     saveFrames(sketchPath("tmp/frames.ser"));
-    
+    println("Frames loaded failed ...");
     return 0;
   }
   
+  println("Frames loaded successfully");
   return 1;
 }
 

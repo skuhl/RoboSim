@@ -10,7 +10,6 @@ float liveSpeed = 0.1;
 int errorCounter;
 String errorText;
 
-public static final boolean PRINT_EXTRA_TEXT = true;
 public static final boolean COLLISION_DISPLAY = false;
 
 /**
@@ -125,14 +124,14 @@ void showMainDisplayText() {
   if (curCoordFrame == COORD_JOINT) {          
     text(dis_joint, width - 20, 60);
     
-    if (PRINT_EXTRA_TEXT) {
+    if (DISPLAY_TEST_OUTPUT) {
       text(dis_dist, width - 20, 80);
       text(dis_world, width - 20, 100);
     }
   } else {
     text(dis_world, width - 20, 60);
     
-    if (PRINT_EXTRA_TEXT) {
+    if (DISPLAY_TEST_OUTPUT) {
       text(dis_dist, width - 20, 80);
       text(dis_joint, width - 20, 100);
     }
@@ -159,7 +158,7 @@ void showMainDisplayText() {
     text("Press shift on the keyboard to disable camera rotation", 20, height / 2 + 55);
   }
   
-  if (PRINT_EXTRA_TEXT) {
+  if (DISPLAY_TEST_OUTPUT) {
     textSize(12);
     fill(0, 0, 0);
     
@@ -272,27 +271,6 @@ PVector computePerpendicular(PVector in, PVector second) {
 public void drawEndEffectorGridMapping() {
   
   PVector ee_pos = armModel.getEEPos();
-  
-  // x-axis : red
-  // y-axis : green
-  // z-axis : blue
-  /*pushMatrix();
-  resetMatrix();
-  // Display EE axes at the EE position
-  applyModelRotation(armModel, true);
-  float[][] tMatrix = getTransformationMatrix();
-  popMatrix();
-  
-  PVector x_vector = new PVector(5000, 0, 0);//transform(new PVector(0, 0, 5000), tMatrix);
-  PVector y_vector = new PVector(0, 5000, 0);//transform(new PVector(0, -5000, 0), tMatrix);
-  PVector z_vector = new PVector(0, 0, 5000);//transform(new PVector(5000, 0, 0), tMatrix);
-  
-  stroke(255, 0, 0);
-  line(x_vector.x, x_vector.y, x_vector.z, -x_vector.x, x_vector.y, x_vector.z);
-  stroke(0, 255, 0);
-  line(y_vector.x, y_vector.y, y_vector.z, y_vector.x, -y_vector.y, y_vector.z);
-  stroke(0, 0, 255);
-  line(z_vector.x, z_vector.y, z_vector.z, z_vector.x, z_vector.y, -z_vector.z);*/
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
   color c = (ee_pos.y <= PLANE_Z) ? color(255, 0, 0) : color(150, 0, 255);
