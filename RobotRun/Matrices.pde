@@ -6,11 +6,26 @@ public PVector transform(PVector v, float[][] tMatrix) {
   }
 
   PVector u = new PVector();
-
+  // Apply the transformation matrix to the given vector
   u.x = v.x * tMatrix[0][0] + v.y * tMatrix[0][1] + v.z * tMatrix[0][2] + tMatrix[0][3];
   u.y = v.x * tMatrix[1][0] + v.y * tMatrix[1][1] + v.z * tMatrix[1][2] + tMatrix[1][3];
   u.z = v.x * tMatrix[2][0] + v.y * tMatrix[2][1] + v.z * tMatrix[2][2] + tMatrix[2][3];
 
+  return u;
+}
+
+/* Transforms the given vector by the given 3x3 rotation matrix. */
+public PVector rotate(PVector v, float[][] rotMatrix) {
+  if (v == null || rotMatrix == null || rotMatrix.length != 3 || rotMatrix[0].length != 3) {
+    return null;
+  }
+  
+  PVector u = new PVector();
+  // Apply the rotation matrix to the given vector
+  u.x = v.x * rotMatrix[0][0] + v.y * rotMatrix[0][1] + v.z * rotMatrix[0][2];
+  u.y = v.x * rotMatrix[1][0] + v.y * rotMatrix[1][1] + v.z * rotMatrix[1][2];
+  u.z = v.x * rotMatrix[2][0] + v.y * rotMatrix[2][1] + v.z * rotMatrix[2][2];
+  
   return u;
 }
 

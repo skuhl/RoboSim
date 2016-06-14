@@ -888,10 +888,10 @@ public class ArmModel {
         PVector move = new PVector(mvLinear[0], mvLinear[1], mvLinear[2]);
         //convert to user frame coordinates if currently in a user frame
         if (activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
-          PVector[] frame = userFrames[activeUserFrame].axes;
           move.y = -move.y;
           move.z = -move.z;
-          move = vectorConvertTo(move, frame[0], frame[1], frame[2]);
+          
+          move = rotate(move, userFrames[activeUserFrame].getAxes());
         }
         
        

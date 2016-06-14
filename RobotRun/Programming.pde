@@ -74,22 +74,28 @@ public class Point  {
 public class Frame {
   private PVector origin;
   private PVector wpr;
-  private PVector[] axes = new PVector[3];
+  private float[][] axes;
   
   public Frame() {
     origin = new PVector(0,0,0);
     wpr = new PVector(0,0,0);
-    for (int n = 0; n < axes.length; n++) axes[n] = new PVector(0,0,0);
+    axes = new float[3][3];
+    // Create identity matrix
+    for (int diag = 0; diag < 3; ++diag) {
+      axes[diag][diag] = 1f;
+    }
   }
   
   /* Used for loading Frames from a file */
-  public Frame(PVector origin, PVector wpr, PVector[] axes) {
+  public Frame(PVector origin, PVector wpr, float[][] axesVectors) {
     this.origin = origin;
     this.wpr = wpr;
-    this.axes = new PVector[axes.length];
+    this.axes = new float[3][3];
     
-    for (int idx = 0; idx < this.axes.length; ++idx) {
-      this.axes[idx] = axes[idx];
+    for (int col = 0; col < 3; ++col) {
+      for (int row = 0; row < 3; ++row) {
+        axes[row][col] = axesVectors[row][col];
+      }
      }
   }
   
@@ -98,14 +104,21 @@ public class Frame {
   public PVector getWpr() { return wpr; }
   public void setWpr(PVector in) { wpr = in; }
   
-  public PVector getAxis(int idx) {
-    if (idx >= 0 && idx < axes.length) return axes[idx];
-    else return null;
-  }
+  public float[][] getAxes() { return axes.clone(); }
   
   public void setAxis(int idx, PVector in) {
-    if (idx >= 0 && idx < axes.length) axes[idx] = in;
-    if (idx == 2) wpr = vectorConvertTo(new PVector(1,1,1), axes[0], axes[1], axes[2]);
+    
+    if (idx >= 0 && idx < axes.length) {
+      axes[0][idx] = in.x;
+      axes[1][idx] = in.y;
+      axes[2][idx] = in.z;
+      
+      wpr = matrixToEuler(axes);
+    }
+  }
+  
+  public void setAxes(float[][] axesVectors) {
+    axes = axesVectors.clone();
   }
   
   /* Used for saving the Frame to a file */
@@ -116,11 +129,11 @@ public class Frame {
     str += Float.toString(origin.x) + " " + Float.toString(origin.y) + " " + Float.toString(origin.z) + " ";
     str += Float.toString(wpr.x) + " " + Float.toString(wpr.y) + " "  + Float.toString(wpr.z) + " ";
     
-    for (int idx = 0; idx < axes.length; ++idx) {
-      str += Float.toString(axes[idx].x) + " " + Float.toString(axes[idx].y) + " "  + Float.toString(axes[idx].z) + " ";
+    for (int col = 0; col < 3; ++col) {
+        str += Float.toString(axes[0][col]) + " " + Float.toString(axes[1][col]) + " "  + Float.toString(axes[2][col]) + " ";
     }
     
-    str+= "</Frame>";
+    str += "</Frame>";
     return str;
   }
 } // end Frame class
@@ -304,8 +317,7 @@ public final class MotionInstruction extends Instruction  {
       if (globalRegister) ret = pr[register].clone();
       else ret = parent.p[register].clone();
       if (userFrame != -1) {
-        PVector[] frame = userFrames[userFrame].axes;
-        ret.c = vectorConvertFrom(ret.c, frame[0], frame[1], frame[2]);
+        ret.c = rotate(ret.c, userFrames[userFrame].getAxes());
       }
       return ret;
     }
