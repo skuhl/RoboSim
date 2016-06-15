@@ -196,7 +196,7 @@ void showMainDisplayText() {
  */
 public void updateCoordinateMode(ArmModel model) {
   // Increment the current coordinate frame
-  curCoordFrame = (curCoordFrame + 1) % 3;
+  curCoordFrame = (curCoordFrame + 1) % 4;
   
   // Skip the tool frame, if there is no current active tool frame
   if (curCoordFrame == COORD_TOOL && !((activeToolFrame >= 0 && activeToolFrame < toolFrames.length)
@@ -208,6 +208,22 @@ public void updateCoordinateMode(ArmModel model) {
   // Skip the user frame, if there is no current active user frame
   if (curCoordFrame == COORD_USER && !(activeUserFrame >= 0 && activeUserFrame < userFrames.length)) {
     curCoordFrame = COORD_JOINT;
+  }
+  
+  // Update the Arm Model's rotation matrix for rotational motion based on the current frame
+  if (curCoordFrame == COORD_TOOL || (curCoordFrame == COORD_WORLD && activeToolFrame != -1)) {
+    // Active Tool Frames are used in the World Frame as well
+    armModel.currentFrame = toolFrames[activeToolFrame].getAxes();
+  } else if (curCoordFrame == COORD_USER) {
+    
+    armModel.currentFrame = userFrames[activeUserFrame].getAxes();
+  } else {
+    // Reset to the identity matrix
+    armModel.currentFrame = new float[3][3];
+    
+    for (int diag = 0; diag < 3; ++diag) {
+      armModel.currentFrame[diag][diag] = 1;
+    }
   }
 }
 
@@ -494,7 +510,6 @@ int calculateIKJacobian(PVector tgt, float[] rot){
 int calculateIKJacobian(Point p){
   PVector pos = p.pos;
   float[] rot = eulerToQuat(p.ori);
-  println(rot);
   return calculateIKJacobian(pos, rot);
 }
 
@@ -503,8 +518,7 @@ int calculateIKJacobian(Point p){
  * need to be based on current speed
  */
 void calculateDistanceBetweenPoints() {
-  MotionInstruction instruction =
-    (MotionInstruction)currentProgram.getInstructions().get(currentInstruction);
+  MotionInstruction instruction = getActiveMotionInstruct();
   if (instruction != null && instruction.getMotionType() != MTYPE_JOINT)
     distanceBetweenPoints = instruction.getSpeed() / 60.0;
   else if (curCoordFrame != COORD_JOINT)
@@ -638,8 +652,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
  * @param next Point after the destination
  * @param percentage Intensity of the curve
  */
-void beginNewContinuousMotion(Point start, Point end, Point next, float p)
-{
+void beginNewContinuousMotion(Point start, Point end, Point next, float p){
   calculateContinuousPositions(start, end, next, p);
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0){
@@ -673,10 +686,12 @@ void beginNewCircularMotion(Point start, Point inter, Point end) {
   PVector p2 = inter.pos;
   PVector p3 = end.pos;
   
-  intermediatePositions = createArc(createCircleCircumference(p1, p2, p3, 180), p1, p2, p3);
+  calculateDistanceBetweenPoints();
+  ArrayList<PVector> circle = createCircleCircumference(p1, p2, p3, distanceBetweenPoints);
+  intermediatePositions = createArc(circle, p1, p2, p3);
   interMotionIdx = 0;
   motionFrameCounter = 0;
- if(intermediatePositions.size() > 0){
+  if(intermediatePositions.size() > 0){
     calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
 }
@@ -806,7 +821,7 @@ PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {
  * @return List of points comprising a circle circumference that intersects
  *         the three input points.
  */
-ArrayList<PVector> createCircleCircumference(PVector a, PVector b, PVector c, int numPoints){  
+ArrayList<PVector> createCircleCircumference(PVector a, PVector b, PVector c, float dist){  
   // First, we need to compute the value of some variables that we'll
   // use in a parametric equation to get our answer.
   // First up is computing the circle center. This is much easier to
@@ -837,6 +852,7 @@ ArrayList<PVector> createCircleCircumference(PVector a, PVector b, PVector c, in
   // circle, so detect when we're close to those points to decide
   // when to start and stop adding points.
   float angle = 0;
+  int numPoints = (int)(r*TWO_PI/dist);
   float angleInc = (TWO_PI)/(float)numPoints;
   ArrayList<PVector> points = new ArrayList<PVector>();
   for (int iter = 0; iter < numPoints; iter++) {
