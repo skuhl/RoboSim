@@ -6,13 +6,14 @@ import java.nio.charset.Charset;
  */
 void saveState() {
   try{
+    //create tmp directory if not present
+    File f = new File(sketchPath("tmp/"));
+    f.mkdirs();
+    
     Path p1 = Paths.get(sketchPath("tmp/programs.ser")); 
     Path p2 = Paths.get(sketchPath("tmp/currentProgram.ser"));
     Path p3 = Paths.get(sketchPath("tmp/singleInstruction.ser"));
     Path p4 = Paths.get(sketchPath("tmp/frames"));
-    //create tmp directory if not present
-    File f = new File(sketchPath("tmp/"));
-    f.mkdirs();
         
     println("Path: " + Paths.get(sketchPath("tmp/programs.ser")).toString());
     if (Files.exists(p1)) Files.delete(p1);
@@ -115,6 +116,9 @@ public int saveFrames(String path) {
  */
 int loadState() {
   // If loading fails that create all new Frames
+  File f = new File(sketchPath("tmp/"));
+  f.mkdirs();
+  
   Path p2 = Paths.get(sketchPath("tmp/frames.ser"));
   
   if (!Files.exists(p2) || loadFrames(p2) == 0) {
