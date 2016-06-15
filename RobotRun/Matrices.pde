@@ -69,7 +69,7 @@ public float[][] invertHCMatrix(float[][] m) {
 }
 
 /* Returns a 4x4 vector array which reflects the current transform matrix on the top
- * of the stack */
+ * of the stack (ignores scaling values though) */
 public float[][] getTransformationMatrix() {
   float[][] transform = new float[4][4];
 

@@ -1669,13 +1669,7 @@ public void f1(){
     else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
         
       super_mode = mode;
-      if (super_mode == NAV_TOOL_FRAMES) {
-        curFrameIdx = active_row;
-      } 
-      else if (super_mode == NAV_USER_FRAMES) {
-        curFrameIdx = active_row;
-      }
-        
+      curFrameIdx = active_row;  
       loadFrameDetails(false);
     } 
     else if (mode == ACTIVE_FRAMES) {
@@ -1772,8 +1766,18 @@ public void f2() {
       // Reset the active frames for the User or Tool Coordinate Frames
       if (active_row == 1) {
         activeToolFrame = -1;
+        
+        // Leave the Tool Frame
+        if (curCoordFrame == COORD_TOOL) {
+          curCoordFrame = COORD_WORLD;
+        }
       } else if (active_row == 2) {
         activeUserFrame = -1;
+        
+        // Leave the User Frame
+        if (curCoordFrame == COORD_USER) {
+          curCoordFrame = COORD_WORLD;
+        }
       }
       
       loadActiveFrames();
@@ -1872,24 +1876,34 @@ public void f3() {
         origin = new PVector((float)tcp[0], (float)tcp[1], (float)tcp[2]);
       }
     } else if (mode == FOUR_POINT_MODE) {
-      // TODO Four point mode offset
+      // Origin offset for the user frame
+      origin = new PVector(teachPointTMatrices.get(3)[0][3], teachPointTMatrices.get(3)[1][3], teachPointTMatrices.get(3)[2][3]);
     }
     
     if (super_mode == NAV_USER_FRAMES || mode == SIX_POINT_MODE) {
       
       ArrayList<float[][]> axesPoints = new ArrayList<float[][]>();
       // Use the last three points to calculate the axes vectors
-      if (mode == FOUR_POINT_MODE) {
-        axesPoints.add(teachPointTMatrices.get(1));
-        axesPoints.add(teachPointTMatrices.get(2));
-        axesPoints.add(teachPointTMatrices.get(3));
-      } else if (mode == SIX_POINT_MODE) {
+      if (mode == SIX_POINT_MODE) {
         axesPoints.add(teachPointTMatrices.get(3));
         axesPoints.add(teachPointTMatrices.get(4));
         axesPoints.add(teachPointTMatrices.get(5));
-      }
+      } else {
+        axesPoints.add(teachPointTMatrices.get(0));
+        axesPoints.add(teachPointTMatrices.get(1));
+        axesPoints.add(teachPointTMatrices.get(2));
+      } 
       
       axes = createAxesFromThreePoints(axesPoints);
+      
+      if (axes == null) {
+        // Invalid point set
+        mode = FRAME_DETAIL;
+        which_option = 0;
+        loadFrameDetails(true);
+        return;
+      }
+      
       wpr = matrixToEuler(axes);
       
       if (DISPLAY_TEST_OUTPUT) { println(matrixToString(axes)); }
@@ -1905,7 +1919,7 @@ public void f3() {
     
     if (frames != null) {
       
-      if (active_row >= 0 && active_row < frames.length) {
+      if (curFrameIdx >= 0 && curFrameIdx < frames.length) {
         if (DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
         
         frames[curFrameIdx] = new Frame();
@@ -1948,8 +1962,9 @@ public void f3() {
   } else if (mode == DIRECT_ENTRY_MODE) {
     options = new ArrayList<String>();
     which_option = -1;
-      
+    
     boolean error = false;
+    // User defined x, y, z, w, p, and r values
     float[] inputs = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
     
     try {
@@ -1962,7 +1977,7 @@ public void f3() {
           error = true;
           break;
         }
-        //System.out.printf("_%s_\n", str.substring(3));
+        
         // Remove prefix
         inputs[val] = Float.parseFloat(str.substring(3));
       }
@@ -2019,7 +2034,7 @@ public void f3() {
       }
     
       // Create axes vector and save the new frame
-      if (frames != null && text_render_start >= 0 && text_render_start < frames.length) {
+      if (frames != null && curFrameIdx >= 0 && curFrameIdx < frames.length) {
         if (DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
         
         frames[curFrameIdx] = new Frame(origin, wpr, axesVectors);
@@ -3451,7 +3466,8 @@ public void loadDirectEntryMethod() {
   line.add("R: 0.0");
   contents.add(line);
   
-  active_row = active_col = 0;
+  active_row = 1;
+  active_col = 0;
   mode = DIRECT_ENTRY_MODE;
   updateScreen(color(255, 0, 0), color(0));
 }
@@ -3500,9 +3516,9 @@ public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
         
         if (DISPLAY_TEST_OUTPUT) { System.out.printf("\nA = %d\nB = %d\nC = %d\n\n", idxA, idxB, idxC); }
         
-        RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxA), 3, 3));
-        RealMatrix Br = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxB), 3, 3));
-        RealMatrix Cr = new Array2DRowRealMatrix(floatToDouble(teachPointTMatrices.get(idxC), 3, 3));
+        RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(points.get(idxA), 3, 3));
+        RealMatrix Br = new Array2DRowRealMatrix(floatToDouble(points.get(idxB), 3, 3));
+        RealMatrix Cr = new Array2DRowRealMatrix(floatToDouble(points.get(idxC), 3, 3));
         
         double [] t = new double[3];
         for (int idx = 0; idx < 3; ++idx) {
@@ -3580,6 +3596,13 @@ public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
     axes[0] = x_dir;                         // X axis
     axes[2] = crossProduct(x_dir, y_dir);    // Z axis
     axes[1] = crossProduct(x_dir, axes[2]);  // Y axis
+    
+    if ((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
+        (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
+        (axes[2][0] == 0f && axes[2][1] == 0f && axes[2][2] == 0f)) {
+      // One of the three axis vectors is the zreo vector
+      return null;
+    }
     
     // Transpose the matrix
     for (int row = 0; row < 3; ++row) {

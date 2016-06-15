@@ -416,7 +416,7 @@ public void displayTeachPoints() {
 }
 
 public void displayFrameAxes() {
-  if (curCoordFrame == COORD_TOOL && activeToolFrame != -1) {
+  if ((curCoordFrame == COORD_WORLD && curCoordFrame == COORD_TOOL) && activeToolFrame != -1) {
     /* Draw the axes of the active tool frame */
     float[][] axes = toolFrames[activeToolFrame].getAxes();
     PVector origin = armModel.getEEPos();

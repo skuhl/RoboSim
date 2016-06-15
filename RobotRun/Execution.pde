@@ -196,7 +196,7 @@ void showMainDisplayText() {
  */
 public void updateCoordinateMode(ArmModel model) {
   // Increment the current coordinate frame
-  curCoordFrame = (curCoordFrame + 1) % 3;
+  curCoordFrame = (curCoordFrame + 1) % 4;
   
   // Skip the tool frame, if there is no current active tool frame
   if (curCoordFrame == COORD_TOOL && !((activeToolFrame >= 0 && activeToolFrame < toolFrames.length)
@@ -208,6 +208,22 @@ public void updateCoordinateMode(ArmModel model) {
   // Skip the user frame, if there is no current active user frame
   if (curCoordFrame == COORD_USER && !(activeUserFrame >= 0 && activeUserFrame < userFrames.length)) {
     curCoordFrame = COORD_JOINT;
+  }
+  
+  // Update the Arm Model's rotation matrix for rotational motion based on the current frame
+  if (curCoordFrame == COORD_TOOL || (curCoordFrame == COORD_WORLD && activeToolFrame != -1)) {
+    // Active Tool Frames are used in the World Frame as well
+    armModel.currentFrame = toolFrames[activeToolFrame].getAxes();
+  } else if (curCoordFrame == COORD_USER) {
+    
+    armModel.currentFrame = userFrames[activeUserFrame].getAxes();
+  } else {
+    // Reset to the identity matrix
+    armModel.currentFrame = new float[3][3];
+    
+    for (int diag = 0; diag < 3; ++diag) {
+      armModel.currentFrame[diag][diag] = 1;
+    }
   }
 }
 
