@@ -92,8 +92,8 @@ public class Frame {
     this.wpr = wpr;
     this.axes = new float[3][3];
     
-    for (int col = 0; col < 3; ++col) {
-      for (int row = 0; row < 3; ++row) {
+    for (int row = 0; row < 3; ++row) {
+      for (int col = 0; col < 3; ++col) {
         axes[row][col] = axesVectors[row][col];
       }
      }
@@ -109,9 +109,9 @@ public class Frame {
   public void setAxis(int idx, PVector in) {
     
     if (idx >= 0 && idx < axes.length) {
-      axes[0][idx] = in.x;
-      axes[1][idx] = in.y;
-      axes[2][idx] = in.z;
+      axes[idx][0] = in.x;
+      axes[idx][1] = in.y;
+      axes[idx][2] = in.z;
       
       wpr = matrixToEuler(axes);
     }
@@ -129,8 +129,8 @@ public class Frame {
     str += Float.toString(origin.x) + " " + Float.toString(origin.y) + " " + Float.toString(origin.z) + " ";
     str += Float.toString(wpr.x) + " " + Float.toString(wpr.y) + " "  + Float.toString(wpr.z) + " ";
     
-    for (int col = 0; col < 3; ++col) {
-        str += Float.toString(axes[0][col]) + " " + Float.toString(axes[1][col]) + " "  + Float.toString(axes[2][col]) + " ";
+    for (int row = 0; row < 3; ++row) {
+        str += Float.toString(axes[row][0]) + " " + Float.toString(axes[row][1]) + " "  + Float.toString(axes[row][2]) + " ";
     }
     
     str += "</Frame>";

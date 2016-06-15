@@ -1670,7 +1670,7 @@ public void f1(){
     else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
         
       super_mode = mode;
-      curFrameIdx = active_row;  
+      curFrameIdx = active_row;
       loadFrameDetails(false);
     } 
     else if (mode == ACTIVE_FRAMES) {
@@ -1771,6 +1771,7 @@ public void f2() {
         // Leave the Tool Frame
         if (curCoordFrame == COORD_TOOL) {
           curCoordFrame = COORD_WORLD;
+          armModel.resetFrame();
         }
       } else if (active_row == 2) {
         activeUserFrame = -1;
@@ -1778,6 +1779,7 @@ public void f2() {
         // Leave the User Frame
         if (curCoordFrame == COORD_USER) {
           curCoordFrame = COORD_WORLD;
+          armModel.resetFrame();
         }
       }
       
@@ -1794,13 +1796,13 @@ public void f2() {
       options = new ArrayList<String>();
       
       if (super_mode == NAV_USER_FRAMES) {
-        options.add("1.Three Point");
-        options.add("2.Four Point");
-        options.add("3.Direct Entry");
+        options.add("1. Three Point");
+        options.add("2. Four Point");
+        options.add("3. Direct Entry");
       } else if (super_mode == NAV_TOOL_FRAMES) {
-        options.add("1.Three Point");
-        options.add("2.Six Point");
-        options.add("3.Direct Entry");
+        options.add("1. Three Point");
+        options.add("2. Six Point");
+        options.add("3. Direct Entry");
       }
       mode = PICK_FRAME_METHOD;
       which_option = 0;
@@ -3596,36 +3598,27 @@ public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
     // Form axes
     axes[0] = x_dir;                         // X axis
     axes[2] = crossProduct(x_dir, y_dir);    // Z axis
-    axes[1] = crossProduct(x_dir, axes[2]);  // Y axis
+    axes[1] = crossProduct(axes[2], x_dir);  // Y axis
     
-    if ((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
-        (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
-        (axes[2][0] == 0f && axes[2][1] == 0f && axes[2][2] == 0f)) {
-      // One of the three axis vectors is the zreo vector
+    if ((axes[0][0] == 0f && axes[0][1] == 0f && axes[2][0] == 0f) ||
+        (axes[0][1] == 0f && axes[0][1] == 0f && axes[2][1] == 0f) ||
+        (axes[0][2] == 0f && axes[0][2] == 0f && axes[2][2] == 0f)) {
+      // One of the three axis vectors is the zero vector
       return null;
-    }
-    
-    // Transpose the matrix
-    for (int row = 0; row < 3; ++row) {
-      for (int col = row + 1; col < 3; ++col) {
-        float limbo = axes[row][col];
-        axes[row][col] = axes[col][row];
-        axes[col][row] = limbo;
-      }
     }
     
     float[] magnitudes = new float[axes[0].length];
     
-    for (int v = 0; v < axes[0].length; ++v) {
+    for (int v = 0; v < axes.length; ++v) {
       // Find the magnitude of each axis vector
-      for (int e = 0; e < axes.length; ++e) {
-        magnitudes[v] += pow(axes[e][v], 2);
+      for (int e = 0; e < axes[0].length; ++e) {
+        magnitudes[v] += pow(axes[v][e], 2);
       }
       
       magnitudes[v] = sqrt(magnitudes[v]);
       // Normalize each vector
       for (int e = 0; e < axes.length; ++e) {
-        axes[e][v] /= magnitudes[v];
+        axes[v][e] /= magnitudes[v];
       }
     }
     
