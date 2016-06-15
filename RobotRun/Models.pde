@@ -889,17 +889,9 @@ public class ArmModel {
         // NOTE: Currently only translational motion works for reference frames!
         if (curCoordFrame == COORD_USER && activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
           // Convert to User Frame coordinates if currently in a User Frame
-          float limbo = move.y;
-          move.y = move.z;
-          move.z = limbo;
-          
           move = rotate(move, userFrames[activeUserFrame].getAxes());
         } else if ((curCoordFrame == COORD_WORLD || curCoordFrame == COORD_TOOL) && activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
           // Convert to Tool Frame coordinates if currently in a Tool Frame
-          float limbo = move.y;
-          move.y = move.z;
-          move.z = limbo;
-          
           move = rotate(move, toolFrames[activeToolFrame].getAxes());
         }
         

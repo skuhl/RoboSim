@@ -422,9 +422,9 @@ public void displayFrameAxes() {
     PVector origin = armModel.getEEPos();
     
     pushMatrix();
-    applyMatrix(axes[0][0], axes[0][1], axes[0][2], origin.x,
-                axes[1][0], axes[1][1], axes[1][2],  origin.y,
-                axes[2][0], axes[2][1], axes[2][2],  origin.z,
+    applyMatrix(axes[0][0], axes[1][0], axes[2][0], origin.x,
+                axes[0][1], axes[1][1], axes[2][1],  origin.y,
+                axes[0][2], axes[1][2], axes[2][2],  origin.z,
                 0, 0, 0, 1);
     // X axis
     stroke(255, 0, 0);
@@ -435,6 +435,15 @@ public void displayFrameAxes() {
     // Z axis
     stroke(0, 0, 255);
     line(0, 0, -5000, 0, 0, 5000);
+    
+    // Draw a sphere on the positive direction fo each axis
+    stroke(0);
+    translate(50, 0, 0);
+    sphere(4);
+    translate(-50, 50, 0);
+    sphere(4);
+    translate(0, -50, 50);
+    sphere(4);
     
     popMatrix();
   } else if (curCoordFrame == COORD_USER && activeUserFrame != -1) {
@@ -443,9 +452,9 @@ public void displayFrameAxes() {
     PVector origin = userFrames[activeUserFrame].getOrigin();
     
     pushMatrix();
-    applyMatrix(axes[0][0], axes[0][1], axes[0][2], origin.x,
-                axes[1][0], axes[1][1], axes[1][2],  origin.y,
-                axes[2][0], axes[2][1], axes[2][2],  origin.z,
+    applyMatrix(axes[0][0], axes[1][0], axes[2][0], origin.x,
+                axes[0][1], axes[1][1], axes[2][1],  origin.y,
+                axes[0][2], axes[1][2], axes[2][2],  origin.z,
                 0, 0, 0, 1);
     // X axis
     stroke(255, 0, 0);
@@ -456,6 +465,15 @@ public void displayFrameAxes() {
     // Z axis
     stroke(0, 0, 255);
     line(0, 0, -5000, 0, 0, 5000);
+    
+    // Draw a sphere on the positive direction fo each axis
+    stroke(0);
+    translate(50, 0, 0);
+    sphere(4);
+    translate(-50, 50, 0);
+    sphere(4);
+    translate(0, -50, 50);
+    sphere(4);
     
     popMatrix();
   }
