@@ -170,7 +170,7 @@ public void draw(){
   if(intermediatePositions != null){
     for(Point p : intermediatePositions){
       pushMatrix();
-      translate(p.c.x, p.c.y, p.c.z);
+      translate(p.pos.x, p.pos.y, p.pos.z);
       sphere(10);
       popMatrix();
     }

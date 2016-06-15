@@ -109,9 +109,9 @@ public class ArmModel {
   public float[] mvRot = new float[3];
   public float[] tgtRot = new float[4];
   public PVector tgtPos = new PVector();
-  public float[][] currentFrame = {{ 1, 0, 0},
-                                   { 0, 1, 0},
-                                   { 0, 0, 1}};
+  public float[][] currentFrame = {{1, 0, 0},
+                                   {0, 1, 0}, 
+                                   {0, 0, 1}};
   
   public Box[] bodyHitBoxes;
   private ArrayList<Box>[] eeHitBoxes;
@@ -832,21 +832,15 @@ public class ArmModel {
   
   void updateOrientation(){
     PVector u = new PVector(0, 0, 0);
-    RealMatrix frameInverse = new Array2DRowRealMatrix(floatToDouble(currentFrame, 3, 3));
-    frameInverse = MatrixUtils.inverse(frameInverse);
     float theta = DEG_TO_RAD*2.5*liveSpeed;
     
-    //if not in user frame mode
-    for(int i = 0; i < 3; i += 1){
-      u.x += mvRot[i]*frameInverse.getEntry(i, 0);
-      u.y += mvRot[i]*frameInverse.getEntry(i, 1);
-      u.z += mvRot[i]*frameInverse.getEntry(i, 2);
-    }
+    u.x = mvRot[0];
+    u.y = mvRot[1];
+    u.z = mvRot[2];
+    u.normalize();
     
     if(u.x != 0 || u.y != 0 || u.z != 0){
       tgtRot = rotateQuat(tgtRot, theta, u);
-      //float[][] tgtMatrix = rotateAxisVector(getRotationMatrix(currentFrame), theta, u.normalize());
-      //tgtRot = matrixToQuat(tgtMatrix);
     }
   }
 
@@ -885,16 +879,14 @@ public class ArmModel {
       //only move if our movement vector is non-zero
       if(mvLinear[0] != 0 || mvLinear[1] != 0 || mvLinear[2] != 0 || 
          mvRot[0] != 0 || mvRot[1] != 0 || mvRot[2] != 0) {
-        PVector move = new PVector(mvLinear[0], mvLinear[1], mvLinear[2]);
+        PVector move = new PVector(0, 0, 0);
         //convert to user frame coordinates if currently in a user frame
-        if (activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
-          move.y = -move.y;
-          move.z = -move.z;
-          
-          move = rotate(move, userFrames[activeUserFrame].getAxes());
+        for(int i = 0; i < 3; i += 1){
+          move.x += mvLinear[i]*currentFrame[i][0];
+          move.y += mvLinear[i]*currentFrame[i][1];
+          move.z += mvLinear[i]*currentFrame[i][2];
         }
         
-       
         //respond to user defined movement
         float distance = motorSpeed/60.0 * liveSpeed;
         tgtPos.x += move.x * distance;

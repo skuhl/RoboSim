@@ -1036,14 +1036,15 @@ public void keyPressed(){
     //println();
     //armModel.resetFrame(); 
     /*------------Test Conversion Functions------------------*/
-    float[] q = armModel.getQuaternion();
-    PVector wpr = armModel.getWPR();
-    float[] qP = eulerToQuat(wpr);
-    PVector wprP = quatToEuler(qP);
-    println("converted values:");
-    println(qP);
-    println(wprP.mult(RAD_TO_DEG));
-    println();
+    //float[] q = armModel.getQuaternion();
+    //PVector wpr = armModel.getWPR();
+    //float[] qP = eulerToQuat(wpr);
+    //PVector wprP = quatToEuler(qP);
+    //println("converted values:");
+    //println(qP);
+    //println(wprP.mult(RAD_TO_DEG));
+    //println();
+    armModel.currentFrame = armModel.getRotationMatrix();
   } else if(key == 'y'){
     float[] rot = {PI, 0, 0, 0, 0, PI};
     armModel.setJointRotations(rot);
@@ -2146,8 +2147,8 @@ public void f5() {
           options = new ArrayList<String>();
           options.add("Data of the point in this register (press ENTER to exit):");
           if (castIns.getMotionType() != MTYPE_JOINT) {
-            options.add("x: " + p.c.x + "  y: " + p.c.y + "  z: " + p.c.z);
-            options.add("w: " + p.a.x + "  p: " + p.a.y + "  r: " + p.a.z);
+            options.add("x: " + p.pos.x + "  y: " + p.pos.y + "  z: " + p.pos.z);
+            options.add("w: " + p.ori.x + "  p: " + p.ori.y + "  r: " + p.ori.z);
           } else {
             options.add("j1: " + p.j[0] + "  j2: " + p.j[1] + "  j3: " + p.j[2]);
             options.add("j4: " + p.j[3] + "  j5: " + p.j[4] + "  j6: " + p.j[5]);

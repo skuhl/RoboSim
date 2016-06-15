@@ -410,11 +410,14 @@ int calculateIKJacobian(PVector tgt, float[] rot){
   float[][] nFrame = armModel.getRotationMatrix();
   float[][] rMatrix = quatToMatrix(rot);
   armModel.currentFrame = nFrame;
-  //translate target rotation to new ref frame
+  //translate target rotation to world ref frame
   RealMatrix M = new Array2DRowRealMatrix(floatToDouble(nFrame, 3, 3));
+  RealMatrix O = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
+  RealMatrix MO = M.multiply(MatrixUtils.inverse(O));
+  //translate target rotation to EE ref frame
   RealMatrix R = new Array2DRowRealMatrix(floatToDouble(rMatrix, 3, 3));
-  RealMatrix MR = R.multiply(MatrixUtils.inverse(M));
-  rot = matrixToQuat(doubleToFloat(MR.getData(), 3, 3));
+  RealMatrix OR = R.multiply(MatrixUtils.inverse(MO));
+  rot = matrixToQuat(doubleToFloat(OR.getData(), 3, 3));
   
   int count = 0;
   
@@ -437,10 +440,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     delta[6] = rDelta[3];
     
     float dist = PVector.dist(cPos, tgt);
-    float rDist = sqrt(pow(rDelta[0], 2) + 
-                       pow(rDelta[1], 2) + 
-                       pow(rDelta[2], 2) + 
-                       pow(rDelta[3], 2));
+    float rDist = calculateQuatMag(rDelta);
                                                   
     //check whether our current position is within tolerance
     if(dist < liveSpeed && rDist < 0.005*liveSpeed) break;
@@ -492,8 +492,8 @@ int calculateIKJacobian(PVector tgt, float[] rot){
 }
 
 int calculateIKJacobian(Point p){
-  PVector pos = p.c;
-  float[] rot = eulerToQuat(p.a);
+  PVector pos = p.pos;
+  float[] rot = eulerToQuat(p.ori);
   println(rot);
   return calculateIKJacobian(pos, rot);
 }
@@ -522,21 +522,26 @@ void calculateIntermediatePositions(Point start, Point end) {
   calculateDistanceBetweenPoints();
   intermediatePositions.clear();
   
-  PVector p1 = start.c;
-  PVector p2 = end.c;
-  PVector o1 = start.a;
-  PVector o2 = end.a;
+  PVector p1 = start.pos;
+  PVector p2 = end.pos;
+  PVector o1 = start.ori;
+  PVector o2 = end.ori;
+  float[] q1 = eulerToQuat(o1);
+  float[] q2 = eulerToQuat(o2);
+  float[] qi = new float[4];
   
   float mu = 0;
   int numberOfPoints = (int)(dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) / distanceBetweenPoints);
   float increment = 1.0 / (float)numberOfPoints;
   for (int n = 0; n < numberOfPoints; n++) {
     mu += increment;
+    
+    qi = quaternionSlerp(q1, q2, mu);
     intermediatePositions.add(new Point(new PVector(
       p1.x * (1 - mu) + (p2.x * mu),
       p1.y * (1 - mu) + (p2.y * mu),
       p1.z * (1 - mu) + (p2.z * mu)),
-      o1));
+      quatToEuler(qi)));
   }
   interMotionIdx = 0;
 } // end calculate intermediate positions
@@ -566,9 +571,9 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   percentage = constrain(percentage, 0, 1);
   intermediatePositions.clear();
   
-  PVector p1 = start.c;
-  PVector p2 = end.c;
-  PVector p3 = next.c;
+  PVector p1 = start.pos;
+  PVector p2 = end.pos;
+  PVector p3 = next.pos;
   
   ArrayList<PVector> secondaryTargets = new ArrayList<PVector>();
   float mu = 0;
@@ -615,9 +620,9 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   for (int n = transitionPoint; n < numberOfPoints; n++) {
     mu += increment;
     intermediatePositions.add(new Point(new PVector(
-      currentPoint.c.x * (1 - mu) + (secondaryTargets.get(secondaryIdx).x * mu),
-      currentPoint.c.y * (1 - mu) + (secondaryTargets.get(secondaryIdx).y * mu),
-      currentPoint.c.z * (1 - mu) + (secondaryTargets.get(secondaryIdx).z * mu)), 
+      currentPoint.pos.x * (1 - mu) + (secondaryTargets.get(secondaryIdx).x * mu),
+      currentPoint.pos.y * (1 - mu) + (secondaryTargets.get(secondaryIdx).y * mu),
+      currentPoint.pos.z * (1 - mu) + (secondaryTargets.get(secondaryIdx).z * mu)), 
       armModel.getWPR()));
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
     secondaryIdx++;
@@ -664,9 +669,9 @@ void beginNewLinearMotion(Point start, Point end) {
 void beginNewCircularMotion(Point start, Point inter, Point end) {
   // Generate the circle circumference,
   // then turn it into an arc from the current point to the end point
-  PVector p1 = start.c;
-  PVector p2 = inter.c;
-  PVector p3 = end.c;
+  PVector p1 = start.pos;
+  PVector p2 = inter.pos;
+  PVector p3 = end.pos;
   
   intermediatePositions = createArc(createCircleCircumference(p1, p2, p3, 180), p1, p2, p3);
   interMotionIdx = 0;

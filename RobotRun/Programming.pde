@@ -7,13 +7,13 @@ Frame[] userFrames = new Frame[10];
 
 
 public class Point  {
-  public PVector c; // coordinates
-  public PVector a; // angles
+  public PVector pos; // position
+  public PVector ori; // orientation
   public float[] j = new float[6]; // joint values
   
   public Point() {
-    c = new PVector(0,0,0);
-    a = new PVector(0,0,0);
+    pos = new PVector(0,0,0);
+    ori = new PVector(0,0,0);
     for (int n = 0; n < j.length; n++) j[n] = 0;
   }
   
@@ -21,8 +21,8 @@ public class Point  {
   public Point(float x, float y, float z, float w, float p, float r,
                float j1, float j2, float j3, float j4, float j5, float j6)
   {
-    c = new PVector(x,y,z);
-    a = new PVector(w,p,r);
+    pos = new PVector(x,y,z);
+    ori = new PVector(w,p,r);
     j[0] = j1;
     j[1] = j2;
     j[2] = j3;
@@ -33,32 +33,32 @@ public class Point  {
   
   //create a new point with position and orientation only
   public Point(float x, float y, float z, float w, float p, float r){
-    c = new PVector(x,y,z);
-    a = new PVector(w,p,r);
+    pos = new PVector(x,y,z);
+    ori = new PVector(w,p,r);
   }
   
   public Point(PVector position, PVector orientation){
-    c = position;
-    a = orientation;
+    pos = position;
+    ori = orientation;
   }
   
   public Point clone() {
-    return new Point(c.x, c.y, c.z, a.x, a.y, a.z, j[0], j[1], j[2], j[3], j[4], j[5]);
+    return new Point(pos.x, pos.y, pos.z, ori.x, ori.y, ori.z, j[0], j[1], j[2], j[3], j[4], j[5]);
   }
   
   public String toExport(){
      String ret = "<Point> ";
-     ret += Float.toString(c.x);
+     ret += Float.toString(pos.x);
      ret += " ";
-     ret += Float.toString(c.y);
+     ret += Float.toString(pos.y);
      ret += " ";
-     ret += Float.toString(c.z);
+     ret += Float.toString(pos.z);
      ret += " ";
-     ret += Float.toString(a.x);
+     ret += Float.toString(ori.x);
      ret += " ";
-     ret += Float.toString(a.y);
+     ret += Float.toString(ori.y);
      ret += " ";
-     ret += Float.toString(a.z);
+     ret += Float.toString(ori.z);
      ret += " ";
      for (int i=0;i<j.length-1;i++){
         ret += Float.toString(j[i]);
@@ -311,14 +311,14 @@ public final class MotionInstruction extends Instruction  {
       Point out;
       if (globalRegister) out = pr[register].clone();
       else out = parent.p[register].clone();
-      out.c = convertWorldToNative(out.c);
+      out.pos = convertWorldToNative(out.pos);
       return out;
     } else {
       Point ret;
       if (globalRegister) ret = pr[register].clone();
       else ret = parent.p[register].clone();
       if (userFrame != -1) {
-        ret.c = rotate(ret.c, userFrames[userFrame].getAxes());
+        ret.pos = rotate(ret.pos, userFrames[userFrame].getAxes());
       }
       return ret;
     }

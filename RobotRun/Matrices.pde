@@ -388,6 +388,7 @@ float[] calculateQuatOffset(float[] q1, float[] q2){
   return qr;
 }
 
+//returns the result of a quaternion 'q1' multiplied by quaternion 'q2'
 float[] quaternionMult(float[] q1, float[] q2) {
   float[] r = new float[4];
   r[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
@@ -398,9 +399,82 @@ float[] quaternionMult(float[] q1, float[] q2) {
   return r;
 }
 
+//returns the result of a quaternion 'q' multiplied by scalar 's'
+float[] quaternionScalarMult(float[] q, float s){
+  float[] qr = new float[4];
+  qr[0] = q[0]*s;
+  qr[1] = q[1]*s;
+  qr[2] = q[2]*s;
+  qr[3] = q[3]*s;
+  return qr;
+}
+
+//returns the result of the addition of two quaternions, 'q1' and 'q2'
+float[] quaternionAdd(float[] q1, float[] q2){
+  float[] qr = new float[4];
+  qr[0] = q1[0] + q2[0];
+  qr[1] = q1[1] + q2[1];
+  qr[2] = q1[2] + q2[2];
+  qr[3] = q1[3] + q2[3];
+  return qr;
+}
+
 //returns the magnitude of the input quaternion 'q'
 float calculateQuatMag(float[] q){
   return sqrt(pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2));
+}
+
+/* Given two input quaternions, 'q1' and 'q2', computes the spherical-
+ * linear interpolation from 'q1' to 'q2' for a given fraction of the
+ * complete transformation 'q1' to 'q2', denoted by 0 <= 'mu' <= 1. 
+ */
+float[] quaternionSlerp(float[] q1, float[] q2, float mu){
+  float[] qSlerp = new float[4];
+  float[] qTemp = new float[4];
+  float[] q1Scaled = new float[4];
+  float[] q2Scaled = new float[4];
+  float startScale, endScale;
+  float cOmega = 0;
+  
+  for(int i = 0; i < 4; i += 1)
+    cOmega += q1[i]*q2[i];
+    
+  if(cOmega < 0){
+    cOmega = -cOmega;
+    qTemp = quaternionScalarMult(q1, -1);
+  }
+  
+  if(1 + cOmega > 1e-10){
+    if(1 - cOmega > 1e-10){
+      float omega = acos(cOmega);
+      float sOmega = sin(omega);
+      startScale = sin((1 - mu)*omega/sOmega);
+      endScale = sin(mu*omega)/sOmega;
+    }
+    else{
+      startScale = 1 - mu;
+      endScale = mu;
+    }
+    
+
+    q1Scaled = quaternionScalarMult(qTemp, startScale);
+    q2Scaled = quaternionScalarMult(q2, endScale);
+    qSlerp = quaternionAdd(q1Scaled, q2Scaled);
+  }
+  else{
+    qSlerp[0] = -qTemp[1];
+    qSlerp[1] = qTemp[0];
+    qSlerp[2] = -qTemp[3];
+    qSlerp[3] = qTemp[2];
+    
+    startScale = sin((0.5 - mu)*PI);
+    endScale = sin(mu*PI);
+    q1Scaled = quaternionScalarMult(qTemp, startScale);
+    q2Scaled = quaternionScalarMult(qSlerp, startScale);
+    qSlerp = quaternionAdd(q1Scaled, q2Scaled);
+  }
+  
+  return qSlerp;
 }
 
 /* Displays the contents of a 4x4 matrix in the command line */
