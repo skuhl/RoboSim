@@ -879,23 +879,13 @@ public class ArmModel {
       //only move if our movement vector is non-zero
       if(mvLinear[0] != 0 || mvLinear[1] != 0 || mvLinear[2] != 0 || 
          mvRot[0] != 0 || mvRot[1] != 0 || mvRot[2] != 0) {
-<<<<<<< HEAD
+        
         PVector move = new PVector(0, 0, 0);
         //convert to user frame coordinates if currently in a user frame
         for(int i = 0; i < 3; i += 1){
           move.x += mvLinear[i]*currentFrame[i][0];
           move.y += mvLinear[i]*currentFrame[i][1];
           move.z += mvLinear[i]*currentFrame[i][2];
-=======
-        PVector move = new PVector(mvLinear[0], mvLinear[1], mvLinear[2]);
-        // NOTE: Currently only translational motion works for reference frames!
-        if (curCoordFrame == COORD_USER && activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
-          // Convert to User Frame coordinates if currently in a User Frame
-          move = rotate(move, userFrames[activeUserFrame].getAxes());
-        } else if ((curCoordFrame == COORD_WORLD || curCoordFrame == COORD_TOOL) && activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
-          // Convert to Tool Frame coordinates if currently in a Tool Frame
-          move = rotate(move, toolFrames[activeToolFrame].getAxes());
->>>>>>> dev2
         }
         
         //respond to user defined movement
