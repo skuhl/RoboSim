@@ -38,8 +38,8 @@ void saveState() {
       }else{
          for(int i=0;i<programs.size();i++){
            out.write(programs.get(i).toExport().getBytes(Charset.forName("UTF-8")));
-           //String blank = "\n";
-           //out.write(blank.getBytes(Charset.forName("UTF-8")));
+           String blank = "\n";
+           out.write(blank.getBytes(Charset.forName("UTF-8")));
          }
       } 
       out.close();
@@ -164,10 +164,12 @@ int loadPrograms(Path path){
         aProgram = new Program(name);
         int nextRegister = s.nextInt();
         aProgram.loadNextRegister(nextRegister);
-        for(int i=0;i<aProgram.getRegistersLength();i++){
+        for(int i = 0; i < aProgram.getRegistersLength(); i += 1){
           s.next(); // consume token: <Point>
-          Point p = new Point(s.nextFloat(), s.nextFloat(), s.nextFloat(), s.nextFloat(), s.nextFloat(), s.nextFloat(),
-          s.nextFloat(), s.nextFloat(), s.nextFloat(), s.nextFloat(), s.nextFloat(), s.nextFloat());
+          Point p = new Point(s.nextFloat(), s.nextFloat(), s.nextFloat(), 
+                              s.nextFloat(), s.nextFloat(), s.nextFloat(), 
+                              s.nextFloat(), s.nextFloat(), s.nextFloat(), 
+                              s.nextFloat(), s.nextFloat(), s.nextFloat());
           s.next(); // consume token: </Point> 
           aProgram.addRegister(p, i);
         }

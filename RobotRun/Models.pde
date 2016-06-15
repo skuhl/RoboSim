@@ -844,7 +844,7 @@ public class ArmModel {
     }
     
     if(u.x != 0 || u.y != 0 || u.z != 0){
-      tgtRot = rotateQuat(tgtRot, DEG_TO_RAD, u);
+      tgtRot = rotateQuat(tgtRot, theta, u);
       //float[][] tgtMatrix = rotateAxisVector(getRotationMatrix(currentFrame), theta, u.normalize());
       //tgtRot = matrixToQuat(tgtMatrix);
     }
