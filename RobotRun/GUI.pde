@@ -1669,7 +1669,7 @@ public void f1(){
     else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
         
       super_mode = mode;
-      curFrameIdx = active_row;  
+      curFrameIdx = active_row;
       loadFrameDetails(false);
     } 
     else if (mode == ACTIVE_FRAMES) {
@@ -1770,6 +1770,7 @@ public void f2() {
         // Leave the Tool Frame
         if (curCoordFrame == COORD_TOOL) {
           curCoordFrame = COORD_WORLD;
+          armModel.resetFrame();
         }
       } else if (active_row == 2) {
         activeUserFrame = -1;
@@ -1777,6 +1778,7 @@ public void f2() {
         // Leave the User Frame
         if (curCoordFrame == COORD_USER) {
           curCoordFrame = COORD_WORLD;
+          armModel.resetFrame();
         }
       }
       
@@ -1793,13 +1795,13 @@ public void f2() {
       options = new ArrayList<String>();
       
       if (super_mode == NAV_USER_FRAMES) {
-        options.add("1.Three Point");
-        options.add("2.Four Point");
-        options.add("3.Direct Entry");
+        options.add("1. Three Point");
+        options.add("2. Four Point");
+        options.add("3. Direct Entry");
       } else if (super_mode == NAV_TOOL_FRAMES) {
-        options.add("1.Three Point");
-        options.add("2.Six Point");
-        options.add("3.Direct Entry");
+        options.add("1. Three Point");
+        options.add("2. Six Point");
+        options.add("3. Direct Entry");
       }
       mode = PICK_FRAME_METHOD;
       which_option = 0;
@@ -3600,7 +3602,7 @@ public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
     if ((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
         (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
         (axes[2][0] == 0f && axes[2][1] == 0f && axes[2][2] == 0f)) {
-      // One of the three axis vectors is the zreo vector
+      // One of the three axis vectors is the zero vector
       return null;
     }
     
