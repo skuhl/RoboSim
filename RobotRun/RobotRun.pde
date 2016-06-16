@@ -5,6 +5,7 @@ import java.util.*;
 import java.nio.*;
 import java.nio.file.*;
 import java.io.*;
+import java.awt.event.KeyEvent;
 import java.io.Serializable;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -55,7 +56,7 @@ Program currentProgram;
 boolean execSingleInst = false;
 MotionInstruction singleInstruction = null;
 int currentInstruction;
-int EXEC_PROCESSING = 0, EXEC_FAILURE = 1, EXEC_SUCCESS = 2;
+int EXEC_SUCCESS = 0, EXEC_FAILURE = 1;
 
 /*******************************/
 
@@ -83,13 +84,8 @@ public void setup(){
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
-  intermediatePositions = new ArrayList<PVector>();
+  intermediatePositions = new ArrayList<Point>();
   loadState();
-  
-  /*for (int n = 0; n < toolFrames.length; n++) {
-    toolFrames[n] = new Frame();
-    userFrames[n] = new Frame();
-  }*/
    
   // Intialize world objects
   objects = new Object[2];
@@ -105,6 +101,7 @@ public void setup(){
   objects[1] = new Object(250, 125, 500, color(255, 0, 255), color(255, 255, 255));
   
   popMatrix();
+  
   //createTestProgram();
 }
 
@@ -119,11 +116,15 @@ public void draw(){
 
   background(127);
   
+  //execute arm movement
   if (!doneMoving){
+    //run program
     doneMoving = executeProgram(currentProgram, armModel, execSingleInst);
   }
   else{
+    //respond to manual movement from J button presses
     intermediatePositions.clear();
+    armModel.executeLiveMotion();
   }
   
   pushMatrix();
@@ -132,8 +133,6 @@ public void draw(){
   // Keep track of the old coordinate frame of the armModel
   armModel.oldEETMatrix = getTransformationMatrix();
   popMatrix();
-  
-  armModel.executeLiveMotion(); // respond to manual movement from J button presses
   
   hint(ENABLE_DEPTH_TEST);
   background(255);
@@ -157,8 +156,8 @@ public void draw(){
   
   if (COLLISION_DISPLAY) { armModel.drawBoxes(); }
   
-  float[] q = eulerToQuat(armModel.getWPR());
-  //println(String.format("q = %4.3f, %4.3f, %4.3f, %4.3f", q[0], q[1], q[2], q[3]));
+  /*float[] q = eulerToQuat(armModel.getWPR());
+  println(String.format("q = %4.3f, %4.3f, %4.3f, %4.3f", q[0], q[1], q[2], q[3]));*/
   
   noLights();
   
@@ -166,9 +165,9 @@ public void draw(){
   noStroke();
   pushMatrix();
   if(intermediatePositions != null){
-    for(PVector v : intermediatePositions){
+    for(Point p : intermediatePositions){
       pushMatrix();
-      translate(v.x, v.y, v.z);
+      translate(p.pos.x, p.pos.y, p.pos.z);
       sphere(10);
       popMatrix();
     }
@@ -177,7 +176,7 @@ public void draw(){
   //TESTING CODE: DRAW END EFFECTOR POSITION
   pushMatrix();
   noFill();
-  stroke(0, 0, 0);
+  stroke(255, 0, 255);
   applyModelRotation(armModel, true);
   //EE position
   sphere(5);
@@ -236,24 +235,19 @@ public void draw(){
   popMatrix();*/
   // END TESTING CODE
   
-  if (mode == THREE_POINT_MODE && teachPointTMatrices != null) {
-    for (float[][] T : teachPointTMatrices) {
-      pushMatrix();
-      applyMatrix(T[0][0], T[0][1], T[0][2], T[0][3],
-                  T[1][0], T[1][1], T[1][2], T[1][3],
-                  T[2][0], T[2][1], T[2][2], T[2][3],
-                  T[3][0], T[3][1], T[3][2], T[3][3]);
-      noFill();
-      stroke(255, 0, 0);
-      sphere(3);
-      
-      popMatrix();
-    }
+  /* Draw a point in space */
+  if (ref_point != null) {
+    pushMatrix();
+    translate(ref_point.x, ref_point.y, ref_point.z);
+    
+    noFill();
+    stroke(0, 150, 200);
+    sphere(5);
+    
+    popMatrix();
   }
   
-  drawEndEffectorGridMapping();
-  
-  stroke(255, 0, 0);
+  /*stroke(255, 0, 0);
   // Draw x origin line
   line( -5000, PLANE_Z, 0, 5000, PLANE_Z, 0 );
   // Draw y origin line
@@ -269,6 +263,10 @@ public void draw(){
     line(-5000, PLANE_Z, -100 * l, 5000, PLANE_Z, -100 * l);
   }
   
+  drawEndEffectorGridMapping();*/
+  displayFrameAxes();
+  displayTeachPoints();
+  
   popMatrix();
   
   hint(DISABLE_DEPTH_TEST);
@@ -282,7 +280,7 @@ void applyCamera() {
   translate(panX, panY); // for pan button
   scale(myscale);
   rotateX(myRotX); // for rotate button
-  rotateY(myRotY); // for rotate button /* */
+  rotateY(myRotY); // for rotate button
 }
 
 /* Handles the drawing of world objects as well as collision detection of world objects and the
@@ -345,4 +343,124 @@ public void handleWorldObjects() {
     // Draw world object
     objects[idx].draw();
   }
+}
+
+/* Display any currently taught points during the processes of either the 3-Point, 4-Point, or 6-Point Methods. */
+public void displayTeachPoints() {
+  // Teach points are displayed only while the Robot is being taught a frame
+  if (teachPointTMatrices != null && (mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE)) {
+    
+    color[] pt_colors = new color[teachPointTMatrices.size()];
+    
+    // First point
+    if (teachPointTMatrices.size() >= 1) {
+      if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
+        pt_colors[0] = color(130, 130, 130);
+      } else {
+        pt_colors[0] = color(255, 130, 0);
+      }
+      // Second point
+      if (teachPointTMatrices.size() >= 2) {
+        if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
+          pt_colors[1] = color(130, 130, 130);
+        } else {
+          pt_colors[1] = color(125, 0, 0);
+        }
+        // Thrid point
+        if (teachPointTMatrices.size() >= 3) {
+          if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
+            pt_colors[2] = color(130, 130, 130);
+          } else {
+            pt_colors[2] = color(0, 125, 0);
+          }
+          // Fourth point
+          if (teachPointTMatrices.size() >= 4) {
+            if (mode == SIX_POINT_MODE) {
+              pt_colors[3] = color(255, 130, 0);
+            } else {
+              pt_colors[3] = color(0, 0, 125);
+            }
+            // Fifth point
+            if (teachPointTMatrices.size() >= 5) {
+              pt_colors[4] = color(125, 0, 0);
+              // Sixth point
+              if (teachPointTMatrices.size() == 6) {
+                pt_colors[5] = color(0, 125, 0);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Display points in the teaching point set
+    for (int idx = 0; idx < teachPointTMatrices.size(); ++idx) {
+      float[][] T = teachPointTMatrices.get(idx);
+      
+      pushMatrix();
+      applyMatrix(T[0][0], T[0][1], T[0][2], T[0][3],
+                  T[1][0], T[1][1], T[1][2], T[1][3],
+                  T[2][0], T[2][1], T[2][2], T[2][3],
+                  T[3][0], T[3][1], T[3][2], T[3][3]);
+      
+      // Draw color-coded spheres for each point
+      noFill();
+      stroke(pt_colors[idx]);
+      sphere(3);
+      
+      popMatrix();
+    }
+  }
+}
+
+/* Displays the current axes and the origin of the current frame of reference. */
+public void displayFrameAxes() {
+  
+   if ((curCoordFrame == COORD_WORLD || curCoordFrame == COORD_TOOL) && activeToolFrame != -1) {
+     /* Draw the axes of the active tool frame */
+     displayOriginAxes(toolFrames[activeToolFrame].getWorldAxes(), toVectorArray( armModel.getEEPos() ));
+   } else if (curCoordFrame == COORD_USER && activeUserFrame != -1) {
+     /* Draw the axes of the active user frame */
+     displayOriginAxes(userFrames[activeUserFrame].getWorldAxes(), toVectorArray( userFrames[activeUserFrame].getOrigin() ));
+   } else if (curCoordFrame == COORD_WORLD) {
+     /* Draw World Frame coordinate system */
+     displayOriginAxes(new float[][] { {-1f, 0f, 0f}, {0f, 0f, 1f}, {0f, -1f, 0f} }, new float[] {0f, 0f, 0f});
+   }
+}
+
+/**
+ * Given a set of 3 orthogonal unit vectors a point in space, lines are
+ * drawn for each of the three vectors, which intersect at the origin point.
+ *
+ * @param axesVectors  A set of three orthogonal unti vectors
+ * @param origin       A point in space representing the intersection of the
+ *                     three unit vectors
+ */
+public void displayOriginAxes(float[][] axesVectors, float[] origin) {
+    
+    pushMatrix();
+    applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin[0],
+                axesVectors[0][1], axesVectors[1][1], axesVectors[2][1],  origin[1],
+                axesVectors[0][2], axesVectors[1][2], axesVectors[2][2],  origin[2],
+                0, 0, 0, 1);
+    // X axis
+    stroke(255, 0, 0);
+    line(-5000, 0, 0, 5000, 0, 0);
+    // Y axis
+    stroke(0, 255, 0);
+    line(0, -5000, 0, 0, 5000, 0);
+    // Z axis
+    stroke(0, 0, 255);
+    line(0, 0, -5000, 0, 0, 5000);
+    
+    // Draw a sphere on the positive direction fo each axis
+    stroke(0);
+    translate(50, 0, 0);
+    sphere(4);
+    translate(-50, 50, 0);
+    sphere(4);
+    translate(0, -50, 50);
+    sphere(4);
+    
+    popMatrix();
 }

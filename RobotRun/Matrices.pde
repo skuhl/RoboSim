@@ -1,16 +1,31 @@
 /* Transforms the given vector from the coordinate system defined by the given
- * transformation matrix. */
+ * transformation matrix (column major order). */
 public PVector transform(PVector v, float[][] tMatrix) {
   if (tMatrix.length != 4 || tMatrix[0].length != 4) {
     return null;
   }
 
   PVector u = new PVector();
-
+  // Apply the transformation matrix to the given vector
   u.x = v.x * tMatrix[0][0] + v.y * tMatrix[0][1] + v.z * tMatrix[0][2] + tMatrix[0][3];
   u.y = v.x * tMatrix[1][0] + v.y * tMatrix[1][1] + v.z * tMatrix[1][2] + tMatrix[1][3];
   u.z = v.x * tMatrix[2][0] + v.y * tMatrix[2][1] + v.z * tMatrix[2][2] + tMatrix[2][3];
 
+  return u;
+}
+
+/* Transforms the given vector by the given 3x3 rotation matrix (row major order). */
+public PVector rotate(PVector v, float[][] rotMatrix) {
+  if (v == null || rotMatrix == null || rotMatrix.length != 3 || rotMatrix[0].length != 3) {
+    return null;
+  }
+  
+  PVector u = new PVector();
+  // Apply the rotation matrix to the given vector
+  u.x = v.x * rotMatrix[0][0] + v.y * rotMatrix[1][0] + v.z * rotMatrix[2][0];
+  u.y = v.x * rotMatrix[0][1] + v.y * rotMatrix[1][1] + v.z * rotMatrix[2][1];
+  u.z = v.x * rotMatrix[0][2] + v.y * rotMatrix[1][2] + v.z * rotMatrix[2][2];
+  
   return u;
 }
 
@@ -54,7 +69,7 @@ public float[][] invertHCMatrix(float[][] m) {
 }
 
 /* Returns a 4x4 vector array which reflects the current transform matrix on the top
- * of the stack */
+ * of the stack (ignores scaling values though) */
 public float[][] getTransformationMatrix() {
   float[][] transform = new float[4][4];
 
@@ -95,6 +110,38 @@ public PVector getCoordFromMatrix(float x, float y, float z) {
   vector.z = modelZ(x, y, z);
 
   return vector;
+}
+
+
+
+/* Calculate v x v */
+public float[] crossProduct(float[] v, float[] u) {
+  if (v.length != 3 && v.length != u.length) { return null; }
+  
+  float[] w = new float[v.length];
+  // [a, b, c] x [d, e, f] = [ bf - ce, cd - af, ae - bd ]
+  w[0] = v[1] * u[2] - v[2] * u[1];
+  w[1] = v[2] * u[0] - v[0] * u[2];
+  w[2] = v[0] * u[1] - v[1] * u[0];
+  
+  return w;
+}
+
+/* Converts a PVector object to a float[] */
+public float[] toVectorArray(PVector v) {
+  return new float[] { v.x, v.y, v.z };
+}
+
+/* Returns a vector with the opposite sign
+ * as the given vector. */
+public float[] negate(float[] v) {
+  float[] u = new float[v.length];
+  
+  for (int e = 0; e < v.length; ++e) {
+    u[e] = -v[e];
+  }
+  
+  return u;
 }
 
 //calculates rotation matrix from euler angles
@@ -325,7 +372,7 @@ float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
 /* Calculates the result of a rotation of quaternion 'p'
  * about axis 'u' by 'theta' degrees
  */
-float[] rotateQuat(float[] p, float theta, PVector u) {
+float[] rotateQuat(float[] p, PVector u, float theta) {
   float[] q = new float[4];
   
   q[0] = cos(theta/2);
@@ -333,9 +380,36 @@ float[] rotateQuat(float[] p, float theta, PVector u) {
   q[2] = sin(theta/2)*u.y;
   q[3] = sin(theta/2)*u.z;
   
-  float[] qp = quaternionMult(q, p);
+  float[] pq = quaternionMult(p, q);
 
-  return qp;
+  return pq;
+}
+
+PVector rotateVectorQuat(PVector v, PVector u, float theta){
+  float[] q = new float[4];
+  float[] p = new float[4];
+  float[] q_inv = new float[4];
+  float[] p_prime = new float[4];
+  
+  q[0] = cos(theta/2);
+  q[1] = sin(theta/2)*u.x;
+  q[2] = sin(theta/2)*u.y;
+  q[3] = sin(theta/2)*u.z;
+  
+  p[0] = 0;
+  p[1] = v.x;
+  p[2] = v.y;
+  p[3] = v.z;
+  
+  q_inv[0] = q[0];
+  q_inv[1] = -q[1];
+  q_inv[2] = -q[2];
+  q_inv[3] = -q[3];
+  
+  p_prime = quaternionMult(q, p);
+  p_prime = quaternionMult(p_prime, q_inv);
+
+  return new PVector(p_prime[1], p_prime[2], p_prime[3]);
 }
 
 /* Given 2 quaternions, calculates the quaternion representing the 
@@ -360,6 +434,7 @@ float[] calculateQuatOffset(float[] q1, float[] q2){
   return qr;
 }
 
+//returns the result of a quaternion 'q1' multiplied by quaternion 'q2'
 float[] quaternionMult(float[] q1, float[] q2) {
   float[] r = new float[4];
   r[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
@@ -370,21 +445,90 @@ float[] quaternionMult(float[] q1, float[] q2) {
   return r;
 }
 
+//returns the result of a quaternion 'q' multiplied by scalar 's'
+float[] quaternionScalarMult(float[] q, float s){
+  float[] qr = new float[4];
+  qr[0] = q[0]*s;
+  qr[1] = q[1]*s;
+  qr[2] = q[2]*s;
+  qr[3] = q[3]*s;
+  return qr;
+}
+
+//returns the result of the addition of two quaternions, 'q1' and 'q2'
+float[] quaternionAdd(float[] q1, float[] q2){
+  float[] qr = new float[4];
+  qr[0] = q1[0] + q2[0];
+  qr[1] = q1[1] + q2[1];
+  qr[2] = q1[2] + q2[2];
+  qr[3] = q1[3] + q2[3];
+  return qr;
+}
+
 //returns the magnitude of the input quaternion 'q'
 float calculateQuatMag(float[] q){
   return sqrt(pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2));
 }
 
-/* Displays the contents of a 4x4 matrix in the command line */
-public void printHCMatrix(float[][] m) {
-  if (m.length != 4 || m[0].length != 4) { 
-    return;
+/* Given two input quaternions, 'q1' and 'q2', computes the spherical-
+ * linear interpolation from 'q1' to 'q2' for a given fraction of the
+ * complete transformation 'q1' to 'q2', denoted by 0 <= 'mu' <= 1. 
+ */
+float[] quaternionSlerp(float[] q1, float[] q2, float mu){
+  float[] qSlerp = new float[4];
+  float[] qTemp = new float[4];
+  float[] q1Scaled = new float[4];
+  float[] q2Scaled = new float[4];
+  float startScale, endScale;
+  float cOmega = 0;
+  
+  for(int i = 0; i < 4; i += 1)
+    cOmega += q1[i]*q2[i];
+    
+  if(cOmega < 0){
+    cOmega = -cOmega;
+    qTemp = quaternionScalarMult(q1, -1);
   }
+  
+  if(1 + cOmega > 1e-10){
+    if(1 - cOmega > 1e-10){
+      float omega = acos(cOmega);
+      float sOmega = sin(omega);
+      startScale = sin((1 - mu)*omega/sOmega);
+      endScale = sin(mu*omega)/sOmega;
+    }
+    else{
+      startScale = 1 - mu;
+      endScale = mu;
+    }
+    
 
-  for (int r = 0; r < m.length; ++r) {
-    String row = String.format("[ %5.4f %5.4f %5.4f %5.4f ]\n", m[r][0], m[r][1], m[r][2], m[r][3]);
-    print(row);
+    q1Scaled = quaternionScalarMult(qTemp, startScale);
+    q2Scaled = quaternionScalarMult(q2, endScale);
+    qSlerp = quaternionAdd(q1Scaled, q2Scaled);
   }
+  else{
+    qSlerp[0] = -qTemp[1];
+    qSlerp[1] = qTemp[0];
+    qSlerp[2] = -qTemp[3];
+    qSlerp[3] = qTemp[2];
+    
+    startScale = sin((0.5 - mu)*PI);
+    endScale = sin(mu*PI);
+    q1Scaled = quaternionScalarMult(qTemp, startScale);
+    q2Scaled = quaternionScalarMult(qSlerp, startScale);
+    qSlerp = quaternionAdd(q1Scaled, q2Scaled);
+  }
+  
+  //qSlerp[0] = q1[0]*(1-mu) + q2[0]*mu;
+  //qSlerp[1] = q1[1]*(1-mu) + q2[1]*mu;
+  //qSlerp[2] = q1[2]*(1-mu) + q2[2]*mu;
+  //qSlerp[3] = q1[3]*(1-mu) + q2[3]*mu;
+  
+  float mag = sqrt(pow(qSlerp[0], 2)+pow(qSlerp[1], 2)+pow(qSlerp[2], 2)+pow(qSlerp[3], 2));
+  qSlerp = quaternionScalarMult(qSlerp, 1f/mag);
+  
+  return qSlerp;
 }
 
 /* Returns a string represenation of the given matrix.

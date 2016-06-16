@@ -7,54 +7,102 @@ Frame[] userFrames = new Frame[10];
 
 
 public class Point  {
-  public PVector c; // coordinates
-  public PVector a; // angles
-  public float[] j = new float[6]; // joint values
+  public PVector pos; // position
+  public float[] ori = new float[4]; // orientation
+  public float[] joints = new float[6]; // joint values
   
   public Point() {
-    c = new PVector(0,0,0);
-    a = new PVector(0,0,0);
-    for (int n = 0; n < j.length; n++) j[n] = 0;
+    pos = new PVector(0,0,0);
+    ori[0] = 1;
+    ori[1] = 0;
+    ori[2] = 0;
+    ori[3] = 0; 
+    for (int n = 0; n < joints.length; n++) joints[n] = 0;
   }
   
-  public Point(float x, float y, float z, float w, float p, float r,
+  public Point(float x, float y, float z, float r, float i, float j, float k,
                float j1, float j2, float j3, float j4, float j5, float j6)
   {
-    c = new PVector(x,y,z);
-    a = new PVector(w,p,r);
-    j[0] = j1;
-    j[1] = j2;
-    j[2] = j3;
-    j[3] = j4;
-    j[4] = j5;
-    j[5] = j6;
+    pos = new PVector(x,y,z);
+    ori[0] = r;
+    ori[1] = i;
+    ori[2] = j;
+    ori[3] = k;
+    joints[0] = j1;
+    joints[1] = j2;
+    joints[2] = j3;
+    joints[3] = j4;
+    joints[4] = j5;
+    joints[5] = j6;
   }
   
+  public Point(float x, float y, float z, float r, float i, float j, float k){
+    pos = new PVector(x,y,z);
+    ori[0] = r;
+    ori[1] = i;
+    ori[2] = j;
+    ori[3] = k;
+  }
+  
+  public Point(PVector position, float[] orientation){
+    pos = position;
+    ori = orientation;
+  }
+  
+  ////create a new point with position, orientation, and associated joint angles
+  //public Point(float x, float y, float z, float w, float p, float r,
+  //             float j1, float j2, float j3, float j4, float j5, float j6)
+  //{
+  //  pos = new PVector(x,y,z);
+  //  ori = eulerToQuat(new PVector(w,p,r));
+  //  joints[0] = j1;
+  //  joints[1] = j2;
+  //  joints[2] = j3;
+  //  joints[3] = j4;
+  //  joints[4] = j5;
+  //  joints[5] = j6;
+  //}
+  
+  ////create a new point with position and orientation only
+  //public Point(float x, float y, float z, float w, float p, float r){
+  //  pos = new PVector(x,y,z);
+  //  ori = eulerToQuat(new PVector(w,p,r));
+  //}
+  
+  //public Point(PVector position, PVector orientation){
+  //  pos = position;
+  //  ori = eulerToQuat(orientation);
+  //}
+  
   public Point clone() {
-    return new Point(c.x, c.y, c.z, a.x, a.y, a.z, j[0], j[1], j[2], j[3], j[4], j[5]);
+    return new Point(pos.x, pos.y, pos.z, 
+                     ori[0], ori[1], ori[2], ori[3], 
+                     joints[0], joints[1], joints[2], joints[3], joints[4], joints[5]);
   }
   
   public String toExport(){
      String ret = "<Point> ";
-     ret += Float.toString(c.x);
+     ret += Float.toString(pos.x);
      ret += " ";
-     ret += Float.toString(c.y);
+     ret += Float.toString(pos.y);
      ret += " ";
-     ret += Float.toString(c.z);
+     ret += Float.toString(pos.z);
      ret += " ";
-     ret += Float.toString(a.x);
+     ret += Float.toString(ori[0]);
      ret += " ";
-     ret += Float.toString(a.y);
+     ret += Float.toString(ori[1]);
      ret += " ";
-     ret += Float.toString(a.z);
+     ret += Float.toString(ori[2]);
      ret += " ";
-     for (int i=0;i<j.length-1;i++){
-        ret += Float.toString(j[i]);
+     ret += Float.toString(ori[3]);
+     ret += " ";
+     for (int i=0;i<joints.length-1;i++){
+        ret += Float.toString(joints[i]);
         ret += " ";
      }
-     ret += Float.toString(j[j.length-1]);
+     ret += Float.toString(joints[joints.length-1]);
      ret += " ";
-     ret += "</Point>";     
+     ret += "</Point>";  
      return ret;
   }
 } // end Point class
@@ -62,22 +110,29 @@ public class Point  {
 public class Frame {
   private PVector origin;
   private PVector wpr;
-  private PVector[] axes = new PVector[3];
+  // The unit vectors representing the x, y,z axes (in row major order)
+  private float[][] axes;
   
   public Frame() {
     origin = new PVector(0,0,0);
     wpr = new PVector(0,0,0);
-    for (int n = 0; n < axes.length; n++) axes[n] = new PVector(0,0,0);
+    axes = new float[3][3];
+    // Create identity matrix
+    for (int diag = 0; diag < 3; ++diag) {
+      axes[diag][diag] = 1f;
+    }
   }
   
   /* Used for loading Frames from a file */
-  public Frame(PVector origin, PVector wpr, PVector[] axes) {
+  public Frame(PVector origin, PVector wpr, float[][] axesVectors) {
     this.origin = origin;
     this.wpr = wpr;
-    this.axes = new PVector[axes.length];
+    this.axes = new float[3][3];
     
-    for (int idx = 0; idx < this.axes.length; ++idx) {
-      this.axes[idx] = axes[idx];
+    for (int row = 0; row < 3; ++row) {
+      for (int col = 0; col < 3; ++col) {
+        axes[row][col] = axesVectors[row][col];
+      }
      }
   }
   
@@ -85,15 +140,42 @@ public class Frame {
   public void setOrigin(PVector in) { origin = in; }
   public PVector getWpr() { return wpr; }
   public void setWpr(PVector in) { wpr = in; }
-  
-  public PVector getAxis(int idx) {
-    if (idx >= 0 && idx < axes.length) return axes[idx];
-    else return null;
+  /* Returns a set of axes unit vectors representing the axes
+   * of the frame in reference to the Native Coordinate System. */
+  public float[][] getNativeAxes() { return axes.clone(); }
+  /* Returns a set of axes unit vectors representing the axes
+   * of the frame in reference to the World Coordinate System. */
+  public float[][] getWorldAxes() {
+    float[][] wAxes = new float[3][3];
+    
+    for (int col = 0; col < wAxes[0].length; ++col) {
+      wAxes[0][col] = -axes[0][col];
+      wAxes[1][col] = axes[2][col];
+      wAxes[2][col] = -axes[1][col];
+    }
+    
+    /*for (int row = 0; row < wAxes[0].length; ++row) {
+      wAxes[row][0] = -axes[row][0];
+      wAxes[row][1] = axes[row][2];
+      wAxes[row][2] = -axes[row][1];
+    }*/
+    
+    return wAxes;
   }
   
   public void setAxis(int idx, PVector in) {
-    if (idx >= 0 && idx < axes.length) axes[idx] = in;
-    if (idx == 2) wpr = vectorConvertTo(new PVector(1,1,1), axes[0], axes[1], axes[2]);
+    
+    if (idx >= 0 && idx < axes.length) {
+      axes[idx][0] = in.x;
+      axes[idx][1] = in.y;
+      axes[idx][2] = in.z;
+      
+      wpr = matrixToEuler(axes);
+    }
+  }
+  
+  public void setAxes(float[][] axesVectors) {
+    axes = axesVectors.clone();
   }
   
   /* Used for saving the Frame to a file */
@@ -104,11 +186,11 @@ public class Frame {
     str += Float.toString(origin.x) + " " + Float.toString(origin.y) + " " + Float.toString(origin.z) + " ";
     str += Float.toString(wpr.x) + " " + Float.toString(wpr.y) + " "  + Float.toString(wpr.z) + " ";
     
-    for (int idx = 0; idx < axes.length; ++idx) {
-      str += Float.toString(axes[idx].x) + " " + Float.toString(axes[idx].y) + " "  + Float.toString(axes[idx].z) + " ";
+    for (int row = 0; row < 3; ++row) {
+        str += Float.toString(axes[row][0]) + " " + Float.toString(axes[row][1]) + " "  + Float.toString(axes[row][2]) + " ";
     }
     
-    str+= "</Frame>";
+    str += "</Frame>";
     return str;
   }
 } // end Frame class
@@ -143,25 +225,26 @@ public class Program  {
      ret += " ";
      ret += Integer.toString(nextRegister);
      ret += " ";
-     for(int i=0; i<1000; i++){
-        ret += p[i].toExport();
-        ret += " ";
+     ret += "\n";
+     for(int i = 0; i < p.length; i += 1){
+       ret += "  "; 
+       ret += p[i].toExport();
+       ret += "\n"; 
      }
-     for(int i=0;i<instructions.size();i++){
+     for(int i = 0; i < instructions.size(); i += 1){
         Instruction ins = instructions.get(i);
+        ret += "  ";
         if (ins instanceof MotionInstruction){
            MotionInstruction tmp = (MotionInstruction) ins;
            ret += tmp.toExport();
-           ret += " ";
         }else if (ins instanceof FrameInstruction){
            FrameInstruction tmp = (FrameInstruction) ins;
            ret += tmp.toExport();
-           ret += " ";
         }else if (ins instanceof ToolInstruction){
            ToolInstruction tmp = (ToolInstruction) ins;
            ret += tmp.toExport();
-           ret += " ";
         }
+        ret += "\n";
      }
      ret += "</Program> ";
      return ret;
@@ -228,9 +311,7 @@ public int addProgram(Program p) {
   }
 }
 
-public  class Instruction  {
-}
-
+public  class Instruction  {}
 
 public final class MotionInstruction extends Instruction  {
   private int motionType;
@@ -287,15 +368,14 @@ public final class MotionInstruction extends Instruction  {
       Point out;
       if (globalRegister) out = pr[register].clone();
       else out = parent.p[register].clone();
-      out.c = convertWorldToNative(out.c);
+      out.pos = convertWorldToNative(out.pos);
       return out;
     } else {
       Point ret;
       if (globalRegister) ret = pr[register].clone();
       else ret = parent.p[register].clone();
       if (userFrame != -1) {
-        PVector[] frame = userFrames[userFrame].axes;
-        ret.c = vectorConvertFrom(ret.c, frame[0], frame[1], frame[2]);
+        ret.pos = rotate(ret.pos, userFrames[userFrame].getNativeAxes());
       }
       return ret;
     }
