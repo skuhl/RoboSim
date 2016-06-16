@@ -156,8 +156,8 @@ public void draw(){
   
   if (COLLISION_DISPLAY) { armModel.drawBoxes(); }
   
-  float[] q = eulerToQuat(armModel.getWPR());
-  //println(String.format("q = %4.3f, %4.3f, %4.3f, %4.3f", q[0], q[1], q[2], q[3]));
+  /*float[] q = eulerToQuat(armModel.getWPR());
+  println(String.format("q = %4.3f, %4.3f, %4.3f, %4.3f", q[0], q[1], q[2], q[3]));*/
   
   noLights();
   
@@ -345,6 +345,7 @@ public void handleWorldObjects() {
   }
 }
 
+/* Display any currently taught points during the processes of either the 3-Point, 4-Point, or 6-Point Methods. */
 public void displayTeachPoints() {
   // Teach points are displayed only while the Robot is being taught a frame
   if (teachPointTMatrices != null && (mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE)) {
@@ -412,16 +413,35 @@ public void displayTeachPoints() {
   }
 }
 
+/* Displays the current axes and the origin of the current frame of reference. */
 public void displayFrameAxes() {
-  if ((curCoordFrame == COORD_WORLD || curCoordFrame == COORD_TOOL) && activeToolFrame != -1) {
-    /* Draw the axes of the active tool frame */
-    float[][] axes = toolFrames[activeToolFrame].getNativeAxes();
-    PVector origin = armModel.getEEPos();
+  
+   if ((curCoordFrame == COORD_WORLD || curCoordFrame == COORD_TOOL) && activeToolFrame != -1) {
+     /* Draw the axes of the active tool frame */
+     displayOriginAxes(toolFrames[activeToolFrame].getWorldAxes(), toVectorArray( armModel.getEEPos() ));
+   } else if (curCoordFrame == COORD_USER && activeUserFrame != -1) {
+     /* Draw the axes of the active user frame */
+     displayOriginAxes(userFrames[activeUserFrame].getWorldAxes(), toVectorArray( userFrames[activeUserFrame].getOrigin() ));
+   } else if (curCoordFrame == COORD_WORLD) {
+     /* Draw World Frame coordinate system */
+     displayOriginAxes(new float[][] { {-1f, 0f, 0f}, {0f, 0f, 1f}, {0f, -1f, 0f} }, new float[] {0f, 0f, 0f});
+   }
+}
+
+/**
+ * Given a set of 3 orthogonal unit vectors a point in space, lines are
+ * drawn for each of the three vectors, which intersect at the origin point.
+ *
+ * @param axesVectors  A set of three orthogonal unti vectors
+ * @param origin       A point in space representing the intersection of the
+ *                     three unit vectors
+ */
+public void displayOriginAxes(float[][] axesVectors, float[] origin) {
     
     pushMatrix();
-    applyMatrix(axes[0][0], axes[1][0], axes[2][0], origin.x,
-                axes[0][1], axes[1][1], axes[2][1],  origin.y,
-                axes[0][2], axes[1][2], axes[2][2],  origin.z,
+    applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin[0],
+                axesVectors[0][1], axesVectors[1][1], axesVectors[2][1],  origin[1],
+                axesVectors[0][2], axesVectors[1][2], axesVectors[2][2],  origin[2],
                 0, 0, 0, 1);
     // X axis
     stroke(255, 0, 0);
@@ -443,35 +463,4 @@ public void displayFrameAxes() {
     sphere(4);
     
     popMatrix();
-  } else if (curCoordFrame == COORD_USER && activeUserFrame != -1) {
-    /* Draw the axes of the active user frame */
-    float[][] axes = userFrames[activeUserFrame].getNativeAxes();
-    PVector origin = userFrames[activeUserFrame].getOrigin();
-    
-    pushMatrix();
-    applyMatrix(axes[0][0], axes[1][0], axes[2][0], origin.x,
-                axes[0][1], axes[1][1], axes[2][1],  origin.y,
-                axes[0][2], axes[1][2], axes[2][2],  origin.z,
-                0, 0, 0, 1);
-    // X axis
-    stroke(255, 0, 0);
-    line(-5000, 0, 0, 5000, 0, 0);
-    // Y axis
-    stroke(0, 255, 0);
-    line(0, -5000, 0, 0, 5000, 0);
-    // Z axis
-    stroke(0, 0, 255);
-    line(0, 0, -5000, 0, 0, 5000);
-    
-    // Draw a sphere on the positive direction fo each axis
-    stroke(0);
-    translate(50, 0, 0);
-    sphere(4);
-    translate(-50, 50, 0);
-    sphere(4);
-    translate(0, -50, 50);
-    sphere(4);
-    
-    popMatrix();
-  }
 }
