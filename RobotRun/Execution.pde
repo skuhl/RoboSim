@@ -6,10 +6,10 @@ int interMotionIdx = -1;
 final int COORD_JOINT = 0, COORD_WORLD = 1, COORD_TOOL = 2, COORD_USER = 3;
 int curCoordFrame = COORD_JOINT;
 float liveSpeed = 0.1;
+boolean executingInstruction = false;
 
 int errorCounter;
 String errorText;
-
 public static final boolean COLLISION_DISPLAY = false;
 
 /**
@@ -509,7 +509,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
 
 int calculateIKJacobian(Point p){
   PVector pos = p.pos;
-  float[] rot = eulerToQuat(p.ori);
+  float[] rot = p.ori;
   return calculateIKJacobian(pos, rot);
 }
 
@@ -538,10 +538,8 @@ void calculateIntermediatePositions(Point start, Point end) {
   
   PVector p1 = start.pos;
   PVector p2 = end.pos;
-  PVector o1 = start.ori;
-  PVector o2 = end.ori;
-  float[] q1 = eulerToQuat(o1);
-  float[] q2 = eulerToQuat(o2);
+  float[] q1 = start.ori;
+  float[] q2 = end.ori;
   float[] qi = new float[4];
   
   float mu = 0;
@@ -550,13 +548,14 @@ void calculateIntermediatePositions(Point start, Point end) {
   for (int n = 0; n < numberOfPoints; n++) {
     mu += increment;
     
-    qi = quaternionSlerp(q1, q2, mu);
+    qi = quaternionSlerp(q1, q2, mu - increment);
     intermediatePositions.add(new Point(new PVector(
       p1.x * (1 - mu) + (p2.x * mu),
       p1.y * (1 - mu) + (p2.y * mu),
       p1.z * (1 - mu) + (p2.z * mu)),
-      quatToEuler(qi)));
+      qi));
   }
+  
   interMotionIdx = 0;
 } // end calculate intermediate positions
 
@@ -645,6 +644,68 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
 } // end calculate continuous positions
 
 /**
+ * Creates an arc from 'start' to 'end' that passes through the point specified
+ * by 'inter.'
+ * @param start First point
+ * @param inter Second point
+ * @param end Third point
+ */
+void calculateArc(Point start, Point inter, Point end){  
+  calculateDistanceBetweenPoints();
+  intermediatePositions.clear();
+  
+  PVector a = start.pos;
+  PVector b = inter.pos;
+  PVector c = end.pos;
+  float[] q1 = start.ori;
+  float[] q2 = end.ori;
+  float[] qi = new float[4];
+  
+  PVector[] plane = new PVector[3];
+  plane = createPlaneFrom3Points(a, b, c);
+  PVector center = circleCenter(vectorConvertTo(a, plane[0], plane[1], plane[2]),
+                                vectorConvertTo(b, plane[0], plane[1], plane[2]),
+                                vectorConvertTo(c, plane[0], plane[1], plane[2]));
+  center = vectorConvertFrom(center, plane[0], plane[1], plane[2]);
+  // Now get the radius (easy)
+  float r = dist(center.x, center.y, center.z, a.x, a.y, a.z);
+  // Calculate a vector from the center to point a
+  PVector u = new PVector(a.x-center.x, a.y-center.y, a.z-center.z);
+  u.normalize();
+  // get n (a normal of the plane created by the 3 input points)
+  PVector tmp1 = new PVector(a.x-b.x, a.y-b.y, a.z-b.z);
+  PVector tmp2 = new PVector(a.x-c.x, a.y-c.y, a.z-c.z);
+  PVector n = tmp1.cross(tmp2);
+  tmp1.normalize();
+  tmp2.normalize();
+  n.normalize();
+  //calculate the angle between the start and end points
+  PVector vec1 = new PVector(a.x-center.x, a.y-center.y, a.z-center.z);
+  PVector vec2 = new PVector(c.x-center.x, c.y-center.y, c.z-center.z);
+  vec1.normalize();
+  vec2.normalize();
+  float theta = atan2(vec1.cross(vec2).mag(), vec1.dot(vec2));
+  
+  // Now plug all that into the parametric equation
+  //   P = r*cos(t)*u + r*sin(t)*nxu+center [x is cross product]
+  // to compute our points along the circumference.
+  // We actually only want to create an arc from A to C, not the full
+  // circle, so detect when we're close to those points to decide
+  // when to start and stop adding points.
+  float angle = 0, mu = 0;
+  int numPoints = (int)(r*theta/distanceBetweenPoints);
+  float inc = 1/(float)numPoints;
+  float angleInc = (theta)/(float)numPoints;
+  for (int i = 0; i < numPoints; i += 1) {
+    PVector pos = rotateVectorQuat(u, n, angle).mult(r).add(center);
+    qi = quaternionSlerp(q1, q2, mu);
+    intermediatePositions.add(new Point(pos, qi));
+    angle += angleInc;
+    mu += inc;
+  }
+}
+
+/**
  * Initiate a new continuous (curved) motion instruction.
  * @param model Arm model to use
  * @param start Start point
@@ -680,23 +741,13 @@ void beginNewLinearMotion(Point start, Point end) {
  * @param p3 Point 3
  */
 void beginNewCircularMotion(Point start, Point inter, Point end) {
-  // Generate the circle circumference,
-  // then turn it into an arc from the current point to the end point
-  PVector p1 = start.pos;
-  PVector p2 = inter.pos;
-  PVector p3 = end.pos;
-  
-  calculateDistanceBetweenPoints();
-  ArrayList<PVector> circle = createCircleCircumference(p1, p2, p3, distanceBetweenPoints);
-  intermediatePositions = createArc(circle, p1, p2, p3);
+  calculateArc(start, inter, end);
   interMotionIdx = 0;
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0){
     calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
 }
-
-boolean executingInstruction = false;
 
 /**
  * Move the arm model between two points according to its current speed.
@@ -810,135 +861,6 @@ PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {
   return coordinateSystem;
 }
 
-
-/**
- * Create points around the circumference of a circle calculated from
- * three input points.
- * @param a First point
- * @param b Second point
- * @param c Third point
- * @param numPoints Number of points to place on the circle circumference
- * @return List of points comprising a circle circumference that intersects
- *         the three input points.
- */
-ArrayList<PVector> createCircleCircumference(PVector a, PVector b, PVector c, float dist){  
-  // First, we need to compute the value of some variables that we'll
-  // use in a parametric equation to get our answer.
-  // First up is computing the circle center. This is much easier to
-  // do in 2D, so first we'll convert our three input points into a 2D
-  // plane, compute the circle center in those coordinates, then convert
-  // back to our native 3D frame.
-  PVector[] plane = new PVector[3];
-  plane = createPlaneFrom3Points(a, b, c);
-  PVector center = circleCenter(vectorConvertTo(a, plane[0], plane[1], plane[2]),
-                                vectorConvertTo(b, plane[0], plane[1], plane[2]),
-                                vectorConvertTo(c, plane[0], plane[1], plane[2]));
-  center = vectorConvertFrom(center, plane[0], plane[1], plane[2]);
-  // Now get the radius (easy)
-  float r = dist(center.x, center.y, center.z, a.x, a.y, a.z);
-  // Get u (a unit vector from the center to some point on the circumference)
-  PVector u = new PVector(center.x-a.x, center.y-a.y, center.z-a.z);
-  u.normalize();
-  // get n (a normal of the plane created by the 3 input points)
-  PVector tmp1 = new PVector(a.x-b.x, a.y-b.y, a.z-b.z);
-  PVector tmp2 = new PVector(a.x-c.x, a.y-c.y, a.z-c.z);
-  PVector n = tmp1.cross(tmp2);
-  n.normalize();
-  
-  // Now plug all that into the parametric equation
-  //   P = r*cos(t)*u + r*sin(t)*nxu+center [x is cross product]
-  // to compute our points along the circumference.
-  // We actually only want to create an arc from A to C, not the full
-  // circle, so detect when we're close to those points to decide
-  // when to start and stop adding points.
-  float angle = 0;
-  int numPoints = (int)(r*TWO_PI/dist);
-  float angleInc = (TWO_PI)/(float)numPoints;
-  ArrayList<PVector> points = new ArrayList<PVector>();
-  for (int iter = 0; iter < numPoints; iter++) {
-    PVector inter1 = PVector.mult(u, r * cos(angle));
-    PVector inter2 =  n.cross(u);
-    inter2 = PVector.mult(inter2, r * sin(angle));
-    inter1.add(inter2);
-    inter1.add(center);
-    points.add(inter1);
-    angle += angleInc;
-  }
-  return points;
-}
-
-
-/**
- * Helper method for the createArc method
- */
-int cycleNumber(int number) {
-  number++;
-  if (number >= 4) number = 1;
-  return number;
-}
-
-
-/**
- * Takes a list of points describing a circle circumference, three points
- * A, B, and C, and returns an arc built from the circumference that
- * runs from A to B to C.
- * @param points List of points describing the circle circumference.
- * @param a Point A
- * @param b Point b
- * @param c Point C
- * @return List of points describing the arc from A to B to C
- */
-ArrayList<Point> createArc(ArrayList<PVector> points, PVector a, PVector b, PVector c) {
-  float CHKDIST = 15.0;
-  //CHECK 4 GREMBLINS HERE
-  int count1 = 0, count2 = 0;
-  while (true) {
-    //count2++; println("c2: " + count2);
-    int seenA = 0, seenB = 0, seenC = 0, currentSee = 1;
-    for (int n = 0; n < points.size(); n++) {
-      PVector pt = points.get(n);
-      if (dist(pt.x, pt.y, pt.z, a.x, a.y, a.z) <= CHKDIST) seenA = currentSee++;
-      if (dist(pt.x, pt.y, pt.z, b.x, b.y, b.z) <= CHKDIST) seenB = currentSee++;
-      if (dist(pt.x, pt.y, pt.z, c.x, c.y, c.z) <= CHKDIST) seenC = currentSee++;
-    }
-    while (seenA != 1) {
-      seenA = cycleNumber(seenA);
-      seenB = cycleNumber(seenB);
-      seenC = cycleNumber(seenC);
-      //count1++; println("c1: " + count1);
-    }
-    // detect reverse case: if b > c then we're going the wrong way, so reverse
-    if (seenB > seenC) {
-      Collections.reverse(points);
-      continue;
-    }
-    break;
-  } // end while loop
-  
-  // now we're going in the right direction, so remove unnecessary points
-  ArrayList<Point> newPoints = new ArrayList<Point>();
-  boolean seenA = false, seenC = false;
-  for (PVector pt : points) {
-    if (seenA && !seenC) newPoints.add(new Point(pt, armModel.getWPR()));
-    if (dist(pt.x, pt.y, pt.z, a.x, a.y, a.z) <= CHKDIST) seenA = true;
-    if (seenA && dist(pt.x, pt.y, pt.z, c.x, c.y, c.z) <= CHKDIST) {
-      seenC = true;
-      break;
-    }
-  }
-  // might have to go through a second time
-  if (seenA && !seenC) {
-    for (PVector pt : points) {
-      newPoints.add(new Point(pt, armModel.getWPR()));
-      if (dist(pt.x, pt.y, pt.z, c.x, c.y, c.z) <= CHKDIST) break;
-    }
-  }
-  if (newPoints.size() > 0) newPoints.remove(0);
-  newPoints.add(new Point(c, armModel.getWPR()));
-  return newPoints;
-} // end createArc
-
-
 /**
  * Finds the circle center of 3 points. (That is, find the center of
  * a circle whose circumference intersects all 3 points.)
@@ -978,8 +900,6 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
     denominator *= 2;
     return numerator / denominator;
 }
-
-
 
 /**
  * Executes a program. Returns true when done.
@@ -1052,7 +972,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
   Point start = new Point(armModel.getEEPos(), armModel.getWPR());
   
   if (instruction.getMotionType() == MTYPE_JOINT) {
-    float[] j = instruction.getVector(program).j;
+    float[] j = instruction.getVector(program).joints;
     
     //set target rotational value for each joint
     for (int n = 0; n < j.length; n++) {

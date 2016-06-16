@@ -353,7 +353,7 @@ float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
 /* Calculates the result of a rotation of quaternion 'p'
  * about axis 'u' by 'theta' degrees
  */
-float[] rotateQuat(float[] p, float theta, PVector u) {
+float[] rotateQuat(float[] p, PVector u, float theta) {
   float[] q = new float[4];
   
   q[0] = cos(theta/2);
@@ -364,6 +364,33 @@ float[] rotateQuat(float[] p, float theta, PVector u) {
   float[] pq = quaternionMult(p, q);
 
   return pq;
+}
+
+PVector rotateVectorQuat(PVector v, PVector u, float theta){
+  float[] q = new float[4];
+  float[] p = new float[4];
+  float[] q_inv = new float[4];
+  float[] p_prime = new float[4];
+  
+  q[0] = cos(theta/2);
+  q[1] = sin(theta/2)*u.x;
+  q[2] = sin(theta/2)*u.y;
+  q[3] = sin(theta/2)*u.z;
+  
+  p[0] = 0;
+  p[1] = v.x;
+  p[2] = v.y;
+  p[3] = v.z;
+  
+  q_inv[0] = q[0];
+  q_inv[1] = -q[1];
+  q_inv[2] = -q[2];
+  q_inv[3] = -q[3];
+  
+  p_prime = quaternionMult(q, p);
+  p_prime = quaternionMult(p_prime, q_inv);
+
+  return new PVector(p_prime[1], p_prime[2], p_prime[3]);
 }
 
 /* Given 2 quaternions, calculates the quaternion representing the 

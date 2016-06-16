@@ -840,7 +840,7 @@ public class ArmModel {
     u.normalize();
     
     if(u.x != 0 || u.y != 0 || u.z != 0){
-      tgtRot = rotateQuat(tgtRot, theta, u);
+      tgtRot = rotateQuat(tgtRot, u, theta);
     }
   }
 

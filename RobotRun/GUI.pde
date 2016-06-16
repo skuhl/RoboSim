@@ -2229,10 +2229,11 @@ public void f5() {
           options.add("Data of the point in this register (press ENTER to exit):");
           if (castIns.getMotionType() != MTYPE_JOINT) {
             options.add("x: " + p.pos.x + "  y: " + p.pos.y + "  z: " + p.pos.z);
-            options.add("w: " + p.ori.x + "  p: " + p.ori.y + "  r: " + p.ori.z);
+            PVector wpr = quatToEuler(p.ori);
+            options.add("w: " + wpr.x + "  p: " + wpr.y + "  r: " + wpr.z);
           } else {
-            options.add("j1: " + p.j[0] + "  j2: " + p.j[1] + "  j3: " + p.j[2]);
-            options.add("j4: " + p.j[3] + "  j5: " + p.j[4] + "  j6: " + p.j[5]);
+            options.add("j1: " + p.joints[0] + "  j2: " + p.joints[1] + "  j3: " + p.joints[2]);
+            options.add("j4: " + p.joints[3] + "  j5: " + p.joints[4] + "  j6: " + p.joints[5]);
           }
           mode = VIEW_REGISTER;
           which_option = 0;

@@ -169,7 +169,7 @@ int loadPrograms(Path path){
         for(int i = 0; i < aProgram.getRegistersLength(); i += 1){
           s.next(); // consume token: <Point>
           Point p = new Point(s.nextFloat(), s.nextFloat(), s.nextFloat(), 
-                              s.nextFloat(), s.nextFloat(), s.nextFloat(), 
+                              s.nextFloat(), s.nextFloat(), s.nextFloat(), s.nextFloat(), 
                               s.nextFloat(), s.nextFloat(), s.nextFloat(), 
                               s.nextFloat(), s.nextFloat(), s.nextFloat());
           s.next(); // consume token: </Point> 

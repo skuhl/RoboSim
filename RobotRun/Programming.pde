@@ -8,13 +8,45 @@ Frame[] userFrames = new Frame[10];
 
 public class Point  {
   public PVector pos; // position
-  public PVector ori; // orientation
-  public float[] j = new float[6]; // joint values
+  public float[] ori = new float[4]; // orientation
+  public float[] joints = new float[6]; // joint values
   
   public Point() {
     pos = new PVector(0,0,0);
-    ori = new PVector(0,0,0);
-    for (int n = 0; n < j.length; n++) j[n] = 0;
+    ori[0] = 1;
+    ori[1] = 0;
+    ori[2] = 0;
+    ori[3] = 0; 
+    for (int n = 0; n < joints.length; n++) joints[n] = 0;
+  }
+  
+  public Point(float x, float y, float z, float r, float i, float j, float k,
+               float j1, float j2, float j3, float j4, float j5, float j6)
+  {
+    pos = new PVector(x,y,z);
+    ori[0] = r;
+    ori[1] = i;
+    ori[2] = j;
+    ori[3] = k;
+    joints[0] = j1;
+    joints[1] = j2;
+    joints[2] = j3;
+    joints[3] = j4;
+    joints[4] = j5;
+    joints[5] = j6;
+  }
+  
+  public Point(float x, float y, float z, float r, float i, float j, float k){
+    pos = new PVector(x,y,z);
+    ori[0] = r;
+    ori[1] = i;
+    ori[2] = j;
+    ori[3] = k;
+  }
+  
+  public Point(PVector position, float[] orientation){
+    pos = position;
+    ori = orientation;
   }
   
   //create a new point with position, orientation, and associated joint angles
@@ -22,28 +54,30 @@ public class Point  {
                float j1, float j2, float j3, float j4, float j5, float j6)
   {
     pos = new PVector(x,y,z);
-    ori = new PVector(w,p,r);
-    j[0] = j1;
-    j[1] = j2;
-    j[2] = j3;
-    j[3] = j4;
-    j[4] = j5;
-    j[5] = j6;
+    ori = eulerToQuat(new PVector(w,p,r));
+    joints[0] = j1;
+    joints[1] = j2;
+    joints[2] = j3;
+    joints[3] = j4;
+    joints[4] = j5;
+    joints[5] = j6;
   }
   
   //create a new point with position and orientation only
   public Point(float x, float y, float z, float w, float p, float r){
     pos = new PVector(x,y,z);
-    ori = new PVector(w,p,r);
+    ori = eulerToQuat(new PVector(w,p,r));
   }
   
   public Point(PVector position, PVector orientation){
     pos = position;
-    ori = orientation;
+    ori = eulerToQuat(orientation);
   }
   
   public Point clone() {
-    return new Point(pos.x, pos.y, pos.z, ori.x, ori.y, ori.z, j[0], j[1], j[2], j[3], j[4], j[5]);
+    return new Point(pos.x, pos.y, pos.z, 
+                     ori[0], ori[1], ori[2], ori[3], 
+                     joints[0], joints[1], joints[2], joints[3], joints[4], joints[5]);
   }
   
   public String toExport(){
@@ -54,17 +88,19 @@ public class Point  {
      ret += " ";
      ret += Float.toString(pos.z);
      ret += " ";
-     ret += Float.toString(ori.x);
+     ret += Float.toString(ori[0]);
      ret += " ";
-     ret += Float.toString(ori.y);
+     ret += Float.toString(ori[1]);
      ret += " ";
-     ret += Float.toString(ori.z);
+     ret += Float.toString(ori[2]);
      ret += " ";
-     for (int i=0;i<j.length-1;i++){
-        ret += Float.toString(j[i]);
+     ret += Float.toString(ori[3]);
+     ret += " ";
+     for (int i=0;i<joints.length-1;i++){
+        ret += Float.toString(joints[i]);
         ret += " ";
      }
-     ret += Float.toString(j[j.length-1]);
+     ret += Float.toString(joints[joints.length-1]);
      ret += " ";
      ret += "</Point>";  
      return ret;
