@@ -256,8 +256,8 @@ public int loadFrames(Path path) {
       float[][] axes = new float[3][3];
       // Create axes points
       
-      for (int col = 0; col < 3; ++col) {
-        for (int row = 0; row < 3; ++row) {
+      for (int row = 0; row < 3; ++row) {
+        for (int col = 0; col < 3; ++col) {
           axes[row][col] = Float.parseFloat(reader.next());;
         }  
       }

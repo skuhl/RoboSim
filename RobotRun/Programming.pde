@@ -74,6 +74,7 @@ public class Point  {
 public class Frame {
   private PVector origin;
   private PVector wpr;
+  // The unit vectors representing the x, y,z axes (in row major order)
   private float[][] axes;
   
   public Frame() {

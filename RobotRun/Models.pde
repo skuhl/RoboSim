@@ -880,13 +880,9 @@ public class ArmModel {
       if(mvLinear[0] != 0 || mvLinear[1] != 0 || mvLinear[2] != 0 || 
          mvRot[0] != 0 || mvRot[1] != 0 || mvRot[2] != 0) {
         
-        PVector move = new PVector(0, 0, 0);
-        //convert to user frame coordinates if currently in a user frame
-        for(int i = 0; i < 3; i += 1){
-          move.x += mvLinear[i]*currentFrame[i][0];
-          move.y += mvLinear[i]*currentFrame[i][1];
-          move.z += mvLinear[i]*currentFrame[i][2];
-        }
+        PVector move = new PVector(mvLinear[0], mvLinear[1], mvLinear[2]);
+        // Convert the movement vector into the current reference frame
+        move = rotate(move, currentFrame);
         
         //respond to user defined movement
         float distance = motorSpeed/60.0 * liveSpeed;

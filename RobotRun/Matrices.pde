@@ -1,5 +1,5 @@
 /* Transforms the given vector from the coordinate system defined by the given
- * transformation matrix. */
+ * transformation matrix (column major order). */
 public PVector transform(PVector v, float[][] tMatrix) {
   if (tMatrix.length != 4 || tMatrix[0].length != 4) {
     return null;
@@ -22,7 +22,6 @@ public PVector rotate(PVector v, float[][] rotMatrix) {
   
   PVector u = new PVector();
   // Apply the rotation matrix to the given vector
-  
   u.x = v.x * rotMatrix[0][0] + v.y * rotMatrix[1][0] + v.z * rotMatrix[2][0];
   u.y = v.x * rotMatrix[0][1] + v.y * rotMatrix[1][1] + v.z * rotMatrix[2][1];
   u.z = v.x * rotMatrix[0][2] + v.y * rotMatrix[1][2] + v.z * rotMatrix[2][2];

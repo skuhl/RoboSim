@@ -1712,12 +1712,20 @@ public void f1(){
         // Set the current tool frame
         if (active_row >= 0) {
           activeToolFrame = active_row;
+          // Update the Robot Arm's current frame rotation matrix
+          if (curCoordFrame == COORD_TOOL) {
+            armModel.currentFrame = toolFrames[activeToolFrame].getAxes();
+          }
         }
         break;
       case NAV_USER_FRAMES:
         // Set the current user frame
         if (active_row >= 0) {
           activeUserFrame = active_row;
+          // Update the Robot Arm's current frame rotation matrix
+          if (curCoordFrame == COORD_USER) {
+            armModel.currentFrame = userFrames[activeUserFrame].getAxes();
+          }
         }
         break;
       case INSTRUCTION_EDIT:
@@ -2130,8 +2138,64 @@ public void f4() {
 }
 
 public void f5() {
-  if (mode == INSTRUCTION_NAV) {
-    if (shift == OFF) {
+  
+  if (shift == ON) {
+    if (mode == INSTRUCTION_NAV) {
+      // overwrite current instruction
+      PVector eep = armModel.getEEPos();
+      eep = convertNativeToWorld(eep);
+      Program prog = programs.get(active_program);
+      int reg = prog.nextRegister();
+      PVector r = armModel.getWPR();
+      float[] j = armModel.getJointRotations();
+      prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
+                                 j[0], j[1], j[2], j[3], j[4], j[5]), reg);
+      MotionInstruction insert = new MotionInstruction(
+        (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
+        reg,
+        false,
+        (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
+        0,
+        activeUserFrame,
+        activeToolFrame);
+      prog.overwriteInstruction(active_instruction, insert);
+      active_col = 0;
+      loadInstructions(active_program);
+      updateScreen(color(255,0,0), color(0,0,0));
+    } else if (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE || mode == FOUR_POINT_MODE) {
+  
+      if (teachPointTMatrices != null) {
+        
+        pushMatrix();
+        resetMatrix();
+        applyModelRotation(armModel, false);
+        // Save current position of the EE
+        float[][] tMatrix = getTransformationMatrix();
+        
+        // Add the current teach point to the running list of teach points
+        if (which_option >= 0 && which_option < teachPointTMatrices.size()) {
+          // Cannot override the origin once it is calculated for the six point method
+          teachPointTMatrices.set(which_option, tMatrix);
+        } else if ((mode == THREE_POINT_MODE && teachPointTMatrices.size() < 3) ||
+                   (mode == FOUR_POINT_MODE && teachPointTMatrices.size() < 4) ||
+                   (mode == SIX_POINT_MODE && teachPointTMatrices.size() < 6)) {
+          
+          // Add a new point as long as it does not exceed number of points for a specific method
+          teachPointTMatrices.add(tMatrix);
+          // increment which_option
+          which_option = min(which_option + 1, options.size() - 1);
+        }
+        
+        popMatrix();
+      }
+      
+      int limbo = mode;
+      loadFrameDetails(false);
+      mode = limbo;
+      loadPointList();
+    }
+  } else {
+    if (mode == INSTRUCTION_NAV) {
       if (active_col == 0) {
         // if you're on the line number, bring up a list of instruction editing options
         contents = new ArrayList<ArrayList<String>>();
@@ -2176,62 +2240,9 @@ public void f5() {
           updateScreen(color(255,0,0), color(0,0,0));
         }
       }
-    } else {
-      // overwrite current instruction
-      PVector eep = armModel.getEEPos();
-      eep = convertNativeToWorld(eep);
-      Program prog = programs.get(active_program);
-      int reg = prog.nextRegister();
-      PVector r = armModel.getWPR();
-      float[] j = armModel.getJointRotations();
-      prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
-                                 j[0], j[1], j[2], j[3], j[4], j[5]), reg);
-      MotionInstruction insert = new MotionInstruction(
-        (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
-        reg,
-        false,
-        (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
-        0,
-        activeUserFrame,
-        activeToolFrame);
-      prog.overwriteInstruction(active_instruction, insert);
-      active_col = 0;
-      loadInstructions(active_program);
-      updateScreen(color(255,0,0), color(0,0,0));
+    } else if (mode == CONFIRM_DELETE) {
+      deleteInstEpilogue();
     }
-  } else if (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE || mode == FOUR_POINT_MODE) {
-    
-    if (teachPointTMatrices != null) {
-      
-      pushMatrix();
-      resetMatrix();
-      applyModelRotation(armModel, false);
-      // Save current position of the EE
-      float[][] tMatrix = getTransformationMatrix();
-      
-      // Add the current teach point to the running list of teach points
-      if (which_option >= 0 && which_option < teachPointTMatrices.size()) {
-        // Cannot override the origin once it is calculated for the six point method
-        teachPointTMatrices.set(which_option, tMatrix);
-      } else if ((mode == THREE_POINT_MODE && teachPointTMatrices.size() < 3) ||
-                 (mode == FOUR_POINT_MODE && teachPointTMatrices.size() < 4) ||
-                 (mode == SIX_POINT_MODE && teachPointTMatrices.size() < 6)) {
-        
-        // Add a new point as long as it does not exceed number of points for a specific method
-        teachPointTMatrices.add(tMatrix);
-        // increment which_option
-        which_option = min(which_option + 1, options.size() - 1);
-      }
-      
-      popMatrix();
-    }
-    
-    int limbo = mode;
-    loadFrameDetails(false);
-    mode = limbo;
-    loadPointList();
-  } else if (mode == CONFIRM_DELETE) {
-     deleteInstEpilogue();
   }
 }
 
@@ -3600,14 +3611,14 @@ public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
     axes[2] = crossProduct(x_dir, y_dir);    // Z axis
     axes[1] = crossProduct(axes[2], x_dir);  // Y axis
     
-    if ((axes[0][0] == 0f && axes[0][1] == 0f && axes[2][0] == 0f) ||
-        (axes[0][1] == 0f && axes[0][1] == 0f && axes[2][1] == 0f) ||
-        (axes[0][2] == 0f && axes[0][2] == 0f && axes[2][2] == 0f)) {
+    if ((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
+        (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
+        (axes[2][0] == 0f && axes[2][1] == 0f && axes[2][2] == 0f)) {
       // One of the three axis vectors is the zero vector
       return null;
     }
     
-    float[] magnitudes = new float[axes[0].length];
+    float[] magnitudes = new float[axes.length];
     
     for (int v = 0; v < axes.length; ++v) {
       // Find the magnitude of each axis vector
