@@ -891,6 +891,8 @@ public class ArmModel {
         tgtPos.z += move.z * distance;
         updateOrientation();
         
+        //System.out.printf("%s -> %s: %d\n", getEEPos(), tgtPos, getEEPos().dist(tgtPos));
+        
         //println(lockOrientation);
         int r = calculateIKJacobian(tgtPos, tgtRot);
         if(r == EXEC_FAILURE){

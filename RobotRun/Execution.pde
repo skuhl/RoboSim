@@ -213,10 +213,10 @@ public void updateCoordinateMode(ArmModel model) {
   // Update the Arm Model's rotation matrix for rotational motion based on the current frame
   if (curCoordFrame == COORD_TOOL || (curCoordFrame == COORD_WORLD && activeToolFrame != -1)) {
     // Active Tool Frames are used in the World Frame as well
-    armModel.currentFrame = toolFrames[activeToolFrame].getAxes();
+    armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
   } else if (curCoordFrame == COORD_USER) {
     
-    armModel.currentFrame = userFrames[activeUserFrame].getAxes();
+    armModel.currentFrame = userFrames[activeUserFrame].getNativeAxes();
   } else {
     // Reset to the identity matrix
     armModel.currentFrame = new float[3][3];
@@ -234,10 +234,12 @@ public void updateCoordinateMode(ArmModel model) {
  */
 PVector convertWorldToNative(PVector in) {
   pushMatrix();
+  resetMatrix();
   float outx = modelX(0,0,0)-in.x;
   float outy = modelY(0,0,0)-in.z;
   float outz = -(modelZ(0,0,0)-in.y);
   popMatrix();
+  
   return new PVector(outx, outy, outz);
 }
 
@@ -247,10 +249,12 @@ PVector convertWorldToNative(PVector in) {
  */
 PVector convertNativeToWorld(PVector in) {
   pushMatrix();
+  resetMatrix();
   float outx = modelX(0,0,0)-in.x;
   float outy = in.z+modelZ(0,0,0);
   float outz = modelY(0,0,0)-in.y;
   popMatrix();
+  
   return new PVector(outx, outy, outz);
 }
 
