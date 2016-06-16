@@ -112,6 +112,8 @@ public PVector getCoordFromMatrix(float x, float y, float z) {
   return vector;
 }
 
+
+
 /* Calculate v x v */
 public float[] crossProduct(float[] v, float[] u) {
   if (v.length != 3 && v.length != u.length) { return null; }
@@ -123,6 +125,23 @@ public float[] crossProduct(float[] v, float[] u) {
   w[2] = v[0] * u[1] - v[1] * u[0];
   
   return w;
+}
+
+/* Converts a PVector object to a float[] */
+public float[] toVectorArray(PVector v) {
+  return new float[] { v.x, v.y, v.z };
+}
+
+/* Returns a vector with the opposite sign
+ * as the given vector. */
+public float[] negate(float[] v) {
+  float[] u = new float[v.length];
+  
+  for (int e = 0; e < v.length; ++e) {
+    u[e] = -v[e];
+  }
+  
+  return u;
 }
 
 //calculates rotation matrix from euler angles
@@ -502,18 +521,6 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu){
   }
   
   return qSlerp;
-}
-
-/* Displays the contents of a 4x4 matrix in the command line */
-public void printHCMatrix(float[][] m) {
-  if (m.length != 4 || m[0].length != 4) { 
-    return;
-  }
-
-  for (int r = 0; r < m.length; ++r) {
-    String row = String.format("[ %5.4f %5.4f %5.4f %5.4f ]\n", m[r][0], m[r][1], m[r][2], m[r][3]);
-    print(row);
-  }
 }
 
 /* Returns a string represenation of the given matrix.

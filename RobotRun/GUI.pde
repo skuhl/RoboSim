@@ -1965,8 +1965,18 @@ public void f3() {
         
         // Set new Frame 
         if (super_mode == NAV_TOOL_FRAMES) {
+          // Update the current frame of the Robot Arm
+          if (curFrameIdx == activeUserFrame) {
+            armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
+          }
+          
           activeToolFrame = curFrameIdx;
         } else if (super_mode == NAV_USER_FRAMES) {
+          // Update the current frame of the Robot Arm
+          if (curFrameIdx == activeUserFrame) {
+            armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
+          }
+          
           activeUserFrame = curFrameIdx;
         }
       } else {
@@ -2075,11 +2085,19 @@ public void f3() {
         frames[curFrameIdx] = new Frame(origin, wpr, axesVectors);
         saveFrames(sketchPath("tmp/frames.ser"));
         
-        // Set new Frame 
+        // Set New Frame
         if (super_mode == NAV_TOOL_FRAMES) {
+          // Update the current frame of the Robot Arm
+          if (curFrameIdx == activeUserFrame) {
+            armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
+          }
+          
           activeToolFrame = curFrameIdx;
         } else if (super_mode == NAV_USER_FRAMES) {
-          activeUserFrame = curFrameIdx;
+          // Update the current frame of the Robot Arm
+          if (curFrameIdx == activeUserFrame) {
+            armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
+          }
         }
         
         active_row = curFrameIdx;
@@ -3614,11 +3632,9 @@ public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
  * If the list contains more than three points, then only the first three
  * points will be used.
  * The three points are used to form two vectors. The first vector is treated
- * as the x-axis and the second one is the psuedo-y-axis. These vectors are
- * crossed to form the z-axis. The z-axis is then crossed with the first
- * x-axis to form the true y-axis.
- * 
- * TODO error checking for invalid arguments
+ * as the negative x-axis and the second one is the psuedo-negative z-axis.
+ * These vectors are crossed to form the y-axis. The y-axis is then crossed
+ * with the negative x-axis to form the true y-axis.
  *
  * @param points  a set of at least three 4x4 transformation matrices
  * @return        a set of three unit vectors (down the columns) that
@@ -3638,9 +3654,9 @@ public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
     }
     
     // Form axes
-    axes[0] = x_dir;                         // X axis
-    axes[2] = crossProduct(x_dir, y_dir);    // Z axis
-    axes[1] = crossProduct(axes[2], x_dir);  // Y axis
+    axes[0] = negate(x_dir);                         // X axis
+    axes[1] = crossProduct(axes[0], negate(y_dir));  // Y axis
+    axes[2] = crossProduct(axes[0], axes[1]);        // Z axis
     
     if ((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
         (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
