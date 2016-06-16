@@ -30,13 +30,13 @@ void createTestProgram() {
   program.addInstruction(instruction);
   //for (int n = 0; n < 15; n++) program.addInstruction(
   //  new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
-  pr[0] = new Point(165, 116, -5, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[1] = new Point(166, -355, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[2] = new Point(171, -113, 445, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[3] = new Point(725, 225, 50, 0, 0, 0, 5.6, 1.12, 5.46, 0, 5.6, 0);
-  pr[4] = new Point(775, 300, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[5] = new Point(-474, -218, 37, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[6] = new Point(-659, -412, -454, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[0] = new Point(165, 116, -5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[1] = new Point(166, -355, 120, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[2] = new Point(171, -113, 445, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[3] = new Point(725, 225, 50, 1, 0, 0, 0, 5.6, 1.12, 5.46, 0, 5.6, 0);
+  pr[4] = new Point(775, 300, 50, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[5] = new Point(-474, -218, 37, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  pr[6] = new Point(-659, -412, -454, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
   programs.add(program);
   //currentProgram = program;
   
@@ -620,7 +620,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
       p1.x * (1 - mu) + (p2.x * mu),
       p1.y * (1 - mu) + (p2.y * mu),
       p1.z * (1 - mu) + (p2.z * mu)),
-      armModel.getWPR()));
+      armModel.getQuaternion()));
   }
   int secondaryIdx = 0; // accessor for secondary targets
   mu = 0;
@@ -631,7 +631,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
   }
   else{
-    currentPoint = new Point(armModel.getEEPos(), armModel.getWPR());
+    currentPoint = new Point(armModel.getEEPos(), armModel.getQuaternion());
   }
   
   for (int n = transitionPoint; n < numberOfPoints; n++) {
@@ -640,7 +640,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
       currentPoint.pos.x * (1 - mu) + (secondaryTargets.get(secondaryIdx).x * mu),
       currentPoint.pos.y * (1 - mu) + (secondaryTargets.get(secondaryIdx).y * mu),
       currentPoint.pos.z * (1 - mu) + (secondaryTargets.get(secondaryIdx).z * mu)), 
-      armModel.getWPR()));
+      armModel.getQuaternion()));
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
     secondaryIdx++;
   }
@@ -700,13 +700,16 @@ void calculateArc(Point start, Point inter, Point end){
   int numPoints = (int)(r*theta/distanceBetweenPoints);
   float inc = 1/(float)numPoints;
   float angleInc = (theta)/(float)numPoints;
+  println("generating arc:");
   for (int i = 0; i < numPoints; i += 1) {
     PVector pos = rotateVectorQuat(u, n, angle).mult(r).add(center);
     qi = quaternionSlerp(q1, q2, mu);
+    if(i % 5 == 0) println(qi[0] + ", " + qi[1] + ", " + qi[2] + ", " + qi[3]);
     intermediatePositions.add(new Point(pos, qi));
     angle += angleInc;
     mu += inc;
   }
+  println();
 }
 
 /**
@@ -973,7 +976,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
  * @return Returns true on failure (invalid instruction), false on success
  */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
-  Point start = new Point(armModel.getEEPos(), armModel.getWPR());
+  Point start = new Point(armModel.getEEPos(), armModel.getQuaternion());
   
   if (instruction.getMotionType() == MTYPE_JOINT) {
     float[] j = instruction.getVector(program).joints;

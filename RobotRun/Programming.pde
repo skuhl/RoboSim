@@ -49,30 +49,30 @@ public class Point  {
     ori = orientation;
   }
   
-  //create a new point with position, orientation, and associated joint angles
-  public Point(float x, float y, float z, float w, float p, float r,
-               float j1, float j2, float j3, float j4, float j5, float j6)
-  {
-    pos = new PVector(x,y,z);
-    ori = eulerToQuat(new PVector(w,p,r));
-    joints[0] = j1;
-    joints[1] = j2;
-    joints[2] = j3;
-    joints[3] = j4;
-    joints[4] = j5;
-    joints[5] = j6;
-  }
+  ////create a new point with position, orientation, and associated joint angles
+  //public Point(float x, float y, float z, float w, float p, float r,
+  //             float j1, float j2, float j3, float j4, float j5, float j6)
+  //{
+  //  pos = new PVector(x,y,z);
+  //  ori = eulerToQuat(new PVector(w,p,r));
+  //  joints[0] = j1;
+  //  joints[1] = j2;
+  //  joints[2] = j3;
+  //  joints[3] = j4;
+  //  joints[4] = j5;
+  //  joints[5] = j6;
+  //}
   
-  //create a new point with position and orientation only
-  public Point(float x, float y, float z, float w, float p, float r){
-    pos = new PVector(x,y,z);
-    ori = eulerToQuat(new PVector(w,p,r));
-  }
+  ////create a new point with position and orientation only
+  //public Point(float x, float y, float z, float w, float p, float r){
+  //  pos = new PVector(x,y,z);
+  //  ori = eulerToQuat(new PVector(w,p,r));
+  //}
   
-  public Point(PVector position, PVector orientation){
-    pos = position;
-    ori = eulerToQuat(orientation);
-  }
+  //public Point(PVector position, PVector orientation){
+  //  pos = position;
+  //  ori = eulerToQuat(orientation);
+  //}
   
   public Point clone() {
     return new Point(pos.x, pos.y, pos.z, 

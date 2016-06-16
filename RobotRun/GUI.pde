@@ -1666,10 +1666,10 @@ public void f1(){
       eep = convertNativeToWorld(eep);
       Program prog = programs.get(active_program);
       int reg = prog.nextRegister();
-      PVector r = armModel.getWPR();
+      float[] q = armModel.getQuaternion();
       float[] j = armModel.getJointRotations();
       
-      prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
+      prog.addRegister(new Point(eep.x, eep.y, eep.z, q[0], q[1], q[2], q[3],
                                  j[0], j[1], j[2], j[3], j[4], j[5]), reg);
                                  
       MotionInstruction insert = new MotionInstruction(
@@ -2188,9 +2188,9 @@ public void f5() {
       eep = convertNativeToWorld(eep);
       Program prog = programs.get(active_program);
       int reg = prog.nextRegister();
-      PVector r = armModel.getWPR();
+      float[] q = armModel.getQuaternion();
       float[] j = armModel.getJointRotations();
-      prog.addRegister(new Point(eep.x, eep.y, eep.z, r.x, r.y, r.z,
+      prog.addRegister(new Point(eep.x, eep.y, eep.z, q[0], q[1], q[2], q[3],
                                  j[0], j[1], j[2], j[3], j[4], j[5]), reg);
       MotionInstruction insert = new MotionInstruction(
         (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),

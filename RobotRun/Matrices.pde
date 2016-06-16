@@ -520,6 +520,14 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu){
     qSlerp = quaternionAdd(q1Scaled, q2Scaled);
   }
   
+  //qSlerp[0] = q1[0]*(1-mu) + q2[0]*mu;
+  //qSlerp[1] = q1[1]*(1-mu) + q2[1]*mu;
+  //qSlerp[2] = q1[2]*(1-mu) + q2[2]*mu;
+  //qSlerp[3] = q1[3]*(1-mu) + q2[3]*mu;
+  
+  float mag = sqrt(pow(qSlerp[0], 2)+pow(qSlerp[1], 2)+pow(qSlerp[2], 2)+pow(qSlerp[3], 2));
+  qSlerp = quaternionScalarMult(qSlerp, 1f/mag);
+  
   return qSlerp;
 }
 
