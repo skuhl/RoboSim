@@ -140,8 +140,28 @@ public class Frame {
   public void setOrigin(PVector in) { origin = in; }
   public PVector getWpr() { return wpr; }
   public void setWpr(PVector in) { wpr = in; }
-  
-  public float[][] getAxes() { return axes.clone(); }
+  /* Returns a set of axes unit vectors representing the axes
+   * of the frame in reference to the Native Coordinate System. */
+  public float[][] getNativeAxes() { return axes.clone(); }
+  /* Returns a set of axes unit vectors representing the axes
+   * of the frame in reference to the World Coordinate System. */
+  public float[][] getWorldAxes() {
+    float[][] wAxes = new float[3][3];
+    
+    for (int col = 0; col < wAxes[0].length; ++col) {
+      wAxes[0][col] = -axes[0][col];
+      wAxes[1][col] = axes[2][col];
+      wAxes[2][col] = -axes[1][col];
+    }
+    
+    /*for (int row = 0; row < wAxes[0].length; ++row) {
+      wAxes[row][0] = -axes[row][0];
+      wAxes[row][1] = axes[row][2];
+      wAxes[row][2] = -axes[row][1];
+    }*/
+    
+    return wAxes;
+  }
   
   public void setAxis(int idx, PVector in) {
     
@@ -355,7 +375,7 @@ public final class MotionInstruction extends Instruction  {
       if (globalRegister) ret = pr[register].clone();
       else ret = parent.p[register].clone();
       if (userFrame != -1) {
-        ret.pos = rotate(ret.pos, userFrames[userFrame].getAxes());
+        ret.pos = rotate(ret.pos, userFrames[userFrame].getNativeAxes());
       }
       return ret;
     }

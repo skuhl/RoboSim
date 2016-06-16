@@ -1066,6 +1066,30 @@ public void keyPressed(){
     }
     
     pickup.execute();
+  } else if (keyCode == KeyEvent.VK_1) {
+    // Front view
+    myRotX = 0f;
+    myRotY = 0f;
+  } else if (keyCode == KeyEvent.VK_2) {
+    // Back view
+    myRotX = 0f;
+    myRotY = PI;
+  } else if (keyCode == KeyEvent.VK_3) {
+    // Left view
+    myRotX = 0f;
+    myRotY = PI / 2f;
+  } else if (keyCode == KeyEvent.VK_4) {
+    // Right view
+    myRotX = 0f;
+    myRotY = 3f * PI / 2F;
+  } else if (keyCode == KeyEvent.VK_5) {
+    // Top view
+    myRotX = 3f * PI / 2F;
+    myRotY = 0f;
+  } else if (keyCode == KeyEvent.VK_6) {
+    // Bottom view
+    myRotX = PI / 2f;
+    myRotY = 0f;
   }
   
   if(keyCode == UP){
@@ -1714,7 +1738,7 @@ public void f1(){
           activeToolFrame = active_row;
           // Update the Robot Arm's current frame rotation matrix
           if (curCoordFrame == COORD_TOOL) {
-            armModel.currentFrame = toolFrames[activeToolFrame].getAxes();
+            armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
           }
         }
         break;
@@ -1724,7 +1748,7 @@ public void f1(){
           activeUserFrame = active_row;
           // Update the Robot Arm's current frame rotation matrix
           if (curCoordFrame == COORD_USER) {
-            armModel.currentFrame = userFrames[activeUserFrame].getAxes();
+            armModel.currentFrame = userFrames[activeUserFrame].getNativeAxes();
           }
         }
         break;
@@ -2262,6 +2286,12 @@ public void hd() {
   
   for (int idx = 0; idx < armModel.mvRot.length; ++idx) {
     armModel.mvRot[idx] = 0;
+  }
+  
+  // Reset button highlighting
+  for (int j = 1; j <= 6; ++j) {
+    ((Button)cp5.get("JOINT" + j + "_NEG")).setColorBackground(COLOR_DEFAULT);
+    ((Button)cp5.get("JOINT" + j + "_POS")).setColorBackground(COLOR_DEFAULT);
   }
 }
 

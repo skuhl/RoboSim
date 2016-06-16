@@ -5,6 +5,7 @@ import java.util.*;
 import java.nio.*;
 import java.nio.file.*;
 import java.io.*;
+import java.awt.event.KeyEvent;
 import java.io.Serializable;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -85,11 +86,6 @@ public void setup(){
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   intermediatePositions = new ArrayList<Point>();
   loadState();
-  
-  /*for (int n = 0; n < toolFrames.length; n++) {
-    toolFrames[n] = new Frame();
-    userFrames[n] = new Frame();
-  }*/
    
   // Intialize world objects
   objects = new Object[2];
@@ -105,6 +101,7 @@ public void setup(){
   objects[1] = new Object(250, 125, 500, color(255, 0, 255), color(255, 255, 255));
   
   popMatrix();
+  
   //createTestProgram();
 }
 
@@ -283,7 +280,7 @@ void applyCamera() {
   translate(panX, panY); // for pan button
   scale(myscale);
   rotateX(myRotX); // for rotate button
-  rotateY(myRotY); // for rotate button /* */
+  rotateY(myRotY); // for rotate button
 }
 
 /* Handles the drawing of world objects as well as collision detection of world objects and the
@@ -418,7 +415,7 @@ public void displayTeachPoints() {
 public void displayFrameAxes() {
   if ((curCoordFrame == COORD_WORLD || curCoordFrame == COORD_TOOL) && activeToolFrame != -1) {
     /* Draw the axes of the active tool frame */
-    float[][] axes = toolFrames[activeToolFrame].getAxes();
+    float[][] axes = toolFrames[activeToolFrame].getNativeAxes();
     PVector origin = armModel.getEEPos();
     
     pushMatrix();
@@ -448,7 +445,7 @@ public void displayFrameAxes() {
     popMatrix();
   } else if (curCoordFrame == COORD_USER && activeUserFrame != -1) {
     /* Draw the axes of the active user frame */
-    float[][] axes = userFrames[activeUserFrame].getAxes();
+    float[][] axes = userFrames[activeUserFrame].getNativeAxes();
     PVector origin = userFrames[activeUserFrame].getOrigin();
     
     pushMatrix();
