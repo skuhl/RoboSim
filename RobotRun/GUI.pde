@@ -934,11 +934,11 @@ public void mousePressed(){
 }
 
 public void mouseDragged(MouseEvent e) {
-   if (mouseDown == 2){
+   if (mouseButton == CENTER) {
       panX += mouseX - pmouseX;
       panY += mouseY - pmouseY;
    }
-   if (mouseDown == 1 && mouseButton == RIGHT){
+   if (mouseButton == RIGHT){
       myRotX += (mouseY - pmouseY) * 0.01;
       myRotY += (mouseX - pmouseX) * 0.01;
    }
@@ -1133,6 +1133,8 @@ public void keyPressed(){
     rotate_normal();
   }
 }
+
+//private void 
 
 public void hide(){
    g1.hide();
@@ -1798,10 +1800,11 @@ public void f2() {
     if (mode == ACTIVE_FRAMES) {
       // Reset the active frames for the User or Tool Coordinate Frames
       if (active_row == 1) {
+        
         activeToolFrame = -1;
         
         // Leave the Tool Frame
-        if (curCoordFrame == COORD_TOOL) {
+        if (curCoordFrame == COORD_TOOL || curCoordFrame == COORD_WORLD) {
           curCoordFrame = COORD_WORLD;
           armModel.resetFrame();
         }
@@ -2020,6 +2023,7 @@ public void f3() {
         if (str.length() < 4) {
           // No value entered
           error = true;
+          options.add("All entries must have a value.");
           break;
         }
         
@@ -2030,40 +2034,19 @@ public void f3() {
     } catch (NumberFormatException NFEx) {
       // Invalid number
       error = true;
+      options.add("Inputs must be real numbers.");
+    }
+    
+    if (!error && (inputs[3] < -PI || inputs[3] > PI || inputs[4] > (PI / 2f) || inputs[4] < (-PI / 2f) || inputs[5] < -PI || inputs[5] > PI)) {
+      // Input value is out of bounds
+      options.add("W and R have the range of [-PI, PI] and P has the range of [-PI / 2, PI / 2].");
+      error = true;
     }
     
     if (error) {
       which_option = 0;
-      options.add("Inputs must be real numbers!");
       updateScreen(color(255, 0, 0) , color(0));
     } else {
-      // Bring w within the range [-PI, PI]
-      inputs[3] = inputs[3] % (TWO_PI);
-      
-      if (inputs[3] > PI) {
-        inputs[3] = PI - inputs[3];
-      }
-      
-      // Bring p within the range [-PI / 2, PI / 2]
-      inputs[4] = inputs[4] % (TWO_PI);
-      
-      if (inputs[4] < 0f) { inputs[4] += TWO_PI; }
-      
-      if (inputs[4] > (3f * PI / 2f)) {
-        inputs[4] -= TWO_PI;
-      } else if (inputs[4] > PI) {
-        inputs[4] = PI - inputs[4];
-      } else if (inputs[4] > (PI / 2f)) {
-        inputs[4] -= PI;
-      }
-      
-      // Bring r within the range [-PI, PI]
-      inputs[5] = inputs[5] % (TWO_PI);
-      
-      if (inputs[5] > PI) {
-        inputs[5] = PI - inputs[5];
-      }
-      
       PVector origin = new PVector(inputs[0], inputs[1], inputs[2]),
               wpr = new PVector(inputs[3], inputs[4], inputs[5]);
       float[][] axesVectors = eulerToMatrix(wpr);
@@ -2098,12 +2081,22 @@ public void f3() {
           if (curFrameIdx == activeUserFrame) {
             armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
           }
+          
+          activeUserFrame = curFrameIdx;
         }
         
-        active_row = curFrameIdx;
-        active_col = 0;
-        mode = FRAME_DETAIL;
-        loadFrameDetails(false);
+        if (super_mode == NAV_TOOL_FRAMES) {
+          loadFrames(COORD_TOOL);
+        } else if (super_mode == NAV_USER_FRAMES) {
+          loadFrames(COORD_USER);
+        } else {
+          super_mode = MENU_NAV;
+          mu();
+        }
+        
+        mode = super_mode;
+        super_mode = NONE;
+        options.clear();
       }
     }
     
