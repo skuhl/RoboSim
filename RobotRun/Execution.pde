@@ -425,21 +425,23 @@ public float[][] calculateJacobian(float[] angles){
 //by 'tgt' and the Euler angle orientation 'rot'
 int calculateIKJacobian(PVector tgt, float[] rot){
   final int limit = 1000;  //max number of times to loop
+  int count = 0;
+  
   float[] angles = armModel.getJointRotations();
   float[][] frame = armModel.currentFrame;
   float[][] nFrame = armModel.getRotationMatrix();
   float[][] rMatrix = quatToMatrix(rot);
   armModel.currentFrame = nFrame;
+  
   //translate target rotation to world ref frame
   RealMatrix M = new Array2DRowRealMatrix(floatToDouble(nFrame, 3, 3));
   RealMatrix O = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
   RealMatrix MO = M.multiply(MatrixUtils.inverse(O));
+  
   //translate target rotation to EE ref frame
   RealMatrix R = new Array2DRowRealMatrix(floatToDouble(rMatrix, 3, 3));
   RealMatrix OR = R.multiply(MatrixUtils.inverse(MO));
   rot = matrixToQuat(doubleToFloat(OR.getData(), 3, 3));
-  
-  int count = 0;
   
   while(count < limit){
     PVector cPos = armModel.getEEPos(angles);
@@ -467,7 +469,6 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     //calculate jacobian, 'J', and its inverse 
     float[][] J = calculateJacobian(angles);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
-    //RealMatrix JInverse = MatrixUtils.inverse(m);
     RealMatrix JInverse = new SingularValueDecomposition(m).getSolver().getInverse();
         
     //calculate and apply joint angular changes
@@ -552,7 +553,7 @@ void calculateIntermediatePositions(Point start, Point end) {
   for (int n = 0; n < numberOfPoints; n++) {
     mu += increment;
     
-    qi = quaternionSlerp(q1, q2, mu - increment);
+    qi = quaternionSlerp(q1, q2, mu);
     intermediatePositions.add(new Point(new PVector(
       p1.x * (1 - mu) + (p2.x * mu),
       p1.y * (1 - mu) + (p2.y * mu),
@@ -591,38 +592,48 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   PVector p1 = start.pos;
   PVector p2 = end.pos;
   PVector p3 = next.pos;
+  float[] q1 = start.ori;
+  float[] q2 = end.ori;
+  float[] q3 = next.ori;
+  float[] qi = new float[4];
   
-  ArrayList<PVector> secondaryTargets = new ArrayList<PVector>();
-  float mu = 0;
+  ArrayList<Point> secondaryTargets = new ArrayList<Point>();
+  float d1 = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+  float d2 = dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
   int numberOfPoints = 0;
-  if (dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) >
-      dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z))
-  {
-    numberOfPoints = (int)
-      (dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) / distanceBetweenPoints);
-  } else {
-    numberOfPoints = (int)
-      (dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z) / distanceBetweenPoints);
+  if (d1 > d2){
+    numberOfPoints = (int)(d1 / distanceBetweenPoints);
+  } 
+  else {
+    numberOfPoints = (int)(d2 / distanceBetweenPoints);
   }
+  
+  float mu = 0;
   float increment = 1.0 / (float)numberOfPoints;
   for (int n = 0; n < numberOfPoints; n++) {
     mu += increment;
-    secondaryTargets.add(new PVector(
+    qi = quaternionSlerp(q2, q3, mu);
+    secondaryTargets.add(new Point(new PVector(
       p2.x * (1 - mu) + (p3.x * mu),
       p2.y * (1 - mu) + (p3.y * mu),
-      p2.z * (1 - mu) + (p3.z * mu)));
+      p2.z * (1 - mu) + (p3.z * mu)),
+      qi));
   }
+  
   mu = 0;
   int transitionPoint = (int)((float)numberOfPoints * percentage);
   for (int n = 0; n < transitionPoint; n++) {
     mu += increment;
+    qi = quaternionSlerp(q1, q2, mu);
     intermediatePositions.add(new Point(new PVector(
       p1.x * (1 - mu) + (p2.x * mu),
       p1.y * (1 - mu) + (p2.y * mu),
       p1.z * (1 - mu) + (p2.z * mu)),
-      armModel.getQuaternion()));
+      qi));
   }
+  
   int secondaryIdx = 0; // accessor for secondary targets
+  
   mu = 0;
   increment /= 2.0;
   
@@ -636,11 +647,13 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   
   for (int n = transitionPoint; n < numberOfPoints; n++) {
     mu += increment;
+    Point tgt = secondaryTargets.get(secondaryIdx);
+    qi = quaternionSlerp(currentPoint.ori, tgt.ori, mu);
     intermediatePositions.add(new Point(new PVector(
-      currentPoint.pos.x * (1 - mu) + (secondaryTargets.get(secondaryIdx).x * mu),
-      currentPoint.pos.y * (1 - mu) + (secondaryTargets.get(secondaryIdx).y * mu),
-      currentPoint.pos.z * (1 - mu) + (secondaryTargets.get(secondaryIdx).z * mu)), 
-      armModel.getQuaternion()));
+      currentPoint.pos.x * (1 - mu) + (tgt.pos.x * mu),
+      currentPoint.pos.y * (1 - mu) + (tgt.pos.y * mu),
+      currentPoint.pos.z * (1 - mu) + (tgt.pos.z * mu)), 
+      qi));
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
     secondaryIdx++;
   }

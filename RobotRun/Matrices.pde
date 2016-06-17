@@ -479,8 +479,11 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu){
   float[] qTemp = new float[4];
   float[] q1Scaled = new float[4];
   float[] q2Scaled = new float[4];
-  float startScale, endScale;
+  float startScale, endScale;;
   float cOmega = 0;
+  
+  if(mu == 0) return q1;
+  if(mu == 1) return q2;
   
   for(int i = 0; i < 4; i += 1)
     cOmega += q1[i]*q2[i];
@@ -490,43 +493,24 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu){
     qTemp = quaternionScalarMult(q1, -1);
   }
   
-  if(1 + cOmega > 1e-10){
-    if(1 - cOmega > 1e-10){
-      float omega = acos(cOmega);
-      float sOmega = sin(omega);
-      startScale = sin((1 - mu)*omega/sOmega);
-      endScale = sin(mu*omega)/sOmega;
-    }
-    else{
-      startScale = 1 - mu;
-      endScale = mu;
-    }
-    
-
-    q1Scaled = quaternionScalarMult(qTemp, startScale);
-    q2Scaled = quaternionScalarMult(q2, endScale);
-    qSlerp = quaternionAdd(q1Scaled, q2Scaled);
+  println(cOmega);
+  
+  if(cOmega > 0.99999995){
+    qSlerp[0] = q1[0]*(1-mu) + q2[0]*mu;
+    qSlerp[1] = q1[1]*(1-mu) + q2[1]*mu;
+    qSlerp[2] = q1[2]*(1-mu) + q2[2]*mu;
+    qSlerp[3] = q1[3]*(1-mu) + q2[3]*mu;
   }
   else{
-    qSlerp[0] = -qTemp[1];
-    qSlerp[1] = qTemp[0];
-    qSlerp[2] = -qTemp[3];
-    qSlerp[3] = qTemp[2];
+    float omega = acos(cOmega);
+    float scale1 = sin(omega*(1-mu))/sin(omega);
+    float scale2 = sin(omega*mu)/sin(omega);
     
-    startScale = sin((0.5 - mu)*PI);
-    endScale = sin(mu*PI);
-    q1Scaled = quaternionScalarMult(qTemp, startScale);
-    q2Scaled = quaternionScalarMult(qSlerp, startScale);
-    qSlerp = quaternionAdd(q1Scaled, q2Scaled);
+    qSlerp[0] = q1[0]*scale1 + q2[0]*scale2;
+    qSlerp[1] = q1[1]*scale1 + q2[1]*scale2;
+    qSlerp[2] = q1[2]*scale1 + q2[2]*scale2;
+    qSlerp[3] = q1[3]*scale1 + q2[3]*scale2;
   }
-  
-  //qSlerp[0] = q1[0]*(1-mu) + q2[0]*mu;
-  //qSlerp[1] = q1[1]*(1-mu) + q2[1]*mu;
-  //qSlerp[2] = q1[2]*(1-mu) + q2[2]*mu;
-  //qSlerp[3] = q1[3]*(1-mu) + q2[3]*mu;
-  
-  float mag = sqrt(pow(qSlerp[0], 2)+pow(qSlerp[1], 2)+pow(qSlerp[2], 2)+pow(qSlerp[3], 2));
-  qSlerp = quaternionScalarMult(qSlerp, 1f/mag);
   
   return qSlerp;
 }
