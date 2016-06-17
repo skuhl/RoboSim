@@ -3587,9 +3587,6 @@ public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
         /* Ar + Br - 2Cr */
         RealMatrix R = ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) );
         
-        /*System.out.printf("R:\n%s\n", matrixToString( doubleToFloat(R.getData(), 3, 3) ));
-        System.out.printf("t:\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", b.getEntry(0), b.getEntry(1), b.getEntry(2));*/
-        
         /* (R ^ -1) * b */
         avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
       }
