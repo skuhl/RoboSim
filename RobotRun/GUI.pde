@@ -1068,26 +1068,38 @@ public void keyPressed(){
     pickup.execute();
   } else if (keyCode == KeyEvent.VK_1) {
     // Front view
+    panX = 0;
+    panY = 0;
     myRotX = 0f;
     myRotY = 0f;
   } else if (keyCode == KeyEvent.VK_2) {
     // Back view
+    panX = 0;
+    panY = 0;
     myRotX = 0f;
     myRotY = PI;
   } else if (keyCode == KeyEvent.VK_3) {
     // Left view
+    panX = 0;
+    panY = 0;
     myRotX = 0f;
     myRotY = PI / 2f;
   } else if (keyCode == KeyEvent.VK_4) {
     // Right view
+    panX = 0;
+    panY = 0;
     myRotX = 0f;
     myRotY = 3f * PI / 2F;
   } else if (keyCode == KeyEvent.VK_5) {
     // Top view
+    panX = 0;
+    panY = 0;
     myRotX = 3f * PI / 2F;
     myRotY = 0f;
   } else if (keyCode == KeyEvent.VK_6) {
     // Bottom view
+    panX = 0;
+    panY = 0;
     myRotX = PI / 2f;
     myRotY = 0f;
   }

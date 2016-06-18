@@ -164,11 +164,15 @@ public void draw(){
   noStroke();
   pushMatrix();
   if(intermediatePositions != null){
+    int count = 0;
     for(Point p : intermediatePositions){
-      pushMatrix();
-      translate(p.pos.x, p.pos.y, p.pos.z);
-      sphere(10);
-      popMatrix();
+      if(count % 8 == 0){
+        pushMatrix();
+        translate(p.pos.x, p.pos.y, p.pos.z);
+        sphere(10);
+        popMatrix();
+      }
+      count += 1;
     }
   }
   popMatrix(); 
