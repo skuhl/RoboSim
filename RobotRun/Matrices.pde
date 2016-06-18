@@ -476,10 +476,7 @@ float calculateQuatMag(float[] q){
  */
 float[] quaternionSlerp(float[] q1, float[] q2, float mu){
   float[] qSlerp = new float[4];
-  float[] qTemp = new float[4];
-  float[] q1Scaled = new float[4];
-  float[] q2Scaled = new float[4];
-  float startScale, endScale;;
+  float[] q3 = new float[4];
   float cOmega = 0;
   
   if(mu == 0) return q1;
@@ -490,27 +487,36 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu){
     
   if(cOmega < 0){
     cOmega = -cOmega;
-    qTemp = quaternionScalarMult(q1, -1);
+    q3 = quaternionScalarMult(q2, -1);
+  }
+  else{
+    q3 = quaternionScalarMult(q2, 1);
   }
   
-  println(cOmega);
-  
   if(cOmega > 0.99999995){
-    qSlerp[0] = q1[0]*(1-mu) + q2[0]*mu;
-    qSlerp[1] = q1[1]*(1-mu) + q2[1]*mu;
-    qSlerp[2] = q1[2]*(1-mu) + q2[2]*mu;
-    qSlerp[3] = q1[3]*(1-mu) + q2[3]*mu;
+    qSlerp[0] = q1[0]*(1-mu) + q3[0]*mu;
+    qSlerp[1] = q1[1]*(1-mu) + q3[1]*mu;
+    qSlerp[2] = q1[2]*(1-mu) + q3[2]*mu;
+    qSlerp[3] = q1[3]*(1-mu) + q3[3]*mu;
   }
   else{
     float omega = acos(cOmega);
     float scale1 = sin(omega*(1-mu))/sin(omega);
     float scale2 = sin(omega*mu)/sin(omega);
     
-    qSlerp[0] = q1[0]*scale1 + q2[0]*scale2;
-    qSlerp[1] = q1[1]*scale1 + q2[1]*scale2;
-    qSlerp[2] = q1[2]*scale1 + q2[2]*scale2;
-    qSlerp[3] = q1[3]*scale1 + q2[3]*scale2;
+    qSlerp[0] = q1[0]*scale1 + q3[0]*scale2;
+    qSlerp[1] = q1[1]*scale1 + q3[1]*scale2;
+    qSlerp[2] = q1[2]*scale1 + q3[2]*scale2;
+    qSlerp[3] = q1[3]*scale1 + q3[3]*scale2;
   }
+  
+  float qMag = 0;
+  for(int i = 0; i < 4; i += 1){
+    qMag += qSlerp[i]*qSlerp[i];
+  }
+  
+  qMag = sqrt(qMag);
+  qSlerp = quaternionScalarMult(qSlerp, 1/qMag);
   
   return qSlerp;
 }
@@ -536,4 +542,15 @@ public String matrixToString(float[][] matrix) {
   }
   
   return (mStr + "\n");
+}
+
+public String arrayToString(float[] array){
+  String s = "[";
+  
+  for(int i = 0; i < array.length; i += 1){
+    s += String.format("%5.4f", array[i]);
+    if(i != array.length-1) s += ", ";
+  }
+  
+  return s + "]";
 }
