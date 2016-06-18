@@ -678,6 +678,7 @@ void calculateArc(Point start, Point inter, Point end){
   float[] q2 = end.ori;
   float[] qi = new float[4];
   
+  // Calculate arc center point
   PVector[] plane = new PVector[3];
   plane = createPlaneFrom3Points(a, b, c);
   PVector center = circleCenter(vectorConvertTo(a, plane[0], plane[1], plane[2]),
@@ -689,40 +690,33 @@ void calculateArc(Point start, Point inter, Point end){
   // Calculate a vector from the center to point a
   PVector u = new PVector(a.x-center.x, a.y-center.y, a.z-center.z);
   u.normalize();
-  // get n (a normal of the plane created by the 3 input points)
+  // get the normal of the plane created by the 3 input points
   PVector tmp1 = new PVector(a.x-b.x, a.y-b.y, a.z-b.z);
   PVector tmp2 = new PVector(a.x-c.x, a.y-c.y, a.z-c.z);
   PVector n = tmp1.cross(tmp2);
   tmp1.normalize();
   tmp2.normalize();
   n.normalize();
-  //calculate the angle between the start and end points
+  // calculate the angle between the start and end points
   PVector vec1 = new PVector(a.x-center.x, a.y-center.y, a.z-center.z);
   PVector vec2 = new PVector(c.x-center.x, c.y-center.y, c.z-center.z);
   vec1.normalize();
   vec2.normalize();
   float theta = atan2(vec1.cross(vec2).mag(), vec1.dot(vec2));
-  
-  // Now plug all that into the parametric equation
-  //   P = r*cos(t)*u + r*sin(t)*nxu+center [x is cross product]
-  // to compute our points along the circumference.
-  // We actually only want to create an arc from A to C, not the full
-  // circle, so detect when we're close to those points to decide
-  // when to start and stop adding points.
+
+  // finally, draw an arc through all 3 points by rotating the u
+  // vector around our normal vector
   float angle = 0, mu = 0;
   int numPoints = (int)(r*theta/distanceBetweenPoints);
   float inc = 1/(float)numPoints;
   float angleInc = (theta)/(float)numPoints;
-  println("generating arc:");
   for (int i = 0; i < numPoints; i += 1) {
     PVector pos = rotateVectorQuat(u, n, angle).mult(r).add(center);
     qi = quaternionSlerp(q1, q2, mu);
-    if(i % 5 == 0) println(qi[0] + ", " + qi[1] + ", " + qi[2] + ", " + qi[3]);
     intermediatePositions.add(new Point(pos, qi));
     angle += angleInc;
     mu += inc;
   }
-  println();
 }
 
 /**
