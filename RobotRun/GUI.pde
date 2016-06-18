@@ -1981,18 +1981,12 @@ public void f3() {
         // Set new Frame 
         if (super_mode == NAV_TOOL_FRAMES) {
           // Update the current frame of the Robot Arm
-          if (curFrameIdx == activeUserFrame) {
-            armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-          }
-          
           activeToolFrame = curFrameIdx;
+          armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
         } else if (super_mode == NAV_USER_FRAMES) {
           // Update the current frame of the Robot Arm
-          if (curFrameIdx == activeUserFrame) {
-            armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-          }
-          
           activeUserFrame = curFrameIdx;
+          armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
         }
       } else {
         System.out.printf("Error invalid index %d!\n", curFrameIdx);
@@ -2083,18 +2077,12 @@ public void f3() {
         // Set New Frame
         if (super_mode == NAV_TOOL_FRAMES) {
           // Update the current frame of the Robot Arm
-          if (curFrameIdx == activeUserFrame) {
-            armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-          }
-          
           activeToolFrame = curFrameIdx;
+          armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
         } else if (super_mode == NAV_USER_FRAMES) {
           // Update the current frame of the Robot Arm
-          if (curFrameIdx == activeUserFrame) {
-            armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-          }
-          
           activeUserFrame = curFrameIdx;
+          armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
         }
         
         if (super_mode == NAV_TOOL_FRAMES) {
@@ -3362,7 +3350,8 @@ public void updateScreen(color active, color normal){
                  .moveTo(g1)
                  ;
    } else {
-          fn_info.show()
+          fn_info.setText("")
+                 .show()
                  .moveTo(g1)
                  ;
    }
