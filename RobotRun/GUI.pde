@@ -1659,7 +1659,7 @@ public void goToEnterTextMode() {
 }
 
 
-public void f1(){
+public void f1() {
   if (shift == ON) {
     
     if (mode == INSTRUCTION_NAV) {
@@ -1696,7 +1696,7 @@ public void f1(){
         
       super_mode = mode;
       curFrameIdx = active_row;
-      loadFrameDetails(false);
+      loadFrameDetails();
     } 
     else if (mode == ACTIVE_FRAMES) {
       
@@ -1888,6 +1888,15 @@ public void f3() {
       updateScreen(color(255,0,0), color(0));
       saveState();
     }
+  } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
+    options = new ArrayList<String>();
+    options.add("1.Tool Frame");
+    options.add("2.User Frame");
+    //options.add("3.Jog Frame");
+    
+    mode = PICK_FRAME_MODE;
+    which_option = 0;
+    updateScreen(color(255,0,0), color(0));
   } else if ((mode == THREE_POINT_MODE && teachPointTMatrices.size() == 3) ||
         (mode == FOUR_POINT_MODE && teachPointTMatrices.size() == 4) ||
         (mode == SIX_POINT_MODE && teachPointTMatrices.size() == 6)) {
@@ -1905,7 +1914,7 @@ public void f3() {
       
       if (tcp == null) {
         // Invalid point set
-        loadFrameDetails(true);
+        loadFrameDetails();
         
         which_option = 0;
         options.add("Error: Invalid input values!");
@@ -1938,7 +1947,7 @@ public void f3() {
       
       if (axes == null) {
         // Invalid point set
-        loadFrameDetails(true);
+        loadFrameDetails();
         
         which_option = 0;
         options.add("Error: Invalid input values!");
@@ -2217,7 +2226,7 @@ public void f5() {
       }
       
       int limbo = mode;
-      loadFrameDetails(false);
+      loadFrameDetails();
       mode = limbo;
       loadPointList();
     }
@@ -2524,13 +2533,13 @@ public void ENTER(){
        if (which_option == 0) {
          which_option = 0;
          teachPointTMatrices = new ArrayList<float[][]>();
-         loadFrameDetails(false);
+         loadFrameDetails();
          mode = THREE_POINT_MODE;
          loadPointList();
        } else if (which_option == 1) {
          which_option = 0;
          teachPointTMatrices = new ArrayList<float[][]>();
-         loadFrameDetails(false);
+         loadFrameDetails();
          mode = (super_mode == NAV_TOOL_FRAMES) ? SIX_POINT_MODE : FOUR_POINT_MODE;
          loadPointList();
        } else if (which_option == 2) {
@@ -3307,7 +3316,7 @@ public void updateScreen(color active, color normal){
                  .moveTo(g1)
                  ;
    } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
-     fn_info.setText("F1: SET     SHIFT+F1: DETAIL     F2: RESET")
+     fn_info.setText("F1: SET     SHIFT+F1: DETAIL     F2: RESET     F3: SWITCH")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
