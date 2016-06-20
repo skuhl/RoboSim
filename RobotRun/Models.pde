@@ -904,6 +904,11 @@ public class ArmModel {
           mvRot[1] = 0;
           mvRot[2] = 0;
         }
+        else if(r == EXEC_PARTIAL){
+          tgtPos = armModel.getEEPos();
+          tgtRot = armModel.getQuaternion();
+          
+        }
       }
     }
   } // end execute live motion

@@ -56,7 +56,7 @@ Program currentProgram;
 boolean execSingleInst = false;
 MotionInstruction singleInstruction = null;
 int currentInstruction;
-int EXEC_SUCCESS = 0, EXEC_FAILURE = 1;
+int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 
 /*******************************/
 

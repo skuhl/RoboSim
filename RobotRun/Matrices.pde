@@ -470,6 +470,11 @@ float calculateQuatMag(float[] q){
   return sqrt(pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2));
 }
 
+float[] quaternionNormalize(float[] q){
+  float qMag = calculateQuatMag(q);
+  return quaternionScalarMult(q, 1/qMag);
+}
+
 /* Given two input quaternions, 'q1' and 'q2', computes the spherical-
  * linear interpolation from 'q1' to 'q2' for a given fraction of the
  * complete transformation 'q1' to 'q2', denoted by 0 <= 'mu' <= 1. 
@@ -510,15 +515,7 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu){
     qSlerp[3] = q1[3]*scale1 + q3[3]*scale2;
   }
   
-  float qMag = 0;
-  for(int i = 0; i < 4; i += 1){
-    qMag += qSlerp[i]*qSlerp[i];
-  }
-  
-  qMag = sqrt(qMag);
-  qSlerp = quaternionScalarMult(qSlerp, 1/qMag);
-  
-  return qSlerp;
+  return quaternionNormalize(qSlerp);
 }
 
 /* Returns a string represenation of the given matrix.
