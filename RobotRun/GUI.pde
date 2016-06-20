@@ -1295,9 +1295,9 @@ public void addNumber(String number) {
     if (active_row >= 0 && active_row < contents.size()) {
       String line = contents.get(active_row).get(0) + number;
       
-      if (line.length() > 12) {
-        // Max length of a line is 15 characters
-        line = line.substring(0, 13);
+      if (line.length() > 11) {
+        // Max length of a line is 11 characters
+        line = line.substring(0, 11);
       }
       
       // Concatenate the new digit
@@ -1317,9 +1317,9 @@ public void PERIOD() {
       // Add decimal point
       String line = contents.get(active_row).get(0) + ".";
       
-      if (line.length() > 12) {
-        // Max length of a line is 15 characters
-        line = line.substring(0, 13);
+      if (line.length() > 11) {
+        // Max length of a line is 11 characters
+        line = line.substring(0, 11);
       }
       
       contents.get(active_row).set(0, line);
@@ -1344,9 +1344,9 @@ public void LINE() {
         line = line.substring(0, 3) + "-" + line.substring(3, line.length());
       }
       
-      if (line.length() > 12) {
-        // Max length of a line is 15 characters
-        line = line.substring(0, 13);
+      if (line.length() > 11) {
+        // Max length of a line is 11 characters
+        line = line.substring(0, 11);
       }
       
       contents.get(active_row).set(0, line);
@@ -2035,12 +2035,6 @@ public void f3() {
       options.add("Inputs must be real numbers.");
     }
     
-    if (!error && (inputs[3] < -PI || inputs[3] > PI || inputs[4] > (PI / 2f) || inputs[4] < (-PI / 2f) || inputs[5] < -PI || inputs[5] > PI)) {
-      // Input value is out of bounds
-      options.add("W and R have the range of [-PI, PI] and P has the range of [-PI / 2, PI / 2].");
-      error = true;
-    }
-    
     if (error) {
       which_option = 0;
       updateScreen(color(255, 0, 0) , color(0));
@@ -2048,6 +2042,11 @@ public void f3() {
       PVector origin = new PVector(inputs[0], inputs[1], inputs[2]),
               wpr = new PVector(inputs[3], inputs[4], inputs[5]);
       float[][] axesVectors = eulerToMatrix(wpr);
+      
+      origin.x = max(-9999f, min(origin.x, 9999f));
+      origin.y = max(-9999f, min(origin.y, 9999f));
+      origin.z = max(-9999f, min(origin.z, 9999f));
+      wpr = matrixToEuler(axesVectors);
       
       if (DISPLAY_TEST_OUTPUT) { System.out.printf("\n\n%s\n%s\n%s\n", origin.toString(), wpr.toString(), matrixToString(axesVectors)); }
       
