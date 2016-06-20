@@ -39,6 +39,7 @@ final int NONE = 0,
           CONFIRM_DELETE = 31;
 final int COLOR_DEFAULT = -8421377,
           COLOR_ACTIVE = -65536;
+// Determines what End Effector mapping should be display
 static int     EE_MAPPING = 2;
 
 int frame = FRAME_JOINT; // current frame
@@ -1660,66 +1661,43 @@ public void goToEnterTextMode() {
 
 
 public void f1() {
-  if (shift == ON) {
-    
-    if (mode == INSTRUCTION_NAV) {
-      PVector eep = armModel.getEEPos();
-      eep = convertNativeToWorld(eep);
-      Program prog = programs.get(active_program);
-      int reg = prog.nextRegister();
-      float[] q = armModel.getQuaternion();
-      float[] j = armModel.getJointRotations();
-      
-      prog.addRegister(new Point(eep.x, eep.y, eep.z, q[0], q[1], q[2], q[3],
-                                 j[0], j[1], j[2], j[3], j[4], j[5]), reg);
-                                 
-      MotionInstruction insert = new MotionInstruction(
-        (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
-        reg,
-        false,
-        (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
-        0,
-        activeUserFrame,
-        activeToolFrame);
-      prog.addInstruction(insert);
+  switch (mode) {
+    case PROGRAM_NAV:
+      //shift = OFF;
+      break;
+    case INSTRUCTION_NAV:
+      if (shift == ON) {
         
-      active_instruction = prog.getInstructions().size() - 1;
-      active_col = 0;
-      /* 13 is the maximum number of instructions that can be displayed at one point in time */
-      active_row = min(active_instruction, ITEMS_TO_SHOW - 4);
-      text_render_start = active_instruction - active_row;
-      
-      loadInstructions(active_program);
-      updateScreen(color(255,0,0), color(0,0,0));
-    }
-    else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
+        PVector eep = armModel.getEEPos();
+        eep = convertNativeToWorld(eep);
+        Program prog = programs.get(active_program);
+        int reg = prog.nextRegister();
+        float[] q = armModel.getQuaternion();
+        float[] j = armModel.getJointRotations();
         
-      super_mode = mode;
-      curFrameIdx = active_row;
-      loadFrameDetails();
-    } 
-    else if (mode == ACTIVE_FRAMES) {
-      
-      if (active_row == 1) {
-        loadFrames(COORD_TOOL);
-      } 
-      else if (active_row == 2) {
-        loadFrames(COORD_USER);
-      }
-      
-    } 
-    else if (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE || mode == FOUR_POINT_MODE) {
-      ref_point = null;
-    }
-    
-    return;
-  }
-  else {
-    switch (mode) {
-      case PROGRAM_NAV:
-        //shift = OFF;
-        break;
-      case INSTRUCTION_NAV:
+        prog.addRegister(new Point(eep.x, eep.y, eep.z, q[0], q[1], q[2], q[3],
+                                   j[0], j[1], j[2], j[3], j[4], j[5]), reg);
+                                   
+        MotionInstruction insert = new MotionInstruction(
+          (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
+          reg,
+          false,
+          (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
+          0,
+          activeUserFrame,
+          activeToolFrame);
+        prog.addInstruction(insert);
+          
+        active_instruction = prog.getInstructions().size() - 1;
+        active_col = 0;
+        /* 13 is the maximum number of instructions that can be displayed at one point in time */
+        active_row = min(active_instruction, ITEMS_TO_SHOW - 4);
+        text_render_start = active_instruction - active_row;
+        
+        loadInstructions(active_program);
+        updateScreen(color(255,0,0), color(0,0,0));
+      } else {
+        
         contents = new ArrayList<ArrayList<String>>();
         ArrayList<String> line = new ArrayList<String>();
         line.add("1 I/O");
@@ -1731,9 +1709,15 @@ public void f1() {
         active_col = active_row = 0;
         mode = PICK_INSTRUCTION;
         updateScreen(color(255,0,0), color(0));
-        //shift = OFF;
-        break;
-      case NAV_TOOL_FRAMES:
+      }
+      break;
+    case NAV_TOOL_FRAMES:
+      if (shift == ON) {
+        
+        super_mode = mode;
+        curFrameIdx = active_row;
+        loadFrameDetails();
+      } else {
         // Set the current tool frame
         if (active_row >= 0) {
           activeToolFrame = active_row;
@@ -1742,8 +1726,15 @@ public void f1() {
             armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
           }
         }
-        break;
-      case NAV_USER_FRAMES:
+      }
+      break;
+    case NAV_USER_FRAMES:
+      if (shift == ON) {
+        
+        super_mode = mode;
+        curFrameIdx = active_row;
+        loadFrameDetails();
+      } else {
         // Set the current user frame
         if (active_row >= 0) {
           activeUserFrame = active_row;
@@ -1752,122 +1743,122 @@ public void f1() {
             armModel.currentFrame = userFrames[activeUserFrame].getNativeAxes();
           }
         }
-        break;
-      case INSTRUCTION_EDIT:
-        //shift = OFF;
-        break;
-      case THREE_POINT_MODE:
-      case SIX_POINT_MODE:
-      case FOUR_POINT_MODE:
-        ref_point = armModel.getEEPos();
-        break;
-      case DIRECT_ENTRY_MODE:
-        // Delete a digit from the being of the number entry
-        if (active_row >= 0 && active_row < contents.size()) {
-          String entry = contents.get(active_row).get(0),
-                 new_entry = "";
-          
-           if (entry.length() > 3) {
-             new_entry = entry.substring(0, 3);
-             
-             if (entry.charAt(3) == '-') {
-               if (entry.length() > 5) {
-                 // Keep negative sign until the last digit is removed
-                 new_entry += "-" + entry.substring(5, entry.length());
-               }
-             } else if (entry.length() > 4) {
-               new_entry += entry.substring(4, entry.length());
-             }
-           } else {
-             // Blank entry
-             new_entry = entry;
-           }
-           
-           contents.get(active_row).set(0, new_entry);
-        }
+      }
+      break;
+    case ACTIVE_FRAMES:
+      if (active_row == 1) {
+        loadFrames(COORD_TOOL);
+      } else if (active_row == 2) {
+        loadFrames(COORD_USER);
+      }
+    case INSTRUCTION_EDIT:
+      //shift = OFF;
+      break;
+    case THREE_POINT_MODE:
+    case SIX_POINT_MODE:
+    case FOUR_POINT_MODE:
+      ref_point = (shift == ON) ? null : armModel.getEEPos();
+      break;
+    case DIRECT_ENTRY_MODE:
+      // Delete a digit from the being of the number entry
+      if (active_row >= 0 && active_row < contents.size()) {
+        String entry = contents.get(active_row).get(0),
+               new_entry = "";
         
-        updateScreen(color(255, 0, 0), color(0));
-        break;
-    }
+         if (entry.length() > 3) {
+           new_entry = entry.substring(0, 3);
+           
+           if (entry.charAt(3) == '-') {
+             if (entry.length() > 5) {
+               // Keep negative sign until the last digit is removed
+               new_entry += "-" + entry.substring(5, entry.length());
+             }
+           } else if (entry.length() > 4) {
+             new_entry += entry.substring(4, entry.length());
+           }
+         } else {
+           // Blank entry
+           new_entry = entry;
+         }
+         
+         contents.get(active_row).set(0, new_entry);
+      }
+      
+      updateScreen(color(255, 0, 0), color(0));
+      break;
   }
 }
 
 
 public void f2() {
-  if (shift == ON) {
+  if (mode == PROGRAM_NAV) {
+    workingText = "";
+    active_program = -1;
+    goToEnterTextMode();
+  } else if (mode == FRAME_DETAIL) {
+    options = new ArrayList<String>();
     
-    if (mode == ACTIVE_FRAMES) {
-      // Reset the active frames for the User or Tool Coordinate Frames
-      if (active_row == 1) {
-        
-        activeToolFrame = -1;
-        
-        // Leave the Tool Frame
-        if (curCoordFrame == COORD_TOOL || curCoordFrame == COORD_WORLD) {
-          curCoordFrame = COORD_WORLD;
-          armModel.resetFrame();
-        }
-      } else if (active_row == 2) {
-        activeUserFrame = -1;
-        
-        // Leave the User Frame
-        if (curCoordFrame == COORD_USER) {
-          curCoordFrame = COORD_WORLD;
-          armModel.resetFrame();
-        }
-      }
-      
-      loadActiveFrames();
-      updateScreen(color(255,0,0), color(0));
+    if (super_mode == NAV_USER_FRAMES) {
+      options.add("1. Three Point");
+      options.add("2. Four Point");
+      options.add("3. Direct Entry");
+    } else if (super_mode == NAV_TOOL_FRAMES) {
+      options.add("1. Three Point");
+      options.add("2. Six Point");
+      options.add("3. Direct Entry");
     }
-  } else {
-    
-    if (mode == PROGRAM_NAV) {
-      workingText = "";
-      active_program = -1;
-      goToEnterTextMode();
-    } else if (mode == FRAME_DETAIL) {
-      options = new ArrayList<String>();
-      
-      if (super_mode == NAV_USER_FRAMES) {
-        options.add("1. Three Point");
-        options.add("2. Four Point");
-        options.add("3. Direct Entry");
-      } else if (super_mode == NAV_TOOL_FRAMES) {
-        options.add("1. Three Point");
-        options.add("2. Six Point");
-        options.add("3. Direct Entry");
+    mode = PICK_FRAME_METHOD;
+    which_option = 0;
+    updateScreen(color(255,0,0), color(0));
+  } if (mode == NAV_TOOL_FRAMES) {
+     
+     // Reset the highlighted frame in the tool frame list
+     if (active_row >= 0) {
+        toolFrames[active_row] = new Frame();
+        saveFrames(sketchPath("tmp/frames.ser"));
       }
-      mode = PICK_FRAME_METHOD;
-      which_option = 0;
-      updateScreen(color(255,0,0), color(0));
-    } if (mode == NAV_TOOL_FRAMES) {
+   } else if (mode == NAV_USER_FRAMES) {
+     
+     // Reset the highlighted frame in the user frames list
+     if (active_row >= 0) {
+       userFrames[active_row] = new Frame();
+       saveFrames(sketchPath("tmp/frames.ser"));
+     }
+   } else if (mode == ACTIVE_FRAMES) {
+     // Reset the active frames for the User or Tool Coordinate Frames
+     if (active_row == 1) {
        
-       // Reset the highlighted frame in the tool frame list
-       if (active_row >= 0) {
-          toolFrames[active_row] = new Frame();
-          saveFrames(sketchPath("tmp/frames.ser"));
-        }
-     } else if (mode == NAV_USER_FRAMES) {
+       activeToolFrame = -1;
        
-       // Reset the highlighted frame in the user frames list
-       if (active_row >= 0) {
-         userFrames[active_row] = new Frame();
-         saveFrames(sketchPath("tmp/frames.ser"));
+       // Leave the Tool Frame
+       if (curCoordFrame == COORD_TOOL || curCoordFrame == COORD_WORLD) {
+         curCoordFrame = COORD_WORLD;
+         armModel.resetFrame();
        }
-     } else if (mode == DIRECT_ENTRY_MODE) {
-       // backspace function for current row
+     } else if (active_row == 2) {
+       activeUserFrame = -1;
        
-       if (active_row >= 0 && active_row < contents.size()) {
-         String line = contents.get(active_row).get(0);
-         // Do not remove line prefix
-         if (line.length() > 3) {
-           contents.get(active_row).set(0, line.substring(0, line.length() - 1));
-           updateScreen(color(255, 0, 0) , color(0));
-         }
+       // Leave the User Frame
+       if (curCoordFrame == COORD_USER) {
+         curCoordFrame = COORD_WORLD;
+         armModel.resetFrame();
        }
      }
-  }
+     
+     loadActiveFrames();
+     updateScreen(color(255,0,0), color(0));
+   } else if (mode == DIRECT_ENTRY_MODE) {
+     // backspace function for current row
+     
+     if (active_row >= 0 && active_row < contents.size()) {
+       String line = contents.get(active_row).get(0);
+       // Do not remove line prefix
+       if (line.length() > 3) {
+         contents.get(active_row).set(0, line.substring(0, line.length() - 1));
+         updateScreen(color(255, 0, 0) , color(0));
+       }
+     }
+   }
 }
 
 
@@ -2174,9 +2165,8 @@ public void f4() {
 }
 
 public void f5() {
-  
-  if (shift == ON) {
-    if (mode == INSTRUCTION_NAV) {
+  if (mode == INSTRUCTION_NAV) {
+    if (shift == ON) {
       // overwrite current instruction
       PVector eep = armModel.getEEPos();
       eep = convertNativeToWorld(eep);
@@ -2198,40 +2188,7 @@ public void f5() {
       active_col = 0;
       loadInstructions(active_program);
       updateScreen(color(255,0,0), color(0,0,0));
-    } else if (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE || mode == FOUR_POINT_MODE) {
-  
-      if (teachPointTMatrices != null) {
-        
-        pushMatrix();
-        resetMatrix();
-        applyModelRotation(armModel, false);
-        // Save current position of the EE
-        float[][] tMatrix = getTransformationMatrix();
-        
-        // Add the current teach point to the running list of teach points
-        if (which_option >= 0 && which_option < teachPointTMatrices.size()) {
-          // Cannot override the origin once it is calculated for the six point method
-          teachPointTMatrices.set(which_option, tMatrix);
-        } else if ((mode == THREE_POINT_MODE && teachPointTMatrices.size() < 3) ||
-                   (mode == FOUR_POINT_MODE && teachPointTMatrices.size() < 4) ||
-                   (mode == SIX_POINT_MODE && teachPointTMatrices.size() < 6)) {
-          
-          // Add a new point as long as it does not exceed number of points for a specific method
-          teachPointTMatrices.add(tMatrix);
-          // increment which_option
-          which_option = min(which_option + 1, options.size() - 1);
-        }
-        
-        popMatrix();
-      }
-      
-      int limbo = mode;
-      loadFrameDetails();
-      mode = limbo;
-      loadPointList();
-    }
-  } else {
-    if (mode == INSTRUCTION_NAV) {
+    } else {
       if (active_col == 0) {
         // if you're on the line number, bring up a list of instruction editing options
         contents = new ArrayList<ArrayList<String>>();
@@ -2277,9 +2234,39 @@ public void f5() {
           updateScreen(color(255,0,0), color(0,0,0));
         }
       }
-    } else if (mode == CONFIRM_DELETE) {
-      deleteInstEpilogue();
     }
+  } else if (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE || mode == FOUR_POINT_MODE) {
+    if (teachPointTMatrices != null) {
+      
+      pushMatrix();
+      resetMatrix();
+      applyModelRotation(armModel, false);
+      // Save current position of the EE
+      float[][] tMatrix = getTransformationMatrix();
+      
+      // Add the current teach point to the running list of teach points
+      if (which_option >= 0 && which_option < teachPointTMatrices.size()) {
+        // Cannot override the origin once it is calculated for the six point method
+        teachPointTMatrices.set(which_option, tMatrix);
+      } else if ((mode == THREE_POINT_MODE && teachPointTMatrices.size() < 3) ||
+                 (mode == FOUR_POINT_MODE && teachPointTMatrices.size() < 4) ||
+                 (mode == SIX_POINT_MODE && teachPointTMatrices.size() < 6)) {
+        
+        // Add a new point as long as it does not exceed number of points for a specific method
+        teachPointTMatrices.add(tMatrix);
+        // increment which_option
+        which_option = min(which_option + 1, options.size() - 1);
+      }
+      
+      popMatrix();
+    }
+    
+    int limbo = mode;
+    loadFrameDetails();
+    mode = limbo;
+    loadPointList();
+  } else if (mode == CONFIRM_DELETE) {
+    deleteInstEpilogue();
   }
 }
 
@@ -3344,7 +3331,7 @@ public void updateScreen(color active, color normal){
                  .moveTo(g1)
                  ;
    } else if (mode == ACTIVE_FRAMES) {
-     fn_info.setText("SHIFT+F1: LIST     SHIFT+F2: RESET")
+     fn_info.setText("F1: LIST     F2: RESET")
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
