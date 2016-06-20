@@ -1815,14 +1815,14 @@ public void f2() {
      // Reset the highlighted frame in the tool frame list
      if (active_row >= 0) {
         toolFrames[active_row] = new Frame();
-        saveFrames(sketchPath("tmp/frames.ser"));
+        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
       }
    } else if (mode == NAV_USER_FRAMES) {
      
      // Reset the highlighted frame in the user frames list
      if (active_row >= 0) {
        userFrames[active_row] = new Frame();
-       saveFrames(sketchPath("tmp/frames.ser"));
+       saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
      }
    } else if (mode == ACTIVE_FRAMES) {
      // Reset the active frames for the User or Tool Coordinate Frames
@@ -1968,7 +1968,7 @@ public void f3() {
         frames[curFrameIdx].setOrigin(origin);
         frames[curFrameIdx].setWpr(wpr);
         frames[curFrameIdx].setAxes(axes);
-        saveFrames(sketchPath("tmp/frames.ser"));
+        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         
         // Set new Frame 
         if (super_mode == NAV_TOOL_FRAMES) {
@@ -2063,7 +2063,7 @@ public void f3() {
         if (DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
         
         frames[curFrameIdx] = new Frame(origin, wpr, axesVectors);
-        saveFrames(sketchPath("tmp/frames.ser"));
+        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         
         // Set New Frame
         if (super_mode == NAV_TOOL_FRAMES) {

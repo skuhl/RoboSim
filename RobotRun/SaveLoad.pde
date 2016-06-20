@@ -57,7 +57,7 @@ void saveState() {
     out.close();
     */
     
-    saveFrames(sketchPath("tmp/frames.ser"));
+    saveFrameBytes( new File(sketchPath("tmp/frames.ser")) );
     
   }catch(IOException e){
      e.printStackTrace();
@@ -65,64 +65,52 @@ void saveState() {
   }
 }
 
-public int saveFrames(String path) {
-  try {
-    FileOutputStream out = new FileOutputStream(path);
-    
-    // Save the Tool and User Frames to the path /tmp/frames.ser
-    if (toolFrames != null) {
-      
-      // Save Tool Frames
-      out.write( ("<FrameSet> ").getBytes( Charset.forName("UTF-8") ) );
-      String size = toolFrames.length + " ";
-      out.write(size.getBytes("UTF-8"));
-        
-      for (int idx = 0; idx < toolFrames.length; ++idx) {
-        if(toolFrames[idx] != null){
-          out.write( toolFrames[idx].toExport().getBytes( Charset.forName("UTF-8") ) );
-          out.write( (" ").getBytes( Charset.forName("UTF-8") ) );
-        }
-      }
-    }
-    
-    if (userFrames != null) {
-      // Save User Frames
-      out.write( ("</FrameSet> <FrameSet> ").getBytes( Charset.forName("UTF-8") ) );
-      String size = userFrames.length + " ";
-      out.write(size.getBytes("UTF-8"));
-      
-      for (int idx = 0; idx < userFrames.length; ++idx) {
-        if(userFrames[idx] != null){
-          out.write( userFrames[idx].toExport().getBytes( Charset.forName("UTF-8") ) );
-          out.write( (" ").getBytes( Charset.forName("UTF-8") ) );
-        }
-      }
-      
-      out.write( ("</FrameSet>").getBytes( Charset.forName("UTF-8") ) );
-    }
-    
-    out.close();
-    
-    return 1;
-  } catch (Exception Ex) {
-    Ex.printStackTrace();
-    return 0;
-  }
+public int saveFrames() {
+  
+  
+  
+  return 0;
 }
 
 /**
- * Load the program state that is previously stored. 
- * @return: 1 if sucess, otherwise return 0;
+ * Load program and frames from their respective save files.
+ *
+ * @return  0 if successful,
+ *          1 if the program loading failed,
+ *          2 if the frame loading failed.
  */
-int loadState() {
+public int loadState() {
   // If loading fails that create all new Frames
   File f = new File(sketchPath("tmp/"));
-  f.mkdirs();
+  if (!f.exists()) { f.mkdirs(); }
   
-  Path p2 = Paths.get(sketchPath("tmp/frames.ser"));
+  Path p1 = Paths.get(sketchPath("tmp/programs.ser")); 
+  if (!Files.exists(p1)) return 1;
+  if(loadPrograms(p1)==0) return 1;
   
-  if (!Files.exists(p2) || loadFrames(p2) == 0) {
-    
+  // Find the file 'frames.bin' in the 'tmp/' folder
+  File frameFile = new File( sketchPath("tmp/frames.bin") );
+  
+  if (!frameFile.exists()) {
+    try {
+      // Create 'frames.bin' if it does not already exist
+      frameFile.createNewFile();
+      System.out.printf("Successfully created %s.\n", frameFile.getName());
+    } catch (IOException IOEx) {
+      // Error with the creation of 'frames.bin'
+      System.out.printf("Could not create %s ...\n", frameFile.getName());
+      IOEx.printStackTrace();
+      return 2;
+    }
+  }
+  
+  // Load both the User and Tool Frames
+  int ret = loadFrameBytes(frameFile);
+  
+  if (ret == 0) {
+    println("Successfully loaded Frames.");
+  } else {
+    // Create new frames if they could not be loaded
     toolFrames = new Frame[10];
     userFrames = new Frame[10];
     
@@ -130,17 +118,9 @@ int loadState() {
       toolFrames[n] = new Frame();
       userFrames[n] = new Frame();
     }
-    
-    saveFrames(sketchPath("tmp/frames.ser"));
-    println("Frames loaded failed ...");
   }
   
-  Path p1 = Paths.get(sketchPath("tmp/programs.ser")); 
-  if (!Files.exists(p1)) return 0;
-  if(loadPrograms(p1)==0) return 0;
-  
-  println("Frames loaded successfully");
-  return 1;
+  return 0;
 }
 
 /**
@@ -215,112 +195,163 @@ int loadPrograms(Path path){
 }
 
 /**
- * This method loads all saved Tool and User Frames form /tmp/frames.ser
- * 
- * @param path  the path from which to load the Frames from
- * @return      1 if loading was successful, 0 otherwise
+ * Given a valid file path, both the Tool Frame and then the User
+ * Frame sets are saved to the file. First the length of a list
+ * is saved and then its respective elements.
+ *
+ * @param dest  the file to which the frame sets will be saved
+ * @return      0 if successful,
+ *              1 if an error occurs with accessing the give file
+ *              2 if an error occurs with writing to the file
  */
-public int loadFrames(Path path) {
+public int saveFrameBytes(File dest) {
   
   try {
-    Scanner reader = new Scanner(path);
-    // Consume "<FrameSet>"
-    reader.next();
-    // Read Tool Frame Set length
-    toolFrames = new Frame[reader.nextInt()];
-   
-    String token;
-    // Read each Tool Frame one Vector at a time
-    for (int idx = 0; idx < toolFrames.length; ++idx) {
-      // Consume "<Frame>"
-      reader.next();
-      
-      token = reader.next();
-      float x = Float.parseFloat(token);
-      token = reader.next();
-      float y = Float.parseFloat(token);
-      token = reader.next();
-      float z = Float.parseFloat(token);
-      // Create origin point
-      PVector o = new PVector(x, y ,z);
-      
-      token = reader.next();
-      x = Float.parseFloat(token);
-      token = reader.next();
-      y = Float.parseFloat(token);
-      token = reader.next();
-      z = Float.parseFloat(token);
-      // Create w, p, and r
-      PVector wpr = new PVector(x, y ,z);
-      
-      float[][] axes = new float[3][3];
-      // Create axes points
-      
-      for (int row = 0; row < 3; ++row) {
-        for (int col = 0; col < 3; ++col) {
-          axes[row][col] = Float.parseFloat(reader.next());;
-        }  
-      }
-      
-      toolFrames[idx] = new Frame(o, wpr, axes);
-      
-      reader.next();
+    FileOutputStream out = new FileOutputStream(dest.toString());
+    DataOutputStream dataOut = new DataOutputStream(out);
+    
+    // Save Tool Frames
+    dataOut.writeInt(toolFrames.length);
+    for (Frame frame : toolFrames) {
+      saveFrame(frame, dataOut);
     }
     
-    // Consume "</FrameSet>"
-    reader.next();
-    
-    // Consume "<FrameSet>"
-    reader.next();
-    // Read User Frame Set length
-    userFrames = new Frame[reader.nextInt()];
-    
-    // Read each User Frame one Vector at a time
-    for (int idx = 0; idx < toolFrames.length; ++idx) {
-      // Consume "<Frame>"
-      reader.next();
-      
-      token = reader.next();
-      float x = Float.parseFloat(token);
-      token = reader.next();
-      float y = Float.parseFloat(token);
-      token = reader.next();
-      float z = Float.parseFloat(token);
-      // Create origin point
-      PVector o = new PVector(x, y ,z);
-      
-      token = reader.next();
-      x = Float.parseFloat(token);
-      token = reader.next();
-      y = Float.parseFloat(token);
-      token = reader.next();
-      z = Float.parseFloat(token);
-      // Create w, p, and r
-      PVector wpr = new PVector(x, y ,z);
-      
-      float[][] axes = new float[3][3];
-      // Create axes points
-      
-      for (int col = 0; col < 3; ++col) {
-        for (int row = 0; row < 3; ++row) {
-          axes[row][col] = Float.parseFloat(reader.next());;
-        }  
-      }
-      
-      userFrames[idx] = new Frame(o, wpr, axes);
-      
-      reader.next();
+    // Save User Frames
+    dataOut.writeInt(userFrames.length);
+    for (Frame frame : userFrames) {
+      saveFrame(frame, dataOut);
     }
     
-    // Consume "</FrameSet>"
-    reader.next();
-    
-    reader.close();
-    
-  } catch (Exception e) {
-    e.printStackTrace();
+    dataOut.close();
+    out.close();
     return 0;
+  } catch (FileNotFoundException FNFEx) {
+    // Could not find the given file
+    System.out.printf("%s does not exist!\n", dest.getName());
+    FNFEx.printStackTrace();
+    return 1;
+  } catch (IOException IOEx) {
+    // Error with reading the values for the Frames
+    System.out.printf("%s is corrupt!\n", dest.getName());
+    IOEx.printStackTrace();
+    return 2;
+  }
+}
+
+/**
+ * Loads both the Tool and User Frames from the file path denoted
+ * by the given String. The Tool Frames are expected to come before
+ * the Usser Frames. In addition, it is expected that both frame
+ * sets store the length of the set before the first element.
+ * 
+ * @param src  the file, which contains the data for the Tool and
+ *             User Frames
+ * @return     0 if successful,
+ *             1 if an error occurs with accessing the give file
+ *             2 if an error occurs with reading from the file
+ *             3 if the end of the file is reached before reading
+ *             all the data for the frames
+ */
+public int loadFrameBytes(File src) {
+  
+  try {
+    FileInputStream in = new FileInputStream(src.toString());
+    DataInputStream dataIn = new DataInputStream(in);
+    
+    // Load Tool Frames
+    int size = dataIn.readInt();
+    toolFrames = new Frame[size];
+    int idx;
+    
+    for (idx = 0; idx < size; ++idx) {
+      toolFrames[idx] = loadFrame(dataIn);
+    }
+    
+    // Load User Frames
+    size = dataIn.readInt();
+    userFrames = new Frame[size];
+    
+    for (idx = 0; idx < size; ++idx) {
+      userFrames[idx] = loadFrame(dataIn);
+    }
+    
+    dataIn.close();
+    in.close();
+    return 0;
+  } catch (FileNotFoundException FNFEx) {
+    // Could not find the given file
+    System.out.printf("%s does not exist!\n", src.getName());
+    FNFEx.printStackTrace();
+    return 1;
+  } catch (EOFException EOFEx) {
+    // End of file reached
+    System.out.printf("Reached end of %s!\n", src.getName());
+    EOFEx.printStackTrace();
+    return 3;
+  } catch (IOException IOEx) {
+    // Error with reading the values for the Frames
+    System.out.printf("%s is corrupt!\n", src.getName());
+    IOEx.printStackTrace();
+    return 2;
+  }
+}
+
+/**
+ * Saves the data of the given frame's origin, orientation and axes vectors
+ * to the file opened by the given DataOutputStream.
+ * 
+ * @param f    A non-null frame object
+ * @param out  An output stream used to write the given frame to a file
+ * @throw IOException  if an error occurs with writing the frame to the file
+ */
+public void saveFrame(Frame f, DataOutputStream out) throws IOException {
+  // Write frame origin
+  PVector v = f.getOrigin();
+  out.writeFloat(v.x);
+  out.writeFloat(v.y);
+  out.writeFloat(v.z);
+  // Write frame orientation
+  v = f.getWpr();
+  out.writeFloat(v.x);
+  out.writeFloat(v.y);
+  out.writeFloat(v.z);
+  // Write frame axes
+  for (int row = 0; row < 3; ++row) {
+    for (int col = 0; col < 3; ++col) {
+      out.writeFloat(f.axes[row][col]);
+    }
+  }
+}
+
+/**
+ * Loads the data associated with a Frame object (origin,
+ * orientation and axes vectors) from the file opened by
+ * the given DataOutputStream.
+ *
+ * @param out  An input stream used to read from a file
+ * @return     The next frame stored in the file
+ * @throw IOException  if an error occurs while reading the frame
+ *                     from to the file
+ */
+public Frame loadFrame(DataInputStream in) throws IOException {
+  // Read origin values
+  PVector origin = new PVector();
+  origin.x = in.readFloat();
+  origin.y = in.readFloat();
+  origin.z = in.readFloat();
+  // Read orientation values
+  PVector wpr = new PVector();
+  wpr.x = in.readFloat();
+  wpr.y = in.readFloat();
+  wpr.z = in.readFloat();
+  
+  float[][] axesVectors = new float[3][3];
+  // Read axes vector values
+  for (int row = 0; row < 3; ++row) {
+    for (int col = 0; col < 3; ++col) {
+      axesVectors[row][col] = in.readFloat();
+    }
   }
   
-  return 1;
+  return new Frame(origin, wpr, axesVectors);
 }
