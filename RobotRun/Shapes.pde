@@ -190,6 +190,10 @@ public class Object {
  * This algorithm uses the Separating Axis Theorm to project radi of each Box on to several 
  * axes to determine if a there is any overlap between the boxes. The method strongy resembles 
  * the method outlined in Section 4.4 of "Real Time Collision Detection" by Christer Ericson
+ *
+ * @param A  The hit box associated with some object in space
+ * @param B  The hit box associated with another object in space
+ * @return   Whether the two hit boxes intersect
  */
 public boolean collision3D(Box A, Box B) {
   // Rows are x, y, z axis vectors for A and B: Ax, Ay, Az, Bx, By, and Bz

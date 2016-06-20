@@ -282,7 +282,8 @@ PVector computePerpendicular(PVector in, PVector second) {
   else return vectorConvertFrom(perp2, plane[0], plane[1], plane[2]);
 }
 
-/* This method will draw the End Effector grid mapping based on the value of EE_MAPPING:
+/**
+ * This method will draw the End Effector grid mapping based on the value of EE_MAPPING:
  *
  *  0 -> a line is drawn between the EE and the grid plane
  *  1 -> a point is drawn on the grid plane that corresponds to the EE's xz coordinates
@@ -1112,6 +1113,14 @@ void setError(String text) {
   errorCounter = 600;
 }
 
+/**
+ * Maps wth given angle to the range of 0 (inclusive) to
+ * two PI (exclusive).
+ *
+ * @param angle  some angle in radians
+ * @return       An angle between  0 (inclusive) to two
+ *               PI (exclusive)
+ */
 float clampAngle(float angle) {
   while (angle > TWO_PI) angle -= (TWO_PI);
   while (angle < 0) angle += (TWO_PI);

@@ -934,10 +934,13 @@ public void mousePressed(){
 }
 
 public void mouseDragged(MouseEvent e) {
+    // Hold down the center mouse button and move the mouse to pan the camera
    if (mouseButton == CENTER) {
       panX += mouseX - pmouseX;
       panY += mouseY - pmouseY;
    }
+   
+   // Hold down the right omuse button an move the mouse to rotate the camera
    if (mouseButton == RIGHT){
       myRotX += (mouseY - pmouseY) * 0.01;
       myRotY += (mouseX - pmouseX) * 0.01;
@@ -958,25 +961,20 @@ public void mouseMoved(){
 
 
 public void mouseWheel(MouseEvent event){
-  // TODO add textarea check for scrolling
-  //if (sb != null && sb.focus) {
-  //  sb.increment_slider(event.getCount() / 2f);
-  //} else {
-    // scroll mouse to zoom in / out
-    float e = event.getCount();
-    if (e > 0 ) {
-       myscale *= 1.1;
-       if(myscale > 2){
-         myscale = 2;
-       }
-    }
-    if (e < 0){
-       myscale *= 0.9;
-       if(myscale < 0.25){
-         myscale = 0.25;
-       }
-    }
-  //}
+  float e = event.getCount();
+  // Control scaling of the camera with the mouse wheel
+  if (e > 0 ) {
+     myscale *= 1.1;
+     if(myscale > 2){
+       myscale = 2;
+     }
+  }
+  if (e < 0){
+     myscale *= 0.9;
+     if(myscale < 0.25){
+       myscale = 0.25;
+     }
+  }
 }
 
 public void mouseReleased() {
@@ -985,22 +983,17 @@ public void mouseReleased() {
 
 public void keyPressed(){
   if (mode == ENTER_TEXT) {
-    
-    if (workingText.length() < 10 && ( (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') )) {
+    // Modify the input name for the new program
+    if (workingText.length() < 10 && ( (key >= '0' && key <= '9') || (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') )) {
       workingText += key;
     } else if (keyCode == BACKSPACE && workingText.length() > 0) {
       workingText = workingText.substring(0, workingText.length() - 1);
+    } else if (keyCode == DELETE && workingText.length() > 0) {
+      println("HERE");
+      workingText = workingText.substring(1, workingText.length());
     }
     
-    options = new ArrayList<String>();
-    options.add("");
-    options.add("(ENTER: confirm name)");
-    options.add("");
-    options.add("");
-    options.add("Program Name:   " + workingText);
-    which_option = 0;
-    updateScreen(color(0), color(0));
-    
+    inputProgramName();
     return;
   } else if (key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
@@ -1659,16 +1652,10 @@ public void pr(){
 
 public void goToEnterTextMode() {
     clearScreen();
-    options = new ArrayList<String>();
-    options.add("");
-    options.add("(ENTER: confirm name)");
-    options.add("");
-    options.add("");
-    options.add("Program Name:   " + workingText);
     super_mode = mode;
     mode = ENTER_TEXT;
-    which_option = 0;
-    updateScreen(color(0), color(0));
+    
+    inputProgramName();
 }
 
 
@@ -1918,9 +1905,12 @@ public void f3() {
       
       if (tcp == null) {
         // Invalid point set
-        mode = FRAME_DETAIL;
-        which_option = 0;
         loadFrameDetails(true);
+        
+        which_option = 0;
+        options.add("Error: Invalid input values!");
+        updateScreen(color(255, 0, 0), color(0));
+    
         return;
       } else {
         origin = new PVector((float)tcp[0], (float)tcp[1], (float)tcp[2]);
@@ -1948,9 +1938,11 @@ public void f3() {
       
       if (axes == null) {
         // Invalid point set
-        mode = FRAME_DETAIL;
-        which_option = 0;
         loadFrameDetails(true);
+        
+        which_option = 0;
+        options.add("Error: Invalid input values!");
+        updateScreen(color(255, 0, 0), color(0));
         return;
       }
       
@@ -3410,6 +3402,29 @@ public void clearNums(){
    index_nums = 1000;
 }
 
+/**
+ * Displays the Interface for inputting the name of a program.
+ */
+public void inputProgramName() {
+  active_row = active_col = -1;
+  contents = new ArrayList<ArrayList<String>>();
+  
+  contents.add(new ArrayList<String>());
+  contents.get(0).add("");
+  contents.add(new ArrayList<String>());
+  contents.get(1).add("(ENTER: confirm name)");
+  contents.add(new ArrayList<String>());
+  contents.get(2).add("");
+  contents.add(new ArrayList<String>());
+  contents.get(3).add("");
+  contents.add(new ArrayList<String>());
+  contents.get(4).add("Program Name:   " + workingText);
+  
+  which_option = -1;
+  options = new ArrayList<String>();
+  updateScreen(color(0), color(0));
+}
+
 /* Loads the set of Frames that correspond to the given coordinate frame.
  * Only COORD_TOOL and COOR_USER have Frames sets as of now.
  * 
@@ -3446,26 +3461,30 @@ public void loadFrames(int coordFrame) {
   }
 }
 
+/**
+ * Displays the points along with their respective titles for the
+ * current frame teach method (discluding the Direct Entry method).
+ */
 public void loadPointList() {
   options = new ArrayList<String>();
   
   if (teachPointTMatrices != null) {
   
     ArrayList<String> limbo = new ArrayList<String>();
-    
+    // Display TCP teach points
     if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
       limbo.add("First Approach Point: ");
       limbo.add("Second Approach Point: ");
       limbo.add("Third Approach Point: ");
     }
-    
+    // Display Axes Vectors teach points
     if ((super_mode == NAV_USER_FRAMES && mode == THREE_POINT_MODE) || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE) {
       
       limbo.add("Orient Origin Point: ");
       limbo.add("X Direction Point: ");
       limbo.add("Y Direction Point: ");
     }
-    
+    // Display origin offset point
     if (super_mode == NAV_USER_FRAMES && mode == FOUR_POINT_MODE) {
       // Name of fourth point for the four point method?
       limbo.add("Origin: ");
@@ -3485,6 +3504,11 @@ public void loadPointList() {
   updateScreen(color(255,0,0), color(0));
 }
 
+/**
+ * Transitions to the Direct Entry menu, which resembles
+ * the Frame Detail menu, however, the user is allowed
+ * to input values for the x, y, z, w, p, r fields.
+ */
 public void loadDirectEntryMethod() {
   contents = new ArrayList<ArrayList<String>>();
   ArrayList<String> line = new ArrayList<String>();
@@ -3635,19 +3659,19 @@ public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
   // 3 points are necessary for the creation of the axes
   if (points.size() >= 3) {
     float[][] axes = new float[3][];
-    float[] x_dir = new float[3],
-            y_dir = new float[3];
+    float[] x_ndir = new float[3],
+            z_ndir = new float[3];
             
-    // From preliminary x and y axis vectors
+    // From preliminary negative x and z axis vectors
     for (int row = 0; row < 3; ++row) {
-      x_dir[row] = points.get(1)[row][3] - points.get(0)[row][3];
-      y_dir[row] = points.get(2)[row][3] - points.get(0)[row][3];
+      x_ndir[row] = points.get(1)[row][3] - points.get(0)[row][3];
+      z_ndir[row] = points.get(2)[row][3] - points.get(0)[row][3];
     }
     
     // Form axes
-    axes[0] = negate(x_dir);                         // X axis
-    axes[1] = crossProduct(axes[0], negate(y_dir));  // Y axis
-    axes[2] = crossProduct(axes[0], axes[1]);        // Z axis
+    axes[0] = negate(x_ndir);                         // X axis
+    axes[1] = crossProduct(axes[0], negate(z_ndir));  // Y axis
+    axes[2] = crossProduct(axes[0], axes[1]);         // Z axis
     
     if ((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
         (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
@@ -3677,15 +3701,17 @@ public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
   return null;
 }
 
-/* 
- * @param fault  Used to determine whether to print an error message as a
- *               result of an error when calculating the origin in the
- *               3-Point and 6-Point Methods. */
-public void loadFrameDetails(boolean fault) {
+/**
+ * Transitions to the Frame Details menu, which displays
+ * the x, y, z, w, p, r values associated with the Frame
+ * at curFrameIdx in either the Tool Frames or User Frames,
+ * based on the value of super_mode.
+ */
+public void loadFrameDetails() {
   contents = new ArrayList<ArrayList<String>>();
   ArrayList<String> line = new ArrayList<String>();
   Frame[] frames = null;
-  
+  // Display the frame set name as well as the index of the currently selected frame
   if (super_mode == NAV_TOOL_FRAMES) {
     frames = toolFrames;
     line.add(String.format("TOOL FRAME: %d", curFrameIdx + 1));
@@ -3721,18 +3747,13 @@ public void loadFrameDetails(boolean fault) {
     line.add(String.format("R: %8.4f", frames[curFrameIdx].getWpr().z));
     contents.add(line);
     
-    if (fault) {
-      which_option = 0;
-      options = new ArrayList<String>();
-      options.add("Error: Invalid input values!");
-    }
-    
     active_row = -1;
+    which_option = -1;
+    options = new ArrayList<String>();
+    
     mode = FRAME_DETAIL;
     updateScreen(color(255,0,0), color(0));
   }
-  
-
 }
 
 // prepare for displaying motion instructions on screen
@@ -3780,7 +3801,9 @@ public void loadInstructions(int programID){
    } 
 }
 
-/* Deals with updating the UI after confirming/canceling a deletion */
+/**
+ * Deals with updating the UI after confirming/canceling a deletion
+ */
 public void deleteInstEpilogue() {
   Program prog = programs.get(active_program);
   
@@ -3796,6 +3819,10 @@ public void deleteInstEpilogue() {
   updateScreen(color(255,0,0), color(0,0,0));
 }
 
+/* Transitions to the active frames menu, which display
+ * the label for each Frame set (Tool or User) as well
+ * as the index of the currently active frame for each
+ * respective frame set. */
 void loadActiveFrames() {
   options = new ArrayList<String>();
   contents = new ArrayList<ArrayList<String>>();
