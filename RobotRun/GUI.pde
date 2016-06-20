@@ -3767,6 +3767,13 @@ public void loadInstructions(int programID){
       Instruction instruction = p.getInstructions().get(i);
       if (instruction instanceof MotionInstruction) {
         MotionInstruction a = (MotionInstruction)instruction;
+        if(armModel.getEEPos().dist(a.getVector(p).pos) < liveSpeed){
+          m.add("@");
+        }
+        else{
+          println(a.getVector(p).pos);
+          m.add(" ");
+        }
         // add motion type
         switch (a.getMotionType()){
            case MTYPE_JOINT:
@@ -3782,13 +3789,18 @@ public void loadInstructions(int programID){
         // load register no, speed and termination type
         if (a.getGlobal()) m.add("PR[");
         else m.add("P[");
+        
         m.add(a.getRegister()+"]");
+        
         if (a.getMotionType() == MTYPE_JOINT) m.add((a.getSpeed() * 100) + "%");
         else m.add((int)(a.getSpeed()) + "mm/s");
+        
         if (a.getTermination() == 0) m.add("FINE");
         else m.add("CONT" + (int)(a.getTermination()*100));
+        
         contents.add(m);
-      } else if (instruction instanceof ToolInstruction ||
+      } 
+      else if (instruction instanceof ToolInstruction ||
                  instruction instanceof FrameInstruction)
       {
         m.add(instruction.toString());

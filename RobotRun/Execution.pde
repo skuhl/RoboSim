@@ -443,7 +443,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
   RealMatrix R = new Array2DRowRealMatrix(floatToDouble(rMatrix, 3, 3));
   RealMatrix OR = R.multiply(MatrixUtils.inverse(MO));
   rot = matrixToQuat(doubleToFloat(OR.getData(), 3, 3));
-  
+  //println();
   while(count < limit){
     PVector cPos = armModel.getEEPos(angles);
     float[] cRotQ = armModel.getQuaternion(angles);
@@ -464,10 +464,10 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     
     float dist = PVector.dist(cPos, tgt);
     float rDist = calculateQuatMag(rDelta);
-                                                  
+    //println("distances from tgt: " + dist + ", " + rDist);
     //check whether our current position is within tolerance
     if(dist < liveSpeed && rDist < 0.005*liveSpeed) break;
-    //calculate jacobian, 'J', and its inverse 
+    //calculate jacobian, 'J', and its inverse
     float[][] J = calculateJacobian(angles);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
     RealMatrix JInverse = new SingularValueDecomposition(m).getSolver().getInverse();
@@ -485,6 +485,9 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     }
     
     count += 1;
+    if(count == limit){
+      
+    }
   }
   
   armModel.currentFrame = frame;
@@ -503,13 +506,25 @@ int calculateIKJacobian(PVector tgt, float[] rot){
       for(int j = 0; j < 3; j += 1){
         if(s.rotations[j] && !s.anglePermitted(j, angles[i])){
           //println("illegal joint angle on j" + i);
-          //return EXEC_FAILURE;
+          return EXEC_FAILURE;
         }
       }
     }
     
-    armModel.setJointRotations(angles);
-    return EXEC_SUCCESS;
+    float[] angleOffset = new float[6];
+    float maxOffset = TWO_PI;
+    for(int i = 0; i < 6; i += 1){
+      angleOffset[i] = abs(minimumDistance(angles[i], armModel.getJointRotations()[i]));
+    }
+    
+    if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
+       angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset){
+      armModel.setJointRotations(angles);
+      return EXEC_SUCCESS;
+    }
+    else{
+      return EXEC_PARTIAL;
+    }
   }
 }
 
@@ -713,7 +728,9 @@ void calculateArc(Point start, Point inter, Point end){
   float angleInc = (theta)/(float)numPoints;
   for (int i = 0; i < numPoints; i += 1) {
     PVector pos = rotateVectorQuat(u, n, angle).mult(r).add(center);
+    if(i == numPoints-1) pos = end.pos;
     qi = quaternionSlerp(q1, q2, mu);
+    println(pos + ", " + end.pos);
     intermediatePositions.add(new Point(pos, qi));
     angle += angleInc;
     mu += inc;
