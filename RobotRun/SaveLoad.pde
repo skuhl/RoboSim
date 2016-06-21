@@ -5,71 +5,8 @@ import java.nio.charset.Charset;
  * This method saves the program state.
  */
 void saveState() {
-  try{
-    //create tmp directory if not present
-    File f = new File(sketchPath("tmp/"));
-    f.mkdirs();
-    
-    Path p1 = Paths.get(sketchPath("tmp/programs.ser")); 
-    Path p2 = Paths.get(sketchPath("tmp/currentProgram.ser"));
-    Path p3 = Paths.get(sketchPath("tmp/singleInstruction.ser"));
-    Path p4 = Paths.get(sketchPath("tmp/frames"));
-        
-    println("Path: " + Paths.get(sketchPath("tmp/programs.ser")).toString());
-    if (Files.exists(p1)) Files.delete(p1);
-    if (Files.exists(p2)) Files.delete(p2);
-    if (Files.exists(p3)) Files.delete(p3);
-    if (Files.exists(p4)) Files.delete(p4);
-    /*
-    out = new FileOutputStream(sketchPath("tmp/currentProgram.ser"));
-    if (currentProgram == null){
-      String tmp = "null";
-      out.write(tmp.getBytes(Charset.forName("UTF-8")));
-    }else{
-      out.write(currentProgram.toExport().getBytes(Charset.forName("UTF-8")));
-    }
-    out.close();
-    */
-    
-    if(programs.size() > 0){
-      out = new FileOutputStream(sketchPath("tmp/programs.ser"));
-      if (programs.size() == 0){
-        String tmp = "null";
-        out.write(tmp.getBytes(Charset.forName("UTF-8")));
-      }else{
-         for(int i=0;i<programs.size();i++){
-           out.write(programs.get(i).toExport().getBytes(Charset.forName("UTF-8")));
-           String blank = "\n";
-           out.write(blank.getBytes(Charset.forName("UTF-8")));
-         }
-      } 
-      out.close();
-    }
-
-    /*
-    out = new FileOutputStream(sketchPath("tmp/singleInstruction.ser"));
-    if (singleInstruction == null ) {
-       String tmp = "null";
-       out.write(tmp.getBytes(Charset.forName("UTF-8")));
-    }else{
-       out.write(singleInstruction.toExport().getBytes(Charset.forName("UTF-8")));
-    }
-    out.close();
-    */
-    
-    saveFrameBytes( new File(sketchPath("tmp/frames.ser")) );
-    
-  }catch(IOException e){
-     e.printStackTrace();
-     println("which class caused the exception? " + e.getClass().toString());
-  }
-}
-
-public int saveFrames() {
-  
-  
-  
-  return 0;
+  saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
+  saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
 }
 
 /**
@@ -84,9 +21,26 @@ public int loadState() {
   File f = new File(sketchPath("tmp/"));
   if (!f.exists()) { f.mkdirs(); }
   
-  Path p1 = Paths.get(sketchPath("tmp/programs.ser")); 
-  if (!Files.exists(p1)) return 1;
-  if(loadPrograms(p1)==0) return 1;
+  File progFile = new File( sketchPath("tmp/programs.bin") );
+  
+  if (!progFile.exists()) {
+    try {
+      // Create 'programs.bin' if it does not already exist
+      progFile.createNewFile();
+      System.out.printf("Successfully created %s.\n", progFile.getName());
+    } catch (IOException IOEx) {
+      // Error with the creation of 'programs.bin'
+      System.out.printf("Could not create %s ...\n", progFile.getName());
+      IOEx.printStackTrace();
+      return 1;
+    }
+  }
+  
+  int ret = loadProgramBytes(progFile);
+  
+  if (ret == 0) {
+    println("Successfully loaded programs.\n");
+  }
   
   // Find the file 'frames.bin' in the 'tmp/' folder
   File frameFile = new File( sketchPath("tmp/frames.bin") );
@@ -105,7 +59,7 @@ public int loadState() {
   }
   
   // Load both the User and Tool Frames
-  int ret = loadFrameBytes(frameFile);
+  ret = loadFrameBytes(frameFile);
   
   if (ret == 0) {
     println("Successfully loaded Frames.");
@@ -123,75 +77,216 @@ public int loadState() {
   return 0;
 }
 
-/**
- * This method loads built-in programs and user-defined programs 
- *
- * @PARAM:path - where to find the file that stores program state
- * @return: 1 if success, otherwise 0.
- */
-int loadPrograms(Path path){
-  try{
-    Scanner s = new Scanner(path);
-    while (s.hasNext()){
-      Program aProgram;
-      String curr = s.next();
-      if (curr.equals("null")){
-        programs = new ArrayList<Program>();
-        s.close();
-        return 1;
-      }
-      else{
-        String name = s.next();
-        name = name.replace('_', ' ');
-        aProgram = new Program(name);
-        int nextRegister = s.nextInt();
-        aProgram.loadNextRegister(nextRegister);
-        for(int i = 0; i < aProgram.getRegistersLength(); i += 1){
-          s.next(); // consume token: <Point>
-          Point p = new Point(s.nextFloat(), s.nextFloat(), s.nextFloat(), 
-                              s.nextFloat(), s.nextFloat(), s.nextFloat(), s.nextFloat(), 
-                              s.nextFloat(), s.nextFloat(), s.nextFloat(), 
-                              s.nextFloat(), s.nextFloat(), s.nextFloat());
-          s.next(); // consume token: </Point> 
-          aProgram.addRegister(p, i);
-        }
-
-        while(s.hasNext()){
-          curr = s.next();
-          if (curr.equals("<MotionInstruction>")){
-            // load a motion instruction
-            MotionInstruction instruction = new MotionInstruction(s.nextInt(), s.nextInt(), Boolean.valueOf(s.next()), s.nextFloat(), s.nextFloat(), s.nextInt(), s.nextInt()); //1.0
-            aProgram.addInstruction(instruction);
-            s.next(); // consume token: </MotionInstruction>
-          }
-          else if (curr.equals("<FrameInstruction>")){
-            // load a Frame instruction
-            FrameInstruction instruction = new FrameInstruction(s.nextInt(), s.nextInt());
-            aProgram.addInstruction(instruction);
-            s.next(); // consume token: </FrameInstruction>
-          }
-          else if(curr.equals("<ToolInstruction>")){
-            // load a tool instruction
-            ToolInstruction instruction = new ToolInstruction(s.next(), s.nextInt(), s.nextInt());
-            aProgram.addInstruction(instruction);
-            s.next(); // consume token: </ToolInstruction>
-          }
-          else{ // has scanned </Program>
-            // that's the end of program
-            addProgram(aProgram);
-            break;     
-          }
-        } // end of while
-      } // end of if      
-    } // end of while
-    s.close();
-    return 1; 
+public int saveProgramBytes(File dest) {
+  
+  try {
+    FileOutputStream out = new FileOutputStream(dest);
+    DataOutputStream dataOut = new DataOutputStream(out);
+    // Save the number of programs
+    dataOut.writeInt(programs.size());
+    
+    for (Program prog : programs) {
+      // Save each program
+      saveProgram(prog, dataOut);
+    }
+    
+    dataOut.close();
+    out.close();
+    return 0;
+  } catch (FileNotFoundException FNFEx) {
+    // Could not locate dest
+    System.out.printf("%s does not exist!\n", dest.getName());
+    FNFEx.printStackTrace();
+    return 1;
+  } catch (IOException IOEx) {
+    // An error occrued with writing to dest
+    System.out.printf("%s is corrupt!\n", dest.getName());
+    IOEx.printStackTrace();
+    return 2;
   }
-  catch(IOException e){
-    e.printStackTrace();
-    //return 0;
-  }     
-  return 1;
+}
+
+public int loadProgramBytes(File src) {
+  
+  try {
+    FileInputStream in = new FileInputStream(src);
+    DataInputStream dataIn = new DataInputStream(in);
+    // Read the number of programs stored in src
+    int size = dataIn.readInt();
+    
+    while (size-- > 0) {
+      // Read each program from src
+      programs.add( loadProgram(dataIn) );
+    }
+    
+    dataIn.close();
+    in.close();
+    return 0;
+  } catch (FileNotFoundException FNFEx) {
+    // Could not locate src
+    System.out.printf("%s does not exist!\n", src.getName());
+    FNFEx.printStackTrace();
+    return 1;
+  } catch (EOFException EOFEx) {
+    // Reached the end of src unexpectedly
+    System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
+    EOFEx.printStackTrace();
+    return 3;
+  } catch (IOException IOEx) {
+    // An error occured with reading from src
+    System.out.printf("%s is corrupt!\n", src.getName());
+    IOEx.printStackTrace();
+    return 2;
+  }
+}
+
+private void saveProgram(Program p, DataOutputStream out) throws IOException {
+  
+  out.writeUTF(p.name);
+  out.writeInt(p.nextRegister);
+  out.writeInt(p.instructions.size());
+  // Save each instruction
+  for (Instruction inst : p.instructions) {
+    saveInstruction(inst, out);
+    // Save only the Points associated with a MotionInstruction
+    if (inst instanceof MotionInstruction) {
+      savePoint(p.p[ ((MotionInstruction)inst).register ], out);
+    }
+  }
+}
+
+private Program loadProgram(DataInputStream in) throws IOException {
+  // Read program name
+  String name = in.readUTF();
+  Program prog = new Program(name);
+  // Read the next register value
+  int nReg = in.readInt();
+  prog.loadNextRegister(nReg);
+  // Read the number of insturctions stored for this porgram
+  int numOfInst = in.readInt();
+  
+  while (numOfInst-- > 0) {
+    // Read each instruction
+    Instruction inst = loadInstruction(in);
+    prog.addInstruction(inst);
+    // Read the points stored after each MotionIntruction
+    if (inst instanceof MotionInstruction) {
+      Point pt = loadPoint(in);
+      prog.addRegister(pt, ((MotionInstruction)inst).register);
+    }
+  }
+  
+  return prog;
+}
+
+private void savePoint(Point p, DataOutputStream out) throws IOException {
+  // Write position of the point
+  out.writeFloat(p.pos.x);
+  out.writeFloat(p.pos.y);
+  out.writeFloat(p.pos.z);
+  
+  // Write point's orientation
+  for (float o : p.ori) {
+    out.writeFloat(o);
+  }
+  
+  // Write the joint angles for the point's position
+  for (float j : p.joints) {
+    out.writeFloat(j);
+  }
+}
+
+private Point loadPoint(DataInputStream in) throws IOException {
+        // Read the point's position
+  float pos_x = in.readFloat(),
+        pos_y = in.readFloat(),
+        pos_z = in.readFloat(),
+        // Read the point's orientation
+        orien_r = in.readFloat(),
+        orien_i = in.readFloat(),
+        orien_j = in.readFloat(),
+        orien_k = in.readFloat(),
+        // Read the joint angles for the joint's position
+        joint_1 = in.readFloat(),
+        joint_2 = in.readFloat(),
+        joint_3 = in.readFloat(),
+        joint_4 = in.readFloat(),
+        joint_5 = in.readFloat(),
+        joint_6 = in.readFloat();
+  
+  return new Point(pos_x, pos_y, pos_z,
+                   orien_r, orien_i, orien_j, orien_k,
+                   joint_1, joint_2, joint_3, joint_4, joint_5, joint_6);
+}
+
+private void saveInstruction(Instruction inst, DataOutputStream out) throws IOException {
+  
+  // Each Instruction subclass MUST have its own saving code block associated with its unique data fields
+  if (inst instanceof MotionInstruction) {
+    
+    MotionInstruction m_inst = (MotionInstruction)inst;
+    // Flag byte denoting this instruction as a MotionInstruction
+    out.writeByte(0);
+    // Write data associated with the MotionIntruction object
+    out.writeInt(m_inst.motionType);
+    out.writeInt(m_inst.register);
+    out.writeBoolean(m_inst.globalRegister);
+    out.writeFloat(m_inst.speed);
+    out.writeFloat(m_inst.termination);
+    out.writeInt(m_inst.userFrame);
+    out.writeInt(m_inst.toolFrame);
+  } else if (inst instanceof FrameInstruction) {
+    
+    FrameInstruction f_inst = (FrameInstruction)inst;
+    // Flag byte denoting this instruction as a FrameInstruction
+    out.writeByte(1);
+    // Write data associated with the FrameInstruction object
+    out.writeInt(f_inst.frameType);
+    out.writeInt(f_inst.idx);
+  } else if (inst instanceof ToolInstruction) {
+    
+    ToolInstruction t_inst = (ToolInstruction)inst;
+    // Flag byte denoting this instruction as a ToolInstruction
+    out.writeByte(2);
+    // Write data associated with the ToolInstruction object
+    out.writeUTF(t_inst.type);
+    out.writeInt(t_inst.bracket);
+    out.writeInt(t_inst.setToolStatus);
+  } else {/* TODO add other instructions! */}
+}
+
+private Instruction loadInstruction(DataInputStream in) throws IOException {
+  Instruction inst = null;
+  // Determine what type of instruction is stored in the succeding bytes
+  byte instType = in.readByte();
+  
+  if (instType == 0) {
+    
+    // Read data for a MotionInstruction object
+    int mType = in.readInt();
+    int reg = in.readInt();
+    boolean isGlobal = in.readBoolean();
+    float spd = in.readFloat();
+    float term = in.readFloat();
+    int uFrame = in.readInt();
+    int tFrame = in.readInt();
+    
+    inst = new MotionInstruction(mType, reg, isGlobal, spd, term, uFrame, tFrame);
+  } else if (instType == 1) {
+    
+    // Read data for a FrameInstruction object
+    inst = new FrameInstruction( in.readInt(), in.readInt() );
+  } else if (instType == 2) {
+    
+    // Read data for a ToolInstruction object
+    String type = in.readUTF();
+    int bracket = in.readInt();
+    int setting = in.readInt();
+    
+    inst = new ToolInstruction(type, bracket, setting);
+  }
+  
+  return inst;
 }
 
 /**
@@ -207,7 +302,7 @@ int loadPrograms(Path path){
 public int saveFrameBytes(File dest) {
   
   try {
-    FileOutputStream out = new FileOutputStream(dest.toString());
+    FileOutputStream out = new FileOutputStream(dest);
     DataOutputStream dataOut = new DataOutputStream(out);
     
     // Save Tool Frames
@@ -226,12 +321,12 @@ public int saveFrameBytes(File dest) {
     out.close();
     return 0;
   } catch (FileNotFoundException FNFEx) {
-    // Could not find the given file
+    // Could not find dest
     System.out.printf("%s does not exist!\n", dest.getName());
     FNFEx.printStackTrace();
     return 1;
   } catch (IOException IOEx) {
-    // Error with reading the values for the Frames
+    // Error with writing to dest
     System.out.printf("%s is corrupt!\n", dest.getName());
     IOEx.printStackTrace();
     return 2;
@@ -255,7 +350,7 @@ public int saveFrameBytes(File dest) {
 public int loadFrameBytes(File src) {
   
   try {
-    FileInputStream in = new FileInputStream(src.toString());
+    FileInputStream in = new FileInputStream(src);
     DataInputStream dataIn = new DataInputStream(in);
     
     // Load Tool Frames
@@ -279,17 +374,17 @@ public int loadFrameBytes(File src) {
     in.close();
     return 0;
   } catch (FileNotFoundException FNFEx) {
-    // Could not find the given file
+    // Could not find src
     System.out.printf("%s does not exist!\n", src.getName());
     FNFEx.printStackTrace();
     return 1;
   } catch (EOFException EOFEx) {
-    // End of file reached
-    System.out.printf("Reached end of %s!\n", src.getName());
+    // Reached the end of src unexpectedly
+    System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
     EOFEx.printStackTrace();
     return 3;
   } catch (IOException IOEx) {
-    // Error with reading the values for the Frames
+    // Error with reading from src
     System.out.printf("%s is corrupt!\n", src.getName());
     IOEx.printStackTrace();
     return 2;
@@ -304,7 +399,7 @@ public int loadFrameBytes(File src) {
  * @param out  An output stream used to write the given frame to a file
  * @throw IOException  if an error occurs with writing the frame to the file
  */
-public void saveFrame(Frame f, DataOutputStream out) throws IOException {
+private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   // Write frame origin
   PVector v = f.getOrigin();
   out.writeFloat(v.x);
@@ -333,7 +428,7 @@ public void saveFrame(Frame f, DataOutputStream out) throws IOException {
  * @throw IOException  if an error occurs while reading the frame
  *                     from to the file
  */
-public Frame loadFrame(DataInputStream in) throws IOException {
+private Frame loadFrame(DataInputStream in) throws IOException {
   // Read origin values
   PVector origin = new PVector();
   origin.x = in.readFloat();

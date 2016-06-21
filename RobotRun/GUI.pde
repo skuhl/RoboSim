@@ -35,8 +35,9 @@ final int NONE = 0,
           SET_RO_BRACKET = 27,
           SET_RO_STATUS = 28,
           SET_FRAME_INSTRUCTION = 29,
-          EDIT_MENU = 30,
-          CONFIRM_DELETE = 31;
+          SET_FRAME_INSTRUCTION_IDX = 30,
+          EDIT_MENU = 31,
+          CONFIRM_DELETE = 32;
 final int COLOR_DEFAULT = -8421377,
           COLOR_ACTIVE = -65536;
 // Determines what End Effector mapping should be display
@@ -1282,15 +1283,14 @@ public void NUM9(){
 
 public void addNumber(String number) {
   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION ||
-      mode == JUMP_TO_LINE || mode == SET_DO_BRACKET || mode == SET_RO_BRACKET)
-  {
+      mode == JUMP_TO_LINE || mode == SET_DO_BRACKET || mode == SET_RO_BRACKET ||
+      mode == SET_FRAME_INSTRUCTION_IDX) {
     workingText += number;
     options.set(1, workingText);
+    updateScreen(color(255, 0, 0), color(0));
   } else if (mode == SET_INSTRUCTION_SPEED) {
     workingText += number;
     options.set(1, workingText + workingTextSuffix);
-  } else if (mode == SET_FRAME_INSTRUCTION) {
-    workingText += number;
   } else if (mode == DIRECT_ENTRY_MODE) {
     if (active_row >= 0 && active_row < contents.size()) {
       String line = contents.get(active_row).get(0) + number;
@@ -1608,15 +1608,19 @@ public void rt(){
             mode = IO_SUBMENU;
             updateScreen(color(255,0,0), color(0));
           } else if (active_row == 1) { // Offset/Frames
+            
             contents = new ArrayList<ArrayList<String>>();
             ArrayList<String> line = new ArrayList<String>();
-            line.add("1 UTOOL_NUM=()");
+            
+            line.add("1 UTOOL_NUM");
             contents.add(line);
-            line = new ArrayList<String>(); line.add("2 UFRAME_NUM=()");
+            
+            line = new ArrayList<String>();
+            line.add("2 UFRAME_NUM");
             contents.add(line);
-            active_col = active_row = 0;
+            
             mode = SET_FRAME_INSTRUCTION;
-            workingText="0";
+            active_col = active_row = 0;
             updateScreen(color(255,0,0), color(0));
           }
           break;
@@ -2101,7 +2105,7 @@ public void f4() {
          Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
          if (ins instanceof MotionInstruction) {
            switch (active_col){
-             case 1: // motion type
+             case 2: // motion type
                 options = new ArrayList<String>();
                 options.add("1.JOINT");
                 options.add("2.LINEAR");
@@ -2110,7 +2114,7 @@ public void f4() {
                 mode = INSTRUCTION_EDIT;
                 which_option = 0;
                 break;
-             case 2: // register type
+             case 3: // register type
                 options = new ArrayList<String>();
                 options.add("1.LOCAL(P)");
                 options.add("2.GLOBAL(PR)");
@@ -2118,7 +2122,7 @@ public void f4() {
                 mode = INSTRUCTION_EDIT;
                 which_option = 0;
                 break;
-             case 3: // register
+             case 4: // register
                 options = new ArrayList<String>();
                 options.add("Use number keys to enter a register number (0-999)");
                 workingText = "";
@@ -2126,7 +2130,7 @@ public void f4() {
                 mode = SET_INSTRUCTION_REGISTER;
                 which_option = 0;
                 break;
-             case 4: // speed
+             case 5: // speed
                 options = new ArrayList<String>();
                 options.add("Use number keys to enter a new speed");
                 MotionInstruction castIns = getActiveMotionInstruct();
@@ -2142,7 +2146,7 @@ public void f4() {
                 mode = SET_INSTRUCTION_SPEED;
                 which_option = 0;
                 break;
-             case 5: // termination type
+             case 6: // termination type
                 options = new ArrayList<String>();
                 options.add("Use number keys to enter termination percentage (0-100; 0=FINE)");
                 workingText = "";
@@ -2368,7 +2372,7 @@ public void ENTER(){
     case INSTRUCTION_EDIT:
        MotionInstruction m = getActiveMotionInstruct();
        switch (active_col){
-          case 1: // motion type
+          case 2: // motion type
              if (which_option == 0){
                 if (m.getMotionType() != MTYPE_JOINT) m.setSpeed(m.getSpeed()/armModel.motorSpeed);
                 m.setMotionType(MTYPE_JOINT);
@@ -2380,15 +2384,15 @@ public void ENTER(){
                 m.setMotionType(MTYPE_CIRCULAR);
              }
              break;
-          case 2: // register type
+          case 3: // register type
              if (which_option == 0) m.setGlobal(false);
              else m.setGlobal(true);
              break;
-          case 3: // register
+          case 4: // register
              break;
-          case 4: // speed
+          case 5: // speed
              break;
-          case 5: // termination type
+          case 6: // termination type
              break;   
        }
        loadInstructions(active_program);
@@ -2591,6 +2595,16 @@ public void ENTER(){
        updateScreen(color(255,0,0), color(0,0,0));
        break;
     case SET_FRAME_INSTRUCTION:
+        options = new ArrayList<String>();
+        options.add("Select the index of the frame to use");
+        workingText = "";
+        options.add(workingText);
+        
+        which_option = 0;
+        mode = SET_FRAME_INSTRUCTION_IDX;
+        updateScreen(color(255, 0, 0), color(0));
+        break;
+    case SET_FRAME_INSTRUCTION_IDX:
        prog = programs.get(active_program);
        
        try {
@@ -2613,8 +2627,6 @@ public void ENTER(){
       loadInstructions(active_program);
       mode = INSTRUCTION_NAV;
       which_option = -1;
-      active_row = 0;
-      active_col = 0;
       options.clear();
       updateScreen(color(255,0,0), color(0,0,0));
       break;
