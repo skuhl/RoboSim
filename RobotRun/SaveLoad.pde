@@ -1,6 +1,3 @@
-
-import java.nio.charset.Charset;
-
 /**
  * This method saves the program state.
  */
@@ -77,6 +74,15 @@ public int loadState() {
   return 0;
 }
 
+/**
+ * Saves all the Programs currently in ArrayList programs to the
+ * given file.
+ * 
+ * @param dest  where to save all the programs
+ * @return      0 if the save was successful,
+ *              1 if the dest could not be found,
+ *              2 if an error occurs when saving the Programs
+ */
 public int saveProgramBytes(File dest) {
   
   try {
@@ -106,13 +112,25 @@ public int saveProgramBytes(File dest) {
   }
 }
 
+/**
+ * Loads all Programs stored in the given file. This method expects that the number of
+ * programs to be stored is stored at the immediate beginning of the file as an integer.
+ * Though, no more then 200 programs will be loaded.
+ * 
+ * @param src  The file from which to load the progarms
+ * @return     0 if the load was successful,
+ *             1 if src could not be found,
+ *             2 if an error occured while reading the programs,
+ *             3 if the end of the file is reached before all the expected programs are
+ *               read
+ */
 public int loadProgramBytes(File src) {
   
   try {
     FileInputStream in = new FileInputStream(src);
     DataInputStream dataIn = new DataInputStream(in);
     // Read the number of programs stored in src
-    int size = dataIn.readInt();
+    int size = max(0, min(dataIn.readInt(), 200));
     
     while (size-- > 0) {
       // Read each program from src
@@ -140,6 +158,16 @@ public int loadProgramBytes(File src) {
   }
 }
 
+/**
+ * Saves the data associated with the given Program to the given output stream.
+ * Not all the Points in a programs Point array are stored: only the Points
+ * associated with a MotionInstruction are saved after the MotionInstruction,
+ * to which it belongs.
+ * 
+ * @param  p            The program to save
+ * @param  out          The output stream to which to save the Program
+ * @throws IOException  If an error occurs with saving the Program
+ */
 private void saveProgram(Program p, DataOutputStream out) throws IOException {
   
   out.writeUTF(p.name);
@@ -155,6 +183,15 @@ private void saveProgram(Program p, DataOutputStream out) throws IOException {
   }
 }
 
+/**
+ * Creates a program from data in the given input stream. A maximum of
+ * 500 instructions will be read for a single program
+ * 
+ * @param in            The input stream to read from
+ * @return              A program created from data in the input stream
+ * @throws IOException  If an error occurs with reading from the input
+ *                      stream
+ */
 private Program loadProgram(DataInputStream in) throws IOException {
   // Read program name
   String name = in.readUTF();
@@ -162,8 +199,8 @@ private Program loadProgram(DataInputStream in) throws IOException {
   // Read the next register value
   int nReg = in.readInt();
   prog.loadNextRegister(nReg);
-  // Read the number of insturctions stored for this porgram
-  int numOfInst = min(200, in.readInt());
+  // Read the number of instructions stored for this porgram
+  int numOfInst = max(0, min(in.readInt(), 500));
   
   while (numOfInst-- > 0) {
     // Read each instruction
@@ -179,6 +216,14 @@ private Program loadProgram(DataInputStream in) throws IOException {
   return prog;
 }
 
+/**
+ * Saves the data associated with the given Point object to the file opened
+ * by the given output stream.
+ * 
+ * @param   p            The Point of which to save the data
+ * @param   out          The output stream used to save the Point
+ * @throws  IOException  If an error occurs with writing the data of the Point
+ */
 private void savePoint(Point p, DataOutputStream out) throws IOException {
   // Write position of the point
   out.writeFloat(p.pos.x);
@@ -196,6 +241,17 @@ private void savePoint(Point p, DataOutputStream out) throws IOException {
   }
 }
 
+/**
+ * Loads the data of a Point from the file opened by the given
+ * input stream.
+ *
+ * @param  in           The input stream used to read the data of
+ *                      a Point
+ * @return              The Point stored at the current position
+ *                      of the input stream
+ * @throws IOException  If an error occurs with reading the data
+ *                      of the Point
+ */
 private Point loadPoint(DataInputStream in) throws IOException {
         // Read the point's position
   float pos_x = in.readFloat(),
@@ -219,6 +275,15 @@ private Point loadPoint(DataInputStream in) throws IOException {
                    joint_1, joint_2, joint_3, joint_4, joint_5, joint_6);
 }
 
+/**
+ * Saves the data stored in the given instruction to the file opened by the give output
+ * stream. Currently, this method will only work for instructions of type: Motion, Frame
+ * and Tool.
+ * 
+ * @param inst          The instruction of which to save the data
+ * @pararm out          The output stream used to save the given instruction
+ * @throws IOException  If an error occurs with saving the instruction
+ */
 private void saveInstruction(Instruction inst, DataOutputStream out) throws IOException {
   
   // Each Instruction subclass MUST have its own saving code block associated with its unique data fields
@@ -255,6 +320,18 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
   } else {/* TODO add other instructions! */}
 }
 
+/**
+ * The next instruction stored in the file opened by the given input stream
+ * is read, created, and returned. This method is currently only functional
+ * for instructions of type: Motion, Frame, and Tool.
+ *
+ * @param in            The input stream from which to read the data of an
+ *                      instruction
+ * @return              The instruction saved at the current position of the
+ *                      input stream
+ * @throws IOException  If an error occurs with reading the data of the
+ *                      instruciton
+ */
 private Instruction loadInstruction(DataInputStream in) throws IOException {
   Instruction inst = null;
   // Determine what type of instruction is stored in the succeding bytes
@@ -284,7 +361,7 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     int setting = in.readInt();
     
     inst = new ToolInstruction(type, bracket, setting);
-  }
+  } else {/* TODO add other instructions! */}
   
   return inst;
 }
@@ -354,21 +431,19 @@ public int loadFrameBytes(File src) {
     DataInputStream dataIn = new DataInputStream(in);
     
     // Load Tool Frames
-    int size = min(10, dataIn.readInt());
+    int size = max(0, min(dataIn.readInt(), 10));
     toolFrames = new Frame[size];
     int idx;
     
     for (idx = 0; idx < size; ++idx) {
-      System.out.printf("T: %d\n", idx);
       toolFrames[idx] = loadFrame(dataIn);
     }
     
     // Load User Frames
-    size = min(10, dataIn.readInt());
+    size = max(0, min(dataIn.readInt(), 10));
     userFrames = new Frame[size];
     
     for (idx = 0; idx < size; ++idx) {
-      System.out.printf("U: %d\n", idx);
       userFrames[idx] = loadFrame(dataIn);
     }
     

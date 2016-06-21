@@ -1868,21 +1868,13 @@ public void f2() {
 
 public void f3() {
   if (mode == PROGRAM_NAV) {
-    int progIdx = active_program;
-    if (progIdx >= 0 && progIdx < programs.size()) {
-      programs.remove(progIdx);
-      
-      if (active_program >= programs.size()) {
-        active_program = programs.size() - 1;
-        /* 13 is the maximum number of instructions that can be displayed at one point in time */
-        active_row = min(active_program, ITEMS_TO_SHOW - 4);
-        text_render_start = active_program - active_row;
-      }
-      
-      loadPrograms();
-      updateScreen(color(255,0,0), color(0));
-      saveState();
-    }
+    options = new ArrayList<String>();
+    options.add("Delete this program?  F4 = YES, F5 = NO");
+    which_option = 0;
+    
+    super_mode = mode;
+    mode = CONFIRM_DELETE;
+    updateScreen(color(255, 0, 0), color(0));
   } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
     options = new ArrayList<String>();
     options.add("1.Tool Frame");
@@ -2158,9 +2150,30 @@ public void f4() {
          } 
          break;
      case CONFIRM_DELETE:
-         Program prog = programs.get(active_program);
-         prog.getInstructions().remove(active_instruction);
-         deleteInstEpilogue();
+         if (super_mode == PROGRAM_NAV) {
+           int progIdx = active_program;
+           
+           if (progIdx >= 0 && progIdx < programs.size()) {
+             programs.remove(progIdx);
+             
+             if (active_program >= programs.size()) {
+               active_program = programs.size() - 1;
+               /* 13 is the maximum number of instructions that can be displayed at one point in time */
+               active_row = min(active_program, ITEMS_TO_SHOW - 4);
+               text_render_start = active_program - active_row;
+             }
+             
+             mode = super_mode;
+             super_mode = NONE;
+             loadPrograms();
+             updateScreen(color(255,0,0), color(0));
+             saveState();
+           }
+         } else if (super_mode == INSTRUCTION_NAV) {
+             Program prog = programs.get(active_program);
+             prog.getInstructions().remove(active_instruction);
+             deleteInstEpilogue();
+         }
          break;
    }
    //println("mode="+mode+" active_col"+active_col);
@@ -2269,7 +2282,17 @@ public void f5() {
     mode = limbo;
     loadPointList();
   } else if (mode == CONFIRM_DELETE) {
-    deleteInstEpilogue();
+    
+    if (super_mode == PROGRAM_NAV) {  
+      options = new ArrayList<String>();
+      which_option = -1;
+      
+      mode = super_mode;
+      super_mode = NONE;
+      updateScreen(color(250, 0, 0), color(0));
+    } else if (super_mode == INSTRUCTION_NAV) {
+      deleteInstEpilogue();
+    }
   }
 }
 
@@ -2634,6 +2657,7 @@ public void ENTER(){
       if (active_row == 1) { // delete
          options = new ArrayList<String>();
          options.add("Delete this line? F4 = YES, F5 = NO");
+         super_mode = INSTRUCTION_NAV;
          mode = CONFIRM_DELETE;
          which_option = 0;
          updateScreen(color(255,0,0), color(0,0,0));
@@ -3833,7 +3857,9 @@ public void deleteInstEpilogue() {
   text_render_start = active_instruction - active_row;
   
   loadInstructions(active_program);
-  mode = INSTRUCTION_NAV;
+  
+  mode = super_mode;
+  super_mode = NONE;
   options.clear();
   updateScreen(color(255,0,0), color(0,0,0));
 }

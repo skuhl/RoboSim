@@ -813,7 +813,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
 } // end execute linear motion
 
 MotionInstruction getActiveMotionInstruct(){
-  Instruction inst = new Instruction();
+  Instruction inst = null;
   Program p = programs.get(active_program);
   
   if(p != null && p.getInstructions().size() != 0)

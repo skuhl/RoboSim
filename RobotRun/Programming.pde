@@ -311,7 +311,7 @@ public int addProgram(Program p) {
   }
 }
 
-public  class Instruction  {}
+public abstract class Instruction {}
 
 public final class MotionInstruction extends Instruction  {
   private int motionType;
