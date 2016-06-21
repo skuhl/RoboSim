@@ -163,7 +163,7 @@ private Program loadProgram(DataInputStream in) throws IOException {
   int nReg = in.readInt();
   prog.loadNextRegister(nReg);
   // Read the number of insturctions stored for this porgram
-  int numOfInst = in.readInt();
+  int numOfInst = min(200, in.readInt());
   
   while (numOfInst-- > 0) {
     // Read each instruction
@@ -354,19 +354,21 @@ public int loadFrameBytes(File src) {
     DataInputStream dataIn = new DataInputStream(in);
     
     // Load Tool Frames
-    int size = dataIn.readInt();
+    int size = min(10, dataIn.readInt());
     toolFrames = new Frame[size];
     int idx;
     
     for (idx = 0; idx < size; ++idx) {
+      System.out.printf("T: %d\n", idx);
       toolFrames[idx] = loadFrame(dataIn);
     }
     
     // Load User Frames
-    size = dataIn.readInt();
+    size = min(10, dataIn.readInt());
     userFrames = new Frame[size];
     
     for (idx = 0; idx < size; ++idx) {
+      System.out.printf("U: %d\n", idx);
       userFrames[idx] = loadFrame(dataIn);
     }
     
