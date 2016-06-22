@@ -36,7 +36,7 @@ final int NONE = 0,
           SET_RO_STATUS = 28,
           SET_FRAME_INSTRUCTION = 29,
           SET_FRAME_INSTRUCTION_IDX = 30,
-          DATA_MENU = 31,
+          PICK_REG_LIST = 31,
           VIEW_REG = 32,
           // J for Joint
           VIEW_POS_REG_J = 33,
@@ -1243,6 +1243,13 @@ public void mu() {
 
 // Data button
 public void da() {
+  contents = new ArrayList<ArrayList<String>>();
+  
+  contents.add( newLine("VIEW REGISTERS") );
+  
+  active_row = -1;
+  active_col = text_render_start = 0;
+  
   pickRegisterList();
 }
 
@@ -1456,7 +1463,7 @@ public void up(){
       case FOUR_POINT_MODE:
       case SET_DO_STATUS:
       case SET_RO_STATUS:
-      case DATA_MENU:
+      case PICK_REG_LIST:
          which_option = max(0, which_option - 1);
          break;
       case MENU_NAV:
@@ -1534,7 +1541,7 @@ public void dn(){
            }
            
            ++active_index;
-           active_col = max( 0, min( active_col, contents.get(active_row - 2).size() - 1 ) );
+           active_col = max( 0, min( active_col, contents.get(active_row).size() - 1 ) );
          }
          
          viewRegisters();
@@ -1553,7 +1560,7 @@ public void dn(){
       case FOUR_POINT_MODE:
       case SET_DO_STATUS:
       case SET_RO_STATUS:
-      case DATA_MENU:
+      case PICK_REG_LIST:
          which_option = min(which_option + 1, options.size() - 1);
          break;
       case MENU_NAV:
@@ -1588,6 +1595,13 @@ public void lt(){
           mode = INSTRUCTION_NAV;
           lt();
           break;
+      case VIEW_REG:
+      case VIEW_POS_REG_J:
+      case VIEW_POS_REG_C:
+        
+        active_col = max(0, active_col - 1);
+        updateScreen(color(255, 0, 0), color(0));
+        break;
    }
    
 }
@@ -1658,6 +1672,13 @@ public void rt(){
             updateScreen(color(255,0,0), color(0));
           }
           break;
+       case VIEW_REG:
+       case VIEW_POS_REG_J:
+       case VIEW_POS_REG_C:
+         
+         active_col = min(active_col + 1, contents.get(active_row).size() - 1);
+         updateScreen(color(255, 0, 0), color(0));
+         break;
    }
 }
 
@@ -1894,7 +1915,9 @@ public void f2() {
          updateScreen(color(255, 0, 0) , color(0));
        }
      }
-   }
+   } else if (mode == VIEW_REG || mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C) {
+     pickRegisterList();
+  }
 }
 
 
@@ -2688,13 +2711,46 @@ public void ENTER(){
          updateScreen(color(255,0,0), color(0,0,0));
       }
       break;
-    case DATA_MENU:
-      if (which_option == 0) {
+    case PICK_REG_LIST:
+      /*
+      if (mode == VIEW_REG) {
+         options.add("1. Position Registers (Joint)");
+         options.add("2. Position Registers (Cartesian)");
+       } else if (mode == VIEW_POS_REG_J) {
+         options.add("1. Registers");
+         options.add("2. Position Registers (Cartesian)");
+       } else if (mode == VIEW_POS_REG_C) {
+         options.add("1. Registers");
+         options.add("2. Position Registers (Joint)");
+       } else {
+        options.add("1. Registers");
+        options.add("2. Position Registers (Joint)");
+        options.add("3. Position Registers (Cartesian)");
+      }
+      */
+      int modeCase = 0;
+      
+      if (super_mode == VIEW_REG) {
+        modeCase = 1;
+      } else if (super_mode == VIEW_POS_REG_J) {
+        modeCase = 2;
+      } else if (super_mode == VIEW_POS_REG_C) {
+        modeCase = 3;
+      }
+      
+      if (modeCase != 1 && which_option == 0) {
         // Register Menu
         mode = VIEW_REG;
-      } else if (which_option == 1) {
-        // Position Register Menu
+      } else if ((modeCase == 1 && which_option == 0) ||
+                 (modeCase != 1 && modeCase != 2 && which_option == 1)) {
+        // Position Register Menu (in Joint mode)
+        mode = VIEW_POS_REG_J;
+      } else if ((modeCase == 0 && which_option == 2) ||
+                 (modeCase != 0 && modeCase != 3 && which_option == 1)) {
+        // Position Register Menu (in Cartesian mode)
         mode = VIEW_POS_REG_C;
+      } else {
+        mu();
       }
       
       active_row = 2;
@@ -3361,60 +3417,47 @@ public void updateScreen(color active, color normal){
    
    // display hints for function keys
    next_py += 100;
+   String text = null;
+   
    if (mode == PROGRAM_NAV) {
-          fn_info.setText("F2: CREATE     F3: DELETE")
-                 .setPosition(next_px, display_py+display_height-15)
-                 .setColorValue(normal)
-                 .show()
-                 .moveTo(g1)
-                 ;
+     
+          text = "F2: CREATE     F3: DELETE";
    } else if (mode == INSTRUCTION_NAV) {
-          fn_info.setText("SHIFT+F1: NEW PT     F4: CHOICE     F5: VIEW REG     SHIFT+F5: OVERWRITE")
-                 .setPosition(next_px, display_py+display_height-15)
-                 .setColorValue(normal)
-                 .show()
-                 .moveTo(g1)
-                 ;
+     
+     text = "SHIFT+F1: NEW PT     F4: CHOICE     F5: VIEW REG     SHIFT+F5: OVERWRITE";
    } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
-     fn_info.setText("F1: SET     SHIFT+F1: DETAIL     F2: RESET     F3: SWITCH")
-                 .setPosition(next_px, display_py+display_height-15)
-                 .setColorValue(normal)
-                 .show()
-                 .moveTo(g1)
-                 ;
+     
+     text = "F1: SET     SHIFT+F1: DETAIL     F2: RESET     F3: SWITCH";
    } else if (mode == FRAME_DETAIL) {
-     fn_info.setText("F2: METHOD")
-                 .setPosition(next_px, display_py+display_height-15)
-                 .setColorValue(normal)
-                 .show()
-                 .moveTo(g1)
-                 ;
+     
+     text = "F2: METHOD";
    } else if (mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE) {
-     fn_info.setText("F1: SAV REF PT     SHIFT+F1: RMV REF PT     F3: CONFIRM     SHIFT+F5: RECORD")
-                 .setPosition(next_px, display_py+display_height-15)
-                 .setColorValue(normal)
-                 .show()
-                 .moveTo(g1)
-                 ;
+     
+     text = "F1: SAV REF PT     SHIFT+F1: RMV REF PT     F3: CONFIRM     SHIFT+F5: RECORD";
    } else if (mode == DIRECT_ENTRY_MODE) {
-     fn_info.setText("F1: DELETE     F2: BACKSPACE     F3: CONFIRM")
-                 .setPosition(next_px, display_py+display_height-15)
-                 .setColorValue(normal)
-                 .show()
-                 .moveTo(g1)
-                 ;
+     
+     text = "F1: DELETE     F2: BACKSPACE     F3: CONFIRM";
    } else if (mode == ACTIVE_FRAMES) {
-     fn_info.setText("F1: LIST     F2: RESET")
+     
+     text = "F1: LIST     F2: RESET";
+   } else if (mode == VIEW_REG || mode == VIEW_POS_REG_C || mode == VIEW_POS_REG_J) {
+     
+     text = "F1: EDIT     F2: SWITCH";
+   }
+   
+   
+   if (text != null) {
+     fn_info.setText(text)
                  .setPosition(next_px, display_py+display_height-15)
                  .setColorValue(normal)
                  .show()
                  .moveTo(g1)
                  ;
    } else {
-          fn_info.setText("")
-                 .show()
-                 .moveTo(g1)
-                 ;
+     fn_info.setText("")
+                   .show()
+                   .moveTo(g1)
+                   ;
    }
    
 } // end updateScreen()
@@ -3782,21 +3825,35 @@ public void loadFrameDetails() {
   }
 }
 
-/* Allow the user to choose between viewing the Registers and Position Registers */
+/**
+ * Allow the user to choose between viewing the Registers and
+ * Position Registers and choosing which form the points will
+ * be display in for Position Registers (either Joint or
+ * Cartesian).
+ */
 public void pickRegisterList() {
-  contents = new ArrayList<ArrayList<String>>();
-  
-  contents.add( newLine("VIEW REGISTERS") );
-  
-  active_row = -1;
-  active_col = text_render_start = 0;
-  
   options = new ArrayList<String>();
-  options.add("Registers");
-  options.add("Position Registers");
+  
+  // Determine what registers are available to switch based on the current mode
+  if (mode == VIEW_REG) {
+     options.add("1. Position Registers (Joint)");
+     options.add("2. Position Registers (Cartesian)");
+   } else if (mode == VIEW_POS_REG_J) {
+     options.add("1. Registers");
+     options.add("2. Position Registers (Cartesian)");
+   } else if (mode == VIEW_POS_REG_C) {
+     options.add("1. Registers");
+     options.add("2. Position Registers (Joint)");
+   } else {
+    options.add("1. Registers");
+    options.add("2. Position Registers (Joint)");
+    options.add("3. Position Registers (Cartesian)");
+  }
+     
   which_option = 0;
   
-  mode = DATA_MENU;
+  super_mode = mode;
+  mode = PICK_REG_LIST;
   updateScreen(color(255, 0, 0), color(0));
 }
 
@@ -3893,7 +3950,8 @@ public void viewRegisters() {
       
       if (POS_REG[idx] == null) {
         // No initialized entry
-        contents.add( newLine(lineNum, regLbl, "*") );
+        String unini = (mode == VIEW_POS_REG_J) ? "*" : "#";
+        contents.add( newLine(lineNum, regLbl, unini) );
       } else {
         String[] entries = null;
         
