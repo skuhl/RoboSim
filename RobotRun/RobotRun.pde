@@ -79,7 +79,6 @@ public void setup(){
   
   cp5 = new ControlP5(this);
   gui();
-  for (int n = 0; n < pr.length; n++) pr[n] = new Point();
   armModel = new ArmModel();
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));

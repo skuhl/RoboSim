@@ -1,45 +1,60 @@
 /**
- * This method saves the program state.
+ * This method saves all programs, frames, and initialized registers,
+ * each to separate files
  */
-void saveState() {
+public void saveState() {
   saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
   saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+  saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 }
 
 /**
- * Load program and frames from their respective save files.
+ * Load program, frames, and registers from their respective
+ * binary files.
  *
- * @return  0 if successful,
- *          1 if the program loading failed,
- *          2 if the frame loading failed.
+ * @return  0 if all loads were successful,
+ *          1 if only the program loading failed,
+ *          2 if only the frame loading failed,
+ *          3 if only program and frame loading failed,
+ *          4 if only register loading failed,
+ *          5 if only register and program loading failed,
+ *          6 if only register and frame loading failed,
+ *          7 if all loads failed
  */
 public int loadState() {
-  // If loading fails that create all new Frames
+  int ret = 0,
+      error = 0;
+  
   File f = new File(sketchPath("tmp/"));
   if (!f.exists()) { f.mkdirs(); }
+  
+  /* Load all saved Programs */
   
   File progFile = new File( sketchPath("tmp/programs.bin") );
   
   if (!progFile.exists()) {
+    // Create 'programs.bin' if it does not already exist
     try {
-      // Create 'programs.bin' if it does not already exist
       progFile.createNewFile();
       System.out.printf("Successfully created %s.\n", progFile.getName());
     } catch (IOException IOEx) {
-      // Error with the creation of 'programs.bin'
       System.out.printf("Could not create %s ...\n", progFile.getName());
       IOEx.printStackTrace();
-      return 1;
+      error = 1;
+    }
+  } else {
+    ret = loadProgramBytes(progFile);
+    
+    if (ret == 0) {
+      println("Successfully loaded programs.\n");
     }
   }
   
-  int ret = loadProgramBytes(progFile);
   
-  if (ret == 0) {
-    println("Successfully loaded programs.\n");
-  }
+  /* Load and Initialize the Tool and User Frames */
   
-  // Find the file 'frames.bin' in the 'tmp/' folder
+  ret = 1;
+  
   File frameFile = new File( sketchPath("tmp/frames.bin") );
   
   if (!frameFile.exists()) {
@@ -48,19 +63,25 @@ public int loadState() {
       frameFile.createNewFile();
       System.out.printf("Successfully created %s.\n", frameFile.getName());
     } catch (IOException IOEx) {
-      // Error with the creation of 'frames.bin'
       System.out.printf("Could not create %s ...\n", frameFile.getName());
       IOEx.printStackTrace();
-      return 2;
+      
+      if (error == 0) {
+        error = 2;
+      } else {
+        error = 3;
+      }
+    }
+  } else {
+    // Load both the User and Tool Frames
+    ret = loadFrameBytes(frameFile);
+    
+    if (ret == 0) {
+      println("Successfully loaded Frames.");
     }
   }
   
-  // Load both the User and Tool Frames
-  ret = loadFrameBytes(frameFile);
-  
-  if (ret == 0) {
-    println("Successfully loaded Frames.");
-  } else {
+  if (ret != 0) {
     // Create new frames if they could not be loaded
     toolFrames = new Frame[10];
     userFrames = new Frame[10];
@@ -71,7 +92,39 @@ public int loadState() {
     }
   }
   
-  return 0;
+    
+  /* Load and Initialize the Position Register and Registers */
+  
+  File regFile = new File(sketchPath("tmp/registers.bin"));
+  
+  if (!regFile.exists()) {
+    // Create the 'registers.bin' file
+    try {
+      regFile.createNewFile();
+      System.out.printf("Successfully created %s.\n", regFile.getName());
+    } catch (IOException IOEx) {
+      System.out.printf("Could not create %s ...\n", regFile.getName());
+      IOEx.printStackTrace();
+      
+      if (error == 0) {
+        error = 4;
+      } else if (error == 1) {
+        error = 5;
+      } else if (error == 2) {
+        error = 6;
+      } else if (error == 3) {
+        error = 7;
+      }
+    }
+  } else {
+      ret = loadRegisterBytes(regFile);
+      
+      if (ret == 0) {
+        println("Successfully loaded the Registers.");
+      }
+  }
+  
+  return error;
 }
 
 /**
@@ -526,4 +579,157 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   }
   
   return new Frame(origin, wpr, axesVectors);
+}
+
+/**
+ * Saves all initialized Register and Position Register Entries with their
+ * respective indices in their respective lists to dest. In addition, the
+ * number of Registers and Position Registers saved is saved to the file
+ * before each respective set of entries.
+ * 
+ * @param dest  Some binary file to which to save the Register entries
+ * @return      0 if the save was successful,
+ *              1 if dest could not be found
+ *              2 if an error occrued while writing to dest
+ */
+public int saveRegisterBytes(File dest) {
+  
+  try {
+    FileOutputStream out = new FileOutputStream(dest);
+    DataOutputStream dataOut = new DataOutputStream(out);
+    
+    int numOfREntries = 0,
+        numOfPREntries = 0;
+    
+    ArrayList<Integer> initializedR = new ArrayList<Integer>(),
+                       initializedPR = new ArrayList<Integer>();
+    
+    // Count the number of initialized entries and save their indices
+    for (int idx = 0 ; idx < REG.length; ++idx) {
+      if (REG[idx] != null) {
+        initializedR.add(idx);
+        ++numOfREntries;
+      }
+      
+      if (POS_REG[idx] != null) {
+        initializedPR.add(idx);
+        ++numOfPREntries;
+      }
+    }
+    
+    dataOut.writeInt(numOfREntries);
+    // Save the Register entries
+    for (Integer idx : initializedR) {
+      dataOut.writeInt(idx);
+      dataOut.writeFloat(REG[idx].value);
+      
+      if (REG[idx].comment == null) {
+        dataOut.writeUTF("");
+      } else {
+        dataOut.writeUTF(REG[idx].comment);
+      }
+    }
+    
+    dataOut.writeInt(numOfPREntries);
+    // Save the Position Register entries
+    for (Integer idx : initializedPR) {
+      dataOut.writeInt(idx);
+      savePoint(POS_REG[idx].point, dataOut);
+      
+      if (POS_REG[idx].comment == null) {
+        dataOut.writeUTF("");
+      } else {
+        dataOut.writeUTF(POS_REG[idx].comment);
+      }
+    }
+    
+    dataOut.close();
+    out.close();
+    return 0;
+  } catch (FileNotFoundException FNFEx) {
+    // Could not be located dest
+    System.out.printf("%s does not exist!\n", dest.getName());
+    FNFEx.printStackTrace();
+    return 1;
+  } catch (IOException IOEx) {
+    // Error occured while reading from dest
+    System.out.printf("%s is corrupt!\n", dest.getName());
+    IOEx.printStackTrace();
+    return 2;
+  }
+}
+
+/**
+ * Loads all the saved Registers and Position Registers from the
+ * given binary file. It is expected that the number of entries
+ * saved for both the Registers and Position Registers exist in the
+ * file before each respective list. Also, the index of an entry
+ * in the Register (or Position Register) list should also exist
+ * before each antry in the file.
+ * 
+ * @param src  The binary file from which to load the Register and
+ *             Position Register entries
+ * @return     0 if the load was successful,
+ *             1 if src could not be located,
+ *             2 if an error occured while reading from src
+ *             3 if the end of file is reached in source, before
+ *               all expected entries were read
+ */
+public int loadRegisterBytes(File src) {
+  
+  try {
+    FileInputStream in = new FileInputStream(src);
+    DataInputStream dataIn = new DataInputStream(in);
+    
+    int size = max(0, min(dataIn.readInt(), REG.length));
+    
+    // Load the Register entries
+    while (size-- > 0) {
+      // Each entry is saved after its respective index in REG
+      int reg = dataIn.readInt();
+      Float v = dataIn.readFloat();
+      String c = dataIn.readUTF();
+      
+      if (c != null) {
+        REG[reg] = new Register(c, v);
+      } else {
+        REG[reg] = new Register(v);
+      }
+    }
+    
+    size = max(0, min(dataIn.readInt(), POS_REG.length));
+    
+    // Load the Position Register entries
+    while (size-- > 0) {
+      // Each entry is saved after its respective index in POS_REG
+      int idx = dataIn.readInt();
+      Point p = loadPoint(dataIn);
+      String c = dataIn.readUTF();
+      
+      if (c != "") {
+        POS_REG[idx] = new PositionRegister(c, p);
+      } else {
+        POS_REG[idx] = new PositionRegister(p);
+      }
+    }
+    
+    dataIn.close();
+    in.close();
+    return 0;
+  } catch (FileNotFoundException FNFEx) {
+    // Could not be located src
+    System.out.printf("%s does not exist!\n", src.getName());
+    FNFEx.printStackTrace();
+    return 1;
+  } catch (EOFException EOFEx) {
+    // Unexpectedly reached the end of src
+    System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
+    EOFEx.printStackTrace();
+    return 3;
+  } catch (IOException IOEx) {
+    // Error occrued while reading from src
+    System.out.printf("%s is corrupt!\n", src.getName());
+    IOEx.printStackTrace();
+    return 2;
+  }
 }

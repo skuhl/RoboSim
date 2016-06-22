@@ -36,8 +36,14 @@ final int NONE = 0,
           SET_RO_STATUS = 28,
           SET_FRAME_INSTRUCTION = 29,
           SET_FRAME_INSTRUCTION_IDX = 30,
-          EDIT_MENU = 31,
-          CONFIRM_DELETE = 32;
+          DATA_MENU = 31,
+          VIEW_REG = 32,
+          // J for Joint
+          VIEW_POS_REG_J = 33,
+          // C for Cartesian
+          VIEW_POS_REG_C = 34,
+          EDIT_MENU = 35,
+          CONFIRM_DELETE = 36;
 final int COLOR_DEFAULT = -8421377,
           COLOR_ACTIVE = -65536;
 // Determines what End Effector mapping should be display
@@ -91,8 +97,12 @@ ArrayList<String> options = new ArrayList<String>();
 // store numbers pressed by the user
 ArrayList<Integer> nums = new ArrayList<Integer>(); 
 // which element is on focus now?
-int active_row = 0, active_col = 0; 
-int text_render_start = 0;
+int active_row = 0,
+    active_col = 0,
+    // Keep track of focused element in a displayed list
+    active_index = 0,
+    // Used for drawing a subsection of a list on the screen
+    text_render_start = 0;
 // which option is on focus now?
 int which_option = -1; 
 // how many textlabels have been created for display
@@ -1214,30 +1224,26 @@ public void mu() {
   if (mode == INSTRUCTION_NAV || mode == INSTRUCTION_EDIT) { saveState(); }
   
   contents = new ArrayList<ArrayList<String>>();
-  ArrayList<String> line = new ArrayList<String>();
-  line.add("1 UTILITIES (NA)");
-  contents.add(line);
-  line = new ArrayList<String>(); line.add("2 TEST CYCLE (NA)");
-  contents.add(line);
-  line = new ArrayList<String>(); line.add("3 MANUAL FCTNS (NA)");
-  contents.add(line);
-  line = new ArrayList<String>(); line.add("4 ALARM (NA)");
-  contents.add(line);
-  line = new ArrayList<String>(); line.add("5 I/O (NA)");
-  contents.add(line);
-  line = new ArrayList<String>(); line.add("6 SETUP");
-  contents.add(line);
-  line = new ArrayList<String>(); line.add("7 FILE (NA)");
-  contents.add(line);
-  line = new ArrayList<String>(); line.add("8");
-  contents.add(line);
-  line = new ArrayList<String>(); line.add("9 USER (NA)");
-  contents.add(line);
-  line = new ArrayList<String>(); line.add("0 --NEXT--");
-  contents.add(line);
+  
+  contents.add( newLine("1 UTILITIES (NA)") );
+  contents.add( newLine("2 TEST CYCLE (NA)") );
+  contents.add( newLine("3 MANUAL FCTNS (NA)") );
+  contents.add( newLine("4 ALARM (NA)") );
+  contents.add(newLine("5 I/O (NA)"));
+  contents.add(newLine("6 SETUP"));
+  contents.add(newLine("7 FILE (NA)"));
+  contents.add(newLine("8"));
+  contents.add(newLine("9 USER (NA)"));
+  contents.add(newLine("0 --NEXT--"));
+  
   active_col = active_row = 0;
   mode = MENU_NAV;
   updateScreen(color(255,0,0), color(0));
+}
+
+// Data button
+public void da() {
+  pickRegisterList();
 }
 
 
@@ -1419,6 +1425,29 @@ public void up(){
          }
          
          break;
+      case VIEW_REG:
+      case VIEW_POS_REG_J:
+      case VIEW_POS_REG_C:
+      
+         if (active_index > 2) {
+           if (active_index == text_render_start) {
+             --text_render_start;
+           } else {
+             --active_row;
+           }
+           
+           --active_index;
+           active_col = max( 0, min( active_col, contents.get(active_row - 2).size() - 1 ) );
+         }
+         
+         viewRegisters();
+         
+         if (DISPLAY_TEST_OUTPUT) {
+           System.out.printf("\nRow: %d\nColumn: %d\nIdx: %d\nTRS: %d\n\n",
+                             active_row, active_col, active_index, text_render_start);
+         }
+         
+         break;
       case INSTRUCTION_EDIT:
       case PICK_FRAME_MODE:
       case PICK_FRAME_METHOD:
@@ -1427,6 +1456,7 @@ public void up(){
       case FOUR_POINT_MODE:
       case SET_DO_STATUS:
       case SET_RO_STATUS:
+      case DATA_MENU:
          which_option = max(0, which_option - 1);
          break;
       case MENU_NAV:
@@ -1465,7 +1495,7 @@ public void dn(){
          loadPrograms();
          
          if (DISPLAY_TEST_OUTPUT) {
-           System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
+           System.out.printf("\nRow: %d\nColumn: %d\nIdx: %d\nTRS: %d\n\n",
                              active_row, active_col, active_program, text_render_start);
          }
          
@@ -1490,6 +1520,31 @@ public void dn(){
          }
          
          break;
+      case VIEW_REG:
+      case VIEW_POS_REG_J:
+      case VIEW_POS_REG_C:
+      
+        size = (mode == VIEW_REG) ? REG.length : POS_REG.length;
+        
+        if (active_index < (size - 1)) {
+           if (active_index - text_render_start == ITEMS_TO_SHOW - 5) {
+            ++text_render_start;
+           } else {
+             ++active_row;
+           }
+           
+           ++active_index;
+           active_col = max( 0, min( active_col, contents.get(active_row - 2).size() - 1 ) );
+         }
+         
+         viewRegisters();
+         
+         if (DISPLAY_TEST_OUTPUT) {
+           System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
+                             active_row, active_col, active_index, text_render_start);
+         }
+         
+         break;
       case INSTRUCTION_EDIT:
       case PICK_FRAME_MODE:
       case PICK_FRAME_METHOD:
@@ -1498,6 +1553,7 @@ public void dn(){
       case FOUR_POINT_MODE:
       case SET_DO_STATUS:
       case SET_RO_STATUS:
+      case DATA_MENU:
          which_option = min(which_option + 1, options.size() - 1);
          break;
       case MENU_NAV:
@@ -1556,27 +1612,18 @@ public void rt(){
       case MENU_NAV:
           if (active_row == 5) { // SETUP
             contents = new ArrayList<ArrayList<String>>();
-            ArrayList<String> line = new ArrayList<String>();
-            line.add("1 Prog Select (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("2 General (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("3 Call Guard (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("4 Frames");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("5 Macro (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("6 Ref Position (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("7 Port Init (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("8 Ovrd Select (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("9 User Alarm (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("0 --NEXT--");
-            contents.add(line);
+            
+            contents.add( newLine("1 Prog Select (NA)") );
+            contents.add( newLine("2 General (NA)") );
+            contents.add( newLine("3 Call Guard (NA)") );
+            contents.add( newLine("4 Frames") );
+            contents.add( newLine("5 Macro (NA)") );
+            contents.add( newLine("6 Ref Position (NA)") );
+            contents.add( newLine("7 Port Init (NA)") );
+            contents.add( newLine("8 Ovrd Select (NA)") );
+            contents.add( newLine("9 User Alarm (NA)") );
+            contents.add( newLine("0 --NEXT--") );
+            
             active_col = active_row = 0;
             mode = SETUP_NAV;
             updateScreen(color(255,0,0), color(0));
@@ -1585,39 +1632,26 @@ public void rt(){
        case PICK_INSTRUCTION:
           if (active_row == 0) { // I/O
             contents = new ArrayList<ArrayList<String>>();
-            ArrayList<String> line = new ArrayList<String>();
-            line.add("1 Cell Intface (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("2 Custom (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("3 Digital");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("4 Analog (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("5 Group (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("6 Robot");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("7 UOP (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("8 SOP (NA)");
-            contents.add(line);
-            line = new ArrayList<String>(); line.add("9 Interconnect (NA)");
-            contents.add(line);
+            
+            contents.add( newLine("1 Cell Intface (NA)") );
+            contents.add( newLine("2 Custom (NA)") );
+            contents.add( newLine("3 Digital") );
+            contents.add( newLine("4 Analog (NA)") );
+            contents.add( newLine("5 Group (NA)") );
+            contents.add( newLine("6 Robot") );
+            contents.add( newLine("7 UOP (NA)") );
+            contents.add( newLine("8 SOP (NA)") );
+            contents.add( newLine("9 Interconnect (NA)") );
+            
             active_col = active_row = 0;
             mode = IO_SUBMENU;
             updateScreen(color(255,0,0), color(0));
           } else if (active_row == 1) { // Offset/Frames
             
             contents = new ArrayList<ArrayList<String>>();
-            ArrayList<String> line = new ArrayList<String>();
             
-            line.add("1 UTOOL_NUM");
-            contents.add(line);
-            
-            line = new ArrayList<String>();
-            line.add("2 UFRAME_NUM");
-            contents.add(line);
+            contents.add( newLine("1 UTOOL_NUM") );
+            contents.add( newLine("1 UFRAME_NUM") );
             
             mode = SET_FRAME_INSTRUCTION;
             active_col = active_row = 0;
@@ -1703,13 +1737,11 @@ public void f1() {
       } else {
         
         contents = new ArrayList<ArrayList<String>>();
-        ArrayList<String> line = new ArrayList<String>();
-        line.add("1 I/O");
-        contents.add(line);
-        line = new ArrayList<String>(); line.add("2 Offset/Frames");
-        contents.add(line);
-        line = new ArrayList<String>(); line.add("(Others not yet implemented)");
-        contents.add(line);
+        
+        contents.add( newLine("1 I/O") );
+        contents.add( newLine("2 Offset/Frames") );
+        contents.add( newLine("(Others not yet implemented)") );
+        
         active_col = active_row = 0;
         mode = PICK_INSTRUCTION;
         updateScreen(color(255,0,0), color(0));
@@ -2208,23 +2240,16 @@ public void f5() {
       if (active_col == 0) {
         // if you're on the line number, bring up a list of instruction editing options
         contents = new ArrayList<ArrayList<String>>();
-        ArrayList<String> line = new ArrayList<String>();
-        line.add("1 Insert (NA)");
-        contents.add(line);
-        line = new ArrayList<String>(); line.add("2 Delete");
-        contents.add(line);
-        line = new ArrayList<String>(); line.add("3 Copy (NA)");
-        contents.add(line);
-        line = new ArrayList<String>(); line.add("4 Find (NA)");
-        contents.add(line);
-        line = new ArrayList<String>(); line.add("5 Replace (NA)");
-        contents.add(line);
-        line = new ArrayList<String>(); line.add("6 Renumber (NA)");
-        contents.add(line);
-        line = new ArrayList<String>(); line.add("7 Comment (NA)");
-        contents.add(line);
-        line = new ArrayList<String>(); line.add("8 Undo (NA)");
-        contents.add(line);
+        
+        contents.add( newLine("1 Insert (NA)") );
+        contents.add( newLine("2 Delete") );
+        contents.add( newLine("3 Copy (NA)") );
+        contents.add( newLine("4 Find (NA)") );
+        contents.add( newLine("5 Replace (NA)") );
+        contents.add( newLine("6 Renumber (NA)") );
+        contents.add( newLine("7 Comment (NA)") );
+        contents.add( newLine("8 Undo (NA)") );
+        
         active_col = active_row = 0;
         mode = EDIT_MENU;
         updateScreen(color(255,0,0), color(0));
@@ -2451,7 +2476,7 @@ public void ENTER(){
     case SET_INSTRUCTION_REGISTER:
        try {
          int tempRegister = Integer.parseInt(workingText);
-         if (tempRegister >= 0 && tempRegister < pr.length) {
+         if (tempRegister >= 0 && tempRegister < POS_REG.length) {
            MotionInstruction castIns = getActiveMotionInstruct();
            castIns.setRegister(tempRegister);
          }
@@ -2662,6 +2687,19 @@ public void ENTER(){
          which_option = 0;
          updateScreen(color(255,0,0), color(0,0,0));
       }
+      break;
+    case DATA_MENU:
+      if (which_option == 0) {
+        // Register Menu
+        mode = VIEW_REG;
+      } else if (which_option == 1) {
+        // Position Register Menu
+        mode = VIEW_POS_REG_C;
+      }
+      
+      active_row = 2;
+      active_col = active_index = text_render_start = 0;
+      viewRegisters();
       break;
   }
   println(mode);
@@ -3440,16 +3478,11 @@ public void inputProgramName() {
   active_row = active_col = -1;
   contents = new ArrayList<ArrayList<String>>();
   
-  contents.add(new ArrayList<String>());
-  contents.get(0).add("");
-  contents.add(new ArrayList<String>());
-  contents.get(1).add("(ENTER: confirm name)");
-  contents.add(new ArrayList<String>());
-  contents.get(2).add("");
-  contents.add(new ArrayList<String>());
-  contents.get(3).add("");
-  contents.add(new ArrayList<String>());
-  contents.get(4).add("Program Name:   " + workingText);
+  contents.add( newLine("") );
+  contents.add( newLine("(ENTER: confirm name)") );
+  contents.add( newLine("") );
+  contents.add( newLine("") );
+  contents.add( newLine("Program Name:   " + workingText) );
   
   which_option = -1;
   options = new ArrayList<String>();
@@ -3480,11 +3513,7 @@ public void loadFrames(int coordFrame) {
     for (int idx = 0; idx < frames.length; ++idx) {
       // Display each frame on its own line
       Frame frame = frames[idx];
-      ArrayList<String> line = new ArrayList<String>();
-      String str = String.format("%d) %s", idx + 1, frame.getOrigin());
-      
-      line.add(str);
-      contents.add(line);
+      contents.add ( newLine( String.format("%d) %s", idx + 1, frame.getOrigin()) ) );
     }
     
     active_col = active_row = 0;
@@ -3542,7 +3571,7 @@ public void loadPointList() {
  */
 public void loadDirectEntryMethod() {
   contents = new ArrayList<ArrayList<String>>();
-  ArrayList<String> line = new ArrayList<String>();
+  
   String str = "";
   
   if (super_mode == NAV_TOOL_FRAMES) {
@@ -3551,32 +3580,14 @@ public void loadDirectEntryMethod() {
     str = "USER FRAME ";
   }
   
-  line.add(str);
-  contents.add(line);
+  contents.add( newLine(str) );
   
-  line = new ArrayList<String>();
-  line.add("X: 0.0");
-  contents.add(line);
-  
-  line = new ArrayList<String>();
-  line.add("Y: 0.0");
-  contents.add(line);
-  
-  line = new ArrayList<String>();
-  line.add("Z: 0.0");
-  contents.add(line);
-  
-  line = new ArrayList<String>();
-  line.add("W: 0.0");
-  contents.add(line);
-  
-  line = new ArrayList<String>();
-  line.add("P: 0.0");
-  contents.add(line);
-  
-  line = new ArrayList<String>();
-  line.add("R: 0.0");
-  contents.add(line);
+  contents.add( newLine("X: 0.0") );
+  contents.add( newLine("Y: 0.0") );
+  contents.add( newLine("Z: 0.0") );
+  contents.add( newLine("W: 0.0") );
+  contents.add( newLine("P: 0.0") );
+  contents.add( newLine("R: 0.0") );
   
   active_row = 1;
   active_col = 0;
@@ -3740,43 +3751,27 @@ public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
  */
 public void loadFrameDetails() {
   contents = new ArrayList<ArrayList<String>>();
-  ArrayList<String> line = new ArrayList<String>();
+  
+  String header = null;
   Frame[] frames = null;
   // Display the frame set name as well as the index of the currently selected frame
   if (super_mode == NAV_TOOL_FRAMES) {
     frames = toolFrames;
-    line.add(String.format("TOOL FRAME: %d", curFrameIdx + 1));
+    header = String.format("TOOL FRAME: %d", curFrameIdx + 1);
   } else if (super_mode == NAV_USER_FRAMES) {
     frames = userFrames;
-    line.add(String.format("USER FRAME: %d", curFrameIdx + 1));
+    header = String.format("USER FRAME: %d", curFrameIdx + 1);
   }
   
   if (frames != null) {
-    contents.add(line);
     
-    line = new ArrayList<String>();
-    line.add(String.format("X: %8.4f", frames[curFrameIdx].getOrigin().x));
-    contents.add(line);
-    
-    line = new ArrayList<String>();
-    line.add(String.format("Y: %8.4f", frames[curFrameIdx].getOrigin().y));
-    contents.add(line);
-    
-    line = new ArrayList<String>();
-    line.add(String.format("Z: %8.4f", frames[curFrameIdx].getOrigin().z));
-    contents.add(line);
-    
-    line = new ArrayList<String>();
-    line.add(String.format("W: %8.4f", frames[curFrameIdx].getWpr().x));
-    contents.add(line);
-    
-    line = new ArrayList<String>();
-    line.add(String.format("P: %8.4f", frames[curFrameIdx].getWpr().y));
-    contents.add(line);
-    
-    line = new ArrayList<String>();
-    line.add(String.format("R: %8.4f", frames[curFrameIdx].getWpr().z));
-    contents.add(line);
+    contents.add( newLine(header) );
+    contents.add( newLine(String.format("X: %8.4f", frames[curFrameIdx].getOrigin().x) ) );
+    contents.add( newLine(String.format("Y: %8.4f", frames[curFrameIdx].getOrigin().y) ) );
+    contents.add( newLine(String.format("Z: %8.4f", frames[curFrameIdx].getOrigin().z) ) );
+    contents.add( newLine(String.format("W: %8.4f", frames[curFrameIdx].getWpr().x) ) );
+    contents.add( newLine(String.format("P: %8.4f", frames[curFrameIdx].getWpr().y) ) );
+    contents.add( newLine(String.format("R: %8.4f", frames[curFrameIdx].getWpr().z) ) );
     
     active_row = -1;
     which_option = -1;
@@ -3785,6 +3780,145 @@ public void loadFrameDetails() {
     mode = FRAME_DETAIL;
     updateScreen(color(255,0,0), color(0));
   }
+}
+
+/* Allow the user to choose between viewing the Registers and Position Registers */
+public void pickRegisterList() {
+  contents = new ArrayList<ArrayList<String>>();
+  
+  contents.add( newLine("VIEW REGISTERS") );
+  
+  active_row = -1;
+  active_col = text_render_start = 0;
+  
+  options = new ArrayList<String>();
+  options.add("Registers");
+  options.add("Position Registers");
+  which_option = 0;
+  
+  mode = DATA_MENU;
+  updateScreen(color(255, 0, 0), color(0));
+}
+
+/**
+ * Displays the list of Registers in mode VIEW_REG or the Position Registers
+ * for modes VIEW_REG_J or VIEW_REG_C. In mode VIEW_REG_J the joint angles
+ * associated with the Point are displayed and the Cartesian values are
+ * displayed in mode VIEW_REG_C.
+ */
+public void viewRegisters() {
+  options = new ArrayList<String>();
+  which_option = -1;
+  
+  contents = new ArrayList<ArrayList<String>>();
+  
+  // View Registers
+  if (mode == VIEW_REG) {
+    // Header
+    contents.add( newLine("REGISTERS") );
+    contents.add( newLine("") );
+    
+    int start = text_render_start;
+    int end = min(start + ITEMS_TO_SHOW - 4, REG.length);
+    // Display a subset of the list of registers
+    for (int idx = start; idx < end; ++idx) {
+      String spaces;
+      
+      if (idx < 9) {
+        spaces = "   ";
+      } else if (idx < 99) {
+        spaces = "  ";
+      } else {
+        spaces = " ";
+      }
+      // Display the line number
+      String lineNum = String.format("%d)%s", (idx + 1), spaces);
+      
+      if (idx < 9) {
+        spaces = "    ";
+      } else if (idx < 99) {
+        spaces = "   ";
+      } else {
+        spaces = "  ";
+      }
+      
+      String lbl = (REG[idx] == null) ? "" : REG[idx].comment;
+      // Display the comment asscoiated with a specific Register entry
+      String regLbl = String.format("R[%d: %s]%s", (idx + 1), lbl, spaces);
+      // Display Register value (* if uninitialized)
+      String regEntry = (REG[idx] == null) ? "*" : String.format("%5.4f", REG[idx].value);
+      
+      contents.add( newLine(lineNum, regLbl, regEntry) );
+    }
+    
+  // View Position Registers
+  } else if (mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C) {
+    // Header
+    ArrayList<String> line = new ArrayList<String>();
+    line.add("POSITION REGISTERS");
+    contents.add(line);
+    line = new ArrayList<String>();
+    line.add("");
+    contents.add(line);
+    
+    int start = text_render_start;
+    int end = min(start + ITEMS_TO_SHOW - 4, POS_REG.length);
+    // Display a subset of the list of position registers
+    for (int idx = start; idx < end; ++idx) {
+      line = new ArrayList<String>();
+      
+      String spaces;
+      
+      if (idx < 9) {
+        spaces = "   ";
+      } else if (idx < 99) {
+        spaces = "  ";
+      } else {
+        spaces = " ";
+      }
+      // Display the line number
+      String lineNum = String.format("%d)%s", (idx + 1), spaces);
+      
+      if (idx < 9) {
+        spaces = "    ";
+      } else if (idx < 99) {
+        spaces = "   ";
+      } else {
+        spaces = "  ";
+      }
+      
+      String lbl = (POS_REG[idx] == null) ? "" : POS_REG[idx].comment;
+      // Display the comment asscoiated with a specific Register entry
+      String regLbl = String.format("PR[%d: %s]%s", (idx + 1), lbl, spaces);
+      
+      if (POS_REG[idx] == null) {
+        // No initialized entry
+        contents.add( newLine(lineNum, regLbl, "*") );
+      } else {
+        String[] entries = null;
+        
+        if (mode == VIEW_POS_REG_J) {
+          entries = POS_REG[idx].point.toJointStringArray();
+        } else {
+          // mode == VIEW_POS_REG_C
+          entries = POS_REG[idx].point.toCartesianStringArray();
+        }
+        
+        /* Display each portion of the Point's position and orientation in
+         * a separate column  whether it be X, Y, Z, W, P, R (Cartesian) or 
+         * J1 - J6 (Joint angles) */
+         contents.add( newLine(lineNum, regLbl, entries[0], entries[1], entries[2], entries[3], entries[4], entries[5]) );
+      }
+      
+      
+    }
+  } else {
+    // mode must be VIEW_REG or VIEW_POS_REG_J(C)!
+    contents.add( newLine( String.format("%d is not a valid mode for view registers!", mode)) );
+    active_row = active_col = 0;
+  }
+  
+  updateScreen(color(255, 0, 0), color(0));
 }
 
 // prepare for displaying motion instructions on screen
@@ -3871,24 +4005,12 @@ public void deleteInstEpilogue() {
 void loadActiveFrames() {
   options = new ArrayList<String>();
   contents = new ArrayList<ArrayList<String>>();
-  ArrayList<String> line = new ArrayList<String>();
   active_row = 1;
   
-  line.add("ACTIVE FRAMES");
-  contents.add(line);
-  
-  line = new ArrayList<String>();
-  line.add("Tool: " + (activeToolFrame + 1));
-  contents.add(line);
-  
-  line = new ArrayList<String>();
-  line.add("User: " + (activeUserFrame + 1));
-  contents.add(line);
-  
-  // Currently not implemented
-  /*line = new ArrayList<String>();
-  line.add("Jog:  " + (activeJogFrame + 1));
-  contents.add(line);*/
+  contents.add( newLine("ACTIVE FRAMES") );
+  contents.add( newLine("Tool: " + (activeToolFrame + 1)) );
+  contents.add( newLine("User: " + (activeUserFrame + 1)) );
+  //contents.add( newLine("Jog: " + (activeJogFrame + 1)) );
   
   mode = ACTIVE_FRAMES;
   updateScreen(color(255,0,0), color(0));
@@ -3910,10 +4032,28 @@ void loadPrograms() {
    
    contents.clear();  
    int start = text_render_start;
-   int end = min(start + ITEMS_TO_SHOW, size);
-   for(int i=start;i<end;i++){
-      ArrayList<String> temp = new ArrayList<String>();
-      temp.add(programs.get(i).getName());
-      contents.add(temp);
+   int end = min(start + ITEMS_TO_SHOW - 3, size);
+   
+   for(int i=start;i<end;i++) {
+      contents.add( newLine(programs.get(i).getName()) );
    }
+}
+
+/**
+ * Given a set of Strings this method returns a single
+ * String ArrayList, which contains all the given elements
+ * in the order that they are given as arguments.
+ * 
+ * @param columns  A list of Strings
+ * @return         An ArrayList containing all the given
+ *                 Strings
+ */
+public ArrayList<String> newLine(String... columns) {
+   ArrayList<String> line =  new ArrayList<String>();
+   
+   for (String col : columns) {
+     line.add(col);
+   }
+   
+   return line;
 }

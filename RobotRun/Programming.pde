@@ -1,10 +1,14 @@
 
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
 final int FTYPE_TOOL = 0, FTYPE_USER = 1;
-Point[] pr = new Point[1000]; // global registers
-Frame[] toolFrames = new Frame[10]; // tool frames
-Frame[] userFrames = new Frame[10];
 
+Frame[] toolFrames = null;
+Frame[] userFrames = null;
+
+// Position Registers
+private final PositionRegister[] POS_REG = new PositionRegister[100];
+// Registers
+private final Register[] REG = new Register[100];
 
 public class Point  {
   public PVector pos; // position
@@ -80,30 +84,41 @@ public class Point  {
                      joints[0], joints[1], joints[2], joints[3], joints[4], joints[5]);
   }
   
-  public String toExport(){
-     String ret = "<Point> ";
-     ret += Float.toString(pos.x);
-     ret += " ";
-     ret += Float.toString(pos.y);
-     ret += " ";
-     ret += Float.toString(pos.z);
-     ret += " ";
-     ret += Float.toString(ori[0]);
-     ret += " ";
-     ret += Float.toString(ori[1]);
-     ret += " ";
-     ret += Float.toString(ori[2]);
-     ret += " ";
-     ret += Float.toString(ori[3]);
-     ret += " ";
-     for (int i=0;i<joints.length-1;i++){
-        ret += Float.toString(joints[i]);
-        ret += " ";
-     }
-     ret += Float.toString(joints[joints.length-1]);
-     ret += " ";
-     ret += "</Point>";  
-     return ret;
+  /**
+   * Returns a String array, whose entries are the joint values of the
+   * Point with their respective labels (J1-J6).
+   * 
+   * @return  A 6-element String array
+   */
+  public String[] toJointStringArray() {
+    String[] entries = new String[6];
+    
+    for (int idx = 0; idx < joints.length; ++idx) {
+      entries[idx] = String.format("J%d: %4.3f", (idx + 1), joints[idx]);
+    }
+    
+    return entries;
+  }
+  
+  /**
+   * Returns a string array, where each entry is one of
+   * the values of the Cartiesian represent of the Point:
+   * (X, Y, Z, W, P, and R) and their respective labels.
+   *
+   * @return  A 6-element String array
+   */
+  public String[] toCartesianStringArray() {
+    PVector angles = quatToEuler(ori);
+    
+    String[] entries = new String[6];
+    entries[0] = String.format("X: %4.3f", pos.x);
+    entries[1] = String.format("Y: %4.3f", pos.y);
+    entries[2] = String.format("Z: %4.3f", pos.z);
+    entries[3] = String.format("W: %4.3f", angles.x);
+    entries[4] = String.format("P: %4.3f", angles.y);
+    entries[5] = String.format("R: %4.3f", angles.z);
+    
+    return entries;
   }
 } // end Point class
 
@@ -177,22 +192,6 @@ public class Frame {
   public void setAxes(float[][] axesVectors) {
     axes = axesVectors.clone();
   }
-  
-  /* Used for saving the Frame to a file */
-  public String toExport() {
-    String str = "<Frame>";
-    str += " ";
-    
-    str += Float.toString(origin.x) + " " + Float.toString(origin.y) + " " + Float.toString(origin.z) + " ";
-    str += Float.toString(wpr.x) + " " + Float.toString(wpr.y) + " "  + Float.toString(wpr.z) + " ";
-    
-    for (int row = 0; row < 3; ++row) {
-        str += Float.toString(axes[row][0]) + " " + Float.toString(axes[row][1]) + " "  + Float.toString(axes[row][2]) + " ";
-    }
-    
-    str += "</Frame>";
-    return str;
-  }
 } // end Frame class
 
 public class Program  {
@@ -216,38 +215,6 @@ public class Program  {
   
   public String getName(){
     return name;
-  }
-  
-  // added by Judy
-  public String toExport(){
-     String ret = "<Program> ";
-     ret += name.replace(' ', '_');
-     ret += " ";
-     ret += Integer.toString(nextRegister);
-     ret += " ";
-     ret += "\n";
-     for(int i = 0; i < p.length; i += 1){
-       ret += "  "; 
-       ret += p[i].toExport();
-       ret += "\n"; 
-     }
-     for(int i = 0; i < instructions.size(); i += 1){
-        Instruction ins = instructions.get(i);
-        ret += "  ";
-        if (ins instanceof MotionInstruction){
-           MotionInstruction tmp = (MotionInstruction) ins;
-           ret += tmp.toExport();
-        }else if (ins instanceof FrameInstruction){
-           FrameInstruction tmp = (FrameInstruction) ins;
-           ret += tmp.toExport();
-        }else if (ins instanceof ToolInstruction){
-           ToolInstruction tmp = (ToolInstruction) ins;
-           ret += tmp.toExport();
-        }
-        ret += "\n";
-     }
-     ret += "</Program> ";
-     return ret;
   }
   
   public void loadNextRegister(int next){
@@ -366,13 +333,13 @@ public final class MotionInstruction extends Instruction  {
   public Point getVector(Program parent) {
     if (motionType != COORD_JOINT) {
       Point out;
-      if (globalRegister) out = pr[register].clone();
+      if (globalRegister) out = POS_REG[register].point.clone();
       else out = parent.p[register].clone();
       out.pos = convertWorldToNative(out.pos);
       return out;
     } else {
       Point ret;
-      if (globalRegister) ret = pr[register].clone();
+      if (globalRegister) ret = POS_REG[register].point.clone();
       else ret = parent.p[register].clone();
       if (userFrame != -1) {
         ret.pos = rotate(ret.pos, userFrames[userFrame].getNativeAxes());
@@ -404,26 +371,6 @@ public final class MotionInstruction extends Instruction  {
      return me;
   } // end toString()
   
-  public String toExport(){
-     String ret = "<MotionInstruction> ";
-     ret += Integer.toString(motionType);
-     ret += " ";
-     ret += Integer.toString(register);
-     ret += " ";
-     ret += Boolean.toString(globalRegister);
-     ret += " ";
-     ret += Float.toString(speed);
-     ret += " ";
-     ret += Float.toString(termination);
-     ret += " ";
-     ret += Integer.toString(userFrame);
-     ret += " ";
-     ret += Integer.toString(toolFrame);
-     ret += " ";
-     ret += "</MotionInstruction>";
-     return ret;
-  }
-  
 } // end MotionInstruction class
 
 
@@ -448,16 +395,6 @@ public class FrameInstruction extends Instruction {
     else if (frameType == FTYPE_USER) ret += "UFRAME_NUM=";
     ret += idx+1;
     return ret;
-  }
-  
-  public String toExport(){
-     String ret = "<FrameInstruction> ";
-     ret += Integer.toString(frameType);
-     ret += " ";
-     ret += Integer.toString(idx);
-     ret += " ";
-     ret += "</FrameInstruction>";
-     return ret;
   }
 } // end FrameInstruction class
 
@@ -507,19 +444,6 @@ public class ToolInstruction extends Instruction {
   public String toString() {
     return type + "[" + bracket + "]=" + (setToolStatus == ON ? "ON" : "OFF");
   }
-  
-  public String toExport(){
-     String ret = "<ToolInstruction> ";
-     ret += type;
-     ret += " ";
-     ret += Integer.toString(bracket);
-     ret += " ";
-     ret += Integer.toString(setToolStatus);
-     ret += " ";
-     ret += "</ToolInstruction>";
-     return ret;
-  }
-  
 } // end ToolInstruction class
 
 
@@ -566,4 +490,42 @@ public class RecordScreen implements Runnable{
         }
         
     }
+}
+
+/* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
+public class Register {
+  public String comment = null;
+  public Float value;
+  
+  public Register() {
+    value = 0f;
+  }
+  
+  public Register(Float v) {
+    value = v;
+  }
+  
+  public Register(String c, Float v) {
+    value = v;
+    comment = c;
+  }
+}
+
+/* A simple class for a Position Register of the Robot Arm, which holds a point associated with a comment. */
+public class PositionRegister {
+  public String comment = null;
+  public Point point;
+  
+  public PositionRegister() {
+    point = new Point(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f);
+  }
+  
+  public PositionRegister(Point p) {
+    point = p;
+  }
+  
+  public PositionRegister(String c, Point p) {
+    point = p;
+    comment = c;
+  }
 }
