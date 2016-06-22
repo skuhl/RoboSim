@@ -43,7 +43,9 @@ final int NONE = 0,
           // C for Cartesian
           VIEW_POS_REG_C = 34,
           EDIT_MENU = 35,
-          CONFIRM_DELETE = 36;
+          INPUT_FLOAT = 36,
+          INPUT_COMMENT = 37,
+          CONFIRM_DELETE = 38;
 final int COLOR_DEFAULT = -8421377,
           COLOR_ACTIVE = -65536;
 // Determines what End Effector mapping should be display
@@ -1316,6 +1318,18 @@ public void addNumber(String number) {
       // Concatenate the new digit
       contents.get(active_row).set(0, line);
     }
+  } else if (mode == INPUT_FLOAT) {
+    
+    if (workingText.length() < 16) {
+      workingText += number;
+      options.set(2, workingText);
+    }
+  } else if (mode == INPUT_COMMENT) {
+    
+    if (workingText.length() < 16) {
+      workingText += number;
+      options.set(2, workingText);
+    }
   }
   
   updateScreen(color(255, 0, 0), color(0));
@@ -1336,6 +1350,18 @@ public void PERIOD() {
       }
       
       contents.get(active_row).set(0, line);
+    }
+  } else if (mode == INPUT_FLOAT) {
+    
+    if (workingText.length() < 16) {
+      workingText += ".";
+      options.set(2, workingText);
+    }
+  } else if (mode == INPUT_COMMENT) {
+    
+    if (workingText.length() < 16) {
+      workingText += ".";
+      options.set(2, workingText);
     }
   } else {
      workingText += ".";
@@ -1366,7 +1392,7 @@ public void LINE() {
     }
     
     updateScreen(color(255, 0, 0), color(0));
-  } else if (workingText != null && workingText.length() > 0) {
+  } else if (mode != INPUT_COMMENT && workingText != null && workingText.length() > 0) {
     // Mutliply current number by -1
     if (workingText.charAt(0) == '-') {
       workingText = workingText.substring(1);
@@ -1374,6 +1400,7 @@ public void LINE() {
       workingText = "-" + workingText;
     }
     
+    options.set(2, workingText);
     updateScreen(color(255,0,0), color(0,0,0));
   }
 }
@@ -1842,6 +1869,18 @@ public void f1() {
       }
       
       updateScreen(color(255, 0, 0), color(0));
+      break;
+    case VIEW_REG:
+    case VIEW_POS_REG_J:
+    case VIEW_POS_REG_C:
+      if (active_col == 1) {
+        workingText = "";
+        // TODO name entry
+      } else if (active_col >= 2) {
+        workingText = "0";
+        inputRegisterValueFloat();
+      }
+    
       break;
   }
 }
@@ -2712,22 +2751,6 @@ public void ENTER(){
       }
       break;
     case PICK_REG_LIST:
-      /*
-      if (mode == VIEW_REG) {
-         options.add("1. Position Registers (Joint)");
-         options.add("2. Position Registers (Cartesian)");
-       } else if (mode == VIEW_POS_REG_J) {
-         options.add("1. Registers");
-         options.add("2. Position Registers (Cartesian)");
-       } else if (mode == VIEW_POS_REG_C) {
-         options.add("1. Registers");
-         options.add("2. Position Registers (Joint)");
-       } else {
-        options.add("1. Registers");
-        options.add("2. Position Registers (Joint)");
-        options.add("3. Position Registers (Cartesian)");
-      }
-      */
       int modeCase = 0;
       
       if (super_mode == VIEW_REG) {
@@ -2755,6 +2778,7 @@ public void ENTER(){
       
       active_row = 2;
       active_col = active_index = text_render_start = 0;
+      super_mode = NONE;
       viewRegisters();
       break;
   }
@@ -2771,6 +2795,21 @@ public void ITEM() {
     which_option = 0;
     updateScreen(color(255,0,0), color(0,0,0));
   }
+}
+
+public void LEFT() {
+  if (mode == INPUT_FLOAT || mode == INPUT_COMMENT) {
+    // Functions as a backspace key
+    if (workingText.length() > 1) {
+      workingText = workingText.substring(0, workingText.length() - 1);
+    } else {
+      workingText = "";
+    }
+    
+    options.set(2, workingText);
+  }
+  
+  updateScreen(color(255, 0, 0), color(0));
 }
 
 
@@ -3951,7 +3990,8 @@ public void viewRegisters() {
       if (POS_REG[idx] == null) {
         // No initialized entry
         String unini = (mode == VIEW_POS_REG_J) ? "*" : "#";
-        contents.add( newLine(lineNum, regLbl, unini) );
+        
+        contents.add( newLine(lineNum, regLbl, unini, unini, unini, unini, unini, unini) );
       } else {
         String[] entries = null;
         
@@ -3976,6 +4016,18 @@ public void viewRegisters() {
     active_row = active_col = 0;
   }
   
+  updateScreen(color(255, 0, 0), color(0));
+}
+
+public void inputRegisterValueFloat() {
+  options = new ArrayList<String>();
+  options.add("Input a value using the keypad");
+  options.add("");
+  options.add(workingText);
+  
+  which_option = 0;
+  super_mode = mode;
+  mode = INPUT_FLOAT;
   updateScreen(color(255, 0, 0), color(0));
 }
 
