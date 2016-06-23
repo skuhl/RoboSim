@@ -38,15 +38,17 @@ final int NONE = 0,
           SET_FRAME_INSTRUCTION_IDX = 30,
           PICK_REG_LIST = 31,
           VIEW_REG = 32,
-          // J for Joint
-          VIEW_POS_REG_J = 33,
           // C for Cartesian
-          VIEW_POS_REG_C = 34,
+          VIEW_POS_REG_C = 33,
+          // J for Joint
+          VIEW_POS_REG_J = 34,
           EDIT_MENU = 35,
           INPUT_FLOAT = 36,
-          INPUT_POINT = 37,
-          INPUT_COMMENT = 38,
-          CONFIRM_DELETE = 39;
+          INPUT_POINT_C = 37,
+          INPUT_POINT_J = 38,
+          INPUT_COMMENT_U = 39,
+          INPUT_COMMENT_L = 40,
+          CONFIRM_DELETE = 41;
 final int COLOR_DEFAULT = -8421377,
           COLOR_ACTIVE = -65536;
 // Determines what End Effector mapping should be display
@@ -84,7 +86,6 @@ String workingText; // when entering text or a number
 String workingTextSuffix;
 boolean speedInPercentage;
 final int ITEMS_TO_SHOW = 12; // how many programs/ instructions to display on screen
-int letterSet; // which letter group to enter
 int curFrameIdx = -1;
 // Used to keep track a specific point in space
 PVector ref_point;
@@ -111,6 +112,18 @@ int which_option = -1;
 // how many textlabels have been created for display
 int index_contents = 0, index_options = 100, index_nums = 1000; 
 int mouseDown = 0;
+
+/**
+ * Used for comment name input. The user can cycle through the
+ * six states for each function button in this mode:
+ *
+ * F1 -> A-F/a-f
+ * F2 -> G-L/g-l
+ * F3 -> M-R/m-r
+ * F4 -> S-X/s-x
+ * F5 -> Y, Z, _, @, *, ./y, z, _, @, *, .
+ */
+private final int[] letterStates = new int[] { 0, 0, 0, 0, 0 };
 
 public static final boolean DISPLAY_TEST_OUTPUT = true;
 
@@ -1307,13 +1320,13 @@ public void addNumber(String number) {
   } else if (mode == SET_INSTRUCTION_SPEED) {
     workingText += number;
     options.set(1, workingText + workingTextSuffix);
-  } else if (mode == DIRECT_ENTRY_MODE) {
+  } else if (mode == DIRECT_ENTRY_MODE || mode == INPUT_POINT_J || mode == INPUT_POINT_C) {
     if (active_row >= 0 && active_row < contents.size()) {
       String line = contents.get(active_row).get(0) + number;
       
-      if (line.length() > 11) {
-        // Max length of a line is 11 characters
-        line = line.substring(0, 11);
+      if (line.length() > 9 + which_option) {
+        // Max length of a an input value
+        line = line.substring(0,  9 + which_option);
       }
       
       // Concatenate the new digit
@@ -1325,11 +1338,11 @@ public void addNumber(String number) {
       workingText += number;
       options.set(2, workingText);
     }
-  } else if (mode == INPUT_COMMENT) {
+  } else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
     
     if (workingText.length() < 16) {
       workingText += number;
-      options.set(2, workingText);
+      // TODO update screen
     }
   }
   
@@ -1339,26 +1352,20 @@ public void addNumber(String number) {
 public void PERIOD() {
    if (NUM_MODE == ON){
       nums.add(-1);
-   } else if (mode == DIRECT_ENTRY_MODE) {
+   } else if (mode == DIRECT_ENTRY_MODE || mode == INPUT_POINT_J || mode == INPUT_POINT_C) {
      
     if (active_row >= 0 && active_row < contents.size()) {
       // Add decimal point
       String line = contents.get(active_row).get(0) + ".";
       
-      if (line.length() > 11) {
-        // Max length of a line is 11 characters
-        line = line.substring(0, 11);
+      if (line.length() > 9 + which_option) {
+        // Max length of a an input value
+        line = line.substring(0,  9 + which_option);
       }
       
       contents.get(active_row).set(0, line);
     }
   } else if (mode == INPUT_FLOAT) {
-    
-    if (workingText.length() < 16) {
-      workingText += ".";
-      options.set(2, workingText);
-    }
-  } else if (mode == INPUT_COMMENT) {
     
     if (workingText.length() < 16) {
       workingText += ".";
@@ -1372,28 +1379,28 @@ public void PERIOD() {
 }
 
 public void LINE() {
-  if (mode == DIRECT_ENTRY_MODE) {
+  if (mode == DIRECT_ENTRY_MODE || mode == INPUT_POINT_J || mode == INPUT_POINT_C) {
     
     if (active_row >= 0 && active_row < contents.size()) {
       String line = contents.get(active_row).get(0);
       
       // Mutliply current number by -1
-      if (line.length() > 4 && line.charAt(3) == '-') {
-        line = line.substring(0, 3) + line.substring(4, line.length());
-      } else if (line.length() > 3) {
-        line = line.substring(0, 3) + "-" + line.substring(3, line.length());
+      if (line.length() > (which_option + 1) && line.charAt(which_option) == '-') {
+        line = line.substring(0, which_option) + line.substring(which_option + 1, line.length());
+      } else if (line.length() > which_option) {
+        line = line.substring(0, which_option) + "-" + line.substring(which_option, line.length());
       }
       
-      if (line.length() > 11) {
-        // Max length of a line is 11 characters
-        line = line.substring(0, 11);
+      if (line.length() > 9 + which_option) {
+        // Max length of a an input value
+        line = line.substring(0,  9 + which_option);
       }
       
       contents.get(active_row).set(0, line);
     }
     
     updateScreen(color(255, 0, 0), color(0));
-  } else if (mode != INPUT_COMMENT && workingText != null && workingText.length() > 0) {
+  } else if ((mode != INPUT_COMMENT_U && mode != INPUT_COMMENT_L) && workingText != null && workingText.length() > 0) {
     // Mutliply current number by -1
     if (workingText.charAt(0) == '-') {
       workingText = workingText.substring(1);
@@ -1430,10 +1437,10 @@ public void up(){
            // Move display frame up an entire screen's display length
            int t = text_render_start;
            
-           text_render_start = max(0, t - (ITEMS_TO_SHOW - 2));
+           text_render_start = max(0, t - (ITEMS_TO_SHOW - 1));
            active_program = active_program + min(0, text_render_start - t);
          } else if (shift == OFF && active_program > 0) {
-           // Move upa single row
+           // Move up a single row
            int i = active_program,
                r = active_row;
            
@@ -1445,7 +1452,7 @@ public void up(){
          loadPrograms();
          
          if (DISPLAY_TEST_OUTPUT) {
-           System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
+           System.out.printf("\nRow: %d\nColumn: %d\nProg: %d\nTRS: %d\n\n",
                              active_row, active_col, active_program, text_render_start);
          }
          
@@ -1458,10 +1465,10 @@ public void up(){
            // Move display frame up an entire screen's display length
            int t = text_render_start;
            
-           text_render_start = max(0, t - (ITEMS_TO_SHOW - 2));
+           text_render_start = max(0, t - (ITEMS_TO_SHOW - 1));
            active_instruction = active_instruction + min(0, text_render_start - t);
          } else if (shift == OFF && active_instruction > 0) {
-           // Move upa single row
+           // Move up a single row
            int i = active_instruction,
                r = active_row;
            
@@ -1490,7 +1497,7 @@ public void up(){
            text_render_start = max(0, t - (ITEMS_TO_SHOW - 2));
            active_index = active_index + min(0, text_render_start - t);
          } else if (shift == OFF && active_index > 0) {
-           // Move upa single row
+           // Move up a single row
            int i = active_index,
                r = active_row;
            
@@ -1531,6 +1538,8 @@ public void up(){
          break;
       case ACTIVE_FRAMES:
       case DIRECT_ENTRY_MODE:
+      case INPUT_POINT_C:
+      case INPUT_POINT_J:
          active_row = max(1, active_row - 1);
          break;
    }
@@ -1543,7 +1552,7 @@ public void dn(){
       case PROGRAM_NAV:
          options = new ArrayList<String>();
          clearOptions();
-         if (active_program < programs.size()-1) {
+         /*if (active_program < programs.size()-1) {
            if(active_program - text_render_start == ITEMS_TO_SHOW - 1)
              text_render_start++;
            else
@@ -1551,11 +1560,30 @@ public void dn(){
            
            active_program++;
            active_col = 0;
+         }*/
+         
+         int size = programs.size();
+         
+         if (shift == ON && ( (text_render_start + ITEMS_TO_SHOW) < size )) {
+           // Move display frame down an entire screen's display length
+           int t = text_render_start;
+           
+           text_render_start = min(text_render_start + ITEMS_TO_SHOW - 1, size - ITEMS_TO_SHOW);
+           active_program = active_program + max(0, text_render_start - t);
+         } else if (shift == OFF && active_program < (size - 1)) {
+           // Move down one row
+           int i = active_program,
+               r = active_row;
+           
+           active_program = min(i + 1, size - 1);
+           active_row = min(r + max(0, (active_program - i)), contents.size() - 1);
+           text_render_start = text_render_start + max(0, (active_program - i) - (active_row - r));
          }
+         
          loadPrograms();
          
          if (DISPLAY_TEST_OUTPUT) {
-           System.out.printf("\nRow: %d\nColumn: %d\nIdx: %d\nTRS: %d\n\n",
+           System.out.printf("\nRow: %d\nColumn: %d\nProg: %d\nTRS: %d\n\n",
                              active_row, active_col, active_program, text_render_start);
          }
          
@@ -1563,7 +1591,7 @@ public void dn(){
       case INSTRUCTION_NAV:
          options = new ArrayList<String>();
          clearOptions();
-         int size = programs.get(active_program).getInstructions().size();
+         /*int size = programs.get(active_program).getInstructions().size();
          if (active_instruction < size-1) {
            if(active_instruction - text_render_start == ITEMS_TO_SHOW - 1)
              text_render_start++;
@@ -1571,7 +1599,26 @@ public void dn(){
              active_row++;
            active_instruction++;
            active_col = 0;
+         }*/
+         
+         size = programs.get(active_program).getInstructions().size();
+        
+         if (shift == ON && ( (text_render_start + ITEMS_TO_SHOW) < size )) {
+           // Move display frame down an entire screen's display length
+           int t = text_render_start;
+           
+           text_render_start = min(text_render_start + ITEMS_TO_SHOW - 1, size - ITEMS_TO_SHOW);
+           active_instruction = active_instruction + max(0, text_render_start - t);
+         } else if (shift == OFF && active_instruction < (size - 1)) {
+           // Move down one row
+           int i = active_instruction,
+               r = active_row;
+           
+           active_instruction = min(i + 1, size - 1);
+           active_row = min(r + max(0, (active_instruction - i)), contents.size() - 1);
+           text_render_start = text_render_start + max(0, (active_instruction - i) - (active_row - r));
          }
+         
          loadInstructions(active_program);
          
          if (DISPLAY_TEST_OUTPUT) {
@@ -1628,6 +1675,8 @@ public void dn(){
       case NAV_USER_FRAMES:
       case ACTIVE_FRAMES:
       case DIRECT_ENTRY_MODE:
+      case INPUT_POINT_C:
+      case INPUT_POINT_J:
       case PICK_INSTRUCTION:
       case IO_SUBMENU:
       case SET_FRAME_INSTRUCTION:
@@ -1657,9 +1706,14 @@ public void lt(){
       case VIEW_REG:
       case VIEW_POS_REG_J:
       case VIEW_POS_REG_C:
-        
         active_col = max(0, active_col - 1);
         updateScreen(color(255, 0, 0), color(0));
+        
+        break;
+      case INPUT_COMMENT_U:
+      case INPUT_COMMENT_L:
+        active_col = max(0, active_col - 1);
+        
         break;
    }
    
@@ -1732,22 +1786,24 @@ public void rt(){
           }
           break;
        case DIRECT_ENTRY_MODE:
+       case INPUT_POINT_C:
+       case INPUT_POINT_J:
          
          // Delete a digit from the being of the number entry
          if (shift == ON && active_row >= 0 && active_row < contents.size()) {
            String entry = contents.get(active_row).get(0),
                   new_entry = "";
            
-            if (entry.length() > 3) {
-              new_entry = entry.substring(0, 3);
+            if (entry.length() > which_option) {
+              new_entry = entry.substring(0, which_option);
               
-              if (entry.charAt(3) == '-') {
-                if (entry.length() > 5) {
+              if (entry.charAt(which_option) == '-') {
+                if (entry.length() > (which_option + 2)) {
                   // Keep negative sign until the last digit is removed
-                  new_entry += "-" + entry.substring(5, entry.length());
+                  new_entry += "-" + entry.substring((which_option + 2), entry.length());
                 }
-              } else if (entry.length() > 4) {
-                new_entry += entry.substring(4, entry.length());
+              } else if (entry.length() > (which_option + 1)) {
+                new_entry += entry.substring((which_option + 1), entry.length());
               }
             } else {
               // Blank entry
@@ -1762,9 +1818,31 @@ public void rt(){
        case VIEW_REG:
        case VIEW_POS_REG_J:
        case VIEW_POS_REG_C:
-         
          active_col = min(active_col + 1, contents.get(active_row).size() - 1);
          updateScreen(color(255, 0, 0), color(0));
+         
+         break;
+       case INPUT_COMMENT_U:
+       case INPUT_COMMENT_L:
+       
+         if (shift == ON) {
+           // Delete key function
+           if (workingText.length() > 1) {
+             workingText = workingText.substring(1, workingText.length());
+           } else {
+             workingText = "";
+           }
+         } else {
+           
+           if (workingText.length() < 16 && active_col == (workingText.length() - 1)
+                                         && workingText.charAt(active_col) != ' ') {
+             // Add a blank entry if there is room for one
+             workingText += " ";
+           }
+           
+           active_col = min(active_col + 1, contents.get(active_row).size() - 1);
+         }
+         
          break;
    }
 }
@@ -1902,18 +1980,54 @@ public void f1() {
     case SIX_POINT_MODE:
     case FOUR_POINT_MODE:
       ref_point = (shift == ON) ? null : armModel.getEEPos();
+      
       break;
     case VIEW_REG:
+      loadInputRegisterValueMethod();
+      
+      break;
     case VIEW_POS_REG_J:
+      if (active_col == 1) {
+        workingText = "";
+        // TODO name entry
+      } else if (active_col >= 2) {
+        // Bring up Point editing menu
+        super_mode = mode;
+        mode = INPUT_POINT_J;
+        loadInputRegisterPointMethod();
+      }
+      
+      break;
     case VIEW_POS_REG_C:
       if (active_col == 1) {
         workingText = "";
         // TODO name entry
       } else if (active_col >= 2) {
-        workingText = "0";
-        inputRegisterValueFloat();
+        // Bring up Point editing menu
+        super_mode = mode;
+        mode = INPUT_POINT_C;
+        loadInputRegisterPointMethod();
       }
     
+      break;
+    case INPUT_COMMENT_U:
+    case INPUT_COMMENT_L:
+      char newChar = '\0';
+      
+      if (mode == INPUT_COMMENT_U) {
+        newChar = (char)('A' + letterStates[0]);
+      } else if (mode == INPUT_COMMENT_L) {
+        newChar = (char)('a' + letterStates[0]);
+      }
+      
+      // Insert a character A - F (or a - f)
+      workingText = workingText.substring(0, active_col) + (newChar) + workingText.substring(active_col + 1, workingText.length());
+      // Update and reset the letter states
+      letterStates[0] = (letterStates[0] + 1) % 6;
+      for (int idx = 1; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+      
+      // TODO update contents
+      
       break;
   }
 }
@@ -1978,6 +2092,23 @@ public void f2() {
      updateScreen(color(255,0,0), color(0));
    } else if (mode == VIEW_REG || mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C) {
      pickRegisterList();
+  } else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
+    char newChar = '\0';
+    
+    if (mode == INPUT_COMMENT_U) {
+      newChar = (char)('G' + letterStates[1]);
+    } else if (mode == INPUT_COMMENT_L) {
+      newChar = (char)('g' + letterStates[1]);
+    }
+    
+    // Insert a character G - L (or g - l)
+    workingText = workingText.substring(0, active_col) + (newChar) + workingText.substring(active_col + 1, workingText.length());
+    // Update and reset the letter states
+    letterStates[0] = 0;
+    letterStates[1] = (letterStates[1] + 1) % 6;
+    for (int idx = 2; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+    
+    // TODO update contents
   }
 }
 
@@ -2000,6 +2131,25 @@ public void f3() {
     mode = PICK_FRAME_MODE;
     which_option = 0;
     updateScreen(color(255,0,0), color(0));
+  } else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
+    char newChar = '\0';
+    
+    if (mode == INPUT_COMMENT_U) {
+      newChar = (char)('M' + letterStates[2]);
+    } else if (mode == INPUT_COMMENT_L) {
+      newChar = (char)('m' + letterStates[2]);
+    }
+    
+    // Insert a character M - R (or m - r)
+    workingText = workingText.substring(0, active_col) + (newChar) + workingText.substring(active_col + 1, workingText.length());
+    // Update and reset the letter states
+    letterStates[0] = 0;
+    letterStates[1] = 0;
+    letterStates[2] = (letterStates[2] + 1) % 6;
+    letterStates[3] = 0;
+    letterStates[4] = 0;
+    
+    // TODO update contents
   }
 }
 
@@ -2088,8 +2238,29 @@ public void f4() {
              deleteInstEpilogue();
          }
          break;
+     case INPUT_COMMENT_U:
+     case INPUT_COMMENT_L:
+       char newChar = '\0';
+       
+       if (mode == INPUT_COMMENT_U) {
+         newChar = (char)('S' + letterStates[3]);
+       } else if (mode == INPUT_COMMENT_L) {
+         newChar = (char)('s' + letterStates[3]);
+       }
+       
+       // Insert a character S - X (or s - x)
+       workingText = workingText.substring(0, active_col) + (newChar) + workingText.substring(active_col + 1, workingText.length());
+       // Update and reset the letter states
+       for (int idx = 0; idx < 3; ++idx) { letterStates[idx] = 0; }
+       letterStates[3] = (letterStates[3] + 1) % 6;
+       letterStates[4] = 0;
+       
+       
+       // TODO update contents
+       
+       break;
    }
-   //println("mode="+mode+" active_col"+active_col);
+   
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
@@ -2199,6 +2370,33 @@ public void f5() {
     } else if (super_mode == INSTRUCTION_NAV) {
       deleteInstEpilogue();
     }
+  } else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
+    char newChar = '\0';
+    
+    if (letterStates[4] < 2) {
+      
+      if (mode == INPUT_COMMENT_U) {
+        newChar = (char)('Y' + letterStates[0]);
+      } else if (mode == INPUT_COMMENT_L) {
+        newChar = (char)('y' + letterStates[0]);
+      }
+    } else if (letterStates[4] == 2) {
+      newChar = '_';
+    } else if (letterStates[4] == 3) {
+      newChar = '@';
+    } else if (letterStates[4] == 4) {
+      newChar = '*';
+    } else if (letterStates[4] == 5) {
+      newChar = '.';
+    }
+    
+    // Insert a character Y, Z, (or y, z) _, @, *, .
+    workingText = workingText.substring(0, active_col) + (newChar) + workingText.substring(active_col + 1, workingText.length());
+    // Update and reset the letter states
+    for (int idx = 0; idx < letterStates.length - 1; ++idx) { letterStates[idx] = 0; }
+    letterStates[4] = (letterStates[2] + 1) % 6;
+    
+    // TODO update contents
   }
 }
 
@@ -2812,8 +3010,10 @@ public void ENTER(){
       active_col = active_index = text_render_start = 0;
       super_mode = NONE;
       viewRegisters();
+      
       break;
     case INPUT_FLOAT:
+      
       Float input = null;
       
       try {
@@ -2833,34 +3033,22 @@ public void ENTER(){
         return;
       }
       
-      if (super_mode == VIEW_REG) {
-        
-        if (active_index >= 0 && active_index < REG.length) {
-            REG[active_index].value = input;
-        }
-      } else if (super_mode == VIEW_POS_REG_J || super_mode == VIEW_POS_REG_C) {
-        
-        
-        if (active_index >= 0 && active_index < POS_REG.length) {
-          if (POS_REG[active_index] == null) {
-            // TODO deal with initialization of a Point (is this allowed?)
-          } else {
-            // TODO modify existing Point value entry
-          }
-        }
-      } else {
-        // other mode?
-        super_mode = NONE;
-        mu();
-        return;
+      if (active_index >= 0 && active_index < REG.length) {
+          // Save inputted value
+          REG[active_index].value = input;
+          saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       }
-      
-      saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
-      
+    
       mode = super_mode;
       super_mode = NONE;
       viewRegisters();
       updateScreen(color(255, 0, 0), color(0));
+      
+      break;
+    case INPUT_POINT_C:
+    case INPUT_POINT_J:
+      // TODO save inputted values
+      
       break;
   }
   println(mode);
@@ -2879,7 +3067,7 @@ public void ITEM() {
 }
 
 public void LEFT() {
-  if (mode == INPUT_FLOAT || mode == INPUT_COMMENT) {
+  if (mode == INPUT_FLOAT) {
     // Functions as a backspace key
     if (workingText.length() > 1) {
       workingText = workingText.substring(0, workingText.length() - 1);
@@ -2888,18 +3076,25 @@ public void LEFT() {
     }
     
     options.set(2, workingText);
-  } else if (mode == DIRECT_ENTRY_MODE) {
+  } else if (mode == DIRECT_ENTRY_MODE || mode == INPUT_POINT_J || mode == INPUT_POINT_C) {
     
     // backspace function for current row
     if (active_row >= 0 && active_row < contents.size()) {
       String line = contents.get(active_row).get(0);
       
       // Do not remove line prefix
-      if (line.length() > 3) {
+      if (line.length() > which_option) {
         contents.get(active_row).set(0, line.substring(0, line.length() - 1));
       }
     }
-  } 
+  } else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
+    // Backspace function
+    if (workingText.length() > 1) {
+      workingText = workingText.substring(0, workingText.length() - 1);
+    } else {
+      workingText = "";
+    }
+  }
   
   updateScreen(color(255, 0, 0), color(0));
 }
@@ -3571,6 +3766,8 @@ public void updateScreen(color active, color normal){
    } else if (mode == VIEW_REG || mode == VIEW_POS_REG_C || mode == VIEW_POS_REG_J) {
      
      text = "F1: EDIT     F2: SWITCH";
+   } else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
+     text = "F1: ABCDEF     F2: GHIJKL     F3: MNOPQR     F4: STUVWX     F5: YZ_@*.";
    }
    
    
@@ -3760,6 +3957,8 @@ public void loadDirectEntryMethod() {
   contents.add( newLine("P: 0.0") );
   contents.add( newLine("R: 0.0") );
   
+  // Defines the length of a line's prefix
+  which_option = 3;
   active_row = 1;
   active_col = 0;
   mode = DIRECT_ENTRY_MODE;
@@ -4080,7 +4279,7 @@ public void viewRegisters() {
         // No initialized entry
         String unini = (mode == VIEW_POS_REG_J) ? "*" : "#";
         
-        contents.add( newLine(lineNum, regLbl, unini, unini, unini, unini, unini, unini) );
+        contents.add( newLine(lineNum, regLbl, unini) );
       } else {
         String[] entries = null;
         
@@ -4108,7 +4307,8 @@ public void viewRegisters() {
   updateScreen(color(255, 0, 0), color(0));
 }
 
-public void inputRegisterValueFloat() {
+/** TODO comment */
+public void loadInputRegisterValueMethod() {
   options = new ArrayList<String>();
   options.add("Input a value using the keypad");
   options.add("");
@@ -4117,6 +4317,55 @@ public void inputRegisterValueFloat() {
   which_option = 0;
   super_mode = mode;
   mode = INPUT_FLOAT;
+  updateScreen(color(255, 0, 0), color(0));
+}
+
+/** TODO comment */
+public void loadInputRegisterPointMethod() {
+  contents = new ArrayList<ArrayList<String>>();
+  
+  if (active_index >= 0 && active_index < POS_REG.length) {
+    String header = "POSITION REGISTER";
+    
+    if (POS_REG[active_index].comment != null) {
+      // Show comment if it exists
+      header += ": " + POS_REG[active_index].comment;
+    }
+  
+    contents.add( newLine(header) );
+    
+    if (POS_REG[active_index].point == null) {
+      // Initialize valeus to zero if the entry is null
+      if (mode == INPUT_POINT_C) {
+        
+        contents.add( newLine("X: 0.0") );
+        contents.add( newLine("Y: 0.0") );
+        contents.add( newLine("Z: 0.0") );
+        contents.add( newLine("W: 0.0") );
+        contents.add( newLine("P: 0.0") );
+        contents.add( newLine("R: 0.0") );
+      } else if (mode == INPUT_POINT_J) {
+        
+        for (int idx = 1; idx <= 6; ++idx) {
+          contents.add( newLine(String.format("J%d: 0.0", idx)) );
+        }
+      }
+    } else {
+      // List current entry values if the Register is initialized
+      String[] entries = (mode == INPUT_POINT_C) ? POS_REG[active_index].point.toCartesianStringArray()
+                                                 : POS_REG[active_index].point.toJointStringArray();
+      
+      for (String entry : entries) {
+        contents.add( newLine(entry) );
+      }
+    }
+    
+  }
+  
+  // Defines the length of a line's prefix
+  which_option = (mode == INPUT_POINT_J) ? 4 : 3;
+  active_row = 1;
+  active_col = 0;
   updateScreen(color(255, 0, 0), color(0));
 }
 
