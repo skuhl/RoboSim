@@ -94,7 +94,7 @@ public class Point  {
     String[] entries = new String[6];
     
     for (int idx = 0; idx < joints.length; ++idx) {
-      entries[idx] = String.format("J%d: %4.3f", (idx + 1), joints[idx]);
+      entries[idx] = String.format("J%d: %4.2f", (idx + 1), joints[idx]);
     }
     
     return entries;
@@ -111,12 +111,12 @@ public class Point  {
     PVector angles = quatToEuler(ori);
     
     String[] entries = new String[6];
-    entries[0] = String.format("X: %4.3f", pos.x);
-    entries[1] = String.format("Y: %4.3f", pos.y);
-    entries[2] = String.format("Z: %4.3f", pos.z);
-    entries[3] = String.format("W: %4.3f", angles.x);
-    entries[4] = String.format("P: %4.3f", angles.y);
-    entries[5] = String.format("R: %4.3f", angles.z);
+    entries[0] = String.format("X: %4.2f", pos.x);
+    entries[1] = String.format("Y: %4.2f", pos.y);
+    entries[2] = String.format("Z: %4.2f", pos.z);
+    entries[3] = String.format("W: %4.2f", angles.x);
+    entries[4] = String.format("P: %4.2f", angles.y);
+    entries[5] = String.format("R: %4.2f", angles.z);
     
     return entries;
   }
@@ -495,15 +495,7 @@ public class RecordScreen implements Runnable{
 /* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
 public class Register {
   public String comment = null;
-  public Float value;
-  
-  public Register() {
-    value = 0f;
-  }
-  
-  public Register(Float v) {
-    value = v;
-  }
+  public Float value = null;
   
   public Register(String c, Float v) {
     value = v;
@@ -514,14 +506,10 @@ public class Register {
 /* A simple class for a Position Register of the Robot Arm, which holds a point associated with a comment. */
 public class PositionRegister {
   public String comment = null;
-  public Point point;
+  public Point point = null;
   
   public PositionRegister() {
     point = new Point(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f);
-  }
-  
-  public PositionRegister(Point p) {
-    point = p;
   }
   
   public PositionRegister(String c, Point p) {

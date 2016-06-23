@@ -31,13 +31,13 @@ void createTestProgram() {
   //for (int n = 0; n < 15; n++) program.addInstruction(
   //  new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
   
-  POS_REG[0] = new PositionRegister(new Point(165, 116, -5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-  POS_REG[1] = new PositionRegister(new Point(166, -355, 120, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-  POS_REG[2] = new PositionRegister(new Point(171, -113, 445, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-  POS_REG[3] = new PositionRegister(new Point(725, 225, 50, 1, 0, 0, 0, 5.6, 1.12, 5.46, 0, 5.6, 0));
-  POS_REG[4] = new PositionRegister(new Point(775, 300, 50, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-  POS_REG[5] = new PositionRegister(new Point(-474, -218, 37, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-  POS_REG[6] = new PositionRegister(new Point(-659, -412, -454, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  POS_REG[0] = new PositionRegister(null, new Point(165, 116, -5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  POS_REG[1] = new PositionRegister(null, new Point(166, -355, 120, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  POS_REG[2] = new PositionRegister(null, new Point(171, -113, 445, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  POS_REG[3] = new PositionRegister(null, new Point(725, 225, 50, 1, 0, 0, 0, 5.6, 1.12, 5.46, 0, 5.6, 0));
+  POS_REG[4] = new PositionRegister(null, new Point(775, 300, 50, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  POS_REG[5] = new PositionRegister(null, new Point(-474, -218, 37, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  POS_REG[6] = new PositionRegister(null, new Point(-659, -412, -454, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
   
   programs.add(program);
   //currentProgram = program;
