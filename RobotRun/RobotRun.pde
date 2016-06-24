@@ -26,7 +26,7 @@ float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
 boolean spacebarDown = false;
 
 ControlP5 cp5;
-Textarea myTextarea;
+Textarea textDisplay;
 Accordion accordion;
 
 ArrayList<Program> programs = new ArrayList<Program>();
@@ -177,9 +177,9 @@ public void draw(){
   //TESTING CODE: DRAW END EFFECTOR POSITION
   pushMatrix();
   noFill();
-  stroke(255, 0, 255);
   applyModelRotation(armModel, true);
   //EE position
+  stroke(255, 255, 0);
   sphere(5);
   translate(0, 0, -100);
   stroke(255, 0, 0);

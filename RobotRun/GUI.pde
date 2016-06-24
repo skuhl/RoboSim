@@ -47,7 +47,7 @@ final int NONE = 0,
 final int COLOR_DEFAULT = -8421377,
           COLOR_ACTIVE = -65536;
 // Determines what End Effector mapping should be display
-static int     EE_MAPPING = 2;
+static int EE_MAPPING = 2;
 
 int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
@@ -66,7 +66,8 @@ int g1_width, g1_height; // group 1's width and height
 int display_px, display_py; // the left-top corner of display screen
 int display_width = 340, display_height = 270; // height and width of display screen
 
-Group g1;
+PFont fnt;
+Group g1, g2, txt;
 Button bt_show, bt_hide, 
        bt_zoomin_shrink, bt_zoomin_normal,
        bt_zoomout_shrink, bt_zoomout_normal,
@@ -127,15 +128,16 @@ void gui(){
    // group 1: display and function buttons
    g1 = cp5.addGroup("DISPLAY")
       .setPosition(g1_px, g1_py)
-      .setBackgroundColor(color(127,127,127,50));
+      .setBackgroundColor(color(127,127,127,100));
    
-   myTextarea = cp5.addTextarea("txt")
+   fnt = createFont("data/Consolas.ttf", 14);
+   textDisplay = cp5.addTextarea("txt")
       .setPosition(display_px,display_py)
       .setSize(display_width, display_height)
       .setLineHeight(14)
       .setColor(color(128))
-      .setColorBackground(color(200,255,255))
-      .setColorForeground(color(0,0,0))
+      .setColorBackground(color(240))
+      .setColorForeground(color(15))
       .moveTo(g1);
    
    // expand group 1's width and height
@@ -1385,6 +1387,7 @@ public void se(){
    active_program = 0;
    active_instruction = 0;
    active_row = 0;
+   active_col = -1;
    text_render_start = 0;
    mode = PROGRAM_NAV;
    clearScreen();
@@ -1616,9 +1619,9 @@ public void rt(){
           clearOptions();
           
           active_col = min(active_col + 1, contents.get(active_row).size() - 1);
-          
+          println("active column: " + active_col);
           updateScreen(color(255,0,0), color(0,0,0));
-          break;
+          break; //<>//
       case INSTRUCTION_EDIT:
           mode = INSTRUCTION_NAV;
           rt();
@@ -1712,6 +1715,8 @@ public void pr(){
 
 public void goToEnterTextMode() {
     clearScreen();
+    active_row = 0;
+    active_col = -1;
     super_mode = mode;
     mode = ENTER_TEXT;
     
@@ -2421,13 +2426,14 @@ public void bd(){
 }
 
 public void ENTER(){
-  println(mode);
   switch (mode){
     case NONE:
        break;
     case PROGRAM_NAV:
        active_instruction = 0;
        text_render_start = 0;
+       active_row = 0;
+       active_col = 0;
        mode = INSTRUCTION_NAV;
        clearScreen();
        loadInstructions(active_program);
@@ -2553,6 +2559,8 @@ public void ENTER(){
          workingText = "";
          active_program = new_prog;
          active_instruction = 0;
+         active_row = 0;
+         active_col = 0;
          mode = INSTRUCTION_NAV;
          super_mode = NONE;
          clearScreen();
@@ -2562,6 +2570,8 @@ public void ENTER(){
        } else {
          mode = super_mode;
          super_mode = NONE;
+         active_row = 0;
+         active_col = 0;
          clearScreen();
          options = new ArrayList<String>();
          loadPrograms();
@@ -3319,66 +3329,102 @@ public void updateScreen(color active, color normal){
    }
    
    // clear main list
-   for (int i = 0; i < ITEMS_TO_SHOW*7; i++) {
-     if (cp5.getController(Integer.toString(i)) != null){
-           cp5.getController(Integer.toString(i))
-              .remove()
-              ;
-      }
+   for (int i = 0; i < ITEMS_TO_SHOW*8; i++) {
+     if (cp5.getGroup(Integer.toString(i)) != null){
+       cp5.getGroup(Integer.toString(i)).remove();
+     }
+     else if (cp5.getController(Integer.toString(i)) != null){
+       cp5.getController(Integer.toString(i)).remove();
+     }
    }
 
    // display the main list on screen
-   index_contents = 0;
+   index_contents = 1;
    for(int i=0;i<contents.size();i++){
-      ArrayList<String> temp = contents.get(i);
-      for (int j=0;j<temp.size();j++){
-          if (i == active_row && j == active_col){
-             cp5.addTextlabel(Integer.toString(index_contents))
-                .setText(temp.get(j))
-                .setPosition(next_px, next_py)
-                .setColorValue(active)
-                .moveTo(g1)
-                ;
-          }else{
-             cp5.addTextlabel(Integer.toString(index_contents))
-                .setText(temp.get(j))
-                .setPosition(next_px, next_py)
-                .setColorValue(normal)
-                .moveTo(g1)
-                ;  
-          }
-          index_contents++;
-          next_px += temp.get(j).length() * 6 + 5; 
-      }
-      next_px = display_px;
-      next_py += 14;     
+     ArrayList<String> temp = contents.get(i);
+     if(i == active_row){
+       cp5.addTextarea(Integer.toString(index_contents))
+         .setText("")
+         .setPosition(next_px, next_py)
+         .setSize(10, 20)
+         .setColorBackground(color(15))
+         .hideScrollbar()
+         .moveTo(g1)
+         ;
+     }
+     else{
+       cp5.addTextarea(Integer.toString(index_contents))
+         .setText("")
+         .setPosition(next_px, next_py)
+         .setSize(10, 20)
+         .setColorBackground(color(240))
+         .hideScrollbar()
+         .moveTo(g1)
+         ;
+     }
+     index_contents++;
+     next_px += 10;
+     
+     for (int j=0;j<temp.size();j++){
+       if (i == active_row && j != active_col){
+         cp5.addTextarea(Integer.toString(index_contents))
+           .setText(temp.get(j))
+           .setFont(fnt)
+           .setPosition(next_px, next_py)
+           .setSize(temp.get(j).length()*8 + 18, 20)
+           .setLineHeight(18)
+           .setColorValue(color(240))
+           .setColorBackground(color(15))
+           .hideScrollbar()
+           .moveTo(g1)
+           ;
+       }
+       else{
+         cp5.addTextarea(Integer.toString(index_contents))
+           .setText(temp.get(j))
+           .setFont(fnt)
+           .setPosition(next_px, next_py)
+           .setSize(temp.get(j).length()*8 + 18, 20)
+           .setLineHeight(18)
+           .setColorValue(color(15))
+           .setColorBackground(color(240))
+           .setColorValue(normal)
+           .hideScrollbar()
+           .moveTo(g1)
+           ;  
+       }
+       index_contents++;
+       next_px += temp.get(j).length() * 8 + 18; 
+     }
+     next_px = display_px;
+     next_py += 20;
    }
    
    // display options for an element being edited
    next_py += 14;
    index_options = 100;
    if (options.size() > 0){
-      for(int i=0;i<options.size();i++){
-        if (i==which_option){
-           cp5.addTextlabel(Integer.toString(index_options))
-              .setText(options.get(i))
-              .setPosition(next_px, next_py)
-              .setColorValue(active)
-              .moveTo(g1)
-              ;
-        }else{
-            cp5.addTextlabel(Integer.toString(index_options))
-               .setText(options.get(i))
-               .setPosition(next_px, next_py)
-               .setColorValue(normal)
-               .moveTo(g1)
-               ;
-        }
+     for(int i=0;i<options.size();i++){
+       if (i==which_option){
+         cp5.addTextlabel(Integer.toString(index_options))
+           .setText(options.get(i))
+           .setPosition(next_px, next_py)
+           .setColorValue(active)
+           .moveTo(g1)
+           ;
+       }else{
+         cp5.addTextlabel(Integer.toString(index_options))
+           .setText(options.get(i))
+           .setPosition(next_px, next_py)
+           .setColorValue(normal)
+           .moveTo(g1)
+           ;
+       }
         
-         index_options++;
-         next_px = display_px;
-         next_py += 14;    
-      }
+       index_options++;
+       next_px = display_px;
+       next_py += 14;    
+     }
    }
    
    // display the numbers that the user has typed
@@ -3421,7 +3467,7 @@ public void updateScreen(color active, color normal){
    
    if (mode == PROGRAM_NAV) {
      
-          text = "F2: CREATE     F3: DELETE";
+     text = "F2: CREATE     F3: DELETE";
    } else if (mode == INSTRUCTION_NAV) {
      
      text = "SHIFT+F1: NEW PT     F4: CHOICE     F5: VIEW REG     SHIFT+F5: OVERWRITE";
@@ -3468,10 +3514,7 @@ public void clearScreen(){
    clearOptions();
    
    // hide the text labels that show the start and end of a program
-   if (mode == INSTRUCTION_EDIT){
-     
-   }
-   else if (mode != INSTRUCTION_NAV){
+   if (mode != INSTRUCTION_NAV && mode != INSTRUCTION_EDIT){
       if (cp5.getController("-1") != null){
            cp5.getController("-1")
               .remove()
@@ -3488,21 +3531,22 @@ public void clearScreen(){
    clearNums();
    
    cp5.update();
-   active_row = 0;
-   active_col = 0;
    contents = new ArrayList<ArrayList<String>>();
 }
 
 public void clearContents(){
    for(int i=0;i<index_contents;i++){
-      cp5.getController(Integer.toString(i)).remove();
+     if(cp5.getController(Integer.toString(i)) != null)
+       cp5.getController(Integer.toString(i)).remove();
+     else if(cp5.getGroup(Integer.toString(i)) != null)
+       cp5.getGroup(Integer.toString(i)).remove();
    }
    index_contents = 0;
 }
 
 public void clearOptions(){
    for(int i=100;i<index_options;i++){
-      cp5.getController(Integer.toString(i)).remove();
+      cp5.get(Integer.toString(i)).remove();
    }
    index_options = 100;
 }
@@ -3995,11 +4039,12 @@ public void loadInstructions(int programID){
       if (instruction instanceof MotionInstruction) {
         MotionInstruction a = (MotionInstruction)instruction;
         if(armModel.getEEPos().dist(a.getVector(p).pos) < liveSpeed){
+          println("at tgt position");
           m.add("@");
         }
         else{
           println(a.getVector(p).pos);
-          m.add(" ");
+          m.add("_");
         }
         // add motion type
         switch (a.getMotionType()){
