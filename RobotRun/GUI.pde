@@ -1476,8 +1476,11 @@ public void up(){
                r = active_row;
            
            active_instruction = max(0, i - 1);
-           active_row = max(0, r + min(active_instruction - i, 0));
-           text_render_start = text_render_start + min((active_instruction - i) - (active_row - r), 0);
+           //active_row = max(0, r + min(active_instruction - i, 0));
+           //text_render_start = text_render_start + min((active_instruction - i) - (active_row - r), 0);
+           active_row -= (active_row >= 1) ? 1 : 0;
+           if(active_instruction < text_render_start)
+             text_render_start -= 1;
          }
          
          active_col = max( 0, min( active_col, contents.get(active_row).size() - 1 ) );
@@ -1551,21 +1554,22 @@ public void up(){
 }
 
 public void dn(){
+  int size;
    switch (mode){
       case PROGRAM_NAV:
          options = new ArrayList<String>();
          clearOptions();
-         /*if (active_program < programs.size()-1) {
-           if(active_program - text_render_start == ITEMS_TO_SHOW - 1)
-             text_render_start++;
-           else
-             active_row++;
+         //if (active_program < programs.size()-1) {
+         //  if(active_program - text_render_start == ITEMS_TO_SHOW - 1)
+         //    text_render_start++;
+         //  else
+         //    active_row++;
            
-           active_program++;
-           active_col = 0;
-         }*/
+         //  active_program++;
+         //  active_col = 0;
+         //}
          
-         int size = programs.size();
+         size = programs.size();
          
          if (shift == ON && ( (text_render_start + ITEMS_TO_SHOW) < size )) {
            // Move display frame down an entire screen's display length
@@ -1594,15 +1598,15 @@ public void dn(){
       case INSTRUCTION_NAV:
          options = new ArrayList<String>();
          clearOptions();
-         /*int size = programs.get(active_program).getInstructions().size();
-         if (active_instruction < size-1) {
-           if(active_instruction - text_render_start == ITEMS_TO_SHOW - 1)
-             text_render_start++;
-           else
-             active_row++;
-           active_instruction++;
-           active_col = 0;
-         }*/
+         size = programs.get(active_program).getInstructions().size();
+         //if (active_instruction < size-1) {
+         //  if(active_instruction - text_render_start == ITEMS_TO_SHOW - 1)
+         //    text_render_start++;
+         //  else
+         //    active_row++;
+         //  active_instruction++;
+         //  active_col = 0;
+         //}
          
          size = programs.get(active_program).getInstructions().size();
         
@@ -1618,8 +1622,11 @@ public void dn(){
                r = active_row;
            
            active_instruction = min(i + 1, size - 1);
-           active_row = min(r + max(0, (active_instruction - i)), contents.size() - 1);
-           text_render_start = text_render_start + max(0, (active_instruction - i) - (active_row - r));
+           //active_row = min(r + max(0, (active_instruction - i)), contents.size() - 1);
+           //text_render_start = text_render_start + max(0, (active_instruction - i) - (active_row - r));
+           active_row += (active_row < ITEMS_TO_SHOW-1) ? 1 : 0;
+           if(active_instruction > text_render_start+ITEMS_TO_SHOW-1)
+             text_render_start += 1;
          }
           //<>//
          loadInstructions(active_program);
