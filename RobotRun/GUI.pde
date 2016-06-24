@@ -1239,7 +1239,7 @@ public void show(){
 
 
 public void mu() {
-  if (mode == INSTRUCTION_NAV || mode == INSTRUCTION_EDIT) { saveState(); }
+  if (mode == INSTRUCTION_NAV || mode == INSTRUCTION_EDIT) { saveProgramBytes( new File(sketchPath("tmp/programs.bin")) ); }
   
   contents = new ArrayList<ArrayList<String>>();
   
@@ -1419,7 +1419,7 @@ public void LINE() {
 
 public void se(){
   // Save when exiting a program
-   if (mode == INSTRUCTION_NAV || mode == INSTRUCTION_EDIT) { saveState(); }
+   if (mode == INSTRUCTION_NAV || mode == INSTRUCTION_EDIT) { saveProgramBytes( new File(sketchPath("tmp/programs.bin")) ); }
    
    active_program = 0;
    active_instruction = 0;
@@ -2276,7 +2276,7 @@ public void f4() {
              super_mode = NONE;
              loadPrograms();
              updateScreen(color(255,0,0), color(0));
-             saveState();
+             saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
            }
          } else if (super_mode == INSTRUCTION_NAV) {
              Program prog = programs.get(active_program);
@@ -2606,7 +2606,7 @@ public void ENTER(){
          }
          MotionInstruction castIns = getActiveMotionInstruct();
          castIns.setSpeed(tempSpeed);
-         saveState();
+         saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
        }
        loadInstructions(active_program);
        mode = INSTRUCTION_NAV;

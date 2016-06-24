@@ -32,24 +32,16 @@ public int loadState() {
   
   File progFile = new File( sketchPath("tmp/programs.bin") );
   
-  if (!progFile.exists()) {
-    // Create 'programs.bin' if it does not already exist
-    try {
-      progFile.createNewFile();
-      System.out.printf("Successfully created %s.\n", progFile.getName());
-    } catch (IOException IOEx) {
-      System.out.printf("Could not create %s ...\n", progFile.getName());
-      IOEx.printStackTrace();
-      error = 1;
-    }
-  } else {
+  if (progFile.exists()) {
     ret = loadProgramBytes(progFile);
     
     if (ret == 0) {
-      println("Successfully loaded programs.\n");
+      println("Successfully loaded programs!");
+    } else {
+      println("Failed to load programs ...");
+      error = 1;
     }
   }
-  
   
   /* Load and Initialize the Tool and User Frames */
   
@@ -57,32 +49,26 @@ public int loadState() {
   
   File frameFile = new File( sketchPath("tmp/frames.bin") );
   
-  if (!frameFile.exists()) {
-    try {
-      // Create 'frames.bin' if it does not already exist
-      frameFile.createNewFile();
-      System.out.printf("Successfully created %s.\n", frameFile.getName());
-    } catch (IOException IOEx) {
-      System.out.printf("Could not create %s ...\n", frameFile.getName());
-      IOEx.printStackTrace();
-      
-      if (error == 0) {
-        error = 2;
-      } else {
-        error = 3;
-      }
-    }
-  } else {
+  if (frameFile.exists()) {
     // Load both the User and Tool Frames
     ret = loadFrameBytes(frameFile);
     
     if (ret == 0) {
-      println("Successfully loaded Frames.");
+      println("Successfully loaded frames!");
+    } else {
+       println("Failed to load frames ..."); 
+       
+       if (error == 0) {
+          error = 2;
+        } else {
+          error = 3;
+        }
     }
   }
   
+  // Create new frames if they could not be loaded
   if (ret != 0) {
-    // Create new frames if they could not be loaded
+    
     toolFrames = new Frame[10];
     userFrames = new Frame[10];
     
@@ -97,30 +83,23 @@ public int loadState() {
   
   File regFile = new File(sketchPath("tmp/registers.bin"));
   
-  if (!regFile.exists()) {
-    // Create the 'registers.bin' file
-    try {
-      regFile.createNewFile();
-      System.out.printf("Successfully created %s.\n", regFile.getName());
-    } catch (IOException IOEx) {
-      System.out.printf("Could not create %s ...\n", regFile.getName());
-      IOEx.printStackTrace();
-      
-      if (error == 0) {
-        error = 4;
-      } else if (error == 1) {
-        error = 5;
-      } else if (error == 2) {
-        error = 6;
-      } else if (error == 3) {
-        error = 7;
-      }
-    }
-  } else {
+  if (regFile.exists()) {
       ret = loadRegisterBytes(regFile);
       
       if (ret == 0) {
-        println("Successfully loaded the Registers.");
+        println("Successfully loaded registers!");
+      } else {
+        println("Failed to load registers ...");
+        
+        if (error == 0) {
+          error = 4;
+        } else if (error == 1) {
+          error = 5;
+        } else if (error == 2) {
+          error = 6;
+        } else if (error == 3) {
+          error = 7;
+        }
       }
   }
   
@@ -145,12 +124,24 @@ public int loadState() {
  * 
  * @param dest  where to save all the programs
  * @return      0 if the save was successful,
- *              1 if the dest could not be found,
+ *              1 if dest could not be created or found,
  *              2 if an error occurs when saving the Programs
  */
 public int saveProgramBytes(File dest) {
   
   try {
+    // Create dest if it does not already exist
+    if (!dest.exists()) {      
+      try {
+        dest.createNewFile();
+        System.out.printf("Successfully created %s.\n", dest.getName());
+      } catch (IOException IOEx) {
+        System.out.printf("Could not create %s ...\n", dest.getName());
+        IOEx.printStackTrace();
+        return 1;
+      }
+    } 
+    
     FileOutputStream out = new FileOutputStream(dest);
     DataOutputStream dataOut = new DataOutputStream(out);
     // Save the number of programs
@@ -438,12 +429,23 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
  *
  * @param dest  the file to which the frame sets will be saved
  * @return      0 if successful,
- *              1 if an error occurs with accessing the give file
+ *              1 if dest could not be created or found
  *              2 if an error occurs with writing to the file
  */
 public int saveFrameBytes(File dest) {
   
   try {
+    // Create dest if it does not already exist
+    if (!dest.exists()) {
+      try {
+        dest.createNewFile();
+        System.out.printf("Successfully created %s.\n", dest.getName());
+      } catch (IOException IOEx) {
+        System.out.printf("Could not create %s ...\n", dest.getName());
+        IOEx.printStackTrace();
+      }
+    }
+    
     FileOutputStream out = new FileOutputStream(dest);
     DataOutputStream dataOut = new DataOutputStream(out);
     
@@ -601,12 +603,24 @@ private Frame loadFrame(DataInputStream in) throws IOException {
  * 
  * @param dest  Some binary file to which to save the Register entries
  * @return      0 if the save was successful,
- *              1 if dest could not be found
+ *              1 if dest could not be found pr created
  *              2 if an error occrued while writing to dest
  */
 public int saveRegisterBytes(File dest) {
   
   try {
+    
+    // Create dest if it does not already exist
+    if (!dest.exists()) {
+      try {
+        dest.createNewFile();
+        System.out.printf("Successfully created %s.\n", dest.getName());
+      } catch (IOException IOEx) {
+        System.out.printf("Could not create %s ...\n", dest.getName());
+        IOEx.printStackTrace();
+      }
+    }
+    
     FileOutputStream out = new FileOutputStream(dest);
     DataOutputStream dataOut = new DataOutputStream(out);
     
