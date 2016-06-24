@@ -124,6 +124,18 @@ public int loadState() {
       }
   }
   
+  // Initialize uninitialized registers and position registers to with null fields
+  for (int reg = 0; reg < REG.length; ++reg) {
+    
+    if (REG[reg] == null) {
+      REG[reg] = new Register(null, null);
+    }
+    
+    if (POS_REG[reg] == null) {  
+      POS_REG[reg] = new PositionRegister(null, null);
+    }
+  }
+  
   return error;
 }
 
@@ -606,12 +618,12 @@ public int saveRegisterBytes(File dest) {
     
     // Count the number of initialized entries and save their indices
     for (int idx = 0 ; idx < REG.length; ++idx) {
-      if (REG[idx] != null) {
+      if (REG[idx].value != null || REG[idx].comment != null) {
         initializedR.add(idx);
         ++numOfREntries;
       }
       
-      if (POS_REG[idx] != null) {
+      if (POS_REG[idx].point != null || POS_REG[idx].comment != null) {
         initializedPR.add(idx);
         ++numOfPREntries;
       }
@@ -621,7 +633,13 @@ public int saveRegisterBytes(File dest) {
     // Save the Register entries
     for (Integer idx : initializedR) {
       dataOut.writeInt(idx);
-      dataOut.writeFloat(REG[idx].value);
+      
+      if (REG[idx].value == null) {
+        // save for null Float value
+        dataOut.writeFloat(Float.NaN);
+      } else {
+        dataOut.writeFloat(REG[idx].value);
+      }
       
       if (REG[idx].comment == null) {
         dataOut.writeUTF("");
@@ -634,7 +652,14 @@ public int saveRegisterBytes(File dest) {
     // Save the Position Register entries
     for (Integer idx : initializedPR) {
       dataOut.writeInt(idx);
-      savePoint(POS_REG[idx].point, dataOut);
+      
+      if (POS_REG[idx].point == null) {
+        // Save for null Point value
+        savePoint( new Point(Float.NaN, Float.NaN, Float.NaN,
+                             Float.NaN, Float.NaN, Float.NaN, Float.NaN), dataOut );
+      } else {
+        savePoint(POS_REG[idx].point, dataOut);
+      }
       
       if (POS_REG[idx].comment == null) {
         dataOut.writeUTF("");
@@ -687,14 +712,16 @@ public int loadRegisterBytes(File src) {
     while (size-- > 0) {
       // Each entry is saved after its respective index in REG
       int reg = dataIn.readInt();
-      Float v = dataIn.readFloat();
-      String c = dataIn.readUTF();
       
-      if (c != null) {
-        REG[reg] = new Register(c, v);
-      } else {
-        REG[reg] = new Register(v);
-      }
+      Float v = dataIn.readFloat();
+      // Null values are saved as NaN
+      if (Float.isNaN(v)) { v = null; }
+      
+      String c = dataIn.readUTF();
+      // Null comments are saved as ""
+      if (c == "") { c = null; }
+      
+      REG[reg] = new Register(c, v);
     }
     
     size = max(0, min(dataIn.readInt(), POS_REG.length));
@@ -703,14 +730,16 @@ public int loadRegisterBytes(File src) {
     while (size-- > 0) {
       // Each entry is saved after its respective index in POS_REG
       int idx = dataIn.readInt();
-      Point p = loadPoint(dataIn);
-      String c = dataIn.readUTF();
       
-      if (c != "") {
-        POS_REG[idx] = new PositionRegister(c, p);
-      } else {
-        POS_REG[idx] = new PositionRegister(p);
-      }
+      Point p = loadPoint(dataIn);
+      // Null points are stored with pos Vectors filled with NaNs
+      if (Float.isNaN(p.pos.x)) { p = null; }
+      
+      String c = dataIn.readUTF();
+      // Null comments are stored as ""
+      if (c == "") { c = null; }
+      
+      POS_REG[idx] = new PositionRegister(c, p);
     }
     
     dataIn.close();
