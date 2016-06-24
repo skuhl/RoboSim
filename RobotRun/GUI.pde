@@ -86,7 +86,7 @@ Textlabel fn_info, num_info;
 String workingText; // when entering text or a number
 String workingTextSuffix;
 boolean speedInPercentage;
-final int ITEMS_TO_SHOW = 12; // how many programs/ instructions to display on screen
+final int ITEMS_TO_SHOW = 8; // how many programs/ instructions to display on screen
 int curFrameIdx = -1;
 // Used to keep track a specific point in space
 PVector ref_point;
@@ -1476,11 +1476,11 @@ public void up(){
                r = active_row;
            
            active_instruction = max(0, i - 1);
-           //active_row = max(0, r + min(active_instruction - i, 0));
-           //text_render_start = text_render_start + min((active_instruction - i) - (active_row - r), 0);
-           active_row -= (active_row >= 1) ? 1 : 0;
+           active_row = max(0, r + min(active_instruction - i, 0));
+           text_render_start = text_render_start + min((active_instruction - i) - (active_row - r), 0);
+           /*active_row -= (active_row >= 1) ? 1 : 0;
            if(active_instruction < text_render_start)
-             text_render_start -= 1;
+             text_render_start -= 1;*/
          }
          
          active_col = max( 0, min( active_col, contents.get(active_row).size() - 1 ) );
@@ -1531,6 +1531,7 @@ public void up(){
       case SET_RO_STATUS:
       case PICK_REG_LIST:
          which_option = max(0, which_option - 1);
+         
          break;
       case MENU_NAV:
       case SETUP_NAV:
@@ -1547,6 +1548,7 @@ public void up(){
       case INPUT_POINT_C:
       case INPUT_POINT_J:
          active_row = max(1, active_row - 1);
+         
          break;
    }
    
@@ -1559,15 +1561,6 @@ public void dn(){
       case PROGRAM_NAV:
          options = new ArrayList<String>();
          clearOptions();
-         //if (active_program < programs.size()-1) {
-         //  if(active_program - text_render_start == ITEMS_TO_SHOW - 1)
-         //    text_render_start++;
-         //  else
-         //    active_row++;
-           
-         //  active_program++;
-         //  active_col = 0;
-         //}
          
          size = programs.size();
          
@@ -1598,15 +1591,6 @@ public void dn(){
       case INSTRUCTION_NAV:
          options = new ArrayList<String>();
          clearOptions();
-         size = programs.get(active_program).getInstructions().size();
-         //if (active_instruction < size-1) {
-         //  if(active_instruction - text_render_start == ITEMS_TO_SHOW - 1)
-         //    text_render_start++;
-         //  else
-         //    active_row++;
-         //  active_instruction++;
-         //  active_col = 0;
-         //}
          
          size = programs.get(active_program).getInstructions().size();
         
@@ -1622,11 +1606,11 @@ public void dn(){
                r = active_row;
            
            active_instruction = min(i + 1, size - 1);
-           //active_row = min(r + max(0, (active_instruction - i)), contents.size() - 1);
-           //text_render_start = text_render_start + max(0, (active_instruction - i) - (active_row - r));
-           active_row += (active_row < ITEMS_TO_SHOW-1) ? 1 : 0;
+           active_row = min(r + max(0, (active_instruction - i)), contents.size() - 1);
+           text_render_start = text_render_start + max(0, (active_instruction - i) - (active_row - r));
+           /*active_row += (active_row < ITEMS_TO_SHOW-1) ? 1 : 0;
            if(active_instruction > text_render_start+ITEMS_TO_SHOW-1)
-             text_render_start += 1;
+             text_render_start += 1;*/
          }
           //<>//
          loadInstructions(active_program);
@@ -1678,6 +1662,7 @@ public void dn(){
       case SET_RO_STATUS:
       case PICK_REG_LIST:
          which_option = min(which_option + 1, options.size() - 1);
+         
          break;
       case MENU_NAV:
       case SETUP_NAV:
@@ -1692,8 +1677,10 @@ public void dn(){
       case SET_FRAME_INSTRUCTION:
       case EDIT_MENU:
          active_row = min(active_row  + 1, contents.size() - 1);
+         
          break;
    }  
+   
    updateScreen(color(255,0,0), color(0,0,0));
 }
 
@@ -1995,6 +1982,7 @@ public void f1() {
       
       break;
     case VIEW_REG:
+      workingText = "";
       loadInputRegisterValueMethod();
       
       break;
@@ -2071,6 +2059,7 @@ public void f2() {
      if (active_row >= 0) {
         toolFrames[active_row] = new Frame();
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+        loadFrames(COORD_TOOL);
       }
    } else if (mode == NAV_USER_FRAMES) {
      
@@ -2078,6 +2067,7 @@ public void f2() {
      if (active_row >= 0) {
        userFrames[active_row] = new Frame();
        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+       loadFrames(COORD_USER);
      }
    } else if (mode == ACTIVE_FRAMES) {
      // Reset the active frames for the User or Tool Coordinate Frames
@@ -2101,7 +2091,6 @@ public void f2() {
      }
      
      loadActiveFrames();
-     updateScreen(color(255,0,0), color(0));
    } else if (mode == VIEW_REG || mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C) {
      pickRegisterList();
   } else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
@@ -2525,8 +2514,20 @@ public void ENTER(){
              }
              break;
           case 3: // register type
-             if (which_option == 0) m.setGlobal(false);
-             else m.setGlobal(true);
+             if (which_option == 0) {
+               m.setGlobal(false);
+             } else if (which_option == 1) {
+               
+               if (POS_REG[m.register].point == null) {
+                 // Invalid register index
+                 options = new ArrayList<String>();
+                 options.add("This register is uninitailized!");
+                 which_option = 0;
+                 return;
+               } else {
+                 m.setGlobal(true);
+               } 
+             }
              break;
           case 4: // register
              break;
@@ -2569,6 +2570,15 @@ public void ENTER(){
        try {
          int tempRegister = Integer.parseInt(workingText);
          if (tempRegister >= 0 && tempRegister < POS_REG.length) {
+           
+           if (POS_REG[tempRegister].point == null) {
+             // Invalid register index
+             options = new ArrayList<String>();
+             options.add("This register is uninitailized!");
+             which_option = 0;
+             return;
+           }
+           
            MotionInstruction castIns = getActiveMotionInstruct();
            castIns.setRegister(tempRegister);
          }
@@ -3928,6 +3938,8 @@ public void loadFrames(int coordFrame) {
   // Only the Tool and User Frame lists have been implemented
   if (frames != null) {
     contents = new ArrayList<ArrayList<String>>();
+    options = new ArrayList<String>();
+    which_option = -1;
     
     for (int idx = 0; idx < frames.length; ++idx) {
       // Display each frame on its own line
@@ -4247,10 +4259,11 @@ public void viewRegisters() {
   
   contents = new ArrayList<ArrayList<String>>();
   
-  // View Registers
-  if (mode == VIEW_REG) {
+  // View Registers or Position Registers
+  if (mode == VIEW_REG || mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C) {
     // Header
-    contents.add( newLine("REGISTERS") );
+    String limbo = (mode == VIEW_REG) ? "REGISTERS" : "POSITION REGISTERS";
+    contents.add( newLine(limbo) );
     contents.add( newLine("") );
     
     int start = text_render_start;
@@ -4260,78 +4273,51 @@ public void viewRegisters() {
       String spaces;
       
       if (idx < 9) {
-        spaces = "   ";
-      } else if (idx < 99) {
         spaces = "  ";
-      } else {
+      } else if (idx < 99) {
         spaces = " ";
+      } else {
+        spaces = "";
       }
       // Display the line number
       String lineNum = String.format("%d)%s", (idx + 1), spaces);
       
-      if (idx < 9) {
-        spaces = "    ";
-      } else if (idx < 99) {
-        spaces = "   ";
+      String lbl;
+      
+      if (mode == VIEW_REG) {
+        lbl = (REG[idx].comment == null) ? "" : REG[idx].comment;
       } else {
-        spaces = "  ";
+        lbl  = (POS_REG[idx].comment == null) ? "" : POS_REG[idx].comment;
       }
       
-      String lbl = (REG[idx].comment == null) ? "" : REG[idx].comment;
+      int buffer = 16 - lbl.length();
+      while (buffer-- > 0) { lbl += " "; }
+      
       // Display the comment asscoiated with a specific Register entry
-      String regLbl = String.format("R[%d: %s]%s", (idx + 1), lbl, spaces);
+      String regLbl = String.format("%s[%d:%s%s]", (mode == VIEW_REG) ? "R" : "PR", (idx + 1), spaces, lbl);
       // Display Register value (* if uninitialized)
-      String regEntry = (REG[idx].value == null) ? "*" : String.format("%4.3f", REG[idx].value);
+      String regEntry = "*";
+      
+      if (mode == VIEW_REG) {
+        if (REG[idx].value != null) {
+          // Dispaly Register value
+          regEntry = String.format("%4.3f", REG[idx].value);
+        }
+      
+      } else if (POS_REG[idx].point != null) {
+        // What to display for a point ...
+        regEntry = "...";
+      } else if (mode == VIEW_POS_REG_C && POS_REG[idx] == null) {
+        // Distinguish Joint from Cartesian mode for now
+        regEntry = "#";
+      }
       
       contents.add( newLine(lineNum, regLbl, regEntry) );
     }
-    
-  // View Position Registers
-  } else if (mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C) {
-    // Header
-    ArrayList<String> line = new ArrayList<String>();
-    line.add("POSITION REGISTERS");
-    contents.add(line);
-    line = new ArrayList<String>();
-    line.add("");
-    contents.add(line);
-    
-    int start = text_render_start;
-    int end = min(start + ITEMS_TO_SHOW - 1, POS_REG.length);
-    // Display a subset of the list of position registers
-    for (int idx = start; idx < end; ++idx) {
-      line = new ArrayList<String>();
       
-      String spaces;
+    /* Maybe useful later ...
       
-      if (idx < 9) {
-        spaces = "   ";
-      } else if (idx < 99) {
-        spaces = "  ";
-      } else {
-        spaces = " ";
-      }
-      // Display the line number
-      String lineNum = String.format("%d)%s", (idx + 1), spaces);
-      
-      if (idx < 9) {
-        spaces = "    ";
-      } else if (idx < 99) {
-        spaces = "   ";
-      } else {
-        spaces = "  ";
-      }
-      
-      String lbl = (POS_REG[idx].comment == null) ? "" : POS_REG[idx].comment;
-      // Display the comment asscoiated with a specific Register entry
-      String regLbl = String.format("PR[%d: %s]%s", (idx + 1), lbl, spaces);
-      
-      if (POS_REG[idx].point == null) {
-        // No initialized entry
-        String unini = (mode == VIEW_POS_REG_J) ? "*" : "#";
-        
-        contents.add( newLine(lineNum, regLbl, unini) );
-      } else {
+      else {
         String[] entries = null;
         
         if (mode == VIEW_POS_REG_J) {
@@ -4343,12 +4329,9 @@ public void viewRegisters() {
         
         /* Display each portion of the Point's position and orientation in
          * a separate column  whether it be X, Y, Z, W, P, R (Cartesian) or 
-         * J1 - J6 (Joint angles) */
+         * J1 - J6 (Joint angles) *
          contents.add( newLine(lineNum, regLbl, entries[0], entries[1], entries[2], entries[3], entries[4], entries[5]) );
-      }
-      
-      
-    }
+      }*/
   } else {
     // mode must be VIEW_REG or VIEW_POS_REG_J(C)!
     contents.add( newLine( String.format("%d is not a valid mode for view registers!", mode)) );
@@ -4503,9 +4486,10 @@ public void deleteInstEpilogue() {
  * as the index of the currently active frame for each
  * respective frame set. */
 void loadActiveFrames() {
-  options = new ArrayList<String>();
   contents = new ArrayList<ArrayList<String>>();
   active_row = 1;
+  options = new ArrayList<String>();
+  which_option = -1;
   
   contents.add( newLine("ACTIVE FRAMES") );
   contents.add( newLine("Tool: " + (activeToolFrame + 1)) );
