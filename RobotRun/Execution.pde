@@ -166,16 +166,15 @@ void showMainDisplayText() {
     
     float[][] vectorMatrix = armModel.getRotationMatrix(armModel.currentFrame);
     String row = String.format("[  %f  %f  %f  ]", vectorMatrix[0][0], vectorMatrix[0][1], vectorMatrix[0][2]);
-    text(row, 20, height / 2 + 80);
+    text(row, width - 300, height - 100);
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[1][0], vectorMatrix[1][1], vectorMatrix[1][2]);
-    text(row, 20, height / 2 + 94);
+    text(row, width - 300, height - 86);
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
-    text(row, 20, height / 2 + 108);
+    text(row, width - 300, height - 72);
+    float[] q = armModel.getQuaternion();
+    String quat = String.format("q: [%8.6f, %8.6f, %8.6f, %8.6f]", q[0], q[1], q[2], q[3]);
+    text(quat, width - 350, height - 58);
   }
-  
-  float[] q = armModel.getQuaternion();
-  String quat = String.format("q: [%8.6f, %8.6f, %8.6f, %8.6f]", q[0], q[1], q[2], q[3]);
-  text(quat, 20, height/2 + 148);
   
   if (ref_point != null) {
     String obj1_c = String.format("Ref Point: [%f, %f Z, %f]", ref_point.x, ref_point.y, ref_point.z);
