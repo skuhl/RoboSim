@@ -1342,10 +1342,12 @@ public void addNumber(String number) {
     }
   } else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
     
-    if (workingText.length() < 16) {
-      workingText += number;
-      // TODO update screen
-    }
+    // Replace current entry with a number
+    StringBuilder limbo = new StringBuilder(workingText);
+    limbo.setCharAt(active_col, number.charAt(0));
+    workingText = limbo.toString();
+    
+    updateComment();
   }
   
   updateScreen(color(255, 0, 0), color(0));
@@ -1373,7 +1375,7 @@ public void PERIOD() {
       workingText += ".";
       options.set(2, workingText);
     }
-  } else {
+  } else if (mode != INPUT_COMMENT_U || mode != INPUT_COMMENT_L) {
      workingText += ".";
   }
    
@@ -1550,6 +1552,19 @@ public void up(){
          active_row = max(1, active_row - 1);
          
          break;
+      case INPUT_COMMENT_U:
+      case INPUT_COMMENT_L:
+         which_option = max(0, which_option - 1);
+         // Navigate options menu to switch the function keys functions
+         if (which_option == 0) {
+           mode = INPUT_COMMENT_U;
+         } else if (which_option == 1) {
+           mode = INPUT_COMMENT_L;
+         }
+         // Reset function key states
+         for (int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+         
+         break;
    }
    
    updateScreen(color(255,0,0), color(0,0,0));
@@ -1679,6 +1694,19 @@ public void dn(){
          active_row = min(active_row  + 1, contents.size() - 1);
          
          break;
+      case INPUT_COMMENT_U:
+      case INPUT_COMMENT_L:
+         which_option = min(which_option + 1, options.size() - 1);
+         // Navigate options menu to switch the function keys functions
+         if (which_option == 0) {
+           mode = INPUT_COMMENT_U;
+         } else if (which_option == 1) {
+           mode = INPUT_COMMENT_L;
+         }
+         // Reset function key states
+         for (int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+         
+         break;
    }  
    
    updateScreen(color(255,0,0), color(0,0,0));
@@ -1710,6 +1738,9 @@ public void lt(){
       case INPUT_COMMENT_U:
       case INPUT_COMMENT_L:
         active_col = max(0, active_col - 1);
+        // Reset function key states
+        for (int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+        updateScreen(color(255, 0, 0), color(0));
         
         break;
    }
@@ -1826,19 +1857,21 @@ public void rt(){
            // Delete key function
            if (workingText.length() > 1) {
              workingText = workingText.substring(1, workingText.length());
-           } else {
-             workingText = "";
+             updateComment();
+             active_col = min(active_col, contents.get(active_row).size() - 1);
            }
          } else {
-           
-           if (workingText.length() < 16 && active_col == (workingText.length() - 1)
-                                         && workingText.charAt(active_col) != ' ') {
-             // Add a blank entry if there is room for one
-             workingText += " ";
-           }
-           
+           // Add an insert element if the length of the current comment is less than 16
+           int len = workingText.length();
+           if (len <= 16 && workingText.charAt(len - 1) != '\0') { workingText += '\0'; }
+           updateComment();
+         
            active_col = min(active_col + 1, contents.get(active_row).size() - 1);
+           updateScreen(color(255, 0, 0), color(0));
          }
+         
+         // Reset function key states
+         for (int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
          
          break;
    }
@@ -1982,14 +2015,20 @@ public void f1() {
       
       break;
     case VIEW_REG:
-      workingText = "";
-      loadInputRegisterValueMethod();
+      if (active_col == 1) {
+        // Bring up comment menu
+        loadInputRegisterCommentMethod();
+      } else if (active_col == 2) {
+        // Bring up float input menu
+        workingText = "";
+        loadInputRegisterValueMethod();
+      }
       
       break;
     case VIEW_POS_REG_J:
       if (active_col == 1) {
-        workingText = "";
-        // TODO name entry
+        // Bring up comment menu
+        loadInputRegisterCommentMethod();
       } else if (active_col >= 2) {
         // Bring up Point editing menu
         super_mode = mode;
@@ -2000,8 +2039,8 @@ public void f1() {
       break;
     case VIEW_POS_REG_C:
       if (active_col == 1) {
-        workingText = "";
-        // TODO name entry
+        // Bring up comment menu
+        loadInputRegisterCommentMethod();
       } else if (active_col >= 2) {
         // Bring up Point editing menu
         super_mode = mode;
@@ -2021,12 +2060,14 @@ public void f1() {
       }
       
       // Insert a character A - F (or a - f)
-      workingText = workingText.substring(0, active_col) + (newChar) + workingText.substring(active_col + 1, workingText.length());
+      StringBuilder limbo = new StringBuilder(workingText);
+      limbo.setCharAt(active_col, newChar);
+      workingText = limbo.toString();
       // Update and reset the letter states
       letterStates[0] = (letterStates[0] + 1) % 6;
       for (int idx = 1; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
       
-      // TODO update contents
+      updateComment();
       
       break;
   }
@@ -2103,13 +2144,15 @@ public void f2() {
     }
     
     // Insert a character G - L (or g - l)
-    workingText = workingText.substring(0, active_col) + (newChar) + workingText.substring(active_col + 1, workingText.length());
-    // Update and reset the letter states
+    StringBuilder limbo = new StringBuilder(workingText);
+    limbo.setCharAt(active_col, newChar);
+    workingText = limbo.toString();
+  // Update and reset the letter states
     letterStates[0] = 0;
     letterStates[1] = (letterStates[1] + 1) % 6;
     for (int idx = 2; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
     
-    // TODO update contents
+    updateComment();
   }
 }
 
@@ -2142,7 +2185,9 @@ public void f3() {
     }
     
     // Insert a character M - R (or m - r)
-    workingText = workingText.substring(0, active_col) + (newChar) + workingText.substring(active_col + 1, workingText.length());
+    StringBuilder limbo = new StringBuilder(workingText);
+    limbo.setCharAt(active_col, newChar);
+    workingText = limbo.toString();
     // Update and reset the letter states
     letterStates[0] = 0;
     letterStates[1] = 0;
@@ -2150,7 +2195,7 @@ public void f3() {
     letterStates[3] = 0;
     letterStates[4] = 0;
     
-    // TODO update contents
+    updateComment();
   }
 }
 
@@ -2250,14 +2295,16 @@ public void f4() {
        }
        
        // Insert a character S - X (or s - x)
-       workingText = workingText.substring(0, active_col) + (newChar) + workingText.substring(active_col + 1, workingText.length());
+       StringBuilder limbo = new StringBuilder(workingText);
+       limbo.setCharAt(active_col, newChar);
+       workingText = limbo.toString();
        // Update and reset the letter states
        for (int idx = 0; idx < 3; ++idx) { letterStates[idx] = 0; }
        letterStates[3] = (letterStates[3] + 1) % 6;
        letterStates[4] = 0;
        
        
-       // TODO update contents
+       updateComment();
        
        break;
    }
@@ -2377,9 +2424,9 @@ public void f5() {
     if (letterStates[4] < 2) {
       
       if (mode == INPUT_COMMENT_U) {
-        newChar = (char)('Y' + letterStates[0]);
+        newChar = (char)('Y' + letterStates[4]);
       } else if (mode == INPUT_COMMENT_L) {
-        newChar = (char)('y' + letterStates[0]);
+        newChar = (char)('y' + letterStates[4]);
       }
     } else if (letterStates[4] == 2) {
       newChar = '_';
@@ -2392,12 +2439,14 @@ public void f5() {
     }
     
     // Insert a character Y, Z, (or y, z) _, @, *, .
-    workingText = workingText.substring(0, active_col) + (newChar) + workingText.substring(active_col + 1, workingText.length());
+    StringBuilder limbo = new StringBuilder(workingText);
+    limbo.setCharAt(active_col, newChar);
+    workingText = limbo.toString();
     // Update and reset the letter states
     for (int idx = 0; idx < letterStates.length - 1; ++idx) { letterStates[idx] = 0; }
-    letterStates[4] = (letterStates[2] + 1) % 6;
+    letterStates[4] = (letterStates[4] + 1) % 6;
     
-    // TODO update contents
+    updateComment();
   }
 }
 
@@ -3069,12 +3118,39 @@ public void ENTER(){
       mode = super_mode;
       super_mode = NONE;
       viewRegisters();
-      updateScreen(color(255, 0, 0), color(0));
       
       break;
     case INPUT_POINT_C:
     case INPUT_POINT_J:
       // TODO save inputted values
+      
+      break;
+    case INPUT_COMMENT_U:
+    case INPUT_COMMENT_L:
+      
+      if (workingText.charAt(  workingText.length() - 1  ) == '\0') {
+        workingText = workingText.substring(0, workingText.length() - 1);
+      }
+      // Save the inputted comment to the selected register
+      if (super_mode == VIEW_REG) {
+        REG[active_index].comment = workingText;
+      } else if (super_mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C) {
+        POS_REG[active_index].comment = workingText;
+      } else {
+        // Invalid envocation of the INPUT_COMMENT_* modes
+        super_mode = NONE;
+        mu();
+        return;
+      }
+      
+      workingText = null;
+      mode = super_mode;
+      super_mode = NONE;
+      active_row = 2;
+      active_col = 0;
+      text_render_start = active_index;
+      viewRegisters();
+      saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       
       break;
   }
@@ -3117,10 +3193,18 @@ public void LEFT() {
   } else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
     // Backspace function
     if (workingText.length() > 1) {
-      workingText = workingText.substring(0, workingText.length() - 1);
-    } else {
-      workingText = "";
+      // If an insert space exists, preserve it
+      if (workingText.charAt(workingText.length() - 1) == '\0') {
+        workingText = workingText.substring(0, workingText.length() - 2) + "\0";
+      } else {
+        workingText = workingText.substring(0, workingText.length() - 1);
+      }
+      
+      updateComment();
+      active_col = min(active_col, contents.get(active_row).size() - 1);
     }
+    
+    for (int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
   }
   
   updateScreen(color(255, 0, 0), color(0));
@@ -3829,8 +3913,10 @@ public void updateScreen(color active, color normal){
    } else if (mode == VIEW_REG || mode == VIEW_POS_REG_C || mode == VIEW_POS_REG_J) {
      
      text = "F1: EDIT     F2: SWITCH";
-   } else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
+   } else if (mode == INPUT_COMMENT_U) {
      text = "F1: ABCDEF     F2: GHIJKL     F3: MNOPQR     F4: STUVWX     F5: YZ_@*.";
+   } else if (mode == INPUT_COMMENT_L) {
+     text = "F1: abcdef     F2: ghijkl     F3: mnopqr     F4: stuvwx     F5: yz_@*.";
    }
    
    
@@ -4400,6 +4486,58 @@ public void loadInputRegisterPointMethod() {
   which_option = (mode == INPUT_POINT_J) ? 4 : 3;
   active_row = 1;
   active_col = 0;
+  updateScreen(color(255, 0, 0), color(0));
+}
+
+/** TODO comment */
+public void loadInputRegisterCommentMethod() {
+  contents = new ArrayList<ArrayList<String>>();
+  options = new ArrayList<String>();
+  
+  workingText = "\0";
+  // Load the current comment for the selected register if it exists
+  if (mode == VIEW_REG) {
+    if (active_index >= 0 && active_index < REG.length && REG[active_index].comment != null) {
+      workingText = REG[active_index].comment;
+    }
+  } else if ((mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C) && POS_REG[active_index].comment != null) {
+    if (active_index >= 0 && active_index < POS_REG.length) {
+      workingText = POS_REG[active_index].comment;
+    }
+  }
+  
+  contents.add( newLine("Enter a name for the selected register") );
+  contents.add( newLine("") );
+  contents.add( newLine("") );
+  updateComment();
+  
+  options.add("1. Uppercase");
+  options.add("1. Lowercase");
+  which_option = 0;
+  
+  super_mode = mode;
+  // Navigate options menu to switch the function keys functions
+  if (which_option == 0) {
+    mode = INPUT_COMMENT_U;
+  } else if (which_option == 1) {
+    mode = INPUT_COMMENT_L;
+  }
+  
+  active_row = 2;
+  active_col = 0;
+  updateScreen(color(255, 0, 0), color(0));
+}
+
+/** TODO comment */
+public void updateComment() {
+  
+  ArrayList<String> line = new ArrayList<String>();
+  // Give each letter in the name a separate column
+  for (int idx = 0; idx < workingText.length() && idx < 16; ++idx) {
+    line.add( Character.toString(workingText.charAt(idx)) );
+  }
+  
+  contents.set(2, line);
   updateScreen(color(255, 0, 0), color(0));
 }
 
