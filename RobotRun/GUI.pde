@@ -3122,7 +3122,57 @@ public void ENTER(){
       break;
     case INPUT_POINT_C:
     case INPUT_POINT_J:
-      // TODO save inputted values
+      
+      inputs = new float[6];
+      PVector position = new PVector();
+      float[] orientation = new float[] { 1f, 0f, 0f, 0f };
+      float[] jointAngles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+      
+      // Parse each field, removing each the prefix
+      try {
+        for (int idx = 0; idx < inputs.length; ++idx) {
+          String inputStr = contents.get(idx + 1).get(0);
+          System.out.printf("_%s_\n", inputStr);
+          inputs[idx] = Float.parseFloat( inputStr.substring(which_option, inputStr.length()) );
+        }
+      } catch (NumberFormatException NFEx) {
+        // Invalid input
+        options = new ArrayList<String>();
+        options.add("Input values must be real numbers!");
+        updateScreen(color(255, 0, 0), color(0));
+        return;
+      }
+      
+      if (mode == INPUT_POINT_J) {
+        // Bring angles within range: (0, TWO_PI)
+        for (int idx = 0; idx < inputs.length; ++idx) {
+          jointAngles[idx] = clampAngle(inputs[idx]);
+        }
+        /* Calculate the position and orientation of the Robot Arm given the joint angles */
+        position = armModel.getEEPos(jointAngles);
+        orientation = armModel.getQuaternion(jointAngles);
+      } else if (mode == INPUT_POINT_C) {
+        // Bring the input values with the range [-9999, 9999]
+        for (int idx = 0; idx < inputs.length; ++idx) {
+          inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
+        }
+        
+        position = new PVector(inputs[0], inputs[1], inputs[2]);
+        orientation = eulerToQuat( new PVector(inputs[3], inputs[4], inputs[5]) );
+        // TODO Inverse Kinematics on position and orientation
+      }
+      
+      // Save the input point
+      POS_REG[active_index].point = new Point(position, orientation);
+      POS_REG[active_index].point.joints = jointAngles;
+      saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+      
+      mode = super_mode;
+      super_mode = NONE;
+      text_render_start = active_index;
+      active_row = 2;
+      active_col = 0;
+      viewRegisters();
       
       break;
     case INPUT_COMMENT_U:
@@ -4393,7 +4443,7 @@ public void viewRegisters() {
       } else if (POS_REG[idx].point != null) {
         // What to display for a point ...
         regEntry = "...";
-      } else if (mode == VIEW_POS_REG_C && POS_REG[idx] == null) {
+      } else if (mode == VIEW_POS_REG_C && POS_REG[idx].point == null) {
         // Distinguish Joint from Cartesian mode for now
         regEntry = "#";
       }
