@@ -26,7 +26,7 @@ float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
 boolean spacebarDown = false;
 
 ControlP5 cp5;
-Textarea myTextarea;
+Textarea textDisplay;
 Accordion accordion;
 
 ArrayList<Program> programs = new ArrayList<Program>();
@@ -56,7 +56,7 @@ Program currentProgram;
 boolean execSingleInst = false;
 MotionInstruction singleInstruction = null;
 int currentInstruction;
-int EXEC_SUCCESS = 0, EXEC_FAILURE = 1;
+int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 
 /*******************************/
 
@@ -79,7 +79,6 @@ public void setup(){
   
   cp5 = new ControlP5(this);
   gui();
-  for (int n = 0; n < pr.length; n++) pr[n] = new Point();
   armModel = new ArmModel();
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));
@@ -91,13 +90,11 @@ public void setup(){
   objects = new Object[2];
   pushMatrix();
   resetMatrix();
-  translate(-100, 100, -350);
-  //print( matrixToString(getTransformationMatrix()) );
   
+  translate(-100, 100, -350);
   objects[0] = new Object(125, 60, 300, color(255, 0, 0), color(255, 0, 255));
  
  translate(-250, 0, 0);
-  
   objects[1] = new Object(250, 125, 500, color(255, 0, 255), color(255, 255, 255));
   
   popMatrix();
@@ -165,20 +162,24 @@ public void draw(){
   noStroke();
   pushMatrix();
   if(intermediatePositions != null){
+    int count = 0;
     for(Point p : intermediatePositions){
-      pushMatrix();
-      translate(p.pos.x, p.pos.y, p.pos.z);
-      sphere(10);
-      popMatrix();
+      if(count % 8 == 0){
+        pushMatrix();
+        translate(p.pos.x, p.pos.y, p.pos.z);
+        sphere(10);
+        popMatrix();
+      }
+      count += 1;
     }
   }
   popMatrix(); 
   //TESTING CODE: DRAW END EFFECTOR POSITION
   pushMatrix();
   noFill();
-  stroke(255, 0, 255);
   applyModelRotation(armModel, true);
   //EE position
+  stroke(255, 255, 0);
   sphere(5);
   translate(0, 0, -100);
   stroke(255, 0, 0);
@@ -283,8 +284,10 @@ void applyCamera() {
   rotateY(myRotY); // for rotate button
 }
 
-/* Handles the drawing of world objects as well as collision detection of world objects and the
- * Robot Arm model. */
+/**
+ * Handles the drawing of world objects as well as collision detection of world objects and the
+ * Robot Arm model.
+ */
 public void handleWorldObjects() {
   for (Object o : objects) {
     // reset all world the object's hit box colors
@@ -345,7 +348,9 @@ public void handleWorldObjects() {
   }
 }
 
-/* Display any currently taught points during the processes of either the 3-Point, 4-Point, or 6-Point Methods. */
+/**
+ * Display any currently taught points during the processes of either the 3-Point, 4-Point, or 6-Point Methods.
+ */
 public void displayTeachPoints() {
   // Teach points are displayed only while the Robot is being taught a frame
   if (teachPointTMatrices != null && (mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE)) {
@@ -398,6 +403,7 @@ public void displayTeachPoints() {
       float[][] T = teachPointTMatrices.get(idx);
       
       pushMatrix();
+      // Applies the points transformation matrix
       applyMatrix(T[0][0], T[0][1], T[0][2], T[0][3],
                   T[1][0], T[1][1], T[1][2], T[1][3],
                   T[2][0], T[2][1], T[2][2], T[2][3],
@@ -413,7 +419,9 @@ public void displayTeachPoints() {
   }
 }
 
-/* Displays the current axes and the origin of the current frame of reference. */
+/**
+* Displays the current axes and the origin of the current frame of reference.
+*/
 public void displayFrameAxes() {
   
    if ((curCoordFrame == COORD_WORLD || curCoordFrame == COORD_TOOL) && activeToolFrame != -1) {
@@ -439,6 +447,7 @@ public void displayFrameAxes() {
 public void displayOriginAxes(float[][] axesVectors, float[] origin) {
     
     pushMatrix();
+    // Transform to the reference frame defined by the axes vectors
     applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin[0],
                 axesVectors[0][1], axesVectors[1][1], axesVectors[2][1],  origin[1],
                 axesVectors[0][2], axesVectors[1][2], axesVectors[2][2],  origin[2],

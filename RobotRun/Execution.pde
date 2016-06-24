@@ -30,13 +30,15 @@ void createTestProgram() {
   program.addInstruction(instruction);
   //for (int n = 0; n < 15; n++) program.addInstruction(
   //  new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
-  pr[0] = new Point(165, 116, -5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[1] = new Point(166, -355, 120, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[2] = new Point(171, -113, 445, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[3] = new Point(725, 225, 50, 1, 0, 0, 0, 5.6, 1.12, 5.46, 0, 5.6, 0);
-  pr[4] = new Point(775, 300, 50, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[5] = new Point(-474, -218, 37, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  pr[6] = new Point(-659, -412, -454, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+  
+  POS_REG[0] = new PositionRegister(null, new Point(165, 116, -5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  POS_REG[1] = new PositionRegister(null, new Point(166, -355, 120, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  POS_REG[2] = new PositionRegister(null, new Point(171, -113, 445, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  POS_REG[3] = new PositionRegister(null, new Point(725, 225, 50, 1, 0, 0, 0, 5.6, 1.12, 5.46, 0, 5.6, 0));
+  POS_REG[4] = new PositionRegister(null, new Point(775, 300, 50, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  POS_REG[5] = new PositionRegister(null, new Point(-474, -218, 37, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  POS_REG[6] = new PositionRegister(null, new Point(-659, -412, -454, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  
   programs.add(program);
   //currentProgram = program;
   
@@ -282,7 +284,8 @@ PVector computePerpendicular(PVector in, PVector second) {
   else return vectorConvertFrom(perp2, plane[0], plane[1], plane[2]);
 }
 
-/* This method will draw the End Effector grid mapping based on the value of EE_MAPPING:
+/**
+ * This method will draw the End Effector grid mapping based on the value of EE_MAPPING:
  *
  *  0 -> a line is drawn between the EE and the grid plane
  *  1 -> a point is drawn on the grid plane that corresponds to the EE's xz coordinates
@@ -425,22 +428,24 @@ public float[][] calculateJacobian(float[] angles){
 //by 'tgt' and the Euler angle orientation 'rot'
 int calculateIKJacobian(PVector tgt, float[] rot){
   final int limit = 1000;  //max number of times to loop
+  int count = 0;
+  
   float[] angles = armModel.getJointRotations();
   float[][] frame = armModel.currentFrame;
   float[][] nFrame = armModel.getRotationMatrix();
   float[][] rMatrix = quatToMatrix(rot);
   armModel.currentFrame = nFrame;
+  
   //translate target rotation to world ref frame
   RealMatrix M = new Array2DRowRealMatrix(floatToDouble(nFrame, 3, 3));
   RealMatrix O = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
   RealMatrix MO = M.multiply(MatrixUtils.inverse(O));
+  
   //translate target rotation to EE ref frame
   RealMatrix R = new Array2DRowRealMatrix(floatToDouble(rMatrix, 3, 3));
   RealMatrix OR = R.multiply(MatrixUtils.inverse(MO));
   rot = matrixToQuat(doubleToFloat(OR.getData(), 3, 3));
-  
-  int count = 0;
-  
+  //println();
   while(count < limit){
     PVector cPos = armModel.getEEPos(angles);
     float[] cRotQ = armModel.getQuaternion(angles);
@@ -461,13 +466,12 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     
     float dist = PVector.dist(cPos, tgt);
     float rDist = calculateQuatMag(rDelta);
-                                                  
+    //println("distances from tgt: " + dist + ", " + rDist);
     //check whether our current position is within tolerance
     if(dist < liveSpeed && rDist < 0.005*liveSpeed) break;
-    //calculate jacobian, 'J', and its inverse 
+    //calculate jacobian, 'J', and its inverse
     float[][] J = calculateJacobian(angles);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
-    //RealMatrix JInverse = MatrixUtils.inverse(m);
     RealMatrix JInverse = new SingularValueDecomposition(m).getSolver().getInverse();
         
     //calculate and apply joint angular changes
@@ -483,6 +487,9 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     }
     
     count += 1;
+    if(count == limit){
+      
+    }
   }
   
   armModel.currentFrame = frame;
@@ -501,13 +508,25 @@ int calculateIKJacobian(PVector tgt, float[] rot){
       for(int j = 0; j < 3; j += 1){
         if(s.rotations[j] && !s.anglePermitted(j, angles[i])){
           //println("illegal joint angle on j" + i);
-          //return EXEC_FAILURE;
+          return EXEC_FAILURE;
         }
       }
     }
     
-    armModel.setJointRotations(angles);
-    return EXEC_SUCCESS;
+    float[] angleOffset = new float[6];
+    float maxOffset = TWO_PI;
+    for(int i = 0; i < 6; i += 1){
+      angleOffset[i] = abs(minimumDistance(angles[i], armModel.getJointRotations()[i]));
+    }
+    
+    if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
+       angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset){
+      armModel.setJointRotations(angles);
+      return EXEC_SUCCESS;
+    }
+    else{
+      return EXEC_PARTIAL;
+    }
   }
 }
 
@@ -552,7 +571,7 @@ void calculateIntermediatePositions(Point start, Point end) {
   for (int n = 0; n < numberOfPoints; n++) {
     mu += increment;
     
-    qi = quaternionSlerp(q1, q2, mu - increment);
+    qi = quaternionSlerp(q1, q2, mu);
     intermediatePositions.add(new Point(new PVector(
       p1.x * (1 - mu) + (p2.x * mu),
       p1.y * (1 - mu) + (p2.y * mu),
@@ -591,38 +610,48 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   PVector p1 = start.pos;
   PVector p2 = end.pos;
   PVector p3 = next.pos;
+  float[] q1 = start.ori;
+  float[] q2 = end.ori;
+  float[] q3 = next.ori;
+  float[] qi = new float[4];
   
-  ArrayList<PVector> secondaryTargets = new ArrayList<PVector>();
-  float mu = 0;
+  ArrayList<Point> secondaryTargets = new ArrayList<Point>();
+  float d1 = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+  float d2 = dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
   int numberOfPoints = 0;
-  if (dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) >
-      dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z))
-  {
-    numberOfPoints = (int)
-      (dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) / distanceBetweenPoints);
-  } else {
-    numberOfPoints = (int)
-      (dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z) / distanceBetweenPoints);
+  if (d1 > d2){
+    numberOfPoints = (int)(d1 / distanceBetweenPoints);
+  } 
+  else {
+    numberOfPoints = (int)(d2 / distanceBetweenPoints);
   }
+  
+  float mu = 0;
   float increment = 1.0 / (float)numberOfPoints;
   for (int n = 0; n < numberOfPoints; n++) {
     mu += increment;
-    secondaryTargets.add(new PVector(
+    qi = quaternionSlerp(q2, q3, mu);
+    secondaryTargets.add(new Point(new PVector(
       p2.x * (1 - mu) + (p3.x * mu),
       p2.y * (1 - mu) + (p3.y * mu),
-      p2.z * (1 - mu) + (p3.z * mu)));
+      p2.z * (1 - mu) + (p3.z * mu)),
+      qi));
   }
+  
   mu = 0;
   int transitionPoint = (int)((float)numberOfPoints * percentage);
   for (int n = 0; n < transitionPoint; n++) {
     mu += increment;
+    qi = quaternionSlerp(q1, q2, mu);
     intermediatePositions.add(new Point(new PVector(
       p1.x * (1 - mu) + (p2.x * mu),
       p1.y * (1 - mu) + (p2.y * mu),
       p1.z * (1 - mu) + (p2.z * mu)),
-      armModel.getQuaternion()));
+      qi));
   }
+  
   int secondaryIdx = 0; // accessor for secondary targets
+  
   mu = 0;
   increment /= 2.0;
   
@@ -636,11 +665,13 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   
   for (int n = transitionPoint; n < numberOfPoints; n++) {
     mu += increment;
+    Point tgt = secondaryTargets.get(secondaryIdx);
+    qi = quaternionSlerp(currentPoint.ori, tgt.ori, mu);
     intermediatePositions.add(new Point(new PVector(
-      currentPoint.pos.x * (1 - mu) + (secondaryTargets.get(secondaryIdx).x * mu),
-      currentPoint.pos.y * (1 - mu) + (secondaryTargets.get(secondaryIdx).y * mu),
-      currentPoint.pos.z * (1 - mu) + (secondaryTargets.get(secondaryIdx).z * mu)), 
-      armModel.getQuaternion()));
+      currentPoint.pos.x * (1 - mu) + (tgt.pos.x * mu),
+      currentPoint.pos.y * (1 - mu) + (tgt.pos.y * mu),
+      currentPoint.pos.z * (1 - mu) + (tgt.pos.z * mu)), 
+      qi));
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
     secondaryIdx++;
   }
@@ -665,6 +696,7 @@ void calculateArc(Point start, Point inter, Point end){
   float[] q2 = end.ori;
   float[] qi = new float[4];
   
+  // Calculate arc center point
   PVector[] plane = new PVector[3];
   plane = createPlaneFrom3Points(a, b, c);
   PVector center = circleCenter(vectorConvertTo(a, plane[0], plane[1], plane[2]),
@@ -676,40 +708,35 @@ void calculateArc(Point start, Point inter, Point end){
   // Calculate a vector from the center to point a
   PVector u = new PVector(a.x-center.x, a.y-center.y, a.z-center.z);
   u.normalize();
-  // get n (a normal of the plane created by the 3 input points)
+  // get the normal of the plane created by the 3 input points
   PVector tmp1 = new PVector(a.x-b.x, a.y-b.y, a.z-b.z);
   PVector tmp2 = new PVector(a.x-c.x, a.y-c.y, a.z-c.z);
   PVector n = tmp1.cross(tmp2);
   tmp1.normalize();
   tmp2.normalize();
   n.normalize();
-  //calculate the angle between the start and end points
+  // calculate the angle between the start and end points
   PVector vec1 = new PVector(a.x-center.x, a.y-center.y, a.z-center.z);
   PVector vec2 = new PVector(c.x-center.x, c.y-center.y, c.z-center.z);
   vec1.normalize();
   vec2.normalize();
   float theta = atan2(vec1.cross(vec2).mag(), vec1.dot(vec2));
-  
-  // Now plug all that into the parametric equation
-  //   P = r*cos(t)*u + r*sin(t)*nxu+center [x is cross product]
-  // to compute our points along the circumference.
-  // We actually only want to create an arc from A to C, not the full
-  // circle, so detect when we're close to those points to decide
-  // when to start and stop adding points.
+
+  // finally, draw an arc through all 3 points by rotating the u
+  // vector around our normal vector
   float angle = 0, mu = 0;
   int numPoints = (int)(r*theta/distanceBetweenPoints);
   float inc = 1/(float)numPoints;
   float angleInc = (theta)/(float)numPoints;
-  println("generating arc:");
   for (int i = 0; i < numPoints; i += 1) {
     PVector pos = rotateVectorQuat(u, n, angle).mult(r).add(center);
+    if(i == numPoints-1) pos = end.pos;
     qi = quaternionSlerp(q1, q2, mu);
-    if(i % 5 == 0) println(qi[0] + ", " + qi[1] + ", " + qi[2] + ", " + qi[3]);
+    println(pos + ", " + end.pos);
     intermediatePositions.add(new Point(pos, qi));
     angle += angleInc;
     mu += inc;
   }
-  println();
 }
 
 /**
@@ -788,7 +815,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
 } // end execute linear motion
 
 MotionInstruction getActiveMotionInstruct(){
-  Instruction inst = new Instruction();
+  Instruction inst = null;
   Program p = programs.get(active_program);
   
   if(p != null && p.getInstructions().size() != 0)
@@ -1105,6 +1132,14 @@ void setError(String text) {
   errorCounter = 600;
 }
 
+/**
+ * Maps wth given angle to the range of 0 (inclusive) to
+ * two PI (exclusive).
+ *
+ * @param angle  some angle in radians
+ * @return       An angle between  0 (inclusive) to two
+ *               PI (exclusive)
+ */
 float clampAngle(float angle) {
   while (angle > TWO_PI) angle -= (TWO_PI);
   while (angle < 0) angle += (TWO_PI);
