@@ -49,8 +49,8 @@ final int NONE = 0,
           INPUT_COMMENT_U = 39,
           INPUT_COMMENT_L = 40,
           CONFIRM_DELETE = 41;
-final int COLOR_DEFAULT = -8421377,
-          COLOR_ACTIVE = -65536,
+final int COLOR_DEFAULT = color(70),
+          COLOR_ACTIVE = color(220, 40, 40),
           BUTTON_BACKGROUND = color(70),
           BUTTON_TEXT = color(240);
 // Determines what End Effector mapping should be display
@@ -71,9 +71,9 @@ int record = OFF;
 int g1_px, g1_py; // the left-top corner of group1
 int g1_width, g1_height; // group 1's width and height
 int display_px, display_py; // the left-top corner of display screen
-int display_width = 400, display_height = 320; // height and width of display screen
+int display_width = 510, display_height = 320; // height and width of display screen
 
-PFont fnt;
+PFont fnt_con, fnt_conB;
 Group g1, g2, txt;
 Button bt_show, bt_hide, 
        bt_zoomin_shrink, bt_zoomin_normal,
@@ -133,9 +133,9 @@ public static final boolean DISPLAY_TEST_OUTPUT = true;
 void gui(){
    g1_px = 0;
    g1_py = 0;
-   g1_width = width/3 + 150;
-   g1_height = height;
-   display_px = LARGE_BUTTON + 15;
+   g1_width = 530;
+   g1_height = 800;
+   display_px = 10;
    display_py = SMALL_BUTTON + 1;
    
    // group 1: display and function buttons
@@ -147,7 +147,9 @@ void gui(){
       .setBackgroundHeight(g1_height);
    
    //create font and text display background
-   fnt = createFont("data/Consolas.ttf", 14);
+   fnt_con = createFont("data/Consolas.ttf", 14);
+   fnt_conB = createFont("data/ConsolasBold.ttf", 12);
+   
    textDisplay = cp5.addTextarea("txt")
       .setPosition(display_px,display_py)
       .setSize(display_width, display_height)
@@ -162,19 +164,22 @@ void gui(){
        .hide();
        
    num_info = cp5.addTextlabel("num_info")
-       .hide();   
+       .hide();
+       
+   /**********************Top row buttons**********************/
+   
    // button to show g1
    int bt_show_px = 1;
    int bt_show_py = 1;
    bt_show = cp5.addButton("show")
       .setPosition(bt_show_px, bt_show_py)
       .setSize(LARGE_BUTTON, SMALL_BUTTON)
-      .setCaptionLabel("SHOW")
+      .setLabel("SHOW")
       .setColorBackground(BUTTON_BACKGROUND)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .hide()
-      ;
+      .hide();
     
+    //calculate how much space each button will be given
     int button_offsetX = LARGE_BUTTON + 1;
     int button_offsetY = LARGE_BUTTON + 1;
     
@@ -188,8 +193,7 @@ void gui(){
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setImages(zoomin_shrink)
        .updateSize()
-       .hide()
-       ;   
+       .hide();   
        
     int zoomout_shrink_px = zoomin_shrink_px + LARGE_BUTTON ;
     int zoomout_shrink_py = zoomin_shrink_py;   
@@ -201,8 +205,7 @@ void gui(){
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setImages(zoomout_shrink)
        .updateSize()
-       .hide()
-       ;    
+       .hide();    
    
     int pan_shrink_px = zoomout_shrink_px + LARGE_BUTTON;
     int pan_shrink_py = zoomout_shrink_py ;
@@ -214,8 +217,7 @@ void gui(){
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setImages(pan_shrink)
        .updateSize()
-       .hide()
-       ;    
+       .hide();    
        
     int rotate_shrink_px = pan_shrink_px + LARGE_BUTTON;
     int rotate_shrink_py = pan_shrink_py;   
@@ -227,8 +229,7 @@ void gui(){
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setImages(rotate_shrink)
        .updateSize()
-       .hide()
-       ;     
+       .hide();     
       
    // button to hide g1
    int hide_px = display_px;
@@ -251,7 +252,7 @@ void gui(){
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setImages(zoomin_normal)
        .updateSize()
-       .moveTo(g1) ;   
+       .moveTo(g1);   
        
     int zoomout_normal_px = zoomin_normal_px + LARGE_BUTTON + 1;
     int zoomout_normal_py = zoomin_normal_py;   
@@ -263,7 +264,7 @@ void gui(){
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setImages(zoomout_normal)
        .updateSize()
-       .moveTo(g1) ;    
+       .moveTo(g1);    
    
     int pan_normal_px = zoomout_normal_px + LARGE_BUTTON + 1;
     int pan_normal_py = zoomout_normal_py ;
@@ -275,7 +276,7 @@ void gui(){
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setImages(pan)
        .updateSize()
-       .moveTo(g1) ;    
+       .moveTo(g1);    
        
     int rotate_normal_px = pan_normal_px + LARGE_BUTTON + 1;
     int rotate_normal_py = pan_normal_py;   
@@ -287,7 +288,7 @@ void gui(){
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setImages(rotate)
        .updateSize()
-       .moveTo(g1) ;     
+       .moveTo(g1);     
        
     int record_normal_px = rotate_normal_px + LARGE_BUTTON + 1;
     int record_normal_py = rotate_normal_py;   
@@ -299,7 +300,7 @@ void gui(){
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setImages(record)
        .updateSize()
-       .moveTo(g1) ;     
+       .moveTo(g1);     
       
     int EE_normal_px = record_normal_px + LARGE_BUTTON + 1;
     int EE_normal_py = record_normal_py;   
@@ -311,159 +312,22 @@ void gui(){
        .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setImages(EE)
        .updateSize()
-       .moveTo(g1) ;    
-       
-   PImage[] imgs_arrow_up = {loadImage("images/arrow-up.png"), 
-                             loadImage("images/arrow-up_over.png"), 
-                             loadImage("images/arrow-up_down.png")};   
-   int up_px = display_px+display_width + 2;
-   int up_py = display_py;
-   cp5.addButton("up")
-       .setPosition(up_px, up_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setImages(imgs_arrow_up)
-       .updateSize()
-       .moveTo(g1) ;     
-   
-    PImage[] imgs_arrow_down = {loadImage("images/arrow-down.png"), 
-                                loadImage("images/arrow-down_over.png"), 
-                                loadImage("images/arrow-down_down.png")};   
-    int dn_px = up_px;
-    int dn_py = up_py + LARGE_BUTTON + 2;
-    cp5.addButton("dn")
-       .setPosition(dn_px, dn_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setImages(imgs_arrow_down)
-       .updateSize()
-       .moveTo(g1) ;    
-   
-    PImage[] imgs_arrow_l = {loadImage("images/arrow-l.png"), 
-                             loadImage("images/arrow-l_over.png"), 
-                             loadImage("images/arrow-l_down.png")};
-    int lt_px = dn_px;
-    int lt_py = dn_py + LARGE_BUTTON + 2;
-    cp5.addButton("lt")
-       .setPosition(lt_px, lt_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setImages(imgs_arrow_l)
-       .updateSize()
-       .moveTo(g1) ;  
-    
-    PImage[] imgs_arrow_r = {loadImage("images/arrow-r.png"), 
-                             loadImage("images/arrow-r_over.png"), 
-                             loadImage("images/arrow-r_down.png")};
-    int rt_px = lt_px;
-    int rt_py = lt_py + LARGE_BUTTON + 2;;
-    cp5.addButton("rt")
-       .setPosition(rt_px, rt_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setImages(imgs_arrow_r)
-       .updateSize()
-       .moveTo(g1) ; 
-    
-    int fn_px = rt_px;
-    int fn_py = rt_py + LARGE_BUTTON + 2;   
-    cp5.addButton("Fn")
-       .setPosition(fn_px, fn_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setCaptionLabel("FCTN")
-       .setColorBackground(BUTTON_BACKGROUND)
-       .setColorCaptionLabel(BUTTON_TEXT)  
-       .moveTo(g1);    
-       
-    int sf_px = fn_px;
-    int sf_py = fn_py + LARGE_BUTTON + 2;   
-    cp5.addButton("sf")
-       .setPosition(sf_px, sf_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setCaptionLabel("SHIFT")
-       .setColorBackground(BUTTON_BACKGROUND)
-       .setColorActive(color(0))
-       .setColorCaptionLabel(BUTTON_TEXT)  
        .moveTo(g1);
-       
-    int ne_px = sf_px ;
-    int ne_py = sf_py + LARGE_BUTTON + 2;   
-    cp5.addButton("ne")
-       .setPosition(ne_px, ne_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setCaptionLabel("NEXT")
-       .setColorBackground(BUTTON_BACKGROUND)
-       .setColorCaptionLabel(BUTTON_TEXT)  
-       .moveTo(g1);    
-       
-    int se_px = display_px - 2 - LARGE_BUTTON;
-    int se_py = display_py;   
-    cp5.addButton("se")
-       .setPosition(se_px, se_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setCaptionLabel("SELECT")
-       .setColorBackground(BUTTON_BACKGROUND)
-       .setColorCaptionLabel(BUTTON_TEXT)  
-       .moveTo(g1);           
+
+    /********************Function Row********************/
     
-    int mu_px = se_px ;
-    int mu_py = se_py + LARGE_BUTTON + 2;   
-    cp5.addButton("mu")
-       .setPosition(mu_px, mu_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setCaptionLabel("MENU")
-       .setColorBackground(BUTTON_BACKGROUND)
-       .setColorCaptionLabel(BUTTON_TEXT)  
-       .moveTo(g1);      
-    
-    int ed_px = mu_px ;
-    int ed_py = mu_py + LARGE_BUTTON + 2;   
-    cp5.addButton("ed")
-       .setPosition(ed_px, ed_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setCaptionLabel("EDIT")
-       .setColorBackground(BUTTON_BACKGROUND)
-       .setColorCaptionLabel(BUTTON_TEXT)  
-       .moveTo(g1);      
-     
-    int da_px = ed_px ;
-    int da_py = ed_py + LARGE_BUTTON + 2;   
-    cp5.addButton("da")
-       .setPosition(da_px, da_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setCaptionLabel("DATA")
-       .setColorBackground(BUTTON_BACKGROUND)
-       .setColorCaptionLabel(BUTTON_TEXT)  
-       .moveTo(g1);  
-    
-    int sw_px = da_px ;
-    int sw_py = da_py + LARGE_BUTTON + 2;   
-    cp5.addButton("sw")
-       .setPosition(sw_px, sw_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setCaptionLabel("SWITH")
-       .setColorBackground(BUTTON_BACKGROUND)
-       .setColorCaptionLabel(BUTTON_TEXT)  
-       .moveTo(g1);     
-    
-    int st_px = sw_px ;
-    int st_py = sw_py + LARGE_BUTTON + 2;   
-    cp5.addButton("st")
-       .setPosition(st_px, st_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
-       .setCaptionLabel("STEP")
-       .setColorBackground(BUTTON_BACKGROUND)
-       .setColorCaptionLabel(BUTTON_TEXT)  
-       .moveTo(g1);        
-    
-    int pr_px = st_px ;
-    int pr_py = st_py + LARGE_BUTTON + 2;   
+    int pr_px = 10;
+    int pr_py = display_py + display_height + 2;   
     cp5.addButton("pr")
-       .setPosition(pr_px, pr_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
+       .setPosition(pr_px, pr_py + 15)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
        .setCaptionLabel("PREV")
        .setColorBackground(BUTTON_BACKGROUND)
        .setColorCaptionLabel(BUTTON_TEXT)  
        .moveTo(g1);     
       
-    int f1_px = display_px + 25;
-    int f1_py = display_py + display_height + 2;   
+    int f1_px = pr_px + button_offsetX + 25;
+    int f1_py = pr_py;   
     cp5.addButton("f1")
        .setPosition(f1_px, f1_py)
        .setSize(LARGE_BUTTON, LARGE_BUTTON)
@@ -512,105 +376,154 @@ void gui(){
        .setColorCaptionLabel(BUTTON_TEXT)  
        .moveTo(g1);
        
+    int ne_px = f5_px + button_offsetX + 25;
+    int ne_py = f5_py;   
+    cp5.addButton("ne")
+       .setPosition(ne_px, ne_py + 15)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setCaptionLabel("NEXT")
+       .setColorBackground(BUTTON_BACKGROUND)
+       .setColorCaptionLabel(BUTTON_TEXT)  
+       .moveTo(g1);
+       
+    /**********************Step/Shift Row**********************/
+    
+    int st_px = pr_px + 25;
+    int st_py = pr_py + button_offsetY + 20;   
+    cp5.addButton("st")
+       .setPosition(st_px, st_py)
+       .setSize(LARGE_BUTTON, LARGE_BUTTON)
+       .setCaptionLabel("STEP")
+       .setColorBackground(BUTTON_BACKGROUND)
+       .setColorCaptionLabel(BUTTON_TEXT)  
+       .moveTo(g1);
+       
+    int mu_px = st_px + button_offsetX + 34;
+    int mu_py = st_py;   
+    cp5.addButton("mu")
+       .setPosition(mu_px, mu_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setCaptionLabel("MENU")
+       .setColorBackground(BUTTON_BACKGROUND)
+       .setColorCaptionLabel(BUTTON_TEXT)  
+       .moveTo(g1);
+    
+    int se_px = mu_px + button_offsetX + 15;
+    int se_py = mu_py;
+    cp5.addButton("se")
+       .setPosition(se_px, se_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setCaptionLabel("SELECT")
+       .setColorBackground(BUTTON_BACKGROUND)
+       .setColorCaptionLabel(BUTTON_TEXT)  
+       .moveTo(g1);     
+    
+    int ed_px = se_px + button_offsetX;
+    int ed_py = se_py;   
+    cp5.addButton("ed")
+       .setPosition(ed_px, ed_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setCaptionLabel("EDIT")
+       .setColorBackground(BUTTON_BACKGROUND)
+       .setColorCaptionLabel(BUTTON_TEXT)  
+       .moveTo(g1);      
+     
+    int da_px = ed_px + button_offsetX;
+    int da_py = ed_py;   
+    cp5.addButton("da")
+       .setPosition(da_px, da_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setCaptionLabel("DATA")
+       .setColorBackground(BUTTON_BACKGROUND)
+       .setColorCaptionLabel(BUTTON_TEXT)  
+       .moveTo(g1);
+       
+    int fn_px = da_px + button_offsetX + 15;
+    int fn_py = da_py;   
+    cp5.addButton("Fn")
+       .setPosition(fn_px, fn_py)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setCaptionLabel("FCTN")
+       .setColorBackground(BUTTON_BACKGROUND)
+       .setColorCaptionLabel(BUTTON_TEXT)  
+       .moveTo(g1);
+       
+    int sf_px = fn_px + button_offsetX + 34;
+    int sf_py = fn_py;
+    cp5.addButton("sf")
+       .setPosition(sf_px, sf_py)
+       .setSize(LARGE_BUTTON, LARGE_BUTTON)
+       .setCaptionLabel("SHIFT")
+       .setColorBackground(BUTTON_BACKGROUND)
+       .setColorCaptionLabel(BUTTON_TEXT)  
+       .moveTo(g1);
+   
+   /***********************Arrow Keys***********************/
+   button_offsetY = SMALL_BUTTON + 1;
+   
+   PImage[] imgs_arrow_up = {loadImage("images/arrow-up.png"), 
+                             loadImage("images/arrow-up_over.png"), 
+                             loadImage("images/arrow-up_down.png")};   
+   int up_px = ed_px + 5;
+   int up_py = ed_py + button_offsetY + 10;
+   cp5.addButton("up")
+       .setPosition(up_px, up_py)
+       .setSize(SMALL_BUTTON, SMALL_BUTTON)
+       .setImages(imgs_arrow_up)
+       .updateSize()
+       .moveTo(g1) ;     
+   
+    PImage[] imgs_arrow_down = {loadImage("images/arrow-down.png"), 
+                                loadImage("images/arrow-down_over.png"), 
+                                loadImage("images/arrow-down_down.png")};   
+    int dn_px = up_px;
+    int dn_py = up_py + button_offsetY;
+    cp5.addButton("dn")
+       .setPosition(dn_px, dn_py)
+       .setSize(SMALL_BUTTON, SMALL_BUTTON)
+       .setImages(imgs_arrow_down)
+       .updateSize()
+       .moveTo(g1) ;    
+   
+    PImage[] imgs_arrow_l = {loadImage("images/arrow-l.png"), 
+                             loadImage("images/arrow-l_over.png"), 
+                             loadImage("images/arrow-l_down.png")};
+    int lt_px = dn_px - button_offsetX;
+    int lt_py = dn_py - button_offsetY/2;
+    cp5.addButton("lt")
+       .setPosition(lt_px, lt_py)
+       .setSize(SMALL_BUTTON, SMALL_BUTTON)
+       .setImages(imgs_arrow_l)
+       .updateSize()
+       .moveTo(g1) ;  
+    
+    PImage[] imgs_arrow_r = {loadImage("images/arrow-r.png"), 
+                             loadImage("images/arrow-r_over.png"), 
+                             loadImage("images/arrow-r_down.png")};
+    int rt_px = dn_px + button_offsetX;
+    int rt_py = lt_py;
+    cp5.addButton("rt")
+       .setPosition(rt_px, rt_py)
+       .setSize(SMALL_BUTTON, SMALL_BUTTON)
+       .setImages(imgs_arrow_r)
+       .updateSize()
+       .moveTo(g1);      
+           
    //--------------------------------------------------------------//
    //                           Group 2                            //
    //--------------------------------------------------------------//
-   int g2_offsetY = display_py + display_height + 2*LARGE_BUTTON + 15;
+   int g2_offsetY = display_py + display_height + 4*LARGE_BUTTON + 15;
    Group g2 = cp5.addGroup("TOOLBAR")
                  .setPosition(0, g2_offsetY)
                  .setBackgroundColor(color(127,127,127, 50))
                  .moveTo(g1)   
                  ;
-   g2.setOpen(true);              
-   
-   //calculate how much space each button will be given
-   button_offsetX = LARGE_BUTTON + 1;
-   button_offsetY = SMALL_BUTTON + 1;   
-    
-   int ENTER_px = 0;
-   int ENTER_py = 0;
-   cp5.addButton("ENTER")
-      .setPosition(ENTER_px, ENTER_py)
-      .setSize(LARGE_BUTTON, SMALL_BUTTON)
-      .setCaptionLabel("ENTER")
-      .setColorBackground(BUTTON_BACKGROUND)
-      .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);    
-      
-   int TOOL1_px = ENTER_px + LARGE_BUTTON + 1 ;
-   int TOOL1_py = ENTER_py;
-   cp5.addButton("TOOL1")
-      .setPosition(TOOL1_px, TOOL1_py)
-      .setSize(LARGE_BUTTON, SMALL_BUTTON)
-      .setCaptionLabel("TOOL1")
-      .setColorBackground(BUTTON_BACKGROUND)
-      .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);   
-      
-   int TOOL2_px = TOOL1_px + LARGE_BUTTON + 1 ;
-   int TOOL2_py = TOOL1_py;
-   cp5.addButton("TOOL2")
-      .setPosition(TOOL2_px, TOOL2_py)
-      .setSize(LARGE_BUTTON, SMALL_BUTTON)
-      .setCaptionLabel("TOOL2")
-      .setColorBackground(BUTTON_BACKGROUND)
-      .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);
- 
-   int MOVEMENU_px = TOOL2_px + LARGE_BUTTON + 1 ;
-   int MOVEMENU_py = TOOL2_py;
-   cp5.addButton("MOVEMENU")
-      .setPosition(MOVEMENU_px, MOVEMENU_py)
-      .setSize(LARGE_BUTTON, SMALL_BUTTON)
-      .setCaptionLabel("MVMU")
-      .setColorBackground(BUTTON_BACKGROUND)
-      .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2); 
-      
-   int SETUP_px = MOVEMENU_px + LARGE_BUTTON + 1 ;
-   int SETUP_py = MOVEMENU_py;
-   cp5.addButton("SETUP")
-      .setPosition(SETUP_px, SETUP_py)
-      .setSize(LARGE_BUTTON, SMALL_BUTTON)
-      .setCaptionLabel("SETUP")
-      .setColorBackground(BUTTON_BACKGROUND)
-      .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);    
-      
-   int STATUS_px = SETUP_px + LARGE_BUTTON + 1 ;
-   int STATUS_py = SETUP_py;
-   cp5.addButton("STATUS")
-      .setPosition(STATUS_px, STATUS_py)
-      .setSize(LARGE_BUTTON, SMALL_BUTTON)
-      .setCaptionLabel("STATUS")
-      .setColorBackground(BUTTON_BACKGROUND)
-      .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);    
-      
-   int NO_px = STATUS_px + LARGE_BUTTON + 1 ;
-   int NO_py = STATUS_py;
-   cp5.addButton("NO")
-      .setPosition(NO_px, NO_py)
-      .setSize(LARGE_BUTTON, SMALL_BUTTON)
-      .setCaptionLabel("NO.")
-      .setColorBackground(BUTTON_BACKGROUND)
-      .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);   
-     
-   int POSN_px = NO_px + LARGE_BUTTON + 1 ;
-   int POSN_py = NO_py;
-   cp5.addButton("POSN")
-      .setPosition(POSN_px, POSN_py)
-      .setSize(LARGE_BUTTON, SMALL_BUTTON)
-      .setCaptionLabel("POSN")
-      .setColorBackground(BUTTON_BACKGROUND)
-      .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);
+   g2.setOpen(true);
    
    /**********************Numpad Block*********************/
    
-   int LINE_px = button_offsetX + 1;
-   int LINE_py = height - g2_offsetY - 2*button_offsetY - 1;
+   int LINE_px = button_offsetX + 8;
+   int LINE_py = 5*button_offsetY;
    cp5.addButton("LINE")
       .setPosition(LINE_px, LINE_py)
       .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -619,8 +532,8 @@ void gui(){
       .setColorCaptionLabel(BUTTON_TEXT)  
       .moveTo(g2);    
    
-   int PERIOD_px = LINE_px + LARGE_BUTTON + 1;
-   int PERIOD_py = LINE_py;
+   int PERIOD_px = LINE_px + button_offsetX;
+   int PERIOD_py = LINE_py - button_offsetY;
    cp5.addButton("PERIOD")
       .setPosition(PERIOD_px, PERIOD_py)
       .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -629,7 +542,7 @@ void gui(){
       .setColorCaptionLabel(BUTTON_TEXT)  
       .moveTo(g2);   
    
-   int COMMA_px = PERIOD_px + LARGE_BUTTON + 1;
+   int COMMA_px = PERIOD_px + button_offsetX;
    int COMMA_py = PERIOD_py;
    cp5.addButton("COMMA")
       .setPosition(COMMA_px, COMMA_py)
@@ -637,7 +550,27 @@ void gui(){
       .setCaptionLabel(",")
       .setColorBackground(BUTTON_BACKGROUND)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2); 
+      .moveTo(g2);
+      
+   int POSN_px = LINE_px + button_offsetX;
+   int POSN_py = LINE_py;
+   cp5.addButton("POSN")
+      .setPosition(POSN_px, POSN_py)
+      .setSize(LARGE_BUTTON, SMALL_BUTTON)
+      .setCaptionLabel("POSN")
+      .setColorBackground(BUTTON_BACKGROUND)
+      .setColorCaptionLabel(BUTTON_TEXT)  
+      .moveTo(g2);
+      
+   int IO_px = POSN_px + button_offsetX;
+   int IO_py = POSN_py;
+   cp5.addButton("IO")
+      .setPosition(IO_px, IO_py)
+      .setSize(LARGE_BUTTON, SMALL_BUTTON)
+      .setCaptionLabel("I/O")
+      .setColorBackground(BUTTON_BACKGROUND)
+      .setColorCaptionLabel(BUTTON_TEXT)  
+      .moveTo(g2);
    
    int NUM_px = LINE_px;
    int NUM_py = LINE_py - button_offsetY;
@@ -687,42 +620,74 @@ void gui(){
       .setCaptionLabel("ITEM")
       .setColorBackground(BUTTON_BACKGROUND)
       .setColorCaptionLabel(BUTTON_TEXT)  
+      .moveTo(g2);
+      
+   /***********************Util Block*************************/
+   
+   int ENTER_px = ITEM_px + 3*button_offsetX/2;
+   int ENTER_py = 0;
+   cp5.addButton("ENTER")
+      .setPosition(ENTER_px, ENTER_py)
+      .setSize(LARGE_BUTTON, SMALL_BUTTON)
+      .setCaptionLabel("ENTER")
+      .setColorBackground(BUTTON_BACKGROUND)
+      .setColorCaptionLabel(BUTTON_TEXT)  
       .moveTo(g2);    
+      
+   int TOOL1_px = ENTER_px;
+   int TOOL1_py = ENTER_py + button_offsetY;
+   cp5.addButton("TOOL1")
+      .setPosition(TOOL1_px, TOOL1_py)
+      .setSize(LARGE_BUTTON, SMALL_BUTTON)
+      .setCaptionLabel("TOOL1")
+      .setColorBackground(BUTTON_BACKGROUND)
+      .setColorCaptionLabel(BUTTON_TEXT)  
+      .moveTo(g2);   
+      
+   int TOOL2_px = TOOL1_px;
+   int TOOL2_py = TOOL1_py + button_offsetY;
+   cp5.addButton("TOOL2")
+      .setPosition(TOOL2_px, TOOL2_py)
+      .setSize(LARGE_BUTTON, SMALL_BUTTON)
+      .setCaptionLabel("TOOL2")
+      .setColorBackground(BUTTON_BACKGROUND)
+      .setColorCaptionLabel(BUTTON_TEXT)  
+      .moveTo(g2);
+ 
+   int MOVEMENU_px = TOOL2_px;
+   int MOVEMENU_py = TOOL2_py + button_offsetY;
+   cp5.addButton("MOVEMENU")
+      .setPosition(MOVEMENU_px, MOVEMENU_py)
+      .setSize(LARGE_BUTTON, SMALL_BUTTON)
+      .setCaptionLabel("MVMU")
+      .setColorBackground(BUTTON_BACKGROUND)
+      .setColorCaptionLabel(BUTTON_TEXT)  
+      .moveTo(g2); 
+      
+   int SETUP_px = MOVEMENU_px;
+   int SETUP_py = MOVEMENU_py + button_offsetY;
+   cp5.addButton("SETUP")
+      .setPosition(SETUP_px, SETUP_py)
+      .setSize(LARGE_BUTTON, SMALL_BUTTON)
+      .setCaptionLabel("SETUP")
+      .setColorBackground(BUTTON_BACKGROUND)
+      .setColorCaptionLabel(BUTTON_TEXT)  
+      .moveTo(g2);    
+      
+   int STATUS_px = SETUP_px;
+   int STATUS_py = SETUP_py + button_offsetY;
+   cp5.addButton("STATUS")
+      .setPosition(STATUS_px, STATUS_py)
+      .setSize(LARGE_BUTTON, SMALL_BUTTON)
+      .setCaptionLabel("STATUS")
+      .setColorBackground(BUTTON_BACKGROUND)
+      .setColorCaptionLabel(BUTTON_TEXT)  
+      .moveTo(g2);
    
    /********************Joint Control Block*******************/
    
-   int JOINT_px = 8*button_offsetX + 1;
-   int JOINT_py = height - g2_offsetY - 7*button_offsetY - 1;
-   String[] labels = {"-X (J1)", "+X (J1)",
-                      "-Y (J1)", "+Y (J1)",
-                      "-Z (J1)", "+Z (J1)",
-                      "-XR (J1)", "+XR (J1)",
-                      "-YR (J1)", "+YR (J1)",
-                      "-ZR (J1)", "+ZR (J1)"};
-   for(int i = 1; i <= 6; i += 1){
-     cp5.addButton("JOINT"+i+"_NEG")
-        .setPosition(JOINT_px, JOINT_py)
-        .setSize(LARGE_BUTTON, SMALL_BUTTON)
-        .setCaptionLabel(labels[(i-1)*2])
-        .setColorBackground(BUTTON_BACKGROUND)
-        .setColorCaptionLabel(BUTTON_TEXT)  
-        .moveTo(g2);
-     
-     JOINT_px += LARGE_BUTTON + 1; 
-     cp5.addButton("JOINT"+i+"_POS")
-        .setPosition(JOINT_px, JOINT_py)
-        .setSize(LARGE_BUTTON, SMALL_BUTTON)
-        .setCaptionLabel(labels[(i-1)*2 + 1])
-        .setColorBackground(BUTTON_BACKGROUND)
-        .setColorCaptionLabel(BUTTON_TEXT)  
-        .moveTo(g2);  
-        
-     JOINT_px = 8*button_offsetX + 1;
-     JOINT_py += SMALL_BUTTON + 1;
-   }
-   
-   int hd_px = 7*button_offsetX + 1;
-   int hd_py = height - g2_offsetY - 7*button_offsetY - 1;   
+   int hd_px = STATUS_px + 3*button_offsetX/2;
+   int hd_py = 0;   
    cp5.addButton("hd")
       .setPosition(hd_px, hd_py)
       .setSize(LARGE_BUTTON, SMALL_BUTTON)
@@ -780,6 +745,46 @@ void gui(){
       .setColorBackground(BUTTON_BACKGROUND)
       .setColorCaptionLabel(BUTTON_TEXT)  
       .moveTo(g2);
+      
+   int JOINT_px = SLOWDOWN_px + button_offsetX;
+   int JOINT_py = 0;
+   String[] labels = {" -X\n(J1)", " +X\n(J1)",
+                      " -Y\n(J1)", " +Y\n(J1)",
+                      " -Z\n(J1)", " +Z\n(J1)",
+                      "-XR\n(J1)", "+XR\n(J1)",
+                      "-YR\n(J1)", "+YR\n(J1)",
+                      "-ZR\n(J1)", "+ZR\n(J1)"};
+   
+   for(int i = 1; i <= 6; i += 1){
+     cp5.addButton("JOINT"+i+"_NEG")
+        .setPosition(JOINT_px, JOINT_py)
+        .setSize(LARGE_BUTTON, SMALL_BUTTON)
+        .setCaptionLabel(labels[(i-1)*2])
+        .setColorBackground(BUTTON_BACKGROUND)
+        .setColorCaptionLabel(BUTTON_TEXT)  
+        .moveTo(g2)
+        .getCaptionLabel()
+        .alignY(TOP);
+     
+     JOINT_px += LARGE_BUTTON + 1; 
+     cp5.addButton("JOINT"+i+"_POS")
+        .setPosition(JOINT_px, JOINT_py)
+        .setSize(LARGE_BUTTON, SMALL_BUTTON)
+        .setCaptionLabel(labels[(i-1)*2 + 1])
+        .setColorBackground(BUTTON_BACKGROUND)
+        .setColorCaptionLabel(BUTTON_TEXT)  
+        .moveTo(g2)
+        .getCaptionLabel()
+        .alignY(TOP);
+        
+     JOINT_px = SLOWDOWN_px + button_offsetX;
+     JOINT_py += SMALL_BUTTON + 1;
+   }
+   
+   List<Button> buttons = cp5.getAll(Button.class);
+   for(Button b : buttons){
+     b.getCaptionLabel().setFont(fnt_conB);
+   }
 }
 
 /* mouse events */
@@ -1713,22 +1718,22 @@ public void rt(){
 public void sf(){
    if (shift == OFF){ 
 	 shift = ON;
-     ((Button)cp5.get("sf")).setColorBackground(color(255, 0, 0));
+     ((Button)cp5.get("sf")).setColorBackground(BUTTON_BACKGROUND);
    }
    else{
      shift = OFF;
-     ((Button)cp5.get("sf")).setColorBackground(color(127, 127, 255));
+     ((Button)cp5.get("sf")).setColorBackground(COLOR_ACTIVE);
    }
 }
 
 public void st() {
    if (step == OFF){ 
      step = ON;
-     ((Button)cp5.get("st")).setColorBackground(color(255, 0, 0));
+     ((Button)cp5.get("st")).setColorBackground(BUTTON_BACKGROUND);
    }
    else{
      step = OFF;
-     ((Button)cp5.get("st")).setColorBackground(color(127, 127, 255));
+     ((Button)cp5.get("st")).setColorBackground(COLOR_ACTIVE);
    }
 }
 
@@ -3678,7 +3683,7 @@ public void updateScreen(color active, color normal){
        if (i == active_row && j != active_col){
          cp5.addTextarea(Integer.toString(index_contents))
            .setText(temp.get(j))
-           .setFont(fnt)
+           .setFont(fnt_con)
            .setPosition(next_px, next_py)
            .setSize(temp.get(j).length()*8 + 18, 20)
            .setLineHeight(18)
@@ -3691,7 +3696,7 @@ public void updateScreen(color active, color normal){
        else{
          cp5.addTextarea(Integer.toString(index_contents))
            .setText(temp.get(j))
-           .setFont(fnt)
+           .setFont(fnt_con)
            .setPosition(next_px, next_py)
            .setSize(temp.get(j).length()*8 + 18, 20)
            .setLineHeight(18)
