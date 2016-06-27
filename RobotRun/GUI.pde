@@ -88,7 +88,7 @@ Textlabel fn_info, num_info;
 String workingText; // when entering text or a number
 String workingTextSuffix;
 boolean speedInPercentage;
-final int ITEMS_TO_SHOW = 8; // how many programs/ instructions to display on screen
+final int ITEMS_TO_SHOW = 10; // how many programs/ instructions to display on screen
 int curFrameIdx = -1;
 // Used to keep track a specific point in space
 PVector ref_point;
@@ -1717,23 +1717,24 @@ public void rt(){
 //toggle shift state and button highlight
 public void sf(){
    if (shift == OFF){ 
-	 shift = ON;
+	   shift = ON;
+     ((Button)cp5.get("sf")).setColorBackground(COLOR_ACTIVE);
+   } else{
+     shift = OFF;
      ((Button)cp5.get("sf")).setColorBackground(BUTTON_BACKGROUND);
    }
-   else{
-     shift = OFF;
-     ((Button)cp5.get("sf")).setColorBackground(COLOR_ACTIVE);
-   }
+   
+   updateScreen(color(255, 0, 0), color(0));
 }
 
 public void st() {
    if (step == OFF){ 
      step = ON;
-     ((Button)cp5.get("st")).setColorBackground(BUTTON_BACKGROUND);
+     ((Button)cp5.get("st")).setColorBackground(COLOR_ACTIVE);
    }
    else{
      step = OFF;
-     ((Button)cp5.get("st")).setColorBackground(COLOR_ACTIVE);
+     ((Button)cp5.get("st")).setColorBackground(BUTTON_BACKGROUND);
    }
 }
 
@@ -3781,31 +3782,53 @@ public void updateScreen(color active, color normal){
    
    if (mode == PROGRAM_NAV) {
      
-     text = "F2: CREATE     F3: DELETE";
+     // F2, F3
+     text = "                                                                              CREATE                     DELETE";
    } else if (mode == INSTRUCTION_NAV) {
      
-     text = "SHIFT+F1: NEW PT     F4: CHOICE     F5: VIEW REG     SHIFT+F5: OVERWRITE";
+     // F1, F4, F5
+     if (shift == ON) {
+       text = "                                        NEW PT                                                                                                 CHOICE                  OVERWRITE";
+     } else  {
+       text = "                                       NEW INST                                                                                              CHOICE                    VIEW REG";
+     }
    } else if (mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
      
-     text = "F1: SET     SHIFT+F1: DETAIL     F2: RESET     F3: SWITCH";
+     // F1, F2, F3
+     if (shift == ON) {
+       text = "                                         DETAIL                      RESET                      SWITCH";
+     } else {
+       text = "                                            SET                          RESET                      SWITCH";
+     }
    } else if (mode == FRAME_DETAIL) {
      
-     text = "F2: METHOD";
+     // F2
+     text = "                                                                              METHOD";
    } else if (mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE) {
      
-     text = "F1: SAV REF PT     SHIFT+F1: RMV REF PT     SHIFT+F5: RECORD";
+     // F1, F5
+     if (shift == ON) {
+       text = "                                    RMV REF PT                                                                                                                                 RECORD";
+     } else {
+       text = "                                    SAV REF PT                                                                                                                                  RECORD";
+     }
    } else if (mode == ACTIVE_FRAMES) {
      
-     text = "F1: LIST     F2: RESET";
+     // F1, F2
+     text = "                                            LIST                          RESET";
    } else if (mode == VIEW_REG || mode == VIEW_POS_REG_C || mode == VIEW_POS_REG_J) {
      
-     text = "F1: EDIT     F2: SWITCH";
+     // F1, F2
+     text = "                                            EDIT                         SWITCH";
    } else if (mode == INPUT_COMMENT_U) {
-     text = "F1: ABCDEF     F2: GHIJKL     F3: MNOPQR     F4: STUVWX     F5: YZ_@*.";
+     
+     // F1 - F5
+     text = "                                         ABCDEF                     GHIJKL                    MNOPQR                   STUVWX                    YZ_@*.";
    } else if (mode == INPUT_COMMENT_L) {
-     text = "F1: abcdef     F2: ghijkl     F3: mnopqr     F4: stuvwx     F5: yz_@*.";
+     
+     // F1 - F5
+     text = "                                          abcdef                         ghijkl                        mnopqr                      stuvwx                       yz_@*.";
    }
-   
    
    if (text != null) {
      fn_info.setText(text)

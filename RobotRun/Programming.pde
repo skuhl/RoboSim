@@ -278,7 +278,7 @@ public int addProgram(Program p) {
   }
 }
 
-public abstract class Instruction {}
+public class Instruction { /* Serves as a blank instruction */ }
 
 public final class MotionInstruction extends Instruction  {
   private int motionType;
@@ -445,8 +445,6 @@ public class ToolInstruction extends Instruction {
     return type + "[" + bracket + "]=" + (setToolStatus == ON ? "ON" : "OFF");
   }
 } // end ToolInstruction class
-
-
 
 public class CoordinateFrame {
   private PVector origin = new PVector();
