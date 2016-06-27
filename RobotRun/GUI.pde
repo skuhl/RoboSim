@@ -1703,7 +1703,7 @@ public void rt(){
            if (len <= 16 && workingText.charAt(len - 1) != '\0') { workingText += '\0'; }
            updateComment();
          
-           active_col = min(active_col + 1, contents.get(active_row).size() - 1);
+           active_col = max(0, min(active_col + 1, contents.get(active_row).size() - 1));
            updateScreen(color(255, 0, 0), color(0));
          }
          

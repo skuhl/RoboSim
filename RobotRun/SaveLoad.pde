@@ -733,7 +733,7 @@ public int loadRegisterBytes(File src) {
       
       String c = dataIn.readUTF();
       // Null comments are saved as ""
-      if (c == "") { c = null; }
+      if (c.equals("")) { c = null; }
       
       REG[reg] = new Register(c, v);
     }
