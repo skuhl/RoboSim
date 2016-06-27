@@ -74,8 +74,7 @@ void createTestProgram() {
   currentProgram = program4;
   
   for (int n = 0; n < 22; n++) {
-     programs.add(new Program("Xtra" + Integer.toString(n)));
-     
+     programs.add(new Program("Xtra" + Integer.toString(n)));  
   }
   saveState();
 } // end createTestProgram()
