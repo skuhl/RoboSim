@@ -99,7 +99,7 @@ int activeToolFrame = -1;
 
 // display list of programs or motion instructions
 ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>();
-// display options for an element in a motion instruction
+// Display otions for a number of menus
 ArrayList<String> options = new ArrayList<String>();
 // store numbers pressed by the user
 ArrayList<Integer> nums = new ArrayList<Integer>(); 
@@ -1858,7 +1858,12 @@ public void f1() {
         loadInputRegisterCommentMethod();
       } else if (active_col == 2) {
         // Bring up float input menu
-        workingText = "";
+        if (REG[active_index].value != null) {
+          workingText = Float.toString(REG[active_index].value);
+        } else {
+          workingText = "0.0";
+        }
+        
         loadInputRegisterValueMethod();
       }
       
@@ -3109,7 +3114,6 @@ public void COORD() {
   } else {  
     // Update the coordinate mode
     updateCoordinateMode(armModel);
-    liveSpeed = 0.1;
   }
 }
 
