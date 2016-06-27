@@ -1275,13 +1275,13 @@ public void up(){
          options = new ArrayList<String>();
          clearOptions();
          
-         if (shift == ON && text_render_start > 0) {
+         if (shift == ON && programs.size() > ITEMS_TO_SHOW) {
            // Move display frame up an entire screen's display length
            int t = text_render_start;
            
            text_render_start = max(0, t - (ITEMS_TO_SHOW - 1));
            active_program = active_program + min(0, text_render_start - t);
-         } else if (shift == OFF && active_program > 0) {
+         } else {
            // Move up a single row
            int i = active_program,
                r = active_row;
@@ -1303,13 +1303,13 @@ public void up(){
          options = new ArrayList<String>();
          clearOptions();
          
-         if (shift == ON && text_render_start > 0) {
+         if (shift == ON && programs.get(active_program).getInstructions().size() > ITEMS_TO_SHOW) {
            // Move display frame up an entire screen's display length
            int t = text_render_start;
            
            text_render_start = max(0, t - (ITEMS_TO_SHOW - 1));
            active_instruction = active_instruction + min(0, text_render_start - t);
-         } else if (shift == OFF && active_instruction > 0) {
+         } else {
            // Move up a single row
            int i = active_instruction,
                r = active_row;
@@ -1317,9 +1317,6 @@ public void up(){
            active_instruction = max(0, i - 1);
            active_row = max(0, r + min(active_instruction - i, 0));
            text_render_start = text_render_start + min((active_instruction - i) - (active_row - r), 0);
-           /*active_row -= (active_row >= 1) ? 1 : 0;
-           if(active_instruction < text_render_start)
-             text_render_start -= 1;*/
          }
          
          active_col = max( 0, min( active_col, contents.get(active_row).size() - 1 ) );
@@ -1335,13 +1332,13 @@ public void up(){
       case VIEW_POS_REG_J:
       case VIEW_POS_REG_C:
          
-         if (shift == ON && text_render_start > 0) {
+         if (shift == ON) {
            // Move display frame up an entire screen's display length
            int t = text_render_start;
            
            text_render_start = max(0, t - (ITEMS_TO_SHOW - 2));
            active_index = active_index + min(0, text_render_start - t);
-         } else if (shift == OFF && active_index > 0) {
+         } else {
            // Move up a single row
            int i = active_index,
                r = active_row;
@@ -1416,13 +1413,13 @@ public void dn(){
          
          size = programs.size();
          
-         if (shift == ON && ( (text_render_start + ITEMS_TO_SHOW) < size )) {
+         if (shift == ON && size > ITEMS_TO_SHOW) {
            // Move display frame down an entire screen's display length
            int t = text_render_start;
            
            text_render_start = min(text_render_start + ITEMS_TO_SHOW - 1, size - ITEMS_TO_SHOW);
            active_program = active_program + max(0, text_render_start - t);
-         } else if (shift == OFF && active_program < (size - 1)) {
+         } else {
            // Move down one row
            int i = active_program,
                r = active_row;
@@ -1446,13 +1443,13 @@ public void dn(){
          
          size = programs.get(active_program).getInstructions().size();
         
-         if (shift == ON && ( (text_render_start + ITEMS_TO_SHOW) < size )) {
+         if (shift == ON && size > ITEMS_TO_SHOW) {
            // Move display frame down an entire screen's display length
            int t = text_render_start;
            
            text_render_start = min(text_render_start + ITEMS_TO_SHOW - 1, size - ITEMS_TO_SHOW);
            active_instruction = active_instruction + max(0, text_render_start - t);
-         } else if (shift == OFF && active_instruction < (size - 1)) {
+         } else {
            // Move down one row
            int i = active_instruction,
                r = active_row;
@@ -1460,9 +1457,6 @@ public void dn(){
            active_instruction = min(i + 1, size - 1);
            active_row = min(r + max(0, (active_instruction - i)), contents.size() - 1);
            text_render_start = text_render_start + max(0, (active_instruction - i) - (active_row - r));
-           /*active_row += (active_row < ITEMS_TO_SHOW-1) ? 1 : 0;
-           if(active_instruction > text_render_start+ITEMS_TO_SHOW-1)
-             text_render_start += 1;*/
          }
           //<>//
          loadInstructions(active_program);
@@ -1479,13 +1473,13 @@ public void dn(){
       
         size = (mode == VIEW_REG) ? REG.length : POS_REG.length;
         
-        if (shift == ON && ( (text_render_start + ITEMS_TO_SHOW) < size )) {
+        if (shift == ON) {
           // Move display frame down an entire screen's display length
           int t = text_render_start;
           
           text_render_start = min(text_render_start + ITEMS_TO_SHOW - 2, size - (ITEMS_TO_SHOW - 1));
           active_index = active_index + max(0, text_render_start - t);
-        } else if (shift == OFF && active_index < (size - 1)) {
+        } else {
           // Move down one row
           int i = active_index,
               r = active_row;
@@ -2318,34 +2312,35 @@ public void hd() {
 }
 
 public void fd() {
+  
   if (shift == ON) {
     currentProgram = programs.get(active_program);
-    if (step == OFF){
-      currentInstruction = 0;
-      executingInstruction = false;
-      execSingleInst = false;
-      doneMoving = false;
-    }
-    else {
+    executingInstruction = false;
+    doneMoving = false;
+    
+    if (step == ON) {
+      // Execute a single instruction
       currentInstruction = active_instruction;
-      executingInstruction = false;
       execSingleInst = true;
-      doneMoving = false;
-      //Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
-      //if (ins instanceof MotionInstruction) {
-      //  singleInstruction = (MotionInstruction)ins;
-      //  setUpInstruction(programs.get(active_program), armModel, singleInstruction);
+      Instruction ins = currentProgram.getInstructions().get(active_instruction);
       
-      //  if (active_instruction < programs.get(active_program).getInstructions().size()-1){
-      //    active_instruction = (active_instruction+1);
-      //  }
+      if (ins instanceof MotionInstruction) {
+        singleInstruction = (MotionInstruction)ins;
+        setUpInstruction(currentProgram, armModel, singleInstruction);
+      }
       
-      //  loadInstructions(active_program);
-      //  updateScreen(color(255,0,0), color(0));
-      //}
+      if (active_instruction < currentProgram.getInstructions().size() - 1) {
+        shift = OFF;
+        dn();
+        shift = ON;
+      }
+      
+    } else {
+      // Execute the whole program
+      currentInstruction = 0;
+      execSingleInst = false;
     }
   }
-  //shift = OFF;
 }
 
 public void bd(){
@@ -2353,19 +2348,28 @@ public void bd(){
   if (shift == ON && step == ON && active_instruction > 0) {
     
     currentProgram = programs.get(active_program);
+    executingInstruction = false;
+    doneMoving = false;
+    currentInstruction = active_instruction - 1;
+    execSingleInst = true;
+    
     Instruction ins = programs.get(active_program).getInstructions().get(active_instruction - 1);
     
     if (ins instanceof MotionInstruction) {
-      
+      // Move backwards
       singleInstruction = (MotionInstruction)ins;
-      setUpInstruction(programs.get(active_program), armModel, singleInstruction);
+      setUpInstruction(currentProgram, armModel, singleInstruction);
+    } else if (ins instanceof ToolInstruction) {
       
-      if (active_instruction > 0)
-        active_instruction = (active_instruction-1);
-      
-      loadInstructions(active_program);
-      updateScreen(color(255,0,0), color(0));
+      ToolInstruction tIns = (ToolInstruction)ins;
+      ToolInstruction inverse = new ToolInstruction(tIns.type, tIns.bracket, (tIns.setToolStatus == ON) ? OFF : ON);
+      // Reverse the tool status applied
+      inverse.execute();
     }
+    
+    shift = OFF;
+    up();
+    shift = ON;
   }
 }
 
