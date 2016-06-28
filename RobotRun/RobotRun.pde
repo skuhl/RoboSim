@@ -114,6 +114,13 @@ public void draw(){
 
   background(127);
   
+  pushMatrix();
+  resetMatrix();
+  applyModelRotation(armModel, true);
+  // Keep track of the old coordinate frame of the armModel
+  armModel.oldEETMatrix = getTransformationMatrix();
+  popMatrix();
+  
   //execute arm movement
   if (!doneMoving){
     //run program
@@ -124,13 +131,6 @@ public void draw(){
     intermediatePositions.clear();
     armModel.executeLiveMotion();
   }
-  
-  pushMatrix();
-  resetMatrix();
-  applyModelRotation(armModel, true);
-  // Keep track of the old coordinate frame of the armModel
-  armModel.oldEETMatrix = getTransformationMatrix();
-  popMatrix();
   
   hint(ENABLE_DEPTH_TEST);
   background(255);

@@ -10,7 +10,7 @@ boolean executingInstruction = false;
 
 int errorCounter;
 String errorText;
-public static final boolean COLLISION_DISPLAY = false;
+public static final boolean COLLISION_DISPLAY = true;
 
 /**
  * Creates some programs for testing purposes.
@@ -143,6 +143,10 @@ void showMainDisplayText() {
   if (armModel.held != null) {
     fill(200, 0, 0);
     text("Object held", width - 20, 120);
+    
+    float[] pos = armModel.held.hit_box.position();
+    String obj_pos = String.format("(%f, %f, %f)", pos[0], pos[1], pos[1]);
+    text(obj_pos, width - 20, 140);
   }
   
   textAlign(LEFT);
