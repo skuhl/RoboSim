@@ -48,6 +48,10 @@ public class Box extends Shape {
   public final PVector dimensions;
   public float[][] transform;
   
+  /* NOTE: Box Shapes will use the current Transformation Matrix on
+   * the Procssing stack to define both the center of the Box as well
+   * as the Box's local coordinate system. */
+  
   /* Create a normal box */
   public Box(float wdh, float hgt, float dph, color f, color o) {
     super(f, o);

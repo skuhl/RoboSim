@@ -3807,10 +3807,10 @@ public void updateScreen(color cDefault, color cHighlight){
        funct[0] = "[New Pt]";
        funct[1] = "";
        funct[2] = "";
-       funct[3] = "";
+       funct[3] = "[Edit]";
        funct[4] = "[Overwrite]";
      } else {
-       funct[0] = "";
+       funct[0] = "[New Inst]]";
        funct[1] = "";
        funct[2] = "";
        funct[3] = "[Edit]";
@@ -3820,8 +3820,8 @@ public void updateScreen(color cDefault, color cHighlight){
      // F1, F2, F3
      if(shift == ON){
        funct[0] = "[Detail]";
-       funct[1] = "";
-       funct[2] = "";
+       funct[1] = "[Reset]";
+       funct[2] = "[Switch]";
        funct[3] = "";
        funct[4] = "";
      } else {
@@ -3851,7 +3851,7 @@ public void updateScreen(color cDefault, color cHighlight){
        funct[1] = "";
        funct[2] = "";
        funct[3] = "";
-       funct[4] = "";
+       funct[4] = "[Record]";
      }
    } else if(mode == ACTIVE_FRAMES){
      // F1, F2
@@ -4387,8 +4387,16 @@ public void viewRegisters(){
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
-/** TODO comment */
-public void loadInputRegisterValueMethod(){
+/**
+* This method transitions to the INPUT_FLOAT mode, where the user will
+ * be prompted to innput a floating-point value to be inserted into the
+ * currently selected register from the VIEW_REG mode.
+ * The value is inputted using the numpad on the vitual Pendant along
+ * with the ',' and '-' buttons. In the INPUT_FLOAT mode, the BKSPC
+ * button functions as the backspace key and the RIGHT button will
+ * function like the delete key when shift is set to ON.
+ */
+public void loadInputRegisterValueMethod() {
   options = new ArrayList<String>();
   options.add("Input a value using the keypad");
   options.add("");
@@ -4400,7 +4408,13 @@ public void loadInputRegisterValueMethod(){
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
-/** TODO comment */
+/**
+ * This method will transition to the INPUT_POINT_C or INPUT_POINT_J modes
+ * based whether the current mode is VIEW_REG_C or VIEW_REG_J. In either
+ * mode, the user will be prompted to input 6 floating-point values (X, Y,
+ * Z, W, P, R or J1 - J6 for INPUT_POINT_C or INPUT_POINT_J respectively).
+ * The input method is similar to inputting the value in DIRECT_ENTRY mode.
+ */
 public void loadInputRegisterPointMethod(){
   contents = new ArrayList<ArrayList<String>>();
   
@@ -4449,8 +4463,20 @@ public void loadInputRegisterPointMethod(){
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
-/** TODO comment */
-public void loadInputRegisterCommentMethod(){
+/**
+ * This method transitions to the INPUT_COMMENT mode, which allows the user to input
+ * a comment consisting of A-Z, a-z, 0-9, _, @, ., and * characters.
+ * The current comment entry will be stored in the global field workingText.
+ * The user moves through the comment character by character with the LEFT and RIGHT
+ * buttons, though, the comment will only increase in length to the right and only
+ * if the current last character is not blank. The maximum length of a comment is 16.
+ * The function buttons will each cycle through a separate sets of letters and
+ * override the currently highlighted comment index. The numpad can be used to input
+ * 0-9 in the comment as well. The UP and DOWN buttons will toggle the letter sets
+ * betweeen upper case and lower case (indicated in the options menu by the
+ * highlighted row).
+ */
+public void loadInputRegisterCommentMethod() {
   contents = new ArrayList<ArrayList<String>>();
   options = new ArrayList<String>();
   
@@ -4488,7 +4514,12 @@ public void loadInputRegisterCommentMethod(){
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
-/** TODO comment */
+/**
+ * This method will take the current value of workingText and place
+ * each individual character in a separate column of the content's
+ * third row. This function is used to update the comment display
+ * whenever the user modifies the comment in the INPUT COMMENT mode.
+ */
 public void updateComment(){
   
   ArrayList<String> line = new ArrayList<String>();
