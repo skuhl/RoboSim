@@ -421,7 +421,7 @@ public class ToolInstruction extends Instruction {
       // Check if the Robot is placing an object or picking up and object
       if (armModel.activeEndEffector == ENDEF_CLAW || armModel.activeEndEffector == ENDEF_SUCTION) {
         
-        if (setToolStatus == ON & armModel.held == null) {
+        if (setToolStatus == ON && armModel.held == null) {
           
           PVector ee_pos = armModel.getEEPos();
           

@@ -1452,7 +1452,7 @@ public void dn(){
          if(DISPLAY_TEST_OUTPUT){
            System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
                              active_row, active_col, active_instruction, text_render_start);
-         }
+         } //<>//
          
          break;
       case VIEW_REG:
@@ -1584,7 +1584,7 @@ public void rt(){
           rt();
           break;
       case MENU_NAV:
-          if(active_row == 5){ // SETUP
+          if(active_row == 5){ // SETUP //<>//
             contents = new ArrayList<ArrayList<String>>();
             
             contents.add( newLine("1 Prog Select (NA)") );

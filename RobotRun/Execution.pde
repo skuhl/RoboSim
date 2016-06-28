@@ -941,7 +941,7 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
  */
 boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   //stop executing if no valid program is selected or we reach the end of the program
-  if (program == null || currentInstruction >= program.getInstructions().size()){
+  if (program == null || currentInstruction >= program.getInstructions().size()) {
     return true;
   }
   
@@ -951,44 +951,52 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   //motion instructions
   if (ins instanceof MotionInstruction){
     MotionInstruction instruction = (MotionInstruction)ins;
+    
     if (instruction.getUserFrame() != activeUserFrame){
       setError("ERROR: Instruction's user frame is different from currently active user frame.");
       return true;
     }
+    
     //start a new instruction
-    if (!executingInstruction){
+    if (!executingInstruction) {
       boolean setup = setUpInstruction(program, model, instruction);
-      if(!setup){ return true; }
+      if (!setup) { return true; }
       else executingInstruction = true;
     }
     //continue current instruction
     else {
-      if (instruction.getMotionType() == MTYPE_JOINT){
+      if (instruction.getMotionType() == MTYPE_JOINT) {
         executingInstruction = !(model.interpolateRotation(instruction.getSpeedForExec(model)));
       }
       else{
         executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
       }
       
-      //move to next instruction after current is finished
-      if (!executingInstruction){
+      // Move to next instruction after current is finished
+      if (!executingInstruction) {
         currentInstruction++;
-        if(singleInst){ return true; }
+        if (singleInst) { return true; }
       }
     }
   }
   //tool instructions
-  else if (ins instanceof ToolInstruction){
+  else if (ins instanceof ToolInstruction) {
     ToolInstruction instruction = (ToolInstruction)ins;
     instruction.execute();
     currentInstruction++;
   }
   //frame instructions
-  else if (ins instanceof FrameInstruction){
+  else if (ins instanceof FrameInstruction) {
     FrameInstruction instruction = (FrameInstruction)ins;
     instruction.execute();
     currentInstruction++;
   }//end of instruction type check
+  
+  // Move to next instruction after current is finished
+  if (!executingInstruction) {
+    currentInstruction++;
+    if (singleInst) { return true; }
+  }
   
   return false;
 }//end executeProgram
