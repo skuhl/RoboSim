@@ -945,7 +945,7 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
  */
 boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   //stop executing if no valid program is selected or we reach the end of the program
-  if (program == null || currentInstruction >= program.getInstructions().size()) {
+  if (program == null || currentInstruction < 0 || currentInstruction >= program.getInstructions().size()) {
     return true;
   }
   
@@ -988,19 +988,17 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
     ToolInstruction instruction = (ToolInstruction)ins;
     instruction.execute();
     currentInstruction++;
+    
+    if (singleInst) { return true; }
   }
   //frame instructions
   else if (ins instanceof FrameInstruction) {
     FrameInstruction instruction = (FrameInstruction)ins;
     instruction.execute();
     currentInstruction++;
-  }//end of instruction type check
-  
-  // Move to next instruction after current is finished
-  if (!executingInstruction) {
-    currentInstruction++;
+    
     if (singleInst) { return true; }
-  }
+  }//end of instruction type check
   
   return false;
 }//end executeProgram

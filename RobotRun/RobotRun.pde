@@ -13,6 +13,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 final int OFF = 0, ON = 1;
+// Conversion constant from the radians to degrees
+//final float RAD_TO_DEG = (180f / PI);
 
 ArmModel armModel;
 Model eeModelSuction;

@@ -114,9 +114,9 @@ public class Point  {
     entries[0] = String.format("X: %4.2f", pos.x);
     entries[1] = String.format("Y: %4.2f", pos.y);
     entries[2] = String.format("Z: %4.2f", pos.z);
-    entries[3] = String.format("W: %4.2f", angles.x);
-    entries[4] = String.format("P: %4.2f", angles.y);
-    entries[5] = String.format("R: %4.2f", angles.z);
+    entries[3] = String.format("W: %4.2f", angles.x * RAD_TO_DEG);
+    entries[4] = String.format("P: %4.2f", angles.y * RAD_TO_DEG);
+    entries[5] = String.format("R: %4.2f", angles.z * RAD_TO_DEG);
     
     return entries;
   }
@@ -363,7 +363,7 @@ public final class MotionInstruction extends Instruction  {
      }
      if (globalRegister) me += "PR[";
      else me += "P[";
-     me += Integer.toString(register)+"] ";
+     me += Integer.toString(register + 1)+"] ";
      if (motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "%";
      else me += Integer.toString((int)speed) + "mm/s";
      if (termination == 0) me += "FINE";
@@ -417,6 +417,7 @@ public class ToolInstruction extends Instruction {
     {
       
       armModel.endEffectorStatus = setToolStatus;
+      System.out.printf("EE: %d\n", armModel.endEffectorStatus);
       
       // Check if the Robot is placing an object or picking up and object
       if (armModel.activeEndEffector == ENDEF_CLAW || armModel.activeEndEffector == ENDEF_SUCTION) {
