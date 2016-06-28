@@ -86,7 +86,7 @@ void createTestProgram() {
 void showMainDisplayText() {
   fill(0);
   textAlign(RIGHT, TOP);
-  String coordFrame = "CoordinateFrame: ";
+  String coordFrame = "Coordinate Frame: ";
   
   switch(curCoordFrame) {
     case COORD_JOINT:

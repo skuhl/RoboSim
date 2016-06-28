@@ -94,7 +94,7 @@ public class Point  {
     String[] entries = new String[6];
     
     for (int idx = 0; idx < joints.length; ++idx) {
-      entries[idx] = String.format("J%d: %4.2f", (idx + 1), joints[idx]);
+      entries[idx] = String.format("J%d: %4.2f", (idx + 1), joints[idx] * RAD_TO_DEG);
     }
     
     return entries;
@@ -111,6 +111,7 @@ public class Point  {
     PVector angles = quatToEuler(ori);
     
     String[] entries = new String[6];
+    
     entries[0] = String.format("X: %4.2f", pos.x);
     entries[1] = String.format("Y: %4.2f", pos.y);
     entries[2] = String.format("Z: %4.2f", pos.z);

@@ -2188,12 +2188,14 @@ public void f5(){
           options = new ArrayList<String>();
           options.add("Data of the point in this register (press ENTER to exit):");
           if(castIns.getMotionType() != MTYPE_JOINT){
-            options.add("x: " + p.pos.x + "  y: " + p.pos.y + "  z: " + p.pos.z);
+            PVector wPos = convertNativeToWorld(p.pos);
+            options.add( String.format("X: %5.4f  Y: %5.4f  Z: %5.4f", wPos.x, wPos.y, wPos.z) );
             PVector wpr = quatToEuler(p.ori);
-            options.add("w: " + wpr.x + "  p: " + wpr.y + "  r: " + wpr.z);
+            options.add( String.format("W: %5.4f  P: %5.4f  R: %5.4f", (wpr.x * RAD_TO_DEG), (wpr.y * RAD_TO_DEG), (wpr.z * RAD_TO_DEG)) );
           } else {
-            options.add("j1: " + p.joints[0] + "  j2: " + p.joints[1] + "  j3: " + p.joints[2]);
-            options.add("j4: " + p.joints[3] + "  j5: " + p.joints[4] + "  j6: " + p.joints[5]);
+            
+            options.add( String.format("J1: %5.4f  J2: %5.4f  J3: %5.4f", (p.joints[0] * RAD_TO_DEG), (p.joints[1] * RAD_TO_DEG), (p.joints[2] * RAD_TO_DEG)) );
+            options.add( String.format("J4: %5.4f  J5: %5.4f  J6: %5.4f", (p.joints[3] * RAD_TO_DEG), (p.joints[4] * RAD_TO_DEG), (p.joints[5] * RAD_TO_DEG)) );
           }
           mode = VIEW_REGISTER;
           which_option = 0;
@@ -2976,7 +2978,6 @@ public void ENTER(){
       try {
         for(int idx = 0; idx < inputs.length; ++idx){
           String inputStr = contents.get(idx + 1).get(0);
-          //System.out.printf("_%s_\n", inputStr);
           inputs[idx] = Float.parseFloat( inputStr.substring(which_option, inputStr.length()) );
         }
       } catch (NumberFormatException NFEx){
@@ -2990,7 +2991,7 @@ public void ENTER(){
       if(mode == INPUT_POINT_J){
         // Bring angles within range: (0, TWO_PI)
         for(int idx = 0; idx < inputs.length; ++idx){
-          jointAngles[idx] = clampAngle(inputs[idx]);
+          jointAngles[idx] = clampAngle(inputs[idx] * DEG_TO_RAD);
         }
         /* Calculate the position and orientation of the Robot Arm given the joint angles */
         position = armModel.getEEPos(jointAngles);
