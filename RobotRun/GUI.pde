@@ -104,7 +104,7 @@ ArrayList<String> options = new ArrayList<String>();
 ArrayList<Integer> nums = new ArrayList<Integer>(); 
 // which element is on focus now?
 int active_row = 0,
-    active_col = 0,
+    active_col = -1,
     // Keep track of focused element in a displayed list
     active_index = 0,
     // Used for drawing a subsection of a list on the screen
@@ -305,80 +305,61 @@ void gui(){
 
     /********************Function Row********************/
     
-    int pr_px = 10;
-    int pr_py = display_py + display_height + 2;   
-    cp5.addButton("pr")
-       .setPosition(pr_px, pr_py + 15)
-       .setSize(LARGE_BUTTON, SMALL_BUTTON)
-       .setCaptionLabel("PREV")
-       .setColorBackground(BUTTON_DEFAULT)
-       .setColorCaptionLabel(BUTTON_TEXT)  
-       .moveTo(g1);     
-      
-    int f1_px = pr_px + button_offsetX + 25;
-    int f1_py = pr_py;   
+    int f1_px = display_px;
+    int f1_py = display_py + display_height + 2;
+    int f_width = display_width/5 - 1;
     cp5.addButton("f1")
        .setPosition(f1_px, f1_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
+       .setSize(f_width, LARGE_BUTTON)
        .setCaptionLabel("F1")
        .setColorBackground(BUTTON_DEFAULT)
        .setColorCaptionLabel(BUTTON_TEXT)  
        .moveTo(g1);     
          
-    int f2_px = f1_px + button_offsetX + 25;
+    int f2_px = f1_px + f_width + 1;
     int f2_py = f1_py;
     cp5.addButton("f2")
        .setPosition(f2_px, f2_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
+       .setSize(f_width, LARGE_BUTTON)
        .setCaptionLabel("F2")
        .setColorBackground(BUTTON_DEFAULT)
        .setColorCaptionLabel(BUTTON_TEXT)  
        .moveTo(g1);  
        
-    int f3_px = f2_px + button_offsetX + 25;
+    int f3_px = f2_px + f_width + 1;
     int f3_py = f2_py;
     cp5.addButton("f3")
        .setPosition(f3_px, f3_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
+       .setSize(f_width, LARGE_BUTTON)
        .setCaptionLabel("F3")
        .setColorBackground(BUTTON_DEFAULT)
        .setColorCaptionLabel(BUTTON_TEXT)  
        .moveTo(g1);    
        
-    int f4_px = f3_px + button_offsetX + 25;
+    int f4_px = f3_px + f_width + 1;
     int f4_py = f3_py;   
     cp5.addButton("f4")
        .setPosition(f4_px, f4_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
+       .setSize(f_width, LARGE_BUTTON)
        .setCaptionLabel("F4")
        .setColorBackground(BUTTON_DEFAULT)
        .setColorCaptionLabel(BUTTON_TEXT)  
        .moveTo(g1);   
       
-    int f5_px = f4_px + button_offsetX + 25;
+    int f5_px = f4_px + f_width + 1;
     int f5_py = f4_py;   
     cp5.addButton("f5")
        .setPosition(f5_px, f5_py)
-       .setSize(LARGE_BUTTON, LARGE_BUTTON)
+       .setSize(f_width, LARGE_BUTTON)
        .setCaptionLabel("F5")
-       .setColorBackground(BUTTON_DEFAULT)
-       .setColorCaptionLabel(BUTTON_TEXT)  
-       .moveTo(g1);
-       
-    int ne_px = f5_px + button_offsetX + 25;
-    int ne_py = f5_py;   
-    cp5.addButton("ne")
-       .setPosition(ne_px, ne_py + 15)
-       .setSize(LARGE_BUTTON, SMALL_BUTTON)
-       .setCaptionLabel("NEXT")
        .setColorBackground(BUTTON_DEFAULT)
        .setColorCaptionLabel(BUTTON_TEXT)  
        .moveTo(g1);
        
     /**********************Step/Shift Row**********************/
     
-    int st_px = pr_px + 25;
-    int st_py = pr_py + button_offsetY + 20;   
+    int st_px = f1_px + 25;
+    int st_py = f1_py + button_offsetY + 20;   
     cp5.addButton("st")
        .setPosition(st_px, st_py)
        .setSize(LARGE_BUTTON, LARGE_BUTTON)
@@ -443,6 +424,26 @@ void gui(){
        .setPosition(sf_px, sf_py)
        .setSize(LARGE_BUTTON, LARGE_BUTTON)
        .setCaptionLabel("SHIFT")
+       .setColorBackground(BUTTON_DEFAULT)
+       .setColorCaptionLabel(BUTTON_TEXT)  
+       .moveTo(g1);
+       
+    int pr_px = mu_px;
+    int pr_py = mu_py + button_offsetY;   
+    cp5.addButton("pr")
+       .setPosition(pr_px, pr_py + 15)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setCaptionLabel("PREV")
+       .setColorBackground(BUTTON_DEFAULT)
+       .setColorCaptionLabel(BUTTON_TEXT)  
+       .moveTo(g1);
+       
+    int ne_px = fn_px;
+    int ne_py = mu_py + button_offsetY;
+    cp5.addButton("ne")
+       .setPosition(ne_px, ne_py + 15)
+       .setSize(LARGE_BUTTON, SMALL_BUTTON)
+       .setCaptionLabel("NEXT")
        .setColorBackground(BUTTON_DEFAULT)
        .setColorCaptionLabel(BUTTON_TEXT)  
        .moveTo(g1);
@@ -737,11 +738,11 @@ void gui(){
    int JOINT_px = SLOWDOWN_px + button_offsetX;
    int JOINT_py = 0;
    String[] labels = {" -X\n(J1)", " +X\n(J1)",
-                      " -Y\n(J1)", " +Y\n(J1)",
-                      " -Z\n(J1)", " +Z\n(J1)",
-                      "-XR\n(J1)", "+XR\n(J1)",
-                      "-YR\n(J1)", "+YR\n(J1)",
-                      "-ZR\n(J1)", "+ZR\n(J1)"};
+                      " -Y\n(J2)", " +Y\n(J2)",
+                      " -Z\n(J3)", " +Z\n(J3)",
+                      "-XR\n(J4)", "+XR\n(J4)",
+                      "-YR\n(J5)", "+YR\n(J5)",
+                      "-ZR\n(J6)", "+ZR\n(J6)"};
    
    for(int i = 1; i <= 6; i += 1){
      cp5.addButton("JOINT"+i+"_NEG")
@@ -1080,7 +1081,8 @@ public void mu(){
   contents.add(newLine("9 USER (NA)"));
   contents.add(newLine("0 --NEXT--"));
   
-  active_col = active_row = 0;
+  active_row = 0;
+  active_col = -1;
   mode = MENU_NAV;
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
@@ -1245,7 +1247,9 @@ public void LINE(){
 
 public void se(){
   // Save when exiting a program
-   if(mode == INSTRUCTION_NAV || mode == INSTRUCTION_EDIT){ saveProgramBytes( new File(sketchPath("tmp/programs.bin")) ); }
+   if(mode == INSTRUCTION_NAV || mode == INSTRUCTION_EDIT){ 
+     saveProgramBytes( new File(sketchPath("tmp/programs.bin")) ); 
+   }
    
    active_program = 0;
    active_instruction = 0;
@@ -1577,7 +1581,6 @@ public void rt(){
           clearOptions();
           
           active_col = min(active_col + 1, contents.get(active_row).size() - 1);
-          println("active column: " + active_col);
           updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
           break; //<>//
       case INSTRUCTION_EDIT:
@@ -1599,7 +1602,8 @@ public void rt(){
             contents.add( newLine("9 User Alarm (NA)") );
             contents.add( newLine("0 --NEXT--") );
             
-            active_col = active_row = 0;
+            active_row = 0;
+            active_col = -1; 
             mode = SETUP_NAV;
             updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
           }
@@ -1618,7 +1622,8 @@ public void rt(){
             contents.add( newLine("8 SOP (NA)") );
             contents.add( newLine("9 Interconnect (NA)") );
             
-            active_col = active_row = 0;
+            active_row = 0;
+            active_col = -1;
             mode = IO_SUBMENU;
             updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
           } else if(active_row == 1){ // Offset/Frames
@@ -1629,7 +1634,8 @@ public void rt(){
             contents.add( newLine("1 UFRAME_NUM") );
             
             mode = SET_FRAME_INSTRUCTION;
-            active_col = active_row = 0;
+            active_row = 0;
+            active_col = -1;
             updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
           }
           break;
@@ -1781,7 +1787,8 @@ public void f1(){
         contents.add( newLine("2 Offset/Frames") );
         contents.add( newLine("(Others not yet implemented)") );
         
-        active_col = active_row = 0;
+        active_col = -1; 
+        active_row = 0;
         mode = PICK_INSTRUCTION;
         updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       }
@@ -2366,6 +2373,7 @@ public void bd() {
 }
 
 public void ENTER(){
+  println(mode + ", " + active_col);
   switch (mode){
     case NONE:
        break;
@@ -2428,6 +2436,7 @@ public void ENTER(){
           case 6: // termination type
              break;   
        }
+       
        loadInstructions(active_program);
        mode = INSTRUCTION_NAV;
        NUM_MODE = OFF;
@@ -2665,7 +2674,7 @@ public void ENTER(){
          if(active_row == 0) type = FTYPE_TOOL;
          else if(active_row == 1) type = FTYPE_USER;
          prog.addInstruction(new FrameInstruction(type, num));
-      } catch (NumberFormatException NFEx){ /* Ignore invalid numbers */ }
+       } catch (NumberFormatException NFEx){ /* Ignore invalid numbers */ }
        
       active_instruction = prog.getInstructions().size() - 1;
       active_col = 0;
@@ -2675,6 +2684,7 @@ public void ENTER(){
       
       loadInstructions(active_program);
       mode = INSTRUCTION_NAV;
+      active_col = 0;
       which_option = -1;
       options.clear();
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -3049,7 +3059,7 @@ public void ENTER(){
       
       break;
   }
-  println(mode);
+  println(mode + ", " + active_col);
 }
 
 public void ITEM(){
@@ -3635,12 +3645,12 @@ public void updateScreen(color cDefault, color cHighlight){
    switch(mode){
       case INSTRUCTION_NAV:
          cp5.addTextarea("header")
-            .setText(programs.get(active_program).getName())
+            .setText("  "+programs.get(active_program).getName())
             .setFont(fnt_con)
             .setPosition(next_px, next_py)
             .setSize(display_width, 20)
-            .setColorValue(cHighlight)
-            .setColorBackground(cDefault)
+            .setColorValue(cDefault)
+            .setColorBackground(cHighlight)
             .hideScrollbar()
             .show()
             .moveTo(g1);
@@ -3653,7 +3663,7 @@ public void updateScreen(color cDefault, color cHighlight){
       case SET_INSTRUCTION_REGISTER:
       case SET_INSTRUCTION_TERMINATION:
          cp5.addTextarea("header")
-            .setText(programs.get(active_program).getName())
+            .setText("  "+programs.get(active_program).getName())
             .setFont(fnt_con)
             .setPosition(next_px, next_py)
             .setSize(display_width, 20)
@@ -3818,9 +3828,9 @@ public void updateScreen(color cDefault, color cHighlight){
        funct[1] = "";
        funct[2] = "";
        funct[3] = "[Edit]";
-       funct[4] = "[Overwrite]";
+       funct[4] = "[Replace]";
      } else {
-       funct[0] = "[New Inst]]";
+       funct[0] = "[New Inst]";
        funct[1] = "";
        funct[2] = "";
        funct[3] = "[Edit]";
@@ -3851,13 +3861,13 @@ public void updateScreen(color cDefault, color cHighlight){
    } else if(mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE){
      // F1, F5
      if(shift == ON){
-       funct[0] = "[Rmv Ref Pt]";
+       funct[0] = "[Rmv Pt]";
        funct[1] = "";
        funct[2] = "";
        funct[3] = "";
        funct[4] = "[Record]";
      } else {
-       funct[0] = "[Save Ref Pt]";
+       funct[0] = "[Save Pt]";
        funct[1] = "";
        funct[2] = "";
        funct[3] = "";
@@ -3906,8 +3916,8 @@ public void updateScreen(color cDefault, color cHighlight){
      cp5.addTextarea("lf"+i)
         .setText(funct[i])
         .setFont(fnt_con)
-        .setPosition(display_width*i/5 + 10, display_height + 15)
-        .setSize(display_width/5, 20)
+        .setPosition(display_width*i/5 + 15 , display_height + 15)
+        .setSize(display_width/5 - 5, 20)
         .setColorValue(cHighlight)
         .setColorBackground(cDefault)
         .hideScrollbar()
@@ -3967,7 +3977,8 @@ public void clearNums(){
  * Displays the Interface for inputting the name of a program.
  */
 public void inputProgramName(){
-  active_row = active_col = -1;
+  active_row = -1; 
+  active_col = -1;
   contents = new ArrayList<ArrayList<String>>();
   
   contents.add( newLine("") );
@@ -4010,7 +4021,8 @@ public void loadFrames(int coordFrame){
       contents.add ( newLine( String.format("%d) %s", idx + 1, frame.getOrigin()) ) );
     }
     
-    active_col = active_row = 0;
+    active_row = 0;
+    active_col = -1;
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
   }
 }
@@ -4398,7 +4410,8 @@ public void viewRegisters(){
   } else {
     // mode must be VIEW_REG or VIEW_POS_REG_J(C)!
     contents.add( newLine( String.format("%d is not a valid mode for view registers!", mode)) );
-    active_row = active_col = 0;
+    active_row = 0; 
+    active_col = 0;
   }
   
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
