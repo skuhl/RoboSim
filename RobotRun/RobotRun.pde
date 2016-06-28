@@ -27,8 +27,6 @@ float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
 boolean spacebarDown = false;
 
 ControlP5 cp5;
-Textarea textDisplay;
-Accordion accordion;
 
 ArrayList<Program> programs = new ArrayList<Program>();
 

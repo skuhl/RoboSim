@@ -631,7 +631,7 @@ public int saveRegisterBytes(File dest) {
                        initializedPR = new ArrayList<Integer>();
     
     // Count the number of initialized entries and save their indices
-    for (int idx = 0 ; idx < REG.length; ++idx) {
+    for (int idx = 0; idx < REG.length; ++idx) {
       if (REG[idx].value != null || REG[idx].comment != null) {
         initializedR.add(idx);
         ++numOfREntries;
