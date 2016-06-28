@@ -1912,7 +1912,8 @@ public void f2(){
     workingText = "";
     active_program = -1;
     goToEnterTextMode();
-  } else if(mode == FRAME_DETAIL){
+  } 
+  else if(mode == FRAME_DETAIL){
     options = new ArrayList<String>();
     
     if(super_mode == NAV_USER_FRAMES){
@@ -1935,7 +1936,8 @@ public void f2(){
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         loadFrames(COORD_TOOL);
       }
-   } else if(mode == NAV_USER_FRAMES){
+   } 
+   else if(mode == NAV_USER_FRAMES){
      
      // Reset the highlighted frame in the user frames list
      if(active_row >= 0){
@@ -1943,7 +1945,8 @@ public void f2(){
        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
        loadFrames(COORD_USER);
      }
-   } else if(mode == ACTIVE_FRAMES){
+   } 
+   else if(mode == ACTIVE_FRAMES){
      // Reset the active frames for the User or Tool Coordinate Frames
      if(active_row == 1){
        
@@ -1954,7 +1957,8 @@ public void f2(){
          curCoordFrame = COORD_WORLD;
          armModel.resetFrame();
        }
-     } else if(active_row == 2){
+     } 
+     else if(active_row == 2){
        activeUserFrame = -1;
        
        // Leave the User Frame
@@ -1965,14 +1969,17 @@ public void f2(){
      }
      
      loadActiveFrames();
-   } else if(mode == VIEW_REG || mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C){
+   } 
+   else if(mode == VIEW_REG || mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C){
      pickRegisterList();
-  } else if(mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L){
+  } 
+  else if(mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L){
     char newChar = '\0';
     
     if(mode == INPUT_COMMENT_U){
       newChar = (char)('G' + letterStates[1]);
-    } else if(mode == INPUT_COMMENT_L){
+    } 
+    else if(mode == INPUT_COMMENT_L){
       newChar = (char)('g' + letterStates[1]);
     }
     
@@ -2034,115 +2041,117 @@ public void f3(){
 
 
 public void f4(){
-   switch (mode){
-      case INSTRUCTION_NAV:
-         Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
-         if(ins instanceof MotionInstruction){
-           switch (active_col){
-             case 2: // motion type
-                options = new ArrayList<String>();
-                options.add("1.JOINT");
-                options.add("2.LINEAR");
-                options.add("3.CIRCULAR");
-                //NUM_MODE = ON;
-                mode = INSTRUCTION_EDIT;
-                which_option = 0;
-                break;
-             case 3: // register type
-                options = new ArrayList<String>();
-                options.add("1.LOCAL(P)");
-                options.add("2.GLOBAL(PR)");
-                //NUM_MODE = ON;
-                mode = INSTRUCTION_EDIT;
-                which_option = 0;
-                break;
-             case 4: // register
-                options = new ArrayList<String>();
-                options.add("Use number keys to enter a register number (0-999)");
-                workingText = "";
-                options.add(workingText);
-                mode = SET_INSTRUCTION_REGISTER;
-                which_option = 0;
-                break;
-             case 5: // speed
-                options = new ArrayList<String>();
-                options.add("Use number keys to enter a new speed");
-                MotionInstruction castIns = getActiveMotionInstruct();
-                if(castIns.getMotionType() == MTYPE_JOINT){
-                  speedInPercentage = true;
-                  workingTextSuffix = "%";
-                } else {
-                  workingTextSuffix = "mm/s";
-                  speedInPercentage = false;
-                }
-                workingText = "";
-                options.add(workingText + workingTextSuffix);
-                mode = SET_INSTRUCTION_SPEED;
-                which_option = 0;
-                break;
-             case 6: // termination type
-                options = new ArrayList<String>();
-                options.add("Use number keys to enter termination percentage (0-100; 0=FINE)");
-                workingText = "";
-                options.add(workingText);
-                mode = SET_INSTRUCTION_TERMINATION;
-                which_option = 0;
-                break;
-           }
-         } 
-         break;
-     case CONFIRM_DELETE:
-         if(super_mode == PROGRAM_NAV){
-           int progIdx = active_program;
+  switch (mode){
+    case INSTRUCTION_NAV:
+      Program p = programs.get(active_program);
+      if(p.instructions.size() == 0) break;
+      Instruction ins = p.getInstructions().get(active_instruction);
+      if(ins instanceof MotionInstruction){
+        switch (active_col){
+          case 2: // motion type
+            options = new ArrayList<String>();
+            options.add("1.JOINT");
+            options.add("2.LINEAR");
+            options.add("3.CIRCULAR");
+            //NUM_MODE = ON;
+            mode = INSTRUCTION_EDIT;
+            which_option = 0;
+            break;
+          case 3: // register type
+            options = new ArrayList<String>();
+            options.add("1.LOCAL(P)");
+            options.add("2.GLOBAL(PR)");
+            //NUM_MODE = ON;
+            mode = INSTRUCTION_EDIT;
+            which_option = 0;
+            break;
+          case 4: // register
+            options = new ArrayList<String>();
+            options.add("Use number keys to enter a register number (0-999)");
+            workingText = "";
+            options.add(workingText);
+            mode = SET_INSTRUCTION_REGISTER;
+            which_option = 0;
+            break;
+          case 5: // speed
+            options = new ArrayList<String>();
+            options.add("Use number keys to enter a new speed");
+            MotionInstruction castIns = getActiveMotionInstruct();
+            if(castIns.getMotionType() == MTYPE_JOINT){
+              speedInPercentage = true;
+              workingTextSuffix = "%";
+            } else {
+              workingTextSuffix = "mm/s";
+              speedInPercentage = false;
+            }
+            workingText = "";
+            options.add(workingText + workingTextSuffix);
+            mode = SET_INSTRUCTION_SPEED;
+            which_option = 0;
+            break;
+          case 6: // termination type
+            options = new ArrayList<String>();
+            options.add("Use number keys to enter termination percentage (0-100; 0=FINE)");
+            workingText = "";
+            options.add(workingText);
+            mode = SET_INSTRUCTION_TERMINATION;
+            which_option = 0;
+            break;
+        }
+      } 
+      break;
+    case CONFIRM_DELETE:
+      if(super_mode == PROGRAM_NAV){
+        int progIdx = active_program;
+         
+        if(progIdx >= 0 && progIdx < programs.size()){
+          programs.remove(progIdx);
            
-           if(progIdx >= 0 && progIdx < programs.size()){
-             programs.remove(progIdx);
-             
-             if(active_program >= programs.size()){
-               active_program = programs.size() - 1;
-               /* 13 is the maximum number of instructions that can be displayed at one point in time */
-               active_row = min(active_program, ITEMS_TO_SHOW - 1);
-               text_render_start = active_program - active_row;
-             }
-             
-             mode = super_mode;
-             super_mode = NONE;
-             loadPrograms();
-             updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-             saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
-           }
-         } else if(super_mode == INSTRUCTION_NAV){
-             Program prog = programs.get(active_program);
-             prog.getInstructions().remove(active_instruction);
-             deleteInstEpilogue();
-         }
-         break;
-     case INPUT_COMMENT_U:
-     case INPUT_COMMENT_L:
-       char newChar = '\0';
-       
-       if(mode == INPUT_COMMENT_U){
-         newChar = (char)('S' + letterStates[3]);
-       } else if(mode == INPUT_COMMENT_L){
-         newChar = (char)('s' + letterStates[3]);
-       }
-       
-       // Insert a character S - X (or s - x)
-       StringBuilder limbo = new StringBuilder(workingText);
-       limbo.setCharAt(active_col, newChar);
-       workingText = limbo.toString();
-       // Update and reset the letter states
-       for(int idx = 0; idx < 3; ++idx){ letterStates[idx] = 0; }
-       letterStates[3] = (letterStates[3] + 1) % 6;
-       letterStates[4] = 0;
-       
-       
-       updateComment();
-       
-       break;
-   }
-   
-   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+          if(active_program >= programs.size()){
+            active_program = programs.size() - 1;
+            /* 13 is the maximum number of instructions that can be displayed at one point in time */
+            active_row = min(active_program, ITEMS_TO_SHOW - 1);
+            text_render_start = active_program - active_row;
+          }
+           
+          mode = super_mode;
+          super_mode = NONE;
+          loadPrograms();
+          updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+          saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
+        }
+      } else if(super_mode == INSTRUCTION_NAV){
+          Program prog = programs.get(active_program);
+          prog.getInstructions().remove(active_instruction);
+          deleteInstEpilogue();
+      }
+      break;
+    case INPUT_COMMENT_U:
+    case INPUT_COMMENT_L:
+      char newChar = '\0';
+      
+      if(mode == INPUT_COMMENT_U){
+        newChar = (char)('S' + letterStates[3]);
+      } 
+      else if(mode == INPUT_COMMENT_L){
+        newChar = (char)('s' + letterStates[3]);
+      }
+      
+      // Insert a character S - X (or s - x)
+      StringBuilder limbo = new StringBuilder(workingText);
+      limbo.setCharAt(active_col, newChar);
+      workingText = limbo.toString();
+      // Update and reset the letter states
+      for(int idx = 0; idx < 3; ++idx){ letterStates[idx] = 0; }
+      letterStates[3] = (letterStates[3] + 1) % 6;
+      letterStates[4] = 0;
+            
+      updateComment();
+      
+      break;
+  }
+  
+  updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
 public void f5(){
