@@ -3040,11 +3040,21 @@ public void ENTER() {
           inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
         }
         
-        System.out.printf("W: %4.3f  P: %4.3f  R: %4.3f", (inputs[3] * DEG_TO_RAD) * RAD_TO_DEG, (inputs[4] * DEG_TO_RAD) * RAD_TO_DEG, (inputs[5] * DEG_TO_RAD) * RAD_TO_DEG);
+        //System.out.printf("W: %4.3f  P: %4.3f  R: %4.3f\n", inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD);
         
         position = new PVector(inputs[0], inputs[1], inputs[2]);
         orientation = eulerToQuat( new PVector(inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD) );
-        // TODO Inverse Kinematics on position and orientation
+        // Testing code: Check several iterations of converting the same angles between euler and quaternions
+        /*PVector wpr = quatToEuler(orientation);
+        System.out.printf("W: %4.3f  P: %4.3f  R: %4.3f\n", wpr.x, wpr.y, wpr.z);
+        float[] limbo = eulerToQuat(wpr);
+        wpr = quatToEuler(limbo);
+        System.out.printf("W: %4.3f  P: %4.3f  R: %4.3f\n", wpr.x, wpr.y, wpr.z);
+        limbo = eulerToQuat(wpr);
+        wpr = quatToEuler(limbo);
+        System.out.printf("W: %4.3f  P: %4.3f  R: %4.3f\n", wpr.x, wpr.y, wpr.z);*/
+        
+        // TODO inverse kinematics to get joint angles
       }
       
       /* Since all points are displayed with respect to the World Frame, it is

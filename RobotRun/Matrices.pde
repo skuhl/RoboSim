@@ -173,24 +173,27 @@ float[][] eulerToMatrix(PVector wpr) {
   return r;
 }
 
-//calculates quaternion from euler angles
+/**
+ * Converts the given Euler angle set values to a Quaternion using the method described on the Wikipedia page:
+ *    https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+ */
 float[] eulerToQuat(PVector wpr) {
-  //float[][] r = eulerToMatrix(wpr);
-  //float[] q = matrixToQuat(r);
-
-  /*Alternate computation method; produces equivalent result to above, but may
-   *not have the same sign (certain quaternions are equivalent when negated).
-   */
+  
   float[] q = new float[4];
   float xRot = wpr.x;
   float yRot = wpr.y;
   float zRot = wpr.z;
 
-  q[0] = sin(zRot/2)*sin(yRot/2)*sin(xRot/2) + cos(zRot/2)*cos(yRot/2)*cos(xRot/2);
+  /*q[0] = sin(zRot/2)*sin(yRot/2)*sin(xRot/2) + cos(zRot/2)*cos(yRot/2)*cos(xRot/2);
   q[1] = -sin(zRot/2)*sin(yRot/2)*cos(xRot/2) + sin(xRot/2)*cos(zRot/2)*cos(yRot/2);
   q[2] = sin(zRot/2)*sin(xRot/2)*cos(yRot/2) + sin(yRot/2)*cos(zRot/2)*cos(zRot/2);
-  q[3] = sin(zRot/2)*cos(yRot/2)*cos(xRot/2) - sin(yRot/2)*sin(xRot/2)*cos(xRot/2);
-
+  q[3] = sin(zRot/2)*cos(yRot/2)*cos(xRot/2) - sin(yRot/2)*sin(xRot/2)*cos(xRot/2);*/
+  
+  q[0] = cos(xRot / 2) * cos(yRot / 2) * cos(zRot / 2) + sin(xRot / 2) * sin(yRot / 2) * sin(zRot / 2);
+  q[1] = sin(xRot / 2) * cos(yRot / 2) * cos(zRot / 2) - cos(xRot / 2) * sin(yRot / 2) * sin(zRot / 2);
+  q[2] = cos(xRot / 2) * sin(yRot / 2) * cos(zRot / 2) + sin(xRot / 2) * cos(yRot / 2) * sin(zRot / 2);
+  q[3] = cos(xRot / 2) * cos(yRot / 2) * sin(zRot / 2) - sin(xRot / 2) * sin(yRot / 2) * cos(zRot / 2);
+  
   return q;
 }
 
