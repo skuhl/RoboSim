@@ -48,7 +48,8 @@ final int NONE = 0,
           INPUT_POINT_J = 38,
           INPUT_COMMENT_U = 39,
           INPUT_COMMENT_L = 40,
-          CONFIRM_DELETE = 41;
+          CONFIRM_INSERT = 41,
+          CONFIRM_DELETE = 42;
 final int BUTTON_DEFAULT = color(70),
           BUTTON_ACTIVE = color(220, 40, 40),
           BUTTON_TEXT = color(240),
@@ -1134,13 +1135,6 @@ public void NUM9() {
    addNumber("9");
 }
 
-public void IO() {
-  if (armModel.endEffectorStatus == OFF)
-    armModel.endEffectorStatus = ON;
-  else
-    armModel.endEffectorStatus = OFF;
-}
-
 public void addNumber(String number) {
   if (mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION ||
       mode == JUMP_TO_LINE || mode == SET_DO_BRACKET || mode == SET_RO_BRACKET ||
@@ -1148,10 +1142,12 @@ public void addNumber(String number) {
     workingText += number;
     options.set(1, workingText);
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-  } else if (mode == SET_INSTRUCTION_SPEED) {
+  }
+  else if (mode == SET_INSTRUCTION_SPEED) {
     workingText += number;
     options.set(1, workingText + workingTextSuffix);
-  } else if (mode == DIRECT_ENTRY_MODE || mode == INPUT_POINT_J || mode == INPUT_POINT_C) {
+  } 
+  else if (mode == DIRECT_ENTRY_MODE || mode == INPUT_POINT_J || mode == INPUT_POINT_C) {
     if (active_row >= 0 && active_row < contents.size()) {
       String line = contents.get(active_row).get(0) + number;
       
@@ -1163,13 +1159,14 @@ public void addNumber(String number) {
       // Concatenate the new digit
       contents.get(active_row).set(0, line);
     }
-  } else if (mode == INPUT_FLOAT) {
-    
+  } 
+  else if (mode == INPUT_FLOAT) { 
     if (workingText.length() < 16) {
       workingText += number;
       options.set(2, workingText);
     }
-  } else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
+  } 
+  else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
     
     // Replace current entry with a number
     StringBuilder limbo = new StringBuilder(workingText);
@@ -1248,6 +1245,13 @@ public void LINE() {
     }
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
   }
+}
+
+public void IO() {
+  if (armModel.endEffectorStatus == OFF)
+    armModel.endEffectorStatus = ON;
+  else
+    armModel.endEffectorStatus = OFF;
 }
 
 public void se() {
@@ -2046,6 +2050,8 @@ public void f3() {
 
 
 public void f4() {
+  Program prog;
+  
   switch (mode) {
     case INSTRUCTION_NAV:
       Program p = programs.get(active_program);
@@ -2055,32 +2061,31 @@ public void f4() {
         switch (active_col) {
           case 2: // motion type
             options = new ArrayList<String>();
-            options.add(" 1.JOINT");
-            options.add(" 2.LINEAR");
-            options.add(" 3.CIRCULAR");
+            options.add("1.JOINT");
+            options.add("2.LINEAR");
+            options.add("3.CIRCULAR");
             //NUM_MODE = ON;
             mode = INSTRUCTION_EDIT;
             which_option = 0;
             break;
           case 3: // register type
             options = new ArrayList<String>();
-            options.add(" 1.LOCAL(P)");
-            options.add(" 2.GLOBAL(PR)");
+            options.add("1.LOCAL(P)");
+            options.add("2.GLOBAL(PR)");
             //NUM_MODE = ON;
             mode = INSTRUCTION_EDIT;
             which_option = 0;
             break;
           case 4: // register
             options = new ArrayList<String>();
-            options.add(" Enter desired register number (0-999)");
+            options.add("Enter desired register number (0-999)");
             workingText = "";
-            options.add("\0");
             mode = SET_INSTRUCTION_REGISTER;
             which_option = 0;
             break;
           case 5: // speed
             options = new ArrayList<String>();
-            options.add(" Enter desired speed");
+            options.add("Enter desired speed");
             MotionInstruction castIns = getActiveMotionInstruct();
             if (castIns.getMotionType() == MTYPE_JOINT) {
               speedInPercentage = true;
@@ -2096,7 +2101,7 @@ public void f4() {
             break;
           case 6: // termination type
             options = new ArrayList<String>();
-            options.add(" Enter desired termination percentage (0-100; 0=FINE)");
+            options.add("Enter desired termination percentage (0-100; 0=FINE)");
             workingText = "";
             options.add("\0");
             mode = SET_INSTRUCTION_TERMINATION;
@@ -2104,6 +2109,13 @@ public void f4() {
             break;
         }
       } 
+      break;
+    case CONFIRM_INSERT:
+      prog = programs.get(active_program);
+      int lines_to_insert = 1;
+      for(int i = 0; i < lines_to_insert; i += 1)
+        prog.getInstructions().add(active_instruction, new Instruction());
+      updateInstructions();
       break;
     case CONFIRM_DELETE:
       if (super_mode == PROGRAM_NAV) {
@@ -2118,7 +2130,7 @@ public void f4() {
             active_row = min(active_program, ITEMS_TO_SHOW - 1);
             text_render_start = active_program - active_row;
           }
-           
+          
           mode = super_mode;
           super_mode = NONE;
           loadPrograms();
@@ -2126,9 +2138,9 @@ public void f4() {
           saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
         }
       } else if (super_mode == INSTRUCTION_NAV) {
-          Program prog = programs.get(active_program);
+          prog = programs.get(active_program);
           prog.getInstructions().remove(active_instruction);
-          deleteInstEpilogue();
+          updateInstructions();
       }
       break;
     case INPUT_COMMENT_U:
@@ -2219,12 +2231,20 @@ public void f5() {
             options.add( String.format("X: %5.4f  Y: %5.4f  Z: %5.4f", wPos.x, wPos.y, wPos.z) );
             PVector wpr = quatToEuler(p.ori);
             // Show angles in degrees
-            options.add( String.format("W: %5.4f  P: %5.4f  R: %5.4f", (wpr.x * RAD_TO_DEG), (wpr.y * RAD_TO_DEG), (wpr.z * RAD_TO_DEG)) );
-            
-          } else {
-            
-            options.add( String.format("J1: %5.4f  J2: %5.4f  J3: %5.4f", (p.joints[0] * RAD_TO_DEG), (p.joints[1] * RAD_TO_DEG), (p.joints[2] * RAD_TO_DEG)) );
-            options.add( String.format("J4: %5.4f  J5: %5.4f  J6: %5.4f", (p.joints[3] * RAD_TO_DEG), (p.joints[4] * RAD_TO_DEG), (p.joints[5] * RAD_TO_DEG)) );
+            options.add( String.format("W: %5.4f  P: %5.4f  R: %5.4f", 
+                                      (wpr.x * RAD_TO_DEG), 
+                                      (wpr.y * RAD_TO_DEG), 
+                                      (wpr.z * RAD_TO_DEG)));
+          }
+          else {  
+            options.add( String.format("J1: %5.4f  J2: %5.4f  J3: %5.4f", 
+                                      (p.joints[0] * RAD_TO_DEG), 
+                                      (p.joints[1] * RAD_TO_DEG), 
+                                      (p.joints[2] * RAD_TO_DEG)));
+            options.add( String.format("J4: %5.4f  J5: %5.4f  J6: %5.4f", 
+                                      (p.joints[3] * RAD_TO_DEG), 
+                                      (p.joints[4] * RAD_TO_DEG),
+                                      (p.joints[5] * RAD_TO_DEG)));
           }
           
           mode = VIEW_INST_REG;
@@ -2266,9 +2286,8 @@ public void f5() {
     mode = limbo;
     loadPointList();
   } 
-  else if (mode == CONFIRM_DELETE) {
-    
-    if (super_mode == PROGRAM_NAV) {  
+  else if (mode == CONFIRM_DELETE){
+    if (super_mode == PROGRAM_NAV){
       options = new ArrayList<String>();
       which_option = -1;
       
@@ -2277,7 +2296,7 @@ public void f5() {
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     } 
     else if (super_mode == INSTRUCTION_NAV) {
-      deleteInstEpilogue();
+      updateInstructions();
     }
   } 
   else if (mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
@@ -2574,7 +2593,8 @@ public void ENTER() {
          options = new ArrayList<String>();
          loadInstructions(active_program);
          updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-       } else {
+       } 
+       else {
          mode = super_mode;
          super_mode = NONE;
          active_row = 0;
@@ -2601,7 +2621,8 @@ public void ENTER() {
        
        if (which_option == 0) {
          loadFrames(COORD_TOOL);
-       } else if (which_option == 1) {
+       } 
+       else if (which_option == 1) {
          loadFrames(COORD_USER);
        } // Jog Frame not implemented
        
@@ -2614,13 +2635,15 @@ public void ENTER() {
          loadFrameDetails();
          mode = THREE_POINT_MODE;
          loadPointList();
-       } else if (which_option == 1) {
+       } 
+       else if (which_option == 1) {
          which_option = 0;
          teachPointTMatrices = new ArrayList<float[][]>();
          loadFrameDetails();
          mode = (super_mode == NAV_TOOL_FRAMES) ? SIX_POINT_MODE : FOUR_POINT_MODE;
          loadPointList();
-       } else if (which_option == 2) {
+       } 
+       else if (which_option == 2) {
          options = new ArrayList<String>();
          which_option = -1;
          loadDirectEntryMethod();
@@ -2635,7 +2658,8 @@ public void ENTER() {
           mode = SET_DO_BRACKET;
           which_option = 0;
           updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-       } else if (active_row == 5) { // robot
+       } 
+       else if (active_row == 5) { // robot
           options = new ArrayList<String>();
           options.add("Use number keys to enter RO[X]");
           workingText = "";
@@ -2720,13 +2744,30 @@ public void ENTER() {
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
     case EDIT_MENU:
-      if (active_row == 1) { // delete
-         options = new ArrayList<String>();
-         options.add("Delete this line?");
-         super_mode = INSTRUCTION_NAV;
-         mode = CONFIRM_DELETE;
-         which_option = 0;
-         updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+      switch(active_row){
+        case 0: //Insert
+          options = new ArrayList<String>();
+          options.add("Enter number of lines to insert:");
+          super_mode = INSTRUCTION_NAV;
+          mode = CONFIRM_INSERT;
+          which_option = 0;
+          updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+          break;
+        case 1: //Delete
+          options = new ArrayList<String>();
+          options.add("Delete this line?");
+          super_mode = INSTRUCTION_NAV;
+          mode = CONFIRM_DELETE;
+          which_option = 0;
+          updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+          break;
+        case 2: //Cut/Copy
+        case 3: //Find
+        case 4: //Replace
+        case 5: //Renumber
+        case 6: //Comment
+        case 7: //Undo
+        case 8: //Remark
       }
       break;
       
@@ -3775,8 +3816,7 @@ public void updateScreen(color cDefault, color cHighlight) {
   next_py += 20;
   index_options = 100;
   if (options.size() > 0) {
-    for (int i = 0; i < options.size(); i += 1) {
-            
+    for (int i = 0; i < options.size(); i += 1) {   
       if (i == which_option) {
         cp5.addTextarea(Integer.toString(index_options))
           .setText("  "+options.get(i))
@@ -4624,8 +4664,10 @@ public void loadInstructions(int programID) {
     ArrayList<String> m = new ArrayList<String>();
     m.add(Integer.toString(i+1) + ")");
     Instruction instruction = p.getInstructions().get(i);
+    
     if (instruction instanceof MotionInstruction) {
       MotionInstruction a = (MotionInstruction)instruction;
+      
       if (armModel.getEEPos().dist(a.getVector(p).pos) < liveSpeed) {
         println("at tgt position");
         m.add("@");
@@ -4661,9 +4703,7 @@ public void loadInstructions(int programID) {
       
       contents.add(m);
     } 
-    else if (instruction instanceof ToolInstruction ||
-               instruction instanceof FrameInstruction)
-    {
+    else{
       m.add(instruction.toString());
       contents.add(m);
     }
@@ -4673,7 +4713,7 @@ public void loadInstructions(int programID) {
 /**
  * Deals with updating the UI after confirming/canceling a deletion
  */
-public void deleteInstEpilogue() {
+public void updateInstructions() {
   Program prog = programs.get(active_program);
   
   active_instruction = min(active_instruction,  prog.getInstructions().size() - 1);

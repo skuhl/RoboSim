@@ -218,16 +218,13 @@ public void updateCoordinateMode(ArmModel model) {
   if (curCoordFrame == COORD_TOOL || (curCoordFrame == COORD_WORLD && activeToolFrame != -1)) {
     // Active Tool Frames are used in the World Frame as well
     armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
-  } else if (curCoordFrame == COORD_USER) {
-    
+  } 
+  else if (curCoordFrame == COORD_USER ) {
     armModel.currentFrame = userFrames[activeUserFrame].getNativeAxes();
-  } else {
-    // Reset to the identity matrix
-    armModel.currentFrame = new float[3][3];
-    
-    for (int diag = 0; diag < 3; ++diag) {
-      armModel.currentFrame[diag][diag] = 1;
-    }
+  } 
+  else {
+    //reset to world frame
+    armModel.resetFrame();
   }
 }
 

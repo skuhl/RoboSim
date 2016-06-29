@@ -305,7 +305,15 @@ public int addProgram(Program p) {
   }
 }
 
-public class Instruction { /* Serves as a blank instruction */ }
+public class Instruction { 
+  
+  public Instruction(){}
+  
+  public String toString(){
+    String str = "\0";
+    return str;
+  }
+}
 
 public final class MotionInstruction extends Instruction  {
   private int motionType;
@@ -400,8 +408,6 @@ public final class MotionInstruction extends Instruction  {
   
 } // end MotionInstruction class
 
-
-
 public class FrameInstruction extends Instruction {
   private int frameType;
   private int idx;
@@ -424,8 +430,6 @@ public class FrameInstruction extends Instruction {
     return ret;
   }
 } // end FrameInstruction class
-
-
 
 public class ToolInstruction extends Instruction {
   private String type;
