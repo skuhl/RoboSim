@@ -199,6 +199,9 @@ void showMainDisplayText() {
  * @param model  The Robot Arm, for which to switch coordinate frames
  */
 public void updateCoordinateMode(ArmModel model) {
+  // Stop Robot movement
+  hd();
+  
   // Increment the current coordinate frame
   curCoordFrame = (curCoordFrame + 1) % 4;
   
@@ -215,7 +218,7 @@ public void updateCoordinateMode(ArmModel model) {
   }
     
   // Update the Arm Model's rotation matrix for rotational motion based on the current frame
-  if (curCoordFrame == COORD_TOOL || (curCoordFrame == COORD_WORLD && activeToolFrame != -1)) {
+  if (model.activeEndEffector == ENDEF_NONE && (curCoordFrame == COORD_TOOL || (curCoordFrame == COORD_WORLD && activeToolFrame != -1))) {
     // Active Tool Frames are used in the World Frame as well
     armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
   } else if (curCoordFrame == COORD_USER) {
