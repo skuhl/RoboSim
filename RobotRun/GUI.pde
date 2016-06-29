@@ -72,7 +72,7 @@ int record = OFF;
 int g1_px, g1_py; // the left-top corner of group1
 int g1_width, g1_height; // group 1's width and height
 int display_px, display_py; // the left-top corner of display screen
-int display_width = 510, display_height = 320; // height and width of display screen
+int display_width = 510, display_height = 340; // height and width of display screen
 
 PFont fnt_con, fnt_conB;
 Group g1, g2;
@@ -502,24 +502,19 @@ void gui(){
    //--------------------------------------------------------------//
    //                           Group 2                            //
    //--------------------------------------------------------------//
-   int g2_offsetY = display_py + display_height + 4*LARGE_BUTTON + 15;
-   Group g2 = cp5.addGroup("TOOLBAR")
-                 .setPosition(0, g2_offsetY)
-                 .setBackgroundColor(color(127,127,127, 50))
-                 .moveTo(g1);
-   g2.setOpen(true);
+   int g2_offsetY = display_py + display_height + 4*LARGE_BUTTON;
    
    /**********************Numpad Block*********************/
    
    int LINE_px = button_offsetX + 8;
-   int LINE_py = 5*button_offsetY;
+   int LINE_py = g2_offsetY + 5*button_offsetY;
    cp5.addButton("LINE")
       .setPosition(LINE_px, LINE_py)
       .setSize(LARGE_BUTTON, SMALL_BUTTON)
       .setCaptionLabel("-")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);    
+      .moveTo(g1);    
    
    int PERIOD_px = LINE_px + button_offsetX;
    int PERIOD_py = LINE_py - button_offsetY;
@@ -529,7 +524,7 @@ void gui(){
       .setCaptionLabel(".")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);   
+      .moveTo(g1);   
    
    int COMMA_px = PERIOD_px + button_offsetX;
    int COMMA_py = PERIOD_py;
@@ -539,7 +534,7 @@ void gui(){
       .setCaptionLabel(",")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);
+      .moveTo(g1);
       
    int POSN_px = LINE_px + button_offsetX;
    int POSN_py = LINE_py;
@@ -549,7 +544,7 @@ void gui(){
       .setCaptionLabel("POSN")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);
+      .moveTo(g1);
       
    int IO_px = POSN_px + button_offsetX;
    int IO_py = POSN_py;
@@ -559,7 +554,7 @@ void gui(){
       .setCaptionLabel("I/O")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);
+      .moveTo(g1);
    
    int NUM_px = LINE_px;
    int NUM_py = LINE_py - button_offsetY;
@@ -570,7 +565,7 @@ void gui(){
         .setCaptionLabel(""+i)
         .setColorBackground(BUTTON_DEFAULT)
         .setColorCaptionLabel(BUTTON_TEXT)
-        .moveTo(g2);
+        .moveTo(g1);
         
      if(i % 3 == 0){
        NUM_px = LINE_px;
@@ -589,7 +584,7 @@ void gui(){
       .setCaptionLabel("RESET")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);   
+      .moveTo(g1);   
  
    int BKSPC_px = RESET_px + button_offsetX;
    int BKSPC_py = RESET_py;
@@ -599,7 +594,7 @@ void gui(){
       .setCaptionLabel("BKSPC")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);      
+      .moveTo(g1);      
       
    int ITEM_px = BKSPC_px + button_offsetX;
    int ITEM_py = BKSPC_py;
@@ -609,19 +604,19 @@ void gui(){
       .setCaptionLabel("ITEM")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);
+      .moveTo(g1);
       
    /***********************Util Block*************************/
    
    int ENTER_px = ITEM_px + 3*button_offsetX/2;
-   int ENTER_py = 0;
+   int ENTER_py = g2_offsetY;
    cp5.addButton("ENTER")
       .setPosition(ENTER_px, ENTER_py)
       .setSize(LARGE_BUTTON, SMALL_BUTTON)
       .setCaptionLabel("ENTER")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);    
+      .moveTo(g1);    
       
    int TOOL1_px = ENTER_px;
    int TOOL1_py = ENTER_py + button_offsetY;
@@ -631,7 +626,7 @@ void gui(){
       .setCaptionLabel("TOOL1")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);   
+      .moveTo(g1);   
       
    int TOOL2_px = TOOL1_px;
    int TOOL2_py = TOOL1_py + button_offsetY;
@@ -641,7 +636,7 @@ void gui(){
       .setCaptionLabel("TOOL2")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);
+      .moveTo(g1);
  
    int MOVEMENU_px = TOOL2_px;
    int MOVEMENU_py = TOOL2_py + button_offsetY;
@@ -651,7 +646,7 @@ void gui(){
       .setCaptionLabel("MVMU")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2); 
+      .moveTo(g1); 
       
    int SETUP_px = MOVEMENU_px;
    int SETUP_py = MOVEMENU_py + button_offsetY;
@@ -661,7 +656,7 @@ void gui(){
       .setCaptionLabel("SETUP")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);    
+      .moveTo(g1);    
       
    int STATUS_px = SETUP_px;
    int STATUS_py = SETUP_py + button_offsetY;
@@ -671,19 +666,19 @@ void gui(){
       .setCaptionLabel("STATUS")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);
+      .moveTo(g1);
    
    /********************Joint Control Block*******************/
    
    int hd_px = STATUS_px + 3*button_offsetX/2;
-   int hd_py = 0;   
+   int hd_py = g2_offsetY;   
    cp5.addButton("hd")
       .setPosition(hd_px, hd_py)
       .setSize(LARGE_BUTTON, SMALL_BUTTON)
       .setCaptionLabel("HOLD")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);    
+      .moveTo(g1);    
       
    int fd_px = hd_px;
    int fd_py = hd_py + button_offsetY;   
@@ -693,7 +688,7 @@ void gui(){
       .setCaptionLabel("FWD")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);   
+      .moveTo(g1);   
      
    int bd_px = fd_px;
    int bd_py = fd_py + button_offsetY;   
@@ -703,7 +698,7 @@ void gui(){
       .setCaptionLabel("BWD")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);
+      .moveTo(g1);
       
    int COORD_px = bd_px;   
    int COORD_py = bd_py + button_offsetY;
@@ -713,7 +708,7 @@ void gui(){
       .setCaptionLabel("COORD")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)
-      .moveTo(g2);
+      .moveTo(g1);
       
    int SPEEDUP_px = COORD_px;
    int SPEEDUP_py = COORD_py + button_offsetY;
@@ -723,7 +718,7 @@ void gui(){
       .setCaptionLabel("+%")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);   
+      .moveTo(g1);   
     
    int SLOWDOWN_px = SPEEDUP_px;
    int SLOWDOWN_py = SPEEDUP_py + button_offsetY;
@@ -733,10 +728,10 @@ void gui(){
       .setCaptionLabel("-%")
       .setColorBackground(BUTTON_DEFAULT)
       .setColorCaptionLabel(BUTTON_TEXT)  
-      .moveTo(g2);
+      .moveTo(g1);
       
    int JOINT_px = SLOWDOWN_px + button_offsetX;
-   int JOINT_py = 0;
+   int JOINT_py = g2_offsetY;
    String[] labels = {" -X\n(J1)", " +X\n(J1)",
                       " -Y\n(J2)", " +Y\n(J2)",
                       " -Z\n(J3)", " +Z\n(J3)",
@@ -751,7 +746,7 @@ void gui(){
         .setCaptionLabel(labels[(i-1)*2])
         .setColorBackground(BUTTON_DEFAULT)
         .setColorCaptionLabel(BUTTON_TEXT)  
-        .moveTo(g2)
+        .moveTo(g1)
         .getCaptionLabel()
         .alignY(TOP);
      
@@ -762,7 +757,7 @@ void gui(){
         .setCaptionLabel(labels[(i-1)*2 + 1])
         .setColorBackground(BUTTON_DEFAULT)
         .setColorCaptionLabel(BUTTON_TEXT)  
-        .moveTo(g2)
+        .moveTo(g1)
         .getCaptionLabel()
         .alignY(TOP);
         
@@ -1099,7 +1094,6 @@ public void da() {
   pickRegisterList();
 }
 
-
 public void NUM0(){
    addNumber("0");
 }
@@ -1138,6 +1132,10 @@ public void NUM8(){
 
 public void NUM9(){
    addNumber("9");
+}
+
+public void io(){
+  
 }
 
 public void addNumber(String number){
@@ -2050,24 +2048,24 @@ public void f4(){
         switch (active_col){
           case 2: // motion type
             options = new ArrayList<String>();
-            options.add("1.JOINT");
-            options.add("2.LINEAR");
-            options.add("3.CIRCULAR");
+            options.add(" 1.JOINT");
+            options.add(" 2.LINEAR");
+            options.add(" 3.CIRCULAR");
             //NUM_MODE = ON;
             mode = INSTRUCTION_EDIT;
             which_option = 0;
             break;
           case 3: // register type
             options = new ArrayList<String>();
-            options.add("1.LOCAL(P)");
-            options.add("2.GLOBAL(PR)");
+            options.add(" 1.LOCAL(P)");
+            options.add(" 2.GLOBAL(PR)");
             //NUM_MODE = ON;
             mode = INSTRUCTION_EDIT;
             which_option = 0;
             break;
           case 4: // register
             options = new ArrayList<String>();
-            options.add("Use number keys to enter a register number (0-999)");
+            options.add(" Enter desired register number (0-999)");
             workingText = "";
             options.add(workingText);
             mode = SET_INSTRUCTION_REGISTER;
@@ -2075,7 +2073,7 @@ public void f4(){
             break;
           case 5: // speed
             options = new ArrayList<String>();
-            options.add("Use number keys to enter a new speed");
+            options.add(" Enter desired speed");
             MotionInstruction castIns = getActiveMotionInstruct();
             if(castIns.getMotionType() == MTYPE_JOINT){
               speedInPercentage = true;
@@ -2091,7 +2089,7 @@ public void f4(){
             break;
           case 6: // termination type
             options = new ArrayList<String>();
-            options.add("Use number keys to enter termination percentage (0-100; 0=FINE)");
+            options.add(" Enter desired termination percentage (0-100; 0=FINE)");
             workingText = "";
             options.add(workingText);
             mode = SET_INSTRUCTION_TERMINATION;
@@ -2178,7 +2176,8 @@ public void f5(){
       active_col = 0;
       loadInstructions(active_program);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-    } else {
+    } 
+    else {
       if(active_col == 0){
         // ifyou're on the line number, bring up a list of instruction editing options
         contents = new ArrayList<ArrayList<String>>();
@@ -2191,11 +2190,14 @@ public void f5(){
         contents.add( newLine("6 Renumber (NA)") );
         contents.add( newLine("7 Comment (NA)") );
         contents.add( newLine("8 Undo (NA)") );
+        contents.add( newLine("9 Remark") );
         
-        active_col = active_row = 0;
+        active_col = -1; 
+        active_row = 0;
         mode = EDIT_MENU;
         updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-      } else if(active_col == 2 || active_col == 3){ 
+      } 
+      else if(active_col == 2 || active_col == 3){ 
         // show register contents ifyou're highlighting a register
         Instruction ins = programs.get(active_program).getInstructions().get(active_instruction);
          if(ins instanceof MotionInstruction){
@@ -2218,7 +2220,8 @@ public void f5(){
         }
       }
     }
-  } else if(mode == THREE_POINT_MODE || mode == SIX_POINT_MODE || mode == FOUR_POINT_MODE){
+  } 
+  else if(mode == THREE_POINT_MODE || mode == SIX_POINT_MODE || mode == FOUR_POINT_MODE){
     if(teachPointTMatrices != null){
       
       pushMatrix();
@@ -2248,7 +2251,8 @@ public void f5(){
     loadFrameDetails();
     mode = limbo;
     loadPointList();
-  } else if(mode == CONFIRM_DELETE){
+  } 
+  else if(mode == CONFIRM_DELETE){
     
     if(super_mode == PROGRAM_NAV){  
       options = new ArrayList<String>();
@@ -2257,17 +2261,20 @@ public void f5(){
       mode = super_mode;
       super_mode = NONE;
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-    } else if(super_mode == INSTRUCTION_NAV){
+    } 
+    else if(super_mode == INSTRUCTION_NAV){
       deleteInstEpilogue();
     }
-  } else if(mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L){
+  } 
+  else if(mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L){
     char newChar = '\0';
     
     if(letterStates[4] < 2){
       
       if(mode == INPUT_COMMENT_U){
         newChar = (char)('Y' + letterStates[4]);
-      } else if(mode == INPUT_COMMENT_L){
+      } 
+      else if(mode == INPUT_COMMENT_L){
         newChar = (char)('y' + letterStates[4]);
       }
     } else if(letterStates[4] == 2){
@@ -2380,11 +2387,11 @@ public void bd() {
 }
 
 public void ENTER(){
-  println(mode + ", " + active_col);
   switch (mode){
     case NONE:
        break;
     case PROGRAM_NAV:
+       if(programs.size() == 0) return;
        active_instruction = 0;
        text_render_start = 0;
        active_row = 0;
@@ -3067,7 +3074,6 @@ public void ENTER(){
       
       break;
   }
-  println(mode + ", " + active_col);
 }
 
 public void ITEM(){
@@ -3633,304 +3639,305 @@ public void updateButtonColors(){
 
 // update what displayed on screen
 public void updateScreen(color cDefault, color cHighlight){
-   int next_px = display_px;
-   int next_py = display_py;
-   
-   // clear text
-   List<Textarea> displayText = cp5.getAll(Textarea.class);
-   for(Textarea t: displayText){
-     cp5.remove(t.getName());
-   }
-   
-   // draw display background
-   cp5.addTextarea("txt")
-      .setPosition(display_px,display_py)
-      .setSize(display_width, display_height)
-      .setColorBackground(cDefault)
-      .moveTo(g1);
-   
-   // display the name of the program that is being edited 
-   switch(mode){
-      case INSTRUCTION_NAV:
-         cp5.addTextarea("header")
-            .setText("  "+programs.get(active_program).getName())
-            .setFont(fnt_con)
-            .setPosition(next_px, next_py)
-            .setSize(display_width, 20)
-            .setColorValue(cDefault)
-            .setColorBackground(cHighlight)
-            .hideScrollbar()
-            .show()
-            .moveTo(g1);
-            
-         next_px = display_px;
-         next_py += 20;
-         break;
-      case INSTRUCTION_EDIT:
-      case SET_INSTRUCTION_SPEED:
-      case SET_INSTRUCTION_REGISTER:
-      case SET_INSTRUCTION_TERMINATION:
-         cp5.addTextarea("header")
-            .setText("  "+programs.get(active_program).getName())
-            .setFont(fnt_con)
-            .setPosition(next_px, next_py)
-            .setSize(display_width, 20)
-            .setColorValue(cHighlight)
-            .setColorBackground(cDefault)
-            .hideScrollbar()
-            .show()
-            .moveTo(g1);
-            
-         next_px = display_px;
-         next_py += 20;
-         break;
-   }
-
-   // display the main list on screen
-   index_contents = 1;
-   for(int i=0;i<contents.size();i++){
-     ArrayList<String> temp = contents.get(i);
-     
-     //leading row select indicator []
-     if(i == active_row){
-       cp5.addTextarea(Integer.toString(index_contents))
-         .setText("")
+  int next_px = display_px;
+  int next_py = display_py;
+  
+  // clear text
+  List<Textarea> displayText = cp5.getAll(Textarea.class);
+  for(Textarea t: displayText){
+    cp5.remove(t.getName());
+  }
+  
+  // draw display background
+  cp5.addTextarea("txt")
+     .setPosition(display_px,display_py)
+     .setSize(display_width, display_height)
+     .setColorBackground(cDefault)
+     .moveTo(g1);
+  
+  // display the name of the program that is being edited
+  switch(mode){
+    case INSTRUCTION_NAV:
+      cp5.addTextarea("header")
+         .setText("  "+programs.get(active_program).getName())
+         .setFont(fnt_con)
          .setPosition(next_px, next_py)
-         .setSize(10, 20)
+         .setSize(display_width, 20)
+         .setColorValue(cDefault)
          .setColorBackground(cHighlight)
          .hideScrollbar()
+         .show()
          .moveTo(g1);
-     }
-     else{
-       cp5.addTextarea(Integer.toString(index_contents))
-         .setText("")
-         .setPosition(next_px, next_py)
-         .setSize(10, 20)
-         .setColorBackground(cDefault)
-         .hideScrollbar()
-         .moveTo(g1);
-     }
-     
-     index_contents++;
-     next_px += 10;
-     
-     for(int j=0;j<temp.size();j++){
-       if(i == active_row && j != active_col){
-         cp5.addTextarea(Integer.toString(index_contents))
-           .setText(temp.get(j))
-           .setFont(fnt_con)
-           .setPosition(next_px, next_py)
-           .setSize(temp.get(j).length()*8 + 18, 20)
-           .setColorValue(cDefault)
-           .setColorBackground(cHighlight)
-           .hideScrollbar()
-           .moveTo(g1);
-       }
-       else{
-         cp5.addTextarea(Integer.toString(index_contents))
-           .setText(temp.get(j))
-           .setFont(fnt_con)
-           .setPosition(next_px, next_py)
-           .setSize(temp.get(j).length()*8 + 18, 20)
-           .setColorValue(cHighlight)
-           .setColorBackground(cDefault)
-           .hideScrollbar()
-           .moveTo(g1);  
-       }
-       
-       index_contents++;
-       next_px += temp.get(j).length() * 8 + 18; 
-     }
-     next_px = display_px;
-     next_py += 20;
-   }
-   
-   // display options for an element being edited
-   next_py += 20;
-   index_options = 100;
-   if(options.size() > 0){
-     for(int i = 0; i < options.size(); i += 1){
-       if(i == which_option){
-         cp5.addTextarea(Integer.toString(index_options))
-           .setText(options.get(i))
-           .setFont(fnt_con)
-           .setPosition(next_px, next_py)
-           .setSize(options.get(i).length()*8 + 18, 20)
-           .setColorValue(cDefault)
-           .setColorBackground(cHighlight)
-           .hideScrollbar()
-           .moveTo(g1);
-       }
-       else{
-         cp5.addTextarea(Integer.toString(index_options))
-           .setText(options.get(i))
-           .setFont(fnt_con)
-           .setPosition(next_px, next_py)
-           .setSize(options.get(i).length()*8 + 18, 20)
-           .setColorValue(cHighlight)
-           .setColorBackground(cDefault)
-           .hideScrollbar()
-           .moveTo(g1);
-       }
-        
-       index_options++;
-       next_px = display_px;
-       next_py += 20;    
-     }
-   }
-   
-   // display the numbers that the user has typed
-   next_py += 20;
-   index_nums = 1000;
-   if(nums.size() > 0){
-      for(int i=0; i < nums.size(); i+= 1){
-         if(nums.get(i) == -1){
-            cp5.addTextarea(Integer.toString(index_nums))
-               .setText(".")
-               .setFont(fnt_con)
-               .setPosition(next_px, next_py)
-               .setSize(options.get(i).length()*8 + 18, 20)
-               .setColorValue(cDefault)
-               .setColorBackground(color(255, 0, 0))
-               .hideScrollbar()
-               .moveTo(g1);
-         }
-         else{
-            cp5.addTextarea(Integer.toString(index_nums))
-               .setText(Integer.toString(nums.get(i)))
-               .setFont(fnt_con)
-               .setPosition(next_px, next_py)
-               .setSize(options.get(i).length()*8 + 18, 20)
-               .setColorValue(cDefault)
-               .setColorBackground(color(255, 0, 0))
-               .hideScrollbar()
-               .moveTo(g1);
-         }
          
-         index_nums++;
-         next_px += options.get(i).length()*8 + 18;   
-      }
-   }
-   
-   // display the comment for the user's input
-   //set num info location/ color
-           
-   next_px = display_px;
-   next_py += 20;   
-   
-   // display hints for function keys
-   next_py += 100;
-   String[] funct = {"", "", "", "", ""};
-   
-   if(mode == PROGRAM_NAV){
-     // F2, F3
-     funct[0] = "";
-     funct[1] = "[Create]";
-     funct[2] = "[Delete]";
-     funct[3] = "";
-     funct[4] = "";
-   } else if(mode == INSTRUCTION_NAV){
-     // F1, F4, F5
-     if(shift == ON){
-       funct[0] = "[New Pt]";
-       funct[1] = "";
-       funct[2] = "";
-       funct[3] = "[Edit]";
-       funct[4] = "[Replace]";
-     } else {
-       funct[0] = "[New Inst]";
-       funct[1] = "";
-       funct[2] = "";
-       funct[3] = "[Edit]";
-       funct[4] = "[View Reg]";
-     }
-   } else if(mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES){
-     // F1, F2, F3
-     if(shift == ON){
-       funct[0] = "[Detail]";
-       funct[1] = "[Reset]";
-       funct[2] = "[Switch]";
-       funct[3] = "";
-       funct[4] = "";
-     } else {
-       funct[0] = "[Set]";
-       funct[1] = "[Reset]";
-       funct[2] = "[Switch]";
-       funct[3] = "";
-       funct[4] = "";
-     }
-   } else if(mode == FRAME_DETAIL){
-     // F2
-     funct[0] = "";
-     funct[1] = "[Method]";
-     funct[2] = "";
-     funct[3] = "";
-     funct[4] = "";
-   } else if(mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE){
-     // F1, F5
-     if(shift == ON){
-       funct[0] = "[Rmv Pt]";
-       funct[1] = "";
-       funct[2] = "";
-       funct[3] = "";
-       funct[4] = "[Record]";
-     } else {
-       funct[0] = "[Save Pt]";
-       funct[1] = "";
-       funct[2] = "";
-       funct[3] = "";
-       funct[4] = "[Record]";
-     }
-   } else if(mode == ACTIVE_FRAMES){
-     // F1, F2
-     funct[0] = "[List]";
-     funct[1] = "[Reset]";
-     funct[2] = "";
-     funct[3] = "";
-     funct[4] = "";
-   } else if(mode == VIEW_REG || mode == VIEW_POS_REG_C || mode == VIEW_POS_REG_J){
-     // F1, F2
-     funct[0] = "[Edit]";
-     funct[1] = "[Switch]";
-     funct[2] = "";
-     funct[3] = "";
-     funct[4] = "";
-   } else if(mode == INPUT_COMMENT_U){
-     // F1 - F5
-     funct[0] = "[ABCDEF]";
-     funct[1] = "[GHIJKL]";
-     funct[2] = "[MNOPQR]";
-     funct[3] = "[STUVWX]";
-     funct[4] = "[YZ_@*.]";
-   } else if(mode == INPUT_COMMENT_L){
-     // F1 - F5
-     funct[0] = "[abcdef]";
-     funct[1] = "[ghijkl]";
-     funct[2] = "[mnopqr]";
-     funct[3] = "[stuvwx]";
-     funct[4] = "[yz_@*.]";
-   } else if (mode == CONFIRM_DELETE) {
-     // F4, F5
-     funct[0] = "";
-     funct[1] = "";
-     funct[2] = "";
-     funct[3] = "[YES]";
-     funct[4] = "[NO]";
-   }
-   
-   //set f button text labels
-   for(int i = 0; i < 5; i += 1){
-     //fn_info[i] = new Textarea("f"+i, 0, 0);
-     cp5.addTextarea("lf"+i)
-        .setText(funct[i])
-        .setFont(fnt_con)
-        .setPosition(display_width*i/5 + 15 , display_height + 15)
-        .setSize(display_width/5 - 5, 20)
-        .setColorValue(cHighlight)
+      next_px = display_px;
+      next_py += 20;
+      break;
+    case INSTRUCTION_EDIT:
+    case SET_INSTRUCTION_SPEED:
+    case SET_INSTRUCTION_REGISTER:
+    case SET_INSTRUCTION_TERMINATION:
+      cp5.addTextarea("header")
+          .setText("  "+programs.get(active_program).getName())
+          .setFont(fnt_con)
+          .setPosition(next_px, next_py)
+          .setSize(display_width, 20)
+          .setColorValue(cHighlight)
+          .setColorBackground(cDefault)
+          .hideScrollbar()
+          .show()
+          .moveTo(g1);
+          
+      next_px = display_px;
+      next_py += 20;
+      break;
+  }
+  
+  // display the main list on screen
+  index_contents = 1;
+  for(int i = 0; i < contents.size(); i += 1){
+    ArrayList<String> temp = contents.get(i);
+    
+    //leading row select indicator []
+    if(i == active_row){
+      cp5.addTextarea(Integer.toString(index_contents))
+        .setText("")
+        .setPosition(next_px, next_py)
+        .setSize(10, 20)
+        .setColorBackground(cHighlight)
+        .hideScrollbar()
+       .moveTo(g1);
+    }
+    else{
+      cp5.addTextarea(Integer.toString(index_contents))
+        .setText("")
+        .setPosition(next_px, next_py)
+        .setSize(10, 20)
         .setColorBackground(cDefault)
         .hideScrollbar()
         .moveTo(g1);
-   }
+    }
+    
+    index_contents++;
+    next_px += 10;
+    
+    for(int j = 0; j < temp.size(); j += 1){
+      if(i == active_row && j != active_col){
+        cp5.addTextarea(Integer.toString(index_contents))
+          .setText(temp.get(j))
+          .setFont(fnt_con)
+          .setPosition(next_px, next_py)
+          .setSize(temp.get(j).length()*8 + 20, 20)
+          .setColorValue(cDefault)
+          .setColorBackground(cHighlight)
+          .hideScrollbar()
+          .moveTo(g1);
+      }
+      else{
+        cp5.addTextarea(Integer.toString(index_contents))
+          .setText(temp.get(j))
+          .setFont(fnt_con)
+          .setPosition(next_px, next_py)
+          .setSize(temp.get(j).length()*8 + 20, 20)
+          .setColorValue(cHighlight)
+          .setColorBackground(cDefault)
+          .hideScrollbar()
+          .moveTo(g1);  
+      }
+      
+      index_contents++;
+      next_px += temp.get(j).length() * 8 + 18; 
+    }
+    next_px = display_px;
+    next_py += 20;
+  }
+  
+  // display options for an element being edited
+  next_py += 20;
+  index_options = 100;
+  if(options.size() > 0){
+    for(int i = 0; i < options.size(); i += 1){
+            
+      if(i == which_option){
+        cp5.addTextarea(Integer.toString(index_options))
+          .setText("  "+options.get(i))
+          .setFont(fnt_con)
+          .setPosition(next_px, next_py)
+          .setSize(options.get(i).length()*8 + 40, 20)
+          .setColorValue(cDefault)
+          .setColorBackground(cHighlight)
+          .hideScrollbar()
+          .moveTo(g1);
+      }
+      else{
+        cp5.addTextarea(Integer.toString(index_options))
+          .setText("  "+options.get(i))
+          .setFont(fnt_con)
+          .setPosition(next_px, next_py)
+          .setSize(options.get(i).length()*8 + 40, 20)
+          .setColorValue(cHighlight)
+          .setColorBackground(cDefault)
+          .hideScrollbar()
+          .moveTo(g1);
+      }
+       
+      index_options++;
+      next_px = display_px;
+      next_py += 20;    
+    }
+  }
+  
+  // display the numbers that the user has typed
+  next_py += 20;
+  index_nums = 1000;
+  if(nums.size() > 0){
+     for(int i=0; i < nums.size(); i+= 1){
+        if(nums.get(i) == -1){
+           cp5.addTextarea(Integer.toString(index_nums))
+              .setText(".")
+              .setFont(fnt_con)
+              .setPosition(next_px, next_py)
+              .setSize(40, 20)
+              .setColorValue(cDefault)
+              .setColorBackground(color(255, 0, 0))
+              .hideScrollbar()
+              .moveTo(g1);
+        }
+        else{
+           cp5.addTextarea(Integer.toString(index_nums))
+              .setText("asdf"+Integer.toString(nums.get(i)))
+              .setFont(fnt_con)
+              .setPosition(next_px, next_py)
+              .setSize(40, 20)
+              .setColorValue(cDefault)
+              .setColorBackground(color(255, 0, 0))
+              .hideScrollbar()
+              .moveTo(g1);
+        }
+        
+        index_nums++;
+        next_px += options.get(i).length()*8 + 18;   
+     }
+  }
+  
+  // display the comment for the user's input
+  //set num info location/ color
+          
+  next_px = display_px;
+  next_py += 20;   
+  
+  // display hints for function keys
+  next_py += 100;
+  String[] funct = {"", "", "", "", ""};
+  
+  if(mode == PROGRAM_NAV){
+    // F2, F3
+    funct[0] = "";
+    funct[1] = "[Create]";
+    funct[2] = "[Delete]";
+    funct[3] = "";
+    funct[4] = "";
+  } else if(mode == INSTRUCTION_NAV){
+    // F1, F4, F5
+    if(shift == ON){
+      funct[0] = "[New Pt]";
+      funct[1] = "";
+      funct[2] = "";
+      funct[3] = "[Edit]";
+      funct[4] = "[Replace]";
+    } else {
+      funct[0] = "[New Inst]";
+      funct[1] = "";
+      funct[2] = "";
+      funct[3] = "[Edit]";
+      funct[4] = "[Opt/ Reg]";
+    }
+  } else if(mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES){
+    // F1, F2, F3
+    if(shift == ON){
+      funct[0] = "[Detail]";
+      funct[1] = "[Reset]";
+      funct[2] = "[Switch]";
+      funct[3] = "";
+      funct[4] = "";
+    } else {
+      funct[0] = "[Set]";
+      funct[1] = "[Reset]";
+      funct[2] = "[Switch]";
+      funct[3] = "";
+      funct[4] = "";
+    }
+  } else if(mode == FRAME_DETAIL){
+    // F2
+    funct[0] = "";
+    funct[1] = "[Method]";
+    funct[2] = "";
+    funct[3] = "";
+    funct[4] = "";
+  } else if(mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE){
+    // F1, F5
+    if(shift == ON){
+      funct[0] = "[Rmv Pt]";
+      funct[1] = "";
+      funct[2] = "";
+      funct[3] = "";
+      funct[4] = "[Record]";
+    } else {
+      funct[0] = "[Save Pt]";
+      funct[1] = "";
+      funct[2] = "";
+      funct[3] = "";
+      funct[4] = "[Record]";
+    }
+  } else if(mode == ACTIVE_FRAMES){
+    // F1, F2
+    funct[0] = "[List]";
+    funct[1] = "[Reset]";
+    funct[2] = "";
+    funct[3] = "";
+    funct[4] = "";
+  } else if(mode == VIEW_REG || mode == VIEW_POS_REG_C || mode == VIEW_POS_REG_J){
+    // F1, F2
+    funct[0] = "[Edit]";
+    funct[1] = "[Switch]";
+    funct[2] = "";
+    funct[3] = "";
+    funct[4] = "";
+  } else if(mode == INPUT_COMMENT_U){
+    // F1 - F5
+    funct[0] = "[ABCDEF]";
+    funct[1] = "[GHIJKL]";
+    funct[2] = "[MNOPQR]";
+    funct[3] = "[STUVWX]";
+    funct[4] = "[YZ_@*.]";
+  } else if(mode == INPUT_COMMENT_L){
+    // F1 - F5
+    funct[0] = "[abcdef]";
+    funct[1] = "[ghijkl]";
+    funct[2] = "[mnopqr]";
+    funct[3] = "[stuvwx]";
+    funct[4] = "[yz_@*.]";
+  } else if (mode == CONFIRM_DELETE) {
+    // F4, F5
+    funct[0] = "";
+    funct[1] = "";
+    funct[2] = "";
+    funct[3] = "[YES]";
+    funct[4] = "[NO]";
+  }
+  
+  //set f button text labels
+  for(int i = 0; i < 5; i += 1){
+    //fn_info[i] = new Textarea("f"+i, 0, 0);
+    cp5.addTextarea("lf"+i)
+       .setText(funct[i])
+       .setFont(fnt_con)
+       .setPosition(display_width*i/5 + 15 , display_height + 15)
+       .setSize(display_width/5 - 5, 20)
+       .setColorValue(cHighlight)
+       .setColorBackground(cDefault)
+       .hideScrollbar()
+       .moveTo(g1);
+  }
 } // end updateScreen()
 
 // clear screen
@@ -3958,27 +3965,30 @@ public void clearScreen(){
 }
 
 public void clearContents(){
-   for(int i=0;i<index_contents;i++){
-     if(cp5.getController(Integer.toString(i)) != null)
-       cp5.getController(Integer.toString(i)).remove();
-     else if(cp5.getGroup(Integer.toString(i)) != null)
-       cp5.getGroup(Integer.toString(i)).remove();
-   }
-   index_contents = 0;
+  for(int i = 0; i < index_contents; i += 1){
+    if(cp5.getGroup(Integer.toString(i)) != null)
+      cp5.getGroup(Integer.toString(i)).remove();
+  }
+   
+  index_contents = 0;
 }
 
 public void clearOptions(){
-   for(int i=100;i<index_options;i++){
-      cp5.get(Integer.toString(i)).remove();
-   }
-   index_options = 100;
+  for(int i = 100; i < index_options; i += 1){
+    if(cp5.getGroup(Integer.toString(i)) != null)
+      cp5.getGroup(Integer.toString(i)).remove();
+  }
+  
+  index_options = 100;
 }
 
 public void clearNums(){
-   for(int i=1000;i<index_nums;i++){
-      cp5.getController(Integer.toString(i)).remove();
-   }
-   index_nums = 1000;
+  for(int i = 1000; i < index_nums; i += 1){
+    if(cp5.getGroup(Integer.toString(i)) != null)
+      cp5.getGroup(Integer.toString(i)).remove();
+  }
+  
+  index_nums = 1000;
 }
 
 /**
@@ -4572,60 +4582,62 @@ public void updateComment(){
 
 // prepare for displaying motion instructions on screen
 public void loadInstructions(int programID){
-   Program p = programs.get(programID);
-   contents = new ArrayList<ArrayList<String>>();
-   int size = p.getInstructions().size();
-   
-   int start = text_render_start;
-   int end = min(start + ITEMS_TO_SHOW, size);
-   if(end >= size) end = size;
-   for(int i=start;i<end;i++){
-      ArrayList<String> m = new ArrayList<String>();
-      m.add(Integer.toString(i+1) + ")");
-      Instruction instruction = p.getInstructions().get(i);
-      if(instruction instanceof MotionInstruction){
-        MotionInstruction a = (MotionInstruction)instruction;
-        if(armModel.getEEPos().dist(a.getVector(p).pos) < liveSpeed){
-          println("at tgt position");
-          m.add("@");
-        }
-        else{
-          println(a.getVector(p).pos);
-          m.add("_");
-        }
-        // add motion type
-        switch (a.getMotionType()){
-           case MTYPE_JOINT:
-              m.add("J");
-              break;
-           case MTYPE_LINEAR:
-              m.add("L");
-              break;
-           case MTYPE_CIRCULAR:
-              m.add("C");
-              break; 
-        }
-        // load register no, speed and termination type
-        if(a.getGlobal()) m.add("PR[");
-        else m.add("P[");
-        
-        m.add((a.getRegister() + 1) +"]");
-        
-        if(a.getMotionType() == MTYPE_JOINT) m.add((a.getSpeed() * 100) + "%");
-        else m.add((int)(a.getSpeed()) + "mm/s");
-        
-        if(a.getTermination() == 0) m.add("FINE");
-        else m.add("CONT" + (int)(a.getTermination()*100));
-        
-        contents.add(m);
-      } 
-      else if(instruction instanceof ToolInstruction ||
-                 instruction instanceof FrameInstruction)
-      {
-        m.add(instruction.toString());
-        contents.add(m);
+  if(programs.size() == 0) return;
+  Program p = programs.get(programID);
+  contents = new ArrayList<ArrayList<String>>();
+  int size = p.getInstructions().size();
+  
+  int start = text_render_start;
+  int end = min(start + ITEMS_TO_SHOW, size);
+  if(end >= size) end = size;
+  for(int i=start;i<end;i++){
+    ArrayList<String> m = new ArrayList<String>();
+    m.add(Integer.toString(i+1) + ")");
+    Instruction instruction = p.getInstructions().get(i);
+    if(instruction instanceof MotionInstruction){
+      MotionInstruction a = (MotionInstruction)instruction;
+      if(armModel.getEEPos().dist(a.getVector(p).pos) < liveSpeed){
+        println("at tgt position");
+        m.add("@");
       }
-   } 
+      else{
+        println(a.getVector(p).pos);
+        m.add("_");
+      }
+      // add motion type
+      switch (a.getMotionType()){
+        case MTYPE_JOINT:
+          m.add("J");
+          break;
+        case MTYPE_LINEAR:
+          m.add("L");
+          break;
+        case MTYPE_CIRCULAR:
+          m.add("C");
+          break; 
+      }
+    
+      // load register no, speed and termination type
+      if(a.getGlobal()) m.add("PR[");
+      else m.add("P[");
+      
+      m.add((a.getRegister() + 1) +"]");
+      
+      if(a.getMotionType() == MTYPE_JOINT) m.add((a.getSpeed() * 100) + "%");
+      else m.add((int)(a.getSpeed()) + "mm/s");
+      
+      if(a.getTermination() == 0) m.add("FINE");
+      else m.add("CONT" + (int)(a.getTermination()*100));
+      
+      contents.add(m);
+    } 
+    else if(instruction instanceof ToolInstruction ||
+               instruction instanceof FrameInstruction)
+    {
+      m.add(instruction.toString());
+      contents.add(m);
+    }
+  } 
 }
 
 /**
