@@ -1085,13 +1085,6 @@ public void mu() {
 
 // Data button
 public void da() {
-  contents = new ArrayList<ArrayList<String>>();
-  
-  contents.add( newLine("VIEW REGISTERS") );
-  
-  active_row = -1;
-  active_col = text_render_start = 0;
-  
   pickRegisterList();
 }
 
@@ -1230,7 +1223,7 @@ public void LINE() {
     }
     
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-  } else if ((mode != INPUT_COMMENT_U && mode != INPUT_COMMENT_L) && workingText != null && workingText.length() > 0) {
+  } else if (mode == INPUT_FLOAT) {
     // Mutliply current number by -1
     if (workingText.charAt(0) == '-') {
       workingText = workingText.substring(1);
@@ -1243,6 +1236,7 @@ public void LINE() {
     } else {
       options.set(2, workingText);
     }
+    
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
   }
 }
@@ -1346,7 +1340,7 @@ public void up() {
                r = active_row;
            
            active_index = max(0, i - 1);
-           active_row = max(2, r + min(active_index - i, 0));
+           active_row = max(0, r + min(active_index - i, 0));
            text_render_start = text_render_start + min((active_index - i) - (active_row - r), 0);
          }
          
@@ -1375,17 +1369,18 @@ public void up() {
       case SETUP_NAV:
       case NAV_TOOL_FRAMES:
       case NAV_USER_FRAMES:
+      case ACTIVE_FRAMES:
       case PICK_INSTRUCTION:
       case IO_SUBMENU:
       case SET_FRAME_INSTRUCTION:
       case EDIT_MENU:
-         active_row = max(0, active_row - 1);
-         break;
-      case ACTIVE_FRAMES:
-      case DIRECT_ENTRY_MODE:
       case INPUT_POINT_C:
       case INPUT_POINT_J:
-         active_row = max(1, active_row - 1);
+         active_row = max(0, active_row - 1);
+         break;
+      
+      case DIRECT_ENTRY_MODE:
+         active_row = max(0, active_row - 1);
          
          break;
       case INPUT_COMMENT_U:
@@ -1837,9 +1832,9 @@ public void f1() {
       }
       break;
     case ACTIVE_FRAMES:
-      if (active_row == 1) {
+      if (active_row == 0) {
         loadFrames(COORD_TOOL);
-      } else if (active_row == 2) {
+      } else if (active_row == 1) {
         loadFrames(COORD_USER);
       }
     case INSTRUCTION_EDIT:
@@ -1957,7 +1952,7 @@ public void f2() {
    } 
    else if (mode == ACTIVE_FRAMES) {
      // Reset the active frames for the User or Tool Coordinate Frames
-     if (active_row == 1) {
+     if (active_row == 0) {
        
        activeToolFrame = -1;
        
@@ -1967,7 +1962,7 @@ public void f2() {
          armModel.resetFrame();
        }
      } 
-     else if (active_row == 2) {
+     else if (active_row == 1) {
        activeUserFrame = -1;
        
        // Leave the User Frame
@@ -2532,6 +2527,14 @@ public void ENTER() {
              updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
              return;
            }
+         } else if (tempRegister < 0 || tempRegister >= programs.get(active_program).p.length) {
+             // Invalid register index
+             options = new ArrayList<String>();
+             options.add("Only registers 1 - 1000 are legal!");
+             which_option = 0;
+             mode = INSTRUCTION_NAV;
+             updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+             return;
          }
          
          castIns.setRegister(tempRegister);
@@ -2545,12 +2548,15 @@ public void ENTER() {
        updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
        break;
     case SET_INSTRUCTION_TERMINATION:
-       float tempTerm = Float.parseFloat(workingText);
-       if (tempTerm >= 0.0) {
-         tempTerm /= 100.0;
-         MotionInstruction castIns = getActiveMotionInstruct();
-         castIns.setTermination(tempTerm);
-       }
+       try {
+          float tempTerm = Float.parseFloat(workingText);
+          
+          if (tempTerm >= 0f && tempTerm <= 100f) {
+            tempTerm /= 100f;
+            MotionInstruction castIns = getActiveMotionInstruct();
+            castIns.setTermination(tempTerm);
+          }
+       } catch (NumberFormatException NFEx) { /* Ignore invalid input */ }
        
        loadInstructions(active_program);
        mode = INSTRUCTION_NAV;
@@ -2779,7 +2785,7 @@ public void ENTER() {
         (mode == FOUR_POINT_MODE && teachPointTMatrices.size() == 4) ||
         (mode == SIX_POINT_MODE && teachPointTMatrices.size() == 6)) {
   
-        PVector origin = new PVector(0f, 0f, 0f), wpr = new PVector(0f, 0f, 0f);
+        PVector origin = new PVector(0f, 0f, 0f);
         float[][] axes = new float[3][3];
         
         // Create identity matrix
@@ -2905,7 +2911,7 @@ public void ENTER() {
       try {
         // Parse each input value
         for (int val = 0; val < inputs.length; ++val) {
-          String str = contents.get(val + 1).get(0);
+          String str = contents.get(val).get(0);
           
           if (str.length() < 4) {
             // No value entered
@@ -3007,7 +3013,7 @@ public void ENTER() {
         mu();
       }
       
-      active_row = 2;
+      active_row = 0;
       active_col = active_index = text_render_start = 0;
       super_mode = NONE;
       viewRegisters();
@@ -3056,7 +3062,7 @@ public void ENTER() {
       // Parse each field, removing each the prefix
       try {
         for (int idx = 0; idx < inputs.length; ++idx) {
-          String inputStr = contents.get(idx + 1).get(0);
+          String inputStr = contents.get(idx).get(0);
           inputs[idx] = Float.parseFloat( inputStr.substring(which_option, inputStr.length()) );
         }
       } catch (NumberFormatException NFEx) {
@@ -3081,16 +3087,28 @@ public void ENTER() {
           inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
         }
         
-        System.out.printf("W: %4.3f  P: %4.3f  R: %4.3f", (inputs[3] * DEG_TO_RAD) * RAD_TO_DEG, (inputs[4] * DEG_TO_RAD) * RAD_TO_DEG, (inputs[5] * DEG_TO_RAD) * RAD_TO_DEG);
+        //System.out.printf("W: %4.3f  P: %4.3f  R: %4.3f\n", inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD);
         
         position = new PVector(inputs[0], inputs[1], inputs[2]);
+        /* Since all points are displayed with respect to the World Frame, it is
+         * assumed that the user is entering a point with respect to the World Frame. */
+        position = convertWorldToNative(position);
+      
         orientation = eulerToQuat( new PVector(inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD) );
-        // TODO Inverse Kinematics on position and orientation
+        // Testing code: Check several iterations of converting the same angles between euler and quaternions
+        /*PVector wpr = quatToEuler(orientation);
+        System.out.printf("W: %4.3f  P: %4.3f  R: %4.3f\n", wpr.x, wpr.y, wpr.z);
+        float[] limbo = eulerToQuat(wpr);
+        wpr = quatToEuler(limbo);
+        System.out.printf("W: %4.3f  P: %4.3f  R: %4.3f\n", wpr.x, wpr.y, wpr.z);
+        limbo = eulerToQuat(wpr);
+        wpr = quatToEuler(limbo);
+        System.out.printf("W: %4.3f  P: %4.3f  R: %4.3f\n", wpr.x, wpr.y, wpr.z);*/
+        
+        // TODO inverse kinematics to get joint angles
       }
       
-      /* Since all points are displayed with respect to the World Frame, it is
-       * assumed that the user is entering a point with respect to the World Frame. */
-      position = convertWorldToNative(position);
+      
       
       // Save the input point
       POS_REG[active_index].point = new Point(position, orientation);
@@ -3100,7 +3118,7 @@ public void ENTER() {
       mode = super_mode;
       super_mode = NONE;
       text_render_start = active_index;
-      active_row = 2;
+      active_row = 0;
       active_col = 0;
       viewRegisters();
       
@@ -3126,8 +3144,7 @@ public void ENTER() {
       workingText = null;
       mode = super_mode;
       super_mode = NONE;
-      active_row = 2;
-      active_col = 0;
+      active_row = active_col = 0;
       text_render_start = active_index;
       viewRegisters();
       saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
@@ -3716,29 +3733,128 @@ public void updateScreen(color cDefault, color cHighlight) {
      .setColorBackground(cDefault)
      .moveTo(g1);
   
+  String text = null;
   // display the name of the program that is being edited
   switch(mode) {
-    case INSTRUCTION_NAV:
-      cp5.addTextarea("header")
-         .setText("  "+programs.get(active_program).getName())
-         .setFont(fnt_con)
-         .setPosition(next_px, next_py)
-         .setSize(display_width, 20)
-         .setColorValue(cDefault)
-         .setColorBackground(cHighlight)
-         .hideScrollbar()
-         .show()
-         .moveTo(g1);
-         
-      next_px = display_px;
-      next_py += 20;
+    case PROGRAM_NAV:
+      text = "PROGRAMS";
+      
       break;
+    case INSTRUCTION_NAV:
     case INSTRUCTION_EDIT:
     case SET_INSTRUCTION_SPEED:
     case SET_INSTRUCTION_REGISTER:
     case SET_INSTRUCTION_TERMINATION:
-      cp5.addTextarea("header")
-          .setText("  "+programs.get(active_program).getName())
+    case PICK_INSTRUCTION:
+    case IO_SUBMENU:
+    case SET_DO_BRACKET:
+    case SET_DO_STATUS:
+    case SET_RO_BRACKET:
+    case SET_RO_STATUS:
+    case SET_FRAME_INSTRUCTION:
+    case SET_FRAME_INSTRUCTION_IDX:
+    case VIEW_INST_REG:
+    case EDIT_MENU:
+      text = programs.get(active_program).getName();
+      
+      break;
+    case ACTIVE_FRAMES:
+      text = "ACTIVE FRAMES";
+      
+      break;
+    case NAV_TOOL_FRAMES:
+      text = "TOOL FRAMES";
+      
+      break;
+    case NAV_USER_FRAMES:
+      text = "USER FRAMES";
+      
+      break;
+    case FRAME_DETAIL:
+    case PICK_FRAME_METHOD:
+      if (super_mode == NAV_TOOL_FRAMES) {
+        text = String.format("TOOL FRAME: %d", curFrameIdx + 1);
+      } else if (super_mode == NAV_USER_FRAMES) {
+        text = String.format("USER FRAME: %d", curFrameIdx + 1);
+      }
+    
+      break;
+    case THREE_POINT_MODE:
+      text = "THREE POINT METHOD";
+      
+      break;
+    case FOUR_POINT_MODE:
+      text = "FOUR POINT METHOD";
+      
+      break;
+    case SIX_POINT_MODE:
+      text = "SIX POINT METHOD";
+      
+      break;
+    case DIRECT_ENTRY_MODE:
+      text = "DIRECT ENTRY METHOD";
+      
+      break;
+    case PICK_REG_LIST:
+      if (super_mode == VIEW_REG) {
+        
+        text = "REGISTERS";
+      } else if (super_mode == VIEW_POS_REG_J || super_mode == VIEW_POS_REG_C) {
+        
+        text = "POSITON REGISTERS";
+      } else {
+        
+        text = "VIEW REGISTERS";
+      }
+      
+      break;
+    case VIEW_REG:
+      text = "REGISTERS";
+      
+      break;
+    case VIEW_POS_REG_J:
+    case VIEW_POS_REG_C:
+      text = "POSTION REGISTERS";
+      
+      break;
+    case INPUT_FLOAT:
+      if (super_mode == VIEW_REG) {
+        text = "REGISTERS";
+      }
+      
+      break;
+    case INPUT_POINT_C:
+    case INPUT_POINT_J:
+      if (super_mode == VIEW_POS_REG_J || super_mode == VIEW_POS_REG_C) {
+        
+        text = "POSITION REGISTER: ";
+    
+        if (mode != INPUT_COMMENT_U && mode != INPUT_COMMENT_L && POS_REG[active_index].comment != null) {
+          // Show comment if it exists
+          text += POS_REG[active_index].comment;
+        } else {
+          text += active_index;
+        }
+      }
+      
+      break;
+    case INPUT_COMMENT_U:
+    case INPUT_COMMENT_L:
+      if (super_mode == VIEW_REG) {
+        
+        text = String.format("Enter a name for R[%d]", active_index);
+      } else if (super_mode == VIEW_POS_REG_J || super_mode == VIEW_POS_REG_C) {
+        
+        text = String.format("Enter a name for PR[%d]", active_index);
+      }
+      
+      break;
+  }
+  
+  if (text != null) {
+    // Display header field
+    cp5.addTextarea("header")
+          .setText(" " + text)
           .setFont(fnt_con)
           .setPosition(next_px, next_py)
           .setSize(display_width, 20)
@@ -3747,10 +3863,9 @@ public void updateScreen(color cDefault, color cHighlight) {
           .hideScrollbar()
           .show()
           .moveTo(g1);
-          
-      next_px = display_px;
-      next_py += 20;
-      break;
+     
+    next_px = display_px;
+    next_py += 20;
   }
   
   // display the main list on screen
@@ -4156,16 +4271,6 @@ public void loadPointList() {
 public void loadDirectEntryMethod() {
   contents = new ArrayList<ArrayList<String>>();
   
-  String str = "\0";
-  
-  if (super_mode == NAV_TOOL_FRAMES) {
-    str = "TOOL FRAME ";
-  } else if (super_mode == NAV_USER_FRAMES) {
-    str = "USER FRAME ";
-  }
-  
-  contents.add( newLine(str) );
-  
   contents.add( newLine("X: 0.0") );
   contents.add( newLine("Y: 0.0") );
   contents.add( newLine("Z: 0.0") );
@@ -4175,7 +4280,7 @@ public void loadDirectEntryMethod() {
   
   // Defines the length of a line's prefix
   which_option = 3;
-  active_row = 1;
+  active_row = 0;
   active_col = 0;
   mode = DIRECT_ENTRY_MODE;
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -4342,15 +4447,12 @@ public void loadFrameDetails() {
   // Display the frame set name as well as the index of the currently selected frame
   if (super_mode == NAV_TOOL_FRAMES) {
     
-    contents.add( newLine(String.format("TOOL FRAME: %d", curFrameIdx + 1)) );
-    
     String[] fields = toolFrames[curFrameIdx].toStringArray();
     // Place each value in the frame on a separate lien
     for (String field : fields) { contents.add( newLine(field) ); }
     
   } else if (super_mode == NAV_USER_FRAMES) {
     
-    contents.add( newLine(String.format("USER FRAME: %d", curFrameIdx + 1)) );
     // Transform the origin in terms of the World Frame
     PVector origin = convertNativeToWorld( userFrames[curFrameIdx].getOrigin() );
     // Convert angles to degrees
@@ -4419,10 +4521,6 @@ public void viewRegisters() {
   
   // View Registers or Position Registers
   if (mode == VIEW_REG || mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C) {
-    // Header
-    String limbo = (mode == VIEW_REG) ? "REGISTERS" : "POSITION REGISTERS";
-    contents.add( newLine(limbo) );
-    contents.add( newLine("\0") );
     
     int start = text_render_start;
     int end = min(start + ITEMS_TO_SHOW - 1, REG.length);
@@ -4537,14 +4635,6 @@ public void loadInputRegisterPointMethod() {
   contents = new ArrayList<ArrayList<String>>();
   
   if (active_index >= 0 && active_index < POS_REG.length) {
-    String header = "POSITION REGISTER";
-    
-    if (POS_REG[active_index].comment != null) {
-      // Show comment ifit exists
-      header += ": " + POS_REG[active_index].comment;
-    }
-  
-    contents.add( newLine(header) );
     
     if (POS_REG[active_index].point == null) {
       // Initialize valeus to zero ifthe entry is null
@@ -4576,7 +4666,7 @@ public void loadInputRegisterPointMethod() {
   
   // Defines the length of a line's prefix
   which_option = (mode == INPUT_POINT_J) ? 4 : 3;
-  active_row = 1;
+  active_row = 0;
   active_col = 0;
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
@@ -4610,7 +4700,6 @@ public void loadInputRegisterCommentMethod() {
     }
   }
   
-  contents.add( newLine("Enter a name for the selected register") );
   contents.add( newLine("\0") );
   contents.add( newLine("\0") );
   updateComment();
@@ -4627,7 +4716,7 @@ public void loadInputRegisterCommentMethod() {
     mode = INPUT_COMMENT_L;
   }
   
-  active_row = 2;
+  active_row = 1;
   active_col = 0;
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
@@ -4646,7 +4735,7 @@ public void updateComment() {
     line.add( Character.toString(workingText.charAt(idx)) );
   }
   
-  contents.set(2, line);
+  contents.set(1, line);
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
@@ -4736,14 +4825,12 @@ public void updateInstructions() {
  * respective frame set. */
 void loadActiveFrames() {
   contents = new ArrayList<ArrayList<String>>();
-  active_row = 1;
+  active_row = 0;
   options = new ArrayList<String>();
   which_option = -1;
   
-  contents.add( newLine("ACTIVE FRAMES") );
   contents.add( newLine("Tool: " + (activeToolFrame + 1)) );
   contents.add( newLine("User: " + (activeUserFrame + 1)) );
-  //contents.add( newLine("Jog: " + (activeJogFrame + 1)) );
   
   mode = ACTIVE_FRAMES;
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
