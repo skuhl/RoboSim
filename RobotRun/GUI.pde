@@ -1134,8 +1134,11 @@ public void NUM9(){
    addNumber("9");
 }
 
-public void io(){
-  
+public void IO(){
+  if(armModel.endEffectorStatus == OFF)
+    armModel.endEffectorStatus = ON;
+  else
+    armModel.endEffectorStatus = OFF;
 }
 
 public void addNumber(String number){
