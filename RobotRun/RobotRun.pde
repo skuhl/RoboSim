@@ -158,41 +158,41 @@ public void draw(){
   noLights();
   
   //TESTING CODE: DRAW INTERMEDIATE POINTS
-  noStroke();
-  pushMatrix();
-  if(intermediatePositions != null){
-    int count = 0;
-    for(Point p : intermediatePositions){
-      if(count % 8 == 0){
-        pushMatrix();
-        translate(p.pos.x, p.pos.y, p.pos.z);
-        sphere(10);
-        popMatrix();
-      }
-      count += 1;
-    }
-  }
-  popMatrix(); 
+  //noStroke();
+  //pushMatrix();
+  //if(intermediatePositions != null){
+  //  int count = 0;
+  //  for(Point p : intermediatePositions){
+  //    if(count % 8 == 0){
+  //      pushMatrix();
+  //      translate(p.pos.x, p.pos.y, p.pos.z);
+  //      sphere(10);
+  //      popMatrix();
+  //    }
+  //    count += 1;
+  //  }
+  //}
+  //popMatrix(); 
   //TESTING CODE: DRAW END EFFECTOR POSITION
-  pushMatrix();
-  noFill();
-  applyModelRotation(armModel, true);
-  //EE position
-  stroke(255, 255, 0);
-  sphere(5);
-  translate(0, 0, -100);
-  stroke(255, 0, 0);
-  //EE x axis
-  sphere(6);
-  translate(0, 100, 100);
-  stroke(0, 255, 0);
-  //EE y axis
-  sphere(6);
-  translate(100, -100, 0);
-  stroke(0, 0, 255);
-  //EE z axis
-  sphere(6);
-  popMatrix();
+  //pushMatrix();
+  //noFill();
+  //applyModelRotation(armModel, true);
+  ////EE position
+  //stroke(255, 255, 0);
+  //sphere(5);
+  //translate(0, 0, -100);
+  //stroke(255, 0, 0);
+  ////EE x axis
+  //sphere(6);
+  //translate(0, 100, 100);
+  //stroke(0, 255, 0);
+  ////EE y axis
+  //sphere(6);
+  //translate(100, -100, 0);
+  //stroke(0, 0, 255);
+  ////EE z axis
+  //sphere(6);
+  //popMatrix();
   //END TESTING CODE
   // TESTING CODE: DRAW USER FRAME 0
   /*PVector ufo = convertWorldToNative(userFrames[0].getOrigin());
@@ -264,8 +264,8 @@ public void draw(){
   }
   
   drawEndEffectorGridMapping();*/
-  displayFrameAxes();
-  displayTeachPoints();
+  //displayFrameAxes();
+  //displayTeachPoints();
   
   popMatrix();
   
