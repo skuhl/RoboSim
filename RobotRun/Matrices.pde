@@ -162,8 +162,8 @@ float[][] eulerToMatrix(PVector wpr) {
   r[2][2] = cos(xRot)*cos(yRot);
 
   //println("matrix: ");
-  //  for(int i = 0; i < 3; i += 1){
-  //    for(int j = 0; j < 3; j += 1){
+  //  for (int i = 0; i < 3; i += 1) {
+  //    for (int j = 0; j < 3; j += 1) {
   //      print(String.format("  %4.3f", r[i][j]));
   //    }
   //  println();
@@ -282,8 +282,8 @@ float[][] quatToMatrix(float[] q) {
   r[2][2] = 1 - 2*(q[1]*q[1] + q[2]*q[2]);
 
   //println("matrix: ");
-  //for(int i = 0; i < 3; i += 1){
-  //  for(int j = 0; j < 3; j += 1){
+  //for (int i = 0; i < 3; i += 1) {
+  //  for (int j = 0; j < 3; j += 1) {
   //    print(String.format("  %4.3f", m[i][j]));
   //  }
   //  println();
@@ -385,7 +385,7 @@ float[] rotateQuat(float[] p, PVector u, float theta) {
   return pq;
 }
 
-PVector rotateVectorQuat(PVector v, PVector u, float theta){
+PVector rotateVectorQuat(PVector v, PVector u, float theta) {
   float[] q = new float[4];
   float[] p = new float[4];
   float[] q_inv = new float[4];
@@ -417,7 +417,7 @@ PVector rotateVectorQuat(PVector v, PVector u, float theta){
  * the multiply operation should be taken to mean quaternion
  * multiplication, which is non-commutative.
  */
-float[] calculateQuatOffset(float[] q1, float[] q2){
+float[] calculateQuatOffset(float[] q1, float[] q2) {
   float[] q1_inv = new float[4];
   q1_inv[0] = q1[0];
   q1_inv[1] = -q1[1];
@@ -426,8 +426,8 @@ float[] calculateQuatOffset(float[] q1, float[] q2){
   
   float[] qr = quaternionMult(q2, q1_inv);
   
-  for(int i = 0; i < 4; i += 1){
-    if(qr[i] < 0.00001)
+  for (int i = 0; i < 4; i += 1) {
+    if (qr[i] < 0.00001)
       qr[i] = 0;
   }
   
@@ -446,7 +446,7 @@ float[] quaternionMult(float[] q1, float[] q2) {
 }
 
 //returns the result of a quaternion 'q' multiplied by scalar 's'
-float[] quaternionScalarMult(float[] q, float s){
+float[] quaternionScalarMult(float[] q, float s) {
   float[] qr = new float[4];
   qr[0] = q[0]*s;
   qr[1] = q[1]*s;
@@ -456,7 +456,7 @@ float[] quaternionScalarMult(float[] q, float s){
 }
 
 //returns the result of the addition of two quaternions, 'q1' and 'q2'
-float[] quaternionAdd(float[] q1, float[] q2){
+float[] quaternionAdd(float[] q1, float[] q2) {
   float[] qr = new float[4];
   qr[0] = q1[0] + q2[0];
   qr[1] = q1[1] + q2[1];
@@ -466,11 +466,11 @@ float[] quaternionAdd(float[] q1, float[] q2){
 }
 
 //returns the magnitude of the input quaternion 'q'
-float calculateQuatMag(float[] q){
+float calculateQuatMag(float[] q) {
   return sqrt(pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2));
 }
 
-float[] quaternionNormalize(float[] q){
+float[] quaternionNormalize(float[] q) {
   float qMag = calculateQuatMag(q);
   return quaternionScalarMult(q, 1/qMag);
 }
@@ -479,32 +479,32 @@ float[] quaternionNormalize(float[] q){
  * linear interpolation from 'q1' to 'q2' for a given fraction of the
  * complete transformation 'q1' to 'q2', denoted by 0 <= 'mu' <= 1. 
  */
-float[] quaternionSlerp(float[] q1, float[] q2, float mu){
+float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
   float[] qSlerp = new float[4];
   float[] q3 = new float[4];
   float cOmega = 0;
   
-  if(mu == 0) return q1;
-  if(mu == 1) return q2;
+  if (mu == 0) return q1;
+  if (mu == 1) return q2;
   
-  for(int i = 0; i < 4; i += 1)
+  for (int i = 0; i < 4; i += 1)
     cOmega += q1[i]*q2[i];
     
-  if(cOmega < 0){
+  if (cOmega < 0) {
     cOmega = -cOmega;
     q3 = quaternionScalarMult(q2, -1);
   }
-  else{
+  else {
     q3 = quaternionScalarMult(q2, 1);
   }
   
-  if(cOmega > 0.99999995){
+  if (cOmega > 0.99999995) {
     qSlerp[0] = q1[0]*(1-mu) + q3[0]*mu;
     qSlerp[1] = q1[1]*(1-mu) + q3[1]*mu;
     qSlerp[2] = q1[2]*(1-mu) + q3[2]*mu;
     qSlerp[3] = q1[3]*(1-mu) + q3[3]*mu;
   }
-  else{
+  else {
     float omega = acos(cOmega);
     float scale1 = sin(omega*(1-mu))/sin(omega);
     float scale2 = sin(omega*mu)/sin(omega);
@@ -541,12 +541,12 @@ public String matrixToString(float[][] matrix) {
   return (mStr + "\n");
 }
 
-public String arrayToString(float[] array){
+public String arrayToString(float[] array) {
   String s = "[";
   
-  for(int i = 0; i < array.length; i += 1){
+  for (int i = 0; i < array.length; i += 1) {
     s += String.format("%5.4f", array[i]);
-    if(i != array.length-1) s += ", ";
+    if (i != array.length-1) s += ", ";
   }
   
   return s + "]";

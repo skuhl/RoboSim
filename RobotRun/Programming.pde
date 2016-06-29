@@ -40,7 +40,7 @@ public class Point  {
     joints[5] = j6;
   }
   
-  public Point(float x, float y, float z, float r, float i, float j, float k){
+  public Point(float x, float y, float z, float r, float i, float j, float k) {
     pos = new PVector(x,y,z);
     ori[0] = r;
     ori[1] = i;
@@ -48,7 +48,7 @@ public class Point  {
     ori[3] = k;
   }
   
-  public Point(PVector position, float[] orientation){
+  public Point(PVector position, float[] orientation) {
     pos = position;
     ori = orientation;
   }
@@ -68,12 +68,12 @@ public class Point  {
   //}
   
   ////create a new point with position and orientation only
-  //public Point(float x, float y, float z, float w, float p, float r){
+  //public Point(float x, float y, float z, float w, float p, float r) {
   //  pos = new PVector(x,y,z);
   //  ori = eulerToQuat(new PVector(w,p,r));
   //}
   
-  //public Point(PVector position, PVector orientation){
+  //public Point(PVector position, PVector orientation) {
   //  pos = position;
   //  ori = eulerToQuat(orientation);
   //}
@@ -239,15 +239,15 @@ public class Program  {
   
   public void setName(String n) { name = n; }
   
-  public String getName(){
+  public String getName() {
     return name;
   }
   
-  public void loadNextRegister(int next){
+  public void loadNextRegister(int next) {
      nextRegister = next;
   }
   
-  public int getRegistersLength(){
+  public int getRegistersLength() {
      return p.length;
   }
   /**** end ****/
@@ -375,9 +375,9 @@ public final class MotionInstruction extends Instruction  {
     }
   } // end getVector()
   
-  public String toString(){
+  public String toString() {
      String me = "";
-     switch (motionType){
+     switch (motionType) {
         case MTYPE_JOINT:
            me += "J ";
            break;
@@ -485,10 +485,10 @@ public class CoordinateFrame {
 } // end FrameInstruction class
 
 public class RecordScreen implements Runnable{
-   public RecordScreen(){
+   public RecordScreen() {
      System.out.format("Record screen...\n");
    }
-    public void run(){
+    public void run() {
        try{ 
             // create a timestamp and attach it to the filename
             Calendar calendar = Calendar.getInstance();
@@ -505,13 +505,13 @@ public class RecordScreen implements Runnable{
                            "video=\"screen-capture-recorder\":audio=\"Microphone" + 
                            " (Conexant SmartAudio HD)\" " + filename );
             //Process proc = rt.exec(script);
-            while(record == ON){
+            while(record == ON) {
               Thread.sleep(4000);
             }
             rt.exec("taskkill /F /IM ffmpeg.exe"); // close ffmpeg
             System.out.format("finish recording\n");
             
-        }catch (Throwable t){
+        }catch (Throwable t) {
             t.printStackTrace();
         }
         

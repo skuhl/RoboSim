@@ -571,7 +571,7 @@ void gui() {
        NUM_px = LINE_px;
        NUM_py -= button_offsetY;
      }
-     else{
+     else {
        NUM_px += button_offsetX;
      }
    }
@@ -1713,7 +1713,7 @@ public void sf() {
    if (shift == OFF) { 
 	   shift = ON;
      ((Button)cp5.get("sf")).setColorBackground(BUTTON_ACTIVE);
-   } else{
+   } else {
      shift = OFF;
      ((Button)cp5.get("sf")).setColorBackground(BUTTON_DEFAULT);
    }
@@ -1726,7 +1726,7 @@ public void st() {
      step = ON;
      ((Button)cp5.get("st")).setColorBackground(BUTTON_ACTIVE);
    }
-   else{
+   else {
      step = OFF;
      ((Button)cp5.get("st")).setColorBackground(BUTTON_DEFAULT);
    }
@@ -2429,10 +2429,10 @@ public void ENTER() {
              if (which_option == 0) {
                 if (m.getMotionType() != MTYPE_JOINT) m.setSpeed(m.getSpeed()/armModel.motorSpeed);
                 m.setMotionType(MTYPE_JOINT);
-             }else if (which_option == 1) {
+             } else if (which_option == 1) {
                if (m.getMotionType() == MTYPE_JOINT) m.setSpeed(armModel.motorSpeed*m.getSpeed());
                 m.setMotionType(MTYPE_LINEAR);
-             }else if (which_option == 2) {
+             } else if (which_option == 2) {
                if (m.getMotionType() == MTYPE_JOINT) m.setSpeed(armModel.motorSpeed*m.getSpeed());
                 m.setMotionType(MTYPE_CIRCULAR);
              }
@@ -3215,7 +3215,7 @@ public void pan_normal() {
      cp5.getController("pan_normal")
         .setImages(pressed);
   }
-  else{
+  else {
      cursorMode = ARROW;
      PImage[] released = {loadImage("images/pan_35x20.png"), 
                           loadImage("images/pan_over.png"), 
@@ -3250,7 +3250,7 @@ public void rotate_normal() {
      cp5.getController("rotate_normal")
         .setImages(pressed);
   }
-  else{
+  else {
      cursorMode = ARROW;
      PImage[] released = {loadImage("images/rotate_35x20.png"), 
                           loadImage("images/rotate_over.png"), 
@@ -3277,7 +3277,7 @@ public void record_normal() {
                          loadImage("images/record-on.png")};   
       bt_record_normal.setImages(record);
       new Thread(new RecordScreen()).start();
-   }else{
+   } else {
       record = OFF;
       PImage[] record = {loadImage("images/record-35x20.png"), 
                          loadImage("images/record-over.png"), 
@@ -3354,7 +3354,7 @@ public void activateLiveWorldMotion(int axis, int dir) {
     if (armModel.mvRot[axis] == 0) {
       armModel.mvRot[axis] = dir;
     }
-    else{
+    else {
       armModel.mvRot[axis] = 0;
     }
   }
@@ -3377,7 +3377,7 @@ public void JOINT1_NEG() {
     //both buttons have the default color, set this one to highlight
     ((Button)cp5.get("JOINT1_NEG")).setColorBackground(BUTTON_ACTIVE);
   }
-  else{
+  else {
     ((Button)cp5.get("JOINT1_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT1_POS")).setColorBackground(BUTTON_DEFAULT);
   }
@@ -3400,7 +3400,7 @@ public void JOINT1_POS() {
     //both buttons have the default color, set this one to highlight
     ((Button)cp5.get("JOINT1_POS")).setColorBackground(BUTTON_ACTIVE);
   }
-  else{
+  else {
     //stopping movement, set both buttons to default
     ((Button)cp5.get("JOINT1_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT1_POS")).setColorBackground(BUTTON_DEFAULT);
@@ -3424,7 +3424,7 @@ public void JOINT2_NEG() {
     //both buttons have the default color, set this one to highlight
     ((Button)cp5.get("JOINT2_NEG")).setColorBackground(BUTTON_ACTIVE);
   }
-  else{
+  else {
     ((Button)cp5.get("JOINT2_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT2_POS")).setColorBackground(BUTTON_DEFAULT);
   }
@@ -3447,7 +3447,7 @@ public void JOINT2_POS() {
     //both buttons have the default color, set this one to highlight
     ((Button)cp5.get("JOINT2_POS")).setColorBackground(BUTTON_ACTIVE);
   }
-  else{
+  else {
     ((Button)cp5.get("JOINT2_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT2_POS")).setColorBackground(BUTTON_DEFAULT);
   }
@@ -3470,7 +3470,7 @@ public void JOINT3_NEG() {
     //both buttons have the default color, set this one to highlight
     ((Button)cp5.get("JOINT3_NEG")).setColorBackground(BUTTON_ACTIVE);
   }
-  else{
+  else {
     ((Button)cp5.get("JOINT3_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT3_POS")).setColorBackground(BUTTON_DEFAULT);
   }
@@ -3493,7 +3493,7 @@ public void JOINT3_POS() {
     //both buttons have the default color, set this one to highlight
     ((Button)cp5.get("JOINT3_POS")).setColorBackground(BUTTON_ACTIVE);
   }
-  else{
+  else {
     ((Button)cp5.get("JOINT3_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT3_POS")).setColorBackground(BUTTON_DEFAULT);
   }
@@ -3539,7 +3539,7 @@ public void JOINT4_POS() {
     //both buttons have the default color, set this one to highlight
     ((Button)cp5.get("JOINT4_POS")).setColorBackground(BUTTON_ACTIVE);
   }
-  else{
+  else {
     ((Button)cp5.get("JOINT4_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT4_POS")).setColorBackground(BUTTON_DEFAULT);
   }
@@ -3562,7 +3562,7 @@ public void JOINT5_NEG() {
     //both buttons have the default color, set this one to highlight
     ((Button)cp5.get("JOINT5_NEG")).setColorBackground(BUTTON_ACTIVE);
   }
-  else{
+  else {
     ((Button)cp5.get("JOINT5_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT5_POS")).setColorBackground(BUTTON_DEFAULT);
   }
@@ -3585,7 +3585,7 @@ public void JOINT5_POS() {
     //both buttons have the default color, set this one to highlight
     ((Button)cp5.get("JOINT5_POS")).setColorBackground(BUTTON_ACTIVE);
   }
-  else{
+  else {
     ((Button)cp5.get("JOINT5_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT5_POS")).setColorBackground(BUTTON_DEFAULT);
   }
@@ -3608,7 +3608,7 @@ public void JOINT6_NEG() {
     //both buttons have the default color, set this one to highlight
     ((Button)cp5.get("JOINT6_NEG")).setColorBackground(BUTTON_ACTIVE);
   }
-  else{
+  else {
     ((Button)cp5.get("JOINT6_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT6_POS")).setColorBackground(BUTTON_DEFAULT);
   }
@@ -3631,7 +3631,7 @@ public void JOINT6_POS() {
     //both buttons have the default color, set this one to highlight
     ((Button)cp5.get("JOINT6_POS")).setColorBackground(BUTTON_ACTIVE);
   }
-  else{
+  else {
     ((Button)cp5.get("JOINT6_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT6_POS")).setColorBackground(BUTTON_DEFAULT);
   }
@@ -3727,7 +3727,7 @@ public void updateScreen(color cDefault, color cHighlight) {
         .hideScrollbar()
        .moveTo(g1);
     }
-    else{
+    else {
       cp5.addTextarea(Integer.toString(index_contents))
         .setText("")
         .setPosition(next_px, next_py)
@@ -3752,7 +3752,7 @@ public void updateScreen(color cDefault, color cHighlight) {
           .hideScrollbar()
           .moveTo(g1);
       }
-      else{
+      else {
         cp5.addTextarea(Integer.toString(index_contents))
           .setText(temp.get(j))
           .setFont(fnt_con)
@@ -3788,7 +3788,7 @@ public void updateScreen(color cDefault, color cHighlight) {
           .hideScrollbar()
           .moveTo(g1);
       }
-      else{
+      else {
         cp5.addTextarea(Integer.toString(index_options))
           .setText("  "+options.get(i))
           .setFont(fnt_con)
@@ -3822,7 +3822,7 @@ public void updateScreen(color cDefault, color cHighlight) {
               .hideScrollbar()
               .moveTo(g1);
         }
-        else{
+        else {
            cp5.addTextarea(Integer.toString(index_nums))
               .setText("asdf"+Integer.toString(nums.get(i)))
               .setFont(fnt_con)
@@ -4630,7 +4630,7 @@ public void loadInstructions(int programID) {
         println("at tgt position");
         m.add("@");
       }
-      else{
+      else {
         println(a.getVector(p).pos);
         m.add("_");
       }

@@ -161,11 +161,11 @@ public class ArmModel {
     segments.add(axis5);
     segments.add(axis6);
     
-    for(int idx = 0; idx < mvLinear.length; ++idx){
+    for (int idx = 0; idx < mvLinear.length; ++idx) {
       mvLinear[idx] = 0;
     }
     
-    for(int idx = 0; idx < mvRot.length; ++idx){
+    for (int idx = 0; idx < mvRot.length; ++idx) {
       mvRot[idx] = 0;
     }
     
@@ -576,7 +576,7 @@ public class ArmModel {
   /* Resets the robot's current reference frame to that of the
    * default world frame.
    */
-  public void resetFrame(){
+  public void resetFrame() {
     currentFrame[0][0] = 1;
     currentFrame[0][1] = 0;
     currentFrame[0][2] = 0;
@@ -631,7 +631,7 @@ public class ArmModel {
    * the end effector's current x, y, z axes with respect to an arbitrary coordinate
    * system specified by the rotation matrix 'frame.'
    */
-  public float[][] getRotationMatrix(float[][] frame){
+  public float[][] getRotationMatrix(float[][] frame) {
     float[][] m = getRotationMatrix();
     RealMatrix A = new Array2DRowRealMatrix(floatToDouble(m, 3, 3));
     RealMatrix B = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
@@ -681,7 +681,7 @@ public class ArmModel {
     return wpr;
   }
   
-  public PVector getWPR(float[] testAngles){
+  public PVector getWPR(float[] testAngles) {
     float[] origAngles = getJointRotations();
     setJointRotations(testAngles);
     
@@ -691,14 +691,14 @@ public class ArmModel {
   }
   
   //returns the rotational value of the robot as a quaternion
-  public float[] getQuaternion(){
+  public float[] getQuaternion() {
     float[][] m = getRotationMatrix(currentFrame);
     float[] q = matrixToQuat(m);
     
     return q;
   }
   
-  public float[] getQuaternion(float[] testAngles){
+  public float[] getQuaternion(float[] testAngles) {
     float[] origAngles = getJointRotations();
     setJointRotations(testAngles);
     
@@ -797,13 +797,13 @@ public class ArmModel {
   }
   
   //convenience method to set all joint rotation values of the robot arm
-  public void setJointRotations(float[] rot){
-    for(int i = 0; i < segments.size(); i += 1){
-      for(int j = 0; j < 3; j += 1){
-        if(segments.get(i).rotations[j]){
+  public void setJointRotations(float[] rot) {
+    for (int i = 0; i < segments.size(); i += 1) {
+      for (int j = 0; j < 3; j += 1) {
+        if (segments.get(i).rotations[j]) {
           segments.get(i).currentRotations[j] = rot[i];
           segments.get(i).currentRotations[j] %= TWO_PI;
-          if(segments.get(i).currentRotations[j] < 0){
+          if (segments.get(i).currentRotations[j] < 0) {
             segments.get(i).currentRotations[j] += TWO_PI;
           }
         }
@@ -815,10 +815,10 @@ public class ArmModel {
   
   public boolean interpolateRotation(float speed) {
     boolean done = true;
-    for (Model a : segments){
-      for (int r = 0; r < 3; r++){
-        if (a.rotations[r]){
-          if (abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeed*speed){
+    for (Model a : segments) {
+      for (int r = 0; r < 3; r++) {
+        if (a.rotations[r]) {
+          if (abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeed*speed) {
             done = false;
             a.currentRotations[r] += a.rotationSpeed * a.rotationDirections[r] * speed;
             a.currentRotations[r] = clampAngle(a.currentRotations[r]);
@@ -830,7 +830,7 @@ public class ArmModel {
     return done;
   } // end interpolate rotation
   
-  void updateOrientation(){
+  void updateOrientation() {
     PVector u = new PVector(0, 0, 0);
     float theta = DEG_TO_RAD*2.5*liveSpeed;
     
@@ -839,7 +839,7 @@ public class ArmModel {
     u.z = mvRot[2];
     u.normalize();
     
-    if(u.x != 0 || u.y != 0 || u.z != 0){
+    if (u.x != 0 || u.y != 0 || u.z != 0) {
       tgtRot = rotateQuat(tgtRot, u, theta);
     }
   }
@@ -877,7 +877,7 @@ public class ArmModel {
       updateButtonColors();
     } else {
       //only move if our movement vector is non-zero
-      if(mvLinear[0] != 0 || mvLinear[1] != 0 || mvLinear[2] != 0 || 
+      if (mvLinear[0] != 0 || mvLinear[1] != 0 || mvLinear[2] != 0 || 
          mvRot[0] != 0 || mvRot[1] != 0 || mvRot[2] != 0) {
         
         PVector move = new PVector(mvLinear[0], mvLinear[1], mvLinear[2]);
@@ -895,7 +895,7 @@ public class ArmModel {
         
         //println(lockOrientation);
         int r = calculateIKJacobian(tgtPos, tgtRot);
-        if(r == EXEC_FAILURE){
+        if (r == EXEC_FAILURE) {
           updateButtonColors();
           mvLinear[0] = 0;
           mvLinear[1] = 0;
@@ -904,7 +904,7 @@ public class ArmModel {
           mvRot[1] = 0;
           mvRot[2] = 0;
         }
-        else if(r == EXEC_PARTIAL){
+        else if (r == EXEC_PARTIAL) {
           tgtPos = armModel.getEEPos();
           tgtRot = armModel.getQuaternion();
           
@@ -916,8 +916,8 @@ public class ArmModel {
   public boolean checkAngles(float[] angles) {
     float[] oldAngles = new float[6];
     /* Save the original angles of the Robot and apply the new set of angles */
-    for(int i = 0; i < segments.size(); i += 1) {
-      for(int j = 0; j < 3; j += 1) {
+    for (int i = 0; i < segments.size(); i += 1) {
+      for (int j = 0; j < 3; j += 1) {
         if (segments.get(i).rotations[j]) {
           oldAngles[i] = segments.get(i).currentRotations[j];
           segments.get(i).currentRotations[j] = angles[i];

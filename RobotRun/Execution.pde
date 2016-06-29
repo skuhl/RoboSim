@@ -338,7 +338,7 @@ public void drawEndEffectorGridMapping() {
  * @param applyOffset  Whether to apply the Tool Frame End
  *                     Effector offset (if it exists)
  */
-void applyModelRotation(ArmModel model, boolean applyOffset){   
+void applyModelRotation(ArmModel model, boolean applyOffset) {   
   translate(600, 200, 0);
   translate(-50, -166, -358); // -115, -213, -413
   rotateZ(PI);
@@ -394,7 +394,7 @@ void applyModelRotation(ArmModel model, boolean applyOffset){
  * resulting matrix will describe the linear approximation
  * of the robot's motion for each joint in units per radian. 
  */
-public float[][] calculateJacobian(float[] angles){
+public float[][] calculateJacobian(float[] angles) {
   float dAngle = DEG_TO_RAD;
   float[][] J = new float[7][6];
   //get current ee position
@@ -402,7 +402,7 @@ public float[][] calculateJacobian(float[] angles){
   float[] cRotQ = armModel.getQuaternion(angles);
   
   //examine each segment of the arm
-  for(int i = 0; i < 6; i += 1){
+  for (int i = 0; i < 6; i += 1) {
     //test angular offset
     angles[i] += dAngle;
     //get updated ee position
@@ -428,7 +428,7 @@ public float[][] calculateJacobian(float[] angles){
 //attempts to calculate the joint rotation values
 //required to move the end effector to the point specified
 //by 'tgt' and the Euler angle orientation 'rot'
-int calculateIKJacobian(PVector tgt, float[] rot){
+int calculateIKJacobian(PVector tgt, float[] rot) {
   final int limit = 1000;  //max number of times to loop
   int count = 0;
   
@@ -448,7 +448,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
   RealMatrix OR = R.multiply(MatrixUtils.inverse(MO));
   rot = matrixToQuat(doubleToFloat(OR.getData(), 3, 3));
   //println();
-  while(count < limit){
+  while(count < limit) {
     PVector cPos = armModel.getEEPos(angles);
     float[] cRotQ = armModel.getQuaternion(angles);
     
@@ -470,7 +470,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     float rDist = calculateQuatMag(rDelta);
     //println("distances from tgt: " + dist + ", " + rDist);
     //check whether our current position is within tolerance
-    if(dist < liveSpeed && rDist < 0.005*liveSpeed) break;
+    if (dist < liveSpeed && rDist < 0.005*liveSpeed) break;
     //calculate jacobian, 'J', and its inverse
     float[][] J = calculateJacobian(angles);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
@@ -478,8 +478,8 @@ int calculateIKJacobian(PVector tgt, float[] rot){
         
     //calculate and apply joint angular changes
     float[] dAngle = {0, 0, 0, 0, 0, 0};
-    for(int i = 0; i < 6; i += 1){
-      for(int j = 0; j < 7; j += 1){
+    for (int i = 0; i < 6; i += 1) {
+      for (int j = 0; j < 7; j += 1) {
         dAngle[i] += JInverse.getEntry(i, j)*delta[j];
       }
       //update joint angles
@@ -489,7 +489,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     }
     
     count += 1;
-    if(count == limit){
+    if (count == limit) {
       
     }
   }
@@ -497,18 +497,18 @@ int calculateIKJacobian(PVector tgt, float[] rot){
   armModel.currentFrame = frame;
   
   //did we successfully find the desired angles?
-  if(count >= limit){
+  if (count >= limit) {
     println("IK failure");
     return EXEC_FAILURE;
   }
-  else{
-    for(int i = 0; i < 6; i += 1){
+  else {
+    for (int i = 0; i < 6; i += 1) {
       Model s = armModel.segments.get(i);
-      if(angles[i] > -0.000001 && angles[i] < 0.000001)
+      if (angles[i] > -0.000001 && angles[i] < 0.000001)
         angles[i] = 0;
         
-      for(int j = 0; j < 3; j += 1){
-        if(s.rotations[j] && !s.anglePermitted(j, angles[i])){
+      for (int j = 0; j < 3; j += 1) {
+        if (s.rotations[j] && !s.anglePermitted(j, angles[i])) {
           //println("illegal joint angle on j" + i);
           return EXEC_FAILURE;
         }
@@ -517,22 +517,22 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     
     float[] angleOffset = new float[6];
     float maxOffset = TWO_PI;
-    for(int i = 0; i < 6; i += 1){
+    for (int i = 0; i < 6; i += 1) {
       angleOffset[i] = abs(minimumDistance(angles[i], armModel.getJointRotations()[i]));
     }
     
-    if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
-       angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset){
+    if (angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
+       angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
       armModel.setJointRotations(angles);
       return EXEC_SUCCESS;
     }
-    else{
+    else {
       return EXEC_PARTIAL;
     }
   }
 }
 
-int calculateIKJacobian(Point p){
+int calculateIKJacobian(Point p) {
   PVector pos = p.pos;
   float[] rot = p.ori;
   return calculateIKJacobian(pos, rot);
@@ -621,7 +621,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   float d1 = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
   float d2 = dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
   int numberOfPoints = 0;
-  if (d1 > d2){
+  if (d1 > d2) {
     numberOfPoints = (int)(d1 / distanceBetweenPoints);
   } 
   else {
@@ -658,10 +658,10 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   increment /= 2.0;
   
   Point currentPoint;
-  if(intermediatePositions.size() > 0){
+  if (intermediatePositions.size() > 0) {
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
   }
-  else{
+  else {
     currentPoint = new Point(armModel.getEEPos(), armModel.getQuaternion());
   }
   
@@ -687,7 +687,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
  * @param inter Second point
  * @param end Third point
  */
-void calculateArc(Point start, Point inter, Point end){  
+void calculateArc(Point start, Point inter, Point end) {  
   calculateDistanceBetweenPoints();
   intermediatePositions.clear();
   
@@ -732,7 +732,7 @@ void calculateArc(Point start, Point inter, Point end){
   float angleInc = (theta)/(float)numPoints;
   for (int i = 0; i < numPoints; i += 1) {
     PVector pos = rotateVectorQuat(u, n, angle).mult(r).add(center);
-    if(i == numPoints-1) pos = end.pos;
+    if (i == numPoints-1) pos = end.pos;
     qi = quaternionSlerp(q1, q2, mu);
     println(pos + ", " + end.pos);
     intermediatePositions.add(new Point(pos, qi));
@@ -749,10 +749,10 @@ void calculateArc(Point start, Point inter, Point end){
  * @param next Point after the destination
  * @param percentage Intensity of the curve
  */
-void beginNewContinuousMotion(Point start, Point end, Point next, float p){
+void beginNewContinuousMotion(Point start, Point end, Point next, float p) {
   calculateContinuousPositions(start, end, next, p);
   motionFrameCounter = 0;
-  if(intermediatePositions.size() > 0){
+  if (intermediatePositions.size() > 0) {
     calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
 }
@@ -765,7 +765,7 @@ void beginNewContinuousMotion(Point start, Point end, Point next, float p){
 void beginNewLinearMotion(Point start, Point end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
-  if(intermediatePositions.size() > 0){
+  if (intermediatePositions.size() > 0) {
     calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
 }
@@ -780,7 +780,7 @@ void beginNewCircularMotion(Point start, Point inter, Point end) {
   calculateArc(start, inter, end);
   interMotionIdx = 0;
   motionFrameCounter = 0;
-  if(intermediatePositions.size() > 0){
+  if (intermediatePositions.size() > 0) {
     calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
 }
@@ -804,11 +804,11 @@ boolean executeMotion(ArmModel model, float speedMult) {
     }
     
     int ret = EXEC_SUCCESS;
-    if(intermediatePositions.size() > 0){
+    if (intermediatePositions.size() > 0) {
       calculateIKJacobian(intermediatePositions.get(interMotionIdx));
     }
       
-    if(ret == EXEC_FAILURE){
+    if (ret == EXEC_FAILURE) {
       doneMoving = true;
     }
   }
@@ -816,15 +816,15 @@ boolean executeMotion(ArmModel model, float speedMult) {
   return false;
 } // end execute linear motion
 
-MotionInstruction getActiveMotionInstruct(){
+MotionInstruction getActiveMotionInstruct() {
   Instruction inst = null;
   Program p = programs.get(active_program);
   
-  if(p != null && p.getInstructions().size() != 0)
+  if (p != null && p.getInstructions().size() != 0)
     inst = p.getInstructions().get(active_instruction);
   else return null;
   
-  if(inst instanceof MotionInstruction)
+  if (inst instanceof MotionInstruction)
     return (MotionInstruction)inst;
   else return null;
 }
@@ -953,10 +953,10 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   Instruction ins = program.getInstructions().get(currentInstruction);
   
   //motion instructions
-  if (ins instanceof MotionInstruction){
+  if (ins instanceof MotionInstruction) {
     MotionInstruction instruction = (MotionInstruction)ins;
     
-    if (instruction.getUserFrame() != activeUserFrame){
+    if (instruction.getUserFrame() != activeUserFrame) {
       setError("ERROR: Instruction's user frame is different from currently active user frame.");
       return true;
     }
@@ -972,7 +972,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
       if (instruction.getMotionType() == MTYPE_JOINT) {
         executingInstruction = !(model.interpolateRotation(instruction.getSpeedForExec(model)));
       }
-      else{
+      else {
         executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
       }
       
@@ -1056,7 +1056,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
                a.rotationDirections[r] = -1;
              }
            } 
-           else if (dist_t > 0){
+           else if (dist_t > 0) {
              if ( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {  
                // One or both bounds lie within the shortest path
                a.rotationDirections[r] = -1;
@@ -1087,7 +1087,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
       if (nextPoint == null) {
         beginNewLinearMotion(start, instruction.getVector(program));
       } 
-      else{
+      else {
         beginNewContinuousMotion(start, 
                                  instruction.getVector(program),
                                  nextPoint, 
@@ -1103,16 +1103,16 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
     if (program.getInstructions().size() >= currentInstruction + 2) {
       Instruction nextIns = program.getInstructions().get(currentInstruction+1);
       //make sure next instruction is of valid type
-      if (nextIns instanceof MotionInstruction){
+      if (nextIns instanceof MotionInstruction) {
         MotionInstruction castIns = (MotionInstruction)nextIns;
         nextPoint = castIns.getVector(program);
       }
-      else{
+      else {
         return false;
       }
     } 
     // invalid instruction
-    else{
+    else {
       return false; 
     }
     

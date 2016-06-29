@@ -72,7 +72,7 @@ public Object[] objects;
 FileInputStream in = null;
 FileOutputStream out = null;
 
-public void setup(){
+public void setup() {
   size(1200, 800, P3D);
   ortho();
   
@@ -103,7 +103,7 @@ public void setup(){
 
 boolean doneMoving = true;
 
-public void draw(){
+public void draw() {
   ortho();
   
   //lights();
@@ -120,11 +120,11 @@ public void draw(){
   popMatrix();
   
   //execute arm movement
-  if (!doneMoving){
+  if (!doneMoving) {
     //run program
     doneMoving = executeProgram(currentProgram, armModel, execSingleInst);
   }
-  else{
+  else {
     //respond to manual movement from J button presses
     intermediatePositions.clear();
     armModel.executeLiveMotion();
@@ -160,10 +160,10 @@ public void draw(){
   //TESTING CODE: DRAW INTERMEDIATE POINTS
   //noStroke();
   //pushMatrix();
-  //if(intermediatePositions != null){
+  //if (intermediatePositions != null) {
   //  int count = 0;
-  //  for(Point p : intermediatePositions){
-  //    if(count % 8 == 0){
+  //  for (Point p : intermediatePositions) {
+  //    if (count % 8 == 0) {
   //      pushMatrix();
   //      translate(p.pos.x, p.pos.y, p.pos.z);
   //      sphere(10);
