@@ -106,11 +106,11 @@ void showMainDisplayText() {
   text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
   
   // Display the Current position and orientation of the Robot in the World Frame
-  PVector ee_pos = armModel.getEEPos();
+  PVector ee_pos = convertNativeToWorld( armModel.getEEPos() );
   //ee_pos = convertNativeToWorld(ee_pos);
   PVector wpr = armModel.getWPR();
   String dis_world = String.format("Coord  X: %8.4f  Y: %8.4f  Z: %8.4f  W: %8.4f  P: %8.4f  R: %8.4f", 
-                     ee_pos.x, ee_pos.y, ee_pos.z, wpr.x*RAD_TO_DEG, wpr.y*RAD_TO_DEG, wpr.z*RAD_TO_DEG);
+                     ee_pos.x, ee_pos.y, ee_pos.z, wpr.x * RAD_TO_DEG, wpr.y * RAD_TO_DEG, wpr.z * RAD_TO_DEG);
   
   // Display the Robot's joint angles
   float j[] = armModel.getJointRotations();

@@ -94,7 +94,7 @@ public class Point  {
     String[] entries = new String[6];
     
     for (int idx = 0; idx < joints.length; ++idx) {
-      entries[idx] = String.format("J%d: %4.2f", (idx + 1), joints[idx] * RAD_TO_DEG);
+      entries[idx] = String.format("J%d: %4.4f", (idx + 1), joints[idx] * RAD_TO_DEG);
     }
     
     return entries;
@@ -111,13 +111,16 @@ public class Point  {
     PVector angles = quatToEuler(ori);
     
     String[] entries = new String[6];
+    // Show the vector in terms of the World Frame
+    PVector wPos = convertNativeToWorld(pos);
     
-    entries[0] = String.format("X: %4.2f", pos.x);
-    entries[1] = String.format("Y: %4.2f", pos.y);
-    entries[2] = String.format("Z: %4.2f", pos.z);
-    entries[3] = String.format("W: %4.2f", angles.x * RAD_TO_DEG);
-    entries[4] = String.format("P: %4.2f", angles.y * RAD_TO_DEG);
-    entries[5] = String.format("R: %4.2f", angles.z * RAD_TO_DEG);
+    entries[0] = String.format("X: %4.3f", wPos.x);
+    entries[1] = String.format("Y: %4.3f", wPos.y);
+    entries[2] = String.format("Z: %4.3f", wPos.z);
+    // Show angles in degrees
+    entries[3] = String.format("W: %4.3f", angles.x * RAD_TO_DEG);
+    entries[4] = String.format("P: %4.3f", angles.y * RAD_TO_DEG);
+    entries[5] = String.format("R: %4.3f", angles.z * RAD_TO_DEG);
     
     return entries;
   }
@@ -125,13 +128,11 @@ public class Point  {
 
 public class Frame {
   private PVector origin;
-  private PVector wpr;
-  // The unit vectors representing the x, y,z axes (in row major order)
+  // The unit vectors representing the x, y, z axes (in row major order)
   private float[][] axes;
   
   public Frame() {
     origin = new PVector(0,0,0);
-    wpr = new PVector(0,0,0);
     axes = new float[3][3];
     // Create identity matrix
     for (int diag = 0; diag < 3; ++diag) {
@@ -140,9 +141,8 @@ public class Frame {
   }
   
   /* Used for loading Frames from a file */
-  public Frame(PVector origin, PVector wpr, float[][] axesVectors) {
+  public Frame(PVector origin, float[][] axesVectors) {
     this.origin = origin;
-    this.wpr = wpr;
     this.axes = new float[3][3];
     
     for (int row = 0; row < 3; ++row) {
@@ -154,8 +154,12 @@ public class Frame {
   
   public PVector getOrigin() { return origin; }
   public void setOrigin(PVector in) { origin = in; }
-  public PVector getWpr() { return wpr; }
-  public void setWpr(PVector in) { wpr = in; }
+  
+  /**
+   * Return the W, P, R values of the this frames coordinate
+   * axes with respect to the World Frame axes.
+   */
+  public PVector getWpr() { return matrixToEuler(axes); }
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the Native Coordinate System. */
   public float[][] getNativeAxes() { return axes.clone(); }
@@ -185,13 +189,34 @@ public class Frame {
       axes[idx][0] = in.x;
       axes[idx][1] = in.y;
       axes[idx][2] = in.z;
-      
-      wpr = matrixToEuler(axes);
     }
   }
   
   public void setAxes(float[][] axesVectors) {
     axes = axesVectors.clone();
+  }
+  
+  /**
+   * Returns a string array, where each entry is one of
+   * the Frames six Cartesian values: (X, Y, Z, W, P,
+   * and R) and their respective labels.
+   *
+   * @return  A 6-element String array
+   */
+  public String[] toStringArray() {
+    
+    String[] values = new String[6];
+    
+    values[0] = String.format("X: %4.3f", origin.x);
+    values[1] = String.format("Y: %4.3f", origin.y);
+    values[2] = String.format("Z: %4.3f", origin.z);
+    // Convert angles to degrees
+    PVector wpr = getWpr();
+    values[3] = String.format("W: %4.3f", wpr.x * RAD_TO_DEG);
+    values[4] = String.format("P: %4.3f", wpr.y * RAD_TO_DEG);
+    values[5] = String.format("R: %4.3f", wpr.z * RAD_TO_DEG);
+    
+    return values;
   }
 } // end Frame class
 
@@ -337,7 +362,7 @@ public final class MotionInstruction extends Instruction  {
       Point out;
       if (globalRegister) out = POS_REG[register].point.clone();
       else out = parent.p[register].clone();
-      out.pos = convertWorldToNative(out.pos);
+      //out.pos = convertWorldToNative(out.pos);
       return out;
     } else {
       Point ret;

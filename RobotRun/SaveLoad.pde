@@ -544,16 +544,13 @@ public int loadFrameBytes(File src) {
  * @throw IOException  if an error occurs with writing the frame to the file
  */
 private void saveFrame(Frame f, DataOutputStream out) throws IOException {
+  
   // Write frame origin
   PVector v = f.getOrigin();
   out.writeFloat(v.x);
   out.writeFloat(v.y);
   out.writeFloat(v.z);
-  // Write frame orientation
-  v = f.getWpr();
-  out.writeFloat(v.x);
-  out.writeFloat(v.y);
-  out.writeFloat(v.z);
+  
   // Write frame axes
   for (int row = 0; row < 3; ++row) {
     for (int col = 0; col < 3; ++col) {
@@ -573,16 +570,12 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
  *                     from to the file
  */
 private Frame loadFrame(DataInputStream in) throws IOException {
+  
   // Read origin values
   PVector origin = new PVector();
   origin.x = in.readFloat();
   origin.y = in.readFloat();
   origin.z = in.readFloat();
-  // Read orientation values
-  PVector wpr = new PVector();
-  wpr.x = in.readFloat();
-  wpr.y = in.readFloat();
-  wpr.z = in.readFloat();
   
   float[][] axesVectors = new float[3][3];
   // Read axes vector values
@@ -592,7 +585,7 @@ private Frame loadFrame(DataInputStream in) throws IOException {
     }
   }
   
-  return new Frame(origin, wpr, axesVectors);
+  return new Frame(origin, axesVectors);
 }
 
 /**
