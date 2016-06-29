@@ -3049,6 +3049,10 @@ public void ENTER() {
         //System.out.printf("W: %4.3f  P: %4.3f  R: %4.3f\n", inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD);
         
         position = new PVector(inputs[0], inputs[1], inputs[2]);
+        /* Since all points are displayed with respect to the World Frame, it is
+         * assumed that the user is entering a point with respect to the World Frame. */
+        position = convertWorldToNative(position);
+      
         orientation = eulerToQuat( new PVector(inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD) );
         // Testing code: Check several iterations of converting the same angles between euler and quaternions
         /*PVector wpr = quatToEuler(orientation);
@@ -3063,9 +3067,7 @@ public void ENTER() {
         // TODO inverse kinematics to get joint angles
       }
       
-      /* Since all points are displayed with respect to the World Frame, it is
-       * assumed that the user is entering a point with respect to the World Frame. */
-      position = convertWorldToNative(position);
+      
       
       // Save the input point
       POS_REG[active_index].point = new Point(position, orientation);
