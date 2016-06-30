@@ -1,5 +1,5 @@
 /* Transforms the given vector from the coordinate system defined by the given
-* transformation matrix (column major order). */
+ * transformation matrix (column major order). */
 public PVector transform(PVector v, float[][] tMatrix) {
   if(tMatrix.length != 4 || tMatrix[0].length != 4) {
     return null;

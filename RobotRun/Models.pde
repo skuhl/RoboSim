@@ -115,7 +115,7 @@ public class ArmModel {
   public Box[] bodyHitBoxes;
   private ArrayList<Box>[] eeHitBoxes;
   
-  public Object held;
+  public WorldObject held;
   public float[][] oldEETMatrix;
   
   public ArmModel() {
@@ -504,7 +504,7 @@ public class ArmModel {
   }
   
   /* Determine if the given ojbect is collding with any part of the Robot. */
-  public boolean checkObjectCollision(Object obj) {
+  public boolean checkObjectCollision(WorldObject obj) {
     Box ohb = (Box)obj.hit_box;
     boolean collision = false;
     
@@ -930,7 +930,7 @@ public class ArmModel {
     
     /* Check for a collision between the Robot Arm and any world object as well as an object
     * held by the Robot Arm and any other world object */
-    for(Object obj : objects) {
+    for(WorldObject obj : objects) {
       if(checkObjectCollision(obj) || (held != null && held != obj && held.collision(obj))) {
         collision = true;
       }
