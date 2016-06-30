@@ -22,7 +22,7 @@ public class Model {
   public float[] jointsMoving = new float[3]; // for live control using the joint buttons
   
   public Model(String filename, color col) {
-    for (int n = 0; n < 3; n++) {
+    for(int n = 0; n < 3; n++) {
       rotations[n] = false;
       currentRotations[n] = 0;
       jointRanges[n] = null;
@@ -37,9 +37,9 @@ public class Model {
     byte[] data = loadBytes(filename);
     int n = 84; // skip header and number of triangles
     
-    while (n < data.length) {
+    while(n < data.length) {
       Triangle t = new Triangle();
-      for (int m = 0; m < 4; m++) {
+      for(int m = 0; m < 4; m++) {
         byte[] bytesX = new byte[4];
         bytesX[0] = data[n+3]; bytesX[1] = data[n+2];
         bytesX[2] = data[n+1]; bytesX[3] = data[n];
@@ -65,7 +65,7 @@ public class Model {
     mesh.beginShape(TRIANGLES);
     mesh.noStroke();
     mesh.fill(col);
-    for (Triangle t : triangles) {
+    for(Triangle t : triangles) {
       mesh.normal(t.components[0].x, t.components[0].y, t.components[0].z);
       mesh.vertex(t.components[1].x, t.components[1].y, t.components[1].z);
       mesh.vertex(t.components[2].x, t.components[2].y, t.components[2].z);
@@ -76,7 +76,7 @@ public class Model {
     
   public boolean anglePermitted(int idx, float angle) {
     
-    if (jointRanges[idx].x < jointRanges[idx].y) {
+    if(jointRanges[idx].x < jointRanges[idx].y) {
       // Joint range does not overlap TWO_PI
       return angle >= jointRanges[idx].x && angle < jointRanges[idx].y;
     } else {
@@ -161,11 +161,11 @@ public class ArmModel {
     segments.add(axis5);
     segments.add(axis6);
     
-    for (int idx = 0; idx < mvLinear.length; ++idx) {
+    for(int idx = 0; idx < mvLinear.length; ++idx) {
       mvLinear[idx] = 0;
     }
     
-    for (int idx = 0; idx < mvRot.length; ++idx) {
+    for(int idx = 0; idx < mvRot.length; ++idx) {
       mvRot[idx] = 0;
     }
     
@@ -287,21 +287,21 @@ public class ArmModel {
     segments.get(6).draw();
           
     // next, the end effector
-    if (activeEndEffector == ENDEF_SUCTION) {
+    if(activeEndEffector == ENDEF_SUCTION) {
       rotateY(PI);
       translate(-88, -37, 0);
       eeModelSuction.draw();
-    } else if (activeEndEffector == ENDEF_CLAW) {
+    } else if(activeEndEffector == ENDEF_CLAW) {
       rotateY(PI);
       translate(-88, 0, 0);
       eeModelClaw.draw();
       rotateZ(PI/2);
-      if (endEffectorStatus == OFF) {
+      if(endEffectorStatus == OFF) {
         translate(10, -85, 30);
         eeModelClawPincer.draw();
         translate(55, 0, 0);
         eeModelClawPincer.draw();
-      } else if (endEffectorStatus == ON) {
+      } else if(endEffectorStatus == ON) {
         translate(28, -85, 30);
         eeModelClawPincer.draw();
         translate(20, 0, 0);
@@ -443,9 +443,9 @@ public class ArmModel {
    * current active End Effector and the status of the End Effector. */
   public ArrayList<Box> currentEEHitBoxList() {
     // Determine which set of hit boxes to display based on the active End Effector
-    if (activeEndEffector == ENDEF_CLAW) {
+    if(activeEndEffector == ENDEF_CLAW) {
         return (endEffectorStatus == ON) ? eeHitBoxes[1] : eeHitBoxes[2];
-    } else if (activeEndEffector == ENDEF_SUCTION) {
+    } else if(activeEndEffector == ENDEF_SUCTION) {
       return eeHitBoxes[3];
     }
     
@@ -454,13 +454,13 @@ public class ArmModel {
   
   /* Changes all the Robot Arm's hit boxes to green */
   public void resetBoxColors() {
-    for (Box b : bodyHitBoxes) {
+    for(Box b : bodyHitBoxes) {
       b.outline = color(0, 255, 0);
     }
     
     ArrayList<Box> eeHB = currentEEHitBoxList();
     
-    for (Box b : eeHB) {
+    for(Box b : eeHB) {
       b.outline = color(0, 255, 0);
     }
   }
@@ -480,8 +480,8 @@ public class ArmModel {
      *   rotating end segment
      * The lower long arm segment and the upper rotating end segment
      */
-    for (int idx = 0; idx < check_pairs.length - 1; idx += 2) {
-      if ( collision3D(bodyHitBoxes[ check_pairs[idx] ], bodyHitBoxes[ check_pairs[idx + 1] ]) ) {
+    for(int idx = 0; idx < check_pairs.length - 1; idx += 2) {
+      if( collision3D(bodyHitBoxes[ check_pairs[idx] ], bodyHitBoxes[ check_pairs[idx + 1] ]) ) {
         bodyHitBoxes[ check_pairs[idx] ].outline = color(255, 0, 0);
         bodyHitBoxes[ check_pairs[idx + 1] ].outline = color(255, 0, 0);
         collision = true;
@@ -491,9 +491,9 @@ public class ArmModel {
     ArrayList<Box> eeHB = currentEEHitBoxList();
     
     // Check collisions between all EE hit boxes and base as well as the first long arm hit boxes
-    for (Box hb : eeHB) {
-      for (int idx = 0; idx < 4; ++idx) {
-        if (collision3D(hb, bodyHitBoxes[idx]) ) {
+    for(Box hb : eeHB) {
+      for(int idx = 0; idx < 4; ++idx) {
+        if(collision3D(hb, bodyHitBoxes[idx]) ) {
           hb.outline = color(255, 0, 0);
           bodyHitBoxes[idx].outline = color(255, 0, 0);
           collision = true;
@@ -509,8 +509,8 @@ public class ArmModel {
     Box ohb = (Box)obj.hit_box;
     boolean collision = false;
     
-    for (Box b : bodyHitBoxes) {
-      if ( collision3D(ohb, b) ) {
+    for(Box b : bodyHitBoxes) {
+      if( collision3D(ohb, b) ) {
         b.outline = color(255, 0, 0);
         collision = true;
       }
@@ -518,9 +518,9 @@ public class ArmModel {
     
     ArrayList<Box> eeHBs = currentEEHitBoxList();
     
-    for (Box b : eeHBs) {
+    for(Box b : eeHBs) {
       // Special case for held objects
-      if ( (activeEndEffector != ENDEF_CLAW || activeEndEffector != ENDEF_SUCTION || endEffectorStatus != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
+      if( (activeEndEffector != ENDEF_CLAW || activeEndEffector != ENDEF_SUCTION || endEffectorStatus != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
         b.outline = color(255, 0, 0);
         collision = true;
       }
@@ -532,7 +532,7 @@ public class ArmModel {
   /* Draws the Robot Arm's hit boxes in the world */
   public void drawBoxes() {
     // Draw hit boxes of the body poriotn of the Robot Arm
-    for (Box b : bodyHitBoxes) {
+    for(Box b : bodyHitBoxes) {
       pushMatrix();
       b.applyTransform();
       b.draw();
@@ -541,17 +541,17 @@ public class ArmModel {
     
     int eeIdx = 0;
     // Determine which set of hit boxes to display based on the active End Effector
-    if (activeEndEffector == ENDEF_CLAW) {
-      if (endEffectorStatus == ON) {
+    if(activeEndEffector == ENDEF_CLAW) {
+      if(endEffectorStatus == ON) {
         eeIdx = 1;
       } else {
         eeIdx = 2;
       }
-    } else if (activeEndEffector == ENDEF_SUCTION) {
+    } else if(activeEndEffector == ENDEF_SUCTION) {
       eeIdx = 3;
     }
     // Draw End Effector hit boxes
-    for (Box b : eeHitBoxes[eeIdx]) {
+    for(Box b : eeHitBoxes[eeIdx]) {
       pushMatrix();
       b.applyTransform();
       b.draw();
@@ -562,9 +562,9 @@ public class ArmModel {
   //returns the rotational values for each arm joint
   public float[] getJointRotations() {
     float[] rot = new float[6];
-    for (int i = 0; i < segments.size(); i += 1) {
-      for (int j = 0; j < 3; j += 1) {
-        if (segments.get(i).rotations[j]) {
+    for(int i = 0; i < segments.size(); i += 1) {
+      for(int j = 0; j < 3; j += 1) {
+        if(segments.get(i).rotations[j]) {
           rot[i] = segments.get(i).currentRotations[j];
           break;
         }
@@ -646,7 +646,7 @@ public class ArmModel {
    * NOTE: This method only works in the TOOL or WORLD frame! */
   public void applyToolFrame(int list_idx) {
     // If a tool Frame is active, then it overrides the World Frame
-    if (list_idx >= 0 && list_idx < toolFrames.length) {
+    if(list_idx >= 0 && list_idx < toolFrames.length) {
       
       // Apply a custom tool frame
       PVector tr = toolFrames[list_idx].getOrigin();
@@ -654,9 +654,9 @@ public class ArmModel {
     } else {
       
       // Apply a default tool frame based on the current EE
-      if (activeEndEffector == ENDEF_CLAW) {
+      if(activeEndEffector == ENDEF_CLAW) {
         translate(0, 0, -54);
-      } else if (activeEndEffector == ENDEF_SUCTION) {
+      } else if(activeEndEffector == ENDEF_SUCTION) {
         translate(0, 0, -105);
       }
     }
@@ -775,7 +775,7 @@ public class ArmModel {
     
     rotateZ(getJointRotations()[5]);
     
-    if (curCoordFrame == COORD_TOOL || curCoordFrame == COORD_WORLD) { applyToolFrame(activeToolFrame); }
+    if(curCoordFrame == COORD_TOOL || curCoordFrame == COORD_WORLD) { applyToolFrame(activeToolFrame); }
     
     PVector ret = new PVector(
       modelX(0, 0, 0),
@@ -798,27 +798,27 @@ public class ArmModel {
   
   //convenience method to set all joint rotation values of the robot arm
   public void setJointRotations(float[] rot) {
-    for (int i = 0; i < segments.size(); i += 1) {
-      for (int j = 0; j < 3; j += 1) {
-        if (segments.get(i).rotations[j]) {
+    for(int i = 0; i < segments.size(); i += 1) {
+      for(int j = 0; j < 3; j += 1) {
+        if(segments.get(i).rotations[j]) {
           segments.get(i).currentRotations[j] = rot[i];
           segments.get(i).currentRotations[j] %= TWO_PI;
-          if (segments.get(i).currentRotations[j] < 0) {
+          if(segments.get(i).currentRotations[j] < 0) {
             segments.get(i).currentRotations[j] += TWO_PI;
           }
         }
       }
     }
     
-    if (COLLISION_DISPLAY) { updateBoxes(); }
+    if(COLLISION_DISPLAY) { updateBoxes(); }
   }//end set joint rotations
   
   public boolean interpolateRotation(float speed) {
     boolean done = true;
-    for (Model a : segments) {
-      for (int r = 0; r < 3; r++) {
-        if (a.rotations[r]) {
-          if (abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeed*speed) {
+    for(Model a : segments) {
+      for(int r = 0; r < 3; r++) {
+        if(a.rotations[r]) {
+          if(abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeed*speed) {
             done = false;
             a.currentRotations[r] += a.rotationSpeed * a.rotationDirections[r] * speed;
             a.currentRotations[r] = clampAngle(a.currentRotations[r]);
@@ -826,7 +826,7 @@ public class ArmModel {
         }
       } // end loop through rotation axes
     } // end loop through arm segments
-    if (COLLISION_DISPLAY) { updateBoxes(); }
+    if(COLLISION_DISPLAY) { updateBoxes(); }
     return done;
   } // end interpolate rotation
   
@@ -839,29 +839,29 @@ public class ArmModel {
     u.z = mvRot[2];
     u.normalize();
     
-    if (u.x != 0 || u.y != 0 || u.z != 0) {
+    if(u.x != 0 || u.y != 0 || u.z != 0) {
       tgtRot = rotateQuat(tgtRot, u, theta);
     }
   }
 
   void executeLiveMotion() {
-    if (curCoordFrame == COORD_JOINT) {
-      for (int i = 0; i < segments.size(); i += 1) {
+    if(curCoordFrame == COORD_JOINT) {
+      for(int i = 0; i < segments.size(); i += 1) {
         Model model = segments.get(i);
         
-        for (int n = 0; n < 3; n++) {
-          if (model.rotations[n]) {
+        for(int n = 0; n < 3; n++) {
+          if(model.rotations[n]) {
             float trialAngle = model.currentRotations[n] +
               model.rotationSpeed * model.jointsMoving[n] * liveSpeed;
               trialAngle = clampAngle(trialAngle);
             
-            if (model.anglePermitted(n, trialAngle)) {
+            if(model.anglePermitted(n, trialAngle)) {
               
               float old_angle = model.currentRotations[n];
               model.currentRotations[n] = trialAngle;
-              if (COLLISION_DISPLAY) { updateBoxes(); }
+              if(COLLISION_DISPLAY) { updateBoxes(); }
               
-              if (armModel.checkSelfCollisions()) {
+              if(armModel.checkSelfCollisions()) {
                 // end robot arm movement
                 model.currentRotations[n] = old_angle;
                 updateBoxes();
@@ -877,7 +877,7 @@ public class ArmModel {
       updateButtonColors();
     } else {
       //only move if our movement vector is non-zero
-      if (mvLinear[0] != 0 || mvLinear[1] != 0 || mvLinear[2] != 0 || 
+      if(mvLinear[0] != 0 || mvLinear[1] != 0 || mvLinear[2] != 0 || 
          mvRot[0] != 0 || mvRot[1] != 0 || mvRot[2] != 0) {
         
         PVector move = new PVector(mvLinear[0], mvLinear[1], mvLinear[2]);
@@ -891,11 +891,11 @@ public class ArmModel {
         tgtPos.z += move.z * distance;
         updateOrientation();
         
-        //if (DISPLAY_TEST_OUT_PUT) { System.out.printf("%s -> %s: %d\n", getEEPos(), tgtPos, getEEPos().dist(tgtPos)); }
+        //if(DISPLAY_TEST_OUT_PUT) { System.out.printf("%s -> %s: %d\n", getEEPos(), tgtPos, getEEPos().dist(tgtPos)); }
         
         //println(lockOrientation);
         int r = calculateIKJacobian(tgtPos, tgtRot);
-        if (r == EXEC_FAILURE) {
+        if(r == EXEC_FAILURE) {
           updateButtonColors();
           mvLinear[0] = 0;
           mvLinear[1] = 0;
@@ -904,7 +904,7 @@ public class ArmModel {
           mvRot[1] = 0;
           mvRot[2] = 0;
         }
-        else if (r == EXEC_PARTIAL) {
+        else if(r == EXEC_PARTIAL) {
           tgtPos = armModel.getEEPos();
           tgtRot = armModel.getQuaternion();
           
@@ -916,9 +916,9 @@ public class ArmModel {
   public boolean checkAngles(float[] angles) {
     float[] oldAngles = new float[6];
     /* Save the original angles of the Robot and apply the new set of angles */
-    for (int i = 0; i < segments.size(); i += 1) {
-      for (int j = 0; j < 3; j += 1) {
-        if (segments.get(i).rotations[j]) {
+    for(int i = 0; i < segments.size(); i += 1) {
+      for(int j = 0; j < 3; j += 1) {
+        if(segments.get(i).rotations[j]) {
           oldAngles[i] = segments.get(i).currentRotations[j];
           segments.get(i).currentRotations[j] = angles[i];
         }
@@ -931,13 +931,13 @@ public class ArmModel {
     
     /* Check for a collision between the Robot Arm and any world object as well as an object
      * held by the Robot Arm and any other world object */
-    for (Object obj : objects) {
-      if (checkObjectCollision(obj) || (held != null && held != obj && held.collision(obj))) {
+    for(Object obj : objects) {
+      if(checkObjectCollision(obj) || (held != null && held != obj && held.collision(obj))) {
         collision = true;
       }
     }
     
-    if (collision) {
+    if(collision) {
       // Reset the original position in the case of a collision
       setJointRotations(oldAngles);
     }
@@ -953,9 +953,9 @@ public class ArmModel {
   
   /* Indicates that the Robot Arm is in Motion */
   public boolean modelInMotion() {
-    for (Model m : segments) {
-      for (int idx = 0; idx < m.jointsMoving.length; ++idx) {
-        if (m.jointsMoving[idx] != 0) {
+    for(Model m : segments) {
+      for(int idx = 0; idx < m.jointsMoving.length; ++idx) {
+        if(m.jointsMoving[idx] != 0) {
           return true;
         }
       }

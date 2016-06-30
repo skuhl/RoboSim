@@ -21,7 +21,7 @@ public class Point  {
     ori[1] = 0;
     ori[2] = 0;
     ori[3] = 0; 
-    for (int n = 0; n < joints.length; n++) joints[n] = 0;
+    for(int n = 0; n < joints.length; n++) joints[n] = 0;
   }
   
   public Point(float x, float y, float z, float r, float i, float j, float k,
@@ -93,7 +93,7 @@ public class Point  {
   public String[] toJointStringArray() {
     String[] entries = new String[6];
     
-    for (int idx = 0; idx < joints.length; ++idx) {
+    for(int idx = 0; idx < joints.length; ++idx) {
       entries[idx] = String.format("J%d: %4.4f", (idx + 1), joints[idx] * RAD_TO_DEG);
     }
     
@@ -135,7 +135,7 @@ public class Frame {
     origin = new PVector(0,0,0);
     axes = new float[3][3];
     // Create identity matrix
-    for (int diag = 0; diag < 3; ++diag) {
+    for(int diag = 0; diag < 3; ++diag) {
       axes[diag][diag] = 1f;
     }
   }
@@ -145,8 +145,8 @@ public class Frame {
     this.origin = origin;
     this.axes = new float[3][3];
     
-    for (int row = 0; row < 3; ++row) {
-      for (int col = 0; col < 3; ++col) {
+    for(int row = 0; row < 3; ++row) {
+      for(int col = 0; col < 3; ++col) {
         axes[row][col] = axesVectors[row][col];
       }
      }
@@ -168,13 +168,13 @@ public class Frame {
   public float[][] getWorldAxes() {
     float[][] wAxes = new float[3][3];
     
-    for (int col = 0; col < wAxes[0].length; ++col) {
+    for(int col = 0; col < wAxes[0].length; ++col) {
       wAxes[0][col] = -axes[0][col];
       wAxes[1][col] = axes[2][col];
       wAxes[2][col] = -axes[1][col];
     }
     
-    /*for (int row = 0; row < wAxes[0].length; ++row) {
+    /*for(int row = 0; row < wAxes[0].length; ++row) {
       wAxes[row][0] = -axes[row][0];
       wAxes[row][1] = axes[row][2];
       wAxes[row][2] = -axes[row][1];
@@ -185,7 +185,7 @@ public class Frame {
   
   public void setAxis(int idx, PVector in) {
     
-    if (idx >= 0 && idx < axes.length) {
+    if(idx >= 0 && idx < axes.length) {
       axes[idx][0] = in.x;
       axes[idx][1] = in.y;
       axes[idx][2] = in.z;
@@ -228,7 +228,7 @@ public class Program  {
   
   public Program(String theName) {
     instructions = new ArrayList<Instruction>();
-    for (int n = 0; n < p.length; n++) p[n] = new Point();
+    for(int n = 0; n < p.length; n++) p[n] = new Point();
     name = theName;
     nextRegister = 0;
   }
@@ -254,11 +254,11 @@ public class Program  {
   
   public void addInstruction(Instruction i) {
     instructions.add(i);
-    if (i instanceof MotionInstruction ) {
+    if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
-      if (!castIns.getGlobal() && castIns.getRegister() >= nextRegister) {
+      if(!castIns.getGlobal() && castIns.getRegister() >= nextRegister) {
         nextRegister = castIns.getRegister()+1;
-        if (nextRegister >= p.length) nextRegister = p.length-1;
+        if(nextRegister >= p.length) nextRegister = p.length-1;
       }
     }
   }
@@ -273,7 +273,7 @@ public class Program  {
   }
   
   public void addRegister(Point in, int idx) {
-    if (idx >= 0 && idx < p.length) p[idx] = in;
+    if(idx >= 0 && idx < p.length) p[idx] = in;
   }
   
   public int nextRegister() {
@@ -281,23 +281,24 @@ public class Program  {
   }
   
   public Point getRegister(int idx) {
-    if (idx >= 0 && idx < p.length) return p[idx];
+    if(idx >= 0 && idx < p.length) return p[idx];
     else return null;
   }
 } // end Program class
 
 
 public int addProgram(Program p) {
-  if (p == null) {
+  if(p == null) {
     return -1;
-  } else {
+  } 
+  else {
     int idx = 0;
     
-    if (programs.size() < 1) {
+    if(programs.size() < 1) {
       programs.add(p);
     } 
     else {
-      while (idx < programs.size() && programs.get(idx).name.compareTo(p.name) < 0) { ++idx; }
+      while(idx < programs.size() && programs.get(idx).name.compareTo(p.name) < 0) { ++idx; }
       programs.add(idx, p);
     }
     
@@ -307,9 +308,9 @@ public int addProgram(Program p) {
 
 public class Instruction { 
   
-  public Instruction(){}
+  public Instruction() {}
   
-  public String toString(){
+  public String toString() {
     String str = "\0";
     return str;
   }
@@ -361,24 +362,28 @@ public final class MotionInstruction extends Instruction  {
   public void setToolFrame(int in) { toolFrame = in; }
   
   public float getSpeedForExec(ArmModel model) {
-    if (motionType == MTYPE_JOINT) return speed;
+    if(motionType == MTYPE_JOINT) return speed;
     else return (speed / model.motorSpeed);
   }
   
   public Point getVector(Program parent) {
-    if (motionType != COORD_JOINT) {
+    if(motionType != COORD_JOINT) {
       Point out;
-      if (globalRegister) out = POS_REG[register].point.clone();
+      if(globalRegister) out = POS_REG[register].point.clone();
       else out = parent.p[register].clone();
       //out.pos = convertWorldToNative(out.pos);
       return out;
-    } else {
+    } 
+    else {
       Point ret;
-      if (globalRegister) ret = POS_REG[register].point.clone();
+      
+      if(globalRegister) ret = POS_REG[register].point.clone();
       else ret = parent.p[register].clone();
-      if (userFrame != -1) {
+      
+      if(userFrame != -1) {
         ret.pos = rotate(ret.pos, userFrames[userFrame].getNativeAxes());
       }
+      
       return ret;
     }
   } // end getVector()
@@ -396,12 +401,12 @@ public final class MotionInstruction extends Instruction  {
            me += "C ";
            break;
      }
-     if (globalRegister) me += "PR[";
+     if(globalRegister) me += "PR[";
      else me += "P[";
      me += Integer.toString(register + 1)+"] ";
-     if (motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "%";
+     if(motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "%";
      else me += Integer.toString((int)speed) + "mm/s";
-     if (termination == 0) me += "FINE";
+     if(termination == 0) me += "FINE";
      else me += "CONT" + (int)(termination*100);
      return me;
   } // end toString()
@@ -418,14 +423,14 @@ public class FrameInstruction extends Instruction {
   }
   
   public void execute() {
-    if (frameType == FTYPE_TOOL) activeToolFrame = idx;
-    else if (frameType == FTYPE_USER) activeUserFrame = idx;
+    if(frameType == FTYPE_TOOL) activeToolFrame = idx;
+    else if(frameType == FTYPE_USER) activeUserFrame = idx;
   }
   
   public String toString() {
     String ret = "";
-    if (frameType == FTYPE_TOOL) ret += "UTOOL_NUM=";
-    else if (frameType == FTYPE_USER) ret += "UFRAME_NUM=";
+    if(frameType == FTYPE_TOOL) ret += "UTOOL_NUM=";
+    else if(frameType == FTYPE_USER) ret += "UFRAME_NUM=";
     ret += idx+1;
     return ret;
   }
@@ -443,7 +448,7 @@ public class ToolInstruction extends Instruction {
   }
   
   public void execute() {
-    if ((type.equals("RO") && bracket == 4 && armModel.activeEndEffector == ENDEF_CLAW) ||
+    if((type.equals("RO") && bracket == 4 && armModel.activeEndEffector == ENDEF_CLAW) ||
         (type.equals("DO") && bracket == 101 && armModel.activeEndEffector == ENDEF_SUCTION))
     {
       
@@ -451,21 +456,22 @@ public class ToolInstruction extends Instruction {
       System.out.printf("EE: %d\n", armModel.endEffectorStatus);
       
       // Check if the Robot is placing an object or picking up and object
-      if (armModel.activeEndEffector == ENDEF_CLAW || armModel.activeEndEffector == ENDEF_SUCTION) {
+      if(armModel.activeEndEffector == ENDEF_CLAW || armModel.activeEndEffector == ENDEF_SUCTION) {
         
-        if (setToolStatus == ON && armModel.held == null) {
+        if(setToolStatus == ON && armModel.held == null) {
           
           PVector ee_pos = armModel.getEEPos();
           
           // Determine if an object in the world can be picked up by the Robot
-          for (Object s : objects) {
+          for(Object s : objects) {
             
-            if (s.collision(ee_pos)) {
+            if(s.collision(ee_pos)) {
               armModel.held = s;
               break;
             }
           }
-        } else if (setToolStatus == OFF && armModel.held != null) {
+        } 
+        else if(setToolStatus == OFF && armModel.held != null) {
           // Release the object
           armModel.releaseHeldObject();
         }

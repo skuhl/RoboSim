@@ -26,16 +26,16 @@ public int loadState() {
       error = 0;
   
   File f = new File(sketchPath("tmp/"));
-  if (!f.exists()) { f.mkdirs(); }
+  if(!f.exists()) { f.mkdirs(); }
   
   /* Load all saved Programs */
   
   File progFile = new File( sketchPath("tmp/programs.bin") );
   
-  if (progFile.exists()) {
+  if(progFile.exists()) {
     ret = loadProgramBytes(progFile);
     
-    if (ret == 0) {
+    if(ret == 0) {
       println("Successfully loaded programs!");
     } else {
       println("Failed to load programs ...");
@@ -49,16 +49,16 @@ public int loadState() {
   
   File frameFile = new File( sketchPath("tmp/frames.bin") );
   
-  if (frameFile.exists()) {
+  if(frameFile.exists()) {
     // Load both the User and Tool Frames
     ret = loadFrameBytes(frameFile);
     
-    if (ret == 0) {
+    if(ret == 0) {
       println("Successfully loaded frames!");
     } else {
        println("Failed to load frames ..."); 
        
-       if (error == 0) {
+       if(error == 0) {
           error = 2;
         } else {
           error = 3;
@@ -67,12 +67,12 @@ public int loadState() {
   }
   
   // Create new frames if they could not be loaded
-  if (ret != 0) {
+  if(ret != 0) {
     
     toolFrames = new Frame[10];
     userFrames = new Frame[10];
     
-    for (int n = 0; n < toolFrames.length; ++n) {
+    for(int n = 0; n < toolFrames.length; ++n) {
       toolFrames[n] = new Frame();
       userFrames[n] = new Frame();
     }
@@ -83,34 +83,34 @@ public int loadState() {
   
   File regFile = new File(sketchPath("tmp/registers.bin"));
   
-  if (regFile.exists()) {
+  if(regFile.exists()) {
       ret = loadRegisterBytes(regFile);
       
-      if (ret == 0) {
+      if(ret == 0) {
         println("Successfully loaded registers!");
       } else {
         println("Failed to load registers ...");
         
-        if (error == 0) {
+        if(error == 0) {
           error = 4;
-        } else if (error == 1) {
+        } else if(error == 1) {
           error = 5;
-        } else if (error == 2) {
+        } else if(error == 2) {
           error = 6;
-        } else if (error == 3) {
+        } else if(error == 3) {
           error = 7;
         }
       }
   }
   
   // Initialize uninitialized registers and position registers to with null fields
-  for (int reg = 0; reg < REG.length; ++reg) {
+  for(int reg = 0; reg < REG.length; ++reg) {
     
-    if (REG[reg] == null) {
+    if(REG[reg] == null) {
       REG[reg] = new Register(null, null);
     }
     
-    if (POS_REG[reg] == null) {  
+    if(POS_REG[reg] == null) {  
       POS_REG[reg] = new PositionRegister(null, null);
     }
   }
@@ -131,7 +131,7 @@ public int saveProgramBytes(File dest) {
   
   try {
     // Create dest if it does not already exist
-    if (!dest.exists()) {      
+    if(!dest.exists()) {      
       try {
         dest.createNewFile();
         System.out.printf("Successfully created %s.\n", dest.getName());
@@ -147,7 +147,7 @@ public int saveProgramBytes(File dest) {
     // Save the number of programs
     dataOut.writeInt(programs.size());
     
-    for (Program prog : programs) {
+    for(Program prog : programs) {
       // Save each program
       saveProgram(prog, dataOut);
     }
@@ -188,7 +188,7 @@ public int loadProgramBytes(File src) {
     // Read the number of programs stored in src
     int size = max(0, min(dataIn.readInt(), 200));
     
-    while (size-- > 0) {
+    while(size-- > 0) {
       // Read each program from src
       programs.add( loadProgram(dataIn) );
     }
@@ -230,10 +230,10 @@ private void saveProgram(Program p, DataOutputStream out) throws IOException {
   out.writeInt(p.nextRegister);
   out.writeInt(p.instructions.size());
   // Save each instruction
-  for (Instruction inst : p.instructions) {
+  for(Instruction inst : p.instructions) {
     saveInstruction(inst, out);
     // Save only the Points associated with a MotionInstruction
-    if (inst instanceof MotionInstruction) {
+    if(inst instanceof MotionInstruction) {
       savePoint(p.p[ ((MotionInstruction)inst).register ], out);
     }
   }
@@ -258,12 +258,12 @@ private Program loadProgram(DataInputStream in) throws IOException {
   // Read the number of instructions stored for this porgram
   int numOfInst = max(0, min(in.readInt(), 500));
   
-  while (numOfInst-- > 0) {
+  while(numOfInst-- > 0) {
     // Read each instruction
     Instruction inst = loadInstruction(in);
     prog.addInstruction(inst);
     // Read the points stored after each MotionIntruction
-    if (inst instanceof MotionInstruction) {
+    if(inst instanceof MotionInstruction) {
       Point pt = loadPoint(in);
       prog.addRegister(pt, ((MotionInstruction)inst).register);
     }
@@ -287,12 +287,12 @@ private void savePoint(Point p, DataOutputStream out) throws IOException {
   out.writeFloat(p.pos.z);
   
   // Write point's orientation
-  for (float o : p.ori) {
+  for(float o : p.ori) {
     out.writeFloat(o);
   }
   
   // Write the joint angles for the point's position
-  for (float j : p.joints) {
+  for(float j : p.joints) {
     out.writeFloat(j);
   }
 }
@@ -343,7 +343,7 @@ private Point loadPoint(DataInputStream in) throws IOException {
 private void saveInstruction(Instruction inst, DataOutputStream out) throws IOException {
   
   // Each Instruction subclass MUST have its own saving code block associated with its unique data fields
-  if (inst instanceof MotionInstruction) {
+  if(inst instanceof MotionInstruction) {
     
     MotionInstruction m_inst = (MotionInstruction)inst;
     // Flag byte denoting this instruction as a MotionInstruction
@@ -356,7 +356,7 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeFloat(m_inst.termination);
     out.writeInt(m_inst.userFrame);
     out.writeInt(m_inst.toolFrame);
-  } else if (inst instanceof FrameInstruction) {
+  } else if(inst instanceof FrameInstruction) {
     
     FrameInstruction f_inst = (FrameInstruction)inst;
     // Flag byte denoting this instruction as a FrameInstruction
@@ -364,7 +364,7 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     // Write data associated with the FrameInstruction object
     out.writeInt(f_inst.frameType);
     out.writeInt(f_inst.idx);
-  } else if (inst instanceof ToolInstruction) {
+  } else if(inst instanceof ToolInstruction) {
     
     ToolInstruction t_inst = (ToolInstruction)inst;
     // Flag byte denoting this instruction as a ToolInstruction
@@ -393,7 +393,7 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
   // Determine what type of instruction is stored in the succeding bytes
   byte instType = in.readByte();
   
-  if (instType == 0) {
+  if(instType == 0) {
     
     // Read data for a MotionInstruction object
     int mType = in.readInt();
@@ -405,11 +405,11 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     int tFrame = in.readInt();
     
     inst = new MotionInstruction(mType, reg, isGlobal, spd, term, uFrame, tFrame);
-  } else if (instType == 1) {
+  } else if(instType == 1) {
     
     // Read data for a FrameInstruction object
     inst = new FrameInstruction( in.readInt(), in.readInt() );
-  } else if (instType == 2) {
+  } else if(instType == 2) {
     
     // Read data for a ToolInstruction object
     String type = in.readUTF();
@@ -436,7 +436,7 @@ public int saveFrameBytes(File dest) {
   
   try {
     // Create dest if it does not already exist
-    if (!dest.exists()) {
+    if(!dest.exists()) {
       try {
         dest.createNewFile();
         System.out.printf("Successfully created %s.\n", dest.getName());
@@ -451,13 +451,13 @@ public int saveFrameBytes(File dest) {
     
     // Save Tool Frames
     dataOut.writeInt(toolFrames.length);
-    for (Frame frame : toolFrames) {
+    for(Frame frame : toolFrames) {
       saveFrame(frame, dataOut);
     }
     
     // Save User Frames
     dataOut.writeInt(userFrames.length);
-    for (Frame frame : userFrames) {
+    for(Frame frame : userFrames) {
       saveFrame(frame, dataOut);
     }
     
@@ -502,7 +502,7 @@ public int loadFrameBytes(File src) {
     toolFrames = new Frame[size];
     int idx;
     
-    for (idx = 0; idx < size; ++idx) {
+    for(idx = 0; idx < size; ++idx) {
       toolFrames[idx] = loadFrame(dataIn);
     }
     
@@ -510,7 +510,7 @@ public int loadFrameBytes(File src) {
     size = max(0, min(dataIn.readInt(), 10));
     userFrames = new Frame[size];
     
-    for (idx = 0; idx < size; ++idx) {
+    for(idx = 0; idx < size; ++idx) {
       userFrames[idx] = loadFrame(dataIn);
     }
     
@@ -552,8 +552,8 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   out.writeFloat(v.z);
   
   // Write frame axes
-  for (int row = 0; row < 3; ++row) {
-    for (int col = 0; col < 3; ++col) {
+  for(int row = 0; row < 3; ++row) {
+    for(int col = 0; col < 3; ++col) {
       out.writeFloat(f.axes[row][col]);
     }
   }
@@ -579,8 +579,8 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   
   float[][] axesVectors = new float[3][3];
   // Read axes vector values
-  for (int row = 0; row < 3; ++row) {
-    for (int col = 0; col < 3; ++col) {
+  for(int row = 0; row < 3; ++row) {
+    for(int col = 0; col < 3; ++col) {
       axesVectors[row][col] = in.readFloat();
     }
   }
@@ -604,7 +604,7 @@ public int saveRegisterBytes(File dest) {
   try {
     
     // Create dest if it does not already exist
-    if (!dest.exists()) {
+    if(!dest.exists()) {
       try {
         dest.createNewFile();
         System.out.printf("Successfully created %s.\n", dest.getName());
@@ -624,13 +624,13 @@ public int saveRegisterBytes(File dest) {
                        initializedPR = new ArrayList<Integer>();
     
     // Count the number of initialized entries and save their indices
-    for (int idx = 0; idx < REG.length; ++idx) {
-      if (REG[idx].value != null || REG[idx].comment != null) {
+    for(int idx = 0; idx < REG.length; ++idx) {
+      if(REG[idx].value != null || REG[idx].comment != null) {
         initializedR.add(idx);
         ++numOfREntries;
       }
       
-      if (POS_REG[idx].point != null || POS_REG[idx].comment != null) {
+      if(POS_REG[idx].point != null || POS_REG[idx].comment != null) {
         initializedPR.add(idx);
         ++numOfPREntries;
       }
@@ -638,17 +638,17 @@ public int saveRegisterBytes(File dest) {
     
     dataOut.writeInt(numOfREntries);
     // Save the Register entries
-    for (Integer idx : initializedR) {
+    for(Integer idx : initializedR) {
       dataOut.writeInt(idx);
       
-      if (REG[idx].value == null) {
+      if(REG[idx].value == null) {
         // save for null Float value
         dataOut.writeFloat(Float.NaN);
       } else {
         dataOut.writeFloat(REG[idx].value);
       }
       
-      if (REG[idx].comment == null) {
+      if(REG[idx].comment == null) {
         dataOut.writeUTF("");
       } else {
         dataOut.writeUTF(REG[idx].comment);
@@ -657,10 +657,10 @@ public int saveRegisterBytes(File dest) {
     
     dataOut.writeInt(numOfPREntries);
     // Save the Position Register entries
-    for (Integer idx : initializedPR) {
+    for(Integer idx : initializedPR) {
       dataOut.writeInt(idx);
       
-      if (POS_REG[idx].point == null) {
+      if(POS_REG[idx].point == null) {
         // Save for null Point value
         savePoint( new Point(Float.NaN, Float.NaN, Float.NaN,
                              Float.NaN, Float.NaN, Float.NaN, Float.NaN), dataOut );
@@ -668,7 +668,7 @@ public int saveRegisterBytes(File dest) {
         savePoint(POS_REG[idx].point, dataOut);
       }
       
-      if (POS_REG[idx].comment == null) {
+      if(POS_REG[idx].comment == null) {
         dataOut.writeUTF("");
       } else {
         dataOut.writeUTF(POS_REG[idx].comment);
@@ -716,17 +716,17 @@ public int loadRegisterBytes(File src) {
     int size = max(0, min(dataIn.readInt(), REG.length));
     
     // Load the Register entries
-    while (size-- > 0) {
+    while(size-- > 0) {
       // Each entry is saved after its respective index in REG
       int reg = dataIn.readInt();
       
       Float v = dataIn.readFloat();
       // Null values are saved as NaN
-      if (Float.isNaN(v)) { v = null; }
+      if(Float.isNaN(v)) { v = null; }
       
       String c = dataIn.readUTF();
       // Null comments are saved as ""
-      if (c.equals("")) { c = null; }
+      if(c.equals("")) { c = null; }
       
       REG[reg] = new Register(c, v);
     }
@@ -734,17 +734,17 @@ public int loadRegisterBytes(File src) {
     size = max(0, min(dataIn.readInt(), POS_REG.length));
     
     // Load the Position Register entries
-    while (size-- > 0) {
+    while(size-- > 0) {
       // Each entry is saved after its respective index in POS_REG
       int idx = dataIn.readInt();
       
       Point p = loadPoint(dataIn);
       // Null points are stored with pos Vectors filled with NaNs
-      if (Float.isNaN(p.pos.x)) { p = null; }
+      if(Float.isNaN(p.pos.x)) { p = null; }
       
       String c = dataIn.readUTF();
       // Null comments are stored as ""
-      if (c == "") { c = null; }
+      if(c == "") { c = null; }
       
       POS_REG[idx] = new PositionRegister(c, p);
     }
