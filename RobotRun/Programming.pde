@@ -462,7 +462,7 @@ public class ToolInstruction extends Instruction {
           PVector ee_pos = armModel.getEEPos();
           
           // Determine if an object in the world can be picked up by the Robot
-          for(Object s : objects) {
+          for(WorldObject s : objects) {
             
             if(s.collision(ee_pos)) {
               armModel.held = s;
@@ -550,5 +550,144 @@ public class PositionRegister {
   public PositionRegister(String c, Point p) {
     point = p;
     comment = c;
+  }
+}
+
+/* These asre used to store the operators used in register statement expressions in the ExpressionTree Object */
+public enum Operator { PLUS, MINUS, MUTLIPLY, DIVIDE, MODULUS, INTDIVIDE, PARENTHESIS }
+
+public class ExpressionSet {
+  /* Index of the register to store the result */
+  private int regIdx;
+  /* Whether the result is stored in the position or plain registers list */
+  private boolean isPosReg;
+  /* The individual elements of the expressions */
+  private ArrayList<Object> parameters;
+  
+  /**
+   * Creates a tree with the given index and register list flag.
+   * 
+   * @param idx   the index in the Register list when the result
+   *              of the expression should be stored
+   * @param isPR  whether to store the result in the Position
+   *              Registers or Registers (also works for type
+   *              checking of the result of the expression)
+   */
+  public ExpressionSet(int idx, boolean isPR) {
+    regIdx = idx;
+    isPosReg = isPR;
+    parameters = new ArrayList<Object>();
+  }
+  
+  /**
+   * Adds the given operator, operand pair to the end of the parameters list
+   */
+  public void addParameter(Operator op, Object operand) {
+    parameters.add(op);
+    parameters.add(operand);
+  }
+  
+  /**
+   * Replaces the given index in the list of parameters
+   * with the given parameter.
+   */
+  public void setParameter(int idx, Object param) {
+    parameters.set(idx, param);
+  }
+  
+  // TODO Removing elements?
+  
+  public Object evaluate() throws ExpressionEvaluationException {
+    // TODO
+    return null;
+  }
+  
+  /**
+   * Returns the number of operators AND operands in the expression
+   */
+  public int parameterSize() { return parameters.size(); }
+}
+
+/**
+ * A simple class that holds an element for an expression entry. For Register
+ * expressions, integer arrays as well as floating-point values are stored as
+ * operand entries and Operator objects are stored as operator entries. 
+ */
+public class ExpressionParameter {
+  private Object entry;
+  
+  /**
+   * Creates am empty entry
+   */
+  public ExpressionParameter() {
+    entry = null;
+  }
+  
+  /**
+   * Creates an initialized entry
+   * 
+   * @param e  The value to store in
+   *           this object
+   */
+  public ExpressionParameter(Object e) {
+    entry = e;
+  }
+  
+  // Getter and accessor for the entry field
+  public void setEntry(Object e) { entry = e; }
+  public Object getEntry() { return entry; }
+  public boolean isEmpty() { return entry == null; }
+  
+  /* Returns unique outputs for the four types of entries of Register
+   * Statements: Contants, Registers, Position Registers, and Position
+   * Register Values. */
+  public String toString() {
+    
+    if (entry instanceof int[]) {
+      int[] regIdx = (int[])entry;
+      
+      if (regIdx.length == 1) {
+        
+        // Register entries are stored as a singleton integer array
+        return String.format("R[%d]", regIdx[0]);
+      } else if (regIdx.length == 2) {
+        
+        // Position Register entries are stored as a doubleton integer array
+        if (regIdx[1] >= 0) {
+          return String.format("PR[%d, %d]", regIdx[0], regIdx[1]);
+        } else {
+          return String.format("PR[%d]", regIdx[0]);
+        }
+      }
+    } else if (entry instanceof Operator) {
+      
+      // Each operator has its own symbol
+      switch ( (Operator)entry ) {
+        case PLUS:         return "+";
+        case MINUS:        return "-";
+        case MUTLIPLY:     return "*";
+        case DIVIDE:       return "/";
+        case MODULUS:      return "%";
+        case INTDIVIDE:    return "|";
+        case PARENTHESIS:  return "()";
+      }
+    }
+    
+    // Simply print the value for constants
+    return entry.toString();
+  }
+}
+
+/**
+ * This class defines an error that occurs during the evaluation process of an ExpressionSet Object.
+ */
+public class ExpressionEvaluationException extends RuntimeException {
+  
+  /**
+   * TODO constructor comment
+   */
+  public ExpressionEvaluationException(int flag) {
+    // TODO develop message for expression parsing error
+    super("Error");
   }
 }

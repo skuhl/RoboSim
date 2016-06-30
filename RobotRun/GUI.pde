@@ -1,63 +1,63 @@
 final int FRAME_JOINT = 0, 
-FRAME_JGFRM = 1, 
-FRAME_WORLD = 2, 
-FRAME_TOOL = 3, 
-FRAME_USER = 4;
+          FRAME_JGFRM = 1, 
+          FRAME_WORLD = 2, 
+          FRAME_TOOL = 3, 
+          FRAME_USER = 4;
 final int SMALL_BUTTON = 35,
-LARGE_BUTTON = 50; 
+          LARGE_BUTTON = 50; 
 final int NONE = 0, 
-PROGRAM_NAV = 1, 
-INSTRUCTION_NAV = 2,
-INSTRUCTION_EDIT = 3,
-SET_INSTRUCTION_SPEED = 4,
-SET_INSTRUCTION_REGISTER = 5,
-SET_INSTRUCTION_TERMINATION = 6,
-JUMP_TO_LINE = 7,
-VIEW_INST_REG = 8,
-ENTER_TEXT = 9,
-PICK_LETTER = 10,
-MAIN_MENU_NAV = 11,
-SETUP_NAV = 12,
-NAV_TOOL_FRAMES = 13,
-NAV_USER_FRAMES = 14,
-PICK_FRAME_MODE = 15,
-FRAME_DETAIL = 16,
-PICK_FRAME_METHOD = 17,
-THREE_POINT_MODE = 18,
-FOUR_POINT_MODE = 19,
-SIX_POINT_MODE = 20,
-DIRECT_ENTRY_MODE = 21,
-ACTIVE_FRAMES = 22,
-PICK_INSTRUCTION = 23,
-IO_SUBMENU = 24,
-SET_DO_BRACKET = 25,
-SET_DO_STATUS = 26,
-SET_RO_BRACKET = 27,
-SET_RO_STATUS = 28,
-SET_FRAME_INSTRUCTION = 29,
-SET_FRAME_INSTRUCTION_IDX = 30,
-PICK_REG_LIST = 31,
-VIEW_REG = 32,
-// C for Cartesian
-VIEW_POS_REG_C = 33,
-// J for Joint
-VIEW_POS_REG_J = 34,
-INSTRUCT_MENU_NAV = 35,
-INPUT_FLOAT = 36,
-INPUT_POINT_C = 37,
-INPUT_POINT_J = 38,
-INPUT_COMMENT_U = 39,
-INPUT_COMMENT_L = 40,
-SELECT_LINES = 41,
-CONFIRM_INSERT = 42,
-CONFIRM_DELETE = 43,
-CONFIRM_RENUM = 44,
-CONFIRM_UNDO = 45;
+          PROGRAM_NAV = 1, 
+          INSTRUCTION_NAV = 2,
+          INSTRUCTION_EDIT = 3,
+          SET_INSTRUCTION_SPEED = 4,
+          SET_INSTRUCTION_REGISTER = 5,
+          SET_INSTRUCTION_TERMINATION = 6,
+          JUMP_TO_LINE = 7,
+          VIEW_INST_REG = 8,
+          ENTER_TEXT = 9,
+          PICK_LETTER = 10,
+          MAIN_MENU_NAV = 11,
+          SETUP_NAV = 12,
+          NAV_TOOL_FRAMES = 13,
+          NAV_USER_FRAMES = 14,
+          PICK_FRAME_MODE = 15,
+          FRAME_DETAIL = 16,
+          PICK_FRAME_METHOD = 17,
+          THREE_POINT_MODE = 18,
+          FOUR_POINT_MODE = 19,
+          SIX_POINT_MODE = 20,
+          DIRECT_ENTRY_MODE = 21,
+          ACTIVE_FRAMES = 22,
+          PICK_INSTRUCTION = 23,
+          IO_SUBMENU = 24,
+          SET_DO_BRACKET = 25,
+          SET_DO_STATUS = 26,
+          SET_RO_BRACKET = 27,
+          SET_RO_STATUS = 28,
+          SET_FRAME_INSTRUCTION = 29,
+          SET_FRAME_INSTRUCTION_IDX = 30,
+          PICK_REG_LIST = 31,
+          VIEW_REG = 32,
+          // C for Cartesian
+          VIEW_POS_REG_C = 33,
+          // J for Joint
+          VIEW_POS_REG_J = 34,
+          INSTRUCT_MENU_NAV = 35,
+          INPUT_FLOAT = 36,
+          INPUT_POINT_C = 37,
+          INPUT_POINT_J = 38,
+          INPUT_COMMENT_U = 39,
+          INPUT_COMMENT_L = 40,
+          SELECT_LINES = 41,
+          CONFIRM_INSERT = 42,
+          CONFIRM_DELETE = 43,
+          CONFIRM_RENUM = 44,
+          CONFIRM_UNDO = 45;
 final int BUTTON_DEFAULT = color(70),
-BUTTON_ACTIVE = color(220, 40, 40),
-BUTTON_TEXT = color(240),
-TEXT_DEFAULT = color(240),
-TEXT_HIGHLIGHT = color(40);
+          BUTTON_ACTIVE = color(220, 40, 40),
+          BUTTON_TEXT = color(240),
+          TEXT_DEFAULT = color(240),
+          TEXT_HIGHLIGHT = color(40);
 // Determines what End Effector mapping should be display
 static int EE_MAPPING = 2;
 
@@ -1426,7 +1426,7 @@ public void dn() {
     }
     
     break;
-  case INSTRUCTION_NAV: //<>// //<>//
+  case INSTRUCTION_NAV: //<>// //<>// //<>// //<>//
   case SELECT_LINES:
     options = new ArrayList<String>();
     clearOptions();
@@ -1448,7 +1448,7 @@ public void dn() {
       row_select = min(r + max(0, (active_instruction - i)), contents.size() - 1);
       text_render_start = text_render_start + max(0, (active_instruction - i) - (row_select - r));
     }
-    //<>//
+    //<>// //<>//
     loadInstructions(active_program);
     
     if(DISPLAY_TEST_OUTPUT) {
@@ -1532,7 +1532,7 @@ public void dn() {
 }
 
 public void lt() {
-  switch(mode) { //<>//
+  switch(mode) { //<>// //<>//
   case PROGRAM_NAV:
     break;
   case INSTRUCTION_NAV:
@@ -1577,7 +1577,7 @@ public void rt() {
     
     col_select = min(col_select + 1, contents.get(row_select).size() - 1);
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-    break; //<>// //<>//
+    break; //<>// //<>// //<>//
   case INSTRUCTION_EDIT:
     mode = INSTRUCTION_NAV;
     rt();
@@ -1750,11 +1750,11 @@ public void f1() {
     if(shift == ON) {
       
       PVector eep = armModel.getEEPos();
-      //eep = convertNativeToWorld(eep);
-      Program prog = programs.get(active_program);
-      int reg = prog.nextRegister();
       float[] q = armModel.getQuaternion();
       float[] j = armModel.getJointRotations();
+      
+      Program prog = programs.get(active_program);
+      int reg = prog.nextRegister();
       
       prog.addRegister(new Point(eep.x, eep.y, eep.z, q[0], q[1], q[2], q[3],
       j[0], j[1], j[2], j[3], j[4], j[5]), reg);
@@ -1771,7 +1771,7 @@ public void f1() {
       
       active_instruction = prog.getInstructions().size() - 1;
       col_select = 0;
-      /* 13 is the maximum number of instructions that can be displayed at one point in time */
+      
       row_select = min(active_instruction, ITEMS_TO_SHOW - 1);
       text_render_start = active_instruction - row_select;
       
@@ -1862,26 +1862,24 @@ public void f1() {
     
     break;
   case VIEW_POS_REG_J:
-    if(col_select == 1) {
-      // Bring up comment menu
-      loadInputRegisterCommentMethod();
-    } else if(col_select >= 2) {
-      // Bring up Point editing menu
-      super_mode = mode;
-      mode = INPUT_POINT_J;
-      loadInputRegisterPointMethod();
-    }
-    
-    break;
   case VIEW_POS_REG_C:
-    if(col_select == 1) {
-      // Bring up comment menu
-      loadInputRegisterCommentMethod();
-    } else if(col_select >= 2) {
-      // Bring up Point editing menu
-      super_mode = mode;
-      mode = INPUT_POINT_C;
-      loadInputRegisterPointMethod();
+    if (shift == ON) {
+      /* Save the current position of the Robot's faceplate in the currently select
+       * element of the Position Registers array */ 
+      if (active_index >= 0 && active_index < POS_REG.length) {
+        saveRobotFaceplatePointIn(armModel, POS_REG[active_index]);
+      }
+    } else {
+      
+      if(col_select == 1) {
+        // Bring up comment menu
+        loadInputRegisterCommentMethod();
+      } else if(col_select >= 2) {
+        // Bring up Point editing menu
+        prev_mode = mode;
+        mode = mode == (VIEW_POS_REG_C) ? INPUT_POINT_C : INPUT_POINT_J;
+        loadInputRegisterPointMethod();
+      }
     }
     
     break;
@@ -2127,7 +2125,7 @@ public void f4() {
         
         if(active_program >= programs.size()) {
           active_program = programs.size() - 1;
-          /* 13 is the maximum number of instructions that can be displayed at one point in time */
+          
           row_select = min(active_program, ITEMS_TO_SHOW - 1);
           text_render_start = active_program - row_select;
         }
@@ -2737,7 +2735,7 @@ public void ENTER() {
     
     active_instruction = prog.getInstructions().size() - 1;
     col_select = 0;
-    /* 13 is the maximum number of instructions that can be displayed at one point in time */
+    
     row_select = min(active_instruction, ITEMS_TO_SHOW - 1);
     text_render_start = active_instruction - row_select;
     
@@ -2774,7 +2772,7 @@ public void ENTER() {
     
     active_instruction = prog.getInstructions().size() - 1;
     col_select = 0;
-    /* 13 is the maximum number of instructions that can be displayed at one point in time */
+    
     row_select = min(active_instruction, ITEMS_TO_SHOW - 1);
     text_render_start = active_instruction - row_select;
     
@@ -4125,13 +4123,19 @@ public void updateScreen(color cDefault, color cHighlight) {
     case VIEW_REG:
     case VIEW_POS_REG_C:
     case VIEW_POS_REG_J:
-      // F1, F2
-      funct[0] = "[Edit]";
-      funct[1] = "[Switch]";
-      funct[2] = "";
-      funct[3] = "";
-      funct[4] = "";
-      break;
+      if (shift == ON && (mode == VIEW_POS_REG_C || mode == VIEW_POS_REG_J)) {
+        funct[0] = "[Save Pt]";
+        funct[1] = "[Switch]";
+        funct[2] = "";
+        funct[3] = "";
+        funct[4] = "";
+      } else {
+        funct[0] = "[Edit]";
+        funct[1] = "[Switch]";
+        funct[2] = "";
+        funct[3] = "";
+        funct[4] = "";
+      }
     case INPUT_COMMENT_U:
       // F1 - F5
       funct[0] = "[ABCDEF]";
@@ -4676,6 +4680,32 @@ public void loadInputRegisterValueMethod() {
 }
 
 /**
+ * Saves the given Robot Model's current faceplate position and orientaion as
+ * well as its current joint angles into the given Position Register.
+ * 
+ * @param model The Robot model, of which to save the Faceplate point 
+ * @param pReg  The Position Register, in which to save the point
+ */
+public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
+    
+  pushMatrix();
+  resetMatrix();
+  // Get the position of the Robot's faceplate
+  applyModelRotation(model, false);
+  PVector fp_pos = new PVector( modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0) );
+  
+  popMatrix();
+  
+  float[] orien = armModel.getQuaternion();
+  float[] jointAngles = armModel.getJointRotations();
+  
+  Point pt = new Point(fp_pos, orien);
+  pt.joints = jointAngles;
+  
+  pReg.point = pt;
+}
+
+/**
 * This method will transition to the INPUT_POINT_C or INPUT_POINT_J modes
 * based whether the current mode is VIEW_REG_C or VIEW_REG_J. In either
 * mode, the user will be prompted to input 6 floating-point values (X, Y,
@@ -4857,7 +4887,7 @@ public void updateInstructions() {
   Program prog = programs.get(active_program);
   
   active_instruction = min(active_instruction,  prog.getInstructions().size() - 1);
-  /* 13 is the maximum number of instructions that can be displayed at one point in time */
+  
   row_select = min(active_instruction, ITEMS_TO_SHOW - 1);
   col_select = 0;
   text_render_start = active_instruction - row_select;

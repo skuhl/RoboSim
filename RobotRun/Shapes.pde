@@ -142,13 +142,13 @@ public class Box extends Shape {
   }
 }
 
-public class Object {
+public class WorldObject {
   // The actual object
   public final Shape form;
   // The area around an object used for collision handling
   public final Shape hit_box;
   
-  public Object(float wdh, float hgt, float dph, color f, color o) {
+  public WorldObject(float wdh, float hgt, float dph, color f, color o) {
     form = new Box(wdh, hgt, dph, f, o);
     // green outline for hitboxes
     hit_box = new Box(wdh + 20f, hgt + 20f, dph + 20f, color(0, 255, 0));
@@ -182,7 +182,7 @@ public class Object {
   
   /* Determines if the collider boxes of this object
   * and the given object intersect. */
-  public boolean collision(Object obj) {
+  public boolean collision(WorldObject obj) {
     Box A = (Box)hit_box;
     Box B = (Box)obj.hit_box;
     

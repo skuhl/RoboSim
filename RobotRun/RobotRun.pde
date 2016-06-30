@@ -64,7 +64,7 @@ int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 
 // The Y corrdinate of the ground plane
 public static final float PLANE_Z = 200.5f;
-public Object[] objects;
+public WorldObject[] objects;
 
 /*******************************/
 
@@ -86,15 +86,15 @@ public void setup() {
   loadState();
   
   // Intialize world objects
-  objects = new Object[2];
+  objects = new WorldObject[2];
   pushMatrix();
   resetMatrix();
   
   translate(-100, 100, -350);
-  objects[0] = new Object(125, 60, 300, color(255, 0, 0), color(255, 0, 255));
+  objects[0] = new WorldObject(125, 60, 300, color(255, 0, 0), color(255, 0, 255));
 
   translate(-250, 0, 0);
-  objects[1] = new Object(250, 125, 500, color(255, 0, 255), color(255, 255, 255));
+  objects[1] = new WorldObject(250, 125, 500, color(255, 0, 255), color(255, 255, 255));
   
   popMatrix();
   
@@ -288,7 +288,7 @@ void applyCamera() {
 * Robot Arm model.
 */
 public void handleWorldObjects() {
-  for(Object o : objects) {
+  for(WorldObject o : objects) {
     // reset all world the object's hit box colors
     o.hit_box.outline = color(0, 255, 0);
   }
