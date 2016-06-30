@@ -267,7 +267,6 @@ public class Program  {
   public int getRegistersLength() {
     return p.length;
   }
-  /**** end ****/
 
   public void addInstruction(Instruction i) {
     instructions.add(i);
