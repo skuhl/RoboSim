@@ -283,6 +283,16 @@ public class Program  {
     if(idx >= 0 && idx < p.length) return p[idx];
     else return null;
   }
+  
+  public ArrayList<LabelInstruction> getLabels(){
+    ArrayList<LabelInstruction> labels = new ArrayList<LabelInstruction>();
+    for(Instruction i: instructions){
+      if(i instanceof LabelInstruction)
+        labels.add((LabelInstruction)i);
+    }
+    
+    return labels;
+  }
 } // end Program class
 
 
@@ -305,9 +315,12 @@ public int addProgram(Program p) {
   }
 }
 
-public class Instruction { 
-
-  public Instruction() {}
+public class Instruction {
+  Program p;
+  
+  public Instruction() {
+    p = programs.get(active_program);
+  }
 
   public String toString() {
     String str = "\0";
@@ -323,9 +336,9 @@ public final class MotionInstruction extends Instruction  {
   private float termination;
   private int userFrame, toolFrame;
 
-  public MotionInstruction(int m, int r, boolean g, float s, float t,
-  int uf, int tf)
-  {
+  public MotionInstruction(int m, int r, boolean g, 
+                           float s, float t, int uf, int tf) {
+    super();
     motionType = m;
     register = r;
     globalRegister = g;
@@ -336,6 +349,7 @@ public final class MotionInstruction extends Instruction  {
   }
 
   public MotionInstruction(int m, int r, boolean g, float s, float t) {
+    super();
     motionType = m;
     register = r;
     globalRegister = g;
@@ -417,6 +431,7 @@ public class FrameInstruction extends Instruction {
   private int idx;
 
   public FrameInstruction(int f, int i) {
+    super();
     frameType = f;
     idx = i;
   }
@@ -441,6 +456,7 @@ public class ToolInstruction extends Instruction {
   private int setToolStatus;
 
   public ToolInstruction(String d, int b, int t) {
+    super();
     type = d;
     bracket = b;
     setToolStatus = t;
@@ -482,6 +498,42 @@ public class ToolInstruction extends Instruction {
     return type + "[" + bracket + "]=" + (setToolStatus == ON ? "ON" : "OFF");
   }
 } // end ToolInstruction class
+
+public class LabelInstruction extends Instruction {
+  int labelNum;
+  int labelIdx;
+  
+  public LabelInstruction(int n, int i){
+    super();
+    labelNum = n;
+    labelIdx = i;
+  }
+  
+  public String toString(){
+    return "";
+  }
+}
+
+public class JumpInstruction extends Instruction {
+  int tgtLabel;
+  int tgtIdx;
+  
+  public JumpInstruction(int n){
+    tgtLabel = n;
+    for(LabelInstruction i: p.getLabels()){
+      if(i.labelNum == tgtLabel)
+        tgtIdx = i.labelIdx;
+    }
+  }
+  
+  public void execute(){
+    active_instruction = tgtIdx;
+  }
+  
+  public String toString(){
+    return "";
+  }
+}
 
 public class CoordinateFrame {
   private PVector origin = new PVector();

@@ -1876,7 +1876,7 @@ public void f1() {
         loadInputRegisterCommentMethod();
       } else if(col_select >= 2) {
         // Bring up Point editing menu
-        prev_mode = mode;
+        super_mode = mode;
         mode = mode == (VIEW_POS_REG_C) ? INPUT_POINT_C : INPUT_POINT_J;
         loadInputRegisterPointMethod();
       }
