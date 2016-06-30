@@ -120,7 +120,7 @@ public void draw() {
   popMatrix();
   
   //execute arm movement
-  if (!doneMoving) {
+  if(!doneMoving) {
     //run program
     doneMoving = executeProgram(currentProgram, armModel, execSingleInst);
   }
@@ -143,14 +143,14 @@ public void draw() {
   armModel.draw();
   popMatrix();
   
-  if (COLLISION_DISPLAY) {
+  if(COLLISION_DISPLAY) {
     armModel.resetBoxColors();
     armModel.checkSelfCollisions();
   }
   
   handleWorldObjects();
   
-  if (COLLISION_DISPLAY) { armModel.drawBoxes(); }
+  if(COLLISION_DISPLAY) { armModel.drawBoxes(); }
   
   /*float[] q = eulerToQuat(armModel.getWPR());
   println(String.format("q = %4.3f, %4.3f, %4.3f, %4.3f", q[0], q[1], q[2], q[3]));*/
@@ -160,10 +160,10 @@ public void draw() {
   //TESTING CODE: DRAW INTERMEDIATE POINTS
   //noStroke();
   //pushMatrix();
-  //if (intermediatePositions != null) {
+  //if(intermediatePositions != null) {
   //  int count = 0;
-  //  for (Point p : intermediatePositions) {
-  //    if (count % 8 == 0) {
+  //  for(Point p : intermediatePositions) {
+  //    if(count % 8 == 0) {
   //      pushMatrix();
   //      translate(p.pos.x, p.pos.y, p.pos.z);
   //      sphere(10);
@@ -236,7 +236,7 @@ public void draw() {
   // END TESTING CODE
   
   /* Draw a point in space */
-  if (ref_point != null) {
+  if(ref_point != null) {
     pushMatrix();
     translate(ref_point.x, ref_point.y, ref_point.z);
     
@@ -255,7 +255,7 @@ public void draw() {
   
   // Draw grid lines every 100 units, from -5000 to 5000, in the x and y plane, on the floor plane
   stroke(25, 25, 25);
-  for (int l = 1; l < 50; ++l) {
+  for(int l = 1; l < 50; ++l) {
     line(100 * l, PLANE_Z, -5000, 100 * l, PLANE_Z, 5000);
     line(-5000, PLANE_Z, 100 * l, 5000, PLANE_Z, 100 * l);
     
@@ -288,15 +288,15 @@ void applyCamera() {
  * Robot Arm model.
  */
 public void handleWorldObjects() {
-  for (Object o : objects) {
+  for(Object o : objects) {
     // reset all world the object's hit box colors
     o.hit_box.outline = color(0, 255, 0);
   }
   
-  for (int idx = 0; idx < objects.length; ++idx) {
+  for(int idx = 0; idx < objects.length; ++idx) {
     
     /* Update the transformation matrix of an object held by the Robotic Arm */
-    if (objects[idx] == armModel.held && armModel.modelInMotion()) {
+    if(objects[idx] == armModel.held && armModel.modelInMotion()) {
       pushMatrix();
       resetMatrix();
       
@@ -320,15 +320,15 @@ public void handleWorldObjects() {
     }
     
     /* Collision Detection */
-    if (COLLISION_DISPLAY) {
-      if ( armModel.checkObjectCollision(objects[idx]) ) {
+    if(COLLISION_DISPLAY) {
+      if( armModel.checkObjectCollision(objects[idx]) ) {
         objects[idx].hit_box.outline = color(255, 0, 0);
       }
         
       // Detect collision with other objects
-      for (int cdx = idx + 1; cdx < objects.length; ++cdx) {
+      for(int cdx = idx + 1; cdx < objects.length; ++cdx) {
         
-        if (objects[idx].collision(objects[cdx])) {
+        if(objects[idx].collision(objects[cdx])) {
           // Change hit box color to indicate Object collision
           objects[idx].hit_box.outline = color(255, 0, 0);
           objects[cdx].hit_box.outline = color(255, 0, 0);
@@ -336,7 +336,7 @@ public void handleWorldObjects() {
         }
       }
       
-      if ( objects[idx] != armModel.held && objects[idx].collision(armModel.getEEPos()) ) {
+      if( objects[idx] != armModel.held && objects[idx].collision(armModel.getEEPos()) ) {
         // Change hit box color to indicate End Effector collision
         objects[idx].hit_box.outline = color(0, 0, 255);
       }
@@ -352,11 +352,12 @@ public void handleWorldObjects() {
  */
 public void displayTeachPoints() {
   // Teach points are displayed only while the Robot is being taught a frame
-  if (teachPointTMatrices != null && (mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE)) {
+  if(teachPointTMatrices != null && (mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE)) {
     
     color[] pt_colors = new color[teachPointTMatrices.size()];
     
     // First point
+<<<<<<< HEAD
 <<<<<<< Updated upstream
     if (teachPointTMatrices.size() >= 1) {
       if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
@@ -364,11 +365,16 @@ public void displayTeachPoints() {
     if(teachPointTMatrices.size() >= 1) {
       if((prev_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
 >>>>>>> Stashed changes
+=======
+    if(teachPointTMatrices.size() >= 1) {
+      if((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
+>>>>>>> dev
         pt_colors[0] = color(130, 130, 130);
       } else {
         pt_colors[0] = color(255, 130, 0);
       }
       // Second point
+<<<<<<< HEAD
 <<<<<<< Updated upstream
       if (teachPointTMatrices.size() >= 2) {
         if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
@@ -376,11 +382,16 @@ public void displayTeachPoints() {
       if(teachPointTMatrices.size() >= 2) {
         if((prev_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
 >>>>>>> Stashed changes
+=======
+      if(teachPointTMatrices.size() >= 2) {
+        if((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
+>>>>>>> dev
           pt_colors[1] = color(130, 130, 130);
         } else {
           pt_colors[1] = color(125, 0, 0);
         }
         // Thrid point
+<<<<<<< HEAD
 <<<<<<< Updated upstream
         if (teachPointTMatrices.size() >= 3) {
           if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
@@ -388,22 +399,26 @@ public void displayTeachPoints() {
         if(teachPointTMatrices.size() >= 3) {
           if((prev_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
 >>>>>>> Stashed changes
+=======
+        if(teachPointTMatrices.size() >= 3) {
+          if((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
+>>>>>>> dev
             pt_colors[2] = color(130, 130, 130);
           } else {
             pt_colors[2] = color(0, 125, 0);
           }
           // Fourth point
-          if (teachPointTMatrices.size() >= 4) {
-            if (mode == SIX_POINT_MODE) {
+          if(teachPointTMatrices.size() >= 4) {
+            if(mode == SIX_POINT_MODE) {
               pt_colors[3] = color(255, 130, 0);
             } else {
               pt_colors[3] = color(0, 0, 125);
             }
             // Fifth point
-            if (teachPointTMatrices.size() >= 5) {
+            if(teachPointTMatrices.size() >= 5) {
               pt_colors[4] = color(125, 0, 0);
               // Sixth point
-              if (teachPointTMatrices.size() == 6) {
+              if(teachPointTMatrices.size() == 6) {
                 pt_colors[5] = color(0, 125, 0);
               }
             }
@@ -413,7 +428,7 @@ public void displayTeachPoints() {
     }
     
     // Display points in the teaching point set
-    for (int idx = 0; idx < teachPointTMatrices.size(); ++idx) {
+    for(int idx = 0; idx < teachPointTMatrices.size(); ++idx) {
       float[][] T = teachPointTMatrices.get(idx);
       
       pushMatrix();
@@ -438,13 +453,13 @@ public void displayTeachPoints() {
 */
 public void displayFrameAxes() {
   
-   if ((curCoordFrame == COORD_WORLD || curCoordFrame == COORD_TOOL) && activeToolFrame != -1) {
+   if((curCoordFrame == COORD_WORLD || curCoordFrame == COORD_TOOL) && activeToolFrame != -1) {
      /* Draw the axes of the active tool frame */
      displayOriginAxes(toolFrames[activeToolFrame].getWorldAxes(), toVectorArray( armModel.getEEPos() ));
-   } else if (curCoordFrame == COORD_USER && activeUserFrame != -1) {
+   } else if(curCoordFrame == COORD_USER && activeUserFrame != -1) {
      /* Draw the axes of the active user frame */
      displayOriginAxes(userFrames[activeUserFrame].getWorldAxes(), toVectorArray( userFrames[activeUserFrame].getOrigin() ));
-   } else if (curCoordFrame == COORD_WORLD) {
+   } else if(curCoordFrame == COORD_WORLD) {
      /* Draw World Frame coordinate system */
      displayOriginAxes(new float[][] { {-1f, 0f, 0f}, {0f, 0f, 1f}, {0f, -1f, 0f} }, new float[] {0f, 0f, 0f});
    }

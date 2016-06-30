@@ -93,7 +93,7 @@ public class Box extends Shape {
   public void draw() {
     stroke(outline);
     
-    if (no_fill) {
+    if(no_fill) {
       noFill();
     } else {
       fill(fill);
@@ -105,8 +105,8 @@ public class Box extends Shape {
   public float[][] getRelativeAxes() {
     float[][] Axes = new float[3][3];
     
-    for (int r = 0; r < Axes[0].length; ++r) {
-      for (int c = 0; c < Axes.length; ++c) {
+    for(int r = 0; r < Axes[0].length; ++r) {
+      for(int c = 0; c < Axes.length; ++c) {
         Axes[c][r] = transform[r][c];
       }
     }
@@ -168,7 +168,7 @@ public class Object {
     //line(0, 0, 5000, 0, 0, -5000);
     
     form.draw();
-    if (COLLISION_DISPLAY) { hit_box.draw(); }
+    if(COLLISION_DISPLAY) { hit_box.draw(); }
     
     popMatrix();
   }
@@ -208,8 +208,8 @@ public boolean collision3D(Box A, Box B) {
   float[][] rotMatrix = new float[3][3];
   float[][] absRotMatrix = new float[3][3];
   
-  for (int v = 0; v < axes_A.length; v += 1) {
-    for (int u = 0; u < axes_B.length; u += 1) {
+  for(int v = 0; v < axes_A.length; v += 1) {
+    for(int u = 0; u < axes_B.length; u += 1) {
       // PLEASE do not change to matrix mutliplication
       rotMatrix[v][u] = axes_A[v][0] * axes_B[u][0] +  axes_A[v][1] * axes_B[u][1] +  axes_A[v][2] * axes_B[u][2];
       // Add offset for valeus close to zero (parallel axes)
@@ -228,17 +228,17 @@ public boolean collision3D(Box A, Box B) {
   
   float radiA, radiB;
   
-  for (int idx = 0; idx < absRotMatrix.length; ++idx) {
+  for(int idx = 0; idx < absRotMatrix.length; ++idx) {
     radiA = (A.getDim(idx) / 2);
     radiB = (B.getDim(0) / 2) * absRotMatrix[idx][0] + 
             (B.getDim(1) / 2) * absRotMatrix[idx][1] + 
             (B.getDim(2) / 2) * absRotMatrix[idx][2];
     
     // Check Ax, Ay, and Az
-    if (abs(T[idx]) > (radiA + radiB)) { return false; }
+    if(abs(T[idx]) > (radiA + radiB)) { return false; }
   }
   
-  for (int idx = 0; idx < absRotMatrix[0].length; ++idx) {
+  for(int idx = 0; idx < absRotMatrix[0].length; ++idx) {
     radiA = (A.getDim(0) / 2) * absRotMatrix[0][idx] + 
             (A.getDim(1) / 2) * absRotMatrix[1][idx] + 
             (A.getDim(2) / 2) * absRotMatrix[2][idx];
@@ -249,54 +249,54 @@ public boolean collision3D(Box A, Box B) {
                       T[2]*rotMatrix[2][idx]);
     
     // Check Bx, By, and Bz
-    if (check > (radiA + radiB)) { return false; }
+    if(check > (radiA + radiB)) { return false; }
   }
     
   radiA = (A.getDim(1) / 2) * absRotMatrix[2][0] + (A.getDim(2) / 2) * absRotMatrix[1][0];
   radiB = (B.getDim(1) / 2) * absRotMatrix[0][2] + (B.getDim(2) / 2) * absRotMatrix[0][1];
   // Check axes Ax x Bx
-  if (abs(T[2] * rotMatrix[1][0] - T[1] * rotMatrix[2][0]) > (radiA + radiB)) { return false; }
+  if(abs(T[2] * rotMatrix[1][0] - T[1] * rotMatrix[2][0]) > (radiA + radiB)) { return false; }
     
   radiA = (A.getDim(1) / 2) * absRotMatrix[2][1] + (A.getDim(2) / 2) * absRotMatrix[1][1];
   radiB = (B.getDim(0) / 2) * absRotMatrix[0][2] + (B.getDim(2) / 2) * absRotMatrix[0][0];
   // Check axes Ax x By
-  if (abs(T[2] * rotMatrix[1][1] - T[1] * rotMatrix[2][1]) > (radiA + radiB)) { return false; }
+  if(abs(T[2] * rotMatrix[1][1] - T[1] * rotMatrix[2][1]) > (radiA + radiB)) { return false; }
     
   radiA = (A.getDim(1) / 2) * absRotMatrix[2][2] + (A.getDim(2) / 2) * absRotMatrix[1][2];
   radiB = (B.getDim(0) / 2) * absRotMatrix[0][1] + (B.getDim(1) / 2) * absRotMatrix[0][0];
   // Check axes Ax x Bz
-  if (abs(T[2] * rotMatrix[1][2] - T[1] * rotMatrix[2][2]) > (radiA + radiB)) { return false; }
+  if(abs(T[2] * rotMatrix[1][2] - T[1] * rotMatrix[2][2]) > (radiA + radiB)) { return false; }
     
   radiA = (A.getDim(0) / 2) * absRotMatrix[2][0] + (A.getDim(2) / 2) * absRotMatrix[0][0];
   radiB = (B.getDim(1) / 2) * absRotMatrix[1][2] + (B.getDim(2) / 2) * absRotMatrix[1][1];
   // Check axes Ay x Bx
-  if (abs(T[0] * rotMatrix[2][0] - T[2] * rotMatrix[0][0]) > (radiA + radiB)) { return false; }
+  if(abs(T[0] * rotMatrix[2][0] - T[2] * rotMatrix[0][0]) > (radiA + radiB)) { return false; }
     
   radiA = (A.getDim(0) / 2) * absRotMatrix[2][1] + (A.getDim(2) / 2) * absRotMatrix[0][1];
   radiB = (B.getDim(0) / 2) * absRotMatrix[1][2] + (B.getDim(2) / 2) * absRotMatrix[1][0];
   // Check axes Ay x By
-  if (abs(T[0] * rotMatrix[2][1] - T[2] * rotMatrix[0][1]) > (radiA + radiB)) { return false; }
+  if(abs(T[0] * rotMatrix[2][1] - T[2] * rotMatrix[0][1]) > (radiA + radiB)) { return false; }
     
   radiA = (A.getDim(0) / 2) * absRotMatrix[2][2] + (A.getDim(2) / 2) * absRotMatrix[0][2];
   radiB = (B.getDim(0) / 2) * absRotMatrix[1][1] + (B.getDim(1) / 2) * absRotMatrix[1][0];
   // Check axes Ay x Bz
-  if (abs(T[0] * rotMatrix[2][2] - T[2] * rotMatrix[0][2]) > (radiA + radiB)) { return false; }
+  if(abs(T[0] * rotMatrix[2][2] - T[2] * rotMatrix[0][2]) > (radiA + radiB)) { return false; }
   
   
   radiA = (A.getDim(0) / 2) * absRotMatrix[1][0] + (A.getDim(1) / 2) * absRotMatrix[0][0];
   radiB = (B.getDim(1) / 2) * absRotMatrix[2][2] + (B.getDim(2) / 2) * absRotMatrix[2][1];
   // Check axes Az x Bx
-  if (abs(T[1] * rotMatrix[0][0] - T[0] * rotMatrix[1][0]) > (radiA + radiB)) { return false; }
+  if(abs(T[1] * rotMatrix[0][0] - T[0] * rotMatrix[1][0]) > (radiA + radiB)) { return false; }
   
   radiA = (A.getDim(0) / 2) * absRotMatrix[1][1] + (A.getDim(1) / 2) * absRotMatrix[0][1];
   radiB = (B.getDim(0) / 2) * absRotMatrix[2][2] + (B.getDim(2) / 2) * absRotMatrix[2][0];
   // Check axes Az x By
-  if (abs(T[1] * rotMatrix[0][1] - T[0] * rotMatrix[1][1]) > (radiA + radiB)) { return false; }
+  if(abs(T[1] * rotMatrix[0][1] - T[0] * rotMatrix[1][1]) > (radiA + radiB)) { return false; }
     
   radiA = (A.getDim(0) / 2) * absRotMatrix[1][2] + (A.getDim(1) / 2) * absRotMatrix[0][2];
   radiB = (B.getDim(0) / 2) * absRotMatrix[2][1] + (B.getDim(1) / 2) * absRotMatrix[2][0];
   // Check axes Az x Bz
-  if (abs(T[1] * rotMatrix[0][2] - T[0] * rotMatrix[1][2]) > (radiA + radiB)) { return false; }
+  if(abs(T[1] * rotMatrix[0][2] - T[0] * rotMatrix[1][2]) > (radiA + radiB)) { return false; }
     
   return true;
 }
