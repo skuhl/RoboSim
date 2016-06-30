@@ -357,52 +357,22 @@ public void displayTeachPoints() {
     color[] pt_colors = new color[teachPointTMatrices.size()];
     
     // First point
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-    if (teachPointTMatrices.size() >= 1) {
-      if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
-=======
     if(teachPointTMatrices.size() >= 1) {
       if((prev_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
->>>>>>> Stashed changes
-=======
-    if(teachPointTMatrices.size() >= 1) {
-      if((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
->>>>>>> dev
         pt_colors[0] = color(130, 130, 130);
       } else {
         pt_colors[0] = color(255, 130, 0);
       }
       // Second point
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-      if (teachPointTMatrices.size() >= 2) {
-        if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
-=======
       if(teachPointTMatrices.size() >= 2) {
         if((prev_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
->>>>>>> Stashed changes
-=======
-      if(teachPointTMatrices.size() >= 2) {
-        if((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
->>>>>>> dev
           pt_colors[1] = color(130, 130, 130);
         } else {
           pt_colors[1] = color(125, 0, 0);
         }
         // Thrid point
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-        if (teachPointTMatrices.size() >= 3) {
-          if ((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
-=======
         if(teachPointTMatrices.size() >= 3) {
           if((prev_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
->>>>>>> Stashed changes
-=======
-        if(teachPointTMatrices.size() >= 3) {
-          if((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
->>>>>>> dev
             pt_colors[2] = color(130, 130, 130);
           } else {
             pt_colors[2] = color(0, 125, 0);
