@@ -336,7 +336,10 @@ public class Instruction {
   Program p;
   
   public Instruction() {
-    p = programs.get(active_program);
+    /**
+     * NOPE that ain't gonna work!
+     * p = programs.get(active_program);
+     */
   }
 
   public String toString() {
