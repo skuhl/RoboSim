@@ -14,7 +14,7 @@ public class Point  {
   public PVector pos; // position
   public float[] ori = new float[4]; // orientation
   public float[] joints = new float[6]; // joint values
-  
+
   public Point() {
     pos = new PVector(0,0,0);
     ori[0] = 1;
@@ -23,9 +23,9 @@ public class Point  {
     ori[3] = 0; 
     for(int n = 0; n < joints.length; n++) joints[n] = 0;
   }
-  
+
   public Point(float x, float y, float z, float r, float i, float j, float k,
-               float j1, float j2, float j3, float j4, float j5, float j6)
+  float j1, float j2, float j3, float j4, float j5, float j6)
   {
     pos = new PVector(x,y,z);
     ori[0] = r;
@@ -39,7 +39,7 @@ public class Point  {
     joints[4] = j5;
     joints[5] = j6;
   }
-  
+
   public Point(float x, float y, float z, float r, float i, float j, float k) {
     pos = new PVector(x,y,z);
     ori[0] = r;
@@ -47,12 +47,12 @@ public class Point  {
     ori[2] = j;
     ori[3] = k;
   }
-  
+
   public Point(PVector position, float[] orientation) {
     pos = position;
     ori = orientation;
   }
-  
+
   ////create a new point with position, orientation, and associated joint angles
   //public Point(float x, float y, float z, float w, float p, float r,
   //             float j1, float j2, float j3, float j4, float j5, float j6)
@@ -66,30 +66,30 @@ public class Point  {
   //  joints[4] = j5;
   //  joints[5] = j6;
   //}
-  
+
   ////create a new point with position and orientation only
   //public Point(float x, float y, float z, float w, float p, float r) {
   //  pos = new PVector(x,y,z);
   //  ori = eulerToQuat(new PVector(w,p,r));
   //}
-  
+
   //public Point(PVector position, PVector orientation) {
   //  pos = position;
   //  ori = eulerToQuat(orientation);
   //}
-  
+
   public Point clone() {
     return new Point(pos.x, pos.y, pos.z, 
-                     ori[0], ori[1], ori[2], ori[3], 
-                     joints[0], joints[1], joints[2], joints[3], joints[4], joints[5]);
+    ori[0], ori[1], ori[2], ori[3], 
+    joints[0], joints[1], joints[2], joints[3], joints[4], joints[5]);
   }
-  
+
   /**
-   * Returns a String array, whose entries are the joint values of the
-   * Point with their respective labels (J1-J6).
-   * 
-   * @return  A 6-element String array
-   */
+* Returns a String array, whose entries are the joint values of the
+* Point with their respective labels (J1-J6).
+* 
+* @return  A 6-element String array
+*/
   public String[] toJointStringArray() {
     String[] entries = new String[6];
     
@@ -99,14 +99,14 @@ public class Point  {
     
     return entries;
   }
-  
+
   /**
-   * Returns a string array, where each entry is one of
-   * the values of the Cartiesian represent of the Point:
-   * (X, Y, Z, W, P, and R) and their respective labels.
-   *
-   * @return  A 6-element String array
-   */
+* Returns a string array, where each entry is one of
+* the values of the Cartiesian represent of the Point:
+* (X, Y, Z, W, P, and R) and their respective labels.
+*
+* @return  A 6-element String array
+*/
   public String[] toCartesianStringArray() {
     PVector angles = quatToEuler(ori);
     
@@ -130,7 +130,7 @@ public class Frame {
   private PVector origin;
   // The unit vectors representing the x, y, z axes (in row major order)
   private float[][] axes;
-  
+
   public Frame() {
     origin = new PVector(0,0,0);
     axes = new float[3][3];
@@ -139,7 +139,7 @@ public class Frame {
       axes[diag][diag] = 1f;
     }
   }
-  
+
   /* Used for loading Frames from a file */
   public Frame(PVector origin, float[][] axesVectors) {
     this.origin = origin;
@@ -149,22 +149,22 @@ public class Frame {
       for(int col = 0; col < 3; ++col) {
         axes[row][col] = axesVectors[row][col];
       }
-     }
+    }
   }
-  
+
   public PVector getOrigin() { return origin; }
   public void setOrigin(PVector in) { origin = in; }
-  
+
   /**
-   * Return the W, P, R values of the this frames coordinate
-   * axes with respect to the World Frame axes.
-   */
+* Return the W, P, R values of the this frames coordinate
+* axes with respect to the World Frame axes.
+*/
   public PVector getWpr() { return matrixToEuler(axes); }
   /* Returns a set of axes unit vectors representing the axes
-   * of the frame in reference to the Native Coordinate System. */
+* of the frame in reference to the Native Coordinate System. */
   public float[][] getNativeAxes() { return axes.clone(); }
   /* Returns a set of axes unit vectors representing the axes
-   * of the frame in reference to the World Coordinate System. */
+* of the frame in reference to the World Coordinate System. */
   public float[][] getWorldAxes() {
     float[][] wAxes = new float[3][3];
     
@@ -175,14 +175,14 @@ public class Frame {
     }
     
     /*for(int row = 0; row < wAxes[0].length; ++row) {
-      wAxes[row][0] = -axes[row][0];
-      wAxes[row][1] = axes[row][2];
-      wAxes[row][2] = -axes[row][1];
-    }*/
+  wAxes[row][0] = -axes[row][0];
+  wAxes[row][1] = axes[row][2];
+  wAxes[row][2] = -axes[row][1];
+  }*/
     
     return wAxes;
   }
-  
+
   public void setAxis(int idx, PVector in) {
     
     if(idx >= 0 && idx < axes.length) {
@@ -191,18 +191,18 @@ public class Frame {
       axes[idx][2] = in.z;
     }
   }
-  
+
   public void setAxes(float[][] axesVectors) {
     axes = axesVectors.clone();
   }
-  
+
   /**
-   * Returns a string array, where each entry is one of
-   * the Frames six Cartesian values: (X, Y, Z, W, P,
-   * and R) and their respective labels.
-   *
-   * @return  A 6-element String array
-   */
+* Returns a string array, where each entry is one of
+* the Frames six Cartesian values: (X, Y, Z, W, P,
+* and R) and their respective labels.
+*
+* @return  A 6-element String array
+*/
   public String[] toStringArray() {
     
     String[] values = new String[6];
@@ -225,33 +225,33 @@ public class Program  {
   private int nextRegister;
   private Point[] p = new Point[1000]; // local registers
   private ArrayList<Instruction> instructions;
-  
+
   public Program(String theName) {
     instructions = new ArrayList<Instruction>();
     for(int n = 0; n < p.length; n++) p[n] = new Point();
     name = theName;
     nextRegister = 0;
   }
-  
+
   public ArrayList<Instruction> getInstructions() {
     return instructions;
   }
-  
+
   public void setName(String n) { name = n; }
-  
+
   public String getName() {
     return name;
   }
-  
+
   public void loadNextRegister(int next) {
-     nextRegister = next;
+    nextRegister = next;
   }
-  
+
   public int getRegistersLength() {
-     return p.length;
+    return p.length;
   }
   /**** end ****/
-  
+
   public void addInstruction(Instruction i) {
     instructions.add(i);
     if(i instanceof MotionInstruction ) {
@@ -262,24 +262,24 @@ public class Program  {
       }
     }
   }
-  
+
   public void overwriteInstruction(int idx, Instruction i) {
     instructions.set(idx, i);
     nextRegister++;
   }
-  
+
   public void addInstruction(int idx, Instruction i) {
     instructions.add(idx, i);
   }
-  
+
   public void addRegister(Point in, int idx) {
     if(idx >= 0 && idx < p.length) p[idx] = in;
   }
-  
+
   public int nextRegister() {
     return nextRegister;
   }
-  
+
   public Point getRegister(int idx) {
     if(idx >= 0 && idx < p.length) return p[idx];
     else return null;
@@ -307,9 +307,9 @@ public int addProgram(Program p) {
 }
 
 public class Instruction { 
-  
+
   public Instruction() {}
-  
+
   public String toString() {
     String str = "\0";
     return str;
@@ -323,9 +323,9 @@ public final class MotionInstruction extends Instruction  {
   private float speed;
   private float termination;
   private int userFrame, toolFrame;
-  
+
   public MotionInstruction(int m, int r, boolean g, float s, float t,
-                           int uf, int tf)
+  int uf, int tf)
   {
     motionType = m;
     register = r;
@@ -335,7 +335,7 @@ public final class MotionInstruction extends Instruction  {
     userFrame = uf;
     toolFrame = tf;
   }
-  
+
   public MotionInstruction(int m, int r, boolean g, float s, float t) {
     motionType = m;
     register = r;
@@ -345,7 +345,7 @@ public final class MotionInstruction extends Instruction  {
     userFrame = -1;
     toolFrame = -1;
   }
-  
+
   public int getMotionType() { return motionType; }
   public void setMotionType(int in) { motionType = in; }
   public int getRegister() { return register; }
@@ -360,12 +360,12 @@ public final class MotionInstruction extends Instruction  {
   public void setUserFrame(int in) { userFrame = in; }
   public float getToolFrame() { return toolFrame; }
   public void setToolFrame(int in) { toolFrame = in; }
-  
+
   public float getSpeedForExec(ArmModel model) {
     if(motionType == MTYPE_JOINT) return speed;
     else return (speed / model.motorSpeed);
   }
-  
+
   public Point getVector(Program parent) {
     if(motionType != COORD_JOINT) {
       Point out;
@@ -387,46 +387,46 @@ public final class MotionInstruction extends Instruction  {
       return ret;
     }
   } // end getVector()
-  
+
   public String toString() {
-     String me = "";
-     switch (motionType) {
-        case MTYPE_JOINT:
-           me += "J ";
-           break;
-        case MTYPE_LINEAR:
-           me += "L ";
-           break;
-        case MTYPE_CIRCULAR:
-           me += "C ";
-           break;
-     }
-     if(globalRegister) me += "PR[";
-     else me += "P[";
-     me += Integer.toString(register + 1)+"] ";
-     if(motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "%";
-     else me += Integer.toString((int)speed) + "mm/s";
-     if(termination == 0) me += "FINE";
-     else me += "CONT" + (int)(termination*100);
-     return me;
+    String me = "";
+    switch (motionType) {
+    case MTYPE_JOINT:
+      me += "J ";
+      break;
+    case MTYPE_LINEAR:
+      me += "L ";
+      break;
+    case MTYPE_CIRCULAR:
+      me += "C ";
+      break;
+    }
+    if(globalRegister) me += "PR[";
+    else me += "P[";
+    me += Integer.toString(register + 1)+"] ";
+    if(motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "%";
+    else me += Integer.toString((int)speed) + "mm/s";
+    if(termination == 0) me += "FINE";
+    else me += "CONT" + (int)(termination*100);
+    return me;
   } // end toString()
-  
+
 } // end MotionInstruction class
 
 public class FrameInstruction extends Instruction {
   private int frameType;
   private int idx;
-  
+
   public FrameInstruction(int f, int i) {
     frameType = f;
     idx = i;
   }
-  
+
   public void execute() {
     if(frameType == FTYPE_TOOL) activeToolFrame = idx;
     else if(frameType == FTYPE_USER) activeUserFrame = idx;
   }
-  
+
   public String toString() {
     String ret = "";
     if(frameType == FTYPE_TOOL) ret += "UTOOL_NUM=";
@@ -440,13 +440,13 @@ public class ToolInstruction extends Instruction {
   private String type;
   private int bracket;
   private int setToolStatus;
-  
+
   public ToolInstruction(String d, int b, int t) {
     type = d;
     bracket = b;
     setToolStatus = t;
   }
-  
+
   public void execute() {
     if((type.equals("RO") && bracket == 4 && armModel.activeEndEffector == ENDEF_CLAW) ||
         (type.equals("DO") && bracket == 101 && armModel.activeEndEffector == ENDEF_SUCTION))
@@ -478,7 +478,7 @@ public class ToolInstruction extends Instruction {
       }
     }
   }
-  
+
   public String toString() {
     return type + "[" + bracket + "]=" + (setToolStatus == ON ? "ON" : "OFF");
   }
@@ -487,7 +487,7 @@ public class ToolInstruction extends Instruction {
 public class CoordinateFrame {
   private PVector origin = new PVector();
   private PVector rotation = new PVector();
-  
+
   public PVector getOrigin() { return origin; }
   public void setOrigin(PVector in) { origin = in; }
   public PVector getRotation() { return rotation; }
@@ -495,44 +495,44 @@ public class CoordinateFrame {
 } // end FrameInstruction class
 
 public class RecordScreen implements Runnable{
-   public RecordScreen() {
-     System.out.format("Record screen...\n");
-   }
-    public void run() {
-       try{ 
-            // create a timestamp and attach it to the filename
-            Calendar calendar = Calendar.getInstance();
-            java.util.Date now = calendar.getTime();
-            java.sql.Timestamp currentTimestamp = new java.sql.Timestamp(now.getTime());
-            String filename = "output_" + currentTimestamp.toString() + ".flv"; 
-            filename = filename.replace(' ', '_');
-            filename = filename.replace(':', '_');   
+  public RecordScreen() {
+    System.out.format("Record screen...\n");
+  }
+  public void run() {
+    try{ 
+      // create a timestamp and attach it to the filename
+      Calendar calendar = Calendar.getInstance();
+      java.util.Date now = calendar.getTime();
+      java.sql.Timestamp currentTimestamp = new java.sql.Timestamp(now.getTime());
+      String filename = "output_" + currentTimestamp.toString() + ".flv"; 
+      filename = filename.replace(' ', '_');
+      filename = filename.replace(':', '_');   
 
-            // record screen
-            System.out.format("run script to record screen...\n");
-            Runtime rt = Runtime.getRuntime();
-            Process proc = rt.exec("ffmpeg -f dshow -i " + 
-                           "video=\"screen-capture-recorder\":audio=\"Microphone" + 
-                           " (Conexant SmartAudio HD)\" " + filename );
-            //Process proc = rt.exec(script);
-            while(record == ON) {
-              Thread.sleep(4000);
-            }
-            rt.exec("taskkill /F /IM ffmpeg.exe"); // close ffmpeg
-            System.out.format("finish recording\n");
-            
-        }catch (Throwable t) {
-            t.printStackTrace();
-        }
-        
+      // record screen
+      System.out.format("run script to record screen...\n");
+      Runtime rt = Runtime.getRuntime();
+      Process proc = rt.exec("ffmpeg -f dshow -i " + 
+      "video=\"screen-capture-recorder\":audio=\"Microphone" + 
+      " (Conexant SmartAudio HD)\" " + filename );
+      //Process proc = rt.exec(script);
+      while(record == ON) {
+        Thread.sleep(4000);
+      }
+      rt.exec("taskkill /F /IM ffmpeg.exe"); // close ffmpeg
+      System.out.format("finish recording\n");
+      
+    }catch (Throwable t) {
+      t.printStackTrace();
     }
+    
+  }
 }
 
 /* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
 public class Register {
   public String comment = null;
   public Float value = null;
-  
+
   public Register(String c, Float v) {
     value = v;
     comment = c;
@@ -543,11 +543,11 @@ public class Register {
 public class PositionRegister {
   public String comment = null;
   public Point point = null;
-  
+
   public PositionRegister() {
     point = new Point(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f);
   }
-  
+
   public PositionRegister(String c, Point p) {
     point = p;
     comment = c;
