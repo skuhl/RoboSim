@@ -1876,7 +1876,7 @@ public void f1() {
         loadInputRegisterCommentMethod();
       } else if(col_select >= 2) {
         // Bring up Point editing menu
-        prev_mode = mode;
+        super_mode = mode;
         mode = mode == (VIEW_POS_REG_C) ? INPUT_POINT_C : INPUT_POINT_J;
         loadInputRegisterPointMethod();
       }
@@ -3040,15 +3040,9 @@ public void ENTER() {
   case PICK_REG_LIST:
     int modeCase = 0;
     /* Choose the correct register menu based on if the current mode is
-<<<<<<< HEAD
      * one of the three register modes and which option was selected
      * from the register menu list */
-    if(prev_mode == VIEW_REG) {
-=======
-      * one of the three register modes and which option was selected
-      * from the register menu list */
     if(super_mode == VIEW_REG) {
->>>>>>> e7404e521f4ab0ae1dd297672bfc32c1b61e5e19
       modeCase = 1;
     } else if(super_mode == VIEW_POS_REG_J) {
       modeCase = 2;
@@ -4142,6 +4136,7 @@ public void updateScreen(color cDefault, color cHighlight) {
         funct[3] = "";
         funct[4] = "";
       }
+      break;
     case INPUT_COMMENT_U:
       // F1 - F5
       funct[0] = "[ABCDEF]";
