@@ -83,13 +83,30 @@ public class Point  {
     ori[0], ori[1], ori[2], ori[3], 
     joints[0], joints[1], joints[2], joints[3], joints[4], joints[5]);
   }
+  
+  
+  public Float getValue(int idx) {
+    
+    if (idx >= 0) {
+      
+      if (idx == 1) {
+        return pos.x;  
+      } else if (idx == 2) {
+        return pos.y;
+      } else if (idx == 3) {
+        return pos.z;
+      }
+    }
+    
+    return null;
+  }
 
   /**
-* Returns a String array, whose entries are the joint values of the
-* Point with their respective labels (J1-J6).
-* 
-* @return  A 6-element String array
-*/
+    * Returns a String array, whose entries are the joint values of the
+    * Point with their respective labels (J1-J6).
+    * 
+    * @return  A 6-element String array
+    */
   public String[] toJointStringArray() {
     String[] entries = new String[6];
     
@@ -101,12 +118,12 @@ public class Point  {
   }
 
   /**
-* Returns a string array, where each entry is one of
-* the values of the Cartiesian represent of the Point:
-* (X, Y, Z, W, P, and R) and their respective labels.
-*
-* @return  A 6-element String array
-*/
+    * Returns a string array, where each entry is one of
+    * the values of the Cartiesian represent of the Point:
+    * (X, Y, Z, W, P, and R) and their respective labels.
+    *
+    * @return  A 6-element String array
+    */
   public String[] toCartesianStringArray() {
     PVector angles = quatToEuler(ori);
     
@@ -156,15 +173,15 @@ public class Frame {
   public void setOrigin(PVector in) { origin = in; }
 
   /**
-* Return the W, P, R values of the this frames coordinate
-* axes with respect to the World Frame axes.
-*/
+   * Return the W, P, R values of the this frames coordinate
+   * axes with respect to the World Frame axes.
+   */
   public PVector getWpr() { return matrixToEuler(axes); }
   /* Returns a set of axes unit vectors representing the axes
-* of the frame in reference to the Native Coordinate System. */
+   * of the frame in reference to the Native Coordinate System. */
   public float[][] getNativeAxes() { return axes.clone(); }
   /* Returns a set of axes unit vectors representing the axes
-* of the frame in reference to the World Coordinate System. */
+   * of the frame in reference to the World Coordinate System. */
   public float[][] getWorldAxes() {
     float[][] wAxes = new float[3][3];
     
@@ -175,10 +192,10 @@ public class Frame {
     }
     
     /*for(int row = 0; row < wAxes[0].length; ++row) {
-  wAxes[row][0] = -axes[row][0];
-  wAxes[row][1] = axes[row][2];
-  wAxes[row][2] = -axes[row][1];
-  }*/
+      wAxes[row][0] = -axes[row][0];
+      wAxes[row][1] = axes[row][2];
+      wAxes[row][2] = -axes[row][1];
+    }*/
     
     return wAxes;
   }
@@ -197,12 +214,12 @@ public class Frame {
   }
 
   /**
-* Returns a string array, where each entry is one of
-* the Frames six Cartesian values: (X, Y, Z, W, P,
-* and R) and their respective labels.
-*
-* @return  A 6-element String array
-*/
+   * Returns a string array, where each entry is one of
+   * the Frames six Cartesian values: (X, Y, Z, W, P,
+   * and R) and their respective labels.
+   *
+   * @return  A 6-element String array
+   */
   public String[] toStringArray() {
     
     String[] values = new String[6];
@@ -555,7 +572,7 @@ public class PositionRegister {
 }
 
 /* These asre used to store the operators used in register statement expressions in the ExpressionTree Object */
-public enum Operator { PLUS, MINUS, MUTLIPLY, DIVIDE, MODULUS, INTDIVIDE, PARENTHESIS }
+public enum Operator { PLUS, MINUS, MUTLIPLY, DIVIDE, MODULUS, INTDIVIDE, PAR_OPEN, PAR_CLOSE }
 
 public class ExpressionSet {
   /* Index of the register to store the result */
@@ -596,10 +613,239 @@ public class ExpressionSet {
     parameters.set(idx, param);
   }
   
-  // TODO Removing elements?
-  
+  /**
+   * This method will calculated the result of the current expression.
+   * Expressions should only be made up of Floating-point values, integer
+   * arrays and Operator Objects.
+   * 
+   * Floating-point values     ->  Constants
+   * Singleton integer arrays  ->  Register entries
+   * Doubleton integer arrays  ->  Position Register entries/values
+   * 
+   * For doubleton arrats, if the second element of the array is -1, then
+   * the array corresponds to a Position Register entry as in the whole point.
+   * Otherwise, the array corresponds to a specific value in the point of the
+   * Position Register entry. For example the array { 0, 3 } corresponds to
+   * the fourth joint angle value of the point stored in Position Register 0.
+   * Where as the array { 3, -1 } corresponds to the point stored at Position
+   * Register 3. The second parameter of the doubleton arrays MUST be between
+   * -1 and 11 (inclusive) to be considered valid. The first entry of both the
+   * singleton and doubleton arrays MUST correspond to an initialized Register
+   * (or Position Register) index for it to be considered valid as well.\
+   * 
+   * The expression is evaluated from left to right, ignoring normal order of
+   * operations, however, parenthesis do act as normal. Each element is parsed
+   * individually, keeping track of a current resulting value for every single
+   * operation.
+   * If an open parenthesis is found, then the current working
+   * result is saved on the stack and the value is reset.
+   * If an operator is found, then the next value in the list is taken and the
+   * operator's operation is preformed on the current working result and the
+   * next value.
+   * If a closed parenthesis is found, then the current top of the stack value
+   * is taken off of the stack, the next operator is taken from the list of
+   * parameters, and its operation is preformed on the popped value and the
+   * working result.
+   * 
+   * @return
+   *
+   * Once the entire expression is processed and no errors are found, the result
+   * of the expression is returned as either a Floating-point value or a PointCoord
+   * Object, depending on the nature of the expression.
+   *
+   * @throw ExpressionEvaluationException
+   * 
+   * Since, the expressions are only evaluated when a program is executed, it
+   * is possible that the expression may contain errors such as mssing arguments,
+   * invalid operation arguments, and so on. So, these errors are caught by this
+   * method and a new ExpressionEvaluationException is thrown with an error message
+   * indicating what the error was. 
+   */
   public Object evaluate() throws ExpressionEvaluationException {
-    // TODO
+    
+    try {
+      int pdx = 1,
+          len = parameters.size();
+      Stack<Object> savedVals = new Stack<Object>();
+      Object result = parameters.get(0);
+      
+      while (true) {
+        Operator op = (Operator)( parameters.get(pdx++) );
+        
+        if (op == Operator.PAR_OPEN) {
+          
+          // Entering a parenthesis
+          savedVals.push(result);
+          result = parameters.get(pdx++);
+        } else {
+          Object operand;
+          
+          if (op == Operator.PAR_CLOSE && pdx < len) {
+            
+            // Exiting parenthesis
+            operand = result;
+            result = savedVals.pop();
+            op = (Operator)( parameters.get(pdx++) );
+          } else {
+            // Normal operator
+            Object param = parameters.get(pdx++);
+            
+            if (param instanceof Float) {
+              
+              // Constant value
+              operand = param;
+            } else if (param instanceof int[]) {
+              int[] regIdx = (int[])param;
+              
+              if (regIdx.length == 1) {
+                
+                // use Register value
+                operand = REG[ regIdx[0] ].value;
+              } else if (regIdx.length == 2) {
+                PointCoord pt = new PointCoord(POS_REG[ regIdx[0] ].point);
+                
+                if (regIdx[1] == -1) {
+                  
+                  // use Register value
+                  operand = pt;
+                } else if (regIdx[1] > 0 && regIdx[1] < 12) {
+                  
+                  // use a specific value from the Point
+                  operand = pt.values[ regIdx[1] ];
+                } else {
+                  // Illegal parameter
+                  throw new ExpressionEvaluationException(1);
+                }
+              } else {
+                // Illegal parameter
+                throw new ExpressionEvaluationException(1);
+              }
+              
+            } else {
+              // Illegal parameter
+              throw new ExpressionEvaluationException(1);
+            }
+          }
+          
+          result = operation(result, operand, op);
+        }
+        
+        // Reached the end of the expression (successfully)
+        if (pdx >= len) { break; }
+      }
+      
+      return result;
+    } catch (NullPointerException NPEx) {
+      // Missing a parameter
+      throw new ExpressionEvaluationException(0);
+      
+    } catch (IndexOutOfBoundsException IOOBEx) {
+      // Missing a parameter
+      throw new ExpressionEvaluationException(0);
+      
+    } catch (ClassCastException CCEx) {
+      // Illegal parameters or operations
+      throw new ExpressionEvaluationException(1);
+      
+    } catch (EmptyStackException EXEx) {
+      // Invalid Parenthesis
+      throw new ExpressionEvaluationException(2);
+      
+    }
+  }
+  
+  /**
+   * Evaluate the given parameters with the given operation. The onll valid parameters are floating-point values
+   * and int arrays. The integer arrays should singeltons (for Registers) or doubletons (for Position Registers
+   * and Position Register Values).
+   * 
+   * TODO define valid operations
+   * 
+   * @param param1  The first parameter of the opertion
+   * @param param2  The second parameter for the operation
+   * @param op      The operation to preform on the parameters
+   * @return        The result of the operation on param1 and param2
+   * @throws ExpressionEvaluationException  if the given combination of parameters with the given
+   *                                        operation is illegal
+   */
+  private Object operation(Object param1, Object  param2, Operator op) throws ExpressionEvaluationException {
+    
+    // Call the correct method for the types of the given parameters
+    if (param1 instanceof Float && param2 instanceof Float) {
+      
+      return evaluatePair((Float)param1, (Float)param2, op);
+      
+    } else if (param1 instanceof Float && param2 instanceof Point) {
+      
+      return evaluatePair((Float)param1, (PointCoord)param2, op);
+      
+    } else if (param1 instanceof Point && param2 instanceof Float) {
+      
+      return null;//evaluatePair((Point)param1, (Float)param2, op);
+      
+    } else if (param1 instanceof Point && param2 instanceof Point) {
+      
+      return evaluatePair((PointCoord)param1, (PointCoord)param2, op);
+      
+    } else {
+      // Invalid parameter types
+      throw new ExpressionEvaluationException(1);
+    }
+  }
+  
+  private Object evaluatePair(Float value1, Float value2, Operator op) throws ExpressionEvaluationException {
+    
+    // Float-Float operations
+    switch(op) {
+      case PLUS:       return value1 + value2;
+      case MINUS:      return value1 - value2;
+      case MUTLIPLY:   return value1 * value2;
+      case DIVIDE:     return value1 / value2;
+      case MODULUS:    return (value1 % value2) / value2;
+      case INTDIVIDE:  return (float)( (int)(value1 / value2) );
+      default:         throw new ExpressionEvaluationException(1);
+    }
+  }
+  
+  private Object evaluatePair(Float value, PointCoord point, Operator op) throws ExpressionEvaluationException {
+    
+    // TODO Float-Point operations
+    switch(op) {
+      case PLUS:
+      case MINUS:
+      case MUTLIPLY:
+        for (int idx = 0; idx < point.values.length; ++idx) {
+          point.values[idx] *= value;
+        }
+        
+        return point;
+      
+      case DIVIDE:
+      case MODULUS:
+      case INTDIVIDE:
+        break;
+      default:
+        throw new ExpressionEvaluationException(1);
+    }
+    
+    return null;
+  }
+  
+  private Object evaluatePair(PointCoord point1, PointCoord point2, Operator op) throws ExpressionEvaluationException {
+      
+    // TODO Float-Point operations
+    switch(op) {
+      case PLUS:
+      case MINUS:
+      case MUTLIPLY:
+      case DIVIDE:
+      case MODULUS:
+      case INTDIVIDE:
+        break;
+      default:
+        throw new ExpressionEvaluationException(1);
+    }
+    
     return null;
   }
   
@@ -607,45 +853,41 @@ public class ExpressionSet {
    * Returns the number of operators AND operands in the expression
    */
   public int parameterSize() { return parameters.size(); }
-}
-
-/**
- * A simple class that holds an element for an expression entry. For Register
- * expressions, integer arrays as well as floating-point values are stored as
- * operand entries and Operator objects are stored as operator entries. 
- */
-public class ExpressionParameter {
-  private Object entry;
   
   /**
-   * Creates am empty entry
+   * Create an ArrayList of Strings, where the frist entry is the
+   * Resulting register and all the following entries are the results
+   * of converting the elements of parameters to String Objects.
    */
-  public ExpressionParameter() {
-    entry = null;
-  }
-  
-  /**
-   * Creates an initialized entry
-   * 
-   * @param e  The value to store in
-   *           this object
-   */
-  public ExpressionParameter(Object e) {
-    entry = e;
-  }
-  
-  // Getter and accessor for the entry field
-  public void setEntry(Object e) { entry = e; }
-  public Object getEntry() { return entry; }
-  public boolean isEmpty() { return entry == null; }
-  
-  /* Returns unique outputs for the four types of entries of Register
-   * Statements: Contants, Registers, Position Registers, and Position
-   * Register Values. */
-  public String toString() {
+  public ArrayList<String> toStringArrayList() {
+    ArrayList<String> fields = new ArrayList<String>();
     
-    if (entry instanceof int[]) {
-      int[] regIdx = (int[])entry;
+    String limbo = (isPosReg) ? "PR" : "R";
+    
+    fields.add( String.format("%s[%d] =", limbo, regIdx) );
+    // Each parameter gets its own column
+    for (Object param : parameters) {
+    
+      if (param == null) {
+        // Blank field
+        fields.add("_");
+      } else {
+        fields.add(paramToString(param));
+      }
+    }
+    
+    return fields;
+  }
+  
+  /**
+   * Returns unique outputs for the four types of entries of Register
+   * Statements: Contants, Registers, Position Registers, and Position
+   * Register Values.
+   */
+  private String paramToString(Object param) {
+    
+    if (param instanceof int[]) {
+      int[] regIdx = (int[])param;
       
       if (regIdx.length == 1) {
         
@@ -660,22 +902,63 @@ public class ExpressionParameter {
           return String.format("PR[%d]", regIdx[0]);
         }
       }
-    } else if (entry instanceof Operator) {
+    } else if (param instanceof Operator) {
       
       // Each operator has its own symbol
-      switch ( (Operator)entry ) {
-        case PLUS:         return "+";
-        case MINUS:        return "-";
-        case MUTLIPLY:     return "*";
-        case DIVIDE:       return "/";
-        case MODULUS:      return "%";
-        case INTDIVIDE:    return "|";
-        case PARENTHESIS:  return "()";
+      switch ( (Operator)param ) {
+        case PLUS:      return "+";
+        case MINUS:     return "-";
+        case MUTLIPLY:  return "*";
+        case DIVIDE:    return "/";
+        case MODULUS:   return "%";
+        case INTDIVIDE: return "|";
+        case PAR_OPEN:  return "(";
+        case PAR_CLOSE: return ")";
       }
     }
     
     // Simply print the value for constants
-    return entry.toString();
+    return param.toString();
+  }
+}
+
+/**
+ * This class defines a Point, which stores a position and orientation
+ * in space (X, Y, Z, W, P, R) along with the joint angles (J1 - J6)
+ * necessary for the Robot to reach the position and orientation of
+ * the Point.
+ * This class is designed to temporary store the values of a Point object
+ * in order to bypass multiple conversion between Euler angles and
+ * Quaternions during the evaluation of Register Statement Expressions.
+ */
+public class PointCoord {
+  /* The values associated with this Point:
+   *   0 - 5  ->  J1 - J6
+   *   6 - 11 ->  X, Y, Z, W, P, R
+   */
+  public float[] values;
+  
+  /**
+   * Converts the given Point Object to a PointCoord object
+   */
+  public PointCoord(Point pt) {
+    values = new float[12];
+    
+    for (int jdx = 0; jdx < pt.joints.length; ++jdx) {
+      values[jdx] = pt.joints[jdx];
+    }
+    
+    values[6] = pt.pos.x;
+    values[7] = pt.pos.y;
+    values[8] = pt.pos.z;
+    
+    PVector wpr = quatToEuler(pt.ori);
+    
+    values[9] = wpr.x;
+    values[10] = wpr.y;
+    values[11] = wpr.z;
+    
+    
   }
 }
 

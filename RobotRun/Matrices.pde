@@ -30,12 +30,12 @@ public PVector rotate(PVector v, float[][] rotMatrix) {
 }
 
 /**
-* Find the inverse of the given 4x4 Homogeneous Coordinate Matrix. 
-* 
-* This method is based off of the algorithm found on this webpage:
-*    https://web.archive.org/web/20130806093214/http://www-graphics.stanford.edu/
-*      courses/cs248-98-fall/Final/q4.html
-*/
+ * Find the inverse of the given 4x4 Homogeneous Coordinate Matrix. 
+ * 
+ * This method is based off of the algorithm found on this webpage:
+ *    https://web.archive.org/web/20130806093214/http://www-graphics.stanford.edu/
+ *      courses/cs248-98-fall/Final/q4.html
+ */
 public float[][] invertHCMatrix(float[][] m) {
   if(m.length != 4 || m[0].length != 4) {
     return null;
@@ -44,10 +44,10 @@ public float[][] invertHCMatrix(float[][] m) {
   float[][] inverse = new float[4][4];
 
   /* [ ux vx wx tx ] -1       [ ux uy uz -dot(u, t) ]
-  * [ uy vy wy ty ]     =    [ vx vy vz -dot(v, t) ]
-  * [ uz vz wz tz ]          [ wx wy wz -dot(w, t) ]
-  * [  0  0  0  1 ]          [  0  0  0      1     ]
-  */
+   * [ uy vy wy ty ]     =    [ vx vy vz -dot(v, t) ]
+   * [ uz vz wz tz ]          [ wx wy wz -dot(w, t) ]
+   * [  0  0  0  1 ]          [  0  0  0      1     ]
+   */
   inverse[0][0] = m[0][0];
   inverse[0][1] = m[1][0];
   inverse[0][2] = m[2][0];
@@ -101,7 +101,7 @@ public float[][] getTransformationMatrix() {
 }
 
 /* This method transforms the given coordinates into a vector
-* in the Processing's native coordinate system. */
+ * in the Processing's native coordinate system. */
 public PVector getCoordFromMatrix(float x, float y, float z) {
   PVector vector = new PVector();
 
@@ -133,7 +133,7 @@ public float[] toVectorArray(PVector v) {
 }
 
 /* Returns a vector with the opposite sign
-* as the given vector. */
+ * as the given vector. */
 public float[] negate(float[] v) {
   float[] u = new float[v.length];
   
@@ -174,8 +174,8 @@ float[][] eulerToMatrix(PVector wpr) {
 }
 
 /**
-* Converts the given Euler angle set values to a quaternion
-*/
+ * Converts the given Euler angle set values to a quaternion
+ */
 float[] eulerToQuat(PVector wpr) {
   
   float[] q = new float[4];
@@ -367,8 +367,8 @@ float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
 }
 
 /* Calculates the result of a rotation of quaternion 'p'
-* about axis 'u' by 'theta' degrees
-*/
+ * about axis 'u' by 'theta' degrees
+ */
 float[] rotateQuat(float[] p, PVector u, float theta) {
   float[] q = new float[4];
   
@@ -410,10 +410,10 @@ PVector rotateVectorQuat(PVector v, PVector u, float theta) {
 }
 
 /* Given 2 quaternions, calculates the quaternion representing the 
-* rotation from 'q1' to 'q2' such that 'qr'*'q1' = 'q2'. Note that 
-* the multiply operation should be taken to mean quaternion
-* multiplication, which is non-commutative.
-*/
+ * rotation from 'q1' to 'q2' such that 'qr'*'q1' = 'q2'. Note that 
+ * the multiply operation should be taken to mean quaternion
+ * multiplication, which is non-commutative.
+ */
 float[] calculateQuatOffset(float[] q1, float[] q2) {
   float[] q1_inv = new float[4];
   q1_inv[0] = q1[0];
@@ -473,9 +473,9 @@ float[] quaternionNormalize(float[] q) {
 }
 
 /* Given two input quaternions, 'q1' and 'q2', computes the spherical-
-* linear interpolation from 'q1' to 'q2' for a given fraction of the
-* complete transformation 'q1' to 'q2', denoted by 0 <= 'mu' <= 1. 
-*/
+ * linear interpolation from 'q1' to 'q2' for a given fraction of the
+ * complete transformation 'q1' to 'q2', denoted by 0 <= 'mu' <= 1. 
+ */
 float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
   float[] qSlerp = new float[4];
   float[] q3 = new float[4];
@@ -516,9 +516,9 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
 }
 
 /* Returns a string represenation of the given matrix.
-* 
-* @param matrixx  A non-null matrix
-*/
+ * 
+ * @param matrixx  A non-null matrix
+ */
 public String matrixToString(float[][] matrix) {
   String mStr = "";
   

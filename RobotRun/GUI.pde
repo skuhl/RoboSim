@@ -124,15 +124,15 @@ int index_contents = 0, index_options = 100, index_nums = 1000;
 int mouseDown = 0;
 
 /**
-* Used for comment name input. The user can cycle through the
-* six states for each function button in this mode:
-*
-* F1 -> A-F/a-f
-* F2 -> G-L/g-l
-* F3 -> M-R/m-r
-* F4 -> S-X/s-x
-* F5 -> Y, Z, _, @, *, ./y, z, _, @, *, .
-*/
+ * Used for comment name input. The user can cycle through the
+ * six states for each function button in this mode:
+ *
+ * F1 -> A-F/a-f
+ * F2 -> G-L/g-l
+ * F3 -> M-R/m-r
+ * F4 -> S-X/s-x
+ * F5 -> Y, Z, _, @, *, ./y, z, _, @, *, .
+ */
 private final int[] letterStates = new int[] { 0, 0, 0, 0, 0 };
 
 public static final boolean DISPLAY_TEST_OUTPUT = true;
@@ -3079,8 +3079,8 @@ public void ENTER() {
   case PICK_REG_LIST:
     int modeCase = 0;
     /* Choose the correct register menu based on if the current mode is
-      * one of the three register modes and which option was selected
-      * from the register menu list */
+     * one of the three register modes and which option was selected
+     * from the register menu list */
     if(prev_mode == VIEW_REG) {
       modeCase = 1;
     } else if(prev_mode == VIEW_POS_REG_J) {
@@ -3181,7 +3181,7 @@ public void ENTER() {
       
       position = new PVector(inputs[0], inputs[1], inputs[2]);
       /* Since all points are displayed with respect to the World Frame, it is
-        * assumed that the user is entering a point with respect to the World Frame. */
+       * assumed that the user is entering a point with respect to the World Frame. */
       position = convertWorldToNative(position);
       
       orientation = eulerToQuat(new PVector(inputs[3] * DEG_TO_RAD, 
@@ -3445,13 +3445,13 @@ public void EE() {
 }
 
 /**
-* Updates the motion of one of the Robot's joints based on
-* the joint index given and the value of dir (-/+ 1). The
-* Robot's joint indices range from 0 to 5. ifthe joint
-* Associate with the given index is already in motion,
-* in either direction, then calling this method for that
-* joint index will stop that joint's motion.
-*/
+ * Updates the motion of one of the Robot's joints based on
+ * the joint index given and the value of dir (-/+ 1). The
+ * Robot's joint indices range from 0 to 5. ifthe joint
+ * Associate with the given index is already in motion,
+ * in either direction, then calling this method for that
+ * joint index will stop that joint's motion.
+ */
 public void activateLiveJointMotion(int joint, int dir) {
   
   if(armModel.segments.size() >= joint+1) {
@@ -3473,18 +3473,18 @@ public void activateLiveJointMotion(int joint, int dir) {
 }
 
 /**
-* Updates the motion of the Robot with respect to one of the World axes for
-* either linear or rotational motion around the axis. Similiar to the
-* activateLiveJointMotion() method, calling this method for an axis, in which
-* the Robot is already moving, will result in the termination of the Robot's
-* motion in that axis. Rotational and linear motion for an axis are mutually
-* independent in this regard.
-* 
-* @param axis        The axis of movement for the robotic arm:
+ * Updates the motion of the Robot with respect to one of the World axes for
+ * either linear or rotational motion around the axis. Similiar to the
+ * activateLiveJointMotion() method, calling this method for an axis, in which
+ * the Robot is already moving, will result in the termination of the Robot's
+ * motion in that axis. Rotational and linear motion for an axis are mutually
+ * independent in this regard.
+ * 
+ * @param axis        The axis of movement for the robotic arm:
                       x - 0, y - 2, z - 1, w - 3, p - 5, r - 4
-* @pararm dir        +1 or -1: indicating the direction of motion
-*
-*/
+ * @pararm dir        +1 or -1: indicating the direction of motion
+ *
+ */
 public void activateLiveWorldMotion(int axis, int dir) {
   armModel.tgtPos = armModel.getEEPos();
   armModel.tgtRot = armModel.getQuaternion();
@@ -4259,8 +4259,8 @@ public void clearNums() {
 }
 
 /**
-* Displays the Interface for inputting the name of a program.
-*/
+ * Displays the Interface for inputting the name of a program.
+ */
 public void inputProgramName() {
   row_select = -1; 
   col_select = -1;
@@ -4277,12 +4277,13 @@ public void inputProgramName() {
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
-/* Loads the set of Frames that correspond to the given coordinate frame.
-* Only COORD_TOOL and COOR_USER have Frames sets as of now.
-* 
-* @param coorFrame  the integer value representing the coordinate frame
-*                   of the desired frame set
-*/
+/**
+ * Loads the set of Frames that correspond to the given coordinate frame.
+ * Only COORD_TOOL and COOR_USER have Frames sets as of now.
+ * 
+ * @param coorFrame  the integer value representing the coordinate frame
+ *                   of the desired frame set
+ */
 public void loadFrames(int coordFrame) {
   
   Frame[] frames = null;
@@ -4313,9 +4314,9 @@ public void loadFrames(int coordFrame) {
 }
 
 /**
-* Displays the points along with their respective titles for the
-* current frame teach method (discluding the Direct Entry method).
-*/
+ * Displays the points along with their respective titles for the
+ * current frame teach method (discluding the Direct Entry method).
+ */
 public void loadPointList() {
   options = new ArrayList<String>();
   
@@ -4355,10 +4356,10 @@ public void loadPointList() {
 }
 
 /**
-* Transitions to the Direct Entry menu, which resembles
-* the Frame Detail menu, however, the user is allowed
-* to input values for the x, y, z, w, p, r fields.
-*/
+ * Transitions to the Direct Entry menu, which resembles
+ * the Frame Detail menu, however, the user is allowed
+ * to input values for the x, y, z, w, p, r fields.
+ */
 public void loadDirectEntryMethod() {
   contents = new ArrayList<ArrayList<String>>();
   
@@ -4378,15 +4379,15 @@ public void loadDirectEntryMethod() {
 }
 
 /**
-* Given a valid set of at least 3 points, this method will return the average
-* TCP point. ifmore than three points exist in the list then, only the first
-* three are used. ifthe list contains less than 3 points, then null is returned.
-* ifan avergae TCP cannot be calculated from the given points then null is
-* returned as well.
-*
-* @param points  a set of at least 3 4x4 transformation matrices representating
-*                the position and orientation of three points in space
-*/
+ * Given a valid set of at least 3 points, this method will return the average
+ * TCP point. ifmore than three points exist in the list then, only the first
+ * three are used. ifthe list contains less than 3 points, then null is returned.
+ * ifan avergae TCP cannot be calculated from the given points then null is
+ * returned as well.
+ *
+ * @param points  a set of at least 3 4x4 transformation matrices representating
+ *                the position and orientation of three points in space
+ */
 public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
   
   if(points != null && points.size() >= 3) {
@@ -4466,19 +4467,19 @@ public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
 }
 
 /**
-* Creates a 3x3 rotation matrix based off of two vectors defined by the
-* given set of three transformation matrices representing points in space.
-* ifthe list contains more than three points, then only the first three
-* points will be used.
-* The three points are used to form two vectors. The first vector is treated
-* as the negative x-axis and the second one is the psuedo-negative z-axis.
-* These vectors are crossed to form the y-axis. The y-axis is then crossed
-* with the negative x-axis to form the true y-axis.
-*
-* @param points  a set of at least three 4x4 transformation matrices
-* @return        a set of three unit vectors (down the columns) that
-*                represent an axes
-*/
+ * Creates a 3x3 rotation matrix based off of two vectors defined by the
+ * given set of three transformation matrices representing points in space.
+ * ifthe list contains more than three points, then only the first three
+ * points will be used.
+ * The three points are used to form two vectors. The first vector is treated
+ * as the negative x-axis and the second one is the psuedo-negative z-axis.
+ * These vectors are crossed to form the y-axis. The y-axis is then crossed
+ * with the negative x-axis to form the true y-axis.
+ *
+ * @param points  a set of at least three 4x4 transformation matrices
+ * @return        a set of three unit vectors (down the columns) that
+ *                represent an axes
+ */
 public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
   // 3 points are necessary for the creation of the axes
   if(points.size() >= 3) {
@@ -4526,11 +4527,11 @@ public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
 }
 
 /**
-* Transitions to the Frame Details menu, which displays
-* the x, y, z, w, p, r values associated with the Frame
-* at curFrameIdx in either the Tool Frames or User Frames,
-* based on the value of super_mode.
-*/
+ * Transitions to the Frame Details menu, which displays
+ * the x, y, z, w, p, r values associated with the Frame
+ * at curFrameIdx in either the Tool Frames or User Frames,
+ * based on the value of super_mode.
+ */
 public void loadFrameDetails() {
   contents = new ArrayList<ArrayList<String>>();
   row_select = -1;
@@ -4565,11 +4566,11 @@ public void loadFrameDetails() {
 }
 
 /**
-* Allow the user to choose between viewing the Registers and
-* Position Registers and choosing which form the points will
-* be display in for Position Registers (either Joint or
-* Cartesian).
-*/
+ * Allow the user to choose between viewing the Registers and
+ * Position Registers and choosing which form the points will
+ * be display in for Position Registers (either Joint or
+ * Cartesian).
+ */
 public void pickRegisterList() {
   options = new ArrayList<String>();
   
@@ -4597,11 +4598,11 @@ public void pickRegisterList() {
 }
 
 /**
-* Displays the list of Registers in mode VIEW_REG or the Position Registers
-* for modes VIEW_REG_J or VIEW_REG_C. In mode VIEW_REG_J the joint angles
-* associated with the Point are displayed and the Cartesian values are
-* displayed in mode VIEW_REG_C.
-*/
+ * Displays the list of Registers in mode VIEW_REG or the Position Registers
+ * for modes VIEW_REG_J or VIEW_REG_C. In mode VIEW_REG_J the joint angles
+ * associated with the Point are displayed and the Cartesian values are
+ * displayed in mode VIEW_REG_C.
+ */
 public void viewRegisters() {
   options = new ArrayList<String>();
   opt_select = -1;
@@ -4673,8 +4674,8 @@ public void viewRegisters() {
         }
         
         /* Display each portion of the Point's position and orientation in
-        * a separate column  whether it be X, Y, Z, W, P, R (Cartesian) or 
-        * J1 - J6 (Joint angles) *
+         * a separate column  whether it be X, Y, Z, W, P, R (Cartesian) or 
+         * J1 - J6 (Joint angles) *
         contents.add( newLine(lineNum, regLbl, entries[0], entries[1], entries[2], entries[3], entries[4], entries[5]) );
       }*/
   } else {
@@ -4688,14 +4689,14 @@ public void viewRegisters() {
 }
 
 /**
-* This method transitions to the INPUT_FLOAT mode, where the user will
-* be prompted to innput a floating-point value to be inserted into the
-* currently selected register from the VIEW_REG mode.
-* The value is inputted using the numpad on the vitual Pendant along
-* with the ',' and '-' buttons. In the INPUT_FLOAT mode, the BKSPC
-* button functions as the backspace key and the RIGHT button will
-* function like the delete key when shift is set to ON.
-*/
+ * This method transitions to the INPUT_FLOAT mode, where the user will
+ * be prompted to innput a floating-point value to be inserted into the
+ * currently selected register from the VIEW_REG mode.
+ * The value is inputted using the numpad on the vitual Pendant along
+ * with the ',' and '-' buttons. In the INPUT_FLOAT mode, the BKSPC
+ * button functions as the backspace key and the RIGHT button will
+ * function like the delete key when shift is set to ON.
+ */
 public void loadInputRegisterValueMethod() {
   options = new ArrayList<String>();
   options.add("Input a value using the keypad");
@@ -4740,12 +4741,12 @@ public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
 }
 
 /**
-* This method will transition to the INPUT_POINT_C or INPUT_POINT_J modes
-* based whether the current mode is VIEW_REG_C or VIEW_REG_J. In either
-* mode, the user will be prompted to input 6 floating-point values (X, Y,
-* Z, W, P, R or J1 - J6 for INPUT_POINT_C or INPUT_POINT_J respectively).
-* The input method is similar to inputting the value in DIRECT_ENTRY mode.
-*/
+ * This method will transition to the INPUT_POINT_C or INPUT_POINT_J modes
+ * based whether the current mode is VIEW_REG_C or VIEW_REG_J. In either
+ * mode, the user will be prompted to input 6 floating-point values (X, Y,
+ * Z, W, P, R or J1 - J6 for INPUT_POINT_C or INPUT_POINT_J respectively).
+ * The input method is similar to inputting the value in DIRECT_ENTRY mode.
+ */
 public void loadInputRegisterPointMethod() {
   contents = new ArrayList<ArrayList<String>>();
   
@@ -4787,18 +4788,18 @@ public void loadInputRegisterPointMethod() {
 }
 
 /**
-* This method transitions to the INPUT_COMMENT mode, which allows the user to input
-* a comment consisting of A-Z, a-z, 0-9, _, @, ., and * characters.
-* The current comment entry will be stored in the global field workingText.
-* The user moves through the comment character by character with the LEFT and RIGHT
-* buttons, though, the comment will only increase in length to the right and only
-* if the current last character is not blank. The maximum length of a comment is 16.
-* The function buttons will each cycle through a separate sets of letters and
-* override the currently highlighted comment index. The numpad can be used to input
-* 0-9 in the comment as well. The UP and DOWN buttons will toggle the letter sets
-* betweeen upper case and lower case (indicated in the options menu by the
-* highlighted row).
-*/
+ * This method transitions to the INPUT_COMMENT mode, which allows the user to input
+ * a comment consisting of A-Z, a-z, 0-9, _, @, ., and * characters.
+ * The current comment entry will be stored in the global field workingText.
+ * The user moves through the comment character by character with the LEFT and RIGHT
+ * buttons, though, the comment will only increase in length to the right and only
+ * if the current last character is not blank. The maximum length of a comment is 16.
+ * The function buttons will each cycle through a separate sets of letters and
+ * override the currently highlighted comment index. The numpad can be used to input
+ * 0-9 in the comment as well. The UP and DOWN buttons will toggle the letter sets
+ * betweeen upper case and lower case (indicated in the options menu by the
+ * highlighted row).
+ */
 public void loadInputRegisterCommentMethod() {
   contents = new ArrayList<ArrayList<String>>();
   options = new ArrayList<String>();
@@ -4837,11 +4838,11 @@ public void loadInputRegisterCommentMethod() {
 }
 
 /**
-* This method will take the current value of workingText and place
-* each individual character in a separate column of the content's
-* third row. This function is used to update the comment display
-* whenever the user modifies the comment in the INPUT COMMENT mode.
-*/
+ * This method will take the current value of workingText and place
+ * each individual character in a separate column of the content's
+ * third row. This function is used to update the comment display
+ * whenever the user modifies the comment in the INPUT COMMENT mode.
+ */
 public void updateComment() {
   
   ArrayList<String> line = new ArrayList<String>();
@@ -4915,8 +4916,8 @@ public void loadInstructions(int programID) {
 }
 
 /**
-* Deals with updating the UI after confirming/canceling a deletion
-*/
+ * Deals with updating the UI after confirming/canceling a deletion
+ */
 public void updateInstructions() {
   Program prog = programs.get(active_program);
   
@@ -4935,9 +4936,9 @@ public void updateInstructions() {
 }
 
 /* Transitions to the active frames menu, which display
-* the label for each Frame set (Tool or User) as well
-* as the index of the currently active frame for each
-* respective frame set. */
+ * the label for each Frame set (Tool or User) as well
+ * as the index of the currently active frame for each
+ * respective frame set. */
 void loadActiveFrames() {
   contents = new ArrayList<ArrayList<String>>();
   row_select = 0;
@@ -4975,14 +4976,14 @@ void loadPrograms() {
 }
 
 /**
-* Given a set of Strings this method returns a single
-* String ArrayList, which contains all the given elements
-* in the order that they are given as arguments.
-* 
-* @param columns  A list of Strings
-* @return         An ArrayList containing all the given
-*                 Strings
-*/
+ * Given a set of Strings this method returns a single
+ * String ArrayList, which contains all the given elements
+ * in the order that they are given as arguments.
+ * 
+ * @param columns  A list of Strings
+ * @return         An ArrayList containing all the given
+ *                 Strings
+ */
 public ArrayList<String> newLine(String... columns) {
   ArrayList<String> line =  new ArrayList<String>();
   

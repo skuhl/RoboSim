@@ -284,9 +284,9 @@ void applyCamera() {
 }
 
 /**
-* Handles the drawing of world objects as well as collision detection of world objects and the
-* Robot Arm model.
-*/
+ * Handles the drawing of world objects as well as collision detection of world objects and the
+ * Robot Arm model.
+ */
 public void handleWorldObjects() {
   for(WorldObject o : objects) {
     // reset all world the object's hit box colors
@@ -348,8 +348,8 @@ public void handleWorldObjects() {
 }
 
 /**
-* Display any currently taught points during the processes of either the 3-Point, 4-Point, or 6-Point Methods.
-*/
+ * Display any currently taught points during the processes of either the 3-Point, 4-Point, or 6-Point Methods.
+ */
 public void displayTeachPoints() {
   // Teach points are displayed only while the Robot is being taught a frame
   if(teachPointTMatrices != null && (mode == THREE_POINT_MODE || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE)) {
@@ -419,8 +419,8 @@ public void displayTeachPoints() {
 }
 
 /**
-* Displays the current axes and the origin of the current frame of reference.
-*/
+ * Displays the current axes and the origin of the current frame of reference.
+ */
 public void displayFrameAxes() {
   
   if((curCoordFrame == COORD_WORLD || curCoordFrame == COORD_TOOL) && activeToolFrame != -1) {
@@ -436,13 +436,13 @@ public void displayFrameAxes() {
 }
 
 /**
-* Given a set of 3 orthogonal unit vectors a point in space, lines are
-* drawn for each of the three vectors, which intersect at the origin point.
-*
-* @param axesVectors  A set of three orthogonal unti vectors
-* @param origin       A point in space representing the intersection of the
-*                     three unit vectors
-*/
+ * Given a set of 3 orthogonal unit vectors a point in space, lines are
+ * drawn for each of the three vectors, which intersect at the origin point.
+ *
+ * @param axesVectors  A set of three orthogonal unti vectors
+ * @param origin       A point in space representing the intersection of the
+ *                     three unit vectors
+ */
 public void displayOriginAxes(float[][] axesVectors, float[] origin) {
   
   pushMatrix();

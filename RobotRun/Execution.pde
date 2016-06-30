@@ -13,8 +13,8 @@ String errorText;
 public static final boolean COLLISION_DISPLAY = true;
 
 /**
-* Creates some programs for testing purposes.
-*/
+ * Creates some programs for testing purposes.
+ */
 void createTestProgram() {
   Program program = new Program("Test Program");
   MotionInstruction instruction =
@@ -81,8 +81,8 @@ void createTestProgram() {
 
 
 /**
-* Displays important information in the upper-right corner of the screen.
-*/
+ * Displays important information in the upper-right corner of the screen.
+ */
 void showMainDisplayText() {
   fill(0);
   textAlign(RIGHT, TOP);
@@ -193,11 +193,11 @@ void showMainDisplayText() {
 }
 
 /* Updates the curCoordFrame variable based on the current value of curCoordFrame, activeToolFrame,
-* activeUserFrame, and the current End Effector. If the new coordinate frame is user or tool and
-* no current tool or user frames are active, then the next coordinate frame is selected instead.
-*
-* @param model  The Robot Arm, for which to switch coordinate frames
-*/
+ * activeUserFrame, and the current End Effector. If the new coordinate frame is user or tool and
+ * no current tool or user frames are active, then the next coordinate frame is selected instead.
+ *
+ * @param model  The Robot Arm, for which to switch coordinate frames
+ */
 public void updateCoordinateMode(ArmModel model) {
   // Stop Robot movement
   hd();
@@ -232,10 +232,10 @@ public void updateCoordinateMode(ArmModel model) {
 }
 
 /**
-* Converts from RobotRun-defined world coordinates into
-* Processing's coordinate system.
-* Assumes that the robot starts out facing toward the LEFT.
-*/
+ * Converts from RobotRun-defined world coordinates into
+ * Processing's coordinate system.
+ * Assumes that the robot starts out facing toward the LEFT.
+ */
 PVector convertWorldToNative(PVector in) {
   pushMatrix();
   resetMatrix();
@@ -248,9 +248,9 @@ PVector convertWorldToNative(PVector in) {
 }
 
 /**
-* Converts from Processing's native coordinate system to
-* RobotRun-defined world coordinates.
-*/
+ * Converts from Processing's native coordinate system to
+ * RobotRun-defined world coordinates.
+ */
 PVector convertNativeToWorld(PVector in) {
   pushMatrix();
   resetMatrix();
@@ -263,14 +263,14 @@ PVector convertNativeToWorld(PVector in) {
 }
 
 /**
-* Takes a vector and a (probably not quite orthogonal) second vector
-* and computes a vector that's truly orthogonal to the first one and
-* pointing in the direction closest to the imperfect second vector
-* @param in First vector
-* @param second Second vector
-* @return A vector perpendicular to the first one and on the same side
-*         from first as the second one.
-*/
+ * Takes a vector and a (probably not quite orthogonal) second vector
+ * and computes a vector that's truly orthogonal to the first one and
+ * pointing in the direction closest to the imperfect second vector
+ * @param in First vector
+ * @param second Second vector
+ * @return A vector perpendicular to the first one and on the same side
+ *         from first as the second one.
+ */
 PVector computePerpendicular(PVector in, PVector second) {
   PVector[] plane = createPlaneFrom3Points(in, second, new PVector(in.x*2, in.y*2, in.z*2));
   PVector v1 = vectorConvertTo(in, plane[0], plane[1], plane[2]);
@@ -288,12 +288,12 @@ PVector computePerpendicular(PVector in, PVector second) {
 }
 
 /**
-* This method will draw the End Effector grid mapping based on the value of EE_MAPPING:
-*
-*  0 -> a line is drawn between the EE and the grid plane
-*  1 -> a point is drawn on the grid plane that corresponds to the EE's xz coordinates
-*  For any other value, nothing is drawn
-*/
+ * This method will draw the End Effector grid mapping based on the value of EE_MAPPING:
+ *
+ *  0 -> a line is drawn between the EE and the grid plane
+ *  1 -> a point is drawn on the grid plane that corresponds to the EE's xz coordinates
+ *  For any other value, nothing is drawn
+ */
 public void drawEndEffectorGridMapping() {
   
   PVector ee_pos = armModel.getEEPos();
@@ -328,17 +328,17 @@ public void drawEndEffectorGridMapping() {
 
 
 /**
-* Performs rotations and translations to reach the end effector
-* position, similarly to calculateEndEffectorPosition(), but
-* this function doesn't return anything and also doesn't pop
-* the matrix after performing the transformations. Useful when
-* you're doing some graphical manipulation and you want to use
-* the end effector position as your start point.
-* 
-* @param model        The arm model whose transformations to apply
-* @param applyOffset  Whether to apply the Tool Frame End
-*                     Effector offset (if it exists)
-*/
+ * Performs rotations and translations to reach the end effector
+ * position, similarly to calculateEndEffectorPosition(), but
+ * this function doesn't return anything and also doesn't pop
+ * the matrix after performing the transformations. Useful when
+ * you're doing some graphical manipulation and you want to use
+ * the end effector position as your start point.
+ * 
+ * @param model        The arm model whose transformations to apply
+ * @param applyOffset  Whether to apply the Tool Frame End
+ *                     Effector offset (if it exists)
+ */
 void applyModelRotation(ArmModel model, boolean applyOffset) {   
   translate(600, 200, 0);
   translate(-50, -166, -358); // -115, -213, -413
@@ -389,12 +389,12 @@ void applyModelRotation(ArmModel model, boolean applyOffset) {
 } // end apply model rotations
 
 /**
-* Calculate the Jacobian matrix for the robotic arm for
-* a given set of joint rotational values using a 1 DEGREE
-* offset for each joint rotation value. Each cell of the
-* resulting matrix will describe the linear approximation
-* of the robot's motion for each joint in units per radian. 
-*/
+ * Calculate the Jacobian matrix for the robotic arm for
+ * a given set of joint rotational values using a 1 DEGREE
+ * offset for each joint rotation value. Each cell of the
+ * resulting matrix will describe the linear approximation
+ * of the robot's motion for each joint in units per radian. 
+ */
 public float[][] calculateJacobian(float[] angles) {
   float dAngle = DEG_TO_RAD;
   float[][] J = new float[7][6];
@@ -540,9 +540,9 @@ int calculateIKJacobian(Point p) {
 }
 
 /**
-* Determine how close together intermediate points between two points
-* need to be based on current speed
-*/
+ * Determine how close together intermediate points between two points
+ * need to be based on current speed
+ */
 void calculateDistanceBetweenPoints() {
   MotionInstruction instruction = getActiveMotionInstruct();
   if(instruction != null && instruction.getMotionType() != MTYPE_JOINT)
@@ -553,11 +553,11 @@ void calculateDistanceBetweenPoints() {
 }
 
 /**
-* Calculate a "path" (series of intermediate positions) between two
-* points in a straight line.
-* @param start Start point
-* @param end Destination point
-*/
+ * Calculate a "path" (series of intermediate positions) between two
+ * points in a straight line.
+ * @param start Start point
+ * @param end Destination point
+ */
 void calculateIntermediatePositions(Point start, Point end) {
   calculateDistanceBetweenPoints();
   intermediatePositions.clear();
@@ -586,22 +586,22 @@ void calculateIntermediatePositions(Point start, Point end) {
 } // end calculate intermediate positions
 
 /**
-* Calculate a "path" (series of intermediate positions) between two
-* points in a a curved line. Need a third point as well, or a curved
-* line doesn't make sense.
-* Here's how this works:
-*   Assuming our current point is P1, and we're moving to P2 and then P3:
-*   1 Do linear interpolation between points P2 and P3 FIRST.
-*   2 Begin interpolation between P1 and P2.
-*   3 When you're (cont% / 1.5)% away from P2, begin interpolating not towards
-*     P2, but towards the points defined between P2 and P3 in step 1.
-*   The mu for this is from 0 to 0.5 instead of 0 to 1.0.
-*
-* @param p1 Start point
-* @param p2 Destination point
-* @param p3 Third point, needed to figure out how to curve the path
-* @param percentage Intensity of the curve
-*/
+ * Calculate a "path" (series of intermediate positions) between two
+ * points in a a curved line. Need a third point as well, or a curved
+ * line doesn't make sense.
+ * Here's how this works:
+ *   Assuming our current point is P1, and we're moving to P2 and then P3:
+ *   1 Do linear interpolation between points P2 and P3 FIRST.
+ *   2 Begin interpolation between P1 and P2.
+ *   3 When you're (cont% / 1.5)% away from P2, begin interpolating not towards
+ *     P2, but towards the points defined between P2 and P3 in step 1.
+ *   The mu for this is from 0 to 0.5 instead of 0 to 1.0.
+ *
+ * @param p1 Start point
+ * @param p2 Destination point
+ * @param p3 Third point, needed to figure out how to curve the path
+ * @param percentage Intensity of the curve
+ */
 void calculateContinuousPositions(Point start, Point end, Point next, float percentage) {
   //percentage /= 2;
   calculateDistanceBetweenPoints();
@@ -682,12 +682,12 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
 } // end calculate continuous positions
 
 /**
-* Creates an arc from 'start' to 'end' that passes through the point specified
-* by 'inter.'
-* @param start First point
-* @param inter Second point
-* @param end Third point
-*/
+ * Creates an arc from 'start' to 'end' that passes through the point specified
+ * by 'inter.'
+ * @param start First point
+ * @param inter Second point
+ * @param end Third point
+ */
 void calculateArc(Point start, Point inter, Point end) {  
   calculateDistanceBetweenPoints();
   intermediatePositions.clear();
@@ -743,13 +743,13 @@ void calculateArc(Point start, Point inter, Point end) {
 }
 
 /**
-* Initiate a new continuous (curved) motion instruction.
-* @param model Arm model to use
-* @param start Start point
-* @param end Destination point
-* @param next Point after the destination
-* @param percentage Intensity of the curve
-*/
+ * Initiate a new continuous (curved) motion instruction.
+ * @param model Arm model to use
+ * @param start Start point
+ * @param end Destination point
+ * @param next Point after the destination
+ * @param percentage Intensity of the curve
+ */
 void beginNewContinuousMotion(Point start, Point end, Point next, float p) {
   calculateContinuousPositions(start, end, next, p);
   motionFrameCounter = 0;
@@ -759,10 +759,10 @@ void beginNewContinuousMotion(Point start, Point end, Point next, float p) {
 }
 
 /**
-* Initiate a new fine (linear) motion instruction.
-* @param start Start point
-* @param end Destination point
-*/
+ * Initiate a new fine (linear) motion instruction.
+ * @param start Start point
+ * @param end Destination point
+ */
 void beginNewLinearMotion(Point start, Point end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
@@ -772,11 +772,11 @@ void beginNewLinearMotion(Point start, Point end) {
 }
 
 /**
-* Initiate a new circular motion instruction according to FANUC methodology.
-* @param p1 Point 1
-* @param p2 Point 2
-* @param p3 Point 3
-*/
+ * Initiate a new circular motion instruction according to FANUC methodology.
+ * @param p1 Point 1
+ * @param p2 Point 2
+ * @param p3 Point 3
+ */
 void beginNewCircularMotion(Point start, Point inter, Point end) {
   calculateArc(start, inter, end);
   interMotionIdx = 0;
@@ -787,10 +787,10 @@ void beginNewCircularMotion(Point start, Point inter, Point end) {
 }
 
 /**
-* Move the arm model between two points according to its current speed.
-* @param model The arm model
-* @param speedMult Speed multiplier
-*/
+ * Move the arm model between two points according to its current speed.
+ * @param model The arm model
+ * @param speedMult Speed multiplier
+ */
 boolean executeMotion(ArmModel model, float speedMult) {
   motionFrameCounter++;
   // speed is in pixels per frame, multiply that by the current speed setting
@@ -831,14 +831,14 @@ MotionInstruction getActiveMotionInstruct() {
 }
 
 /**
-* Convert a point based on a coordinate system defined as
-* 3 orthonormal vectors.
-* @param point Point to convert
-* @param xAxis X axis of target coordinate system
-* @param yAxis Y axis of target coordinate system
-* @param zAxis Z axis of target coordinate system
-* @return Coordinates of point after conversion
-*/
+ * Convert a point based on a coordinate system defined as
+ * 3 orthonormal vectors.
+ * @param point Point to convert
+ * @param xAxis X axis of target coordinate system
+ * @param yAxis Y axis of target coordinate system
+ * @param zAxis Z axis of target coordinate system
+ * @return Coordinates of point after conversion
+ */
 PVector vectorConvertTo(PVector point, PVector xAxis,
 PVector yAxis, PVector zAxis)
 {
@@ -853,14 +853,14 @@ PVector yAxis, PVector zAxis)
 
 
 /**
-* Convert a point based on a coordinate system defined as
-* 3 orthonormal vectors. Reverse operation of vectorConvertTo.
-* @param point Point to convert
-* @param xAxis X axis of target coordinate system
-* @param yAxis Y axis of target coordinate system
-* @param zAxis Z axis of target coordinate system
-* @return Coordinates of point after conversion
-*/
+ * Convert a point based on a coordinate system defined as
+ * 3 orthonormal vectors. Reverse operation of vectorConvertTo.
+ * @param point Point to convert
+ * @param xAxis X axis of target coordinate system
+ * @param yAxis Y axis of target coordinate system
+ * @param zAxis Z axis of target coordinate system
+ * @return Coordinates of point after conversion
+ */
 PVector vectorConvertFrom(PVector point, PVector xAxis,
 PVector yAxis, PVector zAxis)
 {
@@ -875,12 +875,12 @@ PVector yAxis, PVector zAxis)
 
 
 /**
-* Create a plane (2D coordinate system) out of 3 input points.
-* @param a First point
-* @param b Second point
-* @param c Third point
-* @return New coordinate system defined by 3 orthonormal vectors
-*/
+ * Create a plane (2D coordinate system) out of 3 input points.
+ * @param a First point
+ * @param b Second point
+ * @param c Third point
+ * @return New coordinate system defined by 3 orthonormal vectors
+ */
 PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {  
   PVector n1 = new PVector(a.x-b.x, a.y-b.y, a.z-b.z);
   n1.normalize();
@@ -899,16 +899,16 @@ PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {
 }
 
 /**
-* Finds the circle center of 3 points. (That is, find the center of
-* a circle whose circumference intersects all 3 points.)
-* The points must all lie
-* on the same plane (all have the same Z value). Should have a check
-* for colinear case, currently doesn't.
-* @param a First point
-* @param b Second point
-* @param c Third point
-* @return Position of circle center
-*/
+ * Finds the circle center of 3 points. (That is, find the center of
+ * a circle whose circumference intersects all 3 points.)
+ * The points must all lie
+ * on the same plane (all have the same Z value). Should have a check
+ * for colinear case, currently doesn't.
+ * @param a First point
+ * @param b Second point
+ * @param c Third point
+ * @return Position of circle center
+ */
 PVector circleCenter(PVector a, PVector b, PVector c) {
   float h = calculateH(a.x, a.y, b.x, b.y, c.x, c.y);
   float k = calculateK(a.x, a.y, b.x, b.y, c.x, c.y);
@@ -939,11 +939,11 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
 }
 
 /**
-* Executes a program. Returns true when done.
-* @param program Program to execute
-* @param model Arm model to use
-* @return Finished yet (false=no, true=yes)
-*/
+ * Executes a program. Returns true when done.
+ * @param program Program to execute
+ * @param model Arm model to use
+ * @return Finished yet (false=no, true=yes)
+ */
 boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   //stop executing if no valid program is selected or we reach the end of the program
   if(program == null || currentInstruction < 0 || currentInstruction >= program.getInstructions().size()) {
@@ -1005,12 +1005,12 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
 }//end executeProgram
 
 /**
-* Sets up an instruction for execution.
-* @param program Program that the instruction belongs to
-* @param model Arm model to use
-* @param instruction The instruction to execute
-* @return Returns true on failure (invalid instruction), false on success
-*/
+ * Sets up an instruction for execution.
+ * @param program Program that the instruction belongs to
+ * @param model Arm model to use
+ * @param instruction The instruction to execute
+ * @return Returns true on failure (invalid instruction), false on success
+ */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
   Point start = new Point(armModel.getEEPos(), armModel.getQuaternion());
   
@@ -1123,7 +1123,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
 } // end setUpInstruction
 
 /* Returns the angle with the smallest magnitude between
-* the two given angles on the Unit Circle */
+ * the two given angles on the Unit Circle */
 public float minimumDistance(float angle1, float angle2) {
   float dist = clampAngle(angle2) - clampAngle(angle1);
   
@@ -1142,13 +1142,13 @@ void setError(String text) {
 }
 
 /**
-* Maps wth given angle to the range of 0 (inclusive) to
-* two PI (exclusive).
-*
-* @param angle  some angle in radians
-* @return       An angle between  0 (inclusive) to two
-*               PI (exclusive)
-*/
+ * Maps wth given angle to the range of 0 (inclusive) to
+ * two PI (exclusive).
+ *
+ * @param angle  some angle in radians
+ * @return       An angle between  0 (inclusive) to two
+ *               PI (exclusive)
+ */
 float clampAngle(float angle) {
   while(angle > TWO_PI) angle -= (TWO_PI);
   while(angle < 0) angle += (TWO_PI);

@@ -1,6 +1,6 @@
 /**
-* A basic definition of a shape in processing that has a fill and outline color.
-*/
+ * A basic definition of a shape in processing that has a fill and outline color.
+ */
 public abstract class Shape {
   protected color fill;
   protected color outline;
@@ -42,15 +42,15 @@ public abstract class Shape {
 }
 
 /**
-* A shape that resembles a cube or rectangle
-*/
+ * A shape that resembles a cube or rectangle
+ */
 public class Box extends Shape {
   public final PVector dimensions;
   public float[][] transform;
   
   /* NOTE: Box Shapes will use the current Transformation Matrix on
-  * the Procssing stack to define both the center of the Box as well
-  * as the Box's local coordinate system. */
+   * the Procssing stack to define both the center of the Box as well
+   * as the Box's local coordinate system. */
   
   /* Create a normal box */
   public Box(float wdh, float hgt, float dph, color f, color o) {
@@ -115,12 +115,12 @@ public class Box extends Shape {
   }
   
   /* Returns the dimension of the box corresponding to the
-  * axes index given; the axi indices are as follows:
-  * 
-  * 0 -> x
-  * 1 -> y
-  * 2 -> z
-  */
+   * axes index given; the axi indices are as follows:
+   * 
+   * 0 -> x
+   * 1 -> y
+   * 2 -> z
+   */
   public float getDim(int axes) {
     
     switch (axes) {
@@ -181,7 +181,7 @@ public class WorldObject {
   }
   
   /* Determines if the collider boxes of this object
-  * and the given object intersect. */
+   * and the given object intersect. */
   public boolean collision(WorldObject obj) {
     Box A = (Box)hit_box;
     Box B = (Box)obj.hit_box;
@@ -190,15 +190,15 @@ public class WorldObject {
   }
 }
 
-/*
-* This algorithm uses the Separating Axis Theorm to project radi of each Box on to several 
-* axes to determine if a there is any overlap between the boxes. The method strongy resembles 
-* the method outlined in Section 4.4 of "Real Time Collision Detection" by Christer Ericson
-*
-* @param A  The hit box associated with some object in space
-* @param B  The hit box associated with another object in space
-* @return   Whether the two hit boxes intersect
-*/
+/**
+ * This algorithm uses the Separating Axis Theorm to project radi of each Box on to several 
+ * axes to determine if a there is any overlap between the boxes. The method strongy resembles 
+ * the method outlined in Section 4.4 of "Real Time Collision Detection" by Christer Ericson
+ *
+ * @param A  The hit box associated with some object in space
+ * @param B  The hit box associated with another object in space
+ * @return   Whether the two hit boxes intersect
+ */
 public boolean collision3D(Box A, Box B) {
   // Rows are x, y, z axis vectors for A and B: Ax, Ay, Az, Bx, By, and Bz
   float[][] axes_A = A.getRelativeAxes();
