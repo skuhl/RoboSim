@@ -52,7 +52,8 @@ final int NONE = 0,
           CONFIRM_INSERT = 42,
           CONFIRM_DELETE = 43,
           CONFIRM_RENUM = 44,
-          CONFIRM_UNDO = 45;
+          CONFIRM_UNDO = 45,
+          CUT_COPY = 46;
 final int BUTTON_DEFAULT = color(70),
           BUTTON_ACTIVE = color(220, 40, 40),
           BUTTON_TEXT = color(240),
@@ -111,7 +112,9 @@ ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>();
 // Display otions for a number of menus
 ArrayList<String> options = new ArrayList<String>();
 // store numbers pressed by the user
-ArrayList<Integer> nums = new ArrayList<Integer>(); 
+ArrayList<Integer> nums = new ArrayList<Integer>();
+// container for instructions being coppied/ cut and pasted
+ArrayList<Instruction> clipBoard = new ArrayList<Instruction>();
 // which element is on focus now?
 int row_select = 0; //currently selected display row
 int col_select = -1; //currently selected display column
@@ -1998,44 +2001,67 @@ public void f2() {
 
 
 public void f3() {
-  if(mode == PROGRAM_NAV) {
-    options = new ArrayList<String>();
-    options.add("Delete this program?");
-    opt_select = 0;
-    
-    super_mode = mode;
-    mode = CONFIRM_DELETE;
-    updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-  } else if(mode == NAV_TOOL_FRAMES || mode == NAV_USER_FRAMES) {
-    options = new ArrayList<String>();
-    options.add("1.Tool Frame");
-    options.add("2.User Frame");
-    //options.add("3.Jog Frame");
-    
-    mode = PICK_FRAME_MODE;
-    opt_select = 0;
-    updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-  } else if(mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
-    char newChar = '\0';
-    
-    if(mode == INPUT_COMMENT_U) {
-      newChar = (char)('M' + letterStates[2]);
-    } else if(mode == INPUT_COMMENT_L) {
-      newChar = (char)('m' + letterStates[2]);
-    }
-    
-    // Insert a character M - R (or m - r)
-    StringBuilder limbo = new StringBuilder(workingText);
-    limbo.setCharAt(col_select, newChar);
-    workingText = limbo.toString();
-    // Update and reset the letter states
-    letterStates[0] = 0;
-    letterStates[1] = 0;
-    letterStates[2] = (letterStates[2] + 1) % 6;
-    letterStates[3] = 0;
-    letterStates[4] = 0;
-    
-    updateComment();
+  switch(mode){
+    case PROGRAM_NAV:
+      options = new ArrayList<String>();
+      options.add("Delete this program?");
+      opt_select = 0;
+      
+      super_mode = mode;
+      mode = CONFIRM_DELETE;
+      updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+      break;
+    case NAV_TOOL_FRAMES:
+    case NAV_USER_FRAMES:
+      options = new ArrayList<String>();
+      options.add("1.Tool Frame");
+      options.add("2.User Frame");
+      //options.add("3.Jog Frame");
+      
+      mode = PICK_FRAME_MODE;
+      opt_select = 0;
+      updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+      break;
+    case CUT_COPY:
+      Program p = programs.get(active_program);
+      ArrayList<Instruction> inst = p.getInstructions();
+      clipBoard = new ArrayList<Instruction>();
+      
+      int remIdx = 0;
+      for(int i = 0; i < selectedLines.length; i += 1){
+        if(selectedLines[i]){
+          clipBoard.add(inst.get(remIdx));
+          inst.remove(remIdx);
+        } else{
+          remIdx += 1;
+        }
+      }
+      
+      updateInstructions();
+      break;
+    case INPUT_COMMENT_U:
+    case INPUT_COMMENT_L:
+      char newChar = '\0';
+      
+      if(mode == INPUT_COMMENT_U) {
+        newChar = (char)('M' + letterStates[2]);
+      } else if(mode == INPUT_COMMENT_L) {
+        newChar = (char)('m' + letterStates[2]);
+      }
+      
+      // Insert a character M - R (or m - r)
+      StringBuilder limbo = new StringBuilder(workingText);
+      limbo.setCharAt(col_select, newChar);
+      workingText = limbo.toString();
+      // Update and reset the letter states
+      letterStates[0] = 0;
+      letterStates[1] = 0;
+      letterStates[2] = (letterStates[2] + 1) % 6;
+      letterStates[3] = 0;
+      letterStates[4] = 0;
+      
+      updateComment();
+      break;
   }
 }
 
@@ -2152,11 +2178,30 @@ public void f4() {
       updateInstructions();
     }
     break;
+  case CUT_COPY:
+    p = programs.get(active_program);
+    ArrayList<Instruction> inst = p.getInstructions();
+    clipBoard = new ArrayList<Instruction>();
+    
+    for(int i = 0; i < selectedLines.length; i += 1){
+      if(selectedLines[i])
+        clipBoard.add(inst.get(i));
+    }
+    
+    updateInstructions();
+    break;
   case SELECT_LINES:
-    if(super_mode == CONFIRM_DELETE){
+    if(super_mode == CONFIRM_DELETE) {
       clearOptions();
       options.add("Delete selected lines?");
       mode = CONFIRM_DELETE;
+      super_mode = INSTRUCTION_NAV;
+      updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+    }
+    else if(super_mode == CUT_COPY){
+      clearOptions();
+      options.add("Cut/ Copy selected lines?");
+      mode = CUT_COPY;
       super_mode = INSTRUCTION_NAV;
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
@@ -2318,6 +2363,9 @@ public void f5() {
       else if(super_mode == SELECT_LINES) {
         updateInstructions();
       }
+      break;
+    case CUT_COPY:
+      updateInstructions();
       break;
     case INPUT_COMMENT_U:
     case INPUT_COMMENT_L:
@@ -2807,8 +2855,10 @@ public void ENTER() {
     case 2: //Cut/Copy
       p = programs.get(active_program);
       selectedLines = resetSelection(p.getInstructions().size());
-      super_mode = INSTRUCTION_NAV;
+      super_mode = CUT_COPY;
       mode = SELECT_LINES;
+      clearScreen();
+      loadInstructions(active_program);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
     case 3: //Find

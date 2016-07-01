@@ -269,6 +269,7 @@ public class Program  {
   }
 
   public void addInstruction(Instruction i) {
+    i.setProg(this);
     instructions.add(i);
     if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
@@ -336,11 +337,11 @@ public class Instruction {
   Program p;
   
   public Instruction() {
-    /**
-     * NOPE that ain't gonna work!
-     * p = programs.get(active_program);
-     */
+    p = null;
   }
+  
+  public Program getProg() { return p; }
+  public void setProg(Program p) { this.p = p; }
 
   public String toString() {
     String str = "\0";
@@ -527,6 +528,12 @@ public class LabelInstruction extends Instruction {
     super();
     labelNum = n;
     labelIdx = i;
+  }
+  
+  public void execute(){
+    if(active_instruction < p.getInstructions().size()-1){
+      active_instruction += 1;
+    }
   }
   
   public String toString(){
