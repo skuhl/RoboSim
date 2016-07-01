@@ -10,7 +10,7 @@ boolean executingInstruction = false;
 
 int errorCounter;
 String errorText;
-public static final boolean COLLISION_DISPLAY = false;
+public static final boolean COLLISION_DISPLAY = true;
 
 /**
  * Creates some programs for testing purposes.
@@ -18,7 +18,7 @@ public static final boolean COLLISION_DISPLAY = false;
 void createTestProgram() {
   Program program = new Program("Test Program");
   MotionInstruction instruction =
-    new MotionInstruction(MTYPE_LINEAR, 0, true, 800, 1.0); //1.0
+  new MotionInstruction(MTYPE_LINEAR, 0, true, 800, 1.0); //1.0
   program.addInstruction(instruction);
   instruction = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1600, 0.75); //0.75
   program.addInstruction(instruction);
@@ -28,7 +28,7 @@ void createTestProgram() {
   program.addInstruction(instruction);
   instruction = new MotionInstruction(MTYPE_JOINT, 4, true, 1.0, 0);
   program.addInstruction(instruction);
-  //for (int n = 0; n < 15; n++) program.addInstruction(
+  //for(int n = 0; n < 15; n++) program.addInstruction(
   //  new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
   
   POS_REG[0] = new PositionRegister(null, new Point(165, 116, -5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
@@ -44,7 +44,7 @@ void createTestProgram() {
   
   Program program2 = new Program("Test Program 2");
   MotionInstruction instruction2 =
-    new MotionInstruction(MTYPE_JOINT, 3, true, 1.0, 0);
+  new MotionInstruction(MTYPE_JOINT, 3, true, 1.0, 0);
   program2.addInstruction(instruction2);
   instruction2 = new MotionInstruction(MTYPE_JOINT, 4, true, 1.0, 0);
   program2.addInstruction(instruction2);
@@ -53,7 +53,7 @@ void createTestProgram() {
   
   Program program3 = new Program("Circular Test");
   MotionInstruction instruction3 =
-    new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, 0);
+  new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, 0);
   program3.addInstruction(instruction3);
   instruction3 = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1.0, 0);
   program3.addInstruction(instruction3);
@@ -66,16 +66,15 @@ void createTestProgram() {
   
   Program program4 = new Program("New Arm Test");
   MotionInstruction instruction4 =
-    new MotionInstruction(MTYPE_LINEAR, 5, true, 1.0, 0);
+  new MotionInstruction(MTYPE_LINEAR, 5, true, 1.0, 0);
   program4.addInstruction(instruction4);
   instruction4 = new MotionInstruction(MTYPE_LINEAR, 6, true, 1.0, 0);
   program4.addInstruction(instruction4);
   programs.add(program4);
   currentProgram = program4;
   
-  for (int n = 0; n < 22; n++) {
-     programs.add(new Program("Xtra" + Integer.toString(n)));
-     
+  for(int n = 0; n < 22; n++) {
+    programs.add(new Program("Xtra" + Integer.toString(n)));  
   }
   saveState();
 } // end createTestProgram()
@@ -87,103 +86,106 @@ void createTestProgram() {
 void showMainDisplayText() {
   fill(0);
   textAlign(RIGHT, TOP);
-  String coordFrame = "CoordinateFrame: ";
+  String coordFrame = "Coordinate Frame: ";
   
   switch(curCoordFrame) {
-    case COORD_JOINT:
-      coordFrame += "Joint";
-      break;
-    case COORD_WORLD:
-      coordFrame += "World";
-      break;
-    case COORD_TOOL:
-      coordFrame += "Tool";
-      break;
-    case COORD_USER:
-      coordFrame += "User";
+  case COORD_JOINT:
+    coordFrame += "Joint";
+    break;
+  case COORD_WORLD:
+    coordFrame += "World";
+    break;
+  case COORD_TOOL:
+    coordFrame += "Tool";
+    break;
+  case COORD_USER:
+    coordFrame += "User";
   }
   
   text(coordFrame, width-20, 20);
   text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
   
   // Display the Current position and orientation of the Robot in the World Frame
-  PVector ee_pos = armModel.getEEPos();
+  PVector ee_pos = convertNativeToWorld( armModel.getEEPos() );
   //ee_pos = convertNativeToWorld(ee_pos);
   PVector wpr = armModel.getWPR();
   String dis_world = String.format("Coord  X: %8.4f  Y: %8.4f  Z: %8.4f  W: %8.4f  P: %8.4f  R: %8.4f", 
-                     ee_pos.x, ee_pos.y, ee_pos.z, wpr.x*RAD_TO_DEG, wpr.y*RAD_TO_DEG, wpr.z*RAD_TO_DEG);
+  ee_pos.x, ee_pos.y, ee_pos.z, wpr.x * RAD_TO_DEG, wpr.y * RAD_TO_DEG, wpr.z * RAD_TO_DEG);
   
   // Display the Robot's joint angles
   float j[] = armModel.getJointRotations();
   String dis_joint = String.format("Joints  J1: %5.4f J2: %5.4f J3: %5.4f J4: %5.4f J5: %5.4f J6: %5.4f", 
-                     j[0], j[1], j[2], j[3], j[4], j[5]);
+  j[0], j[1], j[2], j[3], j[4], j[5]);
   
   // Display the distance between the End Effector and the Based of the Robot
   float dist_base = PVector.dist(ee_pos, base_center);
   String dis_dist = String.format("Distance from EE to Robot Base: %f", dist_base);
   
   // Show the coordinates of the End Effector for the current Coordinate Frame
-  if (curCoordFrame == COORD_JOINT) {          
+  if(curCoordFrame == COORD_JOINT) {          
     text(dis_joint, width - 20, 60);
     
-    if (DISPLAY_TEST_OUTPUT) {
+    if(DISPLAY_TEST_OUTPUT) {
       text(dis_dist, width - 20, 80);
       text(dis_world, width - 20, 100);
     }
   } else {
     text(dis_world, width - 20, 60);
     
-    if (DISPLAY_TEST_OUTPUT) {
+    if(DISPLAY_TEST_OUTPUT) {
       text(dis_dist, width - 20, 80);
       text(dis_joint, width - 20, 100);
     }
   }
   
   // Display a message while the robot is carrying an object
-  if (armModel.held != null) {
+  if(armModel.held != null) {
     fill(200, 0, 0);
     text("Object held", width - 20, 120);
+    
+    float[] pos = armModel.held.hit_box.position();
+    String obj_pos = String.format("(%f, %f, %f)", pos[0], pos[1], pos[1]);
+    text(obj_pos, width - 20, 140);
   }
   
   textAlign(LEFT);
   
   // Display message for camera pan-lock mode
-  if (clickPan % 2 == 1) {
+  if(clickPan % 2 == 1) {
     textSize(14);
     fill(215, 0, 0);
     text("Press space on the keyboard to disable camera paning", 20, height / 2 + 30);
   }
   // Display message for camera rotation-lock mode
-  if (clickRotate % 2 == 1) {
+  if(clickRotate % 2 == 1) {
     textSize(14);
     fill(215, 0, 0);
     text("Press shift on the keyboard to disable camera rotation", 20, height / 2 + 55);
   }
   
-  if (DISPLAY_TEST_OUTPUT) {
+  if(DISPLAY_TEST_OUTPUT) {
     textSize(12);
     fill(0, 0, 0);
     
     float[][] vectorMatrix = armModel.getRotationMatrix(armModel.currentFrame);
     String row = String.format("[  %f  %f  %f  ]", vectorMatrix[0][0], vectorMatrix[0][1], vectorMatrix[0][2]);
-    text(row, 20, height / 2 + 80);
+    text(row, width - 300, height - 100);
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[1][0], vectorMatrix[1][1], vectorMatrix[1][2]);
-    text(row, 20, height / 2 + 94);
+    text(row, width - 300, height - 86);
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
-    text(row, 20, height / 2 + 108);
+    text(row, width - 300, height - 72);
+    float[] q = armModel.getQuaternion();
+    String quat = String.format("q: [%8.6f, %8.6f, %8.6f, %8.6f]", q[0], q[1], q[2], q[3]);
+    text(quat, width - 350, height - 58);
   }
   
-  float[] q = armModel.getQuaternion();
-  String quat = String.format("q: [%8.6f, %8.6f, %8.6f, %8.6f]", q[0], q[1], q[2], q[3]);
-  text(quat, 20, height/2 + 148);
-  
-  if (ref_point != null) {
+  if(ref_point != null) {
     String obj1_c = String.format("Ref Point: [%f, %f Z, %f]", ref_point.x, ref_point.y, ref_point.z);
     text(obj1_c, 20, height / 2 + 168);
   }
   textAlign(RIGHT);
   
-  if (errorCounter > 0) {
+  if(errorCounter > 0) {
     errorCounter--;
     fill(255, 0, 0);
     text(errorText, width-20, 100);
@@ -197,35 +199,35 @@ void showMainDisplayText() {
  * @param model  The Robot Arm, for which to switch coordinate frames
  */
 public void updateCoordinateMode(ArmModel model) {
+  // Stop Robot movement
+  hd();
+  
   // Increment the current coordinate frame
   curCoordFrame = (curCoordFrame + 1) % 4;
   
   // Skip the tool frame, if there is no current active tool frame
-  if (curCoordFrame == COORD_TOOL && !((activeToolFrame >= 0 && activeToolFrame < toolFrames.length)
-                                  || model.activeEndEffector == ENDEF_SUCTION
-                                  || model.activeEndEffector == ENDEF_CLAW)) {
+  if(curCoordFrame == COORD_TOOL && !((activeToolFrame >= 0 && activeToolFrame < toolFrames.length)
+        || model.activeEndEffector == ENDEF_SUCTION
+        || model.activeEndEffector == ENDEF_CLAW)) {
     curCoordFrame = COORD_USER;
   }
   
   // Skip the user frame, if there is no current active user frame
-  if (curCoordFrame == COORD_USER && !(activeUserFrame >= 0 && activeUserFrame < userFrames.length)) {
+  if(curCoordFrame == COORD_USER && !(activeUserFrame >= 0 && activeUserFrame < userFrames.length)) {
     curCoordFrame = COORD_JOINT;
   }
-    
+  
   // Update the Arm Model's rotation matrix for rotational motion based on the current frame
-  if (curCoordFrame == COORD_TOOL || (curCoordFrame == COORD_WORLD && activeToolFrame != -1)) {
+  if(model.activeEndEffector == ENDEF_NONE && (curCoordFrame == COORD_TOOL || (curCoordFrame == COORD_WORLD && activeToolFrame != -1))) {
     // Active Tool Frames are used in the World Frame as well
     armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
-  } else if (curCoordFrame == COORD_USER) {
-    
+  } 
+  else if(curCoordFrame == COORD_USER ) {
     armModel.currentFrame = userFrames[activeUserFrame].getNativeAxes();
-  } else {
-    // Reset to the identity matrix
-    armModel.currentFrame = new float[3][3];
-    
-    for (int diag = 0; diag < 3; ++diag) {
-      armModel.currentFrame[diag][diag] = 1;
-    }
+  } 
+  else {
+    //reset to world frame
+    armModel.resetFrame();
   }
 }
 
@@ -278,9 +280,10 @@ PVector computePerpendicular(PVector in, PVector second) {
   PVector orig = new PVector(v2.x*5, v2.y*5, v2.z);
   PVector p1 = new PVector(perp1.x*5, perp1.y*5, perp1.z);
   PVector p2 = new PVector(perp2.x*5, perp2.y*5, perp2.z);
-  if (dist(orig.x, orig.y, orig.z, p1.x, p1.y, p1.z) <
+  
+  if(dist(orig.x, orig.y, orig.z, p1.x, p1.y, p1.z) <
       dist(orig.x, orig.y, orig.z, p2.x, p2.y, p2.z))
-    return vectorConvertFrom(perp1, plane[0], plane[1], plane[2]);
+  return vectorConvertFrom(perp1, plane[0], plane[1], plane[2]);
   else return vectorConvertFrom(perp2, plane[0], plane[1], plane[2]);
 }
 
@@ -300,25 +303,25 @@ public void drawEndEffectorGridMapping() {
   
   // Toggle EE mapping type with 'e'
   switch (EE_MAPPING) {
-    case 0:
-      stroke(c);
-      // Draw a line, from the EE to the grid in the xy plane, parallel to the z plane
-      line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Z, ee_pos.z);
-      break;
+  case 0:
+    stroke(c);
+    // Draw a line, from the EE to the grid in the xy plane, parallel to the z plane
+    line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Z, ee_pos.z);
+    break;
     
-    case 1:
-      noStroke();
-      fill(c);
-      // Draw a point, which maps the EE's position to the grid in the xy plane
-      pushMatrix();
-      rotateX(PI / 2);
-      translate(0, 0, -PLANE_Z);
-      ellipse(ee_pos.x, ee_pos.z, 10, 10);
-      popMatrix();
-      break;
-      
-    default:
-      // No EE grid mapping
+  case 1:
+    noStroke();
+    fill(c);
+    // Draw a point, which maps the EE's position to the grid in the xy plane
+    pushMatrix();
+    rotateX(PI / 2);
+    translate(0, 0, -PLANE_Z);
+    ellipse(ee_pos.x, ee_pos.z, 10, 10);
+    popMatrix();
+    break;
+    
+  default:
+    // No EE grid mapping
   }
 }
 
@@ -336,7 +339,7 @@ public void drawEndEffectorGridMapping() {
  * @param applyOffset  Whether to apply the Tool Frame End
  *                     Effector offset (if it exists)
  */
-void applyModelRotation(ArmModel model, boolean applyOffset){   
+void applyModelRotation(ArmModel model, boolean applyOffset) {   
   translate(600, 200, 0);
   translate(-50, -166, -358); // -115, -213, -413
   rotateZ(PI);
@@ -382,7 +385,7 @@ void applyModelRotation(ArmModel model, boolean applyOffset){
   translate(45, 45, 0);
   rotateZ(model.segments.get(5).currentRotations[0]);
   
-  if (applyOffset && (curCoordFrame == COORD_TOOL || curCoordFrame == COORD_WORLD)) { armModel.applyToolFrame(activeToolFrame); }
+  if(applyOffset && (curCoordFrame == COORD_TOOL || curCoordFrame == COORD_WORLD)) { armModel.applyToolFrame(activeToolFrame); }
 } // end apply model rotations
 
 /**
@@ -392,7 +395,7 @@ void applyModelRotation(ArmModel model, boolean applyOffset){
  * resulting matrix will describe the linear approximation
  * of the robot's motion for each joint in units per radian. 
  */
-public float[][] calculateJacobian(float[] angles){
+public float[][] calculateJacobian(float[] angles) {
   float dAngle = DEG_TO_RAD;
   float[][] J = new float[7][6];
   //get current ee position
@@ -400,7 +403,7 @@ public float[][] calculateJacobian(float[] angles){
   float[] cRotQ = armModel.getQuaternion(angles);
   
   //examine each segment of the arm
-  for(int i = 0; i < 6; i += 1){
+  for(int i = 0; i < 6; i += 1) {
     //test angular offset
     angles[i] += dAngle;
     //get updated ee position
@@ -426,7 +429,7 @@ public float[][] calculateJacobian(float[] angles){
 //attempts to calculate the joint rotation values
 //required to move the end effector to the point specified
 //by 'tgt' and the Euler angle orientation 'rot'
-int calculateIKJacobian(PVector tgt, float[] rot){
+int calculateIKJacobian(PVector tgt, float[] rot) {
   final int limit = 1000;  //max number of times to loop
   int count = 0;
   
@@ -446,7 +449,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
   RealMatrix OR = R.multiply(MatrixUtils.inverse(MO));
   rot = matrixToQuat(doubleToFloat(OR.getData(), 3, 3));
   //println();
-  while(count < limit){
+  while(count < limit) {
     PVector cPos = armModel.getEEPos(angles);
     float[] cRotQ = armModel.getQuaternion(angles);
     
@@ -473,11 +476,11 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     float[][] J = calculateJacobian(angles);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
     RealMatrix JInverse = new SingularValueDecomposition(m).getSolver().getInverse();
-        
+    
     //calculate and apply joint angular changes
     float[] dAngle = {0, 0, 0, 0, 0, 0};
-    for(int i = 0; i < 6; i += 1){
-      for(int j = 0; j < 7; j += 1){
+    for(int i = 0; i < 6; i += 1) {
+      for(int j = 0; j < 7; j += 1) {
         dAngle[i] += JInverse.getEntry(i, j)*delta[j];
       }
       //update joint angles
@@ -487,7 +490,7 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     }
     
     count += 1;
-    if(count == limit){
+    if(count == limit) {
       
     }
   }
@@ -495,18 +498,18 @@ int calculateIKJacobian(PVector tgt, float[] rot){
   armModel.currentFrame = frame;
   
   //did we successfully find the desired angles?
-  if(count >= limit){
+  if(count >= limit) {
     println("IK failure");
     return EXEC_FAILURE;
   }
-  else{
-    for(int i = 0; i < 6; i += 1){
+  else {
+    for(int i = 0; i < 6; i += 1) {
       Model s = armModel.segments.get(i);
       if(angles[i] > -0.000001 && angles[i] < 0.000001)
-        angles[i] = 0;
-        
-      for(int j = 0; j < 3; j += 1){
-        if(s.rotations[j] && !s.anglePermitted(j, angles[i])){
+      angles[i] = 0;
+      
+      for(int j = 0; j < 3; j += 1) {
+        if(s.rotations[j] && !s.anglePermitted(j, angles[i])) {
           //println("illegal joint angle on j" + i);
           return EXEC_FAILURE;
         }
@@ -515,22 +518,22 @@ int calculateIKJacobian(PVector tgt, float[] rot){
     
     float[] angleOffset = new float[6];
     float maxOffset = TWO_PI;
-    for(int i = 0; i < 6; i += 1){
+    for(int i = 0; i < 6; i += 1) {
       angleOffset[i] = abs(minimumDistance(angles[i], armModel.getJointRotations()[i]));
     }
     
     if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
-       angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset){
+        angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
       armModel.setJointRotations(angles);
       return EXEC_SUCCESS;
     }
-    else{
+    else {
       return EXEC_PARTIAL;
     }
   }
 }
 
-int calculateIKJacobian(Point p){
+int calculateIKJacobian(Point p) {
   PVector pos = p.pos;
   float[] rot = p.ori;
   return calculateIKJacobian(pos, rot);
@@ -542,10 +545,10 @@ int calculateIKJacobian(Point p){
  */
 void calculateDistanceBetweenPoints() {
   MotionInstruction instruction = getActiveMotionInstruct();
-  if (instruction != null && instruction.getMotionType() != MTYPE_JOINT)
-    distanceBetweenPoints = instruction.getSpeed() / 60.0;
-  else if (curCoordFrame != COORD_JOINT)
-    distanceBetweenPoints = armModel.motorSpeed * liveSpeed / 60.0;
+  if(instruction != null && instruction.getMotionType() != MTYPE_JOINT)
+  distanceBetweenPoints = instruction.getSpeed() / 60.0;
+  else if(curCoordFrame != COORD_JOINT)
+  distanceBetweenPoints = armModel.motorSpeed * liveSpeed / 60.0;
   else distanceBetweenPoints = 5.0;
 }
 
@@ -568,15 +571,15 @@ void calculateIntermediatePositions(Point start, Point end) {
   float mu = 0;
   int numberOfPoints = (int)(dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) / distanceBetweenPoints);
   float increment = 1.0 / (float)numberOfPoints;
-  for (int n = 0; n < numberOfPoints; n++) {
+  for(int n = 0; n < numberOfPoints; n++) {
     mu += increment;
     
     qi = quaternionSlerp(q1, q2, mu);
     intermediatePositions.add(new Point(new PVector(
-      p1.x * (1 - mu) + (p2.x * mu),
-      p1.y * (1 - mu) + (p2.y * mu),
-      p1.z * (1 - mu) + (p2.z * mu)),
-      qi));
+    p1.x * (1 - mu) + (p2.x * mu),
+    p1.y * (1 - mu) + (p2.y * mu),
+    p1.z * (1 - mu) + (p2.z * mu)),
+    qi));
   }
   
   interMotionIdx = 0;
@@ -619,7 +622,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   float d1 = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
   float d2 = dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
   int numberOfPoints = 0;
-  if (d1 > d2){
+  if(d1 > d2) {
     numberOfPoints = (int)(d1 / distanceBetweenPoints);
   } 
   else {
@@ -628,26 +631,26 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   
   float mu = 0;
   float increment = 1.0 / (float)numberOfPoints;
-  for (int n = 0; n < numberOfPoints; n++) {
+  for(int n = 0; n < numberOfPoints; n++) {
     mu += increment;
     qi = quaternionSlerp(q2, q3, mu);
     secondaryTargets.add(new Point(new PVector(
-      p2.x * (1 - mu) + (p3.x * mu),
-      p2.y * (1 - mu) + (p3.y * mu),
-      p2.z * (1 - mu) + (p3.z * mu)),
-      qi));
+    p2.x * (1 - mu) + (p3.x * mu),
+    p2.y * (1 - mu) + (p3.y * mu),
+    p2.z * (1 - mu) + (p3.z * mu)),
+    qi));
   }
   
   mu = 0;
   int transitionPoint = (int)((float)numberOfPoints * percentage);
-  for (int n = 0; n < transitionPoint; n++) {
+  for(int n = 0; n < transitionPoint; n++) {
     mu += increment;
     qi = quaternionSlerp(q1, q2, mu);
     intermediatePositions.add(new Point(new PVector(
-      p1.x * (1 - mu) + (p2.x * mu),
-      p1.y * (1 - mu) + (p2.y * mu),
-      p1.z * (1 - mu) + (p2.z * mu)),
-      qi));
+    p1.x * (1 - mu) + (p2.x * mu),
+    p1.y * (1 - mu) + (p2.y * mu),
+    p1.z * (1 - mu) + (p2.z * mu)),
+    qi));
   }
   
   int secondaryIdx = 0; // accessor for secondary targets
@@ -656,22 +659,22 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   increment /= 2.0;
   
   Point currentPoint;
-  if(intermediatePositions.size() > 0){
+  if(intermediatePositions.size() > 0) {
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
   }
-  else{
+  else {
     currentPoint = new Point(armModel.getEEPos(), armModel.getQuaternion());
   }
   
-  for (int n = transitionPoint; n < numberOfPoints; n++) {
+  for(int n = transitionPoint; n < numberOfPoints; n++) {
     mu += increment;
     Point tgt = secondaryTargets.get(secondaryIdx);
     qi = quaternionSlerp(currentPoint.ori, tgt.ori, mu);
     intermediatePositions.add(new Point(new PVector(
-      currentPoint.pos.x * (1 - mu) + (tgt.pos.x * mu),
-      currentPoint.pos.y * (1 - mu) + (tgt.pos.y * mu),
-      currentPoint.pos.z * (1 - mu) + (tgt.pos.z * mu)), 
-      qi));
+    currentPoint.pos.x * (1 - mu) + (tgt.pos.x * mu),
+    currentPoint.pos.y * (1 - mu) + (tgt.pos.y * mu),
+    currentPoint.pos.z * (1 - mu) + (tgt.pos.z * mu)), 
+    qi));
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
     secondaryIdx++;
   }
@@ -685,7 +688,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
  * @param inter Second point
  * @param end Third point
  */
-void calculateArc(Point start, Point inter, Point end){  
+void calculateArc(Point start, Point inter, Point end) {  
   calculateDistanceBetweenPoints();
   intermediatePositions.clear();
   
@@ -700,8 +703,8 @@ void calculateArc(Point start, Point inter, Point end){
   PVector[] plane = new PVector[3];
   plane = createPlaneFrom3Points(a, b, c);
   PVector center = circleCenter(vectorConvertTo(a, plane[0], plane[1], plane[2]),
-                                vectorConvertTo(b, plane[0], plane[1], plane[2]),
-                                vectorConvertTo(c, plane[0], plane[1], plane[2]));
+  vectorConvertTo(b, plane[0], plane[1], plane[2]),
+  vectorConvertTo(c, plane[0], plane[1], plane[2]));
   center = vectorConvertFrom(center, plane[0], plane[1], plane[2]);
   // Now get the radius (easy)
   float r = dist(center.x, center.y, center.z, a.x, a.y, a.z);
@@ -728,7 +731,7 @@ void calculateArc(Point start, Point inter, Point end){
   int numPoints = (int)(r*theta/distanceBetweenPoints);
   float inc = 1/(float)numPoints;
   float angleInc = (theta)/(float)numPoints;
-  for (int i = 0; i < numPoints; i += 1) {
+  for(int i = 0; i < numPoints; i += 1) {
     PVector pos = rotateVectorQuat(u, n, angle).mult(r).add(center);
     if(i == numPoints-1) pos = end.pos;
     qi = quaternionSlerp(q1, q2, mu);
@@ -747,10 +750,10 @@ void calculateArc(Point start, Point inter, Point end){
  * @param next Point after the destination
  * @param percentage Intensity of the curve
  */
-void beginNewContinuousMotion(Point start, Point end, Point next, float p){
+void beginNewContinuousMotion(Point start, Point end, Point next, float p) {
   calculateContinuousPositions(start, end, next, p);
   motionFrameCounter = 0;
-  if(intermediatePositions.size() > 0){
+  if(intermediatePositions.size() > 0) {
     calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
 }
@@ -763,7 +766,7 @@ void beginNewContinuousMotion(Point start, Point end, Point next, float p){
 void beginNewLinearMotion(Point start, Point end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
-  if(intermediatePositions.size() > 0){
+  if(intermediatePositions.size() > 0) {
     calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
 }
@@ -778,7 +781,7 @@ void beginNewCircularMotion(Point start, Point inter, Point end) {
   calculateArc(start, inter, end);
   interMotionIdx = 0;
   motionFrameCounter = 0;
-  if(intermediatePositions.size() > 0){
+  if(intermediatePositions.size() > 0) {
     calculateIKJacobian(intermediatePositions.get(interMotionIdx));
   }
 }
@@ -793,20 +796,20 @@ boolean executeMotion(ArmModel model, float speedMult) {
   // speed is in pixels per frame, multiply that by the current speed setting
   // which is contained in the motion instruction
   float currentSpeed = model.motorSpeed * speedMult;
-  if (currentSpeed * motionFrameCounter > distanceBetweenPoints) {
+  if(currentSpeed * motionFrameCounter > distanceBetweenPoints) {
     interMotionIdx++;
     motionFrameCounter = 0;
-    if (interMotionIdx >= intermediatePositions.size()) {
+    if(interMotionIdx >= intermediatePositions.size()) {
       interMotionIdx = -1;
       return true;
     }
     
     int ret = EXEC_SUCCESS;
-    if(intermediatePositions.size() > 0){
+    if(intermediatePositions.size() > 0) {
       calculateIKJacobian(intermediatePositions.get(interMotionIdx));
     }
-      
-    if(ret == EXEC_FAILURE){
+    
+    if(ret == EXEC_FAILURE) {
       doneMoving = true;
     }
   }
@@ -814,16 +817,16 @@ boolean executeMotion(ArmModel model, float speedMult) {
   return false;
 } // end execute linear motion
 
-MotionInstruction getActiveMotionInstruct(){
+MotionInstruction getActiveMotionInstruct() {
   Instruction inst = null;
   Program p = programs.get(active_program);
   
   if(p != null && p.getInstructions().size() != 0)
-    inst = p.getInstructions().get(active_instruction);
+  inst = p.getInstructions().get(active_instruction);
   else return null;
   
   if(inst instanceof MotionInstruction)
-    return (MotionInstruction)inst;
+  return (MotionInstruction)inst;
   else return null;
 }
 
@@ -837,12 +840,12 @@ MotionInstruction getActiveMotionInstruct(){
  * @return Coordinates of point after conversion
  */
 PVector vectorConvertTo(PVector point, PVector xAxis,
-                        PVector yAxis, PVector zAxis)
+PVector yAxis, PVector zAxis)
 {
   PMatrix3D matrix = new PMatrix3D(xAxis.x, xAxis.y, xAxis.z, 0,
-                                   yAxis.x, yAxis.y, yAxis.z, 0,
-                                   zAxis.x, zAxis.y, zAxis.z, 0,
-                                   0,       0,       0,       1);
+  yAxis.x, yAxis.y, yAxis.z, 0,
+  zAxis.x, zAxis.y, zAxis.z, 0,
+  0,       0,       0,       1);
   PVector result = new PVector();
   matrix.mult(point, result);
   return result;
@@ -859,12 +862,12 @@ PVector vectorConvertTo(PVector point, PVector xAxis,
  * @return Coordinates of point after conversion
  */
 PVector vectorConvertFrom(PVector point, PVector xAxis,
-                          PVector yAxis, PVector zAxis)
+PVector yAxis, PVector zAxis)
 {
   PMatrix3D matrix = new PMatrix3D(xAxis.x, yAxis.x, zAxis.x, 0,
-                                   xAxis.y, yAxis.y, zAxis.y, 0,
-                                   xAxis.z, yAxis.z, zAxis.z, 0,
-                                   0,       0,       0,       1);
+  xAxis.y, yAxis.y, zAxis.y, 0,
+  xAxis.z, yAxis.z, zAxis.z, 0,
+  0,       0,       0,       1);
   PVector result = new PVector();
   matrix.mult(point, result);
   return result;
@@ -914,25 +917,25 @@ PVector circleCenter(PVector a, PVector b, PVector c) {
 
 // TODO: Add error check for colinear case (denominator is zero)
 float calculateH(float x1, float y1, float x2, float y2, float x3, float y3) {
-    float numerator = (x2*x2+y2*y2)*y3 - (x3*x3+y3*y3)*y2 - 
-                      ((x1*x1+y1*y1)*y3 - (x3*x3+y3*y3)*y1) +
-                      (x1*x1+y1*y1)*y2 - (x2*x2+y2*y2)*y1;
-    float denominator = (x2*y3-x3*y2) -
-                        (x1*y3-x3*y1) +
-                        (x1*y2-x2*y1);
-    denominator *= 2;
-    return numerator / denominator;
+  float numerator = (x2*x2+y2*y2)*y3 - (x3*x3+y3*y3)*y2 - 
+  ((x1*x1+y1*y1)*y3 - (x3*x3+y3*y3)*y1) +
+  (x1*x1+y1*y1)*y2 - (x2*x2+y2*y2)*y1;
+  float denominator = (x2*y3-x3*y2) -
+  (x1*y3-x3*y1) +
+  (x1*y2-x2*y1);
+  denominator *= 2;
+  return numerator / denominator;
 }
 
 float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
-    float numerator = x2*(x3*x3+y3*y3) - x3*(x2*x2+y2*y2) -
-                      (x1*(x3*x3+y3*y3) - x3*(x1*x1+y1*y1)) +
-                      x1*(x2*x2+y2*y2) - x2*(x1*x1+y1*y1);
-    float denominator = (x2*y3-x3*y2) -
-                        (x1*y3-x3*y1) +
-                        (x1*y2-x2*y1);
-    denominator *= 2;
-    return numerator / denominator;
+  float numerator = x2*(x3*x3+y3*y3) - x3*(x2*x2+y2*y2) -
+  (x1*(x3*x3+y3*y3) - x3*(x1*x1+y1*y1)) +
+  x1*(x2*x2+y2*y2) - x2*(x1*x1+y1*y1);
+  float denominator = (x2*y3-x3*y2) -
+  (x1*y3-x3*y1) +
+  (x1*y2-x2*y1);
+  denominator *= 2;
+  return numerator / denominator;
 }
 
 /**
@@ -943,7 +946,7 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
  */
 boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   //stop executing if no valid program is selected or we reach the end of the program
-  if (program == null || currentInstruction >= program.getInstructions().size()){
+  if(program == null || currentInstruction < 0 || currentInstruction >= program.getInstructions().size()) {
     return true;
   }
   
@@ -951,45 +954,51 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   Instruction ins = program.getInstructions().get(currentInstruction);
   
   //motion instructions
-  if (ins instanceof MotionInstruction){
+  if(ins instanceof MotionInstruction) {
     MotionInstruction instruction = (MotionInstruction)ins;
-    if (instruction.getUserFrame() != activeUserFrame){
+    
+    if(instruction.getUserFrame() != activeUserFrame) {
       setError("ERROR: Instruction's user frame is different from currently active user frame.");
       return true;
     }
+    
     //start a new instruction
-    if (!executingInstruction){
+    if(!executingInstruction) {
       boolean setup = setUpInstruction(program, model, instruction);
-      if(!setup){ return true; }
+      if(!setup) { return true; }
       else executingInstruction = true;
     }
     //continue current instruction
     else {
-      if (instruction.getMotionType() == MTYPE_JOINT){
+      if(instruction.getMotionType() == MTYPE_JOINT) {
         executingInstruction = !(model.interpolateRotation(instruction.getSpeedForExec(model)));
       }
-      else{
+      else {
         executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
       }
       
-      //move to next instruction after current is finished
-      if (!executingInstruction){
+      // Move to next instruction after current is finished
+      if(!executingInstruction) {
         currentInstruction++;
-        if(singleInst){ return true; }
+        if(singleInst) { return true; }
       }
     }
   }
   //tool instructions
-  else if (ins instanceof ToolInstruction){
+  else if(ins instanceof ToolInstruction) {
     ToolInstruction instruction = (ToolInstruction)ins;
     instruction.execute();
     currentInstruction++;
+    
+    if(singleInst) { return true; }
   }
   //frame instructions
-  else if (ins instanceof FrameInstruction){
+  else if(ins instanceof FrameInstruction) {
     FrameInstruction instruction = (FrameInstruction)ins;
     instruction.execute();
     currentInstruction++;
+    
+    if(singleInst) { return true; }
   }//end of instruction type check
   
   return false;
@@ -1005,106 +1014,106 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
   Point start = new Point(armModel.getEEPos(), armModel.getQuaternion());
   
-  if (instruction.getMotionType() == MTYPE_JOINT) {
+  if(instruction.getMotionType() == MTYPE_JOINT) {
     float[] j = instruction.getVector(program).joints;
     
     //set target rotational value for each joint
-    for (int n = 0; n < j.length; n++) {
-      for (int r = 0; r < 3; r++) {
-        if (model.segments.get(n).rotations[r])
-          model.segments.get(n).targetRotations[r] = j[n];
-          //println("target rotation for joint " + n + ": " + j[n]);
+    for(int n = 0; n < j.length; n++) {
+      for(int r = 0; r < 3; r++) {
+        if(model.segments.get(n).rotations[r])
+        model.segments.get(n).targetRotations[r] = j[n];
+        //println("target rotation for joint " + n + ": " + j[n]);
       }
     }
     
     // calculate whether it's faster to turn CW or CCW
-    for (Model a : model.segments) {
-      for (int r = 0; r < 3; r++) {
-        if (a.rotations[r]) {
-         // The minimum distance between the current and target joint angles
-         float dist_t = minimumDistance(a.currentRotations[r], a.targetRotations[r]);
-         
-         // check joint movement range
-         if (a.jointRanges[r].x == 0 && a.jointRanges[r].y == TWO_PI) {
-           a.rotationDirections[r] = (dist_t < 0) ? -1 : 1;
-         }
-         else {  
-           /* Determine if at least one bound lies within the range of the shortest angle
+    for(Model a : model.segments) {
+      for(int r = 0; r < 3; r++) {
+        if(a.rotations[r]) {
+          // The minimum distance between the current and target joint angles
+          float dist_t = minimumDistance(a.currentRotations[r], a.targetRotations[r]);
+          
+          // check joint movement range
+          if(a.jointRanges[r].x == 0 && a.jointRanges[r].y == TWO_PI) {
+            a.rotationDirections[r] = (dist_t < 0) ? -1 : 1;
+          }
+          else {  
+            /* Determine if at least one bound lies within the range of the shortest angle
             * between the current joint angle and the target angle. If so, then take the
             * longer angle, otherwise choose the shortest angle path. */
             
-           // The minimum distance from the current joint angle to the lower bound of the joint's range
-           float dist_lb = minimumDistance(a.currentRotations[r], a.jointRanges[r].x);
-           
-           // The minimum distance from the current joint angle to the upper bound of the joint's range
-           float dist_ub = minimumDistance(a.currentRotations[r], a.jointRanges[r].y);
-           
-           if (dist_t < 0) {
-             if ( (dist_lb < 0 && dist_lb > dist_t) || (dist_ub < 0 && dist_ub > dist_t) ) {
-               // One or both bounds lie within the shortest path
-               a.rotationDirections[r] = 1;
-             } 
-             else {
-               a.rotationDirections[r] = -1;
-             }
-           } 
-           else if (dist_t > 0){
-             if ( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {  
-               // One or both bounds lie within the shortest path
-               a.rotationDirections[r] = -1;
-             } 
-             else {
-               a.rotationDirections[r] = 1;
-             }
-           }
-         }
+            // The minimum distance from the current joint angle to the lower bound of the joint's range
+            float dist_lb = minimumDistance(a.currentRotations[r], a.jointRanges[r].x);
+            
+            // The minimum distance from the current joint angle to the upper bound of the joint's range
+            float dist_ub = minimumDistance(a.currentRotations[r], a.jointRanges[r].y);
+            
+            if(dist_t < 0) {
+              if( (dist_lb < 0 && dist_lb > dist_t) || (dist_ub < 0 && dist_ub > dist_t) ) {
+                // One or both bounds lie within the shortest path
+                a.rotationDirections[r] = 1;
+              } 
+              else {
+                a.rotationDirections[r] = -1;
+              }
+            } 
+            else if(dist_t > 0) {
+              if( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {  
+                // One or both bounds lie within the shortest path
+                a.rotationDirections[r] = -1;
+              } 
+              else {
+                a.rotationDirections[r] = 1;
+              }
+            }
+          }
         }
       }
     }
   } // end joint movement setup
-  else if (instruction.getMotionType() == MTYPE_LINEAR) {
-    if (instruction.getTermination() == 0) {
+  else if(instruction.getMotionType() == MTYPE_LINEAR) {
+    if(instruction.getTermination() == 0) {
       beginNewLinearMotion(start, instruction.getVector(program));
     } 
     else {
       Point nextPoint = null;
-      for (int n = currentInstruction+1; n < program.getInstructions().size(); n++) {
+      for(int n = currentInstruction+1; n < program.getInstructions().size(); n++) {
         Instruction nextIns = program.getInstructions().get(n);
-        if (nextIns instanceof MotionInstruction) {
+        if(nextIns instanceof MotionInstruction) {
           MotionInstruction castIns = (MotionInstruction)nextIns;
           nextPoint = castIns.getVector(program);
           break;
         }
       }
-      if (nextPoint == null) {
+      if(nextPoint == null) {
         beginNewLinearMotion(start, instruction.getVector(program));
       } 
-      else{
+      else {
         beginNewContinuousMotion(start, 
-                                 instruction.getVector(program),
-                                 nextPoint, 
-                                 instruction.getTermination());
+        instruction.getVector(program),
+        nextPoint, 
+        instruction.getTermination());
       }
     } // end if termination type is continuous
   } // end linear movement setup
-  else if (instruction.getMotionType() == MTYPE_CIRCULAR) {
+  else if(instruction.getMotionType() == MTYPE_CIRCULAR) {
     // If it is a circular instruction, the current instruction holds the intermediate point.
     // There must be another instruction after this that holds the end point.
     // If this isn't the case, the instruction is invalid, so return immediately.
     Point nextPoint = null;
-    if (program.getInstructions().size() >= currentInstruction + 2) {
+    if(program.getInstructions().size() >= currentInstruction + 2) {
       Instruction nextIns = program.getInstructions().get(currentInstruction+1);
       //make sure next instruction is of valid type
-      if (nextIns instanceof MotionInstruction){
+      if(nextIns instanceof MotionInstruction) {
         MotionInstruction castIns = (MotionInstruction)nextIns;
         nextPoint = castIns.getVector(program);
       }
-      else{
+      else {
         return false;
       }
     } 
     // invalid instruction
-    else{
+    else {
       return false; 
     }
     
@@ -1118,9 +1127,9 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
 public float minimumDistance(float angle1, float angle2) {
   float dist = clampAngle(angle2) - clampAngle(angle1);
   
-  if (dist > PI) {
+  if(dist > PI) {
     dist -= TWO_PI;
-  } else if (dist < -PI) {
+  } else if(dist < -PI) {
     dist += TWO_PI;
   }
   
@@ -1141,9 +1150,9 @@ void setError(String text) {
  *               PI (exclusive)
  */
 float clampAngle(float angle) {
-  while (angle > TWO_PI) angle -= (TWO_PI);
-  while (angle < 0) angle += (TWO_PI);
+  while(angle > TWO_PI) angle -= (TWO_PI);
+  while(angle < 0) angle += (TWO_PI);
   // angles range: [0, TWO_PI)
-  if (angle == TWO_PI) angle = 0;
+  if(angle == TWO_PI) angle = 0;
   return angle;
 }

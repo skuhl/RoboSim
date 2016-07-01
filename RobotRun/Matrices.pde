@@ -1,7 +1,7 @@
 /* Transforms the given vector from the coordinate system defined by the given
  * transformation matrix (column major order). */
 public PVector transform(PVector v, float[][] tMatrix) {
-  if (tMatrix.length != 4 || tMatrix[0].length != 4) {
+  if(tMatrix.length != 4 || tMatrix[0].length != 4) {
     return null;
   }
 
@@ -16,7 +16,7 @@ public PVector transform(PVector v, float[][] tMatrix) {
 
 /* Transforms the given vector by the given 3x3 rotation matrix (row major order). */
 public PVector rotate(PVector v, float[][] rotMatrix) {
-  if (v == null || rotMatrix == null || rotMatrix.length != 3 || rotMatrix[0].length != 3) {
+  if(v == null || rotMatrix == null || rotMatrix.length != 3 || rotMatrix[0].length != 3) {
     return null;
   }
   
@@ -37,7 +37,7 @@ public PVector rotate(PVector v, float[][] rotMatrix) {
  *      courses/cs248-98-fall/Final/q4.html
  */
 public float[][] invertHCMatrix(float[][] m) {
-  if (m.length != 4 || m[0].length != 4) {
+  if(m.length != 4 || m[0].length != 4) {
     return null;
   }
 
@@ -69,7 +69,7 @@ public float[][] invertHCMatrix(float[][] m) {
 }
 
 /* Returns a 4x4 vector array which reflects the current transform matrix on the top
- * of the stack (ignores scaling values though) */
+* of the stack (ignores scaling values though) */
 public float[][] getTransformationMatrix() {
   float[][] transform = new float[4][4];
 
@@ -116,7 +116,7 @@ public PVector getCoordFromMatrix(float x, float y, float z) {
 
 /* Calculate v x v */
 public float[] crossProduct(float[] v, float[] u) {
-  if (v.length != 3 && v.length != u.length) { return null; }
+  if(v.length != 3 && v.length != u.length) { return null; }
   
   float[] w = new float[v.length];
   // [a, b, c] x [d, e, f] = [ bf - ce, cd - af, ae - bd ]
@@ -137,7 +137,7 @@ public float[] toVectorArray(PVector v) {
 public float[] negate(float[] v) {
   float[] u = new float[v.length];
   
-  for (int e = 0; e < v.length; ++e) {
+  for(int e = 0; e < v.length; ++e) {
     u[e] = -v[e];
   }
   
@@ -162,8 +162,8 @@ float[][] eulerToMatrix(PVector wpr) {
   r[2][2] = cos(xRot)*cos(yRot);
 
   //println("matrix: ");
-  //  for(int i = 0; i < 3; i += 1){
-  //    for(int j = 0; j < 3; j += 1){
+  //  for(int i = 0; i < 3; i += 1) {
+  //    for(int j = 0; j < 3; j += 1) {
   //      print(String.format("  %4.3f", r[i][j]));
   //    }
   //  println();
@@ -173,24 +173,21 @@ float[][] eulerToMatrix(PVector wpr) {
   return r;
 }
 
-//calculates quaternion from euler angles
+/**
+ * Converts the given Euler angle set values to a quaternion
+ */
 float[] eulerToQuat(PVector wpr) {
-  //float[][] r = eulerToMatrix(wpr);
-  //float[] q = matrixToQuat(r);
-
-  /*Alternate computation method; produces equivalent result to above, but may
-   *not have the same sign (certain quaternions are equivalent when negated).
-   */
+  
   float[] q = new float[4];
   float xRot = wpr.x;
   float yRot = wpr.y;
   float zRot = wpr.z;
-
-  q[0] = sin(zRot/2)*sin(yRot/2)*sin(xRot/2) + cos(zRot/2)*cos(yRot/2)*cos(xRot/2);
-  q[1] = -sin(zRot/2)*sin(yRot/2)*cos(xRot/2) + sin(xRot/2)*cos(zRot/2)*cos(yRot/2);
-  q[2] = sin(zRot/2)*sin(xRot/2)*cos(yRot/2) + sin(yRot/2)*cos(zRot/2)*cos(zRot/2);
-  q[3] = sin(zRot/2)*cos(yRot/2)*cos(xRot/2) - sin(yRot/2)*sin(xRot/2)*cos(xRot/2);
-
+  
+  q[0] = cos(xRot/2)*cos(yRot/2)*cos(zRot/2) + sin(xRot/2)*sin(yRot/2)*sin(zRot/2);
+  q[1] = sin(xRot/2)*cos(yRot/2)*cos(zRot/2) - cos(xRot/2)*sin(yRot/2)*sin(zRot/2);
+  q[2] = cos(xRot/2)*sin(yRot/2)*cos(zRot/2) + sin(xRot/2)*cos(yRot/2)*sin(zRot/2);
+  q[3] = cos(xRot/2)*cos(yRot/2)*sin(zRot/2) - sin(xRot/2)*sin(yRot/2)*cos(zRot/2);
+  
   return q;
 }
 
@@ -199,7 +196,7 @@ PVector matrixToEuler(float[][] r) {
   float yRot1, yRot2, xRot1, xRot2, zRot1, zRot2;
   PVector wpr, wpr2;
 
-  if (r[2][0] != 1 && r[2][0] != -1) {
+  if(r[2][0] != 1 && r[2][0] != -1) {
     //rotation about y-axis
     yRot1 = -asin(r[2][0]);
     yRot2 = PI - yRot1;
@@ -211,7 +208,7 @@ PVector matrixToEuler(float[][] r) {
     zRot2 = atan2(r[1][0]/cos(yRot2), r[0][0]/cos(yRot2));
   } else {
     zRot1 = zRot2 = 0;
-    if (r[2][0] == -1) {
+    if(r[2][0] == -1) {
       yRot1 = yRot2 = PI/2;
       xRot1 = xRot2 = zRot1 + atan2(r[0][1], r[0][2]);
     } else {
@@ -231,19 +228,19 @@ float[] matrixToQuat(float[][] r) {
   float[] q = new float[4];
   float tr = r[0][0] + r[1][1] + r[2][2];
 
-  if (tr > 0) {
+  if(tr > 0) {
     float S = sqrt(1.0 + tr) * 2; // S=4*q[0] 
     q[0] = S / 4;
     q[1] = (r[2][1] - r[1][2]) / S;
     q[2] = (r[0][2] - r[2][0]) / S; 
     q[3] = (r[1][0] - r[0][1]) / S;
-  } else if ((r[0][0] > r[1][1]) & (r[0][0] > r[2][2])) {
+  } else if((r[0][0] > r[1][1]) & (r[0][0] > r[2][2])) {
     float S = sqrt(1.0 + r[0][0] - r[1][1] - r[2][2]) * 2; // S=4*q[1] 
     q[0] = (r[2][1] - r[1][2]) / S;
     q[1] = S / 4;
     q[2] = (r[0][1] + r[1][0]) / S; 
     q[3] = (r[0][2] + r[2][0]) / S;
-  } else if (r[1][1] > r[2][2]) {
+  } else if(r[1][1] > r[2][2]) {
     float S = sqrt(1.0 + r[1][1] - r[0][0] - r[2][2]) * 2; // S=4*q[2]
     q[0] = (r[0][2] - r[2][0]) / S;
     q[1] = (r[0][1] + r[1][0]) / S; 
@@ -282,8 +279,8 @@ float[][] quatToMatrix(float[] q) {
   r[2][2] = 1 - 2*(q[1]*q[1] + q[2]*q[2]);
 
   //println("matrix: ");
-  //for(int i = 0; i < 3; i += 1){
-  //  for(int j = 0; j < 3; j += 1){
+  //for(int i = 0; i < 3; i += 1) {
+  //  for(int j = 0; j < 3; j += 1) {
   //    print(String.format("  %4.3f", m[i][j]));
   //  }
   //  println();
@@ -297,8 +294,8 @@ float[][] quatToMatrix(float[] q) {
 double[][] floatToDouble(float[][] m, int l, int w) {
   double[][] r = new double[l][w];
 
-  for (int i = 0; i < l; i += 1) {
-    for (int j = 0; j < w; j += 1) {
+  for(int i = 0; i < l; i += 1) {
+    for(int j = 0; j < w; j += 1) {
       r[i][j] = (double)m[i][j];
     }
   }
@@ -310,8 +307,8 @@ double[][] floatToDouble(float[][] m, int l, int w) {
 float[][] doubleToFloat(double[][] m, int l, int w) {
   float[][] r = new float[l][w];
 
-  for (int i = 0; i < l; i += 1) {
-    for (int j = 0; j < w; j += 1) {
+  for(int i = 0; i < l; i += 1) {
+    for(int j = 0; j < w; j += 1) {
       r[i][j] = (float)m[i][j];
     }
   }
@@ -329,7 +326,7 @@ float[] calculateVectorDelta(PVector p1, PVector p2) {
 //elements for two vectors of n elements
 float[] calculateVectorDelta(float[] v1, float[] v2, int n) {
   float[] d = new float[n];
-  for (int i = 0; i < n; i += 1) {
+  for(int i = 0; i < n; i += 1) {
     d[i] = v1[i] - v2[i];
   }
 
@@ -343,8 +340,8 @@ float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
   float c = cos(theta);
   float t = 1-c;
 
-  if (c > 0.9)
-    t = 2*sin(theta/2)*sin(theta/2);
+  if(c > 0.9)
+  t = 2*sin(theta/2)*sin(theta/2);
 
   float x = axis.x;
   float y = axis.y;
@@ -385,7 +382,7 @@ float[] rotateQuat(float[] p, PVector u, float theta) {
   return pq;
 }
 
-PVector rotateVectorQuat(PVector v, PVector u, float theta){
+PVector rotateVectorQuat(PVector v, PVector u, float theta) {
   float[] q = new float[4];
   float[] p = new float[4];
   float[] q_inv = new float[4];
@@ -417,7 +414,7 @@ PVector rotateVectorQuat(PVector v, PVector u, float theta){
  * the multiply operation should be taken to mean quaternion
  * multiplication, which is non-commutative.
  */
-float[] calculateQuatOffset(float[] q1, float[] q2){
+float[] calculateQuatOffset(float[] q1, float[] q2) {
   float[] q1_inv = new float[4];
   q1_inv[0] = q1[0];
   q1_inv[1] = -q1[1];
@@ -426,9 +423,9 @@ float[] calculateQuatOffset(float[] q1, float[] q2){
   
   float[] qr = quaternionMult(q2, q1_inv);
   
-  for(int i = 0; i < 4; i += 1){
+  for(int i = 0; i < 4; i += 1) {
     if(qr[i] < 0.00001)
-      qr[i] = 0;
+    qr[i] = 0;
   }
   
   return qr;
@@ -446,7 +443,7 @@ float[] quaternionMult(float[] q1, float[] q2) {
 }
 
 //returns the result of a quaternion 'q' multiplied by scalar 's'
-float[] quaternionScalarMult(float[] q, float s){
+float[] quaternionScalarMult(float[] q, float s) {
   float[] qr = new float[4];
   qr[0] = q[0]*s;
   qr[1] = q[1]*s;
@@ -456,7 +453,7 @@ float[] quaternionScalarMult(float[] q, float s){
 }
 
 //returns the result of the addition of two quaternions, 'q1' and 'q2'
-float[] quaternionAdd(float[] q1, float[] q2){
+float[] quaternionAdd(float[] q1, float[] q2) {
   float[] qr = new float[4];
   qr[0] = q1[0] + q2[0];
   qr[1] = q1[1] + q2[1];
@@ -466,11 +463,11 @@ float[] quaternionAdd(float[] q1, float[] q2){
 }
 
 //returns the magnitude of the input quaternion 'q'
-float calculateQuatMag(float[] q){
+float calculateQuatMag(float[] q) {
   return sqrt(pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2));
 }
 
-float[] quaternionNormalize(float[] q){
+float[] quaternionNormalize(float[] q) {
   float qMag = calculateQuatMag(q);
   return quaternionScalarMult(q, 1/qMag);
 }
@@ -479,7 +476,7 @@ float[] quaternionNormalize(float[] q){
  * linear interpolation from 'q1' to 'q2' for a given fraction of the
  * complete transformation 'q1' to 'q2', denoted by 0 <= 'mu' <= 1. 
  */
-float[] quaternionSlerp(float[] q1, float[] q2, float mu){
+float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
   float[] qSlerp = new float[4];
   float[] q3 = new float[4];
   float cOmega = 0;
@@ -488,23 +485,23 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu){
   if(mu == 1) return q2;
   
   for(int i = 0; i < 4; i += 1)
-    cOmega += q1[i]*q2[i];
-    
-  if(cOmega < 0){
+  cOmega += q1[i]*q2[i];
+  
+  if(cOmega < 0) {
     cOmega = -cOmega;
     q3 = quaternionScalarMult(q2, -1);
   }
-  else{
+  else {
     q3 = quaternionScalarMult(q2, 1);
   }
   
-  if(cOmega > 0.99999995){
+  if(cOmega > 0.99999995) {
     qSlerp[0] = q1[0]*(1-mu) + q3[0]*mu;
     qSlerp[1] = q1[1]*(1-mu) + q3[1]*mu;
     qSlerp[2] = q1[2]*(1-mu) + q3[2]*mu;
     qSlerp[3] = q1[3]*(1-mu) + q3[3]*mu;
   }
-  else{
+  else {
     float omega = acos(cOmega);
     float scale1 = sin(omega*(1-mu))/sin(omega);
     float scale2 = sin(omega*mu)/sin(omega);
@@ -525,12 +522,12 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu){
 public String matrixToString(float[][] matrix) {
   String mStr = "";
   
-  for (int row = 0; row < matrix.length; ++row) {
+  for(int row = 0; row < matrix.length; ++row) {
     mStr += "\n[";
 
-    for (int col = 0; col < matrix[0].length; ++col) {
+    for(int col = 0; col < matrix[0].length; ++col) {
       // Account for the negative sign character
-      if (matrix[row][col] >= 0) { mStr += " "; }
+      if(matrix[row][col] >= 0) { mStr += " "; }
       
       mStr += String.format(" %5.6f", matrix[row][col]);
     }
@@ -541,10 +538,10 @@ public String matrixToString(float[][] matrix) {
   return (mStr + "\n");
 }
 
-public String arrayToString(float[] array){
+public String arrayToString(float[] array) {
   String s = "[";
   
-  for(int i = 0; i < array.length; i += 1){
+  for(int i = 0; i < array.length; i += 1) {
     s += String.format("%5.4f", array[i]);
     if(i != array.length-1) s += ", ";
   }
