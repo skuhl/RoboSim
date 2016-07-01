@@ -4,56 +4,68 @@ final int FRAME_JOINT = 0,
           FRAME_TOOL = 3, 
           FRAME_USER = 4;
 final int SMALL_BUTTON = 35,
-          LARGE_BUTTON = 50; 
-final int NONE = 0, 
-          PROGRAM_NAV = 1, 
-          INSTRUCTION_NAV = 2,
-          INSTRUCTION_EDIT = 3,
-          SET_INSTRUCTION_SPEED = 4,
-          SET_INSTRUCTION_REGISTER = 5,
-          SET_INSTRUCTION_TERMINATION = 6,
-          JUMP_TO_LINE = 7,
-          VIEW_INST_REG = 8,
-          ENTER_TEXT = 9,
-          PICK_LETTER = 10,
-          MAIN_MENU_NAV = 11,
-          SETUP_NAV = 12,
-          NAV_TOOL_FRAMES = 13,
-          NAV_USER_FRAMES = 14,
-          PICK_FRAME_MODE = 15,
-          FRAME_DETAIL = 16,
-          PICK_FRAME_METHOD = 17,
-          THREE_POINT_MODE = 18,
-          FOUR_POINT_MODE = 19,
-          SIX_POINT_MODE = 20,
-          DIRECT_ENTRY_MODE = 21,
-          ACTIVE_FRAMES = 22,
-          PICK_INSTRUCTION = 23,
-          IO_SUBMENU = 24,
-          SET_DO_BRACKET = 25,
-          SET_DO_STATUS = 26,
-          SET_RO_BRACKET = 27,
-          SET_RO_STATUS = 28,
-          SET_FRAME_INSTRUCTION = 29,
-          SET_FRAME_INSTRUCTION_IDX = 30,
-          PICK_REG_LIST = 31,
-          VIEW_REG = 32,
+          LARGE_BUTTON = 50;
+          
+public enum Mode {
+          NONE, 
+          PROGRAM_NAV, 
+          INSTRUCTION_NAV,
+          INSTRUCTION_EDIT,
+          SET_INSTRUCTION_SPEED,
+          SET_INSTRUCTION_REGISTER,
+          SET_INSTRUCTION_TERMINATION,
+          JUMP_TO_LINE,
+          VIEW_INST_REG,
+          ENTER_TEXT,
+          PICK_LETTER,
+          MAIN_MENU_NAV,
+          SETUP_NAV,
+          NAV_TOOL_FRAMES,
+          NAV_USER_FRAMES,
+          PICK_FRAME_MODE,
+          FRAME_DETAIL,
+          PICK_FRAME_METHOD,
+          THREE_POINT_MODE,
+          FOUR_POINT_MODE,
+          SIX_POINT_MODE,
+          DIRECT_ENTRY_MODE,
+          ACTIVE_FRAMES,
+          PICK_INSTRUCTION,
+          IO_SUBMENU,
+          SET_DO_BRACKET,
+          SET_DO_STATUS,
+          SET_RO_BRACKET,
+          SET_RO_STATUS,
+          SET_FRAME_INSTRUCTION,
+          SET_FRAME_INSTRUCTION_IDX,
+          INPUT_RSTMT,
+          EDIT_RSTMT,
+          INPUT_RDX,
+          INPUT_PRDX,
+          INPUT_PRVDX,
+          INPUT_CONSTANT,
+          INPUT_OPERATOR,
+          PICK_REG_LIST,
+          VIEW_REG,
           // C for Cartesian
-          VIEW_POS_REG_C = 33,
+          VIEW_POS_REG_C,
           // J for Joint
-          VIEW_POS_REG_J = 34,
-          INSTRUCT_MENU_NAV = 35,
-          INPUT_FLOAT = 36,
-          INPUT_POINT_C = 37,
-          INPUT_POINT_J = 38,
-          INPUT_COMMENT_U = 39,
-          INPUT_COMMENT_L = 40,
-          SELECT_LINES = 41,
-          CONFIRM_INSERT = 42,
-          CONFIRM_DELETE = 43,
-          CONFIRM_RENUM = 44,
-          CONFIRM_UNDO = 45,
-          CUT_COPY = 46;
+          VIEW_POS_REG_J,
+          INSTRUCT_MENU_NAV,
+          INPUT_INTEGER,
+          INPUT_FLOAT,
+          INPUT_POINT_C,
+          INPUT_POINT_J,
+          INPUT_COMMENT_U,
+          INPUT_COMMENT_L,
+          SELECT_LINES,
+          CONFIRM_INSERT,
+          CONFIRM_DELETE,
+          CONFIRM_RENUM,
+          CONFIRM_UNDO,
+          CUT_COPY;
+}
+
 final int BUTTON_DEFAULT = color(70),
           BUTTON_ACTIVE = color(220, 40, 40),
           BUTTON_TEXT = color(240),
@@ -66,9 +78,9 @@ int frame = FRAME_JOINT; // current frame
 //String displayFrame = "JOINT";
 int active_program = -1; // the currently selected program
 int active_instruction = -1; // the currently selected instruction
-int mode = NONE;
-// Used by some modes to refer to a (not necessarily the) previous mode
-int super_mode = NONE;
+Mode mode = Mode.NONE;
+// A list of previous modes used by some modes to refer to said modes
+Stack<Mode> super_modes = new Stack<Mode>();
 int NUM_MODE; // When NUM_MODE is ON, allows for entering numbers
 int shift = OFF; // Is shift button pressed or not?
 int step = OFF; // Is step button pressed or not?
@@ -844,14 +856,13 @@ public void mouseReleased() {
 }
 
 public void keyPressed() {
-  if(mode == ENTER_TEXT) {
+  if(mode == Mode.ENTER_TEXT) {
     // Modify the input name for the new program
     if(workingText.length() < 10 && ( (key >= '0' && key <= '9') || (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') )) {
       workingText += key;
     } else if(keyCode == BACKSPACE && workingText.length() > 0) {
       workingText = workingText.substring(0, workingText.length() - 1);
     } else if(keyCode == DELETE && workingText.length() > 0) {
-      println("HERE");
       workingText = workingText.substring(1, workingText.length());
     }
     
@@ -887,6 +898,8 @@ public void keyPressed() {
     float[] rot = {PI, 0, 0, 0, 0, PI};
     armModel.setJointRotations(rot);
     intermediatePositions.clear();
+  } else if (key == 'm') {
+    println(mode.toString());
   } else if(key == ENTER && (armModel.activeEndEffector == ENDEF_CLAW || 
         armModel.activeEndEffector == ENDEF_SUCTION)) { 
     // Pick up an object within reach of the EE when the 'ENTER' button is pressed for either
@@ -1054,7 +1067,6 @@ public void show() {
 
 
 public void mu() {
-  if(mode == INSTRUCTION_NAV || mode == INSTRUCTION_EDIT) { saveProgramBytes( new File(sketchPath("tmp/programs.bin")) ); }
   
   contents = new ArrayList<ArrayList<String>>();
   options = new ArrayList<String>();
@@ -1072,7 +1084,7 @@ public void mu() {
   
   row_select = 0;
   col_select = -1;
-  mode = MAIN_MENU_NAV;
+  transitionTo(Mode.MAIN_MENU_NAV, true);
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
@@ -1125,18 +1137,18 @@ public void NUM9() {
 }
 
 public void addNumber(String number) {
-  if(mode == SET_INSTRUCTION_REGISTER || mode == SET_INSTRUCTION_TERMINATION ||
-      mode == JUMP_TO_LINE || mode == SET_DO_BRACKET || mode == SET_RO_BRACKET ||
-      mode == SET_FRAME_INSTRUCTION_IDX || mode == CONFIRM_INSERT) {
+  if(mode == Mode.SET_INSTRUCTION_REGISTER || mode == Mode.SET_INSTRUCTION_TERMINATION || mode == Mode.INPUT_INTEGER ||
+     mode == Mode.JUMP_TO_LINE || mode == Mode.SET_DO_BRACKET || mode == Mode.SET_RO_BRACKET ||
+     mode == Mode.SET_FRAME_INSTRUCTION_IDX || mode == Mode.CONFIRM_INSERT) {
     workingText += number;
     options.set(1, workingText);
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
   }
-  else if(mode == SET_INSTRUCTION_SPEED) {
+  else if(mode == Mode.SET_INSTRUCTION_SPEED) {
     workingText += number;
     options.set(1, workingText + workingTextSuffix);
   } 
-  else if(mode == DIRECT_ENTRY_MODE || mode == INPUT_POINT_J || mode == INPUT_POINT_C) {
+  else if(mode == Mode.DIRECT_ENTRY_MODE || mode == Mode.INPUT_POINT_J || mode == Mode.INPUT_POINT_C) {
     if(row_select >= 0 && row_select < contents.size()) {
       String line = contents.get(row_select).get(0) + number;
       
@@ -1149,13 +1161,13 @@ public void addNumber(String number) {
       contents.get(row_select).set(0, line);
     }
   } 
-  else if(mode == INPUT_FLOAT) { 
+  else if(mode == Mode.INPUT_FLOAT) { 
     if(workingText.length() < 16) {
       workingText += number;
       options.set(2, workingText);
     }
   } 
-  else if(mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
+  else if(mode == Mode.INPUT_COMMENT_U || mode == Mode.INPUT_COMMENT_L) {
     
     // Replace current entry with a number
     StringBuilder limbo = new StringBuilder(workingText);
@@ -1171,7 +1183,7 @@ public void addNumber(String number) {
 public void PERIOD() {
   if(NUM_MODE == ON) {
     nums.add(-1);
-  } else if(mode == DIRECT_ENTRY_MODE || mode == INPUT_POINT_J || mode == INPUT_POINT_C) {
+  } else if(mode == Mode.DIRECT_ENTRY_MODE || mode == Mode.INPUT_POINT_J || mode == Mode.INPUT_POINT_C) {
 
     if(row_select >= 0 && row_select < contents.size()) {
 
@@ -1185,13 +1197,13 @@ public void PERIOD() {
       
       contents.get(row_select).set(0, line);
     }
-  } else if(mode == INPUT_FLOAT) {
+  } else if(mode == Mode.INPUT_FLOAT) {
     
     if(workingText.length() < 16) {
       workingText += ".";
       options.set(2, workingText);
     }
-  } else if(mode != INPUT_COMMENT_U || mode != INPUT_COMMENT_L) {
+  } else if(mode != Mode.INPUT_INTEGER || mode != Mode.INPUT_COMMENT_U || mode != Mode.INPUT_COMMENT_L) {
     workingText += ".";
   }
   
@@ -1199,7 +1211,7 @@ public void PERIOD() {
 }
 
 public void LINE() {
-  if(mode == DIRECT_ENTRY_MODE || mode == INPUT_POINT_J || mode == INPUT_POINT_C) {
+  if(mode == Mode.DIRECT_ENTRY_MODE || mode == Mode.INPUT_POINT_J || mode == Mode.INPUT_POINT_C) {
     
     if(row_select >= 0 && row_select < contents.size()) {
       String line = contents.get(row_select).get(0);
@@ -1219,8 +1231,8 @@ public void LINE() {
       contents.get(row_select).set(0, line);
     }
     
-    updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-  } else if(mode == INPUT_FLOAT) {
+  } else if(mode == Mode.INPUT_FLOAT) {
+    
     // Mutliply current number by -1
     if(workingText.charAt(0) == '-') {
       workingText = workingText.substring(1);
@@ -1234,8 +1246,19 @@ public void LINE() {
       options.set(2, workingText);
     }
     
-    updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+  } else if (mode == Mode.INPUT_INTEGER) {
+    
+    // Mutliply current number by -1
+    if(workingText.charAt(0) == '-') {
+      workingText = workingText.substring(1);
+    } else {
+      workingText = "-" + workingText;
+    }
+    
+    options.set(1, workingText);
   }
+  
+  updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
 public void IO() {
@@ -1247,16 +1270,14 @@ public void IO() {
 
 public void se() {
   // Save when exiting a program
-  if(mode == INSTRUCTION_NAV || mode == INSTRUCTION_EDIT) { 
-    saveProgramBytes( new File(sketchPath("tmp/programs.bin")) ); 
-  }
+  saveProgramBytes( new File(sketchPath("tmp/programs.bin")) ); 
   
   active_program = 0;
   active_instruction = 0;
   row_select = 0;
   col_select = -1;
   text_render_start = 0;
-  mode = PROGRAM_NAV;
+  transitionTo(Mode.PROGRAM_NAV, true);
   clearScreen();
   loadPrograms();
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -1361,18 +1382,16 @@ public void up() {
   case SET_DO_STATUS:
   case SET_RO_STATUS:
   case PICK_REG_LIST:
+  case SET_FRAME_INSTRUCTION:
     opt_select = max(0, opt_select - 1);
     break;
   case MAIN_MENU_NAV:
   case SETUP_NAV:
+  case PICK_INSTRUCTION:
+  case IO_SUBMENU:
   case NAV_TOOL_FRAMES:
   case NAV_USER_FRAMES:
   case ACTIVE_FRAMES:
-  case PICK_INSTRUCTION:
-  case IO_SUBMENU:
-  case SET_FRAME_INSTRUCTION:
-    opt_select = max(0, opt_select - 1);
-    break;
   case INPUT_POINT_C:
   case INPUT_POINT_J:
   case DIRECT_ENTRY_MODE:
@@ -1383,14 +1402,15 @@ public void up() {
     opt_select = max(0, opt_select - 1);
     // Navigate options menu to switch the function keys functions
     if(opt_select == 0) {
-      mode = INPUT_COMMENT_U;
+      switchTo(Mode.INPUT_COMMENT_U);
     } else if(opt_select == 1) {
-      mode = INPUT_COMMENT_L;
+      switchTo(Mode.INPUT_COMMENT_L);
     }
     // Reset function key states
     for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
     
     break;
+    default:
   }
   
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -1464,7 +1484,7 @@ public void dn() {
   case VIEW_POS_REG_J:
   case VIEW_POS_REG_C:
     
-    size = (mode == VIEW_REG) ? REG.length : POS_REG.length;
+    size = (mode == Mode.VIEW_REG) ? REG.length : POS_REG.length;
     
     if(shift == ON) {
       // Move display frame down an entire screen's display length
@@ -1492,6 +1512,7 @@ public void dn() {
     
     break;
   case INSTRUCTION_EDIT:
+  case INSTRUCT_MENU_NAV:
   case PICK_FRAME_MODE:
   case PICK_FRAME_METHOD:
   case THREE_POINT_MODE:
@@ -1500,35 +1521,35 @@ public void dn() {
   case SET_DO_STATUS:
   case SET_RO_STATUS:
   case PICK_REG_LIST:
+  case SET_FRAME_INSTRUCTION:
     opt_select = min(opt_select + 1, options.size() - 1);
     break;
   case MAIN_MENU_NAV:
   case SETUP_NAV:
+  case PICK_INSTRUCTION:
+  case IO_SUBMENU:
   case NAV_TOOL_FRAMES:
   case NAV_USER_FRAMES:
   case ACTIVE_FRAMES:
-  case DIRECT_ENTRY_MODE:
   case INPUT_POINT_C:
   case INPUT_POINT_J:
-  case PICK_INSTRUCTION:
-  case IO_SUBMENU:
-  case SET_FRAME_INSTRUCTION:
-  case INSTRUCT_MENU_NAV:
-    opt_select = min(opt_select + 1, options.size() - 1);
+  case DIRECT_ENTRY_MODE:
+    row_select = min(row_select + 1, contents.size() - 1);
     break;
   case INPUT_COMMENT_U:
   case INPUT_COMMENT_L:
     opt_select = min(opt_select + 1, options.size() - 1);
     // Navigate options menu to switch the function keys functions
     if(opt_select == 0) {
-      mode = INPUT_COMMENT_U;
+      switchTo(Mode.INPUT_COMMENT_U);
     } else if(opt_select == 1) {
-      mode = INPUT_COMMENT_L;
+      switchTo(Mode.INPUT_COMMENT_L);
     }
     // Reset function key states
     for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
     
     break;
+    default:
   }  
   
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -1547,7 +1568,7 @@ public void lt() {
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     break;
   case INSTRUCTION_EDIT:
-    mode = INSTRUCTION_NAV;
+    switchTo(Mode.INSTRUCTION_NAV);
     lt();
     break;
   case VIEW_REG:
@@ -1565,6 +1586,7 @@ public void lt() {
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     
     break;
+    default:
   }
   
 }
@@ -1582,7 +1604,7 @@ public void rt() {
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     break; //<>// //<>// //<>//
   case INSTRUCTION_EDIT:
-    mode = INSTRUCTION_NAV;
+    switchTo(Mode.INSTRUCTION_NAV);
     rt();
     
     break;
@@ -1602,8 +1624,8 @@ public void rt() {
       contents.add( newLine("0 --NEXT--") );
       
       row_select = 0;
-      col_select = -1; 
-      mode = SETUP_NAV;
+      col_select = -1;
+      transitionTo(Mode.SETUP_NAV, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
     break;
@@ -1623,7 +1645,7 @@ public void rt() {
       
       row_select = 0;
       col_select = -1;
-      mode = IO_SUBMENU;
+      transitionTo(Mode.IO_SUBMENU, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     } else if(row_select == 1) { // Offset/Frames
       contents = new ArrayList<ArrayList<String>>();
@@ -1631,11 +1653,18 @@ public void rt() {
       contents.add( newLine("1 UTOOL_NUM") );
       contents.add( newLine("1 UFRAME_NUM") );
       
-      mode = SET_FRAME_INSTRUCTION;
       row_select = 0;
       col_select = -1;
+      transitionTo(Mode.SET_FRAME_INSTRUCTION, false);
+      updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+    } else if (row_select == 2) {
+      
+      transitionTo(Mode.INPUT_RSTMT, false);
+      // TODO call options menu update method
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
+    
+    
     break;
   case DIRECT_ENTRY_MODE:
   case INPUT_POINT_C:
@@ -1701,6 +1730,7 @@ public void rt() {
     for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
     
     break;
+    default:
   }
 }
 
@@ -1735,11 +1765,10 @@ public void pr() {
 
 public void goToEnterTextMode() {
   clearScreen();
+  
   row_select = 0;
   col_select = -1;
-  super_mode = mode;
-  mode = ENTER_TEXT;
-  
+  transitionTo(Mode.ENTER_TEXT, false);
   inputProgramName();
 }
 
@@ -1786,18 +1815,19 @@ public void f1() {
       
       contents.add( newLine("1 I/O") );
       contents.add( newLine("2 Offset/Frames") );
+      contents.add( newLine("3 Register Statement") );
       contents.add( newLine("(Others not yet implemented)") );
       
       col_select = -1; 
       row_select = 0;
-      mode = PICK_INSTRUCTION;
+      transitionTo(Mode.PICK_INSTRUCTION, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
     break;
   case NAV_TOOL_FRAMES:
     if(shift == ON) {
       
-      super_mode = mode;
+      transitionTo(Mode.FRAME_DETAIL, false);
       curFrameIdx = row_select;
       loadFrameDetails();
     } else {
@@ -1816,7 +1846,7 @@ public void f1() {
   case NAV_USER_FRAMES:
     if(shift == ON) {
       
-      super_mode = mode;
+      transitionTo(Mode.FRAME_DETAIL, false);
       curFrameIdx = row_select;
       loadFrameDetails();
     } else {
@@ -1879,8 +1909,7 @@ public void f1() {
         loadInputRegisterCommentMethod();
       } else if(col_select >= 2) {
         // Bring up Point editing menu
-        super_mode = mode;
-        mode = mode == (VIEW_POS_REG_C) ? INPUT_POINT_C : INPUT_POINT_J;
+        transitionTo((mode == (Mode.VIEW_POS_REG_C)) ? Mode.INPUT_POINT_C : Mode.INPUT_POINT_J, false);
         loadInputRegisterPointMethod();
       }
     }
@@ -1890,9 +1919,9 @@ public void f1() {
   case INPUT_COMMENT_L:
     char newChar = '\0';
     
-    if(mode == INPUT_COMMENT_U) {
+    if(mode == Mode.INPUT_COMMENT_U) {
       newChar = (char)('A' + letterStates[0]);
-    } else if(mode == INPUT_COMMENT_L) {
+    } else if(mode == Mode.INPUT_COMMENT_L) {
       newChar = (char)('a' + letterStates[0]);
     }
     
@@ -1907,32 +1936,34 @@ public void f1() {
     updateComment();
     
     break;
+    default:
   }
 }
 
 
 public void f2() {
-  if(mode == PROGRAM_NAV) {
+  if(mode == Mode.PROGRAM_NAV) {
     workingText = "";
     active_program = -1;
     goToEnterTextMode();
   } 
-  else if(mode == FRAME_DETAIL) {
+  else if(mode == Mode.FRAME_DETAIL) {
     options = new ArrayList<String>();
     
-    if(super_mode == NAV_USER_FRAMES) {
+    if(super_modes.peek() == Mode.NAV_USER_FRAMES) {
       options.add("1. Three Point");
       options.add("2. Four Point");
       options.add("3. Direct Entry");
-    } else if(super_mode == NAV_TOOL_FRAMES) {
+    } else if(super_modes.peek() == Mode.NAV_TOOL_FRAMES) {
       options.add("1. Three Point");
       options.add("2. Six Point");
       options.add("3. Direct Entry");
     }
-    mode = PICK_FRAME_METHOD;
+    
+    switchTo(Mode.PICK_FRAME_METHOD);
     opt_select = 0;
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-  } if(mode == NAV_TOOL_FRAMES) {
+  } if(mode == Mode.NAV_TOOL_FRAMES) {
     
     // Reset the highlighted frame in the tool frame list
     if(row_select >= 0) {
@@ -1941,7 +1972,7 @@ public void f2() {
       loadFrames(COORD_TOOL);
     }
   } 
-  else if(mode == NAV_USER_FRAMES) {
+  else if(mode == Mode.NAV_USER_FRAMES) {
     
     // Reset the highlighted frame in the user frames list
     if(row_select >= 0) {
@@ -1950,7 +1981,7 @@ public void f2() {
       loadFrames(COORD_USER);
     }
   } 
-  else if(mode == ACTIVE_FRAMES) {
+  else if(mode == Mode.ACTIVE_FRAMES) {
     // Reset the active frames for the User or Tool Coordinate Frames
     if(row_select == 0) { 
       activeToolFrame = -1;
@@ -1973,16 +2004,16 @@ public void f2() {
     
     loadActiveFrames();
   } 
-  else if(mode == VIEW_REG || mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C) {
+  else if(mode == Mode.VIEW_REG || mode == Mode.VIEW_POS_REG_J || mode == Mode.VIEW_POS_REG_C) {
     pickRegisterList();
   } 
-  else if(mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
+  else if(mode == Mode.INPUT_COMMENT_U || mode == Mode.INPUT_COMMENT_L) {
     char newChar = '\0';
     
-    if(mode == INPUT_COMMENT_U) {
+    if(mode == Mode.INPUT_COMMENT_U) {
       newChar = (char)('G' + letterStates[1]);
     } 
-    else if(mode == INPUT_COMMENT_L) {
+    else if(mode == Mode.INPUT_COMMENT_L) {
       newChar = (char)('g' + letterStates[1]);
     }
     
@@ -2007,8 +2038,7 @@ public void f3() {
       options.add("Delete this program?");
       opt_select = 0;
       
-      super_mode = mode;
-      mode = CONFIRM_DELETE;
+      transitionTo(Mode.CONFIRM_DELETE, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
     case NAV_TOOL_FRAMES:
@@ -2018,7 +2048,7 @@ public void f3() {
       options.add("2.User Frame");
       //options.add("3.Jog Frame");
       
-      mode = PICK_FRAME_MODE;
+      switchTo(Mode.PICK_FRAME_MODE);
       opt_select = 0;
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
@@ -2043,9 +2073,9 @@ public void f3() {
     case INPUT_COMMENT_L:
       char newChar = '\0';
       
-      if(mode == INPUT_COMMENT_U) {
+      if(mode == Mode.INPUT_COMMENT_U) {
         newChar = (char)('M' + letterStates[2]);
-      } else if(mode == INPUT_COMMENT_L) {
+      } else if(mode == Mode.INPUT_COMMENT_L) {
         newChar = (char)('m' + letterStates[2]);
       }
       
@@ -2062,6 +2092,7 @@ public void f3() {
       
       updateComment();
       break;
+      default:
   }
 }
 
@@ -2083,7 +2114,7 @@ public void f4() {
         options.add("2.LINEAR");
         options.add("3.CIRCULAR");
         //NUM_MODE = ON;
-        mode = INSTRUCTION_EDIT;
+        switchTo(Mode.INSTRUCTION_EDIT);
         opt_select = 0;
         break;
       case 3: // register type
@@ -2091,7 +2122,7 @@ public void f4() {
         options.add("1.LOCAL(P)");
         options.add("2.GLOBAL(PR)");
         //NUM_MODE = ON;
-        mode = INSTRUCTION_EDIT;
+        switchTo(Mode.INSTRUCTION_EDIT);
         opt_select = 0;
         break;
       case 4: // register
@@ -2099,7 +2130,7 @@ public void f4() {
         options.add("Enter desired register number (1-1000)");
         workingText = "";
         options.add("\0");
-        mode = SET_INSTRUCTION_REGISTER;
+        switchTo(Mode.SET_INSTRUCTION_REGISTER);
         opt_select = 0;
         break;
       case 5: // speed
@@ -2115,7 +2146,7 @@ public void f4() {
         }
         workingText = "";
         options.add(workingText + workingTextSuffix);
-        mode = SET_INSTRUCTION_SPEED;
+        switchTo(Mode.SET_INSTRUCTION_SPEED);
         opt_select = 0;
         break;
       case 6: // termination type
@@ -2123,7 +2154,7 @@ public void f4() {
         options.add("Enter desired termination percentage (0-100; 0=FINE)");
         workingText = "";
         options.add("\0");
-        mode = SET_INSTRUCTION_TERMINATION;
+        switchTo(Mode.SET_INSTRUCTION_TERMINATION);
         opt_select = 0;
         break;
       }
@@ -2143,7 +2174,7 @@ public void f4() {
     }
     break;
   case CONFIRM_DELETE:
-    if(super_mode == PROGRAM_NAV) {
+    if(super_modes.peek() == Mode.PROGRAM_NAV) {
       int progIdx = active_program;
       
       if(progIdx >= 0 && progIdx < programs.size()) {
@@ -2156,13 +2187,12 @@ public void f4() {
           text_render_start = active_program - row_select;
         }
         
-        mode = super_mode;
-        super_mode = NONE;
+        transitionBack();
         loadPrograms();
         updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
         saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
       }
-    } else if(super_mode == INSTRUCTION_NAV) {
+    } else if(super_modes.peek() == Mode.INSTRUCTION_NAV) {
       p = programs.get(active_program);
       ArrayList<Instruction> inst = p.getInstructions();
       
@@ -2191,18 +2221,20 @@ public void f4() {
     updateInstructions();
     break;
   case SELECT_LINES:
-    if(super_mode == CONFIRM_DELETE) {
+    if(super_modes.peek() == Mode.CONFIRM_DELETE) {
       clearOptions();
       options.add("Delete selected lines?");
-      mode = CONFIRM_DELETE;
-      super_mode = INSTRUCTION_NAV;
+      
+      transitionTo(Mode.INSTRUCTION_NAV, true);
+      transitionTo(Mode.CONFIRM_DELETE, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
-    else if(super_mode == CUT_COPY){
+    else if(super_modes.peek() == Mode.CUT_COPY){
       clearOptions();
       options.add("Cut/ Copy selected lines?");
-      mode = CUT_COPY;
-      super_mode = INSTRUCTION_NAV;
+      
+      transitionTo(Mode.INSTRUCTION_NAV, true);
+      transitionTo(Mode.CUT_COPY, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
     break;
@@ -2210,10 +2242,10 @@ public void f4() {
   case INPUT_COMMENT_L:
     char newChar = '\0';
     
-    if(mode == INPUT_COMMENT_U) {
+    if(mode == Mode.INPUT_COMMENT_U) {
       newChar = (char)('S' + letterStates[3]);
     } 
-    else if(mode == INPUT_COMMENT_L) {
+    else if(mode == Mode.INPUT_COMMENT_L) {
       newChar = (char)('s' + letterStates[3]);
     }
     
@@ -2229,6 +2261,7 @@ public void f4() {
     updateComment();
     
     break;
+    default:
   }
   
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -2276,7 +2309,7 @@ public void f5() {
           options.add( "9 Remark" );
           
           opt_select = 0;
-          mode = INSTRUCT_MENU_NAV;
+          transitionTo(Mode.INSTRUCT_MENU_NAV, false);
           updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
         }
         else if(col_select == 2 || col_select == 3) { 
@@ -2310,7 +2343,7 @@ public void f5() {
               (p.joints[5] * RAD_TO_DEG)));
             }
             
-            mode = VIEW_INST_REG;
+            transitionTo(Mode.VIEW_INST_REG, false);
             opt_select = 0;
             loadInstructions(active_program);
             updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -2333,9 +2366,9 @@ public void f5() {
         if(opt_select >= 0 && opt_select < teachPointTMatrices.size()) {
           // Cannot override the origin once it is calculated for the six point method
           teachPointTMatrices.set(opt_select, tMatrix);
-        } else if((mode == THREE_POINT_MODE && teachPointTMatrices.size() < 3) ||
-            (mode == FOUR_POINT_MODE && teachPointTMatrices.size() < 4) ||
-            (mode == SIX_POINT_MODE && teachPointTMatrices.size() < 6)) {
+        } else if((mode == Mode.THREE_POINT_MODE && teachPointTMatrices.size() < 3) ||
+            (mode == Mode.FOUR_POINT_MODE && teachPointTMatrices.size() < 4) ||
+            (mode == Mode.SIX_POINT_MODE && teachPointTMatrices.size() < 6)) {
           
           // Add a new point as long as it does not exceed number of points for a specific method
           teachPointTMatrices.add(tMatrix);
@@ -2346,21 +2379,18 @@ public void f5() {
         popMatrix();
       }
       
-      int tmp = mode;
       loadFrameDetails();
-      mode = tmp;
       loadPointList();
       break;
     case CONFIRM_DELETE:
-      if(super_mode == PROGRAM_NAV) {
+      if(super_modes.peek() == Mode.PROGRAM_NAV) {
         options = new ArrayList<String>();
         opt_select = -1;
         
-        mode = super_mode;
-        super_mode = NONE;
+        transitionBack();
         updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       } 
-      else if(super_mode == SELECT_LINES) {
+      else if(super_modes.peek() == Mode.SELECT_LINES) {
         updateInstructions();
       }
       break;
@@ -2373,10 +2403,10 @@ public void f5() {
       
       if(letterStates[4] < 2) {
         
-        if(mode == INPUT_COMMENT_U) {
+        if(mode == Mode.INPUT_COMMENT_U) {
           newChar = (char)('Y' + letterStates[4]);
         } 
-        else if(mode == INPUT_COMMENT_L) {
+        else if(mode == Mode.INPUT_COMMENT_L) {
           newChar = (char)('y' + letterStates[4]);
         }
       } else if(letterStates[4] == 2) {
@@ -2399,6 +2429,8 @@ public void f5() {
       
       updateComment();
       break;
+      
+      default:
   }
 }
 
@@ -2500,14 +2532,14 @@ public void ENTER() {
     text_render_start = 0;
     row_select = 0;
     col_select = 0;
-    mode = INSTRUCTION_NAV;
+    transitionTo(Mode.INSTRUCTION_NAV, true);
     clearScreen();
     loadInstructions(active_program);
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     break;
   case INSTRUCTION_NAV:
     if(col_select == 2 || col_select == 3) {
-      mode = INSTRUCTION_EDIT;
+      transitionTo(Mode.INSTRUCTION_EDIT, false);
       NUM_MODE = ON;
       //remove num_info
     }
@@ -2538,7 +2570,7 @@ public void ENTER() {
           options.add("This register is uninitailized!");
           opt_select = 0;
           
-          mode = INSTRUCTION_NAV;
+          transitionTo(Mode.INSTRUCTION_NAV, true);
           loadInstructions(active_program);
           updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
           return;
@@ -2556,7 +2588,7 @@ public void ENTER() {
     }
     
     loadInstructions(active_program);
-    mode = INSTRUCTION_NAV;
+    transitionTo(Mode.INSTRUCTION_NAV, true);
     NUM_MODE = OFF;
     options = new ArrayList<String>();
     opt_select = -1;
@@ -2579,7 +2611,7 @@ public void ENTER() {
       saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
     }
     loadInstructions(active_program);
-    mode = INSTRUCTION_NAV;
+    transitionTo(Mode.INSTRUCTION_NAV, true);
     options = new ArrayList<String>();
     opt_select = -1;
     clearOptions();
@@ -2598,7 +2630,7 @@ public void ENTER() {
           options = new ArrayList<String>();
           options.add("This register is uninitailized!");
           opt_select = 0;
-          mode = INSTRUCTION_NAV;
+          transitionTo(Mode.INSTRUCTION_NAV, true);
           updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
           return;
         }
@@ -2607,7 +2639,7 @@ public void ENTER() {
         options = new ArrayList<String>();
         options.add("Only registers 1 - 1000 are legal!");
         opt_select = 0;
-        mode = INSTRUCTION_NAV;
+        transitionTo(Mode.INSTRUCTION_NAV, true);
         updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
         return;
       }
@@ -2616,7 +2648,7 @@ public void ENTER() {
     } catch (NumberFormatException NFEx) { /* Ignore invalid numbers */ }
     
     loadInstructions(active_program);
-    mode = INSTRUCTION_NAV;
+    transitionTo(Mode.INSTRUCTION_NAV, true);
     options = new ArrayList<String>();
     opt_select = -1;
     clearOptions();
@@ -2634,7 +2666,7 @@ public void ENTER() {
     } catch (NumberFormatException NFEx) { /* Ignore invalid input */ }
     
     loadInstructions(active_program);
-    mode = INSTRUCTION_NAV;
+    transitionTo(Mode.INSTRUCTION_NAV, true);
     options = new ArrayList<String>();
     opt_select = -1;
     clearOptions();
@@ -2648,7 +2680,7 @@ public void ENTER() {
     if(active_instruction < 0) active_instruction = 0;
     if(active_instruction >= programs.get(active_program).getInstructions().size())
     active_instruction = programs.get(active_program).getInstructions().size()-1;
-    mode = INSTRUCTION_NAV;
+    transitionTo(Mode.INSTRUCTION_NAV, true);
     options = new ArrayList<String>();
     opt_select = -1;
     clearOptions();
@@ -2656,7 +2688,7 @@ public void ENTER() {
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     break;
   case VIEW_INST_REG:
-    mode = INSTRUCTION_NAV;
+    transitionTo(Mode.INSTRUCTION_NAV, true);
     options = new ArrayList<String>();
     opt_select = -1;
     clearOptions();
@@ -2671,16 +2703,15 @@ public void ENTER() {
       active_instruction = 0;
       row_select = 0;
       col_select = 0;
-      mode = INSTRUCTION_NAV;
-      super_mode = NONE;
+      transitionTo(Mode.INSTRUCTION_NAV, true);
+      transitionTo(mode, true);
       clearScreen();
       options = new ArrayList<String>();
       loadInstructions(active_program);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     } 
     else {
-      mode = super_mode;
-      super_mode = NONE;
+      transitionBack();
       row_select = 0;
       col_select = 0;
       clearScreen();
@@ -2695,7 +2726,7 @@ public void ENTER() {
     options.add("1.Tool Frame");
     options.add("2.User Frame");
     //options.add("3.Jog Frame");
-    mode = PICK_FRAME_MODE;
+    transitionTo(Mode.PICK_FRAME_MODE, false);
     opt_select = 0;
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     break;
@@ -2716,15 +2747,16 @@ public void ENTER() {
     if(opt_select == 0) {
       opt_select = 0;
       teachPointTMatrices = new ArrayList<float[][]>();
+      switchTo(Mode.THREE_POINT_MODE);
       loadFrameDetails();
-      mode = THREE_POINT_MODE;
       loadPointList();
     } 
     else if(opt_select == 1) {
       opt_select = 0;
       teachPointTMatrices = new ArrayList<float[][]>();
+      switchTo( (super_modes.peek() == Mode.NAV_TOOL_FRAMES) ? Mode.SIX_POINT_MODE : Mode.FOUR_POINT_MODE );
+      
       loadFrameDetails();
-      mode = (super_mode == NAV_TOOL_FRAMES) ? SIX_POINT_MODE : FOUR_POINT_MODE;
       loadPointList();
     } 
     else if(opt_select == 2) {
@@ -2739,7 +2771,7 @@ public void ENTER() {
       options.add("Use number keys to enter DO[X]");
       workingText = "";
       options.add("\0");
-      mode = SET_DO_BRACKET;
+      switchTo(Mode.SET_DO_BRACKET);
       opt_select = 0;
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
@@ -2748,7 +2780,7 @@ public void ENTER() {
       options.add("Use number keys to enter RO[X]");
       workingText = "";
       options.add("\0");
-      mode = SET_RO_BRACKET;
+      switchTo(Mode.SET_RO_BRACKET);
       opt_select = 0;
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
@@ -2760,8 +2792,8 @@ public void ENTER() {
     options.add("ON");
     options.add("OFF");
     
-    if(mode == SET_DO_BRACKET) mode = SET_DO_STATUS;
-    else if(mode == SET_RO_BRACKET) mode = SET_RO_STATUS;
+    if(mode == Mode.SET_DO_BRACKET) switchTo(Mode.SET_DO_STATUS);
+    else if(mode == Mode.SET_RO_BRACKET) switchTo(Mode.SET_RO_STATUS);
     opt_select = 0;
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     
@@ -2774,7 +2806,7 @@ public void ENTER() {
       int bracketNum = Integer.parseInt(workingText);
       if(bracketNum >= 0) {
         ToolInstruction insert = new ToolInstruction(
-        (mode == SET_DO_STATUS ? "DO" : "RO"),
+        (mode == Mode.SET_DO_STATUS ? "DO" : "RO"),
         bracketNum,
         (opt_select == 0 ? ON : OFF));
         prog.addInstruction(insert);
@@ -2789,7 +2821,7 @@ public void ENTER() {
     
     loadInstructions(active_program);
     row_select = contents.size()-1;
-    mode = INSTRUCTION_NAV;
+    transitionTo(Mode.INSTRUCTION_NAV, true);
     options.clear();
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     break;
@@ -2800,7 +2832,7 @@ public void ENTER() {
     options.add("\0");
     
     opt_select = 0;
-    mode = SET_FRAME_INSTRUCTION_IDX;
+    transitionTo(Mode.SET_FRAME_INSTRUCTION_IDX, false);
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     break;
   case SET_FRAME_INSTRUCTION_IDX:
@@ -2825,7 +2857,7 @@ public void ENTER() {
     text_render_start = active_instruction - row_select;
     
     loadInstructions(active_program);
-    mode = INSTRUCTION_NAV;
+    transitionTo(Mode.INSTRUCTION_NAV, true);
     col_select = 0;
     opt_select = -1;
     options.clear();
@@ -2839,15 +2871,15 @@ public void ENTER() {
       options.add("Enter number of lines to insert:");
       workingText = "";
       options.add("\0");
-      super_mode = INSTRUCTION_NAV;
-      mode = CONFIRM_INSERT;
+      transitionTo(Mode.INSTRUCTION_NAV, true);
+      transitionTo(Mode.CONFIRM_INSERT, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
     case 1: //Delete
       p = programs.get(active_program);
       selectedLines = resetSelection(p.getInstructions().size());
-      super_mode = CONFIRM_DELETE;
-      mode = SELECT_LINES;
+      transitionTo(Mode.CONFIRM_DELETE, true);
+      transitionTo(Mode.SELECT_LINES, false);
       clearScreen();
       loadInstructions(active_program);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -2855,8 +2887,8 @@ public void ENTER() {
     case 2: //Cut/Copy
       p = programs.get(active_program);
       selectedLines = resetSelection(p.getInstructions().size());
-      super_mode = CUT_COPY;
-      mode = SELECT_LINES;
+      transitionTo(Mode.CUT_COPY, true);
+      transitionTo(Mode.SELECT_LINES, false);
       clearScreen();
       loadInstructions(active_program);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -2868,8 +2900,8 @@ public void ENTER() {
     case 5: //Renumber
       options = new ArrayList<String>();
       options.add("Renumber positions?");
-      super_mode = INSTRUCTION_NAV;
-      mode = CONFIRM_RENUM;
+      transitionTo(Mode.INSTRUCTION_NAV, true);
+      transitionTo(Mode.CONFIRM_RENUM, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
     case 6: //Comment
@@ -2882,9 +2914,9 @@ public void ENTER() {
   case FOUR_POINT_MODE:
   case SIX_POINT_MODE:
     
-    if((mode == THREE_POINT_MODE && teachPointTMatrices.size() == 3) ||
-        (mode == FOUR_POINT_MODE && teachPointTMatrices.size() == 4) ||
-        (mode == SIX_POINT_MODE && teachPointTMatrices.size() == 6)) {
+    if((mode == Mode.THREE_POINT_MODE && teachPointTMatrices.size() == 3) ||
+        (mode == Mode.FOUR_POINT_MODE && teachPointTMatrices.size() == 4) ||
+        (mode == Mode.SIX_POINT_MODE && teachPointTMatrices.size() == 6)) {
       
       PVector origin = new PVector(0f, 0f, 0f);
       float[][] axes = new float[3][3];
@@ -2894,7 +2926,7 @@ public void ENTER() {
         axes[diag][diag] = 1f;
       }
       
-      if(super_mode == NAV_TOOL_FRAMES && (mode == THREE_POINT_MODE || mode == SIX_POINT_MODE)) {
+      if(super_modes.peek() == Mode.NAV_TOOL_FRAMES && (mode == Mode.THREE_POINT_MODE || mode == Mode.SIX_POINT_MODE)) {
         // Calculate TCP via the 3-Point Method
         double[] tcp = calculateTCPFromThreePoints(teachPointTMatrices);
         
@@ -2910,15 +2942,15 @@ public void ENTER() {
         } else {
           origin = new PVector((float)tcp[0], (float)tcp[1], (float)tcp[2]);
         }
-      } else if(mode == FOUR_POINT_MODE) {
+      } else if(mode == Mode.FOUR_POINT_MODE) {
         // Origin offset for the user frame
         origin = new PVector(teachPointTMatrices.get(3)[0][3], teachPointTMatrices.get(3)[1][3], teachPointTMatrices.get(3)[2][3]);
       }
       
-      if(super_mode == NAV_USER_FRAMES || mode == SIX_POINT_MODE) {
+      if(super_modes.peek() == Mode.NAV_USER_FRAMES || mode == Mode.SIX_POINT_MODE) {
         ArrayList<float[][]> axesPoints = new ArrayList<float[][]>();
         // Use the last three points to calculate the axes vectors
-        if(mode == SIX_POINT_MODE) {
+        if(mode == Mode.SIX_POINT_MODE) {
           axesPoints.add(teachPointTMatrices.get(3));
           axesPoints.add(teachPointTMatrices.get(4));
           axesPoints.add(teachPointTMatrices.get(5));
@@ -2945,9 +2977,9 @@ public void ENTER() {
       
       Frame[] frames = null;
       // Determine to which frame set (user or tool) to add the new frame
-      if(super_mode == NAV_TOOL_FRAMES) {
+      if(super_modes.peek() == Mode.NAV_TOOL_FRAMES) {
         frames = toolFrames;
-      } else if(super_mode == NAV_USER_FRAMES) {
+      } else if(super_modes.peek() == Mode.NAV_USER_FRAMES) {
         frames = userFrames;
       }
       
@@ -2962,11 +2994,11 @@ public void ENTER() {
           saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
           
           // Set new Frame
-          if(super_mode == NAV_TOOL_FRAMES) {
+          if(super_modes.peek() == Mode.NAV_TOOL_FRAMES) {
             // Update the current frame of the Robot Arm
             activeToolFrame = curFrameIdx;
             armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-          } else if(super_mode == NAV_USER_FRAMES) {
+          } else if(super_modes.peek() == Mode.NAV_USER_FRAMES) {
             // Update the current frame of the Robot Arm
             activeUserFrame = curFrameIdx;
             armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
@@ -2984,18 +3016,13 @@ public void ENTER() {
       options.clear();
       row_select = 0;
       
-      if(super_mode == NAV_TOOL_FRAMES) {
+      if(super_modes.peek() == Mode.NAV_TOOL_FRAMES) {
         loadFrames(COORD_TOOL);
-      } else if(super_mode == NAV_USER_FRAMES) {
+      } else if(super_modes.peek() == Mode.NAV_USER_FRAMES) {
         loadFrames(COORD_USER);
       } else {
-        super_mode = MAIN_MENU_NAV;
         mu();
       }
-      
-      mode = super_mode;
-      super_mode = NONE;
-      options.clear();
     }
     
     break;
@@ -3047,9 +3074,9 @@ public void ENTER() {
       
       Frame[] frames = null;
       // Determine to which frame set (user or tool) to add the new frame
-      if(super_mode == NAV_TOOL_FRAMES) {
+      if(super_modes.peek() == Mode.NAV_TOOL_FRAMES) {
         frames = toolFrames;
-      } else if(super_mode == NAV_USER_FRAMES) {
+      } else if(super_modes.peek() == Mode.NAV_USER_FRAMES) {
         frames = userFrames;
       }
       
@@ -3061,28 +3088,23 @@ public void ENTER() {
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         
         // Set New Frame
-        if(super_mode == NAV_TOOL_FRAMES) {
+        if(super_modes.peek() == Mode.NAV_TOOL_FRAMES) {
           // Update the current frame of the Robot Arm
           activeToolFrame = curFrameIdx;
           armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-        } else if(super_mode == NAV_USER_FRAMES) {
+        } else if(super_modes.peek() == Mode.NAV_USER_FRAMES) {
           // Update the current frame of the Robot Arm
           activeUserFrame = curFrameIdx;
           armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
         }
         
-        if(super_mode == NAV_TOOL_FRAMES) {
+        if(super_modes.peek() == Mode.NAV_TOOL_FRAMES) {
           loadFrames(COORD_TOOL);
-        } else if(super_mode == NAV_USER_FRAMES) {
+        } else if(super_modes.peek() == Mode.NAV_USER_FRAMES) {
           loadFrames(COORD_USER);
         } else {
-          super_mode = MAIN_MENU_NAV;
           mu();
         }
-        
-        mode = super_mode;
-        super_mode = NONE;
-        options.clear();
       }
     }
     
@@ -3092,64 +3114,72 @@ public void ENTER() {
     /* Choose the correct register menu based on if the current mode is
      * one of the three register modes and which option was selected
      * from the register menu list */
-    if(super_mode == VIEW_REG) {
+    if(super_modes.peek() == Mode.VIEW_REG) {
       modeCase = 1;
-    } else if(super_mode == VIEW_POS_REG_J) {
+    } else if(super_modes.peek() == Mode.VIEW_POS_REG_J) {
       modeCase = 2;
-    } else if(super_mode == VIEW_POS_REG_C) {
+    } else if(super_modes.peek() == Mode.VIEW_POS_REG_C) {
       modeCase = 3;
     }
     
     if(modeCase != 1 && opt_select == 0) {
       // Register Menu
-      mode = VIEW_REG;
+      transitionTo(Mode.VIEW_REG, true);
     } else if((modeCase == 1 && opt_select == 0) ||
         (modeCase != 1 && modeCase != 2 && opt_select == 1)) {
       // Position Register Menu (in Joint mode)
-      mode = VIEW_POS_REG_J;
+      transitionTo(Mode.VIEW_POS_REG_J, true);
     } else if((modeCase == 0 && opt_select == 2) ||
         (modeCase != 0 && modeCase != 3 && opt_select == 1)) {
       // Position Register Menu (in Cartesian mode)
-      mode = VIEW_POS_REG_C;
+      transitionTo(Mode.VIEW_POS_REG_C, true);
     } else {
       mu();
     }
     
     row_select = 0;
     col_select = active_index = text_render_start = 0;
-    super_mode = NONE;
     viewRegisters();
+    
+    break;
+  case INPUT_INTEGER:
+    Integer integer = null;
+    
+    try {
+      integer = Integer.parseInt(workingText);
+      
+    } catch (NumberFormatException NFEx) {/* Ignore invalid inputs */}
+    
+    // TODO add cases for inputting register values
     
     break;
   case INPUT_FLOAT:
     
-    Float input = null;
+    Float f = null;
     
     try {
       // Read inputted Float value
-      input = Float.parseFloat(workingText);
+      f = Float.parseFloat(workingText);
       // Clamp the value between -9999 and 9999, inclusive
-      input = max(-9999f, min(input, 9999f));
+      f = max(-9999f, min(f, 9999f));
     } catch (NumberFormatException NFEx) {
       // Invalid input value
       options = new ArrayList<String>();
       options.add("Only real numbers are acceptable input!");
       opt_select = 0;
       
-      mode = super_mode;
-      super_mode = NONE;
+      transitionBack();
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       return;
     }
     
     if(active_index >= 0 && active_index < REG.length) {
       // Save inputted value
-      REG[active_index].value = input;
+      REG[active_index].value = f;
       saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
     }
     
-    mode = super_mode;
-    super_mode = NONE;
+    transitionBack();
     viewRegisters();
     
     break;
@@ -3174,7 +3204,7 @@ public void ENTER() {
       return;
     }
     
-    if(mode == INPUT_POINT_J) {
+    if(mode == Mode.INPUT_POINT_J) {
       // Bring angles within range: (0, TWO_PI)
       for(int idx = 0; idx < inputs.length; ++idx) {
         jointAngles[idx] = clampAngle(inputs[idx] * DEG_TO_RAD);
@@ -3182,7 +3212,7 @@ public void ENTER() {
       /* Calculate the position and orientation of the Robot Arm given the joint angles */
       position = armModel.getEEPos(jointAngles);
       orientation = armModel.getQuaternion(jointAngles);
-    } else if(mode == INPUT_POINT_C) {
+    } else if(mode == Mode.INPUT_POINT_C) {
       // Bring the input values with the range [-9999, 9999]
       for(int idx = 0; idx < inputs.length; ++idx) {
         inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
@@ -3216,8 +3246,7 @@ public void ENTER() {
     POS_REG[active_index].point.joints = jointAngles;
     saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
     
-    mode = super_mode;
-    super_mode = NONE;
+    transitionBack();
     text_render_start = active_index;
     row_select = 0;
     col_select = 0;
@@ -3231,43 +3260,43 @@ public void ENTER() {
       workingText = workingText.substring(0, workingText.length() - 1);
     }
     // Save the inputted comment to the selected register
-    if(super_mode == VIEW_REG) {
+    if(super_modes.peek() == Mode.VIEW_REG) {
       REG[active_index].comment = workingText;
-    } else if(super_mode == VIEW_POS_REG_J || super_mode == VIEW_POS_REG_C) {
+    } else if(super_modes.peek() == Mode.VIEW_POS_REG_J || super_modes.peek() == Mode.VIEW_POS_REG_C) {
       POS_REG[active_index].comment = workingText;
     } else {
       // Invalid envocation of the INPUT_COMMENT_* modes
-      super_mode = NONE;
       mu();
       return;
     }
     
     workingText = null;
-    mode = super_mode;
-    super_mode = NONE;
+    transitionBack();
     row_select = col_select = 0;
     text_render_start = active_index;
     viewRegisters();
     saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
     
     break;
+    
+    default:
   }
 }
 
 public void ITEM() {
-  if(mode == INSTRUCTION_NAV) {
+  if(mode == Mode.INSTRUCTION_NAV) {
     options = new ArrayList<String>();
     options.add("Use number keys to enter line number to jump to");
     workingText = "";
     options.add("\0");
-    mode = JUMP_TO_LINE;
+    transitionTo(Mode.JUMP_TO_LINE, false);
     opt_select = 0;
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
   }
 }
 
 public void BKSPC() {
-  if(mode == INPUT_FLOAT) {
+  if(mode == Mode.INPUT_FLOAT) {
     // Functions as a backspace key
     if(workingText.length() > 1) {
       workingText = workingText.substring(0, workingText.length() - 1);
@@ -3278,7 +3307,7 @@ public void BKSPC() {
       options.set(2, "\0");
     }
     
-  } else if(mode == DIRECT_ENTRY_MODE || mode == INPUT_POINT_J || mode == INPUT_POINT_C) {
+  } else if(mode == Mode.DIRECT_ENTRY_MODE || mode == Mode.INPUT_POINT_J || mode == Mode.INPUT_POINT_C) {
     
     // backspace function for current row
     if(row_select >= 0 && row_select < contents.size()) {
@@ -3289,7 +3318,7 @@ public void BKSPC() {
         contents.get(row_select).set(0, line.substring(0, line.length() - 1));
       }
     }
-  } else if(mode == INPUT_COMMENT_U || mode == INPUT_COMMENT_L) {
+  } else if(mode == Mode.INPUT_COMMENT_U || mode == Mode.INPUT_COMMENT_L) {
     // Backspace function
     if(workingText.length() > 1) {
       // ifan insert space exists, preserve it
@@ -3870,10 +3899,10 @@ public void updateScreen(color cDefault, color cHighlight) {
     break;
   case FRAME_DETAIL:
   case PICK_FRAME_METHOD:
-    if(super_mode == NAV_TOOL_FRAMES) {
+    if(super_modes.peek() == Mode.NAV_TOOL_FRAMES) {
       text = String.format("TOOL FRAME: %d", curFrameIdx + 1);
     } 
-    else if(super_mode == NAV_USER_FRAMES) {
+    else if(super_modes.peek() == Mode.NAV_USER_FRAMES) {
       text = String.format("USER FRAME: %d", curFrameIdx + 1);
     }
     
@@ -3891,9 +3920,9 @@ public void updateScreen(color cDefault, color cHighlight) {
     text = "DIRECT ENTRY METHOD";
     break;
   case PICK_REG_LIST:
-    if(super_mode == VIEW_REG) {
+    if(super_modes.peek() == Mode.VIEW_REG) {
       text = "REGISTERS";
-    } else if(super_mode == VIEW_POS_REG_J || super_mode == VIEW_POS_REG_C) {
+    } else if(super_modes.peek() == Mode.VIEW_POS_REG_J || super_modes.peek() == Mode.VIEW_POS_REG_C) {
       text = "POSITON REGISTERS";
     } else {
       text = "VIEW REGISTERS";
@@ -3908,17 +3937,17 @@ public void updateScreen(color cDefault, color cHighlight) {
     text = "POSTION REGISTERS";
     break;
   case INPUT_FLOAT:
-    if(super_mode == VIEW_REG) {
+    if(super_modes.peek() == Mode.VIEW_REG) {
       text = "REGISTERS";
     }
     
     break;
   case INPUT_POINT_C:
   case INPUT_POINT_J:
-    if(super_mode == VIEW_POS_REG_J || super_mode == VIEW_POS_REG_C) {
+    if(super_modes.peek() == Mode.VIEW_POS_REG_J || super_modes.peek() == Mode.VIEW_POS_REG_C) {
       text = "POSITION REGISTER: ";
       
-      if(mode != INPUT_COMMENT_U && mode != INPUT_COMMENT_L && POS_REG[active_index].comment != null) {
+      if(mode != Mode.INPUT_COMMENT_U && mode != Mode.INPUT_COMMENT_L && POS_REG[active_index].comment != null) {
         // Show comment if it exists
         text += POS_REG[active_index].comment;
       } 
@@ -3930,14 +3959,16 @@ public void updateScreen(color cDefault, color cHighlight) {
     break;
   case INPUT_COMMENT_U:
   case INPUT_COMMENT_L:
-    if(super_mode == VIEW_REG) {
+    if(super_modes.peek() == Mode.VIEW_REG) {
       text = String.format("Enter a name for R[%d]", active_index);
     } 
-    else if(super_mode == VIEW_POS_REG_J || super_mode == VIEW_POS_REG_C) {
+    else if(super_modes.peek() == Mode.VIEW_POS_REG_J || super_modes.peek() == Mode.VIEW_POS_REG_C) {
       text = String.format("Enter a name for PR[%d]", active_index);
     }
     
     break;
+    
+    default:
   }
   
   if(text != null) {
@@ -3979,14 +4010,14 @@ public void updateScreen(color cDefault, color cHighlight) {
     
     for(int j = 0; j < temp.size(); j += 1) {
       if(i == row_select) {
-        if(j != col_select || mode == SELECT_LINES){
+        if(j != col_select || mode == Mode.SELECT_LINES){
           c1 = cDefault;
           c2 = cHighlight;
         } else {
           c1 = cHighlight;
           c2 = cDefault;
         }
-      } else if(mode == SELECT_LINES && selectedLines[text_render_start + i]) {
+      } else if(mode == Mode.SELECT_LINES && selectedLines[text_render_start + i]) {
         c1 = cDefault;
         c2 = cHighlight;
       } else {
@@ -4173,7 +4204,7 @@ public void updateScreen(color cDefault, color cHighlight) {
     case VIEW_REG:
     case VIEW_POS_REG_C:
     case VIEW_POS_REG_J:
-      if (shift == ON && (mode == VIEW_POS_REG_C || mode == VIEW_POS_REG_J)) {
+      if (shift == ON && (mode == Mode.VIEW_POS_REG_C || mode == Mode.VIEW_POS_REG_J)) {
         funct[0] = "[Save Pt]";
         funct[1] = "[Switch]";
         funct[2] = "";
@@ -4212,6 +4243,8 @@ public void updateScreen(color cDefault, color cHighlight) {
       funct[3] = "[CONFIRM]";
       funct[4] = "[CANCEL]";
       break;
+      
+      default:
   }
   
   //set f button text labels
@@ -4234,7 +4267,7 @@ public void clearScreen() {
   clearOptions();
   
   // hide the text labels that show the start and end of a program
-  if(mode != INSTRUCTION_NAV && mode != INSTRUCTION_EDIT) {
+  if(mode != Mode.INSTRUCTION_NAV && mode != Mode.INSTRUCTION_EDIT) {
     if(cp5.getController("header") != null) {
       cp5.getController("header")
       .remove();
@@ -4295,6 +4328,24 @@ public void inputProgramName() {
 }
 
 /**
+ * TODO comment
+ */
+public void loadRegStmtEditMenu(boolean isResultField) {
+  
+  contents.add( newLine("Register") );
+  contents.add( newLine("Position Register Point") );
+  contents.add( newLine("Position Register Value") );
+  
+  if (!isResultField) {
+    // Unavailable when editing the resulting register field
+    contents.add( newLine("Constant") );
+  }
+  
+  transitionTo(Mode.EDIT_RSTMT, false);
+  updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+}
+
+/**
  * Loads the set of Frames that correspond to the given coordinate frame.
  * Only COORD_TOOL and COOR_USER have Frames sets as of now.
  * 
@@ -4307,10 +4358,18 @@ public void loadFrames(int coordFrame) {
   
   if(coordFrame == COORD_TOOL) {
     frames = toolFrames;
-    mode = NAV_TOOL_FRAMES;
+    
+    if (mode != Mode.NAV_TOOL_FRAMES) {
+      transitionTo(Mode.NAV_TOOL_FRAMES, false);
+    }
+    
   } else if(coordFrame == COORD_USER) {
     frames = userFrames;
-    mode = NAV_USER_FRAMES;
+    
+    if (mode != Mode.NAV_USER_FRAMES) {
+      transitionTo(Mode.NAV_USER_FRAMES, false);
+    }
+    
   }
   // Only the Tool and User Frame lists have been implemented
   if(frames != null) {
@@ -4341,19 +4400,19 @@ public void loadPointList() {
     
     ArrayList<String> limbo = new ArrayList<String>();
     // Display TCP teach points
-    if((super_mode == NAV_TOOL_FRAMES && mode == THREE_POINT_MODE) || mode == SIX_POINT_MODE) {
+    if((super_modes.peek() == Mode.NAV_TOOL_FRAMES && mode == Mode.THREE_POINT_MODE) || mode == Mode.SIX_POINT_MODE) {
       limbo.add("First Approach Point: ");
       limbo.add("Second Approach Point: ");
       limbo.add("Third Approach Point: ");
     }
     // Display Axes Vectors teach points
-    if((super_mode == NAV_USER_FRAMES && mode == THREE_POINT_MODE) || mode == FOUR_POINT_MODE || mode == SIX_POINT_MODE) {
+    if((super_modes.peek() == Mode.NAV_USER_FRAMES && mode == Mode.THREE_POINT_MODE) || mode == Mode.FOUR_POINT_MODE || mode == Mode.SIX_POINT_MODE) {
       limbo.add("Orient Origin Point: ");
       limbo.add("X Direction Point: ");
       limbo.add("Y Direction Point: ");
     }
     // Display origin offset point
-    if(super_mode == NAV_USER_FRAMES && mode == FOUR_POINT_MODE) {
+    if(super_modes.peek() == Mode.NAV_USER_FRAMES && mode == Mode.FOUR_POINT_MODE) {
       // Name of fourth point for the four point method?
       limbo.add("Origin: ");
     }
@@ -4391,7 +4450,7 @@ public void loadDirectEntryMethod() {
   opt_select = 3;
   row_select = 0;
   col_select = 0;
-  mode = DIRECT_ENTRY_MODE;
+  switchTo(Mode.DIRECT_ENTRY_MODE);
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
@@ -4554,12 +4613,12 @@ public void loadFrameDetails() {
   row_select = -1;
   
   // Display the frame set name as well as the index of the currently selected frame
-  if(super_mode == NAV_TOOL_FRAMES) {
+  if(super_modes.peek() == Mode.NAV_TOOL_FRAMES) {
     String[] fields = toolFrames[curFrameIdx].toStringArray();
     // Place each value in the frame on a separate lien
     for(String field : fields) { contents.add( newLine(field) ); }
     
-  } else if(super_mode == NAV_USER_FRAMES) {
+  } else if(super_modes.peek() == Mode.NAV_USER_FRAMES) {
     // Transform the origin in terms of the World Frame
     PVector origin = convertNativeToWorld( userFrames[curFrameIdx].getOrigin() );
     // Convert angles to degrees
@@ -4578,7 +4637,6 @@ public void loadFrameDetails() {
     return;
   }
   
-  mode = FRAME_DETAIL;
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
@@ -4592,13 +4650,13 @@ public void pickRegisterList() {
   options = new ArrayList<String>();
   
   // Determine what registers are available to switch based on the current mode
-  if(mode == VIEW_REG) {
+  if(mode == Mode.VIEW_REG) {
     options.add("1. Position Registers (Joint)");
     options.add("2. Position Registers (Cartesian)");
-  } else if(mode == VIEW_POS_REG_J) {
+  } else if(mode == Mode.VIEW_POS_REG_J) {
     options.add("1. Registers");
     options.add("2. Position Registers (Cartesian)");
-  } else if(mode == VIEW_POS_REG_C) {
+  } else if(mode == Mode.VIEW_POS_REG_C) {
     options.add("1. Registers");
     options.add("2. Position Registers (Joint)");
   } else {
@@ -4609,8 +4667,7 @@ public void pickRegisterList() {
   
   opt_select = 0;
   
-  super_mode = mode;
-  mode = PICK_REG_LIST;
+  transitionTo(Mode.PICK_REG_LIST, false);
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
@@ -4627,7 +4684,7 @@ public void viewRegisters() {
   contents = new ArrayList<ArrayList<String>>();
   
   // View Registers or Position Registers
-  if(mode == VIEW_REG || mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C) {
+  if(mode == Mode.VIEW_REG || mode == Mode.VIEW_POS_REG_J || mode == Mode.VIEW_POS_REG_C) {
     
     int start = text_render_start;
     int end = min(start + ITEMS_TO_SHOW - 1, REG.length);
@@ -4647,7 +4704,7 @@ public void viewRegisters() {
       
       String lbl;
       
-      if(mode == VIEW_REG) {
+      if(mode == Mode.VIEW_REG) {
         lbl = (REG[idx].comment == null) ? "" : REG[idx].comment;
       } else {
         lbl  = (POS_REG[idx].comment == null) ? "" : POS_REG[idx].comment;
@@ -4657,11 +4714,11 @@ public void viewRegisters() {
       while(buffer-- > 0) { lbl += " "; }
       
       // Display the comment asscoiated with a specific Register entry
-      String regLbl = String.format("%s[%d:%s%s]", (mode == VIEW_REG) ? "R" : "PR", (idx + 1), spaces, lbl);
+      String regLbl = String.format("%s[%d:%s%s]", (mode == Mode.VIEW_REG) ? "R" : "PR", (idx + 1), spaces, lbl);
       // Display Register value (* ifuninitialized)
       String regEntry = "*";
       
-      if(mode == VIEW_REG) {
+      if(mode == Mode.VIEW_REG) {
         if(REG[idx].value != null) {
           // Dispaly Register value
           regEntry = String.format("%4.3f", REG[idx].value);
@@ -4670,7 +4727,7 @@ public void viewRegisters() {
       } else if(POS_REG[idx].point != null) {
         // What to display for a point ...
         regEntry = "...";
-      } else if(mode == VIEW_POS_REG_C && POS_REG[idx].point == null) {
+      } else if(mode == Mode.VIEW_POS_REG_C && POS_REG[idx].point == null) {
         // Distinguish Joint from Cartesian mode for now
         regEntry = "#";
       }
@@ -4683,7 +4740,7 @@ public void viewRegisters() {
       else {
         String[] entries = null;
         
-        if(mode == VIEW_POS_REG_J) {
+        if(mode == Mode.VIEW_POS_REG_J) {
           entries = POS_REG[idx].point.toJointStringArray();
         } else {
           // mode == VIEW_POS_REG_C
@@ -4726,8 +4783,7 @@ public void loadInputRegisterValueMethod() {
   }
   
   opt_select = 0;
-  super_mode = mode;
-  mode = INPUT_FLOAT;
+  transitionTo(Mode.INPUT_FLOAT, false);
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
@@ -4771,7 +4827,7 @@ public void loadInputRegisterPointMethod() {
     
     if(POS_REG[active_index].point == null) {
       // Initialize valeus to zero ifthe entry is null
-      if(mode == INPUT_POINT_C) {
+      if(mode == Mode.INPUT_POINT_C) {
         
         contents.add( newLine("X: 0.0") );
         contents.add( newLine("Y: 0.0") );
@@ -4779,7 +4835,7 @@ public void loadInputRegisterPointMethod() {
         contents.add( newLine("W: 0.0") );
         contents.add( newLine("P: 0.0") );
         contents.add( newLine("R: 0.0") );
-      } else if(mode == INPUT_POINT_J) {
+      } else if(mode == Mode.INPUT_POINT_J) {
         
         for(int idx = 1; idx <= 6; ++idx) {
           contents.add( newLine(String.format("J%d: 0.0", idx)) );
@@ -4787,7 +4843,7 @@ public void loadInputRegisterPointMethod() {
       }
     } else {
       // List current entry values ifthe Register is initialized
-      String[] entries = (mode == INPUT_POINT_C) ? POS_REG[active_index].point.toCartesianStringArray()
+      String[] entries = (mode == Mode.INPUT_POINT_C) ? POS_REG[active_index].point.toCartesianStringArray()
       : POS_REG[active_index].point.toJointStringArray();
       
       for(String entry : entries) {
@@ -4798,7 +4854,7 @@ public void loadInputRegisterPointMethod() {
   }
   
   // Defines the length of a line's prefix
-  opt_select = (mode == INPUT_POINT_J) ? 4 : 3;
+  opt_select = (mode == Mode.INPUT_POINT_J) ? 4 : 3;
   row_select = 0;
   col_select = 0;
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -4823,11 +4879,11 @@ public void loadInputRegisterCommentMethod() {
   
   workingText = "\0";
   // Load the current comment for the selected register ifit exists
-  if(mode == VIEW_REG) {
+  if(mode == Mode.VIEW_REG) {
     if(active_index >= 0 && active_index < REG.length && REG[active_index].comment != null) {
       workingText = REG[active_index].comment;
     }
-  } else if((mode == VIEW_POS_REG_J || mode == VIEW_POS_REG_C) && POS_REG[active_index].comment != null) {
+  } else if((mode == Mode.VIEW_POS_REG_J || mode == Mode.VIEW_POS_REG_C) && POS_REG[active_index].comment != null) {
     if(active_index >= 0 && active_index < POS_REG.length) {
       workingText = POS_REG[active_index].comment;
     }
@@ -4841,12 +4897,11 @@ public void loadInputRegisterCommentMethod() {
   options.add("1. Lowercase");
   opt_select = 0;
   
-  super_mode = mode;
   // Navigate options menu to switch the function keys functionsda
   if(opt_select == 0) {
-    mode = INPUT_COMMENT_U;
+    transitionTo(Mode.INPUT_COMMENT_U, false);
   } else if(opt_select == 1) {
-    mode = INPUT_COMMENT_L;
+    transitionTo(Mode.INPUT_COMMENT_L, false);
   }
   
   row_select = 1;
@@ -4891,11 +4946,11 @@ public void loadInstructions(int programID) {
       MotionInstruction a = (MotionInstruction)instruction;
       
       if(armModel.getEEPos().dist(a.getVector(p).pos) < liveSpeed) {
-        println("at tgt position");
+        //println("at tgt position");
         m.add("@");
       }
       else {
-        println(a.getVector(p).pos);
+        //println(a.getVector(p).pos);
         m.add("_");
       }
       // add motion type
@@ -4946,8 +5001,7 @@ public void updateInstructions() {
   
   loadInstructions(active_program);
   
-  mode = super_mode;
-  super_mode = NONE;
+  transitionBack();
   options.clear();
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
@@ -4965,7 +5019,7 @@ void loadActiveFrames() {
   contents.add( newLine("Tool: " + (activeToolFrame + 1)) );
   contents.add( newLine("User: " + (activeUserFrame + 1)) );
   
-  mode = ACTIVE_FRAMES;
+  transitionTo(Mode.ACTIVE_FRAMES, true);
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
@@ -4996,6 +5050,61 @@ boolean[] resetSelection(int n){
   }
   
   return selectedLines;
+}
+
+/**
+ * Switches the current mode to the new mode
+ * and returns the old mode without affecting
+ * the mode stack.
+ * 
+ * @param new_mode  The mode to which to switch
+ * @return          The immediately previous mode
+ */
+public Mode switchTo(Mode new_mode) {
+  if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s => %s\n", mode, new_mode);  }
+  Mode old_mode = mode;
+  mode = new_mode;
+  return old_mode;
+}
+
+/**
+ * Sets mode to the given mode and either saves the old mode,
+ * or clears the precious mode stack.
+ * 
+ * @param new_mode    The new mode value
+ * @param clearStack  Whether to clear the current mode stack
+ *                    or save the old mode value
+ */
+public void transitionTo(Mode new_mode, boolean clearStack) {
+ 
+ if (clearStack) {
+   if (DISPLAY_TEST_OUTPUT) { println("Stack cleared"); }
+   super_modes.clear();
+ } else {
+   super_modes.push(mode);
+ }
+ 
+ if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s => %s\n", mode, new_mode);  }
+ mode = new_mode;
+}
+
+/**
+ * Takes the mode on the top of the mode stack and sets the
+ * current mode to that mode, removing it from the stack.
+ * If the mode stack is empty, then the mode is transitioned
+ * to the main menu mode.
+ */
+public void transitionBack() {
+  
+  if (super_modes.isEmpty()) {
+    if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s => %s\n", mode, Mode.MAIN_MENU_NAV); }
+    // No mode, to which to return
+    mu();
+    return;
+  }
+  
+  if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s => %s\n", mode, super_modes.peek()); }
+  mode = super_modes.pop();
 }
 
 /**
