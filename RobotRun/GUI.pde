@@ -53,7 +53,8 @@ final int NONE = 0,
           CONFIRM_DELETE = 43,
           CONFIRM_RENUM = 44,
           CONFIRM_UNDO = 45,
-          CUT_COPY = 46;
+          CUT_COPY = 46,
+          FIND_TEXT = 47;
 final int BUTTON_DEFAULT = color(70),
           BUTTON_ACTIVE = color(220, 40, 40),
           BUTTON_TEXT = color(240),
@@ -1757,9 +1758,9 @@ public void f1() {
       float[] j = armModel.getJointRotations();
       
       Program prog = programs.get(active_program);
-      int reg = prog.nextRegister();
+      int reg = prog.nextPosition();
       
-      prog.addRegister(new Point(eep.x, eep.y, eep.z, q[0], q[1], q[2], q[3],
+      prog.addPosition(new Point(eep.x, eep.y, eep.z, q[0], q[1], q[2], q[3],
       j[0], j[1], j[2], j[3], j[4], j[5]), reg);
       
       MotionInstruction insert = new MotionInstruction(
@@ -2190,6 +2191,31 @@ public void f4() {
     
     updateInstructions();
     break;
+  case CONFIRM_RENUM:
+    p = programs.get(active_program);
+    Point[] tmp = new Point[1000];
+    int posIdx = 0;
+    
+    //make a copy of the current positions in p
+    for(int i = 0; i < 1000; i += 1){
+      tmp[i] = p.getPosition(i);
+    }
+    
+    p.clearPositions();
+    
+    //rearrange positions
+    for(int i = 0; i < p.getInstructions().size(); i += 1) {
+      Instruction instruct = p.getInstructions().get(i);
+      if(instruct instanceof MotionInstruction) {
+        int instructPos = ((MotionInstruction)instruct).getPosition();
+        p.setPosition(posIdx, tmp[instructPos]);
+        ((MotionInstruction)instruct).setPosition(posIdx);
+        posIdx += 1;
+      }
+    }
+    
+    updateInstructions();
+    break;
   case SELECT_LINES:
     if(super_mode == CONFIRM_DELETE) {
       clearOptions();
@@ -2242,10 +2268,10 @@ public void f5() {
         PVector eep = armModel.getEEPos();
         eep = convertNativeToWorld(eep);
         Program prog = programs.get(active_program);
-        int reg = prog.nextRegister();
+        int reg = prog.nextPosition();
         float[] q = armModel.getQuaternion();
         float[] j = armModel.getJointRotations();
-        prog.addRegister(new Point(eep.x, eep.y, eep.z, q[0], q[1], q[2], q[3],
+        prog.addPosition(new Point(eep.x, eep.y, eep.z, q[0], q[1], q[2], q[3],
         j[0], j[1], j[2], j[3], j[4], j[5]), reg);
         MotionInstruction insert = new MotionInstruction(
         (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
@@ -2265,15 +2291,15 @@ public void f5() {
           clearScreen();
           options = new ArrayList<String>();
           
-          options.add( "1 Insert" );
-          options.add( "2 Delete" );
-          options.add( "3 Copy (NA)" );
-          options.add( "4 Find (NA)" );
-          options.add( "5 Replace (NA)" );
-          options.add( "6 Renumber (NA)" );
-          options.add( "7 Comment (NA)" );
-          options.add( "8 Undo (NA)" );
-          options.add( "9 Remark" );
+          options.add("1 Insert");
+          options.add("2 Delete");
+          options.add("3 Copy (NA)");
+          options.add("4 Find (NA)");
+          options.add("5 Replace (NA)");
+          options.add("6 Renumber");
+          options.add("7 Comment (NA)");
+          options.add("8 Undo (NA)");
+          options.add("9 Remark");
           
           opt_select = 0;
           mode = INSTRUCT_MENU_NAV;
@@ -2532,7 +2558,7 @@ public void ENTER() {
         m.setGlobal(false);
       } else if(opt_select == 1) {
         
-        if(POS_REG[m.register].point == null) {
+        if(POS_REG[m.positionNum].point == null) {
           // Invalid register index
           options = new ArrayList<String>();
           options.add("This register is uninitailized!");
@@ -2612,7 +2638,7 @@ public void ENTER() {
         return;
       }
       
-      castIns.setRegister(tempRegister);
+      castIns.setPosition(tempRegister);
     } catch (NumberFormatException NFEx) { /* Ignore invalid numbers */ }
     
     loadInstructions(active_program);
@@ -2862,6 +2888,13 @@ public void ENTER() {
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
     case 3: //Find
+      options = new ArrayList<String>();
+      options.add("Enter text to search for:");
+      workingText = "";
+      options.add("/0");
+      super_mode = FIND_TEXT;
+      mode = ENTER_TEXT;
+      updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
     case 4: //Replace
       break;
@@ -2876,12 +2909,10 @@ public void ENTER() {
     case 7: //Undo
     case 8: //Remark
     }
-    break;
-    
+    break; 
   case THREE_POINT_MODE:
   case FOUR_POINT_MODE:
   case SIX_POINT_MODE:
-    
     if((mode == THREE_POINT_MODE && teachPointTMatrices.size() == 3) ||
         (mode == FOUR_POINT_MODE && teachPointTMatrices.size() == 4) ||
         (mode == SIX_POINT_MODE && teachPointTMatrices.size() == 6)) {
@@ -4205,6 +4236,7 @@ public void updateScreen(color cDefault, color cHighlight) {
       break;
     case CONFIRM_INSERT:
     case CONFIRM_DELETE:
+    case CONFIRM_RENUM:
       // F4, F5
       funct[0] = "";
       funct[1] = "";
@@ -4915,7 +4947,7 @@ public void loadInstructions(int programID) {
       if(a.getGlobal()) m.add("PR[");
       else m.add("P[");
       
-      m.add((a.getRegister() + 1) +"]");
+      m.add((a.getPosition() + 1) +"]");
       
       if(a.getMotionType() == MTYPE_JOINT) m.add((a.getSpeed() * 100) + "%");
       else m.add((int)(a.getSpeed()) + "mm/s");
