@@ -1389,6 +1389,8 @@ public void up() {
   case SETUP_NAV:
   case PICK_INSTRUCTION:
   case IO_SUBMENU:
+  case INPUT_RSTMT:
+  case EDIT_RSTMT:
   case NAV_TOOL_FRAMES:
   case NAV_USER_FRAMES:
   case ACTIVE_FRAMES:
@@ -1528,6 +1530,8 @@ public void dn() {
   case SETUP_NAV:
   case PICK_INSTRUCTION:
   case IO_SUBMENU:
+  case INPUT_RSTMT:
+  case EDIT_RSTMT:
   case NAV_TOOL_FRAMES:
   case NAV_USER_FRAMES:
   case ACTIVE_FRAMES:
@@ -2680,9 +2684,46 @@ public void ENTER() {
     clearOptions();
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     break;
+    
+  case INPUT_RSTMT:
+  case EDIT_RSTMT:
+    Program prog = programs.get(active_program);
+    
+    if (row_select == 0) {
+      // Register value
+      options = new ArrayList<String>();
+      options.add("Input the index of the register you wish to use");
+      options.add("\0");
+      
+      opt_select = 1;
+      workingText = "";
+      switchTo(Mode.INPUT_RDX);
+      transitionTo(Mode.INPUT_INTEGER, false);
+    } else if (row_select == 1) {
+      
+      // TODO position register point
+    } else if (row_select == 2) {
+      
+      // TODO position register value
+    } else if (row_select == 3) {
+      
+      // Constant value
+      options = new ArrayList<String>();
+      options.add("Input the constant that you wish to use");
+      options.add("\0");
+      
+      opt_select = 1;
+      workingText = "";
+      switchTo(Mode.INPUT_CONSTANT);
+      transitionTo(Mode.INPUT_FLOAT, false);
+    }
+    
+    break;
+    
   case SELECT_LINES:
     selectedLines[active_instruction] = !selectedLines[active_instruction];
     break;
+    
   case JUMP_TO_LINE:
     active_instruction = Integer.parseInt(workingText)-1;
     if(active_instruction < 0) active_instruction = 0;
@@ -2808,7 +2849,7 @@ public void ENTER() {
     break;
   case SET_DO_STATUS:
   case SET_RO_STATUS:
-    Program prog = programs.get(active_program);
+    prog = programs.get(active_program);
     
     try {
       int bracketNum = Integer.parseInt(workingText);
@@ -4335,17 +4376,18 @@ public void inputProgramName() {
  * TODO comment
  */
 public void loadRegStmtEditMenu(boolean isResultField) {
+  options = new ArrayList<String>();
   
-  contents.add( newLine("Register") );
-  contents.add( newLine("Position Register Point") );
-  contents.add( newLine("Position Register Value") );
+  options.add("Register");
+  options.add("Position Register Point");
+  options.add("Position Register Value");
   
   if (!isResultField) {
     // Unavailable when editing the resulting register field
-    contents.add( newLine("Constant") );
+    options.add("Constant");
   }
   
-  transitionTo(Mode.EDIT_RSTMT, false);
+  opt_select = 0;
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
