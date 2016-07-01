@@ -866,15 +866,23 @@ public class ExpressionSet {
       }
       
       return result;
-    } catch (NullPointerException | IndexOutOfBoundsException Ex) {
+    } catch (NullPointerException NPEx) {
       // Missing a parameter
-      throw new ExpressionEvaluationException(0, Ex.getClass());
+      throw new ExpressionEvaluationException(0, NPEx.getClass());
       
-    } catch (ClassCastException | ArithmeticException Ex) {
+    } catch (IndexOutOfBoundsException IOOBEx) {
+      // Missing a parameter
+      throw new ExpressionEvaluationException(0, IOOBEx.getClass());
+      
+    } catch (ClassCastException CCEx) {
       // Illegal parameters or operations
-      throw new ExpressionEvaluationException(1, Ex.getClass());
+      throw new ExpressionEvaluationException(1, CCEx.getClass());
       
-    }catch (EmptyStackException ESEx) {
+    } catch (ArithmeticException AEx) {
+      // Illegal parameters or operations
+      throw new ExpressionEvaluationException(1, AEx.getClass());
+      
+    } catch (EmptyStackException ESEx) {
       // Invalid parenthesis
       throw new ExpressionEvaluationException(2, ESEx.getClass());
       
