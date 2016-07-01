@@ -19,8 +19,6 @@ Model eeModelSuction;
 Model eeModelClaw;
 Model eeModelClawPincer;
 
-final int ENDEF_NONE = 0, ENDEF_SUCTION = 1, ENDEF_CLAW = 2;
-
 float lastMouseX, lastMouseY;
 float cameraTX = 0, cameraTY = 0, cameraTZ = 0;
 float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
@@ -74,6 +72,7 @@ FileOutputStream out = null;
 
 public void setup() {
   size(1200, 800, P3D);
+  //size(1080, 720, P3D);
   ortho();
   
   cp5 = new ControlP5(this);
@@ -423,13 +422,13 @@ public void displayTeachPoints() {
  */
 public void displayFrameAxes() {
   
-  if((curCoordFrame == COORD_WORLD || curCoordFrame == COORD_TOOL) && activeToolFrame != -1) {
+  if((curCoordFrame == CoordFrame.WORLD || curCoordFrame == CoordFrame.TOOL) && activeToolFrame != -1) {
     /* Draw the axes of the active tool frame */
     displayOriginAxes(toolFrames[activeToolFrame].getWorldAxes(), toVectorArray( armModel.getEEPos() ));
-  } else if(curCoordFrame == COORD_USER && activeUserFrame != -1) {
+  } else if(curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
     /* Draw the axes of the active user frame */
     displayOriginAxes(userFrames[activeUserFrame].getWorldAxes(), toVectorArray( userFrames[activeUserFrame].getOrigin() ));
-  } else if(curCoordFrame == COORD_WORLD) {
+  } else if(curCoordFrame == CoordFrame.WORLD) {
     /* Draw World Frame coordinate system */
     displayOriginAxes(new float[][] { {-1f, 0f, 0f}, {0f, 0f, 1f}, {0f, -1f, 0f} }, new float[] {0f, 0f, 0f});
   }

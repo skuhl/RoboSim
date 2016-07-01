@@ -372,7 +372,7 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     // Write data associated with the ToolInstruction object
     out.writeUTF(t_inst.type);
     out.writeInt(t_inst.bracket);
-    out.writeInt(t_inst.setToolStatus);
+    out.writeInt( saveEEStatus(t_inst.setToolStatus) );
   } else {/* TODO add other instructions! */}
 }
 
@@ -416,10 +416,36 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     int bracket = in.readInt();
     int setting = in.readInt();
     
-    inst = new ToolInstruction(type, bracket, setting);
+    inst = new ToolInstruction(type, bracket, loadEEStatus(setting));
   } else {/* TODO add other instructions! */}
   
   return inst;
+}
+
+/**
+ * Convert the given End Effector status
+ * to a unique integer value.
+ */
+private int saveEEStatus(EEStatus stat) {
+  
+  switch (stat) {
+    case ON:  return 0;
+    case OFF: return 1;
+    default:  return -1;
+  }
+}
+
+/**
+ * Converts a valid integer value to its
+ * corresponding End Effector Status.
+ */
+private EEStatus loadEEStatus(int val) {
+  
+  switch (val) {
+    case 0:   return EEStatus.ON;
+    case 1:   return EEStatus.OFF;
+    default:  return null;
+  }
 }
 
 /**

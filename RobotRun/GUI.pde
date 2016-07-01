@@ -886,7 +886,7 @@ public void keyPressed() {
     // Release an object ifit is currently being held
     if(armModel.held != null) {
       armModel.releaseHeldObject();
-      armModel.endEffectorStatus = OFF;
+      armModel.endEffectorStatus = EEStatus.OFF;
     }
     
     float[] rot = {0, 0, 0, 0, 0, 0};
@@ -900,20 +900,20 @@ public void keyPressed() {
     intermediatePositions.clear();
   } else if (key == 'm') {
     println(mode.toString());
-  } else if(key == ENTER && (armModel.activeEndEffector == ENDEF_CLAW || 
-        armModel.activeEndEffector == ENDEF_SUCTION)) { 
+  } else if(key == ENTER && (armModel.activeEndEffector == EndEffector.CLAW || 
+        armModel.activeEndEffector == EndEffector.SUCTION)) { 
     // Pick up an object within reach of the EE when the 'ENTER' button is pressed for either
     // the suction or claw EE
     ToolInstruction pickup;
     
-    if(armModel.endEffectorStatus == ON) {
-      pickup = (armModel.activeEndEffector == ENDEF_CLAW) ? 
-      new ToolInstruction("RO", 4, OFF) : 
-      new ToolInstruction("DO", 101, OFF);
+    if(armModel.endEffectorStatus == EEStatus.ON) {
+      pickup = (armModel.activeEndEffector == EndEffector.CLAW) ? 
+      new ToolInstruction("RO", 4, EEStatus.OFF) : 
+      new ToolInstruction("DO", 101, EEStatus.OFF);
     } else {
-      pickup = (armModel.activeEndEffector == ENDEF_CLAW) ? 
-      new ToolInstruction("RO", 4, ON) : 
-      new ToolInstruction("DO", 101, ON);
+      pickup = (armModel.activeEndEffector == EndEffector.CLAW) ? 
+      new ToolInstruction("RO", 4, EEStatus.ON) : 
+      new ToolInstruction("DO", 101, EEStatus.ON);
     }
     
     pickup.execute();
@@ -1262,10 +1262,10 @@ public void LINE() {
 }
 
 public void IO() {
-  if(armModel.endEffectorStatus == OFF)
-  armModel.endEffectorStatus = ON;
+  if(armModel.endEffectorStatus == EEStatus.OFF)
+  armModel.endEffectorStatus = EEStatus.ON;
   else
-  armModel.endEffectorStatus = OFF;
+  armModel.endEffectorStatus = EEStatus.OFF;
 }
 
 public void se() {
@@ -1792,10 +1792,10 @@ public void f1() {
       j[0], j[1], j[2], j[3], j[4], j[5]), reg);
       
       MotionInstruction insert = new MotionInstruction(
-      (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
+      (curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
       reg,
       false,
-      (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
+      (curCoordFrame == CoordFrame.JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
       0,
       activeUserFrame,
       activeToolFrame);
@@ -1837,7 +1837,7 @@ public void f1() {
         activeToolFrame = row_select;
         
         // Update the Robot Arm's current frame rotation matrix
-        if(curCoordFrame == COORD_TOOL) {
+        if(curCoordFrame == CoordFrame.TOOL) {
           armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
         }
       }
@@ -1856,7 +1856,7 @@ public void f1() {
         activeUserFrame = row_select;
         
         // Update the Robot Arm's current frame rotation matrix
-        if(curCoordFrame == COORD_USER) {
+        if(curCoordFrame == CoordFrame.USER) {
           armModel.currentFrame = userFrames[activeUserFrame].getNativeAxes();
         }
       }
@@ -1864,9 +1864,9 @@ public void f1() {
     break;
   case ACTIVE_FRAMES:
     if(row_select == 0) {
-      loadFrames(COORD_TOOL);
+      loadFrames(CoordFrame.TOOL);
     } else if(row_select == 1) {
-      loadFrames(COORD_USER);
+      loadFrames(CoordFrame.USER);
     }
   case INSTRUCTION_EDIT:
     //shift = OFF;
@@ -1969,7 +1969,7 @@ public void f2() {
     if(row_select >= 0) {
       toolFrames[row_select] = new Frame();
       saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-      loadFrames(COORD_TOOL);
+      loadFrames(CoordFrame.TOOL);
     }
   } 
   else if(mode == Mode.NAV_USER_FRAMES) {
@@ -1978,7 +1978,7 @@ public void f2() {
     if(row_select >= 0) {
       userFrames[row_select] = new Frame();
       saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-      loadFrames(COORD_USER);
+      loadFrames(CoordFrame.USER);
     }
   } 
   else if(mode == Mode.ACTIVE_FRAMES) {
@@ -1987,8 +1987,8 @@ public void f2() {
       activeToolFrame = -1;
       
       // Leave the Tool Frame
-      if(curCoordFrame == COORD_TOOL || curCoordFrame == COORD_WORLD) {
-        curCoordFrame = COORD_WORLD;
+      if(curCoordFrame == CoordFrame.TOOL || curCoordFrame == CoordFrame.WORLD) {
+        curCoordFrame = CoordFrame.WORLD;
         armModel.resetFrame();
       }
     } 
@@ -1996,8 +1996,8 @@ public void f2() {
       activeUserFrame = -1;
       
       // Leave the User Frame
-      if(curCoordFrame == COORD_USER) {
-        curCoordFrame = COORD_WORLD;
+      if(curCoordFrame == CoordFrame.USER) {
+        curCoordFrame = CoordFrame.WORLD;
         armModel.resetFrame();
       }
     }
@@ -2281,10 +2281,10 @@ public void f5() {
         prog.addRegister(new Point(eep.x, eep.y, eep.z, q[0], q[1], q[2], q[3],
         j[0], j[1], j[2], j[3], j[4], j[5]), reg);
         MotionInstruction insert = new MotionInstruction(
-        (curCoordFrame == COORD_JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
+        (curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
         reg,
         false,
-        (curCoordFrame == COORD_JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
+        (curCoordFrame == CoordFrame.JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
         0,
         activeUserFrame,
         activeToolFrame);
@@ -2514,7 +2514,15 @@ public void bd() {
       execSingleInst = true;
       
       ToolInstruction tIns = (ToolInstruction)ins;
-      ToolInstruction inverse = new ToolInstruction(tIns.type, tIns.bracket, (tIns.setToolStatus == ON) ? OFF : ON);
+      EEStatus opp = null;
+      
+      if (tIns.setToolStatus == EEStatus.ON) {
+        opp = EEStatus.OFF;
+      } else {
+        opp = EEStatus.ON;
+      }
+      
+      ToolInstruction inverse = new ToolInstruction(tIns.type, tIns.bracket, opp);
       // Reverse the tool status applied
       inverse.execute();
     }
@@ -2735,10 +2743,10 @@ public void ENTER() {
     clearOptions();
     
     if(opt_select == 0) {
-      loadFrames(COORD_TOOL);
+      loadFrames(CoordFrame.TOOL);
     } 
     else if(opt_select == 1) {
-      loadFrames(COORD_USER);
+      loadFrames(CoordFrame.USER);
     } // Jog Frame not implemented
     
     opt_select = -1;
@@ -2808,7 +2816,7 @@ public void ENTER() {
         ToolInstruction insert = new ToolInstruction(
         (mode == Mode.SET_DO_STATUS ? "DO" : "RO"),
         bracketNum,
-        (opt_select == 0 ? ON : OFF));
+        (opt_select == 0 ? EEStatus.ON : EEStatus.OFF));
         prog.addInstruction(insert);
       }
     } catch (NumberFormatException NFEx) { /* Ignore invalid numbers */ }
@@ -3017,9 +3025,9 @@ public void ENTER() {
       row_select = 0;
       
       if(super_modes.peek() == Mode.NAV_TOOL_FRAMES) {
-        loadFrames(COORD_TOOL);
+        loadFrames(CoordFrame.TOOL);
       } else if(super_modes.peek() == Mode.NAV_USER_FRAMES) {
-        loadFrames(COORD_USER);
+        loadFrames(CoordFrame.USER);
       } else {
         mu();
       }
@@ -3099,9 +3107,9 @@ public void ENTER() {
         }
         
         if(super_modes.peek() == Mode.NAV_TOOL_FRAMES) {
-          loadFrames(COORD_TOOL);
+          loadFrames(CoordFrame.TOOL);
         } else if(super_modes.peek() == Mode.NAV_USER_FRAMES) {
-          loadFrames(COORD_USER);
+          loadFrames(CoordFrame.USER);
         } else {
           mu();
         }
@@ -3477,11 +3485,7 @@ public void record_normal() {
 }
 
 public void EE() {
-  armModel.activeEndEffector++;
-  if(armModel.activeEndEffector > ENDEF_CLAW) armModel.activeEndEffector = 0;
-  // Drop an object ifheld by the Robot currently
-  armModel.releaseHeldObject();
-  // TODO collision checking ifan object was held by the Robot
+  armModel.swapEndEffector();
 }
 
 /**
@@ -3551,7 +3555,7 @@ public void activateLiveWorldMotion(int axis, int dir) {
 
 public void JOINT1_NEG() {
   
-  if(curCoordFrame == COORD_JOINT) {
+  if(curCoordFrame == CoordFrame.JOINT) {
     // Move single joint
     activateLiveJointMotion(0, -1);
   } else {
@@ -3574,7 +3578,7 @@ public void JOINT1_NEG() {
 
 public void JOINT1_POS() {
   
-  if(curCoordFrame == COORD_JOINT) {
+  if(curCoordFrame == CoordFrame.JOINT) {
     // Move single joint
     activateLiveJointMotion(0, 1);
   } else  {
@@ -3598,7 +3602,7 @@ public void JOINT1_POS() {
 
 public void JOINT2_NEG() {
   
-  if(curCoordFrame == COORD_JOINT) {
+  if(curCoordFrame == CoordFrame.JOINT) {
     // Move single joint
     activateLiveJointMotion(1, -1);
   } else  {
@@ -3621,7 +3625,7 @@ public void JOINT2_NEG() {
 
 public void JOINT2_POS() {
   
-  if(curCoordFrame == COORD_JOINT) {
+  if(curCoordFrame == CoordFrame.JOINT) {
     // Move single joint
     activateLiveJointMotion(1, 1);
   } else  {
@@ -3644,7 +3648,7 @@ public void JOINT2_POS() {
 
 public void JOINT3_NEG() {
   
-  if(curCoordFrame == COORD_JOINT) {
+  if(curCoordFrame == CoordFrame.JOINT) {
     // Move single joint
     activateLiveJointMotion(2, -1);
   } else  {
@@ -3667,7 +3671,7 @@ public void JOINT3_NEG() {
 
 public void JOINT3_POS() {
   
-  if(curCoordFrame == COORD_JOINT) {
+  if(curCoordFrame == CoordFrame.JOINT) {
     // Move single joint
     activateLiveJointMotion(2, 1);
   } else  {
@@ -3690,7 +3694,7 @@ public void JOINT3_POS() {
 
 public void JOINT4_NEG() {
   
-  if(curCoordFrame == COORD_JOINT) {
+  if(curCoordFrame == CoordFrame.JOINT) {
     // Move single joint
     activateLiveJointMotion(3, -1);
   } else  {
@@ -3713,7 +3717,7 @@ public void JOINT4_NEG() {
 
 public void JOINT4_POS() {
   
-  if(curCoordFrame == COORD_JOINT) {
+  if(curCoordFrame == CoordFrame.JOINT) {
     // Move single joint
     activateLiveJointMotion(3, 1);
   } else {
@@ -3736,7 +3740,7 @@ public void JOINT4_POS() {
 
 public void JOINT5_NEG() {
   
-  if(curCoordFrame == COORD_JOINT) {
+  if(curCoordFrame == CoordFrame.JOINT) {
     // Move single joint
     activateLiveJointMotion(4, -1);
   } else {
@@ -3759,7 +3763,7 @@ public void JOINT5_NEG() {
 
 public void JOINT5_POS() {
   
-  if(curCoordFrame == COORD_JOINT) {
+  if(curCoordFrame == CoordFrame.JOINT) {
     // Move single joint
     activateLiveJointMotion(4, 1);
   } else {
@@ -3782,7 +3786,7 @@ public void JOINT5_POS() {
 
 public void JOINT6_NEG() {
   
-  if(curCoordFrame == COORD_JOINT) {
+  if(curCoordFrame == CoordFrame.JOINT) {
     // Move single joint
     activateLiveJointMotion(5, -1);
   } else {
@@ -3805,7 +3809,7 @@ public void JOINT6_NEG() {
 
 public void JOINT6_POS() {
   
-  if(curCoordFrame == COORD_JOINT) {
+  if(curCoordFrame == CoordFrame.JOINT) {
     // Move single joint
     activateLiveJointMotion(5, 1);
   } else {
@@ -4347,23 +4351,23 @@ public void loadRegStmtEditMenu(boolean isResultField) {
 
 /**
  * Loads the set of Frames that correspond to the given coordinate frame.
- * Only COORD_TOOL and COOR_USER have Frames sets as of now.
+ * Only TOOL and USER have Frames sets as of now.
  * 
  * @param coorFrame  the integer value representing the coordinate frame
  *                   of the desired frame set
  */
-public void loadFrames(int coordFrame) {
+public void loadFrames(CoordFrame coordFrame) {
   
   Frame[] frames = null;
   
-  if(coordFrame == COORD_TOOL) {
+  if(coordFrame == CoordFrame.TOOL) {
     frames = toolFrames;
     
     if (mode != Mode.NAV_TOOL_FRAMES) {
       transitionTo(Mode.NAV_TOOL_FRAMES, false);
     }
     
-  } else if(coordFrame == COORD_USER) {
+  } else if(coordFrame == CoordFrame.USER) {
     frames = userFrames;
     
     if (mode != Mode.NAV_USER_FRAMES) {

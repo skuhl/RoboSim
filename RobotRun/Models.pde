@@ -90,13 +90,20 @@ public class Model {
   
 } // end Model class
 
-// The apporximate center of the base of the robot
-public static final PVector base_center = new PVector(404, 137, -212);
+/* The possible values for the current Coordinate Frame */
+public enum CoordFrame { JOINT, WORLD, TOOL, USER }
+/* The current Coordinate Frame for the Robot */
+public static CoordFrame curCoordFrame = CoordFrame.JOINT;
+
+/* The possible types of End Effectors for the Robot */
+public enum EndEffector { NONE, SUCTION, CLAW; }
+/* The possible settings for the End Effector's status */
+public enum EEStatus { ON, OFF }
 
 public class ArmModel {
   
-  public int activeEndEffector = ENDEF_NONE;
-  public int endEffectorStatus = OFF;
+  public EndEffector activeEndEffector = EndEffector.NONE;
+  public EEStatus endEffectorStatus = EEStatus.OFF;
 
   public ArrayList<Model> segments = new ArrayList<Model>();
   public int type;
@@ -286,21 +293,21 @@ public class ArmModel {
     segments.get(6).draw();
     
     // next, the end effector
-    if(activeEndEffector == ENDEF_SUCTION) {
+    if(activeEndEffector == EndEffector.SUCTION) {
       rotateY(PI);
       translate(-88, -37, 0);
       eeModelSuction.draw();
-    } else if(activeEndEffector == ENDEF_CLAW) {
+    } else if(activeEndEffector == EndEffector.CLAW) {
       rotateY(PI);
       translate(-88, 0, 0);
       eeModelClaw.draw();
       rotateZ(PI/2);
-      if(endEffectorStatus == OFF) {
+      if(endEffectorStatus == EEStatus.OFF) {
         translate(10, -85, 30);
         eeModelClawPincer.draw();
         translate(55, 0, 0);
         eeModelClawPincer.draw();
-      } else if(endEffectorStatus == ON) {
+      } else if(endEffectorStatus == EEStatus.ON) {
         translate(28, -85, 30);
         eeModelClawPincer.draw();
         translate(20, 0, 0);
@@ -442,9 +449,9 @@ public class ArmModel {
    * current active End Effector and the status of the End Effector. */
   public ArrayList<Box> currentEEHitBoxList() {
     // Determine which set of hit boxes to display based on the active End Effector
-    if(activeEndEffector == ENDEF_CLAW) {
-      return (endEffectorStatus == ON) ? eeHitBoxes[1] : eeHitBoxes[2];
-    } else if(activeEndEffector == ENDEF_SUCTION) {
+    if(activeEndEffector == EndEffector.CLAW) {
+      return (endEffectorStatus == EEStatus.ON) ? eeHitBoxes[1] : eeHitBoxes[2];
+    } else if(activeEndEffector == EndEffector.SUCTION) {
       return eeHitBoxes[3];
     }
     
@@ -519,7 +526,7 @@ public class ArmModel {
     
     for(Box b : eeHBs) {
       // Special case for held objects
-      if( (activeEndEffector != ENDEF_CLAW || activeEndEffector != ENDEF_SUCTION || endEffectorStatus != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
+      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorStatus != EEStatus.ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
         b.outline = color(255, 0, 0);
         collision = true;
       }
@@ -540,13 +547,13 @@ public class ArmModel {
     
     int eeIdx = 0;
     // Determine which set of hit boxes to display based on the active End Effector
-    if(activeEndEffector == ENDEF_CLAW) {
-      if(endEffectorStatus == ON) {
+    if(activeEndEffector == EndEffector.CLAW) {
+      if(endEffectorStatus == EEStatus.ON) {
         eeIdx = 1;
       } else {
         eeIdx = 2;
       }
-    } else if(activeEndEffector == ENDEF_SUCTION) {
+    } else if(activeEndEffector == EndEffector.SUCTION) {
       eeIdx = 3;
     }
     // Draw End Effector hit boxes
@@ -653,9 +660,9 @@ public class ArmModel {
     } else {
       
       // Apply a default tool frame based on the current EE
-      if(activeEndEffector == ENDEF_CLAW) {
+      if(activeEndEffector == EndEffector.CLAW) {
         translate(0, 0, -54);
-      } else if(activeEndEffector == ENDEF_SUCTION) {
+      } else if(activeEndEffector == EndEffector.SUCTION) {
         translate(0, 0, -105);
       }
     }
@@ -774,7 +781,7 @@ public class ArmModel {
     
     rotateZ(getJointRotations()[5]);
     
-    if(curCoordFrame == COORD_TOOL || curCoordFrame == COORD_WORLD) { applyToolFrame(activeToolFrame); }
+    if(curCoordFrame == CoordFrame.TOOL || curCoordFrame == CoordFrame.WORLD) { applyToolFrame(activeToolFrame); }
     
     PVector ret = new PVector(
     modelX(0, 0, 0),
@@ -844,7 +851,7 @@ public class ArmModel {
   }
 
   void executeLiveMotion() {
-    if(curCoordFrame == COORD_JOINT) {
+    if(curCoordFrame == CoordFrame.JOINT) {
       for(int i = 0; i < segments.size(); i += 1) {
         Model model = segments.get(i);
         
@@ -942,6 +949,33 @@ public class ArmModel {
     }
     
     return collision;
+  }
+  
+  /**
+   * Transitions from the current End Effector
+   * to the next End Effector in a cyclic pattern:
+   * 
+   * NONE -> SUCTION -> CLAW -> NONE
+   */
+  public void swapEndEffector() {
+    
+    switch (activeEndEffector) {
+      case NONE:
+        activeEndEffector = EndEffector.SUCTION;
+        break;
+      
+      case SUCTION:
+        activeEndEffector = EndEffector.CLAW;
+        break;
+        
+      case CLAW:
+      default:
+        activeEndEffector = EndEffector.NONE;
+        break;
+    }
+    
+    // Releases currently held object
+    releaseHeldObject();
   }
   
   

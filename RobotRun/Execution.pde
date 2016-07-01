@@ -3,8 +3,6 @@ int motionFrameCounter = 0;
 float distanceBetweenPoints = 5.0;
 int interMotionIdx = -1;
 
-final int COORD_JOINT = 0, COORD_WORLD = 1, COORD_TOOL = 2, COORD_USER = 3;
-int curCoordFrame = COORD_JOINT;
 float liveSpeed = 0.1;
 boolean executingInstruction = false;
 
@@ -89,17 +87,23 @@ void showMainDisplayText() {
   String coordFrame = "Coordinate Frame: ";
   
   switch(curCoordFrame) {
-  case COORD_JOINT:
-    coordFrame += "Joint";
-    break;
-  case COORD_WORLD:
-    coordFrame += "World";
-    break;
-  case COORD_TOOL:
-    coordFrame += "Tool";
-    break;
-  case COORD_USER:
-    coordFrame += "User";
+    case JOINT:
+      coordFrame += "Joint";
+      break;
+      
+    case WORLD:
+      coordFrame += "World";
+      break;
+      
+    case TOOL:
+      coordFrame += "Tool";
+      break;
+      
+    case USER:
+      coordFrame += "User";
+      break;
+    
+    default:
   }
   
   text(coordFrame, width-20, 20);
@@ -117,24 +121,18 @@ void showMainDisplayText() {
   String dis_joint = String.format("Joints  J1: %5.4f J2: %5.4f J3: %5.4f J4: %5.4f J5: %5.4f J6: %5.4f", 
   j[0], j[1], j[2], j[3], j[4], j[5]);
   
-  // Display the distance between the End Effector and the Based of the Robot
-  float dist_base = PVector.dist(ee_pos, base_center);
-  String dis_dist = String.format("Distance from EE to Robot Base: %f", dist_base);
-  
   // Show the coordinates of the End Effector for the current Coordinate Frame
-  if(curCoordFrame == COORD_JOINT) {          
+  if(curCoordFrame == CoordFrame.JOINT) {          
     text(dis_joint, width - 20, 60);
     
     if(DISPLAY_TEST_OUTPUT) {
-      text(dis_dist, width - 20, 80);
-      text(dis_world, width - 20, 100);
+      text(dis_world, width - 20, 80);
     }
   } else {
     text(dis_world, width - 20, 60);
     
     if(DISPLAY_TEST_OUTPUT) {
-      text(dis_dist, width - 20, 80);
-      text(dis_joint, width - 20, 100);
+      text(dis_joint, width - 20, 80);
     }
   }
   
@@ -203,26 +201,42 @@ public void updateCoordinateMode(ArmModel model) {
   hd();
   
   // Increment the current coordinate frame
-  curCoordFrame = (curCoordFrame + 1) % 4;
+  switch (curCoordFrame) {
+    case JOINT:
+      curCoordFrame = CoordFrame.WORLD;
+      break;
+      
+    case WORLD:
+      curCoordFrame = CoordFrame.TOOL;
+      break;
+     
+    case TOOL:
+      curCoordFrame = CoordFrame.USER;
+      break;
+     
+    case USER:
+    default:
+      curCoordFrame = CoordFrame.JOINT;
+  }
   
   // Skip the tool frame, if there is no current active tool frame
-  if(curCoordFrame == COORD_TOOL && !((activeToolFrame >= 0 && activeToolFrame < toolFrames.length)
-        || model.activeEndEffector == ENDEF_SUCTION
-        || model.activeEndEffector == ENDEF_CLAW)) {
-    curCoordFrame = COORD_USER;
+  if(curCoordFrame == CoordFrame.TOOL && !((activeToolFrame >= 0 && activeToolFrame < toolFrames.length)
+        || model.activeEndEffector == EndEffector.SUCTION
+        || model.activeEndEffector == EndEffector.CLAW)) {
+    curCoordFrame = CoordFrame.USER;
   }
   
   // Skip the user frame, if there is no current active user frame
-  if(curCoordFrame == COORD_USER && !(activeUserFrame >= 0 && activeUserFrame < userFrames.length)) {
-    curCoordFrame = COORD_JOINT;
+  if(curCoordFrame == CoordFrame.USER && !(activeUserFrame >= 0 && activeUserFrame < userFrames.length)) {
+    curCoordFrame = CoordFrame.JOINT;
   }
   
   // Update the Arm Model's rotation matrix for rotational motion based on the current frame
-  if(model.activeEndEffector == ENDEF_NONE && (curCoordFrame == COORD_TOOL || (curCoordFrame == COORD_WORLD && activeToolFrame != -1))) {
+  if(model.activeEndEffector == EndEffector.NONE && (curCoordFrame == CoordFrame.TOOL || (curCoordFrame == CoordFrame.WORLD && activeToolFrame != -1))) {
     // Active Tool Frames are used in the World Frame as well
     armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
   } 
-  else if(curCoordFrame == COORD_USER ) {
+  else if(curCoordFrame == CoordFrame.USER ) {
     armModel.currentFrame = userFrames[activeUserFrame].getNativeAxes();
   } 
   else {
@@ -385,7 +399,7 @@ void applyModelRotation(ArmModel model, boolean applyOffset) {
   translate(45, 45, 0);
   rotateZ(model.segments.get(5).currentRotations[0]);
   
-  if(applyOffset && (curCoordFrame == COORD_TOOL || curCoordFrame == COORD_WORLD)) { armModel.applyToolFrame(activeToolFrame); }
+  if(applyOffset && (curCoordFrame == CoordFrame.TOOL || curCoordFrame == CoordFrame.WORLD)) { armModel.applyToolFrame(activeToolFrame); }
 } // end apply model rotations
 
 /**
@@ -547,7 +561,7 @@ void calculateDistanceBetweenPoints() {
   MotionInstruction instruction = getActiveMotionInstruct();
   if(instruction != null && instruction.getMotionType() != MTYPE_JOINT)
   distanceBetweenPoints = instruction.getSpeed() / 60.0;
-  else if(curCoordFrame != COORD_JOINT)
+  else if(curCoordFrame != CoordFrame.JOINT)
   distanceBetweenPoints = armModel.motorSpeed * liveSpeed / 60.0;
   else distanceBetweenPoints = 5.0;
 }

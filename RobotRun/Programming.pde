@@ -401,7 +401,7 @@ public final class MotionInstruction extends Instruction  {
   }
 
   public Point getVector(Program parent) {
-    if(motionType != COORD_JOINT) {
+    if(motionType != MTYPE_JOINT) {
       Point out;
       if(globalRegister) out = POS_REG[register].point.clone();
       else out = parent.p[register].clone();
@@ -474,9 +474,9 @@ public class FrameInstruction extends Instruction {
 public class ToolInstruction extends Instruction {
   private String type;
   private int bracket;
-  private int setToolStatus;
+  private EEStatus setToolStatus;
 
-  public ToolInstruction(String d, int b, int t) {
+  public ToolInstruction(String d, int b, EEStatus t) {
     super();
     type = d;
     bracket = b;
@@ -484,17 +484,17 @@ public class ToolInstruction extends Instruction {
   }
 
   public void execute() {
-    if((type.equals("RO") && bracket == 4 && armModel.activeEndEffector == ENDEF_CLAW) ||
-        (type.equals("DO") && bracket == 101 && armModel.activeEndEffector == ENDEF_SUCTION))
+    if((type.equals("RO") && bracket == 4 && armModel.activeEndEffector == EndEffector.CLAW) ||
+        (type.equals("DO") && bracket == 101 && armModel.activeEndEffector == EndEffector.SUCTION))
     {
       
       armModel.endEffectorStatus = setToolStatus;
-      System.out.printf("EE: %d\n", armModel.endEffectorStatus);
+      System.out.printf("EE: %s\n", armModel.endEffectorStatus);
       
       // Check if the Robot is placing an object or picking up and object
-      if(armModel.activeEndEffector == ENDEF_CLAW || armModel.activeEndEffector == ENDEF_SUCTION) {
+      if(armModel.activeEndEffector == EndEffector.CLAW || armModel.activeEndEffector == EndEffector.SUCTION) {
         
-        if(setToolStatus == ON && armModel.held == null) {
+        if(setToolStatus == EEStatus.ON && armModel.held == null) {
           
           PVector ee_pos = armModel.getEEPos();
           
@@ -507,7 +507,7 @@ public class ToolInstruction extends Instruction {
             }
           }
         } 
-        else if(setToolStatus == OFF && armModel.held != null) {
+        else if(setToolStatus == EEStatus.OFF && armModel.held != null) {
           // Release the object
           armModel.releaseHeldObject();
         }
@@ -516,7 +516,7 @@ public class ToolInstruction extends Instruction {
   }
 
   public String toString() {
-    return type + "[" + bracket + "]=" + (setToolStatus == ON ? "ON" : "OFF");
+    return type + "[" + bracket + "]=" + setToolStatus.toString();
   }
 } // end ToolInstruction class
 
