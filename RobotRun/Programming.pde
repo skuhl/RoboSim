@@ -562,6 +562,65 @@ public class JumpInstruction extends Instruction {
   }
 }
 
+public class RegisterStatement extends Instruction {
+  /**
+   * A singleton or doubleton array, which determines, whether the
+   * result of the statement will be stored in a Register or a
+   * Position Register.
+   */
+  private final int[] regIndices;
+  /**
+   * The expression associated with this statement.
+   */
+  private ExpressionSet statement;
+  
+  /**
+   * Creates a register statement, whose result is associated with
+   * a Position Register entry.
+   * 
+   * @param regIdx  the index in the Position Register list where
+   *                the result of the expression will be stored
+   * @param ptIdx   the index of the a value in the Point to store
+   *                the result in the case that the result is a
+   *                single Float value. This field should be -1 in
+   *                the case that the whole Point should be saved.
+   */
+  public RegisterStatement(int regIdx, int ptIdx) {
+    super();
+    regIndices = new int[] { regIdx, ptIdx };
+    statement = new ExpressionSet();
+  }
+  
+  /**
+   * Creates a register statement, whose result is associated with
+   * a Register entry.
+   * 
+   * @param regIdx  the index in the Register list where the result
+   *                of the expression will be stored
+   */
+  public RegisterStatement(int regIdx) {
+    super();
+    regIndices = new int[] { regIdx };
+    statement = new ExpressionSet();
+  }
+  
+  
+  public void execute() {
+    // TODO
+  }
+  
+  /**
+   * Convert the entire statement to a set of Strings, where each
+   * operator and operand is a separate Stirng Object.
+   */
+  public ArrayList<String> toStringArrayList() {
+    ArrayList<String> expression = statement.toStringArrayList();
+    expression.add(0, statement.paramToString(regIndices) + " =");
+    
+    return expression;
+  }
+}
+
 public class CoordinateFrame {
   private PVector origin = new PVector();
   private PVector rotation = new PVector();
@@ -632,38 +691,67 @@ public class PositionRegister {
   }
 }
 
-/* These asre used to store the operators used in register statement expressions in the ExpressionTree Object */
-public enum Operator { PLUS, MINUS, MUTLIPLY, DIVIDE, MODULUS, INTDIVIDE, PAR_OPEN, PAR_CLOSE }
+/* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
+public enum Operator { PLUS, MINUS, MUTLIPLY, DIVIDE, REMAINDER, INTDIVIDE, PAR_OPEN, PAR_CLOSE }
 
+/**
+ * This class is designed to save an arithmetic expression for a register statement instruction. Register statements include the
+ * folllowing operands: floating-point constants, Register values, Position Register points, and Position Register values. Legal
+ * operators for these statements include addition(+), subtraction(-), multiplication(*), division(/), remainder(%), integer
+ * division(|), and parenthesis(). An expression is evaluated left to right, ignoring any operation prescendence, save for
+ * parenthesis, whose contents are evaluated first. An expression will have a maximum of 5 operators (discluding closing parenthesis).
+ * 
+ * Singleton arrays indecate the result will be stored in a Register. Doubleton arrays indicate the result will be stored in a
+ * Position Register. For either case, the first value in the array is the index of the destination register. For the doubleton
+ * arrays, if the seond value is -1, then the result of the expression is expected to be a Point Object that will override the
+ * Position Register entry. However, if the second value is between 0 and 11 inclusive, then the result is expected to be a
+ * Floating-point value, which will be saved in a specific entry of the the Position Register.
+ * 
+ * Floating-point values     ->  Constants
+ * Singleton integer arrays  ->  Register values
+ * Doubleton integer arrays  ->  Position Register points/values
+ *
+ * For the second entry of the dobleton array:
+ *   0 - 5  ->  J1 - J6
+ *   6 - 11 ->  X, Y, Z, W, P, R
+ * 
+ */
 public class ExpressionSet {
-  /* Index of the register to store the result */
-  private int regIdx;
-  /* Whether the result is stored in the position or plain registers list */
-  private boolean isPosReg;
   /* The individual elements of the expressions */
-  private ArrayList<Object> parameters;
+  private final ArrayList<Object> parameters;
   
   /**
-   * Creates a tree with the given index and register list flag.
-   * 
-   * @param idx   the index in the Register list when the result
-   *              of the expression should be stored
-   * @param isPR  whether to store the result in the Position
-   *              Registers or Registers (also works for type
-   *              checking of the result of the expression)
+   * Creates a new expression with a single null value.
    */
-  public ExpressionSet(int idx, boolean isPR) {
-    regIdx = idx;
-    isPosReg = isPR;
+  public ExpressionSet() {
     parameters = new ArrayList<Object>();
+    // Expression begins as R[i]/PR[i]/PR[x, y] = _
+    parameters.add(null);
   }
   
   /**
-   * Adds the given operator, operand pair to the end of the parameters list
+   * Addes the operator at the index in the list of parameters and
+   * then adds the operand after the operator.
+   * 
+   * @param idx       Where to add the operator and operand
+   * @param op        The operator to add to the expression
+   * @ param operand  The operand to add to the expression
    */
-  public void addParameter(Operator op, Object operand) {
-    parameters.add(op);
-    parameters.add(operand);
+  public void addParameter(int idx, Operator op, Object operand) {
+    parameters.add(idx, op);
+    parameters.add(idx + 1, operand);
+  }
+  
+  /**
+   * Adds a set of parenthesis to the expression at the given index
+   * with an empty operand inside the parenthesis
+   * 
+   * @param idx  Where to add the set of parethesis to in the expression
+   */
+  public void addParenthesis(int idx) {
+    parameters.add(idx, Operator.PAR_OPEN);
+    parameters.add(idx + 1, null);
+    parameters.add(idx + 2, Operator.PAR_CLOSE);
   }
   
   /**
@@ -675,26 +763,8 @@ public class ExpressionSet {
   }
   
   /**
-   * This method will calculated the result of the current expression.
-   * Expressions should only be made up of Floating-point values, integer
-   * arrays and Operator Objects.
-   * 
-   * Floating-point values     ->  Constants
-   * Singleton integer arrays  ->  Register entries
-   * Doubleton integer arrays  ->  Position Register entries/values
-   * 
-   * For doubleton arrats, if the second element of the array is -1, then
-   * the array corresponds to a Position Register entry as in the whole point.
-   * Otherwise, the array corresponds to a specific value in the point of the
-   * Position Register entry. For example the array { 0, 3 } corresponds to
-   * the fourth joint angle value of the point stored in Position Register 0.
-   * Where as the array { 3, -1 } corresponds to the point stored at Position
-   * Register 3. The second parameter of the doubleton arrays MUST be between
-   * -1 and 11 (inclusive) to be considered valid. The first entry of both the
-   * singleton and doubleton arrays MUST correspond to an initialized Register
-   * (or Position Register) index for it to be considered valid as well.\
-   * 
-   * The expression is evaluated from left to right, ignoring normal order of
+   * This method will calculate the result of the current expression. The
+   * expression is evaluated from left to right, ignoring normal order of
    * operations, however, parenthesis do act as normal. Each element is parsed
    * individually, keeping track of a current resulting value for every single
    * operation.
@@ -760,14 +830,14 @@ public class ExpressionSet {
               
               if (regIdx.length == 1) {
                 
-                // use Register value
+                // Use Register value
                 operand = REG[ regIdx[0] ].value;
               } else if (regIdx.length == 2) {
                 PointCoord pt = new PointCoord(POS_REG[ regIdx[0] ].point);
                 
                 if (regIdx[1] == -1) {
                   
-                  // use Register value
+                  // Use Position Register point
                   operand = pt;
                 } else if (regIdx[1] > 0 && regIdx[1] < 12) {
                   
@@ -796,21 +866,17 @@ public class ExpressionSet {
       }
       
       return result;
-    } catch (NullPointerException NPEx) {
+    } catch (NullPointerException | IndexOutOfBoundsException Ex) {
       // Missing a parameter
-      throw new ExpressionEvaluationException(0);
+      throw new ExpressionEvaluationException(0, Ex.getClass());
       
-    } catch (IndexOutOfBoundsException IOOBEx) {
-      // Missing a parameter
-      throw new ExpressionEvaluationException(0);
-      
-    } catch (ClassCastException CCEx) {
+    } catch (ClassCastException | ArithmeticException Ex) {
       // Illegal parameters or operations
-      throw new ExpressionEvaluationException(1);
+      throw new ExpressionEvaluationException(1, Ex.getClass());
       
-    } catch (EmptyStackException EXEx) {
-      // Invalid Parenthesis
-      throw new ExpressionEvaluationException(2);
+    }catch (EmptyStackException ESEx) {
+      // Invalid parenthesis
+      throw new ExpressionEvaluationException(2, ESEx.getClass());
       
     }
   }
@@ -826,6 +892,7 @@ public class ExpressionSet {
    * @param param2  The second parameter for the operation
    * @param op      The operation to preform on the parameters
    * @return        The result of the operation on param1 and param2
+   * 
    * @throws ExpressionEvaluationException  if the given combination of parameters with the given
    *                                        operation is illegal
    */
@@ -842,7 +909,8 @@ public class ExpressionSet {
       
     } else if (param1 instanceof Point && param2 instanceof Float) {
       
-      return null;//evaluatePair((Point)param1, (Float)param2, op);
+      throw new ExpressionEvaluationException(1);
+      //return evaluatePair((Point)param1, (Float)param2, op);
       
     } else if (param1 instanceof Point && param2 instanceof Point) {
       
@@ -862,7 +930,9 @@ public class ExpressionSet {
       case MINUS:      return value1 - value2;
       case MUTLIPLY:   return value1 * value2;
       case DIVIDE:     return value1 / value2;
-      case MODULUS:    return (value1 % value2) / value2;
+      // Returns the remainder
+      case REMAINDER:  return (value1 % value2) / value2;
+      // Returns the quotient
       case INTDIVIDE:  return (float)( (int)(value1 / value2) );
       default:         throw new ExpressionEvaluationException(1);
     }
@@ -882,32 +952,28 @@ public class ExpressionSet {
         return point;
       
       case DIVIDE:
-      case MODULUS:
+      case REMAINDER:
       case INTDIVIDE:
-        break;
       default:
-        throw new ExpressionEvaluationException(1);
     }
     
-    return null;
+    throw new ExpressionEvaluationException(1);
   }
   
   private Object evaluatePair(PointCoord point1, PointCoord point2, Operator op) throws ExpressionEvaluationException {
       
-    // TODO Float-Point operations
+    // TODO Point-Point operations
     switch(op) {
       case PLUS:
       case MINUS:
       case MUTLIPLY:
       case DIVIDE:
-      case MODULUS:
+      case REMAINDER:
       case INTDIVIDE:
-        break;
       default:
-        throw new ExpressionEvaluationException(1);
     }
     
-    return null;
+    throw new ExpressionEvaluationException(1);
   }
   
   /**
@@ -923,9 +989,6 @@ public class ExpressionSet {
   public ArrayList<String> toStringArrayList() {
     ArrayList<String> fields = new ArrayList<String>();
     
-    String limbo = (isPosReg) ? "PR" : "R";
-    
-    fields.add( String.format("%s[%d] =", limbo, regIdx) );
     // Each parameter gets its own column
     for (Object param : parameters) {
     
@@ -942,12 +1005,15 @@ public class ExpressionSet {
   
   /**
    * Returns unique outputs for the four types of entries of Register
-   * Statements: Contants, Registers, Position Registers, and Position
-   * Register Values.
+   * Statements: Contants, Registers, Position Register points, and
+   * Position Register Values.
    */
-  private String paramToString(Object param) {
+  public String paramToString(Object param) {
     
-    if (param instanceof int[]) {
+    if (param == null) {
+      // An empty parameter is displayed as an underscore
+      return "_";
+    } if (param instanceof int[]) {
       int[] regIdx = (int[])param;
       
       if (regIdx.length == 1) {
@@ -958,7 +1024,9 @@ public class ExpressionSet {
         
         // Position Register entries are stored as a doubleton integer array
         if (regIdx[1] >= 0) {
-          return String.format("PR[%d, %d]", regIdx[0], regIdx[1]);
+          int idx = regIdx[1] % 6;
+          
+          return String.format("PR[%d, %d]", regIdx[0], idx);
         } else {
           return String.format("PR[%d]", regIdx[0]);
         }
@@ -971,7 +1039,7 @@ public class ExpressionSet {
         case MINUS:     return "-";
         case MUTLIPLY:  return "*";
         case DIVIDE:    return "/";
-        case MODULUS:   return "%";
+        case REMAINDER:   return "%";
         case INTDIVIDE: return "|";
         case PAR_OPEN:  return "(";
         case PAR_CLOSE: return ")";
@@ -993,7 +1061,8 @@ public class ExpressionSet {
  * Quaternions during the evaluation of Register Statement Expressions.
  */
 public class PointCoord {
-  /* The values associated with this Point:
+  /**
+   * The values associated with this Point:
    *   0 - 5  ->  J1 - J6
    *   6 - 11 ->  X, Y, Z, W, P, R
    */
@@ -1028,11 +1097,15 @@ public class PointCoord {
  */
 public class ExpressionEvaluationException extends RuntimeException {
   
+  public ExpressionEvaluationException(int flag, Class exception) {
+    super( String.format("Error: %d (%s)", flag, exception.toString()) );
+  }
+  
   /**
    * TODO constructor comment
    */
   public ExpressionEvaluationException(int flag) {
     // TODO develop message for expression parsing error
-    super("Error");
+    super( String.format("Error: %d", flag) );
   }
 }
