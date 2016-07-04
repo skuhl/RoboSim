@@ -860,7 +860,7 @@ public void mouseReleased() {
 }
 
 public void keyPressed() {
-  if(mode == Mode.ENTER_TEXT) {
+  if(mode == Mode.ENTER_TEXT || mode == Mode.FIND_TEXT) {
     // Modify the input name for the new program
     if(workingText.length() < 10 && ( (key >= '0' && key <= '9') || (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') )) {
       workingText += key;
@@ -870,7 +870,10 @@ public void keyPressed() {
       workingText = workingText.substring(1, workingText.length());
     }
     
-    inputProgramName();
+    if(mode == Mode.ENTER_TEXT)
+      inputProgramName();
+    //else if(mode == Mode.FIND_TEXT)
+      
     return;
   } else if(key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
@@ -2424,6 +2427,8 @@ public void f5() {
         updateInstructions();
       }
       break;
+    case CONFIRM_INSERT:
+    case CONFIRM_RENUM:
     case CUT_COPY:
       updateInstructions();
       break;
@@ -2928,6 +2933,7 @@ public void ENTER() {
       options.add("Enter number of lines to insert:");
       workingText = "";
       options.add("\0");
+      transitionTo(Mode.INSTRUCTION_NAV, true);
       transitionTo(Mode.CONFIRM_INSERT, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
@@ -2953,9 +2959,9 @@ public void ENTER() {
       options = new ArrayList<String>();
       options.add("Enter text to search for:");
       workingText = "";
-      options.add("/0");
-      transitionTo(Mode.FIND_TEXT, true);
-      transitionTo(Mode.ENTER_TEXT, false);
+      options.add("\0");
+      transitionTo(Mode.INSTRUCTION_NAV, true);
+      transitionTo(Mode.FIND_TEXT, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
     case 4: //Replace
@@ -2963,6 +2969,7 @@ public void ENTER() {
     case 5: //Renumber
       options = new ArrayList<String>();
       options.add("Renumber positions?");
+      transitionTo(Mode.INSTRUCTION_NAV, true);
       transitionTo(Mode.CONFIRM_RENUM, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
