@@ -71,8 +71,8 @@ FileInputStream in = null;
 FileOutputStream out = null;
 
 public void setup() {
-  size(1200, 800, P3D);
-  //size(1080, 720, P3D);
+  //size(1200, 800, P3D);
+  size(1080, 720, P3D);
   ortho();
   
   cp5 = new ControlP5(this);
@@ -357,21 +357,21 @@ public void displayTeachPoints() {
     
     // First point
     if(teachPointTMatrices.size() >= 1) {
-      if((super_modes.peek() == Mode.NAV_TOOL_FRAMES && mode == Mode.THREE_POINT_MODE) || mode == Mode.SIX_POINT_MODE) {
+      if((transition_stack.peek() == Mode.NAV_TOOL_FRAMES && mode == Mode.THREE_POINT_MODE) || mode == Mode.SIX_POINT_MODE) {
         pt_colors[0] = color(130, 130, 130);
       } else {
         pt_colors[0] = color(255, 130, 0);
       }
       // Second point
       if(teachPointTMatrices.size() >= 2) {
-        if((super_modes.peek() == Mode.NAV_TOOL_FRAMES && mode == Mode.THREE_POINT_MODE) || mode == Mode.SIX_POINT_MODE) {
+        if((transition_stack.peek() == Mode.NAV_TOOL_FRAMES && mode == Mode.THREE_POINT_MODE) || mode == Mode.SIX_POINT_MODE) {
           pt_colors[1] = color(130, 130, 130);
         } else {
           pt_colors[1] = color(125, 0, 0);
         }
         // Thrid point
         if(teachPointTMatrices.size() >= 3) {
-          if((super_modes.peek() == Mode.NAV_TOOL_FRAMES && mode == Mode.THREE_POINT_MODE) || mode == Mode.SIX_POINT_MODE) {
+          if((transition_stack.peek() == Mode.NAV_TOOL_FRAMES && mode == Mode.THREE_POINT_MODE) || mode == Mode.SIX_POINT_MODE) {
             pt_colors[2] = color(130, 130, 130);
           } else {
             pt_colors[2] = color(0, 125, 0);

@@ -240,7 +240,7 @@ public class Frame {
 public class Program  {
   private String name;
   private int nextRegister;
-  private Point[] p = new Point[1000]; // local registers
+  private Point[] p = new Point[1000]; // program positions
   private ArrayList<Instruction> instructions;
 
   public Program(String theName) {
@@ -273,8 +273,8 @@ public class Program  {
     instructions.add(i);
     if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.getGlobal() && castIns.getRegister() >= nextRegister) {
-        nextRegister = castIns.getRegister()+1;
+      if(!castIns.getGlobal() && castIns.getPosition() >= nextRegister) {
+        nextRegister = castIns.getPosition()+1;
         if(nextRegister >= p.length) nextRegister = p.length-1;
       }
     }
@@ -289,17 +289,25 @@ public class Program  {
     instructions.add(idx, i);
   }
 
-  public void addRegister(Point in, int idx) {
+  public void addPosition(Point in, int idx) {
     if(idx >= 0 && idx < p.length) p[idx] = in;
   }
 
-  public int nextRegister() {
+  public int nextPosition() {
     return nextRegister;
   }
 
-  public Point getRegister(int idx) {
+  public Point getPosition(int idx) {
     if(idx >= 0 && idx < p.length) return p[idx];
     else return null;
+  }
+  
+  public void setPosition(int idx, Point pt){
+    p[idx] = pt;
+  }
+  
+  public void clearPositions(){
+    p = new Point[1000];
   }
   
   public ArrayList<LabelInstruction> getLabels(){
@@ -335,13 +343,18 @@ public int addProgram(Program p) {
 
 public class Instruction {
   Program p;
+  boolean com;
   
   public Instruction() {
     p = null;
+    com = false;
   }
   
   public Program getProg() { return p; }
   public void setProg(Program p) { this.p = p; }
+  public boolean isCommented(){ return com; }
+  public void toggleCommented(){ com = !com; }
+  
 
   public String toString() {
     String str = "\0";
@@ -351,17 +364,17 @@ public class Instruction {
 
 public final class MotionInstruction extends Instruction  {
   private int motionType;
-  private int register;
+  private int positionNum;
   private boolean globalRegister;
   private float speed;
   private float termination;
   private int userFrame, toolFrame;
 
-  public MotionInstruction(int m, int r, boolean g, 
+  public MotionInstruction(int m, int p, boolean g, 
                            float s, float t, int uf, int tf) {
     super();
     motionType = m;
-    register = r;
+    positionNum = p;
     globalRegister = g;
     speed = s;
     termination = t;
@@ -369,10 +382,10 @@ public final class MotionInstruction extends Instruction  {
     toolFrame = tf;
   }
 
-  public MotionInstruction(int m, int r, boolean g, float s, float t) {
+  public MotionInstruction(int m, int p, boolean g, float s, float t) {
     super();
     motionType = m;
-    register = r;
+    positionNum = p;
     globalRegister = g;
     speed = s;
     termination = t;
@@ -382,8 +395,8 @@ public final class MotionInstruction extends Instruction  {
 
   public int getMotionType() { return motionType; }
   public void setMotionType(int in) { motionType = in; }
-  public int getRegister() { return register; }
-  public void setRegister(int in) { register = in; }
+  public int getPosition() { return positionNum; }
+  public void setPosition(int in) { positionNum = in; }
   public boolean getGlobal() { return globalRegister; }
   public void setGlobal(boolean in) { globalRegister = in; }
   public float getSpeed() { return speed; }
@@ -403,16 +416,16 @@ public final class MotionInstruction extends Instruction  {
   public Point getVector(Program parent) {
     if(motionType != MTYPE_JOINT) {
       Point out;
-      if(globalRegister) out = POS_REG[register].point.clone();
-      else out = parent.p[register].clone();
+      if(globalRegister) out = POS_REG[positionNum].point.clone();
+      else out = parent.p[positionNum].clone();
       //out.pos = convertWorldToNative(out.pos);
       return out;
     } 
     else {
       Point ret;
       
-      if(globalRegister) ret = POS_REG[register].point.clone();
-      else ret = parent.p[register].clone();
+      if(globalRegister) ret = POS_REG[positionNum].point.clone();
+      else ret = parent.p[positionNum].clone();
       
       if(userFrame != -1) {
         ret.pos = rotate(ret.pos, userFrames[userFrame].getNativeAxes());
@@ -435,11 +448,11 @@ public final class MotionInstruction extends Instruction  {
       me += "C ";
       break;
     }
-    if(globalRegister) me += "PR[";
-    else me += "P[";
-    me += Integer.toString(register + 1)+"] ";
-    if(motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "%";
-    else me += Integer.toString((int)speed) + "mm/s";
+    if(globalRegister) me += "PR[ ";
+    else me += "P[ ";
+    me += Integer.toString(positionNum + 1)+"] ";
+    if(motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "% ";
+    else me += Integer.toString((int)speed) + "mm/s ";
     if(termination == 0) me += "FINE";
     else me += "CONT" + (int)(termination*100);
     return me;
@@ -531,8 +544,8 @@ public class LabelInstruction extends Instruction {
   }
   
   public void execute(){
-    if(active_instruction < p.getInstructions().size()-1){
-      active_instruction += 1;
+    if(active_instr < p.getInstructions().size()-1){
+      active_instr += 1;
     }
   }
   
@@ -554,7 +567,7 @@ public class JumpInstruction extends Instruction {
   }
   
   public void execute(){
-    active_instruction = tgtIdx;
+    active_instr = tgtIdx;
   }
   
   public String toString(){

@@ -833,10 +833,10 @@ boolean executeMotion(ArmModel model, float speedMult) {
 
 MotionInstruction getActiveMotionInstruct() {
   Instruction inst = null;
-  Program p = programs.get(active_program);
+  Program p = programs.get(active_prog);
   
   if(p != null && p.getInstructions().size() != 0)
-  inst = p.getInstructions().get(active_instruction);
+  inst = p.getInstructions().get(active_instr);
   else return null;
   
   if(inst instanceof MotionInstruction)
@@ -967,8 +967,12 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   //get the next program instruction
   Instruction ins = program.getInstructions().get(currentInstruction);
   
+  if(ins.isCommented()){
+    currentInstruction++;
+    if(singleInst) { return true; }
+  }
   //motion instructions
-  if(ins instanceof MotionInstruction) {
+  else if(ins instanceof MotionInstruction) {
     MotionInstruction instruction = (MotionInstruction)ins;
     
     if(instruction.getUserFrame() != activeUserFrame) {
