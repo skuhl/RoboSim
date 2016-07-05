@@ -343,13 +343,18 @@ public int addProgram(Program p) {
 
 public class Instruction {
   Program p;
+  boolean com;
   
   public Instruction() {
     p = null;
+    com = false;
   }
   
   public Program getProg() { return p; }
   public void setProg(Program p) { this.p = p; }
+  public boolean isCommented(){ return com; }
+  public void toggleCommented(){ com = !com; }
+  
 
   public String toString() {
     String str = "\0";
@@ -539,8 +544,8 @@ public class LabelInstruction extends Instruction {
   }
   
   public void execute(){
-    if(active_instruction < p.getInstructions().size()-1){
-      active_instruction += 1;
+    if(active_instr < p.getInstructions().size()-1){
+      active_instr += 1;
     }
   }
   
@@ -562,7 +567,7 @@ public class JumpInstruction extends Instruction {
   }
   
   public void execute(){
-    active_instruction = tgtIdx;
+    active_instr = tgtIdx;
   }
   
   public String toString(){
