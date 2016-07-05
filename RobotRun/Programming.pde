@@ -443,11 +443,11 @@ public final class MotionInstruction extends Instruction  {
       me += "C ";
       break;
     }
-    if(globalRegister) me += "PR[";
-    else me += "P[";
+    if(globalRegister) me += "PR[ ";
+    else me += "P[ ";
     me += Integer.toString(positionNum + 1)+"] ";
-    if(motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "%";
-    else me += Integer.toString((int)speed) + "mm/s";
+    if(motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "% ";
+    else me += Integer.toString((int)speed) + "mm/s ";
     if(termination == 0) me += "FINE";
     else me += "CONT" + (int)(termination*100);
     return me;

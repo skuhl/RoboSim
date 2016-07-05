@@ -862,17 +862,18 @@ public void mouseReleased() {
 public void keyPressed() {
   if(mode == Mode.ENTER_TEXT || mode == Mode.FIND_TEXT) {
     // Modify the input name for the new program
-    if(workingText.length() < 10 && ( (key >= '0' && key <= '9') || (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') )) {
-      workingText += key;
-    } else if(keyCode == BACKSPACE && workingText.length() > 0) {
+    if(key == BACKSPACE && workingText.length() > 0) {
       workingText = workingText.substring(0, workingText.length() - 1);
-    } else if(keyCode == DELETE && workingText.length() > 0) {
+    } else if(key == DELETE && workingText.length() > 0) {
       workingText = workingText.substring(1, workingText.length());
+    } else if(workingText.length() < 10 && key != CODED) {
+      workingText += key;
     }
     
     if(mode == Mode.ENTER_TEXT)
       inputProgramName();
-    //else if(mode == Mode.FIND_TEXT)
+    else if(mode == Mode.FIND_TEXT)
+      findText();
       
     return;
   } else if(key == 'e') {
@@ -2228,14 +2229,32 @@ public void f4() {
     
     updateInstructions();
     break;
+  case FIND_TEXT:
+    p = programs.get(active_program);
+    int lineIdx = 0;
+    String s;
+        
+    for(Instruction instruct: p.getInstructions()){
+      s = lineIdx + 1 + ") " + instruct.toString();
+      
+      if(s.toUpperCase().contains(workingText.toUpperCase())){
+        active_instruction = lineIdx;
+        break;
+      }
+      
+      lineIdx += 1;
+    }
+    
+    updateInstructions();    
+    break;
   case CONFIRM_RENUM:
     p = programs.get(active_program);
-    Point[] tmp = new Point[1000];
+    Point[] pTemp = new Point[1000];
     int posIdx = 0;
     
     //make a copy of the current positions in p
     for(int i = 0; i < 1000; i += 1){
-      tmp[i] = p.getPosition(i);
+      pTemp[i] = p.getPosition(i);
     }
     
     p.clearPositions();
@@ -2245,7 +2264,7 @@ public void f4() {
       Instruction instruct = p.getInstructions().get(i);
       if(instruct instanceof MotionInstruction) {
         int instructPos = ((MotionInstruction)instruct).getPosition();
-        p.setPosition(posIdx, tmp[instructPos]);
+        p.setPosition(posIdx, pTemp[instructPos]);
         ((MotionInstruction)instruct).setPosition(posIdx);
         posIdx += 1;
       }
@@ -2283,9 +2302,9 @@ public void f4() {
     }
     
     // Insert a character S - X (or s - x)
-    StringBuilder limbo = new StringBuilder(workingText);
-    limbo.setCharAt(col_select, newChar);
-    workingText = limbo.toString();
+    StringBuilder sTemp = new StringBuilder(workingText);
+    sTemp.setCharAt(col_select, newChar);
+    workingText = sTemp.toString();
     // Update and reset the letter states
     for(int idx = 0; idx < 3; ++idx) { letterStates[idx] = 0; }
     letterStates[3] = (letterStates[3] + 1) % 6;
@@ -2294,7 +2313,6 @@ public void f4() {
     updateComment();
     
     break;
-    default:
   }
   
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -2739,49 +2757,31 @@ public void ENTER() {
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     break;
   case ENTER_TEXT:
-    transition_stack.pop();
     if(transition_stack.peek() == Mode.NEW_PROGRAM) {
-        if(workingText.length() > 0) {
-          int new_prog = addProgram(new Program(workingText));
-          workingText = "";
-          active_program = new_prog;
-          active_instruction = 0;
-          row_select = 0;
-          col_select = 0;
-          transitionTo(Mode.INSTRUCTION_NAV, true);
-          transitionTo(mode, true);
-          clearScreen();
-          options = new ArrayList<String>();
-          loadInstructions(active_program);
-          updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-        } 
-        else {
-          transitionBack();
-          row_select = 0;
-          col_select = 0;
-          clearScreen();
-          options = new ArrayList<String>();
-          loadPrograms();
-          updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-        }
-    }
-    else if(transition_stack.peek() == Mode.FIND_TEXT){
-      String s = "";
-      
-      for(ArrayList<String> l1: contents){
-        for(String l2: l1){
-          s += l2;
-        }
-        s += "_";
+      if(workingText.length() > 0) {
+        int new_prog = addProgram(new Program(workingText));
+        workingText = "";
+        active_program = new_prog;
+        active_instruction = 0;
+        row_select = 0;
+        col_select = 0;
+        transitionTo(Mode.INSTRUCTION_NAV, true);
+        transitionTo(mode, true);
+        clearScreen();
+        options = new ArrayList<String>();
+        loadInstructions(active_program);
+        updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+      } 
+      else {
+        transitionBack();
+        row_select = 0;
+        col_select = 0;
+        clearScreen();
+        options = new ArrayList<String>();
+        loadPrograms();
+        updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       }
-      
-      println(s);
-      if(s.toUpperCase().contains(workingText)){
-        int index = s.toUpperCase().indexOf(workingText);
-        
-      }
-    }
-    
+    }  
     break;
   case SETUP_NAV:
     options = new ArrayList<String>();
@@ -2957,9 +2957,8 @@ public void ENTER() {
       break;
     case 3: //Find
       options = new ArrayList<String>();
-      options.add("Enter text to search for:");
       workingText = "";
-      options.add("\0");
+      findText();
       transitionTo(Mode.INSTRUCTION_NAV, true);
       transitionTo(Mode.FIND_TEXT, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -4301,6 +4300,7 @@ public void updateScreen(color cDefault, color cHighlight) {
     case CONFIRM_INSERT:
     case CONFIRM_DELETE:
     case CONFIRM_RENUM:
+    case FIND_TEXT:
       // F4, F5
       funct[0] = "";
       funct[1] = "";
@@ -4377,7 +4377,7 @@ public void clearNums() {
  * Displays the Interface for inputting the name of a program.
  */
 public void inputProgramName() {
-  row_select = -1; 
+  row_select = -1;
   col_select = -1;
   contents = new ArrayList<ArrayList<String>>();
   
@@ -4389,6 +4389,21 @@ public void inputProgramName() {
   
   opt_select = -1;
   options = new ArrayList<String>();
+  updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+}
+
+/**
+ * Displays the Interface for inputting text to search for.
+ */
+public void findText() {
+  options = new ArrayList<String>();
+  
+  options.add("Enter text to search for:");
+  options.add("\0");
+  options.add("\0" + workingText);
+  
+  opt_select = -1;
+  loadInstructions(active_program);
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
