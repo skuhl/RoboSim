@@ -2744,7 +2744,7 @@ public void ENTER() {
     
   case INPUT_RSTMT:
   case EDIT_RSTMT:
-    Program prog = programs.get(active_program);
+    Program prog = programs.get(active_prog);
     
     if (row_select == 0) {
       // Register value
@@ -2916,11 +2916,7 @@ public void ENTER() {
     break;
   case SET_DO_STATUS:
   case SET_RO_STATUS:
-<<<<<<< HEAD
-    prog = programs.get(active_program);
-=======
-    Program prog = programs.get(active_prog);
->>>>>>> b72ecd2674e28294ce43491789075b52373d4f1a
+    prog = programs.get(active_prog);
     
     try {
       int bracketNum = Integer.parseInt(workingText);
