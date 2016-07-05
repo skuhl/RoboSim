@@ -1,65 +1,65 @@
 public enum Mode {
-  NONE, 
-  PROGRAM_NAV, 
-  NEW_PROGRAM,
-  INSTRUCTION_NAV,
-  INSTRUCTION_EDIT,
-  SET_INSTRUCTION_SPEED,
-  SET_INSTRUCTION_REGISTER,
-  SET_INSTRUCTION_TERMINATION,
-  JUMP_TO_LINE,
-  VIEW_INST_REG,
-  ENTER_TEXT,
-  PICK_LETTER,
-  MAIN_MENU_NAV,
-  SETUP_NAV,
-  NAV_TOOL_FRAMES,
-  NAV_USER_FRAMES,
-  PICK_FRAME_MODE,
-  FRAME_DETAIL,
-  PICK_FRAME_METHOD,
-  THREE_POINT_MODE,
-  FOUR_POINT_MODE,
-  SIX_POINT_MODE,
-  DIRECT_ENTRY_MODE,
   ACTIVE_FRAMES,
-  PICK_INSTRUCTION,
-  IO_SUBMENU,
-  SET_DO_BRACKET,
-  SET_DO_STATUS,
-  SET_RO_BRACKET,
-  SET_RO_STATUS,
-  SET_FRAME_INSTRUCTION,
-  SET_FRAME_INSTRUCTION_IDX,
-  INPUT_RSTMT,
-  EDIT_RSTMT,
-  INPUT_RDX,
-  INPUT_PRDX,
-  INPUT_PRVDX,
-  INPUT_CONSTANT,
-  INPUT_OPERATOR,
-  PICK_REG_LIST,
-  VIEW_REG,
-  // C for Cartesian
-  VIEW_POS_REG_C,
-  // J for Joint
-  VIEW_POS_REG_J,
-  INSTRUCT_MENU_NAV,
-  INPUT_INTEGER,
-  INPUT_FLOAT,
-  INPUT_POINT_C,
-  INPUT_POINT_J,
-  INPUT_COMMENT_U,
-  INPUT_COMMENT_L,
-  SELECT_LINES,
+  COM_UNCOM,
   CONFIRM_INSERT,
-  CONFIRM_PROG_DELETE,
   CONFIRM_INSTR_DELETE,
+  CONFIRM_PROG_DELETE,
   CONFIRM_RENUM,
   CONFIRM_UNDO,
+  DIRECT_ENTRY_MODE,
+  EDIT_RSTMT,
+  ENTER_TEXT,
   FIND_REPL,
-  CUT_COPY,
-  COM_UNCOM;
+  FOUR_POINT_MODE,
+  FRAME_DETAIL,
+  INPUT_COMMENT_L,
+  INPUT_COMMENT_U,
+  INPUT_CONSTANT,
+  INPUT_FLOAT,
+  INPUT_INTEGER,
+  INPUT_OPERATOR,
+  INPUT_POINT_C,
+  INPUT_POINT_J,
+  INPUT_PRDX,
+  INPUT_PRVDX,
+  INPUT_RDX,
+  INPUT_RSTMT,
+  INSTRUCTION_EDIT,
+  INSTRUCTION_NAV,
+  INSTRUCT_MENU_NAV,
+  IO_SUBMENU,
+  JUMP_TO_LINE,
+  MAIN_MENU_NAV,
+  NAV_TOOL_FRAMES,
+  NAV_USER_FRAMES,
+  NEW_PROGRAM,
+  NONE, 
+  PICK_FRAME_METHOD,
+  PICK_FRAME_MODE,
+  PICK_INSTRUCTION,
+  PICK_LETTER,
+  PICK_REG_LIST,
+  PROGRAM_NAV, 
+  SELECT_CUT_COPY,
+  SELECT_DELETE,
+  SETUP_NAV,
+  SET_DO_BRACKET,
+  SET_DO_STATUS,
+  SET_FRAME_INSTRUCTION,
+  SET_FRAME_INSTRUCTION_IDX,
+  SET_INSTRUCTION_REGISTER,
+  SET_INSTRUCTION_SPEED,
+  SET_INSTRUCTION_TERMINATION,
+  SET_RO_BRACKET,
+  SET_RO_STATUS,
+  SIX_POINT_MODE,
+  THREE_POINT_MODE,
+  VIEW_INST_REG,
+  //Cartesian
+  VIEW_POS_REG_C,
+  //Joint
+  VIEW_POS_REG_J,
+  VIEW_REG;
 }
 
 final int FRAME_JOINT = 0, 
@@ -1323,9 +1323,10 @@ public void up() {
     }
     
     break;
-  case INSTRUCTION_NAV:
-  case SELECT_LINES:
   case COM_UNCOM:
+  case INSTRUCTION_NAV:
+  case SELECT_CUT_COPY:
+  case SELECT_DELETE:
     //options = new ArrayList<String>();
     //clearOptions();
     
@@ -1460,9 +1461,10 @@ public void dn() {
     }
     
     break;
-  case INSTRUCTION_NAV: //<>//
-  case SELECT_LINES:
   case COM_UNCOM:
+  case INSTRUCTION_NAV:
+  case SELECT_CUT_COPY:
+  case SELECT_DELETE: //<>//
     //options = new ArrayList<String>();
     //clearOptions(); //<>//
     
@@ -2065,7 +2067,7 @@ public void f3() {
       opt_select = 0;
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
-    case CUT_COPY:
+    case SELECT_CUT_COPY:
       Program p = programs.get(active_prog);
       ArrayList<Instruction> inst = p.getInstructions();
       clipBoard = new ArrayList<Instruction>();
@@ -2220,7 +2222,7 @@ public void f4() {
     
     updateInstructions();
     break;
-  case CUT_COPY:
+  case SELECT_CUT_COPY:
     p = programs.get(active_prog);
     inst = p.getInstructions();
     clipBoard = new ArrayList<Instruction>();
@@ -2278,25 +2280,14 @@ public void f4() {
     
     updateInstructions();
     break;
-  case SELECT_LINES:
-    println(transition_stack.peek());
-    if(transition_stack.peek() == Mode.CONFIRM_PROG_DELETE) {
+  case SELECT_DELETE:
       clearOptions();
       options.add("Delete selected lines?");
       
       transitionTo(Mode.INSTRUCTION_NAV, true);
-      transitionTo(Mode.CONFIRM_PROG_DELETE, false);
+      transitionTo(Mode.CONFIRM_INSTR_DELETE, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-    }
-    else if(transition_stack.peek() == Mode.CUT_COPY){
-      clearOptions();
-      options.add("Cut/ Copy selected lines?");
-      
-      transitionTo(Mode.INSTRUCTION_NAV, true);
-      transitionTo(Mode.CUT_COPY, false);
-      updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-    }
-    break;
+      break;
   case INPUT_COMMENT_U:
   case INPUT_COMMENT_L:
     char newChar = '\0';
@@ -2451,7 +2442,7 @@ public void f5() {
     
     case CONFIRM_INSERT:
     case CONFIRM_RENUM:
-    case CUT_COPY:
+    case SELECT_CUT_COPY:
       updateInstructions();
       break;
     case INPUT_COMMENT_U:
@@ -2737,7 +2728,8 @@ public void ENTER() {
     clearOptions();
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     break;
-  case SELECT_LINES:
+  case SELECT_CUT_COPY:
+  case SELECT_DELETE:
     selectedLines[active_instr] = !selectedLines[active_instr];
     break;
   case COM_UNCOM:
@@ -2954,7 +2946,7 @@ public void ENTER() {
       p = programs.get(active_prog);
       selectedLines = resetSelection(p.getInstructions().size());
       transitionTo(Mode.CONFIRM_INSTR_DELETE, true);
-      transitionTo(Mode.SELECT_LINES, false);
+      transitionTo(Mode.SELECT_DELETE, false);
       clearScreen();
       options.add("Select lines to delete.");
       loadInstructions(active_prog);
@@ -2963,8 +2955,8 @@ public void ENTER() {
     case 2: //Cut/Copy
       p = programs.get(active_prog);
       selectedLines = resetSelection(p.getInstructions().size());
-      transitionTo(Mode.CUT_COPY, true);
-      transitionTo(Mode.SELECT_LINES, false);
+      transitionTo(Mode.INSTRUCTION_NAV, true);
+      transitionTo(Mode.SELECT_CUT_COPY, false);
       clearScreen();
       options.add("Select lines to cut/ copy.");
       loadInstructions(active_prog);
@@ -4094,14 +4086,14 @@ public void updateScreen(color cDefault, color cHighlight) {
     
     for(int j = 0; j < temp.size(); j += 1) {
       if(i == row_select) {
-        if(j != col_select || mode == Mode.SELECT_LINES || mode == Mode.COM_UNCOM){
+        if(j != col_select || mode == Mode.SELECT_DELETE || mode == Mode.COM_UNCOM){
           c1 = cDefault;
           c2 = cHighlight;          
         } else {
           c1 = cHighlight;
           c2 = cDefault;
         }
-      } else if(mode == Mode.SELECT_LINES && selectedLines[text_render_start + i]) {
+      } else if(mode == Mode.SELECT_DELETE && selectedLines[text_render_start + i]) {
         c1 = cDefault;
         c2 = cHighlight;
       } else {
@@ -4232,13 +4224,20 @@ public void updateScreen(color cDefault, color cHighlight) {
         funct[4] = "[Opt]";
       }
       break;
-    case SELECT_LINES:
+    case SELECT_DELETE:
     case COM_UNCOM:
       funct[0] = "";
       funct[1] = "";
       funct[2] = "";
       funct[3] = "[Done]";
       funct[4] = "";
+      break;
+    case SELECT_CUT_COPY:
+      funct[0] = "";
+      funct[1] = "";
+      funct[2] = "[Cut]";
+      funct[3] = "[Copy]";
+      funct[4] = "[Cancel]";
       break;
     case NAV_TOOL_FRAMES:
     case NAV_USER_FRAMES:
