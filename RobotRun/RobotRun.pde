@@ -351,34 +351,34 @@ public void handleWorldObjects() {
  */
 public void displayTeachPoints() {
   // Teach points are displayed only while the Robot is being taught a frame
-  if(teachPointTMatrices != null && (mode == Mode.THREE_POINT_MODE || mode == Mode.FOUR_POINT_MODE || mode == Mode.SIX_POINT_MODE)) {
+  if(teachPointTMatrices != null && (mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE)) {
     
     color[] pt_colors = new color[teachPointTMatrices.size()];
     
     // First point
     if(teachPointTMatrices.size() >= 1) {
-      if((transition_stack.peek() == Mode.NAV_TOOL_FRAMES && mode == Mode.THREE_POINT_MODE) || mode == Mode.SIX_POINT_MODE) {
+      if((transition_stack.peek() == Screen.NAV_TOOL_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.SIX_POINT_MODE) {
         pt_colors[0] = color(130, 130, 130);
       } else {
         pt_colors[0] = color(255, 130, 0);
       }
       // Second point
       if(teachPointTMatrices.size() >= 2) {
-        if((transition_stack.peek() == Mode.NAV_TOOL_FRAMES && mode == Mode.THREE_POINT_MODE) || mode == Mode.SIX_POINT_MODE) {
+        if((transition_stack.peek() == Screen.NAV_TOOL_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.SIX_POINT_MODE) {
           pt_colors[1] = color(130, 130, 130);
         } else {
           pt_colors[1] = color(125, 0, 0);
         }
         // Thrid point
         if(teachPointTMatrices.size() >= 3) {
-          if((transition_stack.peek() == Mode.NAV_TOOL_FRAMES && mode == Mode.THREE_POINT_MODE) || mode == Mode.SIX_POINT_MODE) {
+          if((transition_stack.peek() == Screen.NAV_TOOL_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.SIX_POINT_MODE) {
             pt_colors[2] = color(130, 130, 130);
           } else {
             pt_colors[2] = color(0, 125, 0);
           }
           // Fourth point
           if(teachPointTMatrices.size() >= 4) {
-            if(mode == Mode.SIX_POINT_MODE) {
+            if(mode == Screen.SIX_POINT_MODE) {
               pt_colors[3] = color(255, 130, 0);
             } else {
               pt_colors[3] = color(0, 0, 125);
