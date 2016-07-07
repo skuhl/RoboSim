@@ -343,13 +343,18 @@ public int addProgram(Program p) {
 
 public class Instruction {
   Program p;
+  boolean com;
   
   public Instruction() {
     p = null;
+    com = false;
   }
   
   public Program getProg() { return p; }
   public void setProg(Program p) { this.p = p; }
+  public boolean isCommented(){ return com; }
+  public void toggleCommented(){ com = !com; }
+  
 
   public String toString() {
     String str = "\0";
@@ -443,11 +448,11 @@ public final class MotionInstruction extends Instruction  {
       me += "C ";
       break;
     }
-    if(globalRegister) me += "PR[";
-    else me += "P[";
+    if(globalRegister) me += "PR[ ";
+    else me += "P[ ";
     me += Integer.toString(positionNum + 1)+"] ";
-    if(motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "%";
-    else me += Integer.toString((int)speed) + "mm/s";
+    if(motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "% ";
+    else me += Integer.toString((int)speed) + "mm/s ";
     if(termination == 0) me += "FINE";
     else me += "CONT" + (int)(termination*100);
     return me;
@@ -539,8 +544,8 @@ public class LabelInstruction extends Instruction {
   }
   
   public void execute(){
-    if(active_instruction < p.getInstructions().size()-1){
-      active_instruction += 1;
+    if(active_instr < p.getInstructions().size()-1){
+      active_instr += 1;
     }
   }
   
@@ -562,7 +567,7 @@ public class JumpInstruction extends Instruction {
   }
   
   public void execute(){
-    active_instruction = tgtIdx;
+    active_instr = tgtIdx;
   }
   
   public String toString(){
