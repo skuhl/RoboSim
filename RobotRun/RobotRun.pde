@@ -25,6 +25,7 @@ float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
 boolean spacebarDown = false;
 
 ControlP5 cp5;
+Stack<Screen> display_stack;
 
 ArrayList<Program> programs = new ArrayList<Program>();
 
@@ -75,8 +76,11 @@ public void setup() {
   size(1080, 720, P3D);
   ortho();
   
+  //set up UI
   cp5 = new ControlP5(this);
+  display_stack = new Stack<Screen>();
   gui();
+  
   armModel = new ArmModel();
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));
