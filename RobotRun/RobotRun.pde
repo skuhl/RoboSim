@@ -104,8 +104,6 @@ public void setup() {
   //createTestProgram();
 }
 
-boolean doneMoving = true;
-
 public void draw() {
   ortho();
   
@@ -123,9 +121,15 @@ public void draw() {
   popMatrix();
   
   //execute arm movement
-  if(!doneMoving) {
-    //run program
-    doneMoving = executeProgram(currentProgram, armModel, execSingleInst);
+  if(armModel.inMotion) {
+    /* If the current instruction is -2, then the Robot's motion is the product of
+     * neither jogging or program execution. */
+    if (currentInstruction != -2) {
+      //run program
+      armModel.inMotion = !executeProgram(currentProgram, armModel, execSingleInst);
+    } else {
+      armModel.inMotion = !executeMotion(armModel, armModel.motorSpeed);
+    }
   }
   else {
     //respond to manual movement from J button presses

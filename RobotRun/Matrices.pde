@@ -30,6 +30,28 @@ public PVector rotate(PVector v, float[][] rotMatrix) {
 }
 
 /**
+ * Given a 3x3 transformation matrix, a matrix, which corresponds
+ * to the given matrix in the World Frame is returned.
+ */
+public float[][] convertToWorld(float[][] rotMatrix) {
+  if (rotMatrix.length < 3 || rotMatrix[0].length < 3) {
+    return null;
+  }
+  
+  float[][] nRotMatrix = new float[3][3];
+  
+  for (int e = 0; e < 3; ++e) {
+    float limbo = rotMatrix[e][0];
+    
+    rotMatrix[e][0] = rotMatrix[e][2];
+    rotMatrix[e][1] = -rotMatrix[e][1];
+    rotMatrix[e][2] = limbo;
+  }
+  
+  return nRotMatrix;
+}
+
+/**
  * Find the inverse of the given 4x4 Homogeneous Coordinate Matrix. 
  * 
  * This method is based off of the algorithm found on this webpage:

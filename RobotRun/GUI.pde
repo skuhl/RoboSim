@@ -821,7 +821,7 @@ public void keyPressed() {
   } else if(key == 'g') {
     armModel.resetFrame();
   } else if(key == 'q') {
-    armModel.getQuaternion();
+    System.out.printf("\n%s\n\n", arrayToString(armModel.getQuaternion()));
   } else if(key == 'r') {
     panX = 0;
     panY = 0;
@@ -1178,7 +1178,7 @@ public void LINE() {
   } else if(mode == Screen.INPUT_FLOAT) {
     
     // Mutliply current number by -1
-    if(workingText.charAt(0) == '-') {
+    if(workingText.length() > 0 && workingText.charAt(0) == '-') {
       workingText = workingText.substring(1);
     } else {
       workingText = "-" + workingText;
@@ -1193,7 +1193,7 @@ public void LINE() {
   } else if (mode == Screen.INPUT_INTEGER) {
     
     // Mutliply current number by -1
-    if(workingText.charAt(0) == '-') {
+    if(workingText.length() > 0 && workingText.charAt(0) == '-') {
       workingText = workingText.substring(1);
     } else {
       workingText = "-" + workingText;
@@ -2228,6 +2228,42 @@ public void f4() {
       transitionTo(Screen.CONFIRM_INSTR_DELETE, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
+  case THREE_POINT_MODE:
+  case FOUR_POINT_MODE:
+  case SIX_POINT_MODE:
+    
+    if (opt_select >= 0 && opt_select < teachPointTMatrices.size() && !armModel.inMotion) {
+      armModel.inMotion = true;
+      currentInstruction = -2;
+      
+      PVector eePos = armModel.getEEPos();
+      float[] eeRot = armModel.getQuaternion();
+      /* The current point of the Robot's End Effector */
+      Point ee = new Point();
+      ee.pos = eePos;
+      ee.ori = eeRot;
+      
+      float[][] tMatrix = teachPointTMatrices.get(opt_select);
+      float[][] rMatrix = new float[3][3];
+      // Transpose the matrix
+      for (int r = 0; r < 3; ++r) {
+        for (int c = 0; c < 3; ++c) {
+          rMatrix[r][c] = tMatrix[c][r];
+        }
+      }
+      
+      PVector tgtPos = new PVector(tMatrix[0][3], tMatrix[1][3], tMatrix[2][3]);
+      float[] tgtRot = matrixToQuat(rMatrix);
+      /* The target position */
+      Point tgt = new Point();
+      tgt.pos = tgtPos;
+      tgt.ori = tgtRot;
+      System.out.printf("\n%s\n%s\n\n", matrixToString(tMatrix), matrixToString(rMatrix));
+      // Move from the current position of the Robot to the target position in a linear fashion
+      beginNewLinearMotion(ee, tgt);
+    }
+    
+    break;
   case INPUT_COMMENT_U:
   case INPUT_COMMENT_L:
     char newChar = '\0';
@@ -2250,6 +2286,8 @@ public void f4() {
     
     updateComment();
     
+    break;
+  default:
     break;
   }
   
@@ -2308,25 +2346,25 @@ public void f5() {
             MotionInstruction castIns = (MotionInstruction)ins;
             Point p = castIns.getVector(programs.get(active_prog));
             options = new ArrayList<String>();
-            options.add("Data of the point in this register (press ENTER to exit):");
+            options.add("Register Data (press ENTER to exit):");
             
             if(castIns.getMotionType() != MTYPE_JOINT) {
               // Show the vector in terms of the World Frame
               PVector wPos = convertNativeToWorld(p.pos);
-              options.add( String.format("X: %5.4f  Y: %5.4f  Z: %5.4f", wPos.x, wPos.y, wPos.z) );
+              options.add( String.format("X: %5.3f  Y: %5.3f  Z: %5.3f", wPos.x, wPos.y, wPos.z) );
               PVector wpr = quatToEuler(p.ori);
               // Show angles in degrees
-              options.add( String.format("W: %5.4f  P: %5.4f  R: %5.4f", 
+              options.add( String.format("W: %5.3f  P: %5.3f  R: %5.3f", 
               (wpr.x * RAD_TO_DEG), 
               (wpr.y * RAD_TO_DEG), 
               (wpr.z * RAD_TO_DEG)));
             }
             else {  
-              options.add( String.format("J1: %5.4f  J2: %5.4f  J3: %5.4f", 
+              options.add( String.format("J1: %5.3f  J2: %5.3f  J3: %5.3f", 
               (p.joints[0] * RAD_TO_DEG), 
               (p.joints[1] * RAD_TO_DEG), 
               (p.joints[2] * RAD_TO_DEG)));
-              options.add( String.format("J4: %5.4f  J5: %5.4f  J6: %5.4f", 
+              options.add( String.format("J4: %5.3f  J5: %5.3f  J6: %5.3f", 
               (p.joints[3] * RAD_TO_DEG), 
               (p.joints[4] * RAD_TO_DEG),
               (p.joints[5] * RAD_TO_DEG)));
@@ -2431,12 +2469,12 @@ public void hd() {
     model.jointsMoving[2] = 0;
   }
   
-  for(int idx = 0; idx < armModel.mvLinear.length; ++idx) {
-    armModel.mvLinear[idx] = 0;
+  for(int idx = 0; idx < armModel.jogLinear.length; ++idx) {
+    armModel.jogLinear[idx] = 0;
   }
   
-  for(int idx = 0; idx < armModel.mvRot.length; ++idx) {
-    armModel.mvRot[idx] = 0;
+  for(int idx = 0; idx < armModel.jogRot.length; ++idx) {
+    armModel.jogRot[idx] = 0;
   }
   
   // Reset button highlighting
@@ -2448,10 +2486,10 @@ public void hd() {
 
 public void fd() {
   
-  if(shift == ON) {
+  if(!armModel.inMotion && shift == ON) {
     currentProgram = programs.get(active_prog);
     executingInstruction = false;
-    doneMoving = false;
+    armModel.inMotion = true;
     
     if(step == ON) {
       // Execute a single instruction
@@ -2476,7 +2514,7 @@ public void fd() {
 public void bd() {
   
   // If there is a previous instruction, then move to it and reverse its affects
-  if(shift == ON && step == ON && active_instr > 0) {
+  if(!armModel.inMotion && shift == ON && step == ON && active_instr > 0) {
     
     shift = OFF;
     up();
@@ -2487,7 +2525,7 @@ public void bd() {
     if(ins instanceof MotionInstruction) {
       currentProgram = programs.get(active_prog);
       executingInstruction = false;
-      doneMoving = false;
+      armModel.inMotion = true;
       currentInstruction = active_instr;
       execSingleInst = true;
       
@@ -2497,7 +2535,7 @@ public void bd() {
     } else if(ins instanceof ToolInstruction) {
       currentProgram = null;
       executingInstruction = false;
-      doneMoving = true;
+      armModel.inMotion = false;
       currentInstruction = -1;
       execSingleInst = true;
       
@@ -3583,21 +3621,21 @@ public void activateLiveWorldMotion(int axis, int dir) {
   armModel.tgtRot = armModel.getQuaternion();
   
   if(axis >= 0 && axis < 3) {
-    if(armModel.mvLinear[axis] == 0) {
+    if(armModel.jogLinear[axis] == 0) {
       //Begin movement on the given axis in the given direction
-      armModel.mvLinear[axis] = dir;
+      armModel.jogLinear[axis] = dir;
     } else {
       //Halt movement
-      armModel.mvLinear[axis] = 0;
+      armModel.jogLinear[axis] = 0;
     }
   }
   else if(axis >= 3 && axis < 6) {
     axis -= 3;
-    if(armModel.mvRot[axis] == 0) {
-      armModel.mvRot[axis] = dir;
+    if(armModel.jogRot[axis] == 0) {
+      armModel.jogRot[axis] = dir;
     }
     else {
-      armModel.mvRot[axis] = 0;
+      armModel.jogRot[axis] = 0;
     }
   }
 }
@@ -4289,13 +4327,13 @@ public void updateScreen(color cDefault, color cHighlight) {
         funct[0] = "[Rmv Pt]";
         funct[1] = "";
         funct[2] = "";
-        funct[3] = "";
+        funct[3] = "[Mov To]";
         funct[4] = "[Record]";
       } else {
         funct[0] = "[Save Pt]";
         funct[1] = "";
         funct[2] = "";
-        funct[3] = "";
+        funct[3] = "[Mov To]";
         funct[4] = "[Record]";
       }
       break;
@@ -4670,62 +4708,60 @@ public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
 
 /**
  * Creates a 3x3 rotation matrix based off of two vectors defined by the
- * given set of three transformation matrices representing points in space.
- * ifthe list contains more than three points, then only the first three
- * points will be used.
+ * given set of three points, which are defined by the three given PVectors.
  * The three points are used to form two vectors. The first vector is treated
  * as the negative x-axis and the second one is the psuedo-negative z-axis.
  * These vectors are crossed to form the y-axis. The y-axis is then crossed
  * with the negative x-axis to form the true y-axis.
  *
- * @param points  a set of at least three 4x4 transformation matrices
+ * @param p1      the origin reference point used to form the negative x-
+ *                and z-axes
+ * @param p2      the point used to create the preliminary negative x-axis
+ * @param p3      the point used to create the preliminary negative z axis
  * @return        a set of three unit vectors (down the columns) that
  *                represent an axes
  */
-public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
-  // 3 points are necessary for the creation of the axes
-  if(points.size() >= 3) {
-    float[][] axes = new float[3][];
-    float[] x_ndir = new float[3],
-    z_ndir = new float[3];
-    
-    // From preliminary negative x and z axis vectors
-    for(int row = 0; row < 3; ++row) {
-      x_ndir[row] = points.get(1)[row][3] - points.get(0)[row][3];
-      z_ndir[row] = points.get(2)[row][3] - points.get(0)[row][3];
-    }
-    
-    // Form axes
-    axes[0] = negate(x_ndir);                         // X axis
-    axes[1] = crossProduct(axes[0], negate(z_ndir));  // Y axis
-    axes[2] = crossProduct(axes[0], axes[1]);         // Z axis
-    
-    if((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
-        (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
-        (axes[2][0] == 0f && axes[2][1] == 0f && axes[2][2] == 0f)) {
-      // One of the three axis vectors is the zero vector
-      return null;
-    }
-    
-    float[] magnitudes = new float[axes.length];
-    
-    for(int v = 0; v < axes.length; ++v) {
-      // Find the magnitude of each axis vector
-      for(int e = 0; e < axes[0].length; ++e) {
-        magnitudes[v] += pow(axes[v][e], 2);
-      }
-      
-      magnitudes[v] = sqrt(magnitudes[v]);
-      // Normalize each vector
-      for(int e = 0; e < axes.length; ++e) {
-        axes[v][e] /= magnitudes[v];
-      }
-    }
-    
-    return axes;
+public float[][] createAxesFromThreePoints(PVector p1, PVector p2, PVector p3) {
+  float[][] axes = new float[3][];
+  float[] x_ndir = new float[3],
+  z_ndir = new float[3];
+  
+  // From preliminary negative x and z axis vectors
+  x_ndir[0] = p2.x - p1.x;
+  x_ndir[1] = p2.y - p1.y;
+  x_ndir[2] = p2.z - p1.z;
+  z_ndir[0] = p3.x - p1.x;
+  z_ndir[1] = p3.y - p1.y;
+  z_ndir[2] = p3.z - p1.z;
+  
+  // Form axes
+  axes[0] = negate(x_ndir);                         // X axis
+  axes[1] = crossProduct(axes[0], negate(z_ndir));  // Y axis
+  axes[2] = crossProduct(axes[0], axes[1]);         // Z axis
+  
+  if((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
+      (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
+      (axes[2][0] == 0f && axes[2][1] == 0f && axes[2][2] == 0f)) {
+    // One of the three axis vectors is the zero vector
+    return null;
   }
   
-  return null;
+  float[] magnitudes = new float[axes.length];
+  
+  for(int v = 0; v < axes.length; ++v) {
+    // Find the magnitude of each axis vector
+    for(int e = 0; e < axes[0].length; ++e) {
+      magnitudes[v] += pow(axes[v][e], 2);
+    }
+    
+    magnitudes[v] = sqrt(magnitudes[v]);
+    // Normalize each vector
+    for(int e = 0; e < axes.length; ++e) {
+      axes[v][e] /= magnitudes[v];
+    }
+  }
+  
+  return axes;
 }
 
 /**
@@ -4750,12 +4786,12 @@ public void loadFrameDetails() {
     // Convert angles to degrees
     PVector wpr = userFrames[curFrameIdx].getWpr();
     
-    contents.add( newLine(String.format("X: %5.4f", origin.x)) );
-    contents.add( newLine(String.format("Y: %5.4f", origin.y)) );
-    contents.add( newLine(String.format("Z: %5.4f", origin.z)) );
-    contents.add( newLine(String.format("W: %5.4f", wpr.x * RAD_TO_DEG)) );
-    contents.add( newLine(String.format("P: %5.4f", wpr.y * RAD_TO_DEG)) );
-    contents.add( newLine(String.format("R: %5.4f", wpr.z * RAD_TO_DEG)) );
+    contents.add( newLine(String.format("X: %5.3f", origin.x)) );
+    contents.add( newLine(String.format("Y: %5.3f", origin.y)) );
+    contents.add( newLine(String.format("Z: %5.3f", origin.z)) );
+    contents.add( newLine(String.format("W: %5.3f", wpr.x * RAD_TO_DEG)) );
+    contents.add( newLine(String.format("P: %5.3f", wpr.y * RAD_TO_DEG)) );
+    contents.add( newLine(String.format("R: %5.3f", wpr.z * RAD_TO_DEG)) );
     
   } else {
     

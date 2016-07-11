@@ -111,7 +111,7 @@ public class Point  {
     String[] entries = new String[6];
     
     for(int idx = 0; idx < joints.length; ++idx) {
-      entries[idx] = String.format("J%d: %4.4f", (idx + 1), joints[idx] * RAD_TO_DEG);
+      entries[idx] = String.format("J%d: %4.3f", (idx + 1), joints[idx] * RAD_TO_DEG);
     }
     
     return entries;
@@ -143,10 +143,15 @@ public class Point  {
   }
 } // end Point class
 
-public class Frame {
+public abstract class Frame {
   private PVector origin;
   // The unit vectors representing the x, y, z axes (in row major order)
   private float[][] axes;
+  // For 6-Point Method of Tool Frames and 3-Point Method of User Frames
+  public PVector[] orientation;
+  // For Manual Entry
+  public PVector mOrigin;
+  public float[] mOrientation;
 
   public Frame() {
     origin = new PVector(0,0,0);
@@ -155,18 +160,11 @@ public class Frame {
     for(int diag = 0; diag < 3; ++diag) {
       axes[diag][diag] = 1f;
     }
-  }
-
-  /* Used for loading Frames from a file */
-  public Frame(PVector origin, float[][] axesVectors) {
-    this.origin = origin;
-    this.axes = new float[3][3];
     
-    for(int row = 0; row < 3; ++row) {
-      for(int col = 0; col < 3; ++col) {
-        axes[row][col] = axesVectors[row][col];
-      }
-    }
+    orientation = new PVector[3];
+    
+    mOrigin = new PVector();
+    mOrientation = new float[4];
   }
 
   public PVector getOrigin() { return origin; }
@@ -212,6 +210,16 @@ public class Frame {
   public void setAxes(float[][] axesVectors) {
     axes = axesVectors.clone();
   }
+  
+  /**
+   * TODO
+   */
+  public abstract void setPoint(Point p, int idx);
+  
+  /**
+   * TODO
+   */
+  public abstract boolean setFrame(int method);
 
   /**
    * Returns a string array, where each entry is one of
@@ -236,6 +244,99 @@ public class Frame {
     return values;
   }
 } // end Frame class
+
+public class ToolFrame extends Frame {
+  // For 3-Point and Six-Point Methods
+  public Point[] TCP;
+  
+  /**
+   * Initialize all fields
+   */
+  public ToolFrame() {
+    super();
+    TCP = new Point[3];
+    orientation = new PVector[3];
+  }
+  
+  public void setPoint(Point p, int idx) {
+    
+    /* Map the index into the 'Point array' to the
+     * actual values stored in the frame */
+    switch (idx) {
+      case 0:
+      case 1:
+      case 2:
+        TCP[idx] = p;
+        return;
+        
+      case 3:
+      case 4:
+      case 5:
+        orientation[ idx % 3 ] = p.pos;
+        return;
+        
+      default:
+    }
+  }
+  
+  public boolean setFrame(int method) {
+    // TODO update the frame based on given input
+    
+    return false;
+  }
+}
+
+public class UserFrame extends Frame {
+  // For the 4-Point Method
+  public PVector orientOrigin;
+  
+  /**
+   * Initialize all fields
+   */
+  public UserFrame() {
+    super();
+    orientOrigin = new PVector();
+  }
+  
+  public void setPoint(Point p, int idx) {
+    
+    /* Map the index into the 'Point array' to the
+     * actual values stored in the frame */
+    switch(idx) {
+      case 0:
+      case 1:
+      case 2:
+        orientation[idx] = p.pos;
+        return;
+        
+      case 3:
+        orientOrigin = p.pos;
+        return;
+        
+      default:
+    }
+  }
+  
+  public boolean setFrame(int mode) {
+    
+    if (mode == 0 && (orientation[0] == null || orientation[1] == null || orientation[2] == null)) {
+      // 3-Pint Method
+      setAxes( createAxesFromThreePoints(orientation[0], orientation[1], orientation[2]) );
+      return true;
+    } else if (mode == 1 && (orientOrigin == null || orientation[0] == null || orientation[1] == null || orientation[2] == null)) {
+      // 4-Point Method
+      setOrigin(orientOrigin);
+      setAxes( createAxesFromThreePoints(orientation[0], orientation[1], orientation[2]) );
+      return true;
+    } else if (mode == 2) {
+      // Direct Entry
+      // TODO parsing method
+      return true;
+    }
+    
+    return false;
+  }
+}
 
 public class Program  {
   private String name;

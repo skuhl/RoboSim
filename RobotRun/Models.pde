@@ -107,12 +107,13 @@ public class ArmModel {
 
   public ArrayList<Model> segments = new ArrayList<Model>();
   public int type;
-  //public boolean calculatingArms = false, movingArms = false;
   public float motorSpeed;
-  // Indicates translational motion in the World Frame
-  public float[] mvLinear = new float[3];
-  // Indicates rotational motion in the World Frame
-  public float[] mvRot = new float[3];
+  // Indicates translational jog motion in the World Frame
+  public float[] jogLinear = new float[3];
+  // Indicates rotational jog motion in the World Frame
+  public float[] jogRot = new float[3];
+  // Indicates that the Robot is moving to a specific point
+  public boolean inMotion = false;
   public float[] tgtRot = new float[4];
   public PVector tgtPos = new PVector();
   public float[][] currentFrame = {{1, 0, 0},
@@ -167,12 +168,12 @@ public class ArmModel {
     segments.add(axis5);
     segments.add(axis6);
     
-    for(int idx = 0; idx < mvLinear.length; ++idx) {
-      mvLinear[idx] = 0;
+    for(int idx = 0; idx < jogLinear.length; ++idx) {
+      jogLinear[idx] = 0;
     }
     
-    for(int idx = 0; idx < mvRot.length; ++idx) {
-      mvRot[idx] = 0;
+    for(int idx = 0; idx < jogRot.length; ++idx) {
+      jogRot[idx] = 0;
     }
     
     /* Initialies dimensions of the Robot Arm's hit boxes */
@@ -840,9 +841,9 @@ public class ArmModel {
     PVector u = new PVector(0, 0, 0);
     float theta = DEG_TO_RAD*2.5*liveSpeed;
     
-    u.x = mvRot[0];
-    u.y = mvRot[1];
-    u.z = mvRot[2];
+    u.x = jogRot[0];
+    u.y = jogRot[1];
+    u.z = jogRot[2];
     u.normalize();
     
     if(u.x != 0 || u.y != 0 || u.z != 0) {
@@ -883,10 +884,10 @@ public class ArmModel {
       updateButtonColors();
     } else {
       //only move if our movement vector is non-zero
-      if(mvLinear[0] != 0 || mvLinear[1] != 0 || mvLinear[2] != 0 || 
-          mvRot[0] != 0 || mvRot[1] != 0 || mvRot[2] != 0) {
+      if(jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0 || 
+          jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0) {
         
-        PVector move = new PVector(mvLinear[0], mvLinear[1], mvLinear[2]);
+        PVector move = new PVector(jogLinear[0], jogLinear[1], jogLinear[2]);
         // Convert the movement vector into the current reference frame
         move = rotate(move, currentFrame);
         
@@ -903,12 +904,12 @@ public class ArmModel {
         int r = calculateIKJacobian(tgtPos, tgtRot);
         if(r == EXEC_FAILURE) {
           updateButtonColors();
-          mvLinear[0] = 0;
-          mvLinear[1] = 0;
-          mvLinear[2] = 0;
-          mvRot[0] = 0;
-          mvRot[1] = 0;
-          mvRot[2] = 0;
+          jogLinear[0] = 0;
+          jogLinear[1] = 0;
+          jogLinear[2] = 0;
+          jogRot[0] = 0;
+          jogRot[1] = 0;
+          jogRot[2] = 0;
         }
         else if(r == EXEC_PARTIAL) {
           tgtPos = armModel.getEEPos();
@@ -994,8 +995,8 @@ public class ArmModel {
       }
     }
     
-    return mvLinear[0] != 0 || mvLinear[1] != 0 || mvLinear[2] != 0 ||
-    mvRot[0] != 0 || mvRot[1] != 0 || mvRot[2] != 0;
+    return jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0 ||
+    jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0 || inMotion;
   }
   
 } // end ArmModel class

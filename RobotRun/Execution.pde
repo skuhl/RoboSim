@@ -113,13 +113,13 @@ void showMainDisplayText() {
   PVector ee_pos = convertNativeToWorld( armModel.getEEPos() );
   //ee_pos = convertNativeToWorld(ee_pos);
   PVector wpr = armModel.getWPR();
-  String dis_world = String.format("Coord  X: %8.4f  Y: %8.4f  Z: %8.4f  W: %8.4f  P: %8.4f  R: %8.4f", 
+  String dis_world = String.format("Coord  X: %8.3f  Y: %8.3f  Z: %8.3f  W: %8.3f  P: %8.3f  R: %8.3f", 
   ee_pos.x, ee_pos.y, ee_pos.z, wpr.x * RAD_TO_DEG, wpr.y * RAD_TO_DEG, wpr.z * RAD_TO_DEG);
   
   // Display the Robot's joint angles
   float j[] = armModel.getJointRotations();
-  String dis_joint = String.format("Joints  J1: %5.4f J2: %5.4f J3: %5.4f J4: %5.4f J5: %5.4f J6: %5.4f", 
-  j[0], j[1], j[2], j[3], j[4], j[5]);
+  String dis_joint = String.format("Joints  J1: %5.3f J2: %5.3f J3: %5.3f J4: %5.3f J5: %5.3f J6: %5.3f", 
+  j[0] * RAD_TO_DEG, j[1] * RAD_TO_DEG, j[2] * RAD_TO_DEG, j[3] * RAD_TO_DEG, j[4] * RAD_TO_DEG, j[5] * RAD_TO_DEG);
   
   // Show the coordinates of the End Effector for the current Coordinate Frame
   if(curCoordFrame == CoordFrame.JOINT) {          
@@ -136,14 +136,20 @@ void showMainDisplayText() {
     }
   }
   
+  // Display a message if the Robot is in motion
+  if (armModel.modelInMotion()) {
+    fill(200, 0, 0);
+    text("Robot is moving", width - 20, 120);
+  }
+  
   // Display a message while the robot is carrying an object
   if(armModel.held != null) {
     fill(200, 0, 0);
-    text("Object held", width - 20, 120);
+    text("Object held", width - 20, 140);
     
     float[] pos = armModel.held.hit_box.position();
     String obj_pos = String.format("(%f, %f, %f)", pos[0], pos[1], pos[1]);
-    text(obj_pos, width - 20, 140);
+    text(obj_pos, width - 20, 160);
   }
   
   textAlign(LEFT);
@@ -173,7 +179,7 @@ void showMainDisplayText() {
     row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
     text(row, width - 300, height - 72);
     float[] q = armModel.getQuaternion();
-    String quat = String.format("q: [%8.6f, %8.6f, %8.6f, %8.6f]", q[0], q[1], q[2], q[3]);
+    String quat = String.format("q: [%8.3f, %8.3f, %8.3f, %8.3f]", q[0], q[1], q[2], q[3]);
     text(quat, width - 350, height - 58);
   }
   
@@ -824,7 +830,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
     }
     
     if(ret == EXEC_FAILURE) {
-      doneMoving = true;
+      armModel.inMotion = false;
     }
   }
   
@@ -833,6 +839,11 @@ boolean executeMotion(ArmModel model, float speedMult) {
 
 MotionInstruction getActiveMotionInstruct() {
   Instruction inst = null;
+  
+  if (active_prog < 0 || active_prog >= programs.size()) {
+    return null;
+  }
+  
   Program p = programs.get(active_prog);
   
   if(p != null && p.getInstructions().size() != 0)

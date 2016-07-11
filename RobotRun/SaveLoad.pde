@@ -73,8 +73,8 @@ public int loadState() {
     userFrames = new Frame[10];
     
     for(int n = 0; n < toolFrames.length; ++n) {
-      toolFrames[n] = new Frame();
-      userFrames[n] = new Frame();
+      toolFrames[n] = new ToolFrame();
+      userFrames[n] = new UserFrame();
     }
   }
   
@@ -274,32 +274,41 @@ private Program loadProgram(DataInputStream in) throws IOException {
 
 /**
  * Saves the data associated with the given Point object to the file opened
- * by the given output stream.
+ * by the given output stream. Null Points are saved a single zero byte.
  * 
  * @param   p            The Point of which to save the data
  * @param   out          The output stream used to save the Point
  * @throws  IOException  If an error occurs with writing the data of the Point
  */
 private void savePoint(Point p, DataOutputStream out) throws IOException {
-  // Write position of the point
-  out.writeFloat(p.pos.x);
-  out.writeFloat(p.pos.y);
-  out.writeFloat(p.pos.z);
   
-  // Write point's orientation
-  for(float o : p.ori) {
-    out.writeFloat(o);
-  }
-  
-  // Write the joint angles for the point's position
-  for(float j : p.joints) {
-    out.writeFloat(j);
+  if (p == null) {
+    // Null points only write out a byte indicating there is no data
+    out.writeByte(0);
+  } else {
+    
+    out.writeByte(1);
+    // Write position of the point
+    out.writeFloat(p.pos.x);
+    out.writeFloat(p.pos.y);
+    out.writeFloat(p.pos.z);
+    
+    // Write point's orientation
+    for(float o : p.ori) {
+      out.writeFloat(o);
+    }
+    
+    // Write the joint angles for the point's position
+    for(float j : p.joints) {
+      out.writeFloat(j);
+    }
   }
 }
 
 /**
  * Loads the data of a Point from the file opened by the given
- * input stream.
+ * input stream. It is possible that null will be returned by
+ * this method if a null Point was saved.
  *
  * @param  in           The input stream used to read the data of
  *                      a Point
@@ -309,26 +318,34 @@ private void savePoint(Point p, DataOutputStream out) throws IOException {
  *                      of the Point
  */
 private Point loadPoint(DataInputStream in) throws IOException {
-  // Read the point's position
-  float pos_x = in.readFloat(),
-  pos_y = in.readFloat(),
-  pos_z = in.readFloat(),
-  // Read the point's orientation
-  orien_r = in.readFloat(),
-  orien_i = in.readFloat(),
-  orien_j = in.readFloat(),
-  orien_k = in.readFloat(),
-  // Read the joint angles for the joint's position
-  joint_1 = in.readFloat(),
-  joint_2 = in.readFloat(),
-  joint_3 = in.readFloat(),
-  joint_4 = in.readFloat(),
-  joint_5 = in.readFloat(),
-  joint_6 = in.readFloat();
   
-  return new Point(pos_x, pos_y, pos_z,
-  orien_r, orien_i, orien_j, orien_k,
-  joint_1, joint_2, joint_3, joint_4, joint_5, joint_6);
+  int val = in.readByte();
+  
+  if (val == 1) {
+    // Read the point's position
+    float pos_x = in.readFloat(),
+    pos_y = in.readFloat(),
+    pos_z = in.readFloat(),
+    // Read the point's orientation
+    orien_r = in.readFloat(),
+    orien_i = in.readFloat(),
+    orien_j = in.readFloat(),
+    orien_k = in.readFloat(),
+    // Read the joint angles for the joint's position
+    joint_1 = in.readFloat(),
+    joint_2 = in.readFloat(),
+    joint_3 = in.readFloat(),
+    joint_4 = in.readFloat(),
+    joint_5 = in.readFloat(),
+    joint_6 = in.readFloat();
+    
+    return new Point(pos_x, pos_y, pos_z,
+    orien_r, orien_i, orien_j, orien_k,
+    joint_1, joint_2, joint_3, joint_4, joint_5, joint_6);
+  }
+  
+  // Null value stored
+  return null;
 }
 
 /**
@@ -525,7 +542,7 @@ public int loadFrameBytes(File src) {
     
     // Load Tool Frames
     int size = max(0, min(dataIn.readInt(), 10));
-    toolFrames = new Frame[size];
+    toolFrames = new ToolFrame[size];
     int idx;
     
     for(idx = 0; idx < size; ++idx) {
@@ -534,7 +551,7 @@ public int loadFrameBytes(File src) {
     
     // Load User Frames
     size = max(0, min(dataIn.readInt(), 10));
-    userFrames = new Frame[size];
+    userFrames = new UserFrame[size];
     
     for(idx = 0; idx < size; ++idx) {
       userFrames[idx] = loadFrame(dataIn);
@@ -571,17 +588,55 @@ public int loadFrameBytes(File src) {
  */
 private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   
+  // Save a flag to indicate what kind of frame was saved
+  if (f instanceof ToolFrame) {
+    out.writeByte(0);
+  } else if (f instanceof UserFrame) {
+    out.writeByte(1);
+  } else {
+    throw new IOException("Invalid Frame!");
+  }
+  
   // Write frame origin
-  PVector v = f.getOrigin();
-  out.writeFloat(v.x);
-  out.writeFloat(v.y);
-  out.writeFloat(v.z);
+  savePVector(f.getOrigin(), out);
   
   // Write frame axes
   for(int row = 0; row < 3; ++row) {
     for(int col = 0; col < 3; ++col) {
       out.writeFloat(f.axes[row][col]);
     }
+  }
+  
+  if (f.orientation == null) {
+    out.writeByte(0);
+  } else {
+    out.writeByte(1);
+    // Write frame orientation points
+    for (PVector point : f.orientation) {
+      out.writeFloat(point.x);
+      out.writeFloat(point.y);
+      out.writeFloat(point.z);
+    }
+  }
+  
+  // Write frame manual entry origin value
+  savePVector(f.mOrigin, out);
+  
+  // Write frame manual entry orientation value
+  for (float ft : f.mOrientation) {
+    out.writeFloat(ft);
+  }
+  
+  if (f instanceof ToolFrame) {
+    ToolFrame tFrame = (ToolFrame)f;
+    // Save points for the TCP teaching of the frame
+    for (Point p : tFrame.TCP) {
+      savePoint(p, out);
+    }
+    
+  } else {
+    // Save point for the origin offset of the frame
+    savePVector( ((UserFrame)f).orientOrigin, out );
   }
 }
 
@@ -597,11 +652,23 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
  */
 private Frame loadFrame(DataInputStream in) throws IOException {
   
+  Frame f = null;
+  int type = in.readByte();
+  
+  if (type == 0) {
+    f = new ToolFrame();
+  } else if (type == 1) {
+    f = new UserFrame();
+  } else {
+    throw new IOException("Invalid Frame type!");
+  }
+  
   // Read origin values
   PVector origin = new PVector();
   origin.x = in.readFloat();
   origin.y = in.readFloat();
   origin.z = in.readFloat();
+  f.setOrigin( loadPVector(in) );
   
   float[][] axesVectors = new float[3][3];
   // Read axes vector values
@@ -610,8 +677,39 @@ private Frame loadFrame(DataInputStream in) throws IOException {
       axesVectors[row][col] = in.readFloat();
     }
   }
+  f.setAxes(axesVectors);
   
-  return new Frame(origin, axesVectors);
+  // Read origin values
+  f.orientation = new PVector[3];
+  // Read in orientation points
+  for (int idx = 0; idx < 3; ++idx) {
+    f.orientation[idx] = loadPVector(in);
+  }
+  
+  // Read manual entry origin values
+  f.mOrigin = loadPVector(in);
+  
+  f.mOrientation = new float[4];
+  // Read in the manual entry orientation values
+  for (int idx = 0; idx < 4; ++idx) {
+    f.mOrientation[idx] = in.readFloat();
+  }
+  
+  if (f instanceof ToolFrame) {
+    ToolFrame tFrame = (ToolFrame)f;
+    
+    tFrame.TCP = new Point[3];
+    // Load points for the TCP teaching of the frame
+    for (int idx = 0; idx < 3; ++idx) {
+      tFrame.TCP[idx] = loadPoint(in);
+    }
+    
+  } else {
+    // Load point for the origin offset of the frame
+    ((UserFrame)f).orientOrigin = loadPVector(in);
+  }
+  
+  return f;
 }
 
 /**
@@ -793,5 +891,42 @@ public int loadRegisterBytes(File src) {
     System.out.printf("%s is corrupt!\n", src.getName());
     IOEx.printStackTrace();
     return 2;
+  }
+}
+
+/**
+ * TODO
+ */
+public void savePVector(PVector p, DataOutputStream out) throws IOException {
+  
+  if (p == null) {
+    // Write flag byte
+    out.writeByte(0);
+  } else {
+    // Write flag byte
+    out.writeByte(1);
+    // Write vector data
+    out.writeFloat(p.x);
+    out.writeFloat(p.y);
+    out.writeFloat(p.z);
+  }
+}
+
+/**
+ * TODO
+ */
+public PVector loadPVector(DataInputStream in) throws IOException {
+  // Read flag byte
+  int val = in.readByte();
+  
+  if (val == 0) {
+    return null;
+  } else {
+    // Read vector data
+    PVector v = new PVector();
+    v.x = in.readFloat();
+    v.y = in.readFloat();
+    v.z = in.readFloat();
+    return v;
   }
 }
