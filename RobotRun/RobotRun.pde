@@ -102,6 +102,13 @@ public void setup() {
   popMatrix();
   
   //createTestProgram();
+  pushMatrix();
+  resetMatrix();
+  
+  applyModelRotation(armModel, true);
+  System.out.printf("%s\n\n%s", matrixToString(armModel.currentFrame), matrixToString(getTransformationMatrix()));
+  
+  popMatrix();
 }
 
 public void draw() {
@@ -359,68 +366,74 @@ public void handleWorldObjects() {
  */
 public void displayTeachPoints() {
   // Teach points are displayed only while the Robot is being taught a frame
-  if(teachPointTMatrices != null && (mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE)) {
+  if(teachFrame != null && (mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE)) {
     
-    color[] pt_colors = new color[teachPointTMatrices.size()];
-    
-    // First point
-    if(teachPointTMatrices.size() >= 1) {
-      if((transition_stack.peek() == Screen.NAV_TOOL_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.SIX_POINT_MODE) {
-        pt_colors[0] = color(130, 130, 130);
-      } else {
-        pt_colors[0] = color(255, 130, 0);
-      }
-      // Second point
-      if(teachPointTMatrices.size() >= 2) {
-        if((transition_stack.peek() == Screen.NAV_TOOL_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.SIX_POINT_MODE) {
-          pt_colors[1] = color(130, 130, 130);
-        } else {
-          pt_colors[1] = color(125, 0, 0);
-        }
-        // Thrid point
-        if(teachPointTMatrices.size() >= 3) {
-          if((transition_stack.peek() == Screen.NAV_TOOL_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.SIX_POINT_MODE) {
-            pt_colors[2] = color(130, 130, 130);
-          } else {
-            pt_colors[2] = color(0, 125, 0);
-          }
-          // Fourth point
-          if(teachPointTMatrices.size() >= 4) {
-            if(mode == Screen.SIX_POINT_MODE) {
-              pt_colors[3] = color(255, 130, 0);
-            } else {
-              pt_colors[3] = color(0, 0, 125);
-            }
-            // Fifth point
-            if(teachPointTMatrices.size() >= 5) {
-              pt_colors[4] = color(125, 0, 0);
-              // Sixth point
-              if(teachPointTMatrices.size() == 6) {
-                pt_colors[5] = color(0, 125, 0);
-              }
-            }
+    if (teachFrame instanceof ToolFrame) {
+      /* Draw the teach points for the Tool Frames TCP */
+        ToolFrame tFrame = (ToolFrame)teachFrame;
+        
+        for (int idx = 0; idx < 3; ++idx) {
+          if (tFrame.TCP[idx] != null) {
+            pushMatrix();
+            // Applies the point's position
+            PVector pt = tFrame.TCP[idx].pos;
+            translate(pt.x, pt.y, pt.z);
+            
+            // Draw color-coded sphere for the point
+            noFill();
+            stroke(color(130, 130, 130));
+            sphere(3);
+            
+            popMatrix();
           }
         }
+    }
+    
+    /* Draw points for the Frame's Axes Vector */
+    for (int idx = 0; idx < 3; ++idx) {
+      if (teachFrame.orientation[idx] != null) {
+        // Orange
+        color pointColor = color(255, 130, 0);
+        
+        if (idx == 1) {
+          // Red
+          pointColor = color(125, 0, 0);
+        } else if (idx == 2) {
+          // Green
+          pointColor = color(0, 125, 0);
+        }
+        
+        pushMatrix();
+        // Applies the point's position
+        PVector pt = teachFrame.orientation[idx];
+        translate(pt.x, pt.y, pt.z);
+        
+        // Draw color-coded sphere for the point
+        noFill();
+        stroke(pointColor);
+        sphere(3);
+        
+        popMatrix();
       }
     }
     
-    // Display points in the teaching point set
-    for(int idx = 0; idx < teachPointTMatrices.size(); ++idx) {
-      float[][] T = teachPointTMatrices.get(idx);
-      
-      pushMatrix();
-      // Applies the points transformation matrix
-      applyMatrix(T[0][0], T[0][1], T[0][2], T[0][3],
-      T[1][0], T[1][1], T[1][2], T[1][3],
-      T[2][0], T[2][1], T[2][2], T[2][3],
-      T[3][0], T[3][1], T[3][2], T[3][3]);
-      
-      // Draw color-coded spheres for each point
-      noFill();
-      stroke(pt_colors[idx]);
-      sphere(3);
-      
-      popMatrix();
+    if (teachFrame instanceof UserFrame) {
+      UserFrame uFrame = (UserFrame)teachFrame;
+      /* Draw the User Frame's orient origin point */
+      if (uFrame.orientOrigin != null) {
+        pushMatrix();
+        // Applies the point's position
+        PVector pt = uFrame.orientOrigin;
+        translate(pt.x, pt.y, pt.z);
+        
+        // Draw color-coded sphere for the point
+        noFill();
+        // Blue
+        stroke(color(0, 0, 125));
+        sphere(3);
+        
+        popMatrix();
+      }
     }
   }
 }

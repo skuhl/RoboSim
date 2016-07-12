@@ -48,7 +48,8 @@ int curFrameIdx = -1;
 
 // Used to keep track a specific point in space
 PVector ref_point;
-ArrayList<float[][]> teachPointTMatrices = null;
+// Used to keep track of a Frame that is being taught
+Frame teachFrame = null;
 int activeUserFrame = -1;
 int activeJogFrame = -1;
 int activeToolFrame = -1;
@@ -1922,7 +1923,7 @@ public void f2() {
     
     // Reset the highlighted frame in the tool frame list
     if(row_select >= 0) {
-      toolFrames[row_select] = new Frame();
+      toolFrames[row_select] = new ToolFrame();
       saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
       loadFrames(CoordFrame.TOOL);
     }
@@ -1931,7 +1932,7 @@ public void f2() {
     
     // Reset the highlighted frame in the user frames list
     if(row_select >= 0) {
-      userFrames[row_select] = new Frame();
+      userFrames[row_select] = new UserFrame();
       saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
       loadFrames(CoordFrame.USER);
     }
@@ -2232,36 +2233,7 @@ public void f4() {
   case FOUR_POINT_MODE:
   case SIX_POINT_MODE:
     
-    if (opt_select >= 0 && opt_select < teachPointTMatrices.size() && !armModel.inMotion) {
-      armModel.inMotion = true;
-      currentInstruction = -2;
-      
-      PVector eePos = armModel.getEEPos();
-      float[] eeRot = armModel.getQuaternion();
-      /* The current point of the Robot's End Effector */
-      Point ee = new Point();
-      ee.pos = eePos;
-      ee.ori = eeRot;
-      
-      float[][] tMatrix = teachPointTMatrices.get(opt_select);
-      float[][] rMatrix = new float[3][3];
-      // Transpose the matrix
-      for (int r = 0; r < 3; ++r) {
-        for (int c = 0; c < 3; ++c) {
-          rMatrix[r][c] = tMatrix[c][r];
-        }
-      }
-      
-      PVector tgtPos = new PVector(tMatrix[0][3], tMatrix[1][3], tMatrix[2][3]);
-      float[] tgtRot = matrixToQuat(rMatrix);
-      /* The target position */
-      Point tgt = new Point();
-      tgt.pos = tgtPos;
-      tgt.ori = tgtRot;
-      System.out.printf("\n%s\n%s\n\n", matrixToString(tMatrix), matrixToString(rMatrix));
-      // Move from the current position of the Robot to the target position in a linear fashion
-      beginNewLinearMotion(ee, tgt);
-    }
+    // TODO move robot to currently selected taught point
     
     break;
   case INPUT_COMMENT_U:
@@ -2300,7 +2272,6 @@ public void f5() {
       if(shift == ON) {
         // overwrite current instruction
         PVector eep = armModel.getEEPos();
-        eep = convertNativeToWorld(eep);
         Program prog = programs.get(active_prog);
         int reg = prog.nextPosition();
         float[] q = armModel.getQuaternion();
@@ -2381,33 +2352,30 @@ public void f5() {
     case THREE_POINT_MODE:
     case FOUR_POINT_MODE:
     case SIX_POINT_MODE:
-      if(teachPointTMatrices != null) {
-        
-        pushMatrix();
-        resetMatrix();
-        applyModelRotation(armModel, false);
-        // Save current position of the EE
-        float[][] tMatrix = getTransformationMatrix();
-        
-        // Add the current teach point to the running list of teach points
-        if(opt_select >= 0 && opt_select < teachPointTMatrices.size()) {
-          // Cannot override the origin once it is calculated for the six point method
-          teachPointTMatrices.set(opt_select, tMatrix);
-        } else if((mode == Screen.THREE_POINT_MODE && teachPointTMatrices.size() < 3) ||
-            (mode == Screen.FOUR_POINT_MODE && teachPointTMatrices.size() < 4) ||
-            (mode == Screen.SIX_POINT_MODE && teachPointTMatrices.size() < 6)) {
-          
-          // Add a new point as long as it does not exceed number of points for a specific method
-          teachPointTMatrices.add(tMatrix);
-          // increment which_option
-          opt_select = min(opt_select + 1, options.size() - 1);
-        }
-        
-        popMatrix();
+      PVector position = armModel.getEEPos();
+      
+      pushMatrix();
+      resetMatrix();
+      applyModelRotation(armModel, false);
+      
+      float[][] tMatrix = getTransformationMatrix();
+      float[][] rMatrix = new float[3][3];
+      // Convert the transformation matrix's axes vectors to a row major order matrix
+      for (int row = 0; row < 3; ++row) {
+       for (int col = 0; col < 3; ++col) {
+         rMatrix[row][col] = tMatrix[col][row];
+       }
       }
       
+      popMatrix();
+      
+      float[] orientation = matrixToQuat( rMatrix );
+      Point curPosition = new Point(position, orientation);
+      // Save the current position of the Robot's Faceplate
+      teachFrame.setPoint(curPosition, opt_select);
       loadFrameDetails();
       loadPointList();
+      
       break;
     case CONFIRM_PROG_DELETE:
       options = new ArrayList<String>();
@@ -2825,18 +2793,22 @@ public void ENTER() {
     opt_select = -1;
     break;
   case PICK_FRAME_METHOD:
+    // Set the currently select frame
+    if (transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
+      teachFrame = toolFrames[curFrameIdx];
+    } else if (transition_stack.peek() == Screen.NAV_USER_FRAMES) {
+      teachFrame = userFrames[curFrameIdx];
+    } 
+    
     if(opt_select == 0) {
       opt_select = 0;
-      teachPointTMatrices = new ArrayList<float[][]>();
       switchTo(Screen.THREE_POINT_MODE);
       loadFrameDetails();
       loadPointList();
     } 
     else if(opt_select == 1) {
       opt_select = 0;
-      teachPointTMatrices = new ArrayList<float[][]>();
       switchTo( (transition_stack.peek() == Screen.NAV_TOOL_FRAMES) ? Screen.SIX_POINT_MODE : Screen.FOUR_POINT_MODE );
-      
       loadFrameDetails();
       loadPointList();
     } 
@@ -2845,6 +2817,7 @@ public void ENTER() {
       opt_select = -1;
       loadDirectEntryMethod();
     }
+    
     break;
   case IO_SUBMENU:
     if(row_select == 2) { // digital
@@ -3008,116 +2981,53 @@ public void ENTER() {
   case THREE_POINT_MODE:
   case FOUR_POINT_MODE:
   case SIX_POINT_MODE:
-    if((mode == Screen.THREE_POINT_MODE && teachPointTMatrices.size() == 3) ||
-        (mode == Screen.FOUR_POINT_MODE && teachPointTMatrices.size() == 4) ||
-        (mode == Screen.SIX_POINT_MODE && teachPointTMatrices.size() == 6)) {
-
+    
+    int method = 0;
+    
+    if (mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE) {
+      method = 1;
+    }
+    
+    if (teachFrame.setFrame(method)) {
       
-      PVector origin = new PVector(0f, 0f, 0f);
-      float[][] axes = new float[3][3];
-      
-      // Create identity matrix
-      for(int diag = 0; diag < 3; ++diag) {
-        axes[diag][diag] = 1f;
-      }
-      
-      if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES && (mode == Screen.THREE_POINT_MODE || mode == Screen.SIX_POINT_MODE)) {
-        // Calculate TCP via the 3-Point Method
-        double[] tcp = calculateTCPFromThreePoints(teachPointTMatrices);
+      if(teachFrame != null && curFrameIdx >= 0 && curFrameIdx < min(userFrames.length, toolFrames.length)) {
+        if(DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
         
-        if(tcp == null) {
-          // Invalid point set
-          loadFrameDetails();
+        // Set new Frame
+        if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
+          // Update the current frame of the Robot Arm
+          toolFrames[curFrameIdx] = teachFrame;
+          activeToolFrame = curFrameIdx;
           
-          opt_select = 0;
-          options.add("Error: Invalid input values!");
-          updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-          
-          return;
-        } else {
-          origin = new PVector((float)tcp[0], (float)tcp[1], (float)tcp[2]);
-        }
-      } else if(mode == Screen.FOUR_POINT_MODE) {
-        // Origin offset for the user frame
-        origin = new PVector(teachPointTMatrices.get(3)[0][3], teachPointTMatrices.get(3)[1][3], teachPointTMatrices.get(3)[2][3]);
-      }
-      
-      if(transition_stack.peek() == Screen.NAV_USER_FRAMES || mode == Screen.SIX_POINT_MODE) {
-        ArrayList<float[][]> axesPoints = new ArrayList<float[][]>();
-        // Use the last three points to calculate the axes vectors
-        if(mode == Screen.SIX_POINT_MODE) {
-          axesPoints.add(teachPointTMatrices.get(3));
-          axesPoints.add(teachPointTMatrices.get(4));
-          axesPoints.add(teachPointTMatrices.get(5));
-        } else {
-          axesPoints.add(teachPointTMatrices.get(0));
-          axesPoints.add(teachPointTMatrices.get(1));
-          axesPoints.add(teachPointTMatrices.get(2));
-        } 
-        
-        axes = createAxesFromThreePoints(axesPoints);
-        
-        if(axes == null) {
-          // Invalid point set
-          loadFrameDetails();
-          
-          opt_select = 0;
-          options.add("Error: Invalid input values!");
-          updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-          return;
-        }
-        
-        if(DISPLAY_TEST_OUTPUT) { println(matrixToString(axes)); }
-      }
-      
-      Frame[] frames = null;
-      // Determine to which frame set (user or tool) to add the new frame
-      if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-        frames = toolFrames;
-      } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
-        frames = userFrames;
-      }
-      
-      if(frames != null) {
-        
-        if(curFrameIdx >= 0 && curFrameIdx < frames.length) {
-          if(DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
-          
-          frames[curFrameIdx] = new Frame();
-          frames[curFrameIdx].setOrigin(origin);
-          frames[curFrameIdx].setAxes(axes);
+          armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
           saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+          loadFrames(CoordFrame.TOOL);
+        } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
+          // Update the current frame of the Robot Arm
+          userFrames[curFrameIdx] = teachFrame;
+          activeUserFrame = curFrameIdx;
           
-          // Set new Frame
-          if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-            // Update the current frame of the Robot Arm
-            activeToolFrame = curFrameIdx;
-            armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-          } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
-            // Update the current frame of the Robot Arm
-            activeUserFrame = curFrameIdx;
-            armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-          }
+          armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
+          saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+          loadFrames(CoordFrame.USER);
         } else {
-          System.out.printf("Error invalid index %d!\n", curFrameIdx);
+          mu();
         }
-        
       } else {
-        System.out.printf("Error: invalid frame list for mode: %d!\n", mode);
+        System.out.printf("Error invalid index %d!\n", curFrameIdx);
       }
       
-      teachPointTMatrices = null;
       opt_select = 0;
       options.clear();
       row_select = 0;
       
-      if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-        loadFrames(CoordFrame.TOOL);
-      } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
-        loadFrames(CoordFrame.USER);
-      } else {
-        mu();
-      }
+    } else {
+      // Invalid point set
+      loadFrameDetails();
+      
+      opt_select = 0;
+      options.add("Error: Invalid input values!");
+      updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
     
     break;
@@ -3156,7 +3066,8 @@ public void ENTER() {
       opt_select = 0;
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     } else {
-      PVector origin = new PVector(inputs[0], inputs[1], inputs[2]),
+      // The user enters values with reference to the World Frame
+      PVector origin = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) ),
       wpr = new PVector(inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD);
       float[][] axesVectors = eulerToMatrix(wpr);
       
@@ -3164,39 +3075,35 @@ public void ENTER() {
       origin.y = max(-9999f, min(origin.y, 9999f));
       origin.z = max(-9999f, min(origin.z, 9999f));
       wpr = matrixToEuler(axesVectors);
+      // Save direct entry values
+      teachFrame.mOrigin = origin;
+      teachFrame.mOrientation = eulerToQuat(wpr);
+      teachFrame.setFrame(2);
       
       if(DISPLAY_TEST_OUTPUT) { System.out.printf("\n\n%s\n%s\n%s\n", origin.toString(), wpr.toString(), matrixToString(axesVectors)); }
       
-      Frame[] frames = null;
-      // Determine to which frame set (user or tool) to add the new frame
-      if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-        frames = toolFrames;
-      } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
-        frames = userFrames;
-      }
-      
-      // Create axes vector and save the new frame
-      if(frames != null && curFrameIdx >= 0 && curFrameIdx < frames.length) {
+      if(teachFrame != null && curFrameIdx >= 0 && curFrameIdx < min(userFrames.length, toolFrames.length)) {
         if(DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
-        
-        frames[curFrameIdx] = new Frame(origin, axesVectors);
-        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         
         // Set New Frame
         if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
           // Update the current frame of the Robot Arm
           activeToolFrame = curFrameIdx;
           armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
+          toolFrames[curFrameIdx] = teachFrame;
+          
+          saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+          loadFrames(CoordFrame.TOOL);
+          
         } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
           // Update the current frame of the Robot Arm
           activeUserFrame = curFrameIdx;
           armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-        }
-        
-        if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-          loadFrames(CoordFrame.TOOL);
-        } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
+          userFrames[curFrameIdx] = teachFrame;
+          
+          saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
           loadFrames(CoordFrame.USER);
+          
         } else {
           mu();
         }
@@ -4544,7 +4451,7 @@ public void loadFrames(CoordFrame coordFrame) {
     for(int idx = 0; idx < frames.length; ++idx) {
       // Display each frame on its own line
       Frame frame = frames[idx];
-      contents.add ( newLine( String.format("%d) %s", idx + 1, frame.getOrigin()) ) );
+      contents.add ( newLine( String.format("%d) %s", idx + 1, convertNativeToWorld(frame.getOrigin())) ) );
     }
     
     row_select = 0;
@@ -4560,7 +4467,7 @@ public void loadFrames(CoordFrame coordFrame) {
 public void loadPointList() {
   options = new ArrayList<String>();
   
-  if(teachPointTMatrices != null) {
+  if(teachFrame != null) {
     
     ArrayList<String> limbo = new ArrayList<String>();
     // Display TCP teach points
@@ -4581,15 +4488,14 @@ public void loadPointList() {
       limbo.add("Origin: ");
     }
     
-    int size = teachPointTMatrices.size();
-    // Determine ifthe point has been set yet
+    // Determine if the point has been set yet
     for(int idx = 0; idx < limbo.size(); ++idx) {
       // Add each line to options
-      options.add( limbo.get(idx) + ((size > idx) ? "RECORDED" : "UNINIT") );
+      options.add( limbo.get(idx) + ((teachFrame.getPoint(idx) != null) ? "RECORDED" : "UNINIT") );
     }
   } else {
     // No teach points
-    options.add("Error: teachPointTMatrices not set!");
+    options.add("Error: teachFrame not set!");
   }
   
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -4601,167 +4507,23 @@ public void loadPointList() {
  * to input values for the x, y, z, w, p, r fields.
  */
 public void loadDirectEntryMethod() {
-  contents = new ArrayList<ArrayList<String>>();
   
-  contents.add( newLine("X: 0.0") );
-  contents.add( newLine("Y: 0.0") );
-  contents.add( newLine("Z: 0.0") );
-  contents.add( newLine("W: 0.0") );
-  contents.add( newLine("P: 0.0") );
-  contents.add( newLine("R: 0.0") );
+  if (teachFrame != null) {
+    contents = new ArrayList<ArrayList<String>>();
+    String[] frameDisplay = teachFrame.toStringArray();
+    
+    for (String line : frameDisplay) {
+      contents.add( newLine(line) );
+    }
+    
+    // Defines the length of a line's prefix
+    opt_select = 3;
+    row_select = 0;
+    col_select = 0;
+    switchTo(Screen.DIRECT_ENTRY_MODE);
+  }
   
-  // Defines the length of a line's prefix
-  opt_select = 3;
-  row_select = 0;
-  col_select = 0;
-  switchTo(Screen.DIRECT_ENTRY_MODE);
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-}
-
-/**
- * Given a valid set of at least 3 points, this method will return the average
- * TCP point. ifmore than three points exist in the list then, only the first
- * three are used. ifthe list contains less than 3 points, then null is returned.
- * ifan avergae TCP cannot be calculated from the given points then null is
- * returned as well.
- *
- * @param points  a set of at least 3 4x4 transformation matrices representating
- *                the position and orientation of three points in space
- */
-public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
-  
-  if(points != null && points.size() >= 3) {
-    /****************************************************************
-        Three Point Method Calculation
-        
-        ------------------------------------------------------------
-        A, B, C      transformation matrices
-        Ar, Br, Cr   rotational portions of A, B, C respectively
-        At, Bt, Ct   translational portions of A, B, C repectively
-        x            TCP point with respect to the EE
-        ------------------------------------------------------------
-        
-        Ax = Bx = Cx
-        Ax = (Ar)x + At
-        
-        (A - B)x = 0
-        (Ar - Br)x + At - Bt = 0
-        
-        Ax + Bx - 2Cx = 0
-        (Ar + Br - 2Cr)x + At + Bt - 2Ct = 0
-        (Ar + Br - 2Cr)x = 2Ct - At - Bt
-        x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
-        
-      ****************************************************************/
-    RealVector avg_TCP = new ArrayRealVector(new double[] {0.0, 0.0, 0.0} , false);
-    
-    for(int idxC = 0; idxC < 3; ++idxC) {
-      
-      int idxA = (idxC + 1) % 3,
-      idxB = (idxA + 1) % 3;
-      
-      if(DISPLAY_TEST_OUTPUT) { System.out.printf("\nA = %d\nB = %d\nC = %d\n\n", idxA, idxB, idxC); }
-      
-      RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(points.get(idxA), 3, 3));
-      RealMatrix Br = new Array2DRowRealMatrix(floatToDouble(points.get(idxB), 3, 3));
-      RealMatrix Cr = new Array2DRowRealMatrix(floatToDouble(points.get(idxC), 3, 3));
-      
-      double [] t = new double[3];
-      for(int idx = 0; idx < 3; ++idx) {
-        // Build a double from the result of the translation portions of the transformation matrices
-        t[idx] = 2 * points.get(idxC)[idx][3] - ( points.get(idxA)[idx][3] + points.get(idxB)[idx][3] );
-      }
-      
-      /* 2Ct - At - Bt */
-      RealVector b = new ArrayRealVector(t, false);
-      /* Ar + Br - 2Cr */
-      RealMatrix R = ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) );
-      
-      /* (R ^ -1) * b */
-      avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
-    }
-    
-    /* Take the average of the three cases: where C = the first point, the second point, and the third point */
-    avg_TCP = avg_TCP.mapMultiply( 1.0 / 3.0 );
-    
-    if(DISPLAY_TEST_OUTPUT) {
-      for(int pt = 0; pt < 3 && pt < points.size(); ++pt) {
-        // Print out each matrix
-        System.out.printf("Point %d:\n", pt);
-        println( matrixToString(points.get(pt)) );
-      }
-      
-      System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
-    }
-    
-    for(int idx = 0; idx < avg_TCP.getDimension(); ++idx) {
-      if(abs((float)avg_TCP.getEntry(idx)) > 1000.0) {
-        return null;
-      }
-    }
-    
-    return avg_TCP.toArray();
-  }
-  
-  return null;
-}
-
-/**
- * Creates a 3x3 rotation matrix based off of two vectors defined by the
- * given set of three points, which are defined by the three given PVectors.
- * The three points are used to form two vectors. The first vector is treated
- * as the negative x-axis and the second one is the psuedo-negative z-axis.
- * These vectors are crossed to form the y-axis. The y-axis is then crossed
- * with the negative x-axis to form the true y-axis.
- *
- * @param p1      the origin reference point used to form the negative x-
- *                and z-axes
- * @param p2      the point used to create the preliminary negative x-axis
- * @param p3      the point used to create the preliminary negative z axis
- * @return        a set of three unit vectors (down the columns) that
- *                represent an axes
- */
-public float[][] createAxesFromThreePoints(PVector p1, PVector p2, PVector p3) {
-  float[][] axes = new float[3][];
-  float[] x_ndir = new float[3],
-  z_ndir = new float[3];
-  
-  // From preliminary negative x and z axis vectors
-  x_ndir[0] = p2.x - p1.x;
-  x_ndir[1] = p2.y - p1.y;
-  x_ndir[2] = p2.z - p1.z;
-  z_ndir[0] = p3.x - p1.x;
-  z_ndir[1] = p3.y - p1.y;
-  z_ndir[2] = p3.z - p1.z;
-  
-  // Form axes
-  axes[0] = negate(x_ndir);                         // X axis
-  axes[1] = crossProduct(axes[0], negate(z_ndir));  // Y axis
-  axes[2] = crossProduct(axes[0], axes[1]);         // Z axis
-  
-  if((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
-      (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
-      (axes[2][0] == 0f && axes[2][1] == 0f && axes[2][2] == 0f)) {
-    // One of the three axis vectors is the zero vector
-    return null;
-  }
-  
-  float[] magnitudes = new float[axes.length];
-  
-  for(int v = 0; v < axes.length; ++v) {
-    // Find the magnitude of each axis vector
-    for(int e = 0; e < axes[0].length; ++e) {
-      magnitudes[v] += pow(axes[v][e], 2);
-    }
-    
-    magnitudes[v] = sqrt(magnitudes[v]);
-    // Normalize each vector
-    for(int e = 0; e < axes.length; ++e) {
-      axes[v][e] /= magnitudes[v];
-    }
-  }
-  
-  return axes;
 }
 
 /**

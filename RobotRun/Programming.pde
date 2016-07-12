@@ -53,31 +53,6 @@ public class Point  {
     ori = orientation;
   }
 
-  ////create a new point with position, orientation, and associated joint angles
-  //public Point(float x, float y, float z, float w, float p, float r,
-  //             float j1, float j2, float j3, float j4, float j5, float j6)
-  //{
-  //  pos = new PVector(x,y,z);
-  //  ori = eulerToQuat(new PVector(w,p,r));
-  //  joints[0] = j1;
-  //  joints[1] = j2;
-  //  joints[2] = j3;
-  //  joints[3] = j4;
-  //  joints[4] = j5;
-  //  joints[5] = j6;
-  //}
-
-  ////create a new point with position and orientation only
-  //public Point(float x, float y, float z, float w, float p, float r) {
-  //  pos = new PVector(x,y,z);
-  //  ori = eulerToQuat(new PVector(w,p,r));
-  //}
-
-  //public Point(PVector position, PVector orientation) {
-  //  pos = position;
-  //  ori = eulerToQuat(orientation);
-  //}
-
   public Point clone() {
     return new Point(pos.x, pos.y, pos.z, 
     ori[0], ori[1], ori[2], ori[3], 
@@ -143,6 +118,9 @@ public class Point  {
   }
 } // end Point class
 
+/**
+ *
+ */
 public abstract class Frame {
   private PVector origin;
   // The unit vectors representing the x, y, z axes (in row major order)
@@ -161,10 +139,10 @@ public abstract class Frame {
       axes[diag][diag] = 1f;
     }
     
-    orientation = new PVector[3];
+    orientation = new PVector[] { null, null, null };
     
-    mOrigin = new PVector();
-    mOrientation = new float[4];
+    mOrigin = null;
+    mOrientation = null;
   }
 
   public PVector getOrigin() { return origin; }
@@ -212,12 +190,17 @@ public abstract class Frame {
   }
   
   /**
-   * TODO
+   * TODO comment
    */
   public abstract void setPoint(Point p, int idx);
   
   /**
-   * TODO
+   * TODO comment
+   */
+  public abstract PVector getPoint(int idx);
+  
+  /**
+   * TODO comment
    */
   public abstract boolean setFrame(int method);
 
@@ -231,10 +214,11 @@ public abstract class Frame {
   public String[] toStringArray() {
     
     String[] values = new String[6];
-    
-    values[0] = String.format("X: %4.3f", origin.x);
-    values[1] = String.format("Y: %4.3f", origin.y);
-    values[2] = String.format("Z: %4.3f", origin.z);
+    // Convert to World frame reference
+    PVector wOrigin = convertNativeToWorld(origin);
+    values[0] = String.format("X: %4.3f", wOrigin.x);
+    values[1] = String.format("Y: %4.3f", wOrigin.y);
+    values[2] = String.format("Z: %4.3f", wOrigin.z);
     // Convert angles to degrees
     PVector wpr = getWpr();
     values[3] = String.format("W: %4.3f", wpr.x * RAD_TO_DEG);
@@ -245,6 +229,9 @@ public abstract class Frame {
   }
 } // end Frame class
 
+/**
+ * TODO comment
+ */
 public class ToolFrame extends Frame {
   // For 3-Point and Six-Point Methods
   public Point[] TCP;
@@ -254,8 +241,7 @@ public class ToolFrame extends Frame {
    */
   public ToolFrame() {
     super();
-    TCP = new Point[3];
-    orientation = new PVector[3];
+    TCP = new Point[] { null, null, null };
   }
   
   public void setPoint(Point p, int idx) {
@@ -279,13 +265,91 @@ public class ToolFrame extends Frame {
     }
   }
   
+  public PVector getPoint(int idx) {
+        
+    /* Map the index into the 'Point array' to the
+     * actual values stored in the frame */
+    switch (idx) {
+      case 0:
+      case 1:
+      case 2:
+        return (TCP[idx] == null) ? null : TCP[idx].pos;
+        
+      case 3:
+      case 4:
+      case 5:
+        return orientation[ idx % 3 ];
+        
+      default:
+    }
+    
+    return null;
+  }
+  
   public boolean setFrame(int method) {
-    // TODO update the frame based on given input
+    
+    if (method == 2) {
+      if (mOrigin == null || mOrientation == null) {
+        // No direct entry values have been set
+        return false;
+      }
+      
+      // Direct Entry Method
+      setOrigin(mOrigin);
+      setAxes( quatToMatrix(mOrientation) );
+      return true;
+    } else if (method >= 0 && method < 2 && TCP[0] != null && TCP[1] != null && TCP[2] != null) {
+      // Both 3-Point and 6-Point Method
+      float[][] pt1_ori = quatToMatrix(TCP[0].ori),
+                pt2_ori = quatToMatrix(TCP[1].ori),
+                pt3_ori = quatToMatrix(TCP[2].ori);
+      
+      for (int e = 0; e < 3; ++e) {
+        float limbo = pt1_ori[0][e];
+        pt1_ori[0][e] = pt1_ori[2][e];
+        pt1_ori[1][e] *= -1;
+        pt1_ori[2][e] = limbo;
+        
+        limbo = pt2_ori[0][e];
+        pt2_ori[0][e] = pt2_ori[2][e];
+        pt2_ori[1][e] *= -1;
+        pt2_ori[2][e] = limbo;
+        
+        limbo = pt3_ori[0][e];
+        pt3_ori[0][e] = pt3_ori[2][e];
+        pt3_ori[1][e] *= -1;
+        pt3_ori[2][e] = limbo;
+      }
+      
+      double[] tcp = calculateTCPFromThreePoints(toVectorArray(TCP[0].pos), pt1_ori,
+                                                 toVectorArray(TCP[1].pos), pt2_ori,
+                                                 toVectorArray(TCP[2].pos), pt3_ori);
+      
+      if (tcp == null) {
+        // Invalid point set for the TCP
+        return false;
+      } else if (method == 1) {
+        // Both 3-Point and 6-Point Method
+        if (method == 1 && (orientation[0] == null || orientation[1] == null || orientation[2] == null)) {
+          // Invalid point set for the coordinate axes
+          return false;
+        }
+        // Other part of the 6-Point Method
+        setAxes( createAxesFromThreePoints(orientation[0], orientation[1], orientation[2]) );
+      }
+      
+      setOrigin( new PVector((float)tcp[0], (float)tcp[1], (float)tcp[2]) );
+      
+      return true;
+    }
     
     return false;
   }
 }
 
+/**
+ * TODO comment
+ */
 public class UserFrame extends Frame {
   // For the 4-Point Method
   public PVector orientOrigin;
@@ -295,7 +359,7 @@ public class UserFrame extends Frame {
    */
   public UserFrame() {
     super();
-    orientOrigin = new PVector();
+    orientOrigin = null;
   }
   
   public void setPoint(Point p, int idx) {
@@ -317,20 +381,45 @@ public class UserFrame extends Frame {
     }
   }
   
+  public PVector getPoint(int idx) {
+        
+    /* Map the index into the 'Point array' to the
+     * actual values stored in the frame */
+    switch (idx) {
+      case 0:
+      case 1:
+      case 2:
+        return orientation[idx];
+        
+      case 3:
+        return orientOrigin;
+        
+      default:
+    }
+    
+    return null;
+  }
+  
   public boolean setFrame(int mode) {
     
-    if (mode == 0 && (orientation[0] == null || orientation[1] == null || orientation[2] == null)) {
-      // 3-Pint Method
+    if (mode == 0 && orientation[0] != null && orientation[1] != null && orientation[2] != null) {
+      // 3-Point Method
       setAxes( createAxesFromThreePoints(orientation[0], orientation[1], orientation[2]) );
       return true;
-    } else if (mode == 1 && (orientOrigin == null || orientation[0] == null || orientation[1] == null || orientation[2] == null)) {
+    } else if (mode == 1 && orientOrigin != null && orientation[0] != null && orientation[1] != null && orientation[2] != null) {
       // 4-Point Method
       setOrigin(orientOrigin);
       setAxes( createAxesFromThreePoints(orientation[0], orientation[1], orientation[2]) );
       return true;
     } else if (mode == 2) {
-      // Direct Entry
-      // TODO parsing method
+      if (mOrigin == null || mOrientation == null) {
+        // No direct entry values have been set
+        return false;
+      }
+      
+      // Direct Entry Method
+      setOrigin(mOrigin);
+      setAxes( quatToMatrix(mOrientation) );
       return true;
     }
     

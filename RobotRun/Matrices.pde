@@ -52,6 +52,169 @@ public float[][] convertToWorld(float[][] rotMatrix) {
 }
 
 /**
+ * This method calculates a TCP offset for the Robot given a valid set of position and orientation values, where each pair ( [pos, ori1],
+ * [pos2, ori2], and [pos3, ori3] ) represent a recorded position and orientation of the Robot. A position contains the X, Y, Z values of
+ * the Robot at the point, while the orientation matrix is a rotation matrix, which describes the Robot's orientation at a one of the points.
+ * Do to the nature of this algorithm, an average TCP value is calculated from three separate calculations.
+ *
+ * @param pos1  The X, Y, Z position of the Robot's faceplate at first point
+ * @param ori1  The orientation of the Robot at the first point
+ * @param pos2  The X, Y, Z position of the Robot's faceplate at the second point
+ * @param ori2  The orientation of the Robot at the second point
+ * @param pos3  the X, Y, Z position of the Robot's faceplate at the third point
+ * @param ori3  The orientation of the Robot at the third point
+ * @return      The new TCP for the Robot, null is returned if the given points
+ *              are invalid
+ */
+public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1, float[] pos2, float[][] ori2, float[] pos3, float[][] ori3) {
+  
+  RealVector avg_TCP = new ArrayRealVector(new double[] {0.0, 0.0, 0.0} , false);
+  int counter = 3;
+  
+  while (counter-- > 0) {
+    
+    RealMatrix Ar = null, Br = null, Cr = null;
+    double[] t = new double[3];
+    
+    if (counter == 0) {
+      /* Case 3: C = point 1 */
+      Ar = new Array2DRowRealMatrix(floatToDouble(ori2, 3, 3));
+      Br = new Array2DRowRealMatrix(floatToDouble(ori3, 3, 3));
+      Cr = new Array2DRowRealMatrix(floatToDouble(ori1, 3, 3));
+      
+      for(int idx = 0; idx < 3; ++idx) {
+        /* 2Ct - At - Bt */
+        t[idx] = 2 * pos1[idx] - ( pos2[idx] + pos3[idx] );
+      }
+    } else if (counter == 1) {
+      /* Case 2: C = point 2 */
+      Ar = new Array2DRowRealMatrix(floatToDouble(ori3, 3, 3));
+      Br = new Array2DRowRealMatrix(floatToDouble(ori1, 3, 3));
+      Cr = new Array2DRowRealMatrix(floatToDouble(ori2, 3, 3));
+      
+      for(int idx = 0; idx < 3; ++idx) {
+        /* 2Ct - At - Bt */
+        t[idx] = 2 * pos2[idx] - ( pos3[idx] + pos1[idx] );
+      }      
+    } else if (counter == 2) {
+      /* Case 1: C = point 3*/
+      Ar = new Array2DRowRealMatrix(floatToDouble(ori1, 3, 3));
+      Br = new Array2DRowRealMatrix(floatToDouble(ori2, 3, 3));
+      Cr = new Array2DRowRealMatrix(floatToDouble(ori3, 3, 3));
+      
+      for(int idx = 0; idx < 3; ++idx) {
+        /* 2Ct - At - Bt */
+        t[idx] = 2 * pos3[idx] - ( pos1[idx] + pos2[idx] );
+      }     
+    }
+    
+  /****************************************************************
+      Three Point Method Calculation
+      
+      ------------------------------------------------------------
+      A, B, C      transformation matrices
+      Ar, Br, Cr   rotational portions of A, B, C respectively
+      At, Bt, Ct   translational portions of A, B, C repectively
+      x            TCP point with respect to the EE
+      ------------------------------------------------------------
+      
+      Ax = Bx = Cx
+      Ax = (Ar)x + At
+      
+      (A - B)x = 0
+      (Ar - Br)x + At - Bt = 0
+      
+      Ax + Bx - 2Cx = 0
+      (Ar + Br - 2Cr)x + At + Bt - 2Ct = 0
+      (Ar + Br - 2Cr)x = 2Ct - At - Bt
+      x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
+      
+    ****************************************************************/
+    
+    RealVector b = new ArrayRealVector(t, false);
+    /* Ar + Br - 2Cr */
+    RealMatrix R = ( ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) ) ).transpose();
+    
+    /* (R ^ -1) * b */
+    avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
+  }
+  
+  /* Take the average of the three cases: where C = the first point, the second point, and the third point */
+  avg_TCP = avg_TCP.mapMultiply( 1.0 / 3.0 );
+  
+  if(DISPLAY_TEST_OUTPUT) {
+    System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
+  }
+  
+  for(int idx = 0; idx < avg_TCP.getDimension(); ++idx) {
+    // Extremely high values may indicate that the given points are invalid
+    if(abs((float)avg_TCP.getEntry(idx)) > 1000.0) {
+      return null;
+    }
+  }
+  
+  return avg_TCP.toArray();
+}
+
+/**
+ * Creates a 3x3 rotation matrix based off of two vectors defined by the
+ * given set of three points, which are defined by the three given PVectors.
+ * The three points are used to form two vectors. The first vector is treated
+ * as the negative x-axis and the second one is the psuedo-negative z-axis.
+ * These vectors are crossed to form the y-axis. The y-axis is then crossed
+ * with the negative x-axis to form the true y-axis.
+ *
+ * @param p1      the origin reference point used to form the negative x-
+ *                and z-axes
+ * @param p2      the point used to create the preliminary negative x-axis
+ * @param p3      the point used to create the preliminary negative z axis
+ * @return        a set of three unit vectors that represent an axes (row
+ *                major order)
+ */
+public float[][] createAxesFromThreePoints(PVector p1, PVector p2, PVector p3) {
+  float[][] axes = new float[3][];
+  float[] x_ndir = new float[3],
+  z_ndir = new float[3];
+  
+  // From preliminary negative x and z axis vectors
+  x_ndir[0] = p2.x - p1.x;
+  x_ndir[1] = p2.y - p1.y;
+  x_ndir[2] = p2.z - p1.z;
+  z_ndir[0] = p3.x - p1.x;
+  z_ndir[1] = p3.y - p1.y;
+  z_ndir[2] = p3.z - p1.z;
+  
+  // Form axes
+  axes[0] = negate(x_ndir);                         // X axis
+  axes[1] = crossProduct(axes[0], negate(z_ndir));  // Y axis
+  axes[2] = crossProduct(axes[0], axes[1]);         // Z axis
+  
+  if((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
+     (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
+     (axes[2][0] == 0f && axes[2][1] == 0f && axes[2][2] == 0f)) {
+    // One of the three axis vectors is the zero vector
+    return null;
+  }
+  
+  float[] magnitudes = new float[axes.length];
+  
+  for(int v = 0; v < axes.length; ++v) {
+    // Find the magnitude of each axis vector
+    for(int e = 0; e < axes[0].length; ++e) {
+      magnitudes[v] += pow(axes[v][e], 2);
+    }
+    
+    magnitudes[v] = sqrt(magnitudes[v]);
+    // Normalize each vector
+    for(int e = 0; e < axes.length; ++e) {
+      axes[v][e] /= magnitudes[v];
+    }
+  }
+  
+  return axes;
+}
+
+/**
  * Find the inverse of the given 4x4 Homogeneous Coordinate Matrix. 
  * 
  * This method is based off of the algorithm found on this webpage:

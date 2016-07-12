@@ -607,24 +607,24 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
     }
   }
   
-  if (f.orientation == null) {
-    out.writeByte(0);
-  } else {
-    out.writeByte(1);
-    // Write frame orientation points
-    for (PVector point : f.orientation) {
-      out.writeFloat(point.x);
-      out.writeFloat(point.y);
-      out.writeFloat(point.z);
-    }
+  // Write frame orientation points
+  for (PVector point : f.orientation) {
+    savePVector(point, out);
   }
   
   // Write frame manual entry origin value
   savePVector(f.mOrigin, out);
   
-  // Write frame manual entry orientation value
-  for (float ft : f.mOrientation) {
-    out.writeFloat(ft);
+  
+  if (f.mOrientation == null) {
+    // Value is null
+    out.writeByte(0);
+  } else {
+    out.writeByte(1);
+    // Write frame manual entry orientation value
+    for (float ft : f.mOrientation) {
+      out.writeFloat(ft);
+    }
   }
   
   if (f instanceof ToolFrame) {
@@ -664,10 +664,6 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   }
   
   // Read origin values
-  PVector origin = new PVector();
-  origin.x = in.readFloat();
-  origin.y = in.readFloat();
-  origin.z = in.readFloat();
   f.setOrigin( loadPVector(in) );
   
   float[][] axesVectors = new float[3][3];
@@ -689,16 +685,19 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   // Read manual entry origin values
   f.mOrigin = loadPVector(in);
   
-  f.mOrientation = new float[4];
-  // Read in the manual entry orientation values
-  for (int idx = 0; idx < 4; ++idx) {
-    f.mOrientation[idx] = in.readFloat();
-  }
+  int val = in.readByte();
+  
+  if (val == 1) {
+    f.mOrientation = new float[4];
+    // Read in the manual entry orientation values
+    for (int idx = 0; idx < 4; ++idx) {
+      f.mOrientation[idx] = in.readFloat();
+    }
+  } // The orientation is null otherwise
   
   if (f instanceof ToolFrame) {
     ToolFrame tFrame = (ToolFrame)f;
     
-    tFrame.TCP = new Point[3];
     // Load points for the TCP teaching of the frame
     for (int idx = 0; idx < 3; ++idx) {
       tFrame.TCP[idx] = loadPoint(in);
