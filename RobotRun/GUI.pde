@@ -822,19 +822,7 @@ public void keyPressed() {
   } else if(key == 'g') {
     armModel.resetFrame();
   } else if(key == 'q') {
-    pushMatrix();
-    resetMatrix();
-    applyModelRotation(armModel, true);
-    
-    float[][] tMatrix = getTransformationMatrix();
-    float[][] cMatrix = quatToMatrix( matrixToQuat(tMatrix) );
-    System.out.printf("\n%s\n\n%s\n\n", matrixToString(tMatrix), matrixToString(cMatrix));
-    
-    popMatrix();
-    
-    /*
     System.out.printf("\n%s\n\n", arrayToString(armModel.getQuaternion()));
-    */
   } else if(key == 'r') {
     panX = 0;
     panY = 0;
@@ -1915,7 +1903,8 @@ public void f2() {
     active_prog = -1;
     goToEnterTextMode();
   } 
-  else if(mode == Screen.FRAME_DETAIL) {
+  else if(mode == Screen.FRAME_DETAIL || mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE
+                                      || mode == Screen.SIX_POINT_MODE || mode == Screen.DIRECT_ENTRY_MODE) {
     options = new ArrayList<String>();
     
     if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
@@ -3017,20 +3006,26 @@ public void ENTER() {
           loadFrames(CoordFrame.USER);
         } else {
           mu();
+          return;
         }
       } else {
         System.out.printf("Error invalid index %d!\n", curFrameIdx);
+        mu();
+        return;
       }
       
+      options = new ArrayList<String>();
       opt_select = 0;
-      options.clear();
       row_select = 0;
       
     } else {
       // Invalid point set
       loadFrameDetails();
       
+      switchTo(Screen.FRAME_DETAIL);
+      loadFrameDetails();
       opt_select = 0;
+      options = new ArrayList<String>();
       options.add("Error: Invalid input values!");
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
@@ -4236,18 +4231,25 @@ public void updateScreen(color cDefault, color cHighlight) {
     case SIX_POINT_MODE:
       // F1, F5
       if(shift == ON) {
-        funct[0] = "[Rmv Pt]";
-        funct[1] = "";
+        funct[0] = "[Rmv Ref]";
+        funct[1] = "[Method]";
         funct[2] = "";
         funct[3] = "[Mov To]";
         funct[4] = "[Record]";
       } else {
-        funct[0] = "[Save Pt]";
-        funct[1] = "";
+        funct[0] = "[Sav Ref]";
+        funct[1] = "[Method]";
         funct[2] = "";
         funct[3] = "[Mov To]";
         funct[4] = "[Record]";
       }
+      break;
+    case DIRECT_ENTRY_MODE:
+      funct[0] = "";
+      funct[1] = "[Method]";
+      funct[2] = "";
+      funct[3] = "";
+      funct[4] = "";
       break;
     case ACTIVE_FRAMES:
       // F1, F2
@@ -4515,11 +4517,25 @@ public void loadDirectEntryMethod() {
   
   if (teachFrame != null) {
     contents = new ArrayList<ArrayList<String>>();
-    String[] frameDisplay = teachFrame.toStringArray();
     
-    for (String line : frameDisplay) {
-      contents.add( newLine(line) );
+    PVector xyz = new PVector(0f, 0f, 0f);
+    if (teachFrame.mOrigin != null) {
+      // Display all points in world frame reference
+      xyz = convertNativeToWorld( teachFrame.mOrigin );
     }
+    
+    PVector wpr = new PVector(0f, 0f, 0f);
+    if (teachFrame.mOrientation != null) {
+      // Display orientation in euler angles
+      wpr = quatToEuler(teachFrame.mOrientation);
+    }
+    
+    contents.add( newLine(String.format("X: %4.3f", xyz.x)) );
+    contents.add( newLine(String.format("Y: %4.3f", xyz.x)) );
+    contents.add( newLine(String.format("Z: %4.3f", xyz.x)) );
+    contents.add( newLine(String.format("W: %4.3f", wpr.x * RAD_TO_DEG)) );
+    contents.add( newLine(String.format("P: %4.3f", wpr.y * RAD_TO_DEG)) );
+    contents.add( newLine(String.format("R: %4.3f", wpr.z * RAD_TO_DEG)) );
     
     // Defines the length of a line's prefix
     opt_select = 3;

@@ -101,6 +101,16 @@ public void setup() {
   
   popMatrix();
   
+  pushMatrix();
+  resetMatrix();
+  applyModelRotation(armModel, false);
+  
+  float[][] tMatrix = getTransformationMatrix(),
+            rMatrix = quatToMatrix( armModel.getQuaternion() );
+  popMatrix();
+  
+  System.out.printf("\n%s\n\n%s\n\n", matrixToString(tMatrix), matrixToString(rMatrix));
+  
   //createTestProgram();
 }
 
@@ -188,7 +198,7 @@ public void draw() {
   stroke(255, 255, 0);
   sphere(5);
   translate(0, 0, -100);
-  stroke(255, 0, 0);
+  stroke(0, 0, 255);
   //EE x axis
   sphere(6);
   translate(0, 100, 100);
@@ -196,7 +206,7 @@ public void draw() {
   //EE y axis
   sphere(6);
   translate(100, -100, 0);
-  stroke(0, 0, 255);
+  stroke(255, 0, 0);
   //EE z axis
   sphere(6);
   popMatrix();
@@ -452,8 +462,8 @@ public void displayOriginAxes(float[][] axesVectors, float[] origin) {
   pushMatrix();
   // Transform to the reference frame defined by the axes vectors
   applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin[0],
-  axesVectors[0][1], axesVectors[1][1], axesVectors[2][1],  origin[1],
-  axesVectors[0][2], axesVectors[1][2], axesVectors[2][2],  origin[2],
+              axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin[1],
+              axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin[2],
   0, 0, 0, 1);
   // X axis
   stroke(255, 0, 0);
