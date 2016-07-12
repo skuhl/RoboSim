@@ -822,7 +822,19 @@ public void keyPressed() {
   } else if(key == 'g') {
     armModel.resetFrame();
   } else if(key == 'q') {
+    pushMatrix();
+    resetMatrix();
+    applyModelRotation(armModel, true);
+    
+    float[][] tMatrix = getTransformationMatrix();
+    float[][] cMatrix = quatToMatrix( matrixToQuat(tMatrix) );
+    System.out.printf("\n%s\n\n%s\n\n", matrixToString(tMatrix), matrixToString(cMatrix));
+    
+    popMatrix();
+    
+    /*
     System.out.printf("\n%s\n\n", arrayToString(armModel.getQuaternion()));
+    */
   } else if(key == 'r') {
     panX = 0;
     panY = 0;
@@ -2352,27 +2364,20 @@ public void f5() {
     case THREE_POINT_MODE:
     case FOUR_POINT_MODE:
     case SIX_POINT_MODE:
-      PVector position = armModel.getEEPos();
       
       pushMatrix();
       resetMatrix();
       applyModelRotation(armModel, false);
       
       float[][] tMatrix = getTransformationMatrix();
-      float[][] rMatrix = new float[3][3];
-      // Convert the transformation matrix's axes vectors to a row major order matrix
-      for (int row = 0; row < 3; ++row) {
-       for (int col = 0; col < 3; ++col) {
-         rMatrix[row][col] = tMatrix[col][row];
-       }
-      }
       
       popMatrix();
       
-      float[] orientation = matrixToQuat( rMatrix );
-      Point curPosition = new Point(position, orientation);
+      float[] orientation = matrixToQuat( tMatrix );
+      Point curPosition = new Point(new PVector(tMatrix[0][3], tMatrix[1][3], tMatrix[2][3]), orientation);
       // Save the current position of the Robot's Faceplate
       teachFrame.setPoint(curPosition, opt_select);
+      saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
       loadFrameDetails();
       loadPointList();
       
@@ -4491,7 +4496,7 @@ public void loadPointList() {
     // Determine if the point has been set yet
     for(int idx = 0; idx < limbo.size(); ++idx) {
       // Add each line to options
-      options.add( limbo.get(idx) + ((teachFrame.getPoint(idx) != null) ? "RECORDED" : "UNINIT") );
+      options.add( limbo.get(idx) + ((teachFrame.getPosition(idx) != null) ? "RECORDED" : "UNINIT") );
     }
   } else {
     // No teach points
@@ -4538,27 +4543,19 @@ public void loadFrameDetails() {
   
   // Display the frame set name as well as the index of the currently selected frame
   if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-    String[] fields = toolFrames[curFrameIdx].toStringArray();
+    
+    String[] fields = toolFrames[curFrameIdx].toCondensedStringArray();
     // Place each value in the frame on a separate lien
     for(String field : fields) { contents.add( newLine(field) ); }
     
   } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
-    // Transform the origin in terms of the World Frame
-    PVector origin = convertNativeToWorld( userFrames[curFrameIdx].getOrigin() );
-    // Convert angles to degrees
-    PVector wpr = userFrames[curFrameIdx].getWpr();
     
-    contents.add( newLine(String.format("X: %5.3f", origin.x)) );
-    contents.add( newLine(String.format("Y: %5.3f", origin.y)) );
-    contents.add( newLine(String.format("Z: %5.3f", origin.z)) );
-    contents.add( newLine(String.format("W: %5.3f", wpr.x * RAD_TO_DEG)) );
-    contents.add( newLine(String.format("P: %5.3f", wpr.y * RAD_TO_DEG)) );
-    contents.add( newLine(String.format("R: %5.3f", wpr.z * RAD_TO_DEG)) );
+    String[] fields = userFrames[curFrameIdx].toCondensedStringArray();
+    // Place each value in the frame on a separate lien
+    for(String field : fields) { contents.add( newLine(field) ); }
     
   } else {
-    
     mu();
-    return;
   }
   
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);

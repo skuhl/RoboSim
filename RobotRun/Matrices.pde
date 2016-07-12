@@ -133,7 +133,7 @@ public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1, float[
     
     RealVector b = new ArrayRealVector(t, false);
     /* Ar + Br - 2Cr */
-    RealMatrix R = ( ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) ) ).transpose();
+    RealMatrix R = ( ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) ) );//.transpose();
     
     /* (R ^ -1) * b */
     avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );

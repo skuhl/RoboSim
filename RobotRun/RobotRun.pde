@@ -102,13 +102,6 @@ public void setup() {
   popMatrix();
   
   //createTestProgram();
-  pushMatrix();
-  resetMatrix();
-  
-  applyModelRotation(armModel, true);
-  System.out.printf("%s\n\n%s", matrixToString(armModel.currentFrame), matrixToString(getTransformationMatrix()));
-  
-  popMatrix();
 }
 
 public void draw() {
@@ -368,68 +361,59 @@ public void displayTeachPoints() {
   // Teach points are displayed only while the Robot is being taught a frame
   if(teachFrame != null && (mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE)) {
     
-    if (teachFrame instanceof ToolFrame) {
-      /* Draw the teach points for the Tool Frames TCP */
-        ToolFrame tFrame = (ToolFrame)teachFrame;
+    int size = 3;
+    
+    if (mode == Screen.SIX_POINT_MODE && teachFrame instanceof ToolFrame) {
+      size = 6;
+    } else if (mode == Screen.FOUR_POINT_MODE && teachFrame instanceof UserFrame) {
+      size = 4;
+    }
+    
+    for (int idx = 0; idx < size; ++idx) {
+      PVector pt = teachFrame.getPosition(idx);
+      
+      if (pt != null) {
+        pushMatrix();
+        // Applies the point's position
+        translate(pt.x, pt.y, pt.z);
         
-        for (int idx = 0; idx < 3; ++idx) {
-          if (tFrame.TCP[idx] != null) {
-            pushMatrix();
-            // Applies the point's position
-            PVector pt = tFrame.TCP[idx].pos;
-            translate(pt.x, pt.y, pt.z);
-            
-            // Draw color-coded sphere for the point
-            noFill();
-            stroke(color(130, 130, 130));
-            sphere(3);
-            
-            popMatrix();
+        // Draw color-coded sphere for the point
+        noFill();
+        color pointColor = color(255, 0, 255);
+        
+        if (teachFrame instanceof ToolFrame) {
+          
+          if (idx < 3) {
+            // TCP teach points
+            pointColor = color(130, 130, 130);
+          } else if (idx == 3) {
+            // Orient origin point
+            pointColor = color(255, 130, 0);
+          } else if (idx == 4) {
+            // Axes X-Direction point
+            pointColor = color(255, 0, 0);
+          } else if (idx == 5) {
+            // Axes Y-Diretion point
+            pointColor = color(0, 255, 0);
+          }
+        } else if (teachFrame instanceof UserFrame) {
+          
+          if (idx == 0) {
+            // Orient origin point
+            pointColor = color(255, 130, 0);
+          } else if (idx == 1) {
+            // Axes X-Diretion point
+            pointColor = color(255, 0, 0);
+          } else if (idx == 2) {
+            // Axes Y-Diretion point
+            pointColor = color(0, 255, 0);
+          } else if (idx == 3) {
+            // Axes Origin point
+            pointColor = color(0, 0, 255);
           }
         }
-    }
-    
-    /* Draw points for the Frame's Axes Vector */
-    for (int idx = 0; idx < 3; ++idx) {
-      if (teachFrame.orientation[idx] != null) {
-        // Orange
-        color pointColor = color(255, 130, 0);
         
-        if (idx == 1) {
-          // Red
-          pointColor = color(125, 0, 0);
-        } else if (idx == 2) {
-          // Green
-          pointColor = color(0, 125, 0);
-        }
-        
-        pushMatrix();
-        // Applies the point's position
-        PVector pt = teachFrame.orientation[idx];
-        translate(pt.x, pt.y, pt.z);
-        
-        // Draw color-coded sphere for the point
-        noFill();
         stroke(pointColor);
-        sphere(3);
-        
-        popMatrix();
-      }
-    }
-    
-    if (teachFrame instanceof UserFrame) {
-      UserFrame uFrame = (UserFrame)teachFrame;
-      /* Draw the User Frame's orient origin point */
-      if (uFrame.orientOrigin != null) {
-        pushMatrix();
-        // Applies the point's position
-        PVector pt = uFrame.orientOrigin;
-        translate(pt.x, pt.y, pt.z);
-        
-        // Draw color-coded sphere for the point
-        noFill();
-        // Blue
-        stroke(color(0, 0, 125));
         sphere(3);
         
         popMatrix();

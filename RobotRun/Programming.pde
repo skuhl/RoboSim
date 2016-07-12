@@ -197,12 +197,26 @@ public abstract class Frame {
   /**
    * TODO comment
    */
-  public abstract PVector getPoint(int idx);
+  public abstract PVector getPosition(int idx);
   
   /**
    * TODO comment
    */
   public abstract boolean setFrame(int method);
+  
+  /**
+   * TODO comment
+   */
+  public String[] toCondensedStringArray() {
+    String[] lines = new String[3];
+    String[] values = toStringArray();
+    
+    lines[0] = String.format("%-12s%s", values[0], values[3]);
+    lines[1] = String.format("%-12s%s", values[1], values[4]);
+    lines[2] = String.format("%-12s%s", values[2], values[5]);
+    
+    return lines;
+  }
 
   /**
    * Returns a string array, where each entry is one of
@@ -265,7 +279,7 @@ public class ToolFrame extends Frame {
     }
   }
   
-  public PVector getPoint(int idx) {
+  public PVector getPosition(int idx) {
         
     /* Map the index into the 'Point array' to the
      * actual values stored in the frame */
@@ -303,23 +317,6 @@ public class ToolFrame extends Frame {
       float[][] pt1_ori = quatToMatrix(TCP[0].ori),
                 pt2_ori = quatToMatrix(TCP[1].ori),
                 pt3_ori = quatToMatrix(TCP[2].ori);
-      
-      for (int e = 0; e < 3; ++e) {
-        float limbo = pt1_ori[0][e];
-        pt1_ori[0][e] = pt1_ori[2][e];
-        pt1_ori[1][e] *= -1;
-        pt1_ori[2][e] = limbo;
-        
-        limbo = pt2_ori[0][e];
-        pt2_ori[0][e] = pt2_ori[2][e];
-        pt2_ori[1][e] *= -1;
-        pt2_ori[2][e] = limbo;
-        
-        limbo = pt3_ori[0][e];
-        pt3_ori[0][e] = pt3_ori[2][e];
-        pt3_ori[1][e] *= -1;
-        pt3_ori[2][e] = limbo;
-      }
       
       double[] tcp = calculateTCPFromThreePoints(toVectorArray(TCP[0].pos), pt1_ori,
                                                  toVectorArray(TCP[1].pos), pt2_ori,
@@ -381,7 +378,7 @@ public class UserFrame extends Frame {
     }
   }
   
-  public PVector getPoint(int idx) {
+  public PVector getPosition(int idx) {
         
     /* Map the index into the 'Point array' to the
      * actual values stored in the frame */
