@@ -1779,13 +1779,21 @@ public void f1() {
       transitionTo(Screen.PICK_INSTRUCTION, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
+    
     break;
   case NAV_TOOL_FRAMES:
     if(shift == ON) {
       
-      transitionTo(Screen.FRAME_DETAIL, false);
-      curFrameIdx = row_select;
-      loadFrameDetails();
+      // Reset the highlighted frame in the tool frame list
+      if(row_select >= 0) {
+        if (activeToolFrame == row_select) {
+          armModel.resetFrame();
+        }
+        
+        toolFrames[row_select] = new ToolFrame();
+        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+        loadFrames(CoordFrame.TOOL);
+      }
     } else {
       
       // Set the current tool frame
@@ -1798,13 +1806,21 @@ public void f1() {
         }
       }
     }
+    
     break;
   case NAV_USER_FRAMES:
     if(shift == ON) {
       
-      transitionTo(Screen.FRAME_DETAIL, false);
-      curFrameIdx = row_select;
-      loadFrameDetails();
+      // Reset the highlighted frame in the user frames list
+      if(row_select >= 0) {
+        if (activeUserFrame == row_select) {
+          armModel.resetFrame();
+        }
+        
+        userFrames[row_select] = new UserFrame();
+        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+        loadFrames(CoordFrame.USER);
+      }
     } else {
       
       // Set the current user frame
@@ -1817,6 +1833,7 @@ public void f1() {
         }
       }
     }
+    
     break;
   case ACTIVE_FRAMES:
     if(row_select == 0) {
@@ -1824,6 +1841,8 @@ public void f1() {
     } else if(row_select == 1) {
       loadFrames(CoordFrame.USER);
     }
+    
+    break;
   case INSTRUCTION_EDIT:
     //shift = OFF;
     break;
@@ -1833,41 +1852,12 @@ public void f1() {
     ref_point = (shift == ON) ? null : armModel.getEEPos();
     
     break;
-  case VIEW_REG:
-    if(col_select == 1) {
-      // Bring up comment menu
-      loadInputRegisterCommentMethod();
-    } else if(col_select == 2) {
-      
-      // Bring up float input menu
-      if(REG[active_index].value != null) {
-        workingText = Float.toString(REG[active_index].value);
-      } else {
-        workingText = "0.0";
-      }
-      
-      loadInputRegisterValueMethod();
-    }
-    
-    break;
   case VIEW_POS_REG_J:
   case VIEW_POS_REG_C:
-    if (shift == ON) {
-      /* Save the current position of the Robot's faceplate in the currently select
-       * element of the Position Registers array */ 
-      if (active_index >= 0 && active_index < POS_REG.length) {
-        saveRobotFaceplatePointIn(armModel, POS_REG[active_index]);
-      }
-    } else {
-      
-      if(col_select == 1) {
-        // Bring up comment menu
-        loadInputRegisterCommentMethod();
-      } else if(col_select >= 2) {
-        // Bring up Point editing menu
-        transitionTo((mode == (Screen.VIEW_POS_REG_C)) ? Screen.INPUT_POINT_C : Screen.INPUT_POINT_J, false);
-        loadInputRegisterPointMethod();
-      }
+    /* Save the current position of the Robot's faceplate in the currently select
+     * element of the Position Registers array */ 
+    if (active_index >= 0 && active_index < POS_REG.length) {
+      saveRobotFaceplatePointIn(armModel, POS_REG[active_index]);
     }
     
     break;
@@ -1903,9 +1893,20 @@ public void f2() {
     active_prog = -1;
     goToEnterTextMode();
   } 
-  else if(mode == Screen.FRAME_DETAIL || mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE
-                                      || mode == Screen.SIX_POINT_MODE || mode == Screen.DIRECT_ENTRY_MODE) {
+  else if (mode == Screen.NAV_TOOL_FRAMES || mode == Screen.NAV_USER_FRAMES || mode == Screen.FRAME_DETAIL
+           || mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE
+           || mode == Screen.SIX_POINT_MODE || mode == Screen.DIRECT_ENTRY_MODE) {
+    
+    if (mode == Screen.NAV_TOOL_FRAMES || mode == Screen.NAV_USER_FRAMES) {
+      transitionTo(Screen.PICK_FRAME_METHOD, false);
+      curFrameIdx = row_select;
+      loadFrameDetails();
+    } else {
+      switchTo(Screen.PICK_FRAME_METHOD);
+    }
+    
     options = new ArrayList<String>();
+    opt_select = 0;
     
     if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
       options.add("1. Three Point");
@@ -1917,35 +1918,8 @@ public void f2() {
       options.add("3. Direct Entry");
     }
     
-    switchTo(Screen.PICK_FRAME_METHOD);
-    opt_select = 0;
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-  } if(mode == Screen.NAV_TOOL_FRAMES) {
-    
-    // Reset the highlighted frame in the tool frame list
-    if(row_select >= 0) {
-      if (activeToolFrame == row_select) {
-        armModel.resetFrame();
-      }
-      
-      toolFrames[row_select] = new ToolFrame();
-      saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-      loadFrames(CoordFrame.TOOL);
-    }
-  } 
-  else if(mode == Screen.NAV_USER_FRAMES) {
-    
-    // Reset the highlighted frame in the user frames list
-    if(row_select >= 0) {
-      if (activeUserFrame == row_select) {
-        armModel.resetFrame();
-      }
-      
-      userFrames[row_select] = new UserFrame();
-      saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-      loadFrames(CoordFrame.USER);
-    }
-  } 
+  }
   else if(mode == Screen.ACTIVE_FRAMES) {
     // Reset the active frames for the User or Tool Coordinate Frames
     if(row_select == 0) { 
@@ -2810,8 +2784,17 @@ public void ENTER() {
     } // Jog Frame not implemented
     
     opt_select = -1;
+    
     break;
-  case PICK_FRAME_METHOD:
+   case NAV_TOOL_FRAMES:
+   case NAV_USER_FRAMES:
+     // View the Frame
+     transitionTo(Screen.FRAME_DETAIL, false);
+     curFrameIdx = row_select;
+     loadFrameDetails();
+     
+     break;
+   case PICK_FRAME_METHOD:
     // Set the currently select frame
     if (transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
       teachFrame = toolFrames[curFrameIdx];
@@ -3174,6 +3157,36 @@ public void ENTER() {
     row_select = 0;
     col_select = active_index = text_render_start = 0;
     viewRegisters();
+    
+    break;
+  case VIEW_REG:
+    if(col_select == 1) {
+      // Bring up comment menu
+      loadInputRegisterCommentMethod();
+    } else if(col_select == 2) {
+      
+      // Bring up float input menu
+      if(REG[active_index].value != null) {
+        workingText = Float.toString(REG[active_index].value);
+      } else {
+        workingText = "0.0";
+      }
+      
+      loadInputRegisterValueMethod();
+    }
+    
+    break;
+  case VIEW_POS_REG_J:
+  case VIEW_POS_REG_C:
+      
+    if(col_select == 1) {
+      // Bring up comment menu
+      loadInputRegisterCommentMethod();
+    } else if(col_select >= 2) {
+      // Bring up Register editing menu
+      transitionTo((mode == (Screen.VIEW_POS_REG_C)) ? Screen.INPUT_POINT_C : Screen.INPUT_POINT_J, false);
+      loadInputRegisterPointMethod();
+    }
     
     break;
   case INPUT_INTEGER:
@@ -4237,14 +4250,14 @@ public void updateScreen(color cDefault, color cHighlight) {
     case NAV_USER_FRAMES:
       // F1, F2, F3
       if(shift == ON) {
-        funct[0] = "[Detail]";
-        funct[1] = "[Reset]";
+        funct[0] = "[Reset]";
+        funct[1] = "[Method]";
         funct[2] = "[Switch]";
         funct[3] = "";
         funct[4] = "";
       } else {
         funct[0] = "[Set]";
-        funct[1] = "[Reset]";
+        funct[1] = "[Method]";
         funct[2] = "[Switch]";
         funct[3] = "";
         funct[4] = "";
@@ -4291,22 +4304,22 @@ public void updateScreen(color cDefault, color cHighlight) {
       funct[3] = "";
       funct[4] = "";
       break;
-    case VIEW_REG:
     case VIEW_POS_REG_C:
     case VIEW_POS_REG_J:
-      if (shift == ON && (mode == Screen.VIEW_POS_REG_C || mode == Screen.VIEW_POS_REG_J)) {
-        funct[0] = "[Save Pt]";
-        funct[1] = "[Switch]";
-        funct[2] = "";
-        funct[3] = "";
-        funct[4] = "";
-      } else {
-        funct[0] = "[Edit]";
-        funct[1] = "[Switch]";
-        funct[2] = "";
-        funct[3] = "";
-        funct[4] = "";
-      }
+      // F1, F2
+      funct[0] = "[Sav Pt]";
+      funct[1] = "[Switch]";
+      funct[2] = "";
+      funct[3] = "";
+      funct[4] = "";
+     break;
+    case VIEW_REG:
+      // F2
+      funct[0] = "";
+      funct[1] = "[Switch]";
+      funct[2] = "";
+      funct[3] = "";
+      funct[4] = "";
       break;
     case INPUT_COMMENT_U:
       // F1 - F5
@@ -4755,7 +4768,7 @@ public void loadInputRegisterValueMethod() {
   if(REG[active_index].value != null) {
     options.add( Float.toString(REG[active_index].value) );
   } else {
-    options.add("\0");
+    options.add(workingText);
   }
   
   opt_select = 0;
@@ -4787,6 +4800,9 @@ public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
   pt.joints = jointAngles;
   
   pReg.point = pt;
+  
+  viewRegisters();
+  updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
 /**
