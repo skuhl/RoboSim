@@ -3091,8 +3091,8 @@ public void ENTER() {
       
       wpr = matrixToEuler(axesVectors);
       // Save direct entry values
-      teachFrame.mOrigin = origin;
-      teachFrame.mOrientation = eulerToQuat(wpr);
+      teachFrame.DEOrigin = origin;
+      teachFrame.DEAxesOffsets = eulerToQuat(wpr);
       teachFrame.setFrame(2);
       
       if(DISPLAY_TEST_OUTPUT) { System.out.printf("\n\n%s\n%s\n%s\n", origin.toString(), wpr.toString(), matrixToString(axesVectors)); }
@@ -4536,20 +4536,20 @@ public void loadDirectEntryMethod() {
     contents = new ArrayList<ArrayList<String>>();
     
     PVector xyz = new PVector(0f, 0f, 0f);
-    if (teachFrame.mOrigin != null) {
+    if (teachFrame.DEOrigin != null) {
       
       if (teachFrame instanceof UserFrame) {
         // Display User Frame Origin in world frame reference
-        xyz = convertNativeToWorld( teachFrame.mOrigin );
+        xyz = convertNativeToWorld( teachFrame.DEOrigin );
       } else {
-        xyz = teachFrame.mOrigin;
+        xyz = teachFrame.DEOrigin;
       }
     }
     
     PVector wpr = new PVector(0f, 0f, 0f);
-    if (teachFrame.mOrientation != null) {
+    if (teachFrame.DEAxesOffsets != null) {
       // Display orientation in euler angles
-      wpr = quatToEuler(teachFrame.mOrientation);
+      wpr = quatToEuler(teachFrame.DEAxesOffsets);
     }
     
     contents.add( newLine(String.format("X: %4.3f", xyz.x)) );

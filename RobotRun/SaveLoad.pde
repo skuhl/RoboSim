@@ -608,21 +608,21 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   }
   
   // Write frame orientation points
-  for (PVector point : f.orientation) {
+  for (PVector point : f.axesTeachPoints) {
     savePVector(point, out);
   }
   
   // Write frame manual entry origin value
-  savePVector(f.mOrigin, out);
+  savePVector(f.DEOrigin, out);
   
   
-  if (f.mOrientation == null) {
+  if (f.DEAxesOffsets == null) {
     // Value is null
     out.writeByte(0);
   } else {
     out.writeByte(1);
     // Write frame manual entry orientation value
-    for (float ft : f.mOrientation) {
+    for (float ft : f.DEAxesOffsets) {
       out.writeFloat(ft);
     }
   }
@@ -630,7 +630,7 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   if (f instanceof ToolFrame) {
     ToolFrame tFrame = (ToolFrame)f;
     // Save points for the TCP teaching of the frame
-    for (Point p : tFrame.TCP) {
+    for (Point p : tFrame.TCPTeachPoints) {
       savePoint(p, out);
     }
     
@@ -676,22 +676,22 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   f.setAxes(axesVectors);
   
   // Read origin values
-  f.orientation = new PVector[3];
+  f.axesTeachPoints = new PVector[3];
   // Read in orientation points
   for (int idx = 0; idx < 3; ++idx) {
-    f.orientation[idx] = loadPVector(in);
+    f.axesTeachPoints[idx] = loadPVector(in);
   }
   
   // Read manual entry origin values
-  f.mOrigin = loadPVector(in);
+  f.DEOrigin = loadPVector(in);
   
   int val = in.readByte();
   
   if (val == 1) {
-    f.mOrientation = new float[4];
+    f.DEAxesOffsets = new float[4];
     // Read in the manual entry orientation values
     for (int idx = 0; idx < 4; ++idx) {
-      f.mOrientation[idx] = in.readFloat();
+      f.DEAxesOffsets[idx] = in.readFloat();
     }
   } // The orientation is null otherwise
   
@@ -700,7 +700,7 @@ private Frame loadFrame(DataInputStream in) throws IOException {
     
     // Load points for the TCP teaching of the frame
     for (int idx = 0; idx < 3; ++idx) {
-      tFrame.TCP[idx] = loadPoint(in);
+      tFrame.TCPTeachPoints[idx] = loadPoint(in);
     }
     
   } else {
@@ -884,7 +884,8 @@ public int loadRegisterBytes(File src) {
 }
 
 /**
- * TODO
+ * Saves the x, y, z fields associated with the given PVector Object to the
+ * given output stream. Null values for p are accepted.
  */
 public void savePVector(PVector p, DataOutputStream out) throws IOException {
   
@@ -902,7 +903,7 @@ public void savePVector(PVector p, DataOutputStream out) throws IOException {
 }
 
 /**
- * TODO
+ * Attempts to load a PVector object from the given input stream.
  */
 public PVector loadPVector(DataInputStream in) throws IOException {
   // Read flag byte
