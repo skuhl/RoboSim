@@ -658,6 +658,17 @@ public class ArmModel {
       // Apply a custom tool frame
       PVector tr = toolFrames[list_idx].getOrigin();
       translate(tr.x, tr.y, tr.z);
+      /*
+       Native Frame to World Frame
+       x' = -x
+       y' = -z
+       z' = y
+       
+       World Frame to End Effector Frame, Native Frame to End Effector Frame
+       x'' = -z' -> -y
+       y'' = -y' -> z
+       z'' = x'  -> -x
+      */
     } else {
       
       // Apply a default tool frame based on the current EE

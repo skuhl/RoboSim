@@ -30,28 +30,6 @@ public PVector rotate(PVector v, float[][] rotMatrix) {
 }
 
 /**
- * Given a 3x3 transformation matrix, a matrix, which corresponds
- * to the given matrix in the World Frame is returned.
- */
-public float[][] convertToWorld(float[][] rotMatrix) {
-  if (rotMatrix.length < 3 || rotMatrix[0].length < 3) {
-    return null;
-  }
-  
-  float[][] nRotMatrix = new float[3][3];
-  
-  for (int e = 0; e < 3; ++e) {
-    float limbo = rotMatrix[e][0];
-    
-    rotMatrix[e][0] = rotMatrix[e][2];
-    rotMatrix[e][1] = -rotMatrix[e][1];
-    rotMatrix[e][2] = limbo;
-  }
-  
-  return nRotMatrix;
-}
-
-/**
  * This method calculates a TCP offset for the Robot given a valid set of position and orientation values, where each pair ( [pos, ori1],
  * [pos2, ori2], and [pos3, ori3] ) represent a recorded position and orientation of the Robot. A position contains the X, Y, Z values of
  * the Robot at the point, while the orientation matrix is a rotation matrix, which describes the Robot's orientation at a one of the points.

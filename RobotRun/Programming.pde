@@ -119,15 +119,15 @@ public class Point  {
 } // end Point class
 
 /**
- *
+ * TODO comment
  */
 public abstract class Frame {
   private PVector origin;
   // The unit vectors representing the x, y, z axes (in row major order)
   private float[][] axes;
-  // For 6-Point Method of Tool Frames and 3-Point Method of User Frames
+  // For 6-Point Method of Tool Frames and 3-Point or 4_Point Methods of User Frames
   public PVector[] orientation;
-  // For Manual Entry
+  // For Direct Entry
   public PVector mOrigin;
   public float[] mOrientation;
 
@@ -190,7 +190,37 @@ public abstract class Frame {
   }
   
   /**
-   * TODO comment
+   * Sets the Frame's point at the given index in its list of taugh points.
+   * For a Tool Frame, the list of possible taught points includes the three
+   * points for the teaching of the TCP offset as well as the three points
+   * for the Coordinate Axes; six points in total. The valid values for indices
+   * are as follows:
+   * 
+   * 0 -> TCP teach point 1
+   * 1 -> TCP teach point 2
+   * 2 -> TCP teach point 3
+   * 3 -> Orient Origin point
+   * 4 -> X-Direction point
+   * 5 -> Y-Direction point
+   * 
+   * For a User Frame, the list of possible taugh points includes the three
+   * points for the Coordinate Axes as well as the Axes Origin point; four
+   * in total. The valid values for index are as follows:
+   * 
+   * 0 -> Orient Origin point
+   * 1 -> X-Direction point
+   * 2 -> Y-Direction point
+   * 3 -> Axes Origin point
+   * 
+   * Because the orientation of a point is only necessary for the creation of the
+   * TCP offset, the orientation of the given point will be ignored for all other
+   * points aside from the TCP teach points and only the position of the point will
+   * be recorded.
+   * 
+   * @param p    A point, which contains the position and orientation of the Robot
+   *             at a specific point in space
+   * @param idx  The index, at which to save the given point, in the Frame's list
+   *             of taught points
    */
   public abstract void setPoint(Point p, int idx);
   
@@ -205,12 +235,23 @@ public abstract class Frame {
   public abstract boolean setFrame(int method);
   
   /**
-   * TODO comment
+   * A variation of toStringArray(), where each element of the
+   * String array contains a pair of values of the frame ( element
+   * 0 is X and W, element 1 is Y and P, and element 2 is Z and R ).
+   * Each element of the array is treated as its own line, when used
+   * to display a Frame's values in the Virtual Pendant. This method
+   * is designed to reduce the number of lines necessay to display
+   * the values of the Frames X, Y, Z, W, P, and R fields.
+   * 
+   * @returning  A 3 element String array, containing paired sets of
+   *             the Frames X, Y, Z, W, P, R fields.
    */
   public String[] toCondensedStringArray() {
     String[] lines = new String[3];
     String[] values = toStringArray();
-    
+    /* The '-12' formatting parameter unifies the starting position
+     * of values 3 - 4 on each line, while allowing the maximum length
+     * of values 0-2. */
     lines[0] = String.format("%-12s%s", values[0], values[3]);
     lines[1] = String.format("%-12s%s", values[1], values[4]);
     lines[2] = String.format("%-12s%s", values[2], values[5]);
@@ -228,8 +269,13 @@ public abstract class Frame {
   public String[] toStringArray() {
     
     String[] values = new String[6];
-    // Convert to World frame reference
-    PVector wOrigin = convertNativeToWorld(origin);
+    
+    PVector wOrigin = origin;
+    if (this instanceof UserFrame) {
+      // Convert to World frame reference
+      wOrigin = convertNativeToWorld(origin);
+    }
+    
     values[0] = String.format("X: %4.3f", wOrigin.x);
     values[1] = String.format("Y: %4.3f", wOrigin.y);
     values[2] = String.format("Z: %4.3f", wOrigin.z);
@@ -303,40 +349,41 @@ public class ToolFrame extends Frame {
   public boolean setFrame(int method) {
     
     if (method == 2) {
+      // Direct Entry Method
+      
       if (mOrigin == null || mOrientation == null) {
         // No direct entry values have been set
         return false;
       }
       
-      // Direct Entry Method
       setOrigin(mOrigin);
       setAxes( quatToMatrix(mOrientation) );
       return true;
     } else if (method >= 0 && method < 2 && TCP[0] != null && TCP[1] != null && TCP[2] != null) {
-      // Both 3-Point and 6-Point Method
+      // 3-Point or 6-Point Method
+      
+      if (method == 1 && (orientation[0] == null || orientation[1] == null || orientation[2] == null)) {
+        // Missing points for the coordinate axes
+        return false;
+      }
+      
       float[][] pt1_ori = quatToMatrix(TCP[0].ori),
                 pt2_ori = quatToMatrix(TCP[1].ori),
                 pt3_ori = quatToMatrix(TCP[2].ori);
       
-      double[] tcp = calculateTCPFromThreePoints(toVectorArray(TCP[0].pos), pt1_ori,
+      double[] newTCP = calculateTCPFromThreePoints(toVectorArray(TCP[0].pos), pt1_ori,
                                                  toVectorArray(TCP[1].pos), pt2_ori,
                                                  toVectorArray(TCP[2].pos), pt3_ori);
       
-      if (tcp == null) {
-        // Invalid point set for the TCP
+      float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(orientation[0], orientation[1], orientation[2]) : new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
+      
+      if (newTCP == null || newAxesVectors == null) {
+        // Invalid point set for the TCP or the coordinate axes
         return false;
-      } else if (method == 1) {
-        // Both 3-Point and 6-Point Method
-        if (method == 1 && (orientation[0] == null || orientation[1] == null || orientation[2] == null)) {
-          // Invalid point set for the coordinate axes
-          return false;
-        }
-        // Other part of the 6-Point Method
-        setAxes( createAxesFromThreePoints(orientation[0], orientation[1], orientation[2]) );
       }
       
-      setOrigin( new PVector((float)tcp[0], (float)tcp[1], (float)tcp[2]) );
-      
+      setOrigin( new PVector((float)newTCP[0], (float)newTCP[1], (float)newTCP[2]) );
+      setAxes(newAxesVectors);
       return true;
     }
     
@@ -399,24 +446,30 @@ public class UserFrame extends Frame {
   
   public boolean setFrame(int mode) {
     
-    if (mode == 0 && orientation[0] != null && orientation[1] != null && orientation[2] != null) {
-      // 3-Point Method
-      setAxes( createAxesFromThreePoints(orientation[0], orientation[1], orientation[2]) );
-      return true;
-    } else if (mode == 1 && orientOrigin != null && orientation[0] != null && orientation[1] != null && orientation[2] != null) {
-      // 4-Point Method
-      setOrigin(orientOrigin);
-      setAxes( createAxesFromThreePoints(orientation[0], orientation[1], orientation[2]) );
-      return true;
-    } else if (mode == 2) {
+    if (mode == 2) {
+      // Direct Entry Method
+      
       if (mOrigin == null || mOrientation == null) {
         // No direct entry values have been set
         return false;
       }
       
-      // Direct Entry Method
       setOrigin(mOrigin);
       setAxes( quatToMatrix(mOrientation) );
+      return true;
+    } else if (mode >= 0 && mode < 2 && orientation[0] != null && orientation[1] != null && orientation[2] != null) {
+      // 3-Point or 4-Point Method
+      
+      PVector newOrigin = (mode == 0) ? getOrigin() : orientOrigin;
+      float[][] newAxesVectors = createAxesFromThreePoints(orientation[0], orientation[1], orientation[2]);
+      
+      if (newOrigin == null || newAxesVectors == null) {
+        // Invalid points for the coordinate axes or missing orient origin for the 4-Point Method
+        return false;
+      }
+      
+      setAxes(newAxesVectors);
+      setOrigin(newOrigin);
       return true;
     }
     

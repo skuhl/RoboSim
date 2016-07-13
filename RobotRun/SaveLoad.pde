@@ -782,14 +782,7 @@ public int saveRegisterBytes(File dest) {
     // Save the Position Register entries
     for(Integer idx : initializedPR) {
       dataOut.writeInt(idx);
-      
-      if(POS_REG[idx].point == null) {
-        // Save for null Point value
-        savePoint( new Point(Float.NaN, Float.NaN, Float.NaN,
-        Float.NaN, Float.NaN, Float.NaN, Float.NaN), dataOut );
-      } else {
-        savePoint(POS_REG[idx].point, dataOut);
-      }
+      savePoint(POS_REG[idx].point, dataOut);
       
       if(POS_REG[idx].comment == null) {
         dataOut.writeUTF("");
@@ -862,9 +855,6 @@ public int loadRegisterBytes(File src) {
       int idx = dataIn.readInt();
       
       Point p = loadPoint(dataIn);
-      // Null points are stored with pos Vectors filled with NaNs
-      if(Float.isNaN(p.pos.x)) { p = null; }
-      
       String c = dataIn.readUTF();
       // Null comments are stored as ""
       if(c == "") { c = null; }

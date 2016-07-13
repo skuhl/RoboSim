@@ -1793,7 +1793,7 @@ public void f1() {
         activeToolFrame = row_select;
         
         // Update the Robot Arm's current frame rotation matrix
-        if(curCoordFrame == CoordFrame.TOOL) {
+        if(curCoordFrame == CoordFrame.TOOL || curCoordFrame == CoordFrame.WORLD) {
           armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
         }
       }
@@ -1924,6 +1924,10 @@ public void f2() {
     
     // Reset the highlighted frame in the tool frame list
     if(row_select >= 0) {
+      if (activeToolFrame == row_select) {
+        armModel.resetFrame();
+      }
+      
       toolFrames[row_select] = new ToolFrame();
       saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
       loadFrames(CoordFrame.TOOL);
@@ -1933,6 +1937,10 @@ public void f2() {
     
     // Reset the highlighted frame in the user frames list
     if(row_select >= 0) {
+      if (activeUserFrame == row_select) {
+        armModel.resetFrame();
+      }
+      
       userFrames[row_select] = new UserFrame();
       saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
       loadFrames(CoordFrame.USER);
@@ -2993,7 +3001,7 @@ public void ENTER() {
           toolFrames[curFrameIdx] = teachFrame;
           activeToolFrame = curFrameIdx;
           
-          armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
+          armModel.currentFrame = toolFrames[curFrameIdx].getNativeAxes();
           saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
           loadFrames(CoordFrame.TOOL);
         } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
@@ -3067,13 +3075,20 @@ public void ENTER() {
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     } else {
       // The user enters values with reference to the World Frame
-      PVector origin = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) ),
-      wpr = new PVector(inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD);
+      PVector origin,
+              wpr = new PVector(inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD);
       float[][] axesVectors = eulerToMatrix(wpr);
+      
+      if (teachFrame instanceof UserFrame) {
+        origin = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
+      } else {
+        origin = new PVector(inputs[0], inputs[1], inputs[2]);
+      }
       
       origin.x = max(-9999f, min(origin.x, 9999f));
       origin.y = max(-9999f, min(origin.y, 9999f));
       origin.z = max(-9999f, min(origin.z, 9999f));
+      
       wpr = matrixToEuler(axesVectors);
       // Save direct entry values
       teachFrame.mOrigin = origin;
@@ -3089,7 +3104,7 @@ public void ENTER() {
         if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
           // Update the current frame of the Robot Arm
           activeToolFrame = curFrameIdx;
-          armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
+          armModel.currentFrame = toolFrames[curFrameIdx].getNativeAxes();
           toolFrames[curFrameIdx] = teachFrame;
           
           saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
@@ -4458,7 +4473,9 @@ public void loadFrames(CoordFrame coordFrame) {
     for(int idx = 0; idx < frames.length; ++idx) {
       // Display each frame on its own line
       Frame frame = frames[idx];
-      contents.add ( newLine( String.format("%d) %s", idx + 1, convertNativeToWorld(frame.getOrigin())) ) );
+      // For a Tool Frame, the origin is the offset of the End Effector from the Robot faceplate, so it is not technically a point.
+      PVector frameOrigin = (frame instanceof ToolFrame) ? frame.getOrigin() : convertNativeToWorld(frame.getOrigin());
+      contents.add ( newLine( String.format("%d) %s", idx + 1, frameOrigin) ) );
     }
     
     row_select = 0;
@@ -4520,8 +4537,13 @@ public void loadDirectEntryMethod() {
     
     PVector xyz = new PVector(0f, 0f, 0f);
     if (teachFrame.mOrigin != null) {
-      // Display all points in world frame reference
-      xyz = convertNativeToWorld( teachFrame.mOrigin );
+      
+      if (teachFrame instanceof UserFrame) {
+        // Display User Frame Origin in world frame reference
+        xyz = convertNativeToWorld( teachFrame.mOrigin );
+      } else {
+        xyz = teachFrame.mOrigin;
+      }
     }
     
     PVector wpr = new PVector(0f, 0f, 0f);
@@ -4531,8 +4553,8 @@ public void loadDirectEntryMethod() {
     }
     
     contents.add( newLine(String.format("X: %4.3f", xyz.x)) );
-    contents.add( newLine(String.format("Y: %4.3f", xyz.x)) );
-    contents.add( newLine(String.format("Z: %4.3f", xyz.x)) );
+    contents.add( newLine(String.format("Y: %4.3f", xyz.y)) );
+    contents.add( newLine(String.format("Z: %4.3f", xyz.z)) );
     contents.add( newLine(String.format("W: %4.3f", wpr.x * RAD_TO_DEG)) );
     contents.add( newLine(String.format("P: %4.3f", wpr.y * RAD_TO_DEG)) );
     contents.add( newLine(String.format("R: %4.3f", wpr.z * RAD_TO_DEG)) );
