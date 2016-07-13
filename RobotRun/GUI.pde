@@ -2242,7 +2242,16 @@ public void f4() {
   case FOUR_POINT_MODE:
   case SIX_POINT_MODE:
     
-    // TODO move robot to currently selected taught point
+    if (teachFrame != null) {
+      Point tgt = teachFrame.getPoint(opt_select);
+      
+      if (tgt != null && tgt.joints != null) {
+        // Move the Robot to a specified teach point
+        armModel.setupRotationInterpolation( tgt.joints );
+        armModel.inMotion = true;
+        currentInstruction = -2;
+      }
+    }
     
     break;
   case INPUT_COMMENT_U:
@@ -2367,11 +2376,19 @@ public void f5() {
       applyModelRotation(armModel, false);
       
       float[][] tMatrix = getTransformationMatrix();
-      
+      float[][] rMatrix = new float[3][3];
       popMatrix();
       
-      float[] orientation = matrixToQuat( tMatrix );
+      for (int row = 0; row < 3; ++row) {
+        for (int col = 0; col < 3; ++col) {
+          // Transpose the rotation matrix portion of the transformation matrix
+          rMatrix[row][col] = tMatrix[col][row];
+        }
+      }
+      
+      float[] orientation = matrixToQuat( rMatrix );
       Point curPosition = new Point(new PVector(tMatrix[0][3], tMatrix[1][3], tMatrix[2][3]), orientation);
+      curPosition.joints = armModel.getJointRotations();
       // Save the current position of the Robot's Faceplate
       teachFrame.setPoint(curPosition, opt_select);
       saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
@@ -4515,7 +4532,7 @@ public void loadPointList() {
     // Determine if the point has been set yet
     for(int idx = 0; idx < limbo.size(); ++idx) {
       // Add each line to options
-      options.add( limbo.get(idx) + ((teachFrame.getPosition(idx) != null) ? "RECORDED" : "UNINIT") );
+      options.add( limbo.get(idx) + ((teachFrame.getPoint(idx) != null) ? "RECORDED" : "UNINIT") );
     }
   } else {
     // No teach points

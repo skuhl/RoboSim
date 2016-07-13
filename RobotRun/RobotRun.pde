@@ -138,7 +138,7 @@ public void draw() {
       //run program
       armModel.inMotion = !executeProgram(currentProgram, armModel, execSingleInst);
     } else {
-      armModel.inMotion = !executeMotion(armModel, armModel.motorSpeed);
+      armModel.inMotion = !armModel.interpolateRotation(liveSpeed);
     }
   }
   else {
@@ -380,12 +380,12 @@ public void displayTeachPoints() {
     }
     
     for (int idx = 0; idx < size; ++idx) {
-      PVector pt = teachFrame.getPosition(idx);
+      Point pt = teachFrame.getPoint(idx);
       
       if (pt != null) {
         pushMatrix();
         // Applies the point's position
-        translate(pt.x, pt.y, pt.z);
+        translate(pt.pos.x, pt.pos.y, pt.pos.z);
         
         // Draw color-coded sphere for the point
         noFill();

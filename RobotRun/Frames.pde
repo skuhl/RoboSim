@@ -7,7 +7,7 @@ public abstract class Frame {
   private float[][] axes;
   /* The three points used to define a coordinate axis for 6-Point Method
    * of Tool Frames and 3-Point or 4_Point Methods of User Frames */
-  public PVector[] axesTeachPoints;
+  public Point[] axesTeachPoints;
   // For Direct Entry
   public PVector DEOrigin;
   public float[] DEAxesOffsets;
@@ -20,7 +20,7 @@ public abstract class Frame {
       axes[diag][diag] = 1f;
     }
     
-    axesTeachPoints = new PVector[] { null, null, null };
+    axesTeachPoints = new Point[] { null, null, null };
     
     DEOrigin = null;
     DEAxesOffsets = null;
@@ -109,7 +109,7 @@ public abstract class Frame {
    * Returns the position of the teach point at the given index in the Frame's list
    * of teach points. Valid indices are described in setPoint().
    */
-  public abstract PVector getPosition(int idx);
+  public abstract Point getPoint(int idx);
   
   /**
    * Based on value of method, an attempt will be made to set the current origin offset and axes vectors.
@@ -214,14 +214,14 @@ public class ToolFrame extends Frame {
       case 3:
       case 4:
       case 5:
-        axesTeachPoints[ idx % 3 ] = p.pos;
+        axesTeachPoints[ idx % 3 ] = p;
         return;
         
       default:
     }
   }
   
-  public PVector getPosition(int idx) {
+  public Point getPoint(int idx) {
         
     /* Map the index into the 'Point array' to the
      * actual values stored in the frame */
@@ -229,7 +229,7 @@ public class ToolFrame extends Frame {
       case 0:
       case 1:
       case 2:
-        return (TCPTeachPoints[idx] == null) ? null : TCPTeachPoints[idx].pos;
+        return TCPTeachPoints[idx];
         
       case 3:
       case 4:
@@ -271,7 +271,7 @@ public class ToolFrame extends Frame {
                                                  toVectorArray(TCPTeachPoints[1].pos), pt2_ori,
                                                  toVectorArray(TCPTeachPoints[2].pos), pt3_ori);
       
-      float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(axesTeachPoints[0], axesTeachPoints[1], axesTeachPoints[2]) : new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
+      float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(axesTeachPoints[0].pos, axesTeachPoints[1].pos, axesTeachPoints[2].pos) : new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
       
       if (newTCP == null || newAxesVectors == null) {
         // Invalid point set for the TCP or the coordinate axes
@@ -289,7 +289,7 @@ public class ToolFrame extends Frame {
 
 public class UserFrame extends Frame {
   // For the 4-Point Method
-  public PVector orientOrigin;
+  public Point orientOrigin;
   
   /**
    * Initialize all fields
@@ -307,18 +307,18 @@ public class UserFrame extends Frame {
       case 0:
       case 1:
       case 2:
-        axesTeachPoints[idx] = p.pos;
+        axesTeachPoints[idx] = p;
         return;
         
       case 3:
-        orientOrigin = p.pos;
+        orientOrigin = p;
         return;
         
       default:
     }
   }
   
-  public PVector getPosition(int idx) {
+  public Point getPoint(int idx) {
         
     /* Map the index into the 'Point array' to the
      * actual values stored in the frame */
@@ -353,8 +353,8 @@ public class UserFrame extends Frame {
     } else if (mode >= 0 && mode < 2 && axesTeachPoints[0] != null && axesTeachPoints[1] != null && axesTeachPoints[2] != null) {
       // 3-Point or 4-Point Method
       
-      PVector newOrigin = (mode == 0) ? getOrigin() : orientOrigin;
-      float[][] newAxesVectors = createAxesFromThreePoints(axesTeachPoints[0], axesTeachPoints[1], axesTeachPoints[2]);
+      PVector newOrigin = (mode == 0) ? getOrigin() : orientOrigin.pos;
+      float[][] newAxesVectors = createAxesFromThreePoints(axesTeachPoints[0].pos, axesTeachPoints[1].pos, axesTeachPoints[2].pos);
       
       if (newOrigin == null || newAxesVectors == null) {
         // Invalid points for the coordinate axes or missing orient origin for the 4-Point Method
@@ -452,7 +452,7 @@ public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1, float[
     
     RealVector b = new ArrayRealVector(t, false);
     /* Ar + Br - 2Cr */
-    RealMatrix R = ( ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) ) );//.transpose();
+    RealMatrix R = ( ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) ) ).transpose();
     
     /* (R ^ -1) * b */
     avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );

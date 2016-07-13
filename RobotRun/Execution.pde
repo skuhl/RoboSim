@@ -1043,61 +1043,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
   Point start = new Point(armModel.getEEPos(), armModel.getQuaternion());
   
   if(instruction.getMotionType() == MTYPE_JOINT) {
-    float[] j = instruction.getVector(program).joints;
-    
-    //set target rotational value for each joint
-    for(int n = 0; n < j.length; n++) {
-      for(int r = 0; r < 3; r++) {
-        if(model.segments.get(n).rotations[r])
-        model.segments.get(n).targetRotations[r] = j[n];
-        //println("target rotation for joint " + n + ": " + j[n]);
-      }
-    }
-    
-    // calculate whether it's faster to turn CW or CCW
-    for(Model a : model.segments) {
-      for(int r = 0; r < 3; r++) {
-        if(a.rotations[r]) {
-          // The minimum distance between the current and target joint angles
-          float dist_t = minimumDistance(a.currentRotations[r], a.targetRotations[r]);
-          
-          // check joint movement range
-          if(a.jointRanges[r].x == 0 && a.jointRanges[r].y == TWO_PI) {
-            a.rotationDirections[r] = (dist_t < 0) ? -1 : 1;
-          }
-          else {  
-            /* Determine if at least one bound lies within the range of the shortest angle
-            * between the current joint angle and the target angle. If so, then take the
-            * longer angle, otherwise choose the shortest angle path. */
-            
-            // The minimum distance from the current joint angle to the lower bound of the joint's range
-            float dist_lb = minimumDistance(a.currentRotations[r], a.jointRanges[r].x);
-            
-            // The minimum distance from the current joint angle to the upper bound of the joint's range
-            float dist_ub = minimumDistance(a.currentRotations[r], a.jointRanges[r].y);
-            
-            if(dist_t < 0) {
-              if( (dist_lb < 0 && dist_lb > dist_t) || (dist_ub < 0 && dist_ub > dist_t) ) {
-                // One or both bounds lie within the shortest path
-                a.rotationDirections[r] = 1;
-              } 
-              else {
-                a.rotationDirections[r] = -1;
-              }
-            } 
-            else if(dist_t > 0) {
-              if( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {  
-                // One or both bounds lie within the shortest path
-                a.rotationDirections[r] = -1;
-              } 
-              else {
-                a.rotationDirections[r] = 1;
-              }
-            }
-          }
-        }
-      }
-    }
+    armModel.setupRotationInterpolation( instruction.getVector(program).joints );
   } // end joint movement setup
   else if(instruction.getMotionType() == MTYPE_LINEAR) {
     if(instruction.getTermination() == 0) {

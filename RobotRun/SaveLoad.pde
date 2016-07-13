@@ -608,13 +608,12 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   }
   
   // Write frame orientation points
-  for (PVector point : f.axesTeachPoints) {
-    savePVector(point, out);
+  for (Point pt : f.axesTeachPoints) {
+    savePoint(pt, out);
   }
   
   // Write frame manual entry origin value
   savePVector(f.DEOrigin, out);
-  
   
   if (f.DEAxesOffsets == null) {
     // Value is null
@@ -636,7 +635,7 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
     
   } else {
     // Save point for the origin offset of the frame
-    savePVector( ((UserFrame)f).orientOrigin, out );
+    savePoint( ((UserFrame)f).orientOrigin, out );
   }
 }
 
@@ -676,10 +675,10 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   f.setAxes(axesVectors);
   
   // Read origin values
-  f.axesTeachPoints = new PVector[3];
+  f.axesTeachPoints = new Point[3];
   // Read in orientation points
   for (int idx = 0; idx < 3; ++idx) {
-    f.axesTeachPoints[idx] = loadPVector(in);
+    f.axesTeachPoints[idx] = loadPoint(in);
   }
   
   // Read manual entry origin values
@@ -705,7 +704,7 @@ private Frame loadFrame(DataInputStream in) throws IOException {
     
   } else {
     // Load point for the origin offset of the frame
-    ((UserFrame)f).orientOrigin = loadPVector(in);
+    ((UserFrame)f).orientOrigin = loadPoint(in);
   }
   
   return f;

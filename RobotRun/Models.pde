@@ -848,6 +848,65 @@ public class ArmModel {
     return done;
   } // end interpolate rotation
   
+  /**
+   * Sets the Model's target joint angles to the given set of angles and updates the
+   * rotation directions of each of the joint segments.
+   */
+  public void setupRotationInterpolation(float[] tgtAngles) {
+    // Set the Robot's target angles
+    for(int n = 0; n < tgtAngles.length; n++) {
+      for(int r = 0; r < 3; r++) {
+        if(armModel.segments.get(n).rotations[r])
+        armModel.segments.get(n).targetRotations[r] = tgtAngles[n];
+      }
+    }
+    
+    // Calculate whether it's faster to turn CW or CCW
+    for(Model a : armModel.segments) {
+      for(int r = 0; r < 3; r++) {
+        if(a.rotations[r]) {
+          // The minimum distance between the current and target joint angles
+          float dist_t = minimumDistance(a.currentRotations[r], a.targetRotations[r]);
+          
+          // check joint movement range
+          if(a.jointRanges[r].x == 0 && a.jointRanges[r].y == TWO_PI) {
+            a.rotationDirections[r] = (dist_t < 0) ? -1 : 1;
+          }
+          else {  
+            /* Determine if at least one bound lies within the range of the shortest angle
+            * between the current joint angle and the target angle. If so, then take the
+            * longer angle, otherwise choose the shortest angle path. */
+            
+            // The minimum distance from the current joint angle to the lower bound of the joint's range
+            float dist_lb = minimumDistance(a.currentRotations[r], a.jointRanges[r].x);
+            
+            // The minimum distance from the current joint angle to the upper bound of the joint's range
+            float dist_ub = minimumDistance(a.currentRotations[r], a.jointRanges[r].y);
+            
+            if(dist_t < 0) {
+              if( (dist_lb < 0 && dist_lb > dist_t) || (dist_ub < 0 && dist_ub > dist_t) ) {
+                // One or both bounds lie within the shortest path
+                a.rotationDirections[r] = 1;
+              } 
+              else {
+                a.rotationDirections[r] = -1;
+              }
+            } 
+            else if(dist_t > 0) {
+              if( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {  
+                // One or both bounds lie within the shortest path
+                a.rotationDirections[r] = -1;
+              } 
+              else {
+                a.rotationDirections[r] = 1;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
   void updateOrientation() {
     PVector u = new PVector(0, 0, 0);
     float theta = DEG_TO_RAD*2.5*liveSpeed;

@@ -890,13 +890,7 @@ public class ExpressionSet {
     
     // Each parameter gets its own column
     for (Object param : parameters) {
-    
-      if (param == null) {
-        // Blank field
-        fields.add("_");
-      } else {
-        fields.add(paramToString(param));
-      }
+      fields.add(paramToString(param));
     }
     
     return fields;
