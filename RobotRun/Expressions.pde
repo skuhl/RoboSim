@@ -2,6 +2,60 @@
 public enum Operator { PLUS, MINUS, MUTLIPLY, DIVIDE, MODULUS, INTDIVIDE, PAR_OPEN, PAR_CLOSE; }
 
 /**
+ * A class which is a special type of parameter allowed in register expressions, which specifics
+ * that the current position of the Robot will be used as the point value of this parameter.
+ */
+public class RobotPoint {
+  /**
+   * The value of valIdx corresponds to:
+   *   -1     ->  The point itself
+   *   0 - 5  ->  J1 - J6
+   *   6 - 11 ->  X, Y, Z, W, P, R
+   */
+  public final int valIdx;
+
+  /**
+   * Default to the entire point
+   */
+  public RobotPoint() {
+    valIdx = -1;
+  }
+  
+  /**
+   * Specific the index of the value of the point
+   */
+  public RobotPoint(int vdx) {
+    valIdx = vdx;
+  }
+  
+  /**
+   * Return the current position of the Robot or a specific value of the current position of
+   * the Robot
+   */
+  public Object getValue() {
+    CartPoint pt = new CartPoint( new Point(armModel.getEEPos(), armModel.getQuaternion()) );
+    
+    if (valIdx == -1) {
+      // Return the entire point
+      return pt;
+    } else {
+      // Return a specific value of the point
+      return pt.values[ valIdx ];
+    }
+  }
+  
+  public String toString() {
+    
+    if (valIdx == -1) {
+      return String.format("RP");
+    } else {
+      // Only show index if the whole point is not used
+      return String.format("RP[%d]", valIdx);
+    }
+  }
+}
+
+/**
  * This class defines a Point, which stores a position and orientation
  * in space (X, Y, Z, W, P, R) along with the joint angles (J1 - J6)
  * necessary for the Robot to reach the position and orientation of
@@ -10,7 +64,7 @@ public enum Operator { PLUS, MINUS, MUTLIPLY, DIVIDE, MODULUS, INTDIVIDE, PAR_OP
  * in order to bypass multiple conversion between Euler angles and
  * Quaternions during the evaluation of Register Statement Expressions.
  */
-public class PointCoord {
+public class CartPoint {
   /**
    * The values associated with this Point:
    *   0 - 5  ->  J1 - J6
@@ -21,7 +75,7 @@ public class PointCoord {
   /**
    * Point for the default position of the Robot
    */
-  public PointCoord() {
+  public CartPoint() {
     values = new float[12];
     
     for (int idx = 0; idx < 6; ++idx) {
@@ -43,7 +97,7 @@ public class PointCoord {
   /**
    * Converts the given Point Object to a PointCoord object
    */
-  public PointCoord(Point pt) {
+  public CartPoint(Point pt) {
     values = new float[12];
     
     for (int jdx = 0; jdx < pt.joints.length; ++jdx) {
@@ -85,19 +139,22 @@ public class ExpressionEvaluationException extends RuntimeException {
 /**
  * This class is designed to save an arithmetic expression for a register statement instruction. Register statements include the
  * folllowing operands: floating-point constants, Register values, Position Register points, and Position Register values. Legal
- * operators for these statements include addition(+), subtraction(-), multiplication(*), division(/), remainder(%), integer
+ * operators for these statements include addition(+), subtraction(-), multiplication(*), division(/), modulus(%), integer
  * division(|), and parenthesis(). An expression is evaluated left to right, ignoring any operation prescendence, save for
  * parenthesis, whose contents are evaluated first. An expression will have a maximum of 5 operators (discluding closing parenthesis).
  * 
- * Singleton arrays indecate the result will be stored in a Register. Doubleton arrays indicate the result will be stored in a
- * Position Register. For either case, the first value in the array is the index of the destination register. For the doubleton
- * arrays, if the seond value is -1, then the result of the expression is expected to be a Point Object that will override the
- * Position Register entry. However, if the second value is between 0 and 11 inclusive, then the result is expected to be a
- * Floating-point value, which will be saved in a specific entry of the the Position Register.
+ * Singleton arrays indecate the result will be stored in a Register. tripleton arrays indicate the result will be stored in a
+ * Position Register. For either case, the first value in the array is the index of the destination register. For the tripleton
+ * arrays, if the second value in the array is 0, then a point from the current prorgrams local position registers is used,
+ * otherwise a point from the global position register list is used. If the third value is -1, then the result of the expression
+ * is expected to be a Point Object that will override the position register entry. However, if the second value is between 0 and
+ * 11 inclusive, then the result is expected to be a floating-point value, which will be saved in a specific entry of the the
+ * position register.
  * 
  * Floating-point values     ->  Constants
+ * RobotPoint                ->  Robot's current position
  * Singleton integer arrays  ->  Register values
- * Doubleton integer arrays  ->  Position Register points/values
+ * Tripleton integer arrays  ->  Position Register points/values
  *
  * For the second entry of the dobleton array:
  *   0 - 5  ->  J1 - J6
@@ -277,17 +334,25 @@ public class ExpressionSet {
         
         // Use Register value
         return REG[ regIdx[0] ].value;
-      } else if (regIdx.length == 2) {
-        PointCoord pt = new PointCoord(POS_REG[ regIdx[0] ].point);
+      } else if (regIdx.length == 3) {
+        CartPoint pt;
         
-        if (regIdx[1] == -1) {
+        if (regIdx[1] % 2 == 0) {
+          // Use Position Register point
+          pt = new CartPoint( programs.get(active_prog).LPosReg[ regIdx[0] ] );
+        } else {
+          // Use a local position register point
+          pt = new CartPoint(GPOS_REG[ regIdx[0] ].point);
+        }
+        
+        if (regIdx[2] == -1) {
           
           // Use Position Register point
           return pt;
-        } else if (regIdx[1] > 0 && regIdx[1] < 12) {
+        } else if (regIdx[2] > 0 && regIdx[2] < 12) {
           
-          // use a specific value from the Point
-          return pt.values[ regIdx[1] ];
+          // Use a specific value from the Point
+          return pt.values[ regIdx[2] ];
         } else {
           // Illegal parameter
           throw new ExpressionEvaluationException(1);
@@ -297,6 +362,9 @@ public class ExpressionSet {
         throw new ExpressionEvaluationException(1);
       }
       
+    } else if (parameter instanceof RobotPoint) {
+      // Use the Robot's current position
+      return ((RobotPoint)parameter).getValue();
     } else {
       // Illegal parameter
       throw new ExpressionEvaluationException(1);
@@ -305,7 +373,7 @@ public class ExpressionSet {
   
   /**
    * Evaluate the given parameters with the given operation. The only valid parameters are floating-point values
-   * and int arrays. The integer arrays should singeltons (for Registers) or doubletons (for Position Registers
+   * and int arrays. The integer arrays should singeltons (for Registers) or tripletons (for Position Registers
    * and Position Register Values).
    * 
    * TODO define valid operations
@@ -327,7 +395,7 @@ public class ExpressionSet {
       
     } else if (param1 instanceof Point && param2 instanceof Point) {
       
-      return evaluatePair((PointCoord)param1, (PointCoord)param2, op);
+      return evaluatePair((CartPoint)param1, (CartPoint)param2, op);
       
     } else {
       // Invalid parameter types
@@ -351,13 +419,13 @@ public class ExpressionSet {
     }
   }
   
-  private Object evaluatePair(PointCoord point1, PointCoord point2, Operator op) throws ExpressionEvaluationException {
+  private Object evaluatePair(CartPoint point1, CartPoint point2, Operator op) throws ExpressionEvaluationException {
       
     // TODO Point-Point operations
     switch(op) {
       case PLUS:
       case MINUS:
-        PointCoord pt = new PointCoord();
+        CartPoint pt = new CartPoint();
         
         for (int idx = 0; idx < 6; ++idx) {
           if (op == Operator.PLUS) {
@@ -431,15 +499,28 @@ public class ExpressionSet {
         
         // Register entries are stored as a singleton integer array
         return String.format("R[%d]", regIdx[0]);
-      } else if (regIdx.length == 2) {
+      } else if (regIdx.length == 3) {
         
-        // Position Register entries are stored as a doubleton integer array
-        if (regIdx[1] >= 0) {
-          int idx = regIdx[1] % 6;
+        // Position Register entries are stored as a tripleton integer array
+        if (regIdx[2] >= 0) {
+          int idx = regIdx[2] % 6;
           
-          return String.format("PR[%d, %d]", regIdx[0], idx);
+          if (regIdx[1] == 0) {
+            // local position register
+            return String.format("P[%d, %d]", regIdx[0], idx);
+          } else {
+            // global Position Register
+            return String.format("PR[%d, %d]", regIdx[0], idx);
+          }
         } else {
-          return String.format("PR[%d]", regIdx[0]);
+          
+          if (regIdx[1] == 0) {
+            // local position register
+            return String.format("P[%d]", regIdx[0]);
+          } else {
+            // global Position Register
+            return String.format("PR[%d]", regIdx[0]);
+          }
         }
       }
     } else if (param instanceof Operator) {

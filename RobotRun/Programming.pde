@@ -3,7 +3,7 @@ final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
 final int FTYPE_TOOL = 0, FTYPE_USER = 1;
 
 // Position Registers
-private final PositionRegister[] POS_REG = new PositionRegister[100];
+private final PositionRegister[] GPOS_REG = new PositionRegister[100];
 // Registers
 private final Register[] REG = new Register[100];
 
@@ -118,12 +118,12 @@ public class Point  {
 public class Program  {
   private String name;
   private int nextRegister;
-  private Point[] p = new Point[1000]; // program positions
+  private Point[] LPosReg = new Point[1000]; // program positions
   private ArrayList<Instruction> instructions;
 
   public Program(String theName) {
     instructions = new ArrayList<Instruction>();
-    for(int n = 0; n < p.length; n++) p[n] = new Point();
+    for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
     name = theName;
     nextRegister = 0;
   }
@@ -143,7 +143,7 @@ public class Program  {
   }
 
   public int getRegistersLength() {
-    return p.length;
+    return LPosReg.length;
   }
 
   public void addInstruction(Instruction i) {
@@ -153,7 +153,7 @@ public class Program  {
       MotionInstruction castIns = (MotionInstruction)i;
       if(!castIns.getGlobal() && castIns.getPosition() >= nextRegister) {
         nextRegister = castIns.getPosition()+1;
-        if(nextRegister >= p.length) nextRegister = p.length-1;
+        if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
       }
     }
   }
@@ -168,7 +168,7 @@ public class Program  {
   }
 
   public void addPosition(Point in, int idx) {
-    if(idx >= 0 && idx < p.length) p[idx] = in;
+    if(idx >= 0 && idx < LPosReg.length) LPosReg[idx] = in;
   }
 
   public int nextPosition() {
@@ -176,16 +176,16 @@ public class Program  {
   }
 
   public Point getPosition(int idx) {
-    if(idx >= 0 && idx < p.length) return p[idx];
+    if(idx >= 0 && idx < LPosReg.length) return LPosReg[idx];
     else return null;
   }
   
   public void setPosition(int idx, Point pt){
-    p[idx] = pt;
+    LPosReg[idx] = pt;
   }
   
   public void clearPositions(){
-    p = new Point[1000];
+    LPosReg = new Point[1000];
   }
   
   public ArrayList<LabelInstruction> getLabels(){
@@ -294,16 +294,16 @@ public final class MotionInstruction extends Instruction  {
   public Point getVector(Program parent) {
     if(motionType != MTYPE_JOINT) {
       Point out;
-      if(globalRegister) out = POS_REG[positionNum].point.clone();
-      else out = parent.p[positionNum].clone();
+      if(globalRegister) out = GPOS_REG[positionNum].point.clone();
+      else out = parent.LPosReg[positionNum].clone();
       //out.pos = convertWorldToNative(out.pos);
       return out;
     } 
     else {
       Point ret;
       
-      if(globalRegister) ret = POS_REG[positionNum].point.clone();
-      else ret = parent.p[positionNum].clone();
+      if(globalRegister) ret = GPOS_REG[positionNum].point.clone();
+      else ret = parent.LPosReg[positionNum].clone();
       
       if(userFrame != -1) {
         ret.pos = rotate(ret.pos, userFrames[userFrame].getNativeAxes());

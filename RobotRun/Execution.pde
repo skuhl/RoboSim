@@ -29,13 +29,13 @@ void createTestProgram() {
   //for(int n = 0; n < 15; n++) program.addInstruction(
   //  new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
   
-  POS_REG[0] = new PositionRegister(null, new Point(165, 116, -5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-  POS_REG[1] = new PositionRegister(null, new Point(166, -355, 120, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-  POS_REG[2] = new PositionRegister(null, new Point(171, -113, 445, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-  POS_REG[3] = new PositionRegister(null, new Point(725, 225, 50, 1, 0, 0, 0, 5.6, 1.12, 5.46, 0, 5.6, 0));
-  POS_REG[4] = new PositionRegister(null, new Point(775, 300, 50, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-  POS_REG[5] = new PositionRegister(null, new Point(-474, -218, 37, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
-  POS_REG[6] = new PositionRegister(null, new Point(-659, -412, -454, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  GPOS_REG[0] = new PositionRegister(null, new Point(165, 116, -5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  GPOS_REG[1] = new PositionRegister(null, new Point(166, -355, 120, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  GPOS_REG[2] = new PositionRegister(null, new Point(171, -113, 445, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  GPOS_REG[3] = new PositionRegister(null, new Point(725, 225, 50, 1, 0, 0, 0, 5.6, 1.12, 5.46, 0, 5.6, 0));
+  GPOS_REG[4] = new PositionRegister(null, new Point(775, 300, 50, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  GPOS_REG[5] = new PositionRegister(null, new Point(-474, -218, 37, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  GPOS_REG[6] = new PositionRegister(null, new Point(-659, -412, -454, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0));
   
   programs.add(program);
   //currentProgram = program;
@@ -448,7 +448,7 @@ public float[][] calculateJacobian(float[] angles) {
 //attempts to calculate the joint rotation values
 //required to move the end effector to the point specified
 //by 'tgt' and the Euler angle orientation 'rot'
-int calculateIKJacobian(PVector tgt, float[] rot) {
+float[] calculateIKJacobian(PVector tgt, float[] rot) {
   final int limit = 1000;  //max number of times to loop
   int count = 0;
   
@@ -509,26 +509,33 @@ int calculateIKJacobian(PVector tgt, float[] rot) {
     }
     
     count += 1;
-    if(count == limit) {
-      
+    if (count == limit) {
+      println("IK failure");
+      armModel.currentFrame = frame;
+      return null;
     }
   }
   
   armModel.currentFrame = frame;
+  return angles;
+}
+
+int calculateIKJacobian(Point p) {
+  PVector pos = p.pos;
+  float[] rot = p.ori;
+  float[] destAngles = calculateIKJacobian(pos, rot);
   
-  //did we successfully find the desired angles?
-  if(count >= limit) {
-    println("IK failure");
+  if(destAngles == null) {
     return EXEC_FAILURE;
   }
   else {
     for(int i = 0; i < 6; i += 1) {
       Model s = armModel.segments.get(i);
-      if(angles[i] > -0.000001 && angles[i] < 0.000001)
-      angles[i] = 0;
+      if(destAngles[i] > -0.000001 && destAngles[i] < 0.000001)
+      destAngles[i] = 0;
       
       for(int j = 0; j < 3; j += 1) {
-        if(s.rotations[j] && !s.anglePermitted(j, angles[i])) {
+        if(s.rotations[j] && !s.anglePermitted(j, destAngles[i])) {
           //println("illegal joint angle on j" + i);
           return EXEC_FAILURE;
         }
@@ -538,24 +545,18 @@ int calculateIKJacobian(PVector tgt, float[] rot) {
     float[] angleOffset = new float[6];
     float maxOffset = TWO_PI;
     for(int i = 0; i < 6; i += 1) {
-      angleOffset[i] = abs(minimumDistance(angles[i], armModel.getJointRotations()[i]));
+      angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointRotations()[i]));
     }
     
     if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
         angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
-      armModel.setJointRotations(angles);
+      armModel.setJointRotations(destAngles);
       return EXEC_SUCCESS;
     }
     else {
       return EXEC_PARTIAL;
     }
   }
-}
-
-int calculateIKJacobian(Point p) {
-  PVector pos = p.pos;
-  float[] rot = p.ori;
-  return calculateIKJacobian(pos, rot);
 }
 
 /**
@@ -1027,6 +1028,9 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
     currentInstruction++;
     
     if(singleInst) { return true; }
+  } else if (ins instanceof Instruction) {
+    // Blank instruction
+    ++currentInstruction;
   }//end of instruction type check
   
   return false;

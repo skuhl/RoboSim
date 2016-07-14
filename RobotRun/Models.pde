@@ -971,8 +971,11 @@ public class ArmModel {
         //if(DISPLAY_TEST_OUT_PUT) { System.out.printf("%s -> %s: %d\n", getEEPos(), tgtPos, getEEPos().dist(tgtPos)); }
         
         //println(lockOrientation);
-        int r = calculateIKJacobian(tgtPos, tgtRot);
-        if(r == EXEC_FAILURE) {
+        float[] destAngles = calculateIKJacobian(tgtPos, tgtRot);
+        
+        //did we successfully find the desired angles?
+        if(destAngles == null) {
+          println("IK failure");
           updateButtonColors();
           jogLinear[0] = 0;
           jogLinear[1] = 0;
@@ -980,11 +983,42 @@ public class ArmModel {
           jogRot[0] = 0;
           jogRot[1] = 0;
           jogRot[2] = 0;
+          return;
         }
-        else if(r == EXEC_PARTIAL) {
+        
+        for(int i = 0; i < 6; i += 1) {
+          Model s = armModel.segments.get(i);
+          if(destAngles[i] > -0.000001 && destAngles[i] < 0.000001)
+          destAngles[i] = 0;
+          
+          for(int j = 0; j < 3; j += 1) {
+            if(s.rotations[j] && !s.anglePermitted(j, destAngles[i])) {
+              //println("illegal joint angle on j" + i);
+              updateButtonColors();
+              jogLinear[0] = 0;
+              jogLinear[1] = 0;
+              jogLinear[2] = 0;
+              jogRot[0] = 0;
+              jogRot[1] = 0;
+              jogRot[2] = 0;
+              return;
+            }
+          }
+        }
+        
+        float[] angleOffset = new float[6];
+        float maxOffset = TWO_PI;
+        for(int i = 0; i < 6; i += 1) {
+          angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointRotations()[i]));
+        }
+        
+        if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
+            angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
+          setJointRotations(destAngles);
+        }
+        else {
           tgtPos = armModel.getEEPos();
           tgtRot = armModel.getQuaternion();
-          
         }
       }
     }

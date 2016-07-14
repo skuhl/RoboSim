@@ -110,8 +110,8 @@ public int loadState() {
       REG[reg] = new Register(null, null);
     }
     
-    if(POS_REG[reg] == null) {  
-      POS_REG[reg] = new PositionRegister(null, null);
+    if(GPOS_REG[reg] == null) {  
+      GPOS_REG[reg] = new PositionRegister(null, null);
     }
   }
   
@@ -234,7 +234,7 @@ private void saveProgram(Program p, DataOutputStream out) throws IOException {
     saveInstruction(inst, out);
     // Save only the Points associated with a MotionInstruction
     if(inst instanceof MotionInstruction) {
-      savePoint(p.p[ ((MotionInstruction)inst).positionNum ], out);
+      savePoint(p.LPosReg[ ((MotionInstruction)inst).positionNum ], out);
     }
   }
 }
@@ -390,6 +390,8 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeUTF(t_inst.type);
     out.writeInt(t_inst.bracket);
     out.writeInt( saveEEStatus(t_inst.setToolStatus) );
+  } else if (inst instanceof Instruction) {
+    out.writeByte(127);
   } else {/* TODO add other instructions! */}
 }
 
@@ -434,6 +436,8 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     int setting = in.readInt();
     
     inst = new ToolInstruction(type, bracket, loadEEStatus(setting));
+  } else if (instType == 127) {
+    inst = new Instruction();
   } else {/* TODO add other instructions! */}
   
   return inst;
@@ -752,7 +756,7 @@ public int saveRegisterBytes(File dest) {
         ++numOfREntries;
       }
       
-      if(POS_REG[idx].point != null || POS_REG[idx].comment != null) {
+      if(GPOS_REG[idx].point != null || GPOS_REG[idx].comment != null) {
         initializedPR.add(idx);
         ++numOfPREntries;
       }
@@ -781,12 +785,12 @@ public int saveRegisterBytes(File dest) {
     // Save the Position Register entries
     for(Integer idx : initializedPR) {
       dataOut.writeInt(idx);
-      savePoint(POS_REG[idx].point, dataOut);
+      savePoint(GPOS_REG[idx].point, dataOut);
       
-      if(POS_REG[idx].comment == null) {
+      if(GPOS_REG[idx].comment == null) {
         dataOut.writeUTF("");
       } else {
-        dataOut.writeUTF(POS_REG[idx].comment);
+        dataOut.writeUTF(GPOS_REG[idx].comment);
       }
     }
     
@@ -846,7 +850,7 @@ public int loadRegisterBytes(File src) {
       REG[reg] = new Register(c, v);
     }
     
-    size = max(0, min(dataIn.readInt(), POS_REG.length));
+    size = max(0, min(dataIn.readInt(), GPOS_REG.length));
     
     // Load the Position Register entries
     while(size-- > 0) {
@@ -858,7 +862,7 @@ public int loadRegisterBytes(File src) {
       // Null comments are stored as ""
       if(c == "") { c = null; }
       
-      POS_REG[idx] = new PositionRegister(c, p);
+      GPOS_REG[idx] = new PositionRegister(c, p);
     }
     
     dataIn.close();

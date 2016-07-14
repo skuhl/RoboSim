@@ -476,7 +476,7 @@ public void displayOriginAxes(float[][] axesVectors, float[] origin) {
   stroke(0, 0, 255);
   line(0, 0, -5000, 0, 0, 5000);
   
-  // Draw a sphere on the positive direction fo each axis
+  // Draw a sphere on the positive direction for each axis
   stroke(0);
   translate(50, 0, 0);
   sphere(4);

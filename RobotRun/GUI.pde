@@ -1428,7 +1428,7 @@ public void dn() {
   case VIEW_POS_REG_J:
   case VIEW_POS_REG_C:
     
-    size = (mode == Screen.VIEW_REG) ? REG.length : POS_REG.length;
+    size = (mode == Screen.VIEW_REG) ? REG.length : GPOS_REG.length;
     
     if(shift == ON) {
       // Move display frame down an entire screen's display length
@@ -1849,8 +1849,8 @@ public void f1() {
   case VIEW_POS_REG_C:
     /* Save the current position of the Robot's faceplate in the currently select
      * element of the Position Registers array */ 
-    if (active_index >= 0 && active_index < POS_REG.length) {
-      saveRobotFaceplatePointIn(armModel, POS_REG[active_index]);
+    if (active_index >= 0 && active_index < GPOS_REG.length) {
+      saveRobotFaceplatePointIn(armModel, GPOS_REG[active_index]);
     }
     
     break;
@@ -2436,6 +2436,8 @@ public void hd() {
     ((Button)cp5.get("JOINT" + j + "_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT" + j + "_POS")).setColorBackground(BUTTON_DEFAULT);
   }
+  
+  armModel.inMotion = false;
 }
 
 public void fd() {
@@ -2552,7 +2554,7 @@ public void ENTER() {
         m.setGlobal(false);
       } else if(opt_select == 1) {
         
-        if(POS_REG[m.positionNum].point == null) {
+        if(GPOS_REG[m.positionNum].point == null) {
           // Invalid register index
           options = new ArrayList<String>();
           options.add("This register is uninitailized!");
@@ -2613,7 +2615,7 @@ public void ENTER() {
       if(castIns.globalRegister) {
         
         // Check global register
-        if((tempRegister < 0 || tempRegister >= POS_REG.length || POS_REG[tempRegister].point == null)) {
+        if((tempRegister < 0 || tempRegister >= GPOS_REG.length || GPOS_REG[tempRegister].point == null)) {
           // Invalid register index
           options = new ArrayList<String>();
           options.add("This register is uninitailized!");
@@ -2622,7 +2624,7 @@ public void ENTER() {
           updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
           return;
         }
-      } else if(tempRegister < 0 || tempRegister >= programs.get(active_prog).p.length) {
+      } else if(tempRegister < 0 || tempRegister >= programs.get(active_prog).LPosReg.length) {
         // Invalid register index
         options = new ArrayList<String>();
         options.add("Only registers 1 - 1000 are legal!");
@@ -3282,8 +3284,8 @@ public void ENTER() {
     }
     
     // Save the input point
-    POS_REG[active_index].point = new Point(position, orientation);
-    POS_REG[active_index].point.joints = jointAngles;
+    GPOS_REG[active_index].point = new Point(position, orientation);
+    GPOS_REG[active_index].point.joints = jointAngles;
     saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
     
     transitionBack();
@@ -3303,7 +3305,7 @@ public void ENTER() {
     if(transition_stack.peek() == Screen.VIEW_REG) {
       REG[active_index].comment = workingText;
     } else if(transition_stack.peek() == Screen.VIEW_POS_REG_J || transition_stack.peek() == Screen.VIEW_POS_REG_C) {
-      POS_REG[active_index].comment = workingText;
+      GPOS_REG[active_index].comment = workingText;
     } else {
       // Invalid envocation of the INPUT_COMMENT_* modes
       mu();
@@ -4019,9 +4021,9 @@ public void updateScreen(color cDefault, color cHighlight) {
     if(transition_stack.peek() == Screen.VIEW_POS_REG_J || transition_stack.peek() == Screen.VIEW_POS_REG_C) {
       text = "POSITION REGISTER: ";
       
-      if(mode != Screen.INPUT_COMMENT_U && mode != Screen.INPUT_COMMENT_L && POS_REG[active_index].comment != null) {
+      if(mode != Screen.INPUT_COMMENT_U && mode != Screen.INPUT_COMMENT_L && GPOS_REG[active_index].comment != null) {
         // Show comment if it exists
-        text += POS_REG[active_index].comment;
+        text += GPOS_REG[active_index].comment;
       } 
       else {
         text += active_index;
@@ -4689,7 +4691,7 @@ public void viewRegisters() {
       if(mode == Screen.VIEW_REG) {
         lbl = (REG[idx].comment == null) ? "" : REG[idx].comment;
       } else {
-        lbl  = (POS_REG[idx].comment == null) ? "" : POS_REG[idx].comment;
+        lbl  = (GPOS_REG[idx].comment == null) ? "" : GPOS_REG[idx].comment;
       }
       
       int buffer = 16 - lbl.length();
@@ -4706,10 +4708,10 @@ public void viewRegisters() {
           regEntry = String.format("%4.3f", REG[idx].value);
         }
         
-      } else if(POS_REG[idx].point != null) {
+      } else if(GPOS_REG[idx].point != null) {
         // What to display for a point ...
         regEntry = "...";
-      } else if(mode == Screen.VIEW_POS_REG_C && POS_REG[idx].point == null) {
+      } else if(mode == Screen.VIEW_POS_REG_C && GPOS_REG[idx].point == null) {
         // Distinguish Joint from Cartesian mode for now
         regEntry = "#";
       }
@@ -4808,9 +4810,9 @@ public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
 public void loadInputRegisterPointMethod() {
   contents = new ArrayList<ArrayList<String>>();
   
-  if(active_index >= 0 && active_index < POS_REG.length) {
+  if(active_index >= 0 && active_index < GPOS_REG.length) {
     
-    if(POS_REG[active_index].point == null) {
+    if(GPOS_REG[active_index].point == null) {
       // Initialize valeus to zero ifthe entry is null
       if(mode == Screen.INPUT_POINT_C) {
         
@@ -4828,8 +4830,8 @@ public void loadInputRegisterPointMethod() {
       }
     } else {
       // List current entry values ifthe Register is initialized
-      String[] entries = (mode == Screen.INPUT_POINT_C) ? POS_REG[active_index].point.toCartesianStringArray()
-      : POS_REG[active_index].point.toJointStringArray();
+      String[] entries = (mode == Screen.INPUT_POINT_C) ? GPOS_REG[active_index].point.toCartesianStringArray()
+      : GPOS_REG[active_index].point.toJointStringArray();
       
       for(String entry : entries) {
         contents.add( newLine(entry) );
@@ -4868,9 +4870,9 @@ public void loadInputRegisterCommentMethod() {
     if(active_index >= 0 && active_index < REG.length && REG[active_index].comment != null) {
       workingText = REG[active_index].comment;
     }
-  } else if((mode == Screen.VIEW_POS_REG_J || mode == Screen.VIEW_POS_REG_C) && POS_REG[active_index].comment != null) {
-    if(active_index >= 0 && active_index < POS_REG.length) {
-      workingText = POS_REG[active_index].comment;
+  } else if((mode == Screen.VIEW_POS_REG_J || mode == Screen.VIEW_POS_REG_C) && GPOS_REG[active_index].comment != null) {
+    if(active_index >= 0 && active_index < GPOS_REG.length) {
+      workingText = GPOS_REG[active_index].comment;
     }
   }
   
