@@ -1379,7 +1379,7 @@ public void dn() {
       int t = text_render_start;
       
       text_render_start = min(text_render_start + ITEMS_TO_SHOW - 1, size - ITEMS_TO_SHOW);
-      active_prog = active_prog + max(0, text_render_start - t); //<>// //<>//
+      active_prog = active_prog + max(0, text_render_start - t); //<>// //<>// //<>//
     } else {
       // Move down one row
       int i = active_prog,
@@ -1401,9 +1401,9 @@ public void dn() {
   case COM_UNCOM:
   case INSTRUCTION_NAV:
   case SELECT_CUT_COPY:
-  case SELECT_DELETE: //<>//
+  case SELECT_DELETE: //<>// //<>//
     //options = new ArrayList<String>();
-    //clearOptions(); //<>//
+    //clearOptions(); //<>// //<>//
     
     size = programs.get(active_prog).getInstructions().size();
     
@@ -1422,7 +1422,7 @@ public void dn() {
       row_select = min(r + max(0, (active_instr - i)), contents.size() - 1);
       text_render_start = text_render_start + max(0, (active_instr - i) - (row_select - r));
     }
-    //<>// //<>//
+    //<>// //<>// //<>//
     loadInstructions(active_prog);
     
     if(DISPLAY_TEST_OUTPUT) {
@@ -1489,7 +1489,7 @@ public void dn() {
   case DIRECT_ENTRY_MODE:
     row_select = min(row_select + 1, contents.size() - 1);
     break;
-  case INPUT_COMMENT_U: //<>// //<>//
+  case INPUT_COMMENT_U: //<>// //<>// //<>//
   case INPUT_COMMENT_L:
     opt_select = min(opt_select + 1, options.size() - 1);
     // Navigate options menu to switch the function keys functions
@@ -1509,7 +1509,7 @@ public void dn() {
 }
 
 public void lt() {
-  switch(mode) { //<>// //<>//
+  switch(mode) { //<>// //<>// //<>//
   case PROGRAM_NAV:
     break;
   case INSTRUCTION_NAV:
@@ -1534,7 +1534,7 @@ public void lt() {
   case INPUT_COMMENT_U:
   case INPUT_COMMENT_L:
     col_select = max(0, col_select - 1);
-    // Reset function key states //<>// //<>//
+    // Reset function key states //<>// //<>// //<>//
     for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     
@@ -1555,7 +1555,7 @@ public void rt() {
     
     col_select = min(col_select + 1, contents.get(row_select).size() - 1);
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-    break; //<>// //<>// //<>//
+    break; //<>// //<>// //<>// //<>//
   case INSTRUCTION_EDIT:
     switchTo(Screen.INSTRUCTION_NAV);
     rt();
@@ -3931,7 +3931,7 @@ public void updateScreen(color cDefault, color cHighlight) {
   int next_py = display_py;
   int c1, c2;
   
-  // clear text //<>//
+  // clear text //<>// //<>//
   List<Textarea> displayText = cp5.getAll(Textarea.class);
   for(Textarea t: displayText) {
     cp5.remove(t.getName());
