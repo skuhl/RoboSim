@@ -12,7 +12,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-final int OFF = 0, ON = 1;
+private static final int OFF = 0, ON = 1;
+
+// Determines what End Effector mapping should be display
+public static int EE_MAPPING = 2;
 
 ArmModel armModel;
 Model eeModelSuction;
@@ -108,9 +111,7 @@ public void setup() {
   float[][] tMatrix = getTransformationMatrix(),
             rMatrix = quatToMatrix( armModel.getQuaternion() );
   popMatrix();
-  
-  System.out.printf("\n%s\n\n%s\n\n", matrixToString(tMatrix), matrixToString(rMatrix));
-  
+    
   //createTestProgram();
 }
 

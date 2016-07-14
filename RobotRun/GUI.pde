@@ -1,8 +1,3 @@
-final int FRAME_JOINT = 0, 
-          FRAME_JGFRM = 1, 
-          FRAME_WORLD = 2, 
-          FRAME_TOOL = 3, 
-          FRAME_USER = 4;
 final int SMALL_BUTTON = 35,
           LARGE_BUTTON = 50;
 final int BUTTON_DEFAULT = color(70),
@@ -10,10 +5,8 @@ final int BUTTON_DEFAULT = color(70),
           BUTTON_TEXT = color(240),
           TEXT_DEFAULT = color(240),
           TEXT_HIGHLIGHT = color(40);
-// Determines what End Effector mapping should be display
-static int EE_MAPPING = 2;
 
-int frame = FRAME_JOINT; // current frame
+
 //String displayFrame = "JOINT";
 int active_prog = -1; // the currently selected program
 int active_instr = -1; // the currently selected instruction
