@@ -284,6 +284,8 @@ public class ExpressionSet {
             
             op = (Operator)( parameters.get(pdx++) );
             break;
+          } else {
+            savedOps.pop();
           }
         }
       }
@@ -337,7 +339,7 @@ public class ExpressionSet {
       } else if (regIdx.length == 3) {
         CartPoint pt;
         
-        if (regIdx[1] % 2 == 0) {
+        if (regIdx[1] == 0) {
           // Use Position Register point
           pt = new CartPoint( programs.get(active_prog).LPosReg[ regIdx[0] ] );
         } else {
@@ -500,27 +502,33 @@ public class ExpressionSet {
         // Register entries are stored as a singleton integer array
         return String.format("R[%d]", regIdx[0]);
       } else if (regIdx.length == 3) {
+        String prefix = null;
         
         // Position Register entries are stored as a tripleton integer array
         if (regIdx[2] >= 0) {
           int idx = regIdx[2] % 6;
           
-          if (regIdx[1] == 0) {
+          
+          if (regIdx[1] % 2 == 0) {
             // local position register
-            return String.format("P[%d, %d]", regIdx[0], idx);
+            prefix = (regIdx[1] == 0) ? "Pc" : "Pj";
           } else {
             // global Position Register
-            return String.format("PR[%d, %d]", regIdx[0], idx);
+            prefix = (regIdx[1] == 0) ? "PRc" : "PRj";
           }
+          
+          return String.format("%s[%d, %d]", prefix, regIdx[0], idx);
         } else {
           
-          if (regIdx[1] == 0) {
+          if (regIdx[1] % 2 == 0) {
             // local position register
-            return String.format("P[%d]", regIdx[0]);
+            prefix = (regIdx[1] == 0) ? "Pc" : "Pj";
           } else {
             // global Position Register
-            return String.format("PR[%d]", regIdx[0]);
+            prefix = (regIdx[1] == 0) ? "PRc" : "PRj";
           }
+          
+          return String.format("%s[%d]", prefix, regIdx[0]);
         }
       }
     } else if (param instanceof Operator) {

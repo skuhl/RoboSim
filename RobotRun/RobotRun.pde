@@ -135,11 +135,11 @@ public void draw() {
   if(armModel.inMotion) {
     /* If the current instruction is -2, then the Robot's motion is the product of
      * neither jogging or program execution. */
-    if (currentInstruction != -2) {
+    if (currentInstruction == -2) {
+      armModel.inMotion = !armModel.interpolateRotation(liveSpeed);
+    } else {
       //run program
       armModel.inMotion = !executeProgram(currentProgram, armModel, execSingleInst);
-    } else {
-      armModel.inMotion = !armModel.interpolateRotation(liveSpeed);
     }
   }
   else {

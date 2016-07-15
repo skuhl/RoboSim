@@ -1322,13 +1322,13 @@ public void up() {
   case SET_DO_STATUS:
   case SET_RO_STATUS:
   case PICK_REG_LIST:
-  case SET_FRAME_INSTRUCTION:
     opt_select = max(0, opt_select - 1);
     break;
   case MAIN_MENU_NAV:
   case SETUP_NAV:
   case PICK_INSTRUCTION:
   case IO_SUBMENU:
+  case SET_FRAME_INSTRUCTION:
   case INPUT_RSTMT:
   case EDIT_RSTMT:
   case NAV_TOOL_FRAMES:
@@ -1465,13 +1465,13 @@ public void dn() {
   case SET_DO_STATUS:
   case SET_RO_STATUS:
   case PICK_REG_LIST:
-  case SET_FRAME_INSTRUCTION:
     opt_select = min(opt_select + 1, options.size() - 1);
     break;
   case MAIN_MENU_NAV:
   case SETUP_NAV:
   case PICK_INSTRUCTION:
   case IO_SUBMENU:
+  case SET_FRAME_INSTRUCTION:
   case INPUT_RSTMT:
   case EDIT_RSTMT:
   case NAV_TOOL_FRAMES:
