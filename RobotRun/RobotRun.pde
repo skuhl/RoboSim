@@ -12,7 +12,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-final int OFF = 0, ON = 1;
+private static final int OFF = 0, ON = 1;
+
+// Determines what End Effector mapping should be display
+public static int EE_MAPPING = 2;
 
 ArmModel armModel;
 Model eeModelSuction;
@@ -25,6 +28,7 @@ float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
 boolean spacebarDown = false;
 
 ControlP5 cp5;
+Stack<Screen> display_stack;
 
 ArrayList<Program> programs = new ArrayList<Program>();
 
@@ -75,8 +79,11 @@ public void setup() {
   size(1080, 720, P3D);
   ortho();
   
+  //set up UI
   cp5 = new ControlP5(this);
+  display_stack = new Stack<Screen>();
   gui();
+  
   armModel = new ArmModel();
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));
@@ -97,10 +104,16 @@ public void setup() {
   
   popMatrix();
   
+  pushMatrix();
+  resetMatrix();
+  applyModelRotation(armModel, false);
+  
+  float[][] tMatrix = getTransformationMatrix(),
+            rMatrix = quatToMatrix( armModel.getQuaternion() );
+  popMatrix();
+    
   //createTestProgram();
 }
-
-boolean doneMoving = true;
 
 public void draw() {
   ortho();
@@ -119,9 +132,15 @@ public void draw() {
   popMatrix();
   
   //execute arm movement
-  if(!doneMoving) {
-    //run program
-    doneMoving = executeProgram(currentProgram, armModel, execSingleInst);
+  if(armModel.inMotion) {
+    /* If the current instruction is -2, then the Robot's motion is the product of
+     * neither jogging or program execution. */
+    if (currentInstruction != -2) {
+      //run program
+      armModel.inMotion = !executeProgram(currentProgram, armModel, execSingleInst);
+    } else {
+      armModel.inMotion = !armModel.interpolateRotation(liveSpeed);
+    }
   }
   else {
     //respond to manual movement from J button presses
@@ -180,16 +199,16 @@ public void draw() {
   stroke(255, 255, 0);
   sphere(5);
   translate(0, 0, -100);
-  stroke(255, 0, 0);
-  //EE x axis
+  stroke(0, 0, 255);
+  //EE z axis
   sphere(6);
   translate(0, 100, 100);
   stroke(0, 255, 0);
   //EE y axis
   sphere(6);
   translate(100, -100, 0);
-  stroke(0, 0, 255);
-  //EE z axis
+  stroke(255, 0, 0);
+  //EE x axis
   sphere(6);
   popMatrix();
   //END TESTING CODE
@@ -351,68 +370,65 @@ public void handleWorldObjects() {
  */
 public void displayTeachPoints() {
   // Teach points are displayed only while the Robot is being taught a frame
-  if(teachPointTMatrices != null && (mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE)) {
+  if(teachFrame != null && (mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE)) {
     
-    color[] pt_colors = new color[teachPointTMatrices.size()];
+    int size = 3;
     
-    // First point
-    if(teachPointTMatrices.size() >= 1) {
-      if((transition_stack.peek() == Screen.NAV_TOOL_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.SIX_POINT_MODE) {
-        pt_colors[0] = color(130, 130, 130);
-      } else {
-        pt_colors[0] = color(255, 130, 0);
-      }
-      // Second point
-      if(teachPointTMatrices.size() >= 2) {
-        if((transition_stack.peek() == Screen.NAV_TOOL_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.SIX_POINT_MODE) {
-          pt_colors[1] = color(130, 130, 130);
-        } else {
-          pt_colors[1] = color(125, 0, 0);
-        }
-        // Thrid point
-        if(teachPointTMatrices.size() >= 3) {
-          if((transition_stack.peek() == Screen.NAV_TOOL_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.SIX_POINT_MODE) {
-            pt_colors[2] = color(130, 130, 130);
-          } else {
-            pt_colors[2] = color(0, 125, 0);
-          }
-          // Fourth point
-          if(teachPointTMatrices.size() >= 4) {
-            if(mode == Screen.SIX_POINT_MODE) {
-              pt_colors[3] = color(255, 130, 0);
-            } else {
-              pt_colors[3] = color(0, 0, 125);
-            }
-            // Fifth point
-            if(teachPointTMatrices.size() >= 5) {
-              pt_colors[4] = color(125, 0, 0);
-              // Sixth point
-              if(teachPointTMatrices.size() == 6) {
-                pt_colors[5] = color(0, 125, 0);
-              }
-            }
-          }
-        }
-      }
+    if (mode == Screen.SIX_POINT_MODE && teachFrame instanceof ToolFrame) {
+      size = 6;
+    } else if (mode == Screen.FOUR_POINT_MODE && teachFrame instanceof UserFrame) {
+      size = 4;
     }
     
-    // Display points in the teaching point set
-    for(int idx = 0; idx < teachPointTMatrices.size(); ++idx) {
-      float[][] T = teachPointTMatrices.get(idx);
+    for (int idx = 0; idx < size; ++idx) {
+      Point pt = teachFrame.getPoint(idx);
       
-      pushMatrix();
-      // Applies the points transformation matrix
-      applyMatrix(T[0][0], T[0][1], T[0][2], T[0][3],
-      T[1][0], T[1][1], T[1][2], T[1][3],
-      T[2][0], T[2][1], T[2][2], T[2][3],
-      T[3][0], T[3][1], T[3][2], T[3][3]);
-      
-      // Draw color-coded spheres for each point
-      noFill();
-      stroke(pt_colors[idx]);
-      sphere(3);
-      
-      popMatrix();
+      if (pt != null) {
+        pushMatrix();
+        // Applies the point's position
+        translate(pt.pos.x, pt.pos.y, pt.pos.z);
+        
+        // Draw color-coded sphere for the point
+        noFill();
+        color pointColor = color(255, 0, 255);
+        
+        if (teachFrame instanceof ToolFrame) {
+          
+          if (idx < 3) {
+            // TCP teach points
+            pointColor = color(130, 130, 130);
+          } else if (idx == 3) {
+            // Orient origin point
+            pointColor = color(255, 130, 0);
+          } else if (idx == 4) {
+            // Axes X-Direction point
+            pointColor = color(255, 0, 0);
+          } else if (idx == 5) {
+            // Axes Y-Diretion point
+            pointColor = color(0, 255, 0);
+          }
+        } else if (teachFrame instanceof UserFrame) {
+          
+          if (idx == 0) {
+            // Orient origin point
+            pointColor = color(255, 130, 0);
+          } else if (idx == 1) {
+            // Axes X-Diretion point
+            pointColor = color(255, 0, 0);
+          } else if (idx == 2) {
+            // Axes Y-Diretion point
+            pointColor = color(0, 255, 0);
+          } else if (idx == 3) {
+            // Axes Origin point
+            pointColor = color(0, 0, 255);
+          }
+        }
+        
+        stroke(pointColor);
+        sphere(3);
+        
+        popMatrix();
+      }
     }
   }
 }
@@ -447,8 +463,8 @@ public void displayOriginAxes(float[][] axesVectors, float[] origin) {
   pushMatrix();
   // Transform to the reference frame defined by the axes vectors
   applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin[0],
-  axesVectors[0][1], axesVectors[1][1], axesVectors[2][1],  origin[1],
-  axesVectors[0][2], axesVectors[1][2], axesVectors[2][2],  origin[2],
+              axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin[1],
+              axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin[2],
   0, 0, 0, 1);
   // X axis
   stroke(255, 0, 0);
@@ -460,7 +476,7 @@ public void displayOriginAxes(float[][] axesVectors, float[] origin) {
   stroke(0, 0, 255);
   line(0, 0, -5000, 0, 0, 5000);
   
-  // Draw a sphere on the positive direction fo each axis
+  // Draw a sphere on the positive direction for each axis
   stroke(0);
   translate(50, 0, 0);
   sphere(4);

@@ -107,12 +107,13 @@ public class ArmModel {
 
   public ArrayList<Model> segments = new ArrayList<Model>();
   public int type;
-  //public boolean calculatingArms = false, movingArms = false;
   public float motorSpeed;
-  // Indicates translational motion in the World Frame
-  public float[] mvLinear = new float[3];
-  // Indicates rotational motion in the World Frame
-  public float[] mvRot = new float[3];
+  // Indicates translational jog motion in the World Frame
+  public float[] jogLinear = new float[3];
+  // Indicates rotational jog motion in the World Frame
+  public float[] jogRot = new float[3];
+  // Indicates that the Robot is moving to a specific point
+  public boolean inMotion = false;
   public float[] tgtRot = new float[4];
   public PVector tgtPos = new PVector();
   public float[][] currentFrame = {{1, 0, 0},
@@ -167,12 +168,12 @@ public class ArmModel {
     segments.add(axis5);
     segments.add(axis6);
     
-    for(int idx = 0; idx < mvLinear.length; ++idx) {
-      mvLinear[idx] = 0;
+    for(int idx = 0; idx < jogLinear.length; ++idx) {
+      jogLinear[idx] = 0;
     }
     
-    for(int idx = 0; idx < mvRot.length; ++idx) {
-      mvRot[idx] = 0;
+    for(int idx = 0; idx < jogRot.length; ++idx) {
+      jogRot[idx] = 0;
     }
     
     /* Initialies dimensions of the Robot Arm's hit boxes */
@@ -657,6 +658,17 @@ public class ArmModel {
       // Apply a custom tool frame
       PVector tr = toolFrames[list_idx].getOrigin();
       translate(tr.x, tr.y, tr.z);
+      /*
+       Native Frame to World Frame
+       x' = -x
+       y' = -z
+       z' = y
+       
+       World Frame to End Effector Frame, Native Frame to End Effector Frame
+       x'' = -z' -> -y
+       y'' = -y' -> z
+       z'' = x'  -> -x
+      */
     } else {
       
       // Apply a default tool frame based on the current EE
@@ -836,13 +848,72 @@ public class ArmModel {
     return done;
   } // end interpolate rotation
   
+  /**
+   * Sets the Model's target joint angles to the given set of angles and updates the
+   * rotation directions of each of the joint segments.
+   */
+  public void setupRotationInterpolation(float[] tgtAngles) {
+    // Set the Robot's target angles
+    for(int n = 0; n < tgtAngles.length; n++) {
+      for(int r = 0; r < 3; r++) {
+        if(armModel.segments.get(n).rotations[r])
+        armModel.segments.get(n).targetRotations[r] = tgtAngles[n];
+      }
+    }
+    
+    // Calculate whether it's faster to turn CW or CCW
+    for(Model a : armModel.segments) {
+      for(int r = 0; r < 3; r++) {
+        if(a.rotations[r]) {
+          // The minimum distance between the current and target joint angles
+          float dist_t = minimumDistance(a.currentRotations[r], a.targetRotations[r]);
+          
+          // check joint movement range
+          if(a.jointRanges[r].x == 0 && a.jointRanges[r].y == TWO_PI) {
+            a.rotationDirections[r] = (dist_t < 0) ? -1 : 1;
+          }
+          else {  
+            /* Determine if at least one bound lies within the range of the shortest angle
+            * between the current joint angle and the target angle. If so, then take the
+            * longer angle, otherwise choose the shortest angle path. */
+            
+            // The minimum distance from the current joint angle to the lower bound of the joint's range
+            float dist_lb = minimumDistance(a.currentRotations[r], a.jointRanges[r].x);
+            
+            // The minimum distance from the current joint angle to the upper bound of the joint's range
+            float dist_ub = minimumDistance(a.currentRotations[r], a.jointRanges[r].y);
+            
+            if(dist_t < 0) {
+              if( (dist_lb < 0 && dist_lb > dist_t) || (dist_ub < 0 && dist_ub > dist_t) ) {
+                // One or both bounds lie within the shortest path
+                a.rotationDirections[r] = 1;
+              } 
+              else {
+                a.rotationDirections[r] = -1;
+              }
+            } 
+            else if(dist_t > 0) {
+              if( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {  
+                // One or both bounds lie within the shortest path
+                a.rotationDirections[r] = -1;
+              } 
+              else {
+                a.rotationDirections[r] = 1;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
   void updateOrientation() {
     PVector u = new PVector(0, 0, 0);
     float theta = DEG_TO_RAD*2.5*liveSpeed;
     
-    u.x = mvRot[0];
-    u.y = mvRot[1];
-    u.z = mvRot[2];
+    u.x = jogRot[0];
+    u.y = jogRot[1];
+    u.z = jogRot[2];
     u.normalize();
     
     if(u.x != 0 || u.y != 0 || u.z != 0) {
@@ -883,10 +954,10 @@ public class ArmModel {
       updateButtonColors();
     } else {
       //only move if our movement vector is non-zero
-      if(mvLinear[0] != 0 || mvLinear[1] != 0 || mvLinear[2] != 0 || 
-          mvRot[0] != 0 || mvRot[1] != 0 || mvRot[2] != 0) {
+      if(jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0 || 
+          jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0) {
         
-        PVector move = new PVector(mvLinear[0], mvLinear[1], mvLinear[2]);
+        PVector move = new PVector(jogLinear[0], jogLinear[1], jogLinear[2]);
         // Convert the movement vector into the current reference frame
         move = rotate(move, currentFrame);
         
@@ -900,20 +971,54 @@ public class ArmModel {
         //if(DISPLAY_TEST_OUT_PUT) { System.out.printf("%s -> %s: %d\n", getEEPos(), tgtPos, getEEPos().dist(tgtPos)); }
         
         //println(lockOrientation);
-        int r = calculateIKJacobian(tgtPos, tgtRot);
-        if(r == EXEC_FAILURE) {
+        float[] destAngles = calculateIKJacobian(tgtPos, tgtRot);
+        
+        //did we successfully find the desired angles?
+        if(destAngles == null) {
+          println("IK failure");
           updateButtonColors();
-          mvLinear[0] = 0;
-          mvLinear[1] = 0;
-          mvLinear[2] = 0;
-          mvRot[0] = 0;
-          mvRot[1] = 0;
-          mvRot[2] = 0;
+          jogLinear[0] = 0;
+          jogLinear[1] = 0;
+          jogLinear[2] = 0;
+          jogRot[0] = 0;
+          jogRot[1] = 0;
+          jogRot[2] = 0;
+          return;
         }
-        else if(r == EXEC_PARTIAL) {
+        
+        for(int i = 0; i < 6; i += 1) {
+          Model s = armModel.segments.get(i);
+          if(destAngles[i] > -0.000001 && destAngles[i] < 0.000001)
+          destAngles[i] = 0;
+          
+          for(int j = 0; j < 3; j += 1) {
+            if(s.rotations[j] && !s.anglePermitted(j, destAngles[i])) {
+              //println("illegal joint angle on j" + i);
+              updateButtonColors();
+              jogLinear[0] = 0;
+              jogLinear[1] = 0;
+              jogLinear[2] = 0;
+              jogRot[0] = 0;
+              jogRot[1] = 0;
+              jogRot[2] = 0;
+              return;
+            }
+          }
+        }
+        
+        float[] angleOffset = new float[6];
+        float maxOffset = TWO_PI;
+        for(int i = 0; i < 6; i += 1) {
+          angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointRotations()[i]));
+        }
+        
+        if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
+            angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
+          setJointRotations(destAngles);
+        }
+        else {
           tgtPos = armModel.getEEPos();
           tgtRot = armModel.getQuaternion();
-          
         }
       }
     }
@@ -994,8 +1099,8 @@ public class ArmModel {
       }
     }
     
-    return mvLinear[0] != 0 || mvLinear[1] != 0 || mvLinear[2] != 0 ||
-    mvRot[0] != 0 || mvRot[1] != 0 || mvRot[2] != 0;
+    return jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0 ||
+    jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0 || inMotion;
   }
   
 } // end ArmModel class

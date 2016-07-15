@@ -1,8 +1,3 @@
-final int FRAME_JOINT = 0, 
-          FRAME_JGFRM = 1, 
-          FRAME_WORLD = 2, 
-          FRAME_TOOL = 3, 
-          FRAME_USER = 4;
 final int SMALL_BUTTON = 35,
           LARGE_BUTTON = 50;
 final int BUTTON_DEFAULT = color(70),
@@ -10,10 +5,8 @@ final int BUTTON_DEFAULT = color(70),
           BUTTON_TEXT = color(240),
           TEXT_DEFAULT = color(240),
           TEXT_HIGHLIGHT = color(40);
-// Determines what End Effector mapping should be display
-static int EE_MAPPING = 2;
 
-int frame = FRAME_JOINT; // current frame
+
 //String displayFrame = "JOINT";
 int active_prog = -1; // the currently selected program
 int active_instr = -1; // the currently selected instruction
@@ -48,7 +41,8 @@ int curFrameIdx = -1;
 
 // Used to keep track a specific point in space
 PVector ref_point;
-ArrayList<float[][]> teachPointTMatrices = null;
+// Used to keep track of a Frame that is being taught
+Frame teachFrame = null;
 int activeUserFrame = -1;
 int activeJogFrame = -1;
 int activeToolFrame = -1;
@@ -821,7 +815,7 @@ public void keyPressed() {
   } else if(key == 'g') {
     armModel.resetFrame();
   } else if(key == 'q') {
-    armModel.getQuaternion();
+    System.out.printf("\n%s\n\n", arrayToString(armModel.getQuaternion()));
   } else if(key == 'r') {
     panX = 0;
     panY = 0;
@@ -1178,7 +1172,7 @@ public void LINE() {
   } else if(mode == Screen.INPUT_FLOAT) {
     
     // Mutliply current number by -1
-    if(workingText.charAt(0) == '-') {
+    if(workingText.length() > 0 && workingText.charAt(0) == '-') {
       workingText = workingText.substring(1);
     } else {
       workingText = "-" + workingText;
@@ -1193,7 +1187,7 @@ public void LINE() {
   } else if (mode == Screen.INPUT_INTEGER) {
     
     // Mutliply current number by -1
-    if(workingText.charAt(0) == '-') {
+    if(workingText.length() > 0 && workingText.charAt(0) == '-') {
       workingText = workingText.substring(1);
     } else {
       workingText = "-" + workingText;
@@ -1335,6 +1329,8 @@ public void up() {
   case SETUP_NAV:
   case PICK_INSTRUCTION:
   case IO_SUBMENU:
+  case INPUT_RSTMT:
+  case EDIT_RSTMT:
   case NAV_TOOL_FRAMES:
   case NAV_USER_FRAMES:
   case ACTIVE_FRAMES:
@@ -1376,7 +1372,7 @@ public void dn() {
       int t = text_render_start;
       
       text_render_start = min(text_render_start + ITEMS_TO_SHOW - 1, size - ITEMS_TO_SHOW);
-      active_prog = active_prog + max(0, text_render_start - t); //<>// //<>//
+      active_prog = active_prog + max(0, text_render_start - t); //<>// //<>// //<>//
     } else {
       // Move down one row
       int i = active_prog,
@@ -1398,9 +1394,9 @@ public void dn() {
   case COM_UNCOM:
   case INSTRUCTION_NAV:
   case SELECT_CUT_COPY:
-  case SELECT_DELETE: //<>//
+  case SELECT_DELETE: //<>// //<>//
     //options = new ArrayList<String>();
-    //clearOptions(); //<>//
+    //clearOptions(); //<>// //<>//
     
     size = programs.get(active_prog).getInstructions().size();
     
@@ -1419,7 +1415,7 @@ public void dn() {
       row_select = min(r + max(0, (active_instr - i)), contents.size() - 1);
       text_render_start = text_render_start + max(0, (active_instr - i) - (row_select - r));
     }
-    //<>// //<>//
+    //<>// //<>// //<>//
     loadInstructions(active_prog);
     
     if(DISPLAY_TEST_OUTPUT) {
@@ -1432,7 +1428,7 @@ public void dn() {
   case VIEW_POS_REG_J:
   case VIEW_POS_REG_C:
     
-    size = (mode == Screen.VIEW_REG) ? REG.length : POS_REG.length;
+    size = (mode == Screen.VIEW_REG) ? REG.length : GPOS_REG.length;
     
     if(shift == ON) {
       // Move display frame down an entire screen's display length
@@ -1476,6 +1472,8 @@ public void dn() {
   case SETUP_NAV:
   case PICK_INSTRUCTION:
   case IO_SUBMENU:
+  case INPUT_RSTMT:
+  case EDIT_RSTMT:
   case NAV_TOOL_FRAMES:
   case NAV_USER_FRAMES:
   case ACTIVE_FRAMES:
@@ -1484,7 +1482,7 @@ public void dn() {
   case DIRECT_ENTRY_MODE:
     row_select = min(row_select + 1, contents.size() - 1);
     break;
-  case INPUT_COMMENT_U: //<>// //<>//
+  case INPUT_COMMENT_U: //<>// //<>// //<>//
   case INPUT_COMMENT_L:
     opt_select = min(opt_select + 1, options.size() - 1);
     // Navigate options menu to switch the function keys functions
@@ -1504,7 +1502,7 @@ public void dn() {
 }
 
 public void lt() {
-  switch(mode) { //<>// //<>//
+  switch(mode) { //<>// //<>// //<>//
   case PROGRAM_NAV:
     break;
   case INSTRUCTION_NAV:
@@ -1529,7 +1527,7 @@ public void lt() {
   case INPUT_COMMENT_U:
   case INPUT_COMMENT_L:
     col_select = max(0, col_select - 1);
-    // Reset function key states //<>// //<>//
+    // Reset function key states //<>// //<>// //<>//
     for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     
@@ -1550,7 +1548,7 @@ public void rt() {
     
     col_select = min(col_select + 1, contents.get(row_select).size() - 1);
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-    break; //<>// //<>// //<>//
+    break; //<>// //<>// //<>// //<>//
   case INSTRUCTION_EDIT:
     switchTo(Screen.INSTRUCTION_NAV);
     rt();
@@ -1688,6 +1686,8 @@ public void sf() {
     shift = ON;
     ((Button)cp5.get("sf")).setColorBackground(BUTTON_ACTIVE);
   } else {
+    // Stop Robot jog movement when shift is off
+    hd();
     shift = OFF;
     ((Button)cp5.get("sf")).setColorBackground(BUTTON_DEFAULT);
   }
@@ -1772,13 +1772,21 @@ public void f1() {
       transitionTo(Screen.PICK_INSTRUCTION, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
+    
     break;
   case NAV_TOOL_FRAMES:
     if(shift == ON) {
       
-      transitionTo(Screen.FRAME_DETAIL, false);
-      curFrameIdx = row_select;
-      loadFrameDetails();
+      // Reset the highlighted frame in the tool frame list
+      if(row_select >= 0) {
+        if (activeToolFrame == row_select) {
+          armModel.resetFrame();
+        }
+        
+        toolFrames[row_select] = new ToolFrame();
+        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+        loadFrames(CoordFrame.TOOL);
+      }
     } else {
       
       // Set the current tool frame
@@ -1786,18 +1794,26 @@ public void f1() {
         activeToolFrame = row_select;
         
         // Update the Robot Arm's current frame rotation matrix
-        if(curCoordFrame == CoordFrame.TOOL) {
+        if(curCoordFrame == CoordFrame.TOOL || curCoordFrame == CoordFrame.WORLD) {
           armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
         }
       }
     }
+    
     break;
   case NAV_USER_FRAMES:
     if(shift == ON) {
       
-      transitionTo(Screen.FRAME_DETAIL, false);
-      curFrameIdx = row_select;
-      loadFrameDetails();
+      // Reset the highlighted frame in the user frames list
+      if(row_select >= 0) {
+        if (activeUserFrame == row_select) {
+          armModel.resetFrame();
+        }
+        
+        userFrames[row_select] = new UserFrame();
+        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+        loadFrames(CoordFrame.USER);
+      }
     } else {
       
       // Set the current user frame
@@ -1810,6 +1826,7 @@ public void f1() {
         }
       }
     }
+    
     break;
   case ACTIVE_FRAMES:
     if(row_select == 0) {
@@ -1817,6 +1834,8 @@ public void f1() {
     } else if(row_select == 1) {
       loadFrames(CoordFrame.USER);
     }
+    
+    break;
   case INSTRUCTION_EDIT:
     //shift = OFF;
     break;
@@ -1826,41 +1845,12 @@ public void f1() {
     ref_point = (shift == ON) ? null : armModel.getEEPos();
     
     break;
-  case VIEW_REG:
-    if(col_select == 1) {
-      // Bring up comment menu
-      loadInputRegisterCommentMethod();
-    } else if(col_select == 2) {
-      
-      // Bring up float input menu
-      if(REG[active_index].value != null) {
-        workingText = Float.toString(REG[active_index].value);
-      } else {
-        workingText = "0.0";
-      }
-      
-      loadInputRegisterValueMethod();
-    }
-    
-    break;
   case VIEW_POS_REG_J:
   case VIEW_POS_REG_C:
-    if (shift == ON) {
-      /* Save the current position of the Robot's faceplate in the currently select
-       * element of the Position Registers array */ 
-      if (active_index >= 0 && active_index < POS_REG.length) {
-        saveRobotFaceplatePointIn(armModel, POS_REG[active_index]);
-      }
-    } else {
-      
-      if(col_select == 1) {
-        // Bring up comment menu
-        loadInputRegisterCommentMethod();
-      } else if(col_select >= 2) {
-        // Bring up Point editing menu
-        transitionTo((mode == (Screen.VIEW_POS_REG_C)) ? Screen.INPUT_POINT_C : Screen.INPUT_POINT_J, false);
-        loadInputRegisterPointMethod();
-      }
+    /* Save the current position of the Robot's faceplate in the currently select
+     * element of the Position Registers array */ 
+    if (active_index >= 0 && active_index < GPOS_REG.length) {
+      saveRobotFaceplatePointIn(armModel, GPOS_REG[active_index]);
     }
     
     break;
@@ -1896,8 +1886,20 @@ public void f2() {
     active_prog = -1;
     goToEnterTextMode();
   } 
-  else if(mode == Screen.FRAME_DETAIL) {
+  else if (mode == Screen.NAV_TOOL_FRAMES || mode == Screen.NAV_USER_FRAMES || mode == Screen.FRAME_DETAIL
+           || mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE
+           || mode == Screen.SIX_POINT_MODE || mode == Screen.DIRECT_ENTRY_MODE) {
+    
+    if (mode == Screen.NAV_TOOL_FRAMES || mode == Screen.NAV_USER_FRAMES) {
+      transitionTo(Screen.PICK_FRAME_METHOD, false);
+      curFrameIdx = row_select;
+      loadFrameDetails();
+    } else {
+      switchTo(Screen.PICK_FRAME_METHOD);
+    }
+    
     options = new ArrayList<String>();
+    opt_select = 0;
     
     if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
       options.add("1. Three Point");
@@ -1909,27 +1911,8 @@ public void f2() {
       options.add("3. Direct Entry");
     }
     
-    switchTo(Screen.PICK_FRAME_METHOD);
-    opt_select = 0;
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-  } if(mode == Screen.NAV_TOOL_FRAMES) {
-    
-    // Reset the highlighted frame in the tool frame list
-    if(row_select >= 0) {
-      toolFrames[row_select] = new Frame();
-      saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-      loadFrames(CoordFrame.TOOL);
-    }
-  } 
-  else if(mode == Screen.NAV_USER_FRAMES) {
-    
-    // Reset the highlighted frame in the user frames list
-    if(row_select >= 0) {
-      userFrames[row_select] = new Frame();
-      saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-      loadFrames(CoordFrame.USER);
-    }
-  } 
+  }
   else if(mode == Screen.ACTIVE_FRAMES) {
     // Reset the active frames for the User or Tool Coordinate Frames
     if(row_select == 0) { 
@@ -2222,6 +2205,22 @@ public void f4() {
       transitionTo(Screen.CONFIRM_INSTR_DELETE, false);
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
       break;
+  case THREE_POINT_MODE:
+  case FOUR_POINT_MODE:
+  case SIX_POINT_MODE:
+    
+    if (teachFrame != null) {
+      Point tgt = teachFrame.getPoint(opt_select);
+      
+      if (tgt != null && tgt.joints != null) {
+        // Move the Robot to a specified teach point
+        armModel.setupRotationInterpolation( tgt.joints );
+        armModel.inMotion = true;
+        currentInstruction = -2;
+      }
+    }
+    
+    break;
   case INPUT_COMMENT_U:
   case INPUT_COMMENT_L:
     char newChar = '\0';
@@ -2245,6 +2244,8 @@ public void f4() {
     updateComment();
     
     break;
+  default:
+    break;
   }
   
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -2256,7 +2257,6 @@ public void f5() {
       if(shift == ON) {
         // overwrite current instruction
         PVector eep = armModel.getEEPos();
-        eep = convertNativeToWorld(eep);
         Program prog = programs.get(active_prog);
         int reg = prog.nextPosition();
         float[] q = armModel.getQuaternion();
@@ -2302,25 +2302,25 @@ public void f5() {
             MotionInstruction castIns = (MotionInstruction)ins;
             Point p = castIns.getVector(programs.get(active_prog));
             options = new ArrayList<String>();
-            options.add("Data of the point in this register (press ENTER to exit):");
+            options.add("Register Data (press ENTER to exit):");
             
             if(castIns.getMotionType() != MTYPE_JOINT) {
               // Show the vector in terms of the World Frame
               PVector wPos = convertNativeToWorld(p.pos);
-              options.add( String.format("X: %5.4f  Y: %5.4f  Z: %5.4f", wPos.x, wPos.y, wPos.z) );
+              options.add( String.format("X: %5.3f  Y: %5.3f  Z: %5.3f", wPos.x, wPos.y, wPos.z) );
               PVector wpr = quatToEuler(p.ori);
               // Show angles in degrees
-              options.add( String.format("W: %5.4f  P: %5.4f  R: %5.4f", 
+              options.add( String.format("W: %5.3f  P: %5.3f  R: %5.3f", 
               (wpr.x * RAD_TO_DEG), 
               (wpr.y * RAD_TO_DEG), 
               (wpr.z * RAD_TO_DEG)));
             }
             else {  
-              options.add( String.format("J1: %5.4f  J2: %5.4f  J3: %5.4f", 
+              options.add( String.format("J1: %5.3f  J2: %5.3f  J3: %5.3f", 
               (p.joints[0] * RAD_TO_DEG), 
               (p.joints[1] * RAD_TO_DEG), 
               (p.joints[2] * RAD_TO_DEG)));
-              options.add( String.format("J4: %5.4f  J5: %5.4f  J6: %5.4f", 
+              options.add( String.format("J4: %5.3f  J5: %5.3f  J6: %5.3f", 
               (p.joints[3] * RAD_TO_DEG), 
               (p.joints[4] * RAD_TO_DEG),
               (p.joints[5] * RAD_TO_DEG)));
@@ -2337,33 +2337,31 @@ public void f5() {
     case THREE_POINT_MODE:
     case FOUR_POINT_MODE:
     case SIX_POINT_MODE:
-      if(teachPointTMatrices != null) {
-        
-        pushMatrix();
-        resetMatrix();
-        applyModelRotation(armModel, false);
-        // Save current position of the EE
-        float[][] tMatrix = getTransformationMatrix();
-        
-        // Add the current teach point to the running list of teach points
-        if(opt_select >= 0 && opt_select < teachPointTMatrices.size()) {
-          // Cannot override the origin once it is calculated for the six point method
-          teachPointTMatrices.set(opt_select, tMatrix);
-        } else if((mode == Screen.THREE_POINT_MODE && teachPointTMatrices.size() < 3) ||
-            (mode == Screen.FOUR_POINT_MODE && teachPointTMatrices.size() < 4) ||
-            (mode == Screen.SIX_POINT_MODE && teachPointTMatrices.size() < 6)) {
-          
-          // Add a new point as long as it does not exceed number of points for a specific method
-          teachPointTMatrices.add(tMatrix);
-          // increment which_option
-          opt_select = min(opt_select + 1, options.size() - 1);
+      
+      pushMatrix();
+      resetMatrix();
+      applyModelRotation(armModel, false);
+      
+      float[][] tMatrix = getTransformationMatrix();
+      float[][] rMatrix = new float[3][3];
+      popMatrix();
+      
+      for (int row = 0; row < 3; ++row) {
+        for (int col = 0; col < 3; ++col) {
+          // Transpose the rotation matrix portion of the transformation matrix
+          rMatrix[row][col] = tMatrix[col][row];
         }
-        
-        popMatrix();
       }
       
+      float[] orientation = matrixToQuat( rMatrix );
+      Point curPosition = new Point(new PVector(tMatrix[0][3], tMatrix[1][3], tMatrix[2][3]), orientation);
+      curPosition.joints = armModel.getJointRotations();
+      // Save the current position of the Robot's Faceplate
+      teachFrame.setPoint(curPosition, opt_select);
+      saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
       loadFrameDetails();
       loadPointList();
+      
       break;
     case CONFIRM_PROG_DELETE:
       options = new ArrayList<String>();
@@ -2425,12 +2423,12 @@ public void hd() {
     model.jointsMoving[2] = 0;
   }
   
-  for(int idx = 0; idx < armModel.mvLinear.length; ++idx) {
-    armModel.mvLinear[idx] = 0;
+  for(int idx = 0; idx < armModel.jogLinear.length; ++idx) {
+    armModel.jogLinear[idx] = 0;
   }
   
-  for(int idx = 0; idx < armModel.mvRot.length; ++idx) {
-    armModel.mvRot[idx] = 0;
+  for(int idx = 0; idx < armModel.jogRot.length; ++idx) {
+    armModel.jogRot[idx] = 0;
   }
   
   // Reset button highlighting
@@ -2438,14 +2436,16 @@ public void hd() {
     ((Button)cp5.get("JOINT" + j + "_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT" + j + "_POS")).setColorBackground(BUTTON_DEFAULT);
   }
+  
+  armModel.inMotion = false;
 }
 
 public void fd() {
   
-  if(shift == ON) {
+  if(!armModel.inMotion && shift == ON) {
     currentProgram = programs.get(active_prog);
     executingInstruction = false;
-    doneMoving = false;
+    armModel.inMotion = true;
     
     if(step == ON) {
       // Execute a single instruction
@@ -2470,7 +2470,7 @@ public void fd() {
 public void bd() {
   
   // If there is a previous instruction, then move to it and reverse its affects
-  if(shift == ON && step == ON && active_instr > 0) {
+  if(!armModel.inMotion && shift == ON && step == ON && active_instr > 0) {
     
     shift = OFF;
     up();
@@ -2481,7 +2481,7 @@ public void bd() {
     if(ins instanceof MotionInstruction) {
       currentProgram = programs.get(active_prog);
       executingInstruction = false;
-      doneMoving = false;
+      armModel.inMotion = true;
       currentInstruction = active_instr;
       execSingleInst = true;
       
@@ -2491,7 +2491,7 @@ public void bd() {
     } else if(ins instanceof ToolInstruction) {
       currentProgram = null;
       executingInstruction = false;
-      doneMoving = true;
+      armModel.inMotion = false;
       currentInstruction = -1;
       execSingleInst = true;
       
@@ -2554,7 +2554,7 @@ public void ENTER() {
         m.setGlobal(false);
       } else if(opt_select == 1) {
         
-        if(POS_REG[m.positionNum].point == null) {
+        if(GPOS_REG[m.positionNum].point == null) {
           // Invalid register index
           options = new ArrayList<String>();
           options.add("This register is uninitailized!");
@@ -2615,7 +2615,7 @@ public void ENTER() {
       if(castIns.globalRegister) {
         
         // Check global register
-        if((tempRegister < 0 || tempRegister >= POS_REG.length || POS_REG[tempRegister].point == null)) {
+        if((tempRegister < 0 || tempRegister >= GPOS_REG.length || GPOS_REG[tempRegister].point == null)) {
           // Invalid register index
           options = new ArrayList<String>();
           options.add("This register is uninitailized!");
@@ -2624,7 +2624,7 @@ public void ENTER() {
           updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
           return;
         }
-      } else if(tempRegister < 0 || tempRegister >= programs.get(active_prog).p.length) {
+      } else if(tempRegister < 0 || tempRegister >= programs.get(active_prog).LPosReg.length) {
         // Invalid register index
         options = new ArrayList<String>();
         options.add("Only registers 1 - 1000 are legal!");
@@ -2661,7 +2661,42 @@ public void ENTER() {
     opt_select = -1;
     clearOptions();
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+    break;  
+  case INPUT_RSTMT:
+  case EDIT_RSTMT:
+    Program prog = programs.get(active_prog);
+    
+    if (row_select == 0) {
+      // Register value
+      options = new ArrayList<String>();
+      options.add("Input the index of the register you wish to use");
+      options.add("\0");
+      
+      opt_select = 1;
+      workingText = "";
+      switchTo(Screen.INPUT_RDX);
+      transitionTo(Screen.INPUT_INTEGER, false);
+    } else if (row_select == 1) {
+      
+      // TODO position register point
+    } else if (row_select == 2) {
+      
+      // TODO position register value
+    } else if (row_select == 3) {
+      
+      // Constant value
+      options = new ArrayList<String>();
+      options.add("Input the constant that you wish to use");
+      options.add("\0");
+      
+      opt_select = 1;
+      workingText = "";
+      switchTo(Screen.INPUT_CONSTANT);
+      transitionTo(Screen.INPUT_FLOAT, false);
+    }
+    
     break;
+    
   case SELECT_CUT_COPY:
   case SELECT_DELETE:
     selectedLines[active_instr] = !selectedLines[active_instr];
@@ -2675,6 +2710,7 @@ public void ENTER() {
     loadInstructions(active_prog);
     updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT); 
     break;
+    
   case JUMP_TO_LINE:
     active_instr = Integer.parseInt(workingText)-1;
     if(active_instr < 0) active_instr = 0;
@@ -2743,20 +2779,33 @@ public void ENTER() {
     } // Jog Frame not implemented
     
     opt_select = -1;
+    
     break;
-  case PICK_FRAME_METHOD:
+   case NAV_TOOL_FRAMES:
+   case NAV_USER_FRAMES:
+     // View the Frame
+     transitionTo(Screen.FRAME_DETAIL, false);
+     curFrameIdx = row_select;
+     loadFrameDetails();
+     
+     break;
+   case PICK_FRAME_METHOD:
+    // Set the currently select frame
+    if (transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
+      teachFrame = toolFrames[curFrameIdx];
+    } else if (transition_stack.peek() == Screen.NAV_USER_FRAMES) {
+      teachFrame = userFrames[curFrameIdx];
+    } 
+    
     if(opt_select == 0) {
       opt_select = 0;
-      teachPointTMatrices = new ArrayList<float[][]>();
       switchTo(Screen.THREE_POINT_MODE);
       loadFrameDetails();
       loadPointList();
     } 
     else if(opt_select == 1) {
       opt_select = 0;
-      teachPointTMatrices = new ArrayList<float[][]>();
       switchTo( (transition_stack.peek() == Screen.NAV_TOOL_FRAMES) ? Screen.SIX_POINT_MODE : Screen.FOUR_POINT_MODE );
-      
       loadFrameDetails();
       loadPointList();
     } 
@@ -2765,6 +2814,7 @@ public void ENTER() {
       opt_select = -1;
       loadDirectEntryMethod();
     }
+    
     break;
   case IO_SUBMENU:
     if(row_select == 2) { // digital
@@ -2801,7 +2851,7 @@ public void ENTER() {
     break;
   case SET_DO_STATUS:
   case SET_RO_STATUS:
-    Program prog = programs.get(active_prog);
+    prog = programs.get(active_prog);
     
     try {
       int bracketNum = Integer.parseInt(workingText);
@@ -2928,116 +2978,59 @@ public void ENTER() {
   case THREE_POINT_MODE:
   case FOUR_POINT_MODE:
   case SIX_POINT_MODE:
-    if((mode == Screen.THREE_POINT_MODE && teachPointTMatrices.size() == 3) ||
-        (mode == Screen.FOUR_POINT_MODE && teachPointTMatrices.size() == 4) ||
-        (mode == Screen.SIX_POINT_MODE && teachPointTMatrices.size() == 6)) {
-
+    
+    int method = 0;
+    
+    if (mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE) {
+      method = 1;
+    }
+    
+    if (teachFrame.setFrame(method)) {
       
-      PVector origin = new PVector(0f, 0f, 0f);
-      float[][] axes = new float[3][3];
-      
-      // Create identity matrix
-      for(int diag = 0; diag < 3; ++diag) {
-        axes[diag][diag] = 1f;
-      }
-      
-      if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES && (mode == Screen.THREE_POINT_MODE || mode == Screen.SIX_POINT_MODE)) {
-        // Calculate TCP via the 3-Point Method
-        double[] tcp = calculateTCPFromThreePoints(teachPointTMatrices);
+      if(teachFrame != null && curFrameIdx >= 0 && curFrameIdx < min(userFrames.length, toolFrames.length)) {
+        if(DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
         
-        if(tcp == null) {
-          // Invalid point set
-          loadFrameDetails();
+        // Set new Frame
+        if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
+          // Update the current frame of the Robot Arm
+          toolFrames[curFrameIdx] = teachFrame;
+          activeToolFrame = curFrameIdx;
           
-          opt_select = 0;
-          options.add("Error: Invalid input values!");
-          updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-          
-          return;
-        } else {
-          origin = new PVector((float)tcp[0], (float)tcp[1], (float)tcp[2]);
-        }
-      } else if(mode == Screen.FOUR_POINT_MODE) {
-        // Origin offset for the user frame
-        origin = new PVector(teachPointTMatrices.get(3)[0][3], teachPointTMatrices.get(3)[1][3], teachPointTMatrices.get(3)[2][3]);
-      }
-      
-      if(transition_stack.peek() == Screen.NAV_USER_FRAMES || mode == Screen.SIX_POINT_MODE) {
-        ArrayList<float[][]> axesPoints = new ArrayList<float[][]>();
-        // Use the last three points to calculate the axes vectors
-        if(mode == Screen.SIX_POINT_MODE) {
-          axesPoints.add(teachPointTMatrices.get(3));
-          axesPoints.add(teachPointTMatrices.get(4));
-          axesPoints.add(teachPointTMatrices.get(5));
-        } else {
-          axesPoints.add(teachPointTMatrices.get(0));
-          axesPoints.add(teachPointTMatrices.get(1));
-          axesPoints.add(teachPointTMatrices.get(2));
-        } 
-        
-        axes = createAxesFromThreePoints(axesPoints);
-        
-        if(axes == null) {
-          // Invalid point set
-          loadFrameDetails();
-          
-          opt_select = 0;
-          options.add("Error: Invalid input values!");
-          updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-          return;
-        }
-        
-        if(DISPLAY_TEST_OUTPUT) { println(matrixToString(axes)); }
-      }
-      
-      Frame[] frames = null;
-      // Determine to which frame set (user or tool) to add the new frame
-      if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-        frames = toolFrames;
-      } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
-        frames = userFrames;
-      }
-      
-      if(frames != null) {
-        
-        if(curFrameIdx >= 0 && curFrameIdx < frames.length) {
-          if(DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
-          
-          frames[curFrameIdx] = new Frame();
-          frames[curFrameIdx].setOrigin(origin);
-          frames[curFrameIdx].setAxes(axes);
+          armModel.currentFrame = toolFrames[curFrameIdx].getNativeAxes();
           saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+          loadFrames(CoordFrame.TOOL);
+        } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
+          // Update the current frame of the Robot Arm
+          userFrames[curFrameIdx] = teachFrame;
+          activeUserFrame = curFrameIdx;
           
-          // Set new Frame
-          if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-            // Update the current frame of the Robot Arm
-            activeToolFrame = curFrameIdx;
-            armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-          } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
-            // Update the current frame of the Robot Arm
-            activeUserFrame = curFrameIdx;
-            armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-          }
+          armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
+          saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+          loadFrames(CoordFrame.USER);
         } else {
-          System.out.printf("Error invalid index %d!\n", curFrameIdx);
+          mu();
+          return;
         }
-        
       } else {
-        System.out.printf("Error: invalid frame list for mode: %d!\n", mode);
+        System.out.printf("Error invalid index %d!\n", curFrameIdx);
+        mu();
+        return;
       }
       
-      teachPointTMatrices = null;
+      options = new ArrayList<String>();
       opt_select = 0;
-      options.clear();
       row_select = 0;
       
-      if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-        loadFrames(CoordFrame.TOOL);
-      } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
-        loadFrames(CoordFrame.USER);
-      } else {
-        mu();
-      }
+    } else {
+      // Invalid point set
+      loadFrameDetails();
+      
+      switchTo(Screen.FRAME_DETAIL);
+      loadFrameDetails();
+      opt_select = 0;
+      options = new ArrayList<String>();
+      options.add("Error: Invalid input values!");
+      updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     }
     
     break;
@@ -3076,47 +3069,51 @@ public void ENTER() {
       opt_select = 0;
       updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
     } else {
-      PVector origin = new PVector(inputs[0], inputs[1], inputs[2]),
-      wpr = new PVector(inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD);
+      // The user enters values with reference to the World Frame
+      PVector origin,
+              wpr = new PVector(inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD);
       float[][] axesVectors = eulerToMatrix(wpr);
+      
+      if (teachFrame instanceof UserFrame) {
+        origin = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
+      } else {
+        origin = new PVector(inputs[0], inputs[1], inputs[2]);
+      }
       
       origin.x = max(-9999f, min(origin.x, 9999f));
       origin.y = max(-9999f, min(origin.y, 9999f));
       origin.z = max(-9999f, min(origin.z, 9999f));
+      
       wpr = matrixToEuler(axesVectors);
+      // Save direct entry values
+      teachFrame.DEOrigin = origin;
+      teachFrame.DEAxesOffsets = eulerToQuat(wpr);
+      teachFrame.setFrame(2);
       
       if(DISPLAY_TEST_OUTPUT) { System.out.printf("\n\n%s\n%s\n%s\n", origin.toString(), wpr.toString(), matrixToString(axesVectors)); }
       
-      Frame[] frames = null;
-      // Determine to which frame set (user or tool) to add the new frame
-      if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-        frames = toolFrames;
-      } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
-        frames = userFrames;
-      }
-      
-      // Create axes vector and save the new frame
-      if(frames != null && curFrameIdx >= 0 && curFrameIdx < frames.length) {
+      if(teachFrame != null && curFrameIdx >= 0 && curFrameIdx < min(userFrames.length, toolFrames.length)) {
         if(DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
-        
-        frames[curFrameIdx] = new Frame(origin, axesVectors);
-        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         
         // Set New Frame
         if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
           // Update the current frame of the Robot Arm
           activeToolFrame = curFrameIdx;
-          armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
+          armModel.currentFrame = toolFrames[curFrameIdx].getNativeAxes();
+          toolFrames[curFrameIdx] = teachFrame;
+          
+          saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+          loadFrames(CoordFrame.TOOL);
+          
         } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
           // Update the current frame of the Robot Arm
           activeUserFrame = curFrameIdx;
           armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-        }
-        
-        if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-          loadFrames(CoordFrame.TOOL);
-        } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
+          userFrames[curFrameIdx] = teachFrame;
+          
+          saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
           loadFrames(CoordFrame.USER);
+          
         } else {
           mu();
         }
@@ -3155,6 +3152,36 @@ public void ENTER() {
     row_select = 0;
     col_select = active_index = text_render_start = 0;
     viewRegisters();
+    
+    break;
+  case VIEW_REG:
+    if(col_select == 1) {
+      // Bring up comment menu
+      loadInputRegisterCommentMethod();
+    } else if(col_select == 2) {
+      
+      // Bring up float input menu
+      if(REG[active_index].value != null) {
+        workingText = Float.toString(REG[active_index].value);
+      } else {
+        workingText = "0.0";
+      }
+      
+      loadInputRegisterValueMethod();
+    }
+    
+    break;
+  case VIEW_POS_REG_J:
+  case VIEW_POS_REG_C:
+      
+    if(col_select == 1) {
+      // Bring up comment menu
+      loadInputRegisterCommentMethod();
+    } else if(col_select >= 2) {
+      // Bring up Register editing menu
+      transitionTo((mode == (Screen.VIEW_POS_REG_C)) ? Screen.INPUT_POINT_C : Screen.INPUT_POINT_J, false);
+      loadInputRegisterPointMethod();
+    }
     
     break;
   case INPUT_INTEGER:
@@ -3257,8 +3284,8 @@ public void ENTER() {
     }
     
     // Save the input point
-    POS_REG[active_index].point = new Point(position, orientation);
-    POS_REG[active_index].point.joints = jointAngles;
+    GPOS_REG[active_index].point = new Point(position, orientation);
+    GPOS_REG[active_index].point.joints = jointAngles;
     saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
     
     transitionBack();
@@ -3278,7 +3305,7 @@ public void ENTER() {
     if(transition_stack.peek() == Screen.VIEW_REG) {
       REG[active_index].comment = workingText;
     } else if(transition_stack.peek() == Screen.VIEW_POS_REG_J || transition_stack.peek() == Screen.VIEW_POS_REG_C) {
-      POS_REG[active_index].comment = workingText;
+      GPOS_REG[active_index].comment = workingText;
     } else {
       // Invalid envocation of the INPUT_COMMENT_* modes
       mu();
@@ -3541,299 +3568,335 @@ public void activateLiveWorldMotion(int axis, int dir) {
   armModel.tgtRot = armModel.getQuaternion();
   
   if(axis >= 0 && axis < 3) {
-    if(armModel.mvLinear[axis] == 0) {
+    if(armModel.jogLinear[axis] == 0) {
       //Begin movement on the given axis in the given direction
-      armModel.mvLinear[axis] = dir;
+      armModel.jogLinear[axis] = dir;
     } else {
       //Halt movement
-      armModel.mvLinear[axis] = 0;
+      armModel.jogLinear[axis] = 0;
     }
   }
   else if(axis >= 3 && axis < 6) {
     axis -= 3;
-    if(armModel.mvRot[axis] == 0) {
-      armModel.mvRot[axis] = dir;
+    if(armModel.jogRot[axis] == 0) {
+      armModel.jogRot[axis] = dir;
     }
     else {
-      armModel.mvRot[axis] = 0;
+      armModel.jogRot[axis] = 0;
     }
   }
 }
 
 public void JOINT1_NEG() {
   
-  if(curCoordFrame == CoordFrame.JOINT) {
-    // Move single joint
-    activateLiveJointMotion(0, -1);
-  } else {
-    // Move entire robot in a single axis plane
-    activateLiveWorldMotion(0, 1);
-  }
-  
-  int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
-  int c2 = ((Button)cp5.get("JOINT1_POS")).getColor().getBackground();
-  
-  if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-    //both buttons have the default color, set this one to highlight
-    ((Button)cp5.get("JOINT1_NEG")).setColorBackground(BUTTON_ACTIVE);
-  }
-  else {
-    ((Button)cp5.get("JOINT1_NEG")).setColorBackground(BUTTON_DEFAULT);
-    ((Button)cp5.get("JOINT1_POS")).setColorBackground(BUTTON_DEFAULT);
+  if (shift == ON) {
+    
+    if (curCoordFrame == CoordFrame.JOINT) {
+      // Move single joint
+      activateLiveJointMotion(0, -1);
+    } else {
+      // Move entire robot in a single axis plane
+      activateLiveWorldMotion(0, 1);
+    }
+    
+    int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
+    int c2 = ((Button)cp5.get("JOINT1_POS")).getColor().getBackground();
+    
+    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
+      //both buttons have the default color, set this one to highlight
+      ((Button)cp5.get("JOINT1_NEG")).setColorBackground(BUTTON_ACTIVE);
+    }
+    else {
+      ((Button)cp5.get("JOINT1_NEG")).setColorBackground(BUTTON_DEFAULT);
+      ((Button)cp5.get("JOINT1_POS")).setColorBackground(BUTTON_DEFAULT);
+    }
   }
 }
 
 public void JOINT1_POS() {
   
-  if(curCoordFrame == CoordFrame.JOINT) {
-    // Move single joint
-    activateLiveJointMotion(0, 1);
-  } else  {
-    // Move entire robot in a single axis plane
-    activateLiveWorldMotion(0, -1);
-  }
-  
-  int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
-  int c2 = ((Button)cp5.get("JOINT1_POS")).getColor().getBackground();
-  
-  if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-    //both buttons have the default color, set this one to highlight
-    ((Button)cp5.get("JOINT1_POS")).setColorBackground(BUTTON_ACTIVE);
-  }
-  else {
-    //stopping movement, set both buttons to default
-    ((Button)cp5.get("JOINT1_NEG")).setColorBackground(BUTTON_DEFAULT);
-    ((Button)cp5.get("JOINT1_POS")).setColorBackground(BUTTON_DEFAULT);
+  if (shift == ON) {
+    
+    if(curCoordFrame == CoordFrame.JOINT) {
+      // Move single joint
+      activateLiveJointMotion(0, 1);
+    } else  {
+      // Move entire robot in a single axis plane
+      activateLiveWorldMotion(0, -1);
+    }
+    
+    int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
+    int c2 = ((Button)cp5.get("JOINT1_POS")).getColor().getBackground();
+    
+    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
+      //both buttons have the default color, set this one to highlight
+      ((Button)cp5.get("JOINT1_POS")).setColorBackground(BUTTON_ACTIVE);
+    }
+    else {
+      //stopping movement, set both buttons to default
+      ((Button)cp5.get("JOINT1_NEG")).setColorBackground(BUTTON_DEFAULT);
+      ((Button)cp5.get("JOINT1_POS")).setColorBackground(BUTTON_DEFAULT);
+    }
   }
 }
 
 public void JOINT2_NEG() {
   
-  if(curCoordFrame == CoordFrame.JOINT) {
-    // Move single joint
-    activateLiveJointMotion(1, -1);
-  } else  {
-    // Move entire robot in a single axis plane
-    activateLiveWorldMotion(2, -1);
-  }
-  
-  int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
-  int c2 = ((Button)cp5.get("JOINT2_POS")).getColor().getBackground();
-  
-  if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-    //both buttons have the default color, set this one to highlight
-    ((Button)cp5.get("JOINT2_NEG")).setColorBackground(BUTTON_ACTIVE);
-  }
-  else {
-    ((Button)cp5.get("JOINT2_NEG")).setColorBackground(BUTTON_DEFAULT);
-    ((Button)cp5.get("JOINT2_POS")).setColorBackground(BUTTON_DEFAULT);
+  if (shift == ON) {
+    
+    if(curCoordFrame == CoordFrame.JOINT) {
+      // Move single joint
+      activateLiveJointMotion(1, -1);
+    } else  {
+      // Move entire robot in a single axis plane
+      activateLiveWorldMotion(2, -1);
+    }
+    
+    int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
+    int c2 = ((Button)cp5.get("JOINT2_POS")).getColor().getBackground();
+    
+    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
+      //both buttons have the default color, set this one to highlight
+      ((Button)cp5.get("JOINT2_NEG")).setColorBackground(BUTTON_ACTIVE);
+    }
+    else {
+      ((Button)cp5.get("JOINT2_NEG")).setColorBackground(BUTTON_DEFAULT);
+      ((Button)cp5.get("JOINT2_POS")).setColorBackground(BUTTON_DEFAULT);
+    }
   }
 }
 
 public void JOINT2_POS() {
   
-  if(curCoordFrame == CoordFrame.JOINT) {
-    // Move single joint
-    activateLiveJointMotion(1, 1);
-  } else  {
-    // Move entire robot in a single axis plane
-    activateLiveWorldMotion(2, 1);
-  }
-  
-  int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
-  int c2 = ((Button)cp5.get("JOINT2_POS")).getColor().getBackground();
-  
-  if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-    //both buttons have the default color, set this one to highlight
-    ((Button)cp5.get("JOINT2_POS")).setColorBackground(BUTTON_ACTIVE);
-  }
-  else {
-    ((Button)cp5.get("JOINT2_NEG")).setColorBackground(BUTTON_DEFAULT);
-    ((Button)cp5.get("JOINT2_POS")).setColorBackground(BUTTON_DEFAULT);
+  if (shift == ON) {
+    
+    if(curCoordFrame == CoordFrame.JOINT) {
+      // Move single joint
+      activateLiveJointMotion(1, 1);
+    } else  {
+      // Move entire robot in a single axis plane
+      activateLiveWorldMotion(2, 1);
+    }
+    
+    int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
+    int c2 = ((Button)cp5.get("JOINT2_POS")).getColor().getBackground();
+    
+    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
+      //both buttons have the default color, set this one to highlight
+      ((Button)cp5.get("JOINT2_POS")).setColorBackground(BUTTON_ACTIVE);
+    }
+    else {
+      ((Button)cp5.get("JOINT2_NEG")).setColorBackground(BUTTON_DEFAULT);
+      ((Button)cp5.get("JOINT2_POS")).setColorBackground(BUTTON_DEFAULT);
+    }
   }
 }
 
 public void JOINT3_NEG() {
   
-  if(curCoordFrame == CoordFrame.JOINT) {
-    // Move single joint
-    activateLiveJointMotion(2, -1);
-  } else  {
-    // Move entire robot in a single axis plane
-    activateLiveWorldMotion(1, 1);
-  }
-  
-  int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
-  int c2 = ((Button)cp5.get("JOINT3_POS")).getColor().getBackground();
-  
-  if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-    //both buttons have the default color, set this one to highlight
-    ((Button)cp5.get("JOINT3_NEG")).setColorBackground(BUTTON_ACTIVE);
-  }
-  else {
-    ((Button)cp5.get("JOINT3_NEG")).setColorBackground(BUTTON_DEFAULT);
-    ((Button)cp5.get("JOINT3_POS")).setColorBackground(BUTTON_DEFAULT);
+  if (shift == ON) {
+    
+    if(curCoordFrame == CoordFrame.JOINT) {
+      // Move single joint
+      activateLiveJointMotion(2, -1);
+    } else  {
+      // Move entire robot in a single axis plane
+      activateLiveWorldMotion(1, 1);
+    }
+    
+    int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
+    int c2 = ((Button)cp5.get("JOINT3_POS")).getColor().getBackground();
+    
+    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
+      //both buttons have the default color, set this one to highlight
+      ((Button)cp5.get("JOINT3_NEG")).setColorBackground(BUTTON_ACTIVE);
+    }
+    else {
+      ((Button)cp5.get("JOINT3_NEG")).setColorBackground(BUTTON_DEFAULT);
+      ((Button)cp5.get("JOINT3_POS")).setColorBackground(BUTTON_DEFAULT);
+    }
   }
 }
 
 public void JOINT3_POS() {
   
-  if(curCoordFrame == CoordFrame.JOINT) {
-    // Move single joint
-    activateLiveJointMotion(2, 1);
-  } else  {
-    // Move entire robot in a single axis plane
-    activateLiveWorldMotion(1, -1);
-  }
-  
-  int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
-  int c2 = ((Button)cp5.get("JOINT3_POS")).getColor().getBackground();
-  
-  if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-    //both buttons have the default color, set this one to highlight
-    ((Button)cp5.get("JOINT3_POS")).setColorBackground(BUTTON_ACTIVE);
-  }
-  else {
-    ((Button)cp5.get("JOINT3_NEG")).setColorBackground(BUTTON_DEFAULT);
-    ((Button)cp5.get("JOINT3_POS")).setColorBackground(BUTTON_DEFAULT);
+  if (shift == ON) {
+    
+    if(curCoordFrame == CoordFrame.JOINT) {
+      // Move single joint
+      activateLiveJointMotion(2, 1);
+    } else  {
+      // Move entire robot in a single axis plane
+      activateLiveWorldMotion(1, -1);
+    }
+    
+    int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
+    int c2 = ((Button)cp5.get("JOINT3_POS")).getColor().getBackground();
+    
+    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
+      //both buttons have the default color, set this one to highlight
+      ((Button)cp5.get("JOINT3_POS")).setColorBackground(BUTTON_ACTIVE);
+    }
+    else {
+      ((Button)cp5.get("JOINT3_NEG")).setColorBackground(BUTTON_DEFAULT);
+      ((Button)cp5.get("JOINT3_POS")).setColorBackground(BUTTON_DEFAULT);
+    }
   }
 }
 
 public void JOINT4_NEG() {
   
-  if(curCoordFrame == CoordFrame.JOINT) {
-    // Move single joint
-    activateLiveJointMotion(3, -1);
-  } else  {
-    // Move entire robot in a single axis plane
-    activateLiveWorldMotion(3, -1);
-  }
-  
-  int c1 = ((Button)cp5.get("JOINT4_NEG")).getColor().getBackground();
-  int c2 = ((Button)cp5.get("JOINT4_POS")).getColor().getBackground();
-  
-  if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-    //both buttons have the default color, set this one to highlight
-    ((Button)cp5.get("JOINT4_NEG")).setColorBackground(BUTTON_ACTIVE);
-  }
-  else {
-    ((Button)cp5.get("JOINT4_NEG")).setColorBackground(BUTTON_DEFAULT);
-    ((Button)cp5.get("JOINT4_POS")).setColorBackground(BUTTON_DEFAULT);
+  if (shift == ON) {
+    
+    if(curCoordFrame == CoordFrame.JOINT) {
+      // Move single joint
+      activateLiveJointMotion(3, -1);
+    } else  {
+      // Move entire robot in a single axis plane
+      activateLiveWorldMotion(3, -1);
+    }
+    
+    int c1 = ((Button)cp5.get("JOINT4_NEG")).getColor().getBackground();
+    int c2 = ((Button)cp5.get("JOINT4_POS")).getColor().getBackground();
+    
+    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
+      //both buttons have the default color, set this one to highlight
+      ((Button)cp5.get("JOINT4_NEG")).setColorBackground(BUTTON_ACTIVE);
+    }
+    else {
+      ((Button)cp5.get("JOINT4_NEG")).setColorBackground(BUTTON_DEFAULT);
+      ((Button)cp5.get("JOINT4_POS")).setColorBackground(BUTTON_DEFAULT);
+    }
   }
 }
 
 public void JOINT4_POS() {
   
-  if(curCoordFrame == CoordFrame.JOINT) {
-    // Move single joint
-    activateLiveJointMotion(3, 1);
-  } else {
-    // Move entire robot in a single axis plane
-    activateLiveWorldMotion(3, 1);
+  if (shift == ON) {
+    
+    if(curCoordFrame == CoordFrame.JOINT) {
+      // Move single joint
+      activateLiveJointMotion(3, 1);
+    } else {
+      // Move entire robot in a single axis plane
+      activateLiveWorldMotion(3, 1);
+    }
+    
+    int c1 = ((Button)cp5.get("JOINT4_NEG")).getColor().getBackground();
+    int c2 = ((Button)cp5.get("JOINT4_POS")).getColor().getBackground();
+    
+    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
+      //both buttons have the default color, set this one to highlight
+      ((Button)cp5.get("JOINT4_POS")).setColorBackground(BUTTON_ACTIVE);
+    }
+    else {
+      ((Button)cp5.get("JOINT4_NEG")).setColorBackground(BUTTON_DEFAULT);
+      ((Button)cp5.get("JOINT4_POS")).setColorBackground(BUTTON_DEFAULT);
   }
-  
-  int c1 = ((Button)cp5.get("JOINT4_NEG")).getColor().getBackground();
-  int c2 = ((Button)cp5.get("JOINT4_POS")).getColor().getBackground();
-  
-  if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-    //both buttons have the default color, set this one to highlight
-    ((Button)cp5.get("JOINT4_POS")).setColorBackground(BUTTON_ACTIVE);
-  }
-  else {
-    ((Button)cp5.get("JOINT4_NEG")).setColorBackground(BUTTON_DEFAULT);
-    ((Button)cp5.get("JOINT4_POS")).setColorBackground(BUTTON_DEFAULT);
   }
 }
 
 public void JOINT5_NEG() {
   
-  if(curCoordFrame == CoordFrame.JOINT) {
-    // Move single joint
-    activateLiveJointMotion(4, -1);
-  } else {
-    // Move entire robot in a single axis plane
-    activateLiveWorldMotion(5, -1);
-  }
-  
-  int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
-  int c2 = ((Button)cp5.get("JOINT5_POS")).getColor().getBackground();
-  
-  if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-    //both buttons have the default color, set this one to highlight
-    ((Button)cp5.get("JOINT5_NEG")).setColorBackground(BUTTON_ACTIVE);
-  }
-  else {
-    ((Button)cp5.get("JOINT5_NEG")).setColorBackground(BUTTON_DEFAULT);
-    ((Button)cp5.get("JOINT5_POS")).setColorBackground(BUTTON_DEFAULT);
+  if (shift == ON) {
+    
+    if(curCoordFrame == CoordFrame.JOINT) {
+      // Move single joint
+      activateLiveJointMotion(4, -1);
+    } else {
+      // Move entire robot in a single axis plane
+      activateLiveWorldMotion(5, -1);
+    }
+    
+    int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
+    int c2 = ((Button)cp5.get("JOINT5_POS")).getColor().getBackground();
+    
+    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
+      //both buttons have the default color, set this one to highlight
+      ((Button)cp5.get("JOINT5_NEG")).setColorBackground(BUTTON_ACTIVE);
+    }
+    else {
+      ((Button)cp5.get("JOINT5_NEG")).setColorBackground(BUTTON_DEFAULT);
+      ((Button)cp5.get("JOINT5_POS")).setColorBackground(BUTTON_DEFAULT);
+    }
   }
 }
 
 public void JOINT5_POS() {
   
-  if(curCoordFrame == CoordFrame.JOINT) {
-    // Move single joint
-    activateLiveJointMotion(4, 1);
-  } else {
-    // Move entire robot in a single axis plane
-    activateLiveWorldMotion(5, 1);
-  }
-  
-  int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
-  int c2 = ((Button)cp5.get("JOINT5_POS")).getColor().getBackground();
-  
-  if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-    //both buttons have the default color, set this one to highlight
-    ((Button)cp5.get("JOINT5_POS")).setColorBackground(BUTTON_ACTIVE);
-  }
-  else {
-    ((Button)cp5.get("JOINT5_NEG")).setColorBackground(BUTTON_DEFAULT);
-    ((Button)cp5.get("JOINT5_POS")).setColorBackground(BUTTON_DEFAULT);
+  if (shift == ON) {
+    
+    if(curCoordFrame == CoordFrame.JOINT) {
+      // Move single joint
+      activateLiveJointMotion(4, 1);
+    } else {
+      // Move entire robot in a single axis plane
+      activateLiveWorldMotion(5, 1);
+    }
+    
+    int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
+    int c2 = ((Button)cp5.get("JOINT5_POS")).getColor().getBackground();
+    
+    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
+      //both buttons have the default color, set this one to highlight
+      ((Button)cp5.get("JOINT5_POS")).setColorBackground(BUTTON_ACTIVE);
+    }
+    else {
+      ((Button)cp5.get("JOINT5_NEG")).setColorBackground(BUTTON_DEFAULT);
+      ((Button)cp5.get("JOINT5_POS")).setColorBackground(BUTTON_DEFAULT);
+    }
   }
 }
 
 public void JOINT6_NEG() {
   
-  if(curCoordFrame == CoordFrame.JOINT) {
-    // Move single joint
-    activateLiveJointMotion(5, -1);
-  } else {
-    // Move entire robot in a single axis plane
-    activateLiveWorldMotion(4, -1);
-  }
-  
-  int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
-  int c2 = ((Button)cp5.get("JOINT6_POS")).getColor().getBackground();
-  
-  if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-    //both buttons have the default color, set this one to highlight
-    ((Button)cp5.get("JOINT6_NEG")).setColorBackground(BUTTON_ACTIVE);
-  }
-  else {
-    ((Button)cp5.get("JOINT6_NEG")).setColorBackground(BUTTON_DEFAULT);
-    ((Button)cp5.get("JOINT6_POS")).setColorBackground(BUTTON_DEFAULT);
+  if (shift == ON) {
+    
+    if(curCoordFrame == CoordFrame.JOINT) {
+      // Move single joint
+      activateLiveJointMotion(5, -1);
+    } else {
+      // Move entire robot in a single axis plane
+      activateLiveWorldMotion(4, -1);
+    }
+    
+    int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
+    int c2 = ((Button)cp5.get("JOINT6_POS")).getColor().getBackground();
+    
+    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
+      //both buttons have the default color, set this one to highlight
+      ((Button)cp5.get("JOINT6_NEG")).setColorBackground(BUTTON_ACTIVE);
+    }
+    else {
+      ((Button)cp5.get("JOINT6_NEG")).setColorBackground(BUTTON_DEFAULT);
+      ((Button)cp5.get("JOINT6_POS")).setColorBackground(BUTTON_DEFAULT);
+    }
   }
 }
 
 public void JOINT6_POS() {
   
-  if(curCoordFrame == CoordFrame.JOINT) {
-    // Move single joint
-    activateLiveJointMotion(5, 1);
-  } else {
-    // Move entire robot in a single axis plane
-    activateLiveWorldMotion(4, 1);
-  }
-  
-  int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
-  int c2 = ((Button)cp5.get("JOINT6_POS")).getColor().getBackground();
-  
-  if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-    //both buttons have the default color, set this one to highlight
-    ((Button)cp5.get("JOINT6_POS")).setColorBackground(BUTTON_ACTIVE);
-  }
-  else {
-    ((Button)cp5.get("JOINT6_NEG")).setColorBackground(BUTTON_DEFAULT);
-    ((Button)cp5.get("JOINT6_POS")).setColorBackground(BUTTON_DEFAULT);
+  if (shift == ON) {
+    
+    if(curCoordFrame == CoordFrame.JOINT) {
+      // Move single joint
+      activateLiveJointMotion(5, 1);
+    } else {
+      // Move entire robot in a single axis plane
+      activateLiveWorldMotion(4, 1);
+    }
+    
+    int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
+    int c2 = ((Button)cp5.get("JOINT6_POS")).getColor().getBackground();
+    
+    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
+      //both buttons have the default color, set this one to highlight
+      ((Button)cp5.get("JOINT6_POS")).setColorBackground(BUTTON_ACTIVE);
+    }
+    else {
+      ((Button)cp5.get("JOINT6_NEG")).setColorBackground(BUTTON_DEFAULT);
+      ((Button)cp5.get("JOINT6_POS")).setColorBackground(BUTTON_DEFAULT);
+    }
   }
 }
 
@@ -3863,7 +3926,7 @@ public void updateScreen(color cDefault, color cHighlight) {
   int next_py = display_py;
   int c1, c2;
   
-  // clear text //<>//
+  // clear text //<>// //<>//
   List<Textarea> displayText = cp5.getAll(Textarea.class);
   for(Textarea t: displayText) {
     cp5.remove(t.getName());
@@ -3958,9 +4021,9 @@ public void updateScreen(color cDefault, color cHighlight) {
     if(transition_stack.peek() == Screen.VIEW_POS_REG_J || transition_stack.peek() == Screen.VIEW_POS_REG_C) {
       text = "POSITION REGISTER: ";
       
-      if(mode != Screen.INPUT_COMMENT_U && mode != Screen.INPUT_COMMENT_L && POS_REG[active_index].comment != null) {
+      if(mode != Screen.INPUT_COMMENT_U && mode != Screen.INPUT_COMMENT_L && GPOS_REG[active_index].comment != null) {
         // Show comment if it exists
-        text += POS_REG[active_index].comment;
+        text += GPOS_REG[active_index].comment;
       } 
       else {
         text += active_index;
@@ -4182,14 +4245,14 @@ public void updateScreen(color cDefault, color cHighlight) {
     case NAV_USER_FRAMES:
       // F1, F2, F3
       if(shift == ON) {
-        funct[0] = "[Detail]";
-        funct[1] = "[Reset]";
+        funct[0] = "[Reset]";
+        funct[1] = "[Method]";
         funct[2] = "[Switch]";
         funct[3] = "";
         funct[4] = "";
       } else {
         funct[0] = "[Set]";
-        funct[1] = "[Reset]";
+        funct[1] = "[Method]";
         funct[2] = "[Switch]";
         funct[3] = "";
         funct[4] = "";
@@ -4208,18 +4271,25 @@ public void updateScreen(color cDefault, color cHighlight) {
     case SIX_POINT_MODE:
       // F1, F5
       if(shift == ON) {
-        funct[0] = "[Rmv Pt]";
-        funct[1] = "";
+        funct[0] = "[Rmv Ref]";
+        funct[1] = "[Method]";
         funct[2] = "";
-        funct[3] = "";
+        funct[3] = "[Mov To]";
         funct[4] = "[Record]";
       } else {
-        funct[0] = "[Save Pt]";
-        funct[1] = "";
+        funct[0] = "[Sav Ref]";
+        funct[1] = "[Method]";
         funct[2] = "";
-        funct[3] = "";
+        funct[3] = "[Mov To]";
         funct[4] = "[Record]";
       }
+      break;
+    case DIRECT_ENTRY_MODE:
+      funct[0] = "";
+      funct[1] = "[Method]";
+      funct[2] = "";
+      funct[3] = "";
+      funct[4] = "";
       break;
     case ACTIVE_FRAMES:
       // F1, F2
@@ -4229,22 +4299,22 @@ public void updateScreen(color cDefault, color cHighlight) {
       funct[3] = "";
       funct[4] = "";
       break;
-    case VIEW_REG:
     case VIEW_POS_REG_C:
     case VIEW_POS_REG_J:
-      if (shift == ON && (mode == Screen.VIEW_POS_REG_C || mode == Screen.VIEW_POS_REG_J)) {
-        funct[0] = "[Save Pt]";
-        funct[1] = "[Switch]";
-        funct[2] = "";
-        funct[3] = "";
-        funct[4] = "";
-      } else {
-        funct[0] = "[Edit]";
-        funct[1] = "[Switch]";
-        funct[2] = "";
-        funct[3] = "";
-        funct[4] = "";
-      }
+      // F1, F2
+      funct[0] = "[Sav Pt]";
+      funct[1] = "[Switch]";
+      funct[2] = "";
+      funct[3] = "";
+      funct[4] = "";
+     break;
+    case VIEW_REG:
+      // F2
+      funct[0] = "";
+      funct[1] = "[Switch]";
+      funct[2] = "";
+      funct[3] = "";
+      funct[4] = "";
       break;
     case INPUT_COMMENT_U:
       // F1 - F5
@@ -4377,16 +4447,18 @@ public void findText() {
  * TODO comment
  */
 public void loadRegStmtEditMenu(boolean isResultField) {
+  options = new ArrayList<String>();
   
-  contents.add( newLine("Register") );
-  contents.add( newLine("Position Register Point") );
-  contents.add( newLine("Position Register Value") );
+  options.add("Register");
+  options.add("Position Register Point");
+  options.add("Position Register Value");
   
   if (!isResultField) {
     // Unavailable when editing the resulting register field
-    contents.add( newLine("Constant") );
+    options.add("Constant");
   }
   
+  opt_select = 0;
   transitionTo(Screen.EDIT_RSTMT, false);
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
@@ -4426,7 +4498,9 @@ public void loadFrames(CoordFrame coordFrame) {
     for(int idx = 0; idx < frames.length; ++idx) {
       // Display each frame on its own line
       Frame frame = frames[idx];
-      contents.add ( newLine( String.format("%d) %s", idx + 1, frame.getOrigin()) ) );
+      // For a Tool Frame, the origin is the offset of the End Effector from the Robot faceplate, so it is not technically a point.
+      PVector frameOrigin = (frame instanceof ToolFrame) ? frame.getOrigin() : convertNativeToWorld(frame.getOrigin());
+      contents.add ( newLine( String.format("%d) %s", idx + 1, frameOrigin) ) );
     }
     
     row_select = 0;
@@ -4442,7 +4516,7 @@ public void loadFrames(CoordFrame coordFrame) {
 public void loadPointList() {
   options = new ArrayList<String>();
   
-  if(teachPointTMatrices != null) {
+  if(teachFrame != null) {
     
     ArrayList<String> limbo = new ArrayList<String>();
     // Display TCP teach points
@@ -4463,15 +4537,14 @@ public void loadPointList() {
       limbo.add("Origin: ");
     }
     
-    int size = teachPointTMatrices.size();
-    // Determine ifthe point has been set yet
+    // Determine if the point has been set yet
     for(int idx = 0; idx < limbo.size(); ++idx) {
       // Add each line to options
-      options.add( limbo.get(idx) + ((size > idx) ? "RECORDED" : "UNINIT") );
+      options.add( limbo.get(idx) + ((teachFrame.getPoint(idx) != null) ? "RECORDED" : "UNINIT") );
     }
   } else {
     // No teach points
-    options.add("Error: teachPointTMatrices not set!");
+    options.add("Error: teachFrame not set!");
   }
   
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -4483,169 +4556,42 @@ public void loadPointList() {
  * to input values for the x, y, z, w, p, r fields.
  */
 public void loadDirectEntryMethod() {
-  contents = new ArrayList<ArrayList<String>>();
   
-  contents.add( newLine("X: 0.0") );
-  contents.add( newLine("Y: 0.0") );
-  contents.add( newLine("Z: 0.0") );
-  contents.add( newLine("W: 0.0") );
-  contents.add( newLine("P: 0.0") );
-  contents.add( newLine("R: 0.0") );
+  if (teachFrame != null) {
+    contents = new ArrayList<ArrayList<String>>();
+    
+    PVector xyz = new PVector(0f, 0f, 0f);
+    if (teachFrame.DEOrigin != null) {
+      
+      if (teachFrame instanceof UserFrame) {
+        // Display User Frame Origin in world frame reference
+        xyz = convertNativeToWorld( teachFrame.DEOrigin );
+      } else {
+        xyz = teachFrame.DEOrigin;
+      }
+    }
+    
+    PVector wpr = new PVector(0f, 0f, 0f);
+    if (teachFrame.DEAxesOffsets != null) {
+      // Display orientation in euler angles
+      wpr = quatToEuler(teachFrame.DEAxesOffsets);
+    }
+    
+    contents.add( newLine(String.format("X: %4.3f", xyz.x)) );
+    contents.add( newLine(String.format("Y: %4.3f", xyz.y)) );
+    contents.add( newLine(String.format("Z: %4.3f", xyz.z)) );
+    contents.add( newLine(String.format("W: %4.3f", wpr.x * RAD_TO_DEG)) );
+    contents.add( newLine(String.format("P: %4.3f", wpr.y * RAD_TO_DEG)) );
+    contents.add( newLine(String.format("R: %4.3f", wpr.z * RAD_TO_DEG)) );
+    
+    // Defines the length of a line's prefix
+    opt_select = 3;
+    row_select = 0;
+    col_select = 0;
+    switchTo(Screen.DIRECT_ENTRY_MODE);
+  }
   
-  // Defines the length of a line's prefix
-  opt_select = 3;
-  row_select = 0;
-  col_select = 0;
-  switchTo(Screen.DIRECT_ENTRY_MODE);
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
-}
-
-/**
- * Given a valid set of at least 3 points, this method will return the average
- * TCP point. ifmore than three points exist in the list then, only the first
- * three are used. ifthe list contains less than 3 points, then null is returned.
- * ifan avergae TCP cannot be calculated from the given points then null is
- * returned as well.
- *
- * @param points  a set of at least 3 4x4 transformation matrices representating
- *                the position and orientation of three points in space
- */
-public double[] calculateTCPFromThreePoints(ArrayList<float[][]> points) {
-  
-  if(points != null && points.size() >= 3) {
-    /****************************************************************
-        Three Point Method Calculation
-        
-        ------------------------------------------------------------
-        A, B, C      transformation matrices
-        Ar, Br, Cr   rotational portions of A, B, C respectively
-        At, Bt, Ct   translational portions of A, B, C repectively
-        x            TCP point with respect to the EE
-        ------------------------------------------------------------
-        
-        Ax = Bx = Cx
-        Ax = (Ar)x + At
-        
-        (A - B)x = 0
-        (Ar - Br)x + At - Bt = 0
-        
-        Ax + Bx - 2Cx = 0
-        (Ar + Br - 2Cr)x + At + Bt - 2Ct = 0
-        (Ar + Br - 2Cr)x = 2Ct - At - Bt
-        x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
-        
-      ****************************************************************/
-    RealVector avg_TCP = new ArrayRealVector(new double[] {0.0, 0.0, 0.0} , false);
-    
-    for(int idxC = 0; idxC < 3; ++idxC) {
-      
-      int idxA = (idxC + 1) % 3,
-      idxB = (idxA + 1) % 3;
-      
-      if(DISPLAY_TEST_OUTPUT) { System.out.printf("\nA = %d\nB = %d\nC = %d\n\n", idxA, idxB, idxC); }
-      
-      RealMatrix Ar = new Array2DRowRealMatrix(floatToDouble(points.get(idxA), 3, 3));
-      RealMatrix Br = new Array2DRowRealMatrix(floatToDouble(points.get(idxB), 3, 3));
-      RealMatrix Cr = new Array2DRowRealMatrix(floatToDouble(points.get(idxC), 3, 3));
-      
-      double [] t = new double[3];
-      for(int idx = 0; idx < 3; ++idx) {
-        // Build a double from the result of the translation portions of the transformation matrices
-        t[idx] = 2 * points.get(idxC)[idx][3] - ( points.get(idxA)[idx][3] + points.get(idxB)[idx][3] );
-      }
-      
-      /* 2Ct - At - Bt */
-      RealVector b = new ArrayRealVector(t, false);
-      /* Ar + Br - 2Cr */
-      RealMatrix R = ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) );
-      
-      /* (R ^ -1) * b */
-      avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
-    }
-    
-    /* Take the average of the three cases: where C = the first point, the second point, and the third point */
-    avg_TCP = avg_TCP.mapMultiply( 1.0 / 3.0 );
-    
-    if(DISPLAY_TEST_OUTPUT) {
-      for(int pt = 0; pt < 3 && pt < points.size(); ++pt) {
-        // Print out each matrix
-        System.out.printf("Point %d:\n", pt);
-        println( matrixToString(points.get(pt)) );
-      }
-      
-      System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
-    }
-    
-    for(int idx = 0; idx < avg_TCP.getDimension(); ++idx) {
-      if(abs((float)avg_TCP.getEntry(idx)) > 1000.0) {
-        return null;
-      }
-    }
-    
-    return avg_TCP.toArray();
-  }
-  
-  return null;
-}
-
-/**
- * Creates a 3x3 rotation matrix based off of two vectors defined by the
- * given set of three transformation matrices representing points in space.
- * ifthe list contains more than three points, then only the first three
- * points will be used.
- * The three points are used to form two vectors. The first vector is treated
- * as the negative x-axis and the second one is the psuedo-negative z-axis.
- * These vectors are crossed to form the y-axis. The y-axis is then crossed
- * with the negative x-axis to form the true y-axis.
- *
- * @param points  a set of at least three 4x4 transformation matrices
- * @return        a set of three unit vectors (down the columns) that
- *                represent an axes
- */
-public float[][] createAxesFromThreePoints(ArrayList<float[][]> points) {
-  // 3 points are necessary for the creation of the axes
-  if(points.size() >= 3) {
-    float[][] axes = new float[3][];
-    float[] x_ndir = new float[3],
-    z_ndir = new float[3];
-    
-    // From preliminary negative x and z axis vectors
-    for(int row = 0; row < 3; ++row) {
-      x_ndir[row] = points.get(1)[row][3] - points.get(0)[row][3];
-      z_ndir[row] = points.get(2)[row][3] - points.get(0)[row][3];
-    }
-    
-    // Form axes
-    axes[0] = negate(x_ndir);                         // X axis
-    axes[1] = crossProduct(axes[0], negate(z_ndir));  // Y axis
-    axes[2] = crossProduct(axes[0], axes[1]);         // Z axis
-    
-    if((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
-        (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
-        (axes[2][0] == 0f && axes[2][1] == 0f && axes[2][2] == 0f)) {
-      // One of the three axis vectors is the zero vector
-      return null;
-    }
-    
-    float[] magnitudes = new float[axes.length];
-    
-    for(int v = 0; v < axes.length; ++v) {
-      // Find the magnitude of each axis vector
-      for(int e = 0; e < axes[0].length; ++e) {
-        magnitudes[v] += pow(axes[v][e], 2);
-      }
-      
-      magnitudes[v] = sqrt(magnitudes[v]);
-      // Normalize each vector
-      for(int e = 0; e < axes.length; ++e) {
-        axes[v][e] /= magnitudes[v];
-      }
-    }
-    
-    return axes;
-  }
-  
-  return null;
 }
 
 /**
@@ -4660,27 +4606,19 @@ public void loadFrameDetails() {
   
   // Display the frame set name as well as the index of the currently selected frame
   if(transition_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-    String[] fields = toolFrames[curFrameIdx].toStringArray();
+    
+    String[] fields = toolFrames[curFrameIdx].toCondensedStringArray();
     // Place each value in the frame on a separate lien
     for(String field : fields) { contents.add( newLine(field) ); }
     
   } else if(transition_stack.peek() == Screen.NAV_USER_FRAMES) {
-    // Transform the origin in terms of the World Frame
-    PVector origin = convertNativeToWorld( userFrames[curFrameIdx].getOrigin() );
-    // Convert angles to degrees
-    PVector wpr = userFrames[curFrameIdx].getWpr();
     
-    contents.add( newLine(String.format("X: %5.4f", origin.x)) );
-    contents.add( newLine(String.format("Y: %5.4f", origin.y)) );
-    contents.add( newLine(String.format("Z: %5.4f", origin.z)) );
-    contents.add( newLine(String.format("W: %5.4f", wpr.x * RAD_TO_DEG)) );
-    contents.add( newLine(String.format("P: %5.4f", wpr.y * RAD_TO_DEG)) );
-    contents.add( newLine(String.format("R: %5.4f", wpr.z * RAD_TO_DEG)) );
+    String[] fields = userFrames[curFrameIdx].toCondensedStringArray();
+    // Place each value in the frame on a separate lien
+    for(String field : fields) { contents.add( newLine(field) ); }
     
   } else {
-    
     mu();
-    return;
   }
   
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -4753,7 +4691,7 @@ public void viewRegisters() {
       if(mode == Screen.VIEW_REG) {
         lbl = (REG[idx].comment == null) ? "" : REG[idx].comment;
       } else {
-        lbl  = (POS_REG[idx].comment == null) ? "" : POS_REG[idx].comment;
+        lbl  = (GPOS_REG[idx].comment == null) ? "" : GPOS_REG[idx].comment;
       }
       
       int buffer = 16 - lbl.length();
@@ -4770,10 +4708,10 @@ public void viewRegisters() {
           regEntry = String.format("%4.3f", REG[idx].value);
         }
         
-      } else if(POS_REG[idx].point != null) {
+      } else if(GPOS_REG[idx].point != null) {
         // What to display for a point ...
         regEntry = "...";
-      } else if(mode == Screen.VIEW_POS_REG_C && POS_REG[idx].point == null) {
+      } else if(mode == Screen.VIEW_POS_REG_C && GPOS_REG[idx].point == null) {
         // Distinguish Joint from Cartesian mode for now
         regEntry = "#";
       }
@@ -4825,7 +4763,7 @@ public void loadInputRegisterValueMethod() {
   if(REG[active_index].value != null) {
     options.add( Float.toString(REG[active_index].value) );
   } else {
-    options.add("\0");
+    options.add(workingText);
   }
   
   opt_select = 0;
@@ -4857,6 +4795,9 @@ public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
   pt.joints = jointAngles;
   
   pReg.point = pt;
+  
+  viewRegisters();
+  updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
 }
 
 /**
@@ -4869,9 +4810,9 @@ public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
 public void loadInputRegisterPointMethod() {
   contents = new ArrayList<ArrayList<String>>();
   
-  if(active_index >= 0 && active_index < POS_REG.length) {
+  if(active_index >= 0 && active_index < GPOS_REG.length) {
     
-    if(POS_REG[active_index].point == null) {
+    if(GPOS_REG[active_index].point == null) {
       // Initialize valeus to zero ifthe entry is null
       if(mode == Screen.INPUT_POINT_C) {
         
@@ -4889,8 +4830,8 @@ public void loadInputRegisterPointMethod() {
       }
     } else {
       // List current entry values ifthe Register is initialized
-      String[] entries = (mode == Screen.INPUT_POINT_C) ? POS_REG[active_index].point.toCartesianStringArray()
-      : POS_REG[active_index].point.toJointStringArray();
+      String[] entries = (mode == Screen.INPUT_POINT_C) ? GPOS_REG[active_index].point.toCartesianStringArray()
+      : GPOS_REG[active_index].point.toJointStringArray();
       
       for(String entry : entries) {
         contents.add( newLine(entry) );
@@ -4929,9 +4870,9 @@ public void loadInputRegisterCommentMethod() {
     if(active_index >= 0 && active_index < REG.length && REG[active_index].comment != null) {
       workingText = REG[active_index].comment;
     }
-  } else if((mode == Screen.VIEW_POS_REG_J || mode == Screen.VIEW_POS_REG_C) && POS_REG[active_index].comment != null) {
-    if(active_index >= 0 && active_index < POS_REG.length) {
-      workingText = POS_REG[active_index].comment;
+  } else if((mode == Screen.VIEW_POS_REG_J || mode == Screen.VIEW_POS_REG_C) && GPOS_REG[active_index].comment != null) {
+    if(active_index >= 0 && active_index < GPOS_REG.length) {
+      workingText = GPOS_REG[active_index].comment;
     }
   }
   

@@ -2,11 +2,8 @@
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
 final int FTYPE_TOOL = 0, FTYPE_USER = 1;
 
-Frame[] toolFrames = null;
-Frame[] userFrames = null;
-
 // Position Registers
-private final PositionRegister[] POS_REG = new PositionRegister[100];
+private final PositionRegister[] GPOS_REG = new PositionRegister[100];
 // Registers
 private final Register[] REG = new Register[100];
 
@@ -53,31 +50,6 @@ public class Point  {
     ori = orientation;
   }
 
-  ////create a new point with position, orientation, and associated joint angles
-  //public Point(float x, float y, float z, float w, float p, float r,
-  //             float j1, float j2, float j3, float j4, float j5, float j6)
-  //{
-  //  pos = new PVector(x,y,z);
-  //  ori = eulerToQuat(new PVector(w,p,r));
-  //  joints[0] = j1;
-  //  joints[1] = j2;
-  //  joints[2] = j3;
-  //  joints[3] = j4;
-  //  joints[4] = j5;
-  //  joints[5] = j6;
-  //}
-
-  ////create a new point with position and orientation only
-  //public Point(float x, float y, float z, float w, float p, float r) {
-  //  pos = new PVector(x,y,z);
-  //  ori = eulerToQuat(new PVector(w,p,r));
-  //}
-
-  //public Point(PVector position, PVector orientation) {
-  //  pos = position;
-  //  ori = eulerToQuat(orientation);
-  //}
-
   public Point clone() {
     return new Point(pos.x, pos.y, pos.z, 
     ori[0], ori[1], ori[2], ori[3], 
@@ -111,7 +83,7 @@ public class Point  {
     String[] entries = new String[6];
     
     for(int idx = 0; idx < joints.length; ++idx) {
-      entries[idx] = String.format("J%d: %4.4f", (idx + 1), joints[idx] * RAD_TO_DEG);
+      entries[idx] = String.format("J%d: %4.3f", (idx + 1), joints[idx] * RAD_TO_DEG);
     }
     
     return entries;
@@ -143,109 +115,15 @@ public class Point  {
   }
 } // end Point class
 
-public class Frame {
-  private PVector origin;
-  // The unit vectors representing the x, y, z axes (in row major order)
-  private float[][] axes;
-
-  public Frame() {
-    origin = new PVector(0,0,0);
-    axes = new float[3][3];
-    // Create identity matrix
-    for(int diag = 0; diag < 3; ++diag) {
-      axes[diag][diag] = 1f;
-    }
-  }
-
-  /* Used for loading Frames from a file */
-  public Frame(PVector origin, float[][] axesVectors) {
-    this.origin = origin;
-    this.axes = new float[3][3];
-    
-    for(int row = 0; row < 3; ++row) {
-      for(int col = 0; col < 3; ++col) {
-        axes[row][col] = axesVectors[row][col];
-      }
-    }
-  }
-
-  public PVector getOrigin() { return origin; }
-  public void setOrigin(PVector in) { origin = in; }
-
-  /**
-   * Return the W, P, R values of the this frames coordinate
-   * axes with respect to the World Frame axes.
-   */
-  public PVector getWpr() { return matrixToEuler(axes); }
-  /* Returns a set of axes unit vectors representing the axes
-   * of the frame in reference to the Native Coordinate System. */
-  public float[][] getNativeAxes() { return axes.clone(); }
-  /* Returns a set of axes unit vectors representing the axes
-   * of the frame in reference to the World Coordinate System. */
-  public float[][] getWorldAxes() {
-    float[][] wAxes = new float[3][3];
-    
-    for(int col = 0; col < wAxes[0].length; ++col) {
-      wAxes[0][col] = -axes[0][col];
-      wAxes[1][col] = axes[2][col];
-      wAxes[2][col] = -axes[1][col];
-    }
-    
-    /*for(int row = 0; row < wAxes[0].length; ++row) {
-      wAxes[row][0] = -axes[row][0];
-      wAxes[row][1] = axes[row][2];
-      wAxes[row][2] = -axes[row][1];
-    }*/
-    
-    return wAxes;
-  }
-
-  public void setAxis(int idx, PVector in) {
-    
-    if(idx >= 0 && idx < axes.length) {
-      axes[idx][0] = in.x;
-      axes[idx][1] = in.y;
-      axes[idx][2] = in.z;
-    }
-  }
-
-  public void setAxes(float[][] axesVectors) {
-    axes = axesVectors.clone();
-  }
-
-  /**
-   * Returns a string array, where each entry is one of
-   * the Frames six Cartesian values: (X, Y, Z, W, P,
-   * and R) and their respective labels.
-   *
-   * @return  A 6-element String array
-   */
-  public String[] toStringArray() {
-    
-    String[] values = new String[6];
-    
-    values[0] = String.format("X: %4.3f", origin.x);
-    values[1] = String.format("Y: %4.3f", origin.y);
-    values[2] = String.format("Z: %4.3f", origin.z);
-    // Convert angles to degrees
-    PVector wpr = getWpr();
-    values[3] = String.format("W: %4.3f", wpr.x * RAD_TO_DEG);
-    values[4] = String.format("P: %4.3f", wpr.y * RAD_TO_DEG);
-    values[5] = String.format("R: %4.3f", wpr.z * RAD_TO_DEG);
-    
-    return values;
-  }
-} // end Frame class
-
 public class Program  {
   private String name;
   private int nextRegister;
-  private Point[] p = new Point[1000]; // program positions
+  private Point[] LPosReg = new Point[1000]; // program positions
   private ArrayList<Instruction> instructions;
 
   public Program(String theName) {
     instructions = new ArrayList<Instruction>();
-    for(int n = 0; n < p.length; n++) p[n] = new Point();
+    for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
     name = theName;
     nextRegister = 0;
   }
@@ -265,7 +143,7 @@ public class Program  {
   }
 
   public int getRegistersLength() {
-    return p.length;
+    return LPosReg.length;
   }
 
   public void addInstruction(Instruction i) {
@@ -275,7 +153,7 @@ public class Program  {
       MotionInstruction castIns = (MotionInstruction)i;
       if(!castIns.getGlobal() && castIns.getPosition() >= nextRegister) {
         nextRegister = castIns.getPosition()+1;
-        if(nextRegister >= p.length) nextRegister = p.length-1;
+        if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
       }
     }
   }
@@ -290,7 +168,7 @@ public class Program  {
   }
 
   public void addPosition(Point in, int idx) {
-    if(idx >= 0 && idx < p.length) p[idx] = in;
+    if(idx >= 0 && idx < LPosReg.length) LPosReg[idx] = in;
   }
 
   public int nextPosition() {
@@ -298,16 +176,16 @@ public class Program  {
   }
 
   public Point getPosition(int idx) {
-    if(idx >= 0 && idx < p.length) return p[idx];
+    if(idx >= 0 && idx < LPosReg.length) return LPosReg[idx];
     else return null;
   }
   
   public void setPosition(int idx, Point pt){
-    p[idx] = pt;
+    LPosReg[idx] = pt;
   }
   
   public void clearPositions(){
-    p = new Point[1000];
+    LPosReg = new Point[1000];
   }
   
   public ArrayList<LabelInstruction> getLabels(){
@@ -416,16 +294,16 @@ public final class MotionInstruction extends Instruction  {
   public Point getVector(Program parent) {
     if(motionType != MTYPE_JOINT) {
       Point out;
-      if(globalRegister) out = POS_REG[positionNum].point.clone();
-      else out = parent.p[positionNum].clone();
+      if(globalRegister) out = GPOS_REG[positionNum].point.clone();
+      else out = parent.LPosReg[positionNum].clone();
       //out.pos = convertWorldToNative(out.pos);
       return out;
     } 
     else {
       Point ret;
       
-      if(globalRegister) ret = POS_REG[positionNum].point.clone();
-      else ret = parent.p[positionNum].clone();
+      if(globalRegister) ret = GPOS_REG[positionNum].point.clone();
+      else ret = parent.LPosReg[positionNum].clone();
       
       if(userFrame != -1) {
         ret.pos = rotate(ret.pos, userFrames[userFrame].getNativeAxes());
@@ -701,432 +579,5 @@ public class PositionRegister {
   public PositionRegister(String c, Point p) {
     point = p;
     comment = c;
-  }
-}
-
-/* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
-public enum Operator { PLUS, MINUS, MUTLIPLY, DIVIDE, REMAINDER, INTDIVIDE, PAR_OPEN, PAR_CLOSE }
-
-/**
- * This class is designed to save an arithmetic expression for a register statement instruction. Register statements include the
- * folllowing operands: floating-point constants, Register values, Position Register points, and Position Register values. Legal
- * operators for these statements include addition(+), subtraction(-), multiplication(*), division(/), remainder(%), integer
- * division(|), and parenthesis(). An expression is evaluated left to right, ignoring any operation prescendence, save for
- * parenthesis, whose contents are evaluated first. An expression will have a maximum of 5 operators (discluding closing parenthesis).
- * 
- * Singleton arrays indecate the result will be stored in a Register. Doubleton arrays indicate the result will be stored in a
- * Position Register. For either case, the first value in the array is the index of the destination register. For the doubleton
- * arrays, if the seond value is -1, then the result of the expression is expected to be a Point Object that will override the
- * Position Register entry. However, if the second value is between 0 and 11 inclusive, then the result is expected to be a
- * Floating-point value, which will be saved in a specific entry of the the Position Register.
- * 
- * Floating-point values     ->  Constants
- * Singleton integer arrays  ->  Register values
- * Doubleton integer arrays  ->  Position Register points/values
- *
- * For the second entry of the dobleton array:
- *   0 - 5  ->  J1 - J6
- *   6 - 11 ->  X, Y, Z, W, P, R
- * 
- */
-public class ExpressionSet {
-  /* The individual elements of the expressions */
-  private final ArrayList<Object> parameters;
-  
-  /**
-   * Creates a new expression with a single null value.
-   */
-  public ExpressionSet() {
-    parameters = new ArrayList<Object>();
-    // Expression begins as R[i]/PR[i]/PR[x, y] = _
-    parameters.add(null);
-  }
-  
-  /**
-   * Addes the operator at the index in the list of parameters and
-   * then adds the operand after the operator.
-   * 
-   * @param idx       Where to add the operator and operand
-   * @param op        The operator to add to the expression
-   * @ param operand  The operand to add to the expression
-   */
-  public void addParameter(int idx, Operator op, Object operand) {
-    parameters.add(idx, op);
-    parameters.add(idx + 1, operand);
-  }
-  
-  /**
-   * Adds a set of parenthesis to the expression at the given index
-   * with an empty operand inside the parenthesis
-   * 
-   * @param idx  Where to add the set of parethesis to in the expression
-   */
-  public void addParenthesis(int idx) {
-    parameters.add(idx, Operator.PAR_OPEN);
-    parameters.add(idx + 1, null);
-    parameters.add(idx + 2, Operator.PAR_CLOSE);
-  }
-  
-  /**
-   * Replaces the given index in the list of parameters
-   * with the given parameter.
-   */
-  public void setParameter(int idx, Object param) {
-    parameters.set(idx, param);
-  }
-  
-  /**
-   * This method will calculate the result of the current expression. The
-   * expression is evaluated from left to right, ignoring normal order of
-   * operations, however, parenthesis do act as normal. Each element is parsed
-   * individually, keeping track of a current resulting value for every single
-   * operation.
-   * If an open parenthesis is found, then the current working
-   * result is saved on the stack and the value is reset.
-   * If an operator is found, then the next value in the list is taken and the
-   * operator's operation is preformed on the current working result and the
-   * next value.
-   * If a closed parenthesis is found, then the current top of the stack value
-   * is taken off of the stack, the next operator is taken from the list of
-   * parameters, and its operation is preformed on the popped value and the
-   * working result.
-   * 
-   * @return
-   *
-   * Once the entire expression is processed and no errors are found, the result
-   * of the expression is returned as either a Floating-point value or a PointCoord
-   * Object, depending on the nature of the expression.
-   *
-   * @throw ExpressionEvaluationException
-   * 
-   * Since, the expressions are only evaluated when a program is executed, it
-   * is possible that the expression may contain errors such as mssing arguments,
-   * invalid operation arguments, and so on. So, these errors are caught by this
-   * method and a new ExpressionEvaluationException is thrown with an error message
-   * indicating what the error was. 
-   */
-  public Object evaluate() throws ExpressionEvaluationException {
-    
-    try {
-      int pdx = 1,
-          len = parameters.size();
-      Stack<Object> savedVals = new Stack<Object>();
-      Object result = parameters.get(0);
-      
-      while (true) {
-        Operator op = (Operator)( parameters.get(pdx++) );
-        
-        if (op == Operator.PAR_OPEN) {
-          
-          // Entering a parenthesis
-          savedVals.push(result);
-          result = parameters.get(pdx++);
-        } else {
-          Object operand;
-          
-          if (op == Operator.PAR_CLOSE && pdx < len) {
-            
-            // Exiting parenthesis
-            operand = result;
-            result = savedVals.pop();
-            op = (Operator)( parameters.get(pdx++) );
-          } else {
-            // Normal operator
-            Object param = parameters.get(pdx++);
-            
-            if (param instanceof Float) {
-              
-              // Constant value
-              operand = param;
-            } else if (param instanceof int[]) {
-              int[] regIdx = (int[])param;
-              
-              if (regIdx.length == 1) {
-                
-                // Use Register value
-                operand = REG[ regIdx[0] ].value;
-              } else if (regIdx.length == 2) {
-                PointCoord pt = new PointCoord(POS_REG[ regIdx[0] ].point);
-                
-                if (regIdx[1] == -1) {
-                  
-                  // Use Position Register point
-                  operand = pt;
-                } else if (regIdx[1] > 0 && regIdx[1] < 12) {
-                  
-                  // use a specific value from the Point
-                  operand = pt.values[ regIdx[1] ];
-                } else {
-                  // Illegal parameter
-                  throw new ExpressionEvaluationException(1);
-                }
-              } else {
-                // Illegal parameter
-                throw new ExpressionEvaluationException(1);
-              }
-              
-            } else {
-              // Illegal parameter
-              throw new ExpressionEvaluationException(1);
-            }
-          }
-          
-          result = operation(result, operand, op);
-        }
-        
-        // Reached the end of the expression (successfully)
-        if (pdx >= len) { break; }
-      }
-      
-      return result;
-    } catch (NullPointerException NPEx) {
-      // Missing a parameter
-      throw new ExpressionEvaluationException(0, NPEx.getClass());
-      
-    } catch (IndexOutOfBoundsException IOOBEx) {
-      // Missing a parameter
-      throw new ExpressionEvaluationException(0, IOOBEx.getClass());
-      
-    } catch (ClassCastException CCEx) {
-      // Illegal parameters or operations
-      throw new ExpressionEvaluationException(1, CCEx.getClass());
-      
-    } catch (ArithmeticException AEx) {
-      // Illegal parameters or operations
-      throw new ExpressionEvaluationException(1, AEx.getClass());
-      
-    } catch (EmptyStackException ESEx) {
-      // Invalid parenthesis
-      throw new ExpressionEvaluationException(2, ESEx.getClass());
-      
-    }
-  }
-  
-  /**
-   * Evaluate the given parameters with the given operation. The onll valid parameters are floating-point values
-   * and int arrays. The integer arrays should singeltons (for Registers) or doubletons (for Position Registers
-   * and Position Register Values).
-   * 
-   * TODO define valid operations
-   * 
-   * @param param1  The first parameter of the opertion
-   * @param param2  The second parameter for the operation
-   * @param op      The operation to preform on the parameters
-   * @return        The result of the operation on param1 and param2
-   * 
-   * @throws ExpressionEvaluationException  if the given combination of parameters with the given
-   *                                        operation is illegal
-   */
-  private Object operation(Object param1, Object  param2, Operator op) throws ExpressionEvaluationException {
-    
-    // Call the correct method for the types of the given parameters
-    if (param1 instanceof Float && param2 instanceof Float) {
-      
-      return evaluatePair((Float)param1, (Float)param2, op);
-      
-    } else if (param1 instanceof Float && param2 instanceof Point) {
-      
-      return evaluatePair((Float)param1, (PointCoord)param2, op);
-      
-    } else if (param1 instanceof Point && param2 instanceof Float) {
-      
-      throw new ExpressionEvaluationException(1);
-      //return evaluatePair((Point)param1, (Float)param2, op);
-      
-    } else if (param1 instanceof Point && param2 instanceof Point) {
-      
-      return evaluatePair((PointCoord)param1, (PointCoord)param2, op);
-      
-    } else {
-      // Invalid parameter types
-      throw new ExpressionEvaluationException(1);
-    }
-  }
-  
-  private Object evaluatePair(Float value1, Float value2, Operator op) throws ExpressionEvaluationException {
-    
-    // Float-Float operations
-    switch(op) {
-      case PLUS:       return value1 + value2;
-      case MINUS:      return value1 - value2;
-      case MUTLIPLY:   return value1 * value2;
-      case DIVIDE:     return value1 / value2;
-      // Returns the remainder
-      case REMAINDER:  return (value1 % value2) / value2;
-      // Returns the quotient
-      case INTDIVIDE:  return (float)( (int)(value1 / value2) );
-      default:         throw new ExpressionEvaluationException(1);
-    }
-  }
-  
-  private Object evaluatePair(Float value, PointCoord point, Operator op) throws ExpressionEvaluationException {
-    
-    // TODO Float-Point operations
-    switch(op) {
-      case PLUS:
-      case MINUS:
-      case MUTLIPLY:
-        for (int idx = 0; idx < point.values.length; ++idx) {
-          point.values[idx] *= value;
-        }
-        
-        return point;
-      
-      case DIVIDE:
-      case REMAINDER:
-      case INTDIVIDE:
-      default:
-    }
-    
-    throw new ExpressionEvaluationException(1);
-  }
-  
-  private Object evaluatePair(PointCoord point1, PointCoord point2, Operator op) throws ExpressionEvaluationException {
-      
-    // TODO Point-Point operations
-    switch(op) {
-      case PLUS:
-      case MINUS:
-      case MUTLIPLY:
-      case DIVIDE:
-      case REMAINDER:
-      case INTDIVIDE:
-      default:
-    }
-    
-    throw new ExpressionEvaluationException(1);
-  }
-  
-  /**
-   * Returns the number of operators AND operands in the expression
-   */
-  public int parameterSize() { return parameters.size(); }
-  
-  /**
-   * Create an ArrayList of Strings, where the frist entry is the
-   * Resulting register and all the following entries are the results
-   * of converting the elements of parameters to String Objects.
-   */
-  public ArrayList<String> toStringArrayList() {
-    ArrayList<String> fields = new ArrayList<String>();
-    
-    // Each parameter gets its own column
-    for (Object param : parameters) {
-    
-      if (param == null) {
-        // Blank field
-        fields.add("_");
-      } else {
-        fields.add(paramToString(param));
-      }
-    }
-    
-    return fields;
-  }
-  
-  /**
-   * Returns unique outputs for the four types of entries of Register
-   * Statements: Contants, Registers, Position Register points, and
-   * Position Register Values.
-   */
-  public String paramToString(Object param) {
-    
-    if (param == null) {
-      // An empty parameter is displayed as an underscore
-      return "_";
-    } if (param instanceof int[]) {
-      int[] regIdx = (int[])param;
-      
-      if (regIdx.length == 1) {
-        
-        // Register entries are stored as a singleton integer array
-        return String.format("R[%d]", regIdx[0]);
-      } else if (regIdx.length == 2) {
-        
-        // Position Register entries are stored as a doubleton integer array
-        if (regIdx[1] >= 0) {
-          int idx = regIdx[1] % 6;
-          
-          return String.format("PR[%d, %d]", regIdx[0], idx);
-        } else {
-          return String.format("PR[%d]", regIdx[0]);
-        }
-      }
-    } else if (param instanceof Operator) {
-      
-      // Each operator has its own symbol
-      switch ( (Operator)param ) {
-        case PLUS:      return "+";
-        case MINUS:     return "-";
-        case MUTLIPLY:  return "*";
-        case DIVIDE:    return "/";
-        case REMAINDER:   return "%";
-        case INTDIVIDE: return "|";
-        case PAR_OPEN:  return "(";
-        case PAR_CLOSE: return ")";
-      }
-    }
-    
-    // Simply print the value for constants
-    return param.toString();
-  }
-}
-
-/**
- * This class defines a Point, which stores a position and orientation
- * in space (X, Y, Z, W, P, R) along with the joint angles (J1 - J6)
- * necessary for the Robot to reach the position and orientation of
- * the Point.
- * This class is designed to temporary store the values of a Point object
- * in order to bypass multiple conversion between Euler angles and
- * Quaternions during the evaluation of Register Statement Expressions.
- */
-public class PointCoord {
-  /**
-   * The values associated with this Point:
-   *   0 - 5  ->  J1 - J6
-   *   6 - 11 ->  X, Y, Z, W, P, R
-   */
-  public float[] values;
-  
-  /**
-   * Converts the given Point Object to a PointCoord object
-   */
-  public PointCoord(Point pt) {
-    values = new float[12];
-    
-    for (int jdx = 0; jdx < pt.joints.length; ++jdx) {
-      values[jdx] = pt.joints[jdx];
-    }
-    
-    values[6] = pt.pos.x;
-    values[7] = pt.pos.y;
-    values[8] = pt.pos.z;
-    
-    PVector wpr = quatToEuler(pt.ori);
-    
-    values[9] = wpr.x;
-    values[10] = wpr.y;
-    values[11] = wpr.z;
-    
-    
-  }
-}
-
-/**
- * This class defines an error that occurs during the evaluation process of an ExpressionSet Object.
- */
-public class ExpressionEvaluationException extends RuntimeException {
-  
-  public ExpressionEvaluationException(int flag, Class exception) {
-    super( String.format("Error: %d (%s)", flag, exception.toString()) );
-  }
-  
-  /**
-   * TODO constructor comment
-   */
-  public ExpressionEvaluationException(int flag) {
-    // TODO develop message for expression parsing error
-    super( String.format("Error: %d", flag) );
   }
 }
