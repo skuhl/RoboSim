@@ -1850,7 +1850,7 @@ public void f1() {
     /* Save the current position of the Robot's faceplate in the currently select
      * element of the Position Registers array */ 
     if (active_index >= 0 && active_index < GPOS_REG.length) {
-      saveRobotFaceplatePointIn(armModel, GPOS_REG[active_index]);
+      saveRobotFaceplatePointIn(armModel, GPOS_REG[active_index], mode == Screen.INPUT_POINT_J);
     }
     
     break;
@@ -3228,9 +3228,6 @@ public void ENTER() {
   case INPUT_POINT_C:
   case INPUT_POINT_J:
     inputs = new float[6];
-    PVector position = new PVector();
-    float[] orientation = new float[] { 1f, 0f, 0f, 0f };
-    float[] jointAngles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
     
     // Parse each field, removing each the prefix
     try {
@@ -3247,14 +3244,19 @@ public void ENTER() {
     }
     
     if(mode == Screen.INPUT_POINT_J) {
+      float[] jointAngles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+      
       // Bring angles within range: (0, TWO_PI)
       for(int idx = 0; idx < inputs.length; ++idx) {
         jointAngles[idx] = clampAngle(inputs[idx] * DEG_TO_RAD);
       }
-      /* Calculate the position and orientation of the Robot Arm given the joint angles */
-      position = armModel.getEEPos(jointAngles);
-      orientation = armModel.getQuaternion(jointAngles);
+      
+      // Save the input point
+      GPOS_REG[active_index].point = new RegPoint(jointAngles);
     } else if(mode == Screen.INPUT_POINT_C) {
+      PVector position = new PVector();
+      float[] orientation = new float[] { 1f, 0f, 0f, 0f };
+    
       // Bring the input values with the range [-9999, 9999]
       for(int idx = 0; idx < inputs.length; ++idx) {
         inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
@@ -3280,12 +3282,10 @@ public void ENTER() {
         wpr = quatToEuler(limbo);
         System.out.printf("W: %4.3f  P: %4.3f  R: %4.3f\n", wpr.x, wpr.y, wpr.z);*/
       
-      // TODO inverse kinematics to get joint angles
+      // Save the input point
+      GPOS_REG[active_index].point = new RegPoint(position, orientation);
     }
     
-    // Save the input point
-    GPOS_REG[active_index].point = new Point(position, orientation);
-    GPOS_REG[active_index].point.joints = jointAngles;
     saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
     
     transitionBack();
@@ -4772,29 +4772,34 @@ public void loadInputRegisterValueMethod() {
 }
 
 /**
- * Saves the given Robot Model's current faceplate position and orientaion as
- * well as its current joint angles into the given Position Register.
+ * Saves the given Robot Model's current faceplate position and orientaion or
+ * its current joint angles into the given Position Register.
  * 
- * @param model The Robot model, of which to save the Faceplate point 
- * @param pReg  The Position Register, in which to save the point
+ * @param model            The Robot model, of which to save the Faceplate point 
+ * @param pReg             The Position Register, in which to save the point
+ * @param saveJointAngles  Whether to save thhe joint angles or the Cartesian
+ *                         values of the Robot's position
  */
-public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
+public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg, boolean saveJointAngles) {
+  
+  if (saveJointAngles) {
     
-  pushMatrix();
-  resetMatrix();
-  // Get the position of the Robot's faceplate
-  applyModelRotation(model, false);
-  PVector fp_pos = new PVector( modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0) );
-  
-  popMatrix();
-  
-  float[] orien = armModel.getQuaternion();
-  float[] jointAngles = armModel.getJointRotations();
-  
-  Point pt = new Point(fp_pos, orien);
-  pt.joints = jointAngles;
-  
-  pReg.point = pt;
+    float[] jointAngles = armModel.getJointRotations();
+    // Save the Robot's current joint angles
+    pReg.point = new RegPoint(jointAngles);
+  } else {
+    
+    pushMatrix();
+    resetMatrix();
+    // Get the position of the Robot's faceplate
+    applyModelRotation(model, false);
+    PVector fp_pos = new PVector( modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0) );
+    float[] orien = armModel.getQuaternion();
+    
+    popMatrix();
+    // Save the Robot's current position and orientation
+    pReg.point = new RegPoint(fp_pos, orien);
+  }
   
   viewRegisters();
   updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
@@ -4829,9 +4834,16 @@ public void loadInputRegisterPointMethod() {
         }
       }
     } else {
-      // List current entry values ifthe Register is initialized
-      String[] entries = (mode == Screen.INPUT_POINT_C) ? GPOS_REG[active_index].point.toCartesianStringArray()
-      : GPOS_REG[active_index].point.toJointStringArray();
+      // List current entry values if the Register is initialized
+      RegPoint toDisplay = GPOS_REG[active_index].point;
+      String[] entries;
+      
+      if ((toDisplay.isCartesian() && mode == Screen.INPUT_POINT_J) || (!toDisplay.isCartesian() && mode == Screen.INPUT_POINT_C)) {
+        // Convert the point, if its type does not match the displat mode
+        entries = toDisplay.complement().toStringArray();
+      } else {
+        entries = toDisplay.toStringArray();
+      }
       
       for(String entry : entries) {
         contents.add( newLine(entry) );
@@ -4865,7 +4877,7 @@ public void loadInputRegisterCommentMethod() {
   options = new ArrayList<String>();
   
   workingText = "\0";
-  // Load the current comment for the selected register ifit exists
+  // Load the curfrent comment for the selected register if it exists
   if(mode == Screen.VIEW_REG) {
     if(active_index >= 0 && active_index < REG.length && REG[active_index].comment != null) {
       workingText = REG[active_index].comment;
