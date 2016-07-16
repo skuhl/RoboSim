@@ -1074,7 +1074,6 @@ public void NUM9() {
 
 public void addNumber(String number) {
   if(mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
-    println("goopgork");
     workingText += number;
     updateScreen();
   }
@@ -1509,6 +1508,7 @@ public void f1() {
       if(shift == ON) {
         newInstruction(false);
         
+        active_instr = programs.get(active_prog).getInstructions().size() - 1; 
         col_select = 0;
         row_select = min(active_instr, ITEMS_TO_SHOW - 1);
         text_render_start = active_instr - row_select;
@@ -1612,6 +1612,7 @@ public void f1() {
 public void f2() {
   switch(mode) {
     case PROGRAM_NAV:
+      workingText = "";
       nextScreen(Screen.NEW_PROGRAM);
       break;
     case UFRAME_DETAIL:
@@ -1735,13 +1736,15 @@ public void f4() {
       p = programs.get(active_prog);
       int lines_to_insert = Integer.parseInt(workingText);
       for(int i = 0; i < lines_to_insert; i += 1)
-      p.getInstructions().add(active_instr, new Instruction());
+        p.getInstructions().add(active_instr, new Instruction());
       
       updateInstructions();
     }
     catch(Exception e){
       e.printStackTrace();
     }
+    
+    lastScreen();
     break;
   case CONFIRM_PROG_DELETE:
     int progIdx = active_prog;
@@ -2437,7 +2440,7 @@ public void ENTER() {
         if(REG[active_index].value != null) {
           workingText = Float.toString(REG[active_index].value);
         } else {
-          workingText = "0.0";
+          workingText = "";
         }
         
         loadInputRegisterValueMethod();
@@ -3083,6 +3086,7 @@ public void updateButtonColors() {
  * @param next    The new screen mode
  */
 public void nextScreen(Screen next) {
+  workingText = "";
   opt_select = 0;
   row_select = 0;
   col_select = 0;
@@ -3237,7 +3241,7 @@ public void updateScreen() {
     }
     
     cp5.addTextarea(Integer.toString(index_options))
-    .setText("  "+options.get(i))
+    .setText(" " + options.get(i))
     .setFont(fnt_con14)
     .setPosition(next_px, next_py)
     .setSize(options.get(i).length()*8 + 40, 20)
@@ -3310,9 +3314,11 @@ public String getHeader(Screen mode){
     case PROGRAM_NAV:
       header = "PROGRAMS";
       break;
-    case INSTRUCTION_NAV:
-      header = programs.get(active_prog).getName();
+    case NEW_PROGRAM:
+      header = "CREATE NEW PROGRAM";
       break;
+    case INSTRUCTION_NAV:
+    case INSTRUCT_MENU_NAV:
     case SET_MV_INSTRUCT_SPEED:
     case SET_MV_INSTRUCT_REG_NUM:
     case SET_MV_INSTRUCT_TERMINATION:
@@ -3324,8 +3330,8 @@ public String getHeader(Screen mode){
     case SET_RO_STATUS:
     case SET_FRAME_INSTRUCTION:
     case SET_FRAME_INSTRUCTION_IDX:
+    case SELECT_DELETE:
     case VIEW_INST_REG:
-    case INSTRUCT_MENU_NAV:
       header = programs.get(active_prog).getName();
       break;
     case ACTIVE_FRAMES:
@@ -3453,10 +3459,10 @@ public ArrayList<String> getOptions(Screen mode){
       options = loadPrograms();
       break;
     case NEW_PROGRAM:
-      options.add("\0");
-      options.add("(ENTER: confirm name)");
-      options.add("\0");
+      opt_select = -1;
       options.add("Program Name:  " + workingText);
+      options.add("\0");
+      options.add("Press ENTER to confirm");
       break;
     case CONFIRM_PROG_DELETE:
       options.add("Delete selected program?");
@@ -3505,7 +3511,10 @@ public ArrayList<String> getOptions(Screen mode){
       break;
     case SELECT_DELETE:
       options.add("Select lines to delete.");
+      break;
     case CONFIRM_INSTR_DELETE:
+      options.add("Delete selected lines?");
+      break;
     case SELECT_CUT_COPY:
     case FIND_REPL:
       options.add("Enter text to search for:");
@@ -3596,10 +3605,9 @@ public ArrayList<String> getOptions(Screen mode){
     case INPUT_FLOAT:
     case INPUT_POINT_C:
     case INPUT_POINT_J:
-    default:
       break;
   }
-  
+
   return options;
 }
 
@@ -4477,7 +4485,7 @@ public void loadInputRegisterCommentMethod() {
   contents = new ArrayList<ArrayList<String>>();
   options = new ArrayList<String>();
   
-  workingText = "\0";
+  workingText = "";
   // Load the current comment for the selected register ifit exists
   if(mode == Screen.VIEW_REG) {
     if(active_index >= 0 && active_index < REG.length && REG[active_index].comment != null) {
@@ -4677,7 +4685,7 @@ public int moveRowUp(int row){
   row = max(0, row - 1);
   
   if(row < text_render_start){
-    text_render_start = row_select;
+    text_render_start = row;
     row_select = 0;
   }
   else{
@@ -4691,7 +4699,7 @@ public int moveOptUp(int opt){
   opt = max(0, opt - 1);
   
   if(opt < text_render_start){
-    text_render_start = row_select;
+    text_render_start = opt;
     opt_select = 0;
   }
   else{
@@ -4718,7 +4726,7 @@ public int moveRowDn(int row, int max){
     text_render_start = row - (ITEMS_TO_SHOW - 1);
     row_select = ITEMS_TO_SHOW - 1;
   }
-  else{
+  else if(row_select < max - 1){
     row_select = min(ITEMS_TO_SHOW - 1, row_select + 1);
   }
   
@@ -4732,7 +4740,7 @@ public int moveOptDn(int opt, int max){
     text_render_start = opt - (ITEMS_TO_SHOW - 1);
     opt_select = ITEMS_TO_SHOW - 1;
   }
-  else{
+  else if(opt_select < max - 1){
     opt_select = min(ITEMS_TO_SHOW - 1, opt_select + 1);
   }
   

@@ -147,7 +147,7 @@ public class Program  {
   }
 
   public void addInstruction(Instruction i) {
-    i.setProg(this);
+    //i.setProg(this);
     instructions.add(i);
     if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
