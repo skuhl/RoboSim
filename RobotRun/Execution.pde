@@ -450,6 +450,7 @@ public float[][] calculateJacobian(float[] angles) {
 //by 'tgt' and the Euler angle orientation 'rot'
 float[] calculateIKJacobian(PVector tgt, float[] rot) {
   final int limit = 1000;  //max number of times to loop
+
   int count = 0;
   
   float[] angles = armModel.getJointRotations();

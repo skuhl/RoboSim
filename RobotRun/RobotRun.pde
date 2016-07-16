@@ -373,7 +373,7 @@ public void displayTeachPoints() {
   if(teachFrame != null && (mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE)) {
     
     int size = 3;
-    
+
     if (mode == Screen.SIX_POINT_MODE && teachFrame instanceof ToolFrame) {
       size = 6;
     } else if (mode == Screen.FOUR_POINT_MODE && teachFrame instanceof UserFrame) {

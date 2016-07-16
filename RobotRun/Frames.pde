@@ -385,7 +385,9 @@ public class UserFrame extends Frame {
  * @return      The new TCP for the Robot, null is returned if the given points
  *              are invalid
  */
-public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1, float[] pos2, float[][] ori2, float[] pos3, float[][] ori3) {
+public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1, 
+                                            float[] pos2, float[][] ori2, 
+                                            float[] pos3, float[][] ori3) {
   
   RealVector avg_TCP = new ArrayRealVector(new double[] {0.0, 0.0, 0.0} , false);
   int counter = 3;
