@@ -1021,7 +1021,8 @@ public void mu() {
 public void se() {
   // Save when exiting a program
   saveProgramBytes( new File(sketchPath("tmp/programs.bin")) ); 
-  active_prog = 0;
+  active_prog = -1;
+  opt_select = 0;
   resetStack();
   nextScreen(Screen.PROGRAM_NAV);
 }
@@ -1608,7 +1609,6 @@ public void f1() {
   updateScreen();
 }
 
-
 public void f2() {
   switch(mode) {
     case PROGRAM_NAV:
@@ -1709,6 +1709,7 @@ public void f4() {
     p = programs.get(active_prog);
     if(p.instructions.size() == 0) break;
     Instruction ins = p.getInstructions().get(active_instr);
+    opt_select = 0;
     workingText = "";
     
     if(ins instanceof MotionInstruction) {
@@ -1797,19 +1798,21 @@ public void f4() {
     String s;
         
     for(Instruction instruct: p.getInstructions()){
-      s = lineIdx + 1 + ") " + instruct.toString();
+      s = (lineIdx + 1) + ") " + instruct.toString();
       
       if(s.toUpperCase().contains(workingText.toUpperCase())){
-        active_instr = lineIdx;
         break;
       }
       
       lineIdx += 1;
     }
     
-    updateInstructions();    
+    display_stack.pop();
+    active_instr = lineIdx;
+    updateInstructions();
     break;
   case SELECT_COM_UNCOM:
+    display_stack.pop();
     updateInstructions();
     break;
   case CONFIRM_RENUM:
@@ -1835,6 +1838,7 @@ public void f4() {
       }
     }
     
+    display_stack.pop();
     updateInstructions();
     break;
   case SELECT_DELETE:
@@ -1848,7 +1852,6 @@ public void f4() {
   case INPUT_REMARK:
     inputLetter(3);
     updateComment();
-    
     break;
   default:
     break;
@@ -1865,11 +1868,12 @@ public void f5() {
         updateScreen();
       } 
       else {
+        opt_select = 0;
         if(col_select == 0) {
           nextScreen(Screen.INSTRUCT_MENU_NAV);
         }
-        else if(col_select == 2 || col_select == 3) { 
-          nextScreen(Screen.VIEW_INST_REG);         
+        else if(col_select == 2 || col_select == 3) {
+          nextScreen(Screen.VIEW_INST_REG);
         }
       }
       break;
@@ -1909,9 +1913,9 @@ public void f5() {
       updateScreen();
       break;
     case CONFIRM_INSTR_DELETE:
-    
     case CONFIRM_INSERT:
     case CONFIRM_RENUM:
+    case FIND_REPL:
     case SELECT_CUT_COPY:
       updateInstructions();
       break;
@@ -2049,7 +2053,9 @@ public void ENTER() {
       break;
     case PROGRAM_NAV:
       if(programs.size() != 0){
+        active_prog = opt_select;
         active_instr = 0;
+        
         nextScreen(Screen.INSTRUCTION_NAV);
       }
       break;
@@ -3087,9 +3093,6 @@ public void updateButtonColors() {
  */
 public void nextScreen(Screen next) {
   workingText = "";
-  opt_select = 0;
-  row_select = 0;
-  col_select = 0;
   
   if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s => %s\n", mode, next);  }
   
@@ -3317,6 +3320,9 @@ public String getHeader(Screen mode){
     case NEW_PROGRAM:
       header = "CREATE NEW PROGRAM";
       break;
+    case CONFIRM_INSTR_DELETE:
+    case CONFIRM_INSERT:
+    case CONFIRM_RENUM:
     case INSTRUCTION_NAV:
     case INSTRUCT_MENU_NAV:
     case SET_MV_INSTRUCT_SPEED:
@@ -3330,6 +3336,7 @@ public String getHeader(Screen mode){
     case SET_RO_STATUS:
     case SET_FRAME_INSTRUCTION:
     case SET_FRAME_INSTRUCTION_IDX:
+    case SELECT_CUT_COPY:    
     case SELECT_DELETE:
     case VIEW_INST_REG:
       header = programs.get(active_prog).getName();
@@ -3432,6 +3439,10 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
   ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>();
   
   switch(mode) {
+    case CONFIRM_INSTR_DELETE:
+    case CONFIRM_INSERT:
+    case CONFIRM_RENUM:
+    case FIND_REPL:
     case INSTRUCTION_NAV:
     case SELECT_DELETE:
     case SELECT_COM_UNCOM:
@@ -3461,7 +3472,6 @@ public ArrayList<String> getOptions(Screen mode){
     case NEW_PROGRAM:
       opt_select = -1;
       options.add("Program Name:  " + workingText);
-      options.add("\0");
       options.add("Press ENTER to confirm");
       break;
     case CONFIRM_PROG_DELETE:
@@ -3506,7 +3516,6 @@ public ArrayList<String> getOptions(Screen mode){
       break;
     case CONFIRM_INSERT:
       options.add("Enter number of lines to insert:");
-      options.add("\0");
       options.add("\0" + workingText);
       break;
     case SELECT_DELETE:
@@ -3516,9 +3525,10 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("Delete selected lines?");
       break;
     case SELECT_CUT_COPY:
+      options.add("Select lines to cut/ copy.");
+      break;
     case FIND_REPL:
       options.add("Enter text to search for:");
-      options.add("\0");
       options.add("\0" + workingText);
       break;
     case CONFIRM_RENUM: 
@@ -3558,15 +3568,15 @@ public ArrayList<String> getOptions(Screen mode){
       break;
     case SET_FRAME_INSTRUCTION_IDX: 
       options.add("Select the index of the frame to use");
-      options.add("\0");
+      options.add("\0" + workingText);
       break;
     case SET_DO_BRACKET:
       options.add("Use number keys to enter DO[X]");
-      options.add("\0");
+      options.add("\0" + workingText);
       break;
     case SET_RO_BRACKET:
       options.add("Use number keys to enter RO[X]");
-      options.add("\0");
+      options.add("\0" + workingText);
       break;
     case SET_DO_STATUS:
     case SET_RO_STATUS:
