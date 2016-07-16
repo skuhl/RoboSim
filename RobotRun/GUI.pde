@@ -1249,6 +1249,8 @@ public void up() {
       }
       break;
     case MAIN_MENU_NAV:
+    case NAV_TOOL_FRAMES:
+    case NAV_USER_FRAMES:
     case INSTRUCT_MENU_NAV:
     case PICK_FRAME_MODE:
     case PICK_FRAME_METHOD:
@@ -1266,8 +1268,6 @@ public void up() {
       opt_select = max(0, opt_select - 1);
       break;
     case IO_SUBMENU:
-    case NAV_TOOL_FRAMES:
-    case NAV_USER_FRAMES:
     case ACTIVE_FRAMES:
     case INPUT_POINT_C:
     case INPUT_POINT_J:
@@ -1342,6 +1342,8 @@ public void dn() {
       
       break;
     case MAIN_MENU_NAV:
+    case NAV_TOOL_FRAMES:
+    case NAV_USER_FRAMES:
     case INSTRUCT_MENU_NAV:
     case PICK_FRAME_MODE:
     case PICK_FRAME_METHOD:
@@ -1359,8 +1361,6 @@ public void dn() {
       opt_select = min(opt_select + 1, options.size() - 1);
       break;
     case IO_SUBMENU:
-    case NAV_TOOL_FRAMES:
-    case NAV_USER_FRAMES:
     case ACTIVE_FRAMES:
     case INPUT_POINT_C:
     case INPUT_POINT_J:
@@ -1519,35 +1519,31 @@ public void f1() {
       break;
     case NAV_TOOL_FRAMES:
       if(shift == ON) {
-        nextScreen(Screen.UFRAME_DETAIL);
-        curFrameIdx = row_select;
-        loadFrameDetails();
+        // Reset the highlighted frame in the tool frame list
+        toolFrames[opt_select] = new ToolFrame();
+        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+        updateScreen();
       } else {
         // Set the current tool frame
-        if(row_select >= 0) {
-          activeToolFrame = row_select;
-          // Update the Robot Arm's current frame rotation matrix
-          if(curCoordFrame == CoordFrame.TOOL) {
-            armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
-          }
+        activeToolFrame = row_select;
+        // Update the Robot Arm's current frame rotation matrix
+        if(curCoordFrame == CoordFrame.TOOL) {
+          armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
         }
       }
       break;
     case NAV_USER_FRAMES:
       if(shift == ON) {
-        nextScreen(Screen.UFRAME_DETAIL);
-        curFrameIdx = row_select;
-        loadFrameDetails();
+        // Reset the highlighted frame in the user frames list
+        userFrames[opt_select] = new UserFrame();
+        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+        updateScreen();
       } else {
-        
         // Set the current user frame
-        if(row_select >= 0) {
-          activeUserFrame = row_select;
-          
-          // Update the Robot Arm's current frame rotation matrix
-          if(curCoordFrame == CoordFrame.USER) {
-            armModel.currentFrame = userFrames[activeUserFrame].getNativeAxes();
-          }
+        activeUserFrame = row_select;
+        // Update the Robot Arm's current frame rotation matrix
+        if(curCoordFrame == CoordFrame.USER) {
+          armModel.currentFrame = userFrames[activeUserFrame].getNativeAxes();
         }
       }
       break;
@@ -1615,20 +1611,12 @@ public void f2() {
       workingText = "";
       nextScreen(Screen.NEW_PROGRAM);
       break;
-    case UFRAME_DETAIL:
+    case USER_FRAME_DETAIL:
       nextScreen(Screen.PICK_FRAME_METHOD);
       break;
     case NAV_TOOL_FRAMES:
-      // Reset the highlighted frame in the tool frame list
-      toolFrames[row_select] = new ToolFrame();
-      saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-      updateScreen();
       break;
     case NAV_USER_FRAMES:
-      // Reset the highlighted frame in the user frames list
-      userFrames[row_select] = new UserFrame();
-      saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-      updateScreen();
       break;
     case ACTIVE_FRAMES:
       // Reset the active frames for the User or Tool Coordinate Frames
@@ -1670,10 +1658,6 @@ public void f3() {
   switch(mode){
     case PROGRAM_NAV:      
       nextScreen(Screen.CONFIRM_PROG_DELETE);
-      break;
-    case NAV_TOOL_FRAMES:
-    case NAV_USER_FRAMES:     
-      nextScreen(Screen.PICK_FRAME_MODE);
       break;
     case SELECT_CUT_COPY:
       Program p = programs.get(active_prog);
@@ -1901,9 +1885,7 @@ public void f5() {
       // Save the current position of the Robot's Faceplate
       teachFrame.setPoint(curPosition, opt_select);
       saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-      loadFrameDetails();
       loadPointList();
-      
       break;
     case CONFIRM_PROG_DELETE:
       options = new ArrayList<String>();
@@ -2048,6 +2030,7 @@ public void ENTER() {
   switch(mode) {
     case MAIN_MENU_NAV:
       if(opt_select == 5) { // SETUP
+        opt_select = 0;
         nextScreen(Screen.SETUP_NAV);
       }
       break;
@@ -2190,7 +2173,6 @@ public void ENTER() {
       
       lastScreen();
       break;
-      
     case INPUT_RSTMT:
     case EDIT_RSTMT:
       Program prog = programs.get(active_prog);
@@ -2272,17 +2254,18 @@ public void ENTER() {
       lastScreen();  
       break;
     case SETUP_NAV:
+      opt_select = 0;
       nextScreen(Screen.PICK_FRAME_MODE);
       break;
     case PICK_FRAME_MODE:
       if(opt_select == 0) {
-        loadFrames(CoordFrame.TOOL);
+        opt_select = 0;
+        nextScreen(Screen.NAV_TOOL_FRAMES);
       }
       else if(opt_select == 1) {
-        loadFrames(CoordFrame.USER);
+        opt_select = 0;
+        nextScreen(Screen.NAV_USER_FRAMES);
       } // Jog Frame not implemented
-      
-      opt_select = -1;
       break;
     case PICK_FRAME_METHOD:
       if(opt_select == 0) {
@@ -2298,6 +2281,14 @@ public void ENTER() {
         opt_select = -1;
         loadDirectEntryMethod();
       }
+      break;
+    case NAV_TOOL_FRAMES:
+      opt_select = 0;
+      nextScreen(Screen.USER_FRAME_DETAIL);
+      break;
+    case NAV_USER_FRAMES:
+      opt_select = 0;
+      nextScreen(Screen.TOOL_FRAME_DETAIL);
       break;
     case IO_SUBMENU:
       if(row_select == 2) { // digital
@@ -3105,6 +3096,8 @@ public void nextScreen(Screen next) {
  * Transitions the display to the previous screen that the user was on.
  */
 public boolean lastScreen() {
+  opt_select = 0;
+  
   if (display_stack.peek() == Screen.DEFAULT) {
     if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s => %s\n", mode, Screen.MAIN_MENU_NAV); }
     return false;
@@ -3350,7 +3343,7 @@ public String getHeader(Screen mode){
     case NAV_USER_FRAMES:
       header = "USER FRAMES";
       break;
-    case UFRAME_DETAIL:
+    case USER_FRAME_DETAIL:
     case PICK_FRAME_METHOD:
       if(display_stack.peek() == Screen.NAV_TOOL_FRAMES) {
         header = String.format("TOOL FRAME: %d", curFrameIdx + 1);
@@ -3449,13 +3442,12 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case SELECT_CUT_COPY:
       contents = loadInstructions(active_prog);
       break;
-    case NAV_TOOL_FRAMES:
-      loadFrames(CoordFrame.TOOL);
+    case TOOL_FRAME_DETAIL:
+      contents = loadFrameDetail(CoordFrame.TOOL);
       break;
-    case NAV_USER_FRAMES:
-      loadFrames(CoordFrame.USER);
+    case USER_FRAME_DETAIL:
+      contents = loadFrameDetail(CoordFrame.USER);
       break;
-    
   }
   
   return contents;
@@ -3592,12 +3584,12 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("2.User Frame");
       //options.add("3.Jog Frame");
       break;
-    case UFRAME_DETAIL:
+    case USER_FRAME_DETAIL:
       options.add("1. Three Point");
       options.add("2. Four Point");
       options.add("3. Direct Entry");
       break;
-    case TFRAME_DETAIL:
+    case TOOL_FRAME_DETAIL:
       options.add("1. Three Point");
       options.add("2. Six Point");
       options.add("3. Direct Entry");
@@ -3608,6 +3600,12 @@ public ArrayList<String> getOptions(Screen mode){
       break;
     case VIEW_INST_REG:
       options = loadInstructionReg();
+      break;
+    case NAV_TOOL_FRAMES:
+      options = loadFrames(CoordFrame.TOOL);
+      break;
+    case NAV_USER_FRAMES:
+      options = loadFrames(CoordFrame.USER);
       break;
     case VIEW_REG:
     case VIEW_POS_REG_J:
@@ -3671,18 +3669,18 @@ public String[] getFunctionLabels(Screen mode){
       if(shift == ON) {
         funct[0] = "[Reset]";
         funct[1] = "[Method]";
-        funct[2] = "[Switch]";
+        funct[2] = "";
         funct[3] = "";
         funct[4] = "";
       } else {
         funct[0] = "[Set]";
         funct[1] = "[Method]";
-        funct[2] = "[Switch]";
+        funct[2] = "";
         funct[3] = "";
         funct[4] = "";
       }
       break;
-    case UFRAME_DETAIL:
+    case USER_FRAME_DETAIL:
       // F2
       funct[0] = "";
       funct[1] = "[Method]";
@@ -3955,7 +3953,7 @@ public void createFrame() {
         
         armModel.currentFrame = toolFrames[curFrameIdx].getNativeAxes();
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-        loadFrames(CoordFrame.TOOL);
+        updateScreen();
       } else if(display_stack.peek() == Screen.NAV_USER_FRAMES) {
         // Update the current frame of the Robot Arm
         userFrames[curFrameIdx] = teachFrame;
@@ -3963,7 +3961,7 @@ public void createFrame() {
         
         armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-        loadFrames(CoordFrame.USER);
+        updateScreen();
       } else {
         mu();
         return;
@@ -4052,8 +4050,7 @@ public void createFrameDirectEntry() {
         toolFrames[curFrameIdx] = teachFrame;
         
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-        loadFrames(CoordFrame.TOOL);
-        
+        updateScreen();
       } else if(display_stack.peek() == Screen.NAV_USER_FRAMES) {
         // Update the current frame of the Robot Arm
         activeUserFrame = curFrameIdx;
@@ -4061,8 +4058,7 @@ public void createFrameDirectEntry() {
         userFrames[curFrameIdx] = teachFrame;
         
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-        loadFrames(CoordFrame.USER);
-        
+        updateScreen();
       } else {
         mu();
       }
@@ -4077,41 +4073,99 @@ public void createFrameDirectEntry() {
  * @param coorFrame  the integer value representing the coordinate frame
  *                   of the desired frame set
  */
-public void loadFrames(CoordFrame coordFrame) {
+public ArrayList<String> loadFrames(CoordFrame coordFrame) {
+  ArrayList<String> frameDisplay = null;
   Frame[] frames = null;
   
-  if(coordFrame == CoordFrame.TOOL) {
-    frames = toolFrames;
-    
-    if (mode != Screen.NAV_TOOL_FRAMES) {
-      nextScreen(Screen.NAV_TOOL_FRAMES);
-    }
-    
-  } else if(coordFrame == CoordFrame.USER) {
+  if(coordFrame == CoordFrame.USER){
     frames = userFrames;
-    
-    if (mode != Screen.NAV_USER_FRAMES) {
-      nextScreen(Screen.NAV_USER_FRAMES);
-    }
-    
   }
+  else if(coordFrame == CoordFrame.TOOL){
+    frames = toolFrames;
+  }
+  
   // Only the Tool and User Frame lists have been implemented
   if(frames != null) {
-    contents = new ArrayList<ArrayList<String>>();
-    options = new ArrayList<String>();
-    opt_select = -1;
+    frameDisplay = new ArrayList<String>();
     
-    for(int idx = 0; idx < frames.length; ++idx) {
+    for(int idx = 0; idx < frames.length; idx += 1) {
       // Display each frame on its own line
       Frame frame = frames[idx];
       // For a Tool Frame, the origin is the offset of the End Effector from the Robot faceplate, so it is not technically a point.
       PVector frameOrigin = (frame instanceof ToolFrame) ? frame.getOrigin() : convertNativeToWorld(frame.getOrigin());
-      contents.add ( newLine( String.format("%d) %s", idx + 1, frameOrigin) ) );
+      frameDisplay.add(String.format("%d) %s", idx + 1, frameOrigin));
+    }
+  }
+  
+  return frameDisplay;
+}
+
+/**
+ * Transitions to the Frame Details menu, which displays
+ * the x, y, z, w, p, r values associated with the Frame
+ * at curFrameIdx in either the Tool Frames or User Frames,
+ * based on the value of super_mode.
+ */
+public ArrayList<ArrayList<String>> loadFrameDetail(CoordFrame coordFrame) {
+  ArrayList<ArrayList<String>> details = new ArrayList<ArrayList<String>>();
+  
+  // Display the frame set name as well as the index of the currently selected frame
+  if(coordFrame == CoordFrame.TOOL) {
+    String[] fields = toolFrames[opt_select].toCondensedStringArray();
+    // Place each value in the frame on a separate lien
+    for(String field : fields) { details.add( newLine(field) ); }
+    
+  } else if(coordFrame == CoordFrame.TOOL) {
+    String[] fields = userFrames[opt_select].toCondensedStringArray();
+    // Place each value in the frame on a separate lien
+    for(String field : fields) { details.add( newLine(field) ); }
+    
+  } else {
+    return null;
+  }
+  
+  return details;
+}
+
+/**
+ * Displays the points along with their respective titles for the
+ * current frame teach method (discluding the Direct Entry method).
+ */
+public ArrayList<String> loadPointList() {
+  ArrayList<String> points = new ArrayList<String>();
+  
+  if(teachFrame != null) {
+    
+    ArrayList<String> temp = new ArrayList<String>();
+    // Display TCP teach points
+    if((display_stack.peek() == Screen.NAV_TOOL_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.SIX_POINT_MODE) {
+      temp.add("First Approach Point: ");
+      temp.add("Second Approach Point: ");
+      temp.add("Third Approach Point: ");
+    }
+    // Display Axes Vectors teach points
+    if((display_stack.peek() == Screen.NAV_USER_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE) {
+      temp.add("Orient Origin Point: ");
+      temp.add("X Direction Point: ");
+      temp.add("Y Direction Point: ");
+    }
+    // Display origin offset point
+    if(display_stack.peek() == Screen.NAV_USER_FRAMES && mode == Screen.FOUR_POINT_MODE) {
+      // Name of fourth point for the four point method?
+      temp.add("Origin: ");
     }
     
-    row_select = 0;
-    col_select = -1;
+    // Determine if the point has been set yet
+    for(int idx = 0; idx < temp.size(); ++idx) {
+      // Add each line to options
+      points.add( temp.get(idx) + ((teachFrame.getPoint(idx) != null) ? "RECORDED" : "UNINIT") );
+    }
+  } else {
+    // No teach points
+    points.add("Error: teachFrame not set!");
   }
+  
+  return points;
 }
 
 public void createPoint(){
@@ -4184,45 +4238,6 @@ public void createPoint(){
 }
 
 /**
- * Displays the points along with their respective titles for the
- * current frame teach method (discluding the Direct Entry method).
- */
-public void loadPointList() {
-  options = new ArrayList<String>();
-  
-  if(teachFrame != null) {
-    
-    ArrayList<String> temp = new ArrayList<String>();
-    // Display TCP teach points
-    if((display_stack.peek() == Screen.NAV_TOOL_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.SIX_POINT_MODE) {
-      temp.add("First Approach Point: ");
-      temp.add("Second Approach Point: ");
-      temp.add("Third Approach Point: ");
-    }
-    // Display Axes Vectors teach points
-    if((display_stack.peek() == Screen.NAV_USER_FRAMES && mode == Screen.THREE_POINT_MODE) || mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE) {
-      temp.add("Orient Origin Point: ");
-      temp.add("X Direction Point: ");
-      temp.add("Y Direction Point: ");
-    }
-    // Display origin offset point
-    if(display_stack.peek() == Screen.NAV_USER_FRAMES && mode == Screen.FOUR_POINT_MODE) {
-      // Name of fourth point for the four point method?
-      temp.add("Origin: ");
-    }
-    
-    // Determine if the point has been set yet
-    for(int idx = 0; idx < temp.size(); ++idx) {
-      // Add each line to options
-      options.add( temp.get(idx) + ((teachFrame.getPoint(idx) != null) ? "RECORDED" : "UNINIT") );
-    }
-  } else {
-    // No teach points
-    options.add("Error: teachFrame not set!");
-  }
-}
-
-/**
  * Transitions to the Direct Entry menu, which resembles
  * the Frame Detail menu, however, the user is allowed
  * to input values for the x, y, z, w, p, r fields.
@@ -4263,32 +4278,6 @@ public void loadDirectEntryMethod() {
   }
   
   updateScreen();
-}
-
-/**
- * Transitions to the Frame Details menu, which displays
- * the x, y, z, w, p, r values associated with the Frame
- * at curFrameIdx in either the Tool Frames or User Frames,
- * based on the value of super_mode.
- */
-public void loadFrameDetails() {
-  contents = new ArrayList<ArrayList<String>>();
-  row_select = -1;
-  
-  // Display the frame set name as well as the index of the currently selected frame
-  if(display_stack.peek() == Screen.NAV_TOOL_FRAMES) {
-    String[] fields = toolFrames[curFrameIdx].toCondensedStringArray();
-    // Place each value in the frame on a separate lien
-    for(String field : fields) { contents.add( newLine(field) ); }
-    
-  } else if(display_stack.peek() == Screen.NAV_USER_FRAMES) {
-    String[] fields = userFrames[curFrameIdx].toCondensedStringArray();
-    // Place each value in the frame on a separate lien
-    for(String field : fields) { contents.add( newLine(field) ); }
-    
-  } else {
-    mu();
-  }
 }
 
 /**
