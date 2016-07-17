@@ -1029,6 +1029,7 @@ public void se() {
 
 // Data button
 public void da() {
+  opt_select = 0;
   resetStack();
   nextScreen(Screen.DATA_MENU_NAV);
 }
@@ -1327,17 +1328,16 @@ public void dn() {
     case VIEW_REG:
     case VIEW_POS_REG_J:
     case VIEW_POS_REG_C:
-      
       size = (mode == Screen.VIEW_REG) ? REG.length : GPOS_REG.length;
       
       if(shift == ON) {
         active_index = shiftDn(active_prog, size);
       } else {
-        active_index = moveOptDn(active_prog, size);
+        active_index = moveRowDn(active_prog, size);
       }
       
       col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
-      viewRegisters();
+      loadRegisters();
       
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nIdx: %d\nTRS: %d\n\n",
@@ -2379,37 +2379,13 @@ public void ENTER() {
       nextScreen(Screen.INSTRUCTION_NAV);    
       break;
     case PICK_REG_LIST:
-    case DATA_MENU_NAV:
-      int modeCase = 0;
-      /* Choose the correct register menu based on if the current mode is
-       * one of the three register modes and which option was selected
-       * from the register menu list */
-      if(display_stack.peek() == Screen.VIEW_REG) {
-        modeCase = 1;
-      } else if(display_stack.peek() == Screen.VIEW_POS_REG_J) {
-        modeCase = 2;
-      } else if(display_stack.peek() == Screen.VIEW_POS_REG_C) {
-        modeCase = 3;
-      }
-      
-      if(modeCase != 1 && opt_select == 0) {
+    case DATA_MENU_NAV:      
+      if(opt_select == 0) {
         // Register Menu
         nextScreen(Screen.VIEW_REG);
-      } else if((modeCase == 1 && opt_select == 0) ||
-          (modeCase != 1 && modeCase != 2 && opt_select == 1)) {
-        // Position Register Menu (in Joint mode)
-        nextScreen(Screen.VIEW_POS_REG_J);
-      } else if((modeCase == 0 && opt_select == 2) ||
-          (modeCase != 0 && modeCase != 3 && opt_select == 1)) {
-        // Position Register Menu (in Cartesian mode)
+      } else if(opt_select == 1) {
         nextScreen(Screen.VIEW_POS_REG_C);
-      } else {
-        mu();
       }
-
-      row_select = 0;
-      col_select = active_index = text_render_start = 0;
-      viewRegisters();
       break;
     case INPUT_INTEGER:
       Integer integer = null;
@@ -3446,6 +3422,7 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
   ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>();
   
   switch(mode) {
+    //View instructions
     case CONFIRM_INSTR_DELETE:
     case CONFIRM_INSERT:
     case CONFIRM_RENUM:
@@ -3456,6 +3433,8 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case SELECT_CUT_COPY:
       contents = loadInstructions(active_prog);
       break;
+      
+    //View frame details
     case TOOL_FRAME_DETAIL:
     case THREE_POINT_TOOL:
     case SIX_POINT_MODE:
@@ -3467,6 +3446,13 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case FOUR_POINT_MODE:
     case DIRECT_ENTRY_USER:
       contents = loadFrameDetail(CoordFrame.USER);
+      break;
+    
+    //View registers
+    case VIEW_REG:
+    case VIEW_POS_REG_C:
+    case VIEW_POS_REG_J:
+      contents = loadRegisters();
       break;
   }
   
@@ -4265,7 +4251,7 @@ public void createPoint(){
   text_render_start = active_index;
   row_select = 0;
   col_select = 0;
-  viewRegisters();
+  loadRegisters();
 }
 
 /**
@@ -4316,87 +4302,77 @@ public void loadDirectEntryMethod() {
  * associated with the Point are displayed and the Cartesian values are
  * displayed in mode VIEW_REG_C.
  */
-public void viewRegisters() {
-  options = new ArrayList<String>();
-  opt_select = -1;
-  
-  contents = new ArrayList<ArrayList<String>>();
+public ArrayList<ArrayList<String>> loadRegisters() { 
+  ArrayList<ArrayList<String>> regs = new ArrayList<ArrayList<String>>();
   
   // View Registers or Position Registers
-  if(mode == Screen.VIEW_REG || mode == Screen.VIEW_POS_REG_J || mode == Screen.VIEW_POS_REG_C) {
+  int start = text_render_start;
+  int end = min(start + ITEMS_TO_SHOW - 1, REG.length);
+  // Display a subset of the list of registers
+  for(int idx = start; idx < end; ++idx) {
+    String spaces;
     
-    int start = text_render_start;
-    int end = min(start + ITEMS_TO_SHOW - 1, REG.length);
-    // Display a subset of the list of registers
-    for(int idx = start; idx < end; ++idx) {
-      String spaces;
-      
-      if(idx < 9) {
-        spaces = "  ";
-      } else if(idx < 99) {
-        spaces = " ";
-      } else {
-        spaces = "";
-      }
-      // Display the line number
-      String lineNum = String.format("%d)%s", (idx + 1), spaces);
-      
-      String lbl;
-      
-      if(mode == Screen.VIEW_REG) {
-        lbl = (REG[idx].comment == null) ? "" : REG[idx].comment;
-      } else {
-        lbl  = (GPOS_REG[idx].comment == null) ? "" : GPOS_REG[idx].comment;
-      }
-      
-      int buffer = 16 - lbl.length();
-      while(buffer-- > 0) { lbl += " "; }
-      
-      // Display the comment asscoiated with a specific Register entry
-      String regLbl = String.format("%s[%d:%s%s]", (mode == Screen.VIEW_REG) ? "R" : "PR", (idx + 1), spaces, lbl);
-      // Display Register value (* ifuninitialized)
-      String regEntry = "*";
-      
-      if(mode == Screen.VIEW_REG) {
-        if(REG[idx].value != null) {
-          // Dispaly Register value
-          regEntry = String.format("%4.3f", REG[idx].value);
-        }
-        
-      } else if(GPOS_REG[idx].point != null) {
-        // What to display for a point ...
-        regEntry = "...";
-      } else if(mode == Screen.VIEW_POS_REG_C && GPOS_REG[idx].point == null) {
-        // Distinguish Joint from Cartesian mode for now
-        regEntry = "#";
-      }
-      
-      contents.add( newLine(lineNum, regLbl, regEntry) );
+    if(idx < 9) {
+      spaces = "  ";
+    } else if(idx < 99) {
+      spaces = " ";
+    } else {
+      spaces = "";
+    }
+    // Display the line number
+    String lineNum = String.format("%d)%s", (idx + 1), spaces);
+    
+    String lbl;
+    
+    if(mode == Screen.VIEW_REG) {
+      lbl = (REG[idx].comment == null) ? "" : REG[idx].comment;
+    } else {
+      lbl  = (GPOS_REG[idx].comment == null) ? "" : GPOS_REG[idx].comment;
     }
     
-    /* Maybe useful later ...
+    int buffer = 16 - lbl.length();
+    while(buffer-- > 0) { lbl += " "; }
+    
+    // Display the comment asscoiated with a specific Register entry
+    String regLbl = String.format("%s[%d:%s%s]", (mode == Screen.VIEW_REG) ? "R" : "PR", (idx + 1), spaces, lbl);
+    // Display Register value (* ifuninitialized)
+    String regEntry = "*";
+    
+    if(mode == Screen.VIEW_REG) {
+      if(REG[idx].value != null) {
+        // Dispaly Register value
+        regEntry = String.format("%4.3f", REG[idx].value);
+      }
       
-      else {
-        String[] entries = null;
-        
-        if(mode == Mode.VIEW_POS_REG_J) {
-          entries = POS_REG[idx].point.toJointStringArray();
-        } else {
-          // mode == VIEW_POS_REG_C
-          entries = POS_REG[idx].point.toCartesianStringArray();
-        }
-        
-        /* Display each portion of the Point's position and orientation in
-         * a separate column  whether it be X, Y, Z, W, P, R (Cartesian) or 
-         * J1 - J6 (Joint angles) *
-        contents.add( newLine(lineNum, regLbl, entries[0], entries[1], entries[2], entries[3], entries[4], entries[5]) );
-      }*/
-  } else {
-    // mode must be VIEW_REG or VIEW_POS_REG_J(C)!
-    contents.add( newLine( String.format("%d is not a valid mode for view registers!", mode)) );
-    row_select = 0; 
-    col_select = 0;
+    } else if(GPOS_REG[idx].point != null) {
+      // What to display for a point ...
+      regEntry = "...";
+    } else if(mode == Screen.VIEW_POS_REG_C && GPOS_REG[idx].point == null) {
+      // Distinguish Joint from Cartesian mode for now
+      regEntry = "#";
+    }
+    
+    regs.add( newLine(lineNum, regLbl, regEntry) );
   }
+  
+  return regs;
+/*Maybe useful later ...
+
+  else {
+    String[] entries = null;
+    
+    if(mode == Mode.VIEW_POS_REG_J) {
+      entries = POS_REG[idx].point.toJointStringArray();
+    } else {
+      // mode == VIEW_POS_REG_C
+      entries = POS_REG[idx].point.toCartesianStringArray();
+    }
+    
+    /* Display each portion of the Point's position and orientation in
+     * a separate column  whether it be X, Y, Z, W, P, R (Cartesian) or 
+     * J1 - J6 (Joint angles) *
+    contents.add( newLine(lineNum, regLbl, entries[0], entries[1], entries[2], entries[3], entries[4], entries[5]) );
+  }*/
 }
 
 /**
@@ -4447,7 +4423,7 @@ public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
   
   pReg.point = pt;
   
-  viewRegisters();
+  loadRegisters();
   updateScreen();
 }
 
