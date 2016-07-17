@@ -7,8 +7,10 @@ public static enum ScreenType implements DisplayMode {
   TYPE_LIST_CONTENTS,
   TYPE_CONFIRM_CANCEL,
   TYPE_INSTRUCT_EDIT,
+  TYPE_FRAME_EDIT,
   TYPE_TEXT_ENTRY,
-  TYPE_NUM_ENTRY;
+  TYPE_NUM_ENTRY,
+  TYPE_POINT_ENTRY;
 }
 
 public static enum Screen implements DisplayMode {
@@ -84,19 +86,31 @@ public static enum Screen implements DisplayMode {
   SET_RO_BRACKET(ScreenType.TYPE_NUM_ENTRY),
   
   /*
+   * Frame input methods
+   */
+  THREE_POINT_TOOL(ScreenType.TYPE_FRAME_EDIT),
+  THREE_POINT_USER(ScreenType.TYPE_FRAME_EDIT),
+  FOUR_POINT_MODE(ScreenType.TYPE_FRAME_EDIT),
+  SIX_POINT_MODE(ScreenType.TYPE_FRAME_EDIT),
+  
+  /*
+   * Screens involving direct entry of point values
+   */
+  DIRECT_ENTRY_TOOL(ScreenType.TYPE_POINT_ENTRY),
+  DIRECT_ENTRY_USER(ScreenType.TYPE_POINT_ENTRY),
+  INPUT_POINT_C(ScreenType.TYPE_POINT_ENTRY),
+  INPUT_POINT_J(ScreenType.TYPE_POINT_ENTRY),
+  
+  /*
   * Miscelanious screens/ not otherwise categorized
   */
   PICK_REG_LIST,
-  DIRECT_ENTRY_MODE,
   EDIT_RSTMT,
-  FOUR_POINT_MODE,
   USER_FRAME_DETAIL,
   TOOL_FRAME_DETAIL,
   INPUT_CONSTANT,
   INPUT_FLOAT,
   INPUT_OPERATOR,
-  INPUT_POINT_C,
-  INPUT_POINT_J,
   INPUT_PRDX,
   INPUT_PRVDX,
   INPUT_RDX,
@@ -105,8 +119,6 @@ public static enum Screen implements DisplayMode {
   DATA_MENU_NAV,
   SET_DO_STATUS,
   SET_RO_STATUS,
-  SIX_POINT_MODE,
-  THREE_POINT_MODE,
   VIEW_INST_REG,
   //Cartesian
   VIEW_POS_REG_C,

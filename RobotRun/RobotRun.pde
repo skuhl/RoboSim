@@ -79,17 +79,18 @@ public void setup() {
   size(1080, 720, P3D);
   ortho();
   
-  //set up UI
-  cp5 = new ControlP5(this);
-  display_stack = new Stack<Screen>();
-  gui();
-  
+  //load model and save data
   armModel = new ArmModel();
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   intermediatePositions = new ArrayList<Point>();
   loadState();
+  
+  //set up UI
+  cp5 = new ControlP5(this);
+  display_stack = new Stack<Screen>();
+  gui();
   
   // Intialize world objects
   objects = new WorldObject[2];
@@ -370,7 +371,7 @@ public void handleWorldObjects() {
  */
 public void displayTeachPoints() {
   // Teach points are displayed only while the Robot is being taught a frame
-  if(teachFrame != null && (mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE)) {
+  if(teachFrame != null && mode.getType() == ScreenType.TYPE_FRAME_EDIT) {
     
     int size = 3;
 

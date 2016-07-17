@@ -1,5 +1,5 @@
-Frame[] toolFrames = null;
-Frame[] userFrames = null;
+Frame[] toolFrames;
+Frame[] userFrames;
 
 public abstract class Frame {
   private PVector origin;
