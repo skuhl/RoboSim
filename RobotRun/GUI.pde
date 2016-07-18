@@ -1081,7 +1081,7 @@ public void addNumber(String number) {
       updateScreen();
     }
   }
-  else if(mode == Screen.SET_MV_INSTRUCT_SPEED) {
+  else if(mode == Screen.SET_MV_INSTR_SPD) {
     workingText += number;
     options.set(1, workingText + workingTextSuffix);
   } 
@@ -1212,7 +1212,7 @@ public void up() {
       }
       
       break;
-    case SELECT_COM_UNCOM:
+    case SELECT_COMMENT:
     case INSTRUCTION_NAV:
     case SELECT_CUT_COPY:
     case SELECT_DELETE:
@@ -1248,7 +1248,7 @@ public void up() {
     case INSTRUCT_MENU_NAV:
     case PICK_FRAME_MODE:
     case PICK_FRAME_METHOD:
-    case PICK_INSTRUCTION:
+    case PICK_INSTRUCT:
     case TOOL_FRAME_DETAIL:
     case USER_FRAME_DETAIL:
     case THREE_POINT_USER:
@@ -1287,9 +1287,9 @@ public void dn() {
   switch(mode) {
     case PROGRAM_NAV:
       size = programs.size();
-       //<>// //<>// //<>//
+       //<>// //<>//
       if(shift == ON && size > ITEMS_TO_SHOW) {
-        active_prog = shiftDn(active_prog, size); //<>//
+        active_prog = shiftDn(active_prog, size);
       } else {
         active_prog = moveOptDn(active_prog, size);
       }
@@ -1300,10 +1300,10 @@ public void dn() {
       }
       
       break;
-    case SELECT_COM_UNCOM:
+    case SELECT_COMMENT:
     case INSTRUCTION_NAV:
     case SELECT_CUT_COPY:
-    case SELECT_DELETE: //<>// //<>// //<>//
+    case SELECT_DELETE: //<>// //<>//
       size = programs.get(active_prog).getInstructions().size();
       
       if(shift == ON && size > ITEMS_TO_SHOW) {
@@ -1311,7 +1311,7 @@ public void dn() {
       } else {
         active_instr = moveRowDn(active_instr, size);
       }
-       //<>//
+      
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
         row_select, col_select, active_instr, text_render_start);
@@ -1344,7 +1344,7 @@ public void dn() {
     case INSTRUCT_MENU_NAV:
     case PICK_FRAME_MODE:
     case PICK_FRAME_METHOD:
-    case PICK_INSTRUCTION:
+    case PICK_INSTRUCT:
     case TOOL_FRAME_DETAIL:
     case USER_FRAME_DETAIL:
     case THREE_POINT_USER:
@@ -1368,7 +1368,7 @@ public void dn() {
     case INPUT_POINT_J:
       row_select = min(row_select + 1, contents.size() - 1);
       break;
-    case INPUT_REMARK_DREG: //<>//
+    case INPUT_REMARK_DREG:
       opt_select = min(opt_select + 1, options.size() - 1);
       // Reset function key states
       for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
@@ -1378,8 +1378,8 @@ public void dn() {
   updateScreen();
 }
 
-public void lt() {  //<>//
-  switch(mode) {  //<>//
+public void lt() { 
+  switch(mode) { 
     case INSTRUCTION_NAV:    
       col_select = max(0, col_select - 1);
       break;
@@ -1510,7 +1510,7 @@ public void f1() {
         row_select = min(active_instr, ITEMS_TO_SHOW - 1);
         text_render_start = active_instr - row_select;
       } else {
-        nextScreen(Screen.PICK_INSTRUCTION);
+        nextScreen(Screen.PICK_INSTRUCT);
       }
       break;
     case NAV_TOOL_FRAMES:
@@ -1561,14 +1561,6 @@ public void f1() {
         // Bring up comment menu
         nextScreen(Screen.INPUT_REMARK_DREG);
       } else if(col_select == 2) {
-        
-        // Bring up float input menu
-        if(REG[active_index].value != null) {
-          workingText = Float.toString(REG[active_index].value);
-        } else {
-          workingText = "";
-        }
-        
         nextScreen(Screen.INPUT_FLOAT);
       }
       
@@ -1692,13 +1684,13 @@ public void f4() {
         nextScreen(Screen.SET_MV_INSTRUCT_REG_TYPE);
         break;
       case 4: // register
-        nextScreen(Screen.SET_MV_INSTRUCT_REG_NUM);
+        nextScreen(Screen.SET_MV_INSTR_REG_NUM);
         break;
       case 5: // speed
-        nextScreen(Screen.SET_MV_INSTRUCT_SPEED);
+        nextScreen(Screen.SET_MV_INSTR_SPD);
         break;
       case 6: // termination type
-        nextScreen(Screen.SET_MV_INSTRUCT_TERMINATION);
+        nextScreen(Screen.SET_MV_INSTR_TERM);
         break;
       }
     } 
@@ -1782,7 +1774,7 @@ public void f4() {
     active_instr = lineIdx;
     updateInstructions();
     break;
-  case SELECT_COM_UNCOM:
+  case SELECT_COMMENT:
     display_stack.pop();
     updateInstructions();
     break;
@@ -2133,7 +2125,7 @@ public void ENTER() {
         case 6: //Comment
           p = programs.get(active_prog);
           selectedLines = resetSelection(p.getInstructions().size());
-          nextScreen(Screen.SELECT_COM_UNCOM);
+          nextScreen(Screen.SELECT_COMMENT);
         case 7: //Undo
         case 8: //Remark
       }
@@ -2169,7 +2161,7 @@ public void ENTER() {
       }
       lastScreen();
       break;
-    case SET_MV_INSTRUCT_SPEED:
+    case SET_MV_INSTR_SPD:
       float tempSpeed = Float.parseFloat(workingText);
       if(tempSpeed >= 5.0) {
         if(speedInPercentage) {
@@ -2185,7 +2177,7 @@ public void ENTER() {
       
       lastScreen();
       break;
-    case SET_MV_INSTRUCT_REG_NUM:
+    case SET_MV_INSTR_REG_NUM:
       try {
         int tempRegister = Integer.parseInt(workingText) - 1;
         MotionInstruction castIns = getActiveMotionInstruct();
@@ -2212,7 +2204,7 @@ public void ENTER() {
       
       lastScreen();
       break;
-    case SET_MV_INSTRUCT_TERMINATION:
+    case SET_MV_INSTR_TERM:
       try {
         float tempTerm = Float.parseFloat(workingText);
         
@@ -2230,7 +2222,7 @@ public void ENTER() {
       selectedLines[active_instr] = !selectedLines[active_instr];
       updateScreen();
       break;
-    case SELECT_COM_UNCOM:
+    case SELECT_COMMENT:
       programs.get(active_prog)
       .getInstructions()
       .get(active_instr)
@@ -2253,7 +2245,7 @@ public void ENTER() {
       
       lastScreen();
       break;
-    case PICK_INSTRUCTION:
+    case PICK_INSTRUCT:
       if(opt_select == 0) {
         nextScreen(Screen.IO_SUBMENU);
       } 
@@ -2331,9 +2323,9 @@ public void ENTER() {
       }
       break;
     case SET_FRAME_INSTRUCTION:
-      nextScreen(Screen.SET_FRAME_INSTRUCTION_IDX);
+      nextScreen(Screen.SET_FRM_INSTR_IDX);
       break;
-    case SET_FRAME_INSTRUCTION_IDX:
+    case SET_FRM_INSTR_IDX:
       p = programs.get(active_prog);
       
       try {
@@ -2511,6 +2503,7 @@ public void COORD() {
   } else {  
     // Update the coordinate mode
     updateCoordinateMode(armModel);
+    updateScreen();
   }
 }
 
@@ -3054,6 +3047,7 @@ public void nextScreen(Screen next) {
   
   mode = next;
   display_stack.push(mode);
+  loadScreen();
   updateScreen();
 }
 
@@ -3083,13 +3077,39 @@ public void resetStack(){
   display_stack.push(mode);
 }
 
+public void loadScreen(){
+  switch(mode){
+    case DIRECT_ENTRY_TOOL:
+    case DIRECT_ENTRY_USER:
+      break;
+    
+    case INPUT_POINT_C:
+    case INPUT_POINT_J:
+      break;
+    
+    case INPUT_REMARK_DREG:
+    case INPUT_REMARK_PREG:
+      break;
+      
+    case INPUT_FLOAT:
+      // Bring up float input menu
+      opt_select = 0;
+      if(REG[active_index].value != null) {
+        workingText = Float.toString(REG[active_index].value);
+      } else {
+        workingText = "";
+      }
+      break;
+  }
+}
+
 // update text displayed on screen
 public void updateScreen() {
   clearScreen();
   
   int next_px = display_px;
-  int next_py = display_py; //<>//
-  int c1, c2; //<>//
+  int next_py = display_py;
+  int c1, c2;
   
   // draw display background
   cp5.addTextarea("txt")
@@ -3283,17 +3303,17 @@ public String getHeader(Screen mode){
     case CONFIRM_RENUM:
     case INSTRUCTION_NAV:
     case INSTRUCT_MENU_NAV:
-    case SET_MV_INSTRUCT_SPEED:
-    case SET_MV_INSTRUCT_REG_NUM:
-    case SET_MV_INSTRUCT_TERMINATION:
-    case PICK_INSTRUCTION:
+    case SET_MV_INSTR_SPD:
+    case SET_MV_INSTR_REG_NUM:
+    case SET_MV_INSTR_TERM:
+    case PICK_INSTRUCT:
     case IO_SUBMENU:
     case SET_DO_BRACKET:
     case SET_DO_STATUS:
     case SET_RO_BRACKET:
     case SET_RO_STATUS:
     case SET_FRAME_INSTRUCTION:
-    case SET_FRAME_INSTRUCTION_IDX:
+    case SET_FRM_INSTR_IDX:
     case SELECT_CUT_COPY:    
     case SELECT_DELETE:
     case VIEW_INST_REG:
@@ -3395,7 +3415,7 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case FIND_REPL:
     case INSTRUCTION_NAV:
     case SELECT_DELETE:
-    case SELECT_COM_UNCOM:
+    case SELECT_COMMENT:
     case SELECT_CUT_COPY:
       contents = loadInstructions(active_prog);
       break;
@@ -3504,7 +3524,7 @@ public ArrayList<String> getOptions(Screen mode){
     case CONFIRM_RENUM: 
       options.add("Renumber program positions?");
       break;
-    case SELECT_COM_UNCOM:
+    case SELECT_COMMENT:
       options.add("Select lines to comment/uncomment.");
       break;
     case ACTIVE_FRAMES:
@@ -3515,14 +3535,14 @@ public ArrayList<String> getOptions(Screen mode){
     //Instruction edit options
     case SET_MV_INSTRUCT_TYPE:
     case SET_MV_INSTRUCT_REG_TYPE:
-    case SET_MV_INSTRUCT_REG_NUM:
-    case SET_MV_INSTRUCT_SPEED:
-    case SET_MV_INSTRUCT_TERMINATION:
+    case SET_MV_INSTR_REG_NUM:
+    case SET_MV_INSTR_SPD:
+    case SET_MV_INSTR_TERM:
       options = loadInstructEdit(mode);
       break;
     
     //Insert instructions (non-movemet)
-    case PICK_INSTRUCTION:
+    case PICK_INSTRUCT:
       options.add("1 I/O"               );
       options.add("2 Offset/Frames"     );
       options.add("3 Register Statement");
@@ -3538,7 +3558,7 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("8 SOP (NA)"          );
       options.add("9 Interconnect (NA)" );
       break;
-    case SET_FRAME_INSTRUCTION_IDX: 
+    case SET_FRM_INSTR_IDX: 
       options.add("Select the index of the frame to use:");
       options.add("\0" + workingText);
       break;
@@ -3601,11 +3621,7 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("1. Data Registers");
       options.add("2. Position Registers");
       break;
-    case INPUT_FLOAT:
-      if(REG[active_index].value != null) {
-        workingText = Float.toString(REG[active_index].value);
-      } 
-      
+    case INPUT_FLOAT:      
       options.add("Input register value:");
       options.add("\0" + workingText);
       break;
@@ -3662,7 +3678,7 @@ public String[] getFunctionLabels(Screen mode){
       }
       break;
     case SELECT_DELETE:
-    case SELECT_COM_UNCOM:
+    case SELECT_COMMENT:
       funct[0] = "";
       funct[1] = "";
       funct[2] = "";
@@ -3944,11 +3960,11 @@ public ArrayList<String> loadInstructEdit(Screen mode){
       edit.add("1.LOCAL(P)");
       edit.add("2.GLOBAL(PR)");
       break;
-    case SET_MV_INSTRUCT_REG_NUM:
+    case SET_MV_INSTR_REG_NUM:
       edit.add("Enter desired register number (1-1000)");
       edit.add("\0" + workingText);
       break;
-    case SET_MV_INSTRUCT_SPEED:
+    case SET_MV_INSTR_SPD:
       edit.add("Enter desired speed");
       MotionInstruction castIns = getActiveMotionInstruct();
       
@@ -3962,7 +3978,7 @@ public ArrayList<String> loadInstructEdit(Screen mode){
       
       edit.add(workingText + workingTextSuffix);
       break;
-    case SET_MV_INSTRUCT_TERMINATION:
+    case SET_MV_INSTR_TERM:
       edit.add("Enter desired termination (0-100):");
       edit.add("\0" + workingText);
       break;
@@ -4090,12 +4106,12 @@ public ArrayList<ArrayList<String>> loadFrameDetail(CoordFrame coordFrame) {
   
   // Display the frame set name as well as the index of the currently selected frame
   if(coordFrame == CoordFrame.TOOL) {
-    String[] fields = toolFrames[opt_select].toCondensedStringArray();
+    String[] fields = toolFrames[curFrameIdx].toCondensedStringArray();
     // Place each value in the frame on a separate lien
     for(String field : fields) { details.add( newLine(field) ); }
     
   } else if(coordFrame == CoordFrame.USER) {
-    String[] fields = userFrames[opt_select].toCondensedStringArray();
+    String[] fields = userFrames[curFrameIdx].toCondensedStringArray();
     // Place each value in the frame on a separate lien
     for(String field : fields) { details.add( newLine(field) ); }
     
@@ -4129,7 +4145,7 @@ public ArrayList<String> loadPointList() {
       temp.add("Y Axis Point: ");
     }
     // Display origin offset point
-    if(display_stack.peek() == Screen.NAV_USER_FRAMES && mode == Screen.FOUR_POINT_MODE) {
+    if(mode == Screen.FOUR_POINT_MODE) {
       // Name of fourth point for the four point method?
       temp.add("Origin: ");
     }
@@ -4502,15 +4518,14 @@ public ArrayList<ArrayList<String>> loadInputRegisterPointMethod() {
     if(GPOS_REG[active_index].point == null) {
       // Initialize valeus to zero ifthe entry is null
       if(mode == Screen.INPUT_POINT_C) {
-        
         register.add( newLine("X: 0.0") );
         register.add( newLine("Y: 0.0") );
         register.add( newLine("Z: 0.0") );
         register.add( newLine("W: 0.0") );
         register.add( newLine("P: 0.0") );
         register.add( newLine("R: 0.0") );
-      } else if(mode == Screen.INPUT_POINT_J) {
         
+      } else if(mode == Screen.INPUT_POINT_J) {
         for(int idx = 1; idx <= 6; ++idx) {
           register.add( newLine(String.format("J%d: 0.0", idx)) );
         }

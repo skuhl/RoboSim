@@ -117,8 +117,8 @@ public class ArmModel {
   public float[] tgtRot = new float[4];
   public PVector tgtPos = new PVector();
   public float[][] currentFrame = {{1, 0, 0},
-    {0, 1, 0}, 
-    {0, 0, 1}};
+                                   {0, 1, 0}, 
+                                   {0, 0, 1}};
   
   public Box[] bodyHitBoxes;
   private ArrayList<Box>[] eeHitBoxes;
@@ -584,17 +584,9 @@ public class ArmModel {
    * default world frame.
    */
   public void resetFrame() {
-    currentFrame[0][0] = 1;
-    currentFrame[0][1] = 0;
-    currentFrame[0][2] = 0;
-    
-    currentFrame[1][0] = 0;
-    currentFrame[1][1] = 1;
-    currentFrame[1][2] = 0;
-    
-    currentFrame[2][0] = 0;
-    currentFrame[2][1] = 0;
-    currentFrame[2][2] = 1;
+    currentFrame = new float[][] {{1, 0, 0},
+                                  {0, 1, 0},
+                                  {0, 0, 1}};
   }
   
   /* Calculate and returns a 3x3 matrix whose columns are the unit vectors of

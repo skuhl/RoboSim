@@ -203,7 +203,7 @@ void showMainDisplayText() {
  */
 public void updateCoordinateMode(ArmModel model) {
   // Stop Robot movement
-  hd();
+  hd(); //<>//
   
   // Increment the current coordinate frame
   switch (curCoordFrame) {
@@ -220,8 +220,8 @@ public void updateCoordinateMode(ArmModel model) {
       break;
      
     case USER:
-    default:
       curCoordFrame = CoordFrame.JOINT;
+      break;
   }
   
   // Skip the tool frame, if there is no current active tool frame

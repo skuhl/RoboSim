@@ -41,7 +41,7 @@ public static enum Screen implements DisplayMode {
   * Screens used to perform arbitrary line-wise selection on a list of
   * elements displayed on a screen of type 'TYPE_LIST_CONTENTS'
   */
-  SELECT_COM_UNCOM(ScreenType.TYPE_LINE_SELECT),
+  SELECT_COMMENT(ScreenType.TYPE_LINE_SELECT),
   SELECT_CUT_COPY(ScreenType.TYPE_LINE_SELECT),
   SELECT_DELETE(ScreenType.TYPE_LINE_SELECT),
   
@@ -61,7 +61,7 @@ public static enum Screen implements DisplayMode {
   MAIN_MENU_NAV(ScreenType.TYPE_OPT_MENU),
   PICK_FRAME_METHOD(ScreenType.TYPE_OPT_MENU),
   PICK_FRAME_MODE(ScreenType.TYPE_OPT_MENU),
-  PICK_INSTRUCTION(ScreenType.TYPE_OPT_MENU),
+  PICK_INSTRUCT(ScreenType.TYPE_OPT_MENU),
   SETUP_NAV(ScreenType.TYPE_OPT_MENU),
   
   /*
@@ -81,10 +81,10 @@ public static enum Screen implements DisplayMode {
   INPUT_FLOAT(ScreenType.TYPE_NUM_ENTRY),
   JUMP_TO_LINE(ScreenType.TYPE_NUM_ENTRY), 
   SET_DO_BRACKET(ScreenType.TYPE_NUM_ENTRY),
-  SET_FRAME_INSTRUCTION_IDX(ScreenType.TYPE_NUM_ENTRY),
-  SET_MV_INSTRUCT_REG_NUM(ScreenType.TYPE_NUM_ENTRY),
-  SET_MV_INSTRUCT_SPEED(ScreenType.TYPE_NUM_ENTRY),
-  SET_MV_INSTRUCT_TERMINATION(ScreenType.TYPE_NUM_ENTRY),
+  SET_FRM_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
+  SET_MV_INSTR_REG_NUM(ScreenType.TYPE_NUM_ENTRY),
+  SET_MV_INSTR_SPD(ScreenType.TYPE_NUM_ENTRY),
+  SET_MV_INSTR_TERM(ScreenType.TYPE_NUM_ENTRY),
   SET_RO_BRACKET(ScreenType.TYPE_NUM_ENTRY),
   
   /*

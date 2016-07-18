@@ -4,7 +4,7 @@ Frame[] userFrames;
 public abstract class Frame {
   private PVector origin;
   // The unit vectors representing the x, y, z axes (in row major order)
-  private float[][] axes;
+  public float[][] axes;
   /* The three points used to define a coordinate axis for 6-Point Method
    * of Tool Frames and 3-Point or 4_Point Methods of User Frames */
   public Point[] axesTeachPoints;
@@ -270,7 +270,7 @@ public class ToolFrame extends Frame {
       double[] newTCP = calculateTCPFromThreePoints(toVectorArray(TCPTeachPoints[0].pos), pt1_ori,
                                                  toVectorArray(TCPTeachPoints[1].pos), pt2_ori,
                                                  toVectorArray(TCPTeachPoints[2].pos), pt3_ori);
-      
+      println("setting frame axes...");
       float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(axesTeachPoints[0].pos, axesTeachPoints[1].pos, axesTeachPoints[2].pos) : new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
       
       if (newTCP == null || newAxesVectors == null) {
