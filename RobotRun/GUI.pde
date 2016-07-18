@@ -1167,12 +1167,6 @@ public void LINE() {
       workingText = "-" + workingText;
     }
     
-    if(workingText.length() == 0) {
-      options.set(2, "\0");
-    } else {
-      options.set(2, workingText);
-    }
-    
   } else if (mode == Screen.INPUT_INTEGER) {
     
     // Mutliply current number by -1
@@ -1521,7 +1515,7 @@ public void f1() {
         updateScreen();
       } else {
         // Set the current tool frame
-        activeToolFrame = row_select;
+        activeToolFrame = opt_select;
         // Update the Robot Arm's current frame rotation matrix
         if(curCoordFrame == CoordFrame.TOOL) {
           armModel.currentFrame = toolFrames[opt_select].getNativeAxes();
@@ -1536,7 +1530,7 @@ public void f1() {
         updateScreen();
       } else {
         // Set the current user frame
-        activeUserFrame = row_select;
+        activeUserFrame = opt_select;
         // Update the Robot Arm's current frame rotation matrix
         if(curCoordFrame == CoordFrame.USER) {
           armModel.currentFrame = userFrames[opt_select].getNativeAxes();
@@ -1561,6 +1555,7 @@ public void f1() {
         // Bring up comment menu
         nextScreen(Screen.INPUT_REMARK_DREG);
       } else if(col_select == 2) {
+        // Bring up float insertion menu
         nextScreen(Screen.INPUT_FLOAT);
       }
       
@@ -1624,9 +1619,11 @@ public void f2() {
       }
       break;
     case VIEW_DATA_REG:
+      nextScreen(Screen.DATA_MENU_NAV);
+      break;
     case VIEW_POS_REG_J:
     case VIEW_POS_REG_C:
-      nextScreen(Screen.DATA_MENU_NAV);
+      nextScreen(Screen.SWITCH_PREG);
       break;
     case INPUT_REMARK_DREG:
       inputLetter(1);
@@ -1656,8 +1653,15 @@ public void f3() {
       
       updateInstructions();
       break;
+    case NAV_TOOL_FRAMES:
+      nextScreen(Screen.NAV_USER_FRAMES);
+      break;
+    case NAV_USER_FRAMES:
+      nextScreen(Screen.NAV_TOOL_FRAMES);
+      break;
     case INPUT_REMARK_DREG:
       inputLetter(2);
+      updateScreen();
       break;
       default:
   }
@@ -1898,7 +1902,12 @@ public void inputLetter(int fIdx){
   workingText = temp.toString();
   // Update and reset the letter states
   
-  for(int idx = 0; idx < letterStates.length; idx += 1) { letterStates[idx] = 0; }
+  for(int idx = 0; idx < letterStates.length; idx += 1) {
+    if (idx != fIdx) {
+      // Reset all other letter states
+      letterStates[idx] = 0;
+    }
+  }
 }
 
 /* Stops all of the Robot's movement */
@@ -2056,6 +2065,35 @@ public void ENTER() {
       } 
       else if(opt_select == 2) {
         nextScreen(Screen.DIRECT_ENTRY_USER);
+      }
+      break;
+    case PICK_FRAME_METHOD:
+      Screen previous = previousScreen();
+      
+      if (previous == Screen.NAV_TOOL_FRAMES || previous == Screen.TOOL_FRAME_DETAIL) {
+        teachFrame = toolFrames[curFrameIdx];
+        // Tool Frame traching methods
+        if(opt_select == 0) {
+          nextScreen(Screen.THREE_POINT_TOOL);
+        } 
+        else if(opt_select == 1) {
+          nextScreen(Screen.SIX_POINT_MODE);
+        } 
+        else if(opt_select == 2) {
+          nextScreen(Screen.DIRECT_ENTRY_TOOL);
+        }
+      } else if (previous == Screen.NAV_USER_FRAMES || previous == Screen.USER_FRAME_DETAIL) {
+        // User Frame teaching methods
+        teachFrame = userFrames[curFrameIdx];
+        if(opt_select == 0) {
+          nextScreen(Screen.THREE_POINT_USER);
+        } 
+        else if(opt_select == 1) {
+          nextScreen(Screen.FOUR_POINT_MODE);
+        } 
+        else if(opt_select == 2) {
+          nextScreen(Screen.DIRECT_ENTRY_USER);
+        }
       }
       break;
     case THREE_POINT_TOOL:
@@ -2349,12 +2387,21 @@ public void ENTER() {
       loadInstructions(active_prog);
       nextScreen(Screen.INSTRUCTION_NAV);    
       break;
-    case PICK_REG_LIST:
+    case SWITCH_PREG:
+      if(opt_select == 0) {
+        // View Cartesian values
+        nextScreen(Screen.VIEW_POS_REG_C);
+      } else if(opt_select == 1) {
+        // View Joint values
+        nextScreen(Screen.VIEW_POS_REG_J);
+      }
+      break;
     case DATA_MENU_NAV:      
       if(opt_select == 0) {
-        // Register Menu
+        // Data Register Menu
         nextScreen(Screen.VIEW_DATA_REG);
       } else if(opt_select == 1) {
+        // Position Register Menu
         nextScreen(Screen.VIEW_POS_REG_C);
       }
       break;
@@ -2499,7 +2546,7 @@ public void BKSPC() {
 
 public void COORD() {
   if(shift == ON) {
-    nextScreen(Screen.PICK_FRAME_MODE);
+    nextScreen(Screen.ACTIVE_FRAMES);
   } else {  
     // Update the coordinate mode
     updateCoordinateMode(armModel);
@@ -3052,6 +3099,21 @@ public void nextScreen(Screen next) {
 }
 
 /**
+ * Return the mode immediately previous to this one.
+ */
+public Screen previousScreen() {
+  
+  if (display_stack.isEmpty()) {
+    return Screen.DEFAULT;
+  } else {
+    display_stack.pop();
+    Screen previous = display_stack.peek();
+    display_stack.push(mode);
+    return previous;
+  }
+}
+
+/**
  * Transitions the display to the previous screen that the user was on.
  */
 public boolean lastScreen() {
@@ -3097,7 +3159,7 @@ public void loadScreen(){
       if(REG[active_index].value != null) {
         workingText = Float.toString(REG[active_index].value);
       } else {
-        workingText = "";
+        workingText = "0.0";
       }
       break;
   }
@@ -3289,7 +3351,7 @@ public void updateScreen() {
 
 //Header text
 public String getHeader(Screen mode){
-  String header;
+  String header = null;
   
   switch(mode) {
     case PROGRAM_NAV:
@@ -3334,6 +3396,16 @@ public String getHeader(Screen mode){
     case USER_FRAME_DETAIL:
       header = String.format("USER FRAME: %d", curFrameIdx + 1);
       break;
+    case PICK_FRAME_METHOD:
+      Screen previous = previousScreen();
+      
+      if (previous == Screen.TOOL_FRAME_DETAIL || previous == Screen.NAV_TOOL_FRAMES) {
+        header = String.format("TOOL FRAME: %d", curFrameIdx + 1);
+      } else if (previous == Screen.USER_FRAME_DETAIL || previous == Screen.NAV_USER_FRAMES) {
+        header = String.format("USER FRAME: %d", curFrameIdx + 1);
+      }
+      
+      break;
     case THREE_POINT_TOOL:
     case THREE_POINT_USER:
       header = "THREE POINT METHOD";
@@ -3349,13 +3421,7 @@ public String getHeader(Screen mode){
       header = "DIRECT ENTRY METHOD";
       break;
     case DATA_MENU_NAV:
-      if(display_stack.peek() == Screen.VIEW_DATA_REG) {
-        header = "REGISTERS";
-      } else if(display_stack.peek() == Screen.VIEW_POS_REG_J || display_stack.peek() == Screen.VIEW_POS_REG_C) {
-        header = "POSITON REGISTERS";
-      } else {
-        header = "VIEW REGISTERS";
-      }
+      header = "VIEW REGISTERS";
       break;
     case VIEW_DATA_REG:
       header = "REGISTERS";
@@ -3419,7 +3485,10 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case SELECT_CUT_COPY:
       contents = loadInstructions(active_prog);
       break;
-      
+    case ACTIVE_FRAMES:
+      contents.add( newLine("Tool: ", Integer.toString(activeToolFrame + 1)) );
+      contents.add( newLine("User: ", Integer.toString(activeUserFrame + 1)) );
+      break;
     //View frame details
     case TOOL_FRAME_DETAIL:
     case THREE_POINT_TOOL:
@@ -3437,14 +3506,6 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case VIEW_POS_REG_C:
     case VIEW_POS_REG_J:
       contents = loadRegisters();
-      break;
-    case INPUT_POINT_C:
-    case INPUT_POINT_J:
-      contents = loadInputRegisterPointMethod();
-      break;
-    case INPUT_REMARK_DREG:
-    case INPUT_REMARK_PREG:
-      contents = loadInputRegisterCommentMethod();
       break;
   }
   
@@ -3527,10 +3588,6 @@ public ArrayList<String> getOptions(Screen mode){
     case SELECT_COMMENT:
       options.add("Select lines to comment/uncomment.");
       break;
-    case ACTIVE_FRAMES:
-      options.add("Tool: " + (activeToolFrame + 1));
-      options.add("User: " + (activeUserFrame + 1));
-      break;
       
     //Instruction edit options
     case SET_MV_INSTRUCT_TYPE:
@@ -3584,7 +3641,24 @@ public ArrayList<String> getOptions(Screen mode){
     case PICK_FRAME_MODE:
       options.add("1.Tool Frame");
       options.add("2.User Frame");
-      //options.add("3.Jog Frame");
+      break;
+    case PICK_FRAME_METHOD:
+      Screen previous = previousScreen();
+      
+      if (previous == Screen.TOOL_FRAME_DETAIL || previous == Screen.NAV_TOOL_FRAMES) {
+        contents = loadFrameDetail(CoordFrame.TOOL);
+        
+        options.add("1. Three Point Method");
+        options.add("2. Six Point Method");
+        options.add("3. Direct Entry Method");
+      } else if (previous == Screen.USER_FRAME_DETAIL || previous == Screen.NAV_USER_FRAMES) {
+        contents = loadFrameDetail(CoordFrame.USER);
+        
+        options.add("1. Three Point Method");
+        options.add("2. Four Point Method");
+        options.add("3. Direct Entry Method");
+      }
+      
       break;
     case VIEW_INST_REG:
       options = loadInstructionReg();
@@ -3594,16 +3668,6 @@ public ArrayList<String> getOptions(Screen mode){
       break;
     case NAV_USER_FRAMES:
       options = loadFrames(CoordFrame.USER);
-      break;
-    case TOOL_FRAME_DETAIL:
-      options.add("1. Three Point");
-      options.add("2. Six Point");
-      options.add("3. Direct Entry");
-      break;
-    case USER_FRAME_DETAIL:
-      options.add("1. Three Point");
-      options.add("2. Four Point");
-      options.add("3. Direct Entry");
       break;
     case THREE_POINT_TOOL:
     case THREE_POINT_USER:
@@ -3621,9 +3685,17 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("1. Data Registers");
       options.add("2. Position Registers");
       break;
-    case INPUT_FLOAT:      
+    case SWITCH_PREG:
+      options.add("1. Cartesian");
+      options.add("2. Joint");
+      break;
+    case INPUT_FLOAT:
       options.add("Input register value:");
-      options.add("\0" + workingText);
+      if(workingText.length() == 0) {
+        options.add("\0");
+      } else {
+        options.add(workingText);
+      }
       break;
     case INPUT_POINT_C:
     case INPUT_POINT_J:
@@ -3697,18 +3769,19 @@ public String[] getFunctionLabels(Screen mode){
       // F1, F2, F3
       if(shift == ON) {
         funct[0] = "[Reset]";
-        funct[1] = "";
-        funct[2] = "";
+        funct[1] = "[Method]";
+        funct[2] = "[Switch]";
         funct[3] = "";
         funct[4] = "";
       } else {
         funct[0] = "[Set]";
-        funct[1] = "";
-        funct[2] = "";
+        funct[1] = "[Method]";
+        funct[2] = "[Switch]";
         funct[3] = "";
         funct[4] = "";
       }
       break;
+    case TOOL_FRAME_DETAIL:
     case USER_FRAME_DETAIL:
       // F2
       funct[0] = "";

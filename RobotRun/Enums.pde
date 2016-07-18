@@ -106,7 +106,7 @@ public static enum Screen implements DisplayMode {
   /*
   * Miscelanious screens/ not otherwise categorized
   */
-  PICK_REG_LIST,
+  SWITCH_PREG,
   EDIT_RSTMT,
   USER_FRAME_DETAIL,
   TOOL_FRAME_DETAIL,
