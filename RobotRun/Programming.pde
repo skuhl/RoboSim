@@ -558,18 +558,18 @@ public class RecordScreen implements Runnable{
 
 /* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
 public class Register {
-  public String comment = null;
+  public String remark = null;
   public Float value = null;
 
   public Register(String c, Float v) {
     value = v;
-    comment = c;
+    remark = c;
   }
 }
 
 /* A simple class for a Position Register of the Robot Arm, which holds a point associated with a comment. */
 public class PositionRegister {
-  public String comment = null;
+  public String remark = null;
   public Point point = null;
 
   public PositionRegister() {
@@ -578,6 +578,6 @@ public class PositionRegister {
 
   public PositionRegister(String c, Point p) {
     point = p;
-    comment = c;
+    remark = c;
   }
 }

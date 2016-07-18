@@ -1076,8 +1076,10 @@ public void NUM9() {
 
 public void addNumber(String number) {
   if(mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
-    workingText += number;
-    updateScreen();
+    if(workingText.length() < 16){
+      workingText += number;
+      updateScreen();
+    }
   }
   else if(mode == Screen.SET_MV_INSTRUCT_SPEED) {
     workingText += number;
@@ -1095,20 +1097,12 @@ public void addNumber(String number) {
       // Concatenate the new digit
       contents.get(row_select).set(0, line);
     }
-  } 
-  else if(mode == Screen.INPUT_FLOAT) { 
-    if(workingText.length() < 16) {
-      workingText += number;
-      options.set(2, workingText);
-    }
-  } 
-  else if(mode == Screen.INPUT_REMARK) {
+  }
+  else if(mode == Screen.INPUT_REMARK_DREG) {
     // Replace current entry with a number
     StringBuilder temp = new StringBuilder(workingText);
     temp.setCharAt(col_select, number.charAt(0));
     workingText = temp.toString();
-    
-    updateComment();
   }
   
   updateScreen();
@@ -1135,9 +1129,8 @@ public void PERIOD() {
     
     if(workingText.length() < 16) {
       workingText += ".";
-      options.set(2, workingText);
     }
-  } else if(mode != Screen.INPUT_INTEGER || mode != Screen.INPUT_REMARK) {
+  } else if(mode != Screen.INPUT_INTEGER || mode != Screen.INPUT_REMARK_DREG) {
     workingText += ".";
   }
   
@@ -1235,7 +1228,7 @@ public void up() {
       }
       
       break;
-    case VIEW_REG:
+    case VIEW_DATA_REG:
     case VIEW_POS_REG_J:
     case VIEW_POS_REG_C:
       if(shift == ON) {
@@ -1260,8 +1253,10 @@ public void up() {
     case USER_FRAME_DETAIL:
     case THREE_POINT_USER:
     case THREE_POINT_TOOL:
-    case SIX_POINT_MODE:
     case FOUR_POINT_MODE:
+    case SIX_POINT_MODE:
+    case DIRECT_ENTRY_TOOL:
+    case DIRECT_ENTRY_USER:
     case SET_DO_STATUS:
     case SET_RO_STATUS:
     case DATA_MENU_NAV:
@@ -1275,11 +1270,9 @@ public void up() {
     case ACTIVE_FRAMES:
     case INPUT_POINT_C:
     case INPUT_POINT_J:
-    case DIRECT_ENTRY_TOOL:
-    case DIRECT_ENTRY_USER:
       row_select = max(0, row_select - 1);
       break;
-    case INPUT_REMARK:
+    case INPUT_REMARK_DREG:
       opt_select = max(0, opt_select - 1); 
       // Reset function key states
       for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
@@ -1325,10 +1318,10 @@ public void dn() {
       }
        //<>//
       break;
-    case VIEW_REG:
+    case VIEW_DATA_REG:
     case VIEW_POS_REG_J:
     case VIEW_POS_REG_C:
-      size = (mode == Screen.VIEW_REG) ? REG.length : GPOS_REG.length;
+      size = (mode == Screen.VIEW_DATA_REG) ? REG.length : GPOS_REG.length;
       
       if(shift == ON) {
         active_index = shiftDn(active_prog, size);
@@ -1356,8 +1349,10 @@ public void dn() {
     case USER_FRAME_DETAIL:
     case THREE_POINT_USER:
     case THREE_POINT_TOOL:
-    case SIX_POINT_MODE:
     case FOUR_POINT_MODE:
+    case SIX_POINT_MODE:
+    case DIRECT_ENTRY_TOOL:
+    case DIRECT_ENTRY_USER:
     case SET_DO_STATUS:
     case SET_RO_STATUS:
     case DATA_MENU_NAV:
@@ -1371,11 +1366,9 @@ public void dn() {
     case ACTIVE_FRAMES:
     case INPUT_POINT_C:
     case INPUT_POINT_J:
-    case DIRECT_ENTRY_TOOL:
-    case DIRECT_ENTRY_USER:
       row_select = min(row_select + 1, contents.size() - 1);
       break;
-    case INPUT_REMARK: //<>//
+    case INPUT_REMARK_DREG: //<>//
       opt_select = min(opt_select + 1, options.size() - 1);
       // Reset function key states
       for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
@@ -1385,17 +1378,17 @@ public void dn() {
   updateScreen();
 }
 
-public void lt() { //<>// //<>//
-  switch(mode) { //<>// //<>//
+public void lt() {  //<>//
+  switch(mode) {  //<>//
     case INSTRUCTION_NAV:    
       col_select = max(0, col_select - 1);
       break;
-    case VIEW_REG:
+    case VIEW_DATA_REG:
     case VIEW_POS_REG_J:
     case VIEW_POS_REG_C:
       col_select = max(0, col_select - 1);
       break;
-    case INPUT_REMARK:
+    case INPUT_REMARK_DREG:
       col_select = max(0, col_select - 1);
       // Reset function key states //<>// //<>//
       for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
@@ -1414,8 +1407,6 @@ public void rt() {
       col_select = min(col_select + 1, contents.get(row_select).size() - 1);
       updateScreen();
       break; //<>//
-    case DIRECT_ENTRY_TOOL:
-    case DIRECT_ENTRY_USER:
     case INPUT_POINT_C:
     case INPUT_POINT_J:
       // Delete a digit from the beginning of the number entry
@@ -1446,17 +1437,16 @@ public void rt() {
       }
       
       break;
-    case VIEW_REG:
+    case VIEW_DATA_REG:
     case VIEW_POS_REG_J:
     case VIEW_POS_REG_C:
       col_select = min(col_select + 1, contents.get(row_select).size() - 1);
       break;
-    case INPUT_REMARK:
+    case INPUT_REMARK_DREG:
       if(shift == ON) {
         // Delete key function
         if(workingText.length() > 1) {
           workingText = workingText.substring(1, workingText.length());
-          updateComment();
           col_select = min(col_select, contents.get(row_select).size() - 1);
         }
       } 
@@ -1464,7 +1454,6 @@ public void rt() {
         // Add an insert element ifthe length of the current comment is less than 16
         int len = workingText.length();
         if(len <= 16 && workingText.charAt(len - 1) != '\0') { workingText += '\0'; }
-        updateComment();
         
         col_select = min(col_select + 1, contents.get(row_select).size() - 1);
       }
@@ -1567,10 +1556,10 @@ public void f1() {
       ref_point = (shift == ON) ? null : armModel.getEEPos();
       updateScreen();
       break;
-    case VIEW_REG:
+    case VIEW_DATA_REG:
       if(col_select == 1) {
         // Bring up comment menu
-        loadInputRegisterCommentMethod();
+        nextScreen(Screen.INPUT_REMARK_DREG);
       } else if(col_select == 2) {
         
         // Bring up float input menu
@@ -1593,21 +1582,18 @@ public void f1() {
           saveRobotFaceplatePointIn(armModel, GPOS_REG[active_index]);
         }
       } else {
-        
         if(col_select == 1) {
           // Bring up comment menu
-          loadInputRegisterCommentMethod();
+          nextScreen(Screen.INPUT_REMARK_PREG);
         } else if(col_select >= 2) {
           // Bring up Point editing menu
           nextScreen((mode == (Screen.VIEW_POS_REG_C)) ? Screen.INPUT_POINT_C : Screen.INPUT_POINT_J);
-          loadInputRegisterPointMethod();
         }
       }
       
       break;
-    case INPUT_REMARK:
+    case INPUT_REMARK_DREG:
       inputLetter(0);     
-      updateComment();
       break;
   }
   
@@ -1644,17 +1630,14 @@ public void f2() {
           armModel.resetFrame();
         }
       }
-    
-      loadActiveFrames();
       break;
-    case VIEW_REG:
+    case VIEW_DATA_REG:
     case VIEW_POS_REG_J:
     case VIEW_POS_REG_C:
       nextScreen(Screen.DATA_MENU_NAV);
       break;
-    case INPUT_REMARK:
+    case INPUT_REMARK_DREG:
       inputLetter(1);
-      updateComment();
       break;
   }
 }
@@ -1681,9 +1664,8 @@ public void f3() {
       
       updateInstructions();
       break;
-    case INPUT_REMARK:
+    case INPUT_REMARK_DREG:
       inputLetter(2);
-      updateComment();
       break;
       default:
   }
@@ -1833,9 +1815,8 @@ public void f4() {
   case SELECT_DELETE:
       nextScreen(Screen.CONFIRM_INSTR_DELETE);
       break;
-  case INPUT_REMARK:
+  case INPUT_REMARK_DREG:
     inputLetter(3);
-    updateComment();
     break;
   default:
     break;
@@ -1889,9 +1870,8 @@ public void f5() {
       updateScreen();
       break;
     case CONFIRM_PROG_DELETE:
-      options = new ArrayList<String>();
       opt_select = -1;
-        
+      
       lastScreen();
       updateScreen();
       break;
@@ -1902,9 +1882,8 @@ public void f5() {
     case SELECT_CUT_COPY:
       updateInstructions();
       break;
-    case INPUT_REMARK:
+    case INPUT_REMARK_DREG:
       inputLetter(4);
-      updateComment();
       break;
       
       default:
@@ -1922,7 +1901,7 @@ public void inputLetter(int fIdx){
     }
   }
   
-  StringBuilder temp = new StringBuilder(workingText);
+  StringBuilder temp = new StringBuilder(" " + workingText);
   temp.setCharAt(col_select, newChar);
   workingText = temp.toString();
   // Update and reset the letter states
@@ -2382,7 +2361,7 @@ public void ENTER() {
     case DATA_MENU_NAV:      
       if(opt_select == 0) {
         // Register Menu
-        nextScreen(Screen.VIEW_REG);
+        nextScreen(Screen.VIEW_DATA_REG);
       } else if(opt_select == 1) {
         nextScreen(Screen.VIEW_POS_REG_C);
       }
@@ -2421,10 +2400,10 @@ public void ENTER() {
       
       lastScreen();
       break;
-    case VIEW_REG:
+    case VIEW_DATA_REG:
       if(col_select == 1) {
         // Bring up comment menu
-        loadInputRegisterCommentMethod();
+        nextScreen(Screen.INPUT_REMARK_DREG);
       } else if(col_select == 2) {
         
         // Bring up float input menu
@@ -2434,7 +2413,7 @@ public void ENTER() {
           workingText = "";
         }
         
-        loadInputRegisterValueMethod();
+        nextScreen(Screen.INPUT_FLOAT);
       }
       
       break;
@@ -2442,11 +2421,10 @@ public void ENTER() {
     case VIEW_POS_REG_C:   
       if(col_select == 1) {
         // Bring up comment menu
-        loadInputRegisterCommentMethod();
+        nextScreen(Screen.INPUT_REMARK_PREG);
       } else if(col_select >= 2) {
         // Bring up Register editing menu
         nextScreen((mode == (Screen.VIEW_POS_REG_C)) ? Screen.INPUT_POINT_C : Screen.INPUT_POINT_J);
-        loadInputRegisterPointMethod();
       }
       
       break;
@@ -2454,15 +2432,15 @@ public void ENTER() {
     case INPUT_POINT_J:
       createPoint();      
       break;
-    case INPUT_REMARK:
+    case INPUT_REMARK_DREG:
       if(workingText.charAt(  workingText.length() - 1  ) == '\0') {
         workingText = workingText.substring(0, workingText.length() - 1);
       }
       // Save the inputted comment to the selected register
-      if(display_stack.peek() == Screen.VIEW_REG) {
-        REG[active_index].comment = workingText;
+      if(display_stack.peek() == Screen.VIEW_DATA_REG) {
+        REG[active_index].remark = workingText;
       } else if(display_stack.peek() == Screen.VIEW_POS_REG_J || display_stack.peek() == Screen.VIEW_POS_REG_C) {
-        GPOS_REG[active_index].comment = workingText;
+        GPOS_REG[active_index].remark = workingText;
       } else {
         // Invalid envocation of the INPUT_COMMENT_* modes
         mu();
@@ -2480,13 +2458,9 @@ public void ENTER() {
 
 public void ITEM() {
   if(mode == Screen.INSTRUCTION_NAV) {
-    options = new ArrayList<String>();
-    options.add("Use number keys to enter line number to jump to");
-    workingText = "";
-    options.add("\0");
-    nextScreen(Screen.JUMP_TO_LINE);
     opt_select = 0;
-    updateScreen();
+    workingText = "";
+    nextScreen(Screen.JUMP_TO_LINE);
   }
 }
 
@@ -2495,11 +2469,9 @@ public void BKSPC() {
     // Functions as a backspace key
     if(workingText.length() > 1) {
       workingText = workingText.substring(0, workingText.length() - 1);
-      options.set(2, workingText);
     } 
     else {
       workingText = "";
-      options.set(2, "\0");
     }
     
   } else if(mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
@@ -2513,7 +2485,7 @@ public void BKSPC() {
         contents.get(row_select).set(0, line.substring(0, line.length() - 1));
       }
     }
-  } else if(mode == Screen.INPUT_REMARK) {
+  } else if(mode == Screen.INPUT_REMARK_DREG) {
     // Backspace function
     if(workingText.length() > 1) {
       // ifan insert space exists, preserve it
@@ -2524,7 +2496,6 @@ public void BKSPC() {
         workingText = workingText.substring(0, workingText.length() - 1);
       }
       
-      updateComment();
       col_select = min(col_select, contents.get(row_select).size() - 1);
     }
     
@@ -3358,7 +3329,7 @@ public String getHeader(Screen mode){
       header = "DIRECT ENTRY METHOD";
       break;
     case DATA_MENU_NAV:
-      if(display_stack.peek() == Screen.VIEW_REG) {
+      if(display_stack.peek() == Screen.VIEW_DATA_REG) {
         header = "REGISTERS";
       } else if(display_stack.peek() == Screen.VIEW_POS_REG_J || display_stack.peek() == Screen.VIEW_POS_REG_C) {
         header = "POSITON REGISTERS";
@@ -3366,7 +3337,7 @@ public String getHeader(Screen mode){
         header = "VIEW REGISTERS";
       }
       break;
-    case VIEW_REG:
+    case VIEW_DATA_REG:
       header = "REGISTERS";
       break;
     case VIEW_POS_REG_J:
@@ -3374,7 +3345,7 @@ public String getHeader(Screen mode){
       header = "POSTION REGISTERS";
       break;
     case INPUT_FLOAT:
-      if(display_stack.peek() == Screen.VIEW_REG) {
+      if(display_stack.peek() == Screen.VIEW_DATA_REG) {
         header = "REGISTERS";
       }
       else{
@@ -3386,9 +3357,9 @@ public String getHeader(Screen mode){
       if(display_stack.peek() == Screen.VIEW_POS_REG_J || display_stack.peek() == Screen.VIEW_POS_REG_C) {
         header = "POSITION REGISTER: ";
         
-        if(mode != Screen.INPUT_REMARK && GPOS_REG[active_index].comment != null) {
+        if(mode != Screen.INPUT_REMARK_DREG && GPOS_REG[active_index].remark != null) {
           // Show comment if it exists
-          header += GPOS_REG[active_index].comment;
+          header += GPOS_REG[active_index].remark;
         } 
         else {
           header += active_index;
@@ -3398,16 +3369,11 @@ public String getHeader(Screen mode){
         header = null;
       }
       break;
-    case INPUT_REMARK:
-      if(display_stack.peek() == Screen.VIEW_REG) {
-        header = String.format("Enter a name for R[%d]", active_index);
-      } 
-      else if(display_stack.peek() == Screen.VIEW_POS_REG_J || display_stack.peek() == Screen.VIEW_POS_REG_C) {
-        header = String.format("Enter a name for PR[%d]", active_index);
-      }
-      else {
-        header = null;
-      }
+    case INPUT_REMARK_DREG:
+      header = String.format("Enter a name for R[%d]", active_index);
+      break;
+    case INPUT_REMARK_PREG:
+      header = String.format("Enter a name for PR[%d]", active_index);
       break;
     default:
       header = null;
@@ -3438,21 +3404,27 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case TOOL_FRAME_DETAIL:
     case THREE_POINT_TOOL:
     case SIX_POINT_MODE:
-    case DIRECT_ENTRY_TOOL:
       contents = loadFrameDetail(CoordFrame.TOOL);
       break;
     case USER_FRAME_DETAIL:
     case THREE_POINT_USER:
     case FOUR_POINT_MODE:
-    case DIRECT_ENTRY_USER:
       contents = loadFrameDetail(CoordFrame.USER);
       break;
-    
+      
     //View registers
-    case VIEW_REG:
+    case VIEW_DATA_REG:
     case VIEW_POS_REG_C:
     case VIEW_POS_REG_J:
       contents = loadRegisters();
+      break;
+    case INPUT_POINT_C:
+    case INPUT_POINT_J:
+      contents = loadInputRegisterPointMethod();
+      break;
+    case INPUT_REMARK_DREG:
+    case INPUT_REMARK_PREG:
+      contents = loadInputRegisterCommentMethod();
       break;
   }
   
@@ -3535,7 +3507,9 @@ public ArrayList<String> getOptions(Screen mode){
     case SELECT_COM_UNCOM:
       options.add("Select lines to comment/uncomment.");
       break;
-    case INPUT_REMARK:
+    case ACTIVE_FRAMES:
+      options.add("Tool: " + (activeToolFrame + 1));
+      options.add("User: " + (activeUserFrame + 1));
       break;
       
     //Instruction edit options
@@ -3565,7 +3539,7 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("9 Interconnect (NA)" );
       break;
     case SET_FRAME_INSTRUCTION_IDX: 
-      options.add("Select the index of the frame to use");
+      options.add("Select the index of the frame to use:");
       options.add("\0" + workingText);
       break;
     case SET_DO_BRACKET:
@@ -3617,18 +3591,41 @@ public ArrayList<String> getOptions(Screen mode){
     case SIX_POINT_MODE:
       options = loadPointList();
       break;
+    case DIRECT_ENTRY_USER:
+    case DIRECT_ENTRY_TOOL:
+      options = loadDirectEntryMethod();
+      break;
       
     //Data navigation and edit menus
     case DATA_MENU_NAV:
       options.add("1. Data Registers");
       options.add("2. Position Registers");
       break;
-    case VIEW_REG:
-    case VIEW_POS_REG_J:
-    case VIEW_POS_REG_C:
     case INPUT_FLOAT:
+      if(REG[active_index].value != null) {
+        workingText = Float.toString(REG[active_index].value);
+      } 
+      
+      options.add("Input register value:");
+      options.add("\0" + workingText);
+      break;
     case INPUT_POINT_C:
     case INPUT_POINT_J:
+      break;
+    case INPUT_REMARK_DREG:
+      options.add("1. Uppercase");
+      options.add("1. Lowercase");
+      break;
+    case EDIT_RSTMT:
+      options.add("Register");
+      options.add("Position Register Point");
+      options.add("Position Register Value");
+      break;
+    
+    //Misc functions
+    case JUMP_TO_LINE:
+      options.add("Use number keys to enter line number to jump to");
+      options.add("\0" + workingText);
       break;
   }
 
@@ -3748,7 +3745,7 @@ public String[] getFunctionLabels(Screen mode){
       funct[3] = "";
       funct[4] = "";
      break;
-    case VIEW_REG:
+    case VIEW_DATA_REG:
       // F2
       funct[0] = "";
       funct[1] = "[Switch]";
@@ -3756,7 +3753,7 @@ public String[] getFunctionLabels(Screen mode){
       funct[3] = "";
       funct[4] = "";
       break;
-    case INPUT_REMARK:
+    case INPUT_REMARK_DREG:
       if(remarkUpper) {
         // F1 - F5
         funct[0] = "[ABCDEF]";
@@ -3840,6 +3837,100 @@ public void clearNums() {
   index_nums = 1000;
 }
 
+ArrayList<String> loadPrograms() {
+  ArrayList<String> progs = new ArrayList<String>();
+  int size = programs.size();
+  active_instr = 0;
+   
+  int start = text_render_start;
+  int end = min(start + ITEMS_TO_SHOW, size);
+  
+  for(int i = start; i < end; i += 1) {
+    progs.add(programs.get(i).getName());
+  }
+  
+  return progs;
+}
+
+// prepare for displaying motion instructions on screen
+public ArrayList<ArrayList<String>> loadInstructions(int programID) {
+  ArrayList<ArrayList<String>> instruct_list = new ArrayList<ArrayList<String>>();
+  if(programs.size() == 0) return instruct_list;
+  
+  Program p = programs.get(programID);
+  int size = p.getInstructions().size();
+  int start = text_render_start;
+  int end = min(start + ITEMS_TO_SHOW, size);
+  
+  for(int i = start ; i < end; i+= 1) {
+    Instruction instr = p.getInstructions().get(i);
+    ArrayList<String> m = new ArrayList<String>();
+    
+    if(instr.isCommented())
+      m.add("//"+Integer.toString(i+1) + ")");
+    else
+      m.add(Integer.toString(i+1) + ")");
+    
+    if(instr instanceof MotionInstruction) {
+      MotionInstruction a = (MotionInstruction)instr;
+      
+      if(armModel.getEEPos().dist(a.getVector(p).pos) < liveSpeed) {
+        m.add("@");
+      }
+      else {
+        m.add("\0");
+      }
+      
+      // add motion type
+      switch(a.getMotionType()) {
+        case MTYPE_JOINT:
+          m.add("J");
+          break;
+        case MTYPE_LINEAR:
+          m.add("L");
+          break;
+        case MTYPE_CIRCULAR:
+          m.add("C");
+          break; 
+      }
+      
+      // load register no, speed and termination type
+      if(a.getGlobal()) m.add("PR[");
+      else m.add("P[");
+      
+      m.add((a.getPosition() + 1) +"]");
+      
+      if(a.getMotionType() == MTYPE_JOINT) m.add((a.getSpeed() * 100) + "%");
+      else m.add((int)(a.getSpeed()) + "mm/s");
+      
+      if(a.getTermination() == 0) m.add("FINE");
+      else m.add("CONT" + (int)(a.getTermination()*100));
+      
+      instruct_list.add(m);
+    } 
+    else{
+      m.add(instr.toString());
+      instruct_list.add(m);
+    }
+  }
+  
+  return instruct_list;
+}
+
+/**
+ * Deals with updating the UI after confirming/canceling a deletion
+ */
+public void updateInstructions() {
+  Program prog = programs.get(active_prog);
+  
+  active_instr = min(active_instr,  prog.getInstructions().size() - 1);
+  row_select = min(active_instr, ITEMS_TO_SHOW - 1);
+  col_select = 0;
+  text_render_start = active_instr - row_select;
+  
+  lastScreen();
+}
+
 public ArrayList<String> loadInstructEdit(Screen mode){
   ArrayList<String> edit = new ArrayList<String>();
   
@@ -3880,19 +3971,40 @@ public ArrayList<String> loadInstructEdit(Screen mode){
   return edit;
 }
 
-ArrayList<String> loadPrograms() {
-  ArrayList<String> progs = new ArrayList<String>();
-  int size = programs.size();
-  active_instr = 0;
-   
-  int start = text_render_start;
-  int end = min(start + ITEMS_TO_SHOW, size);
-  
-  for(int i = start; i < end; i += 1) {
-    progs.add(programs.get(i).getName());
+public ArrayList<String> loadInstructionReg(){
+  ArrayList<String> instReg = new ArrayList<String>();
+  // show register contents if you're highlighting a register
+  Instruction ins = programs.get(active_prog).getInstructions().get(active_instr);
+  if(ins instanceof MotionInstruction) {
+    MotionInstruction castIns = (MotionInstruction)ins;
+    Point p = castIns.getVector(programs.get(active_prog));
+    
+    instReg.add("Data of the point in this register (press ENTER to exit):");
+    
+    if(castIns.getMotionType() != MTYPE_JOINT) {
+      // Show the vector in terms of the World Frame
+      PVector wPos = convertNativeToWorld(p.pos);
+      instReg.add( String.format("X: %5.4f  Y: %5.4f  Z: %5.4f", wPos.x, wPos.y, wPos.z) );
+      PVector wpr = quatToEuler(p.ori);
+      // Show angles in degrees
+      instReg.add( String.format("W: %5.4f  P: %5.4f  R: %5.4f", 
+      (wpr.x * RAD_TO_DEG), 
+      (wpr.y * RAD_TO_DEG), 
+      (wpr.z * RAD_TO_DEG)));
+    }
+    else {  
+      instReg.add( String.format("J1: %5.4f  J2: %5.4f  J3: %5.4f", 
+      (p.joints[0] * RAD_TO_DEG), 
+      (p.joints[1] * RAD_TO_DEG), 
+      (p.joints[2] * RAD_TO_DEG)));
+      instReg.add( String.format("J4: %5.4f  J5: %5.4f  J6: %5.4f", 
+      (p.joints[3] * RAD_TO_DEG), 
+      (p.joints[4] * RAD_TO_DEG),
+      (p.joints[5] * RAD_TO_DEG)));
+    }
   }
   
-  return progs;
+  return instReg;
 }
 
 // clears the array of selected lines
@@ -3931,24 +4043,6 @@ public void newInstruction(boolean overwrite){
   } else {
     prog.addInstruction(insert);
   }
-}
-
-/**
- * TODO comment
- */
-public void loadRegStmtEditMenu(boolean isResultField) {
-  options = new ArrayList<String>();
-  
-  options.add("Register");
-  options.add("Position Register Point");
-  options.add("Position Register Value");
-  
-  if (!isResultField) {
-    // Unavailable when editing the resulting register field
-    options.add("Constant");
-  }
-  
-  nextScreen(Screen.EDIT_RSTMT);
 }
 
 /**
@@ -4053,6 +4147,46 @@ public ArrayList<String> loadPointList() {
   return points;
 }
 
+/**
+ * Transitions to the Direct Entry menu, which resembles
+ * the Frame Detail menu, however, the user is allowed
+ * to input values for the x, y, z, w, p, r fields.
+ */
+public ArrayList<String> loadDirectEntryMethod() {
+  if (teachFrame != null) {
+    ArrayList<String> frame = new ArrayList<String>();
+    
+    PVector xyz = new PVector(0f, 0f, 0f);
+    if (teachFrame.DEOrigin != null) {
+      
+      if (teachFrame instanceof UserFrame) {
+        // Display User Frame Origin in world frame reference
+        xyz = convertNativeToWorld( teachFrame.DEOrigin );
+      } else {
+        xyz = teachFrame.DEOrigin;
+      }
+    }
+    
+    PVector wpr = new PVector(0f, 0f, 0f);
+    if (teachFrame.DEAxesOffsets != null) {
+      // Display orientation in euler angles
+      wpr = quatToEuler(teachFrame.DEAxesOffsets);
+    }
+    
+    frame.add(String.format("X: %4.3f", xyz.x));
+    frame.add(String.format("Y: %4.3f", xyz.y));
+    frame.add(String.format("Z: %4.3f", xyz.z));
+    frame.add(String.format("W: %4.3f", wpr.x * RAD_TO_DEG));
+    frame.add(String.format("P: %4.3f", wpr.y * RAD_TO_DEG));
+    frame.add(String.format("R: %4.3f", wpr.z * RAD_TO_DEG));
+    
+    return frame; 
+  }
+  
+  println("Error: input frame is null!");
+  return null;
+}
+
 public void createFrame() {
   int method = 0;
     
@@ -4102,9 +4236,6 @@ public void createFrame() {
 }
 
 public void createFrameDirectEntry() {
-  options = new ArrayList<String>();
-  opt_select = -1;
-  
   boolean error = false;
   // User defined x, y, z, w, p, and r values
   float[] inputs = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
@@ -4112,7 +4243,7 @@ public void createFrameDirectEntry() {
   try {
     // Parse each input value
     for(int val = 0; val < inputs.length; ++val) {
-      String str = contents.get(val).get(0);
+      String str = options.get(val);
       
       if(str.length() < 4) {
         // No value entered
@@ -4162,7 +4293,7 @@ public void createFrameDirectEntry() {
       if(DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
       
       // Set New Frame
-      if(mode == Screen.THREE_POINT_TOOL || mode == Screen.SIX_POINT_MODE) {
+      if(mode == Screen.DIRECT_ENTRY_TOOL) {
         // Update the current frame of the Robot Arm
         activeToolFrame = curFrameIdx;
         armModel.currentFrame = toolFrames[curFrameIdx].getNativeAxes();
@@ -4170,7 +4301,7 @@ public void createFrameDirectEntry() {
         
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         updateScreen();
-      } else if(mode == Screen.THREE_POINT_USER || mode == Screen.FOUR_POINT_MODE) {
+      } else if(mode == Screen.DIRECT_ENTRY_USER) {
         // Update the current frame of the Robot Arm
         activeUserFrame = curFrameIdx;
         armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
@@ -4178,9 +4309,7 @@ public void createFrameDirectEntry() {
         
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         updateScreen();
-      } else {
-        mu();
-      }
+      } 
     }
   }
 }
@@ -4255,48 +4384,6 @@ public void createPoint(){
 }
 
 /**
- * Transitions to the Direct Entry menu, which resembles
- * the Frame Detail menu, however, the user is allowed
- * to input values for the x, y, z, w, p, r fields.
- */
-public void loadDirectEntryMethod() {
-  if (teachFrame != null) {
-    contents = new ArrayList<ArrayList<String>>();
-    
-    PVector xyz = new PVector(0f, 0f, 0f);
-    if (teachFrame.DEOrigin != null) {
-      
-      if (teachFrame instanceof UserFrame) {
-        // Display User Frame Origin in world frame reference
-        xyz = convertNativeToWorld( teachFrame.DEOrigin );
-      } else {
-        xyz = teachFrame.DEOrigin;
-      }
-    }
-    
-    PVector wpr = new PVector(0f, 0f, 0f);
-    if (teachFrame.DEAxesOffsets != null) {
-      // Display orientation in euler angles
-      wpr = quatToEuler(teachFrame.DEAxesOffsets);
-    }
-    
-    contents.add( newLine(String.format("X: %4.3f", xyz.x)) );
-    contents.add( newLine(String.format("Y: %4.3f", xyz.y)) );
-    contents.add( newLine(String.format("Z: %4.3f", xyz.z)) );
-    contents.add( newLine(String.format("W: %4.3f", wpr.x * RAD_TO_DEG)) );
-    contents.add( newLine(String.format("P: %4.3f", wpr.y * RAD_TO_DEG)) );
-    contents.add( newLine(String.format("R: %4.3f", wpr.z * RAD_TO_DEG)) );
-    
-    // Defines the length of a line's prefix
-    opt_select = 3;
-    row_select = 0;
-    col_select = 0;
-  
-    updateScreen();
-  }
-}
-
-/**
  * Displays the list of Registers in mode VIEW_REG or the Position Registers
  * for modes VIEW_REG_J or VIEW_REG_C. In mode VIEW_REG_J the joint angles
  * associated with the Point are displayed and the Cartesian values are
@@ -4324,21 +4411,21 @@ public ArrayList<ArrayList<String>> loadRegisters() {
     
     String lbl;
     
-    if(mode == Screen.VIEW_REG) {
-      lbl = (REG[idx].comment == null) ? "" : REG[idx].comment;
+    if(mode == Screen.VIEW_DATA_REG) {
+      lbl = (REG[idx].remark == null) ? "" : REG[idx].remark;
     } else {
-      lbl  = (GPOS_REG[idx].comment == null) ? "" : GPOS_REG[idx].comment;
+      lbl  = (GPOS_REG[idx].remark == null) ? "" : GPOS_REG[idx].remark;
     }
     
     int buffer = 16 - lbl.length();
     while(buffer-- > 0) { lbl += " "; }
     
     // Display the comment asscoiated with a specific Register entry
-    String regLbl = String.format("%s[%d:%s%s]", (mode == Screen.VIEW_REG) ? "R" : "PR", (idx + 1), spaces, lbl);
+    String regLbl = String.format("%s[%d:%s%s]", (mode == Screen.VIEW_DATA_REG) ? "R" : "PR", (idx + 1), spaces, lbl);
     // Display Register value (* ifuninitialized)
     String regEntry = "*";
     
-    if(mode == Screen.VIEW_REG) {
+    if(mode == Screen.VIEW_DATA_REG) {
       if(REG[idx].value != null) {
         // Dispaly Register value
         regEntry = String.format("%4.3f", REG[idx].value);
@@ -4376,37 +4463,13 @@ public ArrayList<ArrayList<String>> loadRegisters() {
 }
 
 /**
- * This method transitions to the INPUT_FLOAT mode, where the user will
- * be prompted to innput a floating-point value to be inserted into the
- * currently selected register from the VIEW_REG mode.
- * The value is inputted using the numpad on the vitual Pendant along
- * with the ',' and '-' buttons. In the INPUT_FLOAT mode, the BKSPC
- * button functions as the backspace key and the RIGHT button will
- * function like the delete key when shift is set to ON.
- */
-public void loadInputRegisterValueMethod() {
-  options = new ArrayList<String>();
-  options.add("Input a value using the keypad");
-  options.add("\0");
-  
-  if(REG[active_index].value != null) {
-    options.add( Float.toString(REG[active_index].value) );
-  } else {
-    options.add(workingText);
-  }
-  
-  opt_select = 0;
-}
-
-/**
  * Saves the given Robot Model's current faceplate position and orientaion as
  * well as its current joint angles into the given Position Register.
  * 
  * @param model The Robot model, of which to save the Faceplate point 
  * @param pReg  The Position Register, in which to save the point
  */
-public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
-    
+public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) { 
   pushMatrix();
   resetMatrix();
   // Get the position of the Robot's faceplate
@@ -4422,9 +4485,6 @@ public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
   pt.joints = jointAngles;
   
   pReg.point = pt;
-  
-  loadRegisters();
-  updateScreen();
 }
 
 /**
@@ -4434,8 +4494,8 @@ public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
  * Z, W, P, R or J1 - J6 for INPUT_POINT_C or INPUT_POINT_J respectively).
  * The input method is similar to inputting the value in DIRECT_ENTRY mode.
  */
-public void loadInputRegisterPointMethod() {
-  contents = new ArrayList<ArrayList<String>>();
+public ArrayList<ArrayList<String>> loadInputRegisterPointMethod() {
+  ArrayList<ArrayList<String>> register = new ArrayList<ArrayList<String>>();
   
   if(active_index >= 0 && active_index < GPOS_REG.length) {
     
@@ -4443,16 +4503,16 @@ public void loadInputRegisterPointMethod() {
       // Initialize valeus to zero ifthe entry is null
       if(mode == Screen.INPUT_POINT_C) {
         
-        contents.add( newLine("X: 0.0") );
-        contents.add( newLine("Y: 0.0") );
-        contents.add( newLine("Z: 0.0") );
-        contents.add( newLine("W: 0.0") );
-        contents.add( newLine("P: 0.0") );
-        contents.add( newLine("R: 0.0") );
+        register.add( newLine("X: 0.0") );
+        register.add( newLine("Y: 0.0") );
+        register.add( newLine("Z: 0.0") );
+        register.add( newLine("W: 0.0") );
+        register.add( newLine("P: 0.0") );
+        register.add( newLine("R: 0.0") );
       } else if(mode == Screen.INPUT_POINT_J) {
         
         for(int idx = 1; idx <= 6; ++idx) {
-          contents.add( newLine(String.format("J%d: 0.0", idx)) );
+          register.add( newLine(String.format("J%d: 0.0", idx)) );
         }
       }
     } else {
@@ -4461,16 +4521,14 @@ public void loadInputRegisterPointMethod() {
       : GPOS_REG[active_index].point.toJointStringArray();
       
       for(String entry : entries) {
-        contents.add( newLine(entry) );
+        register.add( newLine(entry) );
       }
     }
     
+    return register;
   }
   
-  // Defines the length of a line's prefix
-  opt_select = (mode == Screen.INPUT_POINT_J) ? 4 : 3;
-  row_select = 0;
-  col_select = 0;
+  return null;
 }
 
 /**
@@ -4486,39 +4544,36 @@ public void loadInputRegisterPointMethod() {
  * betweeen upper case and lower case (indicated in the options menu by the
  * highlighted row).
  */
-public void loadInputRegisterCommentMethod() {
-  contents = new ArrayList<ArrayList<String>>();
-  options = new ArrayList<String>();
+public ArrayList<ArrayList<String>> loadInputRegisterCommentMethod() {
+  ArrayList<ArrayList<String>> remark = new ArrayList<ArrayList<String>>();
   
-  workingText = "";
   // Load the current comment for the selected register ifit exists
-  if(mode == Screen.VIEW_REG) {
-    if(active_index >= 0 && active_index < REG.length && REG[active_index].comment != null) {
-      workingText = REG[active_index].comment;
+  if(mode == Screen.INPUT_REMARK_DREG) {
+    if(active_index >= 0 && active_index < REG.length && REG[active_index].remark != null) {
+      workingText = REG[active_index].remark;
     }
-  } else if((mode == Screen.VIEW_POS_REG_J || mode == Screen.VIEW_POS_REG_C) && GPOS_REG[active_index].comment != null) {
+  } else if(mode == Screen.INPUT_REMARK_PREG && GPOS_REG[active_index].remark != null) {
     if(active_index >= 0 && active_index < GPOS_REG.length) {
-      workingText = GPOS_REG[active_index].comment;
+      workingText = GPOS_REG[active_index].remark;
     }
   }
   
-  contents.add( newLine("\0") );
-  contents.add( newLine("\0") );
-  updateComment();
+  ArrayList<String> line = new ArrayList<String>();
+  // Give each letter in the name a separate column
+  for(int idx = 0; idx < workingText.length() && idx < 16; idx += 1) {
+    line.add( Character.toString(workingText.charAt(idx)) );
+  }
   
-  options.add("1. Uppercase");
-  options.add("1. Lowercase");
-  opt_select = 0;
+  remark.add(line);
   
-  // Navigate options menu to switch the function keys functionsda
+  // Switch between uppercase and lowercase input
   if(opt_select == 0) {
     remarkUpper = true;
   } else if(opt_select == 1) {
     remarkUpper = false;
   }
   
-  row_select = 1;
-  col_select = 0;
+  return remark;
 }
 
 /**
@@ -4527,144 +4582,14 @@ public void loadInputRegisterCommentMethod() {
  * third row. This function is used to update the comment display
  * whenever the user modifies the comment in the INPUT COMMENT mode.
  */
-public void updateComment() {
-  
+public ArrayList<String> updateRemark() {
   ArrayList<String> line = new ArrayList<String>();
   // Give each letter in the name a separate column
   for(int idx = 0; idx < workingText.length() && idx < 16; ++idx) {
     line.add( Character.toString(workingText.charAt(idx)) );
   }
   
-  contents.set(1, line);
-}
-
-// prepare for displaying motion instructions on screen
-public ArrayList<ArrayList<String>> loadInstructions(int programID) {
-  ArrayList<ArrayList<String>> instruct_list = new ArrayList<ArrayList<String>>();
-  if(programs.size() == 0) return instruct_list;
-  
-  Program p = programs.get(programID);
-  int size = p.getInstructions().size();
-  int start = text_render_start;
-  int end = min(start + ITEMS_TO_SHOW, size);
-  
-  for(int i = start ; i < end; i+= 1) {
-    Instruction instr = p.getInstructions().get(i);
-    ArrayList<String> m = new ArrayList<String>();
-    
-    if(instr.isCommented())
-      m.add("//"+Integer.toString(i+1) + ")");
-    else
-      m.add(Integer.toString(i+1) + ")");
-    
-    if(instr instanceof MotionInstruction) {
-      MotionInstruction a = (MotionInstruction)instr;
-      
-      if(armModel.getEEPos().dist(a.getVector(p).pos) < liveSpeed) {
-        m.add("@");
-      }
-      else {
-        m.add("\0");
-      }
-      
-      // add motion type
-      switch(a.getMotionType()) {
-        case MTYPE_JOINT:
-          m.add("J");
-          break;
-        case MTYPE_LINEAR:
-          m.add("L");
-          break;
-        case MTYPE_CIRCULAR:
-          m.add("C");
-          break; 
-      }
-      
-      // load register no, speed and termination type
-      if(a.getGlobal()) m.add("PR[");
-      else m.add("P[");
-      
-      m.add((a.getPosition() + 1) +"]");
-      
-      if(a.getMotionType() == MTYPE_JOINT) m.add((a.getSpeed() * 100) + "%");
-      else m.add((int)(a.getSpeed()) + "mm/s");
-      
-      if(a.getTermination() == 0) m.add("FINE");
-      else m.add("CONT" + (int)(a.getTermination()*100));
-      
-      instruct_list.add(m);
-    } 
-    else{
-      m.add(instr.toString());
-      instruct_list.add(m);
-    }
-  }
-  
-  return instruct_list;
-}
-
-/**
- * Deals with updating the UI after confirming/canceling a deletion
- */
-public void updateInstructions() {
-  Program prog = programs.get(active_prog);
-  
-  active_instr = min(active_instr,  prog.getInstructions().size() - 1);
-  row_select = min(active_instr, ITEMS_TO_SHOW - 1);
-  col_select = 0;
-  text_render_start = active_instr - row_select;
-  
-  lastScreen();
-}
-
-/* Transitions to the active frames menu, which display
- * the label for each Frame set (Tool or User) as well
- * as the index of the currently active frame for each
- * respective frame set. */
-void loadActiveFrames() {
-  contents = new ArrayList<ArrayList<String>>();
-  row_select = 0;
-  options = new ArrayList<String>();
-  opt_select = -1;
-  
-  contents.add( newLine("Tool: " + (activeToolFrame + 1)) );
-  contents.add( newLine("User: " + (activeUserFrame + 1)) );
-}
-
-public ArrayList<String> loadInstructionReg(){
-  ArrayList<String> instReg = new ArrayList<String>();
-  // show register contents if you're highlighting a register
-  Instruction ins = programs.get(active_prog).getInstructions().get(active_instr);
-  if(ins instanceof MotionInstruction) {
-    MotionInstruction castIns = (MotionInstruction)ins;
-    Point p = castIns.getVector(programs.get(active_prog));
-    
-    instReg.add("Data of the point in this register (press ENTER to exit):");
-    
-    if(castIns.getMotionType() != MTYPE_JOINT) {
-      // Show the vector in terms of the World Frame
-      PVector wPos = convertNativeToWorld(p.pos);
-      instReg.add( String.format("X: %5.4f  Y: %5.4f  Z: %5.4f", wPos.x, wPos.y, wPos.z) );
-      PVector wpr = quatToEuler(p.ori);
-      // Show angles in degrees
-      instReg.add( String.format("W: %5.4f  P: %5.4f  R: %5.4f", 
-      (wpr.x * RAD_TO_DEG), 
-      (wpr.y * RAD_TO_DEG), 
-      (wpr.z * RAD_TO_DEG)));
-    }
-    else {  
-      instReg.add( String.format("J1: %5.4f  J2: %5.4f  J3: %5.4f", 
-      (p.joints[0] * RAD_TO_DEG), 
-      (p.joints[1] * RAD_TO_DEG), 
-      (p.joints[2] * RAD_TO_DEG)));
-      instReg.add( String.format("J4: %5.4f  J5: %5.4f  J6: %5.4f", 
-      (p.joints[3] * RAD_TO_DEG), 
-      (p.joints[4] * RAD_TO_DEG),
-      (p.joints[5] * RAD_TO_DEG)));
-    }
-  }
-  
-  return instReg;
+  return line;
 }
 
 /**

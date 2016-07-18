@@ -751,12 +751,12 @@ public int saveRegisterBytes(File dest) {
     
     // Count the number of initialized entries and save their indices
     for(int idx = 0; idx < REG.length; ++idx) {
-      if(REG[idx].value != null || REG[idx].comment != null) {
+      if(REG[idx].value != null || REG[idx].remark != null) {
         initializedR.add(idx);
         ++numOfREntries;
       }
       
-      if(GPOS_REG[idx].point != null || GPOS_REG[idx].comment != null) {
+      if(GPOS_REG[idx].point != null || GPOS_REG[idx].remark != null) {
         initializedPR.add(idx);
         ++numOfPREntries;
       }
@@ -774,10 +774,10 @@ public int saveRegisterBytes(File dest) {
         dataOut.writeFloat(REG[idx].value);
       }
       
-      if(REG[idx].comment == null) {
+      if(REG[idx].remark == null) {
         dataOut.writeUTF("");
       } else {
-        dataOut.writeUTF(REG[idx].comment);
+        dataOut.writeUTF(REG[idx].remark);
       }
     }
     
@@ -787,10 +787,10 @@ public int saveRegisterBytes(File dest) {
       dataOut.writeInt(idx);
       savePoint(GPOS_REG[idx].point, dataOut);
       
-      if(GPOS_REG[idx].comment == null) {
+      if(GPOS_REG[idx].remark == null) {
         dataOut.writeUTF("");
       } else {
-        dataOut.writeUTF(GPOS_REG[idx].comment);
+        dataOut.writeUTF(GPOS_REG[idx].remark);
       }
     }
     

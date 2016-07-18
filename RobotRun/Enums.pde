@@ -68,7 +68,8 @@ public static enum Screen implements DisplayMode {
   * Screens involving the entry of text, either via keyboard input or function buttons
   */
   FIND_REPL(ScreenType.TYPE_TEXT_ENTRY),
-  INPUT_REMARK(ScreenType.TYPE_TEXT_ENTRY),
+  INPUT_REMARK_DREG(ScreenType.TYPE_TEXT_ENTRY),
+  INPUT_REMARK_PREG(ScreenType.TYPE_TEXT_ENTRY),
   NEW_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
   
   /*
@@ -77,6 +78,7 @@ public static enum Screen implements DisplayMode {
   */
   CONFIRM_INSERT(ScreenType.TYPE_NUM_ENTRY),
   INPUT_INTEGER(ScreenType.TYPE_NUM_ENTRY),
+  INPUT_FLOAT(ScreenType.TYPE_NUM_ENTRY),
   JUMP_TO_LINE(ScreenType.TYPE_NUM_ENTRY), 
   SET_DO_BRACKET(ScreenType.TYPE_NUM_ENTRY),
   SET_FRAME_INSTRUCTION_IDX(ScreenType.TYPE_NUM_ENTRY),
@@ -109,7 +111,6 @@ public static enum Screen implements DisplayMode {
   USER_FRAME_DETAIL,
   TOOL_FRAME_DETAIL,
   INPUT_CONSTANT,
-  INPUT_FLOAT,
   INPUT_OPERATOR,
   INPUT_PRDX,
   INPUT_PRVDX,
@@ -124,7 +125,7 @@ public static enum Screen implements DisplayMode {
   VIEW_POS_REG_C,
   //Joint
   VIEW_POS_REG_J,
-  VIEW_REG;
+  VIEW_DATA_REG;
   
   private final ScreenType type;
   
