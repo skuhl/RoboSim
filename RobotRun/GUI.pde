@@ -36,15 +36,16 @@ String workingTextSuffix;
 boolean remarkUpper;
 boolean speedInPercentage;
 final int ITEMS_TO_SHOW = 6; // how many programs/ instructions to display on screen
-int curFrameIdx = -1;
 
-// Used to keep track a specific point in space
-PVector ref_point;
-// Used to keep track of a Frame that is being taught
+// Index of the current frame (Tool or User) selecting when in the Frame menus
+int curFrameIdx = -1,
+// Indices of currently active frames
+    activeUserFrame = -1,
+    activeToolFrame = -1;
+// The Frame being taught, during a frame teaching process
 Frame teachFrame = null;
-int activeUserFrame = -1;
-int activeJogFrame = -1;
-int activeToolFrame = -1;
+// A point in space; used during the Frame Point Teaching processes
+PVector ref_point;
 
 //variables for keeping track of the last change made to the current program
 Instruction lastInstruct;
@@ -65,7 +66,7 @@ String err = null;
 int row_select = 0; //currently selected display row
 int col_select = 0; //currently selected display column
 int opt_select = 0; //which option is on focus now?
-int text_render_start = 0; //index of the first element in a list to be drawn on screen
+int renderStartIdx = 0; //index of the first element in a list to be drawn on screen
 int active_index = 0; //index of the cursor with respect to the first element on screen
 boolean[] selectedLines; //array whose indecies correspond to currently selected lines
 // how many textlabels have been created for display
@@ -1187,15 +1188,15 @@ public void IO() {
 public void up() {
   switch(mode) {
     case NAV_PROGRAMS:
-      int[] indices = moveUp(active_prog, opt_select, text_render_start, shift);
+      int[] indices = moveUp(active_prog, opt_select, renderStartIdx, shift);
       
       active_prog = indices[0];
       opt_select = indices[1];
-      text_render_start = indices[2];
+      renderStartIdx = indices[2];
       
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nOpt: %d\nProg: %d\nTRS: %d\n\n",
-        opt_select, active_prog, text_render_start);
+        opt_select, active_prog, renderStartIdx);
       }
       
       break;
@@ -1203,30 +1204,30 @@ public void up() {
     case NAV_PROG_INST:
     case SELECT_CUT_COPY:
     case SELECT_DELETE:
-      indices = moveUp(active_instr, row_select, text_render_start, shift);
+      indices = moveUp(active_instr, row_select, renderStartIdx, shift);
       
       active_instr = indices[0];
       row_select = indices[1];
-      text_render_start = indices[2];
+      renderStartIdx = indices[2];
       
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
-        row_select, col_select, active_instr, text_render_start);
+        row_select, col_select, active_instr, renderStartIdx);
       }
       
       break;
     case NAV_DREGS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
-      indices = moveUp(active_index, row_select, text_render_start, shift);
+      indices = moveUp(active_index, row_select, renderStartIdx, shift);
       
       active_index = indices[0];
       row_select = indices[1];
-      text_render_start = indices[2];
+      renderStartIdx = indices[2];
       
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nIdx: %d\nTRS: %d\n\n",
-        row_select, col_select, active_index, text_render_start);
+        row_select, col_select, active_index, renderStartIdx);
       }
       break;
     case MAIN_MENU_NAV:
@@ -1276,15 +1277,15 @@ public void dn() {
   switch(mode) {
     case NAV_PROGRAMS:
       size = programs.size(); //<>//
-      int[] indices = moveDown(active_prog, size, opt_select, text_render_start, shift);
+      int[] indices = moveDown(active_prog, size, opt_select, renderStartIdx, shift);
       
       active_prog = indices[0];
       opt_select = indices[1];
-      text_render_start = indices[2];
+      renderStartIdx = indices[2];
       
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nOpt: %d\nProg: %d\nTRS: %d\n\n",
-        opt_select, active_prog, text_render_start);
+        opt_select, active_prog, renderStartIdx);
       }
       
       break;
@@ -1293,17 +1294,17 @@ public void dn() {
     case SELECT_CUT_COPY:
     case SELECT_DELETE: //<>//
       size = programs.get(active_prog).getInstructions().size();
-      indices = moveDown(active_instr, size, row_select, text_render_start, shift);
+      indices = moveDown(active_instr, size, row_select, renderStartIdx, shift);
       
       active_instr = indices[0];
       row_select = indices[1];
-      text_render_start = indices[2];
+      renderStartIdx = indices[2];
       
       col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
       
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
-        row_select, col_select, active_instr, text_render_start);
+        row_select, col_select, active_instr, renderStartIdx);
       }
        //<>//
       break;
@@ -1311,17 +1312,17 @@ public void dn() {
     case NAV_PREGS_J:
     case NAV_PREGS_C:
       size = (mode == Screen.NAV_DREGS) ? REG.length : GPOS_REG.length;
-      indices = moveDown(active_index, size, row_select, text_render_start, shift);
+      indices = moveDown(active_index, size, row_select, renderStartIdx, shift);
       
       active_index = indices[0];
       row_select = indices[1];
-      text_render_start = indices[2];
+      renderStartIdx = indices[2];
       
       col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
       
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nIdx: %d\nTRS: %d\n\n",
-        row_select, col_select, active_index, text_render_start);
+        row_select, col_select, active_index, renderStartIdx);
       }
       
       break;
@@ -1490,7 +1491,7 @@ public void f1() {
         active_instr = programs.get(active_prog).getInstructions().size() - 1; 
         col_select = 0;
         row_select = min(active_instr, ITEMS_TO_SHOW - 1);
-        text_render_start = active_instr - row_select;
+        renderStartIdx = active_instr - row_select;
       } else {
         nextScreen(Screen.PICK_INSTRUCT);
       }
@@ -1729,7 +1730,7 @@ public void f4() {
         active_prog = programs.size() - 1;
         
         row_select = min(active_prog, ITEMS_TO_SHOW - 1);
-        text_render_start = active_prog - row_select;
+        renderStartIdx = active_prog - row_select;
       }
       
       display_stack.pop();
@@ -2317,7 +2318,7 @@ public void ENTER() {
       active_instr = p.getInstructions().size() - 1;
       row_select = min(active_instr, ITEMS_TO_SHOW - 1);
       col_select = 0;
-      text_render_start = active_instr - row_select;
+      renderStartIdx = active_instr - row_select;
       nextScreen(Screen.NAV_PROG_INST);
       break;
     case INPUT_RSTMT:
@@ -2373,7 +2374,7 @@ public void ENTER() {
       col_select = 0;
       
       row_select = min(active_instr, ITEMS_TO_SHOW - 1);
-      text_render_start = active_instr - row_select;
+      renderStartIdx = active_instr - row_select;
       
       loadInstructions(active_prog);
       nextScreen(Screen.NAV_PROG_INST);    
@@ -3178,7 +3179,7 @@ public void loadScreen(){
     case NAV_PROGRAMS:
       active_prog = 0;
       opt_select = 0;
-      text_render_start = 0;
+      renderStartIdx = 0;
       break;
     case NAV_DREGS:
     case NAV_PREGS_J:
@@ -3186,7 +3187,7 @@ public void loadScreen(){
       active_index = 0;
       row_select = 0;
       col_select = 0;
-      text_render_start = 0;
+      renderStartIdx = 0;
       break;
     case ACTIVE_FRAMES:
       row_select = 0;
@@ -3297,7 +3298,7 @@ public void updateScreen() {
           c1 = TEXT_HIGHLIGHT;
           c2 = TEXT_DEFAULT;
         }
-      } else if(mode.getType() == ScreenType.TYPE_LINE_SELECT && selectedLines[text_render_start + i]) {
+      } else if(mode.getType() == ScreenType.TYPE_LINE_SELECT && selectedLines[renderStartIdx + i]) {
         //highlight any currently selected lines
         c1 = TEXT_DEFAULT;
         c2 = TEXT_HIGHLIGHT;
@@ -4026,7 +4027,7 @@ ArrayList<String> loadPrograms() {
   int size = programs.size();
   active_instr = 0;
    
-  int start = text_render_start;
+  int start = renderStartIdx;
   int end = min(start + ITEMS_TO_SHOW, size);
   
   for(int i = start; i < end; i += 1) {
@@ -4043,7 +4044,7 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
   
   Program p = programs.get(programID);
   int size = p.getInstructions().size();
-  int start = text_render_start;
+  int start = renderStartIdx;
   int end = min(start + ITEMS_TO_SHOW, size);
   
   for(int i = start ; i < end; i+= 1) {
@@ -4110,7 +4111,7 @@ public void updateInstructions() {
   active_instr = min(active_instr,  prog.getInstructions().size() - 1);
   row_select = min(active_instr, ITEMS_TO_SHOW - 1);
   col_select = 0;
-  text_render_start = active_instr - row_select;
+  renderStartIdx = active_instr - row_select;
   
   lastScreen();
 }
@@ -4572,7 +4573,7 @@ public void createPoint(){
   saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
   
   lastScreen();
-  text_render_start = active_index;
+  renderStartIdx = active_index;
   row_select = 0;
   col_select = 0;
   loadRegisters();
@@ -4588,7 +4589,7 @@ public ArrayList<ArrayList<String>> loadRegisters() {
   ArrayList<ArrayList<String>> regs = new ArrayList<ArrayList<String>>();
   
   // View Registers or Position Registers
-  int start = text_render_start;
+  int start = renderStartIdx;
   int end = min(start + ITEMS_TO_SHOW, REG.length);
   // Display a subset of the list of registers
   for(int idx = start; idx < end; ++idx) {
@@ -4807,7 +4808,24 @@ public ArrayList<String> newLine(String... columns) {
 }
 
 /**
- * TODO
+ * This method updates the given list, row, and render start indices for a list of elements, whose contents potentially
+ * cannot all be show on the screen, when moving backwards in the list. It is assumed that the lower bound of list index
+ * is 0 and that the given list index is valid. Also, the row index should be within the bounds of [0, ITEMS_TO_DISPLAY].
+ * Render start index corresponds to the index, in the list that is being displayed, that will appear at the top of the
+ * list display; so, the subset of the displayed list ranging from render start index to render start index + ITEMS_TO_DISPLAY
+ * is shown on the screen. The inPlace parameter determines how the list display will be shifted. If it is false, then the
+ * display will be shift backward one element (if possible). However, if inPlace is set to true, then the list display will
+ * shift backward at most ITEMS_TO_DISPLAY - 1 elements (depending on the value of render start index), while holding the
+ * current row index constant. The updated list, row, and render start indices are returned in a three element integer in
+ * that order.
+ * 
+ * @param listIdx         The index, of the currently highlighted row in the display, in the list
+ * @param row             The index, of the currently highlighted row in the display, relative to the first element
+ *                        displayed
+ * @param renderstartIdx  The index of the first element displayed on the Screen
+ * @param inPlace         Whether to move backward the list an entire Screen lenth of elements, while keeping the row
+ *                        constant, or move backward a single element
+ * @returning             The updated values of listIdx, row, renderStartIdx in a 3-element integer array in that order
  */
 public int[] moveUp(int listIdx, int row, int renderStartIdx, boolean inPlace) {
   
@@ -4815,7 +4833,7 @@ public int[] moveUp(int listIdx, int row, int renderStartIdx, boolean inPlace) {
     // Move display frame up an entire screen's display length
     int t = renderStartIdx;
     
-    renderStartIdx = max(0, t - ITEMS_TO_SHOW);
+    renderStartIdx = max(0, t - ITEMS_TO_SHOW - 1);
     listIdx = listIdx + min(0, renderStartIdx - t);
   } else {
     // Move up a single element
@@ -4831,23 +4849,39 @@ public int[] moveUp(int listIdx, int row, int renderStartIdx, boolean inPlace) {
 }
 
 /**
- * TODO
+ * This method updates the list, row, render start indices for a list of elements, which may have too many elements to
+ * fit on the screen, when moving forward in the list. It is assumed that the given list index is within the bounds of
+ * 0 and listSize - 1 and that row is within the bounds of 0 and ITEMS_TO_DISPLAY - 1, and render start index = list
+ * index - row index. Similar to moveUp(), if inPlace is set to true, that the list and render start indices will be
+ * updated to move forward in the list at most ITEMS_TO_DISPLAY - 1 (depending on the current value of render start index),
+ * while keeping the row index constant. Otherwise, the indices are updated for moving a single element forward in the
+ * list and down the screen display. The updated indices are returned in an 3-element integer arrat in the order of list
+ * index, row index, and finally render start index.
+ * 
+ * @param listIdx         The index, of the currently highlighted row in the display, in the list
+ * @param listsize        The number of elements in the list
+ * @param row             The index, of the currently highlighted row in the display, relative to the first element
+ *                        displayed
+ * @param renderstartIdx  The index of the first element displayed on the Screen
+ * @param inPlace         Whether to move forward the list an entire Screen lenth of elements, while keeping the row
+ *                        constant, or move forward a single element
+ * @returning             The updated values of listIdx, row, renderStartIdx in a 3-element integer array in that order
  */
-public int[] moveDown(int listIdx, int uBound, int row, int renderStartIdx, boolean inPlace) {
+public int[] moveDown(int listIdx, int listSize, int row, int renderStartIdx, boolean inPlace) {
   
-  if (inPlace && uBound > ITEMS_TO_SHOW) {
+  if (inPlace && listSize > (renderStartIdx + ITEMS_TO_SHOW)) {
     // Move display frame down an entire screen's display length
     int t = renderStartIdx;
     
-    renderStartIdx = min(renderStartIdx + ITEMS_TO_SHOW, uBound - ITEMS_TO_SHOW);
+    renderStartIdx = min(renderStartIdx + (ITEMS_TO_SHOW - 1), listSize - ITEMS_TO_SHOW);
     listIdx = listIdx + max(0, renderStartIdx - t);
   } else {
     // Move down a single element
     int i = listIdx,
     r = row;
     
-    listIdx = min(i + 1, uBound - 1);
-    row = min(r + max(0, (listIdx - i)), ITEMS_TO_SHOW - 1);
+    listIdx = min(i + 1, listSize - 1);
+    row = min(r + max(0, (listIdx - i)), (ITEMS_TO_SHOW - 1));
     renderStartIdx = renderStartIdx + max(0, (listIdx - i) - (row - r));
   }
   
