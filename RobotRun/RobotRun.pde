@@ -362,13 +362,13 @@ public void handleWorldObjects() {
  */
 public void displayTeachPoints() {
   // Teach points are displayed only while the Robot is being taught a frame
-  if(teachFrame != null && mode.getType() == ScreenType.TEACH_POINTS) {
+  if(teachFrame != null && mode.getType() == ScreenType.TYPE_TEACH_POINTS) {
     
     int size = 3;
 
-    if (mode == Screen.SIX_POINT_MODE && teachFrame instanceof ToolFrame) {
+    if (mode == Screen.TEACH_6PT && teachFrame instanceof ToolFrame) {
       size = 6;
-    } else if (mode == Screen.FOUR_POINT_MODE && teachFrame instanceof UserFrame) {
+    } else if (mode == Screen.TEACH_4PT && teachFrame instanceof UserFrame) {
       size = 4;
     }
     

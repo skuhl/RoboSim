@@ -7,7 +7,7 @@ public static enum ScreenType implements DisplayMode {
   TYPE_LIST_CONTENTS,
   TYPE_CONFIRM_CANCEL,
   TYPE_INSTRUCT_EDIT,
-  TEACH_POINTS,
+  TYPE_TEACH_POINTS,
   TYPE_TEXT_ENTRY,
   TYPE_NUM_ENTRY,
   TYPE_POINT_ENTRY;
@@ -73,8 +73,8 @@ public static enum Screen implements DisplayMode {
   * Screens involving the entry of text, either via keyboard input or function buttons
   */
   FIND_REPL(ScreenType.TYPE_TEXT_ENTRY),
-  INPUT_REMARK_DREG(ScreenType.TYPE_TEXT_ENTRY),
-  INPUT_REMARK_PREG(ScreenType.TYPE_TEXT_ENTRY),
+  EDIT_DREG_COM(ScreenType.TYPE_TEXT_ENTRY),
+  EDIT_PREG_COM(ScreenType.TYPE_TEXT_ENTRY),
   NEW_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
   
   /*
@@ -83,7 +83,7 @@ public static enum Screen implements DisplayMode {
   */
   CONFIRM_INSERT(ScreenType.TYPE_NUM_ENTRY),
   INPUT_INTEGER(ScreenType.TYPE_NUM_ENTRY),
-  INPUT_FLOAT(ScreenType.TYPE_NUM_ENTRY),
+  EDIT_DREG_VAL(ScreenType.TYPE_NUM_ENTRY),
   JUMP_TO_LINE(ScreenType.TYPE_NUM_ENTRY), 
   SET_DO_BRACKET(ScreenType.TYPE_NUM_ENTRY),
   SET_FRM_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
@@ -91,31 +91,31 @@ public static enum Screen implements DisplayMode {
   SET_MV_INSTR_SPD(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_TERM(ScreenType.TYPE_NUM_ENTRY),
   SET_RO_BRACKET(ScreenType.TYPE_NUM_ENTRY),
+  ACTIVE_FRAMES(ScreenType.TYPE_NUM_ENTRY),
   
   /*
    * Frame input methods
    */
-  THREE_POINT_TOOL(ScreenType.TEACH_POINTS),
-  THREE_POINT_USER(ScreenType.TEACH_POINTS),
-  FOUR_POINT_MODE(ScreenType.TEACH_POINTS),
-  SIX_POINT_MODE(ScreenType.TEACH_POINTS),
+  TEACH_3PT_TOOL(ScreenType.TYPE_TEACH_POINTS),
+  TEACH_3PT_USER(ScreenType.TYPE_TEACH_POINTS),
+  TEACH_4PT(ScreenType.TYPE_TEACH_POINTS),
+  TEACH_6PT(ScreenType.TYPE_TEACH_POINTS),
   
   /*
    * Screens involving direct entry of point values
    */
   DIRECT_ENTRY_TOOL(ScreenType.TYPE_POINT_ENTRY),
   DIRECT_ENTRY_USER(ScreenType.TYPE_POINT_ENTRY),
-  INPUT_POINT_C(ScreenType.TYPE_POINT_ENTRY),
-  INPUT_POINT_J(ScreenType.TYPE_POINT_ENTRY),
+  EDIT_PREG_C(ScreenType.TYPE_POINT_ENTRY),
+  EDIT_PREG_J(ScreenType.TYPE_POINT_ENTRY),
   
   /*
   * Miscelanious screens/ not otherwise categorized
   */
   SWITCH_PREG,
-  ACTIVE_FRAMES,
   EDIT_RSTMT,
-  USER_FRAME_DETAIL,
-  TOOL_FRAME_DETAIL,
+  UFRAME_DETAIL,
+  TFRAME_DETAIL,
   INPUT_CONSTANT,
   INPUT_OPERATOR,
   INPUT_PRDX,
