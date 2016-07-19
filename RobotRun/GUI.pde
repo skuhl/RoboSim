@@ -1264,23 +1264,12 @@ public void up() {
     case EDIT_PREG_J:
       row_select = max(0, row_select - 1);
       break;
-<<<<<<< HEAD
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         opt_select = max(0, opt_select - 1); 
         // Reset function key states
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
       }
-=======
-    case INPUT_REMARK_PREG:
-    case INPUT_REMARK_DREG:
-      opt_select = max(0, opt_select - 1); 
-      // Reset function key states
-      for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      break;
-    default:
-      break;
->>>>>>> a1127ec1dd607ba1a3b76c770036276d2a1baca2
   }
   
   updateScreen();
@@ -1371,23 +1360,12 @@ public void dn() {
     case DIRECT_ENTRY_USER:
       row_select = min(row_select + 1, contents.size() - 1);
       break;
-<<<<<<< HEAD
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         opt_select = min(opt_select + 1, options.size() - 1);
         // Reset function key states
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
       }
-=======
-    case INPUT_REMARK_PREG:
-    case INPUT_REMARK_DREG:
-      opt_select = min(opt_select + 1, options.size() - 1);
-      // Reset function key states
-      for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      break;
-    default: 
-      break;
->>>>>>> a1127ec1dd607ba1a3b76c770036276d2a1baca2
   }  
   
   updateScreen();
@@ -1403,23 +1381,12 @@ public void lt() {
     case NAV_PREGS_C:
       col_select = max(0, col_select - 1);
       break;
-<<<<<<< HEAD
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
         // Reset function key states //<>// //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      }
-=======
-    case INPUT_REMARK_PREG:
-    case INPUT_REMARK_DREG:
-      col_select = max(0, col_select - 1);
-      // Reset function key states //<>// //<>//
-      for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      break;
-    default:
-      break;
->>>>>>> a1127ec1dd607ba1a3b76c770036276d2a1baca2
+      } //<>//
   }
   
   updateScreen();
@@ -1488,15 +1455,6 @@ public void rt() {
         // Reset function key states
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
       }
-<<<<<<< HEAD
-=======
-      
-      // Reset function key states
-      for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      break;
-    default:
-      break;
->>>>>>> a1127ec1dd607ba1a3b76c770036276d2a1baca2
   }
   
   updateScreen();
@@ -2422,14 +2380,6 @@ public void ENTER() {
         nextScreen(Screen.NAV_PREGS_C);
       }
       break;
-    case INPUT_INTEGER:
-      Integer integer = null;
-      
-      try { integer = Integer.parseInt(workingText); } 
-      catch (NumberFormatException NFEx) {/* Ignore invalid inputs */}
-      // TODO add cases for inputting register values
-    
-      break;
     case EDIT_DREG_VAL:   
       Float f = null;
       
@@ -3205,7 +3155,6 @@ public void loadScreen(){
     case MAIN_MENU_NAV:
       opt_select = 0;
       break;
-<<<<<<< HEAD
     case NEW_PROGRAM:
       row_select = 1;
       col_select = 0;
@@ -3219,12 +3168,10 @@ public void loadScreen(){
       row_select = 0;
       col_select = 0;
       renderStartIdx = 0;
-=======
+      break;
     case SETUP_NAV:
       opt_select = 0;
->>>>>>> a1127ec1dd607ba1a3b76c770036276d2a1baca2
       break;
-    
     case PICK_FRAME_MODE:
       opt_select = 0;
       break;
@@ -3233,8 +3180,8 @@ public void loadScreen(){
       row_select = 0;
       col_select = -1;
       break;
-    case TOOL_FRAME_DETAIL:
-    case USER_FRAME_DETAIL:
+    case TFRAME_DETAIL:
+    case UFRAME_DETAIL:
       row_select = -1;
       col_select = -1;
       opt_select = -1;
@@ -3252,54 +3199,19 @@ public void loadScreen(){
       col_select = 1;
       contents = loadDirectEntryMethod(teachFrame);
       break;
-    
-<<<<<<< HEAD
-    case EDIT_PREG_C:
-    case EDIT_PREG_J:
-=======
-    case PROGRAM_NAV:
+    case NAV_PROGRAMS:
       opt_select = 0;
-      break;
-    case INSTRUCT_NAV:
->>>>>>> a1127ec1dd607ba1a3b76c770036276d2a1baca2
-      row_select = 0;
-      col_select = 0;
       break;
     case INSTRUCT_MENU_NAV:
       opt_select = 0;
       break;
-    
-<<<<<<< HEAD
     case EDIT_DREG_COM:
     case EDIT_PREG_COM:
       row_select = 1;
-=======
-    case INPUT_REMARK_DREG:
-      row_select = 0;
       col_select = 0;
-      opt_select = 0;
-      
-      workingText = "\0";
-      if(REG[active_index].remark != null) {
-        workingText = REG[active_index].remark;
-      }
-      break; 
-    case INPUT_REMARK_PREG:
-      row_select = 0;
->>>>>>> a1127ec1dd607ba1a3b76c770036276d2a1baca2
-      col_select = 0;
-      opt_select = 0;
-      
-<<<<<<< HEAD
-    case EDIT_DREG_VAL:
-=======
-      workingText = "\0";
-      if(GPOS_REG[active_index].remark != null) {
-        workingText = GPOS_REG[active_index].remark;
-      }
+      contents = loadRegisterComment();
       break;
-    case INPUT_FLOAT:
->>>>>>> a1127ec1dd607ba1a3b76c770036276d2a1baca2
+    case EDIT_DREG_VAL:
       opt_select = 0;
       // Bring up float input menu
       if(REG[active_index].value != null) {
@@ -3308,8 +3220,8 @@ public void loadScreen(){
         workingText = "0.0";
       }
       break;
-    case INPUT_POINT_C:
-    case INPUT_POINT_J:
+    case EDIT_PREG_C:
+    case EDIT_PREG_J:
       row_select = 0;
       col_select = 0;
       contents = loadInputRegisterPointMethod();
@@ -3643,18 +3555,10 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
       contents = loadFrameDetail(CoordFrame.TOOL);
       break;
     case USER_FRAME_METHODS:
-<<<<<<< HEAD
     case UFRAME_DETAIL:
     case TEACH_3PT_USER:
     case TEACH_4PT:
       contents = loadFrameDetail(CoordFrame.USER);
-      
-=======
-    case USER_FRAME_DETAIL:
-    case THREE_POINT_USER:
-    case FOUR_POINT_MODE:
-      contents = loadFrameDetail(CoordFrame.USER);   
->>>>>>> a1127ec1dd607ba1a3b76c770036276d2a1baca2
       break;
     case DIRECT_ENTRY_USER:
     case DIRECT_ENTRY_TOOL:
@@ -3668,26 +3572,17 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case NAV_PREGS_J:
       contents = loadRegisters();
       break;
-    case INPUT_REMARK_DREG:
-    case INPUT_REMARK_PREG:
-      contents = loadRegisterRemark();
-      break;
-    case INPUT_POINT_C:
-    case INPUT_POINT_J:
+    case EDIT_PREG_C:
+    case EDIT_PREG_J:
       contents = this.contents;
       break;
       
     default:
-<<<<<<< HEAD
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         contents = updateTextEntry();
       } else {
         contents = new ArrayList<ArrayList<String>>();
       }
-=======
-      contents = new ArrayList<ArrayList<String>>();
-      break;
->>>>>>> a1127ec1dd607ba1a3b76c770036276d2a1baca2
   }
   
   return contents;
@@ -3701,11 +3596,6 @@ public ArrayList<String> getOptions(Screen mode){
     case NAV_PROGRAMS:
       options = loadPrograms();
       break;
-    case CONFIRM_PROG_DELETE:
-      options = new ArrayList<String>();
-      options.add("Delete selected program?");
-      break;
-      
     //Main menu and submenus
     case MAIN_MENU_NAV:
       options = new ArrayList<String>();
@@ -3731,11 +3621,7 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("9 User Alarm (NA)"  );
       options.add("0 --NEXT--"         );
       break;
-      
-    //Program list navigation/ edit
-    case PROGRAM_NAV:
-      options = loadPrograms();
-      break;
+    
     case NEW_PROGRAM:
       options = new ArrayList<String>();
       opt_select = -1;
@@ -4806,12 +4692,11 @@ public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
  */
 public ArrayList<ArrayList<String>> loadInputRegisterPointMethod() {
   ArrayList<ArrayList<String>> register = new ArrayList<ArrayList<String>>();
-<<<<<<< HEAD
   
   if(active_index >= 0 && active_index < GPOS_REG.length) {
     
     if(GPOS_REG[active_index].point == null) {
-      // Initialize valeus to zero ifthe entry is null
+      // Initialize values to zero if the entry is null
       if(mode == Screen.EDIT_PREG_C) {
         register.add( newLine("X: 0.0") );
         register.add( newLine("Y: 0.0") );
@@ -4834,20 +4719,6 @@ public ArrayList<ArrayList<String>> loadInputRegisterPointMethod() {
         register.add( newLine(entry) );
       }
     }
-=======
->>>>>>> a1127ec1dd607ba1a3b76c770036276d2a1baca2
-    
-  // Initialize new point if register point value is null
-  if(GPOS_REG[active_index].point == null) {
-    GPOS_REG[active_index].point = new Point();
-  }
-
-  // List current entry values ifthe Register is initialized
-  String[] entries = (mode == Screen.INPUT_POINT_C) ? GPOS_REG[active_index].point.toCartesianStringArray()
-  : GPOS_REG[active_index].point.toJointStringArray();
-  
-  for(String entry : entries) {
-    register.add( newLine(entry) );
   }
    
   return register;
@@ -4866,14 +4737,13 @@ public ArrayList<ArrayList<String>> loadInputRegisterPointMethod() {
  * betweeen upper case and lower case (indicated in the options menu by the
  * highlighted row).
  */
-public ArrayList<ArrayList<String>> loadRegisterRemark() {
+public ArrayList<ArrayList<String>> loadRegisterComment() {
   ArrayList<ArrayList<String>> remark = new ArrayList<ArrayList<String>>();
   
   remark.add( newLine("\0") );
   workingText = "\0";
   
   // Load the current comment for the selected register ifit exists
-<<<<<<< HEAD
   if(mode == Screen.EDIT_DREG_COM) {
     if(active_index >= 0 && active_index < REG.length && REG[active_index].remark != null) {
       workingText = REG[active_index].remark;
@@ -4884,8 +4754,6 @@ public ArrayList<ArrayList<String>> loadRegisterRemark() {
     }
   }
   
-=======
->>>>>>> a1127ec1dd607ba1a3b76c770036276d2a1baca2
   ArrayList<String> line = new ArrayList<String>();
   // Give each letter in the name a separate column
   for(int idx = 0; idx < workingText.length() && idx < 16; idx += 1) {
