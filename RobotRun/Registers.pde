@@ -203,26 +203,33 @@ public class RegPoint {
    *
    * @return  A 6-element String array
    */
-  public String[] toStringArray() {
-    String[] entries = new String[6];
+  public String[][] toStringArray() {
+    String[][] entries = new String[6][2];
     
     if (isCartesian()) {
       // Show the vector in terms of the World Frame
       PVector wPos = convertNativeToWorld( new PVector(values[0], values[1], values[2]) );
       PVector angles = quatToEuler( Arrays.copyOfRange(values, 3, 7) );
       
-      entries[0] = String.format("X: %4.3f", wPos.x);
-      entries[1] = String.format("Y: %4.3f", wPos.y);
-      entries[2] = String.format("Z: %4.3f", wPos.z);
+      entries[0][0] = "X: ";
+      entries[0][1] = String.format("%4.3f", wPos.x);
+      entries[1][0] = "Y: ";
+      entries[1][1] = String.format("%4.3f", wPos.y);
+      entries[2][0] = "Z: ";
+      entries[2][1] = String.format("%4.3f", wPos.z);
       // Show angles in degrees
-      entries[3] = String.format("W: %4.3f", angles.x * RAD_TO_DEG);
-      entries[4] = String.format("P: %4.3f", angles.y * RAD_TO_DEG);
-      entries[5] = String.format("R: %4.3f", angles.z * RAD_TO_DEG);
+      entries[3][0] = "W: ";
+      entries[3][1] = String.format("%4.3f", angles.x * RAD_TO_DEG);
+      entries[4][0] = "P: ";
+      entries[4][1] = String.format("%4.3f", angles.y * RAD_TO_DEG);
+      entries[5][0] = "R: ";
+      entries[5][1] = String.format("%4.3f", angles.z * RAD_TO_DEG);
     } else {
       
       for(int idx = 0; idx < values.length; ++idx) {
         // Show angles in degrees
-        entries[idx] = String.format("J%d: %4.3f", (idx + 1), values[idx] * RAD_TO_DEG);
+        entries[idx][0] = String.format("J%d: ", (idx + 1));
+        entries[idx][1] = String.format("%4.3f", values[idx] * RAD_TO_DEG);
       }
     }
     
