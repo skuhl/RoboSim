@@ -661,14 +661,6 @@ public class ArmModel {
        y'' = -y' -> z
        z'' = x'  -> -x
       */
-    } else {
-      
-      // Apply a default tool frame based on the current EE
-      if(activeEndEffector == EndEffector.CLAW) {
-        translate(0, 0, -54);
-      } else if(activeEndEffector == EndEffector.SUCTION) {
-        translate(0, 0, -105);
-      }
     }
   }
   
@@ -901,7 +893,7 @@ public class ArmModel {
   
   void updateOrientation() {
     PVector u = new PVector(0, 0, 0);
-    float theta = DEG_TO_RAD*2.5*liveSpeed;
+    float theta = DEG_TO_RAD*0.025f*liveSpeed;
     
     u.x = jogRot[0];
     u.y = jogRot[1];
@@ -921,7 +913,7 @@ public class ArmModel {
         for(int n = 0; n < 3; n++) {
           if(model.rotations[n]) {
             float trialAngle = model.currentRotations[n] +
-            model.rotationSpeed * model.jointsMoving[n] * liveSpeed;
+            model.rotationSpeed * model.jointsMoving[n] * liveSpeed / 100f;
             trialAngle = clampAngle(trialAngle);
             
             if(model.anglePermitted(n, trialAngle)) {
@@ -954,7 +946,7 @@ public class ArmModel {
         move = rotate(move, currentFrame);
         
         //respond to user defined movement
-        float distance = motorSpeed/60.0 * liveSpeed;
+        float distance = motorSpeed/6000f * liveSpeed;
         tgtPos.x += move.x * distance;
         tgtPos.y += move.y * distance;
         tgtPos.z += move.z * distance;

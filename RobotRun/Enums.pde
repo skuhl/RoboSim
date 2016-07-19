@@ -7,7 +7,7 @@ public static enum ScreenType implements DisplayMode {
   TYPE_LIST_CONTENTS,
   TYPE_CONFIRM_CANCEL,
   TYPE_INSTRUCT_EDIT,
-  TYPE_FRAME_EDIT,
+  TEACH_POINTS,
   TYPE_TEXT_ENTRY,
   TYPE_NUM_ENTRY,
   TYPE_POINT_ENTRY;
@@ -31,11 +31,15 @@ public static enum Screen implements DisplayMode {
   * Screens used to display a sereal list of contents for the user to
   * examine and interact with
   */
-  ACTIVE_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
-  INSTRUCTION_NAV(ScreenType.TYPE_LIST_CONTENTS),
+  NAV_PROG_INST(ScreenType.TYPE_LIST_CONTENTS),
   NAV_TOOL_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
   NAV_USER_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
-  PROGRAM_NAV(ScreenType.TYPE_LIST_CONTENTS),
+  NAV_PROGRAMS(ScreenType.TYPE_LIST_CONTENTS),
+  //Cartesian
+  NAV_PREGS_C(ScreenType.TYPE_LIST_CONTENTS),
+  //Joint
+  NAV_PREGS_J(ScreenType.TYPE_LIST_CONTENTS),
+  NAV_DREGS(ScreenType.TYPE_LIST_CONTENTS),
   
   /*
   * Screens used to perform arbitrary line-wise selection on a list of
@@ -91,10 +95,10 @@ public static enum Screen implements DisplayMode {
   /*
    * Frame input methods
    */
-  THREE_POINT_TOOL(ScreenType.TYPE_FRAME_EDIT),
-  THREE_POINT_USER(ScreenType.TYPE_FRAME_EDIT),
-  FOUR_POINT_MODE(ScreenType.TYPE_FRAME_EDIT),
-  SIX_POINT_MODE(ScreenType.TYPE_FRAME_EDIT),
+  THREE_POINT_TOOL(ScreenType.TEACH_POINTS),
+  THREE_POINT_USER(ScreenType.TEACH_POINTS),
+  FOUR_POINT_MODE(ScreenType.TEACH_POINTS),
+  SIX_POINT_MODE(ScreenType.TEACH_POINTS),
   
   /*
    * Screens involving direct entry of point values
@@ -108,6 +112,7 @@ public static enum Screen implements DisplayMode {
   * Miscelanious screens/ not otherwise categorized
   */
   SWITCH_PREG,
+  ACTIVE_FRAMES,
   EDIT_RSTMT,
   USER_FRAME_DETAIL,
   TOOL_FRAME_DETAIL,
@@ -121,12 +126,7 @@ public static enum Screen implements DisplayMode {
   DATA_MENU_NAV,
   SET_DO_STATUS,
   SET_RO_STATUS,
-  VIEW_INST_REG,
-  //Cartesian
-  VIEW_POS_REG_C,
-  //Joint
-  VIEW_POS_REG_J,
-  VIEW_DATA_REG;
+  VIEW_INST_REG;
   
   private final ScreenType type;
   
