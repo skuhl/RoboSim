@@ -1,11 +1,5 @@
-
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
 final int FTYPE_TOOL = 0, FTYPE_USER = 1;
-
-// Position Registers
-private final PositionRegister[] GPOS_REG = new PositionRegister[100];
-// Registers
-private final Register[] REG = new Register[100];
 
 public class Point  {
   public PVector pos; // position
@@ -74,11 +68,11 @@ public class Point  {
   }
 
   /**
-    * Returns a String array, whose entries are the joint values of the
-    * Point with their respective labels (J1-J6).
-    * 
-    * @return  A 6-element String array
-    */
+   * Returns a String array, whose entries are the joint values of the
+   * Point with their respective labels (J1-J6).
+   * 
+   * @return  A 6-element String array
+   */
   public String[] toJointStringArray() {
     String[] entries = new String[6];
     
@@ -90,12 +84,12 @@ public class Point  {
   }
 
   /**
-    * Returns a string array, where each entry is one of
-    * the values of the Cartiesian represent of the Point:
-    * (X, Y, Z, W, P, and R) and their respective labels.
-    *
-    * @return  A 6-element String array
-    */
+   * Returns a string array, where each entry is one of
+   * the values of the Cartiesian represent of the Point:
+   * (X, Y, Z, W, P, and R) and their respective labels.
+   *
+   * @return  A 6-element String array
+   */
   public String[] toCartesianStringArray() {
     PVector angles = quatToEuler(ori);
     
@@ -294,7 +288,7 @@ public final class MotionInstruction extends Instruction  {
   public Point getVector(Program parent) {
     if(motionType != MTYPE_JOINT) {
       Point out;
-      if(globalRegister) out = GPOS_REG[positionNum].point.clone();
+      if(globalRegister) out = GPOS_REG[positionNum].point.toPointObject();
       else out = parent.LPosReg[positionNum].clone();
       //out.pos = convertWorldToNative(out.pos);
       return out;
@@ -302,7 +296,7 @@ public final class MotionInstruction extends Instruction  {
     else {
       Point ret;
       
-      if(globalRegister) ret = GPOS_REG[positionNum].point.clone();
+      if(globalRegister) ret = GPOS_REG[positionNum].point.toPointObject();
       else ret = parent.LPosReg[positionNum].clone();
       
       if(userFrame != -1) {
@@ -554,6 +548,7 @@ public class RecordScreen implements Runnable{
     }
     
   }
+<<<<<<< HEAD
 }
 
 /* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
@@ -580,4 +575,6 @@ public class PositionRegister {
     point = p;
     remark = c;
   }
+=======
+>>>>>>> dev2
 }

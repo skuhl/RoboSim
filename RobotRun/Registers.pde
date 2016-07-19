@@ -1,3 +1,235 @@
+// Position Registers
+private final PositionRegister[] GPOS_REG = new PositionRegister[100];
+// Registers
+private final Register[] REG = new Register[100];
+
+/* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
+public class Register {
+  public String comment = null;
+  public Float value = null;
+
+  public Register(String c, Float v) {
+    value = v;
+    comment = c;
+  }
+}
+
+/* A simple class for a Position Register of the Robot Arm, which holds a point associated with a comment. */
+public class PositionRegister {
+  public String comment = null;
+  public RegPoint point = null;
+
+  public PositionRegister() {
+    point = new RegPoint();
+  }
+
+  public PositionRegister(String c, RegPoint pt) {
+    point = pt;
+    comment = c;
+  }
+}
+
+/**
+ * This class holds the values for either a Cartesian point (X, Y, Z, Q1 - Q4) or a Joint point (J1- J6). Each Joint
+ * point has a complementing Cartesian point and vice versa. A point's complement is simply the other representation
+ * of the point in terms of the orientation and position of the Robot. Given a set of angles, forward kinematics can
+ * be applied to calculate the Cartesian representation of that point and Inverse Kinematics can be applied to convert
+ * a Cartesian point into a Joint point.
+ */
+public class RegPoint {
+  
+  /**
+   * The values associated with a register point:
+   * 
+   * For a Cartesian point:
+   *   0 - 2 -> X - Z
+   *   3 - 6 -> The quaternion representing W, P, and R
+   * 
+   * For a Joint point:
+   *   0 - 5 -> J1 - J6
+   */
+  private final float[] values;
+  
+  /**
+   * Define a point with the Robot's default joint
+   * positions.
+   */
+  public RegPoint() {
+    values = new float[] { 0f, 0f, 0f, 0f, 0f ,0f };
+  }
+  
+  /**
+   * Define a Cartesian point with the specified position
+   * and orientation.
+   * 
+   * @param position     The X, Y, Z values of the point
+   * @param orientation  The 4-element quaternion array,
+   *                     which represents the W, P, R values
+   *                     of the point
+   */
+  public RegPoint(PVector position, float[] orientation) {
+    values = new float[] { position.x, position.y, position.z,
+                           orientation[0], orientation[1],
+                           orientation[2], orientation[3] };
+  }
+  
+  /**
+   * Define a Joint point with the specified joint
+   * angles J1- J6.
+   * 
+   * @param jointAngles  A set of six angles, which
+   *                     correspond to the six joints
+   *                     of the Robot.
+   */
+  public RegPoint(float[] jointAngles) {
+      values = new float[6];
+      
+      for (int idx = 0; idx < 6; ++idx) {
+        values[idx] = clampAngle(jointAngles[idx]);
+      }
+  }
+  
+  /* Indexer methods for the register point's values */
+  public float getValue(int idx) { return values[idx]; }
+  public void setValue(int idx, float value) {  values[idx] = value; }
+  
+  /**
+   * Return the X, Y, and Z values associated with this point
+   * (or its complement in the case of a Joint point).
+   */
+  public PVector position() {
+    
+    if (isCartesian()) {
+      // Form a position vector
+      return new PVector(values[0], values[1], values[2]);
+    } else {
+      // Convert to a Cartesian point
+      return armModel.getEEPos(values.clone());
+    }
+  }
+  
+  /**
+   * Return the 4-element quaternion orientation associated
+   * with this point (or its complement in the case of a
+   * Joint point).
+   */
+  public float[] orientation() {
+    
+    if (isCartesian()) {
+      // Return a copy of the quaternion
+      return Arrays.copyOfRange(values, 3, 7);
+    } else {
+      // Convert to a Cartesian point
+      return armModel.getQuaternion(values.clone());
+    }
+  }
+  
+  /**
+   * Return the W, P, amd R values associated with this
+   * point (or its complement in the case of a Joint point).
+   */
+  public PVector eulerAngles() {
+    // Convert the quaternion to euler angles
+    return armModel.getWPR(values.clone());
+  }
+  
+  /**
+   * Creates the complement register point of this register point.
+   * 
+   * @return  A point whose type is opposite of this point's, but
+   *          whose values correspond to the values of this point's
+   *          values
+   */
+  public RegPoint complement() {
+    
+    if (isCartesian()) {
+      // Convert from a Cartesian to Joint point
+      PVector position = new PVector(values[0], values[1], values[2]);
+      float[] angles = calculateIKJacobian(position, Arrays.copyOfRange(values, 3, 7));
+      
+      return new RegPoint(angles);
+    } else {
+      // Convert from a Joint to Cartesian point
+      PVector position = armModel.getEEPos(values);
+      float[] orientation = armModel.getQuaternion(values);
+      
+      return new RegPoint(position, orientation);
+    }
+  }
+  
+  /**
+   * Converts this register point to a Point object, setting all the
+   * fields of the Point object by calculating the complement of this
+   * register point.
+   * 
+   * @return  A Point object with the valeus associated with both this
+   *          register point and its complement
+   */
+  public Point toPointObject() {
+    RegPoint complement = complement();
+    Point pt;
+    
+    if (isCartesian()) {
+      // Set position and orientation
+      pt = new Point(position(), orientation());
+      pt.joints = new float[6];
+      // Set joint angles
+      for (int idx = 0; idx < 6; ++idx) {
+        pt.joints[idx] = complement.getValue(idx);
+      }
+    } else {
+      PVector position = complement.position();
+      float[] angles = complement.orientation();
+      // Set position and orientation
+      pt = new Point(position, angles);
+      // Set joint angles
+      pt.joints = Arrays.copyOfRange(values, 0, 6);
+    }
+    
+    return pt;
+  }
+  
+  /**
+   * Determine whether this register point contains Joint values
+   * or Cartesian values
+   */
+  public boolean isCartesian() { return values.length == 7; }
+  
+  /**
+   * Creates a six-element array, which contains the values associated with this register
+   * point. For a Joint point, each array entry is a joint angles associated with a joint
+   * of the Robot (J1- J6). For a Cartesian point, each entry is one of the values (X, Y,
+   * Z, W, P, R) of a point in space.
+   *
+   * @return  A 6-element String array
+   */
+  public String[] toStringArray() {
+    String[] entries = new String[6];
+    
+    if (isCartesian()) {
+      // Show the vector in terms of the World Frame
+      PVector wPos = convertNativeToWorld( new PVector(values[0], values[1], values[2]) );
+      PVector angles = quatToEuler( Arrays.copyOfRange(values, 3, 7) );
+      
+      entries[0] = String.format("X: %4.3f", wPos.x);
+      entries[1] = String.format("Y: %4.3f", wPos.y);
+      entries[2] = String.format("Z: %4.3f", wPos.z);
+      // Show angles in degrees
+      entries[3] = String.format("W: %4.3f", angles.x * RAD_TO_DEG);
+      entries[4] = String.format("P: %4.3f", angles.y * RAD_TO_DEG);
+      entries[5] = String.format("R: %4.3f", angles.z * RAD_TO_DEG);
+    } else {
+      
+      for(int idx = 0; idx < values.length; ++idx) {
+        // Show angles in degrees
+        entries[idx] = String.format("J%d: %4.3f", (idx + 1), values[idx] * RAD_TO_DEG);
+      }
+    }
+    
+    return entries;
+  }
+}
+
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
 public enum Operator { PLUS, MINUS, MUTLIPLY, DIVIDE, MODULUS, INTDIVIDE, PAR_OPEN, PAR_CLOSE; }
 
@@ -33,7 +265,7 @@ public class RobotPoint {
    * the Robot
    */
   public Object getValue() {
-    CartPoint pt = new CartPoint( new Point(armModel.getEEPos(), armModel.getQuaternion()) );
+    CartPoint pt = new CartPoint( new RegPoint(armModel.getEEPos(), armModel.getQuaternion()) );
     
     if (valIdx == -1) {
       // Return the entire point
@@ -57,64 +289,67 @@ public class RobotPoint {
 
 /**
  * This class defines a Point, which stores a position and orientation
- * in space (X, Y, Z, W, P, R) along with the joint angles (J1 - J6)
- * necessary for the Robot to reach the position and orientation of
- * the Point.
+ * in space (X, Y, Z, W, P, R) or the joint angles (J1 - J6) necessary
+ * for the Robot to reach the position and orientation of the register point.
+ * 
  * This class is designed to temporary store the values of a Point object
  * in order to bypass multiple conversion between Euler angles and
  * Quaternions during the evaluation of Register Statement Expressions.
  */
 public class CartPoint {
-  /**
-   * The values associated with this Point:
-   *   0 - 5  ->  J1 - J6
-   *   6 - 11 ->  X, Y, Z, W, P, R
-   */
-  public float[] values;
   
   /**
-   * Point for the default position of the Robot
+   * The values associated with a register point:
+   * 
+   * For a Cartesian point:
+   *   0, 1, 2 -> X, Y, Z
+   *   3. 4, 5 -> W, P, R
+   * 
+   * For a Joint point:
+   *   0 - 5 -> J1 - J6
+   */
+  public final float[] values;
+  /**
+   * Whether this point is a Cartesian or a Joint point
+   */
+  public final boolean isCartesian;
+  
+  /**
+   * Point for the default joint angles of the Robot
    */
   public CartPoint() {
-    values = new float[12];
+    values = new float[6];
+    isCartesian = false;
     
     for (int idx = 0; idx < 6; ++idx) {
-      values[idx] = 0;
+      values[idx] = 0f;
     }
-    
-    float[] angles = Arrays.copyOfRange(values, 0, 5);
-    PVector xyz = armModel.getEEPos(angles);
-    PVector wpr = armModel.getWPR(angles);
-    
-    values[6] = xyz.x;
-    values[7] = xyz.y;
-    values[8] = xyz.z;
-    values[9] = wpr.x;
-    values[10] = wpr.y;
-    values[11] = wpr.z;
   }
   
   /**
    * Converts the given Point Object to a PointCoord object
    */
-  public CartPoint(Point pt) {
-    values = new float[12];
+  public CartPoint(RegPoint pt) {
+    values = new float[6];
+    isCartesian = pt.isCartesian();
     
-    for (int jdx = 0; jdx < pt.joints.length; ++jdx) {
-      values[jdx] = pt.joints[jdx];
-    }
-    
-    values[6] = pt.pos.x;
-    values[7] = pt.pos.y;
-    values[8] = pt.pos.z;
-    
-    PVector wpr = quatToEuler(pt.ori);
-    
-    values[9] = wpr.x;
-    values[10] = wpr.y;
-    values[11] = wpr.z;
-    
-    
+    if (isCartesian) {
+      // Get position and orientation
+      PVector xyz = pt.position();
+      PVector wpr = pt.eulerAngles();
+      
+      values[0] = xyz.x;
+      values[1] = xyz.y;
+      values[2] = xyz.z;
+      values[3] = wpr.x;
+      values[4] = wpr.y;
+      values[5] = wpr.z;
+    } else {
+      // Get joint angles
+      for (int jdx = 0; jdx < values.length; ++jdx) {
+        values[jdx] = pt.getValue(jdx);
+      }
+    }  
   }
 }
 
@@ -148,7 +383,7 @@ public class ExpressionEvaluationException extends RuntimeException {
  * arrays, if the second value in the array is 0, then a point from the current prorgrams local position registers is used,
  * otherwise a point from the global position register list is used. If the third value is -1, then the result of the expression
  * is expected to be a Point Object that will override the position register entry. However, if the second value is between 0 and
- * 11 inclusive, then the result is expected to be a floating-point value, which will be saved in a specific entry of the the
+ * 5 inclusive, then the result is expected to be a floating-point value, which will be saved in a specific entry of the the
  * position register.
  * 
  * Floating-point values     ->  Constants
@@ -156,9 +391,9 @@ public class ExpressionEvaluationException extends RuntimeException {
  * Singleton integer arrays  ->  Register values
  * Tripleton integer arrays  ->  Position Register points/values
  *
- * For the second entry of the dobleton array:
- *   0 - 5  ->  J1 - J6
- *   6 - 11 ->  X, Y, Z, W, P, R
+ * For the third entry of the tripleton array:
+ *   0 - 5  ->  J1 - J6           (for Joint points)
+ *          ->  X, Y, Z, W, P, R  (for Cartesian points)
  * 
  */
 public class ExpressionSet {
@@ -284,6 +519,8 @@ public class ExpressionSet {
             
             op = (Operator)( parameters.get(pdx++) );
             break;
+          } else {
+            savedOps.pop();
           }
         }
       }
@@ -337,12 +574,14 @@ public class ExpressionSet {
       } else if (regIdx.length == 3) {
         CartPoint pt;
         
-        if (regIdx[1] % 2 == 0) {
-          // Use Position Register point
-          pt = new CartPoint( programs.get(active_prog).LPosReg[ regIdx[0] ] );
-        } else {
+        if (regIdx[1] == 0) {
           // Use a local position register point
-          pt = new CartPoint(GPOS_REG[ regIdx[0] ].point);
+          Point p = programs.get(active_prog).LPosReg[ regIdx[0] ];
+          // TODO Cartesian or Joint?
+          pt = new CartPoint( new RegPoint(p.pos, p.ori) );
+        } else {
+          // Use Position Register point
+          pt = new CartPoint( GPOS_REG[ regIdx[0] ].point );
         }
         
         if (regIdx[2] == -1) {
@@ -437,18 +676,6 @@ public class ExpressionSet {
           }
         }
         
-        /* Update the Cartesian values of the point */
-        float[] jointAngles = Arrays.copyOfRange(pt.values, 0, 5);
-        PVector xyz = armModel.getEEPos( jointAngles );
-        PVector wpr = armModel.getWPR( jointAngles );
-        
-        pt.values[6] = xyz.x;
-        pt.values[7] = xyz.y;
-        pt.values[8] = xyz.z;
-        pt.values[9] = wpr.x;
-        pt.values[10] = wpr.y;
-        pt.values[11] = wpr.z;
-        
         return pt;
       case MUTLIPLY:
       case DIVIDE:
@@ -500,28 +727,19 @@ public class ExpressionSet {
         // Register entries are stored as a singleton integer array
         return String.format("R[%d]", regIdx[0]);
       } else if (regIdx.length == 3) {
+        String prefix = (regIdx[1] == 0) ? "P" : "PR",
+               indices = null;
+        
+        // Index into the list of points
+        indices = Integer.toString(regIdx[0]);
+        
+        if (regIdx[2] >= 0) {
+          // Index into the values of the point
+          indices += ", " + regIdx[2];
+        }
         
         // Position Register entries are stored as a tripleton integer array
-        if (regIdx[2] >= 0) {
-          int idx = regIdx[2] % 6;
-          
-          if (regIdx[1] == 0) {
-            // local position register
-            return String.format("P[%d, %d]", regIdx[0], idx);
-          } else {
-            // global Position Register
-            return String.format("PR[%d, %d]", regIdx[0], idx);
-          }
-        } else {
-          
-          if (regIdx[1] == 0) {
-            // local position register
-            return String.format("P[%d]", regIdx[0]);
-          } else {
-            // global Position Register
-            return String.format("PR[%d]", regIdx[0]);
-          }
-        }
+        return String.format("%s[%s]", prefix, indices);
       }
     } else if (param instanceof Operator) {
       

@@ -785,7 +785,7 @@ public int saveRegisterBytes(File dest) {
     // Save the Position Register entries
     for(Integer idx : initializedPR) {
       dataOut.writeInt(idx);
-      savePoint(GPOS_REG[idx].point, dataOut);
+      saveRegPoint(GPOS_REG[idx].point, dataOut);
       
       if(GPOS_REG[idx].remark == null) {
         dataOut.writeUTF("");
@@ -857,7 +857,7 @@ public int loadRegisterBytes(File src) {
       // Each entry is saved after its respective index in POS_REG
       int idx = dataIn.readInt();
       
-      Point p = loadPoint(dataIn);
+      RegPoint p = loadRegPoint(dataIn);
       String c = dataIn.readUTF();
       // Null comments are stored as ""
       if(c == "") { c = null; }
@@ -884,6 +884,70 @@ public int loadRegisterBytes(File src) {
     IOEx.printStackTrace();
     return 2;
   }
+}
+
+/**
+ * Saves all the floating-point values associated with the given register point
+ * to the given output stream. Null values are accepted for the pt field.
+ */
+public void saveRegPoint(RegPoint pt, DataOutputStream out) throws IOException {
+  int size;
+  
+  // Distinguish between a null, Cartesian, and Joint point
+  if (pt == null) {
+    // Null values are valid
+    out.writeByte(0);
+    return;
+  } else if (pt.isCartesian()) {
+    out.writeByte(1);
+    // X, Y, Z, and Q1 - Q4 
+    size = 7;
+  } else {
+    out.writeByte(2);
+    // J1- J6
+    size = 6;
+  }
+  
+  // Write each value of the point to the output stream
+  for (int idx = 0; idx < size; ++idx) {
+    out.writeFloat(pt.getValue(idx));
+  }
+}
+
+/**
+ * Reads data associated with a register point from the given input stream.
+ */
+public RegPoint loadRegPoint(DataInputStream in) throws IOException {
+  RegPoint pt = null;
+  
+  int type = in.readByte();
+  
+  if (type == 1) {
+    // Cartesian point
+    PVector position = new PVector();
+    float[] orientation = new float[4];
+    // Read position and orientation values from the input stream
+    position.x = in.readFloat();
+    position.y = in.readFloat();
+    position.z = in.readFloat();
+    orientation[0] = in.readFloat();
+    orientation[1] = in.readFloat();
+    orientation[2] = in.readFloat();
+    orientation[3] = in.readFloat();
+    
+    pt = new RegPoint(position, orientation);
+  } else if (type == 2) {
+    // Joint point
+    float[] jointAngles = new float[6];
+    // Read all the joint angles form the input stream
+    for (int idx = 0; idx < jointAngles.length; ++idx) {
+      jointAngles[idx] = in.readFloat();
+    }
+    
+    pt = new RegPoint(jointAngles);
+  }
+  
+  return pt;
 }
 
 /**

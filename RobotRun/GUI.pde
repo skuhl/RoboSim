@@ -1218,6 +1218,7 @@ public void up() {
         row_select, col_select, active_instr, renderStartIdx);
       }
       
+<<<<<<< HEAD
       break;
     case NAV_DREGS:
     case NAV_PREGS_J:
@@ -1264,6 +1265,62 @@ public void up() {
     case EDIT_PREG_J:
       row_select = max(0, row_select - 1);
       break;
+=======
+      active_index = max(0, i - 1);
+      row_select = max(0, r + min(active_index - i, 0));
+      text_render_start = text_render_start + min((active_index - i) - (row_select - r), 0);
+    }
+    
+    col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
+    viewRegisters();
+    
+    if(DISPLAY_TEST_OUTPUT) {
+      System.out.printf("\nRow: %d\nColumn: %d\nIdx: %d\nTRS: %d\n\n",
+      row_select, col_select, active_index, text_render_start);
+    }
+    
+    break;
+  case INSTRUCTION_EDIT:
+  case INSTRUCT_MENU_NAV:
+  case PICK_FRAME_MODE:
+  case PICK_FRAME_METHOD:
+  case THREE_POINT_MODE:
+  case SIX_POINT_MODE:
+  case FOUR_POINT_MODE:
+  case SET_DO_STATUS:
+  case SET_RO_STATUS:
+  case PICK_REG_LIST:
+    opt_select = max(0, opt_select - 1);
+    break;
+  case MAIN_MENU_NAV:
+  case SETUP_NAV:
+  case PICK_INSTRUCTION:
+  case IO_SUBMENU:
+  case SET_FRAME_INSTRUCTION:
+  case INPUT_RSTMT:
+  case EDIT_RSTMT:
+  case NAV_TOOL_FRAMES:
+  case NAV_USER_FRAMES:
+  case ACTIVE_FRAMES:
+  case INPUT_POINT_C:
+  case INPUT_POINT_J:
+  case DIRECT_ENTRY_MODE:
+    row_select = max(0, row_select - 1);
+    break;
+  case INPUT_COMMENT_U:
+  case INPUT_COMMENT_L:
+    opt_select = max(0, opt_select - 1);
+    // Navigate options menu to switch the function keys functions
+    if(opt_select == 0) {
+      switchTo(Screen.INPUT_COMMENT_U);
+    } else if(opt_select == 1) {
+      switchTo(Screen.INPUT_COMMENT_L);
+    }
+    // Reset function key states
+    for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+    
+    break;
+>>>>>>> dev2
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         opt_select = max(0, opt_select - 1); 
@@ -1305,6 +1362,7 @@ public void dn() {
       
       col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
       
+<<<<<<< HEAD
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
         row_select, col_select, active_instr, renderStartIdx);
@@ -1360,6 +1418,62 @@ public void dn() {
     case DIRECT_ENTRY_USER:
       row_select = min(row_select + 1, contents.size() - 1);
       break;
+=======
+      active_index = min(i + 1, size - 1);
+      row_select = min(r + max(0, (active_index - i)), contents.size() - 1);
+      text_render_start = text_render_start + max(0, (active_index - i) - (row_select - r));
+    }
+    
+    col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
+    viewRegisters();
+    
+    if(DISPLAY_TEST_OUTPUT) {
+      System.out.printf("\nRow: %d\nColumn: %d\nIdx: %d\nTRS: %d\n\n",
+      row_select, col_select, active_index, text_render_start);
+    }
+    
+    break;
+  case INSTRUCTION_EDIT:
+  case INSTRUCT_MENU_NAV:
+  case PICK_FRAME_MODE:
+  case PICK_FRAME_METHOD:
+  case THREE_POINT_MODE:
+  case SIX_POINT_MODE:
+  case FOUR_POINT_MODE:
+  case SET_DO_STATUS:
+  case SET_RO_STATUS:
+  case PICK_REG_LIST:
+    opt_select = min(opt_select + 1, options.size() - 1);
+    break;
+  case MAIN_MENU_NAV:
+  case SETUP_NAV:
+  case PICK_INSTRUCTION:
+  case IO_SUBMENU:
+  case SET_FRAME_INSTRUCTION:
+  case INPUT_RSTMT:
+  case EDIT_RSTMT:
+  case NAV_TOOL_FRAMES:
+  case NAV_USER_FRAMES:
+  case ACTIVE_FRAMES:
+  case INPUT_POINT_C:
+  case INPUT_POINT_J:
+  case DIRECT_ENTRY_MODE:
+    row_select = min(row_select + 1, contents.size() - 1);
+    break;
+  case INPUT_COMMENT_U: //<>// //<>// //<>//
+  case INPUT_COMMENT_L:
+    opt_select = min(opt_select + 1, options.size() - 1);
+    // Navigate options menu to switch the function keys functions
+    if(opt_select == 0) {
+      switchTo(Screen.INPUT_COMMENT_U);
+    } else if(opt_select == 1) {
+      switchTo(Screen.INPUT_COMMENT_L);
+    }
+    // Reset function key states
+    for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+    
+    break;
+>>>>>>> dev2
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         opt_select = min(opt_select + 1, options.size() - 1);
@@ -1535,6 +1649,7 @@ public void f1() {
           armModel.currentFrame = userFrames[opt_select].getNativeAxes();
         }
       }
+<<<<<<< HEAD
       break;
     case ACTIVE_FRAMES:
       if(row_select == 0) {
@@ -1560,6 +1675,58 @@ public void f1() {
       }
       
       break;
+=======
+    }
+    
+    break;
+  case ACTIVE_FRAMES:
+    if(row_select == 0) {
+      loadFrames(CoordFrame.TOOL);
+    } else if(row_select == 1) {
+      loadFrames(CoordFrame.USER);
+    }
+    
+    break;
+  case INSTRUCTION_EDIT:
+    //shift = OFF;
+    break;
+  case THREE_POINT_MODE:
+  case SIX_POINT_MODE:
+  case FOUR_POINT_MODE:
+    ref_point = (shift == ON) ? null : armModel.getEEPos();
+    
+    break;
+  case VIEW_POS_REG_J:
+  case VIEW_POS_REG_C:
+    /* Save the current position of the Robot's faceplate in the currently select
+     * element of the Position Registers array */ 
+    if (active_index >= 0 && active_index < GPOS_REG.length) {
+      saveRobotFaceplatePointIn(armModel, GPOS_REG[active_index], mode == Screen.INPUT_POINT_J);
+    }
+    
+    break;
+  case INPUT_COMMENT_U:
+  case INPUT_COMMENT_L:
+    char newChar = '\0';
+    
+    if(mode == Screen.INPUT_COMMENT_U) {
+      newChar = (char)('A' + letterStates[0]);
+    } else if(mode == Screen.INPUT_COMMENT_L) {
+      newChar = (char)('a' + letterStates[0]);
+    }
+    
+    // Insert a character A - F (or a - f)
+    StringBuilder limbo = new StringBuilder(workingText);
+    limbo.setCharAt(col_select, newChar);
+    workingText = limbo.toString();
+    // Update and reset the letter states
+    letterStates[0] = (letterStates[0] + 1) % 6;
+    for(int idx = 1; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+    
+    updateComment();
+    
+    break;
+>>>>>>> dev2
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         editTextEntry(0);
@@ -2359,6 +2526,7 @@ public void ENTER() {
       row_select = min(active_instr, ITEMS_TO_SHOW - 1);
       renderStartIdx = active_instr - row_select;
       
+<<<<<<< HEAD
       loadInstructions(active_prog);
       nextScreen(Screen.NAV_PROG_INST);    
       break;
@@ -2396,6 +2564,58 @@ public void ENTER() {
         
         lastScreen();
         return;
+=======
+      transitionBack();
+      updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+      return;
+    }
+    
+    if(active_index >= 0 && active_index < REG.length) {
+      // Save inputted value
+      REG[active_index].value = f;
+      saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+    }
+    
+    transitionBack();
+    viewRegisters();
+    
+    break;
+  case INPUT_POINT_C:
+  case INPUT_POINT_J:
+    inputs = new float[6];
+    
+    // Parse each field, removing each the prefix
+    try {
+      for(int idx = 0; idx < inputs.length; ++idx) {
+        String inputStr = contents.get(idx).get(0);
+        inputs[idx] = Float.parseFloat( inputStr.substring(opt_select, inputStr.length()) );
+      }
+    } catch (NumberFormatException NFEx) {
+      // Invalid input
+      options = new ArrayList<String>();
+      options.add("Input values must be real numbers!");
+      updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+      return;
+    }
+    
+    if(mode == Screen.INPUT_POINT_J) {
+      float[] jointAngles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+      
+      // Bring angles within range: (0, TWO_PI)
+      for(int idx = 0; idx < inputs.length; ++idx) {
+        jointAngles[idx] = clampAngle(inputs[idx] * DEG_TO_RAD);
+      }
+      
+      // Save the input point
+      GPOS_REG[active_index].point = new RegPoint(jointAngles);
+    } else if(mode == Screen.INPUT_POINT_C) {
+      PVector position = new PVector();
+      float[] orientation = new float[] { 1f, 0f, 0f, 0f };
+    
+      // Bring the input values with the range [-9999, 9999]
+      for(int idx = 0; idx < inputs.length; ++idx) {
+        inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
+>>>>>>> dev2
       }
       
       if(active_index >= 0 && active_index < REG.length) {
@@ -2426,6 +2646,7 @@ public void ENTER() {
         nextScreen((mode == (Screen.NAV_PREGS_C)) ? Screen.EDIT_PREG_C : Screen.EDIT_PREG_J);
       }
       
+<<<<<<< HEAD
       break;
     case EDIT_PREG_C:
     case EDIT_PREG_J:
@@ -2455,6 +2676,48 @@ public void ENTER() {
         lastScreen();
       }
       break;
+=======
+      // Save the input point
+      GPOS_REG[active_index].point = new RegPoint(position, orientation);
+    }
+    
+    saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+    
+    transitionBack();
+    text_render_start = active_index;
+    row_select = 0;
+    col_select = 0;
+    viewRegisters();
+    
+    break;
+  case INPUT_COMMENT_U:
+  case INPUT_COMMENT_L:
+    
+    if(workingText.charAt(  workingText.length() - 1  ) == '\0') {
+      workingText = workingText.substring(0, workingText.length() - 1);
+    }
+    // Save the inputted comment to the selected register
+    if(transition_stack.peek() == Screen.VIEW_REG) {
+      REG[active_index].comment = workingText;
+    } else if(transition_stack.peek() == Screen.VIEW_POS_REG_J || transition_stack.peek() == Screen.VIEW_POS_REG_C) {
+      GPOS_REG[active_index].comment = workingText;
+    } else {
+      // Invalid envocation of the INPUT_COMMENT_* modes
+      mu();
+      return;
+    }
+    
+    workingText = null;
+    transitionBack();
+    row_select = col_select = 0;
+    text_render_start = active_index;
+    viewRegisters();
+    saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+    
+    break;
+    
+    default:
+>>>>>>> dev2
   }
 }//End enter
 
@@ -4658,12 +4921,15 @@ public ArrayList<ArrayList<String>> loadRegisters() {
 }
 
 /**
- * Saves the given Robot Model's current faceplate position and orientaion as
- * well as its current joint angles into the given Position Register.
+ * Saves the given Robot Model's current faceplate position and orientaion or
+ * its current joint angles into the given Position Register.
  * 
- * @param model The Robot model, of which to save the Faceplate point 
- * @param pReg  The Position Register, in which to save the point
+ * @param model            The Robot model, of which to save the Faceplate point 
+ * @param pReg             The Position Register, in which to save the point
+ * @param saveJointAngles  Whether to save thhe joint angles or the Cartesian
+ *                         values of the Robot's position
  */
+<<<<<<< HEAD
 public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) { 
   pushMatrix();
   resetMatrix();
@@ -4681,6 +4947,31 @@ public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg) {
   
   pReg.point = pt;
   saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+=======
+public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg, boolean saveJointAngles) {
+  
+  if (saveJointAngles) {
+    
+    float[] jointAngles = armModel.getJointRotations();
+    // Save the Robot's current joint angles
+    pReg.point = new RegPoint(jointAngles);
+  } else {
+    
+    pushMatrix();
+    resetMatrix();
+    // Get the position of the Robot's faceplate
+    applyModelRotation(model, false);
+    PVector fp_pos = new PVector( modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0) );
+    float[] orien = armModel.getQuaternion();
+    
+    popMatrix();
+    // Save the Robot's current position and orientation
+    pReg.point = new RegPoint(fp_pos, orien);
+  }
+  
+  viewRegisters();
+  updateScreen(TEXT_DEFAULT, TEXT_HIGHLIGHT);
+>>>>>>> dev2
 }
 
 /**
@@ -4711,9 +5002,22 @@ public ArrayList<ArrayList<String>> loadInputRegisterPointMethod() {
         }
       }
     } else {
+<<<<<<< HEAD
       // List current entry values ifthe Register is initialized
       String[] entries = (mode == Screen.EDIT_PREG_C) ? GPOS_REG[active_index].point.toCartesianStringArray()
       : GPOS_REG[active_index].point.toJointStringArray();
+=======
+      // List current entry values if the Register is initialized
+      RegPoint toDisplay = GPOS_REG[active_index].point;
+      String[] entries;
+      
+      if ((toDisplay.isCartesian() && mode == Screen.INPUT_POINT_J) || (!toDisplay.isCartesian() && mode == Screen.INPUT_POINT_C)) {
+        // Convert the point, if its type does not match the displat mode
+        entries = toDisplay.complement().toStringArray();
+      } else {
+        entries = toDisplay.toStringArray();
+      }
+>>>>>>> dev2
       
       for(String entry : entries) {
         register.add( newLine(entry) );
@@ -4742,11 +5046,18 @@ public ArrayList<ArrayList<String>> loadRegisterComment() {
   
   remark.add( newLine("\0") );
   workingText = "\0";
+<<<<<<< HEAD
   
   // Load the current comment for the selected register ifit exists
   if(mode == Screen.EDIT_DREG_COM) {
     if(active_index >= 0 && active_index < REG.length && REG[active_index].remark != null) {
       workingText = REG[active_index].remark;
+=======
+  // Load the curfrent comment for the selected register if it exists
+  if(mode == Screen.VIEW_REG) {
+    if(active_index >= 0 && active_index < REG.length && REG[active_index].comment != null) {
+      workingText = REG[active_index].comment;
+>>>>>>> dev2
     }
   } else if(mode == Screen.EDIT_PREG_COM && GPOS_REG[active_index].remark != null) {
     if(active_index >= 0 && active_index < GPOS_REG.length) {
