@@ -32,7 +32,7 @@ public static enum Screen implements DisplayMode {
   * examine and interact with
   */
   ACTIVE_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
-  INSTRUCTION_NAV(ScreenType.TYPE_LIST_CONTENTS),
+  INSTRUCT_NAV(ScreenType.TYPE_LIST_CONTENTS),
   NAV_TOOL_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
   NAV_USER_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
   PROGRAM_NAV(ScreenType.TYPE_LIST_CONTENTS),
