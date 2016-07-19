@@ -103,16 +103,7 @@ public void setup() {
   translate(-250, 0, 0);
   objects[1] = new WorldObject(250, 125, 500, color(255, 0, 255), color(255, 255, 255));
   
-  popMatrix();
-  
-  pushMatrix();
-  resetMatrix();
-  applyModelRotation(armModel, false);
-  
-  float[][] tMatrix = getTransformationMatrix(),
-            rMatrix = quatToMatrix( armModel.getQuaternion() );
-  popMatrix();
-    
+  popMatrix();    
   //createTestProgram();
 }
 
@@ -140,7 +131,7 @@ public void draw() {
       //run program
       armModel.inMotion = !executeProgram(currentProgram, armModel, execSingleInst);
     } else {
-      armModel.inMotion = !armModel.interpolateRotation(liveSpeed);
+      armModel.inMotion = !armModel.interpolateRotation(liveSpeed / 100f);
     }
   }
   else {
@@ -371,7 +362,7 @@ public void handleWorldObjects() {
  */
 public void displayTeachPoints() {
   // Teach points are displayed only while the Robot is being taught a frame
-  if(teachFrame != null && mode.getType() == ScreenType.TYPE_FRAME_EDIT) {
+  if(teachFrame != null && mode.getType() == ScreenType.TEACH_POINTS) {
     
     int size = 3;
 

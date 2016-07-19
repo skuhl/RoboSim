@@ -3,7 +3,7 @@ int motionFrameCounter = 0;
 float distanceBetweenPoints = 5.0;
 int interMotionIdx = -1;
 
-float liveSpeed = 0.1;
+int liveSpeed = 10;
 boolean executingInstruction = false;
 
 int errorCounter;
@@ -107,34 +107,28 @@ void showMainDisplayText() {
   }
   
   text(coordFrame, width-20, 20);
-  text("Speed: " + (Integer.toString((int)(Math.round(liveSpeed*100)))) + "%", width-20, 40);
+  text(String.format("Speed: %d%%" , liveSpeed), width - 20, 40);
   
-  // Display the Current position and orientation of the Robot in the World Frame
-  PVector ee_pos = convertNativeToWorld( armModel.getEEPos() );
-  //ee_pos = convertNativeToWorld(ee_pos);
+  PVector ee_pos = armModel.getEEPos();
+  // Display the Current position and orientation of the Robot in the active User Frame or in the World Frame coordinate system.
+  if (curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
+      Frame active = userFrames[activeUserFrame];
+      ee_pos = transform(ee_pos, invertHCMatrix( transformationMatrix(active.getOrigin(), active.getNativeAxes()) ));
+  }
+  ee_pos = convertNativeToWorld(ee_pos);
+  
   PVector wpr = armModel.getWPR();
+  
+  // Show the coordinates of the End Effector for the current Coordinate Frame
   String dis_world = String.format("Coord  X: %8.3f  Y: %8.3f  Z: %8.3f  W: %8.3f  P: %8.3f  R: %8.3f", 
   ee_pos.x, ee_pos.y, ee_pos.z, wpr.x * RAD_TO_DEG, wpr.y * RAD_TO_DEG, wpr.z * RAD_TO_DEG);
+  text(dis_world, width - 20, 60);
   
   // Display the Robot's joint angles
   float j[] = armModel.getJointRotations();
   String dis_joint = String.format("Joints  J1: %5.3f J2: %5.3f J3: %5.3f J4: %5.3f J5: %5.3f J6: %5.3f", 
   j[0] * RAD_TO_DEG, j[1] * RAD_TO_DEG, j[2] * RAD_TO_DEG, j[3] * RAD_TO_DEG, j[4] * RAD_TO_DEG, j[5] * RAD_TO_DEG);
-  
-  // Show the coordinates of the End Effector for the current Coordinate Frame
-  if(curCoordFrame == CoordFrame.JOINT) {          
-    text(dis_joint, width - 20, 60);
-    
-    if(DISPLAY_TEST_OUTPUT) {
-      text(dis_world, width - 20, 80);
-    }
-  } else {
-    text(dis_world, width - 20, 60);
-    
-    if(DISPLAY_TEST_OUTPUT) {
-      text(dis_joint, width - 20, 80);
-    }
-  }
+  text(dis_joint, width - 20, 80);
   
   // Display a message if the Robot is in motion
   if (armModel.modelInMotion()) {
@@ -225,9 +219,7 @@ public void updateCoordinateMode(ArmModel model) {
   }
   
   // Skip the tool frame, if there is no current active tool frame
-  if(curCoordFrame == CoordFrame.TOOL && !((activeToolFrame >= 0 && activeToolFrame < toolFrames.length)
-        || model.activeEndEffector == EndEffector.SUCTION
-        || model.activeEndEffector == EndEffector.CLAW)) {
+  if(curCoordFrame == CoordFrame.TOOL && !(activeToolFrame >= 0 && activeToolFrame < toolFrames.length)) {
     curCoordFrame = CoordFrame.USER;
   }
   
@@ -237,7 +229,7 @@ public void updateCoordinateMode(ArmModel model) {
   }
   
   // Update the Arm Model's rotation matrix for rotational motion based on the current frame
-  if(model.activeEndEffector == EndEffector.NONE && (curCoordFrame == CoordFrame.TOOL || (curCoordFrame == CoordFrame.WORLD && activeToolFrame != -1))) {
+  if(curCoordFrame == CoordFrame.TOOL || (curCoordFrame == CoordFrame.WORLD && activeToolFrame != -1)) {
     // Active Tool Frames are used in the World Frame as well
     armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
   } 
@@ -491,7 +483,7 @@ float[] calculateIKJacobian(PVector tgt, float[] rot) {
     float rDist = calculateQuatMag(rDelta);
     //println("distances from tgt: " + dist + ", " + rDist);
     //check whether our current position is within tolerance
-    if(dist < liveSpeed && rDist < 0.005*liveSpeed) break;
+    if(dist < (liveSpeed / 100f) && rDist < 0.00005f*liveSpeed) break;
     //calculate jacobian, 'J', and its inverse
     float[][] J = calculateJacobian(angles);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
@@ -569,7 +561,7 @@ void calculateDistanceBetweenPoints() {
   if(instruction != null && instruction.getMotionType() != MTYPE_JOINT)
   distanceBetweenPoints = instruction.getSpeed() / 60.0;
   else if(curCoordFrame != CoordFrame.JOINT)
-  distanceBetweenPoints = armModel.motorSpeed * liveSpeed / 60.0;
+  distanceBetweenPoints = armModel.motorSpeed * liveSpeed / 6000f;
   else distanceBetweenPoints = 5.0;
 }
 

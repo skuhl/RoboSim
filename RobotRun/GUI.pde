@@ -11,8 +11,8 @@ final int BUTTON_DEFAULT = color(70),
 int active_prog = -1; // the currently selected program
 int active_instr = -1; // the currently selected instruction
 int NUM_MODE; // When NUM_MODE is ON, allows for entering numbers
-int shift = OFF; // Is shift button pressed or not?
-int step = OFF; // Is step button pressed or not?
+boolean shift = false; // Is shift button pressed or not?
+boolean step = false; // Is step button pressed or not?
 int record = OFF;
 
 Screen mode;
@@ -36,15 +36,16 @@ String workingTextSuffix;
 boolean remarkUpper;
 boolean speedInPercentage;
 final int ITEMS_TO_SHOW = 6; // how many programs/ instructions to display on screen
-int curFrameIdx = -1;
 
-// Used to keep track a specific point in space
-PVector ref_point;
-// Used to keep track of a Frame that is being taught
+// Index of the current frame (Tool or User) selecting when in the Frame menus
+int curFrameIdx = -1,
+// Indices of currently active frames
+    activeUserFrame = -1,
+    activeToolFrame = -1;
+// The Frame being taught, during a frame teaching process
 Frame teachFrame = null;
-int activeUserFrame = -1;
-int activeJogFrame = -1;
-int activeToolFrame = -1;
+// A point in space; used during the Frame Point Teaching processes
+PVector ref_point;
 
 //variables for keeping track of the last change made to the current program
 Instruction lastInstruct;
@@ -65,7 +66,7 @@ String err = null;
 int row_select = 0; //currently selected display row
 int col_select = 0; //currently selected display column
 int opt_select = 0; //which option is on focus now?
-int text_render_start = 0; //index of the first element in a list to be drawn on screen
+int renderStartIdx = 0; //index of the first element in a list to be drawn on screen
 int active_index = 0; //index of the cursor with respect to the first element on screen
 boolean[] selectedLines; //array whose indecies correspond to currently selected lines
 // how many textlabels have been created for display
@@ -1024,7 +1025,7 @@ public void se() {
   active_prog = -1;
   opt_select = 0;
   resetStack();
-  nextScreen(Screen.PROGRAM_NAV);
+  nextScreen(Screen.NAV_PROGRAMS);
 }
 
 // Data button
@@ -1186,47 +1187,47 @@ public void IO() {
 
 public void up() {
   switch(mode) {
-    case PROGRAM_NAV:
-      if(shift == ON && programs.size() > ITEMS_TO_SHOW) {
-        active_prog = shiftUp(active_prog);
-      } else {
-        active_prog = moveOptUp(active_prog);
-      }
+    case NAV_PROGRAMS:
+      int[] indices = moveUp(active_prog, opt_select, renderStartIdx, shift);
+      
+      active_prog = indices[0];
+      opt_select = indices[1];
+      renderStartIdx = indices[2];
       
       if(DISPLAY_TEST_OUTPUT) {
-        System.out.printf("\nRow: %d\nColumn: %d\nProg: %d\nTRS: %d\n\n",
-        row_select, col_select, active_prog, text_render_start);
+        System.out.printf("\nOpt: %d\nProg: %d\nTRS: %d\n\n",
+        opt_select, active_prog, renderStartIdx);
       }
       
       break;
     case SELECT_COMMENT:
-    case INSTRUCT_NAV:
+    case NAV_PROG_INST:
     case SELECT_CUT_COPY:
     case SELECT_DELETE:
-      if(shift == ON && programs.get(active_prog).getInstructions().size() > ITEMS_TO_SHOW) {
-        active_instr = shiftUp(active_instr);
-      } else {
-        active_instr = moveRowUp(active_instr);
-      }
+      indices = moveUp(active_instr, row_select, renderStartIdx, shift);
+      
+      active_instr = indices[0];
+      row_select = indices[1];
+      renderStartIdx = indices[2];
       
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
-        row_select, col_select, active_instr, text_render_start);
+        row_select, col_select, active_instr, renderStartIdx);
       }
       
       break;
-    case VIEW_DATA_REG:
-    case VIEW_POS_REG_J:
-    case VIEW_POS_REG_C:
-      if(shift == ON) {
-        active_index = shiftUp(active_index);
-      } else {
-        active_index = moveRowUp(active_index);
-      }
+    case NAV_DREGS:
+    case NAV_PREGS_J:
+    case NAV_PREGS_C:
+      indices = moveUp(active_index, row_select, renderStartIdx, shift);
+      
+      active_index = indices[0];
+      row_select = indices[1];
+      renderStartIdx = indices[2];
       
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nIdx: %d\nTRS: %d\n\n",
-        row_select, col_select, active_index, text_render_start);
+        row_select, col_select, active_index, renderStartIdx);
       }
       break;
     case MAIN_MENU_NAV:
@@ -1276,56 +1277,54 @@ public void up() {
 public void dn() {
   int size;
   switch(mode) {
-    case PROGRAM_NAV:
-      size = programs.size();
-       //<>// //<>//
-      if(shift == ON && size > ITEMS_TO_SHOW) {
-        active_prog = shiftDn(active_prog, size);
-      } else {
-        active_prog = moveOptDn(active_prog, size);
-      }
+    case NAV_PROGRAMS:
+      size = programs.size(); //<>//
+      int[] indices = moveDown(active_prog, size, opt_select, renderStartIdx, shift);
+      
+      active_prog = indices[0];
+      opt_select = indices[1];
+      renderStartIdx = indices[2];
       
       if(DISPLAY_TEST_OUTPUT) {
-        System.out.printf("\nRow: %d\nProg: %d\nTRS: %d\n\n",
-        opt_select, active_prog, text_render_start);
+        System.out.printf("\nOpt: %d\nProg: %d\nTRS: %d\n\n",
+        opt_select, active_prog, renderStartIdx);
       }
       
       break;
     case SELECT_COMMENT:
-    case INSTRUCT_NAV:
+    case NAV_PROG_INST:
     case SELECT_CUT_COPY:
-    case SELECT_DELETE: //<>// //<>//
+    case SELECT_DELETE: //<>//
       size = programs.get(active_prog).getInstructions().size();
+      indices = moveDown(active_instr, size, row_select, renderStartIdx, shift);
       
-      if(shift == ON && size > ITEMS_TO_SHOW) {
-        active_instr = shiftDn(active_instr, size);
-      } else {
-        active_instr = moveRowDn(active_instr, size);
-      }
+      active_instr = indices[0];
+      row_select = indices[1];
+      renderStartIdx = indices[2];
+      
+      col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
       
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
-        row_select, col_select, active_instr, text_render_start);
+        row_select, col_select, active_instr, renderStartIdx);
       }
        //<>//
       break;
-    case VIEW_DATA_REG:
-    case VIEW_POS_REG_J:
-    case VIEW_POS_REG_C:
-      size = (mode == Screen.VIEW_DATA_REG) ? REG.length : GPOS_REG.length;
+    case NAV_DREGS:
+    case NAV_PREGS_J:
+    case NAV_PREGS_C:
+      size = (mode == Screen.NAV_DREGS) ? REG.length : GPOS_REG.length;
+      indices = moveDown(active_index, size, row_select, renderStartIdx, shift);
       
-      if(shift == ON) {
-        active_index = shiftDn(active_prog, size);
-      } else {
-        active_index = moveRowDn(active_prog, size);
-      }
+      active_index = indices[0];
+      row_select = indices[1];
+      renderStartIdx = indices[2];
       
       col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
-      loadRegisters();
       
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nIdx: %d\nTRS: %d\n\n",
-        row_select, col_select, active_index, text_render_start);
+        row_select, col_select, active_index, renderStartIdx);
       }
       
       break;
@@ -1375,12 +1374,12 @@ public void dn() {
 
 public void lt() { 
   switch(mode) { 
-    case INSTRUCT_NAV:    
+    case NAV_PROG_INST:    
       col_select = max(0, col_select - 1);
       break;
-    case VIEW_DATA_REG:
-    case VIEW_POS_REG_J:
-    case VIEW_POS_REG_C:
+    case NAV_DREGS:
+    case NAV_PREGS_J:
+    case NAV_PREGS_C:
       col_select = max(0, col_select - 1);
       break;
     case INPUT_REMARK_PREG:
@@ -1399,9 +1398,9 @@ public void lt() {
 
 public void rt() {
   switch(mode) {
-    case PROGRAM_NAV:
+    case NAV_PROGRAMS:
       break;
-    case INSTRUCT_NAV:
+    case NAV_PROG_INST:
       col_select = min(col_select + 1, contents.get(row_select).size() - 1);
       updateScreen();
       break;
@@ -1410,7 +1409,7 @@ public void rt() {
     case INPUT_POINT_C:
     case INPUT_POINT_J:
       // Delete a digit from the beginning of the number entry
-      if(shift == ON) {
+      if(shift) {
         String entry = contents.get(row_select).get(1);
         
         if (entry.length() > 1 && !(entry.length() == 2 && entry.charAt(0) == '-')) {
@@ -1427,14 +1426,14 @@ public void rt() {
       }
       
       break;
-    case VIEW_DATA_REG:
-    case VIEW_POS_REG_J:
-    case VIEW_POS_REG_C:
+    case NAV_DREGS:
+    case NAV_PREGS_J:
+    case NAV_PREGS_C:
       col_select = min(col_select + 1, contents.get(row_select).size() - 1);
       break;
     case INPUT_REMARK_PREG:
     case INPUT_REMARK_DREG:
-      if(shift == ON) {
+      if(shift) {
         // Delete key function
         if(workingText.length() > 1) {
           workingText = workingText.substring(1, workingText.length());
@@ -1461,30 +1460,29 @@ public void rt() {
 
 //toggle shift on/ off and button highlight
 public void sf() {
-  if(shift == OFF) { 
-    shift = ON;
+  if(!shift) {
     ((Button)cp5.get("sf")).setColorBackground(BUTTON_ACTIVE);
   } else {
     // Stop Robot jog movement when shift is off
     hd();
-    shift = OFF;
     ((Button)cp5.get("sf")).setColorBackground(BUTTON_DEFAULT);
   }
   
+  shift = !shift;
   updateScreen();
 }
 
 //toggle step on/ off and button highlight
 public void st() {
-  if(step == OFF) { 
-    step = ON;
+  if(!step) {
     ((Button)cp5.get("st")).setColorBackground(BUTTON_ACTIVE);
   }
   else {
-    step = OFF;
     ((Button)cp5.get("st")).setColorBackground(BUTTON_DEFAULT);
   }
   
+  
+  step = !step;
   updateScreen();
 }
 
@@ -1494,20 +1492,20 @@ public void pr() {
 
 public void f1() {
   switch(mode) {
-    case INSTRUCT_NAV:
-      if(shift == ON) {
+    case NAV_PROG_INST:
+      if(shift) {
         newInstruction(false);
         
         active_instr = programs.get(active_prog).getInstructions().size() - 1; 
         col_select = 0;
         row_select = min(active_instr, ITEMS_TO_SHOW - 1);
-        text_render_start = active_instr - row_select;
+        renderStartIdx = active_instr - row_select;
       } else {
         nextScreen(Screen.PICK_INSTRUCT);
       }
       break;
     case NAV_TOOL_FRAMES:
-      if(shift == ON) {
+      if(shift) {
         // Reset the highlighted frame in the tool frame list
         toolFrames[row_select] = new ToolFrame();
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
@@ -1522,7 +1520,7 @@ public void f1() {
       }
       break;
     case NAV_USER_FRAMES:
-      if(shift == ON) {
+      if(shift) {
         // Reset the highlighted frame in the user frames list
         userFrames[row_select] = new UserFrame();
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
@@ -1546,10 +1544,10 @@ public void f1() {
     case THREE_POINT_TOOL:
     case SIX_POINT_MODE:
     case FOUR_POINT_MODE:
-      ref_point = (shift == ON) ? null : armModel.getEEPos();
+      ref_point = (shift) ? null : armModel.getEEPos();
       updateScreen();
       break;
-    case VIEW_DATA_REG:
+    case NAV_DREGS:
       if(col_select == 1) {
         // Bring up comment menu
         nextScreen(Screen.INPUT_REMARK_DREG);
@@ -1559,9 +1557,9 @@ public void f1() {
       }
       
       break;
-    case VIEW_POS_REG_J:
-    case VIEW_POS_REG_C:
-      if (shift == ON) {
+    case NAV_PREGS_J:
+    case NAV_PREGS_C:
+      if (shift) {
         /* Save the current position of the Robot's faceplate in the currently select
          * element of the Position Registers array */ 
         if (active_index >= 0 && active_index < GPOS_REG.length) {
@@ -1573,7 +1571,7 @@ public void f1() {
           nextScreen(Screen.INPUT_REMARK_PREG);
         } else if(col_select >= 2) {
           // Bring up Point editing menu
-          nextScreen((mode == (Screen.VIEW_POS_REG_C)) ? Screen.INPUT_POINT_C : Screen.INPUT_POINT_J);
+          nextScreen((mode == (Screen.NAV_PREGS_C)) ? Screen.INPUT_POINT_C : Screen.INPUT_POINT_J);
         }
       }
       
@@ -1589,7 +1587,7 @@ public void f1() {
 
 public void f2() {
   switch(mode) {
-    case PROGRAM_NAV:
+    case NAV_PROGRAMS:
       workingText = "";
       nextScreen(Screen.NEW_PROGRAM);
       break;
@@ -1629,12 +1627,13 @@ public void f2() {
           armModel.resetFrame();
         }
       }
+      updateScreen();
       break;
-    case VIEW_DATA_REG:
+    case NAV_DREGS:
       nextScreen(Screen.DATA_MENU_NAV);
       break;
-    case VIEW_POS_REG_J:
-    case VIEW_POS_REG_C:
+    case NAV_PREGS_J:
+    case NAV_PREGS_C:
       nextScreen(Screen.SWITCH_PREG);
       break;
     case INPUT_REMARK_PREG:
@@ -1647,7 +1646,7 @@ public void f2() {
 
 public void f3() {
   switch(mode){
-    case PROGRAM_NAV:
+    case NAV_PROGRAMS:
       nextScreen(Screen.CONFIRM_PROG_DELETE);
       break;
     case SELECT_CUT_COPY:
@@ -1689,7 +1688,7 @@ public void f4() {
   Program p;
   
   switch(mode) {
-  case INSTRUCT_NAV:
+  case NAV_PROG_INST:
     p = programs.get(active_prog);
     if(p.instructions.size() == 0) break;
     Instruction ins = p.getInstructions().get(active_instr);
@@ -1741,7 +1740,7 @@ public void f4() {
         active_prog = programs.size() - 1;
         
         row_select = min(active_prog, ITEMS_TO_SHOW - 1);
-        text_render_start = active_prog - row_select;
+        renderStartIdx = active_prog - row_select;
       }
       
       display_stack.pop();
@@ -1833,7 +1832,20 @@ public void f4() {
     inputLetter(3);
     break;
   default:
-    break;
+    
+    if (mode.type == ScreenType.TEACH_POINTS) {
+      
+      if (teachFrame != null) {
+        Point tgt = teachFrame.getPoint(opt_select);
+        
+        if (tgt != null && tgt.joints != null) {
+          // Move the Robot to the select point
+          armModel.setupRotationInterpolation(tgt.joints);
+          armModel.inMotion = true;
+          currentInstruction = -2;
+        }
+      }
+    }
   }
   
   updateScreen();
@@ -1841,8 +1853,8 @@ public void f4() {
 
 public void f5() {
   switch(mode){
-    case INSTRUCT_NAV:
-      if(shift == ON) {
+    case NAV_PROG_INST:
+      if(shift) {
         newInstruction(true);        
         updateScreen();
       } 
@@ -1884,7 +1896,7 @@ public void f5() {
       updateScreen();
       break;
     case CONFIRM_PROG_DELETE:
-      opt_select = -1;
+      opt_select = 0;
       
       lastScreen();
       updateScreen();
@@ -1955,21 +1967,22 @@ public void hd() {
 }
 
 public void fd() {  
-  if(!armModel.inMotion && shift == ON) {
+  if(!armModel.inMotion && shift) {
     currentProgram = programs.get(active_prog);
     executingInstruction = false;
     armModel.inMotion = true;
     
-    if(step == ON) {
+    if(step) {
       // Execute a single instruction
       currentInstruction = active_instr;
       execSingleInst = true;
       
       if(active_instr < currentProgram.getInstructions().size() - 1) {
         // Move to the next instruction
-        shift = OFF;
+        boolean limbo = shift;
+        shift = false;
         dn();
-        shift = ON;
+        shift = limbo;
       }
       
     } else {
@@ -1982,11 +1995,12 @@ public void fd() {
 
 public void bd() {
   // If there is a previous instruction, then move to it and reverse its affects
-  if(!armModel.inMotion && shift == ON && step == ON && active_instr > 0) {
+  if(!armModel.inMotion && shift && step && active_instr > 0) {
     
-    shift = OFF;
+    boolean limbo = shift;
+    shift = false;
     up();
-    shift = ON;
+    shift = limbo;
     
     Instruction ins = programs.get(active_prog).getInstructions().get(active_instr);
     
@@ -2094,12 +2108,12 @@ public void ENTER() {
       break;  
       
     //Program nav and edit
-    case PROGRAM_NAV:
+    case NAV_PROGRAMS:
       if(programs.size() != 0){
         active_prog = opt_select;
         active_instr = 0;
         
-        nextScreen(Screen.INSTRUCT_NAV);
+        nextScreen(Screen.NAV_PROG_INST);
       }
       break;
     case NEW_PROGRAM:
@@ -2110,10 +2124,10 @@ public void ENTER() {
         active_instr = 0;
   
         display_stack.pop();
-        nextScreen(Screen.INSTRUCT_NAV);
+        nextScreen(Screen.NAV_PROG_INST);
       }
       break;
-    case INSTRUCT_NAV:
+    case NAV_PROG_INST:
       if(col_select == 2) {
         nextScreen(Screen.SET_MV_INSTRUCT_TYPE);
         NUM_MODE = ON;
@@ -2312,8 +2326,8 @@ public void ENTER() {
       active_instr = p.getInstructions().size() - 1;
       row_select = min(active_instr, ITEMS_TO_SHOW - 1);
       col_select = 0;
-      text_render_start = active_instr - row_select;
-      nextScreen(Screen.INSTRUCT_NAV);
+      renderStartIdx = active_instr - row_select;
+      nextScreen(Screen.NAV_PROG_INST);
       break;
     case INPUT_RSTMT:
     case EDIT_RSTMT:
@@ -2368,27 +2382,27 @@ public void ENTER() {
       col_select = 0;
       
       row_select = min(active_instr, ITEMS_TO_SHOW - 1);
-      text_render_start = active_instr - row_select;
+      renderStartIdx = active_instr - row_select;
       
       loadInstructions(active_prog);
-      nextScreen(Screen.INSTRUCT_NAV);    
+      nextScreen(Screen.NAV_PROG_INST);    
       break;
     case SWITCH_PREG:
       if(opt_select == 0) {
         // View Cartesian values
-        nextScreen(Screen.VIEW_POS_REG_C);
+        nextScreen(Screen.NAV_PREGS_C);
       } else if(opt_select == 1) {
         // View Joint values
-        nextScreen(Screen.VIEW_POS_REG_J);
+        nextScreen(Screen.NAV_PREGS_J);
       }
       break;
     case DATA_MENU_NAV:      
       if(opt_select == 0) {
         // Data Register Menu
-        nextScreen(Screen.VIEW_DATA_REG);
+        nextScreen(Screen.NAV_DREGS);
       } else if(opt_select == 1) {
         // Position Register Menu
-        nextScreen(Screen.VIEW_POS_REG_C);
+        nextScreen(Screen.NAV_PREGS_C);
       }
       break;
     case INPUT_INTEGER:
@@ -2425,7 +2439,7 @@ public void ENTER() {
       
       lastScreen();
       break;
-    case VIEW_DATA_REG:
+    case NAV_DREGS:
       if(col_select == 1) {
         // Bring up comment menu
         nextScreen(Screen.INPUT_REMARK_DREG);
@@ -2442,14 +2456,14 @@ public void ENTER() {
       }
       
       break;
-    case VIEW_POS_REG_J:
-    case VIEW_POS_REG_C:   
+    case NAV_PREGS_J:
+    case NAV_PREGS_C:   
       if(col_select == 1) {
         // Bring up comment menu
         nextScreen(Screen.INPUT_REMARK_PREG);
       } else if(col_select >= 2) {
         // Bring up Register editing menu
-        nextScreen((mode == (Screen.VIEW_POS_REG_C)) ? Screen.INPUT_POINT_C : Screen.INPUT_POINT_J);
+        nextScreen((mode == (Screen.NAV_PREGS_C)) ? Screen.INPUT_POINT_C : Screen.INPUT_POINT_J);
       }
       
       break;
@@ -2481,7 +2495,7 @@ public void ENTER() {
 }//End enter
 
 public void ITEM() {
-  if(mode == Screen.INSTRUCT_NAV) {
+  if(mode == Screen.NAV_PROG_INST) {
     opt_select = 0;
     workingText = "";
     nextScreen(Screen.JUMP_TO_LINE);
@@ -2537,7 +2551,7 @@ public void BKSPC() {
 }
 
 public void COORD() {
-  if(shift == ON) {
+  if(shift) {
     nextScreen(Screen.ACTIVE_FRAMES);
   } else {  
     // Update the coordinate mode
@@ -2547,17 +2561,56 @@ public void COORD() {
 }
 
 public void SPEEDUP() {
-  if(liveSpeed == 0.01) liveSpeed += 0.04; 
-  else if(liveSpeed < 0.5) liveSpeed += 0.05;
-  else if(liveSpeed < 1) liveSpeed += 0.1;
-  if(liveSpeed > 1) liveSpeed = 1;
+  // Increase the speed at which the Robot jogs
+  if (shift) {
+    
+    if (liveSpeed < 5) {
+      liveSpeed = 5;
+    } else if (liveSpeed < 50) {
+      liveSpeed = 50;
+    } else {
+      liveSpeed = 100;
+    }
+  } else if (liveSpeed < 100) {
+    
+    if (liveSpeed < 5) {
+      ++liveSpeed;
+    } else if (liveSpeed < 50) {
+      liveSpeed += 5;
+    } else if (liveSpeed < 100) {
+      liveSpeed += 10f;
+    }
+  }
+  
+  // The Robot's speed multiplier is bounded to the range 1% to 100%
+  liveSpeed = min(liveSpeed, 100);
 }
 
 
 public void SLOWDOWN() {
-  if(liveSpeed > 0.5) liveSpeed -= 0.1;
-  else if(liveSpeed > 0) liveSpeed -= 0.05;
-  if(liveSpeed < 0.01) liveSpeed = 0.01;
+  // Reduce the speed at which the Robot jogs
+  if (shift) {
+    
+    if (liveSpeed > 50) {
+      liveSpeed = 50;
+    } else if (liveSpeed > 5) {
+      liveSpeed = 5;
+    } else {
+      liveSpeed = 1;
+    }
+  } else if (liveSpeed > 1) {
+    
+    if (liveSpeed <= 5f) {
+      --liveSpeed;
+    } else if (liveSpeed <= 50) {
+      liveSpeed -= 5;
+    } else {
+      liveSpeed -= 10;
+    }
+  }
+  
+  // The Robot's speed multiplier is bounded to the range 1% to 100%
+  liveSpeed = max(1, liveSpeed);
 }
 
 
@@ -2676,7 +2729,7 @@ public void EE() {
 
 public void JOINT1_NEG() {
   
-  if (shift == ON) {
+  if (shift) {
     
     if (curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
@@ -2702,7 +2755,7 @@ public void JOINT1_NEG() {
 
 public void JOINT1_POS() {
   
-  if (shift == ON) {
+  if (shift) {
     
     if(curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
@@ -2729,7 +2782,7 @@ public void JOINT1_POS() {
 
 public void JOINT2_NEG() {
   
-  if (shift == ON) {
+  if (shift) {
     
     if(curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
@@ -2755,7 +2808,7 @@ public void JOINT2_NEG() {
 
 public void JOINT2_POS() {
   
-  if (shift == ON) {
+  if (shift) {
     
     if(curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
@@ -2781,7 +2834,7 @@ public void JOINT2_POS() {
 
 public void JOINT3_NEG() {
   
-  if (shift == ON) {
+  if (shift) {
     
     if(curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
@@ -2807,7 +2860,7 @@ public void JOINT3_NEG() {
 
 public void JOINT3_POS() {
   
-  if (shift == ON) {
+  if (shift) {
     
     if(curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
@@ -2833,7 +2886,7 @@ public void JOINT3_POS() {
 
 public void JOINT4_NEG() {
   
-  if (shift == ON) {
+  if (shift) {
     
     if(curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
@@ -2859,7 +2912,7 @@ public void JOINT4_NEG() {
 
 public void JOINT4_POS() {
   
-  if (shift == ON) {
+  if (shift) {
     
     if(curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
@@ -2885,7 +2938,7 @@ public void JOINT4_POS() {
 
 public void JOINT5_NEG() {
   
-  if (shift == ON) {
+  if (shift) {
     
     if(curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
@@ -2911,7 +2964,7 @@ public void JOINT5_NEG() {
 
 public void JOINT5_POS() {
   
-  if (shift == ON) {
+  if (shift) {
     
     if(curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
@@ -2937,7 +2990,7 @@ public void JOINT5_POS() {
 
 public void JOINT6_NEG() {
   
-  if (shift == ON) {
+  if (shift) {
     
     if(curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
@@ -2963,7 +3016,7 @@ public void JOINT6_NEG() {
 
 public void JOINT6_POS() {
   
-  if (shift == ON) {
+  if (shift) {
     
     if(curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
@@ -3287,7 +3340,7 @@ public void updateScreen() {
           c1 = TEXT_HIGHLIGHT;
           c2 = TEXT_DEFAULT;
         }
-      } else if(mode.getType() == ScreenType.TYPE_LINE_SELECT && selectedLines[text_render_start + i]) {
+      } else if(mode.getType() == ScreenType.TYPE_LINE_SELECT && selectedLines[renderStartIdx + i]) {
         //highlight any currently selected lines
         c1 = TEXT_DEFAULT;
         c2 = TEXT_HIGHLIGHT;
@@ -3406,7 +3459,7 @@ public String getHeader(Screen mode){
   String header = null;
   
   switch(mode) {
-    case PROGRAM_NAV:
+    case NAV_PROGRAMS:
       header = "PROGRAMS";
       break;
     case NEW_PROGRAM:
@@ -3415,7 +3468,7 @@ public String getHeader(Screen mode){
     case CONFIRM_INSTR_DELETE:
     case CONFIRM_INSERT:
     case CONFIRM_RENUM:
-    case INSTRUCT_NAV:
+    case NAV_PROG_INST:
     case INSTRUCT_MENU_NAV:
     case SET_MV_INSTR_SPD:
     case SET_MV_INSTR_REG_NUM:
@@ -3471,15 +3524,15 @@ public String getHeader(Screen mode){
     case DATA_MENU_NAV:
       header = "VIEW REGISTERS";
       break;
-    case VIEW_DATA_REG:
+    case NAV_DREGS:
       header = "REGISTERS";
       break;
-    case VIEW_POS_REG_J:
-    case VIEW_POS_REG_C:
+    case NAV_PREGS_J:
+    case NAV_PREGS_C:
       header = "POSTION REGISTERS";
       break;
     case INPUT_FLOAT:
-      if(display_stack.peek() == Screen.VIEW_DATA_REG) {
+      if(display_stack.peek() == Screen.NAV_DREGS) {
         header = "REGISTERS";
       }
       else{
@@ -3488,7 +3541,7 @@ public String getHeader(Screen mode){
       break;
     case INPUT_POINT_C:
     case INPUT_POINT_J:
-      if(display_stack.peek() == Screen.VIEW_POS_REG_J || display_stack.peek() == Screen.VIEW_POS_REG_C) {
+      if(display_stack.peek() == Screen.NAV_PREGS_J || display_stack.peek() == Screen.NAV_PREGS_C) {
         header = "POSITION REGISTER: ";
         
         if(mode != Screen.INPUT_REMARK_DREG && GPOS_REG[active_index].remark != null) {
@@ -3527,7 +3580,7 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case CONFIRM_INSERT:
     case CONFIRM_RENUM:
     case FIND_REPL:
-    case INSTRUCT_NAV:
+    case NAV_PROG_INST:
     case SELECT_DELETE:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
@@ -3564,9 +3617,9 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
       break;
       
     //View registers
-    case VIEW_DATA_REG:
-    case VIEW_POS_REG_C:
-    case VIEW_POS_REG_J:
+    case NAV_DREGS:
+    case NAV_PREGS_C:
+    case NAV_PREGS_J:
       contents = loadRegisters();
       break;
     case INPUT_REMARK_DREG:
@@ -3590,6 +3643,20 @@ public ArrayList<String> getOptions(Screen mode){
   ArrayList<String> options;
   
   switch(mode) {
+    //Program list navigation/ edit
+    case NAV_PROGRAMS:
+      options = loadPrograms();
+      break;
+    case NEW_PROGRAM:
+      options = new ArrayList<String>();
+      options.add("Program Name:  " + workingText);
+      options.add("Press ENTER to confirm");
+      break;
+    case CONFIRM_PROG_DELETE:
+      options = new ArrayList<String>();
+      options.add("Delete selected program?");
+      break;
+      
     //Main menu and submenus
     case MAIN_MENU_NAV:
       options = new ArrayList<String>();
@@ -3818,7 +3885,7 @@ public String[] getFunctionLabels(Screen mode){
   String[] funct = new String[5];
   
   switch(mode) {
-    case PROGRAM_NAV:
+    case NAV_PROGRAMS:
       // F2, F3
       funct[0] = "";
       funct[1] = "[Create]";
@@ -3826,9 +3893,9 @@ public String[] getFunctionLabels(Screen mode){
       funct[3] = "";
       funct[4] = "";
       break;
-    case INSTRUCT_NAV:
+    case NAV_PROG_INST:
       // F1, F4, F5
-      if(shift == ON) {
+      if(shift) {
         funct[0] = "[New Pt]";
         funct[1] = "";
         funct[2] = "";
@@ -3860,7 +3927,7 @@ public String[] getFunctionLabels(Screen mode){
     case NAV_TOOL_FRAMES:
     case NAV_USER_FRAMES:
       // F1, F2, F3
-      if(shift == ON) {
+      if(shift) {
         funct[0] = "[Reset]";
         funct[1] = "[Method]";
         funct[2] = "[Switch]";
@@ -3888,7 +3955,7 @@ public String[] getFunctionLabels(Screen mode){
     case FOUR_POINT_MODE:
     case SIX_POINT_MODE:
       // F1, F5
-      if(shift == ON) {
+      if(shift) {
         funct[0] = "[Rmv Ref]";
         funct[1] = "[Method]";
         funct[2] = "";
@@ -3918,8 +3985,8 @@ public String[] getFunctionLabels(Screen mode){
       funct[3] = "";
       funct[4] = "";
       break;
-    case VIEW_POS_REG_C:
-    case VIEW_POS_REG_J:
+    case NAV_PREGS_C:
+    case NAV_PREGS_J:
       // F1, F2
       funct[0] = "[Sav Pt]";
       funct[1] = "[Switch]";
@@ -3927,7 +3994,7 @@ public String[] getFunctionLabels(Screen mode){
       funct[3] = "";
       funct[4] = "";
      break;
-    case VIEW_DATA_REG:
+    case NAV_DREGS:
       // F2
       funct[0] = "";
       funct[1] = "[Switch]";
@@ -4021,7 +4088,7 @@ ArrayList<String> loadPrograms() {
   int size = programs.size();
   active_instr = 0;
    
-  int start = text_render_start;
+  int start = renderStartIdx;
   int end = min(start + ITEMS_TO_SHOW, size);
   
   for(int i = start; i < end; i += 1) {
@@ -4038,7 +4105,7 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
   
   Program p = programs.get(programID);
   int size = p.getInstructions().size();
-  int start = text_render_start;
+  int start = renderStartIdx;
   int end = min(start + ITEMS_TO_SHOW, size);
   
   for(int i = start ; i < end; i+= 1) {
@@ -4053,7 +4120,7 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
     if(instr instanceof MotionInstruction) {
       MotionInstruction a = (MotionInstruction)instr;
       
-      if(armModel.getEEPos().dist(a.getVector(p).pos) < liveSpeed) {
+      if(armModel.getEEPos().dist(a.getVector(p).pos) < (liveSpeed / 100f)) {
         m.add("@");
       }
       else {
@@ -4105,7 +4172,7 @@ public void updateInstructions() {
   active_instr = min(active_instr,  prog.getInstructions().size() - 1);
   row_select = min(active_instr, ITEMS_TO_SHOW - 1);
   col_select = 0;
-  text_render_start = active_instr - row_select;
+  renderStartIdx = active_instr - row_select;
   
   lastScreen();
 }
@@ -4212,7 +4279,7 @@ public void newInstruction(boolean overwrite){
   (curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
   reg,
   false,
-  (curCoordFrame == CoordFrame.JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed),
+  (curCoordFrame == CoordFrame.JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed) / 100f,
   0,
   activeUserFrame,
   activeToolFrame);
@@ -4567,7 +4634,7 @@ public void createPoint(){
   saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
   
   lastScreen();
-  text_render_start = active_index;
+  renderStartIdx = active_index;
   row_select = 0;
   col_select = 0;
   loadRegisters();
@@ -4583,8 +4650,8 @@ public ArrayList<ArrayList<String>> loadRegisters() {
   ArrayList<ArrayList<String>> regs = new ArrayList<ArrayList<String>>();
   
   // View Registers or Position Registers
-  int start = text_render_start;
-  int end = min(start + ITEMS_TO_SHOW - 1, REG.length);
+  int start = renderStartIdx;
+  int end = min(start + ITEMS_TO_SHOW, REG.length);
   // Display a subset of the list of registers
   for(int idx = start; idx < end; ++idx) {
     String spaces;
@@ -4601,7 +4668,7 @@ public ArrayList<ArrayList<String>> loadRegisters() {
     
     String lbl;
     
-    if(mode == Screen.VIEW_DATA_REG) {
+    if(mode == Screen.NAV_DREGS) {
       lbl = (REG[idx].remark == null) ? "" : REG[idx].remark;
     } else {
       lbl  = (GPOS_REG[idx].remark == null) ? "" : GPOS_REG[idx].remark;
@@ -4611,11 +4678,11 @@ public ArrayList<ArrayList<String>> loadRegisters() {
     while(buffer-- > 0) { lbl += " "; }
     
     // Display the comment asscoiated with a specific Register entry
-    String regLbl = String.format("%s[%d:%s%s]", (mode == Screen.VIEW_DATA_REG) ? "R" : "PR", (idx + 1), spaces, lbl);
+    String regLbl = String.format("%s[%d:%s%s]", (mode == Screen.NAV_DREGS) ? "R" : "PR", (idx + 1), spaces, lbl);
     // Display Register value (* ifuninitialized)
     String regEntry = "*";
     
-    if(mode == Screen.VIEW_DATA_REG) {
+    if(mode == Screen.NAV_DREGS) {
       if(REG[idx].value != null) {
         // Dispaly Register value
         regEntry = String.format("%4.3f", REG[idx].value);
@@ -4624,7 +4691,7 @@ public ArrayList<ArrayList<String>> loadRegisters() {
     } else if(GPOS_REG[idx].point != null) {
       // What to display for a point ...
       regEntry = "...";
-    } else if(mode == Screen.VIEW_POS_REG_C && GPOS_REG[idx].point == null) {
+    } else if(mode == Screen.NAV_PREGS_C && GPOS_REG[idx].point == null) {
       // Distinguish Joint from Cartesian mode for now
       regEntry = "#";
     }
@@ -4774,78 +4841,83 @@ public ArrayList<String> newLine(String... columns) {
   return line;
 }
 
-public int moveRowUp(int row){
-  row = max(0, row - 1);
+/**
+ * This method updates the given list, row, and render start indices for a list of elements, whose contents potentially
+ * cannot all be show on the screen, when moving backwards in the list. It is assumed that the lower bound of list index
+ * is 0 and that the given list index is valid. Also, the row index should be within the bounds of [0, ITEMS_TO_DISPLAY].
+ * Render start index corresponds to the index, in the list that is being displayed, that will appear at the top of the
+ * list display; so, the subset of the displayed list ranging from render start index to render start index + ITEMS_TO_DISPLAY
+ * is shown on the screen. The inPlace parameter determines how the list display will be shifted. If it is false, then the
+ * display will be shift backward one element (if possible). However, if inPlace is set to true, then the list display will
+ * shift backward at most ITEMS_TO_DISPLAY - 1 elements (depending on the value of render start index), while holding the
+ * current row index constant. The updated list, row, and render start indices are returned in a three element integer in
+ * that order.
+ * 
+ * @param listIdx         The index, of the currently highlighted row in the display, in the list
+ * @param row             The index, of the currently highlighted row in the display, relative to the first element
+ *                        displayed
+ * @param renderstartIdx  The index of the first element displayed on the Screen
+ * @param inPlace         Whether to move backward the list an entire Screen lenth of elements, while keeping the row
+ *                        constant, or move backward a single element
+ * @returning             The updated values of listIdx, row, renderStartIdx in a 3-element integer array in that order
+ */
+public int[] moveUp(int listIdx, int row, int renderStartIdx, boolean inPlace) {
   
-  if(row < text_render_start){
-    text_render_start = row;
-    row_select = 0;
-  }
-  else{
-    row_select = max(0, row_select - 1);
+  if (inPlace && renderStartIdx > 0) {
+    // Move display frame up an entire screen's display length
+    int t = renderStartIdx;
+    
+    renderStartIdx = max(0, t - ITEMS_TO_SHOW - 1);
+    listIdx = listIdx + min(0, renderStartIdx - t);
+  } else {
+    // Move up a single element
+    int i = listIdx,
+    r = row;
+    
+    listIdx = max(0, i - 1);
+    row = max(0, r + min(listIdx - i, 0));
+    renderStartIdx = renderStartIdx + min((listIdx - i) - (row - r), 0);
   }
   
-  return row;
+  return new int[] { listIdx, row, renderStartIdx };
 }
 
-public int moveOptUp(int opt){
-  opt = max(0, opt - 1);
+/**
+ * This method updates the list, row, render start indices for a list of elements, which may have too many elements to
+ * fit on the screen, when moving forward in the list. It is assumed that the given list index is within the bounds of
+ * 0 and listSize - 1 and that row is within the bounds of 0 and ITEMS_TO_DISPLAY - 1, and render start index = list
+ * index - row index. Similar to moveUp(), if inPlace is set to true, that the list and render start indices will be
+ * updated to move forward in the list at most ITEMS_TO_DISPLAY - 1 (depending on the current value of render start index),
+ * while keeping the row index constant. Otherwise, the indices are updated for moving a single element forward in the
+ * list and down the screen display. The updated indices are returned in an 3-element integer arrat in the order of list
+ * index, row index, and finally render start index.
+ * 
+ * @param listIdx         The index, of the currently highlighted row in the display, in the list
+ * @param listsize        The number of elements in the list
+ * @param row             The index, of the currently highlighted row in the display, relative to the first element
+ *                        displayed
+ * @param renderstartIdx  The index of the first element displayed on the Screen
+ * @param inPlace         Whether to move forward the list an entire Screen lenth of elements, while keeping the row
+ *                        constant, or move forward a single element
+ * @returning             The updated values of listIdx, row, renderStartIdx in a 3-element integer array in that order
+ */
+public int[] moveDown(int listIdx, int listSize, int row, int renderStartIdx, boolean inPlace) {
   
-  if(opt < text_render_start){
-    text_render_start = opt;
-    opt_select = 0;
-  }
-  else{
-    opt_select = max(0, opt_select - 1);
-  }
-  
-  return opt;
-}
-
-public int shiftUp(int idx){
-  // Move display frame up an entire screen's display length
-  int t = text_render_start;
-  
-  text_render_start = max(0, t - (ITEMS_TO_SHOW - 1));
-  idx += min(0, text_render_start - t);
-  
-  return idx;
-}
-
-public int moveRowDn(int row, int max){
-  row = min(max - 1, row + 1);
-  
-  if(row > text_render_start + (ITEMS_TO_SHOW - 1)){
-    text_render_start = row - (ITEMS_TO_SHOW - 1);
-    row_select = ITEMS_TO_SHOW - 1;
-  }
-  else if(row_select < max - 1){
-    row_select = min(ITEMS_TO_SHOW - 1, row_select + 1);
-  }
-  
-  return row;
-}
-
-public int moveOptDn(int opt, int max){
-  opt = min(max - 1, opt + 1);
-  
-  if(opt > text_render_start + (ITEMS_TO_SHOW - 1)){
-    text_render_start = opt - (ITEMS_TO_SHOW - 1);
-    opt_select = ITEMS_TO_SHOW - 1;
-  }
-  else if(opt_select < max - 1){
-    opt_select = min(ITEMS_TO_SHOW - 1, opt_select + 1);
+  if (inPlace && listSize > (renderStartIdx + ITEMS_TO_SHOW)) {
+    // Move display frame down an entire screen's display length
+    int t = renderStartIdx;
+    
+    renderStartIdx = min(renderStartIdx + (ITEMS_TO_SHOW - 1), listSize - ITEMS_TO_SHOW);
+    listIdx = listIdx + max(0, renderStartIdx - t);
+  } else {
+    // Move down a single element
+    int i = listIdx,
+    r = row;
+    
+    listIdx = min(i + 1, listSize - 1);
+    row = min(r + max(0, (listIdx - i)), (ITEMS_TO_SHOW - 1));
+    renderStartIdx = renderStartIdx + max(0, (listIdx - i) - (row - r));
   }
   
-  return opt;
-}
-
-public int shiftDn(int idx, int max){
-  // Move display frame down an entire screen's display length
-  int t = text_render_start;
-  
-  text_render_start = min(text_render_start + ITEMS_TO_SHOW - 1, max - ITEMS_TO_SHOW);
-  idx += max(0, text_render_start - t);
-  
-  return idx;
+  return new int[] { listIdx, row, renderStartIdx };
 }
