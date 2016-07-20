@@ -5,9 +5,14 @@ private final Register[] REG = new Register[100];
 
 /* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
 public class Register {
-  public String comment = null;
-  public Float value = null;
-
+  public String comment;
+  public Float value;
+  
+  public Register() {
+    comment = null;
+    value = null;
+  }
+  
   public Register(String c, Float v) {
     value = v;
     comment = c;
@@ -16,13 +21,14 @@ public class Register {
 
 /* A simple class for a Position Register of the Robot Arm, which holds a point associated with a comment. */
 public class PositionRegister {
-  public String comment = null;
-  public RegPoint point = null;
-
+  public String comment;
+  public RegPoint point;
+  
   public PositionRegister() {
-    point = new RegPoint();
+    comment = null;
+    point = null;
   }
-
+  
   public PositionRegister(String c, RegPoint pt) {
     point = pt;
     comment = c;
@@ -144,8 +150,7 @@ public class RegPoint {
     
     if (isCartesian()) {
       // Convert from a Cartesian to Joint point
-      PVector position = new PVector(values[0], values[1], values[2]);
-      float[] angles = calculateIKJacobian(position, Arrays.copyOfRange(values, 3, 7));
+      float[] angles = calculateIKJacobian(position(), orientation());
       
       return new RegPoint(angles);
     } else {
@@ -595,7 +600,7 @@ public class ExpressionSet {
           
           // Use Position Register point
           return pt;
-        } else if (regIdx[2] > 0 && regIdx[2] < 12) {
+        } else if (regIdx[2] > 0 && regIdx[2] < 6) {
           
           // Use a specific value from the Point
           return pt.values[ regIdx[2] ];
@@ -658,7 +663,7 @@ public class ExpressionSet {
       case MUTLIPLY:   return value1 * value2;
       case DIVIDE:     return value1 / value2;
       // Returns the remainder
-      case MODULUS:  return (value1 % value2) / value2;
+      case MODULUS:    return (value1 % value2) / value2;
       // Returns the quotient
       case INTDIVIDE:  return (int)(value1 / value2);
       default:         throw new ExpressionEvaluationException(1);

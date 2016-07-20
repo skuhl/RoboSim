@@ -107,11 +107,11 @@ public int loadState() {
   for(int reg = 0; reg < REG.length; ++reg) {
     
     if(REG[reg] == null) {
-      REG[reg] = new Register(null, null);
+      REG[reg] = new Register();
     }
     
     if(GPOS_REG[reg] == null) {  
-      GPOS_REG[reg] = new PositionRegister(null, null);
+      GPOS_REG[reg] = new PositionRegister();
     }
   }
   

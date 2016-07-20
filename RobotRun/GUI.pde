@@ -1552,16 +1552,16 @@ public void f1() {
       ref_point = (shift) ? null : armModel.getEEPos();
       updateScreen();
       break;
+    case NAV_DREGS:
+      // Clear Data Register entry
+      REG[active_index] = new Register();
+      saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+      break;
     case NAV_PREGS_J:
     case NAV_PREGS_C:
-      if (shift) {
-        /* Save the current position of the Robot's faceplate in the currently select
-         * element of the Position Registers array */ 
-        if (active_index >= 0 && active_index < GPOS_REG.length) {
-          saveRobotFaceplatePointIn(armModel, GPOS_REG[active_index], mode == Screen.NAV_PREGS_J);
-        }
-      }
-      
+      // Clear Position Register entry
+      GPOS_REG[active_index] = new PositionRegister();
+      saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       break;
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
@@ -1595,12 +1595,9 @@ public void f2() {
     case DIRECT_ENTRY_USER:
       lastScreen();
       break;
-    case NAV_DREGS:
-      nextScreen(Screen.NAV_DATA);
-      break;
     case NAV_PREGS_J:
     case NAV_PREGS_C:
-      nextScreen(Screen.SWAP_PT_TYPE);
+      switchScreen(Screen.SWAP_PT_TYPE);
       break;
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
@@ -1639,6 +1636,15 @@ public void f3() {
     case NAV_USER_FRAMES:
       display_stack.pop();
       nextScreen(Screen.NAV_TOOL_FRAMES);
+      break;
+    case NAV_DREGS:
+      // Switch to Position Registers
+      nextScreen(Screen.NAV_PREGS_C);
+      break;
+    case NAV_PREGS_J:
+    case NAV_PREGS_C:
+    // Switch to Data Registers
+      nextScreen(Screen.NAV_DREGS);
       break;
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
@@ -1792,6 +1798,35 @@ public void f4() {
   case SELECT_DELETE:
       nextScreen(Screen.CONFIRM_INSTR_DELETE);
       break;
+  case NAV_PREGS_J:
+  case NAV_PREGS_C:
+    if (shift) {
+      // Move To function
+      RegPoint pt = GPOS_REG[active_index].point;
+      if (pt != null) {
+        
+        float[] joints = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };;
+        
+        if (pt.isCartesian()) {
+          // Convert to Joint point
+          pt = pt.complement();
+        }
+        
+        for (int idx = 0; idx < 6; ++idx) {
+          // Copy point joint values
+          joints[idx] = pt.getValue(idx);
+        }
+        
+        // Move the Robot to the select point
+        armModel.setupRotationInterpolation(joints);
+        armModel.inMotion = true;
+        currentInstruction = -2;
+      } else {
+        println("Position register is uninitialized!");
+      }
+    }
+    
+    break;
   default:
     
     if (mode.type == ScreenType.TYPE_TEACH_POINTS) {
@@ -1870,6 +1905,16 @@ public void f5() {
     case FIND_REPL:
     case SELECT_CUT_COPY:
       updateInstructions();
+      break;
+    case NAV_PREGS_J:
+    case NAV_PREGS_C:
+      if (shift) {
+        /* Save the current position of the Robot's faceplate in the currently select
+         * element of the Position Registers array */ 
+        if (active_index >= 0 && active_index < GPOS_REG.length) {
+          saveRobotFaceplatePointIn(armModel, GPOS_REG[active_index], mode == Screen.NAV_PREGS_J);
+        }
+      }
       break;
     default:
        if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
@@ -2070,11 +2115,11 @@ public void ENTER() {
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
       // User defined x, y, z, w, p, and r values
-      float[] inputs = {0, 0, 0, 0, 0, 0};
+      float[] inputs = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
       
       try {
         // Parse each input value
-        for(int val = 0; val < inputs.length; val += 1) {
+        for(int val = 0; val < inputs.length; ++val) {
           String str = contents.get(val).get(1);
           
           if(str.length() < 0) {
@@ -3138,8 +3183,8 @@ public void resetStack(){
 }
 
 public void loadScreen(){
-  contents = new ArrayList<ArrayList<String>>();
-  options = new ArrayList<String>();
+  /*contents = new ArrayList<ArrayList<String>>();
+  options = new ArrayList<String>();*/
   
   switch(mode){
     case MAIN_MENU_NAV:
@@ -3213,6 +3258,7 @@ public void loadScreen(){
     case EDIT_DREG_COM:
       row_select = 1;
       col_select = 0;
+      opt_select = 0;
       
       if(REG[active_index].comment != null) {
         workingText = REG[active_index].comment;
@@ -3224,8 +3270,10 @@ public void loadScreen(){
     case EDIT_PREG_COM:
       row_select = 1;
       col_select = 0;
+      opt_select = 0;
       
       if(GPOS_REG[active_index].comment != null) {
+        System.out.printf("_%s_", REG[active_index].comment);
         workingText = GPOS_REG[active_index].comment;
       }
       else {
@@ -3524,6 +3572,7 @@ public String getHeader(Screen mode){
       break;
     case NAV_PREGS_J:
     case NAV_PREGS_C:
+    case SWAP_PT_TYPE:
       header = "POSTION REGISTERS";
       break;
     case EDIT_DREG_VAL:
@@ -3606,6 +3655,8 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
       break;
     case DIRECT_ENTRY_USER:
     case DIRECT_ENTRY_TOOL:
+    case EDIT_DREG_VAL:
+    case SWAP_PT_TYPE:
       contents = this.contents;
       break;
       
@@ -3926,17 +3977,25 @@ public String[] getFunctionLabels(Screen mode){
     case NAV_PREGS_C:
     case NAV_PREGS_J:
       // F1, F2
-      funct[0] = "[Sav Pt]";
-      funct[1] = "[Switch]";
-      funct[2] = "";
-      funct[3] = "";
-      funct[4] = "";
+      if (shift) {
+        funct[0] = "[Clear]";
+        funct[1] = "[Type]";
+        funct[2] = "[Switch]";
+        funct[3] = "[Move To]";
+        funct[4] = "[Record]";
+      } else {
+        funct[0] = "[Clear]";
+        funct[1] = "[Type]";
+        funct[2] = "[Switch]";
+        funct[3] = "";
+        funct[4] = "";
+      }
      break;
     case NAV_DREGS:
       // F2
-      funct[0] = "";
-      funct[1] = "[Switch]";
-      funct[2] = "";
+      funct[0] = "[Clear]";
+      funct[1] = "";
+      funct[2] = "[Switch]";
       funct[3] = "";
       funct[4] = "";
       break;
@@ -4239,28 +4298,31 @@ public void newInstruction(boolean overwrite){
 public void updateActiveFramesDisplay() {
   // Attempt to parse the inputted integer value
   try {
-    int frameIdx = max(-1, min(Integer.parseInt(workingText) - 1, 9));
+    int frameIdx = Integer.parseInt(workingText) - 1;
     
-    if (row_select == 0) {
-      // Set active Tool Frame index
-      activeToolFrame = frameIdx;
-    } else {
-      // Set active User Frame index
-      activeUserFrame = frameIdx;
+    if (frameIdx >= -1 && frameIdx < 10) {
+      // Update the appropriate active Frame index
+      if (row_select == 0) {
+        activeToolFrame = frameIdx;
+      } else {
+        activeUserFrame = frameIdx;
+      }
+      
+      updateCoordFrame(armModel);
     }
-    
-    updateCoordFrame(armModel);
       
   } catch(NumberFormatException NFEx) {
-    // Invalid integer value, so reset the current row's index display
-    if (col_select == 0) {
-      workingText = Integer.toString(activeToolFrame + 1);
-    } else {
-      workingText = Integer.toString(activeUserFrame + 1);
-    }
-    
-    contents.get(row_select).set(col_select, workingText);
+    // Non-integer value
   }
+  // Update display
+  if (row_select == 0) {
+    workingText = Integer.toString(activeToolFrame + 1);
+  } else {
+    workingText = Integer.toString(activeUserFrame + 1);
+  }
+  
+  contents.get(row_select).set(col_select, workingText);
+  updateScreen();
 }
 
 /**
@@ -4624,7 +4686,16 @@ public ArrayList<ArrayList<String>> loadPosRegEntry(PositionRegister reg) {
     }
   } else {
     // List current entry values if the Register is initialized
-    String[][] entries = reg.point.toStringArray();
+    RegPoint displayPt;
+    
+    if ((reg.point.isCartesian() && mode == Screen.EDIT_PREG_J) || (!reg.point.isCartesian() && mode == Screen.EDIT_PREG_C)) {
+      // Convert the point if its type does not match the current register display
+      displayPt = reg.point.complement();
+    } else {
+      displayPt = reg.point;
+    }
+    
+    String[][] entries = displayPt.toStringArray();
     
     for(int idx = 0; idx < entries.length; ++idx) {
       register.add( newLine(entries[idx][0], entries[idx][1]) );
@@ -4695,7 +4766,7 @@ public ArrayList<ArrayList<String>> loadTextInput() {
  
   ArrayList<String> line = new ArrayList<String>();
   // Give each letter in the name a separate column
-  for(int idx = 0; idx < workingText.length() && idx < 16; idx += 1) {
+  for(int idx = 0; idx < workingText.length() && idx < TEXT_ENTRY_LEN; idx += 1) {
     line.add( Character.toString(workingText.charAt(idx)) );
   }
   
