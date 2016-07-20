@@ -813,20 +813,21 @@ public void keyPressed() {
     // Valid characters in a program name or comment
     } else if(workingText.length() < TEXT_ENTRY_LEN && (key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z')
           || (key >= '0' && key <= '9') || key == '.' || key == '@' || key == '*' || key == '_') {
-      StringBuilder limbo;
+      StringBuilder temp;
       // Insert the typed character
       if (workingText.charAt(col_select) != '\0') {
-        limbo = new StringBuilder(workingText.substring(0, col_select) + "\0" + workingText.substring(col_select, workingText.length()));
+        temp = new StringBuilder(workingText.substring(0, col_select) + "\0" + workingText.substring(col_select, workingText.length()));
       } else {
-        limbo = new StringBuilder(workingText);
+        temp = new StringBuilder(workingText);
       }
       
-      limbo.setCharAt(col_select, key);
-      workingText = limbo.toString();
+      temp.setCharAt(col_select, key);
+      workingText = temp.toString();
+      
+      // Move the cursor over for the next letter
+      rt();
     }
     
-    col_select = max(0, min(col_select, workingText.length()));
-    updateScreen();
     return;
   } else if(key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
@@ -946,7 +947,6 @@ public void keyPressed() {
     angles[5] += DEG_TO_RAD;
     armModel.setJointRotations(angles);
   }
-  
   
   if(key == ' ') { 
     pan_normal();
@@ -1577,21 +1577,23 @@ public void f2() {
     case NAV_PROGRAMS:
       nextScreen(Screen.NEW_PROGRAM);
       break;
-    case NAV_TOOL_FRAMES:
-      curFrameIdx = row_select;
     case TFRAME_DETAIL:
+      switchScreen(Screen.TOOL_FRAME_METHODS);
+      //nextScreen(Screen.TOOL_FRAME_METHODS);
+      break;
     case TEACH_3PT_TOOL:
     case TEACH_6PT:
     case DIRECT_ENTRY_TOOL:
-      switchScreen(Screen.TOOL_FRAME_METHODS);
+      lastScreen();
       break;
-    case NAV_USER_FRAMES:
-      curFrameIdx = row_select;
     case UFRAME_DETAIL:
+      switchScreen(Screen.USER_FRAME_METHODS);
+      //nextScreen(Screen.USER_FRAME_METHODS);
+      break;
     case TEACH_3PT_USER:
     case TEACH_4PT:
     case DIRECT_ENTRY_USER:
-      switchScreen(Screen.USER_FRAME_METHODS);
+      lastScreen();
       break;
     case NAV_DREGS:
       nextScreen(Screen.NAV_DATA);
@@ -2068,11 +2070,11 @@ public void ENTER() {
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
       // User defined x, y, z, w, p, and r values
-      float[] inputs = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+      float[] inputs = {0, 0, 0, 0, 0, 0};
       
       try {
         // Parse each input value
-        for(int val = 0; val < inputs.length; ++val) {
+        for(int val = 0; val < inputs.length; val += 1) {
           String str = contents.get(val).get(1);
           
           if(str.length() < 0) {
@@ -2101,15 +2103,10 @@ public void ENTER() {
       break;  
       
     //Program nav and edit
-    case NAV_PROGRAMS:
-      if(programs.size() != 0) {
-        active_instr = 0;
-        nextScreen(Screen.NAV_PROG_INST);
-      }
-      break;
     case NEW_PROGRAM:
+      println(workingText);
       if(!workingText.equals("\0")) {
-        if (workingText.charAt(workingText.length()) == '\0') {
+        if (workingText.charAt(workingText.length() - 1) == '\0') {
           // Remove insert character
           workingText = workingText.substring(0, workingText.length() - 1);
         }
@@ -2120,6 +2117,12 @@ public void ENTER() {
         
         saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
         display_stack.pop();
+        nextScreen(Screen.NAV_PROG_INST);
+      }
+      break;
+    case NAV_PROGRAMS:
+      if(programs.size() != 0) {
+        active_instr = 0;
         nextScreen(Screen.NAV_PROG_INST);
       }
       break;
@@ -2399,7 +2402,6 @@ public void ENTER() {
         // Edit data register value
         nextScreen(Screen.EDIT_DREG_VAL);
       }
-      
       break;
     case NAV_PREGS_J:
     case NAV_PREGS_C:   
@@ -2410,24 +2412,14 @@ public void ENTER() {
         // Bring up Register editing menu
         nextScreen((mode == (Screen.NAV_PREGS_C)) ? Screen.EDIT_PREG_C : Screen.EDIT_PREG_J);
       }
-      
       break;
     case EDIT_PREG_C:
-    case EDIT_PREG_J:
-      inputs = new float[6];
-      // Parse each field, removing each the prefix
-      try {
-        for(int idx = 0; idx < inputs.length; ++idx) {
-          String inputStr = contents.get(idx).get(col_select);
-          inputs[idx] = Float.parseFloat( inputStr.substring(opt_select, inputStr.length()) );
-        }
-      } catch (NumberFormatException NFEx) {
-        // Invalid input
-        println("Values must be real numbers!");
-        return;
-      }
-      
-      createRegisterPoint(inputs, mode == Screen.EDIT_PREG_J);      
+      createRegisterPoint(false);  
+      lastScreen();
+      break;
+    case EDIT_PREG_J:      
+      createRegisterPoint(true);
+      lastScreen();
       break;
     case EDIT_PREG_COM:
       if (!workingText.equals("\0")) {
@@ -3153,6 +3145,7 @@ public void loadScreen(){
     case MAIN_MENU_NAV:
       opt_select = 0;
       break;
+      
     case NEW_PROGRAM:
       row_select = 1;
       col_select = 0;
@@ -3200,7 +3193,7 @@ public void loadScreen(){
     case DIRECT_ENTRY_USER:
       row_select = 0;
       col_select = 1;
-      contents = loadDirectEntryMethod(teachFrame);
+      contents = loadFrameDirectEntry(teachFrame);
       break;
     case NAV_PROGRAMS:
       // Stop Robot movement (i.e. program execution)
@@ -3212,15 +3205,32 @@ public void loadScreen(){
     case INSTRUCT_MENU_NAV:
       opt_select = 0;
       break;
+        
     case NAV_DATA:
     case SWAP_PT_TYPE:
       opt_select = 0;
       break;
     case EDIT_DREG_COM:
+      row_select = 1;
+      col_select = 0;
+      
+      if(REG[active_index].comment != null) {
+        workingText = REG[active_index].comment;
+      }
+      else {
+        workingText = "\0";
+      }
+      break;   
     case EDIT_PREG_COM:
       row_select = 1;
       col_select = 0;
-      contents = loadRegisterComment();
+      
+      if(GPOS_REG[active_index].comment != null) {
+        workingText = GPOS_REG[active_index].comment;
+      }
+      else {
+        workingText = "\0";
+      }
       break;
     case EDIT_DREG_VAL:
       opt_select = 0;
@@ -3235,7 +3245,9 @@ public void loadScreen(){
     case EDIT_PREG_J:
       row_select = 0;
       col_select = 1;
-      contents = loadInputRegisterPointMethod();
+      contents = loadPosRegEntry(GPOS_REG[active_index]);
+      break;
+    default:
       break;
   }
 }
@@ -3339,6 +3351,19 @@ public void updateScreen() {
       next_px += temp.get(j).length() * 8 + 18; 
     }
     
+    if(i == row_select) { c1 = TEXT_HIGHLIGHT; }
+    else                { c1 = TEXT_DEFAULT;   }
+    
+    //Trailing row select indicator []
+    cp5.addTextarea(Integer.toString(index_contents))
+    .setText("")
+    .setPosition(next_px, next_py)
+    .setSize(10, 20)
+    .setColorBackground(c1)
+    .hideScrollbar()
+    .moveTo(g1);
+    
+    index_contents++;
     next_px = display_px;
     next_py += 20;
   }
@@ -3523,6 +3548,7 @@ public String getHeader(Screen mode){
       header = String.format("Enter a name for PR[%d]", active_index);
       break;
     default:
+      break;
   }
   
   return header;
@@ -3530,9 +3556,13 @@ public String getHeader(Screen mode){
 
 //Main display content text
 public ArrayList<ArrayList<String>> getContents(Screen mode){
-  ArrayList<ArrayList<String>> contents;
+  ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>();
   
   switch(mode) { //<>//
+    case NEW_PROGRAM:
+      contents = loadTextInput();
+      break;
+    
     //View instructions
     case CONFIRM_INSTR_DELETE:
     case CONFIRM_INSERT:
@@ -3545,7 +3575,6 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
       contents = loadInstructions(active_prog);
       break;
     case ACTIVE_FRAMES:
-      contents = new ArrayList<ArrayList<String>>();
       /* workingText corresponds to the active row's index display */
       if (row_select == 0) {
         contents.add( newLine("Tool: ", workingText) );
@@ -3577,12 +3606,10 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
       break;
     case DIRECT_ENTRY_USER:
     case DIRECT_ENTRY_TOOL:
-    case EDIT_DREG_VAL:
-    case SWAP_PT_TYPE:
       contents = this.contents;
       break;
       
-    //View registers
+    //View/ edit registers
     case NAV_DREGS:
     case NAV_PREGS_C:
     case NAV_PREGS_J:
@@ -3592,20 +3619,20 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case EDIT_PREG_J:
       contents = this.contents;
       break;
-      
+    case EDIT_DREG_COM:
+    case EDIT_PREG_COM:
+      contents = loadTextInput();
+      break;
+     
     default:
-      if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
-        contents = updateTextEntry();
-      } else {
-        contents = new ArrayList<ArrayList<String>>();
-      }
+      break;
   }
   
   return contents;
 }
 //Options menu text
 public ArrayList<String> getOptions(Screen mode){
-  ArrayList<String> options; //<>//
+  ArrayList<String> options = new ArrayList<String>(); //<>//
   
   switch(mode) {
     //Program list navigation/ edit
@@ -3614,7 +3641,6 @@ public ArrayList<String> getOptions(Screen mode){
       break;
     //Main menu and submenus
     case MAIN_MENU_NAV:
-      options = new ArrayList<String>();
       options.add("1 UTILITIES (NA)"   );
       options.add("2 TEST CYCLE (NA)"  );
       options.add("3 MANUAL FCTNS (NA)");
@@ -3625,7 +3651,6 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("8 USER (NA)"        );
       break;
     case SETUP_NAV:
-      options = new ArrayList<String>();
       options.add("1 Prog Select (NA)" );
       options.add("2 General (NA)"     );
       options.add("3 Call Guard (NA)"  );
@@ -3639,13 +3664,11 @@ public ArrayList<String> getOptions(Screen mode){
       break;
       
     case CONFIRM_PROG_DELETE:
-      options = new ArrayList<String>();
       options.add("Delete selected program?");
       break;
     
     //Instruction options
     case INSTRUCT_MENU_NAV:
-      options = new ArrayList<String>();
       options.add("1 Insert"           );
       options.add("2 Delete"           );
       options.add("3 Cut/ Copy"        );
@@ -3657,33 +3680,26 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("9 Remark"           );
       break;
     case CONFIRM_INSERT:
-      options = new ArrayList<String>();
       options.add("Enter number of lines to insert:");
       options.add("\0" + workingText);
       break;
     case SELECT_DELETE:
-      options = new ArrayList<String>();
       options.add("Select lines to delete.");
       break;
     case CONFIRM_INSTR_DELETE:
-      options = new ArrayList<String>();
       options.add("Delete selected lines?");
       break;
     case SELECT_CUT_COPY:
-      options = new ArrayList<String>();
       options.add("Select lines to cut/ copy.");
       break;
     case FIND_REPL:
-      options = new ArrayList<String>();
       options.add("Enter text to search for:");
       options.add("\0" + workingText);
       break;
     case CONFIRM_RENUM: 
-      options = new ArrayList<String>();
       options.add("Renumber program positions?");
       break;
     case SELECT_COMMENT:
-      options = new ArrayList<String>();
       options.add("Select lines to comment/uncomment.");
       break;
       
@@ -3693,19 +3709,16 @@ public ArrayList<String> getOptions(Screen mode){
     case SET_MV_INSTR_REG_NUM:
     case SET_MV_INSTR_SPD:
     case SET_MV_INSTR_TERM:
-      options = new ArrayList<String>();
       options = loadInstructEdit(mode);
       break;
     
     //Insert instructions (non-movemet)
     case PICK_INSTRUCT:
-      options = new ArrayList<String>();
       options.add("1 I/O"               );
       options.add("2 Offset/Frames"     );
       options.add("3 Register Statement");
       break;
     case IO_SUBMENU:
-      options = new ArrayList<String>();
       options.add("1 Cell Intface (NA)" );
       options.add("2 Custom (NA)"       );
       options.add("3 Digital"           );
@@ -3717,52 +3730,43 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("9 Interconnect (NA)" );
       break;
     case SET_FRM_INSTR_IDX:
-      options = new ArrayList<String>(); 
       options.add("Select the index of the frame to use:");
       options.add("\0" + workingText);
       break;
     case SET_DO_BRACKET:
-      options = new ArrayList<String>();
       options.add("Use number keys to enter DO[X]");
       options.add("\0" + workingText);
       break;
     case SET_RO_BRACKET:
-      options = new ArrayList<String>();
       options.add("Use number keys to enter RO[X]");
       options.add("\0" + workingText);
       break;
     case SET_DO_STATUS:
     case SET_RO_STATUS:
-      options = new ArrayList<String>();
       options.add("ON");
       options.add("OFF");
       break;
     case SET_FRAME_INSTRUCTION:
-      options = new ArrayList<String>();
       options.add("1 UTOOL_NUM");
       options.add("1 UFRAME_NUM");
       break;
       
     //Frame navigation and edit menus
     case PICK_FRAME_MODE:
-      options = new ArrayList<String>();
       options.add("1.Tool Frame");
       options.add("2.User Frame");
       break;
     case TOOL_FRAME_METHODS:
-      options = new ArrayList<String>();
       options.add("1. Three Point Method");
       options.add("2. Six Point Method");
       options.add("3. Direct Entry Method");
       break;
     case USER_FRAME_METHODS:
-      options = new ArrayList<String>();
       options.add("1. Three Point Method");
       options.add("2. Four Point Method");
       options.add("3. Direct Entry Method");
       break;
     case VIEW_INST_REG:
-      options = new ArrayList<String>();
       options = loadInstructionReg();
       break;
     
@@ -3774,23 +3778,16 @@ public ArrayList<String> getOptions(Screen mode){
       break;
     //Data navigation and edit menus
     case NAV_DATA:
-      options = new ArrayList<String>();
       options.add("1. Data Registers");
       options.add("2. Position Registers");
       break;
     case SWAP_PT_TYPE:
-      options = new ArrayList<String>();
       options.add("1. Cartesian");
       options.add("2. Joint");
       break;
     case EDIT_DREG_VAL:
-      options = new ArrayList<String>();
       options.add("Input register value:");
-      if(workingText.length() == 0) {
-        options.add("\0");
-      } else {
-        options.add(workingText);
-      }
+      options.add("\0" + workingText);
       break;
     case NAV_USER_FRAMES:
     case NAV_TOOL_FRAMES:
@@ -3801,7 +3798,6 @@ public ArrayList<String> getOptions(Screen mode){
       options = this.options;
       break;
     case EDIT_RSTMT:
-      options = new ArrayList<String>();
       options.add("Register");
       options.add("Position Register Point");
       options.add("Position Register Value");
@@ -3809,17 +3805,13 @@ public ArrayList<String> getOptions(Screen mode){
     
     //Misc functions
     case JUMP_TO_LINE:
-      options = new ArrayList<String>();
       options.add("Use number keys to enter line number to jump to");
       options.add("\0" + workingText);
       break;
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
-        options = new ArrayList<String>();
         options.add("1. Uppercase");
         options.add("1. Lowercase");
-      } else {
-        options = new ArrayList<String>();
       }
   }
 
@@ -3875,13 +3867,13 @@ public String[] getFunctionLabels(Screen mode){
       // F1, F2, F3
       if(shift) {
         funct[0] = "[Reset]";
-        funct[1] = "[Method]";
+        funct[1] = "";
         funct[2] = "[Switch]";
         funct[3] = "";
         funct[4] = "";
       } else {
         funct[0] = "[Set]";
-        funct[1] = "[Method]";
+        funct[1] = "";
         funct[2] = "[Switch]";
         funct[3] = "";
         funct[4] = "";
@@ -3961,7 +3953,6 @@ public String[] getFunctionLabels(Screen mode){
       funct[4] = "[CANCEL]";
       break;
     default:
-      
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         if(opt_select == 0) {
           // F1 - F5
@@ -4160,6 +4151,8 @@ public ArrayList<String> loadInstructEdit(Screen mode){
       edit.add("Enter desired termination (0-100):");
       edit.add("\0" + workingText);
       break;
+    default:
+      break;
   }
   
   return edit;
@@ -4291,7 +4284,8 @@ public ArrayList<ArrayList<String>> loadFrames(CoordFrame coordFrame) {
       frames = userFrames;
       break;
     default:
-    frames = null;
+      System.err.println("Invalid frame type @GUI: loadFrames.");
+      return null;
   }
   
   for(int idx = 0; idx < frames.length; idx += 1) {
@@ -4382,28 +4376,23 @@ public ArrayList<String> loadPointList() {
  * @returning      A 2D ArrayList with the prefixes and values associated
  *                 with the Frame
  */
-public ArrayList<ArrayList<String>> loadDirectEntryMethod(Frame f) {
+public ArrayList<ArrayList<String>> loadFrameDirectEntry(Frame f) {
   ArrayList<ArrayList<String>> frame = new ArrayList<ArrayList<String>>();
   
-  PVector xyz = new PVector(0f, 0f, 0f);
-  // Load valeus from the frame if they exist
-  if (f.DEOrigin != null) {
+  PVector xyz = new PVector(0, 0, 0);
+  PVector wpr = new PVector(0, 0, 0);
+      
+  if(teachFrame.DEOrigin != null) {
+    xyz = teachFrame.DEOrigin;
     
-    if (f instanceof UserFrame) {
-      // Display User Frame Origin in world frame reference
-      xyz = convertNativeToWorld( f.DEOrigin );
-    } else {
-      xyz = f.DEOrigin;
-    }
+    if(teachFrame instanceof UserFrame)
+      xyz = convertNativeToWorld(xyz);
   }
-  
-  PVector wpr = new PVector(0f, 0f, 0f);
-  // Load values from the frame is they exist
-  if (f.DEAxesOffsets != null) {
-    // Display orientation in euler angles
-    wpr = quatToEuler(f.DEAxesOffsets);
+        
+  if (teachFrame.DEAxesOffsets != null) {
+    wpr = quatToEuler(teachFrame.DEAxesOffsets);
   }
-  
+
   frame.add( newLine("X: ", String.format("%4.3f", xyz.x)) );
   frame.add( newLine("Y: ", String.format("%4.3f", xyz.y)) );
   frame.add( newLine("Z: ", String.format("%4.3f", xyz.z)) );
@@ -4424,7 +4413,6 @@ public ArrayList<ArrayList<String>> loadDirectEntryMethod(Frame f) {
  * @param method  The method by which to each the new Frame
  */
 public void createFrame(Frame frame, int method) {
-  
   if (teachFrame.setFrame(abs(method) % 2)) {
     if (DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
     
@@ -4459,11 +4447,8 @@ public void createFrame(Frame frame, int method) {
  * @param taughtFrame  the Frame, to which the direct entry values will be stored
  */
 public void createFrameDirectEntry(Frame taughtFrame, float[] inputs) {
-
   // The user enters values with reference to the World Frame
-  PVector origin,
-          wpr = new PVector(inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD);
-  float[][] axesVectors = eulerToMatrix(wpr);
+  PVector origin, wpr;
   
   if (taughtFrame instanceof UserFrame) {
     origin = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
@@ -4475,6 +4460,8 @@ public void createFrameDirectEntry(Frame taughtFrame, float[] inputs) {
   origin.y = max(-9999f, min(origin.y, 9999f));
   origin.z = max(-9999f, min(origin.z, 9999f));
   
+  wpr = new PVector(inputs[3], inputs[4], inputs[5]).mult(DEG_TO_RAD);
+  float[][] axesVectors = eulerToMatrix(wpr);
   wpr = matrixToEuler(axesVectors);
   // Save direct entry values
   taughtFrame.DEOrigin = origin;
@@ -4497,42 +4484,6 @@ public void createFrameDirectEntry(Frame taughtFrame, float[] inputs) {
   
   updateCoordFrame(armModel);
   saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-}
-
-public void createRegisterPoint(float[] inputs, boolean jointAngles) { 
-  // Save the input point
-  if(jointAngles) {
-    // Bring angles within range: (0, TWO_PI)
-    for(int idx = 0; idx < inputs.length; ++idx) {
-      inputs[idx] = clampAngle(inputs[idx] * DEG_TO_RAD);
-    }
-    
-    GPOS_REG[active_index].point = new RegPoint(inputs);
-    saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
-  } else {
-    PVector position = new PVector();
-    float[] orientation = new float[] { 1f, 0f, 0f, 0f };
-  
-    // Bring the input values with the range [-9999, 9999]
-    for(int idx = 0; idx < inputs.length; ++idx) {
-      inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
-    }
-    
-    position = new PVector(inputs[0], inputs[1], inputs[2]);
-    /* Since all points are displayed with respect to the World Frame, it is
-     * assumed that the user is entering a point with respect to the World Frame. */
-    position = convertWorldToNative(position);
-    
-    orientation = eulerToQuat(new PVector(inputs[3] * DEG_TO_RAD, 
-    inputs[4] * DEG_TO_RAD, 
-    inputs[5] * DEG_TO_RAD));
-    
-
-    GPOS_REG[active_index].point = new RegPoint(position, orientation);
-    saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
-  }
-  
-  lastScreen();
 }
 
 /**
@@ -4653,69 +4604,95 @@ public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg, boo
  * Z, W, P, R or J1 - J6 for INPUT_POINT_C or INPUT_POINT_J respectively).
  * The input method is similar to inputting the value in DIRECT_ENTRY mode.
  */
-public ArrayList<ArrayList<String>> loadInputRegisterPointMethod() {
+public ArrayList<ArrayList<String>> loadPosRegEntry(PositionRegister reg) {
   ArrayList<ArrayList<String>> register = new ArrayList<ArrayList<String>>();
   
-  if(active_index >= 0 && active_index < GPOS_REG.length) {
-    
-    if(GPOS_REG[active_index].point == null) {
-      // Initialize values to zero if the entry is null
-      if(mode == Screen.EDIT_PREG_C) {
-        register.add( newLine("X: ",  "0.0") );
-        register.add( newLine("Y: ",  "0.0") );
-        register.add( newLine("Z: ",  "0.0") );
-        register.add( newLine("W: ",  "0.0") );
-        register.add( newLine("P: ",  "0.0") );
-        register.add( newLine("R: ",  "0.0") );
-        
-      } else if(mode == Screen.EDIT_PREG_J) {
-        for(int idx = 1; idx <= 6; ++idx) {
-          register.add( newLine(String.format("J%d: ", idx), "0.0") );
-        }
-      }
-    } else {
-      // List current entry values if the Register is initialized
-      String[][] entries = GPOS_REG[active_index].point.toStringArray();
+  if(reg.point == null) {
+    // Initialize values to zero if the entry is null
+    if(mode == Screen.EDIT_PREG_C) {
+      register.add( newLine("X: ",  "0.0") );
+      register.add( newLine("Y: ",  "0.0") );
+      register.add( newLine("Z: ",  "0.0") );
+      register.add( newLine("W: ",  "0.0") );
+      register.add( newLine("P: ",  "0.0") );
+      register.add( newLine("R: ",  "0.0") );
       
-      for(int idx = 0; idx < entries.length; ++idx) {
-        register.add( newLine(entries[idx][0], entries[idx][1]) );
+    } else if(mode == Screen.EDIT_PREG_J) {
+      for(int idx = 1; idx <= 6; ++idx) {
+        register.add( newLine(String.format("J%d: ", idx), "0.0") );
       }
+    }
+  } else {
+    // List current entry values if the Register is initialized
+    String[][] entries = reg.point.toStringArray();
+    
+    for(int idx = 0; idx < entries.length; ++idx) {
+      register.add( newLine(entries[idx][0], entries[idx][1]) );
     }
   }
    
   return register;
 }
 
+public void createRegisterPoint(boolean jointAngles) {
+  // Obtain point inputs from UI display text
+  float[] inputs = new float[6];
+  try {
+    for(int idx = 0; idx < inputs.length; ++idx) {
+      String inputStr = contents.get(idx).get(col_select);
+      inputs[idx] = Float.parseFloat(inputStr);
+    }
+  } catch (NumberFormatException NFEx) {
+    // Invalid input
+    println("Values must be real numbers!");
+    return;
+  }
+  
+  if(jointAngles) {
+    // Bring angles within range: (0, TWO_PI)
+    for(int idx = 0; idx < inputs.length; ++idx) {
+      inputs[idx] = clampAngle(inputs[idx] * DEG_TO_RAD);
+    }
+    
+    GPOS_REG[active_index].point = new RegPoint(inputs);
+    saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+  } else {
+    PVector position = new PVector();
+    float[] orientation = new float[] { 1f, 0f, 0f, 0f };
+  
+    // Bring the input values with the range [-9999, 9999]
+    for(int idx = 0; idx < inputs.length; ++idx) {
+      inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
+    }
+    
+    position = new PVector(inputs[0], inputs[1], inputs[2]);
+    /* Since all points are displayed with respect to the World Frame, it is
+     * assumed that the user is entering a point with respect to the World Frame. */
+    position = convertWorldToNative(position);
+    
+    orientation = eulerToQuat(new PVector(inputs[3] * DEG_TO_RAD, 
+    inputs[4] * DEG_TO_RAD, 
+    inputs[5] * DEG_TO_RAD));
+    
+
+    GPOS_REG[active_index].point = new RegPoint(position, orientation);
+    saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+  }
+}
+
 /**
- * This method transitions to the INPUT_COMMENT mode, which allows the user to input
- * a comment consisting of A-Z, a-z, 0-9, _, @, ., and * characters.
- * The current comment entry will be stored in the global field workingText.
- * The user moves through the comment character by character with the LEFT and RIGHT
- * buttons, though, the comment will only increase in length to the right and only
- * if the current last character is not blank. The maximum length of a comment is 16.
- * The function buttons will each cycle through a separate sets of letters and
- * override the currently highlighted comment index. The numpad can be used to input
- * 0-9 in the comment as well. The UP and DOWN buttons will toggle the letter sets
- * betweeen upper case and lower case (indicated in the options menu by the
- * highlighted row).
+ * This method loads text to screen in such a way as to allow the user
+ * to input an arbitrary character string consisting of letters (a-z
+ * upper and lower case) and/ or special characters (_, @, *, .) via
+ * the function row, as well as numbers via the number pad. Strings are
+ * limited to 16 characters and can be used to name new routines, as well
+ * as set remark fields for frames and instructions.
  */
-public ArrayList<ArrayList<String>> loadRegisterComment() {
+public ArrayList<ArrayList<String>> loadTextInput() {
   ArrayList<ArrayList<String>> remark = new ArrayList<ArrayList<String>>();
   
   remark.add( newLine("\0") );
-  workingText = "\0";
-  
-  // Load the current comment for the selected register ifit exists
-  if(mode == Screen.EDIT_DREG_COM) {
-    if(active_index >= 0 && active_index < REG.length && REG[active_index].comment != null) {
-      workingText = REG[active_index].comment;
-    }
-  } else if(mode == Screen.EDIT_PREG_COM && GPOS_REG[active_index].comment != null) {
-    if(active_index >= 0 && active_index < GPOS_REG.length) {
-      workingText = GPOS_REG[active_index].comment;
-    }
-  }
-  
+ 
   ArrayList<String> line = new ArrayList<String>();
   // Give each letter in the name a separate column
   for(int idx = 0; idx < workingText.length() && idx < 16; idx += 1) {
@@ -4725,27 +4702,6 @@ public ArrayList<ArrayList<String>> loadRegisterComment() {
   remark.add(line);
   
   return remark;
-}
-
-/**
- * This method will take the current value of workingText and place
- * each individual character in a separate column of the content's
- * third row. This function is used to update the comment display
- * whenever the user modifies the comment in the INPUT COMMENT mode.
- */
-public ArrayList<ArrayList<String>> updateTextEntry() {
-  ArrayList<ArrayList<String>> menu = new ArrayList<ArrayList<String>>();
-  menu.add( newLine("\0") );
-  
-  ArrayList<String> comment = new ArrayList<String>();
-  // Give each letter in the name a separate column
-  for(int idx = 0; idx < workingText.length() && idx < 16; ++idx) {
-    comment.add( Character.toString(workingText.charAt(idx)) );
-  }
-  
-  menu.add(comment);
-  
-  return menu;
 }
 
 /**
