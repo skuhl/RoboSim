@@ -34,7 +34,7 @@ bt_ee_normal;
 String workingText; // when entering text or a number
 String workingTextSuffix;
 boolean speedInPercentage;
-private static final int ITEMS_TO_SHOW = 6, // how many programs/ instructions to display on screen
+private static final int ITEMS_TO_SHOW = 7, // how many programs/ instructions to display on screen
                          NUM_ENTRY_LEN = 16, // Maximum character length for a number input
                          TEXT_ENTRY_LEN = 16; // Maximum character length for text entry
 
@@ -851,13 +851,13 @@ public void keyPressed() {
     }
     
     float[] rot = {0, 0, 0, 0, 0, 0};
-    armModel.setJointRotations(rot);
+    armModel.setJointAngles(rot);
     intermediatePositions.clear();
   } else if(key == 'w') {
-    armModel.currentFrame = armModel.getRotationMatrix();
+    //armModel.currentFrame = armModel.getRotationMatrix();
   } else if (key == 'y') {
     float[] rot = {PI, 0, 0, 0, 0, PI};
-    armModel.setJointRotations(rot);
+    armModel.setJointAngles(rot);
     intermediatePositions.clear();
   } else if (key == 'm') {
     println(mode.toString());
@@ -918,34 +918,34 @@ public void keyPressed() {
   
   if(keyCode == UP) {
     float[] angles = armModel.getJointRotations();
-    calculateJacobian(angles);
+    calculateJacobian(angles, true);
     angles[0] += DEG_TO_RAD;
-    armModel.setJointRotations(angles);
+    armModel.setJointAngles(angles);
   } else if(keyCode == DOWN) {
     float[] angles = armModel.getJointRotations();
-    calculateJacobian(angles);
+    calculateJacobian(angles, true);
     angles[1] += DEG_TO_RAD;
-    armModel.setJointRotations(angles);
+    armModel.setJointAngles(angles);
   } else if(keyCode == LEFT) {
     float[] angles = armModel.getJointRotations();
-    calculateJacobian(angles);
+    calculateJacobian(angles, true);
     angles[2] += DEG_TO_RAD;
-    armModel.setJointRotations(angles);
+    armModel.setJointAngles(angles);
   } else if(keyCode == RIGHT) {
     float[] angles = armModel.getJointRotations();
-    calculateJacobian(angles);
+    calculateJacobian(angles, true);
     angles[3] += DEG_TO_RAD;
-    armModel.setJointRotations(angles);
+    armModel.setJointAngles(angles);
   } else if(key == 'z') {
     float[] angles = armModel.getJointRotations();
-    calculateJacobian(angles);
+    calculateJacobian(angles, true);
     angles[4] += DEG_TO_RAD;
-    armModel.setJointRotations(angles);
+    armModel.setJointAngles(angles);
   } else if(key == 'x') {
     float[] angles = armModel.getJointRotations();
-    calculateJacobian(angles);
+    calculateJacobian(angles, true);
     angles[5] += DEG_TO_RAD;
-    armModel.setJointRotations(angles);
+    armModel.setJointAngles(angles);
   }
   
   if(key == ' ') { 
@@ -1301,7 +1301,7 @@ public void dn() {
     case NAV_PROG_INST:
     case SELECT_CUT_COPY:
     case SELECT_DELETE: //<>//
-      size = programs.get(active_prog).getInstructions().size();
+      size = programs.get(active_prog).getInstructions().size() + 1;
       indices = moveDown(active_instr, size, row_select, renderStartIdx, shift);
       
       active_instr = indices[0];
@@ -1505,7 +1505,7 @@ public void f1() {
   switch(mode) {
     case NAV_PROG_INST:
       if(shift) {
-        newInstruction(false);
+        newInstruction();
         
         active_instr = programs.get(active_prog).getInstructions().size() - 1; 
         col_select = 0;
@@ -1852,18 +1852,11 @@ public void f4() {
 public void f5() {
   switch(mode){
     case NAV_PROG_INST:
-      if(shift) {
-        newInstruction(true);        
-        updateScreen();
-      } 
-      else {
-        opt_select = 0;
-        if(col_select == 0) {
-          nextScreen(Screen.INSTRUCT_MENU_NAV);
-        }
-        else if(col_select == 2 || col_select == 3) {
-          nextScreen(Screen.VIEW_INST_REG);
-        }
+      if(col_select == 0) {
+        nextScreen(Screen.INSTRUCT_MENU_NAV);
+      }
+      else if(col_select == 2 || col_select == 3) {
+        nextScreen(Screen.VIEW_INST_REG);
       }
       break;
     case TEACH_3PT_USER:
@@ -1891,13 +1884,11 @@ public void f5() {
       // Save the current position of the Robot's Faceplate
       teachFrame.setPoint(curPosition, opt_select);
       saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-      updateScreen();
       break;
     case CONFIRM_PROG_DELETE:
       opt_select = 0;
       
       lastScreen();
-      updateScreen();
       break;
     case CONFIRM_INSTR_DELETE:
     case CONFIRM_INSERT:
@@ -1919,9 +1910,10 @@ public void f5() {
     default:
        if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
          editTextEntry(4);
-         updateScreen();
        }
   }
+  
+  updateScreen();
 }
 
 public void editTextEntry(int fIdx) {
@@ -3250,6 +3242,9 @@ public void loadScreen(){
     case INSTRUCT_MENU_NAV:
       opt_select = 0;
       break;
+    case VIEW_INST_REG:
+      opt_select = -1;
+      break;
         
     case NAV_DATA:
     case SWAP_PT_TYPE:
@@ -4104,57 +4099,60 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
   Program p = programs.get(programID);
   int size = p.getInstructions().size();
   int start = renderStartIdx;
-  int end = min(start + ITEMS_TO_SHOW, size);
+  int end = min(start + ITEMS_TO_SHOW, size + 1);
   
   for(int i = start ; i < end; i+= 1) {
-    Instruction instr = p.getInstructions().get(i);
-    ArrayList<String> m = new ArrayList<String>();
-    
-    if(instr.isCommented())
-      m.add("//"+Integer.toString(i+1) + ")");
-    else
-      m.add(Integer.toString(i+1) + ")");
-    
-    if(instr instanceof MotionInstruction) {
-      MotionInstruction a = (MotionInstruction)instr;
+    if(i == size){ instruct_list.add(newLine("[END]")); }
+    else {
+      Instruction instr = p.getInstructions().get(i);
+      ArrayList<String> m = new ArrayList<String>();
       
-      if(armModel.getEEPos().dist(a.getVector(p).pos) < (liveSpeed / 100f)) {
-        m.add("@");
+      if(instr.isCommented())
+        m.add("//"+Integer.toString(i+1) + ")");
+      else
+        m.add(Integer.toString(i+1) + ")");
+      
+      if(instr instanceof MotionInstruction) {
+        MotionInstruction a = (MotionInstruction)instr;
+        
+        if(armModel.getEEPos().dist(a.getVector(p).pos) < (liveSpeed / 100f)) {
+          m.add("@");
+        }
+        else {
+          m.add("\0");
+        }
+        
+        // add motion type
+        switch(a.getMotionType()) {
+          case MTYPE_JOINT:
+            m.add("J");
+            break;
+          case MTYPE_LINEAR:
+            m.add("L");
+            break;
+          case MTYPE_CIRCULAR:
+            m.add("C");
+            break; 
+        }
+        
+        // load register no, speed and termination type
+        if(a.getGlobal()) m.add("PR[");
+        else m.add("P[");
+        
+        m.add((a.getPosition() + 1) +"]");
+        
+        if(a.getMotionType() == MTYPE_JOINT) m.add((a.getSpeed() * 100) + "%");
+        else m.add((int)(a.getSpeed()) + "mm/s");
+        
+        if(a.getTermination() == 0) m.add("FINE");
+        else m.add("CONT" + (int)(a.getTermination()*100));
+        
+        instruct_list.add(m);
+      } 
+      else{
+        m.add(instr.toString());
+        instruct_list.add(m);
       }
-      else {
-        m.add("\0");
-      }
-      
-      // add motion type
-      switch(a.getMotionType()) {
-        case MTYPE_JOINT:
-          m.add("J");
-          break;
-        case MTYPE_LINEAR:
-          m.add("L");
-          break;
-        case MTYPE_CIRCULAR:
-          m.add("C");
-          break; 
-      }
-      
-      // load register no, speed and termination type
-      if(a.getGlobal()) m.add("PR[");
-      else m.add("P[");
-      
-      m.add((a.getPosition() + 1) +"]");
-      
-      if(a.getMotionType() == MTYPE_JOINT) m.add((a.getSpeed() * 100) + "%");
-      else m.add((int)(a.getSpeed()) + "mm/s");
-      
-      if(a.getTermination() == 0) m.add("FINE");
-      else m.add("CONT" + (int)(a.getTermination()*100));
-      
-      instruct_list.add(m);
-    } 
-    else{
-      m.add(instr.toString());
-      instruct_list.add(m);
     }
   }
   
@@ -4225,7 +4223,7 @@ public ArrayList<String> loadInstructionReg(){
     MotionInstruction castIns = (MotionInstruction)ins;
     Point p = castIns.getVector(programs.get(active_prog));
     
-    instReg.add("Data of the point in this register (press ENTER to exit):");
+    instReg.add("Position values (press ENTER to exit):");
     
     if(castIns.getMotionType() != MTYPE_JOINT) {
       // Show the vector in terms of the World Frame
@@ -4263,7 +4261,7 @@ boolean[] resetSelection(int n){
   return selectedLines;
 }
 
-public void newInstruction(boolean overwrite){
+public void newInstruction(){
   // overwrite current instruction
   PVector eep = armModel.getEEPos();
   float[] q = armModel.getQuaternion();
@@ -4284,7 +4282,7 @@ public void newInstruction(boolean overwrite){
   activeUserFrame,
   activeToolFrame);
   
-  if(overwrite) {
+  if(active_instr != prog.getInstructions().size()) {
     prog.overwriteInstruction(active_instr, insert);
   } else {
     prog.addInstruction(insert);
@@ -4742,10 +4740,9 @@ public void createRegisterPoint(boolean jointAngles) {
     position = convertWorldToNative(position);
     
     orientation = eulerToQuat(new PVector(inputs[3] * DEG_TO_RAD, 
-    inputs[4] * DEG_TO_RAD, 
-    inputs[5] * DEG_TO_RAD));
+                                          inputs[4] * DEG_TO_RAD, 
+                                          inputs[5] * DEG_TO_RAD));
     
-
     GPOS_REG[active_index].point = new RegPoint(position, orientation);
     saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
   }

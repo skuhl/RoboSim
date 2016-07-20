@@ -431,8 +431,9 @@ void applyModelRotation(ArmModel model, boolean applyOffset) {
  * resulting matrix will describe the linear approximation
  * of the robot's motion for each joint in units per radian. 
  */
-public float[][] calculateJacobian(float[] angles) {
+public float[][] calculateJacobian(float[] angles, boolean posOffset) {
   float dAngle = DEG_TO_RAD;
+  if(!posOffset){ dAngle *= -1; }
   float[][] J = new float[7][6];
   //get current ee position
   PVector cPos = armModel.getEEPos(angles);
@@ -467,7 +468,6 @@ public float[][] calculateJacobian(float[] angles) {
 //by 'tgt' and the Euler angle orientation 'rot'
 float[] calculateIKJacobian(PVector tgt, float[] rot) {
   final int limit = 1000;  //max number of times to loop
-
   int count = 0;
   
   float[] angles = armModel.getJointRotations();
@@ -480,7 +480,7 @@ float[] calculateIKJacobian(PVector tgt, float[] rot) {
   RealMatrix M = new Array2DRowRealMatrix(floatToDouble(nFrame, 3, 3));
   RealMatrix O = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
   RealMatrix MO = M.multiply(MatrixUtils.inverse(O));
-  
+  println(MO);
   //translate target rotation to EE ref frame
   RealMatrix R = new Array2DRowRealMatrix(floatToDouble(rMatrix, 3, 3));
   RealMatrix OR = R.multiply(MatrixUtils.inverse(MO));
@@ -510,7 +510,7 @@ float[] calculateIKJacobian(PVector tgt, float[] rot) {
     //check whether our current position is within tolerance
     if(dist < (liveSpeed / 100f) && rDist < 0.00005f*liveSpeed) break;
     //calculate jacobian, 'J', and its inverse
-    float[][] J = calculateJacobian(angles);
+    float[][] J = calculateJacobian(angles, true);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
     RealMatrix JInverse = new SingularValueDecomposition(m).getSolver().getInverse();
     
@@ -568,7 +568,7 @@ int calculateIKJacobian(Point p) {
     
     if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
         angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
-      armModel.setJointRotations(destAngles);
+      armModel.setJointAngles(destAngles);
       return EXEC_SUCCESS;
     }
     else {

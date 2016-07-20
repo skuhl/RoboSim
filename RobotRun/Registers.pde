@@ -151,7 +151,6 @@ public class RegPoint {
     if (isCartesian()) {
       // Convert from a Cartesian to Joint point
       float[] angles = calculateIKJacobian(position(), orientation());
-      
       return new RegPoint(angles);
     } else {
       // Convert from a Joint to Cartesian point
