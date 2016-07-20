@@ -23,15 +23,18 @@ public class Register {
 public class PositionRegister {
   public String comment;
   public RegPoint point;
+  public boolean isCartesian;
   
   public PositionRegister() {
     comment = null;
     point = null;
+    isCartesian = false;
   }
   
-  public PositionRegister(String c, RegPoint pt) {
-    point = pt;
+  public PositionRegister(String c, RegPoint pt, boolean isCart) {
     comment = c;
+    point = pt;
+    isCartesian = isCart;
   }
 }
 
@@ -142,15 +145,20 @@ public class RegPoint {
   /**
    * Creates the complement register point of this register point.
    * 
+   * @param   Used as a point of reference when converting from a
+   *          Cartesian to a Joint Point
    * @return  A point whose type is opposite of this point's, but
    *          whose values correspond to the values of this point's
    *          values
    */
-  public RegPoint complement() {
+  public RegPoint complement(float[] initialAngles) {
     
     if (isCartesian()) {
       // Convert from a Cartesian to Joint point
+      float[] limbo = armModel.getJointRotations();
+      armModel.setJointRotations(initialAngles);
       float[] angles = calculateIKJacobian(position(), orientation());
+      armModel.setJointRotations(limbo);
       
       return new RegPoint(angles);
     } else {
@@ -171,10 +179,11 @@ public class RegPoint {
    *          register point and its complement
    */
   public Point toPointObject() {
-    RegPoint complement = complement();
+    RegPoint complement;
     Point pt;
     
     if (isCartesian()) {
+      complement = complement(null);
       // Set position and orientation
       pt = new Point(position(), orientation());
       pt.joints = new float[6];
@@ -183,6 +192,9 @@ public class RegPoint {
         pt.joints[idx] = complement.getValue(idx);
       }
     } else {
+      // Use current joint values as a reference
+      complement = complement(values.clone());
+      
       PVector position = complement.position();
       float[] angles = complement.orientation();
       // Set position and orientation
@@ -278,7 +290,7 @@ public class RobotPoint {
    * the Robot
    */
   public Object getValue() {
-    CartPoint pt = new CartPoint( new RegPoint(armModel.getEEPos(), armModel.getQuaternion()) );
+    RegStmtPoint pt = new RegStmtPoint( new RegPoint(armModel.getEEPos(), armModel.getQuaternion()) );
     
     if (valIdx == -1) {
       // Return the entire point
@@ -309,7 +321,7 @@ public class RobotPoint {
  * in order to bypass multiple conversion between Euler angles and
  * Quaternions during the evaluation of Register Statement Expressions.
  */
-public class CartPoint {
+public class RegStmtPoint {
   
   /**
    * The values associated with a register point:
@@ -330,7 +342,7 @@ public class CartPoint {
   /**
    * Point for the default joint angles of the Robot
    */
-  public CartPoint() {
+  public RegStmtPoint() {
     values = new float[6];
     isCartesian = false;
     
@@ -342,7 +354,7 @@ public class CartPoint {
   /**
    * Converts the given Point Object to a PointCoord object
    */
-  public CartPoint(RegPoint pt) {
+  public RegStmtPoint(RegPoint pt) {
     values = new float[6];
     isCartesian = pt.isCartesian();
     
@@ -585,16 +597,23 @@ public class ExpressionSet {
         // Use Register value
         return REG[ regIdx[0] ].value;
       } else if (regIdx.length == 3) {
-        CartPoint pt;
+        RegStmtPoint pt;
         
         if (regIdx[1] == 0) {
           // Use a local position register point
           Point p = programs.get(active_prog).LPosReg[ regIdx[0] ];
           // TODO Cartesian or Joint?
-          pt = new CartPoint( new RegPoint(p.pos, p.ori) );
+          pt = new RegStmtPoint( new RegPoint(p.pos, p.ori) );
         } else {
           // Use Position Register point
-          pt = new CartPoint( GPOS_REG[ regIdx[0] ].point );
+          PositionRegister Preg = GPOS_REG[ regIdx[0] ];
+          
+          if (Preg.isCartesian) {
+            // Convert to a Cartesian value
+            pt = new RegStmtPoint( GPOS_REG[ regIdx[0] ].point.complement(null) );
+          } else {
+            pt = new RegStmtPoint( GPOS_REG[ regIdx[0] ].point );
+          }
         }
         
         if (regIdx[2] == -1) {
@@ -647,7 +666,7 @@ public class ExpressionSet {
       
     } else if (param1 instanceof Point && param2 instanceof Point) {
       
-      return evaluatePair((CartPoint)param1, (CartPoint)param2, op);
+      return evaluatePair((RegStmtPoint)param1, (RegStmtPoint)param2, op);
       
     } else {
       // Invalid parameter types
@@ -671,13 +690,13 @@ public class ExpressionSet {
     }
   }
   
-  private Object evaluatePair(CartPoint point1, CartPoint point2, Operator op) throws ExpressionEvaluationException {
+  private Object evaluatePair(RegStmtPoint point1, RegStmtPoint point2, Operator op) throws ExpressionEvaluationException {
       
     // TODO Point-Point operations
     switch(op) {
       case PLUS:
       case MINUS:
-        CartPoint pt = new CartPoint();
+        RegStmtPoint pt = new RegStmtPoint();
         
         for (int idx = 0; idx < 6; ++idx) {
           if (op == Operator.PLUS) {

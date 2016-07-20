@@ -792,6 +792,8 @@ public int saveRegisterBytes(File dest) {
       } else {
         dataOut.writeUTF(GPOS_REG[idx].comment);
       }
+      
+      dataOut.writeBoolean(GPOS_REG[idx].isCartesian);
     }
     
     dataOut.close();
@@ -861,8 +863,9 @@ public int loadRegisterBytes(File src) {
       String c = dataIn.readUTF();
       // Null comments are stored as ""
       if(c == "") { c = null; }
+      boolean isCartesian = dataIn.readBoolean();
       
-      GPOS_REG[idx] = new PositionRegister(c, p);
+      GPOS_REG[idx] = new PositionRegister(c, p, isCartesian);
     }
     
     dataIn.close();

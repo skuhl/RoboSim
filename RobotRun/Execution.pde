@@ -29,13 +29,13 @@ void createTestProgram() {
   //for(int n = 0; n < 15; n++) program.addInstruction(
   //  new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
   
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(165, 116, -5), new float[] { 1f, 0f, 0f, 0f }));
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(166, -355, 120), new float[] { 1, 0, 0 }));
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(171, -113, 445), new float[] { 1, 0, 0 }));
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(725, 225, 50), new float[] { 1, 0, 0 }));
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(775, 300, 50), new float[] { 1, 0, 0 }));
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(-474, -218, 37), new float[] { 1, 0, 0 }));
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(-659, -412, -454), new float[] { 1, 0, 0 }));
+  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(165, 116, -5), new float[] { 1f, 0f, 0f, 0f }), false);
+  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(166, -355, 120), new float[] { 1, 0, 0 }), false);
+  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(171, -113, 445), new float[] { 1, 0, 0 }), false);
+  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(725, 225, 50), new float[] { 1, 0, 0 }), false);
+  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(775, 300, 50), new float[] { 1, 0, 0 }), false);
+  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(-474, -218, 37), new float[] { 1, 0, 0 }), false);
+  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(-659, -412, -454), new float[] { 1, 0, 0 }), false);
   
   programs.add(program);
   //currentProgram = program;

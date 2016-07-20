@@ -295,6 +295,7 @@ float[] matrixToQuat(float[][] r) {
 //calculates euler angles from quaternion
 PVector quatToEuler(float[] q) {
   float[][] r = quatToMatrix(q);
+  System.out.printf("r: %s\n", matrixToString(r));
   PVector wpr = matrixToEuler(r);
   return wpr;
 }

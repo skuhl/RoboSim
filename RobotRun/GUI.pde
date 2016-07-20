@@ -1805,12 +1805,7 @@ public void f4() {
       RegPoint pt = GPOS_REG[active_index].point;
       if (pt != null) {
         
-        float[] joints = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };;
-        
-        if (pt.isCartesian()) {
-          // Convert to Joint point
-          pt = pt.complement();
-        }
+        float[] joints = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
         
         for (int idx = 0; idx < 6; ++idx) {
           // Copy point joint values
@@ -1910,10 +1905,15 @@ public void f5() {
       break;
     case NAV_PREGS_J:
     case NAV_PREGS_C:
-      /* Save the current position of the Robot's faceplate in the currently select
-       * element of the Position Registers array */ 
+      
       if (shift && active_index >= 0 && active_index < GPOS_REG.length) {
-        saveRobotPositiontIn(armModel, GPOS_REG[active_index], mode == Screen.NAV_PREGS_J);
+        // Save the Robot's current joint angles
+        System.out.printf("Robot Joints: %s\n", arrayToString(armModel.getJointRotations()));
+        GPOS_REG[active_index].point = new RegPoint(armModel.getJointRotations());
+        GPOS_REG[active_index].isCartesian = (mode == Screen.NAV_PREGS_C);
+        println(GPOS_REG[active_index].isCartesian);
+        
+        saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
         updateScreen();
       }
       break;
@@ -4614,58 +4614,6 @@ public ArrayList<ArrayList<String>> loadRegisters() {
   }
   
   return regs;
-/*Maybe useful later ...
-
-  else {
-    String[] entries = null;
-    
-    if(mode == Mode.VIEW_POS_REG_J) {
-      entries = POS_REG[idx].point.toJointStringArray();
-    } else {
-      // mode == VIEW_POS_REG_C
-      entries = POS_REG[idx].point.toCartesianStringArray();
-    }
-    
-    /* Display each portion of the Point's position and orientation in
-     * a separate column  whether it be X, Y, Z, W, P, R (Cartesian) or 
-     * J1 - J6 (Joint angles) *
-    contents.add( newLine(lineNum, regLbl, entries[0], entries[1], entries[2], entries[3], entries[4], entries[5]) );
-  }*/
-}
-
-
-/**
- * Saves the given Robot Model's position and orientaion or its current joint
- * angles into the given Position Register.
- * 
- * @param model            The Robot model, of which to save the Faceplate point 
- * @param pReg             The Position Register, in which to save the point
- * @param saveJointAngles  Whether to save thhe joint angles or the Cartesian
- *                         values of the Robot's position
- */
-public void saveRobotPositiontIn(ArmModel model, PositionRegister pReg, boolean saveJointAngles) {
-
-  if (saveJointAngles) {
-    
-    float[] jointAngles = model.getJointRotations();
-    // Save the Robot's current joint angles
-    pReg.point = new RegPoint(jointAngles);
-  } else {
-    
-    PVector ee_pos = model.getEEPos();
-    
-    // Remove active User Frame
-    if (curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
-        ee_pos = convertNativeToFrame(ee_pos, userFrames[activeUserFrame]);
-    }
-    
-    float[] orien = model.getQuaternion();
-    
-    // Save the Robot's current position and orientation
-    pReg.point = new RegPoint(ee_pos, orien);
-  }
-  
-  saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 }
 
 /**
@@ -4694,17 +4642,47 @@ public ArrayList<ArrayList<String>> loadPosRegEntry(PositionRegister reg) {
       }
     }
   } else {
+    
     // List current entry values if the Register is initialized
-    RegPoint displayPt;
+    try {
+      println("Register: " + reg.isCartesian);
+      println("Point: " + reg.point.isCartesian());
+      for (int idx = 0; idx < 7; ++idx) {
+        System.out.printf("V[%d] = %5.6f\n", idx, reg.point.getValue(idx) * RAD_TO_DEG);
+      }
+    } catch (IndexOutOfBoundsException IOOBEx) {}
+    println();
     
-    if ((reg.point.isCartesian() && mode == Screen.EDIT_PREG_J) || (!reg.point.isCartesian() && mode == Screen.EDIT_PREG_C)) {
-      // Convert the point if its type does not match the current register display
-      displayPt = reg.point.complement();
+    String[][] entries;
+    
+    if (mode == Screen.EDIT_PREG_C) {
+      float[] angles = new float[6];
+      
+      for (int idx = 0; idx < 6; ++idx) {
+        angles[idx] = reg.point.getValue(idx);
+      }
+      
+      PVector ee_pos = armModel.getFaceplate(angles);
+      PVector wpr = armModel.getWPR(angles);
+      entries = new String[6][2];
+      
+      entries[0][0] = "X: ";
+      entries[0][1] = String.format("%4.3f", ee_pos.x);
+      entries[1][0] = "Y: ";
+      entries[1][1] = String.format("%4.3f", ee_pos.y);
+      entries[2][0] = "Z: ";
+      entries[2][1] = String.format("%4.3f", ee_pos.z);
+      // Show angles in degrees
+      entries[3][0] = "W: ";
+      entries[3][1] = String.format("%4.3f", wpr.x * RAD_TO_DEG);
+      entries[4][0] = "P: ";
+      entries[4][1] = String.format("%4.3f", wpr.y * RAD_TO_DEG);
+      entries[5][0] = "R: ";
+      entries[5][1] = String.format("%4.3f", wpr.z * RAD_TO_DEG);
+      
     } else {
-      displayPt = reg.point;
+      entries = reg.point.toStringArray();
     }
-    
-    String[][] entries = displayPt.toStringArray();
     
     for(int idx = 0; idx < entries.length; ++idx) {
       register.add( newLine(entries[idx][0], entries[idx][1]) );
@@ -4731,6 +4709,7 @@ public void createRegisterPoint(boolean jointAngles) {
   if(jointAngles) {
     // Bring angles within range: (0, TWO_PI)
     for(int idx = 0; idx < inputs.length; ++idx) {
+      System.out.printf("J[%d] = %5.6f\n", idx, inputs[idx]);
       inputs[idx] = clampAngle(inputs[idx] * DEG_TO_RAD);
     }
     
@@ -4742,7 +4721,9 @@ public void createRegisterPoint(boolean jointAngles) {
   
     // Bring the input values with the range [-9999, 9999]
     for(int idx = 0; idx < inputs.length; ++idx) {
+      System.out.printf("C[%d] = %5.6f", idx, inputs[idx]);
       inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
+      System.out.printf(" (%5.6f)\n", inputs[idx]);
     }
     
     position = new PVector(inputs[0], inputs[1], inputs[2]);
@@ -4754,8 +4735,18 @@ public void createRegisterPoint(boolean jointAngles) {
     inputs[4] * DEG_TO_RAD, 
     inputs[5] * DEG_TO_RAD));
     
-
-    GPOS_REG[active_index].point = new RegPoint(position, orientation);
+    RegPoint complement = new RegPoint(position, orientation);
+    float[] angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+    
+    if (GPOS_REG[active_index].point != null) {
+      // Use previous value as a reference
+      for (int idx = 0; idx < 6; ++idx) {
+        angles[idx] = GPOS_REG[active_index].point.getValue(idx);
+      }
+    }
+    
+    // Save joint values
+    GPOS_REG[active_index].point = complement.complement(angles);
     saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
   }
 }
