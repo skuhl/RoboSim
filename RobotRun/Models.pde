@@ -798,7 +798,6 @@ public class ArmModel {
     
   }
   
-<<<<<<< HEAD
   /**
    * Return the current position of the Robot's faceplate.
    */
@@ -873,12 +872,13 @@ public class ArmModel {
   
   public PVector getFaceplate(float[] testAngles) {
     float[] origAngles = getJointRotations();
-    setJointRotations(testAngles);
+    setJointAngles(testAngles);
     
     PVector ret = getFaceplate();
-    setJointRotations(origAngles);
+    setJointAngles(origAngles);
     return ret;
-=======
+  }
+  
   public Point getPosition(){
     PVector pos = getEEPos();
     float[] orient = getQuaternion();
@@ -891,7 +891,6 @@ public class ArmModel {
     float[] orient = getQuaternion(angles);
     
     return new Point(pos, orient);
->>>>>>> a13a1bee6bbcfce482dbe95e288750c0c773c6aa
   }
   
   //convenience method to set all joint rotation values of the robot arm

@@ -4734,7 +4734,6 @@ public void createRegisterPoint(boolean jointAngles) {
                                           inputs[4] * DEG_TO_RAD, 
                                           inputs[5] * DEG_TO_RAD));
     
-<<<<<<< HEAD
     RegPoint complement = new RegPoint(position, orientation);
     float[] angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
     
@@ -4747,9 +4746,7 @@ public void createRegisterPoint(boolean jointAngles) {
     
     // Save joint values
     GPOS_REG[active_index].point = complement.complement(angles);
-=======
     GPOS_REG[active_index].point = new RegPoint(position, orientation);
->>>>>>> a13a1bee6bbcfce482dbe95e288750c0c773c6aa
     saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
   }
 }
