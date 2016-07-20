@@ -685,10 +685,10 @@ public class ArmModel {
   
   public PVector getWPR(float[] testAngles) {
     float[] origAngles = getJointRotations();
-    setJointRotations(testAngles);
+    setJointAngles(testAngles);
     
     PVector ret = getWPR();
-    setJointRotations(origAngles);
+    setJointAngles(origAngles);
     return ret;
   }
   
@@ -702,10 +702,10 @@ public class ArmModel {
   
   public float[] getQuaternion(float[] testAngles) {
     float[] origAngles = getJointRotations();
-    setJointRotations(testAngles);
+    setJointAngles(testAngles);
     
     float[] ret = getQuaternion();
-    setJointRotations(origAngles);
+    setJointAngles(origAngles);
     return ret;
   }
   
@@ -790,14 +790,15 @@ public class ArmModel {
   
   public PVector getEEPos(float[] testAngles) {
     float[] origAngles = getJointRotations();
-    setJointRotations(testAngles);
+    setJointAngles(testAngles);
     
     PVector ret = getEEPos();
-    setJointRotations(origAngles);
+    setJointAngles(origAngles);
     return ret;
     
   }
   
+<<<<<<< HEAD
   /**
    * Return the current position of the Robot's faceplate.
    */
@@ -877,10 +878,24 @@ public class ArmModel {
     PVector ret = getFaceplate();
     setJointRotations(origAngles);
     return ret;
+=======
+  public Point getPosition(){
+    PVector pos = getEEPos();
+    float[] orient = getQuaternion();
+    
+    return new Point(pos, orient);
+  }
+  
+  public Point getPosition(float[] angles){
+    PVector pos = getEEPos(angles);
+    float[] orient = getQuaternion(angles);
+    
+    return new Point(pos, orient);
+>>>>>>> a13a1bee6bbcfce482dbe95e288750c0c773c6aa
   }
   
   //convenience method to set all joint rotation values of the robot arm
-  public void setJointRotations(float[] rot) {
+  public void setJointAngles(float[] rot) {
     for(int i = 0; i < segments.size(); i += 1) {
       for(int j = 0; j < 3; j += 1) {
         if(segments.get(i).rotations[j]) {
@@ -1079,7 +1094,7 @@ public class ArmModel {
         
         if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
             angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
-          setJointRotations(destAngles);
+          setJointAngles(destAngles);
         }
         else {
           tgtPos = armModel.getEEPos();
@@ -1115,7 +1130,7 @@ public class ArmModel {
     
     if(collision) {
       // Reset the original position in the case of a collision
-      setJointRotations(oldAngles);
+      setJointAngles(oldAngles);
     }
     
     return collision;

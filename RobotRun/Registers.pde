@@ -158,8 +158,11 @@ public class RegPoint {
       float[] limbo = armModel.getJointRotations();
       armModel.setJointRotations(initialAngles);
       float[] angles = calculateIKJacobian(position(), orientation());
+<<<<<<< HEAD
       armModel.setJointRotations(limbo);
       
+=======
+>>>>>>> a13a1bee6bbcfce482dbe95e288750c0c773c6aa
       return new RegPoint(angles);
     } else {
       // Convert from a Joint to Cartesian point
