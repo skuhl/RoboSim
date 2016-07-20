@@ -110,12 +110,16 @@ void showMainDisplayText() {
   text(String.format("Speed: %d%%" , liveSpeed), width - 20, 40);
   
   PVector ee_pos = armModel.getEEPos();
+  
   // Display the Current position and orientation of the Robot in the active User Frame or in the World Frame coordinate system.
   if (curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
-      Frame active = userFrames[activeUserFrame];
-      ee_pos = transform(ee_pos, invertHCMatrix( transformationMatrix(active.getOrigin(), active.getNativeAxes()) ));
+      ee_pos = convertNativeToFrame(ee_pos, userFrames[activeUserFrame]);
   }
-  ee_pos = convertNativeToWorld(ee_pos);
+  
+  // Display Native Coordinates in the JOINT Coordinte Mode
+  if (curCoordFrame != CoordFrame.JOINT) {
+    ee_pos = convertNativeToWorld(ee_pos);
+  }
   
   PVector wpr = armModel.getWPR();
   
@@ -268,34 +272,48 @@ public void updateCoordFrame(ArmModel model) {
 }
 
 /**
+ * Converts the given vector, v, from the Native Coordinate System into the User frame
+ * Coordinate System defined by the given User frame, active.
+ * 
+ * @param v       Some vector in the XYZ plane
+ * @param active  The frame, to whose Coordinate System v will be converted
+ * @returning     The vector, v, interms of the given frame's Coordinate System
+ */
+public PVector convertNativeToFrame(PVector v, Frame active) {
+  float[][] tMatrix = transformationMatrix(active.getOrigin(), active.getNativeAxes());
+  return transform(v, invertHCMatrix(tMatrix));
+}
+
+/**
+ * Converts the given vector, v, from the Coordinate System defined by User frame,
+ * active, to the Native Coordinate System.
+ * 
+ * @param v       Some vector in the XYZ plane
+ * @param active  The frame, from whose Coordinate System v will be converted
+ * @returning     The vector, v, in terms of the Native Coordinate System
+ */
+public PVector convertFrameToNative(PVector v, Frame active) {
+  float[][] tMatrix = transformationMatrix(active.getOrigin(), active.getNativeAxes());
+  return transform(v, tMatrix);
+}
+
+/**
  * Converts from RobotRun-defined world coordinates into
  * Processing's coordinate system.
  * Assumes that the robot starts out facing toward the LEFT.
  */
-PVector convertWorldToNative(PVector in) {
-  pushMatrix();
-  resetMatrix();
-  float outx = modelX(0,0,0)-in.x;
-  float outy = modelY(0,0,0)-in.z;
-  float outz = -(modelZ(0,0,0)-in.y);
-  popMatrix();
-  
-  return new PVector(outx, outy, outz);
+PVector convertWorldToNative(PVector v) {
+  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
+  return transform(v, tMatrix);
 }
 
 /**
  * Converts from Processing's native coordinate system to
  * RobotRun-defined world coordinates.
  */
-PVector convertNativeToWorld(PVector in) {
-  pushMatrix();
-  resetMatrix();
-  float outx = modelX(0,0,0)-in.x;
-  float outy = in.z+modelZ(0,0,0);
-  float outz = modelY(0,0,0)-in.y;
-  popMatrix();
-  
-  return new PVector(outx, outy, outz);
+PVector convertNativeToWorld(PVector v) {
+  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
+  return transform(v, invertHCMatrix(tMatrix));
 }
 
 /**

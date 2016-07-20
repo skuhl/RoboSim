@@ -1,6 +1,11 @@
 Frame[] toolFrames;
 Frame[] userFrames;
 
+
+public static final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
+                                                           {  0,  0,  1 },
+                                                           {  0, -1,  0 } };
+
 public abstract class Frame {
   private PVector origin;
   // The unit vectors representing the x, y, z axes (in row major order)
@@ -40,21 +45,10 @@ public abstract class Frame {
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the World Coordinate System. */
   public float[][] getWorldAxes() {
-    float[][] wAxes = new float[3][3];
+    RealMatrix frameAxes = new Array2DRowRealMatrix(floatToDouble(axes, 3, 3));
+    RealMatrix worldAxes = new Array2DRowRealMatrix(floatToDouble(WORLD_AXES, 3, 3));
     
-    for(int col = 0; col < wAxes[0].length; ++col) {
-      wAxes[0][col] = -axes[0][col];
-      wAxes[1][col] = axes[2][col];
-      wAxes[2][col] = -axes[1][col];
-    }
-    
-    /*for(int row = 0; row < wAxes[0].length; ++row) {
-      wAxes[row][0] = -axes[row][0];
-      wAxes[row][1] = axes[row][2];
-      wAxes[row][2] = -axes[row][1];
-    }*/
-    
-    return wAxes;
+    return doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
   }
 
   public void setAxis(int idx, PVector in) {

@@ -432,13 +432,13 @@ public void displayFrameAxes() {
   
   if((curCoordFrame == CoordFrame.WORLD || curCoordFrame == CoordFrame.TOOL) && activeToolFrame != -1) {
     /* Draw the axes of the active tool frame */
-    displayOriginAxes(toolFrames[activeToolFrame].getWorldAxes(), toVectorArray( armModel.getEEPos() ));
+    displayOriginAxes(toolFrames[activeToolFrame].getWorldAxes(), armModel.getEEPos());
   } else if(curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
     /* Draw the axes of the active user frame */
-    displayOriginAxes(userFrames[activeUserFrame].getWorldAxes(), toVectorArray( userFrames[activeUserFrame].getOrigin() ));
+    displayOriginAxes(userFrames[activeUserFrame].getWorldAxes(), userFrames[activeUserFrame].getOrigin());
   } else if(curCoordFrame == CoordFrame.WORLD) {
     /* Draw World Frame coordinate system */
-    displayOriginAxes(new float[][] { {-1f, 0f, 0f}, {0f, 0f, 1f}, {0f, -1f, 0f} }, new float[] {0f, 0f, 0f});
+    displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f));
   }
 }
 
@@ -450,13 +450,13 @@ public void displayFrameAxes() {
  * @param origin       A point in space representing the intersection of the
  *                     three unit vectors
  */
-public void displayOriginAxes(float[][] axesVectors, float[] origin) {
+public void displayOriginAxes(float[][] axesVectors, PVector origin) {
   
   pushMatrix();
   // Transform to the reference frame defined by the axes vectors
-  applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin[0],
-              axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin[1],
-              axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin[2],
+  applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
+              axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
+              axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
   0, 0, 0, 1);
   // X axis
   stroke(255, 0, 0);

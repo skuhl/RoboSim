@@ -1831,7 +1831,7 @@ public void f4() {
     
     if (mode.type == ScreenType.TYPE_TEACH_POINTS) {
       
-      if (teachFrame != null) {
+      if (shift && teachFrame != null) {
         Point tgt = teachFrame.getPoint(opt_select);
         
         if (tgt != null && tgt.joints != null) {
@@ -1870,28 +1870,30 @@ public void f5() {
     case TEACH_3PT_TOOL:
     case TEACH_4PT:
     case TEACH_6PT:
-      pushMatrix();
-      resetMatrix();
-      applyModelRotation(armModel, false);
-      
-      float[][] tMatrix = getTransformationMatrix();
-      float[][] rMatrix = new float[3][3];
-      popMatrix();
-      
-      for (int row = 0; row < 3; ++row) {
-        for (int col = 0; col < 3; ++col) {
-          // Transpose the rotation matrix portion of the transformation matrix
-          rMatrix[row][col] = tMatrix[col][row];
+      if (shift) {
+        pushMatrix();
+        resetMatrix();
+        applyModelRotation(armModel, false);
+        
+        float[][] tMatrix = getTransformationMatrix();
+        float[][] rMatrix = new float[3][3];
+        popMatrix();
+        
+        for (int row = 0; row < 3; ++row) {
+          for (int col = 0; col < 3; ++col) {
+            // Transpose the rotation matrix portion of the transformation matrix
+            rMatrix[row][col] = tMatrix[col][row];
+          }
         }
+        
+        float[] orientation = matrixToQuat( rMatrix );
+        Point curPosition = new Point(new PVector(tMatrix[0][3], tMatrix[1][3], tMatrix[2][3]), orientation);
+        curPosition.joints = armModel.getJointRotations();
+        // Save the current position of the Robot's Faceplate
+        teachFrame.setPoint(curPosition, opt_select);
+        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+        updateScreen();
       }
-      
-      float[] orientation = matrixToQuat( rMatrix );
-      Point curPosition = new Point(new PVector(tMatrix[0][3], tMatrix[1][3], tMatrix[2][3]), orientation);
-      curPosition.joints = armModel.getJointRotations();
-      // Save the current position of the Robot's Faceplate
-      teachFrame.setPoint(curPosition, opt_select);
-      saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-      updateScreen();
       break;
     case CONFIRM_PROG_DELETE:
       opt_select = 0;
@@ -1908,12 +1910,11 @@ public void f5() {
       break;
     case NAV_PREGS_J:
     case NAV_PREGS_C:
-      if (shift) {
-        /* Save the current position of the Robot's faceplate in the currently select
-         * element of the Position Registers array */ 
-        if (active_index >= 0 && active_index < GPOS_REG.length) {
-          saveRobotFaceplatePointIn(armModel, GPOS_REG[active_index], mode == Screen.NAV_PREGS_J);
-        }
+      /* Save the current position of the Robot's faceplate in the currently select
+       * element of the Position Registers array */ 
+      if (shift && active_index >= 0 && active_index < GPOS_REG.length) {
+        saveRobotPositiontIn(armModel, GPOS_REG[active_index], mode == Screen.NAV_PREGS_J);
+        updateScreen();
       }
       break;
     default:
@@ -3197,6 +3198,11 @@ public void loadScreen(){
       opt_select = 0;
       workingText = "\0";
       break;
+    case NAV_PROG_INST:
+      row_select = 0;
+      col_select = 0;
+      opt_select = -1;
+      break;
     case NAV_DREGS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
@@ -3917,7 +3923,7 @@ public String[] getFunctionLabels(Screen mode){
     case NAV_USER_FRAMES:
       // F1, F2, F3
       if(shift) {
-        funct[0] = "[Reset]";
+        funct[0] = "[Clear]";
         funct[1] = "";
         funct[2] = "[Switch]";
         funct[3] = "";
@@ -3954,8 +3960,8 @@ public String[] getFunctionLabels(Screen mode){
         funct[0] = "[Sav Ref]";
         funct[1] = "[Method]";
         funct[2] = "";
-        funct[3] = "[Mov To]";
-        funct[4] = "[Record]";
+        funct[3] = "";
+        funct[4] = "";
       }
       break;
     case DIRECT_ENTRY_TOOL:
@@ -4629,34 +4635,37 @@ public ArrayList<ArrayList<String>> loadRegisters() {
 
 
 /**
- * Saves the given Robot Model's current faceplate position and orientaion or
- * its current joint angles into the given Position Register.
+ * Saves the given Robot Model's position and orientaion or its current joint
+ * angles into the given Position Register.
  * 
  * @param model            The Robot model, of which to save the Faceplate point 
  * @param pReg             The Position Register, in which to save the point
  * @param saveJointAngles  Whether to save thhe joint angles or the Cartesian
  *                         values of the Robot's position
  */
-public void saveRobotFaceplatePointIn(ArmModel model, PositionRegister pReg, boolean saveJointAngles) {
+public void saveRobotPositiontIn(ArmModel model, PositionRegister pReg, boolean saveJointAngles) {
 
   if (saveJointAngles) {
     
-    float[] jointAngles = armModel.getJointRotations();
+    float[] jointAngles = model.getJointRotations();
     // Save the Robot's current joint angles
     pReg.point = new RegPoint(jointAngles);
   } else {
     
-    pushMatrix();
-    resetMatrix();
-    // Get the position of the Robot's faceplate
-    applyModelRotation(model, false);
-    PVector fp_pos = new PVector( modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0) );
-    float[] orien = armModel.getQuaternion();
+    PVector ee_pos = model.getEEPos();
     
-    popMatrix();
+    // Remove active User Frame
+    if (curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
+        ee_pos = convertNativeToFrame(ee_pos, userFrames[activeUserFrame]);
+    }
+    
+    float[] orien = model.getQuaternion();
+    
     // Save the Robot's current position and orientation
-    pReg.point = new RegPoint(fp_pos, orien);
+    pReg.point = new RegPoint(ee_pos, orien);
   }
+  
+  saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 }
 
 /**
