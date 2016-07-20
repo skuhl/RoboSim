@@ -345,6 +345,8 @@ public class FrameInstruction extends Instruction {
   public void execute() {
     if(frameType == FTYPE_TOOL) activeToolFrame = idx;
     else if(frameType == FTYPE_USER) activeUserFrame = idx;
+    // Update the Robot Arm's current frame rotation matrix
+    updateCoordFrame(armModel);
   }
 
   public String toString() {

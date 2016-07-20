@@ -112,7 +112,7 @@ public static enum Screen implements DisplayMode {
   /*
   * Miscelanious screens/ not otherwise categorized
   */
-  SWITCH_PREG,
+  SWAP_PT_TYPE,
   EDIT_RSTMT,
   UFRAME_DETAIL,
   TFRAME_DETAIL,
@@ -123,7 +123,7 @@ public static enum Screen implements DisplayMode {
   INPUT_RDX,
   INPUT_RSTMT,
   PICK_LETTER,
-  DATA_MENU_NAV,
+  NAV_DATA,
   SET_DO_STATUS,
   SET_RO_STATUS,
   VIEW_INST_REG;

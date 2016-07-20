@@ -1045,7 +1045,7 @@ public void se() {
 public void da() {
   opt_select = 0;
   resetStack();
-  nextScreen(Screen.DATA_MENU_NAV);
+  nextScreen(Screen.NAV_DATA);
 }
 
 public void NUM0() {
@@ -1247,7 +1247,8 @@ public void up() {
     case TEACH_6PT:
     case SET_DO_STATUS:
     case SET_RO_STATUS:
-    case DATA_MENU_NAV:
+    case NAV_DATA:
+    case SWAP_PT_TYPE:
     case SET_MV_INSTRUCT_TYPE:
     case SET_MV_INSTRUCT_REG_TYPE:
     case SET_FRAME_INSTRUCTION:
@@ -1255,13 +1256,17 @@ public void up() {
       opt_select = max(0, opt_select - 1);
       break;
     case IO_SUBMENU:
-    case ACTIVE_FRAMES:
     case NAV_TOOL_FRAMES:
     case NAV_USER_FRAMES:
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
     case EDIT_PREG_C:
     case EDIT_PREG_J:
+      row_select = max(0, row_select - 1);
+      break;
+    case ACTIVE_FRAMES:
+      updateActiveFramesDisplay();
+      workingText = Integer.toString(activeToolFrame + 1);
       row_select = max(0, row_select - 1);
       break;
     default:
@@ -1343,7 +1348,8 @@ public void dn() {
     case TEACH_6PT:
     case SET_DO_STATUS:
     case SET_RO_STATUS:
-    case DATA_MENU_NAV:
+    case NAV_DATA:
+    case SWAP_PT_TYPE:
     case SET_MV_INSTRUCT_TYPE:
     case SET_MV_INSTRUCT_REG_TYPE:
     case SET_FRAME_INSTRUCTION:
@@ -1351,13 +1357,18 @@ public void dn() {
       opt_select = min(opt_select + 1, options.size() - 1);
       break;
     case IO_SUBMENU:
-    case ACTIVE_FRAMES:
+    
     case NAV_TOOL_FRAMES:
     case NAV_USER_FRAMES:
     case EDIT_PREG_C:
     case EDIT_PREG_J:
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
+      row_select = min(row_select + 1, contents.size() - 1);
+      break;
+    case ACTIVE_FRAMES:
+      updateActiveFramesDisplay();
+      workingText = Integer.toString(activeUserFrame + 1);
       row_select = min(row_select + 1, contents.size() - 1);
       break;
     default:
@@ -1513,10 +1524,7 @@ public void f1() {
       } else {
         // Set the current tool frame
         activeToolFrame = row_select;
-        // Update the Robot Arm's current frame rotation matrix
-        if(curCoordFrame == CoordFrame.TOOL) {
-          armModel.currentFrame = toolFrames[opt_select].getNativeAxes();
-        }
+        updateCoordFrame(armModel);
       }
       break;
     case NAV_USER_FRAMES:
@@ -1528,10 +1536,7 @@ public void f1() {
       } else {
         // Set the current user frame
         activeUserFrame = row_select;
-        // Update the Robot Arm's current frame rotation matrix
-        if(curCoordFrame == CoordFrame.USER) {
-          armModel.currentFrame = userFrames[opt_select].getNativeAxes();
-        }
+        updateCoordFrame(armModel);
       }
       break;
     case ACTIVE_FRAMES:
@@ -1588,34 +1593,12 @@ public void f2() {
     case DIRECT_ENTRY_USER:
       switchScreen(Screen.USER_FRAME_METHODS);
       break;
-    case ACTIVE_FRAMES:
-      // Reset the active frames for the User or Tool Coordinate Frames
-      if(row_select == 0) {
-        activeToolFrame = -1;
-        
-        // Leave the Tool Frame
-        if(curCoordFrame == CoordFrame.TOOL || curCoordFrame == CoordFrame.WORLD) {
-          curCoordFrame = CoordFrame.WORLD;
-          armModel.resetFrame();
-        }
-      } 
-      else if(row_select == 1) {
-        activeUserFrame = -1;
-        
-        // Leave the User Frame
-        if(curCoordFrame == CoordFrame.USER) {
-          curCoordFrame = CoordFrame.WORLD;
-          armModel.resetFrame();
-        }
-      }
-      updateScreen();
-      break;
     case NAV_DREGS:
-      nextScreen(Screen.DATA_MENU_NAV);
+      nextScreen(Screen.NAV_DATA);
       break;
     case NAV_PREGS_J:
     case NAV_PREGS_C:
-      nextScreen(Screen.SWITCH_PREG);
+      nextScreen(Screen.SWAP_PT_TYPE);
       break;
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
@@ -2026,7 +2009,9 @@ public void ENTER() {
     case SETUP_NAV:
       nextScreen(Screen.PICK_FRAME_MODE);
       break;
-    
+    case ACTIVE_FRAMES:
+      updateActiveFramesDisplay();
+      break;
     //Frame nav and edit
     case PICK_FRAME_MODE:
       if(opt_select == 0) {
@@ -2072,13 +2057,47 @@ public void ENTER() {
       break;
     case TEACH_3PT_TOOL:
     case TEACH_3PT_USER:
+      createFrame(teachFrame, 0);
+      lastScreen();
+      break;
     case TEACH_4PT:
     case TEACH_6PT:
-      createFrame();      
+      createFrame(teachFrame, 1);
+      lastScreen();
       break;
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
-      createFrameDirectEntry(teachFrame);      
+      // User defined x, y, z, w, p, and r values
+      float[] inputs = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+      
+      try {
+        // Parse each input value
+        for(int val = 0; val < inputs.length; ++val) {
+          String str = contents.get(val).get(1);
+          
+          if(str.length() < 0) {
+            // No value entered
+            updateScreen();
+            println("All enetries must have a value!");
+            return;
+          }
+          
+          // Remove prefix
+          inputs[val] = Float.parseFloat(str);
+        }
+        
+        createFrameDirectEntry(teachFrame, inputs);
+      } catch (NumberFormatException NFEx) {
+        // Invalid number
+        println("Entries must be real numbers!");
+        return;
+      }
+      
+      if (teachFrame instanceof UserFrame) {
+        nextScreen(Screen.UFRAME_DETAIL);
+      } else {
+        nextScreen(Screen.TFRAME_DETAIL);
+      }
       break;  
       
     //Program nav and edit
@@ -2306,30 +2325,6 @@ public void ENTER() {
       renderStartIdx = active_instr - row_select;
       nextScreen(Screen.NAV_PROG_INST);
       break;
-    case INPUT_RSTMT:
-    case EDIT_RSTMT:
-      p = programs.get(active_prog);
-      
-      if (row_select == 0) {
-        // Register value
-        options = new ArrayList<String>();
-        options.add("Input the index of the register you wish to use");
-        options.add("\0");
-        
-        opt_select = 1;
-        workingText = "";
-        nextScreen(Screen.INPUT_INTEGER);
-      } else if (row_select == 1) {
-        
-        // TODO position register point
-      } else if (row_select == 2) {
-        
-        // TODO position register value
-      } else if (row_select == 3) {
-        
-        // TODO Constant value
-      }
-      break;
     case SET_FRAME_INSTRUCTION:
       nextScreen(Screen.SET_FRM_INSTR_IDX);
       break;
@@ -2357,7 +2352,7 @@ public void ENTER() {
       loadInstructions(active_prog);
       nextScreen(Screen.NAV_PROG_INST);    
       break;
-    case SWITCH_PREG:
+    case SWAP_PT_TYPE:
       if(opt_select == 0) {
         // View Cartesian values
         nextScreen(Screen.NAV_PREGS_C);
@@ -2366,7 +2361,7 @@ public void ENTER() {
         nextScreen(Screen.NAV_PREGS_J);
       }
       break;
-    case DATA_MENU_NAV:      
+    case NAV_DATA:      
       if(opt_select == 0) {
         // Data Register Menu
         nextScreen(Screen.NAV_DREGS);
@@ -2383,20 +2378,15 @@ public void ENTER() {
         f = Float.parseFloat(workingText);
         // Clamp the value between -9999 and 9999, inclusive
         f = max(-9999f, min(f, 9999f));
+        
+        if(active_index >= 0 && active_index < REG.length) {
+          // Save inputted value
+          REG[active_index].value = f;
+          saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+        }
       } catch (NumberFormatException NFEx) {
         // Invalid input value
-        options = new ArrayList<String>();
-        options.add("Only real numbers are acceptable input!");
-        opt_select = 0;
-        
-        lastScreen();
-        return;
-      }
-      
-      if(active_index >= 0 && active_index < REG.length) {
-        // Save inputted value
-        REG[active_index].value = f;
-        saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+        println("Value must be a real number!");
       }
       
       lastScreen();
@@ -2424,20 +2414,20 @@ public void ENTER() {
       break;
     case EDIT_PREG_C:
     case EDIT_PREG_J:
-      float[] inputs = new float[6];
+      inputs = new float[6];
       // Parse each field, removing each the prefix
       try {
         for(int idx = 0; idx < inputs.length; ++idx) {
-          String inputStr = contents.get(idx).get(1);
+          String inputStr = contents.get(idx).get(col_select);
           inputs[idx] = Float.parseFloat( inputStr.substring(opt_select, inputStr.length()) );
         }
       } catch (NumberFormatException NFEx) {
         // Invalid input
-        updateScreen();
+        println("Values must be real numbers!");
         return;
       }
       
-      createRegisterPoint(inputs);      
+      createRegisterPoint(inputs, mode == Screen.EDIT_PREG_J);      
       break;
     case EDIT_PREG_COM:
       if (!workingText.equals("\0")) {
@@ -2529,7 +2519,7 @@ public void COORD() {
     nextScreen(Screen.ACTIVE_FRAMES);
   } else {  
     // Update the coordinate mode
-    updateCoordinateMode(armModel);
+    coordFrameTransition(armModel);
     updateScreen();
   }
 }
@@ -3180,6 +3170,11 @@ public void loadScreen(){
     case SETUP_NAV:
       opt_select = 0;
       break;
+    case ACTIVE_FRAMES:
+      row_select = 0;
+      col_select = 1;
+      workingText = Integer.toString(activeToolFrame + 1);
+      break;
     case PICK_FRAME_MODE:
       opt_select = 0;
       break;
@@ -3217,6 +3212,10 @@ public void loadScreen(){
     case INSTRUCT_MENU_NAV:
       opt_select = 0;
       break;
+    case NAV_DATA:
+    case SWAP_PT_TYPE:
+      opt_select = 0;
+      break;
     case EDIT_DREG_COM:
     case EDIT_PREG_COM:
       row_select = 1;
@@ -3235,7 +3234,7 @@ public void loadScreen(){
     case EDIT_PREG_C:
     case EDIT_PREG_J:
       row_select = 0;
-      col_select = 0;
+      col_select = 1;
       contents = loadInputRegisterPointMethod();
       break;
   }
@@ -3492,7 +3491,7 @@ public String getHeader(Screen mode){
     case DIRECT_ENTRY_USER:
       header = "DIRECT ENTRY METHOD";
       break;
-    case DATA_MENU_NAV:
+    case NAV_DATA:
       header = "VIEW REGISTERS";
       break;
     case NAV_DREGS:
@@ -3547,8 +3546,14 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
       break;
     case ACTIVE_FRAMES:
       contents = new ArrayList<ArrayList<String>>();
-      contents.add( newLine("Tool: ", Integer.toString(activeToolFrame + 1)) );
-      contents.add( newLine("User: ", Integer.toString(activeUserFrame + 1)) );
+      /* workingText corresponds to the active row's index display */
+      if (row_select == 0) {
+        contents.add( newLine("Tool: ", workingText) );
+        contents.add( newLine("User: ", Integer.toString(activeUserFrame + 1)) );
+      } else {
+        contents.add( newLine("Tool: ", Integer.toString(activeToolFrame + 1)) );
+        contents.add( newLine("User: ", workingText) );
+      }
       break;
     case NAV_TOOL_FRAMES:
       contents = loadFrames(CoordFrame.TOOL);
@@ -3573,6 +3578,7 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case DIRECT_ENTRY_USER:
     case DIRECT_ENTRY_TOOL:
     case EDIT_DREG_VAL:
+    case SWAP_PT_TYPE:
       contents = this.contents;
       break;
       
@@ -3752,7 +3758,7 @@ public ArrayList<String> getOptions(Screen mode){
     case USER_FRAME_METHODS:
       options = new ArrayList<String>();
       options.add("1. Three Point Method");
-      options.add("2. Six Point Method");
+      options.add("2. Four Point Method");
       options.add("3. Direct Entry Method");
       break;
     case VIEW_INST_REG:
@@ -3767,12 +3773,12 @@ public ArrayList<String> getOptions(Screen mode){
       options = loadPointList();
       break;
     //Data navigation and edit menus
-    case DATA_MENU_NAV:
+    case NAV_DATA:
       options = new ArrayList<String>();
       options.add("1. Data Registers");
       options.add("2. Position Registers");
       break;
-    case SWITCH_PREG:
+    case SWAP_PT_TYPE:
       options = new ArrayList<String>();
       options.add("1. Cartesian");
       options.add("2. Joint");
@@ -3920,7 +3926,7 @@ public String[] getFunctionLabels(Screen mode){
     case ACTIVE_FRAMES:
       // F1, F2
       funct[0] = "[List]";
-      funct[1] = "[Reset]";
+      funct[1] = "";
       funct[2] = "";
       funct[3] = "";
       funct[4] = "";
@@ -4234,6 +4240,37 @@ public void newInstruction(boolean overwrite){
 }
 
 /**
+ * Updates the index display in the Active Frames menu based on the
+ * current value of workingText
+ */
+public void updateActiveFramesDisplay() {
+  // Attempt to parse the inputted integer value
+  try {
+    int frameIdx = max(-1, min(Integer.parseInt(workingText) - 1, 9));
+    
+    if (row_select == 0) {
+      // Set active Tool Frame index
+      activeToolFrame = frameIdx;
+    } else {
+      // Set active User Frame index
+      activeUserFrame = frameIdx;
+    }
+    
+    updateCoordFrame(armModel);
+      
+  } catch(NumberFormatException NFEx) {
+    // Invalid integer value, so reset the current row's index display
+    if (col_select == 0) {
+      workingText = Integer.toString(activeToolFrame + 1);
+    } else {
+      workingText = Integer.toString(activeUserFrame + 1);
+    }
+    
+    contents.get(row_select).set(col_select, workingText);
+  }
+}
+
+/**
  * Loads the set of Frames that correspond to the given coordinate frame.
  * Only TOOL and USER have Frames sets as of now.
  * 
@@ -4377,51 +4414,39 @@ public ArrayList<ArrayList<String>> loadDirectEntryMethod(Frame f) {
   return frame; 
 }
 
-public void createFrame() {
-  int method = 0;
-    
-  if (mode == Screen.TEACH_4PT || mode == Screen.TEACH_6PT) {
-    method = 1;
-  }
+/**
+ * This method attempts to modify the Frame based on the given value of method.
+ * If method is even, then the frame is taught via the 3-Point Method. Otherwise,
+ * the Frame is taught by either the 4-Point or 6-Point Method based on if the
+ * Frame is a Tool Frame or a User Frame.
+ * 
+ * @param frame    The frame to be taught
+ * @param method  The method by which to each the new Frame
+ */
+public void createFrame(Frame frame, int method) {
   
-  if (teachFrame.setFrame(method)) {
-    if(teachFrame != null) {
-      if(DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
-      
-      // Set new Frame
-      if(mode == Screen.TEACH_3PT_TOOL || mode == Screen.TEACH_6PT) {
-        // Update the current frame of the Robot Arm
-        activeToolFrame = curFrameIdx;
-        toolFrames[activeToolFrame] = teachFrame;
-        
-        armModel.currentFrame = toolFrames[curFrameIdx].getNativeAxes();
-        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-        updateScreen();
-      } else if(mode == Screen.TEACH_3PT_USER || mode == Screen.TEACH_4PT) {
-        // Update the current frame of the Robot Arm
-        activeUserFrame = curFrameIdx;
-        userFrames[activeUserFrame] = teachFrame;
-        
-        armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-        saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
-        updateScreen();
-      } else {
-        mu();
-        return;
-      }
-    } else {
-      System.out.printf("Error invalid index %d!\n", curFrameIdx);
-      mu();
-      return;
-    }
+  if (teachFrame.setFrame(abs(method) % 2)) {
+    if (DISPLAY_TEST_OUTPUT) { System.out.printf("Frame set: %d\n", curFrameIdx); }
     
-    options = new ArrayList<String>();
-    opt_select = 0;
-    row_select = 0;
+    // Set new Frame
+    if (frame instanceof ToolFrame) {
+      // Update the current frame of the Robot Arm
+      activeToolFrame = curFrameIdx;
+      toolFrames[activeToolFrame] = frame;
+      updateCoordFrame(armModel);
+      
+      saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+    } else {
+      // Update the current frame of the Robot Arm
+      activeUserFrame = curFrameIdx;
+      userFrames[activeUserFrame] = frame;
+      updateCoordFrame(armModel);
+      
+      saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+    }
     
   } else {
     println("Invalid input points");
-    lastScreen();
   }
 }
 
@@ -4433,89 +4458,50 @@ public void createFrame() {
  * 
  * @param taughtFrame  the Frame, to which the direct entry values will be stored
  */
-public void createFrameDirectEntry(Frame taughtFrame) {
-  boolean error = false;
-  // User defined x, y, z, w, p, and r values
-  float[] inputs = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
-  
-  try {
-    // Parse each input value
-    for(int val = 0; val < inputs.length; ++val) {
-      String str = contents.get(val).get(1);
-      
-      if(str.length() < 0) {
-        // No value entered
-        error = true;
-        options.add("All entries must have a value.");
-        break;
-      }
-      
-      // Remove prefix
-      inputs[val] = Float.parseFloat(str);
-    }
-    
-  } catch (NumberFormatException NFEx) {
-    // Invalid number
-    error = true;
-    options.add("Inputs must be real numbers.");
-    updateScreen();
-    return;
-  }
-  
-  if(error) {
-    row_select = 0;
-    updateScreen();
-  } else {
-    // The user enters values with reference to the World Frame
-    PVector origin,
-            wpr = new PVector(inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD);
-    float[][] axesVectors = eulerToMatrix(wpr);
-    
-    if (taughtFrame instanceof UserFrame) {
-      origin = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
-    } else {
-      origin = new PVector(inputs[0], inputs[1], inputs[2]);
-    }
-    
-    origin.x = max(-9999f, min(origin.x, 9999f));
-    origin.y = max(-9999f, min(origin.y, 9999f));
-    origin.z = max(-9999f, min(origin.z, 9999f));
-    
-    wpr = matrixToEuler(axesVectors);
-    // Save direct entry values
-    taughtFrame.DEOrigin = origin;
-    taughtFrame.DEAxesOffsets = eulerToQuat(wpr);
-    taughtFrame.setFrame(2);
-    
-    if(DISPLAY_TEST_OUTPUT) {
-      System.out.printf("\n\n%s\n%s\n%s\nFrame set: %d\n", origin.toString(), wpr.toString(),
-                                                   matrixToString(axesVectors), curFrameIdx);
-    }
-    
-    // Set New Frame
-    if(mode == Screen.DIRECT_ENTRY_TOOL) {
-      // Update the current frame of the Robot Arm
-      activeToolFrame = curFrameIdx;
-      armModel.currentFrame = toolFrames[curFrameIdx].getNativeAxes();
-    } else if(mode == Screen.DIRECT_ENTRY_USER) {
-      // Update the current frame of the Robot Arm
-      activeUserFrame = curFrameIdx;
-      armModel.currentFrame = userFrames[curFrameIdx].getNativeAxes();
-    } 
-  }
-  
-  saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
+public void createFrameDirectEntry(Frame taughtFrame, float[] inputs) {
+
+  // The user enters values with reference to the World Frame
+  PVector origin,
+          wpr = new PVector(inputs[3] * DEG_TO_RAD, inputs[4] * DEG_TO_RAD, inputs[5] * DEG_TO_RAD);
+  float[][] axesVectors = eulerToMatrix(wpr);
   
   if (taughtFrame instanceof UserFrame) {
-    nextScreen(Screen.UFRAME_DETAIL);
+    origin = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
   } else {
-    nextScreen(Screen.TFRAME_DETAIL);
+    origin = new PVector(inputs[0], inputs[1], inputs[2]);
   }
+  
+  origin.x = max(-9999f, min(origin.x, 9999f));
+  origin.y = max(-9999f, min(origin.y, 9999f));
+  origin.z = max(-9999f, min(origin.z, 9999f));
+  
+  wpr = matrixToEuler(axesVectors);
+  // Save direct entry values
+  taughtFrame.DEOrigin = origin;
+  taughtFrame.DEAxesOffsets = eulerToQuat(wpr);
+  taughtFrame.setFrame(2);
+  
+  if(DISPLAY_TEST_OUTPUT) {
+    System.out.printf("\n\n%s\n%s\n%s\nFrame set: %d\n", origin.toString(), wpr.toString(),
+                                                 matrixToString(axesVectors), curFrameIdx);
+  }
+  
+  // Set New Frame
+  if(taughtFrame instanceof ToolFrame) {
+    // Update the current frame of the Robot Arm
+    activeToolFrame = curFrameIdx;
+  } else {
+    // Update the current frame of the Robot Arm
+    activeUserFrame = curFrameIdx;
+  } 
+  
+  updateCoordFrame(armModel);
+  saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
 }
 
-public void createRegisterPoint(float[] inputs){ 
+public void createRegisterPoint(float[] inputs, boolean jointAngles) { 
   // Save the input point
-  if(mode == Screen.EDIT_PREG_J) {
+  if(jointAngles) {
     // Bring angles within range: (0, TWO_PI)
     for(int idx = 0; idx < inputs.length; ++idx) {
       inputs[idx] = clampAngle(inputs[idx] * DEG_TO_RAD);
@@ -4523,7 +4509,7 @@ public void createRegisterPoint(float[] inputs){
     
     GPOS_REG[active_index].point = new RegPoint(inputs);
     saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
-  } else if(mode == Screen.EDIT_PREG_C) {
+  } else {
     PVector position = new PVector();
     float[] orientation = new float[] { 1f, 0f, 0f, 0f };
   

@@ -189,13 +189,14 @@ void showMainDisplayText() {
   }
 }
 
-/* Updates the curCoordFrame variable based on the current value of curCoordFrame, activeToolFrame,
- * activeUserFrame, and the current End Effector. If the new coordinate frame is user or tool and
- * no current tool or user frames are active, then the next coordinate frame is selected instead.
+/**
+ * Transitions to the next Coordinate frame in the cycle, updating the Robot's current frame
+ * in the process and skipping the Tool or User frame if there are no active frames in either
+ * one. Since the Robot's frame is potentially reset in this method, all Robot motion is halted.
  *
  * @param model  The Robot Arm, for which to switch coordinate frames
  */
-public void updateCoordinateMode(ArmModel model) {
+public void coordFrameTransition(ArmModel model) {
   // Stop Robot movement
   hd(); //<>//
   
@@ -218,27 +219,51 @@ public void updateCoordinateMode(ArmModel model) {
       break;
   }
   
-  // Skip the tool frame, if there is no current active tool frame
+  // Skip the Tool Frame, if there is no active frame
   if(curCoordFrame == CoordFrame.TOOL && !(activeToolFrame >= 0 && activeToolFrame < toolFrames.length)) {
     curCoordFrame = CoordFrame.USER;
   }
   
-  // Skip the user frame, if there is no current active user frame
+  // Skip the User Frame, if there is no active frame
   if(curCoordFrame == CoordFrame.USER && !(activeUserFrame >= 0 && activeUserFrame < userFrames.length)) {
     curCoordFrame = CoordFrame.JOINT;
+  }
+  
+  updateCoordFrame(model);
+}
+
+/**
+ * Transition back to the World Frame, if the current Frame is Tool or User and there are no active frame
+ * set for that Coordinate Frame. Also, the Robot frame is updated as a result. This method will halt all
+ * Robot motion, since the Robot's frame may be changed.
+ * 
+ * @param model  the Robot model, of which to change the frame
+ */
+public void updateCoordFrame(ArmModel model) {
+  // Stop Robot movement
+  hd();
+  
+  // Return to the World Frame, if no User Frame is active
+  if(curCoordFrame == CoordFrame.TOOL && !(activeToolFrame >= 0 && activeToolFrame < toolFrames.length)) {
+    curCoordFrame = CoordFrame.WORLD;
+  }
+  
+  // Return to the World Frame, if no User Frame is active
+  if(curCoordFrame == CoordFrame.USER && !(activeUserFrame >= 0 && activeUserFrame < userFrames.length)) {
+    curCoordFrame = CoordFrame.WORLD;
   }
   
   // Update the Arm Model's rotation matrix for rotational motion based on the current frame
   if(curCoordFrame == CoordFrame.TOOL || (curCoordFrame == CoordFrame.WORLD && activeToolFrame != -1)) {
     // Active Tool Frames are used in the World Frame as well
-    armModel.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
+    model.currentFrame = toolFrames[activeToolFrame].getNativeAxes();
   } 
   else if(curCoordFrame == CoordFrame.USER ) {
-    armModel.currentFrame = userFrames[activeUserFrame].getNativeAxes();
+    model.currentFrame = userFrames[activeUserFrame].getNativeAxes();
   } 
   else {
     //reset to world frame
-    armModel.resetFrame();
+    model.resetFrame();
   }
 }
 
