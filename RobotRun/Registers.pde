@@ -211,16 +211,17 @@ public class RegPoint {
     String[][] entries = new String[6][2];
     
     if (isCartesian()) {
-      // Show the vector in terms of the World Frame
-      PVector wPos = convertNativeToWorld( new PVector(values[0], values[1], values[2]) );
+      // Show the vector in terms of the World Frame or the active User Frame
+      PVector pos = convertNativeToWorld(position());
+      // Convert W, P, R to User Frame
       PVector angles = quatToEuler( Arrays.copyOfRange(values, 3, 7) );
       
       entries[0][0] = "X: ";
-      entries[0][1] = String.format("%4.3f", wPos.x);
+      entries[0][1] = String.format("%4.3f", pos.x);
       entries[1][0] = "Y: ";
-      entries[1][1] = String.format("%4.3f", wPos.y);
+      entries[1][1] = String.format("%4.3f", pos.y);
       entries[2][0] = "Z: ";
-      entries[2][1] = String.format("%4.3f", wPos.z);
+      entries[2][1] = String.format("%4.3f", pos.z);
       // Show angles in degrees
       entries[3][0] = "W: ";
       entries[3][1] = String.format("%4.3f", angles.x * RAD_TO_DEG);
