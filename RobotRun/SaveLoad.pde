@@ -104,10 +104,10 @@ public int loadState() {
   }
   
   // Initialize uninitialized registers and position registers to with null fields
-  for(int reg = 0; reg < REG.length; ++reg) {
+  for(int reg = 0; reg < DAT_REG.length; ++reg) {
     
-    if(REG[reg] == null) {
-      REG[reg] = new Register();
+    if(DAT_REG[reg] == null) {
+      DAT_REG[reg] = new DataRegister();
     }
     
     if(GPOS_REG[reg] == null) {  
@@ -387,9 +387,8 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     // Flag byte denoting this instruction as a ToolInstruction
     out.writeByte(2);
     // Write data associated with the ToolInstruction object
-    out.writeUTF(t_inst.type);
-    out.writeInt(t_inst.bracket);
-    out.writeInt( saveEEStatus(t_inst.setToolStatus) );
+    out.writeInt(t_inst.reg);
+    out.writeInt( saveEEStatus(t_inst.status) );
   } else if (inst instanceof Instruction) {
     out.writeByte(127);
   } else {/* TODO add other instructions! */}
@@ -431,11 +430,10 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
   } else if(instType == 2) {
     
     // Read data for a ToolInstruction object
-    String type = in.readUTF();
-    int bracket = in.readInt();
+    int reg = in.readInt();
     int setting = in.readInt();
     
-    inst = new ToolInstruction(type, bracket, loadEEStatus(setting));
+    inst = new ToolInstruction(reg, loadEEStatus(setting));
   } else if (instType == 127) {
     inst = new Instruction();
   } else {/* TODO add other instructions! */}
@@ -750,8 +748,8 @@ public int saveRegisterBytes(File dest) {
     initializedPR = new ArrayList<Integer>();
     
     // Count the number of initialized entries and save their indices
-    for(int idx = 0; idx < REG.length; ++idx) {
-      if(REG[idx].value != null || REG[idx].comment != null) {
+    for(int idx = 0; idx < DAT_REG.length; ++idx) {
+      if(DAT_REG[idx].value != null || DAT_REG[idx].comment != null) {
         initializedR.add(idx);
         ++numOfREntries;
       }
@@ -767,17 +765,17 @@ public int saveRegisterBytes(File dest) {
     for(Integer idx : initializedR) {
       dataOut.writeInt(idx);
       
-      if(REG[idx].value == null) {
+      if(DAT_REG[idx].value == null) {
         // save for null Float value
         dataOut.writeFloat(Float.NaN);
       } else {
-        dataOut.writeFloat(REG[idx].value);
+        dataOut.writeFloat(DAT_REG[idx].value);
       }
       
-      if(REG[idx].comment == null) {
+      if(DAT_REG[idx].comment == null) {
         dataOut.writeUTF("");
       } else {
-        dataOut.writeUTF(REG[idx].comment);
+        dataOut.writeUTF(DAT_REG[idx].comment);
       }
     }
     
@@ -834,7 +832,7 @@ public int loadRegisterBytes(File src) {
     FileInputStream in = new FileInputStream(src);
     DataInputStream dataIn = new DataInputStream(in);
     
-    int size = max(0, min(dataIn.readInt(), REG.length));
+    int size = max(0, min(dataIn.readInt(), DAT_REG.length));
     
     // Load the Register entries
     while(size-- > 0) {
@@ -849,7 +847,7 @@ public int loadRegisterBytes(File src) {
       // Null comments are saved as ""
       if(c.equals("")) { c = null; }
       
-      REG[reg] = new Register(c, v);
+      DAT_REG[reg] = new DataRegister(c, v);
     }
     
     size = max(0, min(dataIn.readInt(), GPOS_REG.length));

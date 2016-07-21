@@ -359,51 +359,44 @@ public class FrameInstruction extends Instruction {
 } // end FrameInstruction class
 
 public class ToolInstruction extends Instruction {
-  private String type;
-  private int bracket;
-  private EEStatus setToolStatus;
+  private int reg;
+  private EEStatus status;
 
-  public ToolInstruction(String d, int b, EEStatus t) {
+  public ToolInstruction(int r, EEStatus t) {
     super();
-    type = d;
-    bracket = b;
-    setToolStatus = t;
+    reg = r;
+    status = t;
   }
 
   public void execute() {
-    if((type.equals("RO") && bracket == 4 && armModel.activeEndEffector == EndEffector.CLAW) ||
-        (type.equals("DO") && bracket == 101 && armModel.activeEndEffector == EndEffector.SUCTION))
-    {
+    armModel.endEffectorStatus = status;
+    System.out.printf("EE: %s\n", armModel.endEffectorStatus);
       
-      armModel.endEffectorStatus = setToolStatus;
-      System.out.printf("EE: %s\n", armModel.endEffectorStatus);
+    // Check if the Robot is placing an object or picking up and object
+    if(armModel.activeEndEffector == EndEffector.CLAW || armModel.activeEndEffector == EndEffector.SUCTION) {
       
-      // Check if the Robot is placing an object or picking up and object
-      if(armModel.activeEndEffector == EndEffector.CLAW || armModel.activeEndEffector == EndEffector.SUCTION) {
+      if(status == EEStatus.ON && armModel.held == null) {
         
-        if(setToolStatus == EEStatus.ON && armModel.held == null) {
+        PVector ee_pos = armModel.getEEPos();
+        
+        // Determine if an object in the world can be picked up by the Robot
+        for(WorldObject s : objects) {
           
-          PVector ee_pos = armModel.getEEPos();
-          
-          // Determine if an object in the world can be picked up by the Robot
-          for(WorldObject s : objects) {
-            
-            if(s.collision(ee_pos)) {
-              armModel.held = s;
-              break;
-            }
+          if(s.collision(ee_pos)) {
+            armModel.held = s;
+            break;
           }
-        } 
-        else if(setToolStatus == EEStatus.OFF && armModel.held != null) {
-          // Release the object
-          armModel.releaseHeldObject();
         }
+      } 
+      else if(status == EEStatus.OFF && armModel.held != null) {
+        // Release the object
+        armModel.releaseHeldObject();
       }
     }
   }
 
   public String toString() {
-    return type + "[" + bracket + "]=" + setToolStatus.toString();
+    return "IO[" + reg + "]=" + status.toString();
   }
 } // end ToolInstruction class
 

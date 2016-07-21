@@ -866,18 +866,6 @@ public void keyPressed() {
     // Pick up an object within reach of the EE when the 'ENTER' button is pressed for either
     // the suction or claw EE
     ToolInstruction pickup;
-    
-    if(armModel.endEffectorStatus == EEStatus.ON) {
-      pickup = (armModel.activeEndEffector == EndEffector.CLAW) ? 
-      new ToolInstruction("RO", 4, EEStatus.OFF) : 
-      new ToolInstruction("DO", 101, EEStatus.OFF);
-    } else {
-      pickup = (armModel.activeEndEffector == EndEffector.CLAW) ? 
-      new ToolInstruction("RO", 4, EEStatus.ON) : 
-      new ToolInstruction("DO", 101, EEStatus.ON);
-    }
-    
-    pickup.execute();
   } else if(keyCode == KeyEvent.VK_1) {
     // Front view
     panX = 0;
@@ -1239,14 +1227,13 @@ public void up() {
     case USER_FRAME_METHODS:
     case TOOL_FRAME_METHODS:
     case PICK_INSTRUCT:
+    case IO_SUBMENU:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
     case TEACH_3PT_USER:
     case TEACH_3PT_TOOL:
     case TEACH_4PT:
     case TEACH_6PT:
-    case SET_DO_STATUS:
-    case SET_RO_STATUS:
     case NAV_DATA:
     case SWAP_PT_TYPE:
     case SET_MV_INSTRUCT_TYPE:
@@ -1255,7 +1242,6 @@ public void up() {
     case SETUP_NAV:
       opt_select = max(0, opt_select - 1);
       break;
-    case IO_SUBMENU:
     case NAV_TOOL_FRAMES:
     case NAV_USER_FRAMES:
     case DIRECT_ENTRY_TOOL:
@@ -1319,7 +1305,7 @@ public void dn() {
     case NAV_DREGS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
-      size = (mode == Screen.NAV_DREGS) ? REG.length : GPOS_REG.length;
+      size = (mode == Screen.NAV_DREGS) ? DAT_REG.length : GPOS_REG.length;
       indices = moveDown(active_index, size, row_select, renderStartIdx, shift);
       
       active_index = indices[0];
@@ -1340,14 +1326,13 @@ public void dn() {
     case USER_FRAME_METHODS:
     case TOOL_FRAME_METHODS:
     case PICK_INSTRUCT:
+    case IO_SUBMENU:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
     case TEACH_3PT_USER:
     case TEACH_3PT_TOOL:
     case TEACH_4PT:
     case TEACH_6PT:
-    case SET_DO_STATUS:
-    case SET_RO_STATUS:
     case NAV_DATA:
     case SWAP_PT_TYPE:
     case SET_MV_INSTRUCT_TYPE:
@@ -1356,8 +1341,6 @@ public void dn() {
     case SETUP_NAV:
       opt_select = min(opt_select + 1, options.size() - 1);
       break;
-    case IO_SUBMENU:
-    
     case NAV_TOOL_FRAMES:
     case NAV_USER_FRAMES:
     case EDIT_PREG_C:
@@ -1505,7 +1488,7 @@ public void f1() {
   switch(mode) {
     case NAV_PROG_INST:
       if(shift) {
-        newInstruction();
+        newMotionInstruction();
         
         active_instr = programs.get(active_prog).getInstructions().size() - 1; 
         col_select = 0;
@@ -1554,7 +1537,7 @@ public void f1() {
       break;
     case NAV_DREGS:
       // Clear Data Register entry
-      REG[active_index] = new Register();
+      DAT_REG[active_index] = new DataRegister();
       saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       break;
     case NAV_PREGS_J:
@@ -2022,13 +2005,13 @@ public void bd() {
       ToolInstruction tIns = (ToolInstruction)ins;
       EEStatus opp = null;
       
-      if (tIns.setToolStatus == EEStatus.ON) {
+      if (tIns.status == EEStatus.ON) {
         opp = EEStatus.OFF;
       } else {
         opp = EEStatus.ON;
       }
       
-      ToolInstruction inverse = new ToolInstruction(tIns.type, tIns.bracket, opp);
+      ToolInstruction inverse = new ToolInstruction(tIns.reg, tIns.status);
       // Reverse the tool status applied
       inverse.execute();
     }
@@ -2333,66 +2316,23 @@ public void ENTER() {
       }
       break;
     case IO_SUBMENU:
-      if(row_select == 2) { // digital
-        nextScreen(Screen.SET_DO_BRACKET);
-      }
-      else if(row_select == 5) { // robot
-        nextScreen(Screen.SET_RO_BRACKET);
-      }
-      break;
-    case SET_DO_BRACKET:
-      nextScreen(Screen.SET_DO_STATUS);
-      break;
-    case SET_RO_BRACKET:
-      nextScreen(Screen.SET_RO_STATUS);
-      break;
-    case SET_DO_STATUS:
-    case SET_RO_STATUS:
       p = programs.get(active_prog);
       
-      try {
-        int bracketNum = Integer.parseInt(workingText);
-        if(bracketNum >= 0) {
-          ToolInstruction insert = new ToolInstruction(
-          (mode == Screen.SET_DO_STATUS ? "DO" : "RO"),
-          bracketNum,
-          (opt_select == 0 ? EEStatus.ON : EEStatus.OFF));
-          p.addInstruction(insert);
-        }
-      } catch (NumberFormatException NFEx) { /* Ignore invalid numbers */ }
-      
-      active_instr = p.getInstructions().size() - 1;
-      row_select = min(active_instr, ITEMS_TO_SHOW - 1);
-      col_select = 0;
-      renderStartIdx = active_instr - row_select;
       nextScreen(Screen.NAV_PROG_INST);
       break;
     case SET_FRAME_INSTRUCTION:
-      nextScreen(Screen.SET_FRM_INSTR_IDX);
+      if(opt_select == 0){
+        nextScreen(Screen.SET_TFRM_INSTR_IDX);
+      } else {
+        nextScreen(Screen.SET_UFRM_INSTR_IDX);
+      }
       break;
-    case SET_FRM_INSTR_IDX:
-      p = programs.get(active_prog);
-      
-      try {
-        int num = Integer.parseInt(workingText)-1;
-        if(num < -1) num = -1;
-        else if(num >= userFrames.length) num = userFrames.length-1;
-        
-        int type = 0;
-        if(row_select == 0) type = FTYPE_TOOL;
-        else if(row_select == 1) type = FTYPE_USER;
-        
-        p.addInstruction(new FrameInstruction(type, num));
-      } catch (NumberFormatException NFEx) { /* Ignore invalid numbers */ }
-      
-      active_instr = p.getInstructions().size() - 1;
-      col_select = 0;
-      
-      row_select = min(active_instr, ITEMS_TO_SHOW - 1);
-      renderStartIdx = active_instr - row_select;
-      
-      loadInstructions(active_prog);
-      nextScreen(Screen.NAV_PROG_INST);    
+    case SET_TFRM_INSTR_IDX:
+    case SET_UFRM_INSTR_IDX:
+      newFrameInstruction(mode);
+      display_stack.pop();
+      display_stack.pop();
+      lastScreen();
       break;
     case SWAP_PT_TYPE:
       if(opt_select == 0) {
@@ -2403,7 +2343,7 @@ public void ENTER() {
         nextScreen(Screen.NAV_PREGS_J);
       }
       break;
-    case NAV_DATA:      
+    case NAV_DATA:
       if(opt_select == 0) {
         // Data Register Menu
         nextScreen(Screen.NAV_DREGS);
@@ -2421,9 +2361,9 @@ public void ENTER() {
         // Clamp the value between -9999 and 9999, inclusive
         f = max(-9999f, min(f, 9999f));
         
-        if(active_index >= 0 && active_index < REG.length) {
+        if(active_index >= 0 && active_index < DAT_REG.length) {
           // Save inputted value
-          REG[active_index].value = f;
+          DAT_REG[active_index].value = f;
           saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
         }
       } catch (NumberFormatException NFEx) {
@@ -2478,7 +2418,7 @@ public void ENTER() {
           workingText = workingText.substring(0, workingText.length() - 1);
         }
         // Save the inputted comment to the selected register\
-        REG[active_index].comment = workingText;
+        DAT_REG[active_index].comment = workingText;
         saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
         workingText = "";
         lastScreen();
@@ -3154,7 +3094,9 @@ public void switchScreen(Screen nextScreen) {
 /**
  * Transitions the display to the previous screen that the user was on.
  */
-public boolean lastScreen() {  
+public boolean lastScreen() {
+  opt_select = 0;
+  
   if (display_stack.peek() == Screen.DEFAULT) {
     if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s\n", mode); }
     return false;
@@ -3163,7 +3105,7 @@ public boolean lastScreen() {
     display_stack.pop();
     if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s => %s\n", mode, display_stack.peek()); }
     mode = display_stack.peek();
-    loadScreen();
+    
     updateScreen();
     return true;
   }
@@ -3181,10 +3123,12 @@ public void loadScreen(){
   options = new ArrayList<String>();*/
   
   switch(mode){
+    //Main menu
     case MAIN_MENU_NAV:
       opt_select = 0;
       break;
-      
+    
+    //Programs and instructions
     case NEW_PROGRAM:
       row_select = 1;
       col_select = 0;
@@ -3196,6 +3140,19 @@ public void loadScreen(){
       col_select = 0;
       opt_select = -1;
       break;
+    case PICK_INSTRUCT:
+    case SET_FRAME_INSTRUCTION:
+      opt_select = 0;
+      break;
+    case SET_TFRM_INSTR_IDX:
+    case SET_UFRM_INSTR_IDX:
+      workingText = "";
+      break;
+      
+    //Frames
+    case SETUP_NAV:
+      opt_select = 0;
+      break;
     case NAV_DREGS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
@@ -3203,9 +3160,6 @@ public void loadScreen(){
       row_select = 0;
       col_select = 0;
       renderStartIdx = 0;
-      break;
-    case SETUP_NAV:
-      opt_select = 0;
       break;
     case ACTIVE_FRAMES:
       row_select = 0;
@@ -3232,7 +3186,8 @@ public void loadScreen(){
       col_select = -1;
       opt_select = 0;
       break;
-          
+    
+    //Registers
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
       row_select = 0;
@@ -3252,7 +3207,6 @@ public void loadScreen(){
     case VIEW_INST_REG:
       opt_select = -1;
       break;
-        
     case NAV_DATA:
     case SWAP_PT_TYPE:
       opt_select = 0;
@@ -3262,8 +3216,8 @@ public void loadScreen(){
       col_select = 0;
       opt_select = 0;
       
-      if(REG[active_index].comment != null) {
-        workingText = REG[active_index].comment;
+      if(DAT_REG[active_index].comment != null) {
+        workingText = DAT_REG[active_index].comment;
       }
       else {
         workingText = "\0";
@@ -3275,7 +3229,7 @@ public void loadScreen(){
       opt_select = 0;
       
       if(GPOS_REG[active_index].comment != null) {
-        System.out.printf("_%s_", REG[active_index].comment);
+        System.out.printf("_%s_", DAT_REG[active_index].comment);
         workingText = GPOS_REG[active_index].comment;
       }
       else {
@@ -3285,8 +3239,8 @@ public void loadScreen(){
     case EDIT_DREG_VAL:
       opt_select = 0;
       // Bring up float input menu
-      if(REG[active_index].value != null) {
-        workingText = Float.toString(REG[active_index].value);
+      if(DAT_REG[active_index].value != null) {
+        workingText = Float.toString(DAT_REG[active_index].value);
       } else {
         workingText = "0.0";
       }
@@ -3520,12 +3474,9 @@ public String getHeader(Screen mode){
     case SET_MV_INSTR_TERM:
     case PICK_INSTRUCT:
     case IO_SUBMENU:
-    case SET_DO_BRACKET:
-    case SET_DO_STATUS:
-    case SET_RO_BRACKET:
-    case SET_RO_STATUS:
     case SET_FRAME_INSTRUCTION:
-    case SET_FRM_INSTR_IDX:
+    case SET_TFRM_INSTR_IDX:
+    case SET_UFRM_INSTR_IDX:
     case SELECT_CUT_COPY:    
     case SELECT_DELETE:
     case VIEW_INST_REG:
@@ -3640,6 +3591,9 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
       break;
     case NAV_USER_FRAMES:
       contents = loadFrames(CoordFrame.USER);
+      break;
+    case IO_SUBMENU:
+      contents = loadToolIORegisters();
       break;
       
     //View frame details
@@ -3771,37 +3725,14 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("2 Offset/Frames"     );
       options.add("3 Register Statement");
       break;
-    case IO_SUBMENU:
-      options.add("1 Cell Intface (NA)" );
-      options.add("2 Custom (NA)"       );
-      options.add("3 Digital"           );
-      options.add("4 Analog (NA)"       );
-      options.add("5 Group (NA)"        );
-      options.add("6 Robot"             );
-      options.add("7 UOP (NA)"          );
-      options.add("8 SOP (NA)"          );
-      options.add("9 Interconnect (NA)" );
+    case SET_FRAME_INSTRUCTION:
+      options.add("1. Tool Frame Instruct");
+      options.add("2. User Frame Instruct");
       break;
-    case SET_FRM_INSTR_IDX:
+    case SET_TFRM_INSTR_IDX:
+    case SET_UFRM_INSTR_IDX:
       options.add("Select the index of the frame to use:");
       options.add("\0" + workingText);
-      break;
-    case SET_DO_BRACKET:
-      options.add("Use number keys to enter DO[X]");
-      options.add("\0" + workingText);
-      break;
-    case SET_RO_BRACKET:
-      options.add("Use number keys to enter RO[X]");
-      options.add("\0" + workingText);
-      break;
-    case SET_DO_STATUS:
-    case SET_RO_STATUS:
-      options.add("ON");
-      options.add("OFF");
-      break;
-    case SET_FRAME_INSTRUCTION:
-      options.add("1 UTOOL_NUM");
-      options.add("1 UFRAME_NUM");
       break;
       
     //Frame navigation and edit menus
@@ -4268,7 +4199,7 @@ boolean[] resetSelection(int n){
   return selectedLines;
 }
 
-public void newInstruction(){
+public void newMotionInstruction(){
   // overwrite current instruction
   PVector eep = armModel.getEEPos();
   float[] q = armModel.getQuaternion();
@@ -4293,6 +4224,29 @@ public void newInstruction(){
     prog.overwriteInstruction(active_instr, insert);
   } else {
     prog.addInstruction(insert);
+  }
+}
+
+public void newFrameInstruction(Screen mode){
+  Program p = programs.get(active_prog);
+    
+  try {
+    println(workingText);
+    int num = Integer.parseInt(workingText)-1;
+    if(num < 0) num = 0;
+    else if(num >= userFrames.length) num = userFrames.length-1;
+    
+    int type = (mode == Screen.SET_TFRM_INSTR_IDX) ? FTYPE_TOOL : FTYPE_USER;
+    
+    FrameInstruction f = new FrameInstruction(type, num);
+    if(active_instr != p.getInstructions().size()) {
+      p.overwriteInstruction(active_instr, f);
+    } else {
+      p.addInstruction(f);
+    }
+  } catch (NumberFormatException NFEx) {
+    /* Ignore invalid numbers */ 
+    println("Error: invalid frame number");
   }
 }
 
@@ -4449,14 +4403,14 @@ public ArrayList<ArrayList<String>> loadFrameDirectEntry(Frame f) {
   PVector xyz = new PVector(0, 0, 0);
   PVector wpr = new PVector(0, 0, 0);
       
-  if(teachFrame.DEOrigin != null) {
+  if(f.DEOrigin != null) {
     xyz = teachFrame.DEOrigin;
     
-    if(teachFrame instanceof UserFrame)
+    if(f instanceof UserFrame)
       xyz = convertNativeToWorld(xyz);
   }
         
-  if (teachFrame.DEAxesOffsets != null) {
+  if (f.DEAxesOffsets != null) {
     wpr = quatToEuler(teachFrame.DEAxesOffsets);
   }
 
@@ -4564,7 +4518,7 @@ public ArrayList<ArrayList<String>> loadRegisters() {
   
   // View Registers or Position Registers
   int start = renderStartIdx;
-  int end = min(start + ITEMS_TO_SHOW, REG.length);
+  int end = min(start + ITEMS_TO_SHOW, DAT_REG.length);
   // Display a subset of the list of registers
   for(int idx = start; idx < end; ++idx) {
     String spaces;
@@ -4582,7 +4536,7 @@ public ArrayList<ArrayList<String>> loadRegisters() {
     String lbl;
     
     if(mode == Screen.NAV_DREGS) {
-      lbl = (REG[idx].comment == null) ? "" : REG[idx].comment;
+      lbl = (DAT_REG[idx].comment == null) ? "" : DAT_REG[idx].comment;
     } else {
       lbl  = (GPOS_REG[idx].comment == null) ? "" : GPOS_REG[idx].comment;
     }
@@ -4596,9 +4550,9 @@ public ArrayList<ArrayList<String>> loadRegisters() {
     String regEntry = "*";
     
     if(mode == Screen.NAV_DREGS) {
-      if(REG[idx].value != null) {
+      if(DAT_REG[idx].value != null) {
         // Dispaly Register value
-        regEntry = String.format("%4.3f", REG[idx].value);
+        regEntry = String.format("%4.3f", DAT_REG[idx].value);
       }
       
     } else if(GPOS_REG[idx].point != null) {
@@ -4689,6 +4643,19 @@ public ArrayList<ArrayList<String>> loadPosRegEntry(PositionRegister reg) {
   }
    
   return register;
+}
+
+public ArrayList<ArrayList<String>> loadToolIORegisters() {
+  ArrayList<ArrayList<String>> ioRegs = new ArrayList<ArrayList<String>>();
+  
+  for(int i = 0; i < IO_REG.length; i += 1){
+    if(IO_REG[i] == null) IO_REG[i] = new IORegister();
+    
+    String state = (IO_REG[i].state == ON) ? "ON" : "OFF";
+    ioRegs.add(newLine((i+1) + ") IO[" + i + "] =", state));
+  }
+  
+  return ioRegs;
 }
 
 public void createRegisterPoint(boolean jointAngles) {

@@ -85,12 +85,11 @@ public static enum Screen implements DisplayMode {
   INPUT_INTEGER(ScreenType.TYPE_NUM_ENTRY),
   EDIT_DREG_VAL(ScreenType.TYPE_NUM_ENTRY),
   JUMP_TO_LINE(ScreenType.TYPE_NUM_ENTRY), 
-  SET_DO_BRACKET(ScreenType.TYPE_NUM_ENTRY),
-  SET_FRM_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
+  SET_TFRM_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
+  SET_UFRM_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_REG_NUM(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_SPD(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_TERM(ScreenType.TYPE_NUM_ENTRY),
-  SET_RO_BRACKET(ScreenType.TYPE_NUM_ENTRY),
   ACTIVE_FRAMES(ScreenType.TYPE_NUM_ENTRY),
   
   /*
@@ -124,8 +123,6 @@ public static enum Screen implements DisplayMode {
   INPUT_RSTMT,
   PICK_LETTER,
   NAV_DATA,
-  SET_DO_STATUS,
-  SET_RO_STATUS,
   VIEW_INST_REG;
   
   private final ScreenType type;

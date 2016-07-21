@@ -1,19 +1,22 @@
 // Position Registers
 private final PositionRegister[] GPOS_REG = new PositionRegister[100];
-// Registers
-private final Register[] REG = new Register[100];
+// Data Registers
+private final DataRegister[] DAT_REG = new DataRegister[100];
+// IO Registers
+private final IORegister[] IO_REG = new IORegister[6];
+
 
 /* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
-public class Register {
+public class DataRegister {
   public String comment;
   public Float value;
   
-  public Register() {
+  public DataRegister() {
     comment = null;
     value = null;
   }
   
-  public Register(String c, Float v) {
+  public DataRegister(String c, Float v) {
     value = v;
     comment = c;
   }
@@ -378,6 +381,21 @@ public class RegStmtPoint {
   }
 }
 
+public class IORegister {
+  public String comment;
+  public int state;
+  
+  public IORegister(){
+    comment = null;
+    state = OFF;
+  }
+  
+  public IORegister(int init, String com){
+    comment = com;
+    state = init;
+  }
+}
+
 /**
  * This class defines an error that occurs during the evaluation process of an ExpressionSet Object.
  */
@@ -595,7 +613,7 @@ public class ExpressionSet {
       if (regIdx.length == 1) {
         
         // Use Register value
-        return REG[ regIdx[0] ].value;
+        return DAT_REG[ regIdx[0] ].value;
       } else if (regIdx.length == 3) {
         RegStmtPoint pt;
         
