@@ -355,48 +355,58 @@ public final class MotionInstruction extends Instruction  {
 
 public class FrameInstruction extends Instruction {
   private int frameType;
-  private int idx;
-
-  public FrameInstruction(int f, int i) {
+  private int reg;
+    
+  public FrameInstruction(int f, int r) {
     super();
     frameType = f;
-    idx = i;
+    reg = r;
   }
-
+  
+  public int getFrameType(){ return frameType; }
+  public void setFrameType(int t){ frameType = t; }
+  public int getReg(){ return reg; }
+  public void setReg(int r){ reg = r; }
+  
   public void execute() {
-    if(frameType == FTYPE_TOOL) activeToolFrame = idx;
-    else if(frameType == FTYPE_USER) activeUserFrame = idx;
+    if(frameType == FTYPE_TOOL) activeToolFrame = reg;
+    else if(frameType == FTYPE_USER) activeUserFrame = reg;
     // Update the Robot Arm's current frame rotation matrix
     updateCoordFrame(armModel);
   }
 
   public String toString() {
     String ret = "";
-    if(frameType == FTYPE_TOOL) ret += "UTOOL_NUM=";
+    if(frameType == FTYPE_TOOL) ret += "TFRAME_NUM=";
     else if(frameType == FTYPE_USER) ret += "UFRAME_NUM=";
-    ret += idx+1;
+    ret += reg+1;
     return ret;
   }
 } // end FrameInstruction class
 
-public class ToolInstruction extends Instruction {
+public class IOInstruction extends Instruction {
+  private int state;
   private int reg;
-  private EEStatus status;
-
-  public ToolInstruction(int r, EEStatus t) {
+  
+  public IOInstruction(int r, int t) {
     super();
     reg = r;
-    status = t;
+    state = t;
   }
 
+  public int getState(){ return state; }
+  public void setState(int s){ state = s; }
+  public int getReg(){ return reg; }
+  public void setReg(int r){ reg = r; }
+  
   public void execute() {
-    armModel.endEffectorStatus = status;
+    armModel.endEffectorStatus = state;
     System.out.printf("EE: %s\n", armModel.endEffectorStatus);
       
     // Check if the Robot is placing an object or picking up and object
     if(armModel.activeEndEffector == EndEffector.CLAW || armModel.activeEndEffector == EndEffector.SUCTION) {
       
-      if(status == EEStatus.ON && armModel.held == null) {
+      if(state == ON && armModel.held == null) {
         
         PVector ee_pos = armModel.getEEPos();
         
@@ -409,7 +419,7 @@ public class ToolInstruction extends Instruction {
           }
         }
       } 
-      else if(status == EEStatus.OFF && armModel.held != null) {
+      else if(state == OFF && armModel.held != null) {
         // Release the object
         armModel.releaseHeldObject();
       }
@@ -417,7 +427,7 @@ public class ToolInstruction extends Instruction {
   }
 
   public String toString() {
-    return "IO[" + reg + "]=" + status.toString();
+    return "IO[" + reg + "]=" + state;
   }
 } // end ToolInstruction class
 

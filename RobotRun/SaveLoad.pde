@@ -380,15 +380,15 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeByte(1);
     // Write data associated with the FrameInstruction object
     out.writeInt(f_inst.frameType);
-    out.writeInt(f_inst.idx);
-  } else if(inst instanceof ToolInstruction) {
+    out.writeInt(f_inst.reg);
+  } else if(inst instanceof IOInstruction) {
     
-    ToolInstruction t_inst = (ToolInstruction)inst;
+    IOInstruction t_inst = (IOInstruction)inst;
     // Flag byte denoting this instruction as a ToolInstruction
     out.writeByte(2);
     // Write data associated with the ToolInstruction object
     out.writeInt(t_inst.reg);
-    out.writeInt( saveEEStatus(t_inst.status) );
+    out.writeInt( saveint(t_inst.state) );
   } else if (inst instanceof Instruction) {
     out.writeByte(127);
   } else {/* TODO add other instructions! */}
@@ -433,7 +433,7 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     int reg = in.readInt();
     int setting = in.readInt();
     
-    inst = new ToolInstruction(reg, loadEEStatus(setting));
+    inst = new IOInstruction(reg, loadint(setting));
   } else if (instType == 127) {
     inst = new Instruction();
   } else {/* TODO add other instructions! */}
@@ -445,8 +445,7 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
  * Convert the given End Effector status
  * to a unique integer value.
  */
-private int saveEEStatus(EEStatus stat) {
-  
+private int saveint(int stat) {
   switch (stat) {
     case ON:  return 0;
     case OFF: return 1;
@@ -458,12 +457,11 @@ private int saveEEStatus(EEStatus stat) {
  * Converts a valid integer value to its
  * corresponding End Effector Status.
  */
-private EEStatus loadEEStatus(int val) {
-  
+private int loadint(int val) {
   switch (val) {
-    case 0:   return EEStatus.ON;
-    case 1:   return EEStatus.OFF;
-    default:  return null;
+    case 0:   return ON;
+    case 1:   return OFF;
+    default:  return -1;
   }
 }
 

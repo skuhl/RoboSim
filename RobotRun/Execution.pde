@@ -1050,8 +1050,8 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
     }
   }
   //tool instructions
-  else if(ins instanceof ToolInstruction) {
-    ToolInstruction instruction = (ToolInstruction)ins;
+  else if(ins instanceof IOInstruction) {
+    IOInstruction instruction = (IOInstruction)ins;
     instruction.execute();
     currentInstruction++;
     
