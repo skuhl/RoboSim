@@ -905,32 +905,32 @@ public void keyPressed() {
   }
   
   if(keyCode == UP) {
-    float[] angles = armModel.getJointRotations();
+    float[] angles = armModel.getJointAngles();
     calculateJacobian(angles, true);
     angles[0] += DEG_TO_RAD;
     armModel.setJointAngles(angles);
   } else if(keyCode == DOWN) {
-    float[] angles = armModel.getJointRotations();
+    float[] angles = armModel.getJointAngles();
     calculateJacobian(angles, true);
     angles[1] += DEG_TO_RAD;
     armModel.setJointAngles(angles);
   } else if(keyCode == LEFT) {
-    float[] angles = armModel.getJointRotations();
+    float[] angles = armModel.getJointAngles();
     calculateJacobian(angles, true);
     angles[2] += DEG_TO_RAD;
     armModel.setJointAngles(angles);
   } else if(keyCode == RIGHT) {
-    float[] angles = armModel.getJointRotations();
+    float[] angles = armModel.getJointAngles();
     calculateJacobian(angles, true);
     angles[3] += DEG_TO_RAD;
     armModel.setJointAngles(angles);
   } else if(key == 'z') {
-    float[] angles = armModel.getJointRotations();
+    float[] angles = armModel.getJointAngles();
     calculateJacobian(angles, true);
     angles[4] += DEG_TO_RAD;
     armModel.setJointAngles(angles);
   } else if(key == 'x') {
-    float[] angles = armModel.getJointRotations();
+    float[] angles = armModel.getJointAngles();
     calculateJacobian(angles, true);
     angles[5] += DEG_TO_RAD;
     armModel.setJointAngles(angles);
@@ -1785,18 +1785,11 @@ public void f4() {
   case NAV_PREGS_C:
     if (shift) {
       // Move To function
-      RegPoint pt = GPOS_REG[active_index].point;
+      Point pt = GPOS_REG[active_index].point;
+      
       if (pt != null) {
-        
-        float[] joints = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
-        
-        for (int idx = 0; idx < 6; ++idx) {
-          // Copy point joint values
-          joints[idx] = pt.getValue(idx);
-        }
-        
         // Move the Robot to the select point
-        armModel.setupRotationInterpolation(joints);
+        armModel.setupRotationInterpolation(pt.angles.clone());
         armModel.inMotion = true;
         currentInstruction = -2;
       } else {
@@ -1812,9 +1805,9 @@ public void f4() {
       if (shift && teachFrame != null) {
         Point tgt = teachFrame.getPoint(opt_select);
         
-        if (tgt != null && tgt.joints != null) {
+        if (tgt != null && tgt.angles != null) {
           // Move the Robot to the select point
-          armModel.setupRotationInterpolation(tgt.joints);
+          armModel.setupRotationInterpolation(tgt.angles);
           armModel.inMotion = true;
           currentInstruction = -2;
         }
@@ -1859,7 +1852,7 @@ public void f5() {
         
         float[] orientation = matrixToQuat( rMatrix );
         Point curPosition = new Point(new PVector(tMatrix[0][3], tMatrix[1][3], tMatrix[2][3]), orientation);
-        curPosition.joints = armModel.getJointRotations();
+        curPosition.angles = armModel.getJointAngles();
         // Save the current position of the Robot's Faceplate
         teachFrame.setPoint(curPosition, opt_select);
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
@@ -1883,13 +1876,9 @@ public void f5() {
       
       if (shift && active_index >= 0 && active_index < GPOS_REG.length) {
         // Save the Robot's current joint angles
-        System.out.printf("Robot Joints: %s\n", arrayToString(armModel.getJointRotations()));
-        GPOS_REG[active_index].point = new RegPoint(armModel.getJointRotations());
+        GPOS_REG[active_index].point = new Point(armModel.getEEPos(), armModel.getQuaternion(), armModel.getJointAngles());
         GPOS_REG[active_index].isCartesian = (mode == Screen.NAV_PREGS_C);
-        println(GPOS_REG[active_index].isCartesian);
-        
         saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
-        updateScreen();
       }
       break;
     default:
@@ -3560,7 +3549,7 @@ public String getHeader(Screen mode){
 public ArrayList<ArrayList<String>> getContents(Screen mode){
   ArrayList<ArrayList<String>> contents = new ArrayList<ArrayList<String>>();
   
-  switch(mode) { //<>//
+  switch(mode) {
     case NEW_PROGRAM:
       contents = loadTextInput();
       break;
@@ -3639,7 +3628,7 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
 }
 //Options menu text
 public ArrayList<String> getOptions(Screen mode){
-  ArrayList<String> options = new ArrayList<String>(); //<>//
+  ArrayList<String> options = new ArrayList<String>();
   
   switch(mode) {
     //Program list navigation/ edit
@@ -4053,7 +4042,7 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
       if(instr instanceof MotionInstruction) {
         MotionInstruction a = (MotionInstruction)instr;
         
-        if(armModel.getEEPos().dist(a.getVector(p).pos) < (liveSpeed / 100f)) {
+        if(armModel.getEEPos().dist(a.getVector(p).position) < (liveSpeed / 100f)) {
           m.add("@");
         }
         else {
@@ -4165,9 +4154,9 @@ public ArrayList<String> loadInstructionReg(){
     
     if(castIns.getMotionType() != MTYPE_JOINT) {
       // Show the vector in terms of the World Frame
-      PVector wPos = convertNativeToWorld(p.pos);
+      PVector wPos = convertNativeToWorld(p.position);
       instReg.add( String.format("X: %5.4f  Y: %5.4f  Z: %5.4f", wPos.x, wPos.y, wPos.z) );
-      PVector wpr = quatToEuler(p.ori);
+      PVector wpr = quatToEuler(p.orientation);
       // Show angles in degrees
       instReg.add( String.format("W: %5.4f  P: %5.4f  R: %5.4f", 
       (wpr.x * RAD_TO_DEG), 
@@ -4176,13 +4165,13 @@ public ArrayList<String> loadInstructionReg(){
     }
     else {  
       instReg.add( String.format("J1: %5.4f  J2: %5.4f  J3: %5.4f", 
-      (p.joints[0] * RAD_TO_DEG), 
-      (p.joints[1] * RAD_TO_DEG), 
-      (p.joints[2] * RAD_TO_DEG)));
+      (p.angles[0] * RAD_TO_DEG), 
+      (p.angles[1] * RAD_TO_DEG), 
+      (p.angles[2] * RAD_TO_DEG)));
       instReg.add( String.format("J4: %5.4f  J5: %5.4f  J6: %5.4f", 
-      (p.joints[3] * RAD_TO_DEG), 
-      (p.joints[4] * RAD_TO_DEG),
-      (p.joints[5] * RAD_TO_DEG)));
+      (p.angles[3] * RAD_TO_DEG), 
+      (p.angles[4] * RAD_TO_DEG),
+      (p.angles[5] * RAD_TO_DEG)));
     }
   }
   
@@ -4203,7 +4192,7 @@ public void newMotionInstruction(){
   // overwrite current instruction
   PVector eep = armModel.getEEPos();
   float[] q = armModel.getQuaternion();
-  float[] j = armModel.getJointRotations();
+  float[] j = armModel.getJointAngles();
   
   Program prog = programs.get(active_prog);
   int reg = prog.nextPosition();
@@ -4597,45 +4586,7 @@ public ArrayList<ArrayList<String>> loadPosRegEntry(PositionRegister reg) {
   } else {
     
     // List current entry values if the Register is initialized
-    try {
-      println("Register: " + reg.isCartesian);
-      println("Point: " + reg.point.isCartesian());
-      for (int idx = 0; idx < 7; ++idx) {
-        System.out.printf("V[%d] = %5.6f\n", idx, reg.point.getValue(idx) * RAD_TO_DEG);
-      }
-    } catch (IndexOutOfBoundsException IOOBEx) {}
-    println();
-    
-    String[][] entries;
-    
-    if (mode == Screen.EDIT_PREG_C) {
-      float[] angles = new float[6];
-      
-      for (int idx = 0; idx < 6; ++idx) {
-        angles[idx] = reg.point.getValue(idx);
-      }
-      
-      PVector ee_pos = armModel.getFaceplate(angles);
-      PVector wpr = armModel.getWPR(angles);
-      entries = new String[6][2];
-      
-      entries[0][0] = "X: ";
-      entries[0][1] = String.format("%4.3f", ee_pos.x);
-      entries[1][0] = "Y: ";
-      entries[1][1] = String.format("%4.3f", ee_pos.y);
-      entries[2][0] = "Z: ";
-      entries[2][1] = String.format("%4.3f", ee_pos.z);
-      // Show angles in degrees
-      entries[3][0] = "W: ";
-      entries[3][1] = String.format("%4.3f", wpr.x * RAD_TO_DEG);
-      entries[4][0] = "P: ";
-      entries[4][1] = String.format("%4.3f", wpr.y * RAD_TO_DEG);
-      entries[5][0] = "R: ";
-      entries[5][1] = String.format("%4.3f", wpr.z * RAD_TO_DEG);
-      
-    } else {
-      entries = reg.point.toStringArray();
-    }
+    String[][] entries = (mode == Screen.EDIT_PREG_C) ? reg.point.toCartesianStringArray() : reg.point.toJointStringArray();
     
     for(int idx = 0; idx < entries.length; ++idx) {
       register.add( newLine(entries[idx][0], entries[idx][1]) );
@@ -4675,21 +4626,17 @@ public void createRegisterPoint(boolean jointAngles) {
   if(jointAngles) {
     // Bring angles within range: (0, TWO_PI)
     for(int idx = 0; idx < inputs.length; ++idx) {
-      System.out.printf("J[%d] = %5.6f\n", idx, inputs[idx]);
       inputs[idx] = clampAngle(inputs[idx] * DEG_TO_RAD);
     }
     
-    GPOS_REG[active_index].point = new RegPoint(inputs);
-    saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+    GPOS_REG[active_index].point = new Point(inputs);
   } else {
     PVector position = new PVector();
     float[] orientation = new float[] { 1f, 0f, 0f, 0f };
   
     // Bring the input values with the range [-9999, 9999]
     for(int idx = 0; idx < inputs.length; ++idx) {
-      System.out.printf("C[%d] = %5.6f", idx, inputs[idx]);
       inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
-      System.out.printf(" (%5.6f)\n", inputs[idx]);
     }
     
     position = new PVector(inputs[0], inputs[1], inputs[2]);
@@ -4701,21 +4648,12 @@ public void createRegisterPoint(boolean jointAngles) {
                                           inputs[4] * DEG_TO_RAD, 
                                           inputs[5] * DEG_TO_RAD));
     
-    RegPoint complement = new RegPoint(position, orientation);
-    float[] angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
-    
-    if (GPOS_REG[active_index].point != null) {
-      // Use previous value as a reference
-      for (int idx = 0; idx < 6; ++idx) {
-        angles[idx] = GPOS_REG[active_index].point.getValue(idx);
-      }
-    }
-    
     // Save joint values
-    GPOS_REG[active_index].point = complement.complement(angles);
-    GPOS_REG[active_index].point = new RegPoint(position, orientation);
-    saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+    GPOS_REG[active_index].point = new Point(position, orientation);
   }
+  
+  GPOS_REG[active_index].isCartesian = !jointAngles;
+  saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 }
 
 /**

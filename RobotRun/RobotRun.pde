@@ -378,7 +378,7 @@ public void displayTeachPoints() {
       if (pt != null) {
         pushMatrix();
         // Applies the point's position
-        translate(pt.pos.x, pt.pos.y, pt.pos.z);
+        translate(pt.position.x, pt.position.y, pt.position.z);
         
         // Draw color-coded sphere for the point
         noFill();

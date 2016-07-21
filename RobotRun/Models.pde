@@ -567,7 +567,7 @@ public class ArmModel {
   }
   
   //returns the rotational values for each arm joint
-  public float[] getJointRotations() {
+  public float[] getJointAngles() {
     float[] rot = new float[6];
     for(int i = 0; i < segments.size(); i += 1) {
       for(int j = 0; j < 3; j += 1) {
@@ -684,7 +684,7 @@ public class ArmModel {
   }
   
   public PVector getWPR(float[] testAngles) {
-    float[] origAngles = getJointRotations();
+    float[] origAngles = getJointAngles();
     setJointAngles(testAngles);
     
     PVector ret = getWPR();
@@ -701,7 +701,7 @@ public class ArmModel {
   }
   
   public float[] getQuaternion(float[] testAngles) {
-    float[] origAngles = getJointRotations();
+    float[] origAngles = getJointAngles();
     setJointAngles(testAngles);
     
     float[] ret = getQuaternion();
@@ -726,7 +726,7 @@ public class ArmModel {
     rotateZ(PI);
     translate(150, 0, 150);
     
-    rotateY(getJointRotations()[0]);
+    rotateY(getJointAngles()[0]);
     
     translate(-150, 0, -150);
     rotateZ(-PI);    
@@ -735,7 +735,7 @@ public class ArmModel {
     rotateY(PI/2);
     translate(0, 62, 62);
     
-    rotateX(getJointRotations()[1]);
+    rotateX(getJointAngles()[1]);
     
     translate(0, -62, -62);
     rotateY(-PI/2);
@@ -745,7 +745,7 @@ public class ArmModel {
     rotateY(PI/2);
     translate(0, 75, 75);
     
-    rotateX(getJointRotations()[2]);
+    rotateX(getJointAngles()[2]);
     
     translate(0, -75, -75);
     rotateY(PI/2);
@@ -755,7 +755,7 @@ public class ArmModel {
     rotateY(PI/2);
     translate(70, 0, 70);
     
-    rotateY(getJointRotations()[3]);
+    rotateY(getJointAngles()[3]);
     
     translate(-70, 0, -70);
     rotateY(-PI/2);
@@ -765,7 +765,7 @@ public class ArmModel {
     rotateY(-PI/2);
     translate(0, 50, 50);
     
-    rotateX(getJointRotations()[4]);
+    rotateX(getJointAngles()[4]);
     
     translate(0, -50, -50);
     rotateY(PI/2);
@@ -775,7 +775,7 @@ public class ArmModel {
     rotateZ(PI);
     translate(45, 45, 0);
     
-    rotateZ(getJointRotations()[5]);
+    rotateZ(getJointAngles()[5]);
     
     if(curCoordFrame == CoordFrame.TOOL || curCoordFrame == CoordFrame.WORLD) { applyToolFrame(activeToolFrame); }
     
@@ -789,7 +789,7 @@ public class ArmModel {
   } // end calculateEndEffectorPosition
   
   public PVector getEEPos(float[] testAngles) {
-    float[] origAngles = getJointRotations();
+    float[] origAngles = getJointAngles();
     setJointAngles(testAngles);
     
     PVector ret = getEEPos();
@@ -810,7 +810,7 @@ public class ArmModel {
     rotateZ(PI);
     translate(150, 0, 150);
     
-    rotateY(getJointRotations()[0]);
+    rotateY(getJointAngles()[0]);
     
     translate(-150, 0, -150);
     rotateZ(-PI);    
@@ -819,7 +819,7 @@ public class ArmModel {
     rotateY(PI/2);
     translate(0, 62, 62);
     
-    rotateX(getJointRotations()[1]);
+    rotateX(getJointAngles()[1]);
     
     translate(0, -62, -62);
     rotateY(-PI/2);
@@ -829,7 +829,7 @@ public class ArmModel {
     rotateY(PI/2);
     translate(0, 75, 75);
     
-    rotateX(getJointRotations()[2]);
+    rotateX(getJointAngles()[2]);
     
     translate(0, -75, -75);
     rotateY(PI/2);
@@ -839,7 +839,7 @@ public class ArmModel {
     rotateY(PI/2);
     translate(70, 0, 70);
     
-    rotateY(getJointRotations()[3]);
+    rotateY(getJointAngles()[3]);
     
     translate(-70, 0, -70);
     rotateY(-PI/2);
@@ -849,7 +849,7 @@ public class ArmModel {
     rotateY(-PI/2);
     translate(0, 50, 50);
     
-    rotateX(getJointRotations()[4]);
+    rotateX(getJointAngles()[4]);
     
     translate(0, -50, -50);
     rotateY(PI/2);
@@ -859,7 +859,7 @@ public class ArmModel {
     rotateZ(PI);
     translate(45, 45, 0);
     
-    rotateZ(getJointRotations()[5]);
+    rotateZ(getJointAngles()[5]);
     
     PVector ret = new PVector(
     modelX(0, 0, 0),
@@ -871,7 +871,7 @@ public class ArmModel {
   }
   
   public PVector getFaceplate(float[] testAngles) {
-    float[] origAngles = getJointRotations();
+    float[] origAngles = getJointAngles();
     setJointAngles(testAngles);
     
     PVector ret = getFaceplate();
@@ -1088,7 +1088,7 @@ public class ArmModel {
         float[] angleOffset = new float[6];
         float maxOffset = TWO_PI;
         for(int i = 0; i < 6; i += 1) {
-          angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointRotations()[i]));
+          angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointAngles()[i]));
         }
         
         if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 

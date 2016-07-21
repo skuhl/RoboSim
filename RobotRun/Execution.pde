@@ -29,13 +29,13 @@ void createTestProgram() {
   //for(int n = 0; n < 15; n++) program.addInstruction(
   //  new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
   
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(165, 116, -5), new float[] { 1f, 0f, 0f, 0f }), false);
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(166, -355, 120), new float[] { 1, 0, 0 }), false);
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(171, -113, 445), new float[] { 1, 0, 0 }), false);
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(725, 225, 50), new float[] { 1, 0, 0 }), false);
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(775, 300, 50), new float[] { 1, 0, 0 }), false);
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(-474, -218, 37), new float[] { 1, 0, 0 }), false);
-  GPOS_REG[0] = new PositionRegister(null, new RegPoint(new PVector(-659, -412, -454), new float[] { 1, 0, 0 }), false);
+  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(165, 116, -5), new float[] { 1f, 0f, 0f, 0f }), false);
+  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(166, -355, 120), new float[] { 1, 0, 0 }), false);
+  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(171, -113, 445), new float[] { 1, 0, 0 }), false);
+  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(725, 225, 50), new float[] { 1, 0, 0 }), false);
+  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(775, 300, 50), new float[] { 1, 0, 0 }), false);
+  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(-474, -218, 37), new float[] { 1, 0, 0 }), false);
+  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(-659, -412, -454), new float[] { 1, 0, 0 }), false);
   
   programs.add(program);
   //currentProgram = program;
@@ -129,7 +129,7 @@ void showMainDisplayText() {
   text(dis_world, width - 20, 60);
   
   // Display the Robot's joint angles
-  float j[] = armModel.getJointRotations();
+  float j[] = armModel.getJointAngles();
   String dis_joint = String.format("Joints  J1: %5.3f J2: %5.3f J3: %5.3f J4: %5.3f J5: %5.3f J6: %5.3f", 
   j[0] * RAD_TO_DEG, j[1] * RAD_TO_DEG, j[2] * RAD_TO_DEG, j[3] * RAD_TO_DEG, j[4] * RAD_TO_DEG, j[5] * RAD_TO_DEG);
   text(dis_joint, width - 20, 80);
@@ -488,7 +488,7 @@ float[] calculateIKJacobian(PVector tgt, float[] rot) {
   final int limit = 1000;  //max number of times to loop
   int count = 0;
   
-  float[] angles = armModel.getJointRotations();
+  float[] angles = armModel.getJointAngles();
   float[][] frame = armModel.currentFrame;
   float[][] nFrame = armModel.getRotationMatrix();
   float[][] rMatrix = quatToMatrix(rot);
@@ -557,8 +557,8 @@ float[] calculateIKJacobian(PVector tgt, float[] rot) {
 }
 
 int calculateIKJacobian(Point p) {
-  PVector pos = p.pos;
-  float[] rot = p.ori;
+  PVector pos = p.position;
+  float[] rot = p.orientation;
   float[] destAngles = calculateIKJacobian(pos, rot);
   
   if(destAngles == null) {
@@ -581,7 +581,7 @@ int calculateIKJacobian(Point p) {
     float[] angleOffset = new float[6];
     float maxOffset = TWO_PI;
     for(int i = 0; i < 6; i += 1) {
-      angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointRotations()[i]));
+      angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointAngles()[i]));
     }
     
     if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
@@ -618,10 +618,10 @@ void calculateIntermediatePositions(Point start, Point end) {
   calculateDistanceBetweenPoints();
   intermediatePositions.clear();
   
-  PVector p1 = start.pos;
-  PVector p2 = end.pos;
-  float[] q1 = start.ori;
-  float[] q2 = end.ori;
+  PVector p1 = start.position;
+  PVector p2 = end.position;
+  float[] q1 = start.orientation;
+  float[] q2 = end.orientation;
   float[] qi = new float[4];
   
   float mu = 0;
@@ -666,12 +666,12 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   percentage = constrain(percentage, 0, 1);
   intermediatePositions.clear();
   
-  PVector p1 = start.pos;
-  PVector p2 = end.pos;
-  PVector p3 = next.pos;
-  float[] q1 = start.ori;
-  float[] q2 = end.ori;
-  float[] q3 = next.ori;
+  PVector p1 = start.position;
+  PVector p2 = end.position;
+  PVector p3 = next.position;
+  float[] q1 = start.orientation;
+  float[] q2 = end.orientation;
+  float[] q3 = next.orientation;
   float[] qi = new float[4];
   
   ArrayList<Point> secondaryTargets = new ArrayList<Point>();
@@ -725,11 +725,11 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   for(int n = transitionPoint; n < numberOfPoints; n++) {
     mu += increment;
     Point tgt = secondaryTargets.get(secondaryIdx);
-    qi = quaternionSlerp(currentPoint.ori, tgt.ori, mu);
+    qi = quaternionSlerp(currentPoint.orientation, tgt.orientation, mu);
     intermediatePositions.add(new Point(new PVector(
-    currentPoint.pos.x * (1 - mu) + (tgt.pos.x * mu),
-    currentPoint.pos.y * (1 - mu) + (tgt.pos.y * mu),
-    currentPoint.pos.z * (1 - mu) + (tgt.pos.z * mu)), 
+    currentPoint.position.x * (1 - mu) + (tgt.position.x * mu),
+    currentPoint.position.y * (1 - mu) + (tgt.position.y * mu),
+    currentPoint.position.z * (1 - mu) + (tgt.position.z * mu)), 
     qi));
     currentPoint = intermediatePositions.get(intermediatePositions.size()-1);
     secondaryIdx++;
@@ -748,11 +748,11 @@ void calculateArc(Point start, Point inter, Point end) {
   calculateDistanceBetweenPoints();
   intermediatePositions.clear();
   
-  PVector a = start.pos;
-  PVector b = inter.pos;
-  PVector c = end.pos;
-  float[] q1 = start.ori;
-  float[] q2 = end.ori;
+  PVector a = start.position;
+  PVector b = inter.position;
+  PVector c = end.position;
+  float[] q1 = start.orientation;
+  float[] q2 = end.orientation;
   float[] qi = new float[4];
   
   // Calculate arc center point
@@ -789,9 +789,9 @@ void calculateArc(Point start, Point inter, Point end) {
   float angleInc = (theta)/(float)numPoints;
   for(int i = 0; i < numPoints; i += 1) {
     PVector pos = rotateVectorQuat(u, n, angle).mult(r).add(center);
-    if(i == numPoints-1) pos = end.pos;
+    if(i == numPoints-1) pos = end.position;
     qi = quaternionSlerp(q1, q2, mu);
-    println(pos + ", " + end.pos);
+    println(pos + ", " + end.position);
     intermediatePositions.add(new Point(pos, qi));
     angle += angleInc;
     mu += inc;
@@ -1083,7 +1083,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
   Point start = new Point(armModel.getEEPos(), armModel.getQuaternion());
   
   if(instruction.getMotionType() == MTYPE_JOINT) {
-    armModel.setupRotationInterpolation( instruction.getVector(program).joints );
+    armModel.setupRotationInterpolation( instruction.getVector(program).angles );
   } // end joint movement setup
   else if(instruction.getMotionType() == MTYPE_LINEAR) {
     if(instruction.getTermination() == 0) {
