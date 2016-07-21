@@ -3182,6 +3182,7 @@ public void loadScreen(){
       row_select = 0;
       col_select = 1;
       contents = loadFrameDirectEntry(teachFrame);
+      options = new ArrayList<String>();
       break;
     case NAV_PROGRAMS:
       // Stop Robot movement (i.e. program execution)
@@ -3586,18 +3587,18 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
       break;
       
     //View frame details
-    case TOOL_FRAME_METHODS:
     case TFRAME_DETAIL:
     case TEACH_3PT_TOOL:
     case TEACH_6PT:
       contents = loadFrameDetail(CoordFrame.TOOL);
       break;
-    case USER_FRAME_METHODS:
     case UFRAME_DETAIL:
     case TEACH_3PT_USER:
     case TEACH_4PT:
       contents = loadFrameDetail(CoordFrame.USER);
       break;
+    case TOOL_FRAME_METHODS:
+    case USER_FRAME_METHODS:
     case DIRECT_ENTRY_USER:
     case DIRECT_ENTRY_TOOL:
     case EDIT_DREG_VAL:
@@ -3762,8 +3763,6 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("Input register value:");
       options.add("\0" + workingText);
       break;
-    case NAV_USER_FRAMES:
-    case NAV_TOOL_FRAMES:
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
     case EDIT_PREG_C:
@@ -4389,26 +4388,11 @@ public ArrayList<String> loadPointList() {
 public ArrayList<ArrayList<String>> loadFrameDirectEntry(Frame f) {
   ArrayList<ArrayList<String>> frame = new ArrayList<ArrayList<String>>();
   
-  PVector xyz = new PVector(0, 0, 0);
-  PVector wpr = new PVector(0, 0, 0);
-      
-  if(f.DEOrigin != null) {
-    xyz = teachFrame.DEOrigin;
-    
-    if(f instanceof UserFrame)
-      xyz = convertNativeToWorld(xyz);
+  String[][] entries = f.directEntryStringArray();
+  
+  for (int line = 0; line < entries.length; ++line) {
+    frame.add( newLine(entries[line][0], entries[line][1]) );
   }
-        
-  if (f.DEAxesOffsets != null) {
-    wpr = quatToEuler(teachFrame.DEAxesOffsets);
-  }
-
-  frame.add( newLine("X: ", String.format("%4.3f", xyz.x)) );
-  frame.add( newLine("Y: ", String.format("%4.3f", xyz.y)) );
-  frame.add( newLine("Z: ", String.format("%4.3f", xyz.z)) );
-  frame.add( newLine("W: ", String.format("%4.3f", wpr.x * RAD_TO_DEG)) );
-  frame.add( newLine("P: ", String.format("%4.3f", wpr.y * RAD_TO_DEG)) );
-  frame.add( newLine("R: ", String.format("%4.3f", wpr.z * RAD_TO_DEG)) );
   
   return frame; 
 }
@@ -4470,17 +4454,17 @@ public void createFrameDirectEntry(Frame taughtFrame, float[] inputs) {
   origin.y = max(-9999f, min(origin.y, 9999f));
   origin.z = max(-9999f, min(origin.z, 9999f));
   
-  wpr = new PVector(inputs[3], inputs[4], inputs[5]).mult(DEG_TO_RAD);
-  float[][] axesVectors = eulerToMatrix(wpr);
-  wpr = matrixToEuler(axesVectors);
+  wpr = new PVector(-inputs[3], -inputs[5], inputs[4]).mult(DEG_TO_RAD);
+  
   // Save direct entry values
   taughtFrame.DEOrigin = origin;
   taughtFrame.DEAxesOffsets = eulerToQuat(wpr);
   taughtFrame.setFrame(2);
   
   if(DISPLAY_TEST_OUTPUT) {
-    System.out.printf("\n\n%s\n%s\n%s\nFrame set: %d\n", origin.toString(), wpr.toString(),
-                                                 matrixToString(axesVectors), curFrameIdx);
+    wpr = quatToEuler(taughtFrame.axes).mult(RAD_TO_DEG);
+    System.out.printf("\n\n%s\n%s\nFrame set: %d\n", origin.toString(),
+                      wpr.toString(), curFrameIdx);
   }
   
   // Set New Frame

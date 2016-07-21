@@ -1051,7 +1051,6 @@ public class ArmModel {
         
         //println(lockOrientation);
         float[] destAngles = calculateIKJacobian(tgtPos, tgtRot);
-        
         //did we successfully find the desired angles?
         if(destAngles == null) {
           println("IK failure");
@@ -1068,10 +1067,11 @@ public class ArmModel {
         for(int i = 0; i < 6; i += 1) {
           Model s = armModel.segments.get(i);
           if(destAngles[i] > -0.000001 && destAngles[i] < 0.000001)
-          destAngles[i] = 0;
+            destAngles[i] = 0;
           
           for(int j = 0; j < 3; j += 1) {
             if(s.rotations[j] && !s.anglePermitted(j, destAngles[i])) {
+              println("WHY?");
               //println("illegal joint angle on j" + i);
               updateButtonColors();
               jogLinear[0] = 0;

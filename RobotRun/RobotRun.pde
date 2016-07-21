@@ -103,7 +103,7 @@ public void setup() {
   translate(-250, 0, 0);
   objects[1] = new WorldObject(250, 125, 500, color(255, 0, 255), color(255, 255, 255));
   
-  popMatrix();    
+  popMatrix();
   //createTestProgram();
 }
 

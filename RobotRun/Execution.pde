@@ -280,8 +280,13 @@ public void updateCoordFrame(ArmModel model) {
  * @returning     The vector, v, interms of the given frame's Coordinate System
  */
 public PVector convertNativeToFrame(PVector v, Frame active) {
+  /**/
+  float[] invAxes = new float[] { active.axes[0], -active.axes[1], -active.axes[2], -active.axes[3] };
+  return transform(v, active.getOrigin(), invAxes);
+  /**
   float[][] tMatrix = transformationMatrix(active.getOrigin(), active.getNativeAxes());
   return transform(v, invertHCMatrix(tMatrix));
+  /**/
 }
 
 /**
@@ -293,8 +298,12 @@ public PVector convertNativeToFrame(PVector v, Frame active) {
  * @returning     The vector, v, in terms of the Native Coordinate System
  */
 public PVector convertFrameToNative(PVector v, Frame active) {
+  /**/
+  return transform(v, active.getOrigin(), active.axes.clone());
+  /**
   float[][] tMatrix = transformationMatrix(active.getOrigin(), active.getNativeAxes());
   return transform(v, tMatrix);
+  /**/
 }
 
 /**

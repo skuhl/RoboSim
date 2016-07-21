@@ -603,10 +603,8 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   savePVector(f.getOrigin(), out);
   
   // Write frame axes
-  for(int row = 0; row < 3; ++row) {
-    for(int col = 0; col < 3; ++col) {
-      out.writeFloat(f.axes[row][col]);
-    }
+  for(int idx = 0; idx < 4; ++idx) {
+    out.writeFloat(f.axes[idx]);
   }
   
   // Write frame orientation points
@@ -667,14 +665,12 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   // Read origin values
   f.setOrigin( loadPVector(in) );
   
-  float[][] axesVectors = new float[3][3];
-  // Read axes vector values
-  for(int row = 0; row < 3; ++row) {
-    for(int col = 0; col < 3; ++col) {
-      axesVectors[row][col] = in.readFloat();
-    }
+  float[] axes = new float[4];
+  // Read axes quaternion values
+  for(int idx = 0; idx < 4; ++idx) {
+    axes[idx] = in.readFloat();
   }
-  f.setAxes(axesVectors);
+  f.setAxes(axes);
   
   // Read origin values
   f.axesTeachPoints = new Point[3];

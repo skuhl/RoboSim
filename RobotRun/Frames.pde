@@ -9,7 +9,7 @@ public static final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
 public abstract class Frame {
   private PVector origin;
   // The unit vectors representing the x, y, z axes (in row major order)
-  public float[][] axes;
+  public float[] axes;
   /* The three points used to define a coordinate axis for 6-Point Method
    * of Tool Frames and 3-Point or 4_Point Methods of User Frames */
   public Point[] axesTeachPoints;
@@ -18,15 +18,9 @@ public abstract class Frame {
   public float[] DEAxesOffsets;
 
   public Frame() {
-    origin = new PVector(0,0,0);
-    axes = new float[3][3];
-    // Create identity matrix
-    for(int diag = 0; diag < 3; ++diag) {
-      axes[diag][diag] = 1f;
-    }
-    
+    origin = new PVector(0, 0, 0);
+    axes = new float[] { 1f, 0f, 0f, 0f };
     axesTeachPoints = new Point[] { null, null, null };
-    
     DEOrigin = null;
     DEAxesOffsets = null;
   }
@@ -38,30 +32,21 @@ public abstract class Frame {
    * Return the W, P, R values of the this frames coordinate
    * axes with respect to the World Frame axes.
    */
-  public PVector getWpr() { return matrixToEuler(axes); }
+  public PVector getWpr() { return quatToEuler(axes); }
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the Native Coordinate System. */
-  public float[][] getNativeAxes() { return axes.clone(); }
+  public float[][] getNativeAxes() { return quatToMatrix(axes); }
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the World Coordinate System. */
   public float[][] getWorldAxes() {
-    RealMatrix frameAxes = new Array2DRowRealMatrix(floatToDouble(axes, 3, 3));
+    RealMatrix frameAxes = new Array2DRowRealMatrix(floatToDouble(getNativeAxes(), 3, 3));
     RealMatrix worldAxes = new Array2DRowRealMatrix(floatToDouble(WORLD_AXES, 3, 3));
     
     return doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
   }
 
-  public void setAxis(int idx, PVector in) {
-    
-    if(idx >= 0 && idx < axes.length) {
-      axes[idx][0] = in.x;
-      axes[idx][1] = in.y;
-      axes[idx][2] = in.z;
-    }
-  }
-
-  public void setAxes(float[][] axesVectors) {
-    axes = axesVectors.clone();
+  public void setAxes(float[] newAxes) {
+    axes = newAxes.clone();
   }
   
   /**
@@ -173,12 +158,52 @@ public abstract class Frame {
     values[1] = String.format("Y: %4.3f", wOrigin.y);
     values[2] = String.format("Z: %4.3f", wOrigin.z);
     // Convert angles to degrees
-    PVector wpr = getWpr();
-    values[3] = String.format("W: %4.3f", wpr.x * RAD_TO_DEG);
-    values[4] = String.format("P: %4.3f", wpr.y * RAD_TO_DEG);
-    values[5] = String.format("R: %4.3f", wpr.z * RAD_TO_DEG);
+    PVector wpr = quatToEuler(axes);
+    // Display in reference to the world frame
+    values[3] = String.format("W: %4.3f", -wpr.x * RAD_TO_DEG);
+    values[4] = String.format("P: %4.3f", wpr.z * RAD_TO_DEG);
+    values[5] = String.format("R: %4.3f", -wpr.y * RAD_TO_DEG);
     
     return values;
+  }
+  
+  /**
+   * Similiar to toStringArray, however, it converts the Frame's direct entry
+   * values instead of the current origin and axes of the Frame.
+   * 
+   * @returning  A 6x2-element String array
+   */
+  public String[][] directEntryStringArray() {
+    String[][] entries = new String[6][2];
+    PVector xyz;
+    
+    if (this instanceof UserFrame) {
+      xyz = convertWorldToNative(DEOrigin);
+    } else {
+      // Tool Frame origins are an offset of the Robot's End Effector
+      xyz = DEOrigin;
+    }
+    // Convert to degrees and World Frame reference
+    PVector wpr = quatToEuler(axes);
+    wpr.x *= -RAD_TO_DEG;
+    float limbo = -RAD_TO_DEG * wpr.y;
+    wpr.y = wpr.z * RAD_TO_DEG;
+    wpr.z = limbo;
+  
+    entries[0][0] = "X: ";
+    entries[0][1] = String.format("%4.3f", xyz.x);
+    entries[1][0] = "Y: ";
+    entries[1][1] = String.format("%4.3f", xyz.y);
+    entries[2][0] = "Z: ";
+    entries[2][1] = String.format("%4.3f", xyz.z);
+    entries[3][0] = "W: ";
+    entries[3][1] = String.format("%4.3f", wpr.x);
+    entries[4][0] = "P: ";
+    entries[4][1] = String.format("%4.3f", wpr.y);
+    entries[5][0] = "R: ";
+    entries[5][1] = String.format("%4.3f", wpr.z);
+    
+    return entries;
   }
 } // end Frame class
 
@@ -247,7 +272,7 @@ public class ToolFrame extends Frame {
       }
       
       setOrigin(DEOrigin);
-      setAxes( quatToMatrix(DEAxesOffsets) );
+      setAxes( DEAxesOffsets.clone() );
       return true;
     } else if (method >= 0 && method < 2 && TCPTeachPoints[0] != null && TCPTeachPoints[1] != null && TCPTeachPoints[2] != null) {
       // 3-Point or 6-Point Method
@@ -273,7 +298,7 @@ public class ToolFrame extends Frame {
       }
       
       setOrigin( new PVector((float)newTCP[0], (float)newTCP[1], (float)newTCP[2]) );
-      setAxes(newAxesVectors);
+      setAxes( matrixToQuat(newAxesVectors) );
       return true;
     }
     
@@ -342,7 +367,7 @@ public class UserFrame extends Frame {
       }
       
       setOrigin(DEOrigin);
-      setAxes( quatToMatrix(DEAxesOffsets) );
+      setAxes( DEAxesOffsets.clone() );
       return true;
     } else if (mode >= 0 && mode < 2 && axesTeachPoints[0] != null && axesTeachPoints[1] != null && axesTeachPoints[2] != null) {
       // 3-Point or 4-Point Method
@@ -355,7 +380,7 @@ public class UserFrame extends Frame {
         return false;
       }
       
-      setAxes(newAxesVectors);
+      setAxes( matrixToQuat(newAxesVectors) );
       setOrigin(newOrigin);
       return true;
     }
