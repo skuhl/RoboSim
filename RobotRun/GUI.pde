@@ -6,7 +6,6 @@ final int BUTTON_DEFAULT = color(70),
           TEXT_DEFAULT = color(240),
           TEXT_HIGHLIGHT = color(40);
 
-
 //String displayFrame = "JOINT";
 int active_prog = -1; // the currently selected program
 int active_instr = -1; // the currently selected instruction
@@ -847,7 +846,7 @@ public void keyPressed() {
     // Release an object ifit is currently being held
     if(armModel.held != null) {
       armModel.releaseHeldObject();
-      armModel.endEffectorStatus = EEStatus.OFF;
+      armModel.endEffectorStatus = OFF;
     }
     
     float[] rot = {0, 0, 0, 0, 0, 0};
@@ -865,7 +864,7 @@ public void keyPressed() {
         armModel.activeEndEffector == EndEffector.SUCTION)) { 
     // Pick up an object within reach of the EE when the 'ENTER' button is pressed for either
     // the suction or claw EE
-    ToolInstruction pickup;
+    IOInstruction pickup;
   } else if(keyCode == KeyEvent.VK_1) {
     // Front view
     panX = 0;
@@ -1168,10 +1167,10 @@ public void LINE() {
 }
 
 public void IO() {
-  if(armModel.endEffectorStatus == EEStatus.OFF)
-  armModel.endEffectorStatus = EEStatus.ON;
+  if(armModel.endEffectorStatus == OFF)
+  armModel.endEffectorStatus = ON;
   else
-  armModel.endEffectorStatus = EEStatus.OFF;
+  armModel.endEffectorStatus = OFF;
 }
 
 /*Arrow keys*/
@@ -1226,8 +1225,7 @@ public void up() {
     case PICK_FRAME_MODE:
     case USER_FRAME_METHODS:
     case TOOL_FRAME_METHODS:
-    case PICK_INSTRUCT:
-    case IO_SUBMENU:
+    case SELECT_INSTR_INSERT:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
     case TEACH_3PT_USER:
@@ -1238,7 +1236,8 @@ public void up() {
     case SWAP_PT_TYPE:
     case SET_MV_INSTRUCT_TYPE:
     case SET_MV_INSTRUCT_REG_TYPE:
-    case SET_FRAME_INSTRUCTION:
+    case SET_FRM_INSTR_TYPE:
+    case SET_IO_INSTR_STATE:
     case SETUP_NAV:
       opt_select = max(0, opt_select - 1);
       break;
@@ -1325,8 +1324,7 @@ public void dn() {
     case PICK_FRAME_MODE:
     case USER_FRAME_METHODS:
     case TOOL_FRAME_METHODS:
-    case PICK_INSTRUCT:
-    case IO_SUBMENU:
+    case SELECT_INSTR_INSERT:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
     case TEACH_3PT_USER:
@@ -1337,7 +1335,8 @@ public void dn() {
     case SWAP_PT_TYPE:
     case SET_MV_INSTRUCT_TYPE:
     case SET_MV_INSTRUCT_REG_TYPE:
-    case SET_FRAME_INSTRUCTION:
+    case SET_FRM_INSTR_TYPE:
+    case SET_IO_INSTR_STATE:
     case SETUP_NAV:
       opt_select = min(opt_select + 1, options.size() - 1);
       break;
@@ -1495,7 +1494,7 @@ public void f1() {
         row_select = min(active_instr, ITEMS_TO_SHOW - 1);
         renderStartIdx = active_instr - row_select;
       } else {
-        nextScreen(Screen.PICK_INSTRUCT);
+        nextScreen(Screen.SELECT_INSTR_INSERT);
       }
       break;
     case NAV_TOOL_FRAMES:
@@ -1651,23 +1650,43 @@ public void f4() {
     
     if(ins instanceof MotionInstruction) {
       switch(col_select) {
-      case 2: // motion type
-        nextScreen(Screen.SET_MV_INSTRUCT_TYPE);
-        break;
-      case 3: // register type
-        nextScreen(Screen.SET_MV_INSTRUCT_REG_TYPE);
-        break;
-      case 4: // register
-        nextScreen(Screen.SET_MV_INSTR_REG_NUM);
-        break;
-      case 5: // speed
-        nextScreen(Screen.SET_MV_INSTR_SPD);
-        break;
-      case 6: // termination type
-        nextScreen(Screen.SET_MV_INSTR_TERM);
-        break;
+        case 2: // motion type
+          nextScreen(Screen.SET_MV_INSTRUCT_TYPE);
+          break;
+        case 3: // register type
+          nextScreen(Screen.SET_MV_INSTRUCT_REG_TYPE);
+          break;
+        case 4: // register
+          nextScreen(Screen.SET_MV_INSTR_IDX);
+          break;
+        case 5: // speed
+          nextScreen(Screen.SET_MV_INSTR_SPD);
+          break;
+        case 6: // termination type
+          nextScreen(Screen.SET_MV_INSTR_TERM);
+          break;
       }
     } 
+    else if(ins instanceof FrameInstruction) {
+      switch(col_select) {
+        case 1:
+          nextScreen(Screen.SET_FRM_INSTR_TYPE);
+          break;
+        case 2:
+          nextScreen(Screen.SET_FRM_INSTR_IDX);
+          break;
+      }
+    }
+    else if(ins instanceof IOInstruction) {
+       switch(col_select) {
+        case 1:
+          nextScreen(Screen.SET_IO_INSTR_IDX);
+          break;
+        case 2:
+          nextScreen(Screen.SET_IO_INSTR_STATE);
+          break;
+      }
+    }
     break;
   case CONFIRM_INSERT:
     try {
@@ -1984,23 +2003,23 @@ public void bd() {
       // Move backwards
       singleInstruction = (MotionInstruction)ins;
       setUpInstruction(currentProgram, armModel, singleInstruction);
-    } else if(ins instanceof ToolInstruction) {
+    } else if(ins instanceof IOInstruction) {
       currentProgram = null;
       executingInstruction = false;
       armModel.inMotion = false;
       currentInstruction = -1;
       execSingleInst = true;
       
-      ToolInstruction tIns = (ToolInstruction)ins;
-      EEStatus opp = null;
+      IOInstruction tIns = (IOInstruction)ins;
+      int status;
       
-      if (tIns.status == EEStatus.ON) {
-        opp = EEStatus.OFF;
+      if (tIns.state == ON) {
+        status = OFF;
       } else {
-        opp = EEStatus.ON;
+        status = ON;
       }
       
-      ToolInstruction inverse = new ToolInstruction(tIns.reg, tIns.status);
+      IOInstruction inverse = new IOInstruction(tIns.reg, status);
       // Reverse the tool status applied
       inverse.execute();
     }
@@ -2137,16 +2156,6 @@ public void ENTER() {
         nextScreen(Screen.NAV_PROG_INST);
       }
       break;
-    case NAV_PROG_INST:
-      if(col_select == 2) {
-        nextScreen(Screen.SET_MV_INSTRUCT_TYPE);
-        NUM_MODE = ON;
-        //remove num_info
-      }
-      else if(col_select == 3) {
-        nextScreen(Screen.SET_MV_INSTRUCT_REG_TYPE);
-      }
-      break;
     case INSTRUCT_MENU_NAV:
       switch(opt_select) {
         case 0: //Insert
@@ -2225,7 +2234,7 @@ public void ENTER() {
       
       lastScreen();
       break;
-    case SET_MV_INSTR_REG_NUM:
+    case SET_MV_INSTR_IDX:
       try {
         int tempRegister = Integer.parseInt(workingText) - 1;
         MotionInstruction castIns = getActiveMotionInstruct();
@@ -2265,6 +2274,58 @@ public void ENTER() {
       
       lastScreen();
       break;
+    case SET_IO_INSTR_STATE:
+      p = programs.get(active_prog);
+      IOInstruction ioInst = (IOInstruction)p.getInstructions().get(active_instr);
+    
+      if(opt_select == 0)
+        ioInst.setState(ON);
+      else
+        ioInst.setState(OFF);
+        
+      lastScreen();
+      break;
+    case SET_IO_INSTR_IDX:
+      p = programs.get(active_prog);
+      
+      try {
+        int tempReg = Integer.parseInt(workingText);
+        
+        if(tempReg >= 0 && tempReg < 6){
+          ioInst = (IOInstruction)p.getInstructions().get(active_instr);
+          ioInst.setReg(tempReg);
+        }
+      }
+      catch (NumberFormatException NFEx){ /* Ignore invalid input */ }
+      
+      lastScreen();
+      break;
+    case SET_FRM_INSTR_TYPE:
+      p = programs.get(active_prog);
+      FrameInstruction fInst = (FrameInstruction)p.getInstructions().get(active_instr);
+      
+      if(opt_select == 0)
+        fInst.setFrameType(FTYPE_TOOL);
+      else
+        fInst.setFrameType(FTYPE_USER);
+        
+      lastScreen();
+      break;      
+    case SET_FRM_INSTR_IDX:
+    p = programs.get(active_prog);
+      
+      try {
+        int tempReg = Integer.parseInt(workingText);
+        
+        if(tempReg >= 0 && tempReg < 6){
+          fInst = (FrameInstruction)p.getInstructions().get(active_instr);
+          fInst.setReg(tempReg);
+        }
+      }
+      catch (NumberFormatException NFEx){ /* Ignore invalid input */ }
+      
+      lastScreen();
+      break;
     case SELECT_CUT_COPY:
     case SELECT_DELETE:
       selectedLines[active_instr] = !selectedLines[active_instr];
@@ -2293,35 +2354,18 @@ public void ENTER() {
       
       lastScreen();
       break;
-    case PICK_INSTRUCT:
+    case SELECT_INSTR_INSERT:
       if(opt_select == 0) {
-        nextScreen(Screen.IO_SUBMENU);
+        newIOInstruction();
+        lastScreen();
       } 
       else if(opt_select == 1) { // Offset/Frames
-        nextScreen(Screen.SET_FRAME_INSTRUCTION);
+        newFrameInstruction();
+        lastScreen();
       } 
       else if (opt_select == 2) {  
         nextScreen(Screen.INPUT_RSTMT);
       }
-      break;
-    case IO_SUBMENU:
-      p = programs.get(active_prog);
-      
-      nextScreen(Screen.NAV_PROG_INST);
-      break;
-    case SET_FRAME_INSTRUCTION:
-      if(opt_select == 0){
-        nextScreen(Screen.SET_TFRM_INSTR_IDX);
-      } else {
-        nextScreen(Screen.SET_UFRM_INSTR_IDX);
-      }
-      break;
-    case SET_TFRM_INSTR_IDX:
-    case SET_UFRM_INSTR_IDX:
-      newFrameInstruction(mode);
-      display_stack.pop();
-      display_stack.pop();
-      lastScreen();
       break;
     case SWAP_PT_TYPE:
       if(opt_select == 0) {
@@ -3129,12 +3173,12 @@ public void loadScreen(){
       col_select = 0;
       opt_select = -1;
       break;
-    case PICK_INSTRUCT:
-    case SET_FRAME_INSTRUCTION:
+    case SELECT_INSTR_INSERT:
+    case SET_IO_INSTR_STATE:
+    case SET_FRM_INSTR_TYPE:
       opt_select = 0;
       break;
-    case SET_TFRM_INSTR_IDX:
-    case SET_UFRM_INSTR_IDX:
+    case SET_FRM_INSTR_IDX:
       workingText = "";
       break;
       
@@ -3460,13 +3504,12 @@ public String getHeader(Screen mode){
     case NAV_PROG_INST:
     case INSTRUCT_MENU_NAV:
     case SET_MV_INSTR_SPD:
-    case SET_MV_INSTR_REG_NUM:
+    case SET_MV_INSTR_IDX:
     case SET_MV_INSTR_TERM:
-    case PICK_INSTRUCT:
-    case IO_SUBMENU:
-    case SET_FRAME_INSTRUCTION:
-    case SET_TFRM_INSTR_IDX:
-    case SET_UFRM_INSTR_IDX:
+    case SELECT_INSTR_INSERT:
+    case SET_IO_INSTR_STATE:
+    case SET_FRM_INSTR_TYPE:
+    case SET_FRM_INSTR_IDX:
     case SELECT_CUT_COPY:    
     case SELECT_DELETE:
     case VIEW_INST_REG:
@@ -3576,17 +3619,23 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
         contents.add( newLine("User: ", workingText) );
       }
       break;
+      
+    //View frame details
     case NAV_TOOL_FRAMES:
       contents = loadFrames(CoordFrame.TOOL);
       break;
     case NAV_USER_FRAMES:
       contents = loadFrames(CoordFrame.USER);
       break;
+<<<<<<< HEAD
     case IO_SUBMENU:
       contents = loadToolIORegisters();
       break;
       
     //View frame details
+=======
+    case TOOL_FRAME_METHODS:
+>>>>>>> 2062be2250836932ceacfc64a9526836943c89d2
     case TFRAME_DETAIL:
     case TEACH_3PT_TOOL:
     case TEACH_6PT:
@@ -3703,26 +3752,21 @@ public ArrayList<String> getOptions(Screen mode){
     //Instruction edit options
     case SET_MV_INSTRUCT_TYPE:
     case SET_MV_INSTRUCT_REG_TYPE:
-    case SET_MV_INSTR_REG_NUM:
+    case SET_MV_INSTR_IDX:
     case SET_MV_INSTR_SPD:
     case SET_MV_INSTR_TERM:
+    case SET_FRM_INSTR_TYPE:
+    case SET_FRM_INSTR_IDX:
+    case SET_IO_INSTR_STATE:
+    case SET_IO_INSTR_IDX:
       options = loadInstructEdit(mode);
       break;
     
     //Insert instructions (non-movemet)
-    case PICK_INSTRUCT:
-      options.add("1 I/O"               );
-      options.add("2 Offset/Frames"     );
-      options.add("3 Register Statement");
-      break;
-    case SET_FRAME_INSTRUCTION:
-      options.add("1. Tool Frame Instruct");
-      options.add("2. User Frame Instruct");
-      break;
-    case SET_TFRM_INSTR_IDX:
-    case SET_UFRM_INSTR_IDX:
-      options.add("Select the index of the frame to use:");
-      options.add("\0" + workingText);
+    case SELECT_INSTR_INSERT:
+      options.add("1 I/O Instr"         );
+      options.add("2 Frame Set Instr"   );
+      options.add("3 Data Reg Expr"     );
       break;
       
     //Frame navigation and edit menus
@@ -4028,7 +4072,9 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
   int end = min(start + ITEMS_TO_SHOW, size + 1);
   
   for(int i = start ; i < end; i+= 1) {
-    if(i == size){ instruct_list.add(newLine("[END]")); }
+    if(i == size){
+      instruct_list.add(newLine("[END]")); 
+    }
     else {
       Instruction instr = p.getInstructions().get(i);
       ArrayList<String> m = new ArrayList<String>();
@@ -4072,13 +4118,31 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
         
         if(a.getTermination() == 0) m.add("FINE");
         else m.add("CONT" + (int)(a.getTermination()*100));
-        
-        instruct_list.add(m);
       } 
-      else{
-        m.add(instr.toString());
-        instruct_list.add(m);
+      else if(instr instanceof FrameInstruction){
+        FrameInstruction a = (FrameInstruction)instr;
+        
+        if(a.frameType == FTYPE_TOOL){
+          m.add("TFRAME_NUM =");
+        } else{
+          m.add("UFRAME_NUM =");
+        }
+        
+        m.add(""+a.getReg());
       }
+      else if(instr instanceof IOInstruction){
+        IOInstruction a = (IOInstruction)instr;
+        
+        m.add("IO[" + a.getReg() + "]=");
+        
+        if(a.getState() == ON){
+          m.add("ON");
+        } else {
+          m.add("OFF");
+        }
+      }
+      
+      instruct_list.add(m);
     }
   }
   
@@ -4112,7 +4176,7 @@ public ArrayList<String> loadInstructEdit(Screen mode){
       edit.add("1.LOCAL(P)");
       edit.add("2.GLOBAL(PR)");
       break;
-    case SET_MV_INSTR_REG_NUM:
+    case SET_MV_INSTR_IDX:
       edit.add("Enter desired register number (1-1000)");
       edit.add("\0" + workingText);
       break;
@@ -4131,7 +4195,23 @@ public ArrayList<String> loadInstructEdit(Screen mode){
       edit.add(workingText + workingTextSuffix);
       break;
     case SET_MV_INSTR_TERM:
-      edit.add("Enter desired termination (0-100):");
+      edit.add("Enter desired termination %(0-100):");
+      edit.add("\0" + workingText);
+      break;
+    case SET_FRM_INSTR_TYPE:
+      edit.add("1. Tool Frame");
+      edit.add("2. User Frame");
+      break;
+    case SET_FRM_INSTR_IDX:
+      edit.add("Select frame index:");
+      edit.add("\0" + workingText);
+      break;
+    case SET_IO_INSTR_STATE:
+      edit.add("1. IO ON");
+      edit.add("2. IO OFF");
+      break;
+    case SET_IO_INSTR_IDX:
+      edit.add("Select I/O register index:");
       edit.add("\0" + workingText);
       break;
     default:
@@ -4215,26 +4295,25 @@ public void newMotionInstruction(){
   }
 }
 
-public void newFrameInstruction(Screen mode){
+public void newFrameInstruction(){
   Program p = programs.get(active_prog);
-    
-  try {
-    println(workingText);
-    int num = Integer.parseInt(workingText)-1;
-    if(num < 0) num = 0;
-    else if(num >= userFrames.length) num = userFrames.length-1;
-    
-    int type = (mode == Screen.SET_TFRM_INSTR_IDX) ? FTYPE_TOOL : FTYPE_USER;
-    
-    FrameInstruction f = new FrameInstruction(type, num);
-    if(active_instr != p.getInstructions().size()) {
-      p.overwriteInstruction(active_instr, f);
-    } else {
-      p.addInstruction(f);
-    }
-  } catch (NumberFormatException NFEx) {
-    /* Ignore invalid numbers */ 
-    println("Error: invalid frame number");
+  FrameInstruction f = new FrameInstruction(FTYPE_TOOL, 0);
+  
+  if(active_instr != p.getInstructions().size()) {
+    p.overwriteInstruction(active_instr, f);
+  } else {
+    p.addInstruction(f);
+  }
+}
+
+public void newIOInstruction(){
+  Program p = programs.get(active_prog);
+  IOInstruction io = new IOInstruction(0, OFF);
+  
+  if(active_instr != p.getInstructions().size()) {
+    p.overwriteInstruction(active_instr, io);
+  } else {
+    p.addInstruction(io);
   }
 }
 

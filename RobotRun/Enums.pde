@@ -25,7 +25,8 @@ public static enum Screen implements DisplayMode {
   */
   SET_MV_INSTRUCT_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_MV_INSTRUCT_REG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
-  SET_FRAME_INSTRUCTION(ScreenType.TYPE_INSTRUCT_EDIT),
+  SET_FRM_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
+  SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
    
   /*
   * Screens used to display a sereal list of contents for the user to
@@ -61,12 +62,11 @@ public static enum Screen implements DisplayMode {
   * Screens used to display a context-based list of options to the user
   */
   INSTRUCT_MENU_NAV(ScreenType.TYPE_OPT_MENU),
-  IO_SUBMENU(ScreenType.TYPE_OPT_MENU),
   MAIN_MENU_NAV(ScreenType.TYPE_OPT_MENU),
   TOOL_FRAME_METHODS(ScreenType.TYPE_OPT_MENU),
   USER_FRAME_METHODS(ScreenType.TYPE_OPT_MENU),
   PICK_FRAME_MODE(ScreenType.TYPE_OPT_MENU),
-  PICK_INSTRUCT(ScreenType.TYPE_OPT_MENU),
+  SELECT_INSTR_INSERT(ScreenType.TYPE_OPT_MENU),
   SETUP_NAV(ScreenType.TYPE_OPT_MENU),
   
   /*
@@ -85,11 +85,11 @@ public static enum Screen implements DisplayMode {
   INPUT_INTEGER(ScreenType.TYPE_NUM_ENTRY),
   EDIT_DREG_VAL(ScreenType.TYPE_NUM_ENTRY),
   JUMP_TO_LINE(ScreenType.TYPE_NUM_ENTRY), 
-  SET_TFRM_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
-  SET_UFRM_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
-  SET_MV_INSTR_REG_NUM(ScreenType.TYPE_NUM_ENTRY),
+  SET_MV_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_SPD(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_TERM(ScreenType.TYPE_NUM_ENTRY),
+  SET_FRM_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
+  SET_IO_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   ACTIVE_FRAMES(ScreenType.TYPE_NUM_ENTRY),
   
   /*

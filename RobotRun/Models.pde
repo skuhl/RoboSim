@@ -97,13 +97,11 @@ public static CoordFrame curCoordFrame = CoordFrame.JOINT;
 
 /* The possible types of End Effectors for the Robot */
 public enum EndEffector { NONE, SUCTION, CLAW; }
-/* The possible settings for the End Effector's status */
-public enum EEStatus { ON, OFF }
 
 public class ArmModel {
   
   public EndEffector activeEndEffector = EndEffector.NONE;
-  public EEStatus endEffectorStatus = EEStatus.OFF;
+  public int endEffectorStatus = OFF;
 
   public ArrayList<Model> segments = new ArrayList<Model>();
   public int type;
@@ -303,12 +301,12 @@ public class ArmModel {
       translate(-88, 0, 0);
       eeModelClaw.draw();
       rotateZ(PI/2);
-      if(endEffectorStatus == EEStatus.OFF) {
+      if(endEffectorStatus == OFF) {
         translate(10, -85, 30);
         eeModelClawPincer.draw();
         translate(55, 0, 0);
         eeModelClawPincer.draw();
-      } else if(endEffectorStatus == EEStatus.ON) {
+      } else if(endEffectorStatus == ON) {
         translate(28, -85, 30);
         eeModelClawPincer.draw();
         translate(20, 0, 0);
@@ -451,7 +449,7 @@ public class ArmModel {
   public ArrayList<Box> currentEEHitBoxList() {
     // Determine which set of hit boxes to display based on the active End Effector
     if(activeEndEffector == EndEffector.CLAW) {
-      return (endEffectorStatus == EEStatus.ON) ? eeHitBoxes[1] : eeHitBoxes[2];
+      return (endEffectorStatus == ON) ? eeHitBoxes[1] : eeHitBoxes[2];
     } else if(activeEndEffector == EndEffector.SUCTION) {
       return eeHitBoxes[3];
     }
@@ -527,7 +525,7 @@ public class ArmModel {
     
     for(Box b : eeHBs) {
       // Special case for held objects
-      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorStatus != EEStatus.ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
+      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorStatus != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
         b.outline = color(255, 0, 0);
         collision = true;
       }
@@ -549,7 +547,7 @@ public class ArmModel {
     int eeIdx = 0;
     // Determine which set of hit boxes to display based on the active End Effector
     if(activeEndEffector == EndEffector.CLAW) {
-      if(endEffectorStatus == EEStatus.ON) {
+      if(endEffectorStatus == ON) {
         eeIdx = 1;
       } else {
         eeIdx = 2;

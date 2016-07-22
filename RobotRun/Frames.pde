@@ -1,7 +1,6 @@
 Frame[] toolFrames;
 Frame[] userFrames;
 
-
 public static final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
                                                            {  0,  0,  1 },
                                                            {  0, -1,  0 } };
