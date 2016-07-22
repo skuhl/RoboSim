@@ -3627,15 +3627,7 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case NAV_USER_FRAMES:
       contents = loadFrames(CoordFrame.USER);
       break;
-<<<<<<< HEAD
-    case IO_SUBMENU:
-      contents = loadToolIORegisters();
-      break;
-      
     //View frame details
-=======
-    case TOOL_FRAME_METHODS:
->>>>>>> 2062be2250836932ceacfc64a9526836943c89d2
     case TFRAME_DETAIL:
     case TEACH_3PT_TOOL:
     case TEACH_6PT:
