@@ -1,115 +1,130 @@
-
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
 final int FTYPE_TOOL = 0, FTYPE_USER = 1;
 
-// Position Registers
-private final PositionRegister[] GPOS_REG = new PositionRegister[100];
-// Registers
-private final Register[] REG = new Register[100];
-
 public class Point  {
-  public PVector pos; // position
-  public float[] ori = new float[4]; // orientation
-  public float[] joints = new float[6]; // joint values
+  // X, Y, Z
+  public PVector position;
+  // Q1 - Q4
+  public float[] orientation;
+  // J1 - J6
+  public float[] angles;
 
   public Point() {
-    pos = new PVector(0,0,0);
-    ori[0] = 1;
-    ori[1] = 0;
-    ori[2] = 0;
-    ori[3] = 0; 
-    for(int n = 0; n < joints.length; n++) joints[n] = 0;
+    angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+    position = armModel.getEEPos(angles.clone());
+    orientation = armModel.getQuaternion(angles.clone());
   }
-
+  
+  public Point(float[] jointAngles) {
+    angles = Arrays.copyOfRange(jointAngles, 0, 6);
+    position = armModel.getEEPos(angles.clone());
+    orientation = armModel.getQuaternion(angles.clone());
+  }
+  
+  public Point(PVector pos, float[] orient) {
+    position = new PVector(pos.x, pos.y, pos.z);
+    orientation = Arrays.copyOfRange(orient, 0, 4);
+    angles = calculateIKJacobian(position, orientation);
+  }
+  
   public Point(float x, float y, float z, float r, float i, float j, float k,
-  float j1, float j2, float j3, float j4, float j5, float j6)
-  {
-    pos = new PVector(x,y,z);
-    ori[0] = r;
-    ori[1] = i;
-    ori[2] = j;
-    ori[3] = k;
-    joints[0] = j1;
-    joints[1] = j2;
-    joints[2] = j3;
-    joints[3] = j4;
-    joints[4] = j5;
-    joints[5] = j6;
+  float j1, float j2, float j3, float j4, float j5, float j6) {
+    orientation = new float[4];
+    angles = new float[6];
+    position = new PVector(x,y,z);
+    orientation[0] = r;
+    orientation[1] = i;
+    orientation[2] = j;
+    orientation[3] = k;
+    angles[0] = j1;
+    angles[1] = j2;
+    angles[2] = j3;
+    angles[3] = j4;
+    angles[4] = j5;
+    angles[5] = j6;
   }
-
-  public Point(float x, float y, float z, float r, float i, float j, float k) {
-    pos = new PVector(x,y,z);
-    ori[0] = r;
-    ori[1] = i;
-    ori[2] = j;
-    ori[3] = k;
-  }
-
-  public Point(PVector position, float[] orientation) {
-    pos = position;
-    ori = orientation;
+  
+  public Point(PVector pos, float[] orient, float[] jointAngles) {
+    position = new PVector(pos.x, pos.y, pos.z);
+    orientation = Arrays.copyOfRange(orient, 0, 4);
+    angles = Arrays.copyOfRange(jointAngles, 0, 6);
   }
 
   public Point clone() {
-    return new Point(pos.x, pos.y, pos.z, 
-    ori[0], ori[1], ori[2], ori[3], 
-    joints[0], joints[1], joints[2], joints[3], joints[4], joints[5]);
+    return new Point(position.x, position.y, position.z, 
+    orientation[0], orientation[1], orientation[2], orientation[3], 
+    angles[0], angles[1], angles[2], angles[3], angles[4], angles[5]);
   }
   
-  
   public Float getValue(int idx) {
-    
-    if (idx >= 0) {
       
-      if (idx == 1) {
-        return pos.x;  
-      } else if (idx == 2) {
-        return pos.y;
-      } else if (idx == 3) {
-        return pos.z;
-      }
+    switch(idx) {
+      // Joint angles
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:   return angles[idx];
+      // Position
+      case 6:   return position.x;
+      case 7:   return position.y;
+      case 8:   return position.z;
+      // Orientation
+      case 9:   
+      case 10:  
+      case 11:  
+      case 12:  return orientation[idx - 9];
+      default:
     }
     
     return null;
   }
 
   /**
-    * Returns a String array, whose entries are the joint values of the
-    * Point with their respective labels (J1-J6).
-    * 
-    * @return  A 6-element String array
-    */
-  public String[] toJointStringArray() {
-    String[] entries = new String[6];
+   * Returns a String array, whose entries are the joint values of the
+   * Point with their respective labels (J1-J6).
+   * 
+   * @return  A 6x2-element String array
+   */
+  public String[][] toJointStringArray() {
+    String[][] entries = new String[6][2];
     
-    for(int idx = 0; idx < joints.length; ++idx) {
-      entries[idx] = String.format("J%d: %4.3f", (idx + 1), joints[idx] * RAD_TO_DEG);
+    for(int idx = 0; idx < angles.length; ++idx) {
+      entries[idx][0] = String.format("J%d: ", (idx + 1));
+      entries[idx][1] = String.format("%4.3f", angles[idx] * RAD_TO_DEG);
     }
     
     return entries;
   }
 
   /**
-    * Returns a string array, where each entry is one of
-    * the values of the Cartiesian represent of the Point:
-    * (X, Y, Z, W, P, and R) and their respective labels.
-    *
-    * @return  A 6-element String array
-    */
-  public String[] toCartesianStringArray() {
-    PVector angles = quatToEuler(ori);
+   * Returns a string array, where each entry is one of
+   * the values of the Cartiesian represent of the Point:
+   * (X, Y, Z, W, P, and R) and their respective labels.
+   *
+   * @return  A 6x2-element String array
+   */
+  public String[][] toCartesianStringArray() {
+    String[][] entries = new String[6][2];
+    // Show the vector in terms of the World Frame or the active User Frame
+    PVector pos = convertNativeToWorld(this.position);
+    // Convert W, P, R to User Frame
+    PVector angles = quatToEuler(orientation);
     
-    String[] entries = new String[6];
-    // Show the vector in terms of the World Frame
-    PVector wPos = convertNativeToWorld(pos);
-    
-    entries[0] = String.format("X: %4.3f", wPos.x);
-    entries[1] = String.format("Y: %4.3f", wPos.y);
-    entries[2] = String.format("Z: %4.3f", wPos.z);
+    entries[0][0] = "X: ";
+    entries[0][1] = String.format("%4.3f", pos.x);
+    entries[1][0] = "Y: ";
+    entries[1][1] = String.format("%4.3f", pos.y);
+    entries[2][0] = "Z: ";
+    entries[2][1] = String.format("%4.3f", pos.z);
     // Show angles in degrees
-    entries[3] = String.format("W: %4.3f", angles.x * RAD_TO_DEG);
-    entries[4] = String.format("P: %4.3f", angles.y * RAD_TO_DEG);
-    entries[5] = String.format("R: %4.3f", angles.z * RAD_TO_DEG);
+    entries[3][0] = "W: ";
+    entries[3][1] = String.format("%4.3f", angles.x * RAD_TO_DEG);
+    entries[4][0] = "P: ";
+    entries[4][1] = String.format("%4.3f", angles.y * RAD_TO_DEG);
+    entries[5][0] = "R: ";
+    entries[5][1] = String.format("%4.3f", angles.z * RAD_TO_DEG);
     
     return entries;
   }
@@ -147,7 +162,7 @@ public class Program  {
   }
 
   public void addInstruction(Instruction i) {
-    i.setProg(this);
+    //i.setProg(this);
     instructions.add(i);
     if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
@@ -294,7 +309,7 @@ public final class MotionInstruction extends Instruction  {
   public Point getVector(Program parent) {
     if(motionType != MTYPE_JOINT) {
       Point out;
-      if(globalRegister) out = GPOS_REG[positionNum].point.clone();
+      if(globalRegister) out = GPOS_REG[positionNum].point;
       else out = parent.LPosReg[positionNum].clone();
       //out.pos = convertWorldToNative(out.pos);
       return out;
@@ -302,11 +317,11 @@ public final class MotionInstruction extends Instruction  {
     else {
       Point ret;
       
-      if(globalRegister) ret = GPOS_REG[positionNum].point.clone();
+      if(globalRegister) ret = GPOS_REG[positionNum].point;
       else ret = parent.LPosReg[positionNum].clone();
       
       if(userFrame != -1) {
-        ret.pos = rotate(ret.pos, userFrames[userFrame].getNativeAxes());
+        ret.position = rotate(ret.position, userFrames[userFrame].getNativeAxes());
       }
       
       return ret;
@@ -340,74 +355,79 @@ public final class MotionInstruction extends Instruction  {
 
 public class FrameInstruction extends Instruction {
   private int frameType;
-  private int idx;
-
-  public FrameInstruction(int f, int i) {
+  private int reg;
+    
+  public FrameInstruction(int f, int r) {
     super();
     frameType = f;
-    idx = i;
+    reg = r;
   }
-
+  
+  public int getFrameType(){ return frameType; }
+  public void setFrameType(int t){ frameType = t; }
+  public int getReg(){ return reg; }
+  public void setReg(int r){ reg = r; }
+  
   public void execute() {
-    if(frameType == FTYPE_TOOL) activeToolFrame = idx;
-    else if(frameType == FTYPE_USER) activeUserFrame = idx;
+    if(frameType == FTYPE_TOOL) activeToolFrame = reg;
+    else if(frameType == FTYPE_USER) activeUserFrame = reg;
+    // Update the Robot Arm's current frame rotation matrix
+    updateCoordFrame(armModel);
   }
 
   public String toString() {
     String ret = "";
-    if(frameType == FTYPE_TOOL) ret += "UTOOL_NUM=";
+    if(frameType == FTYPE_TOOL) ret += "TFRAME_NUM=";
     else if(frameType == FTYPE_USER) ret += "UFRAME_NUM=";
-    ret += idx+1;
+    ret += reg+1;
     return ret;
   }
 } // end FrameInstruction class
 
-public class ToolInstruction extends Instruction {
-  private String type;
-  private int bracket;
-  private EEStatus setToolStatus;
-
-  public ToolInstruction(String d, int b, EEStatus t) {
+public class IOInstruction extends Instruction {
+  private int state;
+  private int reg;
+  
+  public IOInstruction(int r, int t) {
     super();
-    type = d;
-    bracket = b;
-    setToolStatus = t;
+    reg = r;
+    state = t;
   }
 
+  public int getState(){ return state; }
+  public void setState(int s){ state = s; }
+  public int getReg(){ return reg; }
+  public void setReg(int r){ reg = r; }
+  
   public void execute() {
-    if((type.equals("RO") && bracket == 4 && armModel.activeEndEffector == EndEffector.CLAW) ||
-        (type.equals("DO") && bracket == 101 && armModel.activeEndEffector == EndEffector.SUCTION))
-    {
+    armModel.endEffectorStatus = state;
+    System.out.printf("EE: %s\n", armModel.endEffectorStatus);
       
-      armModel.endEffectorStatus = setToolStatus;
-      System.out.printf("EE: %s\n", armModel.endEffectorStatus);
+    // Check if the Robot is placing an object or picking up and object
+    if(armModel.activeEndEffector == EndEffector.CLAW || armModel.activeEndEffector == EndEffector.SUCTION) {
       
-      // Check if the Robot is placing an object or picking up and object
-      if(armModel.activeEndEffector == EndEffector.CLAW || armModel.activeEndEffector == EndEffector.SUCTION) {
+      if(state == ON && armModel.held == null) {
         
-        if(setToolStatus == EEStatus.ON && armModel.held == null) {
+        PVector ee_pos = armModel.getEEPos();
+        println(ee_pos);
+        // Determine if an object in the world can be picked up by the Robot
+        for(WorldObject s : objects) {
           
-          PVector ee_pos = armModel.getEEPos();
-          
-          // Determine if an object in the world can be picked up by the Robot
-          for(WorldObject s : objects) {
-            
-            if(s.collision(ee_pos)) {
-              armModel.held = s;
-              break;
-            }
+          if(s.collision(ee_pos)) {
+            armModel.held = s;
+            break;
           }
-        } 
-        else if(setToolStatus == EEStatus.OFF && armModel.held != null) {
-          // Release the object
-          armModel.releaseHeldObject();
         }
+      } 
+      else if(state == OFF && armModel.held != null) {
+        // Release the object
+        armModel.releaseHeldObject();
       }
     }
   }
 
   public String toString() {
-    return type + "[" + bracket + "]=" + setToolStatus.toString();
+    return "IO[" + reg + "]=" + ((state == ON) ? "ON" : "OFF");
   }
 } // end ToolInstruction class
 
@@ -553,31 +573,5 @@ public class RecordScreen implements Runnable{
       t.printStackTrace();
     }
     
-  }
-}
-
-/* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
-public class Register {
-  public String comment = null;
-  public Float value = null;
-
-  public Register(String c, Float v) {
-    value = v;
-    comment = c;
-  }
-}
-
-/* A simple class for a Position Register of the Robot Arm, which holds a point associated with a comment. */
-public class PositionRegister {
-  public String comment = null;
-  public Point point = null;
-
-  public PositionRegister() {
-    point = new Point(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f);
-  }
-
-  public PositionRegister(String c, Point p) {
-    point = p;
-    comment = c;
   }
 }

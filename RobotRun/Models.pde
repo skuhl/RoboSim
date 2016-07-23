@@ -97,13 +97,11 @@ public static CoordFrame curCoordFrame = CoordFrame.JOINT;
 
 /* The possible types of End Effectors for the Robot */
 public enum EndEffector { NONE, SUCTION, CLAW; }
-/* The possible settings for the End Effector's status */
-public enum EEStatus { ON, OFF }
 
 public class ArmModel {
   
   public EndEffector activeEndEffector = EndEffector.NONE;
-  public EEStatus endEffectorStatus = EEStatus.OFF;
+  public int endEffectorStatus = OFF;
 
   public ArrayList<Model> segments = new ArrayList<Model>();
   public int type;
@@ -117,8 +115,8 @@ public class ArmModel {
   public float[] tgtRot = new float[4];
   public PVector tgtPos = new PVector();
   public float[][] currentFrame = {{1, 0, 0},
-    {0, 1, 0}, 
-    {0, 0, 1}};
+                                   {0, 1, 0}, 
+                                   {0, 0, 1}};
   
   public Box[] bodyHitBoxes;
   private ArrayList<Box>[] eeHitBoxes;
@@ -303,12 +301,12 @@ public class ArmModel {
       translate(-88, 0, 0);
       eeModelClaw.draw();
       rotateZ(PI/2);
-      if(endEffectorStatus == EEStatus.OFF) {
+      if(endEffectorStatus == OFF) {
         translate(10, -85, 30);
         eeModelClawPincer.draw();
         translate(55, 0, 0);
         eeModelClawPincer.draw();
-      } else if(endEffectorStatus == EEStatus.ON) {
+      } else if(endEffectorStatus == ON) {
         translate(28, -85, 30);
         eeModelClawPincer.draw();
         translate(20, 0, 0);
@@ -451,7 +449,7 @@ public class ArmModel {
   public ArrayList<Box> currentEEHitBoxList() {
     // Determine which set of hit boxes to display based on the active End Effector
     if(activeEndEffector == EndEffector.CLAW) {
-      return (endEffectorStatus == EEStatus.ON) ? eeHitBoxes[1] : eeHitBoxes[2];
+      return (endEffectorStatus == ON) ? eeHitBoxes[1] : eeHitBoxes[2];
     } else if(activeEndEffector == EndEffector.SUCTION) {
       return eeHitBoxes[3];
     }
@@ -527,7 +525,7 @@ public class ArmModel {
     
     for(Box b : eeHBs) {
       // Special case for held objects
-      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorStatus != EEStatus.ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
+      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorStatus != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
         b.outline = color(255, 0, 0);
         collision = true;
       }
@@ -549,7 +547,7 @@ public class ArmModel {
     int eeIdx = 0;
     // Determine which set of hit boxes to display based on the active End Effector
     if(activeEndEffector == EndEffector.CLAW) {
-      if(endEffectorStatus == EEStatus.ON) {
+      if(endEffectorStatus == ON) {
         eeIdx = 1;
       } else {
         eeIdx = 2;
@@ -567,7 +565,7 @@ public class ArmModel {
   }
   
   //returns the rotational values for each arm joint
-  public float[] getJointRotations() {
+  public float[] getJointAngles() {
     float[] rot = new float[6];
     for(int i = 0; i < segments.size(); i += 1) {
       for(int j = 0; j < 3; j += 1) {
@@ -584,17 +582,9 @@ public class ArmModel {
    * default world frame.
    */
   public void resetFrame() {
-    currentFrame[0][0] = 1;
-    currentFrame[0][1] = 0;
-    currentFrame[0][2] = 0;
-    
-    currentFrame[1][0] = 0;
-    currentFrame[1][1] = 1;
-    currentFrame[1][2] = 0;
-    
-    currentFrame[2][0] = 0;
-    currentFrame[2][1] = 0;
-    currentFrame[2][2] = 1;
+    currentFrame = new float[][] {{1, 0, 0},
+                                  {0, 1, 0},
+                                  {0, 0, 1}};
   }
   
   /* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
@@ -669,14 +659,6 @@ public class ArmModel {
        y'' = -y' -> z
        z'' = x'  -> -x
       */
-    } else {
-      
-      // Apply a default tool frame based on the current EE
-      if(activeEndEffector == EndEffector.CLAW) {
-        translate(0, 0, -54);
-      } else if(activeEndEffector == EndEffector.SUCTION) {
-        translate(0, 0, -105);
-      }
     }
   }
   
@@ -700,11 +682,11 @@ public class ArmModel {
   }
   
   public PVector getWPR(float[] testAngles) {
-    float[] origAngles = getJointRotations();
-    setJointRotations(testAngles);
+    float[] origAngles = getJointAngles();
+    setJointAngles(testAngles);
     
     PVector ret = getWPR();
-    setJointRotations(origAngles);
+    setJointAngles(origAngles);
     return ret;
   }
   
@@ -717,11 +699,11 @@ public class ArmModel {
   }
   
   public float[] getQuaternion(float[] testAngles) {
-    float[] origAngles = getJointRotations();
-    setJointRotations(testAngles);
+    float[] origAngles = getJointAngles();
+    setJointAngles(testAngles);
     
     float[] ret = getQuaternion();
-    setJointRotations(origAngles);
+    setJointAngles(origAngles);
     return ret;
   }
   
@@ -742,7 +724,7 @@ public class ArmModel {
     rotateZ(PI);
     translate(150, 0, 150);
     
-    rotateY(getJointRotations()[0]);
+    rotateY(getJointAngles()[0]);
     
     translate(-150, 0, -150);
     rotateZ(-PI);    
@@ -751,7 +733,7 @@ public class ArmModel {
     rotateY(PI/2);
     translate(0, 62, 62);
     
-    rotateX(getJointRotations()[1]);
+    rotateX(getJointAngles()[1]);
     
     translate(0, -62, -62);
     rotateY(-PI/2);
@@ -761,7 +743,7 @@ public class ArmModel {
     rotateY(PI/2);
     translate(0, 75, 75);
     
-    rotateX(getJointRotations()[2]);
+    rotateX(getJointAngles()[2]);
     
     translate(0, -75, -75);
     rotateY(PI/2);
@@ -771,7 +753,7 @@ public class ArmModel {
     rotateY(PI/2);
     translate(70, 0, 70);
     
-    rotateY(getJointRotations()[3]);
+    rotateY(getJointAngles()[3]);
     
     translate(-70, 0, -70);
     rotateY(-PI/2);
@@ -781,7 +763,7 @@ public class ArmModel {
     rotateY(-PI/2);
     translate(0, 50, 50);
     
-    rotateX(getJointRotations()[4]);
+    rotateX(getJointAngles()[4]);
     
     translate(0, -50, -50);
     rotateY(PI/2);
@@ -791,7 +773,7 @@ public class ArmModel {
     rotateZ(PI);
     translate(45, 45, 0);
     
-    rotateZ(getJointRotations()[5]);
+    rotateZ(getJointAngles()[5]);
     
     if(curCoordFrame == CoordFrame.TOOL || curCoordFrame == CoordFrame.WORLD) { applyToolFrame(activeToolFrame); }
     
@@ -805,17 +787,112 @@ public class ArmModel {
   } // end calculateEndEffectorPosition
   
   public PVector getEEPos(float[] testAngles) {
-    float[] origAngles = getJointRotations();
-    setJointRotations(testAngles);
+    float[] origAngles = getJointAngles();
+    setJointAngles(testAngles);
     
     PVector ret = getEEPos();
-    setJointRotations(origAngles);
+    setJointAngles(origAngles);
     return ret;
     
   }
   
+  /**
+   * Return the current position of the Robot's faceplate.
+   */
+  public PVector getFaceplate() {
+    pushMatrix();
+    resetMatrix();
+    
+    translate(600, 200, 0);
+    translate(-50, -166, -358); // -115, -213, -413
+    rotateZ(PI);
+    translate(150, 0, 150);
+    
+    rotateY(getJointAngles()[0]);
+    
+    translate(-150, 0, -150);
+    rotateZ(-PI);    
+    translate(-115, -85, 180);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 62, 62);
+    
+    rotateX(getJointAngles()[1]);
+    
+    translate(0, -62, -62);
+    rotateY(-PI/2);
+    rotateZ(-PI);   
+    translate(0, -500, -50);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 75, 75);
+    
+    rotateX(getJointAngles()[2]);
+    
+    translate(0, -75, -75);
+    rotateY(PI/2);
+    rotateZ(-PI);
+    translate(745, -150, 150);
+    rotateZ(PI/2);
+    rotateY(PI/2);
+    translate(70, 0, 70);
+    
+    rotateY(getJointAngles()[3]);
+    
+    translate(-70, 0, -70);
+    rotateY(-PI/2);
+    rotateZ(-PI/2);    
+    translate(-115, 130, -124);
+    rotateZ(PI);
+    rotateY(-PI/2);
+    translate(0, 50, 50);
+    
+    rotateX(getJointAngles()[4]);
+    
+    translate(0, -50, -50);
+    rotateY(PI/2);
+    rotateZ(-PI);    
+    translate(150, -10, 95);
+    rotateY(-PI/2);
+    rotateZ(PI);
+    translate(45, 45, 0);
+    
+    rotateZ(getJointAngles()[5]);
+    
+    PVector ret = new PVector(
+    modelX(0, 0, 0),
+    modelY(0, 0, 0),
+    modelZ(0, 0, 0));
+    
+    popMatrix();
+    return ret;
+  }
+  
+  public PVector getFaceplate(float[] testAngles) {
+    float[] origAngles = getJointAngles();
+    setJointAngles(testAngles);
+    
+    PVector ret = getFaceplate();
+    setJointAngles(origAngles);
+    return ret;
+  }
+  
+  public Point getPosition(){
+    PVector pos = getEEPos();
+    float[] orient = getQuaternion();
+    
+    return new Point(pos, orient);
+  }
+  
+  public Point getPosition(float[] angles){
+    PVector pos = getEEPos(angles);
+    float[] orient = getQuaternion(angles);
+    
+    return new Point(pos, orient);
+  }
+  
   //convenience method to set all joint rotation values of the robot arm
-  public void setJointRotations(float[] rot) {
+  public void setJointAngles(float[] rot) {
     for(int i = 0; i < segments.size(); i += 1) {
       for(int j = 0; j < 3; j += 1) {
         if(segments.get(i).rotations[j]) {
@@ -909,7 +986,7 @@ public class ArmModel {
   
   void updateOrientation() {
     PVector u = new PVector(0, 0, 0);
-    float theta = DEG_TO_RAD*2.5*liveSpeed;
+    float theta = DEG_TO_RAD*0.025f*liveSpeed;
     
     u.x = jogRot[0];
     u.y = jogRot[1];
@@ -929,7 +1006,7 @@ public class ArmModel {
         for(int n = 0; n < 3; n++) {
           if(model.rotations[n]) {
             float trialAngle = model.currentRotations[n] +
-            model.rotationSpeed * model.jointsMoving[n] * liveSpeed;
+            model.rotationSpeed * model.jointsMoving[n] * liveSpeed / 100f;
             trialAngle = clampAngle(trialAngle);
             
             if(model.anglePermitted(n, trialAngle)) {
@@ -962,7 +1039,7 @@ public class ArmModel {
         move = rotate(move, currentFrame);
         
         //respond to user defined movement
-        float distance = motorSpeed/60.0 * liveSpeed;
+        float distance = motorSpeed/6000f * liveSpeed;
         tgtPos.x += move.x * distance;
         tgtPos.y += move.y * distance;
         tgtPos.z += move.z * distance;
@@ -1009,12 +1086,12 @@ public class ArmModel {
         float[] angleOffset = new float[6];
         float maxOffset = TWO_PI;
         for(int i = 0; i < 6; i += 1) {
-          angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointRotations()[i]));
+          angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointAngles()[i]));
         }
         
         if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
             angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
-          setJointRotations(destAngles);
+          setJointAngles(destAngles);
         }
         else {
           tgtPos = armModel.getEEPos();
@@ -1050,7 +1127,7 @@ public class ArmModel {
     
     if(collision) {
       // Reset the original position in the case of a collision
-      setJointRotations(oldAngles);
+      setJointAngles(oldAngles);
     }
     
     return collision;

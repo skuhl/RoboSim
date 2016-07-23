@@ -104,14 +104,14 @@ public int loadState() {
   }
   
   // Initialize uninitialized registers and position registers to with null fields
-  for(int reg = 0; reg < REG.length; ++reg) {
+  for(int reg = 0; reg < DAT_REG.length; ++reg) {
     
-    if(REG[reg] == null) {
-      REG[reg] = new Register(null, null);
+    if(DAT_REG[reg] == null) {
+      DAT_REG[reg] = new DataRegister();
     }
     
     if(GPOS_REG[reg] == null) {  
-      GPOS_REG[reg] = new PositionRegister(null, null);
+      GPOS_REG[reg] = new PositionRegister();
     }
   }
   
@@ -282,24 +282,24 @@ private Program loadProgram(DataInputStream in) throws IOException {
  */
 private void savePoint(Point p, DataOutputStream out) throws IOException {
   
-  if (p == null) {
+  if (p == null) { //<>//
     // Null points only write out a byte indicating there is no data
     out.writeByte(0);
   } else {
     
     out.writeByte(1);
     // Write position of the point
-    out.writeFloat(p.pos.x);
-    out.writeFloat(p.pos.y);
-    out.writeFloat(p.pos.z);
+    out.writeFloat(p.position.x);
+    out.writeFloat(p.position.y);
+    out.writeFloat(p.position.z);
     
     // Write point's orientation
-    for(float o : p.ori) {
+    for(float o : p.orientation) {
       out.writeFloat(o);
     }
     
     // Write the joint angles for the point's position
-    for(float j : p.joints) {
+    for(float j : p.angles) {
       out.writeFloat(j);
     }
   }
@@ -380,16 +380,15 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeByte(1);
     // Write data associated with the FrameInstruction object
     out.writeInt(f_inst.frameType);
-    out.writeInt(f_inst.idx);
-  } else if(inst instanceof ToolInstruction) {
+    out.writeInt(f_inst.reg);
+  } else if(inst instanceof IOInstruction) {
     
-    ToolInstruction t_inst = (ToolInstruction)inst;
+    IOInstruction t_inst = (IOInstruction)inst;
     // Flag byte denoting this instruction as a ToolInstruction
     out.writeByte(2);
     // Write data associated with the ToolInstruction object
-    out.writeUTF(t_inst.type);
-    out.writeInt(t_inst.bracket);
-    out.writeInt( saveEEStatus(t_inst.setToolStatus) );
+    out.writeInt(t_inst.reg);
+    out.writeInt( saveint(t_inst.state) );
   } else if (inst instanceof Instruction) {
     out.writeByte(127);
   } else {/* TODO add other instructions! */}
@@ -431,11 +430,10 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
   } else if(instType == 2) {
     
     // Read data for a ToolInstruction object
-    String type = in.readUTF();
-    int bracket = in.readInt();
+    int reg = in.readInt();
     int setting = in.readInt();
     
-    inst = new ToolInstruction(type, bracket, loadEEStatus(setting));
+    inst = new IOInstruction(reg, loadint(setting));
   } else if (instType == 127) {
     inst = new Instruction();
   } else {/* TODO add other instructions! */}
@@ -447,8 +445,7 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
  * Convert the given End Effector status
  * to a unique integer value.
  */
-private int saveEEStatus(EEStatus stat) {
-  
+private int saveint(int stat) {
   switch (stat) {
     case ON:  return 0;
     case OFF: return 1;
@@ -460,12 +457,11 @@ private int saveEEStatus(EEStatus stat) {
  * Converts a valid integer value to its
  * corresponding End Effector Status.
  */
-private EEStatus loadEEStatus(int val) {
-  
+private int loadint(int val) {
   switch (val) {
-    case 0:   return EEStatus.ON;
-    case 1:   return EEStatus.OFF;
-    default:  return null;
+    case 0:   return ON;
+    case 1:   return OFF;
+    default:  return -1;
   }
 }
 
@@ -750,8 +746,8 @@ public int saveRegisterBytes(File dest) {
     initializedPR = new ArrayList<Integer>();
     
     // Count the number of initialized entries and save their indices
-    for(int idx = 0; idx < REG.length; ++idx) {
-      if(REG[idx].value != null || REG[idx].comment != null) {
+    for(int idx = 0; idx < DAT_REG.length; ++idx) {
+      if(DAT_REG[idx].value != null || DAT_REG[idx].comment != null) {
         initializedR.add(idx);
         ++numOfREntries;
       }
@@ -767,17 +763,17 @@ public int saveRegisterBytes(File dest) {
     for(Integer idx : initializedR) {
       dataOut.writeInt(idx);
       
-      if(REG[idx].value == null) {
+      if(DAT_REG[idx].value == null) {
         // save for null Float value
         dataOut.writeFloat(Float.NaN);
       } else {
-        dataOut.writeFloat(REG[idx].value);
+        dataOut.writeFloat(DAT_REG[idx].value);
       }
       
-      if(REG[idx].comment == null) {
+      if(DAT_REG[idx].comment == null) {
         dataOut.writeUTF("");
       } else {
-        dataOut.writeUTF(REG[idx].comment);
+        dataOut.writeUTF(DAT_REG[idx].comment);
       }
     }
     
@@ -792,6 +788,8 @@ public int saveRegisterBytes(File dest) {
       } else {
         dataOut.writeUTF(GPOS_REG[idx].comment);
       }
+      
+      dataOut.writeBoolean(GPOS_REG[idx].isCartesian);
     }
     
     dataOut.close();
@@ -832,7 +830,7 @@ public int loadRegisterBytes(File src) {
     FileInputStream in = new FileInputStream(src);
     DataInputStream dataIn = new DataInputStream(in);
     
-    int size = max(0, min(dataIn.readInt(), REG.length));
+    int size = max(0, min(dataIn.readInt(), DAT_REG.length));
     
     // Load the Register entries
     while(size-- > 0) {
@@ -847,7 +845,7 @@ public int loadRegisterBytes(File src) {
       // Null comments are saved as ""
       if(c.equals("")) { c = null; }
       
-      REG[reg] = new Register(c, v);
+      DAT_REG[reg] = new DataRegister(c, v);
     }
     
     size = max(0, min(dataIn.readInt(), GPOS_REG.length));
@@ -861,8 +859,9 @@ public int loadRegisterBytes(File src) {
       String c = dataIn.readUTF();
       // Null comments are stored as ""
       if(c == "") { c = null; }
+      boolean isCartesian = dataIn.readBoolean();
       
-      GPOS_REG[idx] = new PositionRegister(c, p);
+      GPOS_REG[idx] = new PositionRegister(c, p, isCartesian);
     }
     
     dataIn.close();

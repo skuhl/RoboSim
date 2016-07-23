@@ -1,10 +1,14 @@
-Frame[] toolFrames = null;
-Frame[] userFrames = null;
+Frame[] toolFrames;
+Frame[] userFrames;
+
+public static final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
+                                                           {  0,  0,  1 },
+                                                           {  0, -1,  0 } };
 
 public abstract class Frame {
   private PVector origin;
   // The unit vectors representing the x, y, z axes (in row major order)
-  private float[][] axes;
+  public float[][] axes;
   /* The three points used to define a coordinate axis for 6-Point Method
    * of Tool Frames and 3-Point or 4_Point Methods of User Frames */
   public Point[] axesTeachPoints;
@@ -40,21 +44,10 @@ public abstract class Frame {
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the World Coordinate System. */
   public float[][] getWorldAxes() {
-    float[][] wAxes = new float[3][3];
+    RealMatrix frameAxes = new Array2DRowRealMatrix(floatToDouble(axes, 3, 3));
+    RealMatrix worldAxes = new Array2DRowRealMatrix(floatToDouble(WORLD_AXES, 3, 3));
     
-    for(int col = 0; col < wAxes[0].length; ++col) {
-      wAxes[0][col] = -axes[0][col];
-      wAxes[1][col] = axes[2][col];
-      wAxes[2][col] = -axes[1][col];
-    }
-    
-    /*for(int row = 0; row < wAxes[0].length; ++row) {
-      wAxes[row][0] = -axes[row][0];
-      wAxes[row][1] = axes[row][2];
-      wAxes[row][2] = -axes[row][1];
-    }*/
-    
-    return wAxes;
+    return doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
   }
 
   public void setAxis(int idx, PVector in) {
@@ -263,15 +256,15 @@ public class ToolFrame extends Frame {
         return false;
       }
       
-      float[][] pt1_ori = quatToMatrix(TCPTeachPoints[0].ori),
-                pt2_ori = quatToMatrix(TCPTeachPoints[1].ori),
-                pt3_ori = quatToMatrix(TCPTeachPoints[2].ori);
+      float[][] pt1_ori = quatToMatrix(TCPTeachPoints[0].orientation),
+                pt2_ori = quatToMatrix(TCPTeachPoints[1].orientation),
+                pt3_ori = quatToMatrix(TCPTeachPoints[2].orientation);
       
-      double[] newTCP = calculateTCPFromThreePoints(toVectorArray(TCPTeachPoints[0].pos), pt1_ori,
-                                                 toVectorArray(TCPTeachPoints[1].pos), pt2_ori,
-                                                 toVectorArray(TCPTeachPoints[2].pos), pt3_ori);
+      double[] newTCP = calculateTCPFromThreePoints(toVectorArray(TCPTeachPoints[0].position), pt1_ori,
+                                                 toVectorArray(TCPTeachPoints[1].position), pt2_ori,
+                                                 toVectorArray(TCPTeachPoints[2].position), pt3_ori);
       
-      float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(axesTeachPoints[0].pos, axesTeachPoints[1].pos, axesTeachPoints[2].pos) : new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
+      float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(axesTeachPoints[0].position, axesTeachPoints[1].position, axesTeachPoints[2].position) : new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
       
       if (newTCP == null || newAxesVectors == null) {
         // Invalid point set for the TCP or the coordinate axes
@@ -353,8 +346,8 @@ public class UserFrame extends Frame {
     } else if (mode >= 0 && mode < 2 && axesTeachPoints[0] != null && axesTeachPoints[1] != null && axesTeachPoints[2] != null) {
       // 3-Point or 4-Point Method
       
-      PVector newOrigin = (mode == 0) ? getOrigin() : orientOrigin.pos;
-      float[][] newAxesVectors = createAxesFromThreePoints(axesTeachPoints[0].pos, axesTeachPoints[1].pos, axesTeachPoints[2].pos);
+      PVector newOrigin = (mode == 0) ? getOrigin() : orientOrigin.position;
+      float[][] newAxesVectors = createAxesFromThreePoints(axesTeachPoints[0].position, axesTeachPoints[1].position, axesTeachPoints[2].position);
       
       if (newOrigin == null || newAxesVectors == null) {
         // Invalid points for the coordinate axes or missing orient origin for the 4-Point Method
@@ -385,7 +378,9 @@ public class UserFrame extends Frame {
  * @return      The new TCP for the Robot, null is returned if the given points
  *              are invalid
  */
-public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1, float[] pos2, float[][] ori2, float[] pos3, float[][] ori3) {
+public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1, 
+                                            float[] pos2, float[][] ori2, 
+                                            float[] pos3, float[][] ori3) {
   
   RealVector avg_TCP = new ArrayRealVector(new double[] {0.0, 0.0, 0.0} , false);
   int counter = 3;

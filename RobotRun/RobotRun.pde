@@ -79,17 +79,18 @@ public void setup() {
   size(1080, 720, P3D);
   ortho();
   
-  //set up UI
-  cp5 = new ControlP5(this);
-  display_stack = new Stack<Screen>();
-  gui();
-  
+  //load model and save data
   armModel = new ArmModel();
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   intermediatePositions = new ArrayList<Point>();
   loadState();
+  
+  //set up UI
+  cp5 = new ControlP5(this);
+  display_stack = new Stack<Screen>();
+  gui();
   
   // Intialize world objects
   objects = new WorldObject[2];
@@ -102,16 +103,7 @@ public void setup() {
   translate(-250, 0, 0);
   objects[1] = new WorldObject(250, 125, 500, color(255, 0, 255), color(255, 255, 255));
   
-  popMatrix();
-  
-  pushMatrix();
-  resetMatrix();
-  applyModelRotation(armModel, false);
-  
-  float[][] tMatrix = getTransformationMatrix(),
-            rMatrix = quatToMatrix( armModel.getQuaternion() );
-  popMatrix();
-    
+  popMatrix();    
   //createTestProgram();
 }
 
@@ -139,7 +131,7 @@ public void draw() {
       //run program
       armModel.inMotion = !executeProgram(currentProgram, armModel, execSingleInst);
     } else {
-      armModel.inMotion = !armModel.interpolateRotation(liveSpeed);
+      armModel.inMotion = !armModel.interpolateRotation(liveSpeed / 100f);
     }
   }
   else {
@@ -370,13 +362,13 @@ public void handleWorldObjects() {
  */
 public void displayTeachPoints() {
   // Teach points are displayed only while the Robot is being taught a frame
-  if(teachFrame != null && (mode == Screen.THREE_POINT_MODE || mode == Screen.FOUR_POINT_MODE || mode == Screen.SIX_POINT_MODE)) {
+  if(teachFrame != null && mode.getType() == ScreenType.TYPE_TEACH_POINTS) {
     
     int size = 3;
-    
-    if (mode == Screen.SIX_POINT_MODE && teachFrame instanceof ToolFrame) {
+
+    if (mode == Screen.TEACH_6PT && teachFrame instanceof ToolFrame) {
       size = 6;
-    } else if (mode == Screen.FOUR_POINT_MODE && teachFrame instanceof UserFrame) {
+    } else if (mode == Screen.TEACH_4PT && teachFrame instanceof UserFrame) {
       size = 4;
     }
     
@@ -386,7 +378,7 @@ public void displayTeachPoints() {
       if (pt != null) {
         pushMatrix();
         // Applies the point's position
-        translate(pt.pos.x, pt.pos.y, pt.pos.z);
+        translate(pt.position.x, pt.position.y, pt.position.z);
         
         // Draw color-coded sphere for the point
         noFill();
@@ -440,13 +432,13 @@ public void displayFrameAxes() {
   
   if((curCoordFrame == CoordFrame.WORLD || curCoordFrame == CoordFrame.TOOL) && activeToolFrame != -1) {
     /* Draw the axes of the active tool frame */
-    displayOriginAxes(toolFrames[activeToolFrame].getWorldAxes(), toVectorArray( armModel.getEEPos() ));
+    displayOriginAxes(toolFrames[activeToolFrame].getWorldAxes(), armModel.getEEPos());
   } else if(curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
     /* Draw the axes of the active user frame */
-    displayOriginAxes(userFrames[activeUserFrame].getWorldAxes(), toVectorArray( userFrames[activeUserFrame].getOrigin() ));
+    displayOriginAxes(userFrames[activeUserFrame].getWorldAxes(), userFrames[activeUserFrame].getOrigin());
   } else if(curCoordFrame == CoordFrame.WORLD) {
     /* Draw World Frame coordinate system */
-    displayOriginAxes(new float[][] { {-1f, 0f, 0f}, {0f, 0f, 1f}, {0f, -1f, 0f} }, new float[] {0f, 0f, 0f});
+    displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f));
   }
 }
 
@@ -458,13 +450,13 @@ public void displayFrameAxes() {
  * @param origin       A point in space representing the intersection of the
  *                     three unit vectors
  */
-public void displayOriginAxes(float[][] axesVectors, float[] origin) {
+public void displayOriginAxes(float[][] axesVectors, PVector origin) {
   
   pushMatrix();
   // Transform to the reference frame defined by the axes vectors
-  applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin[0],
-              axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin[1],
-              axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin[2],
+  applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
+              axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
+              axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
   0, 0, 0, 1);
   // X axis
   stroke(255, 0, 0);

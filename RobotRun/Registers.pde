@@ -1,3 +1,46 @@
+// Position Registers
+private final PositionRegister[] GPOS_REG = new PositionRegister[100];
+// Data Registers
+private final DataRegister[] DAT_REG = new DataRegister[100];
+// IO Registers
+private final IORegister[] IO_REG = new IORegister[6];
+
+
+/* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
+public class DataRegister {
+  public String comment;
+  public Float value;
+  
+  public DataRegister() {
+    comment = null;
+    value = null;
+  }
+  
+  public DataRegister(String c, Float v) {
+    value = v;
+    comment = c;
+  }
+}
+
+/* A simple class for a Position Register of the Robot Arm, which holds a point associated with a comment. */
+public class PositionRegister {
+  public String comment;
+  public Point point;
+  public boolean isCartesian;
+  
+  public PositionRegister() {
+    comment = null;
+    point = null;
+    isCartesian = false;
+  }
+  
+  public PositionRegister(String c, Point pt, boolean isCart) {
+    comment = c;
+    point = pt;
+    isCartesian = isCart;
+  }
+}
+
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
 public enum Operator { PLUS, MINUS, MUTLIPLY, DIVIDE, MODULUS, INTDIVIDE, PAR_OPEN, PAR_CLOSE; }
 
@@ -33,7 +76,7 @@ public class RobotPoint {
    * the Robot
    */
   public Object getValue() {
-    CartPoint pt = new CartPoint( new Point(armModel.getEEPos(), armModel.getQuaternion()) );
+    RegStmtPoint pt = new RegStmtPoint( armModel.getEEPos(), armModel.getQuaternion() );
     
     if (valIdx == -1) {
       // Return the entire point
@@ -57,64 +100,82 @@ public class RobotPoint {
 
 /**
  * This class defines a Point, which stores a position and orientation
- * in space (X, Y, Z, W, P, R) along with the joint angles (J1 - J6)
- * necessary for the Robot to reach the position and orientation of
- * the Point.
+ * in space (X, Y, Z, W, P, R) or the joint angles (J1 - J6) necessary
+ * for the Robot to reach the position and orientation of the register point.
+ * 
  * This class is designed to temporary store the values of a Point object
  * in order to bypass multiple conversion between Euler angles and
  * Quaternions during the evaluation of Register Statement Expressions.
  */
-public class CartPoint {
-  /**
-   * The values associated with this Point:
-   *   0 - 5  ->  J1 - J6
-   *   6 - 11 ->  X, Y, Z, W, P, R
-   */
-  public float[] values;
+public class RegStmtPoint {
   
   /**
-   * Point for the default position of the Robot
+   * The values associated with a register point:
+   * 
+   * For a Cartesian point:
+   *   0, 1, 2 -> X, Y, Z
+   *   3. 4, 5 -> W, P, R
+   * 
+   * For a Joint point:
+   *   0 - 5 -> J1 - J6
    */
-  public CartPoint() {
-    values = new float[12];
-    
-    for (int idx = 0; idx < 6; ++idx) {
-      values[idx] = 0;
-    }
-    
-    float[] angles = Arrays.copyOfRange(values, 0, 5);
-    PVector xyz = armModel.getEEPos(angles);
-    PVector wpr = armModel.getWPR(angles);
-    
-    values[6] = xyz.x;
-    values[7] = xyz.y;
-    values[8] = xyz.z;
-    values[9] = wpr.x;
-    values[10] = wpr.y;
-    values[11] = wpr.z;
+  public final float[] values;
+  /**
+   * Whether this point is a Cartesian or a Joint point
+   */
+  public final boolean isCartesian;
+  
+  /**
+   * Creates a Joint point with all values equal to zero
+   */
+  public RegStmtPoint() {
+    values = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+    isCartesian = false;
   }
   
   /**
-   * Converts the given Point Object to a PointCoord object
+   * Creates a Joint point
    */
-  public CartPoint(Point pt) {
-    values = new float[12];
+  public RegStmtPoint(float[] jointAngles) {
+    values = new float[6];
+    isCartesian = false;
     
-    for (int jdx = 0; jdx < pt.joints.length; ++jdx) {
-      values[jdx] = pt.joints[jdx];
+    for (int idx = 0; idx < 6; ++idx) {
+      values[idx] = jointAngles[idx];
     }
+  }
+  
+  /**
+   * Creates a Cartesian point
+   */
+  public RegStmtPoint(PVector pos, float[] ori) {
+    values = new float[6];
+    isCartesian = true;
     
-    values[6] = pt.pos.x;
-    values[7] = pt.pos.y;
-    values[8] = pt.pos.z;
+    // Get W, P, R values
+    PVector wpr = quatToEuler(ori);
     
-    PVector wpr = quatToEuler(pt.ori);
-    
-    values[9] = wpr.x;
-    values[10] = wpr.y;
-    values[11] = wpr.z;
-    
-    
+    values[0] = pos.x;
+    values[1] = pos.y;
+    values[2] = pos.z;
+    values[3] = wpr.x;
+    values[4] = wpr.y;
+    values[5] = wpr.z;
+  }
+}
+
+public class IORegister {
+  public String comment;
+  public int state;
+  
+  public IORegister(){
+    comment = null;
+    state = OFF;
+  }
+  
+  public IORegister(int init, String com){
+    comment = com;
+    state = init;
   }
 }
 
@@ -148,7 +209,7 @@ public class ExpressionEvaluationException extends RuntimeException {
  * arrays, if the second value in the array is 0, then a point from the current prorgrams local position registers is used,
  * otherwise a point from the global position register list is used. If the third value is -1, then the result of the expression
  * is expected to be a Point Object that will override the position register entry. However, if the second value is between 0 and
- * 11 inclusive, then the result is expected to be a floating-point value, which will be saved in a specific entry of the the
+ * 5 inclusive, then the result is expected to be a floating-point value, which will be saved in a specific entry of the the
  * position register.
  * 
  * Floating-point values     ->  Constants
@@ -156,9 +217,9 @@ public class ExpressionEvaluationException extends RuntimeException {
  * Singleton integer arrays  ->  Register values
  * Tripleton integer arrays  ->  Position Register points/values
  *
- * For the second entry of the dobleton array:
- *   0 - 5  ->  J1 - J6
- *   6 - 11 ->  X, Y, Z, W, P, R
+ * For the third entry of the tripleton array:
+ *   0 - 5  ->  J1 - J6           (for Joint points)
+ *          ->  X, Y, Z, W, P, R  (for Cartesian points)
  * 
  */
 public class ExpressionSet {
@@ -284,6 +345,8 @@ public class ExpressionSet {
             
             op = (Operator)( parameters.get(pdx++) );
             break;
+          } else {
+            savedOps.pop();
           }
         }
       }
@@ -333,23 +396,32 @@ public class ExpressionSet {
       if (regIdx.length == 1) {
         
         // Use Register value
-        return REG[ regIdx[0] ].value;
+        return DAT_REG[ regIdx[0] ].value;
       } else if (regIdx.length == 3) {
-        CartPoint pt;
+        RegStmtPoint pt;
         
-        if (regIdx[1] % 2 == 0) {
-          // Use Position Register point
-          pt = new CartPoint( programs.get(active_prog).LPosReg[ regIdx[0] ] );
-        } else {
+        if (regIdx[1] == 0) {
           // Use a local position register point
-          pt = new CartPoint(GPOS_REG[ regIdx[0] ].point);
+          Point p = programs.get(active_prog).LPosReg[ regIdx[0] ];
+          // TODO Cartesian or Joint?
+          pt = new RegStmtPoint(p.position, p.orientation);
+        } else {
+          // Use Position Register point
+          PositionRegister Preg = GPOS_REG[ regIdx[0] ];
+          
+          if (Preg.isCartesian) {
+            // Convert to a Cartesian value
+            pt = new RegStmtPoint(Preg.point.position, Preg.point.orientation);
+          } else {
+            pt = new RegStmtPoint(Preg.point.angles);
+          }
         }
         
         if (regIdx[2] == -1) {
           
           // Use Position Register point
           return pt;
-        } else if (regIdx[2] > 0 && regIdx[2] < 12) {
+        } else if (regIdx[2] > 0 && regIdx[2] < 6) {
           
           // Use a specific value from the Point
           return pt.values[ regIdx[2] ];
@@ -395,7 +467,7 @@ public class ExpressionSet {
       
     } else if (param1 instanceof Point && param2 instanceof Point) {
       
-      return evaluatePair((CartPoint)param1, (CartPoint)param2, op);
+      return evaluatePair((RegStmtPoint)param1, (RegStmtPoint)param2, op);
       
     } else {
       // Invalid parameter types
@@ -412,20 +484,20 @@ public class ExpressionSet {
       case MUTLIPLY:   return value1 * value2;
       case DIVIDE:     return value1 / value2;
       // Returns the remainder
-      case MODULUS:  return (value1 % value2) / value2;
+      case MODULUS:    return (value1 % value2) / value2;
       // Returns the quotient
       case INTDIVIDE:  return (int)(value1 / value2);
       default:         throw new ExpressionEvaluationException(1);
     }
   }
   
-  private Object evaluatePair(CartPoint point1, CartPoint point2, Operator op) throws ExpressionEvaluationException {
+  private Object evaluatePair(RegStmtPoint point1, RegStmtPoint point2, Operator op) throws ExpressionEvaluationException {
       
     // TODO Point-Point operations
     switch(op) {
       case PLUS:
       case MINUS:
-        CartPoint pt = new CartPoint();
+        RegStmtPoint pt = new RegStmtPoint();
         
         for (int idx = 0; idx < 6; ++idx) {
           if (op == Operator.PLUS) {
@@ -436,18 +508,6 @@ public class ExpressionSet {
             pt.values[idx] = point1.values[idx] - point2.values[idx];
           }
         }
-        
-        /* Update the Cartesian values of the point */
-        float[] jointAngles = Arrays.copyOfRange(pt.values, 0, 5);
-        PVector xyz = armModel.getEEPos( jointAngles );
-        PVector wpr = armModel.getWPR( jointAngles );
-        
-        pt.values[6] = xyz.x;
-        pt.values[7] = xyz.y;
-        pt.values[8] = xyz.z;
-        pt.values[9] = wpr.x;
-        pt.values[10] = wpr.y;
-        pt.values[11] = wpr.z;
         
         return pt;
       case MUTLIPLY:
@@ -500,28 +560,19 @@ public class ExpressionSet {
         // Register entries are stored as a singleton integer array
         return String.format("R[%d]", regIdx[0]);
       } else if (regIdx.length == 3) {
+        String prefix = (regIdx[1] == 0) ? "P" : "PR",
+               indices = null;
+        
+        // Index into the list of points
+        indices = Integer.toString(regIdx[0]);
+        
+        if (regIdx[2] >= 0) {
+          // Index into the values of the point
+          indices += ", " + regIdx[2];
+        }
         
         // Position Register entries are stored as a tripleton integer array
-        if (regIdx[2] >= 0) {
-          int idx = regIdx[2] % 6;
-          
-          if (regIdx[1] == 0) {
-            // local position register
-            return String.format("P[%d, %d]", regIdx[0], idx);
-          } else {
-            // global Position Register
-            return String.format("PR[%d, %d]", regIdx[0], idx);
-          }
-        } else {
-          
-          if (regIdx[1] == 0) {
-            // local position register
-            return String.format("P[%d]", regIdx[0]);
-          } else {
-            // global Position Register
-            return String.format("PR[%d]", regIdx[0]);
-          }
-        }
+        return String.format("%s[%s]", prefix, indices);
       }
     } else if (param instanceof Operator) {
       

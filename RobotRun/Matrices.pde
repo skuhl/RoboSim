@@ -100,6 +100,41 @@ public float[][] getTransformationMatrix() {
   return transform;
 }
 
+/**
+ * Forms the 4x4 transformation matrix (column major order) form the given
+ * origin offset and axes offset (row major order) of the Native Coordinate
+ * system.
+ * 
+ * @param origin  the X, Y, Z, offset of the origin for the Coordinate frame
+ * @param axes    a 3x3 rotatin matrix (row major order) representing the unit
+ *                vector axes offset of the new Coordinate Frame from the Native
+ *                Coordinate Frame
+ * @returning     the 4x4 transformation matrix (column major order) formed from
+ *                the given origin and axes offset
+ */
+public float[][] transformationMatrix(PVector origin, float[][] axes) {
+  float[][] transform = new float[4][4];
+  
+  transform[0][0] = axes[0][0];
+  transform[1][0] = axes[0][1];
+  transform[2][0] = axes[2][0];
+  transform[3][0] = 0;
+  transform[0][1] = axes[1][0];
+  transform[1][1] = axes[1][1];
+  transform[2][1] = axes[1][2];
+  transform[3][1] = 0;
+  transform[0][2] = axes[2][0];
+  transform[1][2] = axes[2][1];
+  transform[2][2] = axes[2][2];
+  transform[3][2] = 0;
+  transform[0][3] = origin.x;
+  transform[1][3] = origin.y;
+  transform[2][3] = origin.z;
+  transform[3][3] = 1;
+  
+  return transform;
+}
+
 /* This method transforms the given coordinates into a vector
  * in the Processing's native coordinate system. */
 public PVector getCoordFromMatrix(float x, float y, float z) {
