@@ -1014,6 +1014,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   //get the next program instruction
   Instruction ins = program.getInstructions().get(currentInstruction);
   
+  //skip commented instructions
   if(ins.isCommented()){
     currentInstruction++;
     if(singleInst) { return true; }

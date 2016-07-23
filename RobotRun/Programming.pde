@@ -409,7 +409,7 @@ public class IOInstruction extends Instruction {
       if(state == ON && armModel.held == null) {
         
         PVector ee_pos = armModel.getEEPos();
-        
+        println(ee_pos);
         // Determine if an object in the world can be picked up by the Robot
         for(WorldObject s : objects) {
           
@@ -427,7 +427,7 @@ public class IOInstruction extends Instruction {
   }
 
   public String toString() {
-    return "IO[" + reg + "]=" + state;
+    return "IO[" + reg + "]=" + ((state == ON) ? "ON" : "OFF");
   }
 } // end ToolInstruction class
 

@@ -864,7 +864,8 @@ public void keyPressed() {
         armModel.activeEndEffector == EndEffector.SUCTION)) { 
     // Pick up an object within reach of the EE when the 'ENTER' button is pressed for either
     // the suction or claw EE
-    IOInstruction pickup;
+    IOInstruction pickup = new IOInstruction(0, (armModel.endEffectorStatus+1)%2);
+    pickup.execute();
   } else if(keyCode == KeyEvent.VK_1) {
     // Front view
     panX = 0;
@@ -1282,10 +1283,7 @@ public void dn() {
       }
       
       break;
-    case SELECT_COMMENT:
     case NAV_PROG_INST:
-    case SELECT_CUT_COPY:
-    case SELECT_DELETE: //<>//
       size = programs.get(active_prog).getInstructions().size() + 1;
       indices = moveDown(active_instr, size, row_select, renderStartIdx, shift);
       
@@ -1299,7 +1297,23 @@ public void dn() {
         System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
         row_select, col_select, active_instr, renderStartIdx);
       }
-       //<>//
+      break;
+    case SELECT_COMMENT:
+    case SELECT_CUT_COPY:
+    case SELECT_DELETE: //<>//
+      size = programs.get(active_prog).getInstructions().size();
+      indices = moveDown(active_instr, size, row_select, renderStartIdx, shift);
+      
+      active_instr = indices[0];
+      row_select = indices[1];
+      renderStartIdx = indices[2];
+      
+      col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
+      
+      if(DISPLAY_TEST_OUTPUT) {
+        System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
+        row_select, col_select, active_instr, renderStartIdx);
+      } //<>//
       break;
     case NAV_DREGS:
     case NAV_PREGS_J:
@@ -1716,7 +1730,6 @@ public void f4() {
         renderStartIdx = active_prog - row_select;
       }
       
-      display_stack.pop();
       lastScreen();
       saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
     }
@@ -1734,6 +1747,8 @@ public void f4() {
       }
     }
     
+    display_stack.pop();
+    display_stack.pop();
     updateInstructions();
     break;
   case SELECT_CUT_COPY:
@@ -1746,6 +1761,8 @@ public void f4() {
         clipBoard.add(inst.get(i));
     }
     
+    display_stack.pop();
+    display_stack.pop();
     updateInstructions();
     break;
   case FIND_REPL:
@@ -1888,6 +1905,8 @@ public void f5() {
     case CONFIRM_RENUM:
     case FIND_REPL:
     case SELECT_CUT_COPY:
+      display_stack.pop();
+      display_stack.pop();
       updateInstructions();
       break;
     case NAV_PREGS_J:
@@ -1976,7 +1995,7 @@ public void fd() {
       
     } else {
       // Execute the whole program
-      currentInstruction = 0;
+      currentInstruction = active_instr;
       execSingleInst = false;
     }
   }
@@ -3173,6 +3192,9 @@ public void loadScreen(){
       col_select = 0;
       opt_select = -1;
       break;
+    case CONFIRM_INSERT:
+      workingText = "";
+      break;
     case SELECT_INSTR_INSERT:
     case SET_IO_INSTR_STATE:
     case SET_FRM_INSTR_TYPE:
@@ -3181,7 +3203,13 @@ public void loadScreen(){
     case SET_FRM_INSTR_IDX:
       workingText = "";
       break;
-      
+    case SELECT_DELETE:
+    case SELECT_COMMENT:
+    case SELECT_CUT_COPY:
+      int size = programs.get(active_prog).getInstructions().size();
+      row_select = max(0, min(row_select, size));
+      break;
+          
     //Frames
     case SETUP_NAV:
       opt_select = 0;
@@ -3328,11 +3356,15 @@ public void updateScreen() {
   contents = getContents(mode);
   options = getOptions(mode);
   
+  boolean selectMode = false;
+  if(mode.getType() == ScreenType.TYPE_LINE_SELECT)
+    selectMode = true;
+  
   // display the main list on screen
   index_contents = 1;
   for(int i = 0; i < contents.size(); i += 1) {
     ArrayList<String> temp = contents.get(i);
-    
+        
     if(i == row_select) { c1 = TEXT_HIGHLIGHT; }
     else                { c1 = TEXT_DEFAULT;   }
     
@@ -3347,19 +3379,24 @@ public void updateScreen() {
     
     index_contents++;
     next_px += 10;
-    
+     
     for(int j = 0; j < temp.size(); j += 1) {
       if(i == row_select) {
-        if(j != col_select || mode.getType() == ScreenType.TYPE_LINE_SELECT){
+        if(j != col_select && !selectMode){
           //highlight selected row
           c1 = TEXT_DEFAULT;
           c2 = TEXT_HIGHLIGHT;          
-        } else {
+        } 
+        else if(selectMode && !selectedLines[renderStartIdx + i]){
+          c1 = TEXT_DEFAULT;
+          c2 = TEXT_HIGHLIGHT;
+        }
+        else {
           //contrast selected column from selected row
           c1 = TEXT_HIGHLIGHT;
           c2 = TEXT_DEFAULT;
         }
-      } else if(mode.getType() == ScreenType.TYPE_LINE_SELECT && selectedLines[renderStartIdx + i]) {
+      } else if(selectMode && selectedLines[renderStartIdx + i]) {
         //highlight any currently selected lines
         c1 = TEXT_DEFAULT;
         c2 = TEXT_HIGHLIGHT;
@@ -3607,6 +3644,8 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
       contents = loadInstructions(active_prog);
+      if(mode.getType() == ScreenType.TYPE_LINE_SELECT)
+        contents.remove(contents.size() - 1);
       break;
     case ACTIVE_FRAMES:
       /* workingText corresponds to the active row's index display */
@@ -3846,7 +3885,7 @@ public String[] getFunctionLabels(Screen mode){
         funct[1] = "";
         funct[2] = "";
         funct[3] = "[Edit]";
-        funct[4] = "[Replace]";
+        funct[4] = "[Opt]";
       } else {
         funct[0] = "[New Ins]";
         funct[1] = "";
@@ -4063,7 +4102,7 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
   int start = renderStartIdx;
   int end = min(start + ITEMS_TO_SHOW, size + 1);
   
-  for(int i = start ; i < end; i+= 1) {
+  for(int i = start; i < end; i+= 1) {
     if(i == size){
       instruct_list.add(newLine("[END]")); 
     }
@@ -4137,7 +4176,7 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
       instruct_list.add(m);
     }
   }
-  
+   
   return instruct_list;
 }
 
