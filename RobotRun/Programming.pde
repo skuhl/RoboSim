@@ -164,7 +164,7 @@ public class Program  {
   public void addInstruction(Instruction i) {
     //i.setProg(this);
     instructions.add(i);
-    if(i instanceof MotionInstruction ) {
+    if(i instanceof MotionInstruction ) { 
       MotionInstruction castIns = (MotionInstruction)i;
       if(!castIns.getGlobal() && castIns.getPosition() >= nextRegister) {
         nextRegister = castIns.getPosition()+1;
@@ -175,11 +175,13 @@ public class Program  {
 
   public void overwriteInstruction(int idx, Instruction i) {
     instructions.set(idx, i);
-    nextRegister++;
-  }
-
-  public void addInstruction(int idx, Instruction i) {
-    instructions.add(idx, i);
+    if(i instanceof MotionInstruction ) { 
+      MotionInstruction castIns = (MotionInstruction)i;
+      if(!castIns.getGlobal() && castIns.getPosition() >= nextRegister) {
+        nextRegister = castIns.getPosition()+1;
+        if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
+      }
+    }
   }
 
   public void addPosition(Point in, int idx) {

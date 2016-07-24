@@ -1502,11 +1502,7 @@ public void f1() {
     case NAV_PROG_INST:
       if(shift) {
         newMotionInstruction();
-        
-        active_instr = programs.get(active_prog).getInstructions().size() - 1; 
         col_select = 0;
-        row_select = min(active_instr, ITEMS_TO_SHOW - 1);
-        renderStartIdx = active_instr - row_select;
       } else {
         nextScreen(Screen.SELECT_INSTR_INSERT);
       }
