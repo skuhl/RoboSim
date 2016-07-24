@@ -254,7 +254,7 @@ private Program loadProgram(DataInputStream in) throws IOException {
   Program prog = new Program(name);
   // Read the next register value
   int nReg = in.readInt();
-  prog.loadNextRegister(nReg);
+  prog.setNextRegister(nReg);
   // Read the number of instructions stored for this porgram
   int numOfInst = max(0, min(in.readInt(), 500));
   
@@ -361,7 +361,6 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
   
   // Each Instruction subclass MUST have its own saving code block associated with its unique data fields
   if(inst instanceof MotionInstruction) {
-    
     MotionInstruction m_inst = (MotionInstruction)inst;
     // Flag byte denoting this instruction as a MotionInstruction
     out.writeByte(0);
@@ -374,7 +373,6 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeInt(m_inst.userFrame);
     out.writeInt(m_inst.toolFrame);
   } else if(inst instanceof FrameInstruction) {
-    
     FrameInstruction f_inst = (FrameInstruction)inst;
     // Flag byte denoting this instruction as a FrameInstruction
     out.writeByte(1);
@@ -382,14 +380,25 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeInt(f_inst.frameType);
     out.writeInt(f_inst.reg);
   } else if(inst instanceof IOInstruction) {
-    
     IOInstruction t_inst = (IOInstruction)inst;
     // Flag byte denoting this instruction as a ToolInstruction
     out.writeByte(2);
     // Write data associated with the ToolInstruction object
     out.writeInt(t_inst.reg);
     out.writeInt( saveint(t_inst.state) );
-  } else if (inst instanceof Instruction) {
+  } else if(inst instanceof LabelInstruction) {
+    LabelInstruction l_inst = (LabelInstruction)inst;
+    
+    out.writeByte(3);
+    out.writeInt(l_inst.labelNum);
+    out.writeInt(l_inst.labelIdx);
+  } else if(inst instanceof JumpInstruction) {
+    JumpInstruction j_inst = (JumpInstruction)inst;
+    
+    out.writeByte(4);
+    out.writeInt(j_inst.tgtLabel);
+    out.writeInt(j_inst.tgtIdx);
+  } else if(inst instanceof Instruction) {
     out.writeByte(127);
   } else {/* TODO add other instructions! */}
 }
@@ -434,6 +443,16 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     int setting = in.readInt();
     
     inst = new IOInstruction(reg, loadint(setting));
+  } else if (instType == 3) {
+    int labelNum = in.readInt();
+    int labelIdx = in.readInt();
+    
+    inst = new LabelInstruction(labelNum, labelIdx);
+  } else if (instType == 4) {
+    int tgtLabel = in.readInt();
+    int tgtIdx = in.readInt();
+    
+    inst = new JumpInstruction(tgtLabel, tgtIdx);
   } else if (instType == 127) {
     inst = new Instruction();
   } else {/* TODO add other instructions! */}

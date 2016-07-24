@@ -133,6 +133,7 @@ public class Point  {
 public class Program  {
   private String name;
   private int nextRegister;
+  private int nextLabel;
   private Point[] LPosReg = new Point[1000]; // program positions
   private ArrayList<Instruction> instructions;
 
@@ -141,6 +142,7 @@ public class Program  {
     for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
     name = theName;
     nextRegister = 0;
+    nextLabel = 0;
   }
 
   public ArrayList<Instruction> getInstructions() {
@@ -153,10 +155,6 @@ public class Program  {
     return name;
   }
 
-  public void loadNextRegister(int next) {
-    nextRegister = next;
-  }
-
   public int getRegistersLength() {
     return LPosReg.length;
   }
@@ -164,12 +162,15 @@ public class Program  {
   public void addInstruction(Instruction i) {
     //i.setProg(this);
     instructions.add(i);
-    if(i instanceof MotionInstruction ) { 
+    if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
       if(!castIns.getGlobal() && castIns.getPosition() >= nextRegister) {
         nextRegister = castIns.getPosition()+1;
         if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
       }
+    }
+    else if(i instanceof LabelInstruction){
+      nextLabel += 1;
     }
   }
 
@@ -187,10 +188,11 @@ public class Program  {
   public void addPosition(Point in, int idx) {
     if(idx >= 0 && idx < LPosReg.length) LPosReg[idx] = in;
   }
-
-  public int nextPosition() {
-    return nextRegister;
-  }
+  
+  public int getNextPosition() { return nextRegister; }
+  public void setNextRegister(int next) { nextRegister = next; }
+  public int getNextLabel() { return nextLabel; }
+  public void getNextLabel(int next) { nextLabel = next; }
 
   public Point getPosition(int idx) {
     if(idx >= 0 && idx < LPosReg.length) return LPosReg[idx];
@@ -435,7 +437,7 @@ public class IOInstruction extends Instruction {
 
 public class LabelInstruction extends Instruction {
   int labelNum;
-  int labelIdx;
+  int labelIdx; 
   
   public LabelInstruction(int n, int i){
     super();
@@ -443,14 +445,10 @@ public class LabelInstruction extends Instruction {
     labelIdx = i;
   }
   
-  public void execute(){
-    if(active_instr < p.getInstructions().size()-1){
-      active_instr += 1;
-    }
-  }
+  public void execute() {}
   
   public String toString(){
-    return "";
+    return "LBL[" + labelNum + "]";
   }
 }
 
@@ -460,18 +458,24 @@ public class JumpInstruction extends Instruction {
   
   public JumpInstruction(int n){
     tgtLabel = n;
-    for(LabelInstruction i: p.getLabels()){
-      if(i.labelNum == tgtLabel)
-        tgtIdx = i.labelIdx;
-    }
+    tgtIdx = 0;
+    //for(LabelInstruction i: p.getLabels()){
+    //  if(i.labelNum == tgtLabel)
+    //    tgtIdx = i.labelIdx;
+    //}
   }
   
-  public void execute(){
-    active_instr = tgtIdx;
+  public JumpInstruction(int n, int i){
+    tgtLabel = n;
+    tgtIdx = i;
+  }
+  
+  public void execute() {
+    currentInstruction = tgtIdx;
   }
   
   public String toString(){
-    return "";
+    return "JMP LBL[" + tgtLabel + "]";
   }
 }
 

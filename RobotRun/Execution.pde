@@ -1065,7 +1065,12 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
     currentInstruction++;
     
     if(singleInst) { return true; }
-  } else if (ins instanceof Instruction) {
+  } 
+  else if(ins instanceof JumpInstruction){
+    ((JumpInstruction)ins).execute();
+    currentInstruction++;
+  }
+  else if (ins instanceof Instruction) {
     // Blank instruction
     ++currentInstruction;
   }//end of instruction type check
