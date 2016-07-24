@@ -1795,6 +1795,7 @@ public void f4() {
     p = programs.get(active_prog);
     Point[] pTemp = new Point[1000];
     int posIdx = 0;
+    int lblIdx = 0;
     
     //make a copy of the current positions in p
     for(int i = 0; i < 1000; i += 1){
@@ -1805,13 +1806,17 @@ public void f4() {
     
     //rearrange positions
     for(int i = 0; i < p.getInstructions().size(); i += 1) {
-      Instruction instruct = p.getInstructions().get(i);
-      if(instruct instanceof MotionInstruction) {
-        int instructPos = ((MotionInstruction)instruct).getPosition();
+      Instruction instr = p.getInstruction(i);
+      if(instr instanceof MotionInstruction) {
+        int instructPos = ((MotionInstruction)instr).getPosition();
         p.setPosition(posIdx, pTemp[instructPos]);
-        ((MotionInstruction)instruct).setPosition(posIdx);
+        ((MotionInstruction)instr).setPosition(posIdx);
         posIdx += 1;
       }
+      //else if(instr instanceof LabelInstruction) {
+      //  ((LabelInstruction)instr).labelNum = lblIdx;
+      //  lblIdx += 1;
+      //}
     }
     
     display_stack.pop();
@@ -2396,9 +2401,14 @@ public void ENTER() {
       
       try {
         int tempLbl = Integer.parseInt(workingText);
-        
-        JumpInstruction jmp = (JumpInstruction)p.getInstructions().get(active_instr);
-        jmp.tgtLabel = tempLbl;
+        LabelInstruction l = p.getLabel(tempLbl);
+        if(l != null){
+          JumpInstruction jmp = (JumpInstruction)p.getInstruction(active_instr);
+          jmp.tgtLabel = l;
+        }
+        else{
+          err = "Invalid label number.";
+        }
       }
       catch (NumberFormatException NFEx){ /* Ignore invalid input */ }
       
@@ -4433,7 +4443,7 @@ public void newLabel() {
 
 public void newJumpInstruction() {
   Program p = programs.get(active_prog);
-  JumpInstruction j = new JumpInstruction(0);
+  JumpInstruction j = new JumpInstruction(-1);
   
   if(active_instr != p.getInstructions().size()) {
     p.overwriteInstruction(active_instr, j);

@@ -159,6 +159,10 @@ public class Program  {
     return LPosReg.length;
   }
 
+  public Instruction getInstruction(int i){
+    return instructions.get(i);
+  }
+
   public void addInstruction(Instruction i) {
     //i.setProg(this);
     instructions.add(i);
@@ -207,14 +211,16 @@ public class Program  {
     LPosReg = new Point[1000];
   }
   
-  public ArrayList<LabelInstruction> getLabels(){
-    ArrayList<LabelInstruction> labels = new ArrayList<LabelInstruction>();
+  public LabelInstruction getLabel(int n){    
     for(Instruction i: instructions){
-      if(i instanceof LabelInstruction)
-        labels.add((LabelInstruction)i);
+      if(i instanceof LabelInstruction){
+        if(((LabelInstruction)i).labelNum == n){
+          return (LabelInstruction)i;
+        }
+      }
     }
     
-    return labels;
+    return null;
   }
 } // end Program class
 
@@ -439,7 +445,7 @@ public class LabelInstruction extends Instruction {
   int labelNum;
   int labelIdx; 
   
-  public LabelInstruction(int n, int i){
+  public LabelInstruction(int n, int i) {
     super();
     labelNum = n;
     labelIdx = i;
@@ -447,35 +453,29 @@ public class LabelInstruction extends Instruction {
   
   public void execute() {}
   
-  public String toString(){
+  public String toString() {
     return "LBL[" + labelNum + "]";
   }
 }
 
 public class JumpInstruction extends Instruction {
-  int tgtLabel;
-  int tgtIdx;
+  LabelInstruction tgtLabel;
   
-  public JumpInstruction(int n){
-    tgtLabel = n;
-    tgtIdx = 0;
-    //for(LabelInstruction i: p.getLabels()){
-    //  if(i.labelNum == tgtLabel)
-    //    tgtIdx = i.labelIdx;
-    //}
-  }
-  
-  public JumpInstruction(int n, int i){
-    tgtLabel = n;
-    tgtIdx = i;
+  public JumpInstruction(int l){
+    tgtLabel = programs.get(active_prog).getLabel(l);
   }
   
   public void execute() {
-    currentInstruction = tgtIdx;
+    if(tgtLabel != null)
+      currentInstruction = tgtLabel.labelIdx;
   }
   
   public String toString(){
-    return "JMP LBL[" + tgtLabel + "]";
+    if(tgtLabel == null){
+      return "JMP LBL[...]";
+    } else {
+      return "JMP LBL[" + tgtLabel.labelNum + "]";
+    }
   }
 }
 

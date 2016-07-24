@@ -396,8 +396,7 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     JumpInstruction j_inst = (JumpInstruction)inst;
     
     out.writeByte(4);
-    out.writeInt(j_inst.tgtLabel);
-    out.writeInt(j_inst.tgtIdx);
+    out.writeInt(j_inst.tgtLabel.labelNum);
   } else if(inst instanceof Instruction) {
     out.writeByte(127);
   } else {/* TODO add other instructions! */}
@@ -449,10 +448,9 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     
     inst = new LabelInstruction(labelNum, labelIdx);
   } else if (instType == 4) {
-    int tgtLabel = in.readInt();
-    int tgtIdx = in.readInt();
+    int tgtLabelNum = in.readInt();
     
-    inst = new JumpInstruction(tgtLabel, tgtIdx);
+    inst = new JumpInstruction(tgtLabelNum);
   } else if (instType == 127) {
     inst = new Instruction();
   } else {/* TODO add other instructions! */}
