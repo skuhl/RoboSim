@@ -1272,7 +1272,7 @@ public void dn() {
   int size;
   switch(mode) {
     case NAV_PROGRAMS:
-      size = programs.size(); //<>//
+      size = programs.size(); //<>// //<>//
       int[] indices = moveDown(active_prog, size, opt_select, renderStartIdx, shift);
       
       active_prog = indices[0];
@@ -1395,9 +1395,9 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>// //<>//
+        // Reset function key states //<>// //<>// //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } //<>//
+      } //<>// //<>//
   }
   
   updateScreen();
