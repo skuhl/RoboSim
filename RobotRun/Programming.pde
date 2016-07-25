@@ -92,25 +92,46 @@ public class Point  {
     
     for(int idx = 0; idx < angles.length; ++idx) {
       entries[idx][0] = String.format("J%d: ", (idx + 1));
-      entries[idx][1] = String.format("%4.3f", angles[idx] * RAD_TO_DEG);
+      
+      if (angles == null) {
+        entries[idx][1] = Float.toString(Float.NaN);
+      } else {
+        entries[idx][1] = String.format("%4.3f", angles[idx] * RAD_TO_DEG);
+      }
     }
     
     return entries;
   }
 
   /**
-   * Returns a string array, where each entry is one of
-   * the values of the Cartiesian represent of the Point:
-   * (X, Y, Z, W, P, and R) and their respective labels.
-   *
+   * Returns a string array, where each entry is one of the values of the Cartiesian
+   * represent of the Point: (X, Y, Z, W, P, and R) in the Frame represented by the
+   * given origin and axes values and their respective labels.
+   * 
+   * @param   The origin of the display Frame
+   * @param   The axes of the display Frame
    * @return  A 6x2-element String array
    */
-  public String[][] toCartesianStringArray() {
+  public String[][] toCartesianStringArray(PVector frameOrigin, float[][] frameAxes) {
     String[][] entries = new String[6][2];
-    // Show the vector in terms of the World Frame or the active User Frame
-    PVector pos = convertNativeToWorld(this.position);
-    // Convert W, P, R to User Frame
-    PVector angles = quatToEuler(orientation);
+    
+    PVector pos;
+    if (position == null) {
+      pos = new PVector(Float.NaN, Float.NaN, Float.NaN);
+    } else {
+      // Show the vector in terms of the given Frame's axes
+      float[][] tMatrix = transformationMatrix(frameOrigin, frameAxes);
+      pos = transform(position, tMatrix);
+    }
+    
+    // Convert Quaternion to Euler Angles
+    PVector angles;
+    if (orientation == null) {
+      angles = new PVector(Float.NaN, Float.NaN, Float.NaN);
+    } else {
+      // TODO convert to given frame
+      angles = quatToEuler(orientation);
+    }
     
     entries[0][0] = "X: ";
     entries[0][1] = String.format("%4.3f", pos.x);

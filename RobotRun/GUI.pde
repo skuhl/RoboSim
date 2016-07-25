@@ -2482,21 +2482,21 @@ public void ENTER() {
       lastScreen();
       break;
     case NAV_DREGS:
-      if(col_select == 1) {
-        // Edit data register comment
+      if(col_select == 0) {
+        // Edit register comment
         nextScreen(Screen.EDIT_DREG_COM);
-      } else if(col_select == 2) {
-        // Edit data register value
+      } else if(col_select >= 1) {
+        // Edit Data Register value
         nextScreen(Screen.EDIT_DREG_VAL);
       }
       break;
     case NAV_PREGS_J:
     case NAV_PREGS_C:   
-      if(col_select == 1) {
-        // Bring up comment menu
+      if(col_select == 0) {
+        // Edit register comment
         nextScreen(Screen.EDIT_PREG_COM);
-      } else if(col_select >= 2) {
-        // Bring up Register editing menu
+      } else if(col_select >= 1) {
+        // Edit Position Register value
         nextScreen((mode == (Screen.NAV_PREGS_C)) ? Screen.EDIT_PREG_C : Screen.EDIT_PREG_J);
       }
       break;
@@ -4708,18 +4708,6 @@ public ArrayList<ArrayList<String>> loadRegisters() {
   int end = min(start + ITEMS_TO_SHOW, DAT_REG.length);
   // Display a subset of the list of registers
   for(int idx = start; idx < end; ++idx) {
-    String spaces;
-    
-    if(idx < 9) {
-      spaces = "  ";
-    } else if(idx < 99) {
-      spaces = " ";
-    } else {
-      spaces = "";
-    }
-    // Display the line number
-    String lineNum = String.format("%d)%s", (idx + 1), spaces);
-    
     String lbl;
     
     if(mode == Screen.NAV_DREGS) {
@@ -4730,6 +4718,16 @@ public ArrayList<ArrayList<String>> loadRegisters() {
     
     int buffer = 16 - lbl.length();
     while(buffer-- > 0) { lbl += " "; }
+    
+    String spaces;
+    
+    if(idx < 9) {
+      spaces = "  ";
+    } else if(idx < 99) {
+      spaces = " ";
+    } else {
+      spaces = "";
+    }
     
     // Display the comment asscoiated with a specific Register entry
     String regLbl = String.format("%s[%d:%s%s]", (mode == Screen.NAV_DREGS) ? "R" : "PR", (idx + 1), spaces, lbl);
@@ -4743,14 +4741,14 @@ public ArrayList<ArrayList<String>> loadRegisters() {
       }
       
     } else if(GPOS_REG[idx].point != null) {
-      // What to display for a point ...
+      // TODO What to display for a point ...
       regEntry = "...";
     } else if(mode == Screen.NAV_PREGS_C && GPOS_REG[idx].point == null) {
       // Distinguish Joint from Cartesian mode for now
       regEntry = "#";
     }
     
-    regs.add( newLine(lineNum, regLbl, regEntry) );
+    regs.add( newLine(regLbl, regEntry) );
   }
   
   return regs;
@@ -4784,7 +4782,15 @@ public ArrayList<ArrayList<String>> loadPosRegEntry(PositionRegister reg) {
   } else {
     
     // List current entry values if the Register is initialized
-    String[][] entries = (mode == Screen.EDIT_PREG_C) ? reg.point.toCartesianStringArray() : reg.point.toJointStringArray();
+    String[][] entries;
+    
+    if (mode == Screen.EDIT_PREG_J) {
+      // List joint angles
+      entries = reg.point.toJointStringArray();
+    } else {
+      // Display Cartesian values
+      entries = reg.point.toCartesianStringArray(new PVector(0f, 0f, 0f), new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} });
+    }
     
     for(int idx = 0; idx < entries.length; ++idx) {
       register.add( newLine(entries[idx][0], entries[idx][1]) );

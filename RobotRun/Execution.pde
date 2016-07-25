@@ -280,10 +280,10 @@ public void updateCoordFrame(ArmModel model) {
  * @returning     The vector, v, interms of the given frame's Coordinate System
  */
 public PVector convertNativeToFrame(PVector v, Frame active) {
-  /**/
+  /**
   float[] invAxes = new float[] { active.axes[0], -active.axes[1], -active.axes[2], -active.axes[3] };
   return transform(v, active.getOrigin(), invAxes);
-  /**
+  /**/
   float[][] tMatrix = transformationMatrix(active.getOrigin(), active.getNativeAxes());
   return transform(v, invertHCMatrix(tMatrix));
   /**/
@@ -298,9 +298,9 @@ public PVector convertNativeToFrame(PVector v, Frame active) {
  * @returning     The vector, v, in terms of the Native Coordinate System
  */
 public PVector convertFrameToNative(PVector v, Frame active) {
-  /**/
-  return transform(v, active.getOrigin(), active.axes.clone());
   /**
+  return transform(v, active.getOrigin(), active.axes.clone());
+  /**/
   float[][] tMatrix = transformationMatrix(active.getOrigin(), active.getNativeAxes());
   return transform(v, tMatrix);
   /**/
@@ -400,7 +400,7 @@ public void drawEndEffectorGridMapping() {
  * @param applyOffset  Whether to apply the Tool Frame End
  *                     Effector offset (if it exists)
  */
-void applyModelRotation(ArmModel model, boolean applyOffset) {   
+public void applyModelRotation(ArmModel model, boolean applyOffset) {   
   translate(600, 200, 0);
   translate(-50, -166, -358); // -115, -213, -413
   rotateZ(PI);
@@ -448,6 +448,89 @@ void applyModelRotation(ArmModel model, boolean applyOffset) {
   
   if(applyOffset && (curCoordFrame == CoordFrame.TOOL || curCoordFrame == CoordFrame.WORLD)) { armModel.applyToolFrame(activeToolFrame); }
 } // end apply model rotations
+
+/**
+ * Applies the rotations and translations of the Robot Arm to get to the
+ * face plate center, given the set of six joint angles, each corresponding
+ * to a joint of the Robot Arm and each within the bounds of [0, TWO_PI).
+ * 
+ * jointAngles  A set of 6 joint angles (in radians)
+ */
+public void applyModelRotation(float[] jointAngles) {
+  translate(600, 200, 0);
+  translate(-50, -166, -358); // -115, -213, -413
+  rotateZ(PI);
+  translate(150, 0, 150);
+  rotateY(jointAngles[0]);
+  translate(-150, 0, -150);
+  rotateZ(-PI);    
+  translate(-115, -85, 180);
+  rotateZ(PI);
+  rotateY(PI/2);
+  translate(0, 62, 62);
+  rotateX(jointAngles[1]);
+  translate(0, -62, -62);
+  rotateY(-PI/2);
+  rotateZ(-PI);   
+  translate(0, -500, -50);
+  rotateZ(PI);
+  rotateY(PI/2);
+  translate(0, 75, 75);
+  rotateX(jointAngles[2]);
+  translate(0, -75, -75);
+  rotateY(PI/2);
+  rotateZ(-PI);
+  translate(745, -150, 150);
+  rotateZ(PI/2);
+  rotateY(PI/2);
+  translate(70, 0, 70);
+  rotateY(jointAngles[3]);
+  translate(-70, 0, -70);
+  rotateY(-PI/2);
+  rotateZ(-PI/2);    
+  translate(-115, 130, -124);
+  rotateZ(PI);
+  rotateY(-PI/2);
+  translate(0, 50, 50);
+  rotateX(jointAngles[4]);
+  translate(0, -50, -50);
+  rotateY(PI/2);
+  rotateZ(-PI);    
+  translate(150, -10, 95);
+  rotateY(-PI/2);
+  rotateZ(PI);
+  translate(45, 45, 0);
+  rotateZ(jointAngles[5]);
+}
+
+/**
+ * Returns a point containing the Robot's faceplate position,
+ * orientation corresponding to the given joint angles as well
+ * as the given joints.
+ * 
+ * @param      jointAngles  A set of six joint angles (in radians)
+ * @returning  The Robot's faceplate position and orientation
+ *             corresponding to the given joint angles
+ */
+public Point getRobotPoint(float[] jointAngles) {
+  
+  pushMatrix();
+  resetMatrix();
+  applyModelRotation(jointAngles);
+  PVector faceplate = getCoordFromMatrix(0f, 0f, 0f);
+  float[][] orientationMatrix = getRotationMatrix();
+  popMatrix();
+  // Return a Point containing the Faceplate position, orientation, and joint angles
+  return new Point(faceplate, matrixToQuat(orientationMatrix), jointAngles);
+}
+
+/**
+ * TODO
+ */
+public Point applyFrame(float[] jointAngles, Frame frame) {
+  // TODO apply the given Frame
+  return getRobotPoint(jointAngles);
+}
 
 /**
  * Calculate the Jacobian matrix for the robotic arm for

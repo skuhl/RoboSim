@@ -117,7 +117,7 @@ public float[][] transformationMatrix(PVector origin, float[][] axes) {
   
   transform[0][0] = axes[0][0];
   transform[1][0] = axes[0][1];
-  transform[2][0] = axes[2][0];
+  transform[2][0] = axes[0][2];
   transform[3][0] = 0;
   transform[0][1] = axes[1][0];
   transform[1][1] = axes[1][1];
@@ -133,6 +133,32 @@ public float[][] transformationMatrix(PVector origin, float[][] axes) {
   transform[3][3] = 1;
   
   return transform;
+}
+
+/**
+ * Returns a 3x3 rotation matrix of the current transformation
+ * matrix on the stack (in row major order).
+ */
+public float[][] getRotationMatrix() {
+  float[][] rMatrix = new float[3][3];
+  // Calculate origin point
+  PVector origin = getCoordFromMatrix(0f, 0f, 0f),
+          // Create axes vectors
+          vx = getCoordFromMatrix(1f, 0f, 0f).sub(origin),
+          vy = getCoordFromMatrix(0f, 1f, 0f).sub(origin),
+          vz = getCoordFromMatrix(0f, 0f, 1f).sub(origin);
+  // Save values in a 3x3 rotation matrix
+  rMatrix[0][0] = vx.x;
+  rMatrix[0][1] = vx.y;
+  rMatrix[0][2] = vx.z;
+  rMatrix[1][0] = vy.x;
+  rMatrix[1][1] = vy.y;
+  rMatrix[1][2] = vy.z;
+  rMatrix[2][0] = vz.x;
+  rMatrix[2][1] = vz.y;
+  rMatrix[2][2] = vz.z;
+  
+  return rMatrix;
 }
 
 /* This method transforms the given coordinates into a vector
