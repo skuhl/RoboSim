@@ -388,8 +388,6 @@ public void drawEndEffectorGridMapping() {
   }
 }
 
-
-
 /**
  * Performs rotations and translations to reach the end effector
  * position, similarly to calculateEndEffectorPosition(), but

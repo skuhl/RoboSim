@@ -24,14 +24,9 @@ public abstract class Frame {
     DEAxesOffsets = null;
   }
 
-  public PVector getOrigin() { return origin; }
-  public void setOrigin(PVector in) { origin = in; }
-
-  /**
-   * Return the W, P, R values of the this frames coordinate
-   * axes with respect to the World Frame axes.
-   */
-  public PVector getWpr() { return quatToEuler(axes); }
+  public PVector getOrigin() { return new PVector(origin.x, origin.y, origin.z); }
+  public void setOrigin(PVector newOrigin) { origin = new PVector(newOrigin.x, newOrigin.y, newOrigin.z); }
+  
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the Native Coordinate System. */
   public float[][] getNativeAxes() { return quatToMatrix(axes); }
@@ -148,6 +143,8 @@ public abstract class Frame {
     String[] values = new String[6];
     
     PVector wOrigin = origin;
+    PVector wpr = quatToEuler(axes);
+    
     if (this instanceof UserFrame) {
       // Convert to World frame reference
       wOrigin = convertNativeToWorld(origin);
@@ -156,9 +153,7 @@ public abstract class Frame {
     values[0] = String.format("X: %4.3f", wOrigin.x);
     values[1] = String.format("Y: %4.3f", wOrigin.y);
     values[2] = String.format("Z: %4.3f", wOrigin.z);
-    // Convert angles to degrees
-    PVector wpr = quatToEuler(axes);
-    // Display in reference to the world frame
+    // Convert angles to degrees and to the World Coordinate Frame
     values[3] = String.format("W: %4.3f", -wpr.x * RAD_TO_DEG);
     values[4] = String.format("P: %4.3f", wpr.z * RAD_TO_DEG);
     values[5] = String.format("R: %4.3f", -wpr.y * RAD_TO_DEG);
@@ -174,20 +169,21 @@ public abstract class Frame {
    */
   public String[][] directEntryStringArray() {
     String[][] entries = new String[6][2];
-    PVector xyz;
+    PVector xyz,
+            // Use previous value if it exists
+            wpr = quatToEuler(axes);
     
-    if (this instanceof UserFrame) {
-      xyz = convertWorldToNative(DEOrigin);
+    if (DEOrigin == null) {
+      xyz = new PVector(0f, 0f, 0f);
     } else {
-      // Tool Frame origins are an offset of the Robot's End Effector
-      xyz = DEOrigin;
+      // Use previous value if it exists
+      if (this instanceof UserFrame) {
+        xyz = convertWorldToNative(DEOrigin);
+      } else {
+        // Tool Frame origins are an offset of the Robot's End Effector
+        xyz = DEOrigin;
+      }
     }
-    // Convert to degrees and World Frame reference
-    PVector wpr = quatToEuler(axes);
-    wpr.x *= -RAD_TO_DEG;
-    float limbo = -RAD_TO_DEG * wpr.y;
-    wpr.y = wpr.z * RAD_TO_DEG;
-    wpr.z = limbo;
   
     entries[0][0] = "X: ";
     entries[0][1] = String.format("%4.3f", xyz.x);
@@ -195,12 +191,13 @@ public abstract class Frame {
     entries[1][1] = String.format("%4.3f", xyz.y);
     entries[2][0] = "Z: ";
     entries[2][1] = String.format("%4.3f", xyz.z);
+    // Convert angles to degrees and to the World Coordinate Frame
     entries[3][0] = "W: ";
-    entries[3][1] = String.format("%4.3f", wpr.x);
+    entries[3][1] = String.format("%4.3f", -wpr.x * RAD_TO_DEG);
     entries[4][0] = "P: ";
-    entries[4][1] = String.format("%4.3f", wpr.y);
+    entries[4][1] = String.format("%4.3f", wpr.z * RAD_TO_DEG);
     entries[5][0] = "R: ";
-    entries[5][1] = String.format("%4.3f", wpr.z);
+    entries[5][1] = String.format("%4.3f", -wpr.y * RAD_TO_DEG);
     
     return entries;
   }
