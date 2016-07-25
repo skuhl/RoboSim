@@ -1021,6 +1021,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   //get the next program instruction
   Instruction ins = program.getInstructions().get(currentInstruction);
   
+  //skip commented instructions
   if(ins.isCommented()){
     currentInstruction++;
     if(singleInst) { return true; }
@@ -1071,7 +1072,12 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
     currentInstruction++;
     
     if(singleInst) { return true; }
-  } else if (ins instanceof Instruction) {
+  } 
+  else if(ins instanceof JumpInstruction){
+    ((JumpInstruction)ins).execute();
+    currentInstruction++;
+  }
+  else if (ins instanceof Instruction) {
     // Blank instruction
     ++currentInstruction;
   }//end of instruction type check

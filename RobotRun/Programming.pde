@@ -133,6 +133,7 @@ public class Point  {
 public class Program  {
   private String name;
   private int nextRegister;
+  private int nextLabel;
   private Point[] LPosReg = new Point[1000]; // program positions
   private ArrayList<Instruction> instructions;
 
@@ -141,6 +142,7 @@ public class Program  {
     for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
     name = theName;
     nextRegister = 0;
+    nextLabel = 0;
   }
 
   public ArrayList<Instruction> getInstructions() {
@@ -153,12 +155,12 @@ public class Program  {
     return name;
   }
 
-  public void loadNextRegister(int next) {
-    nextRegister = next;
-  }
-
   public int getRegistersLength() {
     return LPosReg.length;
+  }
+
+  public Instruction getInstruction(int i){
+    return instructions.get(i);
   }
 
   public void addInstruction(Instruction i) {
@@ -171,24 +173,30 @@ public class Program  {
         if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
       }
     }
+    else if(i instanceof LabelInstruction){
+      nextLabel += 1;
+    }
   }
 
   public void overwriteInstruction(int idx, Instruction i) {
     instructions.set(idx, i);
-    nextRegister++;
-  }
-
-  public void addInstruction(int idx, Instruction i) {
-    instructions.add(idx, i);
+    if(i instanceof MotionInstruction ) { 
+      MotionInstruction castIns = (MotionInstruction)i;
+      if(!castIns.getGlobal() && castIns.getPosition() >= nextRegister) {
+        nextRegister = castIns.getPosition()+1;
+        if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
+      }
+    }
   }
 
   public void addPosition(Point in, int idx) {
     if(idx >= 0 && idx < LPosReg.length) LPosReg[idx] = in;
   }
-
-  public int nextPosition() {
-    return nextRegister;
-  }
+  
+  public int getNextPosition() { return nextRegister; }
+  public void setNextRegister(int next) { nextRegister = next; }
+  public int getNextLabel() { return nextLabel; }
+  public void getNextLabel(int next) { nextLabel = next; }
 
   public Point getPosition(int idx) {
     if(idx >= 0 && idx < LPosReg.length) return LPosReg[idx];
@@ -203,14 +211,16 @@ public class Program  {
     LPosReg = new Point[1000];
   }
   
-  public ArrayList<LabelInstruction> getLabels(){
-    ArrayList<LabelInstruction> labels = new ArrayList<LabelInstruction>();
+  public LabelInstruction getLabel(int n){    
     for(Instruction i: instructions){
-      if(i instanceof LabelInstruction)
-        labels.add((LabelInstruction)i);
+      if(i instanceof LabelInstruction){
+        if(((LabelInstruction)i).labelNum == n){
+          return (LabelInstruction)i;
+        }
+      }
     }
     
-    return labels;
+    return null;
   }
 } // end Program class
 
@@ -409,7 +419,7 @@ public class IOInstruction extends Instruction {
       if(state == ON && armModel.held == null) {
         
         PVector ee_pos = armModel.getEEPos();
-        
+        println(ee_pos);
         // Determine if an object in the world can be picked up by the Robot
         for(WorldObject s : objects) {
           
@@ -427,49 +437,45 @@ public class IOInstruction extends Instruction {
   }
 
   public String toString() {
-    return "IO[" + reg + "]=" + state;
+    return "IO[" + reg + "]=" + ((state == ON) ? "ON" : "OFF");
   }
 } // end ToolInstruction class
 
 public class LabelInstruction extends Instruction {
   int labelNum;
-  int labelIdx;
+  int labelIdx; 
   
-  public LabelInstruction(int n, int i){
+  public LabelInstruction(int n, int i) {
     super();
     labelNum = n;
     labelIdx = i;
   }
   
-  public void execute(){
-    if(active_instr < p.getInstructions().size()-1){
-      active_instr += 1;
-    }
-  }
+  public void execute() {}
   
-  public String toString(){
-    return "";
+  public String toString() {
+    return "LBL[" + labelNum + "]";
   }
 }
 
 public class JumpInstruction extends Instruction {
-  int tgtLabel;
-  int tgtIdx;
+  LabelInstruction tgtLabel;
   
-  public JumpInstruction(int n){
-    tgtLabel = n;
-    for(LabelInstruction i: p.getLabels()){
-      if(i.labelNum == tgtLabel)
-        tgtIdx = i.labelIdx;
-    }
+  public JumpInstruction(int l){
+    tgtLabel = programs.get(active_prog).getLabel(l);
   }
   
-  public void execute(){
-    active_instr = tgtIdx;
+  public void execute() {
+    if(tgtLabel != null)
+      currentInstruction = tgtLabel.labelIdx;
   }
   
   public String toString(){
-    return "";
+    if(tgtLabel == null){
+      return "JMP LBL[...]";
+    } else {
+      return "JMP LBL[" + tgtLabel.labelNum + "]";
+    }
   }
 }
 
