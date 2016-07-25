@@ -1879,9 +1879,9 @@ public void f5() {
     case TEACH_4PT:
     case TEACH_6PT:
       if (shift) {
-        pushMatrix();
+        /*pushMatrix();
         resetMatrix();
-        applyModelRotation(armModel, false);
+        applyModelRotation(armModel.getJointAngles());
         
         float[][] tMatrix = getTransformationMatrix();
         float[][] rMatrix = new float[3][3];
@@ -1896,9 +1896,9 @@ public void f5() {
         
         float[] orientation = matrixToQuat( rMatrix );
         Point curPosition = new Point(new PVector(tMatrix[0][3], tMatrix[1][3], tMatrix[2][3]), orientation);
-        curPosition.angles = armModel.getJointAngles();
+        curPosition.angles = armModel.getJointAngles();*/
         // Save the current position of the Robot's Faceplate
-        teachFrame.setPoint(curPosition, opt_select);
+        teachFrame.setPoint(getRobotPoint(armModel.getJointAngles()), opt_select);
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         updateScreen();
       }
@@ -3298,6 +3298,12 @@ public void loadScreen(){
       row_select = -1;
       col_select = -1;
       opt_select = -1;
+      break;
+    case TEACH_3PT_TOOL:
+    case TEACH_3PT_USER:
+    case TEACH_4PT:
+    case TEACH_6PT:
+      opt_select = 0;
       break;
     case TOOL_FRAME_METHODS:
     case USER_FRAME_METHODS:
@@ -4844,10 +4850,6 @@ public void createRegisterPoint(boolean jointAngles) {
     }
     
     position = new PVector(inputs[0], inputs[1], inputs[2]);
-    /* Since all points are displayed with respect to the World Frame, it is
-     * assumed that the user is entering a point with respect to the World Frame. */
-    position = convertWorldToNative(position);
-    
     orientation = eulerToQuat(new PVector(inputs[3] * DEG_TO_RAD, 
                                           inputs[4] * DEG_TO_RAD, 
                                           inputs[5] * DEG_TO_RAD));

@@ -105,6 +105,12 @@ public void setup() {
   
   popMatrix();
   //createTestProgram();
+  pushMatrix();
+  resetMatrix();
+  applyModelRotation(armModel.getJointAngles());
+  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
+  System.out.printf("%s\n%s", matrixToString( transform(getRotationMatrix(), invertHCMatrix(tMatrix)) ), matrixToString( eulerToMatrix(new PVector(180f, 0f, -90f).mult(DEG_TO_RAD)) ));
+  popMatrix();
 }
 
 public void draw() {
@@ -118,7 +124,7 @@ public void draw() {
   
   pushMatrix();
   resetMatrix();
-  applyModelRotation(armModel, true);
+  applyModelRotation(armModel.getJointAngles());
   // Keep track of the old coordinate frame of the armModel
   armModel.oldEETMatrix = getTransformationMatrix();
   popMatrix();
@@ -186,12 +192,12 @@ public void draw() {
   //TESTING CODE: DRAW END EFFECTOR POSITION
   pushMatrix();
   noFill();
-  applyModelRotation(armModel, true);
+  applyModelRotation(armModel.getJointAngles());
   //EE position
   stroke(255, 255, 0);
   sphere(5);
   translate(0, 0, -100);
-  stroke(0, 0, 255);
+  stroke(30, 0, 150);
   //EE z axis
   sphere(6);
   translate(0, 100, 100);
@@ -277,6 +283,11 @@ public void draw() {
   displayFrameAxes();
   displayTeachPoints();
   
+  float[][] RobotOrientation = quatToMatrix( getRobotPoint(armModel.getJointAngles()).orientation );
+  //displayOriginAxes(RobotOrientation, new PVector(-100f, -100f, -100f));
+  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
+  displayOriginAxes(transform(RobotOrientation, tMatrix), new PVector(-100, -100f, -100f));
+  
   popMatrix();
   
   hint(DISABLE_DEPTH_TEST);
@@ -312,7 +323,7 @@ public void handleWorldObjects() {
       
       // new object transform = EE transform x (old EE transform) ^ -1 x current object transform
       
-      applyModelRotation(armModel, true);
+      applyModelRotation(armModel.getJointAngles());
       
       float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
       applyMatrix(invEETMatrix[0][0], invEETMatrix[0][1], invEETMatrix[0][2], invEETMatrix[0][3],
@@ -430,16 +441,27 @@ public void displayTeachPoints() {
  */
 public void displayFrameAxes() {
   
+  if (curCoordFrame == CoordFrame.JOINT) {
+    // Show Native Coordinate System
+    displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f}}, new PVector(0f, 0f, 0f));
+    return;
+  }
+  
+  pushMatrix();
+  
+  
   if((curCoordFrame == CoordFrame.WORLD || curCoordFrame == CoordFrame.TOOL) && activeToolFrame != -1) {
     /* Draw the axes of the active tool frame */
-    displayOriginAxes(toolFrames[activeToolFrame].getWorldAxes(), armModel.getEEPos());
+    displayOriginAxes(toolFrames[activeToolFrame].getNativeAxes(), armModel.getEEPos());
   } else if(curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
     /* Draw the axes of the active user frame */
-    displayOriginAxes(userFrames[activeUserFrame].getWorldAxes(), userFrames[activeUserFrame].getOrigin());
+    displayOriginAxes(userFrames[activeUserFrame].getNativeAxes(), userFrames[activeUserFrame].getOrigin());
   } else if(curCoordFrame == CoordFrame.WORLD) {
     /* Draw World Frame coordinate system */
-    displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f));
+    displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f));
   }
+  
+  popMatrix();
 }
 
 /**
@@ -452,12 +474,18 @@ public void displayFrameAxes() {
  */
 public void displayOriginAxes(float[][] axesVectors, PVector origin) {
   
-  pushMatrix();
+  pushMatrix();    
   // Transform to the reference frame defined by the axes vectors
   applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
               axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
               axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
-  0, 0, 0, 1);
+              0, 0, 0, 1);
+  
+  applyMatrix(WORLD_AXES[0][0], WORLD_AXES[1][0], WORLD_AXES[2][0], 0,
+              WORLD_AXES[0][1], WORLD_AXES[1][1], WORLD_AXES[2][1], 0,
+              WORLD_AXES[0][2], WORLD_AXES[1][2], WORLD_AXES[2][2], 0,
+              0, 0, 0, 1);
+  
   // X axis
   stroke(255, 0, 0);
   line(-5000, 0, 0, 5000, 0, 0);

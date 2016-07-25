@@ -207,7 +207,7 @@ public class ArmModel {
     held = null;
     // Initializes the old transformation matrix for the arm model
     pushMatrix();
-    applyModelRotation(this, false);
+    applyModelRotation(getJointAngles());
     oldEETMatrix = getTransformationMatrix();
     popMatrix();
   } // end ArmModel constructor
@@ -594,7 +594,7 @@ public class ArmModel {
     pushMatrix();
     resetMatrix();
     // Switch to End Effector reference Frame
-    applyModelRotation(armModel, true);
+    applyModelRotation(getJointAngles());
     /* Define vectors { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, and { 0, 0, 1 }
      * Swap vectors:
      *   x' = z

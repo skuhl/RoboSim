@@ -178,7 +178,7 @@ public abstract class Frame {
     } else {
       // Use previous value if it exists
       if (this instanceof UserFrame) {
-        xyz = convertWorldToNative(DEOrigin);
+        xyz = convertNativeToWorld(DEOrigin);
       } else {
         // Tool Frame origins are an offset of the Robot's End Effector
         xyz = DEOrigin;
@@ -283,10 +283,13 @@ public class ToolFrame extends Frame {
                 pt3_ori = quatToMatrix(TCPTeachPoints[2].orientation);
       
       double[] newTCP = calculateTCPFromThreePoints(toVectorArray(TCPTeachPoints[0].position), pt1_ori,
-                                                 toVectorArray(TCPTeachPoints[1].position), pt2_ori,
-                                                 toVectorArray(TCPTeachPoints[2].position), pt3_ori);
+                                                    toVectorArray(TCPTeachPoints[1].position), pt2_ori,
+                                                    toVectorArray(TCPTeachPoints[2].position), pt3_ori);
       
-      float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(axesTeachPoints[0].position, axesTeachPoints[1].position, axesTeachPoints[2].position) : new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
+      float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(axesTeachPoints[0].position,
+                                                                           axesTeachPoints[1].position,
+                                                                           axesTeachPoints[2].position)
+                                               : new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
       
       if (newTCP == null || newAxesVectors == null) {
         // Invalid point set for the TCP or the coordinate axes
@@ -368,8 +371,10 @@ public class UserFrame extends Frame {
     } else if (mode >= 0 && mode < 2 && axesTeachPoints[0] != null && axesTeachPoints[1] != null && axesTeachPoints[2] != null) {
       // 3-Point or 4-Point Method
       
-      PVector newOrigin = (mode == 0) ? getOrigin() : orientOrigin.position;
-      float[][] newAxesVectors = createAxesFromThreePoints(axesTeachPoints[0].position, axesTeachPoints[1].position, axesTeachPoints[2].position);
+      PVector newOrigin = (mode == 0) ? new PVector(0f, 0f, 0f) : orientOrigin.position;
+      float[][] newAxesVectors = createAxesFromThreePoints(axesTeachPoints[0].position,
+                                                           axesTeachPoints[1].position,
+                                                           axesTeachPoints[2].position);
       
       if (newOrigin == null || newAxesVectors == null) {
         // Invalid points for the coordinate axes or missing orient origin for the 4-Point Method

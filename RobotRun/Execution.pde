@@ -113,7 +113,9 @@ void showMainDisplayText() {
   
   // Display the Current position and orientation of the Robot in the active User Frame or in the World Frame coordinate system.
   if (curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
-      ee_pos = convertNativeToFrame(ee_pos, userFrames[activeUserFrame]);
+    ee_pos = convertNativeToFrame(ee_pos, userFrames[activeUserFrame]);
+  } else if (curCoordFrame == CoordFrame.TOOL && activeToolFrame != -1) {
+    ee_pos = convertNativeToFrame(ee_pos, toolFrames[activeToolFrame]);
   }
   
   // Display Native Coordinates in the JOINT Coordinte Mode
@@ -134,6 +136,29 @@ void showMainDisplayText() {
   j[0] * RAD_TO_DEG, j[1] * RAD_TO_DEG, j[2] * RAD_TO_DEG, j[3] * RAD_TO_DEG, j[4] * RAD_TO_DEG, j[5] * RAD_TO_DEG);
   text(dis_joint, width - 20, 80);
   
+  Point RP = getRobotPoint(armModel.getJointAngles());
+  PVector pos;
+  float[][] orienMatrix = quatToMatrix(RP.orientation);
+  
+  // Display the Current position and orientation of the Robot in the active User Frame or in the World Frame coordinate system.
+  if (curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
+    pos = convertNativeToFrame(RP.position, userFrames[activeUserFrame]);
+    orienMatrix = transform(orienMatrix, userFrames[activeUserFrame].getWorldAxes());
+  } else if (curCoordFrame == CoordFrame.TOOL && activeToolFrame != -1) {
+    pos = convertNativeToFrame(RP.position, toolFrames[activeToolFrame]);
+    orienMatrix = transform(orienMatrix, toolFrames[activeToolFrame].getWorldAxes());
+  } else if (curCoordFrame == CoordFrame.WORLD) {
+    pos = convertNativeToWorld(RP.position);
+    float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
+    orienMatrix = transform(orienMatrix, invertHCMatrix(tMatrix));
+  } else {
+    pos = RP.position;
+  }
+  
+  wpr = matrixToEuler(orienMatrix);
+  String cartesian = String.format("Coord  X: %8.3f  Y: %8.3f  Z: %8.3f  W: %8.3f  P: %8.3f  R: %8.3f", pos.x, pos.y, pos.z, wpr.x * RAD_TO_DEG, wpr.y * RAD_TO_DEG, wpr.z * RAD_TO_DEG);
+  text(cartesian, width - 20, 180);
+  
   // Display a message if the Robot is in motion
   if (armModel.modelInMotion()) {
     fill(200, 0, 0);
@@ -145,8 +170,8 @@ void showMainDisplayText() {
     fill(200, 0, 0);
     text("Object held", width - 20, 140);
     
-    float[] pos = armModel.held.hit_box.position();
-    String obj_pos = String.format("(%f, %f, %f)", pos[0], pos[1], pos[1]);
+    float[] held_pos = armModel.held.hit_box.position();
+    String obj_pos = String.format("(%f, %f, %f)", held_pos[0], held_pos[1], held_pos[1]);
     text(obj_pos, width - 20, 160);
   }
   
@@ -324,6 +349,8 @@ PVector convertNativeToWorld(PVector v) {
   float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
   return transform(v, invertHCMatrix(tMatrix));
 }
+
+public 
 
 /**
  * Takes a vector and a (probably not quite orthogonal) second vector
@@ -588,7 +615,7 @@ float[] calculateIKJacobian(PVector tgt, float[] rot) {
   RealMatrix M = new Array2DRowRealMatrix(floatToDouble(nFrame, 3, 3));
   RealMatrix O = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
   RealMatrix MO = M.multiply(MatrixUtils.inverse(O));
-  println(MO);
+  //println(MO);
   //translate target rotation to EE ref frame
   RealMatrix R = new Array2DRowRealMatrix(floatToDouble(rMatrix, 3, 3));
   RealMatrix OR = R.multiply(MatrixUtils.inverse(MO));

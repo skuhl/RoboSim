@@ -14,6 +14,16 @@ public PVector transform(PVector v, float[][] tMatrix) {
   return u;
 }
 
+/**
+ *
+ */
+public float[][] transform(float[][] orientation, float[][] axes) {
+  RealMatrix limboOrient = new Array2DRowRealMatrix(floatToDouble(orientation, 3, 3));
+  RealMatrix limboAxes = new Array2DRowRealMatrix(floatToDouble(axes, 3, 3));
+  
+  return doubleToFloat(limboOrient.multiply(limboAxes).getData(), 3, 3);
+}
+
 /* Transforms the given vector by the given 3x3 rotation matrix (row major order). */
 public PVector rotate(PVector v, float[][] rotMatrix) {
   if(v == null || rotMatrix == null || rotMatrix.length != 3 || rotMatrix[0].length != 3) {
@@ -211,7 +221,29 @@ float[][] eulerToMatrix(PVector wpr) {
   float xRot = wpr.x;
   float yRot = wpr.y;
   float zRot = wpr.z;
-
+  
+  /**
+  PVector vx = new PVector(cos(yRot)*cos(zRot), sin(xRot)*sin(yRot)*cos(zRot) - cos(xRot)*sin(zRot), cos(xRot)*sin(yRot)*cos(zRot) + sin(xRot)*sin(zRot)),
+          vy = new PVector(cos(yRot)*sin(zRot), sin(xRot)*sin(yRot)*sin(zRot) + cos(xRot)*cos(zRot), cos(xRot)*sin(yRot)*sin(zRot) - sin(xRot)*cos(zRot)),
+          vz = new PVector(-sin(yRot), sin(xRot)*cos(yRot), cos(xRot)*cos(yRot));
+  
+  // Normalize all the axes vectors
+  vx.normalize();
+  vy.normalize();
+  vz.normalize();
+  
+  r[0][0] = vx.x;
+  r[0][1] = vx.y;
+  r[0][2] = vx.z;
+  r[1][0] = vy.x;
+  r[1][1] = vy.y;
+  r[1][2] = vy.z;
+  r[2][0] = vz.x;
+  r[2][1] = vz.y;
+  r[2][2] = vz.z;
+  
+  /**/
+  
   r[0][0] = cos(yRot)*cos(zRot);
   r[0][1] = sin(xRot)*sin(yRot)*cos(zRot) - cos(xRot)*sin(zRot);
   r[0][2] = cos(xRot)*sin(yRot)*cos(zRot) + sin(xRot)*sin(zRot);
@@ -221,15 +253,22 @@ float[][] eulerToMatrix(PVector wpr) {
   r[2][0] = -sin(yRot);
   r[2][1] = sin(xRot)*cos(yRot);
   r[2][2] = cos(xRot)*cos(yRot);
-
-  //println("matrix: ");
-  //  for(int i = 0; i < 3; i += 1) {
-  //    for(int j = 0; j < 3; j += 1) {
-  //      print(String.format("  %4.3f", r[i][j]));
-  //    }
-  //  println();
-  //}
-  //println();
+  
+  float[] magnitudes = new float[3];
+  
+  for(int v = 0; v < r.length; ++v) {
+    // Find the magnitude of each axis vector
+    for(int e = 0; e < r[0].length; ++e) {
+      magnitudes[v] += pow(r[v][e], 2);
+    }
+    
+    magnitudes[v] = sqrt(magnitudes[v]);
+    // Normalize each vector
+    for(int e = 0; e < r.length; ++e) {
+      r[v][e] /= magnitudes[v];
+    }
+  }
+  /**/
 
   return r;
 }
@@ -315,7 +354,7 @@ float[] matrixToQuat(float[][] r) {
     q[3] = S / 4;
   }
 
-  return q;
+  return quaternionNormalize(q);
 }
 
 //calculates euler angles from quaternion
@@ -328,7 +367,27 @@ PVector quatToEuler(float[] q) {
 //calculates rotation matrix from quaternion
 float[][] quatToMatrix(float[] q) {
   float[][] r = new float[3][3];
-
+  
+  /**
+  PVector vx = new PVector(1 - 2*(q[2]*q[2] + q[3]*q[3]), 2*(q[1]*q[2] - q[0]*q[3]), 2*(q[0]*q[2] + q[1]*q[3])),
+          vy = new PVector(2*(q[1]*q[2] + q[0]*q[3]), 1 - 2*(q[1]*q[1] + q[3]*q[3]), 2*(q[2]*q[3] - q[0]*q[1])),
+          vz = new PVector(2*(q[1]*q[3] - q[0]*q[2]), 2*(q[0]*q[1] + q[2]*q[3]), 1 - 2*(q[1]*q[1] + q[2]*q[2]));
+  // Normalize all the axes vectors
+  vx.normalize();
+  vy.normalize();
+  vz.normalize();
+  
+  r[0][0] = vx.x;
+  r[0][1] = vx.y;
+  r[0][2] = vx.z;
+  r[1][0] = vy.x;
+  r[1][1] = vy.y;
+  r[1][2] = vy.z;
+  r[2][0] = vz.x;
+  r[2][1] = vz.y;
+  r[2][2] = vz.z;
+  
+  /**/
   r[0][0] = 1 - 2*(q[2]*q[2] + q[3]*q[3]);
   r[0][1] = 2*(q[1]*q[2] - q[0]*q[3]);
   r[0][2] = 2*(q[0]*q[2] + q[1]*q[3]);
@@ -338,16 +397,23 @@ float[][] quatToMatrix(float[] q) {
   r[2][0] = 2*(q[1]*q[3] - q[0]*q[2]);
   r[2][1] = 2*(q[0]*q[1] + q[2]*q[3]);
   r[2][2] = 1 - 2*(q[1]*q[1] + q[2]*q[2]);
-
-  //println("matrix: ");
-  //for(int i = 0; i < 3; i += 1) {
-  //  for(int j = 0; j < 3; j += 1) {
-  //    print(String.format("  %4.3f", m[i][j]));
-  //  }
-  //  println();
-  //}
-  //println();
-
+  
+  float[] magnitudes = new float[3];
+  
+  for(int v = 0; v < r.length; ++v) {
+    // Find the magnitude of each axis vector
+    for(int e = 0; e < r[0].length; ++e) {
+      magnitudes[v] += pow(r[v][e], 2);
+    }
+    
+    magnitudes[v] = sqrt(magnitudes[v]);
+    // Normalize each vector
+    for(int e = 0; e < r.length; ++e) {
+      r[v][e] /= magnitudes[v];
+    }
+  }
+  /**/
+  
   return r;
 }
 
