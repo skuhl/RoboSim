@@ -90,8 +90,10 @@ public static enum Screen implements DisplayMode {
   MAIN_MENU_NAV(ScreenType.TYPE_OPT_MENU),
   TOOL_FRAME_METHODS(ScreenType.TYPE_OPT_MENU),
   USER_FRAME_METHODS(ScreenType.TYPE_OPT_MENU),
-  PICK_FRAME_MODE(ScreenType.TYPE_OPT_MENU),
+  SELECT_FRAME_MODE(ScreenType.TYPE_OPT_MENU),
+  SELECT_IF_SEL(ScreenType.TYPE_OPT_MENU),
   SELECT_INSTR_INSERT(ScreenType.TYPE_OPT_MENU),
+  SELECT_JMP_LBL(ScreenType.TYPE_OPT_MENU),
   SETUP_NAV(ScreenType.TYPE_OPT_MENU),
   
   /*
@@ -115,6 +117,7 @@ public static enum Screen implements DisplayMode {
   SET_MV_INSTR_TERM(ScreenType.TYPE_NUM_ENTRY),
   SET_FRM_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_IO_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
+  SET_JUMP_LBL(ScreenType.TYPE_NUM_ENTRY),
   ACTIVE_FRAMES(ScreenType.TYPE_NUM_ENTRY),
   
   /*
