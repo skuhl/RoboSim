@@ -258,6 +258,7 @@ public class Instruction {
   public boolean isCommented(){ return com; }
   public void toggleCommented(){ com = !com; }
   
+  public void execute() {}
 
   public String toString() {
     String str = "\0";
@@ -479,6 +480,34 @@ public class JumpInstruction extends Instruction {
   }
 }
 
+/**
+ * An if statement consists of an expression and an instruction. If the expression evaluates
+ * to true, the execution of this if statement will result in the execution of the associated
+ * instruction.
+ *
+ * Legal operators for the if statement expression are "=, <>, >, <, >=, and <=," which 
+ * correspond to the equal, not equal, greater-than, less-than, greater-than or equal to,
+ * and less-than or equal to operations, respectively.
+ *
+ * @param o - the operator to use for this if statement's expression.
+ * @param i - the instruction to be executed if the statement expression evaluates to true.
+ */
+public class IfStmt extends Instruction {
+  AtomicExpression expr;
+  Instruction instr;
+  
+  public IfStmt(Operator o, Instruction i){
+    expr = new AtomicExpression(o);
+    instr = i;
+  }
+  
+  public void execute() {
+    if(expr.evaluate().boolVal){
+      instr.execute();
+    }
+  }
+}
+
 public class RegisterStatement extends Instruction {
   /**
    * A singleton or doubleton array, which determines, whether the
@@ -489,7 +518,7 @@ public class RegisterStatement extends Instruction {
   /**
    * The expression associated with this statement.
    */
-  private ExpressionSet statement;
+  private RegExpression statement;
   
   /**
    * Creates a register statement, whose result is associated with
@@ -505,7 +534,7 @@ public class RegisterStatement extends Instruction {
   public RegisterStatement(int regIdx, int ptIdx) {
     super();
     regIndices = new int[] { regIdx, ptIdx };
-    statement = new ExpressionSet();
+    statement = new RegExpression();
   }
   
   /**
@@ -518,7 +547,7 @@ public class RegisterStatement extends Instruction {
   public RegisterStatement(int regIdx) {
     super();
     regIndices = new int[] { regIdx };
-    statement = new ExpressionSet();
+    statement = new RegExpression();
   }
   
   
