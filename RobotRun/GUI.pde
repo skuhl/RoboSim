@@ -1269,7 +1269,7 @@ public void dn() {
   int size;
   switch(mode) {
     case NAV_PROGRAMS:
-      size = programs.size(); //<>//
+      size = programs.size(); //<>// //<>//
       int[] indices = moveDown(active_prog, size, opt_select, renderStartIdx, shift);
       
       active_prog = indices[0];
@@ -1285,7 +1285,7 @@ public void dn() {
     case SELECT_COMMENT:
     case NAV_PROG_INST:
     case SELECT_CUT_COPY:
-    case SELECT_DELETE: //<>//
+    case SELECT_DELETE: //<>// //<>//
       size = programs.get(active_prog).getInstructions().size() + 1;
       indices = moveDown(active_instr, size, row_select, renderStartIdx, shift);
       
@@ -1299,7 +1299,7 @@ public void dn() {
         System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
         row_select, col_select, active_instr, renderStartIdx);
       }
-       //<>//
+       //<>// //<>//
       break;
     case NAV_DREGS:
     case NAV_PREGS_J:
@@ -1377,9 +1377,9 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>// //<>//
+        // Reset function key states //<>// //<>// //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } //<>//
+      } //<>// //<>//
   }
   
   updateScreen();

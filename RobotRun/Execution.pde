@@ -202,7 +202,7 @@ void showMainDisplayText() {
  */
 public void coordFrameTransition(ArmModel model) {
   // Stop Robot movement
-  hd(); //<>//
+  hd(); //<>// //<>//
   
   // Increment the current coordinate frame
   switch (curCoordFrame) {

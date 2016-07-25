@@ -1,3 +1,28 @@
+/* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
+public enum Operator { 
+  ADDTN("+"), 
+  SUBTR("-"), 
+  MULT("*"), 
+  DIV("/"), 
+  MOD("%"), 
+  INTDIV("|"), 
+  PAR_OPEN("("), 
+  PAR_CLOSE(")"),
+  EQUAL("="),
+  NEQUAL("<>"),
+  GRTR(">"),
+  LESS("<"),
+  GEQ(">="),
+  LEQ("<="),
+  UNINIT("_");
+  
+  public final String opSymbol;
+  
+  private Operator(String s){
+    opSymbol = s;
+  }
+}
+
 public interface DisplayMode {}
 
 public static enum ScreenType implements DisplayMode {

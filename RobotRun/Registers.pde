@@ -41,9 +41,6 @@ public class PositionRegister {
   }
 }
 
-/* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
-public enum Operator { PLUS, MINUS, MUTLIPLY, DIVIDE, MODULUS, INTDIVIDE, PAR_OPEN, PAR_CLOSE; }
-
 /**
  * A class which is a special type of parameter allowed in register expressions, which specifics
  * that the current position of the Robot will be used as the point value of this parameter.
@@ -197,6 +194,143 @@ public class ExpressionEvaluationException extends RuntimeException {
   }
 }
 
+public class AtomicExpression extends ExprOperand {
+  ExprOperand operand1;
+  ExprOperand operand2;
+  Operator op;
+  
+  public AtomicExpression(){
+    op = Operator.UNINIT;
+  }
+  
+  public AtomicExpression(Operator o){
+    op = o;
+  }
+  
+  public ExprOperand evaluate() {
+    ExprOperand result;
+    float o1, o2;
+    if(operand1.type == -1) {
+      o1 = ((AtomicExpression)operand1).evaluate().dataVal;
+    } else {
+      o1 = operand1.dataVal;
+    }
+    
+    if(operand2.type == -1) {
+      o2 = ((AtomicExpression)operand2).evaluate().dataVal;
+    } else {
+      o2 = operand2.dataVal;
+    }
+    
+    //integer operands for integer operations
+    int intop1 = Math.round(operand1.dataVal);
+    int intop2 = Math.round(operand2.dataVal);
+    
+    switch(op) {
+      case ADDTN:
+        result = new ExprOperand(o1 + o2);
+        break;
+      case SUBTR:
+        result = new ExprOperand(o1 - o2);
+        break;
+      case MULT:
+        result = new ExprOperand(o1 * o2);
+        break;
+      case DIV:
+        result = new ExprOperand(o1 / o2);
+        break;
+      case MOD:
+        result = new ExprOperand(o1 % o2);
+        break;
+      case INTDIV:
+        result = new ExprOperand(intop1 / intop2);
+        break;
+      case EQUAL:
+        result = new ExprOperand(o1 == o2);
+        break;
+      case NEQUAL:
+        result = new ExprOperand(o1 != o2);
+        break;
+      case GRTR:
+        result = new ExprOperand(o1 > o2);
+        break;
+      case LESS:
+        result = new ExprOperand(o1 < o2);
+        break;
+      case GEQ:
+        result = new ExprOperand(o1 >= o2);
+        break;
+      case LEQ:
+        result = new ExprOperand(o1 <= o2);
+        break;
+      default:
+        result = null;
+        break;
+    }
+    
+    return result;
+  }
+}
+
+public class ExprOperand {
+  //type: 0 = numeric operand, 1 = boolean operand
+  //      2 = data reg operand, 3 = IO reg operand
+  //      -1 = expression 
+  final int type;
+  float dataVal;
+  boolean boolVal;
+  
+  public ExprOperand(){
+    type = -1;
+  }
+  
+  public ExprOperand(float d) {
+    type = 0;
+    dataVal = d;
+    boolVal = getBoolVal(dataVal);
+  }
+  
+  public ExprOperand(boolean b) {
+    type = 1;
+    dataVal = b ? 1 : 0;
+    boolVal = b;
+  }
+  
+  public ExprOperand(DataRegister dReg) {
+    type = 2;
+    dataVal = dReg.value;
+    boolVal = getBoolVal(dataVal);
+  }
+  
+  public ExprOperand(IORegister ioReg) {
+    type = 3;
+    if(ioReg.state == ON) {
+      dataVal = 1;
+      boolVal = true;
+    } else {
+      dataVal = 0;
+      boolVal = false;
+    }
+  }
+  
+  /* Returns the boolean value of a floating point value, where a value of 0 is considered to be
+  *  false and all other values are true. Any floating point value close enough to zero within a
+  *  given tolerance is considered to be 0 for the purposes of this function in order to avoid 
+  *  issues with floating point errors.
+  */
+  private boolean getBoolVal(float d) {
+    boolean bool;
+    
+    if(d > -0.00001 || d < 0.00001){
+      bool = false;
+    } else {
+      bool = true;
+    }
+    
+    return bool;
+  }
+}
+
 /**
  * This class is designed to save an arithmetic expression for a register statement instruction. Register statements include the
  * folllowing operands: floating-point constants, Register values, Position Register points, and Position Register values. Legal
@@ -222,14 +356,14 @@ public class ExpressionEvaluationException extends RuntimeException {
  *          ->  X, Y, Z, W, P, R  (for Cartesian points)
  * 
  */
-public class ExpressionSet {
+public class RegExpression {
   /* The individual elements of the expressions */
   private final ArrayList<Object> parameters;
   
   /**
    * Creates a new expression with a single null value.
    */
-  public ExpressionSet() {
+  public RegExpression() {
     parameters = new ArrayList<Object>();
     // Expression begins as R[i]/PR[i]/PR[x, y] = _
     parameters.add(null);
@@ -479,14 +613,14 @@ public class ExpressionSet {
     
     // Float-Float operations
     switch(op) {
-      case PLUS:       return value1 + value2;
-      case MINUS:      return value1 - value2;
-      case MUTLIPLY:   return value1 * value2;
-      case DIVIDE:     return value1 / value2;
+      case ADDTN:       return value1 + value2;
+      case SUBTR:      return value1 - value2;
+      case MULT:   return value1 * value2;
+      case DIV:     return value1 / value2;
       // Returns the remainder
-      case MODULUS:    return (value1 % value2) / value2;
+      case MOD:    return (value1 % value2) / value2;
       // Returns the quotient
-      case INTDIVIDE:  return (int)(value1 / value2);
+      case INTDIV:  return (int)(value1 / value2);
       default:         throw new ExpressionEvaluationException(1);
     }
   }
@@ -495,12 +629,12 @@ public class ExpressionSet {
       
     // TODO Point-Point operations
     switch(op) {
-      case PLUS:
-      case MINUS:
+      case ADDTN:
+      case SUBTR:
         RegStmtPoint pt = new RegStmtPoint();
         
         for (int idx = 0; idx < 6; ++idx) {
-          if (op == Operator.PLUS) {
+          if (op == Operator.ADDTN) {
             // Add each point's Joint values together
             pt.values[idx] = point1.values[idx] + point2.values[idx];
           } else {
@@ -510,10 +644,10 @@ public class ExpressionSet {
         }
         
         return pt;
-      case MUTLIPLY:
-      case DIVIDE:
-      case MODULUS:
-      case INTDIVIDE:
+      case MULT:
+      case DIV:
+      case MOD:
+      case INTDIV:
         break;
       default:
     }
@@ -575,18 +709,7 @@ public class ExpressionSet {
         return String.format("%s[%s]", prefix, indices);
       }
     } else if (param instanceof Operator) {
-      
-      // Each operator has its own symbol
-      switch ( (Operator)param ) {
-        case PLUS:      return "+";
-        case MINUS:     return "-";
-        case MUTLIPLY:  return "*";
-        case DIVIDE:    return "/";
-        case MODULUS:   return "%";
-        case INTDIVIDE: return "|";
-        case PAR_OPEN:  return "(";
-        case PAR_CLOSE: return ")";
-      }
+      return ((Operator)param).opSymbol;
     }
     
     // Simply print the value for constants
