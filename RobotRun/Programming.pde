@@ -456,13 +456,8 @@ public class IOInstruction extends Instruction {
       
       if(state == ON && armModel.held == null) {
         
-<<<<<<< HEAD
         PVector ee_pos = armModel.nativeEEPos().position;
         println(ee_pos);
-=======
-        PVector ee_pos = armModel.getEEPos();
-        
->>>>>>> dev
         // Determine if an object in the world can be picked up by the Robot
         for(WorldObject s : objects) {
           
