@@ -1,28 +1,86 @@
 /**
- * Converts the given point, pt, into the Coordinate System defined by the frame, active.
+ * Applies the rotations and translations of the Robot Arm to get to the
+ * face plate center, given the set of six joint angles, each corresponding
+ * to a joint of the Robot Arm and each within the bounds of [0, TWO_PI).
+ * 
+ * @param jointAngles  A valid set of six joint angles (in radians) for the Robot
+ */
+public void applyModelRotation(float[] jointAngles) {
+  translate(600, 200, 0);
+  translate(-50, -166, -358); // -115, -213, -413
+  rotateZ(PI);
+  translate(150, 0, 150);
+  rotateY(jointAngles[0]);
+  translate(-150, 0, -150);
+  rotateZ(-PI);    
+  translate(-115, -85, 180);
+  rotateZ(PI);
+  rotateY(PI/2);
+  translate(0, 62, 62);
+  rotateX(jointAngles[1]);
+  translate(0, -62, -62);
+  rotateY(-PI/2);
+  rotateZ(-PI);   
+  translate(0, -500, -50);
+  rotateZ(PI);
+  rotateY(PI/2);
+  translate(0, 75, 75);
+  rotateX(jointAngles[2]);
+  translate(0, -75, -75);
+  rotateY(PI/2);
+  rotateZ(-PI);
+  translate(745, -150, 150);
+  rotateZ(PI/2);
+  rotateY(PI/2);
+  translate(70, 0, 70);
+  rotateY(jointAngles[3]);
+  translate(-70, 0, -70);
+  rotateY(-PI/2);
+  rotateZ(-PI/2);    
+  translate(-115, 130, -124);
+  rotateZ(PI);
+  rotateY(-PI/2);
+  translate(0, 50, 50);
+  rotateX(jointAngles[4]);
+  translate(0, -50, -50);
+  rotateY(PI/2);
+  rotateZ(-PI);    
+  translate(150, -10, 95);
+  rotateY(-PI/2);
+  rotateZ(PI);
+  translate(45, 45, 0);
+  rotateZ(jointAngles[5]);
+}
+
+/**
+ * Converts the given point, pt, into the Coordinate System defined by the given origin
+ * vector and rotation quaternion axes.
  * 
  * @param pt      A point with initialized position and orientation
- * @param active  The frame, to whose Coordinate System pt will be converted
+ * @param origin  The origin of the Coordinate System
+ * @param axes    The axes of the Coordinate System representing as a rotation quanternion
  * @returning     The point, pt, interms of the given frame's Coordinate System
  */
-public Point applyFrame(Point pt, Frame active) {
-  float[] invAxes = new float[] { active.axes[0], -active.axes[1], -active.axes[2], -active.axes[3] };
-  PVector position = transform(pt.position, active.getOrigin(), active.getAxes());
+public Point applyFrame(Point pt, PVector origin, float[] axes) {
+  float[] invAxes = new float[] { axes[0], -axes[1], -axes[2], -axes[3] };
+  PVector position = transform(pt.position, origin, axes);
   float[] orientation = quaternionMult(pt.orientation, invAxes);
   
   return new Point(position, orientation, pt.angles);
 }
 
 /**
- * Converts the given point, pt, from the Coordinate System defined by the frame, active.
+ * Converts the given point, pt, from the Coordinate System defined by the given origin
+ * vector and rotation quaternion axes.
  * 
  * @param pt      A point with initialized position and orientation
- * @param active  The frame, from whose Coordinate System pt will be converted
- * @returning     The point, pt, in terms of the Native Coordinate System
+ * @param origin  The origin of the Coordinate System
+ * @param axes    The axes of the Coordinate System representing as a rotation quanternion
+ * @returning     The point, pt, interms of the given frame's Coordinate System
  */
-public Point removeFrame(Point pt, Frame active) {
-  PVector position = transform(pt.position, active.getOrigin(), active.getAxes());
-  float[] orientation = quaternionMult(pt.orientation, active.getAxes());
+public Point removeFrame(Point pt, PVector origin, float[] axes) {
+  PVector position = transform(pt.position, origin, axes);
+  float[] orientation = quaternionMult(pt.orientation, axes);
   
   return new Point(position, orientation, pt.angles);
 }

@@ -164,6 +164,22 @@ public abstract class Frame {
   }
   
   /**
+   * Converts the original toStirngArray into a 2x1 String array, where the origin
+   * values are in the first element and the W, P, R values are in the second element,
+   * where each element has space buffers.
+   */
+  public String[] toLineStringArray() {
+    String[] entries = toStringArray();
+    String[] line = new String[2];
+    // X, Y, Z with space buffers
+    line[0] = String.format("%-12s %-12s %-12s", entries[0], entries[1], entries[2]);
+    // W, P, R with space buffers
+    line[1] = String.format("%-12s %-12s %-12s", entries[3], entries[4], entries[5]);
+    
+    return line;
+  }
+  
+  /**
    * Similiar to toStringArray, however, it converts the Frame's direct entry
    * values instead of the current origin and axes of the Frame.
    * 
@@ -408,29 +424,16 @@ public Frame getActiveFrame(CoordFrame coord) {
   }
   
   // Determine if a frame is active in the given Coordinate Frame
-  if (coord == CoordFrame.USER && activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
+  if (coord == CoordFrame.USER && activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
     // active User frame
     return userFrames[activeUserFrame];
-  } else if ((coord == CoordFrame.TOOL || coord == CoordFrame.WORLD) && activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
+  } else if ((coord == CoordFrame.TOOL || coord == CoordFrame.WORLD) && activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
     // active Tool frame
     return toolFrames[activeToolFrame];
   } else {
     // no active frame
     return null;
   }
-}
-
-/**
- * Checks if a Frame is active for the given Coordinate Frame System. The
- * active Tool Frame will be checked if either TOOL or WORLD are given and
- * false will be return for JOINT always. If null is given as a parameter,
- * then the current value of curCoordFrame will be checked instead.
- * 
- * @param coord  The Coordinate Frame System to check for an active frame,
- *               or null to check the current active Frame System.
- */
-public boolean frameActive(CoordFrame coord) {
-  return getActiveFrame(coord) == null;
 }
 
 /**

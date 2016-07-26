@@ -73,7 +73,8 @@ public class RobotPoint {
    * the Robot
    */
   public Object getValue() {
-    RegStmtPoint pt = new RegStmtPoint( armModel.getEEPos(), armModel.getQuaternion() );
+    Point RP = nativeRobotPosition(armModel.getJointAngles());
+    RegStmtPoint pt = new RegStmtPoint( RP.position, RP.orientation );
     
     if (valIdx == -1) {
       // Return the entire point

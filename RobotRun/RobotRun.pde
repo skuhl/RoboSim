@@ -106,10 +106,16 @@ public void setup() {
   popMatrix();
   //createTestProgram();
   
+  /**
+  PVector TCP = new PVector(-5, -5, -100);
+  PVector nativeTCP = transform(TCP, new PVector(0f, 0f, 0f), nativeRobotPosition(armModel.getJointAngles()).orientation);
+  System.out.printf("%s -> %s\n", TCP, nativeTCP);
+  /**
   PVector v = new PVector(12f, -11f, 100f);
   PVector worldV = convertNativeToWorld(v);
   PVector nativeV = convertWorldToNative(v);
   System.out.printf("%s -> %s\n%s -> %s\n", v, worldV, v, nativeV);
+  /**/
 }
 
 public void draw() {
@@ -189,25 +195,25 @@ public void draw() {
   //}
   //popMatrix(); 
   //TESTING CODE: DRAW END EFFECTOR POSITION
-  pushMatrix();
-  noFill();
-  applyModelRotation(armModel.getJointAngles());
-  //EE position
-  stroke(255, 255, 0);
-  sphere(5);
-  translate(0, 0, -100);
-  stroke(30, 0, 150);
-  //EE z axis
-  sphere(6);
-  translate(0, 100, 100);
-  stroke(0, 255, 0);
-  //EE y axis
-  sphere(6);
-  translate(100, -100, 0);
-  stroke(255, 0, 0);
-  //EE x axis
-  sphere(6);
-  popMatrix();
+  //pushMatrix();
+  //noFill();
+  //applyModelRotation(armModel.getJointAngles());
+  ////EE position
+  //stroke(255, 255, 0);
+  //sphere(5);
+  //translate(0, 0, -100);
+  //stroke(30, 0, 150);
+  ////EE z axis
+  //sphere(6);
+  //translate(0, 100, 100);
+  //stroke(0, 255, 0);
+  ////EE y axis
+  //sphere(6);
+  //translate(100, -100, 0);
+  //stroke(255, 0, 0);
+  ////EE x axis
+  //sphere(6);
+  //popMatrix();
   //END TESTING CODE
   // TESTING CODE: DRAW USER FRAME 0
   /*PVector ufo = convertWorldToNative(userFrames[0].getOrigin());
@@ -282,14 +288,6 @@ public void draw() {
   displayFrameAxes();
   displayTeachPoints();
   
-  /**
-  float[][] RobotOrientation = quatToMatrix( getRobotPoint(armModel.getJointAngles()).orientation );
-  /**
-  displayOriginAxes(RobotOrientation, new PVector(-100f, -100f, -100f));
-  /**
-  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
-  displayOriginAxes(transform(RobotOrientation, tMatrix), new PVector(-100, -100f, -100f));
-  /**/
   popMatrix();
   
   hint(DISABLE_DEPTH_TEST);
@@ -359,7 +357,7 @@ public void handleWorldObjects() {
         }
       }
       
-      if( objects[idx] != armModel.held && objects[idx].collision(armModel.getEEPos()) ) {
+      if( objects[idx] != armModel.held && objects[idx].collision(armModel.nativeEEPos().position) ) {
         // Change hit box color to indicate End Effector collision
         objects[idx].hit_box.outline = color(0, 0, 255);
       }
@@ -443,27 +441,27 @@ public void displayTeachPoints() {
  */
 public void displayFrameAxes() {
   
-  if (curCoordFrame == CoordFrame.JOINT) {
-    // Show Native Coordinate System
-    displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f}}, new PVector(0f, 0f, 0f));
-    return;
+  if (curCoordFrame != CoordFrame.JOINT) {
+    Frame activeTool = getActiveFrame(CoordFrame.TOOL),
+          activeUser = getActiveFrame(CoordFrame.USER);
+    
+    if (curCoordFrame == CoordFrame.TOOL) {
+      /* Draw the axes of the active Tool frame at the Robot End Effector */
+      displayOriginAxes(activeTool.getNativeAxes(), armModel.nativeEEPos().position, color(255, 0, 255));
+    } else {
+      /* Draw axes of the Robot's End Effector frame */
+      Point ee_point = armModel.nativeEEPos();
+      displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, color(255, 0, 255));
+    }
+    
+    if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
+      /* Draw the axes of the active User frame */
+      displayOriginAxes(activeUser.getNativeAxes(), activeUser.getOrigin(), color(0));
+    } else {
+      /* Draw the axes of the World frame */
+      displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f), color(0));
+    }
   }
-  
-  pushMatrix();
-  Frame active = getActiveFrame(null);
-  
-  if((curCoordFrame == CoordFrame.WORLD || curCoordFrame == CoordFrame.TOOL) && activeToolFrame != -1) {
-    /* Draw the axes of the active tool frame */
-    displayOriginAxes(toolFrames[activeToolFrame].getNativeAxes(), armModel.getEEPos());
-  } else if(curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
-    /* Draw the axes of the active user frame */
-    displayOriginAxes(userFrames[activeUserFrame].getNativeAxes(), userFrames[activeUserFrame].getOrigin());
-  } else if(curCoordFrame == CoordFrame.WORLD) {
-    /* Draw World Frame coordinate system */
-    displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f));
-  }
-  
-  popMatrix();
 }
 
 /**
@@ -474,7 +472,7 @@ public void displayFrameAxes() {
  * @param origin       A point in space representing the intersection of the
  *                     three unit vectors
  */
-public void displayOriginAxes(float[][] axesVectors, PVector origin) {
+public void displayOriginAxes(float[][] axesVectors, PVector origin, color originColor) {
   
   pushMatrix();    
   // Transform to the reference frame defined by the axes vectors
@@ -499,6 +497,8 @@ public void displayOriginAxes(float[][] axesVectors, PVector origin) {
   line(0, 0, -5000, 0, 0, 5000);
   
   // Draw a sphere on the positive direction for each axis
+  stroke(originColor);
+  sphere(4);
   stroke(0);
   translate(50, 0, 0);
   sphere(4);

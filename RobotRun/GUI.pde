@@ -1547,7 +1547,7 @@ public void f1() {
     case TEACH_3PT_TOOL:
     case TEACH_6PT:
     case TEACH_4PT:
-      ref_point = (shift) ? null : armModel.getEEPos();
+      ref_point = (shift) ? null : nativeRobotPosition(armModel.getJointAngles()).position;
       updateScreen();
       break;
     case NAV_DREGS:
@@ -1900,7 +1900,7 @@ public void f5() {
         Point curPosition = new Point(new PVector(tMatrix[0][3], tMatrix[1][3], tMatrix[2][3]), orientation);
         curPosition.angles = armModel.getJointAngles();*/
         // Save the current position of the Robot's Faceplate
-        teachFrame.setPoint(nativeRobotPoint(armModel.getJointAngles()), opt_select);
+        teachFrame.setPoint(nativeRobotPosition(armModel.getJointAngles()), opt_select);
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         updateScreen();
       }
@@ -1924,7 +1924,7 @@ public void f5() {
       
       if (shift && active_index >= 0 && active_index < GPOS_REG.length) {
         // Save the Robot's current joint angles
-        GPOS_REG[active_index].point = new Point(armModel.getEEPos(), armModel.getQuaternion(), armModel.getJointAngles());
+        GPOS_REG[active_index].point = nativeRobotPosition(armModel.getJointAngles());
         GPOS_REG[active_index].isCartesian = (mode == Screen.NAV_PREGS_C);
         saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       }
@@ -3149,7 +3149,7 @@ public void activateLiveJointMotion(int joint, int dir) {
  *
  */
 public void activateLiveWorldMotion(int axis, int dir) {
-  armModel.tgtPos = armModel.getEEPos();
+  armModel.tgtPos = armModel.nativeEEPos().position;
   armModel.tgtRot = armModel.getQuaternion();
   
   if(axis >= 0 && axis < 3) {
@@ -3409,7 +3409,7 @@ public void loadScreen(){
 
 // update text displayed on screen
 public void updateScreen() {
-  int next_px = display_px;
+  int next_px = display_px; //<>//
   int next_py = display_py;
   int c1, c2;
   
@@ -4230,7 +4230,7 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
       if(instr instanceof MotionInstruction) {
         MotionInstruction a = (MotionInstruction)instr;
         
-        if(armModel.getEEPos().dist(a.getVector(p).position) < (liveSpeed / 100f)) {
+        if(armModel.nativeEEPos().position.dist(a.getVector(p).position) < (liveSpeed / 100f)) {
           m.add("@");
         }
         else {
@@ -4432,7 +4432,7 @@ public void newMotionInstruction() {
   Program prog = programs.get(active_prog);
   int reg = prog.getNextPosition();
   
-  prog.addPosition(nativeRobotPoint(armModel.getJointAngles()), reg);
+  prog.addPosition(nativeRobotPosition(armModel.getJointAngles()), reg);
   
   MotionInstruction insert = new MotionInstruction(
   (curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
@@ -4569,10 +4569,8 @@ public ArrayList<ArrayList<String>> loadFrames(CoordFrame coordFrame) {
   
   for(int idx = 0; idx < frames.length; idx += 1) {
     // Display each frame on its own line
-    Frame frame = frames[idx];
-    // For a Tool Frame, the origin is the offset of the End Effector from the Robot faceplate, so it is not technically a point.
-    PVector frameOrigin = (frame instanceof ToolFrame) ? frame.getOrigin() : convertNativeToWorld(frame.getOrigin());
-    frameDisplay.add( newLine(String.format("%d) %s", idx + 1, frameOrigin)) );
+    String[] strArray = frames[idx].toLineStringArray();
+    frameDisplay.add( newLine(String.format("%-4s %s", String.format("%d) ", idx + 1), strArray[0])) );
   }
   
   return frameDisplay;
@@ -4600,7 +4598,7 @@ public ArrayList<ArrayList<String>> loadFrameDetail(CoordFrame coordFrame) {
     
   } else {
     return null;
-  }
+}
   
   return details;
 }

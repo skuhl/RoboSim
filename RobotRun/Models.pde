@@ -639,57 +639,6 @@ public class ArmModel {
     return doubleToFloat(AB.getData(), 3, 3);
   }
   
-  /* Applies the transformation for the current tool frame.
-   * NOTE: This method only works in the TOOL or WORLD frame! */
-  public void applyToolFrame(int list_idx) {
-    // If a tool Frame is active, then it overrides the World Frame
-    if(list_idx >= 0 && list_idx < toolFrames.length) {
-      
-      // Apply a custom tool frame
-      PVector tr = toolFrames[list_idx].getOrigin();
-      translate(tr.x, tr.y, tr.z);
-      /*
-       Native Frame to World Frame
-       x' = -x
-       y' = -z
-       z' = y
-       
-       World Frame to End Effector Frame, Native Frame to End Effector Frame
-       x'' = -z' -> -y
-       y'' = -y' -> z
-       z'' = x'  -> -x
-      */
-    }
-  }
-  
-  /* This method calculates the Euler angular rotations: roll, pitch and yaw of the Robot's
-   * End Effector in the form of a vector array.
-   *
-   * @param axesMatrix  A 3x3 matrix containing unti vectors representing the Robot's End
-   *                    Effector's x, y, z axes in respect of the World Coordinate Frame;
-   * @returning         A array containing the End Effector's roll, pitch, and yaw, in that
-   *                    order
-   *
-   *  Method based off of procedure outlined in the pdf at this location:
-   *     http://www.staff.city.ac.uk/~sbbh653/publications/euler.pdf
-   *     rotation about: x - psi, y - theta, z - phi
-   */
-  public PVector getWPR() {
-    float[][] m = getRotationMatrix(currentFrame);
-    PVector wpr = matrixToEuler(m);
-    
-    return wpr;
-  }
-  
-  public PVector getWPR(float[] testAngles) {
-    float[] origAngles = getJointAngles();
-    setJointAngles(testAngles);
-    
-    PVector ret = getWPR();
-    setJointAngles(origAngles);
-    return ret;
-  }
-  
   //returns the rotational value of the robot as a quaternion
   public float[] getQuaternion() {
     float[][] m = getRotationMatrix(currentFrame);
@@ -708,187 +657,35 @@ public class ArmModel {
   }
   
   /**
-   * Gives the current position of the end effector in
-   * Processing native coordinates.
+   * Gives the current position and orientation of the end effector
+   * in the current Coordinate Frame
+   * 
    * @param model Arm model whose end effector position to calculate
    * @param test Determines whether to use arm segments' actual
    *             rotation values or if we're checking trial rotations
    * @return The current end effector position
    */
-  public PVector getEEPos() {
-    pushMatrix();
-    resetMatrix();
-    
-    translate(600, 200, 0);
-    translate(-50, -166, -358); // -115, -213, -413
-    rotateZ(PI);
-    translate(150, 0, 150);
-    
-    rotateY(getJointAngles()[0]);
-    
-    translate(-150, 0, -150);
-    rotateZ(-PI);    
-    translate(-115, -85, 180);
-    rotateZ(PI);
-    rotateY(PI/2);
-    translate(0, 62, 62);
-    
-    rotateX(getJointAngles()[1]);
-    
-    translate(0, -62, -62);
-    rotateY(-PI/2);
-    rotateZ(-PI);   
-    translate(0, -500, -50);
-    rotateZ(PI);
-    rotateY(PI/2);
-    translate(0, 75, 75);
-    
-    rotateX(getJointAngles()[2]);
-    
-    translate(0, -75, -75);
-    rotateY(PI/2);
-    rotateZ(-PI);
-    translate(745, -150, 150);
-    rotateZ(PI/2);
-    rotateY(PI/2);
-    translate(70, 0, 70);
-    
-    rotateY(getJointAngles()[3]);
-    
-    translate(-70, 0, -70);
-    rotateY(-PI/2);
-    rotateZ(-PI/2);    
-    translate(-115, 130, -124);
-    rotateZ(PI);
-    rotateY(-PI/2);
-    translate(0, 50, 50);
-    
-    rotateX(getJointAngles()[4]);
-    
-    translate(0, -50, -50);
-    rotateY(PI/2);
-    rotateZ(-PI);    
-    translate(150, -10, 95);
-    rotateY(-PI/2);
-    rotateZ(PI);
-    translate(45, 45, 0);
-    
-    rotateZ(getJointAngles()[5]);
-    
-    if(curCoordFrame == CoordFrame.TOOL || curCoordFrame == CoordFrame.WORLD) { applyToolFrame(activeToolFrame); }
-    
-    PVector ret = new PVector(
-    modelX(0, 0, 0),
-    modelY(0, 0, 0),
-    modelZ(0, 0, 0));
-    
-    popMatrix();
-    return ret;
-  } // end calculateEndEffectorPosition
-  
-  public PVector getEEPos(float[] testAngles) {
-    float[] origAngles = getJointAngles();
-    setJointAngles(testAngles);
-    
-    PVector ret = getEEPos();
-    setJointAngles(origAngles);
-    return ret;
-    
+  public Point nativeEEPos() {
+    return nativeEEPos(armModel.getJointAngles());
   }
   
   /**
-   * Return the current position of the Robot's faceplate.
+   * Returns the position of the Robot's End Effector for
+   * its current joint angles, in the Native Coordinate
+   * System.
    */
-  public PVector getFaceplate() {
-    pushMatrix();
-    resetMatrix();
+  public Point nativeEEPos(float[] jointAngles) {
+    Frame activeTool = getActiveFrame(CoordFrame.TOOL);
+    PVector offset;
     
-    translate(600, 200, 0);
-    translate(-50, -166, -358); // -115, -213, -413
-    rotateZ(PI);
-    translate(150, 0, 150);
+    if (activeTool != null) {
+      // Apply the Tool Tip
+      offset = activeTool.getOrigin();
+    } else {
+      offset = new PVector(0f, 0f, 0f);
+    }
     
-    rotateY(getJointAngles()[0]);
-    
-    translate(-150, 0, -150);
-    rotateZ(-PI);    
-    translate(-115, -85, 180);
-    rotateZ(PI);
-    rotateY(PI/2);
-    translate(0, 62, 62);
-    
-    rotateX(getJointAngles()[1]);
-    
-    translate(0, -62, -62);
-    rotateY(-PI/2);
-    rotateZ(-PI);   
-    translate(0, -500, -50);
-    rotateZ(PI);
-    rotateY(PI/2);
-    translate(0, 75, 75);
-    
-    rotateX(getJointAngles()[2]);
-    
-    translate(0, -75, -75);
-    rotateY(PI/2);
-    rotateZ(-PI);
-    translate(745, -150, 150);
-    rotateZ(PI/2);
-    rotateY(PI/2);
-    translate(70, 0, 70);
-    
-    rotateY(getJointAngles()[3]);
-    
-    translate(-70, 0, -70);
-    rotateY(-PI/2);
-    rotateZ(-PI/2);    
-    translate(-115, 130, -124);
-    rotateZ(PI);
-    rotateY(-PI/2);
-    translate(0, 50, 50);
-    
-    rotateX(getJointAngles()[4]);
-    
-    translate(0, -50, -50);
-    rotateY(PI/2);
-    rotateZ(-PI);    
-    translate(150, -10, 95);
-    rotateY(-PI/2);
-    rotateZ(PI);
-    translate(45, 45, 0);
-    
-    rotateZ(getJointAngles()[5]);
-    
-    PVector ret = new PVector(
-    modelX(0, 0, 0),
-    modelY(0, 0, 0),
-    modelZ(0, 0, 0));
-    
-    popMatrix();
-    return ret;
-  }
-  
-  public PVector getFaceplate(float[] testAngles) {
-    float[] origAngles = getJointAngles();
-    setJointAngles(testAngles);
-    
-    PVector ret = getFaceplate();
-    setJointAngles(origAngles);
-    return ret;
-  }
-  
-  public Point getPosition(){
-    PVector pos = getEEPos();
-    float[] orient = getQuaternion();
-    
-    return new Point(pos, orient);
-  }
-  
-  public Point getPosition(float[] angles){
-    PVector pos = getEEPos(angles);
-    float[] orient = getQuaternion(angles);
-    
-    return new Point(pos, orient);
+    return nativeRobotEEPosition(jointAngles, offset);
   }
   
   //convenience method to set all joint rotation values of the robot arm
@@ -1095,7 +892,7 @@ public class ArmModel {
           setJointAngles(destAngles);
         }
         else {
-          tgtPos = armModel.getEEPos();
+          tgtPos = armModel.nativeEEPos().position;
           tgtRot = armModel.getQuaternion();
         }
       }

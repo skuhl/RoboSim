@@ -11,14 +11,18 @@ public class Point  {
 
   public Point() {
     angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
-    position = armModel.getEEPos(angles.clone());
-    orientation = armModel.getQuaternion(angles.clone());
+    // Fix later
+    Point pt = armModel.nativeEEPos(angles.clone());
+    position = pt.position;
+    orientation = pt.orientation;
   }
   
   public Point(float[] jointAngles) {
     angles = Arrays.copyOfRange(jointAngles, 0, 6);
-    position = armModel.getEEPos(angles.clone());
-    orientation = armModel.getQuaternion(angles.clone());
+    // Fix later
+    Point pt = armModel.nativeEEPos(angles.clone());
+    position = pt.position;
+    orientation = pt.orientation;
   }
   
   public Point(PVector pos, float[] orient) {
@@ -440,7 +444,7 @@ public class IOInstruction extends Instruction {
       
       if(state == ON && armModel.held == null) {
         
-        PVector ee_pos = armModel.getEEPos();
+        PVector ee_pos = armModel.nativeEEPos().position;
         println(ee_pos);
         // Determine if an object in the world can be picked up by the Robot
         for(WorldObject s : objects) {
