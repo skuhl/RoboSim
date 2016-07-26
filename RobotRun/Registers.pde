@@ -195,8 +195,8 @@ public class ExpressionEvaluationException extends RuntimeException {
 }
 
 public class AtomicExpression extends ExprOperand {
-  ExprOperand operand1;
-  ExprOperand operand2;
+  ExprOperand arg1;
+  ExprOperand arg2;
   Operator op;
   
   public AtomicExpression(){
@@ -210,21 +210,21 @@ public class AtomicExpression extends ExprOperand {
   public ExprOperand evaluate() {
     ExprOperand result;
     float o1, o2;
-    if(operand1.type == -1) {
-      o1 = ((AtomicExpression)operand1).evaluate().dataVal;
+    if(arg1.type == -1) {
+      o1 = ((AtomicExpression)arg1).evaluate().dataVal;
     } else {
-      o1 = operand1.dataVal;
+      o1 = arg1.dataVal;
     }
     
-    if(operand2.type == -1) {
-      o2 = ((AtomicExpression)operand2).evaluate().dataVal;
+    if(arg2.type == -1) {
+      o2 = ((AtomicExpression)arg2).evaluate().dataVal;
     } else {
-      o2 = operand2.dataVal;
+      o2 = arg2.dataVal;
     }
     
     //integer operands for integer operations
-    int intop1 = Math.round(operand1.dataVal);
-    int intop2 = Math.round(operand2.dataVal);
+    int intop1 = Math.round(arg1.dataVal);
+    int intop2 = Math.round(arg2.dataVal);
     
     switch(op) {
       case ADDTN:
@@ -257,10 +257,10 @@ public class AtomicExpression extends ExprOperand {
       case LESS:
         result = new ExprOperand(o1 < o2);
         break;
-      case GEQ:
+      case GREQ:
         result = new ExprOperand(o1 >= o2);
         break;
-      case LEQ:
+      case LSEQ:
         result = new ExprOperand(o1 <= o2);
         break;
       default:
@@ -273,18 +273,18 @@ public class AtomicExpression extends ExprOperand {
   
   public String toString(){
     String s = "";
-    if(operand1 == null){
+    if(arg1 == null){
       s += "...";
     } else {
-      s += operand1.toString();
+      s += arg1.toString();
     }
     
     s += " " + op.symbol + " ";
     
-    if(operand2 == null){
-      s += "...";
+    if(arg2 == null){
+      s += "... :";
     } else {
-      s += operand2.toString();
+      s += arg2.toString() + " :";
     }
     
     return s;
@@ -294,18 +294,18 @@ public class AtomicExpression extends ExprOperand {
     String[] s1, s2, ret;
     String opString = "";
     
-    if(operand1 == null){
+    if(arg1 == null){
       s1 = new String[] {"..."};
     } else {
-      s1 = operand1.toStringArray();
+      s1 = arg1.toStringArray();
     }
     
     opString += " " + op.symbol + " ";
     
-    if(operand2 == null){
+    if(arg2 == null){
       s2 = new String[] {"..."};
     } else {
-      s2 = operand2.toStringArray();
+      s2 = arg2.toStringArray();
     }
     
     ret = new String[s1.length + s2.length + 1];
@@ -314,9 +314,10 @@ public class AtomicExpression extends ExprOperand {
     }
     ret[s1.length] = opString;
     for(int i = 0; i < s2.length; i += 1){
-      ret[i] = s2[i];
+      ret[i+s1.length+1] = s2[i];
     }
     
+    ret[ret.length-1] += " :";
     return ret;
   }
 }
@@ -324,7 +325,7 @@ public class AtomicExpression extends ExprOperand {
 public class ExprOperand {
   //type: 0 = numeric operand, 1 = boolean operand
   //      2 = data reg operand, 3 = IO reg operand
-  //      4 = position reg operand, -1 = expression
+  //      4 = position reg operand, -1 = sub-expression
   final int type;
   int regIndex;
   float dataVal;

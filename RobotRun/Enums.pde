@@ -12,8 +12,8 @@ public enum Operator {
   NEQUAL("<>"),
   GRTR(">"),
   LESS("<"),
-  GEQ(">="),
-  LEQ("<="),
+  GREQ(">="),
+  LSEQ("<="),
   UNINIT("_");
   
   public final String symbol;
@@ -32,6 +32,7 @@ public static enum ScreenType implements DisplayMode {
   TYPE_LIST_CONTENTS,
   TYPE_CONFIRM_CANCEL,
   TYPE_INSTRUCT_EDIT,
+  TYPE_EXPR_EDIT,
   TYPE_TEACH_POINTS,
   TYPE_TEXT_ENTRY,
   TYPE_NUM_ENTRY,
@@ -52,7 +53,19 @@ public static enum Screen implements DisplayMode {
   SET_MV_INSTRUCT_REG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_FRM_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
-   
+  
+  SELECT_IF_OP(ScreenType.TYPE_EXPR_EDIT),
+  SELECT_SEL_OP(ScreenType.TYPE_EXPR_EDIT),
+  SET_BOOL_EXPR_ACT(ScreenType.TYPE_EXPR_EDIT),
+  SET_BOOL_EXPR_ARG1(ScreenType.TYPE_EXPR_EDIT),
+  SET_BOOL_EXPR_ARG2(ScreenType.TYPE_EXPR_EDIT),
+  SET_BOOL_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
+  
+  SELECT_REG_OP(ScreenType.TYPE_EXPR_EDIT),
+  SET_REG_EXPR_ARG1(ScreenType.TYPE_EXPR_EDIT),
+  SET_REG_EXPR_ARG2(ScreenType.TYPE_EXPR_EDIT),
+  SET_REG_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
+     
   /*
   * Screens used to display a sereal list of contents for the user to
   * examine and interact with
@@ -90,11 +103,11 @@ public static enum Screen implements DisplayMode {
   MAIN_MENU_NAV(ScreenType.TYPE_OPT_MENU),
   TOOL_FRAME_METHODS(ScreenType.TYPE_OPT_MENU),
   USER_FRAME_METHODS(ScreenType.TYPE_OPT_MENU),
+  SELECT_COND_STMT(ScreenType.TYPE_OPT_MENU),
   SELECT_FRAME_MODE(ScreenType.TYPE_OPT_MENU),
-  SELECT_IF_SEL(ScreenType.TYPE_OPT_MENU),
-  SELECT_IF_OP(ScreenType.TYPE_OPT_MENU),
   SELECT_INSTR_INSERT(ScreenType.TYPE_OPT_MENU),
   SELECT_JMP_LBL(ScreenType.TYPE_OPT_MENU),
+  SELECT_REG_EXPR_TYPE(ScreenType.TYPE_OPT_MENU),
   SETUP_NAV(ScreenType.TYPE_OPT_MENU),
   
   /*
@@ -109,18 +122,19 @@ public static enum Screen implements DisplayMode {
   * Screens involving the entry of numeric values via either a physical num pad or
   * the virtual numpad included in the simulator UI
   */
+  ACTIVE_FRAMES(ScreenType.TYPE_NUM_ENTRY),
   CONFIRM_INSERT(ScreenType.TYPE_NUM_ENTRY),
-  INPUT_INTEGER(ScreenType.TYPE_NUM_ENTRY),
   EDIT_DREG_VAL(ScreenType.TYPE_NUM_ENTRY),
-  JUMP_TO_LINE(ScreenType.TYPE_NUM_ENTRY), 
-  SET_MV_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
-  SET_MV_INSTR_SPD(ScreenType.TYPE_NUM_ENTRY),
-  SET_MV_INSTR_TERM(ScreenType.TYPE_NUM_ENTRY),
+  INPUT_INTEGER(ScreenType.TYPE_NUM_ENTRY),
+  JUMP_TO_LINE(ScreenType.TYPE_NUM_ENTRY),
   SET_FRM_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_IO_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_JUMP_LBL(ScreenType.TYPE_NUM_ENTRY),
-  ACTIVE_FRAMES(ScreenType.TYPE_NUM_ENTRY),
-  
+  SET_LBL_NUM(ScreenType.TYPE_NUM_ENTRY),
+  SET_MV_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
+  SET_MV_INSTR_SPD(ScreenType.TYPE_NUM_ENTRY),
+  SET_MV_INSTR_TERM(ScreenType.TYPE_NUM_ENTRY),
+    
   /*
    * Frame input methods
    */
