@@ -16,10 +16,10 @@ public enum Operator {
   LEQ("<="),
   UNINIT("_");
   
-  public final String opSymbol;
+  public final String symbol;
   
   private Operator(String s){
-    opSymbol = s;
+    symbol = s;
   }
 }
 
@@ -92,6 +92,7 @@ public static enum Screen implements DisplayMode {
   USER_FRAME_METHODS(ScreenType.TYPE_OPT_MENU),
   SELECT_FRAME_MODE(ScreenType.TYPE_OPT_MENU),
   SELECT_IF_SEL(ScreenType.TYPE_OPT_MENU),
+  SELECT_IF_OP(ScreenType.TYPE_OPT_MENU),
   SELECT_INSTR_INSERT(ScreenType.TYPE_OPT_MENU),
   SELECT_JMP_LBL(ScreenType.TYPE_OPT_MENU),
   SETUP_NAV(ScreenType.TYPE_OPT_MENU),
