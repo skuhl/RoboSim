@@ -90,74 +90,43 @@ void showMainDisplayText() {
     case JOINT:
       coordFrame += "Joint";
       break;
-      
     case WORLD:
       coordFrame += "World";
       break;
-      
     case TOOL:
       coordFrame += "Tool";
       break;
-      
     case USER:
       coordFrame += "User";
       break;
-    
     default:
   }
   
-  text(coordFrame, width-20, 20);
-  text(String.format("Speed: %d%%" , liveSpeed), width - 20, 40);
+  Point RP = currentRobotPoint(armModel.getJointAngles());
   
-  PVector ee_pos = armModel.getEEPos();
+  /*
+  // apply World Frame
+  pos = convertNativeToWorld(RP.position);
+  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
+  float[][] orienMatrix = quatToMatrix(orien);
+  orien = matrixToQuat( transform(orienMatrix, invertHCMatrix(tMatrix)) );
+  */
   
-  // Display the Current position and orientation of the Robot in the active User Frame or in the World Frame coordinate system.
-  if (curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
-    ee_pos = convertNativeToFrame(ee_pos, userFrames[activeUserFrame]);
-  } else if (curCoordFrame == CoordFrame.TOOL && activeToolFrame != -1) {
-    ee_pos = convertNativeToFrame(ee_pos, toolFrames[activeToolFrame]);
-  }
-  
-  // Display Native Coordinates in the JOINT Coordinte Mode
-  if (curCoordFrame != CoordFrame.JOINT) {
-    ee_pos = convertNativeToWorld(ee_pos);
-  }
-  
-  PVector wpr = armModel.getWPR();
-  
+  PVector wpr = quatToEuler(RP.orientation).mult(RAD_TO_DEG);
   // Show the coordinates of the End Effector for the current Coordinate Frame
-  String dis_world = String.format("Coord  X: %8.3f  Y: %8.3f  Z: %8.3f  W: %8.3f  P: %8.3f  R: %8.3f", 
-  ee_pos.x, ee_pos.y, ee_pos.z, wpr.x * RAD_TO_DEG, wpr.y * RAD_TO_DEG, wpr.z * RAD_TO_DEG);
-  text(dis_world, width - 20, 60);
+  String cartesian = String.format("Coord  X: %5.3f  Y: %5.3f  Z: %5.3f  W: %5.3f  P: %5.3f  R: %5.3f",
+                                    RP.position.x, RP.position.y, RP.position.z, wpr.x, wpr.y, wpr.z);
+  
   
   // Display the Robot's joint angles
-  float j[] = armModel.getJointAngles();
-  String dis_joint = String.format("Joints  J1: %5.3f J2: %5.3f J3: %5.3f J4: %5.3f J5: %5.3f J6: %5.3f", 
-  j[0] * RAD_TO_DEG, j[1] * RAD_TO_DEG, j[2] * RAD_TO_DEG, j[3] * RAD_TO_DEG, j[4] * RAD_TO_DEG, j[5] * RAD_TO_DEG);
-  text(dis_joint, width - 20, 80);
+  String joints = String.format("Joints  J1: %4.3f J2: %4.3f J3: %4.3f J4: %4.3f J5: %4.3f J6: %4.3f", 
+                                 RP.angles[0] * RAD_TO_DEG, RP.angles[1] * RAD_TO_DEG, RP.angles[2] * RAD_TO_DEG,
+                                 RP.angles[3] * RAD_TO_DEG, RP.angles[4] * RAD_TO_DEG, RP.angles[5] * RAD_TO_DEG);
   
-  Point RP = getRobotPoint(armModel.getJointAngles());
-  PVector pos;
-  float[][] orienMatrix = quatToMatrix(RP.orientation);
-  
-  // Display the Current position and orientation of the Robot in the active User Frame or in the World Frame coordinate system.
-  if (curCoordFrame == CoordFrame.USER && activeUserFrame != -1) {
-    pos = convertNativeToFrame(RP.position, userFrames[activeUserFrame]);
-    orienMatrix = transform(orienMatrix, userFrames[activeUserFrame].getWorldAxes());
-  } else if (curCoordFrame == CoordFrame.TOOL && activeToolFrame != -1) {
-    pos = convertNativeToFrame(RP.position, toolFrames[activeToolFrame]);
-    orienMatrix = transform(orienMatrix, toolFrames[activeToolFrame].getWorldAxes());
-  } else if (curCoordFrame == CoordFrame.WORLD) {
-    pos = convertNativeToWorld(RP.position);
-    float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
-    orienMatrix = transform(orienMatrix, invertHCMatrix(tMatrix));
-  } else {
-    pos = RP.position;
-  }
-  
-  wpr = matrixToEuler(orienMatrix);
-  String cartesian = String.format("Coord  X: %8.3f  Y: %8.3f  Z: %8.3f  W: %8.3f  P: %8.3f  R: %8.3f", pos.x, pos.y, pos.z, wpr.x * RAD_TO_DEG, wpr.y * RAD_TO_DEG, wpr.z * RAD_TO_DEG);
-  text(cartesian, width - 20, 180);
+  text(coordFrame, width - 20, 20);
+  text(String.format("Speed: %d%%" , liveSpeed), width - 20, 40);
+  text(cartesian, width - 20, 60);
+  text(joints, width - 20, 80);
   
   // Display a message if the Robot is in motion
   if (armModel.modelInMotion()) {
@@ -208,8 +177,6 @@ void showMainDisplayText() {
       text(obj1_c, width - 20, height - 42);
     }
   }
-  
-
   
   if(errorCounter > 0) {
     errorCounter--;
@@ -297,60 +264,110 @@ public void updateCoordFrame(ArmModel model) {
 }
 
 /**
- * Converts the given vector, v, from the Native Coordinate System into the User frame
- * Coordinate System defined by the given User frame, active.
+ * Applies the rotations and translations of the Robot Arm to get to the
+ * face plate center, given the set of six joint angles, each corresponding
+ * to a joint of the Robot Arm and each within the bounds of [0, TWO_PI).
  * 
- * @param v       Some vector in the XYZ plane
- * @param active  The frame, to whose Coordinate System v will be converted
- * @returning     The vector, v, interms of the given frame's Coordinate System
+ * @param jointAngles  A valid set of six joint angles (in radians) for the Robot
  */
-public PVector convertNativeToFrame(PVector v, Frame active) {
-  /**
-  float[] invAxes = new float[] { active.axes[0], -active.axes[1], -active.axes[2], -active.axes[3] };
-  return transform(v, active.getOrigin(), invAxes);
-  /**/
-  float[][] tMatrix = transformationMatrix(active.getOrigin(), active.getNativeAxes());
-  return transform(v, invertHCMatrix(tMatrix));
-  /**/
+public void applyModelRotation(float[] jointAngles) {
+  translate(600, 200, 0);
+  translate(-50, -166, -358); // -115, -213, -413
+  rotateZ(PI);
+  translate(150, 0, 150);
+  rotateY(jointAngles[0]);
+  translate(-150, 0, -150);
+  rotateZ(-PI);    
+  translate(-115, -85, 180);
+  rotateZ(PI);
+  rotateY(PI/2);
+  translate(0, 62, 62);
+  rotateX(jointAngles[1]);
+  translate(0, -62, -62);
+  rotateY(-PI/2);
+  rotateZ(-PI);   
+  translate(0, -500, -50);
+  rotateZ(PI);
+  rotateY(PI/2);
+  translate(0, 75, 75);
+  rotateX(jointAngles[2]);
+  translate(0, -75, -75);
+  rotateY(PI/2);
+  rotateZ(-PI);
+  translate(745, -150, 150);
+  rotateZ(PI/2);
+  rotateY(PI/2);
+  translate(70, 0, 70);
+  rotateY(jointAngles[3]);
+  translate(-70, 0, -70);
+  rotateY(-PI/2);
+  rotateZ(-PI/2);    
+  translate(-115, 130, -124);
+  rotateZ(PI);
+  rotateY(-PI/2);
+  translate(0, 50, 50);
+  rotateX(jointAngles[4]);
+  translate(0, -50, -50);
+  rotateY(PI/2);
+  rotateZ(-PI);    
+  translate(150, -10, 95);
+  rotateY(-PI/2);
+  rotateZ(PI);
+  translate(45, 45, 0);
+  rotateZ(jointAngles[5]);
 }
 
 /**
- * Converts the given vector, v, from the Coordinate System defined by User frame,
- * active, to the Native Coordinate System.
+ * Returns a point containing the Robot's faceplate position,
+ * orientation corresponding to the given joint angles, as well
+ * as the given joints.
  * 
- * @param v       Some vector in the XYZ plane
- * @param active  The frame, from whose Coordinate System v will be converted
- * @returning     The vector, v, in terms of the Native Coordinate System
+ * @param jointAngles  A valid set of six joint angles (in
+ *                     radians) for the Robot
+ * @returning  The Robot's faceplate position and orientation
+ *             corresponding to the given joint angles
  */
-public PVector convertFrameToNative(PVector v, Frame active) {
-  /**
-  return transform(v, active.getOrigin(), active.axes.clone());
-  /**/
-  float[][] tMatrix = transformationMatrix(active.getOrigin(), active.getNativeAxes());
-  return transform(v, tMatrix);
-  /**/
+public Point nativeRobotPoint(float[] jointAngles) {
+  
+  pushMatrix();
+  resetMatrix();
+  applyModelRotation(jointAngles);
+  PVector faceplate = getCoordFromMatrix(0f, 0f, 0f);
+  float[][] orientationMatrix = getRotationMatrix();
+  popMatrix();
+  // Return a Point containing the Faceplate position, orientation, and joint angles
+  return new Point(faceplate, matrixToQuat(orientationMatrix), jointAngles);
 }
 
 /**
- * Converts from RobotRun-defined world coordinates into
- * Processing's coordinate system.
- * Assumes that the robot starts out facing toward the LEFT.
+ * Returns a Point containing the Robot's position, orientation in reference
+ * to the currently active Tool or User Frame corresponding to the given set
+ * of joint angles, as well as the joint angles themselves.
+ * 
+ * @param jointAngles  A valid set of six joint angles (in radians)
+ *                     for the Robot
  */
-PVector convertWorldToNative(PVector v) {
-  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
-  return transform(v, tMatrix);
+public Point currentRobotPoint(float[] jointAngles) {
+  Point RP = nativeRobotPoint(jointAngles);
+  
+  if (activeToolFrame != -1) {
+    // Apply Tool Tip
+    RP.position = RP.position.add(toolFrames[activeToolFrame].getOrigin());
+  }
+  
+  if (curCoordFrame == CoordFrame.USER) {
+    // apply User Frame
+    return applyFrame(RP, userFrames[activeUserFrame]);
+  } else if (curCoordFrame == CoordFrame.TOOL) {
+    // apply Tool Frame
+    ToolFrame tFrame = new ToolFrame();
+    tFrame.setAxes(toolFrames[activeToolFrame].getAxes());
+    
+    return applyFrame(RP, tFrame);
+  }
+  // No active frames
+  return RP;
 }
-
-/**
- * Converts from Processing's native coordinate system to
- * RobotRun-defined world coordinates.
- */
-PVector convertNativeToWorld(PVector v) {
-  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
-  return transform(v, invertHCMatrix(tMatrix));
-}
-
-public 
 
 /**
  * Takes a vector and a (probably not quite orthogonal) second vector
@@ -413,150 +430,6 @@ public void drawEndEffectorGridMapping() {
   default:
     // No EE grid mapping
   }
-}
-
-/**
- * Performs rotations and translations to reach the end effector
- * position, similarly to calculateEndEffectorPosition(), but
- * this function doesn't return anything and also doesn't pop
- * the matrix after performing the transformations. Useful when
- * you're doing some graphical manipulation and you want to use
- * the end effector position as your start point.
- * 
- * @param model        The arm model whose transformations to apply
- * @param applyOffset  Whether to apply the Tool Frame End
- *                     Effector offset (if it exists)
- */
-public void applyModelRotation(ArmModel model, boolean applyOffset) {   
-  translate(600, 200, 0);
-  translate(-50, -166, -358); // -115, -213, -413
-  rotateZ(PI);
-  translate(150, 0, 150);
-  rotateY(model.segments.get(0).currentRotations[1]);
-  translate(-150, 0, -150);
-  rotateZ(-PI);    
-  translate(-115, -85, 180);
-  rotateZ(PI);
-  rotateY(PI/2);
-  translate(0, 62, 62);
-  rotateX(model.segments.get(1).currentRotations[2]);
-  translate(0, -62, -62);
-  rotateY(-PI/2);
-  rotateZ(-PI);   
-  translate(0, -500, -50);
-  rotateZ(PI);
-  rotateY(PI/2);
-  translate(0, 75, 75);
-  rotateX(model.segments.get(2).currentRotations[2]);
-  translate(0, -75, -75);
-  rotateY(PI/2);
-  rotateZ(-PI);
-  translate(745, -150, 150);
-  rotateZ(PI/2);
-  rotateY(PI/2);
-  translate(70, 0, 70);
-  rotateY(model.segments.get(3).currentRotations[0]);
-  translate(-70, 0, -70);
-  rotateY(-PI/2);
-  rotateZ(-PI/2);    
-  translate(-115, 130, -124);
-  rotateZ(PI);
-  rotateY(-PI/2);
-  translate(0, 50, 50);
-  rotateX(model.segments.get(4).currentRotations[2]);
-  translate(0, -50, -50);
-  rotateY(PI/2);
-  rotateZ(-PI);    
-  translate(150, -10, 95);
-  rotateY(-PI/2);
-  rotateZ(PI);
-  translate(45, 45, 0);
-  rotateZ(model.segments.get(5).currentRotations[0]);
-  
-  if(applyOffset && (curCoordFrame == CoordFrame.TOOL || curCoordFrame == CoordFrame.WORLD)) { armModel.applyToolFrame(activeToolFrame); }
-} // end apply model rotations
-
-/**
- * Applies the rotations and translations of the Robot Arm to get to the
- * face plate center, given the set of six joint angles, each corresponding
- * to a joint of the Robot Arm and each within the bounds of [0, TWO_PI).
- * 
- * jointAngles  A set of 6 joint angles (in radians)
- */
-public void applyModelRotation(float[] jointAngles) {
-  translate(600, 200, 0);
-  translate(-50, -166, -358); // -115, -213, -413
-  rotateZ(PI);
-  translate(150, 0, 150);
-  rotateY(jointAngles[0]);
-  translate(-150, 0, -150);
-  rotateZ(-PI);    
-  translate(-115, -85, 180);
-  rotateZ(PI);
-  rotateY(PI/2);
-  translate(0, 62, 62);
-  rotateX(jointAngles[1]);
-  translate(0, -62, -62);
-  rotateY(-PI/2);
-  rotateZ(-PI);   
-  translate(0, -500, -50);
-  rotateZ(PI);
-  rotateY(PI/2);
-  translate(0, 75, 75);
-  rotateX(jointAngles[2]);
-  translate(0, -75, -75);
-  rotateY(PI/2);
-  rotateZ(-PI);
-  translate(745, -150, 150);
-  rotateZ(PI/2);
-  rotateY(PI/2);
-  translate(70, 0, 70);
-  rotateY(jointAngles[3]);
-  translate(-70, 0, -70);
-  rotateY(-PI/2);
-  rotateZ(-PI/2);    
-  translate(-115, 130, -124);
-  rotateZ(PI);
-  rotateY(-PI/2);
-  translate(0, 50, 50);
-  rotateX(jointAngles[4]);
-  translate(0, -50, -50);
-  rotateY(PI/2);
-  rotateZ(-PI);    
-  translate(150, -10, 95);
-  rotateY(-PI/2);
-  rotateZ(PI);
-  translate(45, 45, 0);
-  rotateZ(jointAngles[5]);
-}
-
-/**
- * Returns a point containing the Robot's faceplate position,
- * orientation corresponding to the given joint angles as well
- * as the given joints.
- * 
- * @param      jointAngles  A set of six joint angles (in radians)
- * @returning  The Robot's faceplate position and orientation
- *             corresponding to the given joint angles
- */
-public Point getRobotPoint(float[] jointAngles) {
-  
-  pushMatrix();
-  resetMatrix();
-  applyModelRotation(jointAngles);
-  PVector faceplate = getCoordFromMatrix(0f, 0f, 0f);
-  float[][] orientationMatrix = getRotationMatrix();
-  popMatrix();
-  // Return a Point containing the Faceplate position, orientation, and joint angles
-  return new Point(faceplate, matrixToQuat(orientationMatrix), jointAngles);
-}
-
-/**
- * TODO
- */
-public Point applyFrame(float[] jointAngles, Frame frame) {
-  // TODO apply the given Frame
-  return getRobotPoint(jointAngles);
 }
 
 /**

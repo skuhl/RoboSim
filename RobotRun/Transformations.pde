@@ -1,3 +1,65 @@
+/**
+ * Converts the given point, pt, into the Coordinate System defined by the frame, active.
+ * 
+ * @param pt      A point with initialized position and orientation
+ * @param active  The frame, to whose Coordinate System pt will be converted
+ * @returning     The point, pt, interms of the given frame's Coordinate System
+ */
+public Point applyFrame(Point pt, Frame active) {
+  float[] invAxes = new float[] { active.axes[0], -active.axes[1], -active.axes[2], -active.axes[3] };
+  PVector position = transform(pt.position, active.getOrigin(), active.getAxes());
+  float[] orientation = quaternionMult(pt.orientation, invAxes);
+  
+  return new Point(position, orientation, pt.angles);
+}
+
+/**
+ * Converts the given point, pt, from the Coordinate System defined by the frame, active.
+ * 
+ * @param pt      A point with initialized position and orientation
+ * @param active  The frame, from whose Coordinate System pt will be converted
+ * @returning     The point, pt, in terms of the Native Coordinate System
+ */
+public Point removeFrame(Point pt, Frame active) {
+  PVector position = transform(pt.position, active.getOrigin(), active.getAxes());
+  float[] orientation = quaternionMult(pt.orientation, active.getAxes());
+  
+  return new Point(position, orientation, pt.angles);
+}
+
+/**
+ * Converts the given vector form the right-hand World Frame Coordinate System
+ * to the left-hand Native Coordinate System.
+ */
+public PVector convertWorldToNative(PVector v) {
+  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
+  return transform(v, tMatrix);
+}
+
+/**
+ * Converts the given vector form the left-hand Native Coordinate System to the
+ * right-hand World Frame Coordinate System.
+ */
+public PVector convertNativeToWorld(PVector v) {
+  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
+  return transform(v, invertHCMatrix(tMatrix));
+}
+
+/**
+ * Converts the given vector into the Coordinate System defined by
+ * the given vector origin offset and rotation quanternion.
+ * 
+ * @param v       A vector in the xyz plane
+ * @param origin  The origin of the Coordinate System
+ * @param axes    A unit quaternion representing the axes of the
+ *                Coordinate System
+ * @param         The vector, v, in reference to the Coordinate
+ *                System defined by origin and axes
+ */
+public PVector transform(PVector v, PVector origin, float[] axes) {
+  return rotateVectorQuat(v.sub(origin), axes);
+}
+
 /* Transforms the given vector from the coordinate system defined by the given
  * transformation matrix (column major order). */
 public PVector transform(PVector v, float[][] tMatrix) {
@@ -12,16 +74,6 @@ public PVector transform(PVector v, float[][] tMatrix) {
   u.z = v.x * tMatrix[2][0] + v.y * tMatrix[2][1] + v.z * tMatrix[2][2] + tMatrix[2][3];
 
   return u;
-}
-
-/**
- *
- */
-public float[][] transform(float[][] orientation, float[][] axes) {
-  RealMatrix limboOrient = new Array2DRowRealMatrix(floatToDouble(orientation, 3, 3));
-  RealMatrix limboAxes = new Array2DRowRealMatrix(floatToDouble(axes, 3, 3));
-  
-  return doubleToFloat(limboOrient.multiply(limboAxes).getData(), 3, 3);
 }
 
 /* Transforms the given vector by the given 3x3 rotation matrix (row major order). */
@@ -241,7 +293,6 @@ float[][] eulerToMatrix(PVector wpr) {
   r[2][0] = vz.x;
   r[2][1] = vz.y;
   r[2][2] = vz.z;
-  
   /**/
   
   r[0][0] = cos(yRot)*cos(zRot);
@@ -386,8 +437,8 @@ float[][] quatToMatrix(float[] q) {
   r[2][0] = vz.x;
   r[2][1] = vz.y;
   r[2][2] = vz.z;
-  
   /**/
+  
   r[0][0] = 1 - 2*(q[2]*q[2] + q[3]*q[3]);
   r[0][1] = 2*(q[1]*q[2] - q[0]*q[3]);
   r[0][2] = 2*(q[0]*q[2] + q[1]*q[3]);
@@ -537,30 +588,32 @@ PVector rotateVectorQuat(PVector v, PVector u, float theta) {
   return new PVector(p_prime[1], p_prime[2], p_prime[3]);
 }
 
+/**
+ * Rotates the given vector, v, by the given unit quaternion, q.
+ * 
+ * @param v    A vector in the xyz plane
+ * @param q    A unit quaternion that defines a rotation
+ * @returning  v rotated by q
+ */
 PVector rotateVectorQuat(PVector v, float[] q) {
   float[] p = new float[4];
   float[] q_inv = new float[4];
   float[] p_prime = new float[4];
-  
+  // v
   p[0] = 0;
   p[1] = v.x;
   p[2] = v.y;
   p[3] = v.z;
-  
+  // q'
   q_inv[0] = q[0];
   q_inv[1] = -q[1];
   q_inv[2] = -q[2];
   q_inv[3] = -q[3];
-  
+  // u = q * v * q'
   p_prime = quaternionMult(q, p);
   p_prime = quaternionMult(p_prime, q_inv);
-
+  
   return new PVector(p_prime[1], p_prime[2], p_prime[3]);
-}
-
-public PVector transform(PVector v, PVector origin, float[] axes) {
-  PVector rotatedVector = rotateVectorQuat(v, axes);
-  return rotatedVector.add(origin);
 }
 
 /* Given 2 quaternions, calculates the quaternion representing the 

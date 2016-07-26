@@ -38,6 +38,8 @@ public abstract class Frame {
     
     return doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
   }
+  
+  public float[] getAxes() { return axes.clone(); }
 
   public void setAxes(float[] newAxes) {
     axes = newAxes.clone();
@@ -388,6 +390,47 @@ public class UserFrame extends Frame {
     
     return false;
   }
+}
+
+/**
+ * Returns the active Tool frame for either TOOL or WORLD, or the active
+ * User frame for USER. If no active frame is set or JOINT is given as a
+ * parameter, then null is returned. If null is given as a parameter, then
+ * the active Coordinate Frame System is checked.
+ * 
+ * @param coord  The Coordinate Frame System to check for an active frame,
+ *               or null to check the current active Frame System.
+ */
+public Frame getActiveFrame(CoordFrame coord) {
+  if (coord == null) {
+    // Use current coordinate Frame
+    coord = curCoordFrame;
+  }
+  
+  // Determine if a frame is active in the given Coordinate Frame
+  if (coord == CoordFrame.USER && activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
+    // active User frame
+    return userFrames[activeUserFrame];
+  } else if ((coord == CoordFrame.TOOL || coord == CoordFrame.WORLD) && activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
+    // active Tool frame
+    return toolFrames[activeToolFrame];
+  } else {
+    // no active frame
+    return null;
+  }
+}
+
+/**
+ * Checks if a Frame is active for the given Coordinate Frame System. The
+ * active Tool Frame will be checked if either TOOL or WORLD are given and
+ * false will be return for JOINT always. If null is given as a parameter,
+ * then the current value of curCoordFrame will be checked instead.
+ * 
+ * @param coord  The Coordinate Frame System to check for an active frame,
+ *               or null to check the current active Frame System.
+ */
+public boolean frameActive(CoordFrame coord) {
+  return getActiveFrame(coord) == null;
 }
 
 /**

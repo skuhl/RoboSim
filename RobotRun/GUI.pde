@@ -1273,7 +1273,7 @@ public void dn() {
   int size;
   switch(mode) {
     case NAV_PROGRAMS:
-      size = programs.size(); //<>// //<>//
+      size = programs.size(); //<>// //<>// //<>//
       int[] indices = moveDown(active_prog, size, opt_select, renderStartIdx, shift);
       
       active_prog = indices[0];
@@ -1303,7 +1303,7 @@ public void dn() {
       break;
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
-    case SELECT_DELETE: //<>//
+    case SELECT_DELETE: //<>// //<>//
       size = programs.get(active_prog).getInstructions().size();
       indices = moveDown(active_instr, size, row_select, renderStartIdx, shift);
       
@@ -1316,7 +1316,7 @@ public void dn() {
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
         row_select, col_select, active_instr, renderStartIdx);
-      } //<>//
+      } //<>// //<>//
       break;
     case NAV_DREGS:
     case NAV_PREGS_J:
@@ -1397,9 +1397,9 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>// //<>// //<>//
+        // Reset function key states //<>// //<>// //<>// //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } //<>// //<>//
+      } //<>// //<>// //<>//
   }
   
   updateScreen();
@@ -1900,7 +1900,7 @@ public void f5() {
         Point curPosition = new Point(new PVector(tMatrix[0][3], tMatrix[1][3], tMatrix[2][3]), orientation);
         curPosition.angles = armModel.getJointAngles();*/
         // Save the current position of the Robot's Faceplate
-        teachFrame.setPoint(getRobotPoint(armModel.getJointAngles()), opt_select);
+        teachFrame.setPoint(nativeRobotPoint(armModel.getJointAngles()), opt_select);
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         updateScreen();
       }
@@ -2803,7 +2803,7 @@ public void JOINT1_NEG() {
       activateLiveJointMotion(0, -1);
     } else {
       // Move entire robot in a single axis plane
-      activateLiveWorldMotion(0, 1);
+      activateLiveWorldMotion(0, -1);
     }
     
     int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
@@ -2829,7 +2829,7 @@ public void JOINT1_POS() {
       activateLiveJointMotion(0, 1);
     } else  {
       // Move entire robot in a single axis plane
-      activateLiveWorldMotion(0, -1);
+      activateLiveWorldMotion(0, 1);
     }
     
     int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
@@ -2856,7 +2856,7 @@ public void JOINT2_NEG() {
       activateLiveJointMotion(1, -1);
     } else  {
       // Move entire robot in a single axis plane
-      activateLiveWorldMotion(2, -1);
+      activateLiveWorldMotion(1, -1);
     }
     
     int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
@@ -2882,7 +2882,7 @@ public void JOINT2_POS() {
       activateLiveJointMotion(1, 1);
     } else  {
       // Move entire robot in a single axis plane
-      activateLiveWorldMotion(2, 1);
+      activateLiveWorldMotion(1, 1);
     }
     
     int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
@@ -2908,7 +2908,7 @@ public void JOINT3_NEG() {
       activateLiveJointMotion(2, -1);
     } else  {
       // Move entire robot in a single axis plane
-      activateLiveWorldMotion(1, 1);
+      activateLiveWorldMotion(2, -1);
     }
     
     int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
@@ -2934,7 +2934,7 @@ public void JOINT3_POS() {
       activateLiveJointMotion(2, 1);
     } else  {
       // Move entire robot in a single axis plane
-      activateLiveWorldMotion(1, -1);
+      activateLiveWorldMotion(2, 1);
     }
     
     int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
@@ -3012,7 +3012,7 @@ public void JOINT5_NEG() {
       activateLiveJointMotion(4, -1);
     } else {
       // Move entire robot in a single axis plane
-      activateLiveWorldMotion(5, -1);
+      activateLiveWorldMotion(4, -1);
     }
     
     int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
@@ -3038,7 +3038,7 @@ public void JOINT5_POS() {
       activateLiveJointMotion(4, 1);
     } else {
       // Move entire robot in a single axis plane
-      activateLiveWorldMotion(5, 1);
+      activateLiveWorldMotion(4, 1);
     }
     
     int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
@@ -3064,7 +3064,7 @@ public void JOINT6_NEG() {
       activateLiveJointMotion(5, -1);
     } else {
       // Move entire robot in a single axis plane
-      activateLiveWorldMotion(4, -1);
+      activateLiveWorldMotion(5, -1);
     }
     
     int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
@@ -3090,7 +3090,7 @@ public void JOINT6_POS() {
       activateLiveJointMotion(5, 1);
     } else {
       // Move entire robot in a single axis plane
-      activateLiveWorldMotion(4, 1);
+      activateLiveWorldMotion(5, 1);
     }
     
     int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
@@ -3144,7 +3144,7 @@ public void activateLiveJointMotion(int joint, int dir) {
  * independent in this regard.
  * 
  * @param axis        The axis of movement for the robotic arm:
-                      x - 0, y - 2, z - 1, w - 3, p - 5, r - 4
+                      x - 0, y - 1, z - 2, w - 3, p - 4, r - 5
  * @pararm dir        +1 or -1: indicating the direction of motion
  *
  */
@@ -3162,7 +3162,7 @@ public void activateLiveWorldMotion(int axis, int dir) {
     }
   }
   else if(axis >= 3 && axis < 6) {
-    axis -= 3;
+    axis %= 3;
     if(armModel.jogRot[axis] == 0) {
       armModel.jogRot[axis] = dir;
     }
@@ -3238,6 +3238,7 @@ public boolean lastScreen() {
     if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s => %s\n", mode, display_stack.peek()); }
     mode = display_stack.peek();
     
+    loadScreen();
     updateScreen();
     return true;
   }
@@ -4428,15 +4429,10 @@ boolean[] resetSelection(int n) {
 
 public void newMotionInstruction() {
   // overwrite current instruction
-  PVector eep = armModel.getEEPos();
-  float[] q = armModel.getQuaternion();
-  float[] j = armModel.getJointAngles();
-  
   Program prog = programs.get(active_prog);
   int reg = prog.getNextPosition();
   
-  prog.addPosition(new Point(eep.x, eep.y, eep.z, q[0], q[1], q[2], q[3],
-  j[0], j[1], j[2], j[3], j[4], j[5]), reg);
+  prog.addPosition(nativeRobotPoint(armModel.getJointAngles()), reg);
   
   MotionInstruction insert = new MotionInstruction(
   (curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR),

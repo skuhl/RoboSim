@@ -1037,6 +1037,7 @@ public class ArmModel {
         PVector move = new PVector(jogLinear[0], jogLinear[1], jogLinear[2]);
         // Convert the movement vector into the current reference frame
         move = rotate(move, currentFrame);
+        //move = convertNativeToWorld(move);
         
         //respond to user defined movement
         float distance = motorSpeed/6000f * liveSpeed;
