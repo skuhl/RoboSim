@@ -1229,6 +1229,7 @@ public void up() {
     case SELECT_INSTR_INSERT:
     case SELECT_JMP_LBL:
     case SELECT_IF_SEL:
+    case SELECT_IF_OP:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
     case TEACH_3PT_USER:
@@ -1343,6 +1344,7 @@ public void dn() {
     case SELECT_INSTR_INSERT:
     case SELECT_JMP_LBL:
     case SELECT_IF_SEL:
+    case SELECT_IF_OP:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
     case TEACH_3PT_USER:
@@ -2241,10 +2243,32 @@ public void ENTER() {
       break;
     case SELECT_IF_SEL:
       if(opt_select == 0)
-        //newIfStmt();
-      //else
-        //newSelStmt();
+        nextScreen(Screen.SELECT_IF_OP);
+        
+      break;
+    case SELECT_IF_OP:
+      switch(opt_select){
+        case 0:
+          newIfStmt(Operator.EQUAL);
+          break;
+        case 1:
+          newIfStmt(Operator.EQUAL);
+          break;
+        case 2:
+          newIfStmt(Operator.EQUAL);
+          break;
+        case 3:
+          newIfStmt(Operator.EQUAL);
+          break;
+        case 4:
+          newIfStmt(Operator.EQUAL);
+          break;
+        case 5:
+          newIfStmt(Operator.EQUAL);
+          break;
+      }
       
+      display_stack.pop();
       display_stack.pop();
       lastScreen();
       break;
@@ -3866,6 +3890,14 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("1. IF Stmt");
       options.add("2. SEL Stmt");
       break;
+    case SELECT_IF_OP:
+      options.add("1. ... = ...");
+      options.add("2. ... <> ...");
+      options.add("3. ... > ...");
+      options.add("4. ... < ...");
+      options.add("5. ... >= ...");
+      options.add("6. ... <= ...");
+      break;
     case SELECT_JMP_LBL:
       options.add("1. Insert LBL");
       options.add("2. Insert JMP");
@@ -4245,6 +4277,17 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
           m.add("OFF");
         }
       }
+      else if(instr instanceof IfStatement){
+        IfStatement stmt = (IfStatement)instr;
+        String[] s = stmt.expr.toStringArray();
+        
+        m.add("IF ");
+        for(int j = 0; i < s.length; i += 1) {
+          m.add(s[j]); 
+        }
+        
+        
+      }
       else {
         m.add(instr.toString());
       }
@@ -4449,6 +4492,17 @@ public void newJumpInstruction() {
     p.overwriteInstruction(active_instr, j);
   } else {
     p.addInstruction(j);
+  }
+}
+
+public void newIfStmt(Operator o) {
+  Program p = programs.get(active_prog);
+  IfStatement stmt = new IfStatement(o, null);
+  
+  if(active_instr != p.getInstructions().size()) {
+    p.overwriteInstruction(active_instr, stmt);
+  } else {
+    p.addInstruction(stmt);
   }
 }
 

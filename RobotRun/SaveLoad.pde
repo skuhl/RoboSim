@@ -420,7 +420,6 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
   byte instType = in.readByte();
   
   if(instType == 0) {
-    
     // Read data for a MotionInstruction object
     int mType = in.readInt();
     int reg = in.readInt();
@@ -432,11 +431,9 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     
     inst = new MotionInstruction(mType, reg, isGlobal, spd, term, uFrame, tFrame);
   } else if(instType == 1) {
-    
     // Read data for a FrameInstruction object
     inst = new FrameInstruction( in.readInt(), in.readInt() );
   } else if(instType == 2) {
-    
     // Read data for a ToolInstruction object
     int reg = in.readInt();
     int setting = in.readInt();

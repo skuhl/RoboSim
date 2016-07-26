@@ -270,40 +270,95 @@ public class AtomicExpression extends ExprOperand {
     
     return result;
   }
+  
+  public String toString(){
+    String s = "";
+    if(operand1 == null){
+      s += "...";
+    } else {
+      s += operand1.toString();
+    }
+    
+    s += " " + op.symbol + " ";
+    
+    if(operand2 == null){
+      s += "...";
+    } else {
+      s += operand2.toString();
+    }
+    
+    return s;
+  }
+  
+  public String[] toStringArray(){
+    String[] s1, s2, ret;
+    String opString = "";
+    
+    if(operand1 == null){
+      s1 = new String[] {"..."};
+    } else {
+      s1 = operand1.toStringArray();
+    }
+    
+    opString += " " + op.symbol + " ";
+    
+    if(operand2 == null){
+      s2 = new String[] {"..."};
+    } else {
+      s2 = operand2.toStringArray();
+    }
+    
+    ret = new String[s1.length + s2.length + 1];
+    for(int i = 0; i < s1.length; i += 1){
+      ret[i] = s1[i];
+    }
+    ret[s1.length] = opString;
+    for(int i = 0; i < s2.length; i += 1){
+      ret[i] = s2[i];
+    }
+    
+    return ret;
+  }
 }
 
 public class ExprOperand {
   //type: 0 = numeric operand, 1 = boolean operand
   //      2 = data reg operand, 3 = IO reg operand
-  //      -1 = expression 
+  //      4 = position reg operand, -1 = expression
   final int type;
+  int regIndex;
   float dataVal;
   boolean boolVal;
   
   public ExprOperand(){
     type = -1;
+    regIndex = -1;
   }
   
   public ExprOperand(float d) {
     type = 0;
+    regIndex = -1;
     dataVal = d;
     boolVal = getBoolVal(dataVal);
   }
   
   public ExprOperand(boolean b) {
     type = 1;
+    regIndex = -1;
     dataVal = b ? 1 : 0;
     boolVal = b;
   }
   
-  public ExprOperand(DataRegister dReg) {
+  public ExprOperand(DataRegister dReg, int i) {
     type = 2;
+    regIndex = i;
     dataVal = dReg.value;
     boolVal = getBoolVal(dataVal);
   }
   
-  public ExprOperand(IORegister ioReg) {
+  public ExprOperand(IORegister ioReg, int i) {
     type = 3;
+    regIndex = i;
     if(ioReg.state == ON) {
       dataVal = 1;
       boolVal = true;
@@ -311,6 +366,12 @@ public class ExprOperand {
       dataVal = 0;
       boolVal = false;
     }
+  }
+  
+  public ExprOperand(PositionRegister pReg, int i){
+    type = 4;
+    regIndex = i;
+    
   }
   
   /* Returns the boolean value of a floating point value, where a value of 0 is considered to be
@@ -328,6 +389,49 @@ public class ExprOperand {
     }
     
     return bool;
+  }
+  
+  public String toString(){
+    String s = "";
+    switch(type){
+      case -1: 
+        s = ((AtomicExpression)this).toString();
+        break;
+      case 0:
+        s += dataVal;
+        break;
+      case 1:
+        s += boolVal ? "TRUE" : "FALSE";
+        break;
+      case 2:
+        s += "DR[" + regIndex + "]";
+        break;
+      case 3:
+        s += "IO[" + regIndex + "]";
+        break;
+    }
+    
+    return s;
+  }
+  
+  public String[] toStringArray(){
+    String[] s;
+    switch(type){
+      case -1: 
+        s = ((AtomicExpression)this).toStringArray();
+        break;
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+        s = new String[] {this.toString()};
+        break;
+      default:
+        s = null;
+        break;
+    }
+    
+    return s;
   }
 }
 
@@ -709,7 +813,7 @@ public class RegExpression {
         return String.format("%s[%s]", prefix, indices);
       }
     } else if (param instanceof Operator) {
-      return ((Operator)param).opSymbol;
+      return ((Operator)param).symbol;
     }
     
     // Simply print the value for constants
