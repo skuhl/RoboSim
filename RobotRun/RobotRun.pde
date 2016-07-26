@@ -168,21 +168,22 @@ public void draw() {
   noLights();
   
   //TESTING CODE: DRAW INTERMEDIATE POINTS
-  //noStroke();
-  //pushMatrix();
-  //if(intermediatePositions != null) {
-  //  int count = 0;
-  //  for(Point p : intermediatePositions) {
-  //    if(count % 8 == 0) {
-  //      pushMatrix();
-  //      translate(p.pos.x, p.pos.y, p.pos.z);
-  //      sphere(10);
-  //      popMatrix();
-  //    }
-  //    count += 1;
-  //  }
-  //}
-  //popMatrix(); 
+  noStroke();
+  pushMatrix();
+  if(intermediatePositions != null) {
+    int count = 0;
+    for(Point p : intermediatePositions) {
+      if(count % 4 == 0) {
+        pushMatrix();
+        stroke(0);
+        translate(p.position.x, p.position.y, p.position.z);
+        sphere(5);
+        popMatrix();
+      }
+      count += 1;
+    }
+  }
+  popMatrix(); 
   //TESTING CODE: DRAW END EFFECTOR POSITION
   pushMatrix();
   noFill();
