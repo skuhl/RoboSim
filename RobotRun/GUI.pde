@@ -10,6 +10,7 @@ final int BUTTON_DEFAULT = color(70),
 int active_prog = -1; // the currently selected program
 int active_instr = -1; // the currently selected instruction
 int NUM_MODE; // When NUM_MODE is ON, allows for entering numbers
+boolean valueInit = false; //used to init an instruction param
 boolean shift = false; // Is shift button pressed or not?
 boolean step = false; // Is step button pressed or not?
 int record = OFF;
@@ -1228,7 +1229,7 @@ public void up() {
     case TOOL_FRAME_METHODS:
     case SELECT_INSTR_INSERT:
     case SELECT_JMP_LBL:
-    case SELECT_IF_SEL:
+    case SELECT_COND_STMT:
     case SELECT_IF_OP:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
@@ -1343,7 +1344,7 @@ public void dn() {
     case TOOL_FRAME_METHODS:
     case SELECT_INSTR_INSERT:
     case SELECT_JMP_LBL:
-    case SELECT_IF_SEL:
+    case SELECT_COND_STMT:
     case SELECT_IF_OP:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
@@ -1682,7 +1683,7 @@ public void f4() {
           nextScreen(Screen.SET_MV_INSTR_TERM);
           break;
       }
-    } 
+    }
     else if(ins instanceof FrameInstruction) {
       switch(col_select) {
         case 1:
@@ -1705,6 +1706,22 @@ public void f4() {
     }
     else if(ins instanceof JumpInstruction){
       nextScreen(Screen.SET_JUMP_LBL);
+    }
+    else if(ins instanceof IfStatement){
+      switch(col_select) {
+        case 2:
+          nextScreen(Screen.SET_BOOL_EXPR_ARG1);
+          break;
+        case 3:
+          nextScreen(Screen.SET_BOOL_EXPR_OP);
+          break;
+        case 4:
+          nextScreen(Screen.SET_BOOL_EXPR_ARG2);
+          break;
+        case 5:
+          nextScreen(Screen.SET_BOOL_EXPR_ACT);
+          break;
+      }
     }
     break;
   case CONFIRM_INSERT:
@@ -1797,7 +1814,6 @@ public void f4() {
     p = programs.get(active_prog);
     Point[] pTemp = new Point[1000];
     int posIdx = 0;
-    int lblIdx = 0;
     
     //make a copy of the current positions in p
     for(int i = 0; i < 1000; i += 1){
@@ -1815,10 +1831,6 @@ public void f4() {
         ((MotionInstruction)instr).setPosition(posIdx);
         posIdx += 1;
       }
-      //else if(instr instanceof LabelInstruction) {
-      //  ((LabelInstruction)instr).labelNum = lblIdx;
-      //  lblIdx += 1;
-      //}
     }
     
     display_stack.pop();
@@ -1845,7 +1857,6 @@ public void f4() {
     
     break;
   default:
-    
     if (mode.type == ScreenType.TYPE_TEACH_POINTS) {
       
       if (shift && teachFrame != null) {
@@ -2070,9 +2081,6 @@ public void ENTER() {
     case SETUP_NAV:
       nextScreen(Screen.SELECT_FRAME_MODE);
       break;
-    case ACTIVE_FRAMES:
-      updateActiveFramesDisplay();
-      break;
     //Frame nav and edit
     case SELECT_FRAME_MODE:
       if(opt_select == 0) {
@@ -2081,6 +2089,9 @@ public void ENTER() {
       else if(opt_select == 1) {
         nextScreen(Screen.NAV_USER_FRAMES);
       }
+      break;
+    case ACTIVE_FRAMES:
+      updateActiveFramesDisplay();
       break;
     case NAV_TOOL_FRAMES:
       curFrameIdx = row_select;
@@ -2219,32 +2230,33 @@ public void ENTER() {
       break;
     case SELECT_INSTR_INSERT:
       switch(opt_select){
-        case 0:
+        case 0: // I/O
           newIOInstruction();
           lastScreen();
           break;
-        case 1:
-          // Offset/Frames
+        case 1: // Offset/Frames
           newFrameInstruction();
           lastScreen();
           break;
-        case 2:   
+        case 2: //Register 
           nextScreen(Screen.INPUT_RSTMT);
           break;
-        case 3:
-          nextScreen(Screen.SELECT_IF_SEL);
+        case 3: //IF/ SELECT
+          nextScreen(Screen.SELECT_COND_STMT);
           break;
-        case 4:
+        case 4: //JMP/ LBL
           nextScreen(Screen.SELECT_JMP_LBL);
           break;
       }
       break;
     case INPUT_RSTMT:
       break;
-    case SELECT_IF_SEL:
-      if(opt_select == 0)
+    case SELECT_COND_STMT:
+      if(opt_select == 0){
         nextScreen(Screen.SELECT_IF_OP);
-        
+      } else {
+        nextScreen(Screen.SELECT_SEL_OP);
+      }      
       break;
     case SELECT_IF_OP:
       switch(opt_select){
@@ -2252,25 +2264,41 @@ public void ENTER() {
           newIfStmt(Operator.EQUAL);
           break;
         case 1:
-          newIfStmt(Operator.EQUAL);
+          newIfStmt(Operator.NEQUAL);
           break;
         case 2:
-          newIfStmt(Operator.EQUAL);
+          newIfStmt(Operator.GRTR);
           break;
         case 3:
-          newIfStmt(Operator.EQUAL);
+          newIfStmt(Operator.LESS);
           break;
         case 4:
-          newIfStmt(Operator.EQUAL);
+          newIfStmt(Operator.GREQ);
           break;
         case 5:
-          newIfStmt(Operator.EQUAL);
+          newIfStmt(Operator.LSEQ);
           break;
       }
       
       display_stack.pop();
       display_stack.pop();
       lastScreen();
+      break;
+    case SET_BOOL_EXPR_ARG1:
+      p = programs.get(active_prog);
+      IfStatement stmt = (IfStatement)p.getInstruction(active_instr);
+      
+      if(opt_select == 0){
+        stmt.expr.arg1 = new ExprOperand();
+      } else if(opt_select == 1) {
+        stmt.expr.arg1 = new ExprOperand();
+      } else {
+        stmt.expr.arg1 = new ExprOperand();
+      }
+      break;
+    case SET_BOOL_EXPR_ARG2:
+    case SET_BOOL_EXPR_OP:
+    case SET_BOOL_EXPR_ACT:
       break;
     case SELECT_JMP_LBL:
       if(opt_select == 0)
@@ -3278,7 +3306,7 @@ public void loadScreen(){
       break;
     case SELECT_INSTR_INSERT:
     case SELECT_JMP_LBL:
-    case SELECT_IF_SEL:
+    case SELECT_COND_STMT:
     case SET_IO_INSTR_STATE:
     case SET_FRM_INSTR_TYPE:
       opt_select = 0;
@@ -3889,27 +3917,40 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("1. I/O"       );
       options.add("2. Frames"    );
       options.add("3. Registers" );
-      options.add("4. IF/SELECT (NA)" );
+      options.add("4. IF/SELECT" );
       options.add("5. JMP/LBL"   );
       options.add("6. CALL (NA)"      );
       options.add("7. WAIT (NA)"      );
       options.add("8. Macro (NA)"     );
       break;
-    case SELECT_IF_SEL:
-      options.add("1. IF Stmt");
-      options.add("2. SEL Stmt");
+    case SELECT_REG_EXPR_TYPE:
+      options.add("1. R[x]");
+      options.add("1. PR[x]");
+      break;
+    case SELECT_COND_STMT:
+      options.add("1. IF ...");
+      options.add("2. SEL ...");
       break;
     case SELECT_IF_OP:
-      options.add("1. ... = ...");
-      options.add("2. ... <> ...");
-      options.add("3. ... > ...");
-      options.add("4. ... < ...");
-      options.add("5. ... >= ...");
-      options.add("6. ... <= ...");
+    case SET_BOOL_EXPR_OP:
+      options.add("1. IF ... =  ...");
+      options.add("2. IF ... <> ...");
+      options.add("3. IF ... >  ...");
+      options.add("4. IF ... <  ...");
+      options.add("5. IF ... >= ...");
+      options.add("6. IF ... <= ...");
       break;
+    case SET_BOOL_EXPR_ARG1:
+    case SET_BOOL_EXPR_ARG2:
+      options.add("R[...]");
+      options.add("IO[...]");
+      options.add("Const");
+      break;
+    case SET_BOOL_EXPR_ACT:
+      options.add("JMP LBL[...]");
     case SELECT_JMP_LBL:
-      options.add("1. Insert LBL");
-      options.add("2. Insert JMP");
+      options.add("1. LBL[...]");
+      options.add("2. JMP LBL[...]");
       break;
       
     //Frame navigation and edit menus
@@ -4289,11 +4330,9 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
         String[] s = stmt.expr.toStringArray();
         
         m.add("IF ");
-        for(int j = 0; i < s.length; i += 1) {
+        for(int j = 0; j < s.length; j += 1) {
           m.add(s[j]); 
         }
-        
-        
       }
       else {
         m.add(instr.toString());

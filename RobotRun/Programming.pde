@@ -392,7 +392,13 @@ public final class MotionInstruction extends Instruction  {
 public class FrameInstruction extends Instruction {
   private int frameType;
   private int reg;
-    
+  
+  public FrameInstruction(int f) {
+    super();
+    frameType = f;
+    reg = -1;
+  }
+  
   public FrameInstruction(int f, int r) {
     super();
     frameType = f;
@@ -424,10 +430,16 @@ public class IOInstruction extends Instruction {
   private int state;
   private int reg;
   
+  public IOInstruction(){
+    super();
+    state = OFF;
+    reg = -1;
+  }
+  
   public IOInstruction(int r, int t) {
     super();
-    reg = r;
     state = t;
+    reg = r;
   }
 
   public int getState(){ return state; }
@@ -444,8 +456,13 @@ public class IOInstruction extends Instruction {
       
       if(state == ON && armModel.held == null) {
         
+<<<<<<< HEAD
         PVector ee_pos = armModel.nativeEEPos().position;
         println(ee_pos);
+=======
+        PVector ee_pos = armModel.getEEPos();
+        
+>>>>>>> dev
         // Determine if an object in the world can be picked up by the Robot
         for(WorldObject s : objects) {
           
@@ -463,13 +480,22 @@ public class IOInstruction extends Instruction {
   }
 
   public String toString() {
-    return "IO[" + reg + "]=" + ((state == ON) ? "ON" : "OFF");
+    if(reg == -1){
+      return "IO[...]=" + ((state == ON) ? "ON" : "OFF");
+    } else {
+      return "IO[" + reg + "]=" + ((state == ON) ? "ON" : "OFF");
+    }
   }
 } // end ToolInstruction class
 
 public class LabelInstruction extends Instruction {
   int labelNum;
   int labelIdx; 
+  
+  public LabelInstruction(int i) {
+    labelNum = -1;
+    labelIdx = i;
+  }
   
   public LabelInstruction(int n, int i) {
     super();
@@ -480,12 +506,20 @@ public class LabelInstruction extends Instruction {
   public void execute() {}
   
   public String toString() {
-    return "LBL[" + labelNum + "]";
+    if(labelNum == -1) {
+      return "LBL[...]";
+    } else {
+      return "LBL[" + labelNum + "]";
+    }
   }
 }
 
 public class JumpInstruction extends Instruction {
   LabelInstruction tgtLabel;
+  
+  public JumpInstruction() {
+    tgtLabel = null;
+  }
   
   public JumpInstruction(int l){
     tgtLabel = programs.get(active_prog).getLabel(l);
@@ -530,6 +564,10 @@ public class IfStatement extends Instruction {
     if(expr.evaluate().boolVal){
       instr.execute();
     }
+  }
+  
+  public String toString(){
+    return "S";
   }
 }
 
