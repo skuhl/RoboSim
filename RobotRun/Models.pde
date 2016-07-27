@@ -665,8 +665,89 @@ public class ArmModel {
    *             rotation values or if we're checking trial rotations
    * @return The current end effector position
    */
+<<<<<<< HEAD
   public Point nativeEEPos() {
     return nativeEEPos(armModel.getJointAngles());
+=======
+  public PVector getEEPos() {
+    pushMatrix();
+    resetMatrix();
+    
+    translate(600, 200, 0);
+    translate(-50, -166, -358); // -115, -213, -413
+    rotateZ(PI);
+    translate(150, 0, 150);
+    
+    rotateY(getJointAngles()[0]);
+    
+    translate(-150, 0, -150);
+    rotateZ(-PI);    
+    translate(-115, -85, 180);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 62, 62);
+    
+    rotateX(getJointAngles()[1]);
+    
+    translate(0, -62, -62);
+    rotateY(-PI/2);
+    rotateZ(-PI);   
+    translate(0, -500, -50);
+    rotateZ(PI);
+    rotateY(PI/2);
+    translate(0, 75, 75);
+    
+    rotateX(getJointAngles()[2]);
+    
+    translate(0, -75, -75);
+    rotateY(PI/2);
+    rotateZ(-PI);
+    translate(745, -150, 150);
+    rotateZ(PI/2);
+    rotateY(PI/2);
+    translate(70, 0, 70);
+    
+    rotateY(getJointAngles()[3]);
+    
+    translate(-70, 0, -70);
+    rotateY(-PI/2);
+    rotateZ(-PI/2);    
+    translate(-115, 130, -124);
+    rotateZ(PI);
+    rotateY(-PI/2);
+    translate(0, 50, 50);
+    
+    rotateX(getJointAngles()[4]);
+    
+    translate(0, -50, -50);
+    rotateY(PI/2);
+    rotateZ(-PI);    
+    translate(150, -10, 95);
+    rotateY(-PI/2);
+    rotateZ(PI);
+    translate(45, 45, 0);
+    
+    rotateZ(getJointAngles()[5]);
+    
+    if(curCoordFrame == CoordFrame.TOOL || curCoordFrame == CoordFrame.WORLD) { applyToolFrame(activeToolFrame); }
+    
+    PVector ret = new PVector(
+    modelX(0, 0, 0),
+    modelY(0, 0, 0),
+    modelZ(0, 0, 0));
+    
+    popMatrix();
+    return ret;
+  } // end calculateEndEffectorPosition
+  
+  public PVector getEEPos(float[] testAngles) {
+    float[] origAngles = getJointAngles();
+    setJointAngles(testAngles);
+    
+    PVector ret = getEEPos();
+    setJointAngles(origAngles);
+    return ret;
+>>>>>>> dev
   }
   
   /**
@@ -978,6 +1059,27 @@ public class ArmModel {
     jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0 || inMotion;
   }
   
+  /* Stops all robot movement */
+  public void halt(){
+    for(Model model : segments) {
+      model.jointsMoving[0] = 0;
+      model.jointsMoving[1] = 0;
+      model.jointsMoving[2] = 0;
+    }
+    
+    for(int idx = 0; idx < jogLinear.length; ++idx) {
+      jogLinear[idx] = 0;
+    }
+    
+    for(int idx = 0; idx < jogRot.length; ++idx) {
+      jogRot[idx] = 0;
+    }
+    
+    // Reset button highlighting
+    resetButtonColors();
+    
+    armModel.inMotion = false;
+  }
 } // end ArmModel class
 
 void printCurrentModelCoordinates(String msg) {

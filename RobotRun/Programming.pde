@@ -158,7 +158,6 @@ public class Point  {
 public class Program  {
   private String name;
   private int nextRegister;
-  private int nextLabel;
   private Point[] LPosReg = new Point[1000]; // program positions
   private ArrayList<Instruction> instructions;
 
@@ -167,7 +166,6 @@ public class Program  {
     for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
     name = theName;
     nextRegister = 0;
-    nextLabel = 0;
   }
 
   public ArrayList<Instruction> getInstructions() {
@@ -198,9 +196,6 @@ public class Program  {
         if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
       }
     }
-    else if(i instanceof LabelInstruction){
-      nextLabel += 1;
-    }
   }
 
   public void overwriteInstruction(int idx, Instruction i) {
@@ -220,8 +215,6 @@ public class Program  {
   
   public int getNextPosition() { return nextRegister; }
   public void setNextRegister(int next) { nextRegister = next; }
-  public int getNextLabel() { return nextLabel; }
-  public void getNextLabel(int next) { nextLabel = next; }
 
   public Point getPosition(int idx) {
     if(idx >= 0 && idx < LPosReg.length) return LPosReg[idx];
@@ -411,17 +404,21 @@ public class FrameInstruction extends Instruction {
   public void setReg(int r){ reg = r; }
   
   public void execute() {
-    if(frameType == FTYPE_TOOL) activeToolFrame = reg;
-    else if(frameType == FTYPE_USER) activeUserFrame = reg;
-    // Update the Robot Arm's current frame rotation matrix
-    updateCoordFrame(armModel);
+    if(reg != -1){
+      if(frameType == FTYPE_TOOL) activeToolFrame = reg;
+      else if(frameType == FTYPE_USER) activeUserFrame = reg;
+      // Update the Robot Arm's current frame rotation matrix
+      updateCoordFrame(armModel);
+    }
   }
 
   public String toString() {
     String ret = "";
-    if(frameType == FTYPE_TOOL) ret += "TFRAME_NUM=";
-    else if(frameType == FTYPE_USER) ret += "UFRAME_NUM=";
-    ret += reg+1;
+    if(frameType == FTYPE_TOOL) ret += "TFRAME_NUM= ";
+    else if(frameType == FTYPE_USER) ret += "UFRAME_NUM= ";
+    
+    if(reg == -1) { ret += "..."; }
+    else          { ret += reg; }
     return ret;
   }
 } // end FrameInstruction class
@@ -450,7 +447,7 @@ public class IOInstruction extends Instruction {
   public void execute() {
     armModel.endEffectorStatus = state;
     System.out.printf("EE: %s\n", armModel.endEffectorStatus);
-      
+    
     // Check if the Robot is placing an object or picking up and object
     if(armModel.activeEndEffector == EndEffector.CLAW || armModel.activeEndEffector == EndEffector.SUCTION) {
       
