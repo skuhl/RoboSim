@@ -793,7 +793,6 @@ public class ArmModel {
     PVector ret = getEEPos();
     setJointAngles(origAngles);
     return ret;
-    
   }
   
   /**
@@ -1180,6 +1179,27 @@ public class ArmModel {
     jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0 || inMotion;
   }
   
+  /* Stops all robot movement */
+  public void halt(){
+    for(Model model : segments) {
+      model.jointsMoving[0] = 0;
+      model.jointsMoving[1] = 0;
+      model.jointsMoving[2] = 0;
+    }
+    
+    for(int idx = 0; idx < jogLinear.length; ++idx) {
+      jogLinear[idx] = 0;
+    }
+    
+    for(int idx = 0; idx < jogRot.length; ++idx) {
+      jogRot[idx] = 0;
+    }
+    
+    // Reset button highlighting
+    resetButtonColors();
+    
+    armModel.inMotion = false;
+  }
 } // end ArmModel class
 
 void printCurrentModelCoordinates(String msg) {
