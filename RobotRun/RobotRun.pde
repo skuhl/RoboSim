@@ -14,8 +14,7 @@ import java.io.IOException;
 
 private static final int OFF = 0, ON = 1;
 
-// Determines what End Effector mapping should be display
-public static int EE_MAPPING = 2;
+
 
 ArmModel armModel;
 Model eeModelSuction;
@@ -65,7 +64,7 @@ int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 /*        Shape Stuff          */
 
 // The Y corrdinate of the ground plane
-public static final float PLANE_Z = 200.5f;
+public static final float PLANE_Y = 200.5f;
 public WorldObject[] objects;
 
 /*******************************/
@@ -106,16 +105,26 @@ public void setup() {
   popMatrix();
   //createTestProgram();
   
-  /**
-  PVector TCP = new PVector(-5, -5, -100);
-  PVector nativeTCP = transform(TCP, new PVector(0f, 0f, 0f), nativeRobotPosition(armModel.getJointAngles()).orientation);
-  System.out.printf("%s -> %s\n", TCP, nativeTCP);
-  /**
-  PVector v = new PVector(12f, -11f, 100f);
-  PVector worldV = convertNativeToWorld(v);
-  PVector nativeV = convertWorldToNative(v);
-  System.out.printf("%s -> %s\n%s -> %s\n", v, worldV, v, nativeV);
-  /**/
+  if (DISPLAY_TEST_OUTPUT) {
+    /**
+    PVector TCP = new PVector(-5, -5, -100);
+    PVector nativeTCP = transform(TCP, new PVector(0f, 0f, 0f), nativeRobotPosition(armModel.getJointAngles()).orientation);
+    System.out.printf("%s -> %s\n", TCP, nativeTCP);
+    /**/
+    pushMatrix();
+    resetMatrix();
+    applyMatrix(WORLD_AXES[0][0], WORLD_AXES[1][0], WORLD_AXES[2][0], 0,
+                WORLD_AXES[0][1], WORLD_AXES[1][1], WORLD_AXES[2][1], 0,
+                WORLD_AXES[0][2], WORLD_AXES[1][2], WORLD_AXES[2][2], 0,
+                0, 0, 0, 1);
+    PVector v = getCoordFromMatrix(1, 2, 3);
+    popMatrix();
+    
+    PVector worldV = convertNativeToWorld(v);
+    PVector nativeV = convertWorldToNative(worldV);
+    System.out.printf("%s -> %s\n%s -> %s\n", v, worldV, worldV, nativeV);
+    /**/
+  }
 }
 
 public void draw() {
@@ -269,24 +278,7 @@ public void draw() {
     popMatrix();
   }
   
-  /*stroke(255, 0, 0);
-  // Draw x origin line
-  line( -5000, PLANE_Z, 0, 5000, PLANE_Z, 0 );
-  // Draw y origin line
-  line( 0, PLANE_Z, 5000, 0, PLANE_Z, -5000 );
-  
-  // Draw grid lines every 100 units, from -5000 to 5000, in the x and y plane, on the floor plane
-  stroke(25, 25, 25);
-  for(int l = 1; l < 50; ++l) {
-    line(100 * l, PLANE_Z, -5000, 100 * l, PLANE_Z, 5000);
-    line(-5000, PLANE_Z, 100 * l, 5000, PLANE_Z, 100 * l);
-    
-    line(-100 * l, PLANE_Z, -5000, -100 * l, PLANE_Z, 5000);
-    line(-5000, PLANE_Z, -100 * l, 5000, PLANE_Z, -100 * l);
-  }
-  
-  drawEndEffectorGridMapping();*/
-  displayFrameAxes();
+  displayAxes();
   displayTeachPoints();
   
   popMatrix();
@@ -369,6 +361,10 @@ public void handleWorldObjects() {
   }
 }
 
+/*****************************************************************************************************************
+ NOTE: All the below methods assume that current matrix has the camrea applied!
+ *****************************************************************************************************************/
+
 /**
  * Display any currently taught points during the processes of either the 3-Point, 4-Point, or 6-Point Methods.
  */
@@ -438,30 +434,66 @@ public void displayTeachPoints() {
 }
 
 /**
- * Displays the current axes and the origin of the current frame of reference.
+ * Displays coordinate frame associated with the current Coordinate frame. The active User frame is displayed in the User and Tool
+ * Coordinate Frames. The World frame is display in the World Coordinate frame and the Tool Coordinate Frame in the case that no
+ * active User frame is set. The active Tool frame axes are displayed in the Tool frame in addition to the current User (or World)
+ * frame. Nothing is displayed in the Joint Coordinate Frame.
  */
-public void displayFrameAxes() {
+public void displayAxes() {
   
-  if (curCoordFrame != CoordFrame.JOINT) {
-    Frame activeTool = getActiveFrame(CoordFrame.TOOL),
-          activeUser = getActiveFrame(CoordFrame.USER);
+  if (AXES_DISPLAY == 0 && curCoordFrame != CoordFrame.JOINT) {
+    // Draw axes of the Robot's End Effector frame for testing purposes
+    Point ee_point = armModel.nativeEEPos();
+    displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
+  } else if (AXES_DISPLAY == 1) {
+    // Display axes
+    if (curCoordFrame != CoordFrame.JOINT) {
+      Frame activeTool = getActiveFrame(CoordFrame.TOOL),
+            activeUser = getActiveFrame(CoordFrame.USER);
+      
+      if (curCoordFrame == CoordFrame.TOOL) {
+        /* Draw the axes of the active Tool frame at the Robot End Effector */
+        displayOriginAxes(activeTool.getNativeAxes(), armModel.nativeEEPos().position, 200f, color(255, 0, 255));
+      } else {
+        // Draw axes of the Robot's End Effector frame for testing purposes
+        Point ee_point = armModel.nativeEEPos();
+        displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
+      }
+      
+      if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
+        /* Draw the axes of the active User frame */
+        displayOriginAxes(activeUser.getNativeAxes(), activeUser.getOrigin(), 5000f, color(0));
+      } else {
+        /* Draw the axes of the World frame */
+        displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f), 5000f, color(0));
+      }
+    }
+  } else if (AXES_DISPLAY == 2) {
+    // Display gridlines spanning from axes of the current frame
+    Frame active = getActiveFrame(null);
+    float[][] displayAxes;
+    PVector displayOrigin;
     
-    if (curCoordFrame == CoordFrame.TOOL) {
-      /* Draw the axes of the active Tool frame at the Robot End Effector */
-      displayOriginAxes(activeTool.getNativeAxes(), armModel.nativeEEPos().position, color(255, 0, 255));
-    } else {
-      /* Draw axes of the Robot's End Effector frame */
-      Point ee_point = armModel.nativeEEPos();
-      displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, color(255, 0, 255));
+    switch(curCoordFrame) {
+      case WORLD:
+        displayAxes = new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} };
+        displayOrigin = new PVector(0f, 0f, 0f);
+        break;
+      case TOOL:
+        displayAxes = active.getNativeAxes();
+        displayOrigin = armModel.nativeEEPos().position;
+        break;
+      case USER:
+        displayAxes = active.getNativeAxes();
+        displayOrigin = active.getOrigin();
+        break;
+      default:
+        // No gridlines are displayed in the Joint Coordinate Frame
+        return;
     }
     
-    if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
-      /* Draw the axes of the active User frame */
-      displayOriginAxes(activeUser.getNativeAxes(), activeUser.getOrigin(), color(0));
-    } else {
-      /* Draw the axes of the World frame */
-      displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f), color(0));
-    }
+    // Draw grid lines every 100 units, from -3500 to 3500, in the x and y plane, on the floor plane
+    displayGridlines(displayAxes, displayOrigin, 35, 100);
   }
 }
 
@@ -472,8 +504,10 @@ public void displayFrameAxes() {
  * @param axesVectors  A set of three orthogonal unti vectors
  * @param origin       A point in space representing the intersection of the
  *                     three unit vectors
+ * @param axesLength   The length, to which the all axes, will be drawn
+ * @param originColor  The color of the point to draw at the origin
  */
-public void displayOriginAxes(float[][] axesVectors, PVector origin, color originColor) {
+public void displayOriginAxes(float[][] axesVectors, PVector origin, float axesLength, color originColor) {
   
   pushMatrix();    
   // Transform to the reference frame defined by the axes vectors
@@ -489,13 +523,13 @@ public void displayOriginAxes(float[][] axesVectors, PVector origin, color origi
   
   // X axis
   stroke(255, 0, 0);
-  line(-5000, 0, 0, 5000, 0, 0);
+  line(-axesLength, 0, 0, axesLength, 0, 0);
   // Y axis
   stroke(0, 255, 0);
-  line(0, -5000, 0, 0, 5000, 0);
+  line(0, -axesLength, 0, 0, axesLength, 0);
   // Z axis
   stroke(0, 0, 255);
-  line(0, 0, -5000, 0, 0, 5000);
+  line(0, 0, -axesLength, 0, 0, axesLength);
   
   // Draw a sphere on the positive direction for each axis
   stroke(originColor);
@@ -509,4 +543,102 @@ public void displayOriginAxes(float[][] axesVectors, PVector origin, color origi
   sphere(4);
   
   popMatrix();
+}
+
+/**
+ * Gridlines are drawn, spanning from two of the three axes defined by the given axes vector set. The two axes that form a
+ * plane that has the lowest offset of the xz-plane (hence the two vectors with the minimum y-values) are chosen to be
+ * mapped to the xz-plane and their reflection on the xz-plane are drawn the along with a grid is formed from the the two
+ * reflection axes at the base of the Robot.
+ * 
+ * @param axesVectors     A rotation matrix (in row major order) that defines the axes of the frame to map to the xz-plane
+ * @param origin          The xz-origin at which to drawn the reflection axes
+ * @param halfNumOfLines  Half the number of lines to draw for one of the axes
+ * @param distBwtLines    The distance between each gridline
+ */
+public void displayGridlines(float[][] axesVectors, PVector origin, int halfNumOfLines, float distBwtLines) {
+  int vectorPX = -1, vectorPZ = -1;
+  
+  // Find the two vectors with the minimum y values
+  for (int v = 0; v < axesVectors.length; ++v) {
+    int limboX = (v + 1) % axesVectors.length,
+        limboY = (limboX + 1) % axesVectors.length;
+    // Compare the y value of the current vector to those of the other two vectors
+    if (abs(axesVectors[v][1]) >= abs(axesVectors[limboX][1]) && abs(axesVectors[v][1]) >= abs(axesVectors[limboY][1])) {
+      vectorPX = limboX;
+      vectorPZ = limboY;
+      break;
+    }
+  }
+  
+  if (vectorPX == -1 || vectorPZ == -1) {
+    println("Invalid axes-origin pair for grid lines!");
+    return;
+  }
+  
+  //System.out.printf("X: %d\nY:%d\n", vectorPX, vectorPZ);
+  
+  pushMatrix();
+  // Map the chosen two axes vectors to the xz-plane at the y-position of the Robot's base
+  applyMatrix(axesVectors[vectorPX][0], 0, axesVectors[vectorPZ][0], origin.x,
+                                     0, 1,                        0, PLANE_Y,
+              axesVectors[vectorPX][2], 0, axesVectors[vectorPZ][2], origin.z,
+                                     0, 0,                        0,        1);
+  
+  float lineLen = halfNumOfLines * distBwtLines;
+  
+  // Draw axes lines in red
+  stroke(255, 0, 0);
+  line(-lineLen, 0, 0, lineLen, 0, 0);
+  line(0, 0, -lineLen, 0, 0, lineLen);
+  // Draw remaining gridlines in black
+  stroke(25, 25, 25);
+  for(int linePosScale = 1; linePosScale <= halfNumOfLines; ++linePosScale) {
+    line(distBwtLines * linePosScale, 0, -lineLen, distBwtLines * linePosScale, 0, lineLen);
+    line(-lineLen, 0, distBwtLines * linePosScale, lineLen, 0, distBwtLines * linePosScale);
+    
+    line(-distBwtLines * linePosScale, 0, -lineLen, -distBwtLines * linePosScale, 0, lineLen);
+    line(-lineLen, 0, -distBwtLines * linePosScale, lineLen, 0, -distBwtLines * linePosScale);
+  }
+  
+  popMatrix();
+  drawEndEffectorGridMapping();
+}
+
+/**
+ * This method will draw the End Effector grid mapping based on the value of EE_MAPPING:
+ *
+ *  0 -> a line is drawn between the EE and the grid plane
+ *  1 -> a point is drawn on the grid plane that corresponds to the EE's xz coordinates
+ *  For any other value, nothing is drawn
+ */
+public void drawEndEffectorGridMapping() {
+  
+  PVector ee_pos = armModel.nativeEEPos().position;
+  
+  // Change color of the EE mapping based on if it lies below or above the ground plane
+  color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);
+  
+  // Toggle EE mapping type with 'e'
+  switch (EE_MAPPING) {
+  case 0:
+    stroke(c);
+    // Draw a line, from the EE to the grid in the xy plane, parallel to the z plane
+    line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
+    break;
+    
+  case 1:
+    noStroke();
+    fill(c);
+    // Draw a point, which maps the EE's position to the grid in the xy plane
+    pushMatrix();
+    rotateX(PI / 2);
+    translate(0, 0, -PLANE_Y);
+    ellipse(ee_pos.x, ee_pos.z, 10, 10);
+    popMatrix();
+    break;
+    
+  default:
+    // No EE grid mapping
+  }
 }

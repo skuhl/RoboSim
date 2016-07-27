@@ -89,8 +89,6 @@ private final char[][] letters = {{'a', 'b', 'c', 'd', 'e', 'f'},
                                   {'m', 'n', 'o', 'p', 'q', 'r'},
                                   {'s', 't', 'u', 'v', 'w', 'x'},
                                   {'y', 'z', '_', '@', '*', '.'}};                    
-                                   
-public static final boolean DISPLAY_TEST_OUTPUT = true;
 
 void gui() {
   g1_px = 0;
@@ -828,6 +826,8 @@ public void keyPressed() {
     }
     
     return;
+  } else if (key == 'a') {
+    AXES_DISPLAY = (AXES_DISPLAY + 1) % 3;
   } else if(key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
   } else if(key == 'f') {
@@ -1273,14 +1273,9 @@ public void up() {
 public void dn() {
   int size;
   switch(mode) {
-    case NAV_PROGRAMS:
-<<<<<<< HEAD
-      size = programs.size(); //<>// //<>// //<>//
-      int[] indices = moveDown(active_prog, size, opt_select, renderStartIdx, shift);
-=======
-      size = programs.size(); //<>// //<>//
+    case NAV_PROGRAMS: //<>//
+      size = programs.size(); //<>//
       int[] indices = moveDown(active_prog, size, opt_select, start_render, shift);
->>>>>>> dev
       
       active_prog = indices[0];
       opt_select = indices[1];
@@ -1321,13 +1316,8 @@ public void dn() {
       
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
-<<<<<<< HEAD
-        row_select, col_select, active_instr, renderStartIdx);
-      } //<>// //<>//
-=======
         row_select, col_select, active_instr, start_render);
-      } //<>//
->>>>>>> dev
+      } //<>// //<>//
       break;
     case NAV_DREGS:
     case NAV_PREGS_J:
@@ -1490,7 +1480,7 @@ public void sf() {
     ((Button)cp5.get("sf")).setColorBackground(BUTTON_ACTIVE);
   } else {
     // Stop Robot jog movement when shift is off
-    hd();
+    armModel.halt();
     ((Button)cp5.get("sf")).setColorBackground(BUTTON_DEFAULT);
   }
   
@@ -3290,12 +3280,7 @@ public boolean lastScreen() {
     if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s => %s\n", mode, display_stack.peek()); }
     mode = display_stack.peek();
     
-<<<<<<< HEAD
     loadScreen();
-    updateScreen();
-=======
-    loadScreen();    
->>>>>>> dev
     return true;
   }
 }
@@ -5095,7 +5080,7 @@ public ArrayList<String> newLine(String... columns) {
  * @param renderstartIdx  The index of the first element displayed on the Screen
  * @param inPlace         Whether to move backward the list an entire Screen lenth of elements, while keeping the row
  *                        constant, or move backward a single element
- * @returning             The updated values of listIdx, row, renderStartIdx in a 3-element integer array in that order
+ * @returning             The updated values of listIdx, row, start_render in a 3-element integer array in that order
  */
 public int[] moveUp(int listIdx, int row, int renderStartIdx, boolean inPlace) {
   
@@ -5135,7 +5120,7 @@ public int[] moveUp(int listIdx, int row, int renderStartIdx, boolean inPlace) {
  * @param renderstartIdx  The index of the first element displayed on the Screen
  * @param inPlace         Whether to move forward the list an entire Screen lenth of elements, while keeping the row
  *                        constant, or move forward a single element
- * @returning             The updated values of listIdx, row, renderStartIdx in a 3-element integer array in that order
+ * @returning             The updated values of listIdx, row, start_render in a 3-element integer array in that order
  */
 public int[] moveDown(int listIdx, int listSize, int row, int renderStartIdx, boolean inPlace) {
   

@@ -8,7 +8,13 @@ boolean executingInstruction = false;
 
 int errorCounter;
 String errorText;
-public static final boolean COLLISION_DISPLAY = true;
+
+// Determines what End Effector mapping should be display
+public static int EE_MAPPING = 2,
+// Deterimes what type of axes should be displayed
+                  AXES_DISPLAY = 1;
+public static final boolean COLLISION_DISPLAY = true,
+                            DISPLAY_TEST_OUTPUT = true;
 
 /**
  * Creates some programs for testing purposes.
@@ -117,7 +123,6 @@ void showMainDisplayText() {
   String cartesian = String.format("Coord  X: %5.3f  Y: %5.3f  Z: %5.3f  W: %5.3f  P: %5.3f  R: %5.3f",
                                     RP.position.x, RP.position.y, RP.position.z, wpr.x, wpr.y, wpr.z);
   
-  
   // Display the Robot's joint angles
   String joints = String.format("Joints  J1: %4.3f J2: %4.3f J3: %4.3f J4: %4.3f J5: %4.3f J6: %4.3f", 
                                  RP.angles[0] * RAD_TO_DEG, RP.angles[1] * RAD_TO_DEG, RP.angles[2] * RAD_TO_DEG,
@@ -194,7 +199,7 @@ void showMainDisplayText() {
  */
 public void coordFrameTransition(ArmModel model) {
   // Stop Robot movement
-  hd(); //<>// //<>//
+  armModel.halt(); //<>//
   
   // Increment the current coordinate frame
   switch (curCoordFrame) {
@@ -237,7 +242,7 @@ public void coordFrameTransition(ArmModel model) {
  */
 public void updateCoordFrame(ArmModel model) {
   // Stop Robot movement
-  hd();
+  armModel.halt();
   
   // Return to the World Frame, if no User Frame is active
   if(curCoordFrame == CoordFrame.TOOL && !(activeToolFrame >= 0 && activeToolFrame < toolFrames.length)) {
@@ -318,7 +323,7 @@ public Point currentRobotPosition(float[] jointAngles) {
   Point RP = nativeRobotEEPosition(jointAngles, offset);
   
   // Apply the active User frame
-  if (activeUser != null) {
+  if ((curCoordFrame == CoordFrame.USER || curCoordFrame == CoordFrame.TOOL) && activeUser != null) {
     return applyFrame(RP, activeUser.getOrigin(), activeUser.getAxes());
   }
   
@@ -348,44 +353,6 @@ PVector computePerpendicular(PVector in, PVector second) {
       dist(orig.x, orig.y, orig.z, p2.x, p2.y, p2.z))
   return vectorConvertFrom(perp1, plane[0], plane[1], plane[2]);
   else return vectorConvertFrom(perp2, plane[0], plane[1], plane[2]);
-}
-
-/**
- * This method will draw the End Effector grid mapping based on the value of EE_MAPPING:
- *
- *  0 -> a line is drawn between the EE and the grid plane
- *  1 -> a point is drawn on the grid plane that corresponds to the EE's xz coordinates
- *  For any other value, nothing is drawn
- */
-public void drawEndEffectorGridMapping() {
-  
-  PVector ee_pos = armModel.nativeEEPos().position;
-  
-  // Change color of the EE mapping based on if it lies below or above the ground plane
-  color c = (ee_pos.y <= PLANE_Z) ? color(255, 0, 0) : color(150, 0, 255);
-  
-  // Toggle EE mapping type with 'e'
-  switch (EE_MAPPING) {
-  case 0:
-    stroke(c);
-    // Draw a line, from the EE to the grid in the xy plane, parallel to the z plane
-    line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Z, ee_pos.z);
-    break;
-    
-  case 1:
-    noStroke();
-    fill(c);
-    // Draw a point, which maps the EE's position to the grid in the xy plane
-    pushMatrix();
-    rotateX(PI / 2);
-    translate(0, 0, -PLANE_Z);
-    ellipse(ee_pos.x, ee_pos.z, 10, 10);
-    popMatrix();
-    break;
-    
-  default:
-    // No EE grid mapping
-  }
 }
 
 /**
