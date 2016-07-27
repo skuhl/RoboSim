@@ -831,11 +831,9 @@ public void keyPressed() {
   } else if(key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
   } else if(key == 'f') {
-    armModel.currentFrame = armModel.getRotationMatrix();
+    armModel.currentFrame = armModel.getRobotOrientationMatrix();
   } else if(key == 'g') {
     armModel.resetFrame();
-  } else if(key == 'q') {
-    System.out.printf("\n%s\n\n", arrayToString(armModel.getQuaternion()));
   } else if(key == 'r') {
     panX = 0;
     panY = 0;
@@ -902,38 +900,6 @@ public void keyPressed() {
     panY = 0;
     myRotX = PI / 2f;
     myRotY = 0f;
-  }
-  
-  if(keyCode == UP) {
-    float[] angles = armModel.getJointAngles();
-    calculateJacobian(angles, true);
-    angles[0] += DEG_TO_RAD;
-    armModel.setJointAngles(angles);
-  } else if(keyCode == DOWN) {
-    float[] angles = armModel.getJointAngles();
-    calculateJacobian(angles, true);
-    angles[1] += DEG_TO_RAD;
-    armModel.setJointAngles(angles);
-  } else if(keyCode == LEFT) {
-    float[] angles = armModel.getJointAngles();
-    calculateJacobian(angles, true);
-    angles[2] += DEG_TO_RAD;
-    armModel.setJointAngles(angles);
-  } else if(keyCode == RIGHT) {
-    float[] angles = armModel.getJointAngles();
-    calculateJacobian(angles, true);
-    angles[3] += DEG_TO_RAD;
-    armModel.setJointAngles(angles);
-  } else if(key == 'z') {
-    float[] angles = armModel.getJointAngles();
-    calculateJacobian(angles, true);
-    angles[4] += DEG_TO_RAD;
-    armModel.setJointAngles(angles);
-  } else if(key == 'x') {
-    float[] angles = armModel.getJointAngles();
-    calculateJacobian(angles, true);
-    angles[5] += DEG_TO_RAD;
-    armModel.setJointAngles(angles);
   }
   
   if(key == ' ') { 
@@ -1940,7 +1906,7 @@ public void f5() {
       
       if (shift && active_index >= 0 && active_index < GPOS_REG.length) {
         // Save the Robot's current joint angles
-        GPOS_REG[active_index].point = nativeRobotPosition(armModel.getJointAngles());
+        GPOS_REG[active_index].point = frameRobotPosition(armModel.getJointAngles());
         GPOS_REG[active_index].isCartesian = (mode == Screen.NAV_PREGS_C);
         saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       }
@@ -3195,8 +3161,6 @@ public void activateLiveJointMotion(int joint, int dir) {
  *
  */
 public void activateLiveWorldMotion(int axis, int dir) {
-  armModel.tgtPos = armModel.nativeEEPos().position;
-  armModel.tgtRot = armModel.getQuaternion();
   
   if(axis >= 0 && axis < 3) {
     if(armModel.jogLinear[axis] == 0) {
@@ -4311,7 +4275,8 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
       if(instr instanceof MotionInstruction) {
         MotionInstruction a = (MotionInstruction)instr;
         
-        if(armModel.nativeEEPos().position.dist(a.getVector(p).position) < (liveSpeed / 100f)) {
+        Point ee_point = nativeRobotEEPosition(armModel.getJointAngles());
+        if(ee_point.position.dist(a.getVector(p).position) < (liveSpeed / 100f)) {
           m.add("@");
         }
         else {

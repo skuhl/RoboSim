@@ -108,7 +108,7 @@ void showMainDisplayText() {
     default:
   }
   
-  Point RP = currentRobotPosition(armModel.getJointAngles());
+  Point RP = frameRobotPosition(armModel.getJointAngles());
   
   /*
   // apply World Frame
@@ -163,20 +163,6 @@ void showMainDisplayText() {
   }
   
   if(DISPLAY_TEST_OUTPUT) {
-    textSize(12);
-    fill(0, 0, 0);
-    
-    float[][] vectorMatrix = armModel.getRotationMatrix(armModel.currentFrame);
-    String row = String.format("[  %f  %f  %f  ]", vectorMatrix[0][0], vectorMatrix[0][1], vectorMatrix[0][2]);
-    text(row, width - 20, height - 100);
-    row = String.format("[  %f  %f  %f  ]", vectorMatrix[1][0], vectorMatrix[1][1], vectorMatrix[1][2]);
-    text(row, width - 20, height - 86);
-    row = String.format("[  %f  %f  %f  ]", vectorMatrix[2][0], vectorMatrix[2][1], vectorMatrix[2][2]);
-    text(row, width - 20, height - 72);
-    float[] q = armModel.getQuaternion();
-    String quat = String.format("q: [%8.3f, %8.3f, %8.3f, %8.3f]", q[0], q[1], q[2], q[3]);
-    text(quat, width - 20, height - 58);
-    
     if(ref_point != null) {
       String obj1_c = String.format("Ref Point: [%4.3f, %4.3f, %4.3f]", ref_point.x, ref_point.y, ref_point.z);
       text(obj1_c, width - 20, height - 42);
@@ -276,7 +262,7 @@ public void updateCoordFrame(ArmModel model) {
  */
 public Point nativeRobotPosition(float[] jointAngles) {
   // Return a point containing the faceplate position, orientation, and joint angles
-  return nativeRobotEEPosition(jointAngles, new PVector(0f, 0f, 0f));
+  return nativeRobotPositionOffset(jointAngles, new PVector(0f, 0f, 0f));
 }
 
 /**
@@ -288,7 +274,7 @@ public Point nativeRobotPosition(float[] jointAngles) {
  * @returning          The Robot's EE position and orientation corresponding to
  *                     the given joint angles
  */
-public Point nativeRobotEEPosition(float[] jointAngles, PVector offset) {
+public Point nativeRobotPositionOffset(float[] jointAngles, PVector offset) {
   pushMatrix();
   resetMatrix();
   applyModelRotation(jointAngles);
@@ -301,16 +287,14 @@ public Point nativeRobotEEPosition(float[] jointAngles, PVector offset) {
 }
 
 /**
- * Returns a Point containing the Robot's position, orientation in reference
- * to the currently active Tool or User Frame corresponding to the given set
- * of joint angles, as well as the joint angles themselves.
+ * Returns the Robot's End Effectir position according to the active Tool Frame's
+ * offset in the native Coordinate System.
  * 
- * @param jointAngles  A valid set of six joint angles (in radians)
- *                     for the Robot
+ * @param jointAngles  A valid set of six joint angles (in radians) for the Robot
+ * @returning          The Robot's End Effector position
  */
-public Point currentRobotPosition(float[] jointAngles) {
-  Frame activeTool = getActiveFrame(CoordFrame.TOOL),
-        activeUser = getActiveFrame(CoordFrame.USER);
+public Point nativeRobotEEPosition(float[] jointAngles) {
+  Frame activeTool = getActiveFrame(CoordFrame.TOOL);
   PVector offset;
   
   if (activeTool != null) {
@@ -319,13 +303,37 @@ public Point currentRobotPosition(float[] jointAngles) {
   } else {
     offset = new PVector(0f, 0f, 0f);
   }
-   
-  Point RP = nativeRobotEEPosition(jointAngles, offset);
+  
+  return nativeRobotPositionOffset(jointAngles, offset);
+}
+
+/**
+ * Returns a Point containing the Robot's position, orientation in reference
+ * to the currently active Tool or User Frame corresponding to the given set
+ * of joint angles, as well as the joint angles themselves.
+ * 
+ * @param jointAngles  A valid set of six joint angles (in radians)
+ *                     for the Robot
+ */
+public Point frameRobotPosition(float[] jointAngles) {
+  Frame activeUser = getActiveFrame(CoordFrame.USER);
+  Point RP = nativeRobotEEPosition(jointAngles);
   
   // Apply the active User frame
   if ((curCoordFrame == CoordFrame.USER || curCoordFrame == CoordFrame.TOOL) && activeUser != null) {
     return applyFrame(RP, activeUser.getOrigin(), activeUser.getAxes());
   }
+  
+  return RP;
+}
+
+/**
+ * TODO comment
+ */
+public Point relativeRobotEEPosition(float[] jointAngles, float[] refQuaternion) {
+  Point RP = nativeRobotEEPosition(jointAngles);
+  float[] newQuaternion = quaternionNormalize( quaternionMult(RP.orientation, quaternionConjugate(refQuaternion)) );
+  RP.orientation = newQuaternion;
   
   return RP;
 }
@@ -362,31 +370,29 @@ PVector computePerpendicular(PVector in, PVector second) {
  * resulting matrix will describe the linear approximation
  * of the robot's motion for each joint in units per radian. 
  */
-public float[][] calculateJacobian(float[] angles, boolean posOffset) {
+public float[][] calculateJacobian(float[] angles, boolean posOffset, float[] frame) {
   float dAngle = DEG_TO_RAD;
   if(!posOffset){ dAngle *= -1; }
   float[][] J = new float[7][6];
   //get current ee position
-  PVector cPos = armModel.nativeEEPos(angles).position;
-  float[] cRotQ = armModel.getQuaternion(angles);
+  Point curRP = relativeRobotEEPosition(angles, frame);
   
   //examine each segment of the arm
   for(int i = 0; i < 6; i += 1) {
     //test angular offset
     angles[i] += dAngle;
     //get updated ee position
-    PVector nPos = armModel.nativeEEPos(angles).position;
-    float[] nRotQ = armModel.getQuaternion(angles);
-
+    Point newRP = relativeRobotEEPosition(angles, frame);
+    
     //get translational delta
-    J[0][i] = (nPos.x - cPos.x)/DEG_TO_RAD;
-    J[1][i] = (nPos.y - cPos.y)/DEG_TO_RAD;
-    J[2][i] = (nPos.z - cPos.z)/DEG_TO_RAD;
+    J[0][i] = (newRP.position.x - curRP.position.x) / DEG_TO_RAD;
+    J[1][i] = (newRP.position.y - curRP.position.y) / DEG_TO_RAD;
+    J[2][i] = (newRP.position.z - curRP.position.z) / DEG_TO_RAD;
     //get rotational delta        
-    J[3][i] = (nRotQ[0] - cRotQ[0])/DEG_TO_RAD;
-    J[4][i] = (nRotQ[1] - cRotQ[1])/DEG_TO_RAD;
-    J[5][i] = (nRotQ[2] - cRotQ[2])/DEG_TO_RAD;
-    J[6][i] = (nRotQ[3] - cRotQ[3])/DEG_TO_RAD;
+    J[3][i] = (newRP.orientation[0] - curRP.orientation[0]) / DEG_TO_RAD;
+    J[4][i] = (newRP.orientation[1] - curRP.orientation[1]) / DEG_TO_RAD;
+    J[5][i] = (newRP.orientation[2] - curRP.orientation[2]) / DEG_TO_RAD;
+    J[6][i] = (newRP.orientation[3] - curRP.orientation[3]) / DEG_TO_RAD;
     //replace the original rotational value
     angles[i] -= dAngle;
   }
@@ -394,37 +400,20 @@ public float[][] calculateJacobian(float[] angles, boolean posOffset) {
   return J;
 }//end calculate jacobian
 
-//attempts to calculate the joint rotation values
-//required to move the end effector to the point specified
-//by 'tgt' and the Euler angle orientation 'rot'
-float[] calculateIKJacobian(PVector tgt, float[] rot) {
+public float[] inverseKinematics(Point tgt, float[] frame) {
   final int limit = 1000;  //max number of times to loop
   int count = 0;
   
-  float[] angles = armModel.getJointAngles();
-  float[][] frame = armModel.currentFrame;
-  float[][] nFrame = armModel.getRotationMatrix();
-  float[][] rMatrix = quatToMatrix(rot);
-  armModel.currentFrame = nFrame;
+  faultPoint = null;
+  float[] angles = tgt.angles.clone();
   
-  //translate target rotation to world ref frame
-  RealMatrix M = new Array2DRowRealMatrix(floatToDouble(nFrame, 3, 3));
-  RealMatrix O = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
-  RealMatrix MO = M.multiply(MatrixUtils.inverse(O));
-  //println(MO);
-  //translate target rotation to EE ref frame
-  RealMatrix R = new Array2DRowRealMatrix(floatToDouble(rMatrix, 3, 3));
-  RealMatrix OR = R.multiply(MatrixUtils.inverse(MO));
-  rot = matrixToQuat(doubleToFloat(OR.getData(), 3, 3));
-  //println();
   while(count < limit) {
-    PVector cPos = armModel.nativeEEPos(angles).position;
-    float[] cRotQ = armModel.getQuaternion(angles);
+    Point cPoint = relativeRobotEEPosition(angles, frame);
     
     //calculate our translational offset from target
-    float[] tDelta = calculateVectorDelta(tgt, cPos);
+    float[] tDelta = calculateVectorDelta(tgt.position, cPoint.position);
     //calculate our rotational offset from target
-    float[] rDelta = calculateVectorDelta(rot, cRotQ, 4);
+    float[] rDelta = calculateVectorDelta(tgt.orientation, cPoint.orientation, 4);
     float[] delta = new float[7];
     
     delta[0] = tDelta[0];
@@ -435,13 +424,13 @@ float[] calculateIKJacobian(PVector tgt, float[] rot) {
     delta[5] = rDelta[2];
     delta[6] = rDelta[3];
     
-    float dist = PVector.dist(cPos, tgt);
+    float dist = PVector.dist(cPoint.position, tgt.position);
     float rDist = calculateQuatMag(rDelta);
     //println("distances from tgt: " + dist + ", " + rDist);
     //check whether our current position is within tolerance
-    if(dist < (liveSpeed / 100f) && rDist < 0.00005f*liveSpeed) break;
+    if (dist < (liveSpeed / 100f) && rDist < 0.00005f*liveSpeed) break;
     //calculate jacobian, 'J', and its inverse
-    float[][] J = calculateJacobian(angles, true);
+    float[][] J = calculateJacobian(angles, true, frame);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
     RealMatrix JInverse = new SingularValueDecomposition(m).getSolver().getInverse();
     
@@ -459,53 +448,15 @@ float[] calculateIKJacobian(PVector tgt, float[] rot) {
     
     count += 1;
     if (count == limit) {
-      println("IK failure");
-      armModel.currentFrame = frame;
+      // IK failure
+      PVector offset = new PVector(delta[0], delta[1], delta[2]);
+      faultPoint = PVector.add(cPoint.position, offset);
+      System.out.printf("\nDelta: %s\nAngles: %s\n%s\n", arrayToString(delta), arrayToString(angles), matrixToString(J));
       return null;
     }
   }
   
-  armModel.currentFrame = frame;
   return angles;
-}
-
-int calculateIKJacobian(Point p) {
-  PVector pos = p.position;
-  float[] rot = p.orientation;
-  float[] destAngles = calculateIKJacobian(pos, rot);
-  
-  if(destAngles == null) {
-    return EXEC_FAILURE;
-  }
-  else {
-    for(int i = 0; i < 6; i += 1) {
-      Model s = armModel.segments.get(i);
-      if(destAngles[i] > -0.000001 && destAngles[i] < 0.000001)
-      destAngles[i] = 0;
-      
-      for(int j = 0; j < 3; j += 1) {
-        if(s.rotations[j] && !s.anglePermitted(j, destAngles[i])) {
-          //println("illegal joint angle on j" + i);
-          return EXEC_FAILURE;
-        }
-      }
-    }
-    
-    float[] angleOffset = new float[6];
-    float maxOffset = TWO_PI;
-    for(int i = 0; i < 6; i += 1) {
-      angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointAngles()[i]));
-    }
-    
-    if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
-        angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
-      armModel.setJointAngles(destAngles);
-      return EXEC_SUCCESS;
-    }
-    else {
-      return EXEC_PARTIAL;
-    }
-  }
 }
 
 /**
@@ -633,7 +584,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   }
   else {
     // NOTE orientation is in Native Coordinates!
-    currentPoint = armModel.nativeEEPos();
+    currentPoint = nativeRobotEEPosition(armModel.getJointAngles());
   }
   
   for(int n = transitionPoint; n < numberOfPoints; n++) {
@@ -724,7 +675,9 @@ void beginNewContinuousMotion(Point start, Point end, Point next, float p) {
   calculateContinuousPositions(start, end, next, p);
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
-    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+    Point tgtPoint = intermediatePositions.get(interMotionIdx);
+    float[] refQuaternion = nativeRobotEEPosition(armModel.getJointAngles()).orientation;
+    inverseKinematics(tgtPoint, refQuaternion);
   }
 }
 
@@ -737,7 +690,9 @@ void beginNewLinearMotion(Point start, Point end) {
   calculateIntermediatePositions(start, end);
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
-    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+    Point tgtPoint = intermediatePositions.get(interMotionIdx);
+    float[] refQuaternion = nativeRobotEEPosition(armModel.getJointAngles()).orientation;
+    inverseKinematics(tgtPoint, refQuaternion);
   }
 }
 
@@ -752,7 +707,9 @@ void beginNewCircularMotion(Point start, Point inter, Point end) {
   interMotionIdx = 0;
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
-    calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+    Point tgtPoint = intermediatePositions.get(interMotionIdx);
+    float[] refQuaternion = nativeRobotEEPosition(armModel.getJointAngles()).orientation;
+    inverseKinematics(tgtPoint, refQuaternion);
   }
 }
 
@@ -776,7 +733,9 @@ boolean executeMotion(ArmModel model, float speedMult) {
     
     int ret = EXEC_SUCCESS;
     if(intermediatePositions.size() > 0) {
-      calculateIKJacobian(intermediatePositions.get(interMotionIdx));
+      Point tgtPoint = intermediatePositions.get(interMotionIdx);
+      float[] refQuaternion = nativeRobotEEPosition(armModel.getJointAngles()).orientation;
+      inverseKinematics(tgtPoint, refQuaternion);
     }
     
     if(ret == EXEC_FAILURE) {
@@ -1001,7 +960,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
  */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
   // NOTE Orientation is in the Native Coordinate Frame
-  Point start = armModel.nativeEEPos();
+  Point start = nativeRobotEEPosition(armModel.getJointAngles());
   
   if(instruction.getMotionType() == MTYPE_JOINT) {
     armModel.setupRotationInterpolation( instruction.getVector(program).angles );

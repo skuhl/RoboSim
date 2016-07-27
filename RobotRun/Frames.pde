@@ -24,8 +24,8 @@ public abstract class Frame {
     DEAxesOffsets = null;
   }
 
-  public PVector getOrigin() { return new PVector(origin.x, origin.y, origin.z); }
-  public void setOrigin(PVector newOrigin) { origin = new PVector(newOrigin.x, newOrigin.y, newOrigin.z); }
+  public PVector getOrigin() { return origin.copy(); }
+  public void setOrigin(PVector newOrigin) { origin = newOrigin.copy(); }
   
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the Native Coordinate System. */

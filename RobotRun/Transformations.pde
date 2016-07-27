@@ -616,7 +616,7 @@ float[] rotateQuat(float[] p, PVector u, float theta) {
   
   float[] pq = quaternionMult(p, q);
 
-  return pq;
+  return quaternionNormalize(pq);
 }
 
 PVector rotateVectorQuat(PVector v, PVector u, float theta) {
@@ -694,6 +694,13 @@ float[] calculateQuatOffset(float[] q1, float[] q2) {
   }
   
   return qr;
+}
+
+/**
+ * Returns the complex conjugate or inverse of the given quaternion.
+ */
+public float[] quaternionConjugate(float[] q) {
+  return new float[] { q[0], -q[1], -q[2], -q[3] };
 }
 
 //returns the result of a quaternion 'q1' multiplied by quaternion 'q2'

@@ -73,7 +73,7 @@ public class RobotPoint {
    * the Robot
    */
   public Object getValue() {
-    Point RP = nativeRobotPosition(armModel.getJointAngles());
+    Point RP = frameRobotPosition(armModel.getJointAngles());
     RegStmtPoint pt = new RegStmtPoint( RP.position, RP.orientation );
     
     if (valIdx == -1) {

@@ -14,8 +14,6 @@ import java.io.IOException;
 
 private static final int OFF = 0, ON = 1;
 
-
-
 ArmModel armModel;
 Model eeModelSuction;
 Model eeModelClaw;
@@ -69,9 +67,9 @@ public WorldObject[] objects;
 
 /*******************************/
 
-// for store or load program state
-FileInputStream in = null;
-FileOutputStream out = null;
+// Used for debuging inverse kinematics
+public static PVector startPoint = null, targetPoint = null, faultPoint = null;
+public static float[][] orientationStart = null, orientationEnd = null;
 
 public void setup() {
   //size(1200, 800, P3D);
@@ -266,7 +264,7 @@ public void draw() {
   popMatrix();*/
   // END TESTING CODE
   
-  /* Draw a point in space */
+  /* Draw various points in space */
   if(ref_point != null) {
     pushMatrix();
     translate(ref_point.x, ref_point.y, ref_point.z);
@@ -274,6 +272,44 @@ public void draw() {
     noFill();
     stroke(0, 150, 200);
     sphere(5);
+    
+    popMatrix();
+  }
+  
+  if (startPoint != null) {
+    pushMatrix();
+    translate(startPoint.x, startPoint.y, startPoint.z);
+    
+    noFill();
+    stroke(0, 135, 0);
+    sphere(1);
+    
+    if (orientationStart != null && orientationEnd != null) {
+      displayOriginAxes(orientationStart, new PVector(0f, 0f, 0f), 100f, color(0));
+      displayOriginAxes(orientationEnd, new PVector(0f, 0f, 0f), 100f, color(0));
+    }
+    
+    popMatrix();
+  }
+  
+  if (targetPoint != null) {
+    pushMatrix();
+    translate(targetPoint.x, targetPoint.y, targetPoint.z);
+    
+    noFill();
+    stroke(255, 0, 0);
+    sphere(1);
+    
+    popMatrix();
+  }
+  
+  if (faultPoint != null) {
+    pushMatrix();
+    translate(faultPoint.x, faultPoint.y, faultPoint.z);
+    
+    noFill();
+    stroke(0);
+    sphere(1);
     
     popMatrix();
   }
@@ -350,7 +386,7 @@ public void handleWorldObjects() {
         }
       }
       
-      if( objects[idx] != armModel.held && objects[idx].collision(armModel.nativeEEPos().position) ) {
+      if( objects[idx] != armModel.held && objects[idx].collision(nativeRobotEEPosition(armModel.getJointAngles()).position) ) {
         // Change hit box color to indicate End Effector collision
         objects[idx].hit_box.outline = color(0, 0, 255);
       }
@@ -441,9 +477,10 @@ public void displayTeachPoints() {
  */
 public void displayAxes() {
   
+  Point ee_point = nativeRobotEEPosition(armModel.getJointAngles());
+  
   if (AXES_DISPLAY == 0 && curCoordFrame != CoordFrame.JOINT) {
     // Draw axes of the Robot's End Effector frame for testing purposes
-    Point ee_point = armModel.nativeEEPos();
     displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
   } else if (AXES_DISPLAY == 1) {
     // Display axes
@@ -453,10 +490,10 @@ public void displayAxes() {
       
       if (curCoordFrame == CoordFrame.TOOL) {
         /* Draw the axes of the active Tool frame at the Robot End Effector */
-        displayOriginAxes(activeTool.getNativeAxes(), armModel.nativeEEPos().position, 200f, color(255, 0, 255));
+        displayOriginAxes(activeTool.getNativeAxes(), ee_point.position, 200f, color(255, 0, 255));
       } else {
         // Draw axes of the Robot's End Effector frame for testing purposes
-        Point ee_point = armModel.nativeEEPos();
+        
         displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
       }
       
@@ -481,7 +518,7 @@ public void displayAxes() {
         break;
       case TOOL:
         displayAxes = active.getNativeAxes();
-        displayOrigin = armModel.nativeEEPos().position;
+        displayOrigin = ee_point.position;
         break;
       case USER:
         displayAxes = active.getNativeAxes();
@@ -602,7 +639,7 @@ public void displayGridlines(float[][] axesVectors, PVector origin, int halfNumO
   }
   
   popMatrix();
-  drawEndEffectorGridMapping();
+  mapToRobotBasePlane();
 }
 
 /**
@@ -612,9 +649,9 @@ public void displayGridlines(float[][] axesVectors, PVector origin, int halfNumO
  *  1 -> a point is drawn on the grid plane that corresponds to the EE's xz coordinates
  *  For any other value, nothing is drawn
  */
-public void drawEndEffectorGridMapping() {
+public void mapToRobotBasePlane() {
   
-  PVector ee_pos = armModel.nativeEEPos().position;
+  PVector ee_pos = nativeRobotEEPosition(armModel.getJointAngles()).position;
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
   color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);

@@ -12,7 +12,7 @@ public class Point  {
   public Point() {
     angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
     // Fix later
-    Point pt = armModel.nativeEEPos(angles.clone());
+    Point pt = nativeRobotEEPosition(angles.clone());
     position = pt.position;
     orientation = pt.orientation;
   }
@@ -20,15 +20,15 @@ public class Point  {
   public Point(float[] jointAngles) {
     angles = Arrays.copyOfRange(jointAngles, 0, 6);
     // Fix later
-    Point pt = armModel.nativeEEPos(angles.clone());
+    Point pt = nativeRobotEEPosition(angles.clone());
     position = pt.position;
     orientation = pt.orientation;
   }
   
   public Point(PVector pos, float[] orient) {
-    position = new PVector(pos.x, pos.y, pos.z);
+    position = pos.copy();
     orientation = Arrays.copyOfRange(orient, 0, 4);
-    angles = calculateIKJacobian(position, orientation);
+    // TODO intialize angles!
   }
   
   public Point(float x, float y, float z, float r, float i, float j, float k,
@@ -49,7 +49,7 @@ public class Point  {
   }
   
   public Point(PVector pos, float[] orient, float[] jointAngles) {
-    position = new PVector(pos.x, pos.y, pos.z);
+    position = pos.copy();
     orientation = Arrays.copyOfRange(orient, 0, 4);
     angles = Arrays.copyOfRange(jointAngles, 0, 6);
   }
@@ -453,7 +453,7 @@ public class IOInstruction extends Instruction {
       
       if(state == ON && armModel.held == null) {
         
-        PVector ee_pos = armModel.nativeEEPos().position;
+        PVector ee_pos = nativeRobotEEPosition(armModel.getJointAngles()).position;
         println(ee_pos);
         // Determine if an object in the world can be picked up by the Robot
         for(WorldObject s : objects) {

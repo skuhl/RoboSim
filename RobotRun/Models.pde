@@ -112,8 +112,6 @@ public class ArmModel {
   public float[] jogRot = new float[3];
   // Indicates that the Robot is moving to a specific point
   public boolean inMotion = false;
-  public float[] tgtRot = new float[4];
-  public PVector tgtPos = new PVector();
   public float[][] currentFrame = {{1, 0, 0},
                                    {0, 1, 0}, 
                                    {0, 0, 1}};
@@ -590,35 +588,11 @@ public class ArmModel {
   /* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
    * the end effector's current x, y, z axes with respect to the current frame.
    */
-  public float[][] getRotationMatrix() {
+  public float[][] getRobotOrientationMatrix() {
     pushMatrix();
     resetMatrix();
-    // Switch to End Effector reference Frame
     applyModelRotation(getJointAngles());
-    /* Define vectors { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 }, and { 0, 0, 1 }
-     * Swap vectors:
-     *   x' = z
-     *   y' = x
-     *   z' = y
-     */
-    PVector origin = new PVector(modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0)),
-    x = new PVector(modelX(0, 0, -1), modelY(0, 0, -1), modelZ(0, 0, -1)),
-    y = new PVector(modelX(0, 1, 0), modelY(0, 1, 0), modelZ(0, 1, 0)),
-    z = new PVector(modelX(1, 0, 0), modelY(1, 0, 0), modelZ(1, 0, 0));
-    
-    float[][] matrix = new float[3][3];
-    // Calcualte Unit Vectors form difference between each axis vector and the origin
-    
-    matrix[0][0] = x.x - origin.x;
-    matrix[0][1] = x.y - origin.y;
-    matrix[0][2] = x.z - origin.z;
-    matrix[1][0] = y.x - origin.x;
-    matrix[1][1] = y.y - origin.y;
-    matrix[1][2] = y.z - origin.z;
-    matrix[2][0] = z.x - origin.x;
-    matrix[2][1] = z.y - origin.y;
-    matrix[2][2] = z.z - origin.z;
-    
+    float[][] matrix = getRotationMatrix();
     popMatrix();
     
     return matrix;
@@ -628,8 +602,8 @@ public class ArmModel {
    * the end effector's current x, y, z axes with respect to an arbitrary coordinate
    * system specified by the rotation matrix 'frame.'
    */
-  public float[][] getRotationMatrix(float[][] frame) {
-    float[][] m = getRotationMatrix();
+  public float[][] getRobotOrientationMatrix(float[][] frame) {
+    float[][] m = getRobotOrientationMatrix();
     RealMatrix A = new Array2DRowRealMatrix(floatToDouble(m, 3, 3));
     RealMatrix B = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
     RealMatrix AB = A.multiply(B.transpose());
@@ -637,55 +611,6 @@ public class ArmModel {
     //println(AB);
     
     return doubleToFloat(AB.getData(), 3, 3);
-  }
-  
-  //returns the rotational value of the robot as a quaternion
-  public float[] getQuaternion() {
-    float[][] m = getRotationMatrix(currentFrame);
-    float[] q = matrixToQuat(m);
-    
-    return q;
-  }
-  
-  public float[] getQuaternion(float[] testAngles) {
-    float[] origAngles = getJointAngles();
-    setJointAngles(testAngles);
-    
-    float[] ret = getQuaternion();
-    setJointAngles(origAngles);
-    return ret;
-  }
-  
-  /**
-   * Gives the current position and orientation of the end effector
-   * in the current Coordinate Frame
-   * 
-   * @param model Arm model whose end effector position to calculate
-   * @param test Determines whether to use arm segments' actual
-   *             rotation values or if we're checking trial rotations
-   * @return The current end effector position
-   */
-  public Point nativeEEPos() {
-    return nativeEEPos(armModel.getJointAngles());
-  }
-  
-  /**
-   * Returns the position of the Robot's End Effector for
-   * its current joint angles, in the Native Coordinate
-   * System.
-   */
-  public Point nativeEEPos(float[] jointAngles) {
-    Frame activeTool = getActiveFrame(CoordFrame.TOOL);
-    PVector offset;
-    
-    if (activeTool != null) {
-      // Apply the Tool Tip
-      offset = activeTool.getOrigin();
-    } else {
-      offset = new PVector(0f, 0f, 0f);
-    }
-    
-    return nativeRobotEEPosition(jointAngles, offset);
   }
   
   //convenience method to set all joint rotation values of the robot arm
@@ -780,20 +705,6 @@ public class ArmModel {
       }
     }
   }
-  
-  void updateOrientation() {
-    PVector u = new PVector(0, 0, 0);
-    float theta = DEG_TO_RAD*0.025f*liveSpeed;
-    
-    u.x = jogRot[0];
-    u.y = jogRot[1];
-    u.z = jogRot[2];
-    u.normalize();
-    
-    if(u.x != 0 || u.y != 0 || u.z != 0) {
-      tgtRot = rotateQuat(tgtRot, u, theta);
-    }
-  }
 
   void executeLiveMotion() {
     if(curCoordFrame == CoordFrame.JOINT) {
@@ -827,29 +738,47 @@ public class ArmModel {
       }
       updateButtonColors();
     } else {
-      //only move if our movement vector is non-zero
+      // Only move if our movement vector is non-zero
       if(jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0 || 
           jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0) {
         
-        PVector move = new PVector(jogLinear[0], jogLinear[1], jogLinear[2]);
+        Point curPoint = nativeRobotEEPosition(getJointAngles());
+        // Respond to user defined movement
+        float distance = motorSpeed / 6000f * liveSpeed;
+        float theta = DEG_TO_RAD * 0.025f * liveSpeed;
+        
+        PVector translation = new PVector(jogLinear[0], jogLinear[1], jogLinear[2]);
         // Convert the movement vector into the current reference frame
-        move = rotate(move, currentFrame);
-        //move = convertNativeToWorld(move);
+        translation = rotate(translation, currentFrame);
+        PVector tgtPosition = PVector.add(curPoint.position, translation.mult(distance));
         
-        //respond to user defined movement
-        float distance = motorSpeed/6000f * liveSpeed;
-        tgtPos.x += move.x * distance;
-        tgtPos.y += move.y * distance;
-        tgtPos.z += move.z * distance;
-        updateOrientation();
+        PVector rotation = new PVector(jogRot[0], jogRot[1], jogRot[2]);
+        // Convert the movement vector into the current reference frame
+        //rotation = rotate(rotation, currentFrame);
+        rotation.normalize();
         
-        //if(DISPLAY_TEST_OUT_PUT) { System.out.printf("%s -> %s: %d\n", getEEPos(), tgtPos, getEEPos().dist(tgtPos)); }
+        float[] tgtOrientation;
+        if(rotation.x != 0 || rotation.y != 0 || rotation.z != 0) {
+          tgtOrientation = rotateQuat(curPoint.orientation, rotation, theta);
+        } else {
+          tgtOrientation = curPoint.orientation;  
+        }
         
-        //println(lockOrientation);
-        float[] destAngles = calculateIKJacobian(tgtPos, tgtRot);
-        //did we successfully find the desired angles?
+        tgtOrientation = quaternionNormalize( quaternionMult(tgtOrientation, quaternionConjugate(curPoint.orientation)) );
+        Point tgt = new Point(tgtPosition, tgtOrientation, curPoint.angles);
+        float[] destAngles = inverseKinematics(tgt, curPoint.orientation);
+        
+        // Did we successfully find the desired angles?
         if(destAngles == null) {
-          println("IK failure");
+          System.out.printf("IK Failure ...\nTranslation: %s\n%s -> %s\nRotation: %s\n%s : (%3.8f) -> %s : (%3.8f)\n\n",
+                            translation, curPoint.position, tgtPosition, rotation,
+                            arrayToString(curPoint.orientation), calculateQuatMag(curPoint.orientation), arrayToString(tgtOrientation), calculateQuatMag(tgtOrientation));
+          
+          startPoint = curPoint.position.copy();
+          targetPoint = tgtPosition.copy();
+          orientationStart = quatToMatrix(curPoint.orientation);
+          orientationEnd = quatToMatrix(tgtOrientation);
+          
           updateButtonColors();
           jogLinear[0] = 0;
           jogLinear[1] = 0;
@@ -890,10 +819,6 @@ public class ArmModel {
         if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
             angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
           setJointAngles(destAngles);
-        }
-        else {
-          tgtPos = armModel.nativeEEPos().position;
-          tgtRot = armModel.getQuaternion();
         }
       }
     }
