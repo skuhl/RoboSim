@@ -66,11 +66,20 @@ public static final float PLANE_Y = 200.5f;
 public WorldObject[] objects;
 
 /*******************************/
+/*      Debugging Stuff        */
+
+public static ArrayList<String> buffer;
+
+/*******************************/
+
+
 
 public void setup() {
   //size(1200, 800, P3D);
   size(1080, 720, P3D);
   ortho();
+  
+  buffer = new ArrayList<String>();
   
   //load model and save data
   armModel = new ArmModel();
@@ -127,6 +136,12 @@ public void setup() {
             q6 = quaternionNormalize( quaternionMult(quaternionConjugate(q1), q2) );
     System.out.printf("\nq1: %s\nq2: %s\nq1 * q1': %s\nq2 * q1': %s\nq1' * q1: %s\nq1' * q2: %s\n", arrayToString(q1), arrayToString(q2), arrayToString(q3), arrayToString(q4), arrayToString(q5), arrayToString(q6));
     /**/
+    float angleSrc = 0.0f,
+          angleDest = 5.6723f,
+          diff = minimumDistance(angleSrc, angleDest);
+    
+    System.out.printf("%5.4f -> %5.4f = %5.4f\n", angleSrc, angleDest, diff);
+    /**/
   }
 }
 
@@ -149,8 +164,8 @@ public void draw() {
   // Execute arm movement
   if(programRunning) {
     // Run active program
-    println("Running program");
     programRunning = !executeProgram(currentProgram, armModel, execSingleInst);
+    
   } else if (armModel.modelInMotion()) {
     // Jog the Robot
     intermediatePositions.clear();

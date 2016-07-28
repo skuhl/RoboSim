@@ -932,3 +932,25 @@ public PVector loadPVector(DataInputStream in) throws IOException {
     return v;
   }
 }
+
+/**
+ * Writes anything stored in the ArrayList String buffers to tmp\test.out.
+ */
+public int writeBuffer() {
+  try {
+    PrintWriter out = new PrintWriter(sketchPath("tmp/test.out"));
+    
+    for (String line : buffer) {
+      out.print(line);
+    }
+    
+    println("Write to buffer successful.");
+    out.close();
+  } catch(Exception Ex) {
+    Ex.printStackTrace();
+    return 1;
+  }
+  
+  buffer.clear();
+  return 0;
+}

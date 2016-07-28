@@ -626,7 +626,7 @@ public class ArmModel {
           if(abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeed*speed) {
             done = false;
             a.currentRotations[r] += a.rotationSpeed * a.rotationDirections[r] * speed;
-            a.currentRotations[r] = clampAngle(a.currentRotations[r]);
+            a.currentRotations[r] = mod2PI(a.currentRotations[r]);
           }
         }
       } // end loop through rotation axes
@@ -649,7 +649,9 @@ public class ArmModel {
     }
     
     // Calculate whether it's faster to turn CW or CCW
-    for(Model a : armModel.segments) {
+    for(int joint = 0; joint < 6; ++joint) {
+      Model a = armModel.segments.get(joint);
+      
       for(int r = 0; r < 3; r++) {
         if(a.rotations[r]) {
           // The minimum distance between the current and target joint angles
@@ -710,7 +712,7 @@ public class ArmModel {
           if(model.rotations[n]) {
             float trialAngle = model.currentRotations[n] +
             model.rotationSpeed * model.jointsMoving[n] * liveSpeed / 100f;
-            trialAngle = clampAngle(trialAngle);
+            trialAngle = mod2PI(trialAngle);
             
             if(model.anglePermitted(n, trialAngle)) {
               
@@ -720,16 +722,16 @@ public class ArmModel {
               if(COLLISION_DISPLAY) { updateBoxes(); }
               
               if(armModel.checkSelfCollisions()) {
-                // end robot arm movement
+                // End robot arm movement
                 model.currentRotations[n] = old_angle;
                 updateBoxes();
                 model.jointsMoving[n] = 0;
-                updateButtonColors();
+                halt();
               }
             } 
             else {
               model.jointsMoving[n] = 0;
-              updateButtonColors();
+              halt();
             }
           }
         }
@@ -832,15 +834,32 @@ public class ArmModel {
       angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointAngles()[i]));
     }
     
-    if(!(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
-        angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset)) {
+    if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
+        angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
+      //float[] currentAngles = getJointAngles();
+      //// Save differences in angles to a buffer
+      //for (int a = 0; buffer.size() < 9999 && a < 6; ++a) {
+      //  float deltaA = minimumDistance(destAngles[a], currentAngles[a]);
+      //  buffer.add( String.format("[%d] = %5.9f\n", a, deltaA * RAD_TO_DEG) );
+      //}
+      
+      //if (buffer.size() <= 9999) {
+      //  buffer.add("\n");
+      //}
+      
+      setJointAngles(destAngles);
+      return EXEC_SUCCESS;
+    } else {
       Point RP = nativeRobotEEPosition(armModel.getJointAngles());
       armModel.tgtPosition = RP.position;
       armModel.tgtOrientation = RP.orientation;
     }
     
-    setJointAngles(destAngles);
-    return EXEC_SUCCESS;
+    //if (buffer.size() < 10000) {
+    //  buffer.add("Execution Partial\n");
+    //}
+    
+    return EXEC_PARTIAL;
   }
   
   public boolean checkAngles(float[] angles) {

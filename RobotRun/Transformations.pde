@@ -745,3 +745,41 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
   
   return quaternionNormalize(qSlerp);
 }
+
+/**
+ * Brings the given angle (in radians) within the range: [0, TWO_PI).
+ * 
+ * @param angle  Some rotation in radians
+ * @returning    The equivalent angle within the range [0, TWO_PI)
+ */
+public float mod2PI(float angle) {
+  float limbo = angle % TWO_PI;
+  
+  if (limbo < 0f) {
+    limbo += TWO_PI;
+  }
+  
+  return limbo;
+}
+
+/**
+ * Computes the minimum rotational magnitude to move
+ * from src to dest, around the unit circle.
+ * 
+ * @param src   The source angle in radians
+ * @param dset  The destination angle in radians
+ * @returning   The minimum distance between src and dest
+ */
+public float minimumDistance(float src, float dest) {
+  // Bring angles within range [0, TWO_PI)
+  float difference = mod2PI(dest) - mod2PI(src);
+  
+  if (difference > PI) {
+    difference -= TWO_PI;
+  } else if (difference < -PI) {
+    difference += TWO_PI;
+  }
+  
+  return difference;
+}
+  

@@ -65,38 +65,38 @@ void showMainDisplayText() {
   text(cartesian, width - 20, 60);
   text(joints, width - 20, 80);
   
+  fill(215, 0, 0);
   // Display a message if the Robot is in motion
   if (armModel.modelInMotion()) {
-    fill(200, 0, 0);
     text("Robot is moving", width - 20, 120);
+  }
+  
+  if (programRunning) {
+    text("Program executing", width - 20, 140);
   }
   
   // Display a message while the robot is carrying an object
   if(armModel.held != null) {
-    fill(200, 0, 0);
-    text("Object held", width - 20, 140);
+    text("Object held", width - 20, 160);
     
     float[] held_pos = armModel.held.hit_box.position();
     String obj_pos = String.format("(%f, %f, %f)", held_pos[0], held_pos[1], held_pos[1]);
-    text(obj_pos, width - 20, 160);
+    text(obj_pos, width - 20, 180);
   }
   
   // Display message for camera pan-lock mode
   if(clickPan % 2 == 1) {
     textSize(14);
-    fill(215, 0, 0);
     text("Press space on the keyboard to disable camera paning", 20, height / 2 + 30);
   }
   // Display message for camera rotation-lock mode
   if(clickRotate % 2 == 1) {
     textSize(14);
-    fill(215, 0, 0);
     text("Press shift on the keyboard to disable camera rotation", 20, height / 2 + 55);
   }
   
   if(errorCounter > 0) {
     errorCounter--;
-    fill(255, 0, 0);
     text(errorText, width-20, 100);
   }
 }
@@ -314,7 +314,7 @@ public float[] inverseKinematics(Point tgt) {
   int count = 0;
   
   float[] angles = tgt.angles.clone();
-  //println("IK Run");
+  
   while(count < limit) {
     Point cPoint = nativeRobotEEPosition(angles);
     
@@ -327,7 +327,6 @@ public float[] inverseKinematics(Point tgt) {
     PVector tDelta = PVector.sub(tgt.position, cPoint.position);
     //calculate our rotational offset from target
     float[] rDelta = calculateVectorDelta(tgt.orientation, cPoint.orientation, 4);
-    //System.out.printf("%d: %s -> %s\n", count, arrayToString(cPoint.orientation), arrayToString(tgt.orientation));
     float[] delta = new float[7];
     
     delta[0] = tDelta.x;
@@ -354,6 +353,7 @@ public float[] inverseKinematics(Point tgt) {
       for(int j = 0; j < 7; j += 1) {
         dAngle[i] += JInverse.getEntry(i, j)*delta[j];
       }
+      
       //update joint angles
       angles[i] += dAngle[i];
       angles[i] += TWO_PI;
@@ -927,39 +927,10 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
   return true;
 } // end setUpInstruction
 
-/* Returns the angle with the smallest magnitude between
- * the two given angles on the Unit Circle */
-public float minimumDistance(float angle1, float angle2) {
-  float dist = clampAngle(angle2) - clampAngle(angle1);
-  
-  if(dist > PI) {
-    dist -= TWO_PI;
-  } else if(dist < -PI) {
-    dist += TWO_PI;
-  }
-  
-  return dist;
-}
 
 void setError(String text) {
   errorText = text;
   errorCounter = 600;
-}
-
-/**
- * Maps wth given angle to the range of 0 (inclusive) to
- * two PI (exclusive).
- *
- * @param angle  some angle in radians
- * @return       An angle between  0 (inclusive) to two
- *               PI (exclusive)
- */
-float clampAngle(float angle) {
-  while(angle > TWO_PI) angle -= (TWO_PI);
-  while(angle < 0) angle += (TWO_PI);
-  // angles range: [0, TWO_PI)
-  if(angle == TWO_PI) angle = 0;
-  return angle;
 }
 
 /**

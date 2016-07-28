@@ -845,7 +845,7 @@ public void keyPressed() {
     armModel.setJointAngles(rot);
     intermediatePositions.clear();
   } else if(key == 'w') {
-    //armModel.currentFrame = armModel.getRotationMatrix();
+    writeBuffer();
   } else if (key == 'y') {
     float[] rot = {PI, 0, 0, 0, 0, PI};
     armModel.setJointAngles(rot);
@@ -2774,314 +2774,105 @@ public void EE() {
 }
 
 public void JOINT1_NEG() {
-  
   if (shift) {
-    
-    if (curCoordFrame == CoordFrame.JOINT) {
-      // Move single joint
-      activateLiveJointMotion(0, -1);
-    } else {
-      // Move entire robot in a single axis plane
-      activateLiveWorldMotion(0, -1);
-    }
-    
-    int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
-    int c2 = ((Button)cp5.get("JOINT1_POS")).getColor().getBackground();
-    
-    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-      //both buttons have the default color, set this one to highlight
-      ((Button)cp5.get("JOINT1_NEG")).setColorBackground(BUTTON_ACTIVE);
-    }
-    else {
-      ((Button)cp5.get("JOINT1_NEG")).setColorBackground(BUTTON_DEFAULT);
-      ((Button)cp5.get("JOINT1_POS")).setColorBackground(BUTTON_DEFAULT);
-    }
+    updateRobotJogMotion(0, -1);
   }
 }
 
 public void JOINT1_POS() {
-  
   if (shift) {
-    
-    if(curCoordFrame == CoordFrame.JOINT) {
-      // Move single joint
-      activateLiveJointMotion(0, 1);
-    } else  {
-      // Move entire robot in a single axis plane
-      activateLiveWorldMotion(0, 1);
-    }
-    
-    int c1 = ((Button)cp5.get("JOINT1_NEG")).getColor().getBackground();
-    int c2 = ((Button)cp5.get("JOINT1_POS")).getColor().getBackground();
-    
-    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-      //both buttons have the default color, set this one to highlight
-      ((Button)cp5.get("JOINT1_POS")).setColorBackground(BUTTON_ACTIVE);
-    }
-    else {
-      //stopping movement, set both buttons to default
-      ((Button)cp5.get("JOINT1_NEG")).setColorBackground(BUTTON_DEFAULT);
-      ((Button)cp5.get("JOINT1_POS")).setColorBackground(BUTTON_DEFAULT);
-    }
+    updateRobotJogMotion(0, 1);
   }
 }
 
 public void JOINT2_NEG() {
-  
   if (shift) {
-    
-    if(curCoordFrame == CoordFrame.JOINT) {
-      // Move single joint
-      activateLiveJointMotion(1, -1);
-    } else  {
-      // Move entire robot in a single axis plane
-      activateLiveWorldMotion(1, -1);
-    }
-    
-    int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
-    int c2 = ((Button)cp5.get("JOINT2_POS")).getColor().getBackground();
-    
-    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-      //both buttons have the default color, set this one to highlight
-      ((Button)cp5.get("JOINT2_NEG")).setColorBackground(BUTTON_ACTIVE);
-    }
-    else {
-      ((Button)cp5.get("JOINT2_NEG")).setColorBackground(BUTTON_DEFAULT);
-      ((Button)cp5.get("JOINT2_POS")).setColorBackground(BUTTON_DEFAULT);
-    }
+    updateRobotJogMotion(1, -1);
   }
 }
 
 public void JOINT2_POS() {
-  
   if (shift) {
-    
-    if(curCoordFrame == CoordFrame.JOINT) {
-      // Move single joint
-      activateLiveJointMotion(1, 1);
-    } else  {
-      // Move entire robot in a single axis plane
-      activateLiveWorldMotion(1, 1);
-    }
-    
-    int c1 = ((Button)cp5.get("JOINT2_NEG")).getColor().getBackground();
-    int c2 = ((Button)cp5.get("JOINT2_POS")).getColor().getBackground();
-    
-    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-      //both buttons have the default color, set this one to highlight
-      ((Button)cp5.get("JOINT2_POS")).setColorBackground(BUTTON_ACTIVE);
-    }
-    else {
-      ((Button)cp5.get("JOINT2_NEG")).setColorBackground(BUTTON_DEFAULT);
-      ((Button)cp5.get("JOINT2_POS")).setColorBackground(BUTTON_DEFAULT);
-    }
+    updateRobotJogMotion(1, 1);
   }
 }
 
 public void JOINT3_NEG() {
-  
   if (shift) {
-    
-    if(curCoordFrame == CoordFrame.JOINT) {
-      // Move single joint
-      activateLiveJointMotion(2, -1);
-    } else  {
-      // Move entire robot in a single axis plane
-      activateLiveWorldMotion(2, -1);
-    }
-    
-    int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
-    int c2 = ((Button)cp5.get("JOINT3_POS")).getColor().getBackground();
-    
-    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-      //both buttons have the default color, set this one to highlight
-      ((Button)cp5.get("JOINT3_NEG")).setColorBackground(BUTTON_ACTIVE);
-    }
-    else {
-      ((Button)cp5.get("JOINT3_NEG")).setColorBackground(BUTTON_DEFAULT);
-      ((Button)cp5.get("JOINT3_POS")).setColorBackground(BUTTON_DEFAULT);
-    }
+    updateRobotJogMotion(2, -1);
   }
 }
 
 public void JOINT3_POS() {
-  
   if (shift) {
-    
-    if(curCoordFrame == CoordFrame.JOINT) {
-      // Move single joint
-      activateLiveJointMotion(2, 1);
-    } else  {
-      // Move entire robot in a single axis plane
-      activateLiveWorldMotion(2, 1);
-    }
-    
-    int c1 = ((Button)cp5.get("JOINT3_NEG")).getColor().getBackground();
-    int c2 = ((Button)cp5.get("JOINT3_POS")).getColor().getBackground();
-    
-    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-      //both buttons have the default color, set this one to highlight
-      ((Button)cp5.get("JOINT3_POS")).setColorBackground(BUTTON_ACTIVE);
-    }
-    else {
-      ((Button)cp5.get("JOINT3_NEG")).setColorBackground(BUTTON_DEFAULT);
-      ((Button)cp5.get("JOINT3_POS")).setColorBackground(BUTTON_DEFAULT);
-    }
+    updateRobotJogMotion(2, 1);
   }
 }
 
 public void JOINT4_NEG() {
-  
   if (shift) {
-    
-    if(curCoordFrame == CoordFrame.JOINT) {
-      // Move single joint
-      activateLiveJointMotion(3, -1);
-    } else  {
-      // Move entire robot in a single axis plane
-      activateLiveWorldMotion(3, -1);
-    }
-    
-    int c1 = ((Button)cp5.get("JOINT4_NEG")).getColor().getBackground();
-    int c2 = ((Button)cp5.get("JOINT4_POS")).getColor().getBackground();
-    
-    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-      //both buttons have the default color, set this one to highlight
-      ((Button)cp5.get("JOINT4_NEG")).setColorBackground(BUTTON_ACTIVE);
-    }
-    else {
-      ((Button)cp5.get("JOINT4_NEG")).setColorBackground(BUTTON_DEFAULT);
-      ((Button)cp5.get("JOINT4_POS")).setColorBackground(BUTTON_DEFAULT);
-    }
+    updateRobotJogMotion(3, -1);
   }
 }
 
 public void JOINT4_POS() {
-  
   if (shift) {
-    
-    if(curCoordFrame == CoordFrame.JOINT) {
-      // Move single joint
-      activateLiveJointMotion(3, 1);
-    } else {
-      // Move entire robot in a single axis plane
-      activateLiveWorldMotion(3, 1);
-    }
-    
-    int c1 = ((Button)cp5.get("JOINT4_NEG")).getColor().getBackground();
-    int c2 = ((Button)cp5.get("JOINT4_POS")).getColor().getBackground();
-    
-    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-      //both buttons have the default color, set this one to highlight
-      ((Button)cp5.get("JOINT4_POS")).setColorBackground(BUTTON_ACTIVE);
-    }
-    else {
-      ((Button)cp5.get("JOINT4_NEG")).setColorBackground(BUTTON_DEFAULT);
-      ((Button)cp5.get("JOINT4_POS")).setColorBackground(BUTTON_DEFAULT);
-  }
+    updateRobotJogMotion(3, 1);
   }
 }
 
 public void JOINT5_NEG() {
-  
   if (shift) {
-    
-    if(curCoordFrame == CoordFrame.JOINT) {
-      // Move single joint
-      activateLiveJointMotion(4, -1);
-    } else {
-      // Move entire robot in a single axis plane
-      activateLiveWorldMotion(4, -1);
-    }
-    
-    int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
-    int c2 = ((Button)cp5.get("JOINT5_POS")).getColor().getBackground();
-    
-    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-      //both buttons have the default color, set this one to highlight
-      ((Button)cp5.get("JOINT5_NEG")).setColorBackground(BUTTON_ACTIVE);
-    }
-    else {
-      ((Button)cp5.get("JOINT5_NEG")).setColorBackground(BUTTON_DEFAULT);
-      ((Button)cp5.get("JOINT5_POS")).setColorBackground(BUTTON_DEFAULT);
-    }
+    updateRobotJogMotion(4, -1);
   }
 }
 
 public void JOINT5_POS() {
-  
   if (shift) {
-    
-    if(curCoordFrame == CoordFrame.JOINT) {
-      // Move single joint
-      activateLiveJointMotion(4, 1);
-    } else {
-      // Move entire robot in a single axis plane
-      activateLiveWorldMotion(4, 1);
-    }
-    
-    int c1 = ((Button)cp5.get("JOINT5_NEG")).getColor().getBackground();
-    int c2 = ((Button)cp5.get("JOINT5_POS")).getColor().getBackground();
-    
-    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-      //both buttons have the default color, set this one to highlight
-      ((Button)cp5.get("JOINT5_POS")).setColorBackground(BUTTON_ACTIVE);
-    }
-    else {
-      ((Button)cp5.get("JOINT5_NEG")).setColorBackground(BUTTON_DEFAULT);
-      ((Button)cp5.get("JOINT5_POS")).setColorBackground(BUTTON_DEFAULT);
-    }
+    updateRobotJogMotion(4, 1);
   }
 }
 
 public void JOINT6_NEG() {
-  
   if (shift) {
-    
-    if(curCoordFrame == CoordFrame.JOINT) {
-      // Move single joint
-      activateLiveJointMotion(5, -1);
-    } else {
-      // Move entire robot in a single axis plane
-      activateLiveWorldMotion(5, -1);
-    }
-    
-    int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
-    int c2 = ((Button)cp5.get("JOINT6_POS")).getColor().getBackground();
-    
-    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-      //both buttons have the default color, set this one to highlight
-      ((Button)cp5.get("JOINT6_NEG")).setColorBackground(BUTTON_ACTIVE);
-    }
-    else {
-      ((Button)cp5.get("JOINT6_NEG")).setColorBackground(BUTTON_DEFAULT);
-      ((Button)cp5.get("JOINT6_POS")).setColorBackground(BUTTON_DEFAULT);
-    }
+    updateRobotJogMotion(5, -1);
   }
 }
 
 public void JOINT6_POS() {
-  
   if (shift) {
+    updateRobotJogMotion(5, 1);
+  }
+}
+
+public void updateRobotJogMotion(int button, int direction) {
+  // Only six jog button pairs exist
+  if (button >= 0 && button < 6) {
+    float newDir;
     
     if(curCoordFrame == CoordFrame.JOINT) {
       // Move single joint
-      activateLiveJointMotion(5, 1);
+      newDir = activateLiveJointMotion(button, direction);
     } else {
       // Move entire robot in a single axis plane
-      activateLiveWorldMotion(5, 1);
+      newDir = activateLiveWorldMotion(button, direction);
     }
     
-    int c1 = ((Button)cp5.get("JOINT6_NEG")).getColor().getBackground();
-    int c2 = ((Button)cp5.get("JOINT6_POS")).getColor().getBackground();
+    Button negButton = ((Button)cp5.get("JOINT" + (button + 1) + "_NEG")),
+           posButton = ((Button)cp5.get("JOINT" + (button + 1) + "_POS"));
     
-    if(c1 == BUTTON_DEFAULT && c2 == BUTTON_DEFAULT) {
-      //both buttons have the default color, set this one to highlight
-      ((Button)cp5.get("JOINT6_POS")).setColorBackground(BUTTON_ACTIVE);
-    }
-    else {
-      ((Button)cp5.get("JOINT6_NEG")).setColorBackground(BUTTON_DEFAULT);
-      ((Button)cp5.get("JOINT6_POS")).setColorBackground(BUTTON_DEFAULT);
+    if (newDir > 0) {
+      // Positive motion
+      negButton.setColorBackground(BUTTON_DEFAULT);
+      posButton.setColorBackground(BUTTON_ACTIVE);
+    } else if (newDir < 0) {
+      // Negative motion
+      negButton.setColorBackground(BUTTON_ACTIVE);
+      posButton.setColorBackground(BUTTON_DEFAULT);
+    } else {
+      // No motion
+      negButton.setColorBackground(BUTTON_DEFAULT);
+      posButton.setColorBackground(BUTTON_DEFAULT);
     }
   }
 }
@@ -3093,8 +2884,10 @@ public void JOINT6_POS() {
  * Associate with the given index is already in motion,
  * in either direction, then calling this method for that
  * joint index will stop that joint's motion.
+ * 
+ * @returning  The new motion direction of the Robot
  */
-public void activateLiveJointMotion(int joint, int dir) {
+public float activateLiveJointMotion(int joint, int dir) {
   
   if(armModel.segments.size() >= joint+1) {
 
@@ -3106,12 +2899,15 @@ public void activateLiveJointMotion(int joint, int dir) {
         
         if(model.jointsMoving[n] == 0) {
           model.jointsMoving[n] = dir;
+          return dir;
         } else {
           model.jointsMoving[n] = 0;
         }
       }
     }
   }
+  
+  return 0f;
 }
 
 /**
@@ -3125,9 +2921,10 @@ public void activateLiveJointMotion(int joint, int dir) {
  * @param axis        The axis of movement for the robotic arm:
                       x - 0, y - 1, z - 2, w - 3, p - 4, r - 5
  * @pararm dir        +1 or -1: indicating the direction of motion
+ * @returning         The new direction of motion in the given axis
  *
  */
-public void activateLiveWorldMotion(int axis, int dir) {
+public float activateLiveWorldMotion(int axis, int dir) {
   // Initiaize the Robot's destination
   Point RP = nativeRobotEEPosition(armModel.getJointAngles());
   armModel.tgtPosition = RP.position;
@@ -3142,6 +2939,8 @@ public void activateLiveWorldMotion(int axis, int dir) {
       // Halt movement
       armModel.jogLinear[axis] = 0;
     }
+    
+    return armModel.jogLinear[axis];
   }
   else if(axis >= 3 && axis < 6) {
     axis %= 3;
@@ -3153,7 +2952,11 @@ public void activateLiveWorldMotion(int axis, int dir) {
       // Halt movement
       armModel.jogRot[axis] = 0;
     }
+    
+    return armModel.jogRot[axis];
   }
+  
+  return 0f;
 }
 
 //turn of highlighting on all active movement buttons
@@ -3161,22 +2964,6 @@ public void resetButtonColors() {
   for(int i = 1; i <= 6; i += 1) {
     ((Button)cp5.get("JOINT"+i+"_NEG")).setColorBackground(BUTTON_DEFAULT);
     ((Button)cp5.get("JOINT"+i+"_POS")).setColorBackground(BUTTON_DEFAULT);
-  }
-}
-
-//set button highlights for togglable buttons
-public void updateButtonColors() {
-  for(int i = 0; i < 6; i += 1) {
-    Model m = armModel.segments.get(i);
-    for(int j = 0; j < 3; j += 1) {
-      if(m.rotations[j] && m.jointsMoving[j] == 0) {
-        ((Button)cp5.get("JOINT"+(i+1)+"_NEG")).setColorBackground(BUTTON_DEFAULT);
-        ((Button)cp5.get("JOINT"+(i+1)+"_POS")).setColorBackground(BUTTON_DEFAULT);
-      } else {
-        ((Button)cp5.get("JOINT"+(i+1)+"_NEG")).setColorBackground(BUTTON_ACTIVE);
-        ((Button)cp5.get("JOINT"+(i+1)+"_POS")).setColorBackground(BUTTON_ACTIVE);
-      }
-    }
   }
 }
 
@@ -4935,7 +4722,7 @@ public void createRegisterPoint(boolean fromJointAngles) {
   if(fromJointAngles) {
     // Bring angles within range: (0, TWO_PI)
     for(int idx = 0; idx < inputs.length; ++idx) {
-      inputs[idx] = clampAngle(inputs[idx] * DEG_TO_RAD);
+      inputs[idx] = mod2PI(inputs[idx] * DEG_TO_RAD);
     }
     
     GPOS_REG[active_index].point = nativeRobotEEPosition(inputs);
