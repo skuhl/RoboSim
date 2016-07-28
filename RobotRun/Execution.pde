@@ -505,7 +505,6 @@ float[] calculateIKJacobian(PVector tgt, float[] rot) {
   RealMatrix M = new Array2DRowRealMatrix(floatToDouble(nFrame, 3, 3));
   RealMatrix O = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
   RealMatrix MO = M.multiply(MatrixUtils.inverse(O));
-  println(MO);
   //translate target rotation to EE ref frame
   RealMatrix R = new Array2DRowRealMatrix(floatToDouble(rMatrix, 3, 3));
   RealMatrix OR = R.multiply(MatrixUtils.inverse(MO));
@@ -519,6 +518,7 @@ float[] calculateIKJacobian(PVector tgt, float[] rot) {
     float[] tDelta = calculateVectorDelta(tgt, cPos);
     //calculate our rotational offset from target
     float[] rDelta = calculateVectorDelta(rot, cRotQ, 4);
+    System.out.printf("%d: %s -> %s\n", count, arrayToString(cRotQ), arrayToString(rot));
     float[] delta = new float[7];
     
     delta[0] = tDelta[0];
