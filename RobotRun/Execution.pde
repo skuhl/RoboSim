@@ -17,74 +17,6 @@ public static final boolean COLLISION_DISPLAY = false,
                             DISPLAY_TEST_OUTPUT = true;
 
 /**
- * Creates some programs for testing purposes.
- */
-void createTestProgram() {
-  Program program = new Program("Test Program");
-  MotionInstruction instruction =
-  new MotionInstruction(MTYPE_LINEAR, 0, true, 800, 1.0); //1.0
-  program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1600, 0.75); //0.75
-  program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_LINEAR, 2, true, 400, 0.5); //0.5
-  program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_JOINT, 3, true, 1.0, 0);
-  program.addInstruction(instruction);
-  instruction = new MotionInstruction(MTYPE_JOINT, 4, true, 1.0, 0);
-  program.addInstruction(instruction);
-  //for(int n = 0; n < 15; n++) program.addInstruction(
-  //  new MotionInstruction(MTYPE_JOINT, 1, true, 0.5, 0));
-  
-  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(165, 116, -5), new float[] { 1f, 0f, 0f, 0f }), false);
-  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(166, -355, 120), new float[] { 1, 0, 0 }), false);
-  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(171, -113, 445), new float[] { 1, 0, 0 }), false);
-  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(725, 225, 50), new float[] { 1, 0, 0 }), false);
-  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(775, 300, 50), new float[] { 1, 0, 0 }), false);
-  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(-474, -218, 37), new float[] { 1, 0, 0 }), false);
-  GPOS_REG[0] = new PositionRegister(null, new Point(new PVector(-659, -412, -454), new float[] { 1, 0, 0 }), false);
-  
-  programs.add(program);
-  //currentProgram = program;
-  
-  Program program2 = new Program("Test Program 2");
-  MotionInstruction instruction2 =
-  new MotionInstruction(MTYPE_JOINT, 3, true, 1.0, 0);
-  program2.addInstruction(instruction2);
-  instruction2 = new MotionInstruction(MTYPE_JOINT, 4, true, 1.0, 0);
-  program2.addInstruction(instruction2);
-  programs.add(program2);
-  currentProgram = program2;
-  
-  Program program3 = new Program("Circular Test");
-  MotionInstruction instruction3 =
-  new MotionInstruction(MTYPE_LINEAR, 0, true, 1.0, 0);
-  program3.addInstruction(instruction3);
-  instruction3 = new MotionInstruction(MTYPE_CIRCULAR, 1, true, 1.0, 0);
-  program3.addInstruction(instruction3);
-  instruction3 = new MotionInstruction(MTYPE_LINEAR, 2, true, 1.0, 0);
-  program3.addInstruction(instruction3);
-  instruction3 = new MotionInstruction(MTYPE_LINEAR, 3, true, 0.25, 0);
-  program3.addInstruction(instruction3);
-  programs.add(program3);
-  //currentProgram = program3;
-  
-  Program program4 = new Program("New Arm Test");
-  MotionInstruction instruction4 =
-  new MotionInstruction(MTYPE_LINEAR, 5, true, 1.0, 0);
-  program4.addInstruction(instruction4);
-  instruction4 = new MotionInstruction(MTYPE_LINEAR, 6, true, 1.0, 0);
-  program4.addInstruction(instruction4);
-  programs.add(program4);
-  currentProgram = program4;
-  
-  for(int n = 0; n < 22; n++) {
-    programs.add(new Program("Xtra" + Integer.toString(n)));  
-  }
-  saveState();
-} // end createTestProgram()
-
-
-/**
  * Displays important information in the upper-right corner of the screen.
  */
 void showMainDisplayText() {
@@ -176,7 +108,7 @@ void showMainDisplayText() {
  *
  * @param model  The Robot Arm, for which to switch coordinate frames
  */
-public void coordFrameTransition(ArmModel model) {
+public void coordFrameTransition() {
   // Stop Robot movement
   armModel.halt(); //<>//
   
@@ -209,28 +141,27 @@ public void coordFrameTransition(ArmModel model) {
     curCoordFrame = CoordFrame.JOINT;
   }
   
-  updateCoordFrame(model);
+  updateCoordFrame();
 }
 
 /**
  * Transition back to the World Frame, if the current Frame is Tool or User and there are no active frame
- * set for that Coordinate Frame. This method will halt all Robot motion, since the current active frame
- * may be changed.
- * 
- * @param model  the Robot model, of which to change the frame
+ * set for that Coordinate Frame. This method will halt the motion of the Robot if the active frame is changed.
  */
-public void updateCoordFrame(ArmModel model) {
-  // Stop Robot movement
-  armModel.halt();
+public void updateCoordFrame() {
   
   // Return to the World Frame, if no User Frame is active
   if(curCoordFrame == CoordFrame.TOOL && !(activeToolFrame >= 0 && activeToolFrame < toolFrames.length)) {
     curCoordFrame = CoordFrame.WORLD;
+    // Stop Robot movement
+    armModel.halt();
   }
   
   // Return to the World Frame, if no User Frame is active
   if(curCoordFrame == CoordFrame.USER && !(activeUserFrame >= 0 && activeUserFrame < userFrames.length)) {
     curCoordFrame = CoordFrame.WORLD;
+    // Stop Robot movement
+    armModel.halt();
   }
 }
 
@@ -311,17 +242,6 @@ public Point frameRobotPosition(float[] jointAngles) {
 }
 
 /**
- * TODO comment
- */
-public Point relativeRobotEEPosition(float[] jointAngles, float[] refQuaternion) {
-  Point RP = nativeRobotEEPosition(jointAngles);
-  float[] newQuaternion = quaternionNormalize( quaternionMult(RP.orientation, quaternionConjugate(refQuaternion)) );
-  RP.orientation = newQuaternion;
-  
-  return RP;
-}
-
-/**
  * Takes a vector and a (probably not quite orthogonal) second vector
  * and computes a vector that's truly orthogonal to the first one and
  * pointing in the direction closest to the imperfect second vector
@@ -353,19 +273,25 @@ PVector computePerpendicular(PVector in, PVector second) {
  * resulting matrix will describe the linear approximation
  * of the robot's motion for each joint in units per radian. 
  */
-public float[][] calculateJacobian(float[] angles, boolean posOffset, float[] frame) {
+public float[][] calculateJacobian(float[] angles, boolean posOffset) {
   float dAngle = DEG_TO_RAD;
-  if(!posOffset){ dAngle *= -1; }
+  if (!posOffset){ dAngle *= -1; }
+  
   float[][] J = new float[7][6];
   //get current ee position
-  Point curRP = relativeRobotEEPosition(angles, frame);
+  Point curRP = nativeRobotEEPosition(angles);
   
   //examine each segment of the arm
   for(int i = 0; i < 6; i += 1) {
     //test angular offset
     angles[i] += dAngle;
     //get updated ee position
-    Point newRP = relativeRobotEEPosition(angles, frame);
+    Point newRP = nativeRobotEEPosition(angles);
+    
+    if (quaternionDotProduct(curRP.orientation, newRP.orientation) < 0f) {
+      // Use -q instead of q
+      newRP.orientation = quaternionScalarMult(newRP.orientation, -1);
+    }
     
     //get translational delta
     J[0][i] = (newRP.position.x - curRP.position.x) / DEG_TO_RAD;
@@ -381,28 +307,32 @@ public float[][] calculateJacobian(float[] angles, boolean posOffset, float[] fr
   }
   
   return J;
-}//end calculate jacobian
+}
 
-public float[] inverseKinematics(Point tgt, float[] frame) {
-  final int limit = 1000;  //max number of times to loop
+public float[] inverseKinematics(Point tgt) {
+  final int limit = 1000;  // Max number of times to loop
   int count = 0;
   
   float[] angles = tgt.angles.clone();
-  float[] refTgt = quaternionNormalize( quaternionMult(tgt.orientation, quaternionConjugate(frame)) );
-  
+  //println("IK Run");
   while(count < limit) {
-    Point cPoint = relativeRobotEEPosition(angles, frame);
+    Point cPoint = nativeRobotEEPosition(angles);
+    
+    if (quaternionDotProduct(tgt.orientation, cPoint.orientation) < 0f) {
+      // Use -q instead of q
+      cPoint.orientation = quaternionScalarMult(cPoint.orientation, -1);
+    }
     
     //calculate our translational offset from target
-    float[] tDelta = calculateVectorDelta(tgt.position, cPoint.position);
+    PVector tDelta = PVector.sub(tgt.position, cPoint.position);
     //calculate our rotational offset from target
-    float[] rDelta = calculateVectorDelta(refTgt, cPoint.orientation, 4);
-    System.out.printf("%s -> %s\n", arrayToString(cPoint.orientation), arrayToString(refTgt));
+    float[] rDelta = calculateVectorDelta(tgt.orientation, cPoint.orientation, 4);
+    //System.out.printf("%d: %s -> %s\n", count, arrayToString(cPoint.orientation), arrayToString(tgt.orientation));
     float[] delta = new float[7];
     
-    delta[0] = tDelta[0];
-    delta[1] = tDelta[1];
-    delta[2] = tDelta[2];
+    delta[0] = tDelta.x;
+    delta[1] = tDelta.y;
+    delta[2] = tDelta.z;
     delta[3] = rDelta[0];
     delta[4] = rDelta[1];
     delta[5] = rDelta[2];
@@ -410,11 +340,11 @@ public float[] inverseKinematics(Point tgt, float[] frame) {
     
     float dist = PVector.dist(cPoint.position, tgt.position);
     float rDist = calculateQuatMag(rDelta);
-    //println("distances from tgt: " + dist + ", " + rDist);
     //check whether our current position is within tolerance
-    if (dist < (liveSpeed / 100f) && rDist < 0.00005f*liveSpeed) break;
+    if ( (dist < (liveSpeed / 100f)) && (rDist < (0.00005f * liveSpeed)) ) { break; }
+    
     //calculate jacobian, 'J', and its inverse
-    float[][] J = calculateJacobian(angles, true, frame);
+    float[][] J = calculateJacobian(angles, true);
     RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
     RealMatrix JInverse = new SingularValueDecomposition(m).getSolver().getInverse();
     
@@ -433,7 +363,8 @@ public float[] inverseKinematics(Point tgt, float[] frame) {
     count += 1;
     if (count == limit) {
       // IK failure
-      System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles), matrixToString(J), arrayToString(cPoint.orientation), arrayToString(refTgt));
+      System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles),
+                          matrixToString(J), arrayToString(cPoint.orientation), arrayToString(tgt.orientation));
       return null;
     }
   }
@@ -658,8 +589,7 @@ void beginNewContinuousMotion(Point start, Point end, Point next, float p) {
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
     Point tgtPoint = intermediatePositions.get(interMotionIdx);
-    float[] refQuaternion = nativeRobotEEPosition(armModel.getJointAngles()).orientation;
-    inverseKinematics(tgtPoint, refQuaternion);
+    inverseKinematics(tgtPoint);
   }
 }
 
@@ -673,8 +603,7 @@ void beginNewLinearMotion(Point start, Point end) {
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
     Point tgtPoint = intermediatePositions.get(interMotionIdx);
-    float[] refQuaternion = nativeRobotEEPosition(armModel.getJointAngles()).orientation;
-    inverseKinematics(tgtPoint, refQuaternion);
+    inverseKinematics(tgtPoint);
   }
 }
 
@@ -690,8 +619,7 @@ void beginNewCircularMotion(Point start, Point inter, Point end) {
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
     Point tgtPoint = intermediatePositions.get(interMotionIdx);
-    float[] refQuaternion = nativeRobotEEPosition(armModel.getJointAngles()).orientation;
-    inverseKinematics(tgtPoint, refQuaternion);
+    inverseKinematics(tgtPoint);
   }
 }
 
@@ -716,12 +644,11 @@ boolean executeMotion(ArmModel model, float speedMult) {
     int ret = EXEC_SUCCESS;
     if(intermediatePositions.size() > 0) {
       Point tgtPoint = intermediatePositions.get(interMotionIdx);
-      float[] refQuaternion = nativeRobotEEPosition(armModel.getJointAngles()).orientation;
-      inverseKinematics(tgtPoint, refQuaternion);
+      inverseKinematics(tgtPoint);
     }
     
     if(ret == EXEC_FAILURE) {
-      armModel.inMotion = false;
+      programRunning = false;
     }
   }
   
@@ -1031,4 +958,39 @@ float clampAngle(float angle) {
   // angles range: [0, TWO_PI)
   if(angle == TWO_PI) angle = 0;
   return angle;
+}
+
+/**
+ * Returns a string represenation of the given matrix.
+ * 
+ * @param matrix  A non-null matrix
+ */
+public String matrixToString(float[][] matrix) {
+  String mStr = "";
+  
+  for(int row = 0; row < matrix.length; ++row) {
+    mStr += "\n[";
+
+    for(int col = 0; col < matrix[0].length; ++col) {
+      // Account for the negative sign character
+      if(matrix[row][col] >= 0) { mStr += " "; }
+      
+      mStr += String.format(" %5.6f", matrix[row][col]);
+    }
+
+    mStr += "  ]";
+  }
+  
+  return (mStr + "\n");
+}
+
+public String arrayToString(float[] array) {
+  String s = "[";
+  
+  for(int i = 0; i < array.length; i += 1) {
+    s += String.format("%5.4f", array[i]);
+    if(i != array.length-1) s += ", ";
+  }
+  
+  return s + "]";
 }

@@ -1,5 +1,7 @@
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
 final int FTYPE_TOOL = 0, FTYPE_USER = 1;
+// Determine if a program is running currently or not
+public boolean programRunning = false;
 
 public class Point  {
   // X, Y, Z
@@ -11,24 +13,14 @@ public class Point  {
 
   public Point() {
     angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
-    // Fix later
-    Point pt = nativeRobotEEPosition(angles.clone());
-    position = pt.position;
-    orientation = pt.orientation;
-  }
-  
-  public Point(float[] jointAngles) {
-    angles = Arrays.copyOfRange(jointAngles, 0, 6);
-    // Fix later
-    Point pt = nativeRobotEEPosition(angles.clone());
-    position = pt.position;
-    orientation = pt.orientation;
+    position = new PVector(0f, 0f, 0f);
+    orientation = new float[] { 1f, 0f, 0f, 0f };
   }
   
   public Point(PVector pos, float[] orient) {
+    angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
     position = pos.copy();
     orientation = Arrays.copyOfRange(orient, 0, 4);
-    // TODO intialize angles!
   }
   
   public Point(float x, float y, float z, float r, float i, float j, float k,
@@ -54,11 +46,7 @@ public class Point  {
     angles = Arrays.copyOfRange(jointAngles, 0, 6);
   }
 
-  public Point clone() {
-    return new Point(position.x, position.y, position.z, 
-    orientation[0], orientation[1], orientation[2], orientation[3], 
-    angles[0], angles[1], angles[2], angles[3], angles[4], angles[5]);
-  }
+  public Point clone() { return new Point(position, orientation, angles); }
   
   public Float getValue(int idx) {
       
@@ -408,7 +396,7 @@ public class FrameInstruction extends Instruction {
       if(frameType == FTYPE_TOOL) activeToolFrame = reg;
       else if(frameType == FTYPE_USER) activeUserFrame = reg;
       // Update the Robot Arm's current frame rotation matrix
-      updateCoordFrame(armModel);
+      updateCoordFrame();
     }
   }
 

@@ -106,12 +106,9 @@ public class ArmModel {
   public ArrayList<Model> segments = new ArrayList<Model>();
   public int type;
   public float motorSpeed;
-  // Indicates translational jog motion in the World Frame
+  // Indicates the direction of motion of the Robot when jogging
   public float[] jogLinear = new float[3];
-  // Indicates rotational jog motion in the World Frame
   public float[] jogRot = new float[3];
-  // Indicates that the Robot is moving to a specific point
-  public boolean inMotion = false;
   
   public Box[] bodyHitBoxes;
   private ArrayList<Box>[] eeHitBoxes;
@@ -693,9 +690,16 @@ public class ArmModel {
       }
     }
   }
-
-  void executeLiveMotion() {
-    if(curCoordFrame == CoordFrame.JOINT) {
+  
+  /**
+   * Move the Robot, based on the current Coordinate Frame and the current values
+   * of the each segments jointsMoving array or the values in the Robot's jogLinear
+   * and jogRot arrays.
+   */
+  public void executeLiveMotion() {
+    
+    if (curCoordFrame == CoordFrame.JOINT) {
+      // Jog in the Joint Frame
       for(int i = 0; i < segments.size(); i += 1) {
         Model model = segments.get(i);
         
@@ -709,6 +713,7 @@ public class ArmModel {
               
               float old_angle = model.currentRotations[n];
               model.currentRotations[n] = trialAngle;
+              
               if(COLLISION_DISPLAY) { updateBoxes(); }
               
               if(armModel.checkSelfCollisions()) {
@@ -716,101 +721,100 @@ public class ArmModel {
                 model.currentRotations[n] = old_angle;
                 updateBoxes();
                 model.jointsMoving[n] = 0;
+                updateButtonColors();
               }
             } 
             else {
               model.jointsMoving[n] = 0;
+              updateButtonColors();
             }
           }
         }
       }
-      updateButtonColors();
+      
     } else {
-      // Only move if our movement vector is non-zero
-      if(jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0 || 
-          jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0) {
-        
-        Point curPoint = nativeRobotEEPosition(getJointAngles());
+      // Jog in the World, Tool or User Frame
+      PVector tgtPosition;
+      float[] tgtOrientation;
+      Frame curFrame = getActiveFrame(null);
+      Point curPoint = nativeRobotEEPosition(getJointAngles());
+      
+      // Apply translational motion vector
+      if (translationalMotion()) {
         // Respond to user defined movement
         float distance = motorSpeed / 6000f * liveSpeed;
-        float theta = DEG_TO_RAD * 0.025f * liveSpeed;
-        
         PVector translation = new PVector(jogLinear[0], jogLinear[1], jogLinear[2]);
-        Frame curFrame = getActiveFrame(null);
+        
         if (curFrame != null) {
-          // Convert the movement vector into the current reference frame
-          translation = rotate(translation, curFrame.getNativeAxes());
+            // Convert the movement vector into the current reference frame
+          translation = rotateVectorQuat(translation, curFrame.getAxes());
         }
         
-        PVector tgtPosition = PVector.add(curPoint.position, translation.mult(distance));
-        
+        tgtPosition = PVector.add(curPoint.position, translation.mult(distance));
+      } else {
+        // No translational motion
+        tgtPosition = curPoint.position;
+      }
+      
+      // Apply rotational motion vector
+      if (rotationalMotion()) {
+        float theta = DEG_TO_RAD * 0.025f * liveSpeed;
         PVector rotation = new PVector(jogRot[0], jogRot[1], jogRot[2]);
+        
         if (curFrame != null) {
           // Convert the movement vector into the current reference frame
-          //rotation = rotate(rotation, curFrame.getNativeAxes());
+          rotation = rotateVectorQuat(rotation, curFrame.getAxes());
         }
         rotation.normalize();
         
-        float[] tgtOrientation;
-        if(rotation.x != 0 || rotation.y != 0 || rotation.z != 0) {
-          tgtOrientation = rotateQuat(curPoint.orientation, rotation, theta);
-        } else {
-          tgtOrientation = curPoint.orientation;  
+        tgtOrientation = rotateQuat(curPoint.orientation, rotation, theta);
+        
+        if (quaternionDotProduct(tgtOrientation, curPoint.orientation) < 0f) {
+          // Use -q instead of q
+          tgtOrientation = quaternionScalarMult(tgtOrientation, -1);
         }
+      } else {
+        // No rotational motion
+        tgtOrientation = curPoint.orientation;
+      }
+    
+      Point tgt = new Point(tgtPosition, tgtOrientation, curPoint.angles);
+      float[] destAngles = inverseKinematics(tgt);
+      
+      // Did we successfully find the desired angles?
+      if(destAngles == null) {
+        System.out.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n", curPoint.position, tgtPosition,
+                                arrayToString(curPoint.orientation), arrayToString(tgtOrientation));
+        halt();
+        return;
+      }
+      
+      for(int i = 0; i < 6; i += 1) {
+        Model s = armModel.segments.get(i);
+        if(destAngles[i] > -0.000001 && destAngles[i] < 0.000001)
+          destAngles[i] = 0;
         
-        Point tgt = new Point(tgtPosition, tgtOrientation, curPoint.angles);
-        float[] destAngles = inverseKinematics(tgt, curPoint.orientation);
-        
-        // Did we successfully find the desired angles?
-        if(destAngles == null) {
-          System.out.printf("IK Failure ...\nTranslation: %s\n%s -> %s\nRotation: %s\n%s -> %s\n\n",
-                            translation, curPoint.position, tgtPosition, rotation,
-                            arrayToString(curPoint.orientation), arrayToString(tgtOrientation));
-          
-          updateButtonColors();
-          jogLinear[0] = 0;
-          jogLinear[1] = 0;
-          jogLinear[2] = 0;
-          jogRot[0] = 0;
-          jogRot[1] = 0;
-          jogRot[2] = 0;
-          return;
-        }
-        
-        for(int i = 0; i < 6; i += 1) {
-          Model s = armModel.segments.get(i);
-          if(destAngles[i] > -0.000001 && destAngles[i] < 0.000001)
-            destAngles[i] = 0;
-          
-          for(int j = 0; j < 3; j += 1) {
-            if(s.rotations[j] && !s.anglePermitted(j, destAngles[i])) {
-              println("WHY?");
-              //println("illegal joint angle on j" + i);
-              updateButtonColors();
-              jogLinear[0] = 0;
-              jogLinear[1] = 0;
-              jogLinear[2] = 0;
-              jogRot[0] = 0;
-              jogRot[1] = 0;
-              jogRot[2] = 0;
-              return;
-            }
+        for(int j = 0; j < 3; j += 1) {
+          if(s.rotations[j] && !s.anglePermitted(j, destAngles[i])) {
+            println("WHY?");
+            halt();
+            return;
           }
         }
-        
-        float[] angleOffset = new float[6];
-        float maxOffset = TWO_PI;
-        for(int i = 0; i < 6; i += 1) {
-          angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointAngles()[i]));
-        }
-        
-        if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
-            angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
-          setJointAngles(destAngles);
-        }
+      }
+      
+      float[] angleOffset = new float[6];
+      float maxOffset = TWO_PI;
+      for(int i = 0; i < 6; i += 1) {
+        angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointAngles()[i]));
+      }
+      
+      if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
+          angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
+        setJointAngles(destAngles);
       }
     }
-  } // end execute live motion
+  }
   
   public boolean checkAngles(float[] angles) {
     float[] oldAngles = new float[6];
@@ -877,9 +881,12 @@ public class ArmModel {
     armModel.held = null;
   }
   
-  /* Indicates that the Robot Arm is in Motion */
-  public boolean modelInMotion() {
+  /**
+   * Returns true if at least one joint of the Robot is in motion.
+   */
+  public boolean jointMotion() {
     for(Model m : segments) {
+      // Check each segments active joint
       for(int idx = 0; idx < m.jointsMoving.length; ++idx) {
         if(m.jointsMoving[idx] != 0) {
           return true;
@@ -887,8 +894,28 @@ public class ArmModel {
       }
     }
     
-    return jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0 ||
-    jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0 || inMotion;
+    return false;
+  }
+  
+  /**
+   * Returns true if the Robot is jogging translationally.
+   */
+  public boolean translationalMotion() {
+    return jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0;
+  }
+  
+  /**
+   * Returns true if the Robot is jogging rotationally.
+   */
+  public boolean rotationalMotion() {
+    return jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0;
+  }
+  
+  /**
+   * Indicates that the Robot Arm is in motion.
+   */
+  public boolean modelInMotion() {
+    return jointMotion() || translationalMotion() || rotationalMotion();
   }
   
   /* Stops all robot movement */
@@ -909,8 +936,7 @@ public class ArmModel {
     
     // Reset button highlighting
     resetButtonColors();
-    
-    armModel.inMotion = false;
+    programRunning = false;
   }
 } // end ArmModel class
 

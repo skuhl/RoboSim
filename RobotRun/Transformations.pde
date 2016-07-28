@@ -293,8 +293,6 @@ public PVector getCoordFromMatrix(float x, float y, float z) {
   return vector;
 }
 
-
-
 /* Calculate v x v */
 public float[] crossProduct(float[] v, float[] u) {
   if(v.length != 3 && v.length != u.length) { return null; }
@@ -331,27 +329,6 @@ float[][] eulerToMatrix(PVector wpr) {
   float xRot = wpr.x;
   float yRot = wpr.y;
   float zRot = wpr.z;
-  
-  /**
-  PVector vx = new PVector(cos(yRot)*cos(zRot), sin(xRot)*sin(yRot)*cos(zRot) - cos(xRot)*sin(zRot), cos(xRot)*sin(yRot)*cos(zRot) + sin(xRot)*sin(zRot)),
-          vy = new PVector(cos(yRot)*sin(zRot), sin(xRot)*sin(yRot)*sin(zRot) + cos(xRot)*cos(zRot), cos(xRot)*sin(yRot)*sin(zRot) - sin(xRot)*cos(zRot)),
-          vz = new PVector(-sin(yRot), sin(xRot)*cos(yRot), cos(xRot)*cos(yRot));
-  
-  // Normalize all the axes vectors
-  vx.normalize();
-  vy.normalize();
-  vz.normalize();
-  
-  r[0][0] = vx.x;
-  r[0][1] = vx.y;
-  r[0][2] = vx.z;
-  r[1][0] = vy.x;
-  r[1][1] = vy.y;
-  r[1][2] = vy.z;
-  r[2][0] = vz.x;
-  r[2][1] = vz.y;
-  r[2][2] = vz.z;
-  /**/
   
   r[0][0] = cos(yRot)*cos(zRot);
   r[0][1] = sin(xRot)*sin(yRot)*cos(zRot) - cos(xRot)*sin(zRot);
@@ -477,26 +454,6 @@ PVector quatToEuler(float[] q) {
 float[][] quatToMatrix(float[] q) {
   float[][] r = new float[3][3];
   
-  /**
-  PVector vx = new PVector(1 - 2*(q[2]*q[2] + q[3]*q[3]), 2*(q[1]*q[2] - q[0]*q[3]), 2*(q[0]*q[2] + q[1]*q[3])),
-          vy = new PVector(2*(q[1]*q[2] + q[0]*q[3]), 1 - 2*(q[1]*q[1] + q[3]*q[3]), 2*(q[2]*q[3] - q[0]*q[1])),
-          vz = new PVector(2*(q[1]*q[3] - q[0]*q[2]), 2*(q[0]*q[1] + q[2]*q[3]), 1 - 2*(q[1]*q[1] + q[2]*q[2]));
-  // Normalize all the axes vectors
-  vx.normalize();
-  vy.normalize();
-  vz.normalize();
-  
-  r[0][0] = vx.x;
-  r[0][1] = vx.y;
-  r[0][2] = vx.z;
-  r[1][0] = vy.x;
-  r[1][1] = vy.y;
-  r[1][2] = vy.z;
-  r[2][0] = vz.x;
-  r[2][1] = vz.y;
-  r[2][2] = vz.z;
-  /**/
-  
   r[0][0] = 1 - 2*(q[2]*q[2] + q[3]*q[3]);
   r[0][1] = 2*(q[1]*q[2] - q[0]*q[3]);
   r[0][2] = 2*(q[0]*q[2] + q[1]*q[3]);
@@ -550,12 +507,6 @@ float[][] doubleToFloat(double[][] m, int l, int w) {
   }
 
   return r;
-}
-
-//calculates the change in x, y, and z from p1 to p2
-float[] calculateVectorDelta(PVector p1, PVector p2) {
-  float[] d = {p1.x - p2.x, p1.y - p2.y, p1.z - p2.z};
-  return d;
 }
 
 //calculates the difference between each corresponding pair of
@@ -734,6 +685,19 @@ float[] quaternionAdd(float[] q1, float[] q2) {
   return qr;
 }
 
+/**
+ * Computes the dot product between the two given quaternions.
+ */
+public float quaternionDotProduct(float[] q1, float[] q2) {
+  float product = 0f;
+  
+  for (int idx = 0; idx < 4; ++idx) {
+    product += q1[idx] * q2[idx];
+  }
+  
+  return product;
+}
+
 //returns the magnitude of the input quaternion 'q'
 float calculateQuatMag(float[] q) {
   return sqrt(pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2));
@@ -785,38 +749,4 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
   }
   
   return quaternionNormalize(qSlerp);
-}
-
-/* Returns a string represenation of the given matrix.
- * 
- * @param matrixx  A non-null matrix
- */
-public String matrixToString(float[][] matrix) {
-  String mStr = "";
-  
-  for(int row = 0; row < matrix.length; ++row) {
-    mStr += "\n[";
-
-    for(int col = 0; col < matrix[0].length; ++col) {
-      // Account for the negative sign character
-      if(matrix[row][col] >= 0) { mStr += " "; }
-      
-      mStr += String.format(" %5.6f", matrix[row][col]);
-    }
-
-    mStr += "  ]";
-  }
-  
-  return (mStr + "\n");
-}
-
-public String arrayToString(float[] array) {
-  String s = "[";
-  
-  for(int i = 0; i < array.length; i += 1) {
-    s += String.format("%5.4f", array[i]);
-    if(i != array.length-1) s += ", ";
-  }
-  
-  return s + "]";
 }

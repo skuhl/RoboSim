@@ -1485,7 +1485,7 @@ public void f1() {
       } else {
         // Set the current tool frame
         activeToolFrame = row_select;
-        updateCoordFrame(armModel);
+        updateCoordFrame();
       }
       break;
     case NAV_USER_FRAMES:
@@ -1497,7 +1497,7 @@ public void f1() {
       } else {
         // Set the current user frame
         activeUserFrame = row_select;
-        updateCoordFrame(armModel);
+        updateCoordFrame();
       }
       break;
     case ACTIVE_FRAMES:
@@ -1797,6 +1797,7 @@ public void f4() {
   case SELECT_DELETE:
       nextScreen(Screen.CONFIRM_INSTR_DELETE);
       break;
+  /* TODO add functionality for Robot moving to some point
   case NAV_PREGS_J:
   case NAV_PREGS_C:
     if (shift) {
@@ -1806,8 +1807,6 @@ public void f4() {
       if (pt != null) {
         // Move the Robot to the select point
         armModel.setupRotationInterpolation(pt.angles.clone());
-        armModel.inMotion = true;
-        currentInstruction = -2;
       } else {
         println("Position register is uninitialized!");
       }
@@ -1823,13 +1822,12 @@ public void f4() {
         if (tgt != null && tgt.angles != null) {
           // Move the Robot to the select point
           armModel.setupRotationInterpolation(tgt.angles);
-          armModel.inMotion = true;
-          currentInstruction = -2;
         }
       }
     } else if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
       editTextEntry(3);
     }
+    */
   }
   
   updateScreen();
@@ -1850,24 +1848,6 @@ public void f5() {
     case TEACH_4PT:
     case TEACH_6PT:
       if (shift) {
-        /*pushMatrix();
-        resetMatrix();
-        applyModelRotation(armModel.getJointAngles());
-        
-        float[][] tMatrix = getTransformationMatrix();
-        float[][] rMatrix = new float[3][3];
-        popMatrix();
-        
-        for (int row = 0; row < 3; ++row) {
-          for (int col = 0; col < 3; ++col) {
-            // Transpose the rotation matrix portion of the transformation matrix
-            rMatrix[row][col] = tMatrix[col][row];
-          }
-        }
-        
-        float[] orientation = matrixToQuat( rMatrix );
-        Point curPosition = new Point(new PVector(tMatrix[0][3], tMatrix[1][3], tMatrix[2][3]), orientation);
-        curPosition.angles = armModel.getJointAngles();*/
         // Save the current position of the Robot's Faceplate
         teachFrame.setPoint(nativeRobotPosition(armModel.getJointAngles()), opt_select);
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
@@ -1934,10 +1914,10 @@ public void hd() {
 }
 
 public void fd() {  
-  if(!armModel.inMotion && shift) {
+  if(!programRunning && shift) {
     currentProgram = programs.get(active_prog);
     executingInstruction = false;
-    armModel.inMotion = true;
+    programRunning = true;
     
     if(step) {
       // Execute a single instruction
@@ -1962,7 +1942,7 @@ public void fd() {
 
 public void bd() {
   // If there is a previous instruction, then move to it and reverse its affects
-  if(!armModel.inMotion && shift && step && active_instr > 0) {
+  if(!programRunning && shift && step && active_instr > 0) {
     
     boolean limbo = shift;
     shift = false;
@@ -1974,7 +1954,7 @@ public void bd() {
     if(ins instanceof MotionInstruction) {
       currentProgram = programs.get(active_prog);
       executingInstruction = false;
-      armModel.inMotion = true;
+      programRunning = true;
       currentInstruction = active_instr;
       execSingleInst = true;
       
@@ -1984,7 +1964,7 @@ public void bd() {
     } else if(ins instanceof IOInstruction) {
       currentProgram = null;
       executingInstruction = false;
-      armModel.inMotion = false;
+      programRunning = false;
       currentInstruction = -1;
       execSingleInst = true;
       
@@ -2621,7 +2601,7 @@ public void COORD() {
     nextScreen(Screen.ACTIVE_FRAMES);
   } else {  
     // Update the coordinate mode
-    coordFrameTransition(armModel);
+    coordFrameTransition();
     updateScreen();
   }
 }
@@ -3151,19 +3131,21 @@ public void activateLiveWorldMotion(int axis, int dir) {
   
   if(axis >= 0 && axis < 3) {
     if(armModel.jogLinear[axis] == 0) {
-      //Begin movement on the given axis in the given direction
+      // Begin movement on the given axis in the given direction
       armModel.jogLinear[axis] = dir;
     } else {
-      //Halt movement
+      // Halt movement
       armModel.jogLinear[axis] = 0;
     }
   }
   else if(axis >= 3 && axis < 6) {
     axis %= 3;
     if(armModel.jogRot[axis] == 0) {
+      // Begin movement on the given axis in the given direction
       armModel.jogRot[axis] = dir;
     }
     else {
+      // Halt movement
       armModel.jogRot[axis] = 0;
     }
   }
@@ -3185,6 +3167,9 @@ public void updateButtonColors() {
       if(m.rotations[j] && m.jointsMoving[j] == 0) {
         ((Button)cp5.get("JOINT"+(i+1)+"_NEG")).setColorBackground(BUTTON_DEFAULT);
         ((Button)cp5.get("JOINT"+(i+1)+"_POS")).setColorBackground(BUTTON_DEFAULT);
+      } else {
+        ((Button)cp5.get("JOINT"+(i+1)+"_NEG")).setColorBackground(BUTTON_ACTIVE);
+        ((Button)cp5.get("JOINT"+(i+1)+"_POS")).setColorBackground(BUTTON_ACTIVE);
       }
     }
   }
@@ -4586,7 +4571,7 @@ public void updateActiveFramesDisplay() {
         activeUserFrame = frameIdx;
       }
       
-      updateCoordFrame(armModel);
+      updateCoordFrame();
     }
       
   } catch(NumberFormatException NFEx) {
@@ -4744,14 +4729,14 @@ public void createFrame(Frame frame, int method) {
       // Update the current frame of the Robot Arm
       activeToolFrame = curFrameIdx;
       toolFrames[activeToolFrame] = frame;
-      updateCoordFrame(armModel);
+      updateCoordFrame();
       
       saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
     } else {
       // Update the current frame of the Robot Arm
       activeUserFrame = curFrameIdx;
       userFrames[activeUserFrame] = frame;
-      updateCoordFrame(armModel);
+      updateCoordFrame();
       
       saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
     }
@@ -4805,7 +4790,7 @@ public void createFrameDirectEntry(Frame taughtFrame, float[] inputs) {
     activeUserFrame = curFrameIdx;
   } 
   
-  updateCoordFrame(armModel);
+  updateCoordFrame();
   saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
 }
 
@@ -4928,7 +4913,7 @@ public ArrayList<String> loadIORegisters() {
   return ioRegs;
 }
 
-public void createRegisterPoint(boolean jointAngles) {
+public void createRegisterPoint(boolean fromJointAngles) {
   // Obtain point inputs from UI display text
   float[] inputs = new float[6];
   try {
@@ -4942,13 +4927,13 @@ public void createRegisterPoint(boolean jointAngles) {
     return;
   }
   
-  if(jointAngles) {
+  if(fromJointAngles) {
     // Bring angles within range: (0, TWO_PI)
     for(int idx = 0; idx < inputs.length; ++idx) {
       inputs[idx] = clampAngle(inputs[idx] * DEG_TO_RAD);
     }
     
-    GPOS_REG[active_index].point = new Point(inputs);
+    GPOS_REG[active_index].point = nativeRobotEEPosition(inputs);
   } else {
     PVector position = new PVector();
     float[] orientation = new float[] { 1f, 0f, 0f, 0f };
@@ -4962,12 +4947,14 @@ public void createRegisterPoint(boolean jointAngles) {
     orientation = eulerToQuat(new PVector(inputs[3] * DEG_TO_RAD, 
                                           inputs[4] * DEG_TO_RAD, 
                                           inputs[5] * DEG_TO_RAD));
-    
-    // Save joint values
-    GPOS_REG[active_index].point = new Point(position, orientation);
+    // Use default Robot joint angles
+    Point limbo = new Point(position, orientation, new float[] {0f, 0f, 0f, 0f, 0f, 0f});
+    float[] jointAngles = inverseKinematics(limbo);
+    // Position
+    GPOS_REG[active_index].point = new Point(position, orientation, jointAngles);
   }
   
-  GPOS_REG[active_index].isCartesian = !jointAngles;
+  GPOS_REG[active_index].isCartesian = !fromJointAngles;
   saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 }
 

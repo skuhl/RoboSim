@@ -97,7 +97,7 @@ public void setup() {
   objects[1] = new WorldObject(250, 125, 500, color(255, 0, 255), color(255, 255, 255));
   
   popMatrix();
-  //createTestProgram();
+  
   // Testing World frame and quaternion transformations
   if (DISPLAY_TEST_OUTPUT) {
     
@@ -118,7 +118,7 @@ public void setup() {
     PVector worldV = convertNativeToWorld(v);
     PVector nativeV = convertWorldToNative(worldV);
     System.out.printf("%s -> %s\n%s -> %s\n", v, worldV, worldV, nativeV);
-    /**/
+    /**
     float[] q1 = eulerToQuat( new PVector(0f, 45f, 90f).mult(DEG_TO_RAD) ),
             q2 = eulerToQuat( new PVector(0f, 30f, 90f).mult(DEG_TO_RAD) ),
             q3 = quaternionNormalize( quaternionMult(q1, quaternionConjugate(q1)) ),
@@ -146,19 +146,12 @@ public void draw() {
   armModel.oldEETMatrix = getTransformationMatrix();
   popMatrix();
   
-  //execute arm movement
-  if(armModel.inMotion) {
-    /* If the current instruction is -2, then the Robot's motion is the product of
-     * neither jogging or program execution. */
-    if (currentInstruction != -2) {
-      //run program
-      armModel.inMotion = !executeProgram(currentProgram, armModel, execSingleInst);
-    } else {
-      armModel.inMotion = !armModel.interpolateRotation(liveSpeed / 100f);
-    }
-  }
-  else {
-    //respond to manual movement from J button presses
+  // Execute arm movement
+  if(programRunning) {
+    // Run active program
+    programRunning = !executeProgram(currentProgram, armModel, execSingleInst);
+  } else if (armModel.modelInMotion()) {
+    // Jog the Robot
     intermediatePositions.clear();
     armModel.executeLiveMotion();
   }
