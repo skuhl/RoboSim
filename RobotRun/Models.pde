@@ -112,9 +112,6 @@ public class ArmModel {
   public float[] jogRot = new float[3];
   // Indicates that the Robot is moving to a specific point
   public boolean inMotion = false;
-  public float[][] currentFrame = {{1, 0, 0},
-                                   {0, 1, 0}, 
-                                   {0, 0, 1}};
   
   public Box[] bodyHitBoxes;
   private ArrayList<Box>[] eeHitBoxes;
@@ -576,15 +573,6 @@ public class ArmModel {
     return rot;
   }//end get joint rotations
   
-  /* Resets the robot's current reference frame to that of the
-   * default world frame.
-   */
-  public void resetFrame() {
-    currentFrame = new float[][] {{1, 0, 0},
-                                  {0, 1, 0},
-                                  {0, 0, 1}};
-  }
-  
   /* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
    * the end effector's current x, y, z axes with respect to the current frame.
    */
@@ -748,13 +736,19 @@ public class ArmModel {
         float theta = DEG_TO_RAD * 0.025f * liveSpeed;
         
         PVector translation = new PVector(jogLinear[0], jogLinear[1], jogLinear[2]);
-        // Convert the movement vector into the current reference frame
-        translation = rotate(translation, currentFrame);
+        Frame curFrame = getActiveFrame(null);
+        if (curFrame != null) {
+          // Convert the movement vector into the current reference frame
+          translation = rotate(translation, curFrame.getNativeAxes());
+        }
+        
         PVector tgtPosition = PVector.add(curPoint.position, translation.mult(distance));
         
         PVector rotation = new PVector(jogRot[0], jogRot[1], jogRot[2]);
-        // Convert the movement vector into the current reference frame
-        //rotation = rotate(rotation, currentFrame);
+        if (curFrame != null) {
+          // Convert the movement vector into the current reference frame
+          //rotation = rotate(rotation, curFrame.getNativeAxes());
+        }
         rotation.normalize();
         
         float[] tgtOrientation;
@@ -764,20 +758,15 @@ public class ArmModel {
           tgtOrientation = curPoint.orientation;  
         }
         
-        tgtOrientation = quaternionNormalize( quaternionMult(tgtOrientation, quaternionConjugate(curPoint.orientation)) );
         Point tgt = new Point(tgtPosition, tgtOrientation, curPoint.angles);
+        tgt.orientation = quaternionNormalize( quaternionMult(tgt.orientation, quaternionConjugate(curPoint.orientation)) );
         float[] destAngles = inverseKinematics(tgt, curPoint.orientation);
         
         // Did we successfully find the desired angles?
         if(destAngles == null) {
-          System.out.printf("IK Failure ...\nTranslation: %s\n%s -> %s\nRotation: %s\n%s : (%3.8f) -> %s : (%3.8f)\n\n",
+          System.out.printf("IK Failure ...\nTranslation: %s\n%s -> %s\nRotation: %s\n%s -> %s\n\n",
                             translation, curPoint.position, tgtPosition, rotation,
-                            arrayToString(curPoint.orientation), calculateQuatMag(curPoint.orientation), arrayToString(tgtOrientation), calculateQuatMag(tgtOrientation));
-          
-          startPoint = curPoint.position.copy();
-          targetPoint = tgtPosition.copy();
-          orientationStart = quatToMatrix(curPoint.orientation);
-          orientationEnd = quatToMatrix(tgtOrientation);
+                            arrayToString(curPoint.orientation), arrayToString(tgtOrientation));
           
           updateButtonColors();
           jogLinear[0] = 0;

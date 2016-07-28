@@ -44,8 +44,6 @@ int curFrameIdx = -1,
     activeToolFrame = -1;
 // The Frame being taught, during a frame teaching process
 Frame teachFrame = null;
-// A point in space; used during the Frame Point Teaching processes
-PVector ref_point;
 
 //variables for keeping track of the last change made to the current program
 Instruction lastInstruct;
@@ -830,10 +828,6 @@ public void keyPressed() {
     AXES_DISPLAY = (AXES_DISPLAY + 1) % 3;
   } else if(key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
-  } else if(key == 'f') {
-    armModel.currentFrame = armModel.getRobotOrientationMatrix();
-  } else if(key == 'g') {
-    armModel.resetFrame();
   } else if(key == 'r') {
     panX = 0;
     panY = 0;
@@ -1512,13 +1506,6 @@ public void f1() {
       } else if(row_select == 1) {
         nextScreen(Screen.NAV_USER_FRAMES);
       }
-    case TEACH_3PT_USER:
-    case TEACH_3PT_TOOL:
-    case TEACH_6PT:
-    case TEACH_4PT:
-      ref_point = (shift) ? null : nativeRobotPosition(armModel.getJointAngles()).position;
-      updateScreen();
-      break;
     case NAV_DREGS:
       // Clear Data Register entry
       DAT_REG[active_index] = new DataRegister();
@@ -4098,13 +4085,13 @@ public String[] getFunctionLabels(Screen mode){
     case TEACH_6PT:
       // F1, F5
       if(shift) {
-        funct[0] = "[Rmv Ref]";
+        funct[0] = "";
         funct[1] = "[Method]";
         funct[2] = "";
         funct[3] = "[Mov To]";
         funct[4] = "[Record]";
       } else {
-        funct[0] = "[Sav Ref]";
+        funct[0] = "";
         funct[1] = "[Method]";
         funct[2] = "";
         funct[3] = "";

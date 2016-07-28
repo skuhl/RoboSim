@@ -67,10 +67,6 @@ public WorldObject[] objects;
 
 /*******************************/
 
-// Used for debuging inverse kinematics
-public static PVector startPoint = null, targetPoint = null, faultPoint = null;
-public static float[][] orientationStart = null, orientationEnd = null;
-
 public void setup() {
   //size(1200, 800, P3D);
   size(1080, 720, P3D);
@@ -102,13 +98,14 @@ public void setup() {
   
   popMatrix();
   //createTestProgram();
-  
+  // Testing World frame and quaternion transformations
   if (DISPLAY_TEST_OUTPUT) {
+    
     /**
     PVector TCP = new PVector(-5, -5, -100);
     PVector nativeTCP = transform(TCP, new PVector(0f, 0f, 0f), nativeRobotPosition(armModel.getJointAngles()).orientation);
     System.out.printf("%s -> %s\n", TCP, nativeTCP);
-    /**/
+    /**
     pushMatrix();
     resetMatrix();
     applyMatrix(WORLD_AXES[0][0], WORLD_AXES[1][0], WORLD_AXES[2][0], 0,
@@ -121,6 +118,14 @@ public void setup() {
     PVector worldV = convertNativeToWorld(v);
     PVector nativeV = convertWorldToNative(worldV);
     System.out.printf("%s -> %s\n%s -> %s\n", v, worldV, worldV, nativeV);
+    /**/
+    float[] q1 = eulerToQuat( new PVector(0f, 45f, 90f).mult(DEG_TO_RAD) ),
+            q2 = eulerToQuat( new PVector(0f, 30f, 90f).mult(DEG_TO_RAD) ),
+            q3 = quaternionNormalize( quaternionMult(q1, quaternionConjugate(q1)) ),
+            q4 = quaternionNormalize( quaternionMult(q2, quaternionConjugate(q1)) ),
+            q5 = quaternionNormalize( quaternionMult(quaternionConjugate(q1), q1) ),
+            q6 = quaternionNormalize( quaternionMult(quaternionConjugate(q1), q2) );
+    System.out.printf("\nq1: %s\nq2: %s\nq1 * q1': %s\nq2 * q1': %s\nq1' * q1: %s\nq1' * q2: %s\n", arrayToString(q1), arrayToString(q2), arrayToString(q3), arrayToString(q4), arrayToString(q5), arrayToString(q6));
     /**/
   }
 }
@@ -176,7 +181,7 @@ public void draw() {
     armModel.checkSelfCollisions();
   }
   
-  handleWorldObjects();
+  //handleWorldObjects();
   
   if(COLLISION_DISPLAY) { armModel.drawBoxes(); }
   
@@ -263,56 +268,6 @@ public void draw() {
   sphere(15);
   popMatrix();*/
   // END TESTING CODE
-  
-  /* Draw various points in space */
-  if(ref_point != null) {
-    pushMatrix();
-    translate(ref_point.x, ref_point.y, ref_point.z);
-    
-    noFill();
-    stroke(0, 150, 200);
-    sphere(5);
-    
-    popMatrix();
-  }
-  
-  if (startPoint != null) {
-    pushMatrix();
-    translate(startPoint.x, startPoint.y, startPoint.z);
-    
-    noFill();
-    stroke(0, 135, 0);
-    sphere(1);
-    
-    if (orientationStart != null && orientationEnd != null) {
-      displayOriginAxes(orientationStart, new PVector(0f, 0f, 0f), 100f, color(0));
-      displayOriginAxes(orientationEnd, new PVector(0f, 0f, 0f), 100f, color(0));
-    }
-    
-    popMatrix();
-  }
-  
-  if (targetPoint != null) {
-    pushMatrix();
-    translate(targetPoint.x, targetPoint.y, targetPoint.z);
-    
-    noFill();
-    stroke(255, 0, 0);
-    sphere(1);
-    
-    popMatrix();
-  }
-  
-  if (faultPoint != null) {
-    pushMatrix();
-    translate(faultPoint.x, faultPoint.y, faultPoint.z);
-    
-    noFill();
-    stroke(0);
-    sphere(1);
-    
-    popMatrix();
-  }
   
   displayAxes();
   displayTeachPoints();

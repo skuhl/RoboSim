@@ -350,7 +350,7 @@ public final class MotionInstruction extends Instruction  {
       else ret = parent.LPosReg[positionNum].clone();
       
       if(userFrame != -1) {
-        ret.position = rotate(ret.position, userFrames[userFrame].getWorldAxes());
+        // TODO transform point for User Frame
       }
       
       return ret;

@@ -13,7 +13,7 @@ String errorText;
 public static int EE_MAPPING = 2,
 // Deterimes what type of axes should be displayed
                   AXES_DISPLAY = 1;
-public static final boolean COLLISION_DISPLAY = true,
+public static final boolean COLLISION_DISPLAY = false,
                             DISPLAY_TEST_OUTPUT = true;
 
 /**
@@ -162,13 +162,6 @@ void showMainDisplayText() {
     text("Press shift on the keyboard to disable camera rotation", 20, height / 2 + 55);
   }
   
-  if(DISPLAY_TEST_OUTPUT) {
-    if(ref_point != null) {
-      String obj1_c = String.format("Ref Point: [%4.3f, %4.3f, %4.3f]", ref_point.x, ref_point.y, ref_point.z);
-      text(obj1_c, width - 20, height - 42);
-    }
-  }
-  
   if(errorCounter > 0) {
     errorCounter--;
     fill(255, 0, 0);
@@ -221,8 +214,8 @@ public void coordFrameTransition(ArmModel model) {
 
 /**
  * Transition back to the World Frame, if the current Frame is Tool or User and there are no active frame
- * set for that Coordinate Frame. Also, the Robot frame is updated as a result. This method will halt all
- * Robot motion, since the Robot's frame may be changed.
+ * set for that Coordinate Frame. This method will halt all Robot motion, since the current active frame
+ * may be changed.
  * 
  * @param model  the Robot model, of which to change the frame
  */
@@ -238,16 +231,6 @@ public void updateCoordFrame(ArmModel model) {
   // Return to the World Frame, if no User Frame is active
   if(curCoordFrame == CoordFrame.USER && !(activeUserFrame >= 0 && activeUserFrame < userFrames.length)) {
     curCoordFrame = CoordFrame.WORLD;
-  }
-  
-  // Update the Arm Model's rotation matrix for rotational motion based on the current frame
-  Frame active = getActiveFrame(null);
-  
-  if (active != null) {
-    model.currentFrame = active.getNativeAxes();
-  } else {
-    //reset to world frame
-    model.resetFrame();
   }
 }
 
@@ -404,11 +387,11 @@ public float[] inverseKinematics(Point tgt, float[] frame) {
   final int limit = 1000;  //max number of times to loop
   int count = 0;
   
-  faultPoint = null;
   float[] angles = tgt.angles.clone();
   
   while(count < limit) {
     Point cPoint = relativeRobotEEPosition(angles, frame);
+    frame = cPoint.orientation;
     
     //calculate our translational offset from target
     float[] tDelta = calculateVectorDelta(tgt.position, cPoint.position);
@@ -449,9 +432,7 @@ public float[] inverseKinematics(Point tgt, float[] frame) {
     count += 1;
     if (count == limit) {
       // IK failure
-      PVector offset = new PVector(delta[0], delta[1], delta[2]);
-      faultPoint = PVector.add(cPoint.position, offset);
-      System.out.printf("\nDelta: %s\nAngles: %s\n%s\n", arrayToString(delta), arrayToString(angles), matrixToString(J));
+      System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles), matrixToString(J), arrayToString(cPoint.orientation), arrayToString(tgt.orientation));
       return null;
     }
   }
