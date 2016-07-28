@@ -388,15 +388,16 @@ public float[] inverseKinematics(Point tgt, float[] frame) {
   int count = 0;
   
   float[] angles = tgt.angles.clone();
+  float[] refTgt = quaternionNormalize( quaternionMult(tgt.orientation, quaternionConjugate(frame)) );
   
   while(count < limit) {
     Point cPoint = relativeRobotEEPosition(angles, frame);
-    frame = cPoint.orientation;
     
     //calculate our translational offset from target
     float[] tDelta = calculateVectorDelta(tgt.position, cPoint.position);
     //calculate our rotational offset from target
-    float[] rDelta = calculateVectorDelta(tgt.orientation, cPoint.orientation, 4);
+    float[] rDelta = calculateVectorDelta(refTgt, cPoint.orientation, 4);
+    System.out.printf("%s -> %s\n", arrayToString(cPoint.orientation), arrayToString(refTgt));
     float[] delta = new float[7];
     
     delta[0] = tDelta[0];
@@ -432,7 +433,7 @@ public float[] inverseKinematics(Point tgt, float[] frame) {
     count += 1;
     if (count == limit) {
       // IK failure
-      System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles), matrixToString(J), arrayToString(cPoint.orientation), arrayToString(tgt.orientation));
+      System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles), matrixToString(J), arrayToString(cPoint.orientation), arrayToString(refTgt));
       return null;
     }
   }

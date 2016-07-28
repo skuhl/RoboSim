@@ -759,7 +759,6 @@ public class ArmModel {
         }
         
         Point tgt = new Point(tgtPosition, tgtOrientation, curPoint.angles);
-        tgt.orientation = quaternionNormalize( quaternionMult(tgt.orientation, quaternionConjugate(curPoint.orientation)) );
         float[] destAngles = inverseKinematics(tgt, curPoint.orientation);
         
         // Did we successfully find the desired angles?
