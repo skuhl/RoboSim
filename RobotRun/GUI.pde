@@ -1079,7 +1079,6 @@ public void NUM9() {
 
 public void addNumber(String number) {
   if(mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
-    
     if (workingText.length() < NUM_ENTRY_LEN) {
       workingText += number;
     }
@@ -1228,8 +1227,6 @@ public void up() {
     case SELECT_INSTR_INSERT:
     case SELECT_IO_INSTR_REG:
     case SELECT_FRAME_INSTR_TYPE:
-    case SELECT_COND_STMT:
-    case SELECT_IF_OP:
     case SELECT_JMP_LBL:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
@@ -1250,6 +1247,7 @@ public void up() {
     case NAV_USER_FRAMES:
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
+    case SELECT_COND_STMT:
     case EDIT_PREG_C:
     case EDIT_PREG_J:
       row_select = max(0, row_select - 1);
@@ -1345,8 +1343,6 @@ public void dn() {
     case SELECT_INSTR_INSERT:
     case SELECT_IO_INSTR_REG:
     case SELECT_FRAME_INSTR_TYPE:
-    case SELECT_COND_STMT:
-    case SELECT_IF_OP:
     case SELECT_JMP_LBL:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
@@ -1365,10 +1361,11 @@ public void dn() {
       break;
     case NAV_TOOL_FRAMES:
     case NAV_USER_FRAMES:
-    case EDIT_PREG_C:
-    case EDIT_PREG_J:
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
+    case SELECT_COND_STMT:
+    case EDIT_PREG_C:
+    case EDIT_PREG_J:
       row_select = min(row_select + 1, contents.size() - 1);
       break;
     case ACTIVE_FRAMES:
@@ -1392,6 +1389,7 @@ public void lt() {
     case NAV_PROG_INST:    
       col_select = max(0, col_select - 1);
       break;
+    case SELECT_COND_STMT:
     case NAV_DREGS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
@@ -1437,6 +1435,7 @@ public void rt() {
       }
       
       break;
+    case SELECT_COND_STMT:
     case NAV_DREGS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
@@ -2255,35 +2254,50 @@ public void ENTER() {
       switchScreen(Screen.SET_FRAME_INSTR_IDX);
       break;
     case SELECT_COND_STMT:
-      if(opt_select == 0){
-        nextScreen(Screen.SELECT_IF_OP);
-      } else {
-        nextScreen(Screen.SELECT_SEL_OP);
-      }      
-      break;
-    case SELECT_IF_OP:
-      switch(opt_select){
-        case 0:
-          newIfStmt(Operator.EQUAL);
-          break;
-        case 1:
-          newIfStmt(Operator.NEQUAL);
-          break;
-        case 2:
-          newIfStmt(Operator.GRTR);
-          break;
-        case 3:
-          newIfStmt(Operator.LESS);
-          break;
-        case 4:
-          newIfStmt(Operator.GREQ);
-          break;
-        case 5:
-          newIfStmt(Operator.LSEQ);
-          break;
+      if(col_select == 0){
+        switch(opt_select){
+          case 0:
+            newIfStmt(Operator.EQUAL);
+            break;
+          case 1:
+            newIfStmt(Operator.NEQUAL);
+            break;
+          case 2:
+            newIfStmt(Operator.GRTR);
+            break;
+          case 3:
+            newIfStmt(Operator.LESS);
+            break;
+          case 4:
+            newIfStmt(Operator.GREQ);
+            break;
+          case 5:
+            newIfStmt(Operator.LSEQ);
+            break;
+        }
+      } else if(col_select == 1) {
+        switch(opt_select){
+          case 0:
+            newSelStmt(Operator.EQUAL);
+            break;
+          case 1:
+            newSelStmt(Operator.NEQUAL);
+            break;
+          case 2:
+            newSelStmt(Operator.GRTR);
+            break;
+          case 3:
+            newSelStmt(Operator.LESS);
+            break;
+          case 4:
+            newSelStmt(Operator.GREQ);
+            break;
+          case 5:
+            newSelStmt(Operator.LSEQ);
+            break;
+        }
       }
       
-      display_stack.pop();
       display_stack.pop();
       lastScreen();
       break;
@@ -2305,16 +2319,55 @@ public void ENTER() {
       IfStatement stmt = (IfStatement)p.getInstruction(active_instr);
       
       if(opt_select == 0){
-        stmt.expr.arg1 = new ExprOperand();
+        stmt.expr.arg1 = new ExprOperand(new DataRegister(), -1);
+        switchScreen(Screen.INPUT_DREG_IDX);
       } else if(opt_select == 1) {
-        stmt.expr.arg1 = new ExprOperand();
+        stmt.expr.arg1 = new ExprOperand(new IORegister(), -1);
+        switchScreen(Screen.INPUT_IOREG_IDX);
+      } else if(opt_select == 2){
+        stmt.expr.arg1 = new AtomicExpression();
+        lastScreen();
       } else {
-        stmt.expr.arg1 = new ExprOperand();
+        nextScreen(Screen.INPUT_ARG_CONST);
       }
       break;
     case SET_BOOL_EXPR_ARG2:
     case SET_BOOL_EXPR_OP:
+      p = programs.get(active_prog);
+      stmt = (IfStatement)p.getInstruction(active_instr);
+      
+      switch(opt_select) {
+        case 0:
+          stmt.expr.op = Operator.EQUAL;
+          break;
+        case 1:
+          stmt.expr.op = Operator.NEQUAL;
+          break;
+        case 2:
+          stmt.expr.op = Operator.GRTR;
+          break;
+        case 3:
+          stmt.expr.op = Operator.LESS;
+          break;
+        case 4:
+          stmt.expr.op = Operator.GREQ;
+          break;
+        case 5:
+          stmt.expr.op = Operator.LSEQ;
+          break;
+      }
     case SET_BOOL_EXPR_ACT:
+      break;
+    case INPUT_DREG_IDX:
+      p = programs.get(active_prog);
+      stmt = (IfStatement)p.getInstruction(active_instr);
+      
+      try {
+        int idx = Integer.parseInt(workingText);
+        stmt.expr.arg1 = new ExprOperand(DAT_REG[idx], idx);
+        
+      } catch(NumberFormatException e) {}
+      lastScreen();
       break;
     case SET_MV_INSTRUCT_TYPE:
       m = getActiveMotionInstruct();
@@ -3318,14 +3371,23 @@ public void loadScreen(){
       workingText = "\0";
       break;
     case NAV_PROG_INST:
+      row_select = active_instr - start_render;
       opt_select = -1;
       break;
     case CONFIRM_INSERT:
       workingText = "";
       break;
     case SELECT_INSTR_INSERT:
-    case SELECT_COND_STMT:
     case SELECT_JMP_LBL:
+      opt_select = 0;
+      break;
+    case SELECT_COND_STMT:
+      row_select = 0;
+      col_select = 0;
+      break;
+    case SET_BOOL_EXPR_ARG1:
+    case SET_BOOL_EXPR_ARG2:
+    case SET_BOOL_EXPR_OP:
       opt_select = 0;
       break;
     case SET_IO_INSTR_IDX:
@@ -3683,11 +3745,26 @@ public String getHeader(Screen mode){
     case SET_IO_INSTR_STATE:
     case SET_FRM_INSTR_TYPE:
     case SET_FRAME_INSTR_IDX:
+    case SET_BOOL_EXPR_ARG1:
+    case SET_BOOL_EXPR_ARG2:
+    case SET_BOOL_EXPR_OP:
     case SET_JUMP_TGT:
     case SELECT_CUT_COPY:    
     case SELECT_DELETE:
     case VIEW_INST_REG:
       header = programs.get(active_prog).getName();
+      break;
+    case SELECT_IO_INSTR_REG:
+      header = "SELECT IO REGISTER";
+      break;
+    case SELECT_FRAME_INSTR_TYPE:
+      header = "SELECT FRAME INSTRUCTION TYPE";
+      break;
+    case SELECT_COND_STMT:
+      header = "INSERT IF/ SELECT STATEMENT";
+      break;
+    case SELECT_JMP_LBL:
+      header = "INSERT JUMP/ LABEL INSTRUCTION";
       break;
     case ACTIVE_FRAMES:
       header = "ACTIVE FRAMES";
@@ -3786,16 +3863,28 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case SET_MV_INSTR_IDX:
     case SET_MV_INSTR_SPD:
     case SET_MV_INSTR_TERM:
-    case SET_FRM_INSTR_TYPE:
-    case SET_FRAME_INSTR_IDX:
     case SET_IO_INSTR_STATE:
     case SET_IO_INSTR_IDX:
+    case SET_FRM_INSTR_TYPE:
+    case SET_FRAME_INSTR_IDX:
+    case SET_BOOL_EXPR_ARG1:
+    case SET_BOOL_EXPR_ARG2:
+    case SET_BOOL_EXPR_OP:
     case SET_LBL_NUM:
     case SET_JUMP_TGT:
       contents = loadInstructions(active_prog);
       if(mode.getType() == ScreenType.TYPE_LINE_SELECT)
         contents.remove(contents.size() - 1);
       break;
+    case SELECT_COND_STMT:
+      contents.add(newLine("1. IF ... =   ...", "7. SEL ... = ..."));
+      contents.add(newLine("2. IF ... <>  ...", "8. SEL ... <> ..."));
+      contents.add(newLine("3. IF ... >   ...", "9. SEL ... >  ..."));
+      contents.add(newLine("4. IF ... <   ...", "10. SEL ... <  ..."));
+      contents.add(newLine("5. IF ... >=  ...", "11. SEL ... >= ..."));
+      contents.add(newLine("6. IF ... <=  ...", "12. SEL ... <= ..."));
+      break;
+      
     case ACTIVE_FRAMES:
       /* workingText corresponds to the active row's index display */
       if (row_select == 0) {
@@ -3967,18 +4056,6 @@ public ArrayList<String> getOptions(Screen mode){
     case SELECT_REG_EXPR_TYPE:
       options.add("1. R[x]");
       options.add("2. PR[x]");
-      break;
-    case SELECT_COND_STMT:
-      options.add("1. IF ...");
-      options.add("2. SEL ...");
-      break;
-    case SELECT_IF_OP:
-      options.add("1. IF ... =  ...");
-      options.add("2. IF ... <> ...");
-      options.add("3. IF ... >  ...");
-      options.add("4. IF ... <  ...");
-      options.add("5. IF ... >= ...");
-      options.add("6. IF ... <= ...");
       break;
     case SELECT_JMP_LBL:
       options.add("1. LBL[...]");
@@ -4453,22 +4530,23 @@ public ArrayList<String> loadInstructEdit(Screen mode) {
       edit.add("\0" + workingText);
       break;
     case SET_BOOL_EXPR_OP:
-      options.add("1. ... =  ...");
-      options.add("2. ... <> ...");
-      options.add("3. ... >  ...");
-      options.add("4. ... <  ...");
-      options.add("5. ... >= ...");
-      options.add("6. ... <= ...");
+      edit.add("1. ... =  ...");
+      edit.add("2. ... <> ...");
+      edit.add("3. ... >  ...");
+      edit.add("4. ... <  ...");
+      edit.add("5. ... >= ...");
+      edit.add("6. ... <= ...");
       break;
     case SET_BOOL_EXPR_ARG1:
     case SET_BOOL_EXPR_ARG2:
-      options.add("R[...]");
-      options.add("IO[...]");
-      options.add("Const");
+      edit.add("R[...]");
+      edit.add("IO[...]");
+      edit.add("(...)");
+      edit.add("Const");
       break;
     case SET_BOOL_EXPR_ACT:
-      options.add("JMP LBL[...]");
-      options.add("CALL");
+      edit.add("JMP LBL[...]");
+      edit.add("CALL");
       break;
     case SET_LBL_NUM:
       edit.add("Set label number:");
@@ -4606,6 +4684,17 @@ public void newJumpInstruction() {
 }
 
 public void newIfStmt(Operator o) {
+  Program p = programs.get(active_prog);
+  IfStatement stmt = new IfStatement(o, null);
+  
+  if(active_instr != p.getInstructions().size()) {
+    p.overwriteInstruction(active_instr, stmt);
+  } else {
+    p.addInstruction(stmt);
+  }
+}
+
+public void newSelStmt(Operator o) {
   Program p = programs.get(active_prog);
   IfStatement stmt = new IfStatement(o, null);
   
