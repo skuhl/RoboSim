@@ -149,6 +149,7 @@ public void draw() {
   // Execute arm movement
   if(programRunning) {
     // Run active program
+    println("Running program");
     programRunning = !executeProgram(currentProgram, armModel, execSingleInst);
   } else if (armModel.modelInMotion()) {
     // Jog the Robot
@@ -186,19 +187,19 @@ public void draw() {
   //TESTING CODE: DRAW INTERMEDIATE POINTS
   noStroke();
   pushMatrix();
-  if(intermediatePositions != null) {
-    int count = 0;
-    for(Point p : intermediatePositions) {
-      if(count % 4 == 0) {
-        pushMatrix();
-        stroke(0);
-        translate(p.position.x, p.position.y, p.position.z);
-        sphere(5);
-        popMatrix();
-      }
-      count += 1;
-    }
-  }
+  //if(intermediatePositions != null) {
+  //  int count = 0;
+  //  for(Point p : intermediatePositions) {
+  //    if(count % 4 == 0) {
+  //      pushMatrix();
+  //      stroke(0);
+  //      translate(p.position.x, p.position.y, p.position.z);
+  //      sphere(5);
+  //      popMatrix();
+  //    }
+  //    count += 1;
+  //  }
+  //}
   popMatrix(); 
   //TESTING CODE: DRAW END EFFECTOR POSITION
   //pushMatrix();

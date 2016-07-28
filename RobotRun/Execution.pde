@@ -320,7 +320,7 @@ public float[] inverseKinematics(Point tgt) {
     
     if (quaternionDotProduct(tgt.orientation, cPoint.orientation) < 0f) {
       // Use -q instead of q
-      cPoint.orientation = quaternionScalarMult(cPoint.orientation, -1);
+      tgt.orientation = quaternionScalarMult(tgt.orientation, -1);
     }
     
     //calculate our translational offset from target
@@ -363,8 +363,11 @@ public float[] inverseKinematics(Point tgt) {
     count += 1;
     if (count == limit) {
       // IK failure
-      System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles),
-                          matrixToString(J), arrayToString(cPoint.orientation), arrayToString(tgt.orientation));
+      if (DISPLAY_TEST_OUTPUT) {
+        System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles),
+                            matrixToString(J), arrayToString(cPoint.orientation), arrayToString(tgt.orientation));
+      }
+      
       return null;
     }
   }
@@ -589,7 +592,7 @@ void beginNewContinuousMotion(Point start, Point end, Point next, float p) {
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
     Point tgtPoint = intermediatePositions.get(interMotionIdx);
-    inverseKinematics(tgtPoint);
+    armModel.moveTo(tgtPoint);
   }
 }
 
@@ -603,7 +606,7 @@ void beginNewLinearMotion(Point start, Point end) {
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
     Point tgtPoint = intermediatePositions.get(interMotionIdx);
-    inverseKinematics(tgtPoint);
+    armModel.moveTo(tgtPoint);
   }
 }
 
@@ -619,7 +622,7 @@ void beginNewCircularMotion(Point start, Point inter, Point end) {
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
     Point tgtPoint = intermediatePositions.get(interMotionIdx);
-    inverseKinematics(tgtPoint);
+    armModel.moveTo(tgtPoint);
   }
 }
 
@@ -644,7 +647,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
     int ret = EXEC_SUCCESS;
     if(intermediatePositions.size() > 0) {
       Point tgtPoint = intermediatePositions.get(interMotionIdx);
-      inverseKinematics(tgtPoint);
+      armModel.moveTo(tgtPoint);
     }
     
     if(ret == EXEC_FAILURE) {
@@ -868,8 +871,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
  * @return Returns true on failure (invalid instruction), false on success
  */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
-  // NOTE Orientation is in the Native Coordinate Frame
-  Point start = nativeRobotEEPosition(armModel.getJointAngles());
+  Point start = nativeRobotEEPosition(model.getJointAngles());
   
   if(instruction.getMotionType() == MTYPE_JOINT) {
     armModel.setupRotationInterpolation( instruction.getVector(program).angles );

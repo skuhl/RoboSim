@@ -116,6 +116,9 @@ public class ArmModel {
   public WorldObject held;
   public float[][] oldEETMatrix;
   
+  public PVector tgtPosition;
+  public float[] tgtOrientation;
+  
   public ArmModel() {
     
     motorSpeed = 1000.0; // speed in mm/sec
@@ -573,7 +576,7 @@ public class ArmModel {
   /* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
    * the end effector's current x, y, z axes with respect to the current frame.
    */
-  public float[][] getRobotOrientationMatrix() {
+  public float[][] getOrientationMatrix() {
     pushMatrix();
     resetMatrix();
     applyModelRotation(getJointAngles());
@@ -587,8 +590,8 @@ public class ArmModel {
    * the end effector's current x, y, z axes with respect to an arbitrary coordinate
    * system specified by the rotation matrix 'frame.'
    */
-  public float[][] getRobotOrientationMatrix(float[][] frame) {
-    float[][] m = getRobotOrientationMatrix();
+  public float[][] getOrientationMatrix(float[][] frame) {
+    float[][] m = getOrientationMatrix();
     RealMatrix A = new Array2DRowRealMatrix(floatToDouble(m, 3, 3));
     RealMatrix B = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
     RealMatrix AB = A.multiply(B.transpose());
@@ -734,8 +737,6 @@ public class ArmModel {
       
     } else {
       // Jog in the World, Tool or User Frame
-      PVector tgtPosition;
-      float[] tgtOrientation;
       Frame curFrame = getActiveFrame(null);
       Point curPoint = nativeRobotEEPosition(getJointAngles());
       
@@ -747,10 +748,10 @@ public class ArmModel {
         
         if (curFrame != null) {
             // Convert the movement vector into the current reference frame
-          translation = rotateVectorQuat(translation, curFrame.getAxes());
+          translation = rotateVectorQuat(translation, curFrame.getInvAxes());
         }
         
-        tgtPosition = PVector.add(curPoint.position, translation.mult(distance));
+        tgtPosition.add(translation.mult(distance));
       } else {
         // No translational motion
         tgtPosition = curPoint.position;
@@ -763,11 +764,11 @@ public class ArmModel {
         
         if (curFrame != null) {
           // Convert the movement vector into the current reference frame
-          rotation = rotateVectorQuat(rotation, curFrame.getAxes());
+          rotation = rotateVectorQuat(rotation, curFrame.getInvAxes());
         }
         rotation.normalize();
         
-        tgtOrientation = rotateQuat(curPoint.orientation, rotation, theta);
+        tgtOrientation = rotateQuat(tgtOrientation, rotation, theta);
         
         if (quaternionDotProduct(tgtOrientation, curPoint.orientation) < 0f) {
           // Use -q instead of q
@@ -779,41 +780,67 @@ public class ArmModel {
       }
     
       Point tgt = new Point(tgtPosition, tgtOrientation, curPoint.angles);
-      float[] destAngles = inverseKinematics(tgt);
-      
-      // Did we successfully find the desired angles?
-      if(destAngles == null) {
-        System.out.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n", curPoint.position, tgtPosition,
-                                arrayToString(curPoint.orientation), arrayToString(tgtOrientation));
-        halt();
-        return;
+      moveTo(tgt);
+    }
+  }
+  
+  /**
+   * Attempts to move the Robot to the given position and orientation defined by the
+   * given Point, using the initialized joint angles of the Point as reference angles.
+   * 
+   * @param dest  The destination position and orientaion as well as reference angles
+   * @returning   EXEC_FAILURE if inverse kinematics fails or the joint angles returned
+   *              are invalid and EXEC_SUCCESS if the Robot is successfully moved to the
+   *              given position
+   */
+  public int moveTo(Point dest) {
+    // calculate the joint angles for the desired position and orientation
+    float[] destAngles = inverseKinematics(dest);
+    
+    // Did we successfully find the desired angles?
+    if(destAngles == null) {
+      if (DISPLAY_TEST_OUTPUT) {
+        Point RP = nativeRobotEEPosition(getJointAngles());
+        System.out.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n", RP.position, dest.position,
+                                arrayToString(RP.orientation), arrayToString(dest.orientation));
       }
       
-      for(int i = 0; i < 6; i += 1) {
-        Model s = armModel.segments.get(i);
-        if(destAngles[i] > -0.000001 && destAngles[i] < 0.000001)
-          destAngles[i] = 0;
-        
-        for(int j = 0; j < 3; j += 1) {
-          if(s.rotations[j] && !s.anglePermitted(j, destAngles[i])) {
-            println("WHY?");
-            halt();
-            return;
+      halt();
+      return EXEC_FAILURE;
+    }
+    
+    for(int i = 0; i < 6; i += 1) {
+      Model s = armModel.segments.get(i);
+      if(destAngles[i] > -0.000001 && destAngles[i] < 0.000001)
+        destAngles[i] = 0;
+      
+      for(int j = 0; j < 3; j += 1) {
+        if(s.rotations[j] && !s.anglePermitted(j, destAngles[i])) {
+          if (DISPLAY_TEST_OUTPUT) {
+            System.out.printf("Invalid angles: %s\n", arrayToString(destAngles));
           }
+          
+          halt();
+          return EXEC_FAILURE;
         }
       }
-      
-      float[] angleOffset = new float[6];
-      float maxOffset = TWO_PI;
-      for(int i = 0; i < 6; i += 1) {
-        angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointAngles()[i]));
-      }
-      
-      if(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
-          angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset) {
-        setJointAngles(destAngles);
-      }
     }
+    
+    float[] angleOffset = new float[6];
+    float maxOffset = TWO_PI;
+    for(int i = 0; i < 6; i += 1) {
+      angleOffset[i] = abs(minimumDistance(destAngles[i], armModel.getJointAngles()[i]));
+    }
+    
+    if(!(angleOffset[0] <= maxOffset && angleOffset[1] <= maxOffset && angleOffset[2] <= maxOffset && 
+        angleOffset[3] <= maxOffset && angleOffset[4] <= maxOffset && angleOffset[5] <= maxOffset)) {
+      Point RP = nativeRobotEEPosition(armModel.getJointAngles());
+      armModel.tgtPosition = RP.position;
+      armModel.tgtOrientation = RP.orientation;
+    }
+    
+    setJointAngles(destAngles);
+    return EXEC_SUCCESS;
   }
   
   public boolean checkAngles(float[] angles) {

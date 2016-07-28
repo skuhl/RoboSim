@@ -3128,6 +3128,11 @@ public void activateLiveJointMotion(int joint, int dir) {
  *
  */
 public void activateLiveWorldMotion(int axis, int dir) {
+  // Initiaize the Robot's destination
+  Point RP = nativeRobotEEPosition(armModel.getJointAngles());
+  armModel.tgtPosition = RP.position;
+  armModel.tgtOrientation = RP.orientation;
+  
   
   if(axis >= 0 && axis < 3) {
     if(armModel.jogLinear[axis] == 0) {

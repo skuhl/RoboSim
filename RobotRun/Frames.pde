@@ -40,6 +40,10 @@ public abstract class Frame {
   }
   
   public float[] getAxes() { return axes.clone(); }
+  
+  public float[] getInvAxes() {
+    return new float[] { axes[0], -axes[1], -axes[2], -axes[3] };
+  }
 
   public void setAxes(float[] newAxes) {
     axes = newAxes.clone();
@@ -300,9 +304,9 @@ public class ToolFrame extends Frame {
                 pt2_ori = quatToMatrix(TCPTeachPoints[1].orientation),
                 pt3_ori = quatToMatrix(TCPTeachPoints[2].orientation);
       
-      double[] newTCP = calculateTCPFromThreePoints(toVectorArray(TCPTeachPoints[0].position), pt1_ori,
-                                                    toVectorArray(TCPTeachPoints[1].position), pt2_ori,
-                                                    toVectorArray(TCPTeachPoints[2].position), pt3_ori);
+      double[] newTCP = calculateTCPFromThreePoints(TCPTeachPoints[0].position, pt1_ori,
+                                                    TCPTeachPoints[1].position, pt2_ori,
+                                                    TCPTeachPoints[2].position, pt3_ori);
       
       float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(axesTeachPoints[0].position,
                                                                            axesTeachPoints[1].position,
@@ -451,9 +455,9 @@ public Frame getActiveFrame(CoordFrame coord) {
  * @return      The new TCP for the Robot, null is returned if the given points
  *              are invalid
  */
-public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1, 
-                                            float[] pos2, float[][] ori2, 
-                                            float[] pos3, float[][] ori3) {
+public double[] calculateTCPFromThreePoints(PVector pos1, float[][] ori1, 
+                                            PVector pos2, float[][] ori2, 
+                                            PVector pos3, float[][] ori3) {
   
   RealVector avg_TCP = new ArrayRealVector(new double[] {0.0, 0.0, 0.0} , false);
   int counter = 3;
@@ -461,38 +465,32 @@ public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1,
   while (counter-- > 0) {
     
     RealMatrix Ar = null, Br = null, Cr = null;
-    double[] t = new double[3];
+    PVector vt = null;
     
     if (counter == 0) {
       /* Case 3: C = point 1 */
       Ar = new Array2DRowRealMatrix(floatToDouble(ori2, 3, 3));
       Br = new Array2DRowRealMatrix(floatToDouble(ori3, 3, 3));
       Cr = new Array2DRowRealMatrix(floatToDouble(ori1, 3, 3));
+      /* 2Ct - At - Bt */
+      vt = PVector.sub(pos1.mult(2), PVector.add(pos2, pos3));
       
-      for(int idx = 0; idx < 3; ++idx) {
-        /* 2Ct - At - Bt */
-        t[idx] = 2 * pos1[idx] - ( pos2[idx] + pos3[idx] );
-      }
     } else if (counter == 1) {
       /* Case 2: C = point 2 */
       Ar = new Array2DRowRealMatrix(floatToDouble(ori3, 3, 3));
       Br = new Array2DRowRealMatrix(floatToDouble(ori1, 3, 3));
       Cr = new Array2DRowRealMatrix(floatToDouble(ori2, 3, 3));
+      /* 2Ct - At - Bt */
+      vt = PVector.sub(pos2.mult(2), PVector.add(pos3, pos1));
       
-      for(int idx = 0; idx < 3; ++idx) {
-        /* 2Ct - At - Bt */
-        t[idx] = 2 * pos2[idx] - ( pos3[idx] + pos1[idx] );
-      }      
     } else if (counter == 2) {
-      /* Case 1: C = point 3*/
+      /* Case 1: C = point 3 */
       Ar = new Array2DRowRealMatrix(floatToDouble(ori1, 3, 3));
       Br = new Array2DRowRealMatrix(floatToDouble(ori2, 3, 3));
       Cr = new Array2DRowRealMatrix(floatToDouble(ori3, 3, 3));
+      /* 2Ct - At - Bt */
+      vt = PVector.sub(pos3.mult(2), PVector.add(pos1, pos2));
       
-      for(int idx = 0; idx < 3; ++idx) {
-        /* 2Ct - At - Bt */
-        t[idx] = 2 * pos3[idx] - ( pos1[idx] + pos2[idx] );
-      }     
     }
     
   /****************************************************************
@@ -518,7 +516,7 @@ public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1,
       
     ****************************************************************/
     
-    RealVector b = new ArrayRealVector(t, false);
+    RealVector b = new ArrayRealVector(new double[] { vt.x, vt.y, vt.z }, false);
     /* Ar + Br - 2Cr */
     RealMatrix R = ( ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) ) ).transpose();
     

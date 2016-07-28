@@ -306,11 +306,6 @@ public float[] crossProduct(float[] v, float[] u) {
   return w;
 }
 
-/* Converts a PVector object to a float[] */
-public float[] toVectorArray(PVector v) {
-  return new float[] { v.x, v.y, v.z };
-}
-
 /* Returns a vector with the opposite sign
  * as the given vector. */
 public float[] negate(float[] v) {
