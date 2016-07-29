@@ -62,11 +62,26 @@ public void applyModelRotation(float[] jointAngles) {
  * @returning     The point, pt, interms of the given frame's Coordinate System
  */
 public Point applyFrame(Point pt, PVector origin, float[] axes) {
-  float[] invAxes = new float[] { axes[0], -axes[1], -axes[2], -axes[3] };
-  PVector position = transform(pt.position, origin, axes);
+  float[] invAxes = quaternionConjugate(axes);
+  PVector position = convertToFrame(pt.position, origin, axes);
   float[] orientation = quaternionMult(pt.orientation, invAxes);
   
   return new Point(position, orientation, pt.angles);
+}
+
+/**
+ * Converts the given vector, v, into the Coordinate System defined by the given origin
+ * vector and rotation quaternion axes.
+ * 
+ * @param v      A vector in the XYZ vector space
+ * @param origin  The origin of the Coordinate System
+ * @param axes    The axes of the Coordinate System representing as a rotation quanternion
+ * @returning     The vector, v, interms of the given frame's Coordinate System
+ */
+public PVector convertToFrame(PVector v, PVector origin, float[] axes) {
+  float[] invAxes = axes;
+  PVector vOffset = PVector.sub(v, origin);
+  return rotateVectorQuat(vOffset, invAxes);
 }
 
 /**
@@ -79,10 +94,24 @@ public Point applyFrame(Point pt, PVector origin, float[] axes) {
  * @returning     The point, pt, interms of the given frame's Coordinate System
  */
 public Point removeFrame(Point pt, PVector origin, float[] axes) {
-  PVector position = transform(pt.position, origin, axes);
+  PVector position = convertFromFrame(pt.position, origin, axes);
   float[] orientation = quaternionMult(pt.orientation, axes);
   
   return new Point(position, orientation, pt.angles);
+}
+
+/**
+ * Converts the given vector, v, from the Coordinate System defined by the given origin
+ * vector and rotation quaternion axes.
+ * 
+ * @param v       A vector in the XYZ vector space
+ * @param origin  The origin of the Coordinate System
+ * @param axes    The axes of the Coordinate System representing as a rotation quanternion
+ * @returning     The vector, v, interms of the given frame's Coordinate System
+ */
+public PVector convertFromFrame(PVector v, PVector origin, float[] axes) {
+  PVector vRotated = rotateVectorQuat(v, axes);
+  return vRotated.add(origin);
 }
 
 /**
@@ -101,21 +130,6 @@ public PVector convertWorldToNative(PVector v) {
 public PVector convertNativeToWorld(PVector v) {
   float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
   return transform(v, invertHCMatrix(tMatrix));
-}
-
-/**
- * Converts the given vector into the Coordinate System defined by
- * the given vector origin offset and rotation quanternion.
- * 
- * @param v       A vector in the xyz plane
- * @param origin  The origin of the Coordinate System
- * @param axes    A unit quaternion representing the axes of the
- *                Coordinate System
- * @param         The vector, v, in reference to the Coordinate
- *                System defined by origin and axes
- */
-public PVector transform(PVector v, PVector origin, float[] axes) {
-  return rotateVectorQuat(v.sub(origin), axes);
 }
 
 /* Transforms the given vector from the coordinate system defined by the given
@@ -658,6 +672,14 @@ float[] quaternionMult(float[] q1, float[] q2) {
   r[3] = q1[0]*q2[3] + q1[1]*q2[2] - q1[2]*q2[1] + q1[3]*q2[0];
 
   return r;
+}
+
+/**
+ * Returns a quaternion, which represents the rotation of q, in terms of reference.
+ */
+public float[] quaternionRef(float[] q, float[] reference) {
+  float[] invRef = quaternionNormalize( quaternionConjugate(reference) );
+  return quaternionNormalize( quaternionMult(q, invRef) );
 }
 
 //returns the result of a quaternion 'q' multiplied by scalar 's'

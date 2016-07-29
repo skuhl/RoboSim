@@ -205,6 +205,8 @@ public class ArmModel {
     applyModelRotation(getJointAngles());
     oldEETMatrix = getTransformationMatrix();
     popMatrix();
+    
+    updateBoxes();
   } // end ArmModel constructor
   
   public void draw() {
@@ -781,20 +783,19 @@ public class ArmModel {
     } else {
       // Jog in the World, Tool or User Frame
       Frame curFrame = getActiveFrame(null);
-      Point curPoint = nativeRobotEEPosition(getJointAngles());
+      Point curPoint = nativeRobotEEPoint(getJointAngles());
       
       // Apply translational motion vector
       if (translationalMotion()) {
         // Respond to user defined movement
         float distance = motorSpeed / 6000f * liveSpeed;
         PVector translation = new PVector(jogLinear[0], jogLinear[1], jogLinear[2]);
+        translation = convertWorldToNative(translation.mult(distance));
         
         if (curFrame != null) {
             // Convert the movement vector into the current reference frame
           translation = rotateVectorQuat(translation, curFrame.getInvAxes());
         }
-        
-        translation = convertWorldToNative(translation.mult(distance));
         
         tgtPosition.add(translation);
       } else {
@@ -806,14 +807,13 @@ public class ArmModel {
       if (rotationalMotion()) {
         float theta = DEG_TO_RAD * 0.025f * liveSpeed;
         PVector rotation = new PVector(jogRot[0], jogRot[1], jogRot[2]);
+        rotation = convertWorldToNative(rotation);
         
         if (curFrame != null) {
           // Convert the movement vector into the current reference frame
           rotation = rotateVectorQuat(rotation, curFrame.getInvAxes());
         }
         rotation.normalize();
-        
-        rotation = convertWorldToNative(rotation);
         
         tgtOrientation = rotateQuat(tgtOrientation, rotation, theta);
         
@@ -864,7 +864,7 @@ public class ArmModel {
     // Did we successfully find the desired angles?
     if ((destAngles == null) || invalidAngle) {
       if (DISPLAY_TEST_OUTPUT) {
-        Point RP = nativeRobotEEPosition(getJointAngles());
+        Point RP = nativeRobotEEPoint(getJointAngles());
         System.out.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n", RP.position, destPosition,
                                 arrayToString(RP.orientation), arrayToString(destOrientation));
       }

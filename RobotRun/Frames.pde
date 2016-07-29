@@ -551,56 +551,43 @@ public double[] calculateTCPFromThreePoints(PVector pos1, float[][] ori1,
  * Creates a 3x3 rotation matrix based off of two vectors defined by the
  * given set of three points, which are defined by the three given PVectors.
  * The three points are used to form two vectors. The first vector is treated
- * as the negative x-axis and the second one is the psuedo-negative z-axis.
- * These vectors are crossed to form the y-axis. The y-axis is then crossed
- * with the negative x-axis to form the true y-axis.
+ * as the positive x-axis and the second one is the psuedo-positive y-axis.
+ * These vectors are crossed to form the z-axis. The x-axis is then crossed
+ * with the positive z-axis to form the true y-axis. Finally, the axes are
+ * converted from the World frame reference, to Native Coordinates.
  *
- * @param p1      the origin reference point used to form the negative x-
- *                and z-axes
- * @param p2      the point used to create the preliminary negative x-axis
- * @param p3      the point used to create the preliminary negative z axis
+ * @param p1      the origin reference point used to form the positive x-
+ *                and y-axes
+ * @param p2      the point used to create the preliminary positive x-axis
+ * @param p3      the point used to create the preliminary positive y-axis
  * @return        a set of three unit vectors that represent an axes (row
  *                major order)
  */
 public float[][] createAxesFromThreePoints(PVector p1, PVector p2, PVector p3) {
-  float[][] axes = new float[3][];
-  float[] x_ndir = new float[3],
-  z_ndir = new float[3];
+  float[][] axesRefWorld = new float[3][3];
+  PVector xAxis = PVector.sub(p2, p1);
+  PVector yAxis = PVector.sub(p3, p1);
+  PVector zAxis = yAxis.cross(xAxis);
   
-  // From preliminary negative x and z axis vectors
-  x_ndir[0] = p2.x - p1.x;
-  x_ndir[1] = p2.y - p1.y;
-  x_ndir[2] = p2.z - p1.z;
-  z_ndir[0] = p3.x - p1.x;
-  z_ndir[1] = p3.y - p1.y;
-  z_ndir[2] = p3.z - p1.z;
+  yAxis = xAxis.cross(zAxis);
+  // Create unit vectors
+  xAxis.normalize();
+  yAxis.normalize();
+  zAxis.normalize();
   
-  // Form axes
-  axes[0] = negate(x_ndir);                         // X axis
-  axes[1] = crossProduct(axes[0], negate(z_ndir));  // Y axis
-  axes[2] = crossProduct(axes[0], axes[1]);         // Z axis
+  axesRefWorld[0][0] = xAxis.x;
+  axesRefWorld[0][1] = xAxis.y;
+  axesRefWorld[0][2] = xAxis.z;
+  axesRefWorld[1][0] = yAxis.x;
+  axesRefWorld[1][1] = yAxis.y;
+  axesRefWorld[1][2] = yAxis.z;
+  axesRefWorld[2][0] = zAxis.x;
+  axesRefWorld[2][1] = zAxis.y;
+  axesRefWorld[2][2] = zAxis.z;
   
-  if((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
-     (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
-     (axes[2][0] == 0f && axes[2][1] == 0f && axes[2][2] == 0f)) {
-    // One of the three axis vectors is the zero vector
-    return null;
-  }
-  
-  float[] magnitudes = new float[axes.length];
-  
-  for(int v = 0; v < axes.length; ++v) {
-    // Find the magnitude of each axis vector
-    for(int e = 0; e < axes[0].length; ++e) {
-      magnitudes[v] += pow(axes[v][e], 2);
-    }
-    
-    magnitudes[v] = sqrt(magnitudes[v]);
-    // Normalize each vector
-    for(int e = 0; e < axes.length; ++e) {
-      axes[v][e] /= magnitudes[v];
-    }
-  }
-  
-  return axes;
+  RealMatrix axes = new Array2DRowRealMatrix(floatToDouble(axesRefWorld, 3, 3)),
+             worldAxes =  new Array2DRowRealMatrix(floatToDouble(WORLD_AXES, 3, 3)),
+             invWorldAxes = (new SingularValueDecomposition(worldAxes)).getSolver().getInverse();
+  // Remove the World frame transformation from the axes vectors
+  return doubleToFloat(invWorldAxes.multiply(axes).getData(), 3, 3);
 }

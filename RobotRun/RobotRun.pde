@@ -127,20 +127,6 @@ public void setup() {
     PVector worldV = convertNativeToWorld(v);
     PVector nativeV = convertWorldToNative(worldV);
     System.out.printf("%s -> %s\n%s -> %s\n", v, worldV, worldV, nativeV);
-    /**
-    float[] q1 = eulerToQuat( new PVector(0f, 45f, 90f).mult(DEG_TO_RAD) ),
-            q2 = eulerToQuat( new PVector(0f, 30f, 90f).mult(DEG_TO_RAD) ),
-            q3 = quaternionNormalize( quaternionMult(q1, quaternionConjugate(q1)) ),
-            q4 = quaternionNormalize( quaternionMult(q2, quaternionConjugate(q1)) ),
-            q5 = quaternionNormalize( quaternionMult(quaternionConjugate(q1), q1) ),
-            q6 = quaternionNormalize( quaternionMult(quaternionConjugate(q1), q2) );
-    System.out.printf("\nq1: %s\nq2: %s\nq1 * q1': %s\nq2 * q1': %s\nq1' * q1: %s\nq1' * q2: %s\n", arrayToString(q1), arrayToString(q2), arrayToString(q3), arrayToString(q4), arrayToString(q5), arrayToString(q6));
-    /**/
-    float angleSrc = 0.0f,
-          angleDest = 5.6723f,
-          diff = minimumDistance(angleSrc, angleDest);
-    
-    System.out.printf("%5.4f -> %5.4f = %5.4f\n", angleSrc, angleDest, diff);
     /**/
   }
 }
@@ -190,12 +176,9 @@ public void draw() {
     armModel.checkSelfCollisions();
   }
   
-  //handleWorldObjects();
+  handleWorldObjects();
   
   if(COLLISION_DISPLAY) { armModel.drawBoxes(); }
-  
-  /*float[] q = eulerToQuat(armModel.getWPR());
-  println(String.format("q = %4.3f, %4.3f, %4.3f, %4.3f", q[0], q[1], q[2], q[3]));*/
   
   noLights();
   
@@ -320,9 +303,9 @@ public void handleWorldObjects() {
       
       float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
       applyMatrix(invEETMatrix[0][0], invEETMatrix[0][1], invEETMatrix[0][2], invEETMatrix[0][3],
-      invEETMatrix[1][0], invEETMatrix[1][1], invEETMatrix[1][2], invEETMatrix[1][3],
-      invEETMatrix[2][0], invEETMatrix[2][1], invEETMatrix[2][2], invEETMatrix[2][3],
-      invEETMatrix[3][0], invEETMatrix[3][1], invEETMatrix[3][2], invEETMatrix[3][3]);
+                  invEETMatrix[1][0], invEETMatrix[1][1], invEETMatrix[1][2], invEETMatrix[1][3],
+                  invEETMatrix[2][0], invEETMatrix[2][1], invEETMatrix[2][2], invEETMatrix[2][3],
+                  invEETMatrix[3][0], invEETMatrix[3][1], invEETMatrix[3][2], invEETMatrix[3][3]);
       
       armModel.held.form.applyTransform();
       
@@ -350,7 +333,7 @@ public void handleWorldObjects() {
         }
       }
       
-      if( objects[idx] != armModel.held && objects[idx].collision(nativeRobotEEPosition(armModel.getJointAngles()).position) ) {
+      if( objects[idx] != armModel.held && objects[idx].collision(nativeRobotEEPoint(armModel.getJointAngles()).position) ) {
         // Change hit box color to indicate End Effector collision
         objects[idx].hit_box.outline = color(0, 0, 255);
       }
@@ -441,7 +424,7 @@ public void displayTeachPoints() {
  */
 public void displayAxes() {
   
-  Point ee_point = nativeRobotEEPosition(armModel.getJointAngles());
+  Point ee_point = nativeRobotEEPoint(armModel.getJointAngles());
   
   if (AXES_DISPLAY == 0 && curCoordFrame != CoordFrame.JOINT) {
     // Draw axes of the Robot's End Effector frame for testing purposes
@@ -465,6 +448,7 @@ public void displayAxes() {
         displayOriginAxes(activeUser.getWorldAxes(), activeUser.getOrigin(), 5000f, color(0));
       } else {
         /* Draw the axes of the World frame */
+        //displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f), 5000f, color(0));
         displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f), 5000f, color(0));
       }
     }
@@ -609,7 +593,7 @@ public void displayGridlines(float[][] axesVectors, PVector origin, int halfNumO
  */
 public void mapToRobotBasePlane() {
   
-  PVector ee_pos = nativeRobotEEPosition(armModel.getJointAngles()).position;
+  PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
   color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);

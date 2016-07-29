@@ -13,7 +13,7 @@ String errorText;
 public static int EE_MAPPING = 2,
 // Deterimes what type of axes should be displayed
                   AXES_DISPLAY = 1;
-public static final boolean COLLISION_DISPLAY = false,
+public static final boolean COLLISION_DISPLAY = true,
                             DISPLAY_TEST_OUTPUT = true;
 
 /**
@@ -40,20 +40,27 @@ void showMainDisplayText() {
     default:
   }
   
-  Point RP = frameRobotPosition(armModel.getJointAngles());
+  Point RP = nativeRobotEEPoint(armModel.getJointAngles());
+  // Convert to World frame
+  PVector displayPosition = RP.position;
+  PVector wpr;
+  Frame active = getActiveFrame(null);
   
-  /*
-  // apply World Frame
-  pos = convertNativeToWorld(RP.position);
-  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
-  float[][] orienMatrix = quatToMatrix(orien);
-  orien = matrixToQuat( transform(orienMatrix, invertHCMatrix(tMatrix)) );
-  */
+  if (active != null) {
+    // Convert into currently active frame
+    displayPosition = convertToFrame(displayPosition, active.getOrigin(), active.getAxes());
+    wpr = quatToEuler( quaternionRef(RP.orientation, active.getAxes()) ).mult(RAD_TO_DEG);;
+    
+  } else {
+    wpr = quatToEuler(RP.orientation).mult(RAD_TO_DEG);
+  }
+  // Convert into the world frame
+  displayPosition = convertNativeToWorld(displayPosition);
+  wpr = convertNativeToWorld(wpr);
   
-  PVector wpr = quatToEuler(RP.orientation).mult(RAD_TO_DEG);
   // Show the coordinates of the End Effector for the current Coordinate Frame
   String cartesian = String.format("Coord  X: %5.3f  Y: %5.3f  Z: %5.3f  W: %5.3f  P: %5.3f  R: %5.3f",
-                                    RP.position.x, RP.position.y, RP.position.z, wpr.x, wpr.y, wpr.z);
+                                    displayPosition.x, displayPosition.y, displayPosition.z, wpr.x, wpr.y, wpr.z);
   
   // Display the Robot's joint angles
   String joints = String.format("Joints  J1: %4.3f J2: %4.3f J3: %4.3f J4: %4.3f J5: %4.3f J6: %4.3f", 
@@ -174,9 +181,9 @@ public void updateCoordFrame() {
  * @returning          The Robot's faceplate position and orientation
  *                     corresponding to the given joint angles
  */
-public Point nativeRobotPosition(float[] jointAngles) {
+public Point nativeRobotPoint(float[] jointAngles) {
   // Return a point containing the faceplate position, orientation, and joint angles
-  return nativeRobotPositionOffset(jointAngles, new PVector(0f, 0f, 0f));
+  return nativeRobotPointOffset(jointAngles, new PVector(0f, 0f, 0f));
 }
 
 /**
@@ -188,7 +195,7 @@ public Point nativeRobotPosition(float[] jointAngles) {
  * @returning          The Robot's EE position and orientation corresponding to
  *                     the given joint angles
  */
-public Point nativeRobotPositionOffset(float[] jointAngles, PVector offset) {
+public Point nativeRobotPointOffset(float[] jointAngles, PVector offset) {
   pushMatrix();
   resetMatrix();
   applyModelRotation(jointAngles);
@@ -207,7 +214,7 @@ public Point nativeRobotPositionOffset(float[] jointAngles, PVector offset) {
  * @param jointAngles  A valid set of six joint angles (in radians) for the Robot
  * @returning          The Robot's End Effector position
  */
-public Point nativeRobotEEPosition(float[] jointAngles) {
+public Point nativeRobotEEPoint(float[] jointAngles) {
   Frame activeTool = getActiveFrame(CoordFrame.TOOL);
   PVector offset;
   
@@ -218,27 +225,7 @@ public Point nativeRobotEEPosition(float[] jointAngles) {
     offset = new PVector(0f, 0f, 0f);
   }
   
-  return nativeRobotPositionOffset(jointAngles, offset);
-}
-
-/**
- * Returns a Point containing the Robot's position, orientation in reference
- * to the currently active Tool or User Frame corresponding to the given set
- * of joint angles, as well as the joint angles themselves.
- * 
- * @param jointAngles  A valid set of six joint angles (in radians)
- *                     for the Robot
- */
-public Point frameRobotPosition(float[] jointAngles) {
-  Frame activeUser = getActiveFrame(CoordFrame.USER);
-  Point RP = nativeRobotEEPosition(jointAngles);
-  
-  // Apply the active User frame
-  if ((curCoordFrame == CoordFrame.USER || curCoordFrame == CoordFrame.TOOL) && activeUser != null) {
-    return applyFrame(RP, activeUser.getOrigin(), activeUser.getAxes());
-  }
-  
-  return RP;
+  return nativeRobotPointOffset(jointAngles, offset);
 }
 
 /**
@@ -279,14 +266,14 @@ public float[][] calculateJacobian(float[] angles, boolean posOffset) {
   
   float[][] J = new float[7][6];
   //get current ee position
-  Point curRP = nativeRobotEEPosition(angles);
+  Point curRP = nativeRobotEEPoint(angles);
   
   //examine each segment of the arm
   for(int i = 0; i < 6; i += 1) {
     //test angular offset
     angles[i] += dAngle;
     //get updated ee position
-    Point newRP = nativeRobotEEPosition(angles);
+    Point newRP = nativeRobotEEPoint(angles);
     
     if (quaternionDotProduct(curRP.orientation, newRP.orientation) < 0f) {
       // Use -q instead of q
@@ -328,7 +315,7 @@ public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, float[]
   float[] angles = srcAngles.clone();
   
   while(count < limit) {
-    Point cPoint = nativeRobotEEPosition(angles);
+    Point cPoint = nativeRobotEEPoint(angles);
     
     if (quaternionDotProduct(tgtOrientation, cPoint.orientation) < 0f) {
       // Use -q instead of q
@@ -512,7 +499,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   }
   else {
     // NOTE orientation is in Native Coordinates!
-    currentPoint = nativeRobotEEPosition(armModel.getJointAngles());
+    currentPoint = nativeRobotEEPoint(armModel.getJointAngles());
   }
   
   for(int n = transitionPoint; n < numberOfPoints; n++) {
@@ -883,7 +870,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
  * @return Returns true on failure (invalid instruction), false on success
  */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
-  Point start = nativeRobotEEPosition(model.getJointAngles());
+  Point start = nativeRobotEEPoint(model.getJointAngles());
   
   if(instruction.getMotionType() == MTYPE_JOINT) {
     armModel.setupRotationInterpolation( instruction.getVector(program).angles );

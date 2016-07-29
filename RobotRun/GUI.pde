@@ -1848,7 +1848,7 @@ public void f5() {
     case TEACH_6PT:
       if (shift) {
         // Save the current position of the Robot's Faceplate
-        teachFrame.setPoint(nativeRobotPosition(armModel.getJointAngles()), opt_select);
+        teachFrame.setPoint(nativeRobotPoint(armModel.getJointAngles()), opt_select);
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         updateScreen();
       }
@@ -1872,7 +1872,7 @@ public void f5() {
       
       if (shift && active_index >= 0 && active_index < GPOS_REG.length) {
         // Save the Robot's current joint angles
-        GPOS_REG[active_index].point = frameRobotPosition(armModel.getJointAngles());
+        GPOS_REG[active_index].point = nativeRobotEEPoint(armModel.getJointAngles());
         GPOS_REG[active_index].isCartesian = (mode == Screen.NAV_PREGS_C);
         saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       }
@@ -2981,7 +2981,7 @@ public float activateLiveJointMotion(int joint, int dir) {
  */
 public float activateLiveWorldMotion(int axis, int dir) {
   // Initiaize the Robot's destination
-  Point RP = nativeRobotEEPosition(armModel.getJointAngles());
+  Point RP = nativeRobotEEPoint(armModel.getJointAngles());
   armModel.tgtPosition = RP.position;
   armModel.tgtOrientation = RP.orientation;
   
@@ -4118,7 +4118,7 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
       if(instr instanceof MotionInstruction) {
         MotionInstruction a = (MotionInstruction)instr;
         
-        Point ee_point = nativeRobotEEPosition(armModel.getJointAngles());
+        Point ee_point = nativeRobotEEPoint(armModel.getJointAngles());
         if(ee_point.position.dist(a.getVector(p).position) < (liveSpeed / 100f)) {
           m.add("@");
         }
@@ -4351,7 +4351,7 @@ public void newMotionInstruction() {
   Program prog = programs.get(active_prog);
   int reg = prog.getNextPosition();
   
-  prog.addPosition(nativeRobotPosition(armModel.getJointAngles()), reg);
+  prog.addPosition(nativeRobotPoint(armModel.getJointAngles()), reg);
   
   MotionInstruction insert = new MotionInstruction(
   (curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
@@ -4815,7 +4815,7 @@ public void createRegisterPoint(boolean fromJointAngles) {
       inputs[idx] = mod2PI(inputs[idx] * DEG_TO_RAD);
     }
     
-    GPOS_REG[active_index].point = nativeRobotEEPosition(inputs);
+    GPOS_REG[active_index].point = nativeRobotEEPoint(inputs);
   } else {
     PVector position = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
     // Convert the angles from degrees to radians, then convert from World to Native frame, and finally convert to a quaternion
