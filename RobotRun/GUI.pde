@@ -2073,6 +2073,8 @@ public void ENTER() {
           
           // Remove prefix
           inputs[val] = Float.parseFloat(str);
+          // Bring within range of values
+          inputs[val] = max(-9999f, min(inputs[val], 9999f));
         }
         
         createFrameDirectEntry(teachFrame, inputs);
@@ -4642,14 +4644,11 @@ public void createFrameDirectEntry(Frame taughtFrame, float[] inputs) {
   if (taughtFrame instanceof UserFrame) {
     origin = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
   } else {
+    // Tool frame origins are actually an offset of the Robot's EE position
     origin = new PVector(inputs[0], inputs[1], inputs[2]);
   }
-  
-  origin.x = max(-9999f, min(origin.x, 9999f));
-  origin.y = max(-9999f, min(origin.y, 9999f));
-  origin.z = max(-9999f, min(origin.z, 9999f));
-  
-  wpr = new PVector(-inputs[3], -inputs[5], inputs[4]).mult(DEG_TO_RAD);
+  // Convert the angles from degrees to radians, then convert from World to Native frame
+  wpr = convertWorldToNative( (new PVector(inputs[3], inputs[4], inputs[5])).mult(DEG_TO_RAD) );
   
   // Save direct entry values
   taughtFrame.DEOrigin = origin;
@@ -4770,7 +4769,7 @@ public ArrayList<ArrayList<String>> loadPosRegEntry(PositionRegister reg) {
       entries = reg.point.toJointStringArray();
     } else {
       // Display Cartesian values
-      entries = reg.point.toCartesianStringArray(new PVector(0f, 0f, 0f), new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} });
+      entries = reg.point.toCartesianStringArray();
     }
     
     for(int idx = 0; idx < entries.length; ++idx) {
@@ -4801,6 +4800,8 @@ public void createRegisterPoint(boolean fromJointAngles) {
     for(int idx = 0; idx < inputs.length; ++idx) {
       String inputStr = contents.get(idx).get(col_select);
       inputs[idx] = Float.parseFloat(inputStr);
+      // Bring the input values with the range [-9999, 9999]
+      inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
     }
   } catch (NumberFormatException NFEx) {
     // Invalid input
@@ -4816,22 +4817,12 @@ public void createRegisterPoint(boolean fromJointAngles) {
     
     GPOS_REG[active_index].point = nativeRobotEEPosition(inputs);
   } else {
-    PVector position = new PVector();
-    float[] orientation = new float[] { 1f, 0f, 0f, 0f };
-  
-    // Bring the input values with the range [-9999, 9999]
-    for(int idx = 0; idx < inputs.length; ++idx) {
-      inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
-    }
+    PVector position = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
+    // Convert the angles from degrees to radians, then convert from World to Native frame, and finally convert to a quaternion
+    float[] orientation = eulerToQuat( convertWorldToNative( (new PVector(inputs[3], inputs[4], inputs[5]).mult(DEG_TO_RAD)) ) );
     
-    position = new PVector(inputs[0], inputs[1], inputs[2]);
-    orientation = eulerToQuat(new PVector(inputs[3] * DEG_TO_RAD, 
-                                          inputs[4] * DEG_TO_RAD, 
-                                          inputs[5] * DEG_TO_RAD));
-    // Use default Robot joint angles
-    Point limbo = new Point(position, orientation, new float[] {0f, 0f, 0f, 0f, 0f, 0f});
-    float[] jointAngles = inverseKinematics(limbo);
-    // Position
+    // Use default the Robot's joint angles for computing inverse kinematics
+    float[] jointAngles = inverseKinematics(new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
     GPOS_REG[active_index].point = new Point(position, orientation, jointAngles);
   }
   

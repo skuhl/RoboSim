@@ -454,19 +454,18 @@ public void displayAxes() {
       
       if (curCoordFrame == CoordFrame.TOOL) {
         /* Draw the axes of the active Tool frame at the Robot End Effector */
-        displayOriginAxes(activeTool.getNativeAxes(), ee_point.position, 200f, color(255, 0, 255));
+        displayOriginAxes(activeTool.getWorldAxes(), ee_point.position, 200f, color(255, 0, 255));
       } else {
         // Draw axes of the Robot's End Effector frame for testing purposes
-        
         displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
       }
       
       if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
         /* Draw the axes of the active User frame */
-        displayOriginAxes(activeUser.getNativeAxes(), activeUser.getOrigin(), 5000f, color(0));
+        displayOriginAxes(activeUser.getWorldAxes(), activeUser.getOrigin(), 5000f, color(0));
       } else {
         /* Draw the axes of the World frame */
-        displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f), 5000f, color(0));
+        displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f), 5000f, color(0));
       }
     }
   } else if (AXES_DISPLAY == 2) {
@@ -516,11 +515,6 @@ public void displayOriginAxes(float[][] axesVectors, PVector origin, float axesL
               axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
               axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
               0, 0, 0, 1);
-  
-  /*applyMatrix(WORLD_AXES[0][0], WORLD_AXES[1][0], WORLD_AXES[2][0], 0,
-                WORLD_AXES[0][1], WORLD_AXES[1][1], WORLD_AXES[2][1], 0,
-                WORLD_AXES[0][2], WORLD_AXES[1][2], WORLD_AXES[2][2], 0,
-                0, 0, 0, 1);*/
   
   // X axis
   stroke(255, 0, 0);

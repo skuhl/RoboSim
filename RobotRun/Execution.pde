@@ -309,24 +309,36 @@ public float[][] calculateJacobian(float[] angles, boolean posOffset) {
   return J;
 }
 
-public float[] inverseKinematics(Point tgt) {
+/**
+ * Attempts to calculate the joint angles that would place the Robot in the given target position and
+ * orientation. The srcAngles parameter defines the position of the Robot from which to move, since
+ * this inverse kinematics uses a relative conversion formula. There is no guarantee that the target
+ * position and orientation can be reached; in the case that inverse kinematics fails, then null is
+ * returned. Otherwise, a set of six angles will be returned, though there is no guarantee that these
+ * angles are valid!
+ * 
+ * @param srcAngles       The initial position of the Robot
+ * @param tgtPosition     The desired position of the Robot
+ * @param tgtOrientation  The desited orientation of the Robot
+ */
+public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, float[] tgtOrientation) {
   final int limit = 1000;  // Max number of times to loop
   int count = 0;
   
-  float[] angles = tgt.angles.clone();
+  float[] angles = srcAngles.clone();
   
   while(count < limit) {
     Point cPoint = nativeRobotEEPosition(angles);
     
-    if (quaternionDotProduct(tgt.orientation, cPoint.orientation) < 0f) {
+    if (quaternionDotProduct(tgtOrientation, cPoint.orientation) < 0f) {
       // Use -q instead of q
-      tgt.orientation = quaternionScalarMult(tgt.orientation, -1);
+      tgtOrientation = quaternionScalarMult(tgtOrientation, -1);
     }
     
     //calculate our translational offset from target
-    PVector tDelta = PVector.sub(tgt.position, cPoint.position);
+    PVector tDelta = PVector.sub(tgtPosition, cPoint.position);
     //calculate our rotational offset from target
-    float[] rDelta = calculateVectorDelta(tgt.orientation, cPoint.orientation, 4);
+    float[] rDelta = calculateVectorDelta(tgtOrientation, cPoint.orientation, 4);
     float[] delta = new float[7];
     
     delta[0] = tDelta.x;
@@ -337,7 +349,7 @@ public float[] inverseKinematics(Point tgt) {
     delta[5] = rDelta[2];
     delta[6] = rDelta[3];
     
-    float dist = PVector.dist(cPoint.position, tgt.position);
+    float dist = PVector.dist(cPoint.position, tgtPosition);
     float rDist = calculateQuatMag(rDelta);
     //check whether our current position is within tolerance
     if ( (dist < (liveSpeed / 100f)) && (rDist < (0.00005f * liveSpeed)) ) { break; }
@@ -365,7 +377,7 @@ public float[] inverseKinematics(Point tgt) {
       // IK failure
       if (DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles),
-                            matrixToString(J), arrayToString(cPoint.orientation), arrayToString(tgt.orientation));
+                            matrixToString(J), arrayToString(cPoint.orientation), arrayToString(tgtOrientation));
       }
       
       return null;
@@ -592,7 +604,7 @@ void beginNewContinuousMotion(Point start, Point end, Point next, float p) {
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
     Point tgtPoint = intermediatePositions.get(interMotionIdx);
-    armModel.moveTo(tgtPoint);
+    armModel.moveTo(tgtPoint.position, tgtPoint.orientation);
   }
 }
 
@@ -606,7 +618,7 @@ void beginNewLinearMotion(Point start, Point end) {
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
     Point tgtPoint = intermediatePositions.get(interMotionIdx);
-    armModel.moveTo(tgtPoint);
+    armModel.moveTo(tgtPoint.position, tgtPoint.orientation);
   }
 }
 
@@ -622,7 +634,7 @@ void beginNewCircularMotion(Point start, Point inter, Point end) {
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
     Point tgtPoint = intermediatePositions.get(interMotionIdx);
-    armModel.moveTo(tgtPoint);
+    armModel.moveTo(tgtPoint.position, tgtPoint.orientation);
   }
 }
 
@@ -647,7 +659,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
     int ret = EXEC_SUCCESS;
     if(intermediatePositions.size() > 0) {
       Point tgtPoint = intermediatePositions.get(interMotionIdx);
-      armModel.moveTo(tgtPoint);
+      armModel.moveTo(tgtPoint.position, tgtPoint.orientation);
     }
     
     if(ret == EXEC_FAILURE) {

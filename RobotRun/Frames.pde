@@ -148,21 +148,23 @@ public abstract class Frame {
     
     String[] values = new String[6];
     
-    PVector wOrigin = origin;
-    PVector wpr = quatToEuler(axes);
+    PVector displayOrigin;
+    // Convert angles to degrees and to the World Coordinate Frame
+    PVector wpr = convertWorldToNative(quatToEuler(axes)).mult(RAD_TO_DEG);
     
     if (this instanceof UserFrame) {
       // Convert to World frame reference
-      wOrigin = convertNativeToWorld(origin);
+      displayOrigin = convertNativeToWorld(origin);
+    } else {
+      displayOrigin = origin;
     }
     
-    values[0] = String.format("X: %4.3f", wOrigin.x);
-    values[1] = String.format("Y: %4.3f", wOrigin.y);
-    values[2] = String.format("Z: %4.3f", wOrigin.z);
-    // Convert angles to degrees and to the World Coordinate Frame
-    values[3] = String.format("W: %4.3f", -wpr.x * RAD_TO_DEG);
-    values[4] = String.format("P: %4.3f", wpr.z * RAD_TO_DEG);
-    values[5] = String.format("R: %4.3f", -wpr.y * RAD_TO_DEG);
+    values[0] = String.format("X: %4.3f", displayOrigin.x);
+    values[1] = String.format("Y: %4.3f", displayOrigin.y);
+    values[2] = String.format("Z: %4.3f", displayOrigin.z);
+    values[3] = String.format("W: %4.3f", wpr.x);
+    values[4] = String.format("P: %4.3f", wpr.y);
+    values[5] = String.format("R: %4.3f", wpr.z);
     
     return values;
   }
@@ -191,9 +193,7 @@ public abstract class Frame {
    */
   public String[][] directEntryStringArray() {
     String[][] entries = new String[6][2];
-    PVector xyz,
-            // Use previous value if it exists
-            wpr = quatToEuler(axes);
+    PVector xyz, wpr;
     
     if (DEOrigin == null) {
       xyz = new PVector(0f, 0f, 0f);
@@ -206,6 +206,13 @@ public abstract class Frame {
         xyz = DEOrigin;
       }
     }
+    
+    if (DEAxesOffsets == null) {
+      wpr = new PVector(0f, 0f, 0f);
+    } else {
+      // Display axes in World Frame Euler angles, in degrees
+      wpr = convertWorldToNative(quatToEuler(DEAxesOffsets)).mult(RAD_TO_DEG);
+    }
   
     entries[0][0] = "X: ";
     entries[0][1] = String.format("%4.3f", xyz.x);
@@ -213,13 +220,12 @@ public abstract class Frame {
     entries[1][1] = String.format("%4.3f", xyz.y);
     entries[2][0] = "Z: ";
     entries[2][1] = String.format("%4.3f", xyz.z);
-    // Convert angles to degrees and to the World Coordinate Frame
     entries[3][0] = "W: ";
-    entries[3][1] = String.format("%4.3f", -wpr.x * RAD_TO_DEG);
+    entries[3][1] = String.format("%4.3f", wpr.x);
     entries[4][0] = "P: ";
-    entries[4][1] = String.format("%4.3f", wpr.z * RAD_TO_DEG);
+    entries[4][1] = String.format("%4.3f", wpr.y);
     entries[5][0] = "R: ";
-    entries[5][1] = String.format("%4.3f", -wpr.y * RAD_TO_DEG);
+    entries[5][1] = String.format("%4.3f", wpr.z);
     
     return entries;
   }

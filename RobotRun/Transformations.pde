@@ -747,6 +747,26 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
 }
 
 /**
+ * Determines if the lies within the range of angles that span from rangeStart to rangeEnd,
+ * going clockwise around the Unit Cycle. It is assumed that all parameters are in radians
+ * and within the range [0, TWO_PI).
+ * 
+ * @param angleToVerify  the angle in question
+ * @param rangeStart     the 'lower bounds' of the angle range to check
+ * @param rangeEnd       the 'upper bounds' of the angle range to check
+ */
+public boolean angleWithinBounds(float angleToVerify, float rangeStart, float rangeEnd) {
+  
+  if(rangeStart < rangeEnd) {
+    // Joint range does not overlap TWO_PI
+    return angleToVerify >= rangeStart && angleToVerify < rangeEnd;
+  } else {
+    // Joint range overlaps TWO_PI
+    return !(angleToVerify >= rangeEnd && angleToVerify < rangeStart);
+  }
+}
+
+/**
  * Brings the given angle (in radians) within the range: [0, TWO_PI).
  * 
  * @param angle  Some rotation in radians

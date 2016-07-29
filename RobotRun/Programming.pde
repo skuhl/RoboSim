@@ -97,32 +97,30 @@ public class Point  {
 
   /**
    * Returns a string array, where each entry is one of the values of the Cartiesian
-   * represent of the Point: (X, Y, Z, W, P, and R) in the Frame represented by the
-   * given origin and axes values and their respective labels.
+   * represent of the Point: (X, Y, Z, W, P, and R) and their respective labels.
    * 
-   * @param   The origin of the display Frame
-   * @param   The axes of the display Frame
    * @return  A 6x2-element String array
    */
-  public String[][] toCartesianStringArray(PVector frameOrigin, float[][] frameAxes) {
+  public String[][] toCartesianStringArray() {
     String[][] entries = new String[6][2];
     
     PVector pos;
     if (position == null) {
+      // Uninitialized
       pos = new PVector(Float.NaN, Float.NaN, Float.NaN);
     } else {
       // Show the vector in terms of the given Frame's axes
-      float[][] tMatrix = transformationMatrix(frameOrigin, frameAxes);
-      pos = transform(position, tMatrix);
+      pos = convertNativeToWorld(position);
     }
     
     // Convert Quaternion to Euler Angles
     PVector angles;
     if (orientation == null) {
+      // Uninitializes
       angles = new PVector(Float.NaN, Float.NaN, Float.NaN);
     } else {
-      // TODO convert to given frame
-      angles = quatToEuler(orientation);
+       // Show angles in degrees
+      angles = convertNativeToWorld( quatToEuler(orientation) ).mult(RAD_TO_DEG);
     }
     
     entries[0][0] = "X: ";
@@ -131,13 +129,12 @@ public class Point  {
     entries[1][1] = String.format("%4.3f", pos.y);
     entries[2][0] = "Z: ";
     entries[2][1] = String.format("%4.3f", pos.z);
-    // Show angles in degrees
     entries[3][0] = "W: ";
-    entries[3][1] = String.format("%4.3f", angles.x * RAD_TO_DEG);
+    entries[3][1] = String.format("%4.3f", angles.x);
     entries[4][0] = "P: ";
-    entries[4][1] = String.format("%4.3f", angles.y * RAD_TO_DEG);
+    entries[4][1] = String.format("%4.3f", angles.y);
     entries[5][0] = "R: ";
-    entries[5][1] = String.format("%4.3f", angles.z * RAD_TO_DEG);
+    entries[5][1] = String.format("%4.3f", angles.z );
     
     return entries;
   }
