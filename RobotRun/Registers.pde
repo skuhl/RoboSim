@@ -274,6 +274,10 @@ public class AtomicExpression extends ExprOperand {
   
   public String toString(){
     String s = "";
+    if(op == Operator.UNINIT){
+      return "(...)";
+    }
+    
     if(arg1 == null){
       s += "...";
     } else {
@@ -294,6 +298,10 @@ public class AtomicExpression extends ExprOperand {
   public String[] toStringArray(){
     String[] s1, s2, ret;
     String opString = "";
+    
+    if(op == Operator.UNINIT){
+      return new String[]{"(...)"};
+    }
     
     if(arg1 == null){
       s1 = new String[] {"..."};
@@ -354,8 +362,10 @@ public class ExprOperand {
   public ExprOperand(DataRegister dReg, int i) {
     type = 2;
     regIndex = i;
-    dataVal = dReg.value;
-    boolVal = getBoolVal(dataVal);
+    if(i != -1) {
+      dataVal = dReg.value;
+      boolVal = getBoolVal(dataVal);
+    }
   }
   
   public ExprOperand(IORegister ioReg, int i) {
@@ -406,10 +416,12 @@ public class ExprOperand {
         s += boolVal ? "TRUE" : "FALSE";
         break;
       case 2:
-        s += "DR[" + regIndex + "]";
+        String rNum = (regIndex == -1) ? "..." : ""+regIndex;
+        s += "DR[" + rNum + "]";
         break;
       case 3:
-        s += "IO[" + regIndex + "]";
+        rNum = (regIndex == -1) ? "..." : ""+regIndex;
+        s += "IO[" + rNum + "]";
         break;
     }
     
