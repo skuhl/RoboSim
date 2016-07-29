@@ -796,6 +796,7 @@ public class ArmModel {
    *              given position
    */
   public int moveTo(Point dest) {
+    dest.angles = getJointAngles();
     // calculate the joint angles for the desired position and orientation
     float[] destAngles = inverseKinematics(dest);
     

@@ -315,18 +315,6 @@ public float[] inverseKinematics(Point tgt) {
   
   float[] angles = tgt.angles.clone();
   
-<<<<<<< HEAD
-=======
-  //translate target rotation to world ref frame
-  RealMatrix M = new Array2DRowRealMatrix(floatToDouble(nFrame, 3, 3));
-  RealMatrix O = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
-  RealMatrix MO = M.multiply(MatrixUtils.inverse(O));
-  //translate target rotation to EE ref frame
-  RealMatrix R = new Array2DRowRealMatrix(floatToDouble(rMatrix, 3, 3));
-  RealMatrix OR = R.multiply(MatrixUtils.inverse(MO));
-  rot = matrixToQuat(doubleToFloat(OR.getData(), 3, 3));
-  //println();
->>>>>>> dev
   while(count < limit) {
     Point cPoint = nativeRobotEEPosition(angles);
     
@@ -338,12 +326,7 @@ public float[] inverseKinematics(Point tgt) {
     //calculate our translational offset from target
     PVector tDelta = PVector.sub(tgt.position, cPoint.position);
     //calculate our rotational offset from target
-<<<<<<< HEAD
     float[] rDelta = calculateVectorDelta(tgt.orientation, cPoint.orientation, 4);
-=======
-    float[] rDelta = calculateVectorDelta(rot, cRotQ, 4);
-    System.out.printf("%d: %s -> %s\n", count, arrayToString(cRotQ), arrayToString(rot));
->>>>>>> dev
     float[] delta = new float[7];
     
     delta[0] = tDelta.x;
