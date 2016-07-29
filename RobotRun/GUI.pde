@@ -1914,6 +1914,9 @@ public void hd() {
 
 public void fd() {  
   if(!programRunning && shift) {
+    // Stop any prior Robot movement
+    armModel.halt();
+    
     currentProgram = programs.get(active_prog);
     executingInstruction = false;
     programRunning = true;

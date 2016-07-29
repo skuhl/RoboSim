@@ -227,7 +227,9 @@ public class ArmModel {
     translate(-50, -166, -358); // -115, -213, -413
     rotateZ(PI);
     translate(150, 0, 150);
+    rotateX(PI);
     rotateY(segments.get(0).currentRotations[1]);
+    rotateX(-PI);
     translate(-150, 0, -150);
     segments.get(1).draw();
     rotateZ(-PI);
@@ -250,7 +252,9 @@ public class ArmModel {
     rotateZ(PI);
     rotateY(PI/2);
     translate(0, 75, 75);
+    rotateZ(PI);
     rotateX(segments.get(2).currentRotations[2]);
+    rotateZ(-PI);
     translate(0, -75, -75);
     segments.get(3).draw();
     rotateY(PI/2);
@@ -339,7 +343,9 @@ public class ArmModel {
     translate(-50, -166, -358);
     rotateZ(PI);
     translate(150, 0, 150);
+    rotateX(PI);
     rotateY(segments.get(0).currentRotations[1]);
+    rotateX(-PI);
     translate(10, 95, 0);
     rotateZ(-0.1f * PI);
     // Segment 1
@@ -366,7 +372,9 @@ public class ArmModel {
     rotateZ(PI);
     rotateY(PI/2);
     translate(0, 75, 75);
+    rotateZ(PI);
     rotateX(segments.get(2).currentRotations[2]);
+    rotateZ(-PI);
     translate(75, 0, 0);
     // Segment 3
     bodyHitBoxes[4].setTransform(getTransformationMatrix());

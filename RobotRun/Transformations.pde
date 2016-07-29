@@ -10,7 +10,9 @@ public void applyModelRotation(float[] jointAngles) {
   translate(-50, -166, -358); // -115, -213, -413
   rotateZ(PI);
   translate(150, 0, 150);
+  rotateX(PI);
   rotateY(jointAngles[0]);
+  rotateX(-PI);
   translate(-150, 0, -150);
   rotateZ(-PI);    
   translate(-115, -85, 180);
@@ -25,7 +27,9 @@ public void applyModelRotation(float[] jointAngles) {
   rotateZ(PI);
   rotateY(PI/2);
   translate(0, 75, 75);
+  rotateZ(PI);
   rotateX(jointAngles[2]);
+  rotateZ(-PI);
   translate(0, -75, -75);
   rotateY(PI/2);
   rotateZ(-PI);
