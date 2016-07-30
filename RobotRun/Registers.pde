@@ -196,18 +196,53 @@ public class ExpressionEvaluationException extends RuntimeException {
 }
 
 public class AtomicExpression extends ExprOperand {
-  ExprOperand arg1;
-  ExprOperand arg2;
-  Operator op;
-  
+  private ExprOperand arg1;
+  private ExprOperand arg2;
+  private Operator op;
+    
   public AtomicExpression(){
+    super();
     op = Operator.UNINIT;
+    len = 1;
   }
   
   public AtomicExpression(Operator o){
+    super();
     ExprOperand arg1 = new ExprOperand();
     ExprOperand arg2 = new ExprOperand();
     op = o;
+    len = 3;
+  }
+  
+  public ExprOperand getArg1() { return arg1; }
+  public void setArg1(ExprOperand a) { 
+    arg1 = a;
+    calculateLength();
+  }
+  
+  public ExprOperand getArg2() { return arg1; }
+  public void setArg2(ExprOperand a) { 
+    arg1 = a;
+    len = calculateLength();
+  }
+  
+  public Operator getOp() { return op; }
+  public void setOp(Operator o) {
+    op = o;
+    len = calculateLength();
+  }
+  
+  private int calculateLength() {
+    if(op == Operator.UNINIT) {
+      return 1;    
+    }
+    
+    int ret = 1;
+    ret += arg1.len;
+    ret += arg2.len;
+    ret += (arg1.type == -1) ? 2 : 0;
+    ret += (arg2.type == -1) ? 2 : 0;
+    return ret;
   }
   
   public ExprOperand evaluate() {
@@ -276,6 +311,7 @@ public class AtomicExpression extends ExprOperand {
   
   public String toString(){
     String s = "";
+    
     if(op == Operator.UNINIT){
       return "...";
     }
@@ -333,26 +369,26 @@ public class ExprOperand {
   //      4 = position reg operand, -1 = sub-expression
   //      -2 = uninit
   final int type;
-  int opWidth;
+  protected int len;
+  
   int regIndex;
   float dataVal;
   boolean boolVal;
   
   public ExprOperand() {
-    if(this instanceof AtomicExpression){
+    if(this instanceof AtomicExpression) {
       type = -1;
-      opWidth = 3;
       regIndex = -1;
     } else {
       type = -2;
-      opWidth = 1;
+      len = 1;
       regIndex = -1;
     }
   }
   
   public ExprOperand(float d) {
     type = 0;
-    opWidth = 1;
+    len = 1;
     regIndex = -1;
     dataVal = d;
     boolVal = getBoolVal(dataVal);
@@ -360,7 +396,7 @@ public class ExprOperand {
   
   public ExprOperand(boolean b) {
     type = 1;
-    opWidth = 1;
+    len = 1;
     regIndex = -1;
     dataVal = b ? 1 : 0;
     boolVal = b;
@@ -368,7 +404,7 @@ public class ExprOperand {
   
   public ExprOperand(DataRegister dReg, int i) {
     type = 2;
-    opWidth = 2;
+    len = 2;
     regIndex = i;
     if(i != -1 && dReg.value != null) {
       dataVal = dReg.value;
@@ -378,7 +414,7 @@ public class ExprOperand {
   
   public ExprOperand(IORegister ioReg, int i) {
     type = 3;
-    opWidth = 2;
+    len = 2;
     regIndex = i;
     if(ioReg.state == ON) {
       dataVal = 1;
@@ -391,7 +427,7 @@ public class ExprOperand {
   
   public ExprOperand(PositionRegister pReg, int i){
     type = 4;
-    opWidth = 2;
+    len = 2;
     regIndex = i;
     
   }

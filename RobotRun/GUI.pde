@@ -4223,43 +4223,47 @@ public void getInstrEdit(Instruction ins) {
   }
   else if(ins instanceof IfStatement){
     IfStatement stmt = (IfStatement)ins;
-    editExpression(stmt.expr, 2);
+    
+    if(col_select < stmt.expr.len + 2) {
+      editExpression(stmt.expr, 2);
+    } else if(col_select == stmt.expr.len + 2) {
+      nextScreen(Screen.SET_BOOL_EXPR_ACT);
+    } else if(col_select == stmt.expr.len + 3) {
+      nextScreen(Screen.SET_JUMP_TGT);
+    }
   }
 }
 
-public boolean editExpression(AtomicExpression expr, int col_offset) {
-  int a1_len = expr.arg1.opWidth;
-  int a2_len = expr.arg2.opWidth;
+public void editExpression(AtomicExpression expr, int col_offset) {
+  int a1_len = expr.arg1.len;
+  int a2_len = expr.arg2.len;
   int edit_idx = opt_select - col_offset;
   
-  switch(expr.arg1.type) {
-    case -2:
-      switch(edit_idx) {
-        case 0:
-          nextScreen(Screen.SET_BOOL_EXPR_ARG1);
-          break;
-        case 1:
-          nextScreen(Screen.SET_BOOL_EXPR_OP);
-          break;
-        case 2:
-          nextScreen(Screen.SET_BOOL_EXPR_ARG2);
-          break;
-      }
-      break;
-    case -1:
-      editExpression((AtomicExpression)expr.arg1, col_offset);
-      break;
-    case 0:
-      switch(edit_idx) {
-        case 0:
-          nextScreen(Screen.INPUT_CONST);
-          break;
-        case 1:
-          break;
-      }
+  if(expr.getOp() == Operator.UNINIT) {
+    nextScreen(Screen.SET_REG_EXPR_OP);
+  } else {
+    //todo: handle subexpressions
+    if(edit_idx < expr.arg1.len) {
+      //edit arg1
+      editOperand(expr.arg1, edit_idx);
+    } else if(edit_idx == expr.arg1.len) {
+      //edit op
+      nextScreen(Screen.SET_BOOL_EXPR_OP);
+    } else {
+      //edit arg2
+      editOperand(expr.arg2, edit_idx - expr.arg1.len - 1);
+    }
   }
-  
-  return true;
+}
+
+public void editOperand(ExprOperand o, int edit_idx) {
+  switch(o.type) {
+    case -2: //Uninit
+    case 0: //Float const
+    case 1: //Bool const
+    case 2: //Data reg
+    case 3: //IO reg
+  }
 }
 
 public ArrayList<String> loadInstructEdit(Screen mode) {
