@@ -72,7 +72,7 @@ public int loadState() {
     toolFrames = new Frame[10];
     userFrames = new Frame[10];
     
-    for(int n = 0; n < toolFrames.length; ++n) {
+    for(int n = 0; n < toolFrames.length; n += 1) {
       toolFrames[n] = new ToolFrame();
       userFrames[n] = new UserFrame();
     }
@@ -104,13 +104,13 @@ public int loadState() {
   }
   
   // Initialize uninitialized registers and position registers to with null fields
-  for(int reg = 0; reg < DAT_REG.length; ++reg) {
+  for(int reg = 0; reg < DAT_REG.length; reg += 1) {
     
     if(DAT_REG[reg] == null) {
       DAT_REG[reg] = new DataRegister();
     }
     
-    if(GPOS_REG[reg] == null) {  
+    if(GPOS_REG[reg] == null) {
       GPOS_REG[reg] = new PositionRegister();
     }
   }

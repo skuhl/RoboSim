@@ -3,8 +3,8 @@ final int SMALL_BUTTON = 35,
 final int BUTTON_DEFAULT = color(70),
           BUTTON_ACTIVE = color(220, 40, 40),
           BUTTON_TEXT = color(240),
-          TEXT_DEFAULT = color(240),
-          TEXT_HIGHLIGHT = color(40);
+          UI_LIGHT = color(240),
+          UI_DARK = color(40);
 
 //String displayFrame = "JOINT";
 int active_prog = -1; // the currently selected program
@@ -112,7 +112,7 @@ void gui() {
   cp5.addTextarea("txt")
   .setPosition(display_px,display_py)
   .setSize(display_width, display_height)
-  .setColorBackground(TEXT_DEFAULT)
+  .setColorBackground(UI_LIGHT)
   .moveTo(g1);
   
   //create font and text display background
@@ -1199,6 +1199,10 @@ public void up() {
     case SET_MV_INSTRUCT_TYPE:
     case SET_MV_INSTRUCT_REG_TYPE:
     case SET_FRM_INSTR_TYPE:
+    case SET_BOOL_EXPR_ACT:
+    case SET_BOOL_EXPR_ARG1:
+    case SET_BOOL_EXPR_ARG2:
+    case SET_BOOL_EXPR_OP:
     case SET_IO_INSTR_STATE:
     case SETUP_NAV:
       opt_select = max(0, opt_select - 1);
@@ -1315,6 +1319,10 @@ public void dn() {
     case SET_MV_INSTRUCT_TYPE:
     case SET_MV_INSTRUCT_REG_TYPE:
     case SET_FRM_INSTR_TYPE:
+    case SET_BOOL_EXPR_ACT:
+    case SET_BOOL_EXPR_ARG1:
+    case SET_BOOL_EXPR_ARG2:
+    case SET_BOOL_EXPR_OP:
     case SET_IO_INSTR_STATE:
     case SETUP_NAV:
       opt_select = min(opt_select + 1, options.size() - 1);
@@ -1615,71 +1623,10 @@ public void f4() {
   case NAV_PROG_INST:
     p = programs.get(active_prog);
     if(p.instructions.size() == 0) break;
-    Instruction ins = p.getInstructions().get(active_instr);
+    Instruction ins = p.getInstruction(active_instr);
     opt_select = 0;
     workingText = "";
-    
-    if(ins instanceof MotionInstruction) {
-      switch(col_select) {
-        case 2: // motion type
-          nextScreen(Screen.SET_MV_INSTRUCT_TYPE);
-          break;
-        case 3: // register type
-          nextScreen(Screen.SET_MV_INSTRUCT_REG_TYPE);
-          break;
-        case 4: // register
-          nextScreen(Screen.SET_MV_INSTR_IDX);
-          break;
-        case 5: // speed
-          nextScreen(Screen.SET_MV_INSTR_SPD);
-          break;
-        case 6: // termination type
-          nextScreen(Screen.SET_MV_INSTR_TERM);
-          break;
-      }
-    }
-    else if(ins instanceof FrameInstruction) {
-      switch(col_select) {
-        case 1:
-          nextScreen(Screen.SET_FRM_INSTR_TYPE);
-          break;
-        case 2:
-          nextScreen(Screen.SET_FRAME_INSTR_IDX);
-          break;
-      }
-    }
-    else if(ins instanceof IOInstruction) {
-       switch(col_select) {
-        case 1:
-          nextScreen(Screen.SET_IO_INSTR_IDX);
-          break;
-        case 2:
-          nextScreen(Screen.SET_IO_INSTR_STATE);
-          break;
-      }
-    }
-    else if(ins instanceof LabelInstruction){
-      nextScreen(Screen.SET_LBL_NUM);
-    }
-    else if(ins instanceof JumpInstruction){
-      nextScreen(Screen.SET_JUMP_TGT);
-    }
-    else if(ins instanceof IfStatement){
-      switch(col_select) {
-        case 2:
-          nextScreen(Screen.SET_BOOL_EXPR_ARG1);
-          break;
-        case 3:
-          nextScreen(Screen.SET_BOOL_EXPR_OP);
-          break;
-        case 4:
-          nextScreen(Screen.SET_BOOL_EXPR_ARG2);
-          break;
-        case 5:
-          nextScreen(Screen.SET_BOOL_EXPR_ACT);
-          break;
-      }
-    }
+    getInstrEdit(ins);
     break;
   case CONFIRM_INSERT:
     try {
@@ -2193,7 +2140,7 @@ public void ENTER() {
       break;
     case SELECT_COND_STMT:
       if(col_select == 0){
-        switch(opt_select){
+        switch(row_select){
           case 0:
             newIfStmt(Operator.EQUAL);
             break;
@@ -2214,7 +2161,7 @@ public void ENTER() {
             break;
         }
       } else if(col_select == 1) {
-        switch(opt_select){
+        switch(row_select){
           case 0:
             newSelStmt(Operator.EQUAL);
             break;
@@ -2294,6 +2241,9 @@ public void ENTER() {
           stmt.expr.op = Operator.LSEQ;
           break;
       }
+      
+      lastScreen();
+      break;
     case SET_BOOL_EXPR_ACT:
       break;
     case INPUT_DREG_IDX:
@@ -3123,6 +3073,10 @@ public void loadScreen(){
     case SET_BOOL_EXPR_OP:
       opt_select = 0;
       break;
+    case INPUT_DREG_IDX:
+    case INPUT_IOREG_IDX:
+      workingText = "";
+      break;
     case SET_IO_INSTR_IDX:
     case SET_JUMP_TGT:
     case SET_LBL_NUM:
@@ -3260,7 +3214,7 @@ public void loadScreen(){
 public void updateScreen() {
   int next_px = display_px; //<>//
   int next_py = display_py;
-  int c1, c2;
+  int txt, bg;
   
   clearScreen();
   
@@ -3268,7 +3222,7 @@ public void updateScreen() {
   cp5.addTextarea("txt")
   .setPosition(display_px,display_py)
   .setSize(display_width, display_height)
-  .setColorBackground(TEXT_DEFAULT)
+  .setColorBackground(UI_LIGHT)
   .moveTo(g1);
   
   String header = null;
@@ -3282,8 +3236,8 @@ public void updateScreen() {
     .setFont(fnt_con14)
     .setPosition(next_px, next_py)
     .setSize(display_width, 20)
-    .setColorValue(TEXT_DEFAULT)
-    .setColorBackground(TEXT_HIGHLIGHT)
+    .setColorValue(UI_LIGHT)
+    .setColorBackground(UI_DARK)
     .hideScrollbar()
     .show()
     .moveTo(g1);
@@ -3304,15 +3258,15 @@ public void updateScreen() {
   for(int i = 0; i < contents.size(); i += 1) {
     ArrayList<String> temp = contents.get(i);
         
-    if(i == row_select) { c1 = TEXT_HIGHLIGHT; }
-    else                { c1 = TEXT_DEFAULT;   }
+    if(i == row_select) { bg = UI_DARK; }
+    else                { bg = UI_LIGHT;}
     
     //leading row select indicator []
     cp5.addTextarea(Integer.toString(index_contents))
     .setText("")
     .setPosition(next_px, next_py)
     .setSize(10, 20)
-    .setColorBackground(c1)
+    .setColorBackground(bg)
     .hideScrollbar()
     .moveTo(g1);
     
@@ -3321,33 +3275,33 @@ public void updateScreen() {
      
     for(int j = 0; j < temp.size(); j += 1) {
       if(i == row_select) {
-        if(j != col_select && !selectMode){
-          //highlight selected row
-          c1 = TEXT_DEFAULT;
-          c2 = TEXT_HIGHLIGHT;          
+        if(j == col_select && !selectMode){
+          //highlight selected row + column
+          txt = UI_LIGHT;
+          bg = UI_DARK;          
         } 
         else if(selectMode && !selectedLines[start_render + i]){
-          c1 = TEXT_DEFAULT;
-          c2 = TEXT_HIGHLIGHT;
+          //highlight selected line
+          txt = UI_LIGHT;
+          bg = UI_DARK;
         }
         else {
-          //contrast selected column from selected row
-          c1 = TEXT_HIGHLIGHT;
-          c2 = TEXT_DEFAULT;
+          txt = UI_DARK;
+          bg = UI_LIGHT;
         }
       } else if(selectMode && selectedLines[start_render + i]) {
         //highlight any currently selected lines
-        c1 = TEXT_DEFAULT;
-        c2 = TEXT_HIGHLIGHT;
+        txt = UI_LIGHT;
+        bg = UI_DARK;
       } else {
         //display normal row
-        c1 = TEXT_HIGHLIGHT;
-        c2 = TEXT_DEFAULT;
+        txt = UI_DARK;
+        bg = UI_LIGHT;
       }
       
       //grey text for comme also this
       if(temp.size() > 0 && temp.get(0).contains("//")){
-        c1 = color(127);
+        txt = color(127);
       }
       
       cp5.addTextarea(Integer.toString(index_contents))
@@ -3355,8 +3309,8 @@ public void updateScreen() {
       .setFont(fnt_con14)
       .setPosition(next_px, next_py)
       .setSize(temp.get(j).length()*8 + 20, 20)
-      .setColorValue(c1)
-      .setColorBackground(c2)
+      .setColorValue(txt)
+      .setColorBackground(bg)
       .hideScrollbar()
       .moveTo(g1);
       
@@ -3364,15 +3318,15 @@ public void updateScreen() {
       next_px += temp.get(j).length() * 8 + 18; 
     }
     
-    if(i == row_select) { c1 = TEXT_HIGHLIGHT; }
-    else                { c1 = TEXT_DEFAULT;   }
+    if(i == row_select) { txt = UI_DARK; }
+    else                { txt = UI_LIGHT;   }
     
     //Trailing row select indicator []
     cp5.addTextarea(Integer.toString(index_contents))
     .setText("")
     .setPosition(next_px, next_py)
     .setSize(10, 20)
-    .setColorBackground(c1)
+    .setColorBackground(txt)
     .hideScrollbar()
     .moveTo(g1);
     
@@ -3388,12 +3342,12 @@ public void updateScreen() {
   index_options = 100;
   for(int i = 0; i < options.size(); i += 1) {   
     if(i == opt_select) {
-      c1 = TEXT_DEFAULT;
-      c2 = TEXT_HIGHLIGHT;
+      txt = UI_LIGHT;
+      bg = UI_DARK;
     }
     else{
-      c1 = TEXT_HIGHLIGHT;
-      c2 = TEXT_DEFAULT;
+      txt = UI_DARK;
+      bg = UI_LIGHT;
     }
     
     cp5.addTextarea(Integer.toString(index_options))
@@ -3401,8 +3355,8 @@ public void updateScreen() {
     .setFont(fnt_con14)
     .setPosition(next_px, next_py)
     .setSize(options.get(i).length()*8 + 40, 20)
-    .setColorValue(c1)
-    .setColorBackground(c2)
+    .setColorValue(txt)
+    .setColorBackground(bg)
     .hideScrollbar()
     .moveTo(g1);
     
@@ -3421,7 +3375,7 @@ public void updateScreen() {
       .setFont(fnt_con14)
       .setPosition(next_px, next_py)
       .setSize(40, 20)
-      .setColorValue(TEXT_DEFAULT)
+      .setColorValue(UI_LIGHT)
       .setColorBackground(color(255, 0, 0))
       .hideScrollbar()
       .moveTo(g1);
@@ -3432,7 +3386,7 @@ public void updateScreen() {
       .setFont(fnt_con14)
       .setPosition(next_px, next_py)
       .setSize(40, 20)
-      .setColorValue(TEXT_DEFAULT)
+      .setColorValue(UI_LIGHT)
       .setColorBackground(color(255, 0, 0))
       .hideScrollbar()
       .moveTo(g1);
@@ -3453,8 +3407,8 @@ public void updateScreen() {
     .setFont(fnt_con12)
     .setPosition(display_width*i/5 + 15 , display_height)
     .setSize(display_width/5 - 5, 20)
-    .setColorValue(TEXT_HIGHLIGHT)
-    .setColorBackground(TEXT_DEFAULT)
+    .setColorValue(UI_DARK)
+    .setColorBackground(UI_LIGHT)
     .hideScrollbar()
     .moveTo(g1);
   }
@@ -3767,10 +3721,13 @@ public ArrayList<String> getOptions(Screen mode){
     case SET_IO_INSTR_IDX:
     case SET_FRM_INSTR_TYPE:
     case SET_FRAME_INSTR_IDX:
+    case SET_BOOL_EXPR_ACT:
     case SET_BOOL_EXPR_ARG1:
     case SET_BOOL_EXPR_ARG2:
+    case INPUT_DREG_IDX:
+    case INPUT_IOREG_IDX:
+    case INPUT_CONST:
     case SET_BOOL_EXPR_OP:
-    case SET_BOOL_EXPR_ACT:
     case SET_LBL_NUM:
     case SET_JUMP_TGT:
       options = loadInstructEdit(mode);
@@ -4188,7 +4145,7 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
         IfStatement stmt = (IfStatement)instr;
         String[] s = stmt.expr.toStringArray();
         
-        m.add("IF ");
+        m.add("IF");
         for(int j = 0; j < s.length; j += 1) {
           m.add(s[j]); 
         }
@@ -4216,6 +4173,93 @@ public void updateInstructions() {
   start_render = active_instr - row_select;
   
   lastScreen();
+}
+
+public void getInstrEdit(Instruction ins) {
+  if(ins instanceof MotionInstruction) {
+    switch(col_select) {
+      case 2: // motion type
+        nextScreen(Screen.SET_MV_INSTRUCT_TYPE);
+        break;
+      case 3: // register type
+        nextScreen(Screen.SET_MV_INSTRUCT_REG_TYPE);
+        break;
+      case 4: // register
+        nextScreen(Screen.SET_MV_INSTR_IDX);
+        break;
+      case 5: // speed
+        nextScreen(Screen.SET_MV_INSTR_SPD);
+        break;
+      case 6: // termination type
+        nextScreen(Screen.SET_MV_INSTR_TERM);
+        break;
+    }
+  }
+  else if(ins instanceof FrameInstruction) {
+    switch(col_select) {
+      case 1:
+        nextScreen(Screen.SET_FRM_INSTR_TYPE);
+        break;
+      case 2:
+        nextScreen(Screen.SET_FRAME_INSTR_IDX);
+        break;
+    }
+  }
+  else if(ins instanceof IOInstruction) {
+     switch(col_select) {
+      case 1:
+        nextScreen(Screen.SET_IO_INSTR_IDX);
+        break;
+      case 2:
+        nextScreen(Screen.SET_IO_INSTR_STATE);
+        break;
+    }
+  }
+  else if(ins instanceof LabelInstruction){
+    nextScreen(Screen.SET_LBL_NUM);
+  }
+  else if(ins instanceof JumpInstruction){
+    nextScreen(Screen.SET_JUMP_TGT);
+  }
+  else if(ins instanceof IfStatement){
+    IfStatement stmt = (IfStatement)ins;
+    editExpression(stmt.expr, 2);
+  }
+}
+
+public boolean editExpression(AtomicExpression expr, int col_offset) {
+  int a1_len = expr.arg1.opWidth;
+  int a2_len = expr.arg2.opWidth;
+  int edit_idx = opt_select - col_offset;
+  
+  switch(expr.arg1.type) {
+    case -2:
+      switch(edit_idx) {
+        case 0:
+          nextScreen(Screen.SET_BOOL_EXPR_ARG1);
+          break;
+        case 1:
+          nextScreen(Screen.SET_BOOL_EXPR_OP);
+          break;
+        case 2:
+          nextScreen(Screen.SET_BOOL_EXPR_ARG2);
+          break;
+      }
+      break;
+    case -1:
+      editExpression((AtomicExpression)expr.arg1, col_offset);
+      break;
+    case 0:
+      switch(edit_idx) {
+        case 0:
+          nextScreen(Screen.INPUT_CONST);
+          break;
+        case 1:
+          break;
+      }
+  }
+  
+  return true;
 }
 
 public ArrayList<String> loadInstructEdit(Screen mode) {
@@ -4283,6 +4327,15 @@ public ArrayList<String> loadInstructEdit(Screen mode) {
       edit.add("IO[...]");
       edit.add("(...)");
       edit.add("Const");
+      break;
+    case INPUT_DREG_IDX:
+    case INPUT_IOREG_IDX:
+      edit.add("Input register index:");
+      edit.add("\0" + workingText);
+      break;
+    case INPUT_CONST:
+      edit.add("Input constant value:");
+      edit.add("\0" + workingText);
       break;
     case SET_BOOL_EXPR_ACT:
       edit.add("JMP LBL[...]");

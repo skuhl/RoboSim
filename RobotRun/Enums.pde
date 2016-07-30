@@ -128,6 +128,7 @@ public static enum Screen implements DisplayMode {
   INPUT_ARG_CONST(ScreenType.TYPE_NUM_ENTRY),
   INPUT_DREG_IDX(ScreenType.TYPE_NUM_ENTRY),
   INPUT_IOREG_IDX(ScreenType.TYPE_NUM_ENTRY),
+  INPUT_CONST(ScreenType.TYPE_NUM_ENTRY),
   JUMP_TO_LINE(ScreenType.TYPE_NUM_ENTRY),
   SET_FRAME_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_IO_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),

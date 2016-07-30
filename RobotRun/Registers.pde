@@ -205,6 +205,8 @@ public class AtomicExpression extends ExprOperand {
   }
   
   public AtomicExpression(Operator o){
+    ExprOperand arg1 = new ExprOperand();
+    ExprOperand arg2 = new ExprOperand();
     op = o;
   }
   
@@ -275,55 +277,49 @@ public class AtomicExpression extends ExprOperand {
   public String toString(){
     String s = "";
     if(op == Operator.UNINIT){
-      return "(...)";
+      return "...";
     }
     
-    if(arg1 == null){
-      s += "...";
-    } else {
-      s += arg1.toString();
-    }
-    
+    s += arg1.toString();
     s += " " + op.symbol + " ";
-    
-    if(arg2 == null){
-      s += "... :";
-    } else {
-      s += arg2.toString() + " :";
-    }
+    s += arg2.toString();
     
     return s;
   }
   
-  public String[] toStringArray(){
+  public String[] toStringArray() {
     String[] s1, s2, ret;
     String opString = "";
     
-    if(op == Operator.UNINIT){
-      return new String[]{"(...)"};
+    if(op == Operator.UNINIT) {
+      return new String[]{"..."};
     }
     
-    if(arg1 == null){
-      s1 = new String[] {"..."};
-    } else {
-      s1 = arg1.toStringArray();
-    }
-    
+    s1 = arg1.toStringArray();
     opString += " " + op.symbol + " ";
+    s2 = arg2.toStringArray();
     
-    if(arg2 == null){
-      s2 = new String[] {"..."};
-    } else {
-      s2 = arg2.toStringArray();
+    int lm1 = (arg1 != null && arg1.type == -1) ? 2 : 0;
+    int lm2 = (arg2 != null && arg2.type == -1) ? 2 : 0;
+    ret = new String[s1.length + s2.length + 1 + lm1 + lm2];
+    if(lm1 != 0) {
+      ret[0] = "(";
+      ret[s1.length + 1] = ")";
     }
     
-    ret = new String[s1.length + s2.length + 1];
+    if(lm2 != 0) {
+      ret[s1.length + 2] = "(";
+      ret[ret.length - 1] = ")"; 
+    }
+    
     for(int i = 0; i < s1.length; i += 1){
-      ret[i] = s1[i];
+      ret[i + lm1/2] = s1[i];
     }
-    ret[s1.length] = opString;
+  
+    ret[s1.length + lm1] = opString;
+    
     for(int i = 0; i < s2.length; i += 1){
-      ret[i+s1.length+1] = s2[i];
+      ret[i+s1.length+lm1+1+lm2/2] = s2[i];
     }
     
     ret[ret.length-1] += " :";
@@ -335,18 +331,28 @@ public class ExprOperand {
   //type: 0 = numeric operand, 1 = boolean operand
   //      2 = data reg operand, 3 = IO reg operand
   //      4 = position reg operand, -1 = sub-expression
+  //      -2 = uninit
   final int type;
+  int opWidth;
   int regIndex;
   float dataVal;
   boolean boolVal;
   
-  public ExprOperand(){
-    type = -1;
-    regIndex = -1;
+  public ExprOperand() {
+    if(this instanceof AtomicExpression){
+      type = -1;
+      opWidth = 3;
+      regIndex = -1;
+    } else {
+      type = -2;
+      opWidth = 1;
+      regIndex = -1;
+    }
   }
   
   public ExprOperand(float d) {
     type = 0;
+    opWidth = 1;
     regIndex = -1;
     dataVal = d;
     boolVal = getBoolVal(dataVal);
@@ -354,6 +360,7 @@ public class ExprOperand {
   
   public ExprOperand(boolean b) {
     type = 1;
+    opWidth = 1;
     regIndex = -1;
     dataVal = b ? 1 : 0;
     boolVal = b;
@@ -361,8 +368,9 @@ public class ExprOperand {
   
   public ExprOperand(DataRegister dReg, int i) {
     type = 2;
+    opWidth = 2;
     regIndex = i;
-    if(i != -1) {
+    if(i != -1 && dReg.value != null) {
       dataVal = dReg.value;
       boolVal = getBoolVal(dataVal);
     }
@@ -370,6 +378,7 @@ public class ExprOperand {
   
   public ExprOperand(IORegister ioReg, int i) {
     type = 3;
+    opWidth = 2;
     regIndex = i;
     if(ioReg.state == ON) {
       dataVal = 1;
@@ -382,6 +391,7 @@ public class ExprOperand {
   
   public ExprOperand(PositionRegister pReg, int i){
     type = 4;
+    opWidth = 2;
     regIndex = i;
     
   }
@@ -406,6 +416,9 @@ public class ExprOperand {
   public String toString(){
     String s = "";
     switch(type){
+      case -2:
+        s = "...";
+        break;
       case -1: 
         s = ((AtomicExpression)this).toString();
         break;
@@ -431,14 +444,23 @@ public class ExprOperand {
   public String[] toStringArray(){
     String[] s;
     switch(type){
+      case -2:
+        s = new String[] {"..."};
+        break;
       case -1: 
         s = ((AtomicExpression)this).toStringArray();
         break;
       case 0:
       case 1:
-      case 2:
-      case 3:
         s = new String[] {this.toString()};
+        break;
+      case 2:
+        String rNum = (regIndex == -1) ? "..." : ""+regIndex;
+        s = new String[] {"DR[", rNum + "]"};
+        break;
+      case 3:
+        rNum = (regIndex == -1) ? "..." : ""+regIndex;
+        s = new String[] {"IO[", rNum + "]"};
         break;
       default:
         s = null;

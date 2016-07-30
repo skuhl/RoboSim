@@ -544,7 +544,7 @@ public class IfStatement extends Instruction {
   }
   
   public String toString(){
-    return "S";
+    return "IF " + expr.toString();
   }
 }
 
