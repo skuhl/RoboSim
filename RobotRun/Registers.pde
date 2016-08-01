@@ -389,9 +389,9 @@ public class ExprOperand {
 }
 
 public class AtomicExpression extends ExprOperand {
-  private ExprOperand arg1;
-  private ExprOperand arg2;
-  private Operator op;
+  protected ExprOperand arg1;
+  protected ExprOperand arg2;
+  protected Operator op;
     
   public AtomicExpression(){
     type = -1;
@@ -556,6 +556,64 @@ public class AtomicExpression extends ExprOperand {
     
     ret[ret.length-1] += " :";
     return ret;
+  }
+}
+
+public class BooleanExpression extends AtomicExpression{
+  public BooleanExpression() {
+    super();
+  }
+  
+  public BooleanExpression(Operator o) {
+    if(o.type == BOOL) {
+      type = -1;
+      op = o;
+      len = 3;
+      
+      this.setArg1(new ExprOperand());
+      this.setArg2(new ExprOperand());
+    }
+    else {
+      type = -1;
+      op = Operator.UNINIT;
+      len = 1;
+    }
+  }
+  
+  public void setOp(Operator o) {
+    if(o.type != BOOL) return;
+    
+    op = o;
+    len = getLength();
+  }
+}
+
+public class ArithmeticExpression extends AtomicExpression{
+  public ArithmeticExpression() {
+    super();
+  }
+  
+  public ArithmeticExpression(Operator o) {
+    if(o.type == ARITH) {
+      type = -1;
+      op = o;
+      len = 3;
+      
+      this.setArg1(new ExprOperand());
+      this.setArg2(new ExprOperand());
+    }
+    else {
+      type = -1;
+      op = Operator.UNINIT;
+      len = 1;
+    }
+  }
+  
+  public void setOp(Operator o) {
+    if(o.type != ARITH) return;
+    
+    op = o;
+    len = getLength();
   }
 }
 

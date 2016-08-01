@@ -1204,7 +1204,6 @@ public void up() {
     case SET_BOOL_EXPR_ACT:
     case SET_EXPR_ARG1:
     case SET_EXPR_ARG2:
-    case SET_BOOL_EXPR_OP:
     case SET_IO_INSTR_STATE:
     case SETUP_NAV:
       opt_select = max(0, opt_select - 1);
@@ -1324,7 +1323,6 @@ public void dn() {
     case SET_BOOL_EXPR_ACT:
     case SET_EXPR_ARG1:
     case SET_EXPR_ARG2:
-    case SET_BOOL_EXPR_OP:
     case SET_IO_INSTR_STATE:
     case SETUP_NAV:
       opt_select = min(opt_select + 1, options.size() - 1);
@@ -2306,7 +2304,7 @@ public void ENTER() {
         switchScreen(Screen.INPUT_IOREG_IDX);
       } else if(opt_select == 2) {
         //set arg1 to new expression
-        oper = new AtomicExpression();
+        oper = new ArithmeticExpression();
         lastScreen();
       } else {
         //set arg1 to new constant
@@ -2321,64 +2319,52 @@ public void ENTER() {
       }
       
       break;
-    case SET_BOOL_EXPR_OP:
-      IfStatement stmt = (IfStatement)p.getInstruction(active_instr);
-      
-      switch(opt_select) {
-        case 0:
-          stmt.expr.op = Operator.EQUAL;
-          break;
-        case 1:
-          stmt.expr.op = Operator.NEQUAL;
-          break;
-        case 2:
-          stmt.expr.op = Operator.GRTR;
-          break;
-        case 3:
-          stmt.expr.op = Operator.LESS;
-          break;
-        case 4:
-          stmt.expr.op = Operator.GREQ;
-          break;
-        case 5:
-          stmt.expr.op = Operator.LSEQ;
-          break;
-      }
-      
-      lastScreen();
-      break;
-    case SET_BOOL_EXPR_ACT:
-      stmt = (IfStatement)p.getInstruction(active_instr);
-      
-      if(opt_select == 0) {
-        stmt.instr = new JumpInstruction(); 
-      } else {
-        //stmt.instr = new CallInstruction();
-      }
-      
-      break;
     case SET_EXPR_OP:
-      if(!(opEdit instanceof AtomicExpression)) break;
+      expr = (AtomicExpression)opEdit;
       
-      switch(opt_select) {
-        case 0:
-          ((AtomicExpression)opEdit).op = Operator.ADDTN;
-          break;
-        case 1:
-          ((AtomicExpression)opEdit).op = Operator.SUBTR;
-          break;
-        case 2:
-          ((AtomicExpression)opEdit).op = Operator.MULT;
-          break;
-        case 3:
-          ((AtomicExpression)opEdit).op = Operator.DIV;
-          break;
-        case 4:
-          ((AtomicExpression)opEdit).op = Operator.INTDIV;
-          break;
-        case 5:
-          ((AtomicExpression)opEdit).op = Operator.MOD;
-          break;
+      if(opEdit instanceof ArithmeticExpression) {
+        switch(opt_select) {
+          case 0:
+            expr.setOp(Operator.ADDTN);
+            break;
+          case 1:
+            expr.setOp(Operator.SUBTR);
+            break;
+          case 2:
+            expr.setOp(Operator.MULT);
+            break;
+          case 3:
+            expr.setOp(Operator.DIV);
+            break;
+          case 4:
+            expr.setOp(Operator.INTDIV);
+            break;
+          case 5:
+            expr.setOp(Operator.MOD);
+            break;
+        }
+      }
+      else if(expr instanceof BooleanExpression) {
+        switch(opt_select) {
+          case 0:
+            expr.setOp(Operator.EQUAL);
+            break;
+          case 1:
+            expr.setOp(Operator.NEQUAL);
+            break;
+          case 2:
+            expr.setOp(Operator.GRTR);
+            break;
+          case 3:
+            expr.setOp(Operator.LESS);
+            break;
+          case 4:
+            expr.setOp(Operator.GREQ);
+            break;
+          case 5:
+            expr.setOp(Operator.LSEQ);
+            break;
+        }
       }
       
       lastScreen();
@@ -3117,7 +3103,6 @@ public void loadScreen(){
       break;
     case SET_EXPR_ARG1:
     case SET_EXPR_ARG2:
-    case SET_BOOL_EXPR_OP:
       opt_select = 0;
       break;
     case INPUT_DREG_IDX:
@@ -3488,7 +3473,6 @@ public String getHeader(Screen mode){
     case SET_FRAME_INSTR_IDX:
     case SET_EXPR_ARG1:
     case SET_EXPR_ARG2:
-    case SET_BOOL_EXPR_OP:
     case SET_JUMP_TGT:
     case SELECT_CUT_COPY:    
     case SELECT_DELETE:
@@ -3609,9 +3593,9 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case SET_FRM_INSTR_TYPE:
     case SET_FRAME_INSTR_IDX:
     case SET_BOOL_EXPR_ACT:
-    case SET_BOOL_EXPR_OP:
     case SET_EXPR_ARG1:
     case SET_EXPR_ARG2:
+    case SET_EXPR_OP:
     case INPUT_DREG_IDX:
     case INPUT_IOREG_IDX:
     case INPUT_CONST:
@@ -3775,10 +3759,10 @@ public ArrayList<String> getOptions(Screen mode){
     case SET_BOOL_EXPR_ACT:
     case SET_EXPR_ARG1:
     case SET_EXPR_ARG2:
+    case SET_EXPR_OP:
     case INPUT_DREG_IDX:
     case INPUT_IOREG_IDX:
     case INPUT_CONST:
-    case SET_BOOL_EXPR_OP:
     case SET_LBL_NUM:
     case SET_JUMP_TGT:
       options = loadInstructEdit(mode);
@@ -4302,7 +4286,7 @@ public void editExpression(AtomicExpression expr, int col_offset) {
       editOperand(expr.getArg1(), col_offset + 1, edit_idx, 1);
     } else if(edit_idx == op1_len + op1_mod) {
       //edit op
-      nextScreen(Screen.SET_BOOL_EXPR_OP);
+      nextScreen(Screen.SET_EXPR_OP);
     } else if(edit_idx < expr.len){
       //edit arg2
       int a2_start = op1_len + op1_mod + 1;
@@ -4406,13 +4390,22 @@ public ArrayList<String> loadInstructEdit(Screen mode) {
       edit.add("Select frame index:");
       edit.add("\0" + workingText);
       break;
-    case SET_BOOL_EXPR_OP:
-      edit.add("1. ... =  ...");
-      edit.add("2. ... <> ...");
-      edit.add("3. ... >  ...");
-      edit.add("4. ... <  ...");
-      edit.add("5. ... >= ...");
-      edit.add("6. ... <= ...");
+    case SET_EXPR_OP:
+      if(opEdit instanceof BooleanExpression) {
+        edit.add("1. ... =  ...");
+        edit.add("2. ... <> ...");
+        edit.add("3. ... >  ...");
+        edit.add("4. ... <  ...");
+        edit.add("5. ... >= ...");
+        edit.add("6. ... <= ...");
+      } else if(opEdit instanceof ArithmeticExpression) {
+        edit.add("1. ... + ...");
+        edit.add("2. ... - ...");
+        edit.add("3. ... *  ...");
+        edit.add("4. ... /  ...");
+        edit.add("5. ... | ...");
+        edit.add("6. ... % ...");
+      }
       break;
     case SET_EXPR_ARG1:
     case SET_EXPR_ARG2:

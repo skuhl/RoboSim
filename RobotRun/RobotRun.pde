@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 private static final int OFF = 0, ON = 1;
+private static final int ARITH = 0, BOOL = 1;
 
 ArmModel armModel;
 Model eeModelSuction;

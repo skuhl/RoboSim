@@ -529,11 +529,11 @@ public class JumpInstruction extends Instruction {
  * @param i - the instruction to be executed if the statement expression evaluates to true.
  */
 public class IfStatement extends Instruction {
-  AtomicExpression expr;
+  BooleanExpression expr;
   Instruction instr;
   
   public IfStatement(Operator o, Instruction i){
-    expr = new AtomicExpression(o);
+    expr = new BooleanExpression(o);
     instr = i;
   }
   
