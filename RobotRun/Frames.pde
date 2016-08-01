@@ -594,6 +594,13 @@ public float[][] createAxesFromThreePoints(PVector p1, PVector p2, PVector p3) {
   yAxis.normalize();
   zAxis.normalize();
   
+  if ((xAxis.x == 0f && xAxis.y == 0f && xAxis.z == 0f) ||
+      (yAxis.x == 0f && yAxis.y == 0f && yAxis.z == 0f) ||
+      (zAxis.x == 0f && zAxis.y == 0f && zAxis.z == 0f)) {
+    // One of the three axis vectors is the zero vector
+    return null;
+  }
+  
   axesRefWorld[0][0] = xAxis.x;
   axesRefWorld[0][1] = xAxis.y;
   axesRefWorld[0][2] = xAxis.z;

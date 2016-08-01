@@ -1,8 +1,5 @@
 import java.util.concurrent.ArrayBlockingQueue;
 
-//To-do list:
-//Collision detection
-
 public class Triangle {
   // normal, vertex 1, vertex 2, vertex 3
   public PVector[] components = new PVector[4];

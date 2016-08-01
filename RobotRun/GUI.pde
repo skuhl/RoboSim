@@ -1569,9 +1569,22 @@ public void f2() {
     case DIRECT_ENTRY_USER:
       lastScreen();
       break;
+    case NAV_DREGS:
+      // Data Register copy menus
+      if (col_select == 0) {
+        nextScreen(Screen.CP_DREG_COM);
+      } else if (col_select == 1) {
+        nextScreen(Screen.CP_DREG_VAL);
+      }
+      break;
     case NAV_PREGS_J:
     case NAV_PREGS_C:
-      switchScreen(Screen.SWAP_PT_TYPE);
+    // Position Register copy menus
+      if (col_select == 0) {
+        nextScreen(Screen.CP_PREG_COM);
+      } else if (col_select == 1) {
+        nextScreen(Screen.CP_PREG_PT);
+      }
       break;
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
@@ -1617,8 +1630,12 @@ public void f3() {
       break;
     case NAV_PREGS_J:
     case NAV_PREGS_C:
-    // Switch to Data Registers
-      nextScreen(Screen.NAV_DREGS);
+      if (shift) {
+        switchScreen(Screen.SWAP_PT_TYPE);
+      } else {
+        // Switch to Data Registers
+        nextScreen(Screen.NAV_DREGS);
+      }
       break;
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
@@ -1970,8 +1987,6 @@ public void bd() {
 }
 
 public void ENTER() {
-  Program p = programs.get(active_prog);
-  MotionInstruction m;
   
   switch(mode) {
     //Main menu
@@ -2108,6 +2123,9 @@ public void ENTER() {
       
     //Instruction options menu
     case INSTRUCT_MENU_NAV:
+      Program p = programs.get(active_prog);
+      MotionInstruction m;
+  
       switch(opt_select) {
         case 0: //Insert
           nextScreen(Screen.CONFIRM_INSERT);
@@ -2535,6 +2553,7 @@ public void ENTER() {
     //Register navigation/ edit
     case NAV_DATA:
       if(opt_select == 0) {
+        println("ENTER() -> loadScreen()");
         // Data Register Menu
         nextScreen(Screen.NAV_DREGS);
       } else if(opt_select == 1) {
@@ -3178,6 +3197,7 @@ public void loadScreen(){
     case NAV_DREGS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
+      println(loadScreen()");
       active_index = 0;
       row_select = 0;
       col_select = 0;
@@ -3232,6 +3252,13 @@ public void loadScreen(){
     case NAV_DATA:
     case SWAP_PT_TYPE:
       opt_select = 0;
+      break;
+    case CP_DREG_COM:
+    case CP_DREG_VAL:
+    case CP_PREG_COM:
+    case CP_PREG_PT:
+      opt_select = 0;
+      workingText = Integer.toString(active_index);
       break;
     case EDIT_DREG_COM:
       row_select = 1;
@@ -3568,10 +3595,14 @@ public String getHeader(Screen mode){
       header = "VIEW REGISTERS";
       break;
     case NAV_DREGS:
+    case CP_DREG_COM:
+    case CP_DREG_VAL:
       header = "REGISTERS";
       break;
     case NAV_PREGS_J:
     case NAV_PREGS_C:
+    case CP_PREG_COM:
+    case CP_PREG_PT:
     case SWAP_PT_TYPE:
       header = "POSTION REGISTERS";
       break;
@@ -3687,6 +3718,10 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case DIRECT_ENTRY_USER:
     case DIRECT_ENTRY_TOOL:
     case EDIT_DREG_VAL:
+    case CP_DREG_COM:
+    case CP_DREG_VAL:
+    case CP_PREG_COM:
+    case CP_PREG_PT:
     case SWAP_PT_TYPE:
       contents = this.contents;
       break;
@@ -3877,6 +3912,18 @@ public ArrayList<String> getOptions(Screen mode){
       }
       
       break;
+    case CP_DREG_COM:
+      options.add(String.format("Move R[%d]'s comment to Register: %s", workingText));
+      break;
+    case CP_DREG_VAL:
+            options.add(String.format("Move R[%d]'s value to Register: %s", workingText));
+      break;
+    case CP_PREG_COM:
+      options.add(String.format("Move PR[%d]'s comment to Register: %s", workingText));
+      break;
+    case CP_PREG_PT:
+      options.add(String.format("Move PR[%d]'s point to Register: %s", workingText));
+      break;
     case SWAP_PT_TYPE:
       options.add("1. Cartesian");
       options.add("2. Joint");
@@ -4003,17 +4050,25 @@ public String[] getFunctionLabels(Screen mode){
       break;
     case NAV_PREGS_C:
     case NAV_PREGS_J:
-      // F1, F2
-      funct[0] = "[Clear]";
-      funct[1] = "[Type]";
-      funct[2] = "[Switch]";
-      funct[3] = "[Move To]";
-      funct[4] = "[Record]";
+      // F1 - F5
+      if (shift) {
+        funct[0] = "[Clear]";
+        funct[1] = "[Copy]";
+        funct[2] = "[Type]";
+        funct[3] = "[Move To]";
+        funct[4] = "[Record]";
+      } else {
+        funct[0] = "[Clear]";
+        funct[1] = "[Copy]";
+        funct[2] = "[Switch]";
+        funct[3] = "[Move To]";
+        funct[4] = "[Record]";
+      }
      break;
     case NAV_DREGS:
-      // F2
+      // F1 - F3
       funct[0] = "[Clear]";
-      funct[1] = "";
+      funct[1] = "[Copy]";
       funct[2] = "[Switch]";
       funct[3] = "";
       funct[4] = "";
@@ -4474,15 +4529,9 @@ public ArrayList<String> loadInstructEdit(Screen mode) {
 
 public ArrayList<String> loadInstructionReg() {
   ArrayList<String> instReg = new ArrayList<String>();
-<<<<<<< HEAD
   
-  // Show register contents if you're highlighting a register
-  Instruction ins = programs.get(active_prog).getInstructions().get(active_instr);
-  
-=======
   // show register contents if you're highlighting a register
   Instruction ins = programs.get(active_prog).getInstruction(active_instr);
->>>>>>> 4d1ab28e061fad8708c7175707f031615a56a195
   if(ins instanceof MotionInstruction) {
     MotionInstruction castIns = (MotionInstruction)ins;
     Point p = castIns.getVector(programs.get(active_prog));
