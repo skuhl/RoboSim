@@ -1,25 +1,27 @@
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
 public enum Operator { 
-  ADDTN("+"), 
-  SUBTR("-"), 
-  MULT("*"), 
-  DIV("/"), 
-  MOD("%"), 
-  INTDIV("|"), 
-  PAR_OPEN("("), 
-  PAR_CLOSE(")"),
-  EQUAL("="),
-  NEQUAL("<>"),
-  GRTR(">"),
-  LESS("<"),
-  GREQ(">="),
-  LSEQ("<="),
-  UNINIT("_");
+  ADDTN("+", ARITH), 
+  SUBTR("-", ARITH), 
+  MULT("*", ARITH), 
+  DIV("/", ARITH), 
+  MOD("%", ARITH), 
+  INTDIV("|", ARITH), 
+  PAR_OPEN("(", -1), 
+  PAR_CLOSE(")", -1),
+  EQUAL("=", BOOL),
+  NEQUAL("<>", BOOL),
+  GRTR(">", BOOL),
+  LESS("<", BOOL),
+  GREQ(">=", BOOL),
+  LSEQ("<=", BOOL),
+  UNINIT("_", -1);
   
   public final String symbol;
+  public final int type;
   
-  private Operator(String s){
+  private Operator(String s, int t){
     symbol = s;
+    type = t;
   }
 }
 
@@ -49,21 +51,17 @@ public static enum Screen implements DisplayMode {
   /*
   * Set of screens used to manipulate instruction parameters with a finite number of states
   */
+  SET_BOOL_EXPR_ACT(ScreenType.TYPE_EXPR_EDIT),
   SET_MV_INSTRUCT_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_MV_INSTRUCT_REG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_FRM_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
   
-  SET_BOOL_EXPR_ACT(ScreenType.TYPE_EXPR_EDIT),
-  SET_BOOL_EXPR_ARG1(ScreenType.TYPE_EXPR_EDIT),
-  SET_BOOL_EXPR_ARG2(ScreenType.TYPE_EXPR_EDIT),
-  SET_BOOL_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
+  SET_BOOL_CONST(ScreenType.TYPE_INSTRUCT_EDIT),
+  SET_EXPR_ARG1(ScreenType.TYPE_EXPR_EDIT),
+  SET_EXPR_ARG2(ScreenType.TYPE_EXPR_EDIT),
+  SET_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
   
-  SELECT_REG_OP(ScreenType.TYPE_EXPR_EDIT),
-  SET_REG_EXPR_ARG1(ScreenType.TYPE_EXPR_EDIT),
-  SET_REG_EXPR_ARG2(ScreenType.TYPE_EXPR_EDIT),
-  SET_REG_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
-     
   /*
   * Screens used to display a sereal list of contents for the user to
   * examine and interact with

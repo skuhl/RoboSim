@@ -117,7 +117,7 @@ void showMainDisplayText() {
  */
 public void coordFrameTransition() {
   // Stop Robot movement
-  armModel.halt(); //<>//
+  armModel.halt(); //<>// //<>// //<>// //<>//
   
   // Increment the current coordinate frame
   switch (curCoordFrame) {
@@ -864,6 +864,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
 
 /**
  * Sets up an instruction for execution.
+ *
  * @param program Program that the instruction belongs to
  * @param model Arm model to use
  * @param instruction The instruction to execute
@@ -878,7 +879,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
   }
   
   if(instruction.getMotionType() == MTYPE_JOINT) {
-    armModel.setupRotationInterpolation( instruction.getVector(program).angles );
+    armModel.setupRotationInterpolation(instruction.getVector(program).angles);
   } // end joint movement setup
   else if(instruction.getMotionType() == MTYPE_LINEAR) {
     if(instruction.getTermination() == 0) {
