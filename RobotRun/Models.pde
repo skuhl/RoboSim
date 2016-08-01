@@ -97,12 +97,15 @@ public static CoordFrame curCoordFrame = CoordFrame.JOINT;
 
 /* The possible types of End Effectors for the Robot */
 public enum EndEffector { NONE, SUCTION, CLAW; }
+/* The different motion types for the Robot to when moving to specific joint angles, or positon and orientation. */
+public enum RobotMotion { HALTED, MT_JOINT, MT_LINEAR; }
 
 public class ArmModel {
   
   public EndEffector activeEndEffector = EndEffector.NONE;
   public int endEffectorStatus = OFF;
-
+  public RobotMotion motionType;
+  
   public ArrayList<Model> segments = new ArrayList<Model>();
   public int type;
   public float motorSpeed;
@@ -122,6 +125,7 @@ public class ArmModel {
   public ArmModel() {
     
     motorSpeed = 1000.0; // speed in mm/sec
+    motionType = RobotMotion.HALTED;
     // Joint 1
     Model base = new Model("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
     base.rotations[1] = true;
@@ -135,7 +139,7 @@ public class ArmModel {
     // Joint 3
     Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
     axis2.rotations[2] = true;
-    axis2.jointRanges[2] = new PVector(12f * PI / 20f, 8f * PI / 20f);
+    axis2.jointRanges[2] = new PVector(5.027f, 4.363f);
     axis2.rotationSpeed = radians(200)/60.0;
     // Joint 4
     Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
@@ -671,6 +675,7 @@ public class ArmModel {
   
   public boolean interpolateRotation(float speed) {
     boolean done = true;
+    
     for(Model a : segments) {
       for(int r = 0; r < 3; r++) {
         if(a.rotations[r]) {
@@ -682,6 +687,7 @@ public class ArmModel {
         }
       } // end loop through rotation axes
     } // end loop through arm segments
+    
     if(COLLISION_DISPLAY) { updateBoxes(); }
     return done;
   } // end interpolate rotation
@@ -742,9 +748,13 @@ public class ArmModel {
               }
             }
           }
+          
+          System.out.printf("J[%d]: %5.4f -> %5.4f, [%5.4f, %5.4f] = %d\n", joint, a.currentRotations[r], a.targetRotations[r], a.jointRanges[r].x, a.jointRanges[r].y, a.rotationDirections[r]);
         }
       }
     }
+    
+    println();
   }
   
   /**
@@ -813,6 +823,7 @@ public class ArmModel {
       
       // Apply rotational motion vector
       if (rotationalMotion()) {
+        // Respond to user defined movement
         float theta = DEG_TO_RAD * 0.025f * liveSpeed;
         PVector rotation = new PVector(jogRot[0], jogRot[1], jogRot[2]);
         rotation = convertWorldToNative(rotation);
@@ -834,7 +845,7 @@ public class ArmModel {
         tgtOrientation = curPoint.orientation;
       }
       
-      moveTo(tgtPosition, tgtOrientation);
+      jumpTo(tgtPosition, tgtOrientation);
     }
   }
   
@@ -850,7 +861,7 @@ public class ArmModel {
    *              are invalid and EXEC_SUCCESS if the Robot is successfully moved to the
    *              given position
    */
-  public int moveTo(PVector destPosition, float[] destOrientation) {
+  public int jumpTo(PVector destPosition, float[] destOrientation) {
     boolean invalidAngle = false;
     float[] srcAngles = getJointAngles();
     // Calculate the joint angles for the desired position and orientation
@@ -883,6 +894,24 @@ public class ArmModel {
 
     setJointAngles(destAngles);
     return EXEC_SUCCESS;
+  }
+  
+  /**
+   * TODO
+   */
+  public void moveTo(float[] jointAngles) {
+    setupRotationInterpolation(jointAngles);
+    motionType = RobotMotion.MT_JOINT;
+  }
+  
+  /**
+   * TODO
+   */
+  public void moveTo(PVector position, float[] orientation) {
+    Point start = nativeRobotEEPoint(armModel.getJointAngles());
+    Point end = new Point(position, orientation, start.angles);
+    beginNewLinearMotion(start, end);
+    motionType = RobotMotion.MT_LINEAR;
   }
   
   public boolean checkAngles(float[] angles) {
@@ -984,10 +1013,13 @@ public class ArmModel {
    * Indicates that the Robot Arm is in motion.
    */
   public boolean modelInMotion() {
-    return jointMotion() || translationalMotion() || rotationalMotion();
+    return programRunning || motionType != RobotMotion.HALTED ||
+           jointMotion() || translationalMotion() || rotationalMotion();
   }
   
-  /* Stops all robot movement */
+  /**
+   * Stops all robot movement
+   */
   public void halt() {
     for(Model model : segments) {
       model.jointsMoving[0] = 0;
@@ -1005,6 +1037,7 @@ public class ArmModel {
     
     // Reset button highlighting
     resetButtonColors();
+    motionType = RobotMotion.HALTED;
     programRunning = false;
   }
 } // end ArmModel class

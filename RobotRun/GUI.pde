@@ -828,6 +828,18 @@ public void keyPressed() {
     AXES_DISPLAY = (AXES_DISPLAY + 1) % 3;
   } else if(key == 'e') {
     EE_MAPPING = (EE_MAPPING + 1) % 3;
+  } else if (key == 'f') {
+    // Display the User and Tool frames associated with the current motion instruction
+    if (mode == Screen.NAV_PROG_INST && (col_select == 3 || col_select == 4)) {
+      Instruction inst = programs.get(active_prog).getInstructions().get(active_instr);
+      
+      if (inst instanceof MotionInstruction) {
+        MotionInstruction mInst = (MotionInstruction)inst;
+        //ToolFrame tFrame = (ToolFrame)toolFrames[mInst.toolFrame];
+        //UserFrame uFrame = (UserFrame)userFrames[mInst.userFrame];
+        System.out.printf("\nUser frame: %d\nTool frame: %d\n", mInst.userFrame, mInst.toolFrame);
+      }
+    }
   } else if(key == 'r') {
     panX = 0;
     panY = 0;
@@ -1479,8 +1491,6 @@ public void f1() {
       if(shift) {
         newMotionInstruction();
         col_select = 0;
-      } else {
-        nextScreen(Screen.SELECT_INSTR_INSERT);
       }
       break;
     case NAV_TOOL_FRAMES:
@@ -1537,6 +1547,9 @@ public void f2() {
   switch(mode) {
     case NAV_PROGRAMS:
       nextScreen(Screen.NEW_PROGRAM);
+      break;
+    case NAV_PROG_INST:
+      nextScreen(Screen.SELECT_INSTR_INSERT);
       break;
     case TFRAME_DETAIL:
       switchScreen(Screen.TOOL_FRAME_METHODS);
@@ -1743,16 +1756,29 @@ public void f4() {
   case SELECT_DELETE:
       nextScreen(Screen.CONFIRM_INSTR_DELETE);
       break;
-  /* TODO add functionality for Robot moving to some point
   case NAV_PREGS_J:
   case NAV_PREGS_C:
-    if (shift) {
+    if (shift && !programRunning) {
+      // Stop any prior jogging motion
+      armModel.halt();
+      
       // Move To function
-      Point pt = GPOS_REG[active_index].point;
+      Point pt = GPOS_REG[active_index].point.clone();
       
       if (pt != null) {
         // Move the Robot to the select point
-        armModel.setupRotationInterpolation(pt.angles.clone());
+        if (mode == Screen.NAV_PREGS_C) {
+          Frame active = getActiveFrame(CoordFrame.USER);
+          
+          if (active != null) {
+            pt = removeFrame(pt, active.getOrigin(), active.getAxes());
+            System.out.printf("pt: %s\n", pt.position.toString());
+          }
+          
+          armModel.moveTo(pt.position, pt.orientation);
+        } else {
+          armModel.moveTo(pt.angles);
+        }
       } else {
         println("Position register is uninitialized!");
       }
@@ -1767,13 +1793,13 @@ public void f4() {
         
         if (tgt != null && tgt.angles != null) {
           // Move the Robot to the select point
-          armModel.setupRotationInterpolation(tgt.angles);
+          armModel.moveTo(tgt.angles);
         }
       }
     } else if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
       editTextEntry(3);
     }
-    */
+    
   }
   
   updateScreen();
@@ -1794,7 +1820,7 @@ public void f5() {
     case TEACH_4PT:
     case TEACH_6PT:
       if (shift) {
-        // Save the current position of the Robot's Faceplate
+        // Save the Robot's current position and joint angles
         teachFrame.setPoint(nativeRobotPoint(armModel.getJointAngles()), opt_select);
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         updateScreen();
@@ -1818,8 +1844,18 @@ public void f5() {
     case NAV_PREGS_C:
       
       if (shift && active_index >= 0 && active_index < GPOS_REG.length) {
-        // Save the Robot's current joint angles
-        GPOS_REG[active_index].point = nativeRobotEEPoint(armModel.getJointAngles());
+        // Save the Robot's current position and joint angles
+        Point curRP = nativeRobotEEPoint(armModel.getJointAngles());
+        Frame active = getActiveFrame(CoordFrame.USER);
+        
+        if (active != null) {
+          // Save Cartesian values in terms of the active User frame
+          curRP.position = convertToFrame(curRP.position, active.getOrigin(), active.getAxes());
+          curRP.orientation = quaternionRef(curRP.orientation, active.getAxes());
+          
+        } 
+  
+        GPOS_REG[active_index].point = curRP;
         GPOS_REG[active_index].isCartesian = (mode == Screen.NAV_PREGS_C);
         saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       }
@@ -1892,6 +1928,8 @@ public void fd() {
 public void bd() {
   // If there is a previous instruction, then move to it and reverse its affects
   if(!programRunning && shift && step && active_instr > 0) {
+    // Stop any prior Robot movement
+    armModel.halt();
     
     boolean limbo = shift;
     shift = false;
@@ -3549,6 +3587,7 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case CONFIRM_RENUM:
     case FIND_REPL:
     case NAV_PROG_INST:
+    case VIEW_INST_REG:
     case SELECT_DELETE:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
@@ -3790,6 +3829,19 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("1. Data Registers");
       options.add("2. Position Registers");
       break;
+    case NAV_PREGS_J:
+    case NAV_PREGS_C:
+      opt_select = -1;
+      // Display the point with the Position register of the highlighted line, when viewing the Position registers
+      if (active_index >= 0 && active_index < GPOS_REG.length && GPOS_REG[active_index].point != null) {
+        String[] pregEntry = GPOS_REG[active_index].point.toLineStringArray(mode == Screen.NAV_PREGS_C);
+        
+        for (String line : pregEntry) {
+          options.add(line);
+        }
+      }
+      
+      break;
     case SWAP_PT_TYPE:
       options.add("1. Cartesian");
       options.add("2. Joint");
@@ -3839,20 +3891,12 @@ public String[] getFunctionLabels(Screen mode){
       funct[4] = "";
       break;
     case NAV_PROG_INST:
-      // F1, F4, F5
-      if(shift) {
-        funct[0] = "[New Pt]";
-        funct[1] = "";
-        funct[2] = "";
-        funct[3] = "[Edit]";
-        funct[4] = "[Opt]";
-      } else {
-        funct[0] = "[New Ins]";
-        funct[1] = "";
-        funct[2] = "";
-        funct[3] = "[Edit]";
-        funct[4] = "[Opt]";
-      }
+      // F1, F4, F5f
+      funct[0] = "[New Pt]";
+      funct[1] = "[New Ins]";
+      funct[2] = "";
+      funct[3] = "[Edit]";
+      funct[4] = "[Opt]";
       break;
     case SELECT_DELETE:
     case SELECT_COMMENT:
@@ -3900,19 +3944,11 @@ public String[] getFunctionLabels(Screen mode){
     case TEACH_4PT:
     case TEACH_6PT:
       // F1, F5
-      if(shift) {
-        funct[0] = "";
-        funct[1] = "[Method]";
-        funct[2] = "";
-        funct[3] = "[Mov To]";
-        funct[4] = "[Record]";
-      } else {
-        funct[0] = "";
-        funct[1] = "[Method]";
-        funct[2] = "";
-        funct[3] = "";
-        funct[4] = "";
-      }
+      funct[0] = "";
+      funct[1] = "[Method]";
+      funct[2] = "";
+      funct[3] = "[Mov To]";
+      funct[4] = "[Record]";
       break;
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
@@ -3933,19 +3969,11 @@ public String[] getFunctionLabels(Screen mode){
     case NAV_PREGS_C:
     case NAV_PREGS_J:
       // F1, F2
-      if (shift) {
-        funct[0] = "[Clear]";
-        funct[1] = "[Type]";
-        funct[2] = "[Switch]";
-        funct[3] = "[Move To]";
-        funct[4] = "[Record]";
-      } else {
-        funct[0] = "[Clear]";
-        funct[1] = "[Type]";
-        funct[2] = "[Switch]";
-        funct[3] = "";
-        funct[4] = "";
-      }
+      funct[0] = "[Clear]";
+      funct[1] = "[Type]";
+      funct[2] = "[Switch]";
+      funct[3] = "[Move To]";
+      funct[4] = "[Record]";
      break;
     case NAV_DREGS:
       // F2
@@ -4079,7 +4107,9 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
         MotionInstruction a = (MotionInstruction)instr;
         
         Point ee_point = nativeRobotEEPoint(armModel.getJointAngles());
-        if(ee_point.position.dist(a.getVector(p).position) < (liveSpeed / 100f)) {
+        Point instPt = a.getVector(p);
+        
+        if(instPt != null && ee_point.position.dist(instPt.position) < (liveSpeed / 100f)) {
           m.add("@");
         }
         else {
@@ -4362,34 +4392,21 @@ public ArrayList<String> loadInstructEdit(Screen mode) {
 
 public ArrayList<String> loadInstructionReg() {
   ArrayList<String> instReg = new ArrayList<String>();
-  // show register contents if you're highlighting a register
+  
+  // Show register contents if you're highlighting a register
   Instruction ins = programs.get(active_prog).getInstructions().get(active_instr);
+  
   if(ins instanceof MotionInstruction) {
     MotionInstruction castIns = (MotionInstruction)ins;
     Point p = castIns.getVector(programs.get(active_prog));
     
-    instReg.add("Position values (press ENTER to exit):");
-    
-    if(castIns.getMotionType() != MTYPE_JOINT) {
-      // Show the vector in terms of the World Frame
-      PVector wPos = convertNativeToWorld(p.position);
-      instReg.add( String.format("X: %5.4f  Y: %5.4f  Z: %5.4f", wPos.x, wPos.y, wPos.z) );
-      PVector wpr = quatToEuler(p.orientation);
-      // Show angles in degrees
-      instReg.add( String.format("W: %5.4f  P: %5.4f  R: %5.4f", 
-      (wpr.x * RAD_TO_DEG), 
-      (wpr.y * RAD_TO_DEG), 
-      (wpr.z * RAD_TO_DEG)));
-    }
-    else {  
-      instReg.add( String.format("J1: %5.4f  J2: %5.4f  J3: %5.4f", 
-      (p.angles[0] * RAD_TO_DEG), 
-      (p.angles[1] * RAD_TO_DEG), 
-      (p.angles[2] * RAD_TO_DEG)));
-      instReg.add( String.format("J4: %5.4f  J5: %5.4f  J6: %5.4f", 
-      (p.angles[3] * RAD_TO_DEG), 
-      (p.angles[4] * RAD_TO_DEG),
-      (p.angles[5] * RAD_TO_DEG)));
+    if (p != null) {
+      instReg.add("Position values (press ENTER to exit):");
+      String[] regEntry = p.toLineStringArray(castIns.getMotionType() != MTYPE_JOINT);
+      
+      for (String line : regEntry) {
+        instReg.add(line);
+      }
     }
   }
   
@@ -4407,11 +4424,20 @@ boolean[] resetSelection(int n) {
 }
 
 public void newMotionInstruction() {
+  Point pt = nativeRobotPoint(armModel.getJointAngles());
+  Frame active = getActiveFrame(CoordFrame.USER);
+  
+  if (active != null) {
+    // Convert into currently active frame
+    pt.position = convertToFrame(pt.position, active.getOrigin(), active.getAxes());
+    pt.orientation = quaternionRef(pt.orientation, active.getAxes());
+  }
+  
   // overwrite current instruction
   Program prog = programs.get(active_prog);
   int reg = prog.getNextPosition();
   
-  prog.addPosition(nativeRobotPoint(armModel.getJointAngles()), reg);
+  prog.addPosition(pt, reg);
   
   MotionInstruction insert = new MotionInstruction(
   (curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR),

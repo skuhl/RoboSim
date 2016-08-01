@@ -170,7 +170,7 @@ public abstract class Frame {
   }
   
   /**
-   * Converts the original toStirngArray into a 2x1 String array, where the origin
+   * Converts the original toStringArray into a 2x1 String array, where the origin
    * values are in the first element and the W, P, R values are in the second element,
    * where each element has space buffers.
    */
@@ -444,6 +444,25 @@ public Frame getActiveFrame(CoordFrame coord) {
     // no active frame
     return null;
   }
+}
+
+/**
+ * Returns the difference between the position of the given TCP offset
+ * and the Robot's faceplate, in Native Cooridinates.
+ * 
+ * @param offset  The offset to convert to Native Coordinates
+ * @returning     The given vector offset, in Native Coordinates
+ */
+public PVector nativeTCPOffset(PVector offset) {
+    pushMatrix();
+    resetMatrix();
+    applyModelRotation(armModel.getJointAngles());
+    PVector origin = getCoordFromMatrix(0f, 0f, 0f);
+    // Subtract the origin Native Coordinate values
+    PVector nativeOffset = getCoordFromMatrix(offset.x, offset.y, offset.z).sub(origin);
+    popMatrix();
+    
+    return nativeOffset;
 }
 
 /**

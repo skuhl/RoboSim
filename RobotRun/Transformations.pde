@@ -785,10 +785,10 @@ public boolean angleWithinBounds(float angleToVerify, float rangeStart, float ra
   
   if(rangeStart < rangeEnd) {
     // Joint range does not overlap TWO_PI
-    return angleToVerify >= rangeStart && angleToVerify < rangeEnd;
+    return angleToVerify >= rangeStart && angleToVerify <= rangeEnd;
   } else {
     // Joint range overlaps TWO_PI
-    return !(angleToVerify >= rangeEnd && angleToVerify < rangeStart);
+    return !(angleToVerify > rangeEnd && angleToVerify < rangeStart);
   }
 }
 

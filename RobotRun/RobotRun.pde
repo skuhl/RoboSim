@@ -152,6 +152,23 @@ public void draw() {
     // Run active program
     programRunning = !executeProgram(currentProgram, armModel, execSingleInst);
     
+  } else if (armModel.motionType != RobotMotion.HALTED) {
+    // Move the Robot progressively to a point
+    boolean doneMoving = true;
+    
+    switch (armModel.motionType) {
+      case MT_JOINT:
+        doneMoving = armModel.interpolateRotation((liveSpeed / 100.0));
+        break;
+      case MT_LINEAR:
+        doneMoving = executeMotion(armModel, (liveSpeed / 100.0));
+        break;
+      default:
+    }
+    
+    if (doneMoving) {
+      armModel.halt();
+    }
   } else if (armModel.modelInMotion()) {
     // Jog the Robot
     intermediatePositions.clear();

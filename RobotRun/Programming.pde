@@ -1,6 +1,6 @@
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
 final int FTYPE_TOOL = 0, FTYPE_USER = 1;
-// Determine if a program is running currently or not
+// Indicates whether a program is currently running
 public boolean programRunning = false;
 
 public class Point  {
@@ -72,6 +72,37 @@ public class Point  {
     
     return null;
   }
+  
+  /**
+   * Converts the original toStringArray into a 2x1 String array, where the origin
+   * values are in the first element and the W, P, R values are in the second
+   * element (or in the case of a joint angles, J1-J3 on the first and J4-J6 on
+   * the second), where each element has space buffers.
+   * 
+   * @param displayCartesian  whether to display the joint angles or the cartesian
+   *                          values associated with the point
+   * @returning               A 2-element String array
+   */
+  public String[] toLineStringArray(boolean displayCartesian) {
+    String[][] entries;
+    
+    if (displayCartesian) {
+      entries = toCartesianStringArray();
+    } else {
+      entries = toJointStringArray();
+    }
+    
+    
+    String[] line = new String[2];
+    // X, Y, Z with space buffers
+    line[0] = String.format("%-12s %-12s %-12s", entries[0][0].concat(entries[0][1]),
+            entries[1][0].concat(entries[1][1]), entries[2][0].concat(entries[2][1]));
+    // W, P, R with space buffers
+    line[1] = String.format("%-12s %-12s %-12s", entries[3][0].concat(entries[3][1]),
+            entries[4][0].concat(entries[4][1]), entries[5][0].concat(entries[5][1]));
+    
+    return line;
+  }
 
   /**
    * Returns a String array, whose entries are the joint values of the
@@ -109,17 +140,17 @@ public class Point  {
       // Uninitialized
       pos = new PVector(Float.NaN, Float.NaN, Float.NaN);
     } else {
-      // Show the vector in terms of the given Frame's axes
+      // Display in terms of the World Frame
       pos = convertNativeToWorld(position);
     }
     
     // Convert Quaternion to Euler Angles
     PVector angles;
     if (orientation == null) {
-      // Uninitializes
+      // Uninitialized
       angles = new PVector(Float.NaN, Float.NaN, Float.NaN);
     } else {
-       // Show angles in degrees
+       // Display in terms of the World Frame
       angles = convertNativeToWorld( quatToEuler(orientation) ).mult(RAD_TO_DEG);
     }
     
@@ -143,7 +174,11 @@ public class Point  {
 public class Program  {
   private String name;
   private int nextRegister;
-  private Point[] LPosReg = new Point[1000]; // program positions
+  /**
+   * The positions associated with this program, which are
+   * stored in reference to the current User frame
+   */
+  private Point[] LPosReg = new Point[1000];
   private ArrayList<Instruction> instructions;
 
   public Program(String theName) {
@@ -319,26 +354,61 @@ public final class MotionInstruction extends Instruction  {
     if(motionType == MTYPE_JOINT) return speed;
     else return (speed / model.motorSpeed);
   }
-
+  
+  /**
+   * Returns the point associated with this motion instruction (can be either a position in the program
+   * or a global position register value). If the currently active User or Tool Frame does no match the
+   * User or Tool frame associated with this motion instruction, then null is returned. Otherwise, the
+   * TCP of the active Tool frame is applied to the point and then the point is converted from the active
+   * User frame into the Native Coordinate System.
+   * 
+   * @param parent  The program, to which this instruction belongs
+   * @returning     The point associated with this instruction (or null in the case of an invalid active
+   *                Tool or User frame)
+   */
   public Point getVector(Program parent) {
+    Point pt;
+    
+    if (globalRegister) {
+        pt = GPOS_REG[positionNum].point.clone();
+      } else {
+        pt = parent.LPosReg[positionNum].clone();
+      }
+    
+    
     if(motionType != MTYPE_JOINT) {
-      Point out;
-      if(globalRegister) out = GPOS_REG[positionNum].point;
-      else out = parent.LPosReg[positionNum].clone();
-      //out.pos = convertWorldToNative(out.pos);
-      return out;
-    } 
-    else {
-      Point ret;
+      return pt;
+    }  else {
       
-      if(globalRegister) ret = GPOS_REG[positionNum].point;
-      else ret = parent.LPosReg[positionNum].clone();
-      
-      if(userFrame != -1) {
-        // TODO transform point for User Frame
+      // Apply active TCP
+      if (toolFrame != -1) {
+        Frame active = getActiveFrame(CoordFrame.TOOL);
+        
+        if (active != toolFrames[toolFrame]) {
+          // Invalid active Tool frame
+          System.out.printf("Active Tool frame must be %d!\n", toolFrame);
+          return null;
+        }
+        
+        // Convert TCP offset into Native Coordinates
+        PVector tcpOffset = nativeTCPOffset(active.getOrigin());
+        pt.position.add(tcpOffset);
       }
       
-      return ret;
+      // Remove active User frame
+      if (userFrame != -1) {
+        Frame active = getActiveFrame(CoordFrame.USER);
+        
+        if (active != userFrames[userFrame]) {
+          // Invalid active User frame
+          System.out.printf("Active User frame must be %d!\n", userFrame);
+          return null;
+        }
+        // Convert point into the Native Coordinate System
+        return removeFrame(pt, active.getOrigin(), active.getAxes());
+      }
+      
+      return pt;
     }
   } // end getVector()
 

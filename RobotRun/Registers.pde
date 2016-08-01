@@ -25,6 +25,11 @@ public class DataRegister {
 /* A simple class for a Position Register of the Robot Arm, which holds a point associated with a comment. */
 public class PositionRegister {
   public String comment;
+  /**
+   * The point associated with this Position Register, which is saved in
+   * the current User frame with the active Tool frame TCP offset, though
+   * is independent of Frames
+   */
   public Point point;
   public boolean isCartesian;
   

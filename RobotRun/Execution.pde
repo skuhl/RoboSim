@@ -49,7 +49,7 @@ void showMainDisplayText() {
   if (active != null) {
     // Convert into currently active frame
     displayPosition = convertToFrame(displayPosition, active.getOrigin(), active.getAxes());
-    wpr = quatToEuler( quaternionRef(RP.orientation, active.getAxes()) ).mult(RAD_TO_DEG);;
+    wpr = quatToEuler( quaternionRef(RP.orientation, active.getAxes()) ).mult(RAD_TO_DEG);
     
   } else {
     wpr = quatToEuler(RP.orientation).mult(RAD_TO_DEG);
@@ -591,7 +591,7 @@ void beginNewContinuousMotion(Point start, Point end, Point next, float p) {
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
     Point tgtPoint = intermediatePositions.get(interMotionIdx);
-    armModel.moveTo(tgtPoint.position, tgtPoint.orientation);
+    armModel.jumpTo(tgtPoint.position, tgtPoint.orientation);
   }
 }
 
@@ -605,7 +605,7 @@ void beginNewLinearMotion(Point start, Point end) {
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
     Point tgtPoint = intermediatePositions.get(interMotionIdx);
-    armModel.moveTo(tgtPoint.position, tgtPoint.orientation);
+    armModel.jumpTo(tgtPoint.position, tgtPoint.orientation);
   }
 }
 
@@ -621,7 +621,7 @@ void beginNewCircularMotion(Point start, Point inter, Point end) {
   motionFrameCounter = 0;
   if(intermediatePositions.size() > 0) {
     Point tgtPoint = intermediatePositions.get(interMotionIdx);
-    armModel.moveTo(tgtPoint.position, tgtPoint.orientation);
+    armModel.jumpTo(tgtPoint.position, tgtPoint.orientation);
   }
 }
 
@@ -646,7 +646,7 @@ boolean executeMotion(ArmModel model, float speedMult) {
     int ret = EXEC_SUCCESS;
     if(intermediatePositions.size() > 0) {
       Point tgtPoint = intermediatePositions.get(interMotionIdx);
-      armModel.moveTo(tgtPoint.position, tgtPoint.orientation);
+      ret = armModel.jumpTo(tgtPoint.position, tgtPoint.orientation);
     }
     
     if(ret == EXEC_FAILURE) {
@@ -871,6 +871,11 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
  */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
   Point start = nativeRobotEEPoint(model.getJointAngles());
+  
+  if (instruction.getVector(program) == null) {
+    // Invalid active User or Tool frame
+    return true;
+  }
   
   if(instruction.getMotionType() == MTYPE_JOINT) {
     armModel.setupRotationInterpolation( instruction.getVector(program).angles );
