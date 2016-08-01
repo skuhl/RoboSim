@@ -117,7 +117,7 @@ void showMainDisplayText() {
  */
 public void coordFrameTransition() {
   // Stop Robot movement
-  armModel.halt(); //<>//
+  armModel.halt(); //<>// //<>// //<>// //<>//
   
   // Increment the current coordinate frame
   switch (curCoordFrame) {

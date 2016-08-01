@@ -44,6 +44,8 @@ int curFrameIdx = -1,
     activeToolFrame = -1;
 // The Frame being taught, during a frame teaching process
 Frame teachFrame = null;
+// Expression operand currently being edited
+ExprOperand opEdit = null;
 
 //variables for keeping track of the last change made to the current program
 Instruction lastInstruct;
@@ -1200,8 +1202,8 @@ public void up() {
     case SET_MV_INSTRUCT_REG_TYPE:
     case SET_FRM_INSTR_TYPE:
     case SET_BOOL_EXPR_ACT:
-    case SET_BOOL_EXPR_ARG1:
-    case SET_BOOL_EXPR_ARG2:
+    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG2:
     case SET_BOOL_EXPR_OP:
     case SET_IO_INSTR_STATE:
     case SETUP_NAV:
@@ -1320,8 +1322,8 @@ public void dn() {
     case SET_MV_INSTRUCT_REG_TYPE:
     case SET_FRM_INSTR_TYPE:
     case SET_BOOL_EXPR_ACT:
-    case SET_BOOL_EXPR_ARG1:
-    case SET_BOOL_EXPR_ARG2:
+    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG2:
     case SET_BOOL_EXPR_OP:
     case SET_IO_INSTR_STATE:
     case SETUP_NAV:
@@ -1624,8 +1626,6 @@ public void f4() {
     p = programs.get(active_prog);
     if(p.instructions.size() == 0) break;
     Instruction ins = p.getInstruction(active_instr);
-    opt_select = 0;
-    workingText = "";
     getInstrEdit(ins);
     break;
   case CONFIRM_INSERT:
@@ -1898,7 +1898,7 @@ public void bd() {
     up();
     shift = limbo;
     
-    Instruction ins = programs.get(active_prog).getInstructions().get(active_instr);
+    Instruction ins = programs.get(active_prog).getInstruction(active_instr);
     
     if(ins instanceof MotionInstruction) {
       currentProgram = programs.get(active_prog);
@@ -1934,7 +1934,7 @@ public void bd() {
 }
 
 public void ENTER() {
-  Program p;
+  Program p = programs.get(active_prog);
   MotionInstruction m;
   
   switch(mode) {
@@ -1983,7 +1983,7 @@ public void ENTER() {
       break;
     case TOOL_FRAME_METHODS:
       teachFrame = toolFrames[curFrameIdx];
-      // Tool Frame traching methods
+      // Tool Frame teaching methods
       if(opt_select == 0) {
         nextScreen(Screen.TEACH_3PT_TOOL);
       } 
@@ -2069,6 +2069,7 @@ public void ENTER() {
         nextScreen(Screen.NAV_PROG_INST);
       }
       break;
+      
     //Instruction options menu
     case INSTRUCT_MENU_NAV:
       switch(opt_select) {
@@ -2076,12 +2077,10 @@ public void ENTER() {
           nextScreen(Screen.CONFIRM_INSERT);
           break;
         case 1: //Delete
-          p = programs.get(active_prog);
           selectedLines = resetSelection(p.getInstructions().size());
           nextScreen(Screen.SELECT_DELETE);
           break;
         case 2: //Cut/Copy
-          p = programs.get(active_prog);
           selectedLines = resetSelection(p.getInstructions().size());
           nextScreen(Screen.SELECT_CUT_COPY);
           break;
@@ -2094,14 +2093,15 @@ public void ENTER() {
           nextScreen(Screen.CONFIRM_RENUM);
           break;
         case 6: //Comment
-          p = programs.get(active_prog);
           selectedLines = resetSelection(p.getInstructions().size());
           nextScreen(Screen.SELECT_COMMENT);
           break;
         case 7: //Undo
         case 8: //Remark
       }
+      
       break;
+      
     //Instruction insert menus
     case SELECT_INSTR_INSERT:
       switch(opt_select){
@@ -2121,8 +2121,7 @@ public void ENTER() {
           nextScreen(Screen.SELECT_JMP_LBL);
           break;
       }
-      break;
-    case INPUT_REG_STMT:
+      
       break;
     case SELECT_IO_INSTR_REG:
       newIOInstruction();
@@ -2135,29 +2134,32 @@ public void ENTER() {
       } else {
         newFrameInstruction(FTYPE_USER);
       }
+      
       display_stack.pop();
       switchScreen(Screen.SET_FRAME_INSTR_IDX);
+      break;
+    case INPUT_REG_STMT:
       break;
     case SELECT_COND_STMT:
       if(col_select == 0){
         switch(row_select){
           case 0:
-            newIfStmt(Operator.EQUAL);
+            newIfStatement(Operator.EQUAL);
             break;
           case 1:
-            newIfStmt(Operator.NEQUAL);
+            newIfStatement(Operator.NEQUAL);
             break;
           case 2:
-            newIfStmt(Operator.GRTR);
+            newIfStatement(Operator.GRTR);
             break;
           case 3:
-            newIfStmt(Operator.LESS);
+            newIfStatement(Operator.LESS);
             break;
           case 4:
-            newIfStmt(Operator.GREQ);
+            newIfStatement(Operator.GREQ);
             break;
           case 5:
-            newIfStmt(Operator.LSEQ);
+            newIfStatement(Operator.LSEQ);
             break;
         }
       } else if(col_select == 1) {
@@ -2198,65 +2200,8 @@ public void ENTER() {
       }
             
       break;
-    //Instruction edit menus
-    case SET_BOOL_EXPR_ARG1:
-      p = programs.get(active_prog);
-      IfStatement stmt = (IfStatement)p.getInstruction(active_instr);
-      
-      if(opt_select == 0){
-        stmt.expr.arg1 = new ExprOperand(new DataRegister(), -1);
-        switchScreen(Screen.INPUT_DREG_IDX);
-      } else if(opt_select == 1) {
-        stmt.expr.arg1 = new ExprOperand(new IORegister(), -1);
-        switchScreen(Screen.INPUT_IOREG_IDX);
-      } else if(opt_select == 2){
-        stmt.expr.arg1 = new AtomicExpression();
-        lastScreen();
-      } else {
-        nextScreen(Screen.INPUT_ARG_CONST);
-      }
-      break;
-    case SET_BOOL_EXPR_ARG2:
-    case SET_BOOL_EXPR_OP:
-      p = programs.get(active_prog);
-      stmt = (IfStatement)p.getInstruction(active_instr);
-      
-      switch(opt_select) {
-        case 0:
-          stmt.expr.op = Operator.EQUAL;
-          break;
-        case 1:
-          stmt.expr.op = Operator.NEQUAL;
-          break;
-        case 2:
-          stmt.expr.op = Operator.GRTR;
-          break;
-        case 3:
-          stmt.expr.op = Operator.LESS;
-          break;
-        case 4:
-          stmt.expr.op = Operator.GREQ;
-          break;
-        case 5:
-          stmt.expr.op = Operator.LSEQ;
-          break;
-      }
-      
-      lastScreen();
-      break;
-    case SET_BOOL_EXPR_ACT:
-      break;
-    case INPUT_DREG_IDX:
-      p = programs.get(active_prog);
-      stmt = (IfStatement)p.getInstruction(active_instr);
-      
-      try {
-        int idx = Integer.parseInt(workingText);
-        stmt.expr.arg1 = new ExprOperand(DAT_REG[idx], idx);
-        
-      } catch(NumberFormatException e) {}
-      lastScreen();
-      break;
+    
+    //Movement instruction edit
     case SET_MV_INSTRUCT_TYPE:
       m = getActiveMotionInstruct();
       if(opt_select == 0) {
@@ -2344,9 +2289,113 @@ public void ENTER() {
       
       lastScreen();
       break;
+      
+    //Expression edit
+    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG2:
+      AtomicExpression expr = (AtomicExpression)opEdit;
+      ExprOperand oper;
+      
+      if(opt_select == 0) {
+        //set arg1 to new data reg
+        oper = new ExprOperand(new DataRegister(), -1);
+        switchScreen(Screen.INPUT_DREG_IDX);
+      } else if(opt_select == 1) {
+        //set arg1 to new io reg
+        oper = new ExprOperand(new IORegister(), -1);
+        switchScreen(Screen.INPUT_IOREG_IDX);
+      } else if(opt_select == 2) {
+        //set arg1 to new expression
+        oper = new AtomicExpression();
+        lastScreen();
+      } else {
+        //set arg1 to new constant
+        oper = new ExprOperand();
+        nextScreen(Screen.INPUT_ARG_CONST);
+      }
+      
+      if(mode == Screen.SET_EXPR_ARG1) {
+        opEdit = expr.setArg1(oper);
+      } else {
+        opEdit = expr.setArg2(oper);
+      }
+      
+      break;
+    case SET_BOOL_EXPR_OP:
+      IfStatement stmt = (IfStatement)p.getInstruction(active_instr);
+      
+      switch(opt_select) {
+        case 0:
+          stmt.expr.op = Operator.EQUAL;
+          break;
+        case 1:
+          stmt.expr.op = Operator.NEQUAL;
+          break;
+        case 2:
+          stmt.expr.op = Operator.GRTR;
+          break;
+        case 3:
+          stmt.expr.op = Operator.LESS;
+          break;
+        case 4:
+          stmt.expr.op = Operator.GREQ;
+          break;
+        case 5:
+          stmt.expr.op = Operator.LSEQ;
+          break;
+      }
+      
+      lastScreen();
+      break;
+    case SET_BOOL_EXPR_ACT:
+      stmt = (IfStatement)p.getInstruction(active_instr);
+      
+      if(opt_select == 0) {
+        stmt.instr = new JumpInstruction(); 
+      } else {
+        //stmt.instr = new CallInstruction();
+      }
+      
+      break;
+    case SET_EXPR_OP:
+      if(!(opEdit instanceof AtomicExpression)) break;
+      
+      switch(opt_select) {
+        case 0:
+          ((AtomicExpression)opEdit).op = Operator.ADDTN;
+          break;
+        case 1:
+          ((AtomicExpression)opEdit).op = Operator.SUBTR;
+          break;
+        case 2:
+          ((AtomicExpression)opEdit).op = Operator.MULT;
+          break;
+        case 3:
+          ((AtomicExpression)opEdit).op = Operator.DIV;
+          break;
+        case 4:
+          ((AtomicExpression)opEdit).op = Operator.INTDIV;
+          break;
+        case 5:
+          ((AtomicExpression)opEdit).op = Operator.MOD;
+          break;
+      }
+      
+      lastScreen();
+      break;
+    case INPUT_DREG_IDX:
+      try {
+        int idx = Integer.parseInt(workingText);
+        opEdit.set(DAT_REG[idx], idx);
+        
+      } catch(NumberFormatException e) {}
+      
+      lastScreen();
+      break;
+      
+    //IO instruction edit
     case SET_IO_INSTR_STATE:
-      p = programs.get(active_prog);
-      IOInstruction ioInst = (IOInstruction)p.getInstructions().get(active_instr);
+      IOInstruction ioInst = (IOInstruction)p.getInstruction(active_instr);
     
       if(opt_select == 0)
         ioInst.setState(ON);
@@ -2356,13 +2405,11 @@ public void ENTER() {
       lastScreen();
       break;
     case SET_IO_INSTR_IDX:
-      p = programs.get(active_prog);
-      
       try {
         int tempReg = Integer.parseInt(workingText);
         
         if(tempReg >= 0 && tempReg < 6){
-          ioInst = (IOInstruction)p.getInstructions().get(active_instr);
+          ioInst = (IOInstruction)p.getInstruction(active_instr);
           ioInst.setReg(tempReg);
         }
       }
@@ -2370,9 +2417,10 @@ public void ENTER() {
       
       lastScreen();
       break;
+      
+    //Frame instruction edit
     case SET_FRM_INSTR_TYPE:
-      p = programs.get(active_prog);
-      FrameInstruction fInst = (FrameInstruction)p.getInstructions().get(active_instr);
+      FrameInstruction fInst = (FrameInstruction)p.getInstruction(active_instr);
       
       if(opt_select == 0)
         fInst.setFrameType(FTYPE_TOOL);
@@ -2382,13 +2430,11 @@ public void ENTER() {
       lastScreen();
       break;      
     case SET_FRAME_INSTR_IDX:
-      p = programs.get(active_prog);
-      
       try {
         int tempReg = Integer.parseInt(workingText);
         
         if(tempReg >= 0 && tempReg < 6){
-          fInst = (FrameInstruction)p.getInstructions().get(active_instr);
+          fInst = (FrameInstruction)p.getInstruction(active_instr);
           fInst.setReg(tempReg);
         }
       }
@@ -2396,9 +2442,9 @@ public void ENTER() {
       
       lastScreen();
       break;
-    case SET_LBL_NUM:
-      p = programs.get(active_prog);
       
+    //Jump/ Label instruction edit
+    case SET_LBL_NUM:
       try {
         int tempNum = Integer.parseInt(workingText);
         ((LabelInstruction)p.getInstruction(active_instr)).labelNum = tempNum;        
@@ -2408,8 +2454,6 @@ public void ENTER() {
       lastScreen();
       break;
     case SET_JUMP_TGT:
-      p = programs.get(active_prog);
-      
       try {
         int tempLbl = Integer.parseInt(workingText);
         LabelInstruction l = p.getLabel(tempLbl);
@@ -2425,6 +2469,8 @@ public void ENTER() {
       
       lastScreen();
       break;
+      
+    //Program instruction editing and navigation
     case SELECT_CUT_COPY:
     case SELECT_DELETE:
       selectedLines[active_instr] = !selectedLines[active_instr];
@@ -2444,7 +2490,6 @@ public void ENTER() {
     case FIND_REPL:
       lastScreen();  
       break;
-      
     case JUMP_TO_LINE:
       active_instr = Integer.parseInt(workingText)-1;
       if(active_instr < 0) active_instr = 0;
@@ -2462,6 +2507,8 @@ public void ENTER() {
         nextScreen(Screen.NAV_PREGS_J);
       }
       break;
+      
+    //Register navigation/ edit
     case NAV_DATA:
       if(opt_select == 0) {
         // Data Register Menu
@@ -3068,8 +3115,8 @@ public void loadScreen(){
       row_select = 0;
       col_select = 0;
       break;
-    case SET_BOOL_EXPR_ARG1:
-    case SET_BOOL_EXPR_ARG2:
+    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG2:
     case SET_BOOL_EXPR_OP:
       opt_select = 0;
       break;
@@ -3439,8 +3486,8 @@ public String getHeader(Screen mode){
     case SET_IO_INSTR_STATE:
     case SET_FRM_INSTR_TYPE:
     case SET_FRAME_INSTR_IDX:
-    case SET_BOOL_EXPR_ARG1:
-    case SET_BOOL_EXPR_ARG2:
+    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG2:
     case SET_BOOL_EXPR_OP:
     case SET_JUMP_TGT:
     case SELECT_CUT_COPY:    
@@ -3561,9 +3608,13 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case SET_IO_INSTR_IDX:
     case SET_FRM_INSTR_TYPE:
     case SET_FRAME_INSTR_IDX:
-    case SET_BOOL_EXPR_ARG1:
-    case SET_BOOL_EXPR_ARG2:
+    case SET_BOOL_EXPR_ACT:
     case SET_BOOL_EXPR_OP:
+    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG2:
+    case INPUT_DREG_IDX:
+    case INPUT_IOREG_IDX:
+    case INPUT_CONST:
     case SET_LBL_NUM:
     case SET_JUMP_TGT:
       contents = loadInstructions(active_prog);
@@ -3722,8 +3773,8 @@ public ArrayList<String> getOptions(Screen mode){
     case SET_FRM_INSTR_TYPE:
     case SET_FRAME_INSTR_IDX:
     case SET_BOOL_EXPR_ACT:
-    case SET_BOOL_EXPR_ARG1:
-    case SET_BOOL_EXPR_ARG2:
+    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG2:
     case INPUT_DREG_IDX:
     case INPUT_IOREG_IDX:
     case INPUT_CONST:
@@ -4067,7 +4118,7 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
       instruct_list.add(newLine("[END]")); 
     }
     else {
-      Instruction instr = p.getInstructions().get(i);
+      Instruction instr = p.getInstruction(i);
       ArrayList<String> m = new ArrayList<String>();
       
       if(instr.isCommented())
@@ -4223,7 +4274,7 @@ public void getInstrEdit(Instruction ins) {
   }
   else if(ins instanceof IfStatement){
     IfStatement stmt = (IfStatement)ins;
-    
+    println(col_select + ", " + stmt.expr.len);
     if(col_select < stmt.expr.len + 2) {
       editExpression(stmt.expr, 2);
     } else if(col_select == stmt.expr.len + 2) {
@@ -4235,34 +4286,72 @@ public void getInstrEdit(Instruction ins) {
 }
 
 public void editExpression(AtomicExpression expr, int col_offset) {
-  int a1_len = expr.arg1.len;
-  int a2_len = expr.arg2.len;
-  int edit_idx = opt_select - col_offset;
+  opEdit = expr;
   
   if(expr.getOp() == Operator.UNINIT) {
-    nextScreen(Screen.SET_REG_EXPR_OP);
-  } else {
-    //todo: handle subexpressions
-    if(edit_idx < expr.arg1.len) {
+    nextScreen(Screen.SET_EXPR_OP);
+  } 
+  else {
+    int op1_len = expr.getArg1().getLength();
+    int op1_mod = (expr.getArg1().type == -1) ? 2 : 0;
+    int edit_idx = col_select - col_offset;
+    
+    println(edit_idx);
+    if(edit_idx < op1_len + op1_mod) {
       //edit arg1
-      editOperand(expr.arg1, edit_idx);
-    } else if(edit_idx == expr.arg1.len) {
+      editOperand(expr.getArg1(), col_offset + 1, edit_idx, 1);
+    } else if(edit_idx == op1_len + op1_mod) {
       //edit op
       nextScreen(Screen.SET_BOOL_EXPR_OP);
-    } else {
+    } else if(edit_idx < expr.len){
       //edit arg2
-      editOperand(expr.arg2, edit_idx - expr.arg1.len - 1);
+      int a2_start = op1_len + op1_mod + 1;
+      editOperand(expr.getArg2(), col_offset + a2_start, edit_idx - a2_start, 2);
     }
   }
 }
 
-public void editOperand(ExprOperand o, int edit_idx) {
+public void editOperand(ExprOperand o, int ins_idx, int edit_idx, int opNum) {
   switch(o.type) {
     case -2: //Uninit
+      if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG1);
+      else           nextScreen(Screen.SET_EXPR_ARG2);
+      break;
+    case -1: //Sub-expression
+      if(edit_idx == 0 || edit_idx == o.len + 1) {
+        if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG1);
+        else           nextScreen(Screen.SET_EXPR_ARG2);
+      } else {
+        opEdit = o;
+        editExpression((AtomicExpression)o, ins_idx);
+      }
+      break;
     case 0: //Float const
+      opEdit = o;
+      nextScreen(Screen.INPUT_CONST);
+      break;
     case 1: //Bool const
+      opEdit = o;
+      nextScreen(Screen.SET_BOOL_CONST);
+      break;
     case 2: //Data reg
+      if(edit_idx == 0) {
+        if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG1);
+        else           nextScreen(Screen.SET_EXPR_ARG2);
+      } else {
+        opEdit = o;
+        nextScreen(Screen.INPUT_DREG_IDX);
+      }
+      break;
     case 3: //IO reg
+      if(edit_idx == 0) {
+        if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG1);
+        else           nextScreen(Screen.SET_EXPR_ARG2);
+      } else {
+        opEdit = o;
+        nextScreen(Screen.INPUT_IOREG_IDX);
+      }
+      break;
   }
 }
 
@@ -4325,8 +4414,8 @@ public ArrayList<String> loadInstructEdit(Screen mode) {
       edit.add("5. ... >= ...");
       edit.add("6. ... <= ...");
       break;
-    case SET_BOOL_EXPR_ARG1:
-    case SET_BOOL_EXPR_ARG2:
+    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG2:
       edit.add("R[...]");
       edit.add("IO[...]");
       edit.add("(...)");
@@ -4363,7 +4452,7 @@ public ArrayList<String> loadInstructEdit(Screen mode) {
 public ArrayList<String> loadInstructionReg() {
   ArrayList<String> instReg = new ArrayList<String>();
   // show register contents if you're highlighting a register
-  Instruction ins = programs.get(active_prog).getInstructions().get(active_instr);
+  Instruction ins = programs.get(active_prog).getInstruction(active_instr);
   if(ins instanceof MotionInstruction) {
     MotionInstruction castIns = (MotionInstruction)ins;
     Point p = castIns.getVector(programs.get(active_prog));
@@ -4475,7 +4564,7 @@ public void newJumpInstruction() {
   }
 }
 
-public void newIfStmt(Operator o) {
+public void newIfStatement(Operator o) {
   Program p = programs.get(active_prog);
   IfStatement stmt = new IfStatement(o, null);
   

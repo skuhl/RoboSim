@@ -54,16 +54,13 @@ public static enum Screen implements DisplayMode {
   SET_FRM_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
   
+  SET_BOOL_CONST(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_BOOL_EXPR_ACT(ScreenType.TYPE_EXPR_EDIT),
-  SET_BOOL_EXPR_ARG1(ScreenType.TYPE_EXPR_EDIT),
-  SET_BOOL_EXPR_ARG2(ScreenType.TYPE_EXPR_EDIT),
   SET_BOOL_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
+  SET_EXPR_ARG1(ScreenType.TYPE_EXPR_EDIT),
+  SET_EXPR_ARG2(ScreenType.TYPE_EXPR_EDIT),
+  SET_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
   
-  SELECT_REG_OP(ScreenType.TYPE_EXPR_EDIT),
-  SET_REG_EXPR_ARG1(ScreenType.TYPE_EXPR_EDIT),
-  SET_REG_EXPR_ARG2(ScreenType.TYPE_EXPR_EDIT),
-  SET_REG_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
-     
   /*
   * Screens used to display a sereal list of contents for the user to
   * examine and interact with

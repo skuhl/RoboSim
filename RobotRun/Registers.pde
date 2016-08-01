@@ -195,51 +195,247 @@ public class ExpressionEvaluationException extends RuntimeException {
   }
 }
 
+public class ExprOperand {
+  //type: 0 = numeric operand, 1 = boolean operand
+  //      2 = data reg operand, 3 = IO reg operand
+  //      4 = position reg operand, -1 = sub-expression
+  //      -2 = uninit
+  protected int type;
+  protected int len;
+  
+  int regIndex;
+  float dataVal;
+  boolean boolVal;
+  
+  public ExprOperand() {
+    type = -2;
+    len = 1;
+    regIndex = -1;
+  }
+  
+  public ExprOperand(float d) {
+    type = 0;
+    len = 1;
+    regIndex = -1;
+    dataVal = d;
+    boolVal = getBoolVal(dataVal);
+  }
+  
+  public ExprOperand(boolean b) {
+    type = 1;
+    len = 1;
+    regIndex = -1;
+    dataVal = b ? 1 : 0;
+    boolVal = b;
+  }
+  
+  public ExprOperand(DataRegister dReg, int i) {
+    type = 2;
+    len = 2;
+    regIndex = i;
+    if(i != -1 && dReg.value != null) {
+      dataVal = dReg.value;
+      boolVal = getBoolVal(dataVal);
+    }
+  }
+  
+  public ExprOperand(IORegister ioReg, int i) {
+    type = 3;
+    len = 2;
+    regIndex = i;
+    if(ioReg.state == ON) {
+      dataVal = 1;
+      boolVal = true;
+    } else {
+      dataVal = 0;
+      boolVal = false;
+    }
+  }
+  
+  public ExprOperand(PositionRegister pReg, int i){
+    type = 4;
+    len = 2;
+    regIndex = i;
+  }
+  
+    public ExprOperand set(float d) {
+    type = 0;
+    len = 1;
+    regIndex = -1;
+    dataVal = d;
+    boolVal = getBoolVal(dataVal);
+    return this;
+  }
+  
+  public ExprOperand set(boolean b) {
+    type = 1;
+    len = 1;
+    regIndex = -1;
+    dataVal = b ? 1 : 0;
+    boolVal = b;
+    return this;
+  }
+  
+  public ExprOperand set(DataRegister dReg, int i) {
+    type = 2;
+    len = 2;
+    regIndex = i;
+    if(i != -1 && dReg.value != null) {
+      dataVal = dReg.value;
+      boolVal = getBoolVal(dataVal);
+    }
+    return this;
+  }
+  
+  public ExprOperand set(IORegister ioReg, int i) {
+    type = 3;
+    len = 2;
+    regIndex = i;
+    if(ioReg.state == ON) {
+      dataVal = 1;
+      boolVal = true;
+    } else {
+      dataVal = 0;
+      boolVal = false;
+    }
+    
+    return this;
+  }
+  
+  public ExprOperand set(PositionRegister pReg, int i){
+    type = 4;
+    len = 2;
+    regIndex = i;
+    return this;
+  }
+  
+  public int getLength() {
+    return len;
+  }
+  
+ /* Returns the boolean value of a floating point value, where a value of 0 is considered to be
+  *  false and all other values are true. Any floating point value close enough to zero within a
+  *  given tolerance is considered to be 0 for the purposes of this function in order to avoid 
+  *  issues with floating point errors.
+  */
+  private boolean getBoolVal(float d) {
+    boolean bool;
+    
+    if(d > -0.00001 || d < 0.00001){
+      bool = false;
+    } else {
+      bool = true;
+    }
+    
+    return bool;
+  }
+  
+  public String toString(){
+    String s = "";
+    switch(type){
+      case -2:
+        s = "...";
+        break;
+      case -1: 
+        s = ((AtomicExpression)this).toString();
+        break;
+      case 0:
+        s += dataVal;
+        break;
+      case 1:
+        s += boolVal ? "TRUE" : "FALSE";
+        break;
+      case 2:
+        String rNum = (regIndex == -1) ? "..." : ""+regIndex;
+        s += "DR[" + rNum + "]";
+        break;
+      case 3:
+        rNum = (regIndex == -1) ? "..." : ""+regIndex;
+        s += "IO[" + rNum + "]";
+        break;
+    }
+    
+    return s;
+  }
+  
+  public String[] toStringArray(){
+    String[] s;
+    switch(type){
+      case -2:
+        s = new String[] {"..."};
+        break;
+      case -1: 
+        s = ((AtomicExpression)this).toStringArray();
+        break;
+      case 0:
+      case 1:
+        s = new String[] {this.toString()};
+        break;
+      case 2:
+        String rNum = (regIndex == -1) ? "..." : ""+regIndex;
+        s = new String[] {"DR[", rNum + "]"};
+        break;
+      case 3:
+        rNum = (regIndex == -1) ? "..." : ""+regIndex;
+        s = new String[] {"IO[", rNum + "]"};
+        break;
+      default:
+        s = null;
+        break;
+    }
+    
+    return s;
+  }
+}
+
 public class AtomicExpression extends ExprOperand {
   private ExprOperand arg1;
   private ExprOperand arg2;
   private Operator op;
     
   public AtomicExpression(){
-    super();
+    type = -1;
     op = Operator.UNINIT;
     len = 1;
   }
   
   public AtomicExpression(Operator o){
-    super();
-    ExprOperand arg1 = new ExprOperand();
-    ExprOperand arg2 = new ExprOperand();
+    type = -1;
     op = o;
     len = 3;
+    
+    this.setArg1(new ExprOperand());
+    this.setArg2(new ExprOperand());
   }
   
   public ExprOperand getArg1() { return arg1; }
-  public void setArg1(ExprOperand a) { 
+  public ExprOperand setArg1(ExprOperand a) { 
     arg1 = a;
-    calculateLength();
+    len = getLength();
+    return arg1;
   }
   
-  public ExprOperand getArg2() { return arg1; }
-  public void setArg2(ExprOperand a) { 
-    arg1 = a;
-    len = calculateLength();
+  public ExprOperand getArg2() { return arg2; }
+  public ExprOperand setArg2(ExprOperand a) { 
+    arg2 = a;
+    len = getLength();
+    return arg2;
   }
   
   public Operator getOp() { return op; }
   public void setOp(Operator o) {
     op = o;
-    len = calculateLength();
+    len = getLength();
   }
   
-  private int calculateLength() {
+  public int getLength() {
     if(op == Operator.UNINIT) {
       return 1;    
     }
     
     int ret = 1;
-    ret += arg1.len;
-    ret += arg2.len;
+    ret += arg1.getLength();
+    ret += arg2.getLength();
     ret += (arg1.type == -1) ? 2 : 0;
     ret += (arg2.type == -1) ? 2 : 0;
     return ret;
@@ -360,150 +556,6 @@ public class AtomicExpression extends ExprOperand {
     
     ret[ret.length-1] += " :";
     return ret;
-  }
-}
-
-public class ExprOperand {
-  //type: 0 = numeric operand, 1 = boolean operand
-  //      2 = data reg operand, 3 = IO reg operand
-  //      4 = position reg operand, -1 = sub-expression
-  //      -2 = uninit
-  final int type;
-  protected int len;
-  
-  int regIndex;
-  float dataVal;
-  boolean boolVal;
-  
-  public ExprOperand() {
-    if(this instanceof AtomicExpression) {
-      type = -1;
-      regIndex = -1;
-    } else {
-      type = -2;
-      len = 1;
-      regIndex = -1;
-    }
-  }
-  
-  public ExprOperand(float d) {
-    type = 0;
-    len = 1;
-    regIndex = -1;
-    dataVal = d;
-    boolVal = getBoolVal(dataVal);
-  }
-  
-  public ExprOperand(boolean b) {
-    type = 1;
-    len = 1;
-    regIndex = -1;
-    dataVal = b ? 1 : 0;
-    boolVal = b;
-  }
-  
-  public ExprOperand(DataRegister dReg, int i) {
-    type = 2;
-    len = 2;
-    regIndex = i;
-    if(i != -1 && dReg.value != null) {
-      dataVal = dReg.value;
-      boolVal = getBoolVal(dataVal);
-    }
-  }
-  
-  public ExprOperand(IORegister ioReg, int i) {
-    type = 3;
-    len = 2;
-    regIndex = i;
-    if(ioReg.state == ON) {
-      dataVal = 1;
-      boolVal = true;
-    } else {
-      dataVal = 0;
-      boolVal = false;
-    }
-  }
-  
-  public ExprOperand(PositionRegister pReg, int i){
-    type = 4;
-    len = 2;
-    regIndex = i;
-    
-  }
-  
-  /* Returns the boolean value of a floating point value, where a value of 0 is considered to be
-  *  false and all other values are true. Any floating point value close enough to zero within a
-  *  given tolerance is considered to be 0 for the purposes of this function in order to avoid 
-  *  issues with floating point errors.
-  */
-  private boolean getBoolVal(float d) {
-    boolean bool;
-    
-    if(d > -0.00001 || d < 0.00001){
-      bool = false;
-    } else {
-      bool = true;
-    }
-    
-    return bool;
-  }
-  
-  public String toString(){
-    String s = "";
-    switch(type){
-      case -2:
-        s = "...";
-        break;
-      case -1: 
-        s = ((AtomicExpression)this).toString();
-        break;
-      case 0:
-        s += dataVal;
-        break;
-      case 1:
-        s += boolVal ? "TRUE" : "FALSE";
-        break;
-      case 2:
-        String rNum = (regIndex == -1) ? "..." : ""+regIndex;
-        s += "DR[" + rNum + "]";
-        break;
-      case 3:
-        rNum = (regIndex == -1) ? "..." : ""+regIndex;
-        s += "IO[" + rNum + "]";
-        break;
-    }
-    
-    return s;
-  }
-  
-  public String[] toStringArray(){
-    String[] s;
-    switch(type){
-      case -2:
-        s = new String[] {"..."};
-        break;
-      case -1: 
-        s = ((AtomicExpression)this).toStringArray();
-        break;
-      case 0:
-      case 1:
-        s = new String[] {this.toString()};
-        break;
-      case 2:
-        String rNum = (regIndex == -1) ? "..." : ""+regIndex;
-        s = new String[] {"DR[", rNum + "]"};
-        break;
-      case 3:
-        rNum = (regIndex == -1) ? "..." : ""+regIndex;
-        s = new String[] {"IO[", rNum + "]"};
-        break;
-      default:
-        s = null;
-        break;
-    }
-    
-    return s;
   }
 }
 
