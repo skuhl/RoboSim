@@ -104,10 +104,10 @@ public int loadState() {
   }
   
   // Initialize uninitialized registers and position registers to with null fields
-  for(int reg = 0; reg < DAT_REG.length; reg += 1) {
+  for(int reg = 0; reg < DREG.length; reg += 1) {
     
-    if(DAT_REG[reg] == null) {
-      DAT_REG[reg] = new DataRegister();
+    if(DREG[reg] == null) {
+      DREG[reg] = new DataRegister();
     }
     
     if(GPOS_REG[reg] == null) {
@@ -756,8 +756,8 @@ public int saveRegisterBytes(File dest) {
     initializedPR = new ArrayList<Integer>();
     
     // Count the number of initialized entries and save their indices
-    for(int idx = 0; idx < DAT_REG.length; ++idx) {
-      if(DAT_REG[idx].value != null || DAT_REG[idx].comment != null) {
+    for(int idx = 0; idx < DREG.length; ++idx) {
+      if(DREG[idx].value != null || DREG[idx].comment != null) {
         initializedR.add(idx);
         ++numOfREntries;
       }
@@ -773,17 +773,17 @@ public int saveRegisterBytes(File dest) {
     for(Integer idx : initializedR) {
       dataOut.writeInt(idx);
       
-      if(DAT_REG[idx].value == null) {
+      if(DREG[idx].value == null) {
         // save for null Float value
         dataOut.writeFloat(Float.NaN);
       } else {
-        dataOut.writeFloat(DAT_REG[idx].value);
+        dataOut.writeFloat(DREG[idx].value);
       }
       
-      if(DAT_REG[idx].comment == null) {
+      if(DREG[idx].comment == null) {
         dataOut.writeUTF("");
       } else {
-        dataOut.writeUTF(DAT_REG[idx].comment);
+        dataOut.writeUTF(DREG[idx].comment);
       }
     }
     
@@ -840,7 +840,7 @@ public int loadRegisterBytes(File src) {
     FileInputStream in = new FileInputStream(src);
     DataInputStream dataIn = new DataInputStream(in);
     
-    int size = max(0, min(dataIn.readInt(), DAT_REG.length));
+    int size = max(0, min(dataIn.readInt(), DREG.length));
     
     // Load the Register entries
     while(size-- > 0) {
@@ -855,7 +855,7 @@ public int loadRegisterBytes(File src) {
       // Null comments are saved as ""
       if(c.equals("")) { c = null; }
       
-      DAT_REG[reg] = new DataRegister(c, v);
+      DREG[reg] = new DataRegister(c, v);
     }
     
     size = max(0, min(dataIn.readInt(), GPOS_REG.length));

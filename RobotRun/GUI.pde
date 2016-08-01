@@ -1297,7 +1297,7 @@ public void dn() {
     case NAV_DREGS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
-      size = (mode == Screen.NAV_DREGS) ? DAT_REG.length : GPOS_REG.length;
+      size = (mode == Screen.NAV_DREGS) ? DREG.length : GPOS_REG.length;
       indices = moveDown(active_index, size, row_select, start_render, shift);
       
       active_index = indices[0];
@@ -1525,7 +1525,7 @@ public void f1() {
       }
     case NAV_DREGS:
       // Clear Data Register entry
-      DAT_REG[active_index] = new DataRegister();
+      DREG[active_index] = new DataRegister();
       saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       break;
     case NAV_PREGS_J:
@@ -2068,7 +2068,7 @@ public void ENTER() {
           if(str.length() < 0) {
             // No value entered
             updateScreen();
-            println("All enetries must have a value!");
+            println("All entries must have a value!");
             return;
           }
           
@@ -2428,7 +2428,7 @@ public void ENTER() {
     case INPUT_DREG_IDX:
       try {
         int idx = Integer.parseInt(workingText);
-        opEdit.set(DAT_REG[idx], idx);
+        opEdit.set(DREG[idx], idx);
         
       } catch(NumberFormatException e) {}
       
@@ -2437,6 +2437,7 @@ public void ENTER() {
       
     //IO instruction edit
     case SET_IO_INSTR_STATE:
+      p = programs.get(active_prog);
       IOInstruction ioInst = (IOInstruction)p.getInstruction(active_instr);
     
       if(opt_select == 0)
@@ -2447,6 +2448,7 @@ public void ENTER() {
       lastScreen();
       break;
     case SET_IO_INSTR_IDX:
+      p = programs.get(active_prog);
       try {
         int tempReg = Integer.parseInt(workingText);
         
@@ -2462,6 +2464,7 @@ public void ENTER() {
       
     //Frame instruction edit
     case SET_FRM_INSTR_TYPE:
+      p = programs.get(active_prog);
       FrameInstruction fInst = (FrameInstruction)p.getInstruction(active_instr);
       
       if(opt_select == 0)
@@ -2472,6 +2475,7 @@ public void ENTER() {
       lastScreen();
       break;      
     case SET_FRAME_INSTR_IDX:
+      p = programs.get(active_prog);
       try {
         int tempReg = Integer.parseInt(workingText);
         
@@ -2487,6 +2491,7 @@ public void ENTER() {
       
     //Jump/ Label instruction edit
     case SET_LBL_NUM:
+      p = programs.get(active_prog);
       try {
         int tempNum = Integer.parseInt(workingText);
         ((LabelInstruction)p.getInstruction(active_instr)).labelNum = tempNum;        
@@ -2496,6 +2501,7 @@ public void ENTER() {
       lastScreen();
       break;
     case SET_JUMP_TGT:
+      p = programs.get(active_prog);
       try {
         int tempLbl = Integer.parseInt(workingText);
         LabelInstruction l = p.getLabel(tempLbl);
@@ -2553,13 +2559,76 @@ public void ENTER() {
     //Register navigation/ edit
     case NAV_DATA:
       if(opt_select == 0) {
-        println("ENTER() -> loadScreen()");
         // Data Register Menu
         nextScreen(Screen.NAV_DREGS);
       } else if(opt_select == 1) {
         // Position Register Menu
         nextScreen(Screen.NAV_PREGS_C);
       }
+      break;
+    case CP_DREG_COM:
+      int regIdx = -1;
+      
+      try {
+        // Copy the comment of the curent Data register to the Data register at the specified index
+        regIdx = Integer.parseInt(workingText) - 1;
+        DREG[regIdx].comment = DREG[active_index].comment;
+        saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+      } catch (NumberFormatException MFEx) {
+        println("Only real numbers are valid!");
+      } catch (IndexOutOfBoundsException IOOBEx) {
+        println("Only positve integers between 0 and 100 are valid!");
+      }
+      
+      lastScreen();
+      break;
+    case CP_DREG_VAL:
+      regIdx = -1;
+      
+      try {
+        // Copy the value of the curent Data register to the Data register at the specified index
+        regIdx = Integer.parseInt(workingText) - 1;
+        DREG[regIdx].value = DREG[active_index].value;
+        saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+      } catch (NumberFormatException MFEx) {
+        println("Only real numbers are valid!");
+      } catch (IndexOutOfBoundsException IOOBEx) {
+        println("Only positve integers between 0 and 100 are valid!");
+      }
+      
+      lastScreen();
+      break;
+    case CP_PREG_COM:
+      regIdx = -1;
+      
+      try {
+        // Copy the comment of the curent Position register to the Position register at the specified index
+        regIdx = Integer.parseInt(workingText) - 1;
+        GPOS_REG[regIdx].comment = GPOS_REG[active_index].comment;
+        saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+      } catch (NumberFormatException MFEx) {
+        println("Only real numbers are valid!");
+      } catch (IndexOutOfBoundsException IOOBEx) {
+        println("Only positve integers between 0 and 100 are valid!");
+      }
+      
+      lastScreen();
+      break;
+    case CP_PREG_PT:
+      regIdx = -1;
+      
+      try {
+        // Copy the point of the curent Position register to the Position register at the specified index
+        regIdx = Integer.parseInt(workingText) - 1;
+        GPOS_REG[regIdx].point = GPOS_REG[active_index].point.clone();
+        saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+      } catch (NumberFormatException MFEx) {
+        println("Only real numbers are valid!");
+      } catch (IndexOutOfBoundsException IOOBEx) {
+        println("Only positve integers between 0 and 100 are valid!");
+      }
+      
+      lastScreen();
       break;
     case EDIT_DREG_VAL:   
       Float f = null;
@@ -2570,9 +2639,9 @@ public void ENTER() {
         // Clamp the value between -9999 and 9999, inclusive
         f = max(-9999f, min(f, 9999f));
         
-        if(active_index >= 0 && active_index < DAT_REG.length) {
+        if(active_index >= 0 && active_index < DREG.length) {
           // Save inputted value
-          DAT_REG[active_index].value = f;
+          DREG[active_index].value = f;
           saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
         }
       } catch (NumberFormatException NFEx) {
@@ -2627,7 +2696,7 @@ public void ENTER() {
           workingText = workingText.substring(0, workingText.length() - 1);
         }
         // Save the inputted comment to the selected register\
-        DAT_REG[active_index].comment = workingText;
+        DREG[active_index].comment = workingText;
         saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
         workingText = "";
         lastScreen();
@@ -3197,7 +3266,6 @@ public void loadScreen(){
     case NAV_DREGS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
-      println(loadScreen()");
       active_index = 0;
       row_select = 0;
       col_select = 0;
@@ -3257,16 +3325,16 @@ public void loadScreen(){
     case CP_DREG_VAL:
     case CP_PREG_COM:
     case CP_PREG_PT:
-      opt_select = 0;
-      workingText = Integer.toString(active_index);
+      opt_select = 1;
+      workingText = Integer.toString((active_index + 1));
       break;
     case EDIT_DREG_COM:
       row_select = 1;
       col_select = 0;
       opt_select = 0;
       
-      if(DAT_REG[active_index].comment != null) {
-        workingText = DAT_REG[active_index].comment;
+      if(DREG[active_index].comment != null) {
+        workingText = DREG[active_index].comment;
       }
       else {
         workingText = "\0";
@@ -3278,7 +3346,7 @@ public void loadScreen(){
       opt_select = 0;
       
       if(GPOS_REG[active_index].comment != null) {
-        System.out.printf("_%s_", DAT_REG[active_index].comment);
+        System.out.printf("_%s_", DREG[active_index].comment);
         workingText = GPOS_REG[active_index].comment;
       }
       else {
@@ -3288,8 +3356,8 @@ public void loadScreen(){
     case EDIT_DREG_VAL:
       opt_select = 0;
       // Bring up float input menu
-      if(DAT_REG[active_index].value != null) {
-        workingText = Float.toString(DAT_REG[active_index].value);
+      if(DREG[active_index].value != null) {
+        workingText = Float.toString(DREG[active_index].value);
       } else {
         workingText = "0.0";
       }
@@ -3913,16 +3981,20 @@ public ArrayList<String> getOptions(Screen mode){
       
       break;
     case CP_DREG_COM:
-      options.add(String.format("Move R[%d]'s comment to Register: %s", workingText));
+      options.add(String.format("Move R[%d]'s comment to:", active_index + 1));
+      options.add(String.format("R[%s]", workingText));
       break;
     case CP_DREG_VAL:
-            options.add(String.format("Move R[%d]'s value to Register: %s", workingText));
+      options.add(String.format("Move R[%d]'s value to:", active_index + 1));
+      options.add(String.format("R[%s]", workingText));
       break;
     case CP_PREG_COM:
-      options.add(String.format("Move PR[%d]'s comment to Register: %s", workingText));
+      options.add(String.format("Move PR[%d]'s comment to:", active_index + 1));
+      options.add(String.format("PR[%s]", workingText));
       break;
     case CP_PREG_PT:
-      options.add(String.format("Move PR[%d]'s point to Register: %s", workingText));
+      options.add(String.format("Move PR[%d]'s point to:", active_index + 1));
+      options.add(String.format("PR[%s]", workingText));
       break;
     case SWAP_PT_TYPE:
       options.add("1. Cartesian");
@@ -4907,13 +4979,13 @@ public ArrayList<ArrayList<String>> loadRegisters() {
   
   // View Registers or Position Registers
   int start = start_render;
-  int end = min(start + ITEMS_TO_SHOW, DAT_REG.length);
+  int end = min(start + ITEMS_TO_SHOW, DREG.length);
   // Display a subset of the list of registers
   for(int idx = start; idx < end; ++idx) {
     String lbl;
     
     if(mode == Screen.NAV_DREGS) {
-      lbl = (DAT_REG[idx].comment == null) ? "" : DAT_REG[idx].comment;
+      lbl = (DREG[idx].comment == null) ? "" : DREG[idx].comment;
     } else {
       lbl  = (GPOS_REG[idx].comment == null) ? "" : GPOS_REG[idx].comment;
     }
@@ -4937,9 +5009,9 @@ public ArrayList<ArrayList<String>> loadRegisters() {
     String regEntry = "*";
     
     if(mode == Screen.NAV_DREGS) {
-      if(DAT_REG[idx].value != null) {
+      if(DREG[idx].value != null) {
         // Dispaly Register value
-        regEntry = String.format("%4.3f", DAT_REG[idx].value);
+        regEntry = String.format("%4.3f", DREG[idx].value);
       }
       
     } else if(GPOS_REG[idx].point != null) {

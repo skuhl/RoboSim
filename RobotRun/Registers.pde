@@ -1,7 +1,7 @@
 // Position Registers
 private final PositionRegister[] GPOS_REG = new PositionRegister[100];
 // Data Registers
-private final DataRegister[] DAT_REG = new DataRegister[100];
+private final DataRegister[] DREG = new DataRegister[100];
 // IO Registers
 private final IORegister[] IO_REG = new IORegister[6];
 
@@ -821,7 +821,7 @@ public class RegExpression {
       if (regIdx.length == 1) {
         
         // Use Register value
-        return DAT_REG[ regIdx[0] ].value;
+        return DREG[ regIdx[0] ].value;
       } else if (regIdx.length == 3) {
         RegStmtPoint pt;
         
