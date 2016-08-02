@@ -789,25 +789,50 @@ public void keyPressed() {
   if(mode == Screen.NEW_PROGRAM) {
     // Modify the input name for the new program
     if(key == BACKSPACE && workingText.length() > 0) {
-      workingText = workingText.substring(0, workingText.length() - 1);
+      
+      if(workingText.length() > 1) {
+        workingText = workingText.substring(0, workingText.length() - 1);
+        col_select = min(col_select, workingText.length() - 1);
+      }  else {
+        workingText = "\0";
+      }
+      
+      col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
+      updateScreen();
     } else if(key == DELETE && workingText.length() > 0) {
-      workingText = workingText.substring(1, workingText.length());
+      
+      if(workingText.length() > 1) {
+        workingText = workingText.substring(1, workingText.length());
+        col_select = min(col_select, workingText.length() - 1);
+      }  else {
+        workingText = "\0";
+      }
+      
+      col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
+      updateScreen();
     // Valid characters in a program name or comment
     } else if(workingText.length() < TEXT_ENTRY_LEN && (key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z')
           || (key >= '0' && key <= '9') || key == '.' || key == '@' || key == '*' || key == '_') {
       StringBuilder temp;
       // Insert the typed character
-      if (workingText.charAt(col_select) != '\0') {
+      if (workingText.length() > 0 && workingText.charAt(col_select) != '\0') {
         temp = new StringBuilder(workingText.substring(0, col_select) + "\0" + workingText.substring(col_select, workingText.length()));
       } else {
-        temp = new StringBuilder(workingText);
+        temp = new StringBuilder(workingText); 
       }
-      
+        
       temp.setCharAt(col_select, key);
       workingText = temp.toString();
       
-      // Move the cursor over for the next letter
-      rt();
+      // Add an insert element if the length of the current comment is less than 16
+      int len = workingText.length();
+      if(len <= TEXT_ENTRY_LEN && col_select == workingText.length() - 1 && workingText.charAt(len - 1) != '\0') {
+        workingText += '\0';
+      }
+      
+      col_select = min(col_select + 1, workingText.length() - 1);
+      // Update contents to the new string
+      updateScreen();
     }
     
     return;
@@ -1281,7 +1306,7 @@ public void dn() {
       break;
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
-    case SELECT_DELETE: //<>// //<>//
+    case SELECT_DELETE:  //<>//
       size = activeProgram().getInstructions().size();
       indices = moveDown(active_instr, size, row_select, start_render, shift);
       
@@ -1440,6 +1465,8 @@ public void rt() {
           }  else {
             workingText = "\0";
           }
+          
+          col_select = max(0, min(col_select, contents.get(row_select).size() - 1));
         } 
         else {
           // Add an insert element if the length of the current comment is less than 16
