@@ -86,6 +86,13 @@ void showMainDisplayText() {
    
   if (DISPLAY_TEST_OUTPUT) {
     fill(215, 0, 0);
+    
+    // Display a message when there is an error with the Robot's movement
+    if (robotFault) {
+      text("Robot Fault", lastTextPositionX, lastTextPositionY);
+      lastTextPositionY += 20;
+    }
+    
     // Display a message if the Robot is in motion
     if (armModel.modelInMotion()) {
       text("Robot is moving", lastTextPositionX, lastTextPositionY);
@@ -119,7 +126,7 @@ void showMainDisplayText() {
  */
 public void coordFrameTransition() {
   // Stop Robot movement
-  armModel.halt(); //<>// //<>// //<>// //<>//
+  armModel.halt(); //<>//
   
   // Increment the current coordinate frame
   switch (curCoordFrame) {
@@ -381,7 +388,7 @@ public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, float[]
  * need to be based on current speed
  */
 void calculateDistanceBetweenPoints() {
-  MotionInstruction instruction = getActiveMotionInstruct();
+  MotionInstruction instruction = activeMotionInst();
   if(instruction != null && instruction.getMotionType() != MTYPE_JOINT)
   distanceBetweenPoints = instruction.getSpeed() / 60.0;
   else if(curCoordFrame != CoordFrame.JOINT)
@@ -652,30 +659,13 @@ boolean executeMotion(ArmModel model, float speedMult) {
     }
     
     if(ret == EXEC_FAILURE) {
-      programRunning = false;
+      triggerFault();
+      return true;
     }
   }
   
   return false;
 } // end execute linear motion
-
-MotionInstruction getActiveMotionInstruct() {
-  Instruction inst = null;
-  
-  if (active_prog < 0 || active_prog >= programs.size()) {
-    return null;
-  }
-  
-  Program p = programs.get(active_prog);
-  
-  if(p != null && p.getInstructions().size() != 0)
-  inst = p.getInstructions().get(active_instr);
-  else return null;
-  
-  if(inst instanceof MotionInstruction)
-  return (MotionInstruction)inst;
-  else return null;
-}
 
 /**
  * Convert a point based on a coordinate system defined as
@@ -792,71 +782,49 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
  * @return Finished yet (false=no, true=yes)
  */
 boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
+  Instruction activeInst = activeInstruction();
+  
   //stop executing if no valid program is selected or we reach the end of the program
-  if(program == null || currentInstruction < 0 || currentInstruction >= program.getInstructions().size()) {
+  if(robotFault || activeInst == null) {
     return true;
-  }
-  
-  //get the next program instruction
-  Instruction ins = program.getInstructions().get(currentInstruction);
-  
-  //skip commented instructions
-  if(ins.isCommented()){
-    currentInstruction++;
-    if(singleInst) { return true; }
-  }
-  //motion instructions
-  else if(ins instanceof MotionInstruction) {
-    MotionInstruction instruction = (MotionInstruction)ins;
+  } else if (!activeInst.isCommented()){
     
-    //start a new instruction
-    if(!executingInstruction) {
-      boolean setup = setUpInstruction(program, model, instruction);
-      if(!setup) { return true; }
-      else executingInstruction = true;
-    }
-    //continue current instruction
-    else {
-      if(instruction.getMotionType() == MTYPE_JOINT) {
-        executingInstruction = !(model.interpolateRotation(instruction.getSpeedForExec(model)));
-      }
-      else {
-        executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
-      }
-      
-      // Move to next instruction after current is finished
+    //motion instructions
+    if (activeInst instanceof MotionInstruction) {
+      MotionInstruction instruction = (MotionInstruction)activeInst;
+      //start a new instruction
       if(!executingInstruction) {
-        currentInstruction++;
-        if(singleInst) { return true; }
+        executingInstruction = setUpInstruction(program, model, instruction);
       }
-    }
-  }
-  //tool instructions
-  else if(ins instanceof IOInstruction) {
-    IOInstruction instruction = (IOInstruction)ins;
-    instruction.execute();
-    currentInstruction++;
+      //continue current instruction
+      else {
+        if(instruction.getMotionType() == MTYPE_JOINT) {
+          executingInstruction = !(model.interpolateRotation(instruction.getSpeedForExec(model)));
+        }
+        else {
+          executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
+        }
+      }
+    } else {
+      activeInst.execute();
+      executingInstruction = false;
+    }//end of instruction type check
     
-    if(singleInst) { return true; }
-  }
-  //frame instructions
-  else if(ins instanceof FrameInstruction) {
-    FrameInstruction instruction = (FrameInstruction)ins;
-    instruction.execute();
-    currentInstruction++;
-    
-    if(singleInst) { return true; }
-  } 
-  else if(ins instanceof JumpInstruction){
-    ((JumpInstruction)ins).execute();
-    currentInstruction++;
-  }
-  else if (ins instanceof Instruction) {
-    // Blank instruction
-    ++currentInstruction;
-  }//end of instruction type check
+  } //skip commented instructions
   
-  return false;
+  // Move to next instruction after current is finished
+  if(!executingInstruction) {
+    // Move down an instruction
+    int size = activeProgram().getInstructions().size() + 1;
+    int[] indices = moveDown(active_instr, size, row_select, start_render, shift);
+    
+    active_instr = indices[0];
+    row_select = indices[1];
+    start_render = indices[2];
+    updateScreen();
+  }
+  
+  return (!executingInstruction && singleInst);
 }//end executeProgram
 
 /**
@@ -865,14 +833,14 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
  * @param program Program that the instruction belongs to
  * @param model Arm model to use
  * @param instruction The instruction to execute
- * @return Returns true on failure (invalid instruction), false on success
+ * @return Returns false on failure (invalid instruction), true on success
  */
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
   Point start = nativeRobotEEPoint(model.getJointAngles());
   
   if (instruction.getVector(program) == null) {
     // Invalid active User or Tool frame
-    return true;
+    return false;
   }
   
   if(instruction.getMotionType() == MTYPE_JOINT) {
@@ -884,7 +852,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
     } 
     else {
       Point nextPoint = null;
-      for(int n = currentInstruction+1; n < program.getInstructions().size(); n++) {
+      for(int n = active_instr+1; n < program.getInstructions().size(); n++) {
         Instruction nextIns = program.getInstructions().get(n);
         if(nextIns instanceof MotionInstruction) {
           MotionInstruction castIns = (MotionInstruction)nextIns;
@@ -908,8 +876,8 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
     // There must be another instruction after this that holds the end point.
     // If this isn't the case, the instruction is invalid, so return immediately.
     Point nextPoint = null;
-    if(program.getInstructions().size() >= currentInstruction + 2) {
-      Instruction nextIns = program.getInstructions().get(currentInstruction+1);
+    if(program.getInstructions().size() >= active_instr + 2) {
+      Instruction nextIns = program.getInstructions().get(active_instr+1);
       //make sure next instruction is of valid type
       if(nextIns instanceof MotionInstruction) {
         MotionInstruction castIns = (MotionInstruction)nextIns;
@@ -928,6 +896,14 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
   } // end circular movement setup
   return true;
 } // end setUpInstruction
+
+/**
+ * Stop robot motion, program execution
+ */
+public void triggerFault() {
+  armModel.halt();
+  robotFault = true;
+}
 
 /**
  * Returns a string represenation of the given matrix.

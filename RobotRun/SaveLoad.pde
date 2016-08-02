@@ -282,7 +282,7 @@ private Program loadProgram(DataInputStream in) throws IOException {
  */
 private void savePoint(Point p, DataOutputStream out) throws IOException {
   
-  if (p == null) { //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>//
+  if (p == null) { //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>//
     // Null points only write out a byte indicating there is no data
     out.writeByte(0);
   } else {

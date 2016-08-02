@@ -282,6 +282,49 @@ public int addProgram(Program p) {
   }
 }
 
+/**
+ * Returns the currently active program or null if no program is active
+ */
+public Program activeProgram() {
+  if (active_prog < 0 || active_prog >= programs.size()) {
+    System.out.printf("Not a valid program index: %d!\n", active_prog);
+    return null;
+  }
+  
+  return programs.get(active_prog);
+}
+
+/**
+ * Returns the instruction that is currently active in the currently active program.
+ * 
+ * @returning  The active instruction of the active program or null if no instruction
+ *             is active
+ */
+public Instruction activeInstruction() {
+  Program activeProg = activeProgram();
+  
+  if (activeProg == null || active_instr < 0 || active_instr >= activeProg.getInstructions().size()) {
+    System.out.printf("Not a valid instruction index: %d!\n", active_instr);
+    return null;
+  }
+  
+  return activeProg.getInstruction(active_instr);
+}
+
+/**
+ * Returns the active instructiob of the active program, if
+ * that instruction is a motion instruction.
+ */
+public MotionInstruction activeMotionInst() {
+  Instruction inst = activeInstruction();
+  
+  if(inst instanceof MotionInstruction) {
+    return (MotionInstruction)inst;
+  }
+  
+  return null;
+}
+
 public class Instruction {
   Program p;
   boolean com;
@@ -576,7 +619,7 @@ public class JumpInstruction extends Instruction {
   
   public void execute() {
     if(tgtLabel != null)
-      currentInstruction = tgtLabel.labelIdx;
+      active_instr = tgtLabel.labelIdx;
   }
   
   public String toString(){

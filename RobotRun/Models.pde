@@ -869,7 +869,7 @@ public class ArmModel {
                                 arrayToString(RP.orientation), arrayToString(destOrientation));
       }
       
-      halt();
+      triggerFault();
       return EXEC_FAILURE;
     }
 

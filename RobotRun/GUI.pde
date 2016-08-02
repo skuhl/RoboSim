@@ -840,7 +840,7 @@ public void keyPressed() {
   } else if (key == 'f') {
     // Display the User and Tool frames associated with the current motion instruction
     if (DISPLAY_TEST_OUTPUT && mode == Screen.NAV_PROG_INST && (col_select == 3 || col_select == 4)) {
-      Instruction inst = programs.get(active_prog).getInstructions().get(active_instr);
+      Instruction inst = activeInstruction();
       
       if (inst instanceof MotionInstruction) {
         MotionInstruction mInst = (MotionInstruction)inst;
@@ -1073,6 +1073,14 @@ public void addNumber(String number) {
   updateScreen();
 }
 
+public void RESET() {
+  if (shift) {
+    // Reset robot fault
+    armModel.halt();
+    robotFault = false;
+  }
+}
+
 public void PERIOD() {
   if(mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
 
@@ -1156,17 +1164,19 @@ public void up() {
     case NAV_PROG_INST:
     case SELECT_CUT_COPY:
     case SELECT_DELETE:
-      indices = moveUp(active_instr, row_select, start_render, shift);
-      
-      active_instr = indices[0];
-      row_select = indices[1];
-      start_render = indices[2];
-      
-      if(DISPLAY_TEST_OUTPUT) {
-        System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
-        row_select, col_select, active_instr, start_render);
+      if (!programRunning) {
+        // Lock movement when a program is running
+        indices = moveUp(active_instr, row_select, start_render, shift);
+        
+        active_instr = indices[0];
+        row_select = indices[1];
+        start_render = indices[2];
+        
+        if(DISPLAY_TEST_OUTPUT) {
+          System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
+          row_select, col_select, active_instr, start_render);
+        }
       }
-      
       break;
     case NAV_DREGS:
     case NAV_PREGS_J:
@@ -1252,24 +1262,27 @@ public void dn() {
       
       break;
     case NAV_PROG_INST:
-      size = programs.get(active_prog).getInstructions().size() + 1;
-      indices = moveDown(active_instr, size, row_select, start_render, shift);
-      
-      active_instr = indices[0];
-      row_select = indices[1];
-      start_render = indices[2];
-      
-      col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
-      
-      if(DISPLAY_TEST_OUTPUT) {
-        System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
-        row_select, col_select, active_instr, start_render);
+      if (!programRunning) {
+        // Lock movement when a program is running
+        size = activeProgram().getInstructions().size() + 1;
+        indices = moveDown(active_instr, size, row_select, start_render, shift);
+        
+        active_instr = indices[0];
+        row_select = indices[1];
+        start_render = indices[2];
+        
+        col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
+        
+        if(DISPLAY_TEST_OUTPUT) {
+          System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
+          row_select, col_select, active_instr, start_render);
+        }
       }
       break;
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
     case SELECT_DELETE: //<>// //<>//
-      size = programs.get(active_prog).getInstructions().size();
+      size = activeProgram().getInstructions().size();
       indices = moveDown(active_instr, size, row_select, start_render, shift);
       
       active_instr = indices[0];
@@ -1281,7 +1294,7 @@ public void dn() {
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
         row_select, col_select, active_instr, start_render);
-      } //<>// //<>//
+      } //<>//
       break;
     case NAV_DREGS:
     case NAV_PREGS_J:
@@ -1355,8 +1368,11 @@ public void dn() {
 
 public void lt() { 
   switch(mode) { 
-    case NAV_PROG_INST:    
-      col_select = max(0, col_select - 1);
+    case NAV_PROG_INST:
+      if (!programRunning) {
+        // Lock movement when a program is running
+        col_select = max(0, col_select - 1);
+      }
       break;
     case SELECT_COND_STMT:
     case NAV_DREGS:
@@ -1367,9 +1383,9 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>// //<>// //<>// //<>//
+        // Reset function key states //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } //<>// //<>// //<>//
+      } //<>//
   }
   
   updateScreen();
@@ -1379,8 +1395,11 @@ public void lt() {
 public void rt() {
   switch(mode) {
     case NAV_PROG_INST:
-      col_select = min(col_select + 1, contents.get(row_select).size() - 1);
-      updateScreen();
+      if (!programRunning) {
+        // Lock movement when a program is running
+        col_select = min(col_select + 1, contents.get(row_select).size() - 1);
+        updateScreen();
+      }
       break;
     case DIRECT_ENTRY_USER:
     case DIRECT_ENTRY_TOOL:
@@ -1589,8 +1608,7 @@ public void f3() {
       nextScreen(Screen.CONFIRM_PROG_DELETE);
       break;
     case SELECT_CUT_COPY:
-      Program p = programs.get(active_prog);
-      ArrayList<Instruction> inst = p.getInstructions();
+      ArrayList<Instruction> inst = activeProgram().getInstructions();
       clipBoard = new ArrayList<Instruction>();
       
       int remIdx = 0;
@@ -1636,18 +1654,18 @@ public void f3() {
 
 
 public void f4() {
-  Program p;
+  Program p = activeProgram();
   
   switch(mode) {
   case NAV_PROG_INST:
-    p = programs.get(active_prog);
-    if(p.instructions.size() == 0) break;
-    Instruction ins = p.getInstruction(active_instr);
-    getInstrEdit(ins);
+    Instruction ins = activeInstruction();
+    
+    if (ins != null) {
+      getInstrEdit(ins);
+    }
     break;
   case CONFIRM_INSERT:
     try {
-      p = programs.get(active_prog);
       int lines_to_insert = Integer.parseInt(workingText);
       for(int i = 0; i < lines_to_insert; i += 1)
         p.getInstructions().add(active_instr, new Instruction());
@@ -1678,7 +1696,6 @@ public void f4() {
     }
     break;
   case CONFIRM_INSTR_DELETE:
-    p = programs.get(active_prog);
     ArrayList<Instruction> inst = p.getInstructions();
       
     int remIdx = 0;
@@ -1695,7 +1712,6 @@ public void f4() {
     updateInstructions();
     break;
   case SELECT_CUT_COPY:
-    p = programs.get(active_prog);
     inst = p.getInstructions();
     clipBoard = new ArrayList<Instruction>();
     
@@ -1709,7 +1725,6 @@ public void f4() {
     updateInstructions();
     break;
   case FIND_REPL:
-    p = programs.get(active_prog);
     int lineIdx = 0;
     String s;
         
@@ -1732,7 +1747,6 @@ public void f4() {
     updateInstructions();
     break;
   case CONFIRM_RENUM:
-    p = programs.get(active_prog);
     Point[] pTemp = new Point[1000];
     int posIdx = 0;
     
@@ -1902,82 +1916,32 @@ public void hd() {
 }
 
 public void fd() {  
-  if(!programRunning && shift) {
+  if(mode == Screen.NAV_PROG_INST && !programRunning && shift) {
     // Stop any prior Robot movement
     armModel.halt();
+    // Safeguard against editing a program while it is running
+    col_select = 0;
     
-    currentProgram = programs.get(active_prog);
     executingInstruction = false;
-    programRunning = true;
-    
-    if(step) {
-      // Execute a single instruction
-      currentInstruction = active_instr;
-      execSingleInst = true;
-      
-      if(active_instr < currentProgram.getInstructions().size() - 1) {
-        // Move to the next instruction
-        boolean limbo = shift;
-        shift = false;
-        dn();
-        shift = limbo;
-      }
-      
-    } else {
-      // Execute the whole program
-      currentInstruction = active_instr;
-      execSingleInst = false;
-    }
+    // Run single instruction when step is set
+    execSingleInst = step;
+    programRunning = !executeProgram(activeProgram(), armModel, execSingleInst);
   }
 }
 
 public void bd() {
   // If there is a previous instruction, then move to it and reverse its affects
-  if(!programRunning && shift && step && active_instr > 0) {
+  if(mode == Screen.NAV_PROG_INST && !programRunning && shift && step) {
     // Stop any prior Robot movement
     armModel.halt();
-    
-    boolean limbo = shift;
-    shift = false;
-    up();
-    shift = limbo;
-    
-    Instruction ins = programs.get(active_prog).getInstruction(active_instr);
-    
-    if(ins instanceof MotionInstruction) {
-      currentProgram = programs.get(active_prog);
-      executingInstruction = false;
-      programRunning = true;
-      currentInstruction = active_instr;
-      execSingleInst = true;
-      
-      // Move backwards
-      singleInstruction = (MotionInstruction)ins;
-      setUpInstruction(currentProgram, armModel, singleInstruction);
-    } else if(ins instanceof IOInstruction) {
-      currentProgram = null;
-      executingInstruction = false;
-      programRunning = false;
-      currentInstruction = -1;
-      execSingleInst = true;
-      
-      IOInstruction tIns = (IOInstruction)ins;
-      int status;
-      
-      if (tIns.state == ON) {
-        status = OFF;
-      } else {
-        status = ON;
-      }
-      
-      IOInstruction inverse = new IOInstruction(tIns.reg, status);
-      // Reverse the tool status applied
-      inverse.execute();
-    }
+    // Safeguard against editing a program while it is running
+    col_select = 0;
+    // TODO fix backwards
   }
 }
 
 public void ENTER() {
+  Program p = activeProgram();
   
   switch(mode) {
     //Main menu
@@ -2114,7 +2078,6 @@ public void ENTER() {
       
     //Instruction options menu
     case INSTRUCT_MENU_NAV:
-      Program p = programs.get(active_prog);
       MotionInstruction m;
   
       switch(opt_select) {
@@ -2248,7 +2211,7 @@ public void ENTER() {
     
     //Movement instruction edit
     case SET_MV_INSTRUCT_TYPE:
-      m = getActiveMotionInstruct();
+      m = activeMotionInst();
       if(opt_select == 0) {
         if(m.getMotionType() != MTYPE_JOINT) m.setSpeed(m.getSpeed()/armModel.motorSpeed);
         m.setMotionType(MTYPE_JOINT);
@@ -2263,7 +2226,7 @@ public void ENTER() {
       lastScreen();
       break;
     case SET_MV_INSTRUCT_REG_TYPE:
-      m = getActiveMotionInstruct();
+      m = activeMotionInst();
       if(opt_select == 0) {
         m.setGlobalPosRegUse(false);
       } else if(opt_select == 1) {
@@ -2287,7 +2250,7 @@ public void ENTER() {
         } else if(tempSpeed > armModel.motorSpeed) {
           tempSpeed = armModel.motorSpeed;
         }
-        MotionInstruction castIns = getActiveMotionInstruct();
+        MotionInstruction castIns = activeMotionInst();
         castIns.setSpeed(tempSpeed);
         saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
       }
@@ -2297,7 +2260,7 @@ public void ENTER() {
     case SET_MV_INSTR_IDX:
       try {
         int tempRegister = Integer.parseInt(workingText) - 1;
-        MotionInstruction castIns = getActiveMotionInstruct();
+        MotionInstruction castIns = activeMotionInst();
         
         if(tempRegister < 0 || tempRegister > 1000) {
           // Invalid register index
@@ -2326,7 +2289,7 @@ public void ENTER() {
         int tempTerm = Integer.parseInt(workingText);
         
         if(tempTerm >= 0 && tempTerm <= 100) {
-          MotionInstruction castIns = getActiveMotionInstruct();
+          MotionInstruction castIns = activeMotionInst();
           castIns.setTermination(tempTerm);
         }
       } catch (NumberFormatException NFEx) { /* Ignore invalid input */ }
@@ -2427,8 +2390,7 @@ public void ENTER() {
       
     //IO instruction edit
     case SET_IO_INSTR_STATE:
-      p = programs.get(active_prog);
-      IOInstruction ioInst = (IOInstruction)p.getInstruction(active_instr);
+      IOInstruction ioInst = (IOInstruction)activeInstruction();
     
       if(opt_select == 0)
         ioInst.setState(ON);
@@ -2438,12 +2400,11 @@ public void ENTER() {
       lastScreen();
       break;
     case SET_IO_INSTR_IDX:
-      p = programs.get(active_prog);
       try {
         int tempReg = Integer.parseInt(workingText);
         
         if(tempReg >= 0 && tempReg < 6){
-          ioInst = (IOInstruction)p.getInstruction(active_instr);
+          ioInst = (IOInstruction)activeInstruction();
           ioInst.setReg(tempReg);
         }
       }
@@ -2454,8 +2415,7 @@ public void ENTER() {
       
     //Frame instruction edit
     case SET_FRM_INSTR_TYPE:
-      p = programs.get(active_prog);
-      FrameInstruction fInst = (FrameInstruction)p.getInstruction(active_instr);
+      FrameInstruction fInst = (FrameInstruction)activeInstruction();
       
       if(opt_select == 0)
         fInst.setFrameType(FTYPE_TOOL);
@@ -2465,12 +2425,11 @@ public void ENTER() {
       lastScreen();
       break;      
     case SET_FRAME_INSTR_IDX:
-      p = programs.get(active_prog);
       try {
         int tempReg = Integer.parseInt(workingText);
         
         if(tempReg >= 0 && tempReg < 6){
-          fInst = (FrameInstruction)p.getInstruction(active_instr);
+          fInst = (FrameInstruction)activeInstruction();
           fInst.setReg(tempReg);
         }
       }
@@ -2481,22 +2440,20 @@ public void ENTER() {
       
     //Jump/ Label instruction edit
     case SET_LBL_NUM:
-      p = programs.get(active_prog);
       try {
         int tempNum = Integer.parseInt(workingText);
-        ((LabelInstruction)p.getInstruction(active_instr)).labelNum = tempNum;        
+        ((LabelInstruction)activeInstruction()).labelNum = tempNum;        
       }
       catch (NumberFormatException NFEx){ /* Ignore invalid input */ }
       
       lastScreen();
       break;
     case SET_JUMP_TGT:
-      p = programs.get(active_prog);
       try {
         int tempLbl = Integer.parseInt(workingText);
         LabelInstruction l = p.getLabel(tempLbl);
         if(l != null){
-          JumpInstruction jmp = (JumpInstruction)p.getInstruction(active_instr);
+          JumpInstruction jmp = (JumpInstruction)activeInstruction();;
           jmp.tgtLabel = l;
         }
         else{
@@ -2515,10 +2472,7 @@ public void ENTER() {
       updateScreen();
       break;
     case SELECT_COMMENT:
-      programs.get(active_prog)
-      .getInstructions()
-      .get(active_instr)
-      .toggleCommented();
+      activeInstruction().toggleCommented();
       
       updateScreen(); 
       break;
@@ -2529,10 +2483,8 @@ public void ENTER() {
       lastScreen();  
       break;
     case JUMP_TO_LINE:
-      active_instr = Integer.parseInt(workingText)-1;
-      if(active_instr < 0) active_instr = 0;
-      if(active_instr >= programs.get(active_prog).getInstructions().size())
-        active_instr = programs.get(active_prog).getInstructions().size()-1;
+      int jumpToInst = Integer.parseInt(workingText) - 1;
+      active_instr = max(0, min(jumpToInst, activeProgram().getInstructions().size() - 1));
       
       lastScreen();
       break;
@@ -2919,27 +2871,19 @@ public void EE() {
 }
 
 public void JOINT1_NEG() {
-  if (shift) {
-    updateRobotJogMotion(0, -1);
-  }
+  updateRobotJogMotion(0, -1);
 }
 
 public void JOINT1_POS() {
-  if (shift) {
-    updateRobotJogMotion(0, 1);
-  }
+  updateRobotJogMotion(0, 1);
 }
 
 public void JOINT2_NEG() {
-  if (shift) {
-    updateRobotJogMotion(1, -1);
-  }
+  updateRobotJogMotion(1, -1);
 }
 
 public void JOINT2_POS() {
-  if (shift) {
-    updateRobotJogMotion(1, 1);
-  }
+  updateRobotJogMotion(1, 1);
 }
 
 public void JOINT3_NEG() {
@@ -2949,45 +2893,30 @@ public void JOINT3_NEG() {
 }
 
 public void JOINT3_POS() {
-  if (shift) {
-    updateRobotJogMotion(2, 1);
-  }
+  updateRobotJogMotion(2, 1);
 }
 
 public void JOINT4_NEG() {
-  if (shift) {
-    updateRobotJogMotion(3, -1);
-  }
+  updateRobotJogMotion(3, -1);
 }
 
 public void JOINT4_POS() {
-  if (shift) {
-    updateRobotJogMotion(3, 1);
-  }
+  updateRobotJogMotion(3, 1);
 }
 
 public void JOINT5_NEG() {
-  if (shift) {
-    updateRobotJogMotion(4, -1);
-  }
+  updateRobotJogMotion(4, -1);
 }
 
 public void JOINT5_POS() {
-  if (shift) {
-    updateRobotJogMotion(4, 1);
-  }
+  updateRobotJogMotion(4, 1);
 }
 
-public void JOINT6_NEG() {
-  if (shift) {
-    updateRobotJogMotion(5, -1);
-  }
+public void JOINT6_NEG() {updateRobotJogMotion(5, -1);
 }
 
 public void JOINT6_POS() {
-  if (shift) {
-    updateRobotJogMotion(5, 1);
-  }
+  updateRobotJogMotion(5, 1);
 }
 
 public void updateRobotJogMotion(int button, int direction) {
@@ -3034,6 +2963,11 @@ public void updateRobotJogMotion(int button, int direction) {
  */
 public float activateLiveJointMotion(int joint, int dir) {
   
+  if (!shift || robotFault) {
+    // Only move when shift is set and there is no error
+    return 0f;
+  }
+  
   if(armModel.segments.size() >= joint+1) {
 
     Model model = armModel.segments.get(joint);
@@ -3070,6 +3004,11 @@ public float activateLiveJointMotion(int joint, int dir) {
  *
  */
 public float activateLiveWorldMotion(int axis, int dir) {
+  if (!shift || robotFault) {
+    // Only move when shift is set and there is no error
+    return 0f;
+  }
+  
   // Initiaize the Robot's destination
   Point RP = nativeRobotEEPoint(armModel.getJointAngles());
   armModel.tgtPosition = RP.position;
@@ -3119,6 +3058,8 @@ public void resetButtonColors() {
  * @param next    The new screen mode
  */
 public void nextScreen(Screen next) {
+  // Stop a program from executing when transition screens
+  programRunning = false;
   if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s => %s\n", mode, next);  }
   
   mode = next;
@@ -3132,6 +3073,8 @@ public void nextScreen(Screen next) {
  * @param nextScreen  The new screen mode
  */
 public void switchScreen(Screen nextScreen) {
+  // Stop a program from executing when transition screens
+  programRunning = false;
   if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s => %s\n", mode, nextScreen);  }
   
   mode = nextScreen;
@@ -3144,6 +3087,8 @@ public void switchScreen(Screen nextScreen) {
  * Transitions the display to the previous screen that the user was on.
  */
 public boolean lastScreen() {
+  // Stop a program from executing when transition screens
+  programRunning = false;
   if (display_stack.peek() == Screen.DEFAULT) {
     if (DISPLAY_TEST_OUTPUT) { System.out.printf("%s\n", mode); }
     return false;
@@ -3159,6 +3104,8 @@ public boolean lastScreen() {
 }
 
 public void resetStack(){
+  // Stop a program from executing when transition screens
+  programRunning = false;
   display_stack.clear();
   
   mode = Screen.DEFAULT;
@@ -3166,8 +3113,6 @@ public void resetStack(){
 }
 
 public void loadScreen(){
-  /*contents = new ArrayList<ArrayList<String>>();
-  options = new ArrayList<String>();*/
   
   switch(mode){
     //Main menu
@@ -3221,7 +3166,7 @@ public void loadScreen(){
       workingText = "";
       break;
     case SET_MV_INSTRUCT_TYPE:
-      MotionInstruction mInst = (MotionInstruction)programs.get(active_prog).getInstruction(active_instr);
+      MotionInstruction mInst = activeMotionInst();
       
       switch (mInst.getMotionType()) {
         case MTYPE_JOINT:
@@ -3239,10 +3184,10 @@ public void loadScreen(){
       
       break;
     case SET_MV_INSTR_SPD:
-      mInst = (MotionInstruction)programs.get(active_prog).getInstruction(active_instr);
+      mInst = activeMotionInst();
       workingText = Float.toString(mInst.speed);
     case SET_MV_INSTRUCT_REG_TYPE:
-      mInst = (MotionInstruction)programs.get(active_prog).getInstruction(active_instr);
+      mInst = activeMotionInst();
       
       if (mInst.usesGPosReg()) {
         opt_select = 1;
@@ -3252,12 +3197,12 @@ public void loadScreen(){
       
       break;
     case SET_MV_INSTR_IDX:
-      mInst = (MotionInstruction)programs.get(active_prog).getInstruction(active_instr);
+      mInst = activeMotionInst();
       workingText = Integer.toString(mInst.getPosition());
       
       break;
     case SET_MV_INSTR_TERM:
-      mInst = (MotionInstruction)programs.get(active_prog).getInstruction(active_instr);
+      mInst = activeMotionInst();
       workingText = Integer.toString(mInst.getTermination());
       break;
     case SET_FRAME_INSTR_IDX:
@@ -3273,7 +3218,7 @@ public void loadScreen(){
     case SELECT_DELETE:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
-      int size = programs.get(active_prog).getInstructions().size();
+      int size = activeProgram().getInstructions().size();
       row_select = max(0, min(row_select, size));
       break;
           
@@ -3627,7 +3572,7 @@ public String getHeader(Screen mode){
     case SELECT_CUT_COPY:    
     case SELECT_DELETE:
     case VIEW_INST_REG:
-      header = programs.get(active_prog).getName();
+      header = activeProgram().getName();
       break;
     case SELECT_IO_INSTR_REG:
       header = "SELECT IO REGISTER";
@@ -4378,9 +4323,9 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
  * Deals with updating the UI after confirming/canceling a deletion
  */
 public void updateInstructions() {
-  Program prog = programs.get(active_prog);
+  int instSize = activeProgram().getInstructions().size();
   
-  active_instr = min(active_instr,  prog.getInstructions().size() - 1);
+  active_instr = min(active_instr,  instSize - 1);
   row_select = min(active_instr, ITEMS_TO_SHOW - 1);
   col_select = 0;
   start_render = active_instr - row_select;
@@ -4536,7 +4481,7 @@ public ArrayList<String> loadInstructEdit(Screen mode) {
       break;
     case SET_MV_INSTR_SPD:
       edit.add("Enter desired speed");
-      MotionInstruction castIns = getActiveMotionInstruct();
+      MotionInstruction castIns = activeMotionInst();
       
       if(castIns.getMotionType() == MTYPE_JOINT) {
         speedInPercentage = true;
@@ -4624,10 +4569,10 @@ public ArrayList<String> loadInstructionReg() {
   ArrayList<String> instReg = new ArrayList<String>();
   
   // show register contents if you're highlighting a register
-  Instruction ins = programs.get(active_prog).getInstruction(active_instr);
+  Instruction ins = activeInstruction();
   if(ins instanceof MotionInstruction) {
     MotionInstruction castIns = (MotionInstruction)ins;
-    Point p = castIns.getVector(programs.get(active_prog));
+    Point p = castIns.getVector(activeProgram());
     
     if (p != null) {
       instReg.add("Position values (press ENTER to exit):");
@@ -4663,7 +4608,7 @@ public void newMotionInstruction() {
   }
   
   // overwrite current instruction
-  Program prog = programs.get(active_prog);
+  Program prog = activeProgram();
   int reg = prog.getNextPosition();
   
   prog.addPosition(pt, reg);
@@ -4685,7 +4630,7 @@ public void newMotionInstruction() {
 }
 
 public void newFrameInstruction(int fType) {
-  Program p = programs.get(active_prog);
+  Program p = activeProgram();
   FrameInstruction f = new FrameInstruction(fType, -1);
   
   if(active_instr != p.getInstructions().size()) {
@@ -4696,7 +4641,7 @@ public void newFrameInstruction(int fType) {
 }
 
 public void newIOInstruction() {
-  Program p = programs.get(active_prog);
+  Program p = activeProgram();
   IOInstruction io = new IOInstruction(opt_select, OFF);
   
   if(active_instr != p.getInstructions().size()) {
@@ -4707,7 +4652,7 @@ public void newIOInstruction() {
 }
 
 public void newLabel() {
-  Program p = programs.get(active_prog);
+  Program p = activeProgram();
   
   int labelIdx = active_instr;
   LabelInstruction l = new LabelInstruction(-1, labelIdx);
@@ -4720,7 +4665,7 @@ public void newLabel() {
 }
 
 public void newJumpInstruction() {
-  Program p = programs.get(active_prog);
+  Program p = activeProgram();
   JumpInstruction j = new JumpInstruction(-1);
   
   if(active_instr != p.getInstructions().size()) {
@@ -4731,7 +4676,7 @@ public void newJumpInstruction() {
 }
 
 public void newIfStatement(Operator o) {
-  Program p = programs.get(active_prog);
+  Program p = activeProgram();
   IfStatement stmt = new IfStatement(o, null);
   
   if(active_instr != p.getInstructions().size()) {
@@ -4742,7 +4687,7 @@ public void newIfStatement(Operator o) {
 }
 
 public void newSelStmt(Operator o) {
-  Program p = programs.get(active_prog);
+  Program p = activeProgram();
   IfStatement stmt = new IfStatement(o, null);
   
   if(active_instr != p.getInstructions().size()) {
