@@ -33,17 +33,14 @@ ArrayList<Program> programs = new ArrayList<Program>();
 /* global variables for toolbar */
 
 // for pan button
-int cursorMode = ARROW;
 int clickPan = 0;
 float panX = 1.0; 
 float panY = 1.0;
-boolean doPan = false;
 
 // for rotate button
 int clickRotate = 0;
 float myRotX = 0.0;
 float myRotY = 0.0;
-boolean doRotate = false;
 
 float myscale = 0.5;
 
@@ -107,29 +104,6 @@ public void setup() {
   objects[1] = new WorldObject(250, 125, 500, color(255, 0, 255), color(255, 255, 255));
   
   popMatrix();
-  
-  // Testing World frame and quaternion transformations
-  if (DISPLAY_TEST_OUTPUT) {
-    
-    /**
-    PVector TCP = new PVector(-5, -5, -100);
-    PVector nativeTCP = transform(TCP, new PVector(0f, 0f, 0f), nativeRobotPosition(armModel.getJointAngles()).orientation);
-    System.out.printf("%s -> %s\n", TCP, nativeTCP);
-    /**
-    pushMatrix();
-    resetMatrix();
-    applyMatrix(WORLD_AXES[0][0], WORLD_AXES[1][0], WORLD_AXES[2][0], 0,
-                WORLD_AXES[0][1], WORLD_AXES[1][1], WORLD_AXES[2][1], 0,
-                WORLD_AXES[0][2], WORLD_AXES[1][2], WORLD_AXES[2][2], 0,
-                0, 0, 0, 1);
-    PVector v = getCoordFromMatrix(1, 2, 3);
-    popMatrix();
-    
-    PVector worldV = convertNativeToWorld(v);
-    PVector nativeV = convertWorldToNative(worldV);
-    System.out.printf("%s -> %s\n%s -> %s\n", v, worldV, worldV, nativeV);
-    /**/
-  }
 }
 
 public void draw() {
@@ -444,10 +418,10 @@ public void displayAxes() {
   
   Point ee_point = nativeRobotEEPoint(armModel.getJointAngles());
   
-  if (AXES_DISPLAY == 0 && curCoordFrame != CoordFrame.JOINT) {
+  if (axesState == AxesDisplay.NONE && curCoordFrame != CoordFrame.JOINT) {
     // Draw axes of the Robot's End Effector frame for testing purposes
     displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
-  } else if (AXES_DISPLAY == 1) {
+  } else if (axesState == AxesDisplay.AXES) {
     // Display axes
     if (curCoordFrame != CoordFrame.JOINT) {
       Frame activeTool = getActiveFrame(CoordFrame.TOOL),
@@ -470,7 +444,7 @@ public void displayAxes() {
         displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f), 5000f, color(0));
       }
     }
-  } else if (AXES_DISPLAY == 2) {
+  } else if (axesState == AxesDisplay.GRID) {
     // Display gridlines spanning from axes of the current frame
     Frame active = getActiveFrame(null);
     float[][] displayAxes;
@@ -573,8 +547,6 @@ public void displayGridlines(float[][] axesVectors, PVector origin, int halfNumO
     return;
   }
   
-  //System.out.printf("X: %d\nY:%d\n", vectorPX, vectorPZ);
-  
   pushMatrix();
   // Map the chosen two axes vectors to the xz-plane at the y-position of the Robot's base
   applyMatrix(axesVectors[vectorPX][0], 0, axesVectors[vectorPZ][0], origin.x,
@@ -617,14 +589,14 @@ public void mapToRobotBasePlane() {
   color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);
   
   // Toggle EE mapping type with 'e'
-  switch (EE_MAPPING) {
-  case 0:
+  switch (mappingState) {
+  case LINE:
     stroke(c);
     // Draw a line, from the EE to the grid in the xy plane, parallel to the z plane
     line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
     break;
     
-  case 1:
+  case DOT:
     noStroke();
     fill(c);
     // Draw a point, which maps the EE's position to the grid in the xy plane

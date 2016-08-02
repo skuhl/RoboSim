@@ -87,16 +87,6 @@ public class Model {
   
 } // end Model class
 
-/* The possible values for the current Coordinate Frame */
-public enum CoordFrame { JOINT, WORLD, TOOL, USER }
-/* The current Coordinate Frame for the Robot */
-public static CoordFrame curCoordFrame = CoordFrame.JOINT;
-
-/* The possible types of End Effectors for the Robot */
-public enum EndEffector { NONE, SUCTION, CLAW; }
-/* The different motion types for the Robot to when moving to specific joint angles, or positon and orientation. */
-public enum RobotMotion { HALTED, MT_JOINT, MT_LINEAR; }
-
 public class ArmModel {
   
   public EndEffector activeEndEffector = EndEffector.NONE;
@@ -648,8 +638,6 @@ public class ArmModel {
     RealMatrix B = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
     RealMatrix AB = A.multiply(B.transpose());
     
-    //println(AB);
-    
     return doubleToFloat(AB.getData(), 3, 3);
   }
   
@@ -745,13 +733,9 @@ public class ArmModel {
               }
             }
           }
-          
-          System.out.printf("J[%d]: %5.4f -> %5.4f, [%5.4f, %5.4f] = %d\n", joint, a.currentRotations[r], a.targetRotations[r], a.jointRanges[r].x, a.jointRanges[r].y, a.rotationDirections[r]);
         }
       }
     }
-    
-    println();
   }
   
   /**
@@ -1038,11 +1022,3 @@ public class ArmModel {
     programRunning = false;
   }
 } // end ArmModel class
-
-void printCurrentModelCoordinates(String msg) {
-  print(msg + ": " );
-  print(modelX(0, 0, 0) + " ");
-  print(modelY(0, 0, 0) + " ");
-  print(modelZ(0, 0, 0));
-  println();
-}

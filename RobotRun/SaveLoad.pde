@@ -369,7 +369,7 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeInt(m_inst.positionNum);
     out.writeBoolean(m_inst.globalRegister);
     out.writeFloat(m_inst.speed);
-    out.writeFloat(m_inst.termination);
+    out.writeInt(m_inst.termination);
     out.writeInt(m_inst.userFrame);
     out.writeInt(m_inst.toolFrame);
   } else if(inst instanceof FrameInstruction) {
@@ -425,7 +425,7 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     int reg = in.readInt();
     boolean isGlobal = in.readBoolean();
     float spd = in.readFloat();
-    float term = in.readFloat();
+    int term = in.readInt();
     int uFrame = in.readInt();
     int tFrame = in.readInt();
     

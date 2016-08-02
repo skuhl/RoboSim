@@ -6,13 +6,11 @@ int interMotionIdx = -1;
 int liveSpeed = 10;
 boolean executingInstruction = false;
 
-int errorCounter;
-String errorText;
-
 // Determines what End Effector mapping should be display
-public static int EE_MAPPING = 2,
+public static EEMapping mappingState = EEMapping.LINE;
 // Deterimes what type of axes should be displayed
-                  AXES_DISPLAY = 1;
+public static AxesDisplay axesState = AxesDisplay.AXES;
+
 public static final boolean COLLISION_DISPLAY = true,
                             DISPLAY_TEST_OUTPUT = true;
 
@@ -22,6 +20,8 @@ public static final boolean COLLISION_DISPLAY = true,
 void showMainDisplayText() {
   fill(0);
   textAlign(RIGHT, TOP);
+  int lastTextPositionX = width - 20,
+      lastTextPositionY = 20;
   String coordFrame = "Coordinate Frame: ";
   
   switch(curCoordFrame) {
@@ -41,70 +41,72 @@ void showMainDisplayText() {
   }
   
   Point RP = nativeRobotEEPoint(armModel.getJointAngles());
-  // Convert to World frame
-  PVector displayPosition = RP.position;
-  PVector wpr;
   Frame active = getActiveFrame(null);
   
   if (active != null) {
     // Convert into currently active frame
-    displayPosition = convertToFrame(displayPosition, active.getOrigin(), active.getAxes());
-    wpr = quatToEuler( quaternionRef(RP.orientation, active.getAxes()) ).mult(RAD_TO_DEG);
+    RP.position = convertToFrame(RP.position, active.getOrigin(), active.getAxes());
+    RP.orientation = quaternionRef(RP.orientation, active.getAxes());
     
-  } else {
-    wpr = quatToEuler(RP.orientation).mult(RAD_TO_DEG);
-  }
-  // Convert into the world frame
-  displayPosition = convertNativeToWorld(displayPosition);
-  wpr = convertNativeToWorld(wpr);
-  
-  // Show the coordinates of the End Effector for the current Coordinate Frame
-  String cartesian = String.format("Coord  X: %5.3f  Y: %5.3f  Z: %5.3f  W: %5.3f  P: %5.3f  R: %5.3f",
-                                    displayPosition.x, displayPosition.y, displayPosition.z, wpr.x, wpr.y, wpr.z);
-  
-  // Display the Robot's joint angles
-  String joints = String.format("Joints  J1: %4.3f J2: %4.3f J3: %4.3f J4: %4.3f J5: %4.3f J6: %4.3f", 
-                                 RP.angles[0] * RAD_TO_DEG, RP.angles[1] * RAD_TO_DEG, RP.angles[2] * RAD_TO_DEG,
-                                 RP.angles[3] * RAD_TO_DEG, RP.angles[4] * RAD_TO_DEG, RP.angles[5] * RAD_TO_DEG);
-  
-  text(coordFrame, width - 20, 20);
-  text(String.format("Speed: %d%%" , liveSpeed), width - 20, 40);
-  text(cartesian, width - 20, 60);
-  text(joints, width - 20, 80);
-  
-  fill(215, 0, 0);
-  // Display a message if the Robot is in motion
-  if (armModel.modelInMotion()) {
-    text("Robot is moving", width - 20, 120);
   }
   
-  if (programRunning) {
-    text("Program executing", width - 20, 140);
+  String[] cartesian = RP.toLineStringArray(true),
+           joints = RP.toLineStringArray(false);
+  
+  text(coordFrame, lastTextPositionX, lastTextPositionY);
+  lastTextPositionY += 20;
+  text(String.format("Speed: %d%%", liveSpeed), lastTextPositionX, lastTextPositionY);
+  lastTextPositionY += 40;
+  
+  text("Robot Position and Orientation", lastTextPositionX, lastTextPositionY);
+  lastTextPositionY += 20;
+  for (String line : cartesian) {
+    text(line, lastTextPositionX, lastTextPositionY);
+    lastTextPositionY += 20;
   }
   
-  // Display a message while the robot is carrying an object
-  if(armModel.held != null) {
-    text("Object held", width - 20, 160);
+  lastTextPositionY += 20;
+  text("Robot Joint Angles", lastTextPositionX, lastTextPositionY);
+  lastTextPositionY += 20;
+  for (String line : joints) {
+    text(line, lastTextPositionX, lastTextPositionY);
+    lastTextPositionY += 20;
+  }
+  lastTextPositionY += 20;
+  
+  if (curCoordFrame != CoordFrame.JOINT) {
+    // Display the current axes display state
+    text(String.format("Axes Display: %s", axesState.name()),  lastTextPositionX, height - 50);
     
-    float[] held_pos = armModel.held.hit_box.position();
-    String obj_pos = String.format("(%f, %f, %f)", held_pos[0], held_pos[1], held_pos[1]);
-    text(obj_pos, width - 20, 180);
+    if (axesState == AxesDisplay.GRID) {
+      // Display the current ee mapping state
+      text(String.format("EE Mapping: %s", mappingState.name()),  lastTextPositionX, height - 30);
+    }
   }
-  
-  // Display message for camera pan-lock mode
-  if(clickPan % 2 == 1) {
-    textSize(14);
-    text("Press space on the keyboard to disable camera paning", 20, height / 2 + 30);
-  }
-  // Display message for camera rotation-lock mode
-  if(clickRotate % 2 == 1) {
-    textSize(14);
-    text("Press shift on the keyboard to disable camera rotation", 20, height / 2 + 55);
-  }
-  
-  if(errorCounter > 0) {
-    errorCounter--;
-    text(errorText, width-20, 100);
+   
+  if (DISPLAY_TEST_OUTPUT) {
+    fill(215, 0, 0);
+    // Display a message if the Robot is in motion
+    if (armModel.modelInMotion()) {
+      text("Robot is moving", lastTextPositionX, lastTextPositionY);
+      lastTextPositionY += 20;
+    }
+    
+    if (programRunning) {
+      text("Program executing", lastTextPositionX, lastTextPositionY);
+      lastTextPositionY += 20;
+    }
+    
+    // Display a message while the robot is carrying an object
+    if(armModel.held != null) {
+      text("Object held", lastTextPositionX, lastTextPositionY);
+      lastTextPositionY += 20;
+      
+      float[] held_pos = armModel.held.hit_box.position();
+      String obj_pos = String.format("(%f, %f, %f)", held_pos[0], held_pos[1], held_pos[1]);
+      text(obj_pos, lastTextPositionX, lastTextPositionY);
+      lastTextPositionY += 20;
+    }
   }
 }
 
@@ -807,11 +809,6 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   else if(ins instanceof MotionInstruction) {
     MotionInstruction instruction = (MotionInstruction)ins;
     
-    if(instruction.getUserFrame() != activeUserFrame) {
-      setError("ERROR: Instruction's user frame is different from currently active user frame.");
-      return true;
-    }
-    
     //start a new instruction
     if(!executingInstruction) {
       boolean setup = setUpInstruction(program, model, instruction);
@@ -902,7 +899,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
         beginNewContinuousMotion(start, 
         instruction.getVector(program),
         nextPoint, 
-        instruction.getTermination());
+        instruction.getTermination() / 100f);
       }
     } // end if termination type is continuous
   } // end linear movement setup
@@ -931,12 +928,6 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
   } // end circular movement setup
   return true;
 } // end setUpInstruction
-
-
-void setError(String text) {
-  errorText = text;
-  errorCounter = 600;
-}
 
 /**
  * Returns a string represenation of the given matrix.

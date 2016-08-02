@@ -1,6 +1,9 @@
 Frame[] toolFrames;
 Frame[] userFrames;
 
+/* The current Coordinate Frame for the Robot */
+public static CoordFrame curCoordFrame = CoordFrame.JOINT;
+
 public static final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
                                                            {  0,  0,  1 },
                                                            {  0, -1,  0 } };
@@ -111,31 +114,6 @@ public abstract class Frame {
    *                will not produce valid output.
    */
   public abstract boolean setFrame(int method);
-  
-  /**
-   * A variation of toStringArray(), where each element of the
-   * String array contains a pair of values of the frame ( element
-   * 0 is X and W, element 1 is Y and P, and element 2 is Z and R ).
-   * Each element of the array is treated as its own line, when used
-   * to display a Frame's values in the Virtual Pendant. This method
-   * is designed to reduce the number of lines necessay to display
-   * the values of the Frames X, Y, Z, W, P, and R fields.
-   * 
-   * @returning  A 3 element String array, containing paired sets of
-   *             the Frames X, Y, Z, W, P, R fields.
-   */
-  public String[] toCondensedStringArray() {
-    String[] lines = new String[3];
-    String[] values = toStringArray();
-    /* The '-12' formatting parameter unifies the starting position
-     * of values 3 - 4 on each line, while allowing the maximum length
-     * of values 0-2. */
-    lines[0] = String.format("%-12s%s", values[0], values[3]);
-    lines[1] = String.format("%-12s%s", values[1], values[4]);
-    lines[2] = String.format("%-12s%s", values[2], values[5]);
-    
-    return lines;
-  }
 
   /**
    * Returns a string array, where each entry is one of
@@ -171,16 +149,21 @@ public abstract class Frame {
   
   /**
    * Converts the original toStringArray into a 2x1 String array, where the origin
-   * values are in the first element and the W, P, R values are in the second element,
-   * where each element has space buffers.
+   * values are in the first element and the W, P, R values are in the second
+   * element (or in the case of a joint angles, J1-J3 on the first and J4-J6 on
+   * the second), where each element has space buffers.
+   * 
+   * @param displayCartesian  whether to display the joint angles or the cartesian
+   *                          values associated with the point
+   * @returning               A 2-element String array
    */
   public String[] toLineStringArray() {
     String[] entries = toStringArray();
     String[] line = new String[2];
     // X, Y, Z with space buffers
-    line[0] = String.format("%-12s %-12s %-12s", entries[0], entries[1], entries[2]);
+    line[0] = String.format("%-12s %-12s %s", entries[0], entries[1], entries[2]);
     // W, P, R with space buffers
-    line[1] = String.format("%-12s %-12s %-12s", entries[3], entries[4], entries[5]);
+    line[1] = String.format("%-12s %-12s %s", entries[3], entries[4], entries[5]);
     
     return line;
   }

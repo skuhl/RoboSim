@@ -95,10 +95,10 @@ public class Point  {
     
     String[] line = new String[2];
     // X, Y, Z with space buffers
-    line[0] = String.format("%-12s %-12s %-12s", entries[0][0].concat(entries[0][1]),
+    line[0] = String.format("%-12s %-12s %s", entries[0][0].concat(entries[0][1]),
             entries[1][0].concat(entries[1][1]), entries[2][0].concat(entries[2][1]));
     // W, P, R with space buffers
-    line[1] = String.format("%-12s %-12s %-12s", entries[3][0].concat(entries[3][1]),
+    line[1] = String.format("%-12s %-12s %s", entries[3][0].concat(entries[3][1]),
             entries[4][0].concat(entries[4][1]), entries[5][0].concat(entries[5][1]));
     
     return line;
@@ -211,7 +211,7 @@ public class Program  {
     instructions.add(i);
     if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.getGlobal() && castIns.getPosition() >= nextRegister) {
+      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextRegister) {
         nextRegister = castIns.getPosition()+1;
         if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
       }
@@ -222,7 +222,7 @@ public class Program  {
     instructions.set(idx, i);
     if(i instanceof MotionInstruction ) { 
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.getGlobal() && castIns.getPosition() >= nextRegister) {
+      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextRegister) {
         nextRegister = castIns.getPosition()+1;
         if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
       }
@@ -309,11 +309,11 @@ public final class MotionInstruction extends Instruction  {
   private int positionNum;
   private boolean globalRegister;
   private float speed;
-  private float termination;
+  private int termination;
   private int userFrame, toolFrame;
 
   public MotionInstruction(int m, int p, boolean g, 
-                           float s, float t, int uf, int tf) {
+                           float s, int t, int uf, int tf) {
     super();
     motionType = m;
     positionNum = p;
@@ -324,7 +324,7 @@ public final class MotionInstruction extends Instruction  {
     toolFrame = tf;
   }
 
-  public MotionInstruction(int m, int p, boolean g, float s, float t) {
+  public MotionInstruction(int m, int p, boolean g, float s, int t) {
     super();
     motionType = m;
     positionNum = p;
@@ -339,12 +339,12 @@ public final class MotionInstruction extends Instruction  {
   public void setMotionType(int in) { motionType = in; }
   public int getPosition() { return positionNum; }
   public void setPosition(int in) { positionNum = in; }
-  public boolean getGlobal() { return globalRegister; }
-  public void setGlobal(boolean in) { globalRegister = in; }
+  public boolean usesGPosReg() { return globalRegister; }
+  public void setGlobalPosRegUse(boolean in) { globalRegister = in; }
   public float getSpeed() { return speed; }
   public void setSpeed(float in) { speed = in; }
-  public float getTermination() { return termination; }
-  public void setTermination(float in) { termination = in; }
+  public int getTermination() { return termination; }
+  public void setTermination(int in) { termination = in; }
   public float getUserFrame() { return userFrame; }
   public void setUserFrame(int in) { userFrame = in; }
   public float getToolFrame() { return toolFrame; }
@@ -386,7 +386,9 @@ public final class MotionInstruction extends Instruction  {
         
         if (active != toolFrames[toolFrame]) {
           // Invalid active Tool frame
-          System.out.printf("Active Tool frame must be %d!\n", toolFrame);
+          if (DISPLAY_TEST_OUTPUT) {
+            System.out.printf("Active Tool frame must be %d!\n", toolFrame);
+          }
           return null;
         }
         
@@ -401,7 +403,9 @@ public final class MotionInstruction extends Instruction  {
         
         if (active != userFrames[userFrame]) {
           // Invalid active User frame
-          System.out.printf("Active User frame must be %d!\n", userFrame);
+          if (DISPLAY_TEST_OUTPUT) {
+            System.out.printf("Active User frame must be %d!\n", userFrame);
+          }
           return null;
         }
         // Convert point into the Native Coordinate System
@@ -501,7 +505,6 @@ public class IOInstruction extends Instruction {
   
   public void execute() {
     armModel.endEffectorStatus = state;
-    System.out.printf("EE: %s\n", armModel.endEffectorStatus);
     
     // Check if the Robot is placing an object or picking up and object
     if(armModel.activeEndEffector == EndEffector.CLAW || armModel.activeEndEffector == EndEffector.SUCTION) {
@@ -509,7 +512,6 @@ public class IOInstruction extends Instruction {
       if(state == ON && armModel.held == null) {
         
         PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
-        println(ee_pos);
         // Determine if an object in the world can be picked up by the Robot
         for(WorldObject s : objects) {
           

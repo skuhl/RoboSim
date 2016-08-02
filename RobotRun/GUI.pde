@@ -741,15 +741,15 @@ void gui() {
 /* mouse events */
 
 public void mousePressed() {
-  mouseDown += 1;
-  if(mouseButton == LEFT) {
-    if(clickRotate%2 == 1) {
-      doRotate = !doRotate;
-    }
-    else if(clickPan%2 == 1) {
-      doPan = !doPan;
-    }
-  }
+  //mouseDown += 1;
+  //if(mouseButton == LEFT) {
+  //  if(clickRotate%2 == 1) {
+  //    doRotate = !doRotate;
+  //  }
+  //  else if(clickPan%2 == 1) {
+  //    doPan = !doPan;
+  //  }
+  //}
 }
 
 public void mouseDragged(MouseEvent e) {
@@ -761,17 +761,6 @@ public void mouseDragged(MouseEvent e) {
   
   // Hold down the right omuse button an move the mouse to rotate the camera
   if(mouseButton == RIGHT) {
-    myRotX += (mouseY - pmouseY) * 0.01;
-    myRotY += (mouseX - pmouseX) * 0.01;
-  }
-}
-
-public void mouseMoved() {
-  if(doPan) {
-    panX += mouseX - pmouseX;
-    panY += mouseY - pmouseY;
-  }
-  if(doRotate) {
     myRotX += (mouseY - pmouseY) * 0.01;
     myRotY += (mouseX - pmouseX) * 0.01;
   }
@@ -792,10 +781,6 @@ public void mouseWheel(MouseEvent event) {
       myscale = 0.25;
     }
   }
-}
-
-public void mouseReleased() {
-  mouseDown -= 1;
 }
 
 /*Keyboard events*/
@@ -827,12 +812,34 @@ public void keyPressed() {
     
     return;
   } else if (key == 'a') {
-    AXES_DISPLAY = (AXES_DISPLAY + 1) % 3;
+    // Cycle through Axes display states
+    switch (axesState) {
+      case NONE:
+        axesState = AxesDisplay.AXES;
+        break;
+      case AXES:
+        axesState = AxesDisplay.GRID;
+        break;
+      default:
+        axesState = AxesDisplay.NONE;
+    }
+    
   } else if(key == 'e') {
-    EE_MAPPING = (EE_MAPPING + 1) % 3;
+    // Cycle through EE Mapping states
+    switch (mappingState) {
+      case NONE:
+        mappingState = EEMapping.LINE;
+        break;
+      case LINE:
+        mappingState = EEMapping.DOT;
+        break;
+      default:
+        mappingState = EEMapping.NONE;
+    }
+    
   } else if (key == 'f') {
     // Display the User and Tool frames associated with the current motion instruction
-    if (mode == Screen.NAV_PROG_INST && (col_select == 3 || col_select == 4)) {
+    if (DISPLAY_TEST_OUTPUT && mode == Screen.NAV_PROG_INST && (col_select == 3 || col_select == 4)) {
       Instruction inst = programs.get(active_prog).getInstructions().get(active_instr);
       
       if (inst instanceof MotionInstruction) {
@@ -909,14 +916,6 @@ public void keyPressed() {
     myRotX = PI / 2f;
     myRotY = 0f;
   }
-  
-  if(key == ' ') { 
-    pan_normal();
-  }
-  
-  if(keyCode == SHIFT) { 
-    rotate_normal();
-  }
 }
 
 /*Button events*/
@@ -932,7 +931,6 @@ public void hide() {
   // release buttons of pan and rotate
   clickPan = 0;
   clickRotate = 0;
-  cursorMode = ARROW;
   PImage[] pan_released = {loadImage("images/pan_35x20.png"), 
     loadImage("images/pan_over.png"), 
     loadImage("images/pan_down.png")};
@@ -940,8 +938,7 @@ public void hide() {
   cp5.getController("pan_normal")
   .setImages(pan_released);
   cp5.getController("pan_shrink")
-  .setImages(pan_released);   
-  doPan = false;    
+  .setImages(pan_released); 
 
   PImage[] rotate_released = {loadImage("images/rotate_35x20.png"), 
     loadImage("images/rotate_over.png"), 
@@ -950,10 +947,7 @@ public void hide() {
   cp5.getController("rotate_normal")
   .setImages(rotate_released);
   cp5.getController("rotate_shrink")
-  .setImages(rotate_released);   
-  doRotate = false;   
-  
-  cursor(cursorMode);
+  .setImages(rotate_released);
 }
 
 public void show() {
@@ -967,14 +961,12 @@ public void show() {
   // release buttons of pan and rotate
   clickPan = 0;
   clickRotate = 0;
-  cursorMode = ARROW;
   PImage[] pan_released = {loadImage("images/pan_35x20.png"), 
     loadImage("images/pan_over.png"), 
     loadImage("images/pan_down.png")}; 
   
   cp5.getController("pan_normal")
   .setImages(pan_released);
-  doPan = false;    
 
   PImage[] rotate_released = {loadImage("images/rotate_35x20.png"), 
     loadImage("images/rotate_over.png"),
@@ -982,9 +974,6 @@ public void show() {
   
   cp5.getController("rotate_normal")
   .setImages(rotate_released);
-  doRotate = false;
-  
-  cursor(cursorMode);
 }
 
 // Menu button
@@ -1787,7 +1776,9 @@ public void f4() {
           
           if (active != null) {
             pt = removeFrame(pt, active.getOrigin(), active.getAxes());
-            System.out.printf("pt: %s\n", pt.position.toString());
+            if (DISPLAY_TEST_OUTPUT) {
+              System.out.printf("pt: %s\n", pt.position.toString());
+            }
           }
           
           armModel.moveTo(pt.position, pt.orientation);
@@ -2274,7 +2265,7 @@ public void ENTER() {
     case SET_MV_INSTRUCT_REG_TYPE:
       m = getActiveMotionInstruct();
       if(opt_select == 0) {
-        m.setGlobal(false);
+        m.setGlobalPosRegUse(false);
       } else if(opt_select == 1) {
         
         if(GPOS_REG[m.positionNum].point == null) {
@@ -2282,7 +2273,7 @@ public void ENTER() {
           err = "This register is uninitailized!";
           return;
         } else {
-          m.setGlobal(true);
+          m.setGlobalPosRegUse(true);
         }
       }
       lastScreen();
@@ -2332,10 +2323,9 @@ public void ENTER() {
       break;
     case SET_MV_INSTR_TERM:
       try {
-        float tempTerm = Float.parseFloat(workingText);
+        int tempTerm = Integer.parseInt(workingText);
         
-        if(tempTerm >= 0f && tempTerm <= 100f) {
-          tempTerm /= 100f;
+        if(tempTerm >= 0 && tempTerm <= 100) {
           MotionInstruction castIns = getActiveMotionInstruct();
           castIns.setTermination(tempTerm);
         }
@@ -2830,7 +2820,6 @@ public void SLOWDOWN() {
 /* navigation buttons */
 // zoomin button when interface is at full size
 public void zoomin_normal() {
-  myscale *= 1.1;
 }
 
 // zoomin button when interface is minimized
@@ -2840,7 +2829,6 @@ public void zoomin_shrink() {
 
 // zoomout button when interface is at full size
 public void zoomout_normal() {
-  myscale *= 0.9;
 }
 
 // zoomout button when interface is minimized
@@ -2856,7 +2844,6 @@ public void pan_normal() {
       rotate_normal();
     }
     
-    cursorMode = HAND;
     PImage[] pressed = {loadImage("images/pan_down.png"), 
       loadImage("images/pan_down.png"), 
       loadImage("images/pan_down.png")};
@@ -2865,17 +2852,13 @@ public void pan_normal() {
     .setImages(pressed);
   }
   else {
-    cursorMode = ARROW;
     PImage[] released = {loadImage("images/pan_35x20.png"), 
       loadImage("images/pan_over.png"), 
       loadImage("images/pan_down.png")};
     
     cp5.getController("pan_normal")
     .setImages(released);
-    doPan = false;   
   }
-  
-  cursor(cursorMode);
 }
 
 // pan button when interface is minimized
@@ -2891,7 +2874,6 @@ public void rotate_normal() {
       pan_normal();
     }
     
-    cursorMode = MOVE;
     PImage[] pressed = {loadImage("images/rotate_down.png"), 
       loadImage("images/rotate_down.png"), 
       loadImage("images/rotate_down.png")};
@@ -2900,17 +2882,13 @@ public void rotate_normal() {
     .setImages(pressed);
   }
   else {
-    cursorMode = ARROW;
     PImage[] released = {loadImage("images/rotate_35x20.png"), 
       loadImage("images/rotate_over.png"), 
       loadImage("images/rotate_down.png")};
     
     cp5.getController("rotate_normal")
     .setImages(released);
-    doRotate = false;   
   }
-  
-  cursor(cursorMode);
 }
 
 // rotate button when interface is minized
@@ -3242,6 +3220,46 @@ public void loadScreen(){
       opt_select = 0;
       workingText = "";
       break;
+    case SET_MV_INSTRUCT_TYPE:
+      MotionInstruction mInst = (MotionInstruction)programs.get(active_prog).getInstruction(active_instr);
+      
+      switch (mInst.getMotionType()) {
+        case MTYPE_JOINT:
+          opt_select = 0;
+          break;
+        case MTYPE_LINEAR:
+          opt_select = 1;
+          break;
+        case MTYPE_CIRCULAR:
+          opt_select = 2;
+          break;
+        default:
+          opt_select = -1;
+      }
+      
+      break;
+    case SET_MV_INSTR_SPD:
+      mInst = (MotionInstruction)programs.get(active_prog).getInstruction(active_instr);
+      workingText = Float.toString(mInst.speed);
+    case SET_MV_INSTRUCT_REG_TYPE:
+      mInst = (MotionInstruction)programs.get(active_prog).getInstruction(active_instr);
+      
+      if (mInst.usesGPosReg()) {
+        opt_select = 1;
+      } else {
+        opt_select = 0;
+      }
+      
+      break;
+    case SET_MV_INSTR_IDX:
+      mInst = (MotionInstruction)programs.get(active_prog).getInstruction(active_instr);
+      workingText = Integer.toString(mInst.getPosition());
+      
+      break;
+    case SET_MV_INSTR_TERM:
+      mInst = (MotionInstruction)programs.get(active_prog).getInstruction(active_instr);
+      workingText = Integer.toString(mInst.getTermination());
+      break;
     case SET_FRAME_INSTR_IDX:
       col_select = 2;
       opt_select = 0;
@@ -3346,7 +3364,6 @@ public void loadScreen(){
       opt_select = 0;
       
       if(GPOS_REG[active_index].comment != null) {
-        System.out.printf("_%s_", DREG[active_index].comment);
         workingText = GPOS_REG[active_index].comment;
       }
       else {
@@ -3668,7 +3685,11 @@ public String getHeader(Screen mode){
       header = "REGISTERS";
       break;
     case NAV_PREGS_J:
+      header = "POSTION REGISTERS (J)";
+      break;
     case NAV_PREGS_C:
+      header = "POSTION REGISTERS (C)";
+      break;
     case CP_PREG_COM:
     case CP_PREG_PT:
     case SWAP_PT_TYPE:
@@ -4292,7 +4313,7 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
         }
         
         // load register no, speed and termination type
-        if(a.getGlobal()) m.add("PR[");
+        if(a.usesGPosReg()) m.add("PR[");
         else m.add("P[");
         
         m.add((a.getPosition() + 1) +"]");
@@ -4301,7 +4322,7 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
         else m.add((int)(a.getSpeed()) + "mm/s");
         
         if(a.getTermination() == 0) m.add("FINE");
-        else m.add("CONT" + (int)(a.getTermination()*100));
+        else m.add("CONT" + a.getTermination());
       } 
       else if(instr instanceof FrameInstruction){
         FrameInstruction a = (FrameInstruction)instr;
@@ -4810,12 +4831,12 @@ public ArrayList<ArrayList<String>> loadFrameDetail(CoordFrame coordFrame) {
   
   // Display the frame set name as well as the index of the currently selected frame
   if(coordFrame == CoordFrame.TOOL) {
-    String[] fields = toolFrames[curFrameIdx].toCondensedStringArray();
+    String[] fields = toolFrames[curFrameIdx].toLineStringArray();
     // Place each value in the frame on a separate lien
     for(String field : fields) { details.add( newLine(field) ); }
     
   } else if(coordFrame == CoordFrame.USER) {
-    String[] fields = userFrames[curFrameIdx].toCondensedStringArray();
+    String[] fields = userFrames[curFrameIdx].toLineStringArray();
     // Place each value in the frame on a separate lien
     for(String field : fields) { details.add( newLine(field) ); }
     
@@ -5015,11 +5036,7 @@ public ArrayList<ArrayList<String>> loadRegisters() {
       }
       
     } else if(GPOS_REG[idx].point != null) {
-      // TODO What to display for a point ...
       regEntry = "...";
-    } else if(mode == Screen.NAV_PREGS_C && GPOS_REG[idx].point == null) {
-      // Distinguish Joint from Cartesian mode for now
-      regEntry = "#";
     }
     
     regs.add( newLine(regLbl, regEntry) );
