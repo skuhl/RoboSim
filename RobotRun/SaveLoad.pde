@@ -377,7 +377,7 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     // Write data associated with the MotionIntruction object
     out.writeInt(m_inst.motionType);
     out.writeInt(m_inst.positionNum);
-    out.writeBoolean(m_inst.globalRegister);
+    out.writeBoolean(m_inst.isGPosReg);
     out.writeFloat(m_inst.speed);
     out.writeInt(m_inst.termination);
     out.writeInt(m_inst.userFrame);

@@ -362,9 +362,24 @@ public class Instruction {
   public void toggleCommented(){ com = !com; }
   
   public int execute() { return 0; }
-
+  
+  public String[] toStringArray() {
+    return new String[] { "\0" };
+  }
+  
   public String toString() {
-    String str = "\0";
+    String[] fields = toStringArray();
+    String str = new String();
+    /* Return a stirng which is the concatenation of all the elements in
+     * this instruction's toStringArray() method, separated by spaces */
+    for (int fdx = 0; fdx < fields.length; ++fdx) {
+      str += fields[fdx];
+      
+      if (fdx < (fields.length - 1)) {
+        str += " ";
+      }
+    }
+    
     return str;
   }
 }
@@ -372,7 +387,7 @@ public class Instruction {
 public final class MotionInstruction extends Instruction  {
   private int motionType;
   private int positionNum;
-  private boolean globalRegister;
+  private boolean isGPosReg;
   private float speed;
   private int termination;
   private int userFrame, toolFrame;
@@ -382,7 +397,7 @@ public final class MotionInstruction extends Instruction  {
     super();
     motionType = m;
     positionNum = p;
-    globalRegister = g;
+    isGPosReg = g;
     speed = s;
     termination = t;
     userFrame = uf;
@@ -393,7 +408,7 @@ public final class MotionInstruction extends Instruction  {
     super();
     motionType = m;
     positionNum = p;
-    globalRegister = g;
+    isGPosReg = g;
     speed = s;
     termination = t;
     userFrame = -1;
@@ -404,8 +419,8 @@ public final class MotionInstruction extends Instruction  {
   public void setMotionType(int in) { motionType = in; }
   public int getPosition() { return positionNum; }
   public void setPosition(int in) { positionNum = in; }
-  public boolean usesGPosReg() { return globalRegister; }
-  public void setGlobalPosRegUse(boolean in) { globalRegister = in; }
+  public boolean usesGPosReg() { return isGPosReg; }
+  public void setGlobalPosRegUse(boolean in) { isGPosReg = in; }
   public float getSpeed() { return speed; }
   public void setSpeed(float in) { speed = in; }
   public int getTermination() { return termination; }
@@ -434,7 +449,7 @@ public final class MotionInstruction extends Instruction  {
   public Point getVector(Program parent) {
     Point pt;
     
-    if (globalRegister) {
+    if (isGPosReg) {
         pt = GPOS_REG[positionNum].point.clone();
       } else {
         pt = parent.LPosReg[positionNum].clone();
@@ -480,30 +495,50 @@ public final class MotionInstruction extends Instruction  {
       return pt;
     }
   } // end getVector()
-
-  public String toString() {
-    String me = "";
-    switch (motionType) {
-    case MTYPE_JOINT:
-      me += "J ";
-      break;
-    case MTYPE_LINEAR:
-      me += "L ";
-      break;
-    case MTYPE_CIRCULAR:
-      me += "C ";
-      break;
+  
+  public String[] toStringArray() {
+    String[] fields = new String[5];
+    // Motion type
+    switch(motionType) {
+      case MTYPE_JOINT:
+        fields[0] = "J";
+        break;
+      case MTYPE_LINEAR:
+        fields[0] = "L";
+        break;
+      case MTYPE_CIRCULAR:
+        fields[0] = "C";
+        break;
+      default:
+        fields[0] = "\0";
     }
-    if(globalRegister) me += "PR[ ";
-    else me += "P[ ";
-    me += Integer.toString(positionNum + 1)+"] ";
-    if(motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "% ";
-    else me += Integer.toString((int)speed) + "mm/s ";
-    if(termination == 0) me += "FINE";
-    else me += "CONT" + (int)(termination*100);
-    return me;
-  } // end toString()
-
+    
+    // Regster type
+    if (isGPosReg) {
+      fields[1] = "PR[";
+    } else {
+      fields[1] = "P[";
+    }
+    
+    // Register index
+    fields[2] = String.format("%d]", positionNum + 1);
+    
+    // Speed
+    if (motionType == MTYPE_JOINT) {
+      fields[3] = String.format("%d%%", Math.round(speed * 100));
+    } else {
+      fields[3] = String.format("%dmm/s", (int)(speed));
+    }
+    
+    // Termination percent
+    if (termination == 0) {
+      fields[4] = "FINE";
+    } else {
+      fields[4] = String.format("CONT%d", termination);
+    }
+    
+    return fields;
+  }
 } // end MotionInstruction class
 
 public class FrameInstruction extends Instruction {
@@ -542,16 +577,23 @@ public class FrameInstruction extends Instruction {
     
     return 2;
   }
-
-  public String toString() {
-    String ret = "";
-    if(frameType == FTYPE_TOOL) ret += "TFRAME_NUM= ";
-    else if(frameType == FTYPE_USER) ret += "UFRAME_NUM= ";
+  
+  public String[] toStringArray() {
+    String[] fields = new String[2];
+    // Frame type
+    if (frameType == FTYPE_TOOL) {
+      fields[0] = "TFRAME_NUM =";
+    } else if (frameType == FTYPE_USER) {
+      fields[0] = "UFRAME_NUM =";
+    } else {
+      fields[0] = "?FRAME_NUM =";
+    }
+    // Frame index
+    fields[1] = Integer.toString(frameIdx);
     
-    if(frameIdx == -1) { ret += "..."; }
-    else          { ret += (frameIdx + 1); }
-    return ret;
+    return fields;
   }
+  
 } // end FrameInstruction class
 
 public class IOInstruction extends Instruction {
@@ -579,13 +621,23 @@ public class IOInstruction extends Instruction {
     armModel.endEffectorState = state;
     return armModel.checkEECollision();
   }
-
-  public String toString() {
-    if(reg == -1){
-      return "IO[...]=" + ((state == ON) ? "ON" : "OFF");
+  
+  public String[] toStringArray() {
+    String[] fields = new String[2];
+    // Register index
+    if (reg == -1) {
+      fields[0] = "IO[...] =";
     } else {
-      return "IO[" + reg + "]=" + ((state == ON) ? "ON" : "OFF");
+      fields[0] = String.format("IO[%d] =", reg + 1);
     }
+    // Register value
+    if (state == ON) {
+      fields[1] = "ON";
+    } else {
+      fields[1] = "OFF";
+    }
+    
+    return fields;
   }
 } // end ToolInstruction class
 
@@ -596,12 +648,16 @@ public class LabelInstruction extends Instruction {
     labelNum = num;
   }
   
-  public String toString() {
-    if(labelNum == -1) {
-      return "LBL[...]";
+  public String[] toStringArray() {
+    String[] fields = new String[1];
+    // Label number
+    if (labelNum == -1) {
+      fields[0] = "LBL[...]";
     } else {
-      return "LBL[" + labelNum + "]";
+      fields[0] = String.format("LBL[%d]", labelNum);
     }
+    
+    return fields;
   }
 }
 
@@ -617,7 +673,7 @@ public class JumpInstruction extends Instruction {
   }
   
   /**
-   * Returns the index of the instruction to jump to.
+   * Returns the index of the instruction to which to jump.
    */
   public int execute() {
     Program p = activeProgram();
@@ -626,8 +682,7 @@ public class JumpInstruction extends Instruction {
       int lblIdx = p.findLabelIdx(tgtLblNum);
       
       if (lblIdx != -1) {
-        // Set the current instruction to the label instruction index
-        if (DISPLAY_TEST_OUTPUT) { System.out.printf("%d -> %d\n", active_instr, lblIdx); }
+        // Return destination instrution index
         return lblIdx;
       } else {
         println("Invalid jump instruction!");
@@ -639,8 +694,16 @@ public class JumpInstruction extends Instruction {
     }
   }
   
-  public String toString() {
-    return String.format("JMP LBL[%d]", tgtLblNum);
+  public String[] toStringArray() {
+    String[] fields = new String[1];
+    // Target label number
+    if (tgtLblNum == -1) {
+      fields[0] = "JMP LBL[...]";
+    } else {
+      fields[0] = String.format("JMP LBL[%d]", tgtLblNum);
+    }
+    
+    return fields;
   }
 }
 
@@ -728,13 +791,13 @@ public class RegisterStatement extends Instruction {
   
   /**
    * Convert the entire statement to a set of Strings, where each
-   * operator and operand is a separate Stirng Object.
+   * operator and operand is a separate String Object.
    */
-  public ArrayList<String> toStringArrayList() {
+  public String[] toStringArray() {
     ArrayList<String> expression = statement.toStringArrayList();
     expression.add(0, statement.paramToString(regIndices) + " =");
     
-    return expression;
+    return (String[])expression.toArray();
   }
 }
 

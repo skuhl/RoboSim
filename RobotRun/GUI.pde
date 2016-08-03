@@ -2295,7 +2295,7 @@ public void ENTER() {
           return;
         }
         
-        if(castIns.globalRegister) {
+        if(castIns.isGPosReg) {
           // Check global register
           if(GPOS_REG[tempRegister].point == null) {
             // Invalid register index
@@ -3216,7 +3216,15 @@ public void loadScreen(){
       break;
     case SET_MV_INSTR_SPD:
       mInst = activeMotionInst();
-      workingText = Float.toString(mInst.speed);
+      int instSpd;
+      // Convert speed into an integer value
+      if (mInst.motionType == MTYPE_JOINT) {
+        instSpd = Math.round(mInst.speed * 100f);
+      } else {
+       instSpd = Math.round(mInst.speed);
+      }
+      
+      workingText = Integer.toString(instSpd);
     case SET_MV_INSTRUCT_REG_TYPE:
       mInst = activeMotionInst();
       
@@ -4262,95 +4270,35 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
     }
     else {
       Instruction instr = p.getInstruction(i);
-      ArrayList<String> m = new ArrayList<String>();
-      
+      ArrayList<String> line = new ArrayList<String>();
+      // Add line number
       if(instr.isCommented())
-        m.add("//"+Integer.toString(i+1) + ")");
+        line.add("//"+Integer.toString(i+1) + ")");
       else
-        m.add(Integer.toString(i+1) + ")");
+        line.add(Integer.toString(i+1) + ")");
       
       if(instr instanceof MotionInstruction) {
+        // Show '@' at the an instrution, if the Robot's position is close to that position stored in the instruction's register
         MotionInstruction a = (MotionInstruction)instr;
         
         Point ee_point = nativeRobotEEPoint(armModel.getJointAngles());
         Point instPt = a.getVector(p);
         
         if(instPt != null && ee_point.position.dist(instPt.position) < (liveSpeed / 100f)) {
-          m.add("@");
+          line.add("@");
         }
         else {
-          m.add("\0");
+          line.add("\0");
         }
-        
-        // add motion type
-        switch(a.getMotionType()) {
-          case MTYPE_JOINT:
-            m.add("J");
-            break;
-          case MTYPE_LINEAR:
-            m.add("L");
-            break;
-          case MTYPE_CIRCULAR:
-            m.add("C");
-            break; 
-        }
-        
-        // load register no, speed and termination type
-        if(a.usesGPosReg()) m.add("PR[");
-        else m.add("P[");
-        
-        m.add((a.getPosition() + 1) +"]");
-        
-        if(a.getMotionType() == MTYPE_JOINT) m.add((a.getSpeed() * 100) + "%");
-        else m.add((int)(a.getSpeed()) + "mm/s");
-        
-        if(a.getTermination() == 0) m.add("FINE");
-        else m.add("CONT" + a.getTermination());
-      } 
-      else if(instr instanceof FrameInstruction){
-        FrameInstruction a = (FrameInstruction)instr;
-        
-        if(a.frameType == FTYPE_TOOL){
-          m.add("TFRAME_NUM =");
-        } else{
-          m.add("UFRAME_NUM =");
-        }
-        
-        if(a.getReg() == -1){
-          m.add("...");
-        } else {
-          m.add(""+a.getReg());
-        }
-      }
-      else if(instr instanceof IOInstruction){
-        IOInstruction a = (IOInstruction)instr;
-        
-        if(a.getReg() == -1) {
-          m.add("IO[...]=");
-        } else {
-          m.add("IO[" + a.getReg() + "]=");
-        }
-                
-        if(a.getState() == ON){
-          m.add("ON");
-        } else {
-          m.add("OFF");
-        }
-      }
-      else if(instr instanceof IfStatement){
-        IfStatement stmt = (IfStatement)instr;
-        String[] s = stmt.expr.toStringArray();
-        
-        m.add("IF");
-        for(int j = 0; j < s.length; j += 1) {
-          m.add(s[j]); 
-        }
-      }
-      else {
-        m.add(instr.toString());
       }
       
-      instruct_list.add(m);
+      String[] fields = instr.toStringArray();
+      
+      for (String field : fields) {
+        line.add(field);
+      }
+      
+      instruct_list.add(line);
     }
   }
    
