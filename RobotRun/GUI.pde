@@ -884,7 +884,7 @@ public void keyPressed() {
     // Release an object ifit is currently being held
     if(armModel.held != null) {
       armModel.releaseHeldObject();
-      armModel.endEffectorStatus = OFF;
+      armModel.endEffectorState = OFF;
     }
     
     float[] rot = {0, 0, 0, 0, 0, 0};
@@ -898,12 +898,10 @@ public void keyPressed() {
     intermediatePositions.clear();
   } else if (key == 'm') {
     println(mode.toString());
-  } else if(key == ENTER && (armModel.activeEndEffector == EndEffector.CLAW || 
-        armModel.activeEndEffector == EndEffector.SUCTION)) { 
-    // Pick up an object within reach of the EE when the 'ENTER' button is pressed for either
-    // the suction or claw EE
-    IOInstruction pickup = new IOInstruction(0, (armModel.endEffectorStatus+1)%2);
-    pickup.execute();
+  } else if(key == ENTER) {
+    if (!programRunning) {
+      armModel.toggleEEState();
+    }
   } else if(keyCode == KeyEvent.VK_1) {
     // Front view
     panX = 0;
@@ -1162,10 +1160,11 @@ public void LINE() {
 }
 
 public void IO() {
-  if(armModel.endEffectorStatus == OFF)
-  armModel.endEffectorStatus = ON;
-  else
-  armModel.endEffectorStatus = OFF;
+  if (!programRunning) {
+    /* Do not allow the Robot's End Effector state to be changed
+     * when a program is executing */
+    armModel.toggleEEState();
+  }
 }
 
 /*Arrow keys*/
@@ -1306,7 +1305,7 @@ public void dn() {
       break;
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
-    case SELECT_DELETE:  //<>//
+    case SELECT_DELETE: //<>//
       size = activeProgram().getInstructions().size();
       indices = moveDown(active_instr, size, row_select, start_render, shift);
       
@@ -2336,7 +2335,7 @@ public void ENTER() {
         switchScreen(Screen.INPUT_DREG_IDX);
       } else if(opt_select == 1) {
         //set arg1 to new io reg
-        oper = new ExprOperand(new IORegister(), -1);
+        oper = new ExprOperand(new IORegister(null), -1);
         switchScreen(Screen.INPUT_IOREG_IDX);
       } else if(opt_select == 2) {
         //set arg1 to new expression
@@ -2453,11 +2452,11 @@ public void ENTER() {
       break;      
     case SET_FRAME_INSTR_IDX:
       try {
-        int tempReg = Integer.parseInt(workingText);
+        int frameIdx = Integer.parseInt(workingText) - 1;
         
-        if(tempReg >= 0 && tempReg < 6){
+        if(frameIdx >= -1 && frameIdx < min(toolFrames.length, userFrames.length)){
           fInst = (FrameInstruction)activeInstruction();
-          fInst.setReg(tempReg);
+          fInst.setReg(frameIdx);
         }
       }
       catch (NumberFormatException NFEx){ /* Ignore invalid input */ }
@@ -2469,7 +2468,12 @@ public void ENTER() {
     case SET_LBL_NUM:
       try {
         int tempNum = Integer.parseInt(workingText);
-        ((LabelInstruction)activeInstruction()).labelNum = tempNum;        
+        
+        if (tempNum < 0 || tempNum > 99) {
+          println("Invalid label index!");
+        } else {
+          ((LabelInstruction)activeInstruction()).labelNum = tempNum;
+        }
       }
       catch (NumberFormatException NFEx){ /* Ignore invalid input */ }
       
@@ -2477,13 +2481,13 @@ public void ENTER() {
       break;
     case SET_JUMP_TGT:
       try {
-        int tempLbl = Integer.parseInt(workingText);
-        LabelInstruction l = p.getLabel(tempLbl);
-        if(l != null){
-          JumpInstruction jmp = (JumpInstruction)activeInstruction();;
-          jmp.tgtLabel = l;
-        }
-        else{
+        int lblNum = Integer.parseInt(workingText);
+        int lblIdx = p.findLabelIdx(lblNum);
+        
+        if(lblIdx != -1) {
+          JumpInstruction jmp = (JumpInstruction)activeInstruction();
+          jmp.tgtLblNum = lblNum;
+        } else {
           err = "Invalid label number.";
         }
       }
@@ -4681,8 +4685,7 @@ public void newIOInstruction() {
 public void newLabel() {
   Program p = activeProgram();
   
-  int labelIdx = active_instr;
-  LabelInstruction l = new LabelInstruction(-1, labelIdx);
+  LabelInstruction l = new LabelInstruction(-1);
   
   if(active_instr != p.getInstructions().size()) {
     p.overwriteInstruction(active_instr, l);
@@ -5067,10 +5070,16 @@ public ArrayList<String> loadIORegisters() {
   ArrayList<String> ioRegs = new ArrayList<String>();
   
   for(int i = 0; i < IO_REG.length; i += 1){
-    if(IO_REG[i] == null) IO_REG[i] = new IORegister();
-    
     String state = (IO_REG[i].state == ON) ? "ON" : "OFF";
-    ioRegs.add((i+1) + ") IO[" + i + "] = " + state);
+    String ee;
+    
+    if (IO_REG[i].associatedEE != null) {
+      ee = IO_REG[i].associatedEE.name();
+    } else {
+      ee = "";
+    }
+    
+    ioRegs.add( String.format("IO[%d:%-8s] = %s", i + 1, ee, state) );
   }
   
   return ioRegs;

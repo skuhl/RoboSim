@@ -90,7 +90,7 @@ public class Model {
 public class ArmModel {
   
   public EndEffector activeEndEffector = EndEffector.NONE;
-  public int endEffectorStatus = OFF;
+  public int endEffectorState = OFF;
   public RobotMotion motionType;
   
   public ArrayList<Model> segments = new ArrayList<Model>();
@@ -293,12 +293,12 @@ public class ArmModel {
       translate(-88, 0, 0);
       eeModelClaw.draw();
       rotateZ(PI/2);
-      if(endEffectorStatus == OFF) {
+      if(endEffectorState == OFF) {
         translate(10, -85, 30);
         eeModelClawPincer.draw();
         translate(55, 0, 0);
         eeModelClawPincer.draw();
-      } else if(endEffectorStatus == ON) {
+      } else if(endEffectorState == ON) {
         translate(28, -85, 30);
         eeModelClawPincer.draw();
         translate(20, 0, 0);
@@ -445,7 +445,7 @@ public class ArmModel {
   public ArrayList<Box> currentEEHitBoxList() {
     // Determine which set of hit boxes to display based on the active End Effector
     if(activeEndEffector == EndEffector.CLAW) {
-      return (endEffectorStatus == ON) ? eeHitBoxes[1] : eeHitBoxes[2];
+      return (endEffectorState == ON) ? eeHitBoxes[1] : eeHitBoxes[2];
     } else if(activeEndEffector == EndEffector.SUCTION) {
       return eeHitBoxes[3];
     }
@@ -521,7 +521,7 @@ public class ArmModel {
     
     for(Box b : eeHBs) {
       // Special case for held objects
-      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorStatus != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
+      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorState != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
         b.outline = color(255, 0, 0);
         collision = true;
       }
@@ -543,7 +543,7 @@ public class ArmModel {
     int eeIdx = 0;
     // Determine which set of hit boxes to display based on the active End Effector
     if(activeEndEffector == EndEffector.CLAW) {
-      if(endEffectorStatus == ON) {
+      if(endEffectorState == ON) {
         eeIdx = 1;
       } else {
         eeIdx = 2;
@@ -878,7 +878,7 @@ public class ArmModel {
   }
   
   /**
-   * TODO
+   * TODO comment
    */
   public void moveTo(float[] jointAngles) {
     setupRotationInterpolation(jointAngles);
@@ -886,7 +886,7 @@ public class ArmModel {
   }
   
   /**
-   * TODO
+   * TODO comment
    */
   public void moveTo(PVector position, float[] orientation) {
     Point start = nativeRobotEEPoint(armModel.getJointAngles());
@@ -938,10 +938,12 @@ public class ArmModel {
     switch (activeEndEffector) {
       case NONE:
         activeEndEffector = EndEffector.SUCTION;
+        endEffectorState = IO_REG[0].state;
         break;
       
       case SUCTION:
         activeEndEffector = EndEffector.CLAW;
+        endEffectorState = IO_REG[1].state;
         break;
         
       case CLAW:
@@ -954,10 +956,77 @@ public class ArmModel {
     releaseHeldObject();
   }
   
+  /**
+   * Toggle the Robot's state between ON and OFF. Update the
+   * Robot's currently held world object as well.
+   */
+  public void toggleEEState() {
+    if (endEffectorState == ON) {
+      endEffectorState = OFF;
+    } else {
+      endEffectorState = ON;
+    }
+    
+    updateIORegister();
+    checkEECollision();
+  }
   
-  /* If an object is currently being held by the Robot arm, then release it */
+  /**
+   * TODO comment
+   */
+  public int checkEECollision() {
+    // Check if the Robot is placing an object or picking up and object
+    if(activeEndEffector == EndEffector.CLAW || activeEndEffector == EndEffector.SUCTION) {
+      
+      if(endEffectorState == ON && armModel.held == null) {
+        
+        PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
+        // Determine if an object in the world can be picked up by the Robot
+        for(WorldObject s : objects) {
+          
+          if(s.collision(ee_pos)) {
+            armModel.held = s;
+            return 0;
+          }
+        }
+      } 
+      else if (endEffectorState == OFF && armModel.held != null) {
+        // Release the object
+        armModel.releaseHeldObject();
+        return 1;
+      }
+    }
+    
+    return 2;
+  }
+  
+  /**
+   * If an object is currently being held by the Robot arm, then release it.
+   * Then, update the Robot's End Effector status and IO Registers.
+   */
   public void releaseHeldObject() {
-    armModel.held = null;
+    if (held != null) {
+      endEffectorState = OFF;
+      updateIORegister();
+      armModel.held = null;
+    }
+  }
+  
+  /**
+   * Update the IO Register associated with the Robot's current End Effector
+   * (if any) to the Robot's current End Effector state.
+   */
+  public void updateIORegister() {
+    
+    switch (activeEndEffector) {
+      case SUCTION:
+        IO_REG[0].state = endEffectorState;
+        break;
+      case CLAW:
+        IO_REG[1].state = endEffectorState;
+        break;
+      default:
+    }
   }
   
   /**

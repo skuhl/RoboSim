@@ -115,6 +115,16 @@ public int loadState() {
     }
   }
   
+  int idx = 0;
+  // Associated each End Effector with an I/O Register
+  IO_REG[idx++] = new IORegister(EndEffector.SUCTION);
+  IO_REG[idx++] = new IORegister(EndEffector.CLAW);
+  
+  for (; idx < IO_REG.length; ++idx) {
+    // Unassociated registers
+    IO_REG[idx] = new IORegister(null);
+  }
+  
   return error;
 }
 
@@ -378,7 +388,7 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeByte(1);
     // Write data associated with the FrameInstruction object
     out.writeInt(f_inst.frameType);
-    out.writeInt(f_inst.reg);
+    out.writeInt(f_inst.frameIdx);
   } else if(inst instanceof IOInstruction) {
     IOInstruction t_inst = (IOInstruction)inst;
     // Flag byte denoting this instruction as a ToolInstruction
@@ -391,12 +401,11 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     
     out.writeByte(3);
     out.writeInt(l_inst.labelNum);
-    out.writeInt(l_inst.labelIdx);
   } else if(inst instanceof JumpInstruction) {
     JumpInstruction j_inst = (JumpInstruction)inst;
     
     out.writeByte(4);
-    out.writeInt(j_inst.tgtLabel.labelNum);
+    out.writeInt(j_inst.tgtLblNum);
   } else if(inst instanceof Instruction) {
     out.writeByte(127);
   } else {/* TODO add other instructions! */}
@@ -441,9 +450,8 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     inst = new IOInstruction(reg, loadint(setting));
   } else if (instType == 3) {
     int labelNum = in.readInt();
-    int labelIdx = in.readInt();
     
-    inst = new LabelInstruction(labelNum, labelIdx);
+    inst = new LabelInstruction(labelNum);
   } else if (instType == 4) {
     int tgtLabelNum = in.readInt();
     

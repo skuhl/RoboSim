@@ -593,7 +593,7 @@ public void mapToRobotBasePlane() {
   switch (mappingState) {
   case LINE:
     stroke(c);
-    // Draw a line, from the EE to the grid in the xy plane, parallel to the z plane
+    // Draw a line, from the EE to the grid in the xy plane, parallel to the xy plane
     line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
     break;
     

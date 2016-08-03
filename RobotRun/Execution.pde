@@ -783,6 +783,7 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
  */
 boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   Instruction activeInst = activeInstruction();
+  int nextInstruction = active_instr + 1;
   
   //stop executing if no valid program is selected or we reach the end of the program
   if(robotFault || activeInst == null) {
@@ -805,6 +806,9 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
           executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
         }
       }
+    } else if (activeInst instanceof JumpInstruction) {
+      nextInstruction = activeInst.execute();
+      executingInstruction = false;
     } else {
       activeInst.execute();
       executingInstruction = false;
@@ -814,13 +818,21 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
   
   // Move to next instruction after current is finished
   if(!executingInstruction) {
-    // Move down an instruction
-    int size = activeProgram().getInstructions().size() + 1;
-    int[] indices = moveDown(active_instr, size, row_select, start_render, shift);
     
-    active_instr = indices[0];
-    row_select = indices[1];
-    start_render = indices[2];
+    if (nextInstruction == -1) {
+      // Failed to jump to target label
+      triggerFault();
+    } else {
+      // Move to nextInstruction
+      int size = activeProgram().getInstructions().size() + 1;
+      int i = active_instr,
+          r = row_select;
+      
+      active_instr = max(0, min(nextInstruction, size - 1));
+      row_select = max(0, min(r + active_instr - i, contents.size() - 1));
+      start_render = start_render + (active_instr - i) - (row_select - r);
+    }
+    
     updateScreen();
   }
   

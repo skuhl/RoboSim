@@ -3,7 +3,7 @@ private final PositionRegister[] GPOS_REG = new PositionRegister[100];
 // Data Registers
 private final DataRegister[] DREG = new DataRegister[100];
 // IO Registers
-private final IORegister[] IO_REG = new IORegister[6];
+private final IORegister[] IO_REG = new IORegister[2];
 
 
 /* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
@@ -43,6 +43,22 @@ public class PositionRegister {
     comment = c;
     point = pt;
     isCartesian = isCart;
+  }
+}
+
+/* A simple class designed to hold the current states of the Robot's various End Effectors */
+public class IORegister {
+  public final EndEffector associatedEE;
+  public int state;
+  
+  public IORegister(EndEffector EE) {
+    associatedEE = EE;
+    state = OFF;
+  }
+  
+  public IORegister(EndEffector EE, int init) {
+    associatedEE = EE;
+    state = init;
   }
 }
 
@@ -164,21 +180,6 @@ public class RegStmtPoint {
     values[3] = wpr.x;
     values[4] = wpr.y;
     values[5] = wpr.z;
-  }
-}
-
-public class IORegister {
-  public String comment;
-  public int state;
-  
-  public IORegister(){
-    comment = null;
-    state = OFF;
-  }
-  
-  public IORegister(int init, String com){
-    comment = com;
-    state = init;
   }
 }
 

@@ -209,6 +209,7 @@ public class Program  {
   public void addInstruction(Instruction i) {
     //i.setProg(this);
     instructions.add(i);
+    
     if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
       if(!castIns.usesGPosReg() && castIns.getPosition() >= nextRegister) {
@@ -259,6 +260,27 @@ public class Program  {
     }
     
     return null;
+  }
+  
+  /**
+   * Determines if a label with the given number exists in the program and returns its
+   * instruction index if it does.
+   * 
+   * @param lblNum  The target label index
+   * @returning     The instruction index of the target label, or -1 if it exists
+   */
+  public int findLabelIdx(int lblNum) {
+    
+    for (int idx = 0; idx < instructions.size(); ++idx) {
+      Instruction inst = instructions.get(idx);
+      // Check the current instruction
+      if (inst instanceof LabelInstruction && ((LabelInstruction)inst).labelNum == lblNum) {
+        // Return the label's instruction index
+        return idx;
+      }
+    }
+    // A label with the given number does not exist
+    return -1;
   }
 } // end Program class
 
@@ -339,7 +361,7 @@ public class Instruction {
   public boolean isCommented(){ return com; }
   public void toggleCommented(){ com = !com; }
   
-  public void execute() {}
+  public int execute() { return 0; }
 
   public String toString() {
     String str = "\0";
@@ -486,32 +508,39 @@ public final class MotionInstruction extends Instruction  {
 
 public class FrameInstruction extends Instruction {
   private int frameType;
-  private int reg;
+  private int frameIdx;
   
   public FrameInstruction(int f) {
     super();
     frameType = f;
-    reg = -1;
+    frameIdx = -1;
   }
   
   public FrameInstruction(int f, int r) {
     super();
     frameType = f;
-    reg = r;
+    frameIdx = r;
   }
   
   public int getFrameType(){ return frameType; }
   public void setFrameType(int t){ frameType = t; }
-  public int getReg(){ return reg; }
-  public void setReg(int r){ reg = r; }
+  public int getReg(){ return frameIdx; }
+  public void setReg(int r){ frameIdx = r; }
   
-  public void execute() {
-    if(reg != -1){
-      if(frameType == FTYPE_TOOL) activeToolFrame = reg;
-      else if(frameType == FTYPE_USER) activeUserFrame = reg;
+  public int execute() {
+    if(frameIdx != -1) {
+      if (frameType == FTYPE_TOOL) {
+        activeToolFrame = frameIdx;
+        return 0;
+      } else if (frameType == FTYPE_USER) {
+        activeUserFrame = frameIdx;
+        return 1;
+      }
       // Update the Robot Arm's current frame rotation matrix
       updateCoordFrame();
     }
+    
+    return 2;
   }
 
   public String toString() {
@@ -519,8 +548,8 @@ public class FrameInstruction extends Instruction {
     if(frameType == FTYPE_TOOL) ret += "TFRAME_NUM= ";
     else if(frameType == FTYPE_USER) ret += "UFRAME_NUM= ";
     
-    if(reg == -1) { ret += "..."; }
-    else          { ret += reg; }
+    if(frameIdx == -1) { ret += "..."; }
+    else          { ret += (frameIdx + 1); }
     return ret;
   }
 } // end FrameInstruction class
@@ -546,29 +575,9 @@ public class IOInstruction extends Instruction {
   public int getReg(){ return reg; }
   public void setReg(int r){ reg = r; }
   
-  public void execute() {
-    armModel.endEffectorStatus = state;
-    
-    // Check if the Robot is placing an object or picking up and object
-    if(armModel.activeEndEffector == EndEffector.CLAW || armModel.activeEndEffector == EndEffector.SUCTION) {
-      
-      if(state == ON && armModel.held == null) {
-        
-        PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
-        // Determine if an object in the world can be picked up by the Robot
-        for(WorldObject s : objects) {
-          
-          if(s.collision(ee_pos)) {
-            armModel.held = s;
-            break;
-          }
-        }
-      } 
-      else if(state == OFF && armModel.held != null) {
-        // Release the object
-        armModel.releaseHeldObject();
-      }
-    }
+  public int execute() {
+    armModel.endEffectorState = state;
+    return armModel.checkEECollision();
   }
 
   public String toString() {
@@ -582,20 +591,10 @@ public class IOInstruction extends Instruction {
 
 public class LabelInstruction extends Instruction {
   int labelNum;
-  int labelIdx; 
   
-  public LabelInstruction(int i) {
-    labelNum = -1;
-    labelIdx = i;
+  public LabelInstruction(int num) {
+    labelNum = num;
   }
-  
-  public LabelInstruction(int n, int i) {
-    super();
-    labelNum = n;
-    labelIdx = i;
-  }
-  
-  public void execute() {}
   
   public String toString() {
     if(labelNum == -1) {
@@ -607,27 +606,41 @@ public class LabelInstruction extends Instruction {
 }
 
 public class JumpInstruction extends Instruction {
-  LabelInstruction tgtLabel;
+  public int tgtLblNum;
   
   public JumpInstruction() {
-    tgtLabel = null;
+    tgtLblNum = -1;
   }
   
-  public JumpInstruction(int l){
-    tgtLabel = programs.get(active_prog).getLabel(l);
+  public JumpInstruction(int l) {
+    tgtLblNum = l;
   }
   
-  public void execute() {
-    if(tgtLabel != null)
-      active_instr = tgtLabel.labelIdx;
-  }
-  
-  public String toString(){
-    if(tgtLabel == null){
-      return "JMP LBL[...]";
+  /**
+   * Returns the index of the instruction to jump to.
+   */
+  public int execute() {
+    Program p = activeProgram();
+    
+    if (p != null) {
+      int lblIdx = p.findLabelIdx(tgtLblNum);
+      
+      if (lblIdx != -1) {
+        // Set the current instruction to the label instruction index
+        if (DISPLAY_TEST_OUTPUT) { System.out.printf("%d -> %d\n", active_instr, lblIdx); }
+        return lblIdx;
+      } else {
+        println("Invalid jump instruction!");
+        return 1;
+      }
     } else {
-      return "JMP LBL[" + tgtLabel.labelNum + "]";
+      println("No active program!");
+      return 2;
     }
+  }
+  
+  public String toString() {
+    return String.format("JMP LBL[%d]", tgtLblNum);
   }
 }
 
@@ -652,10 +665,12 @@ public class IfStatement extends Instruction {
     instr = i;
   }
   
-  public void execute() {
+  public int execute() {
     if(expr.evaluate().boolVal){
       instr.execute();
     }
+    
+    return 0;
   }
   
   public String toString(){
@@ -706,8 +721,9 @@ public class RegisterStatement extends Instruction {
   }
   
   
-  public void execute() {
+  public int execute() {
     // TODO
+    return 0;
   }
   
   /**
