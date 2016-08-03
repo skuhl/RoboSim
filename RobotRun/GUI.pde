@@ -1272,7 +1272,7 @@ public void dn() {
   int size;
   switch(mode) {
     case NAV_PROGRAMS: //<>//
-      size = programs.size(); //<>//
+      size = programs.size();
       int[] indices = moveDown(active_prog, size, opt_select, start_render, shift);
       
       active_prog = indices[0];
@@ -1305,8 +1305,8 @@ public void dn() {
       break;
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
-    case SELECT_DELETE: //<>//
-      size = activeProgram().getInstructions().size();
+    case SELECT_DELETE:
+      size = activeProgram().getInstructions().size(); //<>//
       indices = moveDown(active_instr, size, row_select, start_render, shift);
       
       active_instr = indices[0];
@@ -1318,7 +1318,7 @@ public void dn() {
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
         row_select, col_select, active_instr, start_render);
-      } //<>//
+      }
       break;
     case NAV_DREGS:
     case NAV_PREGS_J:
@@ -3370,7 +3370,7 @@ public void loadScreen(){
 
 // update text displayed on screen
 public void updateScreen() {
-  int next_px = display_px; //<>//
+  int next_px = display_px;
   int next_py = display_py;
   int txt, bg;
   
@@ -3737,8 +3737,6 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case SET_LBL_NUM:
     case SET_JUMP_TGT:
       contents = loadInstructions(active_prog);
-      if(mode.getType() == ScreenType.TYPE_LINE_SELECT)
-        contents.remove(contents.size() - 1);
       break;
     case SELECT_COND_STMT:
       contents.add(newLine("1. IF ... =   ...", "7. SEL ... = ..."));
@@ -4246,11 +4244,20 @@ public ArrayList<ArrayList<String>> loadInstructions(int programID) {
   
   Program p = programs.get(programID);
   int size = p.getInstructions().size();
+  
   int start = start_render;
-  int end = min(start + ITEMS_TO_SHOW, size + 1);
+  int end;
+  
+  if (mode.getType() == ScreenType.TYPE_LINE_SELECT) {
+    end = min(start + ITEMS_TO_SHOW, size);
+  } else {
+    // Add END row for editing
+    end = min(start + ITEMS_TO_SHOW, size + 1);
+  }
   
   for(int i = start; i < end; i+= 1) {
-    if(i == size){
+    if(i == size) {
+      
       instruct_list.add(newLine("[END]")); 
     }
     else {
