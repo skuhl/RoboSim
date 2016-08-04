@@ -18,15 +18,10 @@
  * operand, whose position index is -1. SubExpression operands hold an entirely inidependent expression.
  *
  *
- * ConstantOp  ->  Constants
- * RobotPoint  ->  Robot's current position
- * RegisterOp  ->  Register values
- * PositionOp  ->  Position Register points/values
- *
- * For the third entry of the tripleton array:
- *   0 - 5  ->  J1 - J6           (for Joint points)
- *          ->  X, Y, Z, W, P, R  (for Cartesian points)
- * 
+ * ConstantOp       ->  Constants
+ * RobotPositionOp  ->  Robot's current position
+ * RegisterOp       ->  Register values
+ * PositionOp       ->  Position Register points/values
  */
 public class RegisterExpression {
   private final ArrayList<Object> parameters;
@@ -101,7 +96,7 @@ public class RegisterExpression {
         }
         
       } else if (Pattern.matches("R\\[[0123456789]+\\]", param)) {
-        // Parse register operand
+        // Parse Register operand
         String idxVal = param.substring(2, param.length() - 1);
         int idx = Integer.parseInt(idxVal);
         parameters.add(new RegisterOp(idx));
@@ -380,10 +375,6 @@ public class RegisterExpression {
           return a.add(b);
         case SUBTR:
           return a.subtract(b);
-        case MULT:
-        case DIV:
-        case MOD:
-        case INTDIV:
         default:
       }
       // Illegal operator
@@ -653,7 +644,7 @@ public class SubExpression implements Operand {
     expr = new RegisterExpression(params);
   }
   
-  public Object getValue() { return expr.evaluate(); }
+  public Object getValue() throws ExpressionEvaluationException { return expr.evaluate(); }
   
   public Object clone() {
     // Copy the expression into a new Sub Expression
