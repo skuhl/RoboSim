@@ -117,7 +117,7 @@ void showMainDisplayText() {
   }
 }
 
-/**
+/** //<>//
  * Transitions to the next Coordinate frame in the cycle, updating the Robot's current frame
  * in the process and skipping the Tool or User frame if there are no active frames in either
  * one. Since the Robot's frame is potentially reset in this method, all Robot motion is halted.
@@ -126,7 +126,7 @@ void showMainDisplayText() {
  */
 public void coordFrameTransition() {
   // Stop Robot movement
-  armModel.halt(); //<>//
+  armModel.halt();
   
   // Increment the current coordinate frame
   switch (curCoordFrame) {

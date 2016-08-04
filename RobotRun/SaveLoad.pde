@@ -286,13 +286,13 @@ private Program loadProgram(DataInputStream in) throws IOException {
  * Saves the data associated with the given Point object to the file opened
  * by the given output stream. Null Points are saved a single zero byte.
  * 
- * @param   p            The Point of which to save the data
+ * @param   p            The Point of which to save the data //<>//
  * @param   out          The output stream used to save the Point
  * @throws  IOException  If an error occurs with writing the data of the Point
  */
 private void savePoint(Point p, DataOutputStream out) throws IOException {
   
-  if (p == null) { //<>// //<>//
+  if (p == null) {
     // Null points only write out a byte indicating there is no data
     out.writeByte(0);
   } else {
