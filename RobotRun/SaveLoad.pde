@@ -104,10 +104,10 @@ public int loadState() {
   }
   
   // Initialize uninitialized registers and position registers to with null fields
-  for(int reg = 0; reg < DAT_REG.length; reg += 1) {
+  for(int reg = 0; reg < DREG.length; reg += 1) {
     
-    if(DAT_REG[reg] == null) {
-      DAT_REG[reg] = new DataRegister();
+    if(DREG[reg] == null) {
+      DREG[reg] = new DataRegister();
     }
     
     if(GPOS_REG[reg] == null) {
@@ -115,8 +115,14 @@ public int loadState() {
     }
   }
   
-  for(int i = 0; i < 6; i += 1) {
-    IO_REG[i] = new IORegister();
+  int idx = 0;
+  // Associated each End Effector with an I/O Register
+  IO_REG[idx++] = new IORegister(EndEffector.SUCTION);
+  IO_REG[idx++] = new IORegister(EndEffector.CLAW);
+  
+  for (; idx < IO_REG.length; ++idx) {
+    // Unassociated registers
+    IO_REG[idx] = new IORegister(null);
   }
   
   return error;
@@ -280,13 +286,13 @@ private Program loadProgram(DataInputStream in) throws IOException {
  * Saves the data associated with the given Point object to the file opened
  * by the given output stream. Null Points are saved a single zero byte.
  * 
- * @param   p            The Point of which to save the data
+ * @param   p            The Point of which to save the data //<>//
  * @param   out          The output stream used to save the Point
  * @throws  IOException  If an error occurs with writing the data of the Point
  */
 private void savePoint(Point p, DataOutputStream out) throws IOException {
   
-  if (p == null) { //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>//
+  if (p == null) {
     // Null points only write out a byte indicating there is no data
     out.writeByte(0);
   } else {
@@ -371,9 +377,9 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     // Write data associated with the MotionIntruction object
     out.writeInt(m_inst.motionType);
     out.writeInt(m_inst.positionNum);
-    out.writeBoolean(m_inst.globalRegister);
+    out.writeBoolean(m_inst.isGPosReg);
     out.writeFloat(m_inst.speed);
-    out.writeFloat(m_inst.termination);
+    out.writeInt(m_inst.termination);
     out.writeInt(m_inst.userFrame);
     out.writeInt(m_inst.toolFrame);
   } else if(inst instanceof FrameInstruction) {
@@ -382,7 +388,7 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeByte(1);
     // Write data associated with the FrameInstruction object
     out.writeInt(f_inst.frameType);
-    out.writeInt(f_inst.reg);
+    out.writeInt(f_inst.frameIdx);
   } else if(inst instanceof IOInstruction) {
     IOInstruction t_inst = (IOInstruction)inst;
     // Flag byte denoting this instruction as a ToolInstruction
@@ -395,12 +401,11 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     
     out.writeByte(3);
     out.writeInt(l_inst.labelNum);
-    out.writeInt(l_inst.labelIdx);
   } else if(inst instanceof JumpInstruction) {
     JumpInstruction j_inst = (JumpInstruction)inst;
     
     out.writeByte(4);
-    out.writeInt(j_inst.tgtLabel.labelNum);
+    out.writeInt(j_inst.tgtLblNum);
   } else if(inst instanceof Instruction) {
     out.writeByte(127);
   } else {/* TODO add other instructions! */}
@@ -429,7 +434,7 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     int reg = in.readInt();
     boolean isGlobal = in.readBoolean();
     float spd = in.readFloat();
-    float term = in.readFloat();
+    int term = in.readInt();
     int uFrame = in.readInt();
     int tFrame = in.readInt();
     
@@ -445,9 +450,8 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     inst = new IOInstruction(reg, loadint(setting));
   } else if (instType == 3) {
     int labelNum = in.readInt();
-    int labelIdx = in.readInt();
     
-    inst = new LabelInstruction(labelNum, labelIdx);
+    inst = new LabelInstruction(labelNum);
   } else if (instType == 4) {
     int tgtLabelNum = in.readInt();
     
@@ -760,8 +764,8 @@ public int saveRegisterBytes(File dest) {
     initializedPR = new ArrayList<Integer>();
     
     // Count the number of initialized entries and save their indices
-    for(int idx = 0; idx < DAT_REG.length; ++idx) {
-      if(DAT_REG[idx].value != null || DAT_REG[idx].comment != null) {
+    for(int idx = 0; idx < DREG.length; ++idx) {
+      if(DREG[idx].value != null || DREG[idx].comment != null) {
         initializedR.add(idx);
         ++numOfREntries;
       }
@@ -777,17 +781,17 @@ public int saveRegisterBytes(File dest) {
     for(Integer idx : initializedR) {
       dataOut.writeInt(idx);
       
-      if(DAT_REG[idx].value == null) {
+      if(DREG[idx].value == null) {
         // save for null Float value
         dataOut.writeFloat(Float.NaN);
       } else {
-        dataOut.writeFloat(DAT_REG[idx].value);
+        dataOut.writeFloat(DREG[idx].value);
       }
       
-      if(DAT_REG[idx].comment == null) {
+      if(DREG[idx].comment == null) {
         dataOut.writeUTF("");
       } else {
-        dataOut.writeUTF(DAT_REG[idx].comment);
+        dataOut.writeUTF(DREG[idx].comment);
       }
     }
     
@@ -844,7 +848,7 @@ public int loadRegisterBytes(File src) {
     FileInputStream in = new FileInputStream(src);
     DataInputStream dataIn = new DataInputStream(in);
     
-    int size = max(0, min(dataIn.readInt(), DAT_REG.length));
+    int size = max(0, min(dataIn.readInt(), DREG.length));
     
     // Load the Register entries
     while(size-- > 0) {
@@ -859,7 +863,7 @@ public int loadRegisterBytes(File src) {
       // Null comments are saved as ""
       if(c.equals("")) { c = null; }
       
-      DAT_REG[reg] = new DataRegister(c, v);
+      DREG[reg] = new DataRegister(c, v);
     }
     
     size = max(0, min(dataIn.readInt(), GPOS_REG.length));

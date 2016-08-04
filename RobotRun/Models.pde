@@ -1,8 +1,5 @@
 import java.util.concurrent.ArrayBlockingQueue;
 
-//To-do list:
-//Collision detection
-
 public class Triangle {
   // normal, vertex 1, vertex 2, vertex 3
   public PVector[] components = new PVector[4];
@@ -90,19 +87,12 @@ public class Model {
   
 } // end Model class
 
-/* The possible values for the current Coordinate Frame */
-public enum CoordFrame { JOINT, WORLD, TOOL, USER }
-/* The current Coordinate Frame for the Robot */
-public static CoordFrame curCoordFrame = CoordFrame.JOINT;
-
-/* The possible types of End Effectors for the Robot */
-public enum EndEffector { NONE, SUCTION, CLAW; }
-
 public class ArmModel {
   
   public EndEffector activeEndEffector = EndEffector.NONE;
-  public int endEffectorStatus = OFF;
-
+  public int endEffectorState = OFF;
+  public RobotMotion motionType;
+  
   public ArrayList<Model> segments = new ArrayList<Model>();
   public int type;
   public float motorSpeed;
@@ -122,6 +112,7 @@ public class ArmModel {
   public ArmModel() {
     
     motorSpeed = 1000.0; // speed in mm/sec
+    motionType = RobotMotion.HALTED;
     // Joint 1
     Model base = new Model("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
     base.rotations[1] = true;
@@ -135,7 +126,7 @@ public class ArmModel {
     // Joint 3
     Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
     axis2.rotations[2] = true;
-    axis2.jointRanges[2] = new PVector(12f * PI / 20f, 8f * PI / 20f);
+    axis2.jointRanges[2] = new PVector(5.027f, 4.363f);
     axis2.rotationSpeed = radians(200)/60.0;
     // Joint 4
     Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
@@ -302,12 +293,12 @@ public class ArmModel {
       translate(-88, 0, 0);
       eeModelClaw.draw();
       rotateZ(PI/2);
-      if(endEffectorStatus == OFF) {
+      if(endEffectorState == OFF) {
         translate(10, -85, 30);
         eeModelClawPincer.draw();
         translate(55, 0, 0);
         eeModelClawPincer.draw();
-      } else if(endEffectorStatus == ON) {
+      } else if(endEffectorState == ON) {
         translate(28, -85, 30);
         eeModelClawPincer.draw();
         translate(20, 0, 0);
@@ -454,7 +445,7 @@ public class ArmModel {
   public ArrayList<Box> currentEEHitBoxList() {
     // Determine which set of hit boxes to display based on the active End Effector
     if(activeEndEffector == EndEffector.CLAW) {
-      return (endEffectorStatus == ON) ? eeHitBoxes[1] : eeHitBoxes[2];
+      return (endEffectorState == ON) ? eeHitBoxes[1] : eeHitBoxes[2];
     } else if(activeEndEffector == EndEffector.SUCTION) {
       return eeHitBoxes[3];
     }
@@ -530,7 +521,7 @@ public class ArmModel {
     
     for(Box b : eeHBs) {
       // Special case for held objects
-      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorStatus != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
+      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorState != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
         b.outline = color(255, 0, 0);
         collision = true;
       }
@@ -552,7 +543,7 @@ public class ArmModel {
     int eeIdx = 0;
     // Determine which set of hit boxes to display based on the active End Effector
     if(activeEndEffector == EndEffector.CLAW) {
-      if(endEffectorStatus == ON) {
+      if(endEffectorState == ON) {
         eeIdx = 1;
       } else {
         eeIdx = 2;
@@ -647,8 +638,6 @@ public class ArmModel {
     RealMatrix B = new Array2DRowRealMatrix(floatToDouble(frame, 3, 3));
     RealMatrix AB = A.multiply(B.transpose());
     
-    //println(AB);
-    
     return doubleToFloat(AB.getData(), 3, 3);
   }
   
@@ -671,6 +660,7 @@ public class ArmModel {
   
   public boolean interpolateRotation(float speed) {
     boolean done = true;
+    
     for(Model a : segments) {
       for(int r = 0; r < 3; r++) {
         if(a.rotations[r]) {
@@ -682,6 +672,7 @@ public class ArmModel {
         }
       } // end loop through rotation axes
     } // end loop through arm segments
+    
     if(COLLISION_DISPLAY) { updateBoxes(); }
     return done;
   } // end interpolate rotation
@@ -813,6 +804,7 @@ public class ArmModel {
       
       // Apply rotational motion vector
       if (rotationalMotion()) {
+        // Respond to user defined movement
         float theta = DEG_TO_RAD * 0.025f * liveSpeed;
         PVector rotation = new PVector(jogRot[0], jogRot[1], jogRot[2]);
         rotation = convertWorldToNative(rotation);
@@ -834,7 +826,7 @@ public class ArmModel {
         tgtOrientation = curPoint.orientation;
       }
       
-      moveTo(tgtPosition, tgtOrientation);
+      jumpTo(tgtPosition, tgtOrientation);
     }
   }
   
@@ -850,7 +842,7 @@ public class ArmModel {
    *              are invalid and EXEC_SUCCESS if the Robot is successfully moved to the
    *              given position
    */
-  public int moveTo(PVector destPosition, float[] destOrientation) {
+  public int jumpTo(PVector destPosition, float[] destOrientation) {
     boolean invalidAngle = false;
     float[] srcAngles = getJointAngles();
     // Calculate the joint angles for the desired position and orientation
@@ -877,12 +869,30 @@ public class ArmModel {
                                 arrayToString(RP.orientation), arrayToString(destOrientation));
       }
       
-      halt();
+      triggerFault();
       return EXEC_FAILURE;
     }
 
     setJointAngles(destAngles);
     return EXEC_SUCCESS;
+  }
+  
+  /**
+   * TODO comment
+   */
+  public void moveTo(float[] jointAngles) {
+    setupRotationInterpolation(jointAngles);
+    motionType = RobotMotion.MT_JOINT;
+  }
+  
+  /**
+   * TODO comment
+   */
+  public void moveTo(PVector position, float[] orientation) {
+    Point start = nativeRobotEEPoint(armModel.getJointAngles());
+    Point end = new Point(position, orientation, start.angles);
+    beginNewLinearMotion(start, end);
+    motionType = RobotMotion.MT_LINEAR;
   }
   
   public boolean checkAngles(float[] angles) {
@@ -928,10 +938,12 @@ public class ArmModel {
     switch (activeEndEffector) {
       case NONE:
         activeEndEffector = EndEffector.SUCTION;
+        endEffectorState = IO_REG[0].state;
         break;
       
       case SUCTION:
         activeEndEffector = EndEffector.CLAW;
+        endEffectorState = IO_REG[1].state;
         break;
         
       case CLAW:
@@ -944,10 +956,77 @@ public class ArmModel {
     releaseHeldObject();
   }
   
+  /**
+   * Toggle the Robot's state between ON and OFF. Update the
+   * Robot's currently held world object as well.
+   */
+  public void toggleEEState() {
+    if (endEffectorState == ON) {
+      endEffectorState = OFF;
+    } else {
+      endEffectorState = ON;
+    }
+    
+    updateIORegister();
+    checkEECollision();
+  }
   
-  /* If an object is currently being held by the Robot arm, then release it */
+  /**
+   * TODO comment
+   */
+  public int checkEECollision() {
+    // Check if the Robot is placing an object or picking up and object
+    if(activeEndEffector == EndEffector.CLAW || activeEndEffector == EndEffector.SUCTION) {
+      
+      if(endEffectorState == ON && armModel.held == null) {
+        
+        PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
+        // Determine if an object in the world can be picked up by the Robot
+        for(WorldObject s : objects) {
+          
+          if(s.collision(ee_pos)) {
+            armModel.held = s;
+            return 0;
+          }
+        }
+      } 
+      else if (endEffectorState == OFF && armModel.held != null) {
+        // Release the object
+        armModel.releaseHeldObject();
+        return 1;
+      }
+    }
+    
+    return 2;
+  }
+  
+  /**
+   * If an object is currently being held by the Robot arm, then release it.
+   * Then, update the Robot's End Effector status and IO Registers.
+   */
   public void releaseHeldObject() {
-    armModel.held = null;
+    if (held != null) {
+      endEffectorState = OFF;
+      updateIORegister();
+      armModel.held = null;
+    }
+  }
+  
+  /**
+   * Update the IO Register associated with the Robot's current End Effector
+   * (if any) to the Robot's current End Effector state.
+   */
+  public void updateIORegister() {
+    
+    switch (activeEndEffector) {
+      case SUCTION:
+        IO_REG[0].state = endEffectorState;
+        break;
+      case CLAW:
+        IO_REG[1].state = endEffectorState;
+        break;
+      default:
+    }
   }
   
   /**
@@ -984,10 +1063,13 @@ public class ArmModel {
    * Indicates that the Robot Arm is in motion.
    */
   public boolean modelInMotion() {
-    return jointMotion() || translationalMotion() || rotationalMotion();
+    return programRunning || motionType != RobotMotion.HALTED ||
+           jointMotion() || translationalMotion() || rotationalMotion();
   }
   
-  /* Stops all robot movement */
+  /**
+   * Stops all robot movement
+   */
   public void halt() {
     for(Model model : segments) {
       model.jointsMoving[0] = 0;
@@ -1005,14 +1087,7 @@ public class ArmModel {
     
     // Reset button highlighting
     resetButtonColors();
+    motionType = RobotMotion.HALTED;
     programRunning = false;
   }
 } // end ArmModel class
-
-void printCurrentModelCoordinates(String msg) {
-  print(msg + ": " );
-  print(modelX(0, 0, 0) + " ");
-  print(modelY(0, 0, 0) + " ");
-  print(modelZ(0, 0, 0));
-  println();
-}

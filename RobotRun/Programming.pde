@@ -1,6 +1,6 @@
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
 final int FTYPE_TOOL = 0, FTYPE_USER = 1;
-// Determine if a program is running currently or not
+// Indicates whether a program is currently running
 public boolean programRunning = false;
 
 public class Point  {
@@ -72,6 +72,37 @@ public class Point  {
     
     return null;
   }
+  
+  /**
+   * Converts the original toStringArray into a 2x1 String array, where the origin
+   * values are in the first element and the W, P, R values are in the second
+   * element (or in the case of a joint angles, J1-J3 on the first and J4-J6 on
+   * the second), where each element has space buffers.
+   * 
+   * @param displayCartesian  whether to display the joint angles or the cartesian
+   *                          values associated with the point
+   * @returning               A 2-element String array
+   */
+  public String[] toLineStringArray(boolean displayCartesian) {
+    String[][] entries;
+    
+    if (displayCartesian) {
+      entries = toCartesianStringArray();
+    } else {
+      entries = toJointStringArray();
+    }
+    
+    
+    String[] line = new String[2];
+    // X, Y, Z with space buffers
+    line[0] = String.format("%-12s %-12s %s", entries[0][0].concat(entries[0][1]),
+            entries[1][0].concat(entries[1][1]), entries[2][0].concat(entries[2][1]));
+    // W, P, R with space buffers
+    line[1] = String.format("%-12s %-12s %s", entries[3][0].concat(entries[3][1]),
+            entries[4][0].concat(entries[4][1]), entries[5][0].concat(entries[5][1]));
+    
+    return line;
+  }
 
   /**
    * Returns a String array, whose entries are the joint values of the
@@ -109,17 +140,17 @@ public class Point  {
       // Uninitialized
       pos = new PVector(Float.NaN, Float.NaN, Float.NaN);
     } else {
-      // Show the vector in terms of the given Frame's axes
+      // Display in terms of the World Frame
       pos = convertNativeToWorld(position);
     }
     
     // Convert Quaternion to Euler Angles
     PVector angles;
     if (orientation == null) {
-      // Uninitializes
+      // Uninitialized
       angles = new PVector(Float.NaN, Float.NaN, Float.NaN);
     } else {
-       // Show angles in degrees
+       // Display in terms of the World Frame
       angles = convertNativeToWorld( quatToEuler(orientation) ).mult(RAD_TO_DEG);
     }
     
@@ -143,7 +174,11 @@ public class Point  {
 public class Program  {
   private String name;
   private int nextRegister;
-  private Point[] LPosReg = new Point[1000]; // program positions
+  /**
+   * The positions associated with this program, which are
+   * stored in reference to the current User frame
+   */
+  private Point[] LPosReg = new Point[1000];
   private ArrayList<Instruction> instructions;
 
   public Program(String theName) {
@@ -174,9 +209,10 @@ public class Program  {
   public void addInstruction(Instruction i) {
     //i.setProg(this);
     instructions.add(i);
+    
     if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.getGlobal() && castIns.getPosition() >= nextRegister) {
+      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextRegister) {
         nextRegister = castIns.getPosition()+1;
         if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
       }
@@ -187,7 +223,7 @@ public class Program  {
     instructions.set(idx, i);
     if(i instanceof MotionInstruction ) { 
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.getGlobal() && castIns.getPosition() >= nextRegister) {
+      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextRegister) {
         nextRegister = castIns.getPosition()+1;
         if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
       }
@@ -225,6 +261,27 @@ public class Program  {
     
     return null;
   }
+  
+  /**
+   * Determines if a label with the given number exists in the program and returns its
+   * instruction index if it does.
+   * 
+   * @param lblNum  The target label index
+   * @returning     The instruction index of the target label, or -1 if it exists
+   */
+  public int findLabelIdx(int lblNum) {
+    
+    for (int idx = 0; idx < instructions.size(); ++idx) {
+      Instruction inst = instructions.get(idx);
+      // Check the current instruction
+      if (inst instanceof LabelInstruction && ((LabelInstruction)inst).labelNum == lblNum) {
+        // Return the label's instruction index
+        return idx;
+      }
+    }
+    // A label with the given number does not exist
+    return -1;
+  }
 } // end Program class
 
 
@@ -247,6 +304,49 @@ public int addProgram(Program p) {
   }
 }
 
+/**
+ * Returns the currently active program or null if no program is active
+ */
+public Program activeProgram() {
+  if (active_prog < 0 || active_prog >= programs.size()) {
+    System.out.printf("Not a valid program index: %d!\n", active_prog);
+    return null;
+  }
+  
+  return programs.get(active_prog);
+}
+
+/**
+ * Returns the instruction that is currently active in the currently active program.
+ * 
+ * @returning  The active instruction of the active program or null if no instruction
+ *             is active
+ */
+public Instruction activeInstruction() {
+  Program activeProg = activeProgram();
+  
+  if (activeProg == null || active_instr < 0 || active_instr >= activeProg.getInstructions().size()) {
+    System.out.printf("Not a valid instruction index: %d!\n", active_instr);
+    return null;
+  }
+  
+  return activeProg.getInstruction(active_instr);
+}
+
+/**
+ * Returns the active instructiob of the active program, if
+ * that instruction is a motion instruction.
+ */
+public MotionInstruction activeMotionInst() {
+  Instruction inst = activeInstruction();
+  
+  if(inst instanceof MotionInstruction) {
+    return (MotionInstruction)inst;
+  }
+  
+  return null;
+}
+
 public class Instruction {
   Program p;
   boolean com;
@@ -261,10 +361,25 @@ public class Instruction {
   public boolean isCommented(){ return com; }
   public void toggleCommented(){ com = !com; }
   
-  public void execute() {}
-
+  public int execute() { return 0; }
+  
+  public String[] toStringArray() {
+    return new String[] { "\0" };
+  }
+  
   public String toString() {
-    String str = "\0";
+    String[] fields = toStringArray();
+    String str = new String();
+    /* Return a stirng which is the concatenation of all the elements in
+     * this instruction's toStringArray() method, separated by spaces */
+    for (int fdx = 0; fdx < fields.length; ++fdx) {
+      str += fields[fdx];
+      
+      if (fdx < (fields.length - 1)) {
+        str += " ";
+      }
+    }
+    
     return str;
   }
 }
@@ -272,28 +387,28 @@ public class Instruction {
 public final class MotionInstruction extends Instruction  {
   private int motionType;
   private int positionNum;
-  private boolean globalRegister;
+  private boolean isGPosReg;
   private float speed;
-  private float termination;
+  private int termination;
   private int userFrame, toolFrame;
 
   public MotionInstruction(int m, int p, boolean g, 
-                           float s, float t, int uf, int tf) {
+                           float s, int t, int uf, int tf) {
     super();
     motionType = m;
     positionNum = p;
-    globalRegister = g;
+    isGPosReg = g;
     speed = s;
     termination = t;
     userFrame = uf;
     toolFrame = tf;
   }
 
-  public MotionInstruction(int m, int p, boolean g, float s, float t) {
+  public MotionInstruction(int m, int p, boolean g, float s, int t) {
     super();
     motionType = m;
     positionNum = p;
-    globalRegister = g;
+    isGPosReg = g;
     speed = s;
     termination = t;
     userFrame = -1;
@@ -304,12 +419,12 @@ public final class MotionInstruction extends Instruction  {
   public void setMotionType(int in) { motionType = in; }
   public int getPosition() { return positionNum; }
   public void setPosition(int in) { positionNum = in; }
-  public boolean getGlobal() { return globalRegister; }
-  public void setGlobal(boolean in) { globalRegister = in; }
+  public boolean usesGPosReg() { return isGPosReg; }
+  public void setGlobalPosRegUse(boolean in) { isGPosReg = in; }
   public float getSpeed() { return speed; }
   public void setSpeed(float in) { speed = in; }
-  public float getTermination() { return termination; }
-  public void setTermination(float in) { termination = in; }
+  public int getTermination() { return termination; }
+  public void setTermination(int in) { termination = in; }
   public float getUserFrame() { return userFrame; }
   public void setUserFrame(int in) { userFrame = in; }
   public float getToolFrame() { return toolFrame; }
@@ -319,93 +434,166 @@ public final class MotionInstruction extends Instruction  {
     if(motionType == MTYPE_JOINT) return speed;
     else return (speed / model.motorSpeed);
   }
-
+  
+  /**
+   * Returns the point associated with this motion instruction (can be either a position in the program
+   * or a global position register value). If the currently active User or Tool Frame does no match the
+   * User or Tool frame associated with this motion instruction, then null is returned. Otherwise, the
+   * TCP of the active Tool frame is applied to the point and then the point is converted from the active
+   * User frame into the Native Coordinate System.
+   * 
+   * @param parent  The program, to which this instruction belongs
+   * @returning     The point associated with this instruction (or null in the case of an invalid active
+   *                Tool or User frame)
+   */
   public Point getVector(Program parent) {
+    Point pt;
+    
+    if (isGPosReg) {
+        pt = GPOS_REG[positionNum].point.clone();
+      } else {
+        pt = parent.LPosReg[positionNum].clone();
+      }
+    
+    
     if(motionType != MTYPE_JOINT) {
-      Point out;
-      if(globalRegister) out = GPOS_REG[positionNum].point;
-      else out = parent.LPosReg[positionNum].clone();
-      //out.pos = convertWorldToNative(out.pos);
-      return out;
-    } 
-    else {
-      Point ret;
+      return pt;
+    }  else {
       
-      if(globalRegister) ret = GPOS_REG[positionNum].point;
-      else ret = parent.LPosReg[positionNum].clone();
-      
-      if(userFrame != -1) {
-        // TODO transform point for User Frame
+      // Apply active TCP
+      if (toolFrame != -1) {
+        Frame active = getActiveFrame(CoordFrame.TOOL);
+        
+        if (active != toolFrames[toolFrame]) {
+          // Invalid active Tool frame
+          if (DISPLAY_TEST_OUTPUT) {
+            System.out.printf("Active Tool frame must be %d!\n", toolFrame);
+          }
+          return null;
+        }
+        
+        // Convert TCP offset into Native Coordinates
+        PVector tcpOffset = nativeTCPOffset(active.getOrigin());
+        pt.position.add(tcpOffset);
       }
       
-      return ret;
+      // Remove active User frame
+      if (userFrame != -1) {
+        Frame active = getActiveFrame(CoordFrame.USER);
+        
+        if (active != userFrames[userFrame]) {
+          // Invalid active User frame
+          if (DISPLAY_TEST_OUTPUT) {
+            System.out.printf("Active User frame must be %d!\n", userFrame);
+          }
+          return null;
+        }
+        // Convert point into the Native Coordinate System
+        return removeFrame(pt, active.getOrigin(), active.getAxes());
+      }
+      
+      return pt;
     }
   } // end getVector()
-
-  public String toString() {
-    String me = "";
-    switch (motionType) {
-    case MTYPE_JOINT:
-      me += "J ";
-      break;
-    case MTYPE_LINEAR:
-      me += "L ";
-      break;
-    case MTYPE_CIRCULAR:
-      me += "C ";
-      break;
+  
+  public String[] toStringArray() {
+    String[] fields = new String[5];
+    // Motion type
+    switch(motionType) {
+      case MTYPE_JOINT:
+        fields[0] = "J";
+        break;
+      case MTYPE_LINEAR:
+        fields[0] = "L";
+        break;
+      case MTYPE_CIRCULAR:
+        fields[0] = "C";
+        break;
+      default:
+        fields[0] = "\0";
     }
-    if(globalRegister) me += "PR[ ";
-    else me += "P[ ";
-    me += Integer.toString(positionNum + 1)+"] ";
-    if(motionType == MTYPE_JOINT) me += Float.toString(speed * 100) + "% ";
-    else me += Integer.toString((int)speed) + "mm/s ";
-    if(termination == 0) me += "FINE";
-    else me += "CONT" + (int)(termination*100);
-    return me;
-  } // end toString()
-
+    
+    // Regster type
+    if (isGPosReg) {
+      fields[1] = "PR[";
+    } else {
+      fields[1] = "P[";
+    }
+    
+    // Register index
+    fields[2] = String.format("%d]", positionNum + 1);
+    
+    // Speed
+    if (motionType == MTYPE_JOINT) {
+      fields[3] = String.format("%d%%", Math.round(speed * 100));
+    } else {
+      fields[3] = String.format("%dmm/s", (int)(speed));
+    }
+    
+    // Termination percent
+    if (termination == 0) {
+      fields[4] = "FINE";
+    } else {
+      fields[4] = String.format("CONT%d", termination);
+    }
+    
+    return fields;
+  }
 } // end MotionInstruction class
 
 public class FrameInstruction extends Instruction {
   private int frameType;
-  private int reg;
+  private int frameIdx;
   
   public FrameInstruction(int f) {
     super();
     frameType = f;
-    reg = -1;
+    frameIdx = -1;
   }
   
   public FrameInstruction(int f, int r) {
     super();
     frameType = f;
-    reg = r;
+    frameIdx = r;
   }
   
   public int getFrameType(){ return frameType; }
   public void setFrameType(int t){ frameType = t; }
-  public int getReg(){ return reg; }
-  public void setReg(int r){ reg = r; }
+  public int getReg(){ return frameIdx; }
+  public void setReg(int r){ frameIdx = r; }
   
-  public void execute() {
-    if(reg != -1){
-      if(frameType == FTYPE_TOOL) activeToolFrame = reg;
-      else if(frameType == FTYPE_USER) activeUserFrame = reg;
+  public int execute() {
+    if(frameIdx != -1) {
+      if (frameType == FTYPE_TOOL) {
+        activeToolFrame = frameIdx;
+        return 0;
+      } else if (frameType == FTYPE_USER) {
+        activeUserFrame = frameIdx;
+        return 1;
+      }
       // Update the Robot Arm's current frame rotation matrix
       updateCoordFrame();
     }
-  }
-
-  public String toString() {
-    String ret = "";
-    if(frameType == FTYPE_TOOL) ret += "TFRAME_NUM= ";
-    else if(frameType == FTYPE_USER) ret += "UFRAME_NUM= ";
     
-    if(reg == -1) { ret += "..."; }
-    else          { ret += reg; }
-    return ret;
+    return 2;
   }
+  
+  public String[] toStringArray() {
+    String[] fields = new String[2];
+    // Frame type
+    if (frameType == FTYPE_TOOL) {
+      fields[0] = "TFRAME_NUM =";
+    } else if (frameType == FTYPE_USER) {
+      fields[0] = "UFRAME_NUM =";
+    } else {
+      fields[0] = "?FRAME_NUM =";
+    }
+    // Frame index
+    fields[1] = Integer.toString(frameIdx);
+    
+    return fields;
+  }
+  
 } // end FrameInstruction class
 
 public class IOInstruction extends Instruction {
@@ -429,90 +617,93 @@ public class IOInstruction extends Instruction {
   public int getReg(){ return reg; }
   public void setReg(int r){ reg = r; }
   
-  public void execute() {
-    armModel.endEffectorStatus = state;
-    System.out.printf("EE: %s\n", armModel.endEffectorStatus);
-    
-    // Check if the Robot is placing an object or picking up and object
-    if(armModel.activeEndEffector == EndEffector.CLAW || armModel.activeEndEffector == EndEffector.SUCTION) {
-      
-      if(state == ON && armModel.held == null) {
-        
-        PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
-        println(ee_pos);
-        // Determine if an object in the world can be picked up by the Robot
-        for(WorldObject s : objects) {
-          
-          if(s.collision(ee_pos)) {
-            armModel.held = s;
-            break;
-          }
-        }
-      } 
-      else if(state == OFF && armModel.held != null) {
-        // Release the object
-        armModel.releaseHeldObject();
-      }
-    }
+  public int execute() {
+    armModel.endEffectorState = state;
+    return armModel.checkEECollision();
   }
-
-  public String toString() {
-    if(reg == -1){
-      return "IO[...]=" + ((state == ON) ? "ON" : "OFF");
+  
+  public String[] toStringArray() {
+    String[] fields = new String[2];
+    // Register index
+    if (reg == -1) {
+      fields[0] = "IO[...] =";
     } else {
-      return "IO[" + reg + "]=" + ((state == ON) ? "ON" : "OFF");
+      fields[0] = String.format("IO[%d] =", reg + 1);
     }
+    // Register value
+    if (state == ON) {
+      fields[1] = "ON";
+    } else {
+      fields[1] = "OFF";
+    }
+    
+    return fields;
   }
 } // end ToolInstruction class
 
 public class LabelInstruction extends Instruction {
   int labelNum;
-  int labelIdx; 
   
-  public LabelInstruction(int i) {
-    labelNum = -1;
-    labelIdx = i;
+  public LabelInstruction(int num) {
+    labelNum = num;
   }
   
-  public LabelInstruction(int n, int i) {
-    super();
-    labelNum = n;
-    labelIdx = i;
-  }
-  
-  public void execute() {}
-  
-  public String toString() {
-    if(labelNum == -1) {
-      return "LBL[...]";
+  public String[] toStringArray() {
+    String[] fields = new String[1];
+    // Label number
+    if (labelNum == -1) {
+      fields[0] = "LBL[...]";
     } else {
-      return "LBL[" + labelNum + "]";
+      fields[0] = String.format("LBL[%d]", labelNum);
     }
+    
+    return fields;
   }
 }
 
 public class JumpInstruction extends Instruction {
-  LabelInstruction tgtLabel;
+  public int tgtLblNum;
   
   public JumpInstruction() {
-    tgtLabel = null;
+    tgtLblNum = -1;
   }
   
-  public JumpInstruction(int l){
-    tgtLabel = programs.get(active_prog).getLabel(l);
+  public JumpInstruction(int l) {
+    tgtLblNum = l;
   }
   
-  public void execute() {
-    if(tgtLabel != null)
-      currentInstruction = tgtLabel.labelIdx;
-  }
-  
-  public String toString(){
-    if(tgtLabel == null){
-      return "JMP LBL[...]";
+  /**
+   * Returns the index of the instruction to which to jump.
+   */
+  public int execute() {
+    Program p = activeProgram();
+    
+    if (p != null) {
+      int lblIdx = p.findLabelIdx(tgtLblNum);
+      
+      if (lblIdx != -1) {
+        // Return destination instrution index
+        return lblIdx;
+      } else {
+        println("Invalid jump instruction!");
+        return 1;
+      }
     } else {
-      return "JMP LBL[" + tgtLabel.labelNum + "]";
+      println("No active program!");
+      return 2;
     }
+  }
+  
+  public String[] toStringArray() {
+    String[] fields = new String[1];
+    // Target label number
+    if (tgtLblNum == -1) {
+      fields[0] = "JMP LBL[...]";
+    } else {
+      fields[0] = String.format("JMP LBL[%d]", tgtLblNum);
+    }
+    
+    return fields;
   }
 }
 
@@ -537,10 +728,12 @@ public class IfStatement extends Instruction {
     instr = i;
   }
   
-  public void execute() {
-    if(expr.evaluate().boolVal) {
+  public int execute() {
+    if(expr.evaluate().boolVal){
       instr.execute();
     }
+    
+    return 0;
   }
   
   public String toString(){
@@ -554,11 +747,11 @@ public class RegisterStatement extends Instruction {
    * result of the statement will be stored in a Register or a
    * Position Register.
    */
-  private final int[] regIndices;
+  private final RegisterOp destination;
   /**
    * The expression associated with this statement.
    */
-  private RegExpression statement;
+  private RegisterExpression statement;
   
   /**
    * Creates a register statement, whose result is associated with
@@ -570,11 +763,14 @@ public class RegisterStatement extends Instruction {
    *                the result in the case that the result is a
    *                single Float value. This field should be -1 in
    *                the case that the whole Point should be saved.
+   * @param t       The destinationp position: GLOBAL -> global
+   *                position register and LOCAL -> local position
+   *                in active program
    */
-  public RegisterStatement(int regIdx, int ptIdx) {
+  public RegisterStatement(int regIdx, int ptIdx, PositionType t) {
     super();
-    regIndices = new int[] { regIdx, ptIdx };
-    statement = new RegExpression();
+    destination = new PositionOp(regIdx, ptIdx, t);
+    statement = new RegisterExpression();
   }
   
   /**
@@ -586,24 +782,53 @@ public class RegisterStatement extends Instruction {
    */
   public RegisterStatement(int regIdx) {
     super();
-    regIndices = new int[] { regIdx };
-    statement = new RegExpression();
+    destination = new RegisterOp(regIdx);
+    statement = new RegisterExpression();
   }
   
   
-  public void execute() {
-    // TODO
+  public int execute() {
+    Object result = statement.evaluate();
+    
+    try {
+      
+      if (destination instanceof PositionOp) {
+        PositionOp posDest = (PositionOp)destination;
+        
+        if (posDest.type == PositionType.LOCAL) {
+          // Save in one of the active program's local positions
+          activeProgram().LPosReg[posDest.getIdx()] = ((RegStmtPoint)result).toPoint();
+        } else {
+          // Save in a global Position register
+          GPOS_REG[posDest.getIdx()].point = ((RegStmtPoint)result).toPoint();
+          GPOS_REG[posDest.getIdx()].isCartesian = ((RegStmtPoint)result).isCartesian;
+        }
+        
+      } else {
+        // Save in a Data register
+        DREG[destination.getIdx()].value = (Float)result;
+      }
+      
+      return 0;
+    } catch (ExpressionEvaluationException EEEx) {
+      // Invalid expression
+      EEEx.printStackTrace();
+      return 1;
+    } catch (ClassCastException CCEx) {
+      // Expression return type does not match destination register type
+      return 2;
+    }
   }
   
   /**
    * Convert the entire statement to a set of Strings, where each
-   * operator and operand is a separate Stirng Object.
+   * operator and operand is a separate String Object.
    */
-  public ArrayList<String> toStringArrayList() {
+  public String[] toStringArray() {
     ArrayList<String> expression = statement.toStringArrayList();
-    expression.add(0, statement.paramToString(regIndices) + " =");
+    expression.add(0, destination + " =");
     
-    return expression;
+    return (String[])expression.toArray();
   }
 }
 
