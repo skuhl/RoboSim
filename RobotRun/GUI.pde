@@ -2160,7 +2160,7 @@ public void ENTER() {
       
       break;
     case SELECT_IO_INSTR_REG:
-      newIOInstruction(opt_select);
+      newIOInstruction();
       display_stack.pop();
       lastScreen();
       break;
@@ -2411,7 +2411,7 @@ public void ENTER() {
         int idx = Integer.parseInt(workingText);
         
         if(mode == Screen.INPUT_DREG_IDX) {
-          opEdit.set(DAT_REG[idx], idx);
+          opEdit.set(DREG[idx], idx);
         }
         else {
           opEdit.set(IO_REG[idx], idx);
