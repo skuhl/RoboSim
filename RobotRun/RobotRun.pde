@@ -2,6 +2,7 @@ import controlP5.*;
 import org.apache.commons.math3.linear.*;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import java.nio.*;
 import java.nio.file.*;
 import java.io.*;

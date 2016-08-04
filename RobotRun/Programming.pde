@@ -751,7 +751,7 @@ public class RegisterStatement extends Instruction {
   /**
    * The expression associated with this statement.
    */
-  private RegExpression statement;
+  private RegisterExpression statement;
   
   /**
    * Creates a register statement, whose result is associated with
@@ -767,7 +767,7 @@ public class RegisterStatement extends Instruction {
   public RegisterStatement(int regIdx, int ptIdx) {
     super();
     regIndices = new int[] { regIdx, ptIdx };
-    statement = new RegExpression();
+    statement = new RegisterExpression();
   }
   
   /**
@@ -780,7 +780,7 @@ public class RegisterStatement extends Instruction {
   public RegisterStatement(int regIdx) {
     super();
     regIndices = new int[] { regIdx };
-    statement = new RegExpression();
+    statement = new RegisterExpression();
   }
   
   

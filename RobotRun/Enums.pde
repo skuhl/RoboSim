@@ -34,7 +34,14 @@ public enum Operator {
     symbol = s;
     type = t;
   }
+  
+  public String toString() {
+    return symbol;
+  }
 }
+
+/* The type of the position register to use in a register statement */
+public enum PositionType { GLOBAL, LOCAL }
 
 public interface DisplayMode {}
 
