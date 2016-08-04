@@ -538,7 +538,7 @@ public class IfStatement extends Instruction {
   }
   
   public void execute() {
-    if(expr.evaluate().boolVal){
+    if(expr.evaluate().boolVal) {
       instr.execute();
     }
   }

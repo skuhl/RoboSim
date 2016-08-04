@@ -14,6 +14,9 @@ public enum Operator {
   LESS("<", BOOL),
   GREQ(">=", BOOL),
   LSEQ("<=", BOOL),
+  AND("&&", BOOL),
+  OR("&&", BOOL),
+  NOT("!", BOOL),
   UNINIT("_", -1);
   
   public final String symbol;
@@ -123,7 +126,6 @@ public static enum Screen implements DisplayMode {
   ACTIVE_FRAMES(ScreenType.TYPE_NUM_ENTRY),
   CONFIRM_INSERT(ScreenType.TYPE_NUM_ENTRY),
   EDIT_DREG_VAL(ScreenType.TYPE_NUM_ENTRY),
-  INPUT_ARG_CONST(ScreenType.TYPE_NUM_ENTRY),
   INPUT_DREG_IDX(ScreenType.TYPE_NUM_ENTRY),
   INPUT_IOREG_IDX(ScreenType.TYPE_NUM_ENTRY),
   INPUT_CONST(ScreenType.TYPE_NUM_ENTRY),

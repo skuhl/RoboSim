@@ -115,6 +115,10 @@ public int loadState() {
     }
   }
   
+  for(int i = 0; i < 6; i += 1) {
+    IO_REG[i] = new IORegister();
+  }
+  
   return error;
 }
 
@@ -282,7 +286,7 @@ private Program loadProgram(DataInputStream in) throws IOException {
  */
 private void savePoint(Point p, DataOutputStream out) throws IOException {
   
-  if (p == null) { //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>//
+  if (p == null) { //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>//
     // Null points only write out a byte indicating there is no data
     out.writeByte(0);
   } else {

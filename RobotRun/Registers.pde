@@ -258,7 +258,7 @@ public class ExprOperand {
     regIndex = i;
   }
   
-    public ExprOperand set(float d) {
+  public ExprOperand set(float d) {
     type = 0;
     len = 1;
     regIndex = -1;
@@ -388,6 +388,44 @@ public class ExprOperand {
   }
 }
 
+public class Expression extends AtomicExpression {
+  private ArrayList<ExprOperand> operands;
+  private ArrayList<Operator> opList;
+  
+  public Expression() {
+    operands = new ArrayList<ExprOperand>();
+    opList = new ArrayList<Operator>();
+  }
+  
+  public ExprOperand evaluate() throws ExpressionEvaluationException {
+    if(operands.size() - opList.size() != 1) {
+      return null;
+    }
+    
+    ExprOperand result = operands.get(0);
+    
+    for(int i = 0; i < opList.size(); i += 1) {
+      ExprOperand nextOperand = operands.get(i + 1);
+      AtomicExpression expr = new AtomicExpression(opList.get(i));
+      
+      result = expr.evaluate(result, nextOperand);
+    }
+    
+    return result;
+  }
+  
+  public String toString() {
+    String ret = "(" + operands.get(0).toString();
+    for(int i = 0; i < opList.size(); i += 1) {
+      ret += opList.get(i).toString();
+      ret += operands.get(i + 1).toString();
+    }
+    
+    ret += ")";
+    return ret;
+  }
+}
+
 public class AtomicExpression extends ExprOperand {
   protected ExprOperand arg1;
   protected ExprOperand arg2;
@@ -397,15 +435,16 @@ public class AtomicExpression extends ExprOperand {
     type = -1;
     op = Operator.UNINIT;
     len = 1;
+    arg1 = new ExprOperand();
+    arg2 = new ExprOperand();
   }
   
   public AtomicExpression(Operator o){
     type = -1;
     op = o;
     len = 3;
-    
-    this.setArg1(new ExprOperand());
-    this.setArg2(new ExprOperand());
+    arg1 = new ExprOperand();
+    arg2 = new ExprOperand();
   }
   
   public ExprOperand getArg1() { return arg1; }
@@ -420,6 +459,14 @@ public class AtomicExpression extends ExprOperand {
     arg2 = a;
     len = getLength();
     return arg2;
+  }
+  
+  public ExprOperand setArg(ExprOperand a, int argNo) {
+    if(argNo == 1) {
+      return setArg1(a);
+    } else {
+      return setArg2(a);
+    }
   }
   
   public Operator getOp() { return op; }
@@ -444,16 +491,24 @@ public class AtomicExpression extends ExprOperand {
   public ExprOperand evaluate() {
     ExprOperand result;
     float o1, o2;
+    boolean b1, b2;
+    
     if(arg1.type == -1) {
-      o1 = ((AtomicExpression)arg1).evaluate().dataVal;
+      ExprOperand temp = ((AtomicExpression)arg1).evaluate();
+      o1 = temp.dataVal;
+      b1 = temp.boolVal;
     } else {
       o1 = arg1.dataVal;
+      b1 = arg1.boolVal;
     }
     
     if(arg2.type == -1) {
-      o2 = ((AtomicExpression)arg2).evaluate().dataVal;
+      ExprOperand temp = ((AtomicExpression)arg2).evaluate();
+      o2 = temp.dataVal;
+      b2 = temp.boolVal;
     } else {
-      o2 = arg2.dataVal;
+      o2 = arg1.dataVal;
+      b2 = arg1.boolVal;
     }
     
     //integer operands for integer operations
@@ -497,12 +552,22 @@ public class AtomicExpression extends ExprOperand {
       case LSEQ:
         result = new ExprOperand(o1 <= o2);
         break;
+      case AND:
+        result = new ExprOperand(b1 && b2);
+      case OR:
+        result = new ExprOperand(b1 || b2);
       default:
         result = null;
         break;
     }
     
     return result;
+  }
+  
+  public ExprOperand evaluate(ExprOperand a, ExprOperand b) {
+    setArg1(a);
+    setArg2(b);
+    return evaluate();
   }
   
   public String toString(){
@@ -512,9 +577,17 @@ public class AtomicExpression extends ExprOperand {
       return "...";
     }
     
-    s += arg1.toString();
+    if(arg1 instanceof AtomicExpression)
+      s += "(" + arg1.toString() + ")";
+    else 
+      s += arg1.toString();
+      
     s += " " + op.symbol + " ";
-    s += arg2.toString();
+    
+    if(arg2 instanceof AtomicExpression)
+      s += "(" + arg2.toString() + ")";
+    else 
+      s += arg2.toString();
     
     return s;
   }
@@ -534,32 +607,35 @@ public class AtomicExpression extends ExprOperand {
     int lm1 = (arg1 != null && arg1.type == -1) ? 2 : 0;
     int lm2 = (arg2 != null && arg2.type == -1) ? 2 : 0;
     ret = new String[s1.length + s2.length + 1 + lm1 + lm2];
+    
     if(lm1 != 0) {
       ret[0] = "(";
       ret[s1.length + 1] = ")";
     }
     
-    if(lm2 != 0) {
-      ret[s1.length + 2] = "(";
-      ret[ret.length - 1] = ")"; 
-    }
-    
-    for(int i = 0; i < s1.length; i += 1){
-      ret[i + lm1/2] = s1[i];
-    }
-  
     ret[s1.length + lm1] = opString;
     
-    for(int i = 0; i < s2.length; i += 1){
-      ret[i+s1.length+lm1+1+lm2/2] = s2[i];
+    if(lm2 != 0) {
+      ret[s1.length + lm1 + 1] = "(";
+      ret[ret.length - 1] = ")";
     }
     
-    ret[ret.length-1] += " :";
+    for(int i = lm1/2; i < ret.length; i += 1) {
+      if(ret[i] == null) {
+        if(i < s1.length + lm1/2) {
+          ret[i] = s1[i - lm1/2];
+        }
+        else {
+          ret[i] = s2[i - s1.length - lm1 - 1 - lm2/2];
+        }
+      }
+    }
+    
     return ret;
   }
 }
 
-public class BooleanExpression extends AtomicExpression{
+public class BooleanExpression extends AtomicExpression {
   public BooleanExpression() {
     super();
   }
@@ -569,9 +645,8 @@ public class BooleanExpression extends AtomicExpression{
       type = -1;
       op = o;
       len = 3;
-      
-      this.setArg1(new ExprOperand());
-      this.setArg2(new ExprOperand());
+      arg1 = new ExprOperand();
+      arg2 = new ExprOperand();
     }
     else {
       type = -1;
@@ -598,9 +673,8 @@ public class ArithmeticExpression extends AtomicExpression{
       type = -1;
       op = o;
       len = 3;
-      
-      this.setArg1(new ExprOperand());
-      this.setArg2(new ExprOperand());
+      arg1 = new ExprOperand();
+      arg2 = new ExprOperand();
     }
     else {
       type = -1;
