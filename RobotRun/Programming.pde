@@ -747,7 +747,7 @@ public class RegisterStatement extends Instruction {
    * result of the statement will be stored in a Register or a
    * Position Register.
    */
-  private final int[] regIndices;
+  private final RegisterOp destination;
   /**
    * The expression associated with this statement.
    */
@@ -763,10 +763,13 @@ public class RegisterStatement extends Instruction {
    *                the result in the case that the result is a
    *                single Float value. This field should be -1 in
    *                the case that the whole Point should be saved.
+   * @param t       The destinationp position: GLOBAL -> global
+   *                position register and LOCAL -> local position
+   *                in active program
    */
-  public RegisterStatement(int regIdx, int ptIdx) {
+  public RegisterStatement(int regIdx, int ptIdx, PositionType t) {
     super();
-    regIndices = new int[] { regIdx, ptIdx };
+    destination = new PositionOp(regIdx, ptIdx, t);
     statement = new RegisterExpression();
   }
   
@@ -779,14 +782,42 @@ public class RegisterStatement extends Instruction {
    */
   public RegisterStatement(int regIdx) {
     super();
-    regIndices = new int[] { regIdx };
+    destination = new RegisterOp(regIdx);
     statement = new RegisterExpression();
   }
   
   
   public int execute() {
-    // TODO
-    return 0;
+    Object result = statement.evaluate();
+    
+    try {
+      
+      if (destination instanceof PositionOp) {
+        PositionOp posDest = (PositionOp)destination;
+        
+        if (posDest.type == PositionType.LOCAL) {
+          // Save in one of the active program's local positions
+          activeProgram().LPosReg[posDest.getIdx()] = ((RegStmtPoint)result).toPoint();
+        } else {
+          // Save in a global Position register
+          GPOS_REG[posDest.getIdx()].point = ((RegStmtPoint)result).toPoint();
+          GPOS_REG[posDest.getIdx()].isCartesian = ((RegStmtPoint)result).isCartesian;
+        }
+        
+      } else {
+        // Save in a Data register
+        DREG[destination.getIdx()].value = (Float)result;
+      }
+      
+      return 0;
+    } catch (ExpressionEvaluationException EEEx) {
+      // Invalid expression
+      EEEx.printStackTrace();
+      return 1;
+    } catch (ClassCastException CCEx) {
+      // Expression return type does not match destination register type
+      return 2;
+    }
   }
   
   /**
@@ -795,7 +826,7 @@ public class RegisterStatement extends Instruction {
    */
   public String[] toStringArray() {
     ArrayList<String> expression = statement.toStringArrayList();
-    expression.add(0, statement.paramToString(regIndices) + " =");
+    expression.add(0, destination + " =");
     
     return (String[])expression.toArray();
   }
