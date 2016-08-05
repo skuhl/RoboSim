@@ -10,7 +10,7 @@ public enum AxesDisplay { AXES, GRID, NONE };
 public enum EEMapping { LINE, DOT, NONE };
 
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
-public enum Operator { 
+public enum Operator {
   ADDTN("+", ARITH), 
   SUBTR("-", ARITH), 
   MULT("*", ARITH), 
@@ -79,7 +79,7 @@ public static enum Screen implements DisplayMode {
   SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
   
   SET_BOOL_CONST(ScreenType.TYPE_INSTRUCT_EDIT),
-  SET_EXPR_ARG1(ScreenType.TYPE_EXPR_EDIT),
+  SET_EXPR_ARG(ScreenType.TYPE_EXPR_EDIT),
   SET_EXPR_ARG2(ScreenType.TYPE_EXPR_EDIT),
   SET_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
   

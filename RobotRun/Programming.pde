@@ -720,8 +720,13 @@ public class JumpInstruction extends Instruction {
  * @param i - the instruction to be executed if the statement expression evaluates to true.
  */
 public class IfStatement extends Instruction {
-  BooleanExpression expr;
+  AtomicExpression expr;
   Instruction instr;
+  
+  public IfStatement() {
+    expr = new Expression();
+    instr = null;
+  }
   
   public IfStatement(Operator o, Instruction i){
     expr = new BooleanExpression(o);
@@ -737,7 +742,34 @@ public class IfStatement extends Instruction {
   }
   
   public String toString(){
-    return "IF " + expr.toString();
+    return "IF " + expr.toString() + " : " + instr.toString();
+  }
+}
+
+public class SelectStatement extends Instruction {
+  ExprOperand arg;
+  Instruction instr;
+  ArrayList<Float> cases;
+  
+  public SelectStatement() {
+    arg = new ExprOperand();
+    cases = new ArrayList<Float>();
+  }
+  
+  public SelectStatement(ExprOperand a) {
+    arg = a;
+    cases = new ArrayList<Float>();
+  }
+  
+  public int execute() {
+    for(Float c: cases) {
+      if(arg.dataVal == c) {
+        instr.execute();
+        break;
+      }
+    }
+    
+    return 0;
   }
 }
 

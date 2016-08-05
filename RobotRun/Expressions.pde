@@ -813,7 +813,7 @@ public class ExprOperand {
   //      4 = position reg operand, -1 = sub-expression
   //      -2 = uninit
   protected int type;
-  protected int len;
+  protected int exprIndex;
   
   int regIndex;
   float dataVal;
@@ -821,13 +821,11 @@ public class ExprOperand {
   
   public ExprOperand() {
     type = -2;
-    len = 1;
     regIndex = -1;
   }
   
   public ExprOperand(float d) {
     type = 0;
-    len = 1;
     regIndex = -1;
     dataVal = d;
     boolVal = getBoolVal(dataVal);
@@ -835,7 +833,6 @@ public class ExprOperand {
   
   public ExprOperand(boolean b) {
     type = 1;
-    len = 1;
     regIndex = -1;
     dataVal = b ? 1 : 0;
     boolVal = b;
@@ -843,7 +840,6 @@ public class ExprOperand {
   
   public ExprOperand(DataRegister dReg, int i) {
     type = 2;
-    len = 2;
     regIndex = i;
     if(i != -1 && dReg.value != null) {
       dataVal = dReg.value;
@@ -853,7 +849,6 @@ public class ExprOperand {
   
   public ExprOperand(IORegister ioReg, int i) {
     type = 3;
-    len = 2;
     regIndex = i;
     if(ioReg.state == ON) {
       dataVal = 1;
@@ -866,13 +861,17 @@ public class ExprOperand {
   
   public ExprOperand(PositionRegister pReg, int i){
     type = 4;
-    len = 2;
     regIndex = i;
+  }
+  
+  public ExprOperand reset() {
+    type = -2;
+    regIndex = -1;
+    return this;
   }
   
   public ExprOperand set(float d) {
     type = 0;
-    len = 1;
     regIndex = -1;
     dataVal = d;
     boolVal = getBoolVal(dataVal);
@@ -881,7 +880,6 @@ public class ExprOperand {
   
   public ExprOperand set(boolean b) {
     type = 1;
-    len = 1;
     regIndex = -1;
     dataVal = b ? 1 : 0;
     boolVal = b;
@@ -890,7 +888,6 @@ public class ExprOperand {
   
   public ExprOperand set(DataRegister dReg, int i) {
     type = 2;
-    len = 2;
     regIndex = i;
     if(i != -1 && dReg.value != null) {
       dataVal = dReg.value;
@@ -901,7 +898,6 @@ public class ExprOperand {
   
   public ExprOperand set(IORegister ioReg, int i) {
     type = 3;
-    len = 2;
     regIndex = i;
     if(ioReg.state == ON) {
       dataVal = 1;
@@ -916,13 +912,12 @@ public class ExprOperand {
   
   public ExprOperand set(PositionRegister pReg, int i){
     type = 4;
-    len = 2;
     regIndex = i;
     return this;
   }
   
   public int getLength() {
-    return len;
+    return 1;
   }
   
  /* Returns the boolean value of a floating point value, where a value of 0 is considered to be
@@ -970,71 +965,8 @@ public class ExprOperand {
     return s;
   }
   
-  public String[] toStringArray(){
-    String[] s;
-    switch(type){
-      case -2:
-        s = new String[] {"..."};
-        break;
-      case -1: 
-        s = ((AtomicExpression)this).toStringArray();
-        break;
-      case 0:
-      case 1:
-        s = new String[] {this.toString()};
-        break;
-      case 2:
-        String rNum = (regIndex == -1) ? "..." : ""+regIndex;
-        s = new String[] {"DR[", rNum + "]"};
-        break;
-      case 3:
-        rNum = (regIndex == -1) ? "..." : ""+regIndex;
-        s = new String[] {"IO[", rNum + "]"};
-        break;
-      default:
-        s = null;
-        break;
-    }
-    
-    return s;
-  }
-}
-
-public class Expression extends AtomicExpression {
-  private ArrayList<ExprOperand> operands;
-  private ArrayList<Operator> opList;
-  
-  public Expression() {
-    operands = new ArrayList<ExprOperand>();
-    opList = new ArrayList<Operator>();
-  }
-  
-  public ExprOperand evaluate() throws ExpressionEvaluationException {
-    if(operands.size() - opList.size() != 1) {
-      return null;
-    }
-    
-    ExprOperand result = operands.get(0);
-    
-    for(int i = 0; i < opList.size(); i += 1) {
-      ExprOperand nextOperand = operands.get(i + 1);
-      AtomicExpression expr = new AtomicExpression(opList.get(i));
-      
-      result = expr.evaluate(result, nextOperand);
-    }
-    
-    return result;
-  }
-  
-  public String toString() {
-    String ret = "(" + operands.get(0).toString();
-    for(int i = 0; i < opList.size(); i += 1) {
-      ret += opList.get(i).toString();
-      ret += operands.get(i + 1).toString();
-    }
-    
-    ret += ")";
-    return ret;
+  public String[] toStringArray() {
+    return new String[] { this.toString() };
   }
 }
 
@@ -1042,6 +974,7 @@ public class AtomicExpression extends ExprOperand {
   protected ExprOperand arg1;
   protected ExprOperand arg2;
   protected Operator op;
+  protected int len;
     
   public AtomicExpression(){
     type = -1;
@@ -1081,8 +1014,8 @@ public class AtomicExpression extends ExprOperand {
     }
   }
   
-  public Operator getOp() { return op; }
-  public void setOp(Operator o) {
+  public Operator getOperator() { return op; }
+  public void setOperator(Operator o) {
     op = o;
     len = getLength();
   }
@@ -1247,6 +1180,108 @@ public class AtomicExpression extends ExprOperand {
   }
 }
 
+public class Expression extends AtomicExpression {
+  private ArrayList<ExprOperand> operands;
+  private ArrayList<Operator> opList;
+  private boolean whichList; //false = opList, true = operands
+  
+  public Expression() {
+    operands = new ArrayList<ExprOperand>();
+    operands.add(new ExprOperand());
+    opList = new ArrayList<Operator>();
+    whichList = false;
+  }
+  
+  public void insertElement() {
+    if(whichList) {
+      operands.add(new ExprOperand());
+    } else {
+      opList.add(Operator.UNINIT);
+    }
+    
+    whichList = !whichList;
+  }
+  
+  public void removeElement(int idx) {
+    idx /= 2;
+    if(whichList) {
+      operands.remove(idx);
+    } else {
+      opList.remove(idx);
+    }
+    
+    whichList = !whichList;
+  }
+  
+  public ExprOperand getOperand(int idx) {
+    return operands.get(idx);
+  }
+  
+  public Operator getOperator(int idx) {
+    return opList.get(idx);
+  }
+  
+  public ExprOperand setOperand(int idx, ExprOperand o) {
+    return operands.set(idx, o);
+  }
+  
+  public Operator setOperator(int idx, Operator o) {
+    return opList.set(idx, o);
+  }
+  
+  public int getLength() {
+    len = opList.size();
+    for(ExprOperand o: operands) {
+      len += o.getLength();
+    }
+    len += 2;
+    
+    return len;
+  }
+  
+  public ExprOperand evaluate() throws ExpressionEvaluationException {
+    if(operands.size() - opList.size() != 1) {
+      return null;
+    }
+    
+    ExprOperand result = operands.get(0);
+    
+    for(int i = 0; i < opList.size(); i += 1) {
+      ExprOperand nextOperand = operands.get(i + 1);
+      AtomicExpression expr = new AtomicExpression(opList.get(i));
+      
+      result = expr.evaluate(result, nextOperand);
+    }
+    
+    return result;
+  }
+  
+  public String toString() {
+    String ret = "(" + operands.get(0).toString();
+    for(int i = 0; i < opList.size(); i += 1) {
+      ret += opList.get(i).toString();
+      ret += operands.get(i + 1).toString();
+    }
+    
+    ret += ")";
+    return ret;
+  }
+  
+  public String[] toStringArray() {
+    String[] ret = new String[this.getLength()];
+    ret[0] = "(";
+    ret[1] = operands.get(0).toString();
+    
+    for(int i = 2; i < ret.length - 1; i += 2) {
+      ret[i] = opList.get(i).toString();
+      ret[i + 1] = operands.get(i + 1).toString();
+    }
+    
+    ret[ret.length - 1] = ")";
+    return ret;
+  }
+}
+
 public class BooleanExpression extends AtomicExpression {
   public BooleanExpression() {
     super();
@@ -1267,7 +1302,7 @@ public class BooleanExpression extends AtomicExpression {
     }
   }
   
-  public void setOp(Operator o) {
+  public void setOperator(Operator o) {
     if(o.type != BOOL) return;
     
     op = o;

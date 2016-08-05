@@ -46,6 +46,7 @@ int curFrameIdx = -1,
 Frame teachFrame = null;
 // Expression operand currently being edited
 ExprOperand opEdit = null;
+int editIdx = -1;
 
 //variables for keeping track of the last change made to the current program
 Instruction lastInstruct;
@@ -1237,7 +1238,7 @@ public void up() {
     case SET_MV_INSTRUCT_REG_TYPE:
     case SET_FRM_INSTR_TYPE:
     case SET_BOOL_EXPR_ACT:
-    case SET_EXPR_ARG1: //<>//
+    case SET_EXPR_ARG: //<>//
     case SET_EXPR_ARG2: //<>//
     case SET_EXPR_OP:
     case SET_IO_INSTR_STATE:
@@ -1360,7 +1361,7 @@ public void dn() {
     case SET_MV_INSTRUCT_REG_TYPE:
     case SET_FRM_INSTR_TYPE:
     case SET_BOOL_EXPR_ACT:
-    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG:
     case SET_EXPR_ARG2:
     case SET_EXPR_OP:
     case SET_IO_INSTR_STATE:
@@ -2177,52 +2178,20 @@ public void ENTER() {
     case INPUT_REG_STMT:
       break;
     case SELECT_COND_STMT:
-      if(col_select == 0){
-        switch(row_select){
-          case 0:
-            newIfStatement(Operator.EQUAL);
-            break;
-          case 1:
-            newIfStatement(Operator.NEQUAL);
-            break;
-          case 2:
-            newIfStatement(Operator.GRTR);
-            break;
-          case 3:
-            newIfStatement(Operator.LESS);
-            break;
-          case 4:
-            newIfStatement(Operator.GREQ);
-            break;
-          case 5:
-            newIfStatement(Operator.LSEQ);
-            break;
-        }
-      } else if(col_select == 1) {
-        switch(row_select){
-          case 0:
-            newSelStmt(Operator.EQUAL);
-            break;
-          case 1:
-            newSelStmt(Operator.NEQUAL);
-            break;
-          case 2:
-            newSelStmt(Operator.GRTR);
-            break;
-          case 3:
-            newSelStmt(Operator.LESS);
-            break;
-          case 4:
-            newSelStmt(Operator.GREQ);
-            break;
-          case 5:
-            newSelStmt(Operator.LSEQ);
-            break;
-        }
+      if(opt_select == 0) {
+        newIfStatement();
+        display_stack.pop();
+        switchScreen(Screen.SET_EXPR_OP);
+      } else if(opt_select == 1) {
+        newIfExpression();
+        display_stack.pop();
+        lastScreen();
+      } else {
+        newSelectStatement();
+        display_stack.pop();
+        lastScreen();
       }
       
-      display_stack.pop();
-      lastScreen();
       break;
     case SELECT_JMP_LBL:
       display_stack.pop();
@@ -2326,79 +2295,77 @@ public void ENTER() {
       break;
       
     //Expression edit
-    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG:
     case SET_EXPR_ARG2:
-      AtomicExpression expr = (AtomicExpression)opEdit;
-      int argNo = (mode == Screen.SET_EXPR_ARG1) ? 1 : 2;
-      ExprOperand oper;
-            
       if(opt_select == 0) {
-        //set arg1 to new data reg
-        oper = new ExprOperand(new DataRegister(), -1);
-        opEdit = expr.setArg(oper, argNo);
+        //set arg to new data reg
+        opEdit.set(new DataRegister(), -1);
         switchScreen(Screen.INPUT_DREG_IDX);
       } else if(opt_select == 1) {
-        //set arg1 to new io reg
-        oper = new ExprOperand(new IORegister(null), -1);
-        opEdit = expr.setArg(oper, argNo);
+        //set arg to new io reg
+        opEdit.set(new IORegister(null), -1);
         switchScreen(Screen.INPUT_IOREG_IDX);
       } else if(opt_select == 2) {
-        //set arg1 to new expression
-        oper = new ArithmeticExpression();
-        opEdit = expr.setArg(oper, argNo);
+        //set arg to new position reg
+      } else if(opt_select == 3) {
+        //set arg to new expression
+        Expression oper = new Expression();
+        Expression expr = (Expression)opEdit;
+        expr.setOperand(editIdx, oper);
         lastScreen();
       } else {
-        //set arg1 to new constant
-        oper = new ExprOperand();
-        opEdit = expr.setArg(oper, argNo);
+        //set arg to new constant
+        opEdit.reset();
         switchScreen(Screen.INPUT_CONST);
       }
       
       break;
     case SET_EXPR_OP:
-      expr = (AtomicExpression)opEdit;
-      
-      if(opEdit instanceof ArithmeticExpression) {
+      if(opEdit instanceof Expression) {
+        Expression expr = (Expression)opEdit;
+        
         switch(opt_select) {
           case 0:
-            expr.setOp(Operator.ADDTN);
+            expr.setOperator(editIdx, Operator.ADDTN);
             break;
           case 1:
-            expr.setOp(Operator.SUBTR);
+            expr.setOperator(editIdx, Operator.SUBTR);
             break;
           case 2:
-            expr.setOp(Operator.MULT);
+            expr.setOperator(editIdx, Operator.MULT);
             break;
           case 3:
-            expr.setOp(Operator.DIV);
+            expr.setOperator(editIdx, Operator.DIV);
             break;
           case 4:
-            expr.setOp(Operator.INTDIV);
+            expr.setOperator(editIdx, Operator.INTDIV);
             break;
           case 5:
-            expr.setOp(Operator.MOD);
+            expr.setOperator(editIdx, Operator.MOD);
             break;
         }
       }
-      else if(expr instanceof BooleanExpression) {
+      else if(opEdit instanceof BooleanExpression) {
+        BooleanExpression expr = (BooleanExpression)opEdit;
+        
         switch(opt_select) {
           case 0:
-            expr.setOp(Operator.EQUAL);
+            expr.setOperator(Operator.EQUAL);
             break;
           case 1:
-            expr.setOp(Operator.NEQUAL);
+            expr.setOperator(Operator.NEQUAL);
             break;
           case 2:
-            expr.setOp(Operator.GRTR);
+            expr.setOperator(Operator.GRTR);
             break;
           case 3:
-            expr.setOp(Operator.LESS);
+            expr.setOperator(Operator.LESS);
             break;
           case 4:
-            expr.setOp(Operator.GREQ);
+            expr.setOperator(Operator.GREQ);
             break;
           case 5:
-            expr.setOp(Operator.LSEQ);
+            expr.setOperator(Operator.LSEQ);
             break;
         }
       }
@@ -3255,7 +3222,7 @@ public void loadScreen(){
       col_select = 0;
       break;
     case SET_BOOL_EXPR_ACT:
-    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG:
     case SET_EXPR_ARG2:
     case SET_EXPR_OP:
       opt_select = 0;
@@ -3636,7 +3603,7 @@ public String getHeader(Screen mode){
     case SET_IO_INSTR_STATE:
     case SET_FRM_INSTR_TYPE:
     case SET_FRAME_INSTR_IDX:
-    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG:
     case SET_EXPR_ARG2:
     case SET_JUMP_TGT:
     case SELECT_CUT_COPY:    
@@ -3767,7 +3734,7 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case SET_FRM_INSTR_TYPE:
     case SET_FRAME_INSTR_IDX:
     case SET_BOOL_EXPR_ACT:
-    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG:
     case SET_EXPR_ARG2:
     case SET_EXPR_OP:
     case INPUT_DREG_IDX:
@@ -3934,7 +3901,7 @@ public ArrayList<String> getOptions(Screen mode){
     case SET_FRM_INSTR_TYPE:
     case SET_FRAME_INSTR_IDX:
     case SET_BOOL_EXPR_ACT:
-    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG:
     case SET_EXPR_ARG2:
     case SET_EXPR_OP:
     case INPUT_DREG_IDX:
@@ -4415,7 +4382,7 @@ public void getInstrEdit(Instruction ins) {
 public void editExpression(AtomicExpression expr, int col_offset) {
   opEdit = expr;
   
-  if(expr.getOp() == Operator.UNINIT) {
+  if(expr.getOperator() == Operator.UNINIT) {
     nextScreen(Screen.SET_EXPR_OP);
   }
   else {
@@ -4441,12 +4408,12 @@ public void editOperand(ExprOperand o, int ins_idx, int edit_idx, int opNum) {
   println(o.type + ", " + o.getLength() + ", " + ins_idx + ", " + edit_idx + ", " + opNum);
   switch(o.type) {
     case -2: //Uninit
-      if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG1);
+      if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG);
       else           nextScreen(Screen.SET_EXPR_ARG2);
       break;
     case -1: //Sub-expression
       if(edit_idx == 0 || edit_idx == o.getLength() + 1) {
-        if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG1);
+        if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG);
         else           nextScreen(Screen.SET_EXPR_ARG2);
       } else {
         opEdit = o;
@@ -4463,7 +4430,7 @@ public void editOperand(ExprOperand o, int ins_idx, int edit_idx, int opNum) {
       break;
     case 2: //Data reg
       if(edit_idx == 0) {
-        if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG1);
+        if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG);
         else           nextScreen(Screen.SET_EXPR_ARG2);
       } else {
         opEdit = o;
@@ -4472,7 +4439,7 @@ public void editOperand(ExprOperand o, int ins_idx, int edit_idx, int opNum) {
       break;
     case 3: //IO reg
       if(edit_idx == 0) {
-        if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG1);
+        if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG);
         else           nextScreen(Screen.SET_EXPR_ARG2);
       } else {
         opEdit = o;
@@ -4550,7 +4517,7 @@ public ArrayList<String> loadInstructEdit(Screen mode) {
         edit.add("6. ... % ...");
       }
       break;
-    case SET_EXPR_ARG1:
+    case SET_EXPR_ARG:
     case SET_EXPR_ARG2:
       edit.add("R[...]");
       edit.add("IO[...]");
@@ -4698,9 +4665,9 @@ public void newJumpInstruction() {
   }
 }
 
-public void newIfStatement(Operator o) {
+public void newIfStatement() {
   Program p = activeProgram();
-  IfStatement stmt = new IfStatement(o, null);
+  IfStatement stmt = new IfStatement(Operator.UNINIT, null);
   
   if(active_instr != p.getInstructions().size()) {
     p.overwriteInstruction(active_instr, stmt);
@@ -4709,9 +4676,20 @@ public void newIfStatement(Operator o) {
   }
 }
 
-public void newSelStmt(Operator o) {
+public void newIfExpression() {
   Program p = activeProgram();
-  IfStatement stmt = new IfStatement(o, null);
+  IfStatement stmt = new IfStatement();
+  
+  if(active_instr != p.getInstructions().size()) {
+    p.overwriteInstruction(active_instr, stmt);
+  } else {
+    p.addInstruction(stmt);
+  }
+}
+
+public void newSelectStatement() {
+  Program p = activeProgram();
+  SelectStatement stmt = new SelectStatement();
   
   if(active_instr != p.getInstructions().size()) {
     p.overwriteInstruction(active_instr, stmt);
