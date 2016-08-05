@@ -67,7 +67,6 @@ public WorldObject[] objects;
 /*      Debugging Stuff        */
 
 public static ArrayList<String> buffer;
-Cylinder subject;
 
 /*******************************/
 
@@ -94,7 +93,7 @@ public void setup() {
   gui();
   
   // Intialize world objects
-  objects = new WorldObject[1];
+  objects = new WorldObject[2];
   pushMatrix();
   resetMatrix();
   
@@ -102,8 +101,7 @@ public void setup() {
   objects[0] = new WorldObject(color(255, 0, 0), color(255, 0, 255), 50);
 
   translate(-250, 0, 0);
-  //objects[1] = new WorldObject(color(255, 0, 255), color(255, 255, 255), 250, 125, 500);
-  subject = new Cylinder(color(255, 0, 0), color(255, 0, 0), 50, 100);
+  objects[1] = new WorldObject(color(255, 0, 0), color(255, 0, 0), 50, 100);
   
   popMatrix();
   
@@ -163,8 +161,7 @@ public void draw() {
   pushMatrix();
   
   applyCamera();
-  subject.draw();
-
+  
   pushMatrix(); 
   armModel.draw();
   popMatrix();

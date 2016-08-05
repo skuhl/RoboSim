@@ -387,6 +387,14 @@ public class WorldObject {
   }
   
   /**
+   * Creates a cylinder objects with the given colors and dimensions.
+   */
+  public WorldObject(color fill, color outline, float rad, float hgt) {
+    form = new Cylinder(fill, outline, rad, hgt);
+    OOB = new BoundingBox(2 * rad + 5f, 2 * rad + 5f, hgt + 10f);
+  }
+  
+  /**
    * Draw both the object and its bounding box;
    */
   public void draw() {
