@@ -506,7 +506,7 @@ public class ArmModel {
   
   /* Determine if the given ojbect is collding with any part of the Robot. */
   public boolean checkObjectCollision(WorldObject obj) {
-    BoundingBox ohb = obj.getBoundingBox();
+    BoundingBox ohb = obj.getOBB();
     boolean collision = false;
     
     for(BoundingBox b : bodyHitBoxes) {
@@ -910,7 +910,7 @@ public class ArmModel {
     
     /* Check for a collision between the Robot Arm and any world object as well as an object
      * held by the Robot Arm and any other world object */
-    for(WorldObject obj : objects) {
+    for(WorldObject obj : OBJECTS) {
       if(checkObjectCollision(obj) || (held != null && held != obj && held.collision(obj))) {
         collision = true;
       }
@@ -979,9 +979,9 @@ public class ArmModel {
         
         PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
         // Determine if an object in the world can be picked up by the Robot
-        for(WorldObject s : objects) {
+        for(WorldObject s : OBJECTS) {
           
-          if(s.getBoundingBox().collision(ee_pos)) {
+          if(s.getOBB().collision(ee_pos)) {
             armModel.held = s;
             return 0;
           }

@@ -1,3 +1,9 @@
+// The Y corrdinate of the ground plane
+public static final float PLANE_Y = 200.5f;
+
+public final ArrayList<Fixture> FIXTURES = new ArrayList<Fixture>();
+public final ArrayList<WorldObject> OBJECTS = new ArrayList<WorldObject>();
+
 /**
  * A simple class that defines the outline and fill color for a shape
  * along with some methods necessarry for a shape.
@@ -142,6 +148,9 @@ public class Cylinder extends Shape {
   
   /**
    * Assumes the center of the cylinder is halfway between the top and bottom of of the cylinder.
+   * 
+   * Based off of the algorithm defined on Vormplus blog at:
+   * http://vormplus.be/blog/article/drawing-a-cylinder-with-processing
    */
   public void draw() {
     super.draw();
@@ -179,105 +188,99 @@ public class Cylinder extends Shape {
   }
 }
 
-public class BoundingBox {
-  /* The origin of the bounding box's local Coordinate System */
-  private PVector center;
-  /* A 3x3 rotation mtrix, which describes the object's local coordinate axes */
-  private float[][] orientation;
-  private Box boundingBox;
+public class Ray {
+  private PVector origin;
+  private PVector direction;
   
-  /**
-   * Create a cube object with the given colors and dimension
-   */
-  public BoundingBox() {
-    setCoordinateSystem();
-    boundingBox = new Box(color(0, 0, 255), 10f);
+  public Ray() {
+    origin = new PVector(0f, 0f, 0f);
+    direction = new PVector(1f, 1f, 1f);
+  }
+  
+  public Ray(PVector origin, PVector pointOnRay) {
+    this.origin = origin.copy();
+    direction = pointOnRay.sub(origin);
+    direction.normalize();
+  }
+  
+  public void draw() {
+    stroke(0);
+    noFill();
+    PVector endpoint = PVector.add(origin, PVector.mult(direction, 5000f));
+    line(origin.x, origin.y, origin.z, endpoint.x, endpoint.y, endpoint.z);
+  }
+}
+
+/**
+ * Defines the axes and origin vector associated with a Coordinate System.
+ */
+public class CoordinateSystem {
+  private PVector origin;
+  /* A 3x3 rotation matrix */
+  private float[][] axesVectors;
+  
+  public CoordinateSystem() {
+    /* Pull origin and axes from the current transformation matrix */
+    origin = getCoordFromMatrix(0f, 0f, 0f);
+    axesVectors = getRotationMatrix();
   }
   
   /**
-   * Create a cube object with the given colors and dimension
+   * Create a coordinate syste with the given origin and 3x3 rotation matrix.
    */
-  public BoundingBox(float edgeLen) {
-    setCoordinateSystem();
-    boundingBox = new Box(color(0, 0, 255), edgeLen);
+  public CoordinateSystem(PVector origin, float[][] axes) {
+    this.origin = origin.copy();
+    axesVectors = new float[3][3];
+    // Copy axes into axesVectors
+    for (int row = 0; row < 3; ++row) {
+      for (int col = 0; col < 3; ++col) {
+        axesVectors[row][col] = axes[row][col];
+      }
+    }
   }
   
   /**
-   * Create a box object with the given colors and dimensions
+   * Apply the coordinate system's origin and axes to the current transformation matrix.
    */
-  public BoundingBox(float len, float hgt, float wdh) {
-    /* Pull center and orientation from the current transformation matrix */
-    center = getCoordFromMatrix(0f, 0f, 0f);
-    orientation = getRotationMatrix();
-    boundingBox = new Box(color(0, 0, 255), len, hgt, wdh);
-  }
-  
-  /**
-   * Apply the box's local Coordinate System
-   */
-  public void applyCoordinateSystem() {
-    applyMatrix(orientation[0][0], orientation[1][0], orientation[2][0], center.x,
-                orientation[0][1], orientation[1][1], orientation[2][1], center.y,
-                orientation[0][2], orientation[1][2], orientation[2][2], center.z,
+  public void apply() {
+    applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
+                axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
+                axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
                                 0,                 0,                 0,        1);
   }
   
-  /**
-   * Draw both the object and its bounding box;
-   */
-  public void draw() {
-    pushMatrix();
-    // Draw shape in its own coordinate system
-    applyCoordinateSystem();
-    boundingBox.draw();
-    popMatrix();
-  }
-  
-  /**
-   * Sets the current Coordinate System of the bounding-box
-   * to the current transformation matrix.
-   */
-  public void setCoordinateSystem() {
-    /* Pull center and orientation from the current transformation matrix */
-    center = getCoordFromMatrix(0f, 0f, 0f);
-    orientation = getRotationMatrix();
-  }
-  
-  /**
-   * Reset the object's center point
-   */
-  public PVector setCenter(PVector newCenter) {
-    PVector old = center;
-    center = newCenter.copy();
+  public PVector setOrigin(PVector newCenter) {
+    PVector old = origin;
+    origin = newCenter.copy();
     return old;
   }
   
-  public PVector getCenter() { return center.copy(); }
+  public PVector getOrigin() { return origin; }
   
   /**
-   * Reset the object's orientation axes; the given rotation
-   * matrix should be in row major order!
+   * Reset the coordinate system's axes vectors and return the
+   * old axes; the given rotation matrix should be in row
+   * major order!
    */
-  public float[][] setOrientation(float[][] newOrientation) {
-    float[][] old = orientation;
-    orientation = newOrientation.clone();
-    return old;
-  }
-  
-  /**
-   * Return a copy of the orientation matrix in
-   * row major order.
-   */
-  public float[][] getAxes() {
-    float[][] copy = new float[3][3];
-    // Copy orientation
+  public float[][] setAxes(float[][] newAxes) {
+    float[][] old = axesVectors;
+    axesVectors = new float[3][3];
+    
+    // Copy axes into axesVectors
     for (int row = 0; row < 3; ++row) {
       for (int col = 0; col < 3; ++col) {
-        copy[row][col] = orientation[row][col];
+        axesVectors[row][col] = newAxes[row][col];
       }
     }
     
-    return copy;
+    return old;
+  }
+  
+  /**
+   * Return this coordinate system's axes in row major order.
+   */
+  public float[][] getAxes() {
+    return axesVectors;
   }
   
   /**
@@ -289,11 +292,100 @@ public class BoundingBox {
     // Transpose and copy orientation
     for (int row = 0; row < 3; ++row) {
       for (int col = 0; col < 3; ++col) {
-        transpose[row][col] = orientation[col][row];
+        transpose[row][col] = axesVectors[col][row];
       }
     }
     
     return transpose;
+  }
+}
+
+/**
+ * A box object with its own local Coordinate system.
+ */
+public class BoundingBox {
+  private CoordinateSystem localOrientation;
+  /* The origin of the bounding box's local Coordinate System */
+  private Box boundingBox;
+  
+  /**
+   * Create a cube object with the given colors and dimension
+   */
+  public BoundingBox() {
+    localOrientation = new CoordinateSystem();
+    boundingBox = new Box(color(0, 0, 255), 10f);
+  }
+  
+  /**
+   * Create a cube object with the given colors and dimension
+   */
+  public BoundingBox(float edgeLen) {
+    localOrientation = new CoordinateSystem();
+    boundingBox = new Box(color(0, 0, 255), edgeLen);
+  }
+  
+  /**
+   * Create a box object with the given colors and dimensions
+   */
+  public BoundingBox(float len, float hgt, float wdh) {
+    localOrientation = new CoordinateSystem();
+    boundingBox = new Box(color(0, 0, 255), len, hgt, wdh);
+  }
+  
+  /**
+   * Apply the Coordinate System of the bounding-box onto the
+   * current transformation matrix.
+   */
+  public void applyCoordinateSystem() {
+    localOrientation.apply();
+  }
+  
+  /**
+   * Reset the bounding-box's coordinate system to the current
+   * transformation matrix.
+   */
+  public void setCoordinateSystem() {
+    localOrientation = new CoordinateSystem();
+  }
+  
+  /**
+   * Draw both the object and its bounding box;
+   */
+  public void draw() {
+    pushMatrix();
+    // Draw shape in its own coordinate system
+    localOrientation.apply();
+    boundingBox.draw();
+    popMatrix();
+  }
+  
+  /**
+   * Reset the object's center point
+   */
+  public PVector setCenter(PVector newCenter) {
+    PVector old = localOrientation.getOrigin();
+    localOrientation.setOrigin(newCenter.copy());
+    return old;
+  }
+  
+  public PVector getCenter() { return localOrientation.getOrigin(); }
+  
+  /**
+   * Reset the object's orientation axes; the given rotation
+   * matrix should be in row major order!
+   */
+  public float[][] setOrientation(float[][] newOrientation) {
+    float[][] old = localOrientation.getAxes();
+    localOrientation.setAxes(newOrientation);
+    return old;
+  }
+  
+  /**
+   * Return a copy of the orientation matrix in
+   * column major order.
+   */
+  public float[][] getLocalAxesTrans() {
+    return localOrientation.getTransposeAxes();
   }
   
   /**
@@ -303,11 +395,6 @@ public class BoundingBox {
   public void setColor(color newColor) {
     boundingBox.setOutlineColor(newColor);
   }
-  
-  /**
-   * Return a reference to this world object's bounding box
-   */
-  public Box getBox() { return (Box)boundingBox; }
   
   /**
    * Returns the dimension of the world object's bounding
@@ -329,12 +416,17 @@ public class BoundingBox {
   }
   
   /**
+   * Return a reference to this bounding-box's box.
+   */
+  public Box getBox() { return boundingBox; }
+  
+  /**
    * Determine of a single position, in Native Coordinates, is with
    * the bounding box of the this world object.
    */
   public boolean collision(PVector point) {
     // Convert the point to the current reference frame
-    float[][] tMatrix = transformationMatrix(center, orientation);
+    float[][] tMatrix = transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
     PVector relPosition = transform(point, invertHCMatrix(tMatrix));
     
     PVector BBDim = boundingBox.getDimensions();
@@ -351,7 +443,7 @@ public class BoundingBox {
    */
   public BoundingBox clone() {
     pushMatrix();
-    applyCoordinateSystem();
+    localOrientation.apply();
     BoundingBox copy = new BoundingBox(getDim(0), getDim(1), getDim(2));
     copy.setColor( boundingBox.getOutlineColor() );
     popMatrix();
@@ -360,21 +452,70 @@ public class BoundingBox {
   }
 }
 
+
+public class Fixture {
+  private Shape form;
+  private CoordinateSystem localOrientation;
+  
+  /**
+   * Create a cube object with the given colors and dimension
+   */
+  public Fixture(color fill, color outline, float edgeLen) {
+    form = new Box(fill, outline, edgeLen);
+    localOrientation = new CoordinateSystem();
+  }
+  
+  /**
+   * Create a box object with the given colors and dimensions
+   */
+  public Fixture(color fill, color outline, float len, float wdh, float hgt) {
+    form = new Box(fill, outline, len, wdh, hgt);
+    localOrientation = new CoordinateSystem();
+  }
+  
+  /**
+   * Creates a cylinder objects with the given colors and dimensions.
+   */
+  public Fixture(color fill, color outline, float rad, float hgt) {
+    form = new Cylinder(fill, outline, rad, hgt);
+    localOrientation = new CoordinateSystem();
+  }
+  
+  /**
+   * Draw fixture only;
+   */
+  public void draw() {
+    pushMatrix();
+    // Draw shape in its own coordinate system
+    localOrientation.apply();
+    form.draw();
+    popMatrix();
+  }
+  
+  /**
+   * Apply the Coordinate System of the fixture onto the
+   * current transformation matrix.
+   */
+  public void applyCoordinateSystem() {
+    localOrientation.apply();
+  }
+}
+
 /**
- * Defines a world object, which has a shape and a bounding box. The bounding
- * box holds the local coordinate system of the object.
+ * Defines a world object, which has a shape, a bounding box and a reference to a fixture.
+ * The bounding box holds the local coordinate system of the object.
  */
 public class WorldObject {
-  private Shape form;
-  private BoundingBox OOB;
+  public Shape form;
+  private BoundingBox OBB;
+  private Fixture reference;
   
   /**
    * Create a cube object with the given colors and dimension
    */
   public WorldObject(color fill, color outline, float edgeLen) {
     form = new Box(fill, outline, edgeLen);
-    /* Pull center and orientation from the current transformation matrix */
-    OOB = new BoundingBox(edgeLen + 15f, edgeLen + 15f, edgeLen + 15f);
+    OBB = new BoundingBox(edgeLen + 15f);
   }
   
   /**
@@ -382,8 +523,7 @@ public class WorldObject {
    */
   public WorldObject(color fill, color outline, float len, float wdh, float hgt) {
     form = new Box(fill, outline, len, wdh, hgt);
-    /* Pull center and orientation from the current transformation matrix */
-    OOB = new BoundingBox(len + 15f, wdh + 15f, hgt + 15f);
+    OBB = new BoundingBox(len + 15f, wdh + 15f, hgt + 15f);
   }
   
   /**
@@ -391,7 +531,7 @@ public class WorldObject {
    */
   public WorldObject(color fill, color outline, float rad, float hgt) {
     form = new Cylinder(fill, outline, rad, hgt);
-    OOB = new BoundingBox(2 * rad + 5f, 2 * rad + 5f, hgt + 10f);
+    OBB = new BoundingBox(2f * rad + 5f, 2f * rad + 5f, hgt + 10f);
   }
   
   /**
@@ -399,26 +539,34 @@ public class WorldObject {
    */
   public void draw() {
     pushMatrix();
+    
+    if (reference != null) {
+      // Draw world object in terms of its reference fixtire
+      reference.applyCoordinateSystem();
+    }
+    
     // Draw shape in its own coordinate system
-    OOB.applyCoordinateSystem();
+    OBB.applyCoordinateSystem();
     form.draw();
-    OOB.getBox().draw();
+    OBB.getBox().draw();
     popMatrix();
   }
   
-  /**
-   * Returns a reference to this world object's bounding-box.
-   */
-  public BoundingBox getBoundingBox() {
-    return OOB;
+  public void setFixtureRef(Fixture refFixture) {
+    reference = refFixture;
   }
+  
+  /**
+   * Return a reference to this object's bounding-box.
+   */ 
+  public BoundingBox getOBB() { return OBB; }
   
   /**
    * Sets the outline color of the world's bounding-box
    * to the given value.
    */
   public void setBBColor(color newColor) {
-    OOB.setColor(newColor);
+    OBB.setColor(newColor);
   }
   
   /**
@@ -426,7 +574,15 @@ public class WorldObject {
    * with this world object.
    */
   public boolean collision(WorldObject obj) {
-    return collision3D(OOB, obj.getBoundingBox());
+    return collision3D(OBB, obj.getOBB());
+  }
+  
+  /**
+   * Determine if the given point is within
+   * this object's bounding box.
+   */
+  public boolean collision(PVector point) {
+    return OBB.collision(point);
   }
 }
 
@@ -441,8 +597,8 @@ public class WorldObject {
  */
 public static boolean collision3D(BoundingBox A, BoundingBox B) {
   // Rows are x, y, z axis vectors for A and B: Ax, Ay, Az, Bx, By, and Bz
-  float[][] axes_A = A.getTransposeAxes();
-  float[][] axes_B = B.getTransposeAxes();
+  float[][] axes_A = A.getLocalAxesTrans();
+  float[][] axes_B = B.getLocalAxesTrans();
   
   // Rotation matrices to convert B into A's coordinate system
   float[][] rotMatrix = new float[3][3];

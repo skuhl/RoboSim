@@ -6,6 +6,10 @@ final int BUTTON_DEFAULT = color(70),
           UI_LIGHT = color(240),
           UI_DARK = color(40);
 
+// Used for checking for double-clicking
+private float firstClick, secondClick;
+private int clickCount;
+
 //String displayFrame = "JOINT";
 int active_prog = -1; // the currently selected program
 int active_instr = -1; // the currently selected instruction
@@ -741,16 +745,45 @@ void gui() {
 
 /* mouse events */
 
-public void mousePressed() {
-  //mouseDown += 1;
-  //if(mouseButton == LEFT) {
-  //  if(clickRotate%2 == 1) {
-  //    doRotate = !doRotate;
-  //  }
-  //  else if(clickPan%2 == 1) {
-  //    doPan = !doPan;
-  //  }
-  //}
+public void mouseClicked() {
+  ++clickCount;
+  
+  if (mouseButton == LEFT) {
+    
+    if (clickCount == 1) {
+      // Record time of first click
+      firstClick = millis();
+    } else if (clickCount == 2) {
+      // Record time of second click
+      secondClick = millis();
+      
+      if ((secondClick - firstClick) < 10000f) {
+        pushMatrix();
+        resetMatrix();
+        applyCamera();
+        float[][] tMatrix = getTransformationMatrix();
+        popMatrix();
+        
+        PVector mPoint = new PVector(mouseX, mouseY, 0f),
+                mPointDeltaZ = new PVector(mouseX, mouseY, -1f);
+        
+        mPoint = transform(mPoint, invertHCMatrix(tMatrix));
+        mPointDeltaZ = transform(mPointDeltaZ, invertHCMatrix(tMatrix));
+        
+        //mouseRay = new Ray(mPoint, mPointDeltaZ);
+        
+        //System.out.printf("\nMouse: [%d, %d]\n%s -> %s\nScale %2.4f\n", mouseX, mouseY, mPoint, mPointDeltaZ, myscale);
+        
+      } else {
+        //System.out.printf("%9.6f -> %9.6f\n", firstClick, secondClick);
+      }
+      // Reset counter
+      clickCount = 0;
+    } else {
+     // Reset counter
+     clickCount = 0;
+    }
+  }
 }
 
 public void mouseDragged(MouseEvent e) {

@@ -55,18 +55,10 @@ public static boolean execSingleInst = false,
 int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 
 /*******************************/
-
-/*******************************/
-/*        Shape Stuff          */
-
-// The Y corrdinate of the ground plane
-public static final float PLANE_Y = 200.5f;
-public WorldObject[] objects;
-
-/*******************************/
 /*      Debugging Stuff        */
 
 public static ArrayList<String> buffer;
+private static Ray mouseRay;
 
 /*******************************/
 
@@ -78,6 +70,7 @@ public void setup() {
   ortho();
   
   buffer = new ArrayList<String>();
+  mouseRay = null;
   
   //load model and save data
   armModel = new ArmModel();
@@ -92,19 +85,11 @@ public void setup() {
   display_stack = new Stack<Screen>();
   gui();
   
-  // Intialize world objects
-  objects = new WorldObject[2];
   pushMatrix();
   resetMatrix();
-  
-  translate(-100, 100, -350);
-  objects[0] = new WorldObject(color(255, 0, 0), color(255, 0, 255), 50);
-
-  translate(-250, 0, 0);
-  objects[1] = new WorldObject(color(255, 0, 0), color(255, 0, 0), 50, 100);
-  
+  translate(-200, -50, 0);
+  OBJECTS.add(new WorldObject(color(255, 0, 255), color(0), 250));
   popMatrix();
-  
 }
 
 public void draw() {
@@ -159,7 +144,6 @@ public void draw() {
   noFill();
   
   pushMatrix();
-  
   applyCamera();
   
   pushMatrix(); 
@@ -174,10 +158,8 @@ public void draw() {
   handleWorldObjects();
   
   if(COLLISION_DISPLAY) { armModel.drawBoxes(); }
-  
-  noLights();
-  
   //TESTING CODE: DRAW INTERMEDIATE POINTS
+  noLights();
   noStroke();
   pushMatrix();
   //if(intermediatePositions != null) {
@@ -194,67 +176,10 @@ public void draw() {
   //  }
   //}
   popMatrix(); 
-  //TESTING CODE: DRAW END EFFECTOR POSITION
-  //pushMatrix();
-  //noFill();
-  //applyModelRotation(armModel.getJointAngles());
-  ////EE position
-  //stroke(255, 255, 0);
-  //sphere(5);
-  //translate(0, 0, -100);
-  //stroke(30, 0, 150);
-  ////EE z axis
-  //sphere(6);
-  //translate(0, 100, 100);
-  //stroke(0, 255, 0);
-  ////EE y axis
-  //sphere(6);
-  //translate(100, -100, 0);
-  //stroke(255, 0, 0);
-  ////EE x axis
-  //sphere(6);
-  //popMatrix();
-  //END TESTING CODE
-  // TESTING CODE: DRAW USER FRAME 0
-  /*PVector ufo = convertWorldToNative(userFrames[0].getOrigin());
   
-  PVector ufx = new PVector(
-      ufo.x-userFrames[0].getAxis(0).x*80,
-      ufo.y-userFrames[0].getAxis(0).y*80,
-      ufo.z-userFrames[0].getAxis(0).z*80
-    );
-  PVector ufy = new PVector(
-      ufo.x-userFrames[0].getAxis(2).x*80,
-      ufo.y-userFrames[0].getAxis(2).y*80,
-      ufo.z-userFrames[0].getAxis(2).z*80
-    );
-  PVector ufz = new PVector(
-      ufo.x+userFrames[0].getAxis(1).x*80,
-      ufo.y+userFrames[0].getAxis(1).y*80,
-      ufo.z+userFrames[0].getAxis(1).z*80
-    );
-  noFill();
-  stroke(255, 0, 0);
-  pushMatrix();
-  translate(ufo.x, ufo.y, ufo.z);
-  sphere(15);
-  popMatrix();
-  stroke(0, 255, 0);
-  pushMatrix();
-  translate(ufx.x, ufx.y, ufx.z);
-  sphere(15);
-  popMatrix();
-  stroke(0, 0, 255);
-  pushMatrix();
-  translate(ufy.x, ufy.y, ufy.z);
-  sphere(15);
-  popMatrix();
-  stroke(255, 255, 0);
-  pushMatrix();
-  translate(ufz.x, ufz.y, ufz.z);
-  sphere(15);
-  popMatrix();*/
-  // END TESTING CODE
+  if (mouseRay != null) {
+    mouseRay.draw();
+  }
   
   displayAxes();
   displayTeachPoints();
@@ -280,15 +205,15 @@ void applyCamera() {
  * Robot Arm model.
  */
 public void handleWorldObjects() {
-  for(WorldObject o : objects) {
+  for(WorldObject o : OBJECTS) {
     // reset all world the object's hit box colors
     o.setBBColor(color(0, 255, 0));
   }
   
-  for(int idx = 0; idx < objects.length; ++idx) {
+  for(int idx = 0; idx < OBJECTS.size(); ++idx) {
     
     /* Update the transformation matrix of an object held by the Robotic Arm */
-    if(objects[idx] == armModel.held && armModel.modelInMotion()) {
+    if(OBJECTS.get(idx) == armModel.held && armModel.modelInMotion()) {
       pushMatrix();
       resetMatrix();
       
@@ -302,41 +227,41 @@ public void handleWorldObjects() {
                   invEETMatrix[2][0], invEETMatrix[2][1], invEETMatrix[2][2], invEETMatrix[2][3],
                   invEETMatrix[3][0], invEETMatrix[3][1], invEETMatrix[3][2], invEETMatrix[3][3]);
       
-      armModel.held. getBoundingBox().applyCoordinateSystem();
+      armModel.held.getOBB().applyCoordinateSystem();
       // Update the world object's position and orientation
-      armModel.held. getBoundingBox().setCenter( getCoordFromMatrix(0f, 0f, 0f) );
-      armModel.held. getBoundingBox().setOrientation( getRotationMatrix() );
+      armModel.held.getOBB().setCoordinateSystem();
       
       popMatrix();
     }
     
     /* Collision Detection */
     if(COLLISION_DISPLAY) {
-      if( armModel.checkObjectCollision(objects[idx]) ) {
-        objects[idx].setBBColor(color(255, 0, 0));
+      if( armModel.checkObjectCollision(OBJECTS.get(idx)) ) {
+        OBJECTS.get(idx).setBBColor(color(255, 0, 0));
       }
       
       // Detect collision with other objects
-      for(int cdx = idx + 1; cdx < objects.length; ++cdx) {
+      for(int cdx = idx + 1; cdx < OBJECTS.size(); ++cdx) {
         
-        if(objects[idx].collision(objects[cdx])) {
+        if(OBJECTS.get(idx).collision(OBJECTS.get(cdx))) {
           // Change hit box color to indicate Object collision
-          objects[idx].setBBColor(color(255, 0, 0));
-          objects[cdx].setBBColor(color(255, 0, 0));
+          OBJECTS.get(idx).setBBColor(color(255, 0, 0));
+          OBJECTS.get(cdx).setBBColor(color(255, 0, 0));
           break;
         }
       }
       
-      if( objects[idx] != armModel.held && objects[idx].getBoundingBox().collision(nativeRobotEEPoint(armModel.getJointAngles()).position) ) {
+      if( OBJECTS.get(idx) != armModel.held && OBJECTS.get(idx).getOBB().collision(nativeRobotEEPoint(armModel.getJointAngles()).position) ) {
         // Change hit box color to indicate End Effector collision
-        objects[idx].setBBColor(color(255, 0, 0));
+        OBJECTS.get(idx).setBBColor(color(0, 0, 255));
       }
     }
     
     // Draw world object
-    objects[idx].draw();
+    OBJECTS.get(idx).draw();
   }
 }
+
 
 /*****************************************************************************************************************
  NOTE: All the below methods assume that current matrix has the camrea applied!
