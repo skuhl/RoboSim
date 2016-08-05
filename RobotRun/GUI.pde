@@ -1669,6 +1669,16 @@ public void f3() {
     case NAV_PROGRAMS:
       nextScreen(Screen.CONFIRM_PROG_DELETE);
       break;
+    case NAV_PROG_INST:
+      if(activeInstruction() instanceof IfStatement) {
+        IfStatement stmt = (IfStatement)activeInstruction();
+        if(stmt.expr instanceof Expression) {
+          ((Expression)stmt.expr).insertElement(editIdx);
+        }
+      } 
+      else if(activeInstruction() instanceof RegisterStatement) {
+        //insert into reg stmt
+      }
     case SELECT_CUT_COPY:
       ArrayList<Instruction> inst = activeProgram().getInstructions();
       clipBoard = new ArrayList<Instruction>();
@@ -4400,58 +4410,63 @@ public void getInstrEdit(Instruction ins) {
   }
   else if(ins instanceof IfStatement){
     IfStatement stmt = (IfStatement)ins;
-    int len = stmt.expr.getLength();
     
-    if(col_select < len + 2) {
-      editExpression(stmt.expr, 2);
-    } else if(col_select == len + 2) {
-      nextScreen(Screen.SET_BOOL_EXPR_ACT);
-    } else if(col_select == len + 3) {
-      nextScreen(Screen.SET_JUMP_TGT);
+    if(stmt.expr instanceof Expression) {
+      int len = stmt.expr.getLength();
+      
+      if(col_select < len + 2) {
+        editExpression((Expression)stmt.expr, 2);
+      } else if(col_select == len + 2) {
+        nextScreen(Screen.SET_BOOL_EXPR_ACT);
+      } else if(col_select == len + 3) {
+        nextScreen(Screen.SET_JUMP_TGT);
+      }
+    } 
+    else if(stmt.expr instanceof BooleanExpression) {
+      if(col_select == 2) {
+        opEdit = ((BooleanExpression)stmt.expr).getArg1();
+        nextScreen(Screen.SET_EXPR_ARG);
+      } else if(col_select == 3) {
+        opEdit = stmt.expr;
+        nextScreen(Screen.SET_EXPR_OP);
+      } else {
+        opEdit = ((BooleanExpression)stmt.expr).getArg2();
+        nextScreen(Screen.SET_EXPR_ARG);
+      }
     }
   }
 }
 
-public void editExpression(AtomicExpression expr, int col_offset) {
+public void editExpression(Expression expr, int col_offset) {
   opEdit = expr;
   
-  if(expr.getOperator() == Operator.UNINIT) {
-    nextScreen(Screen.SET_EXPR_OP);
-  }
-  else {
-    int op1_len = expr.getArg1().getLength();
-    int op1_mod = (expr.getArg1().type == -1) ? 2 : 0;
-    int edit_idx = col_select - col_offset;
-    
-    if(edit_idx < op1_len + op1_mod) {
-      //edit arg1
-      editOperand(expr.getArg1(), col_offset + 1, edit_idx, 1);
-    } else if(edit_idx == op1_len + op1_mod) {
-      //edit op
-      nextScreen(Screen.SET_EXPR_OP);
-    } else if(edit_idx < expr.getLength()){
-      //edit arg2
-      int a2_start = op1_len + op1_mod + 1;
-      editOperand(expr.getArg2(), col_offset + a2_start + 1, edit_idx - a2_start, 2);
-    }
-  }
+  int edit_idx = col_select - col_offset;
+  int[] element_idx = expr.mapToEdit();
+  ExpressionElement e = expr.get(element_idx[edit_idx]);
+  
+  if(e instanceof Expression)
+    editExpression((Expression) e, col_offset + element_idx[edit_idx]);
+  else if(e instanceof ExprOperand)
+    editOperand((ExprOperand)e, element_idx[edit_idx]);
+  else
+    nextScreen(Screen.SET_EXPR_OP);    
 }
 
-public void editOperand(ExprOperand o, int ins_idx, int edit_idx, int opNum) {
-  println(o.type + ", " + o.getLength() + ", " + ins_idx + ", " + edit_idx + ", " + opNum);
+/**
+ * Accepts an ExpressionOperand object and forwards the UI to the appropriate
+ * menu to edit said object based on the operand type.
+ *
+ * @param o - The operand to be edited.
+ * @ins_idx - The index of the operand's container ExpressionElement list into which this
+ *     operand is stored.
+ *
+ */
+public void editOperand(ExprOperand o, int ins_idx) {
+  println(o.type + ", " + o.getLength() + ", " + ins_idx);
   switch(o.type) {
     case -2: //Uninit
-      if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG);
-      else           nextScreen(Screen.SET_EXPR_ARG2);
-      break;
-    case -1: //Sub-expression
-      if(edit_idx == 0 || edit_idx == o.getLength() + 1) {
-        if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG);
-        else           nextScreen(Screen.SET_EXPR_ARG2);
-      } else {
-        opEdit = o;
-        editExpression((AtomicExpression)o, ins_idx);
-      }
+      editIdx = ins_idx - 1;
+      nextScreen(Screen.SET_EXPR_ARG);
       break;
     case 0: //Float const
       opEdit = o;
@@ -4462,22 +4477,12 @@ public void editOperand(ExprOperand o, int ins_idx, int edit_idx, int opNum) {
       nextScreen(Screen.SET_BOOL_CONST);
       break;
     case 2: //Data reg
-      if(edit_idx == 0) {
-        if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG);
-        else           nextScreen(Screen.SET_EXPR_ARG2);
-      } else {
-        opEdit = o;
-        nextScreen(Screen.INPUT_DREG_IDX);
-      }
+      opEdit = o;
+      nextScreen(Screen.INPUT_DREG_IDX);
       break;
     case 3: //IO reg
-      if(edit_idx == 0) {
-        if(opNum == 1) nextScreen(Screen.SET_EXPR_ARG);
-        else           nextScreen(Screen.SET_EXPR_ARG2);
-      } else {
-        opEdit = o;
-        switchScreen(Screen.INPUT_IOREG_IDX);
-      }
+      opEdit = o;
+      switchScreen(Screen.INPUT_IOREG_IDX);
       break;
   }
 }
@@ -4554,6 +4559,7 @@ public ArrayList<String> loadInstructEdit(Screen mode) {
     case SET_EXPR_ARG2:
       edit.add("R[...]");
       edit.add("IO[...]");
+      edit.add("PR[...]");
       edit.add("(...)");
       edit.add("Const");
       break;
