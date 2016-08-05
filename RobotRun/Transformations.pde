@@ -189,15 +189,15 @@ public float[][] invertHCMatrix(float[][] m) {
   inverse[0][0] = m[0][0];
   inverse[0][1] = m[1][0];
   inverse[0][2] = m[2][0];
-  inverse[0][3] = -(m[0][0] * m[0][3] + m[1][0] * m[1][3] + m[2][0] * m[2][3]);
+  inverse[0][3] = -(m[0][0] * m[0][3] + m[0][1] * m[1][3] + m[0][2] * m[2][3]);
   inverse[1][0] = m[0][1];
   inverse[1][1] = m[1][1];
   inverse[1][2] = m[2][1];
-  inverse[1][3] = -(m[0][1] * m[0][3] + m[1][1] * m[1][3] + m[2][1] * m[2][3]);
+  inverse[1][3] = -(m[1][0] * m[0][3] + m[1][1] * m[1][3] + m[1][2] * m[2][3]);
   inverse[2][0] = m[0][2];
   inverse[2][1] = m[1][2];
   inverse[2][2] = m[2][2];
-  inverse[2][3] = -(m[0][2] * m[0][3] + m[1][2] * m[1][3] + m[2][2] * m[2][3]);
+  inverse[2][3] = -(m[2][0] * m[0][3] + m[2][1] * m[1][3] + m[2][2] * m[2][3]);
   inverse[3][0] = 0;
   inverse[3][1] = 0;
   inverse[3][2] = 0;
@@ -219,20 +219,20 @@ public float[][] getTransformationMatrix() {
 
   // Place the values of each vector in the correct cells of the transform  matrix
   transform[0][0] = xAxis.x;
-  transform[1][0] = yAxis.x;
-  transform[2][0] = zAxis.x;
-  transform[3][0] = 0;
   transform[0][1] = xAxis.y;
-  transform[1][1] = yAxis.y;
-  transform[2][1] = zAxis.y;
-  transform[3][1] = 0;
   transform[0][2] = xAxis.z;
-  transform[1][2] = yAxis.z;
-  transform[2][2] = zAxis.z;
-  transform[3][2] = 0;
   transform[0][3] = origin.x;
+  transform[1][0] = yAxis.x;
+  transform[1][1] = yAxis.y;
+  transform[1][2] = yAxis.z;
   transform[1][3] = origin.y;
+  transform[2][0] = zAxis.x;
+  transform[2][1] = zAxis.y;
+  transform[2][2] = zAxis.z;
   transform[2][3] = origin.z;
+  transform[3][0] = 0;
+  transform[3][1] = 0;
+  transform[3][2] = 0;
   transform[3][3] = 1;
 
   return transform;

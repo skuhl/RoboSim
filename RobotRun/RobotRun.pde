@@ -88,7 +88,7 @@ public void setup() {
   pushMatrix();
   resetMatrix();
   translate(-200, -50, 0);
-  OBJECTS.add(new WorldObject(color(255, 0, 255), color(0), 10, 80));
+  OBJECTS.add(new WorldObject(color(255, 0, 255), color(0), 25, 160));
   popMatrix();
 }
 
@@ -218,14 +218,28 @@ public void handleWorldObjects() {
       resetMatrix();
       
       // new object transform = EE transform x (old EE transform) ^ -1 x current object transform
-      
+      /**/
       applyModelRotation(armModel.getJointAngles());
       
       float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
-      applyMatrix(invEETMatrix[0][0], invEETMatrix[0][1], invEETMatrix[0][2], invEETMatrix[0][3],
-                  invEETMatrix[1][0], invEETMatrix[1][1], invEETMatrix[1][2], invEETMatrix[1][3],
-                  invEETMatrix[2][0], invEETMatrix[2][1], invEETMatrix[2][2], invEETMatrix[2][3],
-                  invEETMatrix[3][0], invEETMatrix[3][1], invEETMatrix[3][2], invEETMatrix[3][3]);
+      applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
+                  invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
+                  invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
+                                   0,                 0,                   0,                  1);
+      /**
+      applyModelRotation(armModel.getJointAngles());
+      float[][] invEETMatrix = invertHCMatrix(getTransformationMatrix());
+      resetMatrix();
+      applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
+                  invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
+                  invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
+                                   0,                 0,                   0,                  1);
+      
+      applyMatrix(armModel.oldEETMatrix[0][0], armModel.oldEETMatrix[1][0], armModel.oldEETMatrix[2][0], armModel.oldEETMatrix[0][3],
+                  armModel.oldEETMatrix[0][1], armModel.oldEETMatrix[1][1], armModel.oldEETMatrix[2][1], armModel.oldEETMatrix[1][3],
+                  armModel.oldEETMatrix[0][2], armModel.oldEETMatrix[1][2], armModel.oldEETMatrix[2][2], armModel.oldEETMatrix[2][3],
+                                   0,                 0,                   0,                  1);
+      /**/
       
       armModel.held.getOBB().applyCoordinateSystem();
       // Update the world object's position and orientation
