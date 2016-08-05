@@ -10,14 +10,14 @@ public enum AxesDisplay { AXES, GRID, NONE };
 public enum EEMapping { LINE, DOT, NONE };
 
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
-public enum Operator {
+public enum Operator implements ExpressionElement {
   ADDTN("+", ARITH), 
   SUBTR("-", ARITH), 
   MULT("*", ARITH), 
   DIV("/", ARITH), 
   MOD("%", ARITH), 
-  INTDIV("|", ARITH), 
-  PAR_OPEN("(", -1), 
+  INTDIV("|", ARITH),
+  PAR_OPEN("(", -1),
   PAR_CLOSE(")", -1),
   EQUAL("=", BOOL),
   NEQUAL("<>", BOOL),
@@ -33,13 +33,21 @@ public enum Operator {
   public final String symbol;
   public final int type;
   
-  private Operator(String s, int t){
+  private Operator(String s, int t) {
     symbol = s;
     type = t;
   }
   
+  public int getLength() {
+    return 1;
+  }
+  
   public String toString() {
     return symbol;
+  }
+  
+  public String[] toStringArray() {
+    return new String[] { toString() };
   }
 }
 
