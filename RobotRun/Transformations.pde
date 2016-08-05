@@ -137,7 +137,7 @@ public PVector convertNativeToWorld(PVector v) {
 }
 
 /* Transforms the given vector from the coordinate system defined by the given
- * transformation matrix (column major order). */
+ * transformation matrix (row major order). */
 public PVector transform(PVector v, float[][] tMatrix) {
   if(tMatrix.length != 4 || tMatrix[0].length != 4) {
     return null;
@@ -145,9 +145,9 @@ public PVector transform(PVector v, float[][] tMatrix) {
 
   PVector u = new PVector();
   // Apply the transformation matrix to the given vector
-  u.x = v.x * tMatrix[0][0] + v.y * tMatrix[0][1] + v.z * tMatrix[0][2] + tMatrix[0][3];
-  u.y = v.x * tMatrix[1][0] + v.y * tMatrix[1][1] + v.z * tMatrix[1][2] + tMatrix[1][3];
-  u.z = v.x * tMatrix[2][0] + v.y * tMatrix[2][1] + v.z * tMatrix[2][2] + tMatrix[2][3];
+  u.x = v.x * tMatrix[0][0] + v.y * tMatrix[1][0] + v.z * tMatrix[2][0] + tMatrix[0][3];
+  u.y = v.x * tMatrix[0][1] + v.y * tMatrix[1][1] + v.z * tMatrix[2][1] + tMatrix[1][3];
+  u.z = v.x * tMatrix[0][2] + v.y * tMatrix[1][2] + v.z * tMatrix[2][2] + tMatrix[2][3];
 
   return u;
 }
@@ -212,34 +212,34 @@ public float[][] getTransformationMatrix() {
   float[][] transform = new float[4][4];
 
   // Caculate four vectors corresponding to the four columns of the transform matrix
-  PVector col_4 = getCoordFromMatrix(0, 0, 0);
-  PVector col_1 = getCoordFromMatrix(1, 0, 0).sub(col_4);
-  PVector col_2 = getCoordFromMatrix(0, 1, 0).sub(col_4);
-  PVector col_3 = getCoordFromMatrix(0, 0, 1).sub(col_4);
+  PVector origin = getCoordFromMatrix(0, 0, 0);
+  PVector xAxis = getCoordFromMatrix(1, 0, 0).sub(origin);
+  PVector yAxis = getCoordFromMatrix(0, 1, 0).sub(origin);
+  PVector zAxis = getCoordFromMatrix(0, 0, 1).sub(origin);
 
   // Place the values of each vector in the correct cells of the transform  matrix
-  transform[0][0] = col_1.x;
-  transform[1][0] = col_1.y;
-  transform[2][0] = col_1.z;
+  transform[0][0] = xAxis.x;
+  transform[1][0] = yAxis.x;
+  transform[2][0] = zAxis.x;
   transform[3][0] = 0;
-  transform[0][1] = col_2.x;
-  transform[1][1] = col_2.y;
-  transform[2][1] = col_2.z;
+  transform[0][1] = xAxis.y;
+  transform[1][1] = yAxis.y;
+  transform[2][1] = zAxis.y;
   transform[3][1] = 0;
-  transform[0][2] = col_3.x;
-  transform[1][2] = col_3.y;
-  transform[2][2] = col_3.z;
+  transform[0][2] = xAxis.z;
+  transform[1][2] = yAxis.z;
+  transform[2][2] = zAxis.z;
   transform[3][2] = 0;
-  transform[0][3] = col_4.x;
-  transform[1][3] = col_4.y;
-  transform[2][3] = col_4.z;
+  transform[0][3] = origin.x;
+  transform[1][3] = origin.y;
+  transform[2][3] = origin.z;
   transform[3][3] = 1;
 
   return transform;
 }
 
 /**
- * Forms the 4x4 transformation matrix (column major order) form the given
+ * Forms the 4x4 transformation matrix (row major order) form the given
  * origin offset and axes offset (row major order) of the Native Coordinate
  * system.
  * 
@@ -254,15 +254,15 @@ public float[][] transformationMatrix(PVector origin, float[][] axes) {
   float[][] transform = new float[4][4];
   
   transform[0][0] = axes[0][0];
-  transform[1][0] = axes[0][1];
-  transform[2][0] = axes[0][2];
+  transform[1][0] = axes[1][0];
+  transform[2][0] = axes[2][0];
   transform[3][0] = 0;
-  transform[0][1] = axes[1][0];
+  transform[0][1] = axes[0][1];
   transform[1][1] = axes[1][1];
-  transform[2][1] = axes[1][2];
+  transform[2][1] = axes[2][1];
   transform[3][1] = 0;
-  transform[0][2] = axes[2][0];
-  transform[1][2] = axes[2][1];
+  transform[0][2] = axes[0][2];
+  transform[1][2] = axes[1][2];
   transform[2][2] = axes[2][2];
   transform[3][2] = 0;
   transform[0][3] = origin.x;

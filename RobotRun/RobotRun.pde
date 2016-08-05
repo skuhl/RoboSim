@@ -88,7 +88,7 @@ public void setup() {
   pushMatrix();
   resetMatrix();
   translate(-200, -50, 0);
-  OBJECTS.add(new WorldObject(color(255, 0, 255), color(0), 250));
+  OBJECTS.add(new WorldObject(color(255, 0, 255), color(0), 10, 80));
   popMatrix();
 }
 

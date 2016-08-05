@@ -113,7 +113,7 @@ public class Box extends Shape {
     box(dimensions.x, dimensions.y, dimensions.z);
   }
   
-  public PVector getDimensions() { return dimensions.copy(); }
+  public PVector getDimensions() { return dimensions; }
   
   public Shape clone() {
     Box copy = new Box(getFillColor(), getOutlineColor(), dimensions.x, dimensions.y, dimensions.z);
@@ -282,22 +282,6 @@ public class CoordinateSystem {
   public float[][] getAxes() {
     return axesVectors;
   }
-  
-  /**
-   * Return a copy of the orientation matrix in
-   * column major order.
-   */
-  public float[][] getTransposeAxes() {
-    float[][] transpose = new float[3][3];
-    // Transpose and copy orientation
-    for (int row = 0; row < 3; ++row) {
-      for (int col = 0; col < 3; ++col) {
-        transpose[row][col] = axesVectors[col][row];
-      }
-    }
-    
-    return transpose;
-  }
 }
 
 /**
@@ -380,12 +364,8 @@ public class BoundingBox {
     return old;
   }
   
-  /**
-   * Return a copy of the orientation matrix in
-   * column major order.
-   */
-  public float[][] getLocalAxesTrans() {
-    return localOrientation.getTransposeAxes();
+  public float[][] getOrientation() {
+    return localOrientation.getAxes();
   }
   
   /**
@@ -597,8 +577,8 @@ public class WorldObject {
  */
 public static boolean collision3D(BoundingBox A, BoundingBox B) {
   // Rows are x, y, z axis vectors for A and B: Ax, Ay, Az, Bx, By, and Bz
-  float[][] axes_A = A.getLocalAxesTrans();
-  float[][] axes_B = B.getLocalAxesTrans();
+  float[][] axes_A = A.getOrientation();
+  float[][] axes_B = B.getOrientation();
   
   // Rotation matrices to convert B into A's coordinate system
   float[][] rotMatrix = new float[3][3];
