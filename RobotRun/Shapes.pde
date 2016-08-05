@@ -1,121 +1,318 @@
 /**
- * A basic definition of a shape in processing that has a fill and outline color.
+ * A simple class that defines the outline and fill color for a shape
+ * along with some methods necessarry for a shape.
  */
 public abstract class Shape {
-  protected color fill;
-  protected color outline;
-  protected final boolean no_fill;
+  private color fillColor,
+                outlineColor;
+  private boolean noFill;
   
-  /* Create a shpae with the given outline/fill colors */
-  public Shape(color f, color o) {
-    fill = f;
-    outline = o;
-    no_fill = false;
+  public Shape() {
+    fillColor = color(0);
+    outlineColor = color(225);
+    noFill = false;
   }
   
-  /* Creates a shape with no fill */
-  public Shape(color o) {
-    outline = o;
-    no_fill = true;
-  } 
+  public Shape(color fill, color outline) {
+    fillColor = fill;
+    outlineColor = outline;
+    noFill = false;
+  }
   
-  /* Returns the x, y, z values of the shape's center point */
-  public abstract float[] position();
+  public Shape(color outline) {
+    fillColor = color(255);
+    outlineColor = outline;
+    noFill = true;
+  }
   
-  /* Applies necessary rotations and translations to convert the Native cooridinate
-  * system into the cooridnate system relative to the center of the Shape */
-  public abstract void applyTransform();
+  public void draw() {
+    // Apply shape outline and fill color
+    stroke(outlineColor);
+    
+    if (noFill) {
+      noFill();
+    } else {
+      fill(fillColor);
+    } 
+  }
   
-  /* Define the transformation matrix for the coordinate system of the shape */
-  public abstract void setTransform(float[][] tMatrix);
+  /* Getters and Setters for shapes fill and outline colors */
+  public color getOutlineColor() { return outlineColor; }
+  public void setOutlineColor(color newColor) { outlineColor = newColor; }
+  public color getFillColor() { return fillColor; }
+  public void setFillColor(color newColor) { fillColor = newColor; }
+  public boolean isFilled() { return !noFill; }
+  public void setFillFlag(boolean notFilled) { noFill = !notFilled; }
   
-  /* Returns the Homogeneous Coordinate Matrix repesenting the conversion from
-  * the object's coordinate frame to the Native coordinate frame */
-  public abstract float[][] getTransform();
-  
-  /* Returns a 3x3 matrix, whose rows contain the x, y, z axes of the Shape's relative
-  * coordinate frame in native coordinates */
-  public abstract float[][] getRelativeAxes();
-  
-  /* Define how a shape is drawn in the window */
-  public abstract void draw();
+  /**
+   * Returns a copy of the Shape object
+   */
+  public abstract Shape clone();
 }
 
 /**
- * A shape that resembles a cube or rectangle
+ * Defines the length, width, height values to draw a box.
  */
 public class Box extends Shape {
-  public final PVector dimensions;
-  public float[][] transform;
+  /**
+   * X -> length
+   * Y -> Height
+   * Z -> Width
+   */
+  private PVector dimensions;
   
-  /* NOTE: Box Shapes will use the current Transformation Matrix on
-   * the Procssing stack to define both the center of the Box as well
-   * as the Box's local coordinate system. */
-  
-  /* Create a normal box */
-  public Box(float wdh, float hgt, float dph, color f, color o) {
-    super(f, o);
-    
-    transform = getTransformationMatrix();
-    dimensions = new PVector(wdh, hgt, dph);
+  /**
+   * Create a cube, with an edge length of 10.
+   */
+  public Box() {
+    super();
+    dimensions = new PVector(10f, 10f, 10f);
   }
   
-  /* Create an empty box */
-  public Box(float wdh, float hgt, float dph, color o) {
-    super(o);
-    
-    transform = getTransformationMatrix();
-    dimensions = new PVector(wdh, hgt, dph);
+  /**
+   * Create a box with the given colors and dinemsions.
+   */
+  public Box(color fill, color outline, float len, float hgt, float wdh) {
+    super(fill, outline);
+    dimensions = new PVector(len, hgt, wdh);
   }
   
-  public float[] position() {
-    pushMatrix();
-    resetMatrix();
-    applyTransform();
-    float[] origin = new float[] { modelX(0, 0, 0), modelY(0, 0, 0), modelZ(0, 0, 0) };
-    popMatrix();
-    
-    return origin;
+  /**
+   * Create an empty box with the given color and dinemsions.
+   */
+  public Box(color outline, float len, float hgt, float wdh) {
+    super(outline);
+    dimensions = new PVector(len, hgt, wdh);
   }
   
-  /* This method modifies the transform matrix! */
-  public void applyTransform() {
-    applyMatrix(transform[0][0], transform[0][1], transform[0][2], transform[0][3],
-    transform[1][0], transform[1][1], transform[1][2], transform[1][3],
-    transform[2][0], transform[2][1], transform[2][2], transform[2][3],
-    transform[3][0], transform[3][1], transform[3][2], transform[3][3]);
+  /**
+   * Create a cube with the given colors and dinemsion.
+   */
+  public Box(color fill, color outline, float edgeLen) {
+    super(fill, outline);
+    dimensions = new PVector(edgeLen, edgeLen, edgeLen);
   }
   
-  public void setTransform(float[][] tMatrix) { transform = tMatrix.clone(); }
-  
-  public float[][] getTransform() {return transform.clone(); }
+  /**
+   * Create an empty cube with the given color and dinemsion.
+   */
+  public Box(color outline, float edgeLen) {
+    super(outline);
+    dimensions = new PVector(edgeLen, edgeLen, edgeLen);
+  }
   
   public void draw() {
-    stroke(outline);
-    
-    if(no_fill) {
-      noFill();
-    } else {
-      fill(fill);
-    }
-    
+    // Apply colors
+    super.draw();
     box(dimensions.x, dimensions.y, dimensions.z);
   }
   
-  public float[][] getRelativeAxes() {
-    float[][] Axes = new float[3][3];
+  public PVector getDimensions() { return dimensions.copy(); }
+  
+  public Shape clone() {
+    Box copy = new Box(getFillColor(), getOutlineColor(), dimensions.x, dimensions.y, dimensions.z);
+    copy.setFillFlag( isFilled() );
+    return copy;
+  }
+}
+
+/**
+ * Defines the radius and height to draw a uniform cylinder
+ */
+public class Cylinder extends Shape {
+  private float radius, height;
+  
+  public Cylinder() {
+    super();
+    radius = 10f;
+    height = 10f;
+  }
+  
+  public Cylinder(color fill, color outline, float rad, float hgt) {
+    super(fill, outline);
+    radius = rad;
+    height = hgt;
+  }
+  
+  public Cylinder(color outline, float rad, float hgt) {
+    super(outline);
+    radius = rad;
+    height = hgt;
+  }
+  
+  /**
+   * Assumes the center of the cylinder is halfway between the top and bottom of of the cylinder.
+   */
+  public void draw() {
+    super.draw();
+    float halfHeight = height / 2,
+          diameter = 2 * radius;
     
-    for(int r = 0; r < Axes[0].length; ++r) {
-      for(int c = 0; c < Axes.length; ++c) {
-        Axes[c][r] = transform[r][c];
+    translate(0f, 0f, halfHeight);
+    // Draw top of the cylinder
+    ellipse(0f, 0f, diameter, diameter);
+    translate(0f, 0f, -height);
+    // Draw bottom of the cylinder
+    ellipse(0f, 0f, diameter, diameter);
+    translate(0f, 0f, halfHeight);
+    
+    beginShape(TRIANGLE_STRIP);
+    // Draw a string of triangles around the circumference of the Cylinders top and bottom.
+    for (int degree = 0; degree <= 360; ++degree) {
+      float pos_x = cos(DEG_TO_RAD * degree) * radius,
+            pos_y = sin(DEG_TO_RAD * degree) * radius;
+      
+      vertex(pos_x, pos_y, halfHeight);
+      vertex(pos_x, pos_y, -halfHeight);
+    }
+    
+    endShape();
+  }
+  
+  public float getRadius() { return radius; }
+  public float getHeight() { return height; }
+  
+  public Shape clone() {
+    Cylinder copy = new Cylinder(getFillColor(), getOutlineColor(), radius, height);
+    copy.setFillFlag( isFilled() );
+    return copy;
+  }
+}
+
+public class BoundingBox {
+  /* The origin of the bounding box's local Coordinate System */
+  private PVector center;
+  /* A 3x3 rotation mtrix, which describes the object's local coordinate axes */
+  private float[][] orientation;
+  private Box boundingBox;
+  
+  /**
+   * Create a cube object with the given colors and dimension
+   */
+  public BoundingBox() {
+    setCoordinateSystem();
+    boundingBox = new Box(color(0, 0, 255), 10f);
+  }
+  
+  /**
+   * Create a cube object with the given colors and dimension
+   */
+  public BoundingBox(float edgeLen) {
+    setCoordinateSystem();
+    boundingBox = new Box(color(0, 0, 255), edgeLen);
+  }
+  
+  /**
+   * Create a box object with the given colors and dimensions
+   */
+  public BoundingBox(float len, float hgt, float wdh) {
+    /* Pull center and orientation from the current transformation matrix */
+    center = getCoordFromMatrix(0f, 0f, 0f);
+    orientation = getRotationMatrix();
+    boundingBox = new Box(color(0, 0, 255), len, hgt, wdh);
+  }
+  
+  /**
+   * Apply the box's local Coordinate System
+   */
+  public void applyCoordinateSystem() {
+    applyMatrix(orientation[0][0], orientation[1][0], orientation[2][0], center.x,
+                orientation[0][1], orientation[1][1], orientation[2][1], center.y,
+                orientation[0][2], orientation[1][2], orientation[2][2], center.z,
+                                0,                 0,                 0,        1);
+  }
+  
+  /**
+   * Draw both the object and its bounding box;
+   */
+  public void draw() {
+    pushMatrix();
+    // Draw shape in its own coordinate system
+    applyCoordinateSystem();
+    boundingBox.draw();
+    popMatrix();
+  }
+  
+  /**
+   * Sets the current Coordinate System of the bounding-box
+   * to the current transformation matrix.
+   */
+  public void setCoordinateSystem() {
+    /* Pull center and orientation from the current transformation matrix */
+    center = getCoordFromMatrix(0f, 0f, 0f);
+    orientation = getRotationMatrix();
+  }
+  
+  /**
+   * Reset the object's center point
+   */
+  public PVector setCenter(PVector newCenter) {
+    PVector old = center;
+    center = newCenter.copy();
+    return old;
+  }
+  
+  public PVector getCenter() { return center.copy(); }
+  
+  /**
+   * Reset the object's orientation axes; the given rotation
+   * matrix should be in row major order!
+   */
+  public float[][] setOrientation(float[][] newOrientation) {
+    float[][] old = orientation;
+    orientation = newOrientation.clone();
+    return old;
+  }
+  
+  /**
+   * Return a copy of the orientation matrix in
+   * row major order.
+   */
+  public float[][] getAxes() {
+    float[][] copy = new float[3][3];
+    // Copy orientation
+    for (int row = 0; row < 3; ++row) {
+      for (int col = 0; col < 3; ++col) {
+        copy[row][col] = orientation[row][col];
       }
     }
     
-    return Axes;
+    return copy;
   }
   
-  /* Returns the dimension of the box corresponding to the
-   * axes index given; the axi indices are as follows:
+  /**
+   * Return a copy of the orientation matrix in
+   * column major order.
+   */
+  public float[][] getTransposeAxes() {
+    float[][] transpose = new float[3][3];
+    // Transpose and copy orientation
+    for (int row = 0; row < 3; ++row) {
+      for (int col = 0; col < 3; ++col) {
+        transpose[row][col] = orientation[col][row];
+      }
+    }
+    
+    return transpose;
+  }
+  
+  /**
+   * Sets the outline color of this ounding-box
+   * to the given value.
+   */
+  public void setColor(color newColor) {
+    boundingBox.setOutlineColor(newColor);
+  }
+  
+  /**
+   * Return a reference to this world object's bounding box
+   */
+  public Box getBox() { return (Box)boundingBox; }
+  
+  /**
+   * Returns the dimension of the world object's bounding
+   * box corresponding to the axes index given; the axes
+   * indices are as follows:
    * 
    * 0 -> x
    * 1 -> y
@@ -124,69 +321,104 @@ public class Box extends Shape {
   public float getDim(int axes) {
     
     switch (axes) {
-    case 0:   return dimensions.x;
-    case 1:   return dimensions.y;
-    case 2:   return dimensions.z;
+    case 0:   return boundingBox.dimensions.x;
+    case 1:   return boundingBox.dimensions.y;
+    case 2:   return boundingBox.dimensions.z;
     default:  return -1f;
     }
   }
   
-  /* Check if the given point is within the dimensions of the box */
-  public boolean within(PVector pos) {
+  /**
+   * Determine of a single position, in Native Coordinates, is with
+   * the bounding box of the this world object.
+   */
+  public boolean collision(PVector point) {
+    // Convert the point to the current reference frame
+    float[][] tMatrix = transformationMatrix(center, orientation);
+    PVector relPosition = transform(point, invertHCMatrix(tMatrix));
     
-    boolean is_inside = pos.x >= -(dimensions.x / 2f) && pos.x <= (dimensions.x / 2f)
-    && pos.y >= -(dimensions.y / 2f) && pos.y <= (dimensions.y / 2f)
-    && pos.z >= -(dimensions.z / 2f) && pos.z <= (dimensions.z / 2f);
+    PVector BBDim = boundingBox.getDimensions();
+    // Determine if the point iw within the bounding-box of this object
+    boolean is_inside = relPosition.x >= -(BBDim.x / 2f) && relPosition.x <= (BBDim.x / 2f)
+                     && relPosition.y >= -(BBDim.y / 2f) && relPosition.y <= (BBDim.y / 2f)
+                     && relPosition.z >= -(BBDim.z / 2f) && relPosition.z <= (BBDim.z / 2f);
     
     return is_inside;
   }
+  
+  /**
+   * Return a replicate of this world object's Bounding Box
+   */
+  public BoundingBox clone() {
+    pushMatrix();
+    applyCoordinateSystem();
+    BoundingBox copy = new BoundingBox(getDim(0), getDim(1), getDim(2));
+    copy.setColor( boundingBox.getOutlineColor() );
+    popMatrix();
+    
+    return copy;
+  }
 }
 
+/**
+ * Defines a world object, which has a shape and a bounding box. The bounding
+ * box holds the local coordinate system of the object.
+ */
 public class WorldObject {
-  // The actual object
-  public final Shape form;
-  // The area around an object used for collision handling
-  public final Shape hit_box;
+  private Shape form;
+  private BoundingBox OOB;
   
-  public WorldObject(float wdh, float hgt, float dph, color f, color o) {
-    form = new Box(wdh, hgt, dph, f, o);
-    // green outline for hitboxes
-    hit_box = new Box(wdh + 20f, hgt + 20f, dph + 20f, color(0, 255, 0));
+  /**
+   * Create a cube object with the given colors and dimension
+   */
+  public WorldObject(color fill, color outline, float edgeLen) {
+    form = new Box(fill, outline, edgeLen);
+    /* Pull center and orientation from the current transformation matrix */
+    OOB = new BoundingBox(edgeLen + 15f, edgeLen + 15f, edgeLen + 15f);
   }
   
+  /**
+   * Create a box object with the given colors and dimensions
+   */
+  public WorldObject(color fill, color outline, float len, float wdh, float hgt) {
+    form = new Box(fill, outline, len, wdh, hgt);
+    /* Pull center and orientation from the current transformation matrix */
+    OOB = new BoundingBox(len + 15f, wdh + 15f, hgt + 15f);
+  }
+  
+  /**
+   * Draw both the object and its bounding box;
+   */
   public void draw() {
     pushMatrix();
-    
-    form.applyTransform();
-    
-    noFill();
-    stroke(255, 0, 0);
-    //line(5000, 0, 0, -5000, 0, 0);
-    stroke(0, 255, 0);
-    //line(0, 5000, 0, 0, -5000, 0);
-    stroke(0, 0, 255);
-    //line(0, 0, 5000, 0, 0, -5000);
-    
+    // Draw shape in its own coordinate system
+    OOB.applyCoordinateSystem();
     form.draw();
-    if(COLLISION_DISPLAY) { hit_box.draw(); }
-    
+    OOB.getBox().draw();
     popMatrix();
   }
   
-  public boolean collision(PVector pos) {
-    // Convert the point to the current reference frame
-    pos = transform(pos, invertHCMatrix(hit_box.getTransform()));
-    
-    return ((Box)hit_box).within(pos);
+  /**
+   * Returns a reference to this world object's bounding-box.
+   */
+  public BoundingBox getBoundingBox() {
+    return OOB;
   }
   
-  /* Determines if the collider boxes of this object
-   * and the given object intersect. */
+  /**
+   * Sets the outline color of the world's bounding-box
+   * to the given value.
+   */
+  public void setBBColor(color newColor) {
+    OOB.setColor(newColor);
+  }
+  
+  /**
+   * Determine if the given world object is colliding
+   * with this world object.
+   */
   public boolean collision(WorldObject obj) {
-    Box A = (Box)hit_box;
-    Box B = (Box)obj.hit_box;
-    
-    return collision3D(A, B);
+    return collision3D(OOB, obj.getBoundingBox());
   }
 }
 
@@ -199,10 +431,10 @@ public class WorldObject {
  * @param B  The hit box associated with another object in space
  * @return   Whether the two hit boxes intersect
  */
-public boolean collision3D(Box A, Box B) {
+public static boolean collision3D(BoundingBox A, BoundingBox B) {
   // Rows are x, y, z axis vectors for A and B: Ax, Ay, Az, Bx, By, and Bz
-  float[][] axes_A = A.getRelativeAxes();
-  float[][] axes_B = B.getRelativeAxes();
+  float[][] axes_A = A.getTransposeAxes();
+  float[][] axes_B = B.getTransposeAxes();
   
   // Rotation matrices to convert B into A's coordinate system
   float[][] rotMatrix = new float[3][3];
@@ -218,8 +450,8 @@ public boolean collision3D(Box A, Box B) {
   }
   
   // T = B's position - A's
-  PVector posA = new PVector().set(A.position());
-  PVector posB = new PVector().set(B.position());
+  PVector posA = new PVector().set(A.getCenter());
+  PVector posB = new PVector().set(B.getCenter());
   PVector limbo = posB.sub(posA);
   // Convert T into A's coordinate frame
   float[] T = new float[] { limbo.dot(new PVector().set(axes_A[0])), 

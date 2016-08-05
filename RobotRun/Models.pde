@@ -100,8 +100,8 @@ public class ArmModel {
   public float[] jogLinear = new float[3];
   public float[] jogRot = new float[3];
   
-  public Box[] bodyHitBoxes;
-  private ArrayList<Box>[] eeHitBoxes;
+  public BoundingBox[] bodyHitBoxes;
+  private ArrayList<BoundingBox>[] eeHitBoxes;
   
   public WorldObject held;
   public float[][] oldEETMatrix;
@@ -161,34 +161,34 @@ public class ArmModel {
     }
     
     /* Initialies dimensions of the Robot Arm's hit boxes */
-    bodyHitBoxes = new Box[7];
+    bodyHitBoxes = new BoundingBox[7];
     
-    bodyHitBoxes[0] = new Box(420, 115, 420, color(0, 255, 0));
-    bodyHitBoxes[1] = new Box(317, 85, 317, color(0, 255, 0));
-    bodyHitBoxes[2] = new Box(130, 185, 170, color(0, 255, 0));
-    bodyHitBoxes[3] = new Box(74, 610, 135, color(0, 255, 0));
-    bodyHitBoxes[4] = new Box(165, 165, 165, color(0, 255, 0));
-    bodyHitBoxes[5] = new Box(160, 160, 160, color(0, 255, 0));
-    bodyHitBoxes[6] = new Box(128, 430, 128, color(0, 255, 0));
+    bodyHitBoxes[0] = new BoundingBox(420, 115, 420);
+    bodyHitBoxes[1] = new BoundingBox(317, 85, 317);
+    bodyHitBoxes[2] = new BoundingBox(130, 185, 170);
+    bodyHitBoxes[3] = new BoundingBox(74, 610, 135);
+    bodyHitBoxes[4] = new BoundingBox(165, 165, 165);
+    bodyHitBoxes[5] = new BoundingBox(160, 160, 160);
+    bodyHitBoxes[6] = new BoundingBox(128, 430, 128);
     
-    eeHitBoxes = (ArrayList<Box>[])new ArrayList[4]; 
+    eeHitBoxes = (ArrayList<BoundingBox>[])new ArrayList[4]; 
     // Face plate
-    eeHitBoxes[0] = new ArrayList<Box>();
-    eeHitBoxes[0].add( new Box(102, 102, 36, color(0, 255, 0)) );
+    eeHitBoxes[0] = new ArrayList<BoundingBox>();
+    eeHitBoxes[0].add( new BoundingBox(102, 102, 36) );
     // Claw Gripper (closed)
-    eeHitBoxes[1] = new ArrayList<Box>();
-    eeHitBoxes[1].add( new Box(102, 102, 46, color(0, 255, 0)) );
-    eeHitBoxes[1].add( new Box(89, 43, 31, color(0, 255, 0)) );
+    eeHitBoxes[1] = new ArrayList<BoundingBox>();
+    eeHitBoxes[1].add( new BoundingBox(102, 102, 46) );
+    eeHitBoxes[1].add( new BoundingBox(89, 43, 31) );
     // Claw Gripper (open)
-    eeHitBoxes[2] = new ArrayList<Box>();
-    eeHitBoxes[2].add( new Box(102, 102, 46, color(0, 255, 0)) );
-    eeHitBoxes[2].add( new Box(89, 21, 31, color(0, 255, 0)) );
-    eeHitBoxes[2].add( new Box(89, 21, 31, color(0, 255, 0)) );
+    eeHitBoxes[2] = new ArrayList<BoundingBox>();
+    eeHitBoxes[2].add( new BoundingBox(102, 102, 46) );
+    eeHitBoxes[2].add( new BoundingBox(89, 21, 31) );
+    eeHitBoxes[2].add( new BoundingBox(89, 21, 31) );
     // Suction 
-    eeHitBoxes[3] = new ArrayList<Box>();
-    eeHitBoxes[3].add( new Box(102, 102, 46, color(0, 255, 0)) );
-    eeHitBoxes[3].add( new Box(37, 37, 87, color(0, 255, 0)) );
-    eeHitBoxes[3].add( new Box(37, 67, 37, color(0, 255, 0)) );
+    eeHitBoxes[3] = new ArrayList<BoundingBox>();
+    eeHitBoxes[3].add( new BoundingBox(102, 102, 46) );
+    eeHitBoxes[3].add( new BoundingBox(37, 37, 87) );
+    eeHitBoxes[3].add( new BoundingBox(37, 67, 37) );
     
     held = null;
     // Initializes the old transformation matrix for the arm model
@@ -321,10 +321,10 @@ public class ArmModel {
     rotateY(PI/2);
     translate(200, 50, 200);
     // Segment 0
-    bodyHitBoxes[0].setTransform(getTransformationMatrix());
+    bodyHitBoxes[0].setCoordinateSystem();
     
     translate(0, 100, 0);
-    bodyHitBoxes[1].setTransform(getTransformationMatrix());
+    bodyHitBoxes[1].setCoordinateSystem();
     
     translate(-200, -150, -200);
     
@@ -340,7 +340,7 @@ public class ArmModel {
     translate(10, 95, 0);
     rotateZ(-0.1f * PI);
     // Segment 1
-    bodyHitBoxes[2].setTransform(getTransformationMatrix());
+    bodyHitBoxes[2].setCoordinateSystem();
     
     rotateZ(0.1f * PI);
     translate(-160, -95, -150);
@@ -353,7 +353,7 @@ public class ArmModel {
     rotateX(segments.get(1).currentRotations[2]);
     translate(30, 240, 0);
     // Segment 2
-    bodyHitBoxes[3].setTransform(getTransformationMatrix());
+    bodyHitBoxes[3].setCoordinateSystem();
     
     translate(-30, -302, -62);
     rotateY(-PI/2);
@@ -368,7 +368,7 @@ public class ArmModel {
     rotateZ(-PI);
     translate(75, 0, 0);
     // Segment 3
-    bodyHitBoxes[4].setTransform(getTransformationMatrix());
+    bodyHitBoxes[4].setCoordinateSystem();
     
     translate(-75, -75, -75);
     rotateY(PI/2);
@@ -381,10 +381,10 @@ public class ArmModel {
     rotateY(segments.get(3).currentRotations[0]);
     translate(5, 75, 5);
     // Segment 4
-    bodyHitBoxes[5].setTransform(getTransformationMatrix());
+    bodyHitBoxes[5].setCoordinateSystem();
     
     translate(0, 295, 0);
-    bodyHitBoxes[6].setTransform(getTransformationMatrix());
+    bodyHitBoxes[6].setCoordinateSystem();
     
     translate(-75, -370, -75);
     
@@ -410,30 +410,29 @@ public class ArmModel {
     // End Effector
     // Face Plate EE
     translate(0, 0, 10);
-    eeHitBoxes[0].get(0).setTransform(getTransformationMatrix());
+    eeHitBoxes[0].get(0).setCoordinateSystem();
     translate(0, 0, -10);
     
     // Claw Gripper EE
-    float[][] transform = getTransformationMatrix();
-    eeHitBoxes[1].get(0).setTransform(transform);
-    eeHitBoxes[2].get(0).setTransform(transform);
-    eeHitBoxes[3].get(0).setTransform(transform);
+    eeHitBoxes[1].get(0).setCoordinateSystem();
+    eeHitBoxes[2].get(0).setCoordinateSystem();
+    eeHitBoxes[3].get(0).setCoordinateSystem();
     
     translate(-2, 0, -54);
-    eeHitBoxes[1].get(1).setTransform(getTransformationMatrix());
+    eeHitBoxes[1].get(1).setCoordinateSystem();
     translate(2, 0, 54);
     // The Claw EE has two separate hit box lists: one for the open claw and another for the closed claw
     translate(-2, 27, -54);
-    eeHitBoxes[2].get(1).setTransform(getTransformationMatrix());
+    eeHitBoxes[2].get(1).setCoordinateSystem();
     translate(0, -54, 0);
-    eeHitBoxes[2].get(2).setTransform(getTransformationMatrix());
+    eeHitBoxes[2].get(2).setCoordinateSystem();
     translate(2, 27, 54);
     
     // Suction EE
     translate(-2, 0, -66);
-    eeHitBoxes[3].get(1).setTransform(getTransformationMatrix());
+    eeHitBoxes[3].get(1).setCoordinateSystem();
     translate(0, -52, 21);
-    eeHitBoxes[3].get(2).setTransform(getTransformationMatrix());
+    eeHitBoxes[3].get(2).setCoordinateSystem();
     translate(2, 52, 35);
     
     translate(-45, -45, 0);
@@ -442,7 +441,7 @@ public class ArmModel {
   
   /* Returns one of the Arraylists for the End Effector hit boxes depending on the
    * current active End Effector and the status of the End Effector. */
-  public ArrayList<Box> currentEEHitBoxList() {
+  public ArrayList<BoundingBox> currentEEHitBoxList() {
     // Determine which set of hit boxes to display based on the active End Effector
     if(activeEndEffector == EndEffector.CLAW) {
       return (endEffectorState == ON) ? eeHitBoxes[1] : eeHitBoxes[2];
@@ -455,14 +454,14 @@ public class ArmModel {
   
   /* Changes all the Robot Arm's hit boxes to green */
   public void resetBoxColors() {
-    for(Box b : bodyHitBoxes) {
-      b.outline = color(0, 255, 0);
+    for(BoundingBox b : bodyHitBoxes) {
+      b.setColor(color(0, 255, 0));
     }
     
-    ArrayList<Box> eeHB = currentEEHitBoxList();
+    ArrayList<BoundingBox> eeHB = currentEEHitBoxList();
     
-    for(Box b : eeHB) {
-      b.outline = color(0, 255, 0);
+    for(BoundingBox b : eeHB) {
+      b.setColor(color(0, 255, 0));
     }
   }
   
@@ -483,20 +482,20 @@ public class ArmModel {
      */
     for(int idx = 0; idx < check_pairs.length - 1; idx += 2) {
       if( collision3D(bodyHitBoxes[ check_pairs[idx] ], bodyHitBoxes[ check_pairs[idx + 1] ]) ) {
-        bodyHitBoxes[ check_pairs[idx] ].outline = color(255, 0, 0);
-        bodyHitBoxes[ check_pairs[idx + 1] ].outline = color(255, 0, 0);
+        bodyHitBoxes[ check_pairs[idx] ].setColor(color(255, 0, 0));
+        bodyHitBoxes[ check_pairs[idx + 1] ].setColor(color(255, 0, 0));
         collision = true;
       }
     }
     
-    ArrayList<Box> eeHB = currentEEHitBoxList();
+    ArrayList<BoundingBox> eeHB = currentEEHitBoxList();
     
     // Check collisions between all EE hit boxes and base as well as the first long arm hit boxes
-    for(Box hb : eeHB) {
+    for(BoundingBox hb : eeHB) {
       for(int idx = 0; idx < 4; ++idx) {
         if(collision3D(hb, bodyHitBoxes[idx]) ) {
-          hb.outline = color(255, 0, 0);
-          bodyHitBoxes[idx].outline = color(255, 0, 0);
+          hb.setColor(color(255, 0, 0));
+          bodyHitBoxes[idx].setColor(color(255, 0, 0));
           collision = true;
         }
       }
@@ -507,22 +506,22 @@ public class ArmModel {
   
   /* Determine if the given ojbect is collding with any part of the Robot. */
   public boolean checkObjectCollision(WorldObject obj) {
-    Box ohb = (Box)obj.hit_box;
+    BoundingBox ohb = obj.getBoundingBox();
     boolean collision = false;
     
-    for(Box b : bodyHitBoxes) {
+    for(BoundingBox b : bodyHitBoxes) {
       if( collision3D(ohb, b) ) {
-        b.outline = color(255, 0, 0);
+        b.setColor(color(255, 0, 0));
         collision = true;
       }
     }
     
-    ArrayList<Box> eeHBs = currentEEHitBoxList();
+    ArrayList<BoundingBox> eeHBs = currentEEHitBoxList();
     
-    for(Box b : eeHBs) {
+    for(BoundingBox b : eeHBs) {
       // Special case for held objects
       if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorState != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
-        b.outline = color(255, 0, 0);
+        b.setColor(color(255, 0, 0));
         collision = true;
       }
     }
@@ -533,9 +532,8 @@ public class ArmModel {
   /* Draws the Robot Arm's hit boxes in the world */
   public void drawBoxes() {
     // Draw hit boxes of the body poriotn of the Robot Arm
-    for(Box b : bodyHitBoxes) {
+    for(BoundingBox b : bodyHitBoxes) {
       pushMatrix();
-      b.applyTransform();
       b.draw();
       popMatrix();
     }
@@ -552,9 +550,8 @@ public class ArmModel {
       eeIdx = 3;
     }
     // Draw End Effector hit boxes
-    for(Box b : eeHitBoxes[eeIdx]) {
+    for(BoundingBox b : eeHitBoxes[eeIdx]) {
       pushMatrix();
-      b.applyTransform();
       b.draw();
       popMatrix();
     }
@@ -984,7 +981,7 @@ public class ArmModel {
         // Determine if an object in the world can be picked up by the Robot
         for(WorldObject s : objects) {
           
-          if(s.collision(ee_pos)) {
+          if(s.getBoundingBox().collision(ee_pos)) {
             armModel.held = s;
             return 0;
           }

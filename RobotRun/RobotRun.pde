@@ -67,6 +67,7 @@ public WorldObject[] objects;
 /*      Debugging Stuff        */
 
 public static ArrayList<String> buffer;
+Cylinder subject;
 
 /*******************************/
 
@@ -93,17 +94,19 @@ public void setup() {
   gui();
   
   // Intialize world objects
-  objects = new WorldObject[2];
+  objects = new WorldObject[1];
   pushMatrix();
   resetMatrix();
   
   translate(-100, 100, -350);
-  objects[0] = new WorldObject(125, 60, 300, color(255, 0, 0), color(255, 0, 255));
+  objects[0] = new WorldObject(color(255, 0, 0), color(255, 0, 255), 50);
 
   translate(-250, 0, 0);
-  objects[1] = new WorldObject(250, 125, 500, color(255, 0, 255), color(255, 255, 255));
+  //objects[1] = new WorldObject(color(255, 0, 255), color(255, 255, 255), 250, 125, 500);
+  subject = new Cylinder(color(255, 0, 0), color(255, 0, 0), 50, 100);
   
   popMatrix();
+  
 }
 
 public void draw() {
@@ -160,6 +163,7 @@ public void draw() {
   pushMatrix();
   
   applyCamera();
+  subject.draw();
 
   pushMatrix(); 
   armModel.draw();
@@ -281,7 +285,7 @@ void applyCamera() {
 public void handleWorldObjects() {
   for(WorldObject o : objects) {
     // reset all world the object's hit box colors
-    o.hit_box.outline = color(0, 255, 0);
+    o.setBBColor(color(0, 255, 0));
   }
   
   for(int idx = 0; idx < objects.length; ++idx) {
@@ -301,11 +305,10 @@ public void handleWorldObjects() {
                   invEETMatrix[2][0], invEETMatrix[2][1], invEETMatrix[2][2], invEETMatrix[2][3],
                   invEETMatrix[3][0], invEETMatrix[3][1], invEETMatrix[3][2], invEETMatrix[3][3]);
       
-      armModel.held.form.applyTransform();
-      
-      float[][] newObjTMatrix = getTransformationMatrix();
-      armModel.held.form.setTransform(newObjTMatrix);
-      armModel.held.hit_box.setTransform(newObjTMatrix);
+      armModel.held. getBoundingBox().applyCoordinateSystem();
+      // Update the world object's position and orientation
+      armModel.held. getBoundingBox().setCenter( getCoordFromMatrix(0f, 0f, 0f) );
+      armModel.held. getBoundingBox().setOrientation( getRotationMatrix() );
       
       popMatrix();
     }
@@ -313,7 +316,7 @@ public void handleWorldObjects() {
     /* Collision Detection */
     if(COLLISION_DISPLAY) {
       if( armModel.checkObjectCollision(objects[idx]) ) {
-        objects[idx].hit_box.outline = color(255, 0, 0);
+        objects[idx].setBBColor(color(255, 0, 0));
       }
       
       // Detect collision with other objects
@@ -321,15 +324,15 @@ public void handleWorldObjects() {
         
         if(objects[idx].collision(objects[cdx])) {
           // Change hit box color to indicate Object collision
-          objects[idx].hit_box.outline = color(255, 0, 0);
-          objects[cdx].hit_box.outline = color(255, 0, 0);
+          objects[idx].setBBColor(color(255, 0, 0));
+          objects[cdx].setBBColor(color(255, 0, 0));
           break;
         }
       }
       
-      if( objects[idx] != armModel.held && objects[idx].collision(nativeRobotEEPoint(armModel.getJointAngles()).position) ) {
+      if( objects[idx] != armModel.held && objects[idx].getBoundingBox().collision(nativeRobotEEPoint(armModel.getJointAngles()).position) ) {
         // Change hit box color to indicate End Effector collision
-        objects[idx].hit_box.outline = color(0, 0, 255);
+        objects[idx].setBBColor(color(255, 0, 0));
       }
     }
     

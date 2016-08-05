@@ -109,8 +109,8 @@ void showMainDisplayText() {
       text("Object held", lastTextPositionX, lastTextPositionY);
       lastTextPositionY += 20;
       
-      float[] held_pos = armModel.held.hit_box.position();
-      String obj_pos = String.format("(%f, %f, %f)", held_pos[0], held_pos[1], held_pos[1]);
+      PVector held_pos = armModel.held.getBoundingBox().getCenter();
+      String obj_pos = String.format("(%f, %f, %f)", held_pos.x, held_pos.y, held_pos.z);
       text(obj_pos, lastTextPositionX, lastTextPositionY);
       lastTextPositionY += 20;
     }
