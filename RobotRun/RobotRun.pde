@@ -350,24 +350,26 @@ public void displayAxes() {
     displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
   } else if (axesState == AxesDisplay.AXES) {
     // Display axes
-    Frame activeTool = getActiveFrame(CoordFrame.TOOL),
-          activeUser = getActiveFrame(CoordFrame.USER);
-    
-    if (curCoordFrame == CoordFrame.TOOL) {
-      /* Draw the axes of the active Tool frame at the Robot End Effector */
-      displayOriginAxes(activeTool.getWorldAxes(), ee_point.position, 200f, color(255, 0, 255));
-    } else {
-      // Draw axes of the Robot's End Effector frame for testing purposes
-      displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
-    }
-    
-    if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
-      /* Draw the axes of the active User frame */
-      displayOriginAxes(activeUser.getWorldAxes(), activeUser.getOrigin(), 5000f, color(0));
-    } else {
-      /* Draw the axes of the World frame */
-      //displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f), 5000f, color(0));
-      displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f), 5000f, color(0));
+    if (curCoordFrame != CoordFrame.JOINT) {
+      Frame activeTool = getActiveFrame(CoordFrame.TOOL),
+            activeUser = getActiveFrame(CoordFrame.USER);
+      
+      if (curCoordFrame == CoordFrame.TOOL) {
+        /* Draw the axes of the active Tool frame at the Robot End Effector */
+        displayOriginAxes(activeTool.getWorldAxes(), ee_point.position, 200f, color(255, 0, 255));
+      } else {
+        // Draw axes of the Robot's End Effector frame for testing purposes
+        displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
+      }
+      
+      if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
+        /* Draw the axes of the active User frame */
+        displayOriginAxes(activeUser.getWorldAxes(), activeUser.getOrigin(), 5000f, color(0));
+      } else {
+        /* Draw the axes of the World frame */
+        //displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f), 5000f, color(0));
+        displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f), 5000f, color(0));
+      }
     }
   } else if (axesState == AxesDisplay.GRID) {
     // Display gridlines spanning from axes of the current frame
@@ -376,6 +378,7 @@ public void displayAxes() {
     PVector displayOrigin;
     
     switch(curCoordFrame) {
+      case JOINT:
       case WORLD:
         displayAxes = new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} };
         displayOrigin = new PVector(0f, 0f, 0f);
