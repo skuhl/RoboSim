@@ -2402,8 +2402,8 @@ public void ENTER() {
     case SET_EXPR_OP:
       if(opEdit instanceof Expression) {
         expr = (Expression)opEdit;
-        
-        switch(opt_select - 1) {
+
+        switch(opt_select) {
           case 0:
             expr.setOperator(editIdx, Operator.ADDTN);
             break;
