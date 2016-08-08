@@ -3615,17 +3615,13 @@ public void updateScreen() {
   if(contents.size() != 0)
     next_py += 20;
   
-  int optStart, optEnd;
+  int maxHeight = options.size();
   if(mode.getType() == ScreenType.TYPE_EXPR_EDIT) {
-    optStart = (opt_select/3) * 3;
-    optEnd = min(options.size(), optStart + 4);
-  } else {
-    optStart = 0;
-    optEnd = options.size();
+    maxHeight = 4;
   }
-    
+  
   index_options = 100;
-  for(int i = optStart; i < optEnd; i += 1) {   
+  for(int i = 0; i < options.size(); i += 1) {   
     if(i == opt_select) {
       txt = UI_LIGHT;
       bg = UI_DARK;
@@ -3635,31 +3631,19 @@ public void updateScreen() {
       bg = UI_LIGHT;
     }
     
-    if(options.size() > 4 && i == optEnd - 1 && optEnd != options.size()) {
-      cp5.addTextarea(Integer.toString(index_options))
-      .setText(" ...")
-      .setFont(fnt_con14)
-      .setPosition(next_px, next_py)
-      .setSize(72, 20)
-      .setColorValue(txt)
-      .setColorBackground(bg)
-      .hideScrollbar()
-      .moveTo(g1);
-    } else {
-      cp5.addTextarea(Integer.toString(index_options))
-      .setText(" " + options.get(i))
-      .setFont(fnt_con14)
-      .setPosition(next_px, next_py)
-      .setSize(options.get(i).length()*8 + 40, 20)
-      .setColorValue(txt)
-      .setColorBackground(bg)
-      .hideScrollbar()
-      .moveTo(g1);
-    }
+    cp5.addTextarea(Integer.toString(index_options))
+    .setText(" " + options.get(i))
+    .setFont(fnt_con14)
+    .setPosition(next_px, next_py)
+    .setSize(options.get(i).length()*8 + 40, 20)
+    .setColorValue(txt)
+    .setColorBackground(bg)
+    .hideScrollbar()
+    .moveTo(g1);
     
     index_options++;
-    next_px = display_px;
-    next_py += 20;    
+    next_px += (i % maxHeight == maxHeight - 1) ? 80 : 0;
+    next_py += (i % maxHeight == maxHeight - 1) ? -20*(maxHeight - 1) : 20;    
   }
   
   // display the numbers that the user has typed
@@ -4671,21 +4655,31 @@ public ArrayList<String> loadInstrEdit(Screen mode) {
         edit.add("5. ... >= ...");
         edit.add("6. ... <= ...");
       } else if(opEdit instanceof Expression) {
-        edit.add("1. ... + ...");
-        edit.add("2. ... - ...");
-        edit.add("3. ... * ...");
-        edit.add("4. ... / ...");
-        edit.add("5. ... | ...");
-        edit.add("6. ... % ...");
-        edit.add("7. ... =  ...");
-        edit.add("8. ... <> ...");
-        edit.add("9. ... >  ...");
-        edit.add("10. ... < ...");
-        edit.add("11. ... >= ...");
-        edit.add("12. ... <= ...");
-        edit.add("13. ... AND ...");
-        edit.add("14. ... OR  ...");
-        edit.add("15. ... NOT ...");
+        if(activeInstruction() instanceof IfStatement) {
+          edit.add("1. + ");
+          edit.add("2. - ");
+          edit.add("3. * ");
+          edit.add("4. / ");
+          edit.add("5. | ");
+          edit.add("6. % ");
+          edit.add("7. = ");
+          edit.add("8. <> ");
+          edit.add("9. > ");
+          edit.add("10. < ");
+          edit.add("11. >= ");
+          edit.add("12. <= ");
+          edit.add("13. AND ");
+          edit.add("14. OR ");
+          edit.add("15. NOT ");
+          edit.add("16. ... ");
+        } else {
+          edit.add("1. + ");
+          edit.add("2. - ");
+          edit.add("3. * ");
+          edit.add("4. / ");
+          edit.add("5. | ");
+          edit.add("6. % ");
+        }
       }
       break;
     case SET_EXPR_ARG:

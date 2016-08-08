@@ -1393,31 +1393,3 @@ public class BooleanExpression extends AtomicExpression {
     len = getLength();
   }
 }
-
-public class ArithmeticExpression extends AtomicExpression{
-  public ArithmeticExpression() {
-    super();
-  }
-  
-  public ArithmeticExpression(Operator o) {
-    if(o.type == ARITH) {
-      type = -1;
-      op = o;
-      len = 3;
-      arg1 = new ExprOperand();
-      arg2 = new ExprOperand();
-    }
-    else {
-      type = -1;
-      op = Operator.UNINIT;
-      len = 1;
-    }
-  }
-  
-  public void setOp(Operator o) {
-    if(o.type != ARITH) return;
-    
-    op = o;
-    len = getLength();
-  }
-}
