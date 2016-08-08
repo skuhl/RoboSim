@@ -72,7 +72,7 @@ public int loadState() {
     toolFrames = new Frame[10];
     userFrames = new Frame[10];
     
-    for(int n = 0; n < toolFrames.length; ++n) {
+    for(int n = 0; n < toolFrames.length; n += 1) {
       toolFrames[n] = new ToolFrame();
       userFrames[n] = new UserFrame();
     }
@@ -104,15 +104,25 @@ public int loadState() {
   }
   
   // Initialize uninitialized registers and position registers to with null fields
-  for(int reg = 0; reg < DAT_REG.length; ++reg) {
+  for(int reg = 0; reg < DREG.length; reg += 1) {
     
-    if(DAT_REG[reg] == null) {
-      DAT_REG[reg] = new DataRegister();
+    if(DREG[reg] == null) {
+      DREG[reg] = new DataRegister();
     }
     
-    if(GPOS_REG[reg] == null) {  
+    if(GPOS_REG[reg] == null) {
       GPOS_REG[reg] = new PositionRegister();
     }
+  }
+  
+  int idx = 0;
+  // Associated each End Effector with an I/O Register
+  IO_REG[idx++] = new IORegister(EndEffector.SUCTION);
+  IO_REG[idx++] = new IORegister(EndEffector.CLAW);
+  
+  for (; idx < IO_REG.length; ++idx) {
+    // Unassociated registers
+    IO_REG[idx] = new IORegister(null);
   }
   
   return error;
@@ -254,7 +264,7 @@ private Program loadProgram(DataInputStream in) throws IOException {
   Program prog = new Program(name);
   // Read the next register value
   int nReg = in.readInt();
-  prog.loadNextRegister(nReg);
+  prog.setNextRegister(nReg);
   // Read the number of instructions stored for this porgram
   int numOfInst = max(0, min(in.readInt(), 500));
   
@@ -276,13 +286,13 @@ private Program loadProgram(DataInputStream in) throws IOException {
  * Saves the data associated with the given Point object to the file opened
  * by the given output stream. Null Points are saved a single zero byte.
  * 
- * @param   p            The Point of which to save the data
+ * @param   p            The Point of which to save the data //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>//
  * @param   out          The output stream used to save the Point
  * @throws  IOException  If an error occurs with writing the data of the Point
  */
 private void savePoint(Point p, DataOutputStream out) throws IOException {
   
-  if (p == null) { //<>//
+  if (p == null) {
     // Null points only write out a byte indicating there is no data
     out.writeByte(0);
   } else {
@@ -361,35 +371,42 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
   
   // Each Instruction subclass MUST have its own saving code block associated with its unique data fields
   if(inst instanceof MotionInstruction) {
-    
     MotionInstruction m_inst = (MotionInstruction)inst;
     // Flag byte denoting this instruction as a MotionInstruction
     out.writeByte(0);
     // Write data associated with the MotionIntruction object
     out.writeInt(m_inst.motionType);
     out.writeInt(m_inst.positionNum);
-    out.writeBoolean(m_inst.globalRegister);
+    out.writeBoolean(m_inst.isGPosReg);
     out.writeFloat(m_inst.speed);
-    out.writeFloat(m_inst.termination);
+    out.writeInt(m_inst.termination);
     out.writeInt(m_inst.userFrame);
     out.writeInt(m_inst.toolFrame);
   } else if(inst instanceof FrameInstruction) {
-    
     FrameInstruction f_inst = (FrameInstruction)inst;
     // Flag byte denoting this instruction as a FrameInstruction
     out.writeByte(1);
     // Write data associated with the FrameInstruction object
     out.writeInt(f_inst.frameType);
-    out.writeInt(f_inst.reg);
+    out.writeInt(f_inst.frameIdx);
   } else if(inst instanceof IOInstruction) {
-    
     IOInstruction t_inst = (IOInstruction)inst;
     // Flag byte denoting this instruction as a ToolInstruction
     out.writeByte(2);
     // Write data associated with the ToolInstruction object
     out.writeInt(t_inst.reg);
     out.writeInt( saveint(t_inst.state) );
-  } else if (inst instanceof Instruction) {
+  } else if(inst instanceof LabelInstruction) {
+    LabelInstruction l_inst = (LabelInstruction)inst;
+    
+    out.writeByte(3);
+    out.writeInt(l_inst.labelNum);
+  } else if(inst instanceof JumpInstruction) {
+    JumpInstruction j_inst = (JumpInstruction)inst;
+    
+    out.writeByte(4);
+    out.writeInt(j_inst.tgtLblNum);
+  } else if(inst instanceof Instruction) {
     out.writeByte(127);
   } else {/* TODO add other instructions! */}
 }
@@ -412,28 +429,33 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
   byte instType = in.readByte();
   
   if(instType == 0) {
-    
     // Read data for a MotionInstruction object
     int mType = in.readInt();
     int reg = in.readInt();
     boolean isGlobal = in.readBoolean();
     float spd = in.readFloat();
-    float term = in.readFloat();
+    int term = in.readInt();
     int uFrame = in.readInt();
     int tFrame = in.readInt();
     
     inst = new MotionInstruction(mType, reg, isGlobal, spd, term, uFrame, tFrame);
   } else if(instType == 1) {
-    
     // Read data for a FrameInstruction object
     inst = new FrameInstruction( in.readInt(), in.readInt() );
   } else if(instType == 2) {
-    
     // Read data for a ToolInstruction object
     int reg = in.readInt();
     int setting = in.readInt();
     
     inst = new IOInstruction(reg, loadint(setting));
+  } else if (instType == 3) {
+    int labelNum = in.readInt();
+    
+    inst = new LabelInstruction(labelNum);
+  } else if (instType == 4) {
+    int tgtLabelNum = in.readInt();
+    
+    inst = new JumpInstruction(tgtLabelNum);
   } else if (instType == 127) {
     inst = new Instruction();
   } else {/* TODO add other instructions! */}
@@ -601,10 +623,8 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   savePVector(f.getOrigin(), out);
   
   // Write frame axes
-  for(int row = 0; row < 3; ++row) {
-    for(int col = 0; col < 3; ++col) {
-      out.writeFloat(f.axes[row][col]);
-    }
+  for(int idx = 0; idx < 4; ++idx) {
+    out.writeFloat(f.axes[idx]);
   }
   
   // Write frame orientation points
@@ -665,14 +685,12 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   // Read origin values
   f.setOrigin( loadPVector(in) );
   
-  float[][] axesVectors = new float[3][3];
-  // Read axes vector values
-  for(int row = 0; row < 3; ++row) {
-    for(int col = 0; col < 3; ++col) {
-      axesVectors[row][col] = in.readFloat();
-    }
+  float[] axes = new float[4];
+  // Read axes quaternion values
+  for(int idx = 0; idx < 4; ++idx) {
+    axes[idx] = in.readFloat();
   }
-  f.setAxes(axesVectors);
+  f.setAxes(axes);
   
   // Read origin values
   f.axesTeachPoints = new Point[3];
@@ -746,8 +764,8 @@ public int saveRegisterBytes(File dest) {
     initializedPR = new ArrayList<Integer>();
     
     // Count the number of initialized entries and save their indices
-    for(int idx = 0; idx < DAT_REG.length; ++idx) {
-      if(DAT_REG[idx].value != null || DAT_REG[idx].comment != null) {
+    for(int idx = 0; idx < DREG.length; ++idx) {
+      if(DREG[idx].value != null || DREG[idx].comment != null) {
         initializedR.add(idx);
         ++numOfREntries;
       }
@@ -763,17 +781,17 @@ public int saveRegisterBytes(File dest) {
     for(Integer idx : initializedR) {
       dataOut.writeInt(idx);
       
-      if(DAT_REG[idx].value == null) {
+      if(DREG[idx].value == null) {
         // save for null Float value
         dataOut.writeFloat(Float.NaN);
       } else {
-        dataOut.writeFloat(DAT_REG[idx].value);
+        dataOut.writeFloat(DREG[idx].value);
       }
       
-      if(DAT_REG[idx].comment == null) {
+      if(DREG[idx].comment == null) {
         dataOut.writeUTF("");
       } else {
-        dataOut.writeUTF(DAT_REG[idx].comment);
+        dataOut.writeUTF(DREG[idx].comment);
       }
     }
     
@@ -830,7 +848,7 @@ public int loadRegisterBytes(File src) {
     FileInputStream in = new FileInputStream(src);
     DataInputStream dataIn = new DataInputStream(in);
     
-    int size = max(0, min(dataIn.readInt(), DAT_REG.length));
+    int size = max(0, min(dataIn.readInt(), DREG.length));
     
     // Load the Register entries
     while(size-- > 0) {
@@ -845,7 +863,7 @@ public int loadRegisterBytes(File src) {
       // Null comments are saved as ""
       if(c.equals("")) { c = null; }
       
-      DAT_REG[reg] = new DataRegister(c, v);
+      DREG[reg] = new DataRegister(c, v);
     }
     
     size = max(0, min(dataIn.readInt(), GPOS_REG.length));
@@ -921,4 +939,26 @@ public PVector loadPVector(DataInputStream in) throws IOException {
     v.z = in.readFloat();
     return v;
   }
+}
+
+/**
+ * Writes anything stored in the ArrayList String buffers to tmp\test.out.
+ */
+public int writeBuffer() {
+  try {
+    PrintWriter out = new PrintWriter(sketchPath("tmp/test.out"));
+    
+    for (String line : buffer) {
+      out.print(line);
+    }
+    
+    println("Write to buffer successful.");
+    out.close();
+  } catch(Exception Ex) {
+    Ex.printStackTrace();
+    return 1;
+  }
+  
+  buffer.clear();
+  return 0;
 }

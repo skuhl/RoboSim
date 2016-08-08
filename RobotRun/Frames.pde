@@ -1,6 +1,9 @@
 Frame[] toolFrames;
 Frame[] userFrames;
 
+/* The current Coordinate Frame for the Robot */
+public static CoordFrame curCoordFrame = CoordFrame.JOINT;
+
 public static final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
                                                            {  0,  0,  1 },
                                                            {  0, -1,  0 } };
@@ -8,7 +11,7 @@ public static final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
 public abstract class Frame {
   private PVector origin;
   // The unit vectors representing the x, y, z axes (in row major order)
-  public float[][] axes;
+  public float[] axes;
   /* The three points used to define a coordinate axis for 6-Point Method
    * of Tool Frames and 3-Point or 4_Point Methods of User Frames */
   public Point[] axesTeachPoints;
@@ -17,50 +20,36 @@ public abstract class Frame {
   public float[] DEAxesOffsets;
 
   public Frame() {
-    origin = new PVector(0,0,0);
-    axes = new float[3][3];
-    // Create identity matrix
-    for(int diag = 0; diag < 3; ++diag) {
-      axes[diag][diag] = 1f;
-    }
-    
+    origin = new PVector(0, 0, 0);
+    axes = new float[] { 1f, 0f, 0f, 0f };
     axesTeachPoints = new Point[] { null, null, null };
-    
     DEOrigin = null;
     DEAxesOffsets = null;
   }
 
-  public PVector getOrigin() { return origin; }
-  public void setOrigin(PVector in) { origin = in; }
-
-  /**
-   * Return the W, P, R values of the this frames coordinate
-   * axes with respect to the World Frame axes.
-   */
-  public PVector getWpr() { return matrixToEuler(axes); }
+  public PVector getOrigin() { return origin.copy(); }
+  public void setOrigin(PVector newOrigin) { origin = newOrigin.copy(); }
+  
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the Native Coordinate System. */
-  public float[][] getNativeAxes() { return axes.clone(); }
+  public float[][] getNativeAxes() { return quatToMatrix(axes); }
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the World Coordinate System. */
   public float[][] getWorldAxes() {
-    RealMatrix frameAxes = new Array2DRowRealMatrix(floatToDouble(axes, 3, 3));
+    RealMatrix frameAxes = new Array2DRowRealMatrix(floatToDouble(getNativeAxes(), 3, 3));
     RealMatrix worldAxes = new Array2DRowRealMatrix(floatToDouble(WORLD_AXES, 3, 3));
     
     return doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
   }
-
-  public void setAxis(int idx, PVector in) {
-    
-    if(idx >= 0 && idx < axes.length) {
-      axes[idx][0] = in.x;
-      axes[idx][1] = in.y;
-      axes[idx][2] = in.z;
-    }
+  
+  public float[] getAxes() { return axes.clone(); }
+  
+  public float[] getInvAxes() {
+    return new float[] { axes[0], -axes[1], -axes[2], -axes[3] };
   }
 
-  public void setAxes(float[][] axesVectors) {
-    axes = axesVectors.clone();
+  public void setAxes(float[] newAxes) {
+    axes = newAxes.clone();
   }
   
   /**
@@ -125,31 +114,6 @@ public abstract class Frame {
    *                will not produce valid output.
    */
   public abstract boolean setFrame(int method);
-  
-  /**
-   * A variation of toStringArray(), where each element of the
-   * String array contains a pair of values of the frame ( element
-   * 0 is X and W, element 1 is Y and P, and element 2 is Z and R ).
-   * Each element of the array is treated as its own line, when used
-   * to display a Frame's values in the Virtual Pendant. This method
-   * is designed to reduce the number of lines necessay to display
-   * the values of the Frames X, Y, Z, W, P, and R fields.
-   * 
-   * @returning  A 3 element String array, containing paired sets of
-   *             the Frames X, Y, Z, W, P, R fields.
-   */
-  public String[] toCondensedStringArray() {
-    String[] lines = new String[3];
-    String[] values = toStringArray();
-    /* The '-12' formatting parameter unifies the starting position
-     * of values 3 - 4 on each line, while allowing the maximum length
-     * of values 0-2. */
-    lines[0] = String.format("%-12s%s", values[0], values[3]);
-    lines[1] = String.format("%-12s%s", values[1], values[4]);
-    lines[2] = String.format("%-12s%s", values[2], values[5]);
-    
-    return lines;
-  }
 
   /**
    * Returns a string array, where each entry is one of
@@ -162,22 +126,91 @@ public abstract class Frame {
     
     String[] values = new String[6];
     
-    PVector wOrigin = origin;
+    PVector displayOrigin;
+    // Convert angles to degrees and to the World Coordinate Frame
+    PVector wpr = convertWorldToNative(quatToEuler(axes)).mult(RAD_TO_DEG);
+    
     if (this instanceof UserFrame) {
       // Convert to World frame reference
-      wOrigin = convertNativeToWorld(origin);
+      displayOrigin = convertNativeToWorld(origin);
+    } else {
+      displayOrigin = origin;
     }
     
-    values[0] = String.format("X: %4.3f", wOrigin.x);
-    values[1] = String.format("Y: %4.3f", wOrigin.y);
-    values[2] = String.format("Z: %4.3f", wOrigin.z);
-    // Convert angles to degrees
-    PVector wpr = getWpr();
-    values[3] = String.format("W: %4.3f", wpr.x * RAD_TO_DEG);
-    values[4] = String.format("P: %4.3f", wpr.y * RAD_TO_DEG);
-    values[5] = String.format("R: %4.3f", wpr.z * RAD_TO_DEG);
+    values[0] = String.format("X: %4.3f", displayOrigin.x);
+    values[1] = String.format("Y: %4.3f", displayOrigin.y);
+    values[2] = String.format("Z: %4.3f", displayOrigin.z);
+    values[3] = String.format("W: %4.3f", wpr.x);
+    values[4] = String.format("P: %4.3f", wpr.y);
+    values[5] = String.format("R: %4.3f", wpr.z);
     
     return values;
+  }
+  
+  /**
+   * Converts the original toStringArray into a 2x1 String array, where the origin
+   * values are in the first element and the W, P, R values are in the second
+   * element (or in the case of a joint angles, J1-J3 on the first and J4-J6 on
+   * the second), where each element has space buffers.
+   * 
+   * @param displayCartesian  whether to display the joint angles or the cartesian
+   *                          values associated with the point
+   * @returning               A 2-element String array
+   */
+  public String[] toLineStringArray() {
+    String[] entries = toStringArray();
+    String[] line = new String[2];
+    // X, Y, Z with space buffers
+    line[0] = String.format("%-12s %-12s %s", entries[0], entries[1], entries[2]);
+    // W, P, R with space buffers
+    line[1] = String.format("%-12s %-12s %s", entries[3], entries[4], entries[5]);
+    
+    return line;
+  }
+  
+  /**
+   * Similiar to toStringArray, however, it converts the Frame's direct entry
+   * values instead of the current origin and axes of the Frame.
+   * 
+   * @returning  A 6x2-element String array
+   */
+  public String[][] directEntryStringArray() {
+    String[][] entries = new String[6][2];
+    PVector xyz, wpr;
+    
+    if (DEOrigin == null) {
+      xyz = new PVector(0f, 0f, 0f);
+    } else {
+      // Use previous value if it exists
+      if (this instanceof UserFrame) {
+        xyz = convertNativeToWorld(DEOrigin);
+      } else {
+        // Tool Frame origins are an offset of the Robot's End Effector
+        xyz = DEOrigin;
+      }
+    }
+    
+    if (DEAxesOffsets == null) {
+      wpr = new PVector(0f, 0f, 0f);
+    } else {
+      // Display axes in World Frame Euler angles, in degrees
+      wpr = convertWorldToNative(quatToEuler(DEAxesOffsets)).mult(RAD_TO_DEG);
+    }
+  
+    entries[0][0] = "X: ";
+    entries[0][1] = String.format("%4.3f", xyz.x);
+    entries[1][0] = "Y: ";
+    entries[1][1] = String.format("%4.3f", xyz.y);
+    entries[2][0] = "Z: ";
+    entries[2][1] = String.format("%4.3f", xyz.z);
+    entries[3][0] = "W: ";
+    entries[3][1] = String.format("%4.3f", wpr.x);
+    entries[4][0] = "P: ";
+    entries[4][1] = String.format("%4.3f", wpr.y);
+    entries[5][0] = "R: ";
+    entries[5][1] = String.format("%4.3f", wpr.z);
+    
+    return entries;
   }
 } // end Frame class
 
@@ -246,7 +279,7 @@ public class ToolFrame extends Frame {
       }
       
       setOrigin(DEOrigin);
-      setAxes( quatToMatrix(DEAxesOffsets) );
+      setAxes( DEAxesOffsets.clone() );
       return true;
     } else if (method >= 0 && method < 2 && TCPTeachPoints[0] != null && TCPTeachPoints[1] != null && TCPTeachPoints[2] != null) {
       // 3-Point or 6-Point Method
@@ -260,11 +293,14 @@ public class ToolFrame extends Frame {
                 pt2_ori = quatToMatrix(TCPTeachPoints[1].orientation),
                 pt3_ori = quatToMatrix(TCPTeachPoints[2].orientation);
       
-      double[] newTCP = calculateTCPFromThreePoints(toVectorArray(TCPTeachPoints[0].position), pt1_ori,
-                                                 toVectorArray(TCPTeachPoints[1].position), pt2_ori,
-                                                 toVectorArray(TCPTeachPoints[2].position), pt3_ori);
+      double[] newTCP = calculateTCPFromThreePoints(TCPTeachPoints[0].position, pt1_ori,
+                                                    TCPTeachPoints[1].position, pt2_ori,
+                                                    TCPTeachPoints[2].position, pt3_ori);
       
-      float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(axesTeachPoints[0].position, axesTeachPoints[1].position, axesTeachPoints[2].position) : new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
+      float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(axesTeachPoints[0].position,
+                                                                           axesTeachPoints[1].position,
+                                                                           axesTeachPoints[2].position)
+                                               : new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
       
       if (newTCP == null || newAxesVectors == null) {
         // Invalid point set for the TCP or the coordinate axes
@@ -272,7 +308,7 @@ public class ToolFrame extends Frame {
       }
       
       setOrigin( new PVector((float)newTCP[0], (float)newTCP[1], (float)newTCP[2]) );
-      setAxes(newAxesVectors);
+      setAxes( matrixToQuat(newAxesVectors) );
       return true;
     }
     
@@ -341,26 +377,75 @@ public class UserFrame extends Frame {
       }
       
       setOrigin(DEOrigin);
-      setAxes( quatToMatrix(DEAxesOffsets) );
+      setAxes( DEAxesOffsets.clone() );
       return true;
     } else if (mode >= 0 && mode < 2 && axesTeachPoints[0] != null && axesTeachPoints[1] != null && axesTeachPoints[2] != null) {
       // 3-Point or 4-Point Method
       
-      PVector newOrigin = (mode == 0) ? getOrigin() : orientOrigin.position;
-      float[][] newAxesVectors = createAxesFromThreePoints(axesTeachPoints[0].position, axesTeachPoints[1].position, axesTeachPoints[2].position);
+      PVector newOrigin = (mode == 0) ? new PVector(0f, 0f, 0f) : orientOrigin.position;
+      float[][] newAxesVectors = createAxesFromThreePoints(axesTeachPoints[0].position,
+                                                           axesTeachPoints[1].position,
+                                                           axesTeachPoints[2].position);
       
       if (newOrigin == null || newAxesVectors == null) {
         // Invalid points for the coordinate axes or missing orient origin for the 4-Point Method
         return false;
       }
       
-      setAxes(newAxesVectors);
+      setAxes( matrixToQuat(newAxesVectors) );
       setOrigin(newOrigin);
       return true;
     }
     
     return false;
   }
+}
+
+/**
+ * Returns the active Tool frame for either TOOL or WORLD, or the active
+ * User frame for USER. If no active frame is set or JOINT is given as a
+ * parameter, then null is returned. If null is given as a parameter, then
+ * the active Coordinate Frame System is checked.
+ * 
+ * @param coord  The Coordinate Frame System to check for an active frame,
+ *               or null to check the current active Frame System.
+ */
+public Frame getActiveFrame(CoordFrame coord) {
+  if (coord == null) {
+    // Use current coordinate Frame
+    coord = curCoordFrame;
+  }
+  
+  // Determine if a frame is active in the given Coordinate Frame
+  if (coord == CoordFrame.USER && activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
+    // active User frame
+    return userFrames[activeUserFrame];
+  } else if ((coord == CoordFrame.TOOL || coord == CoordFrame.WORLD) && activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
+    // active Tool frame
+    return toolFrames[activeToolFrame];
+  } else {
+    // no active frame
+    return null;
+  }
+}
+
+/**
+ * Returns the difference between the position of the given TCP offset
+ * and the Robot's faceplate, in Native Cooridinates.
+ * 
+ * @param offset  The offset to convert to Native Coordinates
+ * @returning     The given vector offset, in Native Coordinates
+ */
+public PVector nativeTCPOffset(PVector offset) {
+    pushMatrix();
+    resetMatrix();
+    applyModelRotation(armModel.getJointAngles());
+    PVector origin = getCoordFromMatrix(0f, 0f, 0f);
+    // Subtract the origin Native Coordinate values
+    PVector nativeOffset = getCoordFromMatrix(offset.x, offset.y, offset.z).sub(origin);
+    popMatrix();
+    
+    return nativeOffset;
 }
 
 /**
@@ -378,9 +463,9 @@ public class UserFrame extends Frame {
  * @return      The new TCP for the Robot, null is returned if the given points
  *              are invalid
  */
-public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1, 
-                                            float[] pos2, float[][] ori2, 
-                                            float[] pos3, float[][] ori3) {
+public double[] calculateTCPFromThreePoints(PVector pos1, float[][] ori1, 
+                                            PVector pos2, float[][] ori2, 
+                                            PVector pos3, float[][] ori3) {
   
   RealVector avg_TCP = new ArrayRealVector(new double[] {0.0, 0.0, 0.0} , false);
   int counter = 3;
@@ -388,38 +473,32 @@ public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1,
   while (counter-- > 0) {
     
     RealMatrix Ar = null, Br = null, Cr = null;
-    double[] t = new double[3];
+    PVector vt = null;
     
     if (counter == 0) {
       /* Case 3: C = point 1 */
       Ar = new Array2DRowRealMatrix(floatToDouble(ori2, 3, 3));
       Br = new Array2DRowRealMatrix(floatToDouble(ori3, 3, 3));
       Cr = new Array2DRowRealMatrix(floatToDouble(ori1, 3, 3));
+      /* 2Ct - At - Bt */
+      vt = PVector.sub(pos1.mult(2), PVector.add(pos2, pos3));
       
-      for(int idx = 0; idx < 3; ++idx) {
-        /* 2Ct - At - Bt */
-        t[idx] = 2 * pos1[idx] - ( pos2[idx] + pos3[idx] );
-      }
     } else if (counter == 1) {
       /* Case 2: C = point 2 */
       Ar = new Array2DRowRealMatrix(floatToDouble(ori3, 3, 3));
       Br = new Array2DRowRealMatrix(floatToDouble(ori1, 3, 3));
       Cr = new Array2DRowRealMatrix(floatToDouble(ori2, 3, 3));
+      /* 2Ct - At - Bt */
+      vt = PVector.sub(pos2.mult(2), PVector.add(pos3, pos1));
       
-      for(int idx = 0; idx < 3; ++idx) {
-        /* 2Ct - At - Bt */
-        t[idx] = 2 * pos2[idx] - ( pos3[idx] + pos1[idx] );
-      }      
     } else if (counter == 2) {
-      /* Case 1: C = point 3*/
+      /* Case 1: C = point 3 */
       Ar = new Array2DRowRealMatrix(floatToDouble(ori1, 3, 3));
       Br = new Array2DRowRealMatrix(floatToDouble(ori2, 3, 3));
       Cr = new Array2DRowRealMatrix(floatToDouble(ori3, 3, 3));
+      /* 2Ct - At - Bt */
+      vt = PVector.sub(pos3.mult(2), PVector.add(pos1, pos2));
       
-      for(int idx = 0; idx < 3; ++idx) {
-        /* 2Ct - At - Bt */
-        t[idx] = 2 * pos3[idx] - ( pos1[idx] + pos2[idx] );
-      }     
     }
     
   /****************************************************************
@@ -445,7 +524,7 @@ public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1,
       
     ****************************************************************/
     
-    RealVector b = new ArrayRealVector(t, false);
+    RealVector b = new ArrayRealVector(new double[] { vt.x, vt.y, vt.z }, false);
     /* Ar + Br - 2Cr */
     RealMatrix R = ( ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) ) ).transpose();
     
@@ -474,56 +553,50 @@ public double[] calculateTCPFromThreePoints(float[] pos1, float[][] ori1,
  * Creates a 3x3 rotation matrix based off of two vectors defined by the
  * given set of three points, which are defined by the three given PVectors.
  * The three points are used to form two vectors. The first vector is treated
- * as the negative x-axis and the second one is the psuedo-negative z-axis.
- * These vectors are crossed to form the y-axis. The y-axis is then crossed
- * with the negative x-axis to form the true y-axis.
+ * as the positive x-axis and the second one is the psuedo-positive y-axis.
+ * These vectors are crossed to form the z-axis. The x-axis is then crossed
+ * with the positive z-axis to form the true y-axis. Finally, the axes are
+ * converted from the World frame reference, to Native Coordinates.
  *
- * @param p1      the origin reference point used to form the negative x-
- *                and z-axes
- * @param p2      the point used to create the preliminary negative x-axis
- * @param p3      the point used to create the preliminary negative z axis
+ * @param p1      the origin reference point used to form the positive x-
+ *                and y-axes
+ * @param p2      the point used to create the preliminary positive x-axis
+ * @param p3      the point used to create the preliminary positive y-axis
  * @return        a set of three unit vectors that represent an axes (row
  *                major order)
  */
 public float[][] createAxesFromThreePoints(PVector p1, PVector p2, PVector p3) {
-  float[][] axes = new float[3][];
-  float[] x_ndir = new float[3],
-  z_ndir = new float[3];
+  float[][] axesRefWorld = new float[3][3];
+  PVector xAxis = PVector.sub(p2, p1);
+  PVector yAxis = PVector.sub(p3, p1);
+  PVector zAxis = yAxis.cross(xAxis);
   
-  // From preliminary negative x and z axis vectors
-  x_ndir[0] = p2.x - p1.x;
-  x_ndir[1] = p2.y - p1.y;
-  x_ndir[2] = p2.z - p1.z;
-  z_ndir[0] = p3.x - p1.x;
-  z_ndir[1] = p3.y - p1.y;
-  z_ndir[2] = p3.z - p1.z;
+  yAxis = xAxis.cross(zAxis);
+  // Create unit vectors
+  xAxis.normalize();
+  yAxis.normalize();
+  zAxis.normalize();
   
-  // Form axes
-  axes[0] = negate(x_ndir);                         // X axis
-  axes[1] = crossProduct(axes[0], negate(z_ndir));  // Y axis
-  axes[2] = crossProduct(axes[0], axes[1]);         // Z axis
-  
-  if((axes[0][0] == 0f && axes[0][1] == 0f && axes[0][2] == 0f) ||
-     (axes[1][0] == 0f && axes[1][1] == 0f && axes[1][2] == 0f) ||
-     (axes[2][0] == 0f && axes[2][1] == 0f && axes[2][2] == 0f)) {
+  if ((xAxis.x == 0f && xAxis.y == 0f && xAxis.z == 0f) ||
+      (yAxis.x == 0f && yAxis.y == 0f && yAxis.z == 0f) ||
+      (zAxis.x == 0f && zAxis.y == 0f && zAxis.z == 0f)) {
     // One of the three axis vectors is the zero vector
     return null;
   }
   
-  float[] magnitudes = new float[axes.length];
+  axesRefWorld[0][0] = xAxis.x;
+  axesRefWorld[0][1] = xAxis.y;
+  axesRefWorld[0][2] = xAxis.z;
+  axesRefWorld[1][0] = yAxis.x;
+  axesRefWorld[1][1] = yAxis.y;
+  axesRefWorld[1][2] = yAxis.z;
+  axesRefWorld[2][0] = zAxis.x;
+  axesRefWorld[2][1] = zAxis.y;
+  axesRefWorld[2][2] = zAxis.z;
   
-  for(int v = 0; v < axes.length; ++v) {
-    // Find the magnitude of each axis vector
-    for(int e = 0; e < axes[0].length; ++e) {
-      magnitudes[v] += pow(axes[v][e], 2);
-    }
-    
-    magnitudes[v] = sqrt(magnitudes[v]);
-    // Normalize each vector
-    for(int e = 0; e < axes.length; ++e) {
-      axes[v][e] /= magnitudes[v];
-    }
-  }
-  
-  return axes;
+  RealMatrix axes = new Array2DRowRealMatrix(floatToDouble(axesRefWorld, 3, 3)),
+             worldAxes =  new Array2DRowRealMatrix(floatToDouble(WORLD_AXES, 3, 3)),
+             invWorldAxes = (new SingularValueDecomposition(worldAxes)).getSolver().getInverse();
+  // Remove the World frame transformation from the axes vectors
+  return doubleToFloat(invWorldAxes.multiply(axes).getData(), 3, 3);
 }

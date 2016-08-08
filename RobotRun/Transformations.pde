@@ -1,5 +1,143 @@
+/**
+ * Applies the rotations and translations of the Robot Arm to get to the
+ * face plate center, given the set of six joint angles, each corresponding
+ * to a joint of the Robot Arm and each within the bounds of [0, TWO_PI).
+ * 
+ * @param jointAngles  A valid set of six joint angles (in radians) for the Robot
+ */
+public void applyModelRotation(float[] jointAngles) {
+  translate(600, 200, 0);
+  translate(-50, -166, -358); // -115, -213, -413
+  rotateZ(PI);
+  translate(150, 0, 150);
+  rotateX(PI);
+  rotateY(jointAngles[0]);
+  rotateX(-PI);
+  translate(-150, 0, -150);
+  rotateZ(-PI);    
+  translate(-115, -85, 180);
+  rotateZ(PI);
+  rotateY(PI/2);
+  translate(0, 62, 62);
+  rotateX(jointAngles[1]);
+  translate(0, -62, -62);
+  rotateY(-PI/2);
+  rotateZ(-PI);   
+  translate(0, -500, -50);
+  rotateZ(PI);
+  rotateY(PI/2);
+  translate(0, 75, 75);
+  rotateZ(PI);
+  rotateX(jointAngles[2]);
+  rotateZ(-PI);
+  translate(0, -75, -75);
+  rotateY(PI/2);
+  rotateZ(-PI);
+  translate(745, -150, 150);
+  rotateZ(PI/2);
+  rotateY(PI/2);
+  translate(70, 0, 70);
+  rotateY(jointAngles[3]);
+  translate(-70, 0, -70);
+  rotateY(-PI/2);
+  rotateZ(-PI/2);    
+  translate(-115, 130, -124);
+  rotateZ(PI);
+  rotateY(-PI/2);
+  translate(0, 50, 50);
+  rotateX(jointAngles[4]);
+  translate(0, -50, -50);
+  rotateY(PI/2);
+  rotateZ(-PI);    
+  translate(150, -10, 95);
+  rotateY(-PI/2);
+  rotateZ(PI);
+  translate(45, 45, 0);
+  rotateZ(jointAngles[5]);
+}
+
+/**
+ * Converts the given point, pt, into the Coordinate System defined by the given origin
+ * vector and rotation quaternion axes.
+ * 
+ * @param pt      A point with initialized position and orientation
+ * @param origin  The origin of the Coordinate System
+ * @param axes    The axes of the Coordinate System representing as a rotation quanternion
+ * @returning     The point, pt, interms of the given frame's Coordinate System
+ */
+public Point applyFrame(Point pt, PVector origin, float[] axes) {
+  float[] invAxes = quaternionConjugate(axes);
+  PVector position = convertToFrame(pt.position, origin, axes);
+  float[] orientation = quaternionMult(pt.orientation, invAxes);
+  
+  return new Point(position, orientation, pt.angles);
+}
+
+/**
+ * Converts the given vector, v, into the Coordinate System defined by the given origin
+ * vector and rotation quaternion axes.
+ * 
+ * @param v      A vector in the XYZ vector space
+ * @param origin  The origin of the Coordinate System
+ * @param axes    The axes of the Coordinate System representing as a rotation quanternion
+ * @returning     The vector, v, interms of the given frame's Coordinate System
+ */
+public PVector convertToFrame(PVector v, PVector origin, float[] axes) {
+  float[] invAxes = axes;
+  PVector vOffset = PVector.sub(v, origin);
+  return rotateVectorQuat(vOffset, invAxes);
+}
+
+/**
+ * Converts the given point, pt, from the Coordinate System defined by the given origin
+ * vector and rotation quaternion axes.
+ * 
+ * @param pt      A point with initialized position and orientation
+ * @param origin  The origin of the Coordinate System
+ * @param axes    The axes of the Coordinate System representing as a rotation quanternion
+ * @returning     The point, pt, interms of the given frame's Coordinate System
+ */
+public Point removeFrame(Point pt, PVector origin, float[] axes) {
+  PVector position = convertFromFrame(pt.position, origin, axes);
+  float[] orientation = quaternionMult(pt.orientation, axes);
+  
+  return new Point(position, orientation, pt.angles);
+}
+
+/**
+ * Converts the given vector, v, from the Coordinate System defined by the given origin
+ * vector and rotation quaternion axes.
+ * 
+ * @param v       A vector in the XYZ vector space
+ * @param origin  The origin of the Coordinate System
+ * @param axes    The axes of the Coordinate System representing as a rotation quanternion
+ * @returning     The vector, v, interms of the given frame's Coordinate System
+ */
+public PVector convertFromFrame(PVector v, PVector origin, float[] axes) {
+  PVector vRotated = rotateVectorQuat(v, axes);
+  return vRotated.add(origin);
+}
+
+/**
+ * Converts the given vector form the right-hand World Frame Coordinate System
+ * to the left-hand Native Coordinate System.
+ */
+public PVector convertWorldToNative(PVector v) {
+  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
+  return transform(v, tMatrix);
+}
+
+/**
+ * Converts the given vector form the left-hand Native Coordinate System to the
+ * right-hand World Frame Coordinate System.
+ */
+public PVector convertNativeToWorld(PVector v) {
+  float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
+  return transform(v, invertHCMatrix(tMatrix));
+}
+
 /* Transforms the given vector from the coordinate system defined by the given
- * transformation matrix (column major order). */
+ * transformation matrix (row major order). */
 public PVector transform(PVector v, float[][] tMatrix) {
   if(tMatrix.length != 4 || tMatrix[0].length != 4) {
     return null;
@@ -7,9 +145,9 @@ public PVector transform(PVector v, float[][] tMatrix) {
 
   PVector u = new PVector();
   // Apply the transformation matrix to the given vector
-  u.x = v.x * tMatrix[0][0] + v.y * tMatrix[0][1] + v.z * tMatrix[0][2] + tMatrix[0][3];
-  u.y = v.x * tMatrix[1][0] + v.y * tMatrix[1][1] + v.z * tMatrix[1][2] + tMatrix[1][3];
-  u.z = v.x * tMatrix[2][0] + v.y * tMatrix[2][1] + v.z * tMatrix[2][2] + tMatrix[2][3];
+  u.x = v.x * tMatrix[0][0] + v.y * tMatrix[1][0] + v.z * tMatrix[2][0] + tMatrix[0][3];
+  u.y = v.x * tMatrix[0][1] + v.y * tMatrix[1][1] + v.z * tMatrix[2][1] + tMatrix[1][3];
+  u.z = v.x * tMatrix[0][2] + v.y * tMatrix[1][2] + v.z * tMatrix[2][2] + tMatrix[2][3];
 
   return u;
 }
@@ -51,15 +189,15 @@ public float[][] invertHCMatrix(float[][] m) {
   inverse[0][0] = m[0][0];
   inverse[0][1] = m[1][0];
   inverse[0][2] = m[2][0];
-  inverse[0][3] = -(m[0][0] * m[0][3] + m[1][0] * m[1][3] + m[2][0] * m[2][3]);
+  inverse[0][3] = -(m[0][0] * m[0][3] + m[0][1] * m[1][3] + m[0][2] * m[2][3]);
   inverse[1][0] = m[0][1];
   inverse[1][1] = m[1][1];
   inverse[1][2] = m[2][1];
-  inverse[1][3] = -(m[0][1] * m[0][3] + m[1][1] * m[1][3] + m[2][1] * m[2][3]);
+  inverse[1][3] = -(m[1][0] * m[0][3] + m[1][1] * m[1][3] + m[1][2] * m[2][3]);
   inverse[2][0] = m[0][2];
   inverse[2][1] = m[1][2];
   inverse[2][2] = m[2][2];
-  inverse[2][3] = -(m[0][2] * m[0][3] + m[1][2] * m[1][3] + m[2][2] * m[2][3]);
+  inverse[2][3] = -(m[2][0] * m[0][3] + m[2][1] * m[1][3] + m[2][2] * m[2][3]);
   inverse[3][0] = 0;
   inverse[3][1] = 0;
   inverse[3][2] = 0;
@@ -69,39 +207,39 @@ public float[][] invertHCMatrix(float[][] m) {
 }
 
 /* Returns a 4x4 vector array which reflects the current transform matrix on the top
-* of the stack (ignores scaling values though) */
+ * of the stack (ignores scaling values though) */
 public float[][] getTransformationMatrix() {
   float[][] transform = new float[4][4];
 
   // Caculate four vectors corresponding to the four columns of the transform matrix
-  PVector col_4 = getCoordFromMatrix(0, 0, 0);
-  PVector col_1 = getCoordFromMatrix(1, 0, 0).sub(col_4);
-  PVector col_2 = getCoordFromMatrix(0, 1, 0).sub(col_4);
-  PVector col_3 = getCoordFromMatrix(0, 0, 1).sub(col_4);
+  PVector origin = getCoordFromMatrix(0, 0, 0);
+  PVector xAxis = getCoordFromMatrix(1, 0, 0).sub(origin);
+  PVector yAxis = getCoordFromMatrix(0, 1, 0).sub(origin);
+  PVector zAxis = getCoordFromMatrix(0, 0, 1).sub(origin);
 
   // Place the values of each vector in the correct cells of the transform  matrix
-  transform[0][0] = col_1.x;
-  transform[1][0] = col_1.y;
-  transform[2][0] = col_1.z;
+  transform[0][0] = xAxis.x;
+  transform[0][1] = xAxis.y;
+  transform[0][2] = xAxis.z;
+  transform[0][3] = origin.x;
+  transform[1][0] = yAxis.x;
+  transform[1][1] = yAxis.y;
+  transform[1][2] = yAxis.z;
+  transform[1][3] = origin.y;
+  transform[2][0] = zAxis.x;
+  transform[2][1] = zAxis.y;
+  transform[2][2] = zAxis.z;
+  transform[2][3] = origin.z;
   transform[3][0] = 0;
-  transform[0][1] = col_2.x;
-  transform[1][1] = col_2.y;
-  transform[2][1] = col_2.z;
   transform[3][1] = 0;
-  transform[0][2] = col_3.x;
-  transform[1][2] = col_3.y;
-  transform[2][2] = col_3.z;
   transform[3][2] = 0;
-  transform[0][3] = col_4.x;
-  transform[1][3] = col_4.y;
-  transform[2][3] = col_4.z;
   transform[3][3] = 1;
 
   return transform;
 }
 
 /**
- * Forms the 4x4 transformation matrix (column major order) form the given
+ * Forms the 4x4 transformation matrix (row major order) form the given
  * origin offset and axes offset (row major order) of the Native Coordinate
  * system.
  * 
@@ -116,15 +254,15 @@ public float[][] transformationMatrix(PVector origin, float[][] axes) {
   float[][] transform = new float[4][4];
   
   transform[0][0] = axes[0][0];
-  transform[1][0] = axes[0][1];
+  transform[1][0] = axes[1][0];
   transform[2][0] = axes[2][0];
   transform[3][0] = 0;
-  transform[0][1] = axes[1][0];
+  transform[0][1] = axes[0][1];
   transform[1][1] = axes[1][1];
-  transform[2][1] = axes[1][2];
+  transform[2][1] = axes[2][1];
   transform[3][1] = 0;
-  transform[0][2] = axes[2][0];
-  transform[1][2] = axes[2][1];
+  transform[0][2] = axes[0][2];
+  transform[1][2] = axes[1][2];
   transform[2][2] = axes[2][2];
   transform[3][2] = 0;
   transform[0][3] = origin.x;
@@ -133,6 +271,32 @@ public float[][] transformationMatrix(PVector origin, float[][] axes) {
   transform[3][3] = 1;
   
   return transform;
+}
+
+/**
+ * Returns a 3x3 rotation matrix of the current transformation
+ * matrix on the stack (in row major order).
+ */
+public float[][] getRotationMatrix() {
+  float[][] rMatrix = new float[3][3];
+  // Calculate origin point
+  PVector origin = getCoordFromMatrix(0f, 0f, 0f),
+          // Create axes vectors
+          vx = getCoordFromMatrix(1f, 0f, 0f).sub(origin),
+          vy = getCoordFromMatrix(0f, 1f, 0f).sub(origin),
+          vz = getCoordFromMatrix(0f, 0f, 1f).sub(origin);
+  // Save values in a 3x3 rotation matrix
+  rMatrix[0][0] = vx.x;
+  rMatrix[0][1] = vx.y;
+  rMatrix[0][2] = vx.z;
+  rMatrix[1][0] = vy.x;
+  rMatrix[1][1] = vy.y;
+  rMatrix[1][2] = vy.z;
+  rMatrix[2][0] = vz.x;
+  rMatrix[2][1] = vz.y;
+  rMatrix[2][2] = vz.z;
+  
+  return rMatrix;
 }
 
 /* This method transforms the given coordinates into a vector
@@ -147,8 +311,6 @@ public PVector getCoordFromMatrix(float x, float y, float z) {
   return vector;
 }
 
-
-
 /* Calculate v x v */
 public float[] crossProduct(float[] v, float[] u) {
   if(v.length != 3 && v.length != u.length) { return null; }
@@ -160,11 +322,6 @@ public float[] crossProduct(float[] v, float[] u) {
   w[2] = v[0] * u[1] - v[1] * u[0];
   
   return w;
-}
-
-/* Converts a PVector object to a float[] */
-public float[] toVectorArray(PVector v) {
-  return new float[] { v.x, v.y, v.z };
 }
 
 /* Returns a vector with the opposite sign
@@ -185,7 +342,7 @@ float[][] eulerToMatrix(PVector wpr) {
   float xRot = wpr.x;
   float yRot = wpr.y;
   float zRot = wpr.z;
-
+  
   r[0][0] = cos(yRot)*cos(zRot);
   r[0][1] = sin(xRot)*sin(yRot)*cos(zRot) - cos(xRot)*sin(zRot);
   r[0][2] = cos(xRot)*sin(yRot)*cos(zRot) + sin(xRot)*sin(zRot);
@@ -195,15 +352,22 @@ float[][] eulerToMatrix(PVector wpr) {
   r[2][0] = -sin(yRot);
   r[2][1] = sin(xRot)*cos(yRot);
   r[2][2] = cos(xRot)*cos(yRot);
-
-  //println("matrix: ");
-  //  for(int i = 0; i < 3; i += 1) {
-  //    for(int j = 0; j < 3; j += 1) {
-  //      print(String.format("  %4.3f", r[i][j]));
-  //    }
-  //  println();
-  //}
-  //println();
+  
+  float[] magnitudes = new float[3];
+  
+  for(int v = 0; v < r.length; ++v) {
+    // Find the magnitude of each axis vector
+    for(int e = 0; e < r[0].length; ++e) {
+      magnitudes[v] += pow(r[v][e], 2);
+    }
+    
+    magnitudes[v] = sqrt(magnitudes[v]);
+    // Normalize each vector
+    for(int e = 0; e < r.length; ++e) {
+      r[v][e] /= magnitudes[v];
+    }
+  }
+  /**/
 
   return r;
 }
@@ -289,7 +453,7 @@ float[] matrixToQuat(float[][] r) {
     q[3] = S / 4;
   }
 
-  return q;
+  return quaternionNormalize(q);
 }
 
 //calculates euler angles from quaternion
@@ -302,7 +466,7 @@ PVector quatToEuler(float[] q) {
 //calculates rotation matrix from quaternion
 float[][] quatToMatrix(float[] q) {
   float[][] r = new float[3][3];
-
+  
   r[0][0] = 1 - 2*(q[2]*q[2] + q[3]*q[3]);
   r[0][1] = 2*(q[1]*q[2] - q[0]*q[3]);
   r[0][2] = 2*(q[0]*q[2] + q[1]*q[3]);
@@ -312,16 +476,23 @@ float[][] quatToMatrix(float[] q) {
   r[2][0] = 2*(q[1]*q[3] - q[0]*q[2]);
   r[2][1] = 2*(q[0]*q[1] + q[2]*q[3]);
   r[2][2] = 1 - 2*(q[1]*q[1] + q[2]*q[2]);
-
-  //println("matrix: ");
-  //for(int i = 0; i < 3; i += 1) {
-  //  for(int j = 0; j < 3; j += 1) {
-  //    print(String.format("  %4.3f", m[i][j]));
-  //  }
-  //  println();
-  //}
-  //println();
-
+  
+  float[] magnitudes = new float[3];
+  
+  for(int v = 0; v < r.length; ++v) {
+    // Find the magnitude of each axis vector
+    for(int e = 0; e < r[0].length; ++e) {
+      magnitudes[v] += pow(r[v][e], 2);
+    }
+    
+    magnitudes[v] = sqrt(magnitudes[v]);
+    // Normalize each vector
+    for(int e = 0; e < r.length; ++e) {
+      r[v][e] /= magnitudes[v];
+    }
+  }
+  /**/
+  
   return r;
 }
 
@@ -349,12 +520,6 @@ float[][] doubleToFloat(double[][] m, int l, int w) {
   }
 
   return r;
-}
-
-//calculates the change in x, y, and z from p1 to p2
-float[] calculateVectorDelta(PVector p1, PVector p2) {
-  float[] d = {p1.x - p2.x, p1.y - p2.y, p1.z - p2.z};
-  return d;
 }
 
 //calculates the difference between each corresponding pair of
@@ -401,6 +566,7 @@ float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
   return doubleToFloat(MR.getData(), 3, 3);
 }
 
+
 /* Calculates the result of a rotation of quaternion 'p'
  * about axis 'u' by 'theta' degrees
  */
@@ -414,7 +580,7 @@ float[] rotateQuat(float[] p, PVector u, float theta) {
   
   float[] pq = quaternionMult(p, q);
 
-  return pq;
+  return quaternionNormalize(pq);
 }
 
 PVector rotateVectorQuat(PVector v, PVector u, float theta) {
@@ -444,6 +610,34 @@ PVector rotateVectorQuat(PVector v, PVector u, float theta) {
   return new PVector(p_prime[1], p_prime[2], p_prime[3]);
 }
 
+/**
+ * Rotates the given vector, v, by the given unit quaternion, q.
+ * 
+ * @param v    A vector in the xyz plane
+ * @param q    A unit quaternion that defines a rotation
+ * @returning  v rotated by q
+ */
+PVector rotateVectorQuat(PVector v, float[] q) {
+  float[] p = new float[4];
+  float[] q_inv = new float[4];
+  float[] p_prime = new float[4];
+  // v
+  p[0] = 0;
+  p[1] = v.x;
+  p[2] = v.y;
+  p[3] = v.z;
+  // q'
+  q_inv[0] = q[0];
+  q_inv[1] = -q[1];
+  q_inv[2] = -q[2];
+  q_inv[3] = -q[3];
+  // u = q * v * q'
+  p_prime = quaternionMult(q, p);
+  p_prime = quaternionMult(p_prime, q_inv);
+  
+  return new PVector(p_prime[1], p_prime[2], p_prime[3]);
+}
+
 /* Given 2 quaternions, calculates the quaternion representing the 
  * rotation from 'q1' to 'q2' such that 'qr'*'q1' = 'q2'. Note that 
  * the multiply operation should be taken to mean quaternion
@@ -466,6 +660,13 @@ float[] calculateQuatOffset(float[] q1, float[] q2) {
   return qr;
 }
 
+/**
+ * Returns the complex conjugate or inverse of the given quaternion.
+ */
+public float[] quaternionConjugate(float[] q) {
+  return new float[] { q[0], -q[1], -q[2], -q[3] };
+}
+
 //returns the result of a quaternion 'q1' multiplied by quaternion 'q2'
 float[] quaternionMult(float[] q1, float[] q2) {
   float[] r = new float[4];
@@ -475,6 +676,14 @@ float[] quaternionMult(float[] q1, float[] q2) {
   r[3] = q1[0]*q2[3] + q1[1]*q2[2] - q1[2]*q2[1] + q1[3]*q2[0];
 
   return r;
+}
+
+/**
+ * Returns a quaternion, which represents the rotation of q, in terms of reference.
+ */
+public float[] quaternionRef(float[] q, float[] reference) {
+  float[] invRef = quaternionNormalize( quaternionConjugate(reference) );
+  return quaternionNormalize( quaternionMult(q, invRef) );
 }
 
 //returns the result of a quaternion 'q' multiplied by scalar 's'
@@ -495,6 +704,19 @@ float[] quaternionAdd(float[] q1, float[] q2) {
   qr[2] = q1[2] + q2[2];
   qr[3] = q1[3] + q2[3];
   return qr;
+}
+
+/**
+ * Computes the dot product between the two given quaternions.
+ */
+public float quaternionDotProduct(float[] q1, float[] q2) {
+  float product = 0f;
+  
+  for (int idx = 0; idx < 4; ++idx) {
+    product += q1[idx] * q2[idx];
+  }
+  
+  return product;
 }
 
 //returns the magnitude of the input quaternion 'q'
@@ -550,36 +772,60 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
   return quaternionNormalize(qSlerp);
 }
 
-/* Returns a string represenation of the given matrix.
+/**
+ * Determines if the lies within the range of angles that span from rangeStart to rangeEnd,
+ * going clockwise around the Unit Cycle. It is assumed that all parameters are in radians
+ * and within the range [0, TWO_PI).
  * 
- * @param matrixx  A non-null matrix
+ * @param angleToVerify  the angle in question
+ * @param rangeStart     the 'lower bounds' of the angle range to check
+ * @param rangeEnd       the 'upper bounds' of the angle range to check
  */
-public String matrixToString(float[][] matrix) {
-  String mStr = "";
+public boolean angleWithinBounds(float angleToVerify, float rangeStart, float rangeEnd) {
   
-  for(int row = 0; row < matrix.length; ++row) {
-    mStr += "\n[";
-
-    for(int col = 0; col < matrix[0].length; ++col) {
-      // Account for the negative sign character
-      if(matrix[row][col] >= 0) { mStr += " "; }
-      
-      mStr += String.format(" %5.6f", matrix[row][col]);
-    }
-
-    mStr += "  ]";
+  if(rangeStart < rangeEnd) {
+    // Joint range does not overlap TWO_PI
+    return angleToVerify >= rangeStart && angleToVerify <= rangeEnd;
+  } else {
+    // Joint range overlaps TWO_PI
+    return !(angleToVerify > rangeEnd && angleToVerify < rangeStart);
   }
-  
-  return (mStr + "\n");
 }
 
-public String arrayToString(float[] array) {
-  String s = "[";
+/**
+ * Brings the given angle (in radians) within the range: [0, TWO_PI).
+ * 
+ * @param angle  Some rotation in radians
+ * @returning    The equivalent angle within the range [0, TWO_PI)
+ */
+public float mod2PI(float angle) {
+  float limbo = angle % TWO_PI;
   
-  for(int i = 0; i < array.length; i += 1) {
-    s += String.format("%5.4f", array[i]);
-    if(i != array.length-1) s += ", ";
+  if (limbo < 0f) {
+    limbo += TWO_PI;
   }
   
-  return s + "]";
+  return limbo;
 }
+
+/**
+ * Computes the minimum rotational magnitude to move
+ * from src to dest, around the unit circle.
+ * 
+ * @param src   The source angle in radians
+ * @param dset  The destination angle in radians
+ * @returning   The minimum distance between src and dest
+ */
+public float minimumDistance(float src, float dest) {
+  // Bring angles within range [0, TWO_PI)
+  float difference = mod2PI(dest) - mod2PI(src);
+  
+  if (difference > PI) {
+    difference -= TWO_PI;
+  } else if (difference < -PI) {
+    difference += TWO_PI;
+  }
+  
+  return difference;
+}
+  
