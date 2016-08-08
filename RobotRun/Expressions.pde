@@ -1188,76 +1188,112 @@ public class AtomicExpression extends ExprOperand {
 }
 
 public class Expression extends AtomicExpression {
-  private ArrayList<ExpressionElement> expr;
+  private ArrayList<ExpressionElement> elementList;
   
   public Expression() {
-    expr = new ArrayList<ExpressionElement>();
-    expr.add(new ExprOperand());
+    elementList = new ArrayList<ExpressionElement>();
+    elementList.add(new ExprOperand());
   }
   
   public ExpressionElement get(int idx) {
-    return expr.get(idx);
+    return elementList.get(idx);
   }
   
   public ExprOperand getOperand(int idx) {
-    if(expr.get(idx) instanceof ExprOperand)
-      return (ExprOperand)expr.get(idx);
+    if(elementList.get(idx) instanceof ExprOperand)
+      return (ExprOperand)elementList.get(idx);
     else
       return null;
   }
   
   public Operator getOperator(int idx) {
-    if(expr.get(idx) instanceof Operator)
-      return (Operator)expr.get(idx);
+    if(elementList.get(idx) instanceof Operator)
+      return (Operator)elementList.get(idx);
     else
       return null;
   }
   
   public ExprOperand setOperand(int idx, ExprOperand o) {
-    if(expr.get(idx) instanceof ExprOperand)
-      return (ExprOperand)expr.set(idx, o);
+    if(elementList.get(idx) instanceof ExprOperand)
+      return (ExprOperand)elementList.set(idx, o);
     else
       return null;
   }
   
   public Operator setOperator(int idx, Operator o) {
-    if(expr.get(idx) instanceof Operator)
-      return (Operator)expr.set(idx, o);
+    if(elementList.get(idx) instanceof Operator)
+      return (Operator)elementList.set(idx, o);
     else
       return null;
   }
   
-  public void insertElement(int idx) {
-    if(expr.get(idx) instanceof ExprOperand)
-      expr.add(idx, new ExprOperand());
-    else
-      expr.add(idx, Operator.UNINIT);
+  public void insertElement(int edit_idx) {
+    if(edit_idx == -1) {
+      if(elementList.get(0) instanceof ExprOperand) {
+        elementList.add(0, Operator.UNINIT);
+      } else {
+        elementList.add(0, new ExprOperand());
+      }
+    } 
+    else {
+      int[] elements = mapToEdit();
+      int start_idx = getStartingIdx(elements[edit_idx]);
+      ExpressionElement e = elementList.get(elements[edit_idx]);
+      
+      if(e instanceof Expression && (edit_idx != start_idx + e.getLength() - 1)) {
+        edit_idx -= (start_idx + 1);
+        ((Expression)e).insertElement(edit_idx);
+      } 
+      else {
+        if(e instanceof ExprOperand) {
+          elementList.add(elements[edit_idx] + 1, Operator.UNINIT);
+        } else {
+          elementList.add(elements[edit_idx] + 1, new ExprOperand());
+        }
+      }
+    }
   }
   
-  public void removeElement(int idx) {
-    expr.remove(idx);
+  public void removeElement(int edit_idx) {
+    if(elementList.size() > 1) {
+      int[] elements = mapToEdit();
+      int start_idx = getStartingIdx(elements[edit_idx]);
+      ExpressionElement e = elementList.get(elements[edit_idx]);
+      
+      if(e instanceof Expression) {
+        if(edit_idx == start_idx || edit_idx == start_idx + e.getLength() - 1) {
+          elementList.remove(elements[edit_idx]);
+        } else {
+          edit_idx -= (start_idx + 1);
+          ((Expression)e).removeElement(edit_idx);
+        }
+      } 
+      else {
+        elementList.remove(elements[edit_idx]);
+      }
+    }
   }
-  
+    
   public int getLength() {
-    len = 0;
-    for(ExpressionElement e: expr) {
+    len = 2;
+    for(ExpressionElement e: elementList) {
       len += e.getLength();
     }
-    
+
     return len;
   }
   
   public ExprOperand evaluate() throws ExpressionEvaluationException {
-    if(expr.get(0) instanceof Operator) { return null; } //can throw error here
+    if(elementList.get(0) instanceof Operator) { return null; } //can throw error here
     
-    ExprOperand result = (ExprOperand)expr.get(0);
+    ExprOperand result = (ExprOperand)elementList.get(0);
     
-    for(int i = 1; i < expr.size(); i += 2) {
-      if(!(expr.get(i) instanceof Operator) || !(expr.get(i + 1) instanceof ExprOperand)) {
+    for(int i = 1; i < elementList.size(); i += 2) {
+      if(!(elementList.get(i) instanceof Operator) || !(elementList.get(i + 1) instanceof ExprOperand)) {
         return null; //and here
       } else {
-        Operator op = (Operator) expr.get(i);
-        ExprOperand nextOperand = (ExprOperand) expr.get(i + 1);
+        Operator op = (Operator) elementList.get(i);
+        ExprOperand nextOperand = (ExprOperand) elementList.get(i + 1);
         AtomicExpression expr = new AtomicExpression(op);
         
         result = expr.evaluate(result, nextOperand);
@@ -1268,12 +1304,12 @@ public class Expression extends AtomicExpression {
   }
   
   public int[] mapToEdit() {
-    int[] ret = new int[this.getLength()];
+    int[] ret = new int[getLength() - 2];
     int element_start = 0;
     int element_idx = 0;
     
     for(int i = 0; i < ret.length; i += 1) {
-      int len = expr.get(element_idx).getLength();
+      int len = elementList.get(element_idx).getLength();
       ret[i] = element_idx;
       
       if(i - element_start >= len - 1) {
@@ -1285,10 +1321,21 @@ public class Expression extends AtomicExpression {
     return ret;
   }
   
+  public int getStartingIdx(int element) {
+    int[] elements = mapToEdit();
+    int idx = 0;
+    
+    while(elements[idx] != element) {
+      idx += 1;
+    }
+    
+    return idx;
+  }
+  
   public String toString() {
-    String ret = "(" + expr.get(0).toString();
-    for(int i = 0; i < expr.size(); i += 1) {
-      ret += expr.get(i).toString();
+    String ret = "(" + elementList.get(0).toString();
+    for(int i = 0; i < elementList.size(); i += 1) {
+      ret += elementList.get(i).toString();
     }
     
     ret += ")";
@@ -1300,7 +1347,7 @@ public class Expression extends AtomicExpression {
     ret[0] = "(";
     
     int idx = 1;
-    for(ExpressionElement e: expr) {
+    for(ExpressionElement e: elementList) {
       String[] temp = e.toStringArray();
       for(int i = 0; i < temp.length; i += 1) {
         ret[idx + i] = temp[i];

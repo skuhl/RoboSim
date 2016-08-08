@@ -28,7 +28,7 @@ public enum Operator implements ExpressionElement {
   AND("&&", BOOL),
   OR("&&", BOOL),
   NOT("!", BOOL),
-  UNINIT("_", -1);
+  UNINIT("...", -1);
   
   public final String symbol;
   public final int type;
@@ -88,7 +88,7 @@ public static enum Screen implements DisplayMode {
   
   SET_BOOL_CONST(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_EXPR_ARG(ScreenType.TYPE_EXPR_EDIT),
-  SET_EXPR_ARG2(ScreenType.TYPE_EXPR_EDIT),
+  SET_BOOL_EXPR_ARG(ScreenType.TYPE_EXPR_EDIT),
   SET_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
   
   /*

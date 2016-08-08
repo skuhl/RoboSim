@@ -51,6 +51,11 @@ public class IORegister {
   public final EndEffector associatedEE;
   public int state;
   
+  public IORegister() {
+    associatedEE = null;
+    state = OFF;
+  }
+  
   public IORegister(EndEffector EE) {
     associatedEE = EE;
     state = OFF;

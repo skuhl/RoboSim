@@ -360,16 +360,13 @@ public class Instruction {
   public void setProg(Program p) { this.p = p; }
   public boolean isCommented(){ return com; }
   public void toggleCommented(){ com = !com; }
-  
-  public int execute() { return 0; }
-  
-  public String[] toStringArray() {
-    return new String[] { "\0" };
-  }
-  
+    
+  public int execute() {return 0; }
+    
   public String toString() {
     String[] fields = toStringArray();
     String str = new String();
+    
     /* Return a stirng which is the concatenation of all the elements in
      * this instruction's toStringArray() method, separated by spaces */
     for (int fdx = 0; fdx < fields.length; ++fdx) {
@@ -381,6 +378,10 @@ public class Instruction {
     }
     
     return str;
+  }
+  
+  public String[] toStringArray() {
+    return new String[] { "" };
   }
 }
 
@@ -695,15 +696,15 @@ public class JumpInstruction extends Instruction {
   }
   
   public String[] toStringArray() {
-    String[] fields = new String[1];
+    String[] ret;
     // Target label number
     if (tgtLblNum == -1) {
-      fields[0] = "JMP LBL[...]";
+      ret = new String[] {"JMP", "LBL[...]"};
     } else {
-      fields[0] = String.format("JMP LBL[%d]", tgtLblNum);
+      ret = new String[] {"JMP", "LBL[" + tgtLblNum + "]"};
     }
     
-    return fields;
+    return ret;
   }
 }
 
@@ -741,8 +742,30 @@ public class IfStatement extends Instruction {
     return 0;
   }
   
-  public String toString(){
+  public String toString() {
     return "IF " + expr.toString() + " : " + instr.toString();
+  }
+  
+  public String[] toStringArray() {
+    String[] exprArray = expr.toStringArray();
+    String[] instArray, ret;
+    if(instr == null) {
+      ret = new String[exprArray.length + 2];
+      ret[ret.length - 1] = "...";
+    } else {
+      ret = new String[exprArray.length + 3];
+      instArray = instr.toStringArray();
+      ret[ret.length - 2] = instArray[0];
+      ret[ret.length - 1] = instArray[1];
+    }
+        
+    ret[0] = "IF";
+    for(int i = 1; i < exprArray.length + 1; i += 1) {
+      ret[i] = exprArray[i - 1];
+    }
+    ret[exprArray.length] += " :";
+
+    return ret;
   }
 }
 
@@ -770,6 +793,14 @@ public class SelectStatement extends Instruction {
     }
     
     return 0;
+  }
+  
+  public String toString() {
+    return "";
+  }
+  
+  public String[] toStringArray() {
+    return new String[] {""};
   }
 }
 
