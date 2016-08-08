@@ -88,7 +88,7 @@ public void setup() {
   pushMatrix();
   resetMatrix();
   translate(-200, -50, 0);
-  OBJECTS.add(new WorldObject(color(255, 0, 255), color(0), 25, 160));
+  PARTS.add(new Part("BP-Cylinder", color(255, 0, 255), color(0), 25, 160));
   popMatrix();
 }
 
@@ -205,20 +205,20 @@ void applyCamera() {
  * Robot Arm model.
  */
 public void handleWorldObjects() {
-  for(WorldObject o : OBJECTS) {
+  for(Part o : PARTS) {
     // reset all world the object's hit box colors
     o.setBBColor(color(0, 255, 0));
   }
   
-  for(int idx = 0; idx < OBJECTS.size(); ++idx) {
+  for(int idx = 0; idx < PARTS.size(); ++idx) {
     
     /* Update the transformation matrix of an object held by the Robotic Arm */
-    if(OBJECTS.get(idx) == armModel.held && armModel.modelInMotion()) {
+    if(PARTS.get(idx) == armModel.held && armModel.modelInMotion()) {
       pushMatrix();
       resetMatrix();
       
       // new object transform = EE transform x (old EE transform) ^ -1 x current object transform
-      /**/
+      
       applyModelRotation(armModel.getJointAngles());
       
       float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
@@ -226,20 +226,6 @@ public void handleWorldObjects() {
                   invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
                   invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
                                    0,                 0,                   0,                  1);
-      /**
-      applyModelRotation(armModel.getJointAngles());
-      float[][] invEETMatrix = invertHCMatrix(getTransformationMatrix());
-      resetMatrix();
-      applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
-                  invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
-                  invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
-                                   0,                 0,                   0,                  1);
-      
-      applyMatrix(armModel.oldEETMatrix[0][0], armModel.oldEETMatrix[1][0], armModel.oldEETMatrix[2][0], armModel.oldEETMatrix[0][3],
-                  armModel.oldEETMatrix[0][1], armModel.oldEETMatrix[1][1], armModel.oldEETMatrix[2][1], armModel.oldEETMatrix[1][3],
-                  armModel.oldEETMatrix[0][2], armModel.oldEETMatrix[1][2], armModel.oldEETMatrix[2][2], armModel.oldEETMatrix[2][3],
-                                   0,                 0,                   0,                  1);
-      /**/
       
       armModel.held.getOBB().applyCoordinateSystem();
       // Update the world object's position and orientation
@@ -250,29 +236,29 @@ public void handleWorldObjects() {
     
     /* Collision Detection */
     if(COLLISION_DISPLAY) {
-      if( armModel.checkObjectCollision(OBJECTS.get(idx)) ) {
-        OBJECTS.get(idx).setBBColor(color(255, 0, 0));
+      if( armModel.checkObjectCollision(PARTS.get(idx)) ) {
+        PARTS.get(idx).setBBColor(color(255, 0, 0));
       }
       
       // Detect collision with other objects
-      for(int cdx = idx + 1; cdx < OBJECTS.size(); ++cdx) {
+      for(int cdx = idx + 1; cdx < PARTS.size(); ++cdx) {
         
-        if(OBJECTS.get(idx).collision(OBJECTS.get(cdx))) {
+        if(PARTS.get(idx).collision(PARTS.get(cdx))) {
           // Change hit box color to indicate Object collision
-          OBJECTS.get(idx).setBBColor(color(255, 0, 0));
-          OBJECTS.get(cdx).setBBColor(color(255, 0, 0));
+          PARTS.get(idx).setBBColor(color(255, 0, 0));
+          PARTS.get(cdx).setBBColor(color(255, 0, 0));
           break;
         }
       }
       
-      if( OBJECTS.get(idx) != armModel.held && OBJECTS.get(idx).getOBB().collision(nativeRobotEEPoint(armModel.getJointAngles()).position) ) {
+      if( PARTS.get(idx) != armModel.held && PARTS.get(idx).getOBB().collision(nativeRobotEEPoint(armModel.getJointAngles()).position) ) {
         // Change hit box color to indicate End Effector collision
-        OBJECTS.get(idx).setBBColor(color(0, 0, 255));
+        PARTS.get(idx).setBBColor(color(0, 0, 255));
       }
     }
     
     // Draw world object
-    OBJECTS.get(idx).draw();
+    PARTS.get(idx).draw();
   }
 }
 
@@ -364,26 +350,24 @@ public void displayAxes() {
     displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
   } else if (axesState == AxesDisplay.AXES) {
     // Display axes
-    if (curCoordFrame != CoordFrame.JOINT) {
-      Frame activeTool = getActiveFrame(CoordFrame.TOOL),
-            activeUser = getActiveFrame(CoordFrame.USER);
-      
-      if (curCoordFrame == CoordFrame.TOOL) {
-        /* Draw the axes of the active Tool frame at the Robot End Effector */
-        displayOriginAxes(activeTool.getWorldAxes(), ee_point.position, 200f, color(255, 0, 255));
-      } else {
-        // Draw axes of the Robot's End Effector frame for testing purposes
-        displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
-      }
-      
-      if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
-        /* Draw the axes of the active User frame */
-        displayOriginAxes(activeUser.getWorldAxes(), activeUser.getOrigin(), 5000f, color(0));
-      } else {
-        /* Draw the axes of the World frame */
-        //displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f), 5000f, color(0));
-        displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f), 5000f, color(0));
-      }
+    Frame activeTool = getActiveFrame(CoordFrame.TOOL),
+          activeUser = getActiveFrame(CoordFrame.USER);
+    
+    if (curCoordFrame == CoordFrame.TOOL) {
+      /* Draw the axes of the active Tool frame at the Robot End Effector */
+      displayOriginAxes(activeTool.getWorldAxes(), ee_point.position, 200f, color(255, 0, 255));
+    } else {
+      // Draw axes of the Robot's End Effector frame for testing purposes
+      displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
+    }
+    
+    if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
+      /* Draw the axes of the active User frame */
+      displayOriginAxes(activeUser.getWorldAxes(), activeUser.getOrigin(), 5000f, color(0));
+    } else {
+      /* Draw the axes of the World frame */
+      //displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f), 5000f, color(0));
+      displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f), 5000f, color(0));
     }
   } else if (axesState == AxesDisplay.GRID) {
     // Display gridlines spanning from axes of the current frame

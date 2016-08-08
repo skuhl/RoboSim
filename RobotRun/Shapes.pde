@@ -2,7 +2,7 @@
 public static final float PLANE_Y = 200.5f;
 
 public final ArrayList<Fixture> FIXTURES = new ArrayList<Fixture>();
-public final ArrayList<WorldObject> OBJECTS = new ArrayList<WorldObject>();
+public final ArrayList<Part> PARTS = new ArrayList<Part>();
 
 /**
  * A simple class that defines the outline and fill color for a shape
@@ -358,13 +358,13 @@ public class BoundingBox {
    * Reset the object's orientation axes; the given rotation
    * matrix should be in row major order!
    */
-  public float[][] setOrientation(float[][] newOrientation) {
+  public float[][] setOrientationAxes(float[][] newOrientation) {
     float[][] old = localOrientation.getAxes();
     localOrientation.setAxes(newOrientation);
     return old;
   }
   
-  public float[][] getOrientation() {
+  public float[][] getOrientationAxes() {
     return localOrientation.getAxes();
   }
   
@@ -432,44 +432,72 @@ public class BoundingBox {
   }
 }
 
-
-public class Fixture {
+/**
+ * Any object in the World other than the Robot.
+ */
+public abstract class WorldObject {
+  private String name;
   private Shape form;
+  
+  public WorldObject() {
+    name = "Object";
+    form = new Box();
+  }
+  
+  public WorldObject(String n, Shape f) {
+    name = n;
+    form = f;
+  }
+  
+  /**
+   * Apply the local Coordinate System of the World Object.
+   */
+  public abstract void applyCoordinateSystem();
+  
+  /**
+   * Draw the World Object in its local Coordinate System.
+   */
+  public abstract void draw();
+  
+  // Getter and Setter methods for the World Object's local orientation, name, and form
+  
+  public abstract void setCenter(PVector newCenter);
+  public abstract PVector getCenter();
+  
+  public abstract void setOrientationAxes(float[][] newAxes);
+  public abstract float[][] getOrientationAxes();
+  
+  public void setName(String newName) { name = newName; }
+  public String getName() { return name; }
+  
+  public Shape getForm() { return form; }
+}
+
+public class Fixture extends WorldObject {
   private CoordinateSystem localOrientation;
   
   /**
    * Create a cube object with the given colors and dimension
    */
-  public Fixture(color fill, color outline, float edgeLen) {
-    form = new Box(fill, outline, edgeLen);
+  public Fixture(String n, color fill, color outline, float edgeLen) {
+    super(n, new Box(fill, outline, edgeLen));
     localOrientation = new CoordinateSystem();
   }
   
   /**
    * Create a box object with the given colors and dimensions
    */
-  public Fixture(color fill, color outline, float len, float wdh, float hgt) {
-    form = new Box(fill, outline, len, wdh, hgt);
+  public Fixture(String n, color fill, color outline, float len, float wdh, float hgt) {
+    super(n, new Box(fill, outline, len, wdh, hgt));
     localOrientation = new CoordinateSystem();
   }
   
   /**
    * Creates a cylinder objects with the given colors and dimensions.
    */
-  public Fixture(color fill, color outline, float rad, float hgt) {
-    form = new Cylinder(fill, outline, rad, hgt);
+  public Fixture(String n, color fill, color outline, float rad, float hgt) {
+    super(n, new Cylinder(fill, outline, rad, hgt));
     localOrientation = new CoordinateSystem();
-  }
-  
-  /**
-   * Draw fixture only;
-   */
-  public void draw() {
-    pushMatrix();
-    // Draw shape in its own coordinate system
-    localOrientation.apply();
-    form.draw();
-    popMatrix();
   }
   
   /**
@@ -479,62 +507,86 @@ public class Fixture {
   public void applyCoordinateSystem() {
     localOrientation.apply();
   }
+  
+  /**
+   * Draw fixture only;
+   */
+  public void draw() {
+    pushMatrix();
+    // Draw shape in its own coordinate system
+    applyCoordinateSystem();
+    getForm().draw();
+    popMatrix();
+  }
+  
+  // Getter and Setter methods for the fixture'a local orientation
+  
+  public void setCenter(PVector newCenter) { localOrientation.setOrigin(newCenter); }
+  public PVector getCenter() { return localOrientation.getOrigin(); }
+  
+  public void setOrientationAxes(float[][] newAxes) { localOrientation.setAxes(newAxes); }
+  public float[][] getOrientationAxes() { return localOrientation.getAxes(); }
 }
 
 /**
  * Defines a world object, which has a shape, a bounding box and a reference to a fixture.
  * The bounding box holds the local coordinate system of the object.
  */
-public class WorldObject {
-  public Shape form;
+public class Part extends WorldObject {
   private BoundingBox OBB;
   private Fixture reference;
   
   /**
    * Create a cube object with the given colors and dimension
    */
-  public WorldObject(color fill, color outline, float edgeLen) {
-    form = new Box(fill, outline, edgeLen);
+  public Part(String n, color fill, color outline, float edgeLen) {
+    super(n, new Box(fill, outline, edgeLen));
     OBB = new BoundingBox(edgeLen + 15f);
   }
   
   /**
    * Create a box object with the given colors and dimensions
    */
-  public WorldObject(color fill, color outline, float len, float wdh, float hgt) {
-    form = new Box(fill, outline, len, wdh, hgt);
+  public Part(String n, color fill, color outline, float len, float wdh, float hgt) {
+    super(n, new Box(fill, outline, len, wdh, hgt));
     OBB = new BoundingBox(len + 15f, wdh + 15f, hgt + 15f);
   }
   
   /**
    * Creates a cylinder objects with the given colors and dimensions.
    */
-  public WorldObject(color fill, color outline, float rad, float hgt) {
-    form = new Cylinder(fill, outline, rad, hgt);
+  public Part(String n, color fill, color outline, float rad, float hgt) {
+    super(n, new Cylinder(fill, outline, rad, hgt));
     OBB = new BoundingBox(2f * rad + 5f, 2f * rad + 5f, hgt + 10f);
   }
   
   /**
-   * Draw both the object and its bounding box;
+   * Apply the part's fixtire reference's local orientation and
+   * then apply the part's own local orientation.
    */
-  public void draw() {
-    pushMatrix();
-    
+  public void applyCoordinateSystem() {
     if (reference != null) {
-      // Draw world object in terms of its reference fixtire
       reference.applyCoordinateSystem();
     }
     
-    // Draw shape in its own coordinate system
     OBB.applyCoordinateSystem();
-    form.draw();
+  }
+  
+  /**
+   * Draw both the object and its bounding box in its local
+   * orientaiton, in the local orientation of the part's
+   * fixture reference.
+   */
+  public void draw() {
+    pushMatrix();
+    applyCoordinateSystem();
+    getForm().draw();
     OBB.getBox().draw();
     popMatrix();
   }
   
-  public void setFixtureRef(Fixture refFixture) {
-    reference = refFixture;
-  }
+  public void setFixtureRef(Fixture refFixture) { reference = refFixture; }
+  public Fixture getFixtureRef() { return reference; }
   
   /**
    * Return a reference to this object's bounding-box.
@@ -553,7 +605,7 @@ public class WorldObject {
    * Determine if the given world object is colliding
    * with this world object.
    */
-  public boolean collision(WorldObject obj) {
+  public boolean collision(Part obj) {
     return collision3D(OBB, obj.getOBB());
   }
   
@@ -564,6 +616,14 @@ public class WorldObject {
   public boolean collision(PVector point) {
     return OBB.collision(point);
   }
+  
+  // Getter and Setter methods for the fixture'a local orientation and name
+  
+  public void setCenter(PVector newCenter) { OBB.setCenter(newCenter); }
+  public PVector getCenter() { return OBB.getCenter(); }
+  
+  public void setOrientationAxes(float[][] newAxes) { OBB.setOrientationAxes(newAxes); }
+  public float[][] getOrientationAxes() { return OBB.getOrientationAxes(); }
 }
 
 /**
@@ -577,8 +637,8 @@ public class WorldObject {
  */
 public static boolean collision3D(BoundingBox A, BoundingBox B) {
   // Rows are x, y, z axis vectors for A and B: Ax, Ay, Az, Bx, By, and Bz
-  float[][] axes_A = A.getOrientation();
-  float[][] axes_B = B.getOrientation();
+  float[][] axes_A = A.getOrientationAxes();
+  float[][] axes_B = B.getOrientationAxes();
   
   // Rotation matrices to convert B into A's coordinate system
   float[][] rotMatrix = new float[3][3];
