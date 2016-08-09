@@ -203,7 +203,7 @@ public class ModelShape extends Shape {
   public ModelShape(String filename, color fill, color outline) {
     super(fill, outline);
     srcFile = filename;
-    form = loadSTLModel(filename, fill, outline);
+    form = loadSTLModel(filename, fill, outline, 1.0);
   }
   
   public void draw() {
@@ -222,7 +222,7 @@ public class ModelShape extends Shape {
  * Build a PShape object from the contents of the given .stl source file
  * stored in /RobotRun/data/.
  */
-public PShape loadSTLModel(String filename, color fill, color outline) {
+public PShape loadSTLModel(String filename, color fill, color outline, float scaleVal) {
   ArrayList<Triangle> triangles = new ArrayList<Triangle>();
   byte[] data = loadBytes(filename);
   int n = 84; // skip header and number of triangles
@@ -254,6 +254,7 @@ public PShape loadSTLModel(String filename, color fill, color outline) {
   
   PShape mesh = createShape();
   mesh.beginShape(TRIANGLES);
+  mesh.scale(scaleVal);
   mesh.stroke(outline);
   mesh.fill(fill);
   for(Triangle t : triangles) {

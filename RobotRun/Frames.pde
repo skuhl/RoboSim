@@ -481,7 +481,7 @@ public double[] calculateTCPFromThreePoints(PVector pos1, float[][] ori1,
       Br = new Array2DRowRealMatrix(floatToDouble(ori3, 3, 3));
       Cr = new Array2DRowRealMatrix(floatToDouble(ori1, 3, 3));
       /* 2Ct - At - Bt */
-      vt = PVector.sub(pos1.mult(2), PVector.add(pos2, pos3));
+      vt = PVector.sub(PVector.mult(pos1, 2), PVector.add(pos2, pos3));
       
     } else if (counter == 1) {
       /* Case 2: C = point 2 */
@@ -489,7 +489,7 @@ public double[] calculateTCPFromThreePoints(PVector pos1, float[][] ori1,
       Br = new Array2DRowRealMatrix(floatToDouble(ori1, 3, 3));
       Cr = new Array2DRowRealMatrix(floatToDouble(ori2, 3, 3));
       /* 2Ct - At - Bt */
-      vt = PVector.sub(pos2.mult(2), PVector.add(pos3, pos1));
+      vt = PVector.sub(PVector.mult(pos2, 2), PVector.add(pos3, pos1));
       
     } else if (counter == 2) {
       /* Case 1: C = point 3 */
@@ -497,7 +497,7 @@ public double[] calculateTCPFromThreePoints(PVector pos1, float[][] ori1,
       Br = new Array2DRowRealMatrix(floatToDouble(ori2, 3, 3));
       Cr = new Array2DRowRealMatrix(floatToDouble(ori3, 3, 3));
       /* 2Ct - At - Bt */
-      vt = PVector.sub(pos3.mult(2), PVector.add(pos1, pos2));
+      vt = PVector.sub(PVector.mult(pos3, 2), PVector.add(pos1, pos2));
       
     }
     
@@ -530,6 +530,10 @@ public double[] calculateTCPFromThreePoints(PVector pos1, float[][] ori1,
     
     /* (R ^ -1) * b */
     avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
+    
+    if (DISPLAY_TEST_OUTPUT) {
+      System.out.printf("\n%s\n\n", matrixToString( doubleToFloat(R.getData(), 3, 3) ));
+    }
   }
   
   /* Take the average of the three cases: where C = the first point, the second point, and the third point */
