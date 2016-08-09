@@ -17,6 +17,9 @@ public class Model {
   public float rotationSpeed;
   public float[] jointsMoving = new float[3]; // for live control using the joint buttons
   
+  /**
+   * Use default scaling
+   */
   public Model(String filename, color col) {
     for(int n = 0; n < 3; n++) {
       rotations[n] = false;
@@ -25,10 +28,24 @@ public class Model {
     }
     rotationSpeed = 0.01;
     name = filename;
-    loadSTLModel(filename, col);
+    loadSTLModel(filename, col, 1.0);
   }
   
-  void loadSTLModel(String filename, color col) {
+  /**
+   * Define the scaling of the Model.
+   */
+  public Model(String filename, color col, float scaleVal) {
+    for(int n = 0; n < 3; n++) {
+      rotations[n] = false;
+      currentRotations[n] = 0;
+      jointRanges[n] = null;
+    }
+    rotationSpeed = 0.01;
+    name = filename;
+    loadSTLModel(filename, col, scaleVal);
+  }
+  
+  void loadSTLModel(String filename, color col, float scaleVal) {
     ArrayList<Triangle> triangles = new ArrayList<Triangle>();
     byte[] data = loadBytes(filename);
     int n = 84; // skip header and number of triangles
@@ -60,6 +77,7 @@ public class Model {
     mesh = createShape();
     mesh.beginShape(TRIANGLES);
     mesh.noStroke();
+    mesh.scale(scaleVal);
     mesh.fill(col);
     for(Triangle t : triangles) {
       mesh.normal(t.components[0].x, t.components[0].y, t.components[0].z);
@@ -103,7 +121,7 @@ public class ArmModel {
   public BoundingBox[] bodyHitBoxes;
   private ArrayList<BoundingBox>[] eeHitBoxes;
   
-  public WorldObject held;
+  public Part held;
   public float[][] oldEETMatrix;
   
   public PVector tgtPosition;
@@ -171,7 +189,7 @@ public class ArmModel {
     bodyHitBoxes[5] = new BoundingBox(160, 160, 160);
     bodyHitBoxes[6] = new BoundingBox(128, 430, 128);
     
-    eeHitBoxes = (ArrayList<BoundingBox>[])new ArrayList[4]; 
+    eeHitBoxes = (ArrayList<BoundingBox>[])new ArrayList[5]; 
     // Face plate
     eeHitBoxes[0] = new ArrayList<BoundingBox>();
     eeHitBoxes[0].add( new BoundingBox(102, 102, 36) );
@@ -189,6 +207,12 @@ public class ArmModel {
     eeHitBoxes[3].add( new BoundingBox(102, 102, 46) );
     eeHitBoxes[3].add( new BoundingBox(37, 37, 87) );
     eeHitBoxes[3].add( new BoundingBox(37, 67, 37) );
+    // Pointer
+    eeHitBoxes[4] = new ArrayList<BoundingBox>();
+    eeHitBoxes[4].add( new BoundingBox(102, 102, 46) );
+    eeHitBoxes[4].add( new BoundingBox(24, 24, 32) );
+    eeHitBoxes[4].add( new BoundingBox(18, 18, 56) );
+    eeHitBoxes[4].add( new BoundingBox(9, 9, 37) );
     
     held = null;
     // Initializes the old transformation matrix for the arm model
@@ -304,6 +328,11 @@ public class ArmModel {
         translate(20, 0, 0);
         eeModelClawPincer.draw();
       }
+    } else if (activeEndEffector == EndEffector.POINTER) {
+      rotateY(PI);
+      rotateZ(PI);
+      translate(45, -45, 10);
+      eePointer.draw();
     }
   }//end draw arm model
   
@@ -413,11 +442,12 @@ public class ArmModel {
     eeHitBoxes[0].get(0).setCoordinateSystem();
     translate(0, 0, -10);
     
-    // Claw Gripper EE
     eeHitBoxes[1].get(0).setCoordinateSystem();
     eeHitBoxes[2].get(0).setCoordinateSystem();
     eeHitBoxes[3].get(0).setCoordinateSystem();
+    eeHitBoxes[4].get(0).setCoordinateSystem();
     
+    // Claw Gripper EE
     translate(-2, 0, -54);
     eeHitBoxes[1].get(1).setCoordinateSystem();
     translate(2, 0, 54);
@@ -435,6 +465,19 @@ public class ArmModel {
     eeHitBoxes[3].get(2).setCoordinateSystem();
     translate(2, 52, 35);
     
+    // Pointer EE
+    translate(0, 0, -30);
+    eeHitBoxes[4].get(1).setCoordinateSystem();
+    translate(0, -18, -34);
+    rotateX(-0.75);
+    eeHitBoxes[4].get(2).setCoordinateSystem();
+    rotateX(0.75);
+    translate(0, -21, -32);
+    eeHitBoxes[4].get(3).setCoordinateSystem();
+    translate(0, 21, 32);
+    translate(0, 18, 34);
+    translate(0, 0, 30);
+    
     translate(-45, -45, 0);
     popMatrix();
   }
@@ -447,6 +490,8 @@ public class ArmModel {
       return (endEffectorState == ON) ? eeHitBoxes[1] : eeHitBoxes[2];
     } else if(activeEndEffector == EndEffector.SUCTION) {
       return eeHitBoxes[3];
+    } else if (activeEndEffector == EndEffector.POINTER) {
+      return eeHitBoxes[4];
     }
     
     return eeHitBoxes[0];
@@ -505,7 +550,7 @@ public class ArmModel {
   }
   
   /* Determine if the given ojbect is collding with any part of the Robot. */
-  public boolean checkObjectCollision(WorldObject obj) {
+  public boolean checkObjectCollision(Part obj) {
     BoundingBox ohb = obj.getOBB();
     boolean collision = false;
     
@@ -537,20 +582,11 @@ public class ArmModel {
       b.draw();
       popMatrix();
     }
+        
+    ArrayList<BoundingBox> curEEHitBoxes = currentEEHitBoxList();
     
-    int eeIdx = 0;
-    // Determine which set of hit boxes to display based on the active End Effector
-    if(activeEndEffector == EndEffector.CLAW) {
-      if(endEffectorState == ON) {
-        eeIdx = 1;
-      } else {
-        eeIdx = 2;
-      }
-    } else if(activeEndEffector == EndEffector.SUCTION) {
-      eeIdx = 3;
-    }
     // Draw End Effector hit boxes
-    for(BoundingBox b : eeHitBoxes[eeIdx]) {
+    for(BoundingBox b : curEEHitBoxes) {
       pushMatrix();
       b.draw();
       popMatrix();
@@ -910,7 +946,7 @@ public class ArmModel {
     
     /* Check for a collision between the Robot Arm and any world object as well as an object
      * held by the Robot Arm and any other world object */
-    for(WorldObject obj : OBJECTS) {
+    for(Part obj : PARTS) {
       if(checkObjectCollision(obj) || (held != null && held != obj && held.collision(obj))) {
         collision = true;
       }
@@ -928,7 +964,7 @@ public class ArmModel {
    * Transitions from the current End Effector
    * to the next End Effector in a cyclic pattern:
    * 
-   * NONE -> SUCTION -> CLAW -> NONE
+   * NONE -> SUCTION -> CLAW -> POINTER -> NONE
    */
   public void swapEndEffector() {
     
@@ -944,6 +980,11 @@ public class ArmModel {
         break;
         
       case CLAW:
+        activeEndEffector = EndEffector.POINTER;
+        endEffectorState = IO_REG[2].state;
+        break;
+      
+      case POINTER:
       default:
         activeEndEffector = EndEffector.NONE;
         break;
@@ -979,7 +1020,7 @@ public class ArmModel {
         
         PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
         // Determine if an object in the world can be picked up by the Robot
-        for(WorldObject s : OBJECTS) {
+        for(Part s : PARTS) {
           
           if(s.getOBB().collision(ee_pos)) {
             armModel.held = s;
@@ -1021,6 +1062,9 @@ public class ArmModel {
         break;
       case CLAW:
         IO_REG[1].state = endEffectorState;
+        break;
+      case POINTER:
+        IO_REG[2].state = endEffectorState;
         break;
       default:
     }

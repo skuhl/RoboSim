@@ -2402,8 +2402,8 @@ public void ENTER() {
     case SET_EXPR_OP:
       if(opEdit instanceof Expression) {
         expr = (Expression)opEdit;
-        
-        switch(opt_select - 1) {
+
+        switch(opt_select) {
           case 0:
             expr.setOperator(editIdx, Operator.ADDTN);
             break;
@@ -3470,7 +3470,7 @@ public void loadScreen(){
       if(DREG[active_index].value != null) {
         workingText = Float.toString(DREG[active_index].value);
       } else {
-        workingText = "0.0";
+        workingText = "";
       }
       break;
     case EDIT_PREG_C:
@@ -5179,16 +5179,16 @@ public ArrayList<ArrayList<String>> loadPosRegEntry(PositionRegister reg) {
   if(reg.point == null) {
     // Initialize values to zero if the entry is null
     if(mode == Screen.EDIT_PREG_C) {
-      register.add( newLine("X: ",  "0.0") );
-      register.add( newLine("Y: ",  "0.0") );
-      register.add( newLine("Z: ",  "0.0") );
-      register.add( newLine("W: ",  "0.0") );
-      register.add( newLine("P: ",  "0.0") );
-      register.add( newLine("R: ",  "0.0") );
+      register.add( newLine("X: ",  "") );
+      register.add( newLine("Y: ",  "") );
+      register.add( newLine("Z: ",  "") );
+      register.add( newLine("W: ",  "") );
+      register.add( newLine("P: ",  "") );
+      register.add( newLine("R: ",  "") );
       
     } else if(mode == Screen.EDIT_PREG_J) {
       for(int idx = 1; idx <= 6; ++idx) {
-        register.add( newLine(String.format("J%d: ", idx), "0.0") );
+        register.add( newLine(String.format("J%d: ", idx), "") );
       }
     }
   } else {

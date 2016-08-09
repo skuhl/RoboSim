@@ -20,6 +20,7 @@ ArmModel armModel;
 Model eeModelSuction;
 Model eeModelClaw;
 Model eeModelClawPincer;
+Model eePointer;
 
 float lastMouseX, lastMouseY;
 float cameraTX = 0, cameraTY = 0, cameraTZ = 0;
@@ -57,8 +58,9 @@ int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 /*******************************/
 /*      Debugging Stuff        */
 
-public static ArrayList<String> buffer;
+private static ArrayList<String> buffer;
 private static Ray mouseRay;
+private float[][] limboAxes;
 
 /*******************************/
 
@@ -71,12 +73,14 @@ public void setup() {
   
   buffer = new ArrayList<String>();
   mouseRay = null;
+  limboAxes = null;
   
   //load model and save data
   armModel = new ArmModel();
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
+  eePointer = new Model("POINTER.stl", color(40), 10.0);
   intermediatePositions = new ArrayList<Point>();
   loadState();
   
@@ -88,7 +92,7 @@ public void setup() {
   pushMatrix();
   resetMatrix();
   translate(-200, -50, 0);
-  OBJECTS.add(new WorldObject(color(255, 0, 255), color(0), 25, 160));
+  PARTS.add(new Part("BP-Cylinder", color(255, 0, 255), color(0), 25, 160));
   popMatrix();
 }
 
@@ -181,6 +185,10 @@ public void draw() {
     mouseRay.draw();
   }
   
+  if (limboAxes != null) {
+    displayOriginAxes(limboAxes, new PVector(0f, 0f, 0f), 200f, color(0, 255, 255));
+  }
+  
   displayAxes();
   displayTeachPoints();
   
@@ -205,20 +213,20 @@ void applyCamera() {
  * Robot Arm model.
  */
 public void handleWorldObjects() {
-  for(WorldObject o : OBJECTS) {
+  for(Part o : PARTS) {
     // reset all world the object's hit box colors
     o.setBBColor(color(0, 255, 0));
   }
   
-  for(int idx = 0; idx < OBJECTS.size(); ++idx) {
+  for(int idx = 0; idx < PARTS.size(); ++idx) {
     
     /* Update the transformation matrix of an object held by the Robotic Arm */
-    if(OBJECTS.get(idx) == armModel.held && armModel.modelInMotion()) {
+    if(PARTS.get(idx) == armModel.held && armModel.modelInMotion()) {
       pushMatrix();
       resetMatrix();
       
       // new object transform = EE transform x (old EE transform) ^ -1 x current object transform
-      /**/
+      
       applyModelRotation(armModel.getJointAngles());
       
       float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
@@ -226,20 +234,6 @@ public void handleWorldObjects() {
                   invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
                   invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
                                    0,                 0,                   0,                  1);
-      /**
-      applyModelRotation(armModel.getJointAngles());
-      float[][] invEETMatrix = invertHCMatrix(getTransformationMatrix());
-      resetMatrix();
-      applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
-                  invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
-                  invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
-                                   0,                 0,                   0,                  1);
-      
-      applyMatrix(armModel.oldEETMatrix[0][0], armModel.oldEETMatrix[1][0], armModel.oldEETMatrix[2][0], armModel.oldEETMatrix[0][3],
-                  armModel.oldEETMatrix[0][1], armModel.oldEETMatrix[1][1], armModel.oldEETMatrix[2][1], armModel.oldEETMatrix[1][3],
-                  armModel.oldEETMatrix[0][2], armModel.oldEETMatrix[1][2], armModel.oldEETMatrix[2][2], armModel.oldEETMatrix[2][3],
-                                   0,                 0,                   0,                  1);
-      /**/
       
       armModel.held.getOBB().applyCoordinateSystem();
       // Update the world object's position and orientation
@@ -250,29 +244,29 @@ public void handleWorldObjects() {
     
     /* Collision Detection */
     if(COLLISION_DISPLAY) {
-      if( armModel.checkObjectCollision(OBJECTS.get(idx)) ) {
-        OBJECTS.get(idx).setBBColor(color(255, 0, 0));
+      if( armModel.checkObjectCollision(PARTS.get(idx)) ) {
+        PARTS.get(idx).setBBColor(color(255, 0, 0));
       }
       
       // Detect collision with other objects
-      for(int cdx = idx + 1; cdx < OBJECTS.size(); ++cdx) {
+      for(int cdx = idx + 1; cdx < PARTS.size(); ++cdx) {
         
-        if(OBJECTS.get(idx).collision(OBJECTS.get(cdx))) {
+        if(PARTS.get(idx).collision(PARTS.get(cdx))) {
           // Change hit box color to indicate Object collision
-          OBJECTS.get(idx).setBBColor(color(255, 0, 0));
-          OBJECTS.get(cdx).setBBColor(color(255, 0, 0));
+          PARTS.get(idx).setBBColor(color(255, 0, 0));
+          PARTS.get(cdx).setBBColor(color(255, 0, 0));
           break;
         }
       }
       
-      if( OBJECTS.get(idx) != armModel.held && OBJECTS.get(idx).getOBB().collision(nativeRobotEEPoint(armModel.getJointAngles()).position) ) {
+      if( PARTS.get(idx) != armModel.held && PARTS.get(idx).getOBB().collision(nativeRobotEEPoint(armModel.getJointAngles()).position) ) {
         // Change hit box color to indicate End Effector collision
-        OBJECTS.get(idx).setBBColor(color(0, 0, 255));
+        PARTS.get(idx).setBBColor(color(0, 0, 255));
       }
     }
     
     // Draw world object
-    OBJECTS.get(idx).draw();
+    PARTS.get(idx).draw();
   }
 }
 
@@ -392,6 +386,7 @@ public void displayAxes() {
     PVector displayOrigin;
     
     switch(curCoordFrame) {
+      case JOINT:
       case WORLD:
         displayAxes = new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} };
         displayOrigin = new PVector(0f, 0f, 0f);

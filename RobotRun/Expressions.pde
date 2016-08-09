@@ -1214,17 +1214,23 @@ public class Expression extends AtomicExpression {
   }
   
   public ExprOperand setOperand(int idx, ExprOperand o) {
-    if(elementList.get(idx) instanceof ExprOperand)
-      return (ExprOperand)elementList.set(idx, o);
-    else
+    if(elementList.get(idx) instanceof ExprOperand) {
+      elementList.set(idx, o);
+      return (ExprOperand)elementList.get(idx);
+    }
+    else {
       return null;
+    }
   }
   
   public Operator setOperator(int idx, Operator o) {
-    if(elementList.get(idx) instanceof Operator)
-      return (Operator)elementList.set(idx, o);
-    else
+    if(elementList.get(idx) instanceof Operator) {
+      elementList.set(idx, o);
+      return (Operator)elementList.get(idx); 
+    }
+    else {
       return null;
+    }
   }
   
   public void insertElement(int edit_idx) {
