@@ -3,7 +3,7 @@ private final PositionRegister[] GPOS_REG = new PositionRegister[100];
 // Data Registers
 private final DataRegister[] DREG = new DataRegister[100];
 // IO Registers
-private final IORegister[] IO_REG = new IORegister[2];
+private final IORegister[] IO_REG = new IORegister[3];
 
 
 /* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */

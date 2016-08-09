@@ -188,6 +188,85 @@ public class Cylinder extends Shape {
   }
 }
 
+/**
+ * A complrx shape formed from a .stl source file.
+ */
+public class ModelShape extends Shape {
+  private PShape form;
+  private String srcFile;
+  
+  /**
+   * Create a complex model from the soruce .stl file of the
+   * given name, filename, stored in the '/RobotRun/data/'
+   * with the given fill and outline colors.
+   */
+  public ModelShape(String filename, color fill, color outline) {
+    super(fill, outline);
+    srcFile = filename;
+    form = loadSTLModel(filename, fill, outline);
+  }
+  
+  public void draw() {
+    shape(form);
+  }
+  
+  /**
+   * Create a new Model form the original source file.
+   */
+  public Shape clone() {
+      return new ModelShape(srcFile, getFillColor(), getOutlineColor());
+  }
+}
+
+/**
+ * Build a PShape object from the contents of the given .stl source file
+ * stored in /RobotRun/data/.
+ */
+public PShape loadSTLModel(String filename, color fill, color outline) {
+  ArrayList<Triangle> triangles = new ArrayList<Triangle>();
+  byte[] data = loadBytes(filename);
+  int n = 84; // skip header and number of triangles
+  
+  while(n < data.length) {
+    Triangle t = new Triangle();
+    for(int m = 0; m < 4; m++) {
+      byte[] bytesX = new byte[4];
+      bytesX[0] = data[n+3]; bytesX[1] = data[n+2];
+      bytesX[2] = data[n+1]; bytesX[3] = data[n];
+      n += 4;
+      byte[] bytesY = new byte[4];
+      bytesY[0] = data[n+3]; bytesY[1] = data[n+2];
+      bytesY[2] = data[n+1]; bytesY[3] = data[n];
+      n += 4;
+      byte[] bytesZ = new byte[4];
+      bytesZ[0] = data[n+3]; bytesZ[1] = data[n+2];
+      bytesZ[2] = data[n+1]; bytesZ[3] = data[n];
+      n += 4;
+      t.components[m] = new PVector(
+      ByteBuffer.wrap(bytesX).getFloat(),
+      ByteBuffer.wrap(bytesY).getFloat(),
+      ByteBuffer.wrap(bytesZ).getFloat()
+      );
+    }
+    triangles.add(t);
+    n += 2; // skip meaningless "attribute byte count"
+  }
+  
+  PShape mesh = createShape();
+  mesh.beginShape(TRIANGLES);
+  mesh.stroke(outline);
+  mesh.fill(fill);
+  for(Triangle t : triangles) {
+    mesh.normal(t.components[0].x, t.components[0].y, t.components[0].z);
+    mesh.vertex(t.components[1].x, t.components[1].y, t.components[1].z);
+    mesh.vertex(t.components[2].x, t.components[2].y, t.components[2].z);
+    mesh.vertex(t.components[3].x, t.components[3].y, t.components[3].z);
+  }
+  mesh.endShape();
+  
+  return mesh;
+} 
+
 public class Ray {
   private PVector origin;
   private PVector direction;
@@ -487,8 +566,8 @@ public class Fixture extends WorldObject {
   /**
    * Create a box object with the given colors and dimensions
    */
-  public Fixture(String n, color fill, color outline, float len, float wdh, float hgt) {
-    super(n, new Box(fill, outline, len, wdh, hgt));
+  public Fixture(String n, color fill, color outline, float len, float hgt, float wdh) {
+    super(n, new Box(fill, outline, len, hgt, wdh));
     localOrientation = new CoordinateSystem();
   }
   
@@ -497,6 +576,11 @@ public class Fixture extends WorldObject {
    */
   public Fixture(String n, color fill, color outline, float rad, float hgt) {
     super(n, new Cylinder(fill, outline, rad, hgt));
+    localOrientation = new CoordinateSystem();
+  }
+  
+  public Fixture(String n, ModelShape model) {
+    super(n, model);
     localOrientation = new CoordinateSystem();
   }
   
@@ -547,7 +631,7 @@ public class Part extends WorldObject {
   /**
    * Create a box object with the given colors and dimensions
    */
-  public Part(String n, color fill, color outline, float len, float wdh, float hgt) {
+  public Part(String n, color fill, color outline, float len, float hgt, float wdh) {
     super(n, new Box(fill, outline, len, wdh, hgt));
     OBB = new BoundingBox(len + 15f, wdh + 15f, hgt + 15f);
   }
@@ -558,6 +642,14 @@ public class Part extends WorldObject {
   public Part(String n, color fill, color outline, float rad, float hgt) {
     super(n, new Cylinder(fill, outline, rad, hgt));
     OBB = new BoundingBox(2f * rad + 5f, 2f * rad + 5f, hgt + 10f);
+  }
+  
+  /**
+   * Define a complex object as a part with given dimensions for its bounding-box.
+   */
+  public Part(String n, ModelShape model, float OBBLen, float OBBHgt, float OBBWid) {
+    super(n, model);
+    OBB = new BoundingBox(OBBLen, OBBHgt, OBBWid);
   }
   
   /**

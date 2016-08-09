@@ -20,6 +20,7 @@ ArmModel armModel;
 Model eeModelSuction;
 Model eeModelClaw;
 Model eeModelClawPincer;
+Model eePointer;
 
 float lastMouseX, lastMouseY;
 float cameraTX = 0, cameraTY = 0, cameraTZ = 0;
@@ -57,8 +58,9 @@ int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 /*******************************/
 /*      Debugging Stuff        */
 
-public static ArrayList<String> buffer;
+private static ArrayList<String> buffer;
 private static Ray mouseRay;
+private float[][] limboAxes;
 
 /*******************************/
 
@@ -71,12 +73,14 @@ public void setup() {
   
   buffer = new ArrayList<String>();
   mouseRay = null;
+  limboAxes = null;
   
   //load model and save data
   armModel = new ArmModel();
   eeModelSuction = new Model("VACUUM_2.STL", color(40));
   eeModelClaw = new Model("GRIPPER.STL", color(40));
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
+  eePointer = new Model("POINTER.stl", color(40), 10.0);
   intermediatePositions = new ArrayList<Point>();
   loadState();
   
@@ -179,6 +183,10 @@ public void draw() {
   
   if (mouseRay != null) {
     mouseRay.draw();
+  }
+  
+  if (limboAxes != null) {
+    displayOriginAxes(limboAxes, new PVector(0f, 0f, 0f), 200f, color(0, 255, 255));
   }
   
   displayAxes();
