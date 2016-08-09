@@ -119,6 +119,7 @@ public int loadState() {
   // Associated each End Effector with an I/O Register
   IO_REG[idx++] = new IORegister(EndEffector.SUCTION);
   IO_REG[idx++] = new IORegister(EndEffector.CLAW);
+  IO_REG[idx++] = new IORegister(EndEffector.POINTER);
   
   for (; idx < IO_REG.length; ++idx) {
     // Unassociated registers

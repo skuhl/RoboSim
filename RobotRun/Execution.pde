@@ -74,14 +74,12 @@ void showMainDisplayText() {
   }
   lastTextPositionY += 20;
   
-  if (curCoordFrame != CoordFrame.JOINT) {
-    // Display the current axes display state
-    text(String.format("Axes Display: %s", axesState.name()),  lastTextPositionX, height - 50);
-    
-    if (axesState == AxesDisplay.GRID) {
-      // Display the current ee mapping state
-      text(String.format("EE Mapping: %s", mappingState.name()),  lastTextPositionX, height - 30);
-    }
+  // Display the current axes display state
+  text(String.format("Axes Display: %s", axesState.name()),  lastTextPositionX, height - 50);
+  
+  if (axesState == AxesDisplay.GRID) {
+    // Display the current ee mapping state
+    text(String.format("EE Mapping: %s", mappingState.name()),  lastTextPositionX, height - 30);
   }
    
   if (DISPLAY_TEST_OUTPUT) {
@@ -89,7 +87,7 @@ void showMainDisplayText() {
     
     // Display a message when there is an error with the Robot's movement
     if (robotFault) {
-      text("Robot Fault", lastTextPositionX, lastTextPositionY);
+      text("Robot Fault (press SHIFT + Reset)", lastTextPositionX, lastTextPositionY);
       lastTextPositionY += 20;
     }
     
