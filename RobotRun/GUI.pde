@@ -890,7 +890,7 @@ public void keyReleased() {
 /*Button events*/
 
 public void Create() {
-  println("CREATE");
+  addWorldObject( manager.createWorldObject() );
 }
 
 public void Clear() {
@@ -898,36 +898,7 @@ public void Clear() {
 }
 
 public void Confirm() {
-  //String windowState = windows.getActiveButtonName();
-  
-  //String name = objName.getText();
-  
-  //try {
-  //  float xValue = Float.parseFloat(objOrientation[0].getText()),
-  //        yValue = Float.parseFloat(objOrientation[1].getText()),
-  //        zValue = Float.parseFloat(objOrientation[2].getText()),
-  //        wValue = Float.parseFloat(objOrientation[3].getText()),
-  //        pValue = Float.parseFloat(objOrientation[4].getText()),
-  //        rValue = Float.parseFloat(objOrientation[5].getText());
-  //} catch (NumberFormatException NFEx) {
-  //  // Invalid number input
-  //  return;
-  //} catch (Exception Ex) {
-  //  // Other problems?
-  //  Ex.printStackTrace();
-  //  return;
-  //}
-  
-  //if (windowState != null && windowState.equals("Parts")) {
-  //  // TODO
-  //} else if (windowState != null && windowState.equals("Fixtures")) {
-  //  // TODO
-  //} else {
-  //  Clear();
-  //  return;
-  //}
-  
-  println("CONFIRM");
+  manager.editWorldObject();
 }
 
 // Menu button

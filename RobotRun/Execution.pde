@@ -65,6 +65,8 @@ void showMainDisplayText() {
     lastTextPositionY += 20;
   }
   
+  
+  
   lastTextPositionY += 20;
   text("Robot Joint Angles", lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
@@ -72,8 +74,29 @@ void showMainDisplayText() {
     text(line, lastTextPositionX, lastTextPositionY);
     lastTextPositionY += 20;
   }
-  lastTextPositionY += 20;
   
+  WorldObject toEdit = manager.getActiveWorldObject();
+  // Display the position and orientation of the active world object
+  if (toEdit != null) {
+    // Convert the values into the World Coordinate System
+    PVector position = convertNativeToWorld(toEdit.getCenter());
+    PVector wpr = convertNativeToWorld( matrixToEuler(toEdit.getOrientationAxes()) ).mult(RAD_TO_DEG);
+    // Create a set of uniform Strings
+    String[] fields = new String[] { String.format("%4.3f", position.x), String.format("%4.3f", position.y),
+                                     String.format("%4.3f", position.z), String.format("%4.3f", wpr.x),
+                                     String.format("%4.3f", wpr.y), String.format("%4.3f", wpr.z) };
+    
+    lastTextPositionY += 20;
+    text(toEdit.getName(), lastTextPositionX, lastTextPositionY);
+    lastTextPositionY += 20;
+    // Add space patting
+    text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX, lastTextPositionY);
+    lastTextPositionY += 20;
+    text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]), lastTextPositionX, lastTextPositionY);
+    lastTextPositionY += 20;
+  }
+  
+  lastTextPositionY += 20;
   // Display the current axes display state
   text(String.format("Axes Display: %s", axesState.name()),  lastTextPositionX, height - 50);
   

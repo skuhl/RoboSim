@@ -224,6 +224,7 @@ public class ModelShape extends Shape {
  */
 public PShape loadSTLModel(String filename, color fill, color outline, float scaleVal) {
   ArrayList<Triangle> triangles = new ArrayList<Triangle>();
+  println(filename);
   byte[] data = loadBytes(filename);
   int n = 84; // skip header and number of triangles
   
@@ -551,6 +552,7 @@ public abstract class WorldObject {
   public String getName() { return name; }
   
   public Shape getForm() { return form; }
+  public String toString() { return name; }
 }
 
 public class Fixture extends WorldObject {
@@ -717,6 +719,22 @@ public class Part extends WorldObject {
   
   public void setOrientationAxes(float[][] newAxes) { OBB.setOrientationAxes(newAxes); }
   public float[][] getOrientationAxes() { return OBB.getOrientationAxes(); }
+}
+
+/**
+ * Add the given world object to the correct list
+ * in the correct manner.
+ */
+public void addWorldObject(WorldObject newObject) {
+  if (newObject instanceof Part) {
+    
+    // TODO add in alphabetical order
+    PARTS.add((Part)newObject);
+  } else if (newObject instanceof Fixture) {
+    
+    // TODO add in alphabetical order
+    FIXTURES.add((Fixture)newObject);
+  }
 }
 
 /**

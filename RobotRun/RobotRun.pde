@@ -275,8 +275,16 @@ public void handleWorldObjects() {
       }
     }
     
+    if (PARTS.get(idx) == manager.getActiveWorldObject()) {
+      PARTS.get(idx).setBBColor(color(255, 255, 0));
+    }
+    
     // Draw world object
     PARTS.get(idx).draw();
+  }
+  
+  for (Fixture fixture : FIXTURES) {
+    fixture.draw();
   }
 }
 
