@@ -82,9 +82,9 @@ void showMainDisplayText() {
     PVector position = convertNativeToWorld(toEdit.getCenter());
     PVector wpr = convertNativeToWorld( matrixToEuler(toEdit.getOrientationAxes()) ).mult(RAD_TO_DEG);
     // Create a set of uniform Strings
-    String[] fields = new String[] { String.format("%4.3f", position.x), String.format("%4.3f", position.y),
-                                     String.format("%4.3f", position.z), String.format("%4.3f", wpr.x),
-                                     String.format("%4.3f", wpr.y), String.format("%4.3f", wpr.z) };
+    String[] fields = new String[] { String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
+                                     String.format("Z: %4.3f", position.z), String.format("W: %4.3f", wpr.x),
+                                     String.format("P: %4.3f", wpr.y), String.format("R: %4.3f", wpr.z) };
     
     lastTextPositionY += 20;
     text(toEdit.getName(), lastTextPositionX, lastTextPositionY);

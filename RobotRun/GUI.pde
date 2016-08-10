@@ -95,7 +95,7 @@ void gui() {
   g1_width = 440;
   g1_height = 720;
   display_px = 10;
-  display_py = (SMALL_BUTTON - 15) + 1;
+  display_py = 0;//(SMALL_BUTTON - 15) + 1;
   display_width = g1_width - 20;
   display_height = 280;
   
@@ -112,7 +112,7 @@ void gui() {
   .hideBar();
   
   cp5.addTextarea("txt")
-  .setPosition(display_px,0)
+  .setPosition(display_px, 0)
   .setSize(display_width, display_height)
   .setColorBackground(UI_LIGHT)
   .moveTo(g1);
@@ -3570,7 +3570,8 @@ public void updateScreen() {
     cp5.addTextarea("lf"+i)
     .setText(funct[i])
     .setFont(fnt_con12)
-    .setPosition(display_width*i/5 + 15 , display_height)
+     // Keep function labels in their original place
+    .setPosition(display_width*i/5 + 15 , display_height - g1_py)
     .setSize(display_width/5 - 5, 20)
     .setColorValue(UI_DARK)
     .setColorBackground(UI_LIGHT)
