@@ -8,6 +8,10 @@ public enum RobotMotion { HALTED, MT_JOINT, MT_LINEAR; }
 public enum AxesDisplay { AXES, GRID, NONE };
 /* The states for mapping the Robot's End Effector to the grid */
 public enum EEMapping { LINE, DOT, NONE };
+/* Define the relative points of an object drawn in a GUI */
+private enum RelativePoint { TOP_RIGHT, TOP_LEFT, BOTTOM_LEFT, BOTTOM_RIGHT; }
+/* Set of valid shape types that a fixture or part can have */
+private enum ShapeType { BOX, CYLINDER, MODEL };
 
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
 public enum Operator implements ExpressionElement {

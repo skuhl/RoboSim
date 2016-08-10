@@ -113,6 +113,8 @@ void showMainDisplayText() {
       lastTextPositionY += 20;
     }
   }
+  
+  manager.updateWindowDisplay();
 }
 
 /** //<>//
