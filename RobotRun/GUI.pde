@@ -31,7 +31,7 @@ Button bt_record_normal,
 String workingText; // when entering text or a number
 String workingTextSuffix;
 boolean speedInPercentage;
-private static final int ITEMS_TO_SHOW = 7, // how many programs/ instructions to display on screen
+private static final int ITEMS_TO_SHOW = 8, // how many programs/ instructions to display on screen
                          NUM_ENTRY_LEN = 16, // Maximum character length for a number input
                          TEXT_ENTRY_LEN = 16; // Maximum character length for text entry
 
@@ -69,8 +69,7 @@ int start_render = 0; //index of the first element in a list to be drawn on scre
 int active_index = 0; //index of the cursor with respect to the first element on screen
 boolean[] selectedLines; //array whose indecies correspond to currently selected lines
 // how many textlabels have been created for display
-int index_contents = 0, index_options = 100, index_nums = 1000; 
-int mouseDown = 0;
+int index_contents = 0, index_options = 100, index_nums = 1000;
 
 /**
  * Used for comment name input. The user can cycle through the
@@ -1310,9 +1309,11 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>// //<>//
+        // Reset function key states //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } //<>// //<>//
+      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>//
+        col_select -= (col_select - 4 >= options.size()) ? 4 : 0;
+      }
   }
   
   updateScreen();
@@ -1368,8 +1369,9 @@ public void rt() {
           }
           
           col_select = max(0, min(col_select, contents.get(row_select).size() - 1));
-        } 
-        else {
+        } else if (mode.type == ScreenType.TYPE_EXPR_EDIT) {
+          col_select += (col_select + 4 < options.size()) ? 4 : 0;
+        } else {
           // Add an insert element if the length of the current comment is less than 16
           int len = workingText.length();
           if(len <= TEXT_ENTRY_LEN && col_select == workingText.length() - 1 && workingText.charAt(len - 1) != '\0') {
@@ -1423,6 +1425,9 @@ public void pr() {
 
 public void f1() {
   switch(mode) {
+    case NAV_PROGRAMS:
+      nextScreen(Screen.NEW_PROGRAM);
+      break;
     case NAV_PROG_INST:
       if(shift) {
         newMotionInstruction();
@@ -1482,7 +1487,7 @@ public void f1() {
 public void f2() {
   switch(mode) {
     case NAV_PROGRAMS:
-      nextScreen(Screen.NEW_PROGRAM);
+      nextScreen(Screen.RENAM_PROGRAM);
       break;
     case NAV_PROG_INST:
       nextScreen(Screen.SELECT_INSTR_INSERT);
@@ -1599,6 +1604,9 @@ public void f4() {
   Program p = activeProgram();
   
   switch(mode) {
+  case NAV_PROGRAMS:
+    nextScreen(Screen.CP_PROGRAM);
+    break;
   case NAV_PROG_INST:
     Instruction ins = activeInstruction();
     
@@ -2014,6 +2022,45 @@ public void ENTER() {
         
         saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );    
         switchScreen(Screen.NAV_PROG_INST);
+      }
+      break;
+    case RENAM_PROGRAM:
+      if(!workingText.equals("\0")) {
+        if (workingText.charAt(workingText.length() - 1) == '\0') {
+          // Remove insert character
+          workingText = workingText.substring(0, workingText.length() - 1);
+        }
+        // Renmae the program
+        activeProgram().setName(workingText);
+        active_instr = 0;
+        row_select = 0;
+        col_select = 0;
+        start_render = 0;
+        
+        saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
+        resetStack();
+        nextScreen(Screen.NAV_PROGRAMS);
+      }
+      break;
+    case CP_PROGRAM:
+      if(!workingText.equals("\0")) {
+        if (workingText.charAt(workingText.length() - 1) == '\0') {
+          // Remove insert character
+          workingText = workingText.substring(0, workingText.length() - 1);
+        }
+        
+        Program newProg = activeProgram().clone();
+        newProg.setName(workingText);
+        int new_prog = addProgram(newProg);
+        active_prog = new_prog;
+        active_instr = 0;
+        row_select = 0;
+        col_select = 0;
+        start_render = 0;
+        
+        saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );    
+        resetStack();
+        nextScreen(Screen.NAV_PROGRAMS);
       }
       break;
     case NAV_PROGRAMS:
@@ -3184,6 +3231,20 @@ public void loadScreen(){
       opt_select = 0;
       workingText = "\0";
       break;
+    case RENAM_PROGRAM:
+      active_prog = opt_select;
+      row_select = 1;
+      col_select = 0;
+      opt_select = 0;
+      workingText = activeProgram().getName();
+      break;
+    case CP_PROGRAM:
+      active_prog = opt_select;
+      row_select = 1;
+      col_select = 0;
+      opt_select = 0;
+      workingText = "\0";
+      break;
     case NAV_PROG_INST:
       //need to enforce row/ column select limits based on 
       //program length/ instruction width
@@ -3397,9 +3458,11 @@ public void updateScreen() {
   if(mode.getType() == ScreenType.TYPE_LINE_SELECT)
     selectMode = true;
   
-  // display the main list on screen
+  //display contents on screen
+  int linesDrawn = 0;
   index_contents = 1;
   for(int i = 0; i < contents.size(); i += 1) {
+    //get current line
     ArrayList<String> temp = contents.get(i);
         
     if(i == row_select) { bg = UI_DARK; }
@@ -3417,6 +3480,7 @@ public void updateScreen() {
     index_contents++;
     next_px += 10;
     
+    //draw each element in current line
     for(int j = 0; j < temp.size(); j += 1) {
       if(i == row_select) {
         if(j == col_select && !selectMode){
@@ -3444,8 +3508,15 @@ public void updateScreen() {
       }
       
       //grey text for comme also this
-      if(temp.size() > 0 && temp.get(0).contains("//")){
+      if(temp.size() > 0 && temp.get(0).contains("//")) {
         txt = color(127);
+      }
+      
+      if(next_px + temp.get(j).length()*8 + 20 > display_px + display_width) {
+        temp.set(j, " : " + temp.get(j));
+        next_px = display_px;
+        next_py += 20;
+        if((linesDrawn += 1) >= ITEMS_TO_SHOW) break;
       }
 
       cp5.addTextarea(Integer.toString(index_contents))
@@ -3460,7 +3531,9 @@ public void updateScreen() {
       
       index_contents++;
       next_px += temp.get(j).length() * 8 + 18; 
-    }
+    }//end draw line elements
+    
+    if((linesDrawn += 1) >= ITEMS_TO_SHOW) break;
     
     if(i == row_select) { txt = UI_DARK; }
     else                { txt = UI_LIGHT;   }
@@ -3477,23 +3550,21 @@ public void updateScreen() {
     index_contents++;
     next_px = display_px;
     next_py += 20;
-  }
+  }//end display contents
   
   // display options for an element being edited
   if(contents.size() != 0)
     next_py += 20;
   
-  int optStart, optEnd;
+  int maxHeight;
   if(mode.getType() == ScreenType.TYPE_EXPR_EDIT) {
-    optStart = (opt_select/3) * 3;
-    optEnd = min(options.size(), optStart + 4);
+    maxHeight = 4;
   } else {
-    optStart = 0;
-    optEnd = options.size();
+    maxHeight = options.size();
   }
-    
+  
   index_options = 100;
-  for(int i = optStart; i < optEnd; i += 1) {   
+  for(int i = 0; i < options.size(); i += 1) {   
     if(i == opt_select) {
       txt = UI_LIGHT;
       bg = UI_DARK;
@@ -3503,31 +3574,19 @@ public void updateScreen() {
       bg = UI_LIGHT;
     }
     
-    if(options.size() > 4 && i == optEnd - 1 && optEnd != options.size()) {
-      cp5.addTextarea(Integer.toString(index_options))
-      .setText(" ...")
-      .setFont(fnt_con14)
-      .setPosition(next_px, next_py)
-      .setSize(72, 20)
-      .setColorValue(txt)
-      .setColorBackground(bg)
-      .hideScrollbar()
-      .moveTo(g1);
-    } else {
-      cp5.addTextarea(Integer.toString(index_options))
-      .setText(" " + options.get(i))
-      .setFont(fnt_con14)
-      .setPosition(next_px, next_py)
-      .setSize(options.get(i).length()*8 + 40, 20)
-      .setColorValue(txt)
-      .setColorBackground(bg)
-      .hideScrollbar()
-      .moveTo(g1);
-    }
+    cp5.addTextarea(Integer.toString(index_options))
+    .setText(" " + options.get(i))
+    .setFont(fnt_con14)
+    .setPosition(next_px, next_py)
+    .setSize(options.get(i).length()*8 + 40, 20)
+    .setColorValue(txt)
+    .setColorBackground(bg)
+    .hideScrollbar()
+    .moveTo(g1);
     
     index_options++;
-    next_px = display_px;
-    next_py += 20;    
+    next_px += (i % maxHeight == maxHeight - 1) ? 80 : 0;
+    next_py += (i % maxHeight == maxHeight - 1) ? -20*(maxHeight - 1) : 20;    
   }
   
   // display the numbers that the user has typed
@@ -3592,6 +3651,12 @@ public String getHeader(Screen mode){
       break;
     case NEW_PROGRAM:
       header = "NAME PROGRAM";
+      break;
+    case RENAM_PROGRAM:
+      header = "RENAME PROGRAM";
+      break;
+    case CP_PROGRAM:
+      header = "COPY PROGRAM";
       break;
     case CONFIRM_INSTR_DELETE:
     case CONFIRM_INSERT:
@@ -3713,6 +3778,8 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
   
   switch(mode) {
     case NEW_PROGRAM:
+    case RENAM_PROGRAM:
+    case CP_PROGRAM:
       contents = loadTextInput();
       break;
     
@@ -4040,10 +4107,10 @@ public String[] getFunctionLabels(Screen mode){
   switch(mode) {
     case NAV_PROGRAMS:
       // F2, F3
-      funct[0] = "";
-      funct[1] = "[Create]";
+      funct[0] = "[Create]";
+      funct[1] = "[Rename]";
       funct[2] = "[Delete]";
-      funct[3] = "";
+      funct[3] = "[Copy]";
       funct[4] = "";
       break;
     case NAV_PROG_INST:
@@ -4543,21 +4610,31 @@ public ArrayList<String> loadInstrEdit(Screen mode) {
         edit.add("5. ... >= ...");
         edit.add("6. ... <= ...");
       } else if(opEdit instanceof Expression) {
-        edit.add("1. ... + ...");
-        edit.add("2. ... - ...");
-        edit.add("3. ... * ...");
-        edit.add("4. ... / ...");
-        edit.add("5. ... | ...");
-        edit.add("6. ... % ...");
-        edit.add("7. ... =  ...");
-        edit.add("8. ... <> ...");
-        edit.add("9. ... >  ...");
-        edit.add("10. ... < ...");
-        edit.add("11. ... >= ...");
-        edit.add("12. ... <= ...");
-        edit.add("13. ... AND ...");
-        edit.add("14. ... OR  ...");
-        edit.add("15. ... NOT ...");
+        if(activeInstruction() instanceof IfStatement) {
+          edit.add("1. + ");
+          edit.add("2. - ");
+          edit.add("3. * ");
+          edit.add("4. / ");
+          edit.add("5. | ");
+          edit.add("6. % ");
+          edit.add("7. = ");
+          edit.add("8. <> ");
+          edit.add("9. > ");
+          edit.add("10. < ");
+          edit.add("11. >= ");
+          edit.add("12. <= ");
+          edit.add("13. AND ");
+          edit.add("14. OR ");
+          edit.add("15. NOT ");
+          edit.add("16. ... ");
+        } else {
+          edit.add("1. + ");
+          edit.add("2. - ");
+          edit.add("3. * ");
+          edit.add("4. / ");
+          edit.add("5. | ");
+          edit.add("6. % ");
+        }
       }
       break;
     case SET_EXPR_ARG:
