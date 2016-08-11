@@ -1267,7 +1267,11 @@ public class Expression extends AtomicExpression {
   }
   
   public void insertElement(int edit_idx) {
+    //limit number of elements allowed in this expression
     if(getLength() >= 21) return;
+    //ensure index is within the bounds of our list of elements
+    else if(edit_idx < 0) return;
+    else if(edit_idx >= getLength() - 2) return;
     
     if(edit_idx == -1) {
       if(elementList.get(0) instanceof ExprOperand) {
@@ -1275,7 +1279,7 @@ public class Expression extends AtomicExpression {
       } else {
         elementList.add(0, new ExprOperand());
       }
-    } 
+    }
     else {
       int[] elements = mapToEdit();
       int start_idx = getStartingIdx(elements[edit_idx]);
