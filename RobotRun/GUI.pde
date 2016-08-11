@@ -37,7 +37,7 @@ bt_ee_normal;
 String workingText; // when entering text or a number
 String workingTextSuffix;
 boolean speedInPercentage;
-private static final int ITEMS_TO_SHOW = 7, // how many programs/ instructions to display on screen
+private static final int ITEMS_TO_SHOW = 8, // how many programs/ instructions to display on screen
                          NUM_ENTRY_LEN = 16, // Maximum character length for a number input
                          TEXT_ENTRY_LEN = 16; // Maximum character length for text entry
 
@@ -3529,9 +3529,11 @@ public void updateScreen() {
   if(mode.getType() == ScreenType.TYPE_LINE_SELECT)
     selectMode = true;
   
-  // display the main list on screen
+  //display contents on screen
+  int linesDrawn = 0;
   index_contents = 1;
   for(int i = 0; i < contents.size(); i += 1) {
+    //get current line
     ArrayList<String> temp = contents.get(i);
         
     if(i == row_select) { bg = UI_DARK; }
@@ -3549,6 +3551,7 @@ public void updateScreen() {
     index_contents++;
     next_px += 10;
     
+    //draw each element in current line
     for(int j = 0; j < temp.size(); j += 1) {
       if(i == row_select) {
         if(j == col_select && !selectMode){
@@ -3576,8 +3579,15 @@ public void updateScreen() {
       }
       
       //grey text for comme also this
-      if(temp.size() > 0 && temp.get(0).contains("//")){
+      if(temp.size() > 0 && temp.get(0).contains("//")) {
         txt = color(127);
+      }
+      
+      if(next_px + temp.get(j).length()*8 + 20 > display_px + display_width) {
+        temp.set(j, " : " + temp.get(j));
+        next_px = display_px;
+        next_py += 20;
+        if((linesDrawn += 1) >= ITEMS_TO_SHOW) break;
       }
 
       cp5.addTextarea(Integer.toString(index_contents))
@@ -3592,7 +3602,9 @@ public void updateScreen() {
       
       index_contents++;
       next_px += temp.get(j).length() * 8 + 18; 
-    }
+    }//end draw line elements
+    
+    if((linesDrawn += 1) >= ITEMS_TO_SHOW) break;
     
     if(i == row_select) { txt = UI_DARK; }
     else                { txt = UI_LIGHT;   }
@@ -3609,15 +3621,17 @@ public void updateScreen() {
     index_contents++;
     next_px = display_px;
     next_py += 20;
-  }
+  }//end display contents
   
   // display options for an element being edited
   if(contents.size() != 0)
     next_py += 20;
   
-  int maxHeight = options.size();
+  int maxHeight;
   if(mode.getType() == ScreenType.TYPE_EXPR_EDIT) {
     maxHeight = 4;
+  } else {
+    maxHeight = options.size();
   }
   
   index_options = 100;

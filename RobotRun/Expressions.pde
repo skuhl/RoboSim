@@ -1234,6 +1234,8 @@ public class Expression extends AtomicExpression {
   }
   
   public void insertElement(int edit_idx) {
+    if(getLength() >= 21) return;
+    
     if(edit_idx == -1) {
       if(elementList.get(0) instanceof ExprOperand) {
         elementList.add(0, Operator.UNINIT);
