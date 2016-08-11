@@ -55,9 +55,7 @@ public class MyDropdownList extends DropdownList {
     super.onRelease();
     
     // Some dropdown lists influence the display
-    manager.updateCreateWindowContentPositions();
-    manager.updateEditWindowContentPositions();
-    manager.updateListContents();
+    manager.updateWindowContentsPositions();
   }
   
   /**
@@ -522,9 +520,7 @@ public class WindowManager {
     }
     
     // Set the positions of all the contents
-    updateCreateWindowContentPositions();
-    updateEditWindowContentPositions();
-    updateListContents();
+    
   }
   
   /**
@@ -596,9 +592,27 @@ public class WindowManager {
   }
   
   /**
+   * Updates the positions of all the elements in the active window
+   * based on the current button tab that is active.
+   */
+  public void updateWindowContentsPositions() {
+    String windowState = windowTabs.getActiveButtonName();
+    
+    if (windowState != null && windowState.equals("Create")) {
+      // Create window
+      updateCreateWindowContentPositions();
+    } else if (windowState != null && windowState.equals("Edit")) {
+      // Edit window
+      updateEditWindowContentPositions();
+    }
+    
+    updateListContents();
+  }
+  
+  /**
    * Updates the positions of all the contents of the world object creation window.
    */
-  protected void updateCreateWindowContentPositions() {
+  private void updateCreateWindowContentPositions() {
     updateDimFieldsAndLabels();
       
     int[] relPos = new int[] { offsetX, offsetX };
@@ -659,7 +673,7 @@ public class WindowManager {
   /**
    * Updates the positions of all the contents of the world object editing window.
    */
-  protected void updateEditWindowContentPositions() {
+  private void updateEditWindowContentPositions() {
     
     // Object type dropdown
     int[] relPos = new int[] { offsetX, offsetX };
