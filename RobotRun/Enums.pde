@@ -8,6 +8,10 @@ public enum RobotMotion { HALTED, MT_JOINT, MT_LINEAR; }
 public enum AxesDisplay { AXES, GRID, NONE };
 /* The states for mapping the Robot's End Effector to the grid */
 public enum EEMapping { LINE, DOT, NONE };
+/* Define the relative points of an object drawn in a GUI */
+private enum RelativePoint { TOP_RIGHT, TOP_LEFT, BOTTOM_LEFT, BOTTOM_RIGHT; }
+/* Set of valid shape types that a fixture or part can have */
+private enum ShapeType { BOX, CYLINDER, MODEL };
 
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
 public enum Operator implements ExpressionElement {
@@ -144,6 +148,8 @@ public static enum Screen implements DisplayMode {
   EDIT_DREG_COM(ScreenType.TYPE_TEXT_ENTRY),
   EDIT_PREG_COM(ScreenType.TYPE_TEXT_ENTRY),
   NEW_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
+  RENAM_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
+  CP_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
   
   /*
   * Screens involving the entry of numeric values via either a physical num pad or
