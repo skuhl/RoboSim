@@ -53,6 +53,7 @@ public class MyDropdownList extends DropdownList {
   
   protected void onRelease() {
     super.onRelease();
+    
     // Some dropdown lists influence the display
     manager.updateCreateWindowContentPositions();
     manager.updateEditWindowContentPositions();
@@ -68,6 +69,18 @@ public class MyDropdownList extends DropdownList {
     
     if (associatedObjects != null) {
       getCaptionLabel().setText(Elementlabel);
+    }
+  }
+  
+  /**
+   * Updates the currently active label on the dropdown list based
+   * on the current list of items.
+   */
+  public void updateActiveLabel() {
+    Map<String, Object> associatedObjects = getItem( getCaptionLabel().getText() );
+    
+    if (associatedObjects == null || associatedObjects.isEmpty()) {
+      getCaptionLabel().setText( getName() );
     }
   }
   
@@ -300,7 +313,7 @@ public class WindowManager {
                         .setColorValue(buttonTxtColor)
                         .setColorBackground(buttonDefColor)
                         .setColorActive(buttonActColor)
-                        .moveTo(createObjWindow)
+                        .moveTo(sharedElements)
                         .setPosition(0, 0)
                         .setSize(sButtonWidth, mButtonHeight);
     
@@ -716,6 +729,9 @@ public class WindowManager {
     
     // Confirm button
     singleButtons[1] = singleButtons[1].setPosition(relPos[0], relPos[1]);
+    // Clear button
+    relPos = relativePosition(singleButtons[1], RelativePoint.TOP_RIGHT, offsetX, 0);
+    singleButtons[2] = singleButtons[2].setPosition(relPos[0], relPos[1]);
   }
   
   /**
@@ -799,12 +815,14 @@ public class WindowManager {
       // Add each world object to the dropdown list
       dropDownLists[4].addItem(obj.toString(), obj);
     }
+    dropDownLists[4].updateActiveLabel();
     
     dropDownLists[5] = (MyDropdownList)dropDownLists[5].clear();
     for (Fixture obj : FIXTURES) {
       // Add each fixture to the dropdown list
       dropDownLists[5].addItem(obj.toString(), obj);
     }
+    dropDownLists[5].updateActiveLabel();
   }
   
   /**
@@ -983,22 +1001,59 @@ public class WindowManager {
     
     if (toEdit != null) {
       try {
-        float xValue = Float.parseFloat(objOrientation[0].getText()),
-              yValue = Float.parseFloat(objOrientation[1].getText()),
-              zValue = Float.parseFloat(objOrientation[2].getText()),
-              wValue = Float.parseFloat(objOrientation[3].getText()),
-              pValue = Float.parseFloat(objOrientation[4].getText()),
-              rValue = Float.parseFloat(objOrientation[5].getText());
-        // Bring values within the range [-9999, 9999]
-        xValue = max(-9999f, min(xValue, 9999f));
-        yValue = max(-9999f, min(yValue, 9999f));
-        zValue = max(-9999f, min(zValue, 9999f));
-        wValue = max(-9999f, min(wValue, 9999f));
-        pValue = max(-9999f, min(pValue, 9999f));
-        rValue = max(-9999f, min(rValue, 9999f));
+        // Pull from all input fields
+        String xFieldVal = objOrientation[0].getText(), yFieldVal = objOrientation[1].getText(),
+               zFieldVal = objOrientation[2].getText(), wFieldVal = objOrientation[3].getText(),
+               pFieldVal = objOrientation[4].getText(), rFieldVal = objOrientation[5].getText();
+        // Convert origin position and orientation into the World Frame
+        PVector oPosition = convertNativeToWorld( toEdit.getCenter() ),
+                oWPR = convertNativeToWorld( matrixToEuler(toEdit.getOrientationAxes()).mult(RAD_TO_DEG) );
+        // Update x value
+        if (xFieldVal != null && !xFieldVal.equals("")) {
+          float val = Float.parseFloat(xFieldVal);
+          // Bring value within the range [-9999, 9999]
+          val = max(-9999f, min(val, 9999f));
+          oPosition.x = val;
+        }
+        // Update y value
+        if (yFieldVal != null && !yFieldVal.equals("")) {
+          float val = Float.parseFloat(yFieldVal);
+          // Bring value within the range [-9999, 9999]
+          val = max(-9999f, min(val, 9999f));
+          oPosition.y = val;
+        }
+        // Update z value
+        if (zFieldVal != null && !zFieldVal.equals("")) {
+          float val = Float.parseFloat(zFieldVal);
+          // Bring value within the range [-9999, 9999]
+          val = max(-9999f, min(val, 9999f));
+          oPosition.z = val;
+        }
+        // Update w angle
+        if (wFieldVal != null && !wFieldVal.equals("")) {
+          float val = Float.parseFloat(wFieldVal);
+          // Bring value within the range [-9999, 9999]
+          val = max(-9999f, min(val, 9999f));
+          oWPR.x = val;
+        }
+        // Update p angle
+        if (pFieldVal != null && !pFieldVal.equals("")) {
+          float val = Float.parseFloat(pFieldVal);
+          // Bring value within the range [-9999, 9999]
+          val = max(-9999f, min(val, 9999f));
+          oWPR.y = val;
+        }
+        // Update r angle
+        if (rFieldVal != null && !rFieldVal.equals("")) {
+          float val = Float.parseFloat(rFieldVal);
+          // Bring value within the range [-9999, 9999]
+          val = max(-9999f, min(val, 9999f));
+          oWPR.z = val;
+        }
+        
         // Convert values from the World to the Native coordinate system
-        PVector position = convertWorldToNative( new PVector(xValue, yValue, zValue) );
-        PVector wpr = convertWorldToNative( (new PVector(wValue, pValue, rValue)).mult(DEG_TO_RAD) );
+        PVector position = convertWorldToNative( oPosition );
+        PVector wpr = convertWorldToNative( oWPR.mult(DEG_TO_RAD) );
         float[][] orientation = eulerToMatrix(wpr);
         // Update the Objects position and orientaion
         toEdit.setCenter(position);
@@ -1014,7 +1069,10 @@ public class WindowManager {
       } catch (NullPointerException NPEx) {
         println("Missing parameter!");
       }
+    } else {
+      println("No object selected!");
     }
+    
   }
   
   /**
