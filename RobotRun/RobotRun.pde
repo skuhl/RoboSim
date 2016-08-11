@@ -6,12 +6,7 @@ import java.util.regex.Pattern;
 import java.nio.*;
 import java.nio.file.*;
 import java.io.*;
-import javax.swing.tree.TreeModel;
 import java.awt.event.KeyEvent;
-import java.io.Serializable;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 private static final int OFF = 0, ON = 1;
 private static final int ARITH = 0, BOOL = 1;
@@ -97,13 +92,6 @@ public void setup() {
   manager = new WindowManager(cp5, fnt_con12, fnt_con14);
   display_stack = new Stack<Screen>();
   gui();
-  
-  pushMatrix();
-  resetMatrix();
-  translate(-200, -50, 0);
-  rotateX(PI / 4f);
-  PARTS.add(new Part("BP-Cylinder", color(255, 0, 255), color(0), 10, 800));
-  popMatrix();
 }
 
 public void draw() {
@@ -283,6 +271,7 @@ public void handleWorldObjects() {
     PARTS.get(idx).draw();
   }
   
+  // Draw fixtures
   for (Fixture fixture : FIXTURES) {
     fixture.draw();
   }
