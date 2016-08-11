@@ -579,16 +579,6 @@ public class WindowManager {
         resetDropdownLabels();
       }
     }
-    
-    if (clearScreen) {
-      // Draw over previous screen
-      pushMatrix();
-      resetMatrix();
-      stroke(255);
-      fill(255);
-      sphere(250);
-      popMatrix();
-    }
   }
   
   /**

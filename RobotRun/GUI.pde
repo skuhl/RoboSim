@@ -1309,9 +1309,11 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>// //<>//
+        // Reset function key states //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } //<>// //<>//
+      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>//
+        col_select -= (col_select - 4 >= options.size()) ? 4 : 0;
+      }
   }
   
   updateScreen();
@@ -1367,8 +1369,9 @@ public void rt() {
           }
           
           col_select = max(0, min(col_select, contents.get(row_select).size() - 1));
-        } 
-        else {
+        } else if (mode.type == ScreenType.TYPE_EXPR_EDIT) {
+          col_select += (col_select + 4 < options.size()) ? 4 : 0;
+        } else {
           // Add an insert element if the length of the current comment is less than 16
           int len = workingText.length();
           if(len <= TEXT_ENTRY_LEN && col_select == workingText.length() - 1 && workingText.charAt(len - 1) != '\0') {
