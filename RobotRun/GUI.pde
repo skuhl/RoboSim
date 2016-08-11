@@ -69,8 +69,7 @@ int start_render = 0; //index of the first element in a list to be drawn on scre
 int active_index = 0; //index of the cursor with respect to the first element on screen
 boolean[] selectedLines; //array whose indecies correspond to currently selected lines
 // how many textlabels have been created for display
-int index_contents = 0, index_options = 100, index_nums = 1000; 
-int mouseDown = 0;
+int index_contents = 0, index_options = 100, index_nums = 1000;
 
 /**
  * Used for comment name input. The user can cycle through the
@@ -1423,6 +1422,9 @@ public void pr() {
 
 public void f1() {
   switch(mode) {
+    case NAV_PROGRAMS:
+      nextScreen(Screen.NEW_PROGRAM);
+      break;
     case NAV_PROG_INST:
       if(shift) {
         newMotionInstruction();
@@ -1482,7 +1484,7 @@ public void f1() {
 public void f2() {
   switch(mode) {
     case NAV_PROGRAMS:
-      nextScreen(Screen.NEW_PROGRAM);
+      nextScreen(Screen.RENAM_PROGRAM);
       break;
     case NAV_PROG_INST:
       nextScreen(Screen.SELECT_INSTR_INSERT);
@@ -1599,6 +1601,9 @@ public void f4() {
   Program p = activeProgram();
   
   switch(mode) {
+  case NAV_PROGRAMS:
+    nextScreen(Screen.CP_PROGRAM);
+    break;
   case NAV_PROG_INST:
     Instruction ins = activeInstruction();
     
@@ -2014,6 +2019,45 @@ public void ENTER() {
         
         saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );    
         switchScreen(Screen.NAV_PROG_INST);
+      }
+      break;
+    case RENAM_PROGRAM:
+      if(!workingText.equals("\0")) {
+        if (workingText.charAt(workingText.length() - 1) == '\0') {
+          // Remove insert character
+          workingText = workingText.substring(0, workingText.length() - 1);
+        }
+        // Renmae the program
+        activeProgram().setName(workingText);
+        active_instr = 0;
+        row_select = 0;
+        col_select = 0;
+        start_render = 0;
+        
+        saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
+        resetStack();
+        nextScreen(Screen.NAV_PROGRAMS);
+      }
+      break;
+    case CP_PROGRAM:
+      if(!workingText.equals("\0")) {
+        if (workingText.charAt(workingText.length() - 1) == '\0') {
+          // Remove insert character
+          workingText = workingText.substring(0, workingText.length() - 1);
+        }
+        
+        Program newProg = activeProgram().clone();
+        newProg.setName(workingText);
+        int new_prog = addProgram(newProg);
+        active_prog = new_prog;
+        active_instr = 0;
+        row_select = 0;
+        col_select = 0;
+        start_render = 0;
+        
+        saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );    
+        resetStack();
+        nextScreen(Screen.NAV_PROGRAMS);
       }
       break;
     case NAV_PROGRAMS:
@@ -3184,6 +3228,20 @@ public void loadScreen(){
       opt_select = 0;
       workingText = "\0";
       break;
+    case RENAM_PROGRAM:
+      active_prog = opt_select;
+      row_select = 1;
+      col_select = 0;
+      opt_select = 0;
+      workingText = activeProgram().getName();
+      break;
+    case CP_PROGRAM:
+      active_prog = opt_select;
+      row_select = 1;
+      col_select = 0;
+      opt_select = 0;
+      workingText = "\0";
+      break;
     case NAV_PROG_INST:
       //need to enforce row/ column select limits based on 
       //program length/ instruction width
@@ -3593,6 +3651,12 @@ public String getHeader(Screen mode){
     case NEW_PROGRAM:
       header = "NAME PROGRAM";
       break;
+    case RENAM_PROGRAM:
+      header = "RENAME PROGRAM";
+      break;
+    case CP_PROGRAM:
+      header = "COPY PROGRAM";
+      break;
     case CONFIRM_INSTR_DELETE:
     case CONFIRM_INSERT:
     case CONFIRM_RENUM:
@@ -3713,6 +3777,8 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
   
   switch(mode) {
     case NEW_PROGRAM:
+    case RENAM_PROGRAM:
+    case CP_PROGRAM:
       contents = loadTextInput();
       break;
     
@@ -4040,10 +4106,10 @@ public String[] getFunctionLabels(Screen mode){
   switch(mode) {
     case NAV_PROGRAMS:
       // F2, F3
-      funct[0] = "";
-      funct[1] = "[Create]";
+      funct[0] = "[Create]";
+      funct[1] = "[Rename]";
       funct[2] = "[Delete]";
-      funct[3] = "";
+      funct[3] = "[Copy]";
       funct[4] = "";
       break;
     case NAV_PROG_INST:

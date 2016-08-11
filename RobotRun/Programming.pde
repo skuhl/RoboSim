@@ -282,6 +282,25 @@ public class Program  {
     // A label with the given number does not exist
     return -1;
   }
+  
+  /**
+   * Return an independent replica of this program object.
+   */
+  public Program clone() {
+    Program copy = new Program(name);
+    // Copy instructions
+    for (Instruction inst : instructions) {
+      copy.addInstruction(inst.clone());
+    }
+    // Copy positions
+    for (int idx = 0; idx < LPosReg.length; ++idx) {
+      copy.addPosition(LPosReg[idx].clone(), idx);
+    }
+    // Copy next register
+    copy.setNextRegister(nextRegister);
+    
+    return copy;
+  }
 } // end Program class
 
 
@@ -348,8 +367,8 @@ public MotionInstruction activeMotionInst() {
 }
 
 public class Instruction {
-  Program p;
-  boolean com;
+  protected Program p;
+  protected boolean com;
   
   public Instruction() {
     p = null;
@@ -359,7 +378,8 @@ public class Instruction {
   public Program getProg() { return p; }
   public void setProg(Program p) { this.p = p; }
   public boolean isCommented(){ return com; }
-  public void toggleCommented(){ com = !com; }
+  public void setIsCommented(boolean comFlag) { com = comFlag; }
+  public void toggleCommented() { com = !com; }
     
   public int execute() {return 0; }
     
@@ -382,6 +402,16 @@ public class Instruction {
   
   public String[] toStringArray() {
     return new String[] { "" };
+  }
+  
+  /**
+   * Create an independent replica of this instruction.
+   */
+  public Instruction clone() {
+    Instruction copy = new Instruction();
+    copy.setIsCommented( isCommented() );
+    
+    return copy;
   }
 }
 
@@ -497,6 +527,13 @@ public final class MotionInstruction extends Instruction  {
     }
   } // end getVector()
   
+  public Instruction clone() {
+    Instruction copy = new MotionInstruction(motionType, positionNum, isGPosReg, speed, termination, userFrame, toolFrame);
+    copy.setIsCommented( isCommented() );
+    
+    return copy;
+  }
+  
   public String[] toStringArray() {
     String[] fields = new String[5];
     // Motion type
@@ -579,6 +616,13 @@ public class FrameInstruction extends Instruction {
     return 2;
   }
   
+  public Instruction clone() {
+    Instruction copy = new FrameInstruction(frameType, frameIdx);
+    copy.setIsCommented( isCommented() );
+    
+    return copy;
+  }
+  
   public String[] toStringArray() {
     String[] fields = new String[2];
     // Frame type
@@ -623,6 +667,13 @@ public class IOInstruction extends Instruction {
     return armModel.checkEECollision();
   }
   
+  public Instruction clone() {
+    Instruction copy = new IOInstruction(state, reg);
+    copy.setIsCommented( isCommented() );
+    
+    return copy;
+  }
+  
   public String[] toStringArray() {
     String[] fields = new String[2];
     // Register index
@@ -660,6 +711,13 @@ public class LabelInstruction extends Instruction {
     
     return fields;
   }
+  
+  public Instruction clone() {
+    Instruction copy = new LabelInstruction(labelNum);
+    copy.setIsCommented( isCommented() );
+    
+    return copy;
+  }
 }
 
 public class JumpInstruction extends Instruction {
@@ -693,6 +751,13 @@ public class JumpInstruction extends Instruction {
       println("No active program!");
       return 2;
     }
+  }
+  
+  public Instruction clone() {
+    Instruction copy = new JumpInstruction(tgtLblNum);
+    copy.setIsCommented( isCommented() );
+    
+    return copy;
   }
   
   public String[] toStringArray() {
@@ -767,6 +832,18 @@ public class IfStatement extends Instruction {
 
     return ret;
   }
+  
+  public Instruction clone() {
+    if (instr == this) {
+      // Cannot copy!
+      return null;
+    }
+    
+    Instruction copy = new IfStatement(null, instr.clone());
+    copy.setIsCommented( isCommented() );
+    // TODO actually copy the if statement
+    return copy;
+  }
 }
 
 public class SelectStatement extends Instruction {
@@ -797,6 +874,19 @@ public class SelectStatement extends Instruction {
   
   public String toString() {
     return "";
+  }
+  
+  public Instruction clone() {
+    if (instr == this) {
+      // Cannot copy this!
+      return null;
+    }
+    
+    Instruction copy = new SelectStatement();
+    copy.setIsCommented( isCommented() );
+    ((SelectStatement)copy).instr = instr.clone();
+    // TODO actually copy the select statement
+    return copy;
   }
   
   public String[] toStringArray() {
@@ -849,6 +939,9 @@ public class RegisterStatement extends Instruction {
     statement = new RegisterExpression();
   }
   
+  public void setExpression(RegisterExpression expr) {
+    statement = expr;
+  }
   
   public int execute() {
     Object result = statement.evaluate();
@@ -883,6 +976,21 @@ public class RegisterStatement extends Instruction {
     }
   }
   
+  public Instruction clone() {
+    Instruction copy;
+    // Copy destination value
+    if (destination instanceof PositionOp) {
+      PositionOp posOp = (PositionOp)destination;
+      copy = new RegisterStatement(posOp.getIdx(), posOp.getPositionIdx(), posOp.getPositionType());
+    } else {
+      copy = new RegisterStatement(destination.getIdx());
+    }
+    // Copy the expression
+    ((RegisterStatement)copy).setExpression(statement.clone());
+    copy.setIsCommented( isCommented() );
+    return copy;
+  }
+  
   /**
    * Convert the entire statement to a set of Strings, where each
    * operator and operand is a separate String Object.
@@ -894,16 +1002,6 @@ public class RegisterStatement extends Instruction {
     return (String[])expression.toArray();
   }
 }
-
-public class CoordinateFrame {
-  private PVector origin = new PVector();
-  private PVector rotation = new PVector();
-
-  public PVector getOrigin() { return origin; }
-  public void setOrigin(PVector in) { origin = in; }
-  public PVector getRotation() { return rotation; }
-  public void setRotation(PVector in) { rotation = in; }
-} // end FrameInstruction class
 
 public class RecordScreen implements Runnable{
   public RecordScreen() {

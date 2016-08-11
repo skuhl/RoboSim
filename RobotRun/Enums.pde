@@ -148,6 +148,8 @@ public static enum Screen implements DisplayMode {
   EDIT_DREG_COM(ScreenType.TYPE_TEXT_ENTRY),
   EDIT_PREG_COM(ScreenType.TYPE_TEXT_ENTRY),
   NEW_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
+  RENAM_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
+  CP_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
   
   /*
   * Screens involving the entry of numeric values via either a physical num pad or

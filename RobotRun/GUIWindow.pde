@@ -808,7 +808,7 @@ public class WindowManager {
   }
   
   /**
-   * Update the contents of the two dropdown mwnus that
+   * Update the contents of the two dropdown menus that
    * contain world objects.
    */
   private void updateListContents() {
@@ -1108,31 +1108,6 @@ public class WindowManager {
     labels[14].hide();
     dropDownLists[5] = (MyDropdownList)dropDownLists[5].hide();
     updateDimFieldsAndLabels();
-  }
-  
-  /**
-   * Fill the input fields for the edit window with the current values of the active world object.
-   */
-  public void updateEditFields() {
-    WorldObject toEdit = (WorldObject)dropDownLists[4].getActiveLabelValue();
-    
-    if (toEdit != null) {
-      // Convert the values into the World Coordinate System
-      PVector position = convertNativeToWorld(toEdit.getCenter());
-      PVector wpr = convertNativeToWorld( matrixToEuler(toEdit.getOrientationAxes()) ).mult(RAD_TO_DEG);
-      
-      objOrientation[0].setValue( Float.toString(position.x) );
-      objOrientation[0].setValue( Float.toString(position.y) );
-      objOrientation[0].setValue( Float.toString(position.z) );
-      objOrientation[0].setValue( Float.toString(wpr.x) );
-      objOrientation[0].setValue( Float.toString(wpr.y) );
-      objOrientation[0].setValue( Float.toString(wpr.z) );
-      
-      if (toEdit instanceof Part) {
-        Fixture reference = ((Part)toEdit).getFixtureRef();
-        dropDownLists[5].setActiveLabel(reference.getName());
-      }
-    }
   }
   
   /**
