@@ -30,7 +30,7 @@ public enum Operator implements ExpressionElement {
   GREQ(">=", BOOL),
   LSEQ("<=", BOOL),
   AND("&&", BOOL),
-  OR("&&", BOOL),
+  OR("||", BOOL),
   NOT("!", BOOL),
   UNINIT("...", -1);
   
