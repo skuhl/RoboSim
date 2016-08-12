@@ -189,7 +189,7 @@ public class Cylinder extends Shape {
 }
 
 /**
- * A complrx shape formed from a .stl source file.
+ * A complex shape formed from a .stl source file.
  */
 public class ModelShape extends Shape {
   private PShape form;
@@ -217,56 +217,6 @@ public class ModelShape extends Shape {
       return new ModelShape(srcFile, getFillColor(), getOutlineColor());
   }
 }
-
-/**
- * Build a PShape object from the contents of the given .stl source file
- * stored in /RobotRun/data/.
- */
-public PShape loadSTLModel(String filename, color fill, color outline, float scaleVal) {
-  ArrayList<Triangle> triangles = new ArrayList<Triangle>();
-  byte[] data = loadBytes(filename);
-  int n = 84; // skip header and number of triangles
-  
-  while(n < data.length) {
-    Triangle t = new Triangle();
-    for(int m = 0; m < 4; m++) {
-      byte[] bytesX = new byte[4];
-      bytesX[0] = data[n+3]; bytesX[1] = data[n+2];
-      bytesX[2] = data[n+1]; bytesX[3] = data[n];
-      n += 4;
-      byte[] bytesY = new byte[4];
-      bytesY[0] = data[n+3]; bytesY[1] = data[n+2];
-      bytesY[2] = data[n+1]; bytesY[3] = data[n];
-      n += 4;
-      byte[] bytesZ = new byte[4];
-      bytesZ[0] = data[n+3]; bytesZ[1] = data[n+2];
-      bytesZ[2] = data[n+1]; bytesZ[3] = data[n];
-      n += 4;
-      t.components[m] = new PVector(
-      ByteBuffer.wrap(bytesX).getFloat(),
-      ByteBuffer.wrap(bytesY).getFloat(),
-      ByteBuffer.wrap(bytesZ).getFloat()
-      );
-    }
-    triangles.add(t);
-    n += 2; // skip meaningless "attribute byte count"
-  }
-  
-  PShape mesh = createShape();
-  mesh.beginShape(TRIANGLES);
-  mesh.scale(scaleVal);
-  mesh.stroke(outline);
-  mesh.fill(fill);
-  for(Triangle t : triangles) {
-    mesh.normal(t.components[0].x, t.components[0].y, t.components[0].z);
-    mesh.vertex(t.components[1].x, t.components[1].y, t.components[1].z);
-    mesh.vertex(t.components[2].x, t.components[2].y, t.components[2].z);
-    mesh.vertex(t.components[3].x, t.components[3].y, t.components[3].z);
-  }
-  mesh.endShape();
-  
-  return mesh;
-} 
 
 public class Ray {
   private PVector origin;
@@ -551,8 +501,13 @@ public abstract class WorldObject {
   public String getName() { return name; }
   
   public Shape getForm() { return form; }
+  public String toString() { return name; }
 }
 
+/**
+ * A world object whose Coordinate System can be referenced by a Part
+ * as its parent Coordinate System.
+ */
 public class Fixture extends WorldObject {
   private CoordinateSystem localOrientation;
   
@@ -717,6 +672,73 @@ public class Part extends WorldObject {
   
   public void setOrientationAxes(float[][] newAxes) { OBB.setOrientationAxes(newAxes); }
   public float[][] getOrientationAxes() { return OBB.getOrientationAxes(); }
+}
+
+/**
+ * Build a PShape object from the contents of the given .stl source file
+ * stored in /RobotRun/data/.
+ */
+public PShape loadSTLModel(String filename, color fill, color outline, float scaleVal) {
+  ArrayList<Triangle> triangles = new ArrayList<Triangle>();
+  println(filename);
+  byte[] data = loadBytes(filename);
+  int n = 84; // skip header and number of triangles
+  
+  while(n < data.length) {
+    Triangle t = new Triangle();
+    for(int m = 0; m < 4; m++) {
+      byte[] bytesX = new byte[4];
+      bytesX[0] = data[n+3]; bytesX[1] = data[n+2];
+      bytesX[2] = data[n+1]; bytesX[3] = data[n];
+      n += 4;
+      byte[] bytesY = new byte[4];
+      bytesY[0] = data[n+3]; bytesY[1] = data[n+2];
+      bytesY[2] = data[n+1]; bytesY[3] = data[n];
+      n += 4;
+      byte[] bytesZ = new byte[4];
+      bytesZ[0] = data[n+3]; bytesZ[1] = data[n+2];
+      bytesZ[2] = data[n+1]; bytesZ[3] = data[n];
+      n += 4;
+      t.components[m] = new PVector(
+      ByteBuffer.wrap(bytesX).getFloat(),
+      ByteBuffer.wrap(bytesY).getFloat(),
+      ByteBuffer.wrap(bytesZ).getFloat()
+      );
+    }
+    triangles.add(t);
+    n += 2; // skip meaningless "attribute byte count"
+  }
+  
+  PShape mesh = createShape();
+  mesh.beginShape(TRIANGLES);
+  mesh.scale(scaleVal);
+  mesh.stroke(outline);
+  mesh.fill(fill);
+  for(Triangle t : triangles) {
+    mesh.normal(t.components[0].x, t.components[0].y, t.components[0].z);
+    mesh.vertex(t.components[1].x, t.components[1].y, t.components[1].z);
+    mesh.vertex(t.components[2].x, t.components[2].y, t.components[2].z);
+    mesh.vertex(t.components[3].x, t.components[3].y, t.components[3].z);
+  }
+  mesh.endShape();
+  
+  return mesh;
+} 
+
+/**
+ * Add the given world object to the correct list
+ * in the correct manner.
+ */
+public void addWorldObject(WorldObject newObject) {
+  if (newObject instanceof Part) {
+    
+    // TODO add in alphabetical order
+    PARTS.add((Part)newObject);
+  } else if (newObject instanceof Fixture) {
+    
+    // TODO add in alphabetical order
+    FIXTURES.add((Fixture)newObject);
+  }
 }
 
 /**

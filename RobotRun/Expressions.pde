@@ -183,7 +183,7 @@ public class RegisterExpression {
     if (param instanceof SubExpression) {
       // Add a copy of the given SubExpression
       parameters.add( ((SubExpression)param).clone() );
-    } else {
+    } else if (param instanceof Operand || param instanceof Operator) {
       parameters.add(param);
     }
   }
@@ -196,7 +196,7 @@ public class RegisterExpression {
     if (param instanceof SubExpression) {
       // Add a copy of the given SubExpression
       parameters.add(idx, ((SubExpression)param).clone() );
-    } else {
+    } else if (param instanceof Operand || param instanceof Operator) {
       parameters.add(idx, param);
     }
   }
@@ -310,7 +310,7 @@ public class RegisterExpression {
       throw new ExpressionEvaluationException(0, NPEx.getClass());
 
     } catch (IndexOutOfBoundsException IOOBEx) {
-      // Invalid register index
+      // Invalid register index or missing parameter
       throw new ExpressionEvaluationException(0, IOOBEx.getClass());
 
     } catch (ClassCastException CCEx) {
@@ -413,11 +413,16 @@ public class RegisterExpression {
    * 
    * @returning  A copy of the this expression
    */
-  public Object clone() {
+  public RegisterExpression clone() {
     RegisterExpression copy = new RegisterExpression();
     
     for (Object param : parameters) {
-      copy.addParameter(param);
+      
+      if (param instanceof Operand) {
+        copy.addParameter(((Operand)param).clone());
+      } else {
+        copy.addParameter(param);
+      }
     }
     
     return copy;
@@ -443,6 +448,8 @@ public class RegisterExpression {
 public interface Operand {
   /* Should return either a Float or RegStmtPoint Object */
   public abstract Object getValue();
+  /* Return an independent replica of this object */
+  public abstract Operand clone();
 }
 
 /**
@@ -460,6 +467,10 @@ public class ConstantOp implements Operand {
   }
   
   public Object getValue() { return new Float(value); }
+  
+  public Operand clone() {
+    return new ConstantOp(value);
+  }
   
   public String toString() {
     return String.format("%4.3f", value);
@@ -486,6 +497,10 @@ public class RegisterOp implements Operand {
   
   public int getIdx() { return listIdx; }
   
+  public Operand clone() {
+    return new RegisterOp(listIdx);
+  }
+  
   public String toString() {
     return String.format("R[%d]", listIdx);
   }
@@ -508,7 +523,7 @@ public class PositionOp extends RegisterOp {
   }
   
   public PositionOp(int ldx, PositionType t) {
-     super(ldx);
+    super(ldx);
     posIdx = -1;
     type = t;
   }
@@ -518,6 +533,9 @@ public class PositionOp extends RegisterOp {
     posIdx = pdx;
     type = t;
   }
+  
+  public int getPositionIdx() { return posIdx; }
+  public PositionType getPositionType() { return type; }
   
   public Object getValue() {
     RegStmtPoint pt;
@@ -542,6 +560,10 @@ public class PositionOp extends RegisterOp {
       // Use a specific value of the Point
       return pt.getValue(posIdx);
     }
+  }
+  
+  public Operand clone() {
+    return new PositionOp(getIdx(), posIdx, type);
   }
   
   public String toString() {
@@ -610,6 +632,10 @@ public class RobotPositionOp implements Operand {
     }
   }
   
+  public Operand clone() {
+    return new RobotPositionOp(valIdx, isCartesian);
+  }
+  
   public String toString() {
     
     if (valIdx == -1) {
@@ -646,7 +672,7 @@ public class SubExpression implements Operand {
   
   public Object getValue() throws ExpressionEvaluationException { return expr.evaluate(); }
   
-  public Object clone() {
+  public Operand clone() {
     // Copy the expression into a new Sub Expression
     return new SubExpression(expr.clone());
   }
@@ -764,7 +790,7 @@ public class RegStmtPoint {
     if (isCartesian) {
       PVector position = new PVector(values[0], values[1], values[2]),
               wpr = new PVector(values[3], values[4], values[5]);
-              // Convet back to quaterninos
+              // Convet back to quaternion
       float[] orientation = eulerToQuat(wpr);
       // TODO initialize angles?
       return new Point(position, orientation);
@@ -772,6 +798,13 @@ public class RegStmtPoint {
       // Use forward kinematics to find the position and orientation of the joint angles
       return nativeRobotEEPoint(values);
     }
+  }
+  
+  /**
+   * Returns an independent replica of this point object.
+   */
+  public RegStmtPoint clone() {
+    return new RegStmtPoint(values, isCartesian);
   }
   
   public String toString() {
@@ -820,43 +853,55 @@ public class ExprOperand implements ExpressionElement {
   //      4 = position reg operand, -1 = sub-expression
   //      -2 = uninit
   protected int type;
-  protected int exprIndex;
   
-  int regIndex;
+  int regIdx;
   float dataVal;
   boolean boolVal;
+  Point pointVal;
   
   public ExprOperand() {
     type = -2;
-    regIndex = -1;
+    regIdx = -1;
+    pointVal = null;
   }
   
   public ExprOperand(float d) {
     type = 0;
-    regIndex = -1;
+    regIdx = -1;
     dataVal = d;
     boolVal = getBoolVal(dataVal);
+    pointVal = null;
+  }
+  
+  public ExprOperand(int t, int i, float d, boolean b, Point p) {
+    type = t;
+    regIdx = i;
+    dataVal = d;
+    boolVal = b;
+    pointVal = p;
   }
   
   public ExprOperand(boolean b) {
     type = 1;
-    regIndex = -1;
+    regIdx = -1;
     dataVal = b ? 1 : 0;
     boolVal = b;
+    pointVal = null;
   }
   
   public ExprOperand(DataRegister dReg, int i) {
     type = 2;
-    regIndex = i;
+    regIdx = i;
     if(i != -1 && dReg.value != null) {
       dataVal = dReg.value;
       boolVal = getBoolVal(dataVal);
     }
+    pointVal = null;
   }
   
   public ExprOperand(IORegister ioReg, int i) {
     type = 3;
-    regIndex = i;
+    regIdx = i;
     if(ioReg.state == ON) {
       dataVal = 1;
       boolVal = true;
@@ -864,22 +909,34 @@ public class ExprOperand implements ExpressionElement {
       dataVal = 0;
       boolVal = false;
     }
+    pointVal = null;
   }
   
   public ExprOperand(PositionRegister pReg, int i){
     type = 4;
-    regIndex = i;
+    regIdx = i;
+    dataVal = 0;
+    boolVal = false;
+    pointVal = pReg.point;
+  }
+  
+  public ExprOperand(Point p){
+    type = 4;
+    regIdx = -1;
+    dataVal = 0;
+    boolVal = false;
+    pointVal = p;
   }
   
   public ExprOperand reset() {
     type = -2;
-    regIndex = -1;
+    regIdx = -1;
     return this;
   }
   
   public ExprOperand set(float d) {
     type = 0;
-    regIndex = -1;
+    regIdx = -1;
     dataVal = d;
     boolVal = getBoolVal(dataVal);
     return this;
@@ -887,7 +944,7 @@ public class ExprOperand implements ExpressionElement {
   
   public ExprOperand set(boolean b) {
     type = 1;
-    regIndex = -1;
+    regIdx = -1;
     dataVal = b ? 1 : 0;
     boolVal = b;
     return this;
@@ -895,7 +952,7 @@ public class ExprOperand implements ExpressionElement {
   
   public ExprOperand set(DataRegister dReg, int i) {
     type = 2;
-    regIndex = i;
+    regIdx = i;
     if(i != -1 && dReg.value != null) {
       dataVal = dReg.value;
       boolVal = getBoolVal(dataVal);
@@ -905,7 +962,7 @@ public class ExprOperand implements ExpressionElement {
   
   public ExprOperand set(IORegister ioReg, int i) {
     type = 3;
-    regIndex = i;
+    regIdx = i;
     if(ioReg.state == ON) {
       dataVal = 1;
       boolVal = true;
@@ -919,7 +976,19 @@ public class ExprOperand implements ExpressionElement {
   
   public ExprOperand set(PositionRegister pReg, int i){
     type = 4;
-    regIndex = i;
+    regIdx = i;
+    dataVal = 0;
+    boolVal = false;
+    pointVal = pReg.point;
+    return this;
+  }
+  
+  public ExprOperand set(Point p){
+    type = 4;
+    regIdx = -1;
+    dataVal = 0;
+    boolVal = false;
+    pointVal = p;
     return this;
   }
   
@@ -944,6 +1013,10 @@ public class ExprOperand implements ExpressionElement {
     return bool;
   }
   
+  public ExprOperand clone() {
+    return new ExprOperand(this.type, this.regIdx, this.dataVal, this.boolVal, this.pointVal);
+  }
+  
   public String toString(){
     String s = "";
     switch(type){
@@ -960,11 +1033,11 @@ public class ExprOperand implements ExpressionElement {
         s += boolVal ? "TRUE" : "FALSE";
         break;
       case 2:
-        String rNum = (regIndex == -1) ? "..." : ""+regIndex;
+        String rNum = (regIdx == -1) ? "..." : ""+regIdx;
         s += "R[" + rNum + "]";
         break;
       case 3:
-        rNum = (regIndex == -1) ? "..." : ""+regIndex;
+        rNum = (regIdx == -1) ? "..." : ""+regIdx;
         s += "IO[" + rNum + "]";
         break;
     }
@@ -1059,8 +1132,20 @@ public class AtomicExpression extends ExprOperand {
       o2 = temp.dataVal;
       b2 = temp.boolVal;
     } else {
-      o2 = arg1.dataVal;
-      b2 = arg1.boolVal;
+      o2 = arg2.dataVal;
+      b2 = arg2.boolVal;
+    }
+    
+    if(arg1.type == 4) {
+      if(arg2.type != 4) {
+        return null;
+      } else {
+        Point p = arg1.pointVal.add(arg2.pointVal);
+        result = new ExprOperand(p);
+      }
+    } 
+    else if(arg2.type == 4) {
+      return null;
     }
     
     //integer operands for integer operations
@@ -1112,7 +1197,7 @@ public class AtomicExpression extends ExprOperand {
         result = null;
         break;
     }
-    
+    println("from AE:" + o1 + op.toString() + o2 + " = " + result.dataVal);
     return result;
   }
   
@@ -1234,13 +1319,19 @@ public class Expression extends AtomicExpression {
   }
   
   public void insertElement(int edit_idx) {
+    //limit number of elements allowed in this expression
+    if(getLength() >= 21) return;
+    //ensure index is within the bounds of our list of elements
+    else if(edit_idx < 0) return;
+    else if(edit_idx >= getLength() - 2) return;
+    
     if(edit_idx == -1) {
       if(elementList.get(0) instanceof ExprOperand) {
         elementList.add(0, Operator.UNINIT);
       } else {
         elementList.add(0, new ExprOperand());
       }
-    } 
+    }
     else {
       int[] elements = mapToEdit();
       int start_idx = getStartingIdx(elements[edit_idx]);
@@ -1302,6 +1393,7 @@ public class Expression extends AtomicExpression {
         ExprOperand nextOperand = (ExprOperand) elementList.get(i + 1);
         AtomicExpression expr = new AtomicExpression(op);
         
+        println(result.dataVal + op.toString() + nextOperand.dataVal + " = " + result.dataVal);
         result = expr.evaluate(result, nextOperand);
       }
     }
@@ -1388,34 +1480,6 @@ public class BooleanExpression extends AtomicExpression {
   
   public void setOperator(Operator o) {
     if(o.type != BOOL) return;
-    
-    op = o;
-    len = getLength();
-  }
-}
-
-public class ArithmeticExpression extends AtomicExpression{
-  public ArithmeticExpression() {
-    super();
-  }
-  
-  public ArithmeticExpression(Operator o) {
-    if(o.type == ARITH) {
-      type = -1;
-      op = o;
-      len = 3;
-      arg1 = new ExprOperand();
-      arg2 = new ExprOperand();
-    }
-    else {
-      type = -1;
-      op = Operator.UNINIT;
-      len = 1;
-    }
-  }
-  
-  public void setOp(Operator o) {
-    if(o.type != ARITH) return;
     
     op = o;
     len = getLength();

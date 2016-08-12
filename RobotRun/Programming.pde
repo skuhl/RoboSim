@@ -74,6 +74,28 @@ public class Point  {
   }
   
   /**
+   * Computes and returns the result of the addition of this point with
+   * another point, 'p.' Does not alter the original values of this point.
+   */
+  public Point add(Point p) {
+    Point p3 = new Point();
+    
+    PVector p3Pos = PVector.add(position, p.position);
+    float[] p3Orient = quaternionMult(orientation, p.orientation);
+    float[] p3Joints = new float[6];
+    
+    for(int i = 0; i < 6; i += 1) {
+      p3Joints[i] = angles[i] + p.angles[i];
+    }
+    
+    p3.position = p3Pos;
+    p3.orientation = p3Orient;
+    p3.angles = p3Joints;
+    
+    return p3;
+  }
+    
+  /**
    * Converts the original toStringArray into a 2x1 String array, where the origin
    * values are in the first element and the W, P, R values are in the second
    * element (or in the case of a joint angles, J1-J3 on the first and J4-J6 on
@@ -282,6 +304,25 @@ public class Program  {
     // A label with the given number does not exist
     return -1;
   }
+  
+  /**
+   * Return an independent replica of this program object.
+   */
+  public Program clone() {
+    Program copy = new Program(name);
+    // Copy instructions
+    for (Instruction inst : instructions) {
+      copy.addInstruction(inst.clone());
+    }
+    // Copy positions
+    for (int idx = 0; idx < LPosReg.length; ++idx) {
+      copy.addPosition(LPosReg[idx].clone(), idx);
+    }
+    // Copy next register
+    copy.setNextRegister(nextRegister);
+    
+    return copy;
+  }
 } // end Program class
 
 
@@ -348,18 +389,11 @@ public MotionInstruction activeMotionInst() {
 }
 
 public class Instruction {
-  Program p;
-  boolean com;
+  protected boolean com = false;
   
-  public Instruction() {
-    p = null;
-    com = false;
-  }
-  
-  public Program getProg() { return p; }
-  public void setProg(Program p) { this.p = p; }
   public boolean isCommented(){ return com; }
-  public void toggleCommented(){ com = !com; }
+  public void setIsCommented(boolean comFlag) { com = comFlag; }
+  public void toggleCommented() { com = !com; }
     
   public int execute() {return 0; }
     
@@ -382,6 +416,16 @@ public class Instruction {
   
   public String[] toStringArray() {
     return new String[] { "" };
+  }
+  
+  /**
+   * Create an independent replica of this instruction.
+   */
+  public Instruction clone() {
+    Instruction copy = new Instruction();
+    copy.setIsCommented( isCommented() );
+    
+    return copy;
   }
 }
 
@@ -497,6 +541,13 @@ public final class MotionInstruction extends Instruction  {
     }
   } // end getVector()
   
+  public Instruction clone() {
+    Instruction copy = new MotionInstruction(motionType, positionNum, isGPosReg, speed, termination, userFrame, toolFrame);
+    copy.setIsCommented( isCommented() );
+    
+    return copy;
+  }
+  
   public String[] toStringArray() {
     String[] fields = new String[5];
     // Motion type
@@ -579,6 +630,13 @@ public class FrameInstruction extends Instruction {
     return 2;
   }
   
+  public Instruction clone() {
+    Instruction copy = new FrameInstruction(frameType, frameIdx);
+    copy.setIsCommented( isCommented() );
+    
+    return copy;
+  }
+  
   public String[] toStringArray() {
     String[] fields = new String[2];
     // Frame type
@@ -623,6 +681,13 @@ public class IOInstruction extends Instruction {
     return armModel.checkEECollision();
   }
   
+  public Instruction clone() {
+    Instruction copy = new IOInstruction(state, reg);
+    copy.setIsCommented( isCommented() );
+    
+    return copy;
+  }
+  
   public String[] toStringArray() {
     String[] fields = new String[2];
     // Register index
@@ -660,6 +725,13 @@ public class LabelInstruction extends Instruction {
     
     return fields;
   }
+  
+  public Instruction clone() {
+    Instruction copy = new LabelInstruction(labelNum);
+    copy.setIsCommented( isCommented() );
+    
+    return copy;
+  }
 }
 
 public class JumpInstruction extends Instruction {
@@ -693,6 +765,13 @@ public class JumpInstruction extends Instruction {
       println("No active program!");
       return 2;
     }
+  }
+  
+  public Instruction clone() {
+    Instruction copy = new JumpInstruction(tgtLblNum);
+    copy.setIsCommented( isCommented() );
+    
+    return copy;
   }
   
   public String[] toStringArray() {
@@ -767,6 +846,18 @@ public class IfStatement extends Instruction {
 
     return ret;
   }
+  
+  public Instruction clone() {
+    if (instr == this) {
+      // Cannot copy!
+      return null;
+    }
+    
+    Instruction copy = new IfStatement(null, instr.clone());
+    copy.setIsCommented( isCommented() );
+    // TODO actually copy the if statement
+    return copy;
+  }
 }
 
 public class SelectStatement extends Instruction {
@@ -799,88 +890,72 @@ public class SelectStatement extends Instruction {
     return "";
   }
   
+  public Instruction clone() {
+    if (instr == this) {
+      // Cannot copy this!
+      return null;
+    }
+    
+    Instruction copy = new SelectStatement();
+    copy.setIsCommented( isCommented() );
+    ((SelectStatement)copy).instr = instr.clone();
+    // TODO actually copy the select statement
+    return copy;
+  }
+  
   public String[] toStringArray() {
     return new String[] {""};
   }
 }
 
 public class RegisterStatement extends Instruction {
-  /**
-   * A singleton or doubleton array, which determines, whether the
-   * result of the statement will be stored in a Register or a
-   * Position Register.
-   */
-  private final RegisterOp destination;
-  /**
-   * The expression associated with this statement.
-   */
-  private RegisterExpression statement;
+  Register reg;
+  Expression expr;
   
   /**
-   * Creates a register statement, whose result is associated with
-   * a Position Register entry.
-   * 
-   * @param regIdx  the index in the Position Register list where
-   *                the result of the expression will be stored
-   * @param ptIdx   the index of the a value in the Point to store
-   *                the result in the case that the result is a
-   *                single Float value. This field should be -1 in
-   *                the case that the whole Point should be saved.
-   * @param t       The destinationp position: GLOBAL -> global
-   *                position register and LOCAL -> local position
-   *                in active program
+   * Creates a register statement with a given register and a blank Expression.
+   *
+   * @param reg - The destination register for this register expression. The
+   *              result of the expression 'expr' will be assigned to 'reg'
+   *              upon successful execution of this statement.
+   * @param expr - The expression to be evaluated in conjunction with the execution
+   *               of this statement. The value of this expression, if valid for the
+                   register 
    */
-  public RegisterStatement(int regIdx, int ptIdx, PositionType t) {
-    super();
-    destination = new PositionOp(regIdx, ptIdx, t);
-    statement = new RegisterExpression();
+  public RegisterStatement(Register r) {
+    reg = r;
+    expr = new Expression();
   }
   
-  /**
-   * Creates a register statement, whose result is associated with
-   * a Register entry.
-   * 
-   * @param regIdx  the index in the Register list where the result
-   *                of the expression will be stored
-   */
-  public RegisterStatement(int regIdx) {
-    super();
-    destination = new RegisterOp(regIdx);
-    statement = new RegisterExpression();
+  public RegisterStatement(Register r, Expression e) {
+    reg = r;
+    expr = e;
   }
   
+  public Register setRegister(Register r) {
+    if(!(r instanceof DataRegister) && !(r instanceof PositionRegister)) {
+      return null;
+    } else {
+      return reg = r;
+    }
+  }
   
   public int execute() {
-    Object result = statement.evaluate();
+    ExprOperand result = expr.evaluate();
     
-    try {
-      
-      if (destination instanceof PositionOp) {
-        PositionOp posDest = (PositionOp)destination;
-        
-        if (posDest.type == PositionType.LOCAL) {
-          // Save in one of the active program's local positions
-          activeProgram().LPosReg[posDest.getIdx()] = ((RegStmtPoint)result).toPoint();
-        } else {
-          // Save in a global Position register
-          GPOS_REG[posDest.getIdx()].point = ((RegStmtPoint)result).toPoint();
-          GPOS_REG[posDest.getIdx()].isCartesian = ((RegStmtPoint)result).isCartesian;
-        }
-        
-      } else {
-        // Save in a Data register
-        DREG[destination.getIdx()].value = (Float)result;
-      }
-      
-      return 0;
-    } catch (ExpressionEvaluationException EEEx) {
-      // Invalid expression
-      EEEx.printStackTrace();
-      return 1;
-    } catch (ClassCastException CCEx) {
-      // Expression return type does not match destination register type
-      return 2;
+    if(reg instanceof DataRegister) {
+      ((DataRegister)reg).value = result.dataVal;
+      println(result.dataVal + ", " + ((DataRegister)reg).value);
+    } else if(reg instanceof PositionRegister) {
+      ((PositionRegister)reg).point = result.pointVal;
     }
+        
+    return 1;
+  }
+  
+  public Instruction clone() {
+    Instruction copy = new RegisterStatement(reg, (Expression)expr.clone());    
+    return copy;
   }
   
   /**
@@ -888,22 +963,19 @@ public class RegisterStatement extends Instruction {
    * operator and operand is a separate String Object.
    */
   public String[] toStringArray() {
-    ArrayList<String> expression = statement.toStringArrayList();
-    expression.add(0, destination + " =");
+    String[] ret = new String[2 + expr.getLength()];
+    String[] exprString = expr.toStringArray();
     
-    return (String[])expression.toArray();
+    ret[0] = (reg instanceof DataRegister) ? "R[" : "PR[";
+    ret[1] = (reg.getIdx() == -1) ? "...] =" : (reg.getIdx() + 1) + "] =";
+    
+    for(int i = 0; i < exprString.length; i += 1) {
+      ret[i + 2] = exprString[i];
+    }
+    
+    return ret;
   }
 }
-
-public class CoordinateFrame {
-  private PVector origin = new PVector();
-  private PVector rotation = new PVector();
-
-  public PVector getOrigin() { return origin; }
-  public void setOrigin(PVector in) { origin = in; }
-  public PVector getRotation() { return rotation; }
-  public void setRotation(PVector in) { rotation = in; }
-} // end FrameInstruction class
 
 public class RecordScreen implements Runnable{
   public RecordScreen() {

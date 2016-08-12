@@ -6,12 +6,7 @@ import java.util.regex.Pattern;
 import java.nio.*;
 import java.nio.file.*;
 import java.io.*;
-import javax.swing.tree.TreeModel;
 import java.awt.event.KeyEvent;
-import java.io.Serializable;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 private static final int OFF = 0, ON = 1;
 private static final int ARITH = 0, BOOL = 1;
@@ -28,11 +23,13 @@ float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
 boolean spacebarDown = false;
 
 ControlP5 cp5;
+WindowManager manager;
 Stack<Screen> display_stack;
 
 ArrayList<Program> programs = new ArrayList<Program>();
 
 /* global variables for toolbar */
+PFont fnt_con14, fnt_con12, fnt_conB;
 
 // for pan button
 int clickPan = 0;
@@ -59,6 +56,7 @@ int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 /*      Debugging Stuff        */
 
 private static ArrayList<String> buffer;
+private static boolean enterDown;
 private static Ray mouseRay;
 private float[][] limboAxes;
 
@@ -70,8 +68,13 @@ public void setup() {
   //size(1200, 800, P3D);
   size(1080, 720, P3D);
   ortho();
+  //create font and text display background
+  fnt_con14 = createFont("data/Consolas.ttf", 14);
+  fnt_con12 = createFont("data/Consolas.ttf", 12);
+  fnt_conB = createFont("data/ConsolasBold.ttf", 12);
   
   buffer = new ArrayList<String>();
+  enterDown = false;
   mouseRay = null;
   limboAxes = null;
   
@@ -86,14 +89,9 @@ public void setup() {
   
   //set up UI
   cp5 = new ControlP5(this);
+  manager = new WindowManager(cp5, fnt_con12, fnt_con14);
   display_stack = new Stack<Screen>();
   gui();
-  
-  pushMatrix();
-  resetMatrix();
-  translate(-200, -50, 0);
-  PARTS.add(new Part("BP-Cylinder", color(255, 0, 255), color(0), 25, 160));
-  popMatrix();
 }
 
 public void draw() {
@@ -265,8 +263,17 @@ public void handleWorldObjects() {
       }
     }
     
+    if (PARTS.get(idx) == manager.getActiveWorldObject()) {
+      PARTS.get(idx).setBBColor(color(255, 255, 0));
+    }
+    
     // Draw world object
     PARTS.get(idx).draw();
+  }
+  
+  // Draw fixtures
+  for (Fixture fixture : FIXTURES) {
+    fixture.draw();
   }
 }
 

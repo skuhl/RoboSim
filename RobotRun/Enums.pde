@@ -8,6 +8,10 @@ public enum RobotMotion { HALTED, MT_JOINT, MT_LINEAR; }
 public enum AxesDisplay { AXES, GRID, NONE };
 /* The states for mapping the Robot's End Effector to the grid */
 public enum EEMapping { LINE, DOT, NONE };
+/* Define the relative points of an object drawn in a GUI */
+private enum RelativePoint { TOP_RIGHT, TOP_LEFT, BOTTOM_LEFT, BOTTOM_RIGHT; }
+/* Set of valid shape types that a fixture or part can have */
+private enum ShapeType { BOX, CYLINDER, MODEL };
 
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
 public enum Operator implements ExpressionElement {
@@ -26,7 +30,7 @@ public enum Operator implements ExpressionElement {
   GREQ(">=", BOOL),
   LSEQ("<=", BOOL),
   AND("&&", BOOL),
-  OR("&&", BOOL),
+  OR("||", BOOL),
   NOT("!", BOOL),
   UNINIT("...", -1);
   
@@ -85,6 +89,7 @@ public static enum Screen implements DisplayMode {
   SET_MV_INSTRUCT_REG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_FRM_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
+  SET_REG_EXPR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   
   SET_BOOL_CONST(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_EXPR_ARG(ScreenType.TYPE_EXPR_EDIT),
@@ -144,6 +149,8 @@ public static enum Screen implements DisplayMode {
   EDIT_DREG_COM(ScreenType.TYPE_TEXT_ENTRY),
   EDIT_PREG_COM(ScreenType.TYPE_TEXT_ENTRY),
   NEW_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
+  RENAM_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
+  CP_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
   
   /*
   * Screens involving the entry of numeric values via either a physical num pad or
@@ -160,6 +167,7 @@ public static enum Screen implements DisplayMode {
   SET_IO_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_JUMP_TGT(ScreenType.TYPE_NUM_ENTRY),
   SET_LBL_NUM(ScreenType.TYPE_NUM_ENTRY),
+  SET_REG_EXPR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_SPD(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_TERM(ScreenType.TYPE_NUM_ENTRY),
@@ -196,7 +204,7 @@ public static enum Screen implements DisplayMode {
   INPUT_PRDX,
   INPUT_PRVDX,
   INPUT_RDX,
-  INPUT_REG_STMT,
+  SELECT_REG_STMT,
   PICK_LETTER,
   NAV_DATA,
   VIEW_INST_REG;

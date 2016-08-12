@@ -24,20 +24,14 @@ int g1_width, g1_height; // group 1's width and height
 int display_px, display_py; // the left-top corner of display screen
 int display_width, display_height; // height and width of display screen
 
-PFont fnt_con14, fnt_con12, fnt_conB;
 Group g1, g2;
-Button bt_show, bt_hide, 
-bt_zoomin_shrink, bt_zoomin_normal,
-bt_zoomout_shrink, bt_zoomout_normal,
-bt_pan_shrink, bt_pan_normal,
-bt_rotate_shrink, bt_rotate_normal,
-bt_record_shrink, bt_record_normal, 
-bt_ee_normal;
+Button bt_record_normal, 
+       bt_ee_normal;
 
 String workingText; // when entering text or a number
 String workingTextSuffix;
 boolean speedInPercentage;
-private static final int ITEMS_TO_SHOW = 7, // how many programs/ instructions to display on screen
+private static final int ITEMS_TO_SHOW = 8, // how many programs/ instructions to display on screen
                          NUM_ENTRY_LEN = 16, // Maximum character length for a number input
                          TEXT_ENTRY_LEN = 16; // Maximum character length for text entry
 
@@ -75,8 +69,7 @@ int start_render = 0; //index of the first element in a list to be drawn on scre
 int active_index = 0; //index of the cursor with respect to the first element on screen
 boolean[] selectedLines; //array whose indecies correspond to currently selected lines
 // how many textlabels have been created for display
-int index_contents = 0, index_options = 100, index_nums = 1000; 
-int mouseDown = 0;
+int index_contents = 0, index_options = 100, index_nums = 1000;
 
 /**
  * Used for comment name input. The user can cycle through the
@@ -97,11 +90,11 @@ private final char[][] letters = {{'a', 'b', 'c', 'd', 'e', 'f'},
 
 void gui() {
   g1_px = 0;
-  g1_py = 0;
+  g1_py = (SMALL_BUTTON - 15) + 1;
   g1_width = 440;
   g1_height = 720;
   display_px = 10;
-  display_py = (SMALL_BUTTON - 15) + 1;
+  display_py = 0;//(SMALL_BUTTON - 15) + 1;
   display_width = g1_width - 20;
   display_height = 280;
   
@@ -114,145 +107,23 @@ void gui() {
   .setBackgroundColor(color(127,127,127,100))
   .setWidth(g1_width)
   .setHeight(g1_height)
-  .setBackgroundHeight(g1_height);
+  .setBackgroundHeight(g1_height)
+  .hideBar();
   
   cp5.addTextarea("txt")
-  .setPosition(display_px,display_py)
+  .setPosition(display_px, 0)
   .setSize(display_width, display_height)
   .setColorBackground(UI_LIGHT)
   .moveTo(g1);
   
-  //create font and text display background
-  fnt_con14 = createFont("data/Consolas.ttf", 14);
-  fnt_con12 = createFont("data/Consolas.ttf", 12);
-  fnt_conB = createFont("data/ConsolasBold.ttf", 12);
-  
   /**********************Top row buttons**********************/
-  
-  // button to show g1
-  int bt_show_px = 1;
-  int bt_show_py = 1;
-  bt_show = cp5.addButton("show")
-  .setPosition(bt_show_px, bt_show_py)
-  .setSize(SMALL_BUTTON, SMALL_BUTTON - 15)
-  .setLabel("SHOW")
-  .setColorBackground(BUTTON_DEFAULT)
-  .setColorCaptionLabel(BUTTON_TEXT)  
-  .hide();
   
   //calculate how much space each button will be given
   int button_offsetX = LARGE_BUTTON + 1;
-  int button_offsetY = LARGE_BUTTON + 1;
+  int button_offsetY = LARGE_BUTTON + 1;  
   
-  int zoomin_shrink_px = bt_show_px + LARGE_BUTTON;
-  int zoomin_shrink_py = bt_show_py;
-  PImage[] zoomin_shrink = {loadImage("images/zoomin_35x20.png"), 
-    loadImage("images/zoomin_over.png"), 
-    loadImage("images/zoomin_down.png")};   
-  bt_zoomin_shrink = cp5.addButton("zoomin_shrink")
-  .setPosition(zoomin_shrink_px, zoomin_shrink_py)
-  .setSize(SMALL_BUTTON, SMALL_BUTTON)
-  .setImages(zoomin_shrink)
-  .updateSize()
-  .hide();   
-  
-  int zoomout_shrink_px = zoomin_shrink_px + LARGE_BUTTON;
-  int zoomout_shrink_py = zoomin_shrink_py;   
-  PImage[] zoomout_shrink = {loadImage("images/zoomout_35x20.png"), 
-    loadImage("images/zoomout_over.png"), 
-    loadImage("images/zoomout_down.png")};   
-  bt_zoomout_shrink = cp5.addButton("zoomout_shrink")
-  .setPosition(zoomout_shrink_px, zoomout_shrink_py)
-  .setSize(SMALL_BUTTON, SMALL_BUTTON)
-  .setImages(zoomout_shrink)
-  .updateSize()
-  .hide();    
-  
-  int pan_shrink_px = zoomout_shrink_px + LARGE_BUTTON;
-  int pan_shrink_py = zoomout_shrink_py;
-  PImage[] pan_shrink = {loadImage("images/pan_35x20.png"), 
-    loadImage("images/pan_over.png"), 
-    loadImage("images/pan_down.png")};   
-  bt_pan_shrink = cp5.addButton("pan_shrink")
-  .setPosition(pan_shrink_px, pan_shrink_py)
-  .setSize(SMALL_BUTTON, SMALL_BUTTON)
-  .setImages(pan_shrink)
-  .updateSize()
-  .hide();    
-  
-  int rotate_shrink_px = pan_shrink_px + LARGE_BUTTON;
-  int rotate_shrink_py = pan_shrink_py;   
-  PImage[] rotate_shrink = {loadImage("images/rotate_35x20.png"), 
-    loadImage("images/rotate_over.png"), 
-    loadImage("images/rotate_down.png")};   
-  bt_rotate_shrink = cp5.addButton("rotate_shrink")
-  .setPosition(rotate_shrink_px, rotate_shrink_py)
-  .setSize(SMALL_BUTTON, SMALL_BUTTON)
-  .setImages(rotate_shrink)
-  .updateSize()
-  .hide();     
-  
-  // button to hide g1
-  int hide_px = display_px;
-  int hide_py = display_py - (SMALL_BUTTON - 15);
-  bt_hide = cp5.addButton("hide")
-  .setPosition(hide_px, hide_py)
-  .setSize(SMALL_BUTTON, SMALL_BUTTON - 15)
-  .setCaptionLabel("HIDE")
-  .setColorBackground(BUTTON_DEFAULT)
-  .setColorCaptionLabel(BUTTON_TEXT)  
-  .moveTo(g1);
-  
-  int zoomin_normal_px =  hide_px + LARGE_BUTTON + 1;
-  int zoomin_normal_py = hide_py;
-  PImage[] zoomin_normal = {loadImage("images/zoomin_35x20.png"), 
-    loadImage("images/zoomin_over.png"), 
-    loadImage("images/zoomin_down.png")};   
-  bt_zoomin_normal = cp5.addButton("zoomin_normal")
-  .setPosition(zoomin_normal_px, zoomin_normal_py)
-  .setSize(SMALL_BUTTON, SMALL_BUTTON)
-  .setImages(zoomin_normal)
-  .updateSize()
-  .moveTo(g1);   
-  
-  int zoomout_normal_px = zoomin_normal_px + LARGE_BUTTON + 1;
-  int zoomout_normal_py = zoomin_normal_py;   
-  PImage[] zoomout_normal = {loadImage("images/zoomout_35x20.png"), 
-    loadImage("images/zoomout_over.png"), 
-    loadImage("images/zoomout_down.png")};   
-  bt_zoomout_normal = cp5.addButton("zoomout_normal")
-  .setPosition(zoomout_normal_px, zoomout_normal_py)
-  .setSize(SMALL_BUTTON, SMALL_BUTTON)
-  .setImages(zoomout_normal)
-  .updateSize()
-  .moveTo(g1);    
-  
-  int pan_normal_px = zoomout_normal_px + LARGE_BUTTON + 1;
-  int pan_normal_py = zoomout_normal_py;
-  PImage[] pan = {loadImage("images/pan_35x20.png"), 
-    loadImage("images/pan_over.png"), 
-    loadImage("images/pan_down.png")};   
-  bt_pan_normal = cp5.addButton("pan_normal")
-  .setPosition(pan_normal_px, pan_normal_py)
-  .setSize(SMALL_BUTTON, SMALL_BUTTON)
-  .setImages(pan)
-  .updateSize()
-  .moveTo(g1);    
-  
-  int rotate_normal_px = pan_normal_px + LARGE_BUTTON + 1;
-  int rotate_normal_py = pan_normal_py;   
-  PImage[] rotate = {loadImage("images/rotate_35x20.png"), 
-    loadImage("images/rotate_over.png"), 
-    loadImage("images/rotate_down.png")};   
-  bt_rotate_normal = cp5.addButton("rotate_normal")
-  .setPosition(rotate_normal_px, rotate_normal_py)
-  .setSize(SMALL_BUTTON, SMALL_BUTTON)
-  .setImages(rotate)
-  .updateSize()
-  .moveTo(g1);     
-  
-  int record_normal_px = rotate_normal_px + LARGE_BUTTON + 1;
-  int record_normal_py = rotate_normal_py;   
+  int record_normal_px = WindowManager.lButtonWidth * 4 + LARGE_BUTTON + 1;
+  int record_normal_py = 0;   
   PImage[] record = {loadImage("images/record-35x20.png"), 
     loadImage("images/record-over.png"), 
     loadImage("images/record-on.png")};   
@@ -260,11 +131,10 @@ void gui() {
   .setPosition(record_normal_px, record_normal_py)
   .setSize(SMALL_BUTTON, SMALL_BUTTON)
   .setImages(record)
-  .updateSize()
-  .moveTo(g1);     
+  .updateSize();     
   
   int EE_normal_px = record_normal_px + LARGE_BUTTON + 1;
-  int EE_normal_py = record_normal_py;   
+  int EE_normal_py = 0;   
   PImage[] EE = {loadImage("images/EE_35x20.png"), 
     loadImage("images/EE_over.png"), 
     loadImage("images/EE_down.png")};   
@@ -272,8 +142,7 @@ void gui() {
   .setPosition(EE_normal_px, EE_normal_py)
   .setSize(SMALL_BUTTON, SMALL_BUTTON)
   .setImages(EE)
-  .updateSize()
-  .moveTo(g1);
+  .updateSize();
 
   /********************Function Row********************/
   
@@ -870,35 +739,42 @@ public void keyPressed() {
     }
     
     return;
+  } else if (keyCode == ENTER) {
+    enterDown = true;
   } else if (key == 'a') {
-    // Cycle through Axes display states
-    switch (axesState) {
-      case NONE:
-        axesState = AxesDisplay.AXES;
-        break;
-      case AXES:
-        axesState = AxesDisplay.GRID;
-        break;
-      default:
-        axesState = AxesDisplay.NONE;
+    
+    if (enterDown) {
+      // Cycle through Axes display states
+      switch (axesState) {
+        case NONE:
+          axesState = AxesDisplay.AXES;
+          break;
+        case AXES:
+          axesState = AxesDisplay.GRID;
+          break;
+        default:
+          axesState = AxesDisplay.NONE;
+      }
     }
     
   } else if(key == 'e') {
-    // Cycle through EE Mapping states
-    switch (mappingState) {
-      case NONE:
-        mappingState = EEMapping.LINE;
-        break;
-      case LINE:
-        mappingState = EEMapping.DOT;
-        break;
-      default:
-        mappingState = EEMapping.NONE;
+    if (enterDown) {
+      // Cycle through EE Mapping states
+      switch (mappingState) {
+        case NONE:
+          mappingState = EEMapping.LINE;
+          break;
+        case LINE:
+          mappingState = EEMapping.DOT;
+          break;
+        default:
+          mappingState = EEMapping.NONE;
+      }
     }
     
-  } else if (key == 'f') {
+  } else if (key == 'f' ) {
     // Display the User and Tool frames associated with the current motion instruction
-    if (DISPLAY_TEST_OUTPUT && mode == Screen.NAV_PROG_INST && (col_select == 3 || col_select == 4)) {
+    if (enterDown && DISPLAY_TEST_OUTPUT && mode == Screen.NAV_PROG_INST && (col_select == 3 || col_select == 4)) {
       Instruction inst = activeInstruction();
       
       if (inst instanceof MotionInstruction) {
@@ -909,128 +785,119 @@ public void keyPressed() {
       }
     }
   } else if(key == 'r') {
-    panX = 0;
-    panY = 0;
-    myscale = 0.5;
-    myRotX = 0;
-    myRotY = 0;
-  } else if(key == 't') {
-    // Release an object ifit is currently being held
-    if(armModel.held != null) {
-      armModel.releaseHeldObject();
-      armModel.endEffectorState = OFF;
-    }
     
-    float[] rot = {0, 0, 0, 0, 0, 0};
-    armModel.setJointAngles(rot);
-    intermediatePositions.clear();
+    if (enterDown) {
+      panX = 0;
+      panY = 0;
+      myscale = 0.5;
+      myRotX = 0;
+      myRotY = 0;
+    }
+  } else if(key == 't') {
+    
+    if (enterDown) {
+      float[] rot = {0, 0, 0, 0, 0, 0};
+      armModel.setJointAngles(rot);
+      intermediatePositions.clear();
+    }
   } else if(key == 'w') {
-    writeBuffer();
+    
+    if (enterDown) {
+      writeBuffer();
+    }
   } else if (key == 'y') {
-    float[] rot = {PI, 0, 0, 0, 0, PI};
-    armModel.setJointAngles(rot);
-    intermediatePositions.clear();
+    
+    if (enterDown) {
+      float[] rot = {PI, 0, 0, 0, 0, PI};
+      armModel.setJointAngles(rot);
+      intermediatePositions.clear();
+    }
   } else if (key == 'm') {
-    println(mode.toString());
-  } else if(key == ENTER) {
-    if (!programRunning) {
+    
+    if (enterDown) {
+      println(mode.toString());
+    }
+  } else if (key == 'p') {
+    
+    if (enterDown && !programRunning) {
       armModel.toggleEEState();
     }
   } else if(keyCode == KeyEvent.VK_1) {
-    // Front view
-    panX = 0;
-    panY = 0;
-    myRotX = 0f;
-    myRotY = 0f;
+    
+    if (enterDown) {
+      // Front view
+      panX = 0;
+      panY = 0;
+      myRotX = 0f;
+      myRotY = 0f;
+    }
   } else if(keyCode == KeyEvent.VK_2) {
-    // Back view
-    panX = 0;
-    panY = 0;
-    myRotX = 0f;
-    myRotY = PI;
+    
+    if (enterDown) {
+      // Back view
+      panX = 0;
+      panY = 0;
+      myRotX = 0f;
+      myRotY = PI;
+    }
   } else if(keyCode == KeyEvent.VK_3) {
-    // Left view
-    panX = 0;
-    panY = 0;
-    myRotX = 0f;
-    myRotY = PI / 2f;
+    
+    if (enterDown) {
+      // Left view
+      panX = 0;
+      panY = 0;
+      myRotX = 0f;
+      myRotY = PI / 2f;
+    }
   } else if(keyCode == KeyEvent.VK_4) {
-    // Right view
-    panX = 0;
-    panY = 0;
-    myRotX = 0f;
-    myRotY = 3f * PI / 2F;
+    
+    if (enterDown) {
+      // Right view
+      panX = 0;
+      panY = 0;
+      myRotX = 0f;
+      myRotY = 3f * PI / 2F;
+    }
   } else if(keyCode == KeyEvent.VK_5) {
-    // Top view
-    panX = 0;
-    panY = 0;
-    myRotX = 3f * PI / 2F;
-    myRotY = 0f;
+    
+    if (enterDown) {
+      // Top view
+      panX = 0;
+      panY = 0;
+      myRotX = 3f * PI / 2F;
+      myRotY = 0f;
+    }
   } else if(keyCode == KeyEvent.VK_6) {
-    // Bottom view
-    panX = 0;
-    panY = 0;
-    myRotX = PI / 2f;
-    myRotY = 0f;
+    
+    if (enterDown) {
+      // Bottom view
+      panX = 0;
+      panY = 0;
+      myRotX = PI / 2f;
+      myRotY = 0f;
+    }
+  }
+}
+
+public void keyReleased() {
+  if (keyCode == ENTER) {
+    // Enter key is released
+    enterDown = false;
   }
 }
 
 /*Button events*/
 
-public void hide() {
-  g1.hide();
-  bt_show.show();
-  bt_zoomin_shrink.show();
-  bt_zoomout_shrink.show();
-  bt_pan_shrink.show();
-  bt_rotate_shrink.show(); 
-  
-  // release buttons of pan and rotate
-  clickPan = 0;
-  clickRotate = 0;
-  PImage[] pan_released = {loadImage("images/pan_35x20.png"), 
-    loadImage("images/pan_over.png"), 
-    loadImage("images/pan_down.png")};
-  
-  cp5.getController("pan_normal")
-  .setImages(pan_released);
-  cp5.getController("pan_shrink")
-  .setImages(pan_released); 
-
-  PImage[] rotate_released = {loadImage("images/rotate_35x20.png"), 
-    loadImage("images/rotate_over.png"), 
-    loadImage("images/rotate_down.png")};
-  
-  cp5.getController("rotate_normal")
-  .setImages(rotate_released);
-  cp5.getController("rotate_shrink")
-  .setImages(rotate_released);
+public void Create() {
+  addWorldObject( manager.createWorldObject() );
 }
 
-public void show() {
-  g1.show();
-  bt_show.hide();
-  bt_zoomin_shrink.hide();
-  bt_zoomout_shrink.hide();
-  bt_pan_shrink.hide();
-  bt_rotate_shrink.hide();
-  
-  // release buttons of pan and rotate
-  clickPan = 0;
-  clickRotate = 0;
-  PImage[] pan_released = {loadImage("images/pan_35x20.png"), 
-    loadImage("images/pan_over.png"), 
-    loadImage("images/pan_down.png")}; 
-  
-  cp5.getController("pan_normal")
-  .setImages(pan_released);
+public void Clear() {
+  manager.clearObjCreationInput();
+}
 
-  PImage[] rotate_released = {loadImage("images/rotate_35x20.png"), 
-    loadImage("images/rotate_over.png"),
-    loadImage("images/rotate_down.png")}; 
-  
-  cp5.getController("rotate_normal")
-  .setImages(rotate_released);
+public void Confirm() {
+  manager.editWorldObject();
 }
 
 // Menu button
@@ -1258,6 +1125,7 @@ public void up() {
     case SELECT_INSTR_INSERT:
     case SELECT_IO_INSTR_REG:
     case SELECT_FRAME_INSTR_TYPE:
+    case SELECT_REG_STMT:
     case SELECT_COND_STMT:
     case SELECT_JMP_LBL:
     case TFRAME_DETAIL:
@@ -1271,6 +1139,7 @@ public void up() {
     case SET_MV_INSTRUCT_TYPE:
     case SET_MV_INSTRUCT_REG_TYPE:
     case SET_FRM_INSTR_TYPE:
+    case SET_REG_EXPR_TYPE:
     case SET_BOOL_EXPR_ACT:
     case SET_EXPR_ARG: //<>//
     case SET_BOOL_EXPR_ARG: //<>//
@@ -1381,6 +1250,7 @@ public void dn() {
     case SELECT_INSTR_INSERT:
     case SELECT_IO_INSTR_REG:
     case SELECT_FRAME_INSTR_TYPE:
+    case SELECT_REG_STMT:
     case SELECT_COND_STMT:
     case SELECT_JMP_LBL:
     case TFRAME_DETAIL:
@@ -1394,6 +1264,7 @@ public void dn() {
     case SET_MV_INSTRUCT_TYPE:
     case SET_MV_INSTRUCT_REG_TYPE:
     case SET_FRM_INSTR_TYPE:
+    case SET_REG_EXPR_TYPE:
     case SET_BOOL_EXPR_ACT:
     case SET_EXPR_ARG:
     case SET_BOOL_EXPR_ARG:
@@ -1442,9 +1313,11 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>// //<>//
+        // Reset function key states //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } //<>// //<>//
+      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>//
+        col_select -= (col_select - 4 >= options.size()) ? 4 : 0;
+      }
   }
   
   updateScreen();
@@ -1500,8 +1373,9 @@ public void rt() {
           }
           
           col_select = max(0, min(col_select, contents.get(row_select).size() - 1));
-        } 
-        else {
+        } else if (mode.type == ScreenType.TYPE_EXPR_EDIT) {
+          col_select += (col_select + 4 < options.size()) ? 4 : 0;
+        } else {
           // Add an insert element if the length of the current comment is less than 16
           int len = workingText.length();
           if(len <= TEXT_ENTRY_LEN && col_select == workingText.length() - 1 && workingText.charAt(len - 1) != '\0') {
@@ -1555,6 +1429,9 @@ public void pr() {
 
 public void f1() {
   switch(mode) {
+    case NAV_PROGRAMS:
+      nextScreen(Screen.NEW_PROGRAM);
+      break;
     case NAV_PROG_INST:
       if(shift) {
         newMotionInstruction();
@@ -1614,7 +1491,7 @@ public void f1() {
 public void f2() {
   switch(mode) {
     case NAV_PROGRAMS:
-      nextScreen(Screen.NEW_PROGRAM);
+      nextScreen(Screen.RENAM_PROGRAM);
       break;
     case NAV_PROG_INST:
       nextScreen(Screen.SELECT_INSTR_INSERT);
@@ -1674,9 +1551,13 @@ public void f3() {
         if(stmt.expr instanceof Expression && col_select >= 2) {
           ((Expression)stmt.expr).insertElement(col_select - 3);
         }
+        
+        rt();
       } 
       else if(activeInstruction() instanceof RegisterStatement) {
-        //insert into reg stmt
+        RegisterStatement stmt = (RegisterStatement)activeInstruction();
+        stmt.expr.insertElement(col_select - 4);
+        rt();
       }
       
       updateScreen();
@@ -1731,6 +1612,9 @@ public void f4() {
   Program p = activeProgram();
   
   switch(mode) {
+  case NAV_PROGRAMS:
+    nextScreen(Screen.CP_PROGRAM);
+    break;
   case NAV_PROG_INST:
     Instruction ins = activeInstruction();
     
@@ -1915,6 +1799,10 @@ public void f5() {
         if(stmt.expr instanceof Expression) {
           ((Expression)stmt.expr).removeElement(col_select - 3);
         }
+      }
+      else if(i instanceof RegisterStatement) {
+        RegisterStatement stmt = (RegisterStatement)i;
+        stmt.expr.removeElement(col_select - 4);
       }
       break;
     case TEACH_3PT_USER:
@@ -2148,6 +2036,45 @@ public void ENTER() {
         switchScreen(Screen.NAV_PROG_INST);
       }
       break;
+    case RENAM_PROGRAM:
+      if(!workingText.equals("\0")) {
+        if (workingText.charAt(workingText.length() - 1) == '\0') {
+          // Remove insert character
+          workingText = workingText.substring(0, workingText.length() - 1);
+        }
+        // Renmae the program
+        activeProgram().setName(workingText);
+        active_instr = 0;
+        row_select = 0;
+        col_select = 0;
+        start_render = 0;
+        
+        saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
+        resetStack();
+        nextScreen(Screen.NAV_PROGRAMS);
+      }
+      break;
+    case CP_PROGRAM:
+      if(!workingText.equals("\0")) {
+        if (workingText.charAt(workingText.length() - 1) == '\0') {
+          // Remove insert character
+          workingText = workingText.substring(0, workingText.length() - 1);
+        }
+        
+        Program newProg = activeProgram().clone();
+        newProg.setName(workingText);
+        int new_prog = addProgram(newProg);
+        active_prog = new_prog;
+        active_instr = 0;
+        row_select = 0;
+        col_select = 0;
+        start_render = 0;
+        
+        saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );    
+        resetStack();
+        nextScreen(Screen.NAV_PROGRAMS);
+      }
+      break;
     case NAV_PROGRAMS:
       if(programs.size() != 0) {
         active_instr = 0;
@@ -2202,7 +2129,7 @@ public void ENTER() {
           nextScreen(Screen.SELECT_FRAME_INSTR_TYPE);
           break;
         case 2: //Register 
-          nextScreen(Screen.INPUT_REG_STMT);
+          nextScreen(Screen.SELECT_REG_STMT);
           break;
         case 3: //IF/ SELECT
           nextScreen(Screen.SELECT_COND_STMT);
@@ -2228,7 +2155,15 @@ public void ENTER() {
       display_stack.pop();
       switchScreen(Screen.SET_FRAME_INSTR_IDX);
       break;
-    case INPUT_REG_STMT:
+    case SELECT_REG_STMT:
+      if(opt_select == 0) {
+        newRegisterStatement(new DataRegister());
+      } else {
+        newRegisterStatement(new PositionRegister());
+      }
+      
+      display_stack.pop();
+      switchScreen(Screen.SET_REG_EXPR_IDX);
       break;
     case SELECT_COND_STMT:
       if(opt_select == 0) {
@@ -2564,6 +2499,37 @@ public void ENTER() {
       lastScreen();
       break;
       
+    //Register statement edit
+    case SET_REG_EXPR_TYPE:
+      RegisterStatement regStmt = (RegisterStatement)activeInstruction();
+      
+      if(opt_select == 0) {
+        regStmt.setRegister(new DataRegister());
+      } else {
+        regStmt.setRegister(new PositionRegister());
+      }
+      
+      switchScreen(Screen.SET_REG_EXPR_IDX);
+      break;
+    case SET_REG_EXPR_IDX:
+      try {
+        int tempNum = Integer.parseInt(workingText);
+        
+        if (tempNum < 1 || tempNum > 1000) {
+          println("Invalid label index!");
+        } else {
+          regStmt = (RegisterStatement)activeInstruction(); 
+          if(regStmt.reg instanceof DataRegister) {
+            (regStmt).setRegister(DREG[tempNum - 1]);
+          } else {
+            (regStmt).setRegister(GPOS_REG[tempNum - 1]);
+          }
+        }
+      }
+      catch (NumberFormatException NFEx){ /* Ignore invalid input */ }
+      
+      lastScreen();
+      break;
     //Jump/ Label instruction edit
     case SET_LBL_NUM:
       try {
@@ -3316,6 +3282,20 @@ public void loadScreen(){
       opt_select = 0;
       workingText = "\0";
       break;
+    case RENAM_PROGRAM:
+      active_prog = opt_select;
+      row_select = 1;
+      col_select = 0;
+      opt_select = 0;
+      workingText = activeProgram().getName();
+      break;
+    case CP_PROGRAM:
+      active_prog = opt_select;
+      row_select = 1;
+      col_select = 0;
+      opt_select = 0;
+      workingText = "\0";
+      break;
     case NAV_PROG_INST:
       //need to enforce row/ column select limits based on 
       //program length/ instruction width
@@ -3328,11 +3308,8 @@ public void loadScreen(){
       break;
     case SELECT_INSTR_INSERT:
     case SELECT_JMP_LBL:
-      opt_select = 0;
-      break;
+    case SELECT_REG_STMT:
     case SELECT_COND_STMT:
-      opt_select = 0;
-      break;
     case SET_BOOL_EXPR_ACT:
     case SET_EXPR_ARG:
     case SET_BOOL_EXPR_ARG:
@@ -3400,11 +3377,13 @@ public void loadScreen(){
       workingText = Integer.toString(mInst.getTermination());
       break;
     case SET_FRAME_INSTR_IDX:
+    case SET_REG_EXPR_IDX:
       opt_select = 0;
       workingText = "";
       break;
     case SET_IO_INSTR_STATE:
     case SET_FRM_INSTR_TYPE:
+    case SET_REG_EXPR_TYPE:
       col_select = 1;
       opt_select = 0;
       break;
@@ -3529,9 +3508,11 @@ public void updateScreen() {
   if(mode.getType() == ScreenType.TYPE_LINE_SELECT)
     selectMode = true;
   
-  // display the main list on screen
+  //display contents on screen
+  int linesDrawn = 0;
   index_contents = 1;
   for(int i = 0; i < contents.size(); i += 1) {
+    //get current line
     ArrayList<String> temp = contents.get(i);
         
     if(i == row_select) { bg = UI_DARK; }
@@ -3549,6 +3530,7 @@ public void updateScreen() {
     index_contents++;
     next_px += 10;
     
+    //draw each element in current line
     for(int j = 0; j < temp.size(); j += 1) {
       if(i == row_select) {
         if(j == col_select && !selectMode){
@@ -3576,8 +3558,15 @@ public void updateScreen() {
       }
       
       //grey text for comme also this
-      if(temp.size() > 0 && temp.get(0).contains("//")){
+      if(temp.size() > 0 && temp.get(0).contains("//")) {
         txt = color(127);
+      }
+      
+      if(next_px + temp.get(j).length()*8 + 20 > display_px + display_width) {
+        temp.set(j, " : " + temp.get(j));
+        next_px = display_px;
+        next_py += 20;
+        if((linesDrawn += 1) >= ITEMS_TO_SHOW) break;
       }
 
       cp5.addTextarea(Integer.toString(index_contents))
@@ -3592,7 +3581,9 @@ public void updateScreen() {
       
       index_contents++;
       next_px += temp.get(j).length() * 8 + 18; 
-    }
+    }//end draw line elements
+    
+    if((linesDrawn += 1) >= ITEMS_TO_SHOW) break;
     
     if(i == row_select) { txt = UI_DARK; }
     else                { txt = UI_LIGHT;   }
@@ -3609,23 +3600,21 @@ public void updateScreen() {
     index_contents++;
     next_px = display_px;
     next_py += 20;
-  }
+  }//end display contents
   
   // display options for an element being edited
   if(contents.size() != 0)
     next_py += 20;
   
-  int optStart, optEnd;
+  int maxHeight;
   if(mode.getType() == ScreenType.TYPE_EXPR_EDIT) {
-    optStart = (opt_select/3) * 3;
-    optEnd = min(options.size(), optStart + 4);
+    maxHeight = 4;
   } else {
-    optStart = 0;
-    optEnd = options.size();
+    maxHeight = options.size();
   }
-    
+  
   index_options = 100;
-  for(int i = optStart; i < optEnd; i += 1) {   
+  for(int i = 0; i < options.size(); i += 1) {   
     if(i == opt_select) {
       txt = UI_LIGHT;
       bg = UI_DARK;
@@ -3635,31 +3624,19 @@ public void updateScreen() {
       bg = UI_LIGHT;
     }
     
-    if(options.size() > 4 && i == optEnd - 1 && optEnd != options.size()) {
-      cp5.addTextarea(Integer.toString(index_options))
-      .setText(" ...")
-      .setFont(fnt_con14)
-      .setPosition(next_px, next_py)
-      .setSize(72, 20)
-      .setColorValue(txt)
-      .setColorBackground(bg)
-      .hideScrollbar()
-      .moveTo(g1);
-    } else {
-      cp5.addTextarea(Integer.toString(index_options))
-      .setText(" " + options.get(i))
-      .setFont(fnt_con14)
-      .setPosition(next_px, next_py)
-      .setSize(options.get(i).length()*8 + 40, 20)
-      .setColorValue(txt)
-      .setColorBackground(bg)
-      .hideScrollbar()
-      .moveTo(g1);
-    }
+    cp5.addTextarea(Integer.toString(index_options))
+    .setText(" " + options.get(i))
+    .setFont(fnt_con14)
+    .setPosition(next_px, next_py)
+    .setSize(options.get(i).length()*8 + 40, 20)
+    .setColorValue(txt)
+    .setColorBackground(bg)
+    .hideScrollbar()
+    .moveTo(g1);
     
     index_options++;
-    next_px = display_px;
-    next_py += 20;    
+    next_px += (i % maxHeight == maxHeight - 1) ? 80 : 0;
+    next_py += (i % maxHeight == maxHeight - 1) ? -20*(maxHeight - 1) : 20;    
   }
   
   // display the numbers that the user has typed
@@ -3702,7 +3679,8 @@ public void updateScreen() {
     cp5.addTextarea("lf"+i)
     .setText(funct[i])
     .setFont(fnt_con12)
-    .setPosition(display_width*i/5 + 15 , display_height)
+     // Keep function labels in their original place
+    .setPosition(display_width*i/5 + 15 , display_height - g1_py)
     .setSize(display_width/5 - 5, 20)
     .setColorValue(UI_DARK)
     .setColorBackground(UI_LIGHT)
@@ -3723,6 +3701,12 @@ public String getHeader(Screen mode){
       break;
     case NEW_PROGRAM:
       header = "NAME PROGRAM";
+      break;
+    case RENAM_PROGRAM:
+      header = "RENAME PROGRAM";
+      break;
+    case CP_PROGRAM:
+      header = "COPY PROGRAM";
       break;
     case CONFIRM_INSTR_DELETE:
     case CONFIRM_INSERT:
@@ -3844,6 +3828,8 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
   
   switch(mode) {
     case NEW_PROGRAM:
+    case RENAM_PROGRAM:
+    case CP_PROGRAM:
       contents = loadTextInput();
       break;
     
@@ -3866,6 +3852,8 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case SET_IO_INSTR_IDX:
     case SET_FRM_INSTR_TYPE:
     case SET_FRAME_INSTR_IDX:
+    case SET_REG_EXPR_TYPE:
+    case SET_REG_EXPR_IDX:
     case SET_BOOL_EXPR_ACT:
     case SET_EXPR_ARG:
     case SET_BOOL_EXPR_ARG:
@@ -4025,6 +4013,8 @@ public ArrayList<String> getOptions(Screen mode){
     case SET_IO_INSTR_IDX:
     case SET_FRM_INSTR_TYPE:
     case SET_FRAME_INSTR_IDX:
+    case SET_REG_EXPR_TYPE:
+    case SET_REG_EXPR_IDX:
     case SET_BOOL_EXPR_ACT:
     case SET_EXPR_ARG:
     case SET_BOOL_EXPR_ARG:
@@ -4059,6 +4049,10 @@ public ArrayList<String> getOptions(Screen mode){
     case SELECT_REG_EXPR_TYPE:
       options.add("1. R[x]");
       options.add("2. PR[x]");
+      break;
+    case SELECT_REG_STMT:
+      options.add("1. R[x] = (...)");
+      options.add("2. PR[x] = (...)");
       break;
     case SELECT_COND_STMT:
       options.add("1. IF Stmt");
@@ -4171,10 +4165,10 @@ public String[] getFunctionLabels(Screen mode){
   switch(mode) {
     case NAV_PROGRAMS:
       // F2, F3
-      funct[0] = "";
-      funct[1] = "[Create]";
+      funct[0] = "[Create]";
+      funct[1] = "[Rename]";
       funct[2] = "[Delete]";
-      funct[3] = "";
+      funct[3] = "[Copy]";
       funct[4] = "";
       break;
     case NAV_PROG_INST:
@@ -4197,6 +4191,15 @@ public String[] getFunctionLabels(Screen mode){
           if(col_select > 2 && col_select < stmt.expr.getLength() + 1) {
             funct[4] = "[Delete]";
           }
+        }
+      } else if(activeInstruction() instanceof RegisterStatement) {
+        RegisterStatement stmt = (RegisterStatement)activeInstruction();
+
+        if(col_select > 2 && col_select < stmt.expr.getLength() + 2) {
+          funct[2] = "[Insert]";
+        }
+        if(col_select > 3 && col_select < stmt.expr.getLength() + 2) {
+          funct[4] = "[Delete]";
         }
       }
       break;
@@ -4342,7 +4345,10 @@ public void clearScreen() {
   //remove all text labels on screen  
   List<Textarea> displayText = cp5.getAll(Textarea.class);
   for(Textarea t: displayText) {
-    cp5.remove(t.getName());
+    // ONLY remove text areas from the Pendant!
+    if (t.getParent().equals(g1)) {
+      cp5.remove(t.getName());
+    }
   }
   
   cp5.update();
@@ -4549,6 +4555,17 @@ public void getInstrEdit(Instruction ins) {
         }
       }
     }
+  } else if(ins instanceof RegisterStatement) {
+    RegisterStatement stmt = (RegisterStatement)ins;
+    int len = stmt.expr.getLength();
+    
+    if(col_select == 1) {
+      nextScreen(Screen.SET_REG_EXPR_TYPE);
+    } else if(col_select == 2) {
+      nextScreen(Screen.SET_REG_EXPR_IDX);
+    } else if(col_select >= 4 && col_select <= len + 2) {
+      editExpression(stmt.expr, 4);
+    }
   }
 }
 
@@ -4662,6 +4679,14 @@ public ArrayList<String> loadInstrEdit(Screen mode) {
       edit.add("Select frame index:");
       edit.add("\0" + workingText);
       break;
+    case SET_REG_EXPR_TYPE:
+      edit.add("1. R[x] = (...)");
+      edit.add("2. PR[x] = (...)");
+      break;
+    case SET_REG_EXPR_IDX:
+      edit.add("Select register index:");
+      edit.add("\0" + workingText);
+      break;
     case SET_EXPR_OP:
       if(opEdit instanceof BooleanExpression) {
         edit.add("1. ... =  ...");
@@ -4671,21 +4696,31 @@ public ArrayList<String> loadInstrEdit(Screen mode) {
         edit.add("5. ... >= ...");
         edit.add("6. ... <= ...");
       } else if(opEdit instanceof Expression) {
-        edit.add("1. ... + ...");
-        edit.add("2. ... - ...");
-        edit.add("3. ... * ...");
-        edit.add("4. ... / ...");
-        edit.add("5. ... | ...");
-        edit.add("6. ... % ...");
-        edit.add("7. ... =  ...");
-        edit.add("8. ... <> ...");
-        edit.add("9. ... >  ...");
-        edit.add("10. ... < ...");
-        edit.add("11. ... >= ...");
-        edit.add("12. ... <= ...");
-        edit.add("13. ... AND ...");
-        edit.add("14. ... OR  ...");
-        edit.add("15. ... NOT ...");
+        if(activeInstruction() instanceof IfStatement) {
+          edit.add("1. + ");
+          edit.add("2. - ");
+          edit.add("3. * ");
+          edit.add("4. / ");
+          edit.add("5. | ");
+          edit.add("6. % ");
+          edit.add("7. = ");
+          edit.add("8. <> ");
+          edit.add("9. > ");
+          edit.add("10. < ");
+          edit.add("11. >= ");
+          edit.add("12. <= ");
+          edit.add("13. AND ");
+          edit.add("14. OR ");
+          edit.add("15. NOT ");
+          edit.add("16. ... ");
+        } else {
+          edit.add("1. + ");
+          edit.add("2. - ");
+          edit.add("3. * ");
+          edit.add("4. / ");
+          edit.add("5. | ");
+          edit.add("6. % ");
+        }
       }
       break;
     case SET_EXPR_ARG:
@@ -4865,6 +4900,17 @@ public void newIfExpression() {
 public void newSelectStatement() {
   Program p = activeProgram();
   SelectStatement stmt = new SelectStatement();
+  
+  if(active_instr != p.getInstructions().size()) {
+    p.overwriteInstruction(active_instr, stmt);
+  } else {
+    p.addInstruction(stmt);
+  }
+}
+
+public void newRegisterStatement(Register r) {
+  Program p = activeProgram();
+  RegisterStatement stmt = new RegisterStatement(r);
   
   if(active_instr != p.getInstructions().size()) {
     p.overwriteInstruction(active_instr, stmt);
