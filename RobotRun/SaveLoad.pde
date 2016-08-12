@@ -108,10 +108,12 @@ public int loadState() {
     
     if(DREG[reg] == null) {
       DREG[reg] = new DataRegister();
+      DREG[reg].setIdx(reg);
     }
     
     if(GPOS_REG[reg] == null) {
       GPOS_REG[reg] = new PositionRegister();
+      GPOS_REG[reg].setIdx(reg);
     }
   }
   
@@ -124,6 +126,7 @@ public int loadState() {
   for (; idx < IO_REG.length; ++idx) {
     // Unassociated registers
     IO_REG[idx] = new IORegister(null);
+    IO_REG[idx].setIdx(idx);
   }
   
   return error;

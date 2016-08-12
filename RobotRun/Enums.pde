@@ -89,6 +89,7 @@ public static enum Screen implements DisplayMode {
   SET_MV_INSTRUCT_REG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_FRM_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
+  SET_REG_EXPR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   
   SET_BOOL_CONST(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_EXPR_ARG(ScreenType.TYPE_EXPR_EDIT),
@@ -166,6 +167,7 @@ public static enum Screen implements DisplayMode {
   SET_IO_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_JUMP_TGT(ScreenType.TYPE_NUM_ENTRY),
   SET_LBL_NUM(ScreenType.TYPE_NUM_ENTRY),
+  SET_REG_EXPR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_SPD(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_TERM(ScreenType.TYPE_NUM_ENTRY),
@@ -202,7 +204,7 @@ public static enum Screen implements DisplayMode {
   INPUT_PRDX,
   INPUT_PRVDX,
   INPUT_RDX,
-  INPUT_REG_STMT,
+  SELECT_REG_STMT,
   PICK_LETTER,
   NAV_DATA,
   VIEW_INST_REG;

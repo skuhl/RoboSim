@@ -5,9 +5,28 @@ private final DataRegister[] DREG = new DataRegister[100];
 // IO Registers
 private final IORegister[] IO_REG = new IORegister[3];
 
+public abstract class Register {
+  protected String comment;
+  protected int idx;
+  
+  public Register() {
+    comment = null;
+    idx = -1;
+  }
+  
+  public Register(int i) {
+    comment = null;
+    idx = i;
+  }
+  
+  public String getComment() { return comment; }
+  public int getIdx() { return idx; }
+  public String setComment(String s) { return comment = s; }
+  public int setIdx(int i) { return idx = i; }
+}
 
 /* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
-public class DataRegister {
+public class DataRegister extends Register {
   public String comment;
   public Float value;
   
@@ -23,8 +42,7 @@ public class DataRegister {
 }
 
 /* A simple class for a Position Register of the Robot Arm, which holds a point associated with a comment. */
-public class PositionRegister {
-  public String comment;
+public class PositionRegister extends Register {
   /**
    * The point associated with this Position Register, which is saved in
    * the current User frame with the active Tool frame TCP offset, though
@@ -47,7 +65,7 @@ public class PositionRegister {
 }
 
 /* A simple class designed to hold the current states of the Robot's various End Effectors */
-public class IORegister {
+public class IORegister extends Register {
   public final EndEffector associatedEE;
   public int state;
   
