@@ -76,6 +76,28 @@ public class Point  {
   }
   
   /**
+   * Computes and returns the result of the addition of this point with
+   * another point, 'p.' Does not alter the original values of this point.
+   */
+  public Point add(Point p) {
+    Point p3 = new Point();
+    
+    PVector p3Pos = PVector.add(position, p.position);
+    float[] p3Orient = quaternionMult(orientation, p.orientation);
+    float[] p3Joints = new float[6];
+    
+    for(int i = 0; i < 6; i += 1) {
+      p3Joints[i] = angles[i] + p.angles[i];
+    }
+    
+    p3.position = p3Pos;
+    p3.orientation = p3Orient;
+    p3.angles = p3Joints;
+    
+    return p3;
+  }
+    
+  /**
    * Converts the original toStringArray into a 2x1 String array, where the origin
    * values are in the first element and the W, P, R values are in the second
    * element (or in the case of a joint angles, J1-J3 on the first and J4-J6 on
@@ -375,16 +397,8 @@ public MotionInstruction activeMotionInst() {
 }
 
 public class Instruction {
-  protected Program p;
-  protected boolean com;
+  protected boolean com = false;
   
-  public Instruction() {
-    p = null;
-    com = false;
-  }
-  
-  public Program getProg() { return p; }
-  public void setProg(Program p) { this.p = p; }
   public boolean isCommented(){ return com; }
   public void setIsCommented(boolean comFlag) { com = comFlag; }
   public void toggleCommented() { com = !com; }
@@ -946,99 +960,52 @@ public class SelectStatement extends Instruction {
 }
 
 public class RegisterStatement extends Instruction {
-  /**
-   * A singleton or doubleton array, which determines, whether the
-   * result of the statement will be stored in a Register or a
-   * Position Register.
-   */
-  private final RegisterOp destination;
-  /**
-   * The expression associated with this statement.
-   */
-  private RegisterExpression statement;
+  Register reg;
+  Expression expr;
   
   /**
-   * Creates a register statement, whose result is associated with
-   * a Position Register entry.
-   * 
-   * @param regIdx  the index in the Position Register list where
-   *                the result of the expression will be stored
-   * @param ptIdx   the index of the a value in the Point to store
-   *                the result in the case that the result is a
-   *                single Float value. This field should be -1 in
-   *                the case that the whole Point should be saved.
-   * @param t       The destinationp position: GLOBAL -> global
-   *                position register and LOCAL -> local position
-   *                in active program
+   * Creates a register statement with a given register and a blank Expression.
+   *
+   * @param reg - The destination register for this register expression. The
+   *              result of the expression 'expr' will be assigned to 'reg'
+   *              upon successful execution of this statement.
+   * @param expr - The expression to be evaluated in conjunction with the execution
+   *               of this statement. The value of this expression, if valid for the
+                   register 
    */
-  public RegisterStatement(int regIdx, int ptIdx, PositionType t) {
-    super();
-    destination = new PositionOp(regIdx, ptIdx, t);
-    statement = new RegisterExpression();
+  public RegisterStatement(Register r) {
+    reg = r;
+    expr = new Expression();
   }
   
-  /**
-   * Creates a register statement, whose result is associated with
-   * a Register entry.
-   * 
-   * @param regIdx  the index in the Register list where the result
-   *                of the expression will be stored
-   */
-  public RegisterStatement(int regIdx) {
-    super();
-    destination = new RegisterOp(regIdx);
-    statement = new RegisterExpression();
+  public RegisterStatement(Register r, Expression e) {
+    reg = r;
+    expr = e;
   }
   
-  public void setExpression(RegisterExpression expr) {
-    statement = expr;
+  public Register setRegister(Register r) {
+    if(!(r instanceof DataRegister) && !(r instanceof PositionRegister)) {
+      return null;
+    } else {
+      return reg = r;
+    }
   }
   
   public int execute() {
-    Object result = statement.evaluate();
+    ExprOperand result = expr.evaluate();
     
-    try {
-      
-      if (destination instanceof PositionOp) {
-        PositionOp posDest = (PositionOp)destination;
-        
-        if (posDest.type == PositionType.LOCAL) {
-          // Save in one of the active program's local positions
-          activeProgram().LPosReg[posDest.getIdx()] = ((RegStmtPoint)result).toPoint();
-        } else {
-          // Save in a global Position register
-          GPOS_REG[posDest.getIdx()].point = ((RegStmtPoint)result).toPoint();
-          GPOS_REG[posDest.getIdx()].isCartesian = ((RegStmtPoint)result).isCartesian;
-        }
-        
-      } else {
-        // Save in a Data register
-        DREG[destination.getIdx()].value = (Float)result;
-      }
-      
-      return 0;
-    } catch (ExpressionEvaluationException EEEx) {
-      // Invalid expression
-      EEEx.printStackTrace();
-      return 1;
-    } catch (ClassCastException CCEx) {
-      // Expression return type does not match destination register type
-      return 2;
+    if(reg instanceof DataRegister) {
+      ((DataRegister)reg).value = result.dataVal;
+      println(result.dataVal + ", " + ((DataRegister)reg).value);
+    } else if(reg instanceof PositionRegister) {
+      ((PositionRegister)reg).point = result.pointVal;
     }
+        
+    return 1;
   }
   
   public Instruction clone() {
-    Instruction copy;
-    // Copy destination value
-    if (destination instanceof PositionOp) {
-      PositionOp posOp = (PositionOp)destination;
-      copy = new RegisterStatement(posOp.getIdx(), posOp.getPositionIdx(), posOp.getPositionType());
-    } else {
-      copy = new RegisterStatement(destination.getIdx());
-    }
-    // Copy the expression
-    ((RegisterStatement)copy).setExpression(statement.clone());
-    copy.setIsCommented( isCommented() );
+    Instruction copy = new RegisterStatement(reg, (Expression)expr.clone());    
     return copy;
   }
   
@@ -1047,10 +1014,17 @@ public class RegisterStatement extends Instruction {
    * operator and operand is a separate String Object.
    */
   public String[] toStringArray() {
-    ArrayList<String> expression = statement.toStringArrayList();
-    expression.add(0, destination + " =");
+    String[] ret = new String[2 + expr.getLength()];
+    String[] exprString = expr.toStringArray();
     
-    return (String[])expression.toArray();
+    ret[0] = (reg instanceof DataRegister) ? "R[" : "PR[";
+    ret[1] = (reg.getIdx() == -1) ? "...] =" : (reg.getIdx() + 1) + "] =";
+    
+    for(int i = 0; i < exprString.length; i += 1) {
+      ret[i + 2] = exprString[i];
+    }
+    
+    return ret;
   }
 }
 
