@@ -804,54 +804,63 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
  * @param model Arm model to use
  * @return Finished yet (false=no, true=yes)
  */
-boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
-  Instruction activeInst = activeInstruction();
-  int nextInstruction = active_instr + 1;
+boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
+  Instruction activeInstr = activeInstruction();
+  int nextInstr = active_instr + 1;
   
   //stop executing if no valid program is selected or we reach the end of the program
-  if(robotFault || activeInst == null) {
+  if(robotFault || activeInstr == null) {
     return true;
-  } else if (!activeInst.isCommented()){
-    
+  } else if (!activeInstr.isCommented()){
     //motion instructions
-    if (activeInst instanceof MotionInstruction) {
-      MotionInstruction instruction = (MotionInstruction)activeInst;
+    if (activeInstr instanceof MotionInstruction) {
+      MotionInstruction motInstr = (MotionInstruction)activeInstr;
       //start a new instruction
       if(!executingInstruction) {
-        executingInstruction = setUpInstruction(program, model, instruction);
+        executingInstruction = setUpInstruction(program, model, motInstr);
       }
-      //continue current instruction
+      //continue current motion instruction
       else {
-        if(instruction.getMotionType() == MTYPE_JOINT) {
-          executingInstruction = !(model.interpolateRotation(instruction.getSpeedForExec(model)));
+        if(motInstr.getMotionType() == MTYPE_JOINT) {
+          executingInstruction = !(model.interpolateRotation(motInstr.getSpeedForExec(model)));  
         }
-        else {
-          executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
+        else {  
+          executingInstruction = !(executeMotion(model, motInstr.getSpeedForExec(model)));
         }
       }
-    } else if (activeInst instanceof JumpInstruction) {
-      nextInstruction = activeInst.execute();
+    } 
+    //jump instructions
+    else if (activeInstr instanceof JumpInstruction) {
+      nextInstr = activeInstr.execute();
       executingInstruction = false;
-    } else {
-      activeInst.execute();
+    } 
+    //other instructions
+    else {
       executingInstruction = false;
+      activeInstr.execute();
     }//end of instruction type check
-    
   } //skip commented instructions
   
   // Move to next instruction after current is finished
   if(!executingInstruction) {
-    
-    if (nextInstruction == -1) {
+    if(nextInstr == -1) {
       // Failed to jump to target label
       triggerFault();
+    } else if(nextInstr == activeProgram().size() && !call_stack.isEmpty()) {
+      Program p = call_stack.pop();
+      active_prog = 1;
+      active_instr = p.nextInstr;
+      row_select = active_instr;
+      col_select = 0;
+      start_render = 0;
+      programRunning = !executeProgram(p, armModel, false);
     } else {
       // Move to nextInstruction
       int size = activeProgram().getInstructions().size() + 1;
       int i = active_instr,
           r = row_select;
       
-      active_instr = max(0, min(nextInstruction, size - 1));
+      active_instr = max(0, min(nextInstr, size - 1));
       row_select = max(0, min(r + active_instr - i, contents.size() - 1));
       start_render = start_render + (active_instr - i) - (row_select - r);
     }
@@ -859,7 +868,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
     updateScreen();
   }
   
-  return (!executingInstruction && singleInst);
+  return (!executingInstruction && singleInstr);
 }//end executeProgram
 
 /**

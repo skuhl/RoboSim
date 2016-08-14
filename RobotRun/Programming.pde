@@ -1,5 +1,7 @@
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
 final int FTYPE_TOOL = 0, FTYPE_USER = 1;
+//stack containing the previously running program state when a new program is called
+Stack<Program> call_stack = new Stack<Program>();
 // Indicates whether a program is currently running
 public boolean programRunning = false;
 
@@ -171,9 +173,10 @@ public class Point  {
   }
 } // end Point class
 
-public class Program  {
+public class Program {
   private String name;
   private int nextRegister;
+  private int nextInstr;
   /**
    * The positions associated with this program, which are
    * stored in reference to the current User frame
@@ -181,21 +184,26 @@ public class Program  {
   private Point[] LPosReg = new Point[1000];
   private ArrayList<Instruction> instructions;
 
-  public Program(String theName) {
-    instructions = new ArrayList<Instruction>();
-    for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
-    name = theName;
+  public Program(String s) {
+    name = s;
     nextRegister = 0;
+    nextInstr = 0;
+    for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
+    instructions = new ArrayList<Instruction>();
   }
 
   public ArrayList<Instruction> getInstructions() {
     return instructions;
   }
-
+  
   public void setName(String n) { name = n; }
 
   public String getName() {
     return name;
+  }
+  
+  public int size() {
+    return instructions.size();
   }
 
   public int getRegistersLength() {
@@ -773,6 +781,49 @@ public class JumpInstruction extends Instruction {
   }
 }
 
+public class CallInstruction extends Instruction {
+  Program callProg;
+  int progIdx;
+  
+  public CallInstruction() {
+    callProg = null;
+    progIdx = -1;
+  }
+  
+  public CallInstruction(Program p, int i) {
+    callProg = p;
+    progIdx = i;
+  }
+  
+  public int execute() {
+    Program p = activeProgram();
+    p.nextInstr = active_instr + 1;
+    call_stack.push(p);
+    
+    active_prog = progIdx;
+    active_instr = 0;
+    row_select = 0;
+    col_select = 0;
+    start_render = 0;
+    updateScreen();
+    programRunning = !executeProgram(callProg, armModel, false);
+    
+    return 1;
+  }
+  
+  public String toString() {
+    String progName = (callProg == null) ? "..." : callProg.name;
+    return "Call " + progName;
+  }
+  
+  public String[] toStringArray() {
+    String[] ret = new String[2];
+    ret[0] = "Call";
+    ret[1] = (callProg == null) ? "..." : callProg.name;
+    return ret;
+  }
+}
+
 /**
  * An if statement consists of an expression and an instruction. If the expression evaluates
  * to true, the execution of this if statement will result in the execution of the associated
@@ -1003,7 +1054,7 @@ public class RegisterStatement extends Instruction {
   }
 }
 
-public class RecordScreen implements Runnable{
+public class RecordScreen implements Runnable {
   public RecordScreen() {
     System.out.format("Record screen...\n");
   }

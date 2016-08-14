@@ -1143,6 +1143,7 @@ public void up() {
     case SET_BOOL_EXPR_ARG: //<>//
     case SET_EXPR_OP:
     case SET_IO_INSTR_STATE:
+    case SET_CALL_PROG:
     case SETUP_NAV:
       opt_select = max(0, opt_select - 1);
       break;
@@ -1266,6 +1267,7 @@ public void dn() {
     case SET_BOOL_EXPR_ARG:
     case SET_EXPR_OP:
     case SET_IO_INSTR_STATE:
+    case SET_CALL_PROG:
     case SETUP_NAV:
       opt_select = min(opt_select + 1, options.size() - 1);
       break;
@@ -2125,6 +2127,10 @@ public void ENTER() {
         case 4: //JMP/ LBL
           nextScreen(Screen.SELECT_JMP_LBL);
           break;
+        case 5: //Call
+          newCallInstruction();
+          switchScreen(Screen.SET_CALL_PROG);
+          break;
       }
       
       break;
@@ -2142,8 +2148,6 @@ public void ENTER() {
       
       display_stack.pop();
       switchScreen(Screen.SET_FRAME_INSTR_IDX);
-      break;
-    case INPUT_REG_STMT:
       break;
     case SELECT_COND_STMT:
       if(opt_select == 0) {
@@ -2514,6 +2518,14 @@ public void ENTER() {
       }
       catch (NumberFormatException NFEx){ /* Ignore invalid input */ }
       
+      lastScreen();
+      break;
+    
+    //Call instruction edit
+    case SET_CALL_PROG:
+      CallInstruction call = (CallInstruction)activeInstruction();
+      call.callProg = programs.get(opt_select);
+      call.progIdx = opt_select;
       lastScreen();
       break;
       
@@ -3266,6 +3278,7 @@ public void loadScreen(){
     case SET_EXPR_ARG:
     case SET_BOOL_EXPR_ARG:
     case SET_EXPR_OP:
+    case SET_CALL_PROG:
       opt_select = 0;
       break;
     case INPUT_DREG_IDX:
@@ -3690,6 +3703,9 @@ public String getHeader(Screen mode){
     case SELECT_JMP_LBL:
       header = "INSERT JUMP/ LABEL INSTRUCTION";
       break;
+    case SET_CALL_PROG:
+      header = "SELECT CALL TARGET";
+      break;
     case ACTIVE_FRAMES:
       header = "ACTIVE FRAMES";
       break;
@@ -3885,6 +3901,7 @@ public ArrayList<String> getOptions(Screen mode){
   switch(mode) {
     //Program list navigation/ edit
     case NAV_PROGRAMS:
+    case SET_CALL_PROG:
       options = loadPrograms();
       break;
     //Main menu and submenus
@@ -3981,7 +3998,7 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("3. Registers" );
       options.add("4. IF/SELECT" );
       options.add("5. JMP/LBL"   );
-      options.add("6. CALL (NA)"      );
+      options.add("6. CALL"      );
       options.add("7. WAIT (NA)"      );
       options.add("8. Macro (NA)"     );
       break;
@@ -4819,6 +4836,17 @@ public void newSelectStatement() {
     p.overwriteInstruction(active_instr, stmt);
   } else {
     p.addInstruction(stmt);
+  }
+}
+
+public void newCallInstruction() {
+  Program p = activeProgram();
+  CallInstruction call = new CallInstruction();
+  
+  if(active_instr != p.getInstructions().size()) {
+    p.overwriteInstruction(active_instr, call);
+  } else {
+    p.addInstruction(call);
   }
 }
 
