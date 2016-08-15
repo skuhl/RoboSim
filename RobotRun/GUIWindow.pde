@@ -956,7 +956,10 @@ public class WindowManager {
     dropDownLists[5].updateActiveLabel();
     
     dropDownLists[6] = (MyDropdownList)dropDownLists[6].clear();
-    // TODO add scenarios
+    for (Scenario s : SCENARIOS) {
+      dropDownLists[6].addItem(s.getName(), s);
+    }
+    dropDownLists[6].updateActiveLabel();
   }
   
   /**
@@ -1043,6 +1046,7 @@ public class WindowManager {
       if (objectType == 0.0) {
         // Create a Part
         String name = objName.getText();
+        
         ShapeType type = (ShapeType)dropDownLists[2].getActiveLabelValue();
           
         color fill = (Integer)dropDownLists[0].getActiveLabelValue(),
