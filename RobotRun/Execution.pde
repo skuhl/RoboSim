@@ -847,13 +847,14 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
       // Failed to jump to target label
       triggerFault();
     } else if(nextInstr == activeProgram().size() && !call_stack.isEmpty()) {
-      Program p = call_stack.pop();
-      active_prog = 1;
-      active_instr = p.nextInstr;
+      int[] p = call_stack.pop();
+      active_prog = p[0];
+      active_instr = p[1];
+      
       row_select = active_instr;
       col_select = 0;
       start_render = 0;
-      programRunning = !executeProgram(p, armModel, false);
+      programRunning = !executeProgram(activeProgram(), armModel, false);
     } else {
       // Move to nextInstruction
       int size = activeProgram().getInstructions().size() + 1;

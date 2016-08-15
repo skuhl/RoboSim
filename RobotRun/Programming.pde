@@ -1,7 +1,7 @@
 final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
 final int FTYPE_TOOL = 0, FTYPE_USER = 1;
 //stack containing the previously running program state when a new program is called
-Stack<Program> call_stack = new Stack<Program>();
+Stack<int[]> call_stack = new Stack<int[]>();
 // Indicates whether a program is currently running
 public boolean programRunning = false;
 
@@ -199,6 +199,7 @@ public class Program {
   private String name;
   private int nextRegister;
   private int nextInstr;
+  private int progIdx;
   /**
    * The positions associated with this program, which are
    * stored in reference to the current User frame
@@ -810,8 +811,9 @@ public class CallInstruction extends Instruction {
   }
   
   public int execute() {
-    Program p = activeProgram();
-    p.nextInstr = active_instr + 1;
+    int[] p = new int[2];
+    p[0] = active_prog;
+    p[1] = active_instr + 1;
     call_stack.push(p);
     
     active_prog = progIdx;
@@ -913,23 +915,23 @@ public class IfStatement extends Instruction {
 
 public class SelectStatement extends Instruction {
   ExprOperand arg;
-  Instruction instr;
-  ArrayList<Float> cases;
-  
+  ArrayList<ExprOperand> cases;
+  ArrayList<Instruction> instr;
+    
   public SelectStatement() {
     arg = new ExprOperand();
-    cases = new ArrayList<Float>();
+    cases = new ArrayList<ExprOperand>();
   }
   
   public SelectStatement(ExprOperand a) {
     arg = a;
-    cases = new ArrayList<Float>();
+    cases = new ArrayList<ExprOperand>();
   }
   
-  public int execute() {
-    for(Float c: cases) {
-      if(arg.dataVal == c) {
-        instr.execute();
+  public int execute() {    
+    for(int i = 0; i < cases.size(); i += 1) {
+      if(arg.dataVal == cases.get(i).dataVal) {
+        instr.get(i).execute();
         break;
       }
     }
@@ -941,21 +943,25 @@ public class SelectStatement extends Instruction {
     return "";
   }
   
-  public Instruction clone() {
-    if (instr == this) {
-      // Cannot copy this!
-      return null;
-    }
-    
+  public Instruction clone() {   
     Instruction copy = new SelectStatement();
     copy.setIsCommented( isCommented() );
-    ((SelectStatement)copy).instr = instr.clone();
     // TODO actually copy the select statement
     return copy;
   }
   
   public String[] toStringArray() {
-    return new String[] {""};
+    String[] ret = new String[2 + 3*cases.size()];
+    ret[0] = "SELECT";
+    ret[1] = arg.toString() + " = ";
+    
+    for(int i = 0; i < cases.size(); i += 1) {
+      ret[i*3 + 3] = cases.get(i).toString();
+      ret[i*3 + 4] = instr.get(i).toStringArray()[0];
+      ret[i*3 + 5] = instr.get(i).toStringArray()[1];
+    }
+    
+    return ret;
   }
 }
 
