@@ -424,7 +424,7 @@ public class Instruction {
   }
   
   public String[] toStringArray() {
-    return new String[] { "" };
+    return new String[] {"..."};
   }
   
   /**
@@ -921,22 +921,48 @@ public class SelectStatement extends Instruction {
   public SelectStatement() {
     arg = new ExprOperand();
     cases = new ArrayList<ExprOperand>();
+    instr = new ArrayList<Instruction>();
+    addCase();
   }
   
   public SelectStatement(ExprOperand a) {
     arg = a;
     cases = new ArrayList<ExprOperand>();
+    instr = new ArrayList<Instruction>();
+    addCase();
   }
   
   public int execute() {    
     for(int i = 0; i < cases.size(); i += 1) {
+      println("testing case " + i + " = " + cases.get(i).dataVal + " against " + arg.dataVal);
       if(arg.dataVal == cases.get(i).dataVal) {
+        println("executing " + instr.get(i).toString());
         instr.get(i).execute();
         break;
       }
     }
     
-    return 0;
+    return 1;
+  }
+  
+  public void addCase() {
+    cases.add(new ExprOperand());
+    instr.add(new Instruction());
+  }
+  
+  public void addCase(ExprOperand e, Instruction i) {
+    cases.add(e);
+    instr.add(i);
+  }
+  
+  public void deleteCase(int idx) {
+    if(cases.size() > 1) {
+      cases.remove(idx);
+    }
+    
+    if(instr.size() > 1) {
+      instr.remove(idx);
+    }
   }
   
   public String toString() {
@@ -951,14 +977,17 @@ public class SelectStatement extends Instruction {
   }
   
   public String[] toStringArray() {
-    String[] ret = new String[2 + 3*cases.size()];
+    String[] ret = new String[2 + 4*cases.size()];
     ret[0] = "SELECT";
-    ret[1] = arg.toString() + " = ";
+    ret[1] = arg.toString();
     
     for(int i = 0; i < cases.size(); i += 1) {
-      ret[i*3 + 3] = cases.get(i).toString();
-      ret[i*3 + 4] = instr.get(i).toStringArray()[0];
-      ret[i*3 + 5] = instr.get(i).toStringArray()[1];
+      String[] iString = instr.get(i).toStringArray();
+      
+      ret[i*4 + 2] = "= " + cases.get(i).toString();
+      ret[i*4 + 3] = iString[0];
+      ret[i*4 + 4] = iString.length == 1 ? "..." : iString[1];
+      ret[i*4 + 5] = "\n";
     }
     
     return ret;

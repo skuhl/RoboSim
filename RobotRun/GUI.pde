@@ -1560,6 +1560,10 @@ public void f3() {
         
         rt();
       } 
+      else if(activeInstruction() instanceof SelectStatement) {
+        SelectStatement stmt = (SelectStatement)activeInstruction();
+        stmt.addCase();
+      }
       else if(activeInstruction() instanceof RegisterStatement) {
         RegisterStatement stmt = (RegisterStatement)activeInstruction();
         stmt.expr.insertElement(col_select - 4);
@@ -2461,37 +2465,38 @@ public void ENTER() {
     //Select statement edit
     case SET_SELECT_STMT_ACT:
       SelectStatement s = (SelectStatement)activeInstruction();
-      editIdx = (col_select - 2) / 4;
+      int i = (col_select - 3) / 3;
       
       if(opt_select == 0) {
-        s.arg = new ExprOperand();
+        s.instr.set(i, new JumpInstruction());
       } else {
-        s.arg = new ExprOperand(new DataRegister(), -1);
+        s.instr.set(i, new CallInstruction());
       }
       
+      lastScreen();
       break;
     case SET_SELECT_STMT_ARG:
-      s = (SelectStatement)activeInstruction();
-      
       if(opt_select == 0) {
-        s.arg = new ExprOperand();
+        opEdit.set(new DataRegister(), -1);
       } else {
-        s.arg = new ExprOperand(new DataRegister(), -1);
+        opEdit.reset();
       }
       
-      nextScreen(Screen.SET_SELECT_STMT_VAL);
-    case SET_SELECT_STMT_VAL:
+      nextScreen(Screen.SET_SELECT_ARGVAL);
+      break;
+    case SET_SELECT_ARGVAL:
       try {
         s = (SelectStatement)activeInstruction();
         float f = Float.parseFloat(workingText);
         
-        if(opEdit.type == 0) {
-          opEdit.dataVal = f;
+        if(opEdit.type == -2) {
+          opEdit.set(f);
         } else if(opEdit.type == 2) {
-          opEdit.dataVal = DREG[(int)f].value;
+          opEdit.set(DREG[(int)f], (int)f);
         }
       } catch(NumberFormatException ex) {}
       
+      display_stack.pop();
       lastScreen();
       break;
     
@@ -2599,8 +2604,12 @@ public void ENTER() {
         int lblIdx = p.findLabelIdx(lblNum);
         
         if(activeInstruction() instanceof IfStatement) {
-          stmt = (IfStatement)activeInstruction();
-          ((JumpInstruction)stmt.instr).tgtLblNum = lblNum;
+          IfStatement ifStmt = (IfStatement)activeInstruction();
+          ((JumpInstruction)ifStmt.instr).tgtLblNum = lblNum;
+        } 
+        else if(activeInstruction() instanceof SelectStatement) {
+          SelectStatement sStmt = (SelectStatement)activeInstruction();
+          ((JumpInstruction)sStmt.instr.get(editIdx)).tgtLblNum = lblNum;
         }
         else {
           if(lblIdx != -1) {
@@ -2618,9 +2627,24 @@ public void ENTER() {
     
     //Call instruction edit
     case SET_CALL_PROG:
-      CallInstruction call = (CallInstruction)activeInstruction();
-      call.callProg = programs.get(opt_select);
-      call.progIdx = opt_select;
+      if(activeInstruction() instanceof IfStatement) {
+        IfStatement ifStmt = (IfStatement)activeInstruction();
+        ((CallInstruction)ifStmt.instr).callProg = programs.get(opt_select);
+        ((CallInstruction)ifStmt.instr).progIdx = opt_select;
+      }
+      else if(activeInstruction() instanceof SelectStatement) {
+        SelectStatement sStmt = (SelectStatement)activeInstruction();
+        CallInstruction c = (CallInstruction)sStmt.instr.get(editIdx);
+        c.callProg = programs.get(opt_select);
+        c.progIdx = opt_select;
+      }
+      else {
+        CallInstruction call = (CallInstruction)activeInstruction();
+        call.callProg = programs.get(opt_select);
+        call.progIdx = opt_select;
+        lastScreen();
+      }
+      
       lastScreen();
       break;
       
@@ -3434,7 +3458,7 @@ public void loadScreen(){
       workingText = Integer.toString(mInst.getTermination());
       break;
     case SET_FRAME_INSTR_IDX:
-    case SET_SELECT_STMT_VAL:
+    case SET_SELECT_ARGVAL:
     case SET_REG_EXPR_IDX:
       opt_select = 0;
       workingText = "";
@@ -3622,7 +3646,14 @@ public void updateScreen() {
       
       if(next_px + temp.get(j).length()*8 + 20 > display_px + display_width) {
         temp.set(j, " : " + temp.get(j));
-        next_px = display_px;
+        next_px = display_px + 36;
+        next_py += 20;
+        if((linesDrawn += 1) >= ITEMS_TO_SHOW) break;
+      } else if(temp.get(j).equals("\n")) {
+        temp.remove(j);
+        if(j >= temp.size()) break;
+        
+        next_px = display_px + 152;
         next_py += 20;
         if((linesDrawn += 1) >= ITEMS_TO_SHOW) break;
       }
@@ -3917,7 +3948,7 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case SET_REG_EXPR_IDX:
     case SET_IF_STMT_ACT:
     case SET_SELECT_STMT_ARG:
-    case SET_SELECT_STMT_VAL:
+    case SET_SELECT_ARGVAL:
     case SET_SELECT_STMT_ACT:
     case SET_EXPR_ARG:
     case SET_BOOL_EXPR_ARG:
@@ -4082,7 +4113,7 @@ public ArrayList<String> getOptions(Screen mode){
     case SET_REG_EXPR_IDX:
     case SET_IF_STMT_ACT:
     case SET_SELECT_STMT_ARG:
-    case SET_SELECT_STMT_VAL:
+    case SET_SELECT_ARGVAL:
     case SET_SELECT_STMT_ACT:
     case SET_EXPR_ARG:
     case SET_BOOL_EXPR_ARG:
@@ -4623,6 +4654,26 @@ public void getInstrEdit(Instruction ins) {
         }
       }
     }
+  } else if(ins instanceof SelectStatement) {
+    SelectStatement stmt = (SelectStatement)ins;
+    
+    if(col_select == 2) {
+      opEdit = stmt.arg;
+      nextScreen(Screen.SET_SELECT_STMT_ARG);
+    } else if((col_select - 3) % 3 == 0) {
+      opEdit = stmt.cases.get((col_select - 3)/3);
+      nextScreen(Screen.SET_SELECT_STMT_ARG);
+    } else if((col_select - 3) % 3 == 1) {
+      editIdx = (col_select - 3)/3;
+      nextScreen(Screen.SET_SELECT_STMT_ACT);
+    } else if((col_select - 3) % 3 == 2) {
+      editIdx = (col_select - 3)/3;
+      if(stmt.instr.get((col_select - 3)/3) instanceof JumpInstruction) {
+        nextScreen(Screen.SET_JUMP_TGT);
+      } else {
+        nextScreen(Screen.SET_CALL_PROG);
+      }
+    }
   } else if(ins instanceof RegisterStatement) {
     RegisterStatement stmt = (RegisterStatement)ins;
     int len = stmt.expr.getLength();
@@ -4822,7 +4873,7 @@ public ArrayList<String> loadInstrEdit(Screen mode) {
       edit.add("R[x]");
       edit.add("Const");
       break;
-    case SET_SELECT_STMT_VAL:
+    case SET_SELECT_ARGVAL:
       edit.add("Input value/ register index:");
       edit.add("\0" + workingText);
       break;
