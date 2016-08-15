@@ -1,6 +1,8 @@
 // The Y corrdinate of the ground plane
 public static final float PLANE_Y = 200.5f;
 
+public final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
+
 public final ArrayList<Fixture> FIXTURES = new ArrayList<Fixture>();
 public final ArrayList<Part> PARTS = new ArrayList<Part>();
 
@@ -675,6 +677,82 @@ public class Part extends WorldObject {
 }
 
 /**
+ * A storage class for a collection of objects with an associated name for the collection.
+ */
+public class Scenario {
+  private String name;
+  /**
+   * A combine list of Parts and Fixtures
+   */
+  private ArrayList<WorldObject> objList;
+  
+  /**
+   * Create a new scenario of the given name.
+   */
+  public Scenario(String n) {
+    name = n;
+  }
+  
+  /**
+   * Only adds the given world objects that are non-null and do
+   * not already exist in the scenario.
+   * 
+   * @param newObjs  The world objects to add to the scenario
+   */
+  public void addWorldObject(WorldObject... newObjs) {
+    
+    for (WorldObject obj : newObjs) {
+      // Add any non-null world object that does not already exist in the scenario
+      if (obj != null && !objList.contains(obj)) {
+        objList.add(obj);
+      }
+    }
+  }
+  
+  /**
+   * Attempt to remove the given set of world objects from the scenario.
+   * 
+   * @param tgtObjs  The objects to remove from the scenario
+   * @returning      The number of the given objects that were successfully
+   *                 removed from the scenario
+   */
+  public int removeWorldObject(WorldObject... tgtObjs) {
+    int objsRemoved = 0;
+    
+    for (WorldObject tgt : tgtObjs) {
+      // Keep track of the number of given targets that were successfully removed
+      if (tgt != null && objList.remove(tgt)) {
+        ++objsRemoved;
+      }
+    }
+    
+    return objsRemoved;
+  }
+  
+  /**
+   * Return the world object that corresponds to the given index in
+   * the list of world objects contained in this scenario, or null
+   * if the index is invalid.
+   * 
+   * @param idx  A valid index
+   * @returning  The world object, at the given index in the list,
+   *             or null
+   */
+  public WorldObject getWorldObject(int idx) {
+    if (idx >= 0 && idx < size()) {
+      return objList.get(idx);
+    }
+    
+    return null;
+  }
+  
+  public int size() { return objList.size(); }
+  
+  public void setName(String newName) { name = newName; }
+  public String getName() { return name; }
+}
+
+/**
  * Build a PShape object from the contents of the given .stl source file
  * stored in /RobotRun/data/.
  */
@@ -739,6 +817,50 @@ public void addWorldObject(WorldObject newObject) {
     // TODO add in alphabetical order
     FIXTURES.add((Fixture)newObject);
   }
+}
+
+  /**
+   * Delete the given world object from the correct object
+   * list, if it exists in the list.
+   * 
+   * @returning  0 if a Part was removed succesfully,
+   *             1 if a Part failed to be removed,
+   *             2 if a Fixture was removed successfully,
+   *             3 if a Fixture failed to be removed,
+   *             5 for any other case.
+   */
+public int removeWorldObject(WorldObject toRemove) {
+  int ret = 5;
+  
+  if (toRemove instanceof Part) {
+    // Remove a part from the list
+    boolean removed = PARTS.remove(toRemove);
+    ret = (removed) ? 0 : 1;
+    
+  } else if (toRemove instanceof Fixture) {
+    // Remove a fixture from the list
+    boolean removed = FIXTURES.remove(toRemove);
+    
+    if (removed) {
+      // Remove the reference from all Part objects associated with this fixture
+      for (WorldObject obj : PARTS) {
+        
+        if (obj instanceof Part) {
+          Part part = (Part)obj;
+          
+          if (part.getFixtureRef() == toRemove) {
+            part.setFixtureRef(null);
+          }
+        }
+      }
+      
+      ret = 2;
+    } else {
+      ret =  3;
+    }
+  }
+  
+  return ret;
 }
 
 /**
