@@ -1165,7 +1165,9 @@ public void up() {
     case SET_MV_INSTRUCT_REG_TYPE:
     case SET_FRM_INSTR_TYPE:
     case SET_REG_EXPR_TYPE:
-    case SET_BOOL_EXPR_ACT:
+    case SET_IF_STMT_ACT:
+    case SET_SELECT_STMT_ACT:
+    case SET_SELECT_STMT_ARG:
     case SET_EXPR_ARG: //<>//
     case SET_BOOL_EXPR_ARG: //<>//
     case SET_EXPR_OP:
@@ -1291,7 +1293,9 @@ public void dn() {
     case SET_MV_INSTRUCT_REG_TYPE:
     case SET_FRM_INSTR_TYPE:
     case SET_REG_EXPR_TYPE:
-    case SET_BOOL_EXPR_ACT:
+    case SET_IF_STMT_ACT:
+    case SET_SELECT_STMT_ACT:
+    case SET_SELECT_STMT_ARG:
     case SET_EXPR_ARG:
     case SET_BOOL_EXPR_ARG:
     case SET_EXPR_OP:
@@ -2356,7 +2360,7 @@ public void ENTER() {
         switchScreen(Screen.INPUT_CONST);
       }
       break;
-    case SET_BOOL_EXPR_ACT:
+    case SET_IF_STMT_ACT:
       IfStatement stmt = (IfStatement)activeInstruction();
       if(opt_select == 0)
         stmt.instr = new JumpInstruction();
@@ -2479,6 +2483,43 @@ public void ENTER() {
       lastScreen();
       break;
     
+    //Select statement edit
+    case SET_SELECT_STMT_ACT:
+      SelectStatement s = (SelectStatement)activeInstruction();
+      editIdx = (col_select - 2) / 4;
+      
+      if(opt_select == 0) {
+        s.arg = new ExprOperand();
+      } else {
+        s.arg = new ExprOperand(new DataRegister(), -1);
+      }
+      
+      break;
+    case SET_SELECT_STMT_ARG:
+      s = (SelectStatement)activeInstruction();
+      
+      if(opt_select == 0) {
+        s.arg = new ExprOperand();
+      } else {
+        s.arg = new ExprOperand(new DataRegister(), -1);
+      }
+      
+      nextScreen(Screen.SET_SELECT_STMT_VAL);
+    case SET_SELECT_STMT_VAL:
+      try {
+        s = (SelectStatement)activeInstruction();
+        float f = Float.parseFloat(workingText);
+        
+        if(opEdit.type == 0) {
+          opEdit.dataVal = f;
+        } else if(opEdit.type == 2) {
+          opEdit.dataVal = DREG[(int)f].value;
+        }
+      } catch(NumberFormatException ex) {}
+      
+      lastScreen();
+      break;
+    
     //IO instruction edit
     case SET_IO_INSTR_STATE:
       IOInstruction ioInst = (IOInstruction)activeInstruction();
@@ -2561,6 +2602,7 @@ public void ENTER() {
       
       lastScreen();
       break;
+      
     //Jump/ Label instruction edit
     case SET_LBL_NUM:
       try {
@@ -3255,7 +3297,6 @@ public void resetStack(){
 }
 
 public void loadScreen(){
-  
   switch(mode){
     //Main menu
     case MAIN_MENU_NAV:
@@ -3349,7 +3390,9 @@ public void loadScreen(){
     case SELECT_JMP_LBL:
     case SELECT_REG_STMT:
     case SELECT_COND_STMT:
-    case SET_BOOL_EXPR_ACT:
+    case SET_IF_STMT_ACT:
+    case SET_SELECT_STMT_ACT:
+    case SET_SELECT_STMT_ARG:
     case SET_EXPR_ARG:
     case SET_BOOL_EXPR_ARG:
     case SET_EXPR_OP:
@@ -3410,13 +3453,13 @@ public void loadScreen(){
     case SET_MV_INSTR_IDX:
       mInst = activeMotionInst();
       workingText = Integer.toString(mInst.getPosition());
-      
       break;
     case SET_MV_INSTR_TERM:
       mInst = activeMotionInst();
       workingText = Integer.toString(mInst.getTermination());
       break;
     case SET_FRAME_INSTR_IDX:
+    case SET_SELECT_STMT_VAL:
     case SET_REG_EXPR_IDX:
       opt_select = 0;
       workingText = "";
@@ -3897,7 +3940,10 @@ public ArrayList<ArrayList<String>> getContents(Screen mode){
     case SET_FRAME_INSTR_IDX:
     case SET_REG_EXPR_TYPE:
     case SET_REG_EXPR_IDX:
-    case SET_BOOL_EXPR_ACT:
+    case SET_IF_STMT_ACT:
+    case SET_SELECT_STMT_ARG:
+    case SET_SELECT_STMT_VAL:
+    case SET_SELECT_STMT_ACT:
     case SET_EXPR_ARG:
     case SET_BOOL_EXPR_ARG:
     case SET_EXPR_OP:
@@ -4059,7 +4105,10 @@ public ArrayList<String> getOptions(Screen mode){
     case SET_FRAME_INSTR_IDX:
     case SET_REG_EXPR_TYPE:
     case SET_REG_EXPR_IDX:
-    case SET_BOOL_EXPR_ACT:
+    case SET_IF_STMT_ACT:
+    case SET_SELECT_STMT_ARG:
+    case SET_SELECT_STMT_VAL:
+    case SET_SELECT_STMT_ACT:
     case SET_EXPR_ARG:
     case SET_BOOL_EXPR_ARG:
     case SET_EXPR_OP:
@@ -4570,7 +4619,7 @@ public void getInstrEdit(Instruction ins) {
       if(col_select >= 3 && col_select < len + 1) {
         editExpression((Expression)stmt.expr, 3);
       } else if(col_select == len + 2) {
-        nextScreen(Screen.SET_BOOL_EXPR_ACT);
+        nextScreen(Screen.SET_IF_STMT_ACT);
       } else if(col_select == len + 3) {
         if(stmt.instr instanceof JumpInstruction) {
           nextScreen(Screen.SET_JUMP_TGT);
@@ -4590,7 +4639,7 @@ public void getInstrEdit(Instruction ins) {
         opEdit = ((BooleanExpression)stmt.expr).getArg2();
         nextScreen(Screen.SET_BOOL_EXPR_ARG);
       } else if(col_select == 5){
-        nextScreen(Screen.SET_BOOL_EXPR_ACT);
+        nextScreen(Screen.SET_IF_STMT_ACT);
       } else {
         if(stmt.instr instanceof JumpInstruction) {
           nextScreen(Screen.SET_JUMP_TGT);
@@ -4716,8 +4765,8 @@ public ArrayList<String> loadInstrEdit(Screen mode) {
       edit.add("\0" + workingText);
       break;
     case SET_FRM_INSTR_TYPE:
-      edit.add("1. TFRAME_NUM = ...");
-      edit.add("2. UFRAME_NUM = ...");
+      edit.add("1. TFRAME_NUM = x");
+      edit.add("2. UFRAME_NUM = x");
       break;
     case SET_FRAME_INSTR_IDX:
       edit.add("Select frame index:");
@@ -4769,10 +4818,10 @@ public ArrayList<String> loadInstrEdit(Screen mode) {
       break;
     case SET_EXPR_ARG:
     case SET_BOOL_EXPR_ARG:
-      edit.add("R[...]");
-      edit.add("IO[...]");
+      edit.add("R[x]");
+      edit.add("IO[x]");
       if(opEdit instanceof Expression) {
-        edit.add("PR[...]");
+        edit.add("PR[x]");
         edit.add("(...)");
       }
       edit.add("Const");
@@ -4790,8 +4839,20 @@ public ArrayList<String> loadInstrEdit(Screen mode) {
       edit.add("1. False");
       edit.add("2. True");
       break;
-    case SET_BOOL_EXPR_ACT:
-      edit.add("JMP LBL[...]");
+    case SET_IF_STMT_ACT:
+      edit.add("JMP LBL[x]");
+      edit.add("CALL");
+      break;
+    case SET_SELECT_STMT_ARG:
+      edit.add("R[x]");
+      edit.add("Const");
+      break;
+    case SET_SELECT_STMT_VAL:
+      edit.add("Input value/ register index:");
+      edit.add("\0" + workingText);
+      break;
+    case SET_SELECT_STMT_ACT:
+      edit.add("JMP LBL[x]");
       edit.add("CALL");
       break;
     case SET_LBL_NUM:
