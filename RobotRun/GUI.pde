@@ -122,7 +122,7 @@ void gui() {
   int button_offsetX = LARGE_BUTTON + 1;
   int button_offsetY = LARGE_BUTTON + 1;  
   
-  int record_normal_px = WindowManager.lButtonWidth * 4 + LARGE_BUTTON + 1;
+  int record_normal_px = WindowManager.lButtonWidth * 5 + LARGE_BUTTON + 1;
   int record_normal_py = 0;   
   PImage[] record = {loadImage("images/record-35x20.png"), 
     loadImage("images/record-over.png"), 
@@ -888,16 +888,41 @@ public void keyReleased() {
 
 /*Button events*/
 
-public void Create() {
+public void CreateWldObj() {
+  /* Create a world object from the input fields in the Create window. */
   addWorldObject( manager.createWorldObject() );
 }
 
-public void Clear() {
-  manager.clearObjCreationInput();
+public void ClearFields() {
+  /* Clear all input fields for creating and editing world objects. */
+  manager.clearCreateInputFields();
 }
 
-public void Confirm() {
+public void UpdateWldObj() {
+  /* Confirm changes made to the orientation and
+  * position of the selected world object. */
   manager.editWorldObject();
+}
+
+public void DeleteWldObj() {
+  /* Delete focused world object */
+  int ret = manager.deleteActiveWorldObject();
+  System.out.printf("World Object removed: %d\n", ret);
+}
+
+public void NewScenario() {
+  // TODO create a new scenario
+  println("Create scenario");
+}
+
+public void SaveScenario() {
+  // TODO save current scenario
+  println("Save scenario");
+}
+
+public void LoadScenario() {
+  // TODO load previous scenario
+  println("Load scenario");
 }
 
 // Menu button

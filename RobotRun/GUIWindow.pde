@@ -109,11 +109,11 @@ public class MyDropdownList extends DropdownList {
 public class WindowManager {
   private ControlP5 UIManager;
   
-  private Group createObjWindow, editObjWindow, sharedElements;
+  private Group createObjWindow, editObjWindow, sharedElements, scenarioWindow;
 
   private ButtonTabs windowTabs;
   private Textarea[] labels;
-  private Textfield objName;
+  private Textfield objName, scenarioName;
   private ArrayList<Textfield> shapeDefFields;
   private Textfield[] objOrientation;
   
@@ -142,11 +142,11 @@ public class WindowManager {
     // Initialize content fields
     UIManager = manager;
     
-    labels = new Textarea[15];
+    labels = new Textarea[17];
     objOrientation = new Textfield[6];
     shapeDefFields = new ArrayList<Textfield>();
-    singleButtons = new Button[3];
-    dropDownLists = new MyDropdownList[6];
+    singleButtons = new Button[7];
+    dropDownLists = new MyDropdownList[7];
     
     // Create some temporary color and dimension variables
     color bkgrdColor = color(210),
@@ -160,7 +160,7 @@ public class WindowManager {
           buttonActColor = color(220, 40, 40);
     
     int[] relPos = new int[] { offsetX, 0 };
-    String[] windowList = new String[] { "Hide", "Pendant", "Create", "Edit" };
+    String[] windowList = new String[] { "Hide", "Pendant", "Create", "Edit", "Scenario" };
     // Create window tab bar
     windowTabs = (ButtonTabs)(new ButtonTabs(UIManager, "List:")
                   // Sets button text color
@@ -176,44 +176,49 @@ public class WindowManager {
     // Initialize the groups
     relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_LEFT, 0, 0);
     createObjWindow = UIManager.addGroup("CREATEOBJ").setPosition(relPos[0], relPos[1])
-                  .setBackgroundColor(bkgrdColor)
-                  .setSize(windowTabs.getWidth(), 420)
-                  .hideBar();
+                               .setBackgroundColor(bkgrdColor)
+                               .setSize(windowTabs.getWidth(), 0)
+                               .hideBar();
     
     editObjWindow = UIManager.addGroup("EDITOBJ").setPosition(relPos[0], relPos[1])
-                .setBackgroundColor(bkgrdColor)
-                .setSize(windowTabs.getWidth(), 350)
-                .hideBar();
+                             .setBackgroundColor(bkgrdColor)
+                             .setSize(windowTabs.getWidth(), 0)
+                             .hideBar();
     
     sharedElements = UIManager.addGroup("SHARED").setPosition(relPos[0], relPos[1])
-                .setBackgroundColor(bkgrdColor)
-                .setSize(lButtonWidth + offsetX + 10, sButtonHeight + offsetX)
-                .hideBar();
+                              .setBackgroundColor(bkgrdColor)
+                              .setSize(lButtonWidth + offsetX + 10, sButtonHeight + offsetX)
+                              .hideBar();
+    
+    scenarioWindow = UIManager.addGroup("SCENARIO").setPosition(relPos[0], relPos[1])
+                              .setBackgroundColor(bkgrdColor)
+                              .setSize(windowTabs.getWidth(), 0)
+                              .hideBar();
     // Initialize window contents
     labels[0] = UIManager.addTextarea("Name", "Name:", 0, 0, sLblWidth, fieldHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(createObjWindow);
+                         .setFont(medium)
+                         .setColor(fieldTxtColor)
+                         .setColorActive(fieldActColor)
+                         .setColorBackground(bkgrdColor)
+                         .setColorForeground(bkgrdColor)
+                         .moveTo(createObjWindow);
     
     objName = UIManager.addTextfield("NField", 0, 0, fieldWidth, fieldHeight)
-                          .setColor(fieldTxtColor)
-                          .setColorCursor(fieldCurColor)
-                          .setColorActive(fieldActColor)
-                          .setColorLabel(bkgrdColor)
-                          .setColorBackground(fieldBkgrdColor)
-                          .setColorForeground(fieldFrgrdColor)
-                          .moveTo(createObjWindow);
+                       .setColor(fieldTxtColor)
+                       .setColorCursor(fieldCurColor)
+                       .setColorActive(fieldActColor)
+                       .setColorLabel(bkgrdColor)
+                       .setColorBackground(fieldBkgrdColor)
+                       .setColorForeground(fieldFrgrdColor)
+                       .moveTo(createObjWindow);
     
     labels[1] = UIManager.addTextarea("ShapeType", "Shape:", 0, 0, mLblWidth, mButtonHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(createObjWindow);
+                         .setFont(medium)
+                         .setColor(fieldTxtColor)
+                         .setColorActive(fieldActColor)
+                         .setColorBackground(bkgrdColor)
+                         .setColorForeground(bkgrdColor)
+                         .moveTo(createObjWindow);
     
     labels[10] = UIManager.addTextarea("Dim0", "Dim(0):", 0, 0, mLblWidth, mButtonHeight)
                           .setFont(medium)
@@ -224,13 +229,13 @@ public class WindowManager {
                           .moveTo(createObjWindow);
     
     shapeDefFields.add( UIManager.addTextfield("D0Field", 0, 0, fieldWidth, fieldHeight)
-                          .setColor(fieldTxtColor)
-                          .setColorCursor(fieldCurColor)
-                          .setColorActive(fieldActColor)
-                          .setColorLabel(bkgrdColor)
-                          .setColorBackground(fieldBkgrdColor)
-                          .setColorForeground(fieldFrgrdColor)
-                          .moveTo(createObjWindow) );
+                                 .setColor(fieldTxtColor)
+                                 .setColorCursor(fieldCurColor)
+                                 .setColorActive(fieldActColor)
+                                 .setColorLabel(bkgrdColor)
+                                 .setColorBackground(fieldBkgrdColor)
+                                 .setColorForeground(fieldFrgrdColor)
+                                 .moveTo(createObjWindow) );
     
     labels[11] = UIManager.addTextarea("Dim1", "Dim(1):", 0, 0, mLblWidth, mButtonHeight)
                           .setFont(medium)
@@ -241,13 +246,13 @@ public class WindowManager {
                           .moveTo(createObjWindow);
     
     shapeDefFields.add( UIManager.addTextfield("D1Field", 0, 0, fieldWidth, fieldHeight)
-                          .setColor(fieldTxtColor)
-                          .setColorCursor(fieldCurColor)
-                          .setColorActive(fieldActColor)
-                          .setColorLabel(bkgrdColor)
-                          .setColorBackground(fieldBkgrdColor)
-                          .setColorForeground(fieldFrgrdColor)
-                          .moveTo(createObjWindow) );
+                                 .setColor(fieldTxtColor)
+                                 .setColorCursor(fieldCurColor)
+                                 .setColorActive(fieldActColor)
+                                 .setColorLabel(bkgrdColor)
+                                 .setColorBackground(fieldBkgrdColor)
+                                 .setColorForeground(fieldFrgrdColor)
+                                 .moveTo(createObjWindow) );
     
     labels[12] = UIManager.addTextarea("Dim2", "Dim(2):", 0, 0, mLblWidth, mButtonHeight)
                           .setFont(medium)
@@ -258,13 +263,13 @@ public class WindowManager {
                           .moveTo(createObjWindow);
     
     shapeDefFields.add( UIManager.addTextfield("D2Field", 0, 0, fieldWidth, fieldHeight)
-                          .setColor(fieldTxtColor)
-                          .setColorCursor(fieldCurColor)
-                          .setColorActive(fieldActColor)
-                          .setColorLabel(bkgrdColor)
-                          .setColorBackground(fieldBkgrdColor)
-                          .setColorForeground(fieldFrgrdColor)
-                          .moveTo(createObjWindow) );
+                                 .setColor(fieldTxtColor)
+                                 .setColorCursor(fieldCurColor)
+                                 .setColorActive(fieldActColor)
+                                 .setColorLabel(bkgrdColor)
+                                 .setColorBackground(fieldBkgrdColor)
+                                 .setColorForeground(fieldFrgrdColor)
+                                 .moveTo(createObjWindow) );
     
     labels[13] = UIManager.addTextarea("Dim3", "Dim(3):", 0, 0, mLblWidth, mButtonHeight)
                           .setFont(medium)
@@ -275,80 +280,82 @@ public class WindowManager {
                           .moveTo(createObjWindow);
     
     shapeDefFields.add( UIManager.addTextfield("D3Field", 0, 0, fieldWidth, fieldHeight)
-                          .setColor(fieldTxtColor)
-                          .setColorCursor(fieldCurColor)
-                          .setColorActive(fieldActColor)
-                          .setColorLabel(bkgrdColor)
-                          .setColorBackground(fieldBkgrdColor)
-                          .setColorForeground(fieldFrgrdColor)
-                          .moveTo(createObjWindow) );
+                                 .setColor(fieldTxtColor)
+                                 .setColorCursor(fieldCurColor)
+                                 .setColorActive(fieldActColor)
+                                 .setColorLabel(bkgrdColor)
+                                 .setColorBackground(fieldBkgrdColor)
+                                 .setColorForeground(fieldFrgrdColor)
+                                 .moveTo(createObjWindow) );
     
     labels[2] = UIManager.addTextarea("FillColor", "Fill:", 0, 0, mLblWidth, mButtonHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(createObjWindow);
+                         .setFont(medium)
+                         .setColor(fieldTxtColor)
+                         .setColorActive(fieldActColor)
+                         .setColorBackground(bkgrdColor)
+                         .setColorForeground(bkgrdColor)
+                         .moveTo(createObjWindow);
     
     labels[3] = UIManager.addTextarea("OutlineColor", "Outline:", 0, 0, mLblWidth, mButtonHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(createObjWindow);
+                         .setFont(medium)
+                         .setColor(fieldTxtColor)
+                         .setColorActive(fieldActColor)
+                         .setColorBackground(bkgrdColor)
+                         .setColorForeground(bkgrdColor)
+                         .moveTo(createObjWindow);
     
-    singleButtons[0] = UIManager.addButton("Create")
-                        .setColorValue(buttonTxtColor)
-                        .setColorBackground(buttonDefColor)
-                        .setColorActive(buttonActColor)
-                        .moveTo(createObjWindow)
-                        .setPosition(0, 0)
-                        .setSize(sButtonWidth, mButtonHeight);
+    singleButtons[0] = UIManager.addButton("CreateWldObj")
+                                .setCaptionLabel("Create")
+                                .setColorValue(buttonTxtColor)
+                                .setColorBackground(buttonDefColor)
+                                .setColorActive(buttonActColor)
+                                .moveTo(createObjWindow)
+                                .setPosition(0, 0)
+                                .setSize(sButtonWidth, mButtonHeight);
     
-    singleButtons[2] = UIManager.addButton("Clear")
-                        .setColorValue(buttonTxtColor)
-                        .setColorBackground(buttonDefColor)
-                        .setColorActive(buttonActColor)
-                        .moveTo(sharedElements)
-                        .setPosition(0, 0)
-                        .setSize(sButtonWidth, mButtonHeight);
+    singleButtons[2] = UIManager.addButton("ClearFields")
+                                .setCaptionLabel("Clear")
+                                .setColorValue(buttonTxtColor)
+                                .setColorBackground(buttonDefColor)
+                                .setColorActive(buttonActColor)
+                                .moveTo(createObjWindow)
+                                .setPosition(0, 0)
+                                .setSize(sButtonWidth, mButtonHeight);
     
     // Place below the objects dropdown list
     labels[4] = UIManager.addTextarea("XArea", "X:", 0, 0, sLblWidth, fieldHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(editObjWindow);
+                         .setFont(medium)
+                         .setColor(fieldTxtColor)
+                         .setColorActive(fieldActColor)
+                         .setColorBackground(bkgrdColor)
+                         .setColorForeground(bkgrdColor)
+                         .moveTo(editObjWindow);
     
     objOrientation[0] = UIManager.addTextfield("XField", 0, 0, fieldWidth, fieldHeight)
-                          .setColor(fieldTxtColor)
-                          .setColorCursor(fieldCurColor)
-                          .setColorActive(fieldActColor)
-                          .setColorLabel(bkgrdColor)
-                          .setColorBackground(fieldBkgrdColor)
-                          .setColorForeground(fieldFrgrdColor)
-                          .moveTo(editObjWindow);
+                                 .setColor(fieldTxtColor)
+                                 .setColorCursor(fieldCurColor)
+                                 .setColorActive(fieldActColor)
+                                 .setColorLabel(bkgrdColor)
+                                 .setColorBackground(fieldBkgrdColor)
+                                 .setColorForeground(fieldFrgrdColor)
+                                 .moveTo(editObjWindow);
     
     labels[5] = UIManager.addTextarea("YArea", "Y:", 0, 0, sLblWidth, fieldHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(editObjWindow);
+                         .setFont(medium)
+                         .setColor(fieldTxtColor)
+                         .setColorActive(fieldActColor)
+                         .setColorBackground(bkgrdColor)
+                         .setColorForeground(bkgrdColor)
+                         .moveTo(editObjWindow);
     
     objOrientation[1] = UIManager.addTextfield("YField", 0, 0, fieldWidth, fieldHeight)
-                          .setColor(fieldTxtColor)
-                          .setColorCursor(fieldCurColor)
-                          .setColorActive(fieldActColor)
-                          .setColorLabel(bkgrdColor)
-                          .setColorBackground(fieldBkgrdColor)
-                          .setColorForeground(fieldFrgrdColor)
-                          .moveTo(editObjWindow);
+                                 .setColor(fieldTxtColor)
+                                 .setColorCursor(fieldCurColor)
+                                 .setColorActive(fieldActColor)
+                                 .setColorLabel(bkgrdColor)
+                                 .setColorBackground(fieldBkgrdColor)
+                                 .setColorForeground(fieldFrgrdColor)
+                                 .moveTo(editObjWindow);
     
     labels[6] = UIManager.addTextarea("ZArea", "Z:", 0, 0, sLblWidth, fieldHeight)
                           .setFont(medium)
@@ -359,64 +366,64 @@ public class WindowManager {
                           .moveTo(editObjWindow);
     
     objOrientation[2] = UIManager.addTextfield("ZField", 0, 0, fieldWidth, fieldHeight)
-                          .setColor(fieldTxtColor)
-                          .setColorCursor(fieldCurColor)
-                          .setColorActive(fieldActColor)
-                          .setColorLabel(bkgrdColor)
-                          .setColorBackground(fieldBkgrdColor)
-                          .setColorForeground(fieldFrgrdColor)
-                          .moveTo(editObjWindow);
+                                 .setColor(fieldTxtColor)
+                                 .setColorCursor(fieldCurColor)
+                                 .setColorActive(fieldActColor)
+                                 .setColorLabel(bkgrdColor)
+                                 .setColorBackground(fieldBkgrdColor)
+                                 .setColorForeground(fieldFrgrdColor)
+                                 .moveTo(editObjWindow);
     
     labels[7] = UIManager.addTextarea("WArea", "W:", 0, 0, sLblWidth, fieldHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(editObjWindow);
+                         .setFont(medium)
+                         .setColor(fieldTxtColor)
+                         .setColorActive(fieldActColor)
+                         .setColorBackground(bkgrdColor)
+                         .setColorForeground(bkgrdColor)
+                         .moveTo(editObjWindow);
     
     objOrientation[3] = UIManager.addTextfield("WField", 0, 0, fieldWidth, fieldHeight)
-                          .setColor(fieldTxtColor)
-                          .setColorCursor(fieldCurColor)
-                          .setColorActive(fieldActColor)
-                          .setColorLabel(bkgrdColor)
-                          .setColorBackground(fieldBkgrdColor)
-                          .setColorForeground(fieldFrgrdColor)
-                          .moveTo(editObjWindow);
+                                 .setColor(fieldTxtColor)
+                                 .setColorCursor(fieldCurColor)
+                                 .setColorActive(fieldActColor)
+                                 .setColorLabel(bkgrdColor)
+                                 .setColorBackground(fieldBkgrdColor)
+                                 .setColorForeground(fieldFrgrdColor)
+                                 .moveTo(editObjWindow);
     
     labels[8] = UIManager.addTextarea("PArea", "P:", 0, 0, sLblWidth, fieldHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(editObjWindow);
+                         .setFont(medium)
+                         .setColor(fieldTxtColor)
+                         .setColorActive(fieldActColor)
+                         .setColorBackground(bkgrdColor)
+                         .setColorForeground(bkgrdColor)
+                         .moveTo(editObjWindow);
     
     objOrientation[4] = UIManager.addTextfield("PField", 0, 0, fieldWidth, fieldHeight)
-                          .setColor(fieldTxtColor)
-                          .setColorCursor(fieldCurColor)
-                          .setColorActive(fieldActColor)
-                          .setColorLabel(bkgrdColor)
-                          .setColorBackground(fieldBkgrdColor)
-                          .setColorForeground(fieldFrgrdColor)
-                          .moveTo(editObjWindow);
+                                 .setColor(fieldTxtColor)
+                                 .setColorCursor(fieldCurColor)
+                                 .setColorActive(fieldActColor)
+                                 .setColorLabel(bkgrdColor)
+                                 .setColorBackground(fieldBkgrdColor)
+                                 .setColorForeground(fieldFrgrdColor)
+                                 .moveTo(editObjWindow);
     
     labels[9] = UIManager.addTextarea("RArea", "R:", 0, 0, sLblWidth, fieldHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(editObjWindow);
+                         .setFont(medium)
+                         .setColor(fieldTxtColor)
+                         .setColorActive(fieldActColor)
+                         .setColorBackground(bkgrdColor)
+                         .setColorForeground(bkgrdColor)
+                         .moveTo(editObjWindow);
     
     objOrientation[5] = UIManager.addTextfield("RField", 0, 0, fieldWidth, fieldHeight)
-                          .setColor(fieldTxtColor)
-                          .setColorCursor(fieldCurColor)
-                          .setColorActive(fieldActColor)
-                          .setColorLabel(bkgrdColor)
-                          .setColorBackground(fieldBkgrdColor)
-                          .setColorForeground(fieldFrgrdColor)
-                          .moveTo(editObjWindow);
+                                 .setColor(fieldTxtColor)
+                                 .setColorCursor(fieldCurColor)
+                                 .setColorActive(fieldActColor)
+                                 .setColorLabel(bkgrdColor)
+                                 .setColorBackground(fieldBkgrdColor)
+                                 .setColorForeground(fieldFrgrdColor)
+                                 .moveTo(editObjWindow);
     
     labels[14] = UIManager.addTextarea("FixRef", "Reference:", 0, 0, lLblWidth, mButtonHeight)
                           .setFont(medium)
@@ -426,14 +433,104 @@ public class WindowManager {
                           .setColorForeground(bkgrdColor)
                           .moveTo(editObjWindow);
     
-    singleButtons[1] = UIManager.addButton("Confirm")
-                        .setColorValue(buttonTxtColor)
-                        .setColorBackground(buttonDefColor)
-                        .setColorActive(buttonActColor)
-                        .moveTo(editObjWindow)
-                        .setSize(sButtonWidth, mButtonHeight);
+    singleButtons[1] = UIManager.addButton("UpdateWldObj")
+                                .setCaptionLabel("Confirm")
+                                .setColorValue(buttonTxtColor)
+                                .setColorBackground(buttonDefColor)
+                                .setColorActive(buttonActColor)
+                                .moveTo(editObjWindow)
+                                .setSize(sButtonWidth, mButtonHeight);
+    
+    singleButtons[3] = UIManager.addButton("DeleteWldObj")
+                                .setCaptionLabel("Delete")
+                                .setColorValue(buttonTxtColor)
+                                .setColorBackground(buttonDefColor)
+                                .setColorActive(buttonActColor)
+                                .moveTo(editObjWindow)
+                                .setSize(sButtonWidth, mButtonHeight);
+    
+    labels[15] = UIManager.addTextarea("NewScenarioArea", "Name:", 0, 0, sLblWidth, sButtonHeight)
+                          .setFont(medium)
+                          .setColor(fieldTxtColor)
+                          .setColorActive(fieldActColor)
+                          .setColorBackground(bkgrdColor)
+                          .setColorForeground(bkgrdColor)
+                          .moveTo(scenarioWindow);
+    
+    scenarioName = UIManager.addTextfield("ScenarioName", 0, 0, fieldWidth, fieldHeight)
+                            .setColor(fieldTxtColor)
+                            .setColorCursor(fieldCurColor)
+                            .setColorActive(fieldActColor)
+                            .setColorLabel(bkgrdColor)
+                            .setColorBackground(fieldBkgrdColor)
+                            .setColorForeground(fieldFrgrdColor)
+                            .moveTo(scenarioWindow);
+    
+    singleButtons[4] = UIManager.addButton("NewScenario")
+                                .setCaptionLabel("New")
+                                .setColorValue(buttonTxtColor)
+                                .setColorBackground(buttonDefColor)
+                                .setColorActive(buttonActColor)
+                                .moveTo(scenarioWindow)
+                                .setSize(sButtonWidth, mButtonHeight);
+    
+    labels[16] = UIManager.addTextarea("ScenarioArea", "Scenario:", 0, 0, lLblWidth, mButtonHeight)
+                          .setFont(medium)
+                          .setColor(fieldTxtColor)
+                          .setColorActive(fieldActColor)
+                          .setColorBackground(bkgrdColor)
+                          .setColorForeground(bkgrdColor)
+                          .moveTo(scenarioWindow);
+    
+    singleButtons[5] = UIManager.addButton("SaveScenario")
+                                .setCaptionLabel("Save")
+                                .setColorValue(buttonTxtColor)
+                                .setColorBackground(buttonDefColor)
+                                .setColorActive(buttonActColor)
+                                .moveTo(scenarioWindow)
+                                .setSize(sButtonWidth, mButtonHeight);
+    
+    singleButtons[6] = UIManager.addButton("LoadScenario")
+                                .setCaptionLabel("Load")
+                                .setColorValue(buttonTxtColor)
+                                .setColorBackground(buttonDefColor)
+                                .setColorActive(buttonActColor)
+                                .moveTo(scenarioWindow)
+                                .setSize(sButtonWidth, mButtonHeight);
+    
     // Initialize dropdown lists
-    dropDownLists[2] = (MyDropdownList)((new MyDropdownList( UIManager, "Shape"))
+    dropDownLists[1] = (MyDropdownList)((new MyDropdownList( UIManager, "Outline"))
+                          .setSize(lButtonWidth, 4 * mButtonHeight)
+                          .setBarHeight(dropItemHeight)
+                          .setItemHeight(dropItemHeight)
+                          .setColorValue(buttonTxtColor)
+                          .setColorBackground(buttonDefColor)
+                          .setColorActive(buttonActColor)
+                          .moveTo(createObjWindow)
+                          .close());
+    
+    dropDownLists[1].addItem("red", color(255, 0, 0));
+    dropDownLists[1].addItem("green", color(0, 255, 0));
+    dropDownLists[1].addItem("blue", color(0, 0, 255));
+    dropDownLists[1].addItem("black", color(0));
+    
+    dropDownLists[0] = (MyDropdownList)((new MyDropdownList( UIManager, "Fill"))
+                          .setSize(lButtonWidth, 5 * mButtonHeight)
+                          .setBarHeight(dropItemHeight)
+                          .setItemHeight(dropItemHeight)
+                          .setColorValue(buttonTxtColor)
+                          .setColorBackground(buttonDefColor)
+                          .setColorActive(buttonActColor)
+                          .moveTo(createObjWindow)
+                          .close());
+   
+    dropDownLists[0].addItem("white", color(255));
+    dropDownLists[0].addItem("red", color(255, 0, 0));
+    dropDownLists[0].addItem("green", color(0, 255, 0));
+    dropDownLists[0].addItem("blue", color(0, 0, 255));
+    dropDownLists[0].addItem("black", color(0));
+   
+   dropDownLists[2] = (MyDropdownList)((new MyDropdownList( UIManager, "Shape"))
                           .setSize(lButtonWidth, 4 * mButtonHeight)
                           .setBarHeight(dropItemHeight)
                           .setItemHeight(dropItemHeight)
@@ -460,47 +557,6 @@ public class WindowManager {
     dropDownLists[3].addItem("Parts", 0.0);
     dropDownLists[3].addItem("Fixtures", 1.0);
     
-    dropDownLists[1] = (MyDropdownList)((new MyDropdownList( UIManager, "Outline"))
-                          .setSize(lButtonWidth, 4 * mButtonHeight)
-                          .setBarHeight(dropItemHeight)
-                          .setItemHeight(dropItemHeight)
-                          .setColorValue(buttonTxtColor)
-                          .setColorBackground(buttonDefColor)
-                          .setColorActive(buttonActColor)
-                          .moveTo(createObjWindow)
-                          .close());
-    
-    dropDownLists[1].addItem("red", color(255, 0, 0));
-    dropDownLists[1].addItem("green", color(0, 255, 0));
-    dropDownLists[1].addItem("blue", color(0, 0, 255));
-    dropDownLists[1].addItem("black", color(0));
-    
-    dropDownLists[0] = (MyDropdownList)((new MyDropdownList( UIManager, "Fill"))
-                          .setSize(lButtonWidth, 5 * mButtonHeight)
-                          .setBarHeight(dropItemHeight)
-                          .setItemHeight(dropItemHeight)
-                          .setColorValue(buttonTxtColor)
-                          .setColorBackground(buttonDefColor)
-                          .setColorActive(buttonActColor)
-                          .moveTo(createObjWindow)
-                          .close());
-    
-    dropDownLists[0].addItem("white", color(255));
-    dropDownLists[0].addItem("red", color(255, 0, 0));
-    dropDownLists[0].addItem("green", color(0, 255, 0));
-    dropDownLists[0].addItem("blue", color(0, 0, 255));
-    dropDownLists[0].addItem("black", color(0));
-    
-    dropDownLists[4] = (MyDropdownList)((new MyDropdownList( UIManager, "Object"))
-                          .setSize(lLblWidth, 4 * mButtonHeight)
-                          .setBarHeight(dropItemHeight)
-                          .setItemHeight(dropItemHeight)
-                          .setColorValue(buttonTxtColor)
-                          .setColorBackground(buttonDefColor)
-                          .setColorActive(buttonActColor)
-                          .moveTo(editObjWindow)
-                          .close());
-    
     dropDownLists[5] = (MyDropdownList)((new MyDropdownList( UIManager, "Fixture"))
                           .setSize(lLblWidth, 4 * mButtonHeight)
                           .setBarHeight(dropItemHeight)
@@ -510,17 +566,34 @@ public class WindowManager {
                           .setColorActive(buttonActColor)
                           .moveTo(editObjWindow)
                           .close());
-                          
-    for (Button button : singleButtons) {
-      button.getCaptionLabel().setFont(small);
-    }
-    
-    for (DropdownList list : dropDownLists) {
-      list.getCaptionLabel().setFont(small);
-    }
-    
-    // Set the positions of all the contents
-    
+   
+   dropDownLists[4] = (MyDropdownList)((new MyDropdownList( UIManager, "Object"))
+                          .setSize(lLblWidth, 4 * mButtonHeight)
+                          .setBarHeight(dropItemHeight)
+                          .setItemHeight(dropItemHeight)
+                          .setColorValue(buttonTxtColor)
+                          .setColorBackground(buttonDefColor)
+                          .setColorActive(buttonActColor)
+                          .moveTo(editObjWindow)
+                          .close());
+   
+   dropDownLists[6] = (MyDropdownList)((new MyDropdownList( UIManager, "Scenario"))
+                          .setSize(lLblWidth, 4 * mButtonHeight)
+                          .setBarHeight(dropItemHeight)
+                          .setItemHeight(dropItemHeight)
+                          .setColorValue(buttonTxtColor)
+                          .setColorBackground(buttonDefColor)
+                          .setColorActive(buttonActColor)
+                          .moveTo(scenarioWindow)
+                          .close());
+   
+   for (Button button : singleButtons) {
+     button.getCaptionLabel().setFont(small);
+   }
+   
+   for (DropdownList list : dropDownLists) {
+     list.getCaptionLabel().setFont(small);
+   }
   }
   
   /**
@@ -531,52 +604,63 @@ public class WindowManager {
    */
   public void updateWindowDisplay() {
     String windowState = windowTabs.getActiveButtonName();
-    boolean clearScreen = false;
     
     if (windowState == null || windowState.equals("Hide")) {
       // Hide any window
-      clearScreen = (g1.isVisible() || createObjWindow.isVisible() || editObjWindow.isVisible() || sharedElements.isVisible());
       g1.hide();
       setGroupVisible(createObjWindow, false);
       setGroupVisible(editObjWindow, false);
       setGroupVisible(sharedElements, false);
+      setGroupVisible(scenarioWindow, false);
       
     } else if (windowState.equals("Pendant")) {
       // Show pendant
-      clearScreen = (!g1.isVisible() || createObjWindow.isVisible() || editObjWindow.isVisible() || sharedElements.isVisible());
       g1.show();
       setGroupVisible(createObjWindow, false);
       setGroupVisible(editObjWindow, false);
       setGroupVisible(sharedElements, false);
+      setGroupVisible(scenarioWindow, false);
       
     } else if (windowState.equals("Create")) {
       // Show world object creation window
-      clearScreen = (g1.isVisible() || !createObjWindow.isVisible() || editObjWindow.isVisible() || !sharedElements.isVisible());
-      
       g1.hide();
       setGroupVisible(editObjWindow, false);
+      setGroupVisible(scenarioWindow, false);
       
       if (!createObjWindow.isVisible()) {
         setGroupVisible(createObjWindow, true);
         setGroupVisible(sharedElements, true);
         updateCreateWindowContentPositions();
         updateListContents();
-        resetDropdownLabels();
+        resetListLabels();
       }
       
     } else if (windowState.equals("Edit")) {
       // Show world object edit window
-      clearScreen = (g1.isVisible() || createObjWindow.isVisible() || !editObjWindow.isVisible() || !sharedElements.isVisible());
-      
       g1.hide();
       setGroupVisible(createObjWindow, false);
+      setGroupVisible(scenarioWindow, false);
       
       if (!editObjWindow.isVisible()) {
         setGroupVisible(editObjWindow, true);
         setGroupVisible(sharedElements, true);
+        
         updateEditWindowContentPositions();
         updateListContents();
-        resetDropdownLabels();
+        resetListLabels();
+      }
+      
+    } else if (windowState.equals("Scenario")) {
+      // Show scenario creating/saving/loading
+      g1.hide();
+      setGroupVisible(createObjWindow, false);
+      setGroupVisible(editObjWindow, false);
+      
+      if (!scenarioWindow.isVisible()) {
+        setGroupVisible(scenarioWindow, true);
+        updateScenarioWindowContentPositions();
+        updateListContents();
+        resetListLabels();
       }
     }
   }
@@ -594,6 +678,9 @@ public class WindowManager {
     } else if (windowState != null && windowState.equals("Edit")) {
       // Edit window
       updateEditWindowContentPositions();
+    } else if (windowState != null && windowState.equals("Scenario")) {
+      // Scenario window
+      updateScenarioWindowContentPositions();
     }
     
     updateListContents();
@@ -658,6 +745,10 @@ public class WindowManager {
     // Clear button
     relPos = relativePosition(singleButtons[0], RelativePoint.TOP_RIGHT, offsetX, 0);
     singleButtons[2] = singleButtons[2].setPosition(relPos[0], relPos[1]);
+    // Update window background display
+    relPos = relativePosition(singleButtons[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    editObjWindow.setHeight(relPos[1]);
+    createObjWindow.setBackgroundHeight(relPos[1]);
   }
   
   /**
@@ -733,9 +824,44 @@ public class WindowManager {
     
     // Confirm button
     singleButtons[1] = singleButtons[1].setPosition(relPos[0], relPos[1]);
-    // Clear button
+    // Delete button
     relPos = relativePosition(singleButtons[1], RelativePoint.TOP_RIGHT, offsetX, 0);
-    singleButtons[2] = singleButtons[2].setPosition(relPos[0], relPos[1]);
+    singleButtons[3] = singleButtons[3].setPosition(relPos[0], relPos[1]);
+    // Update window background display
+    relPos = relativePosition(singleButtons[3], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    editObjWindow.setHeight(relPos[1]);
+    editObjWindow.setBackgroundHeight(relPos[1]);
+  }
+  
+  /**
+   * Updates the positions of all the contents of the scenario window.
+   */
+  private void updateScenarioWindowContentPositions() {
+    // New scenario name label
+    int[] relPos = new int[] {offsetX, offsetX };
+    labels[15] = labels[15].setPosition(relPos[0], relPos[1]);
+    // New scenario name field
+    relPos = relativePosition(labels[15], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    scenarioName = scenarioName.setPosition(relPos[0], relPos[1]);
+    // New scenario button
+    relPos = relativePosition(labels[15], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    singleButtons[4] = singleButtons[4].setPosition(relPos[0], relPos[1]);
+    // Scenario dropdown list label
+    relPos = relativePosition(singleButtons[4], RelativePoint.BOTTOM_LEFT, 0, 2 * distBtwFieldsY);
+    labels[16] = labels[16].setPosition(relPos[0], relPos[1]);
+    // Scenario dropdown list
+    relPos = relativePosition(labels[16], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    dropDownLists[6] = (MyDropdownList)dropDownLists[6].setPosition(relPos[0], relPos[1]);
+    // Save scenario button
+    relPos = relativePosition(labels[16], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    singleButtons[5] = singleButtons[5].setPosition(relPos[0], relPos[1]);
+    // Load scenario button
+    relPos = relativePosition(singleButtons[5], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    singleButtons[6] = singleButtons[6].setPosition(relPos[0], relPos[1]);
+    // Update window background display
+    relPos = relativePosition(singleButtons[6], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    scenarioWindow.setHeight(relPos[1]);
+    scenarioWindow.setBackgroundHeight(relPos[1]);
   }
   
   /**
@@ -822,11 +948,15 @@ public class WindowManager {
     dropDownLists[4].updateActiveLabel();
     
     dropDownLists[5] = (MyDropdownList)dropDownLists[5].clear();
+    dropDownLists[5].addItem("None", null);
     for (Fixture obj : FIXTURES) {
       // Add each fixture to the dropdown list
       dropDownLists[5].addItem(obj.toString(), obj);
     }
     dropDownLists[5].updateActiveLabel();
+    
+    dropDownLists[6] = (MyDropdownList)dropDownLists[6].clear();
+    // TODO add scenarios
   }
   
   /**
@@ -892,7 +1022,7 @@ public class WindowManager {
   }
   
   /**
-   * Creates a world object
+   * Creates a world object form the input fields in the Create window.
    */
   public WorldObject createWorldObject() {
     // Check the object type dropdown list
@@ -1082,7 +1212,7 @@ public class WindowManager {
   /**
    * Reset the base label of every dropdown list.
    */
-  private void resetDropdownLabels() {
+  private void resetListLabels() {
     for (MyDropdownList list : dropDownLists) {
       list.resetLabel();
     }
@@ -1101,9 +1231,30 @@ public class WindowManager {
   }
   
   /**
-   * Clear function for the Clear button
+   * Delete the world object that is selected in
+   * the Object dropdown list, if any.
+   * 
+   * @returning  0 if a Part was removed succesfully,
+   *             1 if a Part failed to be removed,
+   *             2 if a Fixture was removed successfully,
+   *             3 if a Fixture failed to be removed,
+   *             5 for any other case.
    */
-  public void clearObjCreationInput() {
+  public int deleteActiveWorldObject() {
+    int ret = removeWorldObject( getActiveWorldObject() );
+    
+    if (ret % 2 == 0) {
+      // Even numbers symbolize a successful removal
+      updateListContents();
+    }
+    
+    return ret;
+  }
+  
+  /**
+   * Reinitialze the input fields for any contents in the Create Object window
+   */
+  public void clearCreateInputFields() {
     clearGroupInputFields(createObjWindow);
     updateDimFieldsAndLabels();
   }
@@ -1117,7 +1268,7 @@ public class WindowManager {
     
     for (ControllerInterface<?> controller : contents) {
       
-      if (g != null || controller.getParent().equals(g)) {
+      if (g == null || controller.getParent().equals(g)) {
         
         if (controller instanceof Textfield) {
           // Clear anything inputted into the text field
