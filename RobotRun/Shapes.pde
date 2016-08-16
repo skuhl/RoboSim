@@ -804,31 +804,50 @@ public PShape loadSTLModel(String filename, color fill, color outline, float sca
 } 
 
 /**
- * Add the given world object to the correct list
- * in the correct manner.
+ * Add the given world object to the correct list in the correct manner.
+ * Though, if the name of the given world object does not only contain
+ * letter and number characters, then the object is not added to either
+ * list.
+ * 
+ * @param newObject  The object to be added to either the Part or Fixture
+ *                   list
+ * @returning        Whether the object was added to a list or not
  */
-public void addWorldObject(WorldObject newObject) {
+public boolean addWorldObject(WorldObject newObject) {
   String originName = newObject.getName();
   
-  if (newObject instanceof Part) {
-    if (findObjectWithName(originName, PARTS) != null) {
-      // Keep names unique
-      newObject.setName( addSuffixForDuplicateName(originName, PARTS) );
-    }
-    
-    // TODO add in alphabetical order
-    PARTS.add((Part)newObject);
-    
-  } else if (newObject instanceof Fixture) {
-    if (findObjectWithName(originName, FIXTURES) != null) {
-      // Keep names unique
-      newObject.setName( addSuffixForDuplicateName(originName, FIXTURES) );
-    }
-    
-    // TODO add in alphabetical order
-    FIXTURES.add((Fixture)newObject);
-    
+  if (originName.length() > 16) {
+    // Base name length caps at 16 charcters
+    newObject.setName( originName.substring(0, 16) );
+    originName = newObject.getName();
   }
+  
+  if (Pattern.matches("[a-zA-Z0-9]+", originName)) {
+  
+    if (newObject instanceof Part) {
+      if (findObjectWithName(originName, PARTS) != null) {
+        // Keep names unique
+        newObject.setName( addSuffixForDuplicateName(originName, PARTS) );
+      }
+      
+      // TODO add in alphabetical order
+      PARTS.add((Part)newObject);
+      return true;
+      
+    } else if (newObject instanceof Fixture) {
+      if (findObjectWithName(originName, FIXTURES) != null) {
+        // Keep names unique
+        newObject.setName( addSuffixForDuplicateName(originName, FIXTURES) );
+      }
+      
+      // TODO add in alphabetical order
+      FIXTURES.add((Fixture)newObject);
+      return true;
+      
+    }
+  }
+  
+  return false;
 }
 
   /**

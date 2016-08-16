@@ -123,16 +123,19 @@ public class WindowManager {
   public static final int offsetX = 10,
                           distBtwFieldsY = 15,
                           distLblToFieldX = 5,
-                          fieldHeight = 20,
-                          dropItemHeight = 21,
                           lLblWidth = 120,
                           mLblWidth = 86,
                           sLblWidth = 60,
+                          fieldHeight = 20,
                           fieldWidth = 95,
                           lButtonWidth = 80,
                           sButtonWidth = 56,
                           mButtonHeight = 26,
-                          sButtonHeight = 20;
+                          sButtonHeight = 20,
+                          sdropItemWidth = 80,
+                          mdropItemWidth = 90,
+                          ldropItemWidth = 120,
+                          dropItemHeight = 21;
   
   /**
    * Creates a new window with the given ControlP5 object as the parent
@@ -500,7 +503,7 @@ public class WindowManager {
     
     // Initialize dropdown lists
     dropDownLists[1] = (MyDropdownList)((new MyDropdownList( UIManager, "Outline"))
-                          .setSize(lButtonWidth, 4 * mButtonHeight)
+                          .setSize(sdropItemWidth, mButtonHeight + 3 * dropItemHeight)
                           .setBarHeight(dropItemHeight)
                           .setItemHeight(dropItemHeight)
                           .setColorValue(buttonTxtColor)
@@ -509,13 +512,18 @@ public class WindowManager {
                           .moveTo(createObjWindow)
                           .close());
     
+    dropDownLists[1].addItem("black", color(0));
     dropDownLists[1].addItem("red", color(255, 0, 0));
     dropDownLists[1].addItem("green", color(0, 255, 0));
     dropDownLists[1].addItem("blue", color(0, 0, 255));
-    dropDownLists[1].addItem("black", color(0));
+    dropDownLists[1].addItem("orange", color(255, 60, 0));
+    dropDownLists[1].addItem("yellow", color(255, 255, 0));
+    dropDownLists[1].addItem("pink", color(255, 0, 255));
+    dropDownLists[1].addItem("purple", color(90, 0, 255));
+    
     
     dropDownLists[0] = (MyDropdownList)((new MyDropdownList( UIManager, "Fill"))
-                          .setSize(lButtonWidth, 5 * mButtonHeight)
+                          .setSize(mdropItemWidth, 4 * dropItemHeight)
                           .setBarHeight(dropItemHeight)
                           .setItemHeight(dropItemHeight)
                           .setColorValue(buttonTxtColor)
@@ -525,13 +533,19 @@ public class WindowManager {
                           .close());
    
     dropDownLists[0].addItem("white", color(255));
+    dropDownLists[0].addItem("black", color(0));
     dropDownLists[0].addItem("red", color(255, 0, 0));
     dropDownLists[0].addItem("green", color(0, 255, 0));
     dropDownLists[0].addItem("blue", color(0, 0, 255));
-    dropDownLists[0].addItem("black", color(0));
+    dropDownLists[0].addItem("orange", color(255, 60, 0));
+    dropDownLists[0].addItem("yellow", color(255, 255, 0));
+    dropDownLists[0].addItem("pink", color(255, 0, 255));
+    dropDownLists[0].addItem("purple", color(90, 0, 255));
+    dropDownLists[0].addItem("sky blue", color(0, 255, 255));
+    dropDownLists[0].addItem("dark green", color(0, 100, 15));
    
    dropDownLists[2] = (MyDropdownList)((new MyDropdownList( UIManager, "Shape"))
-                          .setSize(lButtonWidth, 4 * mButtonHeight)
+                          .setSize(sdropItemWidth, 4 * dropItemHeight)
                           .setBarHeight(dropItemHeight)
                           .setItemHeight(dropItemHeight)
                           .setColorValue(buttonTxtColor)
@@ -545,7 +559,7 @@ public class WindowManager {
     dropDownLists[2].addItem("Import", ShapeType.MODEL);
     
     dropDownLists[3] = (MyDropdownList)((new MyDropdownList( UIManager, "ObjType"))
-                          .setSize(lButtonWidth, 3 * mButtonHeight)
+                          .setSize(sdropItemWidth, 3 * dropItemHeight)
                           .setBarHeight(dropItemHeight)
                           .setItemHeight(dropItemHeight)
                           .setColorValue(buttonTxtColor)
@@ -558,7 +572,7 @@ public class WindowManager {
     dropDownLists[3].addItem("Fixtures", 1.0);
     
     dropDownLists[5] = (MyDropdownList)((new MyDropdownList( UIManager, "Fixture"))
-                          .setSize(lLblWidth, 4 * mButtonHeight)
+                          .setSize(ldropItemWidth, 4 * dropItemHeight)
                           .setBarHeight(dropItemHeight)
                           .setItemHeight(dropItemHeight)
                           .setColorValue(buttonTxtColor)
@@ -568,7 +582,7 @@ public class WindowManager {
                           .close());
    
    dropDownLists[4] = (MyDropdownList)((new MyDropdownList( UIManager, "Object"))
-                          .setSize(lLblWidth, 4 * mButtonHeight)
+                          .setSize(ldropItemWidth, 4 * dropItemHeight)
                           .setBarHeight(dropItemHeight)
                           .setItemHeight(dropItemHeight)
                           .setColorValue(buttonTxtColor)
@@ -578,7 +592,7 @@ public class WindowManager {
                           .close());
    
    dropDownLists[6] = (MyDropdownList)((new MyDropdownList( UIManager, "Scenario"))
-                          .setSize(lLblWidth, 4 * mButtonHeight)
+                          .setSize(ldropItemWidth, 4 * dropItemHeight)
                           .setBarHeight(dropItemHeight)
                           .setItemHeight(dropItemHeight)
                           .setColorValue(buttonTxtColor)
