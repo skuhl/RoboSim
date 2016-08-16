@@ -3578,10 +3578,13 @@ public void updateScreen() {
   if(mode.getType() == ScreenType.TYPE_LINE_SELECT)
     selectMode = true;
   
-  //display contents on screen
+  /*************************
+   *    Display Contents   *
+   *************************/
+  
   int linesDrawn = 0;
   index_contents = 1;
-  for(int i = 0; i < contents.size(); i += 1) {
+  for(int i = 0; i < contents.size() && linesDrawn < ITEMS_TO_SHOW; i += 1) {
     //get current line
     ArrayList<String> temp = contents.get(i);
         
@@ -3636,8 +3639,10 @@ public void updateScreen() {
         temp.set(j, " : " + temp.get(j));
         next_px = display_px + 36;
         next_py += 20;
+        
         if((linesDrawn += 1) >= ITEMS_TO_SHOW) break;
-      } else if(temp.get(j).equals("\n")) {
+      } 
+      else if(temp.get(j).equals("\n")) {
         temp.remove(j);
         if(j >= temp.size()) break;
         
@@ -3659,9 +3664,7 @@ public void updateScreen() {
       index_contents++;
       next_px += temp.get(j).length() * 8 + 18; 
     }//end draw line elements
-    
-    if((linesDrawn += 1) >= ITEMS_TO_SHOW) break;
-    
+        
     if(i == row_select) { txt = UI_DARK; }
     else                { txt = UI_LIGHT;   }
     
@@ -3674,7 +3677,8 @@ public void updateScreen() {
     .hideScrollbar()
     .moveTo(g1);
     
-    index_contents++;
+    linesDrawn += 1;
+    index_contents += 1;
     next_px = display_px;
     next_py += 20;
   }//end display contents
@@ -3689,6 +3693,10 @@ public void updateScreen() {
   } else {
     maxHeight = options.size();
   }
+  
+  /*************************
+   *    Display Options    *
+   *************************/
   
   index_options = 100;
   for(int i = 0; i < options.size(); i += 1) {   
