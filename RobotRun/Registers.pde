@@ -27,7 +27,6 @@ public abstract class Register {
 
 /* A simple class for a Register of the Robot Arm, which holds a value associated with a comment. */
 public class DataRegister extends Register {
-  public String comment;
   public Float value;
   
   public DataRegister() {

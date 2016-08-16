@@ -1,3 +1,5 @@
+private static boolean mouseRightDown;
+
 final int SMALL_BUTTON = 35,
           LARGE_BUTTON = 50;
 final int BUTTON_DEFAULT = color(70),
@@ -6,11 +8,6 @@ final int BUTTON_DEFAULT = color(70),
           UI_LIGHT = color(240),
           UI_DARK = color(40);
 
-// Used for checking for double-clicking
-private float firstClick, secondClick;
-private int clickCount;
-
-//String displayFrame = "JOINT";
 int active_prog = -1; // the currently selected program
 int active_instr = -1; // the currently selected instruction
 int temp_select = 0;
@@ -614,74 +611,39 @@ void gui() {
 
 /* mouse events */
 
-public void mouseClicked() {
-  ++clickCount;
-  
-  if (mouseButton == LEFT) {
-    
-    if (clickCount == 1) {
-      // Record time of first click
-      firstClick = millis();
-    } else if (clickCount == 2) {
-      // Record time of second click
-      secondClick = millis();
-      
-      if ((secondClick - firstClick) < 10000f) {
-        pushMatrix();
-        resetMatrix();
-        applyCamera();
-        float[][] tMatrix = getTransformationMatrix();
-        popMatrix();
-        
-        PVector mPoint = new PVector(mouseX, mouseY, 0f),
-                mPointDeltaZ = new PVector(mouseX, mouseY, -1f);
-        
-        mPoint = transform(mPoint, invertHCMatrix(tMatrix));
-        mPointDeltaZ = transform(mPointDeltaZ, invertHCMatrix(tMatrix));
-        
-        //mouseRay = new Ray(mPoint, mPointDeltaZ);
-        
-        //System.out.printf("\nMouse: [%d, %d]\n%s -> %s\nScale %2.4f\n", mouseX, mouseY, mPoint, mPointDeltaZ, myscale);
-        
-      } else {
-        //System.out.printf("%9.6f -> %9.6f\n", firstClick, secondClick);
-      }
-      // Reset counter
-      clickCount = 0;
-    } else {
-     // Reset counter
-     clickCount = 0;
-    }
-  }
-}
-
 public void mouseDragged(MouseEvent e) {
-  // Hold down the center mouse button and move the mouse to pan the camera
-  if(mouseButton == CENTER) {
+  if (mouseButton == CENTER) {
+    // Drag the center mouse button to pan the camera
     panX += mouseX - pmouseX;
     panY += mouseY - pmouseY;
   }
   
-  // Hold down the right omuse button an move the mouse to rotate the camera
-  if(mouseButton == RIGHT) {
+  if (mouseButton == RIGHT) {
+    // Drag right mouse button to rotate the camera
     myRotX += (mouseY - pmouseY) * 0.01;
     myRotY += (mouseX - pmouseX) * 0.01;
   }
 }
 
-public void mouseWheel(MouseEvent event) {
-  float e = event.getCount();
-  // Control scaling of the camera with the mouse wheel
-  if(e > 0 ) {
-    myscale *= 1.1;
-    if(myscale > 2) {
-      myscale = 2;
-    }
+public void mousePressed() {
+  if (mouseButton == RIGHT) {
+    mouseRightDown = true;
   }
-  if(e < 0) {
-    myscale *= 0.9;
-    if(myscale < 0.25) {
-      myscale = 0.25;
+}
+
+public void mouseReleased() {
+  mouseRightDown = false;
+}
+
+public void mouseWheel(MouseEvent event) {
+  // Only zoom when right mouse button is held
+  if (mouseRightDown) {
+    float e = event.getCount();
+    // Control scaling of the camera with the mouse wheel
+    if (e > 0) {
+      myscale = min(myscale * 1.1f, 2f);
+    } else if (e < 0) {
+      myscale = max(0.25f, myscale * 0.9f);
     }
   }
 }
@@ -1499,6 +1461,7 @@ public void f1() {
       } else if(row_select == 1) {
         nextScreen(Screen.NAV_USER_FRAMES);
       }
+      break;
     case NAV_DREGS:
       // Clear Data Register entry
       DREG[active_index] = new DataRegister();
@@ -2788,7 +2751,7 @@ public void ENTER() {
         f = Float.parseFloat(workingText);
         // Clamp the value between -9999 and 9999, inclusive
         f = max(-9999f, min(f, 9999f));
-        
+        System.out.printf("Index; %d\n", active_index);
         if(active_index >= 0 && active_index < DREG.length) {
           // Save inputted value
           DREG[active_index].value = f;

@@ -72,6 +72,7 @@ public void setup() {
   fnt_con14 = createFont("data/Consolas.ttf", 14);
   fnt_con12 = createFont("data/Consolas.ttf", 12);
   fnt_conB = createFont("data/ConsolasBold.ttf", 12);
+  mouseRightDown = false;
   
   buffer = new ArrayList<String>();
   enterDown = false;

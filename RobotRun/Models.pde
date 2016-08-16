@@ -814,7 +814,16 @@ public class ArmModel {
       
     } else {
       // Jog in the World, Tool or User Frame
-      Frame curFrame = getActiveFrame(null);
+      Frame curFrame;
+      
+      if (curCoordFrame == CoordFrame.TOOL) {
+        curFrame = getActiveFrame(CoordFrame.TOOL);
+      } else if (curCoordFrame == CoordFrame.USER) {
+        curFrame = getActiveFrame(CoordFrame.USER);
+      } else {
+        curFrame = null;
+      }
+      
       Point curPoint = nativeRobotEEPoint(getJointAngles());
       
       // Apply translational motion vector

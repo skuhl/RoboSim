@@ -195,16 +195,19 @@ public class Cylinder extends Shape {
  */
 public class ModelShape extends Shape {
   private PShape form;
-  private String srcFile;
+  private String srcFilePath;
   
   /**
    * Create a complex model from the soruce .stl file of the
    * given name, filename, stored in the '/RobotRun/data/'
    * with the given fill and outline colors.
+   * 
+   * @throws NullPointerException  if the given filename is
+   *         not a valid .stl file in RobotRun/data/
    */
-  public ModelShape(String filename, color fill, color outline) {
+  public ModelShape(String filename, color fill, color outline) throws NullPointerException {
     super(fill, outline);
-    srcFile = filename;
+    srcFilePath = filename;
     form = loadSTLModel(filename, fill, outline, 1.0);
   }
   
@@ -212,11 +215,13 @@ public class ModelShape extends Shape {
     shape(form);
   }
   
+  public String getSourcePath() { return srcFilePath; }
+  
   /**
    * Create a new Model form the original source file.
    */
   public Shape clone() {
-      return new ModelShape(srcFile, getFillColor(), getOutlineColor());
+      return new ModelShape(srcFilePath, getFillColor(), getOutlineColor());
   }
 }
 
@@ -530,16 +535,27 @@ public class Fixture extends WorldObject {
   }
   
   /**
-   * Creates a cylinder objects with the given colors and dimensions.
+   * Creates a cylinder object with the given colors and dimensions.
    */
   public Fixture(String n, color fill, color outline, float rad, float hgt) {
     super(n, new Cylinder(fill, outline, rad, hgt));
     localOrientation = new CoordinateSystem();
   }
   
+  /**
+   * Creates a fixture with the given name and shape.
+   */
   public Fixture(String n, ModelShape model) {
     super(n, model);
     localOrientation = new CoordinateSystem();
+  }
+  
+  /**
+   * Creates a fixture with the given name and shape, and coordinate system.
+   */
+  public Fixture(String n, Shape s, CoordinateSystem cs) {
+    super(n, s);
+    localOrientation = cs;
   }
   
   /**
@@ -608,6 +624,15 @@ public class Part extends WorldObject {
   public Part(String n, ModelShape model, float OBBLen, float OBBHgt, float OBBWid) {
     super(n, model);
     OBB = new BoundingBox(OBBLen, OBBHgt, OBBWid);
+  }
+  
+  /**
+   * Creates a Part with the given name, shape, bounding-box, and fixture reference.
+   */
+  public Part(String n, Shape s, BoundingBox obb, Fixture fixRef) {
+    super(n, s);
+    OBB = obb;
+    reference = fixRef;
   }
   
   /**
@@ -755,11 +780,14 @@ public class Scenario {
 /**
  * Build a PShape object from the contents of the given .stl source file
  * stored in /RobotRun/data/.
+ * 
+ * @throws NullPointerException  if hte given filename does not pertain
+ *         to a valid .stl file located in RobotRun/data/
  */
-public PShape loadSTLModel(String filename, color fill, color outline, float scaleVal) {
+public PShape loadSTLModel(String filename, color fill, color outline, float scaleVal) throws NullPointerException {
   ArrayList<Triangle> triangles = new ArrayList<Triangle>();
-  println(filename);
   byte[] data = loadBytes(filename);
+  
   int n = 84; // skip header and number of triangles
   
   while(n < data.length) {
@@ -804,19 +832,50 @@ public PShape loadSTLModel(String filename, color fill, color outline, float sca
 } 
 
 /**
- * Add the given world object to the correct list
- * in the correct manner.
+ * Add the given world object to the correct list in the correct manner.
+ * Though, if the name of the given world object does not only contain
+ * letter and number characters, then the object is not added to either
+ * list.
+ * 
+ * @param newObject  The object to be added to either the Part or Fixture
+ *                   list
+ * @returning        Whether the object was added to a list or not
  */
-public void addWorldObject(WorldObject newObject) {
-  if (newObject instanceof Part) {
-    
-    // TODO add in alphabetical order
-    PARTS.add((Part)newObject);
-  } else if (newObject instanceof Fixture) {
-    
-    // TODO add in alphabetical order
-    FIXTURES.add((Fixture)newObject);
+public boolean addWorldObject(WorldObject newObject) {
+  String originName = newObject.getName();
+  
+  if (originName.length() > 16) {
+    // Base name length caps at 16 charcters
+    newObject.setName( originName.substring(0, 16) );
+    originName = newObject.getName();
   }
+  
+  if (Pattern.matches("[a-zA-Z0-9]+", originName)) {
+  
+    if (newObject instanceof Part) {
+      if (findObjectWithName(originName, PARTS) != null) {
+        // Keep names unique
+        newObject.setName( addSuffixForDuplicateName(originName, PARTS) );
+      }
+      
+      // TODO add in alphabetical order
+      PARTS.add((Part)newObject);
+      return true;
+      
+    } else if (newObject instanceof Fixture) {
+      if (findObjectWithName(originName, FIXTURES) != null) {
+        // Keep names unique
+        newObject.setName( addSuffixForDuplicateName(originName, FIXTURES) );
+      }
+      
+      // TODO add in alphabetical order
+      FIXTURES.add((Fixture)newObject);
+      return true;
+      
+    }
+  }
+  
+  return false;
 }
 
   /**
@@ -861,6 +920,92 @@ public int removeWorldObject(WorldObject toRemove) {
   }
   
   return ret;
+}
+
+/**
+ * Adds a number suffix to the given name, so that the name is unique amonst the names of all the other world
+ * objects in the given list. So, if the given name is 'block' and objects with names 'block', 'block1', and
+ * 'block2' exist in wldObjList, then the new name will be 'block3'.
+ * 
+ * @param originName  The origin name of the new world object
+ * @param eldObjList  The list of world objects, of wixh to check names
+ * @returning         A unique name amongst the names of the existing world objects in the given list, that
+ *                    contains the original name as a prefix
+ */
+public <T extends WorldObject> String addSuffixForDuplicateName(String originName, ArrayList<T> wldObjList) {
+  int nameLen = originName.length();
+  ArrayList<Integer> suffixes = new ArrayList<Integer>();
+  
+  for (T wldObj : wldObjList) {
+    String objName = wldObj.getName();
+    int objNameLen = objName.length();
+    
+    if (objNameLen > nameLen) {
+      String namePrefix = objName.substring(0, nameLen),
+             nameSuffix = objName.substring(nameLen, objNameLen);
+      // Find all strings that have the given name as a prefix and an integer value suffix
+      if (namePrefix.equals(originName) && Pattern.matches("[0123456789]+", nameSuffix)) {
+        int suffix = Integer.parseInt(nameSuffix),
+            insertIdx = 0;
+        // Store suffixes in increasing order
+        while (insertIdx < suffixes.size() && suffix > suffixes.get(insertIdx)) {
+          ++insertIdx;
+        }
+        
+        if (insertIdx == suffixes.size()) {
+          suffixes.add(suffix);
+        } else {
+          suffixes.add(insertIdx, suffix);
+        }
+      }
+    }
+  }
+  // Determine the minimum suffix value
+  int suffix = 0;
+  
+  if (suffixes.size() == 1 && suffixes.get(0) == 0) {
+    // If the only stirng with a suffix has a suffix of '0'
+    suffix = 1;
+    
+  } else if (suffixes.size() >= 2) {
+    int idx = 0;
+    
+    while ((idx + 1) < suffixes.size()) {
+      // Find the first occurance of a gap between to adjacent suffix values (if any)
+      if ((suffixes.get(idx + 1) - suffixes.get(idx)) > 1) {
+        break;
+      }
+      
+      ++idx;
+    }
+    
+    suffix = suffixes.get(idx) + 1;
+  }
+  // Concatenate the origin name with the new suffix
+  return String.format("%s%d", originName, suffix);
+}
+
+/**
+ * Attempts to find the world object, in the given list, with the given name. If no such object exists,
+ * then null is returned, otherwise the object with the given name is returned.
+ * 
+ * @param tgtName     The name of the world object to find
+ * @param wldObjList  The list of world objects to check
+ * @returning         The object with the given name, if it exists in the given list, or null.
+ */
+public <T extends WorldObject> WorldObject findObjectWithName(String tgtName, ArrayList<T> wldObjList) {
+  
+  if (tgtName != null && wldObjList != null) {
+    
+    for (T obj : wldObjList) {
+      // Determine if the object exists
+      if (obj != null && obj.getName().equals(tgtName)) {
+        return obj;
+      }
+    }
+  }
+  
+  return null;
 }
 
 /**
