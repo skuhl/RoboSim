@@ -1322,7 +1322,7 @@ public class Expression extends AtomicExpression {
     //limit number of elements allowed in this expression
     if(getLength() >= 21) return;
     //ensure index is within the bounds of our list of elements
-    else if(edit_idx < 0) return;
+    else if(edit_idx < -1) return;
     else if(edit_idx >= getLength() - 2) return;
     
     if(edit_idx == -1) {
