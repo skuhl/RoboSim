@@ -1116,9 +1116,6 @@ public class WindowManager {
             break;
           case MODEL:
             String srcFile = shapeDefFields.get(0).getText();
-            len = Float.parseFloat( shapeDefFields.get(1).getText() );
-            hgt = Float.parseFloat( shapeDefFields.get(2).getText() );
-            wdh = Float.parseFloat( shapeDefFields.get(3).getText() );
             // Construct a complex model
             ModelShape model = new ModelShape(srcFile, fill, outline);
             wldObj = new Fixture(name, model);

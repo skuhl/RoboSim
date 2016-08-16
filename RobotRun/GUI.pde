@@ -1461,6 +1461,7 @@ public void f1() {
       } else if(row_select == 1) {
         nextScreen(Screen.NAV_USER_FRAMES);
       }
+      break;
     case NAV_DREGS:
       // Clear Data Register entry
       DREG[active_index] = new DataRegister();
@@ -2750,7 +2751,7 @@ public void ENTER() {
         f = Float.parseFloat(workingText);
         // Clamp the value between -9999 and 9999, inclusive
         f = max(-9999f, min(f, 9999f));
-        
+        System.out.printf("Index; %d\n", active_index);
         if(active_index >= 0 && active_index < DREG.length) {
           // Save inputted value
           DREG[active_index].value = f;

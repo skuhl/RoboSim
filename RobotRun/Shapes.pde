@@ -195,16 +195,19 @@ public class Cylinder extends Shape {
  */
 public class ModelShape extends Shape {
   private PShape form;
-  private String srcFile;
+  private String srcFilePath;
   
   /**
    * Create a complex model from the soruce .stl file of the
    * given name, filename, stored in the '/RobotRun/data/'
    * with the given fill and outline colors.
+   * 
+   * @throws NullPointerException  if the given filename is
+   *         not a valid .stl file in RobotRun/data/
    */
-  public ModelShape(String filename, color fill, color outline) {
+  public ModelShape(String filename, color fill, color outline) throws NullPointerException {
     super(fill, outline);
-    srcFile = filename;
+    srcFilePath = filename;
     form = loadSTLModel(filename, fill, outline, 1.0);
   }
   
@@ -212,11 +215,13 @@ public class ModelShape extends Shape {
     shape(form);
   }
   
+  public String getSourcePath() { return srcFilePath; }
+  
   /**
    * Create a new Model form the original source file.
    */
   public Shape clone() {
-      return new ModelShape(srcFile, getFillColor(), getOutlineColor());
+      return new ModelShape(srcFilePath, getFillColor(), getOutlineColor());
   }
 }
 
@@ -530,16 +535,27 @@ public class Fixture extends WorldObject {
   }
   
   /**
-   * Creates a cylinder objects with the given colors and dimensions.
+   * Creates a cylinder object with the given colors and dimensions.
    */
   public Fixture(String n, color fill, color outline, float rad, float hgt) {
     super(n, new Cylinder(fill, outline, rad, hgt));
     localOrientation = new CoordinateSystem();
   }
   
+  /**
+   * Creates a fixture with the given name and shape.
+   */
   public Fixture(String n, ModelShape model) {
     super(n, model);
     localOrientation = new CoordinateSystem();
+  }
+  
+  /**
+   * Creates a fixture with the given name and shape, and coordinate system.
+   */
+  public Fixture(String n, Shape s, CoordinateSystem cs) {
+    super(n, s);
+    localOrientation = cs;
   }
   
   /**
@@ -608,6 +624,15 @@ public class Part extends WorldObject {
   public Part(String n, ModelShape model, float OBBLen, float OBBHgt, float OBBWid) {
     super(n, model);
     OBB = new BoundingBox(OBBLen, OBBHgt, OBBWid);
+  }
+  
+  /**
+   * Creates a Part with the given name, shape, bounding-box, and fixture reference.
+   */
+  public Part(String n, Shape s, BoundingBox obb, Fixture fixRef) {
+    super(n, s);
+    OBB = obb;
+    reference = fixRef;
   }
   
   /**
@@ -755,11 +780,14 @@ public class Scenario {
 /**
  * Build a PShape object from the contents of the given .stl source file
  * stored in /RobotRun/data/.
+ * 
+ * @throws NullPointerException  if hte given filename does not pertain
+ *         to a valid .stl file located in RobotRun/data/
  */
-public PShape loadSTLModel(String filename, color fill, color outline, float scaleVal) {
+public PShape loadSTLModel(String filename, color fill, color outline, float scaleVal) throws NullPointerException {
   ArrayList<Triangle> triangles = new ArrayList<Triangle>();
-  println(filename);
   byte[] data = loadBytes(filename);
+  
   int n = 84; // skip header and number of triangles
   
   while(n < data.length) {
