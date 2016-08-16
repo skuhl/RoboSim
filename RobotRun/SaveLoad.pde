@@ -169,11 +169,13 @@ public int saveProgramBytes(File dest) {
     dataOut.close();
     out.close();
     return 0;
+    
   } catch (FileNotFoundException FNFEx) {
     // Could not locate dest
     System.out.printf("%s does not exist!\n", dest.getName());
     FNFEx.printStackTrace();
     return 1;
+    
   } catch (IOException IOEx) {
     // An error occrued with writing to dest
     System.out.printf("%s is corrupt!\n", dest.getName());
@@ -210,16 +212,19 @@ public int loadProgramBytes(File src) {
     dataIn.close();
     in.close();
     return 0;
+    
   } catch (FileNotFoundException FNFEx) {
     // Could not locate src
     System.out.printf("%s does not exist!\n", src.getName());
     FNFEx.printStackTrace();
     return 1;
+    
   } catch (EOFException EOFEx) {
     // Reached the end of src unexpectedly
     System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
     EOFEx.printStackTrace();
     return 3;
+    
   } catch (IOException IOEx) {
     // An error occured with reading from src
     System.out.printf("%s is corrupt!\n", src.getName());
@@ -394,6 +399,7 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeInt(m_inst.termination);
     out.writeInt(m_inst.userFrame);
     out.writeInt(m_inst.toolFrame);
+    
   } else if(inst instanceof FrameInstruction) {
     FrameInstruction f_inst = (FrameInstruction)inst;
     // Flag byte denoting this instruction as a FrameInstruction
@@ -402,6 +408,7 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeBoolean(f_inst.isCommented());
     out.writeInt(f_inst.frameType);
     out.writeInt(f_inst.frameIdx);
+    
   } else if(inst instanceof IOInstruction) {
     IOInstruction t_inst = (IOInstruction)inst;
     // Flag byte denoting this instruction as a ToolInstruction
@@ -410,23 +417,27 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeBoolean(t_inst.isCommented());
     out.writeInt(t_inst.reg);
     out.writeInt( saveint(t_inst.state) );
+    
   } else if(inst instanceof LabelInstruction) {
     LabelInstruction l_inst = (LabelInstruction)inst;
     
     out.writeByte(5);
     out.writeBoolean(l_inst.isCommented());
     out.writeInt(l_inst.labelNum);
+    
   } else if(inst instanceof JumpInstruction) {
     JumpInstruction j_inst = (JumpInstruction)inst;
     
     out.writeByte(6);
     out.writeBoolean(j_inst.isCommented());
     out.writeInt(j_inst.tgtLblNum);
+    
   } /* Add other instructions here! */
     else if (inst instanceof Instruction) {
     /// A blank instruction
     out.writeByte(1);
     out.writeBoolean(inst.isCommented());
+    
   } else {
     // Indicate a null-value is saved
     out.writeByte(0);
@@ -574,11 +585,13 @@ public int saveFrameBytes(File dest) {
     dataOut.close();
     out.close();
     return 0;
+    
   } catch (FileNotFoundException FNFEx) {
     // Could not find dest
     System.out.printf("%s does not exist!\n", dest.getName());
     FNFEx.printStackTrace();
     return 1;
+    
   } catch (IOException IOEx) {
     // Error with writing to dest
     System.out.printf("%s is corrupt!\n", dest.getName());
@@ -628,16 +641,19 @@ public int loadFrameBytes(File src) {
     dataIn.close();
     in.close();
     return 0;
+    
   } catch (FileNotFoundException FNFEx) {
     // Could not find src
     System.out.printf("%s does not exist!\n", src.getName());
     FNFEx.printStackTrace();
     return 1;
+    
   } catch (EOFException EOFEx) {
     // Reached the end of src unexpectedly
     System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
     EOFEx.printStackTrace();
     return 3;
+    
   } catch (IOException IOEx) {
     // Error with reading from src
     System.out.printf("%s is corrupt!\n", src.getName());
@@ -844,11 +860,13 @@ public int saveRegisterBytes(File dest) {
     dataOut.close();
     out.close();
     return 0;
+    
   } catch (FileNotFoundException FNFEx) {
     // Could not be located dest
     System.out.printf("%s does not exist!\n", dest.getName());
     FNFEx.printStackTrace();
     return 1;
+    
   } catch (IOException IOEx) {
     // Error occured while reading from dest
     System.out.printf("%s is corrupt!\n", dest.getName());
@@ -916,21 +934,110 @@ public int loadRegisterBytes(File src) {
     dataIn.close();
     in.close();
     return 0;
+    
   } catch (FileNotFoundException FNFEx) {
     // Could not be located src
     System.out.printf("%s does not exist!\n", src.getName());
     FNFEx.printStackTrace();
     return 1;
+    
   } catch (EOFException EOFEx) {
     // Unexpectedly reached the end of src
     System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
     EOFEx.printStackTrace();
     return 3;
+    
   } catch (IOException IOEx) {
     // Error occrued while reading from src
     System.out.printf("%s is corrupt!\n", src.getName());
     IOEx.printStackTrace();
     return 2;
+  }
+}
+
+/**
+ * TODO
+ */
+public int saveScenarioBytes(File dest) {
+  
+  try {
+    FileOutputStream out = new FileOutputStream(dest);
+    DataOutputStream dataOut = new DataOutputStream(out);
+    
+    int numOfScenarios = SCENARIOS.size();
+    dataOut.writeInt(numOfScenarios);
+    // Save all the scenarios
+    for (Scenario s : SCENARIOS) {
+      saveScenario(s, dataOut);
+    }
+    
+    dataOut.close();
+    out.close();
+    return 0;
+    
+  } catch (FileNotFoundException FNFEx) {
+    // Could not be located src
+    System.out.printf("%s does not exist!\n", dest.getName());
+    FNFEx.printStackTrace();
+    return 1;
+    
+  } catch (EOFException EOFEx) {
+    // Unexpectedly reached the end of src
+    System.out.printf("End of file, %s, was reached unexpectedly!\n", dest.getName());
+    EOFEx.printStackTrace();
+    return 3;
+    
+  } catch (IOException IOEx) {
+    // Error occrued while reading from src
+    System.out.printf("%s is corrupt!\n", dest.getName());
+    IOEx.printStackTrace();
+    return 2;
+    
+  }
+}
+
+/**
+ * TODO
+ */
+public int loadScenarios(File src) {
+  
+  try {
+    FileInputStream in = new FileInputStream(src);
+    DataInputStream dataIn = new DataInputStream(in);
+    
+    int numOfScenarios = dataIn.readInt();
+    // Load all scenarios saved
+    while (numOfScenarios-- > 0) {
+      SCENARIOS.add( loadScenario(dataIn) );
+    }
+    
+    dataIn.close();
+    in.close();
+    return 0;
+    
+  } catch (FileNotFoundException FNFEx) {
+    // Could not be located src
+    System.out.printf("%s does not exist!\n", src.getName());
+    FNFEx.printStackTrace();
+    return 1;
+    
+  } catch (EOFException EOFEx) {
+    // Unexpectedly reached the end of src
+    System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
+    EOFEx.printStackTrace();
+    return 3;
+    
+  } catch (IOException IOEx) {
+    // Error occrued while reading from src
+    System.out.printf("%s is corrupt!\n", src.getName());
+    IOEx.printStackTrace();
+    return 2;
+    
+  } catch (NullPointerException NPEx) {
+    // Error with loading a .stl model
+    System.out.printf("Missing source file!\n");
+    NPEx.printStackTrace();
+    return 4;
   }
 }
 
@@ -961,7 +1068,7 @@ public void saveScenario(Scenario s, DataOutputStream out) throws IOException {
 /**
  * TODO
  */
-public Scenario loadScenarion(DataInputStream in) throws IOException, NullPointerException {
+public Scenario loadScenario(DataInputStream in) throws IOException, NullPointerException {
   // Read flag byte
   byte flag = in.readByte();
   
@@ -1103,7 +1210,13 @@ public BoundingBox loadOBB(DataInputStream in) throws IOException {
 }
 
 /**
- * TODO
+ * Saves all the fields associated with the given Coordinate System to the given data output
+ * stream. First a single byte is wrote to the output stream. Then, the origin vector and
+ * finally the axes vectors are written to the output stream.
+ * 
+ * @param cs   The Coordinate System to save to the given output stream
+ * @param out  The output stream to which to save the given Coordinate System
+ * @throws     IOException  if an error occurs in with writing to the output stream
  */
 public void saveCoordSystem(CoordinateSystem cs, DataOutputStream out) throws IOException {
   if (cs == null) {
@@ -1121,7 +1234,13 @@ public void saveCoordSystem(CoordinateSystem cs, DataOutputStream out) throws IO
 }
 
 /**
- * TODO
+ * Attempt to load a Coordinate System object from the given data input stream.
+ * It is expected that the input stream contains a single byte (for the byte flag)
+ * followed by a PVector object and then finally a 3x3 float array matrix.
+ * 
+ * @param in   The data input stream, from which to read bytes
+ * @returning  The Coordinate System stored in the input stream (which can be null!)
+ * @throws     IOException  if an error occurs with reading from the input stream
  */
 public CoordinateSystem loadCoordSystem(DataInputStream in) throws IOException {
   // Read the flag byte
@@ -1144,7 +1263,16 @@ public CoordinateSystem loadCoordSystem(DataInputStream in) throws IOException {
 }
 
 /**
- * TODO
+ * Saves all the data associated with the given shape, in the form of bytes,
+ * to the given data output stream. First flag byte is saved, which indicates
+ * what subclass the object is (or if the object is null). Then the fields
+ * associated with the subclass saved followed by the color fields common among
+ * all shapes.
+ * 
+ * @param shape  The shape to save to the given output stream
+ * @param out    The data output stream, to which to save the given shape
+ * @throws       IOException  if an error occurs with writing to the given output
+ *               stream
  */
 public void saveShape(Shape shape, DataOutputStream out) throws IOException {
   if (shape == null) {
@@ -1177,13 +1305,21 @@ public void saveShape(Shape shape, DataOutputStream out) throws IOException {
     }
     // Write the shape's color fields
     out.writeBoolean( shape.isFilled() );
-    out.writeInt(shape.getFillColor());
+    out.writeInt( shape.getFillColor() );
     out.writeInt( shape.getOutlineColor() );
   }
 }
 
 /**
- * TODO
+ * Attempts to load a Shape from the given data input stream. It is expected that the
+ * stream contains a single byte (the flag byte) followed by the fields unique to the
+ * subclass of the Shape object saved, which are followed by the color fields of the Shape.
+ * 
+ * @param in   The data input stream, from which to read bytes
+ * @returning  The shape object saved in the input stream (which can be null!)
+ * @throws     IOException  if an error occurs with reading from the input stream
+ *             NullPointerException  if the shape stored is a model shape and its source
+ *             file is either invalid or does not exist
  */
 public Shape loadShape(DataInputStream in) throws IOException, NullPointerException {
   // Read flag byte
