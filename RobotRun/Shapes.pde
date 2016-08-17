@@ -1,10 +1,8 @@
 // The Y corrdinate of the ground plane
-public static final float PLANE_Y = 200.5f;
+private static final float PLANE_Y = 200.5f;
 
-public final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
-
-public final ArrayList<Fixture> FIXTURES = new ArrayList<Fixture>();
-public final ArrayList<Part> PARTS = new ArrayList<Part>();
+private final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
+private int activeScenarioIdx;
 
 /**
  * A simple class that defines the outline and fill color for a shape
@@ -496,6 +494,55 @@ public abstract class WorldObject {
    */
   public abstract void draw();
   
+  /**
+   * Returns a list of values with short prefix labels, which descibe
+   * the dimensions of the this world object's shape (except for Model
+   * shapes, because their dimensions are unknown).
+   * 
+   * @returning  A non-null, variable length string array
+   */
+  public String[] dimFieldsToStringArray() {
+    String[] fields;
+    
+    if (form instanceof Box) {
+      fields = new String[3];
+      PVector dimensions = ((Box)form).getDimensions();
+      // Add the box's length, height, and width values
+      fields[0] = String.format("L: %4.3f", dimensions.x);
+      fields[1] = String.format("H: %4.3f", dimensions.y);
+      fields[2] = String.format("W: %4.3f", dimensions.z);
+      
+    } else if (form instanceof Cylinder) {
+      fields = new String[2];
+      float radius = ((Cylinder)form).getRadius(),
+            hgt = ((Cylinder)form).getHeight();
+      // Add the cylinder's radius and height values
+      fields[0] = String.format("R: %4.3f", radius);
+      fields[1] = String.format("H: %4.3f", hgt);
+      
+    } else if (form instanceof ModelShape) {
+      if (this instanceof Part)  {
+        // Use bounding-box dimensions instead
+        fields = new String[3];
+        BoundingBox obb = ((Part)this).getOBB();
+        
+        fields[0] = String.format("L: %4.3f", obb.getDim(0));
+        fields[1] = String.format("H: %4.3f", obb.getDim(1));
+        fields[2] = String.format("W: %4.3f", obb.getDim(2));
+        
+      } else {
+        // No dimensios to display
+        fields = new String[0];
+      }
+      
+    } else {
+      // Invalid shape
+      fields = new String[0];
+    }
+    
+    return fields;
+  }
+  
   // Getter and Setter methods for the World Object's local orientation, name, and form
   
   public abstract void setCenter(PVector newCenter);
@@ -606,8 +653,8 @@ public class Part extends WorldObject {
    * Create a box object with the given colors and dimensions
    */
   public Part(String n, color fill, color outline, float len, float hgt, float wdh) {
-    super(n, new Box(fill, outline, len, wdh, hgt));
-    OBB = new BoundingBox(len + 15f, wdh + 15f, hgt + 15f);
+    super(n, new Box(fill, outline, len, hgt, wdh));
+    OBB = new BoundingBox(len + 15f, hgt + 15f, wdh + 15f);
   }
   
   /**
@@ -704,18 +751,19 @@ public class Part extends WorldObject {
 /**
  * A storage class for a collection of objects with an associated name for the collection.
  */
-public class Scenario {
+public class Scenario implements Iterable<WorldObject> {
   private String name;
   /**
    * A combine list of Parts and Fixtures
    */
-  private ArrayList<WorldObject> objList;
+  private final ArrayList<WorldObject> objList;
   
   /**
    * Create a new scenario of the given name.
    */
   public Scenario(String n) {
     name = n;
+    objList = new ArrayList<WorldObject>();
   }
   
   /**
@@ -724,14 +772,55 @@ public class Scenario {
    * 
    * @param newObjs  The world objects to add to the scenario
    */
-  public void addWorldObject(WorldObject... newObjs) {
+  public void addWorldObjects(WorldObject... newObjs) {
     
     for (WorldObject obj : newObjs) {
-      // Add any non-null world object that does not already exist in the scenario
-      if (obj != null && !objList.contains(obj)) {
-        objList.add(obj);
-      }
+        addWorldObject(obj);
     }
+  }
+  
+  /**
+   * Add the given world object to the scenario. Though, if the name of
+   * the given world object does not only contain letter and number
+   * characters, then the object is not added to either list.
+   * 
+   * @param newObject  The object to be added to either the Part or Fixture
+   *                   list
+   * @returning        Whether the object was added to a list or not
+   */
+  public boolean addWorldObject(WorldObject newObject) {
+    if (newObject == null || objList.contains(newObject)) {
+      // Ignore nulls and duplicates
+      if (newObject == null) {
+        println("New Object is null");
+      } else {
+        println("New Object is: " + newObject.toString());
+      }
+      
+      return false;
+    }
+    
+    String originName = newObject.getName();
+    
+    if (originName.length() > 16) {
+      // Base name length caps at 16 charcters
+      newObject.setName( originName.substring(0, 16) );
+      originName = newObject.getName();
+    }
+    
+    if (Pattern.matches("[a-zA-Z0-9]+", originName)) {
+    
+      if (findObjectWithName(originName, objList) != null) {
+        // Keep names unique
+        newObject.setName( addSuffixForDuplicateName(originName, objList) );
+      }
+      
+      // TODO add in alphabetical order
+      objList.add(newObject);
+      return true;
+    }
+    
+    return false;
   }
   
   /**
@@ -741,17 +830,57 @@ public class Scenario {
    * @returning      The number of the given objects that were successfully
    *                 removed from the scenario
    */
-  public int removeWorldObject(WorldObject... tgtObjs) {
+  public int removeWorldObjects(WorldObject... tgtObjs) {
     int objsRemoved = 0;
     
     for (WorldObject tgt : tgtObjs) {
+      int ret = removeWorldObject(tgt);
       // Keep track of the number of given targets that were successfully removed
-      if (tgt != null && objList.remove(tgt)) {
+      if (ret == 0 || ret == 2) {
         ++objsRemoved;
       }
     }
     
     return objsRemoved;
+  }
+  
+  /**
+   * Delete the given world object from the correct object
+   * list, if it exists in the list.
+   * 
+   * @returning  0 if the object was removed succesfully,
+   *             1 if the object did not exist in the scenario,
+   *             2 if the object was a Fixture that was removed
+   *                from the scenario and was referenced by at
+   *                least one Part in the scenario
+   */
+  public int removeWorldObject(WorldObject toRemove) {
+    if (toRemove == null) {
+      return 1;
+    }
+    
+    int ret;
+    // Remove a fixture from the list
+    boolean removed = objList.remove(toRemove);
+    
+    ret = (removed) ? 0 : 1;
+    
+    if (removed && toRemove instanceof Fixture) {
+      // Remove the reference from all Part objects associated with this fixture
+      for (WorldObject obj : objList) {
+        
+        if (obj instanceof Part) {
+          Part part = (Part)obj;
+          
+          if (part.getFixtureRef() == toRemove) {
+            part.setFixtureRef(null);
+            ret = 2;
+          }
+        }
+      }
+    }
+    
+    return ret;
   }
   
   /**
@@ -771,10 +900,182 @@ public class Scenario {
     return null;
   }
   
+  /**
+   * Updates the collision detection of all the Parts in the scenario,
+   * using the given ArmModel to detect collisions between world objects
+   * and the armModel, and draw every object.
+   */
+  public void updateAndDrawObjects(ArmModel model) {
+    int numOfObjects = objList.size();
+    
+    for (WorldObject wldObj : objList) {
+      if (wldObj instanceof Part) {
+        // Reset all Part bounding-box colors
+        ((Part)wldObj).setBBColor(color(0, 255, 0));
+      }
+    }
+    
+    for (int idx = 0; idx < numOfObjects; ++idx) {
+      WorldObject wldObj = objList.get(idx);
+      
+      if (wldObj instanceof Part) {
+        Part p = (Part)wldObj;
+        
+        /* Update the transformation matrix of an object held by the Robotic Arm */
+        if(model != null && p == model.held && model.modelInMotion()) {
+          pushMatrix();
+          resetMatrix();
+          
+          // new object transform = EE transform x (old EE transform) ^ -1 x current object transform
+          
+          applyModelRotation(model.getJointAngles());
+          
+          float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
+          applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
+                      invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
+                      invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
+                                       0,                 0,                   0,                  1);
+          
+          armModel.held.getOBB().applyCoordinateSystem();
+          // Update the world object's position and orientation
+          armModel.held.getOBB().setCoordinateSystem();
+          
+          popMatrix();
+        }
+        
+        /* Collision Detection */
+        if(COLLISION_DISPLAY) {
+          if( model != null && model.checkObjectCollision(p) ) {
+            p.setBBColor(color(255, 0, 0));
+          }
+          
+          // Detect collision with other objects
+          for(int cdx = idx + 1; cdx < objList.size(); ++cdx) {
+            
+            if (objList.get(cdx) instanceof Part) {
+              Part p2 = (Part)objList.get(cdx);
+              
+              if(p.collision(p2)) {
+                // Change hit box color to indicate Object collision
+                p.setBBColor(color(255, 0, 0));
+                p2.setBBColor(color(255, 0, 0));
+                break;
+              }
+            }
+          }
+          
+          if( model != null && p != model.held && p.getOBB().collision( nativeRobotEEPoint(model.getJointAngles()).position) ) {
+            // Change hit box color to indicate End Effector collision
+            p.setBBColor(color(0, 0, 255));
+          }
+        }
+        
+        if (p == manager.getActiveWorldObject()) {
+          p.setBBColor(color(255, 255, 0));
+        }
+      }
+      // Draw the object
+      wldObj.draw();
+    }
+  }
+  
+  /**
+   * Adds a number suffix to the given name, so that the name is unique amonst the names of all the other world
+   * objects in the given list. So, if the given name is 'block' and objects with names 'block', 'block1', and
+   * 'block2' exist in wldObjList, then the new name will be 'block3'.
+   * 
+   * @param originName  The origin name of the new world object
+   * @param eldObjList  The list of world objects, of wixh to check names
+   * @returning         A unique name amongst the names of the existing world objects in the given list, that
+   *                    contains the original name as a prefix
+   */
+  private <T extends WorldObject> String addSuffixForDuplicateName(String originName, ArrayList<T> wldObjList) {
+    int nameLen = originName.length();
+    ArrayList<Integer> suffixes = new ArrayList<Integer>();
+    
+    for (T wldObj : wldObjList) {
+      String objName = wldObj.getName();
+      int objNameLen = objName.length();
+      
+      if (objNameLen > nameLen) {
+        String namePrefix = objName.substring(0, nameLen),
+               nameSuffix = objName.substring(nameLen, objNameLen);
+        // Find all strings that have the given name as a prefix and an integer value suffix
+        if (namePrefix.equals(originName) && Pattern.matches("[0123456789]+", nameSuffix)) {
+          int suffix = Integer.parseInt(nameSuffix),
+              insertIdx = 0;
+          // Store suffixes in increasing order
+          while (insertIdx < suffixes.size() && suffix > suffixes.get(insertIdx)) {
+            ++insertIdx;
+          }
+          
+          if (insertIdx == suffixes.size()) {
+            suffixes.add(suffix);
+          } else {
+            suffixes.add(insertIdx, suffix);
+          }
+        }
+      }
+    }
+    // Determine the minimum suffix value
+    int suffix = 0;
+    
+    if (suffixes.size() == 1 && suffixes.get(0) == 0) {
+      // If the only stirng with a suffix has a suffix of '0'
+      suffix = 1;
+      
+    } else if (suffixes.size() >= 2) {
+      int idx = 0;
+      
+      while ((idx + 1) < suffixes.size()) {
+        // Find the first occurance of a gap between to adjacent suffix values (if any)
+        if ((suffixes.get(idx + 1) - suffixes.get(idx)) > 1) {
+          break;
+        }
+        
+        ++idx;
+      }
+      
+      suffix = suffixes.get(idx) + 1;
+    }
+    // Concatenate the origin name with the new suffix
+    return String.format("%s%d", originName, suffix);
+  }
+  
+  /**
+   * Attempts to find the world object, in the given list, with the given name. If no such object exists,
+   * then null is returned, otherwise the object with the given name is returned.
+   * 
+   * @param tgtName     The name of the world object to find
+   * @param wldObjList  The list of world objects to check
+   * @returning         The object with the given name, if it exists in the given list, or null.
+   */
+  private <T extends WorldObject> WorldObject findObjectWithName(String tgtName, ArrayList<T> wldObjList) {
+    
+    if (tgtName != null && wldObjList != null) {
+      
+      for (T obj : wldObjList) {
+        // Determine if the object exists
+        if (obj != null && obj.getName().equals(tgtName)) {
+          return obj;
+        }
+      }
+    }
+    
+    return null;
+  }
+  
+  @Override
+  public Iterator<WorldObject> iterator() {
+    return objList.iterator();
+  }
+  
   public int size() { return objList.size(); }
   
   public void setName(String newName) { name = newName; }
   public String getName() { return name; }
+  
+  public String toString() { return name; }
 }
 
 /**
@@ -832,180 +1133,18 @@ public PShape loadSTLModel(String filename, color fill, color outline, float sca
 } 
 
 /**
- * Add the given world object to the correct list in the correct manner.
- * Though, if the name of the given world object does not only contain
- * letter and number characters, then the object is not added to either
- * list.
- * 
- * @param newObject  The object to be added to either the Part or Fixture
- *                   list
- * @returning        Whether the object was added to a list or not
+ * Returns the scenario located that the index of activeScenarioIdx or null
+ * if activeScenarioIdx is invalid.
  */
-public boolean addWorldObject(WorldObject newObject) {
-  String originName = newObject.getName();
+public Scenario activeScenario() {
   
-  if (originName.length() > 16) {
-    // Base name length caps at 16 charcters
-    newObject.setName( originName.substring(0, 16) );
-    originName = newObject.getName();
+  if (activeScenarioIdx >= 0 && activeScenarioIdx < SCENARIOS.size()) {
+    return SCENARIOS.get(activeScenarioIdx);
+    
+  } else {
+    //System.out.printf("Invalid scenaro index: %d!\n", activeScenarioIdx);
+    return null;
   }
-  
-  if (Pattern.matches("[a-zA-Z0-9]+", originName)) {
-  
-    if (newObject instanceof Part) {
-      if (findObjectWithName(originName, PARTS) != null) {
-        // Keep names unique
-        newObject.setName( addSuffixForDuplicateName(originName, PARTS) );
-      }
-      
-      // TODO add in alphabetical order
-      PARTS.add((Part)newObject);
-      return true;
-      
-    } else if (newObject instanceof Fixture) {
-      if (findObjectWithName(originName, FIXTURES) != null) {
-        // Keep names unique
-        newObject.setName( addSuffixForDuplicateName(originName, FIXTURES) );
-      }
-      
-      // TODO add in alphabetical order
-      FIXTURES.add((Fixture)newObject);
-      return true;
-      
-    }
-  }
-  
-  return false;
-}
-
-  /**
-   * Delete the given world object from the correct object
-   * list, if it exists in the list.
-   * 
-   * @returning  0 if a Part was removed succesfully,
-   *             1 if a Part failed to be removed,
-   *             2 if a Fixture was removed successfully,
-   *             3 if a Fixture failed to be removed,
-   *             5 for any other case.
-   */
-public int removeWorldObject(WorldObject toRemove) {
-  int ret = 5;
-  
-  if (toRemove instanceof Part) {
-    // Remove a part from the list
-    boolean removed = PARTS.remove(toRemove);
-    ret = (removed) ? 0 : 1;
-    
-  } else if (toRemove instanceof Fixture) {
-    // Remove a fixture from the list
-    boolean removed = FIXTURES.remove(toRemove);
-    
-    if (removed) {
-      // Remove the reference from all Part objects associated with this fixture
-      for (WorldObject obj : PARTS) {
-        
-        if (obj instanceof Part) {
-          Part part = (Part)obj;
-          
-          if (part.getFixtureRef() == toRemove) {
-            part.setFixtureRef(null);
-          }
-        }
-      }
-      
-      ret = 2;
-    } else {
-      ret =  3;
-    }
-  }
-  
-  return ret;
-}
-
-/**
- * Adds a number suffix to the given name, so that the name is unique amonst the names of all the other world
- * objects in the given list. So, if the given name is 'block' and objects with names 'block', 'block1', and
- * 'block2' exist in wldObjList, then the new name will be 'block3'.
- * 
- * @param originName  The origin name of the new world object
- * @param eldObjList  The list of world objects, of wixh to check names
- * @returning         A unique name amongst the names of the existing world objects in the given list, that
- *                    contains the original name as a prefix
- */
-public <T extends WorldObject> String addSuffixForDuplicateName(String originName, ArrayList<T> wldObjList) {
-  int nameLen = originName.length();
-  ArrayList<Integer> suffixes = new ArrayList<Integer>();
-  
-  for (T wldObj : wldObjList) {
-    String objName = wldObj.getName();
-    int objNameLen = objName.length();
-    
-    if (objNameLen > nameLen) {
-      String namePrefix = objName.substring(0, nameLen),
-             nameSuffix = objName.substring(nameLen, objNameLen);
-      // Find all strings that have the given name as a prefix and an integer value suffix
-      if (namePrefix.equals(originName) && Pattern.matches("[0123456789]+", nameSuffix)) {
-        int suffix = Integer.parseInt(nameSuffix),
-            insertIdx = 0;
-        // Store suffixes in increasing order
-        while (insertIdx < suffixes.size() && suffix > suffixes.get(insertIdx)) {
-          ++insertIdx;
-        }
-        
-        if (insertIdx == suffixes.size()) {
-          suffixes.add(suffix);
-        } else {
-          suffixes.add(insertIdx, suffix);
-        }
-      }
-    }
-  }
-  // Determine the minimum suffix value
-  int suffix = 0;
-  
-  if (suffixes.size() == 1 && suffixes.get(0) == 0) {
-    // If the only stirng with a suffix has a suffix of '0'
-    suffix = 1;
-    
-  } else if (suffixes.size() >= 2) {
-    int idx = 0;
-    
-    while ((idx + 1) < suffixes.size()) {
-      // Find the first occurance of a gap between to adjacent suffix values (if any)
-      if ((suffixes.get(idx + 1) - suffixes.get(idx)) > 1) {
-        break;
-      }
-      
-      ++idx;
-    }
-    
-    suffix = suffixes.get(idx) + 1;
-  }
-  // Concatenate the origin name with the new suffix
-  return String.format("%s%d", originName, suffix);
-}
-
-/**
- * Attempts to find the world object, in the given list, with the given name. If no such object exists,
- * then null is returned, otherwise the object with the given name is returned.
- * 
- * @param tgtName     The name of the world object to find
- * @param wldObjList  The list of world objects to check
- * @returning         The object with the given name, if it exists in the given list, or null.
- */
-public <T extends WorldObject> WorldObject findObjectWithName(String tgtName, ArrayList<T> wldObjList) {
-  
-  if (tgtName != null && wldObjList != null) {
-    
-    for (T obj : wldObjList) {
-      // Determine if the object exists
-      if (obj != null && obj.getName().equals(tgtName)) {
-        return obj;
-      }
-    }
-  }
-  
-  return null;
 }
 
 /**

@@ -493,7 +493,7 @@ public class WindowManager {
                                 .moveTo(scenarioWindow)
                                 .setSize(sButtonWidth, mButtonHeight);
     
-    singleButtons[6] = UIManager.addButton("LoadScenario")
+    singleButtons[6] = UIManager.addButton("SetScenario")
                                 .setCaptionLabel("Load")
                                 .setColorValue(buttonTxtColor)
                                 .setColorBackground(buttonDefColor)
@@ -942,36 +942,40 @@ public class WindowManager {
    * contain world objects.
    */
   private void updateListContents() {
+    Scenario s = activeScenario();
     
-    // Check value of the ObjType dropdown list
-    Object val = dropDownLists[3].getActiveLabelValue();
-    ArrayList wldObjects;
-    
-    if (val != null && ((Float)val) == 1.0) {
-      wldObjects = FIXTURES;
-    } else {
-      // Add the list of parts as default
-      wldObjects = PARTS;
+    if (s != null) {
+      // Check value of the ObjType dropdown list
+      Object val = dropDownLists[3].getActiveLabelValue();
+      boolean loadFixtures = (val instanceof Float) && ((Float)val == 1.0);
+      
+      dropDownLists[4] = (MyDropdownList)dropDownLists[4].clear();
+      dropDownLists[5] = (MyDropdownList)dropDownLists[5].clear();
+      dropDownLists[5].addItem("None", null);
+      
+      for (WorldObject wldObj : s) {
+        
+        if (wldObj instanceof Fixture) {
+          // Load all fixtures from the active scenario
+          dropDownLists[5].addItem(wldObj.toString(), wldObj);
+          
+          if (loadFixtures) {
+            dropDownLists[4].addItem(wldObj.toString(), wldObj);
+          }
+        } else if (wldObj instanceof Part && !loadFixtures) {
+          dropDownLists[4].addItem(wldObj.toString(), wldObj);
+        }
+        
+      }
+      // Update each dropdownlist's active label
+      dropDownLists[4].updateActiveLabel();
+      dropDownLists[5].updateActiveLabel();
     }
-    
-    dropDownLists[4] = (MyDropdownList)dropDownLists[4].clear();
-    for (Object obj : wldObjects) {
-      // Add each world object to the dropdown list
-      dropDownLists[4].addItem(obj.toString(), obj);
-    }
-    dropDownLists[4].updateActiveLabel();
-    
-    dropDownLists[5] = (MyDropdownList)dropDownLists[5].clear();
-    dropDownLists[5].addItem("None", null);
-    for (Fixture obj : FIXTURES) {
-      // Add each fixture to the dropdown list
-      dropDownLists[5].addItem(obj.toString(), obj);
-    }
-    dropDownLists[5].updateActiveLabel();
     
     dropDownLists[6] = (MyDropdownList)dropDownLists[6].clear();
-    for (Scenario s : SCENARIOS) {
-      dropDownLists[6].addItem(s.getName(), s);
+    for (int idx = 0; idx < SCENARIOS.size(); ++idx) {
+      // Load all scenario indices
+      dropDownLists[6].addItem(SCENARIOS.get(idx).getName(), new Integer(idx));
     }
     dropDownLists[6].updateActiveLabel();
   }
@@ -1249,18 +1253,19 @@ public class WindowManager {
    * Delete the world object that is selected in
    * the Object dropdown list, if any.
    * 
-   * @returning  0 if a Part was removed succesfully,
-   *             1 if a Part failed to be removed,
-   *             2 if a Fixture was removed successfully,
-   *             3 if a Fixture failed to be removed,
-   *             5 for any other case.
+   * @returning  -1  if the active Scenario is null
+   *              0  if the object was removed succesfully,
+   *              1  if the object did not exist in the scenario,
+   *              2  if the object was a Fixture that was removed
+   *                 from the scenario and was referenced by at
+   *                 least one Part in the scenario
    */
   public int deleteActiveWorldObject() {
-    int ret = removeWorldObject( getActiveWorldObject() );
+    int ret = -1;
+    Scenario s = activeScenario();
     
-    if (ret % 2 == 0) {
-      // Even numbers symbolize a successful removal
-      updateListContents();
+    if (s != null) {
+      ret = s.removeWorldObject( getActiveWorldObject() );
     }
     
     return ret;
@@ -1296,5 +1301,70 @@ public class WindowManager {
       }
     }
   }
+  
+  /**
+   * Creates a new scenario with the name pulled from the scenario name text field.
+   * If the name given is already given to another existing scenario, then no new
+   * Scenario is created. Also, names can only consist of 16 letters or numbers.
+   * 
+   * @returning  A new Scenario object or null if the scenario name text field's
+   *             value is invalid
+   */
+  public Scenario initializeScenario() {
+    String activeButtonLabel = windowTabs.getActiveButtonName();
+    
+    if (activeButtonLabel != null && activeButtonLabel.equals("Scenario")) {
+      String name = scenarioName.getText();
+      
+      if (name != null) {
+        // Names only consist of letters and numbers
+        if (Pattern.matches("[a-zA-Z0-9]+", name)) {
+          
+          for (Scenario s : SCENARIOS) {
+            if (s.getName().equals(name)) {
+              // Duplicate name
+              println("Names must be unique!");
+              return null;
+            }
+          }
+          
+          if (name.length() > 16) {
+            // Names have a max length of 16 characters
+            name = name.substring(0, 16);
+          }
+          
+          return new Scenario(name);
+        }
+      }
+    }
+    
+    // Invalid input or wrong window open 
+    return null;
+  }
+  
+  /**
+   * Returns the index of the scenario associated with the active
+   * label of the scenario's dropdown list.
+   * 
+   * @returning  The index value or null if no such index exists
+   */
+  public Integer getScenarioIndex() {
+    String activeButtonLabel = windowTabs.getActiveButtonName();
+    
+    if (activeButtonLabel != null && activeButtonLabel.equals("Scenario")) {
+      Object val = dropDownLists[6].getActiveLabelValue();
+      
+      if (val instanceof Integer) {
+        // Set the active scenario index
+        return (Integer)val;
+      } else if (val != null) {
+        // Invalid entry in the dropdown list
+        System.out.printf("Invalid class type: %d!\n", val.getClass());
+      }
+    }
+    
+    return null;
+  }
+  
 
 }

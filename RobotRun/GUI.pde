@@ -852,7 +852,11 @@ public void keyReleased() {
 
 public void CreateWldObj() {
   /* Create a world object from the input fields in the Create window. */
-  addWorldObject( manager.createWorldObject() );
+  Scenario s = activeScenario();
+  
+  if (s != null) {
+    s.addWorldObject( manager.createWorldObject() );
+  }
 }
 
 public void ClearFields() {
@@ -867,24 +871,32 @@ public void UpdateWldObj() {
 }
 
 public void DeleteWldObj() {
-  /* Delete focused world object */
+  // Delete focused world object
   int ret = manager.deleteActiveWorldObject();
-  System.out.printf("World Object removed: %d\n", ret);
+  if (DISPLAY_TEST_OUTPUT) { System.out.printf("World Object removed: %d\n", ret); }
 }
 
 public void NewScenario() {
-  // TODO create a new scenario
-  println("Create scenario");
+  Scenario newScenario = manager.initializeScenario();
+  
+  if (newScenario != null) {
+    // Add the new scenario
+    SCENARIOS.add(newScenario);
+  }
 }
 
 public void SaveScenario() {
-  // TODO save current scenario
-  println("Save scenario");
+  // Save all scenarios
+  saveScenarioBytes( new File(sketchPath("tmp/scenarios.bin")) );
 }
 
-public void LoadScenario() {
-  // TODO load previous scenario
-  println("Load scenario");
+public void SetScenario() {
+  Integer newActiveIdx = manager.getScenarioIndex();
+  
+  if (newActiveIdx != null) {
+    // Set a new active scenario
+    activeScenarioIdx = newActiveIdx;
+  }
 }
 
 // Menu button

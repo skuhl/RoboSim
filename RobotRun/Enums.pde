@@ -1,20 +1,20 @@
 /* The possible values for the current Coordinate Frame */
-public enum CoordFrame { JOINT, WORLD, TOOL, USER }
+private enum CoordFrame { JOINT, WORLD, TOOL, USER }
 /* The possible types of End Effectors for the Robot */
-public enum EndEffector { NONE, SUCTION, CLAW, POINTER; }
+private enum EndEffector { NONE, SUCTION, CLAW, POINTER; }
 /* The different motion types for the Robot to when moving to specific joint angles, or positon and orientation. */
-public enum RobotMotion { HALTED, MT_JOINT, MT_LINEAR; }
+private enum RobotMotion { HALTED, MT_JOINT, MT_LINEAR; }
 /* The states for displaying the current frame as axes */
-public enum AxesDisplay { AXES, GRID, NONE };
+private enum AxesDisplay { AXES, GRID, NONE };
 /* The states for mapping the Robot's End Effector to the grid */
-public enum EEMapping { LINE, DOT, NONE };
+private enum EEMapping { LINE, DOT, NONE };
 /* Define the relative points of an object drawn in a GUI */
 private enum RelativePoint { TOP_RIGHT, TOP_LEFT, BOTTOM_LEFT, BOTTOM_RIGHT; }
 /* Set of valid shape types that a fixture or part can have */
 private enum ShapeType { BOX, CYLINDER, MODEL };
 
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
-public enum Operator implements ExpressionElement {
+private enum Operator implements ExpressionElement {
   ADDTN("+", ARITH), 
   SUBTR("-", ARITH), 
   MULT("*", ARITH), 

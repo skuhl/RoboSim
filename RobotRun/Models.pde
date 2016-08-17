@@ -955,9 +955,19 @@ public class ArmModel {
     
     /* Check for a collision between the Robot Arm and any world object as well as an object
      * held by the Robot Arm and any other world object */
-    for(Part obj : PARTS) {
-      if(checkObjectCollision(obj) || (held != null && held != obj && held.collision(obj))) {
-        collision = true;
+     Scenario s = activeScenario();
+     
+    if (s != null) {
+      
+      for (WorldObject wldObj : s) {
+        
+        if (wldObj instanceof Part) {
+          Part p = (Part)wldObj;
+          
+          if(checkObjectCollision(p) || (held != null && held != p && held.collision(p))) {
+            collision = true;
+          }
+        }
       }
     }
     
@@ -1028,12 +1038,21 @@ public class ArmModel {
       if(endEffectorState == ON && armModel.held == null) {
         
         PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
-        // Determine if an object in the world can be picked up by the Robot
-        for(Part s : PARTS) {
+        Scenario s = activeScenario();
+        
+        if (s != null) {
           
-          if(s.getOBB().collision(ee_pos)) {
-            armModel.held = s;
-            return 0;
+          for (WorldObject wldObj : s) {
+            
+            if (wldObj instanceof Part) {
+              Part p = (Part)wldObj;
+              
+              if (p.getOBB().collision(ee_pos)) {
+                held = p;
+                return 0;
+              }
+            }
+          
           }
         }
       } 
