@@ -6,24 +6,17 @@ public void saveState() {
   saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
   saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
   saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+  saveScenarioBytes( new File(sketchPath("tmp/scenarios.bin")) );
 }
 
 /**
  * Load program, frames, and registers from their respective
  * binary files.
  *
- * @return  0 if all loads were successful,
- *          1 if only the program loading failed,
- *          2 if only the frame loading failed,
- *          3 if only program and frame loading failed,
- *          4 if only register loading failed,
- *          5 if only register and program loading failed,
- *          6 if only register and frame loading failed,
- *          7 if all loads failed
+ * @return  a byte value
  */
-public int loadState() {
-  int ret = 0,
-  error = 0;
+public byte loadState() {
+  byte[] fileFlags = new byte[] { 1, 1, 1, 1 };
   
   File f = new File(sketchPath("tmp/"));
   if(!f.exists()) { f.mkdirs(); }
@@ -33,41 +26,35 @@ public int loadState() {
   File progFile = new File( sketchPath("tmp/programs.bin") );
   
   if(progFile.exists()) {
-    ret = loadProgramBytes(progFile);
+    int ret = loadProgramBytes(progFile);
     
     if(ret == 0) {
       println("Successfully loaded programs!");
+      fileFlags[0] = 0;
     } else {
       println("Failed to load programs ...");
-      error = 1;
     }
   }
   
   /* Load and Initialize the Tool and User Frames */
   
-  ret = 1;
-  
   File frameFile = new File( sketchPath("tmp/frames.bin") );
   
   if(frameFile.exists()) {
     // Load both the User and Tool Frames
-    ret = loadFrameBytes(frameFile);
+    int ret = loadFrameBytes(frameFile);
     
     if(ret == 0) {
       println("Successfully loaded frames!");
+      fileFlags[1] = 0;
     } else {
-      println("Failed to load frames ..."); 
+      println("Failed to load frames ...");
       
-      if(error == 0) {
-        error = 2;
-      } else {
-        error = 3;
-      }
     }
   }
   
   // Create new frames if they could not be loaded
-  if(ret != 0) {
+  if(fileFlags[1] == 1) {
     
     toolFrames = new Frame[10];
     userFrames = new Frame[10];
@@ -84,22 +71,26 @@ public int loadState() {
   File regFile = new File(sketchPath("tmp/registers.bin"));
   
   if(regFile.exists()) {
-    ret = loadRegisterBytes(regFile);
+    int ret = loadRegisterBytes(regFile);
     
     if(ret == 0) {
       println("Successfully loaded registers!");
+      fileFlags[2] = 0;
     } else {
       println("Failed to load registers ...");
-      
-      if(error == 0) {
-        error = 4;
-      } else if(error == 1) {
-        error = 5;
-      } else if(error == 2) {
-        error = 6;
-      } else if(error == 3) {
-        error = 7;
-      }
+    }
+  }
+  
+  File scenarioFile = new File(sketchPath("tmp/scenarios.bin"));
+  
+  if(scenarioFile.exists()) {
+    int ret = loadScenarioBytes(scenarioFile); //<>//
+    
+    if(ret == 0) {
+      println("Successfully loaded scenarios!");
+      fileFlags[3] = 0;
+    } else {
+      println("Failed to load scenarios ...");
     }
   }
   
@@ -129,9 +120,14 @@ public int loadState() {
     IO_REG[idx].setIdx(idx);
   }
   
+  byte ret = 0;
   
+  for (int bdx = 0; bdx < fileFlags.length; ++bdx) {
+    // Move each flag to a separate bit spot
+    ret += (fileFlags[bdx] << bdx);
+  }
   
-  return error;
+  return ret;
 }
 
 /**
@@ -315,7 +311,7 @@ private Program loadProgram(DataInputStream in) throws IOException {
  * Saves the data associated with the given Point object to the file opened
  * by the given output stream. Null Points are saved a single zero byte.
  * 
- * @param   p            The Point of which to save the data //<>//
+ * @param   p            The Point of which to save the data
  * @param   out          The output stream used to save the Point
  * @throws  IOException  If an error occurs with writing the data of the Point
  */
@@ -336,7 +332,7 @@ private void savePoint(Point p, DataOutputStream out) throws IOException {
     saveFloatArray(p.angles, out);
     
     if (p.angles == null) {
-      println("null angles!"); //<>//
+      println("null angles!");
     }
   }
 }
@@ -970,6 +966,18 @@ public int loadRegisterBytes(File src) {
 public int saveScenarioBytes(File dest) {
   
   try {
+     
+    // Create dest if it does not already exist
+    if(!dest.exists()) {
+      try {
+        dest.createNewFile();
+        System.out.printf("Successfully created %s.\n", dest.getName());
+      } catch (IOException IOEx) {
+        System.out.printf("Could not create %s ...\n", dest.getName());
+        IOEx.printStackTrace();
+      }
+    }
+    
     FileOutputStream out = new FileOutputStream(dest);
     DataOutputStream dataOut = new DataOutputStream(out);
     
@@ -1017,10 +1025,10 @@ public int saveScenarioBytes(File dest) {
  *             4  if an error occurs with loading a .stl file
  *                for the shape of a world object
  */
-public int loadScenarios(File src) {
+public int loadScenarioBytes(File src) {
   
   try {
-    FileInputStream in = new FileInputStream(src);
+    FileInputStream in = new FileInputStream(src); //<>//
     DataInputStream dataIn = new DataInputStream(in);
     
     int numOfScenarios = dataIn.readInt();
@@ -1079,14 +1087,14 @@ public void saveScenario(Scenario s, DataOutputStream out) throws IOException {
   } else {
     // Indicate the value saved is non-null
     out.writeByte(1);
-    
-    int size = s.size();
+    // Write the name of the scenario
+    out.writeUTF(s.getName());
     // Save the number of world objects in the scenario
-    out.writeInt(size);
+    out.writeInt( s.size() );
     
-    for (int idx = 0; idx < size; ++idx) {
+    for (WorldObject wldObj : s) {
       // Save all the world objects associated with the scenario
-      saveWorldObject(s.getWorldObject(idx), out);  
+      saveWorldObject(wldObj, out);  
     }
   }
 }
@@ -1105,7 +1113,7 @@ public void saveScenario(Scenario s, DataOutputStream out) throws IOException {
  */
 public Scenario loadScenario(DataInputStream in) throws IOException, NullPointerException {
   // Read flag byte
-  byte flag = in.readByte();
+  byte flag = in.readByte(); //<>//
   
   if (flag == 0) {
     return null;
@@ -1136,27 +1144,31 @@ public Scenario loadScenario(DataInputStream in) throws IOException, NullPointer
  */
 public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {
   
-  if (wldObj == null) {
+  if (wldObj == null) { //<>//
     // Indicate that the value saved is null
     out.writeByte(0);
     
   } else {
+    if (wldObj instanceof Part) {
+      // Indicate that the value saved is a Part
+      out.writeByte(1);
+    } else if (wldObj instanceof Fixture) {
+      // Indicate that the value saved is a Fixture
+      out.writeByte(2);
+    }
+    
     // Save the name and form of the object
     out.writeUTF(wldObj.getName());
     saveShape(wldObj.getForm(), out);
     
     if (wldObj instanceof Part) {
       Part part = (Part)wldObj;
-      // Indicate that the value saved is a Part
-      out.writeByte(1);
       // Save the bounding-box and fixture reference of the part
       saveOBB(part.getOBB(), out);
       saveWorldObject(part.getFixtureRef(), out);
       
     } else if (wldObj instanceof Fixture) {
       Fixture fixture = (Fixture)wldObj;
-      // Indicate that the value saved is a Fixture
-      out.writeByte(2);
       // Save the local orientation of the fixture
       savePVector(fixture.getCenter(), out);
       saveFloatArray2D(fixture.getOrientationAxes(), out);
@@ -1178,7 +1190,7 @@ public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOE
  */
 public WorldObject loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
   // Load the flag byte
-  byte flag = in.readByte();
+  byte flag = in.readByte(); //<>//
   WorldObject wldObj = null;
   
   if (flag != 0) {
@@ -1342,35 +1354,40 @@ public void saveShape(Shape shape, DataOutputStream out) throws IOException {
   if (shape == null) {
     // Indicate the saved value is null
     out.writeByte(0);
+    
   } else {
+    if (shape instanceof Box) {
+      // Indicate the saved value is a box
+      out.writeByte(1);
+    } else if (shape instanceof Cylinder) {
+      // Indicate the value saved is a cylinder
+      out.writeByte(2);
+    } else if (shape instanceof ModelShape) {
+      // Indicate the value saved is a complex shape
+      out.writeByte(3);
+    }
+    
+    // Write the shape's color fields
+    out.writeBoolean( shape.isFilled() );
+    out.writeInt( shape.getFillColor() );
+    out.writeInt( shape.getOutlineColor() );
     
     if (shape instanceof Box) {
       Box b = (Box)shape;
-      // Indicate the saved value is a box
-      out.writeByte(1);
       // Save length, height, and width of the box
       savePVector(b.getDimensions(), out);
       
     } else if (shape instanceof Cylinder) {
       Cylinder c = (Cylinder)shape;
-      // Indicate the value saved is a cylinder
-      out.writeByte(2);
       // Save the radius and height of the cylinder
       out.writeFloat(c.getRadius());
       out.writeFloat(c.getHeight());
       
     } else if (shape instanceof ModelShape) {
       ModelShape m = (ModelShape)shape;
-      // Indicate the value saved is a complex shape
-      out.writeByte(2);
       // Save the source path of the complex shape
-      out.writeUTF(m.getSourcePath());
-      
+      out.writeUTF(m.getSourcePath()); 
     }
-    // Write the shape's color fields
-    out.writeBoolean( shape.isFilled() );
-    out.writeInt( shape.getFillColor() );
-    out.writeInt( shape.getOutlineColor() );
   }
 }
 
@@ -1390,33 +1407,31 @@ public Shape loadShape(DataInputStream in) throws IOException, NullPointerExcept
   byte flag = in.readByte();
   Shape shape = null;
   
-  if (flag == 1) {
-    PVector dimensions = loadPVector(in);
+  if (flag != 0) {
+    // Read color fields
     boolean isFilled = in.readBoolean();
     int fill = in.readInt(),
         outline = in.readInt();
-    // Create a box
-    shape = new Box(fill, outline, dimensions.x, dimensions.y, dimensions.z);
-    shape.setFillFlag(isFilled);
-    
-  } else if (flag == 2) {
-    float radius = in.readFloat(),
-          hgt = in.readFloat();
-    boolean isFilled = in.readBoolean();
-    int fill = in.readInt(),
-        outline = in.readInt();
-    // Create a cylinder
-    shape = new Cylinder(fill, outline, radius, hgt);
-    shape.setFillFlag(isFilled);
-    
-  } else if (flag == 3) {
-    String srcPath = in.readUTF();
-    boolean isFilled = in.readBoolean();
-    int fill = in.readInt(),
-        outline = in.readInt();
-    // Creates a complex shape from the srcPath located in RobotRun/data/
-    shape = new ModelShape(srcPath, fill, outline);
-    shape.setFillFlag(isFilled);
+          
+    if (flag == 1) {
+      PVector dimensions = loadPVector(in);
+      // Create a box
+      shape = new Box(fill, outline, dimensions.x, dimensions.y, dimensions.z);
+      shape.setFillFlag(isFilled);
+      
+    } else if (flag == 2) {
+      float radius = in.readFloat(),
+            hgt = in.readFloat();
+      // Create a cylinder
+      shape = new Cylinder(fill, outline, radius, hgt);
+      shape.setFillFlag(isFilled);
+      
+    } else if (flag == 3) {
+      String srcPath = in.readUTF();
+      // Creates a complex shape from the srcPath located in RobotRun/data/
+      shape = new ModelShape(srcPath, fill, outline);
+      shape.setFillFlag(isFilled);
+    }
   }
   
   return shape;
@@ -1431,6 +1446,7 @@ public void savePVector(PVector p, DataOutputStream out) throws IOException {
   if (p == null) {
     // Write flag byte
     out.writeByte(0);
+    
   } else {
     // Write flag byte
     out.writeByte(1);
@@ -1450,6 +1466,7 @@ public PVector loadPVector(DataInputStream in) throws IOException {
   
   if (val == 0) {
     return null;
+    
   } else {
     // Read vector data
     PVector v = new PVector();
@@ -1472,6 +1489,7 @@ public void saveFloatArray(float[] list, DataOutputStream out) throws IOExceptio
   if (list == null) {
     // Write flag value
     out.writeByte(0);
+    
   } else {
     // Write flag value
     out.writeByte(1);
@@ -1528,6 +1546,7 @@ public void saveFloatArray2D(float[][] list, DataOutputStream out) throws IOExce
   if (list == null) {
     // Write flag value
     out.writeByte(0);
+    
   } else {
     // Write flag value
     out.writeByte(1);

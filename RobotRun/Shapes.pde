@@ -653,8 +653,8 @@ public class Part extends WorldObject {
    * Create a box object with the given colors and dimensions
    */
   public Part(String n, color fill, color outline, float len, float hgt, float wdh) {
-    super(n, new Box(fill, outline, len, wdh, hgt));
-    OBB = new BoundingBox(len + 15f, wdh + 15f, hgt + 15f);
+    super(n, new Box(fill, outline, len, hgt, wdh));
+    OBB = new BoundingBox(len + 15f, hgt + 15f, wdh + 15f);
   }
   
   /**
@@ -1142,7 +1142,7 @@ public Scenario activeScenario() {
     return SCENARIOS.get(activeScenarioIdx);
     
   } else {
-    println("Invalid scenaro index!");
+    //System.out.printf("Invalid scenaro index: %d!\n", activeScenarioIdx);
     return null;
   }
 }

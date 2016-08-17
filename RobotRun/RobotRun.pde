@@ -86,7 +86,9 @@ public void setup() {
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   eePointer = new Model("POINTER.stl", color(40), 10.0);
   intermediatePositions = new ArrayList<Point>();
+  
   activeScenarioIdx = -1;
+  
   loadState();
   
   //set up UI
