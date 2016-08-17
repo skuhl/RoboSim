@@ -53,7 +53,6 @@ public class MyDropdownList extends DropdownList {
   
   protected void onRelease() {
     super.onRelease();
-    
     // Some dropdown lists influence the display
     manager.updateWindowContentsPositions();
   }
@@ -109,16 +108,25 @@ public class MyDropdownList extends DropdownList {
 public class WindowManager {
   private ControlP5 UIManager;
   
-  private Group createObjWindow, editObjWindow, sharedElements, scenarioWindow;
+  private Group createObjWindow, editObjWindow,
+                sharedElements, scenarioWindow;
 
   private ButtonTabs windowTabs;
-  private Textarea[] labels;
+  private Background background;
+  
+  private Textarea objNameLbl, scenarioNameLbl;
   private Textfield objName, scenarioName;
+  
+  private ArrayList<Textarea> shapeDefAreas;
   private ArrayList<Textfield> shapeDefFields;
-  private Textfield[] objOrientation;
+  
+  private Textarea[] objOrientationLbls;
+  private Textfield[] objOrientationAreas;
+  
+  private Textarea[] dropDownLbls;
+  private MyDropdownList[] dropDownLists;
   
   private Button[] singleButtons;
-  private MyDropdownList[] dropDownLists;
   
   public static final int offsetX = 10,
                           distBtwFieldsY = 15,
@@ -145,11 +153,13 @@ public class WindowManager {
     // Initialize content fields
     UIManager = manager;
     
-    labels = new Textarea[17];
-    objOrientation = new Textfield[6];
+    objOrientationLbls = new Textarea[6];
+    objOrientationAreas = new Textfield[6];
+    shapeDefAreas = new ArrayList<Textarea>();
     shapeDefFields = new ArrayList<Textfield>();
-    singleButtons = new Button[7];
+    dropDownLbls = new Textarea[7];
     dropDownLists = new MyDropdownList[7];
+    singleButtons = new Button[7];
     
     // Create some temporary color and dimension variables
     color bkgrdColor = color(210),
@@ -174,10 +184,19 @@ public class WindowManager {
                   .setSize(windowList.length * lButtonWidth, sButtonHeight));
     
     windowTabs.getCaptionLabel().setFont(medium);
-    
     windowTabs.addItems(windowList);
-    // Initialize the groups
+    
     relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_LEFT, 0, 0);
+    background = UIManager.addBackground("WindowBackground").setPosition(relPos[0], relPos[1])
+                          .setBackgroundColor(bkgrdColor)
+                          .setSize(windowTabs.getWidth(), 0);
+    
+    // Initialize the groups
+    sharedElements = UIManager.addGroup("SHARED").setPosition(relPos[0], relPos[1])
+                          .setBackgroundColor(bkgrdColor)
+                          .setSize(windowTabs.getWidth(), 0)
+                          .hideBar();
+    
     createObjWindow = UIManager.addGroup("CREATEOBJ").setPosition(relPos[0], relPos[1])
                                .setBackgroundColor(bkgrdColor)
                                .setSize(windowTabs.getWidth(), 0)
@@ -188,17 +207,32 @@ public class WindowManager {
                              .setSize(windowTabs.getWidth(), 0)
                              .hideBar();
     
-    sharedElements = UIManager.addGroup("SHARED").setPosition(relPos[0], relPos[1])
-                              .setBackgroundColor(bkgrdColor)
-                              .setSize(lButtonWidth + offsetX + 10, sButtonHeight + offsetX)
-                              .hideBar();
-    
     scenarioWindow = UIManager.addGroup("SCENARIO").setPosition(relPos[0], relPos[1])
-                              .setBackgroundColor(bkgrdColor)
-                              .setSize(windowTabs.getWidth(), 0)
-                              .hideBar();
+                          .setBackgroundColor(bkgrdColor)
+                          .setSize(windowTabs.getWidth(), 0)
+                          .hideBar();
+    
     // Initialize window contents
-    labels[0] = UIManager.addTextarea("Name", "Name:", 0, 0, sLblWidth, fieldHeight)
+    for (int idx = 0; idx < 5; ++idx) {
+      shapeDefAreas.add( UIManager.addTextarea(String.format("Dim%dLbl", idx), String.format("Dim(%d):", idx), 0, 0, mLblWidth, mButtonHeight)
+                                  .setFont(medium)
+                                  .setColor(fieldTxtColor)
+                                  .setColorActive(fieldActColor)
+                                  .setColorBackground(bkgrdColor)
+                                  .setColorForeground(bkgrdColor)
+                                  .moveTo(sharedElements) );
+      
+      shapeDefFields.add( UIManager.addTextfield(String.format("Dim%d", idx), 0, 0, fieldWidth, fieldHeight)
+                                   .setColor(fieldTxtColor)
+                                   .setColorCursor(fieldCurColor)
+                                   .setColorActive(fieldActColor)
+                                   .setColorLabel(bkgrdColor)
+                                   .setColorBackground(fieldBkgrdColor)
+                                   .setColorForeground(fieldFrgrdColor)
+                                   .moveTo(sharedElements) );
+    }
+    
+    dropDownLbls[0] = UIManager.addTextarea("ObjTypeLbl", "Type:", 0, 0, mLblWidth, mButtonHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -206,7 +240,15 @@ public class WindowManager {
                          .setColorForeground(bkgrdColor)
                          .moveTo(createObjWindow);
     
-    objName = UIManager.addTextfield("NField", 0, 0, fieldWidth, fieldHeight)
+    objNameLbl = UIManager.addTextarea("ObjNameLbl", "Name:", 0, 0, sLblWidth, fieldHeight)
+                         .setFont(medium)
+                         .setColor(fieldTxtColor)
+                         .setColorActive(fieldActColor)
+                         .setColorBackground(bkgrdColor)
+                         .setColorForeground(bkgrdColor)
+                         .moveTo(createObjWindow);
+    
+    objName = UIManager.addTextfield("ObjName", 0, 0, fieldWidth, fieldHeight)
                        .setColor(fieldTxtColor)
                        .setColorCursor(fieldCurColor)
                        .setColorActive(fieldActColor)
@@ -215,7 +257,7 @@ public class WindowManager {
                        .setColorForeground(fieldFrgrdColor)
                        .moveTo(createObjWindow);
     
-    labels[1] = UIManager.addTextarea("ShapeType", "Shape:", 0, 0, mLblWidth, mButtonHeight)
+    dropDownLbls[1] = UIManager.addTextarea("ShapeLbl", "Shape:", 0, 0, mLblWidth, mButtonHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -223,75 +265,7 @@ public class WindowManager {
                          .setColorForeground(bkgrdColor)
                          .moveTo(createObjWindow);
     
-    labels[10] = UIManager.addTextarea("Dim0", "Dim(0):", 0, 0, mLblWidth, mButtonHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(createObjWindow);
-    
-    shapeDefFields.add( UIManager.addTextfield("D0Field", 0, 0, fieldWidth, fieldHeight)
-                                 .setColor(fieldTxtColor)
-                                 .setColorCursor(fieldCurColor)
-                                 .setColorActive(fieldActColor)
-                                 .setColorLabel(bkgrdColor)
-                                 .setColorBackground(fieldBkgrdColor)
-                                 .setColorForeground(fieldFrgrdColor)
-                                 .moveTo(createObjWindow) );
-    
-    labels[11] = UIManager.addTextarea("Dim1", "Dim(1):", 0, 0, mLblWidth, mButtonHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(createObjWindow);
-    
-    shapeDefFields.add( UIManager.addTextfield("D1Field", 0, 0, fieldWidth, fieldHeight)
-                                 .setColor(fieldTxtColor)
-                                 .setColorCursor(fieldCurColor)
-                                 .setColorActive(fieldActColor)
-                                 .setColorLabel(bkgrdColor)
-                                 .setColorBackground(fieldBkgrdColor)
-                                 .setColorForeground(fieldFrgrdColor)
-                                 .moveTo(createObjWindow) );
-    
-    labels[12] = UIManager.addTextarea("Dim2", "Dim(2):", 0, 0, mLblWidth, mButtonHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(createObjWindow);
-    
-    shapeDefFields.add( UIManager.addTextfield("D2Field", 0, 0, fieldWidth, fieldHeight)
-                                 .setColor(fieldTxtColor)
-                                 .setColorCursor(fieldCurColor)
-                                 .setColorActive(fieldActColor)
-                                 .setColorLabel(bkgrdColor)
-                                 .setColorBackground(fieldBkgrdColor)
-                                 .setColorForeground(fieldFrgrdColor)
-                                 .moveTo(createObjWindow) );
-    
-    labels[13] = UIManager.addTextarea("Dim3", "Dim(3):", 0, 0, mLblWidth, mButtonHeight)
-                          .setFont(medium)
-                          .setColor(fieldTxtColor)
-                          .setColorActive(fieldActColor)
-                          .setColorBackground(bkgrdColor)
-                          .setColorForeground(bkgrdColor)
-                          .moveTo(createObjWindow);
-    
-    shapeDefFields.add( UIManager.addTextfield("D3Field", 0, 0, fieldWidth, fieldHeight)
-                                 .setColor(fieldTxtColor)
-                                 .setColorCursor(fieldCurColor)
-                                 .setColorActive(fieldActColor)
-                                 .setColorLabel(bkgrdColor)
-                                 .setColorBackground(fieldBkgrdColor)
-                                 .setColorForeground(fieldFrgrdColor)
-                                 .moveTo(createObjWindow) );
-    
-    labels[2] = UIManager.addTextarea("FillColor", "Fill:", 0, 0, mLblWidth, mButtonHeight)
+    dropDownLbls[2] = UIManager.addTextarea("FillLbl", "Fill:", 0, 0, mLblWidth, mButtonHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -299,7 +273,7 @@ public class WindowManager {
                          .setColorForeground(bkgrdColor)
                          .moveTo(createObjWindow);
     
-    labels[3] = UIManager.addTextarea("OutlineColor", "Outline:", 0, 0, mLblWidth, mButtonHeight)
+    dropDownLbls[3] = UIManager.addTextarea("OutlineLbl", "Outline:", 0, 0, mLblWidth, mButtonHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -325,8 +299,7 @@ public class WindowManager {
                                 .setPosition(0, 0)
                                 .setSize(sButtonWidth, mButtonHeight);
     
-    // Place below the objects dropdown list
-    labels[4] = UIManager.addTextarea("XArea", "X:", 0, 0, sLblWidth, fieldHeight)
+    dropDownLbls[4] = UIManager.addTextarea("ObjLabel", "Object:", 0, 0, mLblWidth, fieldHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -334,7 +307,15 @@ public class WindowManager {
                          .setColorForeground(bkgrdColor)
                          .moveTo(editObjWindow);
     
-    objOrientation[0] = UIManager.addTextfield("XField", 0, 0, fieldWidth, fieldHeight)
+    objOrientationLbls[0] = UIManager.addTextarea("XArea", "X:", 0, 0, sLblWidth, fieldHeight)
+                         .setFont(medium)
+                         .setColor(fieldTxtColor)
+                         .setColorActive(fieldActColor)
+                         .setColorBackground(bkgrdColor)
+                         .setColorForeground(bkgrdColor)
+                         .moveTo(editObjWindow);
+    
+    objOrientationAreas[0] = UIManager.addTextfield("XField", 0, 0, fieldWidth, fieldHeight)
                                  .setColor(fieldTxtColor)
                                  .setColorCursor(fieldCurColor)
                                  .setColorActive(fieldActColor)
@@ -343,7 +324,7 @@ public class WindowManager {
                                  .setColorForeground(fieldFrgrdColor)
                                  .moveTo(editObjWindow);
     
-    labels[5] = UIManager.addTextarea("YArea", "Y:", 0, 0, sLblWidth, fieldHeight)
+    objOrientationLbls[1] = UIManager.addTextarea("YArea", "Y:", 0, 0, sLblWidth, fieldHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -351,7 +332,7 @@ public class WindowManager {
                          .setColorForeground(bkgrdColor)
                          .moveTo(editObjWindow);
     
-    objOrientation[1] = UIManager.addTextfield("YField", 0, 0, fieldWidth, fieldHeight)
+    objOrientationAreas[1] = UIManager.addTextfield("YField", 0, 0, fieldWidth, fieldHeight)
                                  .setColor(fieldTxtColor)
                                  .setColorCursor(fieldCurColor)
                                  .setColorActive(fieldActColor)
@@ -360,7 +341,7 @@ public class WindowManager {
                                  .setColorForeground(fieldFrgrdColor)
                                  .moveTo(editObjWindow);
     
-    labels[6] = UIManager.addTextarea("ZArea", "Z:", 0, 0, sLblWidth, fieldHeight)
+    objOrientationLbls[2] = UIManager.addTextarea("ZArea", "Z:", 0, 0, sLblWidth, fieldHeight)
                           .setFont(medium)
                           .setColor(fieldTxtColor)
                           .setColorActive(fieldActColor)
@@ -368,7 +349,7 @@ public class WindowManager {
                           .setColorForeground(bkgrdColor)
                           .moveTo(editObjWindow);
     
-    objOrientation[2] = UIManager.addTextfield("ZField", 0, 0, fieldWidth, fieldHeight)
+    objOrientationAreas[2] = UIManager.addTextfield("ZField", 0, 0, fieldWidth, fieldHeight)
                                  .setColor(fieldTxtColor)
                                  .setColorCursor(fieldCurColor)
                                  .setColorActive(fieldActColor)
@@ -377,7 +358,7 @@ public class WindowManager {
                                  .setColorForeground(fieldFrgrdColor)
                                  .moveTo(editObjWindow);
     
-    labels[7] = UIManager.addTextarea("WArea", "W:", 0, 0, sLblWidth, fieldHeight)
+    objOrientationLbls[3] = UIManager.addTextarea("WArea", "W:", 0, 0, sLblWidth, fieldHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -385,7 +366,7 @@ public class WindowManager {
                          .setColorForeground(bkgrdColor)
                          .moveTo(editObjWindow);
     
-    objOrientation[3] = UIManager.addTextfield("WField", 0, 0, fieldWidth, fieldHeight)
+    objOrientationAreas[3] = UIManager.addTextfield("WField", 0, 0, fieldWidth, fieldHeight)
                                  .setColor(fieldTxtColor)
                                  .setColorCursor(fieldCurColor)
                                  .setColorActive(fieldActColor)
@@ -394,7 +375,7 @@ public class WindowManager {
                                  .setColorForeground(fieldFrgrdColor)
                                  .moveTo(editObjWindow);
     
-    labels[8] = UIManager.addTextarea("PArea", "P:", 0, 0, sLblWidth, fieldHeight)
+    objOrientationLbls[4] = UIManager.addTextarea("PArea", "P:", 0, 0, sLblWidth, fieldHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -402,7 +383,7 @@ public class WindowManager {
                          .setColorForeground(bkgrdColor)
                          .moveTo(editObjWindow);
     
-    objOrientation[4] = UIManager.addTextfield("PField", 0, 0, fieldWidth, fieldHeight)
+    objOrientationAreas[4] = UIManager.addTextfield("PField", 0, 0, fieldWidth, fieldHeight)
                                  .setColor(fieldTxtColor)
                                  .setColorCursor(fieldCurColor)
                                  .setColorActive(fieldActColor)
@@ -411,7 +392,7 @@ public class WindowManager {
                                  .setColorForeground(fieldFrgrdColor)
                                  .moveTo(editObjWindow);
     
-    labels[9] = UIManager.addTextarea("RArea", "R:", 0, 0, sLblWidth, fieldHeight)
+    objOrientationLbls[5] = UIManager.addTextarea("RArea", "R:", 0, 0, sLblWidth, fieldHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -419,7 +400,7 @@ public class WindowManager {
                          .setColorForeground(bkgrdColor)
                          .moveTo(editObjWindow);
     
-    objOrientation[5] = UIManager.addTextfield("RField", 0, 0, fieldWidth, fieldHeight)
+    objOrientationAreas[5] = UIManager.addTextfield("RField", 0, 0, fieldWidth, fieldHeight)
                                  .setColor(fieldTxtColor)
                                  .setColorCursor(fieldCurColor)
                                  .setColorActive(fieldActColor)
@@ -428,7 +409,7 @@ public class WindowManager {
                                  .setColorForeground(fieldFrgrdColor)
                                  .moveTo(editObjWindow);
     
-    labels[14] = UIManager.addTextarea("FixRef", "Reference:", 0, 0, lLblWidth, mButtonHeight)
+    dropDownLbls[5] = UIManager.addTextarea("FixtureLbl", "Reference:", 0, 0, lLblWidth, mButtonHeight)
                           .setFont(medium)
                           .setColor(fieldTxtColor)
                           .setColorActive(fieldActColor)
@@ -452,7 +433,7 @@ public class WindowManager {
                                 .moveTo(editObjWindow)
                                 .setSize(sButtonWidth, mButtonHeight);
     
-    labels[15] = UIManager.addTextarea("NewScenarioArea", "Name:", 0, 0, sLblWidth, sButtonHeight)
+    scenarioNameLbl = UIManager.addTextarea("NewScenarioLbl", "Name:", 0, 0, sLblWidth, sButtonHeight)
                           .setFont(medium)
                           .setColor(fieldTxtColor)
                           .setColorActive(fieldActColor)
@@ -477,7 +458,7 @@ public class WindowManager {
                                 .moveTo(scenarioWindow)
                                 .setSize(sButtonWidth, mButtonHeight);
     
-    labels[16] = UIManager.addTextarea("ScenarioArea", "Scenario:", 0, 0, lLblWidth, mButtonHeight)
+    dropDownLbls[6] = UIManager.addTextarea("ActiveScenarioLbl", "Scenario:", 0, 0, lLblWidth, mButtonHeight)
                           .setFont(medium)
                           .setColor(fieldTxtColor)
                           .setColorActive(fieldActColor)
@@ -502,104 +483,104 @@ public class WindowManager {
                                 .setSize(sButtonWidth, mButtonHeight);
     
     // Initialize dropdown lists
-    dropDownLists[1] = (MyDropdownList)((new MyDropdownList( UIManager, "Outline"))
-                          .setSize(sdropItemWidth, mButtonHeight + 3 * dropItemHeight)
-                          .setBarHeight(dropItemHeight)
-                          .setItemHeight(dropItemHeight)
-                          .setColorValue(buttonTxtColor)
-                          .setColorBackground(buttonDefColor)
-                          .setColorActive(buttonActColor)
-                          .moveTo(createObjWindow)
-                          .close());
-    
-    dropDownLists[1].addItem("black", color(0));
-    dropDownLists[1].addItem("red", color(255, 0, 0));
-    dropDownLists[1].addItem("green", color(0, 255, 0));
-    dropDownLists[1].addItem("blue", color(0, 0, 255));
-    dropDownLists[1].addItem("orange", color(255, 60, 0));
-    dropDownLists[1].addItem("yellow", color(255, 255, 0));
-    dropDownLists[1].addItem("pink", color(255, 0, 255));
-    dropDownLists[1].addItem("purple", color(90, 0, 255));
-    
-    
-    dropDownLists[0] = (MyDropdownList)((new MyDropdownList( UIManager, "Fill"))
-                          .setSize(mdropItemWidth, 4 * dropItemHeight)
-                          .setBarHeight(dropItemHeight)
-                          .setItemHeight(dropItemHeight)
-                          .setColorValue(buttonTxtColor)
-                          .setColorBackground(buttonDefColor)
-                          .setColorActive(buttonActColor)
-                          .moveTo(createObjWindow)
-                          .close());
-   
-    dropDownLists[0].addItem("white", color(255));
-    dropDownLists[0].addItem("black", color(0));
-    dropDownLists[0].addItem("red", color(255, 0, 0));
-    dropDownLists[0].addItem("green", color(0, 255, 0));
-    dropDownLists[0].addItem("blue", color(0, 0, 255));
-    dropDownLists[0].addItem("orange", color(255, 60, 0));
-    dropDownLists[0].addItem("yellow", color(255, 255, 0));
-    dropDownLists[0].addItem("pink", color(255, 0, 255));
-    dropDownLists[0].addItem("purple", color(90, 0, 255));
-    dropDownLists[0].addItem("sky blue", color(0, 255, 255));
-    dropDownLists[0].addItem("dark green", color(0, 100, 15));
-   
-   dropDownLists[2] = (MyDropdownList)((new MyDropdownList( UIManager, "Shape"))
-                          .setSize(sdropItemWidth, 4 * dropItemHeight)
-                          .setBarHeight(dropItemHeight)
-                          .setItemHeight(dropItemHeight)
-                          .setColorValue(buttonTxtColor)
-                          .setColorBackground(buttonDefColor)
-                          .setColorActive(buttonActColor)
-                          .moveTo(createObjWindow)
-                          .close());
-                          
-    dropDownLists[2].addItem("Box", ShapeType.BOX);
-    dropDownLists[2].addItem("Cylinder", ShapeType.CYLINDER);
-    dropDownLists[2].addItem("Import", ShapeType.MODEL);
-    
-    dropDownLists[3] = (MyDropdownList)((new MyDropdownList( UIManager, "ObjType"))
-                          .setSize(sdropItemWidth, 3 * dropItemHeight)
-                          .setBarHeight(dropItemHeight)
-                          .setItemHeight(dropItemHeight)
-                          .setColorValue(buttonTxtColor)
-                          .setColorBackground(buttonDefColor)
-                          .setColorActive(buttonActColor)
-                          .moveTo(sharedElements)
-                          .close());
-      
-    dropDownLists[3].addItem("Parts", 0.0);
-    dropDownLists[3].addItem("Fixtures", 1.0);
-    
-    dropDownLists[5] = (MyDropdownList)((new MyDropdownList( UIManager, "Fixture"))
-                          .setSize(ldropItemWidth, 4 * dropItemHeight)
-                          .setBarHeight(dropItemHeight)
-                          .setItemHeight(dropItemHeight)
-                          .setColorValue(buttonTxtColor)
-                          .setColorBackground(buttonDefColor)
-                          .setColorActive(buttonActColor)
-                          .moveTo(editObjWindow)
-                          .close());
+   dropDownLists[6] = (MyDropdownList)((new MyDropdownList( UIManager, "Scenario"))
+                        .setSize(ldropItemWidth, 4 * dropItemHeight)
+                        .setBarHeight(dropItemHeight)
+                        .setItemHeight(dropItemHeight)
+                        .setColorValue(buttonTxtColor)
+                        .setColorBackground(buttonDefColor)
+                        .setColorActive(buttonActColor)
+                        .moveTo(scenarioWindow)
+                        .close());
+                      
+   dropDownLists[5] = (MyDropdownList)((new MyDropdownList( UIManager, "Fixture"))
+                        .setSize(ldropItemWidth, 4 * dropItemHeight)
+                        .setBarHeight(dropItemHeight)
+                        .setItemHeight(dropItemHeight)
+                        .setColorValue(buttonTxtColor)
+                        .setColorBackground(buttonDefColor)
+                        .setColorActive(buttonActColor)
+                        .moveTo(editObjWindow)
+                        .close());
    
    dropDownLists[4] = (MyDropdownList)((new MyDropdownList( UIManager, "Object"))
-                          .setSize(ldropItemWidth, 4 * dropItemHeight)
-                          .setBarHeight(dropItemHeight)
-                          .setItemHeight(dropItemHeight)
-                          .setColorValue(buttonTxtColor)
-                          .setColorBackground(buttonDefColor)
-                          .setColorActive(buttonActColor)
-                          .moveTo(editObjWindow)
-                          .close());
+                        .setSize(ldropItemWidth, 4 * dropItemHeight)
+                        .setBarHeight(dropItemHeight)
+                        .setItemHeight(dropItemHeight)
+                        .setColorValue(buttonTxtColor)
+                        .setColorBackground(buttonDefColor)
+                        .setColorActive(buttonActColor)
+                        .moveTo(editObjWindow)
+                        .close());
+     
+    dropDownLists[3] = (MyDropdownList)((new MyDropdownList( UIManager, "Outline"))
+                        .setSize(sdropItemWidth, mButtonHeight + 3 * dropItemHeight)
+                        .setBarHeight(dropItemHeight)
+                        .setItemHeight(dropItemHeight)
+                        .setColorValue(buttonTxtColor)
+                        .setColorBackground(buttonDefColor)
+                        .setColorActive(buttonActColor)
+                        .moveTo(createObjWindow)
+                        .close());
+    
+    dropDownLists[3].addItem("black", color(0));
+    dropDownLists[3].addItem("red", color(255, 0, 0));
+    dropDownLists[3].addItem("green", color(0, 255, 0));
+    dropDownLists[3].addItem("blue", color(0, 0, 255));
+    dropDownLists[3].addItem("orange", color(255, 60, 0));
+    dropDownLists[3].addItem("yellow", color(255, 255, 0));
+    dropDownLists[3].addItem("pink", color(255, 0, 255));
+    dropDownLists[3].addItem("purple", color(90, 0, 255));
+    
+    
+    dropDownLists[2] = (MyDropdownList)((new MyDropdownList( UIManager, "Fill"))
+                        .setSize(mdropItemWidth, 4 * dropItemHeight)
+                        .setBarHeight(dropItemHeight)
+                        .setItemHeight(dropItemHeight)
+                        .setColorValue(buttonTxtColor)
+                        .setColorBackground(buttonDefColor)
+                        .setColorActive(buttonActColor)
+                        .moveTo(createObjWindow)
+                        .close());
    
-   dropDownLists[6] = (MyDropdownList)((new MyDropdownList( UIManager, "Scenario"))
-                          .setSize(ldropItemWidth, 4 * dropItemHeight)
-                          .setBarHeight(dropItemHeight)
-                          .setItemHeight(dropItemHeight)
-                          .setColorValue(buttonTxtColor)
-                          .setColorBackground(buttonDefColor)
-                          .setColorActive(buttonActColor)
-                          .moveTo(scenarioWindow)
-                          .close());
+    dropDownLists[2].addItem("white", color(255));
+    dropDownLists[2].addItem("black", color(0));
+    dropDownLists[2].addItem("red", color(255, 0, 0));
+    dropDownLists[2].addItem("green", color(0, 255, 0));
+    dropDownLists[2].addItem("blue", color(0, 0, 255));
+    dropDownLists[2].addItem("orange", color(255, 60, 0));
+    dropDownLists[2].addItem("yellow", color(255, 255, 0));
+    dropDownLists[2].addItem("pink", color(255, 0, 255));
+    dropDownLists[2].addItem("purple", color(90, 0, 255));
+    dropDownLists[2].addItem("sky blue", color(0, 255, 255));
+    dropDownLists[2].addItem("dark green", color(0, 100, 15));
+   
+   dropDownLists[1] = (MyDropdownList)((new MyDropdownList( UIManager, "Shape"))
+                       .setSize(sdropItemWidth, 4 * dropItemHeight)
+                       .setBarHeight(dropItemHeight)
+                       .setItemHeight(dropItemHeight)
+                       .setColorValue(buttonTxtColor)
+                       .setColorBackground(buttonDefColor)
+                       .setColorActive(buttonActColor)
+                       .moveTo(createObjWindow)
+                       .close());
+                         
+   dropDownLists[1].addItem("Box", ShapeType.BOX);
+   dropDownLists[1].addItem("Cylinder", ShapeType.CYLINDER);
+   dropDownLists[1].addItem("Import", ShapeType.MODEL);
+   
+   dropDownLists[0] = (MyDropdownList)((new MyDropdownList( UIManager, "ObjType"))
+                       .setSize(sdropItemWidth, 3 * dropItemHeight)
+                       .setBarHeight(dropItemHeight)
+                       .setItemHeight(dropItemHeight)
+                       .setColorValue(buttonTxtColor)
+                       .setColorBackground(buttonDefColor)
+                       .setColorActive(buttonActColor)
+                       .moveTo(createObjWindow)
+                       .close());
+     
+   dropDownLists[0].addItem("Parts", 0.0);
+   dropDownLists[0].addItem("Fixtures", 1.0);
    
    for (Button button : singleButtons) {
      button.getCaptionLabel().setFont(small);
@@ -704,136 +685,119 @@ public class WindowManager {
    * Updates the positions of all the contents of the world object creation window.
    */
   private void updateCreateWindowContentPositions() {
-    updateDimFieldsAndLabels();
-      
-    int[] relPos = new int[] { offsetX, offsetX };
-    // Object Type dropdown
-    dropDownLists[3] = (MyDropdownList)dropDownLists[3].setPosition(relPos[0], relPos[1]);
-    // Name label and field
-    relPos = relativePosition(dropDownLists[3], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    labels[0] = labels[0].setPosition(relPos[0], relPos[1]);
+    updateDimLblsAndFields();
     
-    relPos = relativePosition(labels[0], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    // Object Type dropdown list and label
+    int[] relPos = new int[] { offsetX, offsetX };
+    dropDownLbls[0] = dropDownLbls[0].setPosition(relPos[0], relPos[1]);
+    
+    relPos = relativePosition(dropDownLbls[0], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    dropDownLists[0] = (MyDropdownList)dropDownLists[0].setPosition(relPos[0], relPos[1]);
+    // Name label and field
+    relPos = relativePosition(dropDownLbls[0], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    objNameLbl = objNameLbl.setPosition(relPos[0], relPos[1]);
+    
+    relPos = relativePosition(objNameLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
     objName = objName.setPosition(relPos[0], relPos[1]);
     // Shape type label and dropdown
-    relPos = relativePosition(labels[0], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    labels[1] = labels[1].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(objNameLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    dropDownLbls[1] = dropDownLbls[1].setPosition(relPos[0], relPos[1]);
     
-    relPos = relativePosition(labels[1], RelativePoint.TOP_RIGHT, distLblToFieldX, abs(fieldHeight - dropItemHeight) / 2);
-    dropDownLists[2] = (MyDropdownList)dropDownLists[2].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(dropDownLbls[1], RelativePoint.TOP_RIGHT, distLblToFieldX, abs(fieldHeight - dropItemHeight) / 2);
+    dropDownLists[1] = (MyDropdownList)dropDownLists[1].setPosition(relPos[0], relPos[1]);
     // Dimension label and fields
-    int idxDim = 0;
-    
-    relPos = relativePosition(labels[1], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    // Update position and label text of the dimension fields based on the selected shape from the Shape dropDown List
-    while (idxDim < shapeDefFields.size()) {
-      Textfield dimField = shapeDefFields.get(idxDim);
-      
-      if (!dimField.isVisible()) { break; }
-      
-      int lblIdx = idxDim + 10;
-        
-      labels[lblIdx] = labels[lblIdx].setPosition(relPos[0], relPos[1]);
-      relPos = relativePosition(labels[lblIdx], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-      
-      shapeDefFields.set(idxDim, dimField.setPosition(relPos[0], relPos[1]) );
-      relPos = relativePosition(labels[lblIdx], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-      
-      ++idxDim;
-    }
+    relPos = relativePosition(dropDownLbls[1], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
     
     // Fill color label and dropdown
-    labels[2] = labels[2].setPosition(relPos[0], relPos[1]);
+    dropDownLbls[2] = dropDownLbls[2].setPosition(relPos[0], relPos[1]);
     
-    relPos = relativePosition(labels[2], RelativePoint.TOP_RIGHT, distLblToFieldX, abs(fieldHeight - dropItemHeight) / 2);
-    dropDownLists[0] = (MyDropdownList)dropDownLists[0].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(dropDownLbls[2], RelativePoint.TOP_RIGHT, distLblToFieldX, abs(fieldHeight - dropItemHeight) / 2);
+    dropDownLists[2] = (MyDropdownList)dropDownLists[2].setPosition(relPos[0], relPos[1]);
     // Outline color label and dropdown
-    relPos = relativePosition(labels[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    labels[3] = labels[3].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(dropDownLbls[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    dropDownLbls[3] = dropDownLbls[3].setPosition(relPos[0], relPos[1]);
     
-    relPos = relativePosition(labels[3], RelativePoint.TOP_RIGHT, distLblToFieldX, abs(fieldHeight - dropItemHeight) / 2);
-    dropDownLists[1] = (MyDropdownList)dropDownLists[1].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(dropDownLbls[3], RelativePoint.TOP_RIGHT, distLblToFieldX, abs(fieldHeight - dropItemHeight) / 2);
+    dropDownLists[3] = (MyDropdownList)dropDownLists[3].setPosition(relPos[0], relPos[1]);
     // Create button
-    relPos = relativePosition(labels[3], RelativePoint.BOTTOM_RIGHT, distLblToFieldX, distBtwFieldsY);
+    relPos = relativePosition(dropDownLbls[3], RelativePoint.BOTTOM_RIGHT, distLblToFieldX, distBtwFieldsY);
     singleButtons[0] = singleButtons[0].setPosition(relPos[0], relPos[1]);
     // Clear button
     relPos = relativePosition(singleButtons[0], RelativePoint.TOP_RIGHT, offsetX, 0);
     singleButtons[2] = singleButtons[2].setPosition(relPos[0], relPos[1]);
     // Update window background display
     relPos = relativePosition(singleButtons[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    editObjWindow.setHeight(relPos[1]);
-    createObjWindow.setBackgroundHeight(relPos[1]);
+    background.setHeight(relPos[1]);
+    background.setBackgroundHeight(relPos[1]);
   }
   
   /**
    * Updates the positions of all the contents of the world object editing window.
    */
   private void updateEditWindowContentPositions() {
+    updateDimLblsAndFields();
     
-    // Object type dropdown
+    // Object list dropdown and label
     int[] relPos = new int[] { offsetX, offsetX };
-    dropDownLists[3] = (MyDropdownList)dropDownLists[3].setPosition(relPos[0], relPos[1]);
-    // Object list dropdown
-    relPos = relativePosition(dropDownLists[3], RelativePoint.TOP_RIGHT, offsetX, 0);
+    dropDownLbls[4] = dropDownLbls[4].setPosition(relPos[0], relPos[1]);
+    
+    relPos = relativePosition(dropDownLbls[4], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
     dropDownLists[4] = (MyDropdownList)dropDownLists[4].setPosition(relPos[0], relPos[1]);
+    // Dimension label and fields
+    relPos = relativePosition(dropDownLbls[4], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
     
     // X label and field
-    relPos = relativePosition(dropDownLists[3], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    labels[4] = labels[4].setPosition(relPos[0], relPos[1]);
+    objOrientationLbls[0] = objOrientationLbls[0].setPosition(relPos[0], relPos[1]);
     
-    relPos = relativePosition(labels[4], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-    objOrientation[0] = objOrientation[0].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(objOrientationLbls[0], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    objOrientationAreas[0] = objOrientationAreas[0].setPosition(relPos[0], relPos[1]);
     // Y label and field
-    relPos = relativePosition(labels[4], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    labels[5] = labels[5].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(objOrientationLbls[0], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    objOrientationLbls[1] = objOrientationLbls[1].setPosition(relPos[0], relPos[1]);
     
-    relPos = relativePosition(labels[5], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-    objOrientation[1] = objOrientation[1].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(objOrientationLbls[1], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    objOrientationAreas[1] = objOrientationAreas[1].setPosition(relPos[0], relPos[1]);
     // Z label and field
-    relPos = relativePosition(labels[5], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    labels[6] = labels[6].setPosition(relPos[0], relPos[1]);;
+    relPos = relativePosition(objOrientationLbls[1], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    objOrientationLbls[2] = objOrientationLbls[2].setPosition(relPos[0], relPos[1]);;
     
-    relPos = relativePosition(labels[6], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-    objOrientation[2] = objOrientation[2].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(objOrientationLbls[2], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    objOrientationAreas[2] = objOrientationAreas[2].setPosition(relPos[0], relPos[1]);
     // W label and field
-    relPos = relativePosition(labels[6], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    labels[7] = labels[7].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(objOrientationLbls[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    objOrientationLbls[3] = objOrientationLbls[3].setPosition(relPos[0], relPos[1]);
     
-    relPos = relativePosition(labels[7], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-    objOrientation[3] = objOrientation[3].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(objOrientationLbls[3], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    objOrientationAreas[3] = objOrientationAreas[3].setPosition(relPos[0], relPos[1]);
     // P label and field
-    relPos = relativePosition(labels[7], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    labels[8] = labels[8].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(objOrientationLbls[3], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    objOrientationLbls[4] = objOrientationLbls[4].setPosition(relPos[0], relPos[1]);
     
-    relPos = relativePosition(labels[8], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-    objOrientation[4] = objOrientation[4].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(objOrientationLbls[4], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    objOrientationAreas[4] = objOrientationAreas[4].setPosition(relPos[0], relPos[1]);
     // R label and field
-    relPos = relativePosition(labels[8], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    labels[9] = labels[9].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(objOrientationLbls[4], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    objOrientationLbls[5] = objOrientationLbls[5].setPosition(relPos[0], relPos[1]);
     
-    relPos = relativePosition(labels[9], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-    objOrientation[5] = objOrientation[5].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(objOrientationLbls[5], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    objOrientationAreas[5] = objOrientationAreas[5].setPosition(relPos[0], relPos[1]);
    
-    relPos = relativePosition(labels[9], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    relPos = relativePosition(objOrientationLbls[5], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
     
-    // Check value of the ObjType
-    Object val = dropDownLists[3].getActiveLabelValue();
-    
-    if (val instanceof Float) {
+    if (getActiveWorldObject() instanceof Part) {
+       // Reference fxiture (for Parts only) label and dropdown
+      dropDownLbls[5] = dropDownLbls[5].setPosition(relPos[0], relPos[1]).show();
+      relPos = relativePosition(dropDownLbls[5], RelativePoint.TOP_RIGHT, distLblToFieldX, abs(fieldHeight - dropItemHeight) / 2);
       
-      if (((Float)val) == 0.0) {
-         // Reference fxiture (for Parts only) label and dropdown
-        labels[14] = labels[14].setPosition(relPos[0], relPos[1]).show();
-        relPos = relativePosition(labels[14], RelativePoint.TOP_RIGHT, distLblToFieldX, abs(fieldHeight - dropItemHeight) / 2);
-        
-        dropDownLists[5] = (MyDropdownList)dropDownLists[5].setPosition(relPos[0], relPos[1]).show();
-        relPos = relativePosition(labels[14], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-        
-      } else {
-        // Fixtures do not have a reference object
-        labels[14].hide();
-        dropDownLists[5] = (MyDropdownList)dropDownLists[5].hide();
-      }
+      dropDownLists[5] = (MyDropdownList)dropDownLists[5].setPosition(relPos[0], relPos[1]).show();
+      relPos = relativePosition(dropDownLbls[5], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+      
+    } else {
+      // Fixtures do not have a reference object
+      dropDownLbls[5].hide();
+      dropDownLists[5] = (MyDropdownList)dropDownLists[5].hide();
     }
     
     // Confirm button
@@ -843,8 +807,8 @@ public class WindowManager {
     singleButtons[3] = singleButtons[3].setPosition(relPos[0], relPos[1]);
     // Update window background display
     relPos = relativePosition(singleButtons[3], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    editObjWindow.setHeight(relPos[1]);
-    editObjWindow.setBackgroundHeight(relPos[1]);
+    background.setHeight(relPos[1]);
+    background.setBackgroundHeight(relPos[1]);
   }
   
   /**
@@ -853,43 +817,62 @@ public class WindowManager {
   private void updateScenarioWindowContentPositions() {
     // New scenario name label
     int[] relPos = new int[] {offsetX, offsetX };
-    labels[15] = labels[15].setPosition(relPos[0], relPos[1]);
+    scenarioNameLbl = scenarioNameLbl.setPosition(relPos[0], relPos[1]);
     // New scenario name field
-    relPos = relativePosition(labels[15], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    relPos = relativePosition(scenarioNameLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
     scenarioName = scenarioName.setPosition(relPos[0], relPos[1]);
     // New scenario button
-    relPos = relativePosition(labels[15], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    relPos = relativePosition(scenarioNameLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
     singleButtons[4] = singleButtons[4].setPosition(relPos[0], relPos[1]);
-    // Scenario dropdown list label
+    // Scenario dropdown list and label
     relPos = relativePosition(singleButtons[4], RelativePoint.BOTTOM_LEFT, 0, 2 * distBtwFieldsY);
-    labels[16] = labels[16].setPosition(relPos[0], relPos[1]);
-    // Scenario dropdown list
-    relPos = relativePosition(labels[16], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    dropDownLbls[6] = dropDownLbls[6].setPosition(relPos[0], relPos[1]);
+    
+    relPos = relativePosition(dropDownLbls[6], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
     dropDownLists[6] = (MyDropdownList)dropDownLists[6].setPosition(relPos[0], relPos[1]);
     // Save scenario button
-    relPos = relativePosition(labels[16], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    relPos = relativePosition(dropDownLbls[6], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
     singleButtons[5] = singleButtons[5].setPosition(relPos[0], relPos[1]);
     // Load scenario button
     relPos = relativePosition(singleButtons[5], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
     singleButtons[6] = singleButtons[6].setPosition(relPos[0], relPos[1]);
     // Update window background display
     relPos = relativePosition(singleButtons[6], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    scenarioWindow.setHeight(relPos[1]);
-    scenarioWindow.setBackgroundHeight(relPos[1]);
+    background.setHeight(relPos[1]);
+    background.setBackgroundHeight(relPos[1]);
   }
   
   /**
-   * Returns the object that is currently being edited
-   * in the world object editing menu.
+   * Updates positions of all the visible dimension text areas and fields. The given x and y positions are used to
+   * place the first text area and field pair and updated through the process of updating the positions of the rest
+   * of the visible text areas and fields. Then the x and y position of the last visible text area and field is returned
+   * in the form a 2-element integer array.
+   * 
+   * @param initialXPos  The x position of the first text area-field pair
+   * @param initialYPos  The y position of the first text area-field pair
+   * @returning          The x and y position of the last visible text area  in a 2-element integer array
    */
-  protected WorldObject getActiveWorldObject() {
-    Object wldObj = dropDownLists[4].getActiveLabelValue();
+  private int[] updateDimLblAndFieldPositions(int initialXPos, int initialYPos) {
+    int[] relPos = new int[] { initialXPos, initialYPos };
+    int idxDim = 0;
     
-    if (editObjWindow.isVisible() && wldObj instanceof WorldObject) {
-      return (WorldObject)wldObj;
-    } else {
-      return null;
+    // Update position and label text of the dimension fields based on the selected shape from the Shape dropDown List
+    while (idxDim < shapeDefFields.size()) {
+      Textfield dimField = shapeDefFields.get(idxDim);
+      
+      if (!dimField.isVisible()) { break; }
+      
+      Textarea dimLbl = shapeDefAreas.get(idxDim);
+      shapeDefAreas.set(idxDim, dimLbl.setPosition(relPos[0], relPos[1]) );
+      relPos = relativePosition(dimLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+      
+      shapeDefFields.set(idxDim, dimField.setPosition(relPos[0], relPos[1]) );
+      relPos = relativePosition(dimLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+      
+      ++idxDim;
     }
+    
+    return relPos;
   }
   
   /**
@@ -945,27 +928,17 @@ public class WindowManager {
     Scenario s = activeScenario();
     
     if (s != null) {
-      // Check value of the ObjType dropdown list
-      Object val = dropDownLists[3].getActiveLabelValue();
-      boolean loadFixtures = (val instanceof Float) && ((Float)val == 1.0);
-      
       dropDownLists[4] = (MyDropdownList)dropDownLists[4].clear();
       dropDownLists[5] = (MyDropdownList)dropDownLists[5].clear();
       dropDownLists[5].addItem("None", null);
       
       for (WorldObject wldObj : s) {
+        dropDownLists[4].addItem(wldObj.toString(), wldObj);
         
         if (wldObj instanceof Fixture) {
           // Load all fixtures from the active scenario
           dropDownLists[5].addItem(wldObj.toString(), wldObj);
-          
-          if (loadFixtures) {
-            dropDownLists[4].addItem(wldObj.toString(), wldObj);
-          }
-        } else if (wldObj instanceof Part && !loadFixtures) {
-          dropDownLists[4].addItem(wldObj.toString(), wldObj);
         }
-        
       }
       // Update each dropdownlist's active label
       dropDownLists[4].updateActiveLabel();
@@ -984,51 +957,73 @@ public class WindowManager {
    * Update how many of the dimension field and label pairs are displayed in
    * the create world object window based on which shape type is chosen from the shape dropdown list.
    */
-  private void updateDimFieldsAndLabels() {
-    ShapeType selectedShape = (ShapeType)dropDownLists[2].getActiveLabelValue();
+  private void updateDimLblsAndFields() {
+    String activeButtonLabel = windowTabs.getActiveButtonName();
     int dimSize = 0;
-    String[] lblNames;
+    String[] lblNames = new String[0];
     
-    // Define the label text and the number of dimensionos fields to display
-    if (selectedShape == ShapeType.BOX) {
-      dimSize = 3;
-      lblNames = new String[] { "Length:", "Height:", "Width" };
-    } else if (selectedShape == ShapeType.CYLINDER) {
-      dimSize = 2;
-      lblNames = new String[] { "Radius", "Height" };
-    } else if (selectedShape == ShapeType.MODEL) {
-      Object objType = dropDownLists[3].getActiveLabelValue();
-      
-      if (objType instanceof Float && (Float)objType == 0.0) {
-        // Define the dimensions of the bounding box of the Part
-        dimSize = 4;
-        lblNames = new String[] { "Source:", "Length:", "Height", "Width" };
-      } else {
-        dimSize = 1;
-        lblNames = new String[] { "Source:" };
+    if (activeButtonLabel != null) {
+      if (activeButtonLabel.equals("Create")) {
+        ShapeType selectedShape = (ShapeType)dropDownLists[1].getActiveLabelValue();
+        
+        // Define the label text and the number of dimensionos fields to display
+        if (selectedShape == ShapeType.BOX) {
+          dimSize = 3;
+          lblNames = new String[] { "Length:", "Height:", "Width" };
+          
+        } else if (selectedShape == ShapeType.CYLINDER) {
+          dimSize = 2;
+          lblNames = new String[] { "Radius", "Height" };
+          
+        } else if (selectedShape == ShapeType.MODEL) {
+          Object objType = dropDownLists[0].getActiveLabelValue();
+          
+          if (objType instanceof Float && (Float)objType == 0.0) {
+            // Define the dimensions of the bounding box of the Part
+            dimSize = 4;
+            lblNames = new String[] { "Source:", "Length:", "Height", "Width" };
+            
+          } else {
+            dimSize = 1;
+            lblNames = new String[] { "Source:" };
+          }
+    
+        }
+        
+      } else if (activeButtonLabel.equals("Edit")) {
+        Object val = dropDownLists[4].getActiveLabelValue();
+        
+        if (val instanceof WorldObject) {
+          Shape s = ((WorldObject)val).getForm();
+          
+          if (s instanceof Box) {
+            dimSize = 3;
+            lblNames = new String[] { "Length:", "Height:", "Width" };
+            
+          } else if (s instanceof Cylinder) {
+            dimSize = 2;
+            lblNames = new String[] { "Radius", "Height" };
+          
+          } else if (s instanceof ModelShape && val instanceof Part) {
+            dimSize = 3;
+            lblNames = new String[] { "Length:", "Height:", "Width" };
+          }
+        }
+        
       }
-
-    } else {
-      dimSize = 0;
-      lblNames = new String[0];
     }
     
-    int idxDim = 0;
-    
-    // Show a number of dimension fields and labels equal to the value of idxDim
-    for (; idxDim < dimSize; ++idxDim) {
-      int lblIdx = idxDim + 10;
-      
-      labels[lblIdx] = labels[lblIdx].setText(lblNames[idxDim]).show();
-      shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).show());
-    }
-    
-    while(idxDim < shapeDefFields.size()) {
-      // Hide remaining dimension fields and labels
-      int lblIdx = idxDim + 10;
-      shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).hide());
-      labels[lblIdx] = labels[lblIdx].hide();
-      ++idxDim;
+    for (int idxDim = 0; idxDim < shapeDefFields.size(); ++idxDim) {
+      if (idxDim < dimSize) {
+        // Show a number of dimension fields and labels equal to the value of dimSize
+        shapeDefAreas.set(idxDim, shapeDefAreas.get(idxDim).setText(lblNames[idxDim]).show());
+        shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).show());
+        
+      } else {
+        // Hide remaining dimension fields and labels
+        shapeDefAreas.set(idxDim, shapeDefAreas.get(idxDim).hide());
+        shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).hide());
+      }
     }
   }
   
@@ -1047,7 +1042,7 @@ public class WindowManager {
    */
   public WorldObject createWorldObject() {
     // Check the object type dropdown list
-    Object val = dropDownLists[3].getActiveLabelValue();
+    Object val = dropDownLists[0].getActiveLabelValue();
     // Determine if the object to be create is a Fixture or a Part
     Float objectType = 0.0;
     
@@ -1065,33 +1060,36 @@ public class WindowManager {
         // Create a Part
         String name = objName.getText();
         
-        ShapeType type = (ShapeType)dropDownLists[2].getActiveLabelValue();
+        ShapeType type = (ShapeType)dropDownLists[1].getActiveLabelValue();
           
-        color fill = (Integer)dropDownLists[0].getActiveLabelValue(),
-              outline = (Integer)dropDownLists[1].getActiveLabelValue();
+        color fill = (Integer)dropDownLists[2].getActiveLabelValue(),
+              outline = (Integer)dropDownLists[3].getActiveLabelValue();
         
         switch(type) {
           case BOX:
-            float len = Float.parseFloat( shapeDefFields.get(0).getText() ),
-                  hgt = Float.parseFloat( shapeDefFields.get(1).getText() ),
-                  wdh = Float.parseFloat( shapeDefFields.get(2).getText() );
+            PVector boxDims = getBoxDimensions();
             // Construct a box shape
-            wldObj = new Part(name, fill, outline, len, hgt, wdh);
+            if (!Float.isNaN(boxDims.x) && !Float.isNaN(boxDims.y) && !Float.isNaN(boxDims.z)) {
+              wldObj = new Part(name, fill, outline, boxDims.x, boxDims.y, boxDims.z);
+            }
             break;
+            
           case CYLINDER:
-            float rad = Float.parseFloat( shapeDefFields.get(0).getText() );
-            hgt = Float.parseFloat( shapeDefFields.get(1).getText() );
+            float[] cylDims = getCylinderDimensions();
             // Construct a cylinder
-            wldObj = new Part(name, fill, outline, rad, hgt);
+            if (!Float.isNaN(cylDims[0]) && !Float.isNaN(cylDims[1])) {
+              wldObj = new Part(name, fill, outline, cylDims[0], cylDims[1]);
+            }
             break;
+            
           case MODEL:
             String srcFile = shapeDefFields.get(0).getText();
-            len = Float.parseFloat( shapeDefFields.get(1).getText() );
-            hgt = Float.parseFloat( shapeDefFields.get(2).getText() );
-            wdh = Float.parseFloat( shapeDefFields.get(3).getText() );
+            boxDims = getModelOBBDimensions();
             // Construct a complex model
-            ModelShape model = new ModelShape(srcFile, fill, outline);
-            wldObj = new Part(name, model, len, hgt, wdh);
+            if (!Float.isNaN(boxDims.x) && !Float.isNaN(boxDims.y) && !Float.isNaN(boxDims.z)) {
+              ModelShape model = new ModelShape(srcFile, fill, outline);
+              wldObj = new Part(name, model, boxDims.x, boxDims.y, boxDims.z);
+            }
             break;
           default:
         }
@@ -1099,25 +1097,28 @@ public class WindowManager {
       } else if (objectType == 1.0) {
         // Create a fixture
         String name = objName.getText();
-        ShapeType type = (ShapeType)dropDownLists[2].getActiveLabelValue();
+        ShapeType type = (ShapeType)dropDownLists[1].getActiveLabelValue();
           
-        color fill = (Integer)dropDownLists[0].getActiveLabelValue(),
-              outline = (Integer)dropDownLists[1].getActiveLabelValue();
+        color fill = (Integer)dropDownLists[2].getActiveLabelValue(),
+              outline = (Integer)dropDownLists[3].getActiveLabelValue();
         
         switch(type) {
           case BOX:
-            float len = Float.parseFloat( shapeDefFields.get(0).getText() ),
-                  hgt = Float.parseFloat( shapeDefFields.get(1).getText() ),
-                  wdh = Float.parseFloat( shapeDefFields.get(2).getText() );
+            PVector boxDims = getBoxDimensions();
             // Construct a box
-            wldObj = new Fixture(name, fill, outline, len, hgt, wdh);
+            if (!Float.isNaN(boxDims.x) && !Float.isNaN(boxDims.y) && !Float.isNaN(boxDims.z)) {
+              wldObj = new Fixture(name, fill, outline, boxDims.x, boxDims.y, boxDims.z);
+            }
             break;
+            
           case CYLINDER:
-            float rad = Float.parseFloat( shapeDefFields.get(0).getText() );
-            hgt = Float.parseFloat( shapeDefFields.get(1).getText() );
+            float[] cylDims = getCylinderDimensions();
             // Construct a cylinder
-            wldObj = new Fixture(name, fill, outline, rad, hgt);
+            if (!Float.isNaN(cylDims[0]) && !Float.isNaN(cylDims[1])) {
+              wldObj = new Fixture(name, fill, outline, cylDims[0], cylDims[1]);
+            }
             break;
+            
           case MODEL:
             String srcFile = shapeDefFields.get(0).getText();
             // Construct a complex model
@@ -1128,8 +1129,6 @@ public class WindowManager {
         }
       }
     
-    } catch (NumberFormatException NFEx) {
-      println("Invalid number input!");
     } catch (NullPointerException NPEx) {
       println("Missing parameter!");
     } catch (ClassCastException CCEx) {
@@ -1154,55 +1153,56 @@ public class WindowManager {
     
     if (toEdit != null) {
       try {
-        // Pull from all input fields
-        String xFieldVal = objOrientation[0].getText(), yFieldVal = objOrientation[1].getText(),
-               zFieldVal = objOrientation[2].getText(), wFieldVal = objOrientation[3].getText(),
-               pFieldVal = objOrientation[4].getText(), rFieldVal = objOrientation[5].getText();
+        Shape s = toEdit.getForm();
+        
+        if (s instanceof Box) {
+          // Update box's length, height, or width
+          PVector oldDims = ((Box)s).getDimensions();
+          PVector newDims = getBoxDimensions();
+          
+          if (!Float.isNaN(newDims.x)) { oldDims.x = newDims.x; }
+          if (!Float.isNaN(newDims.y)) { oldDims.y = newDims.y; }
+          if (!Float.isNaN(newDims.z)) { oldDims.z = newDims.z; }
+          
+          if (toEdit instanceof Part) {
+            // Update the bounding-box's dimenions
+            ((Part)toEdit).setOBBDims(oldDims.x + 10f, oldDims.y + 10f, oldDims.z + 10f);
+          }
+          
+        } else if (s instanceof Cylinder) {
+          // Update the cylinder's radius or height
+          Cylinder cylinder = (Cylinder)s;
+          float[] newDims = getCylinderDimensions();
+          
+         if (!Float.isNaN(newDims[0])) { cylinder.setRadius(newDims[0]); }
+         if (!Float.isNaN(newDims[1])) { cylinder.setHeight(newDims[1]); }
+         
+         if (toEdit instanceof Part) {
+           // Update the bounding-box's dimensions
+           ((Part)toEdit).setOBBDims(2f * cylinder.getRadius() + 5f, 2f * cylinder.getRadius() + 5f, cylinder.getHeight() + 10f);
+         }
+         
+        } else if (s instanceof ModelShape && toEdit instanceof Part) {
+          // Update the length, height or width of the Part's bounding-box
+          PVector oldDims = ((Part)toEdit).getOBB().getBox().getDimensions();
+          PVector newDims = getBoxDimensions();
+          
+          if (!Float.isNaN(newDims.x)) { oldDims.x = newDims.x; }
+          if (!Float.isNaN(newDims.y)) { oldDims.y = newDims.y; }
+          if (!Float.isNaN(newDims.z)) { oldDims.z = newDims.z; }
+        }
+        
         // Convert origin position and orientation into the World Frame
         PVector oPosition = convertNativeToWorld( toEdit.getCenter() ),
                 oWPR = convertNativeToWorld( matrixToEuler(toEdit.getOrientationAxes()).mult(RAD_TO_DEG) );
-        // Update x value
-        if (xFieldVal != null && !xFieldVal.equals("")) {
-          float val = Float.parseFloat(xFieldVal);
-          // Bring value within the range [-9999, 9999]
-          val = max(-9999f, min(val, 9999f));
-          oPosition.x = val;
-        }
-        // Update y value
-        if (yFieldVal != null && !yFieldVal.equals("")) {
-          float val = Float.parseFloat(yFieldVal);
-          // Bring value within the range [-9999, 9999]
-          val = max(-9999f, min(val, 9999f));
-          oPosition.y = val;
-        }
-        // Update z value
-        if (zFieldVal != null && !zFieldVal.equals("")) {
-          float val = Float.parseFloat(zFieldVal);
-          // Bring value within the range [-9999, 9999]
-          val = max(-9999f, min(val, 9999f));
-          oPosition.z = val;
-        }
-        // Update w angle
-        if (wFieldVal != null && !wFieldVal.equals("")) {
-          float val = Float.parseFloat(wFieldVal);
-          // Bring value within the range [-9999, 9999]
-          val = max(-9999f, min(val, 9999f));
-          oWPR.x = val;
-        }
-        // Update p angle
-        if (pFieldVal != null && !pFieldVal.equals("")) {
-          float val = Float.parseFloat(pFieldVal);
-          // Bring value within the range [-9999, 9999]
-          val = max(-9999f, min(val, 9999f));
-          oWPR.y = val;
-        }
-        // Update r angle
-        if (rFieldVal != null && !rFieldVal.equals("")) {
-          float val = Float.parseFloat(rFieldVal);
-          // Bring value within the range [-9999, 9999]
-          val = max(-9999f, min(val, 9999f));
-          oWPR.z = val;
-        }
+        float[] inputValues = getOrientationValues();
+        // Update position and orientation
+        if (!Float.isNaN(inputValues[0])) { oPosition.x = inputValues[0]; }
+        if (!Float.isNaN(inputValues[1])) { oPosition.y = inputValues[1]; }
+        if (!Float.isNaN(inputValues[2])) { oPosition.z = inputValues[2]; }
+        if (!Float.isNaN(inputValues[3])) { oWPR.x = inputValues[3]; }
+        if (!Float.isNaN(inputValues[4])) { oWPR.y = inputValues[4]; }
+        if (!Float.isNaN(inputValues[5])) { oWPR.z = inputValues[5]; }
         
         // Convert values from the World to the Native coordinate system
         PVector position = convertWorldToNative( oPosition );
@@ -1217,8 +1217,6 @@ public class WindowManager {
           Fixture refFixture = (Fixture)dropDownLists[5].getActiveLabelValue();
           ((Part)toEdit).setFixtureRef(refFixture);
         }
-      } catch (NumberFormatException NFEx) {
-        println("Invalid number input!");
       } catch (NullPointerException NPEx) {
         println("Missing parameter!");
       }
@@ -1226,6 +1224,235 @@ public class WindowManager {
       println("No object selected!");
     }
     
+  }
+  
+  /**
+   * TODO
+   */
+  private PVector getBoxDimensions() {
+    try {
+      // NaN values represent an uninitialized field
+      PVector dimensions = new PVector(Float.NaN, Float.NaN, Float.NaN);
+      
+      // Pull from the dim fields
+      String lenField = shapeDefFields.get(0).getText(),
+             hgtField = shapeDefFields.get(1).getText(),
+             wdhField = shapeDefFields.get(2).getText();
+      
+      if (lenField != null && !lenField.equals("")) {
+        // Read length input
+        float val = Float.parseFloat(lenField);
+        
+        if (val <= 0) {
+          throw new NumberFormatException("Invalid length value!");
+        }
+        // Length cap of 9999
+        dimensions.x = min(val, 9999f);
+      }
+      
+      if (hgtField != null && !hgtField.equals("")) {
+        // Read height input
+        float val = Float.parseFloat(hgtField);
+        
+        if (val <= 0) {
+          throw new NumberFormatException("Invalid height value!");
+        }
+        // Height cap of 9999
+        dimensions.y = min(val, 9999f);
+      }
+      
+      if (wdhField != null && !wdhField.equals("")) {
+        // Read Width input
+        float val = Float.parseFloat(wdhField);
+        
+        if (val <= 0) {
+          throw new NumberFormatException("Invalid width value!");
+        }
+        // Width cap of 9999
+        dimensions.z = min(val, 9999f);
+      }
+      
+      return dimensions;
+      
+    } catch (NumberFormatException NFEx) {
+      println("Invalid number input!");
+      return null;
+      
+    } catch (NullPointerException NPEx) {
+      println("Missing parameter!");
+      return null;
+    }
+  }
+  
+  /**
+   *TODO
+   */
+  private float[] getCylinderDimensions() {
+    try {
+      // NaN values represent an uninitialized field
+      float[] dimensions = new float[] { Float.NaN, Float.NaN };
+      
+      // Pull from the dim fields
+      String radField = shapeDefFields.get(0).getText(),
+             hgtField = shapeDefFields.get(1).getText();
+      
+      if (radField != null && !radField.equals("")) {
+        // Read radius input
+        float val = Float.parseFloat(radField);
+        
+        if (val <= 0) {
+          throw new NumberFormatException("Invalid length value!");
+        }
+        // Radius cap of 9999
+        dimensions[0] = min(val, 9999f);
+      }
+      
+      if (hgtField != null && !hgtField.equals("")) {
+        // Read height input
+        float val = Float.parseFloat(hgtField);
+        
+        if (val <= 0) {
+          throw new NumberFormatException("Invalid height value!");
+        }
+        // Height cap of 9999
+        dimensions[1] = min(val, 9999f);
+      }
+      
+      return dimensions;
+      
+    } catch (NumberFormatException NFEx) {
+      println("Invalid number input!");
+      return null;
+      
+    } catch (NullPointerException NPEx) {
+      println("Missing parameter!");
+      return null;
+    }
+  }
+  
+  /**
+   * TODO
+   */
+  private PVector getModelOBBDimensions() {
+    try {
+      // NaN values represent an uninitialized field
+      PVector dimensions = new PVector(Float.NaN, Float.NaN, Float.NaN);
+      
+      // Pull from the dim fields
+      String lenField = shapeDefFields.get(1).getText(),
+             hgtField = shapeDefFields.get(2).getText(),
+             wdhField = shapeDefFields.get(3).getText();
+      
+      if (lenField != null && !lenField.equals("")) {
+        // Read length input
+        float val = Float.parseFloat(lenField);
+        
+        if (val <= 0) {
+          throw new NumberFormatException("Invalid length value!");
+        }
+        // Length cap of 9999
+        dimensions.x = min(val, 9999f);
+      }
+      
+      if (hgtField != null && !hgtField.equals("")) {
+        // Read height input
+        float val = Float.parseFloat(hgtField);
+        
+        if (val <= 0) {
+          throw new NumberFormatException("Invalid height value!");
+        }
+        // Height cap of 9999
+        dimensions.y = min(val, 9999f);
+      }
+      
+      if (wdhField != null && !wdhField.equals("")) {
+        // Read Width input
+        float val = Float.parseFloat(wdhField);
+        
+        if (val <= 0) {
+          throw new NumberFormatException("Invalid width value!");
+        }
+        // Width cap of 9999
+        dimensions.z = min(val, 9999f);
+      }
+      
+      return dimensions;
+      
+    } catch (NumberFormatException NFEx) {
+      println("Invalid number input!");
+      return null;
+      
+    } catch (NullPointerException NPEx) {
+      println("Missing parameter!");
+      return null;
+    }
+  }
+  
+  /**
+   * TODO
+   */
+  private float[] getOrientationValues() {
+    try {
+        // Pull from x, y, z, w, p, r, fields input fields
+        String xFieldVal = objOrientationAreas[0].getText(), yFieldVal = objOrientationAreas[1].getText(),
+               zFieldVal = objOrientationAreas[2].getText(), wFieldVal = objOrientationAreas[3].getText(),
+               pFieldVal = objOrientationAreas[4].getText(), rFieldVal = objOrientationAreas[5].getText();
+        // NaN indicates an uninitialized field
+        float[] values = new float[] { Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN };
+        
+        // Update x value
+        if (xFieldVal != null && !xFieldVal.equals("")) {
+          float val = Float.parseFloat(xFieldVal);
+          // Bring value within the range [-9999, 9999]
+          val = max(-9999f, min(val, 9999f));
+          values[0] = val;
+        }
+        // Update y value
+        if (yFieldVal != null && !yFieldVal.equals("")) {
+          float val = Float.parseFloat(yFieldVal);
+          // Bring value within the range [-9999, 9999]
+          val = max(-9999f, min(val, 9999f));
+          values[1] = val;
+        }
+        // Update z value
+        if (zFieldVal != null && !zFieldVal.equals("")) {
+          float val = Float.parseFloat(zFieldVal);
+          // Bring value within the range [-9999, 9999]
+          val = max(-9999f, min(val, 9999f));
+          values[2] = val;
+        }
+        // Update w angle
+        if (wFieldVal != null && !wFieldVal.equals("")) {
+          float val = Float.parseFloat(wFieldVal);
+          // Bring value within the range [-9999, 9999]
+          val = max(-9999f, min(val, 9999f));
+          values[3] = val;
+        }
+        // Update p angle
+        if (pFieldVal != null && !pFieldVal.equals("")) {
+          float val = Float.parseFloat(pFieldVal);
+          // Bring value within the range [-9999, 9999]
+          val = max(-9999f, min(val, 9999f));
+          values[4] = val;
+        }
+        // Update r angle
+        if (rFieldVal != null && !rFieldVal.equals("")) {
+          float val = Float.parseFloat(rFieldVal);
+          // Bring value within the range [-9999, 9999]
+          val = max(-9999f, min(val, 9999f));
+          values[5] = val;
+        }
+        
+        return values;
+        
+    } catch (NumberFormatException NFEx) {
+      println("Invalid number input!");
+      return null;
+      
+    } catch (NullPointerException NPEx) {
+      println("Missing parameter!");
+      return null;
+    }
   }
   
   /**
@@ -1238,15 +1465,14 @@ public class WindowManager {
     
     for (int idxDim = 0; idxDim < shapeDefFields.size(); ++idxDim) {
       // Hide remaining dimension fields and labels
-      int lblIdx = idxDim + 10;
+      shapeDefAreas.set(idxDim, shapeDefAreas.get(idxDim).hide());
       shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).hide());
-      labels[lblIdx] = labels[lblIdx].hide();
       ++idxDim;
     }
     
-    labels[14].hide();
+    dropDownLbls[5].hide();
     dropDownLists[5] = (MyDropdownList)dropDownLists[5].hide();
-    updateDimFieldsAndLabels();
+    updateDimLblsAndFields();
   }
   
   /**
@@ -1276,7 +1502,7 @@ public class WindowManager {
    */
   public void clearCreateInputFields() {
     clearGroupInputFields(createObjWindow);
-    updateDimFieldsAndLabels();
+    updateDimLblsAndFields();
   }
   
   /**
@@ -1366,5 +1592,17 @@ public class WindowManager {
     return null;
   }
   
-
+    /**
+   * Returns the object that is currently being edited
+   * in the world object editing menu.
+   */
+  protected WorldObject getActiveWorldObject() {
+    Object wldObj = dropDownLists[4].getActiveLabelValue();
+    
+    if (editObjWindow.isVisible() && wldObj instanceof WorldObject) {
+      return (WorldObject)wldObj;
+    } else {
+      return null;
+    }
+  }
 }

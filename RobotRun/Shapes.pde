@@ -113,6 +113,10 @@ public class Box extends Shape {
     box(dimensions.x, dimensions.y, dimensions.z);
   }
   
+  public void setDimensions(float newLength, float newHeight, float newWidth) {
+    dimensions = new PVector(newLength, newHeight, newWidth);
+  }
+  
   public PVector getDimensions() { return dimensions; }
   
   public Shape clone() {
@@ -178,7 +182,9 @@ public class Cylinder extends Shape {
     endShape();
   }
   
+  public void setRadius(float newRadius) { radius = newRadius; }
   public float getRadius() { return radius; }
+  public void setHeight(float newHeight) { height = newHeight; }
   public float getHeight() { return height; }
   
   public Shape clone() {
@@ -709,6 +715,13 @@ public class Part extends WorldObject {
   
   public void setFixtureRef(Fixture refFixture) { reference = refFixture; }
   public Fixture getFixtureRef() { return reference; }
+  
+  /**
+   * Set the dimensions of this object's bounding box.
+   */
+  public void setOBBDims(float newLength, float newHeight, float newWidth) {
+    OBB.getBox().setDimensions(newLength, newHeight, newWidth);
+  }
   
   /**
    * Return a reference to this object's bounding-box.
