@@ -852,7 +852,11 @@ public void keyReleased() {
 
 public void CreateWldObj() {
   /* Create a world object from the input fields in the Create window. */
-  addWorldObject( manager.createWorldObject() );
+  Scenario s = activeScenario();
+  
+  if (s != null) {
+    s.addWorldObject( manager.createWorldObject() );
+  }
 }
 
 public void ClearFields() {

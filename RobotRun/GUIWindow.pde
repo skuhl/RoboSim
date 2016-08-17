@@ -942,36 +942,61 @@ public class WindowManager {
    * contain world objects.
    */
   private void updateListContents() {
+    Scenario s = activeScenario();
     
-    // Check value of the ObjType dropdown list
-    Object val = dropDownLists[3].getActiveLabelValue();
-    ArrayList wldObjects;
-    
-    if (val != null && ((Float)val) == 1.0) {
-      wldObjects = FIXTURES;
-    } else {
-      // Add the list of parts as default
-      wldObjects = PARTS;
+    if (s != null) {
+      // Check value of the ObjType dropdown list
+      Object val = dropDownLists[3].getActiveLabelValue();
+      boolean loadFixtures = (val instanceof Float) && ((Float)val == 1.0);
+      
+      dropDownLists[4] = (MyDropdownList)dropDownLists[4].clear();
+      dropDownLists[5] = (MyDropdownList)dropDownLists[5].clear();
+      dropDownLists[5].addItem("None", null);
+      
+      for (WorldObject wldObj : s) {
+        
+        if (wldObj instanceof Fixture) {
+          dropDownLists[5].addItem(wldObj.toString(), wldObj);
+          
+          if (loadFixtures) {
+            dropDownLists[4].addItem(wldObj.toString(), wldObj);
+          }
+        } else if (wldObj instanceof Part && !loadFixtures) {
+          dropDownLists[4].addItem(wldObj.toString(), wldObj);
+        }
+        
+      }
+      
+      dropDownLists[4].updateActiveLabel();
+      dropDownLists[5].updateActiveLabel();
     }
+    //ArrayList wldObjects;
     
-    dropDownLists[4] = (MyDropdownList)dropDownLists[4].clear();
-    for (Object obj : wldObjects) {
-      // Add each world object to the dropdown list
-      dropDownLists[4].addItem(obj.toString(), obj);
-    }
-    dropDownLists[4].updateActiveLabel();
+    //if (val != null && ((Float)val) == 1.0) {
+    //  wldObjects = FIXTURES;
+    //} else {
+    //  // Add the list of parts as default
+    //  wldObjects = PARTS;
+    //}
     
-    dropDownLists[5] = (MyDropdownList)dropDownLists[5].clear();
-    dropDownLists[5].addItem("None", null);
-    for (Fixture obj : FIXTURES) {
-      // Add each fixture to the dropdown list
-      dropDownLists[5].addItem(obj.toString(), obj);
-    }
-    dropDownLists[5].updateActiveLabel();
+    ////dropDownLists[4] = (MyDropdownList)dropDownLists[4].clear();
+    ////for (Object obj : wldObjects) {
+    ////  // Add each world object to the dropdown list
+    ////  dropDownLists[4].addItem(obj.toString(), obj);
+    ////}
+    ////dropDownLists[4].updateActiveLabel();
+    
+    ////dropDownLists[5] = (MyDropdownList)dropDownLists[5].clear();
+    ////dropDownLists[5].addItem("None", null);
+    ////for (Fixture obj : FIXTURES) {
+    ////  // Add each fixture to the dropdown list
+    ////  dropDownLists[5].addItem(obj.toString(), obj);
+    ////}
+    ////dropDownLists[5].updateActiveLabel();
     
     dropDownLists[6] = (MyDropdownList)dropDownLists[6].clear();
-    for (Scenario s : SCENARIOS) {
-      dropDownLists[6].addItem(s.getName(), s);
+    for (Scenario scenario : SCENARIOS) {
+      dropDownLists[6].addItem(scenario.getName(), scenario);
     }
     dropDownLists[6].updateActiveLabel();
   }
@@ -1249,18 +1274,19 @@ public class WindowManager {
    * Delete the world object that is selected in
    * the Object dropdown list, if any.
    * 
-   * @returning  0 if a Part was removed succesfully,
-   *             1 if a Part failed to be removed,
-   *             2 if a Fixture was removed successfully,
-   *             3 if a Fixture failed to be removed,
-   *             5 for any other case.
+   * @returning  -1  if the active Scenario is null
+   *              0  if the object was removed succesfully,
+   *              1  if the object did not exist in the scenario,
+   *              2  if the object was a Fixture that was removed
+   *                 from the scenario and was referenced by at
+   *                 least one Part in the scenario
    */
   public int deleteActiveWorldObject() {
-    int ret = removeWorldObject( getActiveWorldObject() );
+    int ret = -1;
+    Scenario s = activeScenario();
     
-    if (ret % 2 == 0) {
-      // Even numbers symbolize a successful removal
-      updateListContents();
+    if (s != null) {
+      ret = s.removeWorldObject( getActiveWorldObject() );
     }
     
     return ret;

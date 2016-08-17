@@ -129,6 +129,8 @@ public int loadState() {
     IO_REG[idx].setIdx(idx);
   }
   
+  
+  
   return error;
 }
 
@@ -956,7 +958,14 @@ public int loadRegisterBytes(File src) {
 }
 
 /**
- * TODO
+ * Saves all the scenarios stored in SCENARIOS to given
+ * destination binary file.
+ * 
+ * @param dest  The binary file to which to save the scenarios
+ * @returning   0  if the saving of scenarios is successful,
+ *              1  if the file could not be found,
+ *              2  if some other error occurs with writing
+ *                 to dest
  */
 public int saveScenarioBytes(File dest) {
   
@@ -965,7 +974,10 @@ public int saveScenarioBytes(File dest) {
     DataOutputStream dataOut = new DataOutputStream(out);
     
     int numOfScenarios = SCENARIOS.size();
+    // Save the number of scenarios
     dataOut.writeInt(numOfScenarios);
+    // Save the active scenario
+    dataOut.writeInt(activeScenarioIdx);
     // Save all the scenarios
     for (Scenario s : SCENARIOS) {
       saveScenario(s, dataOut);
@@ -976,19 +988,13 @@ public int saveScenarioBytes(File dest) {
     return 0;
     
   } catch (FileNotFoundException FNFEx) {
-    // Could not be located src
+    // Could not be located dest
     System.out.printf("%s does not exist!\n", dest.getName());
     FNFEx.printStackTrace();
     return 1;
     
-  } catch (EOFException EOFEx) {
-    // Unexpectedly reached the end of src
-    System.out.printf("End of file, %s, was reached unexpectedly!\n", dest.getName());
-    EOFEx.printStackTrace();
-    return 3;
-    
   } catch (IOException IOEx) {
-    // Error occrued while reading from src
+    // Error occrued while writing to dest
     System.out.printf("%s is corrupt!\n", dest.getName());
     IOEx.printStackTrace();
     return 2;
@@ -997,7 +1003,19 @@ public int saveScenarioBytes(File dest) {
 }
 
 /**
- * TODO
+ * Attempts to load scenarios from the given binary file.
+ * It is expected that an integer representing the number
+ * of scenarios is saved in the file first, followed by the
+ * index of the previously active scenario, and finally at
+ * least that number of scenarios.
+ * 
+ * @param src  The binary file from which to read scenarios
+ * @returning  0  if loading was succssful,
+ *             1  if the file could not be found,
+ *             2  if the file is corrupt,
+ *             3  if the end of file is reached unexpectedly,
+ *             4  if an error occurs with loading a .stl file
+ *                for the shape of a world object
  */
 public int loadScenarios(File src) {
   
@@ -1006,6 +1024,8 @@ public int loadScenarios(File src) {
     DataInputStream dataIn = new DataInputStream(in);
     
     int numOfScenarios = dataIn.readInt();
+    activeScenarioIdx = dataIn.readInt();
+    
     // Load all scenarios saved
     while (numOfScenarios-- > 0) {
       SCENARIOS.add( loadScenario(dataIn) );
@@ -1042,7 +1062,13 @@ public int loadScenarios(File src) {
 }
 
 /**
- * TODO
+ * Saveds all the data associated with a scenario to the given output stream.
+ * First a single flag byte is saved to the stream followed by the number of
+ * objects in the scenario and then exxactly that number of world objects.
+ * 
+ * @param s    The scenario to save
+ * @param out  The output stream to which to save the scenario
+ * @throws     IOException if an erro occurs with writing to the output stream
  */
 public void saveScenario(Scenario s, DataOutputStream out) throws IOException {
   
@@ -1066,7 +1092,16 @@ public void saveScenario(Scenario s, DataOutputStream out) throws IOException {
 }
 
 /**
- * TODO
+ * Attempts to load the data of a Scenario from the given input stream. It is expected that
+ * the stream contains a single byte (the flag byte) followed by a String representing the
+ * name of the scenario. After the name of the scenario, there should be an positive integer
+ * value followed by exactly that many world objects.
+ * 
+ * @param in   The input stream from which to read bytes
+ * @returning  The Scenario pulled from the input stream
+ * @throws     IOException  if an error occurs with reading from the input stream
+ *             NullPointerException  if a world object has a model shape, whose source file is
+ *             corrupt or missing
  */
 public Scenario loadScenario(DataInputStream in) throws IOException, NullPointerException {
   // Read flag byte
@@ -1091,7 +1126,13 @@ public Scenario loadScenario(DataInputStream in) throws IOException, NullPointer
 }
 
 /**
- * TODO
+ * Saved all the fields associated with the given world object to the given data output
+ * stream. First a single byte (the flag byte) is saved to the stream followed by the
+ * name and shape of the object and finally the fields associated with subclass of the object.
+ * 
+ * @param wldObj  The world object to save
+ * @param out     The output stream to which to save the world object
+ * @throws        IOException if an error occurs with writing to the output stream
  */
 public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {
   
@@ -1125,7 +1166,15 @@ public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOE
 }
 
 /**
- * TODO
+ * Attempts to load the data associated with a world object from the given data input stream. It
+ * is expected that the input stream contains a single byte (for the flag byte) followed by the
+ * name and shape of the object, which is followde by the data specific to the object's subclass.
+ * 
+ * @param in   The input stream from which to read bytes
+ * @returning  The world object pulled from the input streaam (which can be null!)
+ * @throws     IOException  if an error occurs with rading from the input stream
+ *             NullPointerExpcetion  if the world object has a model shape and its source file is
+ *             corrupt or missing
  */
 public WorldObject loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
   // Load the flag byte
@@ -1161,7 +1210,14 @@ public WorldObject loadWorldObject(DataInputStream in) throws IOException, NullP
 }
 
 /**
- * TODO
+ * Saves all the fields associated with the given Bounding-Box to the given data
+ * output stream. A single flag byte is written first, followed by the length,
+ * height, and width of box, then the center position PVector, and finally the
+ * box's orientation in the form of a 3x3 float array matrix.
+ * 
+ * @param OBB  The Bounding-Box object to save
+ * @param out  The output stream to which to save the Bounding-Box
+ * @throws     IOException  if an error occurs with writing to the output stream.
  */
 public void saveOBB(BoundingBox OBB, DataOutputStream out) throws IOException {
   
@@ -1183,7 +1239,16 @@ public void saveOBB(BoundingBox OBB, DataOutputStream out) throws IOException {
 }
 
 /**
- * TODO
+ * Attempts to load the data of a Bounding Box object from the given
+ * data input stream. It is expected that the input stream contains a
+ * single byte (for the flag byte) followed three float values, a
+ * PVector, and finally a 3x3 float array matrix.
+ * 
+ * @param in   The data stream, from which to read bytes
+ * @returning  The Bounding-Box pulled from the input stream (which
+ *             can be null!)
+ * @throws     IOException if an error occurs with reading from the
+ *             input stream
  */
 public BoundingBox loadOBB(DataInputStream in) throws IOException {
   
@@ -1214,8 +1279,8 @@ public BoundingBox loadOBB(DataInputStream in) throws IOException {
  * stream. First a single byte is wrote to the output stream. Then, the origin vector and
  * finally the axes vectors are written to the output stream.
  * 
- * @param cs   The Coordinate System to save to the given output stream
- * @param out  The output stream to which to save the given Coordinate System
+ * @param cs   The Coordinate System to save
+ * @param out  The output stream to which to save the Coordinate System
  * @throws     IOException  if an error occurs in with writing to the output stream
  */
 public void saveCoordSystem(CoordinateSystem cs, DataOutputStream out) throws IOException {
@@ -1234,12 +1299,12 @@ public void saveCoordSystem(CoordinateSystem cs, DataOutputStream out) throws IO
 }
 
 /**
- * Attempt to load a Coordinate System object from the given data input stream.
- * It is expected that the input stream contains a single byte (for the byte flag)
- * followed by a PVector object and then finally a 3x3 float array matrix.
+ * Attempt to load the data of a Coordinate System object from the given data input
+ * stream. It is expected that the input stream contains a single byte (for the byte
+ * flag) followed by a PVector object and then finally a 3x3 float array matrix.
  * 
- * @param in   The data input stream, from which to read bytes
- * @returning  The Coordinate System stored in the input stream (which can be null!)
+ * @param in   The input stream, from which to read bytes
+ * @returning  The Coordinate System pulled from the input stream (which can be null!)
  * @throws     IOException  if an error occurs with reading from the input stream
  */
 public CoordinateSystem loadCoordSystem(DataInputStream in) throws IOException {
@@ -1269,10 +1334,9 @@ public CoordinateSystem loadCoordSystem(DataInputStream in) throws IOException {
  * associated with the subclass saved followed by the color fields common among
  * all shapes.
  * 
- * @param shape  The shape to save to the given output stream
- * @param out    The data output stream, to which to save the given shape
- * @throws       IOException  if an error occurs with writing to the given output
- *               stream
+ * @param shape  The shape to save
+ * @param out    The output stream, to which to save the given shape
+ * @throws       IOException  if an error occurs with writing to the output stream
  */
 public void saveShape(Shape shape, DataOutputStream out) throws IOException {
   if (shape == null) {
@@ -1315,8 +1379,8 @@ public void saveShape(Shape shape, DataOutputStream out) throws IOException {
  * stream contains a single byte (the flag byte) followed by the fields unique to the
  * subclass of the Shape object saved, which are followed by the color fields of the Shape.
  * 
- * @param in   The data input stream, from which to read bytes
- * @returning  The shape object saved in the input stream (which can be null!)
+ * @param in   The input stream, from which to read bytes
+ * @returning  The shape object pulled from the input stream (which can be null!)
  * @throws     IOException  if an error occurs with reading from the input stream
  *             NullPointerException  if the shape stored is a model shape and its source
  *             file is either invalid or does not exist
@@ -1400,9 +1464,9 @@ public PVector loadPVector(DataInputStream in) throws IOException {
  * Saves the list of floats to the given data output stream. A flag byte is stored
  * first, ten the length of list followed by each consecutive value in the list.
  * 
- * @param list  The list of floats to save
- * @param out   The output stream, to which to save the float list
- * @throws      IOException  if an error occurs with saving the flaot list
+ * @param list  The array of floats to save
+ * @param out   The output stream, to which to save the float array
+ * @throws      IOException  if an error occurs with writing to the output stream
  */
 public void saveFloatArray(float[] list, DataOutputStream out) throws IOException {
   if (list == null) {
@@ -1426,10 +1490,11 @@ public void saveFloatArray(float[] list, DataOutputStream out) throws IOExceptio
  * integer value for the length of the array, which is followed by at
  * least that number of floating point values.
  * 
- * @param in   The data input stream, from which to read
- * @returning  An initialized float array, or a null pointer
- * @throws     IOException  if an error occurs with reading a float array
- *             from the given data output stream
+ * @param in   The input stream, from which to read bytes
+ * @returning  The float array pulled from the input stream (which
+ *             can be null!)
+ * @throws     IOException  if an error occurs with reading from the
+ *             output stream
  */
 public float[] loadFloatArray(DataInputStream in) throws IOException {
   // Read byte flag
@@ -1455,9 +1520,9 @@ public float[] loadFloatArray(DataInputStream in) throws IOException {
  * Saves the 2D array of floats to the given data output stream. A flag byte is stored
  * first, ten the dimensions of array followed by each consecutive value in the array.
  * 
- * @param list  The array of floats to save
- * @param out   The output stream, to which to save the float array
- * @throws      IOException  if an error occurs with saving the float array
+ * @param list  The array matrix of floats to save
+ * @param out   The output stream, to which to save the float array matrix
+ * @throws      IOException  if an error occurs with writing to the output stream
  */
 public void saveFloatArray2D(float[][] list, DataOutputStream out) throws IOException {
   if (list == null) {
@@ -1484,10 +1549,10 @@ public void saveFloatArray2D(float[][] list, DataOutputStream out) throws IOExce
  * integer values for the dimensions of the array, which is followed by at
  * least that number of floating point values.
  * 
- * @param in   The data input stream, from which to read
- * @returning  An initialized float array, or a null pointer
- * @throws     IOException  if an error occurs with reading a float array
- *             from the given data output stream
+ * @param in   The data input stream, from which to read bytes
+ * @returning  The float array matrix pulled from the input stream
+ * @throws     IOException  if an error occurs with reading from the
+ *             input stream
  */
 public float[][] loadFloatArray2D(DataInputStream in) throws IOException {
   // Read byte flag

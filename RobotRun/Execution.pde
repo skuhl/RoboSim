@@ -7,17 +7,17 @@ int liveSpeed = 10;
 boolean executingInstruction = false;
 
 // Determines what End Effector mapping should be display
-public static EEMapping mappingState = EEMapping.LINE;
+private EEMapping mappingState = EEMapping.LINE;
 // Deterimes what type of axes should be displayed
-public static AxesDisplay axesState = AxesDisplay.AXES;
+private static AxesDisplay axesState = AxesDisplay.AXES;
 
-public static final boolean COLLISION_DISPLAY = true,
-                            DISPLAY_TEST_OUTPUT = true;
+private static final boolean COLLISION_DISPLAY = true,
+                             DISPLAY_TEST_OUTPUT = true;
 
 /**
  * Displays important information in the upper-right corner of the screen.
  */
-void showMainDisplayText() {
+public void showMainDisplayText() {
   fill(0);
   textAlign(RIGHT, TOP);
   int lastTextPositionX = width - 20,
@@ -52,12 +52,25 @@ void showMainDisplayText() {
   
   String[] cartesian = RP.toLineStringArray(true),
            joints = RP.toLineStringArray(false);
-  
+  // Display the current Coordinate Frame name
   text(coordFrame, lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
+  // Display the Robot's speed value as a percent
   text(String.format("Speed: %d%%", liveSpeed), lastTextPositionX, lastTextPositionY);
-  lastTextPositionY += 40;
+  lastTextPositionY += 20;
+  // Display the title of the currently active scenario
+  String scenarioTitle;
+  Scenario s = activeScenario();
   
+  if (s != null) {
+    scenarioTitle = "Scenario: " + s.getName();
+  } else {
+    scenarioTitle = "No active scenario";
+  }
+  
+  text(scenarioTitle, lastTextPositionX, lastTextPositionY);
+  lastTextPositionY += 40;
+  // Display the Robot's current XYZWPR values
   text("Robot Position and Orientation", lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
   for (String line : cartesian) {
@@ -65,9 +78,8 @@ void showMainDisplayText() {
     lastTextPositionY += 20;
   }
   
-  
-  
   lastTextPositionY += 20;
+  // Display the Robot's current joint angle values
   text("Robot Joint Angles", lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
   for (String line : joints) {
@@ -78,6 +90,7 @@ void showMainDisplayText() {
   WorldObject toEdit = manager.getActiveWorldObject();
   // Display the position and orientation of the active world object
   if (toEdit != null) {
+    String[] dimFields = toEdit.dimFieldsToStringArray();
     // Convert the values into the World Coordinate System
     PVector position = convertNativeToWorld(toEdit.getCenter());
     PVector wpr = convertNativeToWorld( matrixToEuler(toEdit.getOrientationAxes()) ).mult(RAD_TO_DEG);
@@ -88,6 +101,15 @@ void showMainDisplayText() {
     
     lastTextPositionY += 20;
     text(toEdit.getName(), lastTextPositionX, lastTextPositionY);
+    lastTextPositionY += 20;
+    String dimDisplay = "";
+    // Display the dimensions of the world object (if any)
+    for (String dim : dimFields) {
+      dimDisplay += String.format("%-12s", dim);
+    }
+    
+    text(dimDisplay, lastTextPositionX, lastTextPositionY);
+    
     lastTextPositionY += 20;
     // Add space patting
     text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX, lastTextPositionY);

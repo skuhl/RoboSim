@@ -1,9 +1,9 @@
-final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
-final int FTYPE_TOOL = 0, FTYPE_USER = 1;
+private final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
+private final int FTYPE_TOOL = 0, FTYPE_USER = 1;
 //stack containing the previously running program state when a new program is called
-Stack<int[]> call_stack = new Stack<int[]>();
+private Stack<int[]> call_stack = new Stack<int[]>();
 // Indicates whether a program is currently running
-public boolean programRunning = false;
+private boolean programRunning = false;
 
 public class Point  {
   // X, Y, Z
