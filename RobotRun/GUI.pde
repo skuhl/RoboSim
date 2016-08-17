@@ -5496,6 +5496,28 @@ public ArrayList<String> newLine(String... columns) {
   return line;
 }
 
+public int[][] mapDisplayEntry(int idx, int lines) {
+  ArrayList<String> line = contents.get(idx);
+  int[][] lineMap = new int[lines][2];
+  int lineIdx = 0;
+  int curX = 0;
+  
+  lineMap[0][0] = 1;
+  lineMap[lines - 1][1] = line.size() - 1;
+  for(int i = 0; i < line.size(); i += 1) {
+    curX += line.get(i).length()*8 + 20;
+    if(curX > display_width) {
+      curX = 0;
+      lineIdx += 1;
+      
+      lineMap[lineIdx - 1][1] = i - 1;
+      lineMap[lineIdx][0] = i;           
+    }
+  }
+  
+  return lineMap;
+}
+
 /**
  * This method updates the given list, row, and render start indices for a list of elements, whose contents potentially
  * cannot all be show on the screen, when moving backwards in the list. It is assumed that the lower bound of list index
@@ -5524,16 +5546,38 @@ public int[] moveUp(int listIdx, int row, int renderStartIdx, boolean inPlace) {
     
     renderStartIdx = max(0, t - ITEMS_TO_SHOW - 1);
     listIdx = listIdx + min(0, renderStartIdx - t);
-  } else {
-    // Move up a single element
-    int i = listIdx,
-    r = row;
+  } 
+  else {
+    int tokens, chars, lines = -1;
+    if(mode == Screen.NAV_PROG_INST && listIdx < activeProgram().size()) {
+      tokens = contents.get(row).size();
+      chars = activeProgram().getInstruction(listIdx).toString().length();
+      lines = ((tokens*20 + chars*8 - 1) / display_width) + 1;
+    }
     
-    listIdx = max(0, i - 1);
-    row = max(0, r + min(listIdx - i, 0));
-    renderStartIdx = renderStartIdx + min((listIdx - i) - (row - r), 0);
+    if(lines > 1 && col_select > 0) {
+      chars = 0;
+      for(int i = 0; i < col_select; i += 1) {
+        chars += contents.get(row).get(i).length();
+      }
+      
+      int selectRow = (col_select*20 + chars*8 - 1) / display_width;
+      if(selectRow > 0) {
+        int[][] lineMap = mapDisplayEntry(row, lines);
+        int lineOffset = col_select - lineMap[selectRow][0]; 
+        col_select = min(lineMap[selectRow - 1][1], lineMap[selectRow - 1][0] + lineOffset);
+      }
+    }
+    else {
+      // Move up a single element
+      int i = listIdx,
+      r = row;
+      
+      listIdx = max(0, i - 1);
+      row = max(0, r + min(listIdx - i, 0));
+      renderStartIdx = renderStartIdx + min((listIdx - i) - (row - r), 0);
+    }
   }
-  
   return new int[] { listIdx, row, renderStartIdx };
 }
 
@@ -5565,13 +5609,35 @@ public int[] moveDown(int listIdx, int listSize, int row, int renderStartIdx, bo
     renderStartIdx = min(renderStartIdx + (ITEMS_TO_SHOW - 1), listSize - ITEMS_TO_SHOW);
     listIdx = listIdx + max(0, renderStartIdx - t);
   } else {
-    // Move down a single element
-    int i = listIdx,
-    r = row;
+    int tokens, chars, lines = -1;
+    if(mode == Screen.NAV_PROG_INST) {
+      tokens = contents.get(row).size();
+      chars = activeProgram().getInstruction(listIdx).toString().length();
+      lines = ((tokens*20 + chars*8 - 1) / display_width) + 1;
+    }
     
-    listIdx = min(i + 1, listSize - 1);
-    row = min(r + max(0, (listIdx - i)), (ITEMS_TO_SHOW - 1));
-    renderStartIdx = renderStartIdx + max(0, (listIdx - i) - (row - r));
+    if(lines > 1 && col_select > 0) {
+      chars = 0;
+      for(int i = 0; i < col_select; i += 1) {
+        chars += contents.get(row).get(i).length();
+      }
+      
+      int selectRow = (col_select*20 + chars*8 - 1) / display_width;
+      if(selectRow < lines - 1) {
+        int[][] lineMap = mapDisplayEntry(row, lines);
+        int lineOffset = col_select - lineMap[selectRow][0]; 
+        col_select = min(lineMap[selectRow + 1][1], lineMap[selectRow + 1][0] + lineOffset);
+      }
+    }
+    else {
+      // Move down a single element
+      int i = listIdx,
+      r = row;
+      
+      listIdx = min(i + 1, listSize - 1);
+      row = min(r + max(0, (listIdx - i)), (ITEMS_TO_SHOW - 1));
+      renderStartIdx = renderStartIdx + max(0, (listIdx - i) - (row - r));
+    }
   }
   
   return new int[] { listIdx, row, renderStartIdx };
