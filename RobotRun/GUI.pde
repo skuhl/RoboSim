@@ -5496,8 +5496,9 @@ public ArrayList<String> newLine(String... columns) {
   return line;
 }
 
-public int[][] mapDisplayEntry(int idx, int lines) {
+public int[][] mapDisplayEntry(int idx) {
   ArrayList<String> line = contents.get(idx);
+  int lines = getDisplayEntryLineCount(idx); 
   int[][] lineMap = new int[lines][2];
   int lineIdx = 0;
   int curX = 0;
@@ -5507,7 +5508,7 @@ public int[][] mapDisplayEntry(int idx, int lines) {
   for(int i = 0; i < line.size(); i += 1) {
     curX += line.get(i).length()*8 + 20;
     if(curX > display_width) {
-      curX = 0;
+      curX = line.get(i).length()*8 + 56;
       lineIdx += 1;
       
       lineMap[lineIdx - 1][1] = i - 1;
@@ -5516,6 +5517,29 @@ public int[][] mapDisplayEntry(int idx, int lines) {
   }
   
   return lineMap;
+}
+
+public int getDisplayEntryLineCount(int idx) {
+  int entryWidth = contents.get(idx).size() - 1;
+  int lineCount = getDisplayEntryLineSelect(idx, entryWidth) + 1;
+  
+  return lineCount;
+}
+
+public int getDisplayEntryLineSelect(int entryIdx, int column) {
+  ArrayList<String> displayEntry = contents.get(entryIdx);
+  int lineIdx = 0;
+  int posX = 0;
+  
+  for(int i = 0; i <= column; i += 1) {
+    posX += displayEntry.get(i).length()*8 + 20;
+    if(posX > display_width) {
+      posX = displayEntry.get(i).length()*8 + 56;
+      lineIdx += 1;
+    }
+  }
+  
+  return lineIdx;
 }
 
 /**
@@ -5548,25 +5572,17 @@ public int[] moveUp(int listIdx, int row, int renderStartIdx, boolean inPlace) {
     listIdx = listIdx + min(0, renderStartIdx - t);
   } 
   else {
-    int tokens, chars, lines = -1;
-    if(mode == Screen.NAV_PROG_INST && listIdx < activeProgram().size()) {
-      tokens = contents.get(row).size();
-      chars = activeProgram().getInstruction(listIdx).toString().length();
-      lines = ((tokens*20 + chars*8 - 1) / display_width) + 1;
+    int lineSelect;
+    if(contents.size() > 0) {
+      lineSelect = getDisplayEntryLineSelect(row, col_select);
+    } else {
+      lineSelect = -1;
     }
     
-    if(lines > 1 && col_select > 0) {
-      chars = 0;
-      for(int i = 0; i < col_select; i += 1) {
-        chars += contents.get(row).get(i).length();
-      }
-      
-      int selectRow = (col_select*20 + chars*8 - 1) / display_width;
-      if(selectRow > 0) {
-        int[][] lineMap = mapDisplayEntry(row, lines);
-        int lineOffset = col_select - lineMap[selectRow][0]; 
-        col_select = min(lineMap[selectRow - 1][1], lineMap[selectRow - 1][0] + lineOffset);
-      }
+    if(lineSelect > 0) {
+      int[][] lineMap = mapDisplayEntry(row);
+      int lineOffset = col_select - lineMap[lineSelect][0];
+      col_select = min(lineMap[lineSelect - 1][1], lineMap[lineSelect - 1][0] + lineOffset);
     }
     else {
       // Move up a single element
@@ -5609,25 +5625,19 @@ public int[] moveDown(int listIdx, int listSize, int row, int renderStartIdx, bo
     renderStartIdx = min(renderStartIdx + (ITEMS_TO_SHOW - 1), listSize - ITEMS_TO_SHOW);
     listIdx = listIdx + max(0, renderStartIdx - t);
   } else {
-    int tokens, chars, lines = -1;
-    if(mode == Screen.NAV_PROG_INST) {
-      tokens = contents.get(row).size();
-      chars = activeProgram().getInstruction(listIdx).toString().length();
-      lines = ((tokens*20 + chars*8 - 1) / display_width) + 1;
+    int numLines, lineSelect;
+    if(contents.size() > 0) {
+      numLines = getDisplayEntryLineCount(row);
+      lineSelect = getDisplayEntryLineSelect(row, col_select);
+    } else {
+      numLines = 0;
+      lineSelect = -1;
     }
-    
-    if(lines > 1 && col_select > 0) {
-      chars = 0;
-      for(int i = 0; i < col_select; i += 1) {
-        chars += contents.get(row).get(i).length();
-      }
-      
-      int selectRow = (col_select*20 + chars*8 - 1) / display_width;
-      if(selectRow < lines - 1) {
-        int[][] lineMap = mapDisplayEntry(row, lines);
-        int lineOffset = col_select - lineMap[selectRow][0]; 
-        col_select = min(lineMap[selectRow + 1][1], lineMap[selectRow + 1][0] + lineOffset);
-      }
+        
+    if(lineSelect < numLines - 1 && col_select > 0) {
+      int[][] lineMap = mapDisplayEntry(row);
+      int lineOffset = col_select - lineMap[lineSelect][0]; 
+      col_select = min(lineMap[lineSelect + 1][1], lineMap[lineSelect + 1][0] + lineOffset);
     }
     else {
       // Move down a single element
