@@ -104,8 +104,13 @@ public void showMainDisplayText() {
     lastTextPositionY += 20;
     String dimDisplay = "";
     // Display the dimensions of the world object (if any)
-    for (String dim : dimFields) {
-      dimDisplay += String.format("%-12s", dim);
+    for (int idx = 0; idx < dimFields.length; ++idx) {
+      if ((idx + 1) < dimFields.length) {
+        dimDisplay += String.format("%-12s", dimFields[idx]);
+        
+      } else {
+        dimDisplay += String.format("%s", dimFields[idx]);
+      }
     }
     
     text(dimDisplay, lastTextPositionX, lastTextPositionY);
