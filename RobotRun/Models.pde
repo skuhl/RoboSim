@@ -696,9 +696,21 @@ public class ArmModel {
     for(Model a : segments) {
       for(int r = 0; r < 3; r++) {
         if(a.rotations[r]) {
-          if(abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeed*speed) {
+          System.out.printf("%4.8f -> %4.8f\n", a.currentRotations[r], a.targetRotations[r]);
+          float distToDest = abs(a.currentRotations[r] - a.targetRotations[r]);
+          
+          if (distToDest <= 0.0001f) {
+            // Destination (basically) met
+            continue;
+            
+          } else if (distToDest >= (a.rotationSpeed * speed)) {
             done = false;
             a.currentRotations[r] += a.rotationSpeed * a.rotationDirections[r] * speed;
+            a.currentRotations[r] = mod2PI(a.currentRotations[r]);
+            
+          } else if (distToDest > 0.0001f) {
+            // Destination too close to move at current speed
+            a.currentRotations[r] = a.targetRotations[r];
             a.currentRotations[r] = mod2PI(a.currentRotations[r]);
           }
         }
@@ -706,6 +718,7 @@ public class ArmModel {
     } // end loop through arm segments
     
     if(COLLISION_DISPLAY) { updateBoxes(); }
+    println();
     return done;
   } // end interpolate rotation
   
@@ -922,6 +935,14 @@ public class ArmModel {
    * TODO comment
    */
   public void moveTo(float[] jointAngles) {
+    
+    float[] anglesInDegrees = new float[jointAngles.length];
+    
+    for (int joint = 0; joint < anglesInDegrees.length; ++joint) {
+      anglesInDegrees[joint] = jointAngles[joint] * RAD_TO_DEG;
+    }
+    
+    System.out.printf("Destinations: %s\n", arrayToString(anglesInDegrees));
     setupRotationInterpolation(jointAngles);
     motionType = RobotMotion.MT_JOINT;
   }

@@ -415,7 +415,7 @@ public void displayGridlines(float[][] axesVectors, PVector origin, int halfNumO
   pushMatrix();
   // Map the chosen two axes vectors to the xz-plane at the y-position of the Robot's base
   applyMatrix(axesVectors[vectorPX][0], 0, axesVectors[vectorPZ][0], origin.x,
-                                     0, 1,                        0, PLANE_Y,
+                                     0, 1,                        0, ROBOT_POSITION.y,
               axesVectors[vectorPX][2], 0, axesVectors[vectorPZ][2], origin.z,
                                      0, 0,                        0,        1);
   
@@ -451,14 +451,14 @@ public void mapToRobotBasePlane() {
   PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
-  color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);
+  color c = (ee_pos.y <= ROBOT_POSITION.y) ? color(255, 0, 0) : color(150, 0, 255);
   
   // Toggle EE mapping type with 'e'
   switch (mappingState) {
   case LINE:
     stroke(c);
     // Draw a line, from the EE to the grid in the xy plane, parallel to the xy plane
-    line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
+    line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, ROBOT_POSITION.y, ee_pos.z);
     break;
     
   case DOT:
@@ -467,7 +467,7 @@ public void mapToRobotBasePlane() {
     // Draw a point, which maps the EE's position to the grid in the xy plane
     pushMatrix();
     rotateX(PI / 2);
-    translate(0, 0, -PLANE_Y);
+    translate(0, 0, -ROBOT_POSITION.y);
     ellipse(ee_pos.x, ee_pos.z, 10, 10);
     popMatrix();
     break;
