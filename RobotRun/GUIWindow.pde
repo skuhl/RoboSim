@@ -1075,7 +1075,7 @@ public class WindowManager {
             Float[] boxDims = getBoxDimensions();
             // Construct a box shape
             if (boxDims != null && boxDims[0] != null && boxDims[1] != null && boxDims[2] != null) {
-              wldObj = new Part(name, fill, outline, boxDims[0], boxDims[0], boxDims[0]);
+              wldObj = new Part(name, fill, outline, boxDims[0], boxDims[1], boxDims[2]);
             }
             break;
             
@@ -1112,7 +1112,7 @@ public class WindowManager {
             Float[] boxDims = getBoxDimensions();
             // Construct a box shape
             if (boxDims != null && boxDims[0] != null && boxDims[1] != null && boxDims[2] != null) {
-              wldObj = new Fixture(name, fill, outline, boxDims[0], boxDims[0], boxDims[0]);
+              wldObj = new Fixture(name, fill, outline, boxDims[0], boxDims[1], boxDims[2]);
             }
             break;
             
