@@ -92,8 +92,8 @@ public void showMainDisplayText() {
   if (toEdit != null) {
     String[] dimFields = toEdit.dimFieldsToStringArray();
     // Convert the values into the World Coordinate System
-    PVector position = convertNativeToWorld(toEdit.getCenter());
-    PVector wpr = convertNativeToWorld( matrixToEuler(toEdit.getOrientationAxes()) ).mult(RAD_TO_DEG);
+    PVector position = convertNativeToWorld(toEdit.getLocalCenter());
+    PVector wpr = convertNativeToWorld( matrixToEuler(toEdit.getLocalOrientationAxes()) ).mult(RAD_TO_DEG);
     // Create a set of uniform Strings
     String[] fields = new String[] { String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
                                      String.format("Z: %4.3f", position.z), String.format("W: %4.3f", wpr.x),
@@ -157,7 +157,7 @@ public void showMainDisplayText() {
       text("Object held", lastTextPositionX, lastTextPositionY);
       lastTextPositionY += 20;
       
-      PVector held_pos = armModel.held.getOBB().getCenter();
+      PVector held_pos = armModel.held.getLocalCenter();
       String obj_pos = String.format("(%f, %f, %f)", held_pos.x, held_pos.y, held_pos.z);
       text(obj_pos, lastTextPositionX, lastTextPositionY);
       lastTextPositionY += 20;

@@ -56,10 +56,6 @@ int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 /*      Debugging Stuff        */
 
 private static ArrayList<String> buffer;
-private static boolean enterDown;
-private static Ray mouseRay;
-private float[][] limboAxes;
-
 /*******************************/
 
 
@@ -72,12 +68,8 @@ public void setup() {
   fnt_con14 = createFont("data/Consolas.ttf", 14);
   fnt_con12 = createFont("data/Consolas.ttf", 12);
   fnt_conB = createFont("data/ConsolasBold.ttf", 12);
-  mouseRightDown = false;
   
   buffer = new ArrayList<String>();
-  enterDown = false;
-  mouseRay = null;
-  limboAxes = null;
   
   //load model and save data
   armModel = new ArmModel();
@@ -188,14 +180,6 @@ public void draw() {
   //}
   popMatrix(); 
   
-  if (mouseRay != null) {
-    mouseRay.draw();
-  }
-  
-  if (limboAxes != null) {
-    displayOriginAxes(limboAxes, new PVector(0f, 0f, 0f), 200f, color(0, 255, 255));
-  }
-  
   displayAxes();
   displayTeachPoints();
   
@@ -295,11 +279,11 @@ public void displayTeachPoints() {
  */
 public void displayAxes() {
   
-  Point ee_point = nativeRobotEEPoint(armModel.getJointAngles());
+  Point eePoint = nativeRobotEEPoint(armModel.getJointAngles());
   
   if (axesState == AxesDisplay.NONE && curCoordFrame != CoordFrame.JOINT) {
     // Draw axes of the Robot's End Effector frame for testing purposes
-    displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
+    displayOriginAxes(quatToMatrix( eePoint.orientation ), eePoint.position, 200f, color(255, 0, 255));
   } else if (axesState == AxesDisplay.AXES) {
     // Display axes
     if (curCoordFrame != CoordFrame.JOINT) {
@@ -308,10 +292,10 @@ public void displayAxes() {
       
       if (curCoordFrame == CoordFrame.TOOL) {
         /* Draw the axes of the active Tool frame at the Robot End Effector */
-        displayOriginAxes(activeTool.getWorldAxes(), ee_point.position, 200f, color(255, 0, 255));
+        displayOriginAxes(activeTool.getWorldAxes(), eePoint.position, 200f, color(255, 0, 255));
       } else {
         // Draw axes of the Robot's End Effector frame for testing purposes
-        displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
+        displayOriginAxes(quatToMatrix( eePoint.orientation ), eePoint.position, 200f, color(255, 0, 255));
       }
       
       if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
@@ -337,7 +321,7 @@ public void displayAxes() {
         break;
       case TOOL:
         displayAxes = active.getNativeAxes();
-        displayOrigin = ee_point.position;
+        displayOrigin = eePoint.position;
         break;
       case USER:
         displayAxes = active.getNativeAxes();

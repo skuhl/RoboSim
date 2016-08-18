@@ -228,8 +228,6 @@ public class ArmModel {
     
     noStroke();
     fill(200, 200, 0);
-    
-    translate(600, 200, 0);
 
     rotateZ(PI);
     rotateY(PI/2);
@@ -344,7 +342,6 @@ public class ArmModel {
     
     pushMatrix();
     resetMatrix();
-    translate(600, 200, 0);
 
     rotateZ(PI);
     rotateY(PI/2);
@@ -551,11 +548,10 @@ public class ArmModel {
   
   /* Determine if the given ojbect is collding with any part of the Robot. */
   public boolean checkObjectCollision(Part obj) {
-    BoundingBox ohb = obj.getOBB();
     boolean collision = false;
     
     for(BoundingBox b : bodyHitBoxes) {
-      if( collision3D(ohb, b) ) {
+      if( obj.collision(b) ) {
         b.setColor(color(255, 0, 0));
         collision = true;
       }
@@ -565,7 +561,7 @@ public class ArmModel {
     
     for(BoundingBox b : eeHBs) {
       // Special case for held objects
-      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorState != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
+      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorState != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && obj.collision(b) ) {
         b.setColor(color(255, 0, 0));
         collision = true;
       }
@@ -1047,7 +1043,7 @@ public class ArmModel {
             if (wldObj instanceof Part) {
               Part p = (Part)wldObj;
               
-              if (p.getOBB().collision(ee_pos)) {
+              if (p.collision(ee_pos)) {
                 held = p;
                 return 0;
               }

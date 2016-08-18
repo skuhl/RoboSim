@@ -12,6 +12,8 @@ private enum EEMapping { LINE, DOT, NONE };
 private enum RelativePoint { TOP_RIGHT, TOP_LEFT, BOTTOM_LEFT, BOTTOM_RIGHT; }
 /* Set of valid shape types that a fixture or part can have */
 private enum ShapeType { BOX, CYLINDER, MODEL };
+/* Set of valid dimension types for a shape */
+private enum DimType { LENGTH, WIDTH, HEIGHT, RADIUS };
 
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
 private enum Operator implements ExpressionElement {
