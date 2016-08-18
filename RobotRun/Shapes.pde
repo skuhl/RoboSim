@@ -743,6 +743,19 @@ public class Fixture extends WorldObject {
   public Fixture(String n, Shape s, CoordinateSystem cs) {
     super(n, s, cs);
   }
+  
+  /**
+   * Applies the inverse of this Fixture's Coordinate System's transformation matrix to the matrix stack.
+   */
+  public void removeCoordinateSystem() {
+    float[][] tMatrix = transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
+    tMatrix = invertHCMatrix(tMatrix);
+    
+    applyMatrix(tMatrix[0][0], tMatrix[1][0], tMatrix[2][0], tMatrix[0][3],
+                tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[1][3],
+                tMatrix[0][2], tMatrix[1][2], tMatrix[2][2], tMatrix[2][3],
+                            0,             0,             0,             1);
+  }
 }
 
 /**
@@ -1124,6 +1137,11 @@ public class Scenario implements Iterable<WorldObject> {
           resetMatrix();
           
           // new object transform = EE transform x (old EE transform) ^ -1 x current object transform
+          Fixture refFixture = p.getFixtureRef();
+        
+          if (refFixture != null) {
+            refFixture.removeCoordinateSystem();
+          }
           
           applyModelRotation(model.getJointAngles());
           
@@ -1133,10 +1151,10 @@ public class Scenario implements Iterable<WorldObject> {
                       invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
                                        0,                 0,                   0,                  1);
           
-          armModel.held.applyLocalCoordinateSystem();
+          p.applyCoordinateSystem();
           // Update the world object's position and orientation
-          armModel.held.setLocalCoordinateSystem();
-          armModel.held.updateAbsoluteOrientation();
+          p.setLocalCoordinateSystem();
+          p.updateAbsoluteOrientation();
           popMatrix();
         }
         

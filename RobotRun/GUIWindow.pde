@@ -1209,8 +1209,8 @@ public class WindowManager {
             
             if (toEdit instanceof Part) {
               // Update the bounding-box's length and height
-              ((Part)toEdit).setOBBDim(newDims[0] + 5f, DimType.LENGTH);
-              ((Part)toEdit).setOBBDim(newDims[0] + 5f, DimType.HEIGHT);
+              ((Part)toEdit).setOBBDim(2f * newDims[0] + 5f, DimType.LENGTH);
+              ((Part)toEdit).setOBBDim(2f * newDims[0] + 5f, DimType.HEIGHT);
             }
           }
           
