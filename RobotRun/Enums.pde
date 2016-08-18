@@ -1,20 +1,22 @@
 /* The possible values for the current Coordinate Frame */
-public enum CoordFrame { JOINT, WORLD, TOOL, USER }
+private enum CoordFrame { JOINT, WORLD, TOOL, USER }
 /* The possible types of End Effectors for the Robot */
-public enum EndEffector { NONE, SUCTION, CLAW, POINTER; }
+private enum EndEffector { NONE, SUCTION, CLAW, POINTER; }
 /* The different motion types for the Robot to when moving to specific joint angles, or positon and orientation. */
-public enum RobotMotion { HALTED, MT_JOINT, MT_LINEAR; }
+private enum RobotMotion { HALTED, MT_JOINT, MT_LINEAR; }
 /* The states for displaying the current frame as axes */
-public enum AxesDisplay { AXES, GRID, NONE };
+private enum AxesDisplay { AXES, GRID, NONE };
 /* The states for mapping the Robot's End Effector to the grid */
-public enum EEMapping { LINE, DOT, NONE };
+private enum EEMapping { LINE, DOT, NONE };
 /* Define the relative points of an object drawn in a GUI */
 private enum RelativePoint { TOP_RIGHT, TOP_LEFT, BOTTOM_LEFT, BOTTOM_RIGHT; }
 /* Set of valid shape types that a fixture or part can have */
 private enum ShapeType { BOX, CYLINDER, MODEL };
+/* Set of valid dimension types for a shape */
+private enum DimType { LENGTH, WIDTH, HEIGHT, RADIUS };
 
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
-public enum Operator implements ExpressionElement {
+private enum Operator implements ExpressionElement {
   ADDTN("+", ARITH), 
   SUBTR("-", ARITH), 
   MULT("*", ARITH), 
@@ -84,16 +86,22 @@ public static enum Screen implements DisplayMode {
   /*
   * Set of screens used to manipulate instruction parameters with a finite number of states
   */
-  SET_BOOL_EXPR_ACT(ScreenType.TYPE_EXPR_EDIT),
-  SET_MV_INSTRUCT_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
-  SET_MV_INSTRUCT_REG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
+  SET_BOOL_CONST(ScreenType.TYPE_INSTRUCT_EDIT),
+  SET_CALL_PROG(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_FRM_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
+  SET_MV_INSTRUCT_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
+  SET_MV_INSTRUCT_REG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_REG_EXPR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
-  
-  SET_BOOL_CONST(ScreenType.TYPE_INSTRUCT_EDIT),
-  SET_EXPR_ARG(ScreenType.TYPE_EXPR_EDIT),
+  SET_SELECT_STMT_ARG(ScreenType.TYPE_INSTRUCT_EDIT),
+  SET_SELECT_STMT_ACT(ScreenType.TYPE_INSTRUCT_EDIT),
+    
+  /*
+  * Set of screens used to edit expression elements
+  */
+  SET_IF_STMT_ACT(ScreenType.TYPE_EXPR_EDIT),
   SET_BOOL_EXPR_ARG(ScreenType.TYPE_EXPR_EDIT),
+  SET_EXPR_ARG(ScreenType.TYPE_EXPR_EDIT),
   SET_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
   
   /*
@@ -168,6 +176,7 @@ public static enum Screen implements DisplayMode {
   SET_JUMP_TGT(ScreenType.TYPE_NUM_ENTRY),
   SET_LBL_NUM(ScreenType.TYPE_NUM_ENTRY),
   SET_REG_EXPR_IDX(ScreenType.TYPE_NUM_ENTRY),
+  SET_SELECT_ARGVAL(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_SPD(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_TERM(ScreenType.TYPE_NUM_ENTRY),

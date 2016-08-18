@@ -225,12 +225,11 @@ public class ArmModel {
   } // end ArmModel constructor
   
   public void draw() {
-    
     noStroke();
     fill(200, 200, 0);
     
-    translate(600, 200, 0);
-
+    translate(ROBOT_POSITION.x, ROBOT_POSITION.y, ROBOT_POSITION.z);
+    
     rotateZ(PI);
     rotateY(PI/2);
     segments.get(0).draw();
@@ -344,8 +343,9 @@ public class ArmModel {
     
     pushMatrix();
     resetMatrix();
-    translate(600, 200, 0);
-
+    
+    translate(ROBOT_POSITION.x, ROBOT_POSITION.y, ROBOT_POSITION.z);
+    
     rotateZ(PI);
     rotateY(PI/2);
     translate(200, 50, 200);
@@ -551,11 +551,10 @@ public class ArmModel {
   
   /* Determine if the given ojbect is collding with any part of the Robot. */
   public boolean checkObjectCollision(Part obj) {
-    BoundingBox ohb = obj.getOBB();
     boolean collision = false;
     
     for(BoundingBox b : bodyHitBoxes) {
-      if( collision3D(ohb, b) ) {
+      if( obj.collision(b) ) {
         b.setColor(color(255, 0, 0));
         collision = true;
       }
@@ -565,7 +564,7 @@ public class ArmModel {
     
     for(BoundingBox b : eeHBs) {
       // Special case for held objects
-      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorState != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
+      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorState != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && obj.collision(b) ) {
         b.setColor(color(255, 0, 0));
         collision = true;
       }
@@ -814,7 +813,16 @@ public class ArmModel {
       
     } else {
       // Jog in the World, Tool or User Frame
-      Frame curFrame = getActiveFrame(null);
+      Frame curFrame;
+      
+      if (curCoordFrame == CoordFrame.TOOL) {
+        curFrame = getActiveFrame(CoordFrame.TOOL);
+      } else if (curCoordFrame == CoordFrame.USER) {
+        curFrame = getActiveFrame(CoordFrame.USER);
+      } else {
+        curFrame = null;
+      }
+      
       Point curPoint = nativeRobotEEPoint(getJointAngles());
       
       // Apply translational motion vector
@@ -946,9 +954,19 @@ public class ArmModel {
     
     /* Check for a collision between the Robot Arm and any world object as well as an object
      * held by the Robot Arm and any other world object */
-    for(Part obj : PARTS) {
-      if(checkObjectCollision(obj) || (held != null && held != obj && held.collision(obj))) {
-        collision = true;
+     Scenario s = activeScenario();
+     
+    if (s != null) {
+      
+      for (WorldObject wldObj : s) {
+        
+        if (wldObj instanceof Part) {
+          Part p = (Part)wldObj;
+          
+          if(checkObjectCollision(p) || (held != null && held != p && held.collision(p))) {
+            collision = true;
+          }
+        }
       }
     }
     
@@ -1019,12 +1037,21 @@ public class ArmModel {
       if(endEffectorState == ON && armModel.held == null) {
         
         PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
-        // Determine if an object in the world can be picked up by the Robot
-        for(Part s : PARTS) {
+        Scenario s = activeScenario();
+        
+        if (s != null) {
           
-          if(s.getOBB().collision(ee_pos)) {
-            armModel.held = s;
-            return 0;
+          for (WorldObject wldObj : s) {
+            
+            if (wldObj instanceof Part) {
+              Part p = (Part)wldObj;
+              
+              if (p.collision(ee_pos)) {
+                held = p;
+                return 0;
+              }
+            }
+          
           }
         }
       } 

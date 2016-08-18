@@ -10,7 +10,8 @@ import java.awt.event.KeyEvent;
 
 private static final int OFF = 0, ON = 1;
 private static final int ARITH = 0, BOOL = 1;
-
+// The position at which the Robot is drawn
+private final PVector ROBOT_POSITION = new PVector(200, 250, 200);
 ArmModel armModel;
 Model eeModelSuction;
 Model eeModelClaw;
@@ -47,7 +48,7 @@ float myscale = 0.5;
 /* other global variables      */
 
 // for Execution
-public static boolean execSingleInst = false,
+public boolean execSingleInst = false,
 /* Indicates an error with moving the robot */
                       robotFault = false;
 int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
@@ -56,10 +57,6 @@ int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 /*      Debugging Stuff        */
 
 private static ArrayList<String> buffer;
-private static boolean enterDown;
-private static Ray mouseRay;
-private float[][] limboAxes;
-
 /*******************************/
 
 
@@ -74,9 +71,6 @@ public void setup() {
   fnt_conB = createFont("data/ConsolasBold.ttf", 12);
   
   buffer = new ArrayList<String>();
-  enterDown = false;
-  mouseRay = null;
-  limboAxes = null;
   
   //load model and save data
   armModel = new ArmModel();
@@ -85,6 +79,9 @@ public void setup() {
   eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
   eePointer = new Model("POINTER.stl", color(40), 10.0);
   intermediatePositions = new ArrayList<Point>();
+  
+  activeScenarioIdx = -1;
+  
   loadState();
   
   //set up UI
@@ -157,7 +154,12 @@ public void draw() {
     armModel.checkSelfCollisions();
   }
   
-  handleWorldObjects();
+  Scenario s = activeScenario();
+  
+  if (s != null) {
+    // Handles the world objects
+    s.updateAndDrawObjects(armModel);
+  }
   
   if(COLLISION_DISPLAY) { armModel.drawBoxes(); }
   //TESTING CODE: DRAW INTERMEDIATE POINTS
@@ -179,14 +181,6 @@ public void draw() {
   //}
   popMatrix(); 
   
-  if (mouseRay != null) {
-    mouseRay.draw();
-  }
-  
-  if (limboAxes != null) {
-    displayOriginAxes(limboAxes, new PVector(0f, 0f, 0f), 200f, color(0, 255, 255));
-  }
-  
   displayAxes();
   displayTeachPoints();
   
@@ -205,78 +199,6 @@ void applyCamera() {
   rotateX(myRotX); // for rotate button
   rotateY(myRotY); // for rotate button
 }
-
-/**
- * Handles the drawing of world objects as well as collision detection of world objects and the
- * Robot Arm model.
- */
-public void handleWorldObjects() {
-  for(Part o : PARTS) {
-    // reset all world the object's hit box colors
-    o.setBBColor(color(0, 255, 0));
-  }
-  
-  for(int idx = 0; idx < PARTS.size(); ++idx) {
-    
-    /* Update the transformation matrix of an object held by the Robotic Arm */
-    if(PARTS.get(idx) == armModel.held && armModel.modelInMotion()) {
-      pushMatrix();
-      resetMatrix();
-      
-      // new object transform = EE transform x (old EE transform) ^ -1 x current object transform
-      
-      applyModelRotation(armModel.getJointAngles());
-      
-      float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
-      applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
-                  invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
-                  invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
-                                   0,                 0,                   0,                  1);
-      
-      armModel.held.getOBB().applyCoordinateSystem();
-      // Update the world object's position and orientation
-      armModel.held.getOBB().setCoordinateSystem();
-      
-      popMatrix();
-    }
-    
-    /* Collision Detection */
-    if(COLLISION_DISPLAY) {
-      if( armModel.checkObjectCollision(PARTS.get(idx)) ) {
-        PARTS.get(idx).setBBColor(color(255, 0, 0));
-      }
-      
-      // Detect collision with other objects
-      for(int cdx = idx + 1; cdx < PARTS.size(); ++cdx) {
-        
-        if(PARTS.get(idx).collision(PARTS.get(cdx))) {
-          // Change hit box color to indicate Object collision
-          PARTS.get(idx).setBBColor(color(255, 0, 0));
-          PARTS.get(cdx).setBBColor(color(255, 0, 0));
-          break;
-        }
-      }
-      
-      if( PARTS.get(idx) != armModel.held && PARTS.get(idx).getOBB().collision(nativeRobotEEPoint(armModel.getJointAngles()).position) ) {
-        // Change hit box color to indicate End Effector collision
-        PARTS.get(idx).setBBColor(color(0, 0, 255));
-      }
-    }
-    
-    if (PARTS.get(idx) == manager.getActiveWorldObject()) {
-      PARTS.get(idx).setBBColor(color(255, 255, 0));
-    }
-    
-    // Draw world object
-    PARTS.get(idx).draw();
-  }
-  
-  // Draw fixtures
-  for (Fixture fixture : FIXTURES) {
-    fixture.draw();
-  }
-}
-
 
 /*****************************************************************************************************************
  NOTE: All the below methods assume that current matrix has the camrea applied!
@@ -358,11 +280,11 @@ public void displayTeachPoints() {
  */
 public void displayAxes() {
   
-  Point ee_point = nativeRobotEEPoint(armModel.getJointAngles());
+  Point eePoint = nativeRobotEEPoint(armModel.getJointAngles());
   
   if (axesState == AxesDisplay.NONE && curCoordFrame != CoordFrame.JOINT) {
     // Draw axes of the Robot's End Effector frame for testing purposes
-    displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
+    displayOriginAxes(quatToMatrix( eePoint.orientation ), eePoint.position, 200f, color(255, 0, 255));
   } else if (axesState == AxesDisplay.AXES) {
     // Display axes
     if (curCoordFrame != CoordFrame.JOINT) {
@@ -371,10 +293,10 @@ public void displayAxes() {
       
       if (curCoordFrame == CoordFrame.TOOL) {
         /* Draw the axes of the active Tool frame at the Robot End Effector */
-        displayOriginAxes(activeTool.getWorldAxes(), ee_point.position, 200f, color(255, 0, 255));
+        displayOriginAxes(activeTool.getWorldAxes(), eePoint.position, 200f, color(255, 0, 255));
       } else {
         // Draw axes of the Robot's End Effector frame for testing purposes
-        displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
+        displayOriginAxes(quatToMatrix( eePoint.orientation ), eePoint.position, 200f, color(255, 0, 255));
       }
       
       if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
@@ -400,7 +322,7 @@ public void displayAxes() {
         break;
       case TOOL:
         displayAxes = active.getNativeAxes();
-        displayOrigin = ee_point.position;
+        displayOrigin = eePoint.position;
         break;
       case USER:
         displayAxes = active.getNativeAxes();

@@ -6,24 +6,17 @@ public void saveState() {
   saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
   saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
   saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
+  saveScenarioBytes( new File(sketchPath("tmp/scenarios.bin")) );
 }
 
 /**
  * Load program, frames, and registers from their respective
  * binary files.
  *
- * @return  0 if all loads were successful,
- *          1 if only the program loading failed,
- *          2 if only the frame loading failed,
- *          3 if only program and frame loading failed,
- *          4 if only register loading failed,
- *          5 if only register and program loading failed,
- *          6 if only register and frame loading failed,
- *          7 if all loads failed
+ * @return  a byte value
  */
-public int loadState() {
-  int ret = 0,
-  error = 0;
+public byte loadState() {
+  byte[] fileFlags = new byte[] { 1, 1, 1, 1 };
   
   File f = new File(sketchPath("tmp/"));
   if(!f.exists()) { f.mkdirs(); }
@@ -33,41 +26,35 @@ public int loadState() {
   File progFile = new File( sketchPath("tmp/programs.bin") );
   
   if(progFile.exists()) {
-    ret = loadProgramBytes(progFile);
+    int ret = loadProgramBytes(progFile);
     
     if(ret == 0) {
       println("Successfully loaded programs!");
+      fileFlags[0] = 0;
     } else {
       println("Failed to load programs ...");
-      error = 1;
     }
   }
   
   /* Load and Initialize the Tool and User Frames */
   
-  ret = 1;
-  
   File frameFile = new File( sketchPath("tmp/frames.bin") );
   
   if(frameFile.exists()) {
     // Load both the User and Tool Frames
-    ret = loadFrameBytes(frameFile);
+    int ret = loadFrameBytes(frameFile);
     
     if(ret == 0) {
       println("Successfully loaded frames!");
+      fileFlags[1] = 0;
     } else {
-      println("Failed to load frames ..."); 
+      println("Failed to load frames ...");
       
-      if(error == 0) {
-        error = 2;
-      } else {
-        error = 3;
-      }
     }
   }
   
   // Create new frames if they could not be loaded
-  if(ret != 0) {
+  if(fileFlags[1] == 1) {
     
     toolFrames = new Frame[10];
     userFrames = new Frame[10];
@@ -84,22 +71,26 @@ public int loadState() {
   File regFile = new File(sketchPath("tmp/registers.bin"));
   
   if(regFile.exists()) {
-    ret = loadRegisterBytes(regFile);
+    int ret = loadRegisterBytes(regFile);
     
     if(ret == 0) {
       println("Successfully loaded registers!");
+      fileFlags[2] = 0;
     } else {
       println("Failed to load registers ...");
-      
-      if(error == 0) {
-        error = 4;
-      } else if(error == 1) {
-        error = 5;
-      } else if(error == 2) {
-        error = 6;
-      } else if(error == 3) {
-        error = 7;
-      }
+    }
+  }
+  
+  File scenarioFile = new File(sketchPath("tmp/scenarios.bin"));
+  
+  if(scenarioFile.exists()) {
+    int ret = loadScenarioBytes(scenarioFile); //<>// //<>//
+    
+    if(ret == 0) {
+      println("Successfully loaded scenarios!");
+      fileFlags[3] = 0;
+    } else {
+      println("Failed to load scenarios ...");
     }
   }
   
@@ -129,7 +120,14 @@ public int loadState() {
     IO_REG[idx].setIdx(idx);
   }
   
-  return error;
+  byte ret = 0;
+  
+  for (int bdx = 0; bdx < fileFlags.length; ++bdx) {
+    // Move each flag to a separate bit spot
+    ret += (fileFlags[bdx] << bdx);
+  }
+  
+  return ret;
 }
 
 /**
@@ -169,11 +167,13 @@ public int saveProgramBytes(File dest) {
     dataOut.close();
     out.close();
     return 0;
+    
   } catch (FileNotFoundException FNFEx) {
     // Could not locate dest
     System.out.printf("%s does not exist!\n", dest.getName());
     FNFEx.printStackTrace();
     return 1;
+    
   } catch (IOException IOEx) {
     // An error occrued with writing to dest
     System.out.printf("%s is corrupt!\n", dest.getName());
@@ -210,16 +210,19 @@ public int loadProgramBytes(File src) {
     dataIn.close();
     in.close();
     return 0;
+    
   } catch (FileNotFoundException FNFEx) {
     // Could not locate src
     System.out.printf("%s does not exist!\n", src.getName());
     FNFEx.printStackTrace();
     return 1;
+    
   } catch (EOFException EOFEx) {
     // Reached the end of src unexpectedly
     System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
     EOFEx.printStackTrace();
     return 3;
+    
   } catch (IOException IOEx) {
     // An error occured with reading from src
     System.out.printf("%s is corrupt!\n", src.getName());
@@ -240,15 +243,24 @@ public int loadProgramBytes(File src) {
  */
 private void saveProgram(Program p, DataOutputStream out) throws IOException {
   
-  out.writeUTF(p.name);
-  out.writeInt(p.nextRegister);
-  out.writeInt(p.instructions.size());
-  // Save each instruction
-  for(Instruction inst : p.instructions) {
-    saveInstruction(inst, out);
-    // Save only the Points associated with a MotionInstruction
-    if(inst instanceof MotionInstruction) {
-      savePoint(p.LPosReg[ ((MotionInstruction)inst).positionNum ], out);
+  if (p == null) {
+    // Indicates a null value is saved
+    out.writeByte(0);
+    
+  } else {
+    // Indicates a non-null value is saved
+    out.writeByte(1);
+    
+    out.writeUTF(p.name);
+    out.writeInt(p.nextRegister);
+    out.writeInt(p.instructions.size());
+    // Save each instruction
+    for(Instruction inst : p.instructions) {
+      saveInstruction(inst, out);
+      // Save only the Points associated with a MotionInstruction
+      if(inst instanceof MotionInstruction) {
+        savePoint(p.LPosReg[ ((MotionInstruction)inst).positionNum ], out);
+      }
     }
   }
 }
@@ -258,63 +270,69 @@ private void saveProgram(Program p, DataOutputStream out) throws IOException {
  * 500 instructions will be read for a single program
  * 
  * @param in            The input stream to read from
- * @return              A program created from data in the input stream
+ * @return              A program created from data in the input stream,
+ *                      or null
  * @throws IOException  If an error occurs with reading from the input
  *                      stream
  */
 private Program loadProgram(DataInputStream in) throws IOException {
-  // Read program name
-  String name = in.readUTF();
-  Program prog = new Program(name);
-  // Read the next register value
-  int nReg = in.readInt();
-  prog.setNextRegister(nReg);
-  // Read the number of instructions stored for this porgram
-  int numOfInst = max(0, min(in.readInt(), 500));
+  // Read flag byte
+  byte flag = in.readByte();
   
-  while(numOfInst-- > 0) {
-    // Read each instruction
-    Instruction inst = loadInstruction(in);
-    prog.addInstruction(inst);
-    // Read the points stored after each MotionIntruction
-    if(inst instanceof MotionInstruction) {
-      Point pt = loadPoint(in);
-      prog.addPosition(pt, ((MotionInstruction)inst).positionNum);
+  if (flag == 0) {
+    return null;
+    
+  } else {
+    // Read program name
+    String name = in.readUTF();
+    Program prog = new Program(name);
+    // Read the next register value
+    int nReg = in.readInt();
+    prog.setNextRegister(nReg);
+    // Read the number of instructions stored for this porgram
+    int numOfInst = max(0, min(in.readInt(), 500));
+    
+    while(numOfInst-- > 0) {
+      // Read each instruction
+      Instruction inst = loadInstruction(in);
+      prog.addInstruction(inst);
+      // Read the points stored after each MotionIntruction
+      if(inst instanceof MotionInstruction) {
+        Point pt = loadPoint(in);
+        prog.addPosition(pt, ((MotionInstruction)inst).positionNum);
+      }
     }
+    
+    return prog;
   }
-  
-  return prog;
 }
 
 /**
  * Saves the data associated with the given Point object to the file opened
  * by the given output stream. Null Points are saved a single zero byte.
  * 
- * @param   p            The Point of which to save the data //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>//
+ * @param   p            The Point of which to save the data
  * @param   out          The output stream used to save the Point
  * @throws  IOException  If an error occurs with writing the data of the Point
  */
 private void savePoint(Point p, DataOutputStream out) throws IOException {
   
   if (p == null) {
-    // Null points only write out a byte indicating there is no data
+    // Indicate a null value is saved
     out.writeByte(0);
-  } else {
     
+  } else {
+    // Indicate a non-null value is saved
     out.writeByte(1);
     // Write position of the point
-    out.writeFloat(p.position.x);
-    out.writeFloat(p.position.y);
-    out.writeFloat(p.position.z);
-    
+    savePVector(p.position, out);
     // Write point's orientation
-    for(float o : p.orientation) {
-      out.writeFloat(o);
-    }
-    
+    saveFloatArray(p.orientation, out);
     // Write the joint angles for the point's position
-    for(float j : p.angles) {
-      out.writeFloat(j);
+    saveFloatArray(p.angles, out);
+    
+    if (p.angles == null) {
+      println("null angles!");
     }
   }
 }
@@ -332,34 +350,26 @@ private void savePoint(Point p, DataOutputStream out) throws IOException {
  *                      of the Point
  */
 private Point loadPoint(DataInputStream in) throws IOException {
+  // Read flag byte
+  byte val = in.readByte();
   
-  int val = in.readByte();
-  
-  if (val == 1) {
-    // Read the point's position
-    float pos_x = in.readFloat(),
-    pos_y = in.readFloat(),
-    pos_z = in.readFloat(),
-    // Read the point's orientation
-    orien_r = in.readFloat(),
-    orien_i = in.readFloat(),
-    orien_j = in.readFloat(),
-    orien_k = in.readFloat(),
-    // Read the joint angles for the joint's position
-    joint_1 = in.readFloat(),
-    joint_2 = in.readFloat(),
-    joint_3 = in.readFloat(),
-    joint_4 = in.readFloat(),
-    joint_5 = in.readFloat(),
-    joint_6 = in.readFloat();
+  if (val == 0) {
+    return null;
     
-    return new Point(pos_x, pos_y, pos_z,
-    orien_r, orien_i, orien_j, orien_k,
-    joint_1, joint_2, joint_3, joint_4, joint_5, joint_6);
+  } else {
+    // Read the point's position
+    PVector position = loadPVector(in);
+    // Read the point's orientation
+    float[] orientation = loadFloatArray(in);
+    // Read the joint angles for the joint's position
+    float[] angles = loadFloatArray(in);
+    
+    if (angles == null) {
+      println("null angles!"); //<>// //<>//
+    }
+    
+    return new Point(position, orientation, angles);
   }
-  
-  // Null value stored
-  return null;
 }
 
 /**
@@ -374,11 +384,12 @@ private Point loadPoint(DataInputStream in) throws IOException {
 private void saveInstruction(Instruction inst, DataOutputStream out) throws IOException {
   
   // Each Instruction subclass MUST have its own saving code block associated with its unique data fields
-  if(inst instanceof MotionInstruction) {
+  if (inst instanceof MotionInstruction) {
     MotionInstruction m_inst = (MotionInstruction)inst;
     // Flag byte denoting this instruction as a MotionInstruction
-    out.writeByte(0);
+    out.writeByte(2);
     // Write data associated with the MotionIntruction object
+    out.writeBoolean(m_inst.isCommented());
     out.writeInt(m_inst.motionType);
     out.writeInt(m_inst.positionNum);
     out.writeBoolean(m_inst.isGPosReg);
@@ -386,33 +397,51 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeInt(m_inst.termination);
     out.writeInt(m_inst.userFrame);
     out.writeInt(m_inst.toolFrame);
+    
   } else if(inst instanceof FrameInstruction) {
     FrameInstruction f_inst = (FrameInstruction)inst;
     // Flag byte denoting this instruction as a FrameInstruction
-    out.writeByte(1);
+    out.writeByte(3);
     // Write data associated with the FrameInstruction object
+    out.writeBoolean(f_inst.isCommented());
     out.writeInt(f_inst.frameType);
     out.writeInt(f_inst.frameIdx);
+    
   } else if(inst instanceof IOInstruction) {
     IOInstruction t_inst = (IOInstruction)inst;
     // Flag byte denoting this instruction as a ToolInstruction
-    out.writeByte(2);
+    out.writeByte(4);
     // Write data associated with the ToolInstruction object
+    out.writeBoolean(t_inst.isCommented());
     out.writeInt(t_inst.reg);
     out.writeInt( saveint(t_inst.state) );
+    
   } else if(inst instanceof LabelInstruction) {
     LabelInstruction l_inst = (LabelInstruction)inst;
     
-    out.writeByte(3);
+    out.writeByte(5);
+    out.writeBoolean(l_inst.isCommented());
     out.writeInt(l_inst.labelNum);
+    
   } else if(inst instanceof JumpInstruction) {
     JumpInstruction j_inst = (JumpInstruction)inst;
     
-    out.writeByte(4);
+    out.writeByte(6);
+    out.writeBoolean(j_inst.isCommented());
     out.writeInt(j_inst.tgtLblNum);
-  } else if(inst instanceof Instruction) {
-    out.writeByte(127);
-  } else {/* TODO add other instructions! */}
+    
+  } /* Add other instructions here! */
+    else if (inst instanceof Instruction) {
+    /// A blank instruction
+    out.writeByte(1);
+    out.writeBoolean(inst.isCommented());
+    
+  } else {
+    // Indicate a null-value is saved
+    out.writeByte(0);
+  }
+  
+  
 }
 
 /**
@@ -429,11 +458,12 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
  */
 private Instruction loadInstruction(DataInputStream in) throws IOException {
   Instruction inst = null;
-  // Determine what type of instruction is stored in the succeding bytes
+  // Read flag byte
   byte instType = in.readByte();
   
-  if(instType == 0) {
+  if(instType == 2) {
     // Read data for a MotionInstruction object
+    boolean isCommented = in.readBoolean();
     int mType = in.readInt();
     int reg = in.readInt();
     boolean isGlobal = in.readBoolean();
@@ -443,26 +473,46 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     int tFrame = in.readInt();
     
     inst = new MotionInstruction(mType, reg, isGlobal, spd, term, uFrame, tFrame);
-  } else if(instType == 1) {
+    inst.setIsCommented(isCommented);
+    
+  } else if(instType == 3) {
     // Read data for a FrameInstruction object
+    boolean isCommented = in.readBoolean();
     inst = new FrameInstruction( in.readInt(), in.readInt() );
-  } else if(instType == 2) {
+    inst.setIsCommented(isCommented);
+    
+  } else if(instType == 4) {
     // Read data for a ToolInstruction object
+    boolean isCommented = in.readBoolean();
     int reg = in.readInt();
     int setting = in.readInt();
     
     inst = new IOInstruction(reg, loadint(setting));
-  } else if (instType == 3) {
+    inst.setIsCommented(isCommented);
+    
+  } else if (instType == 5) {
+    boolean isCommented = in.readBoolean();
     int labelNum = in.readInt();
     
     inst = new LabelInstruction(labelNum);
-  } else if (instType == 4) {
+    inst.setIsCommented(isCommented);
+    
+  } else if (instType == 6) {
+    boolean isCommented = in.readBoolean();
     int tgtLabelNum = in.readInt();
     
     inst = new JumpInstruction(tgtLabelNum);
-  } else if (instType == 127) {
+    inst.setIsCommented(isCommented);
+    
+  } /* Add other instructions here! */
+    else if (instType == 7) {
     inst = new Instruction();
-  } else {/* TODO add other instructions! */}
+    boolean isCommented = in.readBoolean();
+    inst.setIsCommented(isCommented);
+    
+  } else {
+    return null;
+  }
   
   return inst;
 }
@@ -533,11 +583,13 @@ public int saveFrameBytes(File dest) {
     dataOut.close();
     out.close();
     return 0;
+    
   } catch (FileNotFoundException FNFEx) {
     // Could not find dest
     System.out.printf("%s does not exist!\n", dest.getName());
     FNFEx.printStackTrace();
     return 1;
+    
   } catch (IOException IOEx) {
     // Error with writing to dest
     System.out.printf("%s is corrupt!\n", dest.getName());
@@ -561,6 +613,7 @@ public int saveFrameBytes(File dest) {
  *             all the data for the frames
  */
 public int loadFrameBytes(File src) {
+  int idx = -1;
   
   try {
     FileInputStream in = new FileInputStream(src);
@@ -569,7 +622,7 @@ public int loadFrameBytes(File src) {
     // Load Tool Frames
     int size = max(0, min(dataIn.readInt(), 10));
     toolFrames = new ToolFrame[size];
-    int idx;
+    
     
     for(idx = 0; idx < size; ++idx) {
       toolFrames[idx] = loadFrame(dataIn);
@@ -586,16 +639,19 @@ public int loadFrameBytes(File src) {
     dataIn.close();
     in.close();
     return 0;
+    
   } catch (FileNotFoundException FNFEx) {
     // Could not find src
     System.out.printf("%s does not exist!\n", src.getName());
     FNFEx.printStackTrace();
     return 1;
+    
   } catch (EOFException EOFEx) {
     // Reached the end of src unexpectedly
     System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
     EOFEx.printStackTrace();
     return 3;
+    
   } catch (IOException IOEx) {
     // Error with reading from src
     System.out.printf("%s is corrupt!\n", src.getName());
@@ -615,21 +671,24 @@ public int loadFrameBytes(File src) {
 private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   
   // Save a flag to indicate what kind of frame was saved
-  if (f instanceof ToolFrame) {
+  if (f == null) {
     out.writeByte(0);
-  } else if (f instanceof UserFrame) {
+    return;
+    
+  } else if (f instanceof ToolFrame) {
     out.writeByte(1);
+  
+  } else if (f instanceof UserFrame) {
+    out.writeByte(2);
+  
   } else {
     throw new IOException("Invalid Frame!");
   }
   
   // Write frame origin
   savePVector(f.getOrigin(), out);
-  
   // Write frame axes
-  for(int idx = 0; idx < 4; ++idx) {
-    out.writeFloat(f.axes[idx]);
-  }
+  saveFloatArray(f.axes, out);
   
   // Write frame orientation points
   for (Point pt : f.axesTeachPoints) {
@@ -638,17 +697,8 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   
   // Write frame manual entry origin value
   savePVector(f.DEOrigin, out);
-  
-  if (f.DEAxesOffsets == null) {
-    // Value is null
-    out.writeByte(0);
-  } else {
-    out.writeByte(1);
-    // Write frame manual entry orientation value
-    for (float ft : f.DEAxesOffsets) {
-      out.writeFloat(ft);
-    }
-  }
+  // Write frame manual entry origin value
+  saveFloatArray(f.DEAxesOffsets, out);
   
   if (f instanceof ToolFrame) {
     ToolFrame tFrame = (ToolFrame)f;
@@ -676,25 +726,25 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
 private Frame loadFrame(DataInputStream in) throws IOException {
   
   Frame f = null;
-  int type = in.readByte();
+  byte type = in.readByte();
   
   if (type == 0) {
-    f = new ToolFrame();
+    return null;
   } else if (type == 1) {
+    f = new ToolFrame();
+  
+  } else if (type == 2) {
     f = new UserFrame();
+  
   } else {
+    println(type);
     throw new IOException("Invalid Frame type!");
   }
   
   // Read origin values
   f.setOrigin( loadPVector(in) );
-  
-  float[] axes = new float[4];
   // Read axes quaternion values
-  for(int idx = 0; idx < 4; ++idx) {
-    axes[idx] = in.readFloat();
-  }
-  f.setAxes(axes);
+  f.setAxes( loadFloatArray(in) );
   
   // Read origin values
   f.axesTeachPoints = new Point[3];
@@ -705,16 +755,7 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   
   // Read manual entry origin values
   f.DEOrigin = loadPVector(in);
-  
-  int val = in.readByte();
-  
-  if (val == 1) {
-    f.DEAxesOffsets = new float[4];
-    // Read in the manual entry orientation values
-    for (int idx = 0; idx < 4; ++idx) {
-      f.DEAxesOffsets[idx] = in.readFloat();
-    }
-  } // The orientation is null otherwise
+  f.DEAxesOffsets = loadFloatArray(in);
   
   if (f instanceof ToolFrame) {
     ToolFrame tFrame = (ToolFrame)f;
@@ -817,11 +858,13 @@ public int saveRegisterBytes(File dest) {
     dataOut.close();
     out.close();
     return 0;
+    
   } catch (FileNotFoundException FNFEx) {
     // Could not be located dest
     System.out.printf("%s does not exist!\n", dest.getName());
     FNFEx.printStackTrace();
     return 1;
+    
   } catch (IOException IOEx) {
     // Error occured while reading from dest
     System.out.printf("%s is corrupt!\n", dest.getName());
@@ -889,22 +932,506 @@ public int loadRegisterBytes(File src) {
     dataIn.close();
     in.close();
     return 0;
+    
   } catch (FileNotFoundException FNFEx) {
     // Could not be located src
     System.out.printf("%s does not exist!\n", src.getName());
     FNFEx.printStackTrace();
     return 1;
+    
   } catch (EOFException EOFEx) {
     // Unexpectedly reached the end of src
     System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
     EOFEx.printStackTrace();
     return 3;
+    
   } catch (IOException IOEx) {
     // Error occrued while reading from src
     System.out.printf("%s is corrupt!\n", src.getName());
     IOEx.printStackTrace();
     return 2;
   }
+}
+
+/**
+ * Saves all the scenarios stored in SCENARIOS to given
+ * destination binary file.
+ * 
+ * @param dest  The binary file to which to save the scenarios
+ * @returning   0  if the saving of scenarios is successful,
+ *              1  if the file could not be found,
+ *              2  if some other error occurs with writing
+ *                 to dest
+ */
+public int saveScenarioBytes(File dest) {
+  
+  try {
+     
+    // Create dest if it does not already exist
+    if(!dest.exists()) {
+      try {
+        dest.createNewFile();
+        System.out.printf("Successfully created %s.\n", dest.getName());
+      } catch (IOException IOEx) {
+        System.out.printf("Could not create %s ...\n", dest.getName());
+        IOEx.printStackTrace();
+      }
+    }
+    
+    FileOutputStream out = new FileOutputStream(dest);
+    DataOutputStream dataOut = new DataOutputStream(out);
+    
+    int numOfScenarios = SCENARIOS.size();
+    // Save the number of scenarios
+    dataOut.writeInt(numOfScenarios);
+    // Save the active scenario
+    dataOut.writeInt(activeScenarioIdx);
+    // Save all the scenarios
+    for (Scenario s : SCENARIOS) {
+      saveScenario(s, dataOut);
+    }
+    
+    dataOut.close();
+    out.close();
+    return 0;
+    
+  } catch (FileNotFoundException FNFEx) {
+    // Could not be located dest
+    System.out.printf("%s does not exist!\n", dest.getName());
+    FNFEx.printStackTrace();
+    return 1;
+    
+  } catch (IOException IOEx) {
+    // Error occrued while writing to dest
+    System.out.printf("%s is corrupt!\n", dest.getName());
+    IOEx.printStackTrace();
+    return 2;
+    
+  }
+}
+
+/**
+ * Attempts to load scenarios from the given binary file.
+ * It is expected that an integer representing the number
+ * of scenarios is saved in the file first, followed by the
+ * index of the previously active scenario, and finally at
+ * least that number of scenarios.
+ * 
+ * @param src  The binary file from which to read scenarios
+ * @returning  0  if loading was succssful,
+ *             1  if the file could not be found,
+ *             2  if the file is corrupt,
+ *             3  if the end of file is reached unexpectedly,
+ *             4  if an error occurs with loading a .stl file
+ *                for the shape of a world object
+ */
+public int loadScenarioBytes(File src) {
+  
+  try {
+    FileInputStream in = new FileInputStream(src); //<>// //<>//
+    DataInputStream dataIn = new DataInputStream(in);
+    
+    int numOfScenarios = dataIn.readInt();
+    activeScenarioIdx = dataIn.readInt();
+    
+    // Load all scenarios saved
+    while (numOfScenarios-- > 0) {
+      SCENARIOS.add( loadScenario(dataIn) );
+    }
+    
+    dataIn.close();
+    in.close();
+    return 0;
+    
+  } catch (FileNotFoundException FNFEx) {
+    // Could not be located src
+    System.out.printf("%s does not exist!\n", src.getName());
+    FNFEx.printStackTrace();
+    return 1;
+    
+  } catch (EOFException EOFEx) {
+    // Unexpectedly reached the end of src
+    System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
+    EOFEx.printStackTrace();
+    return 3;
+    
+  } catch (IOException IOEx) {
+    // Error occrued while reading from src
+    System.out.printf("%s is corrupt!\n", src.getName());
+    IOEx.printStackTrace();
+    return 2;
+    
+  } catch (NullPointerException NPEx) {
+    // Error with loading a .stl model
+    System.out.printf("Missing source file!\n");
+    NPEx.printStackTrace();
+    return 4;
+  }
+}
+
+/**
+ * Saveds all the data associated with a scenario to the given output stream.
+ * First a single flag byte is saved to the stream followed by the number of
+ * objects in the scenario and then exxactly that number of world objects.
+ * 
+ * @param s    The scenario to save
+ * @param out  The output stream to which to save the scenario
+ * @throws     IOException if an erro occurs with writing to the output stream
+ */
+public void saveScenario(Scenario s, DataOutputStream out) throws IOException {
+  
+  if (s == null) {
+    // Indicate the value saved is null
+    out.writeByte(0);
+    
+  } else {
+    // Indicate the value saved is non-null
+    out.writeByte(1);
+    // Write the name of the scenario
+    out.writeUTF(s.getName());
+    // Save the number of world objects in the scenario
+    out.writeInt( s.size() );
+    
+    for (WorldObject wldObj : s) {
+      // Save all the world objects associated with the scenario
+      saveWorldObject(wldObj, out);  
+    }
+  }
+}
+
+/**
+ * Attempts to load the data of a Scenario from the given input stream. It is expected that
+ * the stream contains a single byte (the flag byte) followed by a String representing the
+ * name of the scenario. After the name of the scenario, there should be an positive integer
+ * value followed by exactly that many world objects.
+ * 
+ * @param in   The input stream from which to read bytes
+ * @returning  The Scenario pulled from the input stream
+ * @throws     IOException  if an error occurs with reading from the input stream
+ *             NullPointerException  if a world object has a model shape, whose source file is
+ *             corrupt or missing
+ */
+public Scenario loadScenario(DataInputStream in) throws IOException, NullPointerException {
+  // Read flag byte
+  byte flag = in.readByte(); //<>// //<>//
+  
+  if (flag == 0) {
+    return null;
+    
+  } else {
+    // Read the name of the scenario
+    String name = in.readUTF();
+    Scenario s = new Scenario(name);
+    // Read the number of objects in the scenario
+    int size = in.readInt();
+    // Read all the world objects contained in the scenario
+    while (size-- > 0) {
+      s.addWorldObject( loadWorldObject(in) );
+    }
+    
+    return s;
+  }
+}
+
+/**
+ * Saved all the fields associated with the given world object to the given data output
+ * stream. First a single byte (the flag byte) is saved to the stream followed by the
+ * name and shape of the object and finally the fields associated with subclass of the object.
+ * 
+ * @param wldObj  The world object to save
+ * @param out     The output stream to which to save the world object
+ * @throws        IOException if an error occurs with writing to the output stream
+ */
+public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {
+  
+  if (wldObj == null) { //<>// //<>//
+    // Indicate that the value saved is null
+    out.writeByte(0);
+    
+  } else {
+    if (wldObj instanceof Part) {
+      // Indicate that the value saved is a Part
+      out.writeByte(1);
+    } else if (wldObj instanceof Fixture) {
+      // Indicate that the value saved is a Fixture
+      out.writeByte(2);
+    }
+    
+    // Save the name and form of the object
+    out.writeUTF(wldObj.getName());
+    saveShape(wldObj.getForm(), out);
+    // Save the local orientation of the object
+    savePVector(wldObj.getLocalCenter(), out);
+    saveFloatArray2D(wldObj.getLocalOrientationAxes(), out);
+    
+    if (wldObj instanceof Part) {
+      Part part = (Part)wldObj;
+      // Save the fixture reference of the part
+      savePVector(part.getOBBDims(), out);
+      saveWorldObject(part.getFixtureRef(), out);
+      
+    }
+  }
+}
+
+/**
+ * Attempts to load the data associated with a world object from the given data input stream. It
+ * is expected that the input stream contains a single byte (for the flag byte) followed by the
+ * name and shape of the object, which is followde by the data specific to the object's subclass.
+ * 
+ * @param in   The input stream from which to read bytes
+ * @returning  The world object pulled from the input streaam (which can be null!)
+ * @throws     IOException  if an error occurs with rading from the input stream
+ *             NullPointerExpcetion  if the world object has a model shape and its source file is
+ *             corrupt or missing
+ */
+public WorldObject loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
+  // Load the flag byte
+  byte flag = in.readByte(); //<>// //<>//
+  WorldObject wldObj = null;
+  
+  if (flag != 0) {
+    // Load the name and shape of the object
+    String name = in.readUTF();
+    Shape form = loadShape(in);
+    // Load the object's local orientation
+    PVector center = loadPVector(in);
+    float[][] orientationAxes = loadFloatArray2D(in);
+    CoordinateSystem localOrientation = new CoordinateSystem();
+    localOrientation.setOrigin(center);
+    localOrientation.setAxes(orientationAxes);
+    
+    if (flag == 1) {
+      // Load the part's bounding-box and fixture reference
+      PVector OBBDims = loadPVector(in);
+      Fixture reference = (Fixture)loadWorldObject(in);
+      
+      wldObj = new Part(name, form, OBBDims, localOrientation, reference);
+      
+    } else if (flag == 2) {
+      wldObj = new Fixture(name, form, localOrientation);
+    } 
+  }
+  
+  return wldObj;
+}
+
+/**
+ * Saves all the fields associated with the given Bounding-Box to the given data
+ * output stream. A single flag byte is written first, followed by the length,
+ * height, and width of box, then the center position PVector, and finally the
+ * box's orientation in the form of a 3x3 float array matrix.
+ * 
+ * @param OBB  The Bounding-Box object to save
+ * @param out  The output stream to which to save the Bounding-Box
+ * @throws     IOException  if an error occurs with writing to the output stream.
+ */
+public void saveOBB(BoundingBox OBB, DataOutputStream out) throws IOException {
+  
+  if (OBB == null) {
+    // Indicate the saved value is null
+    out.writeByte(0);
+    
+  } else {
+    // Indicate the saved value is non-null
+    out.writeByte(1);
+    // Save the bounding-boxe's dimensions
+    out.writeFloat( OBB.getDim(DimType.LENGTH) );
+    out.writeFloat( OBB.getDim(DimType.HEIGHT) );
+    out.writeFloat( OBB.getDim(DimType.WIDTH) );
+    // Save the local orientation of the bounding-box
+    savePVector(OBB.getCenter(), out);
+    saveFloatArray2D(OBB.getOrientationAxes(), out);
+  }
+}
+
+/**
+ * Attempts to load the data of a Bounding Box object from the given
+ * data input stream. It is expected that the input stream contains a
+ * single byte (for the flag byte) followed three float values, a
+ * PVector, and finally a 3x3 float array matrix.
+ * 
+ * @param in   The data stream, from which to read bytes
+ * @returning  The Bounding-Box pulled from the input stream (which
+ *             can be null!)
+ * @throws     IOException if an error occurs with reading from the
+ *             input stream
+ */
+public BoundingBox loadOBB(DataInputStream in) throws IOException {
+  
+  byte flag = in.readByte();
+  
+  if (flag == 0) {
+    return null;
+    
+  } else {
+    // Read the dimensions of the box
+    float len = in.readFloat(),
+          hgt = in.readFloat(),
+          wid = in.readFloat();
+    // Read the local orientation of the box
+    PVector center = loadPVector(in);
+    float[][] axes = loadFloatArray2D(in);
+    
+    BoundingBox OBB = new BoundingBox(len, hgt, wid);
+    // Set the local orientation of the box
+    OBB.setCenter(center);
+    OBB.setOrientationAxes(axes);
+    return OBB;
+  }
+}
+
+/**
+ * Saves all the fields associated with the given Coordinate System to the given data output
+ * stream. First a single byte is wrote to the output stream. Then, the origin vector and
+ * finally the axes vectors are written to the output stream.
+ * 
+ * @param cs   The Coordinate System to save
+ * @param out  The output stream to which to save the Coordinate System
+ * @throws     IOException  if an error occurs in with writing to the output stream
+ */
+public void saveCoordSystem(CoordinateSystem cs, DataOutputStream out) throws IOException {
+  if (cs == null) {
+    // Indicate the saved value is null
+    out.writeByte(0);
+    
+  } else {
+    // Indicate the saved value is non-null
+    out.writeByte(1);
+    // Save the origin value of the coodinate system
+    savePVector(cs.getOrigin(), out);
+    // Save the axes vectors of the coordinate system
+    saveFloatArray2D(cs.getAxes(), out);
+  }
+}
+
+/**
+ * Attempt to load the data of a Coordinate System object from the given data input
+ * stream. It is expected that the input stream contains a single byte (for the byte
+ * flag) followed by a PVector object and then finally a 3x3 float array matrix.
+ * 
+ * @param in   The input stream, from which to read bytes
+ * @returning  The Coordinate System pulled from the input stream (which can be null!)
+ * @throws     IOException  if an error occurs with reading from the input stream
+ */
+public CoordinateSystem loadCoordSystem(DataInputStream in) throws IOException {
+  // Read the flag byte
+  byte flag = in.readByte();
+  
+  if (flag == 0) {
+    return null;
+    
+  } else {
+    // Read the origin PVector and axes vectors
+    PVector origin = loadPVector(in);
+    float[][] axes = loadFloatArray2D(in);
+    
+    CoordinateSystem cs = new CoordinateSystem();
+    cs.setOrigin(origin);
+    cs.setAxes(axes);
+    
+    return cs;
+  }
+}
+
+/**
+ * Saves all the data associated with the given shape, in the form of bytes,
+ * to the given data output stream. First flag byte is saved, which indicates
+ * what subclass the object is (or if the object is null). Then the fields
+ * associated with the subclass saved followed by the color fields common among
+ * all shapes.
+ * 
+ * @param shape  The shape to save
+ * @param out    The output stream, to which to save the given shape
+ * @throws       IOException  if an error occurs with writing to the output stream
+ */
+public void saveShape(Shape shape, DataOutputStream out) throws IOException {
+  if (shape == null) {
+    // Indicate the saved value is null
+    out.writeByte(0);
+    
+  } else {
+    if (shape instanceof Box) {
+      // Indicate the saved value is a box
+      out.writeByte(1);
+    } else if (shape instanceof Cylinder) {
+      // Indicate the value saved is a cylinder
+      out.writeByte(2);
+    } else if (shape instanceof ModelShape) {
+      // Indicate the value saved is a complex shape
+      out.writeByte(3);
+    }
+    
+    // Write the shape's color fields
+    out.writeBoolean( shape.isFilled() );
+    out.writeInt( shape.getFillColor() );
+    out.writeInt( shape.getOutlineColor() );
+    
+    if (shape instanceof Box) {
+      // Save length, height, and width of the box
+      out.writeFloat(shape.getDim(DimType.LENGTH));
+      out.writeFloat(shape.getDim(DimType.HEIGHT));
+      out.writeFloat(shape.getDim(DimType.WIDTH));
+      
+    } else if (shape instanceof Cylinder) {
+      // Save the radius and height of the cylinder
+      out.writeFloat(shape.getDim(DimType.RADIUS));
+      out.writeFloat(shape.getDim(DimType.HEIGHT));
+      
+    } else if (shape instanceof ModelShape) {
+      ModelShape m = (ModelShape)shape;
+      // Save the source path of the complex shape
+      out.writeUTF(m.getSourcePath()); 
+    }
+  }
+}
+
+/**
+ * Attempts to load a Shape from the given data input stream. It is expected that the
+ * stream contains a single byte (the flag byte) followed by the fields unique to the
+ * subclass of the Shape object saved, which are followed by the color fields of the Shape.
+ * 
+ * @param in   The input stream, from which to read bytes
+ * @returning  The shape object pulled from the input stream (which can be null!)
+ * @throws     IOException  if an error occurs with reading from the input stream
+ *             NullPointerException  if the shape stored is a model shape and its source
+ *             file is either invalid or does not exist
+ */
+public Shape loadShape(DataInputStream in) throws IOException, NullPointerException {
+  // Read flag byte
+  byte flag = in.readByte();
+  Shape shape = null;
+  
+  if (flag != 0) {
+    // Read color fields
+    boolean isFilled = in.readBoolean();
+    int fill = in.readInt(),
+        outline = in.readInt();
+          
+    if (flag == 1) {
+      float x = in.readFloat(),
+            y = in.readFloat(),
+            z = in.readFloat();
+      // Create a box
+      shape = new Box(fill, outline, x, y, z);
+      shape.setFillFlag(isFilled);
+      
+    } else if (flag == 2) {
+      float radius = in.readFloat(),
+            hgt = in.readFloat();
+      // Create a cylinder
+      shape = new Cylinder(fill, outline, radius, hgt);
+      shape.setFillFlag(isFilled);
+      
+    } else if (flag == 3) {
+      String srcPath = in.readUTF();
+      // Creates a complex shape from the srcPath located in RobotRun/data/
+      shape = new ModelShape(srcPath, fill, outline);
+      shape.setFillFlag(isFilled);
+    }
+  }
+  
+  return shape;
 }
 
 /**
@@ -916,6 +1443,7 @@ public void savePVector(PVector p, DataOutputStream out) throws IOException {
   if (p == null) {
     // Write flag byte
     out.writeByte(0);
+    
   } else {
     // Write flag byte
     out.writeByte(1);
@@ -935,6 +1463,7 @@ public PVector loadPVector(DataInputStream in) throws IOException {
   
   if (val == 0) {
     return null;
+    
   } else {
     // Read vector data
     PVector v = new PVector();
@@ -942,6 +1471,125 @@ public PVector loadPVector(DataInputStream in) throws IOException {
     v.y = in.readFloat();
     v.z = in.readFloat();
     return v;
+  }
+}
+
+/**
+ * Saves the list of floats to the given data output stream. A flag byte is stored
+ * first, ten the length of list followed by each consecutive value in the list.
+ * 
+ * @param list  The array of floats to save
+ * @param out   The output stream, to which to save the float array
+ * @throws      IOException  if an error occurs with writing to the output stream
+ */
+public void saveFloatArray(float[] list, DataOutputStream out) throws IOException {
+  if (list == null) {
+    // Write flag value
+    out.writeByte(0);
+    
+  } else {
+    // Write flag value
+    out.writeByte(1);
+    // Write list length
+    out.writeInt(list.length);
+    // Write each value in the list
+    for (int idx = 0; idx < list.length; ++idx) {
+      out.writeFloat(list[idx]);
+    }
+  }
+}
+
+/**
+ * Attempts to parse a list of floats from the given data input stream.
+ * This method expects that a byte flag exists, follwed by a positive
+ * integer value for the length of the array, which is followed by at
+ * least that number of floating point values.
+ * 
+ * @param in   The input stream, from which to read bytes
+ * @returning  The float array pulled from the input stream (which
+ *             can be null!)
+ * @throws     IOException  if an error occurs with reading from the
+ *             output stream
+ */
+public float[] loadFloatArray(DataInputStream in) throws IOException {
+  // Read byte flag
+  byte flag = in.readByte();
+  
+  if (flag == 0) {
+    return null;
+    
+  } else {
+    // Read the length of the list
+    int len = in.readInt();
+    float[] list = new float[len];
+    // Read each value of the list
+    for (int idx = 0; idx < list.length; ++idx) {
+      list[idx] = in.readFloat();
+    }
+    
+    return list;
+  }
+}
+
+/**
+ * Saves the 2D array of floats to the given data output stream. A flag byte is stored
+ * first, ten the dimensions of array followed by each consecutive value in the array.
+ * 
+ * @param list  The array matrix of floats to save
+ * @param out   The output stream, to which to save the float array matrix
+ * @throws      IOException  if an error occurs with writing to the output stream
+ */
+public void saveFloatArray2D(float[][] list, DataOutputStream out) throws IOException {
+  if (list == null) {
+    // Write flag value
+    out.writeByte(0);
+    
+  } else {
+    // Write flag value
+    out.writeByte(1);
+    // Write the dimensions of the list
+    out.writeInt(list.length);
+    out.writeInt(list[0].length);
+    // Write each value in the list
+    for (int row = 0; row < list.length; ++row) {
+      for (int col = 0; col < list[0].length; ++col) {
+        out.writeFloat(list[row][col]);
+      }
+    }
+  }
+}
+
+/**
+ * Attempts to parse a 2D array of floats from the given data input stream.
+ * This method expects that a byte flag exists, follwed by two positive
+ * integer values for the dimensions of the array, which is followed by at
+ * least that number of floating point values.
+ * 
+ * @param in   The data input stream, from which to read bytes
+ * @returning  The float array matrix pulled from the input stream
+ * @throws     IOException  if an error occurs with reading from the
+ *             input stream
+ */
+public float[][] loadFloatArray2D(DataInputStream in) throws IOException {
+  // Read byte flag
+  byte flag = in.readByte();
+  
+  if (flag == 0) {
+    return null;
+    
+  } else {
+    // Read the length of the list
+    int numOfRows = in.readInt(),
+        numOfCols = in.readInt();
+    float[][] list = new float[numOfRows][numOfCols];
+    // Read each value of the list
+    for (int row = 0; row < list.length; ++row) {
+      for (int col = 0; col < list[0].length; ++col) {
+        list[row][col] = in.readFloat();
+      }
+    }
+    
+    return list;
   }
 }
 

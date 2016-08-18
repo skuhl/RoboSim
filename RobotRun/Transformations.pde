@@ -6,7 +6,8 @@
  * @param jointAngles  A valid set of six joint angles (in radians) for the Robot
  */
 public void applyModelRotation(float[] jointAngles) {
-  translate(600, 200, 0);
+  translate(ROBOT_POSITION.x, ROBOT_POSITION.y, ROBOT_POSITION.z);
+  
   translate(-50, -166, -358); // -115, -213, -413
   rotateZ(PI);
   translate(150, 0, 150);

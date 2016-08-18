@@ -1,7 +1,9 @@
-final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
-final int FTYPE_TOOL = 0, FTYPE_USER = 1;
+private final int MTYPE_JOINT = 0, MTYPE_LINEAR = 1, MTYPE_CIRCULAR = 2;
+private final int FTYPE_TOOL = 0, FTYPE_USER = 1;
+//stack containing the previously running program state when a new program is called
+private Stack<int[]> call_stack = new Stack<int[]>();
 // Indicates whether a program is currently running
-public boolean programRunning = false;
+private boolean programRunning = false;
 
 public class Point  {
   // X, Y, Z
@@ -193,9 +195,11 @@ public class Point  {
   }
 } // end Point class
 
-public class Program  {
+public class Program {
   private String name;
   private int nextRegister;
+  private int nextInstr;
+  private int progIdx;
   /**
    * The positions associated with this program, which are
    * stored in reference to the current User frame
@@ -203,21 +207,26 @@ public class Program  {
   private Point[] LPosReg = new Point[1000];
   private ArrayList<Instruction> instructions;
 
-  public Program(String theName) {
-    instructions = new ArrayList<Instruction>();
-    for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
-    name = theName;
+  public Program(String s) {
+    name = s;
     nextRegister = 0;
+    nextInstr = 0;
+    for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
+    instructions = new ArrayList<Instruction>();
   }
 
   public ArrayList<Instruction> getInstructions() {
     return instructions;
   }
-
+  
   public void setName(String n) { name = n; }
 
   public String getName() {
     return name;
+  }
+  
+  public int size() {
+    return instructions.size();
   }
 
   public int getRegistersLength() {
@@ -415,7 +424,7 @@ public class Instruction {
   }
   
   public String[] toStringArray() {
-    return new String[] { "" };
+    return new String[] {"..."};
   }
   
   /**
@@ -787,6 +796,50 @@ public class JumpInstruction extends Instruction {
   }
 }
 
+public class CallInstruction extends Instruction {
+  Program callProg;
+  int progIdx;
+  
+  public CallInstruction() {
+    callProg = null;
+    progIdx = -1;
+  }
+  
+  public CallInstruction(Program p, int i) {
+    callProg = p;
+    progIdx = i;
+  }
+  
+  public int execute() {
+    int[] p = new int[2];
+    p[0] = active_prog;
+    p[1] = active_instr + 1;
+    call_stack.push(p);
+    
+    active_prog = progIdx;
+    active_instr = 0;
+    row_select = 0;
+    col_select = 0;
+    start_render = 0;
+    updateScreen();
+    programRunning = !executeProgram(callProg, armModel, false);
+    
+    return 1;
+  }
+  
+  public String toString() {
+    String progName = (callProg == null) ? "..." : callProg.name;
+    return "Call " + progName;
+  }
+  
+  public String[] toStringArray() {
+    String[] ret = new String[2];
+    ret[0] = "Call";
+    ret[1] = (callProg == null) ? "..." : callProg.name;
+    return ret;
+  }
+}
+
 /**
  * An if statement consists of an expression and an instruction. If the expression evaluates
  * to true, the execution of this if statement will result in the execution of the associated
@@ -862,49 +915,82 @@ public class IfStatement extends Instruction {
 
 public class SelectStatement extends Instruction {
   ExprOperand arg;
-  Instruction instr;
-  ArrayList<Float> cases;
-  
+  ArrayList<ExprOperand> cases;
+  ArrayList<Instruction> instr;
+    
   public SelectStatement() {
     arg = new ExprOperand();
-    cases = new ArrayList<Float>();
+    cases = new ArrayList<ExprOperand>();
+    instr = new ArrayList<Instruction>();
+    addCase();
   }
   
   public SelectStatement(ExprOperand a) {
     arg = a;
-    cases = new ArrayList<Float>();
+    cases = new ArrayList<ExprOperand>();
+    instr = new ArrayList<Instruction>();
+    addCase();
   }
   
-  public int execute() {
-    for(Float c: cases) {
-      if(arg.dataVal == c) {
-        instr.execute();
+  public int execute() {    
+    for(int i = 0; i < cases.size(); i += 1) {
+      println("testing case " + i + " = " + cases.get(i).dataVal + " against " + arg.dataVal);
+      if(arg.dataVal == cases.get(i).dataVal) {
+        println("executing " + instr.get(i).toString());
+        instr.get(i).execute();
         break;
       }
     }
     
-    return 0;
+    return 1;
+  }
+  
+  public void addCase() {
+    cases.add(new ExprOperand());
+    instr.add(new Instruction());
+  }
+  
+  public void addCase(ExprOperand e, Instruction i) {
+    cases.add(e);
+    instr.add(i);
+  }
+  
+  public void deleteCase(int idx) {
+    if(cases.size() > 1) {
+      cases.remove(idx);
+    }
+    
+    if(instr.size() > 1) {
+      instr.remove(idx);
+    }
   }
   
   public String toString() {
     return "";
   }
   
-  public Instruction clone() {
-    if (instr == this) {
-      // Cannot copy this!
-      return null;
-    }
-    
+  public Instruction clone() {   
     Instruction copy = new SelectStatement();
     copy.setIsCommented( isCommented() );
-    ((SelectStatement)copy).instr = instr.clone();
     // TODO actually copy the select statement
     return copy;
   }
   
   public String[] toStringArray() {
-    return new String[] {""};
+    String[] ret = new String[2 + 4*cases.size()];
+    ret[0] = "SELECT";
+    ret[1] = arg.toString();
+    
+    for(int i = 0; i < cases.size(); i += 1) {
+      String[] iString = instr.get(i).toStringArray();
+      
+      ret[i*4 + 2] = "= " + cases.get(i).toString();
+      ret[i*4 + 3] = iString[0];
+      ret[i*4 + 4] = iString.length == 1 ? "..." : iString[1];
+      ret[i*4 + 5] = "\n";
+    }
+    
+    return ret;
   }
 }
 
@@ -977,7 +1063,7 @@ public class RegisterStatement extends Instruction {
   }
 }
 
-public class RecordScreen implements Runnable{
+public class RecordScreen implements Runnable {
   public RecordScreen() {
     System.out.format("Record screen...\n");
   }

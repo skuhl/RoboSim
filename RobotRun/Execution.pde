@@ -7,17 +7,17 @@ int liveSpeed = 10;
 boolean executingInstruction = false;
 
 // Determines what End Effector mapping should be display
-public static EEMapping mappingState = EEMapping.LINE;
+private EEMapping mappingState = EEMapping.LINE;
 // Deterimes what type of axes should be displayed
-public static AxesDisplay axesState = AxesDisplay.AXES;
+private static AxesDisplay axesState = AxesDisplay.AXES;
 
-public static final boolean COLLISION_DISPLAY = true,
-                            DISPLAY_TEST_OUTPUT = true;
+private static final boolean COLLISION_DISPLAY = true,
+                             DISPLAY_TEST_OUTPUT = true;
 
 /**
  * Displays important information in the upper-right corner of the screen.
  */
-void showMainDisplayText() {
+public void showMainDisplayText() {
   fill(0);
   textAlign(RIGHT, TOP);
   int lastTextPositionX = width - 20,
@@ -52,12 +52,25 @@ void showMainDisplayText() {
   
   String[] cartesian = RP.toLineStringArray(true),
            joints = RP.toLineStringArray(false);
-  
+  // Display the current Coordinate Frame name
   text(coordFrame, lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
+  // Display the Robot's speed value as a percent
   text(String.format("Speed: %d%%", liveSpeed), lastTextPositionX, lastTextPositionY);
-  lastTextPositionY += 40;
+  lastTextPositionY += 20;
+  // Display the title of the currently active scenario
+  String scenarioTitle;
+  Scenario s = activeScenario();
   
+  if (s != null) {
+    scenarioTitle = "Scenario: " + s.getName();
+  } else {
+    scenarioTitle = "No active scenario";
+  }
+  
+  text(scenarioTitle, lastTextPositionX, lastTextPositionY);
+  lastTextPositionY += 40;
+  // Display the Robot's current XYZWPR values
   text("Robot Position and Orientation", lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
   for (String line : cartesian) {
@@ -65,9 +78,8 @@ void showMainDisplayText() {
     lastTextPositionY += 20;
   }
   
-  
-  
   lastTextPositionY += 20;
+  // Display the Robot's current joint angle values
   text("Robot Joint Angles", lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
   for (String line : joints) {
@@ -78,9 +90,10 @@ void showMainDisplayText() {
   WorldObject toEdit = manager.getActiveWorldObject();
   // Display the position and orientation of the active world object
   if (toEdit != null) {
+    String[] dimFields = toEdit.dimFieldsToStringArray();
     // Convert the values into the World Coordinate System
-    PVector position = convertNativeToWorld(toEdit.getCenter());
-    PVector wpr = convertNativeToWorld( matrixToEuler(toEdit.getOrientationAxes()) ).mult(RAD_TO_DEG);
+    PVector position = convertNativeToWorld(toEdit.getLocalCenter());
+    PVector wpr = convertNativeToWorld( matrixToEuler(toEdit.getLocalOrientationAxes()) ).mult(RAD_TO_DEG);
     // Create a set of uniform Strings
     String[] fields = new String[] { String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
                                      String.format("Z: %4.3f", position.z), String.format("W: %4.3f", wpr.x),
@@ -88,6 +101,20 @@ void showMainDisplayText() {
     
     lastTextPositionY += 20;
     text(toEdit.getName(), lastTextPositionX, lastTextPositionY);
+    lastTextPositionY += 20;
+    String dimDisplay = "";
+    // Display the dimensions of the world object (if any)
+    for (int idx = 0; idx < dimFields.length; ++idx) {
+      if ((idx + 1) < dimFields.length) {
+        dimDisplay += String.format("%-12s", dimFields[idx]);
+        
+      } else {
+        dimDisplay += String.format("%s", dimFields[idx]);
+      }
+    }
+    
+    text(dimDisplay, lastTextPositionX, lastTextPositionY);
+    
     lastTextPositionY += 20;
     // Add space patting
     text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX, lastTextPositionY);
@@ -130,7 +157,7 @@ void showMainDisplayText() {
       text("Object held", lastTextPositionX, lastTextPositionY);
       lastTextPositionY += 20;
       
-      PVector held_pos = armModel.held.getOBB().getCenter();
+      PVector held_pos = armModel.held.getLocalCenter();
       String obj_pos = String.format("(%f, %f, %f)", held_pos.x, held_pos.y, held_pos.z);
       text(obj_pos, lastTextPositionX, lastTextPositionY);
       lastTextPositionY += 20;
@@ -804,54 +831,64 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
  * @param model Arm model to use
  * @return Finished yet (false=no, true=yes)
  */
-boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
-  Instruction activeInst = activeInstruction();
-  int nextInstruction = active_instr + 1;
+boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
+  Instruction activeInstr = activeInstruction();
+  int nextInstr = active_instr + 1;
   
   //stop executing if no valid program is selected or we reach the end of the program
-  if(robotFault || activeInst == null) {
+  if(robotFault || activeInstr == null) {
     return true;
-  } else if (!activeInst.isCommented()){
-    
+  } else if (!activeInstr.isCommented()){
     //motion instructions
-    if (activeInst instanceof MotionInstruction) {
-      MotionInstruction instruction = (MotionInstruction)activeInst;
+    if (activeInstr instanceof MotionInstruction) {
+      MotionInstruction motInstr = (MotionInstruction)activeInstr;
       //start a new instruction
       if(!executingInstruction) {
-        executingInstruction = setUpInstruction(program, model, instruction);
+        executingInstruction = setUpInstruction(program, model, motInstr);
       }
-      //continue current instruction
+      //continue current motion instruction
       else {
-        if(instruction.getMotionType() == MTYPE_JOINT) {
-          executingInstruction = !(model.interpolateRotation(instruction.getSpeedForExec(model)));
+        if(motInstr.getMotionType() == MTYPE_JOINT) {
+          executingInstruction = !(model.interpolateRotation(motInstr.getSpeedForExec(model)));  
         }
-        else {
-          executingInstruction = !(executeMotion(model, instruction.getSpeedForExec(model)));
+        else {  
+          executingInstruction = !(executeMotion(model, motInstr.getSpeedForExec(model)));
         }
       }
-    } else if (activeInst instanceof JumpInstruction) {
-      nextInstruction = activeInst.execute();
+    } 
+    //jump instructions
+    else if (activeInstr instanceof JumpInstruction) {
+      nextInstr = activeInstr.execute();
       executingInstruction = false;
-    } else {
-      activeInst.execute();
+    } 
+    //other instructions
+    else {
       executingInstruction = false;
+      activeInstr.execute();
     }//end of instruction type check
-    
   } //skip commented instructions
   
   // Move to next instruction after current is finished
   if(!executingInstruction) {
-    
-    if (nextInstruction == -1) {
+    if(nextInstr == -1) {
       // Failed to jump to target label
       triggerFault();
+    } else if(nextInstr == activeProgram().size() && !call_stack.isEmpty()) {
+      int[] p = call_stack.pop();
+      active_prog = p[0];
+      active_instr = p[1];
+      
+      row_select = active_instr;
+      col_select = 0;
+      start_render = 0;
+      programRunning = !executeProgram(activeProgram(), armModel, false);
     } else {
       // Move to nextInstruction
       int size = activeProgram().getInstructions().size() + 1;
       int i = active_instr,
           r = row_select;
       
-      active_instr = max(0, min(nextInstruction, size - 1));
+      active_instr = max(0, min(nextInstr, size - 1));
       row_select = max(0, min(r + active_instr - i, contents.size() - 1));
       start_render = start_render + (active_instr - i) - (row_select - r);
     }
@@ -859,7 +896,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInst) {
     updateScreen();
   }
   
-  return (!executingInstruction && singleInst);
+  return (!executingInstruction && singleInstr);
 }//end executeProgram
 
 /**

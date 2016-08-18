@@ -1,12 +1,12 @@
-Frame[] toolFrames;
-Frame[] userFrames;
+private Frame[] toolFrames;
+private Frame[] userFrames;
 
 /* The current Coordinate Frame for the Robot */
-public static CoordFrame curCoordFrame = CoordFrame.JOINT;
+private CoordFrame curCoordFrame = CoordFrame.JOINT;
 
-public static final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
-                                                           {  0,  0,  1 },
-                                                           {  0, -1,  0 } };
+private final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
+                                                     {  0,  0,  1 },
+                                                     {  0, -1,  0 } };
 
 public abstract class Frame {
   private PVector origin;
