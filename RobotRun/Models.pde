@@ -225,10 +225,11 @@ public class ArmModel {
   } // end ArmModel constructor
   
   public void draw() {
-    
     noStroke();
     fill(200, 200, 0);
-
+    
+    translate(ROBOT_POSITION.x, ROBOT_POSITION.y, ROBOT_POSITION.z);
+    
     rotateZ(PI);
     rotateY(PI/2);
     segments.get(0).draw();
@@ -342,7 +343,9 @@ public class ArmModel {
     
     pushMatrix();
     resetMatrix();
-
+    
+    translate(ROBOT_POSITION.x, ROBOT_POSITION.y, ROBOT_POSITION.z);
+    
     rotateZ(PI);
     rotateY(PI/2);
     translate(200, 50, 200);

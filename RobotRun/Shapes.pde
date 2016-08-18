@@ -1,5 +1,5 @@
 // The Y corrdinate of the ground plane
-private static final float PLANE_Y = 200.5f;
+private static final float PLANE_Y = 250f;
 
 private final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
 private int activeScenarioIdx;

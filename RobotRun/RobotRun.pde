@@ -10,7 +10,8 @@ import java.awt.event.KeyEvent;
 
 private static final int OFF = 0, ON = 1;
 private static final int ARITH = 0, BOOL = 1;
-
+// The position at which the Robot is drawn
+private final PVector ROBOT_POSITION = new PVector(200, 250, 200);
 ArmModel armModel;
 Model eeModelSuction;
 Model eeModelClaw;
