@@ -109,6 +109,11 @@ public class ArmModel {
   
   public EndEffector activeEndEffector = EndEffector.NONE;
   public int endEffectorState = OFF;
+  private Model eeModelSuction;
+  private Model eeModelClaw;
+  private Model eeModelClawPincer;
+  private Model eePointer;
+
   public RobotMotion motionType;
   
   public ArrayList<Model> segments = new ArrayList<Model>();
@@ -135,6 +140,10 @@ public class ArmModel {
   public ArmModel() {
     
     motorSpeed = 1000.0; // speed in mm/sec
+    eeModelSuction = new Model("VACUUM_2.STL", color(40));
+    eeModelClaw = new Model("GRIPPER.STL", color(40));
+    eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
+    eePointer = new Model("POINTER.stl", color(40), 10.0);
     motionType = RobotMotion.HALTED;
     // Joint 1
     Model base = new Model("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
@@ -202,7 +211,7 @@ public class ArmModel {
     eeOBBsMap.put(EndEffector.NONE, limbo);
     // Cannot pickup
     limbo = new ArrayList<BoundingBox>();
-    eePickupOBBs.put(EndEffector.SUCTION, limbo);
+    eePickupOBBs.put(EndEffector.NONE, limbo);
     // Claw Gripper
     limbo = new ArrayList<BoundingBox>();
     limbo.add( new BoundingBox(102, 102, 46) );
@@ -211,18 +220,21 @@ public class ArmModel {
     eeOBBsMap.put(EndEffector.CLAW, limbo);
     // In between the grippers
     limbo = new ArrayList<BoundingBox>();
-    limbo.add(new BoundingBox(10, 5, 10) );
+    limbo.add(new BoundingBox(55, 3, 15) );
+    limbo.get(0).setColor(color(0, 0, 255));
     eePickupOBBs.put(EndEffector.CLAW, limbo);
     // Suction 
     limbo = new ArrayList<BoundingBox>();
     limbo.add( new BoundingBox(102, 102, 46) );
-    limbo.add( new BoundingBox(37, 37, 87) );
-    limbo.add( new BoundingBox(37, 67, 37) );
+    limbo.add( new BoundingBox(37, 37, 82/*87*/) );
+    limbo.add( new BoundingBox(37, 62/*67*/, 37) );
     eeOBBsMap.put(EndEffector.SUCTION, limbo);
     // One for each suction cup
     limbo = new ArrayList<BoundingBox>();
-    limbo.add(new BoundingBox(37, 37, 5) );
-    limbo.add(new BoundingBox(37, 5, 37) );
+    limbo.add(new BoundingBox(25, 25, 3) );
+    limbo.get(0).setColor(color(0, 0, 255));
+    limbo.add(new BoundingBox(25, 3, 25) );
+    limbo.get(1).setColor(color(0, 0, 255));
     eePickupOBBs.put(EndEffector.SUCTION, limbo);
     // Pointer
     limbo = new ArrayList<BoundingBox>();
@@ -233,7 +245,7 @@ public class ArmModel {
     eeOBBsMap.put(EndEffector.POINTER, limbo);
     // Cannot pickup
     limbo = new ArrayList<BoundingBox>();
-    eePickupOBBs.put(EndEffector.SUCTION, limbo);
+    eePickupOBBs.put(EndEffector.POINTER, limbo);
     
     held = null;
     // Initializes the old transformation matrix for the arm model
@@ -512,9 +524,9 @@ public class ArmModel {
    * Updates position and orientation of the hit boxes associated
    * with the given End Effector.
    */
-  public void updateOBBBoxesForEE(EndEffector current) {
+  private void updateOBBBoxesForEE(EndEffector current) {
     ArrayList<BoundingBox> curEEOBBs = eeOBBsMap.get(current),
-                           curPUEEOBBS = eePickupOBBs.get(current);
+                           curPUEEOBBs = eePickupOBBs.get(current);
     
     pushMatrix();
     resetMatrix();
@@ -532,35 +544,48 @@ public class ArmModel {
         // Claw Gripper EE
         curEEOBBs.get(0).setCoordinateSystem();
         
+        translate(-2, 0, -54);
+        curPUEEOBBs.get(0).setCoordinateSystem();
+        
         if (endEffectorState == OFF) {
           // When claw is open
-          translate(-2, 27, -54);
+          translate(0, 27, 0);
           curEEOBBs.get(1).setCoordinateSystem();
           translate(0, -54, 0);
           curEEOBBs.get(2).setCoordinateSystem();
-          translate(2, 27, 54);
+          translate(0, 27, 0);
           
         } else if (endEffectorState == ON) {
           // When claw is closed
-          translate(-2, 10, -54);
+          translate(0, 10, 0);
           curEEOBBs.get(1).setCoordinateSystem();
           translate(0, -20, 0);
           curEEOBBs.get(2).setCoordinateSystem();
-          translate(2, 10, 54);
+          translate(0, 10, 0);
         }
-        // TODO add pickup bounding box updates
+        
+        translate(2, 0, 54);
         break;
         
       case SUCTION:
         // Suction EE
         curEEOBBs.get(0).setCoordinateSystem();
         
-        translate(-2, 0, -66);
-        curEEOBBs.get(1).setCoordinateSystem();
-        translate(0, -52, 21);
-        curEEOBBs.get(2).setCoordinateSystem();
-        translate(2, 52, 35);
-        // TODO add pickup bounding box updates
+        translate(-2, 0, -64);
+        BoundingBox limbo = curEEOBBs.get(1);
+        limbo.setCoordinateSystem();
+        
+        float dist = -43;
+        translate(0, 0, dist);
+        curPUEEOBBs.get(0).setCoordinateSystem();
+        translate(0, -50, 19 - dist);
+        limbo = curEEOBBs.get(2);
+        limbo.setCoordinateSystem();
+        
+        dist = -33;
+        translate(0, dist, 0);
+        curPUEEOBBs.get(1).setCoordinateSystem();
+        translate(2, 50 - dist, 45);
         break;
         
       case POINTER:
@@ -666,8 +691,7 @@ public class ArmModel {
     ArrayList<BoundingBox> eeHBs = eeOBBsMap.get(activeEndEffector);
     
     for(BoundingBox b : eeHBs) {
-      // Special case for held objects
-      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorState != ON || obj != armModel.held) && obj.collision(b) ) {
+      if(obj.collision(b)) {
         b.setColor(color(255, 0, 0));
         collision = true;
       }
@@ -680,18 +704,20 @@ public class ArmModel {
   public void drawBoxes() {
     // Draw hit boxes of the body poriotn of the Robot Arm
     for(BoundingBox b : armOBBs) {
-      pushMatrix();
       b.draw();
-      popMatrix();
     }
         
     ArrayList<BoundingBox> curEEHitBoxes = eeOBBsMap.get(activeEndEffector);
     
     // Draw End Effector hit boxes
     for(BoundingBox b : curEEHitBoxes) {
-      pushMatrix();
       b.draw();
-      popMatrix();
+    }
+    
+    curEEHitBoxes = eePickupOBBs.get(activeEndEffector);
+    // Draw Pickup hit boxes
+    for (BoundingBox b : curEEHitBoxes) {
+      b.draw();
     }
   }
   
@@ -1098,42 +1124,59 @@ public class ArmModel {
     }
     
     updateIORegister();
-    checkEECollision();
+    checkPickupCollision();
+  }
+  
+  /**
+   * TODO comment this
+   */
+  public boolean canPickup(Part p) {
+    ArrayList<BoundingBox> curEEOBBs = eeOBBsMap.get(activeEndEffector);
+    
+    for (BoundingBox b : curEEOBBs) {
+      // Cannot be colliding with a normal bounding box
+      if (p != null && p.collision(b)) {
+        return false;
+      }
+    }
+    
+    curEEOBBs = eePickupOBBs.get(activeEndEffector);
+    
+    for (BoundingBox b : curEEOBBs) {
+      // Must be colliding with a pickup bounding box
+      if (p != null && p.collision(b)) {
+        return true;
+      }
+    }
+    
+    return false;
   }
   
   /**
    * TODO comment
    */
-  public int checkEECollision() {
-    // Check if the Robot is placing an object or picking up and object
-    if(activeEndEffector == EndEffector.CLAW || activeEndEffector == EndEffector.SUCTION) {
-      
-      if(endEffectorState == ON && armModel.held == null) {
+  public int checkPickupCollision() {
+    // End Effector must be on and no object is currently held to be able to pickup an object
+    if (endEffectorState == ON && armModel.held == null) {
+      ArrayList<BoundingBox> curPUEEOBBs = eePickupOBBs.get(activeEndEffector);
+      Scenario s = activeScenario();
+      // Can this End Effector pick up objects?
+      if (s != null && curPUEEOBBs.size() > 0) {
         
-        PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
-        Scenario s = activeScenario();
-        
-        if (s != null) {
-          
-          for (WorldObject wldObj : s) {
-            
-            if (wldObj instanceof Part) {
-              Part p = (Part)wldObj;
-              
-              if (p.collision(ee_pos)) {
-                held = p;
-                return 0;
-              }
-            }
-          
+        for (WorldObject wldObj : s) {
+          // Only parts can be picked up
+          if (wldObj instanceof Part && canPickup( (Part)wldObj )) {
+              // Pickup the object
+              held = (Part)wldObj;
+              return 0;
           }
         }
-      } 
-      else if (endEffectorState == OFF && armModel.held != null) {
-        // Release the object
-        armModel.releaseHeldObject();
-        return 1;
       }
+      
+    } else if (endEffectorState == OFF && armModel.held != null) {
+      // Release the object
+      armModel.releaseHeldObject();
+      return 1;
     }
     
     return 2;

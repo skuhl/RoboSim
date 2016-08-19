@@ -820,7 +820,7 @@ public void CreateWldObj() {
     WorldObject newObject = manager.createWorldObject();
     
     if (newObject != null) {
-      newObject.setLocalCenter( new PVector(0f, 100f, 0f) );
+      newObject.setLocalCenter( new PVector(-500f, 0f, 0f) );
       s.addWorldObject(newObject);
     }
   }

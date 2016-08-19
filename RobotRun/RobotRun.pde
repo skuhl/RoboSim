@@ -11,17 +11,8 @@ import java.awt.event.KeyEvent;
 private static final int OFF = 0, ON = 1;
 private static final int ARITH = 0, BOOL = 1;
 // The position at which the Robot is drawn
-private final PVector ROBOT_POSITION = new PVector(200, 250, 200);
+private final PVector ROBOT_POSITION = new PVector(200, 300, 200);
 ArmModel armModel;
-Model eeModelSuction;
-Model eeModelClaw;
-Model eeModelClawPincer;
-Model eePointer;
-
-float lastMouseX, lastMouseY;
-float cameraTX = 0, cameraTY = 0, cameraTZ = 0;
-float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
-boolean spacebarDown = false;
 
 ControlP5 cp5;
 WindowManager manager;
@@ -74,10 +65,6 @@ public void setup() {
   
   //load model and save data
   armModel = new ArmModel();
-  eeModelSuction = new Model("VACUUM_2.STL", color(40));
-  eeModelClaw = new Model("GRIPPER.STL", color(40));
-  eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
-  eePointer = new Model("POINTER.stl", color(40), 10.0);
   intermediatePositions = new ArrayList<Point>();
   
   activeScenarioIdx = -1;

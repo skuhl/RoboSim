@@ -1362,24 +1362,28 @@ public void saveShape(Shape shape, DataOutputStream out) throws IOException {
       out.writeByte(3);
     }
     
-    // Write the shape's color fields
-    out.writeBoolean( shape.isFilled() );
-    out.writeInt( shape.getFillColor() );
-    out.writeInt( shape.getOutlineColor() );
+    // Write fill color value
+    saveInteger(shape.getFillValue(), out);
     
     if (shape instanceof Box) {
+      // Write stroke value
+      saveInteger(shape.getStrokeValue(), out);
       // Save length, height, and width of the box
       out.writeFloat(shape.getDim(DimType.LENGTH));
       out.writeFloat(shape.getDim(DimType.HEIGHT));
       out.writeFloat(shape.getDim(DimType.WIDTH));
       
     } else if (shape instanceof Cylinder) {
+      // Write stroke value
+      saveInteger(shape.getStrokeValue(), out);
       // Save the radius and height of the cylinder
       out.writeFloat(shape.getDim(DimType.RADIUS));
       out.writeFloat(shape.getDim(DimType.HEIGHT));
       
     } else if (shape instanceof ModelShape) {
       ModelShape m = (ModelShape)shape;
+      
+      out.writeFloat(m.getDim(DimType.SCALE));
       // Save the source path of the complex shape
       out.writeUTF(m.getSourcePath()); 
     }
@@ -1403,35 +1407,69 @@ public Shape loadShape(DataInputStream in) throws IOException, NullPointerExcept
   Shape shape = null;
   
   if (flag != 0) {
-    // Read color fields
-    boolean isFilled = in.readBoolean();
-    int fill = in.readInt(),
-        outline = in.readInt();
+    // Read fiil color
+    Integer fill = loadInteger(in);
           
     if (flag == 1) {
+      // Read stroke color
+      Integer strokeVal = loadInteger(in);
       float x = in.readFloat(),
             y = in.readFloat(),
             z = in.readFloat();
       // Create a box
-      shape = new Box(fill, outline, x, y, z);
-      shape.setFillFlag(isFilled);
+      shape = new Box(fill, strokeVal, x, y, z);
       
     } else if (flag == 2) {
+      // Read stroke color
+      Integer strokeVal = loadInteger(in);
       float radius = in.readFloat(),
             hgt = in.readFloat();
       // Create a cylinder
-      shape = new Cylinder(fill, outline, radius, hgt);
-      shape.setFillFlag(isFilled);
+      shape = new Cylinder(fill, strokeVal, radius, hgt);
       
     } else if (flag == 3) {
+      float scale = in.readFloat();
       String srcPath = in.readUTF();
+      
       // Creates a complex shape from the srcPath located in RobotRun/data/
-      shape = new ModelShape(srcPath, fill, outline);
-      shape.setFillFlag(isFilled);
+      shape = new ModelShape(srcPath, fill, scale);
     }
   }
   
   return shape;
+}
+
+/**
+ * Writes the integer object to the given data output stream. Null values are accepted.
+ */
+public void saveInteger(Integer i, DataOutputStream out) throws IOException {
+  
+  if (i == null) {
+    // Write byte flag
+    out.writeByte(0);
+    
+  } else {
+    // Write byte flag
+    out.writeByte(1);
+    // Write integer value
+    out.writeInt(i);
+  }
+}
+
+/**
+ * Attempts to read an Integer object from the given data input stream.
+ */
+public Integer loadInteger(DataInputStream in) throws IOException {
+  // Read byte flag
+  byte flag = in.readByte();
+  
+  if (flag == 0) {
+    return null;
+    
+  } else {
+    // Read integer value
+    return in.readInt();
+  }
 }
 
 /**
