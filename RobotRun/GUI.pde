@@ -1,5 +1,3 @@
-private static boolean mouseRightDown;
-
 final int SMALL_BUTTON = 35,
           LARGE_BUTTON = 50;
 final int BUTTON_DEFAULT = color(70),
@@ -626,32 +624,31 @@ public void mouseDragged(MouseEvent e) {
   }
 }
 
-public void mousePressed() {
-  if (mouseButton == RIGHT) {
-    mouseRightDown = true;
-  }
-}
-
-public void mouseReleased() {
-  mouseRightDown = false;
-}
-
 public void mouseWheel(MouseEvent event) {
-  // Only zoom when right mouse button is held
-  if (mouseRightDown) {
-    float e = event.getCount();
-    // Control scaling of the camera with the mouse wheel
-    if (e > 0) {
-      myscale = min(myscale * 1.1f, 2f);
-    } else if (e < 0) {
-      myscale = max(0.25f, myscale * 0.9f);
-    }
+  
+  if (manager != null && manager.isMouseOverADropdownList()) {
+    // Disable zomming when selecting an element from a dropdown list
+    return;
+  }
+  
+  float e = event.getCount();
+  // Control scaling of the camera with the mouse wheel
+  if (e > 0) {
+    myscale = min(myscale * 1.1f, 2f);
+  } else if (e < 0) {
+    myscale = max(0.25f, myscale * 0.9f);
   }
 }
 
 /*Keyboard events*/
 
 public void keyPressed() {
+  
+  if (manager != null && manager.isATextFieldActive()) {
+    // Disable other key events when typing in a text field
+    return;
+  }
+  
   if(mode == Screen.NEW_PROGRAM) {
     // Modify the input name for the new program
     if(key == BACKSPACE && workingText.length() > 0) {
@@ -702,42 +699,35 @@ public void keyPressed() {
     }
     
     return;
-  } else if (keyCode == ENTER) {
-    enterDown = true;
   } else if (key == 'a') {
-    
-    if (enterDown) {
-      // Cycle through Axes display states
-      switch (axesState) {
-        case NONE:
-          axesState = AxesDisplay.AXES;
-          break;
-        case AXES:
-          axesState = AxesDisplay.GRID;
-          break;
-        default:
-          axesState = AxesDisplay.NONE;
-      }
+    // Cycle through Axes display states
+    switch (axesState) {
+      case NONE:
+        axesState = AxesDisplay.AXES;
+        break;
+      case AXES:
+        axesState = AxesDisplay.GRID;
+        break;
+      default:
+        axesState = AxesDisplay.NONE;
     }
     
   } else if(key == 'e') {
-    if (enterDown) {
-      // Cycle through EE Mapping states
-      switch (mappingState) {
-        case NONE:
-          mappingState = EEMapping.LINE;
-          break;
-        case LINE:
-          mappingState = EEMapping.DOT;
-          break;
-        default:
-          mappingState = EEMapping.NONE;
-      }
+    // Cycle through EE Mapping states
+    switch (mappingState) {
+      case NONE:
+        mappingState = EEMapping.LINE;
+        break;
+      case LINE:
+        mappingState = EEMapping.DOT;
+        break;
+      default:
+        mappingState = EEMapping.NONE;
     }
     
   } else if (key == 'f' ) {
     // Display the User and Tool frames associated with the current motion instruction
-    if (enterDown && DISPLAY_TEST_OUTPUT && mode == Screen.NAV_PROG_INST && (col_select == 3 || col_select == 4)) {
+    if (DISPLAY_TEST_OUTPUT && mode == Screen.NAV_PROG_INST && (col_select == 3 || col_select == 4)) {
       Instruction inst = activeInstruction();
       
       if (inst instanceof MotionInstruction) {
@@ -747,105 +737,76 @@ public void keyPressed() {
         System.out.printf("\nUser frame: %d\nTool frame: %d\n", mInst.userFrame, mInst.toolFrame);
       }
     }
-  } else if(key == 'r') {
     
-    if (enterDown) {
-      panX = 0;
-      panY = 0;
-      myscale = 0.5;
-      myRotX = 0;
-      myRotY = 0;
-    }
+  } else if(key == 'r') { 
+    panX = 0;
+    panY = 0;
+    myscale = 0.5;
+    myRotX = 0;
+    myRotY = 0;
+    
   } else if(key == 't') {
+    float[] rot = {0, 0, 0, 0, 0, 0};
+    armModel.setJointAngles(rot);
+    intermediatePositions.clear();
     
-    if (enterDown) {
-      float[] rot = {0, 0, 0, 0, 0, 0};
-      armModel.setJointAngles(rot);
-      intermediatePositions.clear();
-    }
   } else if(key == 'w') {
+    writeBuffer();
     
-    if (enterDown) {
-      writeBuffer();
-    }
   } else if (key == 'y') {
+    float[] rot = {PI, 0, 0, 0, 0, PI};
+    armModel.setJointAngles(rot);
+    intermediatePositions.clear();
     
-    if (enterDown) {
-      float[] rot = {PI, 0, 0, 0, 0, PI};
-      armModel.setJointAngles(rot);
-      intermediatePositions.clear();
-    }
   } else if (key == 'm') {
+    println(mode.toString());
     
-    if (enterDown) {
-      println(mode.toString());
-    }
   } else if (key == 'p') {
-    
-    if (enterDown && !programRunning) {
+    if (!programRunning) {
       armModel.toggleEEState();
     }
+    
   } else if(keyCode == KeyEvent.VK_1) {
+    // Front view
+    panX = 0;
+    panY = 0;
+    myRotX = 0f;
+    myRotY = 0f;
     
-    if (enterDown) {
-      // Front view
-      panX = 0;
-      panY = 0;
-      myRotX = 0f;
-      myRotY = 0f;
-    }
   } else if(keyCode == KeyEvent.VK_2) {
+    // Back view
+    panX = 0;
+    panY = 0;
+    myRotX = 0f;
+    myRotY = PI;
     
-    if (enterDown) {
-      // Back view
-      panX = 0;
-      panY = 0;
-      myRotX = 0f;
-      myRotY = PI;
-    }
   } else if(keyCode == KeyEvent.VK_3) {
+    // Left view
+    panX = 0;
+    panY = 0;
+    myRotX = 0f;
+    myRotY = PI / 2f;
     
-    if (enterDown) {
-      // Left view
-      panX = 0;
-      panY = 0;
-      myRotX = 0f;
-      myRotY = PI / 2f;
-    }
   } else if(keyCode == KeyEvent.VK_4) {
+    // Right view
+    panX = 0;
+    panY = 0;
+    myRotX = 0f;
+    myRotY = 3f * PI / 2F;
     
-    if (enterDown) {
-      // Right view
-      panX = 0;
-      panY = 0;
-      myRotX = 0f;
-      myRotY = 3f * PI / 2F;
-    }
   } else if(keyCode == KeyEvent.VK_5) {
+    // Top view
+    panX = 0;
+    panY = 0;
+    myRotX = 3f * PI / 2F;
+    myRotY = 0f;
     
-    if (enterDown) {
-      // Top view
-      panX = 0;
-      panY = 0;
-      myRotX = 3f * PI / 2F;
-      myRotY = 0f;
-    }
   } else if(keyCode == KeyEvent.VK_6) {
-    
-    if (enterDown) {
-      // Bottom view
-      panX = 0;
-      panY = 0;
-      myRotX = PI / 2f;
-      myRotY = 0f;
-    }
-  }
-}
-
-public void keyReleased() {
-  if (keyCode == ENTER) {
-    // Enter key is released
-    enterDown = false;
+    // Bottom view
+    panX = 0;
+    panY = 0;
+    myRotX = PI / 2f;
+    myRotY = 0f;
   }
 }
 
@@ -856,7 +817,12 @@ public void CreateWldObj() {
   Scenario s = activeScenario();
   
   if (s != null) {
-    s.addWorldObject( manager.createWorldObject() );
+    WorldObject newObject = manager.createWorldObject();
+    
+    if (newObject != null) {
+      newObject.setLocalCenter( new PVector(0f, 100f, 0f) );
+      s.addWorldObject(newObject);
+    }
   }
 }
 
@@ -1131,8 +1097,8 @@ public void up() {
     case SET_IF_STMT_ACT:
     case SET_SELECT_STMT_ACT:
     case SET_SELECT_STMT_ARG:
-    case SET_EXPR_ARG: //<>//
-    case SET_BOOL_EXPR_ARG: //<>//
+    case SET_EXPR_ARG: //<>// //<>// //<>//
+    case SET_BOOL_EXPR_ARG: //<>// //<>// //<>//
     case SET_EXPR_OP:
     case SET_IO_INSTR_STATE:
     case SET_CALL_PROG:
@@ -1162,11 +1128,11 @@ public void up() {
   
   updateScreen();
 }
- //<>//
+ //<>// //<>// //<>//
 public void dn() {
   int size;
   switch(mode) {
-    case NAV_PROGRAMS: //<>// //<>//
+    case NAV_PROGRAMS: //<>// //<>// //<>// //<>//
       active_prog = moveDown(shift);
             
       if(DISPLAY_TEST_OUTPUT) {
@@ -1230,9 +1196,9 @@ public void dn() {
       opt_select = min(opt_select + 1, options.size() - 1);
       break;
     case NAV_TOOL_FRAMES:
-    case NAV_USER_FRAMES: //<>//
+    case NAV_USER_FRAMES: //<>// //<>// //<>//
     case DIRECT_ENTRY_TOOL:
-    case DIRECT_ENTRY_USER: //<>//
+    case DIRECT_ENTRY_USER: //<>// //<>// //<>//
     case EDIT_PREG_C:
     case EDIT_PREG_J:
       row_select = min(row_select + 1, contents.size() - 1);
@@ -1269,9 +1235,9 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>//
+        // Reset function key states //<>// //<>// //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>//
+      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>// //<>// //<>//
         col_select -= (col_select - 4 >= options.size()) ? 4 : 0;
       }
   }
@@ -3364,7 +3330,7 @@ public void loadScreen(){
     case SET_LBL_NUM:
       col_select = 1;
       opt_select = 0;
-      workingText = ""; //<>//
+      workingText = ""; //<>// //<>// //<>//
       break;
     case SET_MV_INSTRUCT_TYPE:
       MotionInstruction mInst = activeMotionInst();

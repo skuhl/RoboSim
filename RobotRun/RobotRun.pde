@@ -10,7 +10,8 @@ import java.awt.event.KeyEvent;
 
 private static final int OFF = 0, ON = 1;
 private static final int ARITH = 0, BOOL = 1;
-
+// The position at which the Robot is drawn
+private final PVector ROBOT_POSITION = new PVector(200, 250, 200);
 ArmModel armModel;
 Model eeModelSuction;
 Model eeModelClaw;
@@ -56,10 +57,6 @@ int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 /*      Debugging Stuff        */
 
 private static ArrayList<String> buffer;
-private static boolean enterDown;
-private static Ray mouseRay;
-private float[][] limboAxes;
-
 /*******************************/
 
 
@@ -72,12 +69,8 @@ public void setup() {
   fnt_con14 = createFont("data/Consolas.ttf", 14);
   fnt_con12 = createFont("data/Consolas.ttf", 12);
   fnt_conB = createFont("data/ConsolasBold.ttf", 12);
-  mouseRightDown = false;
   
   buffer = new ArrayList<String>();
-  enterDown = false;
-  mouseRay = null;
-  limboAxes = null;
   
   //load model and save data
   armModel = new ArmModel();
@@ -188,14 +181,6 @@ public void draw() {
   //}
   popMatrix(); 
   
-  if (mouseRay != null) {
-    mouseRay.draw();
-  }
-  
-  if (limboAxes != null) {
-    displayOriginAxes(limboAxes, new PVector(0f, 0f, 0f), 200f, color(0, 255, 255));
-  }
-  
   displayAxes();
   displayTeachPoints();
   
@@ -295,11 +280,11 @@ public void displayTeachPoints() {
  */
 public void displayAxes() {
   
-  Point ee_point = nativeRobotEEPoint(armModel.getJointAngles());
+  Point eePoint = nativeRobotEEPoint(armModel.getJointAngles());
   
   if (axesState == AxesDisplay.NONE && curCoordFrame != CoordFrame.JOINT) {
     // Draw axes of the Robot's End Effector frame for testing purposes
-    displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
+    displayOriginAxes(quatToMatrix( eePoint.orientation ), eePoint.position, 200f, color(255, 0, 255));
   } else if (axesState == AxesDisplay.AXES) {
     // Display axes
     if (curCoordFrame != CoordFrame.JOINT) {
@@ -308,10 +293,10 @@ public void displayAxes() {
       
       if (curCoordFrame == CoordFrame.TOOL) {
         /* Draw the axes of the active Tool frame at the Robot End Effector */
-        displayOriginAxes(activeTool.getWorldAxes(), ee_point.position, 200f, color(255, 0, 255));
+        displayOriginAxes(activeTool.getWorldAxes(), eePoint.position, 200f, color(255, 0, 255));
       } else {
         // Draw axes of the Robot's End Effector frame for testing purposes
-        displayOriginAxes(quatToMatrix( ee_point.orientation ), ee_point.position, 200f, color(255, 0, 255));
+        displayOriginAxes(quatToMatrix( eePoint.orientation ), eePoint.position, 200f, color(255, 0, 255));
       }
       
       if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
@@ -337,7 +322,7 @@ public void displayAxes() {
         break;
       case TOOL:
         displayAxes = active.getNativeAxes();
-        displayOrigin = ee_point.position;
+        displayOrigin = eePoint.position;
         break;
       case USER:
         displayAxes = active.getNativeAxes();
@@ -430,7 +415,7 @@ public void displayGridlines(float[][] axesVectors, PVector origin, int halfNumO
   pushMatrix();
   // Map the chosen two axes vectors to the xz-plane at the y-position of the Robot's base
   applyMatrix(axesVectors[vectorPX][0], 0, axesVectors[vectorPZ][0], origin.x,
-                                     0, 1,                        0, PLANE_Y,
+                                     0, 1,                        0, ROBOT_POSITION.y,
               axesVectors[vectorPX][2], 0, axesVectors[vectorPZ][2], origin.z,
                                      0, 0,                        0,        1);
   
@@ -466,14 +451,14 @@ public void mapToRobotBasePlane() {
   PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
-  color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);
+  color c = (ee_pos.y <= ROBOT_POSITION.y) ? color(255, 0, 0) : color(150, 0, 255);
   
   // Toggle EE mapping type with 'e'
   switch (mappingState) {
   case LINE:
     stroke(c);
     // Draw a line, from the EE to the grid in the xy plane, parallel to the xy plane
-    line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
+    line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, ROBOT_POSITION.y, ee_pos.z);
     break;
     
   case DOT:
@@ -482,7 +467,7 @@ public void mapToRobotBasePlane() {
     // Draw a point, which maps the EE's position to the grid in the xy plane
     pushMatrix();
     rotateX(PI / 2);
-    translate(0, 0, -PLANE_Y);
+    translate(0, 0, -ROBOT_POSITION.y);
     ellipse(ee_pos.x, ee_pos.z, 10, 10);
     popMatrix();
     break;

@@ -225,12 +225,11 @@ public class ArmModel {
   } // end ArmModel constructor
   
   public void draw() {
-    
     noStroke();
     fill(200, 200, 0);
     
-    translate(600, 200, 0);
-
+    translate(ROBOT_POSITION.x, ROBOT_POSITION.y, ROBOT_POSITION.z);
+    
     rotateZ(PI);
     rotateY(PI/2);
     segments.get(0).draw();
@@ -344,8 +343,9 @@ public class ArmModel {
     
     pushMatrix();
     resetMatrix();
-    translate(600, 200, 0);
-
+    
+    translate(ROBOT_POSITION.x, ROBOT_POSITION.y, ROBOT_POSITION.z);
+    
     rotateZ(PI);
     rotateY(PI/2);
     translate(200, 50, 200);
@@ -551,11 +551,10 @@ public class ArmModel {
   
   /* Determine if the given ojbect is collding with any part of the Robot. */
   public boolean checkObjectCollision(Part obj) {
-    BoundingBox ohb = obj.getOBB();
     boolean collision = false;
     
     for(BoundingBox b : bodyHitBoxes) {
-      if( collision3D(ohb, b) ) {
+      if( obj.collision(b) ) {
         b.setColor(color(255, 0, 0));
         collision = true;
       }
@@ -565,7 +564,7 @@ public class ArmModel {
     
     for(BoundingBox b : eeHBs) {
       // Special case for held objects
-      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorState != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && collision3D(ohb, b) ) {
+      if( (activeEndEffector != EndEffector.CLAW || activeEndEffector != EndEffector.SUCTION || endEffectorState != ON || b != eeHitBoxes[1].get(1) || obj != armModel.held) && obj.collision(b) ) {
         b.setColor(color(255, 0, 0));
         collision = true;
       }
@@ -697,9 +696,21 @@ public class ArmModel {
     for(Model a : segments) {
       for(int r = 0; r < 3; r++) {
         if(a.rotations[r]) {
-          if(abs(a.currentRotations[r] - a.targetRotations[r]) > a.rotationSpeed*speed) {
+          System.out.printf("%4.8f -> %4.8f\n", a.currentRotations[r], a.targetRotations[r]);
+          float distToDest = abs(a.currentRotations[r] - a.targetRotations[r]);
+          
+          if (distToDest <= 0.0001f) {
+            // Destination (basically) met
+            continue;
+            
+          } else if (distToDest >= (a.rotationSpeed * speed)) {
             done = false;
             a.currentRotations[r] += a.rotationSpeed * a.rotationDirections[r] * speed;
+            a.currentRotations[r] = mod2PI(a.currentRotations[r]);
+            
+          } else if (distToDest > 0.0001f) {
+            // Destination too close to move at current speed
+            a.currentRotations[r] = a.targetRotations[r];
             a.currentRotations[r] = mod2PI(a.currentRotations[r]);
           }
         }
@@ -707,6 +718,7 @@ public class ArmModel {
     } // end loop through arm segments
     
     if(COLLISION_DISPLAY) { updateBoxes(); }
+    println();
     return done;
   } // end interpolate rotation
   
@@ -923,6 +935,14 @@ public class ArmModel {
    * TODO comment
    */
   public void moveTo(float[] jointAngles) {
+    
+    float[] anglesInDegrees = new float[jointAngles.length];
+    
+    for (int joint = 0; joint < anglesInDegrees.length; ++joint) {
+      anglesInDegrees[joint] = jointAngles[joint] * RAD_TO_DEG;
+    }
+    
+    System.out.printf("Destinations: %s\n", arrayToString(anglesInDegrees));
     setupRotationInterpolation(jointAngles);
     motionType = RobotMotion.MT_JOINT;
   }
@@ -1047,7 +1067,7 @@ public class ArmModel {
             if (wldObj instanceof Part) {
               Part p = (Part)wldObj;
               
-              if (p.getOBB().collision(ee_pos)) {
+              if (p.collision(ee_pos)) {
                 held = p;
                 return 0;
               }

@@ -1,6 +1,3 @@
-// The Y corrdinate of the ground plane
-private static final float PLANE_Y = 200.5f;
-
 private final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
 private int activeScenarioIdx;
 
@@ -30,6 +27,26 @@ public abstract class Shape {
     outlineColor = outline;
     noFill = true;
   }
+  
+  /**
+   * Sets the value of the given dimension associated with
+   * this shape, if that dimension exists.
+   * 
+   * @param newVal  The value to which to set the dimension
+   * @param dim     The dimension of  which ro set the value
+   */
+  public abstract void setDim(Float newVal, DimType dim);
+  
+  /**
+   * Returns the value of the given dimension associated with
+   * this shape. If no such dimension exists, then -1 should
+   * be returned.
+   * 
+   * @param dim  The dimension of which to get the value
+   * @returning  The value of that dimension, or -1, if no
+   *             such dimension exists
+   */
+  public abstract float getDim(DimType dim);
   
   public void draw() {
     // Apply shape outline and fill color
@@ -113,7 +130,38 @@ public class Box extends Shape {
     box(dimensions.x, dimensions.y, dimensions.z);
   }
   
-  public PVector getDimensions() { return dimensions; }
+  @Override
+  public void setDim(Float newVal, DimType dim) {
+    
+    switch (dim) {
+      case LENGTH:
+      // Update length
+        dimensions.x = newVal;
+        break;
+      case HEIGHT:
+      // Update height
+        dimensions.y = newVal;
+        break;
+        
+      case WIDTH:
+        // Update width
+        dimensions.z = newVal;
+        break;
+      // Invalid dimension
+      default:
+    }
+  }
+  
+  @Override
+  public float getDim(DimType dim) {    
+    switch (dim) {
+      case LENGTH:  return dimensions.x;
+      case HEIGHT:  return dimensions.y;
+      case WIDTH:   return dimensions.z;
+      // Invalid dimension
+      default:      return -1f;
+    }
+  }
   
   public Shape clone() {
     Box copy = new Box(getFillColor(), getOutlineColor(), dimensions.x, dimensions.y, dimensions.z);
@@ -178,8 +226,32 @@ public class Cylinder extends Shape {
     endShape();
   }
   
-  public float getRadius() { return radius; }
-  public float getHeight() { return height; }
+  @Override
+  public void setDim(Float newVal, DimType dim) {
+    switch(dim) {
+      case RADIUS:
+      // Update radius
+        radius = newVal;
+        break;
+        
+      case HEIGHT:
+        // Update height
+        height = newVal;
+        break;
+        
+      default:
+    }
+  }
+  
+  @Override
+  public float getDim(DimType dim) {
+    switch(dim) {
+      case RADIUS:  return radius;
+      case HEIGHT:  return height;
+      // Invalid dimension
+      default:      return -1f;
+    }
+  }
   
   public Shape clone() {
     Cylinder copy = new Cylinder(getFillColor(), getOutlineColor(), radius, height);
@@ -212,6 +284,11 @@ public class ModelShape extends Shape {
   public void draw() {
     shape(form);
   }
+  
+  @Override
+  public void setDim(Float newVal, DimType dim) {}
+  @Override
+  public float getDim(DimType dim) { return -1f; }
   
   public String getSourcePath() { return srcFilePath; }
   
@@ -284,10 +361,8 @@ public class CoordinateSystem {
                                 0,                 0,                 0,        1);
   }
   
-  public PVector setOrigin(PVector newCenter) {
-    PVector old = origin;
-    origin = newCenter.copy();
-    return old;
+  public void setOrigin(PVector newCenter) {
+    origin = newCenter;
   }
   
   public PVector getOrigin() { return origin; }
@@ -297,8 +372,7 @@ public class CoordinateSystem {
    * old axes; the given rotation matrix should be in row
    * major order!
    */
-  public float[][] setAxes(float[][] newAxes) {
-    float[][] old = axesVectors;
+  public void setAxes(float[][] newAxes) {
     axesVectors = new float[3][3];
     
     // Copy axes into axesVectors
@@ -307,8 +381,6 @@ public class CoordinateSystem {
         axesVectors[row][col] = newAxes[row][col];
       }
     }
-    
-    return old;
   }
   
   /**
@@ -381,10 +453,8 @@ public class BoundingBox {
   /**
    * Reset the object's center point
    */
-  public PVector setCenter(PVector newCenter) {
-    PVector old = localOrientation.getOrigin();
-    localOrientation.setOrigin(newCenter.copy());
-    return old;
+  public void setCenter(PVector newCenter) {
+    localOrientation.setOrigin(newCenter);
   }
   
   public PVector getCenter() { return localOrientation.getOrigin(); }
@@ -393,10 +463,8 @@ public class BoundingBox {
    * Reset the object's orientation axes; the given rotation
    * matrix should be in row major order!
    */
-  public float[][] setOrientationAxes(float[][] newOrientation) {
-    float[][] old = localOrientation.getAxes();
+  public void setOrientationAxes(float[][] newOrientation) {
     localOrientation.setAxes(newOrientation);
-    return old;
   }
   
   public float[][] getOrientationAxes() {
@@ -412,22 +480,42 @@ public class BoundingBox {
   }
   
   /**
-   * Returns the dimension of the world object's bounding
-   * box corresponding to the axes index given; the axes
-   * indices are as follows:
-   * 
-   * 0 -> x
-   * 1 -> y
-   * 2 -> z
+   * See Box.setDim()
    */
-  public float getDim(int axes) {
-    
-    switch (axes) {
-    case 0:   return boundingBox.dimensions.x;
-    case 1:   return boundingBox.dimensions.y;
-    case 2:   return boundingBox.dimensions.z;
-    default:  return -1f;
-    }
+  public void setDim(Float newVal, DimType dim) {
+    boundingBox.setDim(newVal, dim);
+  }
+  
+  /**
+   * See Box.getDim()
+   */
+  public float getDim(DimType dim) {
+    return boundingBox.getDim(dim);
+  }
+  
+  /**
+   * Sets all the dimension values of the
+   * bounding-box, where:
+   * X -> length
+   * Y -> height
+   * Z -> width
+   */
+  public void setDims(PVector newDims) {
+    boundingBox.setDim(newDims.x, DimType.LENGTH);
+    boundingBox.setDim(newDims.y, DimType.HEIGHT);
+    boundingBox.setDim(newDims.z, DimType.WIDTH);
+  }
+  
+  /**
+   * Returns the bounding-box's dimension in the
+   * form of a PVector: (length, height, width).
+   */
+  public PVector getDims() {
+    PVector dims = new PVector();
+    dims.x = boundingBox.getDim(DimType.LENGTH);
+    dims.y = boundingBox.getDim(DimType.HEIGHT);
+    dims.z = boundingBox.getDim(DimType.WIDTH);
+    return dims;
   }
   
   /**
@@ -444,11 +532,11 @@ public class BoundingBox {
     float[][] tMatrix = transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
     PVector relPosition = transform(point, invertHCMatrix(tMatrix));
     
-    PVector BBDim = boundingBox.getDimensions();
+    PVector OBBDim = getDims();
     // Determine if the point iw within the bounding-box of this object
-    boolean is_inside = relPosition.x >= -(BBDim.x / 2f) && relPosition.x <= (BBDim.x / 2f)
-                     && relPosition.y >= -(BBDim.y / 2f) && relPosition.y <= (BBDim.y / 2f)
-                     && relPosition.z >= -(BBDim.z / 2f) && relPosition.z <= (BBDim.z / 2f);
+    boolean is_inside = relPosition.x >= -(OBBDim.x / 2f) && relPosition.x <= (OBBDim.x / 2f)
+                     && relPosition.y >= -(OBBDim.y / 2f) && relPosition.y <= (OBBDim.y / 2f)
+                     && relPosition.z >= -(OBBDim.z / 2f) && relPosition.z <= (OBBDim.z / 2f);
     
     return is_inside;
   }
@@ -459,7 +547,8 @@ public class BoundingBox {
   public BoundingBox clone() {
     pushMatrix();
     localOrientation.apply();
-    BoundingBox copy = new BoundingBox(getDim(0), getDim(1), getDim(2));
+    PVector dims = getDims();
+    BoundingBox copy = new BoundingBox(dims.x, dims.y, dims.z);
     copy.setColor( boundingBox.getOutlineColor() );
     popMatrix();
     
@@ -473,26 +562,50 @@ public class BoundingBox {
 public abstract class WorldObject {
   private String name;
   private Shape form;
+  protected CoordinateSystem localOrientation;
   
   public WorldObject() {
     name = "Object";
     form = new Box();
+    localOrientation = new CoordinateSystem();
   }
   
   public WorldObject(String n, Shape f) {
     name = n;
     form = f;
+    localOrientation = new CoordinateSystem();
+  }
+  
+  public WorldObject(String n, Shape f, CoordinateSystem cs) {
+    name = n;
+    form = f;
+    localOrientation = cs;
   }
   
   /**
    * Apply the local Coordinate System of the World Object.
    */
-  public abstract void applyCoordinateSystem();
+  public void applyCoordinateSystem() {
+    localOrientation.apply();
+  }
+  /**
+   * Transform the World Object's local Coordinate System to
+   * the current transformation matrix.
+   */
+  public void setCoordinateSystem() {
+    localOrientation = new CoordinateSystem();
+  }
   
   /**
-   * Draw the World Object in its local Coordinate System.
+   * Draw the world object in its local orientation.
    */
-  public abstract void draw();
+  public void draw() {
+    pushMatrix();
+    // Draw shape in its own coordinate system
+    applyCoordinateSystem();
+    getForm().draw();
+    popMatrix();
+  }
   
   /**
    * Returns a list of values with short prefix labels, which descibe
@@ -506,29 +619,26 @@ public abstract class WorldObject {
     
     if (form instanceof Box) {
       fields = new String[3];
-      PVector dimensions = ((Box)form).getDimensions();
       // Add the box's length, height, and width values
-      fields[0] = String.format("L: %4.3f", dimensions.x);
-      fields[1] = String.format("H: %4.3f", dimensions.y);
-      fields[2] = String.format("W: %4.3f", dimensions.z);
+      fields[0] = String.format("L: %4.3f", form.getDim(DimType.LENGTH));
+      fields[1] = String.format("H: %4.3f", form.getDim(DimType.HEIGHT));
+      fields[2] = String.format("W: %4.3f", form.getDim(DimType.WIDTH));
       
     } else if (form instanceof Cylinder) {
       fields = new String[2];
-      float radius = ((Cylinder)form).getRadius(),
-            hgt = ((Cylinder)form).getHeight();
       // Add the cylinder's radius and height values
-      fields[0] = String.format("R: %4.3f", radius);
-      fields[1] = String.format("H: %4.3f", hgt);
+      fields[0] = String.format("R: %4.3f", form.getDim(DimType.RADIUS));
+      fields[1] = String.format("H: %4.3f", form.getDim(DimType.HEIGHT));
       
     } else if (form instanceof ModelShape) {
       if (this instanceof Part)  {
         // Use bounding-box dimensions instead
         fields = new String[3];
-        BoundingBox obb = ((Part)this).getOBB();
+        PVector dims = ((Part)this).getOBBDims();
         
-        fields[0] = String.format("L: %4.3f", obb.getDim(0));
-        fields[1] = String.format("H: %4.3f", obb.getDim(1));
-        fields[2] = String.format("W: %4.3f", obb.getDim(2));
+        fields[0] = String.format("L: %4.3f", dims.x);
+        fields[1] = String.format("H: %4.3f", dims.y);
+        fields[2] = String.format("W: %4.3f", dims.z);
         
       } else {
         // No dimensios to display
@@ -545,11 +655,43 @@ public abstract class WorldObject {
   
   // Getter and Setter methods for the World Object's local orientation, name, and form
   
-  public abstract void setCenter(PVector newCenter);
-  public abstract PVector getCenter();
+  public void setLocalCenter(PVector newCenter) { localOrientation.setOrigin(newCenter); }
   
-  public abstract void setOrientationAxes(float[][] newAxes);
-  public abstract float[][] getOrientationAxes();
+  /**
+   * Updates all non-null values of the object's center position.
+   * If a given value is null, then the origin value remains unchanged.
+   * 
+   * @param x  The new x value*
+   * @param y  The new y value*
+   * @param z  The new z value*
+   *           *null indicates that the origin value will remain unchanged
+   */
+  public void updateLocalCenter(Float x, Float y, Float z) {
+    PVector center = localOrientation.getOrigin();
+    
+    if (x != null) {
+      // Update x value
+      center.x = x;
+    }
+    if (y != null) {
+      // Update y value
+      center.y = y;
+    }
+    if (z != null) {
+      // update z value
+      center.z = z;
+    }
+  }
+  
+  public PVector getLocalCenter() { return localOrientation.getOrigin(); }
+  
+  public void setLocalOrientationAxes(float[][] newAxes) {
+    localOrientation.setAxes(newAxes);
+  }
+  
+  public float[][] getLocalOrientationAxes() {
+    return localOrientation.getAxes();
+  }
   
   public void setName(String newName) { name = newName; }
   public String getName() { return name; }
@@ -563,14 +705,12 @@ public abstract class WorldObject {
  * as its parent Coordinate System.
  */
 public class Fixture extends WorldObject {
-  private CoordinateSystem localOrientation;
   
   /**
    * Create a cube object with the given colors and dimension
    */
   public Fixture(String n, color fill, color outline, float edgeLen) {
     super(n, new Box(fill, outline, edgeLen));
-    localOrientation = new CoordinateSystem();
   }
   
   /**
@@ -578,7 +718,6 @@ public class Fixture extends WorldObject {
    */
   public Fixture(String n, color fill, color outline, float len, float hgt, float wdh) {
     super(n, new Box(fill, outline, len, hgt, wdh));
-    localOrientation = new CoordinateSystem();
   }
   
   /**
@@ -586,7 +725,6 @@ public class Fixture extends WorldObject {
    */
   public Fixture(String n, color fill, color outline, float rad, float hgt) {
     super(n, new Cylinder(fill, outline, rad, hgt));
-    localOrientation = new CoordinateSystem();
   }
   
   /**
@@ -594,43 +732,27 @@ public class Fixture extends WorldObject {
    */
   public Fixture(String n, ModelShape model) {
     super(n, model);
-    localOrientation = new CoordinateSystem();
   }
   
   /**
    * Creates a fixture with the given name and shape, and coordinate system.
    */
   public Fixture(String n, Shape s, CoordinateSystem cs) {
-    super(n, s);
-    localOrientation = cs;
+    super(n, s, cs);
   }
   
   /**
-   * Apply the Coordinate System of the fixture onto the
-   * current transformation matrix.
+   * Applies the inverse of this Fixture's Coordinate System's transformation matrix to the matrix stack.
    */
-  public void applyCoordinateSystem() {
-    localOrientation.apply();
+  public void removeCoordinateSystem() {
+    float[][] tMatrix = transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
+    tMatrix = invertHCMatrix(tMatrix);
+    
+    applyMatrix(tMatrix[0][0], tMatrix[1][0], tMatrix[2][0], tMatrix[0][3],
+                tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[1][3],
+                tMatrix[0][2], tMatrix[1][2], tMatrix[2][2], tMatrix[2][3],
+                            0,             0,             0,             1);
   }
-  
-  /**
-   * Draw fixture only;
-   */
-  public void draw() {
-    pushMatrix();
-    // Draw shape in its own coordinate system
-    applyCoordinateSystem();
-    getForm().draw();
-    popMatrix();
-  }
-  
-  // Getter and Setter methods for the fixture'a local orientation
-  
-  public void setCenter(PVector newCenter) { localOrientation.setOrigin(newCenter); }
-  public PVector getCenter() { return localOrientation.getOrigin(); }
-  
-  public void setOrientationAxes(float[][] newAxes) { localOrientation.setAxes(newAxes); }
-  public float[][] getOrientationAxes() { return localOrientation.getAxes(); }
 }
 
 /**
@@ -638,7 +760,7 @@ public class Fixture extends WorldObject {
  * The bounding box holds the local coordinate system of the object.
  */
 public class Part extends WorldObject {
-  private BoundingBox OBB;
+  private BoundingBox absOBB;
   private Fixture reference;
   
   /**
@@ -646,7 +768,7 @@ public class Part extends WorldObject {
    */
   public Part(String n, color fill, color outline, float edgeLen) {
     super(n, new Box(fill, outline, edgeLen));
-    OBB = new BoundingBox(edgeLen + 15f);
+    absOBB = new BoundingBox(edgeLen + 15f);
   }
   
   /**
@@ -654,7 +776,7 @@ public class Part extends WorldObject {
    */
   public Part(String n, color fill, color outline, float len, float hgt, float wdh) {
     super(n, new Box(fill, outline, len, hgt, wdh));
-    OBB = new BoundingBox(len + 15f, hgt + 15f, wdh + 15f);
+    absOBB = new BoundingBox(len + 15f, hgt + 15f, wdh + 15f);
   }
   
   /**
@@ -662,7 +784,7 @@ public class Part extends WorldObject {
    */
   public Part(String n, color fill, color outline, float rad, float hgt) {
     super(n, new Cylinder(fill, outline, rad, hgt));
-    OBB = new BoundingBox(2f * rad + 5f, 2f * rad + 5f, hgt + 10f);
+    absOBB = new BoundingBox(2f * rad + 5f, 2f * rad + 5f, hgt + 10f);
   }
   
   /**
@@ -670,28 +792,32 @@ public class Part extends WorldObject {
    */
   public Part(String n, ModelShape model, float OBBLen, float OBBHgt, float OBBWid) {
     super(n, model);
-    OBB = new BoundingBox(OBBLen, OBBHgt, OBBWid);
+    absOBB = new BoundingBox(OBBLen, OBBHgt, OBBWid);
   }
   
   /**
-   * Creates a Part with the given name, shape, bounding-box, and fixture reference.
+   * Creates a Part with the given name, shape, bounding-box dimensions, and fixture reference.
    */
-  public Part(String n, Shape s, BoundingBox obb, Fixture fixRef) {
-    super(n, s);
-    OBB = obb;
-    reference = fixRef;
+  public Part(String n, Shape s, PVector OBBDims, CoordinateSystem local, Fixture fixRef) {
+    super(n, s, local);
+    absOBB = new BoundingBox(OBBDims.x, OBBDims.y, OBBDims.z);
+    setFixtureRef(fixRef);
   }
   
-  /**
-   * Apply the part's fixtire reference's local orientation and
-   * then apply the part's own local orientation.
-   */
   public void applyCoordinateSystem() {
-    if (reference != null) {
-      reference.applyCoordinateSystem();
-    }
-    
-    OBB.applyCoordinateSystem();
+    absOBB.applyCoordinateSystem();
+  }
+  
+  public void setCoordinateSystem() {
+    absOBB.setCoordinateSystem();
+  }
+  
+  public void applyLocalCoordinateSystem() {
+    super.applyCoordinateSystem();
+  }
+  
+  public void setLocalCoordinateSystem() {
+    super.setCoordinateSystem();
   }
   
   /**
@@ -703,24 +829,95 @@ public class Part extends WorldObject {
     pushMatrix();
     applyCoordinateSystem();
     getForm().draw();
-    OBB.getBox().draw();
+    absOBB.getBox().draw();
     popMatrix();
   }
   
-  public void setFixtureRef(Fixture refFixture) { reference = refFixture; }
+  /**
+   * Set the fixture reference of this part and
+   * update its absolute orientation.
+   */
+  public void setFixtureRef(Fixture refFixture) {
+    reference = refFixture;
+    updateAbsoluteOrientation();
+  }
+  
   public Fixture getFixtureRef() { return reference; }
+  
+  /**
+   * Update the Part's absolute (or world) orientation
+   * based om its local orientation and fixture
+   * reference's orientation.
+   */
+  private void updateAbsoluteOrientation() {
+    pushMatrix();
+    resetMatrix();
+    
+    if (reference != null) {
+      reference.applyCoordinateSystem();
+    }
+    
+    super.applyCoordinateSystem();
+    absOBB.setCoordinateSystem();
+    popMatrix();
+  }
+  
+  /**
+   * See BoundingBox.setDim()
+   */
+  public void setOBBDim(Float newVal, DimType dim) {
+    absOBB.setDim(newVal, dim);
+  }
+  
+  /**
+   * Set the dimensions of this part's bounding box.
+   */
+  public void setOBBDimenions(PVector newDims) {
+    absOBB.setDims(newDims);
+  }
+  
+  /**
+   * Update all non-null dimensions of the part's bounding-box. This method functions
+   * similiar to updateLocalCenter().
+   * 
+   * @param newLength  The new length value*
+   * @param newHeight  The new height value*
+   * @param newWidth   The new length value*
+   *                   *null indicates that the origin value will be unchanged
+   */
+  public void updateOBBDimensions(Float newLength, Float newHeight, Float newWidth) {
+    if (newLength != null) {
+      // Update the length
+      absOBB.setDim(newLength, DimType.LENGTH);
+    }
+    if (newHeight != null) {
+      // Update the height
+      absOBB.setDim(newHeight, DimType.HEIGHT);
+    }
+    if (newWidth != null) {
+      // Update the width
+      absOBB.setDim(newWidth, DimType.WIDTH);
+    }
+  }
+  
+  /**
+   * Get the dimensions of the part's bounding-box
+   */
+  public PVector getOBBDims() {
+    return absOBB.getDims();
+  }
   
   /**
    * Return a reference to this object's bounding-box.
    */ 
-  public BoundingBox getOBB() { return OBB; }
+  public BoundingBox getOBB() { return absOBB; }
   
   /**
    * Sets the outline color of the world's bounding-box
    * to the given value.
    */
   public void setBBColor(color newColor) {
-    OBB.setColor(newColor);
+    absOBB.setColor(newColor);
   }
   
   /**
@@ -728,7 +925,15 @@ public class Part extends WorldObject {
    * with this world object.
    */
   public boolean collision(Part obj) {
-    return collision3D(OBB, obj.getOBB());
+    return collision3D(absOBB, obj.getOBB());
+  }
+  
+  /**
+   * Determies if the given bounding box is colliding
+   * with this Part's bounding box.
+   */
+  public boolean collision(BoundingBox obb) {
+    return collision3D(absOBB, obb);
   }
   
   /**
@@ -736,16 +941,18 @@ public class Part extends WorldObject {
    * this object's bounding box.
    */
   public boolean collision(PVector point) {
-    return OBB.collision(point);
+    return absOBB.collision(point);
   }
   
-  // Getter and Setter methods for the fixture'a local orientation and name
+  public void setLocalCenter(float x, float y, float z) {
+    super.updateLocalCenter(x, y, z);
+    updateAbsoluteOrientation();
+  }
   
-  public void setCenter(PVector newCenter) { OBB.setCenter(newCenter); }
-  public PVector getCenter() { return OBB.getCenter(); }
-  
-  public void setOrientationAxes(float[][] newAxes) { OBB.setOrientationAxes(newAxes); }
-  public float[][] getOrientationAxes() { return OBB.getOrientationAxes(); }
+  public void setLocalOrientationAxes(float[][] newAxes) {
+    super.setLocalOrientationAxes(newAxes);
+    updateAbsoluteOrientation();
+  }
 }
 
 /**
@@ -927,6 +1134,11 @@ public class Scenario implements Iterable<WorldObject> {
           resetMatrix();
           
           // new object transform = EE transform x (old EE transform) ^ -1 x current object transform
+          Fixture refFixture = p.getFixtureRef();
+        
+          if (refFixture != null) {
+            refFixture.removeCoordinateSystem();
+          }
           
           applyModelRotation(model.getJointAngles());
           
@@ -936,10 +1148,10 @@ public class Scenario implements Iterable<WorldObject> {
                       invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
                                        0,                 0,                   0,                  1);
           
-          armModel.held.getOBB().applyCoordinateSystem();
+          p.applyCoordinateSystem();
           // Update the world object's position and orientation
-          armModel.held.getOBB().setCoordinateSystem();
-          
+          p.setLocalCoordinateSystem();
+          p.updateAbsoluteOrientation();
           popMatrix();
         }
         
@@ -964,7 +1176,7 @@ public class Scenario implements Iterable<WorldObject> {
             }
           }
           
-          if( model != null && p != model.held && p.getOBB().collision( nativeRobotEEPoint(model.getJointAngles()).position) ) {
+          if( model != null && p != model.held && p.collision( nativeRobotEEPoint(model.getJointAngles()).position) ) {
             // Change hit box color to indicate End Effector collision
             p.setBBColor(color(0, 0, 255));
           }
@@ -1186,20 +1398,35 @@ public static boolean collision3D(BoundingBox A, BoundingBox B) {
   float radiA, radiB;
   
   for(int idx = 0; idx < absRotMatrix.length; ++idx) {
-    radiA = (A.getDim(idx) / 2);
-    radiB = (B.getDim(0) / 2) * absRotMatrix[idx][0] + 
-    (B.getDim(1) / 2) * absRotMatrix[idx][1] + 
-    (B.getDim(2) / 2) * absRotMatrix[idx][2];
+    
+    if (idx == 0) {
+      radiA = A.getDim(DimType.LENGTH) / 2f;
+    } else if (idx == 1) {
+      radiA = A.getDim(DimType.HEIGHT) / 2f;
+    } else {
+      radiA = A.getDim(DimType.WIDTH) / 2f;
+    }
+    
+    radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[idx][0] + 
+    (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[idx][1] + 
+    (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[idx][2];
     
     // Check Ax, Ay, and Az
     if(abs(T[idx]) > (radiA + radiB)) { return false; }
   }
   
   for(int idx = 0; idx < absRotMatrix[0].length; ++idx) {
-    radiA = (A.getDim(0) / 2) * absRotMatrix[0][idx] + 
-    (A.getDim(1) / 2) * absRotMatrix[1][idx] + 
-    (A.getDim(2) / 2) * absRotMatrix[2][idx];
-    radiB = (B.getDim(idx) / 2);
+    radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[0][idx] + 
+    (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[1][idx] + 
+    (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[2][idx];
+    
+    if (idx == 0) {
+      radiB = B.getDim(DimType.LENGTH) / 2f;
+    } else if (idx == 1) {
+      radiB = B.getDim(DimType.HEIGHT) / 2f;
+    } else {
+      radiB = B.getDim(DimType.WIDTH) / 2f;
+    }
     
     float check = abs(T[0]*rotMatrix[0][idx] + 
     T[1]*rotMatrix[1][idx] + 
@@ -1209,49 +1436,49 @@ public static boolean collision3D(BoundingBox A, BoundingBox B) {
     if(check > (radiA + radiB)) { return false; }
   }
   
-  radiA = (A.getDim(1) / 2) * absRotMatrix[2][0] + (A.getDim(2) / 2) * absRotMatrix[1][0];
-  radiB = (B.getDim(1) / 2) * absRotMatrix[0][2] + (B.getDim(2) / 2) * absRotMatrix[0][1];
+  radiA = (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[2][0] + (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[1][0];
+  radiB = (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[0][2] + (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[0][1];
   // Check axes Ax x Bx
   if(abs(T[2] * rotMatrix[1][0] - T[1] * rotMatrix[2][0]) > (radiA + radiB)) { return false; }
   
-  radiA = (A.getDim(1) / 2) * absRotMatrix[2][1] + (A.getDim(2) / 2) * absRotMatrix[1][1];
-  radiB = (B.getDim(0) / 2) * absRotMatrix[0][2] + (B.getDim(2) / 2) * absRotMatrix[0][0];
+  radiA = (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[2][1] + (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[1][1];
+  radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[0][2] + (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[0][0];
   // Check axes Ax x By
   if(abs(T[2] * rotMatrix[1][1] - T[1] * rotMatrix[2][1]) > (radiA + radiB)) { return false; }
   
-  radiA = (A.getDim(1) / 2) * absRotMatrix[2][2] + (A.getDim(2) / 2) * absRotMatrix[1][2];
-  radiB = (B.getDim(0) / 2) * absRotMatrix[0][1] + (B.getDim(1) / 2) * absRotMatrix[0][0];
+  radiA = (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[2][2] + (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[1][2];
+  radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[0][1] + (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[0][0];
   // Check axes Ax x Bz
   if(abs(T[2] * rotMatrix[1][2] - T[1] * rotMatrix[2][2]) > (radiA + radiB)) { return false; }
   
-  radiA = (A.getDim(0) / 2) * absRotMatrix[2][0] + (A.getDim(2) / 2) * absRotMatrix[0][0];
-  radiB = (B.getDim(1) / 2) * absRotMatrix[1][2] + (B.getDim(2) / 2) * absRotMatrix[1][1];
+  radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[2][0] + (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[0][0];
+  radiB = (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[1][2] + (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[1][1];
   // Check axes Ay x Bx
   if(abs(T[0] * rotMatrix[2][0] - T[2] * rotMatrix[0][0]) > (radiA + radiB)) { return false; }
   
-  radiA = (A.getDim(0) / 2) * absRotMatrix[2][1] + (A.getDim(2) / 2) * absRotMatrix[0][1];
-  radiB = (B.getDim(0) / 2) * absRotMatrix[1][2] + (B.getDim(2) / 2) * absRotMatrix[1][0];
+  radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[2][1] + (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[0][1];
+  radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[1][2] + (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[1][0];
   // Check axes Ay x By
   if(abs(T[0] * rotMatrix[2][1] - T[2] * rotMatrix[0][1]) > (radiA + radiB)) { return false; }
   
-  radiA = (A.getDim(0) / 2) * absRotMatrix[2][2] + (A.getDim(2) / 2) * absRotMatrix[0][2];
-  radiB = (B.getDim(0) / 2) * absRotMatrix[1][1] + (B.getDim(1) / 2) * absRotMatrix[1][0];
+  radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[2][2] + (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[0][2];
+  radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[1][1] + (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[1][0];
   // Check axes Ay x Bz
   if(abs(T[0] * rotMatrix[2][2] - T[2] * rotMatrix[0][2]) > (radiA + radiB)) { return false; }
   
   
-  radiA = (A.getDim(0) / 2) * absRotMatrix[1][0] + (A.getDim(1) / 2) * absRotMatrix[0][0];
-  radiB = (B.getDim(1) / 2) * absRotMatrix[2][2] + (B.getDim(2) / 2) * absRotMatrix[2][1];
+  radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[1][0] + (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[0][0];
+  radiB = (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[2][2] + (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[2][1];
   // Check axes Az x Bx
   if(abs(T[1] * rotMatrix[0][0] - T[0] * rotMatrix[1][0]) > (radiA + radiB)) { return false; }
   
-  radiA = (A.getDim(0) / 2) * absRotMatrix[1][1] + (A.getDim(1) / 2) * absRotMatrix[0][1];
-  radiB = (B.getDim(0) / 2) * absRotMatrix[2][2] + (B.getDim(2) / 2) * absRotMatrix[2][0];
+  radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[1][1] + (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[0][1];
+  radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[2][2] + (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[2][0];
   // Check axes Az x By
   if(abs(T[1] * rotMatrix[0][1] - T[0] * rotMatrix[1][1]) > (radiA + radiB)) { return false; }
   
-  radiA = (A.getDim(0) / 2) * absRotMatrix[1][2] + (A.getDim(1) / 2) * absRotMatrix[0][2];
-  radiB = (B.getDim(0) / 2) * absRotMatrix[2][1] + (B.getDim(1) / 2) * absRotMatrix[2][0];
+  radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[1][2] + (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[0][2];
+  radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[2][1] + (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[2][0];
   // Check axes Az x Bz
   if(abs(T[1] * rotMatrix[0][2] - T[0] * rotMatrix[1][2]) > (radiA + radiB)) { return false; }
   

@@ -84,7 +84,7 @@ public byte loadState() {
   File scenarioFile = new File(sketchPath("tmp/scenarios.bin"));
   
   if(scenarioFile.exists()) {
-    int ret = loadScenarioBytes(scenarioFile); //<>// //<>// //<>// //<>//
+    int ret = loadScenarioBytes(scenarioFile); //<>// //<>//
     
     if(ret == 0) {
       println("Successfully loaded scenarios!");
@@ -365,7 +365,7 @@ private Point loadPoint(DataInputStream in) throws IOException {
     float[] angles = loadFloatArray(in);
     
     if (angles == null) {
-      println("null angles!"); //<>// //<>// //<>// //<>//
+      println("null angles!"); //<>// //<>//
     }
     
     return new Point(position, orientation, angles);
@@ -1028,7 +1028,7 @@ public int saveScenarioBytes(File dest) {
 public int loadScenarioBytes(File src) {
   
   try {
-    FileInputStream in = new FileInputStream(src); //<>// //<>// //<>// //<>//
+    FileInputStream in = new FileInputStream(src); //<>// //<>//
     DataInputStream dataIn = new DataInputStream(in);
     
     int numOfScenarios = dataIn.readInt();
@@ -1113,7 +1113,7 @@ public void saveScenario(Scenario s, DataOutputStream out) throws IOException {
  */
 public Scenario loadScenario(DataInputStream in) throws IOException, NullPointerException {
   // Read flag byte
-  byte flag = in.readByte(); //<>// //<>// //<>// //<>//
+  byte flag = in.readByte(); //<>// //<>//
   
   if (flag == 0) {
     return null;
@@ -1144,7 +1144,7 @@ public Scenario loadScenario(DataInputStream in) throws IOException, NullPointer
  */
 public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {
   
-  if (wldObj == null) { //<>// //<>// //<>// //<>//
+  if (wldObj == null) { //<>// //<>//
     // Indicate that the value saved is null
     out.writeByte(0);
     
@@ -1160,18 +1160,15 @@ public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOE
     // Save the name and form of the object
     out.writeUTF(wldObj.getName());
     saveShape(wldObj.getForm(), out);
+    // Save the local orientation of the object
+    savePVector(wldObj.getLocalCenter(), out);
+    saveFloatArray2D(wldObj.getLocalOrientationAxes(), out);
     
     if (wldObj instanceof Part) {
       Part part = (Part)wldObj;
-      // Save the bounding-box and fixture reference of the part
-      saveOBB(part.getOBB(), out);
+      // Save the fixture reference of the part
+      savePVector(part.getOBBDims(), out);
       saveWorldObject(part.getFixtureRef(), out);
-      
-    } else if (wldObj instanceof Fixture) {
-      Fixture fixture = (Fixture)wldObj;
-      // Save the local orientation of the fixture
-      savePVector(fixture.getCenter(), out);
-      saveFloatArray2D(fixture.getOrientationAxes(), out);
       
     }
   }
@@ -1190,31 +1187,29 @@ public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOE
  */
 public WorldObject loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
   // Load the flag byte
-  byte flag = in.readByte(); //<>// //<>// //<>// //<>//
+  byte flag = in.readByte(); //<>// //<>//
   WorldObject wldObj = null;
   
   if (flag != 0) {
     // Load the name and shape of the object
     String name = in.readUTF();
     Shape form = loadShape(in);
+    // Load the object's local orientation
+    PVector center = loadPVector(in);
+    float[][] orientationAxes = loadFloatArray2D(in);
+    CoordinateSystem localOrientation = new CoordinateSystem();
+    localOrientation.setOrigin(center);
+    localOrientation.setAxes(orientationAxes);
     
     if (flag == 1) {
       // Load the part's bounding-box and fixture reference
-      BoundingBox OBB = loadOBB(in);
+      PVector OBBDims = loadPVector(in);
       Fixture reference = (Fixture)loadWorldObject(in);
       
-      wldObj = new Part(name, form, OBB, reference);
+      wldObj = new Part(name, form, OBBDims, localOrientation, reference);
       
     } else if (flag == 2) {
-      // Load the fixture's local orientation
-      PVector center = loadPVector(in);
-      float[][] orientationAxes = loadFloatArray2D(in);
-      CoordinateSystem localOrientation = new CoordinateSystem();
-      localOrientation.setOrigin(center);
-      localOrientation.setAxes(orientationAxes);
-      
       wldObj = new Fixture(name, form, localOrientation);
-      
     } 
   }
   
@@ -1241,9 +1236,9 @@ public void saveOBB(BoundingBox OBB, DataOutputStream out) throws IOException {
     // Indicate the saved value is non-null
     out.writeByte(1);
     // Save the bounding-boxe's dimensions
-    out.writeFloat( OBB.getDim(0) );
-    out.writeFloat( OBB.getDim(1) );
-    out.writeFloat( OBB.getDim(2) );
+    out.writeFloat( OBB.getDim(DimType.LENGTH) );
+    out.writeFloat( OBB.getDim(DimType.HEIGHT) );
+    out.writeFloat( OBB.getDim(DimType.WIDTH) );
     // Save the local orientation of the bounding-box
     savePVector(OBB.getCenter(), out);
     saveFloatArray2D(OBB.getOrientationAxes(), out);
@@ -1373,15 +1368,15 @@ public void saveShape(Shape shape, DataOutputStream out) throws IOException {
     out.writeInt( shape.getOutlineColor() );
     
     if (shape instanceof Box) {
-      Box b = (Box)shape;
       // Save length, height, and width of the box
-      savePVector(b.getDimensions(), out);
+      out.writeFloat(shape.getDim(DimType.LENGTH));
+      out.writeFloat(shape.getDim(DimType.HEIGHT));
+      out.writeFloat(shape.getDim(DimType.WIDTH));
       
     } else if (shape instanceof Cylinder) {
-      Cylinder c = (Cylinder)shape;
       // Save the radius and height of the cylinder
-      out.writeFloat(c.getRadius());
-      out.writeFloat(c.getHeight());
+      out.writeFloat(shape.getDim(DimType.RADIUS));
+      out.writeFloat(shape.getDim(DimType.HEIGHT));
       
     } else if (shape instanceof ModelShape) {
       ModelShape m = (ModelShape)shape;
@@ -1414,9 +1409,11 @@ public Shape loadShape(DataInputStream in) throws IOException, NullPointerExcept
         outline = in.readInt();
           
     if (flag == 1) {
-      PVector dimensions = loadPVector(in);
+      float x = in.readFloat(),
+            y = in.readFloat(),
+            z = in.readFloat();
       // Create a box
-      shape = new Box(fill, outline, dimensions.x, dimensions.y, dimensions.z);
+      shape = new Box(fill, outline, x, y, z);
       shape.setFillFlag(isFilled);
       
     } else if (flag == 2) {
