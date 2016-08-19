@@ -603,7 +603,7 @@ public abstract class WorldObject {
     pushMatrix();
     // Draw shape in its own coordinate system
     applyCoordinateSystem();
-    getForm().draw();
+    form.draw();
     popMatrix();
   }
   
@@ -804,10 +804,12 @@ public class Part extends WorldObject {
     setFixtureRef(fixRef);
   }
   
+  @Override
   public void applyCoordinateSystem() {
     absOBB.applyCoordinateSystem();
   }
   
+  @Override
   public void setCoordinateSystem() {
     absOBB.setCoordinateSystem();
   }
@@ -829,7 +831,7 @@ public class Part extends WorldObject {
     pushMatrix();
     applyCoordinateSystem();
     getForm().draw();
-    absOBB.getBox().draw();
+    if (COLLISION_DISPLAY) { absOBB.getBox().draw(); }
     popMatrix();
   }
   
@@ -877,30 +879,6 @@ public class Part extends WorldObject {
   }
   
   /**
-   * Update all non-null dimensions of the part's bounding-box. This method functions
-   * similiar to updateLocalCenter().
-   * 
-   * @param newLength  The new length value*
-   * @param newHeight  The new height value*
-   * @param newWidth   The new length value*
-   *                   *null indicates that the origin value will be unchanged
-   */
-  public void updateOBBDimensions(Float newLength, Float newHeight, Float newWidth) {
-    if (newLength != null) {
-      // Update the length
-      absOBB.setDim(newLength, DimType.LENGTH);
-    }
-    if (newHeight != null) {
-      // Update the height
-      absOBB.setDim(newHeight, DimType.HEIGHT);
-    }
-    if (newWidth != null) {
-      // Update the width
-      absOBB.setDim(newWidth, DimType.WIDTH);
-    }
-  }
-  
-  /**
    * Get the dimensions of the part's bounding-box
    */
   public PVector getOBBDims() {
@@ -910,7 +888,7 @@ public class Part extends WorldObject {
   /**
    * Return a reference to this object's bounding-box.
    */ 
-  public BoundingBox getOBB() { return absOBB; }
+  private BoundingBox getOBB() { return absOBB; }
   
   /**
    * Sets the outline color of the world's bounding-box
@@ -942,16 +920,6 @@ public class Part extends WorldObject {
    */
   public boolean collision(PVector point) {
     return absOBB.collision(point);
-  }
-  
-  public void setLocalCenter(float x, float y, float z) {
-    super.updateLocalCenter(x, y, z);
-    updateAbsoluteOrientation();
-  }
-  
-  public void setLocalOrientationAxes(float[][] newAxes) {
-    super.setLocalOrientationAxes(newAxes);
-    updateAbsoluteOrientation();
   }
 }
 
@@ -1108,19 +1076,25 @@ public class Scenario implements Iterable<WorldObject> {
   }
   
   /**
-   * Updates the collision detection of all the Parts in the scenario,
-   * using the given ArmModel to detect collisions between world objects
-   * and the armModel, and draw every object.
+   * Return the color of all the object's bounding
+   * boxes to normal (green).
    */
-  public void updateAndDrawObjects(ArmModel model) {
-    int numOfObjects = objList.size();
-    
+  public void resetObjectHitBoxColors() {
     for (WorldObject wldObj : objList) {
       if (wldObj instanceof Part) {
         // Reset all Part bounding-box colors
         ((Part)wldObj).setBBColor(color(0, 255, 0));
       }
     }
+  }
+  
+  /**
+   * Updates the collision detection of all the Parts in the scenario,
+   * using the given ArmModel to detect collisions between world objects
+   * and the armModel, and draws every object.
+   */
+  public void updateAndDrawObjects(ArmModel model) {
+    int numOfObjects = objList.size();
     
     for (int idx = 0; idx < numOfObjects; ++idx) {
       WorldObject wldObj = objList.get(idx);
@@ -1133,7 +1107,19 @@ public class Scenario implements Iterable<WorldObject> {
           pushMatrix();
           resetMatrix();
           
-          // new object transform = EE transform x (old EE transform) ^ -1 x current object transform
+          /***********************************************
+             Moving a part with the Robot:
+            
+             P' = R^-1 x E' x E^-1 x P
+             
+             where:
+             P' - new part local orientation
+             R  - part fixture reference orientation
+             E' - current Robot end effector orientation
+             E  - previous Robot end effector orientation
+             P  - current part loval orientation
+           ***********************************************/
+          
           Fixture refFixture = p.getFixtureRef();
         
           if (refFixture != null) {
@@ -1142,7 +1128,7 @@ public class Scenario implements Iterable<WorldObject> {
           
           applyModelRotation(model.getJointAngles());
           
-          float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
+          float[][] invEETMatrix = invertHCMatrix(armModel.oldEEOrientation);
           applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
                       invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
                       invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
@@ -1354,7 +1340,6 @@ public Scenario activeScenario() {
     return SCENARIOS.get(activeScenarioIdx);
     
   } else {
-    //System.out.printf("Invalid scenaro index: %d!\n", activeScenarioIdx);
     return null;
   }
 }

@@ -1248,14 +1248,14 @@ public class WindowManager {
         // Convert origin position and orientation into the World Frame
         PVector oPosition = convertNativeToWorld( toEdit.getLocalCenter() ),
                 oWPR = convertNativeToWorld( matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RAD_TO_DEG) );
-        float[] inputValues = getOrientationValues();
+        Float[] inputValues = getOrientationValues();
         // Update position and orientation
-        if (!Float.isNaN(inputValues[0])) { oPosition.x = inputValues[0]; }
-        if (!Float.isNaN(inputValues[1])) { oPosition.y = inputValues[1]; }
-        if (!Float.isNaN(inputValues[2])) { oPosition.z = inputValues[2]; }
-        if (!Float.isNaN(inputValues[3])) { oWPR.x = inputValues[3]; }
-        if (!Float.isNaN(inputValues[4])) { oWPR.y = inputValues[4]; }
-        if (!Float.isNaN(inputValues[5])) { oWPR.z = inputValues[5]; }
+        if (inputValues[0] != null) { oPosition.x = inputValues[0]; }
+        if (inputValues[1] != null) { oPosition.y = inputValues[1]; }
+        if (inputValues[2] != null) { oPosition.z = inputValues[2]; }
+        if (inputValues[3] != null) { oWPR.x = inputValues[3]; }
+        if (inputValues[4] != null) { oWPR.y = inputValues[4]; }
+        if (inputValues[5] != null) { oWPR.z = inputValues[5]; }
         
         // Convert values from the World to the Native coordinate system
         PVector position = convertWorldToNative( oPosition );
@@ -1361,7 +1361,7 @@ public class WindowManager {
    */
   private Float[] getCylinderDimensions() {
     try {
-      // NaN values represent an uninitialized field
+      // null values represent an uninitialized field
       final Float[] dimensions = new Float[] { null, null };
       
       // Pull from the dim fields
@@ -1407,7 +1407,7 @@ public class WindowManager {
    */
   private Float[] getModelOBBDimensions() {
     try {
-      // NaN values represent an uninitialized field
+      // null values represent an uninitialized field
       final Float[] dimensions = new Float[] { null, null, null };
       
       // Pull from the dim fields
@@ -1463,14 +1463,14 @@ public class WindowManager {
   /**
    * TODO
    */
-  private float[] getOrientationValues() {
+  private Float[] getOrientationValues() {
     try {
         // Pull from x, y, z, w, p, r, fields input fields
         String xFieldVal = objOrientationFields[0].getText(), yFieldVal = objOrientationFields[1].getText(),
                zFieldVal = objOrientationFields[2].getText(), wFieldVal = objOrientationFields[3].getText(),
                pFieldVal = objOrientationFields[4].getText(), rFieldVal = objOrientationFields[5].getText();
         // NaN indicates an uninitialized field
-        float[] values = new float[] { Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN };
+        Float[] values = new Float[] { null, null, null, null, null, null };
         
         // Update x value
         if (xFieldVal != null && !xFieldVal.equals("")) {
