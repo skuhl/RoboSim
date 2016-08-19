@@ -162,7 +162,7 @@ public void showMainDisplayText() {
   manager.updateWindowDisplay();
 }
 
-/** //<>//
+/** //<>// //<>// //<>// //<>//
  * Transitions to the next Coordinate frame in the cycle, updating the Robot's current frame
  * in the process and skipping the Tool or User frame if there are no active frames in either
  * one. Since the Robot's frame is potentially reset in this method, all Robot motion is halted.
@@ -262,7 +262,7 @@ public Point nativeRobotPointOffset(float[] jointAngles, PVector offset) {
 }
 
 /**
- * Returns the Robot's End Effectir position according to the active Tool Frame's
+ * Returns the Robot's End Effector position according to the active Tool Frame's
  * offset in the native Coordinate System.
  * 
  * @param jointAngles  A valid set of six joint angles (in radians) for the Robot

@@ -559,6 +559,7 @@ public final class MotionInstruction extends Instruction  {
   
   public String[] toStringArray() {
     String[] fields = new String[5];
+    
     // Motion type
     switch(motionType) {
       case MTYPE_JOINT:
