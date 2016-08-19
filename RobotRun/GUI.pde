@@ -1045,7 +1045,6 @@ public void up() {
         System.out.printf("\nOpt: %d\nProg: %d\nTRS: %d\n\n",
         opt_select, active_prog, start_render);
       }
-      
       break;
     case NAV_PROG_INST:
     case SELECT_COMMENT:
@@ -1064,6 +1063,8 @@ public void up() {
     case NAV_DREGS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
+    case NAV_TOOL_FRAMES:
+    case NAV_USER_FRAMES:
       active_index = moveUp(shift);
       
       if(DISPLAY_TEST_OUTPUT) {
@@ -1105,8 +1106,6 @@ public void up() {
     case SETUP_NAV:
       opt_select = max(0, opt_select - 1);
       break;
-    case NAV_TOOL_FRAMES:
-    case NAV_USER_FRAMES:
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
     case EDIT_PREG_C:
@@ -1151,6 +1150,8 @@ public void dn() {
         row_select, col_select, active_instr, start_render);
       }
       break;
+    case NAV_TOOL_FRAMES:
+    case NAV_USER_FRAMES:
     case NAV_DREGS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
@@ -1194,11 +1195,9 @@ public void dn() {
     case SET_CALL_PROG:
     case SETUP_NAV:
       opt_select = min(opt_select + 1, options.size() - 1);
-      break;
-    case NAV_TOOL_FRAMES:
-    case NAV_USER_FRAMES: //<>// //<>// //<>//
+      break; //<>//
     case DIRECT_ENTRY_TOOL:
-    case DIRECT_ENTRY_USER: //<>// //<>// //<>//
+    case DIRECT_ENTRY_USER: //<>//
     case EDIT_PREG_C:
     case EDIT_PREG_J:
       row_select = min(row_select + 1, contents.size() - 1);
@@ -1224,7 +1223,7 @@ public void lt() {
     case NAV_PROG_INST:
       if (!programRunning) {
         // Lock movement when a program is running
-        col_select = max(0, col_select - 1);
+        moveLeft();
       }
       break;
     case NAV_DREGS:
@@ -1251,8 +1250,7 @@ public void rt() {
     case NAV_PROG_INST:
       if (!programRunning) {
         // Lock movement when a program is running
-        col_select = min(col_select + 1, contents.get(row_select).size() - 1);
-        updateScreen();
+        moveRight();
       }
       break;
     case DIRECT_ENTRY_USER:
@@ -1474,13 +1472,15 @@ public void f3() {
       nextScreen(Screen.CONFIRM_PROG_DELETE);
       break;
     case NAV_PROG_INST:
+      int selectIdx = getSelectedIdx();
       if(activeInstruction() instanceof IfStatement) {
         IfStatement stmt = (IfStatement)activeInstruction();
-        
-        if(stmt.expr instanceof Expression && col_select >= 2) {
-          ((Expression)stmt.expr).insertElement(col_select - 3);
+                
+        if(stmt.expr instanceof Expression && selectIdx >= 2) {
+          ((Expression)stmt.expr).insertElement(selectIdx - 3);
         }
         
+        updateScreen();
         rt();
       } 
       else if(activeInstruction() instanceof SelectStatement) {
@@ -1489,7 +1489,8 @@ public void f3() {
       }
       else if(activeInstruction() instanceof RegisterStatement) {
         RegisterStatement stmt = (RegisterStatement)activeInstruction();
-        stmt.expr.insertElement(col_select - 4);
+        stmt.expr.insertElement(selectIdx - 4);
+        updateScreen();
         rt();
       }
       
@@ -1552,7 +1553,8 @@ public void f4() {
     Instruction ins = activeInstruction();
     
     if (ins != null) {
-      getInstrEdit(ins);
+      int selectIdx = getSelectedIdx();
+      getInstrEdit(ins, selectIdx);
     }
     break;
   case CONFIRM_INSERT:
@@ -1720,22 +1722,23 @@ public void f5() {
   switch(mode) {
     case NAV_PROG_INST:
       Instruction i = activeInstruction();
-    
-      if(col_select == 0) {
+      int selectIdx = getSelectedIdx();
+      
+      if(selectIdx == 0) {
         nextScreen(Screen.INSTRUCT_MENU_NAV);
       }
-      else if(i instanceof MotionInstruction && col_select == 3) {
+      else if(i instanceof MotionInstruction && selectIdx == 3) {
         nextScreen(Screen.VIEW_INST_REG);
       }
       else if(i instanceof IfStatement) {
         IfStatement stmt = (IfStatement)i;
         if(stmt.expr instanceof Expression) {
-          ((Expression)stmt.expr).removeElement(col_select - 3);
+          ((Expression)stmt.expr).removeElement(selectIdx - 3);
         }
       }
       else if(i instanceof RegisterStatement) {
         RegisterStatement stmt = (RegisterStatement)i;
-        stmt.expr.removeElement(col_select - 4);
+        stmt.expr.removeElement(selectIdx - 4);
       }
       break;
     case TEACH_3PT_USER:
@@ -3248,7 +3251,7 @@ public void loadScreen(){
     case NAV_TOOL_FRAMES:
     case NAV_USER_FRAMES:
       row_select = 0;
-      col_select = -1;
+      col_select = 0;
       break;
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
@@ -3300,7 +3303,6 @@ public void loadScreen(){
     case NAV_PROG_INST:
       //need to enforce row/ column select limits based on 
       //program length/ instruction width
-      row_select = active_instr - start_render;
       //col_select = min(col_select, activeInstruct().length);
       opt_select = -1;
       break;
@@ -4491,9 +4493,9 @@ public void updateInstructions() {
   lastScreen();
 }
 
-public void getInstrEdit(Instruction ins) {
+public void getInstrEdit(Instruction ins, int editIdx) {
   if(ins instanceof MotionInstruction) {
-    switch(col_select) {
+    switch(editIdx) {
       case 2: // motion type
         nextScreen(Screen.SET_MV_INSTRUCT_TYPE);
         break;
@@ -4512,7 +4514,7 @@ public void getInstrEdit(Instruction ins) {
     }
   }
   else if(ins instanceof FrameInstruction) {
-    switch(col_select) {
+    switch(editIdx) {
       case 1:
         nextScreen(Screen.SET_FRM_INSTR_TYPE);
         break;
@@ -4522,7 +4524,7 @@ public void getInstrEdit(Instruction ins) {
     }
   }
   else if(ins instanceof IOInstruction) {
-     switch(col_select) {
+     switch(editIdx) {
       case 1:
         nextScreen(Screen.SET_IO_INSTR_IDX);
         break;
@@ -4543,53 +4545,53 @@ public void getInstrEdit(Instruction ins) {
     if(stmt.expr instanceof Expression) {
       int len = stmt.expr.getLength();
       
-      if(col_select >= 3 && col_select < len + 1) {
+      if(editIdx >= 3 && editIdx < len + 1) {
         editExpression((Expression)stmt.expr, 3);
-      } else if(col_select == len + 2) {
+      } else if(editIdx == len + 2) {
         nextScreen(Screen.SET_IF_STMT_ACT);
-      } else if(col_select == len + 3) {
+      } else if(editIdx == len + 3) {
         if(stmt.instr instanceof JumpInstruction) {
           nextScreen(Screen.SET_JUMP_TGT);
         } else {
-          //edit call instruct
+          nextScreen(Screen.SET_CALL_PROG);
         }
       }
     } 
     else if(stmt.expr instanceof BooleanExpression) {
-      if(col_select == 2) {
+      if(editIdx == 2) {
         opEdit = ((BooleanExpression)stmt.expr).getArg1();
         nextScreen(Screen.SET_BOOL_EXPR_ARG);
-      } else if(col_select == 3) {
+      } else if(editIdx == 3) {
         opEdit = stmt.expr;
         nextScreen(Screen.SET_EXPR_OP);
-      } else if(col_select == 4){
+      } else if(editIdx == 4){
         opEdit = ((BooleanExpression)stmt.expr).getArg2();
         nextScreen(Screen.SET_BOOL_EXPR_ARG);
-      } else if(col_select == 5){
+      } else if(editIdx == 5){
         nextScreen(Screen.SET_IF_STMT_ACT);
       } else {
         if(stmt.instr instanceof JumpInstruction) {
           nextScreen(Screen.SET_JUMP_TGT);
         } else {
-          //edit call instruct
+          nextScreen(Screen.SET_CALL_PROG);
         }
       }
     }
   } else if(ins instanceof SelectStatement) {
     SelectStatement stmt = (SelectStatement)ins;
     
-    if(col_select == 2) {
+    if(editIdx == 2) {
       opEdit = stmt.arg;
       nextScreen(Screen.SET_SELECT_STMT_ARG);
-    } else if((col_select - 3) % 3 == 0) {
-      opEdit = stmt.cases.get((col_select - 3)/3);
+    } else if((editIdx - 3) % 3 == 0) {
+      opEdit = stmt.cases.get((editIdx - 3)/3);
       nextScreen(Screen.SET_SELECT_STMT_ARG);
-    } else if((col_select - 3) % 3 == 1) {
-      editIdx = (col_select - 3)/3;
+    } else if((editIdx - 3) % 3 == 1) {
+      editIdx = (editIdx - 3)/3;
       nextScreen(Screen.SET_SELECT_STMT_ACT);
-    } else if((col_select - 3) % 3 == 2) {
-      editIdx = (col_select - 3)/3;
-      if(stmt.instr.get((col_select - 3)/3) instanceof JumpInstruction) {
+    } else if((editIdx - 3) % 3 == 2) {
+      editIdx = (editIdx - 3)/3;
+      if(stmt.instr.get((editIdx - 3)/3) instanceof JumpInstruction) {
         nextScreen(Screen.SET_JUMP_TGT);
       } else {
         nextScreen(Screen.SET_CALL_PROG);
@@ -4599,37 +4601,37 @@ public void getInstrEdit(Instruction ins) {
     RegisterStatement stmt = (RegisterStatement)ins;
     int len = stmt.expr.getLength();
     
-    if(col_select == 1) {
+    if(editIdx == 1) {
       nextScreen(Screen.SET_REG_EXPR_TYPE);
-    } else if(col_select == 2) {
+    } else if(editIdx == 2) {
       nextScreen(Screen.SET_REG_EXPR_IDX);
-    } else if(col_select >= 4 && col_select <= len + 2) {
-      editExpression(stmt.expr, 4);
+    } else if(editIdx >= 4 && editIdx <= len + 2) {
+      editExpression(stmt.expr, editIdx - 4);
     }
   }
 }
 
-public void editExpression(Expression expr, int col_offset) {
-  int edit_idx = col_select - col_offset;
+public void editExpression(Expression expr, int selectIdx) {
   int[] elements = expr.mapToEdit();
-  
+  println(selectIdx);
+  println(Arrays.toString(elements));
   opEdit = expr;
-  ExpressionElement e = expr.get(elements[edit_idx]);
+  ExpressionElement e = expr.get(elements[selectIdx]);
   
   if(e instanceof Expression) {
     //if selecting the open or close paren
-    if(edit_idx == 0 || edit_idx == e.getLength() || 
-    elements[edit_idx-1] != elements[edit_idx] || 
-    elements[edit_idx+1] != elements[edit_idx]){
+    if(selectIdx == 0 || selectIdx == e.getLength() || 
+    elements[selectIdx - 1] != elements[selectIdx] || 
+    elements[selectIdx + 1] != elements[selectIdx]) {
       nextScreen(Screen.SET_EXPR_ARG);
     } else {
-      int start_idx = expr.getStartingIdx(elements[edit_idx]);
-      editExpression((Expression)e, col_offset + start_idx + 1);
+      int startIdx = expr.getStartingIdx(elements[selectIdx]);
+      editExpression((Expression)e, selectIdx - startIdx - 1);
     }
   } else if(e instanceof ExprOperand) {
-    editOperand((ExprOperand)e, elements[edit_idx]);
+    editOperand((ExprOperand)e, elements[selectIdx]);
   } else {
-    editIdx = elements[edit_idx];
+    editIdx = elements[selectIdx];
     nextScreen(Screen.SET_EXPR_OP);
   }
 }
@@ -5045,7 +5047,9 @@ public ArrayList<DisplayLine> loadFrames(CoordFrame coordFrame) {
   for(int idx = 0; idx < frames.length; idx += 1) {
     // Display each frame on its own line
     String[] strArray = frames[idx].toLineStringArray();
-    frameDisplay.add(newLine(idx, String.format("%-4s %s", String.format("%d) ", idx + 1), strArray[0])));
+    frameDisplay.add(newLine(String.format("%-4s %s", String.format("%d)", idx + 1), strArray[0])));
+    frameDisplay.add(newLine(String.format("%s", strArray[1])));
+    frameDisplay.get(idx*2 + 1).xAlign = 38;
   }
   
   return frameDisplay;
@@ -5475,6 +5479,40 @@ public int moveDown(boolean page) {
   col_select = max(0, min(col_select, contents.get(row_select).size() - 1));
   
   return contents.get(row_select).itemIdx;
+}
+
+public void moveLeft() {
+  if(row_select > 0 && contents.get(row_select - 1).itemIdx == contents.get(row_select).itemIdx) {
+    col_select -= 1;
+    if(col_select < 0) {
+      moveUp(false);
+      col_select = contents.get(row_select).size() - 1;
+    }
+  } else {
+    col_select = max(0, col_select - 1);
+  }
+}
+
+public void moveRight() {
+  if(row_select < contents.size() && contents.get(row_select + 1).itemIdx == contents.get(row_select).itemIdx) {
+    col_select += 1;
+    if(col_select > contents.get(row_select).size() - 1) {
+      moveDown(false);
+      col_select = 0;
+    }
+  } else {
+    col_select = min(contents.get(row_select).size() - 1, col_select + 1);
+  }
+}
+
+public int getSelectedIdx() {
+  int editIdx = col_select;
+  for(int i = row_select - 1; i >= 0; i -= 1) {
+    if(contents.get(i).itemIdx != contents.get(i + 1).itemIdx) break;
+    editIdx += contents.get(i).size();
+  }
+  
+  return editIdx;
 }
 
 public class DisplayLine {

@@ -34,7 +34,7 @@ private enum Operator implements ExpressionElement {
   AND("&&", BOOL),
   OR("||", BOOL),
   NOT("!", BOOL),
-  UNINIT("...", -1);
+  UNINIT("_", -1);
   
   public final String symbol;
   public final int type;
