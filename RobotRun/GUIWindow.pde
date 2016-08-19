@@ -719,14 +719,25 @@ public class WindowManager {
     
     relPos = relativePosition(dropdownLbls[2], RelativePoint.TOP_RIGHT, distLblToFieldX, abs(fieldHeight - dropItemHeight) / 2);
     dropdownLists[2] = (MyDropdownList)dropdownLists[2].setPosition(relPos[0], relPos[1]);
-    // Outline color label and dropdown
-    relPos = relativePosition(dropdownLbls[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    dropdownLbls[3] = dropdownLbls[3].setPosition(relPos[0], relPos[1]);
     
-    relPos = relativePosition(dropdownLbls[3], RelativePoint.TOP_RIGHT, distLblToFieldX, abs(fieldHeight - dropItemHeight) / 2);
-    dropdownLists[3] = (MyDropdownList)dropdownLists[3].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(dropdownLbls[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    Object val = dropdownLists[1].getActiveLabelValue();
+    
+    if (val == ShapeType.MODEL) {
+      // No stroke color for Model Shapes
+      dropdownLbls[3] = dropdownLbls[3].hide();
+      dropdownLists[3] = (MyDropdownList)dropdownLists[3].hide();
+      
+    } else {
+      // Outline color label and dropdown
+      dropdownLbls[3] = dropdownLbls[3].setPosition(relPos[0], relPos[1]).show();
+      relPos = relativePosition(dropdownLbls[3], RelativePoint.TOP_RIGHT, distLblToFieldX, abs(fieldHeight - dropItemHeight) / 2);
+      
+      dropdownLists[3] = (MyDropdownList)dropdownLists[3].setPosition(relPos[0], relPos[1]).show();
+      relPos = relativePosition(dropdownLbls[3], RelativePoint.BOTTOM_RIGHT, distLblToFieldX, distBtwFieldsY);
+    } 
+
     // Create button
-    relPos = relativePosition(dropdownLbls[3], RelativePoint.BOTTOM_RIGHT, distLblToFieldX, distBtwFieldsY);
     singleButtons[0] = singleButtons[0].setPosition(relPos[0], relPos[1]);
     // Clear button
     relPos = relativePosition(singleButtons[0], RelativePoint.TOP_RIGHT, offsetX, 0);
@@ -964,7 +975,6 @@ public class WindowManager {
    */
   private void updateDimLblsAndFields() {
     String activeButtonLabel = windowTabs.getActiveButtonName();
-    int dimSize = 0;
     String[] lblNames = new String[0];
     
     if (activeButtonLabel != null) {
@@ -973,11 +983,9 @@ public class WindowManager {
         
         // Define the label text and the number of dimensionos fields to display
         if (selectedShape == ShapeType.BOX) {
-          dimSize = 3;
           lblNames = new String[] { "Length:", "Height:", "Width" };
           
         } else if (selectedShape == ShapeType.CYLINDER) {
-          dimSize = 2;
           lblNames = new String[] { "Radius", "Height" };
           
         } else if (selectedShape == ShapeType.MODEL) {
@@ -985,12 +993,10 @@ public class WindowManager {
           
           if (objType instanceof Float && (Float)objType == 0.0) {
             // Define the dimensions of the bounding box of the Part
-            dimSize = 4;
-            lblNames = new String[] { "Source:", "Length:", "Height", "Width" };
+            lblNames = new String[] { "Source:", "Scale:", "Length:", "Height", "Width" };
             
           } else {
-            dimSize = 1;
-            lblNames = new String[] { "Source:" };
+            lblNames = new String[] { "Source:", "Scale:" };
           }
     
         }
@@ -1002,16 +1008,19 @@ public class WindowManager {
           Shape s = ((WorldObject)val).getForm();
           
           if (s instanceof Box) {
-            dimSize = 3;
             lblNames = new String[] { "Length:", "Height:", "Width" };
             
           } else if (s instanceof Cylinder) {
-            dimSize = 2;
             lblNames = new String[] { "Radius", "Height" };
           
-          } else if (s instanceof ModelShape && val instanceof Part) {
-            dimSize = 3;
-            lblNames = new String[] { "Length:", "Height:", "Width" };
+          } else if (s instanceof ModelShape) {
+            if (val instanceof Part) {
+              // Define the dimensions of the bounding box of the Part
+              lblNames = new String[] { "Scale:", "Length:", "Height:", "Width" };
+              
+            } else if (val instanceof Fixture) {
+              lblNames = new String[] { "Scale:" };
+            }
           }
         }
         
@@ -1019,7 +1028,7 @@ public class WindowManager {
     }
     
     for (int idxDim = 0; idxDim < shapeDefFields.size(); ++idxDim) {
-      if (idxDim < dimSize) {
+      if (idxDim < lblNames.length) {
         // Show a number of dimension fields and labels equal to the value of dimSize
         shapeDefAreas.set(idxDim, shapeDefAreas.get(idxDim).setText(lblNames[idxDim]).show());
         shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).show());
@@ -1067,33 +1076,42 @@ public class WindowManager {
         
         ShapeType type = (ShapeType)dropdownLists[1].getActiveLabelValue();
           
-        color fill = (Integer)dropdownLists[2].getActiveLabelValue(),
-              outline = (Integer)dropdownLists[3].getActiveLabelValue();
+        color fill = (Integer)dropdownLists[2].getActiveLabelValue();
         
         switch(type) {
           case BOX:
-            Float[] boxDims = getBoxDimensions();
+            color strokeVal = (Integer)dropdownLists[3].getActiveLabelValue();
+            Float[] shapeDims = getBoxDimensions();
             // Construct a box shape
-            if (boxDims != null && boxDims[0] != null && boxDims[1] != null && boxDims[2] != null) {
-              wldObj = new Part(name, fill, outline, boxDims[0], boxDims[1], boxDims[2]);
+            if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
+              wldObj = new Part(name, fill, strokeVal, shapeDims[0], shapeDims[1], shapeDims[2]);
             }
             break;
             
           case CYLINDER:
-            Float[] cylDims = getCylinderDimensions();
+            strokeVal = (Integer)dropdownLists[3].getActiveLabelValue();
+            shapeDims = getCylinderDimensions();
             // Construct a cylinder
-            if (cylDims != null && cylDims[0] != null && cylDims[1] != null) {
-              wldObj = new Part(name, fill, outline, cylDims[0], cylDims[1]);
+            if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
+              wldObj = new Part(name, fill, strokeVal, shapeDims[0], shapeDims[1]);
             }
             break;
             
           case MODEL:
             String srcFile = shapeDefFields.get(0).getText();
-            boxDims = getModelOBBDimensions();
+            shapeDims = getModelDimensions(true);
             // Construct a complex model
-            if (boxDims != null && boxDims[0] != null && boxDims[1] != null && boxDims[2] != null) {
-              ModelShape model = new ModelShape(srcFile, fill, outline);
-              wldObj = new Part(name, model, boxDims[0], boxDims[0], boxDims[0]);
+            if (shapeDims != null && shapeDims[1] != null && shapeDims[2] != null && shapeDims[3] != null) {
+              ModelShape model;
+              
+              if (shapeDims[0] != null) {
+                // Define shape scale
+                model = new ModelShape(srcFile, fill, shapeDims[0]);
+              } else {
+                model = new ModelShape(srcFile, fill);
+              }
+              
+              wldObj = new Part(name, model, shapeDims[1], shapeDims[2], shapeDims[3]);
             }
             break;
           default:
@@ -1104,30 +1122,40 @@ public class WindowManager {
         String name = objName.getText();
         ShapeType type = (ShapeType)dropdownLists[1].getActiveLabelValue();
           
-        color fill = (Integer)dropdownLists[2].getActiveLabelValue(),
-              outline = (Integer)dropdownLists[3].getActiveLabelValue();
+        color fill = (Integer)dropdownLists[2].getActiveLabelValue();
         
         switch(type) {
           case BOX:
-            Float[] boxDims = getBoxDimensions();
+            color strokeVal = (Integer)dropdownLists[3].getActiveLabelValue();
+            Float[] shapeDims = getBoxDimensions();
             // Construct a box shape
-            if (boxDims != null && boxDims[0] != null && boxDims[1] != null && boxDims[2] != null) {
-              wldObj = new Fixture(name, fill, outline, boxDims[0], boxDims[1], boxDims[2]);
+            if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
+              wldObj = new Fixture(name, fill, strokeVal, shapeDims[0], shapeDims[1], shapeDims[2]);
             }
             break;
             
           case CYLINDER:
-            Float[] cylDims = getCylinderDimensions();
+            strokeVal = (Integer)dropdownLists[3].getActiveLabelValue();
+            shapeDims = getCylinderDimensions();
             // Construct a cylinder
-            if (cylDims != null && cylDims[0] != null && cylDims[1] != null) {
-              wldObj = new Fixture(name, fill, outline, cylDims[0], cylDims[1]);
+            if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
+              wldObj = new Fixture(name, fill, strokeVal, shapeDims[0], shapeDims[1]);
             }
             break;
             
           case MODEL:
             String srcFile = shapeDefFields.get(0).getText();
+            shapeDims = getModelDimensions(false);
             // Construct a complex model
-            ModelShape model = new ModelShape(srcFile, fill, outline);
+            ModelShape model;
+            
+            if (shapeDims != null && shapeDims[0] != null) {
+              // Define model scale value
+              model = new ModelShape(srcFile, fill, shapeDims[0]);
+            } else {
+              model = new ModelShape(srcFile, fill);
+            }
+            
             wldObj = new Fixture(name, model);
             break;
           default:
@@ -1224,38 +1252,46 @@ public class WindowManager {
             }
           }
          
-        } else if (s instanceof ModelShape && toEdit instanceof Part) {
-          // Update the length, height or width of the Part's bounding-box
-          Part p = (Part)toEdit;
-          Float[] newDims = getBoxDimensions();
+        } else if (s instanceof ModelShape) {
+          Float[] newDims = getModelDimensions( (toEdit instanceof Part) );
           
           if (newDims[0] != null) {
-            // Update the bounding-box's length
-            p.setOBBDim(newDims[0], DimType.LENGTH);
+            // Update the model's scale value
+            s.setDim(newDims[0], DimType.SCALE);
           }
           
-          if (newDims[1] != null) {
-            // Update the bounding-box's height
-            p.setOBBDim(newDims[1], DimType.HEIGHT);
-          }
-          
-          if (newDims[2] != null) {
-            // Update the bounding-box's width
-            p.setOBBDim(newDims[2], DimType.WIDTH);
+          if (toEdit instanceof Part) {
+            // Update the length, height or width of the Part's bounding-box
+            Part p = (Part)toEdit;
+            
+            if (newDims[1] != null) {
+              // Update the bounding-box's length
+              p.setOBBDim(newDims[1], DimType.LENGTH);
+            }
+            
+            if (newDims[2] != null) {
+              // Update the bounding-box's height
+              p.setOBBDim(newDims[2], DimType.HEIGHT);
+            }
+            
+            if (newDims[3] != null) {
+              // Update the bounding-box's width
+              p.setOBBDim(newDims[3], DimType.WIDTH);
+            }
           }
         }
         
         // Convert origin position and orientation into the World Frame
         PVector oPosition = convertNativeToWorld( toEdit.getLocalCenter() ),
                 oWPR = convertNativeToWorld( matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RAD_TO_DEG) );
-        float[] inputValues = getOrientationValues();
+        Float[] inputValues = getOrientationValues();
         // Update position and orientation
-        if (!Float.isNaN(inputValues[0])) { oPosition.x = inputValues[0]; }
-        if (!Float.isNaN(inputValues[1])) { oPosition.y = inputValues[1]; }
-        if (!Float.isNaN(inputValues[2])) { oPosition.z = inputValues[2]; }
-        if (!Float.isNaN(inputValues[3])) { oWPR.x = inputValues[3]; }
-        if (!Float.isNaN(inputValues[4])) { oWPR.y = inputValues[4]; }
-        if (!Float.isNaN(inputValues[5])) { oWPR.z = inputValues[5]; }
+        if (inputValues[0] != null) { oPosition.x = inputValues[0]; }
+        if (inputValues[1] != null) { oPosition.y = inputValues[1]; }
+        if (inputValues[2] != null) { oPosition.z = inputValues[2]; }
+        if (inputValues[3] != null) { oWPR.x = inputValues[3]; }
+        if (inputValues[4] != null) { oWPR.y = inputValues[4]; }
+        if (inputValues[5] != null) { oWPR.z = inputValues[5]; }
         
         // Convert values from the World to the Native coordinate system
         PVector position = convertWorldToNative( oPosition );
@@ -1361,7 +1397,7 @@ public class WindowManager {
    */
   private Float[] getCylinderDimensions() {
     try {
-      // NaN values represent an uninitialized field
+      // null values represent an uninitialized field
       final Float[] dimensions = new Float[] { null, null };
       
       // Pull from the dim fields
@@ -1405,53 +1441,77 @@ public class WindowManager {
   /**
    * TODO
    */
-  private Float[] getModelOBBDimensions() {
+  private Float[] getModelDimensions(boolean forAPart) {
     try {
-      // NaN values represent an uninitialized field
-      final Float[] dimensions = new Float[] { null, null, null };
+      // null values represent an uninitialized field
+      final Float[] dimensions = new Float[] { null, null, null, null };
       
-      // Pull from the dim fields
-      String lenField = shapeDefFields.get(1).getText(),
-             hgtField = shapeDefFields.get(2).getText(),
-             wdhField = shapeDefFields.get(3).getText();
-      
-      if (lenField != null && !lenField.equals("")) {
-        // Read length input
-        float val = Float.parseFloat(lenField);
+      String activeWindow = windowTabs.getActiveButtonName(),
+             sclField, lenField, hgtField, wdhField;
+      // Pull from the Dim fields
+      if (activeWindow != null && activeWindow.equals("Create")) {
+        sclField = shapeDefFields.get(1).getText();
+        lenField = shapeDefFields.get(2).getText();
+        hgtField = shapeDefFields.get(3).getText();
+        wdhField = shapeDefFields.get(4).getText();
         
-        if (val <= 0) {
-          throw new NumberFormatException("Invalid length value!");
-        }
-        // Length cap of 9999
-        dimensions[0] = min(val, 9999f);
+      } else {
+        sclField = shapeDefFields.get(0).getText();
+        lenField = shapeDefFields.get(1).getText();
+        hgtField = shapeDefFields.get(2).getText();
+        wdhField = shapeDefFields.get(3).getText();
       }
       
-      if (hgtField != null && !hgtField.equals("")) {
-        // Read height input
-        float val = Float.parseFloat(hgtField);
+      if (sclField != null && !sclField.equals("")) {
+        // Read scale input
+        float val = Float.parseFloat(sclField);
         
         if (val <= 0) {
-          throw new NumberFormatException("Invalid height value!");
+          throw new NumberFormatException("Invalid scale value");
         }
-        // Height cap of 9999
-        dimensions[1] = min(val, 9999f);
+        // Scale cap of 20
+        dimensions[0] = min(val, 20f);
       }
       
-      if (wdhField != null && !wdhField.equals("")) {
-        // Read Width input
-        float val = Float.parseFloat(wdhField);
-        
-        if (val <= 0) {
-          throw new NumberFormatException("Invalid width value!");
+      if (forAPart) {
+        if (lenField != null && !lenField.equals("")) {
+          // Read length input
+          float val = Float.parseFloat(lenField);
+          
+          if (val <= 0) {
+            throw new NumberFormatException("Invalid length value!");
+          }
+          // Length cap of 9999
+          dimensions[1] = min(val, 9999f);
         }
-        // Width cap of 9999
-        dimensions[2] = min(val, 9999f);
+        
+        if (hgtField != null && !hgtField.equals("")) {
+          // Read height input
+          float val = Float.parseFloat(hgtField);
+          
+          if (val <= 0) {
+            throw new NumberFormatException("Invalid height value!");
+          }
+          // Height cap of 9999
+          dimensions[2] = min(val, 9999f);
+        }
+        
+        if (wdhField != null && !wdhField.equals("")) {
+          // Read Width input
+          float val = Float.parseFloat(wdhField);
+          
+          if (val <= 0) {
+            throw new NumberFormatException("Invalid width value!");
+          }
+          // Width cap of 9999
+          dimensions[3] = min(val, 9999f);
+        }
       }
       
       return dimensions;
       
     } catch (NumberFormatException NFEx) {
-      println("Invalid number input!");
+      println(NFEx.getMessage());
       return null;
       
     } catch (NullPointerException NPEx) {
@@ -1463,14 +1523,14 @@ public class WindowManager {
   /**
    * TODO
    */
-  private float[] getOrientationValues() {
+  private Float[] getOrientationValues() {
     try {
         // Pull from x, y, z, w, p, r, fields input fields
         String xFieldVal = objOrientationFields[0].getText(), yFieldVal = objOrientationFields[1].getText(),
                zFieldVal = objOrientationFields[2].getText(), wFieldVal = objOrientationFields[3].getText(),
                pFieldVal = objOrientationFields[4].getText(), rFieldVal = objOrientationFields[5].getText();
         // NaN indicates an uninitialized field
-        float[] values = new float[] { Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN };
+        Float[] values = new Float[] { null, null, null, null, null, null };
         
         // Update x value
         if (xFieldVal != null && !xFieldVal.equals("")) {

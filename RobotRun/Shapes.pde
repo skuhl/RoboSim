@@ -2,30 +2,21 @@ private final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
 private int activeScenarioIdx;
 
 /**
- * A simple class that defines the outline and fill color for a shape
+ * A simple class that defines the stroke and fill color for a shape
  * along with some methods necessarry for a shape.
  */
 public abstract class Shape {
-  private color fillColor,
-                outlineColor;
-  private boolean noFill;
+  private Integer fillCVal,
+                  strokeCVal;
   
   public Shape() {
-    fillColor = color(0);
-    outlineColor = color(225);
-    noFill = false;
+    fillCVal = color(0);
+    strokeCVal = color(225);
   }
   
-  public Shape(color fill, color outline) {
-    fillColor = fill;
-    outlineColor = outline;
-    noFill = false;
-  }
-  
-  public Shape(color outline) {
-    fillColor = color(255);
-    outlineColor = outline;
-    noFill = true;
+  public Shape(Integer fill, Integer strokeVal) {
+    fillCVal = fill;
+    strokeCVal = strokeVal;
   }
   
   /**
@@ -48,24 +39,33 @@ public abstract class Shape {
    */
   public abstract float getDim(DimType dim);
   
-  public void draw() {
-    // Apply shape outline and fill color
-    stroke(outlineColor);
-    
-    if (noFill) {
-      noFill();
+  /**
+   * Apply stroke and fill colors.
+   */
+  protected void applyColors() {
+    if (strokeCVal == null) {
+      noStroke();
+      
     } else {
-      fill(fillColor);
+      stroke(strokeCVal);
+    }
+    
+    if (fillCVal == null) {
+      noFill();
+      
+    } else {
+      fill(fillCVal);
     } 
   }
   
-  /* Getters and Setters for shapes fill and outline colors */
-  public color getOutlineColor() { return outlineColor; }
-  public void setOutlineColor(color newColor) { outlineColor = newColor; }
-  public color getFillColor() { return fillColor; }
-  public void setFillColor(color newColor) { fillColor = newColor; }
-  public boolean isFilled() { return !noFill; }
-  public void setFillFlag(boolean notFilled) { noFill = !notFilled; }
+  public abstract void draw();
+  
+  /* Getters and Setters for shapes fill and stroke colors */
+  
+  public Integer getStrokeValue() { return strokeCVal; }
+  public void setStrokeValue(Integer newVal) { strokeCVal = newVal; }
+  public Integer getFillValue() { return fillCVal; }
+  public void setFillValue(Integer newVal) { fillCVal = newVal; }
   
   /**
    * Returns a copy of the Shape object
@@ -95,38 +95,38 @@ public class Box extends Shape {
   /**
    * Create a box with the given colors and dinemsions.
    */
-  public Box(color fill, color outline, float len, float hgt, float wdh) {
-    super(fill, outline);
+  public Box(color fill, color strokeVal, float len, float hgt, float wdh) {
+    super(fill, strokeVal);
     dimensions = new PVector(len, hgt, wdh);
   }
   
   /**
    * Create an empty box with the given color and dinemsions.
    */
-  public Box(color outline, float len, float hgt, float wdh) {
-    super(outline);
+  public Box(color strokeVal, float len, float hgt, float wdh) {
+    super(null, strokeVal);
     dimensions = new PVector(len, hgt, wdh);
   }
   
   /**
    * Create a cube with the given colors and dinemsion.
    */
-  public Box(color fill, color outline, float edgeLen) {
-    super(fill, outline);
+  public Box(color fill, color strokeVal, float edgeLen) {
+    super(fill, strokeVal);
     dimensions = new PVector(edgeLen, edgeLen, edgeLen);
   }
   
   /**
    * Create an empty cube with the given color and dinemsion.
    */
-  public Box(color outline, float edgeLen) {
-    super(outline);
+  public Box(color strokeVal, float edgeLen) {
+    super(null, strokeVal);
     dimensions = new PVector(edgeLen, edgeLen, edgeLen);
   }
   
   public void draw() {
     // Apply colors
-    super.draw();
+    applyColors();
     box(dimensions.x, dimensions.y, dimensions.z);
   }
   
@@ -164,9 +164,7 @@ public class Box extends Shape {
   }
   
   public Shape clone() {
-    Box copy = new Box(getFillColor(), getOutlineColor(), dimensions.x, dimensions.y, dimensions.z);
-    copy.setFillFlag( isFilled() );
-    return copy;
+    return new Box(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
   }
 }
 
@@ -182,14 +180,14 @@ public class Cylinder extends Shape {
     height = 10f;
   }
   
-  public Cylinder(color fill, color outline, float rad, float hgt) {
-    super(fill, outline);
+  public Cylinder(color fill, color strokeVal, float rad, float hgt) {
+    super(fill, strokeVal);
     radius = rad;
     height = hgt;
   }
   
-  public Cylinder(color outline, float rad, float hgt) {
-    super(outline);
+  public Cylinder(color strokeVal, float rad, float hgt) {
+    super(null, strokeVal);
     radius = rad;
     height = hgt;
   }
@@ -201,7 +199,8 @@ public class Cylinder extends Shape {
    * http://vormplus.be/blog/article/drawing-a-cylinder-with-processing
    */
   public void draw() {
-    super.draw();
+    applyColors();
+    
     float halfHeight = height / 2,
           diameter = 2 * radius;
     
@@ -254,9 +253,7 @@ public class Cylinder extends Shape {
   }
   
   public Shape clone() {
-    Cylinder copy = new Cylinder(getFillColor(), getOutlineColor(), radius, height);
-    copy.setFillFlag( isFilled() );
-    return copy;
+    return new Cylinder(getFillValue(), getStrokeValue(), radius, height);
   }
 }
 
@@ -265,20 +262,37 @@ public class Cylinder extends Shape {
  */
 public class ModelShape extends Shape {
   private PShape form;
+  private float scale;
   private String srcFilePath;
   
   /**
    * Create a complex model from the soruce .stl file of the
    * given name, filename, stored in the '/RobotRun/data/'
-   * with the given fill and outline colors.
+   * with the given fill color.
    * 
    * @throws NullPointerException  if the given filename is
    *         not a valid .stl file in RobotRun/data/
    */
-  public ModelShape(String filename, color fill, color outline) throws NullPointerException {
-    super(fill, outline);
+  public ModelShape(String filename, color fill) throws NullPointerException {
+    super(fill, null);
     srcFilePath = filename;
-    form = loadSTLModel(filename, fill, outline, 1.0);
+    scale = 1f;
+    form = loadSTLModel(filename, fill, scale);
+  }
+  
+  /**
+   * Create a complex model from the soruce .stl file of the
+   * given name, filename, stored in the '/RobotRun/data/'
+   * with the given fill color and scale value.
+   * 
+   * @throws NullPointerException  if the given filename is
+   *         not a valid .stl file in RobotRun/data/
+   */
+  public ModelShape(String filename, color fill, float scale) throws NullPointerException {
+    super(fill, null);
+    srcFilePath = filename;
+    this.scale = scale;
+    form = loadSTLModel(filename, fill, scale);
   }
   
   public void draw() {
@@ -286,9 +300,25 @@ public class ModelShape extends Shape {
   }
   
   @Override
-  public void setDim(Float newVal, DimType dim) {}
+  public void setDim(Float newVal, DimType dim) {
+    switch(dim) {
+      case SCALE:
+        // Update the model's scale
+        form.scale(newVal / scale);
+        scale = newVal;
+        break;
+        
+      default:
+    }
+  }
+  
   @Override
-  public float getDim(DimType dim) { return -1f; }
+  public float getDim(DimType dim) {
+      switch(dim) {
+      case SCALE:  return scale;
+      default:     return -1f;
+    }
+  }
   
   public String getSourcePath() { return srcFilePath; }
   
@@ -296,7 +326,7 @@ public class ModelShape extends Shape {
    * Create a new Model form the original source file.
    */
   public Shape clone() {
-      return new ModelShape(srcFilePath, getFillColor(), getOutlineColor());
+      return new ModelShape(srcFilePath, getFillValue(), scale);
   }
 }
 
@@ -404,7 +434,7 @@ public class BoundingBox {
    */
   public BoundingBox() {
     localOrientation = new CoordinateSystem();
-    boundingBox = new Box(color(0, 0, 255), 10f);
+    boundingBox = new Box(color(0, 255, 0), 10f);
   }
   
   /**
@@ -412,7 +442,7 @@ public class BoundingBox {
    */
   public BoundingBox(float edgeLen) {
     localOrientation = new CoordinateSystem();
-    boundingBox = new Box(color(0, 0, 255), edgeLen);
+    boundingBox = new Box(color(0, 255, 0), edgeLen);
   }
   
   /**
@@ -420,7 +450,7 @@ public class BoundingBox {
    */
   public BoundingBox(float len, float hgt, float wdh) {
     localOrientation = new CoordinateSystem();
-    boundingBox = new Box(color(0, 0, 255), len, hgt, wdh);
+    boundingBox = new Box(color(0, 255, 0), len, hgt, wdh);
   }
   
   /**
@@ -472,11 +502,11 @@ public class BoundingBox {
   }
   
   /**
-   * Sets the outline color of this ounding-box
+   * Sets the stroke color of this ounding-box
    * to the given value.
    */
   public void setColor(color newColor) {
-    boundingBox.setOutlineColor(newColor);
+    boundingBox.setStrokeValue(newColor);
   }
   
   /**
@@ -549,7 +579,7 @@ public class BoundingBox {
     localOrientation.apply();
     PVector dims = getDims();
     BoundingBox copy = new BoundingBox(dims.x, dims.y, dims.z);
-    copy.setColor( boundingBox.getOutlineColor() );
+    copy.setColor( boundingBox.getStrokeValue() );
     popMatrix();
     
     return copy;
@@ -603,7 +633,7 @@ public abstract class WorldObject {
     pushMatrix();
     // Draw shape in its own coordinate system
     applyCoordinateSystem();
-    getForm().draw();
+    form.draw();
     popMatrix();
   }
   
@@ -631,14 +661,20 @@ public abstract class WorldObject {
       fields[1] = String.format("H: %4.3f", form.getDim(DimType.HEIGHT));
       
     } else if (form instanceof ModelShape) {
+      
       if (this instanceof Part)  {
         // Use bounding-box dimensions instead
-        fields = new String[3];
+        fields = new String[4];
         PVector dims = ((Part)this).getOBBDims();
         
-        fields[0] = String.format("L: %4.3f", dims.x);
-        fields[1] = String.format("H: %4.3f", dims.y);
-        fields[2] = String.format("W: %4.3f", dims.z);
+        fields[0] = String.format("S: %4.3f", form.getDim(DimType.SCALE));
+        fields[1] = String.format("L: %4.3f", dims.x);
+        fields[2] = String.format("H: %4.3f", dims.y);
+        fields[3] = String.format("W: %4.3f", dims.z);
+        
+      } else if (this instanceof Fixture) {
+        fields = new String[1];
+        fields[0] = String.format("S: %4.3f", form.getDim(DimType.SCALE));
         
       } else {
         // No dimensios to display
@@ -709,22 +745,22 @@ public class Fixture extends WorldObject {
   /**
    * Create a cube object with the given colors and dimension
    */
-  public Fixture(String n, color fill, color outline, float edgeLen) {
-    super(n, new Box(fill, outline, edgeLen));
+  public Fixture(String n, color fill, color strokeVal, float edgeLen) {
+    super(n, new Box(fill, strokeVal, edgeLen));
   }
   
   /**
    * Create a box object with the given colors and dimensions
    */
-  public Fixture(String n, color fill, color outline, float len, float hgt, float wdh) {
-    super(n, new Box(fill, outline, len, hgt, wdh));
+  public Fixture(String n, color fill, color strokeVal, float len, float hgt, float wdh) {
+    super(n, new Box(fill, strokeVal, len, hgt, wdh));
   }
   
   /**
    * Creates a cylinder object with the given colors and dimensions.
    */
-  public Fixture(String n, color fill, color outline, float rad, float hgt) {
-    super(n, new Cylinder(fill, outline, rad, hgt));
+  public Fixture(String n, color fill, color strokeVal, float rad, float hgt) {
+    super(n, new Cylinder(fill, strokeVal, rad, hgt));
   }
   
   /**
@@ -766,24 +802,24 @@ public class Part extends WorldObject {
   /**
    * Create a cube object with the given colors and dimension
    */
-  public Part(String n, color fill, color outline, float edgeLen) {
-    super(n, new Box(fill, outline, edgeLen));
+  public Part(String n, color fill, color strokeVal, float edgeLen) {
+    super(n, new Box(fill, strokeVal, edgeLen));
     absOBB = new BoundingBox(edgeLen + 15f);
   }
   
   /**
    * Create a box object with the given colors and dimensions
    */
-  public Part(String n, color fill, color outline, float len, float hgt, float wdh) {
-    super(n, new Box(fill, outline, len, hgt, wdh));
+  public Part(String n, color fill, color strokeVal, float len, float hgt, float wdh) {
+    super(n, new Box(fill, strokeVal, len, hgt, wdh));
     absOBB = new BoundingBox(len + 15f, hgt + 15f, wdh + 15f);
   }
   
   /**
    * Creates a cylinder objects with the given colors and dimensions.
    */
-  public Part(String n, color fill, color outline, float rad, float hgt) {
-    super(n, new Cylinder(fill, outline, rad, hgt));
+  public Part(String n, color fill, color strokeVal, float rad, float hgt) {
+    super(n, new Cylinder(fill, strokeVal, rad, hgt));
     absOBB = new BoundingBox(2f * rad + 5f, 2f * rad + 5f, hgt + 10f);
   }
   
@@ -804,10 +840,12 @@ public class Part extends WorldObject {
     setFixtureRef(fixRef);
   }
   
+  @Override
   public void applyCoordinateSystem() {
     absOBB.applyCoordinateSystem();
   }
   
+  @Override
   public void setCoordinateSystem() {
     absOBB.setCoordinateSystem();
   }
@@ -829,7 +867,7 @@ public class Part extends WorldObject {
     pushMatrix();
     applyCoordinateSystem();
     getForm().draw();
-    absOBB.getBox().draw();
+    if (COLLISION_DISPLAY) { absOBB.getBox().draw(); }
     popMatrix();
   }
   
@@ -877,30 +915,6 @@ public class Part extends WorldObject {
   }
   
   /**
-   * Update all non-null dimensions of the part's bounding-box. This method functions
-   * similiar to updateLocalCenter().
-   * 
-   * @param newLength  The new length value*
-   * @param newHeight  The new height value*
-   * @param newWidth   The new length value*
-   *                   *null indicates that the origin value will be unchanged
-   */
-  public void updateOBBDimensions(Float newLength, Float newHeight, Float newWidth) {
-    if (newLength != null) {
-      // Update the length
-      absOBB.setDim(newLength, DimType.LENGTH);
-    }
-    if (newHeight != null) {
-      // Update the height
-      absOBB.setDim(newHeight, DimType.HEIGHT);
-    }
-    if (newWidth != null) {
-      // Update the width
-      absOBB.setDim(newWidth, DimType.WIDTH);
-    }
-  }
-  
-  /**
    * Get the dimensions of the part's bounding-box
    */
   public PVector getOBBDims() {
@@ -910,10 +924,10 @@ public class Part extends WorldObject {
   /**
    * Return a reference to this object's bounding-box.
    */ 
-  public BoundingBox getOBB() { return absOBB; }
+  private BoundingBox getOBB() { return absOBB; }
   
   /**
-   * Sets the outline color of the world's bounding-box
+   * Sets the stroke color of the world's bounding-box
    * to the given value.
    */
   public void setBBColor(color newColor) {
@@ -944,11 +958,19 @@ public class Part extends WorldObject {
     return absOBB.collision(point);
   }
   
-  public void setLocalCenter(float x, float y, float z) {
+  @Override
+  public void setLocalCenter(PVector newCenter) {
+    super.setLocalCenter(newCenter);
+    updateAbsoluteOrientation();
+  }
+  
+  @Override
+  public void updateLocalCenter(Float x, Float y, Float z) {
     super.updateLocalCenter(x, y, z);
     updateAbsoluteOrientation();
   }
   
+  @Override
   public void setLocalOrientationAxes(float[][] newAxes) {
     super.setLocalOrientationAxes(newAxes);
     updateAbsoluteOrientation();
@@ -1108,19 +1130,25 @@ public class Scenario implements Iterable<WorldObject> {
   }
   
   /**
-   * Updates the collision detection of all the Parts in the scenario,
-   * using the given ArmModel to detect collisions between world objects
-   * and the armModel, and draw every object.
+   * Return the color of all the object's bounding
+   * boxes to normal (green).
    */
-  public void updateAndDrawObjects(ArmModel model) {
-    int numOfObjects = objList.size();
-    
+  public void resetObjectHitBoxColors() {
     for (WorldObject wldObj : objList) {
       if (wldObj instanceof Part) {
         // Reset all Part bounding-box colors
         ((Part)wldObj).setBBColor(color(0, 255, 0));
       }
     }
+  }
+  
+  /**
+   * Updates the collision detection of all the Parts in the scenario,
+   * using the given ArmModel to detect collisions between world objects
+   * and the armModel, and draws every object.
+   */
+  public void updateAndDrawObjects(ArmModel model) {
+    int numOfObjects = objList.size();
     
     for (int idx = 0; idx < numOfObjects; ++idx) {
       WorldObject wldObj = objList.get(idx);
@@ -1133,7 +1161,19 @@ public class Scenario implements Iterable<WorldObject> {
           pushMatrix();
           resetMatrix();
           
-          // new object transform = EE transform x (old EE transform) ^ -1 x current object transform
+          /***********************************************
+             Moving a part with the Robot:
+            
+             P' = R^-1 x E' x E^-1 x P
+             
+             where:
+             P' - new part local orientation
+             R  - part fixture reference orientation
+             E' - current Robot end effector orientation
+             E  - previous Robot end effector orientation
+             P  - current part loval orientation
+           ***********************************************/
+          
           Fixture refFixture = p.getFixtureRef();
         
           if (refFixture != null) {
@@ -1142,7 +1182,7 @@ public class Scenario implements Iterable<WorldObject> {
           
           applyModelRotation(model.getJointAngles());
           
-          float[][] invEETMatrix = invertHCMatrix(armModel.oldEETMatrix);
+          float[][] invEETMatrix = invertHCMatrix(armModel.oldEEOrientation);
           applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
                       invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
                       invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
@@ -1176,7 +1216,7 @@ public class Scenario implements Iterable<WorldObject> {
             }
           }
           
-          if( model != null && p != model.held && p.collision( nativeRobotEEPoint(model.getJointAngles()).position) ) {
+          if (model != null && p != model.held && model.canPickup(p)) {
             // Change hit box color to indicate End Effector collision
             p.setBBColor(color(0, 0, 255));
           }
@@ -1297,7 +1337,7 @@ public class Scenario implements Iterable<WorldObject> {
  * @throws NullPointerException  if hte given filename does not pertain
  *         to a valid .stl file located in RobotRun/data/
  */
-public PShape loadSTLModel(String filename, color fill, color outline, float scaleVal) throws NullPointerException {
+public PShape loadSTLModel(String filename, color fill, float scaleVal) throws NullPointerException {
   ArrayList<Triangle> triangles = new ArrayList<Triangle>();
   byte[] data = loadBytes(filename);
   
@@ -1330,8 +1370,7 @@ public PShape loadSTLModel(String filename, color fill, color outline, float sca
   
   PShape mesh = createShape();
   mesh.beginShape(TRIANGLES);
-  mesh.scale(scaleVal);
-  mesh.stroke(outline);
+  mesh.noStroke();
   mesh.fill(fill);
   for(Triangle t : triangles) {
     mesh.normal(t.components[0].x, t.components[0].y, t.components[0].z);
@@ -1341,6 +1380,7 @@ public PShape loadSTLModel(String filename, color fill, color outline, float sca
   }
   mesh.endShape();
   
+  mesh.scale(scaleVal);
   return mesh;
 } 
 
@@ -1354,14 +1394,13 @@ public Scenario activeScenario() {
     return SCENARIOS.get(activeScenarioIdx);
     
   } else {
-    //System.out.printf("Invalid scenaro index: %d!\n", activeScenarioIdx);
     return null;
   }
 }
 
 /**
  * This algorithm uses the Separating Axis Theorm to project radi of each Box on to several 
- * axes to determine if a there is any overlap between the boxes. The method strongy resembles 
+ * axes to determine if a there is any overlap between the boxes. The method strongly resembles 
  * the method outlined in Section 4.4 of "Real Time Collision Detection" by Christer Ericson
  *
  * @param A  The hit box associated with some object in space

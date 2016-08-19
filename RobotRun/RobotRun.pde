@@ -11,17 +11,8 @@ import java.awt.event.KeyEvent;
 private static final int OFF = 0, ON = 1;
 private static final int ARITH = 0, BOOL = 1;
 // The position at which the Robot is drawn
-private final PVector ROBOT_POSITION = new PVector(200, 250, 200);
+private final PVector ROBOT_POSITION = new PVector(200, 300, 200);
 ArmModel armModel;
-Model eeModelSuction;
-Model eeModelClaw;
-Model eeModelClawPincer;
-Model eePointer;
-
-float lastMouseX, lastMouseY;
-float cameraTX = 0, cameraTY = 0, cameraTZ = 0;
-float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
-boolean spacebarDown = false;
 
 ControlP5 cp5;
 WindowManager manager;
@@ -74,10 +65,6 @@ public void setup() {
   
   //load model and save data
   armModel = new ArmModel();
-  eeModelSuction = new Model("VACUUM_2.STL", color(40));
-  eeModelClaw = new Model("GRIPPER.STL", color(40));
-  eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
-  eePointer = new Model("POINTER.stl", color(40), 10.0);
   intermediatePositions = new ArrayList<Point>();
   
   activeScenarioIdx = -1;
@@ -94,48 +81,10 @@ public void setup() {
 public void draw() {
   ortho();
   
-  //lights();
   directionalLight(255, 255, 255, 1, 1, 0);
   ambientLight(150, 150, 150);
 
   background(127);
-  
-  pushMatrix();
-  resetMatrix();
-  applyModelRotation(armModel.getJointAngles());
-  // Keep track of the old coordinate frame of the armModel
-  armModel.oldEETMatrix = getTransformationMatrix();
-  popMatrix();
-  
-  if (!robotFault) {
-    // Execute arm movement
-    if(programRunning) {
-      // Run active program
-      programRunning = !executeProgram(activeProgram(), armModel, execSingleInst);
-      
-    } else if (armModel.motionType != RobotMotion.HALTED) {
-      // Move the Robot progressively to a point
-      boolean doneMoving = true;
-      
-      switch (armModel.motionType) {
-        case MT_JOINT:
-          doneMoving = armModel.interpolateRotation((liveSpeed / 100.0));
-          break;
-        case MT_LINEAR:
-          doneMoving = executeMotion(armModel, (liveSpeed / 100.0));
-          break;
-        default:
-      }
-      
-      if (doneMoving) {
-        armModel.halt();
-      }
-    } else if (armModel.modelInMotion()) {
-      // Jog the Robot
-      intermediatePositions.clear();
-      armModel.executeLiveMotion();
-    }
-  }
   
   hint(ENABLE_DEPTH_TEST);
   background(255);
@@ -145,45 +94,31 @@ public void draw() {
   pushMatrix();
   applyCamera();
   
-  pushMatrix(); 
-  armModel.draw();
-  popMatrix();
-  
-  if(COLLISION_DISPLAY) {
-    armModel.resetBoxColors();
-    armModel.checkSelfCollisions();
-  }
-  
   Scenario s = activeScenario();
+  Program p = activeProgram();
   
-  if (s != null) {
-    // Handles the world objects
-    s.updateAndDrawObjects(armModel);
-  }
-  
-  if(COLLISION_DISPLAY) { armModel.drawBoxes(); }
-  //TESTING CODE: DRAW INTERMEDIATE POINTS
-  noLights();
-  noStroke();
-  pushMatrix();
-  //if(intermediatePositions != null) {
-  //  int count = 0;
-  //  for(Point p : intermediatePositions) {
-  //    if(count % 4 == 0) {
-  //      pushMatrix();
-  //      stroke(0);
-  //      translate(p.position.x, p.position.y, p.position.z);
-  //      sphere(5);
-  //      popMatrix();
-  //    }
-  //    count += 1;
-  //  }
-  //}
-  popMatrix(); 
-  
+  updateAndDrawObjects(s, p, armModel);
   displayAxes();
   displayTeachPoints();
   
+  //TESTING CODE: DRAW INTERMEDIATE POINTS
+  noLights();
+  noStroke();
+  //pushMatrix();
+  ////if(intermediatePositions != null) {
+  ////  int count = 0;
+  ////  for(Point p : intermediatePositions) {
+  ////    if(count % 4 == 0) {
+  ////      pushMatrix();
+  ////      stroke(0);
+  ////      translate(p.position.x, p.position.y, p.position.z);
+  ////      sphere(5);
+  ////      popMatrix();
+  ////    }
+  ////    count += 1;
+  ////  }
+  ////}
+  //popMatrix();
   popMatrix();
   
   hint(DISABLE_DEPTH_TEST);
@@ -203,6 +138,34 @@ void applyCamera() {
 /*****************************************************************************************************************
  NOTE: All the below methods assume that current matrix has the camrea applied!
  *****************************************************************************************************************/
+
+/**
+ * Updates the position and orientation of the Robot as well as all the World
+ * Objects associated with the current scenario. Updates the bounding box color,
+ * position and oientation of the Robot and all World Objects as well. Finally,
+ * all the World Objects and the Robot are drawn.
+ * 
+ * @param s       The currently active scenario
+ * @param active  The currently selected program
+ * @param model   The Robot Arm model
+ */
+public void updateAndDrawObjects(Scenario s, Program active, ArmModel model) {
+  model.updateRobot(active);
+  
+  if (s != null) {
+    s.resetObjectHitBoxColors();
+  }
+  
+  model.resetOBBColors(); 
+  model.checkSelfCollisions();
+  
+  if (s != null) {
+    s.updateAndDrawObjects(model);
+  }
+  model.draw();
+  
+  model.updatePreviousEEOrientation();
+}
 
 /**
  * Display any currently taught points during the processes of either the 3-Point, 4-Point, or 6-Point Methods.

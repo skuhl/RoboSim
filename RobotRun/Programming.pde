@@ -359,7 +359,7 @@ public int addProgram(Program p) {
  */
 public Program activeProgram() {
   if (active_prog < 0 || active_prog >= programs.size()) {
-    System.out.printf("Not a valid program index: %d!\n", active_prog);
+    //System.out.printf("Not a valid program index: %d!\n", active_prog);
     return null;
   }
   
@@ -376,7 +376,7 @@ public Instruction activeInstruction() {
   Program activeProg = activeProgram();
   
   if (activeProg == null || active_instr < 0 || active_instr >= activeProg.getInstructions().size()) {
-    System.out.printf("Not a valid instruction index: %d!\n", active_instr);
+    //System.out.printf("Not a valid instruction index: %d!\n", active_instr);
     return null;
   }
   
@@ -688,7 +688,7 @@ public class IOInstruction extends Instruction {
   
   public int execute() {
     armModel.endEffectorState = state;
-    return armModel.checkEECollision();
+    return armModel.checkPickupCollision();
   }
   
   public Instruction clone() {
