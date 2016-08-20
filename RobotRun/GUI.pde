@@ -1098,8 +1098,8 @@ public void up() {
     case SET_IF_STMT_ACT:
     case SET_SELECT_STMT_ACT:
     case SET_SELECT_STMT_ARG:
-    case SET_EXPR_ARG: //<>// //<>// //<>//
-    case SET_BOOL_EXPR_ARG: //<>// //<>// //<>//
+    case SET_EXPR_ARG: //<>//
+    case SET_BOOL_EXPR_ARG: //<>//
     case SET_EXPR_OP:
     case SET_IO_INSTR_STATE:
     case SET_CALL_PROG:
@@ -1127,11 +1127,11 @@ public void up() {
   
   updateScreen();
 }
- //<>// //<>// //<>//
+ //<>//
 public void dn() {
   int size;
   switch(mode) {
-    case NAV_PROGRAMS: //<>// //<>// //<>// //<>//
+    case NAV_PROGRAMS: //<>//
       active_prog = moveDown(shift);
             
       if(DISPLAY_TEST_OUTPUT) {
@@ -1234,9 +1234,9 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>// //<>// //<>//
+        // Reset function key states //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>// //<>// //<>//
+      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>//
         col_select -= (col_select - 4 >= options.size()) ? 4 : 0;
       }
   }
@@ -3332,7 +3332,7 @@ public void loadScreen(){
     case SET_LBL_NUM:
       col_select = 1;
       opt_select = 0;
-      workingText = ""; //<>// //<>// //<>//
+      workingText = ""; //<>//
       break;
     case SET_MV_INSTRUCT_TYPE:
       MotionInstruction mInst = activeMotionInst();

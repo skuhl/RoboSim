@@ -84,7 +84,7 @@ public byte loadState() {
   File scenarioFile = new File(sketchPath("tmp/scenarios.bin"));
   
   if(scenarioFile.exists()) {
-    int ret = loadScenarioBytes(scenarioFile); //<>// //<>// //<>//
+    int ret = loadScenarioBytes(scenarioFile); //<>//
     
     if(ret == 0) {
       println("Successfully loaded scenarios!");
@@ -365,7 +365,7 @@ private Point loadPoint(DataInputStream in) throws IOException {
     float[] angles = loadFloatArray(in);
     
     if (angles == null) {
-      println("null angles!"); //<>// //<>// //<>//
+      println("null angles!"); //<>//
     }
     
     return new Point(position, orientation, angles);
@@ -1028,7 +1028,7 @@ public int saveScenarioBytes(File dest) {
 public int loadScenarioBytes(File src) {
   
   try {
-    FileInputStream in = new FileInputStream(src); //<>// //<>// //<>//
+    FileInputStream in = new FileInputStream(src); //<>//
     DataInputStream dataIn = new DataInputStream(in);
     
     int numOfScenarios = dataIn.readInt();
@@ -1113,7 +1113,7 @@ public void saveScenario(Scenario s, DataOutputStream out) throws IOException {
  */
 public Scenario loadScenario(DataInputStream in) throws IOException, NullPointerException {
   // Read flag byte
-  byte flag = in.readByte(); //<>// //<>// //<>//
+  byte flag = in.readByte(); //<>//
   
   if (flag == 0) {
     return null;
@@ -1122,11 +1122,48 @@ public Scenario loadScenario(DataInputStream in) throws IOException, NullPointer
     // Read the name of the scenario
     String name = in.readUTF();
     Scenario s = new Scenario(name);
+    // An extra set of only the loaded fixtures
+    ArrayList<Fixture> fixtures = new ArrayList<Fixture>();
+    // A list of parts which have a fixture reference defined
+    ArrayList<LoadedPart> partsWithReferences = new ArrayList<LoadedPart>();
+    
     // Read the number of objects in the scenario
     int size = in.readInt();
     // Read all the world objects contained in the scenario
     while (size-- > 0) {
-      s.addWorldObject( loadWorldObject(in) );
+      Object loadedObject =  loadWorldObject(in);
+      
+      if (loadedObject instanceof WorldObject) {
+        // Add all normal world objects to the scenario
+        s.addWorldObject( (WorldObject)loadedObject );
+        
+        if (loadedObject instanceof Fixture) {
+          // Save an extra reference of each fixture
+          fixtures.add( (Fixture)loadedObject );
+        }
+        
+      } else if (loadedObject instanceof LoadedPart) {
+        LoadedPart lPart = (LoadedPart)loadedObject;
+        
+        if (lPart.part != null) {
+          // Save the part in the scenario
+          s.addWorldObject(lPart.part);
+          
+          if (lPart.referenceName != null) {
+            // Save any part with a defined reference
+            partsWithReferences.add(lPart);
+          }
+        }
+      }
+    }
+    
+    // Set all the Part's references
+    for (LoadedPart lPart : partsWithReferences) {
+      for (Fixture f : fixtures) {
+        if (lPart.referenceName.equals(f.getName())) {
+          lPart.part.setFixtureRef(f);
+        }
+      }
     }
     
     return s;
@@ -1144,7 +1181,7 @@ public Scenario loadScenario(DataInputStream in) throws IOException, NullPointer
  */
 public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {
   
-  if (wldObj == null) { //<>// //<>// //<>//
+  if (wldObj == null) { //<>//
     // Indicate that the value saved is null
     out.writeByte(0);
     
@@ -1166,15 +1203,22 @@ public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOE
     
     if (wldObj instanceof Part) {
       Part part = (Part)wldObj;
-      // Save the fixture reference of the part
-      savePVector(part.getOBBDims(), out);
-      saveWorldObject(part.getFixtureRef(), out);
+      String refName = "";
       
+      savePVector(part.getOBBDims(), out);
+      
+      if (part.getFixtureRef() != null) {
+        // Save the name of the part's fixture reference
+        refName = part.getFixtureRef().getName();
+      }
+      
+      out.writeUTF(refName);
     }
   }
 }
 
 /**
+* TODO recomment this
  * Attempts to load the data associated with a world object from the given data input stream. It
  * is expected that the input stream contains a single byte (for the flag byte) followed by the
  * name and shape of the object, which is followde by the data specific to the object's subclass.
@@ -1185,10 +1229,10 @@ public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOE
  *             NullPointerExpcetion  if the world object has a model shape and its source file is
  *             corrupt or missing
  */
-public WorldObject loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
+public Object loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
   // Load the flag byte
-  byte flag = in.readByte(); //<>// //<>// //<>//
-  WorldObject wldObj = null;
+  byte flag = in.readByte(); //<>//
+  Object wldObjFields = null;
   
   if (flag != 0) {
     // Load the name and shape of the object
@@ -1202,18 +1246,25 @@ public WorldObject loadWorldObject(DataInputStream in) throws IOException, NullP
     localOrientation.setAxes(orientationAxes);
     
     if (flag == 1) {
-      // Load the part's bounding-box and fixture reference
+      // Load the part's bounding-box and fixture reference name
       PVector OBBDims = loadPVector(in);
-      Fixture reference = (Fixture)loadWorldObject(in);
+      String refName = in.readUTF();
       
-      wldObj = new Part(name, form, OBBDims, localOrientation, reference);
+      if (refName.equals("")) {
+        // A part object
+        wldObjFields = new Part(name, form, OBBDims, localOrientation, null);
+      } else {
+        // A part object with its reference's name
+        wldObjFields = new LoadedPart( new Part(name, form, OBBDims, localOrientation, null), refName );
+      }
       
     } else if (flag == 2) {
-      wldObj = new Fixture(name, form, localOrientation);
+      // A fixture object
+      wldObjFields = new Fixture(name, form, localOrientation);
     } 
   }
   
-  return wldObj;
+  return wldObjFields;
 }
 
 /**
