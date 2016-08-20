@@ -404,7 +404,7 @@ public class Instruction {
   public void setIsCommented(boolean comFlag) { com = comFlag; }
   public void toggleCommented() { com = !com; }
     
-  public int execute() {return 0; }
+  public int execute() { return 0; }
     
   public String toString() {
     String[] fields = toStringArray();
@@ -933,12 +933,17 @@ public class SelectStatement extends Instruction {
     addCase();
   }
   
-  public int execute() {    
+  public int execute() {
+    arg.updateValues();
+    
     for(int i = 0; i < cases.size(); i += 1) {
+      cases.get(i).updateValues();
       println("testing case " + i + " = " + cases.get(i).dataVal + " against " + arg.dataVal);
-      if(arg.dataVal == cases.get(i).dataVal) {
-        println("executing " + instr.get(i).toString());
-        instr.get(i).execute();
+      if(cases.get(i).type != -2 && arg.dataVal == cases.get(i).dataVal) {
+        if(instr.get(i) instanceof JumpInstruction || instr.get(i) instanceof CallInstruction) {
+          println("executing " + instr.get(i).toString());
+          instr.get(i).execute();
+        }
         break;
       }
     }

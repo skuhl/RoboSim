@@ -35,8 +35,8 @@ public class DataRegister extends Register {
   }
   
   public DataRegister(String c, Float v) {
-    value = v;
     comment = c;
+    value = v;
   }
 }
 

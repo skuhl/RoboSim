@@ -857,6 +857,7 @@ public class ExprOperand implements ExpressionElement {
   int regIdx;
   float dataVal;
   boolean boolVal;
+  Register regVal;
   Point pointVal;
   
   public ExprOperand() {
@@ -892,10 +893,7 @@ public class ExprOperand implements ExpressionElement {
   public ExprOperand(DataRegister dReg, int i) {
     type = 2;
     regIdx = i;
-    if(i != -1 && dReg.value != null) {
-      dataVal = dReg.value;
-      boolVal = getBoolVal(dataVal);
-    }
+    regVal = dReg;
     pointVal = null;
   }
   
@@ -953,24 +951,14 @@ public class ExprOperand implements ExpressionElement {
   public ExprOperand set(DataRegister dReg, int i) {
     type = 2;
     regIdx = i;
-    if(i != -1 && dReg.value != null) {
-      dataVal = dReg.value;
-      boolVal = getBoolVal(dataVal);
-    }
+    regVal = dReg;
     return this;
   }
   
   public ExprOperand set(IORegister ioReg, int i) {
     type = 3;
     regIdx = i;
-    if(ioReg.state == ON) {
-      dataVal = 1;
-      boolVal = true;
-    } else {
-      dataVal = 0;
-      boolVal = false;
-    }
-    
+    regVal = ioReg;    
     return this;
   }
   
@@ -1011,6 +999,23 @@ public class ExprOperand implements ExpressionElement {
     }
     
     return bool;
+  }
+  
+  public void updateValues() {
+    if(type == 2) {
+      if(((DataRegister)regVal).value != null) {
+        dataVal = ((DataRegister)regVal).value;
+      } else {
+        dataVal = -1;
+      }
+    } 
+    else if(type == 1) {
+      if(((IORegister)regVal).state == ON) {
+        boolVal = true;
+      } else {
+        boolVal = false;
+      }
+    }
   }
   
   public ExprOperand clone() {
@@ -1117,6 +1122,8 @@ public class AtomicExpression extends ExprOperand {
     ExprOperand result;
     float o1, o2;
     boolean b1, b2;
+    arg1.updateValues();
+    arg2.updateValues();
     
     if(arg1.type == -1) {
       ExprOperand temp = ((AtomicExpression)arg1).evaluate();
