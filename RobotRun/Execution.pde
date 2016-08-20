@@ -267,7 +267,7 @@ public Point nativeRobotPointOffset(float[] jointAngles, PVector offset) {
 }
 
 /**
- * Returns the Robot's End Effectir position according to the active Tool Frame's
+ * Returns the Robot's End Effector position according to the active Tool Frame's
  * offset in the native Coordinate System.
  * 
  * @param jointAngles  A valid set of six joint angles (in radians) for the Robot
@@ -285,6 +285,25 @@ public Point nativeRobotEEPoint(float[] jointAngles) {
   }
   
   return nativeRobotPointOffset(jointAngles, offset);
+}
+
+/**
+ * Returns the difference between the position of the given TCP offset
+ * and the Robot's faceplate, in Native Cooridinates.
+ * 
+ * @param offset  The offset to convert to Native Coordinates
+ * @returning     The given vector offset, in Native Coordinates
+ */
+public PVector nativeTCPOffset(PVector offset) {
+    pushMatrix();
+    resetMatrix();
+    applyModelRotation(armModel.getJointAngles());
+    PVector origin = getCoordFromMatrix(0f, 0f, 0f);
+    // Subtract the origin Native Coordinate values
+    PVector nativeOffset = getCoordFromMatrix(offset.x, offset.y, offset.z).sub(origin);
+    popMatrix();
+    
+    return nativeOffset;
 }
 
 /**

@@ -359,7 +359,7 @@ public int addProgram(Program p) {
  */
 public Program activeProgram() {
   if (active_prog < 0 || active_prog >= programs.size()) {
-    System.out.printf("Not a valid program index: %d!\n", active_prog);
+    //System.out.printf("Not a valid program index: %d!\n", active_prog);
     return null;
   }
   
@@ -376,7 +376,7 @@ public Instruction activeInstruction() {
   Program activeProg = activeProgram();
   
   if (activeProg == null || active_instr < 0 || active_instr >= activeProg.getInstructions().size()) {
-    System.out.printf("Not a valid instruction index: %d!\n", active_instr);
+    //System.out.printf("Not a valid instruction index: %d!\n", active_instr);
     return null;
   }
   
@@ -404,7 +404,7 @@ public class Instruction {
   public void setIsCommented(boolean comFlag) { com = comFlag; }
   public void toggleCommented() { com = !com; }
     
-  public int execute() {return 0; }
+  public int execute() { return 0; }
     
   public String toString() {
     String[] fields = toStringArray();
@@ -559,6 +559,7 @@ public final class MotionInstruction extends Instruction  {
   
   public String[] toStringArray() {
     String[] fields = new String[5];
+    
     // Motion type
     switch(motionType) {
       case MTYPE_JOINT:
@@ -687,7 +688,7 @@ public class IOInstruction extends Instruction {
   
   public int execute() {
     armModel.endEffectorState = state;
-    return armModel.checkEECollision();
+    return armModel.checkPickupCollision();
   }
   
   public Instruction clone() {
@@ -932,12 +933,17 @@ public class SelectStatement extends Instruction {
     addCase();
   }
   
-  public int execute() {    
+  public int execute() {
+    arg.updateValues();
+    
     for(int i = 0; i < cases.size(); i += 1) {
+      cases.get(i).updateValues();
       println("testing case " + i + " = " + cases.get(i).dataVal + " against " + arg.dataVal);
-      if(arg.dataVal == cases.get(i).dataVal) {
-        println("executing " + instr.get(i).toString());
-        instr.get(i).execute();
+      if(cases.get(i).type != -2 && arg.dataVal == cases.get(i).dataVal) {
+        if(instr.get(i) instanceof JumpInstruction || instr.get(i) instanceof CallInstruction) {
+          println("executing " + instr.get(i).toString());
+          instr.get(i).execute();
+        }
         break;
       }
     }

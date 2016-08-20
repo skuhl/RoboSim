@@ -13,7 +13,7 @@ private enum RelativePoint { TOP_RIGHT, TOP_LEFT, BOTTOM_LEFT, BOTTOM_RIGHT; }
 /* Set of valid shape types that a fixture or part can have */
 private enum ShapeType { BOX, CYLINDER, MODEL };
 /* Set of valid dimension types for a shape */
-private enum DimType { LENGTH, WIDTH, HEIGHT, RADIUS };
+private enum DimType { LENGTH, WIDTH, HEIGHT, RADIUS, SCALE };
 
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
 private enum Operator implements ExpressionElement {
@@ -34,7 +34,7 @@ private enum Operator implements ExpressionElement {
   AND("&&", BOOL),
   OR("||", BOOL),
   NOT("!", BOOL),
-  UNINIT("...", -1);
+  UNINIT("_", -1);
   
   public final String symbol;
   public final int type;
@@ -157,7 +157,7 @@ public static enum Screen implements DisplayMode {
   EDIT_DREG_COM(ScreenType.TYPE_TEXT_ENTRY),
   EDIT_PREG_COM(ScreenType.TYPE_TEXT_ENTRY),
   NEW_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
-  RENAM_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
+  RENAME_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
   CP_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
   
   /*
