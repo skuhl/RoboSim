@@ -1041,7 +1041,7 @@ public void up() {
   switch(mode) {
     case NAV_PROGRAMS:
       active_prog = moveUp(shift);
-      
+            
       if(DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nOpt: %d\nProg: %d\nTRS: %d\n\n",
         opt_select, active_prog, start_render);
@@ -1053,8 +1053,17 @@ public void up() {
     case SELECT_DELETE:
       if (!programRunning) {
         // Lock movement when a program is running
+        int prevRow = getSelectedRow();
         active_instr = moveUp(shift);
-                
+        
+        //special case for select statement column navigation
+        if(activeInstruction() instanceof SelectStatement && getSelectedRow() == 0) {
+          if(prevRow == 1) {
+            col_select += 3;
+          }
+        }
+
+            
         if(DISPLAY_TEST_OUTPUT) {
           System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
           row_select, col_select, active_instr, start_render);
@@ -1143,11 +1152,24 @@ public void dn() {
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
     case SELECT_DELETE:
-      active_instr = moveDown(shift); //<>//
+      if (!programRunning) {
+        // Lock movement when a program is running
+        int prevIdx = getSelectedIdx();
+        active_instr = moveDown(shift); //<>//
+        
+        //special case for select statement column navigation
+        if(activeInstruction() instanceof SelectStatement && getSelectedRow() == 1) {
+          if(prevIdx >= 3) {
+            col_select = prevIdx - 3;
+          } else {
+            col_select = 0;
+          }
+        }
       
-      if(DISPLAY_TEST_OUTPUT) {
-        System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
-        row_select, col_select, active_instr, start_render);
+        if(DISPLAY_TEST_OUTPUT) {
+          System.out.printf("\nRow: %d\nColumn: %d\nInst: %d\nTRS: %d\n\n",
+          row_select, col_select, active_instr, start_render);
+        }
       }
       break;
     case NAV_TOOL_FRAMES:
@@ -3688,7 +3710,7 @@ public void updateScreen() {
     }
     
     index_nums++;
-    next_px += options.get(i).length()*8 + 18;   
+    next_px += options.get(i).length()*8 + 20;   
   }
   
   // display hints for function keys
@@ -4489,7 +4511,7 @@ public ArrayList<DisplayLine> loadInstructions(int programID) {
         xPos += field.length()*8 + 20;
       } else if(field.equals("\n") && j != fields.length - 1) {
         instruct_list.add(line);
-        xPos = 152;       
+        xPos = 148;       
         
         line = new DisplayLine(i, xPos);
         xPos += field.length()*8 + 20;
@@ -4616,8 +4638,6 @@ public void getInstrEdit(Instruction ins, int selectIdx) {
       nextScreen(Screen.SET_SELECT_STMT_ARG);
     } else if((selectIdx - 3) % 3 == 1) {
       editIdx = (selectIdx - 3)/3;
-            println(editIdx);
-      println(selectIdx);
       nextScreen(Screen.SET_SELECT_STMT_ACT);
     } else if((selectIdx - 3) % 3 == 2) {
       editIdx = (selectIdx - 3)/3;
@@ -5474,18 +5494,25 @@ public int moveUp(boolean page) {
     start_render = max(0, start_render - (ITEMS_TO_SHOW - 1));
   } 
   else {
-    // Move up a single element
-    row_select = max(0, row_select - 1);
-    if(row_select < start_render) {
-      start_render -= 1;
+    if(getSelectedIdx() == 0 && active_instr > 0) {
+      // Move up a single instruction
+      while(row_select > 0 && active_instr - 1 == contents.get(row_select - 1).itemIdx) {
+        row_select = max(0, row_select - 1);
+        if(row_select < start_render) {
+          start_render -= 1;
+        }
+      }
+    } else {
+      // Move up a single row
+      row_select = max(0, row_select - 1);
+      if(row_select < start_render) {
+        start_render -= 1;
+      }
     }
   }
   
-  if(activeInstruction() instanceof SelectStatement && getSelectedIdx() < 3) {
-    col_select += 3;
-  } else {
-    col_select = max(0, min(col_select, contents.get(row_select).size() - 1));
-  }
+  //clamp column select to ensure it is within range
+  col_select = min(contents.get(row_select).size() - 1, max(0, col_select));
   
   return contents.get(row_select).itemIdx;
 }
@@ -5501,18 +5528,25 @@ public int moveDown(boolean page) {
     row_select = min(size - 1, row_select + (ITEMS_TO_SHOW - 1));
     start_render = max(0, min(size - ITEMS_TO_SHOW, start_render + (ITEMS_TO_SHOW - 1)));
   } else {
-    // Move down a single element
-    row_select = min(size - 1, row_select + 1);
-    if(row_select - start_render > ITEMS_TO_SHOW - 1) {
-      start_render += 1;
+    if(getSelectedIdx() == 0 && active_instr < activeProgram().size()) {
+      // Move down a single instruction
+      while(active_instr == contents.get(row_select).itemIdx) {
+        row_select = min(size - 1, row_select + 1);
+        if(row_select - start_render > ITEMS_TO_SHOW - 1) {
+          start_render += 1;
+        }
+      }
+    } else {
+      // Move down a single row
+      row_select = min(size - 1, row_select + 1);
+      if(row_select - start_render > ITEMS_TO_SHOW - 1) {
+        start_render += 1;
+      }
     }
   }
   
-  if(activeInstruction() instanceof SelectStatement && col_select >= 3) {
-    col_select -= 3;
-  } else {
-    col_select = max(0, min(col_select, contents.get(row_select).size() - 1));
-  }
+  //clamp column select to ensure it is within range
+  col_select = min(contents.get(row_select).size() - 1, max(0, col_select));
   
   return contents.get(row_select).itemIdx;
 }
@@ -5541,14 +5575,24 @@ public void moveRight() {
   }
 }
 
-public int getSelectedIdx() {
-  int editIdx = col_select;
-  for(int i = row_select - 1; i >= 0; i -= 1) {
-    if(contents.get(i).itemIdx != contents.get(i + 1).itemIdx) break;
-    editIdx += contents.get(i).size();
+public int getSelectedRow() {
+  int row = 0;
+  DisplayLine currRow = contents.get(row_select);
+  while(row_select - row >= 0 && currRow.itemIdx == contents.get(row_select - row).itemIdx) {
+    row += 1;
   }
   
-  return editIdx;
+  return row - 1;
+}
+
+public int getSelectedIdx() {
+  int idx = col_select;
+  for(int i = row_select - 1; i >= 0; i -= 1) {
+    if(contents.get(i).itemIdx != contents.get(i + 1).itemIdx) break;
+    idx += contents.get(i).size();
+  }
+  
+  return idx;
 }
 
 public class DisplayLine {
