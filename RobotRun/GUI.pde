@@ -1050,7 +1050,7 @@ public void up() {
     case NAV_PROG_INST:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
-    case SELECT_DELETE:
+    case SELECT_INSTR_DELETE:
       if (!programRunning) {
         // Lock movement when a program is running
         int prevRow = getSelectedRow();
@@ -1151,7 +1151,7 @@ public void dn() {
     case NAV_PROG_INST:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
-    case SELECT_DELETE:
+    case SELECT_INSTR_DELETE:
       if (!programRunning) {
         // Lock movement when a program is running
         int prevIdx = getSelectedIdx();
@@ -1613,7 +1613,7 @@ public void f4() {
       saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
     }
     break;
-  case CONFIRM_INSTR_DELETE:
+  case SELECT_INSTR_DELETE:
     ArrayList<Instruction> inst = p.getInstructions();
       
     int remIdx = 0;
@@ -1625,7 +1625,6 @@ public void f4() {
       }
     }
     
-    display_stack.pop();
     display_stack.pop();
     updateInstructions();
     break;
@@ -1689,9 +1688,6 @@ public void f4() {
     display_stack.pop();
     updateInstructions();
     break;
-  case SELECT_DELETE:
-      nextScreen(Screen.CONFIRM_INSTR_DELETE);
-      break;
   case NAV_PREGS_J:
   case NAV_PREGS_C:
     if (shift && !programRunning) {
@@ -1788,7 +1784,7 @@ public void f5() {
       
       lastScreen();
       break;
-    case CONFIRM_INSTR_DELETE:
+    case SELECT_INSTR_DELETE:
     case CONFIRM_INSERT:
     case CONFIRM_RENUM:
     case FIND_REPL:
@@ -2062,7 +2058,7 @@ public void ENTER() {
           break;
         case 1: //Delete
           selectedLines = resetSelection(p.getInstructions().size());
-          nextScreen(Screen.SELECT_DELETE);
+          nextScreen(Screen.SELECT_INSTR_DELETE);
           break;
         case 2: //Cut/Copy
           selectedLines = resetSelection(p.getInstructions().size());
@@ -2608,7 +2604,7 @@ public void ENTER() {
       
     //Program instruction editing and navigation
     case SELECT_CUT_COPY:
-    case SELECT_DELETE:
+    case SELECT_INSTR_DELETE:
       selectedLines[active_instr] = !selectedLines[active_instr];
       updateScreen();
       break;
@@ -3434,11 +3430,12 @@ public void loadScreen() {
       col_select = 1;
       opt_select = 0;
       break;
-    case SELECT_DELETE:
+    case SELECT_INSTR_DELETE:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
-      int size = activeProgram().getInstructions().size();
+      int size = contents.size() - 1;
       row_select = max(0, min(row_select, size));
+      col_select = 0;
       break;
     
     //Registers
@@ -3548,10 +3545,8 @@ public void updateScreen() {
   contents = getContents(mode);
   options = getOptions(mode);
   
-  boolean selectMode = false;
-  if(mode.getType() == ScreenType.TYPE_LINE_SELECT)
-    selectMode = true;
-  
+  boolean selectMode = (mode.getType() == ScreenType.TYPE_LINE_SELECT);
+    
   /*************************
    *    Display Contents   *
    *************************/
@@ -3588,7 +3583,7 @@ public void updateScreen() {
           txt = UI_LIGHT;
           bg = UI_DARK;          
         } 
-        else if(selectMode && !selectedLines[start_render + i]){
+        else if(selectMode && !selectedLines[contents.get(i).itemIdx]){
           //highlight selected line
           txt = UI_LIGHT;
           bg = UI_DARK;
@@ -3597,7 +3592,7 @@ public void updateScreen() {
           txt = UI_DARK;
           bg = UI_LIGHT;
         }
-      } else if(selectMode && selectedLines[start_render + i]) {
+      } else if(selectMode && selectedLines[contents.get(i).itemIdx]) {
         //highlight any currently selected lines
         txt = UI_LIGHT;
         bg = UI_DARK;
@@ -3751,7 +3746,6 @@ public String getHeader(Screen mode){
     case CP_PROGRAM:
       header = "COPY PROGRAM";
       break;
-    case CONFIRM_INSTR_DELETE:
     case CONFIRM_INSERT:
     case CONFIRM_RENUM:
     case NAV_PROG_INST:
@@ -3767,7 +3761,7 @@ public String getHeader(Screen mode){
     case SET_BOOL_EXPR_ARG:
     case SET_JUMP_TGT:
     case SELECT_CUT_COPY:    
-    case SELECT_DELETE:
+    case SELECT_INSTR_DELETE:
     case VIEW_INST_REG:
       header = activeProgram().getName();
       break;
@@ -3886,13 +3880,12 @@ public ArrayList<DisplayLine> getContents(Screen mode){
       break;
     
     //View instructions
-    case CONFIRM_INSTR_DELETE:
     case CONFIRM_INSERT:
     case CONFIRM_RENUM:
     case FIND_REPL:
     case NAV_PROG_INST:
     case VIEW_INST_REG:
-    case SELECT_DELETE:
+    case SELECT_INSTR_DELETE:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
     case SET_MV_INSTRUCT_TYPE:
@@ -4034,14 +4027,11 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("Enter number of lines to insert:");
       options.add("\0" + workingText);
       break;
-    case SELECT_DELETE:
-      options.add("Select lines to delete.");
-      break;
-    case CONFIRM_INSTR_DELETE:
-      options.add("Delete selected lines?");
+    case SELECT_INSTR_DELETE:
+      options.add("Select lines to delete (ENTER).");
       break;
     case SELECT_CUT_COPY:
-      options.add("Select lines to cut/ copy.");
+      options.add("Select lines to cut/ copy (ENTER).");
       break;
     case FIND_REPL:
       options.add("Enter text to search for:");
@@ -4266,7 +4256,6 @@ public String[] getFunctionLabels(Screen mode){
         }
       }
       break;
-    case SELECT_DELETE:
     case SELECT_COMMENT:
       funct[0] = "";
       funct[1] = "";
@@ -4361,15 +4350,15 @@ public String[] getFunctionLabels(Screen mode){
       break;
     case CONFIRM_INSERT:
     case CONFIRM_PROG_DELETE:
-    case CONFIRM_INSTR_DELETE:
     case CONFIRM_RENUM:
     case FIND_REPL:
+    case SELECT_INSTR_DELETE:
       // F4, F5
       funct[0] = "";
       funct[1] = "";
       funct[2] = "";
-      funct[3] = "[CONFIRM]";
-      funct[4] = "[CANCEL]";
+      funct[3] = "[Confirm]";
+      funct[4] = "[Cancel]";
       break;
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
@@ -4525,7 +4514,10 @@ public ArrayList<DisplayLine> loadInstructions(int programID) {
     instruct_list.add(line);
   }
   
-  instruct_list.add(newLine(size, "[End]"));
+  if(mode.getType() != ScreenType.TYPE_LINE_SELECT) {
+    instruct_list.add(newLine(size, "[End]"));
+  }
+  
   return instruct_list;
 }
 
@@ -5528,7 +5520,9 @@ public int moveDown(boolean page) {
     row_select = min(size - 1, row_select + (ITEMS_TO_SHOW - 1));
     start_render = max(0, min(size - ITEMS_TO_SHOW, start_render + (ITEMS_TO_SHOW - 1)));
   } else {
-    if(getSelectedIdx() == 0 && active_instr < activeProgram().size()) {
+    int lenMod = 0;
+    if(mode.getType() == ScreenType.TYPE_LINE_SELECT) lenMod = 1;
+    if(getSelectedIdx() == 0 && active_instr < activeProgram().size() - lenMod) {
       // Move down a single instruction
       while(active_instr == contents.get(row_select).itemIdx) {
         row_select = min(size - 1, row_select + 1);

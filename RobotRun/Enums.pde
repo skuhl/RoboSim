@@ -124,12 +124,11 @@ public static enum Screen implements DisplayMode {
   */
   SELECT_COMMENT(ScreenType.TYPE_LINE_SELECT),
   SELECT_CUT_COPY(ScreenType.TYPE_LINE_SELECT),
-  SELECT_DELETE(ScreenType.TYPE_LINE_SELECT),
+  SELECT_INSTR_DELETE(ScreenType.TYPE_LINE_SELECT),
   
   /*
   * Screens used to confirm or cancel the execution of a selected function
   */
-  CONFIRM_INSTR_DELETE(ScreenType.TYPE_CONFIRM_CANCEL),
   CONFIRM_PROG_DELETE(ScreenType.TYPE_CONFIRM_CANCEL),
   CONFIRM_RENUM(ScreenType.TYPE_CONFIRM_CANCEL),
   CONFIRM_UNDO(ScreenType.TYPE_CONFIRM_CANCEL),
