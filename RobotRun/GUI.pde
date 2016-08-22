@@ -1372,7 +1372,7 @@ public void f1() {
     case NAV_TOOL_FRAMES:
       if(shift) {
         // Reset the highlighted frame in the tool frame list
-        toolFrames[row_select] = new ToolFrame();
+        toolFrames[active_index] = new ToolFrame();
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         updateScreen();
       } else {
@@ -1384,12 +1384,12 @@ public void f1() {
     case NAV_USER_FRAMES:
       if(shift) {
         // Reset the highlighted frame in the user frames list
-        userFrames[row_select] = new UserFrame();
+        userFrames[active_index] = new UserFrame();
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         updateScreen();
       } else {
         // Set the current user frame
-        activeUserFrame = row_select;
+        activeUserFrame = active_index;
         updateCoordFrame();
       }
       break;
@@ -1521,12 +1521,12 @@ public void f3() {
       updateInstructions();
       break;
     case NAV_TOOL_FRAMES:
-      display_stack.pop();
-      nextScreen(Screen.NAV_USER_FRAMES);
+      active_index = 0;
+      switchScreen(Screen.NAV_USER_FRAMES);
       break;
     case NAV_USER_FRAMES:
-      display_stack.pop();
-      nextScreen(Screen.NAV_TOOL_FRAMES);
+      active_index = 0;
+      switchScreen(Screen.NAV_TOOL_FRAMES);
       break;
     case NAV_DREGS:
       // Switch to Position Registers
@@ -1881,11 +1881,11 @@ public void ENTER() {
       updateActiveFramesDisplay();
       break;
     case NAV_TOOL_FRAMES:
-      curFrameIdx = row_select;
+      curFrameIdx = contents.get(row_select).itemIdx;
       nextScreen(Screen.TFRAME_DETAIL);
       break;
     case NAV_USER_FRAMES:
-      curFrameIdx = row_select;
+      curFrameIdx = contents.get(row_select).itemIdx;
       nextScreen(Screen.UFRAME_DETAIL);
       break;
     case USER_FRAME_METHODS:
@@ -3157,17 +3157,20 @@ public void loadScreen() {
       workingText = Integer.toString(activeToolFrame + 1);
       break;
     case SELECT_FRAME_MODE:
+      active_index = 0;
       opt_select = 0;
       break;
     case NAV_TOOL_FRAMES:
     case NAV_USER_FRAMES:
-      row_select = 0;
+      row_select = active_index*2;
       col_select = 0;
+      start_render = row_select;
       break;
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
-      row_select = -1;
-      col_select = -1;
+      row_select = 0;
+      col_select = 0;
+      start_render = 0;
       opt_select = -1;
       break;
     case TEACH_3PT_TOOL:
@@ -4970,8 +4973,8 @@ public ArrayList<DisplayLine> loadFrames(CoordFrame coordFrame) {
   for(int idx = 0; idx < frames.length; idx += 1) {
     // Display each frame on its own line
     String[] strArray = frames[idx].toLineStringArray();
-    frameDisplay.add(newLine(String.format("%-4s %s", String.format("%d)", idx + 1), strArray[0])));
-    frameDisplay.add(newLine(String.format("%s", strArray[1])));
+    frameDisplay.add(newLine(idx, String.format("%-4s %s", String.format("%d)", idx + 1), strArray[0])));
+    frameDisplay.add(newLine(idx, String.format("%s", strArray[1])));
     frameDisplay.get(idx*2 + 1).xAlign = 38;
   }
   
@@ -4989,6 +4992,7 @@ public ArrayList<DisplayLine> loadFrameDetail(CoordFrame coordFrame) {
   
   // Display the frame set name as well as the index of the currently selected frame
   if(coordFrame == CoordFrame.TOOL) {
+    println(curFrameIdx);
     String[] fields = toolFrames[curFrameIdx].toLineStringArray();
     // Place each value in the frame on a separate lien
     for(String field : fields) { details.add(newLine(field)); }
@@ -4997,10 +5001,10 @@ public ArrayList<DisplayLine> loadFrameDetail(CoordFrame coordFrame) {
     String[] fields = userFrames[curFrameIdx].toLineStringArray();
     // Place each value in the frame on a separate lien
     for(String field : fields) { details.add(newLine(field)); }
-    
+  
   } else {
     return null;
-}
+  }
   
   return details;
 }
