@@ -525,7 +525,7 @@ public final class MotionInstruction extends Instruction  {
         Frame active = userFrames[userFrame];
         // Convert point into the Native Coordinate System
         Point convertedPt = removeFrame(pt, active.getOrigin(), active.getAxes());
-        println(convertNativeToWorld(convertedPt.position));
+        System.out.printf("getVector(): %s\n", convertNativeToWorld(convertedPt.position));
         return convertedPt;
       }
       

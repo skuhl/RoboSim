@@ -165,7 +165,7 @@ public Point applyFrame(Point pt, PVector origin, float[] axes) {
  * @returning     The vector, v, interms of the given frame's Coordinate System
  */
 public PVector convertToFrame(PVector v, PVector origin, float[] axes) {
-  float[] invAxes = axes;
+  float[] invAxes = quaternionNormalize(  quaternionConjugate(axes) );
   PVector vOffset = PVector.sub(v, origin);
   return rotateVectorQuat(vOffset, invAxes);
 }

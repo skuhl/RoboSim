@@ -45,9 +45,7 @@ public void showMainDisplayText() {
   
   if (active != null) {
     // Convert into currently active frame
-    RP.position = convertToFrame(RP.position, active.getOrigin(), active.getAxes());
-    RP.orientation = quaternionRef(RP.orientation, active.getAxes());
-    
+    RP = applyFrame(RP, active.getOrigin(), active.getAxes());
   }
   
   String[] cartesian = RP.toLineStringArray(true),

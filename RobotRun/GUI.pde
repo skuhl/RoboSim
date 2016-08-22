@@ -1786,9 +1786,7 @@ public void f5() {
         
         if (active != null) {
           // Save Cartesian values in terms of the active User frame
-          curRP.position = convertToFrame(curRP.position, active.getOrigin(), active.getAxes());
-          curRP.orientation = quaternionRef(curRP.orientation, active.getAxes());
-          
+          curRP = applyFrame(curRP, active.getOrigin(), active.getAxes());
         } 
   
         GPOS_REG[active_index].point = curRP;
@@ -4783,7 +4781,7 @@ public void newMotionInstruction() {
   if (active != null) {
     // Convert into currently active frame
     pt = applyFrame(pt, active.getOrigin(), active.getAxes());
-    println(convertNativeToWorld(pt.position));
+    System.out.printf("New: %s\n", convertNativeToWorld(pt.position));
   }
   
   // overwrite current instruction
