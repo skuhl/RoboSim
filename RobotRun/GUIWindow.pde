@@ -1469,8 +1469,8 @@ public class WindowManager {
         if (val <= 0) {
           throw new NumberFormatException("Invalid scale value");
         }
-        // Scale cap of 20
-        dimensions[0] = min(val, 20f);
+        // Scale cap of 50
+        dimensions[0] = min(val, 50f);
       }
       
       if (forAPart) {

@@ -2284,7 +2284,7 @@ public void ENTER() {
         switchScreen(Screen.INPUT_DREG_IDX);
       } else if(opt_select == 1) {
         //set arg to new io reg
-        opEdit.set(new IORegister(null), -1);
+        opEdit.set(new IORegister(), -1);
         switchScreen(Screen.INPUT_IOREG_IDX);
       } else {
         //set arg to new constant
@@ -3004,7 +3004,7 @@ public void record_normal() {
 }
 
 public void EE() {
-  armModel.swapEndEffector();
+  armModel.cycleEndEffector();
 }
 
 public void JOINT1_NEG() {
@@ -5374,8 +5374,8 @@ public ArrayList<String> loadIORegisters() {
     String state = (IO_REG[i].state == ON) ? "ON" : "OFF";
     String ee;
     
-    if (IO_REG[i].associatedEE != null) {
-      ee = IO_REG[i].associatedEE.name();
+    if (IO_REG[i].name != null) {
+      ee = IO_REG[i].name;
     } else {
       ee = "";
     }

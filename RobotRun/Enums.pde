@@ -1,7 +1,7 @@
 /* The possible values for the current Coordinate Frame */
 private enum CoordFrame { JOINT, WORLD, TOOL, USER }
 /* The possible types of End Effectors for the Robot */
-private enum EndEffector { NONE, SUCTION, CLAW, POINTER; }
+private enum EEType { NONE, SUCTION, CLAW, POINTER, GLUE_GUN, WIELDER; }
 /* The different motion types for the Robot to when moving to specific joint angles, or positon and orientation. */
 private enum RobotMotion { HALTED, MT_JOINT, MT_LINEAR; }
 /* The states for displaying the current frame as axes */

@@ -108,15 +108,17 @@ public byte loadState() {
     }
   }
   
-  int idx = 0;
   // Associated each End Effector with an I/O Register
-  IO_REG[idx++] = new IORegister(EndEffector.SUCTION);
-  IO_REG[idx++] = new IORegister(EndEffector.CLAW);
-  IO_REG[idx++] = new IORegister(EndEffector.POINTER);
+  int idx = 0;
+  IO_REG[idx++] = new IORegister((EEType.SUCTION).name(), OFF);
+  IO_REG[idx++] = new IORegister((EEType.CLAW).name(), OFF);
+  IO_REG[idx++] = new IORegister((EEType.POINTER).name(), OFF);
+  IO_REG[idx++] = new IORegister((EEType.GLUE_GUN).name(), OFF);
+  IO_REG[idx++] = new IORegister((EEType.WIELDER).name(), OFF);
   
-  for (; idx < IO_REG.length; ++idx) {
-    // Unassociated registers
-    IO_REG[idx] = new IORegister(null);
+  for (idx = 0; idx < IO_REG.length; ++idx) {
+    // Intialize the rest of the I/O registers
+    IO_REG[idx] = new IORegister(OFF);
     IO_REG[idx].setIdx(idx);
   }
   

@@ -3,7 +3,7 @@ private final PositionRegister[] GPOS_REG = new PositionRegister[100];
 // Data Registers
 private final DataRegister[] DREG = new DataRegister[100];
 // IO Registers
-private final IORegister[] IO_REG = new IORegister[3];
+private final IORegister[] IO_REG = new IORegister[5];
 
 public abstract class Register {
   protected String comment;
@@ -63,23 +63,23 @@ public class PositionRegister extends Register {
   }
 }
 
-/* A simple class designed to hold the current states of the Robot's various End Effectors */
+/* A simple class designed to hold a state value along with a name. */
 public class IORegister extends Register {
-  public final EndEffector associatedEE;
+  public final String name;
   public int state;
   
   public IORegister() {
-    associatedEE = null;
+    name = "";
     state = OFF;
   }
   
-  public IORegister(EndEffector EE) {
-    associatedEE = EE;
-    state = OFF;
+  public IORegister(int iniState) {
+    name = "";
+    state = iniState;
   }
   
-  public IORegister(EndEffector EE, int init) {
-    associatedEE = EE;
-    state = init;
+  public IORegister(String comm, int iniState) {
+    name = comm;
+    state = iniState;
   }
 }

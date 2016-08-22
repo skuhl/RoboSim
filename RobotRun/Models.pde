@@ -107,13 +107,12 @@ public class Model {
 
 public class ArmModel {
   
-  public EndEffector activeEndEffector = EndEffector.NONE;
-  public int endEffectorState = OFF;
-  private Model eeModelSuction;
-  private Model eeModelClaw;
-  private Model eeModelClawPincer;
-  private Model eePointer;
-
+  public EEType activeEndEffector;
+  public int endEffectorState;
+  private final HashMap<EEType, Integer> EEToIORegMap;
+  
+  private Model eeMSuction, eeMClaw, eeMClawPincer, eeMPointer, eeMGlueGun, eeMWielder;
+  
   public RobotMotion motionType;
   
   public ArrayList<Model> segments = new ArrayList<Model>();
@@ -124,11 +123,10 @@ public class ArmModel {
   public float[] jogRot = new float[3];
   
   /* Bounding Boxes of the Robot Arm */
-  public BoundingBox[] armOBBs;
+  public final BoundingBox[] armOBBs;
   /* Bounding Boxes unique to each End Effector */
-  //private ArrayList<BoundingBox>[] eeOBBs;
-  private HashMap<EndEffector, ArrayList<BoundingBox>> eeOBBsMap;
-  private HashMap<EndEffector, ArrayList<BoundingBox>> eePickupOBBs;
+  private final HashMap<EEType, ArrayList<BoundingBox>> eeOBBsMap;
+  private final HashMap<EEType, ArrayList<BoundingBox>> eePickupOBBs;
   
   public Part held;
   /* Keep track of the Robot End Effector's orientation at the previous draw state */
@@ -138,12 +136,25 @@ public class ArmModel {
   public float[] tgtOrientation;
   
   public ArmModel() {
+    activeEndEffector = EEType.NONE;
+    endEffectorState = OFF;
+    // Initialize the End Effector to IO Register mapping
+    EEToIORegMap = new HashMap<EEType, Integer>();
+    EEToIORegMap.put(EEType.SUCTION, 0);
+    EEToIORegMap.put(EEType.CLAW, 1);
+    EEToIORegMap.put(EEType.POINTER, 2);
+    EEToIORegMap.put(EEType.GLUE_GUN, 3);
+    EEToIORegMap.put(EEType.WIELDER, 4);
     
     motorSpeed = 1000.0; // speed in mm/sec
-    eeModelSuction = new Model("VACUUM_2.STL", color(40));
-    eeModelClaw = new Model("GRIPPER.STL", color(40));
-    eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
-    eePointer = new Model("POINTER.stl", color(40), 10.0);
+    
+    eeMSuction = new Model("SUCTION.stl", color(40));
+    eeMClaw = new Model("GRIPPER.stl", color(40));
+    eeMClawPincer = new Model("PINCER.stl", color(200, 200, 0));
+    eeMPointer = new Model("POINTER.stl", color(40), 1f);
+    eeMGlueGun = new Model("GLUE_GUN.stl", color(40));
+    eeMWielder = new Model("WIELDER.stl", color(40));
+    
     motionType = RobotMotion.HALTED;
     // Joint 1
     Model base = new Model("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
@@ -203,49 +214,66 @@ public class ArmModel {
     armOBBs[5] = new BoundingBox(160, 160, 160);
     armOBBs[6] = new BoundingBox(128, 430, 128);
     
-    eeOBBsMap = new HashMap<EndEffector, ArrayList<BoundingBox>>();
-    eePickupOBBs = new HashMap<EndEffector, ArrayList<BoundingBox>>();
+    eeOBBsMap = new HashMap<EEType, ArrayList<BoundingBox>>();
+    eePickupOBBs = new HashMap<EEType, ArrayList<BoundingBox>>();
     // Faceplate
     ArrayList<BoundingBox> limbo = new ArrayList<BoundingBox>();
     limbo.add( new BoundingBox(102, 102, 36) );
-    eeOBBsMap.put(EndEffector.NONE, limbo);
+    eeOBBsMap.put(EEType.NONE, limbo);
     // Cannot pickup
     limbo = new ArrayList<BoundingBox>();
-    eePickupOBBs.put(EndEffector.NONE, limbo);
+    eePickupOBBs.put(EEType.NONE, limbo);
+    
     // Claw Gripper
     limbo = new ArrayList<BoundingBox>();
     limbo.add( new BoundingBox(102, 102, 46) );
     limbo.add( new BoundingBox(89, 21, 31) );
     limbo.add( new BoundingBox(89, 21, 31) );
-    eeOBBsMap.put(EndEffector.CLAW, limbo);
+    eeOBBsMap.put(EEType.CLAW, limbo);
     // In between the grippers
     limbo = new ArrayList<BoundingBox>();
     limbo.add(new BoundingBox(55, 3, 15) );
     limbo.get(0).setColor(color(0, 0, 255));
-    eePickupOBBs.put(EndEffector.CLAW, limbo);
+    eePickupOBBs.put(EEType.CLAW, limbo);
+    
     // Suction 
     limbo = new ArrayList<BoundingBox>();
     limbo.add( new BoundingBox(102, 102, 46) );
     limbo.add( new BoundingBox(37, 37, 82/*87*/) );
     limbo.add( new BoundingBox(37, 62/*67*/, 37) );
-    eeOBBsMap.put(EndEffector.SUCTION, limbo);
+    eeOBBsMap.put(EEType.SUCTION, limbo);
     // One for each suction cup
     limbo = new ArrayList<BoundingBox>();
     limbo.add(new BoundingBox(25, 25, 3) );
     limbo.get(0).setColor(color(0, 0, 255));
     limbo.add(new BoundingBox(25, 3, 25) );
     limbo.get(1).setColor(color(0, 0, 255));
-    eePickupOBBs.put(EndEffector.SUCTION, limbo);
+    eePickupOBBs.put(EEType.SUCTION, limbo);
+    
     // Pointer
     limbo = new ArrayList<BoundingBox>();
     limbo.add( new BoundingBox(102, 102, 46) );
     limbo.add( new BoundingBox(24, 24, 32) );
     limbo.add( new BoundingBox(18, 18, 56) );
     limbo.add( new BoundingBox(9, 9, 37) );
-    eeOBBsMap.put(EndEffector.POINTER, limbo);
+    eeOBBsMap.put(EEType.POINTER, limbo);
     // Cannot pickup
     limbo = new ArrayList<BoundingBox>();
-    eePickupOBBs.put(EndEffector.POINTER, limbo);
+    eePickupOBBs.put(EEType.POINTER, limbo);
+    
+    // TODO Glue Gun
+    limbo = new ArrayList<BoundingBox>();
+    eeOBBsMap.put(EEType.GLUE_GUN, limbo);
+    // Cannot pickup
+    limbo = new ArrayList<BoundingBox>();
+    eePickupOBBs.put(EEType.GLUE_GUN, limbo);
+    
+    // TODO Wielder
+    limbo = new ArrayList<BoundingBox>();
+    eeOBBsMap.put(EEType.WIELDER, limbo);
+    // Cannot pickup
+    limbo = new ArrayList<BoundingBox>();
+    eePickupOBBs.put(EEType.WIELDER, limbo);
     
     held = null;
     // Initializes the old transformation matrix for the arm model
@@ -378,38 +406,68 @@ public class ArmModel {
     translate(-45, -45, 0);
     segments.get(6).draw();
     
-    // next, the end effector
-    if(activeEndEffector == EndEffector.SUCTION) {
-      rotateY(PI);
-      translate(-88, -37, 0);
-      eeModelSuction.draw();
-    } else if(activeEndEffector == EndEffector.CLAW) {
-      rotateY(PI);
-      translate(-88, 0, 0);
-      eeModelClaw.draw();
-      rotateZ(PI/2);
-      if(endEffectorState == OFF) {
-        translate(10, -85, 30);
-        eeModelClawPincer.draw();
-        translate(55, 0, 0);
-        eeModelClawPincer.draw();
-      } else if(endEffectorState == ON) {
-        translate(28, -85, 30);
-        eeModelClawPincer.draw();
-        translate(20, 0, 0);
-        eeModelClawPincer.draw();
-      }
-    } else if (activeEndEffector == EndEffector.POINTER) {
-      rotateY(PI);
-      rotateZ(PI);
-      translate(45, -45, 10);
-      eePointer.draw();
-    }
+    drawEndEffector(activeEndEffector, endEffectorState);
     
     popMatrix();
     
     if (COLLISION_DISPLAY) { drawBoxes(); }
   }//end draw arm model
+  
+  /**
+   * Draw the End Effector model associated with the given
+   * End Effector type in the current coordinate system.
+   * 
+   * @param ee       The End Effector to draw
+   * @param eeState  The state of the End Effector to be drawn
+   */
+  private void drawEndEffector(EEType ee, int eeState) {
+    pushMatrix();
+    
+    // Center the End Effector on the Robot's faceplate and draw it.
+    if(ee == EEType.SUCTION) {
+      rotateY(PI);
+      translate(-88, -37, 0);
+      eeMSuction.draw();
+      
+    } else if(ee == EEType.CLAW) {
+      rotateY(PI);
+      translate(-88, 0, 0);
+      eeMClaw.draw();
+      rotateZ(PI/2);
+      
+      if(eeState == OFF) {
+        // Draw open grippers
+        translate(10, -85, 30);
+        eeMClawPincer.draw();
+        translate(55, 0, 0);
+        eeMClawPincer.draw();
+        
+      } else if(eeState == ON) {
+        // Draw closed grippers
+        translate(28, -85, 30);
+        eeMClawPincer.draw();
+        translate(20, 0, 0);
+        eeMClawPincer.draw();
+      }
+    } else if (ee == EEType.POINTER) {
+      rotateY(PI);
+      rotateZ(PI);
+      translate(45, -45, 10);
+      eeMPointer.draw();
+      
+    } else if (ee == EEType.GLUE_GUN) {
+      translate(48, 46, -12);
+      eeMGlueGun.draw();
+      
+    } else if (ee == EEType.WIELDER) {
+      rotateY(PI);
+      rotateZ(PI);
+      translate(46, -44, 10);
+      eeMWielder.draw();
+    }
+    
+    popMatrix();
+  }
   
   /**
    * Updates the position and orientation of the hit
@@ -524,7 +582,7 @@ public class ArmModel {
    * Updates position and orientation of the hit boxes associated
    * with the given End Effector.
    */
-  private void updateOBBBoxesForEE(EndEffector current) {
+  private void updateOBBBoxesForEE(EEType current) {
     ArrayList<BoundingBox> curEEOBBs = eeOBBsMap.get(current),
                            curPUEEOBBs = eePickupOBBs.get(current);
     
@@ -603,6 +661,14 @@ public class ArmModel {
         translate(0, 21, 32);
         translate(0, 18, 34);
         translate(0, 0, 30);
+        break;
+      
+      case GLUE_GUN:
+        // TODO
+        break;
+      
+      case WIELDER:
+        // TODO
         break;
         
       default:
@@ -1056,14 +1122,6 @@ public class ArmModel {
    * TODO comment
    */
   public void moveTo(float[] jointAngles) {
-    
-    float[] anglesInDegrees = new float[jointAngles.length];
-    
-    for (int joint = 0; joint < anglesInDegrees.length; ++joint) {
-      anglesInDegrees[joint] = jointAngles[joint] * RAD_TO_DEG;
-    }
-    
-    System.out.printf("Destinations: %s\n", arrayToString(anglesInDegrees));
     setupRotationInterpolation(jointAngles);
     motionType = RobotMotion.MT_JOINT;
   }
@@ -1082,33 +1140,45 @@ public class ArmModel {
    * Transitions from the current End Effector
    * to the next End Effector in a cyclic pattern:
    * 
-   * NONE -> SUCTION -> CLAW -> POINTER -> NONE
+   * NONE -> SUCTION -> CLAW -> POINTER -> GLUE_GUN -> WIELDER -> NONE
    */
-  public void swapEndEffector() {
-    
+  public void cycleEndEffector() {
+    // Switch to the next End Effector in the cycle
     switch (activeEndEffector) {
       case NONE:
-        activeEndEffector = EndEffector.SUCTION;
-        endEffectorState = IO_REG[0].state;
+        activeEndEffector = EEType.SUCTION;
         break;
       
       case SUCTION:
-        activeEndEffector = EndEffector.CLAW;
-        endEffectorState = IO_REG[1].state;
+        activeEndEffector = EEType.CLAW;
         break;
         
       case CLAW:
-        activeEndEffector = EndEffector.POINTER;
-        endEffectorState = IO_REG[2].state;
+        activeEndEffector = EEType.POINTER;
         break;
       
       case POINTER:
+        activeEndEffector = EEType.GLUE_GUN;
+        break;
+        
+      case GLUE_GUN:
+        activeEndEffector = EEType.WIELDER;
+        break;
+      
+      case WIELDER:
       default:
-        activeEndEffector = EndEffector.NONE;
+        activeEndEffector = EEType.NONE;
         break;
     }
     
-    // Releases currently held object
+    IORegister associatedIO = getIORegisterFor(activeEndEffector);
+    // Set end effector state
+    if (associatedIO != null) {
+      endEffectorState = associatedIO.state;
+    } else {
+      endEffectorState = OFF;
+    }
+    
     releaseHeldObject();
   }
   
@@ -1195,23 +1265,30 @@ public class ArmModel {
   }
   
   /**
-   * Update the IO Register associated with the Robot's current End Effector
+   * Update the I/O register associated with the Robot's current End Effector
    * (if any) to the Robot's current End Effector state.
    */
   public void updateIORegister() {
+    // Get the I/O register associated with the current End Effector
+    IORegister associatedIO = getIORegisterFor(activeEndEffector);
     
-    switch (activeEndEffector) {
-      case SUCTION:
-        IO_REG[0].state = endEffectorState;
-        break;
-      case CLAW:
-        IO_REG[1].state = endEffectorState;
-        break;
-      case POINTER:
-        IO_REG[2].state = endEffectorState;
-        break;
-      default:
+    if (associatedIO != null) {
+      associatedIO.state = endEffectorState;
     }
+  }
+  
+  /**
+   * Returns the I/O register associated with the given End Effector
+   * type, or null if noy such I/O register exists.
+   */
+  public IORegister getIORegisterFor(EEType ee) {
+    Integer regIdx = EEToIORegMap.get(ee);
+    
+    if (regIdx != null && regIdx >= 0 && regIdx < IO_REG.length) {
+      return IO_REG[regIdx];
+    }
+    
+    return null;
   }
   
   /**
