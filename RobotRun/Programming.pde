@@ -479,9 +479,9 @@ public final class MotionInstruction extends Instruction  {
   public void setSpeed(float in) { speed = in; }
   public int getTermination() { return termination; }
   public void setTermination(int in) { termination = in; }
-  public float getUserFrame() { return userFrame; }
+  public int getUserFrame() { return userFrame; }
   public void setUserFrame(int in) { userFrame = in; }
-  public float getToolFrame() { return toolFrame; }
+  public int getToolFrame() { return toolFrame; }
   public void setToolFrame(int in) { toolFrame = in; }
 
   public float getSpeedForExec(ArmModel model) {
@@ -490,60 +490,43 @@ public final class MotionInstruction extends Instruction  {
   }
   
   /**
-   * Returns the point associated with this motion instruction (can be either a position in the program
-   * or a global position register value). If the currently active User or Tool Frame does no match the
-   * User or Tool frame associated with this motion instruction, then null is returned. Otherwise, the
-   * TCP of the active Tool frame is applied to the point and then the point is converted from the active
-   * User frame into the Native Coordinate System.
+   * Verify that the given frame indices match those of the
+   * instructions frame indices.
+   */
+  public boolean checkFrames(int activeToolIdx, int activeFrameIdx) {
+    return (toolFrame == activeToolIdx) && (userFrame == activeFrameIdx);
+  }
+  
+  /**
+   * Returns the point associated with this motion instruction
+   * (can be either a position in the program or a global position
+   * register value) in Native Coordinates.
    * 
    * @param parent  The program, to which this instruction belongs
-   * @returning     The point associated with this instruction (or null in the case of an invalid active
-   *                Tool or User frame)
+   * @returning     The point associated with this instruction
    */
   public Point getVector(Program parent) {
     Point pt;
     
     if (isGPosReg) {
         pt = GPOS_REG[positionNum].point.clone();
+        
       } else {
         pt = parent.LPosReg[positionNum].clone();
       }
     
     
-    if(motionType != MTYPE_JOINT) {
+    if(motionType == MTYPE_JOINT) {
       return pt;
+      
     }  else {
-      
-      // Apply active TCP
-      if (toolFrame != -1) {
-        Frame active = getActiveFrame(CoordFrame.TOOL);
-        
-        if (active != toolFrames[toolFrame]) {
-          // Invalid active Tool frame
-          if (DISPLAY_TEST_OUTPUT) {
-            System.out.printf("Active Tool frame must be %d!\n", toolFrame);
-          }
-          return null;
-        }
-        
-        // Convert TCP offset into Native Coordinates
-        PVector tcpOffset = nativeTCPOffset(active.getOrigin());
-        pt.position.add(tcpOffset);
-      }
-      
       // Remove active User frame
       if (userFrame != -1) {
-        Frame active = getActiveFrame(CoordFrame.USER);
-        
-        if (active != userFrames[userFrame]) {
-          // Invalid active User frame
-          if (DISPLAY_TEST_OUTPUT) {
-            System.out.printf("Active User frame must be %d!\n", userFrame);
-          }
-          return null;
-        }
+        Frame active = userFrames[userFrame];
         // Convert point into the Native Coordinate System
-        return removeFrame(pt, active.getOrigin(), active.getAxes());
+        Point convertedPt = removeFrame(pt, active.getOrigin(), active.getAxes());
+        println(convertNativeToWorld(convertedPt.position));
+        return convertedPt;
       }
       
       return pt;
@@ -625,17 +608,15 @@ public class FrameInstruction extends Instruction {
   public void setReg(int r){ frameIdx = r; }
   
   public int execute() {
-    if(frameIdx != -1) {
-      if (frameType == FTYPE_TOOL) {
-        activeToolFrame = frameIdx;
-        return 0;
-      } else if (frameType == FTYPE_USER) {
-        activeUserFrame = frameIdx;
-        return 1;
-      }
-      // Update the Robot Arm's current frame rotation matrix
-      updateCoordFrame();
+    if (frameType == FTYPE_TOOL) {
+      activeToolFrame = frameIdx;
+      return 0;
+    } else if (frameType == FTYPE_USER) {
+      activeUserFrame = frameIdx;
+      return 1;
     }
+    // Update the current active frames
+    updateCoordFrame();
     
     return 2;
   }
@@ -658,7 +639,7 @@ public class FrameInstruction extends Instruction {
       fields[0] = "?FRAME_NUM =";
     }
     // Frame index
-    fields[1] = Integer.toString(frameIdx);
+    fields[1] = Integer.toString(frameIdx + 1);
     
     return fields;
   }

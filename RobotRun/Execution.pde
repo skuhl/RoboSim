@@ -288,25 +288,6 @@ public Point nativeRobotEEPoint(float[] jointAngles) {
 }
 
 /**
- * Returns the difference between the position of the given TCP offset
- * and the Robot's faceplate, in Native Cooridinates.
- * 
- * @param offset  The offset to convert to Native Coordinates
- * @returning     The given vector offset, in Native Coordinates
- */
-public PVector nativeTCPOffset(PVector offset) {
-    pushMatrix();
-    resetMatrix();
-    applyModelRotation(armModel.getJointAngles());
-    PVector origin = getCoordFromMatrix(0f, 0f, 0f);
-    // Subtract the origin Native Coordinate values
-    PVector nativeOffset = getCoordFromMatrix(offset.x, offset.y, offset.z).sub(origin);
-    popMatrix();
-    
-    return nativeOffset;
-}
-
-/**
  * Takes a vector and a (probably not quite orthogonal) second vector
  * and computes a vector that's truly orthogonal to the first one and
  * pointing in the direction closest to the imperfect second vector
@@ -929,15 +910,18 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
   Point start = nativeRobotEEPoint(model.getJointAngles());
   
-  if (instruction.getVector(program) == null) {
-    // Invalid active User or Tool frame
-    return false;
-  }
-  
   if(instruction.getMotionType() == MTYPE_JOINT) {
     armModel.setupRotationInterpolation(instruction.getVector(program).angles);
   } // end joint movement setup
   else if(instruction.getMotionType() == MTYPE_LINEAR) {
+    
+    if (!instruction.checkFrames(activeToolFrame, activeUserFrame)) {
+      // Current Frames must match the instruction's frames
+      System.out.printf("Tool frame: %d : %d\nUser frame: %d : %d\n\n", instruction.getToolFrame(),
+                                      activeToolFrame, instruction.getUserFrame(), activeUserFrame);
+      return false;
+    }
+    
     if(instruction.getTermination() == 0) {
       beginNewLinearMotion(start, instruction.getVector(program));
     } 

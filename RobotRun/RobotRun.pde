@@ -10,6 +10,9 @@ import java.awt.event.KeyEvent;
 
 private static final int OFF = 0, ON = 1;
 private static final int ARITH = 0, BOOL = 1;
+PFont fnt_con14, fnt_con12, fnt_conB;
+
+private Camera camera;
 // The position at which the Robot is drawn
 private final PVector ROBOT_POSITION = new PVector(200, 300, 200);
 ArmModel armModel;
@@ -19,21 +22,6 @@ WindowManager manager;
 Stack<Screen> display_stack;
 
 ArrayList<Program> programs = new ArrayList<Program>();
-
-/* global variables for toolbar */
-PFont fnt_con14, fnt_con12, fnt_conB;
-
-// for pan button
-int clickPan = 0;
-float panX = 1.0; 
-float panY = 1.0;
-
-// for rotate button
-int clickRotate = 0;
-float myRotX = 0.0;
-float myRotY = 0.0;
-
-float myscale = 2;
 
 /*******************************/
 /* other global variables      */
@@ -51,15 +39,16 @@ private static ArrayList<String> buffer;
 /*******************************/
 
 
-
 public void setup() {
   //size(1200, 800, P3D);
   size(1080, 720, P3D);
+  
   //create font and text display background
   fnt_con14 = createFont("data/Consolas.ttf", 14);
   fnt_con12 = createFont("data/Consolas.ttf", 12);
   fnt_conB = createFont("data/ConsolasBold.ttf", 12);
   
+  camera = new Camera();
   buffer = new ArrayList<String>();
   
   //load model and save data
@@ -90,7 +79,7 @@ public void draw() {
   noFill();
   
   pushMatrix();
-  applyCamera();
+  camera.apply();
   
   Scenario s = activeScenario();
   Program p = activeProgram();
@@ -121,17 +110,9 @@ public void draw() {
   
   hint(DISABLE_DEPTH_TEST);
   // Apply the camera for drawing text and windows
-  ortho(-width / 2f, width / 2f, -height / 2f, height / 2f, 1, 2000);
+  ortho(-width / 2f, width / 2f, -height / 2f, height / 2f);
   showMainDisplayText();
   //println(frameRate + " fps");
-}
-
-void applyCamera() {
-  ortho(-width / myscale, width / myscale, -height / myscale, height / myscale, 0.001f, 3000f);
-  translate(width / 1.5f, height / 1.5f, -500f);
-  translate(panX, panY); // for pan button
-  rotateX(myRotX); // for rotate button
-  rotateY(myRotY); // for rotate button
 }
 
 /*****************************************************************************************************************

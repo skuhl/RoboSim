@@ -1,4 +1,86 @@
 /**
+ * TODO comment this
+ */
+public class Camera {
+  private PVector position, orientation;
+  private float scale;
+  
+  /**
+   * Creates a camera with the default position, orientation and scale.
+   */
+  public Camera() {
+    position = new PVector(width / 1.5f, height / 1.5f, -500f);
+    orientation = new PVector(0f, 0f, 0f);
+    scale = 1f;
+  }
+  
+  /**
+   * Apply the camer's scale, position, and orientation to the current matrix.
+   */
+  public void apply() {
+    // Apply camera scaling
+    float horizontalMargin = scale * width;
+    float verticalMargin = scale * height;
+    ortho(-horizontalMargin, horizontalMargin, -verticalMargin, verticalMargin, 1f, 3000f);
+    
+    // Apply camera rotations
+    rotateX(orientation.x);
+    rotateY(orientation.y);
+    rotateZ(orientation.z);
+    
+    float[][] tMatrix = getTransformationMatrix();
+    tMatrix = invertHCMatrix(tMatrix);
+    PVector relativePosition = transform(position, tMatrix);
+    
+    // Apply camera translations
+    translate(relativePosition.x, relativePosition.y, relativePosition.z - 500f);
+    
+
+  }
+  
+  /**
+   * Return the camera perspective to the
+   * default position, orientation and scale.
+   */
+  public void reset() {
+    position.x = width / 1.5f;
+    position.y = height / 1.5f;
+    position.z = -500f;
+    orientation.x = 0f;
+    orientation.y = 0f;
+    orientation.z = 0f;
+    scale = 1f;
+  }
+  
+  /**
+   * Change the camera's position by the given values.
+   */
+  public void move(float x, float y, float z) {
+    position.add( new PVector(x, y, z) );
+  }
+  
+  /**
+   * Change the camera's rotation by the given values.
+   */
+  public void rotate(float w, float p, float r) {
+    orientation.add( new PVector(w, p, r) );
+  }
+  
+  /**
+   * Change the scaling of the camera.
+   */
+  public void changeScale(float multiplier) {
+    scale = max(0.25f, min(multiplier * scale, 8f));
+  }
+  
+  // Getters for the Camera's position, orientation, and scale
+  public PVector getPosition() { return position; }
+  public PVector getOrientation() { return orientation; }
+  public float getScale() { return scale; }
+}
+
+
+/**
  * Applies the rotations and translations of the Robot Arm to get to the
  * face plate center, given the set of six joint angles, each corresponding
  * to a joint of the Robot Arm and each within the bounds of [0, TWO_PI).
@@ -67,9 +149,8 @@ public void applyModelRotation(float[] jointAngles) {
  * @returning     The point, pt, interms of the given frame's Coordinate System
  */
 public Point applyFrame(Point pt, PVector origin, float[] axes) {
-  float[] invAxes = quaternionConjugate(axes);
   PVector position = convertToFrame(pt.position, origin, axes);
-  float[] orientation = quaternionMult(pt.orientation, invAxes);
+  float[] orientation = quaternionRef(pt.orientation, axes);
   
   return new Point(position, orientation, pt.angles);
 }
