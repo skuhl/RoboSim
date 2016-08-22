@@ -635,9 +635,9 @@ public void mouseWheel(MouseEvent event) {
   float e = event.getCount();
   // Control scaling of the camera with the mouse wheel
   if (e > 0) {
-    myscale = min(myscale * 1.1f, 2f);
+    myscale = max(0.25, myscale * 0.9f);
   } else if (e < 0) {
-    myscale = max(0.25f, myscale * 0.9f);
+    myscale = min(myscale * 1.1f, 8f);
   }
 }
 
@@ -740,11 +740,11 @@ public void keyPressed() {
     }
     
   } else if(key == 'r') { 
-    panX = 0;
-    panY = 0;
-    myscale = 0.5;
-    myRotX = 0;
-    myRotY = 0;
+    panX = 0f;
+    panY = 0f;
+    myscale = 2f;
+    myRotX = 0f;
+    myRotY = 0f;
     
   } else if(key == 't') {
     float[] rot = {0, 0, 0, 0, 0, 0};

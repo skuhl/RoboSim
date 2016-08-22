@@ -33,7 +33,7 @@ int clickRotate = 0;
 float myRotX = 0.0;
 float myRotY = 0.0;
 
-float myscale = 0.5;
+float myscale = 2;
 
 /*******************************/
 /* other global variables      */
@@ -55,7 +55,6 @@ private static ArrayList<String> buffer;
 public void setup() {
   //size(1200, 800, P3D);
   size(1080, 720, P3D);
-  ortho();
   //create font and text display background
   fnt_con14 = createFont("data/Consolas.ttf", 14);
   fnt_con12 = createFont("data/Consolas.ttf", 12);
@@ -79,8 +78,7 @@ public void setup() {
 }
 
 public void draw() {
-  ortho();
-  
+  // Apply the camera for drawing objects
   directionalLight(255, 255, 255, 1, 1, 0);
   ambientLight(150, 150, 150);
 
@@ -122,15 +120,16 @@ public void draw() {
   popMatrix();
   
   hint(DISABLE_DEPTH_TEST);
-  
+  // Apply the camera for drawing text and windows
+  ortho(-width / 2f, width / 2f, -height / 2f, height / 2f, 1, 2000);
   showMainDisplayText();
   //println(frameRate + " fps");
 }
 
 void applyCamera() {
-  translate(width/1.5,height/1.5);
+  ortho(-width / myscale, width / myscale, -height / myscale, height / myscale, 0.001f, 3000f);
+  translate(width / 1.5f, height / 1.5f, -500f);
   translate(panX, panY); // for pan button
-  scale(myscale);
   rotateX(myRotX); // for rotate button
   rotateY(myRotY); // for rotate button
 }

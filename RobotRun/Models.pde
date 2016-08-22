@@ -148,12 +148,12 @@ public class ArmModel {
     
     motorSpeed = 1000.0; // speed in mm/sec
     
-    eeMSuction = new Model("SUCTION.stl", color(40));
-    eeMClaw = new Model("GRIPPER.stl", color(40));
+    eeMSuction = new Model("SUCTION.stl", color(108, 206, 214));
+    eeMClaw = new Model("GRIPPER.stl", color(108, 206, 214));
     eeMClawPincer = new Model("PINCER.stl", color(200, 200, 0));
-    eeMPointer = new Model("POINTER.stl", color(40), 1f);
-    eeMGlueGun = new Model("GLUE_GUN.stl", color(40));
-    eeMWielder = new Model("WIELDER.stl", color(40));
+    eeMPointer = new Model("POINTER.stl", color(108, 206, 214), 1f);
+    eeMGlueGun = new Model("GLUE_GUN.stl", color(108, 206, 214));
+    eeMWielder = new Model("WIELDER.stl", color(108, 206, 214));
     
     motionType = RobotMotion.HALTED;
     // Joint 1
@@ -456,7 +456,8 @@ public class ArmModel {
       eeMPointer.draw();
       
     } else if (ee == EEType.GLUE_GUN) {
-      translate(48, 46, -12);
+      rotateZ(PI);
+      translate(-48, -46, -12);
       eeMGlueGun.draw();
       
     } else if (ee == EEType.WIELDER) {
