@@ -108,7 +108,7 @@ public static enum Screen implements DisplayMode {
   * Screens used to display a sereal list of contents for the user to
   * examine and interact with
   */
-  NAV_PROG_INST(ScreenType.TYPE_LIST_CONTENTS),
+  NAV_PROG_INSTR(ScreenType.TYPE_LIST_CONTENTS),
   NAV_TOOL_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
   NAV_USER_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
   NAV_PROGRAMS(ScreenType.TYPE_LIST_CONTENTS),

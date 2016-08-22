@@ -728,7 +728,7 @@ public void keyPressed() {
     
   } else if (key == 'f' ) {
     // Display the User and Tool frames associated with the current motion instruction
-    if (DISPLAY_TEST_OUTPUT && mode == Screen.NAV_PROG_INST && (col_select == 3 || col_select == 4)) {
+    if (DISPLAY_TEST_OUTPUT && mode == Screen.NAV_PROG_INSTR && (col_select == 3 || col_select == 4)) {
       Instruction inst = activeInstruction();
       
       if (inst instanceof MotionInstruction) {
@@ -1047,14 +1047,14 @@ public void up() {
         opt_select, active_prog, start_render);
       }
       break;
-    case NAV_PROG_INST:
+    case NAV_PROG_INSTR:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
     case SELECT_INSTR_DELETE:
       if (!programRunning) {
         // Lock movement when a program is running
         int prevRow = getSelectedRow();
-        active_instr = moveUp(shift);
+        active_instr = moveUpInstr(shift);
         
         //special case for select statement column navigation
         if(activeInstruction() instanceof SelectStatement && getSelectedRow() == 0) {
@@ -1148,14 +1148,14 @@ public void dn() {
         row_select, active_prog, start_render);
       }
       break;
-    case NAV_PROG_INST:
+    case NAV_PROG_INSTR:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
     case SELECT_INSTR_DELETE:
       if (!programRunning) {
         // Lock movement when a program is running
         int prevIdx = getSelectedIdx();
-        active_instr = moveDown(shift); //<>//
+        active_instr = moveDownInstr(shift); //<>//
         
         //special case for select statement column navigation
         if(activeInstruction() instanceof SelectStatement && getSelectedRow() == 1) {
@@ -1242,7 +1242,7 @@ public void dn() {
 
 public void lt() { 
   switch(mode) { 
-    case NAV_PROG_INST:
+    case NAV_PROG_INSTR:
       if (!programRunning) {
         // Lock movement when a program is running
         moveLeft();
@@ -1269,7 +1269,7 @@ public void lt() {
 
 public void rt() {
   switch(mode) {
-    case NAV_PROG_INST:
+    case NAV_PROG_INSTR:
       if (!programRunning) {
         // Lock movement when a program is running
         moveRight();
@@ -1374,7 +1374,7 @@ public void f1() {
     case NAV_PROGRAMS:
       nextScreen(Screen.NEW_PROGRAM);
       break;
-    case NAV_PROG_INST:
+    case NAV_PROG_INSTR:
       if(shift) {
         newMotionInstruction();
         col_select = 0;
@@ -1442,7 +1442,7 @@ public void f2() {
     case NAV_PROGRAMS:
       nextScreen(Screen.RENAME_PROGRAM);
       break;
-    case NAV_PROG_INST:
+    case NAV_PROG_INSTR:
       nextScreen(Screen.SELECT_INSTR_INSERT);
       break;
     case TFRAME_DETAIL:
@@ -1493,7 +1493,7 @@ public void f3() {
     case NAV_PROGRAMS:
       nextScreen(Screen.CONFIRM_PROG_DELETE);
       break;
-    case NAV_PROG_INST:
+    case NAV_PROG_INSTR:
       int selectIdx = getSelectedIdx();
       if(activeInstruction() instanceof IfStatement) {
         IfStatement stmt = (IfStatement)activeInstruction();
@@ -1574,7 +1574,7 @@ public void f4() {
   case NAV_PROGRAMS:
     nextScreen(Screen.CP_PROGRAM);
     break;
-  case NAV_PROG_INST:
+  case NAV_PROG_INSTR:
     Instruction ins = activeInstruction();
     
     if (ins != null) {
@@ -1741,7 +1741,7 @@ public void f4() {
 
 public void f5() {
   switch(mode) {
-    case NAV_PROG_INST:
+    case NAV_PROG_INSTR:
       Instruction i = activeInstruction();
       int selectIdx = getSelectedIdx();
       
@@ -1849,7 +1849,7 @@ public void hd() {
 }
 
 public void fd() {  
-  if(mode == Screen.NAV_PROG_INST && !programRunning && shift) {
+  if(mode == Screen.NAV_PROG_INSTR && !programRunning && shift) {
     // Stop any prior Robot movement
     armModel.halt();
     // Safeguard against editing a program while it is running
@@ -1864,7 +1864,7 @@ public void fd() {
 
 public void bd() {
   // If there is a previous instruction, then move to it and reverse its affects
-  if(mode == Screen.NAV_PROG_INST && !programRunning && shift && step) {
+  if(mode == Screen.NAV_PROG_INSTR && !programRunning && shift && step) {
     // Stop any prior Robot movement
     armModel.halt();
     // Safeguard against editing a program while it is running
@@ -1996,7 +1996,7 @@ public void ENTER() {
         start_render = 0;
         
         saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );    
-        switchScreen(Screen.NAV_PROG_INST);
+        switchScreen(Screen.NAV_PROG_INSTR);
       }
       break;
     case RENAME_PROGRAM:
@@ -2044,7 +2044,7 @@ public void ENTER() {
         row_select = 0;
         col_select = 0;
         start_render = 0;
-        nextScreen(Screen.NAV_PROG_INST);
+        nextScreen(Screen.NAV_PROG_INSTR);
       }
       break;
       
@@ -2785,7 +2785,7 @@ public void ENTER() {
 }//End enter
 
 public void ITEM() {
-  if(mode == Screen.NAV_PROG_INST) {
+  if(mode == Screen.NAV_PROG_INSTR) {
     opt_select = 0;
     workingText = "";
     nextScreen(Screen.JUMP_TO_LINE);
@@ -3329,7 +3329,7 @@ public void loadScreen() {
       opt_select = 0;
       workingText = "\0";
       break;
-    case NAV_PROG_INST:
+    case NAV_PROG_INSTR:
       //need to enforce row/ column select limits based on 
       //program length/ instruction width
       if(prev_select != -1) {
@@ -3748,7 +3748,7 @@ public String getHeader(Screen mode){
       break;
     case CONFIRM_INSERT:
     case CONFIRM_RENUM:
-    case NAV_PROG_INST:
+    case NAV_PROG_INSTR:
     case INSTRUCT_MENU_NAV:
     case SET_MV_INSTR_SPD:
     case SET_MV_INSTR_IDX:
@@ -3883,7 +3883,7 @@ public ArrayList<DisplayLine> getContents(Screen mode){
     case CONFIRM_INSERT:
     case CONFIRM_RENUM:
     case FIND_REPL:
-    case NAV_PROG_INST:
+    case NAV_PROG_INSTR:
     case VIEW_INST_REG:
     case SELECT_INSTR_DELETE:
     case SELECT_COMMENT:
@@ -4215,7 +4215,7 @@ public String[] getFunctionLabels(Screen mode){
       funct[3] = "[Copy]";
       funct[4] = "";
       break;
-    case NAV_PROG_INST:
+    case NAV_PROG_INSTR:
       // F1, F4, F5f
       funct[0] = "[New Pt]";
       funct[1] = "[New Ins]";
@@ -5486,6 +5486,26 @@ public int moveUp(boolean page) {
     start_render = max(0, start_render - (ITEMS_TO_SHOW - 1));
   } 
   else {
+    // Move up a single row
+    row_select = max(0, row_select - 1);
+    if(row_select < start_render) {
+      start_render -= 1;
+    }
+  }
+  
+  //clamp column select to ensure it is within range
+  col_select = min(contents.get(row_select).size() - 1, max(0, col_select));
+  
+  return contents.get(row_select).itemIdx;
+}
+
+public int moveUpInstr(boolean page) {
+  if (page && start_render > 0) {
+    // Move display frame up an entire screen's display length
+    row_select = max(0, row_select - (ITEMS_TO_SHOW - 1));
+    start_render = max(0, start_render - (ITEMS_TO_SHOW - 1));
+  } 
+  else {
     if(getSelectedIdx() == 0 && active_instr > 0) {
       // Move up a single instruction
       while(row_select > 0 && active_instr - 1 == contents.get(row_select - 1).itemIdx) {
@@ -5506,13 +5526,35 @@ public int moveUp(boolean page) {
   //clamp column select to ensure it is within range
   col_select = min(contents.get(row_select).size() - 1, max(0, col_select));
   
-  return contents.get(row_select).itemIdx;
+  return contents.get(row_select).itemIdx;  
 }
 
 /**
  * 
  */
 public int moveDown(boolean page) {
+  int size = contents.size();  
+  
+  if (page && size > (start_render + ITEMS_TO_SHOW)) {
+    // Move display frame down an entire screen's display length
+    row_select = min(size - 1, row_select + (ITEMS_TO_SHOW - 1));
+    start_render = max(0, min(size - ITEMS_TO_SHOW, start_render + (ITEMS_TO_SHOW - 1)));
+  } else {
+
+    // Move down a single row
+    row_select = min(size - 1, row_select + 1);
+    if(row_select - start_render > ITEMS_TO_SHOW - 1) {
+      start_render += 1;
+    }
+  }
+  
+  //clamp column select to ensure it is within range
+  col_select = min(contents.get(row_select).size() - 1, max(0, col_select));
+  
+  return contents.get(row_select).itemIdx;
+}
+
+public int moveDownInstr(boolean page) {
   int size = contents.size();  
   
   if (page && size > (start_render + ITEMS_TO_SHOW)) {
@@ -5580,6 +5622,8 @@ public int getSelectedRow() {
 }
 
 public int getSelectedIdx() {
+  if(mode.getType() == ScreenType.TYPE_LINE_SELECT) return 0;
+  
   int idx = col_select;
   for(int i = row_select - 1; i >= 0; i -= 1) {
     if(contents.get(i).itemIdx != contents.get(i + 1).itemIdx) break;
