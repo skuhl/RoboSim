@@ -507,7 +507,7 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     inst.setIsCommented(isCommented);
     
   } /* Add other instructions here! */
-    else if (instType == 7) {
+    else if (instType == 1) {
     inst = new Instruction();
     boolean isCommented = in.readBoolean();
     inst.setIsCommented(isCommented);

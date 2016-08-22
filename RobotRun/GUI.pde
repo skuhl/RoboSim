@@ -614,14 +614,14 @@ void gui() {
 public void mouseDragged(MouseEvent e) {
   if (mouseButton == CENTER) {
     // Drag the center mouse button to pan the camera
-    panX += mouseX - pmouseX;
-    panY += mouseY - pmouseY;
+    float transScale = 1.2f * camera.getScale();
+    camera.move(transScale * (mouseX - pmouseX), transScale * (mouseY - pmouseY), 0);
   }
   
   if (mouseButton == RIGHT) {
     // Drag right mouse button to rotate the camera
-    myRotX += (mouseY - pmouseY) * 0.01;
-    myRotY += (mouseX - pmouseX) * 0.01;
+    float rotScale = DEG_TO_RAD / 2f;
+    camera.rotate(rotScale * (mouseY - pmouseY), rotScale * (mouseX - pmouseX), 0);
   }
 }
 
@@ -635,9 +635,9 @@ public void mouseWheel(MouseEvent event) {
   float e = event.getCount();
   // Control scaling of the camera with the mouse wheel
   if (e > 0) {
-    myscale = max(0.25, myscale * 0.9f);
+    camera.changeScale(0.9f);
   } else if (e < 0) {
-    myscale = min(myscale * 1.1f, 8f);
+    camera.changeScale(1.1f);
   }
 }
 
@@ -740,11 +740,7 @@ public void keyPressed() {
     }
     
   } else if(key == 'r') { 
-    panX = 0f;
-    panY = 0f;
-    myscale = 2f;
-    myRotX = 0f;
-    myRotY = 0f;
+    camera.reset();
     
   } else if(key == 't') {
     float[] rot = {0, 0, 0, 0, 0, 0};
@@ -769,45 +765,32 @@ public void keyPressed() {
     
   } else if(keyCode == KeyEvent.VK_1) {
     // Front view
-    panX = 0;
-    panY = 0;
-    myRotX = 0f;
-    myRotY = 0f;
+    camera.reset();
     
   } else if(keyCode == KeyEvent.VK_2) {
     // Back view
-    panX = 0;
-    panY = 0;
-    myRotX = 0f;
-    myRotY = PI;
+    camera.reset();
+    camera.rotate(0, PI, 0);
     
   } else if(keyCode == KeyEvent.VK_3) {
     // Left view
-    panX = 0;
-    panY = 0;
-    myRotX = 0f;
-    myRotY = PI / 2f;
+    camera.reset();
+    camera.rotate(0, PI / 2f, 0);
     
   } else if(keyCode == KeyEvent.VK_4) {
     // Right view
-    panX = 0;
-    panY = 0;
-    myRotX = 0f;
-    myRotY = 3f * PI / 2F;
+    camera.reset();
+    camera.rotate(0, 3f * PI / 2f, 0);
     
   } else if(keyCode == KeyEvent.VK_5) {
     // Top view
-    panX = 0;
-    panY = 0;
-    myRotX = 3f * PI / 2F;
-    myRotY = 0f;
+    camera.reset();
+    camera.rotate(3f * PI / 2f, 0, 0);
     
   } else if(keyCode == KeyEvent.VK_6) {
     // Bottom view
-    panX = 0;
-    panY = 0;
-    myRotX = PI / 2f;
-    myRotY = 0f;
+    camera.reset();
+    camera.rotate(PI / 2f, 0, 0);
   }
 }
 
@@ -1803,9 +1786,7 @@ public void f5() {
         
         if (active != null) {
           // Save Cartesian values in terms of the active User frame
-          curRP.position = convertToFrame(curRP.position, active.getOrigin(), active.getAxes());
-          curRP.orientation = quaternionRef(curRP.orientation, active.getAxes());
-          
+          curRP = applyFrame(curRP, active.getOrigin(), active.getAxes());
         } 
   
         GPOS_REG[active_index].point = curRP;
@@ -2903,104 +2884,6 @@ public void SLOWDOWN() {
   
   // The Robot's speed multiplier is bounded to the range 1% to 100%
   liveSpeed = max(1, liveSpeed);
-}
-
-
-/* navigation buttons */
-// zoomin button when interface is at full size
-public void zoomin_normal() {
-}
-
-// zoomin button when interface is minimized
-public void zoomin_shrink() {
-  zoomin_normal();
-}
-
-// zoomout button when interface is at full size
-public void zoomout_normal() {
-}
-
-// zoomout button when interface is minimized
-public void zoomout_shrink() {
-  zoomout_normal();
-}
-
-// pan button when interface is at full size
-public void pan_normal() {
-  clickPan += 1;
-  if((clickPan % 2) == 1) {
-    if((clickRotate % 2) == 1) {
-      rotate_normal();
-    }
-    
-    PImage[] pressed = {loadImage("images/pan_down.png"), 
-      loadImage("images/pan_down.png"), 
-      loadImage("images/pan_down.png")};
-    
-    cp5.getController("pan_normal")
-    .setImages(pressed);
-  }
-  else {
-    PImage[] released = {loadImage("images/pan_35x20.png"), 
-      loadImage("images/pan_over.png"), 
-      loadImage("images/pan_down.png")};
-    
-    cp5.getController("pan_normal")
-    .setImages(released);
-  }
-}
-
-// pan button when interface is minimized
-public void pan_shrink() {
-  pan_normal();
-}
-
-// rotate button when interface is at full size
-public void rotate_normal() {
-  clickRotate += 1;
-  if((clickRotate % 2) == 1) {
-    if((clickPan % 2) == 1) {
-      pan_normal();
-    }
-    
-    PImage[] pressed = {loadImage("images/rotate_down.png"), 
-      loadImage("images/rotate_down.png"), 
-      loadImage("images/rotate_down.png")};
-    
-    cp5.getController("rotate_normal")
-    .setImages(pressed);
-  }
-  else {
-    PImage[] released = {loadImage("images/rotate_35x20.png"), 
-      loadImage("images/rotate_over.png"), 
-      loadImage("images/rotate_down.png")};
-    
-    cp5.getController("rotate_normal")
-    .setImages(released);
-  }
-}
-
-// rotate button when interface is minized
-public void rotate_shrink() {
-  rotate_normal();
-}
-
-public void record_normal() {
-  if(record == OFF) {
-    record = ON;
-    PImage[] record = {loadImage("images/record-on.png"), 
-      loadImage("images/record-on.png"),
-      loadImage("images/record-on.png")};   
-    bt_record_normal.setImages(record);
-    new Thread(new RecordScreen()).start();
-  } else {
-    record = OFF;
-    PImage[] record = {loadImage("images/record-35x20.png"), 
-      loadImage("images/record-over.png"), 
-      loadImage("images/record-on.png")};   
-    bt_record_normal.setImages(record);
-    
-  }
 }
 
 public void EE() {
@@ -4892,13 +4775,13 @@ boolean[] resetSelection(int n) {
 }
 
 public void newMotionInstruction() {
-  Point pt = nativeRobotPoint(armModel.getJointAngles());
+  Point pt = nativeRobotEEPoint(armModel.getJointAngles());
   Frame active = getActiveFrame(CoordFrame.USER);
   
   if (active != null) {
     // Convert into currently active frame
-    pt.position = convertToFrame(pt.position, active.getOrigin(), active.getAxes());
-    pt.orientation = quaternionRef(pt.orientation, active.getAxes());
+    pt = applyFrame(pt, active.getOrigin(), active.getAxes());
+    System.out.printf("New: %s\n", convertNativeToWorld(pt.position));
   }
   
   // overwrite current instruction
