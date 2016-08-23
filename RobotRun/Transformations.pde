@@ -910,4 +910,9 @@ public float minimumDistance(float src, float dest) {
   
   return difference;
 }
+
+public int clamp(int in, int min, int max) {
+  return min(max, max(min, in));
+}
+
   

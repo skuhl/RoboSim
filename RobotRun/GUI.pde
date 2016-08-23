@@ -661,7 +661,6 @@ public void keyPressed() {
         workingText = "\0";
       }
       
-      col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
       updateScreen();
     } else if(key == DELETE && workingText.length() > 0) {
       
@@ -672,7 +671,6 @@ public void keyPressed() {
         workingText = "\0";
       }
       
-      col_select = max( 0, min( col_select, contents.get(row_select).size() - 1 ) );
       updateScreen();
     // Valid characters in a program name or comment
     } else if(workingText.length() < TEXT_ENTRY_LEN && (key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z')
@@ -2577,7 +2575,6 @@ public void ENTER() {
         CallInstruction call = (CallInstruction)activeInstruction();
         call.callProg = programs.get(row_select);
         call.progIdx = row_select;
-        lastScreen();
       }
       
       lastScreen();
@@ -3143,14 +3140,6 @@ public void loadScreen() {
     case SETUP_NAV:
       opt_select = 0;
       break;
-    case NAV_DREGS:
-    case NAV_PREGS_J:
-    case NAV_PREGS_C:
-      active_index = 0;
-      row_select = 0;
-      col_select = 0;
-      start_render = 0;
-      break;
     case ACTIVE_FRAMES:
       row_select = 0;
       col_select = 1;
@@ -3164,12 +3153,11 @@ public void loadScreen() {
     case NAV_USER_FRAMES:
       row_select = active_index*2;
       col_select = 0;
-      start_render = row_select;
       break;
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
-      row_select = 0;
-      col_select = 0;
+      row_select = -1;
+      col_select = -1;
       start_render = 0;
       opt_select = -1;
       break;
@@ -3190,10 +3178,9 @@ public void loadScreen() {
     case NAV_PROGRAMS:
       // Stop Robot movement (i.e. program execution)
       armModel.halt();
-      row_select = 0;
+      row_select = active_prog;
       col_select = 0;
-      active_prog = 0;
-      start_render = 0;
+      active_instr = 0;
       break;
     case NEW_PROGRAM:
       row_select = 1;
@@ -3202,14 +3189,14 @@ public void loadScreen() {
       workingText = "\0";
       break;
     case RENAME_PROGRAM:
-      active_prog = opt_select;
+      active_prog = row_select;
       row_select = 1;
       col_select = 0;
       opt_select = 0;
       workingText = activeProgram().getName();
       break;
     case CP_PROGRAM:
-      active_prog = opt_select;
+      active_prog = row_select;
       row_select = 1;
       col_select = 0;
       opt_select = 0;
@@ -3220,15 +3207,16 @@ public void loadScreen() {
       //program length/ instruction width
       if(prev_select != -1) {
         row_select = prev_select;
+        start_render = row_select;
         prev_select = -1;
       }
-      
       opt_select = -1;
       break;
     case SET_CALL_PROG:
       prev_select = row_select;
       row_select = 0;
       col_select = 0;
+      start_render = 0;
       break;
     case CONFIRM_INSERT:
       workingText = "";
@@ -3325,6 +3313,16 @@ public void loadScreen() {
       break;
     
     //Registers
+    case NAV_DATA:
+      opt_select = 0;
+      active_index = 0;
+      break;
+    case NAV_DREGS:
+    case NAV_PREGS_J:
+    case NAV_PREGS_C:
+      row_select = active_index;
+      col_select = 0;
+      break;
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
       row_select = 0;
@@ -3338,7 +3336,6 @@ public void loadScreen() {
     case VIEW_INST_REG:
       opt_select = -1;
       break;
-    case NAV_DATA:
     case SWAP_PT_TYPE:
       opt_select = 0;
       break;
@@ -3436,6 +3433,12 @@ public void updateScreen() {
   /*************************
    *    Display Contents   *
    *************************/
+  
+  if(contents.size() > 0) {
+    row_select = clamp(row_select, 0, contents.size() - 1);
+    col_select = clamp(col_select, 0, contents.get(row_select).size() - 1);
+    start_render = clamp(start_render, row_select - (ITEMS_TO_SHOW - 1), row_select);
+  }
   
   index_contents = 1;
   for(int i = start_render; i < contents.size() && i - start_render < ITEMS_TO_SHOW; i += 1) {
@@ -4467,6 +4470,9 @@ public void getInstrEdit(Instruction ins, int selectIdx) {
   else if(ins instanceof JumpInstruction){
     nextScreen(Screen.SET_JUMP_TGT);
   }
+  else if(ins instanceof CallInstruction){
+    nextScreen(Screen.SET_CALL_PROG);
+  } 
   else if(ins instanceof IfStatement){
     IfStatement stmt = (IfStatement)ins;
     
@@ -5375,13 +5381,7 @@ public int moveUp(boolean page) {
   else {
     // Move up a single row
     row_select = max(0, row_select - 1);
-    if(row_select < start_render) {
-      start_render -= 1;
-    }
   }
-  
-  //clamp column select to ensure it is within range
-  col_select = min(contents.get(row_select).size() - 1, max(0, col_select));
   
   return contents.get(row_select).itemIdx;
 }
@@ -5397,21 +5397,12 @@ public int moveUpInstr(boolean page) {
       // Move up a single instruction
       while(row_select > 0 && active_instr - 1 == contents.get(row_select - 1).itemIdx) {
         row_select = max(0, row_select - 1);
-        if(row_select < start_render) {
-          start_render -= 1;
-        }
       }
     } else {
       // Move up a single row
       row_select = max(0, row_select - 1);
-      if(row_select < start_render) {
-        start_render -= 1;
-      }
     }
   }
-  
-  //clamp column select to ensure it is within range
-  col_select = min(contents.get(row_select).size() - 1, max(0, col_select));
   
   return contents.get(row_select).itemIdx;  
 }
@@ -5427,16 +5418,9 @@ public int moveDown(boolean page) {
     row_select = min(size - 1, row_select + (ITEMS_TO_SHOW - 1));
     start_render = max(0, min(size - ITEMS_TO_SHOW, start_render + (ITEMS_TO_SHOW - 1)));
   } else {
-
     // Move down a single row
     row_select = min(size - 1, row_select + 1);
-    if(row_select - start_render > ITEMS_TO_SHOW - 1) {
-      start_render += 1;
-    }
   }
-  
-  //clamp column select to ensure it is within range
-  col_select = min(contents.get(row_select).size() - 1, max(0, col_select));
   
   return contents.get(row_select).itemIdx;
 }
@@ -5455,21 +5439,12 @@ public int moveDownInstr(boolean page) {
       // Move down a single instruction
       while(active_instr == contents.get(row_select).itemIdx) {
         row_select = min(size - 1, row_select + 1);
-        if(row_select - start_render > ITEMS_TO_SHOW - 1) {
-          start_render += 1;
-        }
       }
     } else {
       // Move down a single row
       row_select = min(size - 1, row_select + 1);
-      if(row_select - start_render > ITEMS_TO_SHOW - 1) {
-        start_render += 1;
-      }
     }
   }
-  
-  //clamp column select to ensure it is within range
-  col_select = min(contents.get(row_select).size() - 1, max(0, col_select));
   
   return contents.get(row_select).itemIdx;
 }
@@ -5496,6 +5471,22 @@ public void moveRight() {
   } else {
     col_select = min(contents.get(row_select).size() - 1, col_select + 1);
   }
+}
+
+/**
+ * Returns the first line in the current list of contents that the instruction 
+ * matching the given index appears on.
+ */
+public int getInstrLine(int instrIdx) {
+  ArrayList<DisplayLine> instr = loadInstructions(active_prog);
+  int row = instrIdx;
+  
+  while(instr.get(row).itemIdx != instrIdx) {
+    row += 1;
+    if(row_select >= contents.size() - 1) break;
+  }
+  
+  return row;
 }
 
 public int getSelectedRow() {
