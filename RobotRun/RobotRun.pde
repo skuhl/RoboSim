@@ -253,7 +253,7 @@ public void displayAxes() {
     }
   } else if (axesState == AxesDisplay.GRID) {
     // Display gridlines spanning from axes of the current frame
-    Frame active = getActiveFrame(null);
+    Frame active;
     float[][] displayAxes;
     PVector displayOrigin;
     
@@ -264,10 +264,12 @@ public void displayAxes() {
         displayOrigin = new PVector(0f, 0f, 0f);
         break;
       case TOOL:
+        active = getActiveFrame(CoordFrame.TOOL);
         displayAxes = active.getNativeAxes();
         displayOrigin = eePoint.position;
         break;
       case USER:
+        active = getActiveFrame(CoordFrame.USER);
         displayAxes = active.getNativeAxes();
         displayOrigin = active.getOrigin();
         break;

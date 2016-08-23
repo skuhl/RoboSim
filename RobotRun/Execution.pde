@@ -277,7 +277,7 @@ public Point nativeRobotEEPoint(float[] jointAngles) {
   
   if (activeTool != null) {
     // Apply the Tool Tip
-    offset = activeTool.getOrigin();
+    offset = ((ToolFrame)activeTool).getTCPOffset();
   } else {
     offset = new PVector(0f, 0f, 0f);
   }
@@ -836,6 +836,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
   //stop executing if no valid program is selected or we reach the end of the program
   if(robotFault || activeInstr == null) {
     return true;
+    
   } else if (!activeInstr.isCommented()){
     //motion instructions
     if (activeInstr instanceof MotionInstruction) {
@@ -843,6 +844,11 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
       //start a new instruction
       if(!executingInstruction) {
         executingInstruction = setUpInstruction(program, model, motInstr);
+        
+        if (!executingInstruction) {
+          // Motion Instruction failed
+          nextInstr = -1;
+        }
       }
       //continue current motion instruction
       else {
@@ -912,7 +918,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
     armModel.setupRotationInterpolation(instruction.getVector(program).angles);
   } // end joint movement setup
   else if(instruction.getMotionType() == MTYPE_LINEAR) {
-    
+    println("HERE");
     if (!instruction.checkFrames(activeToolFrame, activeUserFrame)) {
       // Current Frames must match the instruction's frames
       System.out.printf("Tool frame: %d : %d\nUser frame: %d : %d\n\n", instruction.getToolFrame(),

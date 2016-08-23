@@ -9,26 +9,26 @@ private final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
                                                      {  0, -1,  0 } };
 
 public abstract class Frame {
-  private PVector origin;
   // The unit vectors representing the x, y, z axes (in row major order)
-  public float[] axes;
+  private float[] axes;
   /* The three points used to define a coordinate axis for 6-Point Method
    * of Tool Frames and 3-Point or 4_Point Methods of User Frames */
-  public Point[] axesTeachPoints;
+  protected Point[] axesTeachPoints;
   // For Direct Entry
-  public PVector DEOrigin;
-  public float[] DEAxesOffsets;
+  protected PVector DEOrigin;
+  protected float[] DEAxesOffsets;
 
   public Frame() {
-    origin = new PVector(0, 0, 0);
     axes = new float[] { 1f, 0f, 0f, 0f };
     axesTeachPoints = new Point[] { null, null, null };
     DEOrigin = null;
     DEAxesOffsets = null;
   }
-
-  public PVector getOrigin() { return origin.copy(); }
-  public void setOrigin(PVector newOrigin) { origin = newOrigin.copy(); }
+  
+  /**
+   * Return the origin of this Frame's coordinate System.
+   */
+  public abstract PVector getOrigin();
   
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the Native Coordinate System. */
@@ -42,14 +42,14 @@ public abstract class Frame {
     return doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
   }
   
-  public float[] getAxes() { return axes.clone(); }
+  public float[] getAxes() { return axes; }
   
   public float[] getInvAxes() {
     return new float[] { axes[0], -axes[1], -axes[2], -axes[3] };
   }
 
   public void setAxes(float[] newAxes) {
-    axes = newAxes.clone();
+    axes = newAxes;
   }
   
   /**
@@ -279,30 +279,7 @@ public abstract class Frame {
    *
    * @return  A 6-element String array
    */
-  public String[] toStringArray() {
-    
-    String[] values = new String[6];
-    
-    PVector displayOrigin;
-    // Convert angles to degrees and to the World Coordinate Frame
-    PVector wpr = convertWorldToNative(quatToEuler(axes)).mult(RAD_TO_DEG);
-    
-    if (this instanceof UserFrame) {
-      // Convert to World frame reference
-      displayOrigin = convertNativeToWorld(origin);
-    } else {
-      displayOrigin = origin;
-    }
-    
-    values[0] = String.format("X: %4.3f", displayOrigin.x);
-    values[1] = String.format("Y: %4.3f", displayOrigin.y);
-    values[2] = String.format("Z: %4.3f", displayOrigin.z);
-    values[3] = String.format("W: %4.3f", wpr.x);
-    values[4] = String.format("P: %4.3f", wpr.y);
-    values[5] = String.format("R: %4.3f", wpr.z);
-    
-    return values;
-  }
+  public abstract String[] toStringArray();
   
   /**
    * Converts the original toStringArray into a 2x1 String array, where the origin
@@ -372,14 +349,17 @@ public abstract class Frame {
 } // end Frame class
 
 public class ToolFrame extends Frame {
+  // The TCP offset associated with this frame
+  private PVector TCPOffset;
   // For 3-Point and Six-Point Methods
-  public Point[] TCPTeachPoints;
+  private Point[] TCPTeachPoints;
   
   /**
    * Initialize all fields
    */
   public ToolFrame() {
     super();
+    TCPOffset = new PVector(0f, 0f, 0f);
     TCPTeachPoints = new Point[] { null, null, null };
   }
   
@@ -435,7 +415,7 @@ public class ToolFrame extends Frame {
         return false;
       }
       
-      setOrigin(DEOrigin);
+      setTCPOffset(DEOrigin);
       setAxes( DEAxesOffsets.clone() );
       return true;
     } else if (method >= 0 && method < 2 && TCPTeachPoints[0] != null && TCPTeachPoints[1] != null && TCPTeachPoints[2] != null) {
@@ -464,24 +444,62 @@ public class ToolFrame extends Frame {
         return false;
       }
       
-      setOrigin( new PVector((float)newTCP[0], (float)newTCP[1], (float)newTCP[2]) );
+      setTCPOffset( new PVector((float)newTCP[0], (float)newTCP[1], (float)newTCP[2]) );
       setAxes( matrixToQuat(newAxesVectors) );
       return true;
     }
     
     return false;
   }
+  
+    /**
+   * Returns a string array, where each entry is one of
+   * the Tool frame's TCP offset or orientation values:
+   * (X, Y, Z, W, P, and R) and their respective labels.
+   *
+   * @return  A 6-element String array
+   */
+  public String[] toStringArray() {
+    
+    String[] values = new String[6];
+    
+    PVector displayOffset;
+    // Convert angles to degrees and to the World Coordinate Frame
+    PVector wpr = convertWorldToNative(quatToEuler(getAxes())).mult(RAD_TO_DEG);
+    
+    displayOffset = getTCPOffset();
+    
+    values[0] = String.format("X: %4.3f", displayOffset.x);
+    values[1] = String.format("Y: %4.3f", displayOffset.y);
+    values[2] = String.format("Z: %4.3f", displayOffset.z);
+    values[3] = String.format("W: %4.3f", wpr.x);
+    values[4] = String.format("P: %4.3f", wpr.y);
+    values[5] = String.format("R: %4.3f", wpr.z);
+    
+    return values;
+  }
+  
+  /**
+   * Tool Frames have no origin offset.
+   */
+  public PVector getOrigin() { return new PVector(0f, 0f, 0f); }
+  
+  // Getter and Setter for TCP offset value
+  public void setTCPOffset(PVector newOffset) { TCPOffset = newOffset; }
+  public PVector getTCPOffset() { return TCPOffset; }
 }
 
 public class UserFrame extends Frame {
+  private PVector origin;
   // For the 4-Point Method
-  public Point orientOrigin;
+  private Point orientOrigin;
   
   /**
    * Initialize all fields
    */
   public UserFrame() {
     super();
+    origin = new PVector(0f, 0f, 0f);
     orientOrigin = null;
   }
   
@@ -556,13 +574,44 @@ public class UserFrame extends Frame {
     
     return false;
   }
+  
+  /**
+   * Returns a string array, where each entry is one of
+   * the User frame's origin or orientation values:
+   * (X, Y, Z, W, P, and R) and their respective labels.
+   *
+   * @return  A 6-element String array
+   */
+  public String[] toStringArray() {
+    
+    String[] values = new String[6];
+    
+    PVector displayOrigin;
+    // Convert angles to degrees and to the World Coordinate Frame
+    PVector wpr = convertWorldToNative(quatToEuler(getAxes())).mult(RAD_TO_DEG);
+    
+    // Convert to World frame reference
+    displayOrigin = convertNativeToWorld(origin);
+    
+    values[0] = String.format("X: %4.3f", displayOrigin.x);
+    values[1] = String.format("Y: %4.3f", displayOrigin.y);
+    values[2] = String.format("Z: %4.3f", displayOrigin.z);
+    values[3] = String.format("W: %4.3f", wpr.x);
+    values[4] = String.format("P: %4.3f", wpr.y);
+    values[5] = String.format("R: %4.3f", wpr.z);
+    
+    return values;
+  }
+  
+  // Getter and Setters for the User frame's origin
+  public PVector getOrigin() { return origin; }
+  public void setOrigin(PVector newOrigin) { origin = newOrigin; }
 }
 
 /**
- * Returns the active Tool frame for either TOOL or WORLD, or the active
- * User frame for USER. If no active frame is set or JOINT is given as a
- * parameter, then null is returned. If null is given as a parameter, then
- * the active Coordinate Frame System is checked.
+ * Returns the active Tool frame TOOL, or the active User frame for USER. For either
+ * CoordFrame WORLD or JOINT null is always returned. If null is given as a parameter,
+ * then the active Coordinate Frame System is checked.
  * 
  * @param coord  The Coordinate Frame System to check for an active frame,
  *               or null to check the current active Frame System.
@@ -577,7 +626,7 @@ public Frame getActiveFrame(CoordFrame coord) {
   if (coord == CoordFrame.USER && activeUserFrame >= 0 && activeUserFrame < userFrames.length) {
     // active User frame
     return userFrames[activeUserFrame];
-  } else if ((coord == CoordFrame.TOOL || coord == CoordFrame.WORLD) && activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
+  } else if (coord == CoordFrame.TOOL && activeToolFrame >= 0 && activeToolFrame < toolFrames.length) {
     // active Tool frame
     return toolFrames[activeToolFrame];
   } else {

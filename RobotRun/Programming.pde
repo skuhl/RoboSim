@@ -608,17 +608,18 @@ public class FrameInstruction extends Instruction {
   public void setReg(int r){ frameIdx = r; }
   
   public int execute() {
+    int ret = 2;
     if (frameType == FTYPE_TOOL) {
       activeToolFrame = frameIdx;
-      return 0;
+      ret = 0;
     } else if (frameType == FTYPE_USER) {
       activeUserFrame = frameIdx;
-      return 1;
+      ret = 1;
     }
     // Update the current active frames
     updateCoordFrame();
     
-    return 2;
+    return ret;
   }
   
   public Instruction clone() {

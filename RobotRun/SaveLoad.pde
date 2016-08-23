@@ -687,8 +687,15 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
     throw new IOException("Invalid Frame!");
   }
   
-  // Write frame origin
-  savePVector(f.getOrigin(), out);
+  if (f instanceof UserFrame) {
+    // Write User frame origin
+    savePVector(f.getOrigin(), out);
+    
+  } else {
+    // Write Tool frame TCP offset
+    savePVector( ((ToolFrame)f).getTCPOffset(), out );
+  }
+  
   // Write frame axes
   saveFloatArray(f.axes, out);
   
@@ -743,8 +750,16 @@ private Frame loadFrame(DataInputStream in) throws IOException {
     throw new IOException("Invalid Frame type!");
   }
   
-  // Read origin values
-  f.setOrigin( loadPVector(in) );
+  PVector v = loadPVector(in);
+  
+  if (f instanceof UserFrame) {
+    // Read origin value
+    ((UserFrame)f).setOrigin(v);
+  } else {
+    // Read TCP offset values
+    ((ToolFrame)f).setTCPOffset(v);
+  }
+
   // Read axes quaternion values
   f.setAxes( loadFloatArray(in) );
   
