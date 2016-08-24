@@ -35,7 +35,8 @@ int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 /*******************************/
 /*      Debugging Stuff        */
 
-private static ArrayList<String> buffer;
+private ArrayList<String> buffer;
+private Point displayPoint;
 /*******************************/
 
 
@@ -49,7 +50,6 @@ public void setup() {
   fnt_conB = createFont("data/ConsolasBold.ttf", 12);
   
   camera = new Camera();
-  buffer = new ArrayList<String>();
   
   //load model and save data
   armModel = new ArmModel();
@@ -65,6 +65,9 @@ public void setup() {
   manager = new WindowManager(cp5, fnt_con12, fnt_con14);
   display_stack = new Stack<Screen>();
   gui();
+  
+  buffer = new ArrayList<String>();
+  displayPoint = null;
 }
 
 public void draw() {
@@ -88,6 +91,11 @@ public void draw() {
   updateAndDrawObjects(s, p, armModel);
   displayAxes();
   displayTeachPoints();
+  
+  if (displayPoint != null) {
+    // Display the point with its local orientation axes
+    displayOriginAxes(displayPoint.position, quatToMatrix(displayPoint.orientation), 100f, color(0, 100, 15));
+  }
   
   //TESTING CODE: DRAW INTERMEDIATE POINTS
   noLights();
@@ -229,7 +237,8 @@ public void displayAxes() {
   
   if (axesState == AxesDisplay.NONE && curCoordFrame != CoordFrame.JOINT) {
     // Draw axes of the Robot's End Effector frame for testing purposes
-    displayOriginAxes(quatToMatrix( eePoint.orientation ), eePoint.position, 200f, color(255, 0, 255));
+    displayOriginAxes(eePoint.position, quatToMatrix( eePoint.orientation ), 200f, color(255, 0, 255));
+    
   } else if (axesState == AxesDisplay.AXES) {
     // Display axes
     if (curCoordFrame != CoordFrame.JOINT) {
@@ -238,20 +247,23 @@ public void displayAxes() {
       
       if (curCoordFrame == CoordFrame.TOOL) {
         /* Draw the axes of the active Tool frame at the Robot End Effector */
-        displayOriginAxes(activeTool.getWorldAxes(), eePoint.position, 200f, color(255, 0, 255));
+        displayOriginAxes(eePoint.position, activeTool.getWorldAxes(), 200f, color(255, 0, 255));
+        
       } else {
         // Draw axes of the Robot's End Effector frame for testing purposes
-        displayOriginAxes(quatToMatrix( eePoint.orientation ), eePoint.position, 200f, color(255, 0, 255));
+        displayOriginAxes(eePoint.position, quatToMatrix( eePoint.orientation ), 200f, color(255, 0, 255));
       }
       
       if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
         /* Draw the axes of the active User frame */
-        displayOriginAxes(activeUser.getWorldAxes(), activeUser.getOrigin(), 10000f, color(0));
+        displayOriginAxes(activeUser.getOrigin(), activeUser.getWorldAxes(), 10000f, color(0));
+        
       } else {
         /* Draw the axes of the World frame */
-        displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f), 10000f, color(0));
+        displayOriginAxes(new PVector(0f, 0f, 0f), WORLD_AXES, 10000f, color(0));
       }
     }
+    
   } else if (axesState == AxesDisplay.GRID) {
     // Display gridlines spanning from axes of the current frame
     Frame active;
@@ -288,13 +300,13 @@ public void displayAxes() {
  * Given a set of 3 orthogonal unit vectors a point in space, lines are
  * drawn for each of the three vectors, which intersect at the origin point.
  *
- * @param axesVectors  A set of three orthogonal unti vectors
  * @param origin       A point in space representing the intersection of the
  *                     three unit vectors
+ * @param axesVectors  A set of three orthogonal unti vectors
  * @param axesLength   The length, to which the all axes, will be drawn
  * @param originColor  The color of the point to draw at the origin
  */
-public void displayOriginAxes(float[][] axesVectors, PVector origin, float axesLength, color originColor) {
+public void displayOriginAxes(PVector origin, float[][] axesVectors, float axesLength, color originColor) {
   
   pushMatrix();    
   // Transform to the reference frame defined by the axes vectors

@@ -926,12 +926,13 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
     armModel.setupRotationInterpolation(instruction.getVector(program).angles);
   } // end joint movement setup
   else if(instruction.getMotionType() == MTYPE_LINEAR) {
-    println("HERE");
+    
     if (!instruction.checkFrames(activeToolFrame, activeUserFrame)) {
       // Current Frames must match the instruction's frames
       System.out.printf("Tool frame: %d : %d\nUser frame: %d : %d\n\n", instruction.getToolFrame(),
                                       activeToolFrame, instruction.getUserFrame(), activeUserFrame);
       return false;
+      
     }
     
     if(instruction.getTermination() == 0) {

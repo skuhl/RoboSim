@@ -2603,6 +2603,7 @@ public void ENTER() {
       updateScreen(); 
       break;
     case VIEW_INST_REG:
+      displayPoint = null;
       lastScreen();
       break;
     case FIND_REPL:
@@ -4773,11 +4774,14 @@ public ArrayList<String> loadInstructionReg() {
     
     if (p != null) {
       instReg.add("Position values (press ENTER to exit):");
+      
       String[] regEntry = p.toLineStringArray(castIns.getMotionType() != MTYPE_JOINT);
       
       for (String line : regEntry) {
         instReg.add(line);
       }
+      
+      displayPoint = p;
     }
   }
   
@@ -4801,7 +4805,10 @@ public void newMotionInstruction() {
   if (active != null) {
     // Convert into currently active frame
     pt = applyFrame(pt, active.getOrigin(), active.getAxes());
-    System.out.printf("New: %s\n", convertNativeToWorld(pt.position));
+    
+    if (DISPLAY_TEST_OUTPUT) {
+      System.out.printf("New: %s\n", convertNativeToWorld(pt.position));
+    }
   }
   
   // overwrite current instruction

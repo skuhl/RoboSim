@@ -33,7 +33,7 @@ public class Camera {
      // Apply camera scaling
     float horizontalMargin = scale * width / 2f,
           verticalMargin = scale * height / 2f,
-          near = 8f / scale,
+          near = MAX_SCALE / scale,
           far = scale * 5000f;
     ortho(-horizontalMargin, horizontalMargin, -verticalMargin, verticalMargin, near, far);
     
