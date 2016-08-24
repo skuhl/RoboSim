@@ -6,6 +6,7 @@ public class Camera {
   private PVector position,
                   // Rotations in X, Y, Z in radians
                   orientation;
+  private static final float MAX_SCALE = 8f;
   private float scale;
   
   /**
@@ -57,8 +58,8 @@ public class Camera {
    * Change the camera's position by the given values.
    */
   public void move(float x, float y, float z) {
-    float horzontialLimit = scale * width / 2f,
-          verticalLimit = scale * height / 2f;
+    float horzontialLimit = MAX_SCALE * width / 3f,
+          verticalLimit = MAX_SCALE * height / 3f;
     
     position.add( new PVector(x, y, z) );
     // Apply camera position restrictions
@@ -84,7 +85,7 @@ public class Camera {
    * Change the scaling of the camera.
    */
   public void changeScale(float multiplier) {
-    scale = max(0.25f, min(scale * multiplier, 8f));
+    scale = max(0.25f, min(scale * multiplier, MAX_SCALE));
   }
   
   /**

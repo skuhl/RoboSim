@@ -755,10 +755,6 @@ public void keyPressed() {
     armModel.setJointAngles(rot);
     intermediatePositions.clear();
     
-  } else if(keyCode == KeyEvent.VK_1) {
-    // Front view
-    camera.reset();
-    
   } else if(key == 'w') {
     // Write anything stored in the String buffer to a text file
     writeBuffer();
