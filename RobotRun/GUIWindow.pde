@@ -14,6 +14,7 @@ public class ButtonTabs extends ButtonBar {
   public void onClick() {
     // Update active button state
     super.onClick();
+    
     List items = getItems();
     selectedButtonName = null;
     // Determine which button is active
@@ -112,6 +113,7 @@ public class WindowManager {
                 sharedElements, scenarioWindow;
 
   private ButtonTabs windowTabs;
+  private Button[] cameraViews;
   private Background background;
   
   private Textarea objNameLbl, scenarioNameLbl;
@@ -126,7 +128,7 @@ public class WindowManager {
   private Textarea[] dropdownLbls;
   private MyDropdownList[] dropdownLists;
   
-  private Button[] singleButtons;
+  private Button[] miscButtons;
   
   public static final int offsetX = 10,
                           distBtwFieldsY = 15,
@@ -136,10 +138,11 @@ public class WindowManager {
                           sLblWidth = 60,
                           fieldHeight = 20,
                           fieldWidth = 95,
-                          lButtonWidth = 80,
-                          sButtonWidth = 56,
-                          mButtonHeight = 26,
-                          sButtonHeight = 20,
+                          lButtonWidth = 88,
+                          mButtonWidth = 56,
+                          sButtonWidth = 26,
+                          sButtonHeight = 26,
+                          tButtonHeight = 20,
                           sdropItemWidth = 80,
                           mdropItemWidth = 90,
                           ldropItemWidth = 120,
@@ -153,13 +156,14 @@ public class WindowManager {
     // Initialize content fields
     UIManager = manager;
     
+    cameraViews = new Button[6];
     objOrientationLbls = new Textarea[6];
     objOrientationFields = new Textfield[6];
     shapeDefAreas = new ArrayList<Textarea>();
     shapeDefFields = new ArrayList<Textfield>();
     dropdownLbls = new Textarea[7];
     dropdownLists = new MyDropdownList[7];
-    singleButtons = new Button[7];
+    miscButtons = new Button[7];
     
     // Create some temporary color and dimension variables
     color bkgrdColor = color(210),
@@ -172,7 +176,8 @@ public class WindowManager {
           buttonDefColor = color(70),
           buttonActColor = color(220, 40, 40);
     
-    int[] relPos = new int[] { offsetX, 0 };
+    int[] relPos = new int[] { 0, 0 };
+    
     String[] windowList = new String[] { "Hide", "Pendant", "Create", "Edit", "Scenario" };
     // Create window tab bar
     windowTabs = (ButtonTabs)(new ButtonTabs(UIManager, "List:")
@@ -181,10 +186,66 @@ public class WindowManager {
                   .setColorBackground(buttonDefColor)
                   .setColorActive(buttonActColor)
                   .setPosition(relPos[0], relPos[1])
-                  .setSize(windowList.length * lButtonWidth, sButtonHeight));
+                  .setSize(windowList.length * lButtonWidth, tButtonHeight));
     
     windowTabs.getCaptionLabel().setFont(medium);
     windowTabs.addItems(windowList);
+    
+    // Initialize camera view buttons
+    cameraViews[0] = UIManager.addButton("FrontView")
+                              .setCaptionLabel("F")
+                              .setColorValue(buttonTxtColor)
+                              .setColorBackground(buttonDefColor)
+                              .setColorActive(buttonActColor)
+                              .moveTo(createObjWindow)
+                              .setPosition(0, 0)
+                              .setSize(sButtonWidth, sButtonHeight);
+    
+    cameraViews[1] = UIManager.addButton("BackView")
+                              .setCaptionLabel("Bk")
+                              .setColorValue(buttonTxtColor)
+                              .setColorBackground(buttonDefColor)
+                              .setColorActive(buttonActColor)
+                              .moveTo(createObjWindow)
+                              .setPosition(0, 0)
+                              .setSize(sButtonWidth, sButtonHeight);
+    
+    cameraViews[2] = UIManager.addButton("LeftView")
+                              .setCaptionLabel("L")
+                              .setColorValue(buttonTxtColor)
+                              .setColorBackground(buttonDefColor)
+                              .setColorActive(buttonActColor)
+                              .moveTo(createObjWindow)
+                              .setPosition(0, 0)
+                              .setSize(sButtonWidth, sButtonHeight);
+    
+    cameraViews[3] = UIManager.addButton("RightView")
+                              .setCaptionLabel("R")
+                              .setColorValue(buttonTxtColor)
+                              .setColorBackground(buttonDefColor)
+                              .setColorActive(buttonActColor)
+                              .moveTo(createObjWindow)
+                              .setPosition(0, 0)
+                              .setSize(sButtonWidth, sButtonHeight);
+    
+    cameraViews[4] = UIManager.addButton("TopView")
+                              .setCaptionLabel("T")
+                              .setColorValue(buttonTxtColor)
+                              .setColorBackground(buttonDefColor)
+                              .setColorActive(buttonActColor)
+                              .moveTo(createObjWindow)
+                              .setPosition(0, 0)
+                              .setSize(sButtonWidth, sButtonHeight);
+    
+    cameraViews[5] = UIManager.addButton("BottomView")
+                              .setCaptionLabel("Bt")
+                              .setColorValue(buttonTxtColor)
+                              .setColorBackground(buttonDefColor)
+                              .setColorActive(buttonActColor)
+                              .moveTo(createObjWindow)
+                              .setPosition(0, 0)
+                              .setSize(sButtonWidth, sButtonHeight);
+    
     
     relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_LEFT, 0, 0);
     background = UIManager.addBackground("WindowBackground").setPosition(relPos[0], relPos[1])
@@ -214,7 +275,7 @@ public class WindowManager {
     
     // Initialize window contents
     for (int idx = 0; idx < 5; ++idx) {
-      shapeDefAreas.add( UIManager.addTextarea(String.format("Dim%dLbl", idx), String.format("Dim(%d):", idx), 0, 0, mLblWidth, mButtonHeight)
+      shapeDefAreas.add( UIManager.addTextarea(String.format("Dim%dLbl", idx), String.format("Dim(%d):", idx), 0, 0, mLblWidth, sButtonHeight)
                                   .setFont(medium)
                                   .setColor(fieldTxtColor)
                                   .setColorActive(fieldActColor)
@@ -232,7 +293,7 @@ public class WindowManager {
                                    .moveTo(sharedElements) );
     }
     
-    dropdownLbls[0] = UIManager.addTextarea("ObjTypeLbl", "Type:", 0, 0, mLblWidth, mButtonHeight)
+    dropdownLbls[0] = UIManager.addTextarea("ObjTypeLbl", "Type:", 0, 0, mLblWidth, sButtonHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -257,7 +318,7 @@ public class WindowManager {
                        .setColorForeground(fieldFrgrdColor)
                        .moveTo(createObjWindow);
     
-    dropdownLbls[1] = UIManager.addTextarea("ShapeLbl", "Shape:", 0, 0, mLblWidth, mButtonHeight)
+    dropdownLbls[1] = UIManager.addTextarea("ShapeLbl", "Shape:", 0, 0, mLblWidth, sButtonHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -265,7 +326,7 @@ public class WindowManager {
                          .setColorForeground(bkgrdColor)
                          .moveTo(createObjWindow);
     
-    dropdownLbls[2] = UIManager.addTextarea("FillLbl", "Fill:", 0, 0, mLblWidth, mButtonHeight)
+    dropdownLbls[2] = UIManager.addTextarea("FillLbl", "Fill:", 0, 0, mLblWidth, sButtonHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -273,7 +334,7 @@ public class WindowManager {
                          .setColorForeground(bkgrdColor)
                          .moveTo(createObjWindow);
     
-    dropdownLbls[3] = UIManager.addTextarea("OutlineLbl", "Outline:", 0, 0, mLblWidth, mButtonHeight)
+    dropdownLbls[3] = UIManager.addTextarea("OutlineLbl", "Outline:", 0, 0, mLblWidth, sButtonHeight)
                          .setFont(medium)
                          .setColor(fieldTxtColor)
                          .setColorActive(fieldActColor)
@@ -281,23 +342,23 @@ public class WindowManager {
                          .setColorForeground(bkgrdColor)
                          .moveTo(createObjWindow);
     
-    singleButtons[0] = UIManager.addButton("CreateWldObj")
+    miscButtons[0] = UIManager.addButton("CreateWldObj")
                                 .setCaptionLabel("Create")
                                 .setColorValue(buttonTxtColor)
                                 .setColorBackground(buttonDefColor)
                                 .setColorActive(buttonActColor)
                                 .moveTo(createObjWindow)
                                 .setPosition(0, 0)
-                                .setSize(sButtonWidth, mButtonHeight);
+                                .setSize(mButtonWidth, sButtonHeight);
     
-    singleButtons[2] = UIManager.addButton("ClearFields")
+    miscButtons[2] = UIManager.addButton("ClearFields")
                                 .setCaptionLabel("Clear")
                                 .setColorValue(buttonTxtColor)
                                 .setColorBackground(buttonDefColor)
                                 .setColorActive(buttonActColor)
                                 .moveTo(createObjWindow)
                                 .setPosition(0, 0)
-                                .setSize(sButtonWidth, mButtonHeight);
+                                .setSize(mButtonWidth, sButtonHeight);
     
     dropdownLbls[4] = UIManager.addTextarea("ObjLabel", "Object:", 0, 0, mLblWidth, fieldHeight)
                          .setFont(medium)
@@ -409,7 +470,7 @@ public class WindowManager {
                                  .setColorForeground(fieldFrgrdColor)
                                  .moveTo(editObjWindow);
     
-    dropdownLbls[5] = UIManager.addTextarea("FixtureLbl", "Reference:", 0, 0, lLblWidth, mButtonHeight)
+    dropdownLbls[5] = UIManager.addTextarea("FixtureLbl", "Reference:", 0, 0, lLblWidth, sButtonHeight)
                           .setFont(medium)
                           .setColor(fieldTxtColor)
                           .setColorActive(fieldActColor)
@@ -417,23 +478,23 @@ public class WindowManager {
                           .setColorForeground(bkgrdColor)
                           .moveTo(editObjWindow);
     
-    singleButtons[1] = UIManager.addButton("UpdateWldObj")
+    miscButtons[1] = UIManager.addButton("UpdateWldObj")
                                 .setCaptionLabel("Confirm")
                                 .setColorValue(buttonTxtColor)
                                 .setColorBackground(buttonDefColor)
                                 .setColorActive(buttonActColor)
                                 .moveTo(editObjWindow)
-                                .setSize(sButtonWidth, mButtonHeight);
+                                .setSize(mButtonWidth, sButtonHeight);
     
-    singleButtons[3] = UIManager.addButton("DeleteWldObj")
+    miscButtons[3] = UIManager.addButton("DeleteWldObj")
                                 .setCaptionLabel("Delete")
                                 .setColorValue(buttonTxtColor)
                                 .setColorBackground(buttonDefColor)
                                 .setColorActive(buttonActColor)
                                 .moveTo(editObjWindow)
-                                .setSize(sButtonWidth, mButtonHeight);
+                                .setSize(mButtonWidth, sButtonHeight);
     
-    scenarioNameLbl = UIManager.addTextarea("NewScenarioLbl", "Name:", 0, 0, sLblWidth, sButtonHeight)
+    scenarioNameLbl = UIManager.addTextarea("NewScenarioLbl", "Name:", 0, 0, sLblWidth, fieldHeight)
                           .setFont(medium)
                           .setColor(fieldTxtColor)
                           .setColorActive(fieldActColor)
@@ -450,15 +511,15 @@ public class WindowManager {
                             .setColorForeground(fieldFrgrdColor)
                             .moveTo(scenarioWindow);
     
-    singleButtons[4] = UIManager.addButton("NewScenario")
+    miscButtons[4] = UIManager.addButton("NewScenario")
                                 .setCaptionLabel("New")
                                 .setColorValue(buttonTxtColor)
                                 .setColorBackground(buttonDefColor)
                                 .setColorActive(buttonActColor)
                                 .moveTo(scenarioWindow)
-                                .setSize(sButtonWidth, mButtonHeight);
+                                .setSize(mButtonWidth, sButtonHeight);
     
-    dropdownLbls[6] = UIManager.addTextarea("ActiveScenarioLbl", "Scenario:", 0, 0, lLblWidth, mButtonHeight)
+    dropdownLbls[6] = UIManager.addTextarea("ActiveScenarioLbl", "Scenario:", 0, 0, lLblWidth, sButtonHeight)
                           .setFont(medium)
                           .setColor(fieldTxtColor)
                           .setColorActive(fieldActColor)
@@ -466,21 +527,21 @@ public class WindowManager {
                           .setColorForeground(bkgrdColor)
                           .moveTo(scenarioWindow);
     
-    singleButtons[5] = UIManager.addButton("SaveScenario")
+    miscButtons[5] = UIManager.addButton("SaveScenario")
                                 .setCaptionLabel("Save")
                                 .setColorValue(buttonTxtColor)
                                 .setColorBackground(buttonDefColor)
                                 .setColorActive(buttonActColor)
                                 .moveTo(scenarioWindow)
-                                .setSize(sButtonWidth, mButtonHeight);
+                                .setSize(mButtonWidth, sButtonHeight);
     
-    singleButtons[6] = UIManager.addButton("SetScenario")
+    miscButtons[6] = UIManager.addButton("SetScenario")
                                 .setCaptionLabel("Load")
                                 .setColorValue(buttonTxtColor)
                                 .setColorBackground(buttonDefColor)
                                 .setColorActive(buttonActColor)
                                 .moveTo(scenarioWindow)
-                                .setSize(sButtonWidth, mButtonHeight);
+                                .setSize(mButtonWidth, sButtonHeight);
     
     // Initialize dropdown lists
    dropdownLists[6] = (MyDropdownList)((new MyDropdownList( UIManager, "Scenario"))
@@ -514,7 +575,7 @@ public class WindowManager {
                         .close());
      
     dropdownLists[3] = (MyDropdownList)((new MyDropdownList( UIManager, "Outline"))
-                        .setSize(sdropItemWidth, mButtonHeight + 3 * dropItemHeight)
+                        .setSize(sdropItemWidth, sButtonHeight + 3 * dropItemHeight)
                         .setBarHeight(dropItemHeight)
                         .setItemHeight(dropItemHeight)
                         .setColorValue(buttonTxtColor)
@@ -582,8 +643,14 @@ public class WindowManager {
    dropdownLists[0].addItem("Parts", 0.0);
    dropdownLists[0].addItem("Fixtures", 1.0);
    
-   for (Button button : singleButtons) {
-     button.getCaptionLabel().setFont(small);
+   // Set fonts for buttons and dropdown lists
+   for (Button b : cameraViews) {
+     b.getCaptionLabel().setFont(small);
+     b.hide();
+   }
+   
+   for (Button b : miscButtons) {
+     b.getCaptionLabel().setFont(small);
    }
    
    for (DropdownList list : dropdownLists) {
@@ -608,6 +675,8 @@ public class WindowManager {
       setGroupVisible(sharedElements, false);
       setGroupVisible(scenarioWindow, false);
       
+      updateWindowContentsPositions();
+      
     } else if (windowState.equals("Pendant")) {
       // Show pendant
       g1.show();
@@ -615,6 +684,10 @@ public class WindowManager {
       setGroupVisible(editObjWindow, false);
       setGroupVisible(sharedElements, false);
       setGroupVisible(scenarioWindow, false);
+      
+      if (!g1.isVisible()) {
+        updateWindowContentsPositions();
+      }
       
     } else if (windowState.equals("Create")) {
       // Show world object creation window
@@ -627,7 +700,7 @@ public class WindowManager {
         setGroupVisible(sharedElements, true);
         
         clearAllInputFields();
-        updateCreateWindowContentPositions();
+        updateWindowContentsPositions();
         updateListContents();
         resetListLabels();
       }
@@ -643,7 +716,7 @@ public class WindowManager {
         setGroupVisible(sharedElements, true);
         
         clearAllInputFields();
-        updateEditWindowContentPositions();
+        updateWindowContentsPositions();
         updateListContents();
         resetListLabels();
       }
@@ -658,7 +731,7 @@ public class WindowManager {
         setGroupVisible(scenarioWindow, true);
         
         clearAllInputFields();
-        updateScenarioWindowContentPositions();
+        updateWindowContentsPositions();
         updateListContents();
         resetListLabels();
       }
@@ -672,15 +745,33 @@ public class WindowManager {
   public void updateWindowContentsPositions() {
     String windowState = windowTabs.getActiveButtonName();
     
-    if (windowState != null && windowState.equals("Create")) {
+    if (windowState == null || windowState.equals("Hide")) {
+      // Window is hidden
+      background.hide();
+      for (Button b : cameraViews) {
+        b.hide();
+      }
+      
+      return;
+      
+    } else if (windowState.equals("Create")) {
       // Create window
       updateCreateWindowContentPositions();
-    } else if (windowState != null && windowState.equals("Edit")) {
+      
+    } else if (windowState.equals("Edit")) {
       // Edit window
       updateEditWindowContentPositions();
-    } else if (windowState != null && windowState.equals("Scenario")) {
+      
+    } else if (windowState.equals("Scenario")) {
       // Scenario window
       updateScenarioWindowContentPositions();
+    }
+    // Update the camera view buttons
+    int[] relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_RIGHT, offsetX, 0);
+    
+    for (Button b : cameraViews) {
+      b.setPosition(relPos[0], relPos[1]).show();
+      relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
     }
     
     updateListContents();
@@ -738,14 +829,15 @@ public class WindowManager {
     } 
 
     // Create button
-    singleButtons[0] = singleButtons[0].setPosition(relPos[0], relPos[1]);
+    miscButtons[0] = miscButtons[0].setPosition(relPos[0], relPos[1]);
     // Clear button
-    relPos = relativePosition(singleButtons[0], RelativePoint.TOP_RIGHT, offsetX, 0);
-    singleButtons[2] = singleButtons[2].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(miscButtons[0], RelativePoint.TOP_RIGHT, offsetX, 0);
+    miscButtons[2] = miscButtons[2].setPosition(relPos[0], relPos[1]);
     // Update window background display
-    relPos = relativePosition(singleButtons[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    background.setHeight(relPos[1]);
-    background.setBackgroundHeight(relPos[1]);
+    relPos = relativePosition(miscButtons[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    background.setBackgroundHeight(relPos[1])
+              .setHeight(relPos[1])
+              .show();
   }
   
   /**
@@ -817,14 +909,15 @@ public class WindowManager {
     }
     
     // Confirm button
-    singleButtons[1] = singleButtons[1].setPosition(relPos[0], relPos[1]);
+    miscButtons[1] = miscButtons[1].setPosition(relPos[0], relPos[1]);
     // Delete button
-    relPos = relativePosition(singleButtons[1], RelativePoint.TOP_RIGHT, offsetX, 0);
-    singleButtons[3] = singleButtons[3].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(miscButtons[1], RelativePoint.TOP_RIGHT, offsetX, 0);
+    miscButtons[3] = miscButtons[3].setPosition(relPos[0], relPos[1]);
     // Update window background display
-    relPos = relativePosition(singleButtons[3], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    background.setHeight(relPos[1]);
-    background.setBackgroundHeight(relPos[1]);
+    relPos = relativePosition(miscButtons[3], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    background.setBackgroundHeight(relPos[1])
+              .setHeight(relPos[1])
+              .show();
   }
   
   /**
@@ -839,23 +932,24 @@ public class WindowManager {
     scenarioName = scenarioName.setPosition(relPos[0], relPos[1]);
     // New scenario button
     relPos = relativePosition(scenarioNameLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    singleButtons[4] = singleButtons[4].setPosition(relPos[0], relPos[1]);
+    miscButtons[4] = miscButtons[4].setPosition(relPos[0], relPos[1]);
     // Scenario dropdown list and label
-    relPos = relativePosition(singleButtons[4], RelativePoint.BOTTOM_LEFT, 0, 2 * distBtwFieldsY);
+    relPos = relativePosition(miscButtons[4], RelativePoint.BOTTOM_LEFT, 0, 2 * distBtwFieldsY);
     dropdownLbls[6] = dropdownLbls[6].setPosition(relPos[0], relPos[1]);
     
     relPos = relativePosition(dropdownLbls[6], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
     dropdownLists[6] = (MyDropdownList)dropdownLists[6].setPosition(relPos[0], relPos[1]);
     // Save scenario button
     relPos = relativePosition(dropdownLbls[6], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    singleButtons[5] = singleButtons[5].setPosition(relPos[0], relPos[1]);
+    miscButtons[5] = miscButtons[5].setPosition(relPos[0], relPos[1]);
     // Load scenario button
-    relPos = relativePosition(singleButtons[5], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-    singleButtons[6] = singleButtons[6].setPosition(relPos[0], relPos[1]);
+    relPos = relativePosition(miscButtons[5], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    miscButtons[6] = miscButtons[6].setPosition(relPos[0], relPos[1]);
     // Update window background display
-    relPos = relativePosition(singleButtons[6], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-    background.setHeight(relPos[1]);
-    background.setBackgroundHeight(relPos[1]);
+    relPos = relativePosition(miscButtons[6], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    background.setBackgroundHeight(relPos[1])
+              .setHeight(relPos[1])
+              .show();
   }
   
   /**

@@ -1,41 +1,42 @@
 /**
- * TODO comment this
+ * A class designed which contains the camera transformation values
+ * and the methods to manipulate apply the Camera's transformation.
  */
 public class Camera {
-  private PVector position, orientation;
+  private PVector position,
+                  // Rotations in X, Y, Z in radians
+                  orientation;
   private float scale;
   
   /**
    * Creates a camera with the default position, orientation and scale.
    */
   public Camera() {
-    position = new PVector(width / 1.5f, height / 1.5f, -500f);
+    position = new PVector(0f, 0f, -500f);
     orientation = new PVector(0f, 0f, 0f);
-    scale = 1f;
+    scale = 2f;
   }
   
   /**
    * Apply the camer's scale, position, and orientation to the current matrix.
    */
   public void apply() {
-    // Apply camera scaling
-    float horizontalMargin = scale * width;
-    float verticalMargin = scale * height;
-    ortho(-horizontalMargin, horizontalMargin, -verticalMargin, verticalMargin, 1f, 3000f);
+    beginCamera();
+    // Apply camera translations
+    translate(position.x + width / 2f, position.y + height / 2f, position.z);
     
     // Apply camera rotations
     rotateX(orientation.x);
     rotateY(orientation.y);
-    rotateZ(orientation.z);
     
-    float[][] tMatrix = getTransformationMatrix();
-    tMatrix = invertHCMatrix(tMatrix);
-    PVector relativePosition = transform(position, tMatrix);
+     // Apply camera scaling
+    float horizontalMargin = scale * width / 2f,
+          verticalMargin = scale * height / 2f,
+          near = 8f / scale,
+          far = scale * 5000f;
+    ortho(-horizontalMargin, horizontalMargin, -verticalMargin, verticalMargin, near, far);
     
-    // Apply camera translations
-    translate(relativePosition.x, relativePosition.y, relativePosition.z - 500f);
-    
-
+    endCamera();
   }
   
   /**
@@ -43,34 +44,93 @@ public class Camera {
    * default position, orientation and scale.
    */
   public void reset() {
-    position.x = width / 1.5f;
-    position.y = height / 1.5f;
+    position.x = 0;
+    position.y = 0;
     position.z = -500f;
     orientation.x = 0f;
     orientation.y = 0f;
     orientation.z = 0f;
-    scale = 1f;
+    scale = 2f;
   }
   
   /**
    * Change the camera's position by the given values.
    */
   public void move(float x, float y, float z) {
+    float horzontialLimit = scale * width / 2f,
+          verticalLimit = scale * height / 2f;
+    
     position.add( new PVector(x, y, z) );
+    // Apply camera position restrictions
+    position.x = max(-horzontialLimit, min(position.x, horzontialLimit));
+    position.y = max(-verticalLimit, min(position.y, verticalLimit));
+    position.z = max(-1000f, min(position.z, 1000f));
   }
   
   /**
    * Change the camera's rotation by the given values.
    */
   public void rotate(float w, float p, float r) {
-    orientation.add( new PVector(w, p, r) );
+    PVector rotation = new PVector(w, p, r);
+    
+    orientation.add( rotation );
+    // Apply caerma rotation restrictions
+    orientation.x = mod2PI(orientation.x);
+    orientation.y = mod2PI(orientation.y);
+    orientation.z = 0f;//mod2PI(orientation.z);
   }
   
   /**
    * Change the scaling of the camera.
    */
   public void changeScale(float multiplier) {
-    scale = max(0.25f, min(multiplier * scale, 8f));
+    scale = max(0.25f, min(scale * multiplier, 8f));
+  }
+  
+  /**
+   * Returns the Camera's position, orientation, and scale
+   * in the form of a formatted String array, where each
+   * entry is one of the following values:
+   * 
+   * Title String
+   * X - The camera's x -position value
+   * Y - The camera's y-position value
+   * Z - The camera's z-position value
+   * W - The camera's x-rotation value
+   * P - The camera's y-rotation value
+   * R - The camera's z-rotation value
+   * S - The camera's scale value
+   * 
+   * @returning  A 6-element String array
+   */
+  public String[] toStringArray() {
+    String[] fields = new String[8];
+    // Display rotation in degrees
+    PVector inDegrees = PVector.mult(orientation, RAD_TO_DEG);
+    
+    fields[0] = "Camera Fields";
+    fields[1] = String.format("X: %6.9f", position.x);
+    fields[2] = String.format("Y: %6.9f", position.y);
+    fields[3] = String.format("Z: %6.9f", position.z);
+    fields[4] = String.format("W: %6.9f", inDegrees.x);
+    fields[5] = String.format("P: %6.9f", inDegrees.y);
+    fields[6] = String.format("R: %6.9f", inDegrees.z);
+    fields[7] = String.format("S: %3.9f", scale);
+    
+    return fields;
+  }
+  
+  /**
+   * Returns an independent replica of the Camera object.
+   */
+  public Camera clone() {
+    Camera copy = new Camera();
+    // Copy position, orientation, and scale
+    copy.position = position.copy();
+    copy.orientation = orientation.copy();
+    copy.scale = scale;
+    
+    return copy;
   }
   
   // Getters for the Camera's position, orientation, and scale

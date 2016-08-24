@@ -614,13 +614,13 @@ void gui() {
 public void mouseDragged(MouseEvent e) {
   if (mouseButton == CENTER) {
     // Drag the center mouse button to pan the camera
-    float transScale = 1.2f * camera.getScale();
+    float transScale = camera.getScale();
     camera.move(transScale * (mouseX - pmouseX), transScale * (mouseY - pmouseY), 0);
   }
   
   if (mouseButton == RIGHT) {
     // Drag right mouse button to rotate the camera
-    float rotScale = DEG_TO_RAD / 2f;
+    float rotScale = DEG_TO_RAD / 4f;
     camera.rotate(rotScale * (mouseY - pmouseY), rotScale * (mouseX - pmouseX), 0);
   }
 }
@@ -635,9 +635,9 @@ public void mouseWheel(MouseEvent event) {
   float e = event.getCount();
   // Control scaling of the camera with the mouse wheel
   if (e > 0) {
-    camera.changeScale(0.9f);
+    camera.changeScale(1.05f);
   } else if (e < 0) {
-    camera.changeScale(1.1f);
+    camera.changeScale(0.95f);
   }
 }
 
@@ -731,68 +731,83 @@ public void keyPressed() {
       
       if (inst instanceof MotionInstruction) {
         MotionInstruction mInst = (MotionInstruction)inst;
-        //ToolFrame tFrame = (ToolFrame)toolFrames[mInst.toolFrame];
-        //UserFrame uFrame = (UserFrame)userFrames[mInst.userFrame];
         System.out.printf("\nUser frame: %d\nTool frame: %d\n", mInst.userFrame, mInst.toolFrame);
       }
     }
     
-  } else if(key == 'r') { 
-    camera.reset();
-    
-  } else if(key == 't') {
-    float[] rot = {0, 0, 0, 0, 0, 0};
-    armModel.setJointAngles(rot);
-    intermediatePositions.clear();
-    
-  } else if(key == 'w') {
-    writeBuffer();
-    
-  } else if (key == 'y') {
-    float[] rot = {PI, 0, 0, 0, 0, PI};
-    armModel.setJointAngles(rot);
-    intermediatePositions.clear();
-    
   } else if (key == 'm') {
+    // Print the current mode to the console
     println(mode.toString());
     
   } else if (key == 'p') {
+    // Toggle the Robot's End Effector state
     if (!programRunning) {
       armModel.toggleEEState();
     }
+    
+  } else if (key == 's') {
+    // Save EVERYTHING!
+    saveState();
+    
+  } else if (key == 't') {
+    // Restore default Robot joint angles
+    float[] rot = {0, 0, 0, 0, 0, 0};
+    armModel.setJointAngles(rot);
+    intermediatePositions.clear();
     
   } else if(keyCode == KeyEvent.VK_1) {
     // Front view
     camera.reset();
     
-  } else if(keyCode == KeyEvent.VK_2) {
-    // Back view
-    camera.reset();
-    camera.rotate(0, PI, 0);
+  } else if(key == 'w') {
+    // Write anything stored in the String buffer to a text file
+    writeBuffer();
     
-  } else if(keyCode == KeyEvent.VK_3) {
-    // Left view
-    camera.reset();
-    camera.rotate(0, PI / 2f, 0);
+  } else if (key == 'y') {
+    // Apply another set of default Robot joint angles
+    float[] rot = {PI, 0, 0, 0, 0, PI};
+    armModel.setJointAngles(rot);
+    intermediatePositions.clear();
     
-  } else if(keyCode == KeyEvent.VK_4) {
-    // Right view
-    camera.reset();
-    camera.rotate(0, 3f * PI / 2f, 0);
-    
-  } else if(keyCode == KeyEvent.VK_5) {
-    // Top view
-    camera.reset();
-    camera.rotate(3f * PI / 2f, 0, 0);
-    
-  } else if(keyCode == KeyEvent.VK_6) {
-    // Bottom view
-    camera.reset();
-    camera.rotate(PI / 2f, 0, 0);
   }
 }
 
-/*Button events*/
+/* Button events */
+
+public void FrontView() {
+  // Default view
+  camera.reset();
+}
+
+public void BackView() {
+  // Back view
+  camera.reset();
+  camera.rotate(0, PI, 0);
+}
+
+public void LeftView() {
+  // Left view
+  camera.reset();
+  camera.rotate(0, PI / 2f, 0);
+}
+
+public void RightView() {
+  // Right view
+  camera.reset();
+  camera.rotate(0, 3f * PI / 2f, 0);
+}
+
+public void TopView() {
+  // Top view
+  camera.reset();
+  camera.rotate(3f * PI / 2f, 0, 0);
+}
+
+public void BottomView() {
+  // Bottom view
+  camera.reset();
+  camera.rotate(PI / 2f, 0, 0);
+}
 
 public void CreateWldObj() {
   /* Create a world object from the input fields in the Create window. */

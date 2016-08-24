@@ -61,6 +61,8 @@ public void setup() {
   
   //set up UI
   cp5 = new ControlP5(this);
+  // Expllicitly draw the ControlP5 elements
+  cp5.setAutoDraw(false);
   manager = new WindowManager(cp5, fnt_con12, fnt_con14);
   display_stack = new Stack<Screen>();
   gui();
@@ -110,8 +112,9 @@ public void draw() {
   
   hint(DISABLE_DEPTH_TEST);
   // Apply the camera for drawing text and windows
-  ortho(-width / 2f, width / 2f, -height / 2f, height / 2f);
+  ortho();
   showMainDisplayText();
+  cp5.draw();
   //println(frameRate + " fps");
 }
 
@@ -244,11 +247,10 @@ public void displayAxes() {
       
       if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
         /* Draw the axes of the active User frame */
-        displayOriginAxes(activeUser.getWorldAxes(), activeUser.getOrigin(), 5000f, color(0));
+        displayOriginAxes(activeUser.getWorldAxes(), activeUser.getOrigin(), 10000f, color(0));
       } else {
         /* Draw the axes of the World frame */
-        //displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f), 5000f, color(0));
-        displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f), 5000f, color(0));
+        displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f), 10000f, color(0));
       }
     }
   } else if (axesState == AxesDisplay.GRID) {
