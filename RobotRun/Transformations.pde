@@ -165,7 +165,7 @@ public Point applyFrame(Point pt, PVector origin, float[] axes) {
  * @returning     The vector, v, interms of the given frame's Coordinate System
  */
 public PVector convertToFrame(PVector v, PVector origin, float[] axes) {
-  float[] invAxes = quaternionNormalize(  quaternionConjugate(axes) );
+  float[] invAxes = vectorNorm(  quaternionConjugate(axes) );
   PVector vOffset = PVector.sub(v, origin);
   return rotateVectorQuat(vOffset, invAxes);
 }
@@ -535,7 +535,7 @@ float[] matrixToQuat(float[][] r) {
     q[3] = S / 4;
   }
 
-  return quaternionNormalize(q);
+  return vectorNorm(q);
 }
 
 //calculates euler angles from quaternion
@@ -662,7 +662,7 @@ float[] rotateQuat(float[] p, PVector u, float theta) {
   
   float[] pq = quaternionMult(p, q);
 
-  return quaternionNormalize(pq);
+  return vectorNorm(pq);
 }
 
 PVector rotateVectorQuat(PVector v, PVector u, float theta) {
@@ -764,28 +764,31 @@ float[] quaternionMult(float[] q1, float[] q2) {
  * Returns a quaternion, which represents the rotation of q, in terms of reference.
  */
 public float[] quaternionRef(float[] q, float[] reference) {
-  float[] invRef = quaternionNormalize( quaternionConjugate(reference) );
-  return quaternionNormalize( quaternionMult(q, invRef) );
+  float[] invRef = vectorNorm( quaternionConjugate(reference) );
+  return vectorNorm( quaternionMult(q, invRef) );
 }
 
-//returns the result of a quaternion 'q' multiplied by scalar 's'
-float[] quaternionScalarMult(float[] q, float s) {
-  float[] qr = new float[4];
-  qr[0] = q[0]*s;
-  qr[1] = q[1]*s;
-  qr[2] = q[2]*s;
-  qr[3] = q[3]*s;
-  return qr;
+//returns the result of a vector 'v' multiplied by scalar 's'
+float[] vectorScalarMult(float[] v, float s) {
+  float[] ret = new float[v.length];
+  for(int i = 0; i < ret.length; i += 1) { 
+    ret[i] = v[i]*s; 
+  }
+  
+  return ret;
 }
 
-//returns the result of the addition of two quaternions, 'q1' and 'q2'
-float[] quaternionAdd(float[] q1, float[] q2) {
-  float[] qr = new float[4];
-  qr[0] = q1[0] + q2[0];
-  qr[1] = q1[1] + q2[1];
-  qr[2] = q1[2] + q2[2];
-  qr[3] = q1[3] + q2[3];
-  return qr;
+//returns the result of the addition of two vectors, 'v1' and 'v2'
+float[] vectorAdd(float[] v1, float[] v2) {
+  //vectors must be of matching length
+  if(v1.length != v2.length) return null;
+  
+  float[] ret = new float[v1.length];
+  for(int i = 0; i < ret.length; i += 1) {
+    ret[i] = v1[i] + v2[i];
+  }
+  
+  return ret;
 }
 
 /**
@@ -801,14 +804,20 @@ public float quaternionDotProduct(float[] q1, float[] q2) {
   return product;
 }
 
-//returns the magnitude of the input quaternion 'q'
-float calculateQuatMag(float[] q) {
-  return sqrt(pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2));
+//returns the magnitude of the input vector 'v'
+float getVectorMag(float[] v) {
+  float ret = 0;
+  for(int i = 0; i < v.length; i += 1) {
+    ret += pow(v[i], 2);
+  }
+  
+  return sqrt(ret);
 }
 
-float[] quaternionNormalize(float[] q) {
-  float qMag = calculateQuatMag(q);
-  return quaternionScalarMult(q, 1/qMag);
+//normalizes input vector 'v' to a unit vector
+float[] vectorNorm(float[] v) {
+  float mag = getVectorMag(v);
+  return vectorScalarMult(v, 1/mag);
 }
 
 /* Given two input quaternions, 'q1' and 'q2', computes the spherical-
@@ -828,10 +837,10 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
   
   if(cOmega < 0) {
     cOmega = -cOmega;
-    q3 = quaternionScalarMult(q2, -1);
+    q3 = vectorScalarMult(q2, -1);
   }
   else {
-    q3 = quaternionScalarMult(q2, 1);
+    q3 = vectorScalarMult(q2, 1);
   }
   
   if(cOmega > 0.99999995) {
@@ -851,7 +860,7 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
     qSlerp[3] = q1[3]*scale1 + q3[3]*scale2;
   }
   
-  return quaternionNormalize(qSlerp);
+  return vectorNorm(qSlerp);
 }
 
 /**
@@ -881,13 +890,13 @@ public boolean angleWithinBounds(float angleToVerify, float rangeStart, float ra
  * @returning    The equivalent angle within the range [0, TWO_PI)
  */
 public float mod2PI(float angle) {
-  float limbo = angle % TWO_PI;
+  float temp = angle % TWO_PI;
   
-  if (limbo < 0f) {
-    limbo += TWO_PI;
+  if (temp < 0f) {
+    temp += TWO_PI;
   }
   
-  return limbo;
+  return temp;
 }
 
 /**

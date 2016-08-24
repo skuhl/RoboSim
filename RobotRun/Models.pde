@@ -1061,7 +1061,7 @@ public class ArmModel {
         
         if (quaternionDotProduct(tgtOrientation, curPoint.orientation) < 0f) {
           // Use -q instead of q
-          tgtOrientation = quaternionScalarMult(tgtOrientation, -1);
+          tgtOrientation = vectorScalarMult(tgtOrientation, -1);
         }
       } else {
         // No rotational motion

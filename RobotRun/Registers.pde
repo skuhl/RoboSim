@@ -61,6 +61,26 @@ public class PositionRegister extends Register {
     point = pt;
     isCartesian = isCart;
   }
+  
+  /**
+   * Returns the value of the point stored in this register which corresponds
+   * to the register mode (joint or cartesian) and the given index 'idx.'
+   * Note that 'idx' should be in the range of 0 to 5 inclusive, as this value
+   * is meant to represent either 1 of 6 joint angles for a joint type point,
+   * or 1 of 6 cartesian points (x, y, z, w, p, r) for a cartesian type point.
+   */
+  public float getPointValue(int idx) {
+    if(!isCartesian) {
+      return point.getValue(idx);
+    }
+    else if(idx < 3) {
+      return point.getValue(idx + 6);
+    }
+    else {
+      PVector pOrientation = quatToEuler(point.orientation);
+      return pOrientation.array()[idx - 3];
+    }
+  }
 }
 
 /* A simple class designed to hold a state value along with a name. */

@@ -841,6 +841,16 @@ public class ExpressionEvaluationException extends RuntimeException {
 }
 
 public interface ExpressionElement {
+  //operand types
+  public static final int UNINIT = -2;
+  public static final int SUBEXP = -1;
+  public static final int FLOAT = 0;
+  public static final int BOOL = 1;
+  public static final int DREG = 2;
+  public static final int IOREG = 3;
+  public static final int PREG = 4;
+  public static final int PREG_IDX = 5;
+  public static final int POSTN = 6;
   
   public abstract int getLength();
   public abstract String toString();
@@ -848,135 +858,158 @@ public interface ExpressionElement {
 }
 
 public class ExprOperand implements ExpressionElement {
-  //type: 0 = numeric operand, 1 = boolean operand
-  //      2 = data reg operand, 3 = IO reg operand
-  //      4 = position reg operand, -1 = sub-expression
-  //      -2 = uninit
   protected int type;
   
-  int regIdx;
   float dataVal;
   boolean boolVal;
-  Register regVal;
-  Point pointVal;
+  int regIdx = -1;
+  Register regVal = null;
+  Point pointVal = null;
   
+  //default constructor
   public ExprOperand() {
-    type = -2;
-    regIdx = -1;
-    pointVal = null;
+    type = ExpressionElement.UNINIT;
   }
   
-  public ExprOperand(float d) {
-    type = 0;
-    regIdx = -1;
-    dataVal = d;
-    boolVal = getBoolVal(dataVal);
-    pointVal = null;
-  }
-  
-  public ExprOperand(int t, int i, float d, boolean b, Point p) {
+  //initialize all fields, useful for cloning
+  public ExprOperand(int t, float d, boolean b, int idx, Register reg, Point p) {
     type = t;
-    regIdx = i;
     dataVal = d;
     boolVal = b;
+    regIdx = idx;
+    regVal = reg;
     pointVal = p;
   }
   
-  public ExprOperand(boolean b) {
-    type = 1;
-    regIdx = -1;
-    dataVal = b ? 1 : 0;
-    boolVal = b;
-    pointVal = null;
+  //create floating point operand
+  public ExprOperand(float d) {
+    type = ExpressionElement.FLOAT;
+    dataVal = d;
   }
   
+  //create boolean operand
+  public ExprOperand(boolean b) {
+    type = ExpressionElement.BOOL;
+    boolVal = b;
+  }
+  
+  //create data register operand
   public ExprOperand(DataRegister dReg, int i) {
-    type = 2;
+    type = ExpressionElement.DREG;
     regIdx = i;
     regVal = dReg;
-    pointVal = null;
   }
   
+  //create IO register operand
   public ExprOperand(IORegister ioReg, int i) {
-    type = 3;
+    type = ExpressionElement.IOREG;
     regIdx = i;
-    if(ioReg.state == ON) {
-      dataVal = 1;
-      boolVal = true;
-    } else {
-      dataVal = 0;
-      boolVal = false;
-    }
-    pointVal = null;
+    regVal = ioReg;
   }
   
+  //create position register operand
   public ExprOperand(PositionRegister pReg, int i){
-    type = 4;
+    type = ExpressionElement.PREG;
     regIdx = i;
-    dataVal = 0;
-    boolVal = false;
-    pointVal = pReg.point;
+    regVal = pReg;
   }
   
-  public ExprOperand(Point p){
-    type = 4;
-    regIdx = -1;
-    dataVal = 0;
-    boolVal = false;
+  //create position register operand on a given value of the register's position
+  public ExprOperand(PositionRegister pReg, int i, int j){
+    type = ExpressionElement.PREG_IDX;
+    regIdx = i + 100*j;
+    regVal = pReg;
+  }
+  
+  //create point operand (used during evaulation only) 
+  public ExprOperand(Point p) {
+    type = ExpressionElement.POSTN;
     pointVal = p;
   }
   
-  public ExprOperand reset() {
-    type = -2;
-    regIdx = -1;
-    return this;
+  public float getDataVal() {
+    if(type == ExpressionElement.FLOAT) {
+      return dataVal;
+    } else if(type == ExpressionElement.DREG) {
+      return ((DataRegister)regVal).value; 
+    } else if(type == ExpressionElement.PREG_IDX) {
+      return ((PositionRegister)regVal).getPointValue(regIdx/100);
+    } else {
+      return Float.MAX_VALUE;
+    }
+  }
+  
+  public boolean getBoolVal() {
+    if(type == ExpressionElement.BOOL) {
+      return boolVal;
+    } else if(type == ExpressionElement.IOREG) {
+      return (((IORegister)regVal).state == ON);
+    } else {
+      return false;
+    }
+  }
+  
+  public Point getPointVal() {
+    if(type == ExpressionElement.PREG) {
+      return ((PositionRegister)regVal).point;
+    } else if(type == ExpressionElement.POSTN) {
+      return pointVal;
+    } else {
+      return null;
+    }
   }
   
   public ExprOperand set(float d) {
-    type = 0;
-    regIdx = -1;
+    type = ExpressionElement.UNINIT;
     dataVal = d;
-    boolVal = getBoolVal(dataVal);
     return this;
   }
   
   public ExprOperand set(boolean b) {
-    type = 1;
-    regIdx = -1;
-    dataVal = b ? 1 : 0;
+    type = ExpressionElement.BOOL;
     boolVal = b;
     return this;
   }
   
   public ExprOperand set(DataRegister dReg, int i) {
-    type = 2;
+    type = ExpressionElement.DREG;
     regIdx = i;
     regVal = dReg;
     return this;
   }
   
   public ExprOperand set(IORegister ioReg, int i) {
-    type = 3;
+    type = ExpressionElement.IOREG;
     regIdx = i;
     regVal = ioReg;    
     return this;
   }
   
-  public ExprOperand set(PositionRegister pReg, int i){
-    type = 4;
+  public ExprOperand set(PositionRegister pReg, int i) {
+    type = ExpressionElement.PREG;
     regIdx = i;
-    dataVal = 0;
-    boolVal = false;
-    pointVal = pReg.point;
+    regVal = pReg;
+    return this;
+  }
+
+  public ExprOperand set(PositionRegister pReg, int i, int j) {
+    type = ExpressionElement.PREG;
+    regIdx = i + 100*j;
+    regVal = pReg;
     return this;
   }
   
-  public ExprOperand set(Point p){
-    type = 4;
-    regIdx = -1;
-    dataVal = 0;
-    boolVal = false;
+  public ExprOperand set(Point p) {
+    type = ExpressionElement.POSTN;
     pointVal = p;
+    return this;
+  }
+  
+  public ExprOperand reset() {
+    type = ExpressionElement.UNINIT;
+    regIdx = -1;
+    regVal = null;
+    pointVal = null;
     return this;
   }
   
@@ -984,42 +1017,8 @@ public class ExprOperand implements ExpressionElement {
     return 1;
   }
   
- /* Returns the boolean value of a floating point value, where a value of 0 is considered to be
-  *  false and all other values are true. Any floating point value close enough to zero within a
-  *  given tolerance is considered to be 0 for the purposes of this function in order to avoid 
-  *  issues with floating point errors.
-  */
-  private boolean getBoolVal(float d) {
-    boolean bool;
-    
-    if(d > -0.00001 || d < 0.00001){
-      bool = false;
-    } else {
-      bool = true;
-    }
-    
-    return bool;
-  }
-  
-  public void updateValues() {
-    if(type == 2) {
-      if(((DataRegister)regVal).value != null) {
-        dataVal = ((DataRegister)regVal).value;
-      } else {
-        dataVal = -1;
-      }
-    } 
-    else if(type == 1) {
-      if(((IORegister)regVal).state == ON) {
-        boolVal = true;
-      } else {
-        boolVal = false;
-      }
-    }
-  }
-  
   public ExprOperand clone() {
-    return new ExprOperand(this.type, this.regIdx, this.dataVal, this.boolVal, this.pointVal);
+    return new ExprOperand(type, dataVal, boolVal, regIdx, regVal, pointVal);
   }
   
   public String toString(){
@@ -1059,35 +1058,37 @@ public class AtomicExpression extends ExprOperand {
   protected ExprOperand arg1;
   protected ExprOperand arg2;
   protected Operator op;
-  protected int len;
     
   public AtomicExpression(){
-    type = -1;
+    type = ExpressionElement.SUBEXP;
     op = Operator.UNINIT;
-    len = 1;
     arg1 = new ExprOperand();
     arg2 = new ExprOperand();
   }
   
   public AtomicExpression(Operator o){
-    type = -1;
+    type = ExpressionElement.SUBEXP;
     op = o;
-    len = 3;
     arg1 = new ExprOperand();
     arg2 = new ExprOperand();
+  }
+  
+  public AtomicExpression(Operator o, ExprOperand a1, ExprOperand a2) {
+    type = ExpressionElement.SUBEXP;
+    op = o;
+    arg1 = a1;
+    arg2 = a2;
   }
   
   public ExprOperand getArg1() { return arg1; }
   public ExprOperand setArg1(ExprOperand a) { 
     arg1 = a;
-    len = getLength();
     return arg1;
   }
   
   public ExprOperand getArg2() { return arg2; }
   public ExprOperand setArg2(ExprOperand a) { 
     arg2 = a;
-    len = getLength();
     return arg2;
   }
   
@@ -1102,7 +1103,6 @@ public class AtomicExpression extends ExprOperand {
   public Operator getOperator() { return op; }
   public void setOperator(Operator o) {
     op = o;
-    len = getLength();
   }
   
   public int getLength() {
@@ -1120,38 +1120,76 @@ public class AtomicExpression extends ExprOperand {
   
   public ExprOperand evaluate() {
     ExprOperand result;
-    float o1, o2;
-    boolean b1, b2;
-    arg1.updateValues();
-    arg2.updateValues();
+    int t1 = arg1.type;
+    int t2 = arg2.type;
+    //operation return type:
+    // -1 = uninit, 0 = float,
+    // 1 = boolean, 2 = point
+    int opType = -1;
+    float o1 = 0, o2 = 0; //floating point operand values
+    boolean b1 = false, b2 = false; //boolean operand values
+    Point p1 = null, p2 = null; //point operand values
     
-    if(arg1.type == -1) {
-      ExprOperand temp = ((AtomicExpression)arg1).evaluate();
-      o1 = temp.dataVal;
-      b1 = temp.boolVal;
-    } else {
-      o1 = arg1.dataVal;
-      b1 = arg1.boolVal;
+    //evaluate any sub-expressions
+    if(t1 == -1) {
+      arg1 = ((AtomicExpression)arg1).evaluate();
+      t1 = arg1.type;
     }
     
-    if(arg2.type == -1) {
-      ExprOperand temp = ((AtomicExpression)arg2).evaluate();
-      o2 = temp.dataVal;
-      b2 = temp.boolVal;
-    } else {
-      o2 = arg2.dataVal;
-      b2 = arg2.boolVal;
+    if(t2 == -1) {
+      arg2 = ((AtomicExpression)arg2).evaluate();
+      t2 = arg2.type;
     }
     
-    if(arg1.type == 4) {
-      if(arg2.type != 4) {
-        return null;
-      } else {
-        Point p = arg1.pointVal.add(arg2.pointVal);
-        result = new ExprOperand(p);
-      }
+    //check for type compatability
+    if(t1 == ExpressionElement.UNINIT || t2 == ExpressionElement.UNINIT) {
+      return null;
     } 
-    else if(arg2.type == 4) {
+    else if(t1 == ExpressionElement.FLOAT || t1 == ExpressionElement.DREG || t1 == ExpressionElement.PREG_IDX) {
+      opType = 0;
+      o1 = arg1.getDataVal();
+      
+      switch(t2) {
+        case ExpressionElement.BOOL:
+        case ExpressionElement.IOREG:
+        case ExpressionElement.PREG:
+        case ExpressionElement.POSTN:
+          return null;
+        default:
+          o2 = arg2.getDataVal();
+      }
+    }
+    else if(t1 == ExpressionElement.BOOL || t1 == ExpressionElement.IOREG) {
+      opType = 1;
+      b1 = arg1.getBoolVal();
+      
+      switch(t2) {
+        case ExpressionElement.FLOAT:
+        case ExpressionElement.DREG:
+        case ExpressionElement.PREG:
+        case ExpressionElement.PREG_IDX:
+        case ExpressionElement.POSTN:
+          return null;
+        default:
+          b2 = arg2.getBoolVal();
+      }
+    }
+    else if(t1 == ExpressionElement.PREG || t1 == ExpressionElement.POSTN) {
+      opType = 2;
+      p1 = arg1.getPointVal();
+      
+      switch(t2) {
+        case ExpressionElement.FLOAT:
+        case ExpressionElement.BOOL:
+        case ExpressionElement.DREG:
+        case ExpressionElement.IOREG:
+        case ExpressionElement.PREG_IDX:
+          return null;
+        default:
+          p2 = arg2.getPointVal();
+      }
+    }
+    else {
       return null;
     }
     
@@ -1159,59 +1197,86 @@ public class AtomicExpression extends ExprOperand {
     int intop1 = Math.round(arg1.dataVal);
     int intop2 = Math.round(arg2.dataVal);
     
-    switch(op) {
-      case ADDTN:
-        result = new ExprOperand(o1 + o2);
-        break;
-      case SUBTR:
-        result = new ExprOperand(o1 - o2);
-        break;
-      case MULT:
-        result = new ExprOperand(o1 * o2);
-        break;
-      case DIV:
-        result = new ExprOperand(o1 / o2);
-        break;
-      case MOD:
-        result = new ExprOperand(o1 % o2);
-        break;
-      case INTDIV:
-        result = new ExprOperand(intop1 / intop2);
-        break;
-      case EQUAL:
-        result = new ExprOperand(o1 == o2);
-        break;
-      case NEQUAL:
-        result = new ExprOperand(o1 != o2);
-        break;
-      case GRTR:
-        result = new ExprOperand(o1 > o2);
-        break;
-      case LESS:
-        result = new ExprOperand(o1 < o2);
-        break;
-      case GREQ:
-        result = new ExprOperand(o1 >= o2);
-        break;
-      case LSEQ:
-        result = new ExprOperand(o1 <= o2);
-        break;
-      case AND:
-        result = new ExprOperand(b1 && b2);
-      case OR:
-        result = new ExprOperand(b1 || b2);
-      default:
-        result = null;
-        break;
+    if(opType == 0) {
+      switch(op) {
+        case ADDTN:
+          result = new ExprOperand(o1 + o2);
+          break;
+        case SUBTR:
+          result = new ExprOperand(o1 - o2);
+          break;
+        case MULT:
+          result = new ExprOperand(o1 * o2);
+          break;
+        case DIV:
+          result = new ExprOperand(o1 / o2);
+          break;
+        case MOD:
+          result = new ExprOperand(o1 % o2);
+          break;
+        case INTDIV:
+          result = new ExprOperand(intop1 / intop2);
+          break;
+        case EQUAL:
+          result = new ExprOperand(o1 == o2);
+          break;
+        case NEQUAL:
+          result = new ExprOperand(o1 != o2);
+          break;
+        case GRTR:
+          result = new ExprOperand(o1 > o2);
+          break;
+        case LESS:
+          result = new ExprOperand(o1 < o2);
+          break;
+        case GREQ:
+          result = new ExprOperand(o1 >= o2);
+          break;
+        case LSEQ:
+          result = new ExprOperand(o1 <= o2);
+          break;
+        default:
+          result = null;
+      }
     }
+    else if(opType == 1) {
+      switch(op) {
+       case EQUAL:
+          result = new ExprOperand(b1 == b2);
+          break;
+        case NEQUAL:
+          result = new ExprOperand(b1 != b2);
+          break;
+        case AND:
+          result = new ExprOperand(b1 && b2);
+        case OR:
+          result = new ExprOperand(b1 || b2);
+        default:
+          result = null;
+          break;
+      }
+    }
+    else if(opType == 2) {
+      if(p1 == null || p2 == null) return null;
+      
+      switch(op) {
+       case ADDTN:
+          result = new ExprOperand(p1.add(p2));
+          break;
+        case SUBTR:
+          result = new ExprOperand(p1.add(p2.negate()));
+          break;
+        default:
+          result = null;
+          break;
+      }
+    }
+    else {
+      result = null;
+    }
+    
     println("from AE:" + o1 + op.toString() + o2 + " = " + result.dataVal);
     return result;
-  }
-  
-  public ExprOperand evaluate(ExprOperand a, ExprOperand b) {
-    setArg1(a);
-    setArg2(b);
-    return evaluate();
   }
   
   public String toString(){
@@ -1379,7 +1444,7 @@ public class Expression extends AtomicExpression {
   }
     
   public int getLength() {
-    len = 2;
+    int len = 2;
     for(ExpressionElement e: elementList) {
       len += e.getLength();
     }
@@ -1398,10 +1463,10 @@ public class Expression extends AtomicExpression {
       } else {
         Operator op = (Operator) elementList.get(i);
         ExprOperand nextOperand = (ExprOperand) elementList.get(i + 1);
-        AtomicExpression expr = new AtomicExpression(op);
+        AtomicExpression expr = new AtomicExpression(op, result, nextOperand);
         
         println(result.dataVal + op.toString() + nextOperand.dataVal + " = " + result.dataVal);
-        result = expr.evaluate(result, nextOperand);
+        result = expr.evaluate();
       }
     }
     
@@ -1474,21 +1539,17 @@ public class BooleanExpression extends AtomicExpression {
     if(o.type == BOOL) {
       type = -1;
       op = o;
-      len = 3;
       arg1 = new ExprOperand();
       arg2 = new ExprOperand();
     }
     else {
       type = -1;
       op = Operator.UNINIT;
-      len = 1;
     }
   }
   
   public void setOperator(Operator o) {
     if(o.type != BOOL) return;
-    
     op = o;
-    len = getLength();
   }
 }

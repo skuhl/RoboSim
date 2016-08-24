@@ -334,7 +334,7 @@ public float[][] calculateJacobian(float[] angles, boolean posOffset) {
     
     if (quaternionDotProduct(curRP.orientation, newRP.orientation) < 0f) {
       // Use -q instead of q
-      newRP.orientation = quaternionScalarMult(newRP.orientation, -1);
+      newRP.orientation = vectorScalarMult(newRP.orientation, -1);
     }
     
     //get translational delta
@@ -376,7 +376,7 @@ public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, float[]
     
     if (quaternionDotProduct(tgtOrientation, cPoint.orientation) < 0f) {
       // Use -q instead of q
-      tgtOrientation = quaternionScalarMult(tgtOrientation, -1);
+      tgtOrientation = vectorScalarMult(tgtOrientation, -1);
     }
     
     //calculate our translational offset from target
@@ -394,7 +394,7 @@ public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, float[]
     delta[6] = rDelta[3];
     
     float dist = PVector.dist(cPoint.position, tgtPosition);
-    float rDist = calculateQuatMag(rDelta);
+    float rDist = getVectorMag(rDelta);
     //check whether our current position is within tolerance
     if ( (dist < (liveSpeed / 100f)) && (rDist < (0.00005f * liveSpeed)) ) { break; }
     

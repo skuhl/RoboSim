@@ -2421,9 +2421,9 @@ public void ENTER() {
         s = (SelectStatement)activeInstruction();
         float f = Float.parseFloat(workingText);
         
-        if(opEdit.type == -2) {
+        if(opEdit.type == ExpressionElement.UNINIT) {
           opEdit.set(f);
-        } else if(opEdit.type == 2) {
+        } else if(opEdit.type == ExpressionElement.DREG) {
           println(DREG[(int)f - 1].value);
           opEdit.set(DREG[(int)f - 1], (int)f);
         }

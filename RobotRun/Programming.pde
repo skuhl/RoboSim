@@ -51,7 +51,6 @@ public class Point  {
   public Point clone() { return new Point(position, orientation, angles); }
   
   public Float getValue(int idx) {
-      
     switch(idx) {
       // Joint angles
       case 0:
@@ -95,6 +94,16 @@ public class Point  {
     p3.angles = p3Joints;
     
     return p3;
+  }
+  
+  /**
+   * Negates the current values of the point.
+   */
+  public Point negate() {
+    position = position.mult(-1);
+    orientation = vectorScalarMult(orientation, -1);
+    angles = vectorScalarMult(angles, -1);
+    return this;
   }
     
   /**
@@ -916,21 +925,24 @@ public class SelectStatement extends Instruction {
   }
   
   public int execute() {
-    arg.updateValues();
-    
     for(int i = 0; i < cases.size(); i += 1) {
-      cases.get(i).updateValues();
-      println("testing case " + i + " = " + cases.get(i).dataVal + " against " + arg.dataVal);
-      if(cases.get(i).type != -2 && arg.dataVal == cases.get(i).dataVal) {
-        if(instr.get(i) instanceof JumpInstruction || instr.get(i) instanceof CallInstruction) {
+      ExprOperand c = cases.get(i);
+      if(c == null) return 1;
+      
+      println("testing case " + i + " = " + cases.get(i).getDataVal() + " against " + arg.getDataVal());
+      
+      if(c.type != ExpressionElement.UNINIT && arg.getDataVal() == c.dataVal) {
+        Instruction ins = instr.get(i);
+        
+        if(ins instanceof JumpInstruction || ins instanceof CallInstruction) {
           println("executing " + instr.get(i).toString());
-          instr.get(i).execute();
+          ins.execute();
         }
         break;
       }
     }
     
-    return 1;
+    return 0;
   }
   
   public void addCase() {
@@ -984,6 +996,7 @@ public class SelectStatement extends Instruction {
 
 public class RegisterStatement extends Instruction {
   Register reg;
+  int regLength;
   Expression expr;
   
   /**
