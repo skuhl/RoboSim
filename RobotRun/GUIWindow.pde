@@ -679,7 +679,6 @@ public class WindowManager {
       
     } else if (windowState.equals("Pendant")) {
       // Show pendant
-      g1.show();
       setGroupVisible(createObjWindow, false);
       setGroupVisible(editObjWindow, false);
       setGroupVisible(sharedElements, false);
@@ -688,6 +687,8 @@ public class WindowManager {
       if (!g1.isVisible()) {
         updateWindowContentsPositions();
       }
+      
+      g1.show();
       
     } else if (windowState.equals("Create")) {
       // Show world object creation window
@@ -766,10 +767,11 @@ public class WindowManager {
       // Scenario window
       updateScenarioWindowContentPositions();
     }
+    
     // Update the camera view buttons
     int[] relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_RIGHT, offsetX, 0);
     
-    for (Button b : cameraViews) {
+    for (Button b : cameraViews) {  
       b.setPosition(relPos[0], relPos[1]).show();
       relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
     }

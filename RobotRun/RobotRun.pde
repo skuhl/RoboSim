@@ -54,7 +54,6 @@ public void setup() {
   //load model and save data
   armModel = new ArmModel();
   intermediatePositions = new ArrayList<Point>();
-  
   activeScenarioIdx = -1;
   
   loadState();
