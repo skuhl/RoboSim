@@ -529,12 +529,11 @@ public final class MotionInstruction extends Instruction  {
       return pt;
       
     }  else {
-      // Remove active User frame
+      // Remove the Point's User frame
       if (userFrame != -1) {
         Frame active = userFrames[userFrame];
         // Convert point into the Native Coordinate System
         Point convertedPt = removeFrame(pt, active.getOrigin(), active.getAxes());
-        System.out.printf("getVector(): %s\n", convertNativeToWorld(convertedPt.position));
         return convertedPt;
       }
       
