@@ -17,23 +17,23 @@ private enum DimType { LENGTH, WIDTH, HEIGHT, RADIUS, SCALE };
 
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
 private enum Operator implements ExpressionElement {
-  ADDTN("+", ARITH), 
-  SUBTR("-", ARITH), 
-  MULT("*", ARITH), 
-  DIV("/", ARITH), 
-  MOD("%", ARITH), 
-  INTDIV("|", ARITH),
+  ADDTN("+", ARITH_OP), 
+  SUBTR("-", ARITH_OP), 
+  MULT("*", ARITH_OP), 
+  DIV("/", ARITH_OP), 
+  MOD("%", ARITH_OP), 
+  INTDIV("|", ARITH_OP),
   PAR_OPEN("(", -1),
   PAR_CLOSE(")", -1),
-  EQUAL("=", BOOL),
-  NEQUAL("<>", BOOL),
-  GRTR(">", BOOL),
-  LESS("<", BOOL),
-  GREQ(">=", BOOL),
-  LSEQ("<=", BOOL),
-  AND("&&", BOOL),
-  OR("||", BOOL),
-  NOT("!", BOOL),
+  EQUAL("=", BOOL_OP),
+  NEQUAL("<>", BOOL_OP),
+  GRTR(">", BOOL_OP),
+  LESS("<", BOOL_OP),
+  GREQ(">=", BOOL_OP),
+  LSEQ("<=", BOOL_OP),
+  AND("&&", BOOL_OP),
+  OR("||", BOOL_OP),
+  NOT("!", BOOL_OP),
   UNINIT("_", -1);
   
   public final String symbol;
@@ -136,8 +136,9 @@ public static enum Screen implements DisplayMode {
   /*
   * Screens used to display a context-based list of options to the user
   */
-  INSTRUCT_MENU_NAV(ScreenType.TYPE_OPT_MENU),
-  MAIN_MENU_NAV(ScreenType.TYPE_OPT_MENU),
+  NAV_INSTR_MENU(ScreenType.TYPE_OPT_MENU),
+  NAV_MAIN_MENU(ScreenType.TYPE_OPT_MENU),
+  NAV_SETUP(ScreenType.TYPE_OPT_MENU),
   TOOL_FRAME_METHODS(ScreenType.TYPE_OPT_MENU),
   USER_FRAME_METHODS(ScreenType.TYPE_OPT_MENU),
   SELECT_COND_STMT(ScreenType.TYPE_OPT_MENU),
@@ -147,18 +148,17 @@ public static enum Screen implements DisplayMode {
   SELECT_IO_INSTR_REG(ScreenType.TYPE_OPT_MENU),
   SELECT_JMP_LBL(ScreenType.TYPE_OPT_MENU),
   SELECT_REG_EXPR_TYPE(ScreenType.TYPE_OPT_MENU),
-  SETUP_NAV(ScreenType.TYPE_OPT_MENU),
-  
+    
   /*
   * Screens involving the entry of text, either via keyboard input or function buttons
   */
   FIND_REPL(ScreenType.TYPE_TEXT_ENTRY),
   EDIT_DREG_COM(ScreenType.TYPE_TEXT_ENTRY),
   EDIT_PREG_COM(ScreenType.TYPE_TEXT_ENTRY),
-  NEW_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
-  RENAME_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
-  CP_PROGRAM(ScreenType.TYPE_TEXT_ENTRY),
-  
+  PROG_COPY(ScreenType.TYPE_TEXT_ENTRY),
+  PROG_CREATE(ScreenType.TYPE_TEXT_ENTRY),
+  PROG_RENAME(ScreenType.TYPE_TEXT_ENTRY),
+    
   /*
   * Screens involving the entry of numeric values via either a physical num pad or
   * the virtual numpad included in the simulator UI
@@ -168,13 +168,16 @@ public static enum Screen implements DisplayMode {
   EDIT_DREG_VAL(ScreenType.TYPE_NUM_ENTRY),
   INPUT_DREG_IDX(ScreenType.TYPE_NUM_ENTRY),
   INPUT_IOREG_IDX(ScreenType.TYPE_NUM_ENTRY),
+  INPUT_PREG_IDX1(ScreenType.TYPE_NUM_ENTRY),
+  INPUT_PREG_IDX2(ScreenType.TYPE_NUM_ENTRY),
   INPUT_CONST(ScreenType.TYPE_NUM_ENTRY),
   JUMP_TO_LINE(ScreenType.TYPE_NUM_ENTRY),
   SET_FRAME_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_IO_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_JUMP_TGT(ScreenType.TYPE_NUM_ENTRY),
   SET_LBL_NUM(ScreenType.TYPE_NUM_ENTRY),
-  SET_REG_EXPR_IDX(ScreenType.TYPE_NUM_ENTRY),
+  SET_REG_EXPR_IDX1(ScreenType.TYPE_NUM_ENTRY),
+  SET_REG_EXPR_IDX2(ScreenType.TYPE_NUM_ENTRY),
   SET_SELECT_ARGVAL(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_SPD(ScreenType.TYPE_NUM_ENTRY),

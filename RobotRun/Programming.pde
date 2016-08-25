@@ -995,9 +995,9 @@ public class SelectStatement extends Instruction {
 }
 
 public class RegisterStatement extends Instruction {
-  Register reg;
-  int regLength;
-  Expression expr;
+  Register reg;  //the register to be modified by this instruction
+  int posIdx;  //used if editing a single value in a position register
+  Expression expr;  //the expression whose value will be stored in 'reg' after evaluation
   
   /**
    * Creates a register statement with a given register and a blank Expression.
@@ -1007,24 +1007,30 @@ public class RegisterStatement extends Instruction {
    *              upon successful execution of this statement.
    * @param expr - The expression to be evaluated in conjunction with the execution
    *               of this statement. The value of this expression, if valid for the
-                   register 
+   *               register 
    */
   public RegisterStatement(Register r) {
     reg = r;
+    posIdx = -1;
     expr = new Expression();
   }
   
-  public RegisterStatement(Register r, Expression e) {
+  public RegisterStatement(Register r, int idx, Expression e) {
     reg = r;
+    posIdx = idx;
     expr = e;
   }
   
   public Register setRegister(Register r) {
-    if(!(r instanceof DataRegister) && !(r instanceof PositionRegister)) {
-      return null;
-    } else {
-      return reg = r;
-    }
+    reg = r;
+    posIdx = -1;
+    return reg;
+  }
+  
+  public Register setRegister(Register r, int idx) {
+    reg = r;
+    posIdx = idx;
+    return reg;
   }
   
   public int execute() {
@@ -1041,7 +1047,7 @@ public class RegisterStatement extends Instruction {
   }
   
   public Instruction clone() {
-    Instruction copy = new RegisterStatement(reg, (Expression)expr.clone());    
+    Instruction copy = new RegisterStatement(reg, posIdx, (Expression)expr.clone());    
     return copy;
   }
   
@@ -1050,14 +1056,32 @@ public class RegisterStatement extends Instruction {
    * operator and operand is a separate String Object.
    */
   public String[] toStringArray() {
-    String[] ret = new String[2 + expr.getLength()];
+    String[] ret;
     String[] exprString = expr.toStringArray();
+    String rString = "";
+    int rLen;
+        
+    if(reg instanceof DataRegister) { rString  = "R["; }
+    else if(reg instanceof IORegister) { rString  = "IO["; }
+    else if(reg instanceof PositionRegister) { rString  = "PR["; }
     
-    ret[0] = (reg instanceof DataRegister) ? "R[" : "PR[";
-    ret[1] = (reg.getIdx() == -1) ? "...] =" : (reg.getIdx() + 1) + "] =";
+    if(posIdx == -1) {
+      ret = new String[2 + expr.getLength()];
+            
+      ret[0] = rString;
+      ret[1] = (reg.getIdx() == -1) ? "...] =" : (reg.getIdx() + 1) + "] =";
+      rLen = 2;
+    } else {
+      ret = new String[3 + expr.getLength()];
+      
+      ret[0] = rString;
+      ret[1] = (reg.getIdx() == -1) ? "...," : (reg.getIdx() + 1) + ",";
+      ret[2] = (reg.getIdx() == -1) ? "...] =" : posIdx + "] =";
+      rLen = 3;
+    }
     
     for(int i = 0; i < exprString.length; i += 1) {
-      ret[i + 2] = exprString[i];
+      ret[i + rLen] = exprString[i];
     }
     
     return ret;

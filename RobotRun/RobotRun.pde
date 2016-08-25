@@ -9,7 +9,6 @@ import java.io.*;
 import java.awt.event.KeyEvent;
 
 private static final int OFF = 0, ON = 1;
-private static final int ARITH = 0, BOOL = 1;
 PFont fnt_con14, fnt_con12, fnt_conB;
 
 private Camera camera;

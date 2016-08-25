@@ -841,6 +841,10 @@ public class ExpressionEvaluationException extends RuntimeException {
 }
 
 public interface ExpressionElement {
+  //operator types
+  public static final int ARITH_OP = 0;
+  public static final int BOOL_OP = 1;
+  
   //operand types
   public static final int UNINIT = -2;
   public static final int SUBEXP = -1;
@@ -863,6 +867,7 @@ public class ExprOperand implements ExpressionElement {
   float dataVal;
   boolean boolVal;
   int regIdx = -1;
+  int posIdx = 0;
   Register regVal = null;
   Point pointVal = null;
   
@@ -872,11 +877,12 @@ public class ExprOperand implements ExpressionElement {
   }
   
   //initialize all fields, useful for cloning
-  public ExprOperand(int t, float d, boolean b, int idx, Register reg, Point p) {
+  public ExprOperand(int t, float d, boolean b, int rIdx, int pIdx, Register reg, Point p) {
     type = t;
     dataVal = d;
     boolVal = b;
-    regIdx = idx;
+    regIdx = rIdx;
+    posIdx = pIdx;
     regVal = reg;
     pointVal = p;
   }
@@ -917,7 +923,8 @@ public class ExprOperand implements ExpressionElement {
   //create position register operand on a given value of the register's position
   public ExprOperand(PositionRegister pReg, int i, int j){
     type = ExpressionElement.PREG_IDX;
-    regIdx = i + 100*j;
+    regIdx = i;
+    posIdx = j;
     regVal = pReg;
   }
   
@@ -933,7 +940,7 @@ public class ExprOperand implements ExpressionElement {
     } else if(type == ExpressionElement.DREG) {
       return ((DataRegister)regVal).value; 
     } else if(type == ExpressionElement.PREG_IDX) {
-      return ((PositionRegister)regVal).getPointValue(regIdx/100);
+      return ((PositionRegister)regVal).getPointValue(posIdx);
     } else {
       return Float.MAX_VALUE;
     }
@@ -994,7 +1001,8 @@ public class ExprOperand implements ExpressionElement {
 
   public ExprOperand set(PositionRegister pReg, int i, int j) {
     type = ExpressionElement.PREG;
-    regIdx = i + 100*j;
+    regIdx = i;
+    posIdx = j;
     regVal = pReg;
     return this;
   }
@@ -1014,35 +1022,44 @@ public class ExprOperand implements ExpressionElement {
   }
   
   public int getLength() {
-    return 1;
+    return (type == PREG_IDX) ? 2 : 1;
   }
   
   public ExprOperand clone() {
-    return new ExprOperand(type, dataVal, boolVal, regIdx, regVal, pointVal);
+    return new ExprOperand(type, dataVal, boolVal, regIdx, posIdx, regVal, pointVal);
   }
   
   public String toString(){
     String s = "";
     switch(type){
-      case -2:
+      case UNINIT:
         s = "...";
         break;
-      case -1: 
+      case SUBEXP: 
         s = ((AtomicExpression)this).toString();
         break;
-      case 0:
+      case FLOAT:
         s += dataVal;
         break;
-      case 1:
+      case BOOL:
         s += boolVal ? "TRUE" : "FALSE";
         break;
-      case 2:
+      case DREG:
         String rNum = (regIdx == -1) ? "..." : ""+regIdx;
         s += "R[" + rNum + "]";
         break;
-      case 3:
+      case IOREG:
         rNum = (regIdx == -1) ? "..." : ""+regIdx;
         s += "IO[" + rNum + "]";
+        break;
+      case PREG:
+        rNum = (regIdx == -1) ? "..." : ""+regIdx;
+        s += "PR[" + rNum + "]";
+        break;
+      case PREG_IDX:
+        rNum = (regIdx == -1) ? "..." : ""+regIdx;
+        String pIdx = (posIdx == -1) ? "..." : ""+posIdx;
+        s += "PR[" + rNum + ", " + pIdx + "]";
         break;
     }
     
@@ -1050,7 +1067,14 @@ public class ExprOperand implements ExpressionElement {
   }
   
   public String[] toStringArray() {
-    return new String[] { this.toString() };
+    if(type == PREG_IDX) {
+      String rNum = (regIdx == -1) ? "..." : ""+regIdx;
+      String pIdx = (posIdx == -1) ? "..." : ""+posIdx;
+      
+      return new String[] { "PR[" + rNum, pIdx + "]" };
+    } else {
+      return new String[] { this.toString() };
+    }
   }
 }
 
@@ -1237,6 +1261,7 @@ public class AtomicExpression extends ExprOperand {
           break;
         default:
           result = null;
+          break;
       }
     }
     else if(opType == 1) {
