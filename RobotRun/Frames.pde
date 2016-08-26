@@ -9,20 +9,20 @@ private final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
                                                      {  0, -1,  0 } };
 
 public abstract class Frame {
-  // The unit vectors representing the x, y, z axes (in row major order)
-  private float[] axes;
+  // The orientation of the frame in the form of a unit quaternion
+  private float[] orientation;
   /* The three points used to define a coordinate axis for 6-Point Method
    * of Tool Frames and 3-Point or 4_Point Methods of User Frames */
   protected Point[] axesTeachPoints;
   // For Direct Entry
   protected PVector DEOrigin;
-  protected float[] DEAxesOffsets;
+  protected float[] DEOrientation;
 
   public Frame() {
-    axes = new float[] { 1f, 0f, 0f, 0f };
+    orientation = new float[] { 1f, 0f, 0f, 0f };
     axesTeachPoints = new Point[] { null, null, null };
     DEOrigin = null;
-    DEAxesOffsets = null;
+    DEOrientation = null;
   }
   
   /**
@@ -32,24 +32,24 @@ public abstract class Frame {
   
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the Native Coordinate System. */
-  public float[][] getNativeAxes() { return quatToMatrix(axes); }
+  public float[][] getNativeAxisVectors() { return quatToMatrix(orientation); }
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the World Coordinate System. */
-  public float[][] getWorldAxes() {
-    RealMatrix frameAxes = new Array2DRowRealMatrix(floatToDouble(getNativeAxes(), 3, 3));
+  public float[][] getWorldAxisVectors() {
+    RealMatrix frameAxes = new Array2DRowRealMatrix(floatToDouble(getNativeAxisVectors(), 3, 3));
     RealMatrix worldAxes = new Array2DRowRealMatrix(floatToDouble(WORLD_AXES, 3, 3));
     
     return doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
   }
   
-  public float[] getAxes() { return axes; }
+  public float[] getOrientation() { return orientation; }
   
-  public float[] getInvAxes() {
-    return new float[] { axes[0], -axes[1], -axes[2], -axes[3] };
+  public float[] getOrientationNegation() {
+    return new float[] { orientation[0], -orientation[1], -orientation[2], -orientation[3] };
   }
 
-  public void setAxes(float[] newAxes) {
-    axes = newAxes;
+  public void setOrientation(float[] newAxes) {
+    orientation = newAxes;
   }
   
   /**
@@ -324,11 +324,11 @@ public abstract class Frame {
       }
     }
     
-    if (DEAxesOffsets == null) {
+    if (DEOrientation == null) {
       wpr = new PVector(0f, 0f, 0f);
     } else {
       // Display axes in World Frame Euler angles, in degrees
-      wpr = convertWorldToNative(quatToEuler(DEAxesOffsets)).mult(RAD_TO_DEG);
+      wpr = convertWorldToNative(quatToEuler(DEOrientation)).mult(RAD_TO_DEG);
     }
   
     entries[0][0] = "X: ";
@@ -410,13 +410,13 @@ public class ToolFrame extends Frame {
     if (method == 2) {
       // Direct Entry Method
       
-      if (DEOrigin == null || DEAxesOffsets == null) {
+      if (DEOrigin == null || DEOrientation == null) {
         // No direct entry values have been set
         return false;
       }
       
       setTCPOffset(DEOrigin);
-      setAxes( DEAxesOffsets.clone() );
+      setOrientation( DEOrientation.clone() );
       return true;
     } else if (method >= 0 && method < 2 && TCPTeachPoints[0] != null && TCPTeachPoints[1] != null && TCPTeachPoints[2] != null) {
       // 3-Point or 6-Point Method
@@ -445,7 +445,7 @@ public class ToolFrame extends Frame {
       }
       
       setTCPOffset( new PVector((float)newTCP[0], (float)newTCP[1], (float)newTCP[2]) );
-      setAxes( matrixToQuat(newAxesVectors) );
+      setOrientation( matrixToQuat(newAxesVectors) );
       return true;
     }
     
@@ -465,7 +465,7 @@ public class ToolFrame extends Frame {
     
     PVector displayOffset;
     // Convert angles to degrees and to the World Coordinate Frame
-    PVector wpr = convertWorldToNative(quatToEuler(getAxes())).mult(RAD_TO_DEG);
+    PVector wpr = convertWorldToNative(quatToEuler(getOrientation())).mult(RAD_TO_DEG);
     
     displayOffset = getTCPOffset();
     
@@ -546,13 +546,13 @@ public class UserFrame extends Frame {
     if (mode == 2) {
       // Direct Entry Method
       
-      if (DEOrigin == null || DEAxesOffsets == null) {
+      if (DEOrigin == null || DEOrientation == null) {
         // No direct entry values have been set
         return false;
       }
       
       setOrigin(DEOrigin);
-      setAxes( DEAxesOffsets.clone() );
+      setOrientation( DEOrientation.clone() );
       return true;
     } else if (mode >= 0 && mode < 2 && axesTeachPoints[0] != null && axesTeachPoints[1] != null && axesTeachPoints[2] != null) {
       // 3-Point or 4-Point Method
@@ -567,7 +567,7 @@ public class UserFrame extends Frame {
         return false;
       }
       
-      setAxes( matrixToQuat(newAxesVectors) );
+      setOrientation( matrixToQuat(newAxesVectors) );
       setOrigin(newOrigin);
       return true;
     }
@@ -588,7 +588,7 @@ public class UserFrame extends Frame {
     
     PVector displayOrigin;
     // Convert angles to degrees and to the World Coordinate Frame
-    PVector wpr = convertWorldToNative(quatToEuler(getAxes())).mult(RAD_TO_DEG);
+    PVector wpr = convertWorldToNative(quatToEuler(getOrientation())).mult(RAD_TO_DEG);
     
     // Convert to World frame reference
     displayOrigin = convertNativeToWorld(origin);

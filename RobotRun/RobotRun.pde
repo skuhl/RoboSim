@@ -246,7 +246,7 @@ public void displayAxes() {
       
       if (curCoordFrame == CoordFrame.TOOL) {
         /* Draw the axes of the active Tool frame at the Robot End Effector */
-        displayOriginAxes(eePoint.position, activeTool.getWorldAxes(), 200f, color(255, 0, 255));
+        displayOriginAxes(eePoint.position, activeTool.getWorldAxisVectors(), 200f, color(255, 0, 255));
         
       } else {
         // Draw axes of the Robot's End Effector frame for testing purposes
@@ -255,7 +255,7 @@ public void displayAxes() {
       
       if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
         /* Draw the axes of the active User frame */
-        displayOriginAxes(activeUser.getOrigin(), activeUser.getWorldAxes(), 10000f, color(0));
+        displayOriginAxes(activeUser.getOrigin(), activeUser.getWorldAxisVectors(), 10000f, color(0));
         
       } else {
         /* Draw the axes of the World frame */
@@ -277,12 +277,12 @@ public void displayAxes() {
         break;
       case TOOL:
         active = getActiveFrame(CoordFrame.TOOL);
-        displayAxes = active.getNativeAxes();
+        displayAxes = active.getNativeAxisVectors();
         displayOrigin = eePoint.position;
         break;
       case USER:
         active = getActiveFrame(CoordFrame.USER);
-        displayAxes = active.getNativeAxes();
+        displayAxes = active.getNativeAxisVectors();
         displayOrigin = active.getOrigin();
         break;
       default:

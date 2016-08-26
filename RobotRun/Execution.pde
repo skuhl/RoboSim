@@ -45,7 +45,7 @@ public void showMainDisplayText() {
   
   if (active != null) {
     // Convert into currently active frame
-    RP = applyFrame(RP, active.getOrigin(), active.getAxes());
+    RP = applyFrame(RP, active.getOrigin(), active.getOrientation());
   }
   
   String[] cartesian = RP.toLineStringArray(true),

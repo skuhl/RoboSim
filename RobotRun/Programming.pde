@@ -533,7 +533,7 @@ public final class MotionInstruction extends Instruction  {
       if (userFrame != -1) {
         Frame active = userFrames[userFrame];
         // Convert point into the Native Coordinate System
-        Point convertedPt = removeFrame(pt, active.getOrigin(), active.getAxes());
+        Point convertedPt = removeFrame(pt, active.getOrigin(), active.getOrientation());
         return convertedPt;
       }
       

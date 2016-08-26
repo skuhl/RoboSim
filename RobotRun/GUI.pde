@@ -1695,7 +1695,7 @@ public void f4() {
           Frame active = getActiveFrame(CoordFrame.USER);
           
           if (active != null) {
-            pt = removeFrame(pt, active.getOrigin(), active.getAxes());
+            pt = removeFrame(pt, active.getOrigin(), active.getOrientation());
             if (DISPLAY_TEST_OUTPUT) {
               System.out.printf("pt: %s\n", pt.position.toString());
             }
@@ -1795,7 +1795,7 @@ public void f5() {
         
         if (active != null) {
           // Save Cartesian values in terms of the active User frame
-          curRP = applyFrame(curRP, active.getOrigin(), active.getAxes());
+          curRP = applyFrame(curRP, active.getOrigin(), active.getOrientation());
         } 
   
         GPOS_REG[active_index].point = curRP;
@@ -4869,7 +4869,7 @@ public void newMotionInstruction() {
   
   if (active != null) {
     // Convert into currently active frame
-    pt = applyFrame(pt, active.getOrigin(), active.getAxes());
+    pt = applyFrame(pt, active.getOrigin(), active.getOrientation());
     
     if (DISPLAY_TEST_OUTPUT) {
       System.out.printf("New: %s\n", convertNativeToWorld(pt.position));
@@ -5230,11 +5230,11 @@ public void createFrameDirectEntry(Frame taughtFrame, float[] inputs) {
   
   // Save direct entry values
   taughtFrame.DEOrigin = origin;
-  taughtFrame.DEAxesOffsets = eulerToQuat(wpr);
+  taughtFrame.DEOrientation = eulerToQuat(wpr);
   taughtFrame.setFrame(2);
   
   if(DISPLAY_TEST_OUTPUT) {
-    wpr = quatToEuler(taughtFrame.axes).mult(RAD_TO_DEG);
+    wpr = quatToEuler(taughtFrame.orientation).mult(RAD_TO_DEG);
     System.out.printf("\n\n%s\n%s\nFrame set: %d\n", origin.toString(),
                       wpr.toString(), curFrameIdx);
   }
