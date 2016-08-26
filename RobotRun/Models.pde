@@ -1031,11 +1031,11 @@ public class ArmModel {
         // Respond to user defined movement
         float distance = motorSpeed / 6000f * liveSpeed;
         PVector translation = new PVector(jogLinear[0], jogLinear[1], jogLinear[2]);
-        translation = convertWorldToNative(translation.mult(distance));
+        translation = rotateVector(translation.mult(distance), WORLD_AXES);
         
         if (curFrame != null) {
             // Convert the movement vector into the current reference frame
-          translation = rotateVectorQuat(translation, curFrame.getInvAxes());
+          translation = rotateVectorQuat(translation, curFrame.getOrientationNegation());
         }
         
         tgtPosition.add(translation);
@@ -1053,7 +1053,7 @@ public class ArmModel {
         
         if (curFrame != null) {
           // Convert the movement vector into the current reference frame
-          rotation = rotateVectorQuat(rotation, curFrame.getInvAxes());
+          rotation = rotateVectorQuat(rotation, curFrame.getOrientationNegation());
         }
         rotation.normalize();
         

@@ -226,9 +226,8 @@ public Point applyFrame(Point pt, PVector origin, float[] axes) {
  * @returning     The vector, v, interms of the given frame's Coordinate System
  */
 public PVector convertToFrame(PVector v, PVector origin, float[] axes) {
-  float[] invAxes = vectorNorm(  quaternionConjugate(axes) );
   PVector vOffset = PVector.sub(v, origin);
-  return rotateVectorQuat(vOffset, invAxes);
+    return rotateVectorQuat(vOffset, axes);
 }
 
 /**
@@ -248,16 +247,17 @@ public Point removeFrame(Point pt, PVector origin, float[] axes) {
 }
 
 /**
- * Converts the given vector, v, from the Coordinate System defined by the given origin
+ * Converts the given vector, u, from the Coordinate System defined by the given origin
  * vector and rotation quaternion axes.
  * 
  * @param v       A vector in the XYZ vector space
  * @param origin  The origin of the Coordinate System
  * @param axes    The axes of the Coordinate System representing as a rotation quanternion
- * @returning     The vector, v, interms of the given frame's Coordinate System
+ * @returning     The vector, u, in the Native frame
  */
-public PVector convertFromFrame(PVector v, PVector origin, float[] axes) {
-  PVector vRotated = rotateVectorQuat(v, axes);
+public PVector convertFromFrame(PVector u, PVector origin, float[] axes) {
+  float[] invAxes = vectorNorm(  quaternionConjugate(axes) );
+  PVector vRotated = rotateVectorQuat(u, invAxes);
   return vRotated.add(origin);
 }
 
@@ -267,7 +267,7 @@ public PVector convertFromFrame(PVector v, PVector origin, float[] axes) {
  */
 public PVector convertWorldToNative(PVector v) {
   float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
-  return transform(v, tMatrix);
+  return transformVector(v, invertHCMatrix(tMatrix));
 }
 
 /**
@@ -276,12 +276,12 @@ public PVector convertWorldToNative(PVector v) {
  */
 public PVector convertNativeToWorld(PVector v) {
   float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
-  return transform(v, invertHCMatrix(tMatrix));
+  return transformVector(v, tMatrix);
 }
 
 /* Transforms the given vector from the coordinate system defined by the given
  * transformation matrix (row major order). */
-public PVector transform(PVector v, float[][] tMatrix) {
+public PVector transformVector(PVector v, float[][] tMatrix) {
   if(tMatrix.length != 4 || tMatrix[0].length != 4) {
     return null;
   }
@@ -296,7 +296,7 @@ public PVector transform(PVector v, float[][] tMatrix) {
 }
 
 /* Transforms the given vector by the given 3x3 rotation matrix (row major order). */
-public PVector rotate(PVector v, float[][] rotMatrix) {
+public PVector rotateVector(PVector v, float[][] rotMatrix) {
   if(v == null || rotMatrix == null || rotMatrix.length != 3 || rotMatrix[0].length != 3) {
     return null;
   }

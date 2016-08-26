@@ -694,7 +694,7 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   }
   
   // Write frame axes
-  saveFloatArray(f.axes, out);
+  saveFloatArray(f.orientation, out);
   
   // Write frame orientation points
   for (Point pt : f.axesTeachPoints) {
@@ -704,7 +704,7 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   // Write frame manual entry origin value
   savePVector(f.DEOrigin, out);
   // Write frame manual entry origin value
-  saveFloatArray(f.DEAxesOffsets, out);
+  saveFloatArray(f.DEOrientation, out);
   
   if (f instanceof ToolFrame) {
     ToolFrame tFrame = (ToolFrame)f;
@@ -758,7 +758,7 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   }
 
   // Read axes quaternion values
-  f.setAxes( loadFloatArray(in) );
+  f.setOrientation( loadFloatArray(in) );
   
   // Read origin values
   f.axesTeachPoints = new Point[3];
@@ -769,7 +769,7 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   
   // Read manual entry origin values
   f.DEOrigin = loadPVector(in);
-  f.DEAxesOffsets = loadFloatArray(in);
+  f.DEOrientation = loadFloatArray(in);
   
   if (f instanceof ToolFrame) {
     ToolFrame tFrame = (ToolFrame)f;

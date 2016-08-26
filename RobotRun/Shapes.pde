@@ -560,7 +560,7 @@ public class BoundingBox {
   public boolean collision(PVector point) {
     // Convert the point to the current reference frame
     float[][] tMatrix = transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
-    PVector relPosition = transform(point, invertHCMatrix(tMatrix));
+    PVector relPosition = transformVector(point, invertHCMatrix(tMatrix));
     
     PVector OBBDim = getDims();
     // Determine if the point iw within the bounding-box of this object
