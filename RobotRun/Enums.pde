@@ -89,17 +89,17 @@ public static enum Screen implements DisplayMode {
   SET_BOOL_CONST(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_CALL_PROG(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_FRM_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
+  SET_IF_STMT_ACT(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_MV_INSTRUCT_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_MV_INSTRUCT_REG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_REG_EXPR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_SELECT_STMT_ARG(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_SELECT_STMT_ACT(ScreenType.TYPE_INSTRUCT_EDIT),
-    
+  
   /*
   * Set of screens used to edit expression elements
   */
-  SET_IF_STMT_ACT(ScreenType.TYPE_EXPR_EDIT),
   SET_BOOL_EXPR_ARG(ScreenType.TYPE_EXPR_EDIT),
   SET_EXPR_ARG(ScreenType.TYPE_EXPR_EDIT),
   SET_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
@@ -136,18 +136,17 @@ public static enum Screen implements DisplayMode {
   /*
   * Screens used to display a context-based list of options to the user
   */
+  FRAME_METHOD_TOOL(ScreenType.TYPE_OPT_MENU),
+  FRAME_METHOD_USER(ScreenType.TYPE_OPT_MENU),
   NAV_INSTR_MENU(ScreenType.TYPE_OPT_MENU),
   NAV_MAIN_MENU(ScreenType.TYPE_OPT_MENU),
   NAV_SETUP(ScreenType.TYPE_OPT_MENU),
-  TOOL_FRAME_METHODS(ScreenType.TYPE_OPT_MENU),
-  USER_FRAME_METHODS(ScreenType.TYPE_OPT_MENU),
   SELECT_COND_STMT(ScreenType.TYPE_OPT_MENU),
   SELECT_FRAME_INSTR_TYPE(ScreenType.TYPE_OPT_MENU),
   SELECT_FRAME_MODE(ScreenType.TYPE_OPT_MENU),
   SELECT_INSTR_INSERT(ScreenType.TYPE_OPT_MENU),
   SELECT_IO_INSTR_REG(ScreenType.TYPE_OPT_MENU),
   SELECT_JMP_LBL(ScreenType.TYPE_OPT_MENU),
-  SELECT_REG_EXPR_TYPE(ScreenType.TYPE_OPT_MENU),
     
   /*
   * Screens involving the entry of text, either via keyboard input or function buttons

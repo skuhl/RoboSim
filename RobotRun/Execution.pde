@@ -833,9 +833,9 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
 
 /**
  * Executes a program. Returns true when done.
- * @param program Program to execute
- * @param model Arm model to use
- * @return Finished yet (false=no, true=yes)
+ * @param program - Program to execute
+ * @param model   - Arm model to use
+ * @return        - True if done executing, false if otherwise.
  */
 boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
   Instruction activeInstr = activeInstruction();
@@ -844,11 +844,11 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
   //stop executing if no valid program is selected or we reach the end of the program
   if(robotFault || activeInstr == null) {
     return true;
-    
-  } else if (!activeInstr.isCommented()){
-    //motion instructions
+  } 
+  else if (!activeInstr.isCommented()){
     if (activeInstr instanceof MotionInstruction) {
       MotionInstruction motInstr = (MotionInstruction)activeInstr;
+      
       //start a new instruction
       if(!executingInstruction) {
         executingInstruction = setUpInstruction(program, model, motInstr);
@@ -868,24 +868,29 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
         }
       }
     } 
-    //jump instructions
     else if (activeInstr instanceof JumpInstruction) {
-      nextInstr = activeInstr.execute();
       executingInstruction = false;
+      nextInstr = activeInstr.execute();
+      
+      if(nextInstr == -1) {
+        triggerFault();
+        return true;
+      }
     } 
-    //other instructions
     else {
       executingInstruction = false;
-      activeInstr.execute();
+      
+      if(activeInstr.execute() != 0) {
+        triggerFault();
+        return true;
+      }
     }//end of instruction type check
   } //skip commented instructions
   
   // Move to next instruction after current is finished
   if(!executingInstruction) {
-    if(nextInstr == -1) {
-      // Failed to jump to target label
-      triggerFault();
-    } else if(nextInstr == activeProgram().size() && !call_stack.isEmpty()) {
+    if(nextInstr == activeProgram().size() && !call_stack.isEmpty()) {
+      // Return from called program
       int[] p = call_stack.pop();
       active_prog = p[0];
       active_instr = p[1];
@@ -894,15 +899,12 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
       col_select = 0;
       start_render = 0;
       programRunning = !executeProgram(activeProgram(), armModel, false);
-    } else {
+    } 
+    else {
       // Move to nextInstruction
-      int size = activeProgram().getInstructions().size() + 1;
-      int i = active_instr,
-          r = row_select;
-      
+      int size = activeProgram().getInstructions().size() + 1;      
       active_instr = max(0, min(nextInstr, size - 1));
-      row_select = max(0, min(r + active_instr - i, contents.size() - 1));
-      start_render = start_render + (active_instr - i) - (row_select - r);
+      row_select = getInstrLine(active_instr);
     }
     
     updateScreen();

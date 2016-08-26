@@ -74,6 +74,28 @@ public class Point  {
     return null;
   }
   
+  public void setValue(int idx, float value) {
+    switch(idx) {
+      // Joint angles
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:   angles[idx] = value;
+      // Position
+      case 6:   position.x = value;
+      case 7:   position.y = value;
+      case 8:   position.z = value;
+      // Orientation
+      case 9:   
+      case 10:  
+      case 11:  
+      case 12:  orientation[idx - 9] = value;
+      default:
+    }
+  }
+  
   /**
    * Computes and returns the result of the addition of this point with
    * another point, 'p.' Does not alter the original values of this point.
@@ -207,8 +229,6 @@ public class Point  {
 public class Program {
   private String name;
   private int nextRegister;
-  private int nextInstr;
-  private int progIdx;
   /**
    * The positions associated with this program, which are
    * stored in reference to the current User frame
@@ -219,7 +239,6 @@ public class Program {
   public Program(String s) {
     name = s;
     nextRegister = 0;
-    nextInstr = 0;
     for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
     instructions = new ArrayList<Instruction>();
   }
@@ -615,19 +634,16 @@ public class FrameInstruction extends Instruction {
   public int getReg(){ return frameIdx; }
   public void setReg(int r){ frameIdx = r; }
   
-  public int execute() {
-    int ret = 2;
+  public int execute() {    
     if (frameType == FTYPE_TOOL) {
       activeToolFrame = frameIdx;
-      ret = 0;
     } else if (frameType == FTYPE_USER) {
       activeUserFrame = frameIdx;
-      ret = 1;
     }
     // Update the current active frames
     updateCoordFrame();
     
-    return ret;
+    return 0;
   }
   
   public Instruction clone() {
@@ -678,7 +694,8 @@ public class IOInstruction extends Instruction {
   
   public int execute() {
     armModel.endEffectorState = state;
-    return armModel.checkPickupCollision();
+    armModel.checkPickupCollision();
+    return 0;
   }
   
   public Instruction clone() {
@@ -813,9 +830,10 @@ public class CallInstruction extends Instruction {
     col_select = 0;
     start_render = 0;
     updateScreen();
+    
     programRunning = !executeProgram(callProg, armModel, false);
     
-    return 1;
+    return 0;
   }
   
   public String toString() {
@@ -858,7 +876,11 @@ public class IfStatement extends Instruction {
   }
   
   public int execute() {
-    if(expr.evaluate().boolVal){
+    ExprOperand result = expr.evaluate();
+    
+    if(result == null || result.boolVal == null) {
+      return 1;
+    } else if(expr.evaluate().getBoolVal()){
       instr.execute();
     }
     
@@ -907,19 +929,19 @@ public class IfStatement extends Instruction {
 public class SelectStatement extends Instruction {
   ExprOperand arg;
   ArrayList<ExprOperand> cases;
-  ArrayList<Instruction> instr;
+  ArrayList<Instruction> instrList;
     
   public SelectStatement() {
     arg = new ExprOperand();
     cases = new ArrayList<ExprOperand>();
-    instr = new ArrayList<Instruction>();
+    instrList = new ArrayList<Instruction>();
     addCase();
   }
   
   public SelectStatement(ExprOperand a) {
     arg = a;
     cases = new ArrayList<ExprOperand>();
-    instr = new ArrayList<Instruction>();
+    instrList = new ArrayList<Instruction>();
     addCase();
   }
   
@@ -931,11 +953,11 @@ public class SelectStatement extends Instruction {
       println("testing case " + i + " = " + cases.get(i).getDataVal() + " against " + arg.getDataVal());
       
       if(c.type != ExpressionElement.UNINIT && arg.getDataVal() == c.dataVal) {
-        Instruction ins = instr.get(i);
+        Instruction instr = instrList.get(i);
         
-        if(ins instanceof JumpInstruction || ins instanceof CallInstruction) {
-          println("executing " + instr.get(i).toString());
-          ins.execute();
+        if(instr instanceof JumpInstruction || instr instanceof CallInstruction) {
+          println("executing " + instrList.get(i).toString());
+          instr.execute();
         }
         break;
       }
@@ -946,12 +968,12 @@ public class SelectStatement extends Instruction {
   
   public void addCase() {
     cases.add(new ExprOperand());
-    instr.add(new Instruction());
+    instrList.add(new Instruction());
   }
   
   public void addCase(ExprOperand e, Instruction i) {
     cases.add(e);
-    instr.add(i);
+    instrList.add(i);
   }
   
   public void deleteCase(int idx) {
@@ -959,8 +981,8 @@ public class SelectStatement extends Instruction {
       cases.remove(idx);
     }
     
-    if(instr.size() > 1) {
-      instr.remove(idx);
+    if(instrList.size() > 1) {
+      instrList.remove(idx);
     }
   }
   
@@ -981,7 +1003,7 @@ public class SelectStatement extends Instruction {
     ret[1] = arg.toString();
     
     for(int i = 0; i < cases.size(); i += 1) {
-      String[] iString = instr.get(i).toStringArray();
+      String[] iString = instrList.get(i).toStringArray();
       
       ret[i*4 + 2] = "= " + cases.get(i).toString();
       ret[i*4 + 3] = iString[0];
@@ -1014,6 +1036,12 @@ public class RegisterStatement extends Instruction {
     expr = new Expression();
   }
   
+  public RegisterStatement(Register r, int i) {
+    reg = r;
+    posIdx = i;
+    expr = new Expression();
+  }
+  
   public RegisterStatement(Register r, int idx, Expression e) {
     reg = r;
     posIdx = idx;
@@ -1035,14 +1063,29 @@ public class RegisterStatement extends Instruction {
   public int execute() {
     ExprOperand result = expr.evaluate();
     
+    if(result == null) return 1;
+    
     if(reg instanceof DataRegister) {
-      ((DataRegister)reg).value = result.dataVal;
+      if(result.getDataVal() == null) return 1;
+      ((DataRegister)reg).value = result.getDataVal();
+      
       println(result.dataVal + ", " + ((DataRegister)reg).value);
-    } else if(reg instanceof PositionRegister) {
-      ((PositionRegister)reg).point = result.pointVal;
+    } 
+    else if(reg instanceof IORegister) {
+      if(result.getBoolVal() == null) return 1;
+      ((IORegister)reg).state = result.getBoolVal() ? ON : OFF;
+    } 
+    else if(reg instanceof PositionRegister && posIdx == -1) {
+      if(result.getPointVal() == null) return 1;
+      ((PositionRegister)reg).point = result.getPointVal();
+    } 
+    else {
+      if(result.getDataVal() == null) return 1;
+      println(result.getDataVal());
+      ((PositionRegister)reg).setPointValue(posIdx, result.getDataVal());
     }
         
-    return 1;
+    return 0;
   }
   
   public Instruction clone() {

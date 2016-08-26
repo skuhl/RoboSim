@@ -864,8 +864,8 @@ public interface ExpressionElement {
 public class ExprOperand implements ExpressionElement {
   protected int type;
   
-  float dataVal;
-  boolean boolVal;
+  Float dataVal = null;
+  Boolean boolVal = null;
   int regIdx = -1;
   int posIdx = 0;
   Register regVal = null;
@@ -934,25 +934,25 @@ public class ExprOperand implements ExpressionElement {
     pointVal = p;
   }
   
-  public float getDataVal() {
+  public Float getDataVal() {
     if(type == ExpressionElement.FLOAT) {
       return dataVal;
     } else if(type == ExpressionElement.DREG) {
-      return ((DataRegister)regVal).value; 
+      return ((DataRegister)regVal).value;
     } else if(type == ExpressionElement.PREG_IDX) {
       return ((PositionRegister)regVal).getPointValue(posIdx);
     } else {
-      return Float.MAX_VALUE;
+      return null;
     }
   }
   
-  public boolean getBoolVal() {
+  public Boolean getBoolVal() {
     if(type == ExpressionElement.BOOL) {
       return boolVal;
     } else if(type == ExpressionElement.IOREG) {
       return (((IORegister)regVal).state == ON);
     } else {
-      return false;
+      return null;
     }
   }
   
@@ -967,7 +967,7 @@ public class ExprOperand implements ExpressionElement {
   }
   
   public ExprOperand set(float d) {
-    type = ExpressionElement.UNINIT;
+    type = ExpressionElement.FLOAT;
     dataVal = d;
     return this;
   }
@@ -1150,8 +1150,8 @@ public class AtomicExpression extends ExprOperand {
     // -1 = uninit, 0 = float,
     // 1 = boolean, 2 = point
     int opType = -1;
-    float o1 = 0, o2 = 0; //floating point operand values
-    boolean b1 = false, b2 = false; //boolean operand values
+    Float o1 = null, o2 = null; //floating point operand values
+    Boolean b1 = null, b2 = null; //boolean operand values
     Point p1 = null, p2 = null; //point operand values
     
     //evaluate any sub-expressions
@@ -1171,6 +1171,7 @@ public class AtomicExpression extends ExprOperand {
     } 
     else if(t1 == ExpressionElement.FLOAT || t1 == ExpressionElement.DREG || t1 == ExpressionElement.PREG_IDX) {
       opType = 0;
+      println(arg1.toString());
       o1 = arg1.getDataVal();
       
       switch(t2) {
@@ -1213,15 +1214,14 @@ public class AtomicExpression extends ExprOperand {
           p2 = arg2.getPointVal();
       }
     }
-    else {
-      return null;
-    }
-    
-    //integer operands for integer operations
-    int intop1 = Math.round(arg1.dataVal);
-    int intop2 = Math.round(arg2.dataVal);
     
     if(opType == 0) {
+      if(o1 == null || o2 == null) return null;
+      
+      //integer operands for integer operations
+      int intop1 = Math.round(o1);
+      int intop2 = Math.round(o2);
+     
       switch(op) {
         case ADDTN:
           result = new ExprOperand(o1 + o2);
@@ -1265,6 +1265,8 @@ public class AtomicExpression extends ExprOperand {
       }
     }
     else if(opType == 1) {
+      if(b1 == null || b2 == null) return null;
+      
       switch(op) {
        case EQUAL:
           result = new ExprOperand(b1 == b2);
@@ -1477,20 +1479,24 @@ public class Expression extends AtomicExpression {
     return len;
   }
   
-  public ExprOperand evaluate() throws ExpressionEvaluationException {
-    if(elementList.get(0) instanceof Operator) { return null; } //can throw error here
+  public ExprOperand evaluate() {
+    if(elementList.get(0) instanceof Operator || elementList.size() % 2 != 1) { 
+      println("Expression formatting error");
+      return null;
+    }
     
-    ExprOperand result = (ExprOperand)elementList.get(0);
-    
+    ExprOperand result = (ExprOperand)elementList.get(0);    
     for(int i = 1; i < elementList.size(); i += 2) {
       if(!(elementList.get(i) instanceof Operator) || !(elementList.get(i + 1) instanceof ExprOperand)) {
-        return null; //and here
-      } else {
+        println("Expression formatting error");
+        return null;
+      } 
+      else {
         Operator op = (Operator) elementList.get(i);
         ExprOperand nextOperand = (ExprOperand) elementList.get(i + 1);
         AtomicExpression expr = new AtomicExpression(op, result, nextOperand);
         
-        println(result.dataVal + op.toString() + nextOperand.dataVal + " = " + result.dataVal);
+        println(result.getDataVal() + op.toString() + nextOperand.getDataVal() + " = " + expr.evaluate().dataVal);
         result = expr.evaluate();
       }
     }

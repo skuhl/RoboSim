@@ -23,20 +23,20 @@ Stack<Screen> display_stack;
 ArrayList<Program> programs = new ArrayList<Program>();
 
 /*******************************/
-/* other global variables      */
+/*      Global Variables       */
+/*******************************/
 
 // for Execution
-public boolean execSingleInst = false,
-/* Indicates an error with moving the robot */
-                      robotFault = false;
+public boolean execSingleInst = false; 
+public boolean robotFault = false; //indicates robot error
 int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 
 /*******************************/
 /*      Debugging Stuff        */
+/*******************************/
 
 private ArrayList<String> buffer;
 private Point displayPoint;
-/*******************************/
 
 
 public void setup() {

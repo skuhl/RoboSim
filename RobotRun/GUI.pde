@@ -1084,8 +1084,8 @@ public void up() {
     case NAV_MAIN_MENU:
     case NAV_INSTR_MENU:
     case SELECT_FRAME_MODE:
-    case USER_FRAME_METHODS:
-    case TOOL_FRAME_METHODS:
+    case FRAME_METHOD_USER:
+    case FRAME_METHOD_TOOL:
     case SELECT_INSTR_INSERT:
     case SELECT_IO_INSTR_REG:
     case SELECT_FRAME_INSTR_TYPE:
@@ -1186,8 +1186,8 @@ public void dn() {
     case NAV_MAIN_MENU:
     case NAV_INSTR_MENU:
     case SELECT_FRAME_MODE:
-    case USER_FRAME_METHODS:
-    case TOOL_FRAME_METHODS:
+    case FRAME_METHOD_USER:
+    case FRAME_METHOD_TOOL:
     case SELECT_INSTR_INSERT:
     case SELECT_IO_INSTR_REG:
     case SELECT_FRAME_INSTR_TYPE:
@@ -1411,13 +1411,13 @@ public void f1() {
       break;
     case NAV_DREGS:
       // Clear Data Register entry
-      DREG[active_index] = new DataRegister();
+      DREG[active_index] = new DataRegister(active_index);
       saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       break;
     case NAV_PREGS_J:
     case NAV_PREGS_C:
       // Clear Position Register entry
-      GPOS_REG[active_index] = new PositionRegister();
+      GPOS_REG[active_index] = new PositionRegister(active_index);
       saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       break;
     default:
@@ -1432,13 +1432,15 @@ public void f1() {
 public void f2() {
   switch(mode) {
     case NAV_PROGRAMS:
-      nextScreen(Screen.PROG_RENAME);
+      if(programs.size() > 0) {
+        nextScreen(Screen.PROG_RENAME);
+      }
       break;
     case NAV_PROG_INSTR:
       nextScreen(Screen.SELECT_INSTR_INSERT);
       break;
     case TFRAME_DETAIL:
-      switchScreen(Screen.TOOL_FRAME_METHODS);
+      switchScreen(Screen.FRAME_METHOD_TOOL);
       //nextScreen(Screen.TOOL_FRAME_METHODS);
       break;
     case TEACH_3PT_TOOL:
@@ -1447,7 +1449,7 @@ public void f2() {
       lastScreen();
       break;
     case UFRAME_DETAIL:
-      switchScreen(Screen.USER_FRAME_METHODS);
+      switchScreen(Screen.FRAME_METHOD_USER);
       //nextScreen(Screen.USER_FRAME_METHODS);
       break;
     case TEACH_3PT_USER:
@@ -1483,7 +1485,9 @@ public void f2() {
 public void f3() {
   switch(mode){
     case NAV_PROGRAMS:
-      nextScreen(Screen.CONFIRM_PROG_DELETE);
+      if(programs.size() > 0) {
+        nextScreen(Screen.CONFIRM_PROG_DELETE);
+      }
       break;
     case NAV_PROG_INSTR:
       int selectIdx = getSelectedIdx();
@@ -1492,23 +1496,28 @@ public void f3() {
                 
         if(stmt.expr instanceof Expression && selectIdx >= 2) {
           ((Expression)stmt.expr).insertElement(selectIdx - 3);
+          updateScreen();
+          rt();
         }
-        
-        updateScreen();
-        rt();
       } 
       else if(activeInstruction() instanceof SelectStatement) {
         SelectStatement stmt = (SelectStatement)activeInstruction();
         
         if(selectIdx >= 3) {
           stmt.addCase();
+          updateScreen();
+          rt();
         }
       }
       else if(activeInstruction() instanceof RegisterStatement) {
         RegisterStatement stmt = (RegisterStatement)activeInstruction();
-        stmt.expr.insertElement(selectIdx - 4);
-        updateScreen();
-        rt();
+        int rLen = (stmt.posIdx == -1) ? 2 : 3;
+        
+        if(selectIdx > rLen) {
+          stmt.expr.insertElement(selectIdx - (rLen + 2));
+          updateScreen();
+          rt();
+        }
       }
       
       updateScreen();
@@ -1564,7 +1573,9 @@ public void f4() {
   
   switch(mode) {
   case NAV_PROGRAMS:
-    nextScreen(Screen.PROG_COPY);
+    if(programs.size() > 0) {
+      nextScreen(Screen.PROG_COPY);
+    }
     break;
   case NAV_PROG_INSTR:
     Instruction ins = activeInstruction();
@@ -1757,7 +1768,10 @@ public void f5() {
       }
       else if(i instanceof RegisterStatement) {
         RegisterStatement stmt = (RegisterStatement)i;
-        stmt.expr.removeElement(selectIdx - 4);
+        int rLen = (stmt.posIdx == -1) ? 2 : 3;
+        if(selectIdx > (rLen + 1) && selectIdx < stmt.expr.getLength() + rLen) {
+          stmt.expr.removeElement(selectIdx - (rLen + 2));
+        }
       }
       break;
     case TEACH_3PT_USER:
@@ -1897,7 +1911,7 @@ public void ENTER() {
       curFrameIdx = contents.get(row_select).itemIdx;
       nextScreen(Screen.UFRAME_DETAIL);
       break;
-    case USER_FRAME_METHODS:
+    case FRAME_METHOD_USER:
       // User Frame teaching methods
       teachFrame = userFrames[curFrameIdx];
       if(opt_select == 0) {
@@ -1910,7 +1924,7 @@ public void ENTER() {
         nextScreen(Screen.DIRECT_ENTRY_USER);
       }
       break;
-    case TOOL_FRAME_METHODS:
+    case FRAME_METHOD_TOOL:
       teachFrame = toolFrames[curFrameIdx];
       // Tool Frame teaching methods
       if(opt_select == 0) {
@@ -2114,6 +2128,7 @@ public void ENTER() {
       break;
     case SELECT_REG_STMT:
       display_stack.pop();
+      display_stack.pop();
       
       if(opt_select == 0) {
         newRegisterStatement(new DataRegister());
@@ -2126,7 +2141,7 @@ public void ENTER() {
         display_stack.push(Screen.SET_REG_EXPR_IDX2);
       }
       
-      switchScreen(Screen.SET_REG_EXPR_IDX1);
+      nextScreen(Screen.SET_REG_EXPR_IDX1);
       break;
     case SELECT_COND_STMT:
       if(opt_select == 0) {
@@ -2276,6 +2291,7 @@ public void ENTER() {
         lastScreen();
       } else {
         //set arg to new constant
+        println(editIdx);
         opEdit = expr.getOperand(editIdx).reset();
         switchScreen(Screen.INPUT_CONST);
       }
@@ -2394,14 +2410,14 @@ public void ENTER() {
         int idx = Integer.parseInt(workingText);
         
         if(mode == Screen.INPUT_DREG_IDX) {
-          opEdit.set(DREG[idx], idx);
+          opEdit.set(DREG[idx - 1], idx);
         } else if(mode == Screen.INPUT_IOREG_IDX) {
-          opEdit.set(IO_REG[idx], idx);
+          opEdit.set(IO_REG[idx - 1], idx);
         } else if(mode == Screen.INPUT_PREG_IDX1) {
-          opEdit.set(GPOS_REG[idx], idx);
+          opEdit.set(GPOS_REG[idx - 1], idx);
         } else {
           int reg = opEdit.regIdx;
-          opEdit.set(GPOS_REG[reg], reg, idx);
+          opEdit.set(GPOS_REG[reg - 1], reg, idx);
         }
         
       } catch(NumberFormatException e) {}
@@ -2432,9 +2448,9 @@ public void ENTER() {
       int i = (getSelectedIdx() - 3) / 3;
       
       if(opt_select == 0) {
-        s.instr.set(i, new JumpInstruction());
+        s.instrList.set(i, new JumpInstruction());
       } else {
-        s.instr.set(i, new CallInstruction());
+        s.instrList.set(i, new CallInstruction());
       }
       
       lastScreen();
@@ -2520,7 +2536,6 @@ public void ENTER() {
     case SET_REG_EXPR_TYPE:
       RegisterStatement regStmt = (RegisterStatement)activeInstruction();
       display_stack.pop();
-      display_stack.pop();
       
       if(opt_select == 0) {
         regStmt.setRegister(new DataRegister());
@@ -2537,18 +2552,20 @@ public void ENTER() {
       break;
     case SET_REG_EXPR_IDX1:
       try {
-        int tempNum = Integer.parseInt(workingText);
+        int idx = Integer.parseInt(workingText);
         
-        if (tempNum < 1 || tempNum > 1000) {
+        if (idx < 1 || idx > 1000) {
           println("Invalid register index!");
         } else {
           regStmt = (RegisterStatement)activeInstruction(); 
           if(regStmt.reg instanceof DataRegister) {
-            (regStmt).setRegister(DREG[tempNum - 1]);
+            (regStmt).setRegister(DREG[idx - 1]);
           } else if(regStmt.reg instanceof IORegister) {
-            (regStmt).setRegister(IO_REG[tempNum - 1]);
-          } else if(regStmt.reg instanceof PositionRegister) { 
-            (regStmt).setRegister(GPOS_REG[tempNum - 1]);
+            (regStmt).setRegister(IO_REG[idx - 1]);
+          } else if(regStmt.reg instanceof PositionRegister && regStmt.posIdx == -1) { 
+            (regStmt).setRegister(GPOS_REG[idx - 1]);
+          } else {
+            (regStmt).setRegister(GPOS_REG[idx - 1], 0);
           }
         }
       }
@@ -2558,14 +2575,14 @@ public void ENTER() {
       break;
     case SET_REG_EXPR_IDX2:
        try {
-         int tempNum = Integer.parseInt(workingText);
+         int idx = Integer.parseInt(workingText);
          
-         if (tempNum < 1 || tempNum > 6) {
+         if (idx < 1 || idx > 6) {
            println("Invalid position index!"); 
          } else {
            regStmt = (RegisterStatement)activeInstruction();
            if(regStmt.reg instanceof PositionRegister) {
-             regStmt.posIdx = tempNum;
+             regStmt.posIdx = idx;
            }
          }
        } catch (NumberFormatException NFEx){ /* Ignore invalid input */ }
@@ -2576,12 +2593,12 @@ public void ENTER() {
     //Jump/ Label instruction edit
     case SET_LBL_NUM:
       try {
-        int tempNum = Integer.parseInt(workingText);
+        int idx = Integer.parseInt(workingText);
         
-        if (tempNum < 0 || tempNum > 99) {
+        if (idx < 0 || idx > 99) {
           println("Invalid label index!");
         } else {
-          ((LabelInstruction)activeInstruction()).labelNum = tempNum;
+          ((LabelInstruction)activeInstruction()).labelNum = idx;
         }
       }
       catch (NumberFormatException NFEx){ /* Ignore invalid input */ }
@@ -2599,7 +2616,7 @@ public void ENTER() {
         } 
         else if(activeInstruction() instanceof SelectStatement) {
           SelectStatement sStmt = (SelectStatement)activeInstruction();
-          ((JumpInstruction)sStmt.instr.get(editIdx)).tgtLblNum = lblNum;
+          ((JumpInstruction)sStmt.instrList.get(editIdx)).tgtLblNum = lblNum;
         }
         else {
           if(lblIdx != -1) {
@@ -2624,7 +2641,7 @@ public void ENTER() {
       }
       else if(activeInstruction() instanceof SelectStatement) {
         SelectStatement sStmt = (SelectStatement)activeInstruction();
-        CallInstruction c = (CallInstruction)sStmt.instr.get(editIdx);
+        CallInstruction c = (CallInstruction)sStmt.instrList.get(editIdx);
         c.callProg = programs.get(row_select);
         c.progIdx = row_select;
       }
@@ -3225,8 +3242,8 @@ public void loadScreen() {
     case TEACH_6PT:
       opt_select = 0;
       break;
-    case TOOL_FRAME_METHODS:
-    case USER_FRAME_METHODS:
+    case FRAME_METHOD_TOOL:
+    case FRAME_METHOD_USER:
       row_select = -1;
       col_select = -1;
       opt_select = 0;
@@ -3568,8 +3585,8 @@ public void updateScreen() {
       next_px += temp.get(j).length() * 8 + 20; 
     }//end draw line elements
         
-    if(i == row_select) { txt = UI_DARK; }
-    else                { txt = UI_LIGHT;   }
+    if(i == row_select) { txt = UI_DARK;  }
+    else                { txt = UI_LIGHT; }
     
     ////Trailing row select indicator []
     //cp5.addTextarea(Integer.toString(index_contents))
@@ -3742,10 +3759,10 @@ public String getHeader(Screen mode){
     case UFRAME_DETAIL:
       header = String.format("USER FRAME: %d", curFrameIdx + 1);
       break;
-    case TOOL_FRAME_METHODS:
+    case FRAME_METHOD_TOOL:
       header = String.format("TOOL FRAME: %d", curFrameIdx + 1);
       break;
-    case USER_FRAME_METHODS:
+    case FRAME_METHOD_USER:
       header = String.format("USER FRAME: %d", curFrameIdx + 1);
       break;
     case TEACH_3PT_TOOL:
@@ -3892,8 +3909,8 @@ public ArrayList<DisplayLine> getContents(Screen mode){
     case TEACH_4PT:
       contents = loadFrameDetail(CoordFrame.USER);
       break;
-    case TOOL_FRAME_METHODS:
-    case USER_FRAME_METHODS:
+    case FRAME_METHOD_TOOL:
+    case FRAME_METHOD_USER:
     case DIRECT_ENTRY_USER:
     case DIRECT_ENTRY_TOOL:
     case EDIT_DREG_VAL:
@@ -4039,12 +4056,6 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("1. TFRAME_NUM = ...");
       options.add("2. UFRAME_NUM = ...");
       break;
-    case SELECT_REG_EXPR_TYPE:
-      options.add("1. R[x]");
-      options.add("2. IO[x]");
-      options.add("2. PR[x]");
-      options.add("2. PR[x, y]");
-      break;
     case SELECT_REG_STMT:
       options.add("1. R[x] = (...)");
       options.add("2. IO[x] = (...)");
@@ -4066,12 +4077,12 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("1. Tool Frame");
       options.add("2. User Frame");
       break;
-    case TOOL_FRAME_METHODS:
+    case FRAME_METHOD_TOOL:
       options.add("1. Three Point Method");
       options.add("2. Six Point Method");
       options.add("3. Direct Entry Method");
       break;
-    case USER_FRAME_METHODS:
+    case FRAME_METHOD_USER:
       options.add("1. Three Point Method");
       options.add("2. Four Point Method");
       options.add("3. Direct Entry Method");
@@ -4163,14 +4174,21 @@ public String[] getFunctionLabels(Screen mode){
     case NAV_PROGRAMS:
       // F2, F3
       funct[0] = "[Create]";
-      funct[1] = "[Rename]";
-      funct[2] = "[Delete]";
-      funct[3] = "[Copy]";
-      funct[4] = "";
+      if(programs.size() > 0) {
+        funct[1] = "[Rename]";
+        funct[2] = "[Delete]";
+        funct[3] = "[Copy]";
+        funct[4] = "";
+      } else {
+        funct[1] = "";
+        funct[2] = "";
+        funct[3] = "";
+        funct[4] = "";
+      }
       break;
     case NAV_PROG_INSTR:
       // F1, F4, F5f
-      funct[0] = "[New Pt]";
+      funct[0] = shift ? "[New Pt]" : "";
       funct[1] = "[New Ins]";
       funct[2] = "";
       funct[3] = "[Edit]";
@@ -4199,12 +4217,13 @@ public String[] getFunctionLabels(Screen mode){
         }
       } else if(activeInstruction() instanceof RegisterStatement) {
         RegisterStatement stmt = (RegisterStatement)activeInstruction();
+        int rLen = (stmt.posIdx == -1) ? 2 : 3;
         int selectIdx = getSelectedIdx();
 
-        if(selectIdx > 2 && selectIdx < stmt.expr.getLength() + 2) {
+        if(selectIdx > rLen && selectIdx < stmt.expr.getLength() + rLen) {
           funct[2] = "[Insert]";
         }
-        if(selectIdx > 3 && selectIdx < stmt.expr.getLength() + 2) {
+        if(selectIdx > (rLen + 1) && selectIdx < stmt.expr.getLength() + rLen) {
           funct[4] = "[Delete]";
         }
       }
@@ -4590,9 +4609,9 @@ public void getInstrEdit(Instruction ins, int selectIdx) {
       nextScreen(Screen.SET_SELECT_STMT_ACT);
     } else if((selectIdx - 3) % 3 == 2) {
       editIdx = (selectIdx - 3)/3;
-      if(stmt.instr.get(editIdx) instanceof JumpInstruction) {
+      if(stmt.instrList.get(editIdx) instanceof JumpInstruction) {
         nextScreen(Screen.SET_JUMP_TGT);
-      } else if(stmt.instr.get(editIdx) instanceof CallInstruction) {
+      } else if(stmt.instrList.get(editIdx) instanceof CallInstruction) {
         nextScreen(Screen.SET_CALL_PROG);
       }
     }
@@ -4608,7 +4627,7 @@ public void getInstrEdit(Instruction ins, int selectIdx) {
     } else if(selectIdx == 3 && stmt.posIdx != -1) {
       nextScreen(Screen.SET_REG_EXPR_IDX2);
     } else if(selectIdx >= rLen + 1 && selectIdx <= len + rLen) {
-      editExpression(stmt.expr, selectIdx - 4);
+      editExpression(stmt.expr, selectIdx - (rLen + 2));
     }
   }
 }
@@ -5002,8 +5021,7 @@ public void newRegisterStatement(Register r) {
 
 public void newRegisterStatement(Register r, int i) {
   Program p = activeProgram();
-  RegisterStatement stmt = new RegisterStatement(r);
-  stmt.posIdx = i;
+  RegisterStatement stmt = new RegisterStatement(r, i);
   
   if(active_instr != p.getInstructions().size()) {
     p.overwriteInstruction(active_instr, stmt);

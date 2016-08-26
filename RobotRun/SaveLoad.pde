@@ -98,33 +98,30 @@ public byte loadState() {
   for(int reg = 0; reg < DREG.length; reg += 1) {
     
     if(DREG[reg] == null) {
-      DREG[reg] = new DataRegister();
-      DREG[reg].setIdx(reg);
+      DREG[reg] = new DataRegister(reg);
     }
     
     if(GPOS_REG[reg] == null) {
-      GPOS_REG[reg] = new PositionRegister();
-      GPOS_REG[reg].setIdx(reg);
+      GPOS_REG[reg] = new PositionRegister(reg);
     }
   }
   
   // Associated each End Effector with an I/O Register
   int idx = 0;
-  IO_REG[idx++] = new IORegister((EEType.SUCTION).name(), OFF);
-  IO_REG[idx++] = new IORegister((EEType.CLAW).name(), OFF);
-  IO_REG[idx++] = new IORegister((EEType.POINTER).name(), OFF);
-  IO_REG[idx++] = new IORegister((EEType.GLUE_GUN).name(), OFF);
-  IO_REG[idx++] = new IORegister((EEType.WIELDER).name(), OFF);
+  IO_REG[idx++] = new IORegister(idx, (EEType.SUCTION).name(), OFF);
+  IO_REG[idx++] = new IORegister(idx, (EEType.CLAW).name(), OFF);
+  IO_REG[idx++] = new IORegister(idx, (EEType.POINTER).name(), OFF);
+  IO_REG[idx++] = new IORegister(idx, (EEType.GLUE_GUN).name(), OFF);
+  IO_REG[idx++] = new IORegister(idx, (EEType.WIELDER).name(), OFF);
   
-  for (idx = 0; idx < IO_REG.length; ++idx) {
+  for(; idx < IO_REG.length; idx += 1) {
     // Intialize the rest of the I/O registers
-    IO_REG[idx] = new IORegister(OFF);
-    IO_REG[idx].setIdx(idx);
+    IO_REG[idx] = new IORegister(idx, OFF);
   }
   
   byte ret = 0;
   
-  for (int bdx = 0; bdx < fileFlags.length; ++bdx) {
+  for (int bdx = 0; bdx < fileFlags.length; bdx += 1) {
     // Move each flag to a separate bit spot
     ret += (fileFlags[bdx] << bdx);
   }
@@ -915,7 +912,7 @@ public int loadRegisterBytes(File src) {
     int size = max(0, min(dataIn.readInt(), DREG.length));
     
     // Load the Register entries
-    while(size-- > 0) {
+    while((size -= 1) > 0) {
       // Each entry is saved after its respective index in REG
       int reg = dataIn.readInt();
       
@@ -927,13 +924,13 @@ public int loadRegisterBytes(File src) {
       // Null comments are saved as ""
       if(c.equals("")) { c = null; }
       
-      DREG[reg] = new DataRegister(c, v);
+      DREG[reg] = new DataRegister(reg, c, v);
     }
     
     size = max(0, min(dataIn.readInt(), GPOS_REG.length));
     
     // Load the Position Register entries
-    while(size-- > 0) {
+    while((size -= 1) > 0) {
       // Each entry is saved after its respective index in POS_REG
       int idx = dataIn.readInt();
       
@@ -943,7 +940,7 @@ public int loadRegisterBytes(File src) {
       if(c == "") { c = null; }
       boolean isCartesian = dataIn.readBoolean();
       
-      GPOS_REG[idx] = new PositionRegister(c, p, isCartesian);
+      GPOS_REG[idx] = new PositionRegister(idx, c, p, isCartesian);
     }
     
     dataIn.close();

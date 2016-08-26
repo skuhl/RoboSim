@@ -34,7 +34,14 @@ public class DataRegister extends Register {
     value = null;
   }
   
-  public DataRegister(String c, Float v) {
+  public DataRegister(int i) {
+    idx = i;
+    comment = null;
+    value = null;
+  }
+  
+  public DataRegister(int i, String c, Float v) {
+    idx = i;
     comment = c;
     value = v;
   }
@@ -56,7 +63,15 @@ public class PositionRegister extends Register {
     isCartesian = false;
   }
   
-  public PositionRegister(String c, Point pt, boolean isCart) {
+  public PositionRegister(int i) {
+    idx = i;
+    comment = null;
+    point = null;
+    isCartesian = false;
+  }
+  
+  public PositionRegister(int i, String c, Point pt, boolean isCart) {
+    idx = i;
     comment = c;
     point = pt;
     isCartesian = isCart;
@@ -69,7 +84,11 @@ public class PositionRegister extends Register {
    * is meant to represent either 1 of 6 joint angles for a joint type point,
    * or 1 of 6 cartesian points (x, y, z, w, p, r) for a cartesian type point.
    */
-  public float getPointValue(int idx) {
+  public Float getPointValue(int idx) {
+    if(point == null) {
+      return null;
+    }
+    
     if(!isCartesian) {
       return point.getValue(idx);
     }
@@ -79,6 +98,23 @@ public class PositionRegister extends Register {
     else {
       PVector pOrientation = quatToEuler(point.orientation);
       return pOrientation.array()[idx - 3];
+    }
+  }
+  
+  public void setPointValue(int idx, float value) {
+    if(point == null) {
+      point = new Point();
+    }
+    
+    if(!isCartesian) {
+      point.getValue(idx);
+    }
+    else if(idx < 3) {
+      point.getValue(idx + 6);
+    }
+    else {
+      PVector pOrientation = quatToEuler(point.orientation);
+      pOrientation.array()[idx - 3] = value;
     }
   }
 }
@@ -93,12 +129,14 @@ public class IORegister extends Register {
     state = OFF;
   }
   
-  public IORegister(int iniState) {
+  public IORegister(int i, int iniState) {
+    idx = i;
     name = "";
     state = iniState;
   }
   
-  public IORegister(String comm, int iniState) {
+  public IORegister(int i, String comm, int iniState) {
+    idx = i;
     name = comm;
     state = iniState;
   }
