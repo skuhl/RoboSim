@@ -251,7 +251,7 @@ private void saveProgram(Program p, DataOutputStream out) throws IOException {
     out.writeByte(1);
     
     out.writeUTF(p.name);
-    out.writeInt(p.nextRegister);
+    out.writeInt(p.nextPosition);
     out.writeInt(p.instructions.size());
     // Save each instruction
     for(Instruction inst : p.instructions) {
@@ -287,7 +287,7 @@ private Program loadProgram(DataInputStream in) throws IOException {
     Program prog = new Program(name);
     // Read the next register value
     int nReg = in.readInt();
-    prog.setNextRegister(nReg);
+    prog.setNextPosition(nReg);
     // Read the number of instructions stored for this porgram
     int numOfInst = max(0, min(in.readInt(), 500));
     

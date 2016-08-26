@@ -4926,6 +4926,7 @@ public void newMotionInstruction() {
   if(getSelectedRow() > 0) {
     MotionInstruction m = (MotionInstruction)activeInstruction();
     m.getSecondaryPoint().setPosition(reg);
+    prog.setNextPosition(reg + 1);
   }
   else {
     MotionInstruction insert = new MotionInstruction(

@@ -229,7 +229,7 @@ public class Point  {
 public class Program {
   private String name;
   private Point offset;
-  private int nextRegister;
+  private int nextPosition;
   /**
    * The positions associated with this program, which are
    * stored in reference to the current User frame
@@ -239,7 +239,7 @@ public class Program {
 
   public Program(String s) {
     name = s;
-    nextRegister = 0;
+    nextPosition = 0;
     for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
     instructions = new ArrayList<Instruction>();
   }
@@ -272,9 +272,9 @@ public class Program {
     
     if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextRegister) {
-        nextRegister = castIns.getPosition()+1;
-        if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
+      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextPosition) {
+        nextPosition = castIns.getPosition()+1;
+        if(nextPosition >= LPosReg.length) nextPosition = LPosReg.length-1;
       }
     }
   }
@@ -283,9 +283,9 @@ public class Program {
     instructions.set(idx, i);
     if(i instanceof MotionInstruction ) { 
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextRegister) {
-        nextRegister = castIns.getPosition()+1;
-        if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
+      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextPosition) {
+        nextPosition = castIns.getPosition()+1;
+        if(nextPosition >= LPosReg.length) nextPosition = LPosReg.length-1;
       }
     }
   }
@@ -294,8 +294,8 @@ public class Program {
     if(idx >= 0 && idx < LPosReg.length) LPosReg[idx] = in;
   }
   
-  public int getNextPosition() { return nextRegister; }
-  public void setNextRegister(int next) { nextRegister = next; }
+  public int getNextPosition() { return nextPosition; }
+  public void setNextPosition(int next) { nextPosition = next; }
 
   public Point getPosition(int idx) {
     if(idx >= 0 && idx < LPosReg.length) return LPosReg[idx];
@@ -357,7 +357,7 @@ public class Program {
       copy.addPosition(LPosReg[idx].clone(), idx);
     }
     // Copy next register
-    copy.setNextRegister(nextRegister);
+    copy.setNextPosition(nextPosition);
     
     return copy;
   }
