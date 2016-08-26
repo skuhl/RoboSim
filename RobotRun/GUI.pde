@@ -1100,8 +1100,8 @@ public void up() {
     case TEACH_6PT:
     case NAV_DATA:
     case SWAP_PT_TYPE:
-    case SET_MV_INSTRUCT_TYPE:
-    case SET_MV_INSTRUCT_REG_TYPE:
+    case SET_MV_INSTR_TYPE:
+    case SET_MV_INSTR_REG_TYPE:
     case SET_FRM_INSTR_TYPE:
     case SET_REG_EXPR_TYPE:
     case SET_IF_STMT_ACT:
@@ -1202,8 +1202,8 @@ public void dn() {
     case TEACH_6PT:
     case NAV_DATA:
     case SWAP_PT_TYPE:
-    case SET_MV_INSTRUCT_TYPE:
-    case SET_MV_INSTRUCT_REG_TYPE:
+    case SET_MV_INSTR_TYPE:
+    case SET_MV_INSTR_REG_TYPE:
     case SET_FRM_INSTR_TYPE:
     case SET_REG_EXPR_TYPE:
     case SET_IF_STMT_ACT:
@@ -1215,7 +1215,7 @@ public void dn() {
     case SET_IO_INSTR_STATE:
     case NAV_SETUP:
       opt_select = min(opt_select + 1, options.size() - 1);
-      break; //<>// //<>//
+      break;  //<>//
     case ACTIVE_FRAMES:
       updateActiveFramesDisplay();
       workingText = Integer.toString(activeUserFrame + 1);
@@ -1371,10 +1371,9 @@ public void f1() {
         newMotionInstruction();
         col_select = 0;
         
-        row_select += 1;
-        active_instr += 1;
-        if(row_select - start_render > ITEMS_TO_SHOW - 1) {
-          start_render += 1;
+        if(getSelectedIdx() < 6) {
+          row_select += 1;
+          active_instr += 1;
         }
       }
       break;
@@ -2173,7 +2172,7 @@ public void ENTER() {
       break;
     
     //Movement instruction edit
-    case SET_MV_INSTRUCT_TYPE:
+    case SET_MV_INSTR_TYPE:
       m = activeMotionInst();
       if(opt_select == 0) {
         if(m.getMotionType() != MTYPE_JOINT) m.setSpeed(m.getSpeed()/armModel.motorSpeed);
@@ -2188,12 +2187,14 @@ public void ENTER() {
       
       lastScreen();
       break;
-    case SET_MV_INSTRUCT_REG_TYPE:
-      m = activeMotionInst();
+    case SET_MV_INSTR_REG_TYPE:
+      int selIdx = getSelectedIdx();
+      m = selIdx < 6 ? activeMotionInst() : activeMotionInst().getSecondaryPoint();
+      
       if(opt_select == 0) {
         m.setGlobalPosRegUse(false);
-      } else if(opt_select == 1) {
-        
+      } 
+      else if(opt_select == 1) {  
         if(GPOS_REG[m.positionNum].point == null) {
           // Invalid register index
           err = "This register is uninitailized!";
@@ -2205,6 +2206,9 @@ public void ENTER() {
       lastScreen();
       break;
     case SET_MV_INSTR_SPD:
+      selIdx = getSelectedIdx();
+      m = selIdx < 6 ? activeMotionInst() : activeMotionInst().getSecondaryPoint();
+    
       float tempSpeed = Float.parseFloat(workingText);
       if(tempSpeed >= 5.0) {
         if(speedInPercentage) {
@@ -2213,8 +2217,8 @@ public void ENTER() {
         } else if(tempSpeed > armModel.motorSpeed) {
           tempSpeed = armModel.motorSpeed;
         }
-        MotionInstruction castIns = activeMotionInst();
-        castIns.setSpeed(tempSpeed);
+        
+        m.setSpeed(tempSpeed);
         saveProgramBytes( new File(sketchPath("tmp/programs.bin")) );
       }
       
@@ -2223,7 +2227,8 @@ public void ENTER() {
     case SET_MV_INSTR_IDX:
       try {
         int tempRegister = Integer.parseInt(workingText) - 1;
-        MotionInstruction castIns = activeMotionInst();
+        selIdx = getSelectedIdx();
+        m = selIdx < 6 ? activeMotionInst() : activeMotionInst().getSecondaryPoint();
         
         if(tempRegister < 0 || tempRegister > 1000) {
           // Invalid register index
@@ -2232,7 +2237,7 @@ public void ENTER() {
           return;
         }
         
-        if(castIns.isGPosReg) {
+        if(m.isGPosReg) {
           // Check global register
           if(GPOS_REG[tempRegister].point == null) {
             // Invalid register index
@@ -2242,7 +2247,7 @@ public void ENTER() {
           }
         }
         
-        castIns.setPosition(tempRegister);
+        m.setPosition(tempRegister);
       } catch (NumberFormatException NFEx) { /* Ignore invalid numbers */ }
       
       lastScreen();
@@ -2250,10 +2255,11 @@ public void ENTER() {
     case SET_MV_INSTR_TERM:
       try {
         int tempTerm = Integer.parseInt(workingText);
+        selIdx = getSelectedIdx();
+        m = selIdx < 6 ? activeMotionInst() : activeMotionInst().getSecondaryPoint();
         
         if(tempTerm >= 0 && tempTerm <= 100) {
-          MotionInstruction castIns = activeMotionInst();
-          castIns.setTermination(tempTerm);
+          m.setTermination(tempTerm);
         }
       } catch (NumberFormatException NFEx) { /* Ignore invalid input */ }
       
@@ -3320,7 +3326,7 @@ public void loadScreen() {
       opt_select = 0;
       workingText = ""; //<>//
       break;
-    case SET_MV_INSTRUCT_TYPE:
+    case SET_MV_INSTR_TYPE:
       MotionInstruction mInst = activeMotionInst();
       
       switch (mInst.getMotionType()) {
@@ -3349,7 +3355,7 @@ public void loadScreen() {
       }
       
       workingText = Integer.toString(instSpd);
-    case SET_MV_INSTRUCT_REG_TYPE:
+    case SET_MV_INSTR_REG_TYPE:
       mInst = activeMotionInst();
       
       if (mInst.usesGPosReg()) {
@@ -3852,8 +3858,8 @@ public ArrayList<DisplayLine> getContents(Screen mode){
     case SELECT_INSTR_DELETE:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
-    case SET_MV_INSTRUCT_TYPE:
-    case SET_MV_INSTRUCT_REG_TYPE:
+    case SET_MV_INSTR_TYPE:
+    case SET_MV_INSTR_REG_TYPE:
     case SET_MV_INSTR_IDX:
     case SET_MV_INSTR_SPD:
     case SET_MV_INSTR_TERM:
@@ -4010,8 +4016,8 @@ public ArrayList<String> getOptions(Screen mode){
       break;
       
     //Instruction edit options
-    case SET_MV_INSTRUCT_TYPE:
-    case SET_MV_INSTRUCT_REG_TYPE:
+    case SET_MV_INSTR_TYPE:
+    case SET_MV_INSTR_REG_TYPE:
     case SET_MV_INSTR_IDX:
     case SET_MV_INSTR_SPD:
     case SET_MV_INSTR_TERM:
@@ -4472,7 +4478,11 @@ public ArrayList<DisplayLine> loadInstructions(int programID) {
         xPos += field.length()*8 + 20;
       } else if(field.equals("\n") && j != fields.length - 1) {
         instruct_list.add(line);
-        xPos = 148;       
+        if(instr instanceof SelectStatement) {
+          xPos = 148;
+        } else {
+          xPos = 84;
+        }
         
         line = new DisplayLine(i, xPos);
         xPos += field.length()*8 + 20;
@@ -4511,10 +4521,10 @@ public void getInstrEdit(Instruction ins, int selectIdx) {
   if(ins instanceof MotionInstruction) {
     switch(selectIdx) {
       case 2: // motion type
-        nextScreen(Screen.SET_MV_INSTRUCT_TYPE);
+        nextScreen(Screen.SET_MV_INSTR_TYPE);
         break;
       case 3: // register type
-        nextScreen(Screen.SET_MV_INSTRUCT_REG_TYPE);
+        nextScreen(Screen.SET_MV_INSTR_REG_TYPE);
         break;
       case 4: // register
         nextScreen(Screen.SET_MV_INSTR_IDX);
@@ -4523,6 +4533,18 @@ public void getInstrEdit(Instruction ins, int selectIdx) {
         nextScreen(Screen.SET_MV_INSTR_SPD);
         break;
       case 6: // termination type
+        nextScreen(Screen.SET_MV_INSTR_TERM);
+        break;
+      case 7: //circular motion secondary point edit
+        nextScreen(Screen.SET_MV_INSTR_REG_TYPE);
+        break;
+      case 8: 
+        nextScreen(Screen.SET_MV_INSTR_IDX);
+        break;
+      case 9:
+        nextScreen(Screen.SET_MV_INSTR_SPD);
+        break;
+      case 10:
         nextScreen(Screen.SET_MV_INSTR_TERM);
         break;
     }
@@ -4693,12 +4715,12 @@ public ArrayList<String> loadInstrEdit(Screen mode) {
   ArrayList<String> edit = new ArrayList<String>();
   
   switch(mode){
-    case SET_MV_INSTRUCT_TYPE:
+    case SET_MV_INSTR_TYPE:
       edit.add("1.JOINT");
       edit.add("2.LINEAR");
       edit.add("3.CIRCULAR");
       break;
-    case SET_MV_INSTRUCT_REG_TYPE:
+    case SET_MV_INSTR_REG_TYPE:
       edit.add("1.LOCAL(P)");
       edit.add("2.GLOBAL(PR)");
       break;
@@ -4901,19 +4923,25 @@ public void newMotionInstruction() {
   
   prog.addPosition(pt, reg);
   
-  MotionInstruction insert = new MotionInstruction(
-  (curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR),
-  reg,
-  false,
-  (curCoordFrame == CoordFrame.JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed) / 100f,
-  0,
-  activeUserFrame,
-  activeToolFrame);
-  
-  if(active_instr != prog.getInstructions().size()) {
-    prog.overwriteInstruction(active_instr, insert);
-  } else {
-    prog.addInstruction(insert);
+  if(getSelectedRow() > 0) {
+    MotionInstruction m = (MotionInstruction)activeInstruction();
+    m.getSecondaryPoint().setPosition(reg);
+  }
+  else {
+    MotionInstruction insert = new MotionInstruction(
+    curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR,
+    reg,
+    false,
+    (curCoordFrame == CoordFrame.JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed) / 100f,
+    0,
+    activeUserFrame,
+    activeToolFrame);
+    
+    if(active_instr != prog.getInstructions().size()) {
+      prog.overwriteInstruction(active_instr, insert);
+    } else {
+      prog.addInstruction(insert);
+    }
   }
 }
 

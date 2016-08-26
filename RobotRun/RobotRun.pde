@@ -99,21 +99,21 @@ public void draw() {
   //TESTING CODE: DRAW INTERMEDIATE POINTS
   noLights();
   noStroke();
-  //pushMatrix();
+  pushMatrix();
   //if(intermediatePositions != null) {
   //  int count = 0;
-  //  for(Point p : intermediatePositions) {
-  //    if(count % 4 == 0) {
+  //  for(Point pt : intermediatePositions) {
+  //    if(count % 20 == 0) {
   //      pushMatrix();
   //      stroke(0);
-  //      translate(p.position.x, p.position.y, p.position.z);
+  //      translate(pt.position.x, pt.position.y, pt.position.z);
   //      sphere(5);
   //      popMatrix();
   //    }
   //    count += 1;
   //  }
   //}
-  //popMatrix();
+  popMatrix();
   popMatrix();
   
   hint(DISABLE_DEPTH_TEST);
