@@ -694,7 +694,7 @@ public class IOInstruction extends Instruction {
   
   public int execute() {
     armModel.endEffectorState = state;
-    armModel.checkPickupCollision();
+    armModel.checkPickupCollision(activeScenario);
     return 0;
   }
   

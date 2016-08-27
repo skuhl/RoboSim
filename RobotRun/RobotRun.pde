@@ -53,7 +53,7 @@ public void setup() {
   //load model and save data
   armModel = new ArmModel();
   intermediatePositions = new ArrayList<Point>();
-  activeScenarioIdx = -1;
+  activeScenario = null;
   
   loadState();
   
@@ -84,12 +84,30 @@ public void draw() {
   pushMatrix();
   camera.apply();
   
-  Scenario s = activeScenario();
   Program p = activeProgram();
   
-  updateAndDrawObjects(s, p, armModel);
+  updateAndDrawObjects(activeScenario, p, armModel);
   displayAxes();
   displayTeachPoints();
+  
+  WorldObject wldObj = manager.getActiveWorldObject();
+  
+  if (wldObj != null) {
+    pushMatrix();
+    
+    if (wldObj instanceof Part) {
+      Fixture reference = ((Part)wldObj).getFixtureRef();
+      
+      if (reference != null) {
+        // Draw part's orientation with reference to its fixture
+        reference.applyCoordinateSystem();
+      }
+    }
+    
+    displayOriginAxes(wldObj.getLocalCenter(), wldObj.getLocalOrientationAxes(), 500f, color(0));
+    
+    popMatrix();
+  }
   
   if (displayPoint != null) {
     // Display the point with its local orientation axes
@@ -328,11 +346,11 @@ public void displayOriginAxes(PVector origin, float[][] axesVectors, float axesL
   stroke(originColor);
   sphere(4);
   stroke(0);
-  translate(50, 0, 0);
+  translate(100, 0, 0);
   sphere(4);
-  translate(-50, 50, 0);
+  translate(-100, 100, 0);
   sphere(4);
-  translate(0, -50, 50);
+  translate(0, -100, 100);
   sphere(4);
   
   popMatrix();

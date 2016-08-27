@@ -1037,14 +1037,13 @@ public class WindowManager {
    * contain world objects.
    */
   private void updateListContents() {
-    Scenario s = activeScenario();
     
-    if (s != null) {
+    if (activeScenario != null) {
       dropdownLists[4] = (MyDropdownList)dropdownLists[4].clear();
       dropdownLists[5] = (MyDropdownList)dropdownLists[5].clear();
       dropdownLists[5].addItem("None", null);
       
-      for (WorldObject wldObj : s) {
+      for (WorldObject wldObj : activeScenario) {
         dropdownLists[4].addItem(wldObj.toString(), wldObj);
         
         if (wldObj instanceof Fixture) {
@@ -1060,7 +1059,8 @@ public class WindowManager {
     dropdownLists[6] = (MyDropdownList)dropdownLists[6].clear();
     for (int idx = 0; idx < SCENARIOS.size(); ++idx) {
       // Load all scenario indices
-      dropdownLists[6].addItem(SCENARIOS.get(idx).getName(), new Integer(idx));
+      Scenario s = SCENARIOS.get(idx);
+      dropdownLists[6].addItem(s.getName(), s);
     }
     dropdownLists[6].updateActiveLabel();
   }
@@ -1412,11 +1412,9 @@ public class WindowManager {
     /* If the edited object is a fixture, then update the orientation
      * of all parts, which reference this fixture, in this scenario. */
     if (toEdit instanceof Fixture) {
-      Scenario s = activeScenario();
-      
-      if (s != null) {
+      if (activeScenario != null) {
         
-        for (WorldObject wldObj : s) {
+        for (WorldObject wldObj : activeScenario) {
           if (wldObj instanceof Part) {
             Part p = (Part)wldObj;
             
@@ -1716,10 +1714,9 @@ public class WindowManager {
    */
   public int deleteActiveWorldObject() {
     int ret = -1;
-    Scenario s = activeScenario();
     
-    if (s != null) {
-      ret = s.removeWorldObject( getActiveWorldObject() );
+    if (activeScenario != null) {
+      ret = activeScenario.removeWorldObject( getActiveWorldObject() );
     }
     
     return ret;
@@ -1831,20 +1828,20 @@ public class WindowManager {
   }
   
   /**
-   * Returns the index of the scenario associated with the active
-   * label of the scenario's dropdown list.
+   * Returns the scenario associated with the label that is active
+   * for the scenario dropdown list.
    * 
    * @returning  The index value or null if no such index exists
    */
-  public Integer getScenarioIndex() {
+  public Scenario getActiveScenario() {
     String activeButtonLabel = windowTabs.getActiveButtonName();
     
     if (activeButtonLabel != null && activeButtonLabel.equals("Scenario")) {
       Object val = dropdownLists[6].getActiveLabelValue();
       
-      if (val instanceof Integer) {
+      if (val instanceof Scenario) {
         // Set the active scenario index
-        return (Integer)val;
+        return (Scenario)val;
       } else if (val != null) {
         // Invalid entry in the dropdown list
         System.out.printf("Invalid class type: %d!\n", val.getClass());

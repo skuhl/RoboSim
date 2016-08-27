@@ -807,14 +807,12 @@ public void BottomView() {
 
 public void CreateWldObj() {
   /* Create a world object from the input fields in the Create window. */
-  Scenario s = activeScenario();
-  
-  if (s != null) {
+  if (activeScenario != null) {
     WorldObject newObject = manager.createWorldObject();
     
     if (newObject != null) {
       newObject.setLocalCenter( new PVector(-500f, 0f, 0f) );
-      s.addWorldObject(newObject);
+      activeScenario.addWorldObject(newObject);
     }
   }
 }
@@ -851,12 +849,8 @@ public void SaveScenario() {
 }
 
 public void SetScenario() {
-  Integer newActiveIdx = manager.getScenarioIndex();
-  
-  if (newActiveIdx != null) {
-    // Set a new active scenario
-    activeScenarioIdx = newActiveIdx;
-  }
+  // Set the active scenario to a copy of the scenario associated with te scenario dropdown list
+  activeScenario = (Scenario)manager.getActiveScenario().clone();
 }
 
 // Menu button

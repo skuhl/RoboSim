@@ -1195,7 +1195,7 @@ public class ArmModel {
     }
     
     updateIORegister();
-    checkPickupCollision();
+    checkPickupCollision(activeScenario);
   }
   
   /**
@@ -1226,15 +1226,15 @@ public class ArmModel {
   /**
    * TODO comment
    */
-  public int checkPickupCollision() {
+  public int checkPickupCollision(Scenario active) {
     // End Effector must be on and no object is currently held to be able to pickup an object
     if (endEffectorState == ON && armModel.held == null) {
       ArrayList<BoundingBox> curPUEEOBBs = eePickupOBBs.get(activeEndEffector);
-      Scenario s = activeScenario();
+      
       // Can this End Effector pick up objects?
-      if (s != null && curPUEEOBBs.size() > 0) {
+      if (active != null && curPUEEOBBs.size() > 0) {
         
-        for (WorldObject wldObj : s) {
+        for (WorldObject wldObj : active) {
           // Only parts can be picked up
           if (wldObj instanceof Part && canPickup( (Part)wldObj )) {
               // Pickup the object

@@ -998,10 +998,25 @@ public int saveScenarioBytes(File dest) {
     int numOfScenarios = SCENARIOS.size();
     // Save the number of scenarios
     dataOut.writeInt(numOfScenarios);
-    // Save the active scenario
-    dataOut.writeInt(activeScenarioIdx);
+    
+    if (activeScenario == null) {
+      // No active scenario
+      dataOut.writeUTF("");
+    } else {
+      // Save the name of the active scenario
+      dataOut.writeUTF(activeScenario.getName());
+    }
+    
     // Save all the scenarios
-    for (Scenario s : SCENARIOS) {
+    for (int sdx = 0; sdx < SCENARIOS.size(); ++sdx) {
+      Scenario s = SCENARIOS.get(sdx);
+      
+      if (s.getName().equals( activeScenario.getName() )) {
+        // Update the previous version of the active scenario
+        s = (Scenario)activeScenario.clone();
+        SCENARIOS.set(sdx, s);
+      }
+      
       saveScenario(s, dataOut);
     }
     
@@ -1046,11 +1061,18 @@ public int loadScenarioBytes(File src) {
     DataInputStream dataIn = new DataInputStream(in);
     
     int numOfScenarios = dataIn.readInt();
-    activeScenarioIdx = dataIn.readInt();
+    String activeScenarioName = dataIn.readUTF();
     
     // Load all scenarios saved
     while (numOfScenarios-- > 0) {
-      SCENARIOS.add( loadScenario(dataIn) );
+      Scenario s = loadScenario(dataIn);
+      
+      if (s.getName().equals(activeScenarioName)) {
+        // Set the active scenario
+        activeScenario = (Scenario)s.clone();
+      }
+      
+      SCENARIOS.add(s);
     }
     
     dataIn.close();

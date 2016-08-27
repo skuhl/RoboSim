@@ -58,10 +58,9 @@ public void showMainDisplayText() {
   lastTextPositionY += 20;
   // Display the title of the currently active scenario
   String scenarioTitle;
-  Scenario s = activeScenario();
   
-  if (s != null) {
-    scenarioTitle = "Scenario: " + s.getName();
+  if (activeScenario != null) {
+    scenarioTitle = "Scenario: " + activeScenario.getName();
   } else {
     scenarioTitle = "No active scenario";
   }
