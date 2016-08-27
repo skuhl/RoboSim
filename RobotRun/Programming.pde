@@ -228,7 +228,8 @@ public class Point  {
 
 public class Program {
   private String name;
-  private int nextRegister;
+  private Point offset;
+  private int nextPosition;
   /**
    * The positions associated with this program, which are
    * stored in reference to the current User frame
@@ -238,7 +239,7 @@ public class Program {
 
   public Program(String s) {
     name = s;
-    nextRegister = 0;
+    nextPosition = 0;
     for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
     instructions = new ArrayList<Instruction>();
   }
@@ -271,9 +272,9 @@ public class Program {
     
     if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextRegister) {
-        nextRegister = castIns.getPosition()+1;
-        if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
+      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextPosition) {
+        nextPosition = castIns.getPosition()+1;
+        if(nextPosition >= LPosReg.length) nextPosition = LPosReg.length-1;
       }
     }
   }
@@ -282,9 +283,9 @@ public class Program {
     instructions.set(idx, i);
     if(i instanceof MotionInstruction ) { 
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextRegister) {
-        nextRegister = castIns.getPosition()+1;
-        if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
+      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextPosition) {
+        nextPosition = castIns.getPosition()+1;
+        if(nextPosition >= LPosReg.length) nextPosition = LPosReg.length-1;
       }
     }
   }
@@ -293,8 +294,8 @@ public class Program {
     if(idx >= 0 && idx < LPosReg.length) LPosReg[idx] = in;
   }
   
-  public int getNextPosition() { return nextRegister; }
-  public void setNextRegister(int next) { nextRegister = next; }
+  public int getNextPosition() { return nextPosition; }
+  public void setNextPosition(int next) { nextPosition = next; }
 
   public Point getPosition(int idx) {
     if(idx >= 0 && idx < LPosReg.length) return LPosReg[idx];
@@ -356,7 +357,7 @@ public class Program {
       copy.addPosition(LPosReg[idx].clone(), idx);
     }
     // Copy next register
-    copy.setNextRegister(nextRegister);
+    copy.setNextPosition(nextPosition);
     
     return copy;
   }
@@ -473,10 +474,10 @@ public final class MotionInstruction extends Instruction  {
   private float speed;
   private int termination;
   private int userFrame, toolFrame;
+  private MotionInstruction circSecondPt;
 
   public MotionInstruction(int m, int p, boolean g, 
                            float s, int t, int uf, int tf) {
-    super();
     motionType = m;
     positionNum = p;
     isGPosReg = g;
@@ -484,10 +485,14 @@ public final class MotionInstruction extends Instruction  {
     termination = t;
     userFrame = uf;
     toolFrame = tf;
+    if(motionType != -1) {
+      circSecondPt = new MotionInstruction(-1, -1, false, 100, 0, uf, tf);
+    } else {
+      circSecondPt = null;
+    }
   }
 
   public MotionInstruction(int m, int p, boolean g, float s, int t) {
-    super();
     motionType = m;
     positionNum = p;
     isGPosReg = g;
@@ -495,6 +500,11 @@ public final class MotionInstruction extends Instruction  {
     termination = t;
     userFrame = -1;
     toolFrame = -1;
+    if(motionType != -1) {
+      circSecondPt = new MotionInstruction(-1, -1, false, 100, 0);
+    } else {
+      circSecondPt = null;
+    }
   }
 
   public int getMotionType() { return motionType; }
@@ -511,6 +521,8 @@ public final class MotionInstruction extends Instruction  {
   public void setUserFrame(int in) { userFrame = in; }
   public int getToolFrame() { return toolFrame; }
   public void setToolFrame(int in) { toolFrame = in; }
+  public MotionInstruction getSecondaryPoint() { return circSecondPt; }
+  public void setSecondaryPoint(MotionInstruction p) { circSecondPt = p; }
 
   public float getSpeedForExec(ArmModel model) {
     if(motionType == MTYPE_JOINT) return speed;
@@ -536,18 +548,15 @@ public final class MotionInstruction extends Instruction  {
   public Point getVector(Program parent) {
     Point pt;
     
-    if (isGPosReg) {
-        pt = GPOS_REG[positionNum].point.clone();
-        
-      } else {
-        pt = parent.LPosReg[positionNum].clone();
-      }
-    
-    
-    if(motionType == MTYPE_JOINT) {
-      return pt;
+    if(isGPosReg) {
+      pt = GPOS_REG[positionNum].point.clone();    
+    } else {
+      pt = parent.LPosReg[positionNum].clone();
+    }
       
-    }  else {
+    if(motionType == MTYPE_JOINT) {
+      return pt;  
+    } else {
       // Remove the Point's User frame
       if (userFrame != -1) {
         Frame active = userFrames[userFrame];
@@ -568,7 +577,13 @@ public final class MotionInstruction extends Instruction  {
   }
   
   public String[] toStringArray() {
-    String[] fields = new String[5];
+    String[] fields;
+    
+    if(motionType == MTYPE_CIRCULAR) {
+      fields = new String[10];
+    } else {
+      fields = new String[5];
+    }
     
     // Motion type
     switch(motionType) {
@@ -593,7 +608,11 @@ public final class MotionInstruction extends Instruction  {
     }
     
     // Register index
-    fields[2] = String.format("%d]", positionNum + 1);
+    if(positionNum == -1) {
+      fields[2] = "...]";
+    } else {
+      fields[2] = String.format("%d]", positionNum + 1);
+    }
     
     // Speed
     if (motionType == MTYPE_JOINT) {
@@ -609,6 +628,15 @@ public final class MotionInstruction extends Instruction  {
       fields[4] = String.format("CONT%d", termination);
     }
     
+    if(motionType == MTYPE_CIRCULAR) {
+      String[] secondary = circSecondPt.toStringArray();
+      fields[5] = "\n";
+      fields[6] = ":" + secondary[1];
+      fields[7] = secondary[2];
+      fields[8] = secondary[3];
+      fields[9] = secondary[4];
+    }
+        
     return fields;
   }
 } // end MotionInstruction class

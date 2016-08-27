@@ -172,7 +172,7 @@ public void showMainDisplayText() {
   manager.updateWindowDisplay();
 }
 
-/** //<>//
+/**  //<>//
  * Transitions to the next Coordinate frame in the cycle, updating the Robot's current frame
  * in the process and skipping the Tool or User frame if there are no active frames in either
  * one. Since the Robot's frame is potentially reset in this method, all Robot motion is halted.
@@ -927,13 +927,11 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
     armModel.setupRotationInterpolation(instruction.getVector(program).angles);
   } // end joint movement setup
   else if(instruction.getMotionType() == MTYPE_LINEAR) {
-    
     if (!instruction.checkFrames(activeToolFrame, activeUserFrame)) {
       // Current Frames must match the instruction's frames
       System.out.printf("Tool frame: %d : %d\nUser frame: %d : %d\n\n", instruction.getToolFrame(),
                                       activeToolFrame, instruction.getUserFrame(), activeUserFrame);
       return false;
-      
     }
     
     if(instruction.getTermination() == 0) {
@@ -961,28 +959,12 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
     } // end if termination type is continuous
   } // end linear movement setup
   else if(instruction.getMotionType() == MTYPE_CIRCULAR) {
-    // If it is a circular instruction, the current instruction holds the intermediate point.
-    // There must be another instruction after this that holds the end point.
-    // If this isn't the case, the instruction is invalid, so return immediately.
-    Point nextPoint = null;
-    if(program.getInstructions().size() >= active_instr + 2) {
-      Instruction nextIns = program.getInstructions().get(active_instr+1);
-      //make sure next instruction is of valid type
-      if(nextIns instanceof MotionInstruction) {
-        MotionInstruction castIns = (MotionInstruction)nextIns;
-        nextPoint = castIns.getVector(program);
-      }
-      else {
-        return false;
-      }
-    } 
-    // invalid instruction
-    else {
-      return false; 
-    }
+    MotionInstruction nextIns = instruction.getSecondaryPoint();
+    Point nextPoint = nextIns.getVector(program);
     
     beginNewCircularMotion(start, instruction.getVector(program), nextPoint);
   } // end circular movement setup
+  
   return true;
 } // end setUpInstruction
 
