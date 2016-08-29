@@ -179,6 +179,7 @@ public static enum Screen implements DisplayMode {
   SET_REG_EXPR_IDX2(ScreenType.TYPE_NUM_ENTRY),
   SET_SELECT_ARGVAL(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
+  SET_MV_INSTR_OFFSET(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_SPD(ScreenType.TYPE_NUM_ENTRY),
   SET_MV_INSTR_TERM(ScreenType.TYPE_NUM_ENTRY),
   CP_DREG_COM(ScreenType.TYPE_NUM_ENTRY),

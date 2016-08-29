@@ -228,7 +228,6 @@ public class Point  {
 
 public class Program {
   private String name;
-  private Point offset;
   private int nextPosition;
   /**
    * The positions associated with this program, which are
@@ -470,40 +469,46 @@ public class Instruction {
 public final class MotionInstruction extends Instruction  {
   private int motionType;
   private int positionNum;
+  private int offsetRegNum;
+  private boolean offsetActive;
   private boolean isGPosReg;
   private float speed;
   private int termination;
   private int userFrame, toolFrame;
-  private MotionInstruction circSecondPt;
+  private MotionInstruction circSubInstr;
 
   public MotionInstruction(int m, int p, boolean g, 
                            float s, int t, int uf, int tf) {
     motionType = m;
     positionNum = p;
+    offsetRegNum = -1;
+    offsetActive = false;
     isGPosReg = g;
     speed = s;
     termination = t;
     userFrame = uf;
     toolFrame = tf;
     if(motionType != -1) {
-      circSecondPt = new MotionInstruction(-1, -1, false, 100, 0, uf, tf);
+      circSubInstr = new MotionInstruction(-1, -1, false, 100, 0, uf, tf);
     } else {
-      circSecondPt = null;
+      circSubInstr = null;
     }
   }
 
   public MotionInstruction(int m, int p, boolean g, float s, int t) {
     motionType = m;
     positionNum = p;
+    offsetRegNum = -1;
+    offsetActive = false;
     isGPosReg = g;
     speed = s;
     termination = t;
     userFrame = -1;
     toolFrame = -1;
     if(motionType != -1) {
-      circSecondPt = new MotionInstruction(-1, -1, false, 100, 0);
+      circSubInstr = new MotionInstruction(-1, -1, false, 100, 0);
     } else {
-      circSecondPt = null;
+      circSubInstr = null;
     }
   }
 
@@ -511,6 +516,9 @@ public final class MotionInstruction extends Instruction  {
   public void setMotionType(int in) { motionType = in; }
   public int getPosition() { return positionNum; }
   public void setPosition(int in) { positionNum = in; }
+  public int getOffset() { return offsetRegNum; }
+  public void setOffset(int in) { offsetRegNum = in; }
+  public boolean toggleOffsetActive() { return (offsetActive = !offsetActive); }
   public boolean usesGPosReg() { return isGPosReg; }
   public void setGlobalPosRegUse(boolean in) { isGPosReg = in; }
   public float getSpeed() { return speed; }
@@ -521,8 +529,8 @@ public final class MotionInstruction extends Instruction  {
   public void setUserFrame(int in) { userFrame = in; }
   public int getToolFrame() { return toolFrame; }
   public void setToolFrame(int in) { toolFrame = in; }
-  public MotionInstruction getSecondaryPoint() { return circSecondPt; }
-  public void setSecondaryPoint(MotionInstruction p) { circSecondPt = p; }
+  public MotionInstruction getSecondaryPoint() { return circSubInstr; }
+  public void setSecondaryPoint(MotionInstruction p) { circSubInstr = p; }
 
   public float getSpeedForExec(ArmModel model) {
     if(motionType == MTYPE_JOINT) return speed;
@@ -547,26 +555,27 @@ public final class MotionInstruction extends Instruction  {
    */
   public Point getVector(Program parent) {
     Point pt;
+    Point offset;
     
     if(isGPosReg) {
       pt = GPOS_REG[positionNum].point.clone();    
     } else {
       pt = parent.LPosReg[positionNum].clone();
     }
-      
-    if(motionType == MTYPE_JOINT) {
-      return pt;  
+    
+    if(offsetRegNum != -1) {
+      offset = GPOS_REG[offsetRegNum].point;
     } else {
-      // Remove the Point's User frame
-      if (userFrame != -1) {
-        Frame active = userFrames[userFrame];
-        // Convert point into the Native Coordinate System
-        Point convertedPt = removeFrame(pt, active.getOrigin(), active.getOrientation());
-        return convertedPt;
-      }
-      
-      return pt;
+      offset = new Point();
     }
+    
+    if (userFrame != -1 && motionType != MTYPE_JOINT) {
+      // Convert point into the Native Coordinate System
+      Frame active = userFrames[userFrame];
+      pt = removeFrame(pt, active.getOrigin(), active.getOrientation());
+    }
+      
+    return pt.add(offset);
   } // end getVector()
   
   public Instruction clone() {
@@ -578,11 +587,16 @@ public final class MotionInstruction extends Instruction  {
   
   public String[] toStringArray() {
     String[] fields;
+    int instrLen, subInstrLen;
     
     if(motionType == MTYPE_CIRCULAR) {
-      fields = new String[10];
+      instrLen = offsetActive ? 7 : 6;
+      subInstrLen = circSubInstr.offsetActive ? 5 : 4;      
+      fields = new String[instrLen + subInstrLen];
     } else {
-      fields = new String[5];
+      instrLen = offsetActive ? 6 : 5;
+      subInstrLen = 0;
+      fields = new String[instrLen];
     }
     
     // Motion type
@@ -628,13 +642,24 @@ public final class MotionInstruction extends Instruction  {
       fields[4] = String.format("CONT%d", termination);
     }
     
+    if(offsetActive) {
+      if(offsetRegNum == -1) {
+        fields[5] = "OFST PR[...]";
+      } else {
+        fields[5] = String.format("OFST PR[%d]", offsetRegNum + 1);
+      }
+    }
+    
     if(motionType == MTYPE_CIRCULAR) {
-      String[] secondary = circSecondPt.toStringArray();
-      fields[5] = "\n";
-      fields[6] = ":" + secondary[1];
-      fields[7] = secondary[2];
-      fields[8] = secondary[3];
-      fields[9] = secondary[4];
+      String[] secondary = circSubInstr.toStringArray();
+      fields[instrLen - 1] = "\n";
+      fields[instrLen] = ":" + secondary[1];
+      fields[instrLen + 1] = secondary[2];
+      fields[instrLen + 2] = secondary[3];
+      fields[instrLen + 3] = secondary[4];
+      if(subInstrLen > 4) {
+        fields[instrLen + 4] = secondary[5];
+      }
     }
         
     return fields;
