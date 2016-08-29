@@ -1,11 +1,11 @@
 private final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
-private int activeScenarioIdx;
+private Scenario activeScenario;
 
 /**
  * A simple class that defines the stroke and fill color for a shape
  * along with some methods necessarry for a shape.
  */
-public abstract class Shape {
+public abstract class Shape implements Cloneable {
   private Integer fillCVal,
                   strokeCVal;
   
@@ -67,10 +67,8 @@ public abstract class Shape {
   public Integer getFillValue() { return fillCVal; }
   public void setFillValue(Integer newVal) { fillCVal = newVal; }
   
-  /**
-   * Returns a copy of the Shape object
-   */
-  public abstract Shape clone();
+  @Override
+  public abstract Object clone();
 }
 
 /**
@@ -163,7 +161,8 @@ public class Box extends Shape {
     }
   }
   
-  public Shape clone() {
+  @Override
+  public Object clone() {
     return new Box(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
   }
 }
@@ -252,7 +251,8 @@ public class Cylinder extends Shape {
     }
   }
   
-  public Shape clone() {
+  @Override
+  public Object clone() {
     return new Cylinder(getFillValue(), getStrokeValue(), radius, height);
   }
 }
@@ -322,10 +322,9 @@ public class ModelShape extends Shape {
   
   public String getSourcePath() { return srcFilePath; }
   
-  /**
-   * Create a new Model form the original source file.
-   */
-  public Shape clone() {
+  @Override
+  public Object clone() {
+      // Created from source file
       return new ModelShape(srcFilePath, getFillValue(), scale);
   }
 }
@@ -356,7 +355,7 @@ public class Ray {
 /**
  * Defines the axes and origin vector associated with a Coordinate System.
  */
-public class CoordinateSystem {
+public class CoordinateSystem implements Cloneable {
   private PVector origin;
   /* A 3x3 rotation matrix */
   private float[][] axesVectors;
@@ -418,6 +417,20 @@ public class CoordinateSystem {
    */
   public float[][] getAxes() {
     return axesVectors;
+  }
+  
+  @Override
+  public Object clone() {
+    float[][] axesCopy = new float[3][3];
+    
+     // Copy axes into axesVectors
+    for (int row = 0; row < 3; ++row) {
+      for (int col = 0; col < 3; ++col) {
+        axesCopy[row][col] = axesVectors[row][col];
+      }
+    }
+    
+    return new CoordinateSystem(origin.copy(), axesCopy);
   }
 }
 
@@ -560,7 +573,7 @@ public class BoundingBox {
   public boolean collision(PVector point) {
     // Convert the point to the current reference frame
     float[][] tMatrix = transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
-    PVector relPosition = transform(point, invertHCMatrix(tMatrix));
+    PVector relPosition = transformVector(point, invertHCMatrix(tMatrix));
     
     PVector OBBDim = getDims();
     // Determine if the point iw within the bounding-box of this object
@@ -589,7 +602,7 @@ public class BoundingBox {
 /**
  * Any object in the World other than the Robot.
  */
-public abstract class WorldObject {
+public abstract class WorldObject implements Cloneable {
   private String name;
   private Shape form;
   protected CoordinateSystem localOrientation;
@@ -733,6 +746,9 @@ public abstract class WorldObject {
   public String getName() { return name; }
   
   public Shape getForm() { return form; }
+  
+  @Override
+  public abstract Object clone();
   public String toString() { return name; }
 }
 
@@ -788,6 +804,11 @@ public class Fixture extends WorldObject {
                 tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[1][3],
                 tMatrix[0][2], tMatrix[1][2], tMatrix[2][2], tMatrix[2][3],
                             0,             0,             0,             1);
+  }
+  
+  @Override
+  public Object clone() {
+    return new Fixture(getName(), (Shape)getForm().clone(), (CoordinateSystem)localOrientation.clone());
   }
 }
 
@@ -975,6 +996,12 @@ public class Part extends WorldObject {
     super.setLocalOrientationAxes(newAxes);
     updateAbsoluteOrientation();
   }
+  
+  @Override
+  public Object clone() {
+    // The new object's reference still points to the same fixture!
+    return new Part(getName(), (Shape)getForm().clone(), getOBBDims().copy(), (CoordinateSystem)localOrientation.clone(), reference);
+  }
 }
 
 /**
@@ -998,7 +1025,7 @@ public class LoadedPart {
 /**
  * A storage class for a collection of objects with an associated name for the collection.
  */
-public class Scenario implements Iterable<WorldObject> {
+public class Scenario implements Iterable<WorldObject>, Cloneable {
   private String name;
   /**
    * A combine list of Parts and Fixtures
@@ -1345,6 +1372,46 @@ public class Scenario implements Iterable<WorldObject> {
   public void setName(String newName) { name = newName; }
   public String getName() { return name; }
   
+  @Override
+  public Object clone() {
+    Scenario copy = new Scenario(name);
+    ArrayList<Fixture> fixtures = new ArrayList<Fixture>();
+    ArrayList<Part> parts = new ArrayList<Part>();
+    
+    
+    for (WorldObject obj : this) {
+      // Add copies of all the objects in this scenario
+      WorldObject newObj = (WorldObject)obj.clone();
+      copy.addWorldObject(newObj);
+      // Keep track of all fixtures and parts with non-null references
+      if (newObj instanceof Fixture) {
+        fixtures.add( (Fixture)newObj );
+        
+      } else if (newObj instanceof Part) {
+        Part p = (Part)newObj;
+        
+        if (p.getFixtureRef() != null) {
+          parts.add( (Part)newObj );
+        }
+      }
+    }
+    
+    // Update fixture references of new parts
+    for (Part p : parts) {
+      String refName = p.getFixtureRef().getName();
+      p.setFixtureRef(null);
+      
+      for (Fixture f : fixtures) {
+        if (f.getName().equals( refName )) {
+          p.setFixtureRef(f);
+        }
+      }
+    }
+    
+    return copy;
+  }
+  
+  @Override
   public String toString() { return name; }
 }
 
@@ -1401,20 +1468,6 @@ public PShape loadSTLModel(String filename, color fill, float scaleVal) throws N
   mesh.scale(scaleVal);
   return mesh;
 } 
-
-/**
- * Returns the scenario located that the index of activeScenarioIdx or null
- * if activeScenarioIdx is invalid.
- */
-public Scenario activeScenario() {
-  
-  if (activeScenarioIdx >= 0 && activeScenarioIdx < SCENARIOS.size()) {
-    return SCENARIOS.get(activeScenarioIdx);
-    
-  } else {
-    return null;
-  }
-}
 
 /**
  * This algorithm uses the Separating Axis Theorm to project radi of each Box on to several 

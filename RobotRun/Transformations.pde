@@ -1,4 +1,147 @@
 /**
+ * A class designed which contains the camera transformation values
+ * and the methods to manipulate apply the Camera's transformation.
+ */
+public class Camera {
+  private PVector position,
+                  // Rotations in X, Y, Z in radians
+                  orientation;
+  private static final float MAX_SCALE = 8f;
+  private float scale;
+  
+  /**
+   * Creates a camera with the default position, orientation and scale.
+   */
+  public Camera() {
+    position = new PVector(0f, 0f, -500f);
+    orientation = new PVector(0f, 0f, 0f);
+    scale = 2f;
+  }
+  
+  /**
+   * Apply the camer's scale, position, and orientation to the current matrix.
+   */
+  public void apply() {
+    beginCamera();
+    // Apply camera translations
+    translate(position.x + width / 2f, position.y + height / 2f, position.z);
+    
+    // Apply camera rotations
+    rotateX(orientation.x);
+    rotateY(orientation.y);
+    
+     // Apply camera scaling
+    float horizontalMargin = scale * width / 2f,
+          verticalMargin = scale * height / 2f,
+          near = MAX_SCALE / scale,
+          far = scale * 5000f;
+    ortho(-horizontalMargin, horizontalMargin, -verticalMargin, verticalMargin, near, far);
+    
+    endCamera();
+  }
+  
+  /**
+   * Return the camera perspective to the
+   * default position, orientation and scale.
+   */
+  public void reset() {
+    position.x = 0;
+    position.y = 0;
+    position.z = -500f;
+    orientation.x = 0f;
+    orientation.y = 0f;
+    orientation.z = 0f;
+    scale = 2f;
+  }
+  
+  /**
+   * Change the camera's position by the given values.
+   */
+  public void move(float x, float y, float z) {
+    float horzontialLimit = MAX_SCALE * width / 3f,
+          verticalLimit = MAX_SCALE * height / 3f;
+    
+    position.add( new PVector(x, y, z) );
+    // Apply camera position restrictions
+    position.x = max(-horzontialLimit, min(position.x, horzontialLimit));
+    position.y = max(-verticalLimit, min(position.y, verticalLimit));
+    position.z = max(-1000f, min(position.z, 1000f));
+  }
+  
+  /**
+   * Change the camera's rotation by the given values.
+   */
+  public void rotate(float w, float p, float r) {
+    PVector rotation = new PVector(w, p, r);
+    
+    orientation.add( rotation );
+    // Apply caerma rotation restrictions
+    orientation.x = mod2PI(orientation.x);
+    orientation.y = mod2PI(orientation.y);
+    orientation.z = 0f;//mod2PI(orientation.z);
+  }
+  
+  /**
+   * Change the scaling of the camera.
+   */
+  public void changeScale(float multiplier) {
+    scale = max(0.25f, min(scale * multiplier, MAX_SCALE));
+  }
+  
+  /**
+   * Returns the Camera's position, orientation, and scale
+   * in the form of a formatted String array, where each
+   * entry is one of the following values:
+   * 
+   * Title String
+   * X - The camera's x -position value
+   * Y - The camera's y-position value
+   * Z - The camera's z-position value
+   * W - The camera's x-rotation value
+   * P - The camera's y-rotation value
+   * R - The camera's z-rotation value
+   * S - The camera's scale value
+   * 
+   * @returning  A 6-element String array
+   */
+  public String[] toStringArray() {
+    String[] fields = new String[8];
+    // Display rotation in degrees
+    PVector inDegrees = PVector.mult(orientation, RAD_TO_DEG);
+    
+    fields[0] = "Camera Fields";
+    fields[1] = String.format("X: %6.9f", position.x);
+    fields[2] = String.format("Y: %6.9f", position.y);
+    fields[3] = String.format("Z: %6.9f", position.z);
+    fields[4] = String.format("W: %6.9f", inDegrees.x);
+    fields[5] = String.format("P: %6.9f", inDegrees.y);
+    fields[6] = String.format("R: %6.9f", inDegrees.z);
+    fields[7] = String.format("S: %3.9f", scale);
+    
+    return fields;
+  }
+  
+  /**
+   * Returns an independent replica of the Camera object.
+   */
+  public Camera clone() {
+    Camera copy = new Camera();
+    // Copy position, orientation, and scale
+    copy.position = position.copy();
+    copy.orientation = orientation.copy();
+    copy.scale = scale;
+    
+    return copy;
+  }
+  
+  // Getters for the Camera's position, orientation, and scale
+  public PVector getPosition() { return position; }
+  public PVector getOrientation() { return orientation; }
+  public float getScale() { return scale; }
+}
+
+
+/**
  * Applies the rotations and translations of the Robot Arm to get to the
  * face plate center, given the set of six joint angles, each corresponding
  * to a joint of the Robot Arm and each within the bounds of [0, TWO_PI).
@@ -67,9 +210,8 @@ public void applyModelRotation(float[] jointAngles) {
  * @returning     The point, pt, interms of the given frame's Coordinate System
  */
 public Point applyFrame(Point pt, PVector origin, float[] axes) {
-  float[] invAxes = quaternionConjugate(axes);
   PVector position = convertToFrame(pt.position, origin, axes);
-  float[] orientation = quaternionMult(pt.orientation, invAxes);
+  float[] orientation = quaternionRef(pt.orientation, axes);
   
   return new Point(position, orientation, pt.angles);
 }
@@ -84,9 +226,8 @@ public Point applyFrame(Point pt, PVector origin, float[] axes) {
  * @returning     The vector, v, interms of the given frame's Coordinate System
  */
 public PVector convertToFrame(PVector v, PVector origin, float[] axes) {
-  float[] invAxes = axes;
   PVector vOffset = PVector.sub(v, origin);
-  return rotateVectorQuat(vOffset, invAxes);
+    return rotateVectorQuat(vOffset, axes);
 }
 
 /**
@@ -106,16 +247,17 @@ public Point removeFrame(Point pt, PVector origin, float[] axes) {
 }
 
 /**
- * Converts the given vector, v, from the Coordinate System defined by the given origin
+ * Converts the given vector, u, from the Coordinate System defined by the given origin
  * vector and rotation quaternion axes.
  * 
  * @param v       A vector in the XYZ vector space
  * @param origin  The origin of the Coordinate System
  * @param axes    The axes of the Coordinate System representing as a rotation quanternion
- * @returning     The vector, v, interms of the given frame's Coordinate System
+ * @returning     The vector, u, in the Native frame
  */
-public PVector convertFromFrame(PVector v, PVector origin, float[] axes) {
-  PVector vRotated = rotateVectorQuat(v, axes);
+public PVector convertFromFrame(PVector u, PVector origin, float[] axes) {
+  float[] invAxes = vectorNorm(  quaternionConjugate(axes) );
+  PVector vRotated = rotateVectorQuat(u, invAxes);
   return vRotated.add(origin);
 }
 
@@ -125,7 +267,7 @@ public PVector convertFromFrame(PVector v, PVector origin, float[] axes) {
  */
 public PVector convertWorldToNative(PVector v) {
   float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
-  return transform(v, tMatrix);
+  return transformVector(v, invertHCMatrix(tMatrix));
 }
 
 /**
@@ -134,12 +276,12 @@ public PVector convertWorldToNative(PVector v) {
  */
 public PVector convertNativeToWorld(PVector v) {
   float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
-  return transform(v, invertHCMatrix(tMatrix));
+  return transformVector(v, tMatrix);
 }
 
 /* Transforms the given vector from the coordinate system defined by the given
  * transformation matrix (row major order). */
-public PVector transform(PVector v, float[][] tMatrix) {
+public PVector transformVector(PVector v, float[][] tMatrix) {
   if(tMatrix.length != 4 || tMatrix[0].length != 4) {
     return null;
   }
@@ -154,7 +296,7 @@ public PVector transform(PVector v, float[][] tMatrix) {
 }
 
 /* Transforms the given vector by the given 3x3 rotation matrix (row major order). */
-public PVector rotate(PVector v, float[][] rotMatrix) {
+public PVector rotateVector(PVector v, float[][] rotMatrix) {
   if(v == null || rotMatrix == null || rotMatrix.length != 3 || rotMatrix[0].length != 3) {
     return null;
   }
@@ -454,7 +596,7 @@ float[] matrixToQuat(float[][] r) {
     q[3] = S / 4;
   }
 
-  return quaternionNormalize(q);
+  return vectorNorm(q);
 }
 
 //calculates euler angles from quaternion
@@ -581,7 +723,7 @@ float[] rotateQuat(float[] p, PVector u, float theta) {
   
   float[] pq = quaternionMult(p, q);
 
-  return quaternionNormalize(pq);
+  return vectorNorm(pq);
 }
 
 PVector rotateVectorQuat(PVector v, PVector u, float theta) {
@@ -683,28 +825,31 @@ float[] quaternionMult(float[] q1, float[] q2) {
  * Returns a quaternion, which represents the rotation of q, in terms of reference.
  */
 public float[] quaternionRef(float[] q, float[] reference) {
-  float[] invRef = quaternionNormalize( quaternionConjugate(reference) );
-  return quaternionNormalize( quaternionMult(q, invRef) );
+  float[] invRef = vectorNorm( quaternionConjugate(reference) );
+  return vectorNorm( quaternionMult(q, invRef) );
 }
 
-//returns the result of a quaternion 'q' multiplied by scalar 's'
-float[] quaternionScalarMult(float[] q, float s) {
-  float[] qr = new float[4];
-  qr[0] = q[0]*s;
-  qr[1] = q[1]*s;
-  qr[2] = q[2]*s;
-  qr[3] = q[3]*s;
-  return qr;
+//returns the result of a vector 'v' multiplied by scalar 's'
+float[] vectorScalarMult(float[] v, float s) {
+  float[] ret = new float[v.length];
+  for(int i = 0; i < ret.length; i += 1) { 
+    ret[i] = v[i]*s; 
+  }
+  
+  return ret;
 }
 
-//returns the result of the addition of two quaternions, 'q1' and 'q2'
-float[] quaternionAdd(float[] q1, float[] q2) {
-  float[] qr = new float[4];
-  qr[0] = q1[0] + q2[0];
-  qr[1] = q1[1] + q2[1];
-  qr[2] = q1[2] + q2[2];
-  qr[3] = q1[3] + q2[3];
-  return qr;
+//returns the result of the addition of two vectors, 'v1' and 'v2'
+float[] vectorAdd(float[] v1, float[] v2) {
+  //vectors must be of matching length
+  if(v1.length != v2.length) return null;
+  
+  float[] ret = new float[v1.length];
+  for(int i = 0; i < ret.length; i += 1) {
+    ret[i] = v1[i] + v2[i];
+  }
+  
+  return ret;
 }
 
 /**
@@ -720,14 +865,20 @@ public float quaternionDotProduct(float[] q1, float[] q2) {
   return product;
 }
 
-//returns the magnitude of the input quaternion 'q'
-float calculateQuatMag(float[] q) {
-  return sqrt(pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2));
+//returns the magnitude of the input vector 'v'
+float getVectorMag(float[] v) {
+  float ret = 0;
+  for(int i = 0; i < v.length; i += 1) {
+    ret += pow(v[i], 2);
+  }
+  
+  return sqrt(ret);
 }
 
-float[] quaternionNormalize(float[] q) {
-  float qMag = calculateQuatMag(q);
-  return quaternionScalarMult(q, 1/qMag);
+//normalizes input vector 'v' to a unit vector
+float[] vectorNorm(float[] v) {
+  float mag = getVectorMag(v);
+  return vectorScalarMult(v, 1/mag);
 }
 
 /* Given two input quaternions, 'q1' and 'q2', computes the spherical-
@@ -747,10 +898,10 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
   
   if(cOmega < 0) {
     cOmega = -cOmega;
-    q3 = quaternionScalarMult(q2, -1);
+    q3 = vectorScalarMult(q2, -1);
   }
   else {
-    q3 = quaternionScalarMult(q2, 1);
+    q3 = vectorScalarMult(q2, 1);
   }
   
   if(cOmega > 0.99999995) {
@@ -770,7 +921,7 @@ float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
     qSlerp[3] = q1[3]*scale1 + q3[3]*scale2;
   }
   
-  return quaternionNormalize(qSlerp);
+  return vectorNorm(qSlerp);
 }
 
 /**
@@ -800,13 +951,13 @@ public boolean angleWithinBounds(float angleToVerify, float rangeStart, float ra
  * @returning    The equivalent angle within the range [0, TWO_PI)
  */
 public float mod2PI(float angle) {
-  float limbo = angle % TWO_PI;
+  float temp = angle % TWO_PI;
   
-  if (limbo < 0f) {
-    limbo += TWO_PI;
+  if (temp < 0f) {
+    temp += TWO_PI;
   }
   
-  return limbo;
+  return temp;
 }
 
 /**
@@ -829,4 +980,9 @@ public float minimumDistance(float src, float dest) {
   
   return difference;
 }
+
+public int clamp(int in, int min, int max) {
+  return min(max, max(min, in));
+}
+
   

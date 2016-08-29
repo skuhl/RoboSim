@@ -9,7 +9,9 @@ import java.io.*;
 import java.awt.event.KeyEvent;
 
 private static final int OFF = 0, ON = 1;
-private static final int ARITH = 0, BOOL = 1;
+PFont fnt_con14, fnt_con12, fnt_conB;
+
+private Camera camera;
 // The position at which the Robot is drawn
 private final PVector ROBOT_POSITION = new PVector(200, 300, 200);
 ArmModel armModel;
@@ -20,67 +22,55 @@ Stack<Screen> display_stack;
 
 ArrayList<Program> programs = new ArrayList<Program>();
 
-/* global variables for toolbar */
-PFont fnt_con14, fnt_con12, fnt_conB;
-
-// for pan button
-int clickPan = 0;
-float panX = 1.0; 
-float panY = 1.0;
-
-// for rotate button
-int clickRotate = 0;
-float myRotX = 0.0;
-float myRotY = 0.0;
-
-float myscale = 0.5;
-
 /*******************************/
-/* other global variables      */
+/*      Global Variables       */
+/*******************************/
 
 // for Execution
-public boolean execSingleInst = false,
-/* Indicates an error with moving the robot */
-                      robotFault = false;
+public boolean execSingleInst = false; 
+public boolean robotFault = false; //indicates robot error
 int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 
 /*******************************/
 /*      Debugging Stuff        */
-
-private static ArrayList<String> buffer;
 /*******************************/
 
+private ArrayList<String> buffer;
+private Point displayPoint;
 
 
 public void setup() {
   //size(1200, 800, P3D);
   size(1080, 720, P3D);
-  ortho();
+  
   //create font and text display background
   fnt_con14 = createFont("data/Consolas.ttf", 14);
   fnt_con12 = createFont("data/Consolas.ttf", 12);
   fnt_conB = createFont("data/ConsolasBold.ttf", 12);
   
-  buffer = new ArrayList<String>();
+  camera = new Camera();
   
   //load model and save data
   armModel = new ArmModel();
   intermediatePositions = new ArrayList<Point>();
-  
-  activeScenarioIdx = -1;
+  activeScenario = null;
   
   loadState();
   
   //set up UI
   cp5 = new ControlP5(this);
+  // Expllicitly draw the ControlP5 elements
+  cp5.setAutoDraw(false);
   manager = new WindowManager(cp5, fnt_con12, fnt_con14);
   display_stack = new Stack<Screen>();
   gui();
+  
+  buffer = new ArrayList<String>();
+  displayPoint = null;
 }
 
 public void draw() {
-  ortho();
-  
+  // Apply the camera for drawing objects
   directionalLight(255, 255, 255, 1, 1, 0);
   ambientLight(150, 150, 150);
 
@@ -92,47 +82,64 @@ public void draw() {
   noFill();
   
   pushMatrix();
-  applyCamera();
+  camera.apply();
   
-  Scenario s = activeScenario();
   Program p = activeProgram();
   
-  updateAndDrawObjects(s, p, armModel);
+  updateAndDrawObjects(activeScenario, p, armModel);
   displayAxes();
   displayTeachPoints();
+  
+  WorldObject wldObj = manager.getActiveWorldObject();
+  
+  if (wldObj != null) {
+    pushMatrix();
+    
+    if (wldObj instanceof Part) {
+      Fixture reference = ((Part)wldObj).getFixtureRef();
+      
+      if (reference != null) {
+        // Draw part's orientation with reference to its fixture
+        reference.applyCoordinateSystem();
+      }
+    }
+    
+    displayOriginAxes(wldObj.getLocalCenter(), wldObj.getLocalOrientationAxes(), 500f, color(0));
+    
+    popMatrix();
+  }
+  
+  if (displayPoint != null) {
+    // Display the point with its local orientation axes
+    displayOriginAxes(displayPoint.position, quatToMatrix(displayPoint.orientation), 100f, color(0, 100, 15));
+  }
   
   //TESTING CODE: DRAW INTERMEDIATE POINTS
   noLights();
   noStroke();
-  //pushMatrix();
-  ////if(intermediatePositions != null) {
-  ////  int count = 0;
-  ////  for(Point p : intermediatePositions) {
-  ////    if(count % 4 == 0) {
-  ////      pushMatrix();
-  ////      stroke(0);
-  ////      translate(p.position.x, p.position.y, p.position.z);
-  ////      sphere(5);
-  ////      popMatrix();
-  ////    }
-  ////    count += 1;
-  ////  }
-  ////}
-  //popMatrix();
+  pushMatrix();
+  //if(intermediatePositions != null) {
+  //  int count = 0;
+  //  for(Point pt : intermediatePositions) {
+  //    if(count % 20 == 0) {
+  //      pushMatrix();
+  //      stroke(0);
+  //      translate(pt.position.x, pt.position.y, pt.position.z);
+  //      sphere(5);
+  //      popMatrix();
+  //    }
+  //    count += 1;
+  //  }
+  //}
+  popMatrix();
   popMatrix();
   
   hint(DISABLE_DEPTH_TEST);
-  
+  // Apply the camera for drawing text and windows
+  ortho();
   showMainDisplayText();
+  cp5.draw();
   //println(frameRate + " fps");
-}
-
-void applyCamera() {
-  translate(width/1.5,height/1.5);
-  translate(panX, panY); // for pan button
-  scale(myscale);
-  rotateX(myRotX); // for rotate button
-  rotateY(myRotY); // for rotate button
 }
 
 /*****************************************************************************************************************
@@ -247,7 +254,8 @@ public void displayAxes() {
   
   if (axesState == AxesDisplay.NONE && curCoordFrame != CoordFrame.JOINT) {
     // Draw axes of the Robot's End Effector frame for testing purposes
-    displayOriginAxes(quatToMatrix( eePoint.orientation ), eePoint.position, 200f, color(255, 0, 255));
+    displayOriginAxes(eePoint.position, quatToMatrix( eePoint.orientation ), 200f, color(255, 0, 255));
+    
   } else if (axesState == AxesDisplay.AXES) {
     // Display axes
     if (curCoordFrame != CoordFrame.JOINT) {
@@ -256,24 +264,26 @@ public void displayAxes() {
       
       if (curCoordFrame == CoordFrame.TOOL) {
         /* Draw the axes of the active Tool frame at the Robot End Effector */
-        displayOriginAxes(activeTool.getWorldAxes(), eePoint.position, 200f, color(255, 0, 255));
+        displayOriginAxes(eePoint.position, activeTool.getWorldAxisVectors(), 200f, color(255, 0, 255));
+        
       } else {
         // Draw axes of the Robot's End Effector frame for testing purposes
-        displayOriginAxes(quatToMatrix( eePoint.orientation ), eePoint.position, 200f, color(255, 0, 255));
+        displayOriginAxes(eePoint.position, quatToMatrix( eePoint.orientation ), 200f, color(255, 0, 255));
       }
       
       if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
         /* Draw the axes of the active User frame */
-        displayOriginAxes(activeUser.getWorldAxes(), activeUser.getOrigin(), 5000f, color(0));
+        displayOriginAxes(activeUser.getOrigin(), activeUser.getWorldAxisVectors(), 10000f, color(0));
+        
       } else {
         /* Draw the axes of the World frame */
-        //displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f), 5000f, color(0));
-        displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f), 5000f, color(0));
+        displayOriginAxes(new PVector(0f, 0f, 0f), WORLD_AXES, 10000f, color(0));
       }
     }
+    
   } else if (axesState == AxesDisplay.GRID) {
     // Display gridlines spanning from axes of the current frame
-    Frame active = getActiveFrame(null);
+    Frame active;
     float[][] displayAxes;
     PVector displayOrigin;
     
@@ -284,11 +294,13 @@ public void displayAxes() {
         displayOrigin = new PVector(0f, 0f, 0f);
         break;
       case TOOL:
-        displayAxes = active.getNativeAxes();
+        active = getActiveFrame(CoordFrame.TOOL);
+        displayAxes = active.getNativeAxisVectors();
         displayOrigin = eePoint.position;
         break;
       case USER:
-        displayAxes = active.getNativeAxes();
+        active = getActiveFrame(CoordFrame.USER);
+        displayAxes = active.getNativeAxisVectors();
         displayOrigin = active.getOrigin();
         break;
       default:
@@ -305,13 +317,13 @@ public void displayAxes() {
  * Given a set of 3 orthogonal unit vectors a point in space, lines are
  * drawn for each of the three vectors, which intersect at the origin point.
  *
- * @param axesVectors  A set of three orthogonal unti vectors
  * @param origin       A point in space representing the intersection of the
  *                     three unit vectors
+ * @param axesVectors  A set of three orthogonal unti vectors
  * @param axesLength   The length, to which the all axes, will be drawn
  * @param originColor  The color of the point to draw at the origin
  */
-public void displayOriginAxes(float[][] axesVectors, PVector origin, float axesLength, color originColor) {
+public void displayOriginAxes(PVector origin, float[][] axesVectors, float axesLength, color originColor) {
   
   pushMatrix();    
   // Transform to the reference frame defined by the axes vectors
@@ -334,11 +346,11 @@ public void displayOriginAxes(float[][] axesVectors, PVector origin, float axesL
   stroke(originColor);
   sphere(4);
   stroke(0);
-  translate(50, 0, 0);
+  translate(100, 0, 0);
   sphere(4);
-  translate(-50, 50, 0);
+  translate(-100, 100, 0);
   sphere(4);
-  translate(0, -50, 50);
+  translate(0, -100, 100);
   sphere(4);
   
   popMatrix();

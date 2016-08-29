@@ -45,9 +45,7 @@ public void showMainDisplayText() {
   
   if (active != null) {
     // Convert into currently active frame
-    RP.position = convertToFrame(RP.position, active.getOrigin(), active.getAxes());
-    RP.orientation = quaternionRef(RP.orientation, active.getAxes());
-    
+    RP = applyFrame(RP, active.getOrigin(), active.getOrientation());
   }
   
   String[] cartesian = RP.toLineStringArray(true),
@@ -60,10 +58,9 @@ public void showMainDisplayText() {
   lastTextPositionY += 20;
   // Display the title of the currently active scenario
   String scenarioTitle;
-  Scenario s = activeScenario();
   
-  if (s != null) {
-    scenarioTitle = "Scenario: " + s.getName();
+  if (activeScenario != null) {
+    scenarioTitle = "Scenario: " + activeScenario.getName();
   } else {
     scenarioTitle = "No active scenario";
   }
@@ -133,6 +130,14 @@ public void showMainDisplayText() {
   }
    
   if (DISPLAY_TEST_OUTPUT) {
+    String[] cameraFields = camera.toStringArray();
+    // Display camera position, orientation, and scale
+    for (String field : cameraFields) {
+      lastTextPositionY += 20;
+      text(field, lastTextPositionX, lastTextPositionY);
+    }
+    lastTextPositionY += 40;
+    
     fill(215, 0, 0);
     
     // Display a message when there is an error with the Robot's movement
@@ -167,7 +172,7 @@ public void showMainDisplayText() {
   manager.updateWindowDisplay();
 }
 
-/** //<>//
+/**  //<>//
  * Transitions to the next Coordinate frame in the cycle, updating the Robot's current frame
  * in the process and skipping the Tool or User frame if there are no active frames in either
  * one. Since the Robot's frame is potentially reset in this method, all Robot motion is halted.
@@ -279,31 +284,12 @@ public Point nativeRobotEEPoint(float[] jointAngles) {
   
   if (activeTool != null) {
     // Apply the Tool Tip
-    offset = activeTool.getOrigin();
+    offset = ((ToolFrame)activeTool).getTCPOffset();
   } else {
     offset = new PVector(0f, 0f, 0f);
   }
   
   return nativeRobotPointOffset(jointAngles, offset);
-}
-
-/**
- * Returns the difference between the position of the given TCP offset
- * and the Robot's faceplate, in Native Cooridinates.
- * 
- * @param offset  The offset to convert to Native Coordinates
- * @returning     The given vector offset, in Native Coordinates
- */
-public PVector nativeTCPOffset(PVector offset) {
-    pushMatrix();
-    resetMatrix();
-    applyModelRotation(armModel.getJointAngles());
-    PVector origin = getCoordFromMatrix(0f, 0f, 0f);
-    // Subtract the origin Native Coordinate values
-    PVector nativeOffset = getCoordFromMatrix(offset.x, offset.y, offset.z).sub(origin);
-    popMatrix();
-    
-    return nativeOffset;
 }
 
 /**
@@ -355,7 +341,7 @@ public float[][] calculateJacobian(float[] angles, boolean posOffset) {
     
     if (quaternionDotProduct(curRP.orientation, newRP.orientation) < 0f) {
       // Use -q instead of q
-      newRP.orientation = quaternionScalarMult(newRP.orientation, -1);
+      newRP.orientation = vectorScalarMult(newRP.orientation, -1);
     }
     
     //get translational delta
@@ -397,7 +383,7 @@ public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, float[]
     
     if (quaternionDotProduct(tgtOrientation, cPoint.orientation) < 0f) {
       // Use -q instead of q
-      tgtOrientation = quaternionScalarMult(tgtOrientation, -1);
+      tgtOrientation = vectorScalarMult(tgtOrientation, -1);
     }
     
     //calculate our translational offset from target
@@ -415,7 +401,7 @@ public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, float[]
     delta[6] = rDelta[3];
     
     float dist = PVector.dist(cPoint.position, tgtPosition);
-    float rDist = calculateQuatMag(rDelta);
+    float rDist = getVectorMag(rDelta);
     //check whether our current position is within tolerance
     if ( (dist < (liveSpeed / 100f)) && (rDist < (0.00005f * liveSpeed)) ) { break; }
     
@@ -846,9 +832,9 @@ float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
 
 /**
  * Executes a program. Returns true when done.
- * @param program Program to execute
- * @param model Arm model to use
- * @return Finished yet (false=no, true=yes)
+ * @param program - Program to execute
+ * @param model   - Arm model to use
+ * @return        - True if done executing, false if otherwise.
  */
 boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
   Instruction activeInstr = activeInstruction();
@@ -857,13 +843,19 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
   //stop executing if no valid program is selected or we reach the end of the program
   if(robotFault || activeInstr == null) {
     return true;
-  } else if (!activeInstr.isCommented()){
-    //motion instructions
+  } 
+  else if (!activeInstr.isCommented()){
     if (activeInstr instanceof MotionInstruction) {
       MotionInstruction motInstr = (MotionInstruction)activeInstr;
+      
       //start a new instruction
       if(!executingInstruction) {
         executingInstruction = setUpInstruction(program, model, motInstr);
+        
+        if (!executingInstruction) {
+          // Motion Instruction failed
+          nextInstr = -1;
+        }
       }
       //continue current motion instruction
       else {
@@ -875,24 +867,29 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
         }
       }
     } 
-    //jump instructions
     else if (activeInstr instanceof JumpInstruction) {
-      nextInstr = activeInstr.execute();
       executingInstruction = false;
+      nextInstr = activeInstr.execute();
+      
+      if(nextInstr == -1) {
+        triggerFault();
+        return true;
+      }
     } 
-    //other instructions
     else {
       executingInstruction = false;
-      activeInstr.execute();
+      
+      if(activeInstr.execute() != 0) {
+        triggerFault();
+        return true;
+      }
     }//end of instruction type check
   } //skip commented instructions
   
   // Move to next instruction after current is finished
   if(!executingInstruction) {
-    if(nextInstr == -1) {
-      // Failed to jump to target label
-      triggerFault();
-    } else if(nextInstr == activeProgram().size() && !call_stack.isEmpty()) {
+    if(nextInstr == activeProgram().size() && !call_stack.isEmpty()) {
+      // Return from called program
       int[] p = call_stack.pop();
       active_prog = p[0];
       active_instr = p[1];
@@ -901,15 +898,12 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
       col_select = 0;
       start_render = 0;
       programRunning = !executeProgram(activeProgram(), armModel, false);
-    } else {
+    } 
+    else {
       // Move to nextInstruction
-      int size = activeProgram().getInstructions().size() + 1;
-      int i = active_instr,
-          r = row_select;
-      
+      int size = activeProgram().getInstructions().size() + 1;      
       active_instr = max(0, min(nextInstr, size - 1));
-      row_select = max(0, min(r + active_instr - i, contents.size() - 1));
-      start_render = start_render + (active_instr - i) - (row_select - r);
+      row_select = getInstrLine(active_instr);
     }
     
     updateScreen();
@@ -929,15 +923,17 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
   Point start = nativeRobotEEPoint(model.getJointAngles());
   
-  if (instruction.getVector(program) == null) {
-    // Invalid active User or Tool frame
-    return false;
-  }
-  
   if(instruction.getMotionType() == MTYPE_JOINT) {
     armModel.setupRotationInterpolation(instruction.getVector(program).angles);
   } // end joint movement setup
   else if(instruction.getMotionType() == MTYPE_LINEAR) {
+    if (!instruction.checkFrames(activeToolFrame, activeUserFrame)) {
+      // Current Frames must match the instruction's frames
+      System.out.printf("Tool frame: %d : %d\nUser frame: %d : %d\n\n", instruction.getToolFrame(),
+                                      activeToolFrame, instruction.getUserFrame(), activeUserFrame);
+      return false;
+    }
+    
     if(instruction.getTermination() == 0) {
       beginNewLinearMotion(start, instruction.getVector(program));
     } 
@@ -963,28 +959,12 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
     } // end if termination type is continuous
   } // end linear movement setup
   else if(instruction.getMotionType() == MTYPE_CIRCULAR) {
-    // If it is a circular instruction, the current instruction holds the intermediate point.
-    // There must be another instruction after this that holds the end point.
-    // If this isn't the case, the instruction is invalid, so return immediately.
-    Point nextPoint = null;
-    if(program.getInstructions().size() >= active_instr + 2) {
-      Instruction nextIns = program.getInstructions().get(active_instr+1);
-      //make sure next instruction is of valid type
-      if(nextIns instanceof MotionInstruction) {
-        MotionInstruction castIns = (MotionInstruction)nextIns;
-        nextPoint = castIns.getVector(program);
-      }
-      else {
-        return false;
-      }
-    } 
-    // invalid instruction
-    else {
-      return false; 
-    }
+    MotionInstruction nextIns = instruction.getSecondaryPoint();
+    Point nextPoint = nextIns.getVector(program);
     
     beginNewCircularMotion(start, instruction.getVector(program), nextPoint);
   } // end circular movement setup
+  
   return true;
 } // end setUpInstruction
 

@@ -84,7 +84,7 @@ public byte loadState() {
   File scenarioFile = new File(sketchPath("tmp/scenarios.bin"));
   
   if(scenarioFile.exists()) {
-    int ret = loadScenarioBytes(scenarioFile); //<>//
+    int ret = loadScenarioBytes(scenarioFile);   //<>//
     
     if(ret == 0) {
       println("Successfully loaded scenarios!");
@@ -98,31 +98,30 @@ public byte loadState() {
   for(int reg = 0; reg < DREG.length; reg += 1) {
     
     if(DREG[reg] == null) {
-      DREG[reg] = new DataRegister();
-      DREG[reg].setIdx(reg);
+      DREG[reg] = new DataRegister(reg);
     }
     
     if(GPOS_REG[reg] == null) {
-      GPOS_REG[reg] = new PositionRegister();
-      GPOS_REG[reg].setIdx(reg);
+      GPOS_REG[reg] = new PositionRegister(reg);
     }
   }
   
-  int idx = 0;
   // Associated each End Effector with an I/O Register
-  IO_REG[idx++] = new IORegister(EndEffector.SUCTION);
-  IO_REG[idx++] = new IORegister(EndEffector.CLAW);
-  IO_REG[idx++] = new IORegister(EndEffector.POINTER);
+  int idx = 0;
+  IO_REG[idx++] = new IORegister(idx, (EEType.SUCTION).name(), OFF);
+  IO_REG[idx++] = new IORegister(idx, (EEType.CLAW).name(), OFF);
+  IO_REG[idx++] = new IORegister(idx, (EEType.POINTER).name(), OFF);
+  IO_REG[idx++] = new IORegister(idx, (EEType.GLUE_GUN).name(), OFF);
+  IO_REG[idx++] = new IORegister(idx, (EEType.WIELDER).name(), OFF);
   
-  for (; idx < IO_REG.length; ++idx) {
-    // Unassociated registers
-    IO_REG[idx] = new IORegister(null);
-    IO_REG[idx].setIdx(idx);
+  for(; idx < IO_REG.length; idx += 1) {
+    // Intialize the rest of the I/O registers
+    IO_REG[idx] = new IORegister(idx, OFF);
   }
   
   byte ret = 0;
   
-  for (int bdx = 0; bdx < fileFlags.length; ++bdx) {
+  for (int bdx = 0; bdx < fileFlags.length; bdx += 1) {
     // Move each flag to a separate bit spot
     ret += (fileFlags[bdx] << bdx);
   }
@@ -252,7 +251,7 @@ private void saveProgram(Program p, DataOutputStream out) throws IOException {
     out.writeByte(1);
     
     out.writeUTF(p.name);
-    out.writeInt(p.nextRegister);
+    out.writeInt(p.nextPosition);
     out.writeInt(p.instructions.size());
     // Save each instruction
     for(Instruction inst : p.instructions) {
@@ -288,7 +287,7 @@ private Program loadProgram(DataInputStream in) throws IOException {
     Program prog = new Program(name);
     // Read the next register value
     int nReg = in.readInt();
-    prog.setNextRegister(nReg);
+    prog.setNextPosition(nReg);
     // Read the number of instructions stored for this porgram
     int numOfInst = max(0, min(in.readInt(), 500));
     
@@ -365,7 +364,7 @@ private Point loadPoint(DataInputStream in) throws IOException {
     float[] angles = loadFloatArray(in);
     
     if (angles == null) {
-      println("null angles!"); //<>//
+      println("null angles!");   //<>//
     }
     
     return new Point(position, orientation, angles);
@@ -505,7 +504,7 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     inst.setIsCommented(isCommented);
     
   } /* Add other instructions here! */
-    else if (instType == 7) {
+    else if (instType == 1) {
     inst = new Instruction();
     boolean isCommented = in.readBoolean();
     inst.setIsCommented(isCommented);
@@ -685,10 +684,17 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
     throw new IOException("Invalid Frame!");
   }
   
-  // Write frame origin
-  savePVector(f.getOrigin(), out);
+  if (f instanceof UserFrame) {
+    // Write User frame origin
+    savePVector(f.getOrigin(), out);
+    
+  } else {
+    // Write Tool frame TCP offset
+    savePVector( ((ToolFrame)f).getTCPOffset(), out );
+  }
+  
   // Write frame axes
-  saveFloatArray(f.axes, out);
+  saveFloatArray(f.orientation, out);
   
   // Write frame orientation points
   for (Point pt : f.axesTeachPoints) {
@@ -698,7 +704,7 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   // Write frame manual entry origin value
   savePVector(f.DEOrigin, out);
   // Write frame manual entry origin value
-  saveFloatArray(f.DEAxesOffsets, out);
+  saveFloatArray(f.DEOrientation, out);
   
   if (f instanceof ToolFrame) {
     ToolFrame tFrame = (ToolFrame)f;
@@ -741,10 +747,18 @@ private Frame loadFrame(DataInputStream in) throws IOException {
     throw new IOException("Invalid Frame type!");
   }
   
-  // Read origin values
-  f.setOrigin( loadPVector(in) );
+  PVector v = loadPVector(in);
+  
+  if (f instanceof UserFrame) {
+    // Read origin value
+    ((UserFrame)f).setOrigin(v);
+  } else {
+    // Read TCP offset values
+    ((ToolFrame)f).setTCPOffset(v);
+  }
+
   // Read axes quaternion values
-  f.setAxes( loadFloatArray(in) );
+  f.setOrientation( loadFloatArray(in) );
   
   // Read origin values
   f.axesTeachPoints = new Point[3];
@@ -755,7 +769,7 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   
   // Read manual entry origin values
   f.DEOrigin = loadPVector(in);
-  f.DEAxesOffsets = loadFloatArray(in);
+  f.DEOrientation = loadFloatArray(in);
   
   if (f instanceof ToolFrame) {
     ToolFrame tFrame = (ToolFrame)f;
@@ -898,7 +912,7 @@ public int loadRegisterBytes(File src) {
     int size = max(0, min(dataIn.readInt(), DREG.length));
     
     // Load the Register entries
-    while(size-- > 0) {
+    while((size -= 1) > 0) {
       // Each entry is saved after its respective index in REG
       int reg = dataIn.readInt();
       
@@ -910,13 +924,13 @@ public int loadRegisterBytes(File src) {
       // Null comments are saved as ""
       if(c.equals("")) { c = null; }
       
-      DREG[reg] = new DataRegister(c, v);
+      DREG[reg] = new DataRegister(reg, c, v);
     }
     
     size = max(0, min(dataIn.readInt(), GPOS_REG.length));
     
     // Load the Position Register entries
-    while(size-- > 0) {
+    while((size -= 1) > 0) {
       // Each entry is saved after its respective index in POS_REG
       int idx = dataIn.readInt();
       
@@ -926,7 +940,7 @@ public int loadRegisterBytes(File src) {
       if(c == "") { c = null; }
       boolean isCartesian = dataIn.readBoolean();
       
-      GPOS_REG[idx] = new PositionRegister(c, p, isCartesian);
+      GPOS_REG[idx] = new PositionRegister(idx, c, p, isCartesian);
     }
     
     dataIn.close();
@@ -984,10 +998,25 @@ public int saveScenarioBytes(File dest) {
     int numOfScenarios = SCENARIOS.size();
     // Save the number of scenarios
     dataOut.writeInt(numOfScenarios);
-    // Save the active scenario
-    dataOut.writeInt(activeScenarioIdx);
+    
+    if (activeScenario == null) {
+      // No active scenario
+      dataOut.writeUTF("");
+    } else {
+      // Save the name of the active scenario
+      dataOut.writeUTF(activeScenario.getName());
+    }
+    
     // Save all the scenarios
-    for (Scenario s : SCENARIOS) {
+    for (int sdx = 0; sdx < SCENARIOS.size(); ++sdx) {
+      Scenario s = SCENARIOS.get(sdx);
+      
+      if (s.getName().equals( activeScenario.getName() )) {
+        // Update the previous version of the active scenario
+        s = (Scenario)activeScenario.clone();
+        SCENARIOS.set(sdx, s);
+      }
+      
       saveScenario(s, dataOut);
     }
     
@@ -1028,15 +1057,22 @@ public int saveScenarioBytes(File dest) {
 public int loadScenarioBytes(File src) {
   
   try {
-    FileInputStream in = new FileInputStream(src); //<>//
+    FileInputStream in = new FileInputStream(src);   //<>//
     DataInputStream dataIn = new DataInputStream(in);
     
     int numOfScenarios = dataIn.readInt();
-    activeScenarioIdx = dataIn.readInt();
+    String activeScenarioName = dataIn.readUTF();
     
     // Load all scenarios saved
     while (numOfScenarios-- > 0) {
-      SCENARIOS.add( loadScenario(dataIn) );
+      Scenario s = loadScenario(dataIn);
+      
+      if (s.getName().equals(activeScenarioName)) {
+        // Set the active scenario
+        activeScenario = (Scenario)s.clone();
+      }
+      
+      SCENARIOS.add(s);
     }
     
     dataIn.close();
@@ -1113,7 +1149,7 @@ public void saveScenario(Scenario s, DataOutputStream out) throws IOException {
  */
 public Scenario loadScenario(DataInputStream in) throws IOException, NullPointerException {
   // Read flag byte
-  byte flag = in.readByte(); //<>//
+  byte flag = in.readByte();   //<>//
   
   if (flag == 0) {
     return null;
@@ -1131,7 +1167,7 @@ public Scenario loadScenario(DataInputStream in) throws IOException, NullPointer
     int size = in.readInt();
     // Read all the world objects contained in the scenario
     while (size-- > 0) {
-      Object loadedObject =  loadWorldObject(in);
+      Object loadedObject = loadWorldObject(in);
       
       if (loadedObject instanceof WorldObject) {
         // Add all normal world objects to the scenario
@@ -1181,7 +1217,7 @@ public Scenario loadScenario(DataInputStream in) throws IOException, NullPointer
  */
 public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {
   
-  if (wldObj == null) { //<>//
+  if (wldObj == null) {   //<>//
     // Indicate that the value saved is null
     out.writeByte(0);
     
@@ -1231,7 +1267,7 @@ public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOE
  */
 public Object loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
   // Load the flag byte
-  byte flag = in.readByte(); //<>//
+  byte flag = in.readByte();   //<>//
   Object wldObjFields = null;
   
   if (flag != 0) {
