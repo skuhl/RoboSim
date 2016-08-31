@@ -546,6 +546,22 @@ public final class MotionInstruction extends Instruction  {
   }
   
   /**
+   * Returns the unmodified point that is associate
+   * with this motion instruction.
+   *
+   * @param parent  The program to which this
+   *                instruction belongs
+   */
+  public Point getPoint(Program parent) {
+    
+    if (isGPosReg) {
+      return GPOS_REG[positionNum].point.clone();    
+    } else {
+      return parent.LPosReg[positionNum].clone();
+    }
+  }
+  
+  /**
    * Returns the point associated with this motion instruction
    * (can be either a position in the program or a global position
    * register value) in Native Coordinates.
@@ -557,11 +573,7 @@ public final class MotionInstruction extends Instruction  {
     Point pt;
     Point offset;
     
-    if(isGPosReg) {
-      pt = GPOS_REG[positionNum].point.clone();    
-    } else {
-      pt = parent.LPosReg[positionNum].clone();
-    }
+    pt = getPoint(parent);
     
     if(offsetRegNum != -1) {
       offset = GPOS_REG[offsetRegNum].point;

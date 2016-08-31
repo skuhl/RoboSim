@@ -648,6 +648,10 @@ public void mouseWheel(MouseEvent event) {
 
 public void keyPressed() {
   
+  if (key == 27) {
+    key = 0;
+  }
+  
   if (manager != null && manager.isATextFieldActive()) {
     // Disable other key events when typing in a text field
     return;
@@ -4948,7 +4952,7 @@ public ArrayList<String> loadInstructionReg() {
   Instruction ins = activeInstruction();
   if(ins instanceof MotionInstruction) {
     MotionInstruction castIns = (MotionInstruction)ins;
-    Point p = castIns.getVector(activeProgram());
+    Point p = castIns.getPoint(activeProgram());
     
     if (p != null) {
       instReg.add("Position values (press ENTER to exit):");
@@ -5005,7 +5009,7 @@ public void newMotionInstruction() {
     curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR,
     reg,
     false,
-    (curCoordFrame == CoordFrame.JOINT ? liveSpeed : liveSpeed*armModel.motorSpeed) / 100f,
+    (curCoordFrame == CoordFrame.JOINT ? 50 : 50 * armModel.motorSpeed) / 100f,
     0,
     activeUserFrame,
     activeToolFrame);

@@ -41,12 +41,6 @@ public void showMainDisplayText() {
   }
   
   Point RP = nativeRobotEEPoint(armModel.getJointAngles());
-  Frame active = getActiveFrame(null);
-  
-  if (active != null) {
-    // Convert into currently active frame
-    RP = applyFrame(RP, active.getOrigin(), active.getOrientation());
-  }
   
   String[] cartesian = RP.toLineStringArray(true),
            joints = RP.toLineStringArray(false);
@@ -67,17 +61,37 @@ public void showMainDisplayText() {
   
   text(scenarioTitle, lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 40;
-  // Display the Robot's current XYZWPR values
+  // Display the Robot's current position and orientation ini the World frame
   text("Robot Position and Orientation", lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
+  text("World", lastTextPositionX, lastTextPositionY);
+  lastTextPositionY += 20;
+  
   for (String line : cartesian) {
     text(line, lastTextPositionX, lastTextPositionY);
     lastTextPositionY += 20;
   }
   
+  Frame active = getActiveFrame(CoordFrame.USER);
+  
+  if (active != null) {
+    // Display Robot's current position and orientation in the currently active User frame
+    RP = applyFrame(RP, active.getOrigin(), active.getOrientation());
+    cartesian = RP.toLineStringArray(true);
+    
+    lastTextPositionY += 20;
+    text(String.format("User: %d", activeUserFrame + 1), lastTextPositionX, lastTextPositionY);
+    lastTextPositionY += 20;
+    
+    for (String line : cartesian) {
+      text(line, lastTextPositionX, lastTextPositionY);
+      lastTextPositionY += 20;
+    }
+  }
+  
   lastTextPositionY += 20;
   // Display the Robot's current joint angle values
-  text("Robot Joint Angles", lastTextPositionX, lastTextPositionY);
+  text("Joint", lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
   for (String line : joints) {
     text(line, lastTextPositionX, lastTextPositionY);
@@ -130,14 +144,6 @@ public void showMainDisplayText() {
   }
    
   if (DISPLAY_TEST_OUTPUT) {
-    String[] cameraFields = camera.toStringArray();
-    // Display camera position, orientation, and scale
-    for (String field : cameraFields) {
-      lastTextPositionY += 20;
-      text(field, lastTextPositionX, lastTextPositionY);
-    }
-    lastTextPositionY += 40;
-    
     fill(215, 0, 0);
     
     // Display a message when there is an error with the Robot's movement
