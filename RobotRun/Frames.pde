@@ -10,19 +10,19 @@ private final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
 
 public abstract class Frame {
   // The orientation of the frame in the form of a unit quaternion
-  private float[] orientation;
+  protected float[] orientationOffset;
   /* The three points used to define a coordinate axis for 6-Point Method
    * of Tool Frames and 3-Point or 4_Point Methods of User Frames */
   protected Point[] axesTeachPoints;
   // For Direct Entry
   protected PVector DEOrigin;
-  protected float[] DEOrientation;
+  protected float[] DEOrientationOffset;
 
   public Frame() {
-    orientation = new float[] { 1f, 0f, 0f, 0f };
+    orientationOffset = new float[] { 1f, 0f, 0f, 0f };
     axesTeachPoints = new Point[] { null, null, null };
     DEOrigin = null;
-    DEOrientation = null;
+    DEOrientationOffset = null;
   }
   
   /**
@@ -32,7 +32,7 @@ public abstract class Frame {
   
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the Native Coordinate System. */
-  public float[][] getNativeAxisVectors() { return quatToMatrix(orientation); }
+  public float[][] getNativeAxisVectors() { return quatToMatrix(getOrientation()); }
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the World Coordinate System. */
   public float[][] getWorldAxisVectors() {
@@ -42,14 +42,13 @@ public abstract class Frame {
     return doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
   }
   
-  public float[] getOrientation() { return orientation; }
-  
-  public float[] getOrientationNegation() {
-    return new float[] { orientation[0], -orientation[1], -orientation[2], -orientation[3] };
-  }
+  /**
+   * Returns the orientation of the axes for this frame.
+   */
+  public abstract float[] getOrientation();
 
   public void setOrientation(float[] newAxes) {
-    orientation = newAxes;
+    orientationOffset = newAxes;
   }
   
   /**
@@ -324,11 +323,11 @@ public abstract class Frame {
       }
     }
     
-    if (DEOrientation == null) {
+    if (DEOrientationOffset == null) {
       wpr = new PVector(0f, 0f, 0f);
     } else {
       // Display axes in World Frame Euler angles, in degrees
-      wpr = convertWorldToNative(quatToEuler(DEOrientation)).mult(RAD_TO_DEG);
+      wpr = convertWorldToNative(quatToEuler(DEOrientationOffset)).mult(RAD_TO_DEG);
     }
   
     entries[0][0] = "X: ";
@@ -361,6 +360,13 @@ public class ToolFrame extends Frame {
     super();
     TCPOffset = new PVector(0f, 0f, 0f);
     TCPTeachPoints = new Point[] { null, null, null };
+  }
+  
+  @Override
+  public float[] getOrientation() {
+    float[] robotOrientation = nativeRobotPoint(armModel.getJointAngles()).orientation;
+    // Tool frame axes orientation = (orientation offset x Model default orientation ^ -1) x Model current orientation
+    return quaternionMult(quaternionRef(orientationOffset, armModel.DEFAULT_ORIENTATION), robotOrientation);
   }
   
   public void setPoint(Point p, int idx) {
@@ -410,13 +416,13 @@ public class ToolFrame extends Frame {
     if (method == 2) {
       // Direct Entry Method
       
-      if (DEOrigin == null || DEOrientation == null) {
+      if (DEOrigin == null || DEOrientationOffset == null) {
         // No direct entry values have been set
         return false;
       }
       
       setTCPOffset(DEOrigin);
-      setOrientation( DEOrientation.clone() );
+      setOrientation( DEOrientationOffset.clone() );
       return true;
     } else if (method >= 0 && method < 2 && TCPTeachPoints[0] != null && TCPTeachPoints[1] != null && TCPTeachPoints[2] != null) {
       // 3-Point or 6-Point Method
@@ -503,6 +509,9 @@ public class UserFrame extends Frame {
     orientOrigin = null;
   }
   
+  @Override
+  public float[] getOrientation() { return orientationOffset; }
+  
   public void setPoint(Point p, int idx) {
     
     /* Map the index into the 'Point array' to the
@@ -546,13 +555,13 @@ public class UserFrame extends Frame {
     if (mode == 2) {
       // Direct Entry Method
       
-      if (DEOrigin == null || DEOrientation == null) {
+      if (DEOrigin == null || DEOrientationOffset == null) {
         // No direct entry values have been set
         return false;
       }
       
       setOrigin(DEOrigin);
-      setOrientation( DEOrientation.clone() );
+      setOrientation( DEOrientationOffset.clone() );
       return true;
     } else if (mode >= 0 && mode < 2 && axesTeachPoints[0] != null && axesTeachPoints[1] != null && axesTeachPoints[2] != null) {
       // 3-Point or 4-Point Method

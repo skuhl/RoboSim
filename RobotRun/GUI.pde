@@ -5371,11 +5371,11 @@ public void createFrameDirectEntry(Frame taughtFrame, float[] inputs) {
   
   // Save direct entry values
   taughtFrame.DEOrigin = origin;
-  taughtFrame.DEOrientation = eulerToQuat(wpr);
+  taughtFrame.DEOrientationOffset = eulerToQuat(wpr);
   taughtFrame.setFrame(2);
   
   if(DISPLAY_TEST_OUTPUT) {
-    wpr = quatToEuler(taughtFrame.orientation).mult(RAD_TO_DEG);
+    wpr = quatToEuler(taughtFrame.orientationOffset).mult(RAD_TO_DEG);
     System.out.printf("\n\n%s\n%s\nFrame set: %d\n", origin.toString(),
                       wpr.toString(), curFrameIdx);
   }

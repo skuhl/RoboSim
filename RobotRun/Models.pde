@@ -106,6 +106,9 @@ public class Model {
 } // end Model class
 
 public class ArmModel {
+  // Initial position and orientation of the Robot
+  public final PVector DEFAULT_POSITON;
+  public final float[] DEFAULT_ORIENTATION;
   
   public EEType activeEndEffector;
   public int endEffectorState;
@@ -136,6 +139,11 @@ public class ArmModel {
   public float[] tgtOrientation;
   
   public ArmModel() {
+    Point pt = nativeRobotPoint(new float[] { 0f, 0f, 0f, 0f, 0f, 0f });
+    // Define the defaultl Robot position and orientaiton
+    DEFAULT_POSITON = pt.position;
+    DEFAULT_ORIENTATION = pt.orientation;
+    
     activeEndEffector = EEType.NONE;
     endEffectorState = OFF;
     // Initialize the End Effector to IO Register mapping
@@ -1014,14 +1022,20 @@ public class ArmModel {
       
     } else {
       // Jog in the World, Tool or User Frame
-      Frame curFrame;
+      float[] invFrameOrientation = null;
       
       if (curCoordFrame == CoordFrame.TOOL) {
-        curFrame = getActiveFrame(CoordFrame.TOOL);
+        Frame curFrame = getActiveFrame(CoordFrame.TOOL);
+        
+        if (curFrame != null) {
+          invFrameOrientation = quaternionConjugate(curFrame.getOrientation());
+        }
       } else if (curCoordFrame == CoordFrame.USER) {
-        curFrame = getActiveFrame(CoordFrame.USER);
-      } else {
-        curFrame = null;
+        Frame curFrame = getActiveFrame(CoordFrame.USER);
+        
+        if (curFrame != null) {
+          invFrameOrientation = quaternionConjugate(curFrame.getOrientation());
+        }
       }
       
       Point curPoint = nativeRobotEEPoint(getJointAngles());
@@ -1033,9 +1047,9 @@ public class ArmModel {
         PVector translation = new PVector(jogLinear[0], jogLinear[1], jogLinear[2]);
         translation = rotateVector(translation.mult(distance), WORLD_AXES);
         
-        if (curFrame != null) {
+        if (invFrameOrientation != null) {
             // Convert the movement vector into the current reference frame
-          translation = rotateVectorQuat(translation, curFrame.getOrientationNegation());
+          translation = rotateVectorQuat(translation, invFrameOrientation);
         }
         
         tgtPosition.add(translation);
@@ -1051,9 +1065,9 @@ public class ArmModel {
         PVector rotation = new PVector(jogRot[0], jogRot[1], jogRot[2]);
         rotation = convertWorldToNative(rotation);
         
-        if (curFrame != null) {
+        if (invFrameOrientation != null) {
           // Convert the movement vector into the current reference frame
-          rotation = rotateVectorQuat(rotation, curFrame.getOrientationNegation());
+          rotation = rotateVectorQuat(rotation, invFrameOrientation);
         }
         rotation.normalize();
         
