@@ -1735,10 +1735,20 @@ public void f4() {
       if (shift && teachFrame != null) {
         Point tgt = teachFrame.getPoint(opt_select);
         
-        if (tgt != null && tgt.angles != null) {
-          // Move the Robot to the select point
-          armModel.moveTo(tgt.angles);
+        if  (mode == Screen.TEACH_3PT_USER || mode == Screen.TEACH_4PT) {
+          
+          if (tgt != null && tgt.position != null && tgt.orientation != null) {
+            // Move to the point's position and orientation
+            armModel.moveTo(tgt.position, tgt.orientation);
+          }
+        } else {
+          
+          if (tgt != null && tgt.angles != null) {
+            // Move to the point's joint angles
+            armModel.moveTo(tgt.angles);
+          }
         }
+        
       }
     } else if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
       editTextEntry(3);
@@ -1801,7 +1811,15 @@ public void f5() {
     case TEACH_6PT:
       if (shift) {
         // Save the Robot's current position and joint angles
-        teachFrame.setPoint(nativeRobotPoint(armModel.getJointAngles()), opt_select);
+        Point pt;
+        
+        if (mode == Screen.TEACH_3PT_USER || mode == Screen.TEACH_4PT) {
+          pt = nativeRobotEEPoint(armModel.getJointAngles());
+        } else {
+          pt = nativeRobotPoint(armModel.getJointAngles());
+        }
+        
+        teachFrame.setPoint(pt, opt_select);
         saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
         updateScreen();
       }

@@ -252,31 +252,27 @@ public void displayAxes() {
   
   Point eePoint = nativeRobotEEPoint(armModel.getJointAngles());
   
-  if (axesState == AxesDisplay.NONE && curCoordFrame != CoordFrame.JOINT) {
+  if (axesState == AxesDisplay.AXES && curCoordFrame == CoordFrame.TOOL) {
+    Frame activeTool = getActiveFrame(CoordFrame.TOOL);
+    
+    // Draw the axes of the active Tool frame at the Robot End Effector
+    displayOriginAxes(eePoint.position, activeTool.getWorldAxisVectors(), 200f, color(255, 0, 255));
+  } else {
     // Draw axes of the Robot's End Effector frame for testing purposes
     displayOriginAxes(eePoint.position, quatToMatrix( eePoint.orientation ), 200f, color(255, 0, 255));
-    
-  } else if (axesState == AxesDisplay.AXES) {
+  }
+  
+  if (axesState == AxesDisplay.AXES) {
     // Display axes
     if (curCoordFrame != CoordFrame.JOINT) {
-      Frame activeTool = getActiveFrame(CoordFrame.TOOL),
-            activeUser = getActiveFrame(CoordFrame.USER);
-      
-      if (curCoordFrame == CoordFrame.TOOL) {
-        /* Draw the axes of the active Tool frame at the Robot End Effector */
-        displayOriginAxes(eePoint.position, activeTool.getWorldAxisVectors(), 200f, color(255, 0, 255));
-        
-      } else {
-        // Draw axes of the Robot's End Effector frame for testing purposes
-        displayOriginAxes(eePoint.position, quatToMatrix( eePoint.orientation ), 200f, color(255, 0, 255));
-      }
+      Frame activeUser = getActiveFrame(CoordFrame.USER);
       
       if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
-        /* Draw the axes of the active User frame */
+        // Draw the axes of the active User frame
         displayOriginAxes(activeUser.getOrigin(), activeUser.getWorldAxisVectors(), 10000f, color(0));
         
       } else {
-        /* Draw the axes of the World frame */
+        // Draw the axes of the World frame
         displayOriginAxes(new PVector(0f, 0f, 0f), WORLD_AXES, 10000f, color(0));
       }
     }
