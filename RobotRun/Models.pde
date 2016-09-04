@@ -108,7 +108,7 @@ public class Model {
 public class ArmModel {
   // Initial position and orientation of the Robot
   public final PVector DEFAULT_POSITON;
-  public final float[] DEFAULT_ORIENTATION;
+  public final RQuaternion DEFAULT_ORIENTATION;
   
   public EEType activeEndEffector;
   public int endEffectorState;
@@ -136,7 +136,7 @@ public class ArmModel {
   public float[][] oldEEOrientation;
   
   public PVector tgtPosition;
-  public float[] tgtOrientation;
+  public RQuaternion tgtOrientation;
   
   public ArmModel() {
     Point pt = nativeRobotPoint(new float[] { 0f, 0f, 0f, 0f, 0f, 0f });
@@ -1022,19 +1022,19 @@ public class ArmModel {
       
     } else {
       // Jog in the World, Tool or User Frame
-      float[] invFrameOrientation = null;
+      RQuaternion invFrameOrientation = null;
       
       if (curCoordFrame == CoordFrame.TOOL) {
         Frame curFrame = getActiveFrame(CoordFrame.TOOL);
         
         if (curFrame != null) {
-          invFrameOrientation = quaternionConjugate(curFrame.getOrientation());
+          invFrameOrientation = curFrame.getOrientation().conjugate();
         }
       } else if (curCoordFrame == CoordFrame.USER) {
         Frame curFrame = getActiveFrame(CoordFrame.USER);
         
         if (curFrame != null) {
-          invFrameOrientation = quaternionConjugate(curFrame.getOrientation());
+          invFrameOrientation = curFrame.getOrientation().conjugate();
         }
       }
       
@@ -1049,7 +1049,7 @@ public class ArmModel {
         
         if (invFrameOrientation != null) {
             // Convert the movement vector into the current reference frame
-          translation = rotateVectorQuat(translation, invFrameOrientation);
+          translation = invFrameOrientation.rotateVector(translation);
         }
         
         tgtPosition.add(translation);
@@ -1067,15 +1067,15 @@ public class ArmModel {
         
         if (invFrameOrientation != null) {
           // Convert the movement vector into the current reference frame
-          rotation = rotateVectorQuat(rotation, invFrameOrientation);
+          rotation = invFrameOrientation.rotateVector(rotation);
         }
         rotation.normalize();
         
-        tgtOrientation = rotateQuat(tgtOrientation, rotation, theta);
+        tgtOrientation.rotateAroundAxis(rotation, theta);
         
-        if (quaternionDotProduct(tgtOrientation, curPoint.orientation) < 0f) {
+        if (tgtOrientation.dot(curPoint.orientation) < 0f) {
           // Use -q instead of q
-          tgtOrientation = vectorScalarMult(tgtOrientation, -1);
+          tgtOrientation.scalarMult(-1);
         }
       } else {
         // No rotational motion
@@ -1098,7 +1098,7 @@ public class ArmModel {
    *              are invalid and EXEC_SUCCESS if the Robot is successfully moved to the
    *              given position
    */
-  public int jumpTo(PVector destPosition, float[] destOrientation) {
+  public int jumpTo(PVector destPosition, RQuaternion destOrientation) {
     boolean invalidAngle = false;
     float[] srcAngles = getJointAngles();
     // Calculate the joint angles for the desired position and orientation
@@ -1122,7 +1122,7 @@ public class ArmModel {
       if (DISPLAY_TEST_OUTPUT) {
         Point RP = nativeRobotEEPoint(getJointAngles());
         System.out.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n", RP.position, destPosition,
-                                arrayToString(RP.orientation), arrayToString(destOrientation));
+                                RP.orientation, destOrientation);
       }
       
       triggerFault();
@@ -1144,7 +1144,7 @@ public class ArmModel {
   /**
    * TODO comment
    */
-  public void moveTo(PVector position, float[] orientation) {
+  public void moveTo(PVector position, RQuaternion orientation) {
     Point start = nativeRobotEEPoint(armModel.getJointAngles());
     Point end = new Point(position, orientation, start.angles);
     beginNewLinearMotion(start, end);

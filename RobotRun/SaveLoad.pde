@@ -326,7 +326,7 @@ private void savePoint(Point p, DataOutputStream out) throws IOException {
     // Write position of the point
     savePVector(p.position, out);
     // Write point's orientation
-    saveFloatArray(p.orientation, out);
+    saveRQuaternion(p.orientation, out);
     // Write the joint angles for the point's position
     saveFloatArray(p.angles, out);
     
@@ -359,7 +359,7 @@ private Point loadPoint(DataInputStream in) throws IOException {
     // Read the point's position
     PVector position = loadPVector(in);
     // Read the point's orientation
-    float[] orientation = loadFloatArray(in);
+    RQuaternion orientation = loadRQuaternion(in);
     // Read the joint angles for the joint's position
     float[] angles = loadFloatArray(in);
     
@@ -694,7 +694,7 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   }
   
   // Write frame axes
-  saveFloatArray(f.orientationOffset, out);
+  saveRQuaternion(f.orientationOffset, out);
   
   // Write frame orientation points
   for (Point pt : f.axesTeachPoints) {
@@ -704,7 +704,7 @@ private void saveFrame(Frame f, DataOutputStream out) throws IOException {
   // Write frame manual entry origin value
   savePVector(f.DEOrigin, out);
   // Write frame manual entry origin value
-  saveFloatArray(f.DEOrientationOffset, out);
+  saveRQuaternion(f.DEOrientationOffset, out);
   
   if (f instanceof ToolFrame) {
     ToolFrame tFrame = (ToolFrame)f;
@@ -758,7 +758,7 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   }
 
   // Read axes quaternion values
-  f.setOrientation( loadFloatArray(in) );
+  f.setOrientation( loadRQuaternion(in) );
   
   // Read origin values
   f.axesTeachPoints = new Point[3];
@@ -769,7 +769,7 @@ private Frame loadFrame(DataInputStream in) throws IOException {
   
   // Read manual entry origin values
   f.DEOrigin = loadPVector(in);
-  f.DEOrientationOffset = loadFloatArray(in);
+  f.DEOrientationOffset = loadRQuaternion(in);
   
   if (f instanceof ToolFrame) {
     ToolFrame tFrame = (ToolFrame)f;
@@ -1596,6 +1596,46 @@ public PVector loadPVector(DataInputStream in) throws IOException {
     v.y = in.readFloat();
     v.z = in.readFloat();
     return v;
+  }
+}
+
+/**
+ * Saves the data associated with the given quaternion to the given output stream.
+ */
+public void saveRQuaternion(RQuaternion q, DataOutputStream out) throws IOException {
+  if (q == null) {
+    // Write flag byte
+    out.writeByte(0);
+  
+  } else {
+    // Write flag byte
+    out.writeByte(1);
+    
+    for (int idx = 0; idx < 4; ++idx) {
+      // Write each quaternion value
+      out.writeFloat(q.getValue(idx));
+    }
+  }
+}
+
+/**
+ * Attempts to construct a quaternion object from the data in the given input stream.
+ */
+public RQuaternion loadRQuaternion(DataInputStream in) throws IOException {
+  // Read flag byte
+  byte flag = in.readByte();
+  
+  if (flag == 0) {
+    return null;
+    
+  } else {
+    // Read values of the quaternion
+    float w = in.readFloat(),
+          x = in.readFloat(),
+          y = in.readFloat(),
+          z = in.readFloat();
+    
+    return new RQuaternion(w, x, y, z);
   }
 }
 

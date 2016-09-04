@@ -111,7 +111,7 @@ public void draw() {
   
   if (displayPoint != null) {
     // Display the point with its local orientation axes
-    displayOriginAxes(displayPoint.position, quatToMatrix(displayPoint.orientation), 100f, color(0, 100, 15));
+    displayOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
   }
   
   //TESTING CODE: DRAW INTERMEDIATE POINTS
@@ -259,7 +259,7 @@ public void displayAxes() {
     displayOriginAxes(eePoint.position, activeTool.getWorldAxisVectors(), 200f, color(255, 0, 255));
   } else {
     // Draw axes of the Robot's End Effector frame for testing purposes
-    displayOriginAxes(eePoint.position, quatToMatrix( eePoint.orientation ), 200f, color(255, 0, 255));
+    displayOriginAxes(eePoint.position, eePoint.orientation.toMatrix(), 200f, color(255, 0, 255));
   }
   
   if (axesState == AxesDisplay.AXES) {

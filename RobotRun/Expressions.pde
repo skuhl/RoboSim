@@ -791,7 +791,7 @@ public class RegStmtPoint {
       PVector position = new PVector(values[0], values[1], values[2]),
               wpr = new PVector(values[3], values[4], values[5]);
               // Convet back to quaternion
-      float[] orientation = eulerToQuat(wpr);
+      RQuaternion orientation = eulerToQuat(wpr);
       // TODO initialize angles?
       return new Point(position, orientation);
     } else {

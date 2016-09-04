@@ -345,20 +345,22 @@ public float[][] calculateJacobian(float[] angles, boolean posOffset) {
     //get updated ee position
     Point newRP = nativeRobotEEPoint(angles);
     
-    if (quaternionDotProduct(curRP.orientation, newRP.orientation) < 0f) {
+    if (curRP.orientation.dot(newRP.orientation) < 0f) {
       // Use -q instead of q
-      newRP.orientation = vectorScalarMult(newRP.orientation, -1);
+      newRP.orientation.scalarMult(-1);
     }
+    
+    newRP.orientation.addValues( RQuaternion.scalarMult(-1, curRP.orientation) );
     
     //get translational delta
     J[0][i] = (newRP.position.x - curRP.position.x) / DEG_TO_RAD;
     J[1][i] = (newRP.position.y - curRP.position.y) / DEG_TO_RAD;
     J[2][i] = (newRP.position.z - curRP.position.z) / DEG_TO_RAD;
     //get rotational delta        
-    J[3][i] = (newRP.orientation[0] - curRP.orientation[0]) / DEG_TO_RAD;
-    J[4][i] = (newRP.orientation[1] - curRP.orientation[1]) / DEG_TO_RAD;
-    J[5][i] = (newRP.orientation[2] - curRP.orientation[2]) / DEG_TO_RAD;
-    J[6][i] = (newRP.orientation[3] - curRP.orientation[3]) / DEG_TO_RAD;
+    J[3][i] = newRP.orientation.getValue(0) / DEG_TO_RAD;
+    J[4][i] = newRP.orientation.getValue(1) / DEG_TO_RAD;
+    J[5][i] = newRP.orientation.getValue(2) / DEG_TO_RAD;
+    J[6][i] = newRP.orientation.getValue(3) / DEG_TO_RAD;
     //replace the original rotational value
     angles[i] -= dAngle;
   }
@@ -378,7 +380,7 @@ public float[][] calculateJacobian(float[] angles, boolean posOffset) {
  * @param tgtPosition     The desired position of the Robot
  * @param tgtOrientation  The desited orientation of the Robot
  */
-public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, float[] tgtOrientation) {
+public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, RQuaternion tgtOrientation) {
   final int limit = 1000;  // Max number of times to loop
   int count = 0;
   
@@ -387,27 +389,27 @@ public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, float[]
   while(count < limit) {
     Point cPoint = nativeRobotEEPoint(angles);
     
-    if (quaternionDotProduct(tgtOrientation, cPoint.orientation) < 0f) {
+    if (tgtOrientation.dot(cPoint.orientation) < 0f) {
       // Use -q instead of q
-      tgtOrientation = vectorScalarMult(tgtOrientation, -1);
+      tgtOrientation.scalarMult(-1);
     }
     
     //calculate our translational offset from target
     PVector tDelta = PVector.sub(tgtPosition, cPoint.position);
     //calculate our rotational offset from target
-    float[] rDelta = calculateVectorDelta(tgtOrientation, cPoint.orientation, 4);
+    RQuaternion rDelta = RQuaternion.addValues(tgtOrientation, RQuaternion.scalarMult(-1, cPoint.orientation));
     float[] delta = new float[7];
     
     delta[0] = tDelta.x;
     delta[1] = tDelta.y;
     delta[2] = tDelta.z;
-    delta[3] = rDelta[0];
-    delta[4] = rDelta[1];
-    delta[5] = rDelta[2];
-    delta[6] = rDelta[3];
+    delta[3] = rDelta.getValue(0);
+    delta[4] = rDelta.getValue(1);
+    delta[5] = rDelta.getValue(2);
+    delta[6] = rDelta.getValue(3);
     
     float dist = PVector.dist(cPoint.position, tgtPosition);
-    float rDist = getVectorMag(rDelta);
+    float rDist = rDelta.magnitude();
     //check whether our current position is within tolerance
     if ( (dist < (liveSpeed / 100f)) && (rDist < (0.00005f * liveSpeed)) ) { break; }
     
@@ -434,7 +436,7 @@ public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, float[]
       // IK failure
       if (DISPLAY_TEST_OUTPUT) {
         System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles),
-                            matrixToString(J), arrayToString(cPoint.orientation), arrayToString(tgtOrientation));
+                            matrixToString(J), cPoint.orientation, tgtOrientation);
       }
       
       return null;
@@ -469,9 +471,9 @@ void calculateIntermediatePositions(Point start, Point end) {
   
   PVector p1 = start.position;
   PVector p2 = end.position;
-  float[] q1 = start.orientation;
-  float[] q2 = end.orientation;
-  float[] qi = new float[4];
+  RQuaternion q1 = start.orientation;
+  RQuaternion q2 = end.orientation;
+  RQuaternion qi = new RQuaternion();
   
   float mu = 0;
   int numberOfPoints = (int)(dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) / distanceBetweenPoints);
@@ -479,7 +481,7 @@ void calculateIntermediatePositions(Point start, Point end) {
   for(int n = 0; n < numberOfPoints; n++) {
     mu += increment;
     
-    qi = quaternionSlerp(q1, q2, mu);
+    qi = RQuaternion.SLERP(q1, q2, mu);
     intermediatePositions.add(new Point(new PVector(
     p1.x * (1 - mu) + (p2.x * mu),
     p1.y * (1 - mu) + (p2.y * mu),
@@ -518,10 +520,10 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   PVector p1 = start.position;
   PVector p2 = end.position;
   PVector p3 = next.position;
-  float[] q1 = start.orientation;
-  float[] q2 = end.orientation;
-  float[] q3 = next.orientation;
-  float[] qi = new float[4];
+  RQuaternion q1 = start.orientation;
+  RQuaternion q2 = end.orientation;
+  RQuaternion q3 = next.orientation;
+  RQuaternion qi = new RQuaternion();
   
   ArrayList<Point> secondaryTargets = new ArrayList<Point>();
   float d1 = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
@@ -538,7 +540,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   float increment = 1.0 / (float)numberOfPoints;
   for(int n = 0; n < numberOfPoints; n++) {
     mu += increment;
-    qi = quaternionSlerp(q2, q3, mu);
+    qi = RQuaternion.SLERP(q2, q3, mu);
     secondaryTargets.add(new Point(new PVector(
     p2.x * (1 - mu) + (p3.x * mu),
     p2.y * (1 - mu) + (p3.y * mu),
@@ -550,7 +552,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   int transitionPoint = (int)((float)numberOfPoints * percentage);
   for(int n = 0; n < transitionPoint; n++) {
     mu += increment;
-    qi = quaternionSlerp(q1, q2, mu);
+    qi = RQuaternion.SLERP(q1, q2, mu);
     intermediatePositions.add(new Point(new PVector(
     p1.x * (1 - mu) + (p2.x * mu),
     p1.y * (1 - mu) + (p2.y * mu),
@@ -575,7 +577,7 @@ void calculateContinuousPositions(Point start, Point end, Point next, float perc
   for(int n = transitionPoint; n < numberOfPoints; n++) {
     mu += increment;
     Point tgt = secondaryTargets.get(secondaryIdx);
-    qi = quaternionSlerp(currentPoint.orientation, tgt.orientation, mu);
+    qi = RQuaternion.SLERP(currentPoint.orientation, tgt.orientation, mu);
     intermediatePositions.add(new Point(new PVector(
     currentPoint.position.x * (1 - mu) + (tgt.position.x * mu),
     currentPoint.position.y * (1 - mu) + (tgt.position.y * mu),
@@ -601,9 +603,9 @@ void calculateArc(Point start, Point inter, Point end) {
   PVector a = start.position;
   PVector b = inter.position;
   PVector c = end.position;
-  float[] q1 = start.orientation;
-  float[] q2 = end.orientation;
-  float[] qi = new float[4];
+  RQuaternion q1 = start.orientation;
+  RQuaternion q2 = end.orientation;
+  RQuaternion qi = new RQuaternion();
   
   // Calculate arc center point
   PVector[] plane = new PVector[3];
@@ -638,9 +640,9 @@ void calculateArc(Point start, Point inter, Point end) {
   float inc = 1/(float)numPoints;
   float angleInc = (theta)/(float)numPoints;
   for(int i = 0; i < numPoints; i += 1) {
-    PVector pos = rotateVectorQuat(u, n, angle).mult(r).add(center);
+    PVector pos = RQuaternion.rotateVectorAroundAxis(u, n, angle).mult(r).add(center);
     if(i == numPoints-1) pos = end.position;
-    qi = quaternionSlerp(q1, q2, mu);
+    qi = RQuaternion.SLERP(q1, q2, mu);
     println(pos + ", " + end.position);
     intermediatePositions.add(new Point(pos, qi));
     angle += angleInc;

@@ -98,7 +98,7 @@ public class RQuaternion {
 	 * Returns the magnitude of the quaternion.
 	 */
 	public float magnitude() {
-		return (float)Math.sqrt( Math.pow(x, 2f) + Math.pow(z, 2f) + Math.pow(y, 2f) + Math.pow(z, 2f) );
+		return (float)Math.sqrt( Math.pow(w, 2f) + Math.pow(x, 2f) + Math.pow(y, 2f) + Math.pow(z, 2f) );
 	}
 
 	/**
@@ -152,7 +152,7 @@ public class RQuaternion {
 	 * Returns q, scaled by scalar, without modifying q.
 	 */
 	public static RQuaternion scalarMult(float scalar, RQuaternion q) {
-		RQuaternion copy = q;
+		RQuaternion copy = q.cloneInClass();
 		copy.scalarMult(scalar);
 		return copy;
 	}
@@ -215,7 +215,7 @@ public class RQuaternion {
 	 */
 	public RQuaternion transformQuaternion(RQuaternion q) {
 		RQuaternion conj = conjugate();
-		return mult(q, conj);
+		return RQuaternion.mult(q, conj);
 	}
 	
 	/**

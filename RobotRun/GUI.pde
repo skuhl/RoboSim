@@ -1110,8 +1110,8 @@ public void up() {
     case SET_IF_STMT_ACT:
     case SET_SELECT_STMT_ACT:
     case SET_SELECT_STMT_ARG:
-    case SET_EXPR_ARG: //<>//
-    case SET_BOOL_EXPR_ARG: //<>//
+    case SET_EXPR_ARG: //<>// //<>//
+    case SET_BOOL_EXPR_ARG: //<>// //<>//
     case SET_EXPR_OP:
     case SET_IO_INSTR_STATE:
     case NAV_SETUP:
@@ -1132,14 +1132,14 @@ public void up() {
   
   updateScreen();
 }
- //<>//
+ //<>// //<>//
 public void dn() {
   switch(mode) {
-    case NAV_PROGRAMS: //<>//
+    case NAV_PROGRAMS: //<>// //<>//
       active_prog = moveDown(shift);
             
       if(DISPLAY_TEST_OUTPUT) {
-        System.out.printf("\nRow: %d\nProg: %d\nTRS: %d\n\n", //<>//
+        System.out.printf("\nRow: %d\nProg: %d\nTRS: %d\n\n", //<>// //<>//
         row_select, active_prog, start_render);
       }
       break;
@@ -1151,7 +1151,7 @@ public void dn() {
         // Lock movement when a program is running
         Instruction i = activeInstruction();
         int prevIdx = getSelectedIdx();
-        active_instr = moveDownInstr(shift); //<>//
+        active_instr = moveDownInstr(shift); //<>// //<>//
         int curLine = getSelectedLine();
         
         //special case for select statement column navigation
@@ -1220,7 +1220,7 @@ public void dn() {
     case SET_IO_INSTR_STATE:
     case NAV_SETUP:
       opt_select = min(opt_select + 1, options.size() - 1);
-      break;  //<>//
+      break;  //<>// //<>//
     case ACTIVE_FRAMES:
       updateActiveFramesDisplay();
       workingText = Integer.toString(activeUserFrame + 1);
@@ -1253,9 +1253,9 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>//
+        // Reset function key states //<>// //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>//
+      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>// //<>//
         col_select -= (col_select - 4 >= options.size()) ? 4 : 0;
       }
   }
@@ -3388,7 +3388,7 @@ public void loadScreen() {
     case SET_LBL_NUM:
       col_select = 1;
       opt_select = 0;
-      workingText = ""; //<>//
+      workingText = ""; //<>// //<>//
       break;
     case SET_MV_INSTR_TYPE:
       MotionInstruction mInst = activeMotionInst();
@@ -5541,7 +5541,7 @@ public void createRegisterPoint(boolean fromJointAngles) {
   } else {
     PVector position = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
     // Convert the angles from degrees to radians, then convert from World to Native frame, and finally convert to a quaternion
-    float[] orientation = eulerToQuat( convertWorldToNative( (new PVector(inputs[3], inputs[4], inputs[5]).mult(DEG_TO_RAD)) ) );
+    RQuaternion orientation = eulerToQuat( convertWorldToNative( (new PVector(inputs[3], inputs[4], inputs[5]).mult(DEG_TO_RAD)) ) );
     
     // Use default the Robot's joint angles for computing inverse kinematics
     float[] jointAngles = inverseKinematics(new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
@@ -5553,7 +5553,7 @@ public void createRegisterPoint(boolean fromJointAngles) {
 }
 
 /**
- * This method loads text to screen in such a way as to allow the user
+ * This method loads text to screen in sfuch a way as to allow the user
  * to input an arbitrary character string consisting of letters (a-z
  * upper and lower case) and/ or special characters (_, @, *, .) via
  * the function row, as well as numbers via the number pad. Strings are

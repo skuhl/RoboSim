@@ -209,9 +209,9 @@ public void applyModelRotation(float[] jointAngles) {
  * @param axes    The axes of the Coordinate System representing as a rotation quanternion
  * @returning     The point, pt, interms of the given frame's Coordinate System
  */
-public Point applyFrame(Point pt, PVector origin, float[] axes) {
+public Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
   PVector position = convertToFrame(pt.position, origin, axes);
-  float[] orientation = quaternionRef(pt.orientation, axes);
+  RQuaternion orientation = axes.transformQuaternion(pt.orientation);
   
   return new Point(position, orientation, pt.angles);
 }
@@ -225,9 +225,9 @@ public Point applyFrame(Point pt, PVector origin, float[] axes) {
  * @param axes    The axes of the Coordinate System representing as a rotation quanternion
  * @returning     The vector, v, interms of the given frame's Coordinate System
  */
-public PVector convertToFrame(PVector v, PVector origin, float[] axes) {
+public PVector convertToFrame(PVector v, PVector origin, RQuaternion axes) {
   PVector vOffset = PVector.sub(v, origin);
-    return rotateVectorQuat(vOffset, axes);
+    return axes.rotateVector(vOffset);
 }
 
 /**
@@ -239,9 +239,9 @@ public PVector convertToFrame(PVector v, PVector origin, float[] axes) {
  * @param axes    The axes of the Coordinate System representing as a rotation quanternion
  * @returning     The point, pt, interms of the given frame's Coordinate System
  */
-public Point removeFrame(Point pt, PVector origin, float[] axes) {
+public Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
   PVector position = convertFromFrame(pt.position, origin, axes);
-  float[] orientation = quaternionMult(pt.orientation, axes);
+  RQuaternion orientation = RQuaternion.mult(pt.orientation, axes);
   
   return new Point(position, orientation, pt.angles);
 }
@@ -255,9 +255,10 @@ public Point removeFrame(Point pt, PVector origin, float[] axes) {
  * @param axes    The axes of the Coordinate System representing as a rotation quanternion
  * @returning     The vector, u, in the Native frame
  */
-public PVector convertFromFrame(PVector u, PVector origin, float[] axes) {
-  float[] invAxes = vectorNorm(  quaternionConjugate(axes) );
-  PVector vRotated = rotateVectorQuat(u, invAxes);
+public PVector convertFromFrame(PVector u, PVector origin, RQuaternion axes) {
+  RQuaternion invAxes = axes.conjugate();
+  invAxes.normalize();
+  PVector vRotated = invAxes.rotateVector(u);
   return vRotated.add(origin);
 }
 
@@ -518,19 +519,18 @@ float[][] eulerToMatrix(PVector wpr) {
 /**
  * Converts the given Euler angle set values to a quaternion
  */
-float[] eulerToQuat(PVector wpr) {
-  
-  float[] q = new float[4];
+RQuaternion eulerToQuat(PVector wpr) {
+  float w, x, y, z;
   float xRot = wpr.x;
   float yRot = wpr.y;
   float zRot = wpr.z;
   
-  q[0] = cos(xRot/2)*cos(yRot/2)*cos(zRot/2) + sin(xRot/2)*sin(yRot/2)*sin(zRot/2);
-  q[1] = sin(xRot/2)*cos(yRot/2)*cos(zRot/2) - cos(xRot/2)*sin(yRot/2)*sin(zRot/2);
-  q[2] = cos(xRot/2)*sin(yRot/2)*cos(zRot/2) + sin(xRot/2)*cos(yRot/2)*sin(zRot/2);
-  q[3] = cos(xRot/2)*cos(yRot/2)*sin(zRot/2) - sin(xRot/2)*sin(yRot/2)*cos(zRot/2);
+  w = cos(xRot/2)*cos(yRot/2)*cos(zRot/2) + sin(xRot/2)*sin(yRot/2)*sin(zRot/2);
+  x = sin(xRot/2)*cos(yRot/2)*cos(zRot/2) - cos(xRot/2)*sin(yRot/2)*sin(zRot/2);
+  y = cos(xRot/2)*sin(yRot/2)*cos(zRot/2) + sin(xRot/2)*cos(yRot/2)*sin(zRot/2);
+  z = cos(xRot/2)*cos(yRot/2)*sin(zRot/2) - sin(xRot/2)*sin(yRot/2)*cos(zRot/2);
   
-  return q;
+  return new RQuaternion(w, x, y, z);
 }
 
 //calculates euler angles from rotation matrix
@@ -566,59 +566,62 @@ PVector matrixToEuler(float[][] r) {
 }
 
 //calculates quaternion from rotation matrix
-float[] matrixToQuat(float[][] r) {
-  float[] q = new float[4];
+RQuaternion matrixToQuat(float[][] r) {
+  float[] limboQ = new float[4];
   float tr = r[0][0] + r[1][1] + r[2][2];
 
   if(tr > 0) {
     float S = sqrt(1.0 + tr) * 2; // S=4*q[0] 
-    q[0] = S / 4;
-    q[1] = (r[2][1] - r[1][2]) / S;
-    q[2] = (r[0][2] - r[2][0]) / S; 
-    q[3] = (r[1][0] - r[0][1]) / S;
+    limboQ[0] = S / 4;
+    limboQ[1] = (r[2][1] - r[1][2]) / S;
+    limboQ[2] = (r[0][2] - r[2][0]) / S; 
+    limboQ[3] = (r[1][0] - r[0][1]) / S;
   } else if((r[0][0] > r[1][1]) & (r[0][0] > r[2][2])) {
     float S = sqrt(1.0 + r[0][0] - r[1][1] - r[2][2]) * 2; // S=4*q[1] 
-    q[0] = (r[2][1] - r[1][2]) / S;
-    q[1] = S / 4;
-    q[2] = (r[0][1] + r[1][0]) / S; 
-    q[3] = (r[0][2] + r[2][0]) / S;
+    limboQ[0] = (r[2][1] - r[1][2]) / S;
+    limboQ[1] = S / 4;
+    limboQ[2] = (r[0][1] + r[1][0]) / S; 
+    limboQ[3] = (r[0][2] + r[2][0]) / S;
   } else if(r[1][1] > r[2][2]) {
     float S = sqrt(1.0 + r[1][1] - r[0][0] - r[2][2]) * 2; // S=4*q[2]
-    q[0] = (r[0][2] - r[2][0]) / S;
-    q[1] = (r[0][1] + r[1][0]) / S; 
-    q[2] = S / 4;
-    q[3] = (r[1][2] + r[2][1]) / S;
+    limboQ[0] = (r[0][2] - r[2][0]) / S;
+    limboQ[1] = (r[0][1] + r[1][0]) / S; 
+    limboQ[2] = S / 4;
+    limboQ[3] = (r[1][2] + r[2][1]) / S;
   } else {
     float S = sqrt(1.0 + r[2][2] - r[0][0] - r[1][1]) * 2; // S=4*q[3]
-    q[0] = (r[1][0] - r[0][1]) / S;
-    q[1] = (r[0][2] + r[2][0]) / S;
-    q[2] = (r[1][2] + r[2][1]) / S;
-    q[3] = S / 4;
+    limboQ[0] = (r[1][0] - r[0][1]) / S;
+    limboQ[1] = (r[0][2] + r[2][0]) / S;
+    limboQ[2] = (r[1][2] + r[2][1]) / S;
+    limboQ[3] = S / 4;
   }
-
-  return vectorNorm(q);
+  
+  RQuaternion q = new RQuaternion(limboQ[0], limboQ[1], limboQ[2], limboQ[3]);
+  q.normalize();
+  
+  return q;
 }
 
 //calculates euler angles from quaternion
-PVector quatToEuler(float[] q) {
-  float[][] r = quatToMatrix(q);
+PVector quatToEuler(RQuaternion q) {
+  float[][] r = q.toMatrix();
   PVector wpr = matrixToEuler(r);
   return wpr;
 }
 
 //calculates rotation matrix from quaternion
-float[][] quatToMatrix(float[] q) {
+float[][] quatToMatrix(RQuaternion q) {
   float[][] r = new float[3][3];
   
-  r[0][0] = 1 - 2*(q[2]*q[2] + q[3]*q[3]);
-  r[0][1] = 2*(q[1]*q[2] - q[0]*q[3]);
-  r[0][2] = 2*(q[0]*q[2] + q[1]*q[3]);
-  r[1][0] = 2*(q[1]*q[2] + q[0]*q[3]);
-  r[1][1] = 1 - 2*(q[1]*q[1] + q[3]*q[3]);
-  r[1][2] = 2*(q[2]*q[3] - q[0]*q[1]);
-  r[2][0] = 2*(q[1]*q[3] - q[0]*q[2]);
-  r[2][1] = 2*(q[0]*q[1] + q[2]*q[3]);
-  r[2][2] = 1 - 2*(q[1]*q[1] + q[2]*q[2]);
+  r[0][0] = 1 - 2*(q.getValue(2)*q.getValue(2) + q.getValue(3)*q.getValue(3));
+  r[0][1] = 2*(q.getValue(1)*q.getValue(2) - q.getValue(0)*q.getValue(3));
+  r[0][2] = 2*(q.getValue(0)*q.getValue(2) + q.getValue(1)*q.getValue(3));
+  r[1][0] = 2*(q.getValue(1)*q.getValue(2) + q.getValue(0)*q.getValue(3));
+  r[1][1] = 1 - 2*(q.getValue(1)*q.getValue(1) + q.getValue(3)*q.getValue(3));
+  r[1][2] = 2*(q.getValue(2)*q.getValue(3) - q.getValue(0)*q.getValue(1));
+  r[2][0] = 2*(q.getValue(1)*q.getValue(3) - q.getValue(0)*q.getValue(2));
+  r[2][1] = 2*(q.getValue(0)*q.getValue(1) + q.getValue(2)*q.getValue(3));
+  r[2][2] = 1 - 2*(q.getValue(1)*q.getValue(1) + q.getValue(2)*q.getValue(2));
   
   float[] magnitudes = new float[3];
   
@@ -665,17 +668,6 @@ float[][] doubleToFloat(double[][] m, int l, int w) {
   return r;
 }
 
-//calculates the difference between each corresponding pair of
-//elements for two vectors of n elements
-float[] calculateVectorDelta(float[] v1, float[] v2, int n) {
-  float[] d = new float[n];
-  for(int i = 0; i < n; i += 1) {
-    d[i] = v1[i] - v2[i];
-  }
-
-  return d;
-}
-
 //produces a rotation matrix given a rotation 'theta' around
 //a given axis
 float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
@@ -709,126 +701,6 @@ float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
   return doubleToFloat(MR.getData(), 3, 3);
 }
 
-
-/* Calculates the result of a rotation of quaternion 'p'
- * about axis 'u' by 'theta' degrees
- */
-float[] rotateQuat(float[] p, PVector u, float theta) {
-  float[] q = new float[4];
-  
-  q[0] = cos(theta/2);
-  q[1] = sin(theta/2)*u.x;
-  q[2] = sin(theta/2)*u.y;
-  q[3] = sin(theta/2)*u.z;
-  
-  float[] pq = quaternionMult(p, q);
-
-  return vectorNorm(pq);
-}
-
-PVector rotateVectorQuat(PVector v, PVector u, float theta) {
-  float[] q = new float[4];
-  float[] p = new float[4];
-  float[] q_inv = new float[4];
-  float[] p_prime = new float[4];
-  
-  q[0] = cos(theta/2);
-  q[1] = sin(theta/2)*u.x;
-  q[2] = sin(theta/2)*u.y;
-  q[3] = sin(theta/2)*u.z;
-  
-  p[0] = 0;
-  p[1] = v.x;
-  p[2] = v.y;
-  p[3] = v.z;
-  
-  q_inv[0] = q[0];
-  q_inv[1] = -q[1];
-  q_inv[2] = -q[2];
-  q_inv[3] = -q[3];
-  
-  p_prime = quaternionMult(q, p);
-  p_prime = quaternionMult(p_prime, q_inv);
-
-  return new PVector(p_prime[1], p_prime[2], p_prime[3]);
-}
-
-/**
- * Rotates the given vector, v, by the given unit quaternion, q.
- * 
- * @param v    A vector in the xyz plane
- * @param q    A unit quaternion that defines a rotation
- * @returning  v rotated by q
- */
-PVector rotateVectorQuat(PVector v, float[] q) {
-  float[] p = new float[4];
-  float[] q_inv = new float[4];
-  float[] p_prime = new float[4];
-  // v
-  p[0] = 0;
-  p[1] = v.x;
-  p[2] = v.y;
-  p[3] = v.z;
-  // q'
-  q_inv[0] = q[0];
-  q_inv[1] = -q[1];
-  q_inv[2] = -q[2];
-  q_inv[3] = -q[3];
-  // u = q * v * q'
-  p_prime = quaternionMult(q, p);
-  p_prime = quaternionMult(p_prime, q_inv);
-  
-  return new PVector(p_prime[1], p_prime[2], p_prime[3]);
-}
-
-/* Given 2 quaternions, calculates the quaternion representing the 
- * rotation from 'q1' to 'q2' such that 'qr'*'q1' = 'q2'. Note that 
- * the multiply operation should be taken to mean quaternion
- * multiplication, which is non-commutative.
- */
-float[] calculateQuatOffset(float[] q1, float[] q2) {
-  float[] q1_inv = new float[4];
-  q1_inv[0] = q1[0];
-  q1_inv[1] = -q1[1];
-  q1_inv[2] = -q1[2];
-  q1_inv[3] = -q1[3];
-  
-  float[] qr = quaternionMult(q2, q1_inv);
-  
-  for(int i = 0; i < 4; i += 1) {
-    if(qr[i] < 0.00001)
-    qr[i] = 0;
-  }
-  
-  return qr;
-}
-
-/**
- * Returns the complex conjugate or inverse of the given quaternion.
- */
-public float[] quaternionConjugate(float[] q) {
-  return new float[] { q[0], -q[1], -q[2], -q[3] };
-}
-
-//returns the result of a quaternion 'q1' multiplied by quaternion 'q2'
-float[] quaternionMult(float[] q1, float[] q2) {
-  float[] r = new float[4];
-  r[0] = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
-  r[1] = q1[0]*q2[1] + q1[1]*q2[0] + q1[2]*q2[3] - q1[3]*q2[2];
-  r[2] = q1[0]*q2[2] - q1[1]*q2[3] + q1[2]*q2[0] + q1[3]*q2[1];
-  r[3] = q1[0]*q2[3] + q1[1]*q2[2] - q1[2]*q2[1] + q1[3]*q2[0];
-
-  return r;
-}
-
-/**
- * Returns a quaternion, which represents the rotation of q, in terms of reference.
- */
-public float[] quaternionRef(float[] q, float[] reference) {
-  float[] invRef = vectorNorm( quaternionConjugate(reference) );
-  return vectorNorm( quaternionMult(q, invRef) );
-}
-
 //returns the result of a vector 'v' multiplied by scalar 's'
 float[] vectorScalarMult(float[] v, float s) {
   float[] ret = new float[v.length];
@@ -837,91 +709,6 @@ float[] vectorScalarMult(float[] v, float s) {
   }
   
   return ret;
-}
-
-//returns the result of the addition of two vectors, 'v1' and 'v2'
-float[] vectorAdd(float[] v1, float[] v2) {
-  //vectors must be of matching length
-  if(v1.length != v2.length) return null;
-  
-  float[] ret = new float[v1.length];
-  for(int i = 0; i < ret.length; i += 1) {
-    ret[i] = v1[i] + v2[i];
-  }
-  
-  return ret;
-}
-
-/**
- * Computes the dot product between the two given quaternions.
- */
-public float quaternionDotProduct(float[] q1, float[] q2) {
-  float product = 0f;
-  
-  for (int idx = 0; idx < 4; ++idx) {
-    product += q1[idx] * q2[idx];
-  }
-  
-  return product;
-}
-
-//returns the magnitude of the input vector 'v'
-float getVectorMag(float[] v) {
-  float ret = 0;
-  for(int i = 0; i < v.length; i += 1) {
-    ret += pow(v[i], 2);
-  }
-  
-  return sqrt(ret);
-}
-
-//normalizes input vector 'v' to a unit vector
-float[] vectorNorm(float[] v) {
-  float mag = getVectorMag(v);
-  return vectorScalarMult(v, 1/mag);
-}
-
-/* Given two input quaternions, 'q1' and 'q2', computes the spherical-
- * linear interpolation from 'q1' to 'q2' for a given fraction of the
- * complete transformation 'q1' to 'q2', denoted by 0 <= 'mu' <= 1. 
- */
-float[] quaternionSlerp(float[] q1, float[] q2, float mu) {
-  float[] qSlerp = new float[4];
-  float[] q3 = new float[4];
-  float cOmega = 0;
-  
-  if(mu == 0) return q1;
-  if(mu == 1) return q2;
-  
-  for(int i = 0; i < 4; i += 1)
-  cOmega += q1[i]*q2[i];
-  
-  if(cOmega < 0) {
-    cOmega = -cOmega;
-    q3 = vectorScalarMult(q2, -1);
-  }
-  else {
-    q3 = vectorScalarMult(q2, 1);
-  }
-  
-  if(cOmega > 0.99999995) {
-    qSlerp[0] = q1[0]*(1-mu) + q3[0]*mu;
-    qSlerp[1] = q1[1]*(1-mu) + q3[1]*mu;
-    qSlerp[2] = q1[2]*(1-mu) + q3[2]*mu;
-    qSlerp[3] = q1[3]*(1-mu) + q3[3]*mu;
-  }
-  else {
-    float omega = acos(cOmega);
-    float scale1 = sin(omega*(1-mu))/sin(omega);
-    float scale2 = sin(omega*mu)/sin(omega);
-    
-    qSlerp[0] = q1[0]*scale1 + q3[0]*scale2;
-    qSlerp[1] = q1[1]*scale1 + q3[1]*scale2;
-    qSlerp[2] = q1[2]*scale1 + q3[2]*scale2;
-    qSlerp[3] = q1[3]*scale1 + q3[3]*scale2;
-  }
-  
-  return vectorNorm(qSlerp);
 }
 
 /**

@@ -10,16 +10,16 @@ private final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
 
 public abstract class Frame {
   // The orientation of the frame in the form of a unit quaternion
-  protected float[] orientationOffset;
+  protected RQuaternion orientationOffset;
   /* The three points used to define a coordinate axis for 6-Point Method
    * of Tool Frames and 3-Point or 4_Point Methods of User Frames */
   protected Point[] axesTeachPoints;
   // For Direct Entry
   protected PVector DEOrigin;
-  protected float[] DEOrientationOffset;
+  protected RQuaternion DEOrientationOffset;
 
   public Frame() {
-    orientationOffset = new float[] { 1f, 0f, 0f, 0f };
+    orientationOffset = new RQuaternion();
     axesTeachPoints = new Point[] { null, null, null };
     DEOrigin = null;
     DEOrientationOffset = null;
@@ -32,7 +32,7 @@ public abstract class Frame {
   
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the Native Coordinate System. */
-  public float[][] getNativeAxisVectors() { return quatToMatrix(getOrientation()); }
+  public float[][] getNativeAxisVectors() { return getOrientation().toMatrix(); }
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the World Coordinate System. */
   public float[][] getWorldAxisVectors() {
@@ -45,9 +45,9 @@ public abstract class Frame {
   /**
    * Returns the orientation of the axes for this frame.
    */
-  public abstract float[] getOrientation();
+  public abstract RQuaternion getOrientation();
 
-  public void setOrientation(float[] newAxes) {
+  public void setOrientation(RQuaternion newAxes) {
     orientationOffset = newAxes;
   }
   
@@ -363,10 +363,10 @@ public class ToolFrame extends Frame {
   }
   
   @Override
-  public float[] getOrientation() {
-    float[] robotOrientation = nativeRobotPoint(armModel.getJointAngles()).orientation;
+  public RQuaternion getOrientation() {
+    RQuaternion robotOrientation = nativeRobotPoint(armModel.getJointAngles()).orientation;
     // Tool frame axes orientation = (orientation offset x Model default orientation ^ -1) x Model current orientation
-    return quaternionMult(quaternionRef(orientationOffset, armModel.DEFAULT_ORIENTATION), robotOrientation);
+    return RQuaternion.mult(armModel.DEFAULT_ORIENTATION.transformQuaternion(orientationOffset), robotOrientation);
   }
   
   public void setPoint(Point p, int idx) {
@@ -422,7 +422,7 @@ public class ToolFrame extends Frame {
       }
       
       setTCPOffset(DEOrigin);
-      setOrientation( DEOrientationOffset.clone() );
+      setOrientation( (RQuaternion)DEOrientationOffset.clone() );
       return true;
     } else if (method >= 0 && method < 2 && TCPTeachPoints[0] != null && TCPTeachPoints[1] != null && TCPTeachPoints[2] != null) {
       // 3-Point or 6-Point Method
@@ -432,9 +432,9 @@ public class ToolFrame extends Frame {
         return false;
       }
       
-      float[][] pt1_ori = quatToMatrix(TCPTeachPoints[0].orientation),
-                pt2_ori = quatToMatrix(TCPTeachPoints[1].orientation),
-                pt3_ori = quatToMatrix(TCPTeachPoints[2].orientation);
+      float[][] pt1_ori = TCPTeachPoints[0].orientation.toMatrix(),
+                pt2_ori = TCPTeachPoints[1].orientation.toMatrix(),
+                pt3_ori = TCPTeachPoints[2].orientation.toMatrix();
       
       double[] newTCP = calculateTCPFromThreePoints(TCPTeachPoints[0].position, pt1_ori,
                                                     TCPTeachPoints[1].position, pt2_ori,
@@ -510,7 +510,7 @@ public class UserFrame extends Frame {
   }
   
   @Override
-  public float[] getOrientation() { return orientationOffset; }
+  public RQuaternion getOrientation() { return orientationOffset; }
   
   public void setPoint(Point p, int idx) {
     
@@ -561,7 +561,7 @@ public class UserFrame extends Frame {
       }
       
       setOrigin(DEOrigin);
-      setOrientation( DEOrientationOffset.clone() );
+      setOrientation( (RQuaternion)DEOrientationOffset.clone() );
       return true;
     } else if (mode >= 0 && mode < 2 && axesTeachPoints[0] != null && axesTeachPoints[1] != null && axesTeachPoints[2] != null) {
       // 3-Point or 4-Point Method
