@@ -268,7 +268,7 @@ public PVector convertFromFrame(PVector u, PVector origin, RQuaternion axes) {
  */
 public PVector convertWorldToNative(PVector v) {
   float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
-  return transformVector(v, invertHCMatrix(tMatrix));
+  return transformVector(v, tMatrix);
 }
 
 /**
@@ -277,7 +277,7 @@ public PVector convertWorldToNative(PVector v) {
  */
 public PVector convertNativeToWorld(PVector v) {
   float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
-  return transformVector(v, tMatrix);
+  return transformVector(v, invertHCMatrix(tMatrix));
 }
 
 /* Transforms the given vector from the coordinate system defined by the given
