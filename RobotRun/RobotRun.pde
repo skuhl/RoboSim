@@ -9,19 +9,12 @@ import java.io.*;
 import java.awt.event.KeyEvent;
 
 private static final int OFF = 0, ON = 1;
-private static final int ARITH = 0, BOOL = 1;
-// The position at which the Robot is drawn
-private final PVector ROBOT_POSITION = new PVector(200, 250, 200);
-ArmModel armModel;
-Model eeModelSuction;
-Model eeModelClaw;
-Model eeModelClawPincer;
-Model eePointer;
+PFont fnt_con14, fnt_con12, fnt_conB;
 
-float lastMouseX, lastMouseY;
-float cameraTX = 0, cameraTY = 0, cameraTZ = 0;
-float cameraRX = 0, cameraRY = 0, cameraRZ = 0;
-boolean spacebarDown = false;
+private Camera camera;
+// The position at which the Robot is drawn
+private final PVector ROBOT_POSITION = new PVector(200, 300, 200);
+ArmModel armModel;
 
 ControlP5 cp5;
 WindowManager manager;
@@ -29,113 +22,59 @@ Stack<Screen> display_stack;
 
 ArrayList<Program> programs = new ArrayList<Program>();
 
-/* global variables for toolbar */
-PFont fnt_con14, fnt_con12, fnt_conB;
-
-// for pan button
-int clickPan = 0;
-float panX = 1.0; 
-float panY = 1.0;
-
-// for rotate button
-int clickRotate = 0;
-float myRotX = 0.0;
-float myRotY = 0.0;
-
-float myscale = 0.5;
-
 /*******************************/
-/* other global variables      */
+/*      Global Variables       */
+/*******************************/
 
 // for Execution
-public boolean execSingleInst = false,
-/* Indicates an error with moving the robot */
-                      robotFault = false;
+public boolean execSingleInst = false; 
+public boolean robotFault = false; //indicates robot error
 int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 
 /*******************************/
 /*      Debugging Stuff        */
-
-private static ArrayList<String> buffer;
 /*******************************/
 
+private ArrayList<String> buffer;
+private Point displayPoint;
 
 
 public void setup() {
   //size(1200, 800, P3D);
   size(1080, 720, P3D);
-  ortho();
+  
   //create font and text display background
   fnt_con14 = createFont("data/Consolas.ttf", 14);
   fnt_con12 = createFont("data/Consolas.ttf", 12);
   fnt_conB = createFont("data/ConsolasBold.ttf", 12);
   
-  buffer = new ArrayList<String>();
+  camera = new Camera();
   
   //load model and save data
   armModel = new ArmModel();
-  eeModelSuction = new Model("VACUUM_2.STL", color(40));
-  eeModelClaw = new Model("GRIPPER.STL", color(40));
-  eeModelClawPincer = new Model("GRIPPER_2.STL", color(200,200,0));
-  eePointer = new Model("POINTER.stl", color(40), 10.0);
   intermediatePositions = new ArrayList<Point>();
-  
-  activeScenarioIdx = -1;
+  activeScenario = null;
   
   loadState();
   
   //set up UI
   cp5 = new ControlP5(this);
+  // Expllicitly draw the ControlP5 elements
+  cp5.setAutoDraw(false);
   manager = new WindowManager(cp5, fnt_con12, fnt_con14);
   display_stack = new Stack<Screen>();
   gui();
+  
+  buffer = new ArrayList<String>();
+  displayPoint = null;
 }
 
 public void draw() {
-  ortho();
-  
-  //lights();
+  // Apply the camera for drawing objects
   directionalLight(255, 255, 255, 1, 1, 0);
   ambientLight(150, 150, 150);
 
   background(127);
-  
-  pushMatrix();
-  resetMatrix();
-  applyModelRotation(armModel.getJointAngles());
-  // Keep track of the old coordinate frame of the armModel
-  armModel.oldEETMatrix = getTransformationMatrix();
-  popMatrix();
-  
-  if (!robotFault) {
-    // Execute arm movement
-    if(programRunning) {
-      // Run active program
-      programRunning = !executeProgram(activeProgram(), armModel, execSingleInst);
-      
-    } else if (armModel.motionType != RobotMotion.HALTED) {
-      // Move the Robot progressively to a point
-      boolean doneMoving = true;
-      
-      switch (armModel.motionType) {
-        case MT_JOINT:
-          doneMoving = armModel.interpolateRotation((liveSpeed / 100.0));
-          break;
-        case MT_LINEAR:
-          doneMoving = executeMotion(armModel, (liveSpeed / 100.0));
-          break;
-        default:
-      }
-      
-      if (doneMoving) {
-        armModel.halt();
-      }
-    } else if (armModel.modelInMotion()) {
-      // Jog the Robot
-      intermediatePositions.clear();
-      armModel.executeLiveMotion();
-    }
-  }
   
   hint(ENABLE_DEPTH_TEST);
   background(255);
@@ -143,66 +82,97 @@ public void draw() {
   noFill();
   
   pushMatrix();
-  applyCamera();
+  camera.apply();
   
-  pushMatrix(); 
-  armModel.draw();
-  popMatrix();
+  Program p = activeProgram();
   
-  if(COLLISION_DISPLAY) {
-    armModel.resetBoxColors();
-    armModel.checkSelfCollisions();
+  updateAndDrawObjects(activeScenario, p, armModel);
+  displayAxes();
+  displayTeachPoints();
+  
+  WorldObject wldObj = manager.getActiveWorldObject();
+  
+  if (wldObj != null) {
+    pushMatrix();
+    
+    if (wldObj instanceof Part) {
+      Fixture reference = ((Part)wldObj).getFixtureRef();
+      
+      if (reference != null) {
+        // Draw part's orientation with reference to its fixture
+        reference.applyCoordinateSystem();
+      }
+    }
+    
+    displayOriginAxes(wldObj.getLocalCenter(), wldObj.getLocalOrientationAxes(), 500f, color(0));
+    
+    popMatrix();
   }
   
-  Scenario s = activeScenario();
-  
-  if (s != null) {
-    // Handles the world objects
-    s.updateAndDrawObjects(armModel);
+  if (displayPoint != null) {
+    // Display the point with its local orientation axes
+    displayOriginAxes(displayPoint.position, quatToMatrix(displayPoint.orientation), 100f, color(0, 100, 15));
   }
   
-  if(COLLISION_DISPLAY) { armModel.drawBoxes(); }
   //TESTING CODE: DRAW INTERMEDIATE POINTS
   noLights();
   noStroke();
   pushMatrix();
   //if(intermediatePositions != null) {
   //  int count = 0;
-  //  for(Point p : intermediatePositions) {
-  //    if(count % 4 == 0) {
+  //  for(Point pt : intermediatePositions) {
+  //    if(count % 20 == 0) {
   //      pushMatrix();
   //      stroke(0);
-  //      translate(p.position.x, p.position.y, p.position.z);
+  //      translate(pt.position.x, pt.position.y, pt.position.z);
   //      sphere(5);
   //      popMatrix();
   //    }
   //    count += 1;
   //  }
   //}
-  popMatrix(); 
-  
-  displayAxes();
-  displayTeachPoints();
-  
+  popMatrix();
   popMatrix();
   
   hint(DISABLE_DEPTH_TEST);
-  
+  // Apply the camera for drawing text and windows
+  ortho();
   showMainDisplayText();
+  cp5.draw();
   //println(frameRate + " fps");
-}
-
-void applyCamera() {
-  translate(width/1.5,height/1.5);
-  translate(panX, panY); // for pan button
-  scale(myscale);
-  rotateX(myRotX); // for rotate button
-  rotateY(myRotY); // for rotate button
 }
 
 /*****************************************************************************************************************
  NOTE: All the below methods assume that current matrix has the camrea applied!
  *****************************************************************************************************************/
+
+/**
+ * Updates the position and orientation of the Robot as well as all the World
+ * Objects associated with the current scenario. Updates the bounding box color,
+ * position and oientation of the Robot and all World Objects as well. Finally,
+ * all the World Objects and the Robot are drawn.
+ * 
+ * @param s       The currently active scenario
+ * @param active  The currently selected program
+ * @param model   The Robot Arm model
+ */
+public void updateAndDrawObjects(Scenario s, Program active, ArmModel model) {
+  model.updateRobot(active);
+  
+  if (s != null) {
+    s.resetObjectHitBoxColors();
+  }
+  
+  model.resetOBBColors(); 
+  model.checkSelfCollisions();
+  
+  if (s != null) {
+    s.updateAndDrawObjects(model);
+  }
+  model.draw();
+  
+  model.updatePreviousEEOrientation();
+}
 
 /**
  * Display any currently taught points during the processes of either the 3-Point, 4-Point, or 6-Point Methods.
@@ -284,7 +254,8 @@ public void displayAxes() {
   
   if (axesState == AxesDisplay.NONE && curCoordFrame != CoordFrame.JOINT) {
     // Draw axes of the Robot's End Effector frame for testing purposes
-    displayOriginAxes(quatToMatrix( eePoint.orientation ), eePoint.position, 200f, color(255, 0, 255));
+    displayOriginAxes(eePoint.position, quatToMatrix( eePoint.orientation ), 200f, color(255, 0, 255));
+    
   } else if (axesState == AxesDisplay.AXES) {
     // Display axes
     if (curCoordFrame != CoordFrame.JOINT) {
@@ -293,24 +264,26 @@ public void displayAxes() {
       
       if (curCoordFrame == CoordFrame.TOOL) {
         /* Draw the axes of the active Tool frame at the Robot End Effector */
-        displayOriginAxes(activeTool.getWorldAxes(), eePoint.position, 200f, color(255, 0, 255));
+        displayOriginAxes(eePoint.position, activeTool.getWorldAxisVectors(), 200f, color(255, 0, 255));
+        
       } else {
         // Draw axes of the Robot's End Effector frame for testing purposes
-        displayOriginAxes(quatToMatrix( eePoint.orientation ), eePoint.position, 200f, color(255, 0, 255));
+        displayOriginAxes(eePoint.position, quatToMatrix( eePoint.orientation ), 200f, color(255, 0, 255));
       }
       
       if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
         /* Draw the axes of the active User frame */
-        displayOriginAxes(activeUser.getWorldAxes(), activeUser.getOrigin(), 5000f, color(0));
+        displayOriginAxes(activeUser.getOrigin(), activeUser.getWorldAxisVectors(), 10000f, color(0));
+        
       } else {
         /* Draw the axes of the World frame */
-        //displayOriginAxes(new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} }, new PVector(0f, 0f, 0f), 5000f, color(0));
-        displayOriginAxes(WORLD_AXES, new PVector(0f, 0f, 0f), 5000f, color(0));
+        displayOriginAxes(new PVector(0f, 0f, 0f), WORLD_AXES, 10000f, color(0));
       }
     }
+    
   } else if (axesState == AxesDisplay.GRID) {
     // Display gridlines spanning from axes of the current frame
-    Frame active = getActiveFrame(null);
+    Frame active;
     float[][] displayAxes;
     PVector displayOrigin;
     
@@ -321,11 +294,13 @@ public void displayAxes() {
         displayOrigin = new PVector(0f, 0f, 0f);
         break;
       case TOOL:
-        displayAxes = active.getNativeAxes();
+        active = getActiveFrame(CoordFrame.TOOL);
+        displayAxes = active.getNativeAxisVectors();
         displayOrigin = eePoint.position;
         break;
       case USER:
-        displayAxes = active.getNativeAxes();
+        active = getActiveFrame(CoordFrame.USER);
+        displayAxes = active.getNativeAxisVectors();
         displayOrigin = active.getOrigin();
         break;
       default:
@@ -342,13 +317,13 @@ public void displayAxes() {
  * Given a set of 3 orthogonal unit vectors a point in space, lines are
  * drawn for each of the three vectors, which intersect at the origin point.
  *
- * @param axesVectors  A set of three orthogonal unti vectors
  * @param origin       A point in space representing the intersection of the
  *                     three unit vectors
+ * @param axesVectors  A set of three orthogonal unti vectors
  * @param axesLength   The length, to which the all axes, will be drawn
  * @param originColor  The color of the point to draw at the origin
  */
-public void displayOriginAxes(float[][] axesVectors, PVector origin, float axesLength, color originColor) {
+public void displayOriginAxes(PVector origin, float[][] axesVectors, float axesLength, color originColor) {
   
   pushMatrix();    
   // Transform to the reference frame defined by the axes vectors
@@ -371,11 +346,11 @@ public void displayOriginAxes(float[][] axesVectors, PVector origin, float axesL
   stroke(originColor);
   sphere(4);
   stroke(0);
-  translate(50, 0, 0);
+  translate(100, 0, 0);
   sphere(4);
-  translate(-50, 50, 0);
+  translate(-100, 100, 0);
   sphere(4);
-  translate(0, -50, 50);
+  translate(0, -100, 100);
   sphere(4);
   
   popMatrix();
@@ -415,7 +390,7 @@ public void displayGridlines(float[][] axesVectors, PVector origin, int halfNumO
   pushMatrix();
   // Map the chosen two axes vectors to the xz-plane at the y-position of the Robot's base
   applyMatrix(axesVectors[vectorPX][0], 0, axesVectors[vectorPZ][0], origin.x,
-                                     0, 1,                        0, PLANE_Y,
+                                     0, 1,                        0, ROBOT_POSITION.y,
               axesVectors[vectorPX][2], 0, axesVectors[vectorPZ][2], origin.z,
                                      0, 0,                        0,        1);
   
@@ -451,14 +426,14 @@ public void mapToRobotBasePlane() {
   PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
   
   // Change color of the EE mapping based on if it lies below or above the ground plane
-  color c = (ee_pos.y <= PLANE_Y) ? color(255, 0, 0) : color(150, 0, 255);
+  color c = (ee_pos.y <= ROBOT_POSITION.y) ? color(255, 0, 0) : color(150, 0, 255);
   
   // Toggle EE mapping type with 'e'
   switch (mappingState) {
   case LINE:
     stroke(c);
     // Draw a line, from the EE to the grid in the xy plane, parallel to the xy plane
-    line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, PLANE_Y, ee_pos.z);
+    line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, ROBOT_POSITION.y, ee_pos.z);
     break;
     
   case DOT:
@@ -467,7 +442,7 @@ public void mapToRobotBasePlane() {
     // Draw a point, which maps the EE's position to the grid in the xy plane
     pushMatrix();
     rotateX(PI / 2);
-    translate(0, 0, -PLANE_Y);
+    translate(0, 0, -ROBOT_POSITION.y);
     ellipse(ee_pos.x, ee_pos.z, 10, 10);
     popMatrix();
     break;

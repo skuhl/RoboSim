@@ -51,7 +51,6 @@ public class Point  {
   public Point clone() { return new Point(position, orientation, angles); }
   
   public Float getValue(int idx) {
-      
     switch(idx) {
       // Joint angles
       case 0:
@@ -75,6 +74,28 @@ public class Point  {
     return null;
   }
   
+  public void setValue(int idx, float value) {
+    switch(idx) {
+      // Joint angles
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:   angles[idx] = value;
+      // Position
+      case 6:   position.x = value;
+      case 7:   position.y = value;
+      case 8:   position.z = value;
+      // Orientation
+      case 9:   
+      case 10:  
+      case 11:  
+      case 12:  orientation[idx - 9] = value;
+      default:
+    }
+  }
+  
   /**
    * Computes and returns the result of the addition of this point with
    * another point, 'p.' Does not alter the original values of this point.
@@ -95,6 +116,16 @@ public class Point  {
     p3.angles = p3Joints;
     
     return p3;
+  }
+  
+  /**
+   * Negates the current values of the point.
+   */
+  public Point negate() {
+    position = position.mult(-1);
+    orientation = vectorScalarMult(orientation, -1);
+    angles = vectorScalarMult(angles, -1);
+    return this;
   }
     
   /**
@@ -197,9 +228,7 @@ public class Point  {
 
 public class Program {
   private String name;
-  private int nextRegister;
-  private int nextInstr;
-  private int progIdx;
+  private int nextPosition;
   /**
    * The positions associated with this program, which are
    * stored in reference to the current User frame
@@ -209,8 +238,7 @@ public class Program {
 
   public Program(String s) {
     name = s;
-    nextRegister = 0;
-    nextInstr = 0;
+    nextPosition = 0;
     for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
     instructions = new ArrayList<Instruction>();
   }
@@ -243,9 +271,9 @@ public class Program {
     
     if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextRegister) {
-        nextRegister = castIns.getPosition()+1;
-        if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
+      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextPosition) {
+        nextPosition = castIns.getPosition()+1;
+        if(nextPosition >= LPosReg.length) nextPosition = LPosReg.length-1;
       }
     }
   }
@@ -254,9 +282,9 @@ public class Program {
     instructions.set(idx, i);
     if(i instanceof MotionInstruction ) { 
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextRegister) {
-        nextRegister = castIns.getPosition()+1;
-        if(nextRegister >= LPosReg.length) nextRegister = LPosReg.length-1;
+      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextPosition) {
+        nextPosition = castIns.getPosition()+1;
+        if(nextPosition >= LPosReg.length) nextPosition = LPosReg.length-1;
       }
     }
   }
@@ -265,8 +293,8 @@ public class Program {
     if(idx >= 0 && idx < LPosReg.length) LPosReg[idx] = in;
   }
   
-  public int getNextPosition() { return nextRegister; }
-  public void setNextRegister(int next) { nextRegister = next; }
+  public int getNextPosition() { return nextPosition; }
+  public void setNextPosition(int next) { nextPosition = next; }
 
   public Point getPosition(int idx) {
     if(idx >= 0 && idx < LPosReg.length) return LPosReg[idx];
@@ -328,7 +356,7 @@ public class Program {
       copy.addPosition(LPosReg[idx].clone(), idx);
     }
     // Copy next register
-    copy.setNextRegister(nextRegister);
+    copy.setNextPosition(nextPosition);
     
     return copy;
   }
@@ -359,7 +387,7 @@ public int addProgram(Program p) {
  */
 public Program activeProgram() {
   if (active_prog < 0 || active_prog >= programs.size()) {
-    System.out.printf("Not a valid program index: %d!\n", active_prog);
+    //System.out.printf("Not a valid program index: %d!\n", active_prog);
     return null;
   }
   
@@ -376,7 +404,7 @@ public Instruction activeInstruction() {
   Program activeProg = activeProgram();
   
   if (activeProg == null || active_instr < 0 || active_instr >= activeProg.getInstructions().size()) {
-    System.out.printf("Not a valid instruction index: %d!\n", active_instr);
+    //System.out.printf("Not a valid instruction index: %d!\n", active_instr);
     return null;
   }
   
@@ -404,7 +432,7 @@ public class Instruction {
   public void setIsCommented(boolean comFlag) { com = comFlag; }
   public void toggleCommented() { com = !com; }
     
-  public int execute() {return 0; }
+  public int execute() { return 0; }
     
   public String toString() {
     String[] fields = toStringArray();
@@ -441,48 +469,68 @@ public class Instruction {
 public final class MotionInstruction extends Instruction  {
   private int motionType;
   private int positionNum;
+  private int offsetRegNum;
+  private boolean offsetActive;
   private boolean isGPosReg;
   private float speed;
   private int termination;
   private int userFrame, toolFrame;
+  private MotionInstruction circSubInstr;
 
   public MotionInstruction(int m, int p, boolean g, 
                            float s, int t, int uf, int tf) {
-    super();
     motionType = m;
     positionNum = p;
+    offsetRegNum = -1;
+    offsetActive = false;
     isGPosReg = g;
     speed = s;
     termination = t;
     userFrame = uf;
     toolFrame = tf;
+    if(motionType != -1) {
+      circSubInstr = new MotionInstruction(-1, -1, false, 100, 0, uf, tf);
+    } else {
+      circSubInstr = null;
+    }
   }
 
   public MotionInstruction(int m, int p, boolean g, float s, int t) {
-    super();
     motionType = m;
     positionNum = p;
+    offsetRegNum = -1;
+    offsetActive = false;
     isGPosReg = g;
     speed = s;
     termination = t;
     userFrame = -1;
     toolFrame = -1;
+    if(motionType != -1) {
+      circSubInstr = new MotionInstruction(-1, -1, false, 100, 0);
+    } else {
+      circSubInstr = null;
+    }
   }
 
   public int getMotionType() { return motionType; }
   public void setMotionType(int in) { motionType = in; }
   public int getPosition() { return positionNum; }
   public void setPosition(int in) { positionNum = in; }
+  public int getOffset() { return offsetRegNum; }
+  public void setOffset(int in) { offsetRegNum = in; }
+  public boolean toggleOffsetActive() { return (offsetActive = !offsetActive); }
   public boolean usesGPosReg() { return isGPosReg; }
   public void setGlobalPosRegUse(boolean in) { isGPosReg = in; }
   public float getSpeed() { return speed; }
   public void setSpeed(float in) { speed = in; }
   public int getTermination() { return termination; }
   public void setTermination(int in) { termination = in; }
-  public float getUserFrame() { return userFrame; }
+  public int getUserFrame() { return userFrame; }
   public void setUserFrame(int in) { userFrame = in; }
-  public float getToolFrame() { return toolFrame; }
+  public int getToolFrame() { return toolFrame; }
   public void setToolFrame(int in) { toolFrame = in; }
+  public MotionInstruction getSecondaryPoint() { return circSubInstr; }
+  public void setSecondaryPoint(MotionInstruction p) { circSubInstr = p; }
 
   public float getSpeedForExec(ArmModel model) {
     if(motionType == MTYPE_JOINT) return speed;
@@ -490,64 +538,44 @@ public final class MotionInstruction extends Instruction  {
   }
   
   /**
-   * Returns the point associated with this motion instruction (can be either a position in the program
-   * or a global position register value). If the currently active User or Tool Frame does no match the
-   * User or Tool frame associated with this motion instruction, then null is returned. Otherwise, the
-   * TCP of the active Tool frame is applied to the point and then the point is converted from the active
-   * User frame into the Native Coordinate System.
+   * Verify that the given frame indices match those of the
+   * instructions frame indices.
+   */
+  public boolean checkFrames(int activeToolIdx, int activeFrameIdx) {
+    return (toolFrame == activeToolIdx) && (userFrame == activeFrameIdx);
+  }
+  
+  /**
+   * Returns the point associated with this motion instruction
+   * (can be either a position in the program or a global position
+   * register value) in Native Coordinates.
    * 
    * @param parent  The program, to which this instruction belongs
-   * @returning     The point associated with this instruction (or null in the case of an invalid active
-   *                Tool or User frame)
+   * @returning     The point associated with this instruction
    */
   public Point getVector(Program parent) {
     Point pt;
+    Point offset;
     
-    if (isGPosReg) {
-        pt = GPOS_REG[positionNum].point.clone();
-      } else {
-        pt = parent.LPosReg[positionNum].clone();
-      }
-    
-    
-    if(motionType != MTYPE_JOINT) {
-      return pt;
-    }  else {
-      
-      // Apply active TCP
-      if (toolFrame != -1) {
-        Frame active = getActiveFrame(CoordFrame.TOOL);
-        
-        if (active != toolFrames[toolFrame]) {
-          // Invalid active Tool frame
-          if (DISPLAY_TEST_OUTPUT) {
-            System.out.printf("Active Tool frame must be %d!\n", toolFrame);
-          }
-          return null;
-        }
-        
-        // Convert TCP offset into Native Coordinates
-        PVector tcpOffset = nativeTCPOffset(active.getOrigin());
-        pt.position.add(tcpOffset);
-      }
-      
-      // Remove active User frame
-      if (userFrame != -1) {
-        Frame active = getActiveFrame(CoordFrame.USER);
-        
-        if (active != userFrames[userFrame]) {
-          // Invalid active User frame
-          if (DISPLAY_TEST_OUTPUT) {
-            System.out.printf("Active User frame must be %d!\n", userFrame);
-          }
-          return null;
-        }
-        // Convert point into the Native Coordinate System
-        return removeFrame(pt, active.getOrigin(), active.getAxes());
-      }
-      
-      return pt;
+    if(isGPosReg) {
+      pt = GPOS_REG[positionNum].point.clone();    
+    } else {
+      pt = parent.LPosReg[positionNum].clone();
     }
+    
+    if(offsetRegNum != -1) {
+      offset = GPOS_REG[offsetRegNum].point;
+    } else {
+      offset = new Point();
+    }
+    
+    if (userFrame != -1 && motionType != MTYPE_JOINT) {
+      // Convert point into the Native Coordinate System
+      Frame active = userFrames[userFrame];
+      pt = removeFrame(pt, active.getOrigin(), active.getOrientation());
+    }
+      
+    return pt.add(offset);
   } // end getVector()
   
   public Instruction clone() {
@@ -558,7 +586,19 @@ public final class MotionInstruction extends Instruction  {
   }
   
   public String[] toStringArray() {
-    String[] fields = new String[5];
+    String[] fields;
+    int instrLen, subInstrLen;
+    
+    if(motionType == MTYPE_CIRCULAR) {
+      instrLen = offsetActive ? 7 : 6;
+      subInstrLen = circSubInstr.offsetActive ? 5 : 4;      
+      fields = new String[instrLen + subInstrLen];
+    } else {
+      instrLen = offsetActive ? 6 : 5;
+      subInstrLen = 0;
+      fields = new String[instrLen];
+    }
+    
     // Motion type
     switch(motionType) {
       case MTYPE_JOINT:
@@ -582,7 +622,11 @@ public final class MotionInstruction extends Instruction  {
     }
     
     // Register index
-    fields[2] = String.format("%d]", positionNum + 1);
+    if(positionNum == -1) {
+      fields[2] = "...]";
+    } else {
+      fields[2] = String.format("%d]", positionNum + 1);
+    }
     
     // Speed
     if (motionType == MTYPE_JOINT) {
@@ -598,6 +642,26 @@ public final class MotionInstruction extends Instruction  {
       fields[4] = String.format("CONT%d", termination);
     }
     
+    if(offsetActive) {
+      if(offsetRegNum == -1) {
+        fields[5] = "OFST PR[...]";
+      } else {
+        fields[5] = String.format("OFST PR[%d]", offsetRegNum + 1);
+      }
+    }
+    
+    if(motionType == MTYPE_CIRCULAR) {
+      String[] secondary = circSubInstr.toStringArray();
+      fields[instrLen - 1] = "\n";
+      fields[instrLen] = ":" + secondary[1];
+      fields[instrLen + 1] = secondary[2];
+      fields[instrLen + 2] = secondary[3];
+      fields[instrLen + 3] = secondary[4];
+      if(subInstrLen > 4) {
+        fields[instrLen + 4] = secondary[5];
+      }
+    }
+        
     return fields;
   }
 } // end MotionInstruction class
@@ -623,20 +687,16 @@ public class FrameInstruction extends Instruction {
   public int getReg(){ return frameIdx; }
   public void setReg(int r){ frameIdx = r; }
   
-  public int execute() {
-    if(frameIdx != -1) {
-      if (frameType == FTYPE_TOOL) {
-        activeToolFrame = frameIdx;
-        return 0;
-      } else if (frameType == FTYPE_USER) {
-        activeUserFrame = frameIdx;
-        return 1;
-      }
-      // Update the Robot Arm's current frame rotation matrix
-      updateCoordFrame();
+  public int execute() {    
+    if (frameType == FTYPE_TOOL) {
+      activeToolFrame = frameIdx;
+    } else if (frameType == FTYPE_USER) {
+      activeUserFrame = frameIdx;
     }
+    // Update the current active frames
+    updateCoordFrame();
     
-    return 2;
+    return 0;
   }
   
   public Instruction clone() {
@@ -657,7 +717,7 @@ public class FrameInstruction extends Instruction {
       fields[0] = "?FRAME_NUM =";
     }
     // Frame index
-    fields[1] = Integer.toString(frameIdx);
+    fields[1] = Integer.toString(frameIdx + 1);
     
     return fields;
   }
@@ -687,7 +747,8 @@ public class IOInstruction extends Instruction {
   
   public int execute() {
     armModel.endEffectorState = state;
-    return armModel.checkEECollision();
+    armModel.checkPickupCollision(activeScenario);
+    return 0;
   }
   
   public Instruction clone() {
@@ -822,9 +883,10 @@ public class CallInstruction extends Instruction {
     col_select = 0;
     start_render = 0;
     updateScreen();
+    
     programRunning = !executeProgram(callProg, armModel, false);
     
-    return 1;
+    return 0;
   }
   
   public String toString() {
@@ -867,7 +929,11 @@ public class IfStatement extends Instruction {
   }
   
   public int execute() {
-    if(expr.evaluate().boolVal){
+    ExprOperand result = expr.evaluate();
+    
+    if(result == null || result.boolVal == null) {
+      return 1;
+    } else if(expr.evaluate().getBoolVal()){
       instr.execute();
     }
     
@@ -916,43 +982,51 @@ public class IfStatement extends Instruction {
 public class SelectStatement extends Instruction {
   ExprOperand arg;
   ArrayList<ExprOperand> cases;
-  ArrayList<Instruction> instr;
+  ArrayList<Instruction> instrList;
     
   public SelectStatement() {
     arg = new ExprOperand();
     cases = new ArrayList<ExprOperand>();
-    instr = new ArrayList<Instruction>();
+    instrList = new ArrayList<Instruction>();
     addCase();
   }
   
   public SelectStatement(ExprOperand a) {
     arg = a;
     cases = new ArrayList<ExprOperand>();
-    instr = new ArrayList<Instruction>();
+    instrList = new ArrayList<Instruction>();
     addCase();
   }
   
-  public int execute() {    
+  public int execute() {
     for(int i = 0; i < cases.size(); i += 1) {
-      println("testing case " + i + " = " + cases.get(i).dataVal + " against " + arg.dataVal);
-      if(arg.dataVal == cases.get(i).dataVal) {
-        println("executing " + instr.get(i).toString());
-        instr.get(i).execute();
+      ExprOperand c = cases.get(i);
+      if(c == null) return 1;
+      
+      println("testing case " + i + " = " + cases.get(i).getDataVal() + " against " + arg.getDataVal());
+      
+      if(c.type != ExpressionElement.UNINIT && arg.getDataVal() == c.dataVal) {
+        Instruction instr = instrList.get(i);
+        
+        if(instr instanceof JumpInstruction || instr instanceof CallInstruction) {
+          println("executing " + instrList.get(i).toString());
+          instr.execute();
+        }
         break;
       }
     }
     
-    return 1;
+    return 0;
   }
   
   public void addCase() {
     cases.add(new ExprOperand());
-    instr.add(new Instruction());
+    instrList.add(new Instruction());
   }
   
   public void addCase(ExprOperand e, Instruction i) {
     cases.add(e);
-    instr.add(i);
+    instrList.add(i);
   }
   
   public void deleteCase(int idx) {
@@ -960,8 +1034,8 @@ public class SelectStatement extends Instruction {
       cases.remove(idx);
     }
     
-    if(instr.size() > 1) {
-      instr.remove(idx);
+    if(instrList.size() > 1) {
+      instrList.remove(idx);
     }
   }
   
@@ -982,7 +1056,7 @@ public class SelectStatement extends Instruction {
     ret[1] = arg.toString();
     
     for(int i = 0; i < cases.size(); i += 1) {
-      String[] iString = instr.get(i).toStringArray();
+      String[] iString = instrList.get(i).toStringArray();
       
       ret[i*4 + 2] = "= " + cases.get(i).toString();
       ret[i*4 + 3] = iString[0];
@@ -995,8 +1069,9 @@ public class SelectStatement extends Instruction {
 }
 
 public class RegisterStatement extends Instruction {
-  Register reg;
-  Expression expr;
+  Register reg;  //the register to be modified by this instruction
+  int posIdx;  //used if editing a single value in a position register
+  Expression expr;  //the expression whose value will be stored in 'reg' after evaluation
   
   /**
    * Creates a register statement with a given register and a blank Expression.
@@ -1006,41 +1081,68 @@ public class RegisterStatement extends Instruction {
    *              upon successful execution of this statement.
    * @param expr - The expression to be evaluated in conjunction with the execution
    *               of this statement. The value of this expression, if valid for the
-                   register 
+   *               register 
    */
   public RegisterStatement(Register r) {
     reg = r;
+    posIdx = -1;
     expr = new Expression();
   }
   
-  public RegisterStatement(Register r, Expression e) {
+  public RegisterStatement(Register r, int i) {
     reg = r;
+    posIdx = i;
+    expr = new Expression();
+  }
+  
+  public RegisterStatement(Register r, int idx, Expression e) {
+    reg = r;
+    posIdx = idx;
     expr = e;
   }
   
   public Register setRegister(Register r) {
-    if(!(r instanceof DataRegister) && !(r instanceof PositionRegister)) {
-      return null;
-    } else {
-      return reg = r;
-    }
+    reg = r;
+    posIdx = -1;
+    return reg;
+  }
+  
+  public Register setRegister(Register r, int idx) {
+    reg = r;
+    posIdx = idx;
+    return reg;
   }
   
   public int execute() {
     ExprOperand result = expr.evaluate();
     
+    if(result == null) return 1;
+    
     if(reg instanceof DataRegister) {
-      ((DataRegister)reg).value = result.dataVal;
+      if(result.getDataVal() == null) return 1;
+      ((DataRegister)reg).value = result.getDataVal();
+      
       println(result.dataVal + ", " + ((DataRegister)reg).value);
-    } else if(reg instanceof PositionRegister) {
-      ((PositionRegister)reg).point = result.pointVal;
+    } 
+    else if(reg instanceof IORegister) {
+      if(result.getBoolVal() == null) return 1;
+      ((IORegister)reg).state = result.getBoolVal() ? ON : OFF;
+    } 
+    else if(reg instanceof PositionRegister && posIdx == -1) {
+      if(result.getPointVal() == null) return 1;
+      ((PositionRegister)reg).point = result.getPointVal();
+    } 
+    else {
+      if(result.getDataVal() == null) return 1;
+      println(result.getDataVal());
+      ((PositionRegister)reg).setPointValue(posIdx, result.getDataVal());
     }
         
-    return 1;
+    return 0;
   }
   
   public Instruction clone() {
-    Instruction copy = new RegisterStatement(reg, (Expression)expr.clone());    
+    Instruction copy = new RegisterStatement(reg, posIdx, (Expression)expr.clone());    
     return copy;
   }
   
@@ -1049,14 +1151,32 @@ public class RegisterStatement extends Instruction {
    * operator and operand is a separate String Object.
    */
   public String[] toStringArray() {
-    String[] ret = new String[2 + expr.getLength()];
+    String[] ret;
     String[] exprString = expr.toStringArray();
+    String rString = "";
+    int rLen;
+        
+    if(reg instanceof DataRegister) { rString  = "R["; }
+    else if(reg instanceof IORegister) { rString  = "IO["; }
+    else if(reg instanceof PositionRegister) { rString  = "PR["; }
     
-    ret[0] = (reg instanceof DataRegister) ? "R[" : "PR[";
-    ret[1] = (reg.getIdx() == -1) ? "...] =" : (reg.getIdx() + 1) + "] =";
+    if(posIdx == -1) {
+      ret = new String[2 + expr.getLength()];
+            
+      ret[0] = rString;
+      ret[1] = (reg.getIdx() == -1) ? "...] =" : (reg.getIdx() + 1) + "] =";
+      rLen = 2;
+    } else {
+      ret = new String[3 + expr.getLength()];
+      
+      ret[0] = rString;
+      ret[1] = (reg.getIdx() == -1) ? "...," : (reg.getIdx() + 1) + ",";
+      ret[2] = (reg.getIdx() == -1) ? "...] =" : posIdx + "] =";
+      rLen = 3;
+    }
     
     for(int i = 0; i < exprString.length; i += 1) {
-      ret[i + 2] = exprString[i];
+      ret[i + rLen] = exprString[i];
     }
     
     return ret;
