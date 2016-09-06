@@ -226,7 +226,7 @@ public class ArmModel {
     eePickupOBBs = new HashMap<EEType, ArrayList<BoundingBox>>();
     // Faceplate
     ArrayList<BoundingBox> limbo = new ArrayList<BoundingBox>();
-    limbo.add( new BoundingBox(102, 102, 36) );
+    limbo.add( new BoundingBox(96, 96, 36) );
     eeOBBsMap.put(EEType.NONE, limbo);
     // Cannot pickup
     limbo = new ArrayList<BoundingBox>();
@@ -234,7 +234,7 @@ public class ArmModel {
     
     // Claw Gripper
     limbo = new ArrayList<BoundingBox>();
-    limbo.add( new BoundingBox(102, 102, 46) );
+    limbo.add( new BoundingBox(96, 96, 54) );
     limbo.add( new BoundingBox(89, 21, 31) );
     limbo.add( new BoundingBox(89, 21, 31) );
     eeOBBsMap.put(EEType.CLAW, limbo);
@@ -246,9 +246,9 @@ public class ArmModel {
     
     // Suction 
     limbo = new ArrayList<BoundingBox>();
-    limbo.add( new BoundingBox(102, 102, 46) );
-    limbo.add( new BoundingBox(37, 37, 82/*87*/) );
-    limbo.add( new BoundingBox(37, 62/*67*/, 37) );
+    limbo.add( new BoundingBox(96, 96, 54) );
+    limbo.add( new BoundingBox(37, 37, 82) );
+    limbo.add( new BoundingBox(37, 62, 37) );
     eeOBBsMap.put(EEType.SUCTION, limbo);
     // One for each suction cup
     limbo = new ArrayList<BoundingBox>();
@@ -260,8 +260,8 @@ public class ArmModel {
     
     // Pointer
     limbo = new ArrayList<BoundingBox>();
-    limbo.add( new BoundingBox(102, 102, 46) );
-    limbo.add( new BoundingBox(24, 24, 32) );
+    limbo.add( new BoundingBox(96, 96, 54) );
+    limbo.add( new BoundingBox(32, 32, 34) );
     limbo.add( new BoundingBox(18, 18, 56) );
     limbo.add( new BoundingBox(9, 9, 37) );
     eeOBBsMap.put(EEType.POINTER, limbo);
@@ -602,16 +602,17 @@ public class ArmModel {
     switch(current) {
       case NONE:
         // Face Plate EE
-        translate(0, 0, 10);
+        translate(0, 0, 12);
         curEEOBBs.get(0).setCoordinateSystem();
-        translate(0, 0, -10);
+        translate(0, 0, -12);
         break;
         
       case CLAW:
         // Claw Gripper EE
+        translate(0, 0, 3);
         curEEOBBs.get(0).setCoordinateSystem();
         
-        translate(-2, 0, -54);
+        translate(-2, 0, -57);
         curPUEEOBBs.get(0).setCoordinateSystem();
         
         if (endEffectorState == OFF) {
@@ -636,9 +637,10 @@ public class ArmModel {
         
       case SUCTION:
         // Suction EE
+        translate(0, 0, 3);
         curEEOBBs.get(0).setCoordinateSystem();
         
-        translate(-2, 0, -64);
+        translate(-2, 0, -67);
         BoundingBox limbo = curEEOBBs.get(1);
         limbo.setCoordinateSystem();
         
@@ -657,9 +659,10 @@ public class ArmModel {
         
       case POINTER:
         // Pointer EE
+        translate(0, 0, 3);
         curEEOBBs.get(0).setCoordinateSystem();
 
-        translate(0, 0, -30);
+        translate(0, 0, -43);
         curEEOBBs.get(1).setCoordinateSystem();
         translate(0, -18, -34);
         rotateX(-0.75);
@@ -667,9 +670,7 @@ public class ArmModel {
         rotateX(0.75);
         translate(0, -21, -32);
         curEEOBBs.get(3).setCoordinateSystem();
-        translate(0, 21, 32);
-        translate(0, 18, 34);
-        translate(0, 0, 30);
+        translate(0, 39, 109);
         break;
       
       case GLUE_GUN:

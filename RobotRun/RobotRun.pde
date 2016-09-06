@@ -259,7 +259,17 @@ public void displayAxes() {
     displayOriginAxes(eePoint.position, activeTool.getWorldAxisVectors(), 200f, color(255, 0, 255));
   } else {
     // Draw axes of the Robot's End Effector frame for testing purposes
-    displayOriginAxes(eePoint.position, eePoint.orientation.toMatrix(), 200f, color(255, 0, 255));
+    //displayOriginAxes(eePoint.position, eePoint.orientation.toMatrix(), 200f, color(255, 0, 255));
+    
+    /* Draw a pink point for the Robot's current End Effecot position */
+    pushMatrix();
+    translate(eePoint.position.x, eePoint.position.y, eePoint.position.z);
+    
+    stroke(color(255, 0, 255));
+    noFill();
+    sphere(4);
+    
+    popMatrix();
   }
   
   if (axesState == AxesDisplay.AXES) {
