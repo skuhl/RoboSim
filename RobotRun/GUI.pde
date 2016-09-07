@@ -4981,7 +4981,12 @@ public ArrayList<String> loadInstructionReg() {
         instReg.add(line);
       }
       
-      displayPoint = p;
+      if (castIns.userFrame != -1) {
+        Frame uFrame = userFrames[castIns.userFrame];
+        displayPoint = removeFrame(p, uFrame.getOrigin(), uFrame.getOrientation());
+      } else {
+        displayPoint = p;
+      }
     }
   }
   
