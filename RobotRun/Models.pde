@@ -1045,8 +1045,8 @@ public class ArmModel {
       if (translationalMotion()) {
         // Respond to user defined movement
         float distance = motorSpeed / 6000f * liveSpeed;
-        PVector translation = new PVector(jogLinear[0], jogLinear[1], jogLinear[2]);
-        translation = rotateVector(translation.mult(distance), WORLD_AXES);
+        PVector translation = new PVector(jogLinear[0], -jogLinear[2], jogLinear[1]);
+        translation.mult(distance);
         
         if (invFrameOrientation != null) {
             // Convert the movement vector into the current reference frame
@@ -1063,8 +1063,7 @@ public class ArmModel {
       if (rotationalMotion()) {
         // Respond to user defined movement
         float theta = DEG_TO_RAD * 0.025f * liveSpeed;
-        PVector rotation = new PVector(jogRot[0], jogRot[1], jogRot[2]);
-        rotation = convertWorldToNative(rotation);
+        PVector rotation = new PVector(jogRot[0], -jogRot[2], jogRot[1]);
         
         if (invFrameOrientation != null) {
           // Convert the movement vector into the current reference frame

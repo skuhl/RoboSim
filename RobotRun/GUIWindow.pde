@@ -1377,21 +1377,21 @@ public class WindowManager {
           }
         }
         
-        // Convert origin position and orientation into the World Frame
+        // Convert origin position into the World Frame
         PVector oPosition = convertNativeToWorld( toEdit.getLocalCenter() ),
-                oWPR = convertNativeToWorld( matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RAD_TO_DEG) );
+                oWPR = matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RAD_TO_DEG);
         Float[] inputValues = getOrientationValues();
         // Update position and orientation
         if (inputValues[0] != null) { oPosition.x = inputValues[0]; }
         if (inputValues[1] != null) { oPosition.y = inputValues[1]; }
         if (inputValues[2] != null) { oPosition.z = inputValues[2]; }
-        if (inputValues[3] != null) { oWPR.x = inputValues[3]; }
-        if (inputValues[4] != null) { oWPR.y = inputValues[4]; }
-        if (inputValues[5] != null) { oWPR.z = inputValues[5]; }
+        if (inputValues[3] != null) { oWPR.x = -inputValues[3]; }
+        if (inputValues[4] != null) { oWPR.y = -inputValues[5]; }
+        if (inputValues[5] != null) { oWPR.z = inputValues[4]; }
         
         // Convert values from the World to the Native coordinate system
         PVector position = convertWorldToNative( oPosition );
-        PVector wpr = convertWorldToNative( oWPR.mult(DEG_TO_RAD) );
+        PVector wpr = oWPR.mult(DEG_TO_RAD);
         float[][] orientation = eulerToMatrix(wpr);
         // Update the Objects position and orientaion
         toEdit.setLocalCenter(position);

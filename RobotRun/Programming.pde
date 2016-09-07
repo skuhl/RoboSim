@@ -201,8 +201,8 @@ public class Point  {
       // Uninitialized
       angles = new PVector(Float.NaN, Float.NaN, Float.NaN);
     } else {
-       // Display in terms of the World Frame
-      angles = convertNativeToWorld( quatToEuler(orientation) ).mult(RAD_TO_DEG);
+       // Display in degrees
+      angles = quatToEuler(orientation).mult(RAD_TO_DEG);
     }
     
     entries[0][0] = "X: ";
@@ -211,12 +211,13 @@ public class Point  {
     entries[1][1] = String.format("%4.3f", pos.y);
     entries[2][0] = "Z: ";
     entries[2][1] = String.format("%4.3f", pos.z);
+    // Display angles in terms of the World frame
     entries[3][0] = "W: ";
-    entries[3][1] = String.format("%4.3f", angles.x);
+    entries[3][1] = String.format("%4.3f", -angles.x);
     entries[4][0] = "P: ";
-    entries[4][1] = String.format("%4.3f", angles.y);
+    entries[4][1] = String.format("%4.3f", -angles.z);
     entries[5][0] = "R: ";
-    entries[5][1] = String.format("%4.3f", angles.z );
+    entries[5][1] = String.format("%4.3f", angles.y);
     
     return entries;
   }
@@ -577,7 +578,7 @@ public final class MotionInstruction extends Instruction  {
       offset = new Point();
     }
     
-    if (userFrame != -1 && motionType != MTYPE_JOINT) {
+    if (userFrame != -1) {
       // Convert point into the Native Coordinate System
       Frame active = userFrames[userFrame];
       pt = removeFrame(pt, active.getOrigin(), active.getOrientation());

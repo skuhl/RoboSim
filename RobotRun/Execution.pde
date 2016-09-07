@@ -104,11 +104,11 @@ public void showMainDisplayText() {
     String[] dimFields = toEdit.dimFieldsToStringArray();
     // Convert the values into the World Coordinate System
     PVector position = convertNativeToWorld(toEdit.getLocalCenter());
-    PVector wpr = convertNativeToWorld( matrixToEuler(toEdit.getLocalOrientationAxes()) ).mult(RAD_TO_DEG);
+    PVector wpr =  matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RAD_TO_DEG);
     // Create a set of uniform Strings
     String[] fields = new String[] { String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
-                                     String.format("Z: %4.3f", position.z), String.format("W: %4.3f", wpr.x),
-                                     String.format("P: %4.3f", wpr.y), String.format("R: %4.3f", wpr.z) };
+                                     String.format("Z: %4.3f", position.z), String.format("W: %4.3f", -wpr.x),
+                                     String.format("P: %4.3f", -wpr.z), String.format("R: %4.3f", wpr.y) };
     
     lastTextPositionY += 20;
     text(toEdit.getName(), lastTextPositionX, lastTextPositionY);
@@ -878,25 +878,24 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
     else if (activeInstr instanceof JumpInstruction) {
       executingInstruction = false;
       nextInstr = activeInstr.execute();
-      
-      if(nextInstr == -1) {
-        triggerFault();
-        return true;
-      }
     } 
     else {
       executingInstruction = false;
       
       if(activeInstr.execute() != 0) {
-        triggerFault();
-        return true;
+        nextInstr = -1;
       }
     }//end of instruction type check
   } //skip commented instructions
   
   // Move to next instruction after current is finished
   if(!executingInstruction) {
-    if(nextInstr == activeProgram().size() && !call_stack.isEmpty()) {
+    if (nextInstr == -1) {
+      // If a command fails
+      triggerFault();
+      return true;
+      
+    } if(nextInstr == activeProgram().size() && !call_stack.isEmpty()) {
       // Return from called program
       int[] p = call_stack.pop();
       active_prog = p[0];
@@ -931,16 +930,17 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
 boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
   Point start = nativeRobotEEPoint(model.getJointAngles());
   
+  if (!instruction.checkFrames(activeToolFrame, activeUserFrame)) {
+    // Current Frames must match the instruction's frames
+    System.out.printf("Tool frame: %d : %d\nUser frame: %d : %d\n\n", instruction.getToolFrame(),
+                                    activeToolFrame, instruction.getUserFrame(), activeUserFrame);
+    return false;
+  }
+  
   if(instruction.getMotionType() == MTYPE_JOINT) {
     armModel.setupRotationInterpolation(instruction.getVector(program).angles);
   } // end joint movement setup
   else if(instruction.getMotionType() == MTYPE_LINEAR) {
-    if (!instruction.checkFrames(activeToolFrame, activeUserFrame)) {
-      // Current Frames must match the instruction's frames
-      System.out.printf("Tool frame: %d : %d\nUser frame: %d : %d\n\n", instruction.getToolFrame(),
-                                      activeToolFrame, instruction.getUserFrame(), activeUserFrame);
-      return false;
-    }
     
     if(instruction.getTermination() == 0) {
       beginNewLinearMotion(start, instruction.getVector(program));

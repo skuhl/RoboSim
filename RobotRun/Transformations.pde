@@ -202,7 +202,9 @@ public void applyModelRotation(float[] jointAngles) {
 
 /**
  * Converts the given point, pt, into the Coordinate System defined by the given origin
- * vector and rotation quaternion axes.
+ * vector and rotation quaternion axes. The joint angles associated with the point will
+ * be transformed as well, though, if inverse kinematics fails, then the original joint
+ * angles are used instead.
  * 
  * @param pt      A point with initialized position and orientation
  * @param origin  The origin of the Coordinate System
@@ -212,8 +214,15 @@ public void applyModelRotation(float[] jointAngles) {
 public Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
   PVector position = convertToFrame(pt.position, origin, axes);
   RQuaternion orientation = axes.transformQuaternion(pt.orientation);
+  // Update joint angles associated with the point
+  float[] newJointAngles = inverseKinematics(pt.angles, position, orientation);
   
-  return new Point(position, orientation, pt.angles);
+  if (newJointAngles != null) {
+    return new Point(position, orientation, newJointAngles);
+  } else {
+    // If inverse kinematics fails use the old angles
+    return new Point(position, orientation, pt.angles);
+  }
 }
 
 /**
@@ -232,7 +241,9 @@ public PVector convertToFrame(PVector v, PVector origin, RQuaternion axes) {
 
 /**
  * Converts the given point, pt, from the Coordinate System defined by the given origin
- * vector and rotation quaternion axes.
+ * vector and rotation quaternion axes. The joint angles associated with the point will
+ * be transformed as well, though, if inverse kinematics fails, then the original joint
+ * angles are used instead.
  * 
  * @param pt      A point with initialized position and orientation
  * @param origin  The origin of the Coordinate System
@@ -243,7 +254,15 @@ public Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
   PVector position = convertFromFrame(pt.position, origin, axes);
   RQuaternion orientation = RQuaternion.mult(pt.orientation, axes);
   
-  return new Point(position, orientation, pt.angles);
+  // Update joint angles associated with the point
+  float[] newJointAngles = inverseKinematics(pt.angles, position, orientation);
+  
+  if (newJointAngles != null) {
+    return new Point(position, orientation, newJointAngles);
+  } else {
+    // If inverse kinematics fails use the old angles
+    return new Point(position, orientation, pt.angles);
+  }
 }
 
 /**

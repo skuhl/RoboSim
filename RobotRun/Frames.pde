@@ -326,8 +326,8 @@ public abstract class Frame {
     if (DEOrientationOffset == null) {
       wpr = new PVector(0f, 0f, 0f);
     } else {
-      // Display axes in World Frame Euler angles, in degrees
-      wpr = convertWorldToNative(quatToEuler(DEOrientationOffset)).mult(RAD_TO_DEG);
+      // Display iin degress
+      wpr = quatToEuler(DEOrientationOffset).mult(RAD_TO_DEG);
     }
   
     entries[0][0] = "X: ";
@@ -336,12 +336,13 @@ public abstract class Frame {
     entries[1][1] = String.format("%4.3f", xyz.y);
     entries[2][0] = "Z: ";
     entries[2][1] = String.format("%4.3f", xyz.z);
+    // Display in terms of the World frame
     entries[3][0] = "W: ";
-    entries[3][1] = String.format("%4.3f", wpr.x);
+    entries[3][1] = String.format("%4.3f", -wpr.x);
     entries[4][0] = "P: ";
-    entries[4][1] = String.format("%4.3f", wpr.y);
+    entries[4][1] = String.format("%4.3f", -wpr.z);
     entries[5][0] = "R: ";
-    entries[5][1] = String.format("%4.3f", wpr.z);
+    entries[5][1] = String.format("%4.3f", wpr.y);
     
     return entries;
   }
@@ -470,17 +471,18 @@ public class ToolFrame extends Frame {
     String[] values = new String[6];
     
     PVector displayOffset;
-    // Convert angles to degrees and to the World Coordinate Frame
-    PVector wpr = convertWorldToNative(quatToEuler(getOrientation())).mult(RAD_TO_DEG);
+    // Convert angles to degrees
+    PVector wpr = quatToEuler(getOrientation()).mult(RAD_TO_DEG);
     
     displayOffset = getTCPOffset();
     
     values[0] = String.format("X: %4.3f", displayOffset.x);
     values[1] = String.format("Y: %4.3f", displayOffset.y);
     values[2] = String.format("Z: %4.3f", displayOffset.z);
-    values[3] = String.format("W: %4.3f", wpr.x);
-    values[4] = String.format("P: %4.3f", wpr.y);
-    values[5] = String.format("R: %4.3f", wpr.z);
+    // Display angles in terms of the World frame
+    values[3] = String.format("W: %4.3f", -wpr.x);
+    values[4] = String.format("P: %4.3f", -wpr.z);
+    values[5] = String.format("R: %4.3f", wpr.y);
     
     return values;
   }
@@ -597,7 +599,7 @@ public class UserFrame extends Frame {
     
     PVector displayOrigin;
     // Convert angles to degrees and to the World Coordinate Frame
-    PVector wpr = convertWorldToNative(quatToEuler(getOrientation())).mult(RAD_TO_DEG);
+    PVector wpr = quatToEuler(getOrientation()).mult(RAD_TO_DEG);
     
     // Convert to World frame reference
     displayOrigin = convertNativeToWorld(origin);
@@ -605,9 +607,10 @@ public class UserFrame extends Frame {
     values[0] = String.format("X: %4.3f", displayOrigin.x);
     values[1] = String.format("Y: %4.3f", displayOrigin.y);
     values[2] = String.format("Z: %4.3f", displayOrigin.z);
-    values[3] = String.format("W: %4.3f", wpr.x);
-    values[4] = String.format("P: %4.3f", wpr.y);
-    values[5] = String.format("R: %4.3f", wpr.z);
+    // Display angles in terms of the World frame
+    values[3] = String.format("W: %4.3f", -wpr.x);
+    values[4] = String.format("P: %4.3f", -wpr.z);
+    values[5] = String.format("R: %4.3f", wpr.y);
     
     return values;
   }

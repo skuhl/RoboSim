@@ -5372,7 +5372,7 @@ public void createFrameDirectEntry(Frame taughtFrame, float[] inputs) {
     origin = new PVector(inputs[0], inputs[1], inputs[2]);
   }
   // Convert the angles from degrees to radians, then convert from World to Native frame
-  wpr = convertWorldToNative( (new PVector(inputs[3], inputs[4], inputs[5])).mult(DEG_TO_RAD) );
+  wpr = (new PVector(-inputs[3], inputs[5], -inputs[4])).mult(DEG_TO_RAD);
   
   // Save direct entry values
   taughtFrame.DEOrigin = origin;
@@ -5546,7 +5546,7 @@ public void createRegisterPoint(boolean fromJointAngles) {
   } else {
     PVector position = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
     // Convert the angles from degrees to radians, then convert from World to Native frame, and finally convert to a quaternion
-    RQuaternion orientation = eulerToQuat( convertWorldToNative( (new PVector(inputs[3], inputs[4], inputs[5]).mult(DEG_TO_RAD)) ) );
+    RQuaternion orientation = eulerToQuat( (new PVector(-inputs[3], inputs[5], -inputs[4]).mult(DEG_TO_RAD)) );
     
     // Use default the Robot's joint angles for computing inverse kinematics
     float[] jointAngles = inverseKinematics(new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
