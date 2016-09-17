@@ -76,7 +76,8 @@ public void showMainDisplayText() {
   
   if (active != null) {
     // Display Robot's current position and orientation in the currently active User frame
-    RP = applyFrame(RP, active.getOrigin(), active.getOrientation());
+    RP.position = convertToFrame(RP.position, active.getOrigin(), active.getOrientation());
+    RP.orientation = active.getOrientation().transformQuaternion(RP.orientation);
     cartesian = RP.toLineStringArray(true);
     
     lastTextPositionY += 20;
@@ -434,10 +435,10 @@ public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, RQuater
     count += 1;
     if (count == limit) {
       // IK failure
-      if (DISPLAY_TEST_OUTPUT) {
-        System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles),
-                            matrixToString(J), cPoint.orientation, tgtOrientation);
-      }
+      //if (DISPLAY_TEST_OUTPUT) {
+      //  System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles),
+      //                      matrixToString(J), cPoint.orientation, tgtOrientation);
+      //}
       
       return null;
     }

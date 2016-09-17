@@ -1386,8 +1386,8 @@ public class WindowManager {
         if (inputValues[1] != null) { oPosition.y = inputValues[1]; }
         if (inputValues[2] != null) { oPosition.z = inputValues[2]; }
         if (inputValues[3] != null) { oWPR.x = -inputValues[3]; }
-        if (inputValues[4] != null) { oWPR.y = -inputValues[5]; }
-        if (inputValues[5] != null) { oWPR.z = inputValues[4]; }
+        if (inputValues[5] != null) { oWPR.y = -inputValues[5]; }
+        if (inputValues[4] != null) { oWPR.z = inputValues[4]; }
         
         // Convert values from the World to the Native coordinate system
         PVector position = convertWorldToNative( oPosition );
@@ -1404,6 +1404,7 @@ public class WindowManager {
         }
       } catch (NullPointerException NPEx) {
         println("Missing parameter!");
+        NPEx.printStackTrace();
       }
     } else {
       println("No object selected!");

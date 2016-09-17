@@ -1001,20 +1001,11 @@ public class ArmModel {
             trialAngle = mod2PI(trialAngle);
             
             if(model.anglePermitted(n, trialAngle)) {
-              
-              float old_angle = model.currentRotations[n];
               model.currentRotations[n] = trialAngle;
-              
-              if(armModel.checkSelfCollisions()) {
-                // End robot arm movement
-                model.currentRotations[n] = old_angle;
-                updateCollisionOBBs();
-                model.jointsMoving[n] = 0;
-                halt();
-              }
             } 
             else {
               model.jointsMoving[n] = 0;
+              updateRobotJogMotion(i, 0);
               halt();
             }
           }
@@ -1045,7 +1036,7 @@ public class ArmModel {
       if (translationalMotion()) {
         // Respond to user defined movement
         float distance = motorSpeed / 6000f * liveSpeed;
-        PVector translation = new PVector(jogLinear[0], -jogLinear[2], jogLinear[1]);
+        PVector translation = new PVector(-jogLinear[0], -jogLinear[2], jogLinear[1]);
         translation.mult(distance);
         
         if (invFrameOrientation != null) {
@@ -1063,7 +1054,7 @@ public class ArmModel {
       if (rotationalMotion()) {
         // Respond to user defined movement
         float theta = DEG_TO_RAD * 0.025f * liveSpeed;
-        PVector rotation = new PVector(jogRot[0], -jogRot[2], jogRot[1]);
+        PVector rotation = new PVector(-jogRot[0], -jogRot[2], jogRot[1]);
         
         if (invFrameOrientation != null) {
           // Convert the movement vector into the current reference frame
