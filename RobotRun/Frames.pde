@@ -10,19 +10,19 @@ private final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
 
 public abstract class Frame {
   // The orientation of the frame in the form of a unit quaternion
-  private float[] orientation;
+  protected RQuaternion orientationOffset;
   /* The three points used to define a coordinate axis for 6-Point Method
    * of Tool Frames and 3-Point or 4_Point Methods of User Frames */
   protected Point[] axesTeachPoints;
   // For Direct Entry
   protected PVector DEOrigin;
-  protected float[] DEOrientation;
+  protected RQuaternion DEOrientationOffset;
 
   public Frame() {
-    orientation = new float[] { 1f, 0f, 0f, 0f };
+    orientationOffset = new RQuaternion();
     axesTeachPoints = new Point[] { null, null, null };
     DEOrigin = null;
-    DEOrientation = null;
+    DEOrientationOffset = null;
   }
   
   /**
@@ -32,7 +32,7 @@ public abstract class Frame {
   
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the Native Coordinate System. */
-  public float[][] getNativeAxisVectors() { return quatToMatrix(orientation); }
+  public float[][] getNativeAxisVectors() { return getOrientation().toMatrix(); }
   /* Returns a set of axes unit vectors representing the axes
    * of the frame in reference to the World Coordinate System. */
   public float[][] getWorldAxisVectors() {
@@ -42,14 +42,13 @@ public abstract class Frame {
     return doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
   }
   
-  public float[] getOrientation() { return orientation; }
-  
-  public float[] getOrientationNegation() {
-    return new float[] { orientation[0], -orientation[1], -orientation[2], -orientation[3] };
-  }
+  /**
+   * Returns the orientation of the axes for this frame.
+   */
+  public abstract RQuaternion getOrientation();
 
-  public void setOrientation(float[] newAxes) {
-    orientation = newAxes;
+  public void setOrientation(RQuaternion newAxes) {
+    orientationOffset = newAxes;
   }
   
   /**
@@ -324,11 +323,11 @@ public abstract class Frame {
       }
     }
     
-    if (DEOrientation == null) {
+    if (DEOrientationOffset == null) {
       wpr = new PVector(0f, 0f, 0f);
     } else {
-      // Display axes in World Frame Euler angles, in degrees
-      wpr = convertWorldToNative(quatToEuler(DEOrientation)).mult(RAD_TO_DEG);
+      // Display iin degress
+      wpr = quatToEuler(DEOrientationOffset).mult(RAD_TO_DEG);
     }
   
     entries[0][0] = "X: ";
@@ -337,12 +336,13 @@ public abstract class Frame {
     entries[1][1] = String.format("%4.3f", xyz.y);
     entries[2][0] = "Z: ";
     entries[2][1] = String.format("%4.3f", xyz.z);
+    // Display in terms of the World frame
     entries[3][0] = "W: ";
-    entries[3][1] = String.format("%4.3f", wpr.x);
+    entries[3][1] = String.format("%4.3f", -wpr.x);
     entries[4][0] = "P: ";
-    entries[4][1] = String.format("%4.3f", wpr.y);
+    entries[4][1] = String.format("%4.3f", -wpr.z);
     entries[5][0] = "R: ";
-    entries[5][1] = String.format("%4.3f", wpr.z);
+    entries[5][1] = String.format("%4.3f", wpr.y);
     
     return entries;
   }
@@ -361,6 +361,13 @@ public class ToolFrame extends Frame {
     super();
     TCPOffset = new PVector(0f, 0f, 0f);
     TCPTeachPoints = new Point[] { null, null, null };
+  }
+  
+  @Override
+  public RQuaternion getOrientation() {
+    RQuaternion robotOrientation = nativeRobotPoint(armModel.getJointAngles()).orientation;
+    // Tool frame axes orientation = (orientation offset x Model default orientation ^ -1) x Model current orientation
+    return RQuaternion.mult(armModel.DEFAULT_ORIENTATION.transformQuaternion(orientationOffset), robotOrientation);
   }
   
   public void setPoint(Point p, int idx) {
@@ -410,13 +417,13 @@ public class ToolFrame extends Frame {
     if (method == 2) {
       // Direct Entry Method
       
-      if (DEOrigin == null || DEOrientation == null) {
+      if (DEOrigin == null || DEOrientationOffset == null) {
         // No direct entry values have been set
         return false;
       }
       
       setTCPOffset(DEOrigin);
-      setOrientation( DEOrientation.clone() );
+      setOrientation( (RQuaternion)DEOrientationOffset.clone() );
       return true;
     } else if (method >= 0 && method < 2 && TCPTeachPoints[0] != null && TCPTeachPoints[1] != null && TCPTeachPoints[2] != null) {
       // 3-Point or 6-Point Method
@@ -426,9 +433,9 @@ public class ToolFrame extends Frame {
         return false;
       }
       
-      float[][] pt1_ori = quatToMatrix(TCPTeachPoints[0].orientation),
-                pt2_ori = quatToMatrix(TCPTeachPoints[1].orientation),
-                pt3_ori = quatToMatrix(TCPTeachPoints[2].orientation);
+      float[][] pt1_ori = TCPTeachPoints[0].orientation.toMatrix(),
+                pt2_ori = TCPTeachPoints[1].orientation.toMatrix(),
+                pt3_ori = TCPTeachPoints[2].orientation.toMatrix();
       
       double[] newTCP = calculateTCPFromThreePoints(TCPTeachPoints[0].position, pt1_ori,
                                                     TCPTeachPoints[1].position, pt2_ori,
@@ -464,17 +471,18 @@ public class ToolFrame extends Frame {
     String[] values = new String[6];
     
     PVector displayOffset;
-    // Convert angles to degrees and to the World Coordinate Frame
-    PVector wpr = convertWorldToNative(quatToEuler(getOrientation())).mult(RAD_TO_DEG);
+    // Convert angles to degrees
+    PVector wpr = quatToEuler(getOrientation()).mult(RAD_TO_DEG);
     
     displayOffset = getTCPOffset();
     
     values[0] = String.format("X: %4.3f", displayOffset.x);
     values[1] = String.format("Y: %4.3f", displayOffset.y);
     values[2] = String.format("Z: %4.3f", displayOffset.z);
-    values[3] = String.format("W: %4.3f", wpr.x);
-    values[4] = String.format("P: %4.3f", wpr.y);
-    values[5] = String.format("R: %4.3f", wpr.z);
+    // Display angles in terms of the World frame
+    values[3] = String.format("W: %4.3f", -wpr.x);
+    values[4] = String.format("P: %4.3f", -wpr.z);
+    values[5] = String.format("R: %4.3f", wpr.y);
     
     return values;
   }
@@ -502,6 +510,9 @@ public class UserFrame extends Frame {
     origin = new PVector(0f, 0f, 0f);
     orientOrigin = null;
   }
+  
+  @Override
+  public RQuaternion getOrientation() { return orientationOffset; }
   
   public void setPoint(Point p, int idx) {
     
@@ -546,13 +557,13 @@ public class UserFrame extends Frame {
     if (mode == 2) {
       // Direct Entry Method
       
-      if (DEOrigin == null || DEOrientation == null) {
+      if (DEOrigin == null || DEOrientationOffset == null) {
         // No direct entry values have been set
         return false;
       }
       
       setOrigin(DEOrigin);
-      setOrientation( DEOrientation.clone() );
+      setOrientation( (RQuaternion)DEOrientationOffset.clone() );
       return true;
     } else if (mode >= 0 && mode < 2 && axesTeachPoints[0] != null && axesTeachPoints[1] != null && axesTeachPoints[2] != null) {
       // 3-Point or 4-Point Method
@@ -588,7 +599,7 @@ public class UserFrame extends Frame {
     
     PVector displayOrigin;
     // Convert angles to degrees and to the World Coordinate Frame
-    PVector wpr = convertWorldToNative(quatToEuler(getOrientation())).mult(RAD_TO_DEG);
+    PVector wpr = quatToEuler(getOrientation()).mult(RAD_TO_DEG);
     
     // Convert to World frame reference
     displayOrigin = convertNativeToWorld(origin);
@@ -596,9 +607,10 @@ public class UserFrame extends Frame {
     values[0] = String.format("X: %4.3f", displayOrigin.x);
     values[1] = String.format("Y: %4.3f", displayOrigin.y);
     values[2] = String.format("Z: %4.3f", displayOrigin.z);
-    values[3] = String.format("W: %4.3f", wpr.x);
-    values[4] = String.format("P: %4.3f", wpr.y);
-    values[5] = String.format("R: %4.3f", wpr.z);
+    // Display angles in terms of the World frame
+    values[3] = String.format("W: %4.3f", -wpr.x);
+    values[4] = String.format("P: %4.3f", -wpr.z);
+    values[5] = String.format("R: %4.3f", wpr.y);
     
     return values;
   }

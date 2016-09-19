@@ -9,31 +9,27 @@ public class Point  {
   // X, Y, Z
   public PVector position;
   // Q1 - Q4
-  public float[] orientation;
+  public RQuaternion orientation;
   // J1 - J6
   public float[] angles;
 
   public Point() {
     angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
     position = new PVector(0f, 0f, 0f);
-    orientation = new float[] { 1f, 0f, 0f, 0f };
+    orientation = new RQuaternion();
   }
   
-  public Point(PVector pos, float[] orient) {
+  public Point(PVector pos, RQuaternion orient) {
     angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
     position = pos.copy();
-    orientation = Arrays.copyOfRange(orient, 0, 4);
+    orientation = orient;
   }
   
   public Point(float x, float y, float z, float r, float i, float j, float k,
   float j1, float j2, float j3, float j4, float j5, float j6) {
-    orientation = new float[4];
     angles = new float[6];
     position = new PVector(x,y,z);
-    orientation[0] = r;
-    orientation[1] = i;
-    orientation[2] = j;
-    orientation[3] = k;
+    orientation = new RQuaternion(r, i, j, k);
     angles[0] = j1;
     angles[1] = j2;
     angles[2] = j3;
@@ -42,9 +38,9 @@ public class Point  {
     angles[5] = j6;
   }
   
-  public Point(PVector pos, float[] orient, float[] jointAngles) {
+  public Point(PVector pos, RQuaternion orient, float[] jointAngles) {
     position = pos.copy();
-    orientation = Arrays.copyOfRange(orient, 0, 4);
+    orientation = orient;
     angles = Arrays.copyOfRange(jointAngles, 0, 6);
   }
 
@@ -67,7 +63,7 @@ public class Point  {
       case 9:   
       case 10:  
       case 11:  
-      case 12:  return orientation[idx - 9];
+      case 12:  return orientation.getValue(idx - 9);
       default:
     }
     
@@ -91,7 +87,7 @@ public class Point  {
       case 9:   
       case 10:  
       case 11:  
-      case 12:  orientation[idx - 9] = value;
+      case 12:  orientation.setValue(idx - 9, value);
       default:
     }
   }
@@ -104,7 +100,7 @@ public class Point  {
     Point p3 = new Point();
     
     PVector p3Pos = PVector.add(position, p.position);
-    float[] p3Orient = quaternionMult(orientation, p.orientation);
+    RQuaternion p3Orient = RQuaternion.mult(orientation, p.orientation);
     float[] p3Joints = new float[6];
     
     for(int i = 0; i < 6; i += 1) {
@@ -123,7 +119,7 @@ public class Point  {
    */
   public Point negate() {
     position = position.mult(-1);
-    orientation = vectorScalarMult(orientation, -1);
+    orientation = RQuaternion.scalarMult(-1, orientation);
     angles = vectorScalarMult(angles, -1);
     return this;
   }
@@ -205,8 +201,8 @@ public class Point  {
       // Uninitialized
       angles = new PVector(Float.NaN, Float.NaN, Float.NaN);
     } else {
-       // Display in terms of the World Frame
-      angles = convertNativeToWorld( quatToEuler(orientation) ).mult(RAD_TO_DEG);
+       // Display in degrees
+      angles = quatToEuler(orientation).mult(RAD_TO_DEG);
     }
     
     entries[0][0] = "X: ";
@@ -215,12 +211,13 @@ public class Point  {
     entries[1][1] = String.format("%4.3f", pos.y);
     entries[2][0] = "Z: ";
     entries[2][1] = String.format("%4.3f", pos.z);
+    // Display angles in terms of the World frame
     entries[3][0] = "W: ";
-    entries[3][1] = String.format("%4.3f", angles.x);
+    entries[3][1] = String.format("%4.3f", -angles.x);
     entries[4][0] = "P: ";
-    entries[4][1] = String.format("%4.3f", angles.y);
+    entries[4][1] = String.format("%4.3f", -angles.z);
     entries[5][0] = "R: ";
-    entries[5][1] = String.format("%4.3f", angles.z );
+    entries[5][1] = String.format("%4.3f", angles.y);
     
     return entries;
   }
@@ -546,6 +543,22 @@ public final class MotionInstruction extends Instruction  {
   }
   
   /**
+   * Returns the unmodified point that is associate
+   * with this motion instruction.
+   *
+   * @param parent  The program to which this
+   *                instruction belongs
+   */
+  public Point getPoint(Program parent) {
+    
+    if (isGPosReg) {
+      return GPOS_REG[positionNum].point.clone();    
+    } else {
+      return parent.LPosReg[positionNum].clone();
+    }
+  }
+  
+  /**
    * Returns the point associated with this motion instruction
    * (can be either a position in the program or a global position
    * register value) in Native Coordinates.
@@ -557,11 +570,7 @@ public final class MotionInstruction extends Instruction  {
     Point pt;
     Point offset;
     
-    if(isGPosReg) {
-      pt = GPOS_REG[positionNum].point.clone();    
-    } else {
-      pt = parent.LPosReg[positionNum].clone();
-    }
+    pt = getPoint(parent);
     
     if(offsetRegNum != -1) {
       offset = GPOS_REG[offsetRegNum].point;
@@ -569,7 +578,7 @@ public final class MotionInstruction extends Instruction  {
       offset = new Point();
     }
     
-    if (userFrame != -1 && motionType != MTYPE_JOINT) {
+    if (userFrame != -1) {
       // Convert point into the Native Coordinate System
       Frame active = userFrames[userFrame];
       pt = removeFrame(pt, active.getOrigin(), active.getOrientation());

@@ -106,6 +106,9 @@ public class Model {
 } // end Model class
 
 public class ArmModel {
+  // Initial position and orientation of the Robot
+  public final PVector DEFAULT_POSITON;
+  public final RQuaternion DEFAULT_ORIENTATION;
   
   public EEType activeEndEffector;
   public int endEffectorState;
@@ -133,9 +136,14 @@ public class ArmModel {
   public float[][] oldEEOrientation;
   
   public PVector tgtPosition;
-  public float[] tgtOrientation;
+  public RQuaternion tgtOrientation;
   
   public ArmModel() {
+    Point pt = nativeRobotPoint(new float[] { 0f, 0f, 0f, 0f, 0f, 0f });
+    // Define the defaultl Robot position and orientaiton
+    DEFAULT_POSITON = pt.position;
+    DEFAULT_ORIENTATION = pt.orientation;
+    
     activeEndEffector = EEType.NONE;
     endEffectorState = OFF;
     // Initialize the End Effector to IO Register mapping
@@ -218,7 +226,7 @@ public class ArmModel {
     eePickupOBBs = new HashMap<EEType, ArrayList<BoundingBox>>();
     // Faceplate
     ArrayList<BoundingBox> limbo = new ArrayList<BoundingBox>();
-    limbo.add( new BoundingBox(102, 102, 36) );
+    limbo.add( new BoundingBox(96, 96, 36) );
     eeOBBsMap.put(EEType.NONE, limbo);
     // Cannot pickup
     limbo = new ArrayList<BoundingBox>();
@@ -226,7 +234,7 @@ public class ArmModel {
     
     // Claw Gripper
     limbo = new ArrayList<BoundingBox>();
-    limbo.add( new BoundingBox(102, 102, 46) );
+    limbo.add( new BoundingBox(96, 96, 54) );
     limbo.add( new BoundingBox(89, 21, 31) );
     limbo.add( new BoundingBox(89, 21, 31) );
     eeOBBsMap.put(EEType.CLAW, limbo);
@@ -238,9 +246,9 @@ public class ArmModel {
     
     // Suction 
     limbo = new ArrayList<BoundingBox>();
-    limbo.add( new BoundingBox(102, 102, 46) );
-    limbo.add( new BoundingBox(37, 37, 82/*87*/) );
-    limbo.add( new BoundingBox(37, 62/*67*/, 37) );
+    limbo.add( new BoundingBox(96, 96, 54) );
+    limbo.add( new BoundingBox(37, 37, 82) );
+    limbo.add( new BoundingBox(37, 62, 37) );
     eeOBBsMap.put(EEType.SUCTION, limbo);
     // One for each suction cup
     limbo = new ArrayList<BoundingBox>();
@@ -252,8 +260,8 @@ public class ArmModel {
     
     // Pointer
     limbo = new ArrayList<BoundingBox>();
-    limbo.add( new BoundingBox(102, 102, 46) );
-    limbo.add( new BoundingBox(24, 24, 32) );
+    limbo.add( new BoundingBox(96, 96, 54) );
+    limbo.add( new BoundingBox(32, 32, 34) );
     limbo.add( new BoundingBox(18, 18, 56) );
     limbo.add( new BoundingBox(9, 9, 37) );
     eeOBBsMap.put(EEType.POINTER, limbo);
@@ -594,16 +602,17 @@ public class ArmModel {
     switch(current) {
       case NONE:
         // Face Plate EE
-        translate(0, 0, 10);
+        translate(0, 0, 12);
         curEEOBBs.get(0).setCoordinateSystem();
-        translate(0, 0, -10);
+        translate(0, 0, -12);
         break;
         
       case CLAW:
         // Claw Gripper EE
+        translate(0, 0, 3);
         curEEOBBs.get(0).setCoordinateSystem();
         
-        translate(-2, 0, -54);
+        translate(-2, 0, -57);
         curPUEEOBBs.get(0).setCoordinateSystem();
         
         if (endEffectorState == OFF) {
@@ -628,9 +637,10 @@ public class ArmModel {
         
       case SUCTION:
         // Suction EE
+        translate(0, 0, 3);
         curEEOBBs.get(0).setCoordinateSystem();
         
-        translate(-2, 0, -64);
+        translate(-2, 0, -67);
         BoundingBox limbo = curEEOBBs.get(1);
         limbo.setCoordinateSystem();
         
@@ -649,9 +659,10 @@ public class ArmModel {
         
       case POINTER:
         // Pointer EE
+        translate(0, 0, 3);
         curEEOBBs.get(0).setCoordinateSystem();
 
-        translate(0, 0, -30);
+        translate(0, 0, -43);
         curEEOBBs.get(1).setCoordinateSystem();
         translate(0, -18, -34);
         rotateX(-0.75);
@@ -659,9 +670,7 @@ public class ArmModel {
         rotateX(0.75);
         translate(0, -21, -32);
         curEEOBBs.get(3).setCoordinateSystem();
-        translate(0, 21, 32);
-        translate(0, 18, 34);
-        translate(0, 0, 30);
+        translate(0, 39, 109);
         break;
       
       case GLUE_GUN:
@@ -992,20 +1001,11 @@ public class ArmModel {
             trialAngle = mod2PI(trialAngle);
             
             if(model.anglePermitted(n, trialAngle)) {
-              
-              float old_angle = model.currentRotations[n];
               model.currentRotations[n] = trialAngle;
-              
-              if(armModel.checkSelfCollisions()) {
-                // End robot arm movement
-                model.currentRotations[n] = old_angle;
-                updateCollisionOBBs();
-                model.jointsMoving[n] = 0;
-                halt();
-              }
             } 
             else {
               model.jointsMoving[n] = 0;
+              updateRobotJogMotion(i, 0);
               halt();
             }
           }
@@ -1014,14 +1014,20 @@ public class ArmModel {
       
     } else {
       // Jog in the World, Tool or User Frame
-      Frame curFrame;
+      RQuaternion invFrameOrientation = null;
       
       if (curCoordFrame == CoordFrame.TOOL) {
-        curFrame = getActiveFrame(CoordFrame.TOOL);
+        Frame curFrame = getActiveFrame(CoordFrame.TOOL);
+        
+        if (curFrame != null) {
+          invFrameOrientation = curFrame.getOrientation().conjugate();
+        }
       } else if (curCoordFrame == CoordFrame.USER) {
-        curFrame = getActiveFrame(CoordFrame.USER);
-      } else {
-        curFrame = null;
+        Frame curFrame = getActiveFrame(CoordFrame.USER);
+        
+        if (curFrame != null) {
+          invFrameOrientation = curFrame.getOrientation().conjugate();
+        }
       }
       
       Point curPoint = nativeRobotEEPoint(getJointAngles());
@@ -1030,12 +1036,12 @@ public class ArmModel {
       if (translationalMotion()) {
         // Respond to user defined movement
         float distance = motorSpeed / 6000f * liveSpeed;
-        PVector translation = new PVector(jogLinear[0], jogLinear[1], jogLinear[2]);
-        translation = rotateVector(translation.mult(distance), WORLD_AXES);
+        PVector translation = new PVector(-jogLinear[0], -jogLinear[2], jogLinear[1]);
+        translation.mult(distance);
         
-        if (curFrame != null) {
+        if (invFrameOrientation != null) {
             // Convert the movement vector into the current reference frame
-          translation = rotateVectorQuat(translation, curFrame.getOrientationNegation());
+          translation = invFrameOrientation.rotateVector(translation);
         }
         
         tgtPosition.add(translation);
@@ -1048,20 +1054,19 @@ public class ArmModel {
       if (rotationalMotion()) {
         // Respond to user defined movement
         float theta = DEG_TO_RAD * 0.025f * liveSpeed;
-        PVector rotation = new PVector(jogRot[0], jogRot[1], jogRot[2]);
-        rotation = convertWorldToNative(rotation);
+        PVector rotation = new PVector(-jogRot[0], -jogRot[2], jogRot[1]);
         
-        if (curFrame != null) {
+        if (invFrameOrientation != null) {
           // Convert the movement vector into the current reference frame
-          rotation = rotateVectorQuat(rotation, curFrame.getOrientationNegation());
+          rotation = invFrameOrientation.rotateVector(rotation);
         }
         rotation.normalize();
         
-        tgtOrientation = rotateQuat(tgtOrientation, rotation, theta);
+        tgtOrientation.rotateAroundAxis(rotation, theta);
         
-        if (quaternionDotProduct(tgtOrientation, curPoint.orientation) < 0f) {
+        if (tgtOrientation.dot(curPoint.orientation) < 0f) {
           // Use -q instead of q
-          tgtOrientation = vectorScalarMult(tgtOrientation, -1);
+          tgtOrientation.scalarMult(-1);
         }
       } else {
         // No rotational motion
@@ -1084,7 +1089,7 @@ public class ArmModel {
    *              are invalid and EXEC_SUCCESS if the Robot is successfully moved to the
    *              given position
    */
-  public int jumpTo(PVector destPosition, float[] destOrientation) {
+  public int jumpTo(PVector destPosition, RQuaternion destOrientation) {
     boolean invalidAngle = false;
     float[] srcAngles = getJointAngles();
     // Calculate the joint angles for the desired position and orientation
@@ -1108,7 +1113,7 @@ public class ArmModel {
       if (DISPLAY_TEST_OUTPUT) {
         Point RP = nativeRobotEEPoint(getJointAngles());
         System.out.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n", RP.position, destPosition,
-                                arrayToString(RP.orientation), arrayToString(destOrientation));
+                                RP.orientation, destOrientation);
       }
       
       triggerFault();
@@ -1130,7 +1135,7 @@ public class ArmModel {
   /**
    * TODO comment
    */
-  public void moveTo(PVector position, float[] orientation) {
+  public void moveTo(PVector position, RQuaternion orientation) {
     Point start = nativeRobotEEPoint(armModel.getJointAngles());
     Point end = new Point(position, orientation, start.angles);
     beginNewLinearMotion(start, end);
