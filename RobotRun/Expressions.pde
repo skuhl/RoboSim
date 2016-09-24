@@ -988,19 +988,21 @@ public class ExprOperand implements ExpressionElement {
   public ExprOperand set(IORegister ioReg, int i) {
     type = ExpressionElement.IOREG;
     regIdx = i;
-    regVal = ioReg;    
+    regVal = ioReg;
     return this;
   }
   
   public ExprOperand set(PositionRegister pReg, int i) {
-    type = ExpressionElement.PREG;
+    if(type != ExpressionElement.PREG_IDX)
+      type = ExpressionElement.PREG;
+    
     regIdx = i;
     regVal = pReg;
     return this;
   }
 
   public ExprOperand set(PositionRegister pReg, int i, int j) {
-    type = ExpressionElement.PREG;
+    type = ExpressionElement.PREG_IDX;
     regIdx = i;
     posIdx = j;
     regVal = pReg;
@@ -1071,7 +1073,7 @@ public class ExprOperand implements ExpressionElement {
       String rNum = (regIdx == -1) ? "..." : ""+regIdx;
       String pIdx = (posIdx == -1) ? "..." : ""+posIdx;
       
-      return new String[] { "PR[" + rNum, pIdx + "]" };
+      return new String[] { "PR[" + rNum + ",", " " + pIdx + "]" };
     } else {
       return new String[] { this.toString() };
     }

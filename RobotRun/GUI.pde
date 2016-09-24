@@ -2484,7 +2484,7 @@ public void ENTER() {
           opEdit.set(IO_REG[idx - 1], idx);
         } else if(mode == Screen.INPUT_PREG_IDX1) {
           opEdit.set(GPOS_REG[idx - 1], idx);
-        } else {
+        } else if(mode == Screen.INPUT_PREG_IDX2) {
           int reg = opEdit.regIdx;
           opEdit.set(GPOS_REG[reg - 1], reg, idx);
         }
@@ -3380,6 +3380,8 @@ public void loadScreen() {
     case SET_MV_INSTR_OFFSET:
     case INPUT_DREG_IDX:
     case INPUT_IOREG_IDX:
+    case INPUT_PREG_IDX1:
+    case INPUT_PREG_IDX2:
     case INPUT_CONST:
       workingText = "";
       break;
@@ -3947,6 +3949,8 @@ public ArrayList<DisplayLine> getContents(Screen mode){
     case SET_EXPR_OP:
     case INPUT_DREG_IDX:
     case INPUT_IOREG_IDX:
+    case INPUT_PREG_IDX1:
+    case INPUT_PREG_IDX2:
     case INPUT_CONST:
     case SET_BOOL_CONST:
     case SET_LBL_NUM:
@@ -4106,6 +4110,8 @@ public ArrayList<String> getOptions(Screen mode){
     case SET_EXPR_OP:
     case INPUT_DREG_IDX:
     case INPUT_IOREG_IDX:
+    case INPUT_PREG_IDX1:
+    case INPUT_PREG_IDX2:
     case INPUT_CONST:
     case SET_BOOL_CONST:
     case SET_LBL_NUM:
@@ -4797,6 +4803,15 @@ public void editOperand(ExprOperand o, int ins_idx) {
     case 3: //IO reg
       opEdit = o;
       switchScreen(Screen.INPUT_IOREG_IDX);
+      break;
+    case 4: // Pos reg
+      opEdit = o;
+      switchScreen(Screen.INPUT_PREG_IDX1);
+      break;
+    case 5: // Pos reg at index
+      opEdit = o;
+      switchScreen(Screen.INPUT_PREG_IDX2);
+      nextScreen(Screen.INPUT_PREG_IDX1);
       break;
   }
 }
