@@ -149,7 +149,7 @@ public void showMainDisplayText() {
     
     // Display a message when there is an error with the Robot's movement
     if (motionFault) {
-      text("Robot Fault (press SHIFT + Reset)", lastTextPositionX, lastTextPositionY);
+      text("Motion Fault (press SHIFT + Reset)", lastTextPositionX, lastTextPositionY);
       lastTextPositionY += 20;
     }
     
