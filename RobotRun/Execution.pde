@@ -48,7 +48,7 @@ public void showMainDisplayText() {
   text(coordFrame, lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
   // Display the Robot's speed value as a percent
-  text(String.format("Speed: %d%%", liveSpeed), lastTextPositionX, lastTextPositionY);
+  text(String.format("Jog Speed: %d%%", liveSpeed), lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
   // Display the title of the currently active scenario
   String scenarioTitle;
@@ -148,7 +148,7 @@ public void showMainDisplayText() {
     fill(215, 0, 0);
     
     // Display a message when there is an error with the Robot's movement
-    if (robotFault) {
+    if (motionFault) {
       text("Robot Fault (press SHIFT + Reset)", lastTextPositionX, lastTextPositionY);
       lastTextPositionY += 20;
     }
@@ -850,7 +850,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
   int nextInstr = active_instr + 1;
   
   //stop executing if no valid program is selected or we reach the end of the program
-  if(robotFault || activeInstr == null) {
+  if(motionFault || activeInstr == null) {
     return true;
   } 
   else if (!activeInstr.isCommented()){
@@ -982,7 +982,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
  */
 public void triggerFault() {
   armModel.halt();
-  robotFault = true;
+  motionFault = true;
 }
 
 /**

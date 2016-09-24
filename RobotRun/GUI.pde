@@ -961,7 +961,7 @@ public void RESET() {
   if (shift) {
     // Reset robot fault
     armModel.halt();
-    robotFault = false;
+    motionFault = false;
   }
 }
 
@@ -3124,7 +3124,7 @@ public void updateRobotJogMotion(int button, int direction) {
  */
 public float activateLiveJointMotion(int joint, int dir) {
   
-  if (!shift || robotFault) {
+  if (!shift || motionFault) {
     // Only move when shift is set and there is no error
     return 0f;
   }
@@ -3165,7 +3165,7 @@ public float activateLiveJointMotion(int joint, int dir) {
  *
  */
 public float activateLiveWorldMotion(int axis, int dir) {
-  if (!shift || robotFault) {
+  if (!shift || motionFault) {
     // Only move when shift is set and there is no error
     return 0f;
   }
