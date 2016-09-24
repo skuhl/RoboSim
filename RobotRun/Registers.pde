@@ -105,12 +105,8 @@ public class PositionRegister extends Register {
     if(!isCartesian) {
       point.setValue(idx, value);
     }
-    else if(idx < 3) {
-      point.setValue(idx + 6, value);
-    }
     else {
-      PVector pOrientation = quatToEuler(point.orientation);
-      pOrientation.array()[idx - 3] = value;
+      point.setValue(idx + 6, value);
     }
   }
 }

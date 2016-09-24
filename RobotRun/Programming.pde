@@ -82,11 +82,11 @@ public class Point  {
       case 5:   angles[idx] = value;
                 break;
       // Position
-      case 6:   position.x = value;
+      case 6:   position.x = -value;
                 break;
-      case 7:   position.y = value;
+      case 7:   position.z = value;
                 break;
-      case 8:   position.z = value;
+      case 8:   position.y = -value;
                 break;
       // Orientation
       case 9:   vec.x = -value;
