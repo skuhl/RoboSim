@@ -1173,17 +1173,16 @@ public class AtomicExpression extends ExprOperand {
     } 
     else if(t1 == ExpressionElement.FLOAT || t1 == ExpressionElement.DREG || t1 == ExpressionElement.PREG_IDX) {
       opType = 0;
-      println(arg1.toString());
       o1 = arg1.getDataVal();
       
       switch(t2) {
-        case ExpressionElement.BOOL:
-        case ExpressionElement.IOREG:
-        case ExpressionElement.PREG:
-        case ExpressionElement.POSTN:
-          return null;
-        default:
+        case ExpressionElement.FLOAT:
+        case ExpressionElement.DREG:
+        case ExpressionElement.PREG_IDX:
           o2 = arg2.getDataVal();
+          break;
+        default:
+          return null;
       }
     }
     else if(t1 == ExpressionElement.BOOL || t1 == ExpressionElement.IOREG) {
@@ -1191,14 +1190,12 @@ public class AtomicExpression extends ExprOperand {
       b1 = arg1.getBoolVal();
       
       switch(t2) {
-        case ExpressionElement.FLOAT:
-        case ExpressionElement.DREG:
-        case ExpressionElement.PREG:
-        case ExpressionElement.PREG_IDX:
-        case ExpressionElement.POSTN:
-          return null;
-        default:
+        case ExpressionElement.BOOL:
+        case ExpressionElement.IOREG:
           b2 = arg2.getBoolVal();
+          break;
+        default:
+          return null;
       }
     }
     else if(t1 == ExpressionElement.PREG || t1 == ExpressionElement.POSTN) {
@@ -1206,14 +1203,12 @@ public class AtomicExpression extends ExprOperand {
       p1 = arg1.getPointVal();
       
       switch(t2) {
-        case ExpressionElement.FLOAT:
-        case ExpressionElement.BOOL:
-        case ExpressionElement.DREG:
-        case ExpressionElement.IOREG:
-        case ExpressionElement.PREG_IDX:
-          return null;
-        default:
+        case ExpressionElement.PREG:
+        case ExpressionElement.POSTN:
           p2 = arg2.getPointVal();
+          break;
+        default:
+          return null;
       }
     }
     
@@ -1304,7 +1299,6 @@ public class AtomicExpression extends ExprOperand {
       result = null;
     }
     
-    println("from AE:" + o1 + op.toString() + o2 + " = " + result.dataVal);
     return result;
   }
   

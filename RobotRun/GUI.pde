@@ -4802,15 +4802,15 @@ public void editOperand(ExprOperand o, int ins_idx) {
       break;
     case 3: //IO reg
       opEdit = o;
-      switchScreen(Screen.INPUT_IOREG_IDX);
+      nextScreen(Screen.INPUT_IOREG_IDX);
       break;
     case 4: // Pos reg
       opEdit = o;
-      switchScreen(Screen.INPUT_PREG_IDX1);
+      nextScreen(Screen.INPUT_PREG_IDX1);
       break;
     case 5: // Pos reg at index
       opEdit = o;
-      switchScreen(Screen.INPUT_PREG_IDX2);
+      nextScreen(Screen.INPUT_PREG_IDX2);
       nextScreen(Screen.INPUT_PREG_IDX1);
       break;
   }

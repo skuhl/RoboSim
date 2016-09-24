@@ -56,14 +56,13 @@ public class Point  {
       case 4:
       case 5:   return angles[idx];
       // Position
-      case 6:   return position.x;
-      case 7:   return position.y;
-      case 8:   return position.z;
+      case 6:   return -position.x;
+      case 7:   return position.z;
+      case 8:   return -position.y;
       // Orientation
-      case 9:   
-      case 10:  
-      case 11:  
-      case 12:  return orientation.getValue(idx - 9);
+      case 9:   return -RAD_TO_DEG*quatToEuler(orientation).array()[0];
+      case 10:  return -RAD_TO_DEG*quatToEuler(orientation).array()[2];
+      case 11:  return RAD_TO_DEG*quatToEuler(orientation).array()[1];
       default:
     }
     
@@ -71,6 +70,8 @@ public class Point  {
   }
   
   public void setValue(int idx, float value) {
+    PVector vec = quatToEuler(orientation);
+    
     switch(idx) {
       // Joint angles
       case 0:
@@ -79,15 +80,24 @@ public class Point  {
       case 3:
       case 4:
       case 5:   angles[idx] = value;
+                break;
       // Position
       case 6:   position.x = value;
+                break;
       case 7:   position.y = value;
+                break;
       case 8:   position.z = value;
+                break;
       // Orientation
-      case 9:   
-      case 10:  
-      case 11:  
-      case 12:  orientation.setValue(idx - 9, value);
+      case 9:   vec.x = -value;
+                orientation = eulerToQuat(vec);
+                break;
+      case 10:  vec.z = -value;
+                orientation = eulerToQuat(vec);
+                break;
+      case 11:  vec.y = value;
+                orientation = eulerToQuat(vec);
+                break;
       default:
     }
   }
