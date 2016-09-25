@@ -284,6 +284,11 @@ public class Program {
       }
     }
   }
+  
+  public void addInstruction(Instruction i, int idx) {
+    //i.setProg(this);
+    instructions.add(idx, i);
+  }
 
   public void overwriteInstruction(int idx, Instruction i) {
     instructions.set(idx, i);

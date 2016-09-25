@@ -1095,6 +1095,7 @@ public void up() {
     case SELECT_REG_STMT:
     case SELECT_COND_STMT:
     case SELECT_JMP_LBL:
+    case SELECT_PASTE_OPT:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
     case TEACH_3PT_USER:
@@ -1199,6 +1200,7 @@ public void dn() {
     case SELECT_REG_STMT:
     case SELECT_COND_STMT:
     case SELECT_JMP_LBL:
+    case SELECT_PASTE_OPT:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
     case TEACH_3PT_USER:
@@ -1648,7 +1650,6 @@ public void f4() {
     }
     
     display_stack.pop();
-    display_stack.pop();
     updateInstructions();
     break;
   case FIND_REPL:
@@ -1834,7 +1835,6 @@ public void f5() {
     case CONFIRM_RENUM:
     case FIND_REPL:
     case SELECT_CUT_COPY:
-      display_stack.pop();
       display_stack.pop();
       updateInstructions();
       break;
@@ -2108,6 +2108,7 @@ public void ENTER() {
           nextScreen(Screen.SELECT_CUT_COPY);
           break;
         case 3: //Paste
+          nextScreen(Screen.SELECT_PASTE_OPT);          
           break;
         case 4: //Find/Replace
           nextScreen(Screen.FIND_REPL);
@@ -2728,6 +2729,20 @@ public void ENTER() {
     case SELECT_INSTR_DELETE:
       selectedLines[active_instr] = !selectedLines[active_instr];
       updateScreen();
+      break;
+    case SELECT_PASTE_OPT:
+      if(opt_select == 0) {
+        pasteInstructions();
+      } else if(opt_select == 1) {
+        
+      } else if(opt_select == 2) {
+          
+      } else {
+        
+      }
+      
+      display_stack.pop();
+      lastScreen();
       break;
     case SELECT_COMMENT:
       activeInstruction().toggleCommented();
@@ -3369,6 +3384,7 @@ public void loadScreen() {
     case SELECT_JMP_LBL:
     case SELECT_REG_STMT:
     case SELECT_COND_STMT:
+    case SELECT_PASTE_OPT:
     case SET_IF_STMT_ACT:
     case SET_SELECT_STMT_ACT:
     case SET_SELECT_STMT_ARG:
@@ -3927,6 +3943,7 @@ public ArrayList<DisplayLine> getContents(Screen mode){
     case SELECT_INSTR_DELETE:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
+    case SELECT_PASTE_OPT:
     case SET_MV_INSTR_TYPE:
     case SET_MV_INSTR_REG_TYPE:
     case SET_MV_INSTR_IDX:
@@ -4059,7 +4076,7 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("1 Insert"           );
       options.add("2 Delete"           );
       options.add("3 Cut/ Copy"        );
-      options.add("4 Paste (NA)"       );
+      options.add("4 Paste"            );
       options.add("5 Find/ Replace"    );
       options.add("6 Renumber"         );
       options.add("7 Comment"          );
@@ -4075,6 +4092,12 @@ public ArrayList<String> getOptions(Screen mode){
       break;
     case SELECT_CUT_COPY:
       options.add("Select lines to cut/ copy (ENTER).");
+      break;
+    case SELECT_PASTE_OPT:
+      options.add("1 Standard");
+      options.add("2 Reverse");
+      options.add("3 ");
+      options.add("4 ");
       break;
     case FIND_REPL:
       options.add("Enter text to search for:");
@@ -5009,13 +5032,21 @@ public ArrayList<String> loadInstructionReg() {
 }
 
 // clears the array of selected lines
-boolean[] resetSelection(int n) {
+public boolean[] resetSelection(int n) {
   selectedLines = new boolean[n];
   for(int i = 0; i < n; i += 1){
     selectedLines[i] = false;
   }
   
   return selectedLines;
+}
+
+public void pasteInstructions() {
+  int insertIdx = active_instr;
+  for(Instruction i : clipBoard) {
+    activeProgram().addInstruction(i, insertIdx);
+    insertIdx += 1;
+  }
 }
 
 public void newMotionInstruction() {

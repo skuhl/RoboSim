@@ -147,6 +147,7 @@ public static enum Screen implements DisplayMode {
   SELECT_INSTR_INSERT(ScreenType.TYPE_OPT_MENU),
   SELECT_IO_INSTR_REG(ScreenType.TYPE_OPT_MENU),
   SELECT_JMP_LBL(ScreenType.TYPE_OPT_MENU),
+  SELECT_PASTE_OPT(ScreenType.TYPE_OPT_MENU),
     
   /*
   * Screens involving the entry of text, either via keyboard input or function buttons
