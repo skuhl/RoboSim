@@ -179,7 +179,7 @@ public void showMainDisplayText() {
   manager.updateWindowDisplay();
 }
 
-/**  //<>//
+/**  //<>// //<>//
  * Transitions to the next Coordinate frame in the cycle, updating the Robot's current frame
  * in the process and skipping the Tool or User frame if there are no active frames in either
  * one. Since the Robot's frame is potentially reset in this method, all Robot motion is halted.
@@ -644,7 +644,7 @@ void calculateArc(Point start, Point inter, Point end) {
     PVector pos = RQuaternion.rotateVectorAroundAxis(u, n, angle).mult(r).add(center);
     if(i == numPoints-1) pos = end.position;
     qi = RQuaternion.SLERP(q1, q2, mu);
-    println(pos + ", " + end.position);
+    //println(pos + ", " + end.position);
     intermediatePositions.add(new Point(pos, qi));
     angle += angleInc;
     mu += inc;

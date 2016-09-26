@@ -1500,7 +1500,7 @@ public class Expression extends AtomicExpression {
         ExprOperand nextOperand = (ExprOperand) elementList.get(i + 1);
         AtomicExpression expr = new AtomicExpression(result, nextOperand, op);
         
-        println(result.getDataVal() + op.toString() + nextOperand.getDataVal() + " = " + expr.evaluate().dataVal);
+        //println(result.getDataVal() + op.toString() + nextOperand.getDataVal() + " = " + expr.evaluate().dataVal);
         result = expr.evaluate();
       }
     }

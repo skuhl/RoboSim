@@ -2360,7 +2360,6 @@ public void ENTER() {
         lastScreen();
       } else {
         //set arg to new constant
-        println(editIdx);
         opEdit = expr.getOperand(editIdx).reset();
         switchScreen(Screen.INPUT_CONST);
       }
@@ -2541,7 +2540,7 @@ public void ENTER() {
         if(opEdit.type == ExpressionElement.UNINIT) {
           opEdit.set(f);
         } else if(opEdit.type == ExpressionElement.DREG) {
-          println(DAT_REG[(int)f - 1].value);
+          //println(DAT_REG[(int)f - 1].value);
           opEdit.set(DAT_REG[(int)f - 1], (int)f);
         }
       } catch(NumberFormatException ex) {}
@@ -2792,7 +2791,7 @@ public void ENTER() {
       } catch (NumberFormatException MFEx) {
         println("Only real numbers are valid!");
       } catch (IndexOutOfBoundsException IOOBEx) {
-        println("Only positve integers between 0 and 100 are valid!");
+        println("Only positve integers between 1 and 100 are valid!");
       }
       
       lastScreen();
@@ -2808,7 +2807,7 @@ public void ENTER() {
       } catch (NumberFormatException MFEx) {
         println("Only real numbers are valid!");
       } catch (IndexOutOfBoundsException IOOBEx) {
-        println("Only positve integers between 0 and 100 are valid!");
+        println("Only positve integers between 1 and 100 are valid!");
       }
       
       lastScreen();
@@ -2824,7 +2823,7 @@ public void ENTER() {
       } catch (NumberFormatException MFEx) {
         println("Only real numbers are valid!");
       } catch (IndexOutOfBoundsException IOOBEx) {
-        println("Only positve integers between 0 and 100 are valid!");
+        println("Only positve integers between 1 and 100 are valid!");
       }
       
       lastScreen();
@@ -2840,7 +2839,7 @@ public void ENTER() {
       } catch (NumberFormatException MFEx) {
         println("Only real numbers are valid!");
       } catch (IndexOutOfBoundsException IOOBEx) {
-        println("Only positve integers between 0 and 100 are valid!");
+        println("Only positve integers between 1 and 100 are valid!");
       }
       
       lastScreen();
@@ -5296,7 +5295,6 @@ public ArrayList<DisplayLine> loadFrameDetail(CoordFrame coordFrame) {
   
   // Display the frame set name as well as the index of the currently selected frame
   if(coordFrame == CoordFrame.TOOL) {
-    println(curFrameIdx);
     String[] fields = toolFrames[curFrameIdx].toLineStringArray();
     // Place each value in the frame on a separate lien
     for(String field : fields) { details.add(newLine(field)); }

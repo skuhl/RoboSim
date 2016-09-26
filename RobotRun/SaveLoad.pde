@@ -743,7 +743,7 @@ private Frame loadFrame(DataInputStream in) throws IOException {
     f = new UserFrame();
   
   } else {
-    println(type);
+    //println(type);
     throw new IOException("Invalid Frame type!");
   }
   

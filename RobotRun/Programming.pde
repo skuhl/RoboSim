@@ -1048,13 +1048,13 @@ public class SelectStatement extends Instruction {
       ExprOperand c = cases.get(i);
       if(c == null) return 1;
       
-      println("testing case " + i + " = " + cases.get(i).getDataVal() + " against " + arg.getDataVal());
+      //println("testing case " + i + " = " + cases.get(i).getDataVal() + " against " + arg.getDataVal());
       
       if(c.type != ExpressionElement.UNINIT && arg.getDataVal() == c.dataVal) {
         Instruction instr = instrs.get(i);
         
         if(instr instanceof JumpInstruction || instr instanceof CallInstruction) {
-          println("executing " + instrs.get(i).toString());
+          //println("executing " + instrs.get(i).toString());
           instr.execute();
         }
         break;
@@ -1178,8 +1178,6 @@ public class RegisterStatement extends Instruction {
     if(reg instanceof DataRegister) {
       if(result.getDataVal() == null) return 1;
       ((DataRegister)reg).value = result.getDataVal();
-      
-      println(result.dataVal + ", " + ((DataRegister)reg).value);
     } 
     else if(reg instanceof IORegister) {
       if(result.getBoolVal() == null) return 1;
@@ -1191,7 +1189,6 @@ public class RegisterStatement extends Instruction {
     } 
     else {
       if(result.getDataVal() == null) return 1;
-      println(result.getDataVal());
       ((PositionRegister)reg).setPointValue(posIdx, result.getDataVal());
     }
         
