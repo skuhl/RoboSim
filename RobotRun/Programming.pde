@@ -278,31 +278,39 @@ public class Program {
     
     if(i instanceof MotionInstruction ) {
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextPosition) {
-        nextPosition = castIns.getPosition()+1;
+      if(!castIns.usesGPosReg() && castIns.getPositionNum() >= nextPosition) {
+        nextPosition = castIns.getPositionNum()+1;
         if(nextPosition >= LPosReg.length) nextPosition = LPosReg.length-1;
       }
     }
   }
   
-  public void addInstruction(Instruction i, int idx) {
-    //i.setProg(this);
+  public void addInstruction(int idx, Instruction i, boolean incrPIdx) {
     instructions.add(idx, i);
+    if(i instanceof MotionInstruction && incrPIdx) { 
+      MotionInstruction castIns = (MotionInstruction)i;
+      if(!castIns.usesGPosReg() && castIns.getPositionNum() >= nextPosition) {
+        nextPosition = castIns.getPositionNum()+1;
+        if(nextPosition >= LPosReg.length) nextPosition = LPosReg.length-1;
+      }
+    }
   }
-
+  
   public void overwriteInstruction(int idx, Instruction i) {
     instructions.set(idx, i);
-    if(i instanceof MotionInstruction ) { 
+    if(i instanceof MotionInstruction) { 
       MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.usesGPosReg() && castIns.getPosition() >= nextPosition) {
-        nextPosition = castIns.getPosition()+1;
+      if(!castIns.usesGPosReg() && castIns.getPositionNum() >= nextPosition) {
+        nextPosition = castIns.getPositionNum()+1;
         if(nextPosition >= LPosReg.length) nextPosition = LPosReg.length-1;
       }
     }
   }
 
-  public void addPosition(Point in, int idx) {
-    if(idx >= 0 && idx < LPosReg.length) LPosReg[idx] = in;
+  public void addPosition(Point pt) {
+    LPosReg[nextPosition] = pt;
+    nextPosition += 1;
+    if(nextPosition > LPosReg.length) nextPosition = 0;
   }
   
   public int getNextPosition() { return nextPosition; }
@@ -314,7 +322,7 @@ public class Program {
   }
   
   public void setPosition(int idx, Point pt){
-    LPosReg[idx] = pt;
+    if(idx >= 0 && idx < LPosReg.length) LPosReg[idx] = pt;
   }
   
   public void clearPositions(){
@@ -365,7 +373,7 @@ public class Program {
     }
     // Copy positions
     for (int idx = 0; idx < LPosReg.length; ++idx) {
-      copy.addPosition(LPosReg[idx].clone(), idx);
+      copy.setPosition(idx, LPosReg[idx].clone());
     }
     // Copy next register
     copy.setNextPosition(nextPosition);
@@ -526,8 +534,8 @@ public final class MotionInstruction extends Instruction  {
 
   public int getMotionType() { return motionType; }
   public void setMotionType(int in) { motionType = in; }
-  public int getPosition() { return positionNum; }
-  public void setPosition(int in) { positionNum = in; }
+  public int getPositionNum() { return positionNum; }
+  public void setPositionNum(int in) { positionNum = in; }  
   public int getOffset() { return offsetRegNum; }
   public void setOffset(int in) { offsetRegNum = in; }
   public boolean toggleOffsetActive() { return (offsetActive = !offsetActive); }
@@ -802,11 +810,14 @@ public class IOInstruction extends Instruction {
 } // end ToolInstruction class
 
 public class LabelInstruction extends Instruction {
-  int labelNum;
+  private int labelNum;
   
   public LabelInstruction(int num) {
     labelNum = num;
   }
+  
+  public int getLabelNum() { return labelNum; }
+  public void setLabelNum(int n) { labelNum = n; }
   
   public String[] toStringArray() {
     String[] fields = new String[1];
@@ -829,7 +840,7 @@ public class LabelInstruction extends Instruction {
 }
 
 public class JumpInstruction extends Instruction {
-  public int tgtLblNum;
+  private int tgtLblNum;
   
   public JumpInstruction() {
     tgtLblNum = -1;
@@ -913,6 +924,10 @@ public class CallInstruction extends Instruction {
     return 0;
   }
   
+  public Instruction clone() {
+    return new CallInstruction(callProg, progIdx);
+  }
+  
   public String toString() {
     String progName = (callProg == null) ? "..." : callProg.name;
     return "Call " + progName;
@@ -949,6 +964,11 @@ public class IfStatement extends Instruction {
   
   public IfStatement(Operator o, Instruction i){
     expr = new BooleanExpression(o);
+    instr = i;
+  }
+  
+  public IfStatement(AtomicExpression e, Instruction i) {
+    expr = e;
     instr = i;
   }
   
@@ -991,12 +1011,7 @@ public class IfStatement extends Instruction {
   }
   
   public Instruction clone() {
-    if (instr == this) {
-      // Cannot copy!
-      return null;
-    }
-    
-    Instruction copy = new IfStatement(null, instr.clone());
+    Instruction copy = new IfStatement(expr.clone(), instr.clone());
     copy.setIsCommented( isCommented() );
     // TODO actually copy the if statement
     return copy;
@@ -1006,20 +1021,26 @@ public class IfStatement extends Instruction {
 public class SelectStatement extends Instruction {
   ExprOperand arg;
   ArrayList<ExprOperand> cases;
-  ArrayList<Instruction> instrList;
+  ArrayList<Instruction> instrs;
     
   public SelectStatement() {
     arg = new ExprOperand();
     cases = new ArrayList<ExprOperand>();
-    instrList = new ArrayList<Instruction>();
+    instrs = new ArrayList<Instruction>();
     addCase();
   }
   
   public SelectStatement(ExprOperand a) {
     arg = a;
     cases = new ArrayList<ExprOperand>();
-    instrList = new ArrayList<Instruction>();
+    instrs = new ArrayList<Instruction>();
     addCase();
+  }
+  
+  public SelectStatement(ExprOperand a, ArrayList<ExprOperand> cList, ArrayList<Instruction> iList) {
+    arg = a;
+    cases = cList;
+    instrs = iList;
   }
   
   public int execute() {
@@ -1030,10 +1051,10 @@ public class SelectStatement extends Instruction {
       println("testing case " + i + " = " + cases.get(i).getDataVal() + " against " + arg.getDataVal());
       
       if(c.type != ExpressionElement.UNINIT && arg.getDataVal() == c.dataVal) {
-        Instruction instr = instrList.get(i);
+        Instruction instr = instrs.get(i);
         
         if(instr instanceof JumpInstruction || instr instanceof CallInstruction) {
-          println("executing " + instrList.get(i).toString());
+          println("executing " + instrs.get(i).toString());
           instr.execute();
         }
         break;
@@ -1045,12 +1066,12 @@ public class SelectStatement extends Instruction {
   
   public void addCase() {
     cases.add(new ExprOperand());
-    instrList.add(new Instruction());
+    instrs.add(new Instruction());
   }
   
   public void addCase(ExprOperand e, Instruction i) {
     cases.add(e);
-    instrList.add(i);
+    instrs.add(i);
   }
   
   public void deleteCase(int idx) {
@@ -1058,8 +1079,8 @@ public class SelectStatement extends Instruction {
       cases.remove(idx);
     }
     
-    if(instrList.size() > 1) {
-      instrList.remove(idx);
+    if(instrs.size() > 1) {
+      instrs.remove(idx);
     }
   }
   
@@ -1068,7 +1089,19 @@ public class SelectStatement extends Instruction {
   }
   
   public Instruction clone() {   
-    Instruction copy = new SelectStatement();
+    ExprOperand newArg = arg.clone();
+    ArrayList<ExprOperand> cList = new ArrayList<ExprOperand>();
+    ArrayList<Instruction> iList = new ArrayList<Instruction>();
+    
+    for(ExprOperand o : cases) {
+      cList.add(o.clone());
+    }
+    
+    for(Instruction i : instrs) {
+      iList.add(i.clone());
+    }
+    
+    SelectStatement copy = new SelectStatement(newArg, cList, iList);
     copy.setIsCommented( isCommented() );
     // TODO actually copy the select statement
     return copy;
@@ -1080,7 +1113,7 @@ public class SelectStatement extends Instruction {
     ret[1] = arg.toString();
     
     for(int i = 0; i < cases.size(); i += 1) {
-      String[] iString = instrList.get(i).toStringArray();
+      String[] iString = instrs.get(i).toStringArray();
       
       ret[i*4 + 2] = "= " + cases.get(i).toString();
       ret[i*4 + 3] = iString[0];

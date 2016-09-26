@@ -492,7 +492,7 @@ public class RegisterOp implements Operand {
   }
   
   public Object getValue() {
-    return DREG[listIdx];
+    return DAT_REG[listIdx];
   }
   
   public int getIdx() { return listIdx; }
@@ -876,17 +876,6 @@ public class ExprOperand implements ExpressionElement {
     type = ExpressionElement.UNINIT;
   }
   
-  //initialize all fields, useful for cloning
-  public ExprOperand(int t, float d, boolean b, int rIdx, int pIdx, Register reg, Point p) {
-    type = t;
-    dataVal = d;
-    boolVal = b;
-    regIdx = rIdx;
-    posIdx = pIdx;
-    regVal = reg;
-    pointVal = p;
-  }
-  
   //create floating point operand
   public ExprOperand(float d) {
     type = ExpressionElement.FLOAT;
@@ -1028,7 +1017,18 @@ public class ExprOperand implements ExpressionElement {
   }
   
   public ExprOperand clone() {
-    return new ExprOperand(type, dataVal, boolVal, regIdx, posIdx, regVal, pointVal);
+    switch(type) {
+      case ExpressionElement.UNINIT: return new ExprOperand();
+      case ExpressionElement.SUBEXP: return ((Expression)this).clone();
+      case ExpressionElement.FLOAT:  return new ExprOperand(dataVal);
+      case ExpressionElement.BOOL:   return new ExprOperand(boolVal);
+      case ExpressionElement.DREG:   return new ExprOperand((DataRegister)regVal, regIdx);
+      case ExpressionElement.IOREG:  return new ExprOperand((IORegister)regVal, regIdx);
+      case ExpressionElement.PREG:   return new ExprOperand((PositionRegister)regVal, regIdx);
+      case ExpressionElement.PREG_IDX: return new ExprOperand((PositionRegister)regVal, regIdx, posIdx);
+      case ExpressionElement.POSTN:  return new ExprOperand(pointVal);
+      default:                       return null;
+    }
   }
   
   public String toString(){
@@ -1099,7 +1099,7 @@ public class AtomicExpression extends ExprOperand {
     arg2 = new ExprOperand();
   }
   
-  public AtomicExpression(Operator o, ExprOperand a1, ExprOperand a2) {
+  public AtomicExpression(ExprOperand a1, ExprOperand a2, Operator o) {
     type = ExpressionElement.SUBEXP;
     op = o;
     arg1 = a1;
@@ -1302,6 +1302,10 @@ public class AtomicExpression extends ExprOperand {
     return result;
   }
   
+  public AtomicExpression clone() {
+    return new AtomicExpression(arg1.clone(), arg2.clone(), op);
+  }
+  
   public String toString(){
     String s = "";
     
@@ -1373,6 +1377,10 @@ public class Expression extends AtomicExpression {
   public Expression() {
     elementList = new ArrayList<ExpressionElement>();
     elementList.add(new ExprOperand());
+  }
+  
+  public Expression(ArrayList<ExpressionElement> e) {
+    elementList = e;
   }
   
   public ExpressionElement get(int idx) {
@@ -1490,7 +1498,7 @@ public class Expression extends AtomicExpression {
       else {
         Operator op = (Operator) elementList.get(i);
         ExprOperand nextOperand = (ExprOperand) elementList.get(i + 1);
-        AtomicExpression expr = new AtomicExpression(op, result, nextOperand);
+        AtomicExpression expr = new AtomicExpression(result, nextOperand, op);
         
         println(result.getDataVal() + op.toString() + nextOperand.getDataVal() + " = " + expr.evaluate().dataVal);
         result = expr.evaluate();
@@ -1529,6 +1537,19 @@ public class Expression extends AtomicExpression {
     return idx;
   }
   
+  public Expression clone() {
+    ArrayList<ExpressionElement> newList = new ArrayList<ExpressionElement>();
+    for(ExpressionElement e : elementList) {
+      if(e instanceof ExprOperand) {
+        newList.add(((ExprOperand)e).clone());
+      } else {
+        newList.add((Operator)e);
+      }
+    }
+    
+    return new Expression(newList);
+  }
+  
   public String toString() {
     String ret = "(" + elementList.get(0).toString();
     for(int i = 0; i < elementList.size(); i += 1) {
@@ -1558,6 +1579,7 @@ public class Expression extends AtomicExpression {
 }
 
 public class BooleanExpression extends AtomicExpression {
+  
   public BooleanExpression() {
     super();
   }
