@@ -912,7 +912,7 @@ public int loadRegisterBytes(File src) {
     int size = max(0, min(dataIn.readInt(), DAT_REG.length));
     
     // Load the Register entries
-    while((size -= 1) > 0) {
+    while(size-- > 0) {
       // Each entry is saved after its respective index in REG
       int reg = dataIn.readInt();
       
@@ -930,7 +930,7 @@ public int loadRegisterBytes(File src) {
     size = max(0, min(dataIn.readInt(), GPOS_REG.length));
     
     // Load the Position Register entries
-    while((size -= 1) > 0) {
+    while(size-- > 0) {
       // Each entry is saved after its respective index in POS_REG
       int idx = dataIn.readInt();
       
