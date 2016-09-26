@@ -28,7 +28,7 @@ ArrayList<Program> programs = new ArrayList<Program>();
 
 // for Execution
 public boolean execSingleInst = false; 
-public boolean robotFault = false; //indicates robot error
+public boolean motionFault = false; //indicates motion error with the Robot
 int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 
 /*******************************/

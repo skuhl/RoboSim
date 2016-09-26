@@ -1,7 +1,7 @@
 // Position Registers
 private final PositionRegister[] GPOS_REG = new PositionRegister[100];
 // Data Registers
-private final DataRegister[] DREG = new DataRegister[100];
+private final DataRegister[] DAT_REG = new DataRegister[100];
 // IO Registers
 private final IORegister[] IO_REG = new IORegister[5];
 
@@ -92,12 +92,8 @@ public class PositionRegister extends Register {
     if(!isCartesian) {
       return point.getValue(idx);
     }
-    else if(idx < 3) {
-      return point.getValue(idx + 6);
-    }
     else {
-      PVector pOrientation = quatToEuler(point.orientation);
-      return pOrientation.array()[idx - 3];
+      return point.getValue(idx + 6);
     }
   }
   
@@ -107,14 +103,10 @@ public class PositionRegister extends Register {
     }
     
     if(!isCartesian) {
-      point.getValue(idx);
-    }
-    else if(idx < 3) {
-      point.getValue(idx + 6);
+      point.setValue(idx, value);
     }
     else {
-      PVector pOrientation = quatToEuler(point.orientation);
-      pOrientation.array()[idx - 3] = value;
+      point.setValue(idx + 6, value);
     }
   }
 }

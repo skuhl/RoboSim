@@ -961,7 +961,7 @@ public void RESET() {
   if (shift) {
     // Reset robot fault
     armModel.halt();
-    robotFault = false;
+    motionFault = false;
   }
 }
 
@@ -1095,6 +1095,7 @@ public void up() {
     case SELECT_REG_STMT:
     case SELECT_COND_STMT:
     case SELECT_JMP_LBL:
+    case SELECT_PASTE_OPT:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
     case TEACH_3PT_USER:
@@ -1199,6 +1200,7 @@ public void dn() {
     case SELECT_REG_STMT:
     case SELECT_COND_STMT:
     case SELECT_JMP_LBL:
+    case SELECT_PASTE_OPT:
     case TFRAME_DETAIL:
     case UFRAME_DETAIL:
     case TEACH_3PT_USER:
@@ -1418,7 +1420,7 @@ public void f1() {
       break;
     case NAV_DREGS:
       // Clear Data Register entry
-      DREG[active_index] = new DataRegister(active_index);
+      DAT_REG[active_index] = new DataRegister(active_index);
       saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       break;
     case NAV_PREGS_J:
@@ -1644,10 +1646,9 @@ public void f4() {
     
     for(int i = 0; i < selectedLines.length; i += 1){
       if(selectedLines[i])
-        clipBoard.add(inst.get(i));
+        clipBoard.add(inst.get(i).clone());
     }
     
-    display_stack.pop();
     display_stack.pop();
     updateInstructions();
     break;
@@ -1688,9 +1689,9 @@ public void f4() {
     for(int i = 0; i < p.getInstructions().size(); i += 1) {
       Instruction instr = p.getInstruction(i);
       if(instr instanceof MotionInstruction) {
-        int instructPos = ((MotionInstruction)instr).getPosition();
+        int instructPos = ((MotionInstruction)instr).getPositionNum();
         p.setPosition(posIdx, pTemp[instructPos]);
-        ((MotionInstruction)instr).setPosition(posIdx);
+        ((MotionInstruction)instr).setPositionNum(posIdx);
         posIdx += 1;
       }
     }
@@ -1735,22 +1736,21 @@ public void f4() {
       if (shift && teachFrame != null) {
         Point tgt = teachFrame.getPoint(opt_select);
         
-        if  (mode == Screen.TEACH_3PT_USER || mode == Screen.TEACH_4PT) {
-          
+        if (mode == Screen.TEACH_3PT_USER || mode == Screen.TEACH_4PT) {
           if (tgt != null && tgt.position != null && tgt.orientation != null) {
             // Move to the point's position and orientation
             armModel.moveTo(tgt.position, tgt.orientation);
           }
-        } else {
-          
+        }
+        else {
           if (tgt != null && tgt.angles != null) {
             // Move to the point's joint angles
             armModel.moveTo(tgt.angles);
           }
         }
-        
       }
-    } else if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
+    }
+    else if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
       editTextEntry(3);
     }
     
@@ -1834,7 +1834,6 @@ public void f5() {
     case CONFIRM_RENUM:
     case FIND_REPL:
     case SELECT_CUT_COPY:
-      display_stack.pop();
       display_stack.pop();
       updateInstructions();
       break;
@@ -2108,6 +2107,7 @@ public void ENTER() {
           nextScreen(Screen.SELECT_CUT_COPY);
           break;
         case 3: //Paste
+          nextScreen(Screen.SELECT_PASTE_OPT);          
           break;
         case 4: //Find/Replace
           nextScreen(Screen.FIND_REPL);
@@ -2287,7 +2287,7 @@ public void ENTER() {
           }
         }
         
-        m.setPosition(tempRegister);
+        m.setPositionNum(tempRegister);
       } catch (NumberFormatException NFEx) { /* Ignore invalid numbers */ }
       
       lastScreen();
@@ -2360,7 +2360,6 @@ public void ENTER() {
         lastScreen();
       } else {
         //set arg to new constant
-        println(editIdx);
         opEdit = expr.getOperand(editIdx).reset();
         switchScreen(Screen.INPUT_CONST);
       }
@@ -2479,12 +2478,12 @@ public void ENTER() {
         int idx = Integer.parseInt(workingText);
         
         if(mode == Screen.INPUT_DREG_IDX) {
-          opEdit.set(DREG[idx - 1], idx);
+          opEdit.set(DAT_REG[idx - 1], idx);
         } else if(mode == Screen.INPUT_IOREG_IDX) {
           opEdit.set(IO_REG[idx - 1], idx);
         } else if(mode == Screen.INPUT_PREG_IDX1) {
           opEdit.set(GPOS_REG[idx - 1], idx);
-        } else {
+        } else if(mode == Screen.INPUT_PREG_IDX2) {
           int reg = opEdit.regIdx;
           opEdit.set(GPOS_REG[reg - 1], reg, idx);
         }
@@ -2517,9 +2516,9 @@ public void ENTER() {
       int i = (getSelectedIdx() - 3) / 3;
       
       if(opt_select == 0) {
-        s.instrList.set(i, new JumpInstruction());
+        s.instrs.set(i, new JumpInstruction());
       } else {
-        s.instrList.set(i, new CallInstruction());
+        s.instrs.set(i, new CallInstruction());
       }
       
       lastScreen();
@@ -2541,8 +2540,8 @@ public void ENTER() {
         if(opEdit.type == ExpressionElement.UNINIT) {
           opEdit.set(f);
         } else if(opEdit.type == ExpressionElement.DREG) {
-          println(DREG[(int)f - 1].value);
-          opEdit.set(DREG[(int)f - 1], (int)f);
+          //println(DAT_REG[(int)f - 1].value);
+          opEdit.set(DAT_REG[(int)f - 1], (int)f);
         }
       } catch(NumberFormatException ex) {}
       
@@ -2628,7 +2627,7 @@ public void ENTER() {
         } else {
           regStmt = (RegisterStatement)activeInstruction(); 
           if(regStmt.reg instanceof DataRegister) {
-            (regStmt).setRegister(DREG[idx - 1]);
+            (regStmt).setRegister(DAT_REG[idx - 1]);
           } else if(regStmt.reg instanceof IORegister) {
             (regStmt).setRegister(IO_REG[idx - 1]);
           } else if(regStmt.reg instanceof PositionRegister && regStmt.posIdx == -1) { 
@@ -2685,7 +2684,7 @@ public void ENTER() {
         } 
         else if(activeInstruction() instanceof SelectStatement) {
           SelectStatement sStmt = (SelectStatement)activeInstruction();
-          ((JumpInstruction)sStmt.instrList.get(editIdx)).tgtLblNum = lblNum;
+          ((JumpInstruction)sStmt.instrs.get(editIdx)).tgtLblNum = lblNum;
         }
         else {
           if(lblIdx != -1) {
@@ -2710,7 +2709,7 @@ public void ENTER() {
       }
       else if(activeInstruction() instanceof SelectStatement) {
         SelectStatement sStmt = (SelectStatement)activeInstruction();
-        CallInstruction c = (CallInstruction)sStmt.instrList.get(editIdx);
+        CallInstruction c = (CallInstruction)sStmt.instrs.get(editIdx);
         c.callProg = programs.get(row_select);
         c.progIdx = row_select;
       }
@@ -2728,6 +2727,20 @@ public void ENTER() {
     case SELECT_INSTR_DELETE:
       selectedLines[active_instr] = !selectedLines[active_instr];
       updateScreen();
+      break;
+    case SELECT_PASTE_OPT:
+      if(opt_select == 0) {
+        pasteInstructions(false);
+      } else if(opt_select == 1) {
+        pasteInstructions(true);
+      } else if(opt_select == 2) {
+          
+      } else {
+        
+      }
+      
+      display_stack.pop();
+      lastScreen();
       break;
     case SELECT_COMMENT:
       activeInstruction().toggleCommented();
@@ -2773,12 +2786,12 @@ public void ENTER() {
       try {
         // Copy the comment of the curent Data register to the Data register at the specified index
         regIdx = Integer.parseInt(workingText) - 1;
-        DREG[regIdx].comment = DREG[active_index].comment;
+        DAT_REG[regIdx].comment = DAT_REG[active_index].comment;
         saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       } catch (NumberFormatException MFEx) {
         println("Only real numbers are valid!");
       } catch (IndexOutOfBoundsException IOOBEx) {
-        println("Only positve integers between 0 and 100 are valid!");
+        println("Only positve integers between 1 and 100 are valid!");
       }
       
       lastScreen();
@@ -2789,12 +2802,12 @@ public void ENTER() {
       try {
         // Copy the value of the curent Data register to the Data register at the specified index
         regIdx = Integer.parseInt(workingText) - 1;
-        DREG[regIdx].value = DREG[active_index].value;
+        DAT_REG[regIdx].value = DAT_REG[active_index].value;
         saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
       } catch (NumberFormatException MFEx) {
         println("Only real numbers are valid!");
       } catch (IndexOutOfBoundsException IOOBEx) {
-        println("Only positve integers between 0 and 100 are valid!");
+        println("Only positve integers between 1 and 100 are valid!");
       }
       
       lastScreen();
@@ -2810,7 +2823,7 @@ public void ENTER() {
       } catch (NumberFormatException MFEx) {
         println("Only real numbers are valid!");
       } catch (IndexOutOfBoundsException IOOBEx) {
-        println("Only positve integers between 0 and 100 are valid!");
+        println("Only positve integers between 1 and 100 are valid!");
       }
       
       lastScreen();
@@ -2826,7 +2839,7 @@ public void ENTER() {
       } catch (NumberFormatException MFEx) {
         println("Only real numbers are valid!");
       } catch (IndexOutOfBoundsException IOOBEx) {
-        println("Only positve integers between 0 and 100 are valid!");
+        println("Only positve integers between 1 and 100 are valid!");
       }
       
       lastScreen();
@@ -2840,9 +2853,9 @@ public void ENTER() {
         // Clamp the value between -9999 and 9999, inclusive
         f = max(-9999f, min(f, 9999f));
         System.out.printf("Index; %d\n", active_index);
-        if(active_index >= 0 && active_index < DREG.length) {
+        if(active_index >= 0 && active_index < DAT_REG.length) {
           // Save inputted value
-          DREG[active_index].value = f;
+          DAT_REG[active_index].value = f;
           saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
         }
       } catch (NumberFormatException NFEx) {
@@ -2897,7 +2910,7 @@ public void ENTER() {
           workingText = workingText.substring(0, workingText.length() - 1);
         }
         // Save the inputted comment to the selected register\
-        DREG[active_index].comment = workingText;
+        DAT_REG[active_index].comment = workingText;
         saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
         workingText = "";
         lastScreen();
@@ -3124,7 +3137,7 @@ public void updateRobotJogMotion(int button, int direction) {
  */
 public float activateLiveJointMotion(int joint, int dir) {
   
-  if (!shift || robotFault) {
+  if (!shift || motionFault) {
     // Only move when shift is set and there is no error
     return 0f;
   }
@@ -3165,7 +3178,7 @@ public float activateLiveJointMotion(int joint, int dir) {
  *
  */
 public float activateLiveWorldMotion(int axis, int dir) {
-  if (!shift || robotFault) {
+  if (!shift || motionFault) {
     // Only move when shift is set and there is no error
     return 0f;
   }
@@ -3369,6 +3382,7 @@ public void loadScreen() {
     case SELECT_JMP_LBL:
     case SELECT_REG_STMT:
     case SELECT_COND_STMT:
+    case SELECT_PASTE_OPT:
     case SET_IF_STMT_ACT:
     case SET_SELECT_STMT_ACT:
     case SET_SELECT_STMT_ARG:
@@ -3380,6 +3394,8 @@ public void loadScreen() {
     case SET_MV_INSTR_OFFSET:
     case INPUT_DREG_IDX:
     case INPUT_IOREG_IDX:
+    case INPUT_PREG_IDX1:
+    case INPUT_PREG_IDX2:
     case INPUT_CONST:
       workingText = "";
       break;
@@ -3431,7 +3447,7 @@ public void loadScreen() {
       break;
     case SET_MV_INSTR_IDX:
       mInst = activeMotionInst();
-      workingText = Integer.toString(mInst.getPosition());
+      workingText = Integer.toString(mInst.getPositionNum());
       break;
     case SET_MV_INSTR_TERM:
       mInst = activeMotionInst();
@@ -3496,8 +3512,8 @@ public void loadScreen() {
       col_select = 0;
       opt_select = 0;
       
-      if(DREG[active_index].comment != null) {
-        workingText = DREG[active_index].comment;
+      if(DAT_REG[active_index].comment != null) {
+        workingText = DAT_REG[active_index].comment;
       }
       else {
         workingText = "\0";
@@ -3518,8 +3534,8 @@ public void loadScreen() {
     case EDIT_DREG_VAL:
       opt_select = 0;
       // Bring up float input menu
-      if(DREG[active_index].value != null) {
-        workingText = Float.toString(DREG[active_index].value);
+      if(DAT_REG[active_index].value != null) {
+        workingText = Float.toString(DAT_REG[active_index].value);
       } else {
         workingText = "";
       }
@@ -3925,6 +3941,7 @@ public ArrayList<DisplayLine> getContents(Screen mode){
     case SELECT_INSTR_DELETE:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
+    case SELECT_PASTE_OPT:
     case SET_MV_INSTR_TYPE:
     case SET_MV_INSTR_REG_TYPE:
     case SET_MV_INSTR_IDX:
@@ -3947,6 +3964,8 @@ public ArrayList<DisplayLine> getContents(Screen mode){
     case SET_EXPR_OP:
     case INPUT_DREG_IDX:
     case INPUT_IOREG_IDX:
+    case INPUT_PREG_IDX1:
+    case INPUT_PREG_IDX2:
     case INPUT_CONST:
     case SET_BOOL_CONST:
     case SET_LBL_NUM:
@@ -4055,7 +4074,7 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("1 Insert"           );
       options.add("2 Delete"           );
       options.add("3 Cut/ Copy"        );
-      options.add("4 Paste (NA)"       );
+      options.add("4 Paste"            );
       options.add("5 Find/ Replace"    );
       options.add("6 Renumber"         );
       options.add("7 Comment"          );
@@ -4071,6 +4090,12 @@ public ArrayList<String> getOptions(Screen mode){
       break;
     case SELECT_CUT_COPY:
       options.add("Select lines to cut/ copy (ENTER).");
+      break;
+    case SELECT_PASTE_OPT:
+      options.add("1 Standard");
+      options.add("2 Reverse");
+      options.add("3 ");
+      options.add("4 ");
       break;
     case FIND_REPL:
       options.add("Enter text to search for:");
@@ -4106,6 +4131,8 @@ public ArrayList<String> getOptions(Screen mode){
     case SET_EXPR_OP:
     case INPUT_DREG_IDX:
     case INPUT_IOREG_IDX:
+    case INPUT_PREG_IDX1:
+    case INPUT_PREG_IDX2:
     case INPUT_CONST:
     case SET_BOOL_CONST:
     case SET_LBL_NUM:
@@ -4675,7 +4702,7 @@ public void getInstrEdit(Instruction ins, int selectIdx) {
       int len = stmt.expr.getLength();
       
       if(selectIdx >= 3 && selectIdx < len + 1) {
-        editExpression((Expression)stmt.expr, 3);
+        editExpression((Expression)stmt.expr, selectIdx - 3);
       } else if(selectIdx == len + 2) {
         nextScreen(Screen.SET_IF_STMT_ACT);
       } else if(selectIdx == len + 3) {
@@ -4721,9 +4748,9 @@ public void getInstrEdit(Instruction ins, int selectIdx) {
       nextScreen(Screen.SET_SELECT_STMT_ACT);
     } else if((selectIdx - 3) % 3 == 2) {
       editIdx = (selectIdx - 3)/3;
-      if(stmt.instrList.get(editIdx) instanceof JumpInstruction) {
+      if(stmt.instrs.get(editIdx) instanceof JumpInstruction) {
         nextScreen(Screen.SET_JUMP_TGT);
-      } else if(stmt.instrList.get(editIdx) instanceof CallInstruction) {
+      } else if(stmt.instrs.get(editIdx) instanceof CallInstruction) {
         nextScreen(Screen.SET_CALL_PROG);
       }
     }
@@ -4796,7 +4823,16 @@ public void editOperand(ExprOperand o, int ins_idx) {
       break;
     case 3: //IO reg
       opEdit = o;
-      switchScreen(Screen.INPUT_IOREG_IDX);
+      nextScreen(Screen.INPUT_IOREG_IDX);
+      break;
+    case 4: // Pos reg
+      opEdit = o;
+      nextScreen(Screen.INPUT_PREG_IDX1);
+      break;
+    case 5: // Pos reg at index
+      opEdit = o;
+      nextScreen(Screen.INPUT_PREG_IDX2);
+      nextScreen(Screen.INPUT_PREG_IDX1);
       break;
   }
 }
@@ -4994,13 +5030,33 @@ public ArrayList<String> loadInstructionReg() {
 }
 
 // clears the array of selected lines
-boolean[] resetSelection(int n) {
+public boolean[] resetSelection(int n) {
   selectedLines = new boolean[n];
   for(int i = 0; i < n; i += 1){
     selectedLines[i] = false;
   }
   
   return selectedLines;
+}
+
+public void pasteInstructions(boolean incrPIdx) {
+  int insertIdx = active_instr;
+  for(Instruction i : clipBoard) {
+    /* Copy the instructions position to a new local position index and
+       update the instruction to use this new position */
+    if(i instanceof MotionInstruction && incrPIdx) {
+      Program p = activeProgram();
+      MotionInstruction m = (MotionInstruction)i;
+      int instrPos = m.getPositionNum();
+      int nextPos = p.getNextPosition();
+      
+      p.addPosition(p.getPosition(instrPos).clone());
+      m.setPositionNum(nextPos);
+    }
+    
+    activeProgram().addInstruction(insertIdx, i, incrPIdx);
+    insertIdx += 1;
+  }
 }
 
 public void newMotionInstruction() {
@@ -5020,11 +5076,11 @@ public void newMotionInstruction() {
   Program prog = activeProgram();
   int reg = prog.getNextPosition();
   
-  prog.addPosition(pt, reg);
+  prog.setPosition(reg, pt);
   
   if(getSelectedLine() > 0) {
     MotionInstruction m = (MotionInstruction)activeInstruction();
-    m.getSecondaryPoint().setPosition(reg);
+    m.getSecondaryPoint().setPositionNum(reg);
     prog.setNextPosition(reg + 1);
   }
   else {
@@ -5239,7 +5295,6 @@ public ArrayList<DisplayLine> loadFrameDetail(CoordFrame coordFrame) {
   
   // Display the frame set name as well as the index of the currently selected frame
   if(coordFrame == CoordFrame.TOOL) {
-    println(curFrameIdx);
     String[] fields = toolFrames[curFrameIdx].toLineStringArray();
     // Place each value in the frame on a separate lien
     for(String field : fields) { details.add(newLine(field)); }
@@ -5412,11 +5467,11 @@ public ArrayList<DisplayLine> loadRegisters() {
   //int end = min(start + ITEMS_TO_SHOW, DREG.length);
   
   // Display a subset of the list of registers
-  for(int idx = 0; idx < DREG.length; ++idx) {
+  for(int idx = 0; idx < DAT_REG.length; ++idx) {
     String lbl;
     
     if(mode == Screen.NAV_DREGS) {
-      lbl = (DREG[idx].comment == null) ? "" : DREG[idx].comment;
+      lbl = (DAT_REG[idx].comment == null) ? "" : DAT_REG[idx].comment;
     } else {
       lbl  = (GPOS_REG[idx].comment == null) ? "" : GPOS_REG[idx].comment;
     }
@@ -5440,9 +5495,9 @@ public ArrayList<DisplayLine> loadRegisters() {
     String regEntry = "*";
     
     if(mode == Screen.NAV_DREGS) {
-      if(DREG[idx].value != null) {
+      if(DAT_REG[idx].value != null) {
         // Dispaly Register value
-        regEntry = String.format("%4.3f", DREG[idx].value);
+        regEntry = String.format("%4.3f", DAT_REG[idx].value);
       }
       
     } else if(GPOS_REG[idx].point != null) {

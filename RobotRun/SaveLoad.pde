@@ -95,10 +95,10 @@ public byte loadState() {
   }
   
   // Initialize uninitialized registers and position registers to with null fields
-  for(int reg = 0; reg < DREG.length; reg += 1) {
+  for(int reg = 0; reg < DAT_REG.length; reg += 1) {
     
-    if(DREG[reg] == null) {
-      DREG[reg] = new DataRegister(reg);
+    if(DAT_REG[reg] == null) {
+      DAT_REG[reg] = new DataRegister(reg);
     }
     
     if(GPOS_REG[reg] == null) {
@@ -298,7 +298,7 @@ private Program loadProgram(DataInputStream in) throws IOException {
       // Read the points stored after each MotionIntruction
       if(inst instanceof MotionInstruction) {
         Point pt = loadPoint(in);
-        prog.addPosition(pt, ((MotionInstruction)inst).positionNum);
+        prog.setPosition(((MotionInstruction)inst).positionNum, pt);
       }
     }
     
@@ -743,7 +743,7 @@ private Frame loadFrame(DataInputStream in) throws IOException {
     f = new UserFrame();
   
   } else {
-    println(type);
+    //println(type);
     throw new IOException("Invalid Frame type!");
   }
   
@@ -823,8 +823,8 @@ public int saveRegisterBytes(File dest) {
     initializedPR = new ArrayList<Integer>();
     
     // Count the number of initialized entries and save their indices
-    for(int idx = 0; idx < DREG.length; ++idx) {
-      if(DREG[idx].value != null || DREG[idx].comment != null) {
+    for(int idx = 0; idx < DAT_REG.length; ++idx) {
+      if(DAT_REG[idx].value != null || DAT_REG[idx].comment != null) {
         initializedR.add(idx);
         ++numOfREntries;
       }
@@ -840,17 +840,17 @@ public int saveRegisterBytes(File dest) {
     for(Integer idx : initializedR) {
       dataOut.writeInt(idx);
       
-      if(DREG[idx].value == null) {
+      if(DAT_REG[idx].value == null) {
         // save for null Float value
         dataOut.writeFloat(Float.NaN);
       } else {
-        dataOut.writeFloat(DREG[idx].value);
+        dataOut.writeFloat(DAT_REG[idx].value);
       }
       
-      if(DREG[idx].comment == null) {
+      if(DAT_REG[idx].comment == null) {
         dataOut.writeUTF("");
       } else {
-        dataOut.writeUTF(DREG[idx].comment);
+        dataOut.writeUTF(DAT_REG[idx].comment);
       }
     }
     
@@ -909,7 +909,7 @@ public int loadRegisterBytes(File src) {
     FileInputStream in = new FileInputStream(src);
     DataInputStream dataIn = new DataInputStream(in);
     
-    int size = max(0, min(dataIn.readInt(), DREG.length));
+    int size = max(0, min(dataIn.readInt(), DAT_REG.length));
     
     // Load the Register entries
     while((size -= 1) > 0) {
@@ -924,7 +924,7 @@ public int loadRegisterBytes(File src) {
       // Null comments are saved as ""
       if(c.equals("")) { c = null; }
       
-      DREG[reg] = new DataRegister(reg, c, v);
+      DAT_REG[reg] = new DataRegister(reg, c, v);
     }
     
     size = max(0, min(dataIn.readInt(), GPOS_REG.length));

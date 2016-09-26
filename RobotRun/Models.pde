@@ -297,7 +297,7 @@ public class ArmModel {
    * program or a move to command, or jogging.
    */
   public void updateRobot(Program active) {
-    if (!robotFault) {
+    if (!motionFault) {
       // Execute arm movement
       if(programRunning) {
         // Run active program

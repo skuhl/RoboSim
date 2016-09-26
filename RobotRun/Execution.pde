@@ -48,7 +48,7 @@ public void showMainDisplayText() {
   text(coordFrame, lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
   // Display the Robot's speed value as a percent
-  text(String.format("Speed: %d%%", liveSpeed), lastTextPositionX, lastTextPositionY);
+  text(String.format("Jog Speed: %d%%", liveSpeed), lastTextPositionX, lastTextPositionY);
   lastTextPositionY += 20;
   // Display the title of the currently active scenario
   String scenarioTitle;
@@ -148,8 +148,8 @@ public void showMainDisplayText() {
     fill(215, 0, 0);
     
     // Display a message when there is an error with the Robot's movement
-    if (robotFault) {
-      text("Robot Fault (press SHIFT + Reset)", lastTextPositionX, lastTextPositionY);
+    if (motionFault) {
+      text("Motion Fault (press SHIFT + Reset)", lastTextPositionX, lastTextPositionY);
       lastTextPositionY += 20;
     }
     
@@ -179,7 +179,7 @@ public void showMainDisplayText() {
   manager.updateWindowDisplay();
 }
 
-/**  //<>//
+/**  //<>// //<>//
  * Transitions to the next Coordinate frame in the cycle, updating the Robot's current frame
  * in the process and skipping the Tool or User frame if there are no active frames in either
  * one. Since the Robot's frame is potentially reset in this method, all Robot motion is halted.
@@ -644,7 +644,7 @@ void calculateArc(Point start, Point inter, Point end) {
     PVector pos = RQuaternion.rotateVectorAroundAxis(u, n, angle).mult(r).add(center);
     if(i == numPoints-1) pos = end.position;
     qi = RQuaternion.SLERP(q1, q2, mu);
-    println(pos + ", " + end.position);
+    //println(pos + ", " + end.position);
     intermediatePositions.add(new Point(pos, qi));
     angle += angleInc;
     mu += inc;
@@ -850,7 +850,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
   int nextInstr = active_instr + 1;
   
   //stop executing if no valid program is selected or we reach the end of the program
-  if(robotFault || activeInstr == null) {
+  if(motionFault || activeInstr == null) {
     return true;
   } 
   else if (!activeInstr.isCommented()){
@@ -982,7 +982,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
  */
 public void triggerFault() {
   armModel.halt();
-  robotFault = true;
+  motionFault = true;
 }
 
 /**
