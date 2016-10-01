@@ -472,7 +472,7 @@ public class ToolFrame extends Frame {
     
     PVector displayOffset;
     // Convert angles to degrees
-    PVector wpr = quatToEuler(getOrientation()).mult(RAD_TO_DEG);
+    PVector wpr = quatToEuler(orientationOffset).mult(RAD_TO_DEG);
     
     displayOffset = getTCPOffset();
     
@@ -599,7 +599,7 @@ public class UserFrame extends Frame {
     
     PVector displayOrigin;
     // Convert angles to degrees and to the World Coordinate Frame
-    PVector wpr = quatToEuler(getOrientation()).mult(RAD_TO_DEG);
+    PVector wpr = quatToEuler(orientationOffset).mult(RAD_TO_DEG);
     
     // Convert to World frame reference
     displayOrigin = convertNativeToWorld(origin);
