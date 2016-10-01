@@ -1395,7 +1395,7 @@ public void f1() {
         updateScreen();
       } else {
         // Set the current tool frame
-        activeToolFrame = row_select;
+        activeToolFrame = active_index;
         updateCoordFrame();
       }
       break;
