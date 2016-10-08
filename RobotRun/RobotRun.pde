@@ -54,6 +54,7 @@ public void setup() {
   armModel = new ArmModel();
   intermediatePositions = new ArrayList<Point>();
   activeScenario = null;
+  showOOBs = true;
   
   loadState();
   

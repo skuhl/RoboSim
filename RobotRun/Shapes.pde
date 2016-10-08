@@ -1,5 +1,6 @@
 private final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
 private Scenario activeScenario;
+private boolean showOOBs;
 
 /**
  * A simple class that defines the stroke and fill color for a shape
@@ -888,7 +889,7 @@ public class Part extends WorldObject {
     pushMatrix();
     applyCoordinateSystem();
     getForm().draw();
-    if (COLLISION_DISPLAY) { absOBB.getBox().draw(); }
+    if (showOOBs) { absOBB.getBox().draw(); }
     popMatrix();
   }
   
@@ -1241,7 +1242,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
         }
         
         /* Collision Detection */
-        if(COLLISION_DISPLAY) {
+        if(showOOBs) {
           if( model != null && model.checkObjectCollision(p) ) {
             p.setBBColor(color(255, 0, 0));
           }

@@ -657,7 +657,7 @@ public void keyPressed() {
     return;
   }
   
-  if(mode == Screen.PROG_CREATE) {
+  if(mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
     // Modify the input name for the new program
     if(key == BACKSPACE && workingText.length() > 0) {
       
@@ -858,6 +858,12 @@ public void SaveScenario() {
 public void SetScenario() {
   // Set the active scenario to a copy of the scenario associated with te scenario dropdown list
   activeScenario = (Scenario)manager.getActiveScenario().clone();
+}
+
+public void HideObjects() {
+  // Toggle object display on or off
+  showOOBs = !showOOBs;
+  manager.updateScenarioWindowContentPositions();
 }
 
 // Menu button
@@ -3512,24 +3518,27 @@ public void loadScreen() {
       col_select = 0;
       opt_select = 0;
       
-      if(DAT_REG[active_index].comment != null) {
+      if(DAT_REG[active_index].comment != null && DAT_REG[active_index].comment.length() > 0) {
         workingText = DAT_REG[active_index].comment;
       }
       else {
         workingText = "\0";
       }
+      
       break;   
     case EDIT_PREG_COM:
       row_select = 1;
       col_select = 0;
       opt_select = 0;
       
-      if(GPOS_REG[active_index].comment != null) {
+      if(GPOS_REG[active_index].comment != null && GPOS_REG[active_index].comment.length() > 0) {
         workingText = GPOS_REG[active_index].comment;
       }
       else {
         workingText = "\0";
       }
+      
+      println(workingText.length());
       break;
     case EDIT_DREG_VAL:
       opt_select = 0;

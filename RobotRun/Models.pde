@@ -418,7 +418,7 @@ public class ArmModel {
     
     popMatrix();
     
-    if (COLLISION_DISPLAY) { drawBoxes(); }
+    if (showOOBs) { drawBoxes(); }
   }//end draw arm model
   
   /**
