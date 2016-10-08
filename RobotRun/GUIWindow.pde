@@ -148,6 +148,8 @@ public class WindowManager {
                           ldropItemWidth = 120,
                           dropItemHeight = 21;
   
+  private final color buttonDefColor, buttonActColor;
+  
   /**
    * Creates a new window with the given ControlP5 object as the parent
    * and the given fonts which will be applied to the text in the window.
@@ -163,7 +165,10 @@ public class WindowManager {
     shapeDefFields = new ArrayList<Textfield>();
     dropdownLbls = new Textarea[7];
     dropdownLists = new MyDropdownList[7];
-    miscButtons = new Button[7];
+    miscButtons = new Button[8];
+    
+    buttonDefColor = color(70);
+    buttonActColor = color(220, 40, 40);
     
     // Create some temporary color and dimension variables
     color bkgrdColor = color(210),
@@ -172,10 +177,8 @@ public class WindowManager {
           fieldActColor = color(255, 0, 0),
           fieldBkgrdColor = color(255),
           fieldFrgrdColor = color(0),
-          buttonTxtColor = color(255),
-          buttonDefColor = color(70),
-          buttonActColor = color(220, 40, 40);
-    
+          buttonTxtColor = color(255);
+
     int[] relPos = new int[] { 0, 0 };
     
     String[] windowList = new String[] { "Hide", "Pendant", "Create", "Edit", "Scenario" };
@@ -537,6 +540,14 @@ public class WindowManager {
     
     miscButtons[6] = UIManager.addButton("SetScenario")
                                 .setCaptionLabel("Load")
+                                .setColorValue(buttonTxtColor)
+                                .setColorBackground(buttonDefColor)
+                                .setColorActive(buttonActColor)
+                                .moveTo(scenarioWindow)
+                                .setSize(mButtonWidth, sButtonHeight);
+    
+    miscButtons[7] = UIManager.addButton("HideObjects")
+                                .setCaptionLabel("Hide")
                                 .setColorValue(buttonTxtColor)
                                 .setColorBackground(buttonDefColor)
                                 .setColorActive(buttonActColor)
@@ -947,8 +958,20 @@ public class WindowManager {
     // Load scenario button
     relPos = relativePosition(miscButtons[5], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
     miscButtons[6] = miscButtons[6].setPosition(relPos[0], relPos[1]);
+    // Toggle Object display button
+    relPos = relativePosition(miscButtons[6], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+    miscButtons[7] = miscButtons[7].setPosition(relPos[0], relPos[1]);
+    
+    // Update button color based on the value of the object display flag
+    if (!showObjects) {
+      miscButtons[7].setColorBackground(buttonActColor);
+      
+    } else {
+      miscButtons[7].setColorBackground(buttonDefColor);
+    }
+    
     // Update window background display
-    relPos = relativePosition(miscButtons[6], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+    relPos = relativePosition(miscButtons[7], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
     background.setBackgroundHeight(relPos[1])
               .setHeight(relPos[1])
               .show();

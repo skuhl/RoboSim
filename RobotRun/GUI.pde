@@ -860,6 +860,12 @@ public void SetScenario() {
   activeScenario = (Scenario)manager.getActiveScenario().clone();
 }
 
+public void HideObjects() {
+  // Toggle object display on or off
+  showObjects = !showObjects;
+  manager.updateScenarioWindowContentPositions();
+}
+
 // Menu button
 public void mu() {
   resetStack();

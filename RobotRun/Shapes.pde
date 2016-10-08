@@ -1,5 +1,6 @@
 private final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
 private Scenario activeScenario;
+private boolean showObjects;
 
 /**
  * A simple class that defines the stroke and fill color for a shape

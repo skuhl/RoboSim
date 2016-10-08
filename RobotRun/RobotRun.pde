@@ -54,6 +54,7 @@ public void setup() {
   armModel = new ArmModel();
   intermediatePositions = new ArrayList<Point>();
   activeScenario = null;
+  showObjects = true;
   
   loadState();
   
@@ -166,7 +167,7 @@ public void updateAndDrawObjects(Scenario s, Program active, ArmModel model) {
   model.resetOBBColors(); 
   model.checkSelfCollisions();
   
-  if (s != null) {
+  if (s != null && showObjects) {
     s.updateAndDrawObjects(model);
   }
   model.draw();
