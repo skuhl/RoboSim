@@ -657,7 +657,7 @@ public void keyPressed() {
     return;
   }
   
-  if(mode == Screen.PROG_CREATE) {
+  if(mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
     // Modify the input name for the new program
     if(key == BACKSPACE && workingText.length() > 0) {
       
