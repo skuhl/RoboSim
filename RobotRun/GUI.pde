@@ -3512,24 +3512,27 @@ public void loadScreen() {
       col_select = 0;
       opt_select = 0;
       
-      if(DAT_REG[active_index].comment != null) {
+      if(DAT_REG[active_index].comment != null && DAT_REG[active_index].comment.length() > 0) {
         workingText = DAT_REG[active_index].comment;
       }
       else {
         workingText = "\0";
       }
+      
       break;   
     case EDIT_PREG_COM:
       row_select = 1;
       col_select = 0;
       opt_select = 0;
       
-      if(GPOS_REG[active_index].comment != null) {
+      if(GPOS_REG[active_index].comment != null && GPOS_REG[active_index].comment.length() > 0) {
         workingText = GPOS_REG[active_index].comment;
       }
       else {
         workingText = "\0";
       }
+      
+      println(workingText.length());
       break;
     case EDIT_DREG_VAL:
       opt_select = 0;
