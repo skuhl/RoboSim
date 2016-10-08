@@ -11,8 +11,7 @@ private EEMapping mappingState = EEMapping.LINE;
 // Deterimes what type of axes should be displayed
 private static AxesDisplay axesState = AxesDisplay.AXES;
 
-private static final boolean COLLISION_DISPLAY = true,
-                             DISPLAY_TEST_OUTPUT = true;
+private static final boolean DISPLAY_TEST_OUTPUT = true;
 
 /**
  * Displays important information in the upper-right corner of the screen.

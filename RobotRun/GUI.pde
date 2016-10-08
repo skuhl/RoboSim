@@ -862,7 +862,7 @@ public void SetScenario() {
 
 public void HideObjects() {
   // Toggle object display on or off
-  showObjects = !showObjects;
+  showOOBs = !showOOBs;
   manager.updateScenarioWindowContentPositions();
 }
 

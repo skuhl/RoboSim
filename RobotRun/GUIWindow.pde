@@ -963,7 +963,7 @@ public class WindowManager {
     miscButtons[7] = miscButtons[7].setPosition(relPos[0], relPos[1]);
     
     // Update button color based on the value of the object display flag
-    if (!showObjects) {
+    if (!showOOBs) {
       miscButtons[7].setColorBackground(buttonActColor);
       
     } else {
