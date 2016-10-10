@@ -5078,12 +5078,13 @@ public void pasteInstructions() {
 }
 
 public void pasteInstructions(int options) {
+  ArrayList<Instruction> pasteList = new ArrayList<Instruction>();
   Program p = activeProgram();
-  println(options);
+  
   /* Pre-process instructions for insertion into program. */
   for(int i = 0; i < clipBoard.size(); i += 1) {
-    Instruction instr = clipBoard.get(i);
-  
+    Instruction instr = clipBoard.get(i).clone();
+    
     if(instr instanceof MotionInstruction) {
       MotionInstruction m = (MotionInstruction)instr;
       
@@ -5100,15 +5101,17 @@ public void pasteInstructions(int options) {
         m.setPositionNum(nextPos);
       }
     }
+    
+    pasteList.add(instr);
   }
   
   /* Perform forward/ reverse insertion. */
   for(int i = 0; i < clipBoard.size(); i += 1) {
     Instruction instr;
     if((options & PASTE_REVERSE) == PASTE_REVERSE) {
-      instr = clipBoard.get(clipBoard.size() - 1 - i);
+      instr = pasteList.get(pasteList.size() - 1 - i);
     } else {
-      instr = clipBoard.get(i);
+      instr = pasteList.get(i);
     }
     
     p.addInstruction(active_instr + i, instr);
