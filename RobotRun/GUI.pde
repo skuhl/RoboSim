@@ -8,6 +8,12 @@ final int BUTTON_DEFAULT = color(70),
           BUTTON_TEXT = color(240),
           UI_LIGHT = color(240),
           UI_DARK = color(40);
+          
+final int PASTE_DEFAULT = 0,
+          PASTE_REVERSE = 0b1,
+          CLEAR_POSITION = 0b10,
+          NEW_POSITION = 0b100,
+          REVERSE_MOTION = 0b1000;
 
 int active_prog = -1; // the currently selected program
 int active_instr = -1; // the currently selected instruction
@@ -2735,15 +2741,30 @@ public void ENTER() {
       updateScreen();
       break;
     case SELECT_PASTE_OPT:
+    
+      /*options.add("1 Logic");
+      options.add("2 Position");
+      options.add("3 Pos ID");
+      options.add("4 R Logic");
+      options.add("5 R Position");
+      options.add("6 R Pos ID");
+      options.add("7 RM Pos ID");*/
+    
       if(opt_select == 0) {
-        pasteInstructions(false);
+        pasteInstructions(CLEAR_POSITION);
       } else if(opt_select == 1) {
-        pasteInstructions(true);
+        pasteInstructions(PASTE_DEFAULT);
       } else if(opt_select == 2) {
-          
+        pasteInstructions(NEW_POSITION);
+      } else if(opt_select == 3){
+        pasteInstructions(PASTE_REVERSE | CLEAR_POSITION);
+      } else if(opt_select == 4) {
+        pasteInstructions(PASTE_REVERSE);
+      } else if(opt_select == 5) {
+        pasteInstructions(PASTE_REVERSE | NEW_POSITION);
       } else {
-        
-      }
+        pasteInstructions(PASTE_REVERSE | REVERSE_MOTION);
+      } 
       
       display_stack.pop();
       lastScreen();
@@ -3474,8 +3495,9 @@ public void loadScreen() {
     case SELECT_INSTR_DELETE:
     case SELECT_COMMENT:
     case SELECT_CUT_COPY:
-      int size = contents.size() - 1;
-      row_select = max(0, min(row_select, size));
+      Program p = activeProgram();
+      int size = p.getInstructions().size() - 1;
+      active_instr = max(0, min(active_instr, size));
       col_select = 0;
       break;
     
@@ -4101,10 +4123,13 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("Select lines to cut/ copy (ENTER).");
       break;
     case SELECT_PASTE_OPT:
-      options.add("1 Standard");
-      options.add("2 Reverse");
-      options.add("3 ");
-      options.add("4 ");
+      options.add("1 Logic");
+      options.add("2 Position");
+      options.add("3 Pos ID");
+      options.add("4 R Logic");
+      options.add("5 R Position");
+      options.add("6 R Pos ID");
+      options.add("7 RM Pos ID");
       break;
     case FIND_REPL:
       options.add("Enter text to search for:");
@@ -5048,23 +5073,45 @@ public boolean[] resetSelection(int n) {
   return selectedLines;
 }
 
-public void pasteInstructions(boolean incrPIdx) {
-  int insertIdx = active_instr;
-  for(Instruction i : clipBoard) {
-    /* Copy the instructions position to a new local position index and
-       update the instruction to use this new position */
-    if(i instanceof MotionInstruction && incrPIdx) {
-      Program p = activeProgram();
-      MotionInstruction m = (MotionInstruction)i;
-      int instrPos = m.getPositionNum();
-      int nextPos = p.getNextPosition();
+public void pasteInstructions() {
+  pasteInstructions(0);
+}
+
+public void pasteInstructions(int options) {
+  Program p = activeProgram();
+  println(options);
+  /* Pre-process instructions for insertion into program. */
+  for(int i = 0; i < clipBoard.size(); i += 1) {
+    Instruction instr = clipBoard.get(i);
+  
+    if(instr instanceof MotionInstruction) {
+      MotionInstruction m = (MotionInstruction)instr;
       
-      p.addPosition(p.getPosition(instrPos).clone());
-      m.setPositionNum(nextPos);
+      if((options & CLEAR_POSITION) == CLEAR_POSITION) {
+        m.setPositionNum(-1);
+      }
+      else if((options & NEW_POSITION) == NEW_POSITION) {
+        /* Copy the current instruction's position to a new local position
+           index and update the instruction to use this new position */
+        int instrPos = m.getPositionNum();
+        int nextPos = p.getNextPosition();
+        
+        p.addPosition(p.getPosition(instrPos).clone());
+        m.setPositionNum(nextPos);
+      }
+    }
+  }
+  
+  /* Perform forward/ reverse insertion. */
+  for(int i = 0; i < clipBoard.size(); i += 1) {
+    Instruction instr;
+    if((options & PASTE_REVERSE) == PASTE_REVERSE) {
+      instr = clipBoard.get(clipBoard.size() - 1 - i);
+    } else {
+      instr = clipBoard.get(i);
     }
     
-    activeProgram().addInstruction(insertIdx, i, incrPIdx);
-    insertIdx += 1;
+    p.addInstruction(active_instr + i, instr);
   }
 }
 

@@ -276,7 +276,7 @@ public class Program {
     //i.setProg(this);
     instructions.add(i);
     
-    if(i instanceof MotionInstruction ) {
+    if(i instanceof MotionInstruction) {
       MotionInstruction castIns = (MotionInstruction)i;
       if(!castIns.usesGPosReg() && castIns.getPositionNum() >= nextPosition) {
         nextPosition = castIns.getPositionNum()+1;
@@ -285,9 +285,9 @@ public class Program {
     }
   }
   
-  public void addInstruction(int idx, Instruction i, boolean incrPIdx) {
+  public void addInstruction(int idx, Instruction i) {
     instructions.add(idx, i);
-    if(i instanceof MotionInstruction && incrPIdx) { 
+    if(i instanceof MotionInstruction) { 
       MotionInstruction castIns = (MotionInstruction)i;
       if(!castIns.usesGPosReg() && castIns.getPositionNum() >= nextPosition) {
         nextPosition = castIns.getPositionNum()+1;
@@ -573,11 +573,12 @@ public final class MotionInstruction extends Instruction  {
    *                instruction belongs
    */
   public Point getPoint(Program parent) {
-    
     if (isGPosReg) {
       return GPOS_REG[positionNum].point.clone();    
-    } else {
+    } else if(positionNum != -1) {
       return parent.LPosReg[positionNum].clone();
+    } else {
+      return null;
     }
   }
   
@@ -594,6 +595,7 @@ public final class MotionInstruction extends Instruction  {
     Point offset;
     
     pt = getPoint(parent);
+    if(pt == null) return null;
     
     if(offsetRegNum != -1) {
       offset = GPOS_REG[offsetRegNum].point;
