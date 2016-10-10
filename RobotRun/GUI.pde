@@ -3725,7 +3725,9 @@ public void updateScreen() {
   
   int maxHeight;
   if(mode.getType() == ScreenType.TYPE_EXPR_EDIT) {
-    maxHeight = 4;
+    maxHeight = 3;
+  } else if(mode == Screen.SELECT_PASTE_OPT) {
+    maxHeight = 3;
   } else {
     maxHeight = options.size();
   }
@@ -3756,7 +3758,7 @@ public void updateScreen() {
     .moveTo(g1);
     
     index_options++;
-    next_px += (i % maxHeight == maxHeight - 1) ? 80 : 0;
+    next_px += (i % maxHeight == maxHeight - 1) ? 120 : 0;
     next_py += (i % maxHeight == maxHeight - 1) ? -20*(maxHeight - 1) : 20;    
   }
   
