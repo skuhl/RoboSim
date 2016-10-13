@@ -1108,16 +1108,7 @@ public class WindowManager {
           lblNames = new String[] { "Radius", "Height" };
           
         } else if (selectedShape == ShapeType.MODEL) {
-          Object objType = dropdownLists[0].getActiveLabelValue();
-          
-          if (objType instanceof Float && (Float)objType == 0.0) {
-            // Define the dimensions of the bounding box of the Part
-            lblNames = new String[] { "Source:", "Scale:", "Length:", "Height", "Width" };
-            
-          } else {
-            lblNames = new String[] { "Source:", "Scale:" };
-          }
-    
+          lblNames = new String[] { "Source:", "Scale:", };
         }
         
       } else if (activeButtonLabel.equals("Edit")) {
@@ -1133,13 +1124,7 @@ public class WindowManager {
             lblNames = new String[] { "Radius", "Height" };
           
           } else if (s instanceof ModelShape) {
-            if (val instanceof Part) {
-              // Define the dimensions of the bounding box of the Part
-              lblNames = new String[] { "Scale:", "Length:", "Height:", "Width" };
-              
-            } else if (val instanceof Fixture) {
-              lblNames = new String[] { "Scale:" };
-            }
+            lblNames = new String[] { "Scale:" };
           }
         }
         
@@ -1220,7 +1205,7 @@ public class WindowManager {
             String srcFile = shapeDefFields.get(0).getText();
             shapeDims = getModelDimensions(true);
             // Construct a complex model
-            if (shapeDims != null && shapeDims[1] != null && shapeDims[2] != null && shapeDims[3] != null) {
+            if (shapeDims != null) {
               ModelShape model;
               
               if (shapeDims[0] != null) {
@@ -1230,7 +1215,7 @@ public class WindowManager {
                 model = new ModelShape(srcFile, fill);
               }
               
-              wldObj = new Part(name, model, shapeDims[1], shapeDims[2], shapeDims[3]);
+              wldObj = new Part(name, model);
             }
             break;
           default:
@@ -1377,25 +1362,9 @@ public class WindowManager {
           if (newDims[0] != null) {
             // Update the model's scale value
             s.setDim(newDims[0], DimType.SCALE);
-          }
-          
-          if (toEdit instanceof Part) {
-            // Update the length, height or width of the Part's bounding-box
-            Part p = (Part)toEdit;
             
-            if (newDims[1] != null) {
-              // Update the bounding-box's length
-              p.setOBBDim(newDims[1], DimType.LENGTH);
-            }
-            
-            if (newDims[2] != null) {
-              // Update the bounding-box's height
-              p.setOBBDim(newDims[2], DimType.HEIGHT);
-            }
-            
-            if (newDims[3] != null) {
-              // Update the bounding-box's width
-              p.setOBBDim(newDims[3], DimType.WIDTH);
+            if (toEdit instanceof Part) {
+              ((Part)toEdit).updateOBBDims();
             }
           }
         }
@@ -1562,22 +1531,15 @@ public class WindowManager {
   private Float[] getModelDimensions(boolean forAPart) {
     try {
       // null values represent an uninitialized field
-      final Float[] dimensions = new Float[] { null, null, null, null };
+      final Float[] dimensions = new Float[] { null };
       
-      String activeWindow = windowTabs.getActiveButtonName(),
-             sclField, lenField, hgtField, wdhField;
+      String activeWindow = windowTabs.getActiveButtonName(), sclField;
       // Pull from the Dim fields
       if (activeWindow != null && activeWindow.equals("Create")) {
         sclField = shapeDefFields.get(1).getText();
-        lenField = shapeDefFields.get(2).getText();
-        hgtField = shapeDefFields.get(3).getText();
-        wdhField = shapeDefFields.get(4).getText();
         
       } else {
         sclField = shapeDefFields.get(0).getText();
-        lenField = shapeDefFields.get(1).getText();
-        hgtField = shapeDefFields.get(2).getText();
-        wdhField = shapeDefFields.get(3).getText();
       }
       
       if (sclField != null && !sclField.equals("")) {
@@ -1589,41 +1551,6 @@ public class WindowManager {
         }
         // Scale cap of 50
         dimensions[0] = min(val, 50f);
-      }
-      
-      if (forAPart) {
-        if (lenField != null && !lenField.equals("")) {
-          // Read length input
-          float val = Float.parseFloat(lenField);
-          
-          if (val <= 0) {
-            throw new NumberFormatException("Invalid length value!");
-          }
-          // Length cap of 9999
-          dimensions[1] = min(val, 9999f);
-        }
-        
-        if (hgtField != null && !hgtField.equals("")) {
-          // Read height input
-          float val = Float.parseFloat(hgtField);
-          
-          if (val <= 0) {
-            throw new NumberFormatException("Invalid height value!");
-          }
-          // Height cap of 9999
-          dimensions[2] = min(val, 9999f);
-        }
-        
-        if (wdhField != null && !wdhField.equals("")) {
-          // Read Width input
-          float val = Float.parseFloat(wdhField);
-          
-          if (val <= 0) {
-            throw new NumberFormatException("Invalid width value!");
-          }
-          // Width cap of 9999
-          dimensions[3] = min(val, 9999f);
-        }
       }
       
       return dimensions;
