@@ -3453,7 +3453,7 @@ public void loadScreen() {
       break;
     case SET_MV_INSTR_IDX:
       mInst = activeMotionInst();
-      workingText = Integer.toString(mInst.getPositionNum());
+      workingText = Integer.toString(mInst.getPositionNum() - 1);
       break;
     case SET_MV_INSTR_TERM:
       mInst = activeMotionInst();
@@ -4860,7 +4860,7 @@ public ArrayList<String> loadInstrEdit(Screen mode) {
       edit.add("2.GLOBAL(PR)");
       break;
     case SET_MV_INSTR_IDX:
-      edit.add("Enter desired position/ register (1-1000):");
+      edit.add("Enter desired position/ register (1-100):");
       edit.add("\0" + workingText);
       break;
     case SET_MV_INSTR_SPD:

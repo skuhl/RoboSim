@@ -263,6 +263,7 @@ public class Cylinder extends Shape {
  */
 public class ModelShape extends Shape {
   private PShape form;
+  private PVector minimums, dimensions;
   private float scale;
   private String srcFilePath;
   
@@ -278,7 +279,9 @@ public class ModelShape extends Shape {
     super(fill, null);
     srcFilePath = filename;
     scale = 1f;
-    form = loadSTLModel(filename, fill, scale);
+    
+    form = loadSTLModel(filename, fill);
+    iniDimensions();
   }
   
   /**
@@ -292,12 +295,63 @@ public class ModelShape extends Shape {
   public ModelShape(String filename, color fill, float scale) throws NullPointerException {
     super(fill, null);
     srcFilePath = filename;
-    this.scale = scale;
-    form = loadSTLModel(filename, fill, scale);
+    this.scale = 1f;
+    
+    form = loadSTLModel(filename, fill);
+    iniDimensions();
+    
+    setDim(scale, DimType.SCALE);
+  }
+  
+  /**
+   * Calculate the maximum distances along the x, y, z dimensions that
+   * this model's vertices span.
+   */
+  private void iniDimensions() {
+    PVector maximums = new PVector(Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
+    minimums = new PVector(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
+            
+    int vertexCount = form.getVertexCount();
+    
+    // Calculate the maximum and minimum values for each dimension
+    for (int idx = 0; idx < vertexCount; ++idx) {
+      PVector v = form.getVertex(idx);
+      
+      if (v.x > maximums.x) {
+        maximums.x = v.x;
+        
+      } else if (v.x < minimums.x) {
+        minimums.x = v.x;
+      }
+      
+      if (v.y > maximums.y) {
+        maximums.y = v.y;
+        
+      } else if (v.y < minimums.y) {
+        minimums.y = v.y;
+      }
+      
+      if (v.z > maximums.z) {
+        maximums.z = v.z;
+        
+      } else if (v.z < minimums.z) {
+        minimums.z = v.z;
+      }
+    }
+    
+    // Calculate the base maximum span for each dimension
+    dimensions = PVector.sub(maximums, minimums);
   }
   
   public void draw() {
+    pushMatrix();
+    PVector offset = PVector.sub(minimums, PVector.mult(dimensions, 0.5f)).mult(scale);
+    
+    translate(offset.x, offset.y, offset.z);
+    
     shape(form);
+    
+    popMatrix();
   }
   
   @Override
@@ -316,8 +370,12 @@ public class ModelShape extends Shape {
   @Override
   public float getDim(DimType dim) {
       switch(dim) {
-      case SCALE:  return scale;
-      default:     return -1f;
+        // Determine dimension based on the scale
+        case LENGTH: return scale * (dimensions.x);
+        case HEIGHT: return scale * (dimensions.y);
+        case WIDTH:  return scale * (dimensions.z);
+        case SCALE:  return scale;
+        default:     return -1f;
     }
   }
   
@@ -826,7 +884,7 @@ public class Part extends WorldObject {
    */
   public Part(String n, color fill, color strokeVal, float edgeLen) {
     super(n, new Box(fill, strokeVal, edgeLen));
-    absOBB = new BoundingBox(edgeLen + 15f);
+    absOBB = new BoundingBox(1.1f * edgeLen);
   }
   
   /**
@@ -834,7 +892,7 @@ public class Part extends WorldObject {
    */
   public Part(String n, color fill, color strokeVal, float len, float hgt, float wdh) {
     super(n, new Box(fill, strokeVal, len, hgt, wdh));
-    absOBB = new BoundingBox(len + 15f, hgt + 15f, wdh + 15f);
+    absOBB = new BoundingBox(1.1f * len, 1.1f * hgt, 1.1f * wdh);
   }
   
   /**
@@ -842,15 +900,18 @@ public class Part extends WorldObject {
    */
   public Part(String n, color fill, color strokeVal, float rad, float hgt) {
     super(n, new Cylinder(fill, strokeVal, rad, hgt));
-    absOBB = new BoundingBox(2f * rad + 5f, 2f * rad + 5f, hgt + 10f);
+    absOBB = new BoundingBox(2.12f * rad, 2.12f * rad, 2.2f * hgt);
   }
   
   /**
-   * Define a complex object as a part with given dimensions for its bounding-box.
+   * Define a complex object as a partx.
    */
-  public Part(String n, ModelShape model, float OBBLen, float OBBHgt, float OBBWid) {
+  public Part(String n, ModelShape model) {
     super(n, model);
-    absOBB = new BoundingBox(OBBLen, OBBHgt, OBBWid);
+    
+    absOBB = new BoundingBox(1.1f * model.getDim(DimType.LENGTH),
+                             1.1f * model.getDim(DimType.HEIGHT),
+                             1.1f * model.getDim(DimType.WIDTH));
   }
   
   /**
@@ -870,6 +931,19 @@ public class Part extends WorldObject {
   @Override
   public void setCoordinateSystem() {
     absOBB.setCoordinateSystem();
+  }
+  
+  /**
+   * Update the part's bounding box dimensions if it is a complex shape.
+   */
+  public void updateOBBDims() {
+    Shape s = getForm();
+    
+    if (s instanceof ModelShape) {  
+      absOBB.setDim(1.1f * s.getDim(DimType.LENGTH), DimType.LENGTH);
+      absOBB.setDim(1.1f * s.getDim(DimType.HEIGHT), DimType.HEIGHT);
+      absOBB.setDim(1.1f * s.getDim(DimType.WIDTH), DimType.WIDTH);
+    }
   }
   
   public void applyLocalCoordinateSystem() {
@@ -1420,10 +1494,10 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
  * Build a PShape object from the contents of the given .stl source file
  * stored in /RobotRun/data/.
  * 
- * @throws NullPointerException  if hte given filename does not pertain
+ * @throws NullPointerException  if the given filename does not pertain
  *         to a valid .stl file located in RobotRun/data/
  */
-public PShape loadSTLModel(String filename, color fill, float scaleVal) throws NullPointerException {
+public PShape loadSTLModel(String filename, color fill) throws NullPointerException {
   ArrayList<Triangle> triangles = new ArrayList<Triangle>();
   byte[] data = loadBytes(filename);
   
@@ -1466,7 +1540,6 @@ public PShape loadSTLModel(String filename, color fill, float scaleVal) throws N
   }
   mesh.endShape();
   
-  mesh.scale(scaleVal);
   return mesh;
 } 
 
