@@ -573,13 +573,21 @@ public final class MotionInstruction extends Instruction  {
    *                instruction belongs
    */
   public Point getPoint(Program parent) {
+    Point pt = null;
+    
     if (isGPosReg) {
-      return GPOS_REG[positionNum].point.clone();    
+      pt = GPOS_REG[positionNum].point;   
+      
     } else if(positionNum != -1) {
-      return parent.LPosReg[positionNum].clone();
-    } else {
-      return null;
+      pt = parent.LPosReg[positionNum];
+      
     }
+    
+    if (pt != null) {
+      return pt.clone();
+    }
+    
+    return null;
   }
   
   /**

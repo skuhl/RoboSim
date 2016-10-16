@@ -2278,28 +2278,27 @@ public void ENTER() {
       break;
     case SET_MV_INSTR_IDX:
       try {
-        int tempRegister = Integer.parseInt(workingText) - 1;
+        int tempRegister = Integer.parseInt(workingText);
+        int lbound = 1, ubound;
+        
+        if (activeMotionInst().usesGPosReg()) {
+          ubound = 100;
+          
+        } else {
+          ubound = 1000;
+        }
+        
         line = getSelectedLine();
         m = line == 0 ? activeMotionInst() : activeMotionInst().getSecondaryPoint();
         
-        if(tempRegister < 1 || tempRegister > 1000) {
+        if(tempRegister < lbound || tempRegister > ubound) {
           // Invalid register index
-          err = "Only registers 1 - 1000 are legal!";
+          err = String.format("Only registers %d-%d are valid!", lbound, ubound);
           lastScreen();
           return;
         }
         
-        if(m.isGPosReg) {
-          // Check global register
-          if(GPOS_REG[tempRegister].point == null) {
-            // Invalid register index
-            err = "This register is uninitailized!";
-            lastScreen();
-            return;
-          }
-        }
-        
-        m.setPositionNum(tempRegister);
+        m.setPositionNum(tempRegister - 1);
       } catch (NumberFormatException NFEx) { /* Ignore invalid numbers */ }
       
       lastScreen();
@@ -3474,7 +3473,7 @@ public void loadScreen() {
       break;
     case SET_MV_INSTR_IDX:
       mInst = activeMotionInst();
-      workingText = Integer.toString(mInst.getPositionNum() - 1);
+      workingText = Integer.toString(mInst.getPositionNum() + 1);
       break;
     case SET_MV_INSTR_TERM:
       mInst = activeMotionInst();
@@ -4887,7 +4886,7 @@ public ArrayList<String> loadInstrEdit(Screen mode) {
       edit.add("2.GLOBAL(PR)");
       break;
     case SET_MV_INSTR_IDX:
-      edit.add("Enter desired position/ register (1-100):");
+      edit.add("Enter desired position/ register:");
       edit.add("\0" + workingText);
       break;
     case SET_MV_INSTR_SPD:
@@ -5060,6 +5059,9 @@ public ArrayList<String> loadInstructionReg() {
         displayPoint = p;
       }
     }
+    
+  } else {
+    instReg.add("This position is empty (press ENTER to exit):");
   }
   
   return instReg;
