@@ -2245,16 +2245,11 @@ public void ENTER() {
       
       if(opt_select == 0) {
         m.setGlobalPosRegUse(false);
-      } 
-      else if(opt_select == 1) {  
-        if(GPOS_REG[m.positionNum].point == null) {
-          // Invalid register index
-          err = "This register is uninitailized!";
-          return;
-        } else {
+        
+      } else if(opt_select == 1) {
           m.setGlobalPosRegUse(true);
-        }
       }
+      
       lastScreen();
       break;
     case SET_MV_INSTR_SPD:
