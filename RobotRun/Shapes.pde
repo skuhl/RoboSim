@@ -263,7 +263,7 @@ public class Cylinder extends Shape {
  */
 public class ModelShape extends Shape {
   private PShape form;
-  private PVector minimums, dimensions;
+  private PVector centerOffset, baseDims;
   private float scale;
   private String srcFilePath;
   
@@ -304,12 +304,14 @@ public class ModelShape extends Shape {
   }
   
   /**
-   * Calculate the maximum distances along the x, y, z dimensions that
-   * this model's vertices span.
+   * Calculates the maximum length, height, and width of this shape as well as the center
+   * offset of the shape. The length, height, and width are based off of the maximum and
+   * minimum X, Y, Z values of the shape's vertices. The center offset is based off of
+   * the estimated center of the shape relative to the minimum X, Y, Z values as a position.
    */
   private void iniDimensions() {
-    PVector maximums = new PVector(Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
-    minimums = new PVector(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
+    PVector maximums = new PVector(Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE),
+            minimums = new PVector(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
             
     int vertexCount = form.getVertexCount();
     
@@ -339,15 +341,17 @@ public class ModelShape extends Shape {
       }
     }
     
-    // Calculate the base maximum span for each dimension
-    dimensions = PVector.sub(maximums, minimums);
+    /* Calculate the base maximum span for each dimension as well as the base
+     * offset of the center of the shape, based on the dimensions, from the
+     * first vertex in the shape */
+    baseDims = PVector.sub(maximums, minimums);
+    centerOffset = PVector.add(minimums, PVector.mult(baseDims, 0.5f)).mult(-1);
   }
   
   public void draw() {
     pushMatrix();
-    PVector offset = PVector.sub(minimums, PVector.mult(dimensions, 0.5f)).mult(scale);
-    
-    translate(offset.x, offset.y, offset.z);
+    // Draw shape, where its center is at (0, 0, 0)
+    translate(centerOffset.x, centerOffset.y, centerOffset.z);
     
     shape(form);
     
@@ -359,6 +363,7 @@ public class ModelShape extends Shape {
     switch(dim) {
       case SCALE:
         // Update the model's scale
+        centerOffset.mult(newVal / scale);
         form.scale(newVal / scale);
         scale = newVal;
         break;
@@ -371,9 +376,9 @@ public class ModelShape extends Shape {
   public float getDim(DimType dim) {
       switch(dim) {
         // Determine dimension based on the scale
-        case LENGTH: return scale * (dimensions.x);
-        case HEIGHT: return scale * (dimensions.y);
-        case WIDTH:  return scale * (dimensions.z);
+        case LENGTH: return scale * (baseDims.x);
+        case HEIGHT: return scale * (baseDims.y);
+        case WIDTH:  return scale * (baseDims.z);
         case SCALE:  return scale;
         default:     return -1f;
     }
