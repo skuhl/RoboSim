@@ -568,7 +568,7 @@ public class UserFrame extends Frame {
     } else if (mode >= 0 && mode < 2 && axesTeachPoints[0] != null && axesTeachPoints[1] != null && axesTeachPoints[2] != null) {
       // 3-Point or 4-Point Method
       
-      PVector newOrigin = (mode == 0) ? new PVector(0f, 0f, 0f) : orientOrigin.position;
+      PVector newOrigin = (mode == 0) ? axesTeachPoints[0].position : orientOrigin.position;
       float[][] newAxesVectors = createAxesFromThreePoints(axesTeachPoints[0].position,
                                                            axesTeachPoints[1].position,
                                                            axesTeachPoints[2].position);
