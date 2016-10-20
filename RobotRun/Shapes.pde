@@ -905,7 +905,7 @@ public class Part extends WorldObject {
    */
   public Part(String n, color fill, color strokeVal, float rad, float hgt) {
     super(n, new Cylinder(fill, strokeVal, rad, hgt));
-    absOBB = new BoundingBox(2.12f * rad, 2.12f * rad, 2.2f * hgt);
+    absOBB = new BoundingBox(2.12f * rad, 2.12f * rad, 1.1f * hgt);
   }
   
   /**
