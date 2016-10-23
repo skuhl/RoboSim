@@ -1123,8 +1123,8 @@ public void up() {
     case SET_IF_STMT_ACT:
     case SET_SELECT_STMT_ACT:
     case SET_SELECT_STMT_ARG:
-    case SET_EXPR_ARG: //<>// //<>//
-    case SET_BOOL_EXPR_ARG: //<>// //<>//
+    case SET_EXPR_ARG: //<>// //<>// //<>//
+    case SET_BOOL_EXPR_ARG: //<>// //<>// //<>//
     case SET_EXPR_OP:
     case SET_IO_INSTR_STATE:
     case NAV_SETUP:
@@ -1145,14 +1145,14 @@ public void up() {
   
   updateScreen();
 }
- //<>// //<>//
+ //<>// //<>// //<>//
 public void dn() {
   switch(mode) {
-    case NAV_PROGRAMS: //<>// //<>//
+    case NAV_PROGRAMS: //<>// //<>// //<>//
       active_prog = moveDown(shift);
             
       if(DISPLAY_TEST_OUTPUT) {
-        System.out.printf("\nRow: %d\nProg: %d\nTRS: %d\n\n", //<>// //<>//
+        System.out.printf("\nRow: %d\nProg: %d\nTRS: %d\n\n", //<>// //<>// //<>//
         row_select, active_prog, start_render);
       }
       break;
@@ -1164,7 +1164,7 @@ public void dn() {
         // Lock movement when a program is running
         Instruction i = activeInstruction();
         int prevIdx = getSelectedIdx();
-        active_instr = moveDownInstr(shift); //<>// //<>//
+        active_instr = moveDownInstr(shift); //<>// //<>// //<>//
         int curLine = getSelectedLine();
         
         //special case for select statement column navigation
@@ -1234,7 +1234,7 @@ public void dn() {
     case SET_IO_INSTR_STATE:
     case NAV_SETUP:
       opt_select = min(opt_select + 1, options.size() - 1);
-      break;  //<>// //<>//
+      break;  //<>// //<>// //<>//
     case ACTIVE_FRAMES:
       updateActiveFramesDisplay();
       workingText = Integer.toString(activeUserFrame + 1);
@@ -1267,9 +1267,9 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>// //<>//
+        // Reset function key states //<>// //<>// //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>// //<>//
+      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>// //<>// //<>//
         col_select -= (col_select - 4 >= options.size()) ? 4 : 0;
       }
   }
@@ -2734,16 +2734,7 @@ public void ENTER() {
       selectedLines[active_instr] = !selectedLines[active_instr];
       updateScreen();
       break;
-    case SELECT_PASTE_OPT:
-    
-      /*options.add("1 Logic");
-      options.add("2 Position");
-      options.add("3 Pos ID");
-      options.add("4 R Logic");
-      options.add("5 R Position");
-      options.add("6 R Pos ID");
-      options.add("7 RM Pos ID");*/
-    
+    case SELECT_PASTE_OPT:         
       if(opt_select == 0) {
         pasteInstructions(CLEAR_POSITION);
       } else if(opt_select == 1) {
@@ -2755,10 +2746,12 @@ public void ENTER() {
       } else if(opt_select == 4) {
         pasteInstructions(PASTE_REVERSE);
       } else if(opt_select == 5) {
-        pasteInstructions(PASTE_REVERSE | NEW_POSITION);
-      } else {
+        pasteInstructions(PASTE_REVERSE | NEW_POSITION );
+      } else if(opt_select == 6) {
         pasteInstructions(PASTE_REVERSE | REVERSE_MOTION);
-      } 
+      } else {
+        pasteInstructions(PASTE_REVERSE | NEW_POSITION | REVERSE_MOTION);
+      }
       
       display_stack.pop();
       lastScreen();
@@ -3440,7 +3433,7 @@ public void loadScreen() {
         case MTYPE_CIRCULAR:
           opt_select = 2;
           break;
-        default:
+        default: //<>//
           opt_select = -1;
       }
       
@@ -5098,6 +5091,22 @@ public void pasteInstructions(int options) {
         
         p.addPosition(p.getPosition(instrPos).clone());
         m.setPositionNum(nextPos);
+      }
+      
+      if((options & REVERSE_MOTION) == REVERSE_MOTION) {
+        MotionInstruction next = null;
+        
+        for(int j = i; j < clipBoard.size(); j += 1) {
+          if(clipBoard.get(j) instanceof MotionInstruction) {
+            next = (MotionInstruction)clipBoard.get(j).clone();
+            break;
+          }
+        }
+        
+        if(next != null) {
+          m.setMotionType(next.getMotionType());
+          m.setSpeed(next.getSpeed());
+        }
       }
     }
     
