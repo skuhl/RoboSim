@@ -5096,7 +5096,7 @@ public void pasteInstructions(int options) {
       if((options & REVERSE_MOTION) == REVERSE_MOTION) {
         MotionInstruction next = null;
         
-        for(int j = i; j < clipBoard.size(); j += 1) {
+        for(int j = i + 1; j < clipBoard.size(); j += 1) {
           if(clipBoard.get(j) instanceof MotionInstruction) {
             next = (MotionInstruction)clipBoard.get(j).clone();
             break;
@@ -5104,6 +5104,7 @@ public void pasteInstructions(int options) {
         }
         
         if(next != null) {
+          println("asdf");
           m.setMotionType(next.getMotionType());
           m.setSpeed(next.getSpeed());
         }
