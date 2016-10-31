@@ -87,7 +87,6 @@ public static enum Screen implements DisplayMode {
   * Set of screens used to manipulate instruction parameters with a finite number of states
   */
   SET_BOOL_CONST(ScreenType.TYPE_INSTRUCT_EDIT),
-  SET_CALL_PROG(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_FRM_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_IF_STMT_ACT(ScreenType.TYPE_INSTRUCT_EDIT),
   SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
@@ -108,6 +107,8 @@ public static enum Screen implements DisplayMode {
   * Screens used to display a sereal list of contents for the user to
   * examine and interact with
   */
+  NAV_MACROS(ScreenType.TYPE_LIST_CONTENTS),
+  NAV_MF_MACROS(ScreenType.TYPE_LIST_CONTENTS),
   NAV_PROG_INSTR(ScreenType.TYPE_LIST_CONTENTS),
   NAV_TOOL_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
   NAV_USER_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
@@ -117,6 +118,8 @@ public static enum Screen implements DisplayMode {
   //Joint
   NAV_PREGS_J(ScreenType.TYPE_LIST_CONTENTS),
   NAV_DREGS(ScreenType.TYPE_LIST_CONTENTS),
+  SET_CALL_PROG(ScreenType.TYPE_LIST_CONTENTS),
+  SET_MACRO_PROG(ScreenType.TYPE_LIST_CONTENTS),
   
   /*
   * Screens used to perform arbitrary line-wise selection on a list of
@@ -148,6 +151,8 @@ public static enum Screen implements DisplayMode {
   SELECT_IO_INSTR_REG(ScreenType.TYPE_OPT_MENU),
   SELECT_JMP_LBL(ScreenType.TYPE_OPT_MENU),
   SELECT_PASTE_OPT(ScreenType.TYPE_OPT_MENU),
+  SET_MACRO_TYPE(ScreenType.TYPE_OPT_MENU),
+  SET_MACRO_BINDING(ScreenType.TYPE_OPT_MENU),
     
   /*
   * Screens involving the entry of text, either via keyboard input or function buttons
