@@ -397,6 +397,18 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeInt(m_inst.userFrame);
     out.writeInt(m_inst.toolFrame);
     
+    MotionInstruction subInst = m_inst.getSecondaryPoint();
+    
+    if (subInst != null) {
+      // Save secondary point for circular instructions
+      out.writeByte(1);
+      saveInstruction(subInst, out);
+      
+    } else {
+      // No secondary point
+      out.writeByte(0);
+    }
+    
   } else if(inst instanceof FrameInstruction) {
     FrameInstruction f_inst = (FrameInstruction)inst;
     // Flag byte denoting this instruction as a FrameInstruction
@@ -473,6 +485,13 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     
     inst = new MotionInstruction(mType, reg, isGlobal, spd, term, uFrame, tFrame);
     inst.setIsCommented(isCommented);
+    
+    byte flag = in.readByte();
+    
+    if (flag == 1) {
+      // Load the second point associated with a circular type motion instruction
+     ((MotionInstruction)inst).setSecondaryPoint((MotionInstruction)loadInstruction(in));
+    }
     
   } else if(instType == 3) {
     // Read data for a FrameInstruction object
