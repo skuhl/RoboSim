@@ -303,6 +303,19 @@ public class ArmModel {
         // Run active program
         programRunning = !executeProgram(active, this, execSingleInst);
         
+        // Check the call stack for any waiting processes
+        if (!call_stack.isEmpty() && active_instr == activeProgram().getInstructions().size()) {
+          int[] prevProc = call_stack.pop();
+          // Return to the process on the top of the stack
+          active_prog = prevProc[0];
+          active_instr = prevProc[1];
+          // Update the display
+          row_select = active_instr;
+          col_select = 0;
+          start_render = 0;
+          updateScreen();
+        }
+        
       } else if (motionType != RobotMotion.HALTED) {
         // Move the Robot progressively to a point
         boolean doneMoving = true;

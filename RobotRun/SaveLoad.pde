@@ -441,7 +441,14 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeBoolean(j_inst.isCommented());
     out.writeInt(j_inst.tgtLblNum);
     
-  } /* Add other instructions here! */
+  } else if (inst instanceof CallInstruction) {
+    CallInstruction c_inst = (CallInstruction)inst;
+    
+    out.writeByte(7);
+    out.writeBoolean(c_inst.isCommented());
+    out.writeInt(c_inst.getProgIdx());
+    
+  }/* Add other instructions here! */
     else if (inst instanceof Instruction) {
     /// A blank instruction
     out.writeByte(1);
@@ -520,6 +527,13 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     int tgtLabelNum = in.readInt();
     
     inst = new JumpInstruction(tgtLabelNum);
+    inst.setIsCommented(isCommented);
+    
+  } else if (instType == 7) {
+    boolean isCommented = in.readBoolean();
+    int pdx = in.readInt();
+    
+    inst = new CallInstruction(pdx);
     inst.setIsCommented(isCommented);
     
   } /* Add other instructions here! */

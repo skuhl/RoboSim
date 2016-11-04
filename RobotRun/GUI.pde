@@ -1927,7 +1927,8 @@ public void fd() {
     executingInstruction = false;
     // Run single instruction when step is set
     execSingleInst = step;
-    programRunning = !executeProgram(activeProgram(), armModel, execSingleInst);
+    
+    programRunning = true;
   }
 }
 
@@ -2729,18 +2730,15 @@ public void ENTER() {
     case SET_CALL_PROG:
       if(activeInstruction() instanceof IfStatement) {
         IfStatement ifStmt = (IfStatement)activeInstruction();
-        ((CallInstruction)ifStmt.instr).callProg = programs.get(row_select);
         ((CallInstruction)ifStmt.instr).progIdx = opt_select;
       }
       else if(activeInstruction() instanceof SelectStatement) {
         SelectStatement sStmt = (SelectStatement)activeInstruction();
         CallInstruction c = (CallInstruction)sStmt.instrs.get(editIdx);
-        c.callProg = programs.get(row_select);
         c.progIdx = row_select;
       }
       else {
         CallInstruction call = (CallInstruction)activeInstruction();
-        call.callProg = programs.get(row_select);
         call.progIdx = row_select;
       }
       

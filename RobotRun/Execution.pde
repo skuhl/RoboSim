@@ -878,8 +878,12 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
     else if (activeInstr instanceof JumpInstruction) {
       executingInstruction = false;
       nextInstr = activeInstr.execute();
-    } 
-    else {
+      
+    } else if (activeInstr instanceof CallInstruction) {
+      executingInstruction = false;
+      nextInstr = activeInstr.execute();
+    
+    } else {
       executingInstruction = false;
       
       if(activeInstr.execute() != 0) {
@@ -895,18 +899,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
       triggerFault();
       return true;
       
-    } if(nextInstr == activeProgram().size() && !call_stack.isEmpty()) {
-      // Return from called program
-      int[] p = call_stack.pop();
-      active_prog = p[0];
-      active_instr = p[1];
-      
-      row_select = active_instr;
-      col_select = 0;
-      start_render = 0;
-      programRunning = !executeProgram(activeProgram(), armModel, false);
-    } 
-    else {
+    } else {
       // Move to nextInstruction
       int size = activeProgram().getInstructions().size() + 1;      
       active_instr = max(0, min(nextInstr, size - 1));
