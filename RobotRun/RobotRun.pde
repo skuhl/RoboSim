@@ -21,6 +21,9 @@ WindowManager manager;
 Stack<Screen> display_stack;
 
 ArrayList<Program> programs = new ArrayList<Program>();
+ArrayList<Macro> macros = new ArrayList<Macro>();
+Macro SU_macro_bindings[] = new Macro[7];
+Macro edit_macro = null;
 
 /*******************************/
 /*      Global Variables       */

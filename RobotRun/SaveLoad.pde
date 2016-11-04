@@ -84,7 +84,7 @@ public byte loadState() {
   File scenarioFile = new File(sketchPath("tmp/scenarios.bin"));
   
   if(scenarioFile.exists()) {
-    int ret = loadScenarioBytes(scenarioFile);   //<>// //<>// //<>// //<>// //<>//
+    int ret = loadScenarioBytes(scenarioFile);   //<>// //<>// //<>// //<>// //<>// //<>//
     
     if(ret == 0) {
       println("Successfully loaded scenarios!");
@@ -364,7 +364,7 @@ private Point loadPoint(DataInputStream in) throws IOException {
     float[] angles = loadFloatArray(in);
     
     if (angles == null) {
-      println("null angles!");   //<>// //<>// //<>// //<>// //<>//
+      println("null angles!");   //<>// //<>// //<>// //<>// //<>// //<>//
     }
     
     return new Point(position, orientation, angles);
@@ -1076,7 +1076,7 @@ public int saveScenarioBytes(File dest) {
 public int loadScenarioBytes(File src) {
   
   try {
-    FileInputStream in = new FileInputStream(src);   //<>// //<>// //<>// //<>// //<>//
+    FileInputStream in = new FileInputStream(src);   //<>// //<>// //<>// //<>// //<>// //<>//
     DataInputStream dataIn = new DataInputStream(in);
     
     int numOfScenarios = dataIn.readInt();
@@ -1168,7 +1168,7 @@ public void saveScenario(Scenario s, DataOutputStream out) throws IOException {
  */
 public Scenario loadScenario(DataInputStream in) throws IOException, NullPointerException {
   // Read flag byte
-  byte flag = in.readByte();   //<>// //<>// //<>// //<>// //<>//
+  byte flag = in.readByte();   //<>// //<>// //<>// //<>// //<>// //<>//
   
   if (flag == 0) {
     return null;
@@ -1236,7 +1236,7 @@ public Scenario loadScenario(DataInputStream in) throws IOException, NullPointer
  */
 public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {
   
-  if (wldObj == null) {   //<>// //<>// //<>// //<>// //<>//
+  if (wldObj == null) {   //<>// //<>// //<>// //<>// //<>// //<>//
     // Indicate that the value saved is null
     out.writeByte(0);
     
@@ -1286,7 +1286,7 @@ public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOE
  */
 public Object loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
   // Load the flag byte
-  byte flag = in.readByte();   //<>// //<>// //<>// //<>// //<>//
+  byte flag = in.readByte();   //<>// //<>// //<>// //<>// //<>// //<>//
   Object wldObjFields = null;
   
   if (flag != 0) {

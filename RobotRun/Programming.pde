@@ -1247,6 +1247,40 @@ public class RegisterStatement extends Instruction {
   }
 }
 
+public class Macro {
+  private Program prog;
+  private boolean manual;
+  private int num;
+  
+  public Macro(Program p) {
+    prog = p;
+    manual = false;
+    num = -1;
+  }
+  
+  public void execute() {
+    // Stop any prior Robot movement
+    armModel.halt();
+    // Safeguard against editing a program while it is running
+    col_select = 0;
+    
+    executingInstruction = false;
+    // Run single instruction when step is set
+    execSingleInst = step;
+    programRunning = !executeProgram(prog, armModel, execSingleInst);
+  }
+  
+  public String[] toStringArray() {
+    String[] ret = new String[3];
+    
+    ret[0] = prog.getName();
+    ret[1] = manual ? "MF" : "SU";
+    ret[2] = (num == -1) ? "..." : "" + num;
+    
+    return ret;
+  }
+}
+
 public class RecordScreen implements Runnable {
   public RecordScreen() {
     System.out.format("Record screen...\n");
