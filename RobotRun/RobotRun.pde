@@ -353,14 +353,16 @@ public void displayOriginAxes(PVector origin, float[][] axesVectors, float axesL
   line(0, 0, -axesLength, 0, 0, axesLength);
   
   // Draw a sphere on the positive direction for each axis
+  float dotPos = max(100f, min(axesLength, 500));
+  
   stroke(originColor);
   sphere(4);
   stroke(0);
-  translate(100, 0, 0);
+  translate(dotPos, 0, 0);
   sphere(4);
-  translate(-100, 100, 0);
+  translate(-dotPos, dotPos, 0);
   sphere(4);
-  translate(0, -100, 100);
+  translate(0, -dotPos, dotPos);
   sphere(4);
   
   popMatrix();

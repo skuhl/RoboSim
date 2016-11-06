@@ -939,15 +939,30 @@ public class Part extends WorldObject {
   }
   
   /**
-   * Update the part's bounding box dimensions if it is a complex shape.
+   * Update the part's bounding box dimensions of the part based on the dimensions of its form.
    */
   public void updateOBBDims() {
     Shape s = getForm();
+    float minAddition = Float.MAX_VALUE;
     
-    if (s instanceof ModelShape) {  
-      absOBB.setDim(1.1f * s.getDim(DimType.LENGTH), DimType.LENGTH);
-      absOBB.setDim(1.1f * s.getDim(DimType.HEIGHT), DimType.HEIGHT);
-      absOBB.setDim(1.1f * s.getDim(DimType.WIDTH), DimType.WIDTH);
+    if (s instanceof Box || s instanceof ModelShape) {
+      // Update the OBB dimensions for a box or complex part
+      minAddition = 0.1f * min(s.getDim(DimType.LENGTH),
+                            min(s.getDim(DimType.HEIGHT),
+                                s.getDim(DimType.WIDTH)));
+      
+      absOBB.setDim(s.getDim(DimType.LENGTH) + minAddition, DimType.LENGTH);
+      absOBB.setDim(s.getDim(DimType.HEIGHT) + minAddition, DimType.HEIGHT);
+      absOBB.setDim(s.getDim(DimType.WIDTH) + minAddition, DimType.WIDTH);
+      
+    } else if (s instanceof Cylinder) {
+      // Update the OBB dimensions for a cylindrical part
+      minAddition =  min(0.12f * s.getDim(DimType.RADIUS),
+                         0.1f * s.getDim(DimType.HEIGHT));
+      
+      absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.LENGTH);
+      absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.HEIGHT);
+      absOBB.setDim(s.getDim(DimType.HEIGHT) + minAddition, DimType.WIDTH); 
     }
   }
   

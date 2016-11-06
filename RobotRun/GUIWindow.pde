@@ -1203,7 +1203,7 @@ public class WindowManager {
             
           case MODEL:
             String srcFile = shapeDefFields.get(0).getText();
-            shapeDims = getModelDimensions(true);
+            shapeDims = getModelDimensions();
             // Construct a complex model
             if (shapeDims != null) {
               ModelShape model;
@@ -1249,7 +1249,7 @@ public class WindowManager {
             
           case MODEL:
             String srcFile = shapeDefFields.get(0).getText();
-            shapeDims = getModelDimensions(false);
+            shapeDims = getModelDimensions();
             // Construct a complex model
             ModelShape model;
             
@@ -1298,6 +1298,7 @@ public class WindowManager {
       
       try {
         Shape s = toEdit.getForm();
+        boolean dimChanged = false;
         
         if (s instanceof Box) {
           Float[] newDims = getBoxDimensions();
@@ -1305,31 +1306,19 @@ public class WindowManager {
           if (newDims[0] != null) {
             // Update the box's length
             s.setDim(newDims[0], DimType.LENGTH);
-            
-            if (toEdit instanceof Part) {
-              // Update the bounding-box's length
-              ((Part)toEdit).setOBBDim(newDims[0] + 10f, DimType.LENGTH);
-            }
+            dimChanged = true;
           }
           
           if (newDims[1] != null) {
             // Update the box's height
             s.setDim(newDims[1], DimType.HEIGHT);
-            
-            if (toEdit instanceof Part) {
-              // Update the bounding-box's height
-              ((Part)toEdit).setOBBDim(newDims[1] + 10f, DimType.HEIGHT);
-            }
+            dimChanged = true;
           }
           
           if (newDims[2] != null) {
             // Update the box's width
             s.setDim(newDims[2], DimType.WIDTH);
-            
-            if (toEdit instanceof Part) {
-              // Update the bounding-box's width
-              ((Part)toEdit).setOBBDim(newDims[2] + 10f, DimType.WIDTH);
-            }
+            dimChanged = true;
           }
           
         } else if (s instanceof Cylinder) {
@@ -1338,35 +1327,28 @@ public class WindowManager {
           if (newDims[0] != null) {
             // Update the cylinder's radius
             s.setDim(newDims[0], DimType.RADIUS);
-            
-            if (toEdit instanceof Part) {
-              // Update the bounding-box's length and height
-              ((Part)toEdit).setOBBDim(2f * newDims[0] + 5f, DimType.LENGTH);
-              ((Part)toEdit).setOBBDim(2f * newDims[0] + 5f, DimType.HEIGHT);
-            }
+            dimChanged = true;
           }
           
           if (newDims[1] != null) {
             // Update the cylinder's height
             s.setDim(newDims[1], DimType.HEIGHT);
-            
-            if (toEdit instanceof Part) {
-              // Update the bounding-box's width
-              ((Part)toEdit).setOBBDim(newDims[1] + 10f, DimType.WIDTH);
-            }
+            dimChanged = true;
           }
          
         } else if (s instanceof ModelShape) {
-          Float[] newDims = getModelDimensions( (toEdit instanceof Part) );
+          Float[] newDims = getModelDimensions();
           
           if (newDims[0] != null) {
             // Update the model's scale value
             s.setDim(newDims[0], DimType.SCALE);
-            
-            if (toEdit instanceof Part) {
-              ((Part)toEdit).updateOBBDims();
-            }
+            dimChanged = true;
           }
+        }
+        
+        if (dimChanged && toEdit instanceof Part) {
+          // Update the bounding box dimensions of a part
+          ((Part)toEdit).updateOBBDims();
         }
         
         // Convert origin position into the World Frame
@@ -1441,8 +1423,8 @@ public class WindowManager {
         if (val <= 0) {
           throw new NumberFormatException("Invalid length value!");
         }
-        // Length cap of 9999
-        dimensions[0] = min(val, 9999f);
+        // Length cap of 800
+        dimensions[0] = max(10, min(val, 800f));
       }
       
       if (hgtField != null && !hgtField.equals("")) {
@@ -1452,8 +1434,8 @@ public class WindowManager {
         if (val <= 0) {
           throw new NumberFormatException("Invalid height value!");
         }
-        // Height cap of 9999
-        dimensions[1] = min(val, 9999f);
+        // Height cap of 800
+        dimensions[1] = max(10, min(val, 800f));
       }
       
       if (wdhField != null && !wdhField.equals("")) {
@@ -1463,8 +1445,8 @@ public class WindowManager {
         if (val <= 0) {
           throw new NumberFormatException("Invalid width value!");
         }
-        // Width cap of 9999
-        dimensions[2] = min(val, 9999f);
+        // Width cap of 800
+        dimensions[2] = max(10, min(val, 800f));
       }
       
       return dimensions;
@@ -1499,7 +1481,7 @@ public class WindowManager {
           throw new NumberFormatException("Invalid length value!");
         }
         // Radius cap of 9999
-        dimensions[0] = min(val, 9999f);
+        dimensions[0] = max(5, min(val, 800f));
       }
       
       if (hgtField != null && !hgtField.equals("")) {
@@ -1510,7 +1492,7 @@ public class WindowManager {
           throw new NumberFormatException("Invalid height value!");
         }
         // Height cap of 9999
-        dimensions[1] = min(val, 9999f);
+        dimensions[1] = max(10, min(val, 800f));
       }
       
       return dimensions;
@@ -1528,7 +1510,7 @@ public class WindowManager {
   /**
    * TODO
    */
-  private Float[] getModelDimensions(boolean forAPart) {
+  private Float[] getModelDimensions() {
     try {
       // null values represent an uninitialized field
       final Float[] dimensions = new Float[] { null };

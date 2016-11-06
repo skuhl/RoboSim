@@ -851,7 +851,7 @@ boolean executeProgram(Program program, ArmModel model, boolean singleInstr) {
   //stop executing if no valid program is selected or we reach the end of the program
   if(motionFault || activeInstr == null) {
     return true;
-  } 
+  }
   else if (!activeInstr.isCommented()){
     if (activeInstr instanceof MotionInstruction) {
       MotionInstruction motInstr = (MotionInstruction)activeInstr;
@@ -937,7 +937,7 @@ boolean setUpInstruction(Program program, ArmModel model, MotionInstruction inst
   } // end joint movement setup
   else if(instruction.getMotionType() == MTYPE_LINEAR) {
     
-    if(instruction.getTermination() == 0) {
+    if(instruction.getTermination() == 0 || execSingleInst) {
       beginNewLinearMotion(start, instruction.getVector(program));
     } 
     else {
