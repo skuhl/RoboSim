@@ -487,7 +487,7 @@ void gui() {
 
   int MOVEMENU_px = TOOL2_px;
   int MOVEMENU_py = TOOL2_py + button_offsetY;
-  cp5.addButton("MOVEMENU")
+  cp5.addButton("MVMU")
   .setPosition(MOVEMENU_px, MOVEMENU_py)
   .setSize(LARGE_BUTTON, SMALL_BUTTON)
   .setCaptionLabel("MVMU")
@@ -1032,11 +1032,15 @@ public void LINE() {
   updateScreen();
 }
 
+public void POSN() {
+  if(SU_macro_bindings[5] != null && shift) {
+    SU_macro_bindings[5].execute();
+  }
+}
+
 public void IO() {
-  if (!programRunning) {
-    /* Do not allow the Robot's End Effector state to be changed
-     * when a program is executing */
-    armModel.toggleEEState();
+  if(SU_macro_bindings[6] != null && shift) {
+    SU_macro_bindings[6].execute();
   }
 }
 
@@ -1082,6 +1086,8 @@ public void up() {
     case NAV_PREGS_C:
     case NAV_TOOL_FRAMES:
     case NAV_USER_FRAMES:
+    case NAV_MACROS:
+    case NAV_MF_MACROS:
       active_index = moveUp(shift);
       
       if(DISPLAY_TEST_OUTPUT) {
@@ -1090,6 +1096,7 @@ public void up() {
       }
       break;
     case SET_CALL_PROG:
+    case SET_MACRO_PROG:
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
     case EDIT_PREG_C:
@@ -1118,16 +1125,17 @@ public void up() {
     case SWAP_PT_TYPE:
     case SET_MV_INSTR_TYPE:
     case SET_MV_INSTR_REG_TYPE:
+    case SET_MACRO_TYPE:
+    case SET_MACRO_BINDING:
     case SET_FRM_INSTR_TYPE:
     case SET_REG_EXPR_TYPE:
     case SET_IF_STMT_ACT:
     case SET_SELECT_STMT_ACT:
     case SET_SELECT_STMT_ARG:
-    case SET_EXPR_ARG: //<>// //<>//
-    case SET_BOOL_EXPR_ARG: //<>// //<>//
+    case SET_EXPR_ARG: //<>//
+    case SET_BOOL_EXPR_ARG: //<>//
     case SET_EXPR_OP:
     case SET_IO_INSTR_STATE:
-    case NAV_SETUP:
       opt_select = max(0, opt_select - 1);
       break;
     case ACTIVE_FRAMES:
@@ -1145,14 +1153,14 @@ public void up() {
   
   updateScreen();
 }
- //<>// //<>//
+ //<>//
 public void dn() {
   switch(mode) {
-    case NAV_PROGRAMS: //<>// //<>//
+    case NAV_PROGRAMS:  //<>//
       active_prog = moveDown(shift);
             
       if(DISPLAY_TEST_OUTPUT) {
-        System.out.printf("\nRow: %d\nProg: %d\nTRS: %d\n\n", //<>// //<>//
+        System.out.printf("\nRow: %d\nProg: %d\nTRS: %d\n\n",  //<>//
         row_select, active_prog, start_render);
       }
       break;
@@ -1164,7 +1172,7 @@ public void dn() {
         // Lock movement when a program is running
         Instruction i = activeInstruction();
         int prevIdx = getSelectedIdx();
-        active_instr = moveDownInstr(shift); //<>// //<>//
+        active_instr = moveDownInstr(shift); //<>//
         int curLine = getSelectedLine();
         
         //special case for select statement column navigation
@@ -1182,11 +1190,13 @@ public void dn() {
         }
       }
       break;
-    case NAV_TOOL_FRAMES:
-    case NAV_USER_FRAMES:
     case NAV_DREGS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
+    case NAV_TOOL_FRAMES:
+    case NAV_USER_FRAMES:
+    case NAV_MACROS:
+    case NAV_MF_MACROS:
       active_index = moveDown(shift);
       
       if(DISPLAY_TEST_OUTPUT) {
@@ -1223,6 +1233,8 @@ public void dn() {
     case SWAP_PT_TYPE:
     case SET_MV_INSTR_TYPE:
     case SET_MV_INSTR_REG_TYPE:
+    case SET_MACRO_TYPE:
+    case SET_MACRO_BINDING:
     case SET_FRM_INSTR_TYPE:
     case SET_REG_EXPR_TYPE:
     case SET_IF_STMT_ACT:
@@ -1232,9 +1244,8 @@ public void dn() {
     case SET_BOOL_EXPR_ARG:
     case SET_EXPR_OP:
     case SET_IO_INSTR_STATE:
-    case NAV_SETUP:
       opt_select = min(opt_select + 1, options.size() - 1);
-      break;  //<>// //<>//
+      break;  //<>//
     case ACTIVE_FRAMES:
       updateActiveFramesDisplay();
       workingText = Integer.toString(activeUserFrame + 1);
@@ -1251,7 +1262,7 @@ public void dn() {
   updateScreen();
 }
 
-public void lt() { 
+public void lt() {
   switch(mode) { 
     case NAV_PROG_INSTR:
       if (!programRunning) {
@@ -1260,6 +1271,7 @@ public void lt() {
       }
       break;
     case NAV_DREGS:
+    case NAV_MACROS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
       col_select = max(0, col_select - 1);
@@ -1267,9 +1279,9 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>// //<>//
+        // Reset function key states //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>// //<>//
+      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) {  //<>//
         col_select -= (col_select - 4 >= options.size()) ? 4 : 0;
       }
   }
@@ -1309,6 +1321,7 @@ public void rt() {
       
       break;
     case NAV_DREGS:
+    case NAV_MACROS:
     case NAV_PREGS_J:
     case NAV_PREGS_C:
       col_select = min(col_select + 1, contents.get(row_select).size() - 1);
@@ -1429,6 +1442,10 @@ public void f1() {
       } else if(row_select == 1) {
         nextScreen(Screen.NAV_USER_FRAMES);
       }
+      break;
+    case NAV_MACROS:
+      edit_macro = null;
+      nextScreen(Screen.SET_MACRO_PROG);
       break;
     case NAV_DREGS:
       // Clear Data Register entry
@@ -1711,6 +1728,18 @@ public void f4() {
     display_stack.pop();
     updateInstructions();
     break;
+  case NAV_MACROS:
+    edit_macro = macros.get(row_select);
+    
+    if(col_select == 1) {
+      nextScreen(Screen.SET_MACRO_PROG);
+    } else if(col_select == 2) {
+      nextScreen(Screen.SET_MACRO_TYPE);
+    } else {
+      if(!macros.get(row_select).manual)
+        nextScreen(Screen.SET_MACRO_BINDING);
+    }
+    break;
   case NAV_PREGS_J:
   case NAV_PREGS_C:
     if (shift && !programRunning) {
@@ -1912,7 +1941,8 @@ public void fd() {
     executingInstruction = false;
     // Run single instruction when step is set
     execSingleInst = step;
-    programRunning = !executeProgram(activeProgram(), armModel, execSingleInst);
+    
+    programRunning = true;
   }
 }
 
@@ -1933,14 +1963,14 @@ public void ENTER() {
   switch(mode) {
     //Main menu
     case NAV_MAIN_MENU:
-      if(opt_select == 5) { // SETUP
-        nextScreen(Screen.NAV_SETUP);
+      if(opt_select == 0) { // Frames
+        nextScreen(Screen.SELECT_FRAME_MODE);
+      } else if(opt_select == 1) { // Macros
+        nextScreen(Screen.NAV_MACROS);
+      } else { // Manual Functions
+        nextScreen(Screen.NAV_MF_MACROS);
       }
-      break;
-    //Setup menu
-    case NAV_SETUP:
-      nextScreen(Screen.SELECT_FRAME_MODE);
-      break;
+      break; //<>//
     //Frame nav and edit
     case SELECT_FRAME_MODE:
       if(opt_select == 0) {
@@ -2710,40 +2740,58 @@ public void ENTER() {
     case SET_CALL_PROG:
       if(activeInstruction() instanceof IfStatement) {
         IfStatement ifStmt = (IfStatement)activeInstruction();
-        ((CallInstruction)ifStmt.instr).callProg = programs.get(row_select);
         ((CallInstruction)ifStmt.instr).progIdx = opt_select;
       }
       else if(activeInstruction() instanceof SelectStatement) {
         SelectStatement sStmt = (SelectStatement)activeInstruction();
         CallInstruction c = (CallInstruction)sStmt.instrs.get(editIdx);
-        c.callProg = programs.get(row_select);
         c.progIdx = row_select;
       }
       else {
         CallInstruction call = (CallInstruction)activeInstruction();
-        call.callProg = programs.get(row_select);
         call.progIdx = row_select;
       }
       
       lastScreen();
       break;
       
+    //Macro edit screens
+    case SET_MACRO_PROG:
+      if(edit_macro == null) {
+        edit_macro = new Macro(programs.get(row_select), row_select);
+        macros.add(edit_macro);
+        switchScreen(Screen.SET_MACRO_TYPE);
+      } else {
+        edit_macro.setProgram(programs.get(row_select), row_select);
+      }
+      break;
+    case SET_MACRO_TYPE:
+      if(opt_select == 0) {
+        edit_macro.setManual(false);
+        switchScreen(Screen.SET_MACRO_BINDING);
+      } else if(opt_select == 1) {
+        edit_macro.setManual(true);
+        edit_macro.clearNum();
+        lastScreen();
+      }
+      break;
+    case SET_MACRO_BINDING:
+      edit_macro.setNum(opt_select);
+      lastScreen();
+      break;
+    
+    case NAV_MF_MACROS:
+      int macro_idx = contents.get(active_index).itemIdx;
+      macros.get(macro_idx).execute();
+      break;
+    
     //Program instruction editing and navigation
     case SELECT_CUT_COPY:
     case SELECT_INSTR_DELETE:
       selectedLines[active_instr] = !selectedLines[active_instr];
       updateScreen();
       break;
-    case SELECT_PASTE_OPT:
-    
-      /*options.add("1 Logic");
-      options.add("2 Position");
-      options.add("3 Pos ID");
-      options.add("4 R Logic");
-      options.add("5 R Position");
-      options.add("6 R Pos ID");
-      options.add("7 RM Pos ID");*/
-    
+    case SELECT_PASTE_OPT:         
       if(opt_select == 0) {
         pasteInstructions(CLEAR_POSITION);
       } else if(opt_select == 1) {
@@ -2755,10 +2803,12 @@ public void ENTER() {
       } else if(opt_select == 4) {
         pasteInstructions(PASTE_REVERSE);
       } else if(opt_select == 5) {
-        pasteInstructions(PASTE_REVERSE | NEW_POSITION);
-      } else {
+        pasteInstructions(PASTE_REVERSE | NEW_POSITION );
+      } else if(opt_select == 6) {
         pasteInstructions(PASTE_REVERSE | REVERSE_MOTION);
-      } 
+      } else {
+        pasteInstructions(PASTE_REVERSE | NEW_POSITION | REVERSE_MOTION);
+      }
       
       display_stack.pop();
       lastScreen();
@@ -2940,6 +2990,36 @@ public void ENTER() {
   }
 }//End enter
 
+public void TOOL1() {
+  if(SU_macro_bindings[0] != null && shift) {
+    SU_macro_bindings[0].execute();
+  }
+}
+
+public void TOOL2() {
+  if(SU_macro_bindings[1] != null && shift) {
+    SU_macro_bindings[1].execute();
+  }
+}
+
+public void MVMU() {
+  if(SU_macro_bindings[2] != null && shift) {
+    SU_macro_bindings[2].execute();
+  }
+}
+
+public void SETUP() {
+  if(SU_macro_bindings[3] != null && shift) {
+    SU_macro_bindings[3].execute();
+  }
+}
+
+public void STATUS() {
+  if(SU_macro_bindings[4] != null && shift) {
+    SU_macro_bindings[4].execute();
+  }
+}
+
 public void ITEM() {
   if(mode == Screen.NAV_PROG_INSTR) {
     opt_select = 0;
@@ -3107,7 +3187,8 @@ public void JOINT5_POS() {
   updateRobotJogMotion(4, 1);
 }
 
-public void JOINT6_NEG() {updateRobotJogMotion(5, -1);
+public void JOINT6_NEG() {
+  updateRobotJogMotion(5, -1);
 }
 
 public void JOINT6_POS() {
@@ -3311,13 +3392,12 @@ public void loadScreen() {
   switch(mode){
     //Main menu
     case NAV_MAIN_MENU:
+      active_index = 0;
       opt_select = 0;
+      col_select = 0;
       break;
       
     //Frames
-    case NAV_SETUP:
-      opt_select = 0;
-      break;
     case ACTIVE_FRAMES:
       row_select = 0;
       col_select = 1;
@@ -3425,7 +3505,7 @@ public void loadScreen() {
     case SET_LBL_NUM:
       col_select = 1;
       opt_select = 0;
-      workingText = ""; //<>// //<>//
+      workingText = ""; //<>//
       break;
     case SET_MV_INSTR_TYPE:
       MotionInstruction mInst = activeMotionInst();
@@ -3440,7 +3520,7 @@ public void loadScreen() {
         case MTYPE_CIRCULAR:
           opt_select = 2;
           break;
-        default:
+        default: //<>//
           opt_select = -1;
       }
       
@@ -3493,6 +3573,18 @@ public void loadScreen() {
       int size = p.getInstructions().size() - 1;
       active_instr = max(0, min(active_instr, size));
       col_select = 0;
+      break;
+    
+    //Macros
+    case NAV_MACROS:
+      row_select = active_index;
+      break;
+    case SET_MACRO_PROG:
+      row_select = 0;
+      break;
+    case SET_MACRO_TYPE:
+    case SET_MACRO_BINDING:
+      opt_select = 0;
       break;
     
     //Registers
@@ -3596,7 +3688,7 @@ public void updateScreen() {
   String header = null;
   // display the name of the program that is being edited
   header = getHeader(mode);
-    
+  
   if(header != null) {
     // Display header field
     cp5.addTextarea("header")
@@ -3659,7 +3751,7 @@ public void updateScreen() {
           txt = UI_LIGHT;
           bg = UI_DARK;          
         } 
-        else if(selectMode && !selectedLines[contents.get(i).itemIdx]){
+        else if(selectMode && !selectedLines[contents.get(i).itemIdx]) {
           //highlight selected line
           txt = UI_LIGHT;
           bg = UI_DARK;
@@ -3895,6 +3987,17 @@ public String getHeader(Screen mode){
     case DIRECT_ENTRY_USER:
       header = "DIRECT ENTRY METHOD";
       break;
+    case NAV_MACROS:
+    case SET_MACRO_TYPE:
+    case SET_MACRO_BINDING:
+      header = "VIEW/ EDIT MACROS";
+      break;
+    case NAV_MF_MACROS:
+      header = "EXECUTE MANUAL FUNCTION";
+      break;
+    case SET_MACRO_PROG:
+      header = "SELECT MACRO PROGRAM";
+      break;
     case NAV_DATA:
       header = "VIEW REGISTERS";
       break;
@@ -3950,6 +4053,7 @@ public ArrayList<DisplayLine> getContents(Screen mode){
     //Program list navigation/ edit
     case NAV_PROGRAMS:
     case SET_CALL_PROG:
+    case SET_MACRO_PROG:
       contents = loadPrograms();
       break;
     
@@ -4042,6 +4146,17 @@ public ArrayList<DisplayLine> getContents(Screen mode){
       contents = this.contents;
       break;
       
+    //View/ edit macros
+    case NAV_MACROS:
+    case SET_MACRO_TYPE:
+    case SET_MACRO_BINDING:
+      contents = loadMacros();
+      break;
+      
+    case NAV_MF_MACROS:
+      contents = loadManualFunct();
+      break;
+      
     //View/ edit registers
     case NAV_DREGS:
     case NAV_PREGS_C:
@@ -4070,26 +4185,9 @@ public ArrayList<String> getOptions(Screen mode){
   switch(mode) {
     //Main menu and submenus
     case NAV_MAIN_MENU:
-      options.add("1 UTILITIES (NA)"   );
-      options.add("2 TEST CYCLE (NA)"  );
-      options.add("3 MANUAL FCTNS (NA)");
-      options.add("4 ALARM (NA)"       );
-      options.add("5 I/O (NA)"         );
-      options.add("6 SETUP"            );  
-      options.add("7 FILE (NA)"        );
-      options.add("8 USER (NA)"        );
-      break;
-    case NAV_SETUP:
-      options.add("1 Prog Select (NA)" );
-      options.add("2 General (NA)"     );
-      options.add("3 Call Guard (NA)"  );
-      options.add("4 Frames"           );
-      options.add("5 Macro (NA)"       );
-      options.add("6 Ref Position (NA)");
-      options.add("7 Port Init (NA)"   );
-      options.add("8 Ovrd Select (NA)" );
-      options.add("9 User Alarm (NA)"  );
-      options.add("0 --NEXT--"         );
+      options.add("1 Frames"           );
+      options.add("2 Macros"           );
+      options.add("3 Manual Fncts"     );
       break;
       
     case CONFIRM_PROG_DELETE:
@@ -4105,8 +4203,7 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("5 Find/ Replace"    );
       options.add("6 Renumber"         );
       options.add("7 Comment"          );
-      options.add("8 Undo (NA)"        );
-      options.add("9 Remark"           );
+      options.add("8 Remark"           );
       break;
     case CONFIRM_INSERT:
       options.add("Enter number of lines to insert:");
@@ -4222,13 +4319,28 @@ public ArrayList<String> getOptions(Screen mode){
     case VIEW_INST_REG:
       options = loadInstructionReg();
       break;
-    
     case TEACH_3PT_TOOL:
     case TEACH_3PT_USER:
     case TEACH_4PT:
     case TEACH_6PT:
       options = loadPointList();
       break;
+    
+    //Macro edit menus
+    case SET_MACRO_TYPE:
+      options.add("1. Shift + User Key");
+      options.add("2. Manual Function");
+      break;
+    case SET_MACRO_BINDING:
+      options.add("1. Tool 1");
+      options.add("2. Tool 2");
+      options.add("3. MVMU");
+      options.add("4. Setup");
+      options.add("5. Status");
+      options.add("6. POSN");
+      options.add("7. I/O");
+      break;
+    
     //Data navigation and edit menus
     case NAV_DATA:
       options.add("1. Data Registers");
@@ -4432,6 +4544,13 @@ public String[] getFunctionLabels(Screen mode){
       funct[1] = "";
       funct[2] = "";
       funct[3] = "";
+      funct[4] = "";
+      break;
+    case NAV_MACROS:
+      funct[0] = "[New]";
+      funct[1] = "";
+      funct[2] = "";
+      funct[3] = "[Edit]";
       funct[4] = "";
       break;
     case NAV_PREGS_C:
@@ -5099,6 +5218,23 @@ public void pasteInstructions(int options) {
         p.addPosition(p.getPosition(instrPos).clone());
         m.setPositionNum(nextPos);
       }
+      
+      if((options & REVERSE_MOTION) == REVERSE_MOTION) {
+        MotionInstruction next = null;
+        
+        for(int j = i + 1; j < clipBoard.size(); j += 1) {
+          if(clipBoard.get(j) instanceof MotionInstruction) {
+            next = (MotionInstruction)clipBoard.get(j).clone();
+            break;
+          }
+        }
+        
+        if(next != null) {
+          println("asdf");
+          m.setMotionType(next.getMotionType());
+          m.setSpeed(next.getSpeed());
+        }
+      }
     }
     
     pasteList.add(instr);
@@ -5340,6 +5476,32 @@ public ArrayList<DisplayLine> loadFrames(CoordFrame coordFrame) {
   }
   
   return frameDisplay;
+}
+
+public ArrayList<DisplayLine> loadMacros() {
+  ArrayList<DisplayLine> macroDisplay = new ArrayList<DisplayLine>();
+  
+  for(int i = 0; i < macros.size(); i += 1) {
+    String[] strArray = macros.get(i).toStringArray();
+    macroDisplay.add(newLine(i, ""+(i+1), strArray[0], strArray[1], strArray[2]));  
+  }
+  
+  return macroDisplay;
+}
+
+public ArrayList<DisplayLine> loadManualFunct() {
+  ArrayList<DisplayLine> functionDisplay = new ArrayList<DisplayLine>();
+  int macroNum = 0;
+  
+  for(int i = 0; i < macros.size(); i += 1) {
+    if(macros.get(i).isManual()) {
+      macroNum += 1;
+      String manFunct = macros.get(i).toString();
+      functionDisplay.add(newLine(i, macroNum + " " + manFunct));
+    }
+  }
+  
+  return functionDisplay;
 }
 
 /**

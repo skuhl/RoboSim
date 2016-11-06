@@ -183,6 +183,7 @@ public class RegisterExpression {
     if (param instanceof SubExpression) {
       // Add a copy of the given SubExpression
       parameters.add( ((SubExpression)param).clone() );
+      
     } else if (param instanceof Operand || param instanceof Operator) {
       parameters.add(param);
     }
@@ -196,6 +197,7 @@ public class RegisterExpression {
     if (param instanceof SubExpression) {
       // Add a copy of the given SubExpression
       parameters.add(idx, ((SubExpression)param).clone() );
+      
     } else if (param instanceof Operand || param instanceof Operator) {
       parameters.add(idx, param);
     }
@@ -206,7 +208,17 @@ public class RegisterExpression {
    * new pararmeter, in the expression.
    */
   public Object setParameter(int idx, Object param) {
-    return parameters.set(idx, param);
+    Object oldVal = parameters.get(idx);
+    
+    if (param instanceof SubExpression) {
+      // Add a copy of the given SubExpression
+      parameters.set(idx, ((SubExpression)param).clone() );
+      
+    } else if (param instanceof Operand || param instanceof Operator) {
+      parameters.set(idx, param);
+    }
+    
+    return oldVal;
   }
   
   /**
