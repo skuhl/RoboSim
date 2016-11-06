@@ -487,7 +487,7 @@ void gui() {
 
   int MOVEMENU_px = TOOL2_px;
   int MOVEMENU_py = TOOL2_py + button_offsetY;
-  cp5.addButton("MOVEMENU")
+  cp5.addButton("MVMU")
   .setPosition(MOVEMENU_px, MOVEMENU_py)
   .setSize(LARGE_BUTTON, SMALL_BUTTON)
   .setCaptionLabel("MVMU")
@@ -1032,11 +1032,15 @@ public void LINE() {
   updateScreen();
 }
 
+public void POSN() {
+  if(SU_macro_bindings[5] != null && shift) {
+    SU_macro_bindings[5].execute();
+  }
+}
+
 public void IO() {
-  if (!programRunning) {
-    /* Do not allow the Robot's End Effector state to be changed
-     * when a program is executing */
-    armModel.toggleEEState();
+  if(SU_macro_bindings[6] != null && shift) {
+    SU_macro_bindings[6].execute();
   }
 }
 
@@ -1118,7 +1122,6 @@ public void up() {
     case TEACH_4PT:
     case TEACH_6PT:
     case NAV_DATA:
-    case NAV_SETUP:
     case SWAP_PT_TYPE:
     case SET_MV_INSTR_TYPE:
     case SET_MV_INSTR_REG_TYPE:
@@ -1227,7 +1230,6 @@ public void dn() {
     case TEACH_4PT:
     case TEACH_6PT:
     case NAV_DATA:
-    case NAV_SETUP:
     case SWAP_PT_TYPE:
     case SET_MV_INSTR_TYPE:
     case SET_MV_INSTR_REG_TYPE:
@@ -1277,9 +1279,9 @@ public void lt() {
     default:
       if (mode.type == ScreenType.TYPE_TEXT_ENTRY) {
         col_select = max(0, col_select - 1);
-        // Reset function key states //<>// //<>// //<>//
+        // Reset function key states //<>//
         for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
-      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) { //<>// //<>// //<>//
+      } else if(mode.type == ScreenType.TYPE_EXPR_EDIT) {  //<>//
         col_select -= (col_select - 4 >= options.size()) ? 4 : 0;
       }
   }
@@ -1726,6 +1728,18 @@ public void f4() {
     display_stack.pop();
     updateInstructions();
     break;
+  case NAV_MACROS:
+    edit_macro = macros.get(row_select);
+    
+    if(col_select == 1) {
+      nextScreen(Screen.SET_MACRO_PROG);
+    } else if(col_select == 2) {
+      nextScreen(Screen.SET_MACRO_TYPE);
+    } else {
+      if(!macros.get(row_select).manual)
+        nextScreen(Screen.SET_MACRO_BINDING);
+    }
+    break;
   case NAV_PREGS_J:
   case NAV_PREGS_C:
     if (shift && !programRunning) {
@@ -1949,18 +1963,14 @@ public void ENTER() {
   switch(mode) {
     //Main menu
     case NAV_MAIN_MENU:
-      if(opt_select == 5) { // SETUP
-        nextScreen(Screen.NAV_SETUP);
-      }
-      break;
-    //Setup menu
-    case NAV_SETUP:
-      if(opt_select == 3) {
+      if(opt_select == 0) { // Frames
         nextScreen(Screen.SELECT_FRAME_MODE);
-      } else {
-        nextScreen(Screen.NAV_MACROS); //<>//
+      } else if(opt_select == 1) { // Macros
+        nextScreen(Screen.NAV_MACROS);
+      } else { // Manual Functions
+        nextScreen(Screen.NAV_MF_MACROS);
       }
-      break;
+      break; //<>//
     //Frame nav and edit
     case SELECT_FRAME_MODE:
       if(opt_select == 0) {
@@ -2747,25 +2757,32 @@ public void ENTER() {
       
     //Macro edit screens
     case SET_MACRO_PROG:
-      edit_macro = new Macro(programs.get(row_select));
-      macros.add(edit_macro);
-      switchScreen(Screen.SET_MACRO_TYPE);
+      if(edit_macro == null) {
+        edit_macro = new Macro(programs.get(row_select), row_select);
+        macros.add(edit_macro);
+        switchScreen(Screen.SET_MACRO_TYPE);
+      } else {
+        edit_macro.setProgram(programs.get(row_select), row_select);
+      }
       break;
     case SET_MACRO_TYPE:
       if(opt_select == 0) {
-        edit_macro.manual = false;
+        edit_macro.setManual(false);
         switchScreen(Screen.SET_MACRO_BINDING);
       } else if(opt_select == 1) {
-        edit_macro.manual = true;
+        edit_macro.setManual(true);
+        edit_macro.clearNum();
         lastScreen();
       }
       break;
     case SET_MACRO_BINDING:
-      if(SU_macro_bindings[opt_select] == null) {
-        SU_macro_bindings[opt_select] = edit_macro;
-        edit_macro.num = opt_select;
-      }
+      edit_macro.setNum(opt_select);
       lastScreen();
+      break;
+    
+    case NAV_MF_MACROS:
+      int macro_idx = contents.get(active_index).itemIdx;
+      macros.get(macro_idx).execute();
       break;
     
     //Program instruction editing and navigation
@@ -2973,6 +2990,36 @@ public void ENTER() {
   }
 }//End enter
 
+public void TOOL1() {
+  if(SU_macro_bindings[0] != null && shift) {
+    SU_macro_bindings[0].execute();
+  }
+}
+
+public void TOOL2() {
+  if(SU_macro_bindings[1] != null && shift) {
+    SU_macro_bindings[1].execute();
+  }
+}
+
+public void MVMU() {
+  if(SU_macro_bindings[2] != null && shift) {
+    SU_macro_bindings[2].execute();
+  }
+}
+
+public void SETUP() {
+  if(SU_macro_bindings[3] != null && shift) {
+    SU_macro_bindings[3].execute();
+  }
+}
+
+public void STATUS() {
+  if(SU_macro_bindings[4] != null && shift) {
+    SU_macro_bindings[4].execute();
+  }
+}
+
 public void ITEM() {
   if(mode == Screen.NAV_PROG_INSTR) {
     opt_select = 0;
@@ -3140,7 +3187,8 @@ public void JOINT5_POS() {
   updateRobotJogMotion(4, 1);
 }
 
-public void JOINT6_NEG() {updateRobotJogMotion(5, -1);
+public void JOINT6_NEG() {
+  updateRobotJogMotion(5, -1);
 }
 
 public void JOINT6_POS() {
@@ -3344,13 +3392,12 @@ public void loadScreen() {
   switch(mode){
     //Main menu
     case NAV_MAIN_MENU:
+      active_index = 0;
       opt_select = 0;
+      col_select = 0;
       break;
       
     //Frames
-    case NAV_SETUP:
-      opt_select = 0;
-      break;
     case ACTIVE_FRAMES:
       row_select = 0;
       col_select = 1;
@@ -3458,7 +3505,7 @@ public void loadScreen() {
     case SET_LBL_NUM:
       col_select = 1;
       opt_select = 0;
-      workingText = ""; //<>// //<>//
+      workingText = ""; //<>//
       break;
     case SET_MV_INSTR_TYPE:
       MotionInstruction mInst = activeMotionInst();
@@ -3530,9 +3577,14 @@ public void loadScreen() {
     
     //Macros
     case NAV_MACROS:
+      row_select = active_index;
+      break;
+    case SET_MACRO_PROG:
       row_select = 0;
-      col_select = 0;
-      active_index = 0;
+      break;
+    case SET_MACRO_TYPE:
+    case SET_MACRO_BINDING:
+      opt_select = 0;
       break;
     
     //Registers
@@ -3936,7 +3988,12 @@ public String getHeader(Screen mode){
       header = "DIRECT ENTRY METHOD";
       break;
     case NAV_MACROS:
-      header = "VIEW/ SET MACROS";
+    case SET_MACRO_TYPE:
+    case SET_MACRO_BINDING:
+      header = "VIEW/ EDIT MACROS";
+      break;
+    case NAV_MF_MACROS:
+      header = "EXECUTE MANUAL FUNCTION";
       break;
     case SET_MACRO_PROG:
       header = "SELECT MACRO PROGRAM";
@@ -4096,6 +4153,10 @@ public ArrayList<DisplayLine> getContents(Screen mode){
       contents = loadMacros();
       break;
       
+    case NAV_MF_MACROS:
+      contents = loadManualFunct();
+      break;
+      
     //View/ edit registers
     case NAV_DREGS:
     case NAV_PREGS_C:
@@ -4124,25 +4185,9 @@ public ArrayList<String> getOptions(Screen mode){
   switch(mode) {
     //Main menu and submenus
     case NAV_MAIN_MENU:
-      options.add("1 UTILITIES (NA)"   );
-      options.add("2 TEST CYCLE (NA)"  );
-      options.add("3 MANUAL FCTNS (NA)");
-      options.add("4 ALARM (NA)"       );
-      options.add("5 I/O (NA)"         );
-      options.add("6 SETUP"            );  
-      options.add("7 FILE (NA)"        );
-      options.add("8 USER (NA)"        );
-      break;
-    case NAV_SETUP:
-      options.add("1 Prog Select (NA)" );
-      options.add("2 General (NA)"     );
-      options.add("3 Call Guard (NA)"  );
-      options.add("4 Frames"           );
-      options.add("5 Macro"            );
-      options.add("6 Ref Position (NA)");
-      options.add("7 Port Init (NA)"   );
-      options.add("8 Ovrd Select (NA)" );
-      options.add("9 User Alarm (NA)"  );
+      options.add("1 Frames"           );
+      options.add("2 Macros"           );
+      options.add("3 Manual Fncts"     );
       break;
       
     case CONFIRM_PROG_DELETE:
@@ -4158,8 +4203,7 @@ public ArrayList<String> getOptions(Screen mode){
       options.add("5 Find/ Replace"    );
       options.add("6 Renumber"         );
       options.add("7 Comment"          );
-      options.add("8 Undo (NA)"        );
-      options.add("9 Remark"           );
+      options.add("8 Remark"           );
       break;
     case CONFIRM_INSERT:
       options.add("Enter number of lines to insert:");
@@ -5443,6 +5487,21 @@ public ArrayList<DisplayLine> loadMacros() {
   }
   
   return macroDisplay;
+}
+
+public ArrayList<DisplayLine> loadManualFunct() {
+  ArrayList<DisplayLine> functionDisplay = new ArrayList<DisplayLine>();
+  int macroNum = 0;
+  
+  for(int i = 0; i < macros.size(); i += 1) {
+    if(macros.get(i).isManual()) {
+      macroNum += 1;
+      String manFunct = macros.get(i).toString();
+      functionDisplay.add(newLine(i, macroNum + " " + manFunct));
+    }
+  }
+  
+  return functionDisplay;
 }
 
 /**

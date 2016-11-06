@@ -1270,10 +1270,12 @@ public class RegisterStatement extends Instruction {
 public class Macro {
   private Program prog;
   private boolean manual;
+  private int progIdx;
   private int num;
   
-  public Macro(Program p) {
+  public Macro(Program p, int pidx) {
     prog = p;
+    progIdx = pidx;
     manual = false;
     num = -1;
   }
@@ -1283,19 +1285,63 @@ public class Macro {
     armModel.halt();
     // Safeguard against editing a program while it is running
     col_select = 0;
+    active_prog = progIdx;
+    active_instr = 0;
     
     executingInstruction = false;
     // Run single instruction when step is set
     execSingleInst = step;
-    programRunning = !executeProgram(prog, armModel, execSingleInst);
+    
+    programRunning = true;
+  }
+  
+  public void setProgram(Program p, int idx) { prog = p; progIdx = idx; }
+  public void setManual(boolean b) { manual = b; }
+  public boolean isManual() { return manual; }
+  
+  public Macro setNum(int n) {
+    if(n <= 6 && n >= 0 && SU_macro_bindings[n] == null) {
+      clearNum();
+      SU_macro_bindings[n] = this;
+      num = n;
+      
+      return this;
+    }
+    
+    return null;
+  }
+  
+  public void clearNum() {
+    if(num != -1) {
+      SU_macro_bindings[num] = null;
+      num = -1;
+    }
+  }
+  
+  public String toString() {
+    String[] str = toStringArray();
+    return str[0] + " " + str[1] + " " + str[2];
   }
   
   public String[] toStringArray() {
     String[] ret = new String[3];
+    int name_pad = max(16 - prog.getName().length(), 0);
     
-    ret[0] = prog.getName();
+    ret[0] = String.format("[%-"+name_pad+"s]", prog.getName());
     ret[1] = manual ? "MF" : "SU";
-    ret[2] = (num == -1) ? "..." : "" + num;
+    if(manual) ret[2] = "_";
+    else {
+      switch(num) {
+        case 0: ret[2] = "TOOL1";  break;
+        case 1: ret[2] = "TOOL2";  break;
+        case 2: ret[2] = "MVMU";   break;
+        case 3: ret[2] = "SETUP";  break;
+        case 4: ret[2] = "STATUS"; break;
+        case 5: ret[2] = "PSON";   break;
+        case 6: ret[2] = "IO";     break;
+        default: ret[2] = "...";   break;
+      }
+    }
     
     return ret;
   }
