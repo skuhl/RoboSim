@@ -397,6 +397,18 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeInt(m_inst.userFrame);
     out.writeInt(m_inst.toolFrame);
     
+    MotionInstruction subInst = m_inst.getSecondaryPoint();
+    
+    if (subInst != null) {
+      // Save secondary point for circular instructions
+      out.writeByte(1);
+      saveInstruction(subInst, out);
+      
+    } else {
+      // No secondary point
+      out.writeByte(0);
+    }
+    
   } else if(inst instanceof FrameInstruction) {
     FrameInstruction f_inst = (FrameInstruction)inst;
     // Flag byte denoting this instruction as a FrameInstruction
@@ -429,7 +441,14 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeBoolean(j_inst.isCommented());
     out.writeInt(j_inst.tgtLblNum);
     
-  } /* Add other instructions here! */
+  } else if (inst instanceof CallInstruction) {
+    CallInstruction c_inst = (CallInstruction)inst;
+    
+    out.writeByte(7);
+    out.writeBoolean(c_inst.isCommented());
+    out.writeInt(c_inst.getProgIdx());
+    
+  }/* Add other instructions here! */
     else if (inst instanceof Instruction) {
     /// A blank instruction
     out.writeByte(1);
@@ -474,6 +493,13 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     inst = new MotionInstruction(mType, reg, isGlobal, spd, term, uFrame, tFrame);
     inst.setIsCommented(isCommented);
     
+    byte flag = in.readByte();
+    
+    if (flag == 1) {
+      // Load the second point associated with a circular type motion instruction
+     ((MotionInstruction)inst).setSecondaryPoint((MotionInstruction)loadInstruction(in));
+    }
+    
   } else if(instType == 3) {
     // Read data for a FrameInstruction object
     boolean isCommented = in.readBoolean();
@@ -501,6 +527,13 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     int tgtLabelNum = in.readInt();
     
     inst = new JumpInstruction(tgtLabelNum);
+    inst.setIsCommented(isCommented);
+    
+  } else if (instType == 7) {
+    boolean isCommented = in.readBoolean();
+    int pdx = in.readInt();
+    
+    inst = new CallInstruction(pdx);
     inst.setIsCommented(isCommented);
     
   } /* Add other instructions here! */

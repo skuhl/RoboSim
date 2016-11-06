@@ -424,8 +424,9 @@ public Instruction activeInstruction() {
   Program activeProg = activeProgram();
   
   if (activeProg == null || active_instr < 0 || active_instr >= activeProg.getInstructions().size()) {
-    //System.out.printf("Not a valid instruction index: %d!\n", active_instr);
+    //System.out.printf("Not a valid instruction index: %d!\n", active_instr);   
     return null;
+    
   }
   
   return activeProg.getInstruction(active_instr);
@@ -903,20 +904,23 @@ public class JumpInstruction extends Instruction {
 }
 
 public class CallInstruction extends Instruction {
-  Program callProg;
   int progIdx;
   
   public CallInstruction() {
-    callProg = null;
     progIdx = -1;
   }
   
-  public CallInstruction(Program p, int i) {
-    callProg = p;
-    progIdx = i;
+  public CallInstruction(int pdx) {
+    progIdx = pdx;
   }
   
   public int execute() {
+    
+    if (progIdx < 0 && progIdx >= programs.size()) {
+      // Invalid program id
+      return -1;
+    }
+    
     int[] p = new int[2];
     p[0] = active_prog;
     p[1] = active_instr + 1;
@@ -929,25 +933,41 @@ public class CallInstruction extends Instruction {
     start_render = 0;
     updateScreen();
     
-    programRunning = !executeProgram(callProg, armModel, false);
-    
     return 0;
   }
   
+  // Getters and setters for a call instruction's program id field
+  
+  public int getProgIdx() { return progIdx; }
+  public void setProgIdx(int pdx) { progIdx = pdx; }
+  
   public Instruction clone() {
-    return new CallInstruction(callProg, progIdx);
+    return new CallInstruction(progIdx);
   }
   
   public String toString() {
-    String progName = (callProg == null) ? "..." : callProg.name;
-    return "Call " + progName;
+    return "Call " + progName();
   }
   
   public String[] toStringArray() {
     String[] ret = new String[2];
     ret[0] = "Call";
-    ret[1] = (callProg == null) ? "..." : callProg.name;
+    ret[1] = progName();
+    
     return ret;
+  }
+  
+  /**
+   * Returns the name of the program associated with this call
+   * statement, or "..." if the call statement's program index
+   * is invalid.
+   */
+  private String progName() {
+    if (progIdx >= 0 && progIdx < programs.size()) {
+      return programs.get(progIdx).getName();
+    }
+    
+    return "...";
   }
 }
 
