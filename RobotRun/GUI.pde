@@ -2758,11 +2758,11 @@ public void ENTER() {
     //Macro edit screens
     case SET_MACRO_PROG:
       if(edit_macro == null) {
-        edit_macro = new Macro(programs.get(row_select));
+        edit_macro = new Macro(programs.get(row_select), row_select);
         macros.add(edit_macro);
         switchScreen(Screen.SET_MACRO_TYPE);
       } else {
-        edit_macro.setProgram(programs.get(row_select));
+        edit_macro.setProgram(programs.get(row_select), row_select);
       }
       break;
     case SET_MACRO_TYPE:

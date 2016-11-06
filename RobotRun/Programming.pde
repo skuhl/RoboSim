@@ -1273,18 +1273,29 @@ public class Macro {
   private int progIdx;
   private int num;
   
-  public Macro(Program p) {
+  public Macro(Program p, int pidx) {
     prog = p;
+    progIdx = pidx;
     manual = false;
     num = -1;
   }
   
   public void execute() {
-    CallInstruction ins = new CallInstruction(prog, progIdx);
-    ins.execute();
+    // Stop any prior Robot movement
+    armModel.halt();
+    // Safeguard against editing a program while it is running
+    col_select = 0;
+    active_prog = progIdx;
+    active_instr = 0;
+    
+    executingInstruction = false;
+    // Run single instruction when step is set
+    execSingleInst = step;
+    
+    programRunning = true;
   }
   
-  public void setProgram(Program p) { prog = p; }
+  public void setProgram(Program p, int idx) { prog = p; progIdx = idx; }
   public void setManual(boolean b) { manual = b; }
   public boolean isManual() { return manual; }
   
