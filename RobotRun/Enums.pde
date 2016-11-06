@@ -143,7 +143,6 @@ public static enum Screen implements DisplayMode {
   FRAME_METHOD_USER(ScreenType.TYPE_OPT_MENU),
   NAV_INSTR_MENU(ScreenType.TYPE_OPT_MENU),
   NAV_MAIN_MENU(ScreenType.TYPE_OPT_MENU),
-  NAV_SETUP(ScreenType.TYPE_OPT_MENU),
   SELECT_COND_STMT(ScreenType.TYPE_OPT_MENU),
   SELECT_FRAME_INSTR_TYPE(ScreenType.TYPE_OPT_MENU),
   SELECT_FRAME_MODE(ScreenType.TYPE_OPT_MENU),
