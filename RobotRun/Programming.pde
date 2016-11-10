@@ -1231,6 +1231,13 @@ public class RegisterStatement extends Instruction {
   }
   
   /**
+   * Getter method for resultant register
+   */
+  public Register getReg() {
+    return reg;
+  }
+  
+  /**
    * Convert the entire statement to a set of Strings, where each
    * operator and operand is a separate String Object.
    */

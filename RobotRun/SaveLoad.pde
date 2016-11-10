@@ -21,21 +21,6 @@ public byte loadState() {
   File f = new File(sketchPath("tmp/"));
   if(!f.exists()) { f.mkdirs(); }
   
-  /* Load all saved Programs */
-  
-  File progFile = new File( sketchPath("tmp/programs.bin") );
-  
-  if(progFile.exists()) {
-    int ret = loadProgramBytes(progFile);
-    
-    if(ret == 0) {
-      println("Successfully loaded programs!");
-      fileFlags[0] = 0;
-    } else {
-      println("Failed to load programs ...");
-    }
-  }
-  
   /* Load and Initialize the Tool and User Frames */
   
   File frameFile = new File( sketchPath("tmp/frames.bin") );
@@ -119,6 +104,21 @@ public byte loadState() {
     IO_REG[idx] = new IORegister(idx, OFF);
   }
   
+  /* Load all saved Programs */
+  
+  File progFile = new File( sketchPath("tmp/programs.bin") );
+  
+  if(progFile.exists()) {
+    int ret = loadProgramBytes(progFile);
+    
+    if(ret == 0) {
+      println("Successfully loaded programs!");
+      fileFlags[0] = 0;
+    } else {
+      println("Failed to load programs ...");
+    }
+  }
+  
   byte ret = 0;
   
   for (int bdx = 0; bdx < fileFlags.length; bdx += 1) {
@@ -138,7 +138,7 @@ public byte loadState() {
  *              1 if dest could not be created or found,
  *              2 if an error occurs when saving the Programs
  */
-public int saveProgramBytes(File dest) {
+private int saveProgramBytes(File dest) {
   
   try {
     // Create dest if it does not already exist
@@ -193,7 +193,7 @@ public int saveProgramBytes(File dest) {
  *             3 if the end of the file is reached before all the expected programs are
  *               read
  */
-public int loadProgramBytes(File src) {
+private int loadProgramBytes(File src) {
   
   try {
     FileInputStream in = new FileInputStream(src);
@@ -448,6 +448,14 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     out.writeBoolean(c_inst.isCommented());
     out.writeInt(c_inst.getProgIdx());
     
+  } else if (inst instanceof RegisterStatement) {
+    RegisterStatement rs = (RegisterStatement)inst;
+    Register r = rs.getReg();
+    
+    out.writeByte(8);
+    
+    // TODO save the register statement
+  
   }/* Add other instructions here! */
     else if (inst instanceof Instruction) {
     /// A blank instruction
@@ -536,7 +544,9 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     inst = new CallInstruction(pdx);
     inst.setIsCommented(isCommented);
     
-  } /* Add other instructions here! */
+  } else if (instType == 8) {
+  
+  }/* Add other instructions here! */
     else if (instType == 1) {
     inst = new Instruction();
     boolean isCommented = in.readBoolean();
@@ -583,7 +593,7 @@ private int loadint(int val) {
  *              1 if dest could not be created or found
  *              2 if an error occurs with writing to the file
  */
-public int saveFrameBytes(File dest) {
+private int saveFrameBytes(File dest) {
   
   try {
     // Create dest if it does not already exist
@@ -644,7 +654,7 @@ public int saveFrameBytes(File dest) {
  *             3 if the end of the file is reached before reading
  *             all the data for the frames
  */
-public int loadFrameBytes(File src) {
+private int loadFrameBytes(File src) {
   int idx = -1;
   
   try {
@@ -831,7 +841,7 @@ private Frame loadFrame(DataInputStream in) throws IOException {
  *              1 if dest could not be found pr created
  *              2 if an error occrued while writing to dest
  */
-public int saveRegisterBytes(File dest) {
+private int saveRegisterBytes(File dest) {
   
   try {
     
@@ -936,7 +946,7 @@ public int saveRegisterBytes(File dest) {
  *             3 if the end of file is reached in source, before
  *               all expected entries were read
  */
-public int loadRegisterBytes(File src) {
+private int loadRegisterBytes(File src) {
   
   try {
     FileInputStream in = new FileInputStream(src);
@@ -1010,7 +1020,7 @@ public int loadRegisterBytes(File src) {
  *              2  if some other error occurs with writing
  *                 to dest
  */
-public int saveScenarioBytes(File dest) {
+private int saveScenarioBytes(File dest) {
   
   try {
      
@@ -1087,7 +1097,7 @@ public int saveScenarioBytes(File dest) {
  *             4  if an error occurs with loading a .stl file
  *                for the shape of a world object
  */
-public int loadScenarioBytes(File src) {
+private int loadScenarioBytes(File src) {
   
   try {
     FileInputStream in = new FileInputStream(src);   //<>// //<>// //<>// //<>// //<>// //<>// //<>//
@@ -1138,6 +1148,194 @@ public int loadScenarioBytes(File src) {
   }
 }
 
+private void saveExpression(Expression e, DataOutputStream out) throws IOException {
+  
+  if (e == null) {
+    // Indicate the object saved is null
+    out.writeByte(0);
+    
+  } else {
+    out.writeByte(1);
+    
+    int exprLen = e.getLength();
+    // Save the length of the expression
+    out.writeInt(exprLen);
+    
+    // Save each expression element
+    for (int idx = 0; idx < exprLen; ++idx) {
+      saveExpressionElement(e.get(idx), out);
+    }
+  }
+}
+
+private Expression loadExpression(DataInputStream in) throws IOException, ClassCastException {
+  byte nullFlag = in.readByte();
+  
+  if (nullFlag == 1) {
+    Expression e = new Expression();
+    // Read in expression length
+    int len = in.readInt();
+    
+    for (int idx = 0; idx < len; ++idx) {
+      // Read in an expression element
+      ExpressionElement ee = loadExpressionElement(in);
+      
+      e.insertElement(idx);
+      // Add it to the expression
+      if (ee instanceof Operator) {
+        e.setOperator(idx, (Operator)ee);
+        
+      } else {
+        e.setOperand(idx, (ExprOperand)ee);
+      }
+    }
+    
+    return e;
+  }
+  
+  return null;
+}
+
+private void saveExpressionElement(ExpressionElement ee, DataOutputStream out) throws IOException {
+  
+  if (ee == null) {
+    // Indicate the object saved is null
+    out.writeByte(0);
+    
+  } else {
+    
+    if (ee instanceof Operator) {
+      // Operator
+      Operator op = (Operator)ee;
+      
+      out.writeByte(1);
+      out.writeInt( op.getOpID() );
+      
+    } else if (ee instanceof AtomicExpression) {
+      // Subexpression
+      AtomicExpression ae = (AtomicExpression)ee;
+      
+      out.writeByte(2);
+      saveExpressionElement(ae.arg1, out);
+      saveExpressionElement(ae.arg2, out);
+      saveExpressionElement(ae.op, out);
+      
+    } if (ee instanceof ExprOperand) {
+      ExprOperand eo = (ExprOperand)ee;
+      
+      out.writeByte(3);
+      // Indicate that the object is non-null
+      out.writeInt(eo.type);
+      
+      if (eo.type == ExpressionElement.FLOAT) {
+        // Constant float
+        out.writeFloat( eo.getDataVal() );
+        
+      } else if (eo.type == ExpressionElement.BOOL) {
+        // Constant boolean
+        out.writeBoolean( eo.getBoolVal() );
+        
+      } else if (eo.type == ExpressionElement.DREG ||
+                 eo.type == ExpressionElement.IOREG ||
+                 eo.type == Expression.PREG ||
+                 eo.type == ExpressionElement.PREG_IDX) {
+        
+        // Data, Position, or IO register
+        out.writeInt( eo.getRdx() );
+        
+        if (eo.type == ExpressionElement.PREG_IDX) {
+          // Specific portion of a point
+          out.writeInt( eo.getPosIdx() );
+        }
+        
+      } else if (eo.type == ExpressionElement.POSTN) {
+        // Robot position
+        savePoint(eo.getPointVal(), out);
+        
+      } // Otherwise it is unitialized
+    } 
+  }
+}
+
+private ExpressionElement loadExpressionElement(DataInputStream in) throws
+          IOException, ClassCastException {
+  
+  byte nullFlag = in.readByte();
+  
+  if (nullFlag == 1) {
+    // Read in an operator
+    int opFlag = in.readInt();
+    return Operator.getOpFromID(opFlag);
+    
+  } else if (nullFlag == 2) {
+    // Read in an atomic expression operand
+    ExprOperand a0 = (ExprOperand)loadExpressionElement(in);
+    ExprOperand a1 = (ExprOperand)loadExpressionElement(in);
+    Operator op = (Operator)loadExpressionElement(in);
+    
+    return new AtomicExpression(a0, a1, op);
+    
+  } else if (nullFlag == 3) {
+    // Read in a normal operand
+    ExprOperand eo;
+    int opType = in.readInt();
+    
+    if (opType == ExpressionElement.FLOAT) {
+      // Constant float
+      Float val = in.readFloat();
+      eo = new ExprOperand(val);
+      
+    } else if (opType == ExpressionElement.BOOL) {
+      // Constant boolean
+      Boolean val = in.readBoolean();
+      eo = new ExprOperand(val);
+      
+    } else if (opType == ExpressionElement.DREG ||
+               opType == ExpressionElement.IOREG ||
+               opType == Expression.PREG ||
+               opType == ExpressionElement.PREG_IDX) {
+      // Note: the register value of the operand is set to null!
+      
+      // Data, Position, or IO register
+      Integer rdx = in.readInt();
+      
+      if (opType == ExpressionElement.DREG) {
+        // Data register
+        DataRegister dreg = null;
+        return new ExprOperand(dreg, rdx);
+        
+      } else if (opType == ExpressionElement.PREG) {
+        // Position register
+        PositionRegister preg = null;
+        eo = new ExprOperand(preg, rdx);
+        
+      } else if (opType == ExpressionElement.PREG_IDX) {
+        // Specific portion of a point
+        Integer pdx = in.readInt();
+        eo = new ExprOperand(null, rdx, pdx);
+        
+      } else if (opType == ExpressionElement.IOREG) {
+        // I/O register
+        IORegister ioreg = null;
+        eo = new ExprOperand(ioreg, rdx);
+        
+      } else {
+        eo = new ExprOperand();
+      }
+      
+      return eo;
+      
+    } else if (opType == ExpressionElement.POSTN) {
+      // Robot position
+      Point pt = loadPoint(in);
+      return new ExprOperand(pt);
+    }
+  }
+  
+  // Uninitialized
+  return new ExprOperand();
+}
+
 /**
  * Saveds all the data associated with a scenario to the given output stream.
  * First a single flag byte is saved to the stream followed by the number of
@@ -1147,7 +1345,7 @@ public int loadScenarioBytes(File src) {
  * @param out  The output stream to which to save the scenario
  * @throws     IOException if an erro occurs with writing to the output stream
  */
-public void saveScenario(Scenario s, DataOutputStream out) throws IOException {
+private void saveScenario(Scenario s, DataOutputStream out) throws IOException {
   
   if (s == null) {
     // Indicate the value saved is null
@@ -1180,7 +1378,7 @@ public void saveScenario(Scenario s, DataOutputStream out) throws IOException {
  *             NullPointerException  if a world object has a model shape, whose source file is
  *             corrupt or missing
  */
-public Scenario loadScenario(DataInputStream in) throws IOException, NullPointerException {
+private Scenario loadScenario(DataInputStream in) throws IOException, NullPointerException {
   // Read flag byte
   byte flag = in.readByte();   //<>// //<>// //<>// //<>// //<>// //<>// //<>//
   
@@ -1248,7 +1446,7 @@ public Scenario loadScenario(DataInputStream in) throws IOException, NullPointer
  * @param out     The output stream to which to save the world object
  * @throws        IOException if an error occurs with writing to the output stream
  */
-public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {
+private void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {
   
   if (wldObj == null) {   //<>// //<>// //<>// //<>// //<>// //<>// //<>//
     // Indicate that the value saved is null
@@ -1298,7 +1496,7 @@ public void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOE
  *             NullPointerExpcetion  if the world object has a model shape and its source file is
  *             corrupt or missing
  */
-public Object loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
+private Object loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
   // Load the flag byte
   byte flag = in.readByte();   //<>// //<>// //<>// //<>// //<>// //<>// //<>//
   Object wldObjFields = null;
@@ -1337,124 +1535,6 @@ public Object loadWorldObject(DataInputStream in) throws IOException, NullPointe
 }
 
 /**
- * Saves all the fields associated with the given Bounding-Box to the given data
- * output stream. A single flag byte is written first, followed by the length,
- * height, and width of box, then the center position PVector, and finally the
- * box's orientation in the form of a 3x3 float array matrix.
- * 
- * @param OBB  The Bounding-Box object to save
- * @param out  The output stream to which to save the Bounding-Box
- * @throws     IOException  if an error occurs with writing to the output stream.
- */
-public void saveOBB(BoundingBox OBB, DataOutputStream out) throws IOException {
-  
-  if (OBB == null) {
-    // Indicate the saved value is null
-    out.writeByte(0);
-    
-  } else {
-    // Indicate the saved value is non-null
-    out.writeByte(1);
-    // Save the bounding-boxe's dimensions
-    out.writeFloat( OBB.getDim(DimType.LENGTH) );
-    out.writeFloat( OBB.getDim(DimType.HEIGHT) );
-    out.writeFloat( OBB.getDim(DimType.WIDTH) );
-    // Save the local orientation of the bounding-box
-    savePVector(OBB.getCenter(), out);
-    saveFloatArray2D(OBB.getOrientationAxes(), out);
-  }
-}
-
-/**
- * Attempts to load the data of a Bounding Box object from the given
- * data input stream. It is expected that the input stream contains a
- * single byte (for the flag byte) followed three float values, a
- * PVector, and finally a 3x3 float array matrix.
- * 
- * @param in   The data stream, from which to read bytes
- * @returning  The Bounding-Box pulled from the input stream (which
- *             can be null!)
- * @throws     IOException if an error occurs with reading from the
- *             input stream
- */
-public BoundingBox loadOBB(DataInputStream in) throws IOException {
-  
-  byte flag = in.readByte();
-  
-  if (flag == 0) {
-    return null;
-    
-  } else {
-    // Read the dimensions of the box
-    float len = in.readFloat(),
-          hgt = in.readFloat(),
-          wid = in.readFloat();
-    // Read the local orientation of the box
-    PVector center = loadPVector(in);
-    float[][] axes = loadFloatArray2D(in);
-    
-    BoundingBox OBB = new BoundingBox(len, hgt, wid);
-    // Set the local orientation of the box
-    OBB.setCenter(center);
-    OBB.setOrientationAxes(axes);
-    return OBB;
-  }
-}
-
-/**
- * Saves all the fields associated with the given Coordinate System to the given data output
- * stream. First a single byte is wrote to the output stream. Then, the origin vector and
- * finally the axes vectors are written to the output stream.
- * 
- * @param cs   The Coordinate System to save
- * @param out  The output stream to which to save the Coordinate System
- * @throws     IOException  if an error occurs in with writing to the output stream
- */
-public void saveCoordSystem(CoordinateSystem cs, DataOutputStream out) throws IOException {
-  if (cs == null) {
-    // Indicate the saved value is null
-    out.writeByte(0);
-    
-  } else {
-    // Indicate the saved value is non-null
-    out.writeByte(1);
-    // Save the origin value of the coodinate system
-    savePVector(cs.getOrigin(), out);
-    // Save the axes vectors of the coordinate system
-    saveFloatArray2D(cs.getAxes(), out);
-  }
-}
-
-/**
- * Attempt to load the data of a Coordinate System object from the given data input
- * stream. It is expected that the input stream contains a single byte (for the byte
- * flag) followed by a PVector object and then finally a 3x3 float array matrix.
- * 
- * @param in   The input stream, from which to read bytes
- * @returning  The Coordinate System pulled from the input stream (which can be null!)
- * @throws     IOException  if an error occurs with reading from the input stream
- */
-public CoordinateSystem loadCoordSystem(DataInputStream in) throws IOException {
-  // Read the flag byte
-  byte flag = in.readByte();
-  
-  if (flag == 0) {
-    return null;
-    
-  } else {
-    // Read the origin PVector and axes vectors
-    PVector origin = loadPVector(in);
-    float[][] axes = loadFloatArray2D(in);
-    
-    CoordinateSystem cs = new CoordinateSystem();
-    cs.setOrigin(origin);
-    cs.setAxes(axes);
-    
-    return cs;
-  }
-}
-
-/**
  * Saves all the data associated with the given shape, in the form of bytes,
  * to the given data output stream. First flag byte is saved, which indicates
  * what subclass the object is (or if the object is null). Then the fields
@@ -1465,7 +1545,7 @@ public CoordinateSystem loadCoordSystem(DataInputStream in) throws IOException {
  * @param out    The output stream, to which to save the given shape
  * @throws       IOException  if an error occurs with writing to the output stream
  */
-public void saveShape(Shape shape, DataOutputStream out) throws IOException {
+private void saveShape(Shape shape, DataOutputStream out) throws IOException {
   if (shape == null) {
     // Indicate the saved value is null
     out.writeByte(0);
@@ -1521,7 +1601,7 @@ public void saveShape(Shape shape, DataOutputStream out) throws IOException {
  *             NullPointerException  if the shape stored is a model shape and its source
  *             file is either invalid or does not exist
  */
-public Shape loadShape(DataInputStream in) throws IOException, NullPointerException {
+private Shape loadShape(DataInputStream in) throws IOException, NullPointerException {
   // Read flag byte
   byte flag = in.readByte();
   Shape shape = null;
@@ -1562,7 +1642,7 @@ public Shape loadShape(DataInputStream in) throws IOException, NullPointerExcept
 /**
  * Writes the integer object to the given data output stream. Null values are accepted.
  */
-public void saveInteger(Integer i, DataOutputStream out) throws IOException {
+private void saveInteger(Integer i, DataOutputStream out) throws IOException {
   
   if (i == null) {
     // Write byte flag
@@ -1579,7 +1659,7 @@ public void saveInteger(Integer i, DataOutputStream out) throws IOException {
 /**
  * Attempts to read an Integer object from the given data input stream.
  */
-public Integer loadInteger(DataInputStream in) throws IOException {
+private Integer loadInteger(DataInputStream in) throws IOException {
   // Read byte flag
   byte flag = in.readByte();
   
@@ -1596,7 +1676,7 @@ public Integer loadInteger(DataInputStream in) throws IOException {
  * Saves the x, y, z fields associated with the given PVector Object to the
  * given output stream. Null values for p are accepted.
  */
-public void savePVector(PVector p, DataOutputStream out) throws IOException {
+private void savePVector(PVector p, DataOutputStream out) throws IOException {
   
   if (p == null) {
     // Write flag byte
@@ -1615,7 +1695,7 @@ public void savePVector(PVector p, DataOutputStream out) throws IOException {
 /**
  * Attempts to load a PVector object from the given input stream.
  */
-public PVector loadPVector(DataInputStream in) throws IOException {
+private PVector loadPVector(DataInputStream in) throws IOException {
   // Read flag byte
   int val = in.readByte();
   
@@ -1635,7 +1715,7 @@ public PVector loadPVector(DataInputStream in) throws IOException {
 /**
  * Saves the data associated with the given quaternion to the given output stream.
  */
-public void saveRQuaternion(RQuaternion q, DataOutputStream out) throws IOException {
+private void saveRQuaternion(RQuaternion q, DataOutputStream out) throws IOException {
   if (q == null) {
     // Write flag byte
     out.writeByte(0);
@@ -1654,7 +1734,7 @@ public void saveRQuaternion(RQuaternion q, DataOutputStream out) throws IOExcept
 /**
  * Attempts to construct a quaternion object from the data in the given input stream.
  */
-public RQuaternion loadRQuaternion(DataInputStream in) throws IOException {
+private RQuaternion loadRQuaternion(DataInputStream in) throws IOException {
   // Read flag byte
   byte flag = in.readByte();
   
@@ -1680,7 +1760,7 @@ public RQuaternion loadRQuaternion(DataInputStream in) throws IOException {
  * @param out   The output stream, to which to save the float array
  * @throws      IOException  if an error occurs with writing to the output stream
  */
-public void saveFloatArray(float[] list, DataOutputStream out) throws IOException {
+private void saveFloatArray(float[] list, DataOutputStream out) throws IOException {
   if (list == null) {
     // Write flag value
     out.writeByte(0);
@@ -1709,7 +1789,7 @@ public void saveFloatArray(float[] list, DataOutputStream out) throws IOExceptio
  * @throws     IOException  if an error occurs with reading from the
  *             output stream
  */
-public float[] loadFloatArray(DataInputStream in) throws IOException {
+private float[] loadFloatArray(DataInputStream in) throws IOException {
   // Read byte flag
   byte flag = in.readByte();
   
@@ -1737,7 +1817,7 @@ public float[] loadFloatArray(DataInputStream in) throws IOException {
  * @param out   The output stream, to which to save the float array matrix
  * @throws      IOException  if an error occurs with writing to the output stream
  */
-public void saveFloatArray2D(float[][] list, DataOutputStream out) throws IOException {
+private void saveFloatArray2D(float[][] list, DataOutputStream out) throws IOException {
   if (list == null) {
     // Write flag value
     out.writeByte(0);
@@ -1768,7 +1848,7 @@ public void saveFloatArray2D(float[][] list, DataOutputStream out) throws IOExce
  * @throws     IOException  if an error occurs with reading from the
  *             input stream
  */
-public float[][] loadFloatArray2D(DataInputStream in) throws IOException {
+private float[][] loadFloatArray2D(DataInputStream in) throws IOException {
   // Read byte flag
   byte flag = in.readByte();
   
@@ -1794,7 +1874,7 @@ public float[][] loadFloatArray2D(DataInputStream in) throws IOException {
 /**
  * Writes anything stored in the ArrayList String buffers to tmp\test.out.
  */
-public int writeBuffer() {
+private int writeBuffer() {
   try {
     PrintWriter out = new PrintWriter(sketchPath("tmp/test.out"));
     

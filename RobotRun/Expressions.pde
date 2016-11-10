@@ -935,6 +935,26 @@ public class ExprOperand implements ExpressionElement {
     pointVal = p;
   }
   
+  public Integer getRdx() {
+    if (type == ExpressionElement.DREG ||
+        type == ExpressionElement.PREG ||
+        type == ExpressionElement.PREG_IDX ||
+        type == ExpressionElement.IOREG) {
+      
+      return regIdx;
+    }
+    
+    return null;
+  }
+  
+  public Integer getPosIdx() {
+    if (type == ExpressionElement.PREG_IDX) {
+      return posIdx;
+    }
+    
+    return null;
+  }
+  
   public Float getDataVal() {
     if(type == ExpressionElement.FLOAT) {
       return dataVal;
