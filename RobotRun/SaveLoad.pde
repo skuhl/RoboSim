@@ -93,11 +93,20 @@ public byte loadState() {
   
   // Associated each End Effector with an I/O Register
   int idx = 0;
-  IO_REG[idx++] = new IORegister(idx, (EEType.SUCTION).name(), OFF);
-  IO_REG[idx++] = new IORegister(idx, (EEType.CLAW).name(), OFF);
-  IO_REG[idx++] = new IORegister(idx, (EEType.POINTER).name(), OFF);
-  IO_REG[idx++] = new IORegister(idx, (EEType.GLUE_GUN).name(), OFF);
-  IO_REG[idx++] = new IORegister(idx, (EEType.WIELDER).name(), OFF);
+  IO_REG[idx] = new IORegister(idx, (EEType.SUCTION).name(), OFF);
+  ++idx;
+  
+  IO_REG[idx] = new IORegister(idx, (EEType.CLAW).name(), OFF);
+  ++idx;
+  
+  IO_REG[idx] = new IORegister(idx, (EEType.POINTER).name(), OFF);
+  ++idx;
+  
+  IO_REG[idx] = new IORegister(idx, (EEType.GLUE_GUN).name(), OFF);
+  ++idx;
+  
+  IO_REG[idx] = new IORegister(idx, (EEType.WIELDER).name(), OFF);
+  ++idx;
   
   for(; idx < IO_REG.length; idx += 1) {
     // Intialize the rest of the I/O registers
@@ -453,8 +462,26 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     Register r = rs.getReg();
     
     out.writeByte(8);
+    out.writeBoolean(rs.isCommented());
     
-    // TODO save the register statement
+    // In what type of register will the result of the statement be placed?
+    int regType;
+    
+    if (r instanceof IORegister) {
+      regType = 2;
+      
+    } else if (r instanceof PositionRegister) {
+      regType = 1;
+      
+    } else {
+      regType = 0;
+    }
+    
+    out.writeInt(regType);
+    out.writeInt(r.getIdx());
+    out.writeInt(rs.getPosIdx());
+    
+    saveExpression(rs.getExpression(), out);
   
   }/* Add other instructions here! */
     else if (inst instanceof Instruction) {
@@ -545,7 +572,26 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     inst.setIsCommented(isCommented);
     
   } else if (instType == 8) {
-  
+    boolean isCommented = in.readBoolean();
+    int regType = in.readInt();
+    int regIdx = in.readInt();
+    int posIdx = in.readInt();
+    Expression expr = loadExpression(in);
+    
+    if (regType == 2) {
+      inst = new RegisterStatement(DAT_REG[regIdx], expr);
+      inst.setIsCommented(isCommented);
+      
+    } else if (regType == 1) {
+      inst = new RegisterStatement(GPOS_REG[regIdx], posIdx, expr);
+      inst.setIsCommented(isCommented);
+      
+    } else if (regType == 0) {
+      inst = new RegisterStatement(IO_REG[regIdx], expr);
+      inst.setIsCommented(isCommented);
+      
+    }
+    
   }/* Add other instructions here! */
     else if (instType == 1) {
     inst = new Instruction();
@@ -1157,7 +1203,7 @@ private void saveExpression(Expression e, DataOutputStream out) throws IOExcepti
   } else {
     out.writeByte(1);
     
-    int exprLen = e.getLength();
+    int exprLen = e.getSize();
     // Save the length of the expression
     out.writeInt(exprLen);
     
@@ -1301,23 +1347,20 @@ private ExpressionElement loadExpressionElement(DataInputStream in) throws
       
       if (opType == ExpressionElement.DREG) {
         // Data register
-        DataRegister dreg = null;
-        return new ExprOperand(dreg, rdx);
+        return new ExprOperand(DAT_REG[rdx], rdx);
         
       } else if (opType == ExpressionElement.PREG) {
         // Position register
-        PositionRegister preg = null;
-        eo = new ExprOperand(preg, rdx);
+        eo = new ExprOperand(GPOS_REG[rdx], rdx);
         
       } else if (opType == ExpressionElement.PREG_IDX) {
         // Specific portion of a point
         Integer pdx = in.readInt();
-        eo = new ExprOperand(null, rdx, pdx);
+        eo = new ExprOperand(GPOS_REG[rdx], rdx, pdx);
         
       } else if (opType == ExpressionElement.IOREG) {
         // I/O register
-        IORegister ioreg = null;
-        eo = new ExprOperand(ioreg, rdx);
+        eo = new ExprOperand(IO_REG[rdx], rdx);
         
       } else {
         eo = new ExprOperand();

@@ -1176,6 +1176,12 @@ public class RegisterStatement extends Instruction {
     expr = new Expression();
   }
   
+  public RegisterStatement(Register r, Expression e) {
+    reg = r;
+    posIdx = -1;
+    expr = e;
+  }
+  
   public RegisterStatement(Register r, int i) {
     reg = r;
     posIdx = i;
@@ -1230,12 +1236,10 @@ public class RegisterStatement extends Instruction {
     return copy;
   }
   
-  /**
-   * Getter method for resultant register
-   */
-  public Register getReg() {
-    return reg;
-  }
+  // Getter methods for private fields
+  public Register getReg() { return reg; }
+  public int getPosIdx() { return posIdx; }
+  public Expression getExpression() { return expr; }
   
   /**
    * Convert the entire statement to a set of Strings, where each

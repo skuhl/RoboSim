@@ -1515,6 +1515,13 @@ public class Expression extends AtomicExpression {
     return len;
   }
   
+  /**
+   * Returns the number of elements in the top level of the expression
+   */
+  public int getSize() {
+    return elementList.size();
+  }
+  
   public ExprOperand evaluate() {
     if(elementList.get(0) instanceof Operator || elementList.size() % 2 != 1) { 
       println("Expression formatting error");
