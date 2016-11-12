@@ -579,7 +579,7 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
     Expression expr = loadExpression(in);
     
     if (regType == 2) {
-      inst = new RegisterStatement(DAT_REG[regIdx], expr);
+      inst = new RegisterStatement(IO_REG[regIdx], expr);
       inst.setIsCommented(isCommented);
       
     } else if (regType == 1) {
@@ -587,7 +587,7 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
       inst.setIsCommented(isCommented);
       
     } else if (regType == 0) {
-      inst = new RegisterStatement(IO_REG[regIdx], expr);
+      inst = new RegisterStatement(DAT_REG[regIdx], expr);
       inst.setIsCommented(isCommented);
       
     }
@@ -1366,13 +1366,16 @@ private ExpressionElement loadExpressionElement(DataInputStream in) throws
         eo = new ExprOperand();
       }
       
-      return eo;
-      
     } else if (opType == ExpressionElement.POSTN) {
       // Robot position
       Point pt = loadPoint(in);
-      return new ExprOperand(pt);
+      eo = new ExprOperand(pt);
+      
+    } else {
+      eo = new ExprOperand();
     }
+    
+    return eo;
   }
   
   // Uninitialized
