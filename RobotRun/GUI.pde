@@ -4385,9 +4385,10 @@ public ArrayList<String> getOptions(Screen mode){
       break;
     case DIRECT_ENTRY_TOOL:
     case DIRECT_ENTRY_USER:
+      options = this.options;
+      break;
     case EDIT_PREG_C:
     case EDIT_PREG_J:
-      options = this.options;
       break;
     case EDIT_RSTMT:
       options.add("Register");
@@ -5721,7 +5722,7 @@ public ArrayList<DisplayLine> loadRegisters() {
       }
       
     } else if(GPOS_REG[idx].point != null) {
-      regEntry = "...";
+      regEntry = "...Edit...";
     }
     
     regs.add(newLine(idx, regLbl, regEntry));
