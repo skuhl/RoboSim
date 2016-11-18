@@ -1150,7 +1150,7 @@ public class ArmModel {
    */
   public void moveTo(PVector position, RQuaternion orientation) {
     Point start = nativeRobotEEPoint(armModel.getJointAngles());
-    Point end = new Point(position, orientation, start.angles);
+    Point end = new Point(position.copy(), (RQuaternion)orientation.clone(), start.angles.clone());
     beginNewLinearMotion(start, end);
     motionType = RobotMotion.MT_LINEAR;
   }

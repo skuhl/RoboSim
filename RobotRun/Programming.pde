@@ -21,7 +21,7 @@ public class Point  {
   
   public Point(PVector pos, RQuaternion orient) {
     angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
-    position = pos.copy();
+    position = pos;
     orientation = orient;
   }
   
@@ -39,12 +39,14 @@ public class Point  {
   }
   
   public Point(PVector pos, RQuaternion orient, float[] jointAngles) {
-    position = pos.copy();
+    position = pos;
     orientation = orient;
-    angles = Arrays.copyOfRange(jointAngles, 0, 6);
+    angles = jointAngles;
   }
 
-  public Point clone() { return new Point(position, orientation, angles); }
+  public Point clone() {
+    return new Point(position.copy(), (RQuaternion)orientation.clone(), angles.clone());
+  }
   
   public Float getValue(int idx) {
     switch(idx) {
@@ -231,22 +233,27 @@ public class Point  {
     
     return entries;
   }
+  
+  public String toString() {
+    return String.format("P: { %s, %s }", position, orientation);
+  }
 } // end Point class
 
 public class Program {
   private String name;
   private int nextPosition;
+  
   /**
    * The positions associated with this program, which are
    * stored in reference to the current User frame
    */
-  private Point[] LPosReg = new Point[1000];
+  private HashMap<Integer, Point> LPosReg;
   private ArrayList<Instruction> instructions;
 
   public Program(String s) {
     name = s;
     nextPosition = 0;
-    for(int n = 0; n < LPosReg.length; n++) LPosReg[n] = new Point();
+    LPosReg = new HashMap<Integer, Point>();
     instructions = new ArrayList<Instruction>();
   }
 
@@ -265,7 +272,7 @@ public class Program {
   }
 
   public int getRegistersLength() {
-    return LPosReg.length;
+    return LPosReg.size();
   }
 
   public Instruction getInstruction(int i){
@@ -273,60 +280,98 @@ public class Program {
   }
 
   public void addInstruction(Instruction i) {
-    //i.setProg(this);
     instructions.add(i);
-    
-    if(i instanceof MotionInstruction) {
-      MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.usesGPosReg() && castIns.getPositionNum() >= nextPosition) {
-        nextPosition = castIns.getPositionNum()+1;
-        if(nextPosition >= LPosReg.length) nextPosition = LPosReg.length-1;
-      }
-    }
   }
   
   public void addInstruction(int idx, Instruction i) {
     instructions.add(idx, i);
-    if(i instanceof MotionInstruction) { 
-      MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.usesGPosReg() && castIns.getPositionNum() >= nextPosition) {
-        nextPosition = castIns.getPositionNum()+1;
-        if(nextPosition >= LPosReg.length) nextPosition = LPosReg.length-1;
-      }
-    }
   }
   
   public void overwriteInstruction(int idx, Instruction i) {
     instructions.set(idx, i);
-    if(i instanceof MotionInstruction) { 
-      MotionInstruction castIns = (MotionInstruction)i;
-      if(!castIns.usesGPosReg() && castIns.getPositionNum() >= nextPosition) {
-        nextPosition = castIns.getPositionNum()+1;
-        if(nextPosition >= LPosReg.length) nextPosition = LPosReg.length-1;
+  }
+  
+  /**
+   * Add a new position and the index of the next available position
+   * 
+   * @param pt  The new position to add to the program
+   */
+  public void addPosition(Point pt) {
+    LPosReg.put(nextPosition, pt);
+    updateNextPosition();
+  }
+  
+  /**
+   * Add the given point at the position defined by the given index, overriding
+   * the previous entry if the position isinitialized.
+   * 
+   * @param idx  The index where to store the new position
+   * @param  pt  The new position value
+   * @return     The previous position value
+   */
+  public Point setPosition(int idx, Point pt) {
+    if (idx >= 0 && idx < 1000) {
+      Point prevPt = LPosReg.get(idx);
+      LPosReg.put(idx, pt);
+      
+      if (idx == nextPosition) {
+        // update the next position index if necessary
+        updateNextPosition();
+      }
+      
+      return prevPt;
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Get the position assocaited with the given index.
+   * 
+   * @param idx  The indexx corresopnding to a position in the program
+   */
+  public Point getPosition(int idx) {
+    return LPosReg.get(idx);
+  }
+  
+  /**
+   * Updates the index of the lowest uninitialized position in the program.
+   * In te case that a program has the mazimum number of positions (1000),
+   * then the nextPosition will point to some initialized position.
+   */
+  private void updateNextPosition() {
+    if (LPosReg.size() >= 1000) {
+      // Move to the next position if the position set is full
+      ++nextPosition;
+      
+    } else {
+      // Find the next empty position
+      while (LPosReg.get(nextPosition) != null) {
+        ++nextPosition;
       }
     }
   }
-
-  public void addPosition(Point pt) {
-    LPosReg[nextPosition] = pt;
-    nextPosition += 1;
-    if(nextPosition > LPosReg.length) nextPosition = 0;
+  
+  /**
+   * Remove all the positinos from this program
+   */
+  public void clearPositions() {
+    LPosReg.clear();
+    nextPosition = 0;
   }
   
-  public int getNextPosition() { return nextPosition; }
-  public void setNextPosition(int next) { nextPosition = next; }
-
-  public Point getPosition(int idx) {
-    if(idx >= 0 && idx < LPosReg.length) return LPosReg[idx];
-    else return null;
+  /**
+   * Get all the indices of all initialized positions
+   */
+  public Set<Integer> getPositionNums() {
+    return LPosReg.keySet();
   }
   
-  public void setPosition(int idx, Point pt){
-    if(idx >= 0 && idx < LPosReg.length) LPosReg[idx] = pt;
-  }
-  
-  public void clearPositions(){
-    LPosReg = new Point[1000];
+  /**
+   * Get the index of the next position to normally insert a new position.
+   */
+  public int getNextPosition() {
+    return nextPosition;
   }
   
   public LabelInstruction getLabel(int n){    
@@ -367,16 +412,18 @@ public class Program {
    */
   public Program clone() {
     Program copy = new Program(name);
+    
+    // Copy positions
+    Set<Integer> posNums = LPosReg.keySet();
+    
+    for (Integer posNum : posNums) {
+      copy.setPosition(posNum, LPosReg.get(posNum));
+    }
+    
     // Copy instructions
     for (Instruction inst : instructions) {
       copy.addInstruction(inst.clone());
     }
-    // Copy positions
-    for (int idx = 0; idx < LPosReg.length; ++idx) {
-      copy.setPosition(idx, LPosReg[idx].clone());
-    }
-    // Copy next register
-    copy.setNextPosition(nextPosition);
     
     return copy;
   }
@@ -580,7 +627,7 @@ public final class MotionInstruction extends Instruction  {
       pt = GPOS_REG[positionNum].point;   
       
     } else if(positionNum != -1) {
-      pt = parent.LPosReg[positionNum];
+      pt = parent.LPosReg.get(positionNum);
       
     }
     

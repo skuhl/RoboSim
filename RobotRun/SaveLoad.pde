@@ -260,15 +260,22 @@ private void saveProgram(Program p, DataOutputStream out) throws IOException {
     out.writeByte(1);
     
     out.writeUTF(p.name);
-    out.writeInt(p.nextPosition);
+    
+    for (int pdx = 0; pdx < 1000; ++pdx) {
+      if (p.getPosition(pdx) != null) {
+        // Save the position with its respective index
+        out.writeInt(pdx);
+        savePoint(p.getPosition(pdx), out);
+      }
+    }
+    
+    // End of saved positions
+    out.writeInt(-1);
+    
     out.writeInt(p.instructions.size());
     // Save each instruction
     for(Instruction inst : p.instructions) {
       saveInstruction(inst, out);
-      // Save only the Points associated with a MotionInstruction
-      if(inst instanceof MotionInstruction) {
-        savePoint(p.LPosReg[ ((MotionInstruction)inst).positionNum ], out);
-      }
     }
   }
 }
@@ -294,9 +301,22 @@ private Program loadProgram(DataInputStream in) throws IOException {
     // Read program name
     String name = in.readUTF();
     Program prog = new Program(name);
-    // Read the next register value
-    int nReg = in.readInt();
-    prog.setNextPosition(nReg);
+    int nReg;
+    
+    // Read in all the positions saved for the program
+    do {
+      nReg = in.readInt();
+      
+      if (nReg == -1) {
+        break;  
+      }
+      
+      // Load the saved point
+      Point pt = loadPoint(in);
+      prog.setPosition(nReg, pt);
+      
+    } while (true);
+    
     // Read the number of instructions stored for this porgram
     int numOfInst = max(0, min(in.readInt(), 500));
     
@@ -304,11 +324,6 @@ private Program loadProgram(DataInputStream in) throws IOException {
       // Read each instruction
       Instruction inst = loadInstruction(in);
       prog.addInstruction(inst);
-      // Read the points stored after each MotionIntruction
-      if(inst instanceof MotionInstruction) {
-        Point pt = loadPoint(in);
-        prog.setPosition(((MotionInstruction)inst).positionNum, pt);
-      }
     }
     
     return prog;
@@ -338,10 +353,6 @@ private void savePoint(Point p, DataOutputStream out) throws IOException {
     saveRQuaternion(p.orientation, out);
     // Write the joint angles for the point's position
     saveFloatArray(p.angles, out);
-    
-    if (p.angles == null) {
-      println("null angles!");
-    }
   }
 }
 
@@ -372,11 +383,7 @@ private Point loadPoint(DataInputStream in) throws IOException {
     // Read the joint angles for the joint's position
     float[] angles = loadFloatArray(in);
     
-    if (angles == null) {
-      println("null angles!");   //<>// //<>// //<>// //<>// //<>// //<>// //<>//
-    }
-    
-    return new Point(position, orientation, angles);
+    return new Point(position, orientation, angles); //<>//
   }
 }
 

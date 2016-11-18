@@ -556,7 +556,7 @@ public class PositionOp extends RegisterOp {
       // Use local position
       Program current = activeProgram();
       // TODO Use joint angles?
-      pt = new RegStmtPoint( current.LPosReg[getIdx()], true);
+      pt = new RegStmtPoint( current.getPosition( getIdx() ), true);
     } else if (type == PositionType.GLOBAL) {
       // global Position register
       pt = new RegStmtPoint( GPOS_REG[getIdx()].point, GPOS_REG[getIdx()].isCartesian );

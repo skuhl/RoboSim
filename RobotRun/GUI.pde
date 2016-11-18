@@ -5170,6 +5170,7 @@ public ArrayList<String> loadInstructionReg() {
       if (castIns.userFrame != -1) {
         Frame uFrame = userFrames[castIns.userFrame];
         displayPoint = removeFrame(p, uFrame.getOrigin(), uFrame.getOrientation());
+        
       } else {
         displayPoint = p;
       }
@@ -5267,29 +5268,31 @@ public void newMotionInstruction() {
     }
   }
   
-  // overwrite current instruction
   Program prog = activeProgram();
   int reg = prog.getNextPosition();
   
-  prog.setPosition(reg, pt);
-  
   if(getSelectedLine() > 0) {
+    // Update the secondary point of a circular instruction
     MotionInstruction m = (MotionInstruction)activeInstruction();
     m.getSecondaryPoint().setPositionNum(reg);
-    prog.setNextPosition(reg + 1);
+    prog.setPosition(reg, pt);
   }
   else {
     MotionInstruction insert = new MotionInstruction(
     curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR,
-    reg,
+    active_instr,
     false,
     (curCoordFrame == CoordFrame.JOINT ? 50 : 50 * armModel.motorSpeed) / 100f,
     0,
     activeUserFrame,
     activeToolFrame);
     
+    prog.setPosition(active_instr, pt);
+    
     if(active_instr != prog.getInstructions().size()) {
+      // overwrite current instruction
       prog.overwriteInstruction(active_instr, insert);
+      
     } else {
       prog.addInstruction(insert);
     }
