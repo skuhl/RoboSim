@@ -69,7 +69,7 @@ public byte loadState() {
   File scenarioFile = new File(sketchPath("tmp/scenarios.bin"));
   
   if(scenarioFile.exists()) {
-    int ret = loadScenarioBytes(scenarioFile);   //<>// //<>// //<>// //<>// //<>// //<>// //<>//
+    int ret = loadScenarioBytes(scenarioFile);   //<>// //<>// //<>// //<>// //<>// //<>//
     
     if(ret == 0) {
       println("Successfully loaded scenarios!");
@@ -212,7 +212,7 @@ private int loadProgramBytes(File src) {
     
     while(size-- > 0) {
       // Read each program from src
-      programs.add( loadProgram(dataIn) );
+      programs.add( loadProgram(dataIn) ); //<>//
     }
     
     dataIn.close();
@@ -305,7 +305,7 @@ private Program loadProgram(DataInputStream in) throws IOException {
     
     // Read in all the positions saved for the program
     do {
-      nReg = in.readInt();
+      nReg = in.readInt(); //<>//
       
       if (nReg == -1) {
         break;  
@@ -383,7 +383,7 @@ private Point loadPoint(DataInputStream in) throws IOException {
     // Read the joint angles for the joint's position
     float[] angles = loadFloatArray(in);
     
-    return new Point(position, orientation, angles); //<>//
+    return new Point(position, orientation, angles);
   }
 }
 
@@ -490,6 +490,31 @@ private void saveInstruction(Instruction inst, DataOutputStream out) throws IOEx
     
     saveExpression(rs.getExpression(), out);
   
+  } else if (inst instanceof IfStatement) {
+    IfStatement ifStmt = (IfStatement)inst;
+    
+    out.writeByte(9);
+    out.writeBoolean(ifStmt.isCommented());
+    
+    saveExpressionElement(ifStmt.expr, out);
+    saveInstruction(ifStmt.instr, out);
+    
+  } else if (inst instanceof SelectStatement) {
+    SelectStatement sltInst = (SelectStatement)inst;
+    
+    out.writeByte(10);
+    out.writeBoolean(sltInst.isCommented());
+    
+    saveExpressionElement(sltInst.arg, out);
+    
+    // Save the set of cases and instructions
+    int caseSize = sltInst.cases.size();
+    
+    for (int idx = 0; idx < caseSize; ++idx) {
+      saveExpressionElement(sltInst.cases.get(idx), out);
+      saveInstruction(sltInst.instrs.get(idx), out);
+    }
+    
   }/* Add other instructions here! */
     else if (inst instanceof Instruction) {
     /// A blank instruction
@@ -597,6 +622,32 @@ private Instruction loadInstruction(DataInputStream in) throws IOException {
       inst = new RegisterStatement(DAT_REG[regIdx], expr);
       inst.setIsCommented(isCommented);
       
+    }
+    
+  } else if (instType == 9) {
+    boolean isCommented = in.readBoolean();
+    AtomicExpression expression = (AtomicExpression)loadExpressionElement(in);
+    Instruction subInst = loadInstruction(in);
+    
+    inst = new IfStatement(expression, subInst);
+    inst.setIsCommented(isCommented);
+    
+  } else if (instType == 10) {
+    boolean isCommented = in.readBoolean();
+    ExprOperand expression = (ExprOperand)loadExpressionElement(in);
+    int caseSize = in.readInt();
+    Instruction subInst;
+    SelectStatement sltInst = new SelectStatement(expression);
+    
+    inst = sltInst;
+    inst.setIsCommented(isCommented);
+    
+    // Load each case
+    while (caseSize-- > 0) {
+      expression = (ExprOperand)loadExpressionElement(in);
+      subInst = loadInstruction(in);
+      
+      sltInst.addCase(expression, subInst);
     }
     
   }/* Add other instructions here! */
@@ -1153,7 +1204,7 @@ private int saveScenarioBytes(File dest) {
 private int loadScenarioBytes(File src) {
   
   try {
-    FileInputStream in = new FileInputStream(src);   //<>// //<>// //<>// //<>// //<>// //<>// //<>//
+    FileInputStream in = new FileInputStream(src);   //<>// //<>// //<>// //<>// //<>// //<>//
     DataInputStream dataIn = new DataInputStream(in);
     
     int numOfScenarios = dataIn.readInt();
@@ -1433,7 +1484,7 @@ private void saveScenario(Scenario s, DataOutputStream out) throws IOException {
  */
 private Scenario loadScenario(DataInputStream in) throws IOException, NullPointerException {
   // Read flag byte
-  byte flag = in.readByte();   //<>// //<>// //<>// //<>// //<>// //<>// //<>//
+  byte flag = in.readByte();   //<>// //<>// //<>// //<>// //<>// //<>//
   
   if (flag == 0) {
     return null;
@@ -1551,7 +1602,7 @@ private void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IO
  */
 private Object loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
   // Load the flag byte
-  byte flag = in.readByte();   //<>// //<>// //<>// //<>// //<>// //<>// //<>//
+  byte flag = in.readByte();   //<>// //<>// //<>// //<>// //<>// //<>//
   Object wldObjFields = null;
   
   if (flag != 0) {
