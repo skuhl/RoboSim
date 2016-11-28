@@ -1,0 +1,85 @@
+package programming;
+import robot.RobotRun;
+
+public class Macro {
+
+	private final RobotRun robotRun;
+	private Program prog;
+	boolean manual;
+	private int progIdx;
+	private int num;
+
+	public Macro(RobotRun robotRun, Program p, int pidx) {
+		this.robotRun = robotRun;
+		prog = p;
+		progIdx = pidx;
+		manual = false;
+		num = -1;
+	}
+
+	public void execute() {
+		// Stop any prior Robot movement
+		robotRun.getArmModel().halt();
+		// Safeguard against editing a program while it is running
+		robotRun.setCol_select(0);
+		robotRun.setActive_prog(progIdx);
+		robotRun.setActive_instr(0);
+
+		robotRun.setExecutingInstruction(false);
+		// Run single instruction when step is set
+		robotRun.execSingleInst = robotRun.isStep();
+
+		robotRun.setProgramRunning(true);
+	}
+
+	public void setProgram(Program p, int idx) { prog = p; progIdx = idx; }
+	public void setManual(boolean b) { manual = b; }
+	public boolean isManual() { return manual; }
+
+	public Macro setNum(int n) {
+		if(n <= 6 && n >= 0 && robotRun.getSU_macro_bindings()[n] == null) {
+			clearNum();
+			robotRun.getSU_macro_bindings()[n] = this;
+			num = n;
+
+			return this;
+		}
+
+		return null;
+	}
+
+	public void clearNum() {
+		if(num != -1) {
+			robotRun.getSU_macro_bindings()[num] = null;
+			num = -1;
+		}
+	}
+
+	public String toString() {
+		String[] str = toStringArray();
+		return str[0] + " " + str[1] + " " + str[2];
+	}
+
+	public String[] toStringArray() {
+		String[] ret = new String[3];
+		int name_pad = RobotRun.max(16 - prog.getName().length(), 0);
+
+		ret[0] = String.format("[%-"+name_pad+"s]", prog.getName());
+		ret[1] = manual ? "MF" : "SU";
+		if(manual) ret[2] = "_";
+		else {
+			switch(num) {
+			case 0: ret[2] = "TOOL1";  break;
+			case 1: ret[2] = "TOOL2";  break;
+			case 2: ret[2] = "MVMU";   break;
+			case 3: ret[2] = "SETUP";  break;
+			case 4: ret[2] = "STATUS"; break;
+			case 5: ret[2] = "PSON";   break;
+			case 6: ret[2] = "IO";     break;
+			default: ret[2] = "...";   break;
+			}
+		}
+
+		return ret;
+	}
+}
