@@ -24,10 +24,12 @@ public class FrameInstruction extends Instruction {
 
 	public int execute() {    
 		if (frameType == RobotRun.getInstance().FTYPE_TOOL) {
-			RobotRun.getInstance().setActiveToolFrame(getFrameIdx());
+			RobotRun.getRobot().setActiveToolFrame(getFrameIdx());
+			
 		} else if (frameType == RobotRun.getInstance().FTYPE_USER) {
-			RobotRun.getInstance().setActiveUserFrame(getFrameIdx());
+			RobotRun.getRobot().setActiveUserFrame(getFrameIdx());
 		}
+		
 		// Update the current active frames
 		RobotRun.getInstance().updateCoordFrame();
 

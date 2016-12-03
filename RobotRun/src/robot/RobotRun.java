@@ -31,8 +31,8 @@ import ui.*;
 import window.*;
 
 public class RobotRun extends PApplet {
-	public final PVector ROBOT_POSITION = new PVector(200, 300, 200);
-	public final int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
+	public static final PVector ROBOT_POSITION = new PVector(200, 300, 200);
+	public static final int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 	
 	private Camera camera;
 	private PFont fnt_con14, fnt_con12, fnt_conB;
@@ -64,8 +64,95 @@ public class RobotRun extends PApplet {
 	private ArrayList<String> buffer;
 	private Point displayPoint;
 	
+	/*******************************/
+	/*        GUI Stuff            */
+	/*******************************/
+	
+	public static final float[][] WORLD_AXES;
+												 
+
+
+	private int active_prog = -1; // the currently selected program
+	private int active_instr = -1; // the currently selected instruction
+	int temp_select = 0;
+	boolean shift = false; // Is shift button pressed or not?
+	private boolean step = false; // Is step button pressed or not?
+	private int record = Fields.OFF;
+
+	Screen mode;
+	int g1_px, g1_py; // the left-top corner of group1
+	int g1_width, g1_height; // group 1's width and height
+	int display_px, display_py; // the left-top corner of display screen
+	int display_width, display_height; // height and width of display screen
+
+	public Group g1, g2;
+	Button bt_record_normal, 
+	bt_ee_normal;
+
+	String workingText; // when entering text or a number
+	String workingTextSuffix;
+	boolean speedInPercentage;
+
+	final int ITEMS_TO_SHOW = 8, // how many programs/ instructions to display on screen
+			NUM_ENTRY_LEN = 16, // Maximum character length for a number input
+			TEXT_ENTRY_LEN = 16; // Maximum character length for text entry
+
+	// Index of the current frame (Tool or User) selecting when in the Frame menus
+	int curFrameIdx = -1;
+	// The Frame being taught, during a frame teaching process
+	Frame teachFrame = null;
+	// Expression operand currently being edited
+	ExprOperand opEdit = null;
+	int editIdx = -1;
+
+	//variables for keeping track of the last change made to the current program
+	Instruction lastInstruct;
+	boolean newInstruct;
+	int lastLine;
+
+	// display list of programs or motion instructions
+	ArrayList<DisplayLine> contents = new ArrayList<DisplayLine>();
+	// Display otions for a number of menus
+	ArrayList<String> options = new ArrayList<String>();
+	// store numbers pressed by the user
+	ArrayList<Integer> nums = new ArrayList<Integer>();
+	// container for instructions being coppied/ cut and pasted
+	ArrayList<Instruction> clipBoard = new ArrayList<Instruction>();
+	// string for displaying error message to user
+	String err = null;
+	// which element is on focus now?
+	private int row_select = 0; //currently selected display row
+	int prev_select = -1; //saves row_select value if next screen also utilizes this variable
+	private int col_select = 0; //currently selected display column
+	int opt_select = 0; //which option is on focus now?
+	private int start_render = 0; //index of the first element in a list to be drawn on screen
+	int active_index = 0; //index of the cursor with respect to the first element on screen
+	boolean[] selectedLines; //array whose indecies correspond to currently selected lines
+	// how many textlabels have been created for display
+	int index_contents = 0, index_options = 100, index_nums = 1000;
+
+	/**
+	 * Used for comment name input. The user can cycle through the
+	 * six states for each function button in this mode:
+	 *
+	 * F1 -> A-F/a-f
+	 * F2 -> G-L/g-l
+	 * F3 -> M-R/m-r
+	 * F4 -> S-X/s-x
+	 * F5 -> Y-Z/y-z, _, @, *, .
+	 */
+	private int[] letterStates = {0, 0, 0, 0, 0};
+	private final char[][] letters = {{'a', 'b', 'c', 'd', 'e', 'f'},
+			{'g', 'h', 'i', 'j', 'k', 'l'},
+			{'m', 'n', 'o', 'p', 'q', 'r'},
+			{'s', 't', 'u', 'v', 'w', 'x'},
+			{'y', 'z', '_', '@', '*', '.'}};
+	
 	static {
 		instance = null;
+		WORLD_AXES = new float[][] { { -1,  0,  0 },
+									 {  0,  0,  1 },
+									 {  0, -1,  0 } };
 	}
 	
 	public void setup() {
@@ -96,6 +183,18 @@ public class RobotRun extends PApplet {
 
 		buffer = new ArrayList<String>();
 		displayPoint = null;
+	}
+	
+	public void settings() {  size(1080, 720, P3D); }
+	
+	public static void main(String[] passedArgs) {
+		String[] appletArgs = new String[] { "robot.RobotRun" };
+		
+		if (passedArgs != null) {
+			PApplet.main(concat(appletArgs, passedArgs));
+		} else {
+			PApplet.main(appletArgs);
+		}
 	}
 
 	public void draw() {
@@ -281,8 +380,8 @@ public class RobotRun extends PApplet {
 
 		Point eePoint = nativeRobotEEPoint(armModel.getJointAngles());
 
-		if (axesState == AxesDisplay.AXES && curCoordFrame == CoordFrame.TOOL) {
-			Frame activeTool = getActiveFrame(CoordFrame.TOOL);
+		if (axesState == AxesDisplay.AXES && armModel.getCurCoordFrame() == CoordFrame.TOOL) {
+			Frame activeTool = armModel.getActiveFrame(CoordFrame.TOOL);
 
 			// Draw the axes of the active Tool frame at the Robot End Effector
 			displayOriginAxes(eePoint.position, activeTool.getWorldAxisVectors(), 200f, color(255, 0, 255));
@@ -303,10 +402,10 @@ public class RobotRun extends PApplet {
 
 		if (axesState == AxesDisplay.AXES) {
 			// Display axes
-			if (curCoordFrame != CoordFrame.JOINT) {
-				Frame activeUser = getActiveFrame(CoordFrame.USER);
+			if (armModel.getCurCoordFrame() != CoordFrame.JOINT) {
+				Frame activeUser = armModel.getActiveFrame(CoordFrame.USER);
 
-				if(curCoordFrame != CoordFrame.WORLD && activeUser != null) {
+				if(armModel.getCurCoordFrame() != CoordFrame.WORLD && activeUser != null) {
 					// Draw the axes of the active User frame
 					displayOriginAxes(activeUser.getOrigin(), activeUser.getWorldAxisVectors(), 10000f, color(0));
 
@@ -322,19 +421,19 @@ public class RobotRun extends PApplet {
 			float[][] displayAxes;
 			PVector displayOrigin;
 
-			switch(curCoordFrame) {
+			switch(armModel.getCurCoordFrame()) {
 			case JOINT:
 			case WORLD:
 				displayAxes = new float[][] { {1f, 0f, 0f}, {0f, 1f, 0f}, {0f, 0f, 1f} };
 				displayOrigin = new PVector(0f, 0f, 0f);
 				break;
 			case TOOL:
-				active = getActiveFrame(CoordFrame.TOOL);
+				active = armModel.getActiveFrame(CoordFrame.TOOL);
 				displayAxes = active.getNativeAxisVectors();
 				displayOrigin = eePoint.position;
 				break;
 			case USER:
-				active = getActiveFrame(CoordFrame.USER);
+				active = armModel.getActiveFrame(CoordFrame.USER);
 				displayAxes = active.getNativeAxisVectors();
 				displayOrigin = active.getOrigin();
 				break;
@@ -514,7 +613,7 @@ public class RobotRun extends PApplet {
 				lastTextPositionY = 20;
 		String coordFrame = "Coordinate Frame: ";
 
-		switch(curCoordFrame) {
+		switch(armModel.getCurCoordFrame()) {
 		case JOINT:
 			coordFrame += "Joint";
 			break;
@@ -562,7 +661,7 @@ public class RobotRun extends PApplet {
 			lastTextPositionY += 20;
 		}
 
-		Frame active = getActiveFrame(CoordFrame.USER);
+		Frame active = armModel.getActiveFrame(CoordFrame.USER);
 
 		if (active != null) {
 			// Display Robot's current position and orientation in the currently active User frame
@@ -571,7 +670,7 @@ public class RobotRun extends PApplet {
 			cartesian = RP.toLineStringArray(true);
 
 			lastTextPositionY += 20;
-			text(String.format("User: %d", getActiveUserFrame() + 1), lastTextPositionX, lastTextPositionY);
+			text(String.format("User: %d", armModel.getActiveUserFrame() + 1), lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 
 			for (String line : cartesian) {
@@ -681,32 +780,32 @@ public class RobotRun extends PApplet {
 		armModel.halt();
 
 		// Increment the current coordinate frame
-		switch (curCoordFrame) {
+		switch (armModel.getCurCoordFrame()) {
 		case JOINT:
-			curCoordFrame = CoordFrame.WORLD;
+			armModel.setCurCoordFrame(CoordFrame.WORLD);
 			break;
 
 		case WORLD:
-			curCoordFrame = CoordFrame.TOOL;
+			armModel.setCurCoordFrame(CoordFrame.TOOL);
 			break;
 
 		case TOOL:
-			curCoordFrame = CoordFrame.USER;
+			armModel.setCurCoordFrame(CoordFrame.USER);
 			break;
 
 		case USER:
-			curCoordFrame = CoordFrame.JOINT;
+			armModel.setCurCoordFrame(CoordFrame.JOINT);
 			break;
 		}
 
 		// Skip the Tool Frame, if there is no active frame
-		if(curCoordFrame == CoordFrame.TOOL && !(getActiveToolFrame() >= 0 && getActiveToolFrame() < FrameFile.FRAME_SIZE)) {
-			curCoordFrame = CoordFrame.USER;
+		if(armModel.getCurCoordFrame() == CoordFrame.TOOL && !(armModel.getActiveToolFrame() >= 0 && armModel.getActiveToolFrame() < FrameFile.FRAME_SIZE)) {
+			armModel.setCurCoordFrame(CoordFrame.USER);
 		}
 
 		// Skip the User Frame, if there is no active frame
-		if(curCoordFrame == CoordFrame.USER && !(getActiveUserFrame() >= 0 && getActiveUserFrame() < FrameFile.FRAME_SIZE)) {
-			curCoordFrame = CoordFrame.JOINT;
+		if(armModel.getCurCoordFrame() == CoordFrame.USER && !(armModel.getActiveUserFrame() >= 0 && armModel.getActiveUserFrame() < FrameFile.FRAME_SIZE)) {
+			armModel.setCurCoordFrame(CoordFrame.JOINT);
 		}
 
 		updateCoordFrame();
@@ -719,15 +818,15 @@ public class RobotRun extends PApplet {
 	public void updateCoordFrame() {
 
 		// Return to the World Frame, if no User Frame is active
-		if(curCoordFrame == CoordFrame.TOOL && !(getActiveToolFrame() >= 0 && getActiveToolFrame() < FrameFile.FRAME_SIZE)) {
-			curCoordFrame = CoordFrame.WORLD;
+		if(armModel.getCurCoordFrame() == CoordFrame.TOOL && !(armModel.getActiveToolFrame() >= 0 && armModel.getActiveToolFrame() < FrameFile.FRAME_SIZE)) {
+			armModel.setCurCoordFrame(CoordFrame.WORLD);
 			// Stop Robot movement
 			armModel.halt();
 		}
 
 		// Return to the World Frame, if no User Frame is active
-		if(curCoordFrame == CoordFrame.USER && !(getActiveUserFrame() >= 0 && getActiveUserFrame() < FrameFile.FRAME_SIZE)) {
-			curCoordFrame = CoordFrame.WORLD;
+		if(armModel.getCurCoordFrame() == CoordFrame.USER && !(armModel.getActiveUserFrame() >= 0 && armModel.getActiveUserFrame() < FrameFile.FRAME_SIZE)) {
+			armModel.setCurCoordFrame(CoordFrame.WORLD);
 			// Stop Robot movement
 			armModel.halt();
 		}
@@ -742,7 +841,7 @@ public class RobotRun extends PApplet {
 	 * @returning          The Robot's faceplate position and orientation
 	 *                     corresponding to the given joint angles
 	 */
-	public Point nativeRobotPoint(float[] jointAngles) {
+	public static Point nativeRobotPoint(float[] jointAngles) {
 		// Return a point containing the faceplate position, orientation, and joint angles
 		return nativeRobotPointOffset(jointAngles, new PVector(0f, 0f, 0f));
 	}
@@ -756,14 +855,14 @@ public class RobotRun extends PApplet {
 	 * @returning          The Robot's EE position and orientation corresponding to
 	 *                     the given joint angles
 	 */
-	public Point nativeRobotPointOffset(float[] jointAngles, PVector offset) {
-		pushMatrix();
-		resetMatrix();
+	public static Point nativeRobotPointOffset(float[] jointAngles, PVector offset) {
+		instance.pushMatrix();
+		instance.resetMatrix();
 		applyModelRotation(jointAngles);
 		// Apply offset
-		PVector ee = getCoordFromMatrix(offset.x, offset.y, offset.z);
-		float[][] orientationMatrix = getRotationMatrix();
-		popMatrix();
+		PVector ee = instance.getCoordFromMatrix(offset.x, offset.y, offset.z);
+		float[][] orientationMatrix = instance.getRotationMatrix();
+		instance.popMatrix();
 		// Return a Point containing the EE position, orientation, and joint angles
 		return new Point(ee, matrixToQuat(orientationMatrix), jointAngles);
 	}
@@ -775,8 +874,8 @@ public class RobotRun extends PApplet {
 	 * @param jointAngles  A valid set of six joint angles (in radians) for the Robot
 	 * @returning          The Robot's End Effector position
 	 */
-	public Point nativeRobotEEPoint(float[] jointAngles) {
-		Frame activeTool = getActiveFrame(CoordFrame.TOOL);
+	public static Point nativeRobotEEPoint(float[] jointAngles) {
+		Frame activeTool = instance.armModel.getActiveFrame(CoordFrame.TOOL);
 		PVector offset;
 
 		if (activeTool != null) {
@@ -821,7 +920,7 @@ public class RobotRun extends PApplet {
 	 * resulting matrix will describe the linear approximation
 	 * of the robot's motion for each joint in units per radian. 
 	 */
-	public float[][] calculateJacobian(float[] angles, boolean posOffset) {
+	public static float[][] calculateJacobian(float[] angles, boolean posOffset) {
 		float dAngle = DEG_TO_RAD;
 		if (!posOffset){ dAngle *= -1; }
 
@@ -871,7 +970,7 @@ public class RobotRun extends PApplet {
 	 * @param tgtPosition     The desired position of the Robot
 	 * @param tgtOrientation  The desited orientation of the Robot
 	 */
-	public float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, RQuaternion tgtOrientation) {
+	public static float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, RQuaternion tgtOrientation) {
 		final int limit = 1000;  // Max number of times to loop
 		int count = 0;
 
@@ -902,7 +1001,7 @@ public class RobotRun extends PApplet {
 			float dist = PVector.dist(cPoint.position, tgtPosition);
 			float rDist = rDelta.magnitude();
 			//check whether our current position is within tolerance
-			if ( (dist < (liveSpeed / 100f)) && (rDist < (0.00005f * liveSpeed)) ) { break; }
+			if ( (dist < (instance.liveSpeed / 100f)) && (rDist < (0.00005f * instance.liveSpeed)) ) { break; }
 
 			//calculate jacobian, 'J', and its inverse
 			float[][] J = calculateJacobian(angles, true);
@@ -945,7 +1044,7 @@ public class RobotRun extends PApplet {
 		MotionInstruction instruction = activeMotionInst();
 		if(instruction != null && instruction.getMotionType() != MTYPE_JOINT)
 			distanceBetweenPoints = instruction.getSpeed() / 60.0f;
-		else if(curCoordFrame != CoordFrame.JOINT)
+		else if(armModel.getCurCoordFrame() != CoordFrame.JOINT)
 			distanceBetweenPoints = armModel.motorSpeed * liveSpeed / 6000f;
 		else distanceBetweenPoints = 5.0f;
 	}
@@ -1416,10 +1515,10 @@ public class RobotRun extends PApplet {
 	public boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
 		Point start = nativeRobotEEPoint(model.getJointAngles());
 
-		if (!instruction.checkFrames(getActiveToolFrame(), getActiveUserFrame())) {
+		if (!instruction.checkFrames(armModel.getActiveToolFrame(), armModel.getActiveUserFrame())) {
 			// Current Frames must match the instruction's frames
 			System.out.printf("Tool frame: %d : %d\nUser frame: %d : %d\n\n", instruction.getToolFrame(),
-					getActiveToolFrame(), instruction.getUserFrame(), getActiveUserFrame());
+					armModel.getActiveToolFrame(), instruction.getUserFrame(), armModel.getActiveUserFrame());
 			return false;
 		} else if(instruction.getVector(program) == null) {
 			return false;
@@ -1507,120 +1606,7 @@ public class RobotRun extends PApplet {
 		return s + "]";
 	}
 
-	/* The current Coordinate Frame for the Robot */
-	CoordFrame curCoordFrame = CoordFrame.JOINT;
 
-	public final float[][] WORLD_AXES = new float[][] { { -1,  0,  0 },
-												 {  0,  0,  1 },
-												 {  0, -1,  0 } };
-												 
-	/**
-	 * Returns the active Tool frame TOOL, or the active User frame for USER. For either
-	 * CoordFrame WORLD or JOINT null is always returned. If null is given as a parameter,
-	 * then the active Coordinate Frame System is checked.
-	 * 
-	 * @param coord  The Coordinate Frame System to check for an active frame,
-	 *               or null to check the current active Frame System.
-	 */
-	public Frame getActiveFrame(CoordFrame coord) {
-		if (coord == null) {
-			// Use current coordinate Frame
-			coord = curCoordFrame;
-		}
-
-		// Determine if a frame is active in the given Coordinate Frame
-		if (coord == CoordFrame.USER && getActiveUserFrame() >= 0 && getActiveUserFrame() < FrameFile.FRAME_SIZE) {
-			// active User frame
-			return FrameFile.getUFrame(getActiveUserFrame());
-		} else if (coord == CoordFrame.TOOL && getActiveToolFrame() >= 0 && getActiveToolFrame() < FrameFile.FRAME_SIZE) {
-			// active Tool frame
-			return FrameFile.getTFrame(getActiveToolFrame());
-		} else {
-			// no active frame
-			return null;
-		}
-	}
-
-	private int active_prog = -1; // the currently selected program
-	private int active_instr = -1; // the currently selected instruction
-	int temp_select = 0;
-	boolean shift = false; // Is shift button pressed or not?
-	private boolean step = false; // Is step button pressed or not?
-	private int record = Fields.OFF;
-
-	Screen mode;
-	int g1_px, g1_py; // the left-top corner of group1
-	int g1_width, g1_height; // group 1's width and height
-	int display_px, display_py; // the left-top corner of display screen
-	int display_width, display_height; // height and width of display screen
-
-	public Group g1, g2;
-	Button bt_record_normal, 
-	bt_ee_normal;
-
-	String workingText; // when entering text or a number
-	String workingTextSuffix;
-	boolean speedInPercentage;
-
-	final int ITEMS_TO_SHOW = 8, // how many programs/ instructions to display on screen
-			NUM_ENTRY_LEN = 16, // Maximum character length for a number input
-			TEXT_ENTRY_LEN = 16; // Maximum character length for text entry
-
-	// Index of the current frame (Tool or User) selecting when in the Frame menus
-	int curFrameIdx = -1;
-
-	private int // Indices of currently active frames
-	activeUserFrame = -1;
-
-	private int activeToolFrame = -1;
-	// The Frame being taught, during a frame teaching process
-	Frame teachFrame = null;
-	// Expression operand currently being edited
-	ExprOperand opEdit = null;
-	int editIdx = -1;
-
-	//variables for keeping track of the last change made to the current program
-	Instruction lastInstruct;
-	boolean newInstruct;
-	int lastLine;
-
-	// display list of programs or motion instructions
-	ArrayList<DisplayLine> contents = new ArrayList<DisplayLine>();
-	// Display otions for a number of menus
-	ArrayList<String> options = new ArrayList<String>();
-	// store numbers pressed by the user
-	ArrayList<Integer> nums = new ArrayList<Integer>();
-	// container for instructions being coppied/ cut and pasted
-	ArrayList<Instruction> clipBoard = new ArrayList<Instruction>();
-	// string for displaying error message to user
-	String err = null;
-	// which element is on focus now?
-	private int row_select = 0; //currently selected display row
-	int prev_select = -1; //saves row_select value if next screen also utilizes this variable
-	private int col_select = 0; //currently selected display column
-	int opt_select = 0; //which option is on focus now?
-	private int start_render = 0; //index of the first element in a list to be drawn on screen
-	int active_index = 0; //index of the cursor with respect to the first element on screen
-	boolean[] selectedLines; //array whose indecies correspond to currently selected lines
-	// how many textlabels have been created for display
-	int index_contents = 0, index_options = 100, index_nums = 1000;
-
-	/**
-	 * Used for comment name input. The user can cycle through the
-	 * six states for each function button in this mode:
-	 *
-	 * F1 -> A-F/a-f
-	 * F2 -> G-L/g-l
-	 * F3 -> M-R/m-r
-	 * F4 -> S-X/s-x
-	 * F5 -> Y-Z/y-z, _, @, *, .
-	 */
-	private int[] letterStates = {0, 0, 0, 0, 0};
-	private final char[][] letters = {{'a', 'b', 'c', 'd', 'e', 'f'},
-			{'g', 'h', 'i', 'j', 'k', 'l'},
-			{'m', 'n', 'o', 'p', 'q', 'r'},
-			{'s', 't', 'u', 'v', 'w', 'x'},
-			{'y', 'z', '_', '@', '*', '.'}};
 
 	public void gui() {
 		g1_px = 0;
@@ -2668,7 +2654,7 @@ public class RobotRun extends PApplet {
 			break;
 		case ACTIVE_FRAMES:
 			updateActiveFramesDisplay();
-			workingText = Integer.toString(getActiveToolFrame() + 1);
+			workingText = Integer.toString(armModel.getActiveToolFrame() + 1);
 			setRow_select(max(0, getRow_select() - 1));
 			break;
 		default:
@@ -2776,7 +2762,7 @@ public class RobotRun extends PApplet {
 			break;  //<>//
 		case ACTIVE_FRAMES:
 			updateActiveFramesDisplay();
-			workingText = Integer.toString(getActiveUserFrame() + 1);
+			workingText = Integer.toString(armModel.getActiveUserFrame() + 1);
 			setRow_select(min(getRow_select() + 1, contents.size() - 1));
 			break;
 		default:
@@ -2948,7 +2934,7 @@ public class RobotRun extends PApplet {
 				updateScreen();
 			} else {
 				// Set the current tool frame
-				setActiveToolFrame(active_index);
+				armModel.setActiveToolFrame(active_index);
 				updateCoordFrame();
 			}
 			break;
@@ -2960,7 +2946,7 @@ public class RobotRun extends PApplet {
 				updateScreen();
 			} else {
 				// Set the current user frame
-				setActiveUserFrame(active_index);
+				armModel.setActiveUserFrame(active_index);
 				updateCoordFrame();
 			}
 			break;
@@ -3280,7 +3266,7 @@ public class RobotRun extends PApplet {
 				if (pt != null) {
 					// Move the Robot to the select point
 					if (mode == Screen.NAV_PREGS_C) {
-						Frame active = getActiveFrame(CoordFrame.USER);
+						Frame active = armModel.getActiveFrame(CoordFrame.USER);
 
 						if (active != null) {
 							pt = removeFrame(pt, active.getOrigin(), active.getOrientation());
@@ -3412,7 +3398,7 @@ public class RobotRun extends PApplet {
 			if (shift && active_index >= 0 && active_index < RegisterFile.REG_SIZE) {
 				// Save the Robot's current position and joint angles
 				Point curRP = nativeRobotEEPoint(armModel.getJointAngles());
-				Frame active = getActiveFrame(CoordFrame.USER);
+				Frame active = armModel.getActiveFrame(CoordFrame.USER);
 
 				if (active != null) {
 					// Save Cartesian values in terms of the active User frame
@@ -4497,7 +4483,7 @@ public class RobotRun extends PApplet {
 				if(workingText.charAt(  workingText.length() - 1  ) == '\0') {
 					workingText = workingText.substring(0, workingText.length() - 1);
 				}
-				// Save the inputted comment to the selected register
+				// Save the inputed comment to the selected register
 				RegisterFile.getPReg(active_index).setComment(workingText);
 				saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 				workingText = "";
@@ -4509,7 +4495,7 @@ public class RobotRun extends PApplet {
 				if(workingText.charAt(  workingText.length() - 1  ) == '\0') {
 					workingText = workingText.substring(0, workingText.length() - 1);
 				}
-				// Save the inputted comment to the selected register\
+				// Save the inputed comment to the selected register\
 				RegisterFile.getDReg(active_index).setComment(workingText);
 				saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 				workingText = "";
@@ -4731,7 +4717,7 @@ public class RobotRun extends PApplet {
 		if (button >= 0 && button < 6) {
 			float newDir;
 
-			if(curCoordFrame == CoordFrame.JOINT) {
+			if(armModel.getCurCoordFrame() == CoordFrame.JOINT) {
 				// Move single joint
 				newDir = activateLiveJointMotion(button, direction);
 			} else {
@@ -4775,25 +4761,7 @@ public class RobotRun extends PApplet {
 			return 0f;
 		}
 
-		if(armModel.segments.size() >= joint+1) {
-
-			Model model = armModel.segments.get(joint);
-			// Checks all rotational axes
-			for(int n = 0; n < 3; n++) {
-
-				if(model.rotations[n]) {
-
-					if(model.jointsMoving[n] == 0) {
-						model.jointsMoving[n] = dir;
-						return dir;
-					} else {
-						model.jointsMoving[n] = 0;
-					}
-				}
-			}
-		}
-
-		return 0f;
+		return armModel.setJointMotion(joint, dir);
 	}
 
 	/**
@@ -4932,7 +4900,7 @@ public class RobotRun extends PApplet {
 		case ACTIVE_FRAMES:
 			setRow_select(0);
 			setCol_select(1);
-			workingText = Integer.toString(getActiveToolFrame() + 1);
+			workingText = Integer.toString(armModel.getActiveToolFrame() + 1);
 			break;
 		case SELECT_FRAME_MODE:
 			active_index = 0;
@@ -5641,9 +5609,9 @@ public class RobotRun extends PApplet {
 			/* workingText corresponds to the active row's index display */
 			if (getRow_select() == 0) {
 				contents.add(newLine("Tool: ", workingText));
-				contents.add(newLine("User: ", Integer.toString(getActiveUserFrame() + 1)));
+				contents.add(newLine("User: ", Integer.toString(armModel.getActiveUserFrame() + 1)));
 			} else {
-				contents.add(newLine("Tool: ", Integer.toString(getActiveToolFrame() + 1)));
+				contents.add(newLine("Tool: ", Integer.toString(armModel.getActiveToolFrame() + 1)));
 				contents.add(newLine("User: ", workingText));
 			}
 			break;
@@ -6790,7 +6758,7 @@ public class RobotRun extends PApplet {
 
 	public void newMotionInstruction() {
 		Point pt = nativeRobotEEPoint(armModel.getJointAngles());
-		Frame active = getActiveFrame(CoordFrame.USER);
+		Frame active = armModel.getActiveFrame(CoordFrame.USER);
 
 		if (active != null) {
 			// Convert into currently active frame
@@ -6812,13 +6780,13 @@ public class RobotRun extends PApplet {
 		}
 		else {
 			MotionInstruction insert = new MotionInstruction(
-					curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR,
+					armModel.getCurCoordFrame() == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR,
 							getActive_instr(),
 							false,
-							(curCoordFrame == CoordFrame.JOINT ? 50 : 50 * armModel.motorSpeed) / 100f,
+							(armModel.getCurCoordFrame() == CoordFrame.JOINT ? 50 : 50 * armModel.motorSpeed) / 100f,
 							0,
-							getActiveUserFrame(),
-							getActiveToolFrame());
+							armModel.getActiveUserFrame(),
+							armModel.getActiveToolFrame());
 
 			prog.setPosition(getActive_instr(), pt);
 
@@ -6957,9 +6925,9 @@ public class RobotRun extends PApplet {
 			if (frameIdx >= -1 && frameIdx < 10) {
 				// Update the appropriate active Frame index
 				if (getRow_select() == 0) {
-					setActiveToolFrame(frameIdx);
+					armModel.setActiveToolFrame(frameIdx);
 				} else {
-					setActiveUserFrame(frameIdx);
+					armModel.setActiveUserFrame(frameIdx);
 				}
 
 				updateCoordFrame();
@@ -6970,9 +6938,9 @@ public class RobotRun extends PApplet {
 		}
 		// Update display
 		if (getRow_select() == 0) {
-			workingText = Integer.toString(getActiveToolFrame() + 1);
+			workingText = Integer.toString(armModel.getActiveToolFrame() + 1);
 		} else {
-			workingText = Integer.toString(getActiveUserFrame() + 1);
+			workingText = Integer.toString(armModel.getActiveUserFrame() + 1);
 		}
 
 		contents.get(getRow_select()).set(getCol_select(), workingText);
@@ -7146,15 +7114,15 @@ public class RobotRun extends PApplet {
 			// Set new Frame
 			if (frame instanceof ToolFrame) {
 				// Update the current frame of the Robot Arm
-				setActiveToolFrame(curFrameIdx);
-				FrameFile.setTFrame(getActiveToolFrame(), (ToolFrame)frame);
+				armModel.setActiveToolFrame(curFrameIdx);
+				FrameFile.setTFrame(armModel.getActiveToolFrame(), (ToolFrame)frame);
 				updateCoordFrame();
 
 				saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
 			} else {
 				// Update the current frame of the Robot Arm
-				setActiveUserFrame(curFrameIdx);
-				FrameFile.setUFrame(getActiveUserFrame(), (UserFrame)frame);
+				armModel.setActiveUserFrame(curFrameIdx);
+				FrameFile.setUFrame(armModel.getActiveUserFrame(), (UserFrame)frame);
 				updateCoordFrame();
 
 				saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
@@ -7200,10 +7168,10 @@ public class RobotRun extends PApplet {
 		// Set New Frame
 		if(taughtFrame instanceof ToolFrame) {
 			// Update the current frame of the Robot Arm
-			setActiveToolFrame(curFrameIdx);
+			armModel.setActiveToolFrame(curFrameIdx);
 		} else {
 			// Update the current frame of the Robot Arm
-			setActiveUserFrame(curFrameIdx);
+			armModel.setActiveUserFrame(curFrameIdx);
 		} 
 
 		updateCoordFrame();
@@ -9567,131 +9535,7 @@ public class RobotRun extends PApplet {
 		return mesh;
 	} 
 
-	/**
-	 * This algorithm uses the Separating Axis Theorm to project radi of each Box on to several 
-	 * axes to determine if a there is any overlap between the boxes. The method strongly resembles 
-	 * the method outlined in Section 4.4 of "Real Time Collision Detection" by Christer Ericson
-	 *
-	 * @param A  The hit box associated with some object in space
-	 * @param B  The hit box associated with another object in space
-	 * @return   Whether the two hit boxes intersect
-	 */
-	public static boolean collision3D(BoundingBox A, BoundingBox B) {
-		// Rows are x, y, z axis vectors for A and B: Ax, Ay, Az, Bx, By, and Bz
-		float[][] axes_A = A.getOrientationAxes();
-		float[][] axes_B = B.getOrientationAxes();
 
-		// Rotation matrices to convert B into A's coordinate system
-		float[][] rotMatrix = new float[3][3];
-		float[][] absRotMatrix = new float[3][3];
-
-		for(int v = 0; v < axes_A.length; v += 1) {
-			for(int u = 0; u < axes_B.length; u += 1) {
-				// PLEASE do not change to matrix mutliplication
-				rotMatrix[v][u] = axes_A[v][0] * axes_B[u][0] +  axes_A[v][1] * axes_B[u][1] +  axes_A[v][2] * axes_B[u][2];
-				// Add offset for valeus close to zero (parallel axes)
-				absRotMatrix[v][u] = abs(rotMatrix[v][u]) + 0.00000000175f;
-			}
-		}
-
-		// T = B's position - A's
-		PVector posA = new PVector().set(A.getCenter());
-		PVector posB = new PVector().set(B.getCenter());
-		PVector limbo = posB.sub(posA);
-		// Convert T into A's coordinate frame
-		float[] T = new float[] { limbo.dot(new PVector().set(axes_A[0])), 
-				limbo.dot(new PVector().set(axes_A[1])), 
-				limbo.dot(new PVector().set(axes_A[2])) };
-
-		float radiA, radiB;
-
-		for(int idx = 0; idx < absRotMatrix.length; ++idx) {
-
-			if (idx == 0) {
-				radiA = A.getDim(DimType.LENGTH) / 2f;
-			} else if (idx == 1) {
-				radiA = A.getDim(DimType.HEIGHT) / 2f;
-			} else {
-				radiA = A.getDim(DimType.WIDTH) / 2f;
-			}
-
-			radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[idx][0] + 
-					(B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[idx][1] + 
-					(B.getDim(DimType.WIDTH) / 2) * absRotMatrix[idx][2];
-
-			// Check Ax, Ay, and Az
-			if(abs(T[idx]) > (radiA + radiB)) { return false; }
-		}
-
-		for(int idx = 0; idx < absRotMatrix[0].length; ++idx) {
-			radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[0][idx] + 
-					(A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[1][idx] + 
-					(A.getDim(DimType.WIDTH) / 2) * absRotMatrix[2][idx];
-
-			if (idx == 0) {
-				radiB = B.getDim(DimType.LENGTH) / 2f;
-			} else if (idx == 1) {
-				radiB = B.getDim(DimType.HEIGHT) / 2f;
-			} else {
-				radiB = B.getDim(DimType.WIDTH) / 2f;
-			}
-
-			float check = abs(T[0]*rotMatrix[0][idx] + 
-					T[1]*rotMatrix[1][idx] + 
-					T[2]*rotMatrix[2][idx]);
-
-			// Check Bx, By, and Bz
-			if(check > (radiA + radiB)) { return false; }
-		}
-
-		radiA = (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[2][0] + (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[1][0];
-		radiB = (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[0][2] + (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[0][1];
-		// Check axes Ax x Bx
-		if(abs(T[2] * rotMatrix[1][0] - T[1] * rotMatrix[2][0]) > (radiA + radiB)) { return false; }
-
-		radiA = (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[2][1] + (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[1][1];
-		radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[0][2] + (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[0][0];
-		// Check axes Ax x By
-		if(abs(T[2] * rotMatrix[1][1] - T[1] * rotMatrix[2][1]) > (radiA + radiB)) { return false; }
-
-		radiA = (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[2][2] + (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[1][2];
-		radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[0][1] + (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[0][0];
-		// Check axes Ax x Bz
-		if(abs(T[2] * rotMatrix[1][2] - T[1] * rotMatrix[2][2]) > (radiA + radiB)) { return false; }
-
-		radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[2][0] + (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[0][0];
-		radiB = (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[1][2] + (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[1][1];
-		// Check axes Ay x Bx
-		if(abs(T[0] * rotMatrix[2][0] - T[2] * rotMatrix[0][0]) > (radiA + radiB)) { return false; }
-
-		radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[2][1] + (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[0][1];
-		radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[1][2] + (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[1][0];
-		// Check axes Ay x By
-		if(abs(T[0] * rotMatrix[2][1] - T[2] * rotMatrix[0][1]) > (radiA + radiB)) { return false; }
-
-		radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[2][2] + (A.getDim(DimType.WIDTH) / 2) * absRotMatrix[0][2];
-		radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[1][1] + (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[1][0];
-		// Check axes Ay x Bz
-		if(abs(T[0] * rotMatrix[2][2] - T[2] * rotMatrix[0][2]) > (radiA + radiB)) { return false; }
-
-
-		radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[1][0] + (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[0][0];
-		radiB = (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[2][2] + (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[2][1];
-		// Check axes Az x Bx
-		if(abs(T[1] * rotMatrix[0][0] - T[0] * rotMatrix[1][0]) > (radiA + radiB)) { return false; }
-
-		radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[1][1] + (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[0][1];
-		radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[2][2] + (B.getDim(DimType.WIDTH) / 2) * absRotMatrix[2][0];
-		// Check axes Az x By
-		if(abs(T[1] * rotMatrix[0][1] - T[0] * rotMatrix[1][1]) > (radiA + radiB)) { return false; }
-
-		radiA = (A.getDim(DimType.LENGTH) / 2) * absRotMatrix[1][2] + (A.getDim(DimType.HEIGHT) / 2) * absRotMatrix[0][2];
-		radiB = (B.getDim(DimType.LENGTH) / 2) * absRotMatrix[2][1] + (B.getDim(DimType.HEIGHT) / 2) * absRotMatrix[2][0];
-		// Check axes Az x Bz
-		if(abs(T[1] * rotMatrix[0][2] - T[0] * rotMatrix[1][2]) > (radiA + radiB)) { return false; }
-
-		return true;
-	}
 	/**
 	 * Applies the rotations and translations of the Robot Arm to get to the
 	 * face plate center, given the set of six joint angles, each corresponding
@@ -9699,56 +9543,56 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @param jointAngles  A valid set of six joint angles (in radians) for the Robot
 	 */
-	public void applyModelRotation(float[] jointAngles) {
-		translate(ROBOT_POSITION.x, ROBOT_POSITION.y, ROBOT_POSITION.z);
+	public static void applyModelRotation(float[] jointAngles) {
+		instance.translate(ROBOT_POSITION.x, ROBOT_POSITION.y, ROBOT_POSITION.z);
 
-		translate(-50, -166, -358); // -115, -213, -413
-		rotateZ(PI);
-		translate(150, 0, 150);
-		rotateX(PI);
-		rotateY(jointAngles[0]);
-		rotateX(-PI);
-		translate(-150, 0, -150);
-		rotateZ(-PI);    
-		translate(-115, -85, 180);
-		rotateZ(PI);
-		rotateY(PI/2);
-		translate(0, 62, 62);
-		rotateX(jointAngles[1]);
-		translate(0, -62, -62);
-		rotateY(-PI/2);
-		rotateZ(-PI);   
-		translate(0, -500, -50);
-		rotateZ(PI);
-		rotateY(PI/2);
-		translate(0, 75, 75);
-		rotateZ(PI);
-		rotateX(jointAngles[2]);
-		rotateZ(-PI);
-		translate(0, -75, -75);
-		rotateY(PI/2);
-		rotateZ(-PI);
-		translate(745, -150, 150);
-		rotateZ(PI/2);
-		rotateY(PI/2);
-		translate(70, 0, 70);
-		rotateY(jointAngles[3]);
-		translate(-70, 0, -70);
-		rotateY(-PI/2);
-		rotateZ(-PI/2);    
-		translate(-115, 130, -124);
-		rotateZ(PI);
-		rotateY(-PI/2);
-		translate(0, 50, 50);
-		rotateX(jointAngles[4]);
-		translate(0, -50, -50);
-		rotateY(PI/2);
-		rotateZ(-PI);    
-		translate(150, -10, 95);
-		rotateY(-PI/2);
-		rotateZ(PI);
-		translate(45, 45, 0);
-		rotateZ(jointAngles[5]);
+		instance.translate(-50, -166, -358); // -115, -213, -413
+		instance.rotateZ(PI);
+		instance.translate(150, 0, 150);
+		instance.rotateX(PI);
+		instance.rotateY(jointAngles[0]);
+		instance.rotateX(-PI);
+		instance.translate(-150, 0, -150);
+		instance.rotateZ(-PI);    
+		instance.translate(-115, -85, 180);
+		instance.rotateZ(PI);
+		instance.rotateY(PI/2);
+		instance.translate(0, 62, 62);
+		instance.rotateX(jointAngles[1]);
+		instance.translate(0, -62, -62);
+		instance.rotateY(-PI/2);
+		instance.rotateZ(-PI);   
+		instance.translate(0, -500, -50);
+		instance.rotateZ(PI);
+		instance.rotateY(PI/2);
+		instance.translate(0, 75, 75);
+		instance.rotateZ(PI);
+		instance.rotateX(jointAngles[2]);
+		instance.rotateZ(-PI);
+		instance.translate(0, -75, -75);
+		instance.rotateY(PI/2);
+		instance.rotateZ(-PI);
+		instance.translate(745, -150, 150);
+		instance.rotateZ(PI/2);
+		instance.rotateY(PI/2);
+		instance.translate(70, 0, 70);
+		instance.rotateY(jointAngles[3]);
+		instance.translate(-70, 0, -70);
+		instance.rotateY(-PI/2);
+		instance.rotateZ(-PI/2);    
+		instance.translate(-115, 130, -124);
+		instance.rotateZ(PI);
+		instance.rotateY(-PI/2);
+		instance.translate(0, 50, 50);
+		instance.rotateX(jointAngles[4]);
+		instance.translate(0, -50, -50);
+		instance.rotateY(PI/2);
+		instance.rotateZ(-PI);    
+		instance.translate(150, -10, 95);
+		instance.rotateY(-PI/2);
+		instance.rotateZ(PI);
+		instance.translate(45, 45, 0);
+		instance.rotateZ(jointAngles[5]);
 	}
 
 	/**
@@ -9762,7 +9606,7 @@ public class RobotRun extends PApplet {
 	 * @param axes    The axes of the Coordinate System representing as a rotation quanternion
 	 * @returning     The point, pt, interms of the given frame's Coordinate System
 	 */
-	public Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
+	public static Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
 		PVector position = convertToFrame(pt.position, origin, axes);
 		RQuaternion orientation = axes.transformQuaternion(pt.orientation);
 		// Update joint angles associated with the point
@@ -9785,7 +9629,7 @@ public class RobotRun extends PApplet {
 	 * @param axes    The axes of the Coordinate System representing as a rotation quanternion
 	 * @returning     The vector, v, interms of the given frame's Coordinate System
 	 */
-	public PVector convertToFrame(PVector v, PVector origin, RQuaternion axes) {
+	public static PVector convertToFrame(PVector v, PVector origin, RQuaternion axes) {
 		PVector vOffset = PVector.sub(v, origin);
 		return axes.rotateVector(vOffset);
 	}
@@ -10089,7 +9933,7 @@ public class RobotRun extends PApplet {
 	/**
 	 * Converts the given Euler angle set values to a quaternion
 	 */
-	public RQuaternion eulerToQuat(PVector wpr) {
+	public static RQuaternion eulerToQuat(PVector wpr) {
 		float w, x, y, z;
 		float xRot = wpr.x;
 		float yRot = wpr.y;
@@ -10104,7 +9948,7 @@ public class RobotRun extends PApplet {
 	}
 
 	//calculates euler angles from rotation matrix
-	public PVector matrixToEuler(float[][] r) {
+	public static PVector matrixToEuler(float[][] r) {
 		float yRot1, xRot1, zRot1;
 		PVector wpr;
 
@@ -10131,7 +9975,7 @@ public class RobotRun extends PApplet {
 	}
 
 	//calculates quaternion from rotation matrix
-	public RQuaternion matrixToQuat(float[][] r) {
+	public static RQuaternion matrixToQuat(float[][] r) {
 		float[] limboQ = new float[4];
 		float tr = r[0][0] + r[1][1] + r[2][2];
 
@@ -10168,14 +10012,14 @@ public class RobotRun extends PApplet {
 	}
 
 	//calculates euler angles from quaternion
-	public PVector quatToEuler(RQuaternion q) {
+	public static PVector quatToEuler(RQuaternion q) {
 		float[][] r = q.toMatrix();
 		PVector wpr = matrixToEuler(r);
 		return wpr;
 	}
 
 	//calculates rotation matrix from quaternion
-	public float[][] quatToMatrix(RQuaternion q) {
+	public static float[][] quatToMatrix(RQuaternion q) {
 		float[][] r = new float[3][3];
 
 		r[0][0] = 1 - 2*(q.getValue(2)*q.getValue(2) + q.getValue(3)*q.getValue(3));
@@ -10208,7 +10052,7 @@ public class RobotRun extends PApplet {
 	}
 
 	//converts a float array to a double array
-	public double[][] floatToDouble(float[][] m, int l, int w) {
+	public static double[][] floatToDouble(float[][] m, int l, int w) {
 		double[][] r = new double[l][w];
 
 		for(int i = 0; i < l; i += 1) {
@@ -10221,7 +10065,7 @@ public class RobotRun extends PApplet {
 	}
 
 	//converts a double array to a float array
-	public float[][] doubleToFloat(double[][] m, int l, int w) {
+	public static float[][] doubleToFloat(double[][] m, int l, int w) {
 		float[][] r = new float[l][w];
 
 		for(int i = 0; i < l; i += 1) {
@@ -10235,7 +10079,7 @@ public class RobotRun extends PApplet {
 
 	//produces a rotation matrix given a rotation 'theta' around
 	//a given axis
-	public float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
+	public static float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
 		float s = sin(theta);
 		float c = cos(theta);
 		float t = 1-c;
@@ -10267,7 +10111,7 @@ public class RobotRun extends PApplet {
 	}
 
 	//returns the result of a vector 'v' multiplied by scalar 's'
-	public float[] vectorScalarMult(float[] v, float s) {
+	public static float[] vectorScalarMult(float[] v, float s) {
 		float[] ret = new float[v.length];
 		for(int i = 0; i < ret.length; i += 1) { 
 			ret[i] = v[i]*s; 
@@ -10285,7 +10129,7 @@ public class RobotRun extends PApplet {
 	 * @param rangeStart     the 'lower bounds' of the angle range to check
 	 * @param rangeEnd       the 'upper bounds' of the angle range to check
 	 */
-	public boolean angleWithinBounds(float angleToVerify, float rangeStart, float rangeEnd) {
+	public static boolean angleWithinBounds(float angleToVerify, float rangeStart, float rangeEnd) {
 
 		if(rangeStart < rangeEnd) {
 			// Joint range does not overlap TWO_PI
@@ -10302,7 +10146,7 @@ public class RobotRun extends PApplet {
 	 * @param angle  Some rotation in radians
 	 * @returning    The equivalent angle within the range [0, TWO_PI)
 	 */
-	public float mod2PI(float angle) {
+	public static float mod2PI(float angle) {
 		float temp = angle % TWO_PI;
 
 		if (temp < 0f) {
@@ -10320,7 +10164,7 @@ public class RobotRun extends PApplet {
 	 * @param dset  The destination angle in radians
 	 * @returning   The minimum distance between src and dest
 	 */
-	public float minimumDistance(float src, float dest) {
+	public static float minimumDistance(float src, float dest) {
 		// Bring angles within range [0, TWO_PI)
 		float difference = mod2PI(dest) - mod2PI(src);
 
@@ -10333,20 +10177,12 @@ public class RobotRun extends PApplet {
 		return difference;
 	}
 
-	public int clamp(int in, int min, int max) {
+	public static int clamp(int in, int min, int max) {
 		return min(max, max(min, in));
 	}
 
 
-	public void settings() {  size(1080, 720, P3D); }
-	static public void main(String[] passedArgs) {
-	String[] appletArgs = new String[] { "robot.RobotRun" };
-		if (passedArgs != null) {
-			PApplet.main(concat(appletArgs, passedArgs));
-		} else {
-			PApplet.main(appletArgs);
-		}
-	}
+
 
 	public Camera getCamera() {
 		return camera;
@@ -10422,22 +10258,6 @@ public class RobotRun extends PApplet {
 
 	public void setStart_render(int start_render) {
 		this.start_render = start_render;
-	}
-
-	public int getActiveToolFrame() {
-		return activeToolFrame;
-	}
-
-	public void setActiveToolFrame(int activeToolFrame) {
-		this.activeToolFrame = activeToolFrame;
-	}
-
-	public int getActiveUserFrame() {
-		return activeUserFrame;
-	}
-
-	public void setActiveUserFrame(int activeUserFrame) {
-		this.activeUserFrame = activeUserFrame;
 	}
 
 	public boolean isExecutingInstruction() {
