@@ -7,40 +7,32 @@ import processing.core.PVector;
  * A box object with its own local Coordinate system.
  */
 public class BoundingBox {
-	/**
-	 * 
-	 */
-	private RobotRun robotRun;
 	private CoordinateSystem localOrientation;
 	/* The origin of the bounding box's local Coordinate System */
 	private Box boundingBox;
 
 	/**
 	 * Create a cube object with the given colors and dimension
-	 * @param robotRun TODO
 	 */
-	public BoundingBox(RobotRun robotRun) {
-		this.robotRun = robotRun;
-		localOrientation = new CoordinateSystem(this.robotRun);
-		boundingBox = new Box(this.robotRun, this.robotRun.color(0, 255, 0), 10f);
+	public BoundingBox() {
+		localOrientation = new CoordinateSystem();
+		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), 10f);
 	}
 
 	/**
 	 * Create a cube object with the given colors and dimension
 	 */
-	public BoundingBox(RobotRun robotRun, float edgeLen) {
-		this.robotRun = robotRun;
-		localOrientation = new CoordinateSystem(this.robotRun);
-		boundingBox = new Box(this.robotRun, this.robotRun.color(0, 255, 0), edgeLen);
+	public BoundingBox(float edgeLen) {
+		localOrientation = new CoordinateSystem();
+		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), edgeLen);
 	}
 
 	/**
 	 * Create a box object with the given colors and dimensions
 	 */
-	public BoundingBox(RobotRun robotRun, float len, float hgt, float wdh) {
-		this.robotRun = robotRun;
-		localOrientation = new CoordinateSystem(this.robotRun);
-		boundingBox = new Box(this.robotRun, this.robotRun.color(0, 255, 0), len, hgt, wdh);
+	public BoundingBox(float len, float hgt, float wdh) {
+		localOrientation = new CoordinateSystem();
+		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), len, hgt, wdh);
 	}
 
 	/**
@@ -56,18 +48,18 @@ public class BoundingBox {
 	 * transformation matrix.
 	 */
 	public void setCoordinateSystem() {
-		localOrientation = new CoordinateSystem(this.robotRun);
+		localOrientation = new CoordinateSystem();
 	}
 
 	/**
 	 * Draw both the object and its bounding box;
 	 */
 	public void draw() {
-		this.robotRun.pushMatrix();
+		RobotRun.getInstance().pushMatrix();
 		// Draw shape in its own coordinate system
 		localOrientation.apply();
 		boundingBox.draw();
-		this.robotRun.popMatrix();
+		RobotRun.getInstance().popMatrix();
 	}
 
 	/**
@@ -149,8 +141,8 @@ public class BoundingBox {
 	 */
 	public boolean collision(PVector point) {
 		// Convert the point to the current reference frame
-		float[][] tMatrix = this.robotRun.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
-		PVector relPosition = this.robotRun.transformVector(point, this.robotRun.invertHCMatrix(tMatrix));
+		float[][] tMatrix = RobotRun.getInstance().transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
+		PVector relPosition = RobotRun.getInstance().transformVector(point, RobotRun.getInstance().invertHCMatrix(tMatrix));
 
 		PVector OBBDim = getDims();
 		// Determine if the point iw within the bounding-box of this object
@@ -165,12 +157,12 @@ public class BoundingBox {
 	 * Return a replicate of this world object's Bounding Box
 	 */
 	public BoundingBox clone() {
-		this.robotRun.pushMatrix();
+		RobotRun.getInstance().pushMatrix();
 		localOrientation.apply();
 		PVector dims = getDims();
-		BoundingBox copy = new BoundingBox(this.robotRun, dims.x, dims.y, dims.z);
+		BoundingBox copy = new BoundingBox(dims.x, dims.y, dims.z);
 		copy.setColor( boundingBox.getStrokeValue() );
-		this.robotRun.popMatrix();
+		RobotRun.getInstance().popMatrix();
 
 		return copy;
 	}

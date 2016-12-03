@@ -6,12 +6,8 @@ import global.Fields;
 import robot.RobotRun;
 
 public class RecordScreen implements Runnable {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
-	public RecordScreen(RobotRun robotRun) {
-		this.robotRun = robotRun;
+	
+	public RecordScreen() {
 		System.out.format("Record screen...\n");
 	}
 	public void run() {
@@ -31,7 +27,7 @@ public class RecordScreen implements Runnable {
 					"video=\"screen-capture-recorder\":audio=\"Microphone" + 
 					" (Conexant SmartAudio HD)\" " + filename );
 			//Process proc = rt.exec(script);
-			while(this.robotRun.getRecord() == Fields.ON) {
+			while(RobotRun.getInstance().getRecord() == Fields.ON) {
 				Thread.sleep(4000);
 			}
 			rt.exec("taskkill /F /IM ffmpeg.exe"); // close ffmpeg

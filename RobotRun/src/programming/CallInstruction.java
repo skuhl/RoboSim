@@ -2,38 +2,34 @@ package programming;
 import robot.RobotRun;
 
 public class CallInstruction extends Instruction {
-
-	private RobotRun robotRun;
 	int progIdx;
 
-	public CallInstruction(RobotRun robotRun) {
-		this.robotRun = robotRun;
+	public CallInstruction() {
 		progIdx = -1;
 	}
 
-	public CallInstruction(RobotRun robotRun, int pdx) {
-		this.robotRun = robotRun;
+	public CallInstruction(int pdx) {
 		progIdx = pdx;
 	}
 
 	public int execute() {
 
-		if (progIdx < 0 && progIdx >= robotRun.getPrograms().size()) {
+		if (progIdx < 0 && progIdx >= RobotRun.getInstance().getPrograms().size()) {
 			// Invalid program id
 			return -1;
 		}
 
 		int[] p = new int[2];
-		p[0] = robotRun.getActive_prog();
-		p[1] = robotRun.getActive_instr() + 1;
-		robotRun.getCall_stack().push(p);
+		p[0] = RobotRun.getInstance().getActive_prog();
+		p[1] = RobotRun.getInstance().getActive_instr() + 1;
+		RobotRun.getInstance().getCall_stack().push(p);
 
-		this.robotRun.setActive_prog(progIdx);
-		this.robotRun.setActive_instr(0);
-		this.robotRun.setRow_select(0);
-		this.robotRun.setCol_select(0);
-		this.robotRun.setStart_render(0);
-		this.robotRun.updateScreen();
+		RobotRun.getInstance().setActive_prog(progIdx);
+		RobotRun.getInstance().setActive_instr(0);
+		RobotRun.getInstance().setRow_select(0);
+		RobotRun.getInstance().setCol_select(0);
+		RobotRun.getInstance().setStart_render(0);
+		RobotRun.getInstance().updateScreen();
 
 		return 0;
 	}
@@ -44,7 +40,7 @@ public class CallInstruction extends Instruction {
 	public void setProgIdx(int pdx) { progIdx = pdx; }
 
 	public Instruction clone() {
-		return new CallInstruction(this.robotRun, progIdx);
+		return new CallInstruction(progIdx);
 	}
 
 	public String toString() {
@@ -65,8 +61,8 @@ public class CallInstruction extends Instruction {
 	 * is invalid.
 	 */
 	private String progName() {
-		if (progIdx >= 0 && progIdx < this.robotRun.getPrograms().size()) {
-			return this.robotRun.getPrograms().get(progIdx).getName();
+		if (progIdx >= 0 && progIdx < RobotRun.getInstance().getPrograms().size()) {
+			return RobotRun.getInstance().getPrograms().get(progIdx).getName();
 		}
 
 		return "...";

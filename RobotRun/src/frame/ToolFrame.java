@@ -5,10 +5,6 @@ import processing.core.PVector;
 import robot.RobotRun;
 
 public class ToolFrame extends Frame {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	// The TCP offset associated with this frame
 	private PVector TCPOffset;
 	// For 3-Point and Six-Point Methods
@@ -16,20 +12,18 @@ public class ToolFrame extends Frame {
 
 	/**
 	 * Initialize all fields
-	 * @param robotRun TODO
 	 */
-	public ToolFrame(RobotRun robotRun) {
-		super(robotRun);
-		this.robotRun = robotRun;
+	public ToolFrame() {
+		super();
 		TCPOffset = new PVector(0f, 0f, 0f);
 		setTCPTeachPoints(new Point[] { null, null, null });
 	}
 
 	@Override
 	public RQuaternion getOrientation() {
-		RQuaternion robotOrientation = this.robotRun.nativeRobotPoint(robotRun.getArmModel().getJointAngles()).orientation;
+		RQuaternion robotOrientation = RobotRun.getInstance().nativeRobotPoint(RobotRun.getInstance().getArmModel().getJointAngles()).orientation;
 		// Tool frame axes orientation = (orientation offset x Model default orientation ^ -1) x Model current orientation
-		return RQuaternion.mult(robotRun.getArmModel().DEFAULT_ORIENTATION.transformQuaternion(orientationOffset), robotOrientation);
+		return RQuaternion.mult(RobotRun.getInstance().getArmModel().DEFAULT_ORIENTATION.transformQuaternion(orientationOffset), robotOrientation);
 	}
 
 	public void setPoint(Point p, int idx) {
@@ -114,7 +108,7 @@ public class ToolFrame extends Frame {
 					}
 
 					setTCPOffset( new PVector((float)newTCP[0], (float)newTCP[1], (float)newTCP[2]) );
-					setOrientation( this.robotRun.matrixToQuat(newAxesVectors) );
+					setOrientation( RobotRun.getInstance().matrixToQuat(newAxesVectors) );
 					return true;
 		}
 
@@ -134,7 +128,7 @@ public class ToolFrame extends Frame {
 
 		PVector displayOffset;
 		// Convert angles to degrees
-		PVector wpr = this.robotRun.quatToEuler(orientationOffset).mult(RobotRun.RAD_TO_DEG);
+		PVector wpr = RobotRun.getInstance().quatToEuler(orientationOffset).mult(RobotRun.RAD_TO_DEG);
 
 		displayOffset = getTCPOffset();
 

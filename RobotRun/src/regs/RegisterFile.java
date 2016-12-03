@@ -2,7 +2,6 @@ package regs;
 
 import global.Fields;
 import robot.EEType;
-import robot.RobotRun;
 
 public class RegisterFile {
 	public static final int REG_SIZE = 100;
@@ -14,9 +13,9 @@ public class RegisterFile {
 	// IO Registers
 	private static Register[] IO_REG = new IORegister[IO_REG_SIZE];
 	
-	public static void initRegisterFile(RobotRun robotRun) {
+	public static void initRegisterFile() {
 		for(int i = 0; i < REG_SIZE; i += 1) {
-			GPOS_REG[i] = new PositionRegister(robotRun, i);
+			GPOS_REG[i] = new PositionRegister(i);
 			DAT_REG[i] = new DataRegister(i);
 		}
 

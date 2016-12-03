@@ -10,57 +10,50 @@ import robot.RobotRun;
  * The bounding box holds the local coordinate system of the object.
  */
 public class Part extends WorldObject {
-	
-	private final RobotRun robotRun;
 	private BoundingBox absOBB;
 	private Fixture reference;
 
 	/**
 	 * Create a cube object with the given colors and dimension
 	 */
-	public Part(RobotRun robotRun, String n, int fill, int strokeVal, float edgeLen) {
-		super(robotRun, n, new Box(robotRun, fill, strokeVal, edgeLen));
-		this.robotRun = robotRun;
-		absOBB = new BoundingBox(this.robotRun, 1.1f * edgeLen);
+	public Part(String n, int fill, int strokeVal, float edgeLen) {
+		super(n, new Box(fill, strokeVal, edgeLen));
+		absOBB = new BoundingBox(1.1f * edgeLen);
 	}
 
 	/**
 	 * Create a box object with the given colors and dimensions
 	 */
-	public Part(RobotRun robotRun, String n, int fill, int strokeVal, float len, float hgt, float wdh) {
-		super(robotRun, n, new Box(robotRun, fill, strokeVal, len, hgt, wdh));
-		this.robotRun = robotRun;
-		absOBB = new BoundingBox(this.robotRun, 1.1f * len, 1.1f * hgt, 1.1f * wdh);
+	public Part(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
+		super(n, new Box(fill, strokeVal, len, hgt, wdh));
+		absOBB = new BoundingBox(1.1f * len, 1.1f * hgt, 1.1f * wdh);
 	}
 
 	/**
 	 * Creates a cylinder objects with the given colors and dimensions.
 	 */
-	public Part(RobotRun robotRun, String n, int fill, int strokeVal, float rad, float hgt) {
-		super(robotRun, n, new Cylinder(robotRun, fill, strokeVal, rad, hgt));
-		this.robotRun = robotRun;
-		absOBB = new BoundingBox(this.robotRun, 2.12f * rad, 2.12f * rad, 1.1f * hgt);
+	public Part(String n, int fill, int strokeVal, float rad, float hgt) {
+		super(n, new Cylinder(fill, strokeVal, rad, hgt));
+		absOBB = new BoundingBox(2.12f * rad, 2.12f * rad, 1.1f * hgt);
 	}
 
 	/**
 	 * Define a complex object as a partx.
 	 */
-	public Part(RobotRun robotRun, String n, ModelShape model) {
-		super(robotRun, n, model);
-		this.robotRun = robotRun;
+	public Part(String n, ModelShape model) {
+		super(n, model);
 
-		absOBB = new BoundingBox(this.robotRun, 1.1f * model.getDim(DimType.LENGTH),
-				1.1f * model.getDim(DimType.HEIGHT),
-				1.1f * model.getDim(DimType.WIDTH));
+		absOBB = new BoundingBox(1.1f * model.getDim(DimType.LENGTH),
+								 1.1f * model.getDim(DimType.HEIGHT),
+								 1.1f * model.getDim(DimType.WIDTH));
 	}
 
 	/**
 	 * Creates a Part with the given name, shape, bounding-box dimensions, and fixture reference.
 	 */
-	public Part(RobotRun robotRun, String n, Shape s, PVector OBBDims, CoordinateSystem local, Fixture fixRef) {
-		super(robotRun, n, s, local);
-		this.robotRun = robotRun;
-		absOBB = new BoundingBox(this.robotRun, OBBDims.x, OBBDims.y, OBBDims.z);
+	public Part(String n, Shape s, PVector OBBDims, CoordinateSystem local, Fixture fixRef) {
+		super(n, s, local);
+		absOBB = new BoundingBox(OBBDims.x, OBBDims.y, OBBDims.z);
 		setFixtureRef(fixRef);
 	}
 
@@ -116,11 +109,11 @@ public class Part extends WorldObject {
 	 * fixture reference.
 	 */
 	public void draw() {
-		this.robotRun.pushMatrix();
+		RobotRun.getInstance().pushMatrix();
 		applyCoordinateSystem();
 		getForm().draw();
-		if (this.robotRun.showOOBs) { absOBB.getBox().draw(); }
-		this.robotRun.popMatrix();
+		if (RobotRun.getInstance().showOOBs) { absOBB.getBox().draw(); }
+		RobotRun.getInstance().popMatrix();
 	}
 
 	/**
@@ -140,8 +133,8 @@ public class Part extends WorldObject {
 	 * reference's orientation.
 	 */
 	public void updateAbsoluteOrientation() {
-		this.robotRun.pushMatrix();
-		this.robotRun.resetMatrix();
+		RobotRun.getInstance().pushMatrix();
+		RobotRun.getInstance().resetMatrix();
 
 		if (reference != null) {
 			reference.applyCoordinateSystem();
@@ -149,7 +142,7 @@ public class Part extends WorldObject {
 
 		super.applyCoordinateSystem();
 		absOBB.setCoordinateSystem();
-		this.robotRun.popMatrix();
+		RobotRun.getInstance().popMatrix();
 	}
 
 	/**
@@ -231,6 +224,6 @@ public class Part extends WorldObject {
 	@Override
 	public Object clone() {
 		// The new object's reference still points to the same fixture!
-		return new Part(this.robotRun, getName(), (Shape)getForm().clone(), getOBBDims().copy(), (CoordinateSystem)localOrientation.clone(), reference);
+		return new Part(getName(), (Shape)getForm().clone(), getOBBDims().copy(), (CoordinateSystem)localOrientation.clone(), reference);
 	}
 }

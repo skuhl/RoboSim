@@ -7,10 +7,6 @@ import robot.RobotRun;
  * A complex shape formed from a .stl source file.
  */
 public class ModelShape extends Shape {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	private PShape form;
 	private PVector centerOffset, baseDims;
 	private float scale;
@@ -24,13 +20,12 @@ public class ModelShape extends Shape {
 	 * @throws NullPointerException  if the given filename is
 	 *         not a valid .stl file in RobotRun/data/
 	 */
-	public ModelShape(RobotRun robotRun, String filename, int fill) throws NullPointerException {
-		super(robotRun, fill, null);
-		this.robotRun = robotRun;
+	public ModelShape(String filename, int fill) throws NullPointerException {
+		super(fill, null);
 		srcFilePath = filename;
 		scale = 1f;
 
-		form = this.robotRun.loadSTLModel(filename, fill);
+		form = RobotRun.getInstance().loadSTLModel(filename, fill);
 		iniDimensions();
 	}
 
@@ -42,13 +37,12 @@ public class ModelShape extends Shape {
 	 * @throws NullPointerException  if the given filename is
 	 *         not a valid .stl file in RobotRun/data/
 	 */
-	public ModelShape(RobotRun robotRun, String filename, int fill, float scale) throws NullPointerException {
-		super(robotRun, fill, null);
-		this.robotRun = robotRun;
+	public ModelShape(String filename, int fill, float scale) throws NullPointerException {
+		super(fill, null);
 		srcFilePath = filename;
 		this.scale = 1f;
 
-		form = this.robotRun.loadSTLModel(filename, fill);
+		form = RobotRun.getInstance().loadSTLModel(filename, fill);
 		iniDimensions();
 
 		setDim(scale, DimType.SCALE);
@@ -100,13 +94,13 @@ public class ModelShape extends Shape {
 	}
 
 	public void draw() {
-		this.robotRun.pushMatrix();
+		RobotRun.getInstance().pushMatrix();
 		// Draw shape, where its center is at (0, 0, 0)
-		this.robotRun.translate(centerOffset.x, centerOffset.y, centerOffset.z);
+		RobotRun.getInstance().translate(centerOffset.x, centerOffset.y, centerOffset.z);
 
-		this.robotRun.shape(form);
+		RobotRun.getInstance().shape(form);
 
-		this.robotRun.popMatrix();
+		RobotRun.getInstance().popMatrix();
 	}
 
 	@Override
@@ -140,6 +134,6 @@ public class ModelShape extends Shape {
 	@Override
 	public Object clone() {
 		// Created from source file
-		return new ModelShape(this.robotRun, srcFilePath, getFillValue(), scale);
+		return new ModelShape(srcFilePath, getFillValue(), scale);
 	}
 }

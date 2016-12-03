@@ -1,13 +1,8 @@
 package regs;
 import geom.Point;
-import robot.RobotRun;
 
 /* A simple class for a Position Register of the Robot Arm, which holds a point associated with a comment. */
 public class PositionRegister extends Register {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	/**
 	 * The point associated with this Position Register, which is saved in
 	 * the current User frame with the active Tool frame TCP offset, though
@@ -16,23 +11,20 @@ public class PositionRegister extends Register {
 	public Point point;
 	public boolean isCartesian;
 
-	public PositionRegister(RobotRun robotRun) {
-		this.robotRun = robotRun;
+	public PositionRegister() {
 		comment = null;
 		point = null;
 		isCartesian = false;
 	}
 
-	public PositionRegister(RobotRun robotRun, int i) {
-		this.robotRun = robotRun;
+	public PositionRegister(int i) {
 		idx = i;
 		comment = null;
 		point = null;
 		isCartesian = false;
 	}
 
-	public PositionRegister(RobotRun robotRun, int i, String c, Point pt, boolean isCart) {
-		this.robotRun = robotRun;
+	public PositionRegister(int i, String c, Point pt, boolean isCart) {
 		idx = i;
 		comment = c;
 		point = pt;
@@ -61,7 +53,7 @@ public class PositionRegister extends Register {
 
 	public void setPointValue(int idx, float value) {
 		if(point == null) {
-			point = new Point(this.robotRun);
+			point = new Point();
 		}
 
 		if(!isCartesian) {

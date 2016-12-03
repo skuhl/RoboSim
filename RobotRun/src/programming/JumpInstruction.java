@@ -2,19 +2,13 @@ package programming;
 import robot.RobotRun;
 
 public class JumpInstruction extends Instruction {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	private int tgtLblNum;
 
-	public JumpInstruction(RobotRun robotRun) {
-		this.robotRun = robotRun;
+	public JumpInstruction() {
 		setTgtLblNum(-1);
 	}
 
-	public JumpInstruction(RobotRun robotRun, int l) {
-		this.robotRun = robotRun;
+	public JumpInstruction(int l) {
 		setTgtLblNum(l);
 	}
 
@@ -22,7 +16,7 @@ public class JumpInstruction extends Instruction {
 	 * Returns the index of the instruction to which to jump.
 	 */
 	public int execute() {
-		Program p = this.robotRun.activeProgram();
+		Program p = RobotRun.getInstance().activeProgram();
 
 		if (p != null) {
 			int lblIdx = p.findLabelIdx(getTgtLblNum());
@@ -41,7 +35,7 @@ public class JumpInstruction extends Instruction {
 	}
 
 	public Instruction clone() {
-		Instruction copy = new JumpInstruction(this.robotRun, getTgtLblNum());
+		Instruction copy = new JumpInstruction(getTgtLblNum());
 		copy.setIsCommented( isCommented() );
 
 		return copy;

@@ -7,10 +7,6 @@ import processing.core.PShape;
 import processing.core.PVector;
 
 public class Model {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	public PShape mesh;
 	public String name;
 	public boolean[] rotations = new boolean[3]; // is rotating on this joint valid?
@@ -25,8 +21,7 @@ public class Model {
 	/**
 	 * Use default scaling
 	 */
-	public Model(RobotRun robotRun, String filename, int col) {
-		this.robotRun = robotRun;
+	public Model(String filename, int col) {
 		for(int n = 0; n < 3; n++) {
 			rotations[n] = false;
 			currentRotations[n] = 0;
@@ -40,8 +35,7 @@ public class Model {
 	/**
 	 * Define the scaling of the Model.
 	 */
-	public Model(RobotRun robotRun, String filename, int col, float scaleVal) {
-		this.robotRun = robotRun;
+	public Model(String filename, int col, float scaleVal) {
 		for(int n = 0; n < 3; n++) {
 			rotations[n] = false;
 			currentRotations[n] = 0;
@@ -54,7 +48,7 @@ public class Model {
 
 	public void loadSTLModel(String filename, int col, float scaleVal) {
 		ArrayList<Triangle> triangles = new ArrayList<Triangle>();
-		byte[] data = this.robotRun.loadBytes(filename);
+		byte[] data = RobotRun.getInstance().loadBytes(filename);
 		int n = 84; // skip header and number of triangles
 
 		while(n < data.length) {
@@ -81,7 +75,7 @@ public class Model {
 			triangles.add(t);
 			n += 2; // skip meaningless "attribute byte count"
 		}
-		mesh = this.robotRun.createShape();
+		mesh = RobotRun.getInstance().createShape();
 		mesh.beginShape(RobotRun.TRIANGLES);
 		mesh.noStroke();
 		mesh.scale(scaleVal);
@@ -107,7 +101,7 @@ public class Model {
 	}
 
 	public void draw() {
-		this.robotRun.shape(mesh);
+		RobotRun.getInstance().shape(mesh);
 	}
 
 } // end Model class

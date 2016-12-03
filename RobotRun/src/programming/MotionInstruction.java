@@ -8,8 +8,6 @@ import robot.ArmModel;
 import robot.RobotRun;
 
 public final class MotionInstruction extends Instruction  {
-	
-	private final RobotRun robotRun;
 	private int motionType;
 	private int positionNum;
 	private int offsetRegNum;
@@ -21,9 +19,9 @@ public final class MotionInstruction extends Instruction  {
 	private int toolFrame;
 	private MotionInstruction circSubInstr;
 
-	public MotionInstruction(RobotRun robotRun, int m, int p, boolean g, 
-			float s, int t, int uf, int tf) {
-		this.robotRun = robotRun;
+	public MotionInstruction(int m, int p, boolean g, float s, int t, int uf,
+			int tf) {
+		
 		motionType = m;
 		positionNum = p;
 		offsetRegNum = -1;
@@ -34,14 +32,13 @@ public final class MotionInstruction extends Instruction  {
 		userFrame = uf;
 		toolFrame = tf;
 		if(motionType != -1) {
-			circSubInstr = new MotionInstruction(this.robotRun, -1, -1, false, 100, 0, uf, tf);
+			circSubInstr = new MotionInstruction(-1, -1, false, 100, 0, uf, tf);
 		} else {
 			circSubInstr = null;
 		}
 	}
 
-	public MotionInstruction(RobotRun robotRun, int m, int p, boolean g, float s, int t) {
-		this.robotRun = robotRun;
+	public MotionInstruction(int m, int p, boolean g, float s, int t) {
 		motionType = m;
 		positionNum = p;
 		offsetRegNum = -1;
@@ -52,7 +49,7 @@ public final class MotionInstruction extends Instruction  {
 		userFrame = -1;
 		toolFrame = -1;
 		if(motionType != -1) {
-			circSubInstr = new MotionInstruction(this.robotRun, -1, -1, false, 100, 0);
+			circSubInstr = new MotionInstruction(-1, -1, false, 100, 0);
 		} else {
 			circSubInstr = null;
 		}
@@ -79,7 +76,7 @@ public final class MotionInstruction extends Instruction  {
 	public void setSecondaryPoint(MotionInstruction p) { circSubInstr = p; }
 
 	public float getSpeedForExec(ArmModel model) {
-		if(motionType == this.robotRun.MTYPE_JOINT) return speed;
+		if(motionType == RobotRun.getInstance().MTYPE_JOINT) return speed;
 		else return (speed / model.motorSpeed);
 	}
 
@@ -133,20 +130,20 @@ public final class MotionInstruction extends Instruction  {
 		if(offsetRegNum != -1) {
 			offset = ((PositionRegister)RegisterFile.getPReg(offsetRegNum)).point;
 		} else {
-			offset = new Point(this.robotRun);
+			offset = new Point();
 		}
 
 		if (userFrame != -1) {
 			// Convert point into the Native Coordinate System
 			Frame active = FrameFile.getUFrame(userFrame);
-			pt = this.robotRun.removeFrame(pt, active.getOrigin(), active.getOrientation());
+			pt = RobotRun.getInstance().removeFrame(pt, active.getOrigin(), active.getOrientation());
 		}
 
 		return pt.add(offset);
 	} // end getVector()
 
 	public Instruction clone() {
-		Instruction copy = new MotionInstruction(this.robotRun, motionType, positionNum, isGPosReg, speed, termination, userFrame, toolFrame);
+		Instruction copy = new MotionInstruction(motionType, positionNum, isGPosReg, speed, termination, userFrame, toolFrame);
 		copy.setIsCommented( isCommented() );
 
 		return copy;
@@ -156,7 +153,7 @@ public final class MotionInstruction extends Instruction  {
 		String[] fields;
 		int instrLen, subInstrLen;
 
-		if(motionType == this.robotRun.MTYPE_CIRCULAR) {
+		if(motionType == RobotRun.getInstance().MTYPE_CIRCULAR) {
 			instrLen = offsetActive ? 7 : 6;
 			subInstrLen = circSubInstr.offsetActive ? 5 : 4;      
 			fields = new String[instrLen + subInstrLen];
@@ -196,7 +193,7 @@ public final class MotionInstruction extends Instruction  {
 		}
 
 		// Speed
-		if (motionType == this.robotRun.MTYPE_JOINT) {
+		if (motionType == RobotRun.getInstance().MTYPE_JOINT) {
 			fields[3] = String.format("%d%%", Math.round(speed * 100));
 		} else {
 			fields[3] = String.format("%dmm/s", (int)(speed));
@@ -217,7 +214,7 @@ public final class MotionInstruction extends Instruction  {
 			}
 		}
 
-		if(motionType == this.robotRun.MTYPE_CIRCULAR) {
+		if(motionType == RobotRun.getInstance().MTYPE_CIRCULAR) {
 			String[] secondary = circSubInstr.toStringArray();
 			fields[instrLen - 1] = "\n";
 			fields[instrLen] = ":" + secondary[1];
@@ -231,4 +228,4 @@ public final class MotionInstruction extends Instruction  {
 
 		return fields;
 	}
-} // end MotionInstruction class
+}

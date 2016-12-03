@@ -2,15 +2,12 @@ package programming;
 import robot.RobotRun;
 
 public class Macro {
-
-	private final RobotRun robotRun;
 	private Program prog;
 	boolean manual;
 	private int progIdx;
 	private int num;
 
-	public Macro(RobotRun robotRun, Program p, int pidx) {
-		this.robotRun = robotRun;
+	public Macro(Program p, int pidx) {
 		prog = p;
 		progIdx = pidx;
 		manual = false;
@@ -19,17 +16,17 @@ public class Macro {
 
 	public void execute() {
 		// Stop any prior Robot movement
-		robotRun.getArmModel().halt();
+		RobotRun.getInstance().getArmModel().halt();
 		// Safeguard against editing a program while it is running
-		robotRun.setCol_select(0);
-		robotRun.setActive_prog(progIdx);
-		robotRun.setActive_instr(0);
+		RobotRun.getInstance().setCol_select(0);
+		RobotRun.getInstance().setActive_prog(progIdx);
+		RobotRun.getInstance().setActive_instr(0);
 
-		robotRun.setExecutingInstruction(false);
+		RobotRun.getInstance().setExecutingInstruction(false);
 		// Run single instruction when step is set
-		robotRun.execSingleInst = robotRun.isStep();
+		RobotRun.getInstance().execSingleInst = RobotRun.getInstance().isStep();
 
-		robotRun.setProgramRunning(true);
+		RobotRun.getInstance().setProgramRunning(true);
 	}
 
 	public void setProgram(Program p, int idx) { prog = p; progIdx = idx; }
@@ -37,9 +34,9 @@ public class Macro {
 	public boolean isManual() { return manual; }
 
 	public Macro setNum(int n) {
-		if(n <= 6 && n >= 0 && robotRun.getSU_macro_bindings()[n] == null) {
+		if(n <= 6 && n >= 0 && RobotRun.getInstance().getSU_macro_bindings()[n] == null) {
 			clearNum();
-			robotRun.getSU_macro_bindings()[n] = this;
+			RobotRun.getInstance().getSU_macro_bindings()[n] = this;
 			num = n;
 
 			return this;
@@ -50,7 +47,7 @@ public class Macro {
 
 	public void clearNum() {
 		if(num != -1) {
-			robotRun.getSU_macro_bindings()[num] = null;
+			RobotRun.getInstance().getSU_macro_bindings()[num] = null;
 			num = -1;
 		}
 	}

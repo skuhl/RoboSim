@@ -5,21 +5,15 @@ import processing.core.PVector;
 import robot.RobotRun;
 
 public class UserFrame extends Frame {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	private PVector origin;
 	// For the 4-Point Method
 	private Point orientOrigin;
 
 	/**
 	 * Initialize all fields
-	 * @param robotRun TODO
 	 */
-	public UserFrame(RobotRun robotRun) {
-		super(robotRun);
-		this.robotRun = robotRun;
+	public UserFrame() {
+		super();
 		origin = new PVector(0f, 0f, 0f);
 		setOrientOrigin(null);
 	}
@@ -91,7 +85,7 @@ public class UserFrame extends Frame {
 				return false;
 			}
 
-			setOrientation( this.robotRun.matrixToQuat(newAxesVectors) );
+			setOrientation( RobotRun.getInstance().matrixToQuat(newAxesVectors) );
 			setOrigin(newOrigin);
 			return true;
 		}
@@ -112,10 +106,10 @@ public class UserFrame extends Frame {
 
 		PVector displayOrigin;
 		// Convert angles to degrees and to the World Coordinate Frame
-		PVector wpr = this.robotRun.quatToEuler(orientationOffset).mult(RobotRun.RAD_TO_DEG);
+		PVector wpr = RobotRun.getInstance().quatToEuler(orientationOffset).mult(RobotRun.RAD_TO_DEG);
 
 		// Convert to World frame reference
-		displayOrigin = this.robotRun.convertNativeToWorld(origin);
+		displayOrigin = RobotRun.getInstance().convertNativeToWorld(origin);
 
 		values[0] = String.format("X: %4.3f", displayOrigin.x);
 		values[1] = String.format("Y: %4.3f", displayOrigin.y);

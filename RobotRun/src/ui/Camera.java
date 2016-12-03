@@ -7,10 +7,6 @@ import robot.RobotRun;
  * and the methods to manipulate apply the Camera's transformation.
  */
 public class Camera {
-	/**
-	 * 
-	 */
-	private RobotRun robotRun;
 	private PVector position,
 	// Rotations in X, Y, Z in radians
 	orientation;
@@ -19,10 +15,8 @@ public class Camera {
 
 	/**
 	 * Creates a camera with the default position, orientation and scale.
-	 * @param robotRun TODO
 	 */
-	public Camera(RobotRun robotRun) {
-		this.robotRun = robotRun;
+	public Camera() {
 		position = new PVector(0f, 0f, -500f);
 		orientation = new PVector(0f, 0f, 0f);
 		scale = 2f;
@@ -32,22 +26,22 @@ public class Camera {
 	 * Apply the camer's scale, position, and orientation to the current matrix.
 	 */
 	public void apply() {
-		this.robotRun.beginCamera();
+		RobotRun.getInstance().beginCamera();
 		// Apply camera translations
-		this.robotRun.translate(position.x + this.robotRun.width / 2f, position.y + this.robotRun.height / 2f, position.z);
+		RobotRun.getInstance().translate(position.x + RobotRun.getInstance().width / 2f, position.y + RobotRun.getInstance().height / 2f, position.z);
 
 		// Apply camera rotations
-		this.robotRun.rotateX(orientation.x);
-		this.robotRun.rotateY(orientation.y);
+		RobotRun.getInstance().rotateX(orientation.x);
+		RobotRun.getInstance().rotateY(orientation.y);
 
 		// Apply camera scaling
-		float horizontalMargin = scale * this.robotRun.width / 2f,
-				verticalMargin = scale * this.robotRun.height / 2f,
+		float horizontalMargin = scale * RobotRun.getInstance().width / 2f,
+				verticalMargin = scale * RobotRun.getInstance().height / 2f,
 				near = MAX_SCALE / scale,
 				far = scale * 5000f;
-		this.robotRun.ortho(-horizontalMargin, horizontalMargin, -verticalMargin, verticalMargin, near, far);
+		RobotRun.getInstance().ortho(-horizontalMargin, horizontalMargin, -verticalMargin, verticalMargin, near, far);
 
-		this.robotRun.endCamera();
+		RobotRun.getInstance().endCamera();
 	}
 
 	/**
@@ -68,8 +62,8 @@ public class Camera {
 	 * Change the camera's position by the given values.
 	 */
 	public void move(float x, float y, float z) {
-		float horzontialLimit = MAX_SCALE * this.robotRun.width / 3f,
-				verticalLimit = MAX_SCALE * this.robotRun.height / 3f;
+		float horzontialLimit = MAX_SCALE * RobotRun.getInstance().width / 3f,
+				verticalLimit = MAX_SCALE * RobotRun.getInstance().height / 3f;
 
 		position.add( new PVector(x, y, z) );
 		// Apply camera position restrictions
@@ -86,8 +80,8 @@ public class Camera {
 
 		orientation.add( rotation );
 		// Apply caerma rotation restrictions
-		orientation.x = this.robotRun.mod2PI(orientation.x);
-		orientation.y = this.robotRun.mod2PI(orientation.y);
+		orientation.x = RobotRun.getInstance().mod2PI(orientation.x);
+		orientation.y = RobotRun.getInstance().mod2PI(orientation.y);
 		orientation.z = 0f;//mod2PI(orientation.z);
 	}
 
@@ -135,7 +129,7 @@ public class Camera {
 	 * Returns an independent replica of the Camera object.
 	 */
 	public Camera clone() {
-		Camera copy = new Camera(this.robotRun);
+		Camera copy = new Camera();
 		// Copy position, orientation, and scale
 		copy.position = position.copy();
 		copy.orientation = orientation.copy();

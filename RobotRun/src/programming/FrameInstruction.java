@@ -2,23 +2,17 @@ package programming;
 import robot.RobotRun;
 
 public class FrameInstruction extends Instruction {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	int frameType;
 	private int frameIdx;
 
-	public FrameInstruction(RobotRun robotRun, int f) {
+	public FrameInstruction(int f) {
 		super();
-		this.robotRun = robotRun;
 		frameType = f;
 		setFrameIdx(-1);
 	}
 
-	public FrameInstruction(RobotRun robotRun, int f, int r) {
+	public FrameInstruction(int f, int r) {
 		super();
-		this.robotRun = robotRun;
 		frameType = f;
 		setFrameIdx(r);
 	}
@@ -29,19 +23,19 @@ public class FrameInstruction extends Instruction {
 	public void setReg(int r){ setFrameIdx(r); }
 
 	public int execute() {    
-		if (frameType == this.robotRun.FTYPE_TOOL) {
-			this.robotRun.setActiveToolFrame(getFrameIdx());
-		} else if (frameType == this.robotRun.FTYPE_USER) {
-			this.robotRun.setActiveUserFrame(getFrameIdx());
+		if (frameType == RobotRun.getInstance().FTYPE_TOOL) {
+			RobotRun.getInstance().setActiveToolFrame(getFrameIdx());
+		} else if (frameType == RobotRun.getInstance().FTYPE_USER) {
+			RobotRun.getInstance().setActiveUserFrame(getFrameIdx());
 		}
 		// Update the current active frames
-		this.robotRun.updateCoordFrame();
+		RobotRun.getInstance().updateCoordFrame();
 
 		return 0;
 	}
 
 	public Instruction clone() {
-		Instruction copy = new FrameInstruction(this.robotRun, frameType, getFrameIdx());
+		Instruction copy = new FrameInstruction(frameType, getFrameIdx());
 		copy.setIsCommented( isCommented() );
 
 		return copy;
@@ -50,9 +44,9 @@ public class FrameInstruction extends Instruction {
 	public String[] toStringArray() {
 		String[] fields = new String[2];
 		// Frame type
-		if (frameType == this.robotRun.FTYPE_TOOL) {
+		if (frameType == RobotRun.getInstance().FTYPE_TOOL) {
 			fields[0] = "TFRAME_NUM =";
-		} else if (frameType == this.robotRun.FTYPE_USER) {
+		} else if (frameType == RobotRun.getInstance().FTYPE_USER) {
 			fields[0] = "UFRAME_NUM =";
 		} else {
 			fields[0] = "?FRAME_NUM =";
@@ -71,4 +65,4 @@ public class FrameInstruction extends Instruction {
 		this.frameIdx = frameIdx;
 	}
 
-} // end FrameInstruction class
+}

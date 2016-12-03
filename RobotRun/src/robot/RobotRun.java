@@ -55,6 +55,7 @@ public class RobotRun extends PApplet {
 	// for Execution
 	public boolean execSingleInst = false; 
 	public boolean motionFault = false; //indicates motion error with the Robot
+	private static RobotRun instance;
 
 	/*******************************/
 	/*      Debugging Stuff        */
@@ -63,17 +64,22 @@ public class RobotRun extends PApplet {
 	private ArrayList<String> buffer;
 	private Point displayPoint;
 	
+	static {
+		instance = null;
+	}
+	
 	public void setup() {
+		instance = this;
 		//size(1200, 800, P3D);
 		//create font and text display background
 		fnt_con14 = createFont("data/Consolas.ttf", 14);
 		fnt_con12 = createFont("data/Consolas.ttf", 12);
 		fnt_conB = createFont("data/ConsolasBold.ttf", 12);
 
-		camera = new Camera(this);
+		camera = new Camera();
 
 		//load model and save data
-		armModel = new ArmModel(this);
+		armModel = new ArmModel();
 		intermediatePositions = new ArrayList<Point>();
 		activeScenario = null;
 		showOOBs = true;
@@ -84,7 +90,7 @@ public class RobotRun extends PApplet {
 		cp5 = new ControlP5(this);
 		// Expllicitly draw the ControlP5 elements
 		cp5.setAutoDraw(false);
-		setManager(new WindowManager(this, cp5, fnt_con12, fnt_con14));
+		setManager(new WindowManager(cp5, fnt_con12, fnt_con14));
 		display_stack = new Stack<Screen>();
 		gui();
 
@@ -759,7 +765,7 @@ public class RobotRun extends PApplet {
 		float[][] orientationMatrix = getRotationMatrix();
 		popMatrix();
 		// Return a Point containing the EE position, orientation, and joint angles
-		return new Point(this, ee, matrixToQuat(orientationMatrix), jointAngles);
+		return new Point(ee, matrixToQuat(orientationMatrix), jointAngles);
 	}
 
 	/**
@@ -967,7 +973,7 @@ public class RobotRun extends PApplet {
 			mu += increment;
 
 			qi = RQuaternion.SLERP(q1, q2, mu);
-			intermediatePositions.add(new Point(this, new PVector(
+			intermediatePositions.add(new Point(new PVector(
 					p1.x * (1 - mu) + (p2.x * mu),
 					p1.y * (1 - mu) + (p2.y * mu),
 					p1.z * (1 - mu) + (p2.z * mu)),
@@ -1026,7 +1032,7 @@ public class RobotRun extends PApplet {
 		for(int n = 0; n < numberOfPoints; n++) {
 			mu += increment;
 			qi = RQuaternion.SLERP(q2, q3, mu);
-			secondaryTargets.add(new Point(this, new PVector(
+			secondaryTargets.add(new Point(new PVector(
 					p2.x * (1 - mu) + (p3.x * mu),
 					p2.y * (1 - mu) + (p3.y * mu),
 					p2.z * (1 - mu) + (p3.z * mu)),
@@ -1038,7 +1044,7 @@ public class RobotRun extends PApplet {
 		for(int n = 0; n < transitionPoint; n++) {
 			mu += increment;
 			qi = RQuaternion.SLERP(q1, q2, mu);
-			intermediatePositions.add(new Point(this, new PVector(
+			intermediatePositions.add(new Point(new PVector(
 					p1.x * (1 - mu) + (p2.x * mu),
 					p1.y * (1 - mu) + (p2.y * mu),
 					p1.z * (1 - mu) + (p2.z * mu)),
@@ -1063,7 +1069,7 @@ public class RobotRun extends PApplet {
 			mu += increment;
 			Point tgt = secondaryTargets.get(secondaryIdx);
 			qi = RQuaternion.SLERP(currentPoint.orientation, tgt.orientation, mu);
-			intermediatePositions.add(new Point(this, new PVector(
+			intermediatePositions.add(new Point(new PVector(
 					currentPoint.position.x * (1 - mu) + (tgt.position.x * mu),
 					currentPoint.position.y * (1 - mu) + (tgt.position.y * mu),
 					currentPoint.position.z * (1 - mu) + (tgt.position.z * mu)), 
@@ -1129,7 +1135,7 @@ public class RobotRun extends PApplet {
 			if(i == numPoints-1) pos = end.position;
 			qi = RQuaternion.SLERP(q1, q2, mu);
 			//println(pos + ", " + end.position);
-			intermediatePositions.add(new Point(this, pos, qi));
+			intermediatePositions.add(new Point(pos, qi));
 			angle += angleInc;
 			mu += inc;
 		}
@@ -2937,7 +2943,7 @@ public class RobotRun extends PApplet {
 		case NAV_TOOL_FRAMES:
 			if(shift) {
 				// Reset the highlighted frame in the tool frame list
-				FrameFile.setTFrame(active_index, new ToolFrame(this));
+				FrameFile.setTFrame(active_index, new ToolFrame());
 				saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
 				updateScreen();
 			} else {
@@ -2949,7 +2955,7 @@ public class RobotRun extends PApplet {
 		case NAV_USER_FRAMES:
 			if(shift) {
 				// Reset the highlighted frame in the user frames list
-				FrameFile.setUFrame(active_index, new UserFrame(this));
+				FrameFile.setUFrame(active_index, new UserFrame());
 				saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
 				updateScreen();
 			} else {
@@ -2977,7 +2983,7 @@ public class RobotRun extends PApplet {
 		case NAV_PREGS_J:
 		case NAV_PREGS_C:
 			// Clear Position Register entry
-			RegisterFile.setPReg(active_index, new PositionRegister(this, active_index));
+			RegisterFile.setPReg(active_index, new PositionRegister(active_index));
 			saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 			break;
 		default:
@@ -3738,9 +3744,9 @@ public class RobotRun extends PApplet {
 			} else if(opt_select == 1){
 				newRegisterStatement(new IORegister());
 			} else if(opt_select == 2){
-				newRegisterStatement(new PositionRegister(this));
+				newRegisterStatement(new PositionRegister());
 			} else {
-				newRegisterStatement(new PositionRegister(this), 0);
+				newRegisterStatement(new PositionRegister(), 0);
 				display_stack.push(Screen.SET_REG_EXPR_IDX2);
 			}
 
@@ -3902,11 +3908,11 @@ public class RobotRun extends PApplet {
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(Screen.INPUT_IOREG_IDX);
 			} else if(opt_select == 2) {
-				ExprOperand operand = new ExprOperand(new PositionRegister(this), -1);
+				ExprOperand operand = new ExprOperand(new PositionRegister(), -1);
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(Screen.INPUT_PREG_IDX1);
 			} else if(opt_select == 3) {
-				ExprOperand operand = new ExprOperand(new PositionRegister(this), -1, 0);
+				ExprOperand operand = new ExprOperand(new PositionRegister(), -1, 0);
 				opEdit = expr.setOperand(editIdx, operand);
 				display_stack.pop();
 				display_stack.push(Screen.INPUT_PREG_IDX2);
@@ -3941,10 +3947,10 @@ public class RobotRun extends PApplet {
 		case SET_IF_STMT_ACT:
 			IfStatement stmt = (IfStatement)activeInstruction();
 			if(opt_select == 0) {
-				stmt.setInstr(new JumpInstruction(this));
+				stmt.setInstr(new JumpInstruction());
 				switchScreen(Screen.SET_JUMP_TGT);
 			} else {
-				stmt.setInstr(new CallInstruction(this));
+				stmt.setInstr(new CallInstruction());
 				switchScreen(Screen.SET_CALL_PROG);
 			}
 
@@ -4074,9 +4080,9 @@ public class RobotRun extends PApplet {
 			int i = (getSelectedIdx() - 3) / 3;
 
 			if(opt_select == 0) {
-				s.getInstrs().set(i, new JumpInstruction(this));
+				s.getInstrs().set(i, new JumpInstruction());
 			} else {
-				s.getInstrs().set(i, new CallInstruction(this));
+				s.getInstrs().set(i, new CallInstruction());
 			}
 
 			lastScreen();
@@ -4168,9 +4174,9 @@ public class RobotRun extends PApplet {
 			} else if(opt_select == 1) {
 				regStmt.setRegister(new IORegister());
 			} else if(opt_select == 2) {
-				regStmt.setRegister(new PositionRegister(this));
+				regStmt.setRegister(new PositionRegister());
 			} else {
-				regStmt.setRegister(new PositionRegister(this), 0);
+				regStmt.setRegister(new PositionRegister(), 0);
 				display_stack.push(Screen.SET_REG_EXPR_IDX2);
 			}
 
@@ -4280,7 +4286,7 @@ public class RobotRun extends PApplet {
 			//Macro edit screens
 		case SET_MACRO_PROG:
 			if(edit_macro == null) {
-				edit_macro = new Macro(this, getPrograms().get(getRow_select()), getRow_select());
+				edit_macro = new Macro(getPrograms().get(getRow_select()), getRow_select());
 				macros.add(edit_macro);
 				switchScreen(Screen.SET_MACRO_TYPE);
 			} else {
@@ -6806,7 +6812,7 @@ public class RobotRun extends PApplet {
 		}
 		else {
 			MotionInstruction insert = new MotionInstruction(
-					this, curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR,
+					curCoordFrame == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR,
 							getActive_instr(),
 							false,
 							(curCoordFrame == CoordFrame.JOINT ? 50 : 50 * armModel.motorSpeed) / 100f,
@@ -6828,7 +6834,7 @@ public class RobotRun extends PApplet {
 
 	public void newFrameInstruction(int fType) {
 		Program p = activeProgram();
-		FrameInstruction f = new FrameInstruction(this, fType, -1);
+		FrameInstruction f = new FrameInstruction(fType, -1);
 
 		if(getActive_instr() != p.getInstructions().size()) {
 			p.overwriteInstruction(getActive_instr(), f);
@@ -6839,7 +6845,7 @@ public class RobotRun extends PApplet {
 
 	public void newIOInstruction() {
 		Program p = activeProgram();
-		IOInstruction io = new IOInstruction(this, opt_select, Fields.OFF);
+		IOInstruction io = new IOInstruction(opt_select, Fields.OFF);
 
 		if(getActive_instr() != p.getInstructions().size()) {
 			p.overwriteInstruction(getActive_instr(), io);
@@ -6862,7 +6868,7 @@ public class RobotRun extends PApplet {
 
 	public void newJumpInstruction() {
 		Program p = activeProgram();
-		JumpInstruction j = new JumpInstruction(this, -1);
+		JumpInstruction j = new JumpInstruction(-1);
 
 		if(getActive_instr() != p.getInstructions().size()) {
 			p.overwriteInstruction(getActive_instr(), j);
@@ -6874,7 +6880,7 @@ public class RobotRun extends PApplet {
 
 	public void newCallInstruction() {
 		Program p = activeProgram();
-		CallInstruction call = new CallInstruction(this);
+		CallInstruction call = new CallInstruction();
 
 		if(getActive_instr() != p.getInstructions().size()) {
 			p.overwriteInstruction(getActive_instr(), call);
@@ -7356,7 +7362,7 @@ public class RobotRun extends PApplet {
 
 			// Use default the Robot's joint angles for computing inverse kinematics
 			float[] jointAngles = inverseKinematics(new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
-			(RegisterFile.getPReg(active_index)).point = new Point(this, position, orientation, jointAngles);
+			(RegisterFile.getPReg(active_index)).point = new Point(position, orientation, jointAngles);
 		}
 
 		(RegisterFile.getPReg(active_index)).isCartesian = !fromJointAngles;
@@ -7655,7 +7661,7 @@ public class RobotRun extends PApplet {
 		if(!f.exists()) { f.mkdirs(); }
 
 		/* Load and Initialize the Tool and User Frames */
-		FrameFile.initFrameFile(this);
+		FrameFile.initFrameFile();
 		File savedFrames = new File( sketchPath("tmp/frames.bin") );
 
 		if(savedFrames.exists() && loadFrameBytes(savedFrames) == 0) {
@@ -7666,7 +7672,7 @@ public class RobotRun extends PApplet {
 		}
 
 		/* Load and Initialize the Position Register and Registers */
-		RegisterFile.initRegisterFile(this);
+		RegisterFile.initRegisterFile();
 		File savedRegs = new File(sketchPath("tmp/registers.bin"));
 
 		if(savedRegs.exists() && loadRegisterBytes(savedRegs) == 0) {
@@ -7944,7 +7950,7 @@ public class RobotRun extends PApplet {
 			// Read the joint angles for the joint's position
 			float[] angles = loadFloatArray(in);
 
-			return new Point(this, position, orientation, angles);
+			return new Point(position, orientation, angles);
 		}
 	}
 
@@ -8093,7 +8099,7 @@ public class RobotRun extends PApplet {
 			int uFrame = in.readInt();
 			int tFrame = in.readInt();
 
-			inst = new MotionInstruction(this, mType, reg, isGlobal, spd, term, uFrame, tFrame);
+			inst = new MotionInstruction(mType, reg, isGlobal, spd, term, uFrame, tFrame);
 			inst.setIsCommented(isCommented);
 
 			byte flag = in.readByte();
@@ -8106,7 +8112,7 @@ public class RobotRun extends PApplet {
 		} else if(instType == 3) {
 			// Read data for a FrameInstruction object
 			boolean isCommented = in.readBoolean();
-			inst = new FrameInstruction( this, in.readInt(), in.readInt() );
+			inst = new FrameInstruction( in.readInt(), in.readInt() );
 			inst.setIsCommented(isCommented);
 
 		} else if(instType == 4) {
@@ -8115,7 +8121,7 @@ public class RobotRun extends PApplet {
 			int reg = in.readInt();
 			int setting = in.readInt();
 
-			inst = new IOInstruction(this, reg, loadint(setting));
+			inst = new IOInstruction(reg, loadint(setting));
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 5) {
@@ -8129,14 +8135,14 @@ public class RobotRun extends PApplet {
 			boolean isCommented = in.readBoolean();
 			int tgtLabelNum = in.readInt();
 
-			inst = new JumpInstruction(this, tgtLabelNum);
+			inst = new JumpInstruction(tgtLabelNum);
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 7) {
 			boolean isCommented = in.readBoolean();
 			int pdx = in.readInt();
 
-			inst = new CallInstruction(this, pdx);
+			inst = new CallInstruction(pdx);
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 8) {
@@ -8391,10 +8397,10 @@ public class RobotRun extends PApplet {
 		if (type == 0) {
 			return null;
 		} else if (type == 1) {
-			f = new ToolFrame(this);
+			f = new ToolFrame();
 
 		} else if (type == 2) {
-			f = new UserFrame(this);
+			f = new UserFrame();
 
 		} else {
 			//println(type);
@@ -8594,7 +8600,7 @@ public class RobotRun extends PApplet {
 				if(c == "") { c = null; }
 				boolean isCartesian = dataIn.readBoolean();
 
-				RegisterFile.setPReg(idx, new PositionRegister(this, idx, c, p, isCartesian));
+				RegisterFile.setPReg(idx, new PositionRegister(idx, c, p, isCartesian));
 			}
 
 			dataIn.close();
@@ -8999,7 +9005,7 @@ public class RobotRun extends PApplet {
 		} else {
 			// Read the name of the scenario
 			String name = in.readUTF();
-			Scenario s = new Scenario(this, name);
+			Scenario s = new Scenario(name);
 			// An extra set of only the loaded fixtures
 			ArrayList<Fixture> fixtures = new ArrayList<Fixture>();
 			// A list of parts which have a fixture reference defined
@@ -9119,7 +9125,7 @@ public class RobotRun extends PApplet {
 			// Load the object's local orientation
 			PVector center = loadPVector(in);
 			float[][] orientationAxes = loadFloatArray2D(in);
-			CoordinateSystem localOrientation = new CoordinateSystem(this);
+			CoordinateSystem localOrientation = new CoordinateSystem();
 			localOrientation.setOrigin(center);
 			localOrientation.setAxes(orientationAxes);
 
@@ -9130,15 +9136,15 @@ public class RobotRun extends PApplet {
 
 				if (refName.equals("")) {
 					// A part object
-					wldObjFields = new Part(this, name, form, OBBDims, localOrientation, null);
+					wldObjFields = new Part(name, form, OBBDims, localOrientation, null);
 				} else {
 					// A part object with its reference's name
-					wldObjFields = new LoadedPart( new Part(this, name, form, OBBDims, localOrientation, null), refName );
+					wldObjFields = new LoadedPart( new Part(name, form, OBBDims, localOrientation, null), refName );
 				}
 
 			} else if (flag == 2) {
 				// A fixture object
-				wldObjFields = new Fixture(this, name, form, localOrientation);
+				wldObjFields = new Fixture(name, form, localOrientation);
 			} 
 		}
 
@@ -9228,7 +9234,7 @@ public class RobotRun extends PApplet {
 						y = in.readFloat(),
 						z = in.readFloat();
 				// Create a box
-				shape = new Box(this, fill, strokeVal, x, y, z);
+				shape = new Box(fill, strokeVal, x, y, z);
 
 			} else if (flag == 2) {
 				// Read stroke color
@@ -9236,14 +9242,14 @@ public class RobotRun extends PApplet {
 				float radius = in.readFloat(),
 						hgt = in.readFloat();
 				// Create a cylinder
-				shape = new Cylinder(this, fill, strokeVal, radius, hgt);
+				shape = new Cylinder(fill, strokeVal, radius, hgt);
 
 			} else if (flag == 3) {
 				float scale = in.readFloat();
 				String srcPath = in.readUTF();
 
 				// Creates a complex shape from the srcPath located in RobotRun/data/
-				shape = new ModelShape(this, srcPath, fill, scale);
+				shape = new ModelShape(srcPath, fill, scale);
 			}
 		}
 
@@ -9763,10 +9769,10 @@ public class RobotRun extends PApplet {
 		float[] newJointAngles = inverseKinematics(pt.angles, position, orientation);
 
 		if (newJointAngles != null) {
-			return new Point(this, position, orientation, newJointAngles);
+			return new Point(position, orientation, newJointAngles);
 		} else {
 			// If inverse kinematics fails use the old angles
-			return new Point(this, position, orientation, pt.angles);
+			return new Point(position, orientation, pt.angles);
 		}
 	}
 
@@ -9803,10 +9809,10 @@ public class RobotRun extends PApplet {
 		float[] newJointAngles = inverseKinematics(pt.angles, position, orientation);
 
 		if (newJointAngles != null) {
-			return new Point(this, position, orientation, newJointAngles);
+			return new Point(position, orientation, newJointAngles);
 		} else {
 			// If inverse kinematics fails use the old angles
-			return new Point(this, position, orientation, pt.angles);
+			return new Point(position, orientation, pt.angles);
 		}
 	}
 
@@ -10480,5 +10486,19 @@ public class RobotRun extends PApplet {
 
 	public void setRecord(int record) {
 		this.record = record;
+	}
+	
+	/**
+	 * Returns the instance of this PApplet
+	 */
+	public static RobotRun getInstance() {
+		return instance;
+	}
+	
+	/**
+	 * Returns this PApplet instance's Arm model reference.
+	 */
+	public static ArmModel getRobot() {
+		return instance.getArmModel();
 	}
 }

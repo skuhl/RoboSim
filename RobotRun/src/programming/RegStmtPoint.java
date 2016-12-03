@@ -16,8 +16,6 @@ import robot.RobotRun;
  * Quaternions during the evaluation of Register Statement Expressions.
  */
 public class RegStmtPoint {
-
-	private final RobotRun robotRun;
 	/**
 	 * The values associated with a register point:
 	 * 
@@ -31,14 +29,12 @@ public class RegStmtPoint {
 	private final float[] values;
 	private boolean isCartesian;
 
-	public RegStmtPoint(RobotRun robotRun) {
-		this.robotRun = robotRun;
+	public RegStmtPoint() {
 		values = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
 		isCartesian = false;
 	}
 
-	public RegStmtPoint(RobotRun robotRun, float[] iniValues, boolean cartesian) {
-		this.robotRun = robotRun;
+	public RegStmtPoint(float[] iniValues, boolean cartesian) {
 		if (iniValues.length < 6) {
 			// Not valid input values
 			values = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
@@ -50,12 +46,11 @@ public class RegStmtPoint {
 		isCartesian = cartesian;
 	}
 
-	public RegStmtPoint(RobotRun robotRun, Point initial, boolean cartesian) {
-		this.robotRun = robotRun;
+	public RegStmtPoint(Point initial, boolean cartesian) {
 		values = new float[6];
 		isCartesian = cartesian;
 		// Conver to W, P, R values
-		PVector wpr = this.robotRun.quatToEuler(initial.orientation);
+		PVector wpr = RobotRun.getInstance().quatToEuler(initial.orientation);
 		// Copy values into this point
 		getValues()[0] = initial.position.x;
 		getValues()[1] = initial.position.x;
@@ -95,7 +90,7 @@ public class RegStmtPoint {
 			sums[pdx] = getValues()[pdx] + pt.getValue(pdx);
 		}
 
-		return new RegStmtPoint(this.robotRun, sums, isCartesian);
+		return new RegStmtPoint(sums, isCartesian);
 	}
 
 	public RegStmtPoint subtract(RegStmtPoint pt) {
@@ -110,7 +105,7 @@ public class RegStmtPoint {
 			differences[pdx] = getValues()[pdx] - pt.getValue(pdx);
 		}
 
-		return new RegStmtPoint(this.robotRun, differences, isCartesian);
+		return new RegStmtPoint(differences, isCartesian);
 	}
 
 	public Point toPoint() {
@@ -119,12 +114,12 @@ public class RegStmtPoint {
 			PVector position = new PVector(getValues()[0], getValues()[1], getValues()[2]),
 					wpr = new PVector(getValues()[3], getValues()[4], getValues()[5]);
 			// Convet back to quaternion
-			RQuaternion orientation = this.robotRun.eulerToQuat(wpr);
+			RQuaternion orientation = RobotRun.getInstance().eulerToQuat(wpr);
 			// TODO initialize angles?
-			return new Point(this.robotRun, position, orientation);
+			return new Point(position, orientation);
 		} else {
 			// Use forward kinematics to find the position and orientation of the joint angles
-			return this.robotRun.nativeRobotEEPoint(getValues());
+			return RobotRun.getInstance().nativeRobotEEPoint(getValues());
 		}
 	}
 
@@ -132,7 +127,7 @@ public class RegStmtPoint {
 	 * Returns an independent replica of this point object.
 	 */
 	public RegStmtPoint clone() {
-		return new RegStmtPoint(this.robotRun, getValues(), isCartesian);
+		return new RegStmtPoint(getValues(), isCartesian);
 	}
 
 	public String toString() {

@@ -12,25 +12,18 @@ import robot.RobotRun;
  */
 public class MyDropdownList extends DropdownList {
 
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
-
-	public MyDropdownList( RobotRun robotRun, ControlP5 theControlP5 , String theName ) {
+	public MyDropdownList( ControlP5 theControlP5 , String theName ) {
 		super(theControlP5, theName);
-		this.robotRun = robotRun;
 	}
 
-	protected MyDropdownList( RobotRun robotRun, ControlP5 theControlP5 , ControllerGroup< ? > theGroup , String theName , int theX , int theY , int theW , int theH ) {
+	protected MyDropdownList( ControlP5 theControlP5 , ControllerGroup< ? > theGroup , String theName , int theX , int theY , int theW , int theH ) {
 		super( theControlP5 , theGroup , theName , theX , theY , theW , theH );
-		this.robotRun = robotRun;
 	}
 
 	protected void onRelease() {
 		super.onRelease();
 		// Some dropdown lists influence the display
-		this.robotRun.getManager().updateWindowContentsPositions();
+		RobotRun.getInstance().getManager().updateWindowContentsPositions();
 	}
 
 	/**

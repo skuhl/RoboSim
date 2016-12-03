@@ -6,21 +6,15 @@ import robot.RobotRun;
  * along with some methods necessarry for a shape.
  */
 public abstract class Shape implements Cloneable {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	private Integer fillCVal,
 	strokeCVal;
 
-	public Shape(RobotRun robotRun) {
-		this.robotRun = robotRun;
-		fillCVal = this.robotRun.color(0);
-		strokeCVal = this.robotRun.color(225);
+	public Shape() {
+		fillCVal = RobotRun.getInstance().color(0);
+		strokeCVal = RobotRun.getInstance().color(225);
 	}
 
-	public Shape(RobotRun robotRun, Integer fill, Integer strokeVal) {
-		this.robotRun = robotRun;
+	public Shape(Integer fill, Integer strokeVal) {
 		fillCVal = fill;
 		strokeCVal = strokeVal;
 	}
@@ -50,17 +44,17 @@ public abstract class Shape implements Cloneable {
 	 */
 	protected void applyColors() {
 		if (strokeCVal == null) {
-			this.robotRun.noStroke();
+			RobotRun.getInstance().noStroke();
 
 		} else {
-			this.robotRun.stroke(strokeCVal);
+			RobotRun.getInstance().stroke(strokeCVal);
 		}
 
 		if (fillCVal == null) {
-			this.robotRun.noFill();
+			RobotRun.getInstance().noFill();
 
 		} else {
-			this.robotRun.fill(fillCVal);
+			RobotRun.getInstance().fill(fillCVal);
 		} 
 	}
 

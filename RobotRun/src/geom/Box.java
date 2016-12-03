@@ -6,10 +6,7 @@ import robot.RobotRun;
  * Defines the length, width, height values to draw a box.
  */
 public class Box extends Shape {
-	/**
-	 * 
-	 */
-	private RobotRun robotRun;
+
 	/**
 	 * X -> length
 	 * Y -> Height
@@ -21,52 +18,47 @@ public class Box extends Shape {
 	 * Create a cube, with an edge length of 10.
 	 * @param robotRun TODO
 	 */
-	public Box(RobotRun robotRun) {
-		super(robotRun);
-		this.robotRun = robotRun;
+	public Box() {
+		super();
 		dimensions = new PVector(10f, 10f, 10f);
 	}
 
 	/**
 	 * Create a box with the given colors and dinemsions.
 	 */
-	public Box(RobotRun robotRun, int fill, int strokeVal, float len, float hgt, float wdh) {
-		super(robotRun, fill, strokeVal);
-		this.robotRun = robotRun;
+	public Box(int fill, int strokeVal, float len, float hgt, float wdh) {
+		super(fill, strokeVal);
 		dimensions = new PVector(len, hgt, wdh);
 	}
 
 	/**
 	 * Create an empty box with the given color and dinemsions.
 	 */
-	public Box(RobotRun robotRun, int strokeVal, float len, float hgt, float wdh) {
-		super(robotRun, null, strokeVal);
-		this.robotRun = robotRun;
+	public Box(int strokeVal, float len, float hgt, float wdh) {
+		super(null, strokeVal);
 		dimensions = new PVector(len, hgt, wdh);
 	}
 
 	/**
 	 * Create a cube with the given colors and dinemsion.
 	 */
-	public Box(RobotRun robotRun, int fill, int strokeVal, float edgeLen) {
-		super(robotRun, fill, strokeVal);
-		this.robotRun = robotRun;
+	public Box(int fill, int strokeVal, float edgeLen) {
+		super(fill, strokeVal);
 		dimensions = new PVector(edgeLen, edgeLen, edgeLen);
 	}
 
 	/**
 	 * Create an empty cube with the given color and dinemsion.
 	 */
-	public Box(RobotRun robotRun, int strokeVal, float edgeLen) {
-		super(robotRun, null, strokeVal);
-		this.robotRun = robotRun;
+	public Box(int strokeVal, float edgeLen) {
+		super(null, strokeVal);
 		dimensions = new PVector(edgeLen, edgeLen, edgeLen);
 	}
 
 	public void draw() {
 		// Apply colors
 		applyColors();
-		this.robotRun.box(dimensions.x, dimensions.y, dimensions.z);
+		RobotRun.getInstance().box(dimensions.x, dimensions.y, dimensions.z);
 	}
 
 	@Override
@@ -104,6 +96,6 @@ public class Box extends Shape {
 
 	@Override
 	public Object clone() {
-		return new Box(this.robotRun, getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
+		return new Box(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
 	}
 }

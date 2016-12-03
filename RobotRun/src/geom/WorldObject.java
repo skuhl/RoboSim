@@ -8,30 +8,23 @@ import robot.RobotRun;
  * Any object in the World other than the Robot.
  */
 public abstract class WorldObject implements Cloneable {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	private String name;
 	private Shape form;
 	protected CoordinateSystem localOrientation;
 
-	public WorldObject(RobotRun robotRun) {
-		this.robotRun = robotRun;
+	public WorldObject() {
 		name = "Object";
-		form = new Box(this.robotRun);
-		localOrientation = new CoordinateSystem(this.robotRun);
+		form = new Box();
+		localOrientation = new CoordinateSystem();
 	}
 
-	public WorldObject(RobotRun robotRun, String n, Shape f) {
-		this.robotRun = robotRun;
+	public WorldObject(String n, Shape f) {
 		name = n;
 		form = f;
-		localOrientation = new CoordinateSystem(this.robotRun);
+		localOrientation = new CoordinateSystem();
 	}
 
-	public WorldObject(RobotRun robotRun, String n, Shape f, CoordinateSystem cs) {
-		this.robotRun = robotRun;
+	public WorldObject(String n, Shape f, CoordinateSystem cs) {
 		name = n;
 		form = f;
 		localOrientation = cs;
@@ -48,18 +41,18 @@ public abstract class WorldObject implements Cloneable {
 	 * the current transformation matrix.
 	 */
 	public void setCoordinateSystem() {
-		localOrientation = new CoordinateSystem(this.robotRun);
+		localOrientation = new CoordinateSystem();
 	}
 
 	/**
 	 * Draw the world object in its local orientation.
 	 */
 	public void draw() {
-		this.robotRun.pushMatrix();
+		RobotRun.getInstance().pushMatrix();
 		// Draw shape in its own coordinate system
 		applyCoordinateSystem();
 		form.draw();
-		this.robotRun.popMatrix();
+		RobotRun.getInstance().popMatrix();
 	}
 
 	/**

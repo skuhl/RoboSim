@@ -5,10 +5,6 @@ import robot.RQuaternion;
 import robot.RobotRun;
 
 public class Point  {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	// X, Y, Z
 	public PVector position;
 	// Q1 - Q4
@@ -16,23 +12,20 @@ public class Point  {
 	// J1 - J6
 	public float[] angles;
 
-	public Point(RobotRun robotRun) {
-		this.robotRun = robotRun;
+	public Point() {
 		angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
 		position = new PVector(0f, 0f, 0f);
 		orientation = new RQuaternion();
 	}
 
-	public Point(RobotRun robotRun, PVector pos, RQuaternion orient) {
-		this.robotRun = robotRun;
+	public Point(PVector pos, RQuaternion orient) {
 		angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
 		position = pos;
 		orientation = orient;
 	}
 
-	public Point(RobotRun robotRun, float x, float y, float z, float r, float i, float j, float k,
+	public Point(float x, float y, float z, float r, float i, float j, float k,
 			float j1, float j2, float j3, float j4, float j5, float j6) {
-		this.robotRun = robotRun;
 		angles = new float[6];
 		position = new PVector(x,y,z);
 		orientation = new RQuaternion(r, i, j, k);
@@ -44,15 +37,14 @@ public class Point  {
 		angles[5] = j6;
 	}
 
-	public Point(RobotRun robotRun, PVector pos, RQuaternion orient, float[] jointAngles) {
-		this.robotRun = robotRun;
+	public Point(PVector pos, RQuaternion orient, float[] jointAngles) {
 		position = pos;
 		orientation = orient;
 		angles = jointAngles;
 	}
 
 	public Point clone() {
-		return new Point(this.robotRun, position.copy(), (RQuaternion)orientation.clone(), angles.clone());
+		return new Point(position.copy(), (RQuaternion)orientation.clone(), angles.clone());
 	}
 
 	public Float getValue(int idx) {
@@ -69,9 +61,9 @@ public class Point  {
 		case 7:   return position.z;
 		case 8:   return -position.y;
 		// Orientation
-		case 9:   return -RobotRun.RAD_TO_DEG*this.robotRun.quatToEuler(orientation).array()[0];
-		case 10:  return -RobotRun.RAD_TO_DEG*this.robotRun.quatToEuler(orientation).array()[2];
-		case 11:  return RobotRun.RAD_TO_DEG*this.robotRun.quatToEuler(orientation).array()[1];
+		case 9:   return -RobotRun.RAD_TO_DEG*RobotRun.getInstance().quatToEuler(orientation).array()[0];
+		case 10:  return -RobotRun.RAD_TO_DEG*RobotRun.getInstance().quatToEuler(orientation).array()[2];
+		case 11:  return RobotRun.RAD_TO_DEG*RobotRun.getInstance().quatToEuler(orientation).array()[1];
 		default:
 		}
 
@@ -79,7 +71,7 @@ public class Point  {
 	}
 
 	public void setValue(int idx, float value) {
-		PVector vec = this.robotRun.quatToEuler(orientation);
+		PVector vec = RobotRun.getInstance().quatToEuler(orientation);
 
 		switch(idx) {
 		// Joint angles
@@ -99,13 +91,13 @@ public class Point  {
 		break;
 		// Orientation
 		case 9:   vec.x = -value;
-		orientation = this.robotRun.eulerToQuat(vec);
+		orientation = RobotRun.getInstance().eulerToQuat(vec);
 		break;
 		case 10:  vec.z = -value;
-		orientation = this.robotRun.eulerToQuat(vec);
+		orientation = RobotRun.getInstance().eulerToQuat(vec);
 		break;
 		case 11:  vec.y = value;
-		orientation = this.robotRun.eulerToQuat(vec);
+		orientation = RobotRun.getInstance().eulerToQuat(vec);
 		break;
 		default:
 		}
@@ -116,7 +108,7 @@ public class Point  {
 	 * another point, 'p.' Does not alter the original values of this point.
 	 */
 	public Point add(Point p) {
-		Point p3 = new Point(this.robotRun);
+		Point p3 = new Point();
 
 		PVector p3Pos = PVector.add(position, p.position);
 		RQuaternion p3Orient = RQuaternion.mult(orientation, p.orientation);
@@ -139,7 +131,7 @@ public class Point  {
 	public Point negate() {
 		position = position.mult(-1);
 		orientation = RQuaternion.scalarMult(-1, orientation);
-		angles = this.robotRun.vectorScalarMult(angles, -1);
+		angles = RobotRun.getInstance().vectorScalarMult(angles, -1);
 		return this;
 	}
 
@@ -211,7 +203,7 @@ public class Point  {
 			pos = new PVector(Float.NaN, Float.NaN, Float.NaN);
 		} else {
 			// Display in terms of the World Frame
-			pos = this.robotRun.convertNativeToWorld(position);
+			pos = RobotRun.getInstance().convertNativeToWorld(position);
 		}
 
 		// Convert Quaternion to Euler Angles
@@ -221,7 +213,7 @@ public class Point  {
 			angles = new PVector(Float.NaN, Float.NaN, Float.NaN);
 		} else {
 			// Display in degrees
-			angles = this.robotRun.quatToEuler(orientation).mult(RobotRun.RAD_TO_DEG);
+			angles = RobotRun.getInstance().quatToEuler(orientation).mult(RobotRun.RAD_TO_DEG);
 		}
 
 		entries[0][0] = "X: ";

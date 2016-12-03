@@ -3,23 +3,17 @@ import global.Fields;
 import robot.RobotRun;
 
 public class IOInstruction extends Instruction {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	int state;
 	int reg;
 
-	public IOInstruction(RobotRun robotRun){
+	public IOInstruction(){
 		super();
-		this.robotRun = robotRun;
 		state = Fields.OFF;
 		reg = -1;
 	}
 
-	public IOInstruction(RobotRun robotRun, int r, int t) {
+	public IOInstruction(int r, int t) {
 		super();
-		this.robotRun = robotRun;
 		state = t;
 		reg = r;
 	}
@@ -30,13 +24,13 @@ public class IOInstruction extends Instruction {
 	public void setReg(int r){ reg = r; }
 
 	public int execute() {
-		robotRun.getArmModel().endEffectorState = state;
-		robotRun.getArmModel().checkPickupCollision(this.robotRun.activeScenario);
+		RobotRun.getInstance().getArmModel().endEffectorState = state;
+		RobotRun.getInstance().getArmModel().checkPickupCollision(RobotRun.getInstance().activeScenario);
 		return 0;
 	}
 
 	public Instruction clone() {
-		Instruction copy = new IOInstruction(this.robotRun, state, reg);
+		Instruction copy = new IOInstruction(state, reg);
 		copy.setIsCommented( isCommented() );
 
 		return copy;
@@ -59,4 +53,4 @@ public class IOInstruction extends Instruction {
 
 		return fields;
 	}
-} // end ToolInstruction class
+}

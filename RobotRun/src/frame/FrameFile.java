@@ -1,16 +1,14 @@
 package frame;
 
-import robot.RobotRun;
-
 public class FrameFile {
 	public static final int FRAME_SIZE = 100;
 	private static Frame[] U_FRAME = new UserFrame[FRAME_SIZE];
 	private static Frame[] T_FRAME = new ToolFrame[FRAME_SIZE];
 		
-	public static void initFrameFile(RobotRun robotRun) {
+	public static void initFrameFile() {
 		for(int n = 0; n < FRAME_SIZE; n += 1) {
-			U_FRAME[n] = new UserFrame(robotRun);
-			T_FRAME[n] = new ToolFrame(robotRun);
+			U_FRAME[n] = new UserFrame();
+			T_FRAME[n] = new ToolFrame();
 		}
 	}
 	

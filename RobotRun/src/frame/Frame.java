@@ -11,10 +11,6 @@ import processing.core.PVector;
 import robot.RobotRun;
 
 public abstract class Frame {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	// The orientation of the frame in the form of a unit quaternion
 	protected RQuaternion orientationOffset;
 	/* The three points used to define a coordinate axis for 6-Point Method
@@ -24,8 +20,7 @@ public abstract class Frame {
 	private PVector DEOrigin;
 	private RQuaternion DEOrientationOffset;
 
-	public Frame(RobotRun robotRun) {
-		this.robotRun = robotRun;
+	public Frame() {
 		orientationOffset = new RQuaternion();
 		setAxesTeachPoints(new Point[] { null, null, null });
 		setDEOrigin(null);
@@ -43,10 +38,10 @@ public abstract class Frame {
 	/* Returns a set of axes unit vectors representing the axes
 	 * of the frame in reference to the World Coordinate System. */
 	public float[][] getWorldAxisVectors() {
-		RealMatrix frameAxes = new Array2DRowRealMatrix(this.robotRun.floatToDouble(getNativeAxisVectors(), 3, 3));
-		RealMatrix worldAxes = new Array2DRowRealMatrix(this.robotRun.floatToDouble(this.robotRun.WORLD_AXES, 3, 3));
+		RealMatrix frameAxes = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(getNativeAxisVectors(), 3, 3));
+		RealMatrix worldAxes = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(RobotRun.getInstance().WORLD_AXES, 3, 3));
 
-		return this.robotRun.doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
+		return RobotRun.getInstance().doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
 	}
 
 	/**
@@ -150,25 +145,25 @@ public abstract class Frame {
 
 			if (counter == 0) {
 				/* Case 3: C = point 1 */
-				Ar = new Array2DRowRealMatrix(this.robotRun.floatToDouble(ori2, 3, 3));
-				Br = new Array2DRowRealMatrix(this.robotRun.floatToDouble(ori3, 3, 3));
-				Cr = new Array2DRowRealMatrix(this.robotRun.floatToDouble(ori1, 3, 3));
+				Ar = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori2, 3, 3));
+				Br = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori3, 3, 3));
+				Cr = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori1, 3, 3));
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos1, 2), PVector.add(pos2, pos3));
 
 			} else if (counter == 1) {
 				/* Case 2: C = point 2 */
-				Ar = new Array2DRowRealMatrix(this.robotRun.floatToDouble(ori3, 3, 3));
-				Br = new Array2DRowRealMatrix(this.robotRun.floatToDouble(ori1, 3, 3));
-				Cr = new Array2DRowRealMatrix(this.robotRun.floatToDouble(ori2, 3, 3));
+				Ar = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori3, 3, 3));
+				Br = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori1, 3, 3));
+				Cr = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori2, 3, 3));
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos2, 2), PVector.add(pos3, pos1));
 
 			} else if (counter == 2) {
 				/* Case 1: C = point 3 */
-				Ar = new Array2DRowRealMatrix(this.robotRun.floatToDouble(ori1, 3, 3));
-				Br = new Array2DRowRealMatrix(this.robotRun.floatToDouble(ori2, 3, 3));
-				Cr = new Array2DRowRealMatrix(this.robotRun.floatToDouble(ori3, 3, 3));
+				Ar = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori1, 3, 3));
+				Br = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori2, 3, 3));
+				Cr = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori3, 3, 3));
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos3, 2), PVector.add(pos1, pos2));
 
@@ -205,7 +200,7 @@ x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
 			avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
 
 			if (RobotRun.DISPLAY_TEST_OUTPUT) {
-				System.out.printf("\n%s\n\n", this.robotRun.matrixToString( this.robotRun.doubleToFloat(R.getData(), 3, 3) ));
+				System.out.printf("\n%s\n\n", RobotRun.getInstance().matrixToString( RobotRun.getInstance().doubleToFloat(R.getData(), 3, 3) ));
 			}
 		}
 
@@ -271,11 +266,11 @@ x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
 		axesRefWorld[2][1] = zAxis.y;
 		axesRefWorld[2][2] = zAxis.z;
 
-		RealMatrix axes = new Array2DRowRealMatrix(this.robotRun.floatToDouble(axesRefWorld, 3, 3)),
-				worldAxes =  new Array2DRowRealMatrix(this.robotRun.floatToDouble(this.robotRun.WORLD_AXES, 3, 3)),
+		RealMatrix axes = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(axesRefWorld, 3, 3)),
+				worldAxes =  new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(RobotRun.getInstance().WORLD_AXES, 3, 3)),
 				invWorldAxes = (new SingularValueDecomposition(worldAxes)).getSolver().getInverse();
 		// Remove the World frame transformation from the axes vectors
-		return this.robotRun.doubleToFloat(invWorldAxes.multiply(axes).getData(), 3, 3);
+		return RobotRun.getInstance().doubleToFloat(invWorldAxes.multiply(axes).getData(), 3, 3);
 	}
 
 	/**
@@ -323,7 +318,7 @@ x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
 		} else {
 			// Use previous value if it exists
 			if (this instanceof UserFrame) {
-				xyz = this.robotRun.convertNativeToWorld(getDEOrigin());
+				xyz = RobotRun.getInstance().convertNativeToWorld(getDEOrigin());
 			} else {
 				// Tool Frame origins are an offset of the Robot's End Effector
 				xyz = getDEOrigin();
@@ -334,7 +329,7 @@ x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
 			wpr = new PVector(0f, 0f, 0f);
 		} else {
 			// Display iin degress
-			wpr = this.robotRun.quatToEuler(getDEOrientationOffset()).mult(RobotRun.RAD_TO_DEG);
+			wpr = RobotRun.getInstance().quatToEuler(getDEOrientationOffset()).mult(RobotRun.RAD_TO_DEG);
 		}
 
 		entries[0][0] = "X: ";

@@ -10,10 +10,6 @@ import geom.WorldObject;
  * A storage class for a collection of objects with an associated name for the collection.
  */
 public class Scenario implements Iterable<WorldObject>, Cloneable {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
 	private String name;
 	/**
 	 * A combine list of Parts and Fixtures
@@ -23,8 +19,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	/**
 	 * Create a new scenario of the given name.
 	 */
-	public Scenario(RobotRun robotRun, String n) {
-		this.robotRun = robotRun;
+	public Scenario(String n) {
 		name = n;
 		objList = new ArrayList<WorldObject>();
 	}
@@ -171,7 +166,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		for (WorldObject wldObj : objList) {
 			if (wldObj instanceof Part) {
 				// Reset all Part bounding-box colors
-				((Part)wldObj).setBBColor(this.robotRun.color(0, 255, 0));
+				((Part)wldObj).setBBColor(RobotRun.getInstance().color(0, 255, 0));
 			}
 		}
 	}
@@ -192,8 +187,8 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 				/* Update the transformation matrix of an object held by the Robotic Arm */
 				if(model != null && p == model.held && model.modelInMotion()) {
-					this.robotRun.pushMatrix();
-					this.robotRun.resetMatrix();
+					RobotRun.getInstance().pushMatrix();
+					RobotRun.getInstance().resetMatrix();
 
 					/***********************************************
      Moving a part with the Robot:
@@ -214,10 +209,10 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 						refFixture.removeCoordinateSystem();
 					}
 
-					this.robotRun.applyModelRotation(model.getJointAngles());
+					RobotRun.getInstance().applyModelRotation(model.getJointAngles());
 
-					float[][] invEETMatrix = this.robotRun.invertHCMatrix(robotRun.getArmModel().oldEEOrientation);
-					this.robotRun.applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
+					float[][] invEETMatrix = RobotRun.getInstance().invertHCMatrix(RobotRun.getInstance().getArmModel().oldEEOrientation);
+					RobotRun.getInstance().applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
 							invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
 							invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
 							0,                 0,                   0,                  1);
@@ -226,13 +221,13 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					// Update the world object's position and orientation
 					p.setLocalCoordinateSystem();
 					p.updateAbsoluteOrientation();
-					this.robotRun.popMatrix();
+					RobotRun.getInstance().popMatrix();
 				}
 
 				/* Collision Detection */
-				if(this.robotRun.showOOBs) {
+				if(RobotRun.getInstance().showOOBs) {
 					if( model != null && model.checkObjectCollision(p) ) {
-						p.setBBColor(this.robotRun.color(255, 0, 0));
+						p.setBBColor(RobotRun.getInstance().color(255, 0, 0));
 					}
 
 					// Detect collision with other objects
@@ -243,8 +238,8 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 							if(p.collision(p2)) {
 								// Change hit box color to indicate Object collision
-								p.setBBColor(this.robotRun.color(255, 0, 0));
-								p2.setBBColor(this.robotRun.color(255, 0, 0));
+								p.setBBColor(RobotRun.getInstance().color(255, 0, 0));
+								p2.setBBColor(RobotRun.getInstance().color(255, 0, 0));
 								break;
 							}
 						}
@@ -252,12 +247,12 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 					if (model != null && p != model.held && model.canPickup(p)) {
 						// Change hit box color to indicate End Effector collision
-						p.setBBColor(this.robotRun.color(0, 0, 255));
+						p.setBBColor(RobotRun.getInstance().color(0, 0, 255));
 					}
 				}
 
-				if (p == robotRun.getManager().getActiveWorldObject()) {
-					p.setBBColor(this.robotRun.color(255, 255, 0));
+				if (p == RobotRun.getInstance().getManager().getActiveWorldObject()) {
+					p.setBBColor(RobotRun.getInstance().color(255, 255, 0));
 				}
 			}
 			// Draw the object
@@ -363,7 +358,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 	@Override
 	public Object clone() {
-		Scenario copy = new Scenario(this.robotRun, name);
+		Scenario copy = new Scenario(name);
 		ArrayList<Fixture> fixtures = new ArrayList<Fixture>();
 		ArrayList<Part> parts = new ArrayList<Part>();
 
