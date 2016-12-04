@@ -141,8 +141,8 @@ public class BoundingBox {
 	 */
 	public boolean collision(PVector point) {
 		// Convert the point to the current reference frame
-		float[][] tMatrix = RobotRun.getInstance().transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
-		PVector relPosition = RobotRun.getInstance().transformVector(point, RobotRun.getInstance().invertHCMatrix(tMatrix));
+		float[][] tMatrix = RobotRun.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
+		PVector relPosition = RobotRun.transformVector(point, RobotRun.invertHCMatrix(tMatrix));
 
 		PVector OBBDim = getDims();
 		// Determine if the point iw within the bounding-box of this object

@@ -17,10 +17,24 @@ public class UserFrame extends Frame {
 		origin = new PVector(0f, 0f, 0f);
 		setOrientOrigin(null);
 	}
+	
+	@Override
+	public void reset() {
+		orientationOffset = new RQuaternion();
+		setPoint(null, 0);
+		setPoint(null, 1);
+		setPoint(null, 2);
+		setPoint(null, 3);
+		setDEOrigin(null);
+		setDEOrientationOffset(null);
+		origin = new PVector(0f, 0f, 0f);
+		setOrientOrigin(null);
+	}
 
 	@Override
 	public RQuaternion getOrientation() { return orientationOffset; }
 
+	@Override
 	public void setPoint(Point p, int idx) {
 
 		/* Map the index into the 'Point array' to the
@@ -29,7 +43,7 @@ public class UserFrame extends Frame {
 		case 0:
 		case 1:
 		case 2:
-			getAxesTeachPoints()[idx] = p;
+			super.setPoint(p, idx);
 			return;
 
 		case 3:
@@ -40,6 +54,7 @@ public class UserFrame extends Frame {
 		}
 	}
 
+	@Override
 	public Point getPoint(int idx) {
 
 		/* Map the index into the 'Point array' to the
@@ -48,7 +63,7 @@ public class UserFrame extends Frame {
 		case 0:
 		case 1:
 		case 2:
-			return getAxesTeachPoints()[idx];
+			return super.getPoint(idx);
 
 		case 3:
 			return getOrientOrigin();
@@ -59,6 +74,7 @@ public class UserFrame extends Frame {
 		return null;
 	}
 
+	@Override
 	public boolean setFrame(int mode) {
 
 		if (mode == 2) {
@@ -72,20 +88,20 @@ public class UserFrame extends Frame {
 			setOrigin(getDEOrigin());
 			setOrientation( (RQuaternion)getDEOrientationOffset().clone() );
 			return true;
-		} else if (mode >= 0 && mode < 2 && getAxesTeachPoints()[0] != null && getAxesTeachPoints()[1] != null && getAxesTeachPoints()[2] != null) {
+		} else if (mode >= 0 && mode < 2 && getPoint(0) != null && getPoint(1) != null && getPoint(2) != null) {
 			// 3-Point or 4-Point Method
 
-			PVector newOrigin = (mode == 0) ? getAxesTeachPoints()[0].position : getOrientOrigin().position;
-			float[][] newAxesVectors = createAxesFromThreePoints(getAxesTeachPoints()[0].position,
-					getAxesTeachPoints()[1].position,
-					getAxesTeachPoints()[2].position);
+			PVector newOrigin = (mode == 0) ? getPoint(0).position : getOrientOrigin().position;
+			float[][] newAxesVectors = createAxesFromThreePoints(getPoint(0).position,
+					getPoint(1).position,
+					getPoint(2).position);
 
 			if (newOrigin == null || newAxesVectors == null) {
 				// Invalid points for the coordinate axes or missing orient origin for the 4-Point Method
 				return false;
 			}
 
-			setOrientation( RobotRun.getInstance().matrixToQuat(newAxesVectors) );
+			setOrientation( RobotRun.matrixToQuat(newAxesVectors) );
 			setOrigin(newOrigin);
 			return true;
 		}
@@ -100,16 +116,17 @@ public class UserFrame extends Frame {
 	 *
 	 * @return  A 6-element String array
 	 */
+	@Override
 	public String[] toStringArray() {
 
 		String[] values = new String[6];
 
 		PVector displayOrigin;
 		// Convert angles to degrees and to the World Coordinate Frame
-		PVector wpr = RobotRun.getInstance().quatToEuler(orientationOffset).mult(RobotRun.RAD_TO_DEG);
+		PVector wpr = RobotRun.quatToEuler(orientationOffset).mult(RobotRun.RAD_TO_DEG);
 
 		// Convert to World frame reference
-		displayOrigin = RobotRun.getInstance().convertNativeToWorld(origin);
+		displayOrigin = RobotRun.convertNativeToWorld(origin);
 
 		values[0] = String.format("X: %4.3f", displayOrigin.x);
 		values[1] = String.format("Y: %4.3f", displayOrigin.y);
@@ -123,6 +140,7 @@ public class UserFrame extends Frame {
 	}
 
 	// Getter and Setters for the User frame's origin
+	@Override
 	public PVector getOrigin() { return origin; }
 	public void setOrigin(PVector newOrigin) { origin = newOrigin; }
 

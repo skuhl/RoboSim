@@ -1,6 +1,5 @@
 package programming;
 import frame.Frame;
-import frame.FrameFile;
 import geom.Point;
 import global.Fields;
 import regs.*;
@@ -135,8 +134,8 @@ public final class MotionInstruction extends Instruction  {
 
 		if (userFrame != -1) {
 			// Convert point into the Native Coordinate System
-			Frame active = FrameFile.getUFrame(userFrame);
-			pt = RobotRun.getInstance().removeFrame(pt, active.getOrigin(), active.getOrientation());
+			Frame active = RobotRun.getRobot().getUserFrame(userFrame);
+			pt = RobotRun.removeFrame(pt, active.getOrigin(), active.getOrientation());
 		}
 
 		return pt.add(offset);

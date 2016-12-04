@@ -1275,8 +1275,8 @@ public class WindowManager {
 				 }
 
 				 // Convert origin position into the World Frame
-				 PVector oPosition = RobotRun.getInstance().convertNativeToWorld( toEdit.getLocalCenter() ),
-						 oWPR = RobotRun.getInstance().matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RobotRun.RAD_TO_DEG);
+				 PVector oPosition = RobotRun.convertNativeToWorld( toEdit.getLocalCenter() ),
+						 oWPR = RobotRun.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RobotRun.RAD_TO_DEG);
 				 Float[] inputValues = getOrientationValues();
 				 // Update position and orientation
 				 if (inputValues[0] != null) { oPosition.x = inputValues[0]; }
@@ -1287,9 +1287,9 @@ public class WindowManager {
 				 if (inputValues[4] != null) { oWPR.z = inputValues[4]; }
 
 				 // Convert values from the World to the Native coordinate system
-				 PVector position = RobotRun.getInstance().convertWorldToNative( oPosition );
+				 PVector position = RobotRun.convertWorldToNative( oPosition );
 				 PVector wpr = oWPR.mult(RobotRun.DEG_TO_RAD);
-				 float[][] orientation = RobotRun.getInstance().eulerToMatrix(wpr);
+				 float[][] orientation = RobotRun.eulerToMatrix(wpr);
 				 // Update the Objects position and orientaion
 				 toEdit.setLocalCenter(position);
 				 toEdit.setLocalOrientationAxes(orientation);

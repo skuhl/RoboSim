@@ -50,8 +50,8 @@ public class Fixture extends WorldObject {
 	 * Applies the inverse of this Fixture's Coordinate System's transformation matrix to the matrix stack.
 	 */
 	public void removeCoordinateSystem() {
-		float[][] tMatrix = RobotRun.getInstance().transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
-		tMatrix = RobotRun.getInstance().invertHCMatrix(tMatrix);
+		float[][] tMatrix = RobotRun.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
+		tMatrix = RobotRun.invertHCMatrix(tMatrix);
 
 		RobotRun.getInstance().applyMatrix(tMatrix[0][0], tMatrix[1][0], tMatrix[2][0], tMatrix[0][3],
 				tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[1][3],

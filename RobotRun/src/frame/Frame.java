@@ -22,10 +22,15 @@ public abstract class Frame {
 
 	public Frame() {
 		orientationOffset = new RQuaternion();
-		setAxesTeachPoints(new Point[] { null, null, null });
-		setDEOrigin(null);
-		setDEOrientationOffset(null);
+		axesTeachPoints = new Point[] { null, null, null };
+		DEOrigin = null;
+		DEOrientationOffset = null;
 	}
+	
+	/**
+	 * Resets all the fields of the frame to their default values.
+	 */
+	public abstract void reset();
 
 	/**
 	 * Return the origin of this Frame's coordinate System.
@@ -38,10 +43,10 @@ public abstract class Frame {
 	/* Returns a set of axes unit vectors representing the axes
 	 * of the frame in reference to the World Coordinate System. */
 	public float[][] getWorldAxisVectors() {
-		RealMatrix frameAxes = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(getNativeAxisVectors(), 3, 3));
-		RealMatrix worldAxes = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(RobotRun.getInstance().WORLD_AXES, 3, 3));
+		RealMatrix frameAxes = new Array2DRowRealMatrix(RobotRun.floatToDouble(getNativeAxisVectors(), 3, 3));
+		RealMatrix worldAxes = new Array2DRowRealMatrix(RobotRun.floatToDouble(RobotRun.WORLD_AXES, 3, 3));
 
-		return RobotRun.getInstance().doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
+		return RobotRun.doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
 	}
 
 	/**
@@ -86,13 +91,37 @@ public abstract class Frame {
 	 * @param idx  The index, at which to save the given point, in the Frame's list
 	 *             of taught points
 	 */
-	public abstract void setPoint(Point p, int idx);
+	public void setPoint(Point p, int idx) {
+		/* Map the index into the 'Point array' to the
+		 * actual values stored in the frame */
+		switch (idx) {
+			case 0:
+			case 1:
+			case 2:
+				axesTeachPoints[ idx % 3 ] = p;
+				return;
+	
+			default:
+		}
+	}
 
 	/**
 	 * Returns the position of the teach point at the given index in the Frame's list
 	 * of teach points. Valid indices are described in setPoint().
 	 */
-	public abstract Point getPoint(int idx);
+	public Point getPoint(int idx) {
+		/* Map the index into the 'Point array' to the
+		 * actual values stored in the frame */
+		switch (idx) {
+			case 0:
+			case 1:
+			case 2:
+				return axesTeachPoints[ idx ];
+				
+			default:
+				return null;
+		}
+	}
 
 	/**
 	 * Based on value of method, an attempt will be made to set the current origin offset and axes vectors.
@@ -145,50 +174,50 @@ public abstract class Frame {
 
 			if (counter == 0) {
 				/* Case 3: C = point 1 */
-				Ar = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori2, 3, 3));
-				Br = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori3, 3, 3));
-				Cr = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori1, 3, 3));
+				Ar = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori2, 3, 3));
+				Br = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori3, 3, 3));
+				Cr = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori1, 3, 3));
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos1, 2), PVector.add(pos2, pos3));
 
 			} else if (counter == 1) {
 				/* Case 2: C = point 2 */
-				Ar = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori3, 3, 3));
-				Br = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori1, 3, 3));
-				Cr = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori2, 3, 3));
+				Ar = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori3, 3, 3));
+				Br = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori1, 3, 3));
+				Cr = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori2, 3, 3));
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos2, 2), PVector.add(pos3, pos1));
 
 			} else if (counter == 2) {
 				/* Case 1: C = point 3 */
-				Ar = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori1, 3, 3));
-				Br = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori2, 3, 3));
-				Cr = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(ori3, 3, 3));
+				Ar = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori1, 3, 3));
+				Br = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori2, 3, 3));
+				Cr = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori3, 3, 3));
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos3, 2), PVector.add(pos1, pos2));
 
 			}
 
 			/****************************************************************
-Three Point Method Calculation
-
-------------------------------------------------------------
-A, B, C      transformation matrices
-Ar, Br, Cr   rotational portions of A, B, C respectively
-At, Bt, Ct   translational portions of A, B, C repectively
-x            TCP point with respect to the EE
-------------------------------------------------------------
-
-Ax = Bx = Cx
-Ax = (Ar)x + At
-
-(A - B)x = 0
-(Ar - Br)x + At - Bt = 0
-
-Ax + Bx - 2Cx = 0
-(Ar + Br - 2Cr)x + At + Bt - 2Ct = 0
-(Ar + Br - 2Cr)x = 2Ct - At - Bt
-x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
+				Three Point Method Calculation
+				
+				------------------------------------------------------------
+				A, B, C      transformation matrices
+				Ar, Br, Cr   rotational portions of A, B, C respectively
+				At, Bt, Ct   translational portions of A, B, C repectively
+				x            TCP point with respect to the EE
+				------------------------------------------------------------
+				
+				Ax = Bx = Cx
+				Ax = (Ar)x + At
+				
+				(A - B)x = 0
+				(Ar - Br)x + At - Bt = 0
+				
+				Ax + Bx - 2Cx = 0
+				(Ar + Br - 2Cr)x + At + Bt - 2Ct = 0
+				(Ar + Br - 2Cr)x = 2Ct - At - Bt
+				x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
 
 			 ****************************************************************/
 
@@ -200,7 +229,7 @@ x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
 			avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
 
 			if (RobotRun.DISPLAY_TEST_OUTPUT) {
-				System.out.printf("\n%s\n\n", RobotRun.getInstance().matrixToString( RobotRun.getInstance().doubleToFloat(R.getData(), 3, 3) ));
+				System.out.printf("\n%s\n\n", RobotRun.getInstance().matrixToString( RobotRun.doubleToFloat(R.getData(), 3, 3) ));
 			}
 		}
 
@@ -266,11 +295,11 @@ x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
 		axesRefWorld[2][1] = zAxis.y;
 		axesRefWorld[2][2] = zAxis.z;
 
-		RealMatrix axes = new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(axesRefWorld, 3, 3)),
-				worldAxes =  new Array2DRowRealMatrix(RobotRun.getInstance().floatToDouble(RobotRun.getInstance().WORLD_AXES, 3, 3)),
+		RealMatrix axes = new Array2DRowRealMatrix(RobotRun.floatToDouble(axesRefWorld, 3, 3)),
+				worldAxes =  new Array2DRowRealMatrix(RobotRun.floatToDouble(RobotRun.WORLD_AXES, 3, 3)),
 				invWorldAxes = (new SingularValueDecomposition(worldAxes)).getSolver().getInverse();
 		// Remove the World frame transformation from the axes vectors
-		return RobotRun.getInstance().doubleToFloat(invWorldAxes.multiply(axes).getData(), 3, 3);
+		return RobotRun.doubleToFloat(invWorldAxes.multiply(axes).getData(), 3, 3);
 	}
 
 	/**
@@ -318,7 +347,7 @@ x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
 		} else {
 			// Use previous value if it exists
 			if (this instanceof UserFrame) {
-				xyz = RobotRun.getInstance().convertNativeToWorld(getDEOrigin());
+				xyz = RobotRun.convertNativeToWorld(getDEOrigin());
 			} else {
 				// Tool Frame origins are an offset of the Robot's End Effector
 				xyz = getDEOrigin();
@@ -329,7 +358,7 @@ x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
 			wpr = new PVector(0f, 0f, 0f);
 		} else {
 			// Display iin degress
-			wpr = RobotRun.getInstance().quatToEuler(getDEOrientationOffset()).mult(RobotRun.RAD_TO_DEG);
+			wpr = RobotRun.quatToEuler(getDEOrientationOffset()).mult(RobotRun.RAD_TO_DEG);
 		}
 
 		entries[0][0] = "X: ";
@@ -364,12 +393,4 @@ x = (Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt)
 	public void setDEOrientationOffset(RQuaternion dEOrientationOffset) {
 		DEOrientationOffset = dEOrientationOffset;
 	}
-
-	public Point[] getAxesTeachPoints() {
-		return axesTeachPoints;
-	}
-
-	public void setAxesTeachPoints(Point[] axesTeachPoints) {
-		this.axesTeachPoints = axesTeachPoints;
-	}
-} // end Frame class
+}

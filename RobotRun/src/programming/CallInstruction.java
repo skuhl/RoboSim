@@ -13,8 +13,9 @@ public class CallInstruction extends Instruction {
 	}
 
 	public int execute() {
-
-		if (progIdx < 0 && progIdx >= RobotRun.getInstance().getPrograms().size()) {
+		
+		// TODO associate with the correct Robot ID (RID)
+		if (progIdx < 0 && progIdx >= RobotRun.getRobot().numOfPrograms()) {
 			// Invalid program id
 			return -1;
 		}
@@ -61,8 +62,8 @@ public class CallInstruction extends Instruction {
 	 * is invalid.
 	 */
 	private String progName() {
-		if (progIdx >= 0 && progIdx < RobotRun.getInstance().getPrograms().size()) {
-			return RobotRun.getInstance().getPrograms().get(progIdx).getName();
+		if (progIdx >= 0 && progIdx < RobotRun.getRobot().numOfPrograms()) {
+			return RobotRun.getRobot().getProgram(progIdx).getName();
 		}
 
 		return "...";

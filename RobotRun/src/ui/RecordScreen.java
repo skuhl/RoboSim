@@ -10,6 +10,7 @@ public class RecordScreen implements Runnable {
 	public RecordScreen() {
 		System.out.format("Record screen...\n");
 	}
+	
 	public void run() {
 		try{ 
 			// create a timestamp and attach it to the filename

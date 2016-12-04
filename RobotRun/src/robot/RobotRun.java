@@ -31,7 +31,7 @@ import ui.*;
 import window.*;
 
 public class RobotRun extends PApplet {
-	public static final PVector ROBOT_POSITION = new PVector(200, 300, 200);
+	public static final PVector ROBOT_POSITION;
 	public static final int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 	
 	private Camera camera;
@@ -43,7 +43,6 @@ public class RobotRun extends PApplet {
 	private WindowManager manager;
 	private Stack<Screen> display_stack;
 
-	private ArrayList<Program> programs = new ArrayList<Program>();
 	private ArrayList<Macro> macros = new ArrayList<Macro>();
 	private Macro[] SU_macro_bindings = new Macro[7];
 	private Macro edit_macro;
@@ -141,22 +140,27 @@ public class RobotRun extends PApplet {
 	 * F4 -> S-X/s-x
 	 * F5 -> Y-Z/y-z, _, @, *, .
 	 */
-	private int[] letterStates = {0, 0, 0, 0, 0};
-	private final char[][] letters = {{'a', 'b', 'c', 'd', 'e', 'f'},
-			{'g', 'h', 'i', 'j', 'k', 'l'},
-			{'m', 'n', 'o', 'p', 'q', 'r'},
-			{'s', 't', 'u', 'v', 'w', 'x'},
-			{'y', 'z', '_', '@', '*', '.'}};
+	private int[] letterStates;
+	private static final char[][] letters;
 	
 	static {
 		instance = null;
+		ROBOT_POSITION = new PVector(200, 300, 200);
 		WORLD_AXES = new float[][] { { -1,  0,  0 },
 									 {  0,  0,  1 },
 									 {  0, -1,  0 } };
+		
+		 letters = new char[][] {{'a', 'b', 'c', 'd', 'e', 'f'},
+								 {'g', 'h', 'i', 'j', 'k', 'l'},
+								 {'m', 'n', 'o', 'p', 'q', 'r'},
+								 {'s', 't', 'u', 'v', 'w', 'x'},
+								 {'y', 'z', '_', '@', '*', '.'}};
 	}
 	
 	public void setup() {
 		instance = this;
+		letterStates = new int[] {0, 0, 0, 0, 0};
+		
 		//size(1200, 800, P3D);
 		//create font and text display background
 		fnt_con14 = createFont("data/Consolas.ttf", 14);
@@ -166,7 +170,7 @@ public class RobotRun extends PApplet {
 		camera = new Camera();
 
 		//load model and save data
-		armModel = new ArmModel();
+		armModel = new ArmModel(0);
 		intermediatePositions = new ArrayList<Point>();
 		activeScenario = null;
 		showOOBs = true;
@@ -799,12 +803,12 @@ public class RobotRun extends PApplet {
 		}
 
 		// Skip the Tool Frame, if there is no active frame
-		if(armModel.getCurCoordFrame() == CoordFrame.TOOL && !(armModel.getActiveToolFrame() >= 0 && armModel.getActiveToolFrame() < FrameFile.FRAME_SIZE)) {
+		if(armModel.getCurCoordFrame() == CoordFrame.TOOL && !(armModel.getActiveToolFrame() >= 0 && armModel.getActiveToolFrame() < Fields.FRAME_SIZE)) {
 			armModel.setCurCoordFrame(CoordFrame.USER);
 		}
 
 		// Skip the User Frame, if there is no active frame
-		if(armModel.getCurCoordFrame() == CoordFrame.USER && !(armModel.getActiveUserFrame() >= 0 && armModel.getActiveUserFrame() < FrameFile.FRAME_SIZE)) {
+		if(armModel.getCurCoordFrame() == CoordFrame.USER && !(armModel.getActiveUserFrame() >= 0 && armModel.getActiveUserFrame() < Fields.FRAME_SIZE)) {
 			armModel.setCurCoordFrame(CoordFrame.JOINT);
 		}
 
@@ -818,14 +822,14 @@ public class RobotRun extends PApplet {
 	public void updateCoordFrame() {
 
 		// Return to the World Frame, if no User Frame is active
-		if(armModel.getCurCoordFrame() == CoordFrame.TOOL && !(armModel.getActiveToolFrame() >= 0 && armModel.getActiveToolFrame() < FrameFile.FRAME_SIZE)) {
+		if(armModel.getCurCoordFrame() == CoordFrame.TOOL && !(armModel.getActiveToolFrame() >= 0 && armModel.getActiveToolFrame() < Fields.FRAME_SIZE)) {
 			armModel.setCurCoordFrame(CoordFrame.WORLD);
 			// Stop Robot movement
 			armModel.halt();
 		}
 
 		// Return to the World Frame, if no User Frame is active
-		if(armModel.getCurCoordFrame() == CoordFrame.USER && !(armModel.getActiveUserFrame() >= 0 && armModel.getActiveUserFrame() < FrameFile.FRAME_SIZE)) {
+		if(armModel.getCurCoordFrame() == CoordFrame.USER && !(armModel.getActiveUserFrame() >= 0 && armModel.getActiveUserFrame() < Fields.FRAME_SIZE)) {
 			armModel.setCurCoordFrame(CoordFrame.WORLD);
 			// Stop Robot movement
 			armModel.halt();
@@ -2929,7 +2933,7 @@ public class RobotRun extends PApplet {
 		case NAV_TOOL_FRAMES:
 			if(shift) {
 				// Reset the highlighted frame in the tool frame list
-				FrameFile.setTFrame(active_index, new ToolFrame());
+				armModel.getToolFrame(active_index).reset();
 				saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
 				updateScreen();
 			} else {
@@ -2941,7 +2945,7 @@ public class RobotRun extends PApplet {
 		case NAV_USER_FRAMES:
 			if(shift) {
 				// Reset the highlighted frame in the user frames list
-				FrameFile.setUFrame(active_index, new UserFrame());
+				armModel.getUserFrame(active_index).reset();
 				saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
 				updateScreen();
 			} else {
@@ -2984,7 +2988,7 @@ public class RobotRun extends PApplet {
 	public void f2() {
 		switch(mode) {
 		case NAV_PROGRAMS:
-			if(getPrograms().size() > 0) {
+			if(armModel.numOfPrograms() > 0) {
 				nextScreen(Screen.PROG_RENAME);
 			}
 			break;
@@ -3037,7 +3041,7 @@ public class RobotRun extends PApplet {
 	public void f3() {
 		switch(mode){
 		case NAV_PROGRAMS:
-			if(getPrograms().size() > 0) {
+			if(armModel.numOfPrograms() > 0) {
 				nextScreen(Screen.CONFIRM_PROG_DELETE);
 			}
 			break;
@@ -3125,7 +3129,7 @@ public class RobotRun extends PApplet {
 
 		switch(mode) {
 		case NAV_PROGRAMS:
-			if(getPrograms().size() > 0) {
+			if(armModel.numOfPrograms() > 0) {
 				nextScreen(Screen.PROG_COPY);
 			}
 			break;
@@ -3154,11 +3158,11 @@ public class RobotRun extends PApplet {
 		case CONFIRM_PROG_DELETE:
 			int progIdx = getActive_prog();
 
-			if(progIdx >= 0 && progIdx < getPrograms().size()) {
-				getPrograms().remove(progIdx);
+			if(progIdx >= 0 && progIdx < armModel.numOfPrograms()) {
+				armModel.removeProgram(progIdx);
 
-				if(getActive_prog() >= getPrograms().size()) {
-					setActive_prog(getPrograms().size() - 1);
+				if(getActive_prog() >= armModel.numOfPrograms()) {
+					setActive_prog(armModel.numOfPrograms() - 1);
 
 					setRow_select(min(getActive_prog(), ITEMS_TO_SHOW - 1));
 					setStart_render(getActive_prog() - getRow_select());
@@ -3507,7 +3511,7 @@ public class RobotRun extends PApplet {
 			break;
 		case FRAME_METHOD_USER:
 			// User Frame teaching methods
-			teachFrame = FrameFile.getUFrame(curFrameIdx);
+			teachFrame = armModel.getUserFrame(curFrameIdx);
 			if(opt_select == 0) {
 				nextScreen(Screen.TEACH_3PT_USER);
 			} 
@@ -3519,7 +3523,7 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case FRAME_METHOD_TOOL:
-			teachFrame = FrameFile.getTFrame(curFrameIdx);
+			teachFrame = armModel.getToolFrame(curFrameIdx);
 			// Tool Frame teaching methods
 			if(opt_select == 0) {
 				nextScreen(Screen.TEACH_3PT_TOOL);
@@ -3586,7 +3590,7 @@ public class RobotRun extends PApplet {
 					workingText = workingText.substring(0, workingText.length() - 1);
 				}
 
-				int new_prog = addProgram(new Program(workingText));
+				int new_prog = armModel.addProgram(new Program(workingText));
 				setActive_prog(new_prog);
 				setActive_instr(0);
 				setRow_select(0);
@@ -3624,7 +3628,7 @@ public class RobotRun extends PApplet {
 
 				Program newProg = activeProgram().clone();
 				newProg.setName(workingText);
-				int new_prog = addProgram(newProg);
+				int new_prog = armModel.addProgram(newProg);
 				setActive_prog(new_prog);
 				setActive_instr(0);
 				setRow_select(0);
@@ -3637,7 +3641,7 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case NAV_PROGRAMS:
-			if(getPrograms().size() != 0) {
+			if(armModel.numOfPrograms() != 0) {
 				setActive_instr(0);
 				setRow_select(0);
 				setCol_select(0);
@@ -4140,7 +4144,7 @@ public class RobotRun extends PApplet {
 			try {
 				int frameIdx = Integer.parseInt(workingText) - 1;
 
-				if(frameIdx >= -1 && frameIdx < min(FrameFile.FRAME_SIZE, FrameFile.FRAME_SIZE)){
+				if(frameIdx >= -1 && frameIdx < Fields.FRAME_SIZE){
 					fInst = (FrameInstruction)activeInstruction();
 					fInst.setReg(frameIdx);
 				}
@@ -4272,11 +4276,11 @@ public class RobotRun extends PApplet {
 			//Macro edit screens
 		case SET_MACRO_PROG:
 			if(edit_macro == null) {
-				edit_macro = new Macro(getPrograms().get(getRow_select()), getRow_select());
+				edit_macro = new Macro(armModel.getProgram(getRow_select()), getRow_select());
 				macros.add(edit_macro);
 				switchScreen(Screen.SET_MACRO_TYPE);
 			} else {
-				edit_macro.setProgram(getPrograms().get(getRow_select()), getRow_select());
+				edit_macro.setProgram(armModel.getProgram(getRow_select()), getRow_select());
 			}
 			break;
 		case SET_MACRO_TYPE:
@@ -5920,7 +5924,7 @@ public class RobotRun extends PApplet {
 		case NAV_PROGRAMS:
 			// F2, F3
 			funct[0] = "[Create]";
-			if(getPrograms().size() > 0) {
+			if(armModel.numOfPrograms() > 0) {
 				funct[1] = "[Rename]";
 				funct[2] = "[Delete]";
 				funct[3] = "[Copy]";
@@ -6167,13 +6171,13 @@ public class RobotRun extends PApplet {
 
 	public ArrayList<DisplayLine> loadPrograms() {
 		ArrayList<DisplayLine> progs = new ArrayList<DisplayLine>();
-		int size = getPrograms().size();
+		int size = armModel.numOfPrograms();
 
 		//int start = start_render;
 		//int end = min(start + ITEMS_TO_SHOW, size);
 
 		for(int i = 0; i < size; i += 1) {
-			progs.add(newLine(i, getPrograms().get(i).getName()));
+			progs.add(newLine(i, armModel.getProgram(i).getName()));
 		}
 
 		return progs;
@@ -6184,7 +6188,7 @@ public class RobotRun extends PApplet {
 		ArrayList<DisplayLine> instruct_list = new ArrayList<DisplayLine>();
 		int tokenOffset = Fields.TXT_PAD - Fields.PAD_OFFSET;
 
-		Program p = getPrograms().get(programID);
+		Program p = armModel.getProgram(programID);
 		int size = p.getInstructions().size();
 
 		for(int i = 0; i < size; i+= 1) {
@@ -6669,7 +6673,7 @@ public class RobotRun extends PApplet {
 				}
 
 				if (castIns.getUserFrame() != -1) {
-					Frame uFrame = FrameFile.getUFrame(castIns.getUserFrame());
+					Frame uFrame = armModel.getUserFrame(castIns.getUserFrame());
 					displayPoint = removeFrame(p, uFrame.getOrigin(), uFrame.getOrientation());
 
 				} else {
@@ -6956,28 +6960,26 @@ public class RobotRun extends PApplet {
 	 */
 	public ArrayList<DisplayLine> loadFrames(CoordFrame coordFrame) {
 		ArrayList<DisplayLine> frameDisplay = new ArrayList<DisplayLine>();
-
-		Frame[] frames;
-
-		switch(coordFrame) {
-		// Only the Tool and User Frame lists have been implemented
-		case TOOL:
-			frames = FrameFile.getTFrameFile();
-			break;
-		case USER:
-			frames = FrameFile.getUFrameFile();
-			break;
-		default:
-			System.err.println("Invalid frame type @GUI: loadFrames.");
-			return null;
-		}
-
-		for(int idx = 0; idx < frames.length; idx += 1) {
-			// Display each frame on its own line
-			String[] strArray = frames[idx].toLineStringArray();
-			frameDisplay.add(newLine(idx, String.format("%-4s %s", String.format("%d)", idx + 1), strArray[0])));
-			frameDisplay.add(newLine(idx, String.format("%s", strArray[1])));
-			frameDisplay.get(idx*2 + 1).setxAlign(38);
+		
+		if (coordFrame == CoordFrame.TOOL) {
+			// Display Tool frames
+			for(int idx = 0; idx < Fields.FRAME_SIZE; idx += 1) {
+				// Display each frame on its own line
+				String[] strArray = armModel.getToolFrame(idx).toLineStringArray();
+				frameDisplay.add(newLine(idx, String.format("%-4s %s", String.format("%d)", idx + 1), strArray[0])));
+				frameDisplay.add(newLine(idx, String.format("%s", strArray[1])));
+				frameDisplay.get(idx*2 + 1).setxAlign(38);
+			}
+			
+		} else {
+			// Display User frames
+			for(int idx = 0; idx < Fields.FRAME_SIZE; idx += 1) {
+				// Display each frame on its own line
+				String[] strArray = armModel.getUserFrame(idx).toLineStringArray();
+				frameDisplay.add(newLine(idx, String.format("%-4s %s", String.format("%d)", idx + 1), strArray[0])));
+				frameDisplay.add(newLine(idx, String.format("%s", strArray[1])));
+				frameDisplay.get(idx*2 + 1).setxAlign(38);
+			}
 		}
 
 		return frameDisplay;
@@ -7020,12 +7022,12 @@ public class RobotRun extends PApplet {
 
 		// Display the frame set name as well as the index of the currently selected frame
 		if(coordFrame == CoordFrame.TOOL) {
-			String[] fields = FrameFile.getTFrame(curFrameIdx).toLineStringArray();
+			String[] fields = armModel.getToolFrame(curFrameIdx).toLineStringArray();
 			// Place each value in the frame on a separate lien
 			for(String field : fields) { details.add(newLine(field)); }
 
 		} else if(coordFrame == CoordFrame.USER) {
-			String[] fields = FrameFile.getUFrame(curFrameIdx).toLineStringArray();
+			String[] fields = armModel.getUserFrame(curFrameIdx).toLineStringArray();
 			// Place each value in the frame on a separate lien
 			for(String field : fields) { details.add(newLine(field)); }
 
@@ -7115,14 +7117,12 @@ public class RobotRun extends PApplet {
 			if (frame instanceof ToolFrame) {
 				// Update the current frame of the Robot Arm
 				armModel.setActiveToolFrame(curFrameIdx);
-				FrameFile.setTFrame(armModel.getActiveToolFrame(), (ToolFrame)frame);
 				updateCoordFrame();
 
 				saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
 			} else {
 				// Update the current frame of the Robot Arm
 				armModel.setActiveUserFrame(curFrameIdx);
-				FrameFile.setUFrame(armModel.getActiveUserFrame(), (UserFrame)frame);
 				updateCoordFrame();
 
 				saveFrameBytes( new File(sketchPath("tmp/frames.bin")) );
@@ -7542,35 +7542,16 @@ public class RobotRun extends PApplet {
 	// Indicates whether a program is currently running
 	private boolean programRunning = false;
 
-	public int addProgram(Program p) {
-		if(p == null) {
-			return -1;
-		} 
-		else {
-			int idx = 0;
-
-			if(getPrograms().size() < 1) {
-				getPrograms().add(p);
-			} 
-			else {
-				while(idx < getPrograms().size() && getPrograms().get(idx).getName().compareTo(p.getName()) < 0) { ++idx; }
-				getPrograms().add(idx, p);
-			}
-
-			return idx;
-		}
-	}
-
 	/**
 	 * Returns the currently active program or null if no program is active
 	 */
 	public Program activeProgram() {
-		if (getActive_prog() < 0 || getActive_prog() >= getPrograms().size()) {
+		if (getActive_prog() < 0 || getActive_prog() >= armModel.numOfPrograms()) {
 			//System.out.printf("Not a valid program index: %d!\n", active_prog);
 			return null;
 		}
 
-		return getPrograms().get(getActive_prog());
+		return armModel.getProgram(getActive_prog());
 	}
 
 	/**
@@ -7629,7 +7610,7 @@ public class RobotRun extends PApplet {
 		if(!f.exists()) { f.mkdirs(); }
 
 		/* Load and Initialize the Tool and User Frames */
-		FrameFile.initFrameFile();
+		// TODO add frames to the current Robot
 		File savedFrames = new File( sketchPath("tmp/frames.bin") );
 
 		if(savedFrames.exists() && loadFrameBytes(savedFrames) == 0) {
@@ -7700,11 +7681,11 @@ public class RobotRun extends PApplet {
 			FileOutputStream out = new FileOutputStream(dest);
 			DataOutputStream dataOut = new DataOutputStream(out);
 			// Save the number of programs
-			dataOut.writeInt(getPrograms().size());
+			dataOut.writeInt(armModel.numOfPrograms());
 
-			for(Program prog : getPrograms()) {
+			for(int idx = 0; idx < armModel.numOfPrograms(); ++idx) {
 				// Save each program
-				saveProgram(prog, dataOut);
+				saveProgram(armModel.getProgram(idx), dataOut);
 			}
 
 			dataOut.close();
@@ -7747,7 +7728,7 @@ public class RobotRun extends PApplet {
 
 			while(size-- > 0) {
 				// Read each program from src
-				getPrograms().add( loadProgram(dataIn) );
+				armModel.addProgram( loadProgram(dataIn) );
 			}
 
 			dataIn.close();
@@ -8199,15 +8180,15 @@ public class RobotRun extends PApplet {
 			DataOutputStream dataOut = new DataOutputStream(out);
 
 			// Save Tool Frames
-			dataOut.writeInt(FrameFile.FRAME_SIZE);
-			for(Frame frame : FrameFile.getTFrameFile()) {
-				saveFrame(frame, dataOut);
+			dataOut.writeInt(Fields.FRAME_SIZE);
+			for (int idx = 0; idx < Fields.FRAME_SIZE; ++idx) {
+				saveFrame(armModel.getToolFrame(idx), dataOut);
 			}
-
+			
 			// Save User Frames
-			dataOut.writeInt(FrameFile.FRAME_SIZE);
-			for(Frame frame : FrameFile.getUFrameFile()) {
-				saveFrame(frame, dataOut);
+			dataOut.writeInt(Fields.FRAME_SIZE);
+			for (int idx = 0; idx < Fields.FRAME_SIZE; ++idx) {
+				saveFrame(armModel.getUserFrame(idx), dataOut);
 			}
 
 			dataOut.close();
@@ -8253,14 +8234,14 @@ public class RobotRun extends PApplet {
 			int size = max(0, min(dataIn.readInt(), 10));
 			
 			for(idx = 0; idx < size; idx += 1) {
-				FrameFile.setTFrame(idx, (ToolFrame)loadFrame(dataIn));
+				loadFrame(armModel.getToolFrame(idx), dataIn);
 			}
 
 			// Load User Frames
 			size = max(0, min(dataIn.readInt(), 10));
 
 			for(idx = 0; idx < size; idx += 1) {
-				FrameFile.setUFrame(idx, (UserFrame)loadFrame(dataIn));
+				loadFrame(armModel.getUserFrame(idx), dataIn);
 			}
 
 			dataIn.close();
@@ -8311,22 +8292,27 @@ public class RobotRun extends PApplet {
 		} else {
 			throw new IOException("Invalid Frame!");
 		}
+		
+		int len;
 
 		if (f instanceof UserFrame) {
 			// Write User frame origin
 			savePVector(f.getOrigin(), out);
+			len = 3;
 
 		} else {
 			// Write Tool frame TCP offset
 			savePVector( ((ToolFrame)f).getTCPOffset(), out );
+			len = 6;
+			
 		}
 
 		// Write frame axes
-		saveRQuaternion(f.getDEOrientationOffset(), out);
-
-		// Write frame orientation points
-		for (Point pt : f.getAxesTeachPoints()) {
-			savePoint(pt, out);
+		saveRQuaternion(f.getOrientation(), out);
+		
+		// Write frame orientation (and tooltip teach points for tool frames) points
+		for (int idx = 0; idx < len; ++idx) {
+			savePoint(f.getPoint(idx), out);
 		}
 
 		// Write frame manual entry origin value
@@ -8334,14 +8320,7 @@ public class RobotRun extends PApplet {
 		// Write frame manual entry origin value
 		saveRQuaternion(f.getDEOrientationOffset(), out);
 
-		if (f instanceof ToolFrame) {
-			ToolFrame tFrame = (ToolFrame)f;
-			// Save points for the TCP teaching of the frame
-			for (Point p : tFrame.getTCPTeachPoints()) {
-				savePoint(p, out);
-			}
-
-		} else {
+		if (f instanceof UserFrame) {
 			// Save point for the origin offset of the frame
 			savePoint( ((UserFrame)f).getOrientOrigin(), out );
 		}
@@ -8352,67 +8331,52 @@ public class RobotRun extends PApplet {
 	 * orientation and axes vectors) from the file opened by
 	 * the given DataOutputStream.
 	 *
-	 * @param out  An input stream used to read from a file
-	 * @return     The next frame stored in the file
+	 * @param ref	The frame, in which to save the data
+	 * @param in	An input stream used to read from a file
+	 * @return		The next frame stored in the file
 	 * @throw IOException  if an error occurs while reading the frame
 	 *                     from to the file
 	 */
-	private Frame loadFrame(DataInputStream in) throws IOException {
-
-		Frame f = null;
+	private void loadFrame(Frame ref, DataInputStream in) throws IOException {
 		byte type = in.readByte();
 
-		if (type == 0) {
-			return null;
-		} else if (type == 1) {
-			f = new ToolFrame();
-
-		} else if (type == 2) {
-			f = new UserFrame();
-
-		} else {
-			//println(type);
+		if ((ref instanceof ToolFrame && type != 1) ||
+			(ref instanceof UserFrame && type != 2)) {
+			// Types do not match
 			throw new IOException("Invalid Frame type!");
 		}
 
 		PVector v = loadPVector(in);
-
-		if (f instanceof UserFrame) {
+		int len;
+		
+		if (ref instanceof UserFrame) {
 			// Read origin value
-			((UserFrame)f).setOrigin(v);
+			((UserFrame)ref).setOrigin(v);
+			len = 3;
+			
 		} else {
 			// Read TCP offset values
-			((ToolFrame)f).setTCPOffset(v);
+			((ToolFrame)ref).setTCPOffset(v);
+			len = 6;
 		}
 
 		// Read axes quaternion values
-		f.setOrientation( loadRQuaternion(in) );
-
-		// Read origin values
-		f.setAxesTeachPoints(new Point[3]);
-		// Read in orientation points
-		for (int idx = 0; idx < 3; ++idx) {
-			f.getAxesTeachPoints()[idx] = loadPoint(in);
+		ref.setOrientation( loadRQuaternion(in) );
+		//System.out.printf("%s\n", ref.getOrientation());
+		
+		// Read in orientation points (and tooltip teach points for tool frames)
+		for (int idx = 0; idx < len; ++idx) {
+			ref.setPoint(loadPoint(in), idx);
 		}
 
 		// Read manual entry origin values
-		f.setDEOrigin(loadPVector(in));
-		f.setDEOrientationOffset(loadRQuaternion(in));
+		ref.setDEOrigin(loadPVector(in));
+		ref.setDEOrientationOffset(loadRQuaternion(in));
 
-		if (f instanceof ToolFrame) {
-			ToolFrame tFrame = (ToolFrame)f;
-
-			// Load points for the TCP teaching of the frame
-			for (int idx = 0; idx < 3; ++idx) {
-				tFrame.getTCPTeachPoints()[idx] = loadPoint(in);
-			}
-
-		} else {
+		if (ref instanceof UserFrame) {
 			// Load point for the origin offset of the frame
-			((UserFrame)f).setOrientOrigin(loadPoint(in));
+			((UserFrame)ref).setOrientOrigin(loadPoint(in));
 		}
-
-		return f;
 	}
 
 	/**
@@ -9645,7 +9609,7 @@ public class RobotRun extends PApplet {
 	 * @param axes    The axes of the Coordinate System representing as a rotation quanternion
 	 * @returning     The point, pt, interms of the given frame's Coordinate System
 	 */
-	public Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
+	public static Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
 		PVector position = convertFromFrame(pt.position, origin, axes);
 		RQuaternion orientation = RQuaternion.mult(pt.orientation, axes);
 
@@ -9669,7 +9633,7 @@ public class RobotRun extends PApplet {
 	 * @param axes    The axes of the Coordinate System representing as a rotation quanternion
 	 * @returning     The vector, u, in the Native frame
 	 */
-	public PVector convertFromFrame(PVector u, PVector origin, RQuaternion axes) {
+	public static PVector convertFromFrame(PVector u, PVector origin, RQuaternion axes) {
 		RQuaternion invAxes = axes.conjugate();
 		invAxes.normalize();
 		PVector vRotated = invAxes.rotateVector(u);
@@ -9680,7 +9644,7 @@ public class RobotRun extends PApplet {
 	 * Converts the given vector form the right-hand World Frame Coordinate System
 	 * to the left-hand Native Coordinate System.
 	 */
-	public PVector convertWorldToNative(PVector v) {
+	public static PVector convertWorldToNative(PVector v) {
 		float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
 		return transformVector(v, tMatrix);
 	}
@@ -9689,14 +9653,14 @@ public class RobotRun extends PApplet {
 	 * Converts the given vector form the left-hand Native Coordinate System to the
 	 * right-hand World Frame Coordinate System.
 	 */
-	public PVector convertNativeToWorld(PVector v) {
+	public static PVector convertNativeToWorld(PVector v) {
 		float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
 		return transformVector(v, invertHCMatrix(tMatrix));
 	}
 
 	/* Transforms the given vector from the coordinate system defined by the given
 	 * transformation matrix (row major order). */
-	public PVector transformVector(PVector v, float[][] tMatrix) {
+	public static PVector transformVector(PVector v, float[][] tMatrix) {
 		if(tMatrix.length != 4 || tMatrix[0].length != 4) {
 			return null;
 		}
@@ -9711,7 +9675,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/* Transforms the given vector by the given 3x3 rotation matrix (row major order). */
-	public PVector rotateVector(PVector v, float[][] rotMatrix) {
+	public static PVector rotateVector(PVector v, float[][] rotMatrix) {
 		if(v == null || rotMatrix == null || rotMatrix.length != 3 || rotMatrix[0].length != 3) {
 			return null;
 		}
@@ -9732,7 +9696,7 @@ public class RobotRun extends PApplet {
 	 *    https://web.archive.org/web/20130806093214/http://www-graphics.stanford.edu/
 	 *      courses/cs248-98-fall/Final/q4.html
 	 */
-	public float[][] invertHCMatrix(float[][] m) {
+	public static float[][] invertHCMatrix(float[][] m) {
 		if(m.length != 4 || m[0].length != 4) {
 			return null;
 		}
@@ -9808,7 +9772,7 @@ public class RobotRun extends PApplet {
 	 * @returning     the 4x4 transformation matrix (column major order) formed from
 	 *                the given origin and axes offset
 	 */
-	public float[][] transformationMatrix(PVector origin, float[][] axes) {
+	public static float[][] transformationMatrix(PVector origin, float[][] axes) {
 		float[][] transform = new float[4][4];
 
 		transform[0][0] = axes[0][0];
@@ -9870,7 +9834,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/* Calculate v x v */
-	public float[] crossProduct(float[] v, float[] u) {
+	public static float[] crossProduct(float[] v, float[] u) {
 		if(v.length != 3 && v.length != u.length) { return null; }
 
 		float[] w = new float[v.length];
@@ -9884,7 +9848,7 @@ public class RobotRun extends PApplet {
 
 	/* Returns a vector with the opposite sign
 	 * as the given vector. */
-	public float[] negate(float[] v) {
+	public static float[] negate(float[] v) {
 		float[] u = new float[v.length];
 
 		for(int e = 0; e < v.length; ++e) {
@@ -9895,31 +9859,31 @@ public class RobotRun extends PApplet {
 	}
 
 	//calculates rotation matrix from euler angles
-	public float[][] eulerToMatrix(PVector wpr) {
+	public static float[][] eulerToMatrix(PVector wpr) {
 		float[][] r = new float[3][3];
 		float xRot = wpr.x;
 		float yRot = wpr.y;
 		float zRot = wpr.z;
 
-		r[0][0] = cos(yRot)*cos(zRot);
-		r[0][1] = sin(xRot)*sin(yRot)*cos(zRot) - cos(xRot)*sin(zRot);
-		r[0][2] = cos(xRot)*sin(yRot)*cos(zRot) + sin(xRot)*sin(zRot);
-		r[1][0] = cos(yRot)*sin(zRot);
-		r[1][1] = sin(xRot)*sin(yRot)*sin(zRot) + cos(xRot)*cos(zRot);
-		r[1][2] = cos(xRot)*sin(yRot)*sin(zRot) - sin(xRot)*cos(zRot);
-		r[2][0] = -sin(yRot);
-		r[2][1] = sin(xRot)*cos(yRot);
-		r[2][2] = cos(xRot)*cos(yRot);
+		r[0][0] = (float)Math.cos(yRot)*(float)Math.cos(zRot);
+		r[0][1] = (float)Math.sin(xRot)*(float)Math.sin(yRot)*(float)Math.cos(zRot) - (float)Math.cos(xRot)*(float)Math.sin(zRot);
+		r[0][2] = (float)Math.cos(xRot)*(float)Math.sin(yRot)*(float)Math.cos(zRot) + (float)Math.sin(xRot)*(float)Math.sin(zRot);
+		r[1][0] = (float)Math.cos(yRot)*(float)Math.sin(zRot);
+		r[1][1] = (float)Math.sin(xRot)*(float)Math.sin(yRot)*(float)Math.sin(zRot) + (float)Math.cos(xRot)*(float)Math.cos(zRot);
+		r[1][2] = (float)Math.cos(xRot)*(float)Math.sin(yRot)*(float)Math.sin(zRot) - (float)Math.sin(xRot)*(float)Math.cos(zRot);
+		r[2][0] = -(float)Math.sin(yRot);
+		r[2][1] = (float)Math.sin(xRot)*(float)Math.cos(yRot);
+		r[2][2] = (float)Math.cos(xRot)*(float)Math.cos(yRot);
 
 		float[] magnitudes = new float[3];
 
 		for(int v = 0; v < r.length; ++v) {
 			// Find the magnitude of each axis vector
 			for(int e = 0; e < r[0].length; ++e) {
-				magnitudes[v] += pow(r[v][e], 2);
+				magnitudes[v] += (float)Math.pow(r[v][e], 2);
 			}
 
-			magnitudes[v] = sqrt(magnitudes[v]);
+			magnitudes[v] = (float)Math.sqrt(magnitudes[v]);
 			// Normalize each vector
 			for(int e = 0; e < r.length; ++e) {
 				r[v][e] /= magnitudes[v];
@@ -9939,10 +9903,10 @@ public class RobotRun extends PApplet {
 		float yRot = wpr.y;
 		float zRot = wpr.z;
 
-		w = cos(xRot/2)*cos(yRot/2)*cos(zRot/2) + sin(xRot/2)*sin(yRot/2)*sin(zRot/2);
-		x = sin(xRot/2)*cos(yRot/2)*cos(zRot/2) - cos(xRot/2)*sin(yRot/2)*sin(zRot/2);
-		y = cos(xRot/2)*sin(yRot/2)*cos(zRot/2) + sin(xRot/2)*cos(yRot/2)*sin(zRot/2);
-		z = cos(xRot/2)*cos(yRot/2)*sin(zRot/2) - sin(xRot/2)*sin(yRot/2)*cos(zRot/2);
+		w = (float)Math.cos(xRot/2)*(float)Math.cos(yRot/2)*(float)Math.cos(zRot/2) + (float)Math.sin(xRot/2)*(float)Math.sin(yRot/2)*(float)Math.sin(zRot/2);
+		x = (float)Math.sin(xRot/2)*(float)Math.cos(yRot/2)*(float)Math.cos(zRot/2) - (float)Math.cos(xRot/2)*(float)Math.sin(yRot/2)*(float)Math.sin(zRot/2);
+		y = (float)Math.cos(xRot/2)*(float)Math.sin(yRot/2)*(float)Math.cos(zRot/2) + (float)Math.sin(xRot/2)*(float)Math.cos(yRot/2)*(float)Math.sin(zRot/2);
+		z = (float)Math.cos(xRot/2)*(float)Math.cos(yRot/2)*(float)Math.sin(zRot/2) - (float)Math.sin(xRot/2)*(float)Math.sin(yRot/2)*(float)Math.cos(zRot/2);
 
 		return new RQuaternion(w, x, y, z);
 	}
@@ -9954,19 +9918,19 @@ public class RobotRun extends PApplet {
 
 		if(r[2][0] != 1 && r[2][0] != -1) {
 			//rotation about y-axis
-			yRot1 = -asin(r[2][0]);
+			yRot1 = -(float)Math.asin(r[2][0]);
 			//rotation about x-axis
-			xRot1 = atan2(r[2][1]/cos(yRot1), r[2][2]/cos(yRot1));
+			xRot1 = (float)Math.atan2(r[2][1]/(float)Math.cos(yRot1), r[2][2]/(float)Math.cos(yRot1));
 			//rotation about z-axis
-			zRot1 = atan2(r[1][0]/cos(yRot1), r[0][0]/cos(yRot1));
+			zRot1 = (float)Math.atan2(r[1][0]/(float)Math.cos(yRot1), r[0][0]/(float)Math.cos(yRot1));
 		} else {
 			zRot1 = 0;
 			if(r[2][0] == -1) {
 				yRot1 = PI/2;
-				xRot1 = zRot1 + atan2(r[0][1], r[0][2]);
+				xRot1 = zRot1 + (float)Math.atan2(r[0][1], r[0][2]);
 			} else {
 				yRot1 = -PI/2;
-				xRot1 = -zRot1 + atan2(-r[0][1], -r[0][2]);
+				xRot1 = -zRot1 + (float)Math.atan2(-r[0][1], -r[0][2]);
 			}
 		}
 
@@ -9980,25 +9944,25 @@ public class RobotRun extends PApplet {
 		float tr = r[0][0] + r[1][1] + r[2][2];
 
 		if(tr > 0) {
-			float S = sqrt(1.0f + tr) * 2; // S=4*q[0] 
+			float S = (float)Math.sqrt(1.0f + tr) * 2; // S=4*q[0] 
 			limboQ[0] = S / 4;
 			limboQ[1] = (r[2][1] - r[1][2]) / S;
 			limboQ[2] = (r[0][2] - r[2][0]) / S; 
 			limboQ[3] = (r[1][0] - r[0][1]) / S;
 		} else if((r[0][0] > r[1][1]) & (r[0][0] > r[2][2])) {
-			float S = sqrt(1.0f + r[0][0] - r[1][1] - r[2][2]) * 2; // S=4*q[1] 
+			float S = (float)Math.sqrt(1.0f + r[0][0] - r[1][1] - r[2][2]) * 2; // S=4*q[1] 
 			limboQ[0] = (r[2][1] - r[1][2]) / S;
 			limboQ[1] = S / 4;
 			limboQ[2] = (r[0][1] + r[1][0]) / S; 
 			limboQ[3] = (r[0][2] + r[2][0]) / S;
 		} else if(r[1][1] > r[2][2]) {
-			float S = sqrt(1.0f + r[1][1] - r[0][0] - r[2][2]) * 2; // S=4*q[2]
+			float S = (float)Math.sqrt(1.0f + r[1][1] - r[0][0] - r[2][2]) * 2; // S=4*q[2]
 			limboQ[0] = (r[0][2] - r[2][0]) / S;
 			limboQ[1] = (r[0][1] + r[1][0]) / S; 
 			limboQ[2] = S / 4;
 			limboQ[3] = (r[1][2] + r[2][1]) / S;
 		} else {
-			float S = sqrt(1.0f + r[2][2] - r[0][0] - r[1][1]) * 2; // S=4*q[3]
+			float S = (float)Math.sqrt(1.0f + r[2][2] - r[0][0] - r[1][1]) * 2; // S=4*q[3]
 			limboQ[0] = (r[1][0] - r[0][1]) / S;
 			limboQ[1] = (r[0][2] + r[2][0]) / S;
 			limboQ[2] = (r[1][2] + r[2][1]) / S;
@@ -10218,14 +10182,6 @@ public class RobotRun extends PApplet {
 
 	public void setActive_instr(int active_instr) {
 		this.active_instr = active_instr;
-	}
-
-	public ArrayList<Program> getPrograms() {
-		return programs;
-	}
-
-	public void setPrograms(ArrayList<Program> programs) {
-		this.programs = programs;
 	}
 
 	public Stack<int[]> getCall_stack() {

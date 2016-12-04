@@ -209,9 +209,9 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 						refFixture.removeCoordinateSystem();
 					}
 
-					RobotRun.getInstance().applyModelRotation(model.getJointAngles());
+					RobotRun.applyModelRotation(model.getJointAngles());
 
-					float[][] invEETMatrix = RobotRun.getInstance().invertHCMatrix(RobotRun.getInstance().getArmModel().oldEEOrientation);
+					float[][] invEETMatrix = RobotRun.invertHCMatrix(RobotRun.getInstance().getArmModel().oldEEOrientation);
 					RobotRun.getInstance().applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
 							invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
 							invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],

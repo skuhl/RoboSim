@@ -50,7 +50,7 @@ public class RegStmtPoint {
 		values = new float[6];
 		isCartesian = cartesian;
 		// Conver to W, P, R values
-		PVector wpr = RobotRun.getInstance().quatToEuler(initial.orientation);
+		PVector wpr = RobotRun.quatToEuler(initial.orientation);
 		// Copy values into this point
 		getValues()[0] = initial.position.x;
 		getValues()[1] = initial.position.x;
@@ -114,12 +114,12 @@ public class RegStmtPoint {
 			PVector position = new PVector(getValues()[0], getValues()[1], getValues()[2]),
 					wpr = new PVector(getValues()[3], getValues()[4], getValues()[5]);
 			// Convet back to quaternion
-			RQuaternion orientation = RobotRun.getInstance().eulerToQuat(wpr);
+			RQuaternion orientation = RobotRun.eulerToQuat(wpr);
 			// TODO initialize angles?
 			return new Point(position, orientation);
 		} else {
 			// Use forward kinematics to find the position and orientation of the joint angles
-			return RobotRun.getInstance().nativeRobotEEPoint(getValues());
+			return RobotRun.nativeRobotEEPoint(getValues());
 		}
 	}
 

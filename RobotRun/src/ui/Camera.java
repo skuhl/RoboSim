@@ -80,8 +80,8 @@ public class Camera {
 
 		orientation.add( rotation );
 		// Apply caerma rotation restrictions
-		orientation.x = RobotRun.getInstance().mod2PI(orientation.x);
-		orientation.y = RobotRun.getInstance().mod2PI(orientation.y);
+		orientation.x = RobotRun.mod2PI(orientation.x);
+		orientation.y = RobotRun.mod2PI(orientation.y);
 		orientation.z = 0f;//mod2PI(orientation.z);
 	}
 

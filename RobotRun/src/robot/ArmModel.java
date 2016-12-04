@@ -8,14 +8,17 @@ import org.apache.commons.math3.linear.RealMatrix;
 
 import frame.CoordFrame;
 import frame.Frame;
-import frame.FrameFile;
+import frame.ToolFrame;
+import frame.UserFrame;
 import geom.Part;
 import geom.Point;
 import geom.WorldObject;
 import global.Fields;
 import processing.core.PVector;
 import programming.Program;
+import regs.DataRegister;
 import regs.IORegister;
+import regs.PositionRegister;
 import regs.RegisterFile;
 
 public class ArmModel {
@@ -23,12 +26,27 @@ public class ArmModel {
 	public static final PVector DEFAULT_POSITON;
 	public static final RQuaternion DEFAULT_ORIENTATION;
 	
-	/* The current Coordinate Frame for the Robot */
+	// The unique ID associated with a Robot
+	private int RID;
+	
+	// The programs associated with this Robot
+	private ArrayList<Program> programs;
+	
+	// The set of frames associated with a Robot
+	private Frame[] toolFrames, userFrames;
+	
+	// The current Coordinate Frame for the Robot
 	private CoordFrame curCoordFrame = CoordFrame.JOINT;
 	// Indices of currently active frames
 	private int activeUserFrame,
 				activeToolFrame;
-
+	
+	// The registers associated with a Robot
+	private DataRegister[] DREG;
+	private PositionRegister[] PREG;
+	private IORegister[] IOREG;
+	
+	// The end effectors of the Robot
 	private final Model eeMSuction, eeMClaw, eeMClawPincer, eeMPointer, eeMGlueGun, eeMWielder;
 
 	private final HashMap<EEType, Integer> EEToIORegMap;
@@ -66,9 +84,44 @@ public class ArmModel {
 		DEFAULT_ORIENTATION = pt.orientation;
 	}
 
-	public ArmModel() {
+	public ArmModel(int rid) {
+		int idx;
+		RID = rid;
+		
+		// Initialize the program list
+		programs = new ArrayList<Program>();
+		
+		// Initializes the frames
+		
+		toolFrames = new Frame[10];
+		userFrames = new Frame[10];
+		
+		for (idx = 0; idx < toolFrames.length; ++idx) {
+			toolFrames[idx] = new ToolFrame();
+			userFrames[idx] = new UserFrame();
+		}
+		
 		activeUserFrame = -1;
 		activeToolFrame = -1;
+		
+		// Initialize the registers
+		
+		DREG = new DataRegister[100];
+		PREG = new PositionRegister[100];
+		IOREG = new IORegister[5];
+		
+		for (idx = 0; idx < DREG.length; ++idx) {
+			DREG[idx] = new DataRegister(idx);
+			PREG[idx] = new PositionRegister(idx);
+		}
+		
+		// Associated each End Effector with an I/O Register
+		idx = 0;
+		IOREG[idx++] = new IORegister(idx, (EEType.SUCTION).name(), Fields.OFF);
+		IOREG[idx++] = new IORegister(idx, (EEType.CLAW).name(), Fields.OFF);
+		IOREG[idx++] = new IORegister(idx, (EEType.POINTER).name(), Fields.OFF);
+		IOREG[idx++] = new IORegister(idx, (EEType.GLUE_GUN).name(), Fields.OFF);
+		IOREG[idx++] = new IORegister(idx, (EEType.WIELDER).name(), Fields.OFF);
 		
 		activeEndEffector = EEType.NONE;
 		endEffectorState = Fields.OFF;
@@ -129,11 +182,11 @@ public class ArmModel {
 		segments.add(axis5);
 		segments.add(axis6);
 
-		for(int idx = 0; idx < jogLinear.length; ++idx) {
+		for(idx = 0; idx < jogLinear.length; ++idx) {
 			jogLinear[idx] = 0;
 		}
 
-		for(int idx = 0; idx < jogRot.length; ++idx) {
+		for(idx = 0; idx < jogRot.length; ++idx) {
 			jogRot[idx] = 0;
 		}
 
@@ -215,7 +268,177 @@ public class ArmModel {
 		RobotRun.applyModelRotation(getJointAngles());
 		oldEEOrientation = RobotRun.getInstance().getTransformationMatrix();
 		RobotRun.getInstance().popMatrix();
-	} // end ArmModel constructor
+	}
+	
+	/**
+	 * Returns the unique ID of the Robot.
+	 */
+	public int getRID() { return RID; }
+	
+	/**
+	 * Adds the given program to this Robot's list of programs.
+	 * 
+	 * @param p	The program to add to the Robot
+	 */
+	public int addProgram(Program p) {
+		if (p == null) {
+			return -1;
+			
+		} else {
+			int idx = 0;
+
+			if(programs.size() < 1) {
+				programs.add(p);
+				
+			}  else {
+				while(idx < programs.size() && programs.get(idx).getName().compareTo(p.getName()) < 0) { ++idx; }
+				programs.add(idx, p);
+			}
+
+			return idx;
+		}
+	}
+	
+	/**
+	 * Removes the program, associated with the given index, from the Robot.
+	 * 
+	 * @param pdx	A positive integer value less than the number of programs
+	 * 				the Robot possesses
+	 * @return		The program that was removed, or null if the index given
+	 * 				is invalid
+	 */
+	public Program removeProgram(int pdx) {
+		if (pdx >= 0 && pdx < programs.size()) {
+			// Return the removed program
+			return programs.remove(pdx);
+			
+		} else {
+			// Invalid index
+			return null;
+		}
+	}
+	
+	/**
+	 * Returns the program, which belongs to this Robot, associated with the
+	 * given index value. IF the index value is invalid null is returned
+	 * 
+	 * @param pdx	A positive integer value less than the number of programs
+	 * 				associated with this Robot, which corresponds to a program
+	 * 				of the Robot
+	 * @return		The program associated with the given index, or null if the
+	 * 				index is invalid.
+	 */
+	public Program getProgram(int pdx) {
+		if (pdx >= 0 && pdx < programs.size()) {
+			return programs.get(pdx);
+			
+		} else {
+			// Invalid index
+			return null;
+		}
+	}
+	
+	/**
+	 * Returns the number of programs associated with the Robot.
+	 */
+	public int numOfPrograms() {
+		return programs.size();
+	}
+	
+	/**
+	 * Returns the tool frame, associated with the given index, of the Robot,
+	 * or null if the given index is invalid. A Robot has a total of 10 tool
+	 * frames, which are zero-indexed.
+	 * 
+	 * @param fdx	A integer value between 0 and 9, inclusive
+	 * @return		The tool frame associated with the given index, or null if
+	 * 				the given index is invalid.
+	 */
+	public Frame getToolFrame(int fdx) {
+		if (fdx >= 0 && fdx < toolFrames.length) {
+			return toolFrames[fdx];
+			
+		} else {
+			// Invalid index
+			return null;
+		}
+	}
+	
+	/**
+	 * Returns the user frame, associated with the given index, of the Robot,
+	 * or null if the given index is invalid. A Robot has a total of 10 user
+	 * frames, which are zero-indexed.
+	 * 
+	 * @param fdx	A integer value between 0 and 9, inclusive
+	 * @return		The user frame associated with the given index, or null if
+	 * 				the given index is invalid.
+	 */
+	public Frame getUserFrame(int fdx) {
+		if (fdx >= 0 && fdx < userFrames.length) {
+			return userFrames[fdx];
+			
+		} else {
+			// Invalid index
+			return null;
+		}
+	}
+	
+	/**
+	 * Returns the data register, associated with the given index, of the
+	 * Robot, or null if the given index is invalid. A Robot has a total of 100
+	 * data registers, which are zero-indexed.
+	 * 
+	 * @param rdx	A integer value between 0 and 99, inclusive
+	 * @return		The data register associated with the given index, or null
+	 * 				if the given index is invalid.
+	 */
+	public DataRegister getDReg(int rdx) {
+		if (rdx >= 0 && rdx < DREG.length) {
+			return DREG[rdx];
+			
+		} else {
+			// Invalid index
+			return null;
+		}
+	}
+	
+	/**
+	 * Returns the position register, associated with the given index, of the
+	 * Robot, or null if the given index is invalid. A Robot has a total of 100
+	 * position registers, which are zero-indexed.
+	 * 
+	 * @param rdx	A integer value between 0 and 99, inclusive
+	 * @return		The position register associated with the given index, or
+	 * 				null if the given index is invalid.
+	 */
+	public PositionRegister getPReg(int rdx) {
+		if (rdx >= 0 && rdx < PREG.length) {
+			return PREG[rdx];
+			
+		} else {
+			// Invalid index
+			return null;
+		}
+	}
+	
+	/**
+	 * Returns the I/O register, associated with the given index, of the Robot,
+	 * or null if the given index is invalid. A Robot has a total of 5 I/O
+	 * registers, which are zero-indexed: one for each different end effector.
+	 * 
+	 * @param rdx	A integer value between 0 and 4, inclusive
+	 * @return		The I/O register associated with the given index, or null
+	 * 				if the given index is invalid.
+	 */
+	public IORegister getIOReg(int rdx) {
+		if (rdx >= 0 && rdx < IOREG.length) {
+			return IOREG[rdx];
+			
+		} else {
+			// Invalid index
+			return null;
+		}
+	}
 
 	/**
 	 * Update the Robot's position and orientation (as well as
@@ -366,7 +589,7 @@ public class ArmModel {
 		RobotRun.getInstance().popMatrix();
 
 		if (RobotRun.getInstance().showOOBs) { drawBoxes(); }
-	}//end draw arm model
+	}
 
 	/**
 	 * Draw the End Effector model associated with the given
@@ -1368,12 +1591,16 @@ public class ArmModel {
 		}
 
 		// Determine if a frame is active in the given Coordinate Frame
-		if (coord == CoordFrame.USER && getActiveUserFrame() >= 0 && getActiveUserFrame() < FrameFile.FRAME_SIZE) {
+		if (coord == CoordFrame.USER && activeUserFrame >= 0 &&
+				activeUserFrame < userFrames.length) {
 			// active User frame
-			return FrameFile.getUFrame(getActiveUserFrame());
-		} else if (coord == CoordFrame.TOOL && getActiveToolFrame() >= 0 && getActiveToolFrame() < FrameFile.FRAME_SIZE) {
+			return userFrames[activeUserFrame];
+			
+		} else if (coord == CoordFrame.TOOL && activeToolFrame >= 0 &&
+				activeToolFrame < toolFrames.length) {
 			// active Tool frame
-			return FrameFile.getTFrame(getActiveToolFrame());
+			return toolFrames[activeToolFrame];
+			
 		} else {
 			// no active frame
 			return null;

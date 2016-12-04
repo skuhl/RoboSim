@@ -9,6 +9,10 @@ public class Fields extends PApplet {
 	public static final int FALSE = 0;
 	public static final int TRUE = 1;
 	
+	public static final int FRAME_SIZE = 10;
+	// Only applies to data and position registers
+	public static final int REG_SIZE = 100;
+	
 	public static final int MTYPE_JOINT = 0;
 	public static final int MTYPE_LINEAR = 1;
 	public static final int MTYPE_CIRCULAR = 2;
