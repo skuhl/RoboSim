@@ -4,19 +4,17 @@ public class DataRegister extends Register {
 	public Float value;
 
 	public DataRegister() {
-		comment = null;
+		super();
 		value = null;
 	}
 
 	public DataRegister(int i) {
-		idx = i;
-		comment = null;
+		super(i, null);
 		value = null;
 	}
 
 	public DataRegister(int i, String c, Float v) {
-		idx = i;
-		comment = c;
+		super(i, c);
 		value = v;
 	}
 }

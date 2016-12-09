@@ -128,14 +128,14 @@ public class RegisterStatement extends Instruction {
 			ret = new String[2 + expr.getLength()];
 
 			ret[0] = rString;
-			ret[1] = (reg.getIdx() == -1) ? "...] =" : (reg.getIdx() + 1) + "] =";
+			ret[1] = (reg.idx == -1) ? "...] =" : (reg.idx + 1) + "] =";
 			rLen = 2;
 		} else {
 			ret = new String[3 + expr.getLength()];
 
 			ret[0] = rString;
-			ret[1] = (reg.getIdx() == -1) ? "...," : (reg.getIdx() + 1) + ",";
-			ret[2] = (reg.getIdx() == -1) ? "...] =" : posIdx + "] =";
+			ret[1] = (reg.idx == -1) ? "...," : (reg.idx + 1) + ",";
+			ret[2] = (reg.idx == -1) ? "...] =" : posIdx + "] =";
 			rLen = 3;
 		}
 

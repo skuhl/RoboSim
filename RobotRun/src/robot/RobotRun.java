@@ -2967,13 +2967,25 @@ public class RobotRun extends PApplet {
 			break;
 		case NAV_DREGS:
 			// Clear Data Register entry
-			RegisterFile.setDReg(active_index, new DataRegister(active_index));
+			DataRegister dReg = armModel.getDReg(active_index);
+			
+			if (dReg != null) {
+				dReg.comment = null;
+				dReg.value = null;
+			}
+			
 			saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 			break;
 		case NAV_PREGS_J:
 		case NAV_PREGS_C:
 			// Clear Position Register entry
-			RegisterFile.setPReg(active_index, new PositionRegister(active_index));
+			PositionRegister pReg = armModel.getPReg(active_index);
+			
+			if (pReg != null) {
+				pReg.comment = null;
+				pReg.point = null;
+			}
+			
 			saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 			break;
 		default:
@@ -3265,7 +3277,7 @@ public class RobotRun extends PApplet {
 				armModel.halt();
 
 				// Move To function
-				Point pt = (RegisterFile.getPReg(active_index)).point.clone();
+				Point pt = (armModel.getPReg(active_index)).point.clone();
 
 				if (pt != null) {
 					// Move the Robot to the select point
@@ -3398,8 +3410,9 @@ public class RobotRun extends PApplet {
 			break;
 		case NAV_PREGS_J:
 		case NAV_PREGS_C:
-
-			if (shift && active_index >= 0 && active_index < RegisterFile.REG_SIZE) {
+			PositionRegister pReg = armModel.getPReg(active_index);
+			
+			if (shift && pReg != null) {
 				// Save the Robot's current position and joint angles
 				Point curRP = nativeRobotEEPoint(armModel.getJointAngles());
 				Frame active = armModel.getActiveFrame(CoordFrame.USER);
@@ -3409,8 +3422,8 @@ public class RobotRun extends PApplet {
 					curRP = applyFrame(curRP, active.getOrigin(), active.getOrientation());
 				} 
 
-				(RegisterFile.getPReg(active_index)).point = curRP;
-				(RegisterFile.getPReg(active_index)).isCartesian = (mode == Screen.NAV_PREGS_C);
+				pReg.point = curRP;
+				pReg.isCartesian = (mode == Screen.NAV_PREGS_C);
 				saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 			}
 			break;
@@ -3870,7 +3883,7 @@ public class RobotRun extends PApplet {
 					err = "Only registers 1 - 1000 are legal!";
 					lastScreen();
 					return;
-				} else if((RegisterFile.getPReg(tempRegister)).point == null) {
+				} else if((armModel.getPReg(tempRegister)).point == null) {
 					// Invalid register index
 					err = "This register is uninitailized!";
 					lastScreen();
@@ -4032,14 +4045,14 @@ public class RobotRun extends PApplet {
 				int idx = Integer.parseInt(workingText);
 
 				if(mode == Screen.INPUT_DREG_IDX) {
-					opEdit.set(RegisterFile.getDReg(idx - 1), idx);
+					opEdit.set(armModel.getDReg(idx - 1), idx);
 				} else if(mode == Screen.INPUT_IOREG_IDX) {
-					opEdit.set(RegisterFile.getIOReg(idx - 1), idx);
+					opEdit.set(armModel.getIOReg(idx - 1), idx);
 				} else if(mode == Screen.INPUT_PREG_IDX1) {
-					opEdit.set(RegisterFile.getPReg(idx - 1), idx);
+					opEdit.set(armModel.getPReg(idx - 1), idx);
 				} else if(mode == Screen.INPUT_PREG_IDX2) {
 					int reg = opEdit.getRegIdx();
-					opEdit.set(RegisterFile.getPReg(idx - 1), reg, idx);
+					opEdit.set(armModel.getPReg(idx - 1), reg, idx);
 				}
 
 			} catch(NumberFormatException e) {}
@@ -4095,7 +4108,7 @@ public class RobotRun extends PApplet {
 					opEdit.set(f);
 				} else if(opEdit.type == ExpressionElement.DREG) {
 					//println(regFile.DAT_REG[(int)f - 1].value);
-					opEdit.set(RegisterFile.getDReg((int)f - 1), (int)f);
+					opEdit.set(armModel.getDReg((int)f - 1), (int)f);
 				}
 			} catch(NumberFormatException ex) {}
 
@@ -4181,13 +4194,13 @@ public class RobotRun extends PApplet {
 				} else {
 					regStmt = (RegisterStatement)activeInstruction(); 
 					if(regStmt.getReg() instanceof DataRegister) {
-						(regStmt).setRegister(RegisterFile.getDReg(idx - 1));
+						(regStmt).setRegister(armModel.getDReg(idx - 1));
 					} else if(regStmt.getReg() instanceof IORegister) {
-						(regStmt).setRegister(RegisterFile.getIOReg(idx - 1));
+						(regStmt).setRegister(armModel.getIOReg(idx - 1));
 					} else if(regStmt.getReg() instanceof PositionRegister && regStmt.getPosIdx() == -1) { 
-						(regStmt).setRegister(RegisterFile.getPReg(idx - 1));
+						(regStmt).setRegister(armModel.getPReg(idx - 1));
 					} else {
-						(regStmt).setRegister(RegisterFile.getPReg(idx - 1), 0);
+						(regStmt).setRegister(armModel.getPReg(idx - 1), 0);
 					}
 				}
 			}
@@ -4375,7 +4388,7 @@ public class RobotRun extends PApplet {
 			try {
 				// Copy the comment of the curent Data register to the Data register at the specified index
 				regIdx = Integer.parseInt(workingText) - 1;
-				RegisterFile.getDReg(regIdx).setComment(RegisterFile.getDReg(active_index).getComment());
+				armModel.getDReg(regIdx).comment = armModel.getDReg(active_index).comment;
 				saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 			} catch (NumberFormatException MFEx) {
 				println("Only real numbers are valid!");
@@ -4391,7 +4404,7 @@ public class RobotRun extends PApplet {
 			try {
 				// Copy the value of the curent Data register to the Data register at the specified index
 				regIdx = Integer.parseInt(workingText) - 1;
-				(RegisterFile.getDReg(regIdx)).value = (RegisterFile.getDReg(active_index)).value;
+				armModel.getDReg(regIdx).value = armModel.getDReg(active_index).value;
 				saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 			} catch (NumberFormatException MFEx) {
 				println("Only real numbers are valid!");
@@ -4407,7 +4420,7 @@ public class RobotRun extends PApplet {
 			try {
 				// Copy the comment of the curent Position register to the Position register at the specified index
 				regIdx = Integer.parseInt(workingText) - 1;
-				RegisterFile.getPReg(regIdx).setComment(RegisterFile.getPReg(active_index).getComment());
+				armModel.getPReg(regIdx).comment = armModel.getPReg(active_index).comment;
 				saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 			} catch (NumberFormatException MFEx) {
 				println("Only real numbers are valid!");
@@ -4423,8 +4436,7 @@ public class RobotRun extends PApplet {
 			try {
 				// Copy the point of the curent Position register to the Position register at the specified index
 				regIdx = Integer.parseInt(workingText) - 1;
-				Point copy_pt = (RegisterFile.getPReg(active_index)).point;
-				(RegisterFile.getPReg(regIdx)).point = copy_pt.clone();
+				armModel.getPReg(regIdx).point = armModel.getPReg(active_index).point.clone();
 				saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 			} catch (NumberFormatException MFEx) {
 				println("Only real numbers are valid!");
@@ -4438,14 +4450,16 @@ public class RobotRun extends PApplet {
 			Float f = null;
 
 			try {
-				// Read inputted Float value
+				// Read inputed Float value
 				f = Float.parseFloat(workingText);
 				// Clamp the value between -9999 and 9999, inclusive
 				f = max(-9999f, min(f, 9999f));
 				System.out.printf("Index; %d\n", active_index);
-				if(active_index >= 0 && active_index < RegisterFile.REG_SIZE) {
-					// Save inputted value
-					(RegisterFile.getDReg(active_index)).value = f;
+				DataRegister dReg = armModel.getDReg(active_index);
+				
+				if (dReg != null) {
+					// Save inputed value
+					dReg.value = f;
 					saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 				}
 			} catch (NumberFormatException NFEx) {
@@ -4488,7 +4502,7 @@ public class RobotRun extends PApplet {
 					workingText = workingText.substring(0, workingText.length() - 1);
 				}
 				// Save the inputed comment to the selected register
-				RegisterFile.getPReg(active_index).setComment(workingText);
+				armModel.getPReg(active_index).comment = workingText;
 				saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 				workingText = "";
 				lastScreen();
@@ -4500,7 +4514,7 @@ public class RobotRun extends PApplet {
 					workingText = workingText.substring(0, workingText.length() - 1);
 				}
 				// Save the inputed comment to the selected register\
-				RegisterFile.getDReg(active_index).setComment(workingText);
+				armModel.getDReg(active_index).comment = workingText;
 				saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 				workingText = "";
 				lastScreen();
@@ -5129,7 +5143,7 @@ public class RobotRun extends PApplet {
 			setCol_select(0);
 			opt_select = 0;
 
-			String c = RegisterFile.getDReg(active_index).getComment();
+			String c = armModel.getDReg(active_index).comment;
 			if(c != null && c.length() > 0) {
 				workingText = c;
 			}
@@ -5143,7 +5157,7 @@ public class RobotRun extends PApplet {
 			setCol_select(0);
 			opt_select = 0;
 			
-			c = RegisterFile.getPReg(active_index).getComment();
+			c = armModel.getPReg(active_index).comment;
 			if(c != null && c.length() > 0) {
 				workingText = c;
 			}
@@ -5156,8 +5170,9 @@ public class RobotRun extends PApplet {
 		case EDIT_DREG_VAL:
 			opt_select = 0;
 			// Bring up float input menu
-			if((RegisterFile.getDReg(active_index)).value != null) {
-				workingText = Float.toString((RegisterFile.getDReg(active_index)).value);
+			Float val = armModel.getDReg(active_index).value;
+			if(val != null) {
+				workingText = Float.toString(val);
 			} else {
 				workingText = "";
 			}
@@ -5166,7 +5181,7 @@ public class RobotRun extends PApplet {
 		case EDIT_PREG_J:
 			setRow_select(0);
 			setCol_select(1);
-			contents = loadPosRegEntry(RegisterFile.getPReg(active_index));
+			contents = loadPosRegEntry(armModel.getPReg(active_index));
 			break;
 		default:
 			break;
@@ -5528,10 +5543,11 @@ public class RobotRun extends PApplet {
 		case EDIT_PREG_C:
 		case EDIT_PREG_J:
 			header = "POSITION REGISTER: ";
-
-			if(mode != Screen.EDIT_DREG_COM && RegisterFile.getPReg(active_index).getComment() != null) {
+			String pRegComm = armModel.getPReg(active_index).comment;
+			
+			if(mode != Screen.EDIT_DREG_COM && pRegComm != null) {
 				// Show comment if it exists
-				header += RegisterFile.getPReg(active_index).getComment();
+				header += pRegComm;
 			} 
 			else {
 				header += active_index;
@@ -5854,9 +5870,10 @@ public class RobotRun extends PApplet {
 		case NAV_PREGS_J:
 		case NAV_PREGS_C:
 			opt_select = -1;
+			Point pt = armModel.getPReg(active_index).point;
 			// Display the point with the Position register of the highlighted line, when viewing the Position registers
-			if (active_index >= 0 && active_index < RegisterFile.REG_SIZE && RegisterFile.getPReg(active_index).point != null) {
-				String[] pregEntry = RegisterFile.getPReg(active_index).point.toLineStringArray(mode == Screen.NAV_PREGS_C);
+			if (pt != null) {
+				String[] pregEntry = pt.toLineStringArray(mode == Screen.NAV_PREGS_C);
 
 				for (String line : pregEntry) {
 					options.add(line);
@@ -7192,13 +7209,16 @@ public class RobotRun extends PApplet {
 		//int end = min(start + ITEMS_TO_SHOW, DREG.length);
 
 		// Display a subset of the list of registers
-		for(int idx = 0; idx < RegisterFile.REG_SIZE; ++idx) {
+		for (int idx = 0; idx < ArmModel.DPREG_NUM; ++idx) {
+			Register reg;
 			String lbl;
 
 			if(mode == Screen.NAV_DREGS) {
-				lbl = (RegisterFile.getDReg(idx).getComment() == null) ? "" : RegisterFile.getDReg(idx).getComment();
+				reg = armModel.getDReg(idx);
+				lbl = (reg.comment == null) ? "" : reg.comment;
 			} else {
-				lbl  = (RegisterFile.getPReg(idx).getComment() == null) ? "" : RegisterFile.getPReg(idx).getComment();
+				reg = armModel.getPReg(idx);
+				lbl  = (reg.comment == null) ? "" : reg.comment;
 			}
 
 			int buffer = 16 - lbl.length();
@@ -7214,18 +7234,20 @@ public class RobotRun extends PApplet {
 				spaces = "";
 			}
 
-			// Display the comment asscoiated with a specific Register entry
+			// Display the comment associated with a specific Register entry
 			String regLbl = String.format("%s[%d:%s%s]", (mode == Screen.NAV_DREGS) ? "R" : "PR", (idx + 1), spaces, lbl);
-			// Display Register value (* ifuninitialized)
+			// Display Register value (* if uninitialized)
 			String regEntry = "*";
 
 			if(mode == Screen.NAV_DREGS) {
-				if((RegisterFile.getDReg(idx)).value != null) {
-					// Dispaly Register value
-					regEntry = String.format("%4.3f", (RegisterFile.getDReg(idx)).value);
+				Float val = ((DataRegister)reg).value;
+				
+				if(val != null) {
+					// Display Register value
+					regEntry = String.format("%4.3f", val);
 				}
 
-			} else if((RegisterFile.getPReg(idx)).point != null) {
+			} else if (((PositionRegister)reg).point != null) {
 				regEntry = "...Edit...";
 			}
 
@@ -7284,14 +7306,15 @@ public class RobotRun extends PApplet {
 	public ArrayList<String> loadIORegisters() {
 		ArrayList<String> ioRegs = new ArrayList<String>();
 
-		for(int i = 0; i < RegisterFile.IO_REG_SIZE; i += 1){
-			String state = ((RegisterFile.getIOReg(i)).state == Fields.ON) ? "ON" : "OFF";
+		for(int i = 0; i < ArmModel.IOREG_NUM; i += 1){
+			IORegister ioReg = armModel.getIOReg(i);
+			String state = (ioReg.state == Fields.ON) ? "ON" : "OFF";
 			String ee;
 
-			if ((RegisterFile.getIOReg(i)).name != null) {
-				ee = (RegisterFile.getIOReg(i)).name;
+			if (ioReg.comment != null) {
+				ee = ioReg.comment;
 			} else {
-				ee = "";
+				ee = "UINIT";
 			}
 
 			ioRegs.add( String.format("IO[%d:%-8s] = %s", i + 1, ee, state) );
@@ -7322,7 +7345,7 @@ public class RobotRun extends PApplet {
 				inputs[idx] = mod2PI(inputs[idx] * DEG_TO_RAD);
 			}
 
-			(RegisterFile.getPReg(active_index)).point = nativeRobotEEPoint(inputs);
+			armModel.getPReg(active_index).point = nativeRobotEEPoint(inputs);
 		} else {
 			PVector position = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
 			// Convert the angles from degrees to radians, then convert from World to Native frame, and finally convert to a quaternion
@@ -7330,10 +7353,10 @@ public class RobotRun extends PApplet {
 
 			// Use default the Robot's joint angles for computing inverse kinematics
 			float[] jointAngles = inverseKinematics(new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
-			(RegisterFile.getPReg(active_index)).point = new Point(position, orientation, jointAngles);
+			armModel.getPReg(active_index).point = new Point(position, orientation, jointAngles);
 		}
 
-		(RegisterFile.getPReg(active_index)).isCartesian = !fromJointAngles;
+		armModel.getPReg(active_index).isCartesian = !fromJointAngles;
 		saveRegisterBytes( new File(sketchPath("tmp/registers.bin")) );
 	}
 
@@ -7621,7 +7644,6 @@ public class RobotRun extends PApplet {
 		}
 
 		/* Load and Initialize the Position Register and Registers */
-		RegisterFile.initRegisterFile();
 		File savedRegs = new File(sketchPath("tmp/registers.bin"));
 
 		if(savedRegs.exists() && loadRegisterBytes(savedRegs) == 0) {
@@ -8001,7 +8023,7 @@ public class RobotRun extends PApplet {
 			}
 
 			out.writeInt(regType);
-			out.writeInt(r.getIdx());
+			out.writeInt(r.idx);
 			out.writeInt(rs.getPosIdx());
 
 			saveExpression(rs.getExpr(), out);
@@ -8102,15 +8124,15 @@ public class RobotRun extends PApplet {
 			Expression expr = loadExpression(in);
 
 			if (regType == 2) {
-				inst = new RegisterStatement(RegisterFile.getIOReg(regIdx), expr);
+				inst = new RegisterStatement(armModel.getIOReg(regIdx), expr);
 				inst.setIsCommented(isCommented);
 
 			} else if (regType == 1) {
-				inst = new RegisterStatement(RegisterFile.getPReg(regIdx), posIdx, expr);
+				inst = new RegisterStatement(armModel.getPReg(regIdx), posIdx, expr);
 				inst.setIsCommented(isCommented);
 
 			} else if (regType == 0) {
-				inst = new RegisterStatement(RegisterFile.getDReg(regIdx), expr);
+				inst = new RegisterStatement(armModel.getDReg(regIdx), expr);
 				inst.setIsCommented(isCommented);
 
 			}
@@ -8409,19 +8431,22 @@ public class RobotRun extends PApplet {
 			DataOutputStream dataOut = new DataOutputStream(out);
 
 			int numOfREntries = 0,
-					numOfPREntries = 0;
+				numOfPREntries = 0;
 
 			ArrayList<Integer> initializedR = new ArrayList<Integer>(),
 					initializedPR = new ArrayList<Integer>();
 
 			// Count the number of initialized entries and save their indices
-			for(int idx = 0; idx < RegisterFile.REG_SIZE; ++idx) {
-				if((RegisterFile.getDReg(idx)).value != null || RegisterFile.getDReg(idx).getComment() != null) {
+			for(int idx = 0; idx < ArmModel.DPREG_NUM; ++idx) {
+				DataRegister dReg = armModel.getDReg(idx);
+				PositionRegister pReg = armModel.getPReg(idx);
+				
+				if (dReg.value != null || dReg.comment != null) {
 					initializedR.add(idx);
 					++numOfREntries;
 				}
 
-				if((RegisterFile.getPReg(idx)).point != null || RegisterFile.getPReg(idx).getComment() != null) {
+				if (pReg.point != null || pReg.comment != null) {
 					initializedPR.add(idx);
 					++numOfPREntries;
 				}
@@ -8430,35 +8455,40 @@ public class RobotRun extends PApplet {
 			dataOut.writeInt(numOfREntries);
 			// Save the Register entries
 			for(Integer idx : initializedR) {
+				DataRegister dReg = armModel.getDReg(idx);
 				dataOut.writeInt(idx);
 
-				if(RegisterFile.getDReg(idx).value == null) {
+				if (dReg.value == null) {
 					// save for null Float value
 					dataOut.writeFloat(Float.NaN);
+					
 				} else {
-					dataOut.writeFloat(RegisterFile.getDReg(idx).value);
+					dataOut.writeFloat(dReg.value);
 				}
 
-				if(RegisterFile.getDReg(idx).getComment() == null) {
+				if (dReg.comment == null) {
 					dataOut.writeUTF("");
+					
 				} else {
-					dataOut.writeUTF(RegisterFile.getDReg(idx).getComment());
+					dataOut.writeUTF(dReg.comment);
 				}
 			}
 
 			dataOut.writeInt(numOfPREntries);
 			// Save the Position Register entries
 			for(Integer idx : initializedPR) {
+				PositionRegister pReg = armModel.getPReg(idx);
 				dataOut.writeInt(idx);
-				savePoint(RegisterFile.getPReg(idx).point, dataOut);
+				savePoint(pReg.point, dataOut);
 
-				if(RegisterFile.getPReg(idx).getComment() == null) {
+				if (pReg.comment == null) {
 					dataOut.writeUTF("");
+					
 				} else {
-					dataOut.writeUTF(RegisterFile.getPReg(idx).getComment());
+					dataOut.writeUTF(pReg.comment);
 				}
 
-				dataOut.writeBoolean(RegisterFile.getPReg(idx).isCartesian);
+				dataOut.writeBoolean(pReg.isCartesian);
 			}
 
 			dataOut.close();
@@ -8501,7 +8531,7 @@ public class RobotRun extends PApplet {
 			FileInputStream in = new FileInputStream(src);
 			DataInputStream dataIn = new DataInputStream(in);
 
-			int size = max(0, min(dataIn.readInt(), RegisterFile.REG_SIZE));
+			int size = max(0, min(dataIn.readInt(), ArmModel.DPREG_NUM));
 
 			// Load the Register entries
 			while(size-- > 0) {
@@ -8515,11 +8545,16 @@ public class RobotRun extends PApplet {
 				String c = dataIn.readUTF();
 				// Null comments are saved as ""
 				if(c.equals("")) { c = null; }
-
-				RegisterFile.setDReg(reg, new DataRegister(reg, c, v));
+				
+				DataRegister dReg = armModel.getDReg(reg);
+				
+				if (dReg != null) {
+					dReg.value = v;
+					dReg.comment = c;
+				}
 			}
 
-			size = max(0, min(dataIn.readInt(), RegisterFile.REG_SIZE));
+			size = max(0, min(dataIn.readInt(), ArmModel.DPREG_NUM));
 
 			// Load the Position Register entries
 			while(size-- > 0) {
@@ -8531,8 +8566,14 @@ public class RobotRun extends PApplet {
 				// Null comments are stored as ""
 				if(c == "") { c = null; }
 				boolean isCartesian = dataIn.readBoolean();
-
-				RegisterFile.setPReg(idx, new PositionRegister(idx, c, p, isCartesian));
+				
+				PositionRegister pReg = armModel.getPReg(idx);
+				
+				if (pReg != null) {
+					pReg.point = p;
+					pReg.comment = c;
+					pReg.isCartesian = isCartesian;
+				}
 			}
 
 			dataIn.close();
@@ -8850,20 +8891,20 @@ public class RobotRun extends PApplet {
 
 				if (opType == ExpressionElement.DREG) {
 					// Data register
-					return new ExprOperand(RegisterFile.getDReg(rdx), rdx);
+					return new ExprOperand(armModel.getDReg(rdx), rdx);
 
 				} else if (opType == ExpressionElement.PREG) {
 					// Position register
-					eo = new ExprOperand(RegisterFile.getPReg(rdx), rdx);
+					eo = new ExprOperand(armModel.getPReg(rdx), rdx);
 
 				} else if (opType == ExpressionElement.PREG_IDX) {
 					// Specific portion of a point
 					Integer pdx = in.readInt();
-					eo = new ExprOperand(RegisterFile.getPReg(rdx), rdx, pdx);
+					eo = new ExprOperand(armModel.getPReg(rdx), rdx, pdx);
 
 				} else if (opType == ExpressionElement.IOREG) {
 					// I/O register
-					eo = new ExprOperand(RegisterFile.getIOReg(rdx), rdx);
+					eo = new ExprOperand(armModel.getIOReg(rdx), rdx);
 
 				} else {
 					eo = new ExprOperand();

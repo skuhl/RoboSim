@@ -2,7 +2,6 @@ package programming;
 import frame.Frame;
 import geom.Point;
 import global.Fields;
-import regs.*;
 import robot.ArmModel;
 import robot.RobotRun;
 
@@ -98,7 +97,7 @@ public final class MotionInstruction extends Instruction  {
 		Point pt = null;
 
 		if (isGPosReg) {
-			pt = ((PositionRegister)RegisterFile.getPReg(positionNum)).point;   
+			pt = RobotRun.getRobot().getPReg(positionNum).point;   
 
 		} else if(positionNum != -1) {
 			pt = parent.LPosReg.get(positionNum);
@@ -127,7 +126,7 @@ public final class MotionInstruction extends Instruction  {
 		if(pt == null) return null;
 
 		if(offsetRegNum != -1) {
-			offset = ((PositionRegister)RegisterFile.getPReg(offsetRegNum)).point;
+			offset = RobotRun.getRobot().getPReg(offsetRegNum).point;
 		} else {
 			offset = new Point();
 		}

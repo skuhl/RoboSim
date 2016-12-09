@@ -12,21 +12,20 @@ public class PositionRegister extends Register {
 	public boolean isCartesian;
 
 	public PositionRegister() {
+		super();
 		comment = null;
 		point = null;
 		isCartesian = false;
 	}
 
 	public PositionRegister(int i) {
-		idx = i;
-		comment = null;
+		super(i, null);
 		point = null;
 		isCartesian = false;
 	}
 
 	public PositionRegister(int i, String c, Point pt, boolean isCart) {
-		idx = i;
-		comment = c;
+		super(i, c);
 		point = pt;
 		isCartesian = isCart;
 	}

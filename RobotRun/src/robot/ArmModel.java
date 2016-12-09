@@ -19,12 +19,14 @@ import programming.Program;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
-import regs.RegisterFile;
 
 public class ArmModel {
 	// Initial position and orientation of the Robot
 	public static final PVector DEFAULT_POSITON;
 	public static final RQuaternion DEFAULT_ORIENTATION;
+	/* The number of the user and tool frames, the number of the position and
+	 * data registers, and the number of I/O registers */
+	public static final int FRAME_NUM, DPREG_NUM, IOREG_NUM;
 	
 	// The unique ID associated with a Robot
 	private int RID;
@@ -47,7 +49,8 @@ public class ArmModel {
 	private IORegister[] IOREG;
 	
 	// The end effectors of the Robot
-	private final Model eeMSuction, eeMClaw, eeMClawPincer, eeMPointer, eeMGlueGun, eeMWielder;
+	private final Model eeMSuction, eeMClaw, eeMClawPincer, eeMPointer,
+						eeMGlueGun, eeMWielder;
 
 	private final HashMap<EEType, Integer> EEToIORegMap;
 
@@ -71,7 +74,8 @@ public class ArmModel {
 	private final HashMap<EEType, ArrayList<BoundingBox>> eePickupOBBs;
 
 	public Part held;
-	/* Keep track of the Robot End Effector's orientation at the previous draw state */
+	/* Keep track of the Robot End Effector's orientation at the previous draw
+	 * state */
 	public float[][] oldEEOrientation;
 
 	public PVector tgtPosition;
@@ -82,6 +86,9 @@ public class ArmModel {
 		// Define the defaultl Robot position and orientaiton
 		DEFAULT_POSITON = pt.position;
 		DEFAULT_ORIENTATION = pt.orientation;
+		FRAME_NUM = 10;
+		DPREG_NUM = 100;
+		IOREG_NUM = 5;
 	}
 
 	public ArmModel(int rid) {
@@ -93,8 +100,8 @@ public class ArmModel {
 		
 		// Initializes the frames
 		
-		toolFrames = new Frame[10];
-		userFrames = new Frame[10];
+		toolFrames = new Frame[FRAME_NUM];
+		userFrames = new Frame[FRAME_NUM];
 		
 		for (idx = 0; idx < toolFrames.length; ++idx) {
 			toolFrames[idx] = new ToolFrame();
@@ -106,9 +113,9 @@ public class ArmModel {
 		
 		// Initialize the registers
 		
-		DREG = new DataRegister[100];
-		PREG = new PositionRegister[100];
-		IOREG = new IORegister[5];
+		DREG = new DataRegister[DPREG_NUM];
+		PREG = new PositionRegister[DPREG_NUM];
+		IOREG = new IORegister[IOREG_NUM];
 		
 		for (idx = 0; idx < DREG.length; ++idx) {
 			DREG[idx] = new DataRegister(idx);
@@ -1492,8 +1499,8 @@ public class ArmModel {
 	public IORegister getIORegisterFor(EEType ee) {
 		Integer regIdx = EEToIORegMap.get(ee);
 
-		if (regIdx != null && regIdx >= 0 && regIdx < RegisterFile.REG_SIZE) {
-			return (IORegister)RegisterFile.getIOReg(regIdx);
+		if (regIdx != null && regIdx >= 0 && regIdx < IOREG.length) {
+			return IOREG[regIdx];
 		}
 
 		return null;
