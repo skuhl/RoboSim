@@ -34,6 +34,10 @@ public class RobotRun extends PApplet {
 	public static final PVector ROBOT_POSITION;
 	public static final int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 	
+	public final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
+	public Scenario activeScenario;
+	public boolean showOOBs;
+	
 	private Camera camera;
 	private PFont fnt_con14, fnt_con12, fnt_conB;
 	// The position at which the Robot is drawn
@@ -9088,7 +9092,7 @@ public class RobotRun extends PApplet {
 	 */
 	private Object loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
 		// Load the flag byte
-		byte flag = in.readByte();   //<>// //<>// //<>// //<>// //<>// //<>//
+		byte flag = in.readByte();
 		Object wldObjFields = null;
 
 		if (flag != 0) {
@@ -9482,10 +9486,6 @@ public class RobotRun extends PApplet {
 		buffer.clear();
 		return 0;
 	}
-	
-	public final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
-	public Scenario activeScenario;
-	public boolean showOOBs;
 
 	/**
 	 * Build a PShape object from the contents of the given .stl source file

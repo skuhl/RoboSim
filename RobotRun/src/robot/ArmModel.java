@@ -29,7 +29,7 @@ public class ArmModel {
 	public static final int FRAME_NUM, DPREG_NUM, IOREG_NUM;
 	
 	// The unique ID associated with a Robot
-	private int RID;
+	private final int RID;
 	
 	// The programs associated with this Robot
 	private ArrayList<Program> programs;
