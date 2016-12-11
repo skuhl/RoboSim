@@ -72,6 +72,13 @@ public abstract class DataManagement {
 	}
 	
 	public static void saveState(RobotRun process) {
+		File parentDir = new File(parentDirPath);
+		
+		if (!parentDir.exists()) {
+			// Create the directory if it does not exist
+			parentDir.mkdir();
+		}
+		
 		saveScenarioBytes(process.SCENARIOS, (process.activeScenario == null) ?
 				null : process.activeScenario.getName(), scenarioDirPath);
 		saveRobotData(RobotRun.getRobot());
