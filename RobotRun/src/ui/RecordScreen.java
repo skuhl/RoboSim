@@ -24,10 +24,10 @@ public class RecordScreen implements Runnable {
 			// record screen
 			System.out.format("run script to record screen...\n");
 			Runtime rt = Runtime.getRuntime();
-			Process proc = rt.exec("ffmpeg -f dshow -i " + 
+			/*Process proc = rt.exec("ffmpeg -f dshow -i " + 
 					"video=\"screen-capture-recorder\":audio=\"Microphone" + 
 					" (Conexant SmartAudio HD)\" " + filename );
-			//Process proc = rt.exec(script);
+			Process proc = rt.exec(script); */
 			while(RobotRun.getInstance().getRecord() == Fields.ON) {
 				Thread.sleep(4000);
 			}
