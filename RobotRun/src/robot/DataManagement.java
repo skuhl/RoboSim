@@ -32,6 +32,7 @@ import processing.core.PVector;
 import programming.CallInstruction;
 import programming.FrameInstruction;
 import programming.IOInstruction;
+import programming.IfStatement;
 import programming.Instruction;
 import programming.JumpInstruction;
 import programming.LabelInstruction;
@@ -983,8 +984,18 @@ public abstract class DataManagement {
 			out.writeInt(r.idx);
 			out.writeInt(rs.getPosIdx());
 
-			saveExpression(rs.getExpr(), out);
+			saveExpressionElement(rs.getExpr(), out);
 
+		} else if (inst instanceof IfStatement) {
+			IfStatement is = (IfStatement)inst;
+			
+			out.writeByte(9);
+			out.writeBoolean(is.isCommented());
+			// Save the expression and instruction associated with the if statement
+			System.out.printf("%s\n", is.getExpr());
+			saveExpressionElement(is.getExpr(), out);
+			saveInstruction(is.getInstr(), out);
+			
 		}/* Add other instructions here! */
 		else if (inst instanceof Instruction) {
 			/// A blank instruction
@@ -1071,7 +1082,7 @@ public abstract class DataManagement {
 			int regType = in.readInt();
 			int regIdx = in.readInt();
 			int posIdx = in.readInt();
-			Expression expr = loadExpression(robot, in);
+			Expression expr = (Expression)loadExpressionElement(robot, in);
 
 			if (regType == 2) {
 				inst = new RegisterStatement(robot.getIOReg(regIdx), expr);
@@ -1087,6 +1098,15 @@ public abstract class DataManagement {
 
 			}
 
+		} else if (instType == 9) {
+			boolean isCommented = in.readBoolean();
+			ExpressionElement expr = loadExpressionElement(robot, in);
+			System.out.printf("If : %s\n", expr);
+			Instruction ifBlock = loadInstruction(robot, in);
+			
+			inst = new IfStatement((AtomicExpression)expr, ifBlock);
+			inst.setIsCommented(isCommented);
+			
 		}/* Add other instructions here! */
 		else if (instType == 1) {
 			inst = new Instruction();
@@ -1127,25 +1147,19 @@ public abstract class DataManagement {
 		byte nullFlag = in.readByte();
 	
 		if (nullFlag == 1) {
-			Expression e = new Expression();
+			ArrayList<ExpressionElement> exprElements = new ArrayList<ExpressionElement>();
 			// Read in expression length
 			int len = in.readInt();
 	
 			for (int idx = 0; idx < len; ++idx) {
 				// Read in an expression element
 				ExpressionElement ee = loadExpressionElement(robot, in);
-	
-				e.insertElement(idx);
 				// Add it to the expression
-				if (ee instanceof Operator) {
-					e.setOperator(idx, (Operator)ee);
-	
-				} else {
-					e.setOperand(idx, (ExprOperand)ee);
-				}
+				exprElements.add(ee);
 			}
-	
-			return e;
+			
+			
+			return new Expression(exprElements);
 		}
 	
 		return null;
@@ -1167,11 +1181,25 @@ public abstract class DataManagement {
 				out.writeByte(1);
 				out.writeInt( op.getOpID() );
 
+			} else if (ee instanceof Expression) {
+				// Expression
+				out.writeByte(2);
+				Expression e = (Expression)ee;
+				
+				int exprLen = e.getSize();
+				// Save the length of the expression
+				out.writeInt(exprLen);
+		
+				// Save each expression element
+				for (int idx = 0; idx < exprLen; ++idx) {
+					saveExpressionElement(e.get(idx), out);
+				}
+				
 			} else if (ee instanceof AtomicExpression) {
-				// Subexpression
+				// Atomic expression
 				AtomicExpression ae = (AtomicExpression)ee;
 
-				out.writeByte(2);
+				out.writeByte(3);
 				saveExpressionElement(ae.getArg1(), out);
 				saveExpressionElement(ae.getArg2(), out);
 				saveExpressionElement(ae.getOp(), out);
@@ -1179,7 +1207,7 @@ public abstract class DataManagement {
 			} if (ee instanceof ExprOperand) {
 				ExprOperand eo = (ExprOperand)ee;
 
-				out.writeByte(3);
+				out.writeByte(4);
 				// Indicate that the object is non-null
 				out.writeInt(eo.type);
 
@@ -1224,6 +1252,21 @@ public abstract class DataManagement {
 			return Operator.getOpFromID(opFlag);
 
 		} else if (nullFlag == 2) {
+			// Read in an expression element
+			ArrayList<ExpressionElement> exprElements = new ArrayList<ExpressionElement>();
+			// Read in expression length
+			int len = in.readInt();
+	
+			for (int idx = 0; idx < len; ++idx) {
+				// Read in an expression element
+				ExpressionElement ee = loadExpressionElement(robot, in);
+				// Add it to the expression
+				exprElements.add(ee);
+			}
+			
+			return new Expression(exprElements);
+			
+		} else if (nullFlag == 3) {
 			// Read in an atomic expression operand
 			ExprOperand a0 = (ExprOperand)loadExpressionElement(robot, in);
 			ExprOperand a1 = (ExprOperand)loadExpressionElement(robot, in);
@@ -1231,7 +1274,7 @@ public abstract class DataManagement {
 
 			return new AtomicExpression(a0, a1, op);
 
-		} else if (nullFlag == 3) {
+		} else if (nullFlag == 4) {
 			// Read in a normal operand
 			ExprOperand eo;
 			int opType = in.readInt();
@@ -1289,7 +1332,7 @@ public abstract class DataManagement {
 		}
 
 		// Uninitialized
-		return new ExprOperand();
+		return null;
 	}
 	
 	private static void saveFrame(Frame f, DataOutputStream out) throws IOException {
