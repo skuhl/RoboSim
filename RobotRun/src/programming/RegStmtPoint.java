@@ -49,7 +49,7 @@ public class RegStmtPoint {
 	public RegStmtPoint(Point initial, boolean cartesian) {
 		values = new float[6];
 		isCartesian = cartesian;
-		// Conver to W, P, R values
+		// Convert to W, P, R values
 		PVector wpr = RobotRun.quatToEuler(initial.orientation);
 		// Copy values into this point
 		getValues()[0] = initial.position.x;

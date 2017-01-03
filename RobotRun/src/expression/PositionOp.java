@@ -51,11 +51,11 @@ public class PositionOp extends RegisterOp {
 			// Use local position
 			Program current = robotRun.activeProgram();
 			// TODO Use joint angles?
-			pt = new RegStmtPoint(robotRun, current.getPosition( getIdx() ), true);
+			pt = new RegStmtPoint(current.getPosition( getIdx() ), true);
 		} else if (type == PositionType.GLOBAL) {
 			// global Position register
 			PositionRegister preg = (PositionRegister)RegisterFile.getPReg(getIdx());
-			pt = new RegStmtPoint(robotRun, preg.point, preg.isCartesian);
+			pt = new RegStmtPoint(preg.point, preg.isCartesian);
 		} else {
 			// Not a valid type
 			return null;

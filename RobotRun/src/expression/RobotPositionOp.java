@@ -44,8 +44,8 @@ public class RobotPositionOp implements Operand {
 	 * the Robot
 	 */
 	public Object getValue() {
-		Point RP = this.robotRun.nativeRobotEEPoint(robotRun.getArmModel().getJointAngles());
-		RegStmtPoint pt = new RegStmtPoint(this.robotRun, RP, isCartesian);
+		Point RP = RobotRun.nativeRobotEEPoint(robotRun.getArmModel().getJointAngles());
+		RegStmtPoint pt = new RegStmtPoint(RP, isCartesian);
 
 		if (valIdx == -1) {
 			// Return the entire point
