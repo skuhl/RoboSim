@@ -12,6 +12,13 @@ public class JumpInstruction extends Instruction {
 		setTgtLblNum(l);
 	}
 
+	public Instruction clone() {
+		Instruction copy = new JumpInstruction(getTgtLblNum());
+		copy.setIsCommented( isCommented() );
+
+		return copy;
+	}
+
 	/**
 	 * Returns the index of the instruction to which to jump.
 	 */
@@ -34,11 +41,12 @@ public class JumpInstruction extends Instruction {
 		}
 	}
 
-	public Instruction clone() {
-		Instruction copy = new JumpInstruction(getTgtLblNum());
-		copy.setIsCommented( isCommented() );
+	public int getTgtLblNum() {
+		return tgtLblNum;
+	}
 
-		return copy;
+	public void setTgtLblNum(int tgtLblNum) {
+		this.tgtLblNum = tgtLblNum;
 	}
 
 	public String[] toStringArray() {
@@ -51,13 +59,5 @@ public class JumpInstruction extends Instruction {
 		}
 
 		return ret;
-	}
-
-	public int getTgtLblNum() {
-		return tgtLblNum;
-	}
-
-	public void setTgtLblNum(int tgtLblNum) {
-		this.tgtLblNum = tgtLblNum;
 	}
 }

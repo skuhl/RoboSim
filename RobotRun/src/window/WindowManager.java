@@ -30,29 +30,6 @@ import ui.MyDropdownList;
 import ui.RelativePoint;
 
 public class WindowManager {
-	private ControlP5 UIManager;
-
-	private Group createObjWindow, editObjWindow,
-	sharedElements, scenarioWindow;
-
-	private ButtonTabs windowTabs;
-	private Button[] cameraViews;
-	private Background background;
-
-	private Textarea objNameLbl, scenarioNameLbl;
-	private Textfield objName, scenarioName;
-
-	private ArrayList<Textarea> shapeDefAreas;
-	private ArrayList<Textfield> shapeDefFields;
-
-	private Textarea[] objOrientationLbls;
-	private Textfield[] objOrientationFields;
-
-	private Textarea[] dropdownLbls;
-	private MyDropdownList[] dropdownLists;
-
-	private Button[] miscButtons;
-
 	public static final int offsetX = 10,
 			distBtwFieldsY = 15,
 			distLblToFieldX = 5,
@@ -70,6 +47,29 @@ public class WindowManager {
 			mdropItemWidth = 90,
 			ldropItemWidth = 120,
 			dropItemHeight = 21;
+
+	private ControlP5 UIManager;
+
+	private Group createObjWindow, editObjWindow,
+	sharedElements, scenarioWindow;
+	private ButtonTabs windowTabs;
+	private Button[] cameraViews;
+
+	private Background background;
+	private Textarea objNameLbl, scenarioNameLbl;
+
+	private Textfield objName, scenarioName;
+	private ArrayList<Textarea> shapeDefAreas;
+
+	private ArrayList<Textfield> shapeDefFields;
+	private Textarea[] objOrientationLbls;
+
+	private Textfield[] objOrientationFields;
+	private Textarea[] dropdownLbls;
+
+	private MyDropdownList[] dropdownLists;
+
+	private Button[] miscButtons;
 
 	private final int buttonDefColor, buttonActColor;
 
@@ -593,489 +593,68 @@ public class WindowManager {
 	 }
 
 	 /**
-	  * Updates the current active window display based on the selected button on
-	  * windowTabs. Due to some problems with hiding groups with the ControlP5
-	  * object, when a new window is brought up a large white sphere is drawn oer
-	  * the screen to clear the image of the previous window.
+	  * Reinitialize any and all input fields
 	  */
-	 public void updateWindowDisplay() {
-		 String windowState = windowTabs.getActiveButtonName();
-
-		 if (windowState == null || windowState.equals("Hide")) {
-			 // Hide any window
-			 RobotRun.getInstance().g1.hide();
-			 setGroupVisible(createObjWindow, false);
-			 setGroupVisible(editObjWindow, false);
-			 setGroupVisible(sharedElements, false);
-			 setGroupVisible(scenarioWindow, false);
-
-			 updateWindowContentsPositions();
-
-		 } else if (windowState.equals("Pendant")) {
-			 // Show pendant
-			 setGroupVisible(createObjWindow, false);
-			 setGroupVisible(editObjWindow, false);
-			 setGroupVisible(sharedElements, false);
-			 setGroupVisible(scenarioWindow, false);
-
-			 if (!RobotRun.getInstance().g1.isVisible()) {
-				 updateWindowContentsPositions();
-			 }
-
-			 RobotRun.getInstance().g1.show();
-
-		 } else if (windowState.equals("Create")) {
-			 // Show world object creation window
-			 RobotRun.getInstance().g1.hide();
-			 setGroupVisible(editObjWindow, false);
-			 setGroupVisible(scenarioWindow, false);
-
-			 if (!createObjWindow.isVisible()) {
-				 setGroupVisible(createObjWindow, true);
-				 setGroupVisible(sharedElements, true);
-
-				 clearAllInputFields();
-				 updateWindowContentsPositions();
-				 updateListContents();
-				 resetListLabels();
-			 }
-
-		 } else if (windowState.equals("Edit")) {
-			 // Show world object edit window
-			 RobotRun.getInstance().g1.hide();
-			 setGroupVisible(createObjWindow, false);
-			 setGroupVisible(scenarioWindow, false);
-
-			 if (!editObjWindow.isVisible()) {
-				 setGroupVisible(editObjWindow, true);
-				 setGroupVisible(sharedElements, true);
-
-				 clearAllInputFields();
-				 updateWindowContentsPositions();
-				 updateListContents();
-				 resetListLabels();
-			 }
-
-		 } else if (windowState.equals("Scenario")) {
-			 // Show scenario creating/saving/loading
-			 RobotRun.getInstance().g1.hide();
-			 setGroupVisible(createObjWindow, false);
-			 setGroupVisible(editObjWindow, false);
-
-			 if (!scenarioWindow.isVisible()) {
-				 setGroupVisible(scenarioWindow, true);
-
-				 clearAllInputFields();
-				 updateWindowContentsPositions();
-				 updateListContents();
-				 resetListLabels();
-			 }
-		 }
-	 }
-
-	 /**
-	  * Updates the positions of all the elements in the active window
-	  * based on the current button tab that is active.
-	  */
-	 public void updateWindowContentsPositions() {
-		 String windowState = windowTabs.getActiveButtonName();
-
-		 if (windowState == null || windowState.equals("Hide")) {
-			 // Window is hidden
-			 background.hide();
-			 for (Button b : cameraViews) {
-				 b.hide();
-			 }
-
-			 return;
-
-		 } else if (windowState.equals("Create")) {
-			 // Create window
-			 updateCreateWindowContentPositions();
-
-		 } else if (windowState.equals("Edit")) {
-			 // Edit window
-			 updateEditWindowContentPositions();
-
-		 } else if (windowState.equals("Scenario")) {
-			 // Scenario window
-			 updateScenarioWindowContentPositions();
-		 }
-
-		 // Update the camera view buttons
-		 int[] relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_RIGHT, offsetX, 0);
-
-		 for (Button b : cameraViews) {  
-			 b.setPosition(relPos[0], relPos[1]).show();
-			 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 }
-
-		 updateListContents();
-	 }
-
-	 /**
-	  * Updates the positions of all the contents of the world object creation window.
-	  */
-	 private void updateCreateWindowContentPositions() {
+	 public void clearAllInputFields() {
+		 clearGroupInputFields(null);
 		 updateDimLblsAndFields();
-
-		 // Object Type dropdown list and label
-		 int[] relPos = new int[] { offsetX, offsetX };
-		 dropdownLbls[0] = dropdownLbls[0].setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(dropdownLbls[0], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 dropdownLists[0] = (MyDropdownList)dropdownLists[0].setPosition(relPos[0], relPos[1]);
-		 // Name label and field
-		 relPos = relativePosition(dropdownLbls[0], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 objNameLbl = objNameLbl.setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(objNameLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 objName = objName.setPosition(relPos[0], relPos[1]);
-		 // Shape type label and dropdown
-		 relPos = relativePosition(objNameLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 dropdownLbls[1] = dropdownLbls[1].setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(dropdownLbls[1], RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
-		 dropdownLists[1] = (MyDropdownList)dropdownLists[1].setPosition(relPos[0], relPos[1]);
-		 // Dimension label and fields
-		 relPos = relativePosition(dropdownLbls[1], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
-
-		 // Fill color label and dropdown
-		 dropdownLbls[2] = dropdownLbls[2].setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(dropdownLbls[2], RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
-		 dropdownLists[2] = (MyDropdownList)dropdownLists[2].setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(dropdownLbls[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 Object val = dropdownLists[1].getActiveLabelValue();
-
-		 if (val == ShapeType.MODEL) {
-			 // No stroke color for Model Shapes
-			 dropdownLbls[3] = dropdownLbls[3].hide();
-			 dropdownLists[3] = (MyDropdownList)dropdownLists[3].hide();
-
-		 } else {
-			 // Outline color label and dropdown
-			 dropdownLbls[3] = dropdownLbls[3].setPosition(relPos[0], relPos[1]).show();
-			 relPos = relativePosition(dropdownLbls[3], RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
-
-			 dropdownLists[3] = (MyDropdownList)dropdownLists[3].setPosition(relPos[0], relPos[1]).show();
-			 relPos = relativePosition(dropdownLbls[3], RelativePoint.BOTTOM_RIGHT, distLblToFieldX, distBtwFieldsY);
-		 } 
-
-		 // Create button
-		 miscButtons[0] = miscButtons[0].setPosition(relPos[0], relPos[1]);
-		 // Clear button
-		 relPos = relativePosition(miscButtons[0], RelativePoint.TOP_RIGHT, offsetX, 0);
-		 miscButtons[2] = miscButtons[2].setPosition(relPos[0], relPos[1]);
-		 // Update window background display
-		 relPos = relativePosition(miscButtons[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 background.setBackgroundHeight(relPos[1])
-		 .setHeight(relPos[1])
-		 .show();
 	 }
 
 	 /**
-	  * Updates the positions of all the contents of the world object editing window.
+	  * Reinitialize the input fields for any contents in the Create Object window
 	  */
-	 private void updateEditWindowContentPositions() {
+	 public void clearCreateInputFields() {
+		 clearGroupInputFields(createObjWindow);
+		 clearSharedInputFields();
 		 updateDimLblsAndFields();
-
-		 // Object list dropdown and label
-		 int[] relPos = new int[] { offsetX, offsetX };
-		 dropdownLbls[4] = dropdownLbls[4].setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(dropdownLbls[4], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 dropdownLists[4] = (MyDropdownList)dropdownLists[4].setPosition(relPos[0], relPos[1]);
-		 // Dimension label and fields
-		 relPos = relativePosition(dropdownLbls[4], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
-
-		 // X label and field
-		 objOrientationLbls[0] = objOrientationLbls[0].setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(objOrientationLbls[0], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 objOrientationFields[0] = objOrientationFields[0].setPosition(relPos[0], relPos[1]);
-		 // Y label and field
-		 relPos = relativePosition(objOrientationLbls[0], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 objOrientationLbls[1] = objOrientationLbls[1].setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(objOrientationLbls[1], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 objOrientationFields[1] = objOrientationFields[1].setPosition(relPos[0], relPos[1]);
-		 // Z label and field
-		 relPos = relativePosition(objOrientationLbls[1], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 objOrientationLbls[2] = objOrientationLbls[2].setPosition(relPos[0], relPos[1]);;
-
-		 relPos = relativePosition(objOrientationLbls[2], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 objOrientationFields[2] = objOrientationFields[2].setPosition(relPos[0], relPos[1]);
-		 // W label and field
-		 relPos = relativePosition(objOrientationLbls[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 objOrientationLbls[3] = objOrientationLbls[3].setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(objOrientationLbls[3], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 objOrientationFields[3] = objOrientationFields[3].setPosition(relPos[0], relPos[1]);
-		 // P label and field
-		 relPos = relativePosition(objOrientationLbls[3], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 objOrientationLbls[4] = objOrientationLbls[4].setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(objOrientationLbls[4], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 objOrientationFields[4] = objOrientationFields[4].setPosition(relPos[0], relPos[1]);
-		 // R label and field
-		 relPos = relativePosition(objOrientationLbls[4], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 objOrientationLbls[5] = objOrientationLbls[5].setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(objOrientationLbls[5], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 objOrientationFields[5] = objOrientationFields[5].setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(objOrientationLbls[5], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-
-		 if (getActiveWorldObject() instanceof Part) {
-			 // Reference fxiture (for Parts only) label and dropdown
-			 dropdownLbls[5] = dropdownLbls[5].setPosition(relPos[0], relPos[1]).show();
-			 relPos = relativePosition(dropdownLbls[5], RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
-
-			 dropdownLists[5] = (MyDropdownList)dropdownLists[5].setPosition(relPos[0], relPos[1]).show();
-			 relPos = relativePosition(dropdownLbls[5], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-
-		 } else {
-			 // Fixtures do not have a reference object
-			 dropdownLbls[5].hide();
-			 dropdownLists[5] = (MyDropdownList)dropdownLists[5].hide();
-		 }
-
-		 // Confirm button
-		 miscButtons[1] = miscButtons[1].setPosition(relPos[0], relPos[1]);
-		 // Delete button
-		 relPos = relativePosition(miscButtons[1], RelativePoint.TOP_RIGHT, offsetX, 0);
-		 miscButtons[3] = miscButtons[3].setPosition(relPos[0], relPos[1]);
-		 // Update window background display
-		 relPos = relativePosition(miscButtons[3], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 background.setBackgroundHeight(relPos[1])
-		 .setHeight(relPos[1])
-		 .show();
 	 }
 
 	 /**
-	  * Updates the positions of all the contents of the scenario window.
+	  * Reinitialize the input fields for any contents in the Edit Object window
 	  */
-	 public void updateScenarioWindowContentPositions() {
-		 // New scenario name label
-		 int[] relPos = new int[] {offsetX, offsetX };
-		 scenarioNameLbl = scenarioNameLbl.setPosition(relPos[0], relPos[1]);
-		 // New scenario name field
-		 relPos = relativePosition(scenarioNameLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 scenarioName = scenarioName.setPosition(relPos[0], relPos[1]);
-		 // New scenario button
-		 relPos = relativePosition(scenarioNameLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 miscButtons[4] = miscButtons[4].setPosition(relPos[0], relPos[1]);
-		 // Scenario dropdown list and label
-		 relPos = relativePosition(miscButtons[4], RelativePoint.BOTTOM_LEFT, 0, 2 * distBtwFieldsY);
-		 dropdownLbls[6] = dropdownLbls[6].setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(dropdownLbls[6], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 dropdownLists[6] = (MyDropdownList)dropdownLists[6].setPosition(relPos[0], relPos[1]);
-		 // Save scenario button
-		 relPos = relativePosition(dropdownLbls[6], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 miscButtons[5] = miscButtons[5].setPosition(relPos[0], relPos[1]);
-		 // Load scenario button
-		 relPos = relativePosition(miscButtons[5], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 miscButtons[6] = miscButtons[6].setPosition(relPos[0], relPos[1]);
-		 // Toggle Object display button
-		 relPos = relativePosition(miscButtons[6], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 miscButtons[7] = miscButtons[7].setPosition(relPos[0], relPos[1]);
-
-		 // Update button color based on the value of the object display flag
-		 if (!RobotRun.getInstance().showOOBs) {
-			 miscButtons[7].setColorBackground(buttonActColor);
-
-		 } else {
-			 miscButtons[7].setColorBackground(buttonDefColor);
-		 }
-
-		 // Update window background display
-		 relPos = relativePosition(miscButtons[7], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 background.setBackgroundHeight(relPos[1])
-		 .setHeight(relPos[1])
-		 .show();
+	 public void clearEditInputFields() {
+		 clearGroupInputFields(editObjWindow);
+		 clearSharedInputFields();
+		 updateDimLblsAndFields();
 	 }
 
 	 /**
-	  * Updates positions of all the visible dimension text areas and fields. The given x and y positions are used to
-	  * place the first text area and field pair and updated through the process of updating the positions of the rest
-	  * of the visible text areas and fields. Then the x and y position of the last visible text area and field is returned
-	  * in the form a 2-element integer array.
-	  * 
-	  * @param initialXPos  The x position of the first text area-field pair
-	  * @param initialYPos  The y position of the first text area-field pair
-	  * @returning          The x and y position of the last visible text area  in a 2-element integer array
+	  * Reinitializes any controller interface in the given group that accepts user
+	  * input; currently only text fields and dropdown lists are updated.
 	  */
-	 private int[] updateDimLblAndFieldPositions(int initialXPos, int initialYPos) {
-		 int[] relPos = new int[] { initialXPos, initialYPos };
-		 int idxDim = 0;
+	 public void clearGroupInputFields(Group g) {
+		 List<ControllerInterface<?>> contents = UIManager.getAll();
 
-		 // Update position and label text of the dimension fields based on the selected shape from the Shape dropDown List
-		 while (idxDim < shapeDefFields.size()) {
-			 Textfield dimField = shapeDefFields.get(idxDim);
+		 for (ControllerInterface<?> controller : contents) {
 
-			 if (!dimField.isVisible()) { break; }
+			 if (g == null || controller.getParent().equals(g)) {
 
-			 Textarea dimLbl = shapeDefAreas.get(idxDim);
-			 shapeDefAreas.set(idxDim, dimLbl.setPosition(relPos[0], relPos[1]) );
-			 relPos = relativePosition(dimLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-
-			 shapeDefFields.set(idxDim, dimField.setPosition(relPos[0], relPos[1]) );
-			 relPos = relativePosition(dimLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-
-			 ++idxDim;
-		 }
-
-		 return relPos;
-	 }
-
-	 /**
-	  * Returns a position that is relative to the dimensions and position of the Controller object given.
-	  */
-	 private <T> int[] relativePosition(ControllerInterface<T> obj, RelativePoint pos, int offsetX, int offsetY) {
-		 int[] relPosition = new int[] { 0, 0 };
-		 float[] objPosition = obj.getPosition();
-		 float[] objDimensions;
-
-		 if (obj instanceof Group) {
-			 // getHeight() does not function the same for Group objects for some reason ...
-			 objDimensions = new float[] { obj.getWidth(), ((Group)obj).getBackgroundHeight() };
-		 } else if (obj instanceof DropdownList) {
-			 // Ignore the number of items displayed by the DropdownList, when it is open
-			 objDimensions = new float[] { obj.getWidth(), ((DropdownList)obj).getBarHeight() };
-		 } else {
-			 objDimensions = new float[] { obj.getWidth(), obj.getHeight() };
-		 }
-
-		 switch(pos) {
-		 case TOP_RIGHT:
-			 relPosition[0] = (int)(objPosition[0] + objDimensions[0] + offsetX);
-			 relPosition[1] = (int)(objPosition[1] + offsetY);
-			 break;
-
-		 case TOP_LEFT:
-			 relPosition[0] = (int)(objPosition[0] + offsetX);
-			 relPosition[1] = (int)(objPosition[1] + offsetY);
-			 break;
-
-		 case BOTTOM_RIGHT:
-			 relPosition[0] = (int)(objPosition[0] + objDimensions[0] + offsetX);
-			 relPosition[1] = (int)(objPosition[1] + objDimensions[1] + offsetY);
-			 break;
-
-		 case BOTTOM_LEFT:
-			 relPosition[0] = (int)(objPosition[0] + offsetX);
-			 relPosition[1] = (int)(objPosition[1] + objDimensions[1] + offsetY);
-			 break;
-
-		 default:
-		 }
-
-		 return relPosition;
-	 }
-
-	 /**
-	  * Update the contents of the two dropdown menus that
-	  * contain world objects.
-	  */
-	 private void updateListContents() {
-
-		 if (RobotRun.getInstance().activeScenario != null) {
-			 dropdownLists[4] = (MyDropdownList)dropdownLists[4].clear();
-			 dropdownLists[5] = (MyDropdownList)dropdownLists[5].clear();
-			 dropdownLists[5].addItem("None", null);
-
-			 for (WorldObject wldObj : RobotRun.getInstance().activeScenario) {
-				 dropdownLists[4].addItem(wldObj.toString(), wldObj);
-
-				 if (wldObj instanceof Fixture) {
-					 // Load all fixtures from the active scenario
-					 dropdownLists[5].addItem(wldObj.toString(), wldObj);
+				 if (controller instanceof Textfield) {
+					 // Clear anything inputted into the text field
+					 controller = ((Textfield)controller).setValue("");
+				 } else if (controller instanceof MyDropdownList) {
+					 // Reset the caption label of the dropdown list and close the list
+					 ((MyDropdownList)controller).resetLabel();
+					 controller = ((DropdownList)controller).close();
 				 }
 			 }
-			 // Update each dropdownlist's active label
-			 dropdownLists[4].updateActiveLabel();
-			 dropdownLists[5].updateActiveLabel();
-		 }
-
-		 dropdownLists[6] = (MyDropdownList)dropdownLists[6].clear();
-		 for (int idx = 0; idx < RobotRun.getInstance().SCENARIOS.size(); ++idx) {
-			 // Load all scenario indices
-			 Scenario s = RobotRun.getInstance().SCENARIOS.get(idx);
-			 dropdownLists[6].addItem(s.getName(), s);
-		 }
-		 dropdownLists[6].updateActiveLabel();
-	 }
-
-	 /**
-	  * Update how many of the dimension field and label pairs are displayed in
-	  * the create world object window based on which shape type is chosen from the shape dropdown list.
-	  */
-	 private void updateDimLblsAndFields() {
-		 String activeButtonLabel = windowTabs.getActiveButtonName();
-		 String[] lblNames = new String[0];
-
-		 if (activeButtonLabel != null) {
-			 if (activeButtonLabel.equals("Create")) {
-				 ShapeType selectedShape = (ShapeType)dropdownLists[1].getActiveLabelValue();
-
-				 // Define the label text and the number of dimensionos fields to display
-				 if (selectedShape == ShapeType.BOX) {
-					 lblNames = new String[] { "Length:", "Height:", "Width" };
-
-				 } else if (selectedShape == ShapeType.CYLINDER) {
-					 lblNames = new String[] { "Radius", "Height" };
-
-				 } else if (selectedShape == ShapeType.MODEL) {
-					 lblNames = new String[] { "Source:", "Scale:", };
-				 }
-
-			 } else if (activeButtonLabel.equals("Edit")) {
-				 Object val = dropdownLists[4].getActiveLabelValue();
-
-				 if (val instanceof WorldObject) {
-					 Shape s = ((WorldObject)val).getForm();
-
-					 if (s instanceof Box) {
-						 lblNames = new String[] { "Length:", "Height:", "Width" };
-
-					 } else if (s instanceof Cylinder) {
-						 lblNames = new String[] { "Radius", "Height" };
-
-					 } else if (s instanceof ModelShape) {
-						 lblNames = new String[] { "Scale:" };
-					 }
-				 }
-
-			 }
-		 }
-
-		 for (int idxDim = 0; idxDim < shapeDefFields.size(); ++idxDim) {
-			 if (idxDim < lblNames.length) {
-				 // Show a number of dimension fields and labels equal to the value of dimSize
-				 shapeDefAreas.set(idxDim, shapeDefAreas.get(idxDim).setText(lblNames[idxDim]).show());
-				 shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).show());
-
-			 } else {
-				 // Hide remaining dimension fields and labels
-				 shapeDefAreas.set(idxDim, shapeDefAreas.get(idxDim).hide());
-				 shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).hide());
-			 }
 		 }
 	 }
 
 	 /**
-	  * Only update the group visiblility if it does not
-	  * match the given visiblity flag.
+	  * Reinitialize the input fields for any contents in the Scenario window
 	  */
-	 private void setGroupVisible(Group g, boolean setVisible) {
-		 if (g.isVisible() != setVisible) {
-			 g.setVisible(setVisible);
-		 }
+	 public void clearScenarioInputFields() {
+		 clearGroupInputFields(scenarioWindow);
+		 updateDimLblsAndFields();
+	 }
+
+	 /**
+	  * Reinitialize the input fields for any shared contents
+	  */
+	 public void clearSharedInputFields() {
+		 clearGroupInputFields(sharedElements);
+		 updateDimLblsAndFields();
 	 }
 
 	 /**
@@ -1205,6 +784,27 @@ public class WindowManager {
 	 }
 
 	 /**
+	  * Delete the world object that is selected in
+	  * the Object dropdown list, if any.
+	  * 
+	  * @returning  -1  if the active Scenario is null
+	  *              0  if the object was removed succesfully,
+	  *              1  if the object did not exist in the scenario,
+	  *              2  if the object was a Fixture that was removed
+	  *                 from the scenario and was referenced by at
+	  *                 least one Part in the scenario
+	  */
+	 public int deleteActiveWorldObject() {
+		 int ret = -1;
+
+		 if (RobotRun.getInstance().activeScenario != null) {
+			 ret = RobotRun.getInstance().activeScenario.removeWorldObject( getActiveWorldObject() );
+		 }
+
+		 return ret;
+	 }
+
+	 /**
 	  * Eit the position and orientation (as well as the fixture reference for Parts)
 	  * of the currently selected World Object in the Object dropdown list.
 	  */
@@ -1324,6 +924,44 @@ public class WindowManager {
 			 }
 		 }
 
+	 }
+
+	 /**
+	  * Returns the scenario associated with the label that is active
+	  * for the scenario drop-down list.
+	  * 
+	  * @returning  The index value or null if no such index exists
+	  */
+	 public Scenario getActiveScenario() {
+		 String activeButtonLabel = windowTabs.getActiveButtonName();
+
+		 if (activeButtonLabel != null && activeButtonLabel.equals("Scenario")) {
+			 Object val = dropdownLists[6].getActiveLabelValue();
+
+			 if (val instanceof Scenario) {
+				 // Set the active scenario index
+				 return (Scenario)val;
+			 } else if (val != null) {
+				 // Invalid entry in the dropdown list
+				 System.out.printf("Invalid class type: %d!\n", val.getClass());
+			 }
+		 }
+
+		 return null;
+	 }
+
+	 /**
+	  * Returns the object that is currently being edited
+	  * in the world object editing menu.
+	  */
+	 public WorldObject getActiveWorldObject() {
+		 Object wldObj = dropdownLists[4].getActiveLabelValue();
+
+		 if (editObjWindow.isVisible() && wldObj instanceof WorldObject) {
+			 return (WorldObject)wldObj;
+		 } else {
+			 return null;
+		 }
 	 }
 
 	 /**
@@ -1538,112 +1176,6 @@ public class WindowManager {
 	 }
 
 	 /**
-	  * Reset the base label of every dropdown list.
-	  */
-	 private void resetListLabels() {
-		 for (MyDropdownList list : dropdownLists) {
-			 list.resetLabel();
-		 }
-
-		 for (int idxDim = 0; idxDim < shapeDefFields.size(); ++idxDim) {
-			 // Hide remaining dimension fields and labels
-			 shapeDefAreas.set(idxDim, shapeDefAreas.get(idxDim).hide());
-			 shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).hide());
-			 ++idxDim;
-		 }
-
-		 dropdownLbls[5].hide();
-		 dropdownLists[5] = (MyDropdownList)dropdownLists[5].hide();
-		 updateDimLblsAndFields();
-	 }
-
-	 /**
-	  * Delete the world object that is selected in
-	  * the Object dropdown list, if any.
-	  * 
-	  * @returning  -1  if the active Scenario is null
-	  *              0  if the object was removed succesfully,
-	  *              1  if the object did not exist in the scenario,
-	  *              2  if the object was a Fixture that was removed
-	  *                 from the scenario and was referenced by at
-	  *                 least one Part in the scenario
-	  */
-	 public int deleteActiveWorldObject() {
-		 int ret = -1;
-
-		 if (RobotRun.getInstance().activeScenario != null) {
-			 ret = RobotRun.getInstance().activeScenario.removeWorldObject( getActiveWorldObject() );
-		 }
-
-		 return ret;
-	 }
-
-	 /**
-	  * Reinitialize any and all input fields
-	  */
-	 public void clearAllInputFields() {
-		 clearGroupInputFields(null);
-		 updateDimLblsAndFields();
-	 }
-
-	 /**
-	  * Reinitialize the input fields for any contents in the Create Object window
-	  */
-	 public void clearCreateInputFields() {
-		 clearGroupInputFields(createObjWindow);
-		 clearSharedInputFields();
-		 updateDimLblsAndFields();
-	 }
-
-	 /**
-	  * Reinitialize the input fields for any contents in the Edit Object window
-	  */
-	 public void clearEditInputFields() {
-		 clearGroupInputFields(editObjWindow);
-		 clearSharedInputFields();
-		 updateDimLblsAndFields();
-	 }
-
-	 /**
-	  * Reinitialize the input fields for any shared contents
-	  */
-	 public void clearSharedInputFields() {
-		 clearGroupInputFields(sharedElements);
-		 updateDimLblsAndFields();
-	 }
-
-	 /**
-	  * Reinitialize the input fields for any contents in the Scenario window
-	  */
-	 public void clearScenarioInputFields() {
-		 clearGroupInputFields(scenarioWindow);
-		 updateDimLblsAndFields();
-	 }
-
-	 /**
-	  * Reinitializes any controller interface in the given group that accepts user
-	  * input; currently only text fields and dropdown lists are updated.
-	  */
-	 public void clearGroupInputFields(Group g) {
-		 List<ControllerInterface<?>> contents = UIManager.getAll();
-
-		 for (ControllerInterface<?> controller : contents) {
-
-			 if (g == null || controller.getParent().equals(g)) {
-
-				 if (controller instanceof Textfield) {
-					 // Clear anything inputted into the text field
-					 controller = ((Textfield)controller).setValue("");
-				 } else if (controller instanceof MyDropdownList) {
-					 // Reset the caption label of the dropdown list and close the list
-					 ((MyDropdownList)controller).resetLabel();
-					 controller = ((DropdownList)controller).close();
-				 }
-			 }
-		 }
-	 }
-
-	 /**
 	  * Creates a new scenario with the name pulled from the scenario name text field.
 	  * If the name given is already given to another existing scenario, then no new
 	  * Scenario is created. Also, names can only consist of 16 letters or numbers.
@@ -1684,44 +1216,6 @@ public class WindowManager {
 	 }
 
 	 /**
-	  * Returns the scenario associated with the label that is active
-	  * for the scenario drop-down list.
-	  * 
-	  * @returning  The index value or null if no such index exists
-	  */
-	 public Scenario getActiveScenario() {
-		 String activeButtonLabel = windowTabs.getActiveButtonName();
-
-		 if (activeButtonLabel != null && activeButtonLabel.equals("Scenario")) {
-			 Object val = dropdownLists[6].getActiveLabelValue();
-
-			 if (val instanceof Scenario) {
-				 // Set the active scenario index
-				 return (Scenario)val;
-			 } else if (val != null) {
-				 // Invalid entry in the dropdown list
-				 System.out.printf("Invalid class type: %d!\n", val.getClass());
-			 }
-		 }
-
-		 return null;
-	 }
-
-	 /**
-	  * Returns the object that is currently being edited
-	  * in the world object editing menu.
-	  */
-	 public WorldObject getActiveWorldObject() {
-		 Object wldObj = dropdownLists[4].getActiveLabelValue();
-
-		 if (editObjWindow.isVisible() && wldObj instanceof WorldObject) {
-			 return (WorldObject)wldObj;
-		 } else {
-			 return null;
-		 }
-	 }
-
-	 /**
 	  * Deterimes whether a single text field is active.
 	  */
 	 public boolean isATextFieldActive() {
@@ -1756,5 +1250,511 @@ public class WindowManager {
 		 }
 
 		 return false;
+	 }
+
+	 /**
+	  * Returns a position that is relative to the dimensions and position of the Controller object given.
+	  */
+	 private <T> int[] relativePosition(ControllerInterface<T> obj, RelativePoint pos, int offsetX, int offsetY) {
+		 int[] relPosition = new int[] { 0, 0 };
+		 float[] objPosition = obj.getPosition();
+		 float[] objDimensions;
+
+		 if (obj instanceof Group) {
+			 // getHeight() does not function the same for Group objects for some reason ...
+			 objDimensions = new float[] { obj.getWidth(), ((Group)obj).getBackgroundHeight() };
+		 } else if (obj instanceof DropdownList) {
+			 // Ignore the number of items displayed by the DropdownList, when it is open
+			 objDimensions = new float[] { obj.getWidth(), ((DropdownList)obj).getBarHeight() };
+		 } else {
+			 objDimensions = new float[] { obj.getWidth(), obj.getHeight() };
+		 }
+
+		 switch(pos) {
+		 case TOP_RIGHT:
+			 relPosition[0] = (int)(objPosition[0] + objDimensions[0] + offsetX);
+			 relPosition[1] = (int)(objPosition[1] + offsetY);
+			 break;
+
+		 case TOP_LEFT:
+			 relPosition[0] = (int)(objPosition[0] + offsetX);
+			 relPosition[1] = (int)(objPosition[1] + offsetY);
+			 break;
+
+		 case BOTTOM_RIGHT:
+			 relPosition[0] = (int)(objPosition[0] + objDimensions[0] + offsetX);
+			 relPosition[1] = (int)(objPosition[1] + objDimensions[1] + offsetY);
+			 break;
+
+		 case BOTTOM_LEFT:
+			 relPosition[0] = (int)(objPosition[0] + offsetX);
+			 relPosition[1] = (int)(objPosition[1] + objDimensions[1] + offsetY);
+			 break;
+
+		 default:
+		 }
+
+		 return relPosition;
+	 }
+
+	 /**
+	  * Reset the base label of every dropdown list.
+	  */
+	 private void resetListLabels() {
+		 for (MyDropdownList list : dropdownLists) {
+			 list.resetLabel();
+		 }
+
+		 for (int idxDim = 0; idxDim < shapeDefFields.size(); ++idxDim) {
+			 // Hide remaining dimension fields and labels
+			 shapeDefAreas.set(idxDim, shapeDefAreas.get(idxDim).hide());
+			 shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).hide());
+			 ++idxDim;
+		 }
+
+		 dropdownLbls[5].hide();
+		 dropdownLists[5] = (MyDropdownList)dropdownLists[5].hide();
+		 updateDimLblsAndFields();
+	 }
+
+	 /**
+	  * Only update the group visiblility if it does not
+	  * match the given visiblity flag.
+	  */
+	 private void setGroupVisible(Group g, boolean setVisible) {
+		 if (g.isVisible() != setVisible) {
+			 g.setVisible(setVisible);
+		 }
+	 }
+
+	 /**
+	  * Updates the positions of all the contents of the world object creation window.
+	  */
+	 private void updateCreateWindowContentPositions() {
+		 updateDimLblsAndFields();
+
+		 // Object Type dropdown list and label
+		 int[] relPos = new int[] { offsetX, offsetX };
+		 dropdownLbls[0] = dropdownLbls[0].setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(dropdownLbls[0], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 dropdownLists[0] = (MyDropdownList)dropdownLists[0].setPosition(relPos[0], relPos[1]);
+		 // Name label and field
+		 relPos = relativePosition(dropdownLbls[0], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 objNameLbl = objNameLbl.setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(objNameLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 objName = objName.setPosition(relPos[0], relPos[1]);
+		 // Shape type label and dropdown
+		 relPos = relativePosition(objNameLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 dropdownLbls[1] = dropdownLbls[1].setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(dropdownLbls[1], RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
+		 dropdownLists[1] = (MyDropdownList)dropdownLists[1].setPosition(relPos[0], relPos[1]);
+		 // Dimension label and fields
+		 relPos = relativePosition(dropdownLbls[1], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
+
+		 // Fill color label and dropdown
+		 dropdownLbls[2] = dropdownLbls[2].setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(dropdownLbls[2], RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
+		 dropdownLists[2] = (MyDropdownList)dropdownLists[2].setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(dropdownLbls[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 Object val = dropdownLists[1].getActiveLabelValue();
+
+		 if (val == ShapeType.MODEL) {
+			 // No stroke color for Model Shapes
+			 dropdownLbls[3] = dropdownLbls[3].hide();
+			 dropdownLists[3] = (MyDropdownList)dropdownLists[3].hide();
+
+		 } else {
+			 // Outline color label and dropdown
+			 dropdownLbls[3] = dropdownLbls[3].setPosition(relPos[0], relPos[1]).show();
+			 relPos = relativePosition(dropdownLbls[3], RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
+
+			 dropdownLists[3] = (MyDropdownList)dropdownLists[3].setPosition(relPos[0], relPos[1]).show();
+			 relPos = relativePosition(dropdownLbls[3], RelativePoint.BOTTOM_RIGHT, distLblToFieldX, distBtwFieldsY);
+		 } 
+
+		 // Create button
+		 miscButtons[0] = miscButtons[0].setPosition(relPos[0], relPos[1]);
+		 // Clear button
+		 relPos = relativePosition(miscButtons[0], RelativePoint.TOP_RIGHT, offsetX, 0);
+		 miscButtons[2] = miscButtons[2].setPosition(relPos[0], relPos[1]);
+		 // Update window background display
+		 relPos = relativePosition(miscButtons[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 background.setBackgroundHeight(relPos[1])
+		 .setHeight(relPos[1])
+		 .show();
+	 }
+
+	 /**
+	  * Updates positions of all the visible dimension text areas and fields. The given x and y positions are used to
+	  * place the first text area and field pair and updated through the process of updating the positions of the rest
+	  * of the visible text areas and fields. Then the x and y position of the last visible text area and field is returned
+	  * in the form a 2-element integer array.
+	  * 
+	  * @param initialXPos  The x position of the first text area-field pair
+	  * @param initialYPos  The y position of the first text area-field pair
+	  * @returning          The x and y position of the last visible text area  in a 2-element integer array
+	  */
+	 private int[] updateDimLblAndFieldPositions(int initialXPos, int initialYPos) {
+		 int[] relPos = new int[] { initialXPos, initialYPos };
+		 int idxDim = 0;
+
+		 // Update position and label text of the dimension fields based on the selected shape from the Shape dropDown List
+		 while (idxDim < shapeDefFields.size()) {
+			 Textfield dimField = shapeDefFields.get(idxDim);
+
+			 if (!dimField.isVisible()) { break; }
+
+			 Textarea dimLbl = shapeDefAreas.get(idxDim);
+			 shapeDefAreas.set(idxDim, dimLbl.setPosition(relPos[0], relPos[1]) );
+			 relPos = relativePosition(dimLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+
+			 shapeDefFields.set(idxDim, dimField.setPosition(relPos[0], relPos[1]) );
+			 relPos = relativePosition(dimLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+
+			 ++idxDim;
+		 }
+
+		 return relPos;
+	 }
+
+	 /**
+	  * Update how many of the dimension field and label pairs are displayed in
+	  * the create world object window based on which shape type is chosen from the shape dropdown list.
+	  */
+	 private void updateDimLblsAndFields() {
+		 String activeButtonLabel = windowTabs.getActiveButtonName();
+		 String[] lblNames = new String[0];
+
+		 if (activeButtonLabel != null) {
+			 if (activeButtonLabel.equals("Create")) {
+				 ShapeType selectedShape = (ShapeType)dropdownLists[1].getActiveLabelValue();
+
+				 // Define the label text and the number of dimensionos fields to display
+				 if (selectedShape == ShapeType.BOX) {
+					 lblNames = new String[] { "Length:", "Height:", "Width" };
+
+				 } else if (selectedShape == ShapeType.CYLINDER) {
+					 lblNames = new String[] { "Radius", "Height" };
+
+				 } else if (selectedShape == ShapeType.MODEL) {
+					 lblNames = new String[] { "Source:", "Scale:", };
+				 }
+
+			 } else if (activeButtonLabel.equals("Edit")) {
+				 Object val = dropdownLists[4].getActiveLabelValue();
+
+				 if (val instanceof WorldObject) {
+					 Shape s = ((WorldObject)val).getForm();
+
+					 if (s instanceof Box) {
+						 lblNames = new String[] { "Length:", "Height:", "Width" };
+
+					 } else if (s instanceof Cylinder) {
+						 lblNames = new String[] { "Radius", "Height" };
+
+					 } else if (s instanceof ModelShape) {
+						 lblNames = new String[] { "Scale:" };
+					 }
+				 }
+
+			 }
+		 }
+
+		 for (int idxDim = 0; idxDim < shapeDefFields.size(); ++idxDim) {
+			 if (idxDim < lblNames.length) {
+				 // Show a number of dimension fields and labels equal to the value of dimSize
+				 shapeDefAreas.set(idxDim, shapeDefAreas.get(idxDim).setText(lblNames[idxDim]).show());
+				 shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).show());
+
+			 } else {
+				 // Hide remaining dimension fields and labels
+				 shapeDefAreas.set(idxDim, shapeDefAreas.get(idxDim).hide());
+				 shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).hide());
+			 }
+		 }
+	 }
+
+	 /**
+	  * Updates the positions of all the contents of the world object editing window.
+	  */
+	 private void updateEditWindowContentPositions() {
+		 updateDimLblsAndFields();
+
+		 // Object list dropdown and label
+		 int[] relPos = new int[] { offsetX, offsetX };
+		 dropdownLbls[4] = dropdownLbls[4].setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(dropdownLbls[4], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 dropdownLists[4] = (MyDropdownList)dropdownLists[4].setPosition(relPos[0], relPos[1]);
+		 // Dimension label and fields
+		 relPos = relativePosition(dropdownLbls[4], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
+
+		 // X label and field
+		 objOrientationLbls[0] = objOrientationLbls[0].setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(objOrientationLbls[0], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 objOrientationFields[0] = objOrientationFields[0].setPosition(relPos[0], relPos[1]);
+		 // Y label and field
+		 relPos = relativePosition(objOrientationLbls[0], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 objOrientationLbls[1] = objOrientationLbls[1].setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(objOrientationLbls[1], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 objOrientationFields[1] = objOrientationFields[1].setPosition(relPos[0], relPos[1]);
+		 // Z label and field
+		 relPos = relativePosition(objOrientationLbls[1], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 objOrientationLbls[2] = objOrientationLbls[2].setPosition(relPos[0], relPos[1]);;
+
+		 relPos = relativePosition(objOrientationLbls[2], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 objOrientationFields[2] = objOrientationFields[2].setPosition(relPos[0], relPos[1]);
+		 // W label and field
+		 relPos = relativePosition(objOrientationLbls[2], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 objOrientationLbls[3] = objOrientationLbls[3].setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(objOrientationLbls[3], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 objOrientationFields[3] = objOrientationFields[3].setPosition(relPos[0], relPos[1]);
+		 // P label and field
+		 relPos = relativePosition(objOrientationLbls[3], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 objOrientationLbls[4] = objOrientationLbls[4].setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(objOrientationLbls[4], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 objOrientationFields[4] = objOrientationFields[4].setPosition(relPos[0], relPos[1]);
+		 // R label and field
+		 relPos = relativePosition(objOrientationLbls[4], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 objOrientationLbls[5] = objOrientationLbls[5].setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(objOrientationLbls[5], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 objOrientationFields[5] = objOrientationFields[5].setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(objOrientationLbls[5], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+
+		 if (getActiveWorldObject() instanceof Part) {
+			 // Reference fxiture (for Parts only) label and dropdown
+			 dropdownLbls[5] = dropdownLbls[5].setPosition(relPos[0], relPos[1]).show();
+			 relPos = relativePosition(dropdownLbls[5], RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
+
+			 dropdownLists[5] = (MyDropdownList)dropdownLists[5].setPosition(relPos[0], relPos[1]).show();
+			 relPos = relativePosition(dropdownLbls[5], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+
+		 } else {
+			 // Fixtures do not have a reference object
+			 dropdownLbls[5].hide();
+			 dropdownLists[5] = (MyDropdownList)dropdownLists[5].hide();
+		 }
+
+		 // Confirm button
+		 miscButtons[1] = miscButtons[1].setPosition(relPos[0], relPos[1]);
+		 // Delete button
+		 relPos = relativePosition(miscButtons[1], RelativePoint.TOP_RIGHT, offsetX, 0);
+		 miscButtons[3] = miscButtons[3].setPosition(relPos[0], relPos[1]);
+		 // Update window background display
+		 relPos = relativePosition(miscButtons[3], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 background.setBackgroundHeight(relPos[1])
+		 .setHeight(relPos[1])
+		 .show();
+	 }
+
+	 /**
+	  * Update the contents of the two dropdown menus that
+	  * contain world objects.
+	  */
+	 private void updateListContents() {
+
+		 if (RobotRun.getInstance().activeScenario != null) {
+			 dropdownLists[4] = (MyDropdownList)dropdownLists[4].clear();
+			 dropdownLists[5] = (MyDropdownList)dropdownLists[5].clear();
+			 dropdownLists[5].addItem("None", null);
+
+			 for (WorldObject wldObj : RobotRun.getInstance().activeScenario) {
+				 dropdownLists[4].addItem(wldObj.toString(), wldObj);
+
+				 if (wldObj instanceof Fixture) {
+					 // Load all fixtures from the active scenario
+					 dropdownLists[5].addItem(wldObj.toString(), wldObj);
+				 }
+			 }
+			 // Update each dropdownlist's active label
+			 dropdownLists[4].updateActiveLabel();
+			 dropdownLists[5].updateActiveLabel();
+		 }
+
+		 dropdownLists[6] = (MyDropdownList)dropdownLists[6].clear();
+		 for (int idx = 0; idx < RobotRun.getInstance().SCENARIOS.size(); ++idx) {
+			 // Load all scenario indices
+			 Scenario s = RobotRun.getInstance().SCENARIOS.get(idx);
+			 dropdownLists[6].addItem(s.getName(), s);
+		 }
+		 dropdownLists[6].updateActiveLabel();
+	 }
+
+	 /**
+	  * Updates the positions of all the contents of the scenario window.
+	  */
+	 public void updateScenarioWindowContentPositions() {
+		 // New scenario name label
+		 int[] relPos = new int[] {offsetX, offsetX };
+		 scenarioNameLbl = scenarioNameLbl.setPosition(relPos[0], relPos[1]);
+		 // New scenario name field
+		 relPos = relativePosition(scenarioNameLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 scenarioName = scenarioName.setPosition(relPos[0], relPos[1]);
+		 // New scenario button
+		 relPos = relativePosition(scenarioNameLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 miscButtons[4] = miscButtons[4].setPosition(relPos[0], relPos[1]);
+		 // Scenario dropdown list and label
+		 relPos = relativePosition(miscButtons[4], RelativePoint.BOTTOM_LEFT, 0, 2 * distBtwFieldsY);
+		 dropdownLbls[6] = dropdownLbls[6].setPosition(relPos[0], relPos[1]);
+
+		 relPos = relativePosition(dropdownLbls[6], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 dropdownLists[6] = (MyDropdownList)dropdownLists[6].setPosition(relPos[0], relPos[1]);
+		 // Save scenario button
+		 relPos = relativePosition(dropdownLbls[6], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 miscButtons[5] = miscButtons[5].setPosition(relPos[0], relPos[1]);
+		 // Load scenario button
+		 relPos = relativePosition(miscButtons[5], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 miscButtons[6] = miscButtons[6].setPosition(relPos[0], relPos[1]);
+		 // Toggle Object display button
+		 relPos = relativePosition(miscButtons[6], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 miscButtons[7] = miscButtons[7].setPosition(relPos[0], relPos[1]);
+
+		 // Update button color based on the value of the object display flag
+		 if (!RobotRun.getInstance().showOOBs) {
+			 miscButtons[7].setColorBackground(buttonActColor);
+
+		 } else {
+			 miscButtons[7].setColorBackground(buttonDefColor);
+		 }
+
+		 // Update window background display
+		 relPos = relativePosition(miscButtons[7], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 background.setBackgroundHeight(relPos[1])
+		 .setHeight(relPos[1])
+		 .show();
+	 }
+
+	 /**
+	  * Updates the positions of all the elements in the active window
+	  * based on the current button tab that is active.
+	  */
+	 public void updateWindowContentsPositions() {
+		 String windowState = windowTabs.getActiveButtonName();
+
+		 if (windowState == null || windowState.equals("Hide")) {
+			 // Window is hidden
+			 background.hide();
+			 for (Button b : cameraViews) {
+				 b.hide();
+			 }
+
+			 return;
+
+		 } else if (windowState.equals("Create")) {
+			 // Create window
+			 updateCreateWindowContentPositions();
+
+		 } else if (windowState.equals("Edit")) {
+			 // Edit window
+			 updateEditWindowContentPositions();
+
+		 } else if (windowState.equals("Scenario")) {
+			 // Scenario window
+			 updateScenarioWindowContentPositions();
+		 }
+
+		 // Update the camera view buttons
+		 int[] relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_RIGHT, offsetX, 0);
+
+		 for (Button b : cameraViews) {  
+			 b.setPosition(relPos[0], relPos[1]).show();
+			 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 }
+
+		 updateListContents();
+	 }
+
+	 /**
+	  * Updates the current active window display based on the selected button on
+	  * windowTabs. Due to some problems with hiding groups with the ControlP5
+	  * object, when a new window is brought up a large white sphere is drawn oer
+	  * the screen to clear the image of the previous window.
+	  */
+	 public void updateWindowDisplay() {
+		 String windowState = windowTabs.getActiveButtonName();
+
+		 if (windowState == null || windowState.equals("Hide")) {
+			 // Hide any window
+			 RobotRun.getInstance().g1.hide();
+			 setGroupVisible(createObjWindow, false);
+			 setGroupVisible(editObjWindow, false);
+			 setGroupVisible(sharedElements, false);
+			 setGroupVisible(scenarioWindow, false);
+
+			 updateWindowContentsPositions();
+
+		 } else if (windowState.equals("Pendant")) {
+			 // Show pendant
+			 setGroupVisible(createObjWindow, false);
+			 setGroupVisible(editObjWindow, false);
+			 setGroupVisible(sharedElements, false);
+			 setGroupVisible(scenarioWindow, false);
+
+			 if (!RobotRun.getInstance().g1.isVisible()) {
+				 updateWindowContentsPositions();
+			 }
+
+			 RobotRun.getInstance().g1.show();
+
+		 } else if (windowState.equals("Create")) {
+			 // Show world object creation window
+			 RobotRun.getInstance().g1.hide();
+			 setGroupVisible(editObjWindow, false);
+			 setGroupVisible(scenarioWindow, false);
+
+			 if (!createObjWindow.isVisible()) {
+				 setGroupVisible(createObjWindow, true);
+				 setGroupVisible(sharedElements, true);
+
+				 clearAllInputFields();
+				 updateWindowContentsPositions();
+				 updateListContents();
+				 resetListLabels();
+			 }
+
+		 } else if (windowState.equals("Edit")) {
+			 // Show world object edit window
+			 RobotRun.getInstance().g1.hide();
+			 setGroupVisible(createObjWindow, false);
+			 setGroupVisible(scenarioWindow, false);
+
+			 if (!editObjWindow.isVisible()) {
+				 setGroupVisible(editObjWindow, true);
+				 setGroupVisible(sharedElements, true);
+
+				 clearAllInputFields();
+				 updateWindowContentsPositions();
+				 updateListContents();
+				 resetListLabels();
+			 }
+
+		 } else if (windowState.equals("Scenario")) {
+			 // Show scenario creating/saving/loading
+			 RobotRun.getInstance().g1.hide();
+			 setGroupVisible(createObjWindow, false);
+			 setGroupVisible(editObjWindow, false);
+
+			 if (!scenarioWindow.isVisible()) {
+				 setGroupVisible(scenarioWindow, true);
+
+				 clearAllInputFields();
+				 updateWindowContentsPositions();
+				 updateListContents();
+				 resetListLabels();
+			 }
+		 }
 	 }
 }

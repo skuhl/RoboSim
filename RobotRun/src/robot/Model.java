@@ -46,6 +46,21 @@ public class Model {
 		loadSTLModel(filename, col, scaleVal);
 	}
 
+	public boolean anglePermitted(int idx, float angle) {
+
+		if(jointRanges[idx].x < jointRanges[idx].y) {
+			// Joint range does not overlap TWO_PI
+			return angle >= jointRanges[idx].x && angle < jointRanges[idx].y;
+		} else {
+			// Joint range overlaps TWO_PI
+			return !(angle >= jointRanges[idx].y && angle < jointRanges[idx].x);
+		}
+	}
+
+	public void draw() {
+		RobotRun.getInstance().shape(mesh);
+	}
+
 	public void loadSTLModel(String filename, int col, float scaleVal) {
 		ArrayList<Triangle> triangles = new ArrayList<Triangle>();
 		byte[] data = RobotRun.getInstance().loadBytes(filename);
@@ -88,20 +103,5 @@ public class Model {
 		}
 		mesh.endShape();
 	} // end loadSTLModel
-
-	public boolean anglePermitted(int idx, float angle) {
-
-		if(jointRanges[idx].x < jointRanges[idx].y) {
-			// Joint range does not overlap TWO_PI
-			return angle >= jointRanges[idx].x && angle < jointRanges[idx].y;
-		} else {
-			// Joint range overlaps TWO_PI
-			return !(angle >= jointRanges[idx].y && angle < jointRanges[idx].x);
-		}
-	}
-
-	public void draw() {
-		RobotRun.getInstance().shape(mesh);
-	}
 
 } // end Model class

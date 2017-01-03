@@ -13,6 +13,14 @@ public class RegisterFile {
 	// IO Registers
 	private static Register[] IO_REG = new IORegister[IO_REG_SIZE];
 	
+	public static DataRegister getDReg(int idx) { return (DataRegister)DAT_REG[idx]; }
+	
+	public static Register[] getDRegFile() { return DAT_REG; }
+	public static IORegister getIOReg(int idx) { return (IORegister)IO_REG[idx]; }
+	public static Register[] getIORegFile() { return IO_REG; }
+	
+	public static PositionRegister getPReg(int idx) { return (PositionRegister)GPOS_REG[idx]; }
+	public static Register[] getPRegFile() { return GPOS_REG; }
 	public static void initRegisterFile() {
 		for(int i = 0; i < REG_SIZE; i += 1) {
 			GPOS_REG[i] = new PositionRegister(i);
@@ -28,16 +36,8 @@ public class RegisterFile {
 		IO_REG[idx++] = new IORegister(idx, (EEType.WIELDER).name(), Fields.OFF);
 	}
 	
-	public static PositionRegister getPReg(int idx) { return (PositionRegister)GPOS_REG[idx]; }
-	public static DataRegister getDReg(int idx) { return (DataRegister)DAT_REG[idx]; }
-	public static IORegister getIOReg(int idx) { return (IORegister)IO_REG[idx]; }
-	
-	public static Register[] getPRegFile() { return GPOS_REG; }
-	public static Register[] getDRegFile() { return DAT_REG; }
-	public static Register[] getIORegFile() { return IO_REG; }
-	
-	public static PositionRegister setPReg(int idx, PositionRegister r) { return (PositionRegister)(GPOS_REG[idx] = r); }
 	public static DataRegister setDReg(int idx, DataRegister r) { return (DataRegister)(DAT_REG[idx] = r); }
+	public static PositionRegister setPReg(int idx, PositionRegister r) { return (PositionRegister)(GPOS_REG[idx] = r); }
 	public static int toggleIOReg(int idx) {
 		if(((IORegister)IO_REG[idx]).state == Fields.OFF) {
 			((IORegister)IO_REG[idx]).state = Fields.ON;

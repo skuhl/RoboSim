@@ -23,14 +23,14 @@ public class RegisterOp implements Operand {
 		listIdx = i;
 	}
 
-	public Object getValue() {
-		return RegisterFile.getDReg(listIdx);
+	public Operand clone() {
+		return new RegisterOp(this.robotRun, listIdx);
 	}
 
 	public int getIdx() { return listIdx; }
 
-	public Operand clone() {
-		return new RegisterOp(this.robotRun, listIdx);
+	public Object getValue() {
+		return RegisterFile.getDReg(listIdx);
 	}
 
 	public String toString() {

@@ -7,10 +7,10 @@ import robot.RobotRun;
  * and the methods to manipulate apply the Camera's transformation.
  */
 public class Camera {
+	private static final float MAX_SCALE = 8f;
 	private PVector position,
 	// Rotations in X, Y, Z in radians
 	orientation;
-	private static final float MAX_SCALE = 8f;
 	private float scale;
 
 	/**
@@ -45,18 +45,31 @@ public class Camera {
 	}
 
 	/**
-	 * Return the camera perspective to the
-	 * default position, orientation and scale.
+	 * Change the scaling of the camera.
 	 */
-	public void reset() {
-		position.x = 0;
-		position.y = 0;
-		position.z = -500f;
-		orientation.x = 0f;
-		orientation.y = 0f;
-		orientation.z = 0f;
-		scale = 2f;
+	public void changeScale(float multiplier) {
+		scale = RobotRun.max(0.25f, RobotRun.min(scale * multiplier, MAX_SCALE));
 	}
+
+	/**
+	 * Returns an independent replica of the Camera object.
+	 */
+	public Camera clone() {
+		Camera copy = new Camera();
+		// Copy position, orientation, and scale
+		copy.position = position.copy();
+		copy.orientation = orientation.copy();
+		copy.scale = scale;
+
+		return copy;
+	}
+
+	public PVector getOrientation() { return orientation; }
+
+	// Getters for the Camera's position, orientation, and scale
+	public PVector getPosition() { return position; }
+
+	public float getScale() { return scale; }
 
 	/**
 	 * Change the camera's position by the given values.
@@ -73,6 +86,19 @@ public class Camera {
 	}
 
 	/**
+	 * Return the camera perspective to the
+	 * default position, orientation and scale.
+	 */
+	public void reset() {
+		position.x = 0;
+		position.y = 0;
+		position.z = -500f;
+		orientation.x = 0f;
+		orientation.y = 0f;
+		orientation.z = 0f;
+		scale = 2f;
+	}
+	/**
 	 * Change the camera's rotation by the given values.
 	 */
 	public void rotate(float w, float p, float r) {
@@ -84,14 +110,6 @@ public class Camera {
 		orientation.y = RobotRun.mod2PI(orientation.y);
 		orientation.z = 0f;//mod2PI(orientation.z);
 	}
-
-	/**
-	 * Change the scaling of the camera.
-	 */
-	public void changeScale(float multiplier) {
-		scale = RobotRun.max(0.25f, RobotRun.min(scale * multiplier, MAX_SCALE));
-	}
-
 	/**
 	 * Returns the Camera's position, orientation, and scale
 	 * in the form of a formatted String array, where each
@@ -124,22 +142,4 @@ public class Camera {
 
 		return fields;
 	}
-
-	/**
-	 * Returns an independent replica of the Camera object.
-	 */
-	public Camera clone() {
-		Camera copy = new Camera();
-		// Copy position, orientation, and scale
-		copy.position = position.copy();
-		copy.orientation = orientation.copy();
-		copy.scale = scale;
-
-		return copy;
-	}
-
-	// Getters for the Camera's position, orientation, and scale
-	public PVector getPosition() { return position; }
-	public PVector getOrientation() { return orientation; }
-	public float getScale() { return scale; }
 }

@@ -25,16 +25,66 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 
 	/**
-	 * Only adds the given world objects that are non-null and do
-	 * not already exist in the scenario.
+	 * Adds a number suffix to the given name, so that the name is unique amonst the names of all the other world
+	 * objects in the given list. So, if the given name is 'block' and objects with names 'block', 'block1', and
+	 * 'block2' exist in wldObjList, then the new name will be 'block3'.
 	 * 
-	 * @param newObjs  The world objects to add to the scenario
+	 * @param originName  The origin name of the new world object
+	 * @param eldObjList  The list of world objects, of wixh to check names
+	 * @returning         A unique name amongst the names of the existing world objects in the given list, that
+	 *                    contains the original name as a prefix
 	 */
-	public void addWorldObjects(WorldObject... newObjs) {
+	private <T extends WorldObject> String addSuffixForDuplicateName(String originName, ArrayList<T> wldObjList) {
+		int nameLen = originName.length();
+		ArrayList<Integer> suffixes = new ArrayList<Integer>();
 
-		for (WorldObject obj : newObjs) {
-			addWorldObject(obj);
+		for (T wldObj : wldObjList) {
+			String objName = wldObj.getName();
+			int objNameLen = objName.length();
+
+			if (objNameLen > nameLen) {
+				String namePrefix = objName.substring(0, nameLen),
+						nameSuffix = objName.substring(nameLen, objNameLen);
+				// Find all strings that have the given name as a prefix and an integer value suffix
+				if (namePrefix.equals(originName) && Pattern.matches("[0123456789]+", nameSuffix)) {
+					int suffix = Integer.parseInt(nameSuffix),
+							insertIdx = 0;
+					// Store suffixes in increasing order
+					while (insertIdx < suffixes.size() && suffix > suffixes.get(insertIdx)) {
+						++insertIdx;
+					}
+
+					if (insertIdx == suffixes.size()) {
+						suffixes.add(suffix);
+					} else {
+						suffixes.add(insertIdx, suffix);
+					}
+				}
+			}
 		}
+		// Determine the minimum suffix value
+		int suffix = 0;
+
+		if (suffixes.size() == 1 && suffixes.get(0) == 0) {
+			// If the only stirng with a suffix has a suffix of '0'
+			suffix = 1;
+
+		} else if (suffixes.size() >= 2) {
+			int idx = 0;
+
+			while ((idx + 1) < suffixes.size()) {
+				// Find the first occurance of a gap between to adjacent suffix values (if any)
+				if ((suffixes.get(idx + 1) - suffixes.get(idx)) > 1) {
+					break;
+				}
+
+				++idx;
+			}
+
+			suffix = suffixes.get(idx) + 1;
+		}
+		// Concatenate the origin name with the new suffix
+		return String.format("%s%d", originName, suffix);
 	}
 
 	/**
@@ -82,24 +132,102 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 
 	/**
-	 * Attempt to remove the given set of world objects from the scenario.
+	 * Only adds the given world objects that are non-null and do
+	 * not already exist in the scenario.
 	 * 
-	 * @param tgtObjs  The objects to remove from the scenario
-	 * @returning      The number of the given objects that were successfully
-	 *                 removed from the scenario
+	 * @param newObjs  The world objects to add to the scenario
 	 */
-	public int removeWorldObjects(WorldObject... tgtObjs) {
-		int objsRemoved = 0;
+	public void addWorldObjects(WorldObject... newObjs) {
 
-		for (WorldObject tgt : tgtObjs) {
-			int ret = removeWorldObject(tgt);
-			// Keep track of the number of given targets that were successfully removed
-			if (ret == 0 || ret == 2) {
-				++objsRemoved;
+		for (WorldObject obj : newObjs) {
+			addWorldObject(obj);
+		}
+	}
+
+	@Override
+	public Object clone() {
+		Scenario copy = new Scenario(name);
+		ArrayList<Fixture> fixtures = new ArrayList<Fixture>();
+		ArrayList<Part> parts = new ArrayList<Part>();
+
+
+		for (WorldObject obj : this) {
+			// Add copies of all the objects in this scenario
+			WorldObject newObj = (WorldObject)obj.clone();
+			copy.addWorldObject(newObj);
+			// Keep track of all fixtures and parts with non-null references
+			if (newObj instanceof Fixture) {
+				fixtures.add( (Fixture)newObj );
+
+			} else if (newObj instanceof Part) {
+				Part p = (Part)newObj;
+
+				if (p.getFixtureRef() != null) {
+					parts.add( (Part)newObj );
+				}
 			}
 		}
 
-		return objsRemoved;
+		// Update fixture references of new parts
+		for (Part p : parts) {
+			String refName = p.getFixtureRef().getName();
+			p.setFixtureRef(null);
+
+			for (Fixture f : fixtures) {
+				if (f.getName().equals( refName )) {
+					p.setFixtureRef(f);
+				}
+			}
+		}
+
+		return copy;
+	}
+
+	/**
+	 * Attempts to find the world object, in the given list, with the given name. If no such object exists,
+	 * then null is returned, otherwise the object with the given name is returned.
+	 * 
+	 * @param tgtName     The name of the world object to find
+	 * @param wldObjList  The list of world objects to check
+	 * @returning         The object with the given name, if it exists in the given list, or null.
+	 */
+	private <T extends WorldObject> WorldObject findObjectWithName(String tgtName, ArrayList<T> wldObjList) {
+
+		if (tgtName != null && wldObjList != null) {
+
+			for (T obj : wldObjList) {
+				// Determine if the object exists
+				if (obj != null && obj.getName().equals(tgtName)) {
+					return obj;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	public String getName() { return name; }
+
+	/**
+	 * Return the world object that corresponds to the given index in
+	 * the list of world objects contained in this scenario, or null
+	 * if the index is invalid.
+	 * 
+	 * @param idx  A valid index
+	 * @returning  The world object, at the given index in the list,
+	 *             or null
+	 */
+	public WorldObject getWorldObject(int idx) {
+		if (idx >= 0 && idx < size()) {
+			return objList.get(idx);
+		}
+
+		return null;
+	}
+
+	@Override
+	public Iterator<WorldObject> iterator() {
+		return objList.iterator();
 	}
 
 	/**
@@ -142,20 +270,24 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 
 	/**
-	 * Return the world object that corresponds to the given index in
-	 * the list of world objects contained in this scenario, or null
-	 * if the index is invalid.
+	 * Attempt to remove the given set of world objects from the scenario.
 	 * 
-	 * @param idx  A valid index
-	 * @returning  The world object, at the given index in the list,
-	 *             or null
+	 * @param tgtObjs  The objects to remove from the scenario
+	 * @returning      The number of the given objects that were successfully
+	 *                 removed from the scenario
 	 */
-	public WorldObject getWorldObject(int idx) {
-		if (idx >= 0 && idx < size()) {
-			return objList.get(idx);
+	public int removeWorldObjects(WorldObject... tgtObjs) {
+		int objsRemoved = 0;
+
+		for (WorldObject tgt : tgtObjs) {
+			int ret = removeWorldObject(tgt);
+			// Keep track of the number of given targets that were successfully removed
+			if (ret == 0 || ret == 2) {
+				++objsRemoved;
+			}
 		}
 
-		return null;
+		return objsRemoved;
 	}
 
 	/**
@@ -170,6 +302,12 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 			}
 		}
 	}
+
+	public void setName(String newName) { name = newName; }
+	public int size() { return objList.size(); }
+
+	@Override
+	public String toString() { return name; }
 
 	/**
 	 * Updates the collision detection of all the Parts in the scenario,
@@ -259,142 +397,4 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 			wldObj.draw();
 		}
 	}
-
-	/**
-	 * Adds a number suffix to the given name, so that the name is unique amonst the names of all the other world
-	 * objects in the given list. So, if the given name is 'block' and objects with names 'block', 'block1', and
-	 * 'block2' exist in wldObjList, then the new name will be 'block3'.
-	 * 
-	 * @param originName  The origin name of the new world object
-	 * @param eldObjList  The list of world objects, of wixh to check names
-	 * @returning         A unique name amongst the names of the existing world objects in the given list, that
-	 *                    contains the original name as a prefix
-	 */
-	private <T extends WorldObject> String addSuffixForDuplicateName(String originName, ArrayList<T> wldObjList) {
-		int nameLen = originName.length();
-		ArrayList<Integer> suffixes = new ArrayList<Integer>();
-
-		for (T wldObj : wldObjList) {
-			String objName = wldObj.getName();
-			int objNameLen = objName.length();
-
-			if (objNameLen > nameLen) {
-				String namePrefix = objName.substring(0, nameLen),
-						nameSuffix = objName.substring(nameLen, objNameLen);
-				// Find all strings that have the given name as a prefix and an integer value suffix
-				if (namePrefix.equals(originName) && Pattern.matches("[0123456789]+", nameSuffix)) {
-					int suffix = Integer.parseInt(nameSuffix),
-							insertIdx = 0;
-					// Store suffixes in increasing order
-					while (insertIdx < suffixes.size() && suffix > suffixes.get(insertIdx)) {
-						++insertIdx;
-					}
-
-					if (insertIdx == suffixes.size()) {
-						suffixes.add(suffix);
-					} else {
-						suffixes.add(insertIdx, suffix);
-					}
-				}
-			}
-		}
-		// Determine the minimum suffix value
-		int suffix = 0;
-
-		if (suffixes.size() == 1 && suffixes.get(0) == 0) {
-			// If the only stirng with a suffix has a suffix of '0'
-			suffix = 1;
-
-		} else if (suffixes.size() >= 2) {
-			int idx = 0;
-
-			while ((idx + 1) < suffixes.size()) {
-				// Find the first occurance of a gap between to adjacent suffix values (if any)
-				if ((suffixes.get(idx + 1) - suffixes.get(idx)) > 1) {
-					break;
-				}
-
-				++idx;
-			}
-
-			suffix = suffixes.get(idx) + 1;
-		}
-		// Concatenate the origin name with the new suffix
-		return String.format("%s%d", originName, suffix);
-	}
-
-	/**
-	 * Attempts to find the world object, in the given list, with the given name. If no such object exists,
-	 * then null is returned, otherwise the object with the given name is returned.
-	 * 
-	 * @param tgtName     The name of the world object to find
-	 * @param wldObjList  The list of world objects to check
-	 * @returning         The object with the given name, if it exists in the given list, or null.
-	 */
-	private <T extends WorldObject> WorldObject findObjectWithName(String tgtName, ArrayList<T> wldObjList) {
-
-		if (tgtName != null && wldObjList != null) {
-
-			for (T obj : wldObjList) {
-				// Determine if the object exists
-				if (obj != null && obj.getName().equals(tgtName)) {
-					return obj;
-				}
-			}
-		}
-
-		return null;
-	}
-
-	@Override
-	public Iterator<WorldObject> iterator() {
-		return objList.iterator();
-	}
-
-	public int size() { return objList.size(); }
-
-	public void setName(String newName) { name = newName; }
-	public String getName() { return name; }
-
-	@Override
-	public Object clone() {
-		Scenario copy = new Scenario(name);
-		ArrayList<Fixture> fixtures = new ArrayList<Fixture>();
-		ArrayList<Part> parts = new ArrayList<Part>();
-
-
-		for (WorldObject obj : this) {
-			// Add copies of all the objects in this scenario
-			WorldObject newObj = (WorldObject)obj.clone();
-			copy.addWorldObject(newObj);
-			// Keep track of all fixtures and parts with non-null references
-			if (newObj instanceof Fixture) {
-				fixtures.add( (Fixture)newObj );
-
-			} else if (newObj instanceof Part) {
-				Part p = (Part)newObj;
-
-				if (p.getFixtureRef() != null) {
-					parts.add( (Part)newObj );
-				}
-			}
-		}
-
-		// Update fixture references of new parts
-		for (Part p : parts) {
-			String refName = p.getFixtureRef().getName();
-			p.setFixtureRef(null);
-
-			for (Fixture f : fixtures) {
-				if (f.getName().equals( refName )) {
-					p.setFixtureRef(f);
-				}
-			}
-		}
-
-		return copy;
-	}
-
-	@Override
-	public String toString() { return name; }
 }

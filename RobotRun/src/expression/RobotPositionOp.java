@@ -39,6 +39,10 @@ public class RobotPositionOp implements Operand {
 		isCartesian = cartesian;
 	}
 
+	public Operand clone() {
+		return new RobotPositionOp(this.robotRun, valIdx, isCartesian);
+	}
+
 	/**
 	 * Return the current position of the Robot or a specific value of the current position of
 	 * the Robot
@@ -54,10 +58,6 @@ public class RobotPositionOp implements Operand {
 			// Return a specific value of the point
 			return pt.getValues()[valIdx];
 		}
-	}
-
-	public Operand clone() {
-		return new RobotPositionOp(this.robotRun, valIdx, isCartesian);
 	}
 
 	public String toString() {

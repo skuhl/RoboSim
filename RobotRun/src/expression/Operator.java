@@ -20,7 +20,35 @@ public enum Operator implements ExpressionElement {
 	NOT("!", BOOL_OP),
 	UNINIT("_", -1);
 
+	/**
+	 * Returns a specific operator based on the id value given. Integers 0 through
+	 * 16 correspond to 17 of the operator types; any other integer value
+	 * corresponds to the uninitialized operator.
+	 */
+	public static Operator getOpFromID(int id) {
+		switch(id) {
+		case 0:   return Operator.ADDTN;
+		case 1:   return Operator.SUBTR;
+		case 2:   return Operator.MULT;
+		case 3:   return Operator.DIV;
+		case 4:   return Operator.MOD;
+		case 5:   return Operator.INTDIV;
+		case 6:   return Operator.PAR_OPEN;
+		case 7:   return Operator.PAR_CLOSE;
+		case 8:   return Operator.EQUAL;
+		case 9:   return Operator.NEQUAL;
+		case 10:  return Operator.GRTR;
+		case 11:  return Operator.LESS;
+		case 12:  return Operator.GREQ;
+		case 13:  return Operator.LSEQ;
+		case 14:  return Operator.AND;
+		case 15:  return Operator.OR;
+		case 16:  return Operator.NOT;
+		default:  return Operator.UNINIT;
+		}
+	}
 	public final String symbol;
+
 	public final int type;
 
 	private Operator(String s, int t) {
@@ -56,34 +84,6 @@ public enum Operator implements ExpressionElement {
 		case OR:        return 15;
 		case NOT:       return 16;
 		default:        return 17;
-		}
-	}
-
-	/**
-	 * Returns a specific operator based on the id value given. Integers 0 through
-	 * 16 correspond to 17 of the operator types; any other integer value
-	 * corresponds to the uninitialized operator.
-	 */
-	public static Operator getOpFromID(int id) {
-		switch(id) {
-		case 0:   return Operator.ADDTN;
-		case 1:   return Operator.SUBTR;
-		case 2:   return Operator.MULT;
-		case 3:   return Operator.DIV;
-		case 4:   return Operator.MOD;
-		case 5:   return Operator.INTDIV;
-		case 6:   return Operator.PAR_OPEN;
-		case 7:   return Operator.PAR_CLOSE;
-		case 8:   return Operator.EQUAL;
-		case 9:   return Operator.NEQUAL;
-		case 10:  return Operator.GRTR;
-		case 11:  return Operator.LESS;
-		case 12:  return Operator.GREQ;
-		case 13:  return Operator.LSEQ;
-		case 14:  return Operator.AND;
-		case 15:  return Operator.OR;
-		case 16:  return Operator.NOT;
-		default:  return Operator.UNINIT;
 		}
 	}
 

@@ -39,8 +39,25 @@ public class CoordinateSystem implements Cloneable {
 				0,                 0,                 0,        1);
 	}
 
-	public void setOrigin(PVector newCenter) {
-		origin = newCenter;
+	@Override
+	public Object clone() {
+		float[][] axesCopy = new float[3][3];
+
+		// Copy axes into axesVectors
+		for (int row = 0; row < 3; ++row) {
+			for (int col = 0; col < 3; ++col) {
+				axesCopy[row][col] = axesVectors[row][col];
+			}
+		}
+
+		return new CoordinateSystem(origin.copy(), axesCopy);
+	}
+
+	/**
+	 * Return this coordinate system's axes in row major order.
+	 */
+	public float[][] getAxes() {
+		return axesVectors;
 	}
 
 	public PVector getOrigin() { return origin; }
@@ -61,24 +78,7 @@ public class CoordinateSystem implements Cloneable {
 		}
 	}
 
-	/**
-	 * Return this coordinate system's axes in row major order.
-	 */
-	public float[][] getAxes() {
-		return axesVectors;
-	}
-
-	@Override
-	public Object clone() {
-		float[][] axesCopy = new float[3][3];
-
-		// Copy axes into axesVectors
-		for (int row = 0; row < 3; ++row) {
-			for (int col = 0; col < 3; ++col) {
-				axesCopy[row][col] = axesVectors[row][col];
-			}
-		}
-
-		return new CoordinateSystem(origin.copy(), axesCopy);
+	public void setOrigin(PVector newCenter) {
+		origin = newCenter;
 	}
 }

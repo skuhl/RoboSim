@@ -13,11 +13,11 @@ public class ConstantOp implements Operand {
 		value = val;
 	}
 
-	public Object getValue() { return new Float(value); }
-
 	public Operand clone() {
 		return new ConstantOp(value);
 	}
+
+	public Object getValue() { return new Float(value); }
 
 	public String toString() {
 		return String.format("%4.3f", value);

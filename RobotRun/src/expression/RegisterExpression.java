@@ -48,6 +48,18 @@ public class RegisterExpression {
 	}
 
 	/**
+	 * Creates an expression with the given set of operands and operators.
+	 */
+	public RegisterExpression(RobotRun robotRun, Object... params) {
+		this.robotRun = robotRun;
+		parameters = new ArrayList<Object>();
+
+		for (Object param : params) {
+			addParameter(param);
+		}
+	}
+
+	/**
 	 * Creates an expression from a String. THe format of the String must strictly
 	 * include only the following substrings, wach separating by only spaces:
 	 * 
@@ -180,14 +192,16 @@ public class RegisterExpression {
 	}
 
 	/**
-	 * Creates an expression with the given set of operands and operators.
+	 * Adds the given parameter to the index in the expression
 	 */
-	public RegisterExpression(RobotRun robotRun, Object... params) {
-		this.robotRun = robotRun;
-		parameters = new ArrayList<Object>();
+	public void addParameter(int idx, Object param) {
 
-		for (Object param : params) {
-			addParameter(param);
+		if (param instanceof SubExpression) {
+			// Add a copy of the given SubExpression
+			parameters.add(idx, ((SubExpression)param).clone() );
+
+		} else if (param instanceof Operand || param instanceof Operator) {
+			parameters.add(idx, param);
 		}
 	}
 
@@ -206,42 +220,24 @@ public class RegisterExpression {
 	}
 
 	/**
-	 * Adds the given parameter to the index in the expression
+	 * Copies the current expression (cloning sub expressions) and
+	 * returns the a new Expression with the duplicate set of parameters.
+	 * 
+	 * @returning  A copy of the this expression
 	 */
-	public void addParameter(int idx, Object param) {
+	public RegisterExpression clone() {
+		RegisterExpression copy = new RegisterExpression(robotRun);
 
-		if (param instanceof SubExpression) {
-			// Add a copy of the given SubExpression
-			parameters.add(idx, ((SubExpression)param).clone() );
+		for (Object param : parameters) {
 
-		} else if (param instanceof Operand || param instanceof Operator) {
-			parameters.add(idx, param);
-		}
-	}
-
-	/**
-	 * Sets the parameter at the given index to the given
-	 * new pararmeter, in the expression.
-	 */
-	public Object setParameter(int idx, Object param) {
-		Object oldVal = parameters.get(idx);
-
-		if (param instanceof SubExpression) {
-			// Add a copy of the given SubExpression
-			parameters.set(idx, ((SubExpression)param).clone() );
-
-		} else if (param instanceof Operand || param instanceof Operator) {
-			parameters.set(idx, param);
+			if (param instanceof Operand) {
+				copy.addParameter(((Operand)param).clone());
+			} else {
+				copy.addParameter(param);
+			}
 		}
 
-		return oldVal;
-	}
-
-	/**
-	 * Removes the parameter at the given index from the expression
-	 */
-	public Object removeParameter(int idx) {
-		return parameters.remove(idx);
+		return copy;
 	}
 
 	/**
@@ -356,6 +352,21 @@ public class RegisterExpression {
 		}
 	}
 
+	private Float evaluateFloatOperation(Float a, Float b, Operator op) {
+		// Float-to-Float operations
+		switch(op) {
+		case ADDTN:  return a + b;
+		case SUBTR:  return a - b;
+		case MULT:   return a * b;
+		case DIV:    return a / b;
+		case MOD:    return a % b;
+		case INTDIV: return new Float(a.intValue() / b.intValue());
+		default:
+		}
+		// Illegal operator
+		throw new ExpressionEvaluationException(5);
+	}
+
 	/**
 	 * Evaluate the given parameters with the given operation. The only valid parameters are floating-point values
 	 * and int arrays. The integer arrays should singeltons (for Registers) or tripletons (for Position Registers
@@ -381,21 +392,6 @@ public class RegisterExpression {
 		throw new ExpressionEvaluationException(4);
 	}
 
-	private Float evaluateFloatOperation(Float a, Float b, Operator op) {
-		// Float-to-Float operations
-		switch(op) {
-		case ADDTN:  return a + b;
-		case SUBTR:  return a - b;
-		case MULT:   return a * b;
-		case DIV:    return a / b;
-		case MOD:    return a % b;
-		case INTDIV: return new Float(a.intValue() / b.intValue());
-		default:
-		}
-		// Illegal operator
-		throw new ExpressionEvaluationException(5);
-	}
-
 	private RegStmtPoint evaluePointOperation(RegStmtPoint a, RegStmtPoint b, Operator op) {
 		// Point-to-Point operations
 		switch(op) {
@@ -413,6 +409,47 @@ public class RegisterExpression {
 	 * Returns the number of operators AND operands in the expression
 	 */
 	public int parameterSize() { return parameters.size(); }
+
+	/**
+	 * Removes the parameter at the given index from the expression
+	 */
+	public Object removeParameter(int idx) {
+		return parameters.remove(idx);
+	}
+
+	/**
+	 * Sets the parameter at the given index to the given
+	 * new pararmeter, in the expression.
+	 */
+	public Object setParameter(int idx, Object param) {
+		Object oldVal = parameters.get(idx);
+
+		if (param instanceof SubExpression) {
+			// Add a copy of the given SubExpression
+			parameters.set(idx, ((SubExpression)param).clone() );
+
+		} else if (param instanceof Operand || param instanceof Operator) {
+			parameters.set(idx, param);
+		}
+
+		return oldVal;
+	}
+
+	public String toString() {
+		String expressionString = new String();
+		ArrayList<String> paramSet = toStringArrayList();
+
+		for (int pdx = 0; pdx < paramSet.size(); ++pdx) {
+			// Combine the list of parameter Strings, separating each by a single space
+			expressionString += paramSet.get(pdx);
+
+			if (pdx < (paramSet.size() - 1)) {
+				expressionString += " ";
+			}
+		}
+
+		return expressionString;
+	}
 
 	/**
 	 * Returns a list of the parameters in the expression, each in the
@@ -433,42 +470,5 @@ public class RegisterExpression {
 		}
 
 		return paramList;
-	}
-
-	/**
-	 * Copies the current expression (cloning sub expressions) and
-	 * returns the a new Expression with the duplicate set of parameters.
-	 * 
-	 * @returning  A copy of the this expression
-	 */
-	public RegisterExpression clone() {
-		RegisterExpression copy = new RegisterExpression(robotRun);
-
-		for (Object param : parameters) {
-
-			if (param instanceof Operand) {
-				copy.addParameter(((Operand)param).clone());
-			} else {
-				copy.addParameter(param);
-			}
-		}
-
-		return copy;
-	}
-
-	public String toString() {
-		String expressionString = new String();
-		ArrayList<String> paramSet = toStringArrayList();
-
-		for (int pdx = 0; pdx < paramSet.size(); ++pdx) {
-			// Combine the list of parameter Strings, separating each by a single space
-			expressionString += paramSet.get(pdx);
-
-			if (pdx < (paramSet.size() - 1)) {
-				expressionString += " ";
-			}
-		}
-
-		return expressionString;
 	}
 }

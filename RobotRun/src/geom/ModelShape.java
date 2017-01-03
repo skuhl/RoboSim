@@ -48,6 +48,36 @@ public class ModelShape extends Shape {
 		setDim(scale, DimType.SCALE);
 	}
 
+	@Override
+	public Object clone() {
+		// Created from source file
+		return new ModelShape(srcFilePath, getFillValue(), scale);
+	}
+
+	public void draw() {
+		RobotRun.getInstance().pushMatrix();
+		// Draw shape, where its center is at (0, 0, 0)
+		RobotRun.getInstance().translate(centerOffset.x, centerOffset.y, centerOffset.z);
+
+		RobotRun.getInstance().shape(form);
+
+		RobotRun.getInstance().popMatrix();
+	}
+
+	@Override
+	public float getDim(DimType dim) {
+		switch(dim) {
+		// Determine dimension based on the scale
+		case LENGTH: return scale * (baseDims.x);
+		case HEIGHT: return scale * (baseDims.y);
+		case WIDTH:  return scale * (baseDims.z);
+		case SCALE:  return scale;
+		default:     return -1f;
+		}
+	}
+
+	public String getSourcePath() { return srcFilePath; }
+
 	/**
 	 * Calculates the maximum length, height, and width of this shape as well as the center
 	 * offset of the shape. The length, height, and width are based off of the maximum and
@@ -93,16 +123,6 @@ public class ModelShape extends Shape {
 		centerOffset = PVector.add(minimums, PVector.mult(baseDims, 0.5f)).mult(-1);
 	}
 
-	public void draw() {
-		RobotRun.getInstance().pushMatrix();
-		// Draw shape, where its center is at (0, 0, 0)
-		RobotRun.getInstance().translate(centerOffset.x, centerOffset.y, centerOffset.z);
-
-		RobotRun.getInstance().shape(form);
-
-		RobotRun.getInstance().popMatrix();
-	}
-
 	@Override
 	public void setDim(Float newVal, DimType dim) {
 		switch(dim) {
@@ -115,25 +135,5 @@ public class ModelShape extends Shape {
 
 		default:
 		}
-	}
-
-	@Override
-	public float getDim(DimType dim) {
-		switch(dim) {
-		// Determine dimension based on the scale
-		case LENGTH: return scale * (baseDims.x);
-		case HEIGHT: return scale * (baseDims.y);
-		case WIDTH:  return scale * (baseDims.z);
-		case SCALE:  return scale;
-		default:     return -1f;
-		}
-	}
-
-	public String getSourcePath() { return srcFilePath; }
-
-	@Override
-	public Object clone() {
-		// Created from source file
-		return new ModelShape(srcFilePath, getFillValue(), scale);
 	}
 }

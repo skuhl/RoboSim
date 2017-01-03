@@ -19,17 +19,17 @@ public class Fixture extends WorldObject {
 	}
 
 	/**
-	 * Create a box object with the given colors and dimensions
-	 */
-	public Fixture(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
-		super(n, new Box(fill, strokeVal, len, hgt, wdh));
-	}
-
-	/**
 	 * Creates a cylinder object with the given colors and dimensions.
 	 */
 	public Fixture(String n, int fill, int strokeVal, float rad, float hgt) {
 		super(n, new Cylinder(fill, strokeVal, rad, hgt));
+	}
+
+	/**
+	 * Create a box object with the given colors and dimensions
+	 */
+	public Fixture(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
+		super(n, new Box(fill, strokeVal, len, hgt, wdh));
 	}
 
 	/**
@@ -46,6 +46,11 @@ public class Fixture extends WorldObject {
 		super(n, s, cs);
 	}
 
+	@Override
+	public Object clone() {
+		return new Fixture(getName(), (Shape)getForm().clone(), (CoordinateSystem)localOrientation.clone());
+	}
+
 	/**
 	 * Applies the inverse of this Fixture's Coordinate System's transformation matrix to the matrix stack.
 	 */
@@ -57,10 +62,5 @@ public class Fixture extends WorldObject {
 				tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[1][3],
 				tMatrix[0][2], tMatrix[1][2], tMatrix[2][2], tMatrix[2][3],
 				0,             0,             0,             1);
-	}
-
-	@Override
-	public Object clone() {
-		return new Fixture(getName(), (Shape)getForm().clone(), (CoordinateSystem)localOrientation.clone());
 	}
 }

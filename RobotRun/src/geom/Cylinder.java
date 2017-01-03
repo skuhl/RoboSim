@@ -25,6 +25,11 @@ public class Cylinder extends Shape {
 		height = hgt;
 	}
 
+	@Override
+	public Object clone() {
+		return new Cylinder(getFillValue(), getStrokeValue(), radius, height);
+	}
+
 	/**
 	 * Assumes the center of the cylinder is halfway between the top and bottom of of the cylinder.
 	 * 
@@ -59,6 +64,16 @@ public class Cylinder extends Shape {
 	}
 
 	@Override
+	public float getDim(DimType dim) {
+		switch(dim) {
+		case RADIUS:  return radius;
+		case HEIGHT:  return height;
+		// Invalid dimension
+		default:      return -1f;
+		}
+	}
+
+	@Override
 	public void setDim(Float newVal, DimType dim) {
 		switch(dim) {
 		case RADIUS:
@@ -73,20 +88,5 @@ public class Cylinder extends Shape {
 
 		default:
 		}
-	}
-
-	@Override
-	public float getDim(DimType dim) {
-		switch(dim) {
-		case RADIUS:  return radius;
-		case HEIGHT:  return height;
-		// Invalid dimension
-		default:      return -1f;
-		}
-	}
-
-	@Override
-	public Object clone() {
-		return new Cylinder(getFillValue(), getStrokeValue(), radius, height);
 	}
 }

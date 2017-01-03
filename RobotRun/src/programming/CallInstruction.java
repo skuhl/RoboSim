@@ -12,6 +12,12 @@ public class CallInstruction extends Instruction {
 		progIdx = pdx;
 	}
 
+	public Instruction clone() {
+		return new CallInstruction(progIdx);
+	}
+
+	// Getters and setters for a call instruction's program id field
+
 	public int execute() {
 		
 		// TODO associate with the correct Robot ID (RID)
@@ -34,27 +40,7 @@ public class CallInstruction extends Instruction {
 
 		return 0;
 	}
-
-	// Getters and setters for a call instruction's program id field
-
 	public int getProgIdx() { return progIdx; }
-	public void setProgIdx(int pdx) { progIdx = pdx; }
-
-	public Instruction clone() {
-		return new CallInstruction(progIdx);
-	}
-
-	public String toString() {
-		return "Call " + progName();
-	}
-
-	public String[] toStringArray() {
-		String[] ret = new String[2];
-		ret[0] = "Call";
-		ret[1] = progName();
-
-		return ret;
-	}
 
 	/**
 	 * Returns the name of the program associated with this call
@@ -67,5 +53,19 @@ public class CallInstruction extends Instruction {
 		}
 
 		return "...";
+	}
+
+	public void setProgIdx(int pdx) { progIdx = pdx; }
+
+	public String toString() {
+		return "Call " + progName();
+	}
+
+	public String[] toStringArray() {
+		String[] ret = new String[2];
+		ret[0] = "Call";
+		ret[1] = progName();
+
+		return ret;
 	}
 }

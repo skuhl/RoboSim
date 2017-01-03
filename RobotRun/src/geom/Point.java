@@ -18,12 +18,6 @@ public class Point  {
 		orientation = new RQuaternion();
 	}
 
-	public Point(PVector pos, RQuaternion orient) {
-		angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
-		position = pos;
-		orientation = orient;
-	}
-
 	public Point(float x, float y, float z, float r, float i, float j, float k,
 			float j1, float j2, float j3, float j4, float j5, float j6) {
 		angles = new float[6];
@@ -37,10 +31,38 @@ public class Point  {
 		angles[5] = j6;
 	}
 
+	public Point(PVector pos, RQuaternion orient) {
+		angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+		position = pos;
+		orientation = orient;
+	}
+
 	public Point(PVector pos, RQuaternion orient, float[] jointAngles) {
 		position = pos;
 		orientation = orient;
 		angles = jointAngles;
+	}
+
+	/**
+	 * Computes and returns the result of the addition of this point with
+	 * another point, 'p.' Does not alter the original values of this point.
+	 */
+	public Point add(Point p) {
+		Point p3 = new Point();
+
+		PVector p3Pos = PVector.add(position, p.position);
+		RQuaternion p3Orient = RQuaternion.mult(orientation, p.orientation);
+		float[] p3Joints = new float[6];
+
+		for(int i = 0; i < 6; i += 1) {
+			p3Joints[i] = angles[i] + p.angles[i];
+		}
+
+		p3.position = p3Pos;
+		p3.orientation = p3Orient;
+		p3.angles = p3Joints;
+
+		return p3;
 	}
 
 	public Point clone() {
@@ -68,6 +90,16 @@ public class Point  {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Negates the current values of the point.
+	 */
+	public Point negate() {
+		position = position.mult(-1);
+		orientation = RQuaternion.scalarMult(-1, orientation);
+		angles = RobotRun.vectorScalarMult(angles, -1);
+		return this;
 	}
 
 	public void setValue(int idx, float value) {
@@ -101,91 +133,6 @@ public class Point  {
 		break;
 		default:
 		}
-	}
-
-	/**
-	 * Computes and returns the result of the addition of this point with
-	 * another point, 'p.' Does not alter the original values of this point.
-	 */
-	public Point add(Point p) {
-		Point p3 = new Point();
-
-		PVector p3Pos = PVector.add(position, p.position);
-		RQuaternion p3Orient = RQuaternion.mult(orientation, p.orientation);
-		float[] p3Joints = new float[6];
-
-		for(int i = 0; i < 6; i += 1) {
-			p3Joints[i] = angles[i] + p.angles[i];
-		}
-
-		p3.position = p3Pos;
-		p3.orientation = p3Orient;
-		p3.angles = p3Joints;
-
-		return p3;
-	}
-
-	/**
-	 * Negates the current values of the point.
-	 */
-	public Point negate() {
-		position = position.mult(-1);
-		orientation = RQuaternion.scalarMult(-1, orientation);
-		angles = RobotRun.vectorScalarMult(angles, -1);
-		return this;
-	}
-
-	/**
-	 * Converts the original toStringArray into a 2x1 String array, where the origin
-	 * values are in the first element and the W, P, R values are in the second
-	 * element (or in the case of a joint angles, J1-J3 on the first and J4-J6 on
-	 * the second), where each element has space buffers.
-	 * 
-	 * @param displayCartesian  whether to display the joint angles or the cartesian
-	 *                          values associated with the point
-	 * @returning               A 2-element String array
-	 */
-	public String[] toLineStringArray(boolean displayCartesian) {
-		String[][] entries;
-
-		if (displayCartesian) {
-			entries = toCartesianStringArray();
-		} else {
-			entries = toJointStringArray();
-		}
-
-
-		String[] line = new String[2];
-		// X, Y, Z with space buffers
-		line[0] = String.format("%-12s %-12s %s", entries[0][0].concat(entries[0][1]),
-				entries[1][0].concat(entries[1][1]), entries[2][0].concat(entries[2][1]));
-		// W, P, R with space buffers
-		line[1] = String.format("%-12s %-12s %s", entries[3][0].concat(entries[3][1]),
-				entries[4][0].concat(entries[4][1]), entries[5][0].concat(entries[5][1]));
-
-		return line;
-	}
-
-	/**
-	 * Returns a String array, whose entries are the joint values of the
-	 * Point with their respective labels (J1-J6).
-	 * 
-	 * @return  A 6x2-element String array
-	 */
-	public String[][] toJointStringArray() {
-		String[][] entries = new String[6][2];
-
-		for(int idx = 0; idx < angles.length; ++idx) {
-			entries[idx][0] = String.format("J%d: ", (idx + 1));
-
-			if (angles == null) {
-				entries[idx][1] = Float.toString(Float.NaN);
-			} else {
-				entries[idx][1] = String.format("%4.3f", angles[idx] * RobotRun.RAD_TO_DEG);
-			}
-		}
-
-		return entries;
 	}
 
 	/**
@@ -231,6 +178,59 @@ public class Point  {
 		entries[5][1] = String.format("%4.3f", angles.y);
 
 		return entries;
+	}
+
+	/**
+	 * Returns a String array, whose entries are the joint values of the
+	 * Point with their respective labels (J1-J6).
+	 * 
+	 * @return  A 6x2-element String array
+	 */
+	public String[][] toJointStringArray() {
+		String[][] entries = new String[6][2];
+
+		for(int idx = 0; idx < angles.length; ++idx) {
+			entries[idx][0] = String.format("J%d: ", (idx + 1));
+
+			if (angles == null) {
+				entries[idx][1] = Float.toString(Float.NaN);
+			} else {
+				entries[idx][1] = String.format("%4.3f", angles[idx] * RobotRun.RAD_TO_DEG);
+			}
+		}
+
+		return entries;
+	}
+
+	/**
+	 * Converts the original toStringArray into a 2x1 String array, where the origin
+	 * values are in the first element and the W, P, R values are in the second
+	 * element (or in the case of a joint angles, J1-J3 on the first and J4-J6 on
+	 * the second), where each element has space buffers.
+	 * 
+	 * @param displayCartesian  whether to display the joint angles or the cartesian
+	 *                          values associated with the point
+	 * @returning               A 2-element String array
+	 */
+	public String[] toLineStringArray(boolean displayCartesian) {
+		String[][] entries;
+
+		if (displayCartesian) {
+			entries = toCartesianStringArray();
+		} else {
+			entries = toJointStringArray();
+		}
+
+
+		String[] line = new String[2];
+		// X, Y, Z with space buffers
+		line[0] = String.format("%-12s %-12s %s", entries[0][0].concat(entries[0][1]),
+				entries[1][0].concat(entries[1][1]), entries[2][0].concat(entries[2][1]));
+		// W, P, R with space buffers
+		line[1] = String.format("%-12s %-12s %s", entries[3][0].concat(entries[3][1]),
+				entries[4][0].concat(entries[4][1]), entries[5][0].concat(entries[5][1]));
+
+		return line;
 	}
 
 	public String toString() {

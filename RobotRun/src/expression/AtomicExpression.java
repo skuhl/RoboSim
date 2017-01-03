@@ -13,13 +13,6 @@ public class AtomicExpression extends ExprOperand {
 		arg2 = new ExprOperand();
 	}
 
-	public AtomicExpression(Operator o){
-		type = ExpressionElement.SUBEXP;
-		setOp(o);
-		arg1 = new ExprOperand();
-		arg2 = new ExprOperand();
-	}
-
 	public AtomicExpression(ExprOperand a1, ExprOperand a2, Operator o) {
 		type = ExpressionElement.SUBEXP;
 		setOp(o);
@@ -27,44 +20,16 @@ public class AtomicExpression extends ExprOperand {
 		arg2 = a2;
 	}
 
-	public ExprOperand getArg1() { return arg1; }
-	public ExprOperand setArg1(ExprOperand a) { 
-		arg1 = a;
-		return arg1;
-	}
-
-	public ExprOperand getArg2() { return arg2; }
-	public ExprOperand setArg2(ExprOperand a) { 
-		arg2 = a;
-		return arg2;
-	}
-
-	public ExprOperand setArg(ExprOperand a, int argNo) {
-		if(argNo == 1) {
-			return setArg1(a);
-		} else {
-			return setArg2(a);
-		}
-	}
-
-	public Operator getOperator() { return getOp(); }
-	public void setOperator(Operator o) {
+	public AtomicExpression(Operator o){
+		type = ExpressionElement.SUBEXP;
 		setOp(o);
+		arg1 = new ExprOperand();
+		arg2 = new ExprOperand();
 	}
 
-	public int getLength() {
-		if(getOp() == Operator.UNINIT) {
-			return 1;    
-		}
-
-		int ret = 1;
-		ret += arg1.getLength();
-		ret += arg2.getLength();
-		ret += (arg1.type == -1) ? 2 : 0;
-		ret += (arg2.type == -1) ? 2 : 0;
-		return ret;
+	public AtomicExpression clone() {
+		return new AtomicExpression(arg1.clone(), arg2.clone(), getOp());
 	}
-
 	public ExprOperand evaluate() {
 		ExprOperand result;
 		int t1 = arg1.type;
@@ -223,8 +188,51 @@ public class AtomicExpression extends ExprOperand {
 		return result;
 	}
 
-	public AtomicExpression clone() {
-		return new AtomicExpression(arg1.clone(), arg2.clone(), getOp());
+	public ExprOperand getArg1() { return arg1; }
+	public ExprOperand getArg2() { return arg2; }
+
+	public int getLength() {
+		if(getOp() == Operator.UNINIT) {
+			return 1;    
+		}
+
+		int ret = 1;
+		ret += arg1.getLength();
+		ret += arg2.getLength();
+		ret += (arg1.type == -1) ? 2 : 0;
+		ret += (arg2.type == -1) ? 2 : 0;
+		return ret;
+	}
+
+	public Operator getOp() {
+		return op;
+	}
+	public Operator getOperator() { return getOp(); }
+
+	public ExprOperand setArg(ExprOperand a, int argNo) {
+		if(argNo == 1) {
+			return setArg1(a);
+		} else {
+			return setArg2(a);
+		}
+	}
+
+	public ExprOperand setArg1(ExprOperand a) { 
+		arg1 = a;
+		return arg1;
+	}
+
+	public ExprOperand setArg2(ExprOperand a) { 
+		arg2 = a;
+		return arg2;
+	}
+
+	public void setOp(Operator op) {
+		this.op = op;
+	}
+
+	public void setOperator(Operator o) {
+		setOp(o);
 	}
 
 	public String toString(){
@@ -289,13 +297,5 @@ public class AtomicExpression extends ExprOperand {
 		}
 
 		return ret;
-	}
-
-	public Operator getOp() {
-		return op;
-	}
-
-	public void setOp(Operator op) {
-		this.op = op;
 	}
 }

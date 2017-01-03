@@ -14,6 +14,13 @@ public class Macro {
 		num = -1;
 	}
 
+	public void clearNum() {
+		if(num != -1) {
+			RobotRun.getInstance().getSU_macro_bindings()[num] = null;
+			num = -1;
+		}
+	}
+
 	public void execute() {
 		// Stop any prior Robot movement
 		RobotRun.getInstance().getArmModel().halt();
@@ -28,10 +35,8 @@ public class Macro {
 
 		RobotRun.getInstance().setProgramRunning(true);
 	}
-
-	public void setProgram(Program p, int idx) { prog = p; progIdx = idx; }
-	public void setManual(boolean b) { manual = b; }
 	public boolean isManual() { return manual; }
+	public void setManual(boolean b) { manual = b; }
 
 	public Macro setNum(int n) {
 		if(n <= 6 && n >= 0 && RobotRun.getInstance().getSU_macro_bindings()[n] == null) {
@@ -45,12 +50,7 @@ public class Macro {
 		return null;
 	}
 
-	public void clearNum() {
-		if(num != -1) {
-			RobotRun.getInstance().getSU_macro_bindings()[num] = null;
-			num = -1;
-		}
-	}
+	public void setProgram(Program p, int idx) { prog = p; progIdx = idx; }
 
 	public String toString() {
 		String[] str = toStringArray();

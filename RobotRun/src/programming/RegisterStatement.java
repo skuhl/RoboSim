@@ -48,38 +48,11 @@ public class RegisterStatement extends Instruction {
 		expr = e;
 	}
 	
-	public Register getReg() { 
-		return reg; 
+	public Instruction clone() {
+		Instruction copy = new RegisterStatement(reg, posIdx, (Expression)expr.clone());    
+		return copy;
 	}
 	
-	public int getPosIdx() { 
-		return posIdx; 
-	}
-	
-	public Expression getExpr() {
-		return expr;
-	}
-	
-	public Register setRegister(Register r) {
-		reg = r;
-		posIdx = -1;
-		return reg;
-	}
-
-	public Register setRegister(Register r, int idx) {
-		reg = r;
-		posIdx = idx;
-		return reg;
-	}
-
-	public void setPosIdx(int posIdx) {
-		this.posIdx = posIdx;
-	}
-
-	public void setExpr(Expression expr) {
-		this.expr = expr;
-	}
-
 	public int execute() {
 		ExprOperand result = expr.evaluate();
 
@@ -104,10 +77,37 @@ public class RegisterStatement extends Instruction {
 
 		return 0;
 	}
+	
+	public Expression getExpr() {
+		return expr;
+	}
+	
+	public int getPosIdx() { 
+		return posIdx; 
+	}
 
-	public Instruction clone() {
-		Instruction copy = new RegisterStatement(reg, posIdx, (Expression)expr.clone());    
-		return copy;
+	public Register getReg() { 
+		return reg; 
+	}
+
+	public void setExpr(Expression expr) {
+		this.expr = expr;
+	}
+
+	public void setPosIdx(int posIdx) {
+		this.posIdx = posIdx;
+	}
+
+	public Register setRegister(Register r) {
+		reg = r;
+		posIdx = -1;
+		return reg;
+	}
+
+	public Register setRegister(Register r, int idx) {
+		reg = r;
+		posIdx = idx;
+		return reg;
 	}
 
 	/**

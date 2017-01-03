@@ -27,13 +27,6 @@ public class PositionOp extends RegisterOp {
 		type = PositionType.LOCAL;
 	}
 
-	public PositionOp(RobotRun robotRun, int ldx, PositionType t) {
-		super(robotRun, ldx);
-		this.robotRun = robotRun;
-		posIdx = -1;
-		type = t;
-	}
-
 	public PositionOp(RobotRun robotRun, int ldx, int pdx, PositionType t) {
 		super(robotRun, ldx);
 		this.robotRun = robotRun;
@@ -41,7 +34,18 @@ public class PositionOp extends RegisterOp {
 		type = t;
 	}
 
+	public PositionOp(RobotRun robotRun, int ldx, PositionType t) {
+		super(robotRun, ldx);
+		this.robotRun = robotRun;
+		posIdx = -1;
+		type = t;
+	}
+
+	public Operand clone() {
+		return new PositionOp(this.robotRun, getIdx(), posIdx, type);
+	}
 	public int getPositionIdx() { return posIdx; }
+
 	public PositionType getPositionType() { return type; }
 
 	public Object getValue() {
@@ -68,10 +72,6 @@ public class PositionOp extends RegisterOp {
 			// Use a specific value of the Point
 			return pt.getValue(posIdx);
 		}
-	}
-
-	public Operand clone() {
-		return new PositionOp(this.robotRun, getIdx(), posIdx, type);
 	}
 
 	public String toString() {

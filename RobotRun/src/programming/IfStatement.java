@@ -26,16 +26,35 @@ public class IfStatement extends Instruction {
 		instr = null;
 	}
 
-	public IfStatement(Operator o, Instruction i){
-		expr = new BooleanExpression(o);
-		instr = i;
-	}
-
 	public IfStatement(AtomicExpression e, Instruction i) {
 		expr = e;
 		instr = i;
 	}
+
+	public IfStatement(Operator o, Instruction i){
+		expr = new BooleanExpression(o);
+		instr = i;
+	}
 	
+	public Instruction clone() {
+		Instruction copy = new IfStatement(expr.clone(), instr.clone());
+		copy.setIsCommented( isCommented() );
+		
+		return copy;
+	}
+
+	public int execute() {
+		ExprOperand result = expr.evaluate();
+
+		if(result == null || result.getBoolVal() == null) {
+			return 1;
+		} else if(expr.evaluate().getBoolVal()){
+			instr.execute();
+		}
+
+		return 0;
+	}
+
 	public AtomicExpression getExpr() {
 		return expr;
 	}
@@ -50,18 +69,6 @@ public class IfStatement extends Instruction {
 
 	public void setInstr(Instruction instr) {
 		this.instr = instr;
-	}
-
-	public int execute() {
-		ExprOperand result = expr.evaluate();
-
-		if(result == null || result.getBoolVal() == null) {
-			return 1;
-		} else if(expr.evaluate().getBoolVal()){
-			instr.execute();
-		}
-
-		return 0;
 	}
 
 	public String toString() {
@@ -88,12 +95,5 @@ public class IfStatement extends Instruction {
 		ret[exprArray.length] += " :";
 
 		return ret;
-	}
-
-	public Instruction clone() {
-		Instruction copy = new IfStatement(expr.clone(), instr.clone());
-		copy.setIsCommented( isCommented() );
-		// TODO actually copy the if statement
-		return copy;
 	}
 }

@@ -12,18 +12,41 @@ import robot.RobotRun;
  */
 public class MyDropdownList extends DropdownList {
 
+	protected MyDropdownList( ControlP5 theControlP5 , ControllerGroup< ? > theGroup , String theName , int theX , int theY , int theW , int theH ) {
+		super( theControlP5 , theGroup , theName , theX , theY , theW , theH );
+	}
+
 	public MyDropdownList( ControlP5 theControlP5 , String theName ) {
 		super(theControlP5, theName);
 	}
 
-	protected MyDropdownList( ControlP5 theControlP5 , ControllerGroup< ? > theGroup , String theName , int theX , int theY , int theW , int theH ) {
-		super( theControlP5 , theGroup , theName , theX , theY , theW , theH );
+	/**
+	 * Returns the value associated with the active label of the Dropdown list.
+	 */
+	public Object getActiveLabelValue() {    
+		Map<String, Object> associatedObjects = getItem( getCaptionLabel().getText() );
+
+		if (associatedObjects != null) {
+			return associatedObjects.get("value");
+		}
+
+		// You got problems ...
+		return null;
 	}
 
 	protected void onRelease() {
 		super.onRelease();
 		// Some dropdown lists influence the display
 		RobotRun.getInstance().getManager().updateWindowContentsPositions();
+	}
+
+	/**
+	 * Deactivates the currently selected option
+	 * in the Dropdown list.
+	 */
+	public void resetLabel() {
+		getCaptionLabel().setText( getName() );
+		setValue(0);
 	}
 
 	/**
@@ -48,28 +71,5 @@ public class MyDropdownList extends DropdownList {
 		if (associatedObjects == null || associatedObjects.isEmpty()) {
 			getCaptionLabel().setText( getName() );
 		}
-	}
-
-	/**
-	 * Returns the value associated with the active label of the Dropdown list.
-	 */
-	public Object getActiveLabelValue() {    
-		Map<String, Object> associatedObjects = getItem( getCaptionLabel().getText() );
-
-		if (associatedObjects != null) {
-			return associatedObjects.get("value");
-		}
-
-		// You got problems ...
-		return null;
-	}
-
-	/**
-	 * Deactivates the currently selected option
-	 * in the Dropdown list.
-	 */
-	public void resetLabel() {
-		getCaptionLabel().setText( getName() );
-		setValue(0);
 	}
 }

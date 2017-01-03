@@ -21,49 +21,18 @@ public class ToolFrame extends Frame {
 	}
 	
 	@Override
-	public void reset() {
-		orientationOffset = new RQuaternion();
-		setPoint(null, 0);
-		setPoint(null, 1);
-		setPoint(null, 2);
-		setPoint(null, 3);
-		setPoint(null, 4);
-		setPoint(null, 5);
-		setDEOrigin(null);
-		setDEOrientationOffset(null);
-		TCPOffset = new PVector(0f, 0f, 0f);
-		TCPTeachPoints = new Point[] { null, null, null };
-	}
-
-	@Override
 	public RQuaternion getOrientation() {
 		RQuaternion robotOrientation = RobotRun.nativeRobotPoint(RobotRun.getRobot().getJointAngles()).orientation;
 		// Tool frame axes orientation = (orientation offset x Model default orientation ^ -1) x Model current orientation
 		return RQuaternion.mult(ArmModel.DEFAULT_ORIENTATION.transformQuaternion(orientationOffset), robotOrientation);
 	}
 
+	/**
+	 * Tool Frames have no origin offset.
+	 */
 	@Override
-	public void setPoint(Point p, int idx) {
+	public PVector getOrigin() { return new PVector(0f, 0f, 0f); }
 
-		/* Map the index into the 'Point array' to the
-		 * actual values stored in the frame */
-		switch (idx) {
-			case 0:
-			case 1:
-			case 2:
-				TCPTeachPoints[idx] = p;
-				return;
-	
-			case 3:
-			case 4:
-			case 5:
-				super.setPoint(p, idx % 3);
-				return;
-	
-			default:
-		}
-	}
-	
 	@Override
 	public Point getPoint(int idx) {
 
@@ -86,6 +55,23 @@ public class ToolFrame extends Frame {
 		return null;
 	}
 	
+	public PVector getTCPOffset() { return TCPOffset; }
+	
+	@Override
+	public void reset() {
+		orientationOffset = new RQuaternion();
+		setPoint(null, 0);
+		setPoint(null, 1);
+		setPoint(null, 2);
+		setPoint(null, 3);
+		setPoint(null, 4);
+		setPoint(null, 5);
+		setDEOrigin(null);
+		setDEOrientationOffset(null);
+		TCPOffset = new PVector(0f, 0f, 0f);
+		TCPTeachPoints = new Point[] { null, null, null };
+	}
+
 	@Override
 	public boolean setFrame(int method) {
 
@@ -134,6 +120,30 @@ public class ToolFrame extends Frame {
 		return false;
 	}
 
+	@Override
+	public void setPoint(Point p, int idx) {
+
+		/* Map the index into the 'Point array' to the
+		 * actual values stored in the frame */
+		switch (idx) {
+			case 0:
+			case 1:
+			case 2:
+				TCPTeachPoints[idx] = p;
+				return;
+	
+			case 3:
+			case 4:
+			case 5:
+				super.setPoint(p, idx % 3);
+				return;
+	
+			default:
+		}
+	}
+
+	// Getter and Setter for TCP offset value
+	public void setTCPOffset(PVector newOffset) { TCPOffset = newOffset; }
 	/**
 	 * Returns a string array, where each entry is one of
 	 * the Tool frame's TCP offset or orientation values:
@@ -162,14 +172,4 @@ public class ToolFrame extends Frame {
 
 		return values;
 	}
-
-	/**
-	 * Tool Frames have no origin offset.
-	 */
-	@Override
-	public PVector getOrigin() { return new PVector(0f, 0f, 0f); }
-
-	// Getter and Setter for TCP offset value
-	public void setTCPOffset(PVector newOffset) { TCPOffset = newOffset; }
-	public PVector getTCPOffset() { return TCPOffset; }
 }

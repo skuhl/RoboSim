@@ -10,223 +10,6 @@ import robot.RobotRun;
  * The bounding box holds the local coordinate system of the object.
  */
 public class Part extends WorldObject {
-	private BoundingBox absOBB;
-	private Fixture reference;
-
-	/**
-	 * Create a cube object with the given colors and dimension
-	 */
-	public Part(String n, int fill, int strokeVal, float edgeLen) {
-		super(n, new Box(fill, strokeVal, edgeLen));
-		absOBB = new BoundingBox(1.1f * edgeLen);
-	}
-
-	/**
-	 * Create a box object with the given colors and dimensions
-	 */
-	public Part(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
-		super(n, new Box(fill, strokeVal, len, hgt, wdh));
-		absOBB = new BoundingBox(1.1f * len, 1.1f * hgt, 1.1f * wdh);
-	}
-
-	/**
-	 * Creates a cylinder objects with the given colors and dimensions.
-	 */
-	public Part(String n, int fill, int strokeVal, float rad, float hgt) {
-		super(n, new Cylinder(fill, strokeVal, rad, hgt));
-		absOBB = new BoundingBox(2.12f * rad, 2.12f * rad, 1.1f * hgt);
-	}
-
-	/**
-	 * Define a complex object as a partx.
-	 */
-	public Part(String n, ModelShape model) {
-		super(n, model);
-
-		absOBB = new BoundingBox(1.1f * model.getDim(DimType.LENGTH),
-								 1.1f * model.getDim(DimType.HEIGHT),
-								 1.1f * model.getDim(DimType.WIDTH));
-	}
-
-	/**
-	 * Creates a Part with the given name, shape, bounding-box dimensions, and fixture reference.
-	 */
-	public Part(String n, Shape s, PVector OBBDims, CoordinateSystem local, Fixture fixRef) {
-		super(n, s, local);
-		absOBB = new BoundingBox(OBBDims.x, OBBDims.y, OBBDims.z);
-		setFixtureRef(fixRef);
-	}
-
-	@Override
-	public void applyCoordinateSystem() {
-		absOBB.applyCoordinateSystem();
-	}
-
-	@Override
-	public void setCoordinateSystem() {
-		absOBB.setCoordinateSystem();
-	}
-
-	/**
-	 * Update the part's bounding box dimensions of the part based on the dimensions of its form.
-	 */
-	public void updateOBBDims() {
-		Shape s = getForm();
-		float minAddition = Float.MAX_VALUE;
-
-		if (s instanceof Box || s instanceof ModelShape) {
-			// Update the OBB dimensions for a box or complex part
-			minAddition = 0.1f * RobotRun.min(s.getDim(DimType.LENGTH),
-					RobotRun.min(s.getDim(DimType.HEIGHT),
-							s.getDim(DimType.WIDTH)));
-
-			absOBB.setDim(s.getDim(DimType.LENGTH) + minAddition, DimType.LENGTH);
-			absOBB.setDim(s.getDim(DimType.HEIGHT) + minAddition, DimType.HEIGHT);
-			absOBB.setDim(s.getDim(DimType.WIDTH) + minAddition, DimType.WIDTH);
-
-		} else if (s instanceof Cylinder) {
-			// Update the OBB dimensions for a cylindrical part
-			minAddition =  RobotRun.min(0.12f * s.getDim(DimType.RADIUS),
-					0.1f * s.getDim(DimType.HEIGHT));
-
-			absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.LENGTH);
-			absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.HEIGHT);
-			absOBB.setDim(s.getDim(DimType.HEIGHT) + minAddition, DimType.WIDTH); 
-		}
-	}
-
-	public void applyLocalCoordinateSystem() {
-		super.applyCoordinateSystem();
-	}
-
-	public void setLocalCoordinateSystem() {
-		super.setCoordinateSystem();
-	}
-
-	/**
-	 * Draw both the object and its bounding box in its local
-	 * orientaiton, in the local orientation of the part's
-	 * fixture reference.
-	 */
-	public void draw() {
-		RobotRun.getInstance().pushMatrix();
-		applyCoordinateSystem();
-		getForm().draw();
-		if (RobotRun.getInstance().showOOBs) { absOBB.getBox().draw(); }
-		RobotRun.getInstance().popMatrix();
-	}
-
-	/**
-	 * Set the fixture reference of this part and
-	 * update its absolute orientation.
-	 */
-	public void setFixtureRef(Fixture refFixture) {
-		reference = refFixture;
-		updateAbsoluteOrientation();
-	}
-
-	public Fixture getFixtureRef() { return reference; }
-
-	/**
-	 * Update the Part's absolute (or world) orientation
-	 * based om its local orientation and fixture
-	 * reference's orientation.
-	 */
-	public void updateAbsoluteOrientation() {
-		RobotRun.getInstance().pushMatrix();
-		RobotRun.getInstance().resetMatrix();
-
-		if (reference != null) {
-			reference.applyCoordinateSystem();
-		}
-
-		super.applyCoordinateSystem();
-		absOBB.setCoordinateSystem();
-		RobotRun.getInstance().popMatrix();
-	}
-
-	/**
-	 * See BoundingBox.setDim()
-	 */
-	public void setOBBDim(Float newVal, DimType dim) {
-		absOBB.setDim(newVal, dim);
-	}
-
-	/**
-	 * Set the dimensions of this part's bounding box.
-	 */
-	public void setOBBDimenions(PVector newDims) {
-		absOBB.setDims(newDims);
-	}
-
-	/**
-	 * Get the dimensions of the part's bounding-box
-	 */
-	public PVector getOBBDims() {
-		return absOBB.getDims();
-	}
-
-	/**
-	 * Return a reference to this object's bounding-box.
-	 */ 
-	private BoundingBox getOBB() { return absOBB; }
-
-	/**
-	 * Sets the stroke color of the world's bounding-box
-	 * to the given value.
-	 */
-	public void setBBColor(int newColor) {
-		absOBB.setColor(newColor);
-	}
-
-	/**
-	 * Determine if the given world object is colliding
-	 * with this world object.
-	 */
-	public boolean collision(Part obj) {
-		return collision3D(absOBB, obj.getOBB());
-	}
-
-	/**
-	 * Determies if the given bounding box is colliding
-	 * with this Part's bounding box.
-	 */
-	public boolean collision(BoundingBox obb) {
-		return collision3D(absOBB, obb);
-	}
-
-	/**
-	 * Determine if the given point is within
-	 * this object's bounding box.
-	 */
-	public boolean collision(PVector point) {
-		return absOBB.collision(point);
-	}
-
-	@Override
-	public void setLocalCenter(PVector newCenter) {
-		super.setLocalCenter(newCenter);
-		updateAbsoluteOrientation();
-	}
-
-	@Override
-	public void updateLocalCenter(Float x, Float y, Float z) {
-		super.updateLocalCenter(x, y, z);
-		updateAbsoluteOrientation();
-	}
-
-	@Override
-	public void setLocalOrientationAxes(float[][] newAxes) {
-		super.setLocalOrientationAxes(newAxes);
-		updateAbsoluteOrientation();
-	}
-
-	@Override
-	public Object clone() {
-		// The new object's reference still points to the same fixture!
-		return new Part(getName(), (Shape)getForm().clone(), getOBBDims().copy(), (CoordinateSystem)localOrientation.clone(), reference);
-	}
-	
 	/**
 	 * This algorithm uses the Separating Axis Theorm to project radi of each Box on to several 
 	 * axes to determine if a there is any overlap between the boxes. The method strongly resembles 
@@ -351,5 +134,222 @@ public class Part extends WorldObject {
 		if( Math.abs(T[1] * rotMatrix[0][2] - T[0] * rotMatrix[1][2]) > (radiA + radiB)) { return false; }
 
 		return true;
+	}
+	private BoundingBox absOBB;
+
+	private Fixture reference;
+
+	/**
+	 * Create a cube object with the given colors and dimension
+	 */
+	public Part(String n, int fill, int strokeVal, float edgeLen) {
+		super(n, new Box(fill, strokeVal, edgeLen));
+		absOBB = new BoundingBox(1.1f * edgeLen);
+	}
+
+	/**
+	 * Creates a cylinder objects with the given colors and dimensions.
+	 */
+	public Part(String n, int fill, int strokeVal, float rad, float hgt) {
+		super(n, new Cylinder(fill, strokeVal, rad, hgt));
+		absOBB = new BoundingBox(2.12f * rad, 2.12f * rad, 1.1f * hgt);
+	}
+
+	/**
+	 * Create a box object with the given colors and dimensions
+	 */
+	public Part(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
+		super(n, new Box(fill, strokeVal, len, hgt, wdh));
+		absOBB = new BoundingBox(1.1f * len, 1.1f * hgt, 1.1f * wdh);
+	}
+
+	/**
+	 * Define a complex object as a partx.
+	 */
+	public Part(String n, ModelShape model) {
+		super(n, model);
+
+		absOBB = new BoundingBox(1.1f * model.getDim(DimType.LENGTH),
+								 1.1f * model.getDim(DimType.HEIGHT),
+								 1.1f * model.getDim(DimType.WIDTH));
+	}
+
+	/**
+	 * Creates a Part with the given name, shape, bounding-box dimensions, and fixture reference.
+	 */
+	public Part(String n, Shape s, PVector OBBDims, CoordinateSystem local, Fixture fixRef) {
+		super(n, s, local);
+		absOBB = new BoundingBox(OBBDims.x, OBBDims.y, OBBDims.z);
+		setFixtureRef(fixRef);
+	}
+
+	@Override
+	public void applyCoordinateSystem() {
+		absOBB.applyCoordinateSystem();
+	}
+
+	public void applyLocalCoordinateSystem() {
+		super.applyCoordinateSystem();
+	}
+
+	@Override
+	public Object clone() {
+		// The new object's reference still points to the same fixture!
+		return new Part(getName(), (Shape)getForm().clone(), getOBBDims().copy(), (CoordinateSystem)localOrientation.clone(), reference);
+	}
+
+	/**
+	 * Determies if the given bounding box is colliding
+	 * with this Part's bounding box.
+	 */
+	public boolean collision(BoundingBox obb) {
+		return collision3D(absOBB, obb);
+	}
+
+	/**
+	 * Determine if the given world object is colliding
+	 * with this world object.
+	 */
+	public boolean collision(Part obj) {
+		return collision3D(absOBB, obj.getOBB());
+	}
+
+	/**
+	 * Determine if the given point is within
+	 * this object's bounding box.
+	 */
+	public boolean collision(PVector point) {
+		return absOBB.collision(point);
+	}
+
+	/**
+	 * Draw both the object and its bounding box in its local
+	 * orientaiton, in the local orientation of the part's
+	 * fixture reference.
+	 */
+	public void draw() {
+		RobotRun.getInstance().pushMatrix();
+		applyCoordinateSystem();
+		getForm().draw();
+		if (RobotRun.getInstance().showOOBs) { absOBB.getBox().draw(); }
+		RobotRun.getInstance().popMatrix();
+	}
+
+	public Fixture getFixtureRef() { return reference; }
+
+	/**
+	 * Return a reference to this object's bounding-box.
+	 */ 
+	private BoundingBox getOBB() { return absOBB; }
+
+	/**
+	 * Get the dimensions of the part's bounding-box
+	 */
+	public PVector getOBBDims() {
+		return absOBB.getDims();
+	}
+
+	/**
+	 * Sets the stroke color of the world's bounding-box
+	 * to the given value.
+	 */
+	public void setBBColor(int newColor) {
+		absOBB.setColor(newColor);
+	}
+
+	@Override
+	public void setCoordinateSystem() {
+		absOBB.setCoordinateSystem();
+	}
+
+	/**
+	 * Set the fixture reference of this part and
+	 * update its absolute orientation.
+	 */
+	public void setFixtureRef(Fixture refFixture) {
+		reference = refFixture;
+		updateAbsoluteOrientation();
+	}
+
+	@Override
+	public void setLocalCenter(PVector newCenter) {
+		super.setLocalCenter(newCenter);
+		updateAbsoluteOrientation();
+	}
+
+	public void setLocalCoordinateSystem() {
+		super.setCoordinateSystem();
+	}
+
+	@Override
+	public void setLocalOrientationAxes(float[][] newAxes) {
+		super.setLocalOrientationAxes(newAxes);
+		updateAbsoluteOrientation();
+	}
+
+	/**
+	 * See BoundingBox.setDim()
+	 */
+	public void setOBBDim(Float newVal, DimType dim) {
+		absOBB.setDim(newVal, dim);
+	}
+
+	/**
+	 * Set the dimensions of this part's bounding box.
+	 */
+	public void setOBBDimenions(PVector newDims) {
+		absOBB.setDims(newDims);
+	}
+
+	/**
+	 * Update the Part's absolute (or world) orientation
+	 * based om its local orientation and fixture
+	 * reference's orientation.
+	 */
+	public void updateAbsoluteOrientation() {
+		RobotRun.getInstance().pushMatrix();
+		RobotRun.getInstance().resetMatrix();
+
+		if (reference != null) {
+			reference.applyCoordinateSystem();
+		}
+
+		super.applyCoordinateSystem();
+		absOBB.setCoordinateSystem();
+		RobotRun.getInstance().popMatrix();
+	}
+
+	@Override
+	public void updateLocalCenter(Float x, Float y, Float z) {
+		super.updateLocalCenter(x, y, z);
+		updateAbsoluteOrientation();
+	}
+	
+	/**
+	 * Update the part's bounding box dimensions of the part based on the dimensions of its form.
+	 */
+	public void updateOBBDims() {
+		Shape s = getForm();
+		float minAddition = Float.MAX_VALUE;
+
+		if (s instanceof Box || s instanceof ModelShape) {
+			// Update the OBB dimensions for a box or complex part
+			minAddition = 0.1f * RobotRun.min(s.getDim(DimType.LENGTH),
+					RobotRun.min(s.getDim(DimType.HEIGHT),
+							s.getDim(DimType.WIDTH)));
+
+			absOBB.setDim(s.getDim(DimType.LENGTH) + minAddition, DimType.LENGTH);
+			absOBB.setDim(s.getDim(DimType.HEIGHT) + minAddition, DimType.HEIGHT);
+			absOBB.setDim(s.getDim(DimType.WIDTH) + minAddition, DimType.WIDTH);
+
+		} else if (s instanceof Cylinder) {
+			// Update the OBB dimensions for a cylindrical part
+			minAddition =  RobotRun.min(0.12f * s.getDim(DimType.RADIUS),
+					0.1f * s.getDim(DimType.HEIGHT));
+
+			absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.LENGTH);
+			absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.HEIGHT);
+			absOBB.setDim(s.getDim(DimType.HEIGHT) + minAddition, DimType.WIDTH); 
+		}
 	}
 }

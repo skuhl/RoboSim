@@ -17,6 +17,23 @@ public final class MotionInstruction extends Instruction  {
 	private int toolFrame;
 	private MotionInstruction circSubInstr;
 
+	public MotionInstruction(int m, int p, boolean g, float s, int t) {
+		motionType = m;
+		positionNum = p;
+		offsetRegNum = -1;
+		offsetActive = false;
+		isGPosReg = g;
+		speed = s;
+		termination = t;
+		userFrame = -1;
+		toolFrame = -1;
+		if(motionType != -1) {
+			circSubInstr = new MotionInstruction(-1, -1, false, 100, 0);
+		} else {
+			circSubInstr = null;
+		}
+	}
+
 	public MotionInstruction(int m, int p, boolean g, float s, int t, int uf,
 			int tf) {
 		
@@ -36,48 +53,6 @@ public final class MotionInstruction extends Instruction  {
 		}
 	}
 
-	public MotionInstruction(int m, int p, boolean g, float s, int t) {
-		motionType = m;
-		positionNum = p;
-		offsetRegNum = -1;
-		offsetActive = false;
-		isGPosReg = g;
-		speed = s;
-		termination = t;
-		userFrame = -1;
-		toolFrame = -1;
-		if(motionType != -1) {
-			circSubInstr = new MotionInstruction(-1, -1, false, 100, 0);
-		} else {
-			circSubInstr = null;
-		}
-	}
-
-	public int getMotionType() { return motionType; }
-	public void setMotionType(int in) { motionType = in; }
-	public int getPositionNum() { return positionNum; }
-	public void setPositionNum(int in) { positionNum = in; }  
-	public int getOffset() { return offsetRegNum; }
-	public void setOffset(int in) { offsetRegNum = in; }
-	public boolean toggleOffsetActive() { return (offsetActive = !offsetActive); }
-	public boolean usesGPosReg() { return isGPosReg; }
-	public void setGlobalPosRegUse(boolean in) { isGPosReg = in; }
-	public float getSpeed() { return speed; }
-	public void setSpeed(float in) { speed = in; }
-	public int getTermination() { return termination; }
-	public void setTermination(int in) { termination = in; }
-	public int getUserFrame() { return userFrame; }
-	public void setUserFrame(int in) { userFrame = in; }
-	public int getToolFrame() { return toolFrame; }
-	public void setToolFrame(int in) { toolFrame = in; }
-	public MotionInstruction getSecondaryPoint() { return circSubInstr; }
-	public void setSecondaryPoint(MotionInstruction p) { circSubInstr = p; }
-
-	public float getSpeedForExec(ArmModel model) {
-		if(motionType == RobotRun.getInstance().MTYPE_JOINT) return speed;
-		else return (speed / model.motorSpeed);
-	}
-
 	/**
 	 * Verify that the given frame indices match those of the
 	 * instructions frame indices.
@@ -85,7 +60,14 @@ public final class MotionInstruction extends Instruction  {
 	public boolean checkFrames(int activeToolIdx, int activeFrameIdx) {
 		return (toolFrame == activeToolIdx) && (userFrame == activeFrameIdx);
 	}
+	public Instruction clone() {
+		Instruction copy = new MotionInstruction(motionType, positionNum, isGPosReg, speed, termination, userFrame, toolFrame);
+		copy.setIsCommented( isCommented() );
 
+		return copy;
+	}
+	public int getMotionType() { return motionType; }
+	public int getOffset() { return offsetRegNum; }  
 	/**
 	 * Returns the unmodified point that is associate
 	 * with this motion instruction.
@@ -109,7 +91,16 @@ public final class MotionInstruction extends Instruction  {
 
 		return null;
 	}
-
+	public int getPositionNum() { return positionNum; }
+	public MotionInstruction getSecondaryPoint() { return circSubInstr; }
+	public float getSpeed() { return speed; }
+	public float getSpeedForExec(ArmModel model) {
+		if(motionType == RobotRun.getInstance().MTYPE_JOINT) return speed;
+		else return (speed / model.motorSpeed);
+	}
+	public int getTermination() { return termination; }
+	public int getToolFrame() { return toolFrame; }
+	public int getUserFrame() { return userFrame; }
 	/**
 	 * Returns the point associated with this motion instruction
 	 * (can be either a position in the program or a global position
@@ -139,13 +130,20 @@ public final class MotionInstruction extends Instruction  {
 
 		return pt.add(offset);
 	} // end getVector()
+	public void setGlobalPosRegUse(boolean in) { isGPosReg = in; }
+	public void setMotionType(int in) { motionType = in; }
+	public void setOffset(int in) { offsetRegNum = in; }
+	public void setPositionNum(int in) { positionNum = in; }
+	public void setSecondaryPoint(MotionInstruction p) { circSubInstr = p; }
+	public void setSpeed(float in) { speed = in; }
 
-	public Instruction clone() {
-		Instruction copy = new MotionInstruction(motionType, positionNum, isGPosReg, speed, termination, userFrame, toolFrame);
-		copy.setIsCommented( isCommented() );
+	public void setTermination(int in) { termination = in; }
 
-		return copy;
-	}
+	public void setToolFrame(int in) { toolFrame = in; }
+
+	public void setUserFrame(int in) { userFrame = in; }
+
+	public boolean toggleOffsetActive() { return (offsetActive = !offsetActive); }
 
 	public String[] toStringArray() {
 		String[] fields;
@@ -226,4 +224,6 @@ public final class MotionInstruction extends Instruction  {
 
 		return fields;
 	}
+
+	public boolean usesGPosReg() { return isGPosReg; }
 }

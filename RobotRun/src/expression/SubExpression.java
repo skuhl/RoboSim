@@ -19,12 +19,12 @@ public class SubExpression implements Operand {
 		expr = new RegisterExpression(robotRun, params);
 	}
 
-	public Object getValue() throws ExpressionEvaluationException { return expr.evaluate(); }
-
 	public Operand clone() {
 		// Copy the expression into a new Sub Expression
 		return new SubExpression(robotRun, expr.clone());
 	}
+
+	public Object getValue() throws ExpressionEvaluationException { return expr.evaluate(); }
 
 	public String toString() {
 		return String.format("[ %s ]", expr.toString());

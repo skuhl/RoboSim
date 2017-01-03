@@ -60,24 +60,6 @@ public class RegStmtPoint {
 		getValues()[5] = wpr.z;
 	}
 
-	public Float getValue(int val) {
-		if (val < 0 || val >= getValues().length) {
-			// Not a valid index
-			return null;
-		}
-		// Return value associated with the index
-		return new Float(getValues()[val]);
-	}
-
-	public void setValue(int val, float newVal) {
-		if (val >= 0 && val < getValues().length) {
-			// Set the specified entry to the given value
-			getValues()[val] = newVal;
-		}
-	}
-
-	public boolean isCartesian() { return isCartesian; }
-
 	public RegStmtPoint add(RegStmtPoint pt) {
 		if (pt == null || pt.isCartesian() != isCartesian) {
 			// Must be the same type of point
@@ -91,6 +73,35 @@ public class RegStmtPoint {
 		}
 
 		return new RegStmtPoint(sums, isCartesian);
+	}
+
+	/**
+	 * Returns an independent replica of this point object.
+	 */
+	public RegStmtPoint clone() {
+		return new RegStmtPoint(getValues(), isCartesian);
+	}
+
+	public Float getValue(int val) {
+		if (val < 0 || val >= getValues().length) {
+			// Not a valid index
+			return null;
+		}
+		// Return value associated with the index
+		return new Float(getValues()[val]);
+	}
+
+	public float[] getValues() {
+		return values;
+	}
+
+	public boolean isCartesian() { return isCartesian; }
+
+	public void setValue(int val, float newVal) {
+		if (val >= 0 && val < getValues().length) {
+			// Set the specified entry to the given value
+			getValues()[val] = newVal;
+		}
 	}
 
 	public RegStmtPoint subtract(RegStmtPoint pt) {
@@ -123,13 +134,6 @@ public class RegStmtPoint {
 		}
 	}
 
-	/**
-	 * Returns an independent replica of this point object.
-	 */
-	public RegStmtPoint clone() {
-		return new RegStmtPoint(getValues(), isCartesian);
-	}
-
 	public String toString() {
 		if (isCartesian) {
 			// X, Y, Z, W, P, R
@@ -142,9 +146,5 @@ public class RegStmtPoint {
 					Math.toDegrees(getValues()[0]), Math.toDegrees(getValues()[1]), Math.toDegrees(getValues()[2]),
 					Math.toDegrees(getValues()[3]), Math.toDegrees(getValues()[4]), Math.toDegrees(getValues()[5]));
 		}
-	}
-
-	public float[] getValues() {
-		return values;
 	}
 }

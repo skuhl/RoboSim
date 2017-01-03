@@ -17,11 +17,12 @@ public class FrameInstruction extends Instruction {
 		setFrameIdx(r);
 	}
 
-	public int getFrameType(){ return frameType; }
-	public void setFrameType(int t){ frameType = t; }
-	public int getReg(){ return getFrameIdx(); }
-	public void setReg(int r){ setFrameIdx(r); }
+	public Instruction clone() {
+		Instruction copy = new FrameInstruction(frameType, getFrameIdx());
+		copy.setIsCommented( isCommented() );
 
+		return copy;
+	}
 	public int execute() {    
 		if (frameType == RobotRun.getInstance().FTYPE_TOOL) {
 			RobotRun.getRobot().setActiveToolFrame(getFrameIdx());
@@ -35,13 +36,20 @@ public class FrameInstruction extends Instruction {
 
 		return 0;
 	}
-
-	public Instruction clone() {
-		Instruction copy = new FrameInstruction(frameType, getFrameIdx());
-		copy.setIsCommented( isCommented() );
-
-		return copy;
+	public int getFrameIdx() {
+		return frameIdx;
 	}
+	public int getFrameType(){ return frameType; }
+
+	public int getReg(){ return getFrameIdx(); }
+
+	public void setFrameIdx(int frameIdx) {
+		this.frameIdx = frameIdx;
+	}
+
+	public void setFrameType(int t){ frameType = t; }
+
+	public void setReg(int r){ setFrameIdx(r); }
 
 	public String[] toStringArray() {
 		String[] fields = new String[2];
@@ -57,14 +65,6 @@ public class FrameInstruction extends Instruction {
 		fields[1] = Integer.toString(getFrameIdx() + 1);
 
 		return fields;
-	}
-
-	public int getFrameIdx() {
-		return frameIdx;
-	}
-
-	public void setFrameIdx(int frameIdx) {
-		this.frameIdx = frameIdx;
 	}
 
 }
