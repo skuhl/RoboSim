@@ -27,13 +27,6 @@ public class PositionOp extends RegisterOp {
 		type = PositionType.LOCAL;
 	}
 
-	public PositionOp(RobotRun robotRun, int ldx, PositionType t) {
-		super(robotRun, ldx);
-		this.robotRun = robotRun;
-		posIdx = -1;
-		type = t;
-	}
-
 	public PositionOp(RobotRun robotRun, int ldx, int pdx, PositionType t) {
 		super(robotRun, ldx);
 		this.robotRun = robotRun;
@@ -41,7 +34,18 @@ public class PositionOp extends RegisterOp {
 		type = t;
 	}
 
+	public PositionOp(RobotRun robotRun, int ldx, PositionType t) {
+		super(robotRun, ldx);
+		this.robotRun = robotRun;
+		posIdx = -1;
+		type = t;
+	}
+
+	public Operand clone() {
+		return new PositionOp(this.robotRun, getIdx(), posIdx, type);
+	}
 	public int getPositionIdx() { return posIdx; }
+
 	public PositionType getPositionType() { return type; }
 
 	public Object getValue() {
@@ -51,11 +55,11 @@ public class PositionOp extends RegisterOp {
 			// Use local position
 			Program current = robotRun.activeProgram();
 			// TODO Use joint angles?
-			pt = new RegStmtPoint(robotRun, current.getPosition( getIdx() ), true);
+			pt = new RegStmtPoint(current.getPosition( getIdx() ), true);
 		} else if (type == PositionType.GLOBAL) {
 			// global Position register
 			PositionRegister preg = (PositionRegister)RegisterFile.getPReg(getIdx());
-			pt = new RegStmtPoint(robotRun, preg.point, preg.isCartesian);
+			pt = new RegStmtPoint(preg.point, preg.isCartesian);
 		} else {
 			// Not a valid type
 			return null;
@@ -68,10 +72,6 @@ public class PositionOp extends RegisterOp {
 			// Use a specific value of the Point
 			return pt.getValue(posIdx);
 		}
-	}
-
-	public Operand clone() {
-		return new PositionOp(this.robotRun, getIdx(), posIdx, type);
 	}
 
 	public String toString() {

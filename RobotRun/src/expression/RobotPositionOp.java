@@ -39,13 +39,17 @@ public class RobotPositionOp implements Operand {
 		isCartesian = cartesian;
 	}
 
+	public Operand clone() {
+		return new RobotPositionOp(this.robotRun, valIdx, isCartesian);
+	}
+
 	/**
 	 * Return the current position of the Robot or a specific value of the current position of
 	 * the Robot
 	 */
 	public Object getValue() {
-		Point RP = this.robotRun.nativeRobotEEPoint(robotRun.getArmModel().getJointAngles());
-		RegStmtPoint pt = new RegStmtPoint(this.robotRun, RP, isCartesian);
+		Point RP = RobotRun.nativeRobotEEPoint(robotRun.getArmModel().getJointAngles());
+		RegStmtPoint pt = new RegStmtPoint(RP, isCartesian);
 
 		if (valIdx == -1) {
 			// Return the entire point
@@ -54,10 +58,6 @@ public class RobotPositionOp implements Operand {
 			// Return a specific value of the point
 			return pt.getValues()[valIdx];
 		}
-	}
-
-	public Operand clone() {
-		return new RobotPositionOp(this.robotRun, valIdx, isCartesian);
 	}
 
 	public String toString() {

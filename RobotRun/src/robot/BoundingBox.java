@@ -44,96 +44,18 @@ public class BoundingBox {
 	}
 
 	/**
-	 * Reset the bounding-box's coordinate system to the current
-	 * transformation matrix.
+	 * Return a replicate of this world object's Bounding Box
 	 */
-	public void setCoordinateSystem() {
-		localOrientation = new CoordinateSystem();
-	}
-
-	/**
-	 * Draw both the object and its bounding box;
-	 */
-	public void draw() {
+	public BoundingBox clone() {
 		RobotRun.getInstance().pushMatrix();
-		// Draw shape in its own coordinate system
 		localOrientation.apply();
-		boundingBox.draw();
+		PVector dims = getDims();
+		BoundingBox copy = new BoundingBox(dims.x, dims.y, dims.z);
+		copy.setColor( boundingBox.getStrokeValue() );
 		RobotRun.getInstance().popMatrix();
+
+		return copy;
 	}
-
-	/**
-	 * Reset the object's center point
-	 */
-	public void setCenter(PVector newCenter) {
-		localOrientation.setOrigin(newCenter);
-	}
-
-	public PVector getCenter() { return localOrientation.getOrigin(); }
-
-	/**
-	 * Reset the object's orientation axes; the given rotation
-	 * matrix should be in row major order!
-	 */
-	public void setOrientationAxes(float[][] newOrientation) {
-		localOrientation.setAxes(newOrientation);
-	}
-
-	public float[][] getOrientationAxes() {
-		return localOrientation.getAxes();
-	}
-
-	/**
-	 * Sets the stroke color of this ounding-box
-	 * to the given value.
-	 */
-	public void setColor(int newColor) {
-		boundingBox.setStrokeValue(newColor);
-	}
-
-	/**
-	 * See Box.setDim()
-	 */
-	public void setDim(Float newVal, DimType dim) {
-		boundingBox.setDim(newVal, dim);
-	}
-
-	/**
-	 * See Box.getDim()
-	 */
-	public float getDim(DimType dim) {
-		return boundingBox.getDim(dim);
-	}
-
-	/**
-	 * Sets all the dimension values of the
-	 * bounding-box, where:
-	 * X -> length
-	 * Y -> height
-	 * Z -> width
-	 */
-	public void setDims(PVector newDims) {
-		boundingBox.setDim(newDims.x, DimType.LENGTH);
-		boundingBox.setDim(newDims.y, DimType.HEIGHT);
-		boundingBox.setDim(newDims.z, DimType.WIDTH);
-	}
-
-	/**
-	 * Returns the bounding-box's dimension in the
-	 * form of a PVector: (length, height, width).
-	 */
-	public PVector getDims() {
-		PVector dims = new PVector();
-		dims.x = boundingBox.getDim(DimType.LENGTH);
-		dims.y = boundingBox.getDim(DimType.HEIGHT);
-		dims.z = boundingBox.getDim(DimType.WIDTH);
-		return dims;
-	}
-
-	/**
-	 * Return a reference to this bounding-box's box.
-	 */
-	public Box getBox() { return boundingBox; }
 
 	/**
 	 * Determine of a single position, in Native Coordinates, is with
@@ -154,16 +76,94 @@ public class BoundingBox {
 	}
 
 	/**
-	 * Return a replicate of this world object's Bounding Box
+	 * Draw both the object and its bounding box;
 	 */
-	public BoundingBox clone() {
+	public void draw() {
 		RobotRun.getInstance().pushMatrix();
+		// Draw shape in its own coordinate system
 		localOrientation.apply();
-		PVector dims = getDims();
-		BoundingBox copy = new BoundingBox(dims.x, dims.y, dims.z);
-		copy.setColor( boundingBox.getStrokeValue() );
+		boundingBox.draw();
 		RobotRun.getInstance().popMatrix();
+	}
 
-		return copy;
+	/**
+	 * Return a reference to this bounding-box's box.
+	 */
+	public Box getBox() { return boundingBox; }
+
+	public PVector getCenter() { return localOrientation.getOrigin(); }
+
+	/**
+	 * See Box.getDim()
+	 */
+	public float getDim(DimType dim) {
+		return boundingBox.getDim(dim);
+	}
+
+	/**
+	 * Returns the bounding-box's dimension in the
+	 * form of a PVector: (length, height, width).
+	 */
+	public PVector getDims() {
+		PVector dims = new PVector();
+		dims.x = boundingBox.getDim(DimType.LENGTH);
+		dims.y = boundingBox.getDim(DimType.HEIGHT);
+		dims.z = boundingBox.getDim(DimType.WIDTH);
+		return dims;
+	}
+
+	public float[][] getOrientationAxes() {
+		return localOrientation.getAxes();
+	}
+
+	/**
+	 * Reset the object's center point
+	 */
+	public void setCenter(PVector newCenter) {
+		localOrientation.setOrigin(newCenter);
+	}
+
+	/**
+	 * Sets the stroke color of this ounding-box
+	 * to the given value.
+	 */
+	public void setColor(int newColor) {
+		boundingBox.setStrokeValue(newColor);
+	}
+
+	/**
+	 * Reset the bounding-box's coordinate system to the current
+	 * transformation matrix.
+	 */
+	public void setCoordinateSystem() {
+		localOrientation = new CoordinateSystem();
+	}
+
+	/**
+	 * See Box.setDim()
+	 */
+	public void setDim(Float newVal, DimType dim) {
+		boundingBox.setDim(newVal, dim);
+	}
+
+	/**
+	 * Sets all the dimension values of the
+	 * bounding-box, where:
+	 * X -> length
+	 * Y -> height
+	 * Z -> width
+	 */
+	public void setDims(PVector newDims) {
+		boundingBox.setDim(newDims.x, DimType.LENGTH);
+		boundingBox.setDim(newDims.y, DimType.HEIGHT);
+		boundingBox.setDim(newDims.z, DimType.WIDTH);
+	}
+
+	/**
+	 * Reset the object's orientation axes; the given rotation
+	 * matrix should be in row major order!
+	 */
+	public void setOrientationAxes(float[][] newOrientation) {
+		localOrientation.setAxes(newOrientation);
 	}
 }

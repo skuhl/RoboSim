@@ -15,8 +15,55 @@ public class Expression extends AtomicExpression {
 		elementList = e;
 	}
 
+	public Expression clone() {
+		ArrayList<ExpressionElement> newList = new ArrayList<ExpressionElement>();
+		for(ExpressionElement e : elementList) {
+			if(e instanceof ExprOperand) {
+				newList.add(((ExprOperand)e).clone());
+			} else {
+				newList.add((Operator)e);
+			}
+		}
+
+		return new Expression(newList);
+	}
+
+	public ExprOperand evaluate() {
+		if(elementList.get(0) instanceof Operator || elementList.size() % 2 != 1) { 
+			RobotRun.println("Expression formatting error");
+			return null;
+		}
+
+		ExprOperand result = (ExprOperand)elementList.get(0);    
+		for(int i = 1; i < elementList.size(); i += 2) {
+			if(!(elementList.get(i) instanceof Operator) || !(elementList.get(i + 1) instanceof ExprOperand)) {
+				RobotRun.println("Expression formatting error");
+				return null;
+			} 
+			else {
+				Operator op = (Operator) elementList.get(i);
+				ExprOperand nextOperand = (ExprOperand) elementList.get(i + 1);
+				AtomicExpression expr = new AtomicExpression(result, nextOperand, op);
+
+				//println(result.getDataVal() + op.toString() + nextOperand.getDataVal() + " = " + expr.evaluate().dataVal);
+				result = expr.evaluate();
+			}
+		}
+
+		return result;
+	}
+
 	public ExpressionElement get(int idx) {
 		return elementList.get(idx);
+	}
+
+	public int getLength() {
+		int len = 2;
+		for(ExpressionElement e: elementList) {
+			len += e.getLength();
+		}
+
+		return len;
 	}
 
 	public ExprOperand getOperand(int idx) {
@@ -33,24 +80,22 @@ public class Expression extends AtomicExpression {
 			return null;
 	}
 
-	public ExprOperand setOperand(int idx, ExprOperand o) {
-		if(elementList.get(idx) instanceof ExprOperand) {
-			elementList.set(idx, o);
-			return (ExprOperand)elementList.get(idx);
-		}
-		else {
-			return null;
-		}
+	/**
+	 * Returns the number of elements in the top level of the expression
+	 */
+	public int getSize() {
+		return elementList.size();
 	}
 
-	public Operator setOperator(int idx, Operator o) {
-		if(elementList.get(idx) instanceof Operator) {
-			elementList.set(idx, o);
-			return (Operator)elementList.get(idx); 
+	public int getStartingIdx(int element) {
+		int[] elements = mapToEdit();
+		int idx = 0;
+
+		while(elements[idx] != element) {
+			idx += 1;
 		}
-		else {
-			return null;
-		}
+
+		return idx;
 	}
 
 	public void insertElement(int edit_idx) {
@@ -86,6 +131,24 @@ public class Expression extends AtomicExpression {
 		}
 	}
 
+	public int[] mapToEdit() {
+		int[] ret = new int[getLength() - 2];
+		int element_start = 0;
+		int element_idx = 0;
+
+		for(int i = 0; i < ret.length; i += 1) {
+			int len = elementList.get(element_idx).getLength();
+			ret[i] = element_idx;
+
+			if(i - element_start >= len - 1) {
+				element_idx += 1;
+				element_start = i + 1;
+			}
+		}
+
+		return ret;
+	}
+
 	public void removeElement(int edit_idx) {
 		if(elementList.size() > 1) {
 			int[] elements = mapToEdit();
@@ -106,87 +169,24 @@ public class Expression extends AtomicExpression {
 		}
 	}
 
-	public int getLength() {
-		int len = 2;
-		for(ExpressionElement e: elementList) {
-			len += e.getLength();
+	public ExprOperand setOperand(int idx, ExprOperand o) {
+		if(elementList.get(idx) instanceof ExprOperand) {
+			elementList.set(idx, o);
+			return (ExprOperand)elementList.get(idx);
 		}
-
-		return len;
-	}
-
-	/**
-	 * Returns the number of elements in the top level of the expression
-	 */
-	public int getSize() {
-		return elementList.size();
-	}
-
-	public ExprOperand evaluate() {
-		if(elementList.get(0) instanceof Operator || elementList.size() % 2 != 1) { 
-			RobotRun.println("Expression formatting error");
+		else {
 			return null;
 		}
-
-		ExprOperand result = (ExprOperand)elementList.get(0);    
-		for(int i = 1; i < elementList.size(); i += 2) {
-			if(!(elementList.get(i) instanceof Operator) || !(elementList.get(i + 1) instanceof ExprOperand)) {
-				RobotRun.println("Expression formatting error");
-				return null;
-			} 
-			else {
-				Operator op = (Operator) elementList.get(i);
-				ExprOperand nextOperand = (ExprOperand) elementList.get(i + 1);
-				AtomicExpression expr = new AtomicExpression(result, nextOperand, op);
-
-				//println(result.getDataVal() + op.toString() + nextOperand.getDataVal() + " = " + expr.evaluate().dataVal);
-				result = expr.evaluate();
-			}
-		}
-
-		return result;
 	}
 
-	public int[] mapToEdit() {
-		int[] ret = new int[getLength() - 2];
-		int element_start = 0;
-		int element_idx = 0;
-
-		for(int i = 0; i < ret.length; i += 1) {
-			int len = elementList.get(element_idx).getLength();
-			ret[i] = element_idx;
-
-			if(i - element_start >= len - 1) {
-				element_idx += 1;
-				element_start = i + 1;
-			}
+	public Operator setOperator(int idx, Operator o) {
+		if(elementList.get(idx) instanceof Operator) {
+			elementList.set(idx, o);
+			return (Operator)elementList.get(idx); 
 		}
-
-		return ret;
-	}
-
-	public int getStartingIdx(int element) {
-		int[] elements = mapToEdit();
-		int idx = 0;
-
-		while(elements[idx] != element) {
-			idx += 1;
+		else {
+			return null;
 		}
-
-		return idx;
-	}
-
-	public Expression clone() {
-		ArrayList<ExpressionElement> newList = new ArrayList<ExpressionElement>();
-		for(ExpressionElement e : elementList) {
-			if(e instanceof ExprOperand) {
-				newList.add(((ExprOperand)e).clone());
-			} else {
-				newList.add((Operator)e);
-			}
-		}
-
-		return new Expression(newList);
 	}
 
 	public String toString() {

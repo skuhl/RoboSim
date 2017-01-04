@@ -23,38 +23,12 @@ public class Program {
 		instructions = new ArrayList<Instruction>();
 	}
 
-	public ArrayList<Instruction> getInstructions() {
-		return instructions;
-	}
-
-	public void setName(String n) { name = n; }
-
-	public String getName() {
-		return name;
-	}
-
-	public int size() {
-		return instructions.size();
-	}
-
-	public int getRegistersLength() {
-		return LPosReg.size();
-	}
-
-	public Instruction getInstruction(int i){
-		return instructions.get(i);
-	}
-
 	public void addInstruction(Instruction i) {
 		instructions.add(i);
 	}
 
 	public void addInstruction(int idx, Instruction i) {
 		instructions.add(idx, i);
-	}
-
-	public void overwriteInstruction(int idx, Instruction i) {
-		instructions.set(idx, i);
 	}
 
 	/**
@@ -66,6 +40,113 @@ public class Program {
 		LPosReg.put(nextPosition, pt);
 		updateNextPosition();
 	}
+
+	/**
+	 * Remove all the positinos from this program
+	 */
+	public void clearPositions() {
+		LPosReg.clear();
+		nextPosition = 0;
+	}
+
+	/**
+	 * Return an independent replica of this program object.
+	 */
+	public Program clone() {
+		Program copy = new Program(name);
+
+		// Copy positions
+		Set<Integer> posNums = LPosReg.keySet();
+
+		for (Integer posNum : posNums) {
+			copy.setPosition(posNum, LPosReg.get(posNum));
+		}
+
+		// Copy instructions
+		for (Instruction inst : instructions) {
+			copy.addInstruction(inst.clone());
+		}
+
+		return copy;
+	}
+
+	/**
+	 * Determines if a label with the given number exists in the program and returns its
+	 * instruction index if it does.
+	 * 
+	 * @param lblNum  The target label index
+	 * @returning     The instruction index of the target label, or -1 if it exists
+	 */
+	public int findLabelIdx(int lblNum) {
+
+		for (int idx = 0; idx < instructions.size(); ++idx) {
+			Instruction inst = instructions.get(idx);
+			// Check the current instruction
+			if (inst instanceof LabelInstruction && ((LabelInstruction)inst).getLabelNum() == lblNum) {
+				// Return the label's instruction index
+				return idx;
+			}
+		}
+		// A label with the given number does not exist
+		return -1;
+	}
+
+	public Instruction getInstruction(int i){
+		return instructions.get(i);
+	}
+
+	public ArrayList<Instruction> getInstructions() {
+		return instructions;
+	}
+
+	public LabelInstruction getLabel(int n){    
+		for(Instruction i: instructions){
+			if(i instanceof LabelInstruction){
+				if(((LabelInstruction)i).getLabelNum() == n){
+					return (LabelInstruction)i;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * Get the index of the next position to normally insert a new position.
+	 */
+	public int getNextPosition() {
+		return nextPosition;
+	}
+
+	/**
+	 * Get the position assocaited with the given index.
+	 * 
+	 * @param idx  The indexx corresopnding to a position in the program
+	 */
+	public Point getPosition(int idx) {
+		return LPosReg.get(idx);
+	}
+
+	/**
+	 * Get all the indices of all initialized positions
+	 */
+	public Set<Integer> getPositionNums() {
+		return LPosReg.keySet();
+	}
+
+	public int getRegistersLength() {
+		return LPosReg.size();
+	}
+
+	public void overwriteInstruction(int idx, Instruction i) {
+		instructions.set(idx, i);
+	}
+
+	public void setName(String n) { name = n; }
 
 	/**
 	 * Add the given point at the position defined by the given index, overriding
@@ -91,13 +172,8 @@ public class Program {
 		return null;
 	}
 
-	/**
-	 * Get the position assocaited with the given index.
-	 * 
-	 * @param idx  The indexx corresopnding to a position in the program
-	 */
-	public Point getPosition(int idx) {
-		return LPosReg.get(idx);
+	public int size() {
+		return instructions.size();
 	}
 
 	/**
@@ -116,81 +192,5 @@ public class Program {
 				++nextPosition;
 			}
 		}
-	}
-
-	/**
-	 * Remove all the positinos from this program
-	 */
-	public void clearPositions() {
-		LPosReg.clear();
-		nextPosition = 0;
-	}
-
-	/**
-	 * Get all the indices of all initialized positions
-	 */
-	public Set<Integer> getPositionNums() {
-		return LPosReg.keySet();
-	}
-
-	/**
-	 * Get the index of the next position to normally insert a new position.
-	 */
-	public int getNextPosition() {
-		return nextPosition;
-	}
-
-	public LabelInstruction getLabel(int n){    
-		for(Instruction i: instructions){
-			if(i instanceof LabelInstruction){
-				if(((LabelInstruction)i).getLabelNum() == n){
-					return (LabelInstruction)i;
-				}
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * Determines if a label with the given number exists in the program and returns its
-	 * instruction index if it does.
-	 * 
-	 * @param lblNum  The target label index
-	 * @returning     The instruction index of the target label, or -1 if it exists
-	 */
-	public int findLabelIdx(int lblNum) {
-
-		for (int idx = 0; idx < instructions.size(); ++idx) {
-			Instruction inst = instructions.get(idx);
-			// Check the current instruction
-			if (inst instanceof LabelInstruction && ((LabelInstruction)inst).getLabelNum() == lblNum) {
-				// Return the label's instruction index
-				return idx;
-			}
-		}
-		// A label with the given number does not exist
-		return -1;
-	}
-
-	/**
-	 * Return an independent replica of this program object.
-	 */
-	public Program clone() {
-		Program copy = new Program(name);
-
-		// Copy positions
-		Set<Integer> posNums = LPosReg.keySet();
-
-		for (Integer posNum : posNums) {
-			copy.setPosition(posNum, LPosReg.get(posNum));
-		}
-
-		// Copy instructions
-		for (Instruction inst : instructions) {
-			copy.addInstruction(inst.clone());
-		}
-
-		return copy;
 	}
 } // end Program class

@@ -29,6 +29,45 @@ public class SelectStatement extends Instruction {
 		setInstrs(iList);
 	}
 
+	public void addCase() {
+		getCases().add(new ExprOperand());
+		getInstrs().add(new Instruction());
+	}
+
+	public void addCase(ExprOperand e, Instruction i) {
+		getCases().add(e);
+		getInstrs().add(i);
+	}
+
+	public Instruction clone() {   
+		ExprOperand newArg = getArg().clone();
+		ArrayList<ExprOperand> cList = new ArrayList<ExprOperand>();
+		ArrayList<Instruction> iList = new ArrayList<Instruction>();
+
+		for(ExprOperand o : getCases()) {
+			cList.add(o.clone());
+		}
+
+		for(Instruction i : getInstrs()) {
+			iList.add(i.clone());
+		}
+
+		SelectStatement copy = new SelectStatement(newArg, cList, iList);
+		copy.setIsCommented( isCommented() );
+		
+		return copy;
+	}
+
+	public void deleteCase(int idx) {
+		if(getCases().size() > 1) {
+			getCases().remove(idx);
+		}
+
+		if(getInstrs().size() > 1) {
+			getInstrs().remove(idx);
+		}
+	}
+
 	public int execute() {
 		for(int i = 0; i < getCases().size(); i += 1) {
 			ExprOperand c = getCases().get(i);
@@ -50,47 +89,32 @@ public class SelectStatement extends Instruction {
 		return 0;
 	}
 
-	public void addCase() {
-		getCases().add(new ExprOperand());
-		getInstrs().add(new Instruction());
+	public ExprOperand getArg() {
+		return arg;
 	}
 
-	public void addCase(ExprOperand e, Instruction i) {
-		getCases().add(e);
-		getInstrs().add(i);
+	public ArrayList<ExprOperand> getCases() {
+		return cases;
 	}
 
-	public void deleteCase(int idx) {
-		if(getCases().size() > 1) {
-			getCases().remove(idx);
-		}
+	public ArrayList<Instruction> getInstrs() {
+		return instrs;
+	}
 
-		if(getInstrs().size() > 1) {
-			getInstrs().remove(idx);
-		}
+	public void setArg(ExprOperand arg) {
+		this.arg = arg;
+	}
+
+	public void setCases(ArrayList<ExprOperand> cases) {
+		this.cases = cases;
+	}
+
+	public void setInstrs(ArrayList<Instruction> instrs) {
+		this.instrs = instrs;
 	}
 
 	public String toString() {
 		return "";
-	}
-
-	public Instruction clone() {   
-		ExprOperand newArg = getArg().clone();
-		ArrayList<ExprOperand> cList = new ArrayList<ExprOperand>();
-		ArrayList<Instruction> iList = new ArrayList<Instruction>();
-
-		for(ExprOperand o : getCases()) {
-			cList.add(o.clone());
-		}
-
-		for(Instruction i : getInstrs()) {
-			iList.add(i.clone());
-		}
-
-		SelectStatement copy = new SelectStatement(newArg, cList, iList);
-		copy.setIsCommented( isCommented() );
-		// TODO actually copy the select statement
-		return copy;
 	}
 
 	public String[] toStringArray() {
@@ -108,29 +132,5 @@ public class SelectStatement extends Instruction {
 		}
 
 		return ret;
-	}
-
-	public ArrayList<Instruction> getInstrs() {
-		return instrs;
-	}
-
-	public void setInstrs(ArrayList<Instruction> instrs) {
-		this.instrs = instrs;
-	}
-
-	public ExprOperand getArg() {
-		return arg;
-	}
-
-	public void setArg(ExprOperand arg) {
-		this.arg = arg;
-	}
-
-	public ArrayList<ExprOperand> getCases() {
-		return cases;
-	}
-
-	public void setCases(ArrayList<ExprOperand> cases) {
-		this.cases = cases;
 	}
 }

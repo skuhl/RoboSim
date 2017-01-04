@@ -36,24 +36,8 @@ public abstract class WorldObject implements Cloneable {
 	public void applyCoordinateSystem() {
 		localOrientation.apply();
 	}
-	/**
-	 * Transform the World Object's local Coordinate System to
-	 * the current transformation matrix.
-	 */
-	public void setCoordinateSystem() {
-		localOrientation = new CoordinateSystem();
-	}
-
-	/**
-	 * Draw the world object in its local orientation.
-	 */
-	public void draw() {
-		RobotRun.getInstance().pushMatrix();
-		// Draw shape in its own coordinate system
-		applyCoordinateSystem();
-		form.draw();
-		RobotRun.getInstance().popMatrix();
-	}
+	@Override
+	public abstract Object clone();
 
 	/**
 	 * Returns a list of values with short prefix labels, which descibe
@@ -107,10 +91,45 @@ public abstract class WorldObject implements Cloneable {
 		return fields;
 	}
 
+	/**
+	 * Draw the world object in its local orientation.
+	 */
+	public void draw() {
+		RobotRun.getInstance().pushMatrix();
+		// Draw shape in its own coordinate system
+		applyCoordinateSystem();
+		form.draw();
+		RobotRun.getInstance().popMatrix();
+	}
+
 	// Getter and Setter methods for the World Object's local orientation, name, and form
 
-	public void setLocalCenter(PVector newCenter) { localOrientation.setOrigin(newCenter); }
+	public Shape getForm() { return form; }
 
+	public PVector getLocalCenter() { return localOrientation.getOrigin(); }
+
+	public float[][] getLocalOrientationAxes() {
+		return localOrientation.getAxes();
+	}
+
+	public String getName() { return name; }
+
+	/**
+	 * Transform the World Object's local Coordinate System to
+	 * the current transformation matrix.
+	 */
+	public void setCoordinateSystem() {
+		localOrientation = new CoordinateSystem();
+	}
+
+	public void setLocalCenter(PVector newCenter) { localOrientation.setOrigin(newCenter); }
+	public void setLocalOrientationAxes(float[][] newAxes) {
+		localOrientation.setAxes(newAxes);
+	}
+
+	public void setName(String newName) { name = newName; }
+
+	public String toString() { return name; }
 	/**
 	 * Updates all non-null values of the object's center position.
 	 * If a given value is null, then the origin value remains unchanged.
@@ -136,23 +155,4 @@ public abstract class WorldObject implements Cloneable {
 			center.z = z;
 		}
 	}
-
-	public PVector getLocalCenter() { return localOrientation.getOrigin(); }
-
-	public void setLocalOrientationAxes(float[][] newAxes) {
-		localOrientation.setAxes(newAxes);
-	}
-
-	public float[][] getLocalOrientationAxes() {
-		return localOrientation.getAxes();
-	}
-
-	public void setName(String newName) { name = newName; }
-	public String getName() { return name; }
-
-	public Shape getForm() { return form; }
-
-	@Override
-	public abstract Object clone();
-	public String toString() { return name; }
 }

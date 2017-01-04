@@ -18,23 +18,23 @@ public class IOInstruction extends Instruction {
 		reg = r;
 	}
 
-	public int getState(){ return state; }
-	public void setState(int s){ state = s; }
-	public int getReg(){ return reg; }
-	public void setReg(int r){ reg = r; }
-
-	public int execute() {
-		RobotRun.getInstance().getArmModel().endEffectorState = state;
-		RobotRun.getInstance().getArmModel().checkPickupCollision(RobotRun.getInstance().activeScenario);
-		return 0;
-	}
-
 	public Instruction clone() {
 		Instruction copy = new IOInstruction(state, reg);
 		copy.setIsCommented( isCommented() );
 
 		return copy;
 	}
+	public int execute() {
+		RobotRun.getInstance().getArmModel().endEffectorState = state;
+		RobotRun.getInstance().getArmModel().checkPickupCollision(RobotRun.getInstance().activeScenario);
+		return 0;
+	}
+	public int getReg(){ return reg; }
+	public int getState(){ return state; }
+
+	public void setReg(int r){ reg = r; }
+
+	public void setState(int s){ state = s; }
 
 	public String[] toStringArray() {
 		String[] fields = new String[2];

@@ -7,7 +7,14 @@ public class LabelInstruction extends Instruction {
 		labelNum = num;
 	}
 
+	public Instruction clone() {
+		Instruction copy = new LabelInstruction(labelNum);
+		copy.setIsCommented( isCommented() );
+
+		return copy;
+	}
 	public int getLabelNum() { return labelNum; }
+
 	public void setLabelNum(int n) { labelNum = n; }
 
 	public String[] toStringArray() {
@@ -20,12 +27,5 @@ public class LabelInstruction extends Instruction {
 		}
 
 		return fields;
-	}
-
-	public Instruction clone() {
-		Instruction copy = new LabelInstruction(labelNum);
-		copy.setIsCommented( isCommented() );
-
-		return copy;
 	}
 }

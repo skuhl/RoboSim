@@ -24,11 +24,11 @@ public class Box extends Shape {
 	}
 
 	/**
-	 * Create a box with the given colors and dinemsions.
+	 * Create an empty cube with the given color and dinemsion.
 	 */
-	public Box(int fill, int strokeVal, float len, float hgt, float wdh) {
-		super(fill, strokeVal);
-		dimensions = new PVector(len, hgt, wdh);
+	public Box(int strokeVal, float edgeLen) {
+		super(null, strokeVal);
+		dimensions = new PVector(edgeLen, edgeLen, edgeLen);
 	}
 
 	/**
@@ -48,17 +48,33 @@ public class Box extends Shape {
 	}
 
 	/**
-	 * Create an empty cube with the given color and dinemsion.
+	 * Create a box with the given colors and dinemsions.
 	 */
-	public Box(int strokeVal, float edgeLen) {
-		super(null, strokeVal);
-		dimensions = new PVector(edgeLen, edgeLen, edgeLen);
+	public Box(int fill, int strokeVal, float len, float hgt, float wdh) {
+		super(fill, strokeVal);
+		dimensions = new PVector(len, hgt, wdh);
+	}
+
+	@Override
+	public Object clone() {
+		return new Box(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
 	}
 
 	public void draw() {
 		// Apply colors
 		applyColors();
 		RobotRun.getInstance().box(dimensions.x, dimensions.y, dimensions.z);
+	}
+
+	@Override
+	public float getDim(DimType dim) {    
+		switch (dim) {
+		case LENGTH:  return dimensions.x;
+		case HEIGHT:  return dimensions.y;
+		case WIDTH:   return dimensions.z;
+		// Invalid dimension
+		default:      return -1f;
+		}
 	}
 
 	@Override
@@ -81,21 +97,5 @@ public class Box extends Shape {
 			// Invalid dimension
 		default:
 		}
-	}
-
-	@Override
-	public float getDim(DimType dim) {    
-		switch (dim) {
-		case LENGTH:  return dimensions.x;
-		case HEIGHT:  return dimensions.y;
-		case WIDTH:   return dimensions.z;
-		// Invalid dimension
-		default:      return -1f;
-		}
-	}
-
-	@Override
-	public Object clone() {
-		return new Box(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
 	}
 }

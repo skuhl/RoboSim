@@ -18,6 +18,14 @@ public class ButtonTabs extends ButtonBar {
 		selectedButtonName = null;
 	}
 
+	/**
+	 * Return the name of the button which is currenty active, or
+	 * null if no button is active.
+	 */
+	public String getActiveButtonName() {
+		return selectedButtonName;
+	}
+
 	public void onClick() {
 		// Update active button state
 		super.onClick();
@@ -34,13 +42,5 @@ public class ButtonTabs extends ButtonBar {
 				selectedButtonName = (String)map.get("name");
 			}
 		}
-	}
-
-	/**
-	 * Return the name of the button which is currenty active, or
-	 * null if no button is active.
-	 */
-	public String getActiveButtonName() {
-		return selectedButtonName;
 	}
 }

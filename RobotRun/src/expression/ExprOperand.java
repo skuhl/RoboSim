@@ -22,12 +22,6 @@ public class ExprOperand implements ExpressionElement {
 		type = ExpressionElement.UNINIT;
 	}
 
-	//create floating point operand
-	public ExprOperand(float d) {
-		type = ExpressionElement.FLOAT;
-		dataVal = d;
-	}
-
 	//create boolean operand
 	public ExprOperand(boolean b) {
 		type = ExpressionElement.BOOL;
@@ -41,11 +35,23 @@ public class ExprOperand implements ExpressionElement {
 		regVal = dReg;
 	}
 
+	//create floating point operand
+	public ExprOperand(float d) {
+		type = ExpressionElement.FLOAT;
+		dataVal = d;
+	}
+
 	//create IO register operand
 	public ExprOperand(IORegister ioReg, int i) {
 		type = ExpressionElement.IOREG;
 		setRegIdx(i);
 		regVal = ioReg;
+	}
+
+	//create point operand (used during evaulation only) 
+	public ExprOperand(Point p) {
+		type = ExpressionElement.POSTN;
+		pointVal = p;
 	}
 
 	//create position register operand
@@ -63,30 +69,29 @@ public class ExprOperand implements ExpressionElement {
 		regVal = pReg;
 	}
 
-	//create point operand (used during evaulation only) 
-	public ExprOperand(Point p) {
-		type = ExpressionElement.POSTN;
-		pointVal = p;
+	public ExprOperand clone() {
+		switch(type) {
+		case ExpressionElement.UNINIT: return new ExprOperand();
+		case ExpressionElement.SUBEXP: return ((Expression)this).clone();
+		case ExpressionElement.FLOAT:  return new ExprOperand(dataVal);
+		case ExpressionElement.BOOL:   return new ExprOperand(getBoolVal());
+		case ExpressionElement.DREG:   return new ExprOperand((DataRegister)regVal, getRegIdx());
+		case ExpressionElement.IOREG:  return new ExprOperand((IORegister)regVal, getRegIdx());
+		case ExpressionElement.PREG:   return new ExprOperand((PositionRegister)regVal, getRegIdx());
+		case ExpressionElement.PREG_IDX: return new ExprOperand((PositionRegister)regVal, getRegIdx(), posIdx);
+		case ExpressionElement.POSTN:  return new ExprOperand(pointVal);
+		default:                       return null;
+		}
 	}
 
-	public Integer getRdx() {
-		if (type == ExpressionElement.DREG ||
-				type == ExpressionElement.PREG ||
-				type == ExpressionElement.PREG_IDX ||
-				type == ExpressionElement.IOREG) {
-
-			return getRegIdx();
+	public Boolean getBoolVal() {
+		if(type == ExpressionElement.BOOL) {
+			return boolVal;
+		} else if(type == ExpressionElement.IOREG) {
+			return (((IORegister)regVal).state == Fields.ON);
+		} else {
+			return null;
 		}
-
-		return null;
-	}
-
-	public Integer getPosIdx() {
-		if (type == ExpressionElement.PREG_IDX) {
-			return posIdx;
-		}
-
-		return null;
 	}
 
 	public Float getDataVal() {
@@ -101,14 +106,8 @@ public class ExprOperand implements ExpressionElement {
 		}
 	}
 
-	public Boolean getBoolVal() {
-		if(type == ExpressionElement.BOOL) {
-			return boolVal;
-		} else if(type == ExpressionElement.IOREG) {
-			return (((IORegister)regVal).state == Fields.ON);
-		} else {
-			return null;
-		}
+	public int getLength() {
+		return (type == PREG_IDX) ? 2 : 1;
 	}
 
 	public Point getPointVal() {
@@ -121,9 +120,35 @@ public class ExprOperand implements ExpressionElement {
 		}
 	}
 
-	public ExprOperand set(float d) {
-		type = ExpressionElement.FLOAT;
-		dataVal = d;
+	public Integer getPosIdx() {
+		if (type == ExpressionElement.PREG_IDX) {
+			return posIdx;
+		}
+
+		return null;
+	}
+
+	public Integer getRdx() {
+		if (type == ExpressionElement.DREG ||
+				type == ExpressionElement.PREG ||
+				type == ExpressionElement.PREG_IDX ||
+				type == ExpressionElement.IOREG) {
+
+			return getRegIdx();
+		}
+
+		return null;
+	}
+
+	public int getRegIdx() {
+		return regIdx;
+	}
+
+	public ExprOperand reset() {
+		type = ExpressionElement.UNINIT;
+		setRegIdx(-1);
+		regVal = null;
+		pointVal = null;
 		return this;
 	}
 
@@ -140,10 +165,22 @@ public class ExprOperand implements ExpressionElement {
 		return this;
 	}
 
+	public ExprOperand set(float d) {
+		type = ExpressionElement.FLOAT;
+		dataVal = d;
+		return this;
+	}
+
 	public ExprOperand set(IORegister ioReg, int i) {
 		type = ExpressionElement.IOREG;
 		setRegIdx(i);
 		regVal = ioReg;
+		return this;
+	}
+
+	public ExprOperand set(Point p) {
+		type = ExpressionElement.POSTN;
+		pointVal = p;
 		return this;
 	}
 
@@ -164,37 +201,12 @@ public class ExprOperand implements ExpressionElement {
 		return this;
 	}
 
-	public ExprOperand set(Point p) {
-		type = ExpressionElement.POSTN;
-		pointVal = p;
-		return this;
+	public void setBoolVal(Boolean boolVal) {
+		this.boolVal = boolVal;
 	}
 
-	public ExprOperand reset() {
-		type = ExpressionElement.UNINIT;
-		setRegIdx(-1);
-		regVal = null;
-		pointVal = null;
-		return this;
-	}
-
-	public int getLength() {
-		return (type == PREG_IDX) ? 2 : 1;
-	}
-
-	public ExprOperand clone() {
-		switch(type) {
-		case ExpressionElement.UNINIT: return new ExprOperand();
-		case ExpressionElement.SUBEXP: return ((Expression)this).clone();
-		case ExpressionElement.FLOAT:  return new ExprOperand(dataVal);
-		case ExpressionElement.BOOL:   return new ExprOperand(getBoolVal());
-		case ExpressionElement.DREG:   return new ExprOperand((DataRegister)regVal, getRegIdx());
-		case ExpressionElement.IOREG:  return new ExprOperand((IORegister)regVal, getRegIdx());
-		case ExpressionElement.PREG:   return new ExprOperand((PositionRegister)regVal, getRegIdx());
-		case ExpressionElement.PREG_IDX: return new ExprOperand((PositionRegister)regVal, getRegIdx(), posIdx);
-		case ExpressionElement.POSTN:  return new ExprOperand(pointVal);
-		default:                       return null;
-		}
+	public void setRegIdx(int regIdx) {
+		this.regIdx = regIdx;
 	}
 
 	public String toString(){
@@ -243,17 +255,5 @@ public class ExprOperand implements ExpressionElement {
 		} else {
 			return new String[] { this.toString() };
 		}
-	}
-
-	public int getRegIdx() {
-		return regIdx;
-	}
-
-	public void setRegIdx(int regIdx) {
-		this.regIdx = regIdx;
-	}
-
-	public void setBoolVal(Boolean boolVal) {
-		this.boolVal = boolVal;
 	}
 }

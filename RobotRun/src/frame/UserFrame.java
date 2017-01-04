@@ -19,40 +19,15 @@ public class UserFrame extends Frame {
 	}
 	
 	@Override
-	public void reset() {
-		orientationOffset = new RQuaternion();
-		setPoint(null, 0);
-		setPoint(null, 1);
-		setPoint(null, 2);
-		setPoint(null, 3);
-		setDEOrigin(null);
-		setDEOrientationOffset(null);
-		origin = new PVector(0f, 0f, 0f);
-		setOrientOrigin(null);
-	}
-
-	@Override
 	public RQuaternion getOrientation() { return orientationOffset; }
 
-	@Override
-	public void setPoint(Point p, int idx) {
-
-		/* Map the index into the 'Point array' to the
-		 * actual values stored in the frame */
-		switch(idx) {
-		case 0:
-		case 1:
-		case 2:
-			super.setPoint(p, idx);
-			return;
-
-		case 3:
-			setOrientOrigin(p);
-			return;
-
-		default:
-		}
+	public Point getOrientOrigin() {
+		return orientOrigin;
 	}
+
+	// Getter and Setters for the User frame's origin
+	@Override
+	public PVector getOrigin() { return origin; }
 
 	@Override
 	public Point getPoint(int idx) {
@@ -72,6 +47,19 @@ public class UserFrame extends Frame {
 		}
 
 		return null;
+	}
+
+	@Override
+	public void reset() {
+		orientationOffset = new RQuaternion();
+		setPoint(null, 0);
+		setPoint(null, 1);
+		setPoint(null, 2);
+		setPoint(null, 3);
+		setDEOrigin(null);
+		setDEOrientationOffset(null);
+		origin = new PVector(0f, 0f, 0f);
+		setOrientOrigin(null);
 	}
 
 	@Override
@@ -109,6 +97,31 @@ public class UserFrame extends Frame {
 		return false;
 	}
 
+	public void setOrientOrigin(Point orientOrigin) {
+		this.orientOrigin = orientOrigin;
+	}
+	public void setOrigin(PVector newOrigin) { origin = newOrigin; }
+
+	@Override
+	public void setPoint(Point p, int idx) {
+
+		/* Map the index into the 'Point array' to the
+		 * actual values stored in the frame */
+		switch(idx) {
+		case 0:
+		case 1:
+		case 2:
+			super.setPoint(p, idx);
+			return;
+
+		case 3:
+			setOrientOrigin(p);
+			return;
+
+		default:
+		}
+	}
+
 	/**
 	 * Returns a string array, where each entry is one of
 	 * the User frame's origin or orientation values:
@@ -137,18 +150,5 @@ public class UserFrame extends Frame {
 		values[5] = String.format("R: %4.3f", wpr.y);
 
 		return values;
-	}
-
-	// Getter and Setters for the User frame's origin
-	@Override
-	public PVector getOrigin() { return origin; }
-	public void setOrigin(PVector newOrigin) { origin = newOrigin; }
-
-	public Point getOrientOrigin() {
-		return orientOrigin;
-	}
-
-	public void setOrientOrigin(Point orientOrigin) {
-		this.orientOrigin = orientOrigin;
 	}
 }
