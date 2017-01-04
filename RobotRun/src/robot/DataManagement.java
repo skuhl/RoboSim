@@ -690,30 +690,7 @@ public abstract class DataManagement {
 					}
 				}
 			}
-
-<<<<<<< HEAD
-			out.writeInt(regType);
-			out.writeInt(r.idx);
-			out.writeInt(rs.getPosIdx());
-
-			saveExpressionElement(rs.getExpr(), out);
-
-		} else if (inst instanceof IfStatement) {
-			IfStatement is = (IfStatement)inst;
 			
-			out.writeByte(9);
-			out.writeBoolean(is.isCommented());
-			// Save the expression and instruction associated with the if statement
-			System.out.printf("%s\n", is.getExpr());
-			saveExpressionElement(is.getExpr(), out);
-			saveInstruction(is.getInstr(), out);
-			
-		}/* Add other instructions here! */
-		else if (inst instanceof Instruction) {
-			/// A blank instruction
-			out.writeByte(1);
-			out.writeBoolean(inst.isCommented());
-=======
 			// Set all the Part's references
 			for (LoadedPart lPart : partsWithReferences) {
 				for (Fixture f : fixtures) {
@@ -722,7 +699,6 @@ public abstract class DataManagement {
 					}
 				}
 			}
->>>>>>> bbcb4df388006724cbc9efef44cb46aabc9aa56e
 
 			return s;
 		}
@@ -815,20 +791,10 @@ public abstract class DataManagement {
 			} else if (flag == 3) {
 				float scale = in.readFloat();
 				String srcPath = in.readUTF();
-
-<<<<<<< HEAD
-		} else if (instType == 8) {
-			boolean isCommented = in.readBoolean();
-			int regType = in.readInt();
-			int regIdx = in.readInt();
-			int posIdx = in.readInt();
-			Expression expr = (Expression)loadExpressionElement(robot, in);
-=======
 				// Creates a complex shape from the srcPath located in RobotRun/data/
 				shape = new ModelShape(srcPath, fill, scale);
 			}
 		}
->>>>>>> bbcb4df388006724cbc9efef44cb46aabc9aa56e
 
 		return shape;
 	}
@@ -859,22 +825,6 @@ public abstract class DataManagement {
 				PVector OBBDims = loadPVector(in);
 				String refName = in.readUTF();
 
-<<<<<<< HEAD
-		} else if (instType == 9) {
-			boolean isCommented = in.readBoolean();
-			ExpressionElement expr = loadExpressionElement(robot, in);
-			System.out.printf("If : %s\n", expr);
-			Instruction ifBlock = loadInstruction(robot, in);
-			
-			inst = new IfStatement((AtomicExpression)expr, ifBlock);
-			inst.setIsCommented(isCommented);
-			
-		}/* Add other instructions here! */
-		else if (instType == 1) {
-			inst = new Instruction();
-			boolean isCommented = in.readBoolean();
-			inst.setIsCommented(isCommented);
-=======
 				if (refName.equals("")) {
 					// A part object
 					wldObjFields = new Part(name, form, OBBDims, localOrientation, null);
@@ -882,7 +832,6 @@ public abstract class DataManagement {
 					// A part object with its reference's name
 					wldObjFields = new LoadedPart( new Part(name, form, OBBDims, localOrientation, null), refName );
 				}
->>>>>>> bbcb4df388006724cbc9efef44cb46aabc9aa56e
 
 			} else if (flag == 2) {
 				// A fixture object
@@ -975,28 +924,7 @@ public abstract class DataManagement {
 			} 
 		}
 	}
-	
-<<<<<<< HEAD
-	private static Expression loadExpression(ArmModel robot, DataInputStream in)
-			throws IOException, ClassCastException {
-		
-		byte nullFlag = in.readByte();
-	
-		if (nullFlag == 1) {
-			ArrayList<ExpressionElement> exprElements = new ArrayList<ExpressionElement>();
-			// Read in expression length
-			int len = in.readInt();
-	
-			for (int idx = 0; idx < len; ++idx) {
-				// Read in an expression element
-				ExpressionElement ee = loadExpressionElement(robot, in);
-				// Add it to the expression
-				exprElements.add(ee);
-			}
-			
-			
-			return new Expression(exprElements);
-=======
+
 	private static void saveFloatArray(float[] list, DataOutputStream out) throws IOException {
 		if (list == null) {
 			// Write flag value
@@ -1031,7 +959,6 @@ public abstract class DataManagement {
 					out.writeFloat(list[row][col]);
 				}
 			}
->>>>>>> bbcb4df388006724cbc9efef44cb46aabc9aa56e
 		}
 	}
 	
@@ -1053,31 +980,7 @@ public abstract class DataManagement {
 		}
 		
 		int len;
-
-<<<<<<< HEAD
-			} else if (ee instanceof Expression) {
-				// Expression
-				out.writeByte(2);
-				Expression e = (Expression)ee;
-				
-				int exprLen = e.getSize();
-				// Save the length of the expression
-				out.writeInt(exprLen);
 		
-				// Save each expression element
-				for (int idx = 0; idx < exprLen; ++idx) {
-					saveExpressionElement(e.get(idx), out);
-				}
-				
-			} else if (ee instanceof AtomicExpression) {
-				// Atomic expression
-				AtomicExpression ae = (AtomicExpression)ee;
-
-				out.writeByte(3);
-				saveExpressionElement(ae.getArg1(), out);
-				saveExpressionElement(ae.getArg2(), out);
-				saveExpressionElement(ae.getOp(), out);
-=======
 		if (f instanceof UserFrame) {
 			// Write User frame origin
 			savePVector(f.getOrigin(), out);
@@ -1089,7 +992,6 @@ public abstract class DataManagement {
 			len = 6;
 			
 		}
->>>>>>> bbcb4df388006724cbc9efef44cb46aabc9aa56e
 
 		// Write frame axes
 		saveRQuaternion(f.getOrientation(), out);
@@ -1099,16 +1001,10 @@ public abstract class DataManagement {
 			savePoint(f.getPoint(idx), out);
 		}
 
-<<<<<<< HEAD
-				out.writeByte(4);
-				// Indicate that the object is non-null
-				out.writeInt(eo.type);
-=======
 		// Write frame manual entry origin value
 		savePVector(f.getDEOrigin(), out);
 		// Write frame manual entry origin value
 		saveRQuaternion(f.getDEOrientationOffset(), out);
->>>>>>> bbcb4df388006724cbc9efef44cb46aabc9aa56e
 
 		if (f instanceof UserFrame) {
 			// Save point for the origin offset of the frame
@@ -1166,38 +1062,6 @@ public abstract class DataManagement {
 	private static void saveInstruction(Instruction inst, DataOutputStream out)
 			throws IOException {
 
-<<<<<<< HEAD
-	private static ExpressionElement loadExpressionElement(ArmModel robot,
-			DataInputStream in) throws IOException, ClassCastException {
-
-		byte nullFlag = in.readByte();
-
-		if (nullFlag == 1) {
-			// Read in an operator
-			int opFlag = in.readInt();
-			return Operator.getOpFromID(opFlag);
-
-		} else if (nullFlag == 2) {
-			// Read in an expression element
-			ArrayList<ExpressionElement> exprElements = new ArrayList<ExpressionElement>();
-			// Read in expression length
-			int len = in.readInt();
-	
-			for (int idx = 0; idx < len; ++idx) {
-				// Read in an expression element
-				ExpressionElement ee = loadExpressionElement(robot, in);
-				// Add it to the expression
-				exprElements.add(ee);
-			}
-			
-			return new Expression(exprElements);
-			
-		} else if (nullFlag == 3) {
-			// Read in an atomic expression operand
-			ExprOperand a0 = (ExprOperand)loadExpressionElement(robot, in);
-			ExprOperand a1 = (ExprOperand)loadExpressionElement(robot, in);
-			Operator op = (Operator)loadExpressionElement(robot, in);
-=======
 		/* Each Instruction subclass MUST have its own saving code block
 		 * associated with its unique data fields */
 		if (inst instanceof MotionInstruction) {
@@ -1213,21 +1077,13 @@ public abstract class DataManagement {
 			out.writeInt(m_inst.getTermination());
 			out.writeInt(m_inst.getUserFrame());
 			out.writeInt(m_inst.getToolFrame());
->>>>>>> bbcb4df388006724cbc9efef44cb46aabc9aa56e
 
 			MotionInstruction subInst = m_inst.getSecondaryPoint();
 
-<<<<<<< HEAD
-		} else if (nullFlag == 4) {
-			// Read in a normal operand
-			ExprOperand eo;
-			int opType = in.readInt();
-=======
 			if (subInst != null) {
 				// Save secondary point for circular instructions
 				out.writeByte(1);
 				saveInstruction(subInst, out);
->>>>>>> bbcb4df388006724cbc9efef44cb46aabc9aa56e
 
 			} else {
 				// No secondary point
@@ -1282,17 +1138,9 @@ public abstract class DataManagement {
 
 			// In what type of register will the result of the statement be placed?
 			int regType;
-
-<<<<<<< HEAD
-		// Uninitialized
-		return null;
-	}
-	
-	private static void saveFrame(Frame f, DataOutputStream out) throws IOException {
-=======
+			
 			if (r instanceof IORegister) {
 				regType = 2;
->>>>>>> bbcb4df388006724cbc9efef44cb46aabc9aa56e
 
 			} else if (r instanceof PositionRegister) {
 				regType = 1;
