@@ -54,7 +54,7 @@ public class SelectStatement extends Instruction {
 
 		SelectStatement copy = new SelectStatement(newArg, cList, iList);
 		copy.setIsCommented( isCommented() );
-		// TODO actually copy the select statement
+		
 		return copy;
 	}
 

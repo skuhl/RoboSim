@@ -1,6 +1,5 @@
 package programming;
 import expression.AtomicExpression;
-import expression.BooleanExpression;
 import expression.ExprOperand;
 import expression.Expression;
 import expression.Operator;
@@ -25,6 +24,11 @@ public class IfStatement extends Instruction {
 		expr = new Expression();
 		instr = null;
 	}
+	
+	public IfStatement(AtomicExpression e) {
+		expr = e;
+		instr = null;
+	}
 
 	public IfStatement(AtomicExpression e, Instruction i) {
 		expr = e;
@@ -32,12 +36,21 @@ public class IfStatement extends Instruction {
 	}
 
 	public IfStatement(Operator o, Instruction i){
-		expr = new BooleanExpression(o);
+		expr = new AtomicExpression(o);
 		instr = i;
 	}
 	
 	public Instruction clone() {
-		Instruction copy = new IfStatement(expr.clone(), instr.clone());
+		Instruction copy;
+		
+		if(expr instanceof Expression) {
+			if(instr != null) copy = new IfStatement(((Expression)expr).clone(), instr.clone());
+			else 			  copy = new IfStatement(((Expression)expr).clone());
+		} else {
+			if(instr != null) copy = new IfStatement(expr.clone(), instr.clone());
+			else 			  copy = new IfStatement(expr.clone());
+		}
+		
 		copy.setIsCommented( isCommented() );
 		
 		return copy;

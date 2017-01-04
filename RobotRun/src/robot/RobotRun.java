@@ -35,6 +35,16 @@ public class RobotRun extends PApplet {
 	public static final float[][] WORLD_AXES;
 	private static final char[][] letters;
 	
+	public static void main(String[] passedArgs) {
+		String[] appletArgs = new String[] { "robot.RobotRun" };
+		
+		if (passedArgs != null) {
+			PApplet.main(concat(appletArgs, passedArgs));
+		} else {
+			PApplet.main(appletArgs);
+		}
+	}
+	
 	static {
 		instance = null;
 		ROBOT_POSITION = new PVector(200, 300, 200);
@@ -48,6 +58,7 @@ public class RobotRun extends PApplet {
 								 {'s', 't', 'u', 'v', 'w', 'x'},
 								 {'y', 'z', '_', '@', '*', '.'}};
 	}
+	
 	// Deterimes what type of axes should be displayed
 	private static AxesDisplay axesState = AxesDisplay.AXES;
 	public static final boolean DISPLAY_TEST_OUTPUT = true;
@@ -469,15 +480,7 @@ public class RobotRun extends PApplet {
 
 		return inverse;
 	}
-	public static void main(String[] passedArgs) {
-		String[] appletArgs = new String[] { "robot.RobotRun" };
-		
-		if (passedArgs != null) {
-			PApplet.main(concat(appletArgs, passedArgs));
-		} else {
-			PApplet.main(appletArgs);
-		}
-	}
+	
 	//calculates euler angles from rotation matrix
 	public static PVector matrixToEuler(float[][] r) {
 		float yRot1, xRot1, zRot1;
@@ -2847,27 +2850,27 @@ public class RobotRun extends PApplet {
 					break;
 				}
 			}
-			else if(opEdit instanceof BooleanExpression) {
-				BooleanExpression boolExpr = (BooleanExpression)opEdit;
+			else if(opEdit instanceof AtomicExpression) {
+				AtomicExpression atmExpr = (AtomicExpression)opEdit;
 
 				switch(opt_select) {
 				case 0:
-					boolExpr.setOperator(Operator.EQUAL);
+					atmExpr.setOperator(Operator.EQUAL);
 					break;
 				case 1:
-					boolExpr.setOperator(Operator.NEQUAL);
+					atmExpr.setOperator(Operator.NEQUAL);
 					break;
 				case 2:
-					boolExpr.setOperator(Operator.GRTR);
+					atmExpr.setOperator(Operator.GRTR);
 					break;
 				case 3:
-					boolExpr.setOperator(Operator.LESS);
+					atmExpr.setOperator(Operator.LESS);
 					break;
 				case 4:
-					boolExpr.setOperator(Operator.GREQ);
+					atmExpr.setOperator(Operator.GREQ);
 					break;
 				case 5:
-					boolExpr.setOperator(Operator.LSEQ);
+					atmExpr.setOperator(Operator.LSEQ);
 					break;
 				}
 			}
@@ -3711,6 +3714,7 @@ public class RobotRun extends PApplet {
 				int selectIdx = getSelectedIdx();
 				getInstrEdit(ins, selectIdx);
 			}
+			
 			break;
 		case CONFIRM_INSERT:
 			try {
@@ -4637,17 +4641,17 @@ public class RobotRun extends PApplet {
 					}
 				}
 			} 
-			else if(stmt.getExpr() instanceof BooleanExpression) {
+			else if(stmt.getExpr() instanceof AtomicExpression) {
 				if(selectIdx == 2) {
-					opEdit = ((BooleanExpression)stmt.getExpr()).getArg1();
+					opEdit = ((AtomicExpression)stmt.getExpr()).getArg1();
 					nextScreen(Screen.SET_BOOL_EXPR_ARG);
 				} else if(selectIdx == 3) {
 					opEdit = stmt.getExpr();
 					nextScreen(Screen.SET_EXPR_OP);
-				} else if(selectIdx == 4){
-					opEdit = ((BooleanExpression)stmt.getExpr()).getArg2();
+				} else if(selectIdx == 4) {
+					opEdit = ((AtomicExpression)stmt.getExpr()).getArg2();
 					nextScreen(Screen.SET_BOOL_EXPR_ARG);
-				} else if(selectIdx == 5){
+				} else if(selectIdx == 5) {
 					nextScreen(Screen.SET_IF_STMT_ACT);
 				} else {
 					if(stmt.getInstr() instanceof JumpInstruction) {
@@ -5993,14 +5997,7 @@ public class RobotRun extends PApplet {
 			edit.add("\0" + workingText);
 			break;
 		case SET_EXPR_OP:
-			if(opEdit instanceof BooleanExpression) {
-				edit.add("1. ... =  ...");
-				edit.add("2. ... <> ...");
-				edit.add("3. ... >  ...");
-				edit.add("4. ... <  ...");
-				edit.add("5. ... >= ...");
-				edit.add("6. ... <= ...");
-			} else if(opEdit instanceof Expression) {
+			if(opEdit instanceof Expression) {
 				if(activeInstruction() instanceof IfStatement) {
 					edit.add("1. + ");
 					edit.add("2. - ");
@@ -6017,7 +6014,6 @@ public class RobotRun extends PApplet {
 					edit.add("13. AND ");
 					edit.add("14. OR ");
 					edit.add("15. NOT ");
-					edit.add("16. ... ");
 				} else {
 					edit.add("1. + ");
 					edit.add("2. - ");
@@ -6026,7 +6022,15 @@ public class RobotRun extends PApplet {
 					edit.add("5. | ");
 					edit.add("6. % ");
 				}
+			} else {
+				edit.add("1. ... =  ...");
+				edit.add("2. ... <> ...");
+				edit.add("3. ... >  ...");
+				edit.add("4. ... <  ...");
+				edit.add("5. ... >= ...");
+				edit.add("6. ... <= ...");
 			}
+			
 			break;
 		case SET_EXPR_ARG:
 		case SET_BOOL_EXPR_ARG:
