@@ -78,25 +78,18 @@ public abstract class DataManagement {
 			return Operator.getOpFromID(opFlag);
 
 		} else if (nullFlag == 2) {
-			Expression e = new Expression();
+			ArrayList<ExpressionElement> exprElements = new ArrayList<>();
 			// Read in expression length
 			int len = in.readInt();
 	
 			for (int idx = 0; idx < len; ++idx) {
 				// Read in an expression element
 				ExpressionElement ee = loadExpressionElement(robot, in);
-	
-				e.insertElement(idx);
 				// Add it to the expression
-				if (ee instanceof Operator) {
-					e.setOperator(idx, (Operator)ee);
-	
-				} else {
-					e.setOperand(idx, (ExprOperand)ee);
-				}
+				exprElements.add(ee);
 			}
 	
-			return e;
+			return new Expression(exprElements);
 			
 		} else if (nullFlag == 3) {
 			// Read in an atomic expression operand

@@ -35,11 +35,11 @@ public class RobotRun extends PApplet {
 	public static final float[][] WORLD_AXES;
 	private static final char[][] letters;
 	
-	public static void main(String[] passedArgs) {
+	public static void main(String[] args) {
 		String[] appletArgs = new String[] { "robot.RobotRun" };
 		
-		if (passedArgs != null) {
-			PApplet.main(concat(appletArgs, passedArgs));
+		if (args != null) {
+			PApplet.main(concat(appletArgs, args));
 		} else {
 			PApplet.main(appletArgs);
 		}
