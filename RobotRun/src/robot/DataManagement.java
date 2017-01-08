@@ -67,12 +67,17 @@ public abstract class DataManagement {
 		scenarioDirPath = parentDirPath + "scenarios/";
 	}
 	
-	private static Expression loadExpression(ArmModel robot, DataInputStream in)
-			throws IOException, ClassCastException {
-		
+	private static ExpressionElement loadExpressionElement(ArmModel robot,
+			DataInputStream in) throws IOException, ClassCastException {
+
 		byte nullFlag = in.readByte();
-	
+
 		if (nullFlag == 1) {
+			// Read in an operator
+			int opFlag = in.readInt();
+			return Operator.getOpFromID(opFlag);
+
+		} else if (nullFlag == 2) {
 			Expression e = new Expression();
 			// Read in expression length
 			int len = in.readInt();
@@ -92,22 +97,8 @@ public abstract class DataManagement {
 			}
 	
 			return e;
-		}
-	
-		return null;
-	}
-	
-	private static ExpressionElement loadExpressionElement(ArmModel robot,
-			DataInputStream in) throws IOException, ClassCastException {
-
-		byte nullFlag = in.readByte();
-
-		if (nullFlag == 1) {
-			// Read in an operator
-			int opFlag = in.readInt();
-			return Operator.getOpFromID(opFlag);
-
-		} else if (nullFlag == 2) {
+			
+		} else if (nullFlag == 3) {
 			// Read in an atomic expression operand
 			ExprOperand a0 = (ExprOperand)loadExpressionElement(robot, in);
 			ExprOperand a1 = (ExprOperand)loadExpressionElement(robot, in);
@@ -115,7 +106,7 @@ public abstract class DataManagement {
 
 			return new AtomicExpression(a0, a1, op);
 
-		} else if (nullFlag == 3) {
+		} else if (nullFlag == 4) {
 			// Read in a normal operand
 			ExprOperand eo;
 			int opType = in.readInt();
@@ -379,7 +370,7 @@ public abstract class DataManagement {
 			int regType = in.readInt();
 			int regIdx = in.readInt();
 			int posIdx = in.readInt();
-			Expression expr = loadExpression(robot, in);
+			Expression expr = (Expression)loadExpressionElement(robot, in);
 
 			if (regType == 2) {
 				inst = new RegisterStatement(robot.getIOReg(regIdx), expr);
@@ -841,27 +832,6 @@ public abstract class DataManagement {
 
 		return wldObjFields;
 	}
-	
-	private static void saveExpression(Expression e, DataOutputStream out)
-			throws IOException {
-	
-		if (e == null) {
-			// Indicate the object saved is null
-			out.writeByte(0);
-	
-		} else {
-			out.writeByte(1);
-	
-			int exprLen = e.getSize();
-			// Save the length of the expression
-			out.writeInt(exprLen);
-	
-			// Save each expression element
-			for (int idx = 0; idx < exprLen; ++idx) {
-				saveExpressionElement(e.get(idx), out);
-			}
-		}
-	}
 
 	private static void saveExpressionElement(ExpressionElement ee,
 			DataOutputStream out) throws IOException {
@@ -879,11 +849,25 @@ public abstract class DataManagement {
 				out.writeByte(1);
 				out.writeInt( op.getOpID() );
 
+			} else if (ee instanceof Expression) {
+				Expression expr = (Expression)ee;
+				
+				out.writeByte(2);
+				
+				int exprLen = expr.getSize();
+				// Save the length of the expression
+				out.writeInt(exprLen);
+		
+				// Save each expression element
+				for (int idx = 0; idx < exprLen; ++idx) {
+					saveExpressionElement(expr.get(idx), out);
+				}
+				
 			} else if (ee instanceof AtomicExpression) {
 				// Subexpression
 				AtomicExpression ae = (AtomicExpression)ee;
 
-				out.writeByte(2);
+				out.writeByte(3);
 				saveExpressionElement(ae.getArg1(), out);
 				saveExpressionElement(ae.getArg2(), out);
 				saveExpressionElement(ae.getOp(), out);
@@ -891,7 +875,7 @@ public abstract class DataManagement {
 			} if (ee instanceof ExprOperand) {
 				ExprOperand eo = (ExprOperand)ee;
 
-				out.writeByte(3);
+				out.writeByte(4);
 				// Indicate that the object is non-null
 				out.writeInt(eo.type);
 
@@ -1153,7 +1137,7 @@ public abstract class DataManagement {
 			out.writeInt(r.idx);
 			out.writeInt(rs.getPosIdx());
 
-			saveExpression(rs.getExpr(), out);
+			saveExpressionElement(rs.getExpr(), out);
 
 		}/* Add other instructions here! */
 		else if (inst instanceof Instruction) {
