@@ -81,9 +81,10 @@ public abstract class DataManagement {
 			ArrayList<ExpressionElement> exprElements = new ArrayList<>();
 			// Read in expression length
 			int len = in.readInt();
-	
+			
+			// Read in each expression element
 			for (int idx = 0; idx < len; ++idx) {
-				// Read in an expression element
+				
 				ExpressionElement ee = loadExpressionElement(robot, in);
 				// Add it to the expression
 				exprElements.add(ee);
@@ -379,6 +380,17 @@ public abstract class DataManagement {
 
 			}
 
+		} else if (instType == 9) {
+			// Load data associated with an if statement
+			boolean isCommented = in.readBoolean();
+			Instruction subInst = loadInstruction(robot, in);
+			AtomicExpression expr = (AtomicExpression)loadExpressionElement(robot, in);
+			
+			System.out.printf("%s : %s\n", expr, subInst);
+			
+			inst = new IfStatement(expr, subInst);
+			inst.setIsCommented(isCommented);
+			
 		}/* Add other instructions here! */
 		else if (instType == 1) {
 			inst = new Instruction();
@@ -897,8 +909,8 @@ public abstract class DataManagement {
 					// Robot position
 					savePoint(eo.getPointVal(), out);
 
-				} // Otherwise it is uninitialized
-			} 
+				}// Otherwise it is uninitialized
+			}
 		}
 	}
 
@@ -1132,6 +1144,16 @@ public abstract class DataManagement {
 
 			saveExpressionElement(rs.getExpr(), out);
 
+		} else if (inst instanceof IfStatement) {
+			IfStatement ifSt = (IfStatement)inst;
+			System.out.printf("%s : %s\n", ifSt.getExpr(), ifSt.getInstr());
+			
+			out.writeByte(9);
+			out.writeBoolean(ifSt.isCommented());
+			// Save data associated with the if statement
+			saveInstruction(ifSt.getInstr(), out);
+			saveExpressionElement(ifSt.getExpr(), out);
+			
 		}/* Add other instructions here! */
 		else if (inst instanceof Instruction) {
 			/// A blank instruction

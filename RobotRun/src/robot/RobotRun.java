@@ -3111,7 +3111,8 @@ public class RobotRun extends PApplet {
 		case SET_CALL_PROG:
 			if(activeInstruction() instanceof IfStatement) {
 				IfStatement ifStmt = (IfStatement)activeInstruction();
-				((CallInstruction)ifStmt.getInstr()).setProgIdx(opt_select);
+				//((CallInstruction)ifStmt.getInstr()).setProgIdx(opt_select);
+				((CallInstruction)ifStmt.getInstr()).setProgIdx(getRow_select());
 			}
 			else if(activeInstruction() instanceof SelectStatement) {
 				SelectStatement sStmt = (SelectStatement)activeInstruction();
