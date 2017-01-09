@@ -39,6 +39,7 @@ import programming.LabelInstruction;
 import programming.MotionInstruction;
 import programming.Program;
 import programming.RegisterStatement;
+import programming.SelectStatement;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
@@ -377,7 +378,6 @@ public abstract class DataManagement {
 			} else if (regType == 0) {
 				inst = new RegisterStatement(robot.getDReg(regIdx), expr);
 				inst.setIsCommented(isCommented);
-
 			}
 
 		} else if (instType == 9) {
@@ -386,9 +386,29 @@ public abstract class DataManagement {
 			Instruction subInst = loadInstruction(robot, in);
 			AtomicExpression expr = (AtomicExpression)loadExpressionElement(robot, in);
 			
-			System.out.printf("%s : %s\n", expr, subInst);
-			
 			inst = new IfStatement(expr, subInst);
+			inst.setIsCommented(isCommented);
+			
+		} else if (instType == 10) {
+			// Load data associated with a select statement
+			boolean isCommented = in.readBoolean();
+			ExprOperand arg = (ExprOperand)loadExpressionElement(robot, in);
+			
+			ArrayList<ExprOperand> cases = new ArrayList<ExprOperand>();
+			int size = in.readInt();
+			
+			while (size-- > 0) {
+				cases.add( (ExprOperand)loadExpressionElement(robot, in) );
+			}
+			
+			ArrayList<Instruction> insts = new ArrayList<Instruction>();
+			size = in.readInt();
+			
+			while (size-- > 0) {
+				insts.add( loadInstruction(robot, in) );
+			}
+			
+			inst = new SelectStatement(arg, cases, insts);
 			inst.setIsCommented(isCommented);
 			
 		}/* Add other instructions here! */
@@ -877,7 +897,7 @@ public abstract class DataManagement {
 				saveExpressionElement(ae.getArg2(), out);
 				saveExpressionElement(ae.getOp(), out);
 
-			} if (ee instanceof ExprOperand) {
+			} else if (ee instanceof ExprOperand) {
 				ExprOperand eo = (ExprOperand)ee;
 
 				out.writeByte(4);
@@ -1146,13 +1166,31 @@ public abstract class DataManagement {
 
 		} else if (inst instanceof IfStatement) {
 			IfStatement ifSt = (IfStatement)inst;
-			System.out.printf("%s : %s\n", ifSt.getExpr(), ifSt.getInstr());
 			
 			out.writeByte(9);
 			out.writeBoolean(ifSt.isCommented());
 			// Save data associated with the if statement
 			saveInstruction(ifSt.getInstr(), out);
 			saveExpressionElement(ifSt.getExpr(), out);
+			
+		} else if (inst instanceof SelectStatement) {
+			SelectStatement sStmt = (SelectStatement)inst;
+			ArrayList<ExprOperand> cases = sStmt.getCases();
+			ArrayList<Instruction> insts = sStmt.getInstrs();
+			// Save select statement instruction
+			out.writeByte(10);
+			
+			saveExpressionElement(sStmt.getArg(), out);
+			// Save list of cases
+			out.writeInt(cases.size());
+			for (ExprOperand opr : cases) {
+				saveExpressionElement(opr, out);
+			}
+			// Save list of instructions
+			out.writeInt(insts.size());
+			for (Instruction i : insts) {
+				saveInstruction(i, out);
+			}
 			
 		}/* Add other instructions here! */
 		else if (inst instanceof Instruction) {
