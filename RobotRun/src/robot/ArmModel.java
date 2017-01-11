@@ -124,11 +124,11 @@ public class ArmModel {
 		
 		// Associated each End Effector with an I/O Register
 		idx = 0;
-		IOREG[idx++] = new IORegister(idx, (EEType.SUCTION).name(), Fields.OFF);
-		IOREG[idx++] = new IORegister(idx, (EEType.CLAW).name(), Fields.OFF);
-		IOREG[idx++] = new IORegister(idx, (EEType.POINTER).name(), Fields.OFF);
-		IOREG[idx++] = new IORegister(idx, (EEType.GLUE_GUN).name(), Fields.OFF);
-		IOREG[idx++] = new IORegister(idx, (EEType.WIELDER).name(), Fields.OFF);
+		IOREG[idx] = new IORegister(idx++, (EEType.SUCTION).name(), Fields.OFF);
+		IOREG[idx] = new IORegister(idx++, (EEType.CLAW).name(), Fields.OFF);
+		IOREG[idx] = new IORegister(idx++, (EEType.POINTER).name(), Fields.OFF);
+		IOREG[idx] = new IORegister(idx++, (EEType.GLUE_GUN).name(), Fields.OFF);
+		IOREG[idx] = new IORegister(idx++, (EEType.WIELDER).name(), Fields.OFF);
 		
 		activeEndEffector = EEType.NONE;
 		endEffectorState = Fields.OFF;
@@ -829,7 +829,7 @@ public class ArmModel {
 
 	/**
 	 * Returns the I/O register associated with the given End Effector
-	 * type, or null if noy such I/O register exists.
+	 * type, or null if no such I/O register exists.
 	 */
 	public IORegister getIORegisterFor(EEType ee) {
 		Integer regIdx = EEToIORegMap.get(ee);

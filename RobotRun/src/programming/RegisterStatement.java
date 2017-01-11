@@ -123,19 +123,20 @@ public class RegisterStatement extends Instruction {
 		if(reg instanceof DataRegister) { rString  = "R["; }
 		else if(reg instanceof IORegister) { rString  = "IO["; }
 		else if(reg instanceof PositionRegister) { rString  = "PR["; }
+		else { rString = "["; }
 
 		if(posIdx == -1) {
 			ret = new String[2 + expr.getLength()];
 
 			ret[0] = rString;
-			ret[1] = (reg.idx == -1) ? "...] =" : (reg.idx + 1) + "] =";
+			ret[1] = (reg == null || reg.idx == -1) ? "...] =" : (reg.idx + 1) + "] =";
 			rLen = 2;
 		} else {
 			ret = new String[3 + expr.getLength()];
 
 			ret[0] = rString;
-			ret[1] = (reg.idx == -1) ? "...," : (reg.idx + 1) + ",";
-			ret[2] = (reg.idx == -1) ? "...] =" : posIdx + "] =";
+			ret[1] = (reg == null || reg.idx == -1) ? "...," : (reg.idx + 1) + ",";
+			ret[2] = (reg == null || reg.idx == -1) ? "...] =" : (posIdx + 1) + "] =";
 			rLen = 3;
 		}
 

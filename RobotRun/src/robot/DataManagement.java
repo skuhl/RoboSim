@@ -70,28 +70,28 @@ public abstract class DataManagement {
 	
 	private static ExpressionElement loadExpressionElement(ArmModel robot,
 			DataInputStream in) throws IOException, ClassCastException {
-
+		ExpressionElement ee = null;
+		
 		byte nullFlag = in.readByte();
 
 		if (nullFlag == 1) {
 			// Read in an operator
 			int opFlag = in.readInt();
-			return Operator.getOpFromID(opFlag);
+			ee = Operator.getOpFromID(opFlag);
 
 		} else if (nullFlag == 2) {
+			// Read in each expression element
 			ArrayList<ExpressionElement> exprElements = new ArrayList<>();
-			// Read in expression length
+			
 			int len = in.readInt();
 			
-			// Read in each expression element
 			for (int idx = 0; idx < len; ++idx) {
-				
-				ExpressionElement ee = loadExpressionElement(robot, in);
-				// Add it to the expression
-				exprElements.add(ee);
+				// Read in each element of the expression
+				ExpressionElement limbo = loadExpressionElement(robot, in);
+				exprElements.add(limbo);
 			}
 	
-			return new Expression(exprElements);
+			ee = new Expression(exprElements);
 			
 		} else if (nullFlag == 3) {
 			// Read in an atomic expression operand
@@ -99,22 +99,21 @@ public abstract class DataManagement {
 			ExprOperand a1 = (ExprOperand)loadExpressionElement(robot, in);
 			Operator op = (Operator)loadExpressionElement(robot, in);
 
-			return new AtomicExpression(a0, a1, op);
+			ee = new AtomicExpression(a0, a1, op);
 
 		} else if (nullFlag == 4) {
 			// Read in a normal operand
-			ExprOperand eo;
 			int opType = in.readInt();
 
 			if (opType == ExpressionElement.FLOAT) {
 				// Constant float
 				Float val = in.readFloat();
-				eo = new ExprOperand(val);
+				ee = new ExprOperand(val);
 
 			} else if (opType == ExpressionElement.BOOL) {
 				// Constant boolean
 				Boolean val = in.readBoolean();
-				eo = new ExprOperand(val);
+				ee = new ExprOperand(val);
 
 			} else if (opType == ExpressionElement.DREG ||
 					opType == ExpressionElement.IOREG ||
@@ -127,39 +126,37 @@ public abstract class DataManagement {
 
 				if (opType == ExpressionElement.DREG) {
 					// Data register
-					return new ExprOperand(robot.getDReg(rdx), rdx);
+					ee = new ExprOperand(robot.getDReg(rdx));
 
 				} else if (opType == ExpressionElement.PREG) {
 					// Position register
-					eo = new ExprOperand(robot.getPReg(rdx), rdx);
+					ee = new ExprOperand(robot.getPReg(rdx), rdx);
 
 				} else if (opType == ExpressionElement.PREG_IDX) {
 					// Specific portion of a point
 					Integer pdx = in.readInt();
-					eo = new ExprOperand(robot.getPReg(rdx), rdx, pdx);
+					ee = new ExprOperand(robot.getPReg(rdx), pdx);
 
 				} else if (opType == ExpressionElement.IOREG) {
 					// I/O register
-					eo = new ExprOperand(robot.getIOReg(rdx), rdx);
+					ee = new ExprOperand(robot.getIOReg(rdx));
 
 				} else {
-					eo = new ExprOperand();
+					ee = new ExprOperand();
 				}
 
 			} else if (opType == ExpressionElement.POSTN) {
 				// Robot position
 				Point pt = loadPoint(in);
-				eo = new ExprOperand(pt);
+				ee = new ExprOperand(pt);
 
 			} else {
-				eo = new ExprOperand();
+				ee = new ExprOperand();
 			}
-
-			return eo;
 		}
 
-		// Uninitialized
-		return new ExprOperand();
+		System.out.printf("%s\n", ee);
+		return ee;
 	}
 	
 	private static float[] loadFloatArray(DataInputStream in) throws IOException {
@@ -363,22 +360,27 @@ public abstract class DataManagement {
 		} else if (instType == 8) {
 			boolean isCommented = in.readBoolean();
 			int regType = in.readInt();
-			int regIdx = in.readInt();
-			int posIdx = in.readInt();
+			int posIdx = -1;
+			Register reg;
+			
+			if (regType == 3) {
+				reg = robot.getIOReg( in.readInt() );
+				
+			} else if (regType == 2) {
+				reg = robot.getPReg( in.readInt() );
+				posIdx = in.readInt();
+				
+			} else if (regType == 1) {
+				reg = robot.getDReg( in.readInt() );
+				
+			} else {
+				reg = null;
+			}
+			
 			Expression expr = (Expression)loadExpressionElement(robot, in);
 
-			if (regType == 2) {
-				inst = new RegisterStatement(robot.getIOReg(regIdx), expr);
-				inst.setIsCommented(isCommented);
-
-			} else if (regType == 1) {
-				inst = new RegisterStatement(robot.getPReg(regIdx), posIdx, expr);
-				inst.setIsCommented(isCommented);
-
-			} else if (regType == 0) {
-				inst = new RegisterStatement(robot.getDReg(regIdx), expr);
-				inst.setIsCommented(isCommented);
-			}
+			inst = new RegisterStatement(reg, posIdx, expr);
+			inst.setIsCommented(isCommented);
 
 		} else if (instType == 9) {
 			// Load data associated with an if statement
@@ -487,9 +489,14 @@ public abstract class DataManagement {
 			int numOfInst = Math.max(0, Math.min(in.readInt(), 500));
 
 			while(numOfInst-- > 0) {
-				// Read each instruction
-				Instruction inst = loadInstruction(robot, in);
-				prog.addInstruction(inst);
+				try {
+					// Read in each instruction
+					Instruction inst = loadInstruction(robot, in);
+					prog.addInstruction(inst);
+					
+				} catch (ClassCastException CCEx) {
+					CCEx.printStackTrace();
+				}
 			}
 
 			return prog;
@@ -862,11 +869,13 @@ public abstract class DataManagement {
 			DataOutputStream out) throws IOException {
 
 		if (ee == null) {
+			System.out.printf("Null ExpressionElement\n");
 			// Indicate the object saved is null
 			out.writeByte(0);
 
 		} else {
-
+			System.out.printf("%s\n", ee);
+			
 			if (ee instanceof Operator) {
 				// Operator
 				Operator op = (Operator)ee;
@@ -918,7 +927,7 @@ public abstract class DataManagement {
 						eo.type == ExpressionElement.PREG_IDX) {
 
 					// Data, Position, or IO register
-					out.writeInt( eo.getRdx() );
+					out.writeInt( eo.getRegIdx() );
 
 					if (eo.type == ExpressionElement.PREG_IDX) {
 						// Specific portion of a point
@@ -1149,18 +1158,28 @@ public abstract class DataManagement {
 			int regType;
 			
 			if (r instanceof IORegister) {
-				regType = 2;
+				regType = 3;
 
 			} else if (r instanceof PositionRegister) {
-				regType = 1;
+				
+				regType = 2;
 
+			} else if (r instanceof DataRegister) {
+				regType = 1;
+				
 			} else {
 				regType = 0;
 			}
 
 			out.writeInt(regType);
-			out.writeInt(r.idx);
-			out.writeInt(rs.getPosIdx());
+			
+			if (regType > 0) {
+				out.writeInt(r.idx);
+				
+				if (regType == 2) {
+					out.writeInt(rs.getPosIdx());
+				}
+			}
 
 			saveExpressionElement(rs.getExpr(), out);
 

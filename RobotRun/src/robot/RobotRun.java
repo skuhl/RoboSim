@@ -2742,20 +2742,20 @@ public class RobotRun extends PApplet {
 
 			if(opt_select == 0) {
 				//set arg to new data reg
-				ExprOperand operand = new ExprOperand(new DataRegister(), -1);
+				ExprOperand operand = new ExprOperand(new DataRegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(Screen.INPUT_DREG_IDX);
 			} else if(opt_select == 1) {
 				//set arg to new io reg
-				ExprOperand operand = new ExprOperand(new IORegister(), -1);
+				ExprOperand operand = new ExprOperand(new IORegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(Screen.INPUT_IOREG_IDX);
 			} else if(opt_select == 2) {
-				ExprOperand operand = new ExprOperand(new PositionRegister(), -1);
+				ExprOperand operand = new ExprOperand(new PositionRegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(Screen.INPUT_PREG_IDX1);
 			} else if(opt_select == 3) {
-				ExprOperand operand = new ExprOperand(new PositionRegister(), -1, 0);
+				ExprOperand operand = new ExprOperand(new PositionRegister(), 0);
 				opEdit = expr.setOperand(editIdx, operand);
 				display_stack.pop();
 				display_stack.push(Screen.INPUT_PREG_IDX2);
@@ -2775,11 +2775,11 @@ public class RobotRun extends PApplet {
 		case SET_BOOL_EXPR_ARG:
 			if(opt_select == 0) {
 				//set arg to new data reg
-				opEdit.set(new DataRegister(), -1);
+				opEdit.set(new DataRegister());
 				switchScreen(Screen.INPUT_DREG_IDX);
 			} else if(opt_select == 1) {
 				//set arg to new io reg
-				opEdit.set(new IORegister(), -1);
+				opEdit.set(new IORegister());
 				switchScreen(Screen.INPUT_IOREG_IDX);
 			} else {
 				//set arg to new constant
@@ -2885,14 +2885,16 @@ public class RobotRun extends PApplet {
 				int idx = Integer.parseInt(workingText);
 
 				if(mode == Screen.INPUT_DREG_IDX) {
-					opEdit.set(armModel.getDReg(idx - 1), idx);
+					opEdit.set(armModel.getDReg(idx - 1));
+					
 				} else if(mode == Screen.INPUT_IOREG_IDX) {
-					opEdit.set(armModel.getIOReg(idx - 1), idx);
+					opEdit.set(armModel.getIOReg(idx - 1));
+					
 				} else if(mode == Screen.INPUT_PREG_IDX1) {
-					opEdit.set(armModel.getPReg(idx - 1), idx);
+					opEdit.set(armModel.getPReg(idx - 1));
+					
 				} else if(mode == Screen.INPUT_PREG_IDX2) {
-					int reg = opEdit.getRegIdx();
-					opEdit.set(armModel.getPReg(idx - 1), reg, idx);
+					opEdit.set(armModel.getPReg(idx - 1), idx);
 				}
 
 			} catch(NumberFormatException e) {}
@@ -2932,7 +2934,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_SELECT_STMT_ARG:
 			if(opt_select == 0) {
-				opEdit.set(new DataRegister(), -1);
+				opEdit.set(new DataRegister());
 			} else {
 				opEdit.reset();
 			}
@@ -2948,7 +2950,7 @@ public class RobotRun extends PApplet {
 					opEdit.set(f);
 				} else if(opEdit.type == ExpressionElement.DREG) {
 					//println(regFile.DAT_REG[(int)f - 1].value);
-					opEdit.set(armModel.getDReg((int)f - 1), (int)f);
+					opEdit.set(armModel.getDReg((int)f - 1));
 				}
 			} catch(NumberFormatException ex) {}
 
@@ -3028,19 +3030,24 @@ public class RobotRun extends PApplet {
 		case SET_REG_EXPR_IDX1:
 			try {
 				int idx = Integer.parseInt(workingText);
+				regStmt = (RegisterStatement)activeInstruction();
+				Register reg = regStmt.getReg();
 
-				if (idx < 1 || idx > 1000) {
+				if (idx < 1 || ((reg instanceof DataRegister || reg instanceof PositionRegister) && idx > 100)
+							|| (reg instanceof IORegister && idx > 5)) {
+					// Index is out of bounds
 					println("Invalid register index!");
+					
 				} else {
-					regStmt = (RegisterStatement)activeInstruction(); 
+					
 					if(regStmt.getReg() instanceof DataRegister) {
-						(regStmt).setRegister(armModel.getDReg(idx - 1));
+						regStmt.setRegister(armModel.getDReg(idx - 1));
+						
 					} else if(regStmt.getReg() instanceof IORegister) {
-						(regStmt).setRegister(armModel.getIOReg(idx - 1));
-					} else if(regStmt.getReg() instanceof PositionRegister && regStmt.getPosIdx() == -1) { 
-						(regStmt).setRegister(armModel.getPReg(idx - 1));
-					} else {
-						(regStmt).setRegister(armModel.getPReg(idx - 1), 0);
+						regStmt.setRegister(armModel.getIOReg(idx - 1));
+						
+					} else if(regStmt.getReg() instanceof PositionRegister) { 
+						regStmt.setRegister(armModel.getPReg(idx - 1));
 					}
 				}
 			}
@@ -3057,7 +3064,7 @@ public class RobotRun extends PApplet {
 				} else {
 					regStmt = (RegisterStatement)activeInstruction();
 					if(regStmt.getReg() instanceof PositionRegister) {
-						regStmt.setPosIdx(idx);
+						regStmt.setPosIdx(idx - 1);
 					}
 				}
 			} catch (NumberFormatException NFEx){ /* Ignore invalid input */ }
@@ -6138,7 +6145,11 @@ public class RobotRun extends PApplet {
 			int xPos = 10;
 
 			// Add line number
-			if(instr.isCommented()) {
+			if (instr == null) {
+				line.add( String.format("%d) ...", i+1) );
+				continue;
+				
+			} else if(instr.isCommented()) {
 				line.add("//"+Integer.toString(i+1) + ")");
 			} else {
 				line.add(Integer.toString(i+1) + ")");
