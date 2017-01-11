@@ -2589,7 +2589,7 @@ public class RobotRun extends PApplet {
 			} else if(opt_select == 2){
 				newRegisterStatement(new PositionRegister());
 			} else {
-				newRegisterStatement(new PositionRegister(), 0);
+				newRegisterStatement(new PositionRegister());
 				display_stack.push(Screen.SET_REG_EXPR_IDX2);
 			}
 
@@ -2883,18 +2883,42 @@ public class RobotRun extends PApplet {
 		case INPUT_PREG_IDX2:
 			try {
 				int idx = Integer.parseInt(workingText);
-
-				if(mode == Screen.INPUT_DREG_IDX) {
-					opEdit.set(armModel.getDReg(idx - 1));
+				
+				if (mode == Screen.INPUT_DREG_IDX) {
 					
-				} else if(mode == Screen.INPUT_IOREG_IDX) {
-					opEdit.set(armModel.getIOReg(idx - 1));
+					if (idx < 1 || idx > 100) {
+						System.out.println("Invalid index!");
+						
+					} else {
+						opEdit.set(armModel.getDReg(idx - 1));
+					}
 					
-				} else if(mode == Screen.INPUT_PREG_IDX1) {
-					opEdit.set(armModel.getPReg(idx - 1));
+				} else if (mode == Screen.INPUT_PREG_IDX1) {
 					
-				} else if(mode == Screen.INPUT_PREG_IDX2) {
-					opEdit.set(armModel.getPReg(idx - 1), idx);
+					if (idx < 1 || idx > 100) {
+						System.out.println("Invalid index!");
+						
+					} else {
+						opEdit.set(armModel.getPReg(idx - 1));
+					}
+					
+				} else if (mode == Screen.INPUT_PREG_IDX2) {
+					
+					if (idx < 1 || idx > 6) {
+						System.out.println("Invalid index!");
+						
+					} else {
+						opEdit.set(idx - 1);
+					}
+					
+				} else if (mode == Screen.INPUT_IOREG_IDX) {
+					
+					if (idx < 1 || idx > 5) {
+						System.out.println("Invalid index!");
+						
+					} else {
+						opEdit.set(armModel.getIOReg(idx - 1));
+					}
 				}
 
 			} catch(NumberFormatException e) {}
@@ -2974,7 +2998,10 @@ public class RobotRun extends PApplet {
 			try {
 				int tempReg = Integer.parseInt(workingText);
 
-				if(tempReg >= 0 && tempReg < 6){
+				if(tempReg < 0 || tempReg >= 5) {
+					System.out.println("Invalid index!");
+					
+				} else {
 					ioInst = (IOInstruction)activeInstruction();
 					ioInst.setReg(tempReg);
 				}
@@ -3046,8 +3073,16 @@ public class RobotRun extends PApplet {
 					} else if(regStmt.getReg() instanceof IORegister) {
 						regStmt.setRegister(armModel.getIOReg(idx - 1));
 						
-					} else if(regStmt.getReg() instanceof PositionRegister) { 
-						regStmt.setRegister(armModel.getPReg(idx - 1));
+					} else if(regStmt.getReg() instanceof PositionRegister) {
+						if (regStmt.getPosIdx() < 0) {
+							// Update a position register operand
+							regStmt.setRegister(armModel.getPReg(idx - 1));
+							
+						} else {
+							// Update a position register index operand
+							regStmt.setRegister(armModel.getPReg(idx - 1), regStmt.getPosIdx());
+						}
+						
 					}
 				}
 			}
@@ -6377,31 +6412,15 @@ public class RobotRun extends PApplet {
 		// Display a subset of the list of registers
 		for (int idx = 0; idx < ArmModel.DPREG_NUM; ++idx) {
 			Register reg;
-			String lbl;
 
 			if(mode == Screen.NAV_DREGS) {
 				reg = armModel.getDReg(idx);
-				lbl = (reg.comment == null) ? "" : reg.comment;
 			} else {
 				reg = armModel.getPReg(idx);
-				lbl  = (reg.comment == null) ? "" : reg.comment;
-			}
-
-			int buffer = 16 - lbl.length();
-			while(buffer-- > 0) { lbl += " "; }
-
-			String spaces;
-
-			if(idx < 9) {
-				spaces = "  ";
-			} else if(idx < 99) {
-				spaces = " ";
-			} else {
-				spaces = "";
 			}
 
 			// Display the comment associated with a specific Register entry
-			String regLbl = String.format("%s[%d:%s%s]", (mode == Screen.NAV_DREGS) ? "R" : "PR", (idx + 1), spaces, lbl);
+			String regLbl = reg.toStringWithComm();
 			// Display Register value (* if uninitialized)
 			String regEntry = "*";
 

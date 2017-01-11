@@ -169,17 +169,19 @@ public class ExprOperand implements ExpressionElement {
 	}
 
 	public ExprOperand set(PositionRegister pReg) {
-		if(type != ExpressionElement.PREG_IDX)
-			type = ExpressionElement.PREG;
-		
 		regVal = pReg;
 		return this;
 	}
 
-	public ExprOperand set(PositionRegister pReg, int j) {
+	public ExprOperand set(PositionRegister pReg, int pdx) {
 		type = ExpressionElement.PREG_IDX;
-		posIdx = j;
+		posIdx = pdx;
 		regVal = pReg;
+		return this;
+	}
+	
+	public ExprOperand set(int pdx) {
+		posIdx = pdx;
 		return this;
 	}
 
@@ -203,21 +205,22 @@ public class ExprOperand implements ExpressionElement {
 			s += getBoolVal() ? "TRUE" : "FALSE";
 			break;
 		case DREG:
-			String rNum = (getRegIdx() == -1) ? "..." : ""+getRegIdx();
-			s += "R[" + rNum + "]";
-			break;
 		case IOREG:
-			rNum = (getRegIdx() == -1) ? "..." : ""+getRegIdx();
-			s += "IO[" + rNum + "]";
-			break;
 		case PREG:
-			rNum = (getRegIdx() == -1) ? "..." : ""+getRegIdx();
-			s += "PR[" + rNum + "]";
+			if (regVal == null) {
+				s += "[...]";
+			} else {
+				s += regVal.toString();
+			}
+			
 			break;
 		case PREG_IDX:
-			rNum = (getRegIdx() == -1) ? "..." : ""+getRegIdx();
-			String pIdx = (posIdx == -1) ? "..." : ""+posIdx;
-			s += "PR[" + rNum + ", " + pIdx + "]";
+			if (regVal == null) {
+				s += "[...]";
+				
+			} else {
+				s += ((PositionRegister)regVal).toString(posIdx);
+			}
 			break;
 		}
 

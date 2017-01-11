@@ -62,4 +62,26 @@ public class PositionRegister extends Register {
 			point.setValue(idx + 6, value);
 		}
 	}
+	
+	@Override
+	protected String regPrefix() {
+		return "R";
+	}
+	
+	/**
+	 * A variation of the position's string form, that includes an index, which
+	 * references one of the position's fields (i.e. X, Y, Z, W, P, or R)
+	 * 
+	 * @param pdx	A integer between 0 and 4, inclusive
+	 * @return		The string form of a specific field of a position register
+	 */
+	public String toString(int pdx) {
+		if (pdx >= 0 && pdx < 5) {
+			String idxStr = (idx < 0) ? "..." : Integer.toString(idx + 1);
+			
+			return String.format("P[%s, %d]", idxStr, pdx + 1);
+		}
+		// Invalid index
+		return null;
+	}
 }

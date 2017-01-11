@@ -17,4 +17,9 @@ public class DataRegister extends Register {
 		super(i, c);
 		value = v;
 	}
+	
+	@Override
+	protected String regPrefix() {
+		return "R";
+	}
 }
