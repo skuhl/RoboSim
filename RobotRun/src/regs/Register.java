@@ -38,7 +38,7 @@ public abstract class Register {
 	public String toStringWithComm() {
 		String comm = (comment == null) ? "" : comment;
 		// Add space padding for the index as well as the comment
-		return String.format("%s[%3d: %-16s]", regPrefix(), idx, comm);
+		return String.format("%s[%3d: %-16s]", regPrefix(), idx + 1, comm);
 	}
 	
 	@Override

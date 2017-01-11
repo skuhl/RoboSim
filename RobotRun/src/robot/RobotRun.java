@@ -3172,11 +3172,11 @@ public class RobotRun extends PApplet {
 			//Macro edit screens
 		case SET_MACRO_PROG:
 			if(edit_macro == null) {
-				edit_macro = new Macro(armModel.getProgram(getRow_select()), getRow_select());
+				edit_macro = new Macro(getRow_select());
 				macros.add(edit_macro);
 				switchScreen(Screen.SET_MACRO_TYPE);
 			} else {
-				edit_macro.setProgram(armModel.getProgram(getRow_select()), getRow_select());
+				edit_macro.setProgram(getRow_select());
 			}
 			break;
 		case SET_MACRO_TYPE:
@@ -4259,7 +4259,7 @@ public class RobotRun extends PApplet {
 			break;
 		case NAV_PROG_INSTR:
 			// F1, F4, F5f
-			funct[0] = shift ? "[New Pt]" : "";
+			funct[0] = "[New Pt]";
 			funct[1] = "[New Ins]";
 			funct[2] = "";
 			funct[3] = "[Edit]";

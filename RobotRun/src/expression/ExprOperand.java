@@ -229,8 +229,8 @@ public class ExprOperand implements ExpressionElement {
 
 	public String[] toStringArray() {
 		if(type == PREG_IDX) {
-			String rNum = (getRegIdx() == -1) ? "..." : ""+getRegIdx();
-			String pIdx = (posIdx == -1) ? "..." : ""+posIdx;
+			String rNum = (regVal == null || regVal.idx < 0) ? "..." : Integer.toString(regVal.idx + 1);
+			String pIdx = (posIdx == -1) ? "..." : Integer.toString(posIdx + 1);
 
 			return new String[] { "PR[" + rNum + ",", " " + pIdx + "]" };
 		} else {

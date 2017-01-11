@@ -36,6 +36,7 @@ import programming.IfStatement;
 import programming.Instruction;
 import programming.JumpInstruction;
 import programming.LabelInstruction;
+import programming.Macro;
 import programming.MotionInstruction;
 import programming.Program;
 import programming.RegisterStatement;
@@ -155,7 +156,6 @@ public abstract class DataManagement {
 			}
 		}
 
-		System.out.printf("%s\n", ee);
 		return ee;
 	}
 	
@@ -489,14 +489,9 @@ public abstract class DataManagement {
 			int numOfInst = Math.max(0, Math.min(in.readInt(), 500));
 
 			while(numOfInst-- > 0) {
-				try {
-					// Read in each instruction
-					Instruction inst = loadInstruction(robot, in);
-					prog.addInstruction(inst);
-					
-				} catch (ClassCastException CCEx) {
-					CCEx.printStackTrace();
-				}
+				// Read in each instruction
+				Instruction inst = loadInstruction(robot, in);
+				prog.addInstruction(inst);
 			}
 
 			return prog;
@@ -534,10 +529,17 @@ public abstract class DataManagement {
 			return 3;
 
 		} catch (IOException IOEx) {
-			// An error occured with reading from src
+			// An error occurred with reading from src
 			System.out.printf("%s is corrupt!\n", src.getName());
 			IOEx.printStackTrace();
 			return 2;
+			
+		} catch (ClassCastException CCEx) {
+			/* An error occurred with casting between objects while loading a
+			 * program's instructions */
+			System.err.printf("%s is corrupt!\n", src.getName());
+			CCEx.printStackTrace();
+			return 4;
 		}
 	}
 
@@ -869,12 +871,10 @@ public abstract class DataManagement {
 			DataOutputStream out) throws IOException {
 
 		if (ee == null) {
-			System.out.printf("Null ExpressionElement\n");
 			// Indicate the object saved is null
 			out.writeByte(0);
 
 		} else {
-			System.out.printf("%s\n", ee);
 			
 			if (ee instanceof Operator) {
 				// Operator
@@ -1084,7 +1084,7 @@ public abstract class DataManagement {
 		 * associated with its unique data fields */
 		if (inst instanceof MotionInstruction) {
 			MotionInstruction m_inst = (MotionInstruction)inst;
-			// Flag byte denoting this instruction as a MotionInstruction
+			
 			out.writeByte(2);
 			// Write data associated with the MotionIntruction object
 			out.writeBoolean(m_inst.isCommented());
@@ -1110,7 +1110,7 @@ public abstract class DataManagement {
 
 		} else if(inst instanceof FrameInstruction) {
 			FrameInstruction f_inst = (FrameInstruction)inst;
-			// Flag byte denoting this instruction as a FrameInstruction
+			
 			out.writeByte(3);
 			// Write data associated with the FrameInstruction object
 			out.writeBoolean(f_inst.isCommented());
@@ -1119,7 +1119,7 @@ public abstract class DataManagement {
 
 		} else if(inst instanceof IOInstruction) {
 			IOInstruction t_inst = (IOInstruction)inst;
-			// Flag byte denoting this instruction as a ToolInstruction
+			
 			out.writeByte(4);
 			// Write data associated with the ToolInstruction object
 			out.writeBoolean(t_inst.isCommented());
@@ -1196,8 +1196,9 @@ public abstract class DataManagement {
 			SelectStatement sStmt = (SelectStatement)inst;
 			ArrayList<ExprOperand> cases = sStmt.getCases();
 			ArrayList<Instruction> insts = sStmt.getInstrs();
-			// Save select statement instruction
+			// Save data associated with the select statement instruction
 			out.writeByte(10);
+			out.writeBoolean(sStmt.isCommented());
 			
 			saveExpressionElement(sStmt.getArg(), out);
 			// Save list of cases
