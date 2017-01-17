@@ -7037,15 +7037,8 @@ public class RobotRun extends PApplet {
 			camera.rotate(rotScale * (mouseY - pmouseY), rotScale * (mouseX - pmouseX), 0);
 		}
 	}
-<<<<<<< HEAD
 
 	public void mouseWheel(MouseEvent event) {
-
-=======
-
-	public void mouseWheel(MouseEvent event) {
-
->>>>>>> dev
 		if (getManager() != null && getManager().isMouseOverADropdownList()) {
 			// Disable zomming when selecting an element from a dropdown list
 			return;
@@ -7450,8 +7443,6 @@ public class RobotRun extends PApplet {
 	}
 
 	public void SaveScenario() {
-<<<<<<< HEAD
-=======
 		if (activeScenario != null) {
 			// Save the current version of the active scenario
 			for (int idx = 0; idx < SCENARIOS.size(); ++idx) {
@@ -7461,7 +7452,6 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
->>>>>>> dev
 		// Save all scenarios
 		DataManagement.saveState(this);
 	}
@@ -7507,10 +7497,6 @@ public class RobotRun extends PApplet {
 	}
 
 	public void SetScenario() {
-<<<<<<< HEAD
-		// Set the active scenario to a copy of the scenario associated with te scenario dropdown list
-		activeScenario = (Scenario)getManager().getActiveScenario().clone();
-=======
 		/* Get the scenario, which is associated with the scenario
 		 * dropdownlist's label */
 		Scenario limbo = getManager().getActiveScenario();
@@ -7530,7 +7516,6 @@ public class RobotRun extends PApplet {
 			// Set the active scenario to a copy of the loaded scenario
 			activeScenario = (Scenario)limbo.clone();
 		}
->>>>>>> dev
 	}
 
 	public void setStep(boolean step) {
