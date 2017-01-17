@@ -25,7 +25,7 @@ public class Macro {
 		// Stop any prior Robot movement
 		RobotRun.getInstance().getArmModel().halt();
 		// Safeguard against editing a program while it is running
-		RobotRun.getInstance().setCol_select(0);
+		RobotRun.getInstance().getContentsMenu().setColumnIdx(0);
 		RobotRun.getInstance().setActive_prog(progIdx);
 		RobotRun.getInstance().setActive_instr(0);
 
@@ -35,6 +35,7 @@ public class Macro {
 
 		RobotRun.getInstance().setProgramRunning(true);
 	}
+	
 	public boolean isManual() { return manual; }
 	public void setManual(boolean b) { manual = b; }
 

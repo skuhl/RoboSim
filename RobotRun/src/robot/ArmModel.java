@@ -1594,9 +1594,8 @@ public class ArmModel {
 					RobotRun.getInstance().setActive_prog(prevProc[0]);
 					RobotRun.getInstance().setActive_instr(prevProc[1]);
 					// Update the display
-					RobotRun.getInstance().setRow_select(RobotRun.getInstance().getActive_instr());
-					RobotRun.getInstance().setCol_select(0);
-					RobotRun.getInstance().setStart_render(0);
+					RobotRun.getInstance().getContentsMenu().setLineIdx(RobotRun.getInstance().getActive_instr());
+					RobotRun.getInstance().getContentsMenu().setColumnIdx(0);
 					RobotRun.getInstance().updateScreen();
 				}
 

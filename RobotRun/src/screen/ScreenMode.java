@@ -1,5 +1,8 @@
-package window;
-public enum Screen implements DisplayMode {
+package screen;
+
+import window.DisplayMode;
+
+public enum ScreenMode implements DisplayMode {
 
 	/* 
 	 * The "Home" screen, default root screen state displayed on startup
@@ -150,11 +153,11 @@ public enum Screen implements DisplayMode {
 
 	final ScreenType type;
 
-	private Screen(){
+	private ScreenMode(){
 		type = null;
 	}
 
-	private Screen(ScreenType t){
+	private ScreenMode(ScreenType t){
 		type = t;
 	}
 
