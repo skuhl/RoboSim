@@ -33,9 +33,7 @@ public class CallInstruction extends Instruction {
 
 		RobotRun.getInstance().setActive_prog(progIdx);
 		RobotRun.getInstance().setActive_instr(0);
-		RobotRun.getInstance().setRow_select(0);
-		RobotRun.getInstance().setCol_select(0);
-		RobotRun.getInstance().setStart_render(0);
+		RobotRun.getInstance().getContentsMenu().reset();
 		RobotRun.getInstance().updateScreen();
 
 		return 0;
