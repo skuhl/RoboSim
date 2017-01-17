@@ -1,4 +1,6 @@
-package window;
+package screen;
+
+import window.DisplayMode;
 
 public enum ScreenType implements DisplayMode {
 	TYPE_DEFAULT,

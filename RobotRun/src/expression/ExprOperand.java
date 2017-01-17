@@ -58,7 +58,7 @@ public class ExprOperand implements ExpressionElement {
 	}
 
 	//create position register operand on a given value of the register's position
-	public ExprOperand(PositionRegister pReg, int j){
+	public ExprOperand(PositionRegister pReg, int j) {
 		type = ExpressionElement.PREG_IDX;
 		posIdx = j;
 		regVal = pReg;
