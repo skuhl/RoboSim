@@ -36,7 +36,6 @@ import programming.IfStatement;
 import programming.Instruction;
 import programming.JumpInstruction;
 import programming.LabelInstruction;
-import programming.Macro;
 import programming.MotionInstruction;
 import programming.Program;
 import programming.RegisterStatement;
