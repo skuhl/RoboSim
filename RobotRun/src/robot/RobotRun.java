@@ -37,6 +37,16 @@ public class RobotRun extends PApplet {
 	public static final float[][] WORLD_AXES;
 	private static final char[][] letters;
 	
+	public static void main(String[] args) {
+		String[] appletArgs = new String[] { "robot.RobotRun" };
+		
+		if (args != null) {
+			PApplet.main(concat(appletArgs, args));
+		} else {
+			PApplet.main(appletArgs);
+		}
+	}
+	
 	static {
 		instance = null;
 		ROBOT_POSITION = new PVector(200, 300, 200);
@@ -478,15 +488,6 @@ public class RobotRun extends PApplet {
 		inverse[3][3] = 1;
 
 		return inverse;
-	}
-	public static void main(String[] passedArgs) {
-		String[] appletArgs = new String[] { "robot.RobotRun" };
-		
-		if (passedArgs != null) {
-			PApplet.main(concat(appletArgs, passedArgs));
-		} else {
-			PApplet.main(appletArgs);
-		}
 	}
 
 	//calculates euler angles from rotation matrix
@@ -2931,20 +2932,20 @@ public class RobotRun extends PApplet {
 
 			if(options.getLineIdx() == 0) {
 				//set arg to new data reg
-				ExprOperand operand = new ExprOperand(new DataRegister(), -1);
+				ExprOperand operand = new ExprOperand(new DataRegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(ScreenMode.INPUT_DREG_IDX);
 			} else if(options.getLineIdx() == 1) {
 				//set arg to new io reg
-				ExprOperand operand = new ExprOperand(new IORegister(), -1);
+				ExprOperand operand = new ExprOperand(new IORegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(ScreenMode.INPUT_IOREG_IDX);
 			} else if(options.getLineIdx() == 2) {
-				ExprOperand operand = new ExprOperand(new PositionRegister(), -1);
+				ExprOperand operand = new ExprOperand(new PositionRegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(ScreenMode.INPUT_PREG_IDX1);
 			} else if(options.getLineIdx() == 3) {
-				ExprOperand operand = new ExprOperand(new PositionRegister(), -1, 0);
+				ExprOperand operand = new ExprOperand(new PositionRegister(), 0);
 				opEdit = expr.setOperand(editIdx, operand);
 				display_stack.pop();
 				display_stack.push(ScreenMode.INPUT_PREG_IDX2);
@@ -2964,11 +2965,11 @@ public class RobotRun extends PApplet {
 		case SET_BOOL_EXPR_ARG:
 			if(options.getLineIdx() == 0) {
 				//set arg to new data reg
-				opEdit.set(new DataRegister(), -1);
+				opEdit.set(new DataRegister());
 				switchScreen(ScreenMode.INPUT_DREG_IDX);
 			} else if(options.getLineIdx() == 1) {
 				//set arg to new io reg
-				opEdit.set(new IORegister(), -1);
+				opEdit.set(new IORegister());
 				switchScreen(ScreenMode.INPUT_IOREG_IDX);
 			} else {
 				//set arg to new constant
@@ -3072,16 +3073,42 @@ public class RobotRun extends PApplet {
 		case INPUT_PREG_IDX2:
 			try {
 				int idx = Integer.parseInt(workingText);
-
-				if(mode == ScreenMode.INPUT_DREG_IDX) {
-					opEdit.set(armModel.getDReg(idx - 1), idx);
-				} else if(mode == ScreenMode.INPUT_IOREG_IDX) {
-					opEdit.set(armModel.getIOReg(idx - 1), idx);
-				} else if(mode == ScreenMode.INPUT_PREG_IDX1) {
-					opEdit.set(armModel.getPReg(idx - 1), idx);
-				} else if(mode == ScreenMode.INPUT_PREG_IDX2) {
-					int reg = opEdit.getRegIdx();
-					opEdit.set(armModel.getPReg(idx - 1), reg, idx);
+				
+				if (mode == ScreenMode.INPUT_DREG_IDX) {
+					
+					if (idx < 1 || idx > 100) {
+						System.out.println("Invalid index!");
+						
+					} else {
+						opEdit.set(armModel.getDReg(idx - 1));
+					}
+					
+				} else if (mode == ScreenMode.INPUT_PREG_IDX1) {
+					
+					if (idx < 1 || idx > 100) {
+						System.out.println("Invalid index!");
+						
+					} else {
+						opEdit.set(armModel.getPReg(idx - 1));
+					}
+					
+				} else if (mode == ScreenMode.INPUT_PREG_IDX2) {
+					
+					if (idx < 1 || idx > 6) {
+						System.out.println("Invalid index!");
+						
+					} else {
+						opEdit.set(idx - 1);
+					}
+					
+				} else if (mode == ScreenMode.INPUT_IOREG_IDX) {
+					
+					if (idx < 1 || idx > 5) {
+						System.out.println("Invalid index!");
+						
+					} else {
+						opEdit.set(armModel.getIOReg(idx - 1));
+					}
 				}
 
 			} catch(NumberFormatException e) {}
@@ -3121,7 +3148,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_SELECT_STMT_ARG:
 			if(options.getLineIdx() == 0) {
-				opEdit.set(new DataRegister(), -1);
+				opEdit.set(new DataRegister());
 			} else {
 				opEdit.reset();
 			}
@@ -3137,7 +3164,7 @@ public class RobotRun extends PApplet {
 					opEdit.set(f);
 				} else if(opEdit.type == ExpressionElement.DREG) {
 					//println(regFile.DAT_REG[(int)f - 1].value);
-					opEdit.set(armModel.getDReg((int)f - 1), (int)f);
+					opEdit.set(armModel.getDReg((int)f - 1));
 				}
 			} catch(NumberFormatException ex) {}
 
@@ -3161,7 +3188,10 @@ public class RobotRun extends PApplet {
 			try {
 				int tempReg = Integer.parseInt(workingText);
 
-				if(tempReg >= 0 && tempReg < 6){
+				if(tempReg < 0 || tempReg >= 5) {
+					System.out.println("Invalid index!");
+					
+				} else {
 					ioInst = (IOInstruction)activeInstruction();
 					ioInst.setReg(tempReg);
 				}
@@ -3217,19 +3247,32 @@ public class RobotRun extends PApplet {
 		case SET_REG_EXPR_IDX1:
 			try {
 				int idx = Integer.parseInt(workingText);
+				regStmt = (RegisterStatement)activeInstruction();
+				Register reg = regStmt.getReg();
 
-				if (idx < 1 || idx > 1000) {
+				if (idx < 1 || ((reg instanceof DataRegister || reg instanceof PositionRegister) && idx > 100)
+							|| (reg instanceof IORegister && idx > 5)) {
+					// Index is out of bounds
 					println("Invalid register index!");
+					
 				} else {
-					regStmt = (RegisterStatement)activeInstruction(); 
+					
 					if(regStmt.getReg() instanceof DataRegister) {
-						(regStmt).setRegister(armModel.getDReg(idx - 1));
+						regStmt.setRegister(armModel.getDReg(idx - 1));
+						
 					} else if(regStmt.getReg() instanceof IORegister) {
-						(regStmt).setRegister(armModel.getIOReg(idx - 1));
-					} else if(regStmt.getReg() instanceof PositionRegister && regStmt.getPosIdx() == -1) { 
-						(regStmt).setRegister(armModel.getPReg(idx - 1));
-					} else {
-						(regStmt).setRegister(armModel.getPReg(idx - 1), 0);
+						regStmt.setRegister(armModel.getIOReg(idx - 1));
+						
+					} else if(regStmt.getReg() instanceof PositionRegister) {
+						if (regStmt.getPosIdx() < 0) {
+							// Update a position register operand
+							regStmt.setRegister(armModel.getPReg(idx - 1));
+							
+						} else {
+							// Update a position register index operand
+							regStmt.setRegister(armModel.getPReg(idx - 1), regStmt.getPosIdx());
+						}
+						
 					}
 				}
 			}
@@ -3246,7 +3289,7 @@ public class RobotRun extends PApplet {
 				} else {
 					regStmt = (RegisterStatement)activeInstruction();
 					if(regStmt.getReg() instanceof PositionRegister) {
-						regStmt.setPosIdx(idx);
+						regStmt.setPosIdx(idx - 1);
 					}
 				}
 			} catch (NumberFormatException NFEx){ /* Ignore invalid input */ }
@@ -3318,11 +3361,11 @@ public class RobotRun extends PApplet {
 			//Macro edit screens
 		case SET_MACRO_PROG:
 			if(edit_macro == null) {
-				edit_macro = new Macro(armModel.getProgram(contents.getLineIdx()), contents.getLineIdx());
+				edit_macro = new Macro(contents.getLineIdx());
 				macros.add(edit_macro);
 				switchScreen(ScreenMode.SET_MACRO_TYPE);
 			} else {
-				edit_macro.setProgram(armModel.getProgram(contents.getLineIdx()), contents.getLineIdx());
+				edit_macro.setProgram(contents.getLineIdx());
 			}
 			break;
 		case SET_MACRO_TYPE:
@@ -4396,7 +4439,7 @@ public class RobotRun extends PApplet {
 			break;
 		case NAV_PROG_INSTR:
 			// F1, F4, F5f
-			funct[0] = shift ? "[New Pt]" : "";
+			funct[0] = "[New Pt]";
 			funct[1] = "[New Ins]";
 			funct[2] = "";
 			funct[3] = "[Edit]";
@@ -6303,7 +6346,11 @@ public class RobotRun extends PApplet {
 			int xPos = 10;
 
 			// Add line number
-			if(instr.isCommented()) {
+			if (instr == null) {
+				line.add( String.format("%d) ...", i+1) );
+				continue;
+				
+			} else if(instr.isCommented()) {
 				line.add("//"+Integer.toString(i+1) + ")");
 			} else {
 				line.add(Integer.toString(i+1) + ")");
@@ -6531,31 +6578,15 @@ public class RobotRun extends PApplet {
 		// Display a subset of the list of registers
 		for (int idx = 0; idx < ArmModel.DPREG_NUM; ++idx) {
 			Register reg;
-			String lbl;
 
 			if(mode == ScreenMode.NAV_DREGS) {
 				reg = armModel.getDReg(idx);
-				lbl = (reg.comment == null) ? "" : reg.comment;
 			} else {
 				reg = armModel.getPReg(idx);
-				lbl  = (reg.comment == null) ? "" : reg.comment;
-			}
-
-			int buffer = 16 - lbl.length();
-			while(buffer-- > 0) { lbl += " "; }
-
-			String spaces;
-
-			if(idx < 9) {
-				spaces = "  ";
-			} else if(idx < 99) {
-				spaces = " ";
-			} else {
-				spaces = "";
 			}
 
 			// Display the comment associated with a specific Register entry
-			String regLbl = String.format("%s[%d:%s%s]", (mode == ScreenMode.NAV_DREGS) ? "R" : "PR", (idx + 1), spaces, lbl);
+			String regLbl = reg.toStringWithComm();
 			// Display Register value (* if uninitialized)
 			String regEntry = "*";
 

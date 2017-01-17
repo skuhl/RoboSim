@@ -12,7 +12,6 @@ public class ExprOperand implements ExpressionElement {
 
 	Float dataVal = null;
 	private Boolean boolVal = null;
-	private int regIdx = -1;
 	int posIdx = 0;
 	Register regVal = null;
 	Point pointVal = null;
@@ -29,9 +28,8 @@ public class ExprOperand implements ExpressionElement {
 	}
 
 	//create data register operand
-	public ExprOperand(DataRegister dReg, int i) {
+	public ExprOperand(DataRegister dReg) {
 		type = ExpressionElement.DREG;
-		setRegIdx(i);
 		regVal = dReg;
 	}
 
@@ -42,9 +40,8 @@ public class ExprOperand implements ExpressionElement {
 	}
 
 	//create IO register operand
-	public ExprOperand(IORegister ioReg, int i) {
+	public ExprOperand(IORegister ioReg) {
 		type = ExpressionElement.IOREG;
-		setRegIdx(i);
 		regVal = ioReg;
 	}
 
@@ -55,16 +52,14 @@ public class ExprOperand implements ExpressionElement {
 	}
 
 	//create position register operand
-	public ExprOperand(PositionRegister pReg, int i){
+	public ExprOperand(PositionRegister pReg){
 		type = ExpressionElement.PREG;
-		setRegIdx(i);
 		regVal = pReg;
 	}
 
 	//create position register operand on a given value of the register's position
-	public ExprOperand(PositionRegister pReg, int i, int j){
+	public ExprOperand(PositionRegister pReg, int j) {
 		type = ExpressionElement.PREG_IDX;
-		setRegIdx(i);
 		posIdx = j;
 		regVal = pReg;
 	}
@@ -75,10 +70,10 @@ public class ExprOperand implements ExpressionElement {
 		case ExpressionElement.SUBEXP: return ((Expression)this).clone();
 		case ExpressionElement.FLOAT:  return new ExprOperand(dataVal);
 		case ExpressionElement.BOOL:   return new ExprOperand(getBoolVal());
-		case ExpressionElement.DREG:   return new ExprOperand((DataRegister)regVal, getRegIdx());
-		case ExpressionElement.IOREG:  return new ExprOperand((IORegister)regVal, getRegIdx());
-		case ExpressionElement.PREG:   return new ExprOperand((PositionRegister)regVal, getRegIdx());
-		case ExpressionElement.PREG_IDX: return new ExprOperand((PositionRegister)regVal, getRegIdx(), posIdx);
+		case ExpressionElement.DREG:   return new ExprOperand((DataRegister)regVal);
+		case ExpressionElement.IOREG:  return new ExprOperand((IORegister)regVal);
+		case ExpressionElement.PREG:   return new ExprOperand((PositionRegister)regVal);
+		case ExpressionElement.PREG_IDX: return new ExprOperand((PositionRegister)regVal, posIdx);
 		case ExpressionElement.POSTN:  return new ExprOperand(pointVal);
 		default:                       return null;
 		}
@@ -128,25 +123,16 @@ public class ExprOperand implements ExpressionElement {
 		return null;
 	}
 
-	public Integer getRdx() {
-		if (type == ExpressionElement.DREG ||
-				type == ExpressionElement.PREG ||
-				type == ExpressionElement.PREG_IDX ||
-				type == ExpressionElement.IOREG) {
-
-			return getRegIdx();
-		}
-
-		return null;
-	}
-
 	public int getRegIdx() {
-		return regIdx;
+		if (regVal == null) {
+			return -1;
+		}
+		
+		return regVal.idx;
 	}
 
 	public ExprOperand reset() {
 		type = ExpressionElement.UNINIT;
-		setRegIdx(-1);
 		regVal = null;
 		pointVal = null;
 		return this;
@@ -158,9 +144,8 @@ public class ExprOperand implements ExpressionElement {
 		return this;
 	}
 
-	public ExprOperand set(DataRegister dReg, int i) {
+	public ExprOperand set(DataRegister dReg) {
 		type = ExpressionElement.DREG;
-		setRegIdx(i);
 		regVal = dReg;
 		return this;
 	}
@@ -171,9 +156,8 @@ public class ExprOperand implements ExpressionElement {
 		return this;
 	}
 
-	public ExprOperand set(IORegister ioReg, int i) {
+	public ExprOperand set(IORegister ioReg) {
 		type = ExpressionElement.IOREG;
-		setRegIdx(i);
 		regVal = ioReg;
 		return this;
 	}
@@ -184,29 +168,25 @@ public class ExprOperand implements ExpressionElement {
 		return this;
 	}
 
-	public ExprOperand set(PositionRegister pReg, int i) {
-		if(type != ExpressionElement.PREG_IDX)
-			type = ExpressionElement.PREG;
-
-		setRegIdx(i);
+	public ExprOperand set(PositionRegister pReg) {
 		regVal = pReg;
 		return this;
 	}
 
-	public ExprOperand set(PositionRegister pReg, int i, int j) {
+	public ExprOperand set(PositionRegister pReg, int pdx) {
 		type = ExpressionElement.PREG_IDX;
-		setRegIdx(i);
-		posIdx = j;
+		posIdx = pdx;
 		regVal = pReg;
+		return this;
+	}
+	
+	public ExprOperand set(int pdx) {
+		posIdx = pdx;
 		return this;
 	}
 
 	public void setBoolVal(Boolean boolVal) {
 		this.boolVal = boolVal;
-	}
-
-	public void setRegIdx(int regIdx) {
-		this.regIdx = regIdx;
 	}
 
 	public String toString(){
@@ -225,21 +205,22 @@ public class ExprOperand implements ExpressionElement {
 			s += getBoolVal() ? "TRUE" : "FALSE";
 			break;
 		case DREG:
-			String rNum = (getRegIdx() == -1) ? "..." : ""+getRegIdx();
-			s += "R[" + rNum + "]";
-			break;
 		case IOREG:
-			rNum = (getRegIdx() == -1) ? "..." : ""+getRegIdx();
-			s += "IO[" + rNum + "]";
-			break;
 		case PREG:
-			rNum = (getRegIdx() == -1) ? "..." : ""+getRegIdx();
-			s += "PR[" + rNum + "]";
+			if (regVal == null) {
+				s += "[...]";
+			} else {
+				s += regVal.toString();
+			}
+			
 			break;
 		case PREG_IDX:
-			rNum = (getRegIdx() == -1) ? "..." : ""+getRegIdx();
-			String pIdx = (posIdx == -1) ? "..." : ""+posIdx;
-			s += "PR[" + rNum + ", " + pIdx + "]";
+			if (regVal == null) {
+				s += "[...]";
+				
+			} else {
+				s += ((PositionRegister)regVal).toString(posIdx);
+			}
 			break;
 		}
 
@@ -248,8 +229,8 @@ public class ExprOperand implements ExpressionElement {
 
 	public String[] toStringArray() {
 		if(type == PREG_IDX) {
-			String rNum = (getRegIdx() == -1) ? "..." : ""+getRegIdx();
-			String pIdx = (posIdx == -1) ? "..." : ""+posIdx;
+			String rNum = (regVal == null || regVal.idx < 0) ? "..." : Integer.toString(regVal.idx + 1);
+			String pIdx = (posIdx == -1) ? "..." : Integer.toString(posIdx + 1);
 
 			return new String[] { "PR[" + rNum + ",", " " + pIdx + "]" };
 		} else {

@@ -2,13 +2,11 @@ package programming;
 import robot.RobotRun;
 
 public class Macro {
-	private Program prog;
 	boolean manual;
 	private int progIdx;
 	private int num;
 
-	public Macro(Program p, int pidx) {
-		prog = p;
+	public Macro(int pidx) {
 		progIdx = pidx;
 		manual = false;
 		num = -1;
@@ -22,18 +20,20 @@ public class Macro {
 	}
 
 	public void execute() {
+		RobotRun app = RobotRun.getInstance();
+		
 		// Stop any prior Robot movement
-		RobotRun.getInstance().getArmModel().halt();
+		app.getArmModel().halt();
 		// Safeguard against editing a program while it is running
-		RobotRun.getInstance().getContentsMenu().setColumnIdx(0);
-		RobotRun.getInstance().setActive_prog(progIdx);
-		RobotRun.getInstance().setActive_instr(0);
+		app.getContentsMenu().setColumnIdx(0);
+		app.setActive_prog(progIdx);
+		app.setActive_instr(0);
 
-		RobotRun.getInstance().setExecutingInstruction(false);
+		app.setExecutingInstruction(false);
 		// Run single instruction when step is set
-		RobotRun.getInstance().execSingleInst = RobotRun.getInstance().isStep();
+		app.execSingleInst = app.isStep();
 
-		RobotRun.getInstance().setProgramRunning(true);
+		app.setProgramRunning(true);
 	}
 	
 	public boolean isManual() { return manual; }
@@ -51,7 +51,7 @@ public class Macro {
 		return null;
 	}
 
-	public void setProgram(Program p, int idx) { prog = p; progIdx = idx; }
+	public void setProgram(int idx) { progIdx = idx; }
 
 	public String toString() {
 		String[] str = toStringArray();
@@ -60,9 +60,10 @@ public class Macro {
 
 	public String[] toStringArray() {
 		String[] ret = new String[3];
-		int name_pad = RobotRun.max(16 - prog.getName().length(), 0);
+		String name = RobotRun.getRobot().getProgram(progIdx).getName();
+		int name_pad = Math.max(16 - name.length(), 0);
 
-		ret[0] = String.format("[%-"+name_pad+"s]", prog.getName());
+		ret[0] = String.format("[%-"+name_pad+"s]", name);
 		ret[1] = manual ? "MF" : "SU";
 		if(manual) ret[2] = "_";
 		else {

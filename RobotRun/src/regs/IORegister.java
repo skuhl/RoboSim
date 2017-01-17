@@ -15,4 +15,9 @@ public class IORegister extends Register {
 		super(i, comm);
 		state = iniState;
 	}
+	
+	@Override
+	protected String regPrefix() {
+		return "IO";
+	}
 }
