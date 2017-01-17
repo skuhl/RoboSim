@@ -35,7 +35,13 @@ public class MyDropdownList extends DropdownList {
 	}
 
 	protected void onRelease() {
-		super.onRelease();
+		try {
+			// Error occurs with empty list
+			super.onRelease();
+			
+		} catch (IndexOutOfBoundsException IOOBEx) {
+			//IOOBEx.printStackTrace();
+		}
 		// Some dropdown lists influence the display
 		RobotRun.getInstance().getManager().updateWindowContentsPositions();
 	}
