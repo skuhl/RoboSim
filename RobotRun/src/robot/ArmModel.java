@@ -665,11 +665,12 @@ public class ArmModel {
 						float trialAngle = model.currentRotations[n] +
 								model.rotationSpeed * model.jointsMoving[n] * RobotRun.getInstance().liveSpeed / 100f;
 						trialAngle = RobotRun.mod2PI(trialAngle);
-
+						
 						if(model.anglePermitted(n, trialAngle)) {
 							model.currentRotations[n] = trialAngle;
 						} 
 						else {
+							System.out.printf("A[i%d, n=%d]: %f\n", i, n, trialAngle);
 							model.jointsMoving[n] = 0;
 							RobotRun.getInstance().updateRobotJogMotion(i, 0);
 							halt();

@@ -83,10 +83,12 @@ public class RobotRun extends PApplet {
 
 		if(rangeStart < rangeEnd) {
 			// Joint range does not overlap TWO_PI
-			return angleToVerify >= rangeStart && angleToVerify <= rangeEnd;
+			return (angleToVerify - rangeStart) > -0.0001f && (angleToVerify - rangeEnd) < 0.0001f;
+			//return angleToVerify >= rangeStart && angleToVerify <= rangeEnd;
 		} else {
 			// Joint range overlaps TWO_PI
-			return !(angleToVerify > rangeEnd && angleToVerify < rangeStart);
+			return !( (angleToVerify - rangeEnd) > -0.0001f && (angleToVerify - rangeStart) < 0.0001f );
+			//return !(angleToVerify > rangeEnd && angleToVerify < rangeStart);
 		}
 	}
 
