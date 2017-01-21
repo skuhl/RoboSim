@@ -20,11 +20,23 @@ public class ToolFrame extends Frame {
 		TCPTeachPoints = new Point[] { null, null, null };
 	}
 	
+	/* NOTE: do not use getOrientation when saving a Tool Frame! */
+	
 	@Override
 	public RQuaternion getOrientation() {
 		RQuaternion robotOrientation = RobotRun.nativeRobotPoint(RobotRun.getRobot().getJointAngles()).orientation;
 		// Tool frame axes orientation = (orientation offset x Model default orientation ^ -1) x Model current orientation
 		return RQuaternion.mult(ArmModel.DEFAULT_ORIENTATION.transformQuaternion(orientationOffset), robotOrientation);
+	}
+	
+	/**
+	 * Simply returns the value of the frame's orientation offset.
+	 * 
+	 * @return	The offset of the Robot's orientation associated with the tool
+	 * 			frame
+	 */
+	public RQuaternion getOrientationOffset() {
+		return orientationOffset;
 	}
 
 	/**

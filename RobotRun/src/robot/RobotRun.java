@@ -42,6 +42,7 @@ public class RobotRun extends PApplet {
 		
 		if (args != null) {
 			PApplet.main(concat(appletArgs, args));
+			
 		} else {
 			PApplet.main(appletArgs);
 		}
@@ -1777,7 +1778,18 @@ public class RobotRun extends PApplet {
 		RQuaternion qi = new RQuaternion();
 
 		float mu = 0;
-		int numberOfPoints = (int)(dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) / distanceBetweenPoints);
+		float dist = nDimDist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+		int numberOfPoints = (int)(dist / distanceBetweenPoints);
+		
+		System.out.printf("Dist: %f\n#ofPts: %d\n\n", dist, numberOfPoints);
+		
+		/**/
+		dist = nDimDist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) + nDimDist(q1.getValue(0), q1.getValue(1), q1.getValue(2), q1.getValue(3), q2.getValue(0), q2.getValue(1), q2.getValue(2), q2.getValue(3));
+		numberOfPoints = (int)(dist / distanceBetweenPoints);
+		
+		System.out.printf("Dist: %f\n#ofPts: %d\n\n", dist, numberOfPoints);
+		/**/
+		
 		float increment = 1.0f / (float)numberOfPoints;
 		for(int n = 0; n < numberOfPoints; n++) {
 			mu += increment;
@@ -1792,6 +1804,30 @@ public class RobotRun extends PApplet {
 
 		interMotionIdx = 0;
 	} // end calculate intermediate positions
+	
+	/**
+	 * Calculates the distance between two n-dimensional points.
+	 * 
+	 * @param args	The values for both n-dimensional points
+	 * @return		The distance between the two points
+	 * @throws		IllegalArgumentException when the number of args is odd
+	 */
+	public static float nDimDist(float... args) throws IllegalArgumentException {
+		if (args.length % 2 != 0) {
+			throw new IllegalArgumentException("The dimension of the points must be equal!");
+		}
+		
+		int len = args.length / 2;
+		float result = 0f;
+		
+		/* Calculate the squares of the differences between each portion of the
+		 * points */
+		for (int idx = 0; idx < len; ++idx) {
+			result = (float)Math.pow(args[idx] - args[len + idx], 2.0);
+		}
+		
+		return (float)Math.sqrt(result);
+	}
 
 	public float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
 		float numerator = x2*(x3*x3+y3*y3) - x3*(x2*x2+y2*y2) -
@@ -4271,8 +4307,6 @@ public class RobotRun extends PApplet {
 
 	//Main display content text
 	public void getContents(ScreenMode mode) {
-		contents.clear();
-		
 		switch(mode) {
 		//Program list navigation/ edit
 		case NAV_PROGRAMS:
@@ -4329,6 +4363,7 @@ public class RobotRun extends PApplet {
 			break;
 
 		case ACTIVE_FRAMES:
+			contents.clear();
 			/* workingText corresponds to the active row's index display */
 			if (this.contents.getLineIdx() == 0) {
 				contents.addLine("Tool: ", workingText);
@@ -4361,6 +4396,8 @@ public class RobotRun extends PApplet {
 		case FRAME_METHOD_USER:
 		case DIRECT_ENTRY_USER:
 		case DIRECT_ENTRY_TOOL:
+		case EDIT_PREG_C:
+		case EDIT_PREG_J:
 		case EDIT_DREG_VAL:
 		case CP_DREG_COM:
 		case CP_DREG_VAL:
@@ -4392,7 +4429,7 @@ public class RobotRun extends PApplet {
 			break;
 
 		default:
-			contents.setContents(new ArrayList<DisplayLine>());
+			contents.clear();
 			break;
 		}
 	}
@@ -6099,7 +6136,7 @@ public class RobotRun extends PApplet {
 			frame.add(newLine(line, entries[line][0], entries[line][1]));
 		}
 
-		return frame; 
+		return frame;
 	}
 
 	/**
@@ -8053,7 +8090,7 @@ public class RobotRun extends PApplet {
 	public void updateScreen() {
 		int next_px = display_px;
 		int next_py = display_py;
-		int txt, bg;
+		//int txt, bg;
 
 		clearScreen();
 

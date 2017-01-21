@@ -209,7 +209,7 @@ public abstract class Frame {
 		if (getDEOrientationOffset() == null) {
 			wpr = new PVector(0f, 0f, 0f);
 		} else {
-			// Display iin degress
+			// Display in degrees
 			wpr = RobotRun.quatToEuler(getDEOrientationOffset()).mult(RobotRun.RAD_TO_DEG);
 		}
 

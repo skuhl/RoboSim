@@ -1002,16 +1002,22 @@ public abstract class DataManagement {
 			// Write User frame origin
 			savePVector(f.getOrigin(), out);
 			len = 3;
+			
+			// Write frame axes
+			saveRQuaternion(f.getOrientation(), out);
 
 		} else {
+			ToolFrame tf = (ToolFrame)f;
+			
 			// Write Tool frame TCP offset
-			savePVector( ((ToolFrame)f).getTCPOffset(), out );
+			savePVector( tf.getTCPOffset(), out );
 			len = 6;
 			
+			// Write frame axes
+			saveRQuaternion(tf.getOrientationOffset(), out);
 		}
 
-		// Write frame axes
-		saveRQuaternion(f.getOrientation(), out);
+
 		
 		// Write frame orientation (and tooltip teach points for tool frames) points
 		for (int idx = 0; idx < len; ++idx) {
