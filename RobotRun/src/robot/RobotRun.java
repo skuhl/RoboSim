@@ -1780,17 +1780,10 @@ public class RobotRun extends PApplet {
 		RQuaternion qi = new RQuaternion();
 
 		float mu = 0;
-		float dist = nDimDist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+		float dist = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) + q1.dist(q2);
 		int numberOfPoints = (int)(dist / distanceBetweenPoints);
 		
 		System.out.printf("Dist: %f\n#ofPts: %d\n\n", dist, numberOfPoints);
-		
-		/**/
-		dist = nDimDist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) + nDimDist(q1.getValue(0), q1.getValue(1), q1.getValue(2), q1.getValue(3), q2.getValue(0), q2.getValue(1), q2.getValue(2), q2.getValue(3));
-		numberOfPoints = (int)(dist / distanceBetweenPoints);
-		
-		System.out.printf("Dist: %f\n#ofPts: %d\n\n", dist, numberOfPoints);
-		/**/
 		
 		float increment = 1.0f / (float)numberOfPoints;
 		for(int n = 0; n < numberOfPoints; n++) {
@@ -1806,30 +1799,6 @@ public class RobotRun extends PApplet {
 
 		interMotionIdx = 0;
 	} // end calculate intermediate positions
-	
-	/**
-	 * Calculates the distance between two n-dimensional points.
-	 * 
-	 * @param args	The values for both n-dimensional points
-	 * @return		The distance between the two points
-	 * @throws		IllegalArgumentException when the number of args is odd
-	 */
-	public static float nDimDist(float... args) throws IllegalArgumentException {
-		if (args.length % 2 != 0) {
-			throw new IllegalArgumentException("The dimension of the points must be equal!");
-		}
-		
-		int len = args.length / 2;
-		float result = 0f;
-		
-		/* Calculate the squares of the differences between each portion of the
-		 * points */
-		for (int idx = 0; idx < len; ++idx) {
-			result = (float)Math.pow(args[idx] - args[len + idx], 2.0);
-		}
-		
-		return (float)Math.sqrt(result);
-	}
 
 	public float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
 		float numerator = x2*(x3*x3+y3*y3) - x3*(x2*x2+y2*y2) -
