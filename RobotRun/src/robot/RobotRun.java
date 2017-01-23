@@ -26,7 +26,6 @@ import ui.*;
 import window.*;
 
 public class RobotRun extends PApplet {
-	public static final PVector ROBOT_POSITION;
 	public static final int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 	
 	private static RobotRun instance;
@@ -50,7 +49,6 @@ public class RobotRun extends PApplet {
 	
 	static {
 		instance = null;
-		ROBOT_POSITION = new PVector(200, 300, 200);
 		WORLD_AXES = new float[][] { { -1,  0,  0 },
 									 {  0,  0,  1 },
 									 {  0, -1,  0 } };
@@ -98,16 +96,17 @@ public class RobotRun extends PApplet {
 	 * be transformed as well, though, if inverse kinematics fails, then the original joint
 	 * angles are used instead.
 	 * 
-	 * @param pt      A point with initialized position and orientation
-	 * @param origin  The origin of the Coordinate System
-	 * @param axes    The axes of the Coordinate System representing as a rotation quanternion
-	 * @returning     The point, pt, interms of the given frame's Coordinate System
+	 * @param model		The Robot to which the frame belongs
+	 * @param pt     	A point with initialized position and orientation
+	 * @param origin 	The origin of the Coordinate System
+	 * @param axes   	The axes of the Coordinate System representing as a rotation quanternion
+	 * @returning    	The point, pt, interms of the given frame's Coordinate System
 	 */
-	public static Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
+	public static Point applyFrame(ArmModel model, Point pt, PVector origin, RQuaternion axes) {
 		PVector position = convertToFrame(pt.position, origin, axes);
 		RQuaternion orientation = axes.transformQuaternion(pt.orientation);
 		// Update joint angles associated with the point
-		float[] newJointAngles = inverseKinematics(pt.angles, position, orientation);
+		float[] newJointAngles = inverseKinematics(model, pt.angles, position, orientation);
 
 		if (newJointAngles != null) {
 			return new Point(position, orientation, newJointAngles);
@@ -124,8 +123,10 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @param jointAngles  A valid set of six joint angles (in radians) for the Robot
 	 */
-	public static void applyModelRotation(float[] jointAngles) {
-		instance.translate(ROBOT_POSITION.x, ROBOT_POSITION.y, ROBOT_POSITION.z);
+	public static void applyModelRotation(ArmModel model, float[] jointAngles) {
+		PVector basePos = model.getBasePosition();
+		
+		instance.translate(basePos.x, basePos.y, basePos.z);
 
 		instance.translate(-50, -166, -358); // -115, -213, -413
 		instance.rotateZ(PI);
@@ -183,20 +184,20 @@ public class RobotRun extends PApplet {
 	 * resulting matrix will describe the linear approximation
 	 * of the robot's motion for each joint in units per radian. 
 	 */
-	public static float[][] calculateJacobian(float[] angles, boolean posOffset) {
+	public static float[][] calculateJacobian(ArmModel model, float[] angles, boolean posOffset) {
 		float dAngle = DEG_TO_RAD;
 		if (!posOffset){ dAngle *= -1; }
 
 		float[][] J = new float[7][6];
 		//get current ee position
-		Point curRP = nativeRobotEEPoint(angles);
+		Point curRP = nativeRobotEEPoint(model, angles);
 
 		//examine each segment of the arm
 		for(int i = 0; i < 6; i += 1) {
 			//test angular offset
 			angles[i] += dAngle;
 			//get updated ee position
-			Point newRP = nativeRobotEEPoint(angles);
+			Point newRP = nativeRobotEEPoint(model, angles);
 
 			if (curRP.orientation.dot(newRP.orientation) < 0f) {
 				// Use -q instead of q
@@ -378,25 +379,31 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Attempts to calculate the joint angles that would place the Robot in the given target position and
-	 * orientation. The srcAngles parameter defines the position of the Robot from which to move, since
-	 * this inverse kinematics uses a relative conversion formula. There is no guarantee that the target
-	 * position and orientation can be reached; in the case that inverse kinematics fails, then null is
-	 * returned. Otherwise, a set of six angles will be returned, though there is no guarantee that these
+	 * Attempts to calculate the joint angles that would place the Robot in the
+	 * given target position and orientation. The srcAngles parameter defines
+	 * the position of the Robot from which to move, since this inverse
+	 * kinematics uses a relative conversion formula. There is no guarantee
+	 * that the target position and orientation can be reached; in the case
+	 * that inverse kinematics fails, then null is returned. Otherwise, a set
+	 * of six angles will be returned, though there is no guarantee that these
 	 * angles are valid!
 	 * 
-	 * @param srcAngles       The initial position of the Robot
-	 * @param tgtPosition     The desired position of the Robot
-	 * @param tgtOrientation  The desited orientation of the Robot
+	 * @param model				The Robot model of which to base the inverse
+	 * 							kinematics off
+	 * @param srcAngles      	The initial position of the Robot
+	 * @param tgtPosition    	The desired position of the Robot
+	 * @param tgtOrientation	The desired orientation of the Robot
 	 */
-	public static float[] inverseKinematics(float[] srcAngles, PVector tgtPosition, RQuaternion tgtOrientation) {
+	public static float[] inverseKinematics(ArmModel model, float[] srcAngles,
+			PVector tgtPosition, RQuaternion tgtOrientation) {
+		
 		final int limit = 1000;  // Max number of times to loop
 		int count = 0;
 
 		float[] angles = srcAngles.clone();
 
 		while(count < limit) {
-			Point cPoint = nativeRobotEEPoint(angles);
+			Point cPoint = nativeRobotEEPoint(model, angles);
 
 			if (tgtOrientation.dot(cPoint.orientation) < 0f) {
 				// Use -q instead of q
@@ -423,7 +430,7 @@ public class RobotRun extends PApplet {
 			if ( (dist < (instance.liveSpeed / 100f)) && (rDist < (0.00005f * instance.liveSpeed)) ) { break; }
 
 			//calculate jacobian, 'J', and its inverse
-			float[][] J = calculateJacobian(angles, true);
+			float[][] J = calculateJacobian(model, angles, true);
 			RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
 			RealMatrix JInverse = new SingularValueDecomposition(m).getSolver().getInverse();
 
@@ -595,10 +602,11 @@ public class RobotRun extends PApplet {
 	 * Returns the Robot's End Effector position according to the active Tool Frame's
 	 * offset in the native Coordinate System.
 	 * 
-	 * @param jointAngles  A valid set of six joint angles (in radians) for the Robot
-	 * @returning          The Robot's End Effector position
+	 * @param model			The Robot model of which to base the position off
+	 * @param jointAngles	A valid set of six joint angles (in radians) for the Robot
+	 * @returning			The Robot's End Effector position
 	 */
-	public static Point nativeRobotEEPoint(float[] jointAngles) {
+	public static Point nativeRobotEEPoint(ArmModel model, float[] jointAngles) {
 		Frame activeTool = instance.armModel.getActiveFrame(CoordFrame.TOOL);
 		PVector offset;
 
@@ -609,36 +617,43 @@ public class RobotRun extends PApplet {
 			offset = new PVector(0f, 0f, 0f);
 		}
 
-		return nativeRobotPointOffset(jointAngles, offset);
+		return nativeRobotPointOffset(model, jointAngles, offset);
 	}
 
 	/**
 	 * Returns a point containing the Robot's faceplate position and orientation
 	 * corresponding to the given joint angles, as well as the given joint angles.
 	 * 
-	 * @param jointAngles  A valid set of six joint angles (in radians) for the
-	 *                     Robot
-	 * @returning          The Robot's faceplate position and orientation
-	 *                     corresponding to the given joint angles
+	 * @param model			The Robot model, of which to find the EE position
+	 * @param jointAngles	A valid set of six joint angles (in radians) for the
+	 * 						Robot
+	 * @returning			The Robot's faceplate position and orientation
+	 * 						corresponding to the given joint angles
 	 */
-	public static Point nativeRobotPoint(float[] jointAngles) {
-		// Return a point containing the faceplate position, orientation, and joint angles
-		return nativeRobotPointOffset(jointAngles, new PVector(0f, 0f, 0f));
+	public static Point nativeRobotPoint(ArmModel model, float[] jointAngles) {
+		/* Return a point containing the faceplate position, orientation, and
+		 * joint angles */
+		return nativeRobotPointOffset(model, jointAngles, new PVector(0f, 0f, 0f));
 	}
 
 	/**
-	 * Returns a point containing the Robot's End Effector position and orientation
-	 * corresponding to the given joint angles, as well as the given joint angles.
+	 * Returns a point containing the Robot's End Effector position and
+	 * orientation corresponding to the given joint angles, as well as the
+	 * given joint angles.
 	 * 
-	 * @param jointAngles  A valid set of six joint angles (in radians) for the Robot
-	 * @param offset       The End Effector offset in the form of a vector
-	 * @returning          The Robot's EE position and orientation corresponding to
-	 *                     the given joint angles
+	 * @param model			The Robot model, of which to find the EE position
+	 * @param jointAngles	A valid set of six joint angles (in radians) for
+	 * 						the Robot
+	 * @param offset		The End Effector offset in the form of a vector
+	 * @returning			The Robot's EE position and orientation
+	 * 						corresponding to the given joint angles
 	 */
-	public static Point nativeRobotPointOffset(float[] jointAngles, PVector offset) {
+	public static Point nativeRobotPointOffset(ArmModel model,
+			float[] jointAngles, PVector offset) {
+		
 		instance.pushMatrix();
 		instance.resetMatrix();
-		applyModelRotation(jointAngles);
+		applyModelRotation(model, jointAngles);
 		// Apply offset
 		PVector ee = instance.getCoordFromMatrix(offset.x, offset.y, offset.z);
 		float[][] orientationMatrix = instance.getRotationMatrix();
@@ -704,17 +719,18 @@ public class RobotRun extends PApplet {
 	 * be transformed as well, though, if inverse kinematics fails, then the original joint
 	 * angles are used instead.
 	 * 
-	 * @param pt      A point with initialized position and orientation
-	 * @param origin  The origin of the Coordinate System
-	 * @param axes    The axes of the Coordinate System representing as a rotation quanternion
-	 * @returning     The point, pt, interms of the given frame's Coordinate System
+	 * @param model		The Robot, to which the frame belongs
+	 * @param pt		A point with initialized position and orientation
+	 * @param origin	The origin of the Coordinate System
+	 * @param axes		The axes of the Coordinate System representing as a rotation quanternion
+	 * @returning		The point, pt, interms of the given frame's Coordinate System
 	 */
-	public static Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
+	public static Point removeFrame(ArmModel model, Point pt, PVector origin, RQuaternion axes) {
 		PVector position = convertFromFrame(pt.position, origin, axes);
 		RQuaternion orientation = RQuaternion.mult(pt.orientation, axes);
 
 		// Update joint angles associated with the point
-		float[] newJointAngles = inverseKinematics(pt.angles, position, orientation);
+		float[] newJointAngles = inverseKinematics(model, pt.angles, position, orientation);
 
 		if (newJointAngles != null) {
 			return new Point(position, orientation, newJointAngles);
@@ -984,79 +1000,7 @@ public class RobotRun extends PApplet {
 	// Indicates whether a program is currently running
 	private boolean programRunning = false;
 
-	/**
-	 * Updates the motion of one of the Robot's joints based on
-	 * the joint index given and the value of dir (-/+ 1). The
-	 * Robot's joint indices range from 0 to 5. ifthe joint
-	 * Associate with the given index is already in motion,
-	 * in either direction, then calling this method for that
-	 * joint index will stop that joint's motion.
-	 * 
-	 * @returning  The new motion direction of the Robot
-	 */
-	public float activateLiveJointMotion(int joint, int dir) {
 
-		if (!shift || motionFault) {
-			// Only move when shift is set and there is no error
-			return 0f;
-		}
-
-		return armModel.setJointMotion(joint, dir);
-	}
-
-	/**
-	 * Updates the motion of the Robot with respect to one of the World axes for
-	 * either linear or rotational motion around the axis. Similiar to the
-	 * activateLiveJointMotion() method, calling this method for an axis, in which
-	 * the Robot is already moving, will result in the termination of the Robot's
-	 * motion in that axis. Rotational and linear motion for an axis are mutually
-	 * independent in this regard.
-	 * 
-	 * @param axis        The axis of movement for the robotic arm:
-                  x - 0, y - 1, z - 2, w - 3, p - 4, r - 5
-	 * @pararm dir        +1 or -1: indicating the direction of motion
-	 * @returning         The new direction of motion in the given axis
-	 *
-	 */
-	public float activateLiveWorldMotion(int axis, int dir) {
-		if (!shift || motionFault) {
-			// Only move when shift is set and there is no error
-			return 0f;
-		}
-
-		// Initiaize the Robot's destination
-		Point RP = nativeRobotEEPoint(armModel.getJointAngles());
-		armModel.tgtPosition = RP.position;
-		armModel.tgtOrientation = RP.orientation;
-
-
-		if(axis >= 0 && axis < 3) {
-			if(armModel.jogLinear[axis] == 0) {
-				// Begin movement on the given axis in the given direction
-				armModel.jogLinear[axis] = dir;
-			} else {
-				// Halt movement
-				armModel.jogLinear[axis] = 0;
-			}
-
-			return armModel.jogLinear[axis];
-		}
-		else if(axis >= 3 && axis < 6) {
-			axis %= 3;
-			if(armModel.jogRot[axis] == 0) {
-				// Begin movement on the given axis in the given direction
-				armModel.jogRot[axis] = dir;
-			}
-			else {
-				// Halt movement
-				armModel.jogRot[axis] = 0;
-			}
-
-			return armModel.jogRot[axis];
-		}
-
-		return 0f;
-	}
 
 	/**
 	 * Returns the instruction that is currently active in the currently active program.
@@ -1720,7 +1664,7 @@ public class RobotRun extends PApplet {
 		}
 		else {
 			// NOTE orientation is in Native Coordinates!
-			currentPoint = nativeRobotEEPoint(armModel.getJointAngles());
+			currentPoint = nativeRobotEEPoint(armModel, armModel.getJointAngles());
 		}
 
 		for(int n = transitionPoint; n < numberOfPoints; n++) {
@@ -2081,14 +2025,14 @@ public class RobotRun extends PApplet {
 				inputs[idx] = mod2PI(inputs[idx] * DEG_TO_RAD);
 			}
 
-			armModel.getPReg(active_index).point = nativeRobotEEPoint(inputs);
+			armModel.getPReg(active_index).point = nativeRobotEEPoint(armModel, inputs);
 		} else {
 			PVector position = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
 			// Convert the angles from degrees to radians, then convert from World to Native frame, and finally convert to a quaternion
 			RQuaternion orientation = eulerToQuat( (new PVector(-inputs[3], inputs[5], -inputs[4]).mult(DEG_TO_RAD)) );
 
 			// Use default the Robot's joint angles for computing inverse kinematics
-			float[] jointAngles = inverseKinematics(new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
+			float[] jointAngles = inverseKinematics(armModel, new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
 			armModel.getPReg(active_index).point = new Point(position, orientation, jointAngles);
 		}
 
@@ -2128,7 +2072,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void displayAxes() {
 
-		Point eePoint = nativeRobotEEPoint(armModel.getJointAngles());
+		Point eePoint = nativeRobotEEPoint(armModel, armModel.getJointAngles());
 
 		if (axesState == AxesDisplay.AXES && armModel.getCurCoordFrame() == CoordFrame.TOOL) {
 			Frame activeTool = armModel.getActiveFrame(CoordFrame.TOOL);
@@ -2232,9 +2176,9 @@ public class RobotRun extends PApplet {
 		pushMatrix();
 		// Map the chosen two axes vectors to the xz-plane at the y-position of the Robot's base
 		applyMatrix(axesVectors[vectorPX][0], 0, axesVectors[vectorPZ][0], origin.x,
-				0, 1,                        0, ROBOT_POSITION.y,
-				axesVectors[vectorPX][2], 0, axesVectors[vectorPZ][2], origin.z,
-				0, 0,                        0,        1);
+										   0, 1, 						0, armModel.getBasePosition().y,
+					axesVectors[vectorPX][2], 0, axesVectors[vectorPZ][2], origin.z,
+										   0, 0,                        0,        1);
 
 		float lineLen = halfNumOfLines * distBwtLines;
 
@@ -4085,7 +4029,7 @@ public class RobotRun extends PApplet {
 						Frame active = armModel.getActiveFrame(CoordFrame.USER);
 
 						if (active != null) {
-							pt = removeFrame(pt, active.getOrigin(), active.getOrientation());
+							pt = removeFrame(armModel, pt, active.getOrigin(), active.getOrientation());
 							if (DISPLAY_TEST_OUTPUT) {
 								System.out.printf("pt: %s\n", pt.position.toString());
 							}
@@ -4185,9 +4129,9 @@ public class RobotRun extends PApplet {
 				Point pt;
 
 				if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT) {
-					pt = nativeRobotEEPoint(armModel.getJointAngles());
+					pt = nativeRobotEEPoint(armModel, armModel.getJointAngles());
 				} else {
-					pt = nativeRobotPoint(armModel.getJointAngles());
+					pt = nativeRobotPoint(armModel, armModel.getJointAngles());
 				}
 
 				teachFrame.setPoint(pt, options.getLineIdx());
@@ -4213,12 +4157,12 @@ public class RobotRun extends PApplet {
 			
 			if (shift && pReg != null) {
 				// Save the Robot's current position and joint angles
-				Point curRP = nativeRobotEEPoint(armModel.getJointAngles());
+				Point curRP = nativeRobotEEPoint(armModel, armModel.getJointAngles());
 				Frame active = armModel.getActiveFrame(CoordFrame.USER);
 
 				if (active != null) {
 					// Save Cartesian values in terms of the active User frame
-					curRP = applyFrame(curRP, active.getOrigin(), active.getOrientation());
+					curRP = applyFrame(armModel, curRP, active.getOrigin(), active.getOrientation());
 				} 
 
 				pReg.point = curRP;
@@ -6326,7 +6270,7 @@ public class RobotRun extends PApplet {
 
 				if (castIns.getUserFrame() != -1) {
 					Frame uFrame = armModel.getUserFrame(castIns.getUserFrame());
-					displayPoint = removeFrame(p, uFrame.getOrigin(), uFrame.getOrientation());
+					displayPoint = removeFrame(armModel, p, uFrame.getOrigin(), uFrame.getOrientation());
 
 				} else {
 					displayPoint = p;
@@ -6370,7 +6314,7 @@ public class RobotRun extends PApplet {
 			if(instr instanceof MotionInstruction) {
 				// Show '@' at the an instrution, if the Robot's position is close to that position stored in the instruction's register
 				MotionInstruction a = (MotionInstruction)instr;
-				Point ee_point = nativeRobotEEPoint(armModel.getJointAngles());
+				Point ee_point = nativeRobotEEPoint(armModel, armModel.getJointAngles());
 				Point instPt = a.getVector(p);
 
 				if(instPt != null && ee_point.position.dist(instPt.position) < (liveSpeed / 100f)) {
@@ -6978,18 +6922,19 @@ public class RobotRun extends PApplet {
 	 *  For any other value, nothing is drawn
 	 */
 	public void mapToRobotBasePlane() {
-
-		PVector ee_pos = nativeRobotEEPoint(armModel.getJointAngles()).position;
+		
+		PVector basePos = armModel.getBasePosition();
+		PVector ee_pos = nativeRobotEEPoint(armModel, armModel.getJointAngles()).position;
 
 		// Change color of the EE mapping based on if it lies below or above the ground plane
-		int c = (ee_pos.y <= ROBOT_POSITION.y) ? color(255, 0, 0) : color(150, 0, 255);
+		int c = (ee_pos.y <= basePos.y) ? color(255, 0, 0) : color(150, 0, 255);
 
 		// Toggle EE mapping type with 'e'
 		switch (mappingState) {
 		case LINE:
 			stroke(c);
 			// Draw a line, from the EE to the grid in the xy plane, parallel to the xy plane
-			line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, ROBOT_POSITION.y, ee_pos.z);
+			line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, basePos.y, ee_pos.z);
 			break;
 
 		case DOT:
@@ -6998,7 +6943,7 @@ public class RobotRun extends PApplet {
 			// Draw a point, which maps the EE's position to the grid in the xy plane
 			pushMatrix();
 			rotateX(PI / 2);
-			translate(0, 0, -ROBOT_POSITION.y);
+			translate(0, 0, -basePos.y);
 			ellipse(ee_pos.x, ee_pos.z, 10, 10);
 			popMatrix();
 			break;
@@ -7179,12 +7124,12 @@ public class RobotRun extends PApplet {
 	}
 
 	public void newMotionInstruction() {
-		Point pt = nativeRobotEEPoint(armModel.getJointAngles());
+		Point pt = nativeRobotEEPoint(armModel, armModel.getJointAngles());
 		Frame active = armModel.getActiveFrame(CoordFrame.USER);
 
 		if (active != null) {
 			// Convert into currently active frame
-			pt = applyFrame(pt, active.getOrigin(), active.getOrientation());
+			pt = applyFrame(armModel, pt, active.getOrigin(), active.getOrientation());
 
 			if (DISPLAY_TEST_OUTPUT) {
 				System.out.printf("New: %s\n", convertNativeToWorld(pt.position));
@@ -7549,7 +7494,9 @@ public class RobotRun extends PApplet {
 		camera = new Camera();
 
 		//load model and save data
-		armModel = new ArmModel(0);
+		armModel = new ArmModel(0, new PVector(200, 300, 200));
+		armModel.setDefaultRobotPoint();
+		
 		intermediatePositions = new ArrayList<Point>();
 		activeScenario = null;
 		showOOBs = true;
@@ -7586,7 +7533,7 @@ public class RobotRun extends PApplet {
 	 * @return Returns false on failure (invalid instruction), true on success
 	 */
 	public boolean setUpInstruction(Program program, ArmModel model, MotionInstruction instruction) {
-		Point start = nativeRobotEEPoint(model.getJointAngles());
+		Point start = nativeRobotEEPoint(armModel, model.getJointAngles());
 
 		if (!instruction.checkFrames(armModel.getActiveToolFrame(), armModel.getActiveUserFrame())) {
 			// Current Frames must match the instruction's frames
@@ -7676,7 +7623,7 @@ public class RobotRun extends PApplet {
 		default:
 		}
 
-		Point RP = nativeRobotEEPoint(armModel.getJointAngles());
+		Point RP = nativeRobotEEPoint(armModel, armModel.getJointAngles());
 
 		String[] cartesian = RP.toLineStringArray(true),
 				joints = RP.toLineStringArray(false);
@@ -8032,10 +7979,10 @@ public class RobotRun extends PApplet {
 
 			if(armModel.getCurCoordFrame() == CoordFrame.JOINT) {
 				// Move single joint
-				newDir = activateLiveJointMotion(button, direction);
+				newDir = armModel.activateLiveJointMotion(button, direction);
 			} else {
 				// Move entire robot in a single axis plane
-				newDir = activateLiveWorldMotion(button, direction);
+				newDir = armModel.activateLiveWorldMotion(button, direction);
 			}
 
 			Button negButton = ((Button)cp5.get("JOINT" + (button + 1) + "_NEG")),

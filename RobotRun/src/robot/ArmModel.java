@@ -21,18 +21,15 @@ import regs.IORegister;
 import regs.PositionRegister;
 
 public class ArmModel {
+	private final PVector BASE_POSITION;
 	// Initial position and orientation of the Robot
-	public static final PVector DEFAULT_POSITON;
-	public static final RQuaternion DEFAULT_ORIENTATION;
+	private static Point robotPoint;
+	
 	/* The number of the user and tool frames, the number of the position and
 	 * data registers, and the number of I/O registers */
 	public static final int FRAME_NUM, DPREG_NUM, IOREG_NUM;
 	
 	static {
-		Point pt = RobotRun.nativeRobotPoint(new float[] { 0f, 0f, 0f, 0f, 0f, 0f });
-		// Define the defaultl Robot position and orientaiton
-		DEFAULT_POSITON = pt.position;
-		DEFAULT_ORIENTATION = pt.orientation;
 		FRAME_NUM = 10;
 		DPREG_NUM = 100;
 		IOREG_NUM = 5;
@@ -91,9 +88,11 @@ public class ArmModel {
 
 	public RQuaternion tgtOrientation;
 
-	public ArmModel(int rid) {
+	public ArmModel(int rid, PVector basePos) {
 		int idx;
+		
 		RID = rid;
+		BASE_POSITION = basePos;
 		
 		// Initialize the program list
 		programs = new ArrayList<Program>();
@@ -272,7 +271,7 @@ public class ArmModel {
 		held = null;
 		// Initializes the old transformation matrix for the arm model
 		RobotRun.getInstance().pushMatrix();
-		RobotRun.applyModelRotation(getJointAngles());
+		RobotRun.applyModelRotation(this, getJointAngles());
 		oldEEOrientation = RobotRun.getInstance().getTransformationMatrix();
 		RobotRun.getInstance().popMatrix();
 	}
@@ -299,6 +298,83 @@ public class ArmModel {
 
 			return idx;
 		}
+	}
+	
+	/**
+	 * Updates the motion of one of the Robot's joints based on
+	 * the joint index given and the value of dir (-/+ 1). The
+	 * Robot's joint indices range from 0 to 5. ifthe joint
+	 * Associate with the given index is already in motion,
+	 * in either direction, then calling this method for that
+	 * joint index will stop that joint's motion.
+	 * 
+	 * @returning  The new motion direction of the Robot
+	 */
+	public float activateLiveJointMotion(int joint, int dir) {
+		RobotRun app = RobotRun.getInstance();
+
+		if (!app.shift || app.motionFault) {
+			// Only move when shift is set and there is no error
+			return 0f;
+		}
+
+		return setJointMotion(joint, dir);
+	}
+
+	/**
+	 * Updates the motion of the Robot with respect to one of the World axes for
+	 * either linear or rotational motion around the axis. Similiar to the
+	 * activateLiveJointMotion() method, calling this method for an axis, in which
+	 * the Robot is already moving, will result in the termination of the Robot's
+	 * motion in that axis. Rotational and linear motion for an axis are mutually
+	 * independent in this regard.
+	 * 
+	 * @param axis        The axis of movement for the robotic arm:
+                  x - 0, y - 1, z - 2, w - 3, p - 4, r - 5
+	 * @pararm dir        +1 or -1: indicating the direction of motion
+	 * @returning         The new direction of motion in the given axis
+	 *
+	 */
+	public float activateLiveWorldMotion(int axis, int dir) {
+		RobotRun app = RobotRun.getInstance();
+		
+		if (!app.shift || app.motionFault) {
+			// Only move when shift is set and there is no error
+			return 0f;
+		}
+
+		// Initiaize the Robot's destination
+		Point RP = RobotRun.nativeRobotEEPoint(this, getJointAngles());
+		tgtPosition = RP.position;
+		tgtOrientation = RP.orientation;
+
+
+		if(axis >= 0 && axis < 3) {
+			if(jogLinear[axis] == 0) {
+				// Begin movement on the given axis in the given direction
+				jogLinear[axis] = dir;
+			} else {
+				// Halt movement
+				jogLinear[axis] = 0;
+			}
+
+			return jogLinear[axis];
+		}
+		else if(axis >= 3 && axis < 6) {
+			axis %= 3;
+			if(jogRot[axis] == 0) {
+				// Begin movement on the given axis in the given direction
+				jogRot[axis] = dir;
+			}
+			else {
+				// Halt movement
+				jogRot[axis] = 0;
+			}
+
+			return jogRot[axis];
+		}
+
+		return 0f;
 	}
 	
 	/**
@@ -484,8 +560,8 @@ public class ArmModel {
 		RobotRun.getInstance().fill(200, 200, 0);
 
 		RobotRun.getInstance().pushMatrix();
-		RobotRun.getInstance().translate(RobotRun.ROBOT_POSITION.x,
-				RobotRun.ROBOT_POSITION.y, RobotRun.ROBOT_POSITION.z);
+		RobotRun.getInstance().translate(BASE_POSITION.x, BASE_POSITION.y,
+						BASE_POSITION.z);
 
 		RobotRun.getInstance().rotateZ(Fields.PI);
 		RobotRun.getInstance().rotateY(Fields.PI/2);
@@ -697,7 +773,7 @@ public class ArmModel {
 				}
 			}
 
-			Point curPoint = RobotRun.nativeRobotEEPoint(getJointAngles());
+			Point curPoint = RobotRun.nativeRobotEEPoint(this, getJointAngles());
 
 			// Apply translational motion vector
 			if (translationalMotion()) {
@@ -774,13 +850,27 @@ public class ArmModel {
 			return null;
 		}
 	}
-
+	
+	/**
+	 * @return	The ID for the Robot's active tool frame
+	 */
 	public int getActiveToolFrame() {
 		return activeToolFrame;
 	}
 
+	/**
+	 * @return	The ID for the Robot's active user frame
+	 */
 	public int getActiveUserFrame() {
 		return activeUserFrame;
+	}
+	
+	/**
+	 * @return	A copy of the position of the center of the Robot's base
+	 * 			segment
+	 */
+	public PVector getBasePosition() {
+		return BASE_POSITION.copy();
 	}
 
 	/**
@@ -888,7 +978,7 @@ public class ArmModel {
 	public float[][] getOrientationMatrix() {
 		RobotRun.getInstance().pushMatrix();
 		RobotRun.getInstance().resetMatrix();
-		RobotRun.applyModelRotation(getJointAngles());
+		RobotRun.applyModelRotation(this, getJointAngles());
 		float[][] matrix = RobotRun.getInstance().getRotationMatrix();
 		RobotRun.getInstance().popMatrix();
 
@@ -951,6 +1041,13 @@ public class ArmModel {
 	 * Returns the unique ID of the Robot.
 	 */
 	public int getRID() { return RID; }
+	
+	/**
+	 * @return	A copy of the Robot's default position and orientation
+	 */
+	public Point getDefaultPoint() {
+		return robotPoint.clone();
+	}
 
 	/**
 	 * Returns the tool frame, associated with the given index, of the Robot,
@@ -1074,7 +1171,7 @@ public class ArmModel {
 		boolean invalidAngle = false;
 		float[] srcAngles = getJointAngles();
 		// Calculate the joint angles for the desired position and orientation
-		float[] destAngles = RobotRun.inverseKinematics(srcAngles, destPosition, destOrientation);
+		float[] destAngles = RobotRun.inverseKinematics(this, srcAngles, destPosition, destOrientation);
 
 		// Check the destination joint angles with each joint's range of valid joint angles
 		for(int joint = 0; !(destAngles == null) && joint < 6; joint += 1) {
@@ -1092,7 +1189,7 @@ public class ArmModel {
 		// Did we successfully find the desired angles?
 		if ((destAngles == null) || invalidAngle) {
 			if (RobotRun.DISPLAY_TEST_OUTPUT) {
-				Point RP = RobotRun.nativeRobotEEPoint(getJointAngles());
+				Point RP = RobotRun.nativeRobotEEPoint(this, getJointAngles());
 				System.out.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n", RP.position, destPosition,
 						RP.orientation, destOrientation);
 			}
@@ -1125,7 +1222,7 @@ public class ArmModel {
 	 * TODO comment
 	 */
 	public void moveTo(PVector position, RQuaternion orientation) {
-		Point start = RobotRun.nativeRobotEEPoint(getJointAngles());
+		Point start = RobotRun.nativeRobotEEPoint(this, getJointAngles());
 		Point end = new Point(position.copy(), (RQuaternion)orientation.clone(), start.angles.clone());
 		RobotRun.getInstance().beginNewLinearMotion(start, end);
 		motionType = RobotMotion.MT_LINEAR;
@@ -1249,6 +1346,16 @@ public class ArmModel {
 
 		return 0f;
 	}
+	
+	/**
+	 * Sets the Robot's default position and orientation in a static variable.
+	 * THIS METHOD MUST BE CALLED WHEN THE FIRST ROBOT IS CREATED!
+	 */
+	protected void setDefaultRobotPoint() {
+		// Define the default Robot position and orientation
+		robotPoint = RobotRun.nativeRobotPoint(this,
+				new float[] { 0f, 0f, 0f, 0f, 0f, 0f });
+	}
 
 	/**
 	 * Sets the Model's target joint angles to the given set of angles and updates the
@@ -1345,8 +1452,8 @@ public class ArmModel {
 		RobotRun.getInstance().pushMatrix();
 		RobotRun.getInstance().resetMatrix();
 
-		RobotRun.getInstance().translate(RobotRun.ROBOT_POSITION.x,
-					RobotRun.ROBOT_POSITION.y, RobotRun.ROBOT_POSITION.z);
+		RobotRun.getInstance().translate(BASE_POSITION.x, BASE_POSITION.y,
+				BASE_POSITION.z);
 
 		RobotRun.getInstance().rotateZ(Fields.PI);
 		RobotRun.getInstance().rotateY(Fields.PI/2);
@@ -1467,7 +1574,7 @@ public class ArmModel {
 
 		RobotRun.getInstance().pushMatrix();
 		RobotRun.getInstance().resetMatrix();
-		RobotRun.applyModelRotation(getJointAngles());
+		RobotRun.applyModelRotation(this, getJointAngles());
 
 		switch(current) {
 		case NONE:
@@ -1565,7 +1672,7 @@ public class ArmModel {
 	public void updatePreviousEEOrientation() {
 		RobotRun.getInstance().pushMatrix();
 		RobotRun.getInstance().resetMatrix();
-		RobotRun.applyModelRotation(getJointAngles());
+		RobotRun.applyModelRotation(this, getJointAngles());
 		// Keep track of the old coordinate frame of the armModel
 		oldEEOrientation = RobotRun.getInstance().getTransformationMatrix();
 		RobotRun.getInstance().popMatrix();
