@@ -27,12 +27,12 @@ public class CallInstruction extends Instruction {
 		}
 
 		int[] p = new int[2];
-		p[0] = RobotRun.getInstance().getActive_prog();
-		p[1] = RobotRun.getInstance().getActive_instr() + 1;
+		p[0] = RobotRun.getRobot().getActiveProgIdx();
+		p[1] = RobotRun.getRobot().getActiveInstIdx() + 1;
 		RobotRun.getInstance().getCall_stack().push(p);
-
-		RobotRun.getInstance().setActive_prog(progIdx);
-		RobotRun.getInstance().setActive_instr(0);
+		
+		RobotRun.getRobot().setActiveProgIdx(progIdx);
+		RobotRun.getRobot().setActiveInstIdx(0);
 		RobotRun.getInstance().getContentsMenu().reset();
 		RobotRun.getInstance().updateScreen();
 

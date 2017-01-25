@@ -15,15 +15,17 @@ import geom.Point;
 import geom.WorldObject;
 import global.Fields;
 import processing.core.PVector;
+import programming.Instruction;
 import programming.Program;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 
 public class ArmModel {
+	// The position of the center of the Robot's base segment
 	private final PVector BASE_POSITION;
 	// Initial position and orientation of the Robot
-	private static Point robotPoint;
+	private Point robotPoint;
 	
 	/* The number of the user and tool frames, the number of the position and
 	 * data registers, and the number of I/O registers */
@@ -40,6 +42,9 @@ public class ArmModel {
 	
 	// The programs associated with this Robot
 	private ArrayList<Program> programs;
+	// TODO: refactor into Process class
+	private int activeProgIdx;
+	private int activeInstIdx;
 	
 	// The set of frames associated with a Robot
 	private Frame[] toolFrames, userFrames;
@@ -96,6 +101,8 @@ public class ArmModel {
 		
 		// Initialize the program list
 		programs = new ArrayList<Program>();
+		activeProgIdx = -1;
+		activeInstIdx = -1;
 		
 		// Initializes the frames
 		
@@ -196,7 +203,7 @@ public class ArmModel {
 			jogRot[idx] = 0;
 		}
 
-		/* Initialies dimensions of the Robot Arm's hit boxes */
+		/* Initializes dimensions of the Robot Arm's hit boxes */
 		armOBBs = new BoundingBox[7];
 
 		armOBBs[0] = new BoundingBox(420, 115, 420);
@@ -642,12 +649,13 @@ public class ArmModel {
 		drawEndEffector(activeEndEffector, endEffectorState);
 
 		RobotRun.getInstance().popMatrix();
-
-		if (RobotRun.getInstance().showOOBs) { drawBoxes(); }
+		// My sketchy work-around
+		if (RobotRun.getRobot() == this &&
+				RobotRun.getInstance().showOOBs) { drawBoxes(); }
 	}
 	
 	/* Draws the Robot Arm's hit boxes in the world */
-	public void drawBoxes() {
+	private void drawBoxes() {
 		// Draw hit boxes of the body poriotn of the Robot Arm
 		for(BoundingBox b : armOBBs) {
 			b.draw();
@@ -819,6 +827,28 @@ public class ArmModel {
 			jumpTo(tgtPosition, tgtOrientation);
 		}
 	}
+	
+	/**
+	 * @return	The active instruction of the active program, or null if no
+	 * 			program is active
+	 */
+	public Instruction getActiveInstruction() {
+		Program prog = getActiveProg();
+		
+		if (prog == null || activeInstIdx < 0 || activeInstIdx >= prog.size()) {
+			// Invalid instruction or program index
+			return null;
+		}
+		
+		return prog.getInstruction(activeInstIdx);
+	}
+	
+	/**
+	 * @return	The index of the active program's active instruction
+	 */
+	public int getActiveInstIdx() {
+		return activeInstIdx;
+	}
 
 	/**
 	 * Returns the active Tool frame TOOL, or the active User frame for USER. For either
@@ -849,6 +879,25 @@ public class ArmModel {
 			// no active frame
 			return null;
 		}
+	}
+	
+	/**
+	 * @return	The active for this Robot, or null if no program is active
+	 */
+	public Program getActiveProg() {
+		if (activeProgIdx < 0 || activeProgIdx >= programs.size()) {
+			// Invalid program index
+			return null;
+		}
+		
+		return programs.get(activeProgIdx);
+	}
+	
+	/**
+	 * @return	The index of the active program
+	 */
+	public int getActiveProgIdx() {
+		return activeProgIdx;
 	}
 	
 	/**
@@ -1285,6 +1334,43 @@ public class ArmModel {
 	public boolean rotationalMotion() {
 		return jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0;
 	}
+	
+	/**
+	 * Sets the active instruction of the active program corresponding to the
+	 * index given.
+	 * 
+	 * @param instIdx	The index of the instruction to set as active
+	 * @return			Whether an active program exists and the given index is
+	 * 					valid for the active program
+	 */
+	public boolean setActiveInstIdx(int instIdx) {
+		Program prog = getActiveProg();
+		
+		if (prog != null && instIdx >= 0 && instIdx < prog.getInstructions().size()) {
+			// Set the active instruction
+			activeInstIdx = instIdx;
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Sets the active program of this Robot corresponding to the index value
+	 * given.
+	 * 
+	 * @param progIdx	The index of the program to set as active
+	 * @return			Whether the given index is valid
+	 */
+	public boolean setActiveProgIdx(int progIdx) {
+		if (progIdx >= 0 && progIdx < programs.size()) {
+			// Set the active program
+			activeProgIdx = progIdx;
+			return true;
+		}
+		
+		return false;
+	}
 
 	public void setActiveToolFrame(int activeToolFrame) {
 		this.activeToolFrame = activeToolFrame;
@@ -1683,26 +1769,25 @@ public class ArmModel {
 	 * those of its bounding boxes) based on the active
 	 * program or a move to command, or jogging.
 	 */
-	public void updateRobot(Program active) {
+	public void updateRobot() {
 		if (!RobotRun.getInstance().motionFault) {
 			// Execute arm movement
 			if(RobotRun.getInstance().isProgramRunning()) {
 				// Run active program
 				RobotRun.getInstance().setProgramRunning(
-						!RobotRun.getInstance().executeProgram(active, this,
+						!RobotRun.getInstance().executeProgram(this,
 								RobotRun.getInstance().execSingleInst));
 
 				// Check the call stack for any waiting processes
 				if (!RobotRun.getInstance().getCall_stack().isEmpty() &&
-						RobotRun.getInstance().getActive_instr() ==
-						RobotRun.getInstance().activeProgram().getInstructions().size()) {
+						activeInstIdx == getActiveProg().getInstructions().size()) {
 					
 					int[] prevProc = RobotRun.getInstance().getCall_stack().pop();
 					// Return to the process on the top of the stack
-					RobotRun.getInstance().setActive_prog(prevProc[0]);
-					RobotRun.getInstance().setActive_instr(prevProc[1]);
+					setActiveProgIdx(prevProc[0]);
+					setActiveInstIdx(prevProc[1]);
 					// Update the display
-					RobotRun.getInstance().getContentsMenu().setLineIdx(RobotRun.getInstance().getActive_instr());
+					RobotRun.getInstance().getContentsMenu().setLineIdx(activeInstIdx);
 					RobotRun.getInstance().getContentsMenu().setColumnIdx(0);
 					RobotRun.getInstance().updateScreen();
 				}
