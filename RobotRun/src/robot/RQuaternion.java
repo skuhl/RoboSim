@@ -6,6 +6,9 @@ import processing.core.*;
  * A form of orientation in the complex plain.
  */
 public class RQuaternion {
+	
+	private float w, x, y, z;
+	
 	/**
 	 * Returns the sum q1 + q2 + q3 + ... + qn, where n is number
 	 * of quaternions given. None of the given quaternions are
@@ -19,6 +22,21 @@ public class RQuaternion {
 		}
 		
 		return sum;
+	}
+	
+	/**
+	 * Returns the distance between this quaternion (q) and the given
+	 * quaternion (p) based on the distance formula:
+	 * 		( (q_w - p_w)^2 + (q_x - p_x)^2 + (q_y - p_y)^2 + (q_z - p_z)^2 )^(1/2)
+	 * 
+	 * @param q	A non-null quaternion
+	 * @return	The distance between the two quaternions
+	 */
+	public float dist(RQuaternion q) {
+		return (float)Math.sqrt(	Math.pow(w - q.w, 2.0) +
+									Math.pow(x - q.x, 2.0) +
+									Math.pow(y - q.y, 2.0) +
+									Math.pow(z - q.z, 2.0)	);
 	}
 
 	/**
@@ -112,8 +130,6 @@ public class RQuaternion {
 		q4.normalize();
 		return q4;
 	}
-
-	private float w, x, y, z;
 
 	/**
 	 * Creates the identity quaternion

@@ -42,6 +42,7 @@ public class RobotRun extends PApplet {
 		
 		if (args != null) {
 			PApplet.main(concat(appletArgs, args));
+			
 		} else {
 			PApplet.main(appletArgs);
 		}
@@ -82,10 +83,12 @@ public class RobotRun extends PApplet {
 
 		if(rangeStart < rangeEnd) {
 			// Joint range does not overlap TWO_PI
-			return angleToVerify >= rangeStart && angleToVerify <= rangeEnd;
+			return (angleToVerify - rangeStart) > -0.0001f && (angleToVerify - rangeEnd) < 0.0001f;
+			//return angleToVerify >= rangeStart && angleToVerify <= rangeEnd;
 		} else {
 			// Joint range overlaps TWO_PI
-			return !(angleToVerify > rangeEnd && angleToVerify < rangeStart);
+			return !( (angleToVerify - rangeEnd) > -0.0001f && (angleToVerify - rangeStart) < 0.0001f );
+			//return !(angleToVerify > rangeEnd && angleToVerify < rangeStart);
 		}
 	}
 
@@ -1777,7 +1780,11 @@ public class RobotRun extends PApplet {
 		RQuaternion qi = new RQuaternion();
 
 		float mu = 0;
-		int numberOfPoints = (int)(dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) / distanceBetweenPoints);
+		float dist = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) + q1.dist(q2);
+		int numberOfPoints = (int)(dist / distanceBetweenPoints);
+		
+		System.out.printf("Dist: %f\n#ofPts: %d\n\n", dist, numberOfPoints);
+		
 		float increment = 1.0f / (float)numberOfPoints;
 		for(int n = 0; n < numberOfPoints; n++) {
 			mu += increment;
@@ -4269,8 +4276,6 @@ public class RobotRun extends PApplet {
 
 	//Main display content text
 	public void getContents(ScreenMode mode) {
-		contents.clear();
-		
 		switch(mode) {
 		//Program list navigation/ edit
 		case NAV_PROGRAMS:
@@ -4327,6 +4332,7 @@ public class RobotRun extends PApplet {
 			break;
 
 		case ACTIVE_FRAMES:
+			contents.clear();
 			/* workingText corresponds to the active row's index display */
 			if (this.contents.getLineIdx() == 0) {
 				contents.addLine("Tool: ", workingText);
@@ -4359,6 +4365,8 @@ public class RobotRun extends PApplet {
 		case FRAME_METHOD_USER:
 		case DIRECT_ENTRY_USER:
 		case DIRECT_ENTRY_TOOL:
+		case EDIT_PREG_C:
+		case EDIT_PREG_J:
 		case EDIT_DREG_VAL:
 		case CP_DREG_COM:
 		case CP_DREG_VAL:
@@ -4390,7 +4398,7 @@ public class RobotRun extends PApplet {
 			break;
 
 		default:
-			contents.setContents(new ArrayList<DisplayLine>());
+			contents.clear();
 			break;
 		}
 	}
@@ -6097,7 +6105,7 @@ public class RobotRun extends PApplet {
 			frame.add(newLine(line, entries[line][0], entries[line][1]));
 		}
 
-		return frame; 
+		return frame;
 	}
 
 	/**
@@ -7036,7 +7044,6 @@ public class RobotRun extends PApplet {
 	}
 
 	public void mouseWheel(MouseEvent event) {
-
 		if (getManager() != null && getManager().isMouseOverADropdownList()) {
 			// Disable zomming when selecting an element from a dropdown list
 			return;
@@ -7441,6 +7448,15 @@ public class RobotRun extends PApplet {
 	}
 
 	public void SaveScenario() {
+		if (activeScenario != null) {
+			// Save the current version of the active scenario
+			for (int idx = 0; idx < SCENARIOS.size(); ++idx) {
+				if (SCENARIOS.get(idx).getName().equals( activeScenario.getName() )) {
+					SCENARIOS.set(idx, (Scenario)activeScenario.clone());
+				}
+			}
+		}
+		
 		// Save all scenarios
 		DataManagement.saveState(this);
 	}
@@ -7486,8 +7502,25 @@ public class RobotRun extends PApplet {
 	}
 
 	public void SetScenario() {
-		// Set the active scenario to a copy of the scenario associated with te scenario dropdown list
-		activeScenario = (Scenario)getManager().getActiveScenario().clone();
+		/* Get the scenario, which is associated with the scenario
+		 * dropdownlist's label */
+		Scenario limbo = getManager().getActiveScenario();
+		
+		if (limbo != null) {
+			if (activeScenario != null &&
+					!limbo.getName().equals(activeScenario.getName())) {
+				/* Replace the old version of this scenario with the active
+				 * one, if the scenario to be loaded is not currently active */
+				for (int idx = 0; idx < SCENARIOS.size(); ++idx) {
+					if (SCENARIOS.get(idx).getName().equals( activeScenario.getName() )) {
+						SCENARIOS.set(idx, (Scenario)activeScenario.clone());
+					}
+				}
+			}
+			
+			// Set the active scenario to a copy of the loaded scenario
+			activeScenario = (Scenario)limbo.clone();
+		}
 	}
 
 	public void setStep(boolean step) {
@@ -8025,6 +8058,7 @@ public class RobotRun extends PApplet {
 	public void updateScreen() {
 		int next_px = display_px;
 		int next_py = display_py;
+		//int txt, bg;
 
 		clearScreen();
 

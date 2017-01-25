@@ -47,14 +47,7 @@ public class Model {
 	}
 
 	public boolean anglePermitted(int idx, float angle) {
-
-		if(jointRanges[idx].x < jointRanges[idx].y) {
-			// Joint range does not overlap TWO_PI
-			return angle >= jointRanges[idx].x && angle < jointRanges[idx].y;
-		} else {
-			// Joint range overlaps TWO_PI
-			return !(angle >= jointRanges[idx].y && angle < jointRanges[idx].x);
-		}
+		return RobotRun.angleWithinBounds(angle, jointRanges[idx].x, jointRanges[idx].y);
 	}
 
 	public void draw() {
