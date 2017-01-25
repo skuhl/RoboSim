@@ -11,6 +11,7 @@ public class MenuScroll {
 	private final RobotRun robotRun;
 	private final String name;
 	private int maxDisp;
+	private int lineWidth;
 	private int xPos;
 	private int yPos;
 	
@@ -50,6 +51,9 @@ public class MenuScroll {
 		contents.clear();
 	}
 	
+	/**
+	 * @param screen
+	 */
 	public void drawLines(ScreenMode screen) {
 		boolean selectMode = false;
 		if(screen.getType() == ScreenType.TYPE_LINE_SELECT) { selectMode = true; } 
@@ -60,30 +64,32 @@ public class MenuScroll {
 			renderStart = RobotRun.clamp(renderStart, lineIdx - (maxDisp - 1), lineIdx);
 		}
 		
-		int next_px = 0, next_py = 0;
-		int bg, txt, itemNo = 0;
+		int next_px = 0, next_py = 0; 
+		int itemNo = 0, lineNo = 0;
+		int bg, txt, selectInd = -1;
 		
-		for(int i = renderStart; i < contents.size() && i - renderStart < maxDisp; i += 1) {
+		for(int i = renderStart; i < contents.size() && lineNo < maxDisp; i += 1) {
 			//get current line
 			DisplayLine temp = contents.get(i);
-			next_px += temp.getxAlign();
+			next_px = temp.getxAlign();
 
-			if(i == lineIdx) { bg = Fields.UI_DARK; }
-			else             { bg = Fields.UI_LIGHT;}
+			if(i == 0 || contents.get(i - 1).getItemIdx() != contents.get(i).getItemIdx()) {
+				selectInd = contents.get(i).getItemIdx();
+				if(contents.get(lineIdx).getItemIdx() == selectInd) { bg = Fields.UI_DARK;  }
+				else												{ bg = Fields.UI_LIGHT; }
+				
+				//leading row select indicator []
+				robotRun.getCp5().addTextarea(name + itemNo)
+				.setText("")
+				.setPosition(xPos + next_px, yPos + next_py)
+				.setSize(10, 20)
+				.setColorBackground(bg)
+				.hideScrollbar()
+				.moveTo(robotRun.g1);
+			}
 
-			//if(i == 0 || contents.get(i - 1).itemIdx != contents.get(i).itemIdx) {
-			//  //leading row select indicator []
-			//  cp5.addTextarea(Integer.toString(index_contents))
-			//  .setText("")
-			//  .setPosition(next_px, next_py)
-			//  .setSize(10, 20)
-			//  .setColorBackground(bg)
-			//  .hideScrollbar()
-			//  .moveTo(g1);
-			//}
-
-			//index_contents++;
-			//next_px += 10;
+			itemNo += 1;
+			next_px += 10;
 			
 			//draw each element in current line
 			for(int j = 0; j < temp.size(); j += 1) {
@@ -127,25 +133,28 @@ public class MenuScroll {
 				.hideScrollbar()
 				.moveTo(robotRun.g1);
 
-				next_px += temp.get(j).length()*Fields.CHAR_WDTH + (Fields.TXT_PAD - 8);
 				itemNo += 1;
-			}//end draw line elements
+				next_px += temp.get(j).length()*Fields.CHAR_WDTH + (Fields.TXT_PAD - 8);
+			} //end draw line elements
 
-			if(i == lineIdx) { txt = Fields.UI_DARK;  }
-			else             { txt = Fields.UI_LIGHT; }
-
-			////Trailing row select indicator []
-			//cp5.addTextarea(Integer.toString(index_contents))
-			//.setText("")
-			//.setPosition(next_px, next_py)
-			//.setSize(10, 20)
-			//.setColorBackground(txt)
-			//.hideScrollbar()
-			//.moveTo(g1);
+			//Trailing row select indicator []
+			if(i == contents.size() - 1 || contents.get(i).getItemIdx() != contents.get(i + 1).getItemIdx()) {
+				if(contents.get(lineIdx).getItemIdx() == selectInd) { txt = Fields.UI_DARK;  }
+				else												{ txt = Fields.UI_LIGHT; }
+				
+				robotRun.getCp5().addTextarea(name + itemNo)
+				.setText("")
+				.setPosition(xPos + next_px, yPos + next_py)
+				.setSize(10, 20)
+				.setColorBackground(txt)
+				.hideScrollbar()
+				.moveTo(robotRun.g1);
+			}
 
 			next_px = 0;
 			next_py += 20;
-			//index_contents += 1;
+			itemNo += 1;
+			lineNo += 1;
 		}//end display contents
 	}
 	
@@ -194,9 +203,6 @@ public class MenuScroll {
 		return lineSelect[idx];
 	}
 	
-	/**
-	 * 
-	 */
 	public int moveDown(boolean page) {
 		int size = contents.size();  
 
@@ -240,9 +246,6 @@ public class MenuScroll {
 		return getSelectedIdx();
 	}
 
-	/**
-	 * 
-	 */
 	public int moveUp(boolean page) {
 		if (page && renderStart > 0) {
 			// Move display frame up an entire screen's display length
@@ -258,7 +261,7 @@ public class MenuScroll {
 	}
 	
 	public DisplayLine newLine(String... columns) {
-		DisplayLine line =  new DisplayLine();
+		DisplayLine line =  new DisplayLine(contents.size());
 
 		for(String col : columns) {
 			line.add(col);

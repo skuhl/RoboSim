@@ -3979,13 +3979,11 @@ public class RobotRun extends PApplet {
 			break;
 		case SELECT_INSTR_DELETE:
 			ArrayList<Instruction> inst = p.getInstructions();
-
-			int remIdx = 0;
+			
 			for(int i = 0; i < inst.size(); i += 1){
 				if(contents.isSelected(i)){
-					inst.remove(remIdx);
-				} else{
-					remIdx += 1;
+					inst.remove(i);
+					i -= 1;
 				}
 			}
 
@@ -6349,7 +6347,6 @@ public class RobotRun extends PApplet {
 			if (instr == null) {
 				line.add( String.format("%d) ...", i+1) );
 				continue;
-				
 			} else if(instr.isCommented()) {
 				line.add("//"+Integer.toString(i+1) + ")");
 			} else {
@@ -6391,7 +6388,7 @@ public class RobotRun extends PApplet {
 
 					line = new DisplayLine(i, xPos);
 					xPos += field.length()*Fields.CHAR_WDTH + tokenOffset;
-				} else if(xPos > display_width) {
+				} else if(xPos > display_width - 10) {
 					instruct_list.add(line);
 					xPos = 2*Fields.CHAR_WDTH + tokenOffset;
 
@@ -7163,7 +7160,7 @@ public class RobotRun extends PApplet {
 	 */
 	public DisplayLine newLine(String... columns) {
 		DisplayLine line =  new DisplayLine();
-
+		
 		for(String col : columns) {
 			line.add(col);
 		}
@@ -8028,7 +8025,6 @@ public class RobotRun extends PApplet {
 	public void updateScreen() {
 		int next_px = display_px;
 		int next_py = display_py;
-		int txt, bg;
 
 		clearScreen();
 
