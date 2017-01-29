@@ -1346,7 +1346,7 @@ public class ArmModel {
 	public boolean setActiveInstIdx(int instIdx) {
 		Program prog = getActiveProg();
 		
-		if (prog != null && instIdx >= 0 && instIdx < prog.getInstructions().size()) {
+		if (prog != null && instIdx >= 0 && instIdx <= prog.getInstructions().size()) {
 			// Set the active instruction
 			activeInstIdx = instIdx;
 			return true;
