@@ -104,7 +104,9 @@ public class WindowManager {
 
 		 int[] relPos = new int[] { 0, 0 };
 
-		 String[] windowList = new String[] { "Hide", "Pendant", "Create", "Edit", "Scenario" };
+		 //String[] windowList = new String[] { "Hide", "Pendant", "Create", "Edit", "Scenario" };
+		 String[] windowList = new String[] { "Hide", "Robot1", "Robot2", "Create", "Edit", "Scenario" };
+		 
 		 // Create window tab bar
 		 windowTabs = (ButtonTabs)(new ButtonTabs(UIManager, "List:")
 				 // Sets button text color
@@ -112,7 +114,7 @@ public class WindowManager {
 				 .setColorBackground(buttonDefColor)
 				 .setColorActive(buttonActColor)
 				 .setPosition(relPos[0], relPos[1])
-				 .setSize(windowList.length * lButtonWidth, tButtonHeight));
+				 .setSize(440, tButtonHeight));
 
 		 windowTabs.getCaptionLabel().setFont(medium);
 		 windowTabs.addItems(windowList);
@@ -1696,18 +1698,27 @@ public class WindowManager {
 
 			 updateWindowContentsPositions();
 
-		 } else if (windowState.equals("Pendant")) {
+		 } else if (windowState.equals("Robot1") || windowState.equals("Robot2")) {
+			 RobotRun app = RobotRun.getInstance();
+			 
 			 // Show pendant
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
 			 setGroupVisible(scenarioWindow, false);
-
-			 if (!RobotRun.getInstance().g1.isVisible()) {
+			 // Set the active robot based on which tab was selected
+			 if (windowState.equals("Robot1")) {
+				 app.setRobot(0);
+				 
+			 } else if (windowState.equals("Robot2")) {
+				 app.setRobot(1);
+			 }
+			 
+			 if (!app.g1.isVisible()) {
 				 updateWindowContentsPositions();
 			 }
 
-			 RobotRun.getInstance().g1.show();
+			 app.g1.show();
 
 		 } else if (windowState.equals("Create")) {
 			 // Show world object creation window

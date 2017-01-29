@@ -2173,9 +2173,9 @@ public class RobotRun extends PApplet {
 		pushMatrix();    
 		// Transform to the reference frame defined by the axes vectors
 		applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
-				axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
-				axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
-				0, 0, 0, 1);
+					axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
+					axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
+					0, 0, 0, 1);
 
 		// X axis
 		stroke(255, 0, 0);
@@ -7437,6 +7437,22 @@ public class RobotRun extends PApplet {
 	public void setRecord(int record) {
 		this.record = record;
 	}
+	
+	/**
+	 * Update the active Robot to the Robot at the given index in the list of
+	 * Robots.
+	 * 
+	 * @param rdx	The index of the new active Robot
+	 */
+	public void setRobot(int rdx) {
+		if (rdx >= 0 && rdx < robots.length && robots[rdx] != activeRobot) {
+			if (activeRobot != null) {
+				activeRobot.halt();
+			}
+			
+			activeRobot = robots[rdx];
+		}
+	}
 
 	public void SetScenario() {
 		/* Get the scenario, which is associated with the scenario
@@ -7486,7 +7502,7 @@ public class RobotRun extends PApplet {
 		robots = new ArmModel[2];
 		robots[0] = new ArmModel(0, new PVector(200, 300, 200));
 		robots[0].setDefaultRobotPoint();
-		robots[1] = new ArmModel(1, new PVector(200, 300, -600));
+		robots[1] = new ArmModel(1, new PVector(200, 300, -750));
 		robots[1].setDefaultRobotPoint();
 		
 		activeRobot = robots[0];
