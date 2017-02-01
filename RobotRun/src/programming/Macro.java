@@ -26,8 +26,8 @@ public class Macro {
 		app.getArmModel().halt();
 		// Safeguard against editing a program while it is running
 		app.getContentsMenu().setColumnIdx(0);
-		app.setActive_prog(progIdx);
-		app.setActive_instr(0);
+		RobotRun.getRobot().setActiveProgIdx(progIdx);
+		RobotRun.getRobot().setActiveInstIdx(0);
 
 		app.setExecutingInstruction(false);
 		// Run single instruction when step is set

@@ -124,8 +124,9 @@ public final class MotionInstruction extends Instruction  {
 
 		if (userFrame != -1) {
 			// Convert point into the Native Coordinate System
-			Frame active = RobotRun.getRobot().getUserFrame(userFrame);
-			pt = RobotRun.removeFrame(pt, active.getOrigin(), active.getOrientation());
+			ArmModel model = RobotRun.getRobot();
+			Frame active = model.getUserFrame(userFrame);
+			pt = RobotRun.removeFrame(model, pt, active.getOrigin(), active.getOrientation());
 		}
 
 		return pt.add(offset);
