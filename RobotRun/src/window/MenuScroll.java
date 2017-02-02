@@ -37,7 +37,7 @@ public class MenuScroll {
 	}
 	
 	public DisplayLine addLine(String... lineTxt) {
-		contents.add(newLine(lineTxt));
+		contents.add(newLine(contents.size(), lineTxt));
 		return contents.get(contents.size() - 1);
 	}
 	
@@ -45,6 +45,11 @@ public class MenuScroll {
 		DisplayLine newLine = newLine(idx, lineTxt);
 		contents.add(newLine);
 		return newLine;
+	}
+	
+	public DisplayLine addLine(DisplayLine d) {
+		contents.add(d);
+		return d;
 	}
 	
 	public void clear() {
@@ -260,17 +265,7 @@ public class MenuScroll {
 		return getItemIdx();
 	}
 	
-	public DisplayLine newLine(String... columns) {
-		DisplayLine line =  new DisplayLine(contents.size());
-
-		for(String col : columns) {
-			line.add(col);
-		}
-
-		return line;
-	}
-	
-	public DisplayLine newLine(int itemIdx, String... columns) {
+	private DisplayLine newLine(int itemIdx, String... columns) {
 		DisplayLine line =  new DisplayLine(itemIdx);
 
 		for(String col : columns) {
@@ -294,6 +289,10 @@ public class MenuScroll {
 	
 	public DisplayLine set(int i, DisplayLine d) {
 		return contents.set(i, d);
+	}
+	
+	public DisplayLine set(int i, String... columns) {
+		return contents.set(i, newLine(i, columns));
 	}
 	
 	public MenuScroll setLocation(int x, int y) {
