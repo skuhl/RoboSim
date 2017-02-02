@@ -4202,7 +4202,6 @@ public class RobotRun extends PApplet {
 
 	//Main display content text
 	public void getContents(ScreenMode mode) {
-		contents.clear();
 		
 		switch(mode) {
 		//Program list navigation/ edit
@@ -4282,23 +4281,16 @@ public class RobotRun extends PApplet {
 		case TFRAME_DETAIL:
 		case TEACH_3PT_TOOL:
 		case TEACH_6PT:
-			loadFrameDetail(CoordFrame.TOOL);
-			break;
 		case UFRAME_DETAIL:
 		case TEACH_3PT_USER:
 		case TEACH_4PT:
-			loadFrameDetail(CoordFrame.USER);
-			break;
 		case DIRECT_ENTRY_USER:
 		case DIRECT_ENTRY_TOOL:
-			loadFrameDirectEntry(teachFrame);
-			break;
+		case FRAME_METHOD_USER:
+		case FRAME_METHOD_TOOL:
 		case EDIT_PREG_C:
 		case EDIT_PREG_J:
-			loadPosRegEntry(activeRobot.getPReg(active_index));
 			break;
-		case FRAME_METHOD_TOOL:
-		case FRAME_METHOD_USER:
 		case EDIT_DREG_VAL:
 		case CP_DREG_COM:
 		case CP_DREG_VAL:
@@ -4330,6 +4322,7 @@ public class RobotRun extends PApplet {
 			break;
 
 		default:
+			contents.clear();
 			break;
 		}
 	}
@@ -6511,6 +6504,8 @@ public class RobotRun extends PApplet {
 	}
 	
 	public void loadScreen() {
+		contents.clear();
+		
 		MotionInstruction mInst;
 		{
 			Instruction inst = activeRobot.getActiveInstruction();
@@ -6546,21 +6541,30 @@ public class RobotRun extends PApplet {
 			contents.setLineIdx(active_index*2);
 			contents.setColumnIdx(0);
 			break;
-		case TFRAME_DETAIL:
-		case UFRAME_DETAIL:
-			contents.reset();
-			break;
-		case TEACH_3PT_TOOL:
+			
 		case TEACH_3PT_USER:
 		case TEACH_4PT:
-		case TEACH_6PT:
-			options.reset();
+			loadPointList();
+		case UFRAME_DETAIL:
+			loadFrameDetail(CoordFrame.USER);
 			break;
+			
+		case TEACH_3PT_TOOL:
+		case TEACH_6PT:
+			loadPointList();
+		case TFRAME_DETAIL:
+			loadFrameDetail(CoordFrame.TOOL);
+			break;
+			
 		case FRAME_METHOD_TOOL:
-		case FRAME_METHOD_USER:
+			loadFrameDetail(CoordFrame.TOOL);
 			contents.setLineIdx(-1);
 			contents.setColumnIdx(-1);
-			options.reset();
+			break;
+		case FRAME_METHOD_USER:
+			loadFrameDetail(CoordFrame.USER);
+			contents.setLineIdx(-1);
+			contents.setColumnIdx(-1);
 			break;
 
 			//Programs and instructions
@@ -6720,11 +6724,13 @@ public class RobotRun extends PApplet {
 		case NAV_DREGS:
 		case NAV_PREGS_J:
 		case NAV_PREGS_C:
+			loadRegisters();
 			contents.setLineIdx(active_index);
 			contents.setColumnIdx(0);
 			break;
 		case DIRECT_ENTRY_TOOL:
 		case DIRECT_ENTRY_USER:
+			loadFrameDirectEntry(teachFrame);
 			contents.setLineIdx(0);
 			contents.setColumnIdx(1);
 			break;
@@ -6782,10 +6788,12 @@ public class RobotRun extends PApplet {
 			break;
 		case EDIT_PREG_C:
 		case EDIT_PREG_J:
+			loadPosRegEntry(activeRobot.getPReg(active_index));
 			contents.setLineIdx(0);
 			contents.setColumnIdx(1);
 			break;
 		default:
+			
 			break;
 		}
 
