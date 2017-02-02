@@ -7384,7 +7384,14 @@ public class RobotRun extends PApplet {
 				activeRobot.halt();
 			}
 			
+			ArmModel prevActive = activeRobot;
 			activeRobot = robots[rdx];
+			
+			if (prevActive != activeRobot) {
+				/* If the active robot actually changes then resort to the
+				 * default screen */
+				nextScreen(ScreenMode.DEFAULT);
+			}
 		}
 	}
 
