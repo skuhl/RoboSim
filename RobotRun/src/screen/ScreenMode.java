@@ -44,6 +44,7 @@ public enum ScreenMode implements DisplayMode {
 	//Joint
 	NAV_PREGS_J(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_DREGS(ScreenType.TYPE_LIST_CONTENTS),
+	NAV_IOREG(ScreenType.TYPE_LIST_CONTENTS),
 	SET_CALL_PROG(ScreenType.TYPE_LIST_CONTENTS),
 	SET_MACRO_PROG(ScreenType.TYPE_LIST_CONTENTS),
 
@@ -69,6 +70,7 @@ public enum ScreenMode implements DisplayMode {
 	FRAME_METHOD_USER(ScreenType.TYPE_OPT_MENU),
 	NAV_INSTR_MENU(ScreenType.TYPE_OPT_MENU),
 	NAV_MAIN_MENU(ScreenType.TYPE_OPT_MENU),
+	EDIT_IOREG(ScreenType.TYPE_OPT_MENU),
 	SELECT_COND_STMT(ScreenType.TYPE_OPT_MENU),
 	SELECT_FRAME_INSTR_TYPE(ScreenType.TYPE_OPT_MENU),
 	SELECT_FRAME_MODE(ScreenType.TYPE_OPT_MENU),
