@@ -229,6 +229,7 @@ public abstract class Frame {
 
 		return entries;
 	}
+	
 	public RQuaternion getDEOrientationOffset() {
 		return DEOrientationOffset;
 	}

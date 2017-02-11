@@ -4228,12 +4228,14 @@ public class RobotRun extends PApplet {
 		case NAV_PROGRAMS:
 		case SET_CALL_PROG:
 		case SET_MACRO_PROG:
+			contents.clear();
 			loadPrograms();
 			break;
 
 		case PROG_CREATE:
 		case PROG_RENAME:
 		case PROG_COPY:
+			contents.clear();
 			loadTextInput();
 			break;
 
@@ -4292,9 +4294,11 @@ public class RobotRun extends PApplet {
 
 			//View frame details
 		case NAV_TOOL_FRAMES:
+			contents.clear();
 			loadFrames(CoordFrame.TOOL);
 			break;
 		case NAV_USER_FRAMES:
+			contents.clear();
 			loadFrames(CoordFrame.USER);
 			break;
 			//View frame details
@@ -4324,10 +4328,12 @@ public class RobotRun extends PApplet {
 		case NAV_MACROS:
 		case SET_MACRO_TYPE:
 		case SET_MACRO_BINDING:
+			contents.clear();
 			loadMacros();
 			break;
 
 		case NAV_MF_MACROS:
+			contents.clear();
 			loadManualFunct();
 			break;
 
@@ -4335,10 +4341,12 @@ public class RobotRun extends PApplet {
 		case NAV_DREGS:
 		case NAV_PREGS_C:
 		case NAV_PREGS_J:
+			contents.clear();
 			loadRegisters();
 			break;
 		case EDIT_DREG_COM:
 		case EDIT_PREG_COM:
+			contents.clear();
 			loadTextInput();
 			break;
 		case NAV_IOREG:
