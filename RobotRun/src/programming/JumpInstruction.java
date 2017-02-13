@@ -29,15 +29,15 @@ public class JumpInstruction extends Instruction {
 			int lblIdx = p.findLabelIdx(getTgtLblNum());
 
 			if (lblIdx != -1) {
-				// Return destination instrution index
+				// Return destination instruction index
 				return lblIdx;
 			} else {
 				RobotRun.println("Invalid jump instruction!");
-				return 1;
+				return -1;
 			}
 		} else {
 			RobotRun.println("No active program!");
-			return 2;
+			return -1;
 		}
 	}
 

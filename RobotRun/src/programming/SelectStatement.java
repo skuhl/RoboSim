@@ -71,7 +71,7 @@ public class SelectStatement extends Instruction {
 	public int execute() {
 		for(int i = 0; i < getCases().size(); i += 1) {
 			ExprOperand c = getCases().get(i);
-			if(c == null) return 1;
+			if(c == null) return -1;
 
 			//println("testing case " + i + " = " + cases.get(i).getDataVal() + " against " + arg.getDataVal());
 
@@ -80,13 +80,18 @@ public class SelectStatement extends Instruction {
 
 				if(instr instanceof JumpInstruction || instr instanceof CallInstruction) {
 					//println("executing " + instrs.get(i).toString());
-					instr.execute();
+					return instr.execute();
+					
 				}
+				
 				break;
+				
+			} else {
+				return -2;
 			}
 		}
 
-		return 0;
+		return -1;
 	}
 
 	public ExprOperand getArg() {

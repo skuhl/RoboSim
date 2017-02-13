@@ -60,12 +60,13 @@ public class IfStatement extends Instruction {
 		ExprOperand result = expr.evaluate();
 
 		if(result == null || result.getBoolVal() == null) {
-			return 1;
-		} else if(expr.evaluate().getBoolVal()){
-			instr.execute();
+			return -1;
+			
+		} else if (expr.evaluate().getBoolVal()) {
+			return instr.execute();
 		}
 
-		return 0;
+		return -2;
 	}
 
 	public AtomicExpression getExpr() {

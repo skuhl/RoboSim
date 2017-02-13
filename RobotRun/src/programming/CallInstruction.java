@@ -25,19 +25,18 @@ public class CallInstruction extends Instruction {
 			// Invalid program id
 			return -1;
 		}
-
-		int[] p = new int[2];
-		p[0] = RobotRun.getRobot().getActiveProgIdx();
-		p[1] = RobotRun.getRobot().getActiveInstIdx() + 1;
-		RobotRun.getInstance().getCall_stack().push(p);
-		
+		// Save the current program state
+		RobotRun.getRobot().pushActiveProg();
+		// Set the new program state
 		RobotRun.getRobot().setActiveProgIdx(progIdx);
 		RobotRun.getRobot().setActiveInstIdx(0);
+		// Update the screen
 		RobotRun.getInstance().getContentsMenu().reset();
 		RobotRun.getInstance().updateScreen();
 
 		return 0;
 	}
+	
 	public int getProgIdx() { return progIdx; }
 
 	/**

@@ -2,6 +2,7 @@ package robot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Stack;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -42,6 +43,9 @@ public class ArmModel {
 	
 	// The programs associated with this Robot
 	private ArrayList<Program> programs;
+	
+	//stack containing the previously running program state when a new program is called
+	private Stack<int[]> call_stack = new Stack<int[]>();
 	// TODO: refactor into Process class
 	private int activeProgIdx;
 	private int activeInstIdx;
@@ -101,6 +105,7 @@ public class ArmModel {
 		
 		// Initialize the program list
 		programs = new ArrayList<Program>();
+		call_stack = new Stack<int[]>();
 		activeProgIdx = -1;
 		activeInstIdx = -1;
 		
@@ -1283,6 +1288,59 @@ public class ArmModel {
 	public int numOfPrograms() {
 		return programs.size();
 	}
+	
+	/**
+	 * Pops the program state that has been previously pushed onto the call
+	 * stack. If the state points to a program on the active Robot, then the
+	 * active program state is overridden with the popped one. In the other
+	 * case, where an inactive Robot called the active Robot, then the active
+	 * Robot then returns control to the caller Robot. 
+	 * 
+	 * @return	Whether or not a program state has been saved on the call stack
+	 */
+	public boolean popCallStack() {
+		if (!call_stack.isEmpty()) {
+			int[] savedProgState = call_stack.pop();
+			
+			if (savedProgState.length == 2) {
+				// Restore the program state that was saved previously
+				activeProgIdx = savedProgState[0];
+				activeInstIdx = savedProgState[1];
+				return true;
+				
+			} else if (savedProgState.length == 1) {
+				// Return to the Robot, who called the active Robot
+				RobotRun.getInstance().returnRobot(savedProgState[0]);
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Pushes the active program onto the call stack and resets the active
+	 * program and instruction indices.
+	 */
+	public void pushActiveProg() {
+		// Do not push invalid program or instruction indices
+		if (getActiveInstruction() != null) {
+			call_stack.push(new int[] { activeProgIdx, activeInstIdx + 1 });
+			activeProgIdx = -1;
+			activeInstIdx = -1;
+		}
+	}
+	
+	/**
+	 * Push the index of a Robot, which to return to after the active program
+	 * ends.
+	 * 
+	 * @param r	The Robot to save onto the call stack
+	 */
+	public void pushRobotCall(ArmModel r) {
+		// Push the Robot's index onto this Robot's call stack
+		call_stack.push(new int[] { r.getRID() });
+	}
 
 	/**
 	 * If an object is currently being held by the Robot arm, then release it.
@@ -1779,13 +1837,10 @@ public class ArmModel {
 								RobotRun.getInstance().execSingleInst));
 
 				// Check the call stack for any waiting processes
-				if (!RobotRun.getInstance().getCall_stack().isEmpty() &&
+				if (!call_stack.isEmpty() &&
 						activeInstIdx == getActiveProg().getInstructions().size()) {
 					
-					int[] prevProc = RobotRun.getInstance().getCall_stack().pop();
-					// Return to the process on the top of the stack
-					setActiveProgIdx(prevProc[0]);
-					setActiveInstIdx(prevProc[1]);
+					popCallStack();
 					// Update the display
 					RobotRun.getInstance().getContentsMenu().setLineIdx(activeInstIdx);
 					RobotRun.getInstance().getContentsMenu().setColumnIdx(0);

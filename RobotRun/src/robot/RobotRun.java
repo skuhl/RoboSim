@@ -992,8 +992,7 @@ public class RobotRun extends PApplet {
 
 	/* Button events */
 
-	//stack containing the previously running program state when a new program is called
-	private Stack<int[]> call_stack = new Stack<int[]>();
+
 
 	// Indicates whether a program is currently running
 	private boolean programRunning = false;
@@ -1715,6 +1714,42 @@ public class RobotRun extends PApplet {
 				(x1*y2-x2*y1);
 		denominator *= 2;
 		return numerator / denominator;
+	}
+	
+	/**
+	 * Activates the Robot with the given ID value, saving the previously
+	 * active Robot to this Robot's call stack. Then, the execution of the
+	 * program specified by the given program index of the active Robot begins
+	 * immediately.
+	 * 
+	 * @param rid		The ID of the Robot to call
+	 * @param progIdx	The index of the call Robot's program to execute
+	 */
+	public void callRobot(int rid, int progIdx) {
+		if (rid >= 0 && rid < robots.length && robots[rid] != activeRobot) {
+			if (activeRobot != null) {
+				activeRobot.halt();
+			}
+			
+			ArmModel caller = activeRobot;
+			activeRobot = robots[rid];
+			activeRobot.pushRobotCall(caller);
+			
+			// Initiates the Robot's program specified by the given index
+			activeRobot.setActiveProgIdx(progIdx);
+			
+			if (activeRobot.getActiveProg() != null) {
+				activeRobot.setActiveInstIdx(0);
+				
+				nextScreen(ScreenMode.NAV_PROG_INSTR);
+				
+				if (!shift) {
+					sf();
+				}
+				
+				fd();
+			}
+		}
 	}
 
 	/**
@@ -3626,6 +3661,14 @@ public class RobotRun extends PApplet {
 				setExecutingInstruction(false);
 				nextInstr = activeInstr.execute();
 
+			} else if (activeInstr instanceof IfStatement || activeInstr instanceof SelectStatement) {
+				setExecutingInstruction(false);
+				int ret = activeInstr.execute();
+				
+				if (ret != -2) {
+					nextInstr = ret;
+				}
+				
 			} else {
 				setExecutingInstruction(false);
 
@@ -4210,10 +4253,6 @@ public class RobotRun extends PApplet {
 
 	public ArmModel getArmModel() {
 		return activeRobot;
-	}
-
-	public Stack<int[]> getCall_stack() {
-		return call_stack;
 	}
 
 	public Camera getCamera() {
@@ -7379,6 +7418,33 @@ public class RobotRun extends PApplet {
 		mode = ScreenMode.DEFAULT;
 		display_stack.push(mode);
 	}
+	
+	/**
+	 * Sets the Robot with the specified ID as the active Robot and immediately
+	 * resumes execution of the Robot's active program, if it has one.
+	 * 
+	 * @param rid	The ID of the Robot to call
+	 */
+	public void returnRobot(int rid) {
+		if (rid >= 0 && rid < robots.length && robots[rid] != activeRobot) {
+			if (activeRobot != null) {
+				activeRobot.halt();
+			}
+			
+			activeRobot = robots[rid];
+			
+			// Resume execution of the Robot's active program
+			if (activeRobot.getActiveProg() != null) {
+				nextScreen(ScreenMode.NAV_PROG_INSTR);
+				
+				if (!shift) {
+					sf();
+				}
+				
+				fd();
+			}
+		}
+	}
 
 	public void RightView() {
 		// Right view
@@ -7410,10 +7476,6 @@ public class RobotRun extends PApplet {
 
 		resetStack();
 		nextScreen(ScreenMode.NAV_PROGRAMS);
-	}
-
-	public void setCall_stack(Stack<int[]> call_stack) {
-		this.call_stack = call_stack;
 	}
 
 	public void setExecutingInstruction(boolean executingInstruction) {
