@@ -7421,7 +7421,7 @@ public class RobotRun extends PApplet {
 	
 	/**
 	 * Sets the Robot with the specified ID as the active Robot and immediately
-	 * resumes execution of the Robot's active program, if it has one.
+	 * resume execution of the Robot's active program, if it has one.
 	 * 
 	 * @param rid	The ID of the Robot to call
 	 */

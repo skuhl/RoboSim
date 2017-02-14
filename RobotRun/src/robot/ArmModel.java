@@ -1332,13 +1332,13 @@ public class ArmModel {
 	}
 	
 	/**
-	 * Push the index of a Robot, which to return to after the active program
+	 * Push the ID of a Robot, which to return to after the active program
 	 * ends.
 	 * 
 	 * @param r	The Robot to save onto the call stack
 	 */
 	public void pushRobotCall(ArmModel r) {
-		// Push the Robot's index onto this Robot's call stack
+		// Push the given Robot's index onto this Robot's call stack
 		call_stack.push(new int[] { r.getRID() });
 	}
 
