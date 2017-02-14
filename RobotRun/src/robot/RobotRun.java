@@ -1733,6 +1733,9 @@ public class RobotRun extends PApplet {
 			
 			ArmModel caller = activeRobot;
 			activeRobot = robots[rid];
+			/* Save the currently active program and the caller Robot onto the
+			 * Robot' call stack */
+			activeRobot.pushActiveProg();
 			activeRobot.pushRobotCall(caller);
 			
 			// Initiates the Robot's program specified by the given index

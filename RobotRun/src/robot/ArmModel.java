@@ -1325,7 +1325,15 @@ public class ArmModel {
 	public void pushActiveProg() {
 		// Do not push invalid program or instruction indices
 		if (getActiveInstruction() != null) {
-			call_stack.push(new int[] { activeProgIdx, activeInstIdx + 1 });
+			
+			if (RobotRun.getRobot() == this && RobotRun.getInstance().isProgramRunning()) {
+				// The Robot's program is active, so save the next instruction
+				call_stack.push(new int[] { activeProgIdx, activeInstIdx + 1 });
+			} else {
+				// The Robot's program is inactive, so save the current instruction
+				call_stack.push(new int[] { activeProgIdx, activeInstIdx });
+			}
+			
 			activeProgIdx = -1;
 			activeInstIdx = -1;
 		}
