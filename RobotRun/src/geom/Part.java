@@ -30,9 +30,9 @@ public class Part extends WorldObject {
 
 		for(int v = 0; v < axes_A.length; v += 1) {
 			for(int u = 0; u < axes_B.length; u += 1) {
-				// PLEASE do not change to matrix mutliplication
+				// PLEASE do not change to matrix multiplication
 				rotMatrix[v][u] = axes_A[v][0] * axes_B[u][0] +  axes_A[v][1] * axes_B[u][1] +  axes_A[v][2] * axes_B[u][2];
-				// Add offset for valeus close to zero (parallel axes)
+				// Add offset for values close to zero (parallel axes)
 				absRotMatrix[v][u] = Math.abs(rotMatrix[v][u]) + 0.00000000175f;
 			}
 		}
@@ -135,6 +135,7 @@ public class Part extends WorldObject {
 
 		return true;
 	}
+	
 	private BoundingBox absOBB;
 
 	private Fixture reference;

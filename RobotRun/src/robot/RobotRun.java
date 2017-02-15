@@ -1200,9 +1200,11 @@ public class RobotRun extends PApplet {
 		case DIRECT_ENTRY_USER:
 		case EDIT_PREG_C:
 		case EDIT_PREG_J:
-			contents.moveDown(isShift());
+		case NAV_IOREG:
+			contents.moveDown(shift);
 			break;
 		case NAV_MAIN_MENU:
+		case EDIT_IOREG:
 		case NAV_INSTR_MENU:
 		case SELECT_FRAME_MODE:
 		case FRAME_METHOD_USER:
@@ -1351,7 +1353,7 @@ public class RobotRun extends PApplet {
 
 		updateScreen();
 	}
-
+	
 	public void BackView() {
 		// Back view
 		camera.reset();
@@ -2454,12 +2456,28 @@ public class RobotRun extends PApplet {
 		case NAV_MAIN_MENU:
 			if(options.getLineIdx() == 0) { // Frames
 				nextScreen(ScreenMode.SELECT_FRAME_MODE);
+				
 			} else if(options.getLineIdx() == 1) { // Macros
 				nextScreen(ScreenMode.NAV_MACROS);
-			} else { // Manual Functions
+				
+			} else if (options.getLineIdx() == 2) { // Manual Functions
 				nextScreen(ScreenMode.NAV_MF_MACROS);
+				
+			} else if (options.getLineIdx() == 3) {
+				nextScreen(ScreenMode.NAV_IOREG);
 			}
-			break; 
+			
+			break;
+		case NAV_IOREG:
+			active_index = contents.getLineIdx();
+			nextScreen(ScreenMode.EDIT_IOREG);
+			break;
+		case EDIT_IOREG:
+			IORegister ioReg = activeRobot.getIOReg(active_index);
+			ioReg.state = options.getLineIdx();
+			
+			lastScreen();
+			break;
 			//Frame nav and edit
 		case SELECT_FRAME_MODE:
 			if(options.getLineIdx() == 0) {
@@ -4203,12 +4221,14 @@ public class RobotRun extends PApplet {
 		case NAV_PROGRAMS:
 		case SET_CALL_PROG:
 		case SET_MACRO_PROG:
+			contents.clear();
 			loadPrograms();
 			break;
 
 		case PROG_CREATE:
 		case PROG_RENAME:
 		case PROG_COPY:
+			contents.clear();
 			loadTextInput();
 			break;
 
@@ -4267,9 +4287,11 @@ public class RobotRun extends PApplet {
 
 			//View frame details
 		case NAV_TOOL_FRAMES:
+			contents.clear();
 			loadFrames(CoordFrame.TOOL);
 			break;
 		case NAV_USER_FRAMES:
+			contents.clear();
 			loadFrames(CoordFrame.USER);
 			break;
 			//View frame details
@@ -4285,6 +4307,7 @@ public class RobotRun extends PApplet {
 		case FRAME_METHOD_TOOL:
 		case EDIT_PREG_C:
 		case EDIT_PREG_J:
+		case EDIT_IOREG:
 			break;
 		case EDIT_DREG_VAL:
 		case CP_DREG_COM:
@@ -4298,10 +4321,12 @@ public class RobotRun extends PApplet {
 		case NAV_MACROS:
 		case SET_MACRO_TYPE:
 		case SET_MACRO_BINDING:
+			contents.clear();
 			loadMacros();
 			break;
 
 		case NAV_MF_MACROS:
+			contents.clear();
 			loadManualFunct();
 			break;
 
@@ -4309,13 +4334,18 @@ public class RobotRun extends PApplet {
 		case NAV_DREGS:
 		case NAV_PREGS_C:
 		case NAV_PREGS_J:
+			contents.clear();
 			loadRegisters();
 			break;
 		case EDIT_DREG_COM:
 		case EDIT_PREG_COM:
+			contents.clear();
 			loadTextInput();
 			break;
-
+		case NAV_IOREG:
+			contents.clear();
+			loadIORegistersIntoContents();
+			break;
 		default:
 			contents.clear();
 			break;
@@ -4556,8 +4586,11 @@ public class RobotRun extends PApplet {
 	//Header text
 	public String getHeader(ScreenMode mode){
 		String header = null;
-
+		
 		switch(mode) {
+		case NAV_MAIN_MENU:
+			header = "MAIN MENU";
+			break;
 		case NAV_PROGRAMS:
 			header = "PROGRAMS";
 			break;
@@ -4686,12 +4719,23 @@ public class RobotRun extends PApplet {
 				header += active_index;
 			}
 			break;
+			
 		case EDIT_DREG_COM:
 			header = String.format("Enter a name for R[%d]", active_index);
 			break;
+			
 		case EDIT_PREG_COM:
 			header = String.format("Enter a name for PR[%d]", active_index);
 			break;
+			
+		case NAV_IOREG:
+			header = "IO Registers";
+			break;
+			
+		case EDIT_IOREG:
+			header = "SET IO REGISTER";
+			break;
+			
 		default:
 			break;
 		}
@@ -4879,6 +4923,12 @@ public class RobotRun extends PApplet {
 			options.addLine("1 Frames"           );
 			options.addLine("2 Macros"           );
 			options.addLine("3 Manual Fncts"     );
+			options.addLine("4 I/O Registers");
+			break;
+			
+		case EDIT_IOREG:
+			options.addLine("OFF");
+			options.addLine("ON");
 			break;
 
 		case CONFIRM_PROG_DELETE:
@@ -4966,8 +5016,6 @@ public class RobotRun extends PApplet {
 			options.addLine("4. IF/SELECT" );
 			options.addLine("5. JMP/LBL"   );
 			options.addLine("6. CALL"      );
-			options.addLine("7. WAIT (NA)"      );
-			options.addLine("8. Macro (NA)"     );
 			break;
 		case SELECT_IO_INSTR_REG:
 			loadIORegisters();
@@ -6321,6 +6369,14 @@ public class RobotRun extends PApplet {
 
 		return instruct_list;
 	}
+	
+	public void loadIORegistersIntoContents() {
+		for (int idx = 0; idx < RoboticArm.IOREG_NUM; ++idx) {
+			IORegister ioReg = activeRobot.getIOReg(idx);
+			contents.addLine(String.format("IO[%s] = ", ioReg.comment), (ioReg.state == 0) ? "OFF" : "ON");
+			
+		}
+	}
 
 	public void loadIORegisters() {
 		for(int i = 0; i < RoboticArm.IOREG_NUM; i += 1){
@@ -6492,7 +6548,9 @@ public class RobotRun extends PApplet {
 			options.reset();
 			contents.setColumnIdx(0);
 			break;
-
+		case NAV_IOREG:
+			contents.setColumnIdx(1);
+			break;
 			//Frames
 		case ACTIVE_FRAMES:
 			contents.setLineIdx(0);
@@ -7351,7 +7409,14 @@ public class RobotRun extends PApplet {
 				getActiveRobot().halt();
 			}
 			
-			setActiveRobot(robots[rdx]);
+			RoboticArm prevActive = activeRobot;
+			activeRobot = robots[rdx];
+			
+			if (prevActive != activeRobot) {
+				/* If the active robot actually changes then resort to the
+				 * default screen */
+				nextScreen(ScreenMode.DEFAULT);
+			}
 		}
 	}
 
