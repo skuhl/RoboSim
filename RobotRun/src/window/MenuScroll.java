@@ -207,10 +207,14 @@ public class MenuScroll {
 	public int moveDown(boolean page) {
 		int size = lines.size();  
 
-		if (page && size > (renderStart + maxDisp)) {
+		if (page) {
 			// Move display frame down an entire screen's display length
+			int prevIdx = lineIdx;			
 			lineIdx = Math.min(size - 1, lineIdx + (maxDisp - 1));
 			renderStart = (Math.max(0, Math.min(size - maxDisp, renderStart + (maxDisp - 1))));
+			for(; prevIdx <= lineIdx; prevIdx += 1) {
+				toggleSelect(prevIdx);
+			}
 		} else {
 			// Move down a single row
 			lineIdx = Math.min(size - 1, lineIdx + 1);
@@ -248,10 +252,14 @@ public class MenuScroll {
 	}
 
 	public int moveUp(boolean page) {
-		if (page && renderStart > 0) {
+		if (page) {
 			// Move display frame up an entire screen's display length
+			int prevIdx = lineIdx;
 			lineIdx = (Math.max(0, lineIdx - (maxDisp - 1)));
 			renderStart = (Math.max(0, renderStart - (maxDisp - 1)));
+			for(; prevIdx >= lineIdx; prevIdx -= 1) {
+				toggleSelect(prevIdx);
+			}
 		} 
 		else {
 			// Move up a single row
