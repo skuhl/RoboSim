@@ -642,7 +642,7 @@ public class RoboticArm {
 
 		RobotRun.getInstance().popMatrix();
 		// My sketchy work-around
-		if (RobotRun.getRobot() == this &&
+		if (RobotRun.getInstance().getActiveRobot() == this &&
 				RobotRun.getInstance().showOOBs) { drawBoxes(); }
 	}
 	

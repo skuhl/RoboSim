@@ -353,7 +353,7 @@ public abstract class DataManagement {
 			boolean isCommented = in.readBoolean();
 			int pdx = in.readInt();
 
-			inst = new CallInstruction(pdx);
+			inst = new CallInstruction(pdx, null); //TODO Save/ load target robot
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 8) {
@@ -825,7 +825,8 @@ public abstract class DataManagement {
 	
 	public static void loadState(RobotRun process) {
 		loadScenarioBytes(process, scenarioDirPath);
-		loadRobotData(RobotRun.getRobot());
+		loadRobotData(process.getRobot(0));
+		loadRobotData(process.getRobot(1));
 	}
 
 	private static Object loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
@@ -1616,7 +1617,8 @@ public abstract class DataManagement {
 		
 		saveScenarioBytes(process.SCENARIOS, (process.activeScenario == null) ?
 				null : process.activeScenario.getName(), scenarioDirPath);
-		saveRobotData(RobotRun.getRobot());
+		saveRobotData(process.getRobot(0));
+		saveRobotData(process.getRobot(1));
 	}
 	
 	private static void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {
