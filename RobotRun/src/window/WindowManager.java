@@ -21,7 +21,7 @@ import geom.ShapeType;
 import geom.WorldObject;
 import processing.core.PFont;
 import processing.core.PVector;
-import robot.ArmModel;
+import robot.RoboticArm;
 import robot.Fixture;
 import robot.RobotRun;
 import robot.Scenario;
@@ -812,7 +812,7 @@ public class WindowManager {
 	  */
 	 public void editWorldObject() {
 		 WorldObject toEdit = getActiveWorldObject();
-		 ArmModel model = RobotRun.getRobot();
+		 RoboticArm model = RobotRun.getRobot();
 		 
 		 if (toEdit != null) {
 			 if (model != null && toEdit == model.held) {

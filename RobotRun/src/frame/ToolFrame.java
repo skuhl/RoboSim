@@ -1,5 +1,5 @@
 package frame;
-import robot.ArmModel;
+import robot.RoboticArm;
 import robot.RQuaternion;
 import geom.Point;
 import processing.core.PVector;
@@ -24,7 +24,7 @@ public class ToolFrame extends Frame {
 	
 	@Override
 	public RQuaternion getOrientation() {
-		ArmModel model = RobotRun.getRobot();
+		RoboticArm model = RobotRun.getRobot();
 		RQuaternion robotOrientation = RobotRun.nativeRobotPoint(model, model.getJointAngles()).orientation;
 		// Tool frame axes orientation = (orientation offset x Model default orientation ^ -1) x Model current orientation
 		return RQuaternion.mult(model.getDefaultPoint().orientation.transformQuaternion(orientationOffset), robotOrientation);

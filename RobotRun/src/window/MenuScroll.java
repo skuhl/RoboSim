@@ -15,7 +15,7 @@ public class MenuScroll {
 	private int xPos;
 	private int yPos;
 	
-	private ArrayList<DisplayLine> contents;
+	private ArrayList<DisplayLine> lines;
 	private boolean[] lineSelect;
 	
 	private int lineIdx;
@@ -30,30 +30,30 @@ public class MenuScroll {
 		xPos = x;
 		yPos = y;
 		
-		contents = new ArrayList<DisplayLine>();
+		lines = new ArrayList<DisplayLine>();
 		
 		lineIdx = 0;
 		columnIdx = 0;
 	}
 	
 	public DisplayLine addLine(String... lineTxt) {
-		contents.add(newLine(contents.size(), lineTxt));
-		return contents.get(contents.size() - 1);
+		lines.add(newLine(lines.size(), lineTxt));
+		return lines.get(lines.size() - 1);
 	}
 	
 	public DisplayLine addLine(int idx, String... lineTxt) {
 		DisplayLine newLine = newLine(idx, lineTxt);
-		contents.add(newLine);
+		lines.add(newLine);
 		return newLine;
 	}
 	
 	public DisplayLine addLine(DisplayLine d) {
-		contents.add(d);
+		lines.add(d);
 		return d;
 	}
 	
 	public void clear() {
-		contents.clear();
+		lines.clear();
 	}
 	
 	/**
@@ -63,9 +63,9 @@ public class MenuScroll {
 		boolean selectMode = false;
 		if(screen.getType() == ScreenType.TYPE_LINE_SELECT) { selectMode = true; } 
 		
-		if(contents.size() > 0) {
-			lineIdx = RobotRun.clamp(lineIdx, 0, contents.size() - 1);
-			columnIdx = RobotRun.clamp(columnIdx, 0, contents.get(lineIdx).size() - 1);
+		if(lines.size() > 0) {
+			lineIdx = RobotRun.clamp(lineIdx, 0, lines.size() - 1);
+			columnIdx = RobotRun.clamp(columnIdx, 0, lines.get(lineIdx).size() - 1);
 			renderStart = RobotRun.clamp(renderStart, lineIdx - (maxDisp - 1), lineIdx);
 		}
 		
@@ -73,14 +73,14 @@ public class MenuScroll {
 		int itemNo = 0, lineNo = 0;
 		int bg, txt, selectInd = -1;
 		
-		for(int i = renderStart; i < contents.size() && lineNo < maxDisp; i += 1) {
+		for(int i = renderStart; i < lines.size() && lineNo < maxDisp; i += 1) {
 			//get current line
-			DisplayLine temp = contents.get(i);
+			DisplayLine temp = lines.get(i);
 			next_px = temp.getxAlign();
 
-			if(i == 0 || contents.get(i - 1).getItemIdx() != contents.get(i).getItemIdx()) {
-				selectInd = contents.get(i).getItemIdx();
-				if(contents.get(lineIdx).getItemIdx() == selectInd) { bg = Fields.UI_DARK;  }
+			if(i == 0 || lines.get(i - 1).getItemIdx() != lines.get(i).getItemIdx()) {
+				selectInd = lines.get(i).getItemIdx();
+				if(lines.get(lineIdx).getItemIdx() == selectInd) { bg = Fields.UI_DARK;  }
 				else												{ bg = Fields.UI_LIGHT; }
 				
 				//leading row select indicator []
@@ -143,8 +143,8 @@ public class MenuScroll {
 			} //end draw line elements
 
 			//Trailing row select indicator []
-			if(i == contents.size() - 1 || contents.get(i).getItemIdx() != contents.get(i + 1).getItemIdx()) {
-				if(contents.get(lineIdx).getItemIdx() == selectInd) { txt = Fields.UI_DARK;  }
+			if(i == lines.size() - 1 || lines.get(i).getItemIdx() != lines.get(i + 1).getItemIdx()) {
+				if(lines.get(lineIdx).getItemIdx() == selectInd) { txt = Fields.UI_DARK;  }
 				else												{ txt = Fields.UI_LIGHT; }
 				
 				robotRun.getCp5().addTextarea(name + itemNo)
@@ -164,11 +164,7 @@ public class MenuScroll {
 	}
 	
 	public DisplayLine get(int i) {
-		return contents.get(i);
-	}
-	
-	public ArrayList<DisplayLine> getContents() {
-		return contents;
+		return lines.get(i);
 	}
 	
 	public int getColumnIdx() {
@@ -176,8 +172,8 @@ public class MenuScroll {
 	}
 	
 	public int getItemIdx() {
-		if(lineIdx < contents.size() && lineIdx >= 0)
-			return contents.get(lineIdx).getItemIdx();
+		if(lineIdx < lines.size() && lineIdx >= 0)
+			return lines.get(lineIdx).getItemIdx();
 		else
 			return -1;
 	}
@@ -193,8 +189,8 @@ public class MenuScroll {
 	public int getSelectedIdx() {
 		int idx = columnIdx;
 		for(int i = lineIdx - 1; i >= 0; i -= 1) {
-			if(contents.get(i).getItemIdx() != contents.get(i + 1).getItemIdx()) break;
-			idx += contents.get(i).size();
+			if(lines.get(i).getItemIdx() != lines.get(i + 1).getItemIdx()) break;
+			idx += lines.get(i).size();
 		}
 
 		return idx;
@@ -209,7 +205,7 @@ public class MenuScroll {
 	}
 	
 	public int moveDown(boolean page) {
-		int size = contents.size();  
+		int size = lines.size();  
 
 		if (page && size > (renderStart + maxDisp)) {
 			// Move display frame down an entire screen's display length
@@ -224,11 +220,11 @@ public class MenuScroll {
 	}
 
 	public int moveLeft() {
-		if(lineIdx > 0 && contents.get(lineIdx - 1).getItemIdx() == contents.get(lineIdx).getItemIdx()) {
+		if(lineIdx > 0 && lines.get(lineIdx - 1).getItemIdx() == lines.get(lineIdx).getItemIdx()) {
 			columnIdx = (columnIdx - 1);
 			if(columnIdx < 0) {
 				moveUp(false);
-				columnIdx = (contents.get(lineIdx).size() - 1);
+				columnIdx = (lines.get(lineIdx).size() - 1);
 			}
 		} else {
 			columnIdx = (Math.max(0, columnIdx - 1));
@@ -238,14 +234,14 @@ public class MenuScroll {
 	}
 
 	public int moveRight() {
-		if(lineIdx < contents.size() - 1 && contents.get(lineIdx + 1).getItemIdx() == contents.get(lineIdx).getItemIdx()) {
+		if(lineIdx < lines.size() - 1 && lines.get(lineIdx + 1).getItemIdx() == lines.get(lineIdx).getItemIdx()) {
 			columnIdx = (columnIdx + 1);
-			if(columnIdx > contents.get(lineIdx).size() - 1) {
+			if(columnIdx > lines.get(lineIdx).size() - 1) {
 				moveDown(false);
 				columnIdx = (0);
 			}
 		} else {
-			columnIdx = (Math.min(contents.get(lineIdx).size() - 1, columnIdx + 1));
+			columnIdx = (Math.min(lines.get(lineIdx).size() - 1, columnIdx + 1));
 		}
 		
 		return getSelectedIdx();
@@ -288,11 +284,17 @@ public class MenuScroll {
 	}
 	
 	public DisplayLine set(int i, DisplayLine d) {
-		return contents.set(i, d);
+		return lines.set(i, d);
 	}
 	
 	public DisplayLine set(int i, String... columns) {
-		return contents.set(i, newLine(i, columns));
+		return lines.set(i, newLine(i, columns));
+	}
+	
+	public MenuScroll setLines(ArrayList<DisplayLine> l) {
+		lines = l;
+		
+		return this;
 	}
 	
 	public MenuScroll setLocation(int x, int y) {
@@ -308,7 +310,7 @@ public class MenuScroll {
 	}
 	
 	public MenuScroll setContents(ArrayList<DisplayLine> c) {
-		contents = c;
+		lines = c;
 		return this;
 	}
 	
@@ -321,7 +323,7 @@ public class MenuScroll {
 	}
 	
 	public int size() {
-		return contents.size();
+		return lines.size();
 	}
 	
 	public boolean toggleSelect(int idx) {
