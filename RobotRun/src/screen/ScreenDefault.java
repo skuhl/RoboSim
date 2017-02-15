@@ -1,17 +1,36 @@
 package screen;
 
-import window.MenuScroll;
+import robot.RobotRun;
 
 public class ScreenDefault extends Screen {
-	public ScreenDefault(MenuScroll menu) {
-		super(ScreenMode.DEFAULT, menu);
+	public ScreenDefault(RobotRun r) {
+		super(ScreenMode.DEFAULT, r);
 	}
 
 	@Override
-	public void loadText() {
-		this.contents.getContents().clear();
+	void loadHeader() {
+		header = "";
 	}
 
+	@Override
+	void loadContents() {
+		contents.clear();
+	}
+
+	@Override
+	void loadOptions() {
+		options.clear();
+	}
+
+	@Override
+	void loadLabels() {
+		labels[0] = "";
+		labels[1] = "";
+		labels[2] = "";
+		labels[3] = "";
+		labels[4] = "";
+	}
+	
 	@Override
 	public void loadVars() {}
 
@@ -29,4 +48,22 @@ public class ScreenDefault extends Screen {
 
 	@Override
 	public void actionRt() {}
+	
+	@Override
+	public void actionEntr() {}
+
+	@Override
+	public void actionF1() {}
+
+	@Override
+	public void actionF2() {}
+
+	@Override
+	public void actionF3() {}
+
+	@Override
+	public void actionF4() {}
+
+	@Override
+	public void actionF5() {}
 }
