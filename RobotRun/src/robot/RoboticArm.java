@@ -31,7 +31,7 @@ public class RoboticArm {
 	public static final int IOREG_NUM = 5;
 	
 	private final PVector BASE_POSITION; // The position of the center of the Robot's base segment
-	public final int RID; // The unique ID associated with a Robot
+	private final int RID; // The unique ID associated with a Robot
 	
 	private Point robotPoint; // Initial position and orientation of the Robot
 	
