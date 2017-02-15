@@ -46,6 +46,7 @@ public enum ScreenMode implements DisplayMode {
 	NAV_DREGS(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_IOREG(ScreenType.TYPE_LIST_CONTENTS),
 	SET_CALL_PROG(ScreenType.TYPE_LIST_CONTENTS),
+	SET_CALL_TGT_DEVICE(ScreenType.TYPE_LIST_CONTENTS),
 	SET_MACRO_PROG(ScreenType.TYPE_LIST_CONTENTS),
 
 	/*

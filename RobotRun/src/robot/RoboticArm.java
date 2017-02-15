@@ -31,7 +31,7 @@ public class RoboticArm {
 	public static final int IOREG_NUM = 5;
 	
 	private final PVector BASE_POSITION; // The position of the center of the Robot's base segment
-	private final int RID; // The unique ID associated with a Robot
+	public final int RID; // The unique ID associated with a Robot
 	
 	private Point robotPoint; // Initial position and orientation of the Robot
 	
@@ -647,7 +647,7 @@ public class RoboticArm {
 
 		RobotRun.getInstance().popMatrix();
 		// My sketchy work-around
-		if (RobotRun.getRobot() == this &&
+		if (RobotRun.getInstance().getActiveRobot() == this &&
 				RobotRun.getInstance().showOOBs) { drawBoxes(); }
 	}
 	
