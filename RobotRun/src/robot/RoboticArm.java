@@ -30,19 +30,14 @@ public class RoboticArm {
 	public static final int DPREG_NUM = 100;
 	public static final int IOREG_NUM = 5;
 	
-	public final PVector BASE_POSITION; // The position of the center of the Robot's base segment
+	private final PVector BASE_POSITION; // The position of the center of the Robot's base segment
 	public final int RID; // The unique ID associated with a Robot
 	
-<<<<<<< HEAD:RobotRun/src/robot/ArmModel.java
-	// The programs associated with this Robot
-	private ArrayList<Program> programs;
+	private Point robotPoint; // Initial position and orientation of the Robot
 	
 	//stack containing the previously running program state when a new program is called
 	private Stack<int[]> call_stack = new Stack<int[]>();
-=======
-	private Point robotPoint; // Initial position and orientation of the Robot
 	private ArrayList<Program> programs; // The programs associated with this Robot
->>>>>>> eb84f194356a359d4d07bb46333482d24fcc59ee:RobotRun/src/robot/RoboticArm.java
 	// TODO: refactor into Process class
 	private int activeProgIdx;
 	private int activeInstIdx;
@@ -1208,7 +1203,6 @@ public class RoboticArm {
 		return programs.size();
 	}
 	
-<<<<<<< HEAD:RobotRun/src/robot/ArmModel.java
 	/**
 	 * Pops the program state that has been previously pushed onto the call
 	 * stack. If the state points to a program on the active Robot, then the
@@ -1260,15 +1254,9 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Push the ID of a Robot, which to return to after the active program
-	 * ends.
 	 * 
-	 * @param r	The Robot to save onto the call stack
+	 * @return
 	 */
-	public void pushRobotCall(ArmModel r) {
-		// Push the given Robot's index onto this Robot's call stack
-		call_stack.push(new int[] { r.getRID() });
-=======
 	public ArrayList<DisplayLine> printProgList() {
 		int size = numOfPrograms();
 
@@ -1281,7 +1269,17 @@ public class RoboticArm {
 		}
 		
 		return progList;
->>>>>>> eb84f194356a359d4d07bb46333482d24fcc59ee:RobotRun/src/robot/RoboticArm.java
+	}
+	
+	/**
+	 * Push the ID of a Robot, which to return to after the active program
+	 * ends.
+	 * 
+	 * @param r	The Robot to save onto the call stack
+	 */
+	public void pushRobotCall(RoboticArm r) {
+		// Push the given Robot's index onto this Robot's call stack
+		call_stack.push(new int[] { r.getRID() });
 	}
 
 	/**
@@ -1542,64 +1540,6 @@ public class RoboticArm {
 		// Keep track of the old coordinate frame of the armModel
 		oldEEOrientation = RobotRun.getInstance().getTransformationMatrix();
 		RobotRun.getInstance().popMatrix();
-	}
-	
-	/**
-	 * Update the Robot's position and orientation (as well as
-	 * those of its bounding boxes) based on the active
-	 * program or a move to command, or jogging.
-	 */
-	public void updateRobot() {
-		if (!RobotRun.getInstance().motionFault) {
-			// Execute arm movement
-			if(RobotRun.getInstance().isProgramRunning()) {
-				// Run active program
-				RobotRun.getInstance().setProgramRunning(
-						!RobotRun.getInstance().executeProgram(this,
-								RobotRun.getInstance().execSingleInst));
-
-				// Check the call stack for any waiting processes
-				if (!RobotRun.getInstance().getCall_stack().isEmpty() &&
-						activeInstIdx == getActiveProg().getInstructions().size()) {
-					
-					int[] prevProc = RobotRun.getInstance().getCall_stack().pop();
-					// Return to the process on the top of the stack
-					setActiveProgIdx(prevProc[0]);
-					setActiveInstIdx(prevProc[1]);
-					// Update the display
-					RobotRun.getInstance().getContentsMenu().setLineIdx(activeInstIdx);
-					RobotRun.getInstance().getContentsMenu().setColumnIdx(0);
-					RobotRun.getInstance().updateScreen();
-				}
-
-			} else if (motionType != RobotMotion.HALTED) {
-				// Move the Robot progressively to a point
-				boolean doneMoving = true;
-
-				switch (RobotRun.getInstance().getArmModel().motionType) {
-				case MT_JOINT:
-					doneMoving = interpolateRotation(
-							(RobotRun.getInstance().liveSpeed / 100.0f));
-					break;
-				case MT_LINEAR:
-					doneMoving = RobotRun.getInstance().executeMotion(this,
-							(RobotRun.getInstance().liveSpeed / 100.0f));
-					break;
-				default:
-				}
-
-				if (doneMoving) {
-					halt();
-				}
-
-			} else if (modelInMotion()) {
-				// Jog the Robot
-				RobotRun.getInstance().intermediatePositions.clear();
-				executeLiveMotion();
-			}
-		}
-
-		updateCollisionOBBs();
 	}
 	
 	/* Draws the Robot Arm's hit boxes in the world */
@@ -1894,7 +1834,6 @@ public class RoboticArm {
 	 * Sets the Robot's default position and orientation in a static variable.
 	 * THIS METHOD MUST BE CALLED WHEN THE FIRST ROBOT IS CREATED!
 	 */
-<<<<<<< HEAD:RobotRun/src/robot/ArmModel.java
 	public void updateRobot() {
 		if (!RobotRun.getInstance().motionFault) {
 			// Execute arm movement
@@ -1943,11 +1882,11 @@ public class RoboticArm {
 		}
 
 		updateCollisionOBBs();
-=======
+	}
+	
 	protected void setDefaultRobotPoint() {
 		// Define the default Robot position and orientation
 		robotPoint = RobotRun.nativeRobotPoint(this,
 				new float[] { 0f, 0f, 0f, 0f, 0f, 0f });
->>>>>>> eb84f194356a359d4d07bb46333482d24fcc59ee:RobotRun/src/robot/RoboticArm.java
 	}
 }

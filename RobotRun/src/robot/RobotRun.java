@@ -1724,7 +1724,7 @@ public class RobotRun extends PApplet {
 				activeRobot.halt();
 			}
 			
-			ArmModel caller = activeRobot;
+			RoboticArm caller = activeRobot;
 			activeRobot = robots[rid];
 			/* Save the currently active program and the caller Robot onto the
 			 * Robot' call stack */
