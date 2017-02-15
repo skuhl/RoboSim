@@ -3925,11 +3925,14 @@ public class RobotRun extends PApplet {
 			break;
 		case SELECT_INSTR_DELETE:
 			ArrayList<Instruction> inst = p.getInstructions();
+			int instrIdx = 0;
 			
-			for(int i = 0; i < inst.size(); i += 1){
+			for(int i = 0; i < contents.getSelection().length; i += 1){
 				if(contents.isSelected(i)){
-					inst.remove(i);
-					i -= 1;
+					inst.remove(instrIdx);
+				}
+				else {
+					instrIdx += 1;
 				}
 			}
 
