@@ -351,9 +351,11 @@ public abstract class DataManagement {
 
 		} else if (instType == 7) {
 			boolean isCommented = in.readBoolean();
+			int tgtRID = in.readInt();
 			int pdx = in.readInt();
-
-			inst = new CallInstruction(pdx, null); //TODO Save/ load target robot
+			
+			RoboticArm tgt = RobotRun.getInstance().getRobot(tgtRID);
+			inst = new CallInstruction(tgt, pdx);
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 8) {
@@ -467,7 +469,7 @@ public abstract class DataManagement {
 		} else {
 			// Read program name
 			String name = in.readUTF();
-			Program prog = new Program(name, RobotRun.getInstance());
+			Program prog = new Program(name, robot);
 			int nReg;
 
 			// Read in all the positions saved for the program
@@ -1151,6 +1153,7 @@ public abstract class DataManagement {
 
 			out.writeByte(7);
 			out.writeBoolean(c_inst.isCommented());
+			out.writeInt(c_inst.getTgtDevice().RID);
 			out.writeInt(c_inst.getProgIdx());
 
 		} else if (inst instanceof RegisterStatement) {

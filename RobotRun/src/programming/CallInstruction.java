@@ -6,28 +6,25 @@ public class CallInstruction extends Instruction {
 	int progIdx;
 	RoboticArm tgtDevice;
 
-	public CallInstruction() {
-		progIdx = -1;
+	public CallInstruction(RoboticArm robot) {
 		tgtDevice = null;
+		progIdx = -1;
 	}
-
-	public CallInstruction(int pdx, RoboticArm tgt) {
-		progIdx = pdx;
+		
+	public CallInstruction(RoboticArm tgt, int pdx) {
 		tgtDevice = tgt;
+		progIdx = pdx;
 	}
 
 	public Instruction clone() {
-		return new CallInstruction(progIdx, tgtDevice);
+		return new CallInstruction(tgtDevice, progIdx);
 	}
 
 	// Getters and setters for a call instruction's program id field
 
 	public int execute() {
-		
-		
-		// TODO associate with the correct Robot ID (RID)
+		//Test validity of progIdx
 		if (progIdx < 0 || progIdx >= tgtDevice.numOfPrograms()) {
-			// Invalid program id
 			return -1;
 		}
 		
@@ -66,17 +63,16 @@ public class CallInstruction extends Instruction {
 	public void setTgtDevice(RoboticArm tgt) { tgtDevice = tgt; }
 
 	public String toString() {
-		String robot;
-		if(tgtDevice != null) robot = "Robot" + tgtDevice.RID + " ";
-		else				  robot = "... ";
-		return "Call " + robot + progName();
+		if(tgtDevice.equals(RobotRun.getInstance().getActiveRobot()))
+			return "Call " + progName();
+		else
+			return "RCall " + progName();
 	}
 
 	public String[] toStringArray() {
-		String[] ret = new String[3];
-		ret[0] = "Call";
-		ret[1] = tgtDevice != null ? "Robot" + tgtDevice.RID : "...";
-		ret[2] = progName();
+		String[] ret = new String[2];
+		ret[0] = tgtDevice.equals(RobotRun.getInstance().getActiveRobot()) ? "Call" : "RCall";
+		ret[1] = progName();
 
 		return ret;
 	}

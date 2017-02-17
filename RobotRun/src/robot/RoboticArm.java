@@ -69,11 +69,13 @@ public class RoboticArm {
 
 	private ArrayList<Model> segments = new ArrayList<Model>();
 	public int type;
+	public int liveSpeed;
 	public float motorSpeed;
+	
 	// Indicates the direction of motion of the Robot when jogging
 	public float[] jogLinear = new float[3];
-
 	public float[] jogRot = new float[3];
+	
 	/* Bounding Boxes of the Robot Arm */
 	public final BoundingBox[] armOBBs;
 	/* Bounding Boxes unique to each End Effector */
@@ -144,6 +146,7 @@ public class RoboticArm {
 		EEToIORegMap.put(EEType.WIELDER, 4);
 
 		motorSpeed = 1000.0f; // speed in mm/sec
+		liveSpeed = 10;
 
 		eeMSuction = new Model("SUCTION.stl", RobotRun.getInstance().color(108, 206, 214));
 		eeMClaw = new Model("GRIPPER.stl", RobotRun.getInstance().color(108, 206, 214));
@@ -666,7 +669,7 @@ public class RoboticArm {
 				for(int n = 0; n < 3; n++) {
 					if(model.rotations[n]) {
 						float trialAngle = model.currentRotations[n] +
-								model.rotationSpeed * model.jointsMoving[n] * RobotRun.getInstance().liveSpeed / 100f;
+								model.rotationSpeed * model.jointsMoving[n] * liveSpeed / 100f;
 						trialAngle = RobotRun.mod2PI(trialAngle);
 						
 						if(model.anglePermitted(n, trialAngle)) {
@@ -705,7 +708,7 @@ public class RoboticArm {
 			// Apply translational motion vector
 			if (translationalMotion()) {
 				// Respond to user defined movement
-				float distance = motorSpeed / 6000f * RobotRun.getInstance().liveSpeed;
+				float distance = motorSpeed / 6000f * liveSpeed;
 				PVector translation = new PVector(-jogLinear[0], -jogLinear[2], jogLinear[1]);
 				translation.mult(distance);
 
@@ -723,7 +726,7 @@ public class RoboticArm {
 			// Apply rotational motion vector
 			if (rotationalMotion()) {
 				// Respond to user defined movement
-				float theta = Fields.DEG_TO_RAD * 0.025f * RobotRun.getInstance().liveSpeed;
+				float theta = Fields.DEG_TO_RAD * 0.025f * liveSpeed;
 				PVector rotation = new PVector(-jogRot[0], -jogRot[2], jogRot[1]);
 
 				if (invFrameOrientation != null) {
@@ -799,7 +802,7 @@ public class RoboticArm {
 		
 		return prog.getInstruction(activeInstIdx);
 	}
-	
+
 	/**
 	 * @return	The active for this Robot, or null if no program is active
 	 */
@@ -811,7 +814,7 @@ public class RoboticArm {
 		
 		return programs.get(activeProgIdx);
 	}
-
+	
 	/**
 	 * @return	The index of the active program
 	 */
@@ -825,7 +828,7 @@ public class RoboticArm {
 	public int getActiveToolFrame() {
 		return activeToolFrame;
 	}
-	
+
 	/**
 	 * @return	The ID for the Robot's active user frame
 	 */
@@ -840,7 +843,7 @@ public class RoboticArm {
 	public PVector getBasePosition() {
 		return BASE_POSITION.copy();
 	}
-
+	
 	/**
 	 * @return	The current coordinate frame of the Robot
 	 */
@@ -873,7 +876,7 @@ public class RoboticArm {
 			return null;
 		}
 	}
-
+	
 	/**
 	 * Returns the I/O register, associated with the given index, of the Robot,
 	 * or null if the given index is invalid. A Robot has a total of 5 I/O
@@ -947,6 +950,10 @@ public class RoboticArm {
 		return new PVector(0f, 0f, 0f);
 	}
 
+	public int getLiveSpeed() {
+		return liveSpeed;
+	}
+
 	/* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
 	 * the end effector's current x, y, z axes with respect to the current frame.
 	 */
@@ -991,7 +998,7 @@ public class RoboticArm {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Returns the program, which belongs to this Robot, associated with the
 	 * given index value. IF the index value is invalid null is returned
@@ -1011,7 +1018,7 @@ public class RoboticArm {
 			return null;
 		}
 	}
-
+	
 	/**
 	 * Returns the unique ID of the Robot.
 	 */
@@ -1035,7 +1042,7 @@ public class RoboticArm {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Returns the user frame, associated with the given index, of the Robot,
 	 * or null if the given index is invalid. A Robot has a total of 10 user
@@ -1054,7 +1061,7 @@ public class RoboticArm {
 			return null;
 		}
 	}
-
+	
 	/**
 	 * Stops all robot movement
 	 */
@@ -1202,7 +1209,7 @@ public class RoboticArm {
 	public int numOfPrograms() {
 		return programs.size();
 	}
-	
+
 	/**
 	 * Pops the program state that has been previously pushed onto the call
 	 * stack. If the state points to a program on the active Robot, then the
@@ -1233,6 +1240,24 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * 
+	 * @return
+	 */
+	public ArrayList<DisplayLine> printProgList() {
+		int size = numOfPrograms();
+
+		//int start = start_render;
+		//int end = min(start + ITEMS_TO_SHOW, size);
+
+		ArrayList<DisplayLine> progList = new ArrayList<DisplayLine>();
+		for(int i = 0; i < size; i += 1) {
+			progList.add(new DisplayLine(i, 0, programs.get(i).getName()));
+		}
+		
+		return progList;
+	}
+	
+	/**
 	 * Pushes the active program onto the call stack and resets the active
 	 * program and instruction indices.
 	 */
@@ -1254,24 +1279,6 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * 
-	 * @return
-	 */
-	public ArrayList<DisplayLine> printProgList() {
-		int size = numOfPrograms();
-
-		//int start = start_render;
-		//int end = min(start + ITEMS_TO_SHOW, size);
-
-		ArrayList<DisplayLine> progList = new ArrayList<DisplayLine>();
-		for(int i = 0; i < size; i += 1) {
-			progList.add(new DisplayLine(i, 0, programs.get(i).getName()));
-		}
-		
-		return progList;
-	}
-	
-	/**
 	 * Push the ID of a Robot, which to return to after the active program
 	 * ends.
 	 * 
@@ -1281,7 +1288,7 @@ public class RoboticArm {
 		// Push the given Robot's index onto this Robot's call stack
 		call_stack.push(new int[] { r.getRID() });
 	}
-
+	
 	/**
 	 * If an object is currently being held by the Robot arm, then release it.
 	 * Then, update the Robot's End Effector status and IO Registers.
@@ -1369,7 +1376,7 @@ public class RoboticArm {
 		
 		return false;
 	}
-	
+
 	public void setActiveToolFrame(int activeToolFrame) {
 		this.activeToolFrame = activeToolFrame;
 	}
@@ -1377,7 +1384,7 @@ public class RoboticArm {
 	public void setActiveUserFrame(int activeUserFrame) {
 		this.activeUserFrame = activeUserFrame;
 	}
-
+	
 	/**
 	 * Update the Robot's current coordinate frame.
 	 * @param newFrame	The new coordinate frame
@@ -1429,6 +1436,10 @@ public class RoboticArm {
 		}
 
 		return 0f;
+	}
+
+	public void setLiveSpeed(int liveSpeed) {
+		this.liveSpeed = liveSpeed;
 	}
 
 	/**
@@ -1542,6 +1553,58 @@ public class RoboticArm {
 		RobotRun.getInstance().popMatrix();
 	}
 	
+	/**
+	 * Sets the Robot's default position and orientation in a static variable.
+	 * THIS METHOD MUST BE CALLED WHEN THE FIRST ROBOT IS CREATED!
+	 */
+	public void updateRobot() {
+		if (!RobotRun.getInstance().motionFault) {
+			// Execute arm movement
+			if(RobotRun.getInstance().isProgramRunning()) {
+				// Run active program
+				RobotRun.getInstance().setProgramRunning(
+						!RobotRun.getInstance().executeProgram(this,
+								RobotRun.getInstance().execSingleInst));
+
+				// Check the call stack for any waiting processes
+				if (!call_stack.isEmpty() &&
+						activeInstIdx == getActiveProg().getInstructions().size()) {
+					
+					popCallStack();
+					// Update the display
+					RobotRun.getInstance().getContentsMenu().setLineIdx(activeInstIdx);
+					RobotRun.getInstance().getContentsMenu().setColumnIdx(0);
+					RobotRun.getInstance().updateScreen();
+				}
+
+			} else if (motionType != RobotMotion.HALTED) {
+				// Move the Robot progressively to a point
+				boolean doneMoving = true;
+
+				switch (RobotRun.getInstance().getArmModel().motionType) {
+				case MT_JOINT:
+					doneMoving = interpolateRotation(liveSpeed / 100.0f);
+					break;
+				case MT_LINEAR:
+					doneMoving = RobotRun.getInstance().executeMotion(this, liveSpeed / 100.0f);
+					break;
+				default:
+				}
+
+				if (doneMoving) {
+					halt();
+				}
+
+			} else if (modelInMotion()) {
+				// Jog the Robot
+				RobotRun.getInstance().intermediatePositions.clear();
+				executeLiveMotion();
+			}
+		}
+
+		updateCollisionOBBs();
+	}
+	
 	/* Draws the Robot Arm's hit boxes in the world */
 	private void drawBoxes() {
 		// Draw hit boxes of the body poriotn of the Robot Arm
@@ -1562,7 +1625,7 @@ public class RoboticArm {
 			b.draw();
 		}
 	}
-	
+
 	/**
 	 * Draw the End Effector model associated with the given
 	 * End Effector type in the current coordinate system.
@@ -1828,60 +1891,6 @@ public class RoboticArm {
 		}
 
 		RobotRun.getInstance().popMatrix();
-	}
-
-	/**
-	 * Sets the Robot's default position and orientation in a static variable.
-	 * THIS METHOD MUST BE CALLED WHEN THE FIRST ROBOT IS CREATED!
-	 */
-	public void updateRobot() {
-		if (!RobotRun.getInstance().motionFault) {
-			// Execute arm movement
-			if(RobotRun.getInstance().isProgramRunning()) {
-				// Run active program
-				RobotRun.getInstance().setProgramRunning(
-						!RobotRun.getInstance().executeProgram(this,
-								RobotRun.getInstance().execSingleInst));
-
-				// Check the call stack for any waiting processes
-				if (!call_stack.isEmpty() &&
-						activeInstIdx == getActiveProg().getInstructions().size()) {
-					
-					popCallStack();
-					// Update the display
-					RobotRun.getInstance().getContentsMenu().setLineIdx(activeInstIdx);
-					RobotRun.getInstance().getContentsMenu().setColumnIdx(0);
-					RobotRun.getInstance().updateScreen();
-				}
-
-			} else if (motionType != RobotMotion.HALTED) {
-				// Move the Robot progressively to a point
-				boolean doneMoving = true;
-
-				switch (RobotRun.getInstance().getArmModel().motionType) {
-				case MT_JOINT:
-					doneMoving = interpolateRotation(
-							(RobotRun.getInstance().liveSpeed / 100.0f));
-					break;
-				case MT_LINEAR:
-					doneMoving = RobotRun.getInstance().executeMotion(this,
-							(RobotRun.getInstance().liveSpeed / 100.0f));
-					break;
-				default:
-				}
-
-				if (doneMoving) {
-					halt();
-				}
-
-			} else if (modelInMotion()) {
-				// Jog the Robot
-				RobotRun.getInstance().intermediatePositions.clear();
-				executeLiveMotion();
-			}
-		}
-
-		updateCollisionOBBs();
 	}
 	
 	protected void setDefaultRobotPoint() {

@@ -1,8 +1,12 @@
 package programming;
 
 public class Instruction {
-	protected boolean com = false;
+	boolean com;
 
+	public Instruction() {
+		com = false;
+	}
+	
 	/**
 	 * Create an independent replica of this instruction.
 	 */

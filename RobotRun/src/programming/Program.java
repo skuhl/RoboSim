@@ -7,13 +7,14 @@ import java.util.Set;
 import geom.Point;
 import global.Fields;
 import robot.RobotRun;
+import robot.RoboticArm;
 import window.DisplayLine;
 
 public class Program {
 	String name;
 	//TODO have program only reference the robot to which it is assigned rather
 	//than the whole program instance
-	private RobotRun robotRun;
+	private RoboticArm robot;
 	private int nextPosition;
 
 	/**
@@ -23,9 +24,9 @@ public class Program {
 	HashMap<Integer, Point> LPosReg;
 	ArrayList<Instruction> instructions;
 
-	public Program(String s, RobotRun r) {
+	public Program(String s, RoboticArm r) {
 		name = s;
-		robotRun = r;
+		robot = r;
 		nextPosition = 0;
 		LPosReg = new HashMap<Integer, Point>();
 		instructions = new ArrayList<Instruction>();
@@ -61,7 +62,7 @@ public class Program {
 	 * Return an independent replica of this program object.
 	 */
 	public Program clone() {
-		Program copy = new Program(name, robotRun);
+		Program copy = new Program(name, robot);
 
 		// Copy positions
 		Set<Integer> posNums = LPosReg.keySet();
@@ -149,6 +150,10 @@ public class Program {
 	public int getRegistersLength() {
 		return LPosReg.size();
 	}
+	
+	public RoboticArm getRobot() {
+		return robot;
+	}
 
 	public void overwriteInstruction(int idx, Instruction i) {
 		instructions.set(idx, i);
@@ -182,10 +187,10 @@ public class Program {
 			if(instr instanceof MotionInstruction) {
 				// Show '@' at the an instrution, if the Robot's position is close to that position stored in the instruction's register
 				MotionInstruction a = (MotionInstruction)instr;
-				Point ee_point = RobotRun.nativeRobotEEPoint(robotRun.getActiveRobot(), robotRun.getActiveRobot().getJointAngles());
+				Point ee_point = RobotRun.nativeRobotEEPoint(robot, robot.getJointAngles());
 				Point instPt = a.getVector(p);
 
-				if(instPt != null && ee_point.position.dist(instPt.position) < (robotRun.getLiveSpeed() / 100f)) {
+				if(instPt != null && ee_point.position.dist(instPt.position) < (robot.getLiveSpeed() / 100f)) {
 					line.add("@");
 				}
 				else {

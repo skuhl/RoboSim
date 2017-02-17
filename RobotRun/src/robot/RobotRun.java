@@ -46,6 +46,7 @@ import programming.Macro;
 import programming.MotionInstruction;
 import programming.Program;
 import programming.RegisterStatement;
+import programming.RobotCallInstruction;
 import programming.SelectStatement;
 import regs.DataRegister;
 import regs.IORegister;
@@ -446,7 +447,7 @@ public class RobotRun extends PApplet {
 			float dist = PVector.dist(cPoint.position, tgtPosition);
 			float rDist = rDelta.magnitude();
 			//check whether our current position is within tolerance
-			if ( (dist < (instance.liveSpeed / 100f)) && (rDist < (0.00005f * instance.liveSpeed)) ) { break; }
+			if ( (dist < (instance.getActiveRobot().getLiveSpeed() / 100f)) && (rDist < (0.00005f * instance.getActiveRobot().getLiveSpeed())) ) { break; }
 
 			//calculate jacobian, 'J', and its inverse
 			float[][] J = calculateJacobian(model, angles, true);
@@ -997,9 +998,6 @@ public class RobotRun extends PApplet {
 
 	int interMotionIdx = -1;
 
-	//TODO move liveSpeed to RobotArm class
-	int liveSpeed = 10;
-
 	private boolean executingInstruction = false;
 
 	// Determines what End Effector mapping should be display
@@ -1121,7 +1119,6 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case SET_CALL_PROG:
-		case SET_CALL_TGT_DEVICE:
 		case DIRECT_ENTRY_TOOL:
 		case DIRECT_ENTRY_USER:
 		case EDIT_PREG_C:
@@ -1330,7 +1327,6 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case SET_CALL_PROG:
-		case SET_CALL_TGT_DEVICE:
 		case SET_MACRO_PROG:
 		case DIRECT_ENTRY_TOOL:
 		case DIRECT_ENTRY_USER:
@@ -1679,7 +1675,7 @@ public class RobotRun extends PApplet {
 			if(mInst != null && mInst.getMotionType() != MTYPE_JOINT)
 				distanceBetweenPoints = mInst.getSpeed() / 60.0f;
 			else if(getActiveRobot().getCurCoordFrame() != CoordFrame.JOINT)
-				distanceBetweenPoints = getActiveRobot().motorSpeed * liveSpeed / 6000f;
+				distanceBetweenPoints = getActiveRobot().motorSpeed * activeRobot.getLiveSpeed() / 6000f;
 			else distanceBetweenPoints = 5.0f;
 		}
 	}
@@ -2652,7 +2648,7 @@ public class RobotRun extends PApplet {
 					workingText = workingText.substring(0, workingText.length() - 1);
 				}
 
-				int new_prog = getActiveRobot().addProgram(new Program(workingText, instance));
+				int new_prog = getActiveRobot().addProgram(new Program(workingText, activeRobot));
 				getActiveRobot().setActiveProgIdx(new_prog);
 				getActiveRobot().setActiveInstIdx(0);
 				contents.reset();
@@ -2766,8 +2762,13 @@ public class RobotRun extends PApplet {
 				break;
 			case 5: //Call
 				newCallInstruction();
-				switchScreen(ScreenMode.SET_CALL_TGT_DEVICE);
+				editIdx = activeRobot.RID;
+				switchScreen(ScreenMode.SET_CALL_PROG);
 				break;
+			case 6: //RobotCall
+				newRobotCallInstruction();
+				editIdx = getInactiveRobot().RID;
+				switchScreen(ScreenMode.SET_CALL_PROG);
 			}
 
 			break;
@@ -2999,9 +3000,14 @@ public class RobotRun extends PApplet {
 			if(options.getLineIdx() == 0) {
 				stmt.setInstr(new JumpInstruction());
 				switchScreen(ScreenMode.SET_JUMP_TGT);
+			} else if(options.getLineIdx() == 1) {
+				stmt.setInstr(new CallInstruction(activeRobot));
+				editIdx = activeRobot.RID;
+				switchScreen(ScreenMode.SET_CALL_PROG);
 			} else {
-				stmt.setInstr(new CallInstruction());
-				switchScreen(ScreenMode.SET_CALL_TGT_DEVICE);
+				stmt.setInstr(new CallInstruction(getInactiveRobot()));
+				editIdx = getInactiveRobot().RID;
+				switchScreen(ScreenMode.SET_CALL_PROG);
 			}
 
 			break;
@@ -3157,8 +3163,10 @@ public class RobotRun extends PApplet {
 
 			if(options.getLineIdx() == 0) {
 				s.getInstrs().set(i, new JumpInstruction());
+			} else if(options.getLineIdx() == 0) {
+				s.getInstrs().set(i, new CallInstruction(activeRobot));
 			} else {
-				s.getInstrs().set(i, new CallInstruction());
+				s.getInstrs().set(i, new CallInstruction(getInactiveRobot()));
 			}
 
 			lastScreen();
@@ -3357,21 +3365,6 @@ public class RobotRun extends PApplet {
 			break;
 
 		//Call instruction edit
-		case SET_CALL_TGT_DEVICE:
-			if(inst instanceof IfStatement) {
-				IfStatement ifStmt = (IfStatement)inst;
-				((CallInstruction)ifStmt.getInstr()).setTgtDevice(robots[contents.getLineIdx()]);
-			}
-			else if(inst instanceof SelectStatement) {
-				SelectStatement sStmt = (SelectStatement)inst;
-				CallInstruction c = (CallInstruction)sStmt.getInstrs().get(editIdx);
-				c.setTgtDevice(robots[contents.getLineIdx()]);
-			}
-			else {
-				CallInstruction call = (CallInstruction)inst;
-				call.setTgtDevice(robots[contents.getLineIdx()]);
-			}
-			break;
 		case SET_CALL_PROG:
 			if(inst instanceof IfStatement) {
 				IfStatement ifStmt = (IfStatement)inst;
@@ -3994,7 +3987,7 @@ public class RobotRun extends PApplet {
 			try {
 				int lines_to_insert = Integer.parseInt(workingText);
 				for(int i = 0; i < lines_to_insert; i += 1)
-					p.getInstructions().add(getActiveRobot().getActiveInstIdx(), new Instruction());
+					p.getInstructions().add(activeRobot.getActiveInstIdx(), new Instruction());
 
 				updateInstructions();
 			}
@@ -4303,6 +4296,13 @@ public class RobotRun extends PApplet {
 	public RoboticArm getActiveRobot() {
 		return activeRobot;
 	}
+	
+	public RoboticArm getInactiveRobot() {
+		if(activeRobot.RID == 0) 
+			return robots[1];
+		else
+			return robots[0];
+	}
 
 	public RoboticArm getArmModel() {
 		return getActiveRobot();
@@ -4325,10 +4325,6 @@ public class RobotRun extends PApplet {
 		case NAV_PROGRAMS:
 		case SET_MACRO_PROG:
 			loadPrograms();
-			break;
-		case SET_CALL_TGT_DEVICE:
-			contents.addLine("Robot0");
-			contents.addLine("Robot1");
 			break;
 		case SET_CALL_PROG:
 			loadPrograms(editIdx);
@@ -4914,18 +4910,8 @@ public class RobotRun extends PApplet {
 			nextScreen(ScreenMode.SET_JUMP_TGT);
 		}
 		else if(ins instanceof CallInstruction){
-			switch(selectIdx) {
-			case 1: 
-				nextScreen(ScreenMode.SET_CALL_TGT_DEVICE);
-				break;
-			case 2: 
-				if(((CallInstruction)ins).getTgtDevice() == null)
-					nextScreen(ScreenMode.SET_CALL_TGT_DEVICE);
-				else
-					editIdx = ((CallInstruction)ins).getTgtDevice().RID;
-					nextScreen(ScreenMode.SET_CALL_PROG);
-				break;
-			}
+			editIdx = ((CallInstruction)ins).getTgtDevice().RID;
+			nextScreen(ScreenMode.SET_CALL_PROG);
 		} 
 		else if(ins instanceof IfStatement){
 			IfStatement stmt = (IfStatement)ins;
@@ -4940,8 +4926,9 @@ public class RobotRun extends PApplet {
 				} else if(selectIdx == len + 3) {
 					if(stmt.getInstr() instanceof JumpInstruction) {
 						nextScreen(ScreenMode.SET_JUMP_TGT);
-					} else {
-						nextScreen(ScreenMode.SET_CALL_TGT_DEVICE);
+					} else if(stmt.getInstr() instanceof CallInstruction) {
+						editIdx = ((CallInstruction)stmt.getInstr()).getTgtDevice().RID;
+						nextScreen(ScreenMode.SET_CALL_PROG);
 					}
 				}
 			} 
@@ -4960,8 +4947,9 @@ public class RobotRun extends PApplet {
 				} else {
 					if(stmt.getInstr() instanceof JumpInstruction) {
 						nextScreen(ScreenMode.SET_JUMP_TGT);
-					} else {
-						nextScreen(ScreenMode.SET_CALL_TGT_DEVICE);
+					} else if(stmt.getInstr() instanceof CallInstruction) {
+						editIdx = ((CallInstruction)stmt.getInstr()).getTgtDevice().RID;
+						nextScreen(ScreenMode.SET_CALL_PROG);
 					}
 				}
 			}
@@ -4980,10 +4968,12 @@ public class RobotRun extends PApplet {
 				nextScreen(ScreenMode.SET_SELECT_STMT_ACT);
 			} else if((selectIdx - 3) % 3 == 2) {
 				editIdx = (selectIdx - 3)/3;
-				if(stmt.getInstrs().get(editIdx) instanceof JumpInstruction) {
+				Instruction toExec = stmt.getInstrs().get(editIdx);
+				if(toExec instanceof JumpInstruction) {
 					nextScreen(ScreenMode.SET_JUMP_TGT);
-				} else if(stmt.getInstrs().get(editIdx) instanceof CallInstruction) {
-					nextScreen(ScreenMode.SET_CALL_TGT_DEVICE);
+				} else if(toExec instanceof CallInstruction) {
+					editIdx = ((CallInstruction)toExec).getTgtDevice().RID;
+					nextScreen(ScreenMode.SET_CALL_PROG);
 				}
 			}
 		} else if(ins instanceof RegisterStatement) {
@@ -5017,10 +5007,6 @@ public class RobotRun extends PApplet {
 		}
 
 		return row;
-	}
-
-	public float getLiveSpeed() {
-		return liveSpeed;
 	}
 
 	public WindowManager getManager() {
@@ -6439,7 +6425,7 @@ public class RobotRun extends PApplet {
 				Point ee_point = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles());
 				Point instPt = a.getVector(p);
 
-				if(instPt != null && ee_point.position.dist(instPt.position) < (liveSpeed / 100f)) {
+				if(instPt != null && ee_point.position.dist(instPt.position) < (activeRobot.getLiveSpeed() / 100f)) {
 					line.add("@");
 				}
 				else {
@@ -7125,19 +7111,32 @@ public class RobotRun extends PApplet {
 		resetStack();
 		nextScreen(ScreenMode.NAV_MAIN_MENU);
 	}
+	
 	public void MVMU() {
 		if(getSU_macro_bindings()[2] != null && isShift()) {
 			getSU_macro_bindings()[2].execute();
 		}
 	}
+	
 	public void newCallInstruction() {
 		Program p = getActiveRobot().getActiveProg();
-		CallInstruction call = new CallInstruction();
+		CallInstruction call = new CallInstruction(activeRobot);
 
 		if(getActiveRobot().getActiveInstIdx() != p.getInstructions().size()) {
 			p.overwriteInstruction(getActiveRobot().getActiveInstIdx(), call);
 		} else {
 			p.addInstruction(call);
+		}
+	}
+	
+	public void newRobotCallInstruction() {
+		Program p = getActiveRobot().getActiveProg();
+		CallInstruction rcall = new CallInstruction(getInactiveRobot());
+
+		if(getActiveRobot().getActiveInstIdx() != p.getInstructions().size()) {
+			p.overwriteInstruction(getActiveRobot().getActiveInstIdx(), rcall);
+		} else {
+			p.addInstruction(rcall);
 		}
 	}
 	
@@ -7777,7 +7776,7 @@ public class RobotRun extends PApplet {
 		text(coordFrame, lastTextPositionX, lastTextPositionY);
 		lastTextPositionY += 20;
 		// Display the Robot's speed value as a percent
-		text(String.format("Jog Speed: %d%%", liveSpeed), lastTextPositionX, lastTextPositionY);
+		text(String.format("Jog Speed: %d%%", activeRobot.getLiveSpeed()), lastTextPositionX, lastTextPositionY);
 		lastTextPositionY += 20;
 		// Display the title of the currently active scenario
 		String scenarioTitle;
@@ -7909,55 +7908,47 @@ public class RobotRun extends PApplet {
 	}
 
 	public void SLOWDOWN() {
+		int curSpeed = activeRobot.getLiveSpeed();
 		// Reduce the speed at which the Robot jogs
 		if (isShift()) {
-
-			if (liveSpeed > 50) {
-				liveSpeed = 50;
-			} else if (liveSpeed > 5) {
-				liveSpeed = 5;
+			if (curSpeed > 50) {
+				activeRobot.setLiveSpeed(50);
+			} else if (curSpeed > 5) {
+				activeRobot.setLiveSpeed(5);
 			} else {
-				liveSpeed = 1;
+				activeRobot.setLiveSpeed(1);
 			}
-		} else if (liveSpeed > 1) {
-
-			if (liveSpeed <= 5f) {
-				--liveSpeed;
-			} else if (liveSpeed <= 50) {
-				liveSpeed -= 5;
+		} else if (curSpeed > 1) {
+			if (curSpeed > 50) {
+				activeRobot.setLiveSpeed(curSpeed - 10);
+			} else if (curSpeed > 5) {
+				activeRobot.setLiveSpeed(curSpeed - 5);
 			} else {
-				liveSpeed -= 10;
+				activeRobot.setLiveSpeed(curSpeed - 1);
 			}
 		}
-
-		// The Robot's speed multiplier is bounded to the range 1% to 100%
-		liveSpeed = max(1, liveSpeed);
 	}
 
 	public void SPEEDUP() {
+		int curSpeed = activeRobot.getLiveSpeed();
 		// Increase the speed at which the Robot jogs
 		if (isShift()) {
-
-			if (liveSpeed < 5) {
-				liveSpeed = 5;
-			} else if (liveSpeed < 50) {
-				liveSpeed = 50;
+			if (curSpeed < 5) {
+				activeRobot.setLiveSpeed(5);
+			} else if (curSpeed < 50) {
+				activeRobot.setLiveSpeed(50);
 			} else {
-				liveSpeed = 100;
+				activeRobot.setLiveSpeed(100);
 			}
-		} else if (liveSpeed < 100) {
-
-			if (liveSpeed < 5) {
-				++liveSpeed;
-			} else if (liveSpeed < 50) {
-				liveSpeed += 5;
-			} else if (liveSpeed < 100) {
-				liveSpeed += 10f;
+		} else if (curSpeed < 100) {
+			if (curSpeed < 5) {
+				activeRobot.setLiveSpeed(curSpeed + 1);
+			} else if (curSpeed < 50) {
+				activeRobot.setLiveSpeed(curSpeed + 5);
+			} else {
+				activeRobot.setLiveSpeed(curSpeed + 10);
 			}
 		}
-
-		// The Robot's speed multiplier is bounded to the range 1% to 100%
-		liveSpeed = min(liveSpeed, 100);
 	}
 
 	//toggle step on/ off and button highlight
