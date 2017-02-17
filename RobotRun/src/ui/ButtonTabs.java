@@ -4,6 +4,7 @@ import java.util.List;
 
 import controlP5.ButtonBar;
 import controlP5.ControlP5;
+import robot.RobotRun;
 
 /**
  * A extension of ControlP5's ButtonBar object that actually bloody
@@ -42,5 +43,13 @@ public class ButtonTabs extends ButtonBar {
 				selectedButtonName = (String)map.get("name");
 			}
 		}
+		
+		// Set the active robot based on which tab was selected
+		 if (selectedButtonName.equals("Robot1")) {
+			 RobotRun.getInstance().setRobot(0);
+			 
+		 } else if (selectedButtonName.equals("Robot2")) {
+			 RobotRun.getInstance().setRobot(1);
+		 }
 	}
 }

@@ -35,10 +35,10 @@ public class ScreenProgs extends Screen {
 	
 	@Override
 	public void loadVars() {
-		robotRun.getActiveRobot().halt();
-		contents.setLineIdx(robotRun.getActiveRobot().getActiveProgIdx());
+		robotRun.hd();
+		contents.setLineIdx(RobotRun.getActiveRobot().getActiveProgIdx());
 		contents.setColumnIdx(0);
-		robotRun.getActiveRobot().setActiveInstIdx(0);
+		RobotRun.getActiveRobot().setActiveInstIdx(0);
 	}
 
 	@Override

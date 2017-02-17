@@ -7,7 +7,7 @@ public class CallInstruction extends Instruction {
 	RoboticArm tgtDevice;
 
 	public CallInstruction(RoboticArm robot) {
-		tgtDevice = null;
+		tgtDevice = robot;
 		progIdx = -1;
 	}
 		
@@ -28,12 +28,17 @@ public class CallInstruction extends Instruction {
 			return -1;
 		}
 		
-		// Save the current program state
-		RobotRun.getRobot().pushActiveProg();
-		// Set the new program state
-		tgtDevice.setActiveProgIdx(progIdx);
-		tgtDevice.setActiveInstIdx(0);
-		RobotRun.getInstance().setActiveRobot(tgtDevice);
+		if (RobotRun.getActiveRobot() == tgtDevice) {
+			// Save the current program state
+			tgtDevice.pushActiveProg();
+			// Set the new program state
+			tgtDevice.setActiveProgIdx(progIdx);
+			tgtDevice.setActiveInstIdx(0);
+			
+		} else {
+			RobotRun.getInstance().callRobot(tgtDevice.getRID(), progIdx);
+		}
+		
 		// Update the screen
 		RobotRun.getInstance().getContentsMenu().reset();
 		RobotRun.getInstance().updateScreen();
@@ -51,7 +56,7 @@ public class CallInstruction extends Instruction {
 	 * is invalid.
 	 */
 	private String progName() {
-		if (progIdx >= 0 && progIdx < tgtDevice.numOfPrograms()) {
+		if (tgtDevice != null && tgtDevice.getProgram(progIdx) != null) {
 			return tgtDevice.getProgram(progIdx).getName();
 		}
 
@@ -63,15 +68,17 @@ public class CallInstruction extends Instruction {
 	public void setTgtDevice(RoboticArm tgt) { tgtDevice = tgt; }
 
 	public String toString() {
-		if(tgtDevice.equals(RobotRun.getInstance().getActiveRobot()))
+		if(tgtDevice == RobotRun.getActiveRobot()) {
 			return "Call " + progName();
-		else
+			
+		} else {
 			return "RCall " + progName();
+		}
 	}
 
 	public String[] toStringArray() {
 		String[] ret = new String[2];
-		ret[0] = tgtDevice.equals(RobotRun.getInstance().getActiveRobot()) ? "Call" : "RCall";
+		ret[0] = (tgtDevice == RobotRun.getActiveRobot()) ? "Call" : "RCall";
 		ret[1] = progName();
 
 		return ret;
