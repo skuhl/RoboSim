@@ -34,9 +34,9 @@ public class CoordinateSystem implements Cloneable {
 	 */
 	public void apply() {
 		RobotRun.getInstance().applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
-				axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
-				axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
-				0,                 0,                 0,        1);
+										   axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
+										   axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
+										   				   0,				  0,                 0,        1);
 	}
 
 	@Override

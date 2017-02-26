@@ -2351,16 +2351,11 @@ public class RobotRun extends PApplet {
 
 		pushMatrix();
 		camera.apply();
-
-		updateAndDrawObjects(activeScenario, getActiveRobot());
 		
-		// TODO need to fix this!
-		if (getActiveRobot() == robots[0]) {
-			robots[1].draw();
-			
-		} else {
-			robots[0].draw();
-		}
+		fill( color(255, 0, 0) );
+		box(50);
+		
+		updateAndDrawObjects(activeScenario, getActiveRobot());
 		
 		displayAxes();
 		displayTeachPoints();
@@ -2392,21 +2387,6 @@ public class RobotRun extends PApplet {
 		//TESTING CODE: DRAW INTERMEDIATE POINTS
 		noLights();
 		noStroke();
-		pushMatrix();
-		//if(intermediatePositions != null) {
-		//  int count = 0;
-		//  for(Point pt : intermediatePositions) {
-		//    if(count % 20 == 0) {
-		//      pushMatrix();
-		//      stroke(0);
-		//      translate(pt.position.x, pt.position.y, pt.position.z);
-		//      sphere(5);
-		//      popMatrix();
-		//    }
-		//    count += 1;
-		//  }
-		//}
-		popMatrix();
 		popMatrix();
 
 		hint(DISABLE_DEPTH_TEST);
@@ -2414,7 +2394,6 @@ public class RobotRun extends PApplet {
 		ortho();
 		showMainDisplayText();
 		cp5.draw();
-		//println(frameRate + " fps");
 	}
 
 	public void editExpression(Expression expr, int selectIdx) {
@@ -4318,6 +4297,7 @@ public class RobotRun extends PApplet {
 
 	//Main display content text
 	public void getContents(ScreenMode mode) {
+		ArrayList<DisplayLine> prevContents = contents.copyContents();
 		contents.clear();
 		
 		switch(mode) {
@@ -4409,13 +4389,16 @@ public class RobotRun extends PApplet {
 		case EDIT_PREG_C:
 		case EDIT_PREG_J:
 		case EDIT_IOREG:
+			contents.setContents(prevContents);
 			break;
+			
 		case EDIT_DREG_VAL:
 		case CP_DREG_COM:
 		case CP_DREG_VAL:
 		case CP_PREG_COM:
 		case CP_PREG_PT:
 		case SWAP_PT_TYPE:
+			contents.setContents(prevContents);
 			break;
 
 			//View/ edit macros
@@ -6135,6 +6118,8 @@ public class RobotRun extends PApplet {
 	 * based on the value of super_mode.
 	 */
 	public void loadFrameDetail(CoordFrame coordFrame) {
+		contents.clear();
+		
 		// Display the frame set name as well as the index of the currently selected frame
 		if(coordFrame == CoordFrame.TOOL) {
 			String[] fields = getActiveRobot().getToolFrame(curFrameIdx).toLineStringArray();
@@ -8071,7 +8056,10 @@ public class RobotRun extends PApplet {
 			s.updateAndDrawObjects(model);
 		}
 		
-		model.draw();
+		// Draw all robots
+		for (RoboticArm r : robots) {
+			r.draw();
+		}
 
 		model.updatePreviousEEOrientation();
 	}

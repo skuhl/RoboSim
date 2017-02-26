@@ -279,6 +279,14 @@ public class MenuScroll {
 		return line;
 	}
 	
+	/**
+	 * @return	A copy of the current contents of the display line
+	 */
+	@SuppressWarnings("unchecked")
+	public ArrayList<DisplayLine> copyContents() {
+		return (ArrayList<DisplayLine>)lines.clone();
+	}
+	
 	public void reset() {
 		lineIdx = 0;
 		columnIdx = 0;
