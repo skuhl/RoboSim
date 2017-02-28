@@ -1356,8 +1356,10 @@ public class RoboticArm {
 			activeInstIdx = instIdx;
 			return true;
 		}
-		
-		return false;
+		else {
+			activeInstIdx = -1;
+			return false;
+		}
 	}
 
 	/**

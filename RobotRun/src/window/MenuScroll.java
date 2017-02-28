@@ -67,8 +67,12 @@ public class MenuScroll {
 			lineIdx = RobotRun.clamp(lineIdx, 0, lines.size() - 1);
 			columnIdx = RobotRun.clamp(columnIdx, 0, lines.get(lineIdx).size() - 1);
 			renderStart = RobotRun.clamp(renderStart, lineIdx - (maxDisp - 1), lineIdx);
+		} else {
+			lineIdx = 0;
+			columnIdx = 0;
+			renderStart = 0;
 		}
-		
+				
 		int next_px = 0, next_py = 0; 
 		int itemNo = 0, lineNo = 0;
 		int bg, txt, selectInd = -1;
