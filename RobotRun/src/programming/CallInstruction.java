@@ -7,7 +7,7 @@ public class CallInstruction extends Instruction {
 	RoboticArm tgtDevice;
 
 	public CallInstruction(RoboticArm robot) {
-		tgtDevice = null;
+		tgtDevice = robot;
 		progIdx = -1;
 	}
 		

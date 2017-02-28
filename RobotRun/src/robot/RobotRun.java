@@ -2741,7 +2741,7 @@ public class RobotRun extends PApplet {
 				break;
 			case 5: //Call
 				newCallInstruction();
-				editIdx = activeRobot.RID;
+				editIdx = getActiveRobot().RID;
 				switchScreen(ScreenMode.SET_CALL_PROG);
 				break;
 			case 6: //RobotCall
@@ -5099,6 +5099,7 @@ public class RobotRun extends PApplet {
 			options.addLine("4. IF/SELECT" );
 			options.addLine("5. JMP/LBL"   );
 			options.addLine("6. CALL"      );
+			options.addLine("6. RCALL"     );
 			break;
 		case SELECT_IO_INSTR_REG:
 			loadIORegisters();
