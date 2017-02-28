@@ -1150,10 +1150,13 @@ public abstract class DataManagement {
 
 		} else if (inst instanceof CallInstruction) {
 			CallInstruction c_inst = (CallInstruction)inst;
-
+			
 			out.writeByte(7);
 			out.writeBoolean(c_inst.isCommented());
-			out.writeInt(c_inst.getTgtDevice().RID);
+			if(c_inst.getTgtDevice() == null)
+				out.writeInt(c_inst.getTgtDevice().RID);
+			else
+				out.writeInt(-1);
 			out.writeInt(c_inst.getProgIdx());
 
 		} else if (inst instanceof RegisterStatement) {
