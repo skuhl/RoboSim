@@ -1731,47 +1731,6 @@ public class RobotRun extends PApplet {
 		denominator *= 2;
 		return numerator / denominator;
 	}
-	
-	/**
-	 * Activates the Robot with the given ID value, saving the previously
-	 * active Robot to this Robot's call stack. Then, the execution of the
-	 * program specified by the given program index of the active Robot begins
-	 * immediately.
-	 * 
-	 * @param rid		The ID of the Robot to call
-	 * @param progIdx	The index of the call Robot's program to execute
-	 */
-	public void callRobot(int rid, int progIdx) {
-		if (rid >= 0 && rid < robots.length && robots[rid] != activeRobot) {
-			if (activeRobot != null) {
-				hd();
-			}
-			
-			RoboticArm caller = activeRobot;
-			// Increment the calling robot's instruction index
-			caller.setActiveInstIdx(caller.getActiveInstIdx() + 1);
-			activeRobot = robots[rid];
-			/* Save the currently active program and the caller Robot onto the
-			 * Robot' call stack */
-			activeRobot.pushActiveProg();
-			//activeRobot.pushRobotCall(caller);
-			
-			// Initiates the Robot's program specified by the given index
-			activeRobot.setActiveProgIdx(progIdx);
-			
-			if (activeRobot.getActiveProg() != null) {
-				activeRobot.setActiveInstIdx(0);
-				
-				nextScreen(ScreenMode.NAV_PROG_INSTR);
-				
-				if (!shift) {
-					sf();
-				}
-			}
-			
-			System.out.printf("%s - > %s\n", caller, activeRobot);
-		}
-	}
 
 	/**
 	 * Finds the circle center of 3 points. (That is, find the center of
@@ -8050,20 +8009,19 @@ public class RobotRun extends PApplet {
 		
 		// Check the call stack for any waiting processes
 		if (ap != null && model.getActiveInstIdx() == ap.getInstructions().size()) {
-			int ret = model.popCallStack();
+			CallFrame ret = model.popCallStack();
 			
-			if (ret != -1) {
-				if (ret >= 0) {
-					// Return to a previously active Robot
-					returnRobot(ret);
-					model = getActiveRobot();
-				}
-				
-				// Update the display
-				getContentsMenu().setLineIdx(model.getActiveInstIdx());
-				getContentsMenu().setColumnIdx(0);
-				updateScreen();
+			if(ret != null) {
+				RoboticArm tgtDevice = robots[ret.getTgtRID()];
+				tgtDevice.setActiveProgIdx(ret.getTgtProgID());
+				tgtDevice.setActiveInstIdx(ret.getTgtInstID());
+				activeRobot = tgtDevice;
 			}
+			
+			// Update the display
+			getContentsMenu().setLineIdx(model.getActiveInstIdx());
+			getContentsMenu().setColumnIdx(0);
+			updateScreen();
 			
 		}
 

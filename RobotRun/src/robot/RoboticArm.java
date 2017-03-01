@@ -1282,20 +1282,13 @@ public class RoboticArm {
 	 * 
 	 * @return	Whether or not a program state has been saved on the call stack
 	 */
-	public int popCallStack() {
+	public CallFrame popCallStack() {
 		if (!call_stack.isEmpty()) {
 			CallFrame savedProgState = call_stack.pop();
-			
-			if(RID == savedProgState.getTgtRID()) {
-				activeProgIdx = savedProgState.getTgtProgID();
-				activeInstIdx = savedProgState.getTgtInstID();
-			}
-			else {
-				
-			}
+			return savedProgState;
 		}
 		
-		return -1;
+		return null;
 	}
 	
 	/**
@@ -1322,20 +1315,18 @@ public class RoboticArm {
 	 * program and instruction indices.
 	 */
 	public void pushActiveProg() {
-		// Do not push invalid program or instruction indices
-		if (getActiveInstruction() != null) {
-			
-			if (RobotRun.getActiveRobot() == this && RobotRun.getInstance().isProgramRunning()) {
-				// The Robot's program is active, so save the next instruction
-				call_stack.push(new CallFrame(RID, activeProgIdx, activeInstIdx + 1));
-			} else {
-				// The Robot's program is inactive, so save the current instruction
-				call_stack.push(new CallFrame(RID, activeProgIdx, activeInstIdx));
-			}
-			
-			activeProgIdx = -1;
-			activeInstIdx = -1;
+		RoboticArm activeRobot = RobotRun.getActiveRobot();
+		
+		if (activeRobot.RID == RID && RobotRun.getInstance().isProgramRunning()) {
+			// Save call frame to return to the currently executing program
+			call_stack.push(new CallFrame(RID, activeProgIdx, activeInstIdx + 1));
+		} else {
+			// Save call frame to return to the caller robot's current program
+			call_stack.push(new CallFrame(activeRobot.RID, activeRobot.getActiveProgIdx(), activeRobot.getActiveInstIdx() + 1));
 		}
+		
+		activeProgIdx = -1;
+		activeInstIdx = -1;		
 	}
 			
 	/**

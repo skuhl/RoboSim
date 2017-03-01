@@ -28,7 +28,7 @@ public class CallInstruction extends Instruction {
 			return -1;
 		}
 		
-		// Save the current program state
+		// Save the current program state on tgt robot
 		tgtDevice.pushActiveProg();
 		// Set the new program state
 		tgtDevice.setActiveProgIdx(progIdx);
