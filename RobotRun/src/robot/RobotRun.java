@@ -2346,9 +2346,6 @@ public class RobotRun extends PApplet {
 		pushMatrix();
 		camera.apply();
 		
-		fill( color(255, 0, 0) );
-		box(50);
-		
 		updateAndDrawObjects(activeScenario, getActiveRobot());
 		
 		displayAxes();
@@ -5093,11 +5090,7 @@ public class RobotRun extends PApplet {
 			options.addLine("4. IF/SELECT" );
 			options.addLine("5. JMP/LBL"   );
 			options.addLine("6. CALL"      );
-<<<<<<< HEAD
-			options.addLine("7. ROBOT CALL");
-=======
 			options.addLine("6. RCALL"     );
->>>>>>> de69e68881cb6aae69467a91842af8f575e60f4d
 			break;
 		case SELECT_IO_INSTR_REG:
 			loadIORegisters();
