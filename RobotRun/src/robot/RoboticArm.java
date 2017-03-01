@@ -79,9 +79,9 @@ public class RoboticArm {
 	
 	/* Bounding Boxes of the Robot Arm */
 	public final BoundingBox[] armOBBs;
+	
 	/* Bounding Boxes unique to each End Effector */
 	private final HashMap<EEType, ArrayList<BoundingBox>> eeOBBsMap;
-
 	private final HashMap<EEType, ArrayList<BoundingBox>> eePickupOBBs;
 	public Part held;
 
@@ -92,6 +92,13 @@ public class RoboticArm {
 
 	public RQuaternion tgtOrientation;
 
+	/**
+	 * Creates a robot with the given ID at the given position in the
+	 * application environment.
+	 * 
+	 * @param rid		The unique identifier associated with the Robot
+	 * @param basePos	The center position of the Robot's base segment
+	 */
 	public RoboticArm(int rid, PVector basePos) {
 		int idx;
 		
@@ -401,14 +408,25 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Determines if the given part's bounding box is colliding with the
+	 * Robot's end effector's pickup bounding boxes. Only the claw gripper and
+	 * suction end effectors have pickup bounding boxes, which appear blue in
+	 * the application. When a part's bounding box is colliding with a special
+	 * bounding box and not colliding with another bounding box of the active
+	 * end effector, then true is returned. Otherwise,, false is returned.
+	 * 
+	 * @return	Whether can immediately be picked up by the robot
 	 */
 	public boolean canPickup(Part p) {
+		if (p == null) {
+			return false;
+		}
+		
 		ArrayList<BoundingBox> curEEOBBs = eeOBBsMap.get(activeEndEffector);
 
 		for (BoundingBox b : curEEOBBs) {
 			// Cannot be colliding with a normal bounding box
-			if (p != null && p.collision(b)) {
+			if (p.collision(b)) {
 				return false;
 			}
 		}
@@ -417,7 +435,7 @@ public class RoboticArm {
 
 		for (BoundingBox b : curEEOBBs) {
 			// Must be colliding with a pickup bounding box
-			if (p != null && p.collision(b)) {
+			if (p.collision(b)) {
 				return true;
 			}
 		}
@@ -425,7 +443,7 @@ public class RoboticArm {
 		return false;
 	}
 	
-	/* Determine if the given ojbect is collding with any part of the Robot. */
+	/* Determine if the given object is colliding with any part of the Robot. */
 	public boolean checkObjectCollision(Part obj) {
 		boolean collision = false;
 
@@ -449,7 +467,17 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment
+	 * Checks all objects in the given scenario to determine if a part in the
+	 * scenario can picked up by the robot or a part in the scenario is
+	 * currently being held by the robot. If the robot is not carrying a part
+	 * and a part can be picked up by the robot, then the robot will pickup the
+	 * part. If the robot is currently carrying a part, then it will release
+	 * that part, instead.
+	 * 
+	 * @param active	The scenario, of which to check the world objects
+	 * @return			0, if an part can be picked up
+	 * 					1, if the robot releases a part
+	 * 					2, if nothing occurs
 	 */
 	public int checkPickupCollision(Scenario active) {
 		// End Effector must be on and no object is currently held to be able to pickup an object
@@ -478,14 +506,27 @@ public class RoboticArm {
 		return 2;
 	}
 	
-	/* Determine if select pairs of hit boxes of the Robot Arm are colliding */
+	/**
+	 * Determine if select pairs of hit boxes of the robot are colliding.
+	 * 
+	 * The bounding box collisions checked between the body segments of the Arm:
+	 * The base segment and the four upper arm segments
+	 * The base rotating segment and lower long arm segment as well as the upper long arm and
+	 *   upper rotating end segment
+	 * The second base rotating hit box and the upper long arm segment as well as the upper
+	 *   rotating end segment
+	 * The lower long arm segment and the upper rotating end segment
+	 * 
+	 * @return	A self-collision has occurred with the robot
+	 */
 	public boolean checkSelfCollisions() {
 		boolean collision = false;
 
 		// Pairs of indices corresponding to two of the Arm body hit boxes, for which to check collisions
 		int[] check_pairs = new int[] { 0, 3, 0, 4, 0, 5, 0, 6, 1, 5, 1, 6, 2, 5, 2, 6, 3, 5 };
 
-		/* Check select collisions between the body segments of the Arm:
+		/**
+		 * Check select collisions between the body segments of the Arm:
 		 * The base segment and the four upper arm segments
 		 * The base rotating segment and lower long arm segment as well as the upper long arm and
 		 *   upper rotating end segment
@@ -522,13 +563,6 @@ public class RoboticArm {
 	 */
 	public void clearCallStack() {
 		call_stack.clear();
-		
-		try {
-			throw new Exception("Cleared Stack!");
-			
-		} catch (Exception Ex) {
-			Ex.printStackTrace();
-		}
 	}
 	
 	/**
@@ -567,7 +601,7 @@ public class RoboticArm {
 		}
 
 		IORegister associatedIO = getIORegisterFor(activeEndEffector);
-		// Set end effector state
+		// Update the end effector state
 		if (associatedIO != null) {
 			endEffectorState = associatedIO.state;
 		} else {
@@ -577,6 +611,10 @@ public class RoboticArm {
 		releaseHeldObject();
 	}
 	
+	/**
+	 * Draws the robot arm model, with the center of its base at the robot's
+	 * base position field.
+	 */
 	public void draw() {
 		RobotRun.getInstance().noStroke();
 		RobotRun.getInstance().fill(200, 200, 0);
@@ -664,9 +702,11 @@ public class RoboticArm {
 		drawEndEffector(activeEndEffector, endEffectorState);
 
 		RobotRun.getInstance().popMatrix();
-		// My sketchy work-around
-		if (RobotRun.getActiveRobot() == this &&
-				RobotRun.getInstance().showOOBs) { drawBoxes(); }
+		/* My sketchy work-around for drawing only the bounding boxes of the
+		 * active robot */
+		if (RobotRun.getActiveRobot() == this && RobotRun.getInstance().showOOBs) {
+			drawBoxes();
+		}
 	}
 	
 	/**
@@ -1035,7 +1075,7 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Returns the unique ID of the Robot.
+	 * @return	The unique ID of the Robot.
 	 */
 	public int getRID() { return RID; }
 
@@ -1078,10 +1118,10 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Stops all robot movement
+	 * Stops all movement of this robot.
 	 */
 	public void halt() {
-		for(Model model : segments) {
+		for (Model model : segments) {
 			model.jointsMoving[0] = 0;
 			model.jointsMoving[1] = 0;
 			model.jointsMoving[2] = 0;
@@ -1098,6 +1138,12 @@ public class RoboticArm {
 		motionType = RobotMotion.HALTED;
 	}
 
+	/**
+	 * TODO
+	 * 
+	 * @param speed
+	 * @return
+	 */
 	public boolean interpolateRotation(float speed) {
 		boolean done = true;
 
@@ -1127,7 +1173,7 @@ public class RoboticArm {
 	} // end interpolate rotation
 
 	/**
-	 * Returns true if at least one joint of the Robot is in motion.
+	 * @reutrn	True if at least one joint of the Robot is in motion.
 	 */
 	public boolean jointMotion() {
 		for(Model m : segments) {
@@ -1191,6 +1237,8 @@ public class RoboticArm {
 
 	/**
 	 * Indicates that the Robot Arm is in motion.
+	 * 
+	 * @return	Whether the robot is moving in some way
 	 */
 	public boolean modelInMotion() {
 		return RobotRun.getInstance().isProgramRunning() || motionType != RobotMotion.HALTED ||
@@ -1198,7 +1246,8 @@ public class RoboticArm {
 	}
 
 	/**
-	 * TODO comment
+	 * Initializing rotational interpolation between this robot's current joint
+	 * angles and the given set of joint angles.
 	 */
 	public void moveTo(float[] jointAngles) {
 		setupRotationInterpolation(jointAngles);
@@ -1206,7 +1255,9 @@ public class RoboticArm {
 	}
 
 	/**
-	 * TODO comment
+	 * Initializes the linear interpolation between this robot end effector's
+	 * current position and orientation and the given target position and
+	 * orientation.
 	 */
 	public void moveTo(PVector position, RQuaternion orientation) {
 		Point start = RobotRun.nativeRobotEEPoint(this, getJointAngles());
@@ -1250,6 +1301,7 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO
 	 * 
 	 * @return
 	 */
@@ -1330,7 +1382,9 @@ public class RoboticArm {
 		}
 	}
 
-	/* Changes all the Robot Arm's hit boxes to green */
+	/**
+	 * Resets all the Robot Arm's bounding box colors to green.
+	 */
 	public void resetOBBColors() {
 		for(BoundingBox b : armOBBs) {
 			b.setColor(RobotRun.getInstance().color(0, 255, 0));
@@ -1344,7 +1398,8 @@ public class RoboticArm {
 	}
 
 	/**
-	 * Returns true if the Robot is jogging rotationally.
+	 * @return	Whether the robot is rotating around at least one axis in the
+	 * 			WORLD, TOOL, or USER frames.
 	 */
 	public boolean rotationalMotion() {
 		return jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0;
@@ -1388,11 +1443,21 @@ public class RoboticArm {
 		
 		return false;
 	}
-
+	
+	/**
+	 * Sets this robot's active tool frame index to the given value.
+	 * 
+	 * @param activeToolFrame	The robot's new active tool frame index
+	 */
 	public void setActiveToolFrame(int activeToolFrame) {
 		this.activeToolFrame = activeToolFrame;
 	}
 	
+	/**
+	 * Sets this robot's active user frame index to the given value.
+	 * 
+	 * @param activeToolFrame	The robot's new active user frame index
+	 */
 	public void setActiveUserFrame(int activeUserFrame) {
 		this.activeUserFrame = activeUserFrame;
 	}
@@ -1405,7 +1470,11 @@ public class RoboticArm {
 		curCoordFrame = newFrame;
 	}
 
-	//convenience method to set all joint rotation values of the robot arm
+	/**
+	 * Updates the robot's joint angles to the given set of joint angles.
+	 * 
+	 * @param rot	The robot's new set of joint angles
+	 */
 	public void setJointAngles(float[] rot) {
 		for(int i = 0; i < segments.size(); i += 1) {
 			for(int j = 0; j < 3; j += 1) {
@@ -1418,7 +1487,7 @@ public class RoboticArm {
 				}
 			}
 		}
-	}//end set joint rotations
+	}
 
 	/**
 	 * Updates the motion direction of the joint at the given joint index to
@@ -1449,7 +1518,12 @@ public class RoboticArm {
 
 		return 0f;
 	}
-
+	
+	/**
+	 * Sets the robot's jog speed field to the given value.
+	 * 
+	 * @param liveSpeed	The robot's new jog speed
+	 */
 	public void setLiveSpeed(int liveSpeed) {
 		this.liveSpeed = liveSpeed;
 	}
@@ -1893,12 +1967,18 @@ public class RoboticArm {
 		RobotRun.getInstance().popMatrix();
 	}
 	
+	/**
+	 * Sets the Robot's default position field. This method should ONLY be
+	 * called after the RobotRun's activeRobot field is set, since
+	 * nativeRobotPoint relies on that method.
+	 */
 	protected void setDefaultRobotPoint() {
 		// Define the default Robot position and orientation
 		robotPoint = RobotRun.nativeRobotPoint(this,
 				new float[] { 0f, 0f, 0f, 0f, 0f, 0f });
 	}
 	
+	@Override
 	public String toString() {
 		return String.format("R%d", RID);
 	}

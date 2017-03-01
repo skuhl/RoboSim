@@ -261,7 +261,10 @@ public class MenuScroll {
 			lineIdx = (Math.max(0, lineIdx - (maxDisp - 1)));
 			renderStart = (Math.max(0, renderStart - (maxDisp - 1)));
 			for(; prevIdx >= lineIdx && lineSelect != null; prevIdx -= 1) {
-				toggleSelect(prevIdx);
+				if (prevIdx >= 0 && prevIdx < lineSelect.length) {
+					// The [END] element is non-selectable
+					toggleSelect(prevIdx);
+				}
 			}
 		} 
 		else {
