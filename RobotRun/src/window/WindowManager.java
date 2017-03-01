@@ -812,7 +812,7 @@ public class WindowManager {
 	  */
 	 public void editWorldObject() {
 		 WorldObject toEdit = getActiveWorldObject();
-		 RoboticArm model = RobotRun.getRobot();
+		 RoboticArm model = RobotRun.getActiveRobot();
 		 
 		 if (toEdit != null) {
 			 if (model != null && toEdit == model.held) {
@@ -1706,13 +1706,6 @@ public class WindowManager {
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
 			 setGroupVisible(scenarioWindow, false);
-			 // Set the active robot based on which tab was selected
-			 if (windowState.equals("Robot1")) {
-				 app.setRobot(0);
-				 
-			 } else if (windowState.equals("Robot2")) {
-				 app.setRobot(1);
-			 }
 			 
 			 if (!app.g1.isVisible()) {
 				 updateWindowContentsPositions();

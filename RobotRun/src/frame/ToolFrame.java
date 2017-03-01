@@ -24,7 +24,7 @@ public class ToolFrame extends Frame {
 	
 	@Override
 	public RQuaternion getOrientation() {
-		RoboticArm model = RobotRun.getRobot();
+		RoboticArm model = RobotRun.getActiveRobot();
 		RQuaternion robotOrientation = RobotRun.nativeRobotPoint(model, model.getJointAngles()).orientation;
 		// Tool frame axes orientation = (orientation offset x Model default orientation ^ -1) x Model current orientation
 		return RQuaternion.mult(model.getDefaultPoint().orientation.transformQuaternion(orientationOffset), robotOrientation);

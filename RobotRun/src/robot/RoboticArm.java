@@ -1,6 +1,7 @@
 package robot;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -517,6 +518,20 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * Removes all saved program states from the call stack of this robot.
+	 */
+	public void clearCallStack() {
+		call_stack.clear();
+		
+		try {
+			throw new Exception("Cleared Stack!");
+			
+		} catch (Exception Ex) {
+			Ex.printStackTrace();
+		}
+	}
+	
+	/**
 	 * Transitions from the current End Effector
 	 * to the next End Effector in a cyclic pattern:
 	 * 
@@ -650,7 +665,7 @@ public class RoboticArm {
 
 		RobotRun.getInstance().popMatrix();
 		// My sketchy work-around
-		if (RobotRun.getInstance().getActiveRobot() == this &&
+		if (RobotRun.getActiveRobot() == this &&
 				RobotRun.getInstance().showOOBs) { drawBoxes(); }
 	}
 	
@@ -679,7 +694,7 @@ public class RoboticArm {
 							System.out.printf("A[i%d, n=%d]: %f\n", i, n, trialAngle);
 							model.jointsMoving[n] = 0;
 							RobotRun.getInstance().updateRobotJogMotion(i, 0);
-							halt();
+							RobotRun.getInstance().hd();
 						}
 					}
 				}
@@ -1079,11 +1094,8 @@ public class RoboticArm {
 		for(int idx = 0; idx < jogRot.length; ++idx) {
 			jogRot[idx] = 0;
 		}
-
-		// Reset button highlighting
-		RobotRun.getInstance().resetButtonColors();
+		
 		motionType = RobotMotion.HALTED;
-		RobotRun.getInstance().setProgramRunning(false);
 	}
 
 	public boolean interpolateRotation(float speed) {
@@ -1219,7 +1231,7 @@ public class RoboticArm {
 	 * 
 	 * @return	Whether or not a program state has been saved on the call stack
 	 */
-	public boolean popCallStack() {
+	public int popCallStack() {
 		if (!call_stack.isEmpty()) {
 			int[] savedProgState = call_stack.pop();
 			
@@ -1227,16 +1239,14 @@ public class RoboticArm {
 				// Restore the program state that was saved previously
 				activeProgIdx = savedProgState[0];
 				activeInstIdx = savedProgState[1];
-				return true;
+				return -2;
 				
 			} else if (savedProgState.length == 1) {
-				// Return to the Robot, who called the active Robot
-				RobotRun.getInstance().returnRobot(savedProgState[0]);
-				return true;
+				return savedProgState[0];
 			}
 		}
 		
-		return false;
+		return -1;
 	}
 	
 	/**
@@ -1265,7 +1275,7 @@ public class RoboticArm {
 		// Do not push invalid program or instruction indices
 		if (getActiveInstruction() != null) {
 			
-			if (RobotRun.getRobot() == this && RobotRun.getInstance().isProgramRunning()) {
+			if (RobotRun.getActiveRobot() == this && RobotRun.getInstance().isProgramRunning()) {
 				// The Robot's program is active, so save the next instruction
 				call_stack.push(new int[] { activeProgIdx, activeInstIdx + 1 });
 			} else {
@@ -1562,20 +1572,8 @@ public class RoboticArm {
 			// Execute arm movement
 			if(RobotRun.getInstance().isProgramRunning()) {
 				// Run active program
-				RobotRun.getInstance().setProgramRunning(
-						!RobotRun.getInstance().executeProgram(this,
-								RobotRun.getInstance().execSingleInst));
-
-				// Check the call stack for any waiting processes
-				if (!call_stack.isEmpty() &&
-						activeInstIdx == getActiveProg().getInstructions().size()) {
-					
-					popCallStack();
-					// Update the display
-					RobotRun.getInstance().getContentsMenu().setLineIdx(activeInstIdx);
-					RobotRun.getInstance().getContentsMenu().setColumnIdx(0);
-					RobotRun.getInstance().updateScreen();
-				}
+				RobotRun.getInstance().setProgramRunning(!RobotRun.getInstance().executeProgram(this,
+						RobotRun.getInstance().execSingleInst));
 
 			} else if (motionType != RobotMotion.HALTED) {
 				// Move the Robot progressively to a point
@@ -1592,7 +1590,7 @@ public class RoboticArm {
 				}
 
 				if (doneMoving) {
-					halt();
+					RobotRun.getInstance().hd();
 				}
 
 			} else if (modelInMotion()) {
@@ -1897,5 +1895,9 @@ public class RoboticArm {
 		// Define the default Robot position and orientation
 		robotPoint = RobotRun.nativeRobotPoint(this,
 				new float[] { 0f, 0f, 0f, 0f, 0f, 0f });
+	}
+	
+	public String toString() {
+		return String.format("R%d", RID);
 	}
 }

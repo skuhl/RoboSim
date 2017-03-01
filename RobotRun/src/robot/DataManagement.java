@@ -1153,7 +1153,14 @@ public abstract class DataManagement {
 
 			out.writeByte(7);
 			out.writeBoolean(c_inst.isCommented());
-			out.writeInt(c_inst.getTgtDevice().RID);
+			
+			if (c_inst.getTgtDevice() == null) {
+				out.writeInt(-1);
+				
+			} else {
+				out.writeInt(c_inst.getTgtDevice().RID);
+			}
+			
 			out.writeInt(c_inst.getProgIdx());
 
 		} else if (inst instanceof RegisterStatement) {
