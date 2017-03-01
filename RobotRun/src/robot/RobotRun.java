@@ -3366,8 +3366,8 @@ public class RobotRun extends PApplet {
 			} else {
 				pasteInstructions(Fields.PASTE_REVERSE | Fields.NEW_POSITION | Fields.REVERSE_MOTION);
 			}
-
-			display_stack.pop();
+			
+			while(display_stack.peek() != ScreenMode.NAV_INSTR_MENU) display_stack.pop();
 			lastScreen();
 			break;
 		case SELECT_COMMENT:
@@ -3762,6 +3762,9 @@ public class RobotRun extends PApplet {
 		case NAV_PROG_INSTR:
 			nextScreen(ScreenMode.SELECT_INSTR_INSERT);
 			break;
+		case SELECT_CUT_COPY:
+			nextScreen(ScreenMode.SELECT_PASTE_OPT);
+			break;
 		case TFRAME_DETAIL:
 			switchScreen(ScreenMode.FRAME_METHOD_TOOL);
 			//nextScreen(Screen.TOOL_FRAME_METHODS);
@@ -3860,8 +3863,7 @@ public class RobotRun extends PApplet {
 					remIdx += 1;
 				}
 			}
-
-			updateInstructions();
+			
 			break;
 		case NAV_TOOL_FRAMES:
 			active_index = 0;
@@ -3964,8 +3966,6 @@ public class RobotRun extends PApplet {
 					clipBoard.add(inst.get(i).clone());
 			}
 			
-			display_stack.pop();
-			updateInstructions();
 			break;
 		case FIND_REPL:
 			int lineIdx = 0;
@@ -4474,7 +4474,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SELECT_CUT_COPY:
 			funct[0] = "";
-			funct[1] = "";
+			funct[1] = clipBoard.isEmpty() ? "" : "[Paste]";
 			funct[2] = "[Cut]";
 			funct[3] = "[Copy]";
 			funct[4] = "[Cancel]";
@@ -8149,7 +8149,7 @@ public class RobotRun extends PApplet {
 			options.setMaxDisplay(8);
 		}
 		else {
-			options.setLocation(10, 200);
+			options.setLocation(10, 199);
 			options.setMaxDisplay(3);
 		}
 		
