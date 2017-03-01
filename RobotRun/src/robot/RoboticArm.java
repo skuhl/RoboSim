@@ -37,7 +37,7 @@ public class RoboticArm {
 	private Point robotPoint; // Initial position and orientation of the Robot
 	
 	//stack containing the previously running program state when a new program is called
-	private Stack<int[]> call_stack = new Stack<int[]>();
+	private Stack<CallFrame> call_stack;
 	private ArrayList<Program> programs; // The programs associated with this Robot
 	// TODO: refactor into Process class
 	private int activeProgIdx;
@@ -107,7 +107,7 @@ public class RoboticArm {
 		
 		// Initialize the program list
 		programs = new ArrayList<Program>();
-		call_stack = new Stack<int[]>();
+		call_stack = new Stack<CallFrame>();
 		activeProgIdx = -1;
 		activeInstIdx = -1;
 		
@@ -1284,16 +1284,13 @@ public class RoboticArm {
 	 */
 	public int popCallStack() {
 		if (!call_stack.isEmpty()) {
-			int[] savedProgState = call_stack.pop();
+			CallFrame savedProgState = call_stack.pop();
 			
-			if (savedProgState.length == 2) {
-				// Restore the program state that was saved previously
-				activeProgIdx = savedProgState[0];
-				activeInstIdx = savedProgState[1];
-				return -2;
-				
-			} else if (savedProgState.length == 1) {
-				return savedProgState[0];
+			if(savedProgState.getTgtRID() == RID) {
+				//TODO continue execution of caller prog
+			}
+			else {
+				//TODO return execution to caller robot
 			}
 		}
 		
@@ -1329,28 +1326,17 @@ public class RoboticArm {
 			
 			if (RobotRun.getActiveRobot() == this && RobotRun.getInstance().isProgramRunning()) {
 				// The Robot's program is active, so save the next instruction
-				call_stack.push(new int[] { activeProgIdx, activeInstIdx + 1 });
+				call_stack.push(new CallFrame(RID, activeProgIdx, activeInstIdx + 1));
 			} else {
 				// The Robot's program is inactive, so save the current instruction
-				call_stack.push(new int[] { activeProgIdx, activeInstIdx });
+				call_stack.push(new CallFrame(RID, activeProgIdx, activeInstIdx));
 			}
 			
 			activeProgIdx = -1;
 			activeInstIdx = -1;
 		}
 	}
-	
-	/**
-	 * Push the ID of a Robot, which to return to after the active program
-	 * ends.
-	 * 
-	 * @param r	The Robot to save onto the call stack
-	 */
-	public void pushRobotCall(RoboticArm r) {
-		// Push the given Robot's index onto this Robot's call stack
-		call_stack.push(new int[] { r.getRID() });
-	}
-	
+			
 	/**
 	 * If an object is currently being held by the Robot arm, then release it.
 	 * Then, update the Robot's End Effector status and IO Registers.

@@ -28,17 +28,12 @@ public class CallInstruction extends Instruction {
 			return -1;
 		}
 		
-		if (RobotRun.getActiveRobot() == tgtDevice) {
-			// Save the current program state
-			tgtDevice.pushActiveProg();
-			// Set the new program state
-			tgtDevice.setActiveProgIdx(progIdx);
-			tgtDevice.setActiveInstIdx(0);
-			
-		} else {
-			RobotRun.getInstance().callRobot(tgtDevice.getRID(), progIdx);
-		}
-		
+		// Save the current program state
+		tgtDevice.pushActiveProg();
+		// Set the new program state
+		tgtDevice.setActiveProgIdx(progIdx);
+		tgtDevice.setActiveInstIdx(0);
+		RobotRun.getInstance().setActiveRobot(tgtDevice);
 		// Update the screen
 		RobotRun.getInstance().getContentsMenu().reset();
 		RobotRun.getInstance().updateScreen();

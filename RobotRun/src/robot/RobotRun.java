@@ -1754,7 +1754,7 @@ public class RobotRun extends PApplet {
 			/* Save the currently active program and the caller Robot onto the
 			 * Robot' call stack */
 			activeRobot.pushActiveProg();
-			activeRobot.pushRobotCall(caller);
+			//activeRobot.pushRobotCall(caller);
 			
 			// Initiates the Robot's program specified by the given index
 			activeRobot.setActiveProgIdx(progIdx);
