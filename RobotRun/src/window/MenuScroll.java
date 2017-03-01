@@ -261,10 +261,7 @@ public class MenuScroll {
 			lineIdx = (Math.max(0, lineIdx - (maxDisp - 1)));
 			renderStart = (Math.max(0, renderStart - (maxDisp - 1)));
 			for(; prevIdx >= lineIdx && lineSelect != null; prevIdx -= 1) {
-				if (prevIdx >= 0 && prevIdx < lineSelect.length) {
-					// The [END] element is non-selectable
-					toggleSelect(prevIdx);
-				}
+				toggleSelect(prevIdx);
 			}
 		} 
 		else {
@@ -301,7 +298,8 @@ public class MenuScroll {
 	
 	// clears the array of selected lines
 	public boolean[] resetSelection(int n) {
-		lineSelect = new boolean[n];
+		if(n > 0) lineSelect = new boolean[n];
+		else 	  lineSelect = null;
 		return lineSelect;
 	}
 	

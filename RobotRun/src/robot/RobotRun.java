@@ -4004,7 +4004,7 @@ public class RobotRun extends PApplet {
 				if(contents.isSelected(i))
 					clipBoard.add(inst.get(i).clone());
 			}
-
+			
 			display_stack.pop();
 			updateInstructions();
 			break;
@@ -6069,7 +6069,8 @@ public class RobotRun extends PApplet {
 			display_stack.pop();
 			if (Fields.DEBUG) { System.out.printf("%s => %s\n", mode, display_stack.peek()); }
 			mode = display_stack.peek();
-
+			contents.resetSelection(0);
+			
 			loadScreen();
 			return true;
 		}

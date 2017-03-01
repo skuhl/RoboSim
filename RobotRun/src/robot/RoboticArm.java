@@ -1286,11 +1286,12 @@ public class RoboticArm {
 		if (!call_stack.isEmpty()) {
 			CallFrame savedProgState = call_stack.pop();
 			
-			if(savedProgState.getTgtRID() == RID) {
-				//TODO continue execution of caller prog
+			if(RID == savedProgState.getTgtRID()) {
+				activeProgIdx = savedProgState.getTgtProgID();
+				activeInstIdx = savedProgState.getTgtInstID();
 			}
 			else {
-				//TODO return execution to caller robot
+				
 			}
 		}
 		
