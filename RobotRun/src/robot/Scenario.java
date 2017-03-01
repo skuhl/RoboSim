@@ -314,7 +314,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 * using the given ArmModel to detect collisions between world objects
 	 * and the armModel, and draws every object.
 	 */
-	public void updateAndDrawObjects(ArmModel model) {
+	public void updateAndDrawObjects(RoboticArm model) {
 		int numOfObjects = objList.size();
 
 		for (int idx = 0; idx < numOfObjects; ++idx) {

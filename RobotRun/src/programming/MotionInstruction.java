@@ -2,7 +2,7 @@ package programming;
 import frame.Frame;
 import geom.Point;
 import global.Fields;
-import robot.ArmModel;
+import robot.RoboticArm;
 import robot.RobotRun;
 
 public final class MotionInstruction extends Instruction  {
@@ -79,7 +79,7 @@ public final class MotionInstruction extends Instruction  {
 		Point pt = null;
 
 		if (isGPosReg) {
-			pt = RobotRun.getRobot().getPReg(positionNum).point;   
+			pt = RobotRun.getActiveRobot().getPReg(positionNum).point;   
 
 		} else if(positionNum != -1) {
 			pt = parent.LPosReg.get(positionNum);
@@ -94,7 +94,7 @@ public final class MotionInstruction extends Instruction  {
 	public int getPositionNum() { return positionNum; }
 	public MotionInstruction getSecondaryPoint() { return circSubInstr; }
 	public float getSpeed() { return speed; }
-	public float getSpeedForExec(ArmModel model) {
+	public float getSpeedForExec(RoboticArm model) {
 		if(motionType == RobotRun.getInstance().MTYPE_JOINT) return speed;
 		else return (speed / model.motorSpeed);
 	}
@@ -117,14 +117,14 @@ public final class MotionInstruction extends Instruction  {
 		if(pt == null) return null;
 
 		if(offsetRegNum != -1) {
-			offset = RobotRun.getRobot().getPReg(offsetRegNum).point;
+			offset = RobotRun.getActiveRobot().getPReg(offsetRegNum).point;
 		} else {
 			offset = new Point();
 		}
 
 		if (userFrame != -1) {
 			// Convert point into the Native Coordinate System
-			ArmModel model = RobotRun.getRobot();
+			RoboticArm model = RobotRun.getActiveRobot();
 			Frame active = model.getUserFrame(userFrame);
 			pt = RobotRun.removeFrame(model, pt, active.getOrigin(), active.getOrientation());
 		}

@@ -21,7 +21,7 @@ import geom.ShapeType;
 import geom.WorldObject;
 import processing.core.PFont;
 import processing.core.PVector;
-import robot.ArmModel;
+import robot.RoboticArm;
 import robot.Fixture;
 import robot.RobotRun;
 import robot.Scenario;
@@ -812,7 +812,7 @@ public class WindowManager {
 	  */
 	 public void editWorldObject() {
 		 WorldObject toEdit = getActiveWorldObject();
-		 ArmModel model = RobotRun.getRobot();
+		 RoboticArm model = RobotRun.getActiveRobot();
 		 
 		 if (toEdit != null) {
 			 if (model != null && toEdit == model.held) {
@@ -1706,13 +1706,6 @@ public class WindowManager {
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
 			 setGroupVisible(scenarioWindow, false);
-			 // Set the active robot based on which tab was selected
-			 if (windowState.equals("Robot1")) {
-				 app.setRobot(0);
-				 
-			 } else if (windowState.equals("Robot2")) {
-				 app.setRobot(1);
-			 }
 			 
 			 if (!app.g1.isVisible()) {
 				 updateWindowContentsPositions();

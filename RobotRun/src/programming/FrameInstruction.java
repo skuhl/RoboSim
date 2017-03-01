@@ -25,10 +25,10 @@ public class FrameInstruction extends Instruction {
 	}
 	public int execute() {    
 		if (frameType == RobotRun.getInstance().FTYPE_TOOL) {
-			RobotRun.getRobot().setActiveToolFrame(getFrameIdx());
+			RobotRun.getActiveRobot().setActiveToolFrame(getFrameIdx());
 			
 		} else if (frameType == RobotRun.getInstance().FTYPE_USER) {
-			RobotRun.getRobot().setActiveUserFrame(getFrameIdx());
+			RobotRun.getActiveRobot().setActiveUserFrame(getFrameIdx());
 		}
 		
 		// Update the current active frames

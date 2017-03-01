@@ -68,7 +68,7 @@ public abstract class DataManagement {
 		scenarioDirPath = parentDirPath + "scenarios/";
 	}
 	
-	private static ExpressionElement loadExpressionElement(ArmModel robot,
+	private static ExpressionElement loadExpressionElement(RoboticArm robot,
 			DataInputStream in) throws IOException, ClassCastException {
 		ExpressionElement ee = null;
 		
@@ -243,7 +243,7 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static int loadFrameBytes(ArmModel robot, String srcPath) {
+	private static int loadFrameBytes(RoboticArm robot, String srcPath) {
 		int idx = -1;
 		File src = new File(srcPath);
 
@@ -289,7 +289,7 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static Instruction loadInstruction(ArmModel robot, DataInputStream in)
+	private static Instruction loadInstruction(RoboticArm robot, DataInputStream in)
 			throws IOException {
 		
 		Instruction inst = null;
@@ -351,9 +351,11 @@ public abstract class DataManagement {
 
 		} else if (instType == 7) {
 			boolean isCommented = in.readBoolean();
+			int tgtRID = in.readInt();
 			int pdx = in.readInt();
-
-			inst = new CallInstruction(pdx);
+			
+			RoboticArm tgt = RobotRun.getInstance().getRobot(tgtRID);
+			inst = new CallInstruction(tgt, pdx);
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 8) {
@@ -457,7 +459,7 @@ public abstract class DataManagement {
 		}
 	}
 
-	private static Program loadProgram(ArmModel robot, DataInputStream in) throws IOException {
+	private static Program loadProgram(RoboticArm robot, DataInputStream in) throws IOException {
 		// Read flag byte
 		byte flag = in.readByte();
 
@@ -467,7 +469,7 @@ public abstract class DataManagement {
 		} else {
 			// Read program name
 			String name = in.readUTF();
-			Program prog = new Program(name);
+			Program prog = new Program(name, robot);
 			int nReg;
 
 			// Read in all the positions saved for the program
@@ -497,7 +499,7 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static int loadProgramBytes(ArmModel robot, String srcPath) {
+	private static int loadProgramBytes(RoboticArm robot, String srcPath) {
 		File src = new File(srcPath);
 
 		try {
@@ -559,14 +561,14 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static int loadRegisterBytes(ArmModel robot, String srcPath) {
+	private static int loadRegisterBytes(RoboticArm robot, String srcPath) {
 		File src = new File(srcPath);
 		
 		try {
 			FileInputStream in = new FileInputStream(src);
 			DataInputStream dataIn = new DataInputStream(in);
 
-			int size = Math.max(0, Math.min(dataIn.readInt(), ArmModel.DPREG_NUM));
+			int size = Math.max(0, Math.min(dataIn.readInt(), RoboticArm.DPREG_NUM));
 
 			// Load the Register entries
 			while(size-- > 0) {
@@ -589,7 +591,7 @@ public abstract class DataManagement {
 				}
 			}
 
-			size = Math.max(0, Math.min(dataIn.readInt(), ArmModel.DPREG_NUM));
+			size = Math.max(0, Math.min(dataIn.readInt(), RoboticArm.DPREG_NUM));
 
 			// Load the Position Register entries
 			while(size-- > 0) {
@@ -635,7 +637,7 @@ public abstract class DataManagement {
 		}
 	}
 
-	private static int loadRobotData(ArmModel robot) {
+	private static int loadRobotData(RoboticArm robot) {
 		File srcDir = new File( String.format("%srobot%d/", parentDirPath, robot.getRID()) );
 		
 		if (!srcDir.exists() || !srcDir.isDirectory()) {
@@ -825,7 +827,8 @@ public abstract class DataManagement {
 	
 	public static void loadState(RobotRun process) {
 		loadScenarioBytes(process, scenarioDirPath);
-		loadRobotData(RobotRun.getRobot());
+		loadRobotData(process.getRobot(0));
+		loadRobotData(process.getRobot(1));
 	}
 
 	private static Object loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
@@ -1035,7 +1038,7 @@ public abstract class DataManagement {
 		}
 	}
 
-	private static int saveFrameBytes(ArmModel robot, String destPath) {
+	private static int saveFrameBytes(RoboticArm robot, String destPath) {
 		File dest = new File(destPath);
 
 		try {
@@ -1147,9 +1150,17 @@ public abstract class DataManagement {
 
 		} else if (inst instanceof CallInstruction) {
 			CallInstruction c_inst = (CallInstruction)inst;
-
+			
 			out.writeByte(7);
 			out.writeBoolean(c_inst.isCommented());
+			
+			if (c_inst.getTgtDevice() == null) {
+				out.writeInt(-1);
+				
+			} else {
+				out.writeInt(c_inst.getTgtDevice().RID);
+			}
+			
 			out.writeInt(c_inst.getProgIdx());
 
 		} else if (inst instanceof RegisterStatement) {
@@ -1294,7 +1305,7 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static int saveProgramBytes(ArmModel robot, String destPath) {
+	private static int saveProgramBytes(RoboticArm robot, String destPath) {
 		File dest = new File(destPath);
 		
 		try {
@@ -1354,7 +1365,7 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static int saveRegisterBytes(ArmModel robot, String destPath) {
+	private static int saveRegisterBytes(RoboticArm robot, String destPath) {
 		File dest = new File(destPath);
 		
 		try {
@@ -1373,7 +1384,7 @@ public abstract class DataManagement {
 					initializedPR = new ArrayList<Integer>();
 
 			// Count the number of initialized entries and save their indices
-			for(int idx = 0; idx < ArmModel.DPREG_NUM; ++idx) {
+			for(int idx = 0; idx < RoboticArm.DPREG_NUM; ++idx) {
 				DataRegister dReg = robot.getDReg(idx);
 				PositionRegister pReg = robot.getPReg(idx);
 				
@@ -1445,7 +1456,7 @@ public abstract class DataManagement {
 		}
 	}
 
-	private static int saveRobotData(ArmModel robot) {
+	private static int saveRobotData(RoboticArm robot) {
 		File destDir = new File( String.format("%srobot%d/", parentDirPath, robot.getRID()) );
 		
 		// Initialize and possibly create the robot directory
@@ -1616,7 +1627,8 @@ public abstract class DataManagement {
 		
 		saveScenarioBytes(process.SCENARIOS, (process.activeScenario == null) ?
 				null : process.activeScenario.getName(), scenarioDirPath);
-		saveRobotData(RobotRun.getRobot());
+		saveRobotData(process.getRobot(0));
+		saveRobotData(process.getRobot(1));
 	}
 	
 	private static void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {

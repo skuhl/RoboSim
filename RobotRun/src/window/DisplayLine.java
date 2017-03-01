@@ -2,44 +2,48 @@ package window;
 import java.util.ArrayList;
 
 public class DisplayLine {
-	ArrayList<String> contents;
+	ArrayList<String> fields;
 	private int itemIdx;
 	private int xAlign;
 
 	public DisplayLine() {
-		contents = new ArrayList<String>();
+		fields = new ArrayList<String>();
 		setItemIdx(-1);
 		setxAlign(0);
 	}
 
-	public DisplayLine(ArrayList<String> c, int idx, int align) {
-		contents = c;
-		setItemIdx(idx);
-		setxAlign(align);
-	}
-
 	public DisplayLine(int idx) {
-		contents = new ArrayList<String>();
+		fields = new ArrayList<String>();
 		setItemIdx(idx);
 		setxAlign(0);
 	}
 
 	public DisplayLine(int idx, int align) {
-		contents = new ArrayList<String>();
+		fields = new ArrayList<String>();
+		setItemIdx(idx);
+		setxAlign(align);
+	}
+	
+	public DisplayLine(int idx, int align, String... strings) {
+		fields = new ArrayList<String>();
+		for(String col : strings) {
+			fields.add(col);
+		}
+		
 		setItemIdx(idx);
 		setxAlign(align);
 	}
 
 	public void add(int i, String s) {
-		contents.add(i, s);
+		fields.add(i, s);
 	}
 
 	public boolean add(String s) {
-		return contents.add(s);
+		return fields.add(s);
 	}
 
 	public String get(int idx) {
-		return contents.get(idx);
+		return fields.get(idx);
 	}
 
 	public int getItemIdx() {
@@ -51,11 +55,11 @@ public class DisplayLine {
 	}
 
 	public String remove(int i) {
-		return contents.remove(i);
+		return fields.remove(i);
 	}
 
 	public String set(int i, String s) {
-		return contents.set(i, s);
+		return fields.set(i, s);
 	}
 
 	public void setItemIdx(int itemIdx) {
@@ -67,6 +71,6 @@ public class DisplayLine {
 	}
 
 	public int size() {
-		return contents.size();
+		return fields.size();
 	}
 }

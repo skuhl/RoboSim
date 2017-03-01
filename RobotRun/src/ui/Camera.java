@@ -26,29 +26,33 @@ public class Camera {
 	 * Apply the camer's scale, position, and orientation to the current matrix.
 	 */
 	public void apply() {
-		RobotRun.getInstance().beginCamera();
+		RobotRun app = RobotRun.getInstance();
+		
+		app.beginCamera();
+		app.camera();
+		
 		// Apply camera translations
-		RobotRun.getInstance().translate(position.x + RobotRun.getInstance().width / 2f, position.y + RobotRun.getInstance().height / 2f, position.z);
+		app.translate(position.x + app.width / 2f, position.y + app.height / 2f, position.z);
 
 		// Apply camera rotations
-		RobotRun.getInstance().rotateX(orientation.x);
-		RobotRun.getInstance().rotateY(orientation.y);
+		app.rotateX(orientation.x);
+		app.rotateY(orientation.y);
 
 		// Apply camera scaling
-		float horizontalMargin = scale * RobotRun.getInstance().width / 2f,
-				verticalMargin = scale * RobotRun.getInstance().height / 2f,
-				near = MAX_SCALE / scale,
+		float horizontalMargin = scale * app.width / 2f,
+				verticalMargin = scale * app.height / 2f,
+				near = scale * position.z,
 				far = scale * 5000f;
-		RobotRun.getInstance().ortho(-horizontalMargin, horizontalMargin, -verticalMargin, verticalMargin, near, far);
-
-		RobotRun.getInstance().endCamera();
+		app.ortho(-horizontalMargin, horizontalMargin, -verticalMargin, verticalMargin, near, far);
+		
+		app.endCamera();
 	}
 
 	/**
 	 * Change the scaling of the camera.
 	 */
 	public void changeScale(float multiplier) {
-		scale = RobotRun.max(0.25f, RobotRun.min(scale * multiplier, MAX_SCALE));
+		scale = Math.max(0.25f, Math.min(scale * multiplier, MAX_SCALE));
 	}
 
 	/**
@@ -80,9 +84,9 @@ public class Camera {
 
 		position.add( new PVector(x, y, z) );
 		// Apply camera position restrictions
-		position.x = RobotRun.max(-horzontialLimit, RobotRun.min(position.x, horzontialLimit));
-		position.y = RobotRun.max(-verticalLimit, RobotRun.min(position.y, verticalLimit));
-		position.z = RobotRun.max(-1000f, RobotRun.min(position.z, 1000f));
+		position.x = Math.max(-horzontialLimit, Math.min(position.x, horzontialLimit));
+		position.y = Math.max(-verticalLimit, Math.min(position.y, verticalLimit));
+		position.z = Math.max(-1000f, Math.min(position.z, 1000f));
 	}
 
 	/**
@@ -105,11 +109,12 @@ public class Camera {
 		PVector rotation = new PVector(w, p, r);
 
 		orientation.add( rotation );
-		// Apply caerma rotation restrictions
+		// Apply camera rotation restrictions
 		orientation.x = RobotRun.mod2PI(orientation.x);
 		orientation.y = RobotRun.mod2PI(orientation.y);
 		orientation.z = 0f;//mod2PI(orientation.z);
 	}
+	
 	/**
 	 * Returns the Camera's position, orientation, and scale
 	 * in the form of a formatted String array, where each

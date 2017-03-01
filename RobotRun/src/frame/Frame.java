@@ -7,6 +7,7 @@ import org.apache.commons.math3.linear.SingularValueDecomposition;
 
 import robot.RQuaternion;
 import geom.Point;
+import global.Fields;
 import processing.core.PVector;
 import robot.RobotRun;
 
@@ -110,7 +111,7 @@ public abstract class Frame {
 			/* (R ^ -1) * b */
 			avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
 
-			if (RobotRun.DISPLAY_TEST_OUTPUT) {
+			if (Fields.DEBUG) {
 				System.out.printf("\n%s\n\n", RobotRun.getInstance().matrixToString( RobotRun.doubleToFloat(R.getData(), 3, 3) ));
 			}
 		}
@@ -118,7 +119,7 @@ public abstract class Frame {
 		/* Take the average of the three cases: where C = the first point, the second point, and the third point */
 		avg_TCP = avg_TCP.mapMultiply( 1.0f / 3.0f );
 
-		if(RobotRun.DISPLAY_TEST_OUTPUT) {
+		if(Fields.DEBUG) {
 			System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
 		}
 

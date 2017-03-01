@@ -23,21 +23,21 @@ public class JumpInstruction extends Instruction {
 	 * Returns the index of the instruction to which to jump.
 	 */
 	public int execute() {
-		Program p = RobotRun.getRobot().getActiveProg();
+		Program p = RobotRun.getActiveRobot().getActiveProg();
 
 		if (p != null) {
 			int lblIdx = p.findLabelIdx(getTgtLblNum());
 
 			if (lblIdx != -1) {
-				// Return destination instrution index
+				// Return destination instruction index
 				return lblIdx;
 			} else {
 				RobotRun.println("Invalid jump instruction!");
-				return 1;
+				return -1;
 			}
 		} else {
 			RobotRun.println("No active program!");
-			return 2;
+			return -1;
 		}
 	}
 

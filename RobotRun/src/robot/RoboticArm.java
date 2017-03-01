@@ -1,7 +1,9 @@
 package robot;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Stack;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -20,28 +22,23 @@ import programming.Program;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
+import window.DisplayLine;
 
-public class ArmModel {
-	// The position of the center of the Robot's base segment
-	private final PVector BASE_POSITION;
-	// Initial position and orientation of the Robot
-	private Point robotPoint;
-	
+public class RoboticArm {
 	/* The number of the user and tool frames, the number of the position and
 	 * data registers, and the number of I/O registers */
-	public static final int FRAME_NUM, DPREG_NUM, IOREG_NUM;
+	public static final int FRAME_NUM = 10;
+	public static final int DPREG_NUM = 100;
+	public static final int IOREG_NUM = 5;
 	
-	static {
-		FRAME_NUM = 10;
-		DPREG_NUM = 100;
-		IOREG_NUM = 5;
-	}
+	private final PVector BASE_POSITION; // The position of the center of the Robot's base segment
+	public final int RID; // The unique ID associated with a Robot
 	
-	// The unique ID associated with a Robot
-	private final int RID;
+	private Point robotPoint; // Initial position and orientation of the Robot
 	
-	// The programs associated with this Robot
-	private ArrayList<Program> programs;
+	//stack containing the previously running program state when a new program is called
+	private Stack<CallFrame> call_stack;
+	private ArrayList<Program> programs; // The programs associated with this Robot
 	// TODO: refactor into Process class
 	private int activeProgIdx;
 	private int activeInstIdx;
@@ -73,16 +70,18 @@ public class ArmModel {
 
 	private ArrayList<Model> segments = new ArrayList<Model>();
 	public int type;
+	public int liveSpeed;
 	public float motorSpeed;
+	
 	// Indicates the direction of motion of the Robot when jogging
 	public float[] jogLinear = new float[3];
-
 	public float[] jogRot = new float[3];
+	
 	/* Bounding Boxes of the Robot Arm */
 	public final BoundingBox[] armOBBs;
+	
 	/* Bounding Boxes unique to each End Effector */
 	private final HashMap<EEType, ArrayList<BoundingBox>> eeOBBsMap;
-
 	private final HashMap<EEType, ArrayList<BoundingBox>> eePickupOBBs;
 	public Part held;
 
@@ -93,7 +92,14 @@ public class ArmModel {
 
 	public RQuaternion tgtOrientation;
 
-	public ArmModel(int rid, PVector basePos) {
+	/**
+	 * Creates a robot with the given ID at the given position in the
+	 * application environment.
+	 * 
+	 * @param rid		The unique identifier associated with the Robot
+	 * @param basePos	The center position of the Robot's base segment
+	 */
+	public RoboticArm(int rid, PVector basePos) {
 		int idx;
 		
 		RID = rid;
@@ -101,6 +107,7 @@ public class ArmModel {
 		
 		// Initialize the program list
 		programs = new ArrayList<Program>();
+		call_stack = new Stack<CallFrame>();
 		activeProgIdx = -1;
 		activeInstIdx = -1;
 		
@@ -147,6 +154,7 @@ public class ArmModel {
 		EEToIORegMap.put(EEType.WIELDER, 4);
 
 		motorSpeed = 1000.0f; // speed in mm/sec
+		liveSpeed = 10;
 
 		eeMSuction = new Model("SUCTION.stl", RobotRun.getInstance().color(108, 206, 214));
 		eeMClaw = new Model("GRIPPER.stl", RobotRun.getInstance().color(108, 206, 214));
@@ -284,30 +292,6 @@ public class ArmModel {
 	}
 	
 	/**
-	 * Adds the given program to this Robot's list of programs.
-	 * 
-	 * @param p	The program to add to the Robot
-	 */
-	public int addProgram(Program p) {
-		if (p == null) {
-			return -1;
-			
-		} else {
-			int idx = 0;
-
-			if(programs.size() < 1) {
-				programs.add(p);
-				
-			}  else {
-				while(idx < programs.size() && programs.get(idx).getName().compareTo(p.getName()) < 0) { ++idx; }
-				programs.add(idx, p);
-			}
-
-			return idx;
-		}
-	}
-	
-	/**
 	 * Updates the motion of one of the Robot's joints based on
 	 * the joint index given and the value of dir (-/+ 1). The
 	 * Robot's joint indices range from 0 to 5. ifthe joint
@@ -320,14 +304,14 @@ public class ArmModel {
 	public float activateLiveJointMotion(int joint, int dir) {
 		RobotRun app = RobotRun.getInstance();
 
-		if (!app.shift || app.motionFault) {
+		if (!app.isShift() || app.motionFault) {
 			// Only move when shift is set and there is no error
 			return 0f;
 		}
 
 		return setJointMotion(joint, dir);
 	}
-
+	
 	/**
 	 * Updates the motion of the Robot with respect to one of the World axes for
 	 * either linear or rotational motion around the axis. Similiar to the
@@ -345,7 +329,7 @@ public class ArmModel {
 	public float activateLiveWorldMotion(int axis, int dir) {
 		RobotRun app = RobotRun.getInstance();
 		
-		if (!app.shift || app.motionFault) {
+		if (!app.isShift() || app.motionFault) {
 			// Only move when shift is set and there is no error
 			return 0f;
 		}
@@ -383,6 +367,30 @@ public class ArmModel {
 
 		return 0f;
 	}
+
+	/**
+	 * Adds the given program to this Robot's list of programs.
+	 * 
+	 * @param p	The program to add to the Robot
+	 */
+	public int addProgram(Program p) {
+		if (p == null) {
+			return -1;
+			
+		} else {
+			int idx = 0;
+
+			if(programs.size() < 1) {
+				programs.add(p);
+				
+			}  else {
+				while(idx < programs.size() && programs.get(idx).getName().compareTo(p.getName()) < 0) { ++idx; }
+				programs.add(idx, p);
+			}
+
+			return idx;
+		}
+	}
 	
 	/**
 	 * Determines if the given angle is within the bounds of valid angles for
@@ -400,14 +408,25 @@ public class ArmModel {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Determines if the given part's bounding box is colliding with the
+	 * Robot's end effector's pickup bounding boxes. Only the claw gripper and
+	 * suction end effectors have pickup bounding boxes, which appear blue in
+	 * the application. When a part's bounding box is colliding with a special
+	 * bounding box and not colliding with another bounding box of the active
+	 * end effector, then true is returned. Otherwise,, false is returned.
+	 * 
+	 * @return	Whether can immediately be picked up by the robot
 	 */
 	public boolean canPickup(Part p) {
+		if (p == null) {
+			return false;
+		}
+		
 		ArrayList<BoundingBox> curEEOBBs = eeOBBsMap.get(activeEndEffector);
 
 		for (BoundingBox b : curEEOBBs) {
 			// Cannot be colliding with a normal bounding box
-			if (p != null && p.collision(b)) {
+			if (p.collision(b)) {
 				return false;
 			}
 		}
@@ -416,7 +435,7 @@ public class ArmModel {
 
 		for (BoundingBox b : curEEOBBs) {
 			// Must be colliding with a pickup bounding box
-			if (p != null && p.collision(b)) {
+			if (p.collision(b)) {
 				return true;
 			}
 		}
@@ -424,7 +443,7 @@ public class ArmModel {
 		return false;
 	}
 	
-	/* Determine if the given ojbect is collding with any part of the Robot. */
+	/* Determine if the given object is colliding with any part of the Robot. */
 	public boolean checkObjectCollision(Part obj) {
 		boolean collision = false;
 
@@ -448,7 +467,17 @@ public class ArmModel {
 	}
 	
 	/**
-	 * TODO comment
+	 * Checks all objects in the given scenario to determine if a part in the
+	 * scenario can picked up by the robot or a part in the scenario is
+	 * currently being held by the robot. If the robot is not carrying a part
+	 * and a part can be picked up by the robot, then the robot will pickup the
+	 * part. If the robot is currently carrying a part, then it will release
+	 * that part, instead.
+	 * 
+	 * @param active	The scenario, of which to check the world objects
+	 * @return			0, if an part can be picked up
+	 * 					1, if the robot releases a part
+	 * 					2, if nothing occurs
 	 */
 	public int checkPickupCollision(Scenario active) {
 		// End Effector must be on and no object is currently held to be able to pickup an object
@@ -477,14 +506,27 @@ public class ArmModel {
 		return 2;
 	}
 	
-	/* Determine if select pairs of hit boxes of the Robot Arm are colliding */
+	/**
+	 * Determine if select pairs of hit boxes of the robot are colliding.
+	 * 
+	 * The bounding box collisions checked between the body segments of the Arm:
+	 * The base segment and the four upper arm segments
+	 * The base rotating segment and lower long arm segment as well as the upper long arm and
+	 *   upper rotating end segment
+	 * The second base rotating hit box and the upper long arm segment as well as the upper
+	 *   rotating end segment
+	 * The lower long arm segment and the upper rotating end segment
+	 * 
+	 * @return	A self-collision has occurred with the robot
+	 */
 	public boolean checkSelfCollisions() {
 		boolean collision = false;
 
 		// Pairs of indices corresponding to two of the Arm body hit boxes, for which to check collisions
 		int[] check_pairs = new int[] { 0, 3, 0, 4, 0, 5, 0, 6, 1, 5, 1, 6, 2, 5, 2, 6, 3, 5 };
 
-		/* Check select collisions between the body segments of the Arm:
+		/**
+		 * Check select collisions between the body segments of the Arm:
 		 * The base segment and the four upper arm segments
 		 * The base rotating segment and lower long arm segment as well as the upper long arm and
 		 *   upper rotating end segment
@@ -514,6 +556,13 @@ public class ArmModel {
 		}
 
 		return collision;
+	}
+	
+	/**
+	 * Removes all saved program states from the call stack of this robot.
+	 */
+	public void clearCallStack() {
+		call_stack.clear();
 	}
 	
 	/**
@@ -552,7 +601,7 @@ public class ArmModel {
 		}
 
 		IORegister associatedIO = getIORegisterFor(activeEndEffector);
-		// Set end effector state
+		// Update the end effector state
 		if (associatedIO != null) {
 			endEffectorState = associatedIO.state;
 		} else {
@@ -562,6 +611,10 @@ public class ArmModel {
 		releaseHeldObject();
 	}
 	
+	/**
+	 * Draws the robot arm model, with the center of its base at the robot's
+	 * base position field.
+	 */
 	public void draw() {
 		RobotRun.getInstance().noStroke();
 		RobotRun.getInstance().fill(200, 200, 0);
@@ -649,89 +702,13 @@ public class ArmModel {
 		drawEndEffector(activeEndEffector, endEffectorState);
 
 		RobotRun.getInstance().popMatrix();
-		// My sketchy work-around
-		if (RobotRun.getRobot() == this &&
-				RobotRun.getInstance().showOOBs) { drawBoxes(); }
-	}
-	
-	/* Draws the Robot Arm's hit boxes in the world */
-	private void drawBoxes() {
-		// Draw hit boxes of the body poriotn of the Robot Arm
-		for(BoundingBox b : armOBBs) {
-			b.draw();
-		}
-
-		ArrayList<BoundingBox> curEEHitBoxes = eeOBBsMap.get(activeEndEffector);
-
-		// Draw End Effector hit boxes
-		for(BoundingBox b : curEEHitBoxes) {
-			b.draw();
-		}
-
-		curEEHitBoxes = eePickupOBBs.get(activeEndEffector);
-		// Draw Pickup hit boxes
-		for (BoundingBox b : curEEHitBoxes) {
-			b.draw();
+		/* My sketchy work-around for drawing only the bounding boxes of the
+		 * active robot */
+		if (RobotRun.getActiveRobot() == this && RobotRun.getInstance().showOOBs) {
+			drawBoxes();
 		}
 	}
 	
-	/**
-	 * Draw the End Effector model associated with the given
-	 * End Effector type in the current coordinate system.
-	 * 
-	 * @param ee       The End Effector to draw
-	 * @param eeState  The state of the End Effector to be drawn
-	 */
-	private void drawEndEffector(EEType ee, int eeState) {
-		RobotRun.getInstance().pushMatrix();
-
-		// Center the End Effector on the Robot's faceplate and draw it.
-		if(ee == EEType.SUCTION) {
-			RobotRun.getInstance().rotateY(Fields.PI);
-			RobotRun.getInstance().translate(-88, -37, 0);
-			eeMSuction.draw();
-
-		} else if(ee == EEType.CLAW) {
-			RobotRun.getInstance().rotateY(Fields.PI);
-			RobotRun.getInstance().translate(-88, 0, 0);
-			eeMClaw.draw();
-			RobotRun.getInstance().rotateZ(Fields.PI/2);
-
-			if(eeState == Fields.OFF) {
-				// Draw open grippers
-				RobotRun.getInstance().translate(10, -85, 30);
-				eeMClawPincer.draw();
-				RobotRun.getInstance().translate(55, 0, 0);
-				eeMClawPincer.draw();
-
-			} else if(eeState == Fields.ON) {
-				// Draw closed grippers
-				RobotRun.getInstance().translate(28, -85, 30);
-				eeMClawPincer.draw();
-				RobotRun.getInstance().translate(20, 0, 0);
-				eeMClawPincer.draw();
-			}
-		} else if (ee == EEType.POINTER) {
-			RobotRun.getInstance().rotateY(Fields.PI);
-			RobotRun.getInstance().rotateZ(Fields.PI);
-			RobotRun.getInstance().translate(45, -45, 10);
-			eeMPointer.draw();
-
-		} else if (ee == EEType.GLUE_GUN) {
-			RobotRun.getInstance().rotateZ(Fields.PI);
-			RobotRun.getInstance().translate(-48, -46, -12);
-			eeMGlueGun.draw();
-
-		} else if (ee == EEType.WIELDER) {
-			RobotRun.getInstance().rotateY(Fields.PI);
-			RobotRun.getInstance().rotateZ(Fields.PI);
-			RobotRun.getInstance().translate(46, -44, 10);
-			eeMWielder.draw();
-		}
-
-		RobotRun.getInstance().popMatrix();
-	}
-
 	/**
 	 * Move the Robot, based on the current Coordinate Frame and the current values
 	 * of the each segments jointsMoving array or the values in the Robot's jogLinear
@@ -747,7 +724,7 @@ public class ArmModel {
 				for(int n = 0; n < 3; n++) {
 					if(model.rotations[n]) {
 						float trialAngle = model.currentRotations[n] +
-								model.rotationSpeed * model.jointsMoving[n] * RobotRun.getInstance().liveSpeed / 100f;
+								model.rotationSpeed * model.jointsMoving[n] * liveSpeed / 100f;
 						trialAngle = RobotRun.mod2PI(trialAngle);
 						
 						if(model.anglePermitted(n, trialAngle)) {
@@ -757,7 +734,7 @@ public class ArmModel {
 							System.out.printf("A[i%d, n=%d]: %f\n", i, n, trialAngle);
 							model.jointsMoving[n] = 0;
 							RobotRun.getInstance().updateRobotJogMotion(i, 0);
-							halt();
+							RobotRun.getInstance().hd();
 						}
 					}
 				}
@@ -786,7 +763,7 @@ public class ArmModel {
 			// Apply translational motion vector
 			if (translationalMotion()) {
 				// Respond to user defined movement
-				float distance = motorSpeed / 6000f * RobotRun.getInstance().liveSpeed;
+				float distance = motorSpeed / 6000f * liveSpeed;
 				PVector translation = new PVector(-jogLinear[0], -jogLinear[2], jogLinear[1]);
 				translation.mult(distance);
 
@@ -804,7 +781,7 @@ public class ArmModel {
 			// Apply rotational motion vector
 			if (rotationalMotion()) {
 				// Respond to user defined movement
-				float theta = Fields.DEG_TO_RAD * 0.025f * RobotRun.getInstance().liveSpeed;
+				float theta = Fields.DEG_TO_RAD * 0.025f * liveSpeed;
 				PVector rotation = new PVector(-jogRot[0], -jogRot[2], jogRot[1]);
 
 				if (invFrameOrientation != null) {
@@ -828,28 +805,6 @@ public class ArmModel {
 		}
 	}
 	
-	/**
-	 * @return	The active instruction of the active program, or null if no
-	 * 			program is active
-	 */
-	public Instruction getActiveInstruction() {
-		Program prog = getActiveProg();
-		
-		if (prog == null || activeInstIdx < 0 || activeInstIdx >= prog.size()) {
-			// Invalid instruction or program index
-			return null;
-		}
-		
-		return prog.getInstruction(activeInstIdx);
-	}
-	
-	/**
-	 * @return	The index of the active program's active instruction
-	 */
-	public int getActiveInstIdx() {
-		return activeInstIdx;
-	}
-
 	/**
 	 * Returns the active Tool frame TOOL, or the active User frame for USER. For either
 	 * CoordFrame WORLD or JOINT null is always returned. If null is given as a parameter,
@@ -880,7 +835,29 @@ public class ArmModel {
 			return null;
 		}
 	}
+
+	/**
+	 * @return	The index of the active program's active instruction
+	 */
+	public int getActiveInstIdx() {
+		return activeInstIdx;
+	}
 	
+	/**
+	 * @return	The active instruction of the active program, or null if no
+	 * 			program is active
+	 */
+	public Instruction getActiveInstruction() {
+		Program prog = getActiveProg();
+		
+		if (prog == null || activeInstIdx < 0 || activeInstIdx >= prog.size()) {
+			// Invalid instruction or program index
+			return null;
+		}
+		
+		return prog.getInstruction(activeInstIdx);
+	}
+
 	/**
 	 * @return	The active for this Robot, or null if no program is active
 	 */
@@ -921,12 +898,19 @@ public class ArmModel {
 	public PVector getBasePosition() {
 		return BASE_POSITION.copy();
 	}
-
+	
 	/**
 	 * @return	The current coordinate frame of the Robot
 	 */
 	public CoordFrame getCurCoordFrame() {
 		return curCoordFrame;
+	}
+	
+	/**
+	 * @return	A copy of the Robot's default position and orientation
+	 */
+	public Point getDefaultPoint() {
+		return robotPoint.clone();
 	}
 
 	/**
@@ -947,7 +931,7 @@ public class ArmModel {
 			return null;
 		}
 	}
-
+	
 	/**
 	 * Returns the I/O register, associated with the given index, of the Robot,
 	 * or null if the given index is invalid. A Robot has a total of 5 I/O
@@ -1021,6 +1005,10 @@ public class ArmModel {
 		return new PVector(0f, 0f, 0f);
 	}
 
+	public int getLiveSpeed() {
+		return liveSpeed;
+	}
+
 	/* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
 	 * the end effector's current x, y, z axes with respect to the current frame.
 	 */
@@ -1046,7 +1034,7 @@ public class ArmModel {
 
 		return RobotRun.doubleToFloat(AB.getData(), 3, 3);
 	}
-	
+
 	/**
 	 * Returns the position register, associated with the given index, of the
 	 * Robot, or null if the given index is invalid. A Robot has a total of 100
@@ -1085,18 +1073,11 @@ public class ArmModel {
 			return null;
 		}
 	}
-
-	/**
-	 * Returns the unique ID of the Robot.
-	 */
-	public int getRID() { return RID; }
 	
 	/**
-	 * @return	A copy of the Robot's default position and orientation
+	 * @return	The unique ID of the Robot.
 	 */
-	public Point getDefaultPoint() {
-		return robotPoint.clone();
-	}
+	public int getRID() { return RID; }
 
 	/**
 	 * Returns the tool frame, associated with the given index, of the Robot,
@@ -1135,12 +1116,12 @@ public class ArmModel {
 			return null;
 		}
 	}
-
+	
 	/**
-	 * Stops all robot movement
+	 * Stops all movement of this robot.
 	 */
 	public void halt() {
-		for(Model model : segments) {
+		for (Model model : segments) {
 			model.jointsMoving[0] = 0;
 			model.jointsMoving[1] = 0;
 			model.jointsMoving[2] = 0;
@@ -1153,13 +1134,16 @@ public class ArmModel {
 		for(int idx = 0; idx < jogRot.length; ++idx) {
 			jogRot[idx] = 0;
 		}
-
-		// Reset button highlighting
-		RobotRun.getInstance().resetButtonColors();
+		
 		motionType = RobotMotion.HALTED;
-		RobotRun.getInstance().setProgramRunning(false);
 	}
 
+	/**
+	 * TODO
+	 * 
+	 * @param speed
+	 * @return
+	 */
 	public boolean interpolateRotation(float speed) {
 		boolean done = true;
 
@@ -1189,7 +1173,7 @@ public class ArmModel {
 	} // end interpolate rotation
 
 	/**
-	 * Returns true if at least one joint of the Robot is in motion.
+	 * @reutrn	True if at least one joint of the Robot is in motion.
 	 */
 	public boolean jointMotion() {
 		for(Model m : segments) {
@@ -1227,7 +1211,7 @@ public class ArmModel {
 			if (!anglePermitted(joint, destAngles[joint])) {
 				invalidAngle = true;
 
-				if (RobotRun.DISPLAY_TEST_OUTPUT) {
+				if (Fields.DEBUG) {
 					PVector rangeBounds = getJointRange(joint);
 					System.out.printf("Invalid angle: J[%d] = %4.3f : [%4.3f -> %4.3f]\n", joint,
 							destAngles[joint], rangeBounds.x, rangeBounds.y);
@@ -1237,7 +1221,7 @@ public class ArmModel {
 
 		// Did we successfully find the desired angles?
 		if ((destAngles == null) || invalidAngle) {
-			if (RobotRun.DISPLAY_TEST_OUTPUT) {
+			if (Fields.DEBUG) {
 				Point RP = RobotRun.nativeRobotEEPoint(this, getJointAngles());
 				System.out.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n", RP.position, destPosition,
 						RP.orientation, destOrientation);
@@ -1253,6 +1237,8 @@ public class ArmModel {
 
 	/**
 	 * Indicates that the Robot Arm is in motion.
+	 * 
+	 * @return	Whether the robot is moving in some way
 	 */
 	public boolean modelInMotion() {
 		return RobotRun.getInstance().isProgramRunning() || motionType != RobotMotion.HALTED ||
@@ -1260,7 +1246,8 @@ public class ArmModel {
 	}
 
 	/**
-	 * TODO comment
+	 * Initializing rotational interpolation between this robot's current joint
+	 * angles and the given set of joint angles.
 	 */
 	public void moveTo(float[] jointAngles) {
 		setupRotationInterpolation(jointAngles);
@@ -1268,7 +1255,9 @@ public class ArmModel {
 	}
 
 	/**
-	 * TODO comment
+	 * Initializes the linear interpolation between this robot end effector's
+	 * current position and orientation and the given target position and
+	 * orientation.
 	 */
 	public void moveTo(PVector position, RQuaternion orientation) {
 		Point start = RobotRun.nativeRobotEEPoint(this, getJointAngles());
@@ -1284,6 +1273,62 @@ public class ArmModel {
 		return programs.size();
 	}
 
+	/**
+	 * Pops the program state that has been previously pushed onto the call
+	 * stack. If the state points to a program on the active Robot, then the
+	 * active program state is overridden with the popped one. In the other
+	 * case, where an inactive Robot called the active Robot, then the active
+	 * Robot then returns control to the caller Robot. 
+	 * 
+	 * @return	Whether or not a program state has been saved on the call stack
+	 */
+	public CallFrame popCallStack() {
+		if (!call_stack.isEmpty()) {
+			CallFrame savedProgState = call_stack.pop();
+			return savedProgState;
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * TODO
+	 * 
+	 * @return
+	 */
+	public ArrayList<DisplayLine> printProgList() {
+		int size = numOfPrograms();
+
+		//int start = start_render;
+		//int end = min(start + ITEMS_TO_SHOW, size);
+
+		ArrayList<DisplayLine> progList = new ArrayList<DisplayLine>();
+		for(int i = 0; i < size; i += 1) {
+			progList.add(new DisplayLine(i, 0, programs.get(i).getName()));
+		}
+		
+		return progList;
+	}
+	
+	/**
+	 * Pushes the active program onto the call stack and resets the active
+	 * program and instruction indices.
+	 */
+	public void pushActiveProg() {
+		RoboticArm activeRobot = RobotRun.getActiveRobot();
+		
+		if (activeRobot.RID == RID && RobotRun.getInstance().isProgramRunning()) {
+			// Save call frame to return to the currently executing program
+			call_stack.push(new CallFrame(RID, activeProgIdx, activeInstIdx + 1));
+		} else {
+			// Save call frame to return to the caller robot's current program
+			call_stack.push(new CallFrame(activeRobot.RID, activeRobot.getActiveProgIdx(), activeRobot.getActiveInstIdx() + 1));
+		}
+		
+		activeProgIdx = -1;
+		activeInstIdx = -1;		
+	}
+			
 	/**
 	 * If an object is currently being held by the Robot arm, then release it.
 	 * Then, update the Robot's End Effector status and IO Registers.
@@ -1315,7 +1360,9 @@ public class ArmModel {
 		}
 	}
 
-	/* Changes all the Robot Arm's hit boxes to green */
+	/**
+	 * Resets all the Robot Arm's bounding box colors to green.
+	 */
 	public void resetOBBColors() {
 		for(BoundingBox b : armOBBs) {
 			b.setColor(RobotRun.getInstance().color(0, 255, 0));
@@ -1329,12 +1376,13 @@ public class ArmModel {
 	}
 
 	/**
-	 * Returns true if the Robot is jogging rotationally.
+	 * @return	Whether the robot is rotating around at least one axis in the
+	 * 			WORLD, TOOL, or USER frames.
 	 */
 	public boolean rotationalMotion() {
 		return jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0;
 	}
-	
+
 	/**
 	 * Sets the active instruction of the active program corresponding to the
 	 * index given.
@@ -1351,10 +1399,12 @@ public class ArmModel {
 			activeInstIdx = instIdx;
 			return true;
 		}
-		
-		return false;
+		else {
+			activeInstIdx = -1;
+			return false;
+		}
 	}
-	
+
 	/**
 	 * Sets the active program of this Robot corresponding to the index value
 	 * given.
@@ -1371,15 +1421,25 @@ public class ArmModel {
 		
 		return false;
 	}
-
+	
+	/**
+	 * Sets this robot's active tool frame index to the given value.
+	 * 
+	 * @param activeToolFrame	The robot's new active tool frame index
+	 */
 	public void setActiveToolFrame(int activeToolFrame) {
 		this.activeToolFrame = activeToolFrame;
 	}
-
+	
+	/**
+	 * Sets this robot's active user frame index to the given value.
+	 * 
+	 * @param activeToolFrame	The robot's new active user frame index
+	 */
 	public void setActiveUserFrame(int activeUserFrame) {
 		this.activeUserFrame = activeUserFrame;
 	}
-
+	
 	/**
 	 * Update the Robot's current coordinate frame.
 	 * @param newFrame	The new coordinate frame
@@ -1388,7 +1448,11 @@ public class ArmModel {
 		curCoordFrame = newFrame;
 	}
 
-	//convenience method to set all joint rotation values of the robot arm
+	/**
+	 * Updates the robot's joint angles to the given set of joint angles.
+	 * 
+	 * @param rot	The robot's new set of joint angles
+	 */
 	public void setJointAngles(float[] rot) {
 		for(int i = 0; i < segments.size(); i += 1) {
 			for(int j = 0; j < 3; j += 1) {
@@ -1401,7 +1465,7 @@ public class ArmModel {
 				}
 			}
 		}
-	}//end set joint rotations
+	}
 
 	/**
 	 * Updates the motion direction of the joint at the given joint index to
@@ -1434,13 +1498,12 @@ public class ArmModel {
 	}
 	
 	/**
-	 * Sets the Robot's default position and orientation in a static variable.
-	 * THIS METHOD MUST BE CALLED WHEN THE FIRST ROBOT IS CREATED!
+	 * Sets the robot's jog speed field to the given value.
+	 * 
+	 * @param liveSpeed	The robot's new jog speed
 	 */
-	protected void setDefaultRobotPoint() {
-		// Define the default Robot position and orientation
-		robotPoint = RobotRun.nativeRobotPoint(this,
-				new float[] { 0f, 0f, 0f, 0f, 0f, 0f });
+	public void setLiveSpeed(int liveSpeed) {
+		this.liveSpeed = liveSpeed;
 	}
 
 	/**
@@ -1504,7 +1567,7 @@ public class ArmModel {
 			}
 		}
 	}
-	
+
 	/**
 	 * Toggle the Robot's state between ON and OFF. Update the
 	 * Robot's currently held world object as well.
@@ -1526,7 +1589,152 @@ public class ArmModel {
 	public boolean translationalMotion() {
 		return jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0;
 	}
+
+	/**
+	 * Update the I/O register associated with the Robot's current End Effector
+	 * (if any) to the Robot's current End Effector state.
+	 */
+	public void updateIORegister() {
+		// Get the I/O register associated with the current End Effector
+		IORegister associatedIO = getIORegisterFor(activeEndEffector);
+
+		if (associatedIO != null) {
+			associatedIO.state = endEffectorState;
+		}
+	}
 	
+	/**
+	 * Updates the reference to the Robot's previous
+	 * End Effector orientation, which is used to move
+	 * the object held by the Robot.
+	 */
+	public void updatePreviousEEOrientation() {
+		RobotRun.getInstance().pushMatrix();
+		RobotRun.getInstance().resetMatrix();
+		RobotRun.applyModelRotation(this, getJointAngles());
+		// Keep track of the old coordinate frame of the armModel
+		oldEEOrientation = RobotRun.getInstance().getTransformationMatrix();
+		RobotRun.getInstance().popMatrix();
+	}
+	
+	/**
+	 * Sets the Robot's default position and orientation in a static variable.
+	 * THIS METHOD MUST BE CALLED WHEN THE FIRST ROBOT IS CREATED!
+	 */
+	public void updateRobot() {
+		if (!RobotRun.getInstance().motionFault) {
+			// Execute arm movement
+			if(RobotRun.getInstance().isProgramRunning()) {
+				// Run active program
+				RobotRun.getInstance().setProgramRunning(!RobotRun.getInstance().executeProgram(this,
+						RobotRun.getInstance().execSingleInst));
+
+			} else if (motionType != RobotMotion.HALTED) {
+				// Move the Robot progressively to a point
+				boolean doneMoving = true;
+
+				switch (RobotRun.getInstance().getArmModel().motionType) {
+				case MT_JOINT:
+					doneMoving = interpolateRotation(liveSpeed / 100.0f);
+					break;
+				case MT_LINEAR:
+					doneMoving = RobotRun.getInstance().executeMotion(this, liveSpeed / 100.0f);
+					break;
+				default:
+				}
+
+				if (doneMoving) {
+					RobotRun.getInstance().hd();
+				}
+
+			} else if (modelInMotion()) {
+				// Jog the Robot
+				RobotRun.getInstance().intermediatePositions.clear();
+				executeLiveMotion();
+			}
+		}
+
+		updateCollisionOBBs();
+	}
+	
+	/* Draws the Robot Arm's hit boxes in the world */
+	private void drawBoxes() {
+		// Draw hit boxes of the body poriotn of the Robot Arm
+		for(BoundingBox b : armOBBs) {
+			b.draw();
+		}
+
+		ArrayList<BoundingBox> curEEHitBoxes = eeOBBsMap.get(activeEndEffector);
+
+		// Draw End Effector hit boxes
+		for(BoundingBox b : curEEHitBoxes) {
+			b.draw();
+		}
+
+		curEEHitBoxes = eePickupOBBs.get(activeEndEffector);
+		// Draw Pickup hit boxes
+		for (BoundingBox b : curEEHitBoxes) {
+			b.draw();
+		}
+	}
+
+	/**
+	 * Draw the End Effector model associated with the given
+	 * End Effector type in the current coordinate system.
+	 * 
+	 * @param ee       The End Effector to draw
+	 * @param eeState  The state of the End Effector to be drawn
+	 */
+	private void drawEndEffector(EEType ee, int eeState) {
+		RobotRun.getInstance().pushMatrix();
+
+		// Center the End Effector on the Robot's faceplate and draw it.
+		if(ee == EEType.SUCTION) {
+			RobotRun.getInstance().rotateY(Fields.PI);
+			RobotRun.getInstance().translate(-88, -37, 0);
+			eeMSuction.draw();
+
+		} else if(ee == EEType.CLAW) {
+			RobotRun.getInstance().rotateY(Fields.PI);
+			RobotRun.getInstance().translate(-88, 0, 0);
+			eeMClaw.draw();
+			RobotRun.getInstance().rotateZ(Fields.PI/2);
+
+			if(eeState == Fields.OFF) {
+				// Draw open grippers
+				RobotRun.getInstance().translate(10, -85, 30);
+				eeMClawPincer.draw();
+				RobotRun.getInstance().translate(55, 0, 0);
+				eeMClawPincer.draw();
+
+			} else if(eeState == Fields.ON) {
+				// Draw closed grippers
+				RobotRun.getInstance().translate(28, -85, 30);
+				eeMClawPincer.draw();
+				RobotRun.getInstance().translate(20, 0, 0);
+				eeMClawPincer.draw();
+			}
+		} else if (ee == EEType.POINTER) {
+			RobotRun.getInstance().rotateY(Fields.PI);
+			RobotRun.getInstance().rotateZ(Fields.PI);
+			RobotRun.getInstance().translate(45, -45, 10);
+			eeMPointer.draw();
+
+		} else if (ee == EEType.GLUE_GUN) {
+			RobotRun.getInstance().rotateZ(Fields.PI);
+			RobotRun.getInstance().translate(-48, -46, -12);
+			eeMGlueGun.draw();
+
+		} else if (ee == EEType.WIELDER) {
+			RobotRun.getInstance().rotateY(Fields.PI);
+			RobotRun.getInstance().rotateZ(Fields.PI);
+			RobotRun.getInstance().translate(46, -44, 10);
+			eeMWielder.draw();
+		}
+
+		RobotRun.getInstance().popMatrix();
+	}
+
 	/**
 	 * Updates the position and orientation of the hit
 	 * boxes related to the Robot Arm.
@@ -1636,19 +1844,6 @@ public class ArmModel {
 		// End Effector
 		updateOBBBoxesForEE(activeEndEffector);
 	}
-	
-	/**
-	 * Update the I/O register associated with the Robot's current End Effector
-	 * (if any) to the Robot's current End Effector state.
-	 */
-	public void updateIORegister() {
-		// Get the I/O register associated with the current End Effector
-		IORegister associatedIO = getIORegisterFor(activeEndEffector);
-
-		if (associatedIO != null) {
-			associatedIO.state = endEffectorState;
-		}
-	}
 
 	/**
 	 * Updates position and orientation of the hit boxes associated
@@ -1749,76 +1944,20 @@ public class ArmModel {
 
 		RobotRun.getInstance().popMatrix();
 	}
-
+	
 	/**
-	 * Updates the reference to the Robot's previous
-	 * End Effector orientation, which is used to move
-	 * the object held by the Robot.
+	 * Sets the Robot's default position field. This method should ONLY be
+	 * called after the RobotRun's activeRobot field is set, since
+	 * nativeRobotPoint relies on that method.
 	 */
-	public void updatePreviousEEOrientation() {
-		RobotRun.getInstance().pushMatrix();
-		RobotRun.getInstance().resetMatrix();
-		RobotRun.applyModelRotation(this, getJointAngles());
-		// Keep track of the old coordinate frame of the armModel
-		oldEEOrientation = RobotRun.getInstance().getTransformationMatrix();
-		RobotRun.getInstance().popMatrix();
+	protected void setDefaultRobotPoint() {
+		// Define the default Robot position and orientation
+		robotPoint = RobotRun.nativeRobotPoint(this,
+				new float[] { 0f, 0f, 0f, 0f, 0f, 0f });
 	}
-
-	/**
-	 * Update the Robot's position and orientation (as well as
-	 * those of its bounding boxes) based on the active
-	 * program or a move to command, or jogging.
-	 */
-	public void updateRobot() {
-		if (!RobotRun.getInstance().motionFault) {
-			// Execute arm movement
-			if(RobotRun.getInstance().isProgramRunning()) {
-				// Run active program
-				RobotRun.getInstance().setProgramRunning(
-						!RobotRun.getInstance().executeProgram(this,
-								RobotRun.getInstance().execSingleInst));
-
-				// Check the call stack for any waiting processes
-				if (!RobotRun.getInstance().getCall_stack().isEmpty() &&
-						activeInstIdx == getActiveProg().getInstructions().size()) {
-					
-					int[] prevProc = RobotRun.getInstance().getCall_stack().pop();
-					// Return to the process on the top of the stack
-					setActiveProgIdx(prevProc[0]);
-					setActiveInstIdx(prevProc[1]);
-					// Update the display
-					RobotRun.getInstance().getContentsMenu().setLineIdx(activeInstIdx);
-					RobotRun.getInstance().getContentsMenu().setColumnIdx(0);
-					RobotRun.getInstance().updateScreen();
-				}
-
-			} else if (motionType != RobotMotion.HALTED) {
-				// Move the Robot progressively to a point
-				boolean doneMoving = true;
-
-				switch (RobotRun.getInstance().getArmModel().motionType) {
-				case MT_JOINT:
-					doneMoving = interpolateRotation(
-							(RobotRun.getInstance().liveSpeed / 100.0f));
-					break;
-				case MT_LINEAR:
-					doneMoving = RobotRun.getInstance().executeMotion(this,
-							(RobotRun.getInstance().liveSpeed / 100.0f));
-					break;
-				default:
-				}
-
-				if (doneMoving) {
-					halt();
-				}
-
-			} else if (modelInMotion()) {
-				// Jog the Robot
-				RobotRun.getInstance().intermediatePositions.clear();
-				executeLiveMotion();
-			}
-		}
-
-		updateCollisionOBBs();
+	
+	@Override
+	public String toString() {
+		return String.format("R%d", RID);
 	}
 }

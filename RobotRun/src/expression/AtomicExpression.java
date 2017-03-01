@@ -30,6 +30,7 @@ public class AtomicExpression extends ExprOperand {
 	public AtomicExpression clone() {
 		return new AtomicExpression(arg1.clone(), arg2.clone(), getOp());
 	}
+	
 	public ExprOperand evaluate() {
 		ExprOperand result;
 		int t1 = arg1.type;
@@ -125,10 +126,11 @@ public class AtomicExpression extends ExprOperand {
 				result = new ExprOperand(intop1 / intop2);
 				break;
 			case EQUAL:
-				result = new ExprOperand(o1 == o2);
+				// Do not use == or != with ANY Objects!
+				result = new ExprOperand(o1.floatValue() == o2.floatValue());
 				break;
 			case NEQUAL:
-				result = new ExprOperand(o1 != o2);
+				result = new ExprOperand(o1.floatValue() != o2.floatValue());
 				break;
 			case GRTR:
 				result = new ExprOperand(o1 > o2);
