@@ -11,7 +11,6 @@ public class MenuScroll {
 	private final RobotRun robotRun;
 	private final String name;
 	private int maxDisp;
-	private int lineWidth;
 	private int xPos;
 	private int yPos;
 	
@@ -67,8 +66,12 @@ public class MenuScroll {
 			lineIdx = RobotRun.clamp(lineIdx, 0, lines.size() - 1);
 			columnIdx = RobotRun.clamp(columnIdx, 0, lines.get(lineIdx).size() - 1);
 			renderStart = RobotRun.clamp(renderStart, lineIdx - (maxDisp - 1), lineIdx);
+		} else {
+			lineIdx = 0;
+			columnIdx = 0;
+			renderStart = 0;
 		}
-		
+				
 		int next_px = 0, next_py = 0; 
 		int itemNo = 0, lineNo = 0;
 		int bg, txt, selectInd = -1;
@@ -212,7 +215,7 @@ public class MenuScroll {
 			int prevIdx = lineIdx;			
 			lineIdx = Math.min(size - 1, lineIdx + (maxDisp - 1));
 			renderStart = (Math.max(0, Math.min(size - maxDisp, renderStart + (maxDisp - 1))));
-			for(; prevIdx <= lineIdx; prevIdx += 1) {
+			for(; prevIdx <= lineIdx && lineSelect != null; prevIdx += 1) {
 				toggleSelect(prevIdx);
 			}
 		} else {
@@ -257,7 +260,7 @@ public class MenuScroll {
 			int prevIdx = lineIdx;
 			lineIdx = (Math.max(0, lineIdx - (maxDisp - 1)));
 			renderStart = (Math.max(0, renderStart - (maxDisp - 1)));
-			for(; prevIdx >= lineIdx; prevIdx -= 1) {
+			for(; prevIdx >= lineIdx && lineSelect != null; prevIdx -= 1) {
 				toggleSelect(prevIdx);
 			}
 		} 

@@ -2735,7 +2735,7 @@ public class RobotRun extends PApplet {
 				break;
 			case 5: //Call
 				newCallInstruction();
-				editIdx = activeRobot.RID;
+				editIdx = getActiveRobot().RID;
 				switchScreen(ScreenMode.SET_CALL_PROG);
 				break;
 			case 6: //RobotCall
@@ -3995,7 +3995,7 @@ public class RobotRun extends PApplet {
 					instrIdx += 1;
 				}
 			}
-
+			
 			display_stack.pop();
 			updateInstructions();
 			break;
@@ -5093,7 +5093,11 @@ public class RobotRun extends PApplet {
 			options.addLine("4. IF/SELECT" );
 			options.addLine("5. JMP/LBL"   );
 			options.addLine("6. CALL"      );
+<<<<<<< HEAD
 			options.addLine("7. ROBOT CALL");
+=======
+			options.addLine("6. RCALL"     );
+>>>>>>> de69e68881cb6aae69467a91842af8f575e60f4d
 			break;
 		case SELECT_IO_INSTR_REG:
 			loadIORegisters();
@@ -8114,11 +8118,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void updateInstructions() {
 		int instSize = getActiveRobot().getActiveProg().getInstructions().size();
-
-		getActiveRobot().setActiveInstIdx(min(getActiveRobot().getActiveInstIdx(),  instSize - 1));
-		contents.setLineIdx(min(getActiveRobot().getActiveInstIdx(), ITEMS_TO_SHOW - 1));
-		contents.setColumnIdx(0);
-		
+		getActiveRobot().setActiveInstIdx(min(getActiveRobot().getActiveInstIdx(), instSize));
 		lastScreen();
 	}
 

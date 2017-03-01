@@ -1150,7 +1150,7 @@ public abstract class DataManagement {
 
 		} else if (inst instanceof CallInstruction) {
 			CallInstruction c_inst = (CallInstruction)inst;
-
+			
 			out.writeByte(7);
 			out.writeBoolean(c_inst.isCommented());
 			
