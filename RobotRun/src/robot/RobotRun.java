@@ -57,6 +57,7 @@ import ui.AxesDisplay;
 import ui.Camera;
 import window.DisplayLine;
 import window.MenuScroll;
+import window.Screen;
 import window.WindowManager;
 
 public class RobotRun extends PApplet {
@@ -1383,13 +1384,28 @@ public class RobotRun extends PApplet {
 	}
 	
 	public void bd() {
-		// If there is a previous instruction, then move to it and reverse its affects
-		if(mode == ScreenMode.NAV_PROG_INSTR && !isProgramRunning() && isShift() && isStep()) {
-			// Stop any prior Robot movement
-			hd();
-			// Safeguard against editing a program while it is running
-			contents.setColumnIdx(0);
-			// TODO fix backwards
+		// Backwards is only functional when executing a program one instruction at a time
+		if(mode == ScreenMode.NAV_PROG_INSTR && isShift() && isStep()) {
+			Program p = activeRobot.getActiveProg();
+			int instrIdx = activeRobot.getActiveInstIdx();
+			
+			// Execute the previous motion instruction
+			if (p != null && instrIdx > 1 && p.getInstruction(instrIdx - 2) instanceof MotionInstruction) {
+				// Stop robot motion and normal program execution
+				hd();
+				setProgramRunning(false);
+				
+				activeRobot.setActiveInstIdx(instrIdx - 2);
+				execSingleInst = true;
+				
+				// Safeguard against editing a program while it is running
+				contents.setColumnIdx(0);
+				
+				contents.moveUp(false);
+				contents.moveUp(false);
+
+				setProgramRunning(true);
+			}
 		}
 	}
 
@@ -2344,6 +2360,20 @@ public class RobotRun extends PApplet {
 		ortho();
 		showMainDisplayText();
 		cp5.draw();
+	}
+	
+	/**
+	 * Function of the edit button: renders the instruction view of the active
+	 * program, if one exists. Otherwise, the program navigation view is
+	 * rendered.
+	 */
+	public void ed() {
+		if (activeRobot.getActiveProg() != null) {
+			nextScreen(ScreenMode.NAV_PROG_INSTR);
+			
+		} else {
+			nextScreen(ScreenMode.NAV_PROGRAMS);
+		}
 	}
 
 	public void editExpression(Expression expr, int selectIdx) {
@@ -7495,6 +7525,10 @@ public class RobotRun extends PApplet {
 
 	public void setProgramRunning(boolean programRunning) {
 		this.programRunning = programRunning;
+		
+		if (programRunning == false) {
+			setExecutingInstruction(false);
+		}
 	}
 
 	public void setRecord(int record) {
