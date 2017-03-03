@@ -48,28 +48,30 @@ public class WindowManager {
 			ldropItemWidth = 120,
 			dropItemHeight = 21;
 
-	private ControlP5 UIManager;
+	private final ControlP5 UIManager;
+	private final RobotRun app;
 
 	private Group createObjWindow, editObjWindow,
-	sharedElements, scenarioWindow;
-	private ButtonTabs windowTabs;
-	private Button[] cameraViews;
+	sharedElements, scenarioWindow, miscWindow;
+	
+	private final ButtonTabs windowTabs;
+	private final Button[] cameraViews;
 
-	private Background background;
+	private final Background background;
 	private Textarea objNameLbl, scenarioNameLbl;
 
 	private Textfield objName, scenarioName;
-	private ArrayList<Textarea> shapeDefAreas;
+	private final ArrayList<Textarea> shapeDefAreas;
 
-	private ArrayList<Textfield> shapeDefFields;
-	private Textarea[] objOrientationLbls;
+	private final ArrayList<Textfield> shapeDefFields;
+	private final Textarea[] objOrientationLbls;
 
-	private Textfield[] objOrientationFields;
-	private Textarea[] dropdownLbls;
+	private final Textfield[] objOrientationFields;
+	private final Textarea[] dropdownLbls;
 
-	private MyDropdownList[] dropdownLists;
+	private final MyDropdownList[] dropdownLists;
 
-	private Button[] miscButtons;
+	private final Button[] miscButtons;
 
 	private final int buttonDefColor, buttonActColor;
 
@@ -77,9 +79,10 @@ public class WindowManager {
 	 * Creates a new window with the given ControlP5 object as the parent
 	 * and the given fonts which will be applied to the text in the window.
 	 */
-	 public WindowManager(ControlP5 manager, PFont small, PFont medium) {
+	 public WindowManager(RobotRun appRef, ControlP5 manager, PFont small, PFont medium) {
 		// Initialize content fields
 		 UIManager = manager;
+		 app = appRef;
 
 		 cameraViews = new Button[6];
 		 objOrientationLbls = new Textarea[6];
@@ -90,21 +93,21 @@ public class WindowManager {
 		 dropdownLists = new MyDropdownList[7];
 		 miscButtons = new Button[8];
 
-		 buttonDefColor = RobotRun.getInstance().color(70);
-		 buttonActColor = RobotRun.getInstance().color(220, 40, 40);
+		 buttonDefColor = app.color(70);
+		 buttonActColor = app.color(220, 40, 40);
 
 		 // Create some temporary color and dimension variables
-		 int bkgrdColor = RobotRun.getInstance().color(210),
-				 fieldTxtColor = RobotRun.getInstance().color(0),
-				 fieldCurColor = RobotRun.getInstance().color(0),
-				 fieldActColor = RobotRun.getInstance().color(255, 0, 0),
-				 fieldBkgrdColor = RobotRun.getInstance().color(255),
-				 fieldFrgrdColor = RobotRun.getInstance().color(0),
-				 buttonTxtColor = RobotRun.getInstance().color(255);
+		 int bkgrdColor = app.color(210),
+				 fieldTxtColor = app.color(0),
+				 fieldCurColor = app.color(0),
+				 fieldActColor = app.color(255, 0, 0),
+				 fieldBkgrdColor = app.color(255),
+				 fieldFrgrdColor = app.color(0),
+				 buttonTxtColor = app.color(255);
 
 		 int[] relPos = new int[] { 0, 0 };
-
-		 //String[] windowList = new String[] { "Hide", "Pendant", "Create", "Edit", "Scenario" };
+		 
+		 // TODO initially hidden Robot2
 		 String[] windowList = new String[] { "Hide", "Robot1", "Robot2", "Create", "Edit", "Scenario" };
 		 
 		 // Create window tab bar
@@ -197,6 +200,11 @@ public class WindowManager {
 				 .hideBar();
 
 		 scenarioWindow = UIManager.addGroup("SCENARIO").setPosition(relPos[0], relPos[1])
+				 .setBackgroundColor(bkgrdColor)
+				 .setSize(windowTabs.getWidth(), 0)
+				 .hideBar();
+		 
+		 miscWindow = UIManager.addGroup("MISC").setPosition(relPos[0], relPos[1])
 				 .setBackgroundColor(bkgrdColor)
 				 .setSize(windowTabs.getWidth(), 0)
 				 .hideBar();
@@ -471,13 +479,13 @@ public class WindowManager {
 				 .moveTo(scenarioWindow)
 				 .setSize(mButtonWidth, sButtonHeight);
 
-		 miscButtons[7] = UIManager.addButton("HideObjects")
-				 .setCaptionLabel("Hide")
+		 miscButtons[7] = UIManager.addButton("HideOBBs")
+				 .setCaptionLabel("Hide OBBs")
 				 .setColorValue(buttonTxtColor)
 				 .setColorBackground(buttonDefColor)
 				 .setColorActive(buttonActColor)
 				 .moveTo(scenarioWindow)
-				 .setSize(mButtonWidth, sButtonHeight);
+				 .setSize(lButtonWidth, sButtonHeight);
 
 		 // Initialize dropdown lists
 		 dropdownLists[6] = (MyDropdownList)((new MyDropdownList(UIManager, "Scenario"))
@@ -520,14 +528,14 @@ public class WindowManager {
 				 .moveTo(createObjWindow)
 				 .close());
 
-		 dropdownLists[3].addItem("black", RobotRun.getInstance().color(0));
-		 dropdownLists[3].addItem("red", RobotRun.getInstance().color(255, 0, 0));
-		 dropdownLists[3].addItem("green", RobotRun.getInstance().color(0, 255, 0));
-		 dropdownLists[3].addItem("blue", RobotRun.getInstance().color(0, 0, 255));
-		 dropdownLists[3].addItem("orange", RobotRun.getInstance().color(255, 60, 0));
-		 dropdownLists[3].addItem("yellow", RobotRun.getInstance().color(255, 255, 0));
-		 dropdownLists[3].addItem("pink", RobotRun.getInstance().color(255, 0, 255));
-		 dropdownLists[3].addItem("purple", RobotRun.getInstance().color(90, 0, 255));
+		 dropdownLists[3].addItem("black", app.color(0));
+		 dropdownLists[3].addItem("red", app.color(255, 0, 0));
+		 dropdownLists[3].addItem("green", app.color(0, 255, 0));
+		 dropdownLists[3].addItem("blue", app.color(0, 0, 255));
+		 dropdownLists[3].addItem("orange", app.color(255, 60, 0));
+		 dropdownLists[3].addItem("yellow", app.color(255, 255, 0));
+		 dropdownLists[3].addItem("pink", app.color(255, 0, 255));
+		 dropdownLists[3].addItem("purple", app.color(90, 0, 255));
 
 
 		 dropdownLists[2] = (MyDropdownList)((new MyDropdownList(UIManager, "Fill"))
@@ -540,17 +548,17 @@ public class WindowManager {
 				 .moveTo(createObjWindow)
 				 .close());
 
-		 dropdownLists[2].addItem("white", RobotRun.getInstance().color(255));
-		 dropdownLists[2].addItem("black", RobotRun.getInstance().color(0));
-		 dropdownLists[2].addItem("red", RobotRun.getInstance().color(255, 0, 0));
-		 dropdownLists[2].addItem("green", RobotRun.getInstance().color(0, 255, 0));
-		 dropdownLists[2].addItem("blue", RobotRun.getInstance().color(0, 0, 255));
-		 dropdownLists[2].addItem("orange", RobotRun.getInstance().color(255, 60, 0));
-		 dropdownLists[2].addItem("yellow", RobotRun.getInstance().color(255, 255, 0));
-		 dropdownLists[2].addItem("pink", RobotRun.getInstance().color(255, 0, 255));
-		 dropdownLists[2].addItem("purple", RobotRun.getInstance().color(90, 0, 255));
-		 dropdownLists[2].addItem("sky blue", RobotRun.getInstance().color(0, 255, 255));
-		 dropdownLists[2].addItem("dark green", RobotRun.getInstance().color(0, 100, 15));
+		 dropdownLists[2].addItem("white", app.color(255));
+		 dropdownLists[2].addItem("black", app.color(0));
+		 dropdownLists[2].addItem("red", app.color(255, 0, 0));
+		 dropdownLists[2].addItem("green", app.color(0, 255, 0));
+		 dropdownLists[2].addItem("blue", app.color(0, 0, 255));
+		 dropdownLists[2].addItem("orange", app.color(255, 60, 0));
+		 dropdownLists[2].addItem("yellow", app.color(255, 255, 0));
+		 dropdownLists[2].addItem("pink", app.color(255, 0, 255));
+		 dropdownLists[2].addItem("purple", app.color(90, 0, 255));
+		 dropdownLists[2].addItem("sky blue", app.color(0, 255, 255));
+		 dropdownLists[2].addItem("dark green", app.color(0, 100, 15));
 
 		 dropdownLists[1] = (MyDropdownList)((new MyDropdownList(UIManager, "Shape"))
 				 .setSize(sdropItemWidth, 4 * dropItemHeight)
@@ -672,8 +680,8 @@ public class WindowManager {
 			 objectType = (Float)val;
 		 }
 
-		 RobotRun.getInstance().pushMatrix();
-		 RobotRun.getInstance().resetMatrix();
+		 app.pushMatrix();
+		 app.resetMatrix();
 		 WorldObject wldObj = null;
 
 		 try {
@@ -780,7 +788,7 @@ public class WindowManager {
 			 IOOBEx.printStackTrace();
 		 }
 
-		 RobotRun.getInstance().popMatrix();
+		 app.popMatrix();
 
 		 return wldObj;
 	 }
@@ -799,8 +807,8 @@ public class WindowManager {
 	 public int deleteActiveWorldObject() {
 		 int ret = -1;
 
-		 if (RobotRun.getInstance().activeScenario != null) {
-			 ret = RobotRun.getInstance().activeScenario.removeWorldObject( getActiveWorldObject() );
+		 if (app.activeScenario != null) {
+			 ret = app.activeScenario.removeWorldObject( getActiveWorldObject() );
 		 }
 
 		 return ret;
@@ -912,9 +920,9 @@ public class WindowManager {
 		 /* If the edited object is a fixture, then update the orientation
 		  * of all parts, which reference this fixture, in this scenario. */
 		 if (toEdit instanceof Fixture) {
-			 if (RobotRun.getInstance().activeScenario != null) {
+			 if (app.activeScenario != null) {
 
-				 for (WorldObject wldObj : RobotRun.getInstance().activeScenario) {
+				 for (WorldObject wldObj : app.activeScenario) {
 					 if (wldObj instanceof Part) {
 						 Part p = (Part)wldObj;
 
@@ -1195,7 +1203,7 @@ public class WindowManager {
 				 // Names only consist of letters and numbers
 				 if (Pattern.matches("[a-zA-Z0-9]+", name)) {
 
-					 for (Scenario s : RobotRun.getInstance().SCENARIOS) {
+					 for (Scenario s : app.SCENARIOS) {
 						 if (s.getName().equals(name)) {
 							 // Duplicate name
 							 RobotRun.println("Names must be unique!");
@@ -1568,12 +1576,12 @@ public class WindowManager {
 	  */
 	 private void updateListContents() {
 
-		 if (RobotRun.getInstance().activeScenario != null) {
+		 if (app.activeScenario != null) {
 			 dropdownLists[4] = (MyDropdownList)dropdownLists[4].clear();
 			 dropdownLists[5] = (MyDropdownList)dropdownLists[5].clear();
 			 dropdownLists[5].addItem("None", null);
 
-			 for (WorldObject wldObj : RobotRun.getInstance().activeScenario) {
+			 for (WorldObject wldObj : app.activeScenario) {
 				 dropdownLists[4].addItem(wldObj.toString(), wldObj);
 
 				 if (wldObj instanceof Fixture) {
@@ -1587,9 +1595,9 @@ public class WindowManager {
 		 }
 
 		 dropdownLists[6] = (MyDropdownList)dropdownLists[6].clear();
-		 for (int idx = 0; idx < RobotRun.getInstance().SCENARIOS.size(); ++idx) {
+		 for (int idx = 0; idx < app.SCENARIOS.size(); ++idx) {
 			 // Load all scenario indices
-			 Scenario s = RobotRun.getInstance().SCENARIOS.get(idx);
+			 Scenario s = app.SCENARIOS.get(idx);
 			 dropdownLists[6].addItem(s.getName(), s);
 		 }
 		 dropdownLists[6].updateActiveLabel();
@@ -1625,7 +1633,7 @@ public class WindowManager {
 		 miscButtons[7] = miscButtons[7].setPosition(relPos[0], relPos[1]);
 
 		 // Update button color based on the value of the object display flag
-		 if (!RobotRun.getInstance().showOOBs) {
+		 if (!app.showOBBs) {
 			 miscButtons[7].setColorBackground(buttonActColor);
 
 		 } else {
@@ -1690,7 +1698,7 @@ public class WindowManager {
 
 		 if (windowState == null || windowState.equals("Hide")) {
 			 // Hide any window
-			 RobotRun.getInstance().g1.hide();
+			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
@@ -1699,8 +1707,6 @@ public class WindowManager {
 			 updateWindowContentsPositions();
 
 		 } else if (windowState.equals("Robot1") || windowState.equals("Robot2")) {
-			 RobotRun app = RobotRun.getInstance();
-			 
 			 // Show pendant
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
@@ -1715,7 +1721,7 @@ public class WindowManager {
 
 		 } else if (windowState.equals("Create")) {
 			 // Show world object creation window
-			 RobotRun.getInstance().g1.hide();
+			 app.g1.hide();
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(scenarioWindow, false);
 
@@ -1731,7 +1737,7 @@ public class WindowManager {
 
 		 } else if (windowState.equals("Edit")) {
 			 // Show world object edit window
-			 RobotRun.getInstance().g1.hide();
+			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(scenarioWindow, false);
 
@@ -1747,7 +1753,7 @@ public class WindowManager {
 
 		 } else if (windowState.equals("Scenario")) {
 			 // Show scenario creating/saving/loading
-			 RobotRun.getInstance().g1.hide();
+			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 

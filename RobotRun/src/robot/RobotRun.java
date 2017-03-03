@@ -57,7 +57,6 @@ import ui.AxesDisplay;
 import ui.Camera;
 import window.DisplayLine;
 import window.MenuScroll;
-import window.Screen;
 import window.WindowManager;
 
 public class RobotRun extends PApplet {
@@ -883,11 +882,11 @@ public class RobotRun extends PApplet {
 	public MenuScroll options;
 	public final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
 	public Scenario activeScenario;
-	public boolean showOOBs;
+	public boolean showOBBs;
 	private Camera camera;
 	private RoboticArm activeRobot;
 	
-	private RoboticArm[] robots;
+	private ArrayList<RoboticArm> robots;
 	private ControlP5 cp5;
 	
 	private WindowManager manager;
@@ -4255,14 +4254,12 @@ public class RobotRun extends PApplet {
 	}
 	
 	public RoboticArm getInactiveRobot() {
-		if(activeRobot.RID == 0) 
-			return robots[1];
-		else
-			return robots[0];
-	}
-
-	public RoboticArm getArmModel() {
-		return getActiveRobot();
+		try {
+			return robots.get((activeRobot.getRID() + 1) % 2);
+			
+		} catch (Exception Ex) {
+			return null;
+		}
 	}
 
 	public Camera getCamera() {
@@ -5214,8 +5211,8 @@ public class RobotRun extends PApplet {
 	}
 
 	public RoboticArm getRobot(int rid) {
-		if (rid >= 0 && rid < robots.length) {
-			return robots[rid];
+		if (rid >= 0 && rid < robots.size()) {
+			return robots.get(rid);
 		}
 		
 		return null;
@@ -5830,9 +5827,9 @@ public class RobotRun extends PApplet {
 		setProgramRunning(false);
 	}
 
-	public void HideObjects() {
+	public void HideOBBs() {
 		// Toggle object display on or off
-		showOOBs = !showOOBs;
+		showOBBs = !showOBBs;
 		getManager().updateScenarioWindowContentPositions();
 	}
 
@@ -6577,7 +6574,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		for(int i = 0; i < size; i += 1) {
-			contents.addLine(robots[rid].getProgram(i).getName());
+			contents.addLine(getRobot(rid).getProgram(i).getName());
 		}
 	}
 
@@ -7461,12 +7458,12 @@ public class RobotRun extends PApplet {
 	 * @param rid	The ID of the Robot to call
 	 */
 	public void returnRobot(int rid) {
-		if (rid >= 0 && rid < robots.length && robots[rid] != activeRobot) {
+		if (rid >= 0 && rid < robots.size() && robots.get(rid) != activeRobot) {
 			if (activeRobot != null) {
 				hd();
 			}
 			
-			activeRobot = robots[rid];
+			activeRobot = robots.get(rid);
 			
 			// Resume execution of the Robot's active program
 			if (activeRobot.getActiveProg() != null) {
@@ -7542,11 +7539,11 @@ public class RobotRun extends PApplet {
 	 * @param rdx	The index of the new active Robot
 	 */
 	public void setRobot(int rdx) {
-		if (rdx >= 0 && rdx < robots.length && robots[rdx] != getActiveRobot()) {
+		if (rdx >= 0 && rdx < robots.size() && robots.get(rdx) != getActiveRobot()) {
 			hd();
 			
 			RoboticArm prevActive = activeRobot;
-			activeRobot = robots[rdx];
+			activeRobot = robots.get(rdx);
 			
 			if (prevActive != activeRobot) {
 				/* If the active robot actually changes then resort to the
@@ -7614,17 +7611,17 @@ public class RobotRun extends PApplet {
 		camera = new Camera();
 
 		//load model and save data
-		robots = new RoboticArm[2];
-		robots[0] = new RoboticArm(0, new PVector(200, 300, 200));
-		robots[0].setDefaultRobotPoint();
-		robots[1] = new RoboticArm(1, new PVector(200, 300, -750));
-		robots[1].setDefaultRobotPoint();
+		robots = new ArrayList<RoboticArm>();
+		robots.add(new RoboticArm(0, false, new PVector(200, 300, 200)));
+		robots.get(0).setDefaultRobotPoint();
+		robots.add(new RoboticArm(1, true, new PVector(200, 300, -750)));
+		robots.get(0).setDefaultRobotPoint();
 		
-		setActiveRobot(robots[0]);
+		setActiveRobot(robots.get(0));
 		
 		intermediatePositions = new ArrayList<Point>();
 		activeScenario = null;
-		showOOBs = true;
+		showOBBs = true;
 		
 		DataManagement.initialize(this);
 		DataManagement.loadState(this);
@@ -7633,7 +7630,7 @@ public class RobotRun extends PApplet {
 		cp5 = new ControlP5(this);
 		// Explicitly draw the ControlP5 elements
 		cp5.setAutoDraw(false);
-		setManager(new WindowManager(cp5, fnt_con12, fnt_con14));
+		setManager(new WindowManager(this, cp5, fnt_con12, fnt_con14));
 		display_stack = new Stack<ScreenMode>();
 		contents = new MenuScroll(this, "cont", ITEMS_TO_SHOW, 10, 20);
 		options = new MenuScroll(this, "opt", 3, 10, 180);
@@ -8046,7 +8043,7 @@ public class RobotRun extends PApplet {
 			CallFrame ret = model.popCallStack();
 			
 			if(ret != null) {
-				RoboticArm tgtDevice = robots[ret.getTgtRID()];
+				RoboticArm tgtDevice = robots.get( ret.getTgtRID() );
 				tgtDevice.setActiveProgIdx(ret.getTgtProgID());
 				tgtDevice.setActiveInstIdx(ret.getTgtInstID());
 				activeRobot = tgtDevice;
