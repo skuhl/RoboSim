@@ -3,6 +3,7 @@ package robot;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
@@ -886,7 +887,7 @@ public class RobotRun extends PApplet {
 	private Camera camera;
 	private RoboticArm activeRobot;
 	
-	private ArrayList<RoboticArm> robots;
+	private HashMap<Integer, RoboticArm> robots;
 	private ControlP5 cp5;
 	
 	private WindowManager manager;
@@ -5209,13 +5210,16 @@ public class RobotRun extends PApplet {
 	public int getRecord() {
 		return record;
 	}
-
+	
+	/**
+	 * Returns the robot with the associated ID, or null if no such robot
+	 * exists.
+	 * 
+	 * @param rid	A valid robot ID
+	 * @return		The robot with the given ID
+	 */
 	public RoboticArm getRobot(int rid) {
-		if (rid >= 0 && rid < robots.size()) {
-			return robots.get(rid);
-		}
-		
-		return null;
+		return robots.get(rid);
 	}
 
 	/**
@@ -7611,11 +7615,13 @@ public class RobotRun extends PApplet {
 		camera = new Camera();
 
 		//load model and save data
-		robots = new ArrayList<RoboticArm>();
-		robots.add(new RoboticArm(0, false, new PVector(200, 300, 200)));
-		robots.get(0).setDefaultRobotPoint();
-		robots.add(new RoboticArm(1, true, new PVector(200, 300, -750)));
-		robots.get(0).setDefaultRobotPoint();
+		robots = new HashMap<Integer, RoboticArm>();
+		robots.put(0, new RoboticArm(0, new PVector(200, 300, 200)));
+		robots.put(1, new RoboticArm(1, new PVector(200, 300, -750)));
+		
+		for (RoboticArm r : robots.values()) {
+			r.setDefaultRobotPoint();
+		}
 		
 		setActiveRobot(robots.get(0));
 		
@@ -8068,7 +8074,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		// Draw all robots
-		for (RoboticArm r : robots) {
+		for (RoboticArm r : robots.values()) {
 			r.draw();
 		}
 

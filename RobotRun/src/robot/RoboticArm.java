@@ -99,7 +99,7 @@ public class RoboticArm {
 	 * @param rid		The unique identifier associated with the Robot
 	 * @param basePos	The center position of the Robot's base segment
 	 */
-	public RoboticArm(int rid, boolean hidden, PVector basePos) {
+	public RoboticArm(int rid, PVector basePos) {
 		int idx;
 		
 		RID = rid;
