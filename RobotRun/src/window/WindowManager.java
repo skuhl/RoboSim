@@ -22,9 +22,11 @@ import geom.WorldObject;
 import processing.core.PFont;
 import processing.core.PVector;
 import robot.RoboticArm;
+import robot.EEMapping;
 import robot.Fixture;
 import robot.RobotRun;
 import robot.Scenario;
+import ui.AxesDisplay;
 import ui.ButtonTabs;
 import ui.MyDropdownList;
 import ui.RelativePoint;
@@ -89,9 +91,9 @@ public class WindowManager {
 		 objOrientationFields = new Textfield[6];
 		 shapeDefAreas = new ArrayList<Textarea>();
 		 shapeDefFields = new ArrayList<Textfield>();
-		 dropdownLbls = new Textarea[7];
-		 dropdownLists = new MyDropdownList[7];
-		 miscButtons = new Button[8];
+		 dropdownLbls = new Textarea[9];
+		 dropdownLists = new MyDropdownList[9];
+		 miscButtons = new Button[9];
 
 		 buttonDefColor = app.color(70);
 		 buttonActColor = app.color(220, 40, 40);
@@ -108,7 +110,7 @@ public class WindowManager {
 		 int[] relPos = new int[] { 0, 0 };
 		 
 		 // TODO initially hidden Robot2
-		 String[] windowList = new String[] { "Hide", "Robot1", "Robot2", "Create", "Edit", "Scenario" };
+		 String[] windowList = new String[] { "Hide", "Robot1", "Robot2", "Create", "Edit", "Scenario", "Misc" };
 		 
 		 // Create window tab bar
 		 windowTabs = (ButtonTabs)(new ButtonTabs(UIManager, "List:")
@@ -486,8 +488,60 @@ public class WindowManager {
 				 .setColorActive(buttonActColor)
 				 .moveTo(scenarioWindow)
 				 .setSize(lButtonWidth, sButtonHeight);
+		
+		 dropdownLbls[7] = UIManager.addTextarea("ActiveAxesDisplay", "Axes Display:", 0, 0, lLblWidth, sButtonHeight)
+				 .setFont(medium)
+				 .setColor(fieldTxtColor)
+				 .setColorActive(fieldActColor)
+				 .setColorBackground(bkgrdColor)
+				 .setColorForeground(bkgrdColor)
+				 .moveTo(miscWindow);
+		 
+		 dropdownLbls[8] = UIManager.addTextarea("ActiveEEDisplay", "EE Display:", 0, 0, lLblWidth, sButtonHeight)
+				 .setFont(medium)
+				 .setColor(fieldTxtColor)
+				 .setColorActive(fieldActColor)
+				 .setColorBackground(bkgrdColor)
+				 .setColorForeground(bkgrdColor)
+				 .moveTo(miscWindow);
+		 
+		 miscButtons[8] = UIManager.addButton("HideRobot")
+				 .setCaptionLabel("Hide Robot")
+				 .setColorValue(buttonTxtColor)
+				 .setColorBackground(buttonDefColor)
+				 .setColorActive(buttonActColor)
+				 .moveTo(miscWindow)
+				 .setSize(lButtonWidth, sButtonHeight);
 
 		 // Initialize dropdown lists
+		 dropdownLists[8] = (MyDropdownList)((new MyDropdownList(UIManager, "EEDisplay"))
+				 .setSize(ldropItemWidth, 4 * dropItemHeight)
+				 .setBarHeight(dropItemHeight)
+				 .setItemHeight(dropItemHeight)
+				 .setColorValue(buttonTxtColor)
+				 .setColorBackground(buttonDefColor)
+				 .setColorActive(buttonActColor)
+				 .moveTo(miscWindow)
+				 .close());
+		 
+		 dropdownLists[8].addItem(EEMapping.DOT.toString(), EEMapping.DOT);
+		 dropdownLists[8].addItem(EEMapping.LINE.toString(), EEMapping.LINE);
+		 dropdownLists[8].addItem(EEMapping.NONE.toString(), EEMapping.NONE);
+		 
+		 dropdownLists[7] = (MyDropdownList)((new MyDropdownList(UIManager, "AxesDisplay"))
+				 .setSize(ldropItemWidth, 4 * dropItemHeight)
+				 .setBarHeight(dropItemHeight)
+				 .setItemHeight(dropItemHeight)
+				 .setColorValue(buttonTxtColor)
+				 .setColorBackground(buttonDefColor)
+				 .setColorActive(buttonActColor)
+				 .moveTo(miscWindow)
+				 .close());
+		 
+		 dropdownLists[7].addItem(AxesDisplay.AXES.toString(), AxesDisplay.AXES);
+		 dropdownLists[7].addItem(AxesDisplay.GRID.toString(), AxesDisplay.GRID);
+		 dropdownLists[7].addItem(AxesDisplay.NONE.toString(), AxesDisplay.NONE);
+		 
 		 dropdownLists[6] = (MyDropdownList)((new MyDropdownList(UIManager, "Scenario"))
 				 .setSize(ldropItemWidth, 4 * dropItemHeight)
 				 .setBarHeight(dropItemHeight)
@@ -1608,7 +1662,7 @@ public class WindowManager {
 	  */
 	 public void updateScenarioWindowContentPositions() {
 		 // New scenario name label
-		 int[] relPos = new int[] {offsetX, offsetX };
+		 int[] relPos = new int[] { offsetX, offsetX };
 		 scenarioNameLbl = scenarioNameLbl.setPosition(relPos[0], relPos[1]);
 		 // New scenario name field
 		 relPos = relativePosition(scenarioNameLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
@@ -1633,15 +1687,50 @@ public class WindowManager {
 		 miscButtons[7] = miscButtons[7].setPosition(relPos[0], relPos[1]);
 
 		 // Update button color based on the value of the object display flag
-		 if (!app.showOBBs) {
+		 //if (!app.showOBBs) {
+		 if (miscButtons[7].isOn()) {
 			 miscButtons[7].setColorBackground(buttonActColor);
 
 		 } else {
 			 miscButtons[7].setColorBackground(buttonDefColor);
+			 
 		 }
 
 		 // Update window background display
 		 relPos = relativePosition(miscButtons[7], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 background.setBackgroundHeight(relPos[1])
+		 .setHeight(relPos[1])
+		 .show();
+	 }
+	 
+	 /**
+	  * Updates the positions of all the contents of the miscellaneous window.
+	  */
+	 public void updateMiscWindowContentPositions() {
+		 // Axes Display label
+		 int[] relPos = new int[] { offsetX, offsetX };
+		 dropdownLbls[7] = dropdownLbls[7].setPosition(relPos[0], relPos[1]);
+		 // Axes Display dropdown
+		 relPos = relativePosition(dropdownLbls[7], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 dropdownLists[7] = (MyDropdownList)dropdownLists[7].setPosition(relPos[0], relPos[1]);
+		 
+		// Axes Display label
+		relPos = relativePosition(dropdownLbls[7], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		dropdownLbls[8] = dropdownLbls[8].setPosition(relPos[0], relPos[1]);
+		// Axes Display dropdown
+		relPos = relativePosition(dropdownLbls[8], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		dropdownLists[8] = (MyDropdownList)dropdownLists[8].setPosition(relPos[0], relPos[1]);
+
+		 // Update button color based on the value of the object display flag
+		 if (miscButtons[8].isOn()) {
+			 miscButtons[8].setColorBackground(buttonActColor);
+	
+		 } else {
+			 miscButtons[8].setColorBackground(buttonDefColor);
+		 }
+	
+		 // Update window background display
+		 relPos = relativePosition(dropdownLbls[8], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 background.setBackgroundHeight(relPos[1])
 		 .setHeight(relPos[1])
 		 .show();
@@ -1674,6 +1763,10 @@ public class WindowManager {
 		 } else if (windowState.equals("Scenario")) {
 			 // Scenario window
 			 updateScenarioWindowContentPositions();
+			 
+		 } else if (windowState.equals("Misc")) {
+			// Miscellaneous window
+			 updateMiscWindowContentPositions();
 		 }
 
 		 // Update the camera view buttons
@@ -1703,6 +1796,7 @@ public class WindowManager {
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
 			 setGroupVisible(scenarioWindow, false);
+			 setGroupVisible(miscWindow, false);
 
 			 updateWindowContentsPositions();
 
@@ -1712,6 +1806,7 @@ public class WindowManager {
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
 			 setGroupVisible(scenarioWindow, false);
+			 setGroupVisible(miscWindow, false);
 			 
 			 if (!app.g1.isVisible()) {
 				 updateWindowContentsPositions();
@@ -1724,6 +1819,7 @@ public class WindowManager {
 			 app.g1.hide();
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(scenarioWindow, false);
+			 setGroupVisible(miscWindow, false);
 
 			 if (!createObjWindow.isVisible()) {
 				 setGroupVisible(createObjWindow, true);
@@ -1740,6 +1836,7 @@ public class WindowManager {
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(scenarioWindow, false);
+			 setGroupVisible(miscWindow, false);
 
 			 if (!editObjWindow.isVisible()) {
 				 setGroupVisible(editObjWindow, true);
@@ -1756,11 +1853,27 @@ public class WindowManager {
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
+			 setGroupVisible(miscWindow, false);
 
 			 if (!scenarioWindow.isVisible()) {
 				 setGroupVisible(scenarioWindow, true);
 
 				 clearAllInputFields();
+				 updateWindowContentsPositions();
+				 updateListContents();
+				 resetListLabels();
+			 }
+			 
+		 } else if (windowState.equals("Misc")) {
+			 // Show miscellaneous window
+			 app.g1.hide();
+			 setGroupVisible(createObjWindow, false);
+			 setGroupVisible(editObjWindow, false);
+			 setGroupVisible(scenarioWindow, false);
+
+			 if (!miscWindow.isVisible()) {
+				 setGroupVisible(miscWindow, true);
+				 
 				 updateWindowContentsPositions();
 				 updateListContents();
 				 resetListLabels();
