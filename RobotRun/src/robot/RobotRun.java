@@ -84,9 +84,6 @@ public class RobotRun extends PApplet {
 								 {'y', 'z', '_', '@', '*', '.'}};
 	}
 	
-	// Deterimes what type of axes should be displayed
-	//private static AxesDisplay axesState = AxesDisplay.AXES;
-	
 	public static PFont fnt_con14;
 	
 	public static PFont fnt_con12;
@@ -884,7 +881,6 @@ public class RobotRun extends PApplet {
 	public MenuScroll options;
 	public final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
 	public Scenario activeScenario;
-	//public boolean showOBBs;
 	private Camera camera;
 	private RoboticArm activeRobot;
 	
