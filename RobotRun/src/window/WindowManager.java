@@ -111,7 +111,7 @@ public class WindowManager {
 		 int[] relPos = new int[] { 0, 0 };
 		 
 		 // TODO initially hidden Robot2
-		 String[] windowList = new String[] { "Hide", "Robot1", "Robot2", "Create", "Edit", "Scenario", "Misc" };
+		 String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
 		 
 		 // Create window tab bar
 		 windowTabs = (ButtonTabs)(new ButtonTabs(UIManager, "List:")
@@ -506,8 +506,8 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(miscWindow);
 		 
-		 miscButtons[8] = UIManager.addButton("HideRobot")
-				 .setCaptionLabel("Hide Robot")
+		 miscButtons[8] = UIManager.addButton("ToggleRobot")
+				 .setCaptionLabel("Add Robot")
 				 .setColorValue(buttonTxtColor)
 				 .setColorBackground(buttonDefColor)
 				 .setColorActive(buttonActColor)
@@ -1271,7 +1271,7 @@ public class WindowManager {
 	 }
 	 
 	 /**
-	  * @return	Whether or not Robot display button is on
+	  * @return	Whether or not the robot display button is on
 	  */
 	 public boolean getRobotButtonState() {
 		 return miscButtons[8].isOn();
@@ -1428,6 +1428,31 @@ public class WindowManager {
 			 g.setVisible(setVisible);
 		 }
 	 }
+	 
+	/**
+	 * Updates the tabs that are available in the applications main window.
+	 * 
+	 * @return	Whether the second Robot is hidden
+	 */
+	public boolean toggleSecondRobot() {
+		
+		if (windowTabs.getActiveButtonName().equals("Robot2")) {
+			windowTabs.setLabel("Hide");
+		}
+		
+		// Remove or add the second Robot based on the HideRobot button
+		
+		if (miscButtons[8].isOn()) {
+			windowTabs.setItems(new String[] { "Hide", "Robot1", "Robot2", "Create", "Edit", "Scenario", "Misc" });
+			miscButtons[8].setLabel("Remove Robot");
+						
+		} else {
+			windowTabs.setItems(new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" });
+			miscButtons[8].setLabel("Add Robot");
+		}
+		
+		return miscButtons[8].isOn();
+	}
 
 	 /**
 	  * Updates the positions of all the contents of the world object creation window.

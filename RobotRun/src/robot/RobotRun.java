@@ -3662,7 +3662,17 @@ public class RobotRun extends PApplet {
 
 			} else if (activeInstr instanceof CallInstruction) {
 				setExecutingInstruction(false);
-				nextInstr = activeInstr.execute();
+				
+				if (((CallInstruction)activeInstr).getTgtDevice() != activeRobot) {
+					// Call an inactive Robot's program
+					if (getManager().getRobotButtonState()) {
+						nextInstr = activeInstr.execute();
+						
+					} else {
+						// No second robot in application
+						nextInstr = -1;
+					}
+				}
 
 			} else if (activeInstr instanceof IfStatement || activeInstr instanceof SelectStatement) {
 				setExecutingInstruction(false);
@@ -5847,15 +5857,7 @@ public class RobotRun extends PApplet {
 	 * Toggle bounding box display on or off.
 	 */
 	public void HideOBBs() {
-		//showOBBs = !showOBBs;
 		getManager().updateScenarioWindowContentPositions();
-	}
-	
-	/**
-	 * Toggle the second Robot on of off.
-	 */
-	public void HideRobot() {
-		getManager().updateMiscWindowContentPositions();
 	}
 
 	public void IO() {
@@ -7969,6 +7971,19 @@ public class RobotRun extends PApplet {
 		display_stack.push(mode);
 		loadScreen();
 	}
+	
+	/**
+	 * Toggle the second Robot on or off.
+	 */
+	public void ToggleRobot() {
+		boolean robotRemoved = getManager().toggleSecondRobot();
+		// Reset the active robot to the first if the second robot is removed
+		if (robotRemoved && activeRobot != robots.get(0)) {
+			activeRobot = robots.get(0);
+		}
+		
+		getManager().updateMiscWindowContentPositions();
+	}
 
 	public void TOOL1() {
 		if(getSU_macro_bindings()[0] != null && isShift()) {
@@ -8074,9 +8089,16 @@ public class RobotRun extends PApplet {
 			s.updateAndDrawObjects(model);
 		}
 		
-		// Draw all robots
-		for (RoboticArm r : robots.values()) {
-			r.draw();
+		
+		if (getManager().getRobotButtonState()) {
+			// Draw all robots
+			for (RoboticArm r : robots.values()) {
+				r.draw();
+			}
+			
+		} else {
+			// Draw only the active robot
+			activeRobot.draw();
 		}
 
 		model.updatePreviousEEOrientation();
