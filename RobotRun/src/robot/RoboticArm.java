@@ -704,7 +704,9 @@ public class RoboticArm {
 		RobotRun.getInstance().popMatrix();
 		/* My sketchy work-around for drawing only the bounding boxes of the
 		 * active robot */
-		if (RobotRun.getActiveRobot() == this && RobotRun.getInstance().showOOBs) {
+		if (RobotRun.getActiveRobot() == this &&
+				RobotRun.getInstance().areOBBsDisplayed()) {
+			
 			drawBoxes();
 		}
 	}
@@ -1522,7 +1524,7 @@ public class RoboticArm {
 
 		// Calculate whether it's faster to turn CW or CCW
 		for(int joint = 0; joint < 6; ++joint) {
-			Model a = RobotRun.getInstance().getArmModel().segments.get(joint);
+			Model a = RobotRun.getActiveRobot().segments.get(joint);
 
 			for(int r = 0; r < 3; r++) {
 				if(a.rotations[r]) {
@@ -1633,7 +1635,7 @@ public class RoboticArm {
 				// Move the Robot progressively to a point
 				boolean doneMoving = true;
 
-				switch (RobotRun.getInstance().getArmModel().motionType) {
+				switch (RobotRun.getActiveRobot().motionType) {
 				case MT_JOINT:
 					doneMoving = interpolateRotation(liveSpeed / 100.0f);
 					break;

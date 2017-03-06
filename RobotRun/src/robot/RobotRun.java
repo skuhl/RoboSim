@@ -3,6 +3,7 @@ package robot;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
@@ -82,9 +83,6 @@ public class RobotRun extends PApplet {
 								 {'s', 't', 'u', 'v', 'w', 'x'},
 								 {'y', 'z', '_', '@', '*', '.'}};
 	}
-	
-	// Deterimes what type of axes should be displayed
-	private static AxesDisplay axesState = AxesDisplay.AXES;
 	
 	public static PFont fnt_con14;
 	
@@ -383,9 +381,14 @@ public class RobotRun extends PApplet {
 
 		return r;
 	}
-	public static AxesDisplay getAxesState() {
-		return axesState;
+	
+	/**
+	 * @return	the active axes display state
+	 */
+	public AxesDisplay getAxesState() {
+		return getManager().getAxesDisplay();
 	}
+	
 	/**
 	 * Returns the instance of this PApplet
 	 */
@@ -813,10 +816,6 @@ public class RobotRun extends PApplet {
 
 		return u;
 	}
-
-	public static void setAxesState(AxesDisplay axesState) {
-		RobotRun.axesState = axesState;
-	}
 	
 	/**
 	 * Forms the 4x4 transformation matrix (row major order) form the given
@@ -882,11 +881,10 @@ public class RobotRun extends PApplet {
 	public MenuScroll options;
 	public final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
 	public Scenario activeScenario;
-	public boolean showOOBs;
 	private Camera camera;
 	private RoboticArm activeRobot;
 	
-	private RoboticArm[] robots;
+	private HashMap<Integer, RoboticArm> robots;
 	private ControlP5 cp5;
 	
 	private WindowManager manager;
@@ -994,10 +992,7 @@ public class RobotRun extends PApplet {
 	int interMotionIdx = -1;
 
 	private boolean executingInstruction = false;
-
-	// Determines what End Effector mapping should be display
-	private EEMapping mappingState = EEMapping.LINE;
-
+	
 	public final int MTYPE_JOINT = 0;
 
 	public final int MTYPE_LINEAR = 1;
@@ -1047,6 +1042,13 @@ public class RobotRun extends PApplet {
 		}
 
 		updateScreen();
+	}
+	
+	/**
+	 * @return	Whether or not bounding boxes are displayed
+	 */
+	public boolean areOBBsDisplayed() {
+		return getManager().getOBBButtonState();
 	}
 
 	public String arrayToString(float[] array) {
@@ -1383,13 +1385,28 @@ public class RobotRun extends PApplet {
 	}
 	
 	public void bd() {
-		// If there is a previous instruction, then move to it and reverse its affects
-		if(mode == ScreenMode.NAV_PROG_INSTR && !isProgramRunning() && isShift() && isStep()) {
-			// Stop any prior Robot movement
-			hd();
-			// Safeguard against editing a program while it is running
-			contents.setColumnIdx(0);
-			// TODO fix backwards
+		// Backwards is only functional when executing a program one instruction at a time
+		if(mode == ScreenMode.NAV_PROG_INSTR && isShift() && isStep()) {
+			Program p = activeRobot.getActiveProg();
+			int instrIdx = activeRobot.getActiveInstIdx();
+			
+			// Execute the previous motion instruction
+			if (p != null && instrIdx > 1 && p.getInstruction(instrIdx - 2) instanceof MotionInstruction) {
+				// Stop robot motion and normal program execution
+				hd();
+				setProgramRunning(false);
+				
+				activeRobot.setActiveInstIdx(instrIdx - 2);
+				execSingleInst = true;
+				
+				// Safeguard against editing a program while it is running
+				contents.setColumnIdx(0);
+				
+				contents.moveUp(false);
+				contents.moveUp(false);
+
+				setProgramRunning(true);
+			}
 		}
 	}
 
@@ -2051,7 +2068,7 @@ public class RobotRun extends PApplet {
 
 		Point eePoint = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles());
 
-		if (axesState == AxesDisplay.AXES && getActiveRobot().getCurCoordFrame() == CoordFrame.TOOL) {
+		if (getAxesState() == AxesDisplay.AXES && getActiveRobot().getCurCoordFrame() == CoordFrame.TOOL) {
 			Frame activeTool = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
 
 			// Draw the axes of the active Tool frame at the Robot End Effector
@@ -2071,7 +2088,7 @@ public class RobotRun extends PApplet {
 			popMatrix();
 		}
 
-		if (axesState == AxesDisplay.AXES) {
+		if (getAxesState() == AxesDisplay.AXES) {
 			// Display axes
 			if (getActiveRobot().getCurCoordFrame() != CoordFrame.JOINT) {
 				Frame activeUser = getActiveRobot().getActiveFrame(CoordFrame.USER);
@@ -2086,7 +2103,7 @@ public class RobotRun extends PApplet {
 				}
 			}
 
-		} else if (axesState == AxesDisplay.GRID) {
+		} else if (getAxesState() == AxesDisplay.GRID) {
 			// Display gridlines spanning from axes of the current frame
 			Frame active;
 			float[][] displayAxes;
@@ -2344,6 +2361,20 @@ public class RobotRun extends PApplet {
 		ortho();
 		showMainDisplayText();
 		cp5.draw();
+	}
+	
+	/**
+	 * Function of the edit button: renders the instruction view of the active
+	 * program, if one exists. Otherwise, the program navigation view is
+	 * rendered.
+	 */
+	public void ed() {
+		if (activeRobot.getActiveProg() != null) {
+			nextScreen(ScreenMode.NAV_PROG_INSTR);
+			
+		} else {
+			nextScreen(ScreenMode.NAV_PROGRAMS);
+		}
 	}
 
 	public void editExpression(Expression expr, int selectIdx) {
@@ -3627,7 +3658,17 @@ public class RobotRun extends PApplet {
 
 			} else if (activeInstr instanceof CallInstruction) {
 				setExecutingInstruction(false);
-				nextInstr = activeInstr.execute();
+				
+				if (((CallInstruction)activeInstr).getTgtDevice() != activeRobot) {
+					// Call an inactive Robot's program
+					if (getManager().getRobotButtonState()) {
+						nextInstr = activeInstr.execute();
+						
+					} else {
+						// No second robot in application
+						nextInstr = -1;
+					}
+				}
 
 			} else if (activeInstr instanceof IfStatement || activeInstr instanceof SelectStatement) {
 				setExecutingInstruction(false);
@@ -4225,14 +4266,12 @@ public class RobotRun extends PApplet {
 	}
 	
 	public RoboticArm getInactiveRobot() {
-		if(activeRobot.RID == 0) 
-			return robots[1];
-		else
-			return robots[0];
-	}
-
-	public RoboticArm getArmModel() {
-		return getActiveRobot();
+		try {
+			return robots.get((activeRobot.getRID() + 1) % 2);
+			
+		} catch (Exception Ex) {
+			return null;
+		}
 	}
 
 	public Camera getCamera() {
@@ -4392,6 +4431,13 @@ public class RobotRun extends PApplet {
 
 	public ControlP5 getCp5() {
 		return cp5;
+	}
+	
+	/**
+	 * @return	The active End Effector mapping state
+	 */
+	public EEMapping getEEMapping() {
+		return getManager().getEEMapping();
 	}
 
 	//Function label text
@@ -5182,13 +5228,16 @@ public class RobotRun extends PApplet {
 	public int getRecord() {
 		return record;
 	}
-
+	
+	/**
+	 * Returns the robot with the associated ID, or null if no such robot
+	 * exists.
+	 * 
+	 * @param rid	A valid robot ID
+	 * @return		The robot with the given ID
+	 */
 	public RoboticArm getRobot(int rid) {
-		if (rid >= 0 && rid < robots.length) {
-			return robots[rid];
-		}
-		
-		return null;
+		return robots.get(rid);
 	}
 
 	/**
@@ -5799,10 +5848,11 @@ public class RobotRun extends PApplet {
 		activeRobot.halt();
 		setProgramRunning(false);
 	}
-
-	public void HideObjects() {
-		// Toggle object display on or off
-		showOOBs = !showOOBs;
+	
+	/**
+	 * Toggle bounding box display on or off.
+	 */
+	public void HideOBBs() {
 		getManager().updateScenarioWindowContentPositions();
 	}
 
@@ -5818,6 +5868,13 @@ public class RobotRun extends PApplet {
 
 	public boolean isProgramRunning() {
 		return programRunning;
+	}
+	
+	/**
+	 * @return	Whether or not the second robot is used in the application
+	 */
+	public boolean isSecondRobotUsed() {
+		return getManager().getRobotButtonState();
 	}
 
 	public boolean isShift() {
@@ -5946,32 +6003,6 @@ public class RobotRun extends PApplet {
 			}
 
 			return;
-		} else if (key == 'a') {
-			// Cycle through Axes display states
-			switch (axesState) {
-			case NONE:
-				axesState = AxesDisplay.AXES;
-				break;
-			case AXES:
-				axesState = AxesDisplay.GRID;
-				break;
-			default:
-				axesState = AxesDisplay.NONE;
-			}
-
-		} else if(key == 'e') {
-			// Cycle through EE Mapping states
-			switch (mappingState) {
-			case NONE:
-				mappingState = EEMapping.LINE;
-				break;
-			case LINE:
-				mappingState = EEMapping.DOT;
-				break;
-			default:
-				mappingState = EEMapping.NONE;
-			}
-
 		} else if (key == 'f' ) {
 			// Display the User and Tool frames associated with the current motion instruction
 			if (Fields.DEBUG && mode == ScreenMode.NAV_PROG_INSTR && (contents.getColumnIdx() == 3 || contents.getColumnIdx() == 4)) {
@@ -6547,7 +6578,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		for(int i = 0; i < size; i += 1) {
-			contents.addLine(robots[rid].getProgram(i).getName());
+			contents.addLine(getRobot(rid).getProgram(i).getName());
 		}
 	}
 
@@ -6982,7 +7013,7 @@ public class RobotRun extends PApplet {
 		int c = (ee_pos.y <= basePos.y) ? color(255, 0, 0) : color(150, 0, 255);
 
 		// Toggle EE mapping type with 'e'
-		switch (mappingState) {
+		switch (getEEMapping()) {
 		case LINE:
 			stroke(c);
 			// Draw a line, from the EE to the grid in the xy plane, parallel to the xy plane
@@ -7431,12 +7462,12 @@ public class RobotRun extends PApplet {
 	 * @param rid	The ID of the Robot to call
 	 */
 	public void returnRobot(int rid) {
-		if (rid >= 0 && rid < robots.length && robots[rid] != activeRobot) {
+		if (rid >= 0 && rid < robots.size() && robots.get(rid) != activeRobot) {
 			if (activeRobot != null) {
 				hd();
 			}
 			
-			activeRobot = robots[rid];
+			activeRobot = robots.get(rid);
 			
 			// Resume execution of the Robot's active program
 			if (activeRobot.getActiveProg() != null) {
@@ -7495,6 +7526,10 @@ public class RobotRun extends PApplet {
 
 	public void setProgramRunning(boolean programRunning) {
 		this.programRunning = programRunning;
+		
+		if (programRunning == false) {
+			setExecutingInstruction(false);
+		}
 	}
 
 	public void setRecord(int record) {
@@ -7508,11 +7543,11 @@ public class RobotRun extends PApplet {
 	 * @param rdx	The index of the new active Robot
 	 */
 	public void setRobot(int rdx) {
-		if (rdx >= 0 && rdx < robots.length && robots[rdx] != getActiveRobot()) {
+		if (rdx >= 0 && rdx < robots.size() && robots.get(rdx) != getActiveRobot()) {
 			hd();
 			
 			RoboticArm prevActive = activeRobot;
-			activeRobot = robots[rdx];
+			activeRobot = robots.get(rdx);
 			
 			if (prevActive != activeRobot) {
 				/* If the active robot actually changes then resort to the
@@ -7580,17 +7615,18 @@ public class RobotRun extends PApplet {
 		camera = new Camera();
 
 		//load model and save data
-		robots = new RoboticArm[2];
-		robots[0] = new RoboticArm(0, new PVector(200, 300, 200));
-		robots[0].setDefaultRobotPoint();
-		robots[1] = new RoboticArm(1, new PVector(200, 300, -750));
-		robots[1].setDefaultRobotPoint();
+		robots = new HashMap<Integer, RoboticArm>();
+		robots.put(0, new RoboticArm(0, new PVector(200, 300, 200)));
+		robots.put(1, new RoboticArm(1, new PVector(200, 300, -750)));
 		
-		setActiveRobot(robots[0]);
+		for (RoboticArm r : robots.values()) {
+			r.setDefaultRobotPoint();
+		}
+		
+		setActiveRobot(robots.get(0));
 		
 		intermediatePositions = new ArrayList<Point>();
 		activeScenario = null;
-		showOOBs = true;
 		
 		DataManagement.initialize(this);
 		DataManagement.loadState(this);
@@ -7599,7 +7635,7 @@ public class RobotRun extends PApplet {
 		cp5 = new ControlP5(this);
 		// Explicitly draw the ControlP5 elements
 		cp5.setAutoDraw(false);
-		setManager(new WindowManager(cp5, fnt_con12, fnt_con14));
+		setManager(new WindowManager(this, cp5, fnt_con12, fnt_con14));
 		display_stack = new Stack<ScreenMode>();
 		contents = new MenuScroll(this, "cont", ITEMS_TO_SHOW, 10, 20);
 		options = new MenuScroll(this, "opt", 3, 10, 180);
@@ -7812,11 +7848,11 @@ public class RobotRun extends PApplet {
 
 		lastTextPositionY += 20;
 		// Display the current axes display state
-		text(String.format("Axes Display: %s", axesState.name()),  lastTextPositionX, height - 50);
+		text(String.format("Axes Display: %s", getAxesState().name()),  lastTextPositionX, height - 50);
 
-		if (axesState == AxesDisplay.GRID) {
+		if (getAxesState() == AxesDisplay.GRID) {
 			// Display the current ee mapping state
-			text(String.format("EE Mapping: %s", mappingState.name()),  lastTextPositionX, height - 30);
+			text(String.format("EE Mapping: %s", getEEMapping().name()),  lastTextPositionX, height - 30);
 		}
 
 		if (Fields.DEBUG) {
@@ -7931,6 +7967,19 @@ public class RobotRun extends PApplet {
 		display_stack.push(mode);
 		loadScreen();
 	}
+	
+	/**
+	 * Toggle the second Robot on or off.
+	 */
+	public void ToggleRobot() {
+		boolean robotRemoved = getManager().toggleSecondRobot();
+		// Reset the active robot to the first if the second robot is removed
+		if (robotRemoved && activeRobot != robots.get(0)) {
+			activeRobot = robots.get(0);
+		}
+		
+		getManager().updateMiscWindowContentPositions();
+	}
 
 	public void TOOL1() {
 		if(getSU_macro_bindings()[0] != null && isShift()) {
@@ -8012,7 +8061,7 @@ public class RobotRun extends PApplet {
 			CallFrame ret = model.popCallStack();
 			
 			if(ret != null) {
-				RoboticArm tgtDevice = robots[ret.getTgtRID()];
+				RoboticArm tgtDevice = robots.get( ret.getTgtRID() );
 				tgtDevice.setActiveProgIdx(ret.getTgtProgID());
 				tgtDevice.setActiveInstIdx(ret.getTgtInstID());
 				activeRobot = tgtDevice;
@@ -8036,9 +8085,16 @@ public class RobotRun extends PApplet {
 			s.updateAndDrawObjects(model);
 		}
 		
-		// Draw all robots
-		for (RoboticArm r : robots) {
-			r.draw();
+		
+		if (getManager().getRobotButtonState()) {
+			// Draw all robots
+			for (RoboticArm r : robots.values()) {
+				r.draw();
+			}
+			
+		} else {
+			// Draw only the active robot
+			activeRobot.draw();
 		}
 
 		model.updatePreviousEEOrientation();

@@ -25,8 +25,8 @@ public class IOInstruction extends Instruction {
 		return copy;
 	}
 	public int execute() {
-		RobotRun.getInstance().getArmModel().endEffectorState = state;
-		RobotRun.getInstance().getArmModel().checkPickupCollision(RobotRun.getInstance().activeScenario);
+		RobotRun.getActiveRobot().endEffectorState = state;
+		RobotRun.getActiveRobot().checkPickupCollision(RobotRun.getInstance().activeScenario);
 		return 0;
 	}
 	public int getReg(){ return reg; }
