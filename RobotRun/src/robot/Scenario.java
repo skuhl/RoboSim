@@ -363,7 +363,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 				}
 
 				/* Collision Detection */
-				if(RobotRun.getInstance().showOBBs) {
+				if(RobotRun.getInstance().areOBBsDisplayed()) {
 					if( model != null && model.checkObjectCollision(p) ) {
 						p.setBBColor(RobotRun.getInstance().color(255, 0, 0));
 					}

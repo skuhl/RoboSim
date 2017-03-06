@@ -704,7 +704,9 @@ public class RoboticArm {
 		RobotRun.getInstance().popMatrix();
 		/* My sketchy work-around for drawing only the bounding boxes of the
 		 * active robot */
-		if (RobotRun.getActiveRobot() == this && RobotRun.getInstance().showOBBs) {
+		if (RobotRun.getActiveRobot() == this &&
+				RobotRun.getInstance().areOBBsDisplayed()) {
+			
 			drawBoxes();
 		}
 	}

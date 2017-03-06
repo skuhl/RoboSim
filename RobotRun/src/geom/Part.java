@@ -232,7 +232,11 @@ public class Part extends WorldObject {
 		RobotRun.getInstance().pushMatrix();
 		applyCoordinateSystem();
 		getForm().draw();
-		if (RobotRun.getInstance().showOBBs) { absOBB.getBox().draw(); }
+		
+		if (RobotRun.getInstance().areOBBsDisplayed()) {
+			absOBB.getBox().draw();
+		}
+		
 		RobotRun.getInstance().popMatrix();
 	}
 

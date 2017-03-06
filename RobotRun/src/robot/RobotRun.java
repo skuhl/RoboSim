@@ -85,7 +85,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	// Deterimes what type of axes should be displayed
-	private static AxesDisplay axesState = AxesDisplay.AXES;
+	//private static AxesDisplay axesState = AxesDisplay.AXES;
 	
 	public static PFont fnt_con14;
 	
@@ -384,9 +384,14 @@ public class RobotRun extends PApplet {
 
 		return r;
 	}
-	public static AxesDisplay getAxesState() {
-		return axesState;
+	
+	/**
+	 * @return	the active axes display state
+	 */
+	public AxesDisplay getAxesState() {
+		return getManager().getAxesDisplay();
 	}
+	
 	/**
 	 * Returns the instance of this PApplet
 	 */
@@ -814,10 +819,6 @@ public class RobotRun extends PApplet {
 
 		return u;
 	}
-
-	public static void setAxesState(AxesDisplay axesState) {
-		RobotRun.axesState = axesState;
-	}
 	
 	/**
 	 * Forms the 4x4 transformation matrix (row major order) form the given
@@ -883,7 +884,7 @@ public class RobotRun extends PApplet {
 	public MenuScroll options;
 	public final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
 	public Scenario activeScenario;
-	public boolean showOBBs;
+	//public boolean showOBBs;
 	private Camera camera;
 	private RoboticArm activeRobot;
 	
@@ -995,10 +996,7 @@ public class RobotRun extends PApplet {
 	int interMotionIdx = -1;
 
 	private boolean executingInstruction = false;
-
-	// Determines what End Effector mapping should be display
-	private EEMapping mappingState = EEMapping.LINE;
-
+	
 	public final int MTYPE_JOINT = 0;
 
 	public final int MTYPE_LINEAR = 1;
@@ -1048,6 +1046,13 @@ public class RobotRun extends PApplet {
 		}
 
 		updateScreen();
+	}
+	
+	/**
+	 * @return	Whether or not bounding boxes are displayed
+	 */
+	public boolean areOBBsDisplayed() {
+		return getManager().getOBBButtonState();
 	}
 
 	public String arrayToString(float[] array) {
@@ -2067,7 +2072,7 @@ public class RobotRun extends PApplet {
 
 		Point eePoint = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles());
 
-		if (axesState == AxesDisplay.AXES && getActiveRobot().getCurCoordFrame() == CoordFrame.TOOL) {
+		if (getAxesState() == AxesDisplay.AXES && getActiveRobot().getCurCoordFrame() == CoordFrame.TOOL) {
 			Frame activeTool = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
 
 			// Draw the axes of the active Tool frame at the Robot End Effector
@@ -2087,7 +2092,7 @@ public class RobotRun extends PApplet {
 			popMatrix();
 		}
 
-		if (axesState == AxesDisplay.AXES) {
+		if (getAxesState() == AxesDisplay.AXES) {
 			// Display axes
 			if (getActiveRobot().getCurCoordFrame() != CoordFrame.JOINT) {
 				Frame activeUser = getActiveRobot().getActiveFrame(CoordFrame.USER);
@@ -2102,7 +2107,7 @@ public class RobotRun extends PApplet {
 				}
 			}
 
-		} else if (axesState == AxesDisplay.GRID) {
+		} else if (getAxesState() == AxesDisplay.GRID) {
 			// Display gridlines spanning from axes of the current frame
 			Frame active;
 			float[][] displayAxes;
@@ -4421,6 +4426,13 @@ public class RobotRun extends PApplet {
 	public ControlP5 getCp5() {
 		return cp5;
 	}
+	
+	/**
+	 * @return	The active End Effector mapping state
+	 */
+	public EEMapping getEEMapping() {
+		return getManager().getEEMapping();
+	}
 
 	//Function label text
 	public String[] getFunctionLabels(ScreenMode mode){
@@ -5830,11 +5842,20 @@ public class RobotRun extends PApplet {
 		activeRobot.halt();
 		setProgramRunning(false);
 	}
-
+	
+	/**
+	 * Toggle bounding box display on or off.
+	 */
 	public void HideOBBs() {
-		// Toggle object display on or off
-		showOBBs = !showOBBs;
+		//showOBBs = !showOBBs;
 		getManager().updateScenarioWindowContentPositions();
+	}
+	
+	/**
+	 * Toggle the second Robot on of off.
+	 */
+	public void HideRobot() {
+		getManager().updateMiscWindowContentPositions();
 	}
 
 	public void IO() {
@@ -5849,6 +5870,13 @@ public class RobotRun extends PApplet {
 
 	public boolean isProgramRunning() {
 		return programRunning;
+	}
+	
+	/**
+	 * @return	Whether or not the second robot is used in the application
+	 */
+	public boolean isSecondRobotUsed() {
+		return getManager().getRobotButtonState();
 	}
 
 	public boolean isShift() {
@@ -5977,32 +6005,6 @@ public class RobotRun extends PApplet {
 			}
 
 			return;
-		} else if (key == 'a') {
-			// Cycle through Axes display states
-			switch (axesState) {
-			case NONE:
-				axesState = AxesDisplay.AXES;
-				break;
-			case AXES:
-				axesState = AxesDisplay.GRID;
-				break;
-			default:
-				axesState = AxesDisplay.NONE;
-			}
-
-		} else if(key == 'e') {
-			// Cycle through EE Mapping states
-			switch (mappingState) {
-			case NONE:
-				mappingState = EEMapping.LINE;
-				break;
-			case LINE:
-				mappingState = EEMapping.DOT;
-				break;
-			default:
-				mappingState = EEMapping.NONE;
-			}
-
 		} else if (key == 'f' ) {
 			// Display the User and Tool frames associated with the current motion instruction
 			if (Fields.DEBUG && mode == ScreenMode.NAV_PROG_INSTR && (contents.getColumnIdx() == 3 || contents.getColumnIdx() == 4)) {
@@ -7013,7 +7015,7 @@ public class RobotRun extends PApplet {
 		int c = (ee_pos.y <= basePos.y) ? color(255, 0, 0) : color(150, 0, 255);
 
 		// Toggle EE mapping type with 'e'
-		switch (mappingState) {
+		switch (getEEMapping()) {
 		case LINE:
 			stroke(c);
 			// Draw a line, from the EE to the grid in the xy plane, parallel to the xy plane
@@ -7627,7 +7629,6 @@ public class RobotRun extends PApplet {
 		
 		intermediatePositions = new ArrayList<Point>();
 		activeScenario = null;
-		showOBBs = true;
 		
 		DataManagement.initialize(this);
 		DataManagement.loadState(this);
@@ -7849,11 +7850,11 @@ public class RobotRun extends PApplet {
 
 		lastTextPositionY += 20;
 		// Display the current axes display state
-		text(String.format("Axes Display: %s", axesState.name()),  lastTextPositionX, height - 50);
+		text(String.format("Axes Display: %s", getAxesState().name()),  lastTextPositionX, height - 50);
 
-		if (axesState == AxesDisplay.GRID) {
+		if (getAxesState() == AxesDisplay.GRID) {
 			// Display the current ee mapping state
-			text(String.format("EE Mapping: %s", mappingState.name()),  lastTextPositionX, height - 30);
+			text(String.format("EE Mapping: %s", getEEMapping().name()),  lastTextPositionX, height - 30);
 		}
 
 		if (Fields.DEBUG) {

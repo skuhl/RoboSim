@@ -51,6 +51,11 @@ public class MyDropdownList extends DropdownList {
 	 * in the Dropdown list.
 	 */
 	public void resetLabel() {
+		
+		 if (getLabel().equals("DOT")) {
+			 throw new NullPointerException("Error!");
+		 }
+		
 		getCaptionLabel().setText( getName() );
 		setValue(0);
 	}
