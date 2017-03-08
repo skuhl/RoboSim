@@ -5095,7 +5095,11 @@ public class RobotRun extends PApplet {
 			options.addLine("4. IF/SELECT" );
 			options.addLine("5. JMP/LBL"   );
 			options.addLine("6. CALL"      );
-			options.addLine("6. RCALL"     );
+			/* Only allow the user to add robot call instructions when the
+			 * second robot is in the application */
+			if (getManager().getRobotButtonState()) {
+				options.addLine("6. RCALL"     );
+			}
 			break;
 		case SELECT_IO_INSTR_REG:
 			loadIORegisters();
@@ -7979,6 +7983,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		getManager().updateMiscWindowContentPositions();
+		updateScreen();
 	}
 
 	public void TOOL1() {
@@ -8054,24 +8059,25 @@ public class RobotRun extends PApplet {
 	public void updateAndDrawObjects(Scenario s, RoboticArm model) {
 		model.updateRobot();
 		
-		Program ap = model.getActiveProg();
-		
-		// Check the call stack for any waiting processes
-		if (ap != null && model.getActiveInstIdx() == ap.getInstructions().size()) {
-			CallFrame ret = model.popCallStack();
+		if (RobotRun.getInstance().isProgramRunning()) {
+			Program ap = model.getActiveProg();
 			
-			if(ret != null) {
-				RoboticArm tgtDevice = robots.get( ret.getTgtRID() );
-				tgtDevice.setActiveProgIdx(ret.getTgtProgID());
-				tgtDevice.setActiveInstIdx(ret.getTgtInstID());
-				activeRobot = tgtDevice;
+			// Check the call stack for any waiting processes
+			if (ap != null && model.getActiveInstIdx() == ap.getInstructions().size()) {
+				CallFrame ret = model.popCallStack();
+				
+				if(ret != null) {
+					RoboticArm tgtDevice = robots.get( ret.getTgtRID() );
+					tgtDevice.setActiveProgIdx(ret.getTgtProgID());
+					tgtDevice.setActiveInstIdx(ret.getTgtInstID());
+					activeRobot = tgtDevice;
+					
+					// Update the display
+					getContentsMenu().setLineIdx(model.getActiveInstIdx());
+					getContentsMenu().setColumnIdx(0);
+					updateScreen();
+				}
 			}
-			
-			// Update the display
-			getContentsMenu().setLineIdx(model.getActiveInstIdx());
-			getContentsMenu().setColumnIdx(0);
-			updateScreen();
-			
 		}
 
 		if (s != null) {
