@@ -1,6 +1,7 @@
 package ui;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import controlP5.ButtonBar;
 import controlP5.ControlP5;
@@ -11,7 +12,7 @@ import robot.RobotRun;
  * lets you figure out which button is active in a reasonable manner.
  */
 public class ButtonTabs extends ButtonBar {
-
+	
 	private String selectedButtonName;
 
 	public ButtonTabs(ControlP5 parent, String name) {
@@ -31,16 +32,17 @@ public class ButtonTabs extends ButtonBar {
 		// Update active button state
 		super.onClick();
 
-		List<?> items = getItems();
+		@SuppressWarnings("unchecked")
+		List<HashMap<?, ?>> items = this.getItems();
 		selectedButtonName = null;
 		// Determine which button is active
-		for (Object item : items) {
-			HashMap<?, ?> map = (HashMap<?, ?>)item;
-			Object value = map.get("selected");
-
-			if (value instanceof Boolean && (Boolean)value) {
+		for (HashMap<?, ?> item : items) {
+			assert item.get("selected") instanceof Boolean;
+			Boolean value = (Boolean)item.get("selected");
+			
+			if (value) {
 				// Update selectedButtonName
-				selectedButtonName = (String)map.get("name");
+				selectedButtonName = (String)item.get("name");
 			}
 		}
 		
