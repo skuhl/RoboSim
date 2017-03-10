@@ -3950,7 +3950,7 @@ public class RobotRun extends PApplet {
 
 			if (ins != null) {
 				int selectIdx = getSelectedIdx();
-				getInstrEdit(ins, selectIdx);
+				getEditScreen(ins, selectIdx);
 			}
 			
 			break;
@@ -4812,7 +4812,7 @@ public class RobotRun extends PApplet {
 		return header;
 	}
 	
-	public void getInstrEdit(Instruction ins, int selectIdx) {
+	public void getEditScreen(Instruction ins, int selectIdx) {
 		if(ins instanceof MotionInstruction) {
 			if(getSelectedLine() == 0) {
 				// edit movement instruction line 1
@@ -6320,6 +6320,7 @@ public class RobotRun extends PApplet {
 		case SET_SELECT_STMT_ACT:
 			options.addLine("JMP LBL[x]");
 			options.addLine("CALL");
+			options.addLine("RCALL");
 			break;
 		case SET_SELECT_STMT_ARG:
 			options.addLine("R[x]");
@@ -7262,7 +7263,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void NewScenario() {
+	public void newScenario() {
 		Scenario newScenario = getManager().initializeScenario();
 
 		if (newScenario != null) {
