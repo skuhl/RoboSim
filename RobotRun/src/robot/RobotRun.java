@@ -3663,11 +3663,12 @@ public class RobotRun extends PApplet {
 					// Call an inactive Robot's program
 					if (getManager().getRobotButtonState()) {
 						nextInstr = activeInstr.execute();
-						
 					} else {
 						// No second robot in application
 						nextInstr = -1;
 					}
+				} else {
+					nextInstr = activeInstr.execute();
 				}
 
 			} else if (activeInstr instanceof IfStatement || activeInstr instanceof SelectStatement) {
