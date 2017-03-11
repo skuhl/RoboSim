@@ -422,6 +422,7 @@ public class RobotRun extends PApplet {
 
 		while(count < limit) {
 			Point cPoint = nativeRobotEEPoint(model, angles);
+			float cumulativeOffset = 0;
 
 			if (tgtOrientation.dot(cPoint.orientation) < 0f) {
 				// Use -q instead of q
@@ -460,23 +461,24 @@ public class RobotRun extends PApplet {
 				}
 
 				//update joint angles
+				cumulativeOffset += dAngle[i];
+				//prevents IK algorithm from producing unrealistic motion
+				if(Math.abs(cumulativeOffset) > Fields.PI) {
+					System.out.println("Optimal solution not found.");
+					return null;
+				}
 				angles[i] += dAngle[i];
 				angles[i] += TWO_PI;
 				angles[i] %= TWO_PI;
 			}
-
+			
+			System.out.println(String.format("IK result for cycle %d: [%f, %f, %f, %f, %f, %f]", count, angles[0], angles[1], angles[2], angles[3], angles[4], angles[5]));
 			count += 1;
 			if (count == limit) {
-				// IK failure
-				//if (DISPLAY_TEST_OUTPUT) {
-				//  System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles),
-				//                      matrixToString(J), cPoint.orientation, tgtOrientation);
-				//}
-
 				return null;
 			}
 		}
-
+		
 		return angles;
 	}
 	
