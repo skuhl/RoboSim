@@ -23,13 +23,13 @@ public class MyDropdownList extends DropdownList {
 	/**
 	 * Returns the value associated with the active label of the Dropdown list.
 	 */
-	public Object getActiveLabelValue() {
+	public Object getActiveLabelValue() {    
 		Map<String, Object> associatedObjects = getItem( getCaptionLabel().getText() );
 
 		if (associatedObjects != null) {
 			return associatedObjects.get("value");
 		}
-		
+
 		// You got problems ...
 		return null;
 	}
@@ -51,6 +51,11 @@ public class MyDropdownList extends DropdownList {
 	 * in the Dropdown list.
 	 */
 	public void resetLabel() {
+		
+		 if (getLabel().equals("DOT")) {
+			 throw new NullPointerException("Error!");
+		 }
+		
 		getCaptionLabel().setText( getName() );
 		setValue(0);
 	}
