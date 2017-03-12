@@ -422,6 +422,7 @@ public class RobotRun extends PApplet {
 
 		while(count < limit) {
 			Point cPoint = nativeRobotEEPoint(model, angles);
+			float cumulativeOffset = 0;
 
 			if (tgtOrientation.dot(cPoint.orientation) < 0f) {
 				// Use -q instead of q
@@ -460,23 +461,24 @@ public class RobotRun extends PApplet {
 				}
 
 				//update joint angles
+				cumulativeOffset += dAngle[i];
+				//prevents IK algorithm from producing unrealistic motion
+				if(Math.abs(cumulativeOffset) > Fields.PI) {
+					System.out.println("Optimal solution not found.");
+					//return null;
+				}
 				angles[i] += dAngle[i];
 				angles[i] += TWO_PI;
 				angles[i] %= TWO_PI;
 			}
-
+			
+			//System.out.println(String.format("IK result for cycle %d: [%f, %f, %f, %f, %f, %f]", count, angles[0], angles[1], angles[2], angles[3], angles[4], angles[5]));
 			count += 1;
 			if (count == limit) {
-				// IK failure
-				//if (DISPLAY_TEST_OUTPUT) {
-				//  System.out.printf("\nDelta: %s\nAngles: %s\n%s\n%s -> %s\n", arrayToString(delta), arrayToString(angles),
-				//                      matrixToString(J), cPoint.orientation, tgtOrientation);
-				//}
-
 				return null;
 			}
 		}
-
+		
 		return angles;
 	}
 	
@@ -1547,16 +1549,12 @@ public class RobotRun extends PApplet {
 		PVector tmp1 = new PVector(a.x-b.x, a.y-b.y, a.z-b.z);
 		PVector tmp2 = new PVector(a.x-c.x, a.y-c.y, a.z-c.z);
 		PVector n = tmp1.cross(tmp2);
-		tmp1.normalize();
-		tmp2.normalize();
 		n.normalize();
 		// calculate the angle between the start and end points
 		PVector vec1 = new PVector(a.x-center.x, a.y-center.y, a.z-center.z);
 		PVector vec2 = new PVector(c.x-center.x, c.y-center.y, c.z-center.z);
-		vec1.normalize();
-		vec2.normalize();
-		float theta = atan2(vec1.cross(vec2).mag(), vec1.dot(vec2));
-
+		float theta = atan2(vec1.cross(vec2).dot(n), vec1.dot(vec2));
+		if(theta < 0) theta += Fields.TWO_PI;
 		// finally, draw an arc through all 3 points by rotating the u
 		// vector around our normal vector
 		float angle = 0, mu = 0;
@@ -2350,12 +2348,27 @@ public class RobotRun extends PApplet {
 			// Display the point with its local orientation axes
 			displayOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
 		}
-
+		
 		//TESTING CODE: DRAW INTERMEDIATE POINTS
+		if(Fields.DEBUG && intermediatePositions != null) {
+			int count = 0;
+			for(Point p : intermediatePositions) {
+				if(count % 4 == 0) {
+					pushMatrix();
+					stroke(0);
+					translate(p.position.x, p.position.y, p.position.z);
+					sphere(5);
+					popMatrix();
+				}
+				
+				count += 1;
+			}
+		}
+		
 		noLights();
 		noStroke();
 		popMatrix();
-
+		
 		hint(DISABLE_DEPTH_TEST);
 		// Apply the camera for drawing text and windows
 		ortho();
@@ -3663,11 +3676,12 @@ public class RobotRun extends PApplet {
 					// Call an inactive Robot's program
 					if (getManager().getRobotButtonState()) {
 						nextInstr = activeInstr.execute();
-						
 					} else {
 						// No second robot in application
 						nextInstr = -1;
 					}
+				} else {
+					nextInstr = activeInstr.execute();
 				}
 
 			} else if (activeInstr instanceof IfStatement || activeInstr instanceof SelectStatement) {
@@ -3949,7 +3963,7 @@ public class RobotRun extends PApplet {
 
 			if (ins != null) {
 				int selectIdx = getSelectedIdx();
-				getInstrEdit(ins, selectIdx);
+				getEditScreen(ins, selectIdx);
 			}
 			
 			break;
@@ -4811,7 +4825,7 @@ public class RobotRun extends PApplet {
 		return header;
 	}
 	
-	public void getInstrEdit(Instruction ins, int selectIdx) {
+	public void getEditScreen(Instruction ins, int selectIdx) {
 		if(ins instanceof MotionInstruction) {
 			if(getSelectedLine() == 0) {
 				// edit movement instruction line 1
@@ -6319,6 +6333,7 @@ public class RobotRun extends PApplet {
 		case SET_SELECT_STMT_ACT:
 			options.addLine("JMP LBL[x]");
 			options.addLine("CALL");
+			options.addLine("RCALL");
 			break;
 		case SET_SELECT_STMT_ARG:
 			options.addLine("R[x]");
@@ -7261,7 +7276,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void NewScenario() {
+	public void newScenario() {
 		Scenario newScenario = getManager().initializeScenario();
 
 		if (newScenario != null) {
@@ -7707,7 +7722,7 @@ public class RobotRun extends PApplet {
 		else if(instruction.getMotionType() == MTYPE_CIRCULAR) {
 			MotionInstruction nextIns = instruction.getSecondaryPoint();
 			Point nextPoint = nextIns.getVector(program);
-
+			
 			beginNewCircularMotion(start, instruction.getVector(program), nextPoint);
 		} // end circular movement setup
 

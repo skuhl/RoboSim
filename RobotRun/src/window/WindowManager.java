@@ -702,8 +702,10 @@ public class WindowManager {
 					 
 				 } else if (controller instanceof MyDropdownList) {
 					 // Reset the caption label of the dropdown list and close the list
-					 ((MyDropdownList)controller).resetLabel();
-					 controller = ((DropdownList)controller).close();
+					 if(!controller.equals(stateDDLists[0]) && !controller.equals(stateDDLists[1])) {
+						 ((MyDropdownList)controller).resetLabel();
+						 controller = ((DropdownList)controller).close();
+					 }
 				 }
 			 }
 		 }
@@ -1852,7 +1854,7 @@ public class WindowManager {
 	  */
 	 public void updateWindowDisplay() {
 		 String windowState = windowTabs.getActiveButtonName();
-
+		 		 
 		 if (windowState == null || windowState.equals("Hide")) {
 			 // Hide any window
 			 app.g1.hide();

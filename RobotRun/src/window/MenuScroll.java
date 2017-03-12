@@ -212,10 +212,10 @@ public class MenuScroll {
 
 		if (page) {
 			// Move display frame down an entire screen's display length
-			int prevIdx = lineIdx;			
+			int prevIdx = getItemIdx();			
 			lineIdx = Math.min(size - 1, lineIdx + (maxDisp - 1));
 			renderStart = (Math.max(0, Math.min(size - maxDisp, renderStart + (maxDisp - 1))));
-			for(; prevIdx <= lineIdx && lineSelect != null; prevIdx += 1) {
+			for(; prevIdx <= getItemIdx() && lineSelect != null; prevIdx += 1) {
 				toggleSelect(prevIdx);
 			}
 		} else {
@@ -257,10 +257,10 @@ public class MenuScroll {
 	public int moveUp(boolean page) {
 		if (page) {
 			// Move display frame up an entire screen's display length
-			int prevIdx = lineIdx;
+			int prevIdx = getItemIdx();
 			lineIdx = (Math.max(0, lineIdx - (maxDisp - 1)));
 			renderStart = (Math.max(0, renderStart - (maxDisp - 1)));
-			for(; prevIdx >= lineIdx && lineSelect != null; prevIdx -= 1) {
+			for(; prevIdx >= getItemIdx() && lineSelect != null; prevIdx -= 1) {
 				toggleSelect(prevIdx);
 			}
 		} 

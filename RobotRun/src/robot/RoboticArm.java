@@ -1212,12 +1212,14 @@ public class RoboticArm {
 		for(int joint = 0; !(destAngles == null) && joint < 6; joint += 1) {
 			if (!anglePermitted(joint, destAngles[joint])) {
 				invalidAngle = true;
-
+				
 				if (Fields.DEBUG) {
 					PVector rangeBounds = getJointRange(joint);
-					System.out.printf("Invalid angle: J[%d] = %4.3f : [%4.3f -> %4.3f]\n", joint,
+					System.out.printf("Invalid angle: J[%d] = %4.3f -> %4.3f : [%4.3f - %4.3f]\n", joint, getJointAngles()[joint],
 							destAngles[joint], rangeBounds.x, rangeBounds.y);
-				} 
+				}
+				
+				break;
 			}
 		}
 
