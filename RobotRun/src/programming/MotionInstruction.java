@@ -131,6 +131,7 @@ public final class MotionInstruction extends Instruction  {
 
 		return pt.add(offset);
 	} // end getVector()
+	
 	public void setGlobalPosRegUse(boolean in) { isGPosReg = in; }
 	public void setMotionType(int in) { motionType = in; }
 	public void setOffset(int in) { offsetRegNum = in; }

@@ -465,14 +465,14 @@ public class RobotRun extends PApplet {
 				//prevents IK algorithm from producing unrealistic motion
 				if(Math.abs(cumulativeOffset) > Fields.PI) {
 					System.out.println("Optimal solution not found.");
-					return null;
+					//return null;
 				}
 				angles[i] += dAngle[i];
 				angles[i] += TWO_PI;
 				angles[i] %= TWO_PI;
 			}
 			
-			System.out.println(String.format("IK result for cycle %d: [%f, %f, %f, %f, %f, %f]", count, angles[0], angles[1], angles[2], angles[3], angles[4], angles[5]));
+			//System.out.println(String.format("IK result for cycle %d: [%f, %f, %f, %f, %f, %f]", count, angles[0], angles[1], angles[2], angles[3], angles[4], angles[5]));
 			count += 1;
 			if (count == limit) {
 				return null;
@@ -1549,16 +1549,12 @@ public class RobotRun extends PApplet {
 		PVector tmp1 = new PVector(a.x-b.x, a.y-b.y, a.z-b.z);
 		PVector tmp2 = new PVector(a.x-c.x, a.y-c.y, a.z-c.z);
 		PVector n = tmp1.cross(tmp2);
-		tmp1.normalize();
-		tmp2.normalize();
 		n.normalize();
 		// calculate the angle between the start and end points
 		PVector vec1 = new PVector(a.x-center.x, a.y-center.y, a.z-center.z);
 		PVector vec2 = new PVector(c.x-center.x, c.y-center.y, c.z-center.z);
-		vec1.normalize();
-		vec2.normalize();
-		float theta = atan2(vec1.cross(vec2).mag(), vec1.dot(vec2));
-
+		float theta = atan2(vec1.cross(vec2).dot(n), vec1.dot(vec2));
+		if(theta < 0) theta += Fields.TWO_PI;
 		// finally, draw an arc through all 3 points by rotating the u
 		// vector around our normal vector
 		float angle = 0, mu = 0;
@@ -2352,12 +2348,27 @@ public class RobotRun extends PApplet {
 			// Display the point with its local orientation axes
 			displayOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
 		}
-
+		
 		//TESTING CODE: DRAW INTERMEDIATE POINTS
+		if(Fields.DEBUG && intermediatePositions != null) {
+			int count = 0;
+			for(Point p : intermediatePositions) {
+				if(count % 4 == 0) {
+					pushMatrix();
+					stroke(0);
+					translate(p.position.x, p.position.y, p.position.z);
+					sphere(5);
+					popMatrix();
+				}
+				
+				count += 1;
+			}
+		}
+		
 		noLights();
 		noStroke();
 		popMatrix();
-
+		
 		hint(DISABLE_DEPTH_TEST);
 		// Apply the camera for drawing text and windows
 		ortho();
@@ -7711,7 +7722,7 @@ public class RobotRun extends PApplet {
 		else if(instruction.getMotionType() == MTYPE_CIRCULAR) {
 			MotionInstruction nextIns = instruction.getSecondaryPoint();
 			Point nextPoint = nextIns.getVector(program);
-
+			
 			beginNewCircularMotion(start, instruction.getVector(program), nextPoint);
 		} // end circular movement setup
 
