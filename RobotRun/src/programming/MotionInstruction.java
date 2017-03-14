@@ -1,4 +1,6 @@
 package programming;
+import java.util.ArrayList;
+
 import frame.Frame;
 import geom.Point;
 import global.Fields;
@@ -16,6 +18,8 @@ public final class MotionInstruction extends Instruction  {
 	private int userFrame;
 	private int toolFrame;
 	private MotionInstruction circSubInstr;
+	
+	private ArrayList<Point> intermediatePositions;
 
 	public MotionInstruction(int m, int p, boolean g, float s, int t) {
 		motionType = m;
@@ -27,11 +31,14 @@ public final class MotionInstruction extends Instruction  {
 		termination = t;
 		userFrame = -1;
 		toolFrame = -1;
+		
 		if(motionType != -1) {
 			circSubInstr = new MotionInstruction(-1, -1, false, 100, 0);
 		} else {
 			circSubInstr = null;
 		}
+		
+		
 	}
 
 	public MotionInstruction(int m, int p, boolean g, float s, int t, int uf,
