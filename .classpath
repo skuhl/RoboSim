@@ -9,5 +9,9 @@
 	<classpathentry kind="lib" path="RobotRun/lib/jogl-all-natives-windows-amd64.jar"/>
 	<classpathentry kind="lib" path="RobotRun/lib/jogl-all.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Users/Vince/Documents/GitHub/RobotRun/RobotRun/lib/gluegen-rt-natives-macosx-universal.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Vince/Documents/GitHub/RobotRun/RobotRun/lib/jogl-all-natives-macosx-universal.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Vince/Documents/GitHub/RobotRun/RobotRun/lib/gluegen-rt-natives-windows-i586.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Vince/Documents/GitHub/RobotRun/RobotRun/lib/jogl-all-natives-windows-i586.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
