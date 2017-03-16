@@ -7276,7 +7276,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void newScenario() {
+	public void NewScenario() {
 		Scenario newScenario = getManager().initializeScenario();
 
 		if (newScenario != null) {
