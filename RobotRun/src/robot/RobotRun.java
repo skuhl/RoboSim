@@ -2350,7 +2350,7 @@ public class RobotRun extends PApplet {
 			displayOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
 		}
 		
-		//TESTING CODE: DRAW INTERMEDIATE POINTS
+		/*TESTING CODE: DRAW INTERMEDIATE POINTS*
 		if(Fields.DEBUG && intermediatePositions != null) {
 			int count = 0;
 			for(Point p : intermediatePositions) {
@@ -2365,6 +2365,7 @@ public class RobotRun extends PApplet {
 				count += 1;
 			}
 		}
+		/**/
 		
 		noLights();
 		noStroke();
@@ -8261,10 +8262,16 @@ public class RobotRun extends PApplet {
 		}
 	} // end updateScreen()
 
+	/**
+	 * Confirm changes made to the orientation and position of the selected
+	 * world object.
+	 */
 	public void UpdateWldObj() {
-		/* Confirm changes made to the orientation and
-		 * position of the selected world object. */
-		getManager().editWorldObject();
+		
+		// Only allow world object editing when no program is executing
+		if (!isProgramRunning()) {
+			getManager().editWorldObject();
+		}
 	}
 
 	/**
