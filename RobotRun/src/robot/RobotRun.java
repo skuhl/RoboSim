@@ -88,6 +88,7 @@ public class RobotRun extends PApplet {
 	
 	public static PFont fnt_con12;
 	public static PFont fnt_conB;
+	
 	/**
 	 * Determines if the lies within the range of angles that span from rangeStart to rangeEnd,
 	 * going clockwise around the Unit Cycle. It is assumed that all parameters are in radians
@@ -2848,7 +2849,6 @@ public class RobotRun extends PApplet {
 				}
 
 				m.setSpeed(tempSpeed);
-				DataManagement.saveState(this);
 			}
 
 			lastScreen();
@@ -3460,6 +3460,7 @@ public class RobotRun extends PApplet {
 				regIdx = Integer.parseInt(workingText) - 1;
 				getActiveRobot().getDReg(regIdx).comment = getActiveRobot().getDReg(active_index).comment;
 				DataManagement.saveState(this);
+				
 			} catch (NumberFormatException MFEx) {
 				println("Only real numbers are valid!");
 			} catch (IndexOutOfBoundsException IOOBEx) {
@@ -3476,6 +3477,7 @@ public class RobotRun extends PApplet {
 				regIdx = Integer.parseInt(workingText) - 1;
 				getActiveRobot().getDReg(regIdx).value = getActiveRobot().getDReg(active_index).value;
 				DataManagement.saveState(this);
+				
 			} catch (NumberFormatException MFEx) {
 				println("Only real numbers are valid!");
 			} catch (IndexOutOfBoundsException IOOBEx) {
@@ -3492,6 +3494,7 @@ public class RobotRun extends PApplet {
 				regIdx = Integer.parseInt(workingText) - 1;
 				getActiveRobot().getPReg(regIdx).comment = getActiveRobot().getPReg(active_index).comment;
 				DataManagement.saveState(this);
+				
 			} catch (NumberFormatException MFEx) {
 				println("Only real numbers are valid!");
 			} catch (IndexOutOfBoundsException IOOBEx) {
@@ -3508,6 +3511,7 @@ public class RobotRun extends PApplet {
 				regIdx = Integer.parseInt(workingText) - 1;
 				getActiveRobot().getPReg(regIdx).point = getActiveRobot().getPReg(active_index).point.clone();
 				DataManagement.saveState(this);
+				
 			} catch (NumberFormatException MFEx) {
 				println("Only real numbers are valid!");
 			} catch (IndexOutOfBoundsException IOOBEx) {
@@ -3532,6 +3536,7 @@ public class RobotRun extends PApplet {
 					dReg.value = f;
 					DataManagement.saveState(this);
 				}
+				
 			} catch (NumberFormatException NFEx) {
 				// Invalid input value
 				println("Value must be a real number!");
@@ -7282,6 +7287,7 @@ public class RobotRun extends PApplet {
 		if (newScenario != null) {
 			// Add the new scenario
 			SCENARIOS.add(newScenario);
+			DataManagement.saveState(this);
 		}
 	}
 
@@ -7521,9 +7527,6 @@ public class RobotRun extends PApplet {
 
 	// Select button
 	public void se() {
-		// Save when exiting a program
-		DataManagement.saveState(this); 
-
 		getActiveRobot().setActiveProgIdx(0);
 		getActiveRobot().setActiveInstIdx(-1);
 
@@ -7953,7 +7956,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	//toggle step on/ off and button highlight
+	//toggle step on/off and button highlight
 	public void st() {
 		if(!isStep()) {
 			((Button)cp5.get("st")).setColorBackground(Fields.BUTTON_ACTIVE);
@@ -7961,10 +7964,16 @@ public class RobotRun extends PApplet {
 		else {
 			((Button)cp5.get("st")).setColorBackground(Fields.BUTTON_DEFAULT);
 		}
-
-
+		
 		setStep(!isStep());
 		updateScreen();
+	}
+	
+	@Override
+	public void dispose() {
+		// Save data before exiting
+		DataManagement.saveState(this);
+		super.dispose();
 	}
 
 	public void STATUS() {
