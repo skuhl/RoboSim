@@ -883,6 +883,7 @@ public class WindowManager {
 		 RoboticArm model = RobotRun.getActiveRobot();
 		 
 		 if (toEdit != null) {
+			 
 			 if (model != null && toEdit == model.held) {
 				 // Cannot edit an object being held by the Robot
 				 RobotRun.println("Cannot edit an object currently being held by the Robot!");
@@ -890,8 +891,9 @@ public class WindowManager {
 			 }
 
 			 try {
+				 boolean dimChanged = false, edited = false;
+				 WorldObject objSaveState = (WorldObject)toEdit.clone();
 				 Shape s = toEdit.getForm();
-				 boolean dimChanged = false;
 
 				 if (s instanceof Box) {
 					 Float[] newDims = getBoxDimensions();
@@ -942,6 +944,7 @@ public class WindowManager {
 				 if (dimChanged && toEdit instanceof Part) {
 					 // Update the bounding box dimensions of a part
 					 ((Part)toEdit).updateOBBDims();
+					 edited = true;
 				 }
 
 				 // Convert origin position into the World Frame
@@ -949,12 +952,35 @@ public class WindowManager {
 						 oWPR = RobotRun.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RobotRun.RAD_TO_DEG);
 				 Float[] inputValues = getOrientationValues();
 				 // Update position and orientation
-				 if (inputValues[0] != null) { oPosition.x = inputValues[0]; }
-				 if (inputValues[1] != null) { oPosition.y = inputValues[1]; }
-				 if (inputValues[2] != null) { oPosition.z = inputValues[2]; }
-				 if (inputValues[3] != null) { oWPR.x = -inputValues[3]; }
-				 if (inputValues[5] != null) { oWPR.y = -inputValues[5]; }
-				 if (inputValues[4] != null) { oWPR.z = inputValues[4]; }
+				 if (inputValues[0] != null) {
+					 oPosition.x = inputValues[0];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[1] != null) {
+					 oPosition.y = inputValues[1];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[2] != null) {
+					 oPosition.z = inputValues[2];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[3] != null) {
+					 oWPR.x = -inputValues[3];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[5] != null) {
+					 oWPR.y = -inputValues[5];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[4] != null) {
+					 oWPR.z = inputValues[4];
+					 edited = true;
+				 }
 
 				 // Convert values from the World to the Native coordinate system
 				 PVector position = RobotRun.convertWorldToNative( oPosition );
@@ -967,8 +993,20 @@ public class WindowManager {
 				 if (toEdit instanceof Part) {
 					 // Set the reference of the Part to the currently active fixture
 					 Fixture refFixture = (Fixture)inputDDLists[5].getActiveLabelValue();
+					 
+					 if (((Part) toEdit).getFixtureRef() != refFixture) {
+						 edited = true;
+					 }
+					 
 					 ((Part)toEdit).setFixtureRef(refFixture);
 				 }
+				 
+				 if (edited) {
+					 /* Save the previous version of the world object on the
+					  * undo stack */
+					 app.updateScenarioUndo(objSaveState);
+				 }
+				 
 			 } catch (NullPointerException NPEx) {
 				 RobotRun.println("Missing parameter!");
 				 NPEx.printStackTrace();
@@ -1693,7 +1731,7 @@ public class WindowManager {
 	  * Update the contents of the two dropdown menus that
 	  * contain world objects.
 	  */
-	 private void updateListContents() {
+	 public void updateListContents() {
 
 		 if (app.activeScenario != null) {
 			 inputDDLists[4] = (MyDropdownList)inputDDLists[4].clear();
