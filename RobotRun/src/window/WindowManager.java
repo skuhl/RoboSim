@@ -94,7 +94,7 @@ public class WindowManager {
 		 dropdownLbls = new Textarea[9];
 		 inputDDLists = new MyDropdownList[7];
 		 stateDDLists = new MyDropdownList[2];
-		 miscButtons = new Button[9];
+		 miscButtons = new Button[8];
 
 		 buttonDefColor = app.color(70);
 		 buttonActColor = app.color(220, 40, 40);
@@ -465,30 +465,14 @@ public class WindowManager {
 				 .setColorBackground(bkgrdColor)
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(scenarioWindow);
-
-		 miscButtons[5] = UIManager.addButton("SaveScenario")
-				 .setCaptionLabel("Save")
-				 .setColorValue(buttonTxtColor)
-				 .setColorBackground(buttonDefColor)
-				 .setColorActive(buttonActColor)
-				 .moveTo(scenarioWindow)
-				 .setSize(mButtonWidth, sButtonHeight);
-
-		 miscButtons[6] = UIManager.addButton("SetScenario")
+		 
+		 miscButtons[5] = UIManager.addButton("SetScenario")
 				 .setCaptionLabel("Load")
 				 .setColorValue(buttonTxtColor)
 				 .setColorBackground(buttonDefColor)
 				 .setColorActive(buttonActColor)
 				 .moveTo(scenarioWindow)
 				 .setSize(mButtonWidth, sButtonHeight);
-
-		 miscButtons[7] = UIManager.addButton("HideOBBs")
-				 .setCaptionLabel("Hide OBBs")
-				 .setColorValue(buttonTxtColor)
-				 .setColorBackground(buttonDefColor)
-				 .setColorActive(buttonActColor)
-				 .moveTo(scenarioWindow)
-				 .setSize(lButtonWidth, sButtonHeight);
 		
 		 dropdownLbls[7] = UIManager.addTextarea("ActiveAxesDisplay", "Axes Display:", 0, 0, lLblWidth, sButtonHeight)
 				 .setFont(medium)
@@ -506,7 +490,15 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(miscWindow);
 		 
-		 miscButtons[8] = UIManager.addButton("ToggleRobot")
+		 miscButtons[6] = UIManager.addButton("ToggleOBBs")
+				 .setCaptionLabel("Hide OBBs")
+				 .setColorValue(buttonTxtColor)
+				 .setColorBackground(buttonDefColor)
+				 .setColorActive(buttonActColor)
+				 .moveTo(miscWindow)
+				 .setSize(lButtonWidth, sButtonHeight);
+		 
+		 miscButtons[7] = UIManager.addButton("ToggleRobot")
 				 .setCaptionLabel("Add Robot")
 				 .setColorValue(buttonTxtColor)
 				 .setColorBackground(buttonDefColor)
@@ -1240,7 +1232,7 @@ public class WindowManager {
 	  * @return	Whether or not the OBB Display button is off
 	  */
 	 public boolean getOBBButtonState() {
-		 return !miscButtons[7].isOn();
+		 return !miscButtons[6].isOn();
 	 }
 
 	 /**
@@ -1314,7 +1306,7 @@ public class WindowManager {
 	  * @return	Whether or not the robot display button is on
 	  */
 	 public boolean getRobotButtonState() {
-		 return miscButtons[8].isOn();
+		 return miscButtons[7].isOn();
 	 }
 
 	 /**
@@ -1482,16 +1474,16 @@ public class WindowManager {
 		
 		// Remove or add the second Robot based on the HideRobot button
 		
-		if (miscButtons[8].isOn()) {
+		if (miscButtons[7].isOn()) {
 			windowTabs.setItems(new String[] { "Hide", "Robot1", "Robot2", "Create", "Edit", "Scenario", "Misc" });
-			miscButtons[8].setLabel("Remove Robot");
+			miscButtons[7].setLabel("Remove Robot");
 						
 		} else {
 			windowTabs.setItems(new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" });
-			miscButtons[8].setLabel("Add Robot");
+			miscButtons[7].setLabel("Add Robot");
 		}
 		
-		return miscButtons[8].isOn();
+		return miscButtons[7].isOn();
 	}
 
 	 /**
@@ -1779,26 +1771,12 @@ public class WindowManager {
 
 		 relPos = relativePosition(dropdownLbls[6], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		 inputDDLists[6] = (MyDropdownList)inputDDLists[6].setPosition(relPos[0], relPos[1]);
-		 // Save scenario button
+		 // Load scenario button
 		 relPos = relativePosition(dropdownLbls[6], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 miscButtons[5] = miscButtons[5].setPosition(relPos[0], relPos[1]);
-		 // Load scenario button
-		 relPos = relativePosition(miscButtons[5], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 miscButtons[6] = miscButtons[6].setPosition(relPos[0], relPos[1]);
-		 // Toggle Object display button
-		 relPos = relativePosition(miscButtons[6], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 miscButtons[7] = miscButtons[7].setPosition(relPos[0], relPos[1]);
-
-		 // Update button color based on the value of the object display flag
-		 if (miscButtons[7].isOn()) {
-			 miscButtons[7].setColorBackground(buttonActColor);
-
-		 } else {
-			 miscButtons[7].setColorBackground(buttonDefColor);
-		 }
-
+		 
 		 // Update window background display
-		 relPos = relativePosition(miscButtons[7], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(miscButtons[5], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 background.setBackgroundHeight(relPos[1])
 		 .setHeight(relPos[1])
 		 .show();
@@ -1822,19 +1800,34 @@ public class WindowManager {
 		relPos = relativePosition(dropdownLbls[8], RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		stateDDLists[1] = (MyDropdownList)stateDDLists[1].setPosition(relPos[0], relPos[1]);
 		
+		// Bounding box display toggle button
 		relPos = relativePosition(dropdownLbls[8], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		miscButtons[8] = miscButtons[8].setPosition(relPos[0], relPos[1]);
-		
+		miscButtons[6] = miscButtons[6].setPosition(relPos[0], relPos[1]);
+
 		// Update button color based on the value of the object display flag
-		if (miscButtons[8].isOn()) {
-			miscButtons[8].setColorBackground(buttonActColor);
+		if (miscButtons[6].isOn()) {
+			miscButtons[6].setLabel("Show OBBs");
+			miscButtons[6].setColorBackground(buttonActColor);
 			
 		} else {
-			miscButtons[8].setColorBackground(buttonDefColor);
+			miscButtons[6].setLabel("Hide OBBs");
+			miscButtons[6].setColorBackground(buttonDefColor);
+		}
+		
+		// Second robot toggle button
+		relPos = relativePosition(miscButtons[6], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		miscButtons[7] = miscButtons[7].setPosition(relPos[0], relPos[1]);
+		
+		// Update button color based on the value of the object display flag
+		if (miscButtons[7].isOn()) {
+			miscButtons[7].setColorBackground(buttonActColor);
+			
+		} else {
+			miscButtons[7].setColorBackground(buttonDefColor);
 		}
 	
 		// Update window background display
-		relPos = relativePosition(miscButtons[8], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = relativePosition(miscButtons[7], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		background.setBackgroundHeight(relPos[1])
 		.setHeight(relPos[1])
 		.show();

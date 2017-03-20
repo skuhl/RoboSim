@@ -5874,13 +5874,6 @@ public class RobotRun extends PApplet {
 		activeRobot.halt();
 		setProgramRunning(false);
 	}
-	
-	/**
-	 * Toggle bounding box display on or off.
-	 */
-	public void HideOBBs() {
-		getManager().updateScenarioWindowContentPositions();
-	}
 
 	public void IO() {
 		if(getSU_macro_bindings()[6] != null && isShift()) {
@@ -7520,15 +7513,6 @@ public class RobotRun extends PApplet {
 	}
 
 	public void SaveScenario() {
-		if (activeScenario != null) {
-			// Save the current version of the active scenario
-			for (int idx = 0; idx < SCENARIOS.size(); ++idx) {
-				if (SCENARIOS.get(idx).getName().equals( activeScenario.getName() )) {
-					SCENARIOS.set(idx, (Scenario)activeScenario.clone());
-				}
-			}
-		}
-		
 		// Save all scenarios
 		DataManagement.saveState(this);
 	}
@@ -7597,19 +7581,8 @@ public class RobotRun extends PApplet {
 		Scenario limbo = getManager().getActiveScenario();
 		
 		if (limbo != null) {
-			if (activeScenario != null &&
-					!limbo.getName().equals(activeScenario.getName())) {
-				/* Replace the old version of this scenario with the active
-				 * one, if the scenario to be loaded is not currently active */
-				for (int idx = 0; idx < SCENARIOS.size(); ++idx) {
-					if (SCENARIOS.get(idx).getName().equals( activeScenario.getName() )) {
-						SCENARIOS.set(idx, (Scenario)activeScenario.clone());
-					}
-				}
-			}
-			
 			// Set the active scenario to a copy of the loaded scenario
-			activeScenario = (Scenario)limbo.clone();
+			activeScenario = limbo;
 			// Clear scenario undo stack
 			scenarioUndo.clear();
 		}
@@ -8008,6 +7981,13 @@ public class RobotRun extends PApplet {
 		display_stack.pop();
 		display_stack.push(mode);
 		loadScreen();
+	}
+	
+	/**
+	 * Toggle bounding box display on or off.
+	 */
+	public void ToggleOBBs() {
+		getManager().updateMiscWindowContentPositions();
 	}
 	
 	/**

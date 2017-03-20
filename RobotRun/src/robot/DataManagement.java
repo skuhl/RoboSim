@@ -1505,7 +1505,7 @@ public abstract class DataManagement {
 
 			for (WorldObject wldObj : s) {
 				// Save all the world objects associated with the scenario
-				saveWorldObject(wldObj, out);  
+				saveWorldObject(wldObj, out);
 			}
 		}
 	}
