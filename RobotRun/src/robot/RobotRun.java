@@ -1718,10 +1718,8 @@ public class RobotRun extends PApplet {
 		RQuaternion qi = new RQuaternion();
 
 		float mu = 0;
-		float dist = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) + q1.dist(q2);
+		float dist = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) + 100f * q1.dist(q2);
 		int numberOfPoints = (int)(dist / distanceBetweenPoints);
-		
-		System.out.printf("Dist: %f\n#ofPts: %d\n\n", dist, numberOfPoints);
 		
 		float increment = 1.0f / (float)numberOfPoints;
 		for(int n = 0; n < numberOfPoints; n++) {

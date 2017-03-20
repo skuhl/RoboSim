@@ -936,8 +936,9 @@ public class WindowManager {
 				 if (dimChanged && toEdit instanceof Part) {
 					 // Update the bounding box dimensions of a part
 					 ((Part)toEdit).updateOBBDims();
-					 edited = true;
 				 }
+				 
+				 edited = dimChanged;
 
 				 // Convert origin position into the World Frame
 				 PVector oPosition = RobotRun.convertNativeToWorld( toEdit.getLocalCenter() ),
