@@ -884,6 +884,7 @@ public class RobotRun extends PApplet {
 	public MenuScroll options;
 	public final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
 	public Scenario activeScenario;
+	private final Stack<WorldObject> scenarioUndo = new Stack<WorldObject>();
 	private Camera camera;
 	private RoboticArm activeRobot;
 	
@@ -2052,7 +2053,8 @@ public class RobotRun extends PApplet {
 	}
 
 	public void DeleteWldObj() {
-		// Delete focused world object
+		// Delete focused world object and add to the scenario undo stack
+		updateScenarioUndo( manager.getActiveWorldObject() );
 		int ret = getManager().deleteActiveWorldObject();
 		if (Fields.DEBUG) { System.out.printf("World Object removed: %d\n", ret); }
 	}
@@ -2350,7 +2352,7 @@ public class RobotRun extends PApplet {
 			displayOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
 		}
 		
-		//TESTING CODE: DRAW INTERMEDIATE POINTS
+		/*TESTING CODE: DRAW INTERMEDIATE POINTS*
 		if(Fields.DEBUG && intermediatePositions != null) {
 			int count = 0;
 			for(Point p : intermediatePositions) {
@@ -2365,6 +2367,7 @@ public class RobotRun extends PApplet {
 				count += 1;
 			}
 		}
+		/**/
 		
 		noLights();
 		noStroke();
@@ -5871,13 +5874,6 @@ public class RobotRun extends PApplet {
 		activeRobot.halt();
 		setProgramRunning(false);
 	}
-	
-	/**
-	 * Toggle bounding box display on or off.
-	 */
-	public void HideOBBs() {
-		getManager().updateScenarioWindowContentPositions();
-	}
 
 	public void IO() {
 		if(getSU_macro_bindings()[6] != null && isShift()) {
@@ -6057,7 +6053,10 @@ public class RobotRun extends PApplet {
 			getActiveRobot().setJointAngles(rot);
 			intermediatePositions.clear();
 
-		} else if(key == 'w') {
+		} else if (key == 'u') {
+			undoScenarioEdit();
+			
+		} else if (key == 'w') {
 			// Write anything stored in the String buffer to a text file
 			writeBuffer();
 
@@ -7454,6 +7453,8 @@ public class RobotRun extends PApplet {
 	public void pr() {
 		lastScreen();
 	}
+	
+	
 
 	public void RESET() {
 		if (isShift()) {
@@ -7512,15 +7513,6 @@ public class RobotRun extends PApplet {
 	}
 
 	public void SaveScenario() {
-		if (activeScenario != null) {
-			// Save the current version of the active scenario
-			for (int idx = 0; idx < SCENARIOS.size(); ++idx) {
-				if (SCENARIOS.get(idx).getName().equals( activeScenario.getName() )) {
-					SCENARIOS.set(idx, (Scenario)activeScenario.clone());
-				}
-			}
-		}
-		
 		// Save all scenarios
 		DataManagement.saveState(this);
 	}
@@ -7578,26 +7570,21 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
+	/**
+	 * Sets the active scenario based on the scenario dropdown in the scenario
+	 * window and clears the scenario undo stack.
+	 */
 	public void SetScenario() {
 		/* Get the scenario, which is associated with the scenario
 		 * dropdownlist's label */
 		Scenario limbo = getManager().getActiveScenario();
 		
 		if (limbo != null) {
-			if (activeScenario != null &&
-					!limbo.getName().equals(activeScenario.getName())) {
-				/* Replace the old version of this scenario with the active
-				 * one, if the scenario to be loaded is not currently active */
-				for (int idx = 0; idx < SCENARIOS.size(); ++idx) {
-					if (SCENARIOS.get(idx).getName().equals( activeScenario.getName() )) {
-						SCENARIOS.set(idx, (Scenario)activeScenario.clone());
-					}
-				}
-			}
-			
 			// Set the active scenario to a copy of the loaded scenario
-			activeScenario = (Scenario)limbo.clone();
+			activeScenario = limbo;
+			// Clear scenario undo stack
+			scenarioUndo.clear();
 		}
 	}
 
@@ -7997,6 +7984,13 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
+	 * Toggle bounding box display on or off.
+	 */
+	public void ToggleOBBs() {
+		getManager().updateMiscWindowContentPositions();
+	}
+	
+	/**
 	 * Toggle the second Robot on or off.
 	 */
 	public void ToggleRobot() {
@@ -8034,6 +8028,16 @@ public class RobotRun extends PApplet {
 	public void triggerFault() {
 		hd();
 		motionFault = true;
+	}
+	
+	/**
+	 * Revert the most recent change to the active scenario
+	 */
+	public void undoScenarioEdit() {
+		if (!scenarioUndo.empty()) {
+			activeScenario.put( scenarioUndo.pop() );
+			manager.updateListContents();
+		}
 	}
 
 	/**
@@ -8260,11 +8264,33 @@ public class RobotRun extends PApplet {
 			.moveTo(g1);
 		}
 	} // end updateScreen()
+	
+	/**
+	 * Push a world object onto the undo stack for world objects.
+	 * 
+	 * @param saveState	The world object to save
+	 */
+	public void updateScenarioUndo(WorldObject saveState) {
+		
+		// Only the latest 10 world object save states can be undone
+		if (scenarioUndo.size() >= 10) {
+			// Not sure if size - 1 should be used instead
+			scenarioUndo.remove(0);
+		}
+		
+		scenarioUndo.push(saveState);
+	}
 
+	/**
+	 * Confirm changes made to the orientation and position of the selected
+	 * world object.
+	 */
 	public void UpdateWldObj() {
-		/* Confirm changes made to the orientation and
-		 * position of the selected world object. */
-		getManager().editWorldObject();
+		
+		// Only allow world object editing when no program is executing
+		if (!isProgramRunning()) {
+			getManager().editWorldObject();
+		}
 	}
 
 	/**

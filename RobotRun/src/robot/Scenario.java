@@ -289,6 +289,46 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 		return objsRemoved;
 	}
+	
+	/**
+	 * Replaces the world object, in the scenario, which has the same name as
+	 * the given world object. If no world object with the given world
+	 * object's name exists in the scenario, then the object is added to the
+	 * scenario.
+	 * 
+	 * @param newObj	The new world object
+	 * @return			The object that was replaced, or null if the newObj is
+	 * 					null or was added to the scenario
+	 */
+	public WorldObject put(WorldObject newObj) {
+		if (newObj != null) {
+			WorldObject replaced = null;
+			
+			for (int idx = 0; idx < objList.size(); ++idx) {
+				// Find the world object with the same name as newObj
+				if (objList.get(idx).getName().equals(newObj.getName())) {
+					replaced = objList.set(idx, newObj);
+				}
+			}
+			
+			// Update all part references to the replaced fixture
+			if (replaced instanceof Fixture) {
+				for (WorldObject w : objList) {
+					if (w instanceof Part && ((Part) w).getFixtureRef() == replaced) {
+						((Part)w).setFixtureRef((Fixture)newObj);
+					}
+				}
+			}
+			
+			if (replaced != null) {
+				return replaced;
+			}
+			
+			addWorldObject(newObj);
+		}
+		
+		return null;
+	}
 
 	/**
 	 * Return the color of all the object's bounding
