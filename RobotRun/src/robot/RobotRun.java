@@ -772,8 +772,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 	
-	//produces a rotation matrix given a rotation 'theta' around
-	//a given axis
+	//Rotates the matrix 'm' by an angle 'theta' around the given 'axis'
 	public static float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
 		float s = sin(theta);
 		float c = cos(theta);

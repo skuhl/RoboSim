@@ -2,12 +2,13 @@ package robot;
 
 import java.util.ArrayList;
 import geom.WorldObject;
+import global.Fields;
 import processing.core.PVector;
 
 public class RobotCamera {
 	private PVector camPos;
-	private PVector directionVect;
-	private float camRot;
+	private PVector camLookVect;
+	private float camRot; // The rotation of the camera around its look vector, in radians
 	private float camFOV; // Angle between the diagonals of the camera view frustum, in degrees
 	private float camAspectRatio; // Ratio of horizontal : vertical camera frustum size 
 	
@@ -15,11 +16,11 @@ public class RobotCamera {
 	private float camClipFar; // The distance from the camera to the far clipping plane
 	private Scenario scene;
 	
-	public RobotCamera(float posX, float posY, float posZ, float rot, float dirX, float dirY, float dirZ, 
+	public RobotCamera(float posX, float posY, float posZ, float rot, float dirX, float dirY, float dirZ,
 			float fov, float ar, float near, float far, Scenario s) {
 		camPos = new PVector(posX, posY, posZ);
-		directionVect = new PVector(dirX, dirY, dirZ).normalize();
-		camRot = rot;
+		camLookVect = new PVector(dirX, dirY, dirZ).normalize();
+		camRot = rot % Fields.TWO_PI;
 		camFOV = fov;
 		camAspectRatio = ar;
 		camClipNear = near;
@@ -69,6 +70,18 @@ public class RobotCamera {
 		return 0;
 	}
 	
+	/**
+	 * Returns a 4 element PVector array containing the locations of the 4 points that make up the
+	 * plane specified by the camera field of view, camera aspect ratio, and the distance from the
+	 * camera to the plane. Planes are always defined by their 4 corners and are always perpendicular
+	 * to the camera.
+	 * 
+	 * @param fov Camera field of view
+	 * @param aspectRatio Camera aspect ratio
+	 * @param dist Distance from camera to center of plane
+	 * @return A 4 element array containing the locations of the corners of the plane in the following
+	 * 		   order: top left, top right bottom left, bottom right
+	 */
 	private PVector[] getPlane(float fov, float aspectRatio, float dist) {
 		// Field of view must be in the range of (0, 90) degrees
 		if(fov >= 90 || fov <= 0) { return null; }
@@ -76,25 +89,29 @@ public class RobotCamera {
 		float height = (float)Math.sqrt(diagonal*diagonal / (1 + fov*fov));
 		float width = height * fov;
 		
-		//TODO calculate up and left vectors for camera
-		PVector upVect = new PVector();
-		PVector ltVect = new PVector(); 
+		float[][] m = { {1, 0, 0},
+						{0, 1, 0},
+						{0, 0, 1}};
+		// Produce a coordinate system based on camera look vector and rotation
+		float[][] coord = RobotRun.rotateAxisVector(m, camRot, camLookVect);
+		PVector upVect = new PVector(coord[2][0], coord[2][1], coord[2][2]);
+		PVector ltVect = new PVector(coord[1][0], coord[1][1], coord[1][2]);
 		
-		PVector center = new PVector(camPos.x + directionVect.x * dist,
-									 camPos.y + directionVect.y * dist,
-									 camPos.z + directionVect.z * dist);
+		PVector center = new PVector(camPos.x + camLookVect.x * dist,
+									 camPos.y + camLookVect.y * dist,
+									 camPos.z + camLookVect.z * dist);
 		PVector tl = new PVector(center.x + upVect.x * height / 2 + ltVect.x * width / 2,
 								 center.y + upVect.y * height / 2 + ltVect.y * width / 2,
 								 center.z + upVect.z * height / 2 + ltVect.z * width / 2);
-		PVector tr = new PVector(center.x + upVect.x * height / 2 + ltVect.x * width / 2,
-								 center.y + upVect.y * height / 2 + ltVect.y * width / 2,
-								 center.z + upVect.z * height / 2 + ltVect.z * width / 2);
-		PVector bl = new PVector(center.x + upVect.x * height / 2 + ltVect.x * width / 2,
-				  				 center.y + upVect.y * height / 2 + ltVect.y * width / 2,
-				  				 center.z + upVect.z * height / 2 + ltVect.z * width / 2);
-		PVector br = new PVector(center.x + upVect.x * height / 2 + ltVect.x * width / 2,
-								 center.y + upVect.y * height / 2 + ltVect.y * width / 2,
-				  				 center.z + upVect.z * height / 2 + ltVect.z * width / 2);
+		PVector tr = new PVector(center.x + upVect.x * height / 2 - ltVect.x * width / 2,
+								 center.y + upVect.y * height / 2 - ltVect.y * width / 2,
+								 center.z + upVect.z * height / 2 - ltVect.z * width / 2);
+		PVector bl = new PVector(center.x - upVect.x * height / 2 + ltVect.x * width / 2,
+				  				 center.y - upVect.y * height / 2 + ltVect.y * width / 2,
+				  				 center.z - upVect.z * height / 2 + ltVect.z * width / 2);
+		PVector br = new PVector(center.x - upVect.x * height / 2 - ltVect.x * width / 2,
+								 center.y - upVect.y * height / 2 - ltVect.y * width / 2,
+				  				 center.z - upVect.z * height / 2 - ltVect.z * width / 2);
 		
 		return new PVector[] {tl, tr, bl, br};
 	}
