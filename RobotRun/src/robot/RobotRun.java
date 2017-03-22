@@ -1133,8 +1133,7 @@ public class RobotRun extends PApplet {
 		case SET_CALL_PROG:
 		case DIRECT_ENTRY_TOOL:
 		case DIRECT_ENTRY_USER:
-		case EDIT_PREG_C:
-		case EDIT_PREG_J:
+		case EDIT_PREG:
 		case NAV_IOREG:
 			contents.moveDown(shift);
 			break;
@@ -1227,8 +1226,7 @@ public class RobotRun extends PApplet {
 			break;
 		case DIRECT_ENTRY_USER:
 		case DIRECT_ENTRY_TOOL:
-		case EDIT_PREG_C:
-		case EDIT_PREG_J:
+		case EDIT_PREG:
 			// Delete a digit from the beginning of the number entry
 			if(isShift()) {
 				String entry = contents.get(contents.getLineIdx()).get(1);
@@ -1339,8 +1337,7 @@ public class RobotRun extends PApplet {
 		case SET_MACRO_PROG:
 		case DIRECT_ENTRY_TOOL:
 		case DIRECT_ENTRY_USER:
-		case EDIT_PREG_C:
-		case EDIT_PREG_J:
+		case EDIT_PREG:
 			contents.moveUp(isShift());
 			break;
 		case NAV_INSTR_MENU:
@@ -2007,9 +2004,10 @@ public class RobotRun extends PApplet {
 		return coordinateSystem;
 	}
 
-	public void createRegisterPoint(boolean fromJointAngles) {
+	public void createRegisterPoint(PositionRegister pReg) {
 		// Obtain point inputs from UI display text
 		float[] inputs = new float[6];
+		
 		try {
 			for(int idx = 0; idx < inputs.length; ++idx) {
 				String inputStr = contents.get(idx).get(contents.getColumnIdx());
@@ -2023,24 +2021,24 @@ public class RobotRun extends PApplet {
 			return;
 		}
 
-		if(fromJointAngles) {
-			// Bring angles within range: (0, TWO_PI)
-			for(int idx = 0; idx < inputs.length; ++idx) {
-				inputs[idx] = mod2PI(inputs[idx] * DEG_TO_RAD);
-			}
-
-			getActiveRobot().getPReg(active_index).point = nativeRobotEEPoint(getActiveRobot(), inputs);
-		} else {
+		if (pReg.isCartesian) {
 			PVector position = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
 			// Convert the angles from degrees to radians, then convert from World to Native frame, and finally convert to a quaternion
 			RQuaternion orientation = eulerToQuat( (new PVector(-inputs[3], inputs[5], -inputs[4]).mult(DEG_TO_RAD)) );
 
 			// Use default the Robot's joint angles for computing inverse kinematics
-			float[] jointAngles = inverseKinematics(getActiveRobot(), new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
-			getActiveRobot().getPReg(active_index).point = new Point(position, orientation, jointAngles);
-		}
+			float[] jointAngles = inverseKinematics(activeRobot, new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
+			pReg.point = new Point(position, orientation, jointAngles);
+			
+		} else {
+			// Bring angles within range: (0, TWO_PI)
+			for(int idx = 0; idx < inputs.length; ++idx) {
+				inputs[idx] = mod2PI(inputs[idx] * DEG_TO_RAD);
+			}
 
-		getActiveRobot().getPReg(active_index).isCartesian = !fromJointAngles;
+			pReg.point = nativeRobotEEPoint(activeRobot, inputs);
+		}
+		
 		DataManagement.saveState(this);
 	}
 
@@ -3596,16 +3594,11 @@ public class RobotRun extends PApplet {
 				nextScreen(ScreenMode.EDIT_PREG_COM);
 			} else if(contents.getColumnIdx() >= 1) {
 				// Edit Position Register value
-				PositionRegister toEdit = activeRobot.getPReg(active_index);
-				nextScreen((toEdit.isCartesian) ? ScreenMode.EDIT_PREG_C : ScreenMode.EDIT_PREG_J);
+				nextScreen(ScreenMode.EDIT_PREG);
 			}
 			break;
-		case EDIT_PREG_C:
-			createRegisterPoint(false);  
-			lastScreen();
-			break;
-		case EDIT_PREG_J:      
-			createRegisterPoint(true);
+		case EDIT_PREG:
+			createRegisterPoint( activeRobot.getPReg(active_index) );
 			lastScreen();
 			break;
 		case EDIT_PREG_COM:
@@ -4423,8 +4416,7 @@ public class RobotRun extends PApplet {
 		case DIRECT_ENTRY_TOOL:
 		case FRAME_METHOD_USER:
 		case FRAME_METHOD_TOOL:
-		case EDIT_PREG_C:
-		case EDIT_PREG_J:
+		case EDIT_PREG:
 		case EDIT_IOREG:
 			contents.setContents(prevContents);
 			break;
@@ -4826,8 +4818,7 @@ public class RobotRun extends PApplet {
 		case EDIT_DREG_VAL:
 			header = "REGISTERS";
 			break;
-		case EDIT_PREG_C:
-		case EDIT_PREG_J:
+		case EDIT_PREG:
 			header = "POSITION REGISTER: ";
 			String pRegComm = getActiveRobot().getPReg(active_index).comment;
 			
@@ -6611,12 +6602,18 @@ public class RobotRun extends PApplet {
 	public void loadPosRegEntry(PositionRegister reg) {
 		String[][] entries;
 		
-		if (mode == ScreenMode.EDIT_PREG_J) {
-			// List joint angles
-			entries = reg.point.toJointStringArray();
-		} else {
+		if (reg.point == null) {
+			// Initialize an uninitialized position register
+			reg.point = activeRobot.getDefaultPoint();
+		}
+		
+		if (reg.isCartesian) {
 			// Display Cartesian values
 			entries = reg.point.toCartesianStringArray();
+			
+		} else {
+			// List joint angles
+			entries = reg.point.toJointStringArray();			
 		}
 
 		for(int idx = 0; idx < entries.length; ++idx) {
@@ -6979,9 +6976,8 @@ public class RobotRun extends PApplet {
 				workingText = "";
 			}
 			break;
-		case EDIT_PREG_C:
-		case EDIT_PREG_J:
-			loadPosRegEntry(getActiveRobot().getPReg(active_index));
+		case EDIT_PREG:
+			loadPosRegEntry(activeRobot.getPReg(active_index));
 			contents.setLineIdx(0);
 			contents.setColumnIdx(1);
 			break;

@@ -130,8 +130,7 @@ public enum ScreenMode implements DisplayMode {
 	 */
 	DIRECT_ENTRY_TOOL(ScreenType.TYPE_POINT_ENTRY),
 	DIRECT_ENTRY_USER(ScreenType.TYPE_POINT_ENTRY),
-	EDIT_PREG_C(ScreenType.TYPE_POINT_ENTRY),
-	EDIT_PREG_J(ScreenType.TYPE_POINT_ENTRY),
+	EDIT_PREG(ScreenType.TYPE_POINT_ENTRY),
 
 	/*
 	 * Miscelanious screens/ not otherwise categorized
