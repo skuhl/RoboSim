@@ -1118,8 +1118,7 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case NAV_DREGS:
-		case NAV_PREGS_J:
-		case NAV_PREGS_C:
+		case NAV_PREGS:
 		case NAV_TOOL_FRAMES:
 		case NAV_USER_FRAMES:
 		case NAV_MACROS:
@@ -1202,8 +1201,7 @@ public class RobotRun extends PApplet {
 			break;
 		case NAV_DREGS:
 		case NAV_MACROS:
-		case NAV_PREGS_J:
-		case NAV_PREGS_C:
+		case NAV_PREGS:
 			contents.setColumnIdx(max(0, contents.getColumnIdx() - 1));
 			break;
 		default:
@@ -1251,8 +1249,7 @@ public class RobotRun extends PApplet {
 			break;
 		case NAV_DREGS:
 		case NAV_MACROS:
-		case NAV_PREGS_J:
-		case NAV_PREGS_C:
+		case NAV_PREGS:
 			contents.setColumnIdx(min(contents.getColumnIdx() + 1, contents.get(contents.getLineIdx()).size() - 1));
 			break;
 		default:
@@ -1326,8 +1323,7 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case NAV_DREGS:
-		case NAV_PREGS_J:
-		case NAV_PREGS_C:
+		case NAV_PREGS:
 		case NAV_TOOL_FRAMES:
 		case NAV_USER_FRAMES:
 		case NAV_MACROS:
@@ -3473,23 +3469,24 @@ public class RobotRun extends PApplet {
 			lastScreen();
 			break;
 		case SWAP_PT_TYPE:
-			if(options.getLineIdx() == 0) {
-				// View Cartesian values
-				nextScreen(ScreenMode.NAV_PREGS_C);
-			} else if(options.getLineIdx() == 1) {
-				// View Joint values
-				nextScreen(ScreenMode.NAV_PREGS_J);
+			
+			if (active_index > 0 && active_index < RoboticArm.DPREG_NUM) {
+				// Set the position type of the selected position register
+				PositionRegister toEdit = activeRobot.getPReg(active_index);
+				toEdit.isCartesian = options.getLineIdx() == 0;
+				DataManagement.saveState(this);
+				lastScreen();
 			}
+			
 			break;
 
-			//Register navigation/ edit
 		case NAV_DATA:
 			if(options.getLineIdx() == 0) {
 				// Data Register Menu
 				nextScreen(ScreenMode.NAV_DREGS);
 			} else if(options.getLineIdx() == 1) {
 				// Position Register Menu
-				nextScreen(ScreenMode.NAV_PREGS_C);
+				nextScreen(ScreenMode.NAV_PREGS);
 			}
 			break;
 		case CP_DREG_COM:
@@ -3593,14 +3590,14 @@ public class RobotRun extends PApplet {
 				nextScreen(ScreenMode.EDIT_DREG_VAL);
 			}
 			break;
-		case NAV_PREGS_J:
-		case NAV_PREGS_C:   
+		case NAV_PREGS:   
 			if(contents.getColumnIdx() == 0) {
 				// Edit register comment
 				nextScreen(ScreenMode.EDIT_PREG_COM);
 			} else if(contents.getColumnIdx() >= 1) {
 				// Edit Position Register value
-				nextScreen((mode == (ScreenMode.NAV_PREGS_C)) ? ScreenMode.EDIT_PREG_C : ScreenMode.EDIT_PREG_J);
+				PositionRegister toEdit = activeRobot.getPReg(active_index);
+				nextScreen((toEdit.isCartesian) ? ScreenMode.EDIT_PREG_C : ScreenMode.EDIT_PREG_J);
 			}
 			break;
 		case EDIT_PREG_C:
@@ -3831,8 +3828,7 @@ public class RobotRun extends PApplet {
 			
 			DataManagement.saveState(this);
 			break;
-		case NAV_PREGS_J:
-		case NAV_PREGS_C:
+		case NAV_PREGS:
 			// Clear Position Register entry
 			PositionRegister pReg = getActiveRobot().getPReg(active_index);
 			
@@ -3891,8 +3887,7 @@ public class RobotRun extends PApplet {
 				nextScreen(ScreenMode.CP_DREG_VAL);
 			}
 			break;
-		case NAV_PREGS_J:
-		case NAV_PREGS_C:
+		case NAV_PREGS:
 			// Position Register copy menus
 			if (contents.getColumnIdx() == 0) {
 				nextScreen(ScreenMode.CP_PREG_COM);
@@ -3975,15 +3970,14 @@ public class RobotRun extends PApplet {
 			break;
 		case NAV_DREGS:
 			// Switch to Position Registers
-			nextScreen(ScreenMode.NAV_PREGS_C);
+			nextScreen(ScreenMode.NAV_PREGS);
 			break;
-		case NAV_PREGS_J:
-		case NAV_PREGS_C:
+		case NAV_PREGS:
 			if (isShift()) {
-				switchScreen(ScreenMode.SWAP_PT_TYPE);
+				switchScreen(ScreenMode.NAV_DREGS);
 			} else {
 				// Switch to Data Registers
-				nextScreen(ScreenMode.NAV_DREGS);
+				nextScreen(ScreenMode.SWAP_PT_TYPE);
 			}
 			break;
 		default:
@@ -4126,30 +4120,32 @@ public class RobotRun extends PApplet {
 					nextScreen(ScreenMode.SET_MACRO_BINDING);
 			}
 			break;
-		case NAV_PREGS_J:
-		case NAV_PREGS_C:
+		case NAV_PREGS:
 			if (isShift() && !isProgramRunning()) {
 				// Stop any prior jogging motion
 				hd();
 
 				// Move To function
-				Point pt = (getActiveRobot().getPReg(active_index)).point.clone();
+				PositionRegister pReg = activeRobot.getPReg(active_index);
+				Point pt = pReg.point.clone();
 
 				if (pt != null) {
 					// Move the Robot to the select point
-					if (mode == ScreenMode.NAV_PREGS_C) {
-						Frame active = getActiveRobot().getActiveFrame(CoordFrame.USER);
+					if (pReg.isCartesian) {
+						Frame active = activeRobot.getActiveFrame(CoordFrame.USER);
 
 						if (active != null) {
-							pt = removeFrame(getActiveRobot(), pt, active.getOrigin(), active.getOrientation());
+							pt = removeFrame(activeRobot, pt, active.getOrigin(), active.getOrientation());
+							
 							if (Fields.DEBUG) {
 								System.out.printf("pt: %s\n", pt.position.toString());
 							}
 						}
 
-						getActiveRobot().moveTo(pt.position, pt.orientation);
+						activeRobot.moveTo(pt.position, pt.orientation);
+						
 					} else {
-						getActiveRobot().moveTo(pt.angles);
+						activeRobot.moveTo(pt.angles);
 					}
 				} else {
 					println("Position register is uninitialized!");
@@ -4271,22 +4267,21 @@ public class RobotRun extends PApplet {
 			display_stack.pop();
 			updateInstructions();
 			break;
-		case NAV_PREGS_J:
-		case NAV_PREGS_C:
-			PositionRegister pReg = getActiveRobot().getPReg(active_index);
+		case NAV_PREGS:
+			PositionRegister pReg = activeRobot.getPReg(active_index);
 			
 			if (isShift() && pReg != null) {
 				// Save the Robot's current position and joint angles
-				Point curRP = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles());
-				Frame active = getActiveRobot().getActiveFrame(CoordFrame.USER);
+				Point curRP = nativeRobotEEPoint(activeRobot, activeRobot.getJointAngles());
+				Frame active = activeRobot.getActiveFrame(CoordFrame.USER);
 
 				if (active != null) {
 					// Save Cartesian values in terms of the active User frame
-					curRP = applyFrame(getActiveRobot(), curRP, active.getOrigin(), active.getOrientation());
+					curRP = applyFrame(activeRobot, curRP, active.getOrigin(), active.getOrientation());
 				} 
 
 				pReg.point = curRP;
-				pReg.isCartesian = (mode == ScreenMode.NAV_PREGS_C);
+				pReg.isCartesian = true;
 				DataManagement.saveState(this);
 			}
 			break;
@@ -4439,8 +4434,11 @@ public class RobotRun extends PApplet {
 		case CP_DREG_VAL:
 		case CP_PREG_COM:
 		case CP_PREG_PT:
-		case SWAP_PT_TYPE:
 			contents.setContents(prevContents);
+			break;
+			
+		case SWAP_PT_TYPE:
+			loadPositionRegisters();
 			break;
 
 			//View/ edit macros
@@ -4456,8 +4454,7 @@ public class RobotRun extends PApplet {
 
 			//View/ edit registers
 		case NAV_DREGS:
-		case NAV_PREGS_C:
-		case NAV_PREGS_J:
+		case NAV_PREGS:
 			loadRegisters();
 			break;
 		case EDIT_DREG_COM:
@@ -4644,19 +4641,18 @@ public class RobotRun extends PApplet {
 			funct[3] = "[Edit]";
 			funct[4] = "";
 			break;
-		case NAV_PREGS_C:
-		case NAV_PREGS_J:
+		case NAV_PREGS:
 			// F1 - F5
 			if (isShift()) {
 				funct[0] = "[Clear]";
 				funct[1] = "[Copy]";
-				funct[2] = "[Type]";
+				funct[2] = "[Switch]";
 				funct[3] = "[Move To]";
 				funct[4] = "[Record]";
 			} else {
 				funct[0] = "[Clear]";
 				funct[1] = "[Copy]";
-				funct[2] = "[Switch]";
+				funct[2] = "[Type]";
 				funct[3] = "[Move To]";
 				funct[4] = "[Record]";
 			}
@@ -4819,11 +4815,8 @@ public class RobotRun extends PApplet {
 		case CP_DREG_VAL:
 			header = "REGISTERS";
 			break;
-		case NAV_PREGS_J:
-			header = "POSTION REGISTERS (J)";
-			break;
-		case NAV_PREGS_C:
-			header = "POSTION REGISTERS (C)";
+		case NAV_PREGS:
+			header = "POSTION REGISTERS";
 			break;
 		case CP_PREG_COM:
 		case CP_PREG_PT:
@@ -5228,12 +5221,12 @@ public class RobotRun extends PApplet {
 			options.addLine("1. Data Registers");
 			options.addLine("2. Position Registers");
 			break;
-		case NAV_PREGS_J:
-		case NAV_PREGS_C:
-			Point pt = getActiveRobot().getPReg(active_index).point;
+		case NAV_PREGS:
+			PositionRegister pReg = activeRobot.getPReg(active_index);
+			Point pt = pReg.point;
 			// Display the point with the Position register of the highlighted line, when viewing the Position registers
 			if (pt != null) {
-				String[] pregEntry = pt.toLineStringArray(mode == ScreenMode.NAV_PREGS_C);
+				String[] pregEntry = pt.toLineStringArray(pReg.isCartesian);
 
 				for (String line : pregEntry) {
 					options.addLine(line);
@@ -6591,6 +6584,22 @@ public class RobotRun extends PApplet {
 			options.addLine("Error: teachFrame not set!");
 		}
 	}
+	
+	/**
+	 * Loads all position registers into the contents of the pendant display.
+	 */
+	public void loadPositionRegisters() {
+		// Display a subset of the list of registers
+		for (int idx = 0; idx < RoboticArm.DPREG_NUM; ++idx) {
+			PositionRegister reg = activeRobot.getPReg(idx);
+			// Display the comment associated with a specific Register entry
+			String regLbl = reg.toStringWithComm();
+			// Display Register edit prompt (* if uninitialized)
+			String regEntry = (reg.point == null) ? "*" : "...Edit...";
+			
+			contents.addLine(regLbl, regEntry);
+		}
+	}
 
 	/**
 	 * This method will transition to the INPUT_POINT_C or INPUT_POINT_J modes
@@ -6906,8 +6915,7 @@ public class RobotRun extends PApplet {
 			active_index = 0;
 			break;
 		case NAV_DREGS:
-		case NAV_PREGS_J:
-		case NAV_PREGS_C:
+		case NAV_PREGS:
 			loadRegisters();
 			contents.setLineIdx(active_index);
 			contents.setColumnIdx(0);
@@ -6922,6 +6930,7 @@ public class RobotRun extends PApplet {
 			options.reset();
 			break;
 		case SWAP_PT_TYPE:
+			
 			options.reset();
 			break;
 		case CP_DREG_COM:
