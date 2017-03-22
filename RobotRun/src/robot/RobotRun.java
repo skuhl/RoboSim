@@ -2224,17 +2224,38 @@ public class RobotRun extends PApplet {
 
 		// Draw a sphere on the positive direction for each axis
 		float dotPos = max(100f, min(axesLength, 500));
+		textFont(fnt_conB, 18);
 
 		stroke(originColor);
 		sphere(4);
 		stroke(0);
 		translate(dotPos, 0, 0);
 		sphere(4);
+		
+		pushMatrix();
+		rotateX(-PI / 2f);
+		rotateY(-PI);
+		text("X-axis", 0, 0, 0);
+		popMatrix();
+		
 		translate(-dotPos, dotPos, 0);
 		sphere(4);
+		
+		pushMatrix();
+		rotateX(-PI / 2f);
+		rotateY(-PI);
+		text("Y-axis", 0, 0, 0);
+		popMatrix();
+		
 		translate(0, -dotPos, dotPos);
 		sphere(4);
-
+		
+		pushMatrix();
+		rotateX(-PI / 2f);
+		rotateY(-PI);
+		text("Z-axis", 0, 0, 0);
+		popMatrix();
+		
 		popMatrix();
 	}
 
@@ -7736,6 +7757,7 @@ public class RobotRun extends PApplet {
 	 * Displays important information in the upper-right corner of the screen.
 	 */
 	public void showMainDisplayText() {
+		textFont(fnt_con14, 14);
 		fill(0);
 		textAlign(RIGHT, TOP);
 		int lastTextPositionX = width - 20,

@@ -1633,7 +1633,7 @@ public class RoboticArm {
 				// Move the Robot progressively to a point
 				boolean doneMoving = true;
 
-				switch (motionType) {
+				switch (RobotRun.getActiveRobot().motionType) {
 				case MT_JOINT:
 					doneMoving = interpolateRotation(liveSpeed / 100.0f);
 					break;
