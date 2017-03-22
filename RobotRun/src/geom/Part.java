@@ -225,7 +225,7 @@ public class Part extends WorldObject {
 
 	/**
 	 * Draw both the object and its bounding box in its local
-	 * orientaiton, in the local orientation of the part's
+	 * orientation, in the local orientation of the part's
 	 * fixture reference.
 	 */
 	public void draw() {

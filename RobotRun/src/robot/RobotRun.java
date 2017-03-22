@@ -261,6 +261,7 @@ public class RobotRun extends PApplet {
 		PVector vRotated = invAxes.rotateVector(u);
 		return vRotated.add(origin);
 	} 
+	
 	/**
 	 * Converts the given vector form the left-hand Native Coordinate System to the
 	 * right-hand World Frame Coordinate System.
@@ -269,6 +270,21 @@ public class RobotRun extends PApplet {
 		float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), WORLD_AXES);
 		return transformVector(v, invertHCMatrix(tMatrix));
 	}
+	
+	/**
+	 * Converts the rotation matrix from the native coordinate frame to the
+	 * world frame.
+	 * 
+	 * @param orienMat	A valid rotation matrix
+	 * @return			The rotation matrix in terms of the world frame
+	 */
+	public static float[][] convertNativeToWorld(float[][] orienMat) {
+		RealMatrix frameAxes = new Array2DRowRealMatrix(floatToDouble(orienMat, 3, 3));
+		RealMatrix worldAxes = new Array2DRowRealMatrix(floatToDouble(WORLD_AXES, 3, 3));
+
+		return RobotRun.doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
+	}
+	
 	/**
 	 * Converts the given vector, v, into the Coordinate System defined by the given origin
 	 * vector and rotation quaternion axes.
@@ -1892,6 +1908,7 @@ public class RobotRun extends PApplet {
 
 		updateCoordFrame();
 	}
+	
 	/**
 	 * This method attempts to modify the Frame based on the given value of method.
 	 * If method is even, then the frame is taught via the 3-Point Method. Otherwise,
@@ -2071,7 +2088,7 @@ public class RobotRun extends PApplet {
 			Frame activeTool = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
 
 			// Draw the axes of the active Tool frame at the Robot End Effector
-			displayOriginAxes(eePoint.position, activeTool.getWorldAxisVectors(), 200f, color(255, 0, 255));
+			displayOriginAxes(eePoint.position, convertNativeToWorld(activeTool.getNativeAxisVectors()), 200f, color(255, 0, 255));
 		} else {
 			// Draw axes of the Robot's End Effector frame for testing purposes
 			//displayOriginAxes(eePoint.position, eePoint.orientation.toMatrix(), 200f, color(255, 0, 255));
@@ -2094,7 +2111,8 @@ public class RobotRun extends PApplet {
 
 				if(getActiveRobot().getCurCoordFrame() != CoordFrame.WORLD && activeUser != null) {
 					// Draw the axes of the active User frame
-					displayOriginAxes(activeUser.getOrigin(), activeUser.getWorldAxisVectors(), 10000f, color(0));
+					displayOriginAxes(activeUser.getOrigin(), convertNativeToWorld(activeUser.getNativeAxisVectors()),
+							10000f, color(0));
 
 				} else {
 					// Draw the axes of the World frame
@@ -2360,8 +2378,9 @@ public class RobotRun extends PApplet {
 					reference.applyCoordinateSystem();
 				}
 			}
-
-			displayOriginAxes(wldObj.getLocalCenter(), wldObj.getLocalOrientationAxes(), 500f, color(0));
+			
+			displayOriginAxes(wldObj.getLocalCenter(), convertNativeToWorld(wldObj.getLocalOrientationAxes()),
+					500f, color(0));
 
 			popMatrix();
 		}
