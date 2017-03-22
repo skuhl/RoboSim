@@ -224,6 +224,10 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 		return null;
 	}
+	
+	public ArrayList<WorldObject> getObjectList() {
+		return objList;
+	}
 
 	@Override
 	public Iterator<WorldObject> iterator() {
