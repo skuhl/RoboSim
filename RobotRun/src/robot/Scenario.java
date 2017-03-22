@@ -369,16 +369,16 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					RobotRun.getInstance().resetMatrix();
 
 					/***********************************************
-     Moving a part with the Robot:
-
-     P' = R^-1 x E' x E^-1 x P
-
-     where:
-     P' - new part local orientation
-     R  - part fixture reference orientation
-     E' - current Robot end effector orientation
-     E  - previous Robot end effector orientation
-     P  - current part loval orientation
+					     Moving a part with the Robot:
+					
+					     P' = R^-1 x E' x E^-1 x P
+					
+					     where:
+					     P' - new part local orientation
+					     R  - part fixture reference orientation
+					     E' - current Robot end effector orientation
+					     E  - previous Robot end effector orientation
+					     P  - current part loval orientation
 					 ***********************************************/
 
 					Fixture refFixture = p.getFixtureRef();
