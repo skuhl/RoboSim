@@ -3468,7 +3468,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SWAP_PT_TYPE:
 			
-			if (active_index > 0 && active_index < RoboticArm.DPREG_NUM) {
+			if (active_index >= 0 && active_index < RoboticArm.DPREG_NUM) {
 				// Set the position type of the selected position register
 				PositionRegister toEdit = activeRobot.getPReg(active_index);
 				toEdit.isCartesian = options.getLineIdx() == 0;
