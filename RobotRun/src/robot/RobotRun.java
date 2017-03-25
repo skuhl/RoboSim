@@ -7776,7 +7776,7 @@ public class RobotRun extends PApplet {
 			
 		} else {
 			// Stop Robot jog movement when shift is off
-			setProgramRunning(false);
+			hd();
 			((Button)cp5.get("sf")).setColorBackground(Fields.BUTTON_DEFAULT);
 		}
 
