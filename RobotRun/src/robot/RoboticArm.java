@@ -260,23 +260,19 @@ public class RoboticArm {
 
 		// Pointer
 		limbo = new ArrayList<BoundingBox>();
-		limbo.add( new BoundingBox(96, 96, 54) );
-		limbo.add( new BoundingBox(32, 32, 34) );
-		limbo.add( new BoundingBox(18, 18, 56) );
-		limbo.add( new BoundingBox(9, 9, 37) );
 		eeOBBsMap.put(EEType.POINTER, limbo);
 		// Cannot pickup
 		limbo = new ArrayList<BoundingBox>();
 		eePickupOBBs.put(EEType.POINTER, limbo);
 
-		// TODO Glue Gun
+		// Glue Gun
 		limbo = new ArrayList<BoundingBox>();
 		eeOBBsMap.put(EEType.GLUE_GUN, limbo);
 		// Cannot pickup
 		limbo = new ArrayList<BoundingBox>();
 		eePickupOBBs.put(EEType.GLUE_GUN, limbo);
 
-		// TODO Wielder
+		// Wielder
 		limbo = new ArrayList<BoundingBox>();
 		eeOBBsMap.put(EEType.WIELDER, limbo);
 		// Cannot pickup
@@ -1862,88 +1858,67 @@ public class RoboticArm {
 		RobotRun.applyModelRotation(this, getJointAngles());
 
 		switch(current) {
-		case NONE:
-			// Face Plate EE
-			RobotRun.getInstance().translate(0, 0, 12);
-			curEEOBBs.get(0).setCoordinateSystem();
-			RobotRun.getInstance().translate(0, 0, -12);
-			break;
-
-		case CLAW:
-			// Claw Gripper EE
-			RobotRun.getInstance().translate(0, 0, 3);
-			curEEOBBs.get(0).setCoordinateSystem();
-
-			RobotRun.getInstance().translate(-2, 0, -57);
-			curPUEEOBBs.get(0).setCoordinateSystem();
-
-			if (endEffectorState == Fields.OFF) {
-				// When claw is open
-				RobotRun.getInstance().translate(0, 27, 0);
-				curEEOBBs.get(1).setCoordinateSystem();
-				RobotRun.getInstance().translate(0, -54, 0);
-				curEEOBBs.get(2).setCoordinateSystem();
-				RobotRun.getInstance().translate(0, 27, 0);
-
-			} else if (endEffectorState == Fields.ON) {
-				// When claw is closed
-				RobotRun.getInstance().translate(0, 10, 0);
-				curEEOBBs.get(1).setCoordinateSystem();
-				RobotRun.getInstance().translate(0, -20, 0);
-				curEEOBBs.get(2).setCoordinateSystem();
-				RobotRun.getInstance().translate(0, 10, 0);
-			}
-
-			RobotRun.getInstance().translate(2, 0, 54);
-			break;
-
-		case SUCTION:
-			// Suction EE
-			RobotRun.getInstance().translate(0, 0, 3);
-			curEEOBBs.get(0).setCoordinateSystem();
-
-			RobotRun.getInstance().translate(-2, 0, -67);
-			BoundingBox limbo = curEEOBBs.get(1);
-			limbo.setCoordinateSystem();
-
-			float dist = -43;
-			RobotRun.getInstance().translate(0, 0, dist);
-			curPUEEOBBs.get(0).setCoordinateSystem();
-			RobotRun.getInstance().translate(0, -50, 19 - dist);
-			limbo = curEEOBBs.get(2);
-			limbo.setCoordinateSystem();
-
-			dist = -33;
-			RobotRun.getInstance().translate(0, dist, 0);
-			curPUEEOBBs.get(1).setCoordinateSystem();
-			RobotRun.getInstance().translate(2, 50 - dist, 45);
-			break;
-
-		case POINTER:
-			// Pointer EE
-			RobotRun.getInstance().translate(0, 0, 3);
-			curEEOBBs.get(0).setCoordinateSystem();
-
-			RobotRun.getInstance().translate(0, 0, -43);
-			curEEOBBs.get(1).setCoordinateSystem();
-			RobotRun.getInstance().translate(0, -18, -34);
-			RobotRun.getInstance().rotateX(-0.75f);
-			curEEOBBs.get(2).setCoordinateSystem();
-			RobotRun.getInstance().rotateX(0.75f);
-			RobotRun.getInstance().translate(0, -21, -32);
-			curEEOBBs.get(3).setCoordinateSystem();
-			RobotRun.getInstance().translate(0, 39, 109);
-			break;
-
-		case GLUE_GUN:
-			// TODO
-			break;
-
-		case WIELDER:
-			// TODO
-			break;
-
-		default:
+			case NONE:
+				// Face Plate EE
+				RobotRun.getInstance().translate(0, 0, 12);
+				curEEOBBs.get(0).setCoordinateSystem();
+				RobotRun.getInstance().translate(0, 0, -12);
+				break;
+	
+			case CLAW:
+				// Claw Gripper EE
+				RobotRun.getInstance().translate(0, 0, 3);
+				curEEOBBs.get(0).setCoordinateSystem();
+	
+				RobotRun.getInstance().translate(-2, 0, -57);
+				curPUEEOBBs.get(0).setCoordinateSystem();
+	
+				if (endEffectorState == Fields.OFF) {
+					// When claw is open
+					RobotRun.getInstance().translate(0, 27, 0);
+					curEEOBBs.get(1).setCoordinateSystem();
+					RobotRun.getInstance().translate(0, -54, 0);
+					curEEOBBs.get(2).setCoordinateSystem();
+					RobotRun.getInstance().translate(0, 27, 0);
+	
+				} else if (endEffectorState == Fields.ON) {
+					// When claw is closed
+					RobotRun.getInstance().translate(0, 10, 0);
+					curEEOBBs.get(1).setCoordinateSystem();
+					RobotRun.getInstance().translate(0, -20, 0);
+					curEEOBBs.get(2).setCoordinateSystem();
+					RobotRun.getInstance().translate(0, 10, 0);
+				}
+	
+				RobotRun.getInstance().translate(2, 0, 54);
+				break;
+	
+			case SUCTION:
+				// Suction EE
+				RobotRun.getInstance().translate(0, 0, 3);
+				curEEOBBs.get(0).setCoordinateSystem();
+	
+				RobotRun.getInstance().translate(-2, 0, -67);
+				BoundingBox limbo = curEEOBBs.get(1);
+				limbo.setCoordinateSystem();
+	
+				float dist = -43;
+				RobotRun.getInstance().translate(0, 0, dist);
+				curPUEEOBBs.get(0).setCoordinateSystem();
+				RobotRun.getInstance().translate(0, -50, 19 - dist);
+				limbo = curEEOBBs.get(2);
+				limbo.setCoordinateSystem();
+	
+				dist = -33;
+				RobotRun.getInstance().translate(0, dist, 0);
+				curPUEEOBBs.get(1).setCoordinateSystem();
+				RobotRun.getInstance().translate(2, 50 - dist, 45);
+				break;
+	
+			case POINTER:
+			case GLUE_GUN:
+			case WIELDER:
+			default:
 		}
 
 		RobotRun.getInstance().popMatrix();

@@ -39,10 +39,7 @@ public enum ScreenMode implements DisplayMode {
 	NAV_TOOL_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_USER_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_PROGRAMS(ScreenType.TYPE_LIST_CONTENTS),
-	//Cartesian
-	NAV_PREGS_C(ScreenType.TYPE_LIST_CONTENTS),
-	//Joint
-	NAV_PREGS_J(ScreenType.TYPE_LIST_CONTENTS),
+	NAV_PREGS(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_DREGS(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_IOREG(ScreenType.TYPE_LIST_CONTENTS),
 	SET_CALL_PROG(ScreenType.TYPE_LIST_CONTENTS),
@@ -133,8 +130,7 @@ public enum ScreenMode implements DisplayMode {
 	 */
 	DIRECT_ENTRY_TOOL(ScreenType.TYPE_POINT_ENTRY),
 	DIRECT_ENTRY_USER(ScreenType.TYPE_POINT_ENTRY),
-	EDIT_PREG_C(ScreenType.TYPE_POINT_ENTRY),
-	EDIT_PREG_J(ScreenType.TYPE_POINT_ENTRY),
+	EDIT_PREG(ScreenType.TYPE_POINT_ENTRY),
 
 	/*
 	 * Miscelanious screens/ not otherwise categorized

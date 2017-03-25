@@ -271,15 +271,6 @@ public abstract class Frame {
 		}
 	}
 
-	/* Returns a set of axes unit vectors representing the axes
-	 * of the frame in reference to the World Coordinate System. */
-	public float[][] getWorldAxisVectors() {
-		RealMatrix frameAxes = new Array2DRowRealMatrix(RobotRun.floatToDouble(getNativeAxisVectors(), 3, 3));
-		RealMatrix worldAxes = new Array2DRowRealMatrix(RobotRun.floatToDouble(RobotRun.WORLD_AXES, 3, 3));
-
-		return RobotRun.doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
-	}
-
 	/**
 	 * Resets all the fields of the frame to their default values.
 	 */

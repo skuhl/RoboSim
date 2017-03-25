@@ -65,7 +65,7 @@ public class PositionRegister extends Register {
 	
 	@Override
 	protected String regPrefix() {
-		return "R";
+		return "PR";
 	}
 	
 	/**
