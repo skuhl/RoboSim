@@ -5897,8 +5897,16 @@ public class RobotRun extends PApplet {
 	}
 
 	public void IO() {
-		if(getSU_macro_bindings()[6] != null && isShift()) {
-			getSU_macro_bindings()[6].execute();
+		if(isShift()) {
+			if (getSU_macro_bindings()[6] != null) {
+				getSU_macro_bindings()[6].execute();
+			}
+			
+		} else {
+			if (isProgramRunning()) {
+				// Map I/O to the robot's end effector state, if shift is off
+				activeRobot.toggleEEState();
+			}
 		}
 	}
 
