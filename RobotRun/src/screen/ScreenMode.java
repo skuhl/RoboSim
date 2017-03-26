@@ -131,6 +131,7 @@ public enum ScreenMode implements DisplayMode {
 	DIRECT_ENTRY_TOOL(ScreenType.TYPE_POINT_ENTRY),
 	DIRECT_ENTRY_USER(ScreenType.TYPE_POINT_ENTRY),
 	EDIT_PREG(ScreenType.TYPE_POINT_ENTRY),
+	EDIT_MINST_POS(ScreenType.TYPE_POINT_ENTRY),
 
 	/*
 	 * Miscellaneous screens/ not otherwise categorized
@@ -139,8 +140,7 @@ public enum ScreenMode implements DisplayMode {
 	UFRAME_DETAIL,
 	TFRAME_DETAIL,
 	SELECT_REG_STMT,
-	NAV_DATA,
-	VIEW_INST_REG;
+	NAV_DATA;
 
 	final ScreenType type;
 
