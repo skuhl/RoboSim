@@ -1922,13 +1922,13 @@ public class RobotRun extends PApplet {
 				getActiveRobot().setActiveToolFrame(curFrameIdx);
 				updateCoordFrame();
 
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 2);
 			} else {
 				// Update the current frame of the Robot Arm
 				getActiveRobot().setActiveUserFrame(curFrameIdx);
 				updateCoordFrame();
 
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 2);
 			}
 
 		} else {
@@ -1978,7 +1978,7 @@ public class RobotRun extends PApplet {
 		} 
 
 		updateCoordFrame();
-		DataManagement.saveState(this);
+		DataManagement.saveRobotData(activeRobot, 2);
 	}
 
 
@@ -2051,6 +2051,7 @@ public class RobotRun extends PApplet {
 			if (newObject != null) {
 				newObject.setLocalCenter( new PVector(-500f, 0f, 0f) );
 				activeScenario.addWorldObject(newObject);
+				DataManagement.saveScenarios(this);
 			}
 		}
 	}
@@ -2065,6 +2066,7 @@ public class RobotRun extends PApplet {
 		// Delete focused world object and add to the scenario undo stack
 		updateScenarioUndo( manager.getActiveWorldObject() );
 		int ret = getManager().deleteActiveWorldObject();
+		DataManagement.saveScenarios(this);
 		if (Fields.DEBUG) { System.out.printf("World Object removed: %d\n", ret); }
 	}
 
@@ -2662,7 +2664,7 @@ public class RobotRun extends PApplet {
 				getActiveRobot().setActiveInstIdx(0);
 				contents.reset();
 
-				DataManagement.saveState(this);    
+				DataManagement.saveRobotData(activeRobot, 1);  
 				switchScreen(ScreenMode.NAV_PROG_INSTR);
 			}
 			break;
@@ -2678,7 +2680,7 @@ public class RobotRun extends PApplet {
 				if (prog != null) {
 					prog.setName(workingText);
 					getActiveRobot().setActiveInstIdx(0);
-					DataManagement.saveState(this);
+					DataManagement.saveRobotData(activeRobot, 1);
 				}
 				
 				contents.reset();
@@ -2701,7 +2703,7 @@ public class RobotRun extends PApplet {
 					int new_prog = getActiveRobot().addProgram(newProg);
 					getActiveRobot().setActiveProgIdx(new_prog);
 					getActiveRobot().setActiveInstIdx(0);
-					DataManagement.saveState(this);
+					DataManagement.saveRobotData(activeRobot, 1);
 				}
 				
 				contents.reset();
@@ -3461,7 +3463,7 @@ public class RobotRun extends PApplet {
 			if (pt != null) {
 				// Update the position of the active motion instruction
 				activeRobot.getActiveProg().setPosition(mInst.getPositionNum(), pt);
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 1);
 			}
 			
 			displayPoint = null;
@@ -3482,7 +3484,7 @@ public class RobotRun extends PApplet {
 				// Set the position type of the selected position register
 				PositionRegister toEdit = activeRobot.getPReg(active_index);
 				toEdit.isCartesian = options.getLineIdx() == 0;
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 3);
 				lastScreen();
 			}
 			
@@ -3504,7 +3506,7 @@ public class RobotRun extends PApplet {
 				// Copy the comment of the curent Data register to the Data register at the specified index
 				regIdx = Integer.parseInt(workingText) - 1;
 				getActiveRobot().getDReg(regIdx).comment = getActiveRobot().getDReg(active_index).comment;
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 3);
 				
 			} catch (NumberFormatException MFEx) {
 				println("Only real numbers are valid!");
@@ -3521,7 +3523,7 @@ public class RobotRun extends PApplet {
 				// Copy the value of the curent Data register to the Data register at the specified index
 				regIdx = Integer.parseInt(workingText) - 1;
 				getActiveRobot().getDReg(regIdx).value = getActiveRobot().getDReg(active_index).value;
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 3);
 				
 			} catch (NumberFormatException MFEx) {
 				println("Only real numbers are valid!");
@@ -3538,7 +3540,7 @@ public class RobotRun extends PApplet {
 				// Copy the comment of the curent Position register to the Position register at the specified index
 				regIdx = Integer.parseInt(workingText) - 1;
 				getActiveRobot().getPReg(regIdx).comment = getActiveRobot().getPReg(active_index).comment;
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 3);
 				
 			} catch (NumberFormatException MFEx) {
 				println("Only real numbers are valid!");
@@ -3555,7 +3557,7 @@ public class RobotRun extends PApplet {
 				// Copy the point of the curent Position register to the Position register at the specified index
 				regIdx = Integer.parseInt(workingText) - 1;
 				getActiveRobot().getPReg(regIdx).point = getActiveRobot().getPReg(active_index).point.clone();
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 3);
 				
 			} catch (NumberFormatException MFEx) {
 				println("Only real numbers are valid!");
@@ -3579,7 +3581,7 @@ public class RobotRun extends PApplet {
 				if (dReg != null) {
 					// Save inputed value
 					dReg.value = f;
-					DataManagement.saveState(this);
+					DataManagement.saveRobotData(activeRobot, 3);
 				}
 				
 			} catch (NumberFormatException NFEx) {
@@ -3614,7 +3616,7 @@ public class RobotRun extends PApplet {
 			if (pt != null) {
 				// Position was successfully pulled form the contents menu
 				pReg.point = pt;
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 3);
 			}
 			
 			lastScreen();
@@ -3626,7 +3628,7 @@ public class RobotRun extends PApplet {
 				}
 				// Save the inputed comment to the selected register
 				getActiveRobot().getPReg(active_index).comment = workingText;
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 3);
 				workingText = "";
 				lastScreen();
 			}
@@ -3638,7 +3640,7 @@ public class RobotRun extends PApplet {
 				}
 				// Save the inputed comment to the selected register\
 				getActiveRobot().getDReg(active_index).comment = workingText;
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 3);
 				workingText = "";
 				lastScreen();
 			}
@@ -3797,7 +3799,6 @@ public class RobotRun extends PApplet {
 			if(isShift()) {
 				// Reset the highlighted frame in the tool frame list
 				getActiveRobot().getToolFrame(active_index).reset();
-				DataManagement.saveState(this);
 				updateScreen();
 			} else {
 				// Set the current tool frame
@@ -3809,7 +3810,6 @@ public class RobotRun extends PApplet {
 			if(isShift()) {
 				// Reset the highlighted frame in the user frames list
 				getActiveRobot().getUserFrame(active_index).reset();
-				DataManagement.saveState(this);
 				updateScreen();
 			} else {
 				// Set the current user frame
@@ -3837,7 +3837,6 @@ public class RobotRun extends PApplet {
 				dReg.value = null;
 			}
 			
-			DataManagement.saveState(this);
 			break;
 		case NAV_PREGS:
 			// Clear Position Register entry
@@ -3848,7 +3847,6 @@ public class RobotRun extends PApplet {
 				pReg.point = null;
 			}
 			
-			DataManagement.saveState(this);
 			break;
 		default:
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
@@ -4043,7 +4041,6 @@ public class RobotRun extends PApplet {
 				}
 
 				lastScreen();
-				DataManagement.saveState(this);
 			}
 			break;
 		case SELECT_INSTR_DELETE:
@@ -4262,7 +4259,7 @@ public class RobotRun extends PApplet {
 				}
 
 				teachFrame.setPoint(pt, options.getLineIdx());
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 2);
 				updateScreen();
 			}
 			break;
@@ -4293,7 +4290,7 @@ public class RobotRun extends PApplet {
 
 				pReg.point = curRP;
 				pReg.isCartesian = true;
-				DataManagement.saveState(this);
+				DataManagement.saveRobotData(activeRobot, 3);
 			}
 			break;
 		default:
@@ -7382,7 +7379,7 @@ public class RobotRun extends PApplet {
 		if (newScenario != null) {
 			// Add the new scenario
 			SCENARIOS.add(newScenario);
-			DataManagement.saveState(this);
+			DataManagement.saveScenarios(this);
 		}
 	}
 
@@ -7606,11 +7603,6 @@ public class RobotRun extends PApplet {
 		// Right view
 		camera.reset();
 		camera.rotate(0, 3f * PI / 2f, 0);
-	}
-
-	public void SaveScenario() {
-		// Save all scenarios
-		DataManagement.saveState(this);
 	}
 
 	// Select button
@@ -8387,6 +8379,7 @@ public class RobotRun extends PApplet {
 		// Only allow world object editing when no program is executing
 		if (!isProgramRunning()) {
 			getManager().editWorldObject();
+			DataManagement.saveScenarios(this);
 		}
 	}
 
