@@ -4446,8 +4446,10 @@ public class RobotRun extends PApplet {
 
 			//View/ edit registers
 		case NAV_DREGS:
+			loadDataRegisters();
+			break;
 		case NAV_PREGS:
-			loadRegisters();
+			loadPositionRegisters();
 			break;
 		case EDIT_DREG_COM:
 		case EDIT_PREG_COM:
@@ -4816,21 +4818,31 @@ public class RobotRun extends PApplet {
 			header = "POSTION REGISTERS";
 			break;
 		case EDIT_DREG_VAL:
-			header = "REGISTERS";
+			header = "DATA REGISTER: ";
+			String dRegComm = getActiveRobot().getDReg(active_index).comment;
+			
+			if(dRegComm != null) {
+				// Show comment if it exists
+				header += dRegComm;
+			} 
+			else {
+				header += Integer.toString(active_index + 1);
+			}
+			
 			break;
 		case EDIT_PREG:
 			header = "POSITION REGISTER: ";
 			String pRegComm = getActiveRobot().getPReg(active_index).comment;
 			
-			if(mode != ScreenMode.EDIT_DREG_COM && pRegComm != null) {
+			if(pRegComm != null) {
 				// Show comment if it exists
 				header += pRegComm;
 			} 
 			else {
-				header += active_index;
+				header += Integer.toString(active_index + 1);
 			}
-			break;
 			
+			break;
 		case EDIT_DREG_COM:
 			header = String.format("Enter a name for R[%d]", active_index);
 			break;
@@ -5246,7 +5258,7 @@ public class RobotRun extends PApplet {
 			options.addLine("2. Joint");
 			break;
 		case EDIT_DREG_VAL:
-			options.addLine("Input register value:");
+			options.addLine(String.format("Input R[%d]'s value:", active_index + 1));
 			options.addLine("\0" + workingText);
 			break;
 		case EDIT_RSTMT:
@@ -6150,6 +6162,32 @@ public class RobotRun extends PApplet {
 
 		updateScreen();
 	}
+	
+	public void loadDataRegisters() { 
+		// View Registers or Position Registers
+		//int start = start_render;
+		//int end = min(start + ITEMS_TO_SHOW, DREG.length);
+
+		// Display a subset of the list of registers
+		for (int idx = 0; idx < RoboticArm.DPREG_NUM; ++idx) {
+			DataRegister reg = activeRobot.getDReg(idx);
+
+			// Display the comment associated with a specific Register entry
+			String regLbl = reg.toStringWithComm();
+			// Display Register value (* if uninitialized)
+			String regEntry = "*";
+
+			if(reg.value != null) {
+				// Display Register value
+				regEntry = String.format("%4.3f", reg.value);
+				
+			} else {
+				regEntry = "*";
+			}
+
+			contents.addLine(regLbl, regEntry);
+		}
+	}
 
 	/**
 	 * Transitions to the Frame Details menu, which displays
@@ -6656,48 +6694,6 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	/**
-	 * Displays the list of Registers in mode VIEW_REG or the Position Registers
-	 * for modes VIEW_REG_J or VIEW_REG_C. In mode VIEW_REG_J the joint angles
-	 * associated with the Point are displayed and the Cartesian values are
-	 * displayed in mode VIEW_REG_C.
-	 */
-	public void loadRegisters() { 
-		// View Registers or Position Registers
-		//int start = start_render;
-		//int end = min(start + ITEMS_TO_SHOW, DREG.length);
-
-		// Display a subset of the list of registers
-		for (int idx = 0; idx < RoboticArm.DPREG_NUM; ++idx) {
-			Register reg;
-
-			if(mode == ScreenMode.NAV_DREGS) {
-				reg = getActiveRobot().getDReg(idx);
-			} else {
-				reg = getActiveRobot().getPReg(idx);
-			}
-
-			// Display the comment associated with a specific Register entry
-			String regLbl = reg.toStringWithComm();
-			// Display Register value (* if uninitialized)
-			String regEntry = "*";
-
-			if(mode == ScreenMode.NAV_DREGS) {
-				Float val = ((DataRegister)reg).value;
-				
-				if(val != null) {
-					// Display Register value
-					regEntry = String.format("%4.3f", val);
-				}
-
-			} else if (((PositionRegister)reg).point != null) {
-				regEntry = "...Edit...";
-			}
-
-			contents.addLine(regLbl, regEntry);
-		}
-	}
-
 	public void loadScreen() {
 		setProgramRunning(false);
 		contents.clear();
@@ -6920,8 +6916,12 @@ public class RobotRun extends PApplet {
 			active_index = 0;
 			break;
 		case NAV_DREGS:
+			loadDataRegisters();
+			contents.setLineIdx(active_index);
+			contents.setColumnIdx(0);
+			break;
 		case NAV_PREGS:
-			loadRegisters();
+			loadPositionRegisters();
 			contents.setLineIdx(active_index);
 			contents.setColumnIdx(0);
 			break;
@@ -6940,8 +6940,13 @@ public class RobotRun extends PApplet {
 			break;
 		case CP_DREG_COM:
 		case CP_DREG_VAL:
+			loadDataRegisters();
+			options.setLineIdx(1);
+			workingText = Integer.toString((active_index + 1));
+			break;
 		case CP_PREG_COM:
 		case CP_PREG_PT:
+			loadPositionRegisters();
 			options.setLineIdx(1);
 			workingText = Integer.toString((active_index + 1));
 			break;
@@ -6975,6 +6980,7 @@ public class RobotRun extends PApplet {
 			println(workingText.length());
 			break;
 		case EDIT_DREG_VAL:
+			loadDataRegisters();
 			options.reset();
 			// Bring up float input menu
 			Float val = getActiveRobot().getDReg(active_index).value;
