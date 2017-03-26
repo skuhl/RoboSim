@@ -133,19 +133,12 @@ public enum ScreenMode implements DisplayMode {
 	EDIT_PREG(ScreenType.TYPE_POINT_ENTRY),
 
 	/*
-	 * Miscelanious screens/ not otherwise categorized
+	 * Miscellaneous screens/ not otherwise categorized
 	 */
 	SWAP_PT_TYPE,
-	EDIT_RSTMT,
 	UFRAME_DETAIL,
 	TFRAME_DETAIL,
-	INPUT_CONSTANT,
-	INPUT_OPERATOR,
-	INPUT_PRDX,
-	INPUT_PRVDX,
-	INPUT_RDX,
 	SELECT_REG_STMT,
-	PICK_LETTER,
 	NAV_DATA,
 	VIEW_INST_REG;
 

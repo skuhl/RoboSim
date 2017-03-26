@@ -5261,11 +5261,6 @@ public class RobotRun extends PApplet {
 			options.addLine(String.format("Input R[%d]'s value:", active_index + 1));
 			options.addLine("\0" + workingText);
 			break;
-		case EDIT_RSTMT:
-			options.addLine("Register");
-			options.addLine("Position Register Point");
-			options.addLine("Position Register Value");
-			break;
 
 			//Misc functions
 		case JUMP_TO_LINE:
