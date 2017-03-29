@@ -240,14 +240,14 @@ public class Program {
 
 	/**
 	 * Add the given point at the position defined by the given index, overriding
-	 * the previous entry if the position isinitialized.
+	 * the previous entry if the position is initialized.
 	 * 
 	 * @param idx  The index where to store the new position
 	 * @param  pt  The new position value
 	 * @return     The previous position value
 	 */
 	public Point setPosition(int idx, Point pt) {
-		if (idx >= 0 && idx < 1000) {
+		if (pt != null && idx >= 0 && idx < 1000) {
 			Point prevPt = LPosReg.get(idx);
 			LPosReg.put(idx, pt);
 

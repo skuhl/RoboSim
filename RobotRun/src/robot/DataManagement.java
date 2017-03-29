@@ -1456,19 +1456,29 @@ public abstract class DataManagement {
 		}
 	}
 
-	private static int saveRobotData(RoboticArm robot) {
+	public static int saveRobotData(RoboticArm robot, int dataFlag) {
+		validateParentDir();
 		File destDir = new File( String.format("%srobot%d/", parentDirPath, robot.getRID()) );
 		
 		// Initialize and possibly create the robot directory
-		
 		if (!destDir.exists()) {
 			destDir.mkdir();
 		}
 		
-		// Save the Robot's programs, frames, and registers in their respective files
-		saveProgramBytes(robot, String.format("%s/programs.bin", destDir.getAbsolutePath()));
-		saveFrameBytes(robot, String.format("%s/frames.bin", destDir.getAbsolutePath()));
-		saveRegisterBytes(robot, String.format("%s/registers.bin", destDir.getAbsolutePath()));
+		if ((dataFlag & 0x1) != 0) {
+			// Save the robot's programs
+			saveProgramBytes(robot, String.format("%s/programs.bin", destDir.getAbsolutePath()));
+		}
+		
+		if ((dataFlag & 0x2) != 0) {
+			// Save the robot's frames
+			saveFrameBytes(robot, String.format("%s/frames.bin", destDir.getAbsolutePath()));
+		}
+		
+		if ((dataFlag & 0x4) != 0) {
+			// Save the robot's registers
+			saveRegisterBytes(robot, String.format("%s/registers.bin", destDir.getAbsolutePath()));
+		}
 		
 		return 0;
 	}
@@ -1571,6 +1581,12 @@ public abstract class DataManagement {
 			return 2;
 		}
 	}
+	
+	public static void saveScenarios(RobotRun process) {
+		validateParentDir();
+		saveScenarioBytes(process.SCENARIOS, (process.activeScenario == null) ?
+				null : process.activeScenario.getName(), scenarioDirPath);
+	}
 
 	private static void saveShape(Shape shape, DataOutputStream out) throws IOException {
 		if (shape == null) {
@@ -1616,19 +1632,13 @@ public abstract class DataManagement {
 			}
 		}
 	}
-
+	
 	public static void saveState(RobotRun process) {
-		File parentDir = new File(parentDirPath);
-		
-		if (!parentDir.exists()) {
-			// Create the directory if it does not exist
-			parentDir.mkdir();
-		}
-		
+		validateParentDir();
 		saveScenarioBytes(process.SCENARIOS, (process.activeScenario == null) ?
 				null : process.activeScenario.getName(), scenarioDirPath);
-		saveRobotData(process.getRobot(0));
-		saveRobotData(process.getRobot(1));
+		saveRobotData(process.getRobot(0), 7);
+		saveRobotData(process.getRobot(1), 7);
 	}
 	
 	private static void saveWorldObject(WorldObject wldObj, DataOutputStream out) throws IOException {
@@ -1666,6 +1676,15 @@ public abstract class DataManagement {
 
 				out.writeUTF(refName);
 			}
+		}
+	}
+	
+	private static void validateParentDir() {
+		File parentDir = new File(parentDirPath);
+		
+		if (!parentDir.exists()) {
+			// Create the directory if it does not exist
+			parentDir.mkdir();
 		}
 	}
 }

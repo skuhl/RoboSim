@@ -39,10 +39,7 @@ public enum ScreenMode implements DisplayMode {
 	NAV_TOOL_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_USER_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_PROGRAMS(ScreenType.TYPE_LIST_CONTENTS),
-	//Cartesian
-	NAV_PREGS_C(ScreenType.TYPE_LIST_CONTENTS),
-	//Joint
-	NAV_PREGS_J(ScreenType.TYPE_LIST_CONTENTS),
+	NAV_PREGS(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_DREGS(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_IOREG(ScreenType.TYPE_LIST_CONTENTS),
 	SET_CALL_PROG(ScreenType.TYPE_LIST_CONTENTS),
@@ -133,25 +130,17 @@ public enum ScreenMode implements DisplayMode {
 	 */
 	DIRECT_ENTRY_TOOL(ScreenType.TYPE_POINT_ENTRY),
 	DIRECT_ENTRY_USER(ScreenType.TYPE_POINT_ENTRY),
-	EDIT_PREG_C(ScreenType.TYPE_POINT_ENTRY),
-	EDIT_PREG_J(ScreenType.TYPE_POINT_ENTRY),
+	EDIT_PREG(ScreenType.TYPE_POINT_ENTRY),
+	EDIT_MINST_POS(ScreenType.TYPE_POINT_ENTRY),
 
 	/*
-	 * Miscelanious screens/ not otherwise categorized
+	 * Miscellaneous screens/ not otherwise categorized
 	 */
 	SWAP_PT_TYPE,
-	EDIT_RSTMT,
 	UFRAME_DETAIL,
 	TFRAME_DETAIL,
-	INPUT_CONSTANT,
-	INPUT_OPERATOR,
-	INPUT_PRDX,
-	INPUT_PRVDX,
-	INPUT_RDX,
 	SELECT_REG_STMT,
-	PICK_LETTER,
-	NAV_DATA,
-	VIEW_INST_REG;
+	NAV_DATA;
 
 	final ScreenType type;
 
