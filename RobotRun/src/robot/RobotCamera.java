@@ -1,14 +1,16 @@
 package robot;
 
 import java.util.ArrayList;
+
+import geom.Box;
+import geom.DimType;
 import geom.WorldObject;
 import global.Fields;
 import processing.core.PVector;
 
 public class RobotCamera {
 	private PVector camPos;
-	private PVector camLookVect;
-	private float camRot; // The rotation of the camera around its look vector, in radians
+	private RQuaternion camOrient;
 	private float camFOV; // Angle between the diagonals of the camera view frustum, in degrees
 	private float camAspectRatio; // Ratio of horizontal : vertical camera frustum size 
 	
@@ -16,21 +18,15 @@ public class RobotCamera {
 	private float camClipFar; // The distance from the camera to the far clipping plane
 	private Scenario scene;
 	
-	public RobotCamera(float posX, float posY, float posZ, float rot, float dirX, float dirY, float dirZ,
+	public RobotCamera(float posX, float posY, float posZ, RQuaternion q, 
 			float fov, float ar, float near, float far, Scenario s) {
 		camPos = new PVector(posX, posY, posZ);
-		camLookVect = new PVector(dirX, dirY, dirZ).normalize();
-		camRot = rot % Fields.TWO_PI;
+		camOrient = q;
 		camFOV = fov;
 		camAspectRatio = ar;
 		camClipNear = near;
 		camClipFar = far;
 		scene = s;
-	}
-	
-	public RobotCamera(float posX, float posY, float posZ, RQuaternion q, 
-			float fov, float ar, float near, float far, Scenario s) {
-			
 	}
 	
 	public WorldObject getNearestObjectInFrame() {
@@ -66,7 +62,17 @@ public class RobotCamera {
 	public int checkObjectInFrame(WorldObject o) {
 		PVector[] nearPlane = getPlane(camFOV, camAspectRatio, camClipNear);
 		PVector[] farPlane = getPlane(camFOV, camAspectRatio, camClipFar);
-		//TODO check for object/ frustum collision
+		
+		PVector objCenter = o.getLocalCenter();
+		
+		if(o.getForm() instanceof Box) {
+			float len = o.getForm().getDim(DimType.LENGTH);
+			float wid = o.getForm().getDim(DimType.WIDTH);
+			float hgt = o.getForm().getDim(DimType.HEIGHT);
+			
+			
+		}
+		
 		return 0;
 	}
 	
@@ -89,17 +95,16 @@ public class RobotCamera {
 		float height = (float)Math.sqrt(diagonal*diagonal / (1 + fov*fov));
 		float width = height * fov;
 		
-		float[][] m = { {1, 0, 0},
-						{0, 1, 0},
-						{0, 0, 1}};
-		// Produce a coordinate system based on camera look vector and rotation
-		float[][] coord = RobotRun.rotateAxisVector(m, camRot, camLookVect);
-		PVector upVect = new PVector(coord[2][0], coord[2][1], coord[2][2]);
+		// Produce a coordinate system based on camera orientation
+		float[][] coord = RobotRun.quatToMatrix(camOrient);
+		PVector lookVect = new PVector(coord[0][0], coord[0][1], coord[0][2]);
 		PVector ltVect = new PVector(coord[1][0], coord[1][1], coord[1][2]);
+		PVector upVect = new PVector(coord[2][0], coord[2][1], coord[2][2]);
 		
-		PVector center = new PVector(camPos.x + camLookVect.x * dist,
-									 camPos.y + camLookVect.y * dist,
-									 camPos.z + camLookVect.z * dist);
+		PVector center = new PVector(camPos.x + lookVect.x * dist,
+									 camPos.y + lookVect.y * dist,
+									 camPos.z + lookVect.z * dist);
+		
 		PVector tl = new PVector(center.x + upVect.x * height / 2 + ltVect.x * width / 2,
 								 center.y + upVect.y * height / 2 + ltVect.y * width / 2,
 								 center.z + upVect.z * height / 2 + ltVect.z * width / 2);
