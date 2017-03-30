@@ -58,25 +58,6 @@ public class WindowManager {
 	
 	private final ButtonTabs windowTabs;
 	private final Background background;
-	
-	/**
-	private final Button[] cameraViews;
-
-	private Textarea objNameLbl, getTextField("ScenarioName");Lbl;
-
-	private Textfield objName, getTextField("ScenarioName");;
-	private final ArrayList<Textarea> shapeDefAreas;
-
-	private final ArrayList<Textfield> shapeDefFields;
-	private final Textarea[] objOrientationLbls;
-
-	private final Textfield[] objOrientationFields;
-	private final Textarea[] dropdownLbls;
-
-	private final MyDropdownList[] inputDDLists, stateDDLists;
-
-	private final Button[] miscButtons;
-	/**/
 
 	private final int buttonDefColor, buttonActColor;
 
@@ -801,7 +782,7 @@ public class WindowManager {
 				 // Create a Part
 				 String name = getTextField("ObjName").getText();
 
-				 ShapeType type = (ShapeType)getDropdown("ObjType").getActiveLabelValue();
+				 ShapeType type = (ShapeType)getDropdown("Shape").getActiveLabelValue();
 
 				 int fill = (Integer)getDropdown("Fill").getActiveLabelValue();
 
@@ -847,7 +828,7 @@ public class WindowManager {
 			 } else if (objectType == 1.0f) {
 				 // Create a fixture
 				 String name = getTextField("ObjName").getText();
-				 ShapeType type = (ShapeType)getDropdown("ObjType").getActiveLabelValue();
+				 ShapeType type = (ShapeType)getDropdown("Shape").getActiveLabelValue();
 
 				 int fill = (Integer)getDropdown("Fill").getActiveLabelValue();
 
@@ -1494,7 +1475,7 @@ public class WindowManager {
 			 if (c instanceof MyDropdownList && !c.getParent().equals(miscWindow)) {
 				 ((MyDropdownList)c).resetLabel();
 				 
-			 } else if (c.getName().substring(0, 4).equals("Dim") ||
+			 } else if (c.getName().length() > 4 && c.getName().substring(0, 4).equals("Dim") ||
 					 c.getName().equals("FixtureLbl")) {
 				 
 				 c.hide();
@@ -1549,10 +1530,10 @@ public class WindowManager {
 
 		 // Object Type dropdown list and label
 		 int[] relPos = new int[] { offsetX, offsetX };
-		 ControllerInterface<?> c = getTextArea("OjbTypeLbl").setPosition(relPos[0], relPos[1]);
+		 ControllerInterface<?> c = getTextArea("ObjTypeLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 inputDDLists[0] = (MyDropdownList)inputDDLists[0].setPosition(relPos[0], relPos[1]);
+		 getDropdown("ObjType").setPosition(relPos[0], relPos[1]);
 		 // Name label and field
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("ObjNameLbl").setPosition(relPos[0], relPos[1]);
@@ -1561,10 +1542,10 @@ public class WindowManager {
 		 getTextField("ObjName").setPosition(relPos[0], relPos[1]);
 		 // Shape type label and dropdown
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getTextArea("ShapeTypeLbl").setPosition(relPos[0], relPos[1]);
+		 c = getTextArea("ShapeLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
-		 inputDDLists[1].setPosition(relPos[0], relPos[1]);
+		 getDropdown("Shape").setPosition(relPos[0], relPos[1]);
 		 // Dimension label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
@@ -1573,30 +1554,30 @@ public class WindowManager {
 		 c = getTextArea("FillLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
-		 inputDDLists[2].setPosition(relPos[0], relPos[1]);
+		 getDropdown("Fill").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 Object val = inputDDLists[1].getActiveLabelValue();
+		 Object val = getDropdown("Shape").getActiveLabelValue();
 
 		 if (val == ShapeType.MODEL) {
 			 // No stroke color for Model Shapes
 			 c = getTextArea("OutlineLbl").hide();
-			 inputDDLists[3] = (MyDropdownList)inputDDLists[3].hide();
+			 getDropdown("Outline").hide();
 
 		 } else {
 			 // Outline color label and dropdown
 			 c = getTextArea("OutlineLbl").setPosition(relPos[0], relPos[1]).show();
 			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
 
-			 inputDDLists[3] = (MyDropdownList)inputDDLists[3].setPosition(relPos[0], relPos[1]).show();
+			 getDropdown("Outline").setPosition(relPos[0], relPos[1]).show();
 			 relPos = relativePosition(c, RelativePoint.BOTTOM_RIGHT, distLblToFieldX, distBtwFieldsY);
 		 } 
 
 		 // Create button
-		 c = miscButtons[0].setPosition(relPos[0], relPos[1]);
+		 c = getButton("CreateWldObj").setPosition(relPos[0], relPos[1]);
 		 // Clear button
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, offsetX, 0);
-		 c = miscButtons[2].setPosition(relPos[0], relPos[1]);
+		 c = getButton("ClearFields").setPosition(relPos[0], relPos[1]);
 		 // Update window background display
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 background.setBackgroundHeight(relPos[1])
@@ -1616,22 +1597,19 @@ public class WindowManager {
 	  */
 	 private int[] updateDimLblAndFieldPositions(int initialXPos, int initialYPos) {
 		 int[] relPos = new int[] { initialXPos, initialYPos };
-		 int idxDim = 0;
 
 		 // Update position and label text of the dimension fields based on the selected shape from the Shape dropDown List
-		 while (idxDim < shapeDefFields.size()) {
-			 Textfield dimField = shapeDefFields.get(idxDim);
+		 for (int idxDim = 0; idxDim < 3; ++idxDim) {
+			 Textfield dimField = getTextField( String.format("Dim%d", idxDim) );
 
 			 if (!dimField.isVisible()) { break; }
 
-			 Textarea dimLbl = shapeDefAreas.get(idxDim);
-			 shapeDefAreas.set(idxDim, dimLbl.setPosition(relPos[0], relPos[1]) );
+			 Textarea dimLbl = getTextArea( String.format("Dim%dLbl", idxDim) ).setPosition(relPos[0], relPos[1]);
+			 
 			 relPos = relativePosition(dimLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-
-			 shapeDefFields.set(idxDim, dimField.setPosition(relPos[0], relPos[1]) );
+			 dimField.setPosition(relPos[0], relPos[1]);
+			 
 			 relPos = relativePosition(dimLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-
-			 ++idxDim;
 		 }
 
 		 return relPos;
@@ -1647,7 +1625,7 @@ public class WindowManager {
 
 		 if (activeButtonLabel != null) {
 			 if (activeButtonLabel.equals("Create")) {
-				 ShapeType selectedShape = (ShapeType)inputDDLists[1].getActiveLabelValue();
+				 ShapeType selectedShape = (ShapeType)getDropdown("Shape").getActiveLabelValue();
 
 				 // Define the label text and the number of dimensionos fields to display
 				 if (selectedShape == ShapeType.BOX) {
@@ -1680,16 +1658,17 @@ public class WindowManager {
 			 }
 		 }
 
-		 for (int idxDim = 0; idxDim < shapeDefFields.size(); ++idxDim) {
+		 for (int idxDim = 0; idxDim < 3; ++idxDim) {
+			 
 			 if (idxDim < lblNames.length) {
 				 // Show a number of dimension fields and labels equal to the value of dimSize
-				 shapeDefAreas.set(idxDim, shapeDefAreas.get(idxDim).setText(lblNames[idxDim]).show());
-				 shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).show());
+				 getTextArea( String.format("Dim%dLbl", idxDim) ).setText( lblNames[idxDim] ).show();
+				 getTextField( String.format("Dim%d", idxDim) ).show();
 
 			 } else {
 				 // Hide remaining dimension fields and labels
-				 shapeDefAreas.set(idxDim, shapeDefAreas.get(idxDim).hide());
-				 shapeDefFields.set(idxDim, shapeDefFields.get(idxDim).hide());
+				 getTextArea( String.format("Dim%dLbl", idxDim) ).hide();
+				 getTextField( String.format("Dim%d", idxDim) ).hide();
 			 }
 		 }
 	 }
@@ -1702,7 +1681,7 @@ public class WindowManager {
 
 		 // Object list dropdown and label
 		 int[] relPos = new int[] { offsetX, offsetX };
-		 ControllerInterface<?> c = getTextArea("ObjLbl").setPosition(relPos[0], relPos[1]);
+		 ControllerInterface<?> c = getTextArea("ObjLabel").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		 getDropdown("Object").setPosition(relPos[0], relPos[1]);
@@ -1711,42 +1690,42 @@ public class WindowManager {
 		 relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
 
 		 // X label and field
-		 c = getTextField("XArea").setPosition(relPos[0], relPos[1]);
+		 c = getTextArea("XArea").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		 getTextField("XField").setPosition(relPos[0], relPos[1]);
 		 // Y label and field
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getTextField("YArea").setPosition(relPos[0], relPos[1]);
+		 c = getTextArea("YArea").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		 getTextField("YField").setPosition(relPos[0], relPos[1]);
 		 // Z label and field
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getTextField("ZArea").setPosition(relPos[0], relPos[1]);;
+		 c = getTextArea("ZArea").setPosition(relPos[0], relPos[1]);;
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		 getTextField("ZField").setPosition(relPos[0], relPos[1]);
 		 // W label and field
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getTextField("WArea").setPosition(relPos[0], relPos[1]);
+		 c = getTextArea("WArea").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		 getTextField("WField").setPosition(relPos[0], relPos[1]);
 		 // P label and field
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getTextField("PArea").setPosition(relPos[0], relPos[1]);
+		 c = getTextArea("PArea").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		 getTextField("PField").setPosition(relPos[0], relPos[1]);
 		 // R label and field
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getTextField("RArea").setPosition(relPos[0], relPos[1]);
+		 c = getTextArea("RArea").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		 getTextField("RField").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(getTextField("RArea"), RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 
 		 if (getActiveWorldObject() instanceof Part) {
 			 // Reference fxiture (for Parts only) label and dropdown
@@ -1763,12 +1742,12 @@ public class WindowManager {
 		 }
 
 		 // Confirm button
-		 miscButtons[1] = miscButtons[1].setPosition(relPos[0], relPos[1]);
+		 c = getButton("UpdateWldObj").setPosition(relPos[0], relPos[1]);
 		 // Delete button
-		 relPos = relativePosition(miscButtons[1], RelativePoint.TOP_RIGHT, offsetX, 0);
-		 miscButtons[3] = miscButtons[3].setPosition(relPos[0], relPos[1]);
+		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, offsetX, 0);
+		 c = getButton("DeleteWldObj").setPosition(relPos[0], relPos[1]);
 		 // Update window background display
-		 relPos = relativePosition(miscButtons[3], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 background.setBackgroundHeight(relPos[1])
 		 .setHeight(relPos[1])
 		 .show();
@@ -1817,25 +1796,25 @@ public class WindowManager {
 	 public void updateScenarioWindowContentPositions() {
 		 // New scenario name label
 		 int[] relPos = new int[] { offsetX, offsetX };
-		 ControllerInterface<?> c = getTextField("ScenarioNameLbl").setPosition(relPos[0], relPos[1]);
+		 ControllerInterface<?> c = getTextArea("NewScenarioLbl").setPosition(relPos[0], relPos[1]);
 		 // New scenario name field
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		 getTextField("ScenarioName").setPosition(relPos[0], relPos[1]);
 		 // New scenario button
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 miscButtons[4] = miscButtons[4].setPosition(relPos[0], relPos[1]);
+		 c = getButton("NewScenario").setPosition(relPos[0], relPos[1]);
 		 // Scenario dropdown list and label
-		 relPos = relativePosition(miscButtons[4], RelativePoint.BOTTOM_LEFT, 0, 2 * distBtwFieldsY);
+		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, 2 * distBtwFieldsY);
 		 c = getTextArea("ActiveScenarioLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		 getDropdown("Scenario").setPosition(relPos[0], relPos[1]);
-		 // Load scenario button
+		 // Set scenario button
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 miscButtons[5] = miscButtons[5].setPosition(relPos[0], relPos[1]);
+		 c = getButton("SetScenario").setPosition(relPos[0], relPos[1]);
 		 
 		 // Update window background display
-		 relPos = relativePosition(miscButtons[5], RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 background.setBackgroundHeight(relPos[1])
 		 .setHeight(relPos[1])
 		 .show();
@@ -1902,9 +1881,12 @@ public class WindowManager {
 		 if (windowState == null || windowState.equals("Hide")) {
 			 // Window is hidden
 			 background.hide();
-			 for (Button b : cameraViews) {
-				 b.hide();
-			 }
+			 getButton("FrontView").hide();
+			 getButton("BackView").hide();
+			 getButton("LeftView").hide();
+			 getButton("RightView").hide();
+			 getButton("TopView").hide();
+			 getButton("BottomView").hide();
 
 			 return;
 
@@ -1928,10 +1910,17 @@ public class WindowManager {
 		 // Update the camera view buttons
 		 int[] relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_RIGHT, offsetX, 0);
 
-		 for (Button b : cameraViews) {  
-			 b.setPosition(relPos[0], relPos[1]).show();
-			 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 }
+		 Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
+		 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 b = getButton("BackView").setPosition(relPos[0], relPos[1]).show();
+		 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 b = getButton("LeftView").setPosition(relPos[0], relPos[1]).show();
+		 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 b = getButton("RightView").setPosition(relPos[0], relPos[1]).show();
+		 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 b = getButton("TopView").setPosition(relPos[0], relPos[1]).show();
+		 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 b = getButton("BottomView").setPosition(relPos[0], relPos[1]).show();
 
 		 updateListContents();
 	 }
