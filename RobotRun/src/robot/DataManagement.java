@@ -848,16 +848,22 @@ public abstract class DataManagement {
 			localOrientation.setAxes(orientationAxes);
 
 			if (flag == 1) {
+				center = loadPVector(in);
+				orientationAxes = loadFloatArray2D(in);
+				CoordinateSystem defaultOrientation = new CoordinateSystem();
+				defaultOrientation.setOrigin(center);
+				defaultOrientation.setAxes(orientationAxes);
+				
 				// Load the part's bounding-box and fixture reference name
 				PVector OBBDims = loadPVector(in);
 				String refName = in.readUTF();
 
 				if (refName.equals("")) {
 					// A part object
-					wldObjFields = new Part(name, form, OBBDims, localOrientation, null);
+					wldObjFields = new Part(name, form, OBBDims, localOrientation, defaultOrientation, null);
 				} else {
 					// A part object with its reference's name
-					wldObjFields = new LoadedPart( new Part(name, form, OBBDims, localOrientation, null), refName );
+					wldObjFields = new LoadedPart( new Part(name, form, OBBDims, localOrientation, defaultOrientation, null), refName );
 				}
 
 			} else if (flag == 2) {
@@ -1662,11 +1668,15 @@ public abstract class DataManagement {
 			// Save the local orientation of the object
 			savePVector(wldObj.getLocalCenter(), out);
 			saveFloatArray2D(wldObj.getLocalOrientationAxes(), out);
-
+			
 			if (wldObj instanceof Part) {
 				Part part = (Part)wldObj;
 				String refName = "";
-
+				
+				// Save the default orientation of the part
+				savePVector(part.getDefaultCenter(), out);
+				saveFloatArray2D(part.getDefaultOrientationAxes(), out);
+				
 				savePVector(part.getOBBDims(), out);
 
 				if (part.getFixtureRef() != null) {

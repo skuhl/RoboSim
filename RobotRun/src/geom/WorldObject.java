@@ -36,6 +36,7 @@ public abstract class WorldObject implements Cloneable {
 	public void applyCoordinateSystem() {
 		localOrientation.apply();
 	}
+	
 	@Override
 	public abstract Object clone();
 
@@ -106,7 +107,9 @@ public abstract class WorldObject implements Cloneable {
 
 	public Shape getForm() { return form; }
 
-	public PVector getLocalCenter() { return localOrientation.getOrigin(); }
+	public PVector getLocalCenter() {
+		return localOrientation.getOrigin();
+		}
 
 	public float[][] getLocalOrientationAxes() {
 		return localOrientation.getAxes();
@@ -122,7 +125,10 @@ public abstract class WorldObject implements Cloneable {
 		localOrientation = new CoordinateSystem();
 	}
 
-	public void setLocalCenter(PVector newCenter) { localOrientation.setOrigin(newCenter); }
+	public void setLocalCenter(PVector newCenter) {
+		localOrientation.setOrigin(newCenter);
+	}
+	
 	public void setLocalOrientationAxes(float[][] newAxes) {
 		localOrientation.setAxes(newAxes);
 	}

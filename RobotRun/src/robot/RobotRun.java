@@ -6118,6 +6118,7 @@ public class RobotRun extends PApplet {
 		} else if (key == 't') {
 			// Restore default Robot joint angles
 			float[] rot = {0, 0, 0, 0, 0, 0};
+			getActiveRobot().releaseHeldObject();
 			getActiveRobot().setJointAngles(rot);
 			intermediatePositions.clear();
 

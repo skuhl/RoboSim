@@ -10,6 +10,7 @@ import robot.RobotRun;
  * The bounding box holds the local coordinate system of the object.
  */
 public class Part extends WorldObject {
+	
 	/**
 	 * This algorithm uses the Separating Axis Theorm to project radi of each Box on to several 
 	 * axes to determine if a there is any overlap between the boxes. The method strongly resembles 
@@ -137,7 +138,7 @@ public class Part extends WorldObject {
 	}
 	
 	private BoundingBox absOBB;
-
+	private CoordinateSystem defaultOrientation;
 	private Fixture reference;
 
 	/**
@@ -146,6 +147,7 @@ public class Part extends WorldObject {
 	public Part(String n, int fill, int strokeVal, float edgeLen) {
 		super(n, new Box(fill, strokeVal, edgeLen));
 		absOBB = new BoundingBox(1.1f * edgeLen);
+		defaultOrientation = (CoordinateSystem) localOrientation.clone();
 	}
 
 	/**
@@ -154,6 +156,7 @@ public class Part extends WorldObject {
 	public Part(String n, int fill, int strokeVal, float rad, float hgt) {
 		super(n, new Cylinder(fill, strokeVal, rad, hgt));
 		absOBB = new BoundingBox(2.12f * rad, 2.12f * rad, 1.1f * hgt);
+		defaultOrientation = (CoordinateSystem) localOrientation.clone();
 	}
 
 	/**
@@ -162,10 +165,11 @@ public class Part extends WorldObject {
 	public Part(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
 		super(n, new Box(fill, strokeVal, len, hgt, wdh));
 		absOBB = new BoundingBox(1.1f * len, 1.1f * hgt, 1.1f * wdh);
+		defaultOrientation = (CoordinateSystem) localOrientation.clone();
 	}
 
 	/**
-	 * Define a complex object as a partx.
+	 * Define a complex object as a part.
 	 */
 	public Part(String n, ModelShape model) {
 		super(n, model);
@@ -173,14 +177,19 @@ public class Part extends WorldObject {
 		absOBB = new BoundingBox(1.1f * model.getDim(DimType.LENGTH),
 								 1.1f * model.getDim(DimType.HEIGHT),
 								 1.1f * model.getDim(DimType.WIDTH));
+		defaultOrientation = (CoordinateSystem) localOrientation.clone();
 	}
 
 	/**
-	 * Creates a Part with the given name, shape, bounding-box dimensions, and fixture reference.
+	 * Creates a Part with the given name, shape, bounding-box dimensions,
+	 * default orientation and fixture reference.
 	 */
-	public Part(String n, Shape s, PVector OBBDims, CoordinateSystem local, Fixture fixRef) {
+	public Part(String n, Shape s, PVector OBBDims, CoordinateSystem local,
+			CoordinateSystem def, Fixture fixRef) {
+		
 		super(n, s, local);
 		absOBB = new BoundingBox(OBBDims.x, OBBDims.y, OBBDims.z);
+		defaultOrientation = def;
 		setFixtureRef(fixRef);
 	}
 
@@ -196,7 +205,8 @@ public class Part extends WorldObject {
 	@Override
 	public Object clone() {
 		// The new object's reference still points to the same fixture!
-		return new Part(getName(), (Shape)getForm().clone(), getOBBDims().copy(), (CoordinateSystem)localOrientation.clone(), reference);
+		return new Part(getName(), (Shape)getForm().clone(), getOBBDims().copy(),
+				(CoordinateSystem)localOrientation.clone(), (CoordinateSystem)defaultOrientation.clone(), reference);
 	}
 
 	/**
@@ -253,6 +263,14 @@ public class Part extends WorldObject {
 	public PVector getOBBDims() {
 		return absOBB.getDims();
 	}
+	
+	public PVector getDefaultCenter() {
+		return defaultOrientation.getOrigin();
+	}
+
+	public float[][] getDefaultOrientationAxes() {
+		return defaultOrientation.getAxes();
+	}
 
 	/**
 	 * Sets the stroke color of the world's bounding-box
@@ -284,6 +302,14 @@ public class Part extends WorldObject {
 
 	public void setLocalCoordinateSystem() {
 		super.setCoordinateSystem();
+	}
+	
+	public void setDefaultCenter(PVector newCenter) {
+		defaultOrientation.setOrigin(newCenter);
+	}
+	
+	public void setDefaultOrientationAxes(float[][] newAxes) {
+		defaultOrientation.setAxes(newAxes);
 	}
 
 	@Override
@@ -331,7 +357,8 @@ public class Part extends WorldObject {
 	}
 	
 	/**
-	 * Update the part's bounding box dimensions of the part based on the dimensions of its form.
+	 * Update the part's bounding box dimensions of the part based on the
+	 * dimensions of its form.
 	 */
 	public void updateOBBDims() {
 		Shape s = getForm();

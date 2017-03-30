@@ -35,6 +35,7 @@ public class WindowManager {
 	public static final int offsetX = 10,
 			distBtwFieldsY = 15,
 			distLblToFieldX = 5,
+			distFieldToFieldX = 20,
 			lLblWidth = 120,
 			mLblWidth = 86,
 			sLblWidth = 60,
@@ -293,6 +294,30 @@ public class WindowManager {
 				 .setColorBackground(bkgrdColor)
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
+		 
+		 UIManager.addTextarea("Blank", "Label", 0, 0, sLblWidth, fieldHeight)
+			 .setFont(medium)
+			 .setColor(fieldTxtColor)
+			 .setColorActive(fieldActColor)
+			 .setColorBackground(bkgrdColor)
+			 .setColorForeground(bkgrdColor)
+			 .moveTo(editObjWindow);
+		 
+		 UIManager.addTextarea("Position", "Position", 0, 0, fieldWidth, fieldHeight)
+			 .setFont(medium)
+			 .setColor(fieldTxtColor)
+			 .setColorActive(fieldActColor)
+			 .setColorBackground(bkgrdColor)
+			 .setColorForeground(bkgrdColor)
+			 .moveTo(editObjWindow);
+		 
+		 UIManager.addTextarea("Default", "Default", 0, 0, fieldWidth, fieldHeight)
+			 .setFont(medium)
+			 .setColor(fieldTxtColor)
+			 .setColorActive(fieldActColor)
+			 .setColorBackground(bkgrdColor)
+			 .setColorForeground(bkgrdColor)
+			 .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("XArea", "X:", 0, 0, sLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -310,6 +335,15 @@ public class WindowManager {
 				 .setColorBackground(fieldBkgrdColor)
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
+		 
+		 UIManager.addTextfield("XDefault", 0, 0, fieldWidth, fieldHeight)
+			 .setColor(fieldTxtColor)
+			 .setColorCursor(fieldCurColor)
+			 .setColorActive(fieldActColor)
+			 .setColorLabel(bkgrdColor)
+			 .setColorBackground(fieldBkgrdColor)
+			 .setColorForeground(fieldFrgrdColor)
+			 .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("YArea", "Y:", 0, 0, sLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -327,6 +361,15 @@ public class WindowManager {
 				 .setColorBackground(fieldBkgrdColor)
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
+		 
+		 UIManager.addTextfield("YDefault", 0, 0, fieldWidth, fieldHeight)
+			 .setColor(fieldTxtColor)
+			 .setColorCursor(fieldCurColor)
+			 .setColorActive(fieldActColor)
+			 .setColorLabel(bkgrdColor)
+			 .setColorBackground(fieldBkgrdColor)
+			 .setColorForeground(fieldFrgrdColor)
+			 .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("ZArea", "Z:", 0, 0, sLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -344,6 +387,15 @@ public class WindowManager {
 				 .setColorBackground(fieldBkgrdColor)
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
+		 
+		 UIManager.addTextfield("ZDefault", 0, 0, fieldWidth, fieldHeight)
+			 .setColor(fieldTxtColor)
+			 .setColorCursor(fieldCurColor)
+			 .setColorActive(fieldActColor)
+			 .setColorLabel(bkgrdColor)
+			 .setColorBackground(fieldBkgrdColor)
+			 .setColorForeground(fieldFrgrdColor)
+			 .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("WArea", "W:", 0, 0, sLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -361,6 +413,15 @@ public class WindowManager {
 				 .setColorBackground(fieldBkgrdColor)
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
+		 
+		 UIManager.addTextfield("WDefault", 0, 0, fieldWidth, fieldHeight)
+			 .setColor(fieldTxtColor)
+			 .setColorCursor(fieldCurColor)
+			 .setColorActive(fieldActColor)
+			 .setColorLabel(bkgrdColor)
+			 .setColorBackground(fieldBkgrdColor)
+			 .setColorForeground(fieldFrgrdColor)
+			 .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("PArea", "P:", 0, 0, sLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -378,6 +439,15 @@ public class WindowManager {
 				 .setColorBackground(fieldBkgrdColor)
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
+		 
+		 UIManager.addTextfield("PDefault", 0, 0, fieldWidth, fieldHeight)
+			 .setColor(fieldTxtColor)
+			 .setColorCursor(fieldCurColor)
+			 .setColorActive(fieldActColor)
+			 .setColorLabel(bkgrdColor)
+			 .setColorBackground(fieldBkgrdColor)
+			 .setColorForeground(fieldFrgrdColor)
+			 .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("RArea", "R:", 0, 0, sLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -395,6 +465,15 @@ public class WindowManager {
 				 .setColorBackground(fieldBkgrdColor)
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
+		 
+		 UIManager.addTextfield("RDefault", 0, 0, fieldWidth, fieldHeight)
+			 .setColor(fieldTxtColor)
+			 .setColorCursor(fieldCurColor)
+			 .setColorActive(fieldActColor)
+			 .setColorLabel(bkgrdColor)
+			 .setColorBackground(fieldBkgrdColor)
+			 .setColorForeground(fieldFrgrdColor)
+			 .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("FixtureLbl", "Reference:", 0, 0, lLblWidth, sButtonHeight)
 				 .setFont(medium)
@@ -713,23 +792,6 @@ public class WindowManager {
 		 return (Textarea) UIManager.get(name);
 	 }
 	 
-	 private Textarea getDimTA(DimType t) {
-		 
-		 switch (t) {
-		 	case WIDTH:
-		 		return (Textarea) UIManager.get("Dim2Lbl");
-		 		
-		 	case HEIGHT:
-		 	case SCALE:
-		 		return (Textarea) UIManager.get("Dim1Lbl");
-		 	
-		 	case LENGTH:
-		 	case RADIUS:
-		 	default:
-		 		return (Textarea) UIManager.get("Dim0Lbl");
-		 }
-	 }
-	 
 	 private Textfield getTextField(String name) {
 		 return (Textfield) UIManager.get(name);
 	 }
@@ -764,7 +826,7 @@ public class WindowManager {
 	  */
 	 public WorldObject createWorldObject() {
 		 // Check the object type dropdown list
-		 Object val = getDropdown("Object").getActiveLabelValue();
+		 Object val = getDropdown("ObjType").getActiveLabelValue();
 		 // Determine if the object to be create is a Fixture or a Part
 		 Float objectType = 0.0f;
 
@@ -1024,14 +1086,56 @@ public class WindowManager {
 				 toEdit.setLocalOrientationAxes(orientation);
 
 				 if (toEdit instanceof Part) {
-					 // Set the reference of the Part to the currently active fixture
-					 Fixture refFixture = (Fixture)getDropdown("Fixture").getActiveLabelValue();
-					 
-					 if (((Part) toEdit).getFixtureRef() != refFixture) {
+					Part p = (Part)toEdit;
+					PVector defaultPos = p.getDefaultCenter();
+					PVector defaultWPR = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() ).mult(RobotRun.RAD_TO_DEG);
+					
+					// Update default position and orientation
+					 if (inputValues[6] != null) {
+						 defaultPos.x = inputValues[6];
 						 edited = true;
 					 }
 					 
-					 ((Part)toEdit).setFixtureRef(refFixture);
+					 if (inputValues[7] != null) {
+						 defaultPos.y = inputValues[7];
+						 edited = true;
+					 }
+					 
+					 if (inputValues[8] != null) {
+						 defaultPos.z = inputValues[8];
+						 edited = true;
+					 }
+					 
+					 if (inputValues[9] != null) {
+						 defaultWPR.x = -inputValues[9];
+						 edited = true;
+					 }
+					 
+					 if (inputValues[11] != null) {
+						 defaultWPR.y = -inputValues[11];
+						 edited = true;
+					 }
+					 
+					 if (inputValues[10] != null) {
+						 defaultWPR.z = inputValues[10];
+						 edited = true;
+					 }
+
+					 // Convert values from the World to the Native coordinate system
+					 position = RobotRun.convertWorldToNative( defaultPos );
+					 wpr = defaultWPR.mult(RobotRun.DEG_TO_RAD);
+					 orientation = RobotRun.eulerToMatrix(wpr);
+					 // Update the Object's default position and orientation
+					 p.setDefaultCenter(position);
+					 p.setDefaultOrientationAxes(orientation);
+					 
+					 // Set the reference of the Part to the currently active fixture
+					 Fixture refFixture = (Fixture)getDropdown("Fixture").getActiveLabelValue();
+					 
+					 if (p.getFixtureRef() != refFixture) {
+						 p.setFixtureRef(refFixture);
+						 edited = true;
+					 }
 				 }
 				 
 				 if (edited) {
@@ -1282,53 +1386,27 @@ public class WindowManager {
 	 private Float[] getOrientationValues() {
 		 try {
 			 // Pull from x, y, z, w, p, r, fields input fields
-			 String xFieldVal = getTextField("XField").getText(), yFieldVal = getTextField("YField").getText(),
-					 zFieldVal = getTextField("ZField").getText(), wFieldVal = getTextField("WField").getText(),
-					 pFieldVal = getTextField("PField").getText(), rFieldVal = getTextField("RField").getText();
+			 String[] orienVals = new String[] {
+					getTextField("XField").getText(), getTextField("YField").getText(),
+					getTextField("ZField").getText(), getTextField("WField").getText(),
+					getTextField("PField").getText(), getTextField("RField").getText(),
+					getTextField("XDefault").getText(), getTextField("YDefault").getText(),
+					getTextField("ZDefault").getText(), getTextField("PDefault").getText(),
+					getTextField("PDefault").getText(), getTextField("RDefault").getText()
+			 };
+			 
 			 // NaN indicates an uninitialized field
-			 Float[] values = new Float[] { null, null, null, null, null, null };
-
-			 // Update x value
-			 if (xFieldVal != null && !xFieldVal.equals("")) {
-				 float val = Float.parseFloat(xFieldVal);
-				 // Bring value within the range [-9999, 9999]
-				 val = RobotRun.max(-9999f, RobotRun.min(val, 9999f));
-				 values[0] = val;
-			 }
-			 // Update y value
-			 if (yFieldVal != null && !yFieldVal.equals("")) {
-				 float val = Float.parseFloat(yFieldVal);
-				 // Bring value within the range [-9999, 9999]
-				 val = RobotRun.max(-9999f, RobotRun.min(val, 9999f));
-				 values[1] = val;
-			 }
-			 // Update z value
-			 if (zFieldVal != null && !zFieldVal.equals("")) {
-				 float val = Float.parseFloat(zFieldVal);
-				 // Bring value within the range [-9999, 9999]
-				 val = RobotRun.max(-9999f, RobotRun.min(val, 9999f));
-				 values[2] = val;
-			 }
-			 // Update w angle
-			 if (wFieldVal != null && !wFieldVal.equals("")) {
-				 float val = Float.parseFloat(wFieldVal);
-				 // Bring value within the range [-9999, 9999]
-				 val = RobotRun.max(-9999f, RobotRun.min(val, 9999f));
-				 values[3] = val;
-			 }
-			 // Update p angle
-			 if (pFieldVal != null && !pFieldVal.equals("")) {
-				 float val = Float.parseFloat(pFieldVal);
-				 // Bring value within the range [-9999, 9999]
-				 val = RobotRun.max(-9999f, RobotRun.min(val, 9999f));
-				 values[4] = val;
-			 }
-			 // Update r angle
-			 if (rFieldVal != null && !rFieldVal.equals("")) {
-				 float val = Float.parseFloat(rFieldVal);
-				 // Bring value within the range [-9999, 9999]
-				 val = RobotRun.max(-9999f, RobotRun.min(val, 9999f));
-				 values[5] = val;
+			 Float[] values = new Float[] { null, null, null, null, null, null,
+					 						null, null, null, null, null, null };
+			 
+			 for (int valIdx = 0; valIdx < orienVals.length; ++valIdx) {
+				// Update the orientation value
+				 if (orienVals[valIdx] != null && !orienVals[valIdx].equals("")) {
+					 float val = Float.parseFloat(orienVals[valIdx]);
+					 // Bring value within the range [-9999, 9999]
+					 val = RobotRun.max(-9999f, RobotRun.min(val, 9999f));
+					 values[valIdx] = val;
+				 }
 			 }
 
 			 return values;
@@ -1681,67 +1759,133 @@ public class WindowManager {
 
 		 // Object list dropdown and label
 		 int[] relPos = new int[] { offsetX, offsetX };
-		 ControllerInterface<?> c = getTextArea("ObjLabel").setPosition(relPos[0], relPos[1]);
-
+		 ControllerInterface<?> c = getTextArea("ObjLabel").setPosition(relPos[0], relPos[1]),
+				 				c0 = null;
+		 boolean isPart = getActiveWorldObject() instanceof Part;
+		 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		 getDropdown("Object").setPosition(relPos[0], relPos[1]);
 		 // Dimension label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
-
-		 // X label and field
+		// Orientation column labels
+		 c = getTextArea("Blank").setPosition(relPos[0], relPos[1]);
+		 
+		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 c0 = getTextArea("Position").setPosition(relPos[0], relPos[1]);
+		 
+		 if (isPart) {
+			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			 getTextArea("Default").setPosition(relPos[0], relPos[1]).show();
+			 
+		 } else {
+			 // Only show them for parts
+			 getTextArea("Default").hide();
+		 }
+		 
+		 // X label and fields
+		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("XArea").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 getTextField("XField").setPosition(relPos[0], relPos[1]);
-		 // Y label and field
+		 c0 = getTextField("XField").setPosition(relPos[0], relPos[1]);
+		 
+		 if (isPart) {
+			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			 getTextField("XDefault").setPosition(relPos[0], relPos[1]).show();
+			 
+		 } else {
+			 getTextField("XDefault").hide();
+		 }
+		 
+		 // Y label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("YArea").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 getTextField("YField").setPosition(relPos[0], relPos[1]);
-		 // Z label and field
+		 c0 = getTextField("YField").setPosition(relPos[0], relPos[1]);
+		 
+		 if (isPart) {
+			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			 getTextField("YDefault").setPosition(relPos[0], relPos[1]).show();
+			 
+		 } else {
+			 getTextField("YDefault").hide();
+		 }
+		 
+		 // Z label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("ZArea").setPosition(relPos[0], relPos[1]);;
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 getTextField("ZField").setPosition(relPos[0], relPos[1]);
-		 // W label and field
+		 c0 = getTextField("ZField").setPosition(relPos[0], relPos[1]);
+		 
+		 if (isPart) {
+			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			 getTextField("ZDefault").setPosition(relPos[0], relPos[1]).show();
+			 
+		 } else {
+			 getTextField("ZDefault").hide();
+		 }
+		 
+		 // W label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("WArea").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 getTextField("WField").setPosition(relPos[0], relPos[1]);
-		 // P label and field
+		 c0 = getTextField("WField").setPosition(relPos[0], relPos[1]);
+		 
+		 if (isPart) {
+			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			 getTextField("WDefault").setPosition(relPos[0], relPos[1]).show();
+			 
+		 } else {
+			 getTextField("WDefault").hide();
+		 }
+		 
+		 // P label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("PArea").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 getTextField("PField").setPosition(relPos[0], relPos[1]);
-		 // R label and field
+		 c0 = getTextField("PField").setPosition(relPos[0], relPos[1]);
+		 
+		 if (isPart) {
+			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			 getTextField("PDefault").setPosition(relPos[0], relPos[1]).show();
+			 
+		 } else {
+			 getTextField("PDefault").hide();
+		 }
+		 
+		 // R label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("RArea").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 getTextField("RField").setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-
-		 if (getActiveWorldObject() instanceof Part) {
-			 // Reference fxiture (for Parts only) label and dropdown
-			 c = getTextArea("FixtureLbl").setPosition(relPos[0], relPos[1]).show();
-			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
-
-			 getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
-			 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-
+		 c0 = getTextField("RField").setPosition(relPos[0], relPos[1]);
+		 
+		 if (isPart) {
+			/* Default orientation and fixture references are only relevant for
+			 * fixtures */
+			relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			getTextField("RDefault").setPosition(relPos[0], relPos[1]).show();
+			 
+			
+			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			c = getTextArea("FixtureLbl").setPosition(relPos[0], relPos[1]).show();
+			
+			relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
+			getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
+			
 		 } else {
-			 // Fixtures do not have a reference object
-			 getTextArea("FixtureLbl").hide();
-			 getDropdown("Fixture").hide();
+			getTextField("RDefault").hide();
+			getTextArea("FixtureLbl").hide();
+			getDropdown("Fixture").hide();
 		 }
-
+		 
 		 // Confirm button
+		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getButton("UpdateWldObj").setPosition(relPos[0], relPos[1]);
 		 // Delete button
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, offsetX, 0);
@@ -1761,18 +1905,18 @@ public class WindowManager {
 		 MyDropdownList dropdown;
 		 
 		 if (app.activeScenario != null) {
-			 getDropdown("Object").clear();
-			 dropdown = getDropdown("Fixture");
+			 dropdown = getDropdown("Object");
 			 dropdown.clear();
-			 dropdown.addItem("None", null);
-			 MyDropdownList limbo = dropdown = getDropdown("Object");
-
+			 MyDropdownList limbo = getDropdown("Fixture");
+			 limbo.clear();
+			 limbo.addItem("None", null);
+			 
 			 for (WorldObject wldObj : app.activeScenario) {
-				 limbo.addItem(wldObj.toString(), wldObj);
+				 dropdown.addItem(wldObj.toString(), wldObj);
 
 				 if (wldObj instanceof Fixture) {
 					 // Load all fixtures from the active scenario
-					 dropdown.addItem(wldObj.toString(), wldObj);
+					 limbo.addItem(wldObj.toString(), wldObj);
 				 }
 			 }
 			 // Update each dropdownlist's active label
