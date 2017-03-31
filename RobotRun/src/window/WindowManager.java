@@ -282,7 +282,7 @@ public class WindowManager {
 				 .setColorValue(buttonTxtColor)
 				 .setColorBackground(buttonDefColor)
 				 .setColorActive(buttonActColor)
-				 .moveTo(createObjWindow)
+				 .moveTo(sharedElements)
 				 .setPosition(0, 0)
 				 .setSize(mButtonWidth, sButtonHeight)
 				 .getCaptionLabel().setFont(small);
@@ -295,7 +295,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextarea("Blank", "Label", 0, 0, sLblWidth, fieldHeight)
+		 UIManager.addTextarea("Blank", "Inputs", 0, 0, lLblWidth, fieldHeight)
 			 .setFont(medium)
 			 .setColor(fieldTxtColor)
 			 .setColorActive(fieldActColor)
@@ -303,7 +303,7 @@ public class WindowManager {
 			 .setColorForeground(bkgrdColor)
 			 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextarea("Position", "Position", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextarea("Current", "Current", 0, 0, fieldWidth, fieldHeight)
 			 .setFont(medium)
 			 .setColor(fieldTxtColor)
 			 .setColorActive(fieldActColor)
@@ -318,8 +318,36 @@ public class WindowManager {
 			 .setColorBackground(bkgrdColor)
 			 .setColorForeground(bkgrdColor)
 			 .moveTo(editObjWindow);
+		 
+		 UIManager.addTextarea("AFLbl", "Auto Fill", 0, 0, lLblWidth, fieldHeight)
+			 .setFont(medium)
+			 .setColor(fieldTxtColor)
+			 .setColorActive(fieldActColor)
+			 .setColorBackground(bkgrdColor)
+			 .setColorForeground(bkgrdColor)
+			 .moveTo(editObjWindow);
+		 
+		 UIManager.addButton("DefIntoCur")
+				  .setCaptionLabel("Default")
+				  .setColorValue(buttonTxtColor)
+				  .setColorBackground(buttonDefColor)
+				  .setColorActive(buttonActColor)
+				  .moveTo(editObjWindow)
+				  .setPosition(0, 0)
+				  .setSize(mButtonWidth, sButtonHeight)
+				  .getCaptionLabel().setFont(small);
+		 
+		 UIManager.addButton("CurIntoDef")
+				  .setCaptionLabel("Current")
+				  .setColorValue(buttonTxtColor)
+				  .setColorBackground(buttonDefColor)
+				  .setColorActive(buttonActColor)
+				  .moveTo(editObjWindow)
+				  .setPosition(0, 0)
+				  .setSize(mButtonWidth, sButtonHeight)
+				  .getCaptionLabel().setFont(small);
 
-		 UIManager.addTextarea("XArea", "X:", 0, 0, sLblWidth, fieldHeight)
+		 UIManager.addTextarea("XLbl", "X Position:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
 				 .setColor(fieldTxtColor)
 				 .setColorActive(fieldActColor)
@@ -327,7 +355,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("XField", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextfield("XCur", 0, 0, fieldWidth, fieldHeight)
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -336,7 +364,7 @@ public class WindowManager {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("XDefault", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextfield("XDef", 0, 0, fieldWidth, fieldHeight)
 			 .setColor(fieldTxtColor)
 			 .setColorCursor(fieldCurColor)
 			 .setColorActive(fieldActColor)
@@ -345,7 +373,7 @@ public class WindowManager {
 			 .setColorForeground(fieldFrgrdColor)
 			 .moveTo(editObjWindow);
 
-		 UIManager.addTextarea("YArea", "Y:", 0, 0, sLblWidth, fieldHeight)
+		 UIManager.addTextarea("YLbl", "Y Position:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
 				 .setColor(fieldTxtColor)
 				 .setColorActive(fieldActColor)
@@ -353,7 +381,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("YField", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextfield("YCur", 0, 0, fieldWidth, fieldHeight)
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -362,7 +390,7 @@ public class WindowManager {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("YDefault", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextfield("YDef", 0, 0, fieldWidth, fieldHeight)
 			 .setColor(fieldTxtColor)
 			 .setColorCursor(fieldCurColor)
 			 .setColorActive(fieldActColor)
@@ -371,7 +399,7 @@ public class WindowManager {
 			 .setColorForeground(fieldFrgrdColor)
 			 .moveTo(editObjWindow);
 
-		 UIManager.addTextarea("ZArea", "Z:", 0, 0, sLblWidth, fieldHeight)
+		 UIManager.addTextarea("ZLbl", "Z Position:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
 				 .setColor(fieldTxtColor)
 				 .setColorActive(fieldActColor)
@@ -379,7 +407,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("ZField", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextfield("ZCur", 0, 0, fieldWidth, fieldHeight)
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -388,7 +416,7 @@ public class WindowManager {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("ZDefault", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextfield("ZDef", 0, 0, fieldWidth, fieldHeight)
 			 .setColor(fieldTxtColor)
 			 .setColorCursor(fieldCurColor)
 			 .setColorActive(fieldActColor)
@@ -397,7 +425,7 @@ public class WindowManager {
 			 .setColorForeground(fieldFrgrdColor)
 			 .moveTo(editObjWindow);
 
-		 UIManager.addTextarea("WArea", "W:", 0, 0, sLblWidth, fieldHeight)
+		 UIManager.addTextarea("WLbl", "W Rotation:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
 				 .setColor(fieldTxtColor)
 				 .setColorActive(fieldActColor)
@@ -405,7 +433,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("WField", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextfield("WCur", 0, 0, fieldWidth, fieldHeight)
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -414,7 +442,7 @@ public class WindowManager {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("WDefault", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextfield("WDef", 0, 0, fieldWidth, fieldHeight)
 			 .setColor(fieldTxtColor)
 			 .setColorCursor(fieldCurColor)
 			 .setColorActive(fieldActColor)
@@ -423,7 +451,7 @@ public class WindowManager {
 			 .setColorForeground(fieldFrgrdColor)
 			 .moveTo(editObjWindow);
 
-		 UIManager.addTextarea("PArea", "P:", 0, 0, sLblWidth, fieldHeight)
+		 UIManager.addTextarea("PLbl", "P Rotation:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
 				 .setColor(fieldTxtColor)
 				 .setColorActive(fieldActColor)
@@ -431,7 +459,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("PField", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextfield("PCur", 0, 0, fieldWidth, fieldHeight)
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -440,7 +468,7 @@ public class WindowManager {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("PDefault", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextfield("PDef", 0, 0, fieldWidth, fieldHeight)
 			 .setColor(fieldTxtColor)
 			 .setColorCursor(fieldCurColor)
 			 .setColorActive(fieldActColor)
@@ -449,7 +477,7 @@ public class WindowManager {
 			 .setColorForeground(fieldFrgrdColor)
 			 .moveTo(editObjWindow);
 
-		 UIManager.addTextarea("RArea", "R:", 0, 0, sLblWidth, fieldHeight)
+		 UIManager.addTextarea("RLbl", "R Rotation:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
 				 .setColor(fieldTxtColor)
 				 .setColorActive(fieldActColor)
@@ -457,7 +485,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("RField", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextfield("RCur", 0, 0, fieldWidth, fieldHeight)
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -466,7 +494,7 @@ public class WindowManager {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("RDefault", 0, 0, fieldWidth, fieldHeight)
+		 UIManager.addTextfield("RDef", 0, 0, fieldWidth, fieldHeight)
 			 .setColor(fieldTxtColor)
 			 .setColorCursor(fieldCurColor)
 			 .setColorActive(fieldActColor)
@@ -475,7 +503,7 @@ public class WindowManager {
 			 .setColorForeground(fieldFrgrdColor)
 			 .moveTo(editObjWindow);
 
-		 UIManager.addTextarea("FixtureLbl", "Reference:", 0, 0, lLblWidth, sButtonHeight)
+		 UIManager.addTextarea("RefLbl", "Reference:", 0, 0, lLblWidth, sButtonHeight)
 				 .setFont(medium)
 				 .setColor(fieldTxtColor)
 				 .setColorActive(fieldActColor)
@@ -717,31 +745,79 @@ public class WindowManager {
 		 dropdown.addItem("Parts", 0.0f);
 		 dropdown.addItem("Fixtures", 1.0f);
 	 }
+	 
+	 /**
+	  * Sets the current position and orientation inputs fields to the values of
+	  * the active part's default position and orientation.
+	  */
+	 public void autoFillCurFields() {
+		 WorldObject active = getActiveWorldObject();
+		 
+		 if (active instanceof Part) {
+			 Part p = (Part)active;
+			 // Get the part's default position and orientation
+			 PVector pos = p.getDefaultCenter();
+			 PVector wpr = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
+					 			   .mult(RobotRun.RAD_TO_DEG);
+			 
+			 pos = RobotRun.convertNativeToWorld(pos);
+			 
+			 // Fill the current position and orientation fields in the edit window
+			 getTextField("XCur").setText( Float.toString(pos.x) );
+			 getTextField("YCur").setText( Float.toString(pos.y) );
+			 getTextField("ZCur").setText( Float.toString(pos.z) );
+			 getTextField("WCur").setText( Float.toString(-wpr.x) );
+			 getTextField("PCur").setText( Float.toString(-wpr.z) );
+			 getTextField("RCur").setText( Float.toString(wpr.y) );
+		 }
+	 }
+	 
+	 /**
+	  * Sets the default position and orientation inputs fields to the values of
+	  * the active part's current position and orientation.
+	  */
+	 public void autoFillDefFields() {
+		 WorldObject active = getActiveWorldObject();
+		 
+		 if (active instanceof Part) {
+			 // Get the part's current position and orientation
+			 PVector pos = active.getLocalCenter();
+			 PVector wpr = RobotRun.matrixToEuler( active.getLocalOrientationAxes() )
+					 			   .mult(RobotRun.RAD_TO_DEG);
+			 
+			 pos = RobotRun.convertNativeToWorld(pos);
+			 
+			 // Fill the default position and orientation fields in the edit window
+			 getTextField("XDef").setText( Float.toString(pos.x) );
+			 getTextField("YDef").setText( Float.toString(pos.y) );
+			 getTextField("ZDef").setText( Float.toString(pos.z) );
+			 getTextField("WDef").setText( Float.toString(-wpr.x) );
+			 getTextField("PDef").setText( Float.toString(-wpr.z) );
+			 getTextField("RDef").setText( Float.toString(wpr.y) );
+		 }
+	 }
 
 	 /**
 	  * Reinitialize any and all input fields
 	  */
-	 public void clearAllInputFields() {
+	 private void clearAllInputFields() {
 		 clearGroupInputFields(null);
 		 updateDimLblsAndFields();
 	 }
-
-	 /**
-	  * Reinitialize the input fields for any contents in the Create Object window
-	  */
-	 public void clearCreateInputFields() {
-		 clearGroupInputFields(createObjWindow);
-		 clearSharedInputFields();
-		 updateDimLblsAndFields();
-	 }
-
-	 /**
-	  * Reinitialize the input fields for any contents in the Edit Object window
-	  */
-	 public void clearEditInputFields() {
-		 clearGroupInputFields(editObjWindow);
-		 clearSharedInputFields();
-		 updateDimLblsAndFields();
+	 
+	 public void clearInputsFields() {
+		 String winName = windowTabs.getActiveButtonName();
+		 
+		 if (winName.equals("Create")) {
+			 clearGroupInputFields(createObjWindow);
+			 clearSharedInputFields();
+			 updateCreateWindowContentPositions();
+			 
+		 } else if (winName.equals("Edit")) {
+			 clearGroupInputFields(editObjWindow);
+			 clearSharedInputFields();
+			 updateEditWindowContentPositions();
+		 }
 	 }
 
 	 /**
@@ -786,17 +862,36 @@ public class WindowManager {
 	 public void clearSharedInputFields() {
 		 clearGroupInputFields(sharedElements);
 		 updateDimLblsAndFields();
+	 } 
+	 
+	 /**
+	  * Returns the button, with the given name, if it exists in one of the UI
+	  * (excluding the pendant). If a non-button UI element exists in the UI,
+	  * then a ClassCastException will be thrown. If no UI element with the
+	  * given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a button in the UI
+	  * @return		The button with the given name or null
+	  * @throws ClassCastException	If a non-button UI element with the given
+	  * 							name exists in the UI
+	  */
+	 private Button getButton(String name) throws ClassCastException {
+		 return (Button) UIManager.get(name);
 	 }
 	 
-	 private Textarea getTextArea(String name) {
-		 return (Textarea) UIManager.get(name);
-	 }
-	 
-	 private Textfield getTextField(String name) {
-		 return (Textfield) UIManager.get(name);
-	 }
-	 
-	 private Textfield getDimTF(DimType t) {
+	 /**
+	  * Returns a text-field, which corresponds to the given dimension type.
+	  * The mapping from DimType to text-fields is:
+	  * 	LENGTH, RADIUS, null	->	Dim0 text-field
+	  * 	HEIGHT, SCALE			->	Dim1 text-field
+	  * 	WIDTH					->	Dim2 text-field
+	  * 
+	  * @param name	A type of world object dimension, which corresponds to a
+	  * 			text-field input in the UI
+	  * @return		The text-field corresponding to the given dimension type
+	  * @throws ClassCastException	Really shouldn't happen
+	  */
+	 private Textfield getDimTF(DimType t) throws ClassCastException {
 		 
 		 switch (t) {
 		 	case WIDTH:
@@ -813,12 +908,49 @@ public class WindowManager {
 		 }
 	 }
 	 
-	 private Button getButton(String name) {
-		 return (Button) UIManager.get(name);
+	 /**
+	  * Returns the drop-down, with the given name, if it exists in one of the
+	  * UI (excluding the pendant). If a non-drop-down UI element exists in the
+	  * UI, then a ClassCastException will be thrown. If no UI element with the
+	  * given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a drop-down in the UI
+	  * @return		The drop-down with the given name or null
+	  * @throws ClassCastException	If a non-drop-down UI element with the given
+	  * 							name exists in the UI
+	  */
+	 private MyDropdownList getDropdown(String name) throws ClassCastException {
+		 return (MyDropdownList) UIManager.get(name);
 	 }
 	 
-	 private MyDropdownList getDropdown(String name) {
-		 return (MyDropdownList) UIManager.get(name);
+	 /**
+	  * Returns the text-area, with the given name, if it exists in one of the
+	  * UI (excluding the pendant). If a non-text-area UI element exists in the
+	  * UI, then a ClassCastException will be thrown. If no UI element with the
+	  * given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a text-area in the UI
+	  * @return		The text-area with the given name or null
+	  * @throws ClassCastException	If a non-text-area UI element with the given
+	  * 							name exists in the UI
+	  */
+	 private Textarea getTextArea(String name) throws ClassCastException {
+		 return (Textarea) UIManager.get(name);
+	 }
+	 
+	 /**
+	  * Returns the text-field, with the given name, if it exists in one of the
+	  * UI (excluding the pendant). If a non-text-field UI element exists in the
+	  * UI, then a ClassCastException will be thrown. If no UI element with the
+	  * given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a text-field in the UI
+	  * @return		The text-field with the given name or null
+	  * @throws ClassCastException	If a non-text-field UI element with the given
+	  * 							name exists in the UI
+	  */
+	 private Textfield getTextField(String name) throws ClassCastException {
+		 return (Textfield) UIManager.get(name);
 	 }
 
 	 /**
@@ -1087,7 +1219,7 @@ public class WindowManager {
 
 				 if (toEdit instanceof Part) {
 					Part p = (Part)toEdit;
-					PVector defaultPos = p.getDefaultCenter();
+					PVector defaultPos = RobotRun.convertNativeToWorld( p.getDefaultCenter() );
 					PVector defaultWPR = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() ).mult(RobotRun.RAD_TO_DEG);
 					
 					// Update default position and orientation
@@ -1387,12 +1519,12 @@ public class WindowManager {
 		 try {
 			 // Pull from x, y, z, w, p, r, fields input fields
 			 String[] orienVals = new String[] {
-					getTextField("XField").getText(), getTextField("YField").getText(),
-					getTextField("ZField").getText(), getTextField("WField").getText(),
-					getTextField("PField").getText(), getTextField("RField").getText(),
-					getTextField("XDefault").getText(), getTextField("YDefault").getText(),
-					getTextField("ZDefault").getText(), getTextField("PDefault").getText(),
-					getTextField("PDefault").getText(), getTextField("RDefault").getText()
+					getTextField("XCur").getText(), getTextField("YCur").getText(),
+					getTextField("ZCur").getText(), getTextField("WCur").getText(),
+					getTextField("PCur").getText(), getTextField("RCur").getText(),
+					getTextField("XDef").getText(), getTextField("YDef").getText(),
+					getTextField("ZDef").getText(), getTextField("WDef").getText(),
+					getTextField("PDef").getText(), getTextField("RDef").getText()
 			 };
 			 
 			 // NaN indicates an uninitialized field
@@ -1554,7 +1686,7 @@ public class WindowManager {
 				 ((MyDropdownList)c).resetLabel();
 				 
 			 } else if (c.getName().length() > 4 && c.getName().substring(0, 4).equals("Dim") ||
-					 c.getName().equals("FixtureLbl")) {
+					 c.getName().equals("RefLbl")) {
 				 
 				 c.hide();
 				 
@@ -1772,123 +1904,140 @@ public class WindowManager {
 		 c = getTextArea("Blank").setPosition(relPos[0], relPos[1]);
 		 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 c0 = getTextArea("Position").setPosition(relPos[0], relPos[1]);
+		 c0 = getTextArea("Current").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
 			 getTextArea("Default").setPosition(relPos[0], relPos[1]).show();
 			 
+			 // Auto fill buttons row
+			 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			 c = getTextArea("AFLbl").setPosition(relPos[0], relPos[1]).show();
+			 
+			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+			 c0 = getButton("DefIntoCur").setPosition(relPos[0], relPos[1]).show();
+			 
+			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX +
+					 fieldWidth - mButtonWidth, 0);
+			 c0 = getButton("CurIntoDef").setPosition(relPos[0], relPos[1]).show();
+			 
 		 } else {
 			 // Only show them for parts
 			 getTextArea("Default").hide();
+			 getTextArea("AFLbl").hide();
+			 getButton("DefIntoCur").hide();
+			 getButton("CurIntoDef").hide();
 		 }
 		 
 		 // X label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getTextArea("XArea").setPosition(relPos[0], relPos[1]);
+		 c = getTextArea("XLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 c0 = getTextField("XField").setPosition(relPos[0], relPos[1]);
+		 c0 = getTextField("XCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("XDefault").setPosition(relPos[0], relPos[1]).show();
+			 getTextField("XDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("XDefault").hide();
+			 getTextField("XDef").hide();
 		 }
 		 
 		 // Y label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getTextArea("YArea").setPosition(relPos[0], relPos[1]);
+		 c = getTextArea("YLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 c0 = getTextField("YField").setPosition(relPos[0], relPos[1]);
+		 c0 = getTextField("YCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("YDefault").setPosition(relPos[0], relPos[1]).show();
+			 getTextField("YDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("YDefault").hide();
+			 getTextField("YDef").hide();
 		 }
 		 
 		 // Z label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getTextArea("ZArea").setPosition(relPos[0], relPos[1]);;
+		 c = getTextArea("ZLbl").setPosition(relPos[0], relPos[1]);;
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 c0 = getTextField("ZField").setPosition(relPos[0], relPos[1]);
+		 c0 = getTextField("ZCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("ZDefault").setPosition(relPos[0], relPos[1]).show();
+			 getTextField("ZDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("ZDefault").hide();
+			 getTextField("ZDef").hide();
 		 }
 		 
 		 // W label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getTextArea("WArea").setPosition(relPos[0], relPos[1]);
+		 c = getTextArea("WLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 c0 = getTextField("WField").setPosition(relPos[0], relPos[1]);
+		 c0 = getTextField("WCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("WDefault").setPosition(relPos[0], relPos[1]).show();
+			 getTextField("WDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("WDefault").hide();
+			 getTextField("WDef").hide();
 		 }
 		 
 		 // P label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getTextArea("PArea").setPosition(relPos[0], relPos[1]);
+		 c = getTextArea("PLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 c0 = getTextField("PField").setPosition(relPos[0], relPos[1]);
+		 c0 = getTextField("PCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("PDefault").setPosition(relPos[0], relPos[1]).show();
+			 getTextField("PDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("PDefault").hide();
+			 getTextField("PDef").hide();
 		 }
 		 
 		 // R label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getTextArea("RArea").setPosition(relPos[0], relPos[1]);
+		 c = getTextArea("RLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 c0 = getTextField("RField").setPosition(relPos[0], relPos[1]);
+		 c0 = getTextField("RCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
 			/* Default orientation and fixture references are only relevant for
 			 * fixtures */
 			relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			getTextField("RDefault").setPosition(relPos[0], relPos[1]).show();
-			 
+			getTextField("RDef").setPosition(relPos[0], relPos[1]).show();
 			
 			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c = getTextArea("FixtureLbl").setPosition(relPos[0], relPos[1]).show();
+			c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
 			
-			relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
+			relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX,
+					RobotRun.abs(fieldHeight - dropItemHeight) / 2);
 			getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
 			
 		 } else {
-			getTextField("RDefault").hide();
-			getTextArea("FixtureLbl").hide();
+			getTextField("RDef").hide();
+			getTextArea("RefLbl").hide();
 			getDropdown("Fixture").hide();
 		 }
 		 
 		 // Confirm button
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getButton("UpdateWldObj").setPosition(relPos[0], relPos[1]);
+		 // Clear button
+		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+		 c = getButton("ClearFields").setPosition(relPos[0], relPos[1]);
 		 // Delete button
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, offsetX, 0);
+		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
 		 c = getButton("DeleteWldObj").setPosition(relPos[0], relPos[1]);
 		 // Update window background display
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
@@ -2142,6 +2291,7 @@ public class WindowManager {
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
+			 setGroupVisible(sharedElements, true);
 			 setGroupVisible(miscWindow, false);
 
 			 if (!scenarioWindow.isVisible()) {
@@ -2158,6 +2308,7 @@ public class WindowManager {
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
+			 setGroupVisible(sharedElements, true);
 			 setGroupVisible(scenarioWindow, false);
 
 			 if (!miscWindow.isVisible()) {

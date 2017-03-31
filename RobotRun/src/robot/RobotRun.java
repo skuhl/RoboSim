@@ -1782,10 +1782,12 @@ public class RobotRun extends PApplet {
 
 		index_contents = 0;
 	}
-
+	
+	/**
+	 * Clears all input fields in the world object creation and edit windows.
+	 */
 	public void ClearFields() {
-		/* Clear all input fields for creating and editing world objects. */
-		getManager().clearCreateInputFields();
+		getManager().clearInputsFields();
 	}
 
 	public void clearNums() {
@@ -2055,11 +2057,29 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
+	
+	/**
+	 * In the object edit window, fill the default position and orientation
+	 * inputs fields with the values of the active part's current position
+	 * and orientation.
+	 */
+	public void CurIntoDef() {
+		getManager().autoFillDefFields();
+	}
 
 	// Data button
 	public void da() {
 		resetStack();
 		nextScreen(ScreenMode.NAV_DATA);
+	}
+	
+	/**
+	 * In the object edit window, fill the current position and orientation
+	 * inputs fields with the values of the active part's default position
+	 * and orientation.
+	 */
+	public void DefIntoCur() {
+		getManager().autoFillCurFields();
 	}
 
 	public void DeleteWldObj() {
@@ -7938,11 +7958,29 @@ public class RobotRun extends PApplet {
 			text(dimDisplay, lastTextPositionX, lastTextPositionY);
 
 			lastTextPositionY += 20;
-			// Add space patting
+			// Add space padding
 			text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 			text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]), lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
+			
+			if (toEdit instanceof Part) {
+				Part p = (Part) toEdit;
+				// Convert the values into the World Coordinate System
+				position = convertNativeToWorld(p.getDefaultCenter());
+				wpr =  matrixToEuler(p.getDefaultOrientationAxes()).mult(RAD_TO_DEG);
+				// Create a set of uniform Strings
+				fields = new String[] { String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
+						String.format("Z: %4.3f", position.z), String.format("W: %4.3f", -wpr.x),
+						String.format("P: %4.3f", -wpr.z), String.format("R: %4.3f", wpr.y) };
+				
+				lastTextPositionY += 20;
+				// Add space padding
+				text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX, lastTextPositionY);
+				lastTextPositionY += 20;
+				text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]), lastTextPositionX, lastTextPositionY);
+				lastTextPositionY += 20;
+			}
 		}
 
 		lastTextPositionY += 20;
