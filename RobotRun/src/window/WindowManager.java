@@ -2292,7 +2292,7 @@ public class WindowManager {
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
-			 setGroupVisible(sharedElements, true);
+			 setGroupVisible(sharedElements, false);
 			 setGroupVisible(miscWindow, false);
 
 			 if (!scenarioWindow.isVisible()) {
@@ -2309,7 +2309,7 @@ public class WindowManager {
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
-			 setGroupVisible(sharedElements, true);
+			 setGroupVisible(sharedElements, false);
 			 setGroupVisible(scenarioWindow, false);
 
 			 if (!miscWindow.isVisible()) {
