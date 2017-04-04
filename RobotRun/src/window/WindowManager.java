@@ -893,18 +893,14 @@ public class WindowManager {
 	  */
 	 private Textfield getDimTF(DimType t) throws ClassCastException {
 		 
-		 switch (t) {
-		 	case WIDTH:
-		 		return (Textfield) UIManager.get("Dim2");
-		 		
-		 	case HEIGHT:
-		 	case SCALE:
-		 		return (Textfield) UIManager.get("Dim1");
-		 	
-		 	case LENGTH:
-		 	case RADIUS:
-		 	default:
-		 		return (Textfield) UIManager.get("Dim0");
+		 if (t == DimType.WIDTH) {
+			 return (Textfield) UIManager.get("Dim2");
+			 
+		 } else if (t == DimType.HEIGHT || t == DimType.SCALE) {
+			 return (Textfield) UIManager.get("Dim1");
+			 
+		 } else {
+			 return (Textfield) UIManager.get("Dim0");
 		 }
 	 }
 	 
@@ -1001,6 +997,7 @@ public class WindowManager {
 
 				 case MODEL:
 					 String srcFile = getDimTF(null).getText();
+					 System.out.println(srcFile);
 					 shapeDims = getModelDimensions();
 					 // Construct a complex model
 					 if (shapeDims != null) {
@@ -1047,6 +1044,7 @@ public class WindowManager {
 
 				 case MODEL:
 					 String srcFile = getDimTF(null).getText();
+					 System.out.println(srcFile);
 					 shapeDims = getModelDimensions();
 					 // Construct a complex model
 					 ModelShape model;
@@ -1066,9 +1064,12 @@ public class WindowManager {
 
 		 } catch (NullPointerException NPEx) {
 			 RobotRun.println("Missing parameter!");
+			 NPEx.printStackTrace();
+			 
 		 } catch (ClassCastException CCEx) {
 			 RobotRun.println("Invalid field?");
 			 CCEx.printStackTrace();
+			 
 		 } catch (IndexOutOfBoundsException IOOBEx) {
 			 RobotRun.println("Missing field?");
 			 IOOBEx.printStackTrace();
