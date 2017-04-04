@@ -997,7 +997,6 @@ public class WindowManager {
 
 				 case MODEL:
 					 String srcFile = getDimTF(null).getText();
-					 System.out.println(srcFile);
 					 shapeDims = getModelDimensions();
 					 // Construct a complex model
 					 if (shapeDims != null) {
@@ -1044,7 +1043,6 @@ public class WindowManager {
 
 				 case MODEL:
 					 String srcFile = getDimTF(null).getText();
-					 System.out.println(srcFile);
 					 shapeDims = getModelDimensions();
 					 // Construct a complex model
 					 ModelShape model;
