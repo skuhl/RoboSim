@@ -1,5 +1,6 @@
 package robot;
 
+import java.awt.event.KeyEvent;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -1135,6 +1136,7 @@ public class RobotRun extends PApplet {
 		case DIRECT_ENTRY_USER:
 		case EDIT_PREG:
 		case EDIT_MINST_POS:
+		case SET_MACRO_PROG:
 		case NAV_IOREG:
 			contents.moveDown(shift);
 			break;
@@ -1225,27 +1227,6 @@ public class RobotRun extends PApplet {
 				contents.moveRight();
 			}
 			break;
-		case DIRECT_ENTRY_USER:
-		case DIRECT_ENTRY_TOOL:
-		case EDIT_PREG:
-			// Delete a digit from the beginning of the number entry
-			if(isShift()) {
-				String entry = contents.get(contents.getLineIdx()).get(1);
-
-				if (entry.length() > 1 && !(entry.length() == 2 && entry.charAt(0) == '-')) {
-
-					if(entry.charAt(0) == '-') {
-						// Keep negative sign until the last digit is removed
-						contents.get(contents.getLineIdx()).set(1, "-" + entry.substring(2, entry.length()));
-					} else {
-						contents.get(contents.getLineIdx()).set(1, entry.substring(1, entry.length()));
-					}
-				} else {
-					contents.get(contents.getLineIdx()).set(1, "");
-				}
-			}
-
-			break;
 		case NAV_DREGS:
 		case NAV_MACROS:
 		case NAV_PREGS:
@@ -1280,6 +1261,25 @@ public class RobotRun extends PApplet {
 
 				// Reset function key states
 				for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+				
+			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
+				
+				// Delete a digit from the beginning of the number entry
+				if(isShift()) {
+					String entry = contents.get(contents.getLineIdx()).get(1);
+
+					if (entry.length() > 1 && !(entry.length() == 2 && entry.charAt(0) == '-')) {
+
+						if(entry.charAt(0) == '-') {
+							// Keep negative sign until the last digit is removed
+							contents.get(contents.getLineIdx()).set(1, "-" + entry.substring(2, entry.length()));
+						} else {
+							contents.get(contents.getLineIdx()).set(1, entry.substring(1, entry.length()));
+						}
+					} else {
+						contents.get(contents.getLineIdx()).set(1, "");
+					}
+				}
 			}
 		}
 
@@ -1340,8 +1340,11 @@ public class RobotRun extends PApplet {
 		case DIRECT_ENTRY_USER:
 		case EDIT_PREG:
 		case EDIT_MINST_POS:
+		case NAV_IOREG:
 			contents.moveUp(isShift());
 			break;
+		case NAV_MAIN_MENU:
+		case EDIT_IOREG:
 		case NAV_INSTR_MENU:
 		case SELECT_FRAME_MODE:
 		case FRAME_METHOD_USER:
@@ -1489,28 +1492,49 @@ public class RobotRun extends PApplet {
 
 				if (value.length() == 1) {
 					contents.get(contents.getLineIdx()).set(1, "");
+					
 				} else if(value.length() > 1) {
 
 					if (value.length() == 2 && value.charAt(0) == '-') {
 						// Do not remove line prefix until the last digit is removed
 						contents.get(contents.getLineIdx()).set(1, "");
+						
 					} else {
 						contents.get(contents.getLineIdx()).set(1, value.substring(0, value.length() - 1));
 					}
 				}
 			}
 		} else if(mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-			// Backspace function
+			// Delete/Backspace function
 			if(workingText.length() > 1) {
-				// ifan insert space exists, preserve it
-				if(workingText.charAt(workingText.length() - 1) == '\0') {
-					workingText = workingText.substring(0, workingText.length() - 2) + "\0";
-				} 
-				else {
-					workingText = workingText.substring(0, workingText.length() - 1);
+				int sdx = contents.getColumnIdx();
+				
+				if (!isShift()) {
+					// Backspace removes previous character
+					--sdx;
 				}
-
+				
+				if (sdx == workingText.length() - 1 && workingText.charAt(sdx) == '\0') {
+					// Ignore an insert position
+					--sdx;
+				}
+				
+				if (sdx <= 0) {
+					// Remove the beginning character
+					workingText = workingText.substring(1);
+					
+				} else if (sdx < workingText.length()) {
+					// Remove the character
+					workingText = workingText.substring(0, sdx) + workingText.substring(sdx + 1);
+					
+					if (!isShift()) {
+						// Shift position for backspace
+						contents.setColumnIdx( contents.getColumnIdx() - 1 );
+					}
+				}
+				
 				contents.setColumnIdx(min(contents.getColumnIdx(), workingText.length() - 1));
+				
 			} else {
 				workingText = "\0";
 			}
@@ -4775,6 +4799,8 @@ public class RobotRun extends PApplet {
 		case SET_JUMP_TGT:
 		case SELECT_CUT_COPY:    
 		case SELECT_INSTR_DELETE:
+			header = activeRobot.getActiveProg().getName();
+			break;
 		case EDIT_MINST_POS:
 			Program p = activeRobot.getActiveProg();
 			header = String.format("EDIT %s POSITION", p.getName());
@@ -5101,16 +5127,19 @@ public class RobotRun extends PApplet {
 		
 		case NAV_PROG_INSTR:
 			Program p = activeRobot.getActiveProg();
-			Instruction inst = p.getInstruction( activeRobot.getActiveInstIdx() );
 			
-			if (inst instanceof MotionInstruction && contents.getColumnIdx() == 3) {
-				// Show the position associated with the active motion instruction
-				MotionInstruction mInst = (MotionInstruction)inst;
-				boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
-				String[] pregEntry = mInst.getPoint(p).toLineStringArray(isCartesian);
-
-				for (String line : pregEntry) {
-					options.addLine(line);
+			if (p.getInstructions().size() > 0) {
+				Instruction inst = p.getInstruction( activeRobot.getActiveInstIdx() );
+				
+				if (inst instanceof MotionInstruction && contents.getColumnIdx() == 3) {
+					// Show the position associated with the active motion instruction
+					MotionInstruction mInst = (MotionInstruction)inst;
+					boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
+					String[] pregEntry = mInst.getPoint(p).toLineStringArray(isCartesian);
+	
+					for (String line : pregEntry) {
+						options.addLine(line);
+					}
 				}
 			}
 			break;
@@ -6052,45 +6081,28 @@ public class RobotRun extends PApplet {
 	}
 
 	public void keyPressed() {
-
+		
 		if (key == 27) {
+			// Disable the window exiting function of the 'esc' key
 			key = 0;
 		}
 
 		if (getManager() != null && getManager().isATextFieldActive()) {
-			// Disable other key events when typing in a text field
+			// Disable key events when typing in a text field
 			return;
-		}
-
-		if(mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-			// Modify the input name for the new program
-			if(key == BACKSPACE && workingText.length() > 0) {
-
-				if(workingText.length() > 1) {
-					workingText = workingText.substring(0, workingText.length() - 1);
-					contents.setColumnIdx(min(contents.getColumnIdx(), workingText.length() - 1));
-				}  else {
-					workingText = "\0";
-				}
-
-				updateScreen();
-			} else if(key == DELETE && workingText.length() > 0) {
-
-				if(workingText.length() > 1) {
-					workingText = workingText.substring(1, workingText.length());
-					contents.setColumnIdx(min(contents.getColumnIdx(), workingText.length() - 1));
-				}  else {
-					workingText = "\0";
-				}
-
-				updateScreen();
-				// Valid characters in a program name or comment
-			} else if(workingText.length() < TEXT_ENTRY_LEN && (key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z')
-					|| (key >= '0' && key <= '9') || key == '.' || key == '@' || key == '*' || key == '_') {
+			
+		} else if (getManager() != null && getManager().isPendantActive()) {
+			
+			// Key input for text entries
+			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY && workingText.length() < TEXT_ENTRY_LEN &&
+					((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9') ||
+					  key == '.' || key == '@' || key == '*' || key == '_')) {
+				
 				StringBuilder temp;
 				// Insert the typed character
 				if (workingText.length() > 0 && workingText.charAt(contents.getColumnIdx()) != '\0') {
 					temp = new StringBuilder(workingText.substring(0, contents.getColumnIdx()) + "\0" + workingText.substring(contents.getColumnIdx(), workingText.length()));
+					
 				} else {
 					temp = new StringBuilder(workingText); 
 				}
@@ -6107,10 +6119,59 @@ public class RobotRun extends PApplet {
 				contents.setColumnIdx(min(contents.getColumnIdx() + 1, workingText.length() - 1));
 				// Update contents to the new string
 				updateScreen();
+				return;
+				
+			} else if (mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
+				
+				if ((key >= '0' && key <= '9') || key == '.') {
+					// Append the value
+					workingText += key;
+					
+					// Update contents to the new string
+					updateScreen();
+					return;
+					
+				} else if (key == '-') {
+					// Negate the value
+					if (workingText.length() >= 1 && workingText.charAt(0) == '-') {
+						workingText = workingText.substring(1);
+						
+					} else {
+						workingText = "-" + workingText;
+					}
+					
+					// Update contents to the new string
+					updateScreen();
+					return;	
+				}
 			}
-
-			return;
-		} else if (key == 'f' ) {
+			
+			// Pendant button shortcuts
+			if (keyCode == KeyEvent.VK_ENTER) {
+				ENTER();
+				
+			} else if (keyCode == KeyEvent.VK_BACK_SPACE) {
+				BKSPC();
+				
+			} else if (keyCode == KeyEvent.VK_SHIFT) {
+				sf();
+				
+			} else if (keyCode == KeyEvent.VK_DOWN) {
+				arrow_dn();
+				
+			} else if (keyCode == KeyEvent.VK_LEFT) {
+				arrow_lt();
+				
+			} else if (keyCode == KeyEvent.VK_RIGHT) {
+				arrow_rt();
+				
+			} else if (keyCode == KeyEvent.VK_UP) {
+				arrow_up();
+			}
+		}
+		
+		// General key functions
+		if (key == 'f') {
 			// Display the User and Tool frames associated with the current motion instruction
 			if (Fields.DEBUG && mode == ScreenMode.NAV_PROG_INSTR && (contents.getColumnIdx() == 3 || contents.getColumnIdx() == 4)) {
 				Instruction inst = getActiveRobot().getActiveInstruction();
@@ -6154,7 +6215,6 @@ public class RobotRun extends PApplet {
 			float[] rot = {PI, 0, 0, 0, 0, PI};
 			getActiveRobot().setJointAngles(rot);
 			intermediatePositions.clear();
-
 		}
 	}
 
