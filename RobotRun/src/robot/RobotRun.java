@@ -5127,8 +5127,10 @@ public class RobotRun extends PApplet {
 		
 		case NAV_PROG_INSTR:
 			Program p = activeRobot.getActiveProg();
-			
-			if (p.getInstructions().size() > 0) {
+			int aInst = activeRobot.getActiveInstIdx();
+			/* Really buggy for empty/spare programs, I will fix it later
+			 * 		- Joshua
+			if (p.getInstructions().size() > 0 && aInst >= 0 && aInst < p.getInstructions().size()) {
 				Instruction inst = p.getInstruction( activeRobot.getActiveInstIdx() );
 				
 				if (inst instanceof MotionInstruction && contents.getColumnIdx() == 3) {
@@ -5142,6 +5144,7 @@ public class RobotRun extends PApplet {
 					}
 				}
 			}
+			/**/
 			break;
 			
 		case EDIT_IOREG:
@@ -6152,9 +6155,6 @@ public class RobotRun extends PApplet {
 				
 			} else if (keyCode == KeyEvent.VK_BACK_SPACE) {
 				BKSPC();
-				
-			} else if (keyCode == KeyEvent.VK_SHIFT) {
-				sf();
 				
 			} else if (keyCode == KeyEvent.VK_DOWN) {
 				arrow_dn();

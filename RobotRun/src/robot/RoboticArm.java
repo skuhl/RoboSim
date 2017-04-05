@@ -187,7 +187,10 @@ public class RoboticArm {
 		// Joint 5
 		Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL", RobotRun.getInstance().color(40, 40, 40));
 		axis4.rotations[2] = true;
+		axis4.jointRanges[2] = new PVector(240f * Fields.DEG_TO_RAD, 130f * Fields.DEG_TO_RAD);
+		/** Origin bounds
 		axis4.jointRanges[2] = new PVector(59f * Fields.PI / 40f, 11f * Fields.PI / 20f);
+		/**/
 		axis4.rotationSpeed = Fields.radians(250)/60.0f;
 		// Joint 6
 		Model axis5 = new Model("ROBOT_MODEL_1_AXIS5.STL", RobotRun.getInstance().color(200, 200, 0));
