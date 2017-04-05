@@ -166,7 +166,6 @@ public class WindowManager {
 				 .hide()
 				 .getCaptionLabel().setFont(small);
 
-
 		 relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_LEFT, 0, 0);
 		 background = UIManager.addBackground("WindowBackground").setPosition(relPos[0], relPos[1])
 				 .setBackgroundColor(bkgrdColor)
