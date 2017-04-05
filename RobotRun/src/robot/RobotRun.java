@@ -4799,6 +4799,8 @@ public class RobotRun extends PApplet {
 		case SET_JUMP_TGT:
 		case SELECT_CUT_COPY:    
 		case SELECT_INSTR_DELETE:
+			header = activeRobot.getActiveProg().getName();
+			break;
 		case EDIT_MINST_POS:
 			Program p = activeRobot.getActiveProg();
 			header = String.format("EDIT %s POSITION", p.getName());
@@ -5125,16 +5127,19 @@ public class RobotRun extends PApplet {
 		
 		case NAV_PROG_INSTR:
 			Program p = activeRobot.getActiveProg();
-			Instruction inst = p.getInstruction( activeRobot.getActiveInstIdx() );
 			
-			if (inst instanceof MotionInstruction && contents.getColumnIdx() == 3) {
-				// Show the position associated with the active motion instruction
-				MotionInstruction mInst = (MotionInstruction)inst;
-				boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
-				String[] pregEntry = mInst.getPoint(p).toLineStringArray(isCartesian);
-
-				for (String line : pregEntry) {
-					options.addLine(line);
+			if (p.getInstructions().size() > 0) {
+				Instruction inst = p.getInstruction( activeRobot.getActiveInstIdx() );
+				
+				if (inst instanceof MotionInstruction && contents.getColumnIdx() == 3) {
+					// Show the position associated with the active motion instruction
+					MotionInstruction mInst = (MotionInstruction)inst;
+					boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
+					String[] pregEntry = mInst.getPoint(p).toLineStringArray(isCartesian);
+	
+					for (String line : pregEntry) {
+						options.addLine(line);
+					}
 				}
 			}
 			break;
