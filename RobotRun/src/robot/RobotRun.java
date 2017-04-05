@@ -6090,8 +6090,8 @@ public class RobotRun extends PApplet {
 			
 			// Key input for text entries
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY && workingText.length() < TEXT_ENTRY_LEN &&
-					(key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9') ||
-					key == '.' || key == '@' || key == '*' || key == '_') {
+					((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9') ||
+					  key == '.' || key == '@' || key == '*' || key == '_')) {
 				
 				StringBuilder temp;
 				// Insert the typed character
@@ -6115,6 +6115,30 @@ public class RobotRun extends PApplet {
 				// Update contents to the new string
 				updateScreen();
 				return;
+				
+			} else if (mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
+				
+				if ((key >= '0' && key <= '9') || key == '.') {
+					// Append the value
+					workingText += key;
+					
+					// Update contents to the new string
+					updateScreen();
+					return;
+					
+				} else if (key == '-') {
+					// Negate the value
+					if (workingText.length() >= 1 && workingText.charAt(0) == '-') {
+						workingText = workingText.substring(1);
+						
+					} else {
+						workingText = "-" + workingText;
+					}
+					
+					// Update contents to the new string
+					updateScreen();
+					return;	
+				}
 			}
 			
 			// Pendant button shortcuts
