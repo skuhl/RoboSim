@@ -17,7 +17,7 @@ public class ButtonTabs extends ButtonBar {
 
 	public ButtonTabs(ControlP5 parent, String name) {
 		super(parent, name);
-		selectedButtonName = null;
+		selectedButtonName = "Hide";
 	}
 
 	/**

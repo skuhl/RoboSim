@@ -806,7 +806,7 @@ public class WindowManager {
 	 }
 	 
 	 public void clearInputsFields() {
-		 String winName = windowTabs.getActiveButtonName();
+		 String winName = getMenuName();
 		 
 		 if (winName.equals("Create")) {
 			 clearGroupInputFields(createObjWindow);
@@ -1309,7 +1309,7 @@ public class WindowManager {
 	  * @returning  The index value or null if no such index exists
 	  */
 	 public Scenario getActiveScenario() {
-		 String activeButtonLabel = windowTabs.getActiveButtonName();
+		 String activeButtonLabel = getMenuName();
 
 		 if (activeButtonLabel != null && activeButtonLabel.equals("Scenario")) {
 			 Object val = getDropdown("Scenario").getActiveLabelValue();
@@ -1463,6 +1463,16 @@ public class WindowManager {
 	 public EEMapping getEEMapping() {
 		 return (EEMapping)getDropdown("EEDisplay").getActiveLabelValue();
 	 }
+	 
+	 /**
+	  * Returns the name of the active menu, which corresponds to the label of
+	  * the active button on the top button bar in the RobotRun application.
+	  * 
+	  * @return	The name of the current menu
+	  */
+	 public String getMenuName() {
+		 return windowTabs.getActiveButtonName();
+	 }
 
 	 /**
 	  * TODO
@@ -1472,7 +1482,7 @@ public class WindowManager {
 			 // null values represent an uninitialized field
 			 final Float[] dimensions = new Float[] { null };
 
-			 String activeWindow = windowTabs.getActiveButtonName(), sclField;
+			 String activeWindow = getMenuName(), sclField;
 			 // Pull from the Dim fields
 			 if (activeWindow != null && activeWindow.equals("Create")) {
 				 sclField = getDimTF(DimType.SCALE).getText();
@@ -1568,7 +1578,7 @@ public class WindowManager {
 	  *             value is invalid
 	  */
 	 public Scenario initializeScenario() {
-		 String activeButtonLabel = windowTabs.getActiveButtonName();
+		 String activeButtonLabel = getMenuName();
 
 		 if (activeButtonLabel != null && activeButtonLabel.equals("Scenario")) {
 			 String name = getTextField("ScenarioName").getText();
@@ -1627,6 +1637,15 @@ public class WindowManager {
 		 }
 
 		 return false;
+	 }
+	 
+	 /**
+	  * Determines if the active menu is a pendant.
+	  * 
+	  * @return	If the active menu is a pendant
+	  */
+	 public boolean isPendantActive() {
+		 return getMenuName().equals("Robot1") || getMenuName().equals("Robot2");
 	 }
 
 	 /**
@@ -1712,7 +1731,7 @@ public class WindowManager {
 	 */
 	public boolean toggleSecondRobot() {
 		
-		if (windowTabs.getActiveButtonName().equals("Robot2")) {
+		if (getMenuName().equals("Robot2")) {
 			windowTabs.setLabel("Hide");
 		}
 		
@@ -1829,7 +1848,7 @@ public class WindowManager {
 	  * the create world object window based on which shape type is chosen from the shape dropdown list.
 	  */
 	 private void updateDimLblsAndFields() {
-		 String activeButtonLabel = windowTabs.getActiveButtonName();
+		 String activeButtonLabel = getMenuName();
 		 String[] lblNames = new String[0];
 
 		 if (activeButtonLabel != null) {
@@ -2168,7 +2187,7 @@ public class WindowManager {
 	  * based on the current button tab that is active.
 	  */
 	 public void updateWindowContentsPositions() {
-		 String windowState = windowTabs.getActiveButtonName();
+		 String windowState = getMenuName();
 
 		 if (windowState == null || windowState.equals("Hide")) {
 			 // Window is hidden
@@ -2224,7 +2243,7 @@ public class WindowManager {
 	  * the screen to clear the image of the previous window.
 	  */
 	 public void updateWindowDisplay() {
-		 String windowState = windowTabs.getActiveButtonName();
+		 String windowState = getMenuName();
 		 		 
 		 if (windowState == null || windowState.equals("Hide")) {
 			 // Hide any window
