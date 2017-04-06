@@ -152,20 +152,24 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 
 		for (WorldObject obj : this) {
-			// Add copies of all the objects in this scenario
-			WorldObject newObj = (WorldObject)obj.clone();
-			copy.addWorldObject(newObj);
-			// Keep track of all fixtures and parts with non-null references
-			if (newObj instanceof Fixture) {
-				fixtures.add( (Fixture)newObj );
-
-			} else if (newObj instanceof Part) {
-				Part p = (Part)newObj;
-
-				if (p.getFixtureRef() != null) {
-					parts.add( (Part)newObj );
+			try {
+				// Add copies of all the objects in this scenario
+				WorldObject newObj = (WorldObject)obj.clone();
+				copy.addWorldObject(newObj);
+				
+				// Keep track of all fixtures and parts with non-null references
+				if (newObj instanceof Fixture) {
+					fixtures.add( (Fixture)newObj );
+	
+				} else if (newObj instanceof Part) {
+					Part p = (Part)newObj;
+	
+					if (p.getFixtureRef() != null) {
+						parts.add( (Part)newObj );
+					}
 				}
-			}
+			
+			} catch (NullPointerException NPEx) {/* Invalid source for model shape */}
 		}
 
 		// Update fixture references of new parts

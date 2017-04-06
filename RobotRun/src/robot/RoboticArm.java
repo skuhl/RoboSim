@@ -1,7 +1,6 @@
 package robot;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -16,6 +15,7 @@ import geom.Part;
 import geom.Point;
 import geom.WorldObject;
 import global.Fields;
+import processing.core.PShape;
 import processing.core.PVector;
 import programming.Instruction;
 import programming.Program;
@@ -99,7 +99,7 @@ public class RoboticArm {
 	 * @param rid		The unique identifier associated with the Robot
 	 * @param basePos	The center position of the Robot's base segment
 	 */
-	public RoboticArm(int rid, PVector basePos) {
+	public RoboticArm(int rid, PVector basePos, PShape[] robotModels) {
 		int idx;
 		
 		RID = rid;
@@ -156,48 +156,49 @@ public class RoboticArm {
 		motorSpeed = 1000.0f; // speed in mm/sec
 		liveSpeed = 10;
 
-		eeMSuction = new Model("SUCTION.stl", RobotRun.getInstance().color(108, 206, 214));
-		eeMClaw = new Model("GRIPPER.stl", RobotRun.getInstance().color(108, 206, 214));
-		eeMClawPincer = new Model("PINCER.stl", RobotRun.getInstance().color(200, 200, 0));
-		eeMPointer = new Model("POINTER.stl", RobotRun.getInstance().color(108, 206, 214), 1f);
-		eeMGlueGun = new Model("GLUE_GUN.stl", RobotRun.getInstance().color(108, 206, 214));
-		eeMWielder = new Model("WIELDER.stl", RobotRun.getInstance().color(108, 206, 214));
+		eeMSuction = new Model("suction", robotModels[0]);
+		eeMClaw = new Model("grippers", robotModels[1]);
+		eeMClawPincer = new Model("pincer", robotModels[2]);
+		eeMPointer = new Model("pointer", robotModels[3]);
+		eeMGlueGun = new Model("glue_gun", robotModels[4]);
+		eeMWielder = new Model("wielder", robotModels[5]);
 
 		motionType = RobotMotion.HALTED;
-		// Joint 1
-		Model base = new Model("ROBOT_MODEL_1_BASE.STL", RobotRun.getInstance().color(200, 200, 0));
+		// Base
+		Model base = new Model("base", robotModels[6]);
 		base.rotations[1] = true;
 		base.jointRanges[1] = new PVector(0, Fields.TWO_PI);
 		base.rotationSpeed = Fields.radians(150)/60.0f;
-		// Joint 2
-		Model axis1 = new Model("ROBOT_MODEL_1_AXIS1.STL", RobotRun.getInstance().color(40, 40, 40));
+		// Joint 1
+		Model axis1 = new Model("axis_1", robotModels[7]);
 		axis1.rotations[2] = true;
 		axis1.jointRanges[2] = new PVector(4.34f, 2.01f);
 		axis1.rotationSpeed = Fields.radians(150)/60.0f;
-		// Joint 3
-		Model axis2 = new Model("ROBOT_MODEL_1_AXIS2.STL", RobotRun.getInstance().color(200, 200, 0));
+		// Joint 2
+		Model axis2 = new Model("axis_2", robotModels[8]);
 		axis2.rotations[2] = true;
 		axis2.jointRanges[2] = new PVector(5.027f, 4.363f);
 		axis2.rotationSpeed = Fields.radians(200)/60.0f;
-		// Joint 4
-		Model axis3 = new Model("ROBOT_MODEL_1_AXIS3.STL", RobotRun.getInstance().color(40, 40, 40));
+		// Joint 3
+		Model axis3 = new Model("axis_3", robotModels[9]);
 		axis3.rotations[0] = true;
 		axis3.jointRanges[0] = new PVector(0, Fields.TWO_PI);
 		axis3.rotationSpeed = Fields.radians(250)/60.0f;
-		// Joint 5
-		Model axis4 = new Model("ROBOT_MODEL_1_AXIS4.STL", RobotRun.getInstance().color(40, 40, 40));
+		// Joint 4
+		Model axis4 = new Model("axis_4", robotModels[10]);
 		axis4.rotations[2] = true;
 		axis4.jointRanges[2] = new PVector(240f * Fields.DEG_TO_RAD, 130f * Fields.DEG_TO_RAD);
 		/** Origin bounds
 		axis4.jointRanges[2] = new PVector(59f * Fields.PI / 40f, 11f * Fields.PI / 20f);
 		/**/
 		axis4.rotationSpeed = Fields.radians(250)/60.0f;
-		// Joint 6
-		Model axis5 = new Model("ROBOT_MODEL_1_AXIS5.STL", RobotRun.getInstance().color(200, 200, 0));
+		// Joint 5
+		Model axis5 = new Model("axis_5", robotModels[11]);
 		axis5.rotations[0] = true;
 		axis5.jointRanges[0] = new PVector(0, Fields.TWO_PI);
 		axis5.rotationSpeed = Fields.radians(420)/60.0f;
-		Model axis6 = new Model("ROBOT_MODEL_1_AXIS6.STL", RobotRun.getInstance().color(40, 40, 40));
+		// Joint 6
+		Model axis6 = new Model("axis_6", robotModels[12]);
 		segments.add(base);
 		segments.add(axis1);
 		segments.add(axis2);

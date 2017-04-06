@@ -1003,9 +1003,9 @@ public class WindowManager {
 
 						 if (shapeDims[0] != null) {
 							 // Define shape scale
-							 model = new ModelShape(srcFile, fill, shapeDims[0]);
+							 model = new ModelShape(srcFile, fill, shapeDims[0], app);
 						 } else {
-							 model = new ModelShape(srcFile, fill);
+							 model = new ModelShape(srcFile, fill, app);
 						 }
 
 						 wldObj = new Part(name, model);
@@ -1048,9 +1048,9 @@ public class WindowManager {
 
 					 if (shapeDims != null && shapeDims[0] != null) {
 						 // Define model scale value
-						 model = new ModelShape(srcFile, fill, shapeDims[0]);
+						 model = new ModelShape(srcFile, fill, shapeDims[0], app);
 					 } else {
-						 model = new ModelShape(srcFile, fill);
+						 model = new ModelShape(srcFile, fill, app);
 					 }
 
 					 wldObj = new Fixture(name, model);
@@ -1062,14 +1062,17 @@ public class WindowManager {
 		 } catch (NullPointerException NPEx) {
 			 RobotRun.println("Missing parameter!");
 			 NPEx.printStackTrace();
+			 return null;
 			 
 		 } catch (ClassCastException CCEx) {
 			 RobotRun.println("Invalid field?");
 			 CCEx.printStackTrace();
+			 return null;
 			 
 		 } catch (IndexOutOfBoundsException IOOBEx) {
 			 RobotRun.println("Missing field?");
 			 IOOBEx.printStackTrace();
+			 return null;
 		 }
 
 		 app.popMatrix();
@@ -1277,6 +1280,7 @@ public class WindowManager {
 			 } catch (NullPointerException NPEx) {
 				 RobotRun.println("Missing parameter!");
 				 NPEx.printStackTrace();
+				 return;
 			 }
 		 } else {
 			 RobotRun.println("No object selected!");

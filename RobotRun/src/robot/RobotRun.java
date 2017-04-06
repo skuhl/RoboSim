@@ -2386,6 +2386,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void draw() {
+		
 		// Apply the camera for drawing objects
 		directionalLight(255, 255, 255, 1, 1, 0);
 		ambientLight(150, 150, 150);
@@ -6795,6 +6796,34 @@ public class RobotRun extends PApplet {
 			contents.addLine(getRobot(rid).getProgram(i).getName());
 		}
 	}
+	
+	/**
+	 * Loads all the models for a robot.
+	 * 
+	 * @return	A list of the models for the robot
+	 */
+	private PShape[] loadRobotModels() {
+		PShape[] models = new PShape[13];
+		// End Effectors
+		models[0] = loadSTLModel("SUCTION.stl", color(108, 206, 214));
+		models[1] = loadSTLModel("GRIPPER.stl", color(108, 206, 214));
+		models[2] = loadSTLModel("PINCER.stl", color(200, 200, 0));
+		models[2].scale(1f);
+		models[3] = loadSTLModel("POINTER.stl", color(108, 206, 214));
+		models[4] = loadSTLModel("GLUE_GUN.stl", color(108, 206, 214));
+		models[5] = loadSTLModel("WIELDER.stl", color(108, 206, 214));
+
+		// Body/joint models
+		models[6] = loadSTLModel("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
+		models[7] = loadSTLModel("ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
+		models[8] = loadSTLModel("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
+		models[9] = loadSTLModel("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
+		models[10] = loadSTLModel("ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
+		models[11] = loadSTLModel("ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0));
+		models[12] = loadSTLModel("ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40));
+		
+		return models;
+	}
 
 	public void loadScreen() {
 		setProgramRunning(false);
@@ -7770,8 +7799,11 @@ public class RobotRun extends PApplet {
 	}
 
 	public void settings() {  size(1080, 720, P3D); }
-
+	
+	@Override
 	public void setup() {
+		super.setup();
+		
 		instance = this;
 		letterStates = new int[] {0, 0, 0, 0, 0};
 		
@@ -7794,33 +7826,41 @@ public class RobotRun extends PApplet {
 
 		//load model and save data
 		robots = new HashMap<Integer, RoboticArm>();
-		robots.put(0, new RoboticArm(0, new PVector(200, 300, 200)));
-		robots.put(1, new RoboticArm(1, new PVector(200, 300, -750)));
 		
-		for (RoboticArm r : robots.values()) {
-			r.setDefaultRobotPoint();
+		try {
+			robots.put(0, new RoboticArm(0, new PVector(200, 300, 200), loadRobotModels()));
+			robots.put(1, new RoboticArm(1, new PVector(200, 300, -750), loadRobotModels()));
+			
+			for (RoboticArm r : robots.values()) {
+				r.setDefaultRobotPoint();
+			}
+			
+			setActiveRobot(robots.get(0));
+			
+			intermediatePositions = new ArrayList<Point>();
+			activeScenario = null;
+			
+			DataManagement.initialize(this);
+			DataManagement.loadState(this);
+			
+			//set up UI
+			cp5 = new ControlP5(this);
+			// Explicitly draw the ControlP5 elements
+			cp5.setAutoDraw(false);
+			setManager(new WindowManager(this, cp5, fnt_con12, fnt_con14));
+			display_stack = new Stack<ScreenMode>();
+			contents = new MenuScroll(this, "cont", ITEMS_TO_SHOW, 10, 20);
+			options = new MenuScroll(this, "opt", 3, 10, 180);
+			gui();
+
+			buffer = new ArrayList<String>();
+			displayPoint = null;
+			
+		} catch (NullPointerException NPEx) {
+			
+			// TODO write to a log
+			NPEx.printStackTrace();
 		}
-		
-		setActiveRobot(robots.get(0));
-		
-		intermediatePositions = new ArrayList<Point>();
-		activeScenario = null;
-		
-		DataManagement.initialize(this);
-		DataManagement.loadState(this);
-
-		//set up UI
-		cp5 = new ControlP5(this);
-		// Explicitly draw the ControlP5 elements
-		cp5.setAutoDraw(false);
-		setManager(new WindowManager(this, cp5, fnt_con12, fnt_con14));
-		display_stack = new Stack<ScreenMode>();
-		contents = new MenuScroll(this, "cont", ITEMS_TO_SHOW, 10, 20);
-		options = new MenuScroll(this, "opt", 3, 10, 180);
-		gui();
-
-		buffer = new ArrayList<String>();
-		displayPoint = null;
 	}
 
 	public void SETUP() {
@@ -8537,6 +8577,7 @@ public class RobotRun extends PApplet {
 
 			println("Write to buffer successful.");
 			out.close();
+			
 		} catch(Exception Ex) {
 			Ex.printStackTrace();
 			return 1;
