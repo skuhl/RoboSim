@@ -2,7 +2,6 @@ package window;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import controlP5.Background;
@@ -14,7 +13,6 @@ import controlP5.ControllerInterface;
 import controlP5.DropdownList;
 import controlP5.Group;
 import controlP5.Textarea;
-import controlP5.Textfield;
 import geom.Box;
 import geom.Cylinder;
 import geom.DimType;
@@ -34,6 +32,7 @@ import robot.Scenario;
 import ui.AxesDisplay;
 import ui.ButtonTabs;
 import ui.MyDropdownList;
+import ui.MyTextfield;
 import ui.RelativePoint;
 
 public class WindowManager implements ControlListener {
@@ -221,7 +220,7 @@ public class WindowManager implements ControlListener {
 					 .setColorForeground(bkgrdColor)
 					 .moveTo(sharedElements);
 
-			 UIManager.addTextfield(String.format("Dim%d", idx), 0, 0, fieldWidth, fieldHeight)
+			 (new MyTextfield(UIManager, String.format("Dim%d", idx), 0, 0, fieldWidth, fieldHeight))
 					 .setColor(fieldTxtColor)
 					 .setColorCursor(fieldCurColor)
 					 .setColorActive(fieldActColor)
@@ -247,7 +246,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(createObjWindow);
 
-		 UIManager.addTextfield("ObjName", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "ObjName", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -368,7 +367,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("XCur", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "XCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -377,7 +376,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("XDef", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "XDef", 0, 0, fieldWidth, fieldHeight))
 			 .setColor(fieldTxtColor)
 			 .setColorCursor(fieldCurColor)
 			 .setColorActive(fieldActColor)
@@ -394,7 +393,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("YCur", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "YCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -403,7 +402,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("YDef", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "YDef", 0, 0, fieldWidth, fieldHeight))
 			 .setColor(fieldTxtColor)
 			 .setColorCursor(fieldCurColor)
 			 .setColorActive(fieldActColor)
@@ -420,7 +419,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("ZCur", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "ZCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -429,7 +428,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("ZDef", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "ZDef", 0, 0, fieldWidth, fieldHeight))
 			 .setColor(fieldTxtColor)
 			 .setColorCursor(fieldCurColor)
 			 .setColorActive(fieldActColor)
@@ -446,7 +445,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("WCur", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "WCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -455,7 +454,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("WDef", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "WDef", 0, 0, fieldWidth, fieldHeight))
 			 .setColor(fieldTxtColor)
 			 .setColorCursor(fieldCurColor)
 			 .setColorActive(fieldActColor)
@@ -472,7 +471,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("PCur", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "PCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -481,7 +480,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("PDef", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "PDef", 0, 0, fieldWidth, fieldHeight))
 			 .setColor(fieldTxtColor)
 			 .setColorCursor(fieldCurColor)
 			 .setColorActive(fieldActColor)
@@ -498,7 +497,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("RCur", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "RCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -507,7 +506,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("RDef", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "RDef", 0, 0, fieldWidth, fieldHeight))
 			 .setColor(fieldTxtColor)
 			 .setColorCursor(fieldCurColor)
 			 .setColorActive(fieldActColor)
@@ -550,7 +549,7 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(scenarioWindow);
 
-		 UIManager.addTextfield("ScenarioName", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "ScenarioName", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -955,9 +954,9 @@ public class WindowManager implements ControlListener {
 
 			 if (g == null || controller.getParent().equals(g)) {
 
-				 if (controller instanceof Textfield) {
+				 if (controller instanceof MyTextfield) {
 					 // Clear anything inputted into the text field
-					 controller = ((Textfield)controller).setValue("");
+					 controller = ((MyTextfield)controller).setValue("");
 					 
 				 } else if (controller instanceof MyDropdownList) {
 					 // Reset the caption label of each dropdown list and close the list
@@ -1527,13 +1526,13 @@ public class WindowManager implements ControlListener {
 	 private String getDimText(DimType t) throws ClassCastException {
 		 
 		 if (t == DimType.WIDTH) {
-			 return ( (Textfield) UIManager.get("Dim2") ).getText();
+			 return ( (MyTextfield) UIManager.get("Dim2") ).getText();
 			 
 		 } else if (t == DimType.HEIGHT) {
-			 return ( (Textfield) UIManager.get("Dim1") ).getText();
+			 return ( (MyTextfield) UIManager.get("Dim1") ).getText();
 			 
 		 } else {
-			 return ( (Textfield) UIManager.get("Dim0") ).getText();
+			 return ( (MyTextfield) UIManager.get("Dim0") ).getText();
 		 }
 	 }
 	 
@@ -1678,8 +1677,8 @@ public class WindowManager implements ControlListener {
 	  * @throws ClassCastException	If a non-text-field UI element with the given
 	  * 							name exists in the UI
 	  */
-	 private Textfield getTextField(String name) throws ClassCastException {
-		 return (Textfield) UIManager.get(name);
+	 private MyTextfield getTextField(String name) throws ClassCastException {
+		 return (MyTextfield) UIManager.get(name);
 	 }
 
 	 /**
@@ -1727,7 +1726,7 @@ public class WindowManager implements ControlListener {
 		 List<ControllerInterface<?>> controllers = UIManager.getAll();
 		 
 		 for (ControllerInterface<?> c : controllers) {
-			 if (c instanceof Textfield && ((Textfield) c).isFocus()) {
+			 if (c instanceof MyTextfield && ((MyTextfield) c).isFocus()) {
 				 return true;
 			 }
 		 }
@@ -1973,7 +1972,7 @@ public class WindowManager implements ControlListener {
 		 
 		 // Update the dimension text fields
 		 for (int idx = 0; idx < DIM_TXT; ++idx) {
-			 Textfield dimTxt = getTextField( String.format("Dim%d", idx) );
+			 MyTextfield dimTxt = getTextField( String.format("Dim%d", idx) );
 			 
 			 if (!dimTxt.isVisible()) { break; }
 
@@ -2056,9 +2055,14 @@ public class WindowManager implements ControlListener {
 		 }
 		 
 		 for (int idx = 0; idx < DIM_TXT; ++idx) {
-			 Textfield tf = getTextField( String.format("Dim%d", idx) );
-			 
-			 tf = (idx < txtFields) ? tf.show() : tf.hide();
+			MyTextfield tf = getTextField( String.format("Dim%d", idx) );
+			
+			if (idx < txtFields) {
+				tf.show();
+				
+			} else {
+				tf.hide();
+			}
 		 }
 	 }
 
