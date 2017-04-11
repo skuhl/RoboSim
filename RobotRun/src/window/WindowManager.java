@@ -1,7 +1,8 @@
 package window;
-import java.io.File;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import controlP5.Background;
@@ -78,10 +79,11 @@ public class WindowManager implements ControlListener {
 	 */
 	 public WindowManager(RobotRun appRef, ControlP5 manager, PFont small, PFont medium) {
 		// Initialize content fields
-		 UIManager = manager;
+		 UIManager = manager;		 
 		 app = appRef;
-		 
 		 menu = null;
+		 
+		 manager.addListener(this);
 
 		 buttonDefColor = app.color(70);
 		 buttonActColor = app.color(220, 40, 40);
@@ -100,7 +102,7 @@ public class WindowManager implements ControlListener {
 		 String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
 		 
 		 // Create window tab bar
-		 windowTabs = (ButtonTabs)(new ButtonTabs(this, UIManager, "List:")
+		 windowTabs = (ButtonTabs)(new ButtonTabs(UIManager, "Tabs")
 				 // Sets button text color
 				 .setColorValue(buttonTxtColor)
 				 .setColorBackground(buttonDefColor)
@@ -632,7 +634,7 @@ public class WindowManager implements ControlListener {
 		 dropdown.addItem(EEMapping.DOT.toString(), EEMapping.DOT);
 		 dropdown.addItem(EEMapping.LINE.toString(), EEMapping.LINE);
 		 dropdown.addItem(EEMapping.NONE.toString(), EEMapping.NONE);
-		 dropdown.setActiveLabel(EEMapping.DOT.toString());
+		 dropdown.setValue(0);
 		 
 		 dropdown = (MyDropdownList)((new MyDropdownList(UIManager, "AxesDisplay"))
 				 .setSize(ldropItemWidth, 4 * dropItemHeight)
@@ -648,7 +650,7 @@ public class WindowManager implements ControlListener {
 		 dropdown.addItem(AxesDisplay.AXES.toString(), AxesDisplay.AXES);
 		 dropdown.addItem(AxesDisplay.GRID.toString(), AxesDisplay.GRID);
 		 dropdown.addItem(AxesDisplay.NONE.toString(), AxesDisplay.NONE);
-		 dropdown.setActiveLabel(AxesDisplay.AXES.toString());
+		 dropdown.setValue(0);
 		 
 		 dropdown = (MyDropdownList)((new MyDropdownList(UIManager, "Scenario"))
 				 .setSize(ldropItemWidth, 4 * dropItemHeight)
@@ -822,18 +824,78 @@ public class WindowManager implements ControlListener {
 			 getTextField("RDef").setText( Float.toString(wpr.y) );
 		 }
 	 }
-	 
-	 @Override
+	
+	/**
+	 * Deal with value changes in certain controllers.
+	 * 
+	 * @param arg0	The value change event
+	 */
+	@Override
 	public void controlEvent(ControlEvent arg0) {
-		// TODO Auto-generated method stub
-		 
-		 if (arg0.isFrom(windowTabs)) {
-			 System.out.println(arg0);
+		
+		if (arg0.isFrom(windowTabs)) {
+			// Update the window based on the button tab selected
+			String actLbl = windowTabs.getActButLbl();
+			
+			if (actLbl.equals("Robot1")) {
+				updateView( WindowTab.ROBOT1 );
+				
+			} else if (actLbl.equals("Robot2")) {
+				updateView( WindowTab.ROBOT2 );
+				
+			} else if (actLbl.equals("Create")) {
+				updateView( WindowTab.CREATE );
+				
+			} else if (actLbl.equals("Edit")) {
+				updateView( WindowTab.EDIT );
+				
+			} else if (actLbl.equals("Scenario")) {
+				updateView( WindowTab.SCENARIO );
+				
+			} else if (actLbl.equals("Misc")) {
+				updateView( WindowTab.MISC );
+				
+			} else {
+				updateView( null );
+			}
 			 
 		 } else {
-			 System.out.println(arg0);
+			 if (arg0.isFrom( getDropdown("Object") )) {
+				// Initialize the input fields on the edit menu
+				WorldObject selected = getActiveWorldObject();
+				
+				if (selected != null) {
+					
+					// TODO initialize other fields
+					
+					// Initialize the reference dropdown
+					MyDropdownList ddl = getDropdown("Fixture");
+					
+					if (selected instanceof Part) {
+					
+						Fixture ref = ((Part)selected).getFixtureRef();
+						
+						if (ref == null) {
+							ddl.setValue(0);
+						 
+						} else {
+							ddl.setItem(ref);
+						}
+					
+					} else {
+						ddl.setValue(0);
+					}
+					
+				 }
+			 }
+			 
+			 if (arg0.isFrom( getDropdown("Object") ) || arg0.isFrom( getDropdown("Shape") )) {
+				 /* The selected item in these dropdown lists influence the
+				  * layout of the menu */
+				 updateWindowContentsPositions();
+			 }
 		 }
-		
+			
 	}
 
 	 /**
@@ -878,7 +940,7 @@ public class WindowManager implements ControlListener {
 					 MyDropdownList dropdown = (MyDropdownList)controller;
 					 
 					 if(!dropdown.getParent().equals(miscWindow)) {
-						 dropdown.resetLabel();
+						 dropdown.setValue(-1);
 						 dropdown.close();
 					 }
 				 }
@@ -992,7 +1054,7 @@ public class WindowManager implements ControlListener {
 	  */
 	 public WorldObject createWorldObject() {
 		 // Check the object type dropdown list
-		 Object val = getDropdown("ObjType").getActiveLabelValue();
+		 Object val = getDropdown("ObjType").getSelectedItem();
 		 // Determine if the object to be create is a Fixture or a Part
 		 Float objectType = 0.0f;
 
@@ -1010,13 +1072,13 @@ public class WindowManager implements ControlListener {
 				 // Create a Part
 				 String name = getTextField("ObjName").getText();
 
-				 ShapeType type = (ShapeType)getDropdown("Shape").getActiveLabelValue();
+				 ShapeType type = (ShapeType)getDropdown("Shape").getSelectedItem();
 
-				 int fill = (Integer)getDropdown("Fill").getActiveLabelValue();
+				 int fill = (Integer)getDropdown("Fill").getSelectedItem();
 
 				 switch(type) {
 				 case BOX:
-					 int strokeVal = (Integer)getDropdown("Outline").getActiveLabelValue();
+					 int strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
 					 Float[] shapeDims = getBoxDimensions();
 					 // Construct a box shape
 					 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
@@ -1025,7 +1087,7 @@ public class WindowManager implements ControlListener {
 					 break;
 
 				 case CYLINDER:
-					 strokeVal = (Integer)getDropdown("Outline").getActiveLabelValue();
+					 strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
 					 shapeDims = getCylinderDimensions();
 					 // Construct a cylinder
 					 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
@@ -1034,7 +1096,7 @@ public class WindowManager implements ControlListener {
 					 break;
 
 				 case MODEL:
-					 String srcFile = (String) getDropdown("DimDdl0").getActiveLabelValue();
+					 String srcFile = (String) getDropdown("DimDdl0").getSelectedItem();
 					 shapeDims = getModelDimensions();
 					 // Construct a complex model
 					 if (shapeDims != null) {
@@ -1056,13 +1118,13 @@ public class WindowManager implements ControlListener {
 			 } else if (objectType == 1.0f) {
 				 // Create a fixture
 				 String name = getTextField("ObjName").getText();
-				 ShapeType type = (ShapeType)getDropdown("Shape").getActiveLabelValue();
+				 ShapeType type = (ShapeType)getDropdown("Shape").getSelectedItem();
 
-				 int fill = (Integer)getDropdown("Fill").getActiveLabelValue();
+				 int fill = (Integer)getDropdown("Fill").getSelectedItem();
 
 				 switch(type) {
 				 case BOX:
-					 int strokeVal = (Integer)getDropdown("Outline").getActiveLabelValue();
+					 int strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
 					 Float[] shapeDims = getBoxDimensions();
 					 // Construct a box shape
 					 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
@@ -1071,7 +1133,7 @@ public class WindowManager implements ControlListener {
 					 break;
 
 				 case CYLINDER:
-					 strokeVal = (Integer)getDropdown("Outline").getActiveLabelValue();
+					 strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
 					 shapeDims = getCylinderDimensions();
 					 // Construct a cylinder
 					 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
@@ -1080,7 +1142,7 @@ public class WindowManager implements ControlListener {
 					 break;
 
 				 case MODEL:
-					 String srcFile = (String) getDropdown("DimDdl0").getActiveLabelValue();
+					 String srcFile = (String) getDropdown("DimDdl0").getSelectedItem();
 					 shapeDims = getModelDimensions();
 					 // Construct a complex model
 					 ModelShape model;
@@ -1302,7 +1364,7 @@ public class WindowManager implements ControlListener {
 					 p.setDefaultOrientationAxes(orientation);
 					 
 					 // Set the reference of the Part to the currently active fixture
-					 Fixture refFixture = (Fixture)getDropdown("Fixture").getActiveLabelValue();
+					 Fixture refFixture = (Fixture)getDropdown("Fixture").getSelectedItem();
 					 
 					 if (p.getFixtureRef() != refFixture) {
 						 p.setFixtureRef(refFixture);
@@ -1353,7 +1415,7 @@ public class WindowManager implements ControlListener {
 	 public Scenario getActiveScenario() {
 
 		 if (menu == WindowTab.SCENARIO) {
-			 Object val = getDropdown("Scenario").getActiveLabelValue();
+			 Object val = getDropdown("Scenario").getSelectedItem();
 
 			 if (val instanceof Scenario) {
 				 // Set the active scenario index
@@ -1372,10 +1434,11 @@ public class WindowManager implements ControlListener {
 	  * in the world object editing menu.
 	  */
 	 public WorldObject getActiveWorldObject() {
-		 Object wldObj = getDropdown("Object").getActiveLabelValue();
+		 Object wldObj = getDropdown("Object").getSelectedItem();
 
 		 if (editObjWindow.isVisible() && wldObj instanceof WorldObject) {
 			 return (WorldObject)wldObj;
+			 
 		 } else {
 			 return null;
 		 }
@@ -1388,7 +1451,7 @@ public class WindowManager implements ControlListener {
 	  * @return	The active axes display state
 	  */
 	 public AxesDisplay getAxesDisplay() {
-		 return (AxesDisplay)getDropdown("AxesDisplay").getActiveLabelValue();
+		 return (AxesDisplay)getDropdown("AxesDisplay").getSelectedItem();
 	 }
 
 	 /**
@@ -1502,7 +1565,7 @@ public class WindowManager implements ControlListener {
 	  * @return	The active EEE Mapping state
 	  */
 	 public EEMapping getEEMapping() {
-		 return (EEMapping)getDropdown("EEDisplay").getActiveLabelValue();
+		 return (EEMapping)getDropdown("EEDisplay").getSelectedItem();
 	 }
 
 	 /**
@@ -1725,7 +1788,7 @@ public class WindowManager implements ControlListener {
 		 
 		 for (ControllerInterface<?> c : controllers) {
 			 if (c instanceof MyDropdownList && !c.getParent().equals(miscWindow)) {
-				 ((MyDropdownList)c).resetLabel();
+				 ((MyDropdownList)c).setValue(-1);
 				 
 			 } else if (c.getName().length() > 4 && c.getName().substring(0, 4).equals("Dim") ||
 					 c.getName().equals("RefLbl")) {
@@ -1754,7 +1817,7 @@ public class WindowManager implements ControlListener {
 	 * 
 	 * @param newView	The new menu to render
 	 */
-	public void updateActRobot(WindowTab newView) {
+	private void updateView(WindowTab newView) {
 		menu = newView;
 		
 		// Update active robot if necessary
@@ -1827,7 +1890,7 @@ public class WindowManager implements ControlListener {
 		 getDropdown("Fill").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 Object val = getDropdown("Shape").getActiveLabelValue();
+		 Object val = getDropdown("Shape").getSelectedItem();
 
 		 if (val == ShapeType.MODEL) {
 			 // No stroke color for Model Shapes
@@ -1911,7 +1974,7 @@ public class WindowManager implements ControlListener {
 		 int txtFields = 0, ddlFields = 0;
 
 		 if (menu == WindowTab.CREATE) {
-			 ShapeType selectedShape = (ShapeType)getDropdown("Shape").getActiveLabelValue();
+			 ShapeType selectedShape = (ShapeType)getDropdown("Shape").getSelectedItem();
 
 			 // Define the label text and the number of dimensionos fields to display
 			 if (selectedShape == ShapeType.BOX) {
@@ -1929,7 +1992,7 @@ public class WindowManager implements ControlListener {
 			 }
 
 		 } else if (menu == WindowTab.EDIT) {
-			 Object val = getDropdown("Object").getActiveLabelValue();
+			 Object val = getDropdown("Object").getSelectedItem();
 
 			 if (val instanceof WorldObject) {
 				 Shape s = ((WorldObject)val).getForm();
@@ -2174,8 +2237,8 @@ public class WindowManager implements ControlListener {
 				 }
 			 }
 			 // Update each dropdownlist's active label
-			 limbo.updateActiveLabel();
-			 dropdown.updateActiveLabel();
+			 //limbo.updateActiveLabel();
+			 //dropdown.updateActiveLabel();
 		 }
 
 		 dropdown = getDropdown("Scenario");
@@ -2185,7 +2248,7 @@ public class WindowManager implements ControlListener {
 			 Scenario s = app.SCENARIOS.get(idx);
 			 dropdown.addItem(s.getName(), s);
 		 }
-		 dropdown.updateActiveLabel();
+		 //dropdown.updateActiveLabel();
 	 }
 
 	 /**

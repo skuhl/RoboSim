@@ -17,12 +17,9 @@ import window.WindowTab;
  * @author Joshua Hooker
  */
 public class ButtonTabs extends ButtonBar {
-	
-	private WindowManager manager;
 
-	public ButtonTabs(WindowManager m, ControlP5 parent, String name) {
+	public ButtonTabs(ControlP5 parent, String name) {
 		super(parent, name);
-		manager = m;
 	}
 	
 	/**
@@ -31,7 +28,7 @@ public class ButtonTabs extends ButtonBar {
 	 * @return	The label of the active button
 	 */
 	@SuppressWarnings("unchecked")
-	private String getActButLbl() {
+	public String getActButLbl() {
 		List<HashMap<?, ?>> items = getItems();
 		
 		// Determine which button is active
@@ -47,36 +44,5 @@ public class ButtonTabs extends ButtonBar {
 		
 		// No active button?
 		return null;
-	}
-	
-	@Override
-	public void onClick() {
-		// Update active button state
-		super.onClick();
-		
-		// Update the window based on the button selected
-		String actLbl = getActButLbl();
-		
-		if (actLbl.equals("Robot1")) {
-			manager.updateActRobot( WindowTab.ROBOT1 );
-			
-		} else if (actLbl.equals("Robot2")) {
-			manager.updateActRobot( WindowTab.ROBOT2 );
-			
-		} else if (actLbl.equals("Create")) {
-			manager.updateActRobot( WindowTab.CREATE );
-			
-		} else if (actLbl.equals("Edit")) {
-			manager.updateActRobot( WindowTab.EDIT );
-			
-		} else if (actLbl.equals("Scenario")) {
-			manager.updateActRobot( WindowTab.SCENARIO );
-			
-		} else if (actLbl.equals("Misc")) {
-			manager.updateActRobot( WindowTab.MISC );
-			
-		} else {
-			manager.updateActRobot( null );
-		}
 	}
 }
