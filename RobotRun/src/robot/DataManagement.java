@@ -59,7 +59,7 @@ import regs.Register;
  */
 public abstract class DataManagement {
 	
-	private static String parentDirPath, scenarioDirPath;
+	private static String dataDir, parentDirPath, scenarioDirPath;
 	
 	static {
 		parentDirPath = null;
@@ -68,8 +68,37 @@ public abstract class DataManagement {
 	
 	// Must be called when RobotRun starts!!!!
 	public static void initialize(RobotRun process) {
+		dataDir = process.sketchPath("data/");
 		parentDirPath = process.sketchPath("tmp/");
 		scenarioDirPath = parentDirPath + "scenarios/";
+	}
+	
+	/**
+	 * Returns a list of all the names of files in the data sub directory
+	 * with the .stl file extension.
+	 * 
+	 * @return	A list of model files
+	 */
+	public static ArrayList<String> getDataFileNames() {
+		File data = new File(dataDir);
+		
+		if (!data.exists() || data.isFile()) {
+			// Missing data directory
+			return null;
+		}
+		// Search for all .stl files
+		File[] dataFiles = data.listFiles();
+		ArrayList<String> fileNames = new ArrayList<String>(dataFiles.length);
+		
+		for (File file : dataFiles) {
+			String name = file.getName();
+			// Check file extension and type
+			if (file.isFile() && (name.endsWith(".stl") || name.endsWith(".STL"))) {
+				fileNames.add(name);
+			}
+		}
+		
+		return fileNames;
 	}
 	
 	private static ExpressionElement loadExpressionElement(RoboticArm robot,

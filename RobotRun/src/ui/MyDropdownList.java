@@ -42,6 +42,7 @@ public class MyDropdownList extends DropdownList {
 		} catch (IndexOutOfBoundsException IOOBEx) {
 			//IOOBEx.printStackTrace();
 		}
+		
 		// Some dropdown lists influence the display
 		RobotRun.getInstance().getManager().updateWindowContentsPositions();
 	}

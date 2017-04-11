@@ -1,10 +1,13 @@
 package window;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import controlP5.Background;
 import controlP5.Button;
+import controlP5.ControlEvent;
+import controlP5.ControlListener;
 import controlP5.ControlP5;
 import controlP5.ControllerInterface;
 import controlP5.DropdownList;
@@ -22,6 +25,7 @@ import geom.WorldObject;
 import processing.core.PFont;
 import processing.core.PVector;
 import robot.RoboticArm;
+import robot.DataManagement;
 import robot.EEMapping;
 import robot.Fixture;
 import robot.RobotRun;
@@ -31,7 +35,8 @@ import ui.ButtonTabs;
 import ui.MyDropdownList;
 import ui.RelativePoint;
 
-public class WindowManager {
+public class WindowManager implements ControlListener {
+	
 	public static final int offsetX = 10,
 			distBtwFieldsY = 15,
 			distLblToFieldX = 5,
@@ -49,10 +54,15 @@ public class WindowManager {
 			sdropItemWidth = 80,
 			mdropItemWidth = 90,
 			ldropItemWidth = 120,
-			dropItemHeight = 21;
+			dropItemHeight = 21,
+			DIM_LBL = 3,
+			DIM_TXT = 3,
+			DIM_DDL = 1;
 
 	private final ControlP5 UIManager;
 	private final RobotRun app;
+	
+	private WindowTab menu;
 
 	private Group createObjWindow, editObjWindow,
 	sharedElements, scenarioWindow, miscWindow;
@@ -70,6 +80,8 @@ public class WindowManager {
 		// Initialize content fields
 		 UIManager = manager;
 		 app = appRef;
+		 
+		 menu = null;
 
 		 buttonDefColor = app.color(70);
 		 buttonActColor = app.color(220, 40, 40);
@@ -88,7 +100,7 @@ public class WindowManager {
 		 String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
 		 
 		 // Create window tab bar
-		 windowTabs = (ButtonTabs)(new ButtonTabs(UIManager, "List:")
+		 windowTabs = (ButtonTabs)(new ButtonTabs(this, UIManager, "List:")
 				 // Sets button text color
 				 .setColorValue(buttonTxtColor)
 				 .setColorBackground(buttonDefColor)
@@ -199,7 +211,7 @@ public class WindowManager {
 
 		 // Initialize window contents
 		 for (int idx = 0; idx < 3; ++idx) {
-			 UIManager.addTextarea(String.format("Dim%dLbl", idx), String.format("Dim(%d):", idx), 0, 0, mLblWidth, sButtonHeight)
+			 UIManager.addTextarea(String.format("DimLbl%d", idx), String.format("Dim(%d):", idx), 0, 0, mLblWidth, sButtonHeight)
 					 .setFont(medium)
 					 .setColor(fieldTxtColor)
 					 .setColorActive(fieldActColor)
@@ -658,6 +670,21 @@ public class WindowManager {
 				 .setColorActive(buttonActColor)
 				 .moveTo(editObjWindow)
 				 .close());
+		 
+		 for (int idx = 0; idx < 1; ++idx) {
+			 // Dropdown lists for the dimension fields of an object
+			 dropdown = (MyDropdownList)((new MyDropdownList(UIManager, String.format("DimDdl%d", idx)))
+					 .setSize(ldropItemWidth, 4 * dropItemHeight)
+					 .setBarHeight(dropItemHeight)
+					 .setItemHeight(dropItemHeight)
+					 .setColorValue(buttonTxtColor)
+					 .setColorBackground(buttonDefColor)
+					 .setColorActive(buttonActColor)
+					 .moveTo(sharedElements)
+					 .close());
+			 
+			 dropdown.getCaptionLabel().setFont(small);
+		 }
 
 		 dropdown.getCaptionLabel().setFont(small);
 		 dropdown = (MyDropdownList)((new MyDropdownList(UIManager, "Object"))
@@ -795,6 +822,19 @@ public class WindowManager {
 			 getTextField("RDef").setText( Float.toString(wpr.y) );
 		 }
 	 }
+	 
+	 @Override
+	public void controlEvent(ControlEvent arg0) {
+		// TODO Auto-generated method stub
+		 
+		 if (arg0.isFrom(windowTabs)) {
+			 System.out.println(arg0);
+			 
+		 } else {
+			 System.out.println(arg0);
+		 }
+		
+	}
 
 	 /**
 	  * Reinitialize any and all input fields
@@ -805,14 +845,13 @@ public class WindowManager {
 	 }
 	 
 	 public void clearInputsFields() {
-		 String winName = getMenuName();
 		 
-		 if (winName.equals("Create")) {
+		 if (menu == WindowTab.CREATE) {
 			 clearGroupInputFields(createObjWindow);
 			 clearSharedInputFields();
 			 updateCreateWindowContentPositions();
 			 
-		 } else if (winName.equals("Edit")) {
+		 } else if (menu == WindowTab.EDIT) {
 			 clearGroupInputFields(editObjWindow);
 			 clearSharedInputFields();
 			 updateEditWindowContentPositions();
@@ -890,16 +929,16 @@ public class WindowManager {
 	  * @return		The text-field corresponding to the given dimension type
 	  * @throws ClassCastException	Really shouldn't happen
 	  */
-	 private Textfield getDimTF(DimType t) throws ClassCastException {
+	 private String getDimText(DimType t) throws ClassCastException {
 		 
 		 if (t == DimType.WIDTH) {
-			 return (Textfield) UIManager.get("Dim2");
+			 return ( (Textfield) UIManager.get("Dim2") ).getText();
 			 
-		 } else if (t == DimType.HEIGHT || t == DimType.SCALE) {
-			 return (Textfield) UIManager.get("Dim1");
+		 } else if (t == DimType.HEIGHT) {
+			 return ( (Textfield) UIManager.get("Dim1") ).getText();
 			 
 		 } else {
-			 return (Textfield) UIManager.get("Dim0");
+			 return ( (Textfield) UIManager.get("Dim0") ).getText();
 		 }
 	 }
 	 
@@ -995,7 +1034,7 @@ public class WindowManager {
 					 break;
 
 				 case MODEL:
-					 String srcFile = getDimTF(null).getText();
+					 String srcFile = (String) getDropdown("DimDdl0").getActiveLabelValue();
 					 shapeDims = getModelDimensions();
 					 // Construct a complex model
 					 if (shapeDims != null) {
@@ -1041,7 +1080,7 @@ public class WindowManager {
 					 break;
 
 				 case MODEL:
-					 String srcFile = getDimTF(null).getText();
+					 String srcFile = (String) getDropdown("DimDdl0").getActiveLabelValue();
 					 shapeDims = getModelDimensions();
 					 // Construct a complex model
 					 ModelShape model;
@@ -1312,9 +1351,8 @@ public class WindowManager {
 	  * @returning  The index value or null if no such index exists
 	  */
 	 public Scenario getActiveScenario() {
-		 String activeButtonLabel = getMenuName();
 
-		 if (activeButtonLabel != null && activeButtonLabel.equals("Scenario")) {
+		 if (menu == WindowTab.SCENARIO) {
 			 Object val = getDropdown("Scenario").getActiveLabelValue();
 
 			 if (val instanceof Scenario) {
@@ -1362,9 +1400,9 @@ public class WindowManager {
 			 final Float[] dimensions = new Float[] { null, null, null };
 
 			 // Pull from the dim fields
-			 String lenField = getDimTF(DimType.LENGTH).getText(),
-					 hgtField = getDimTF(DimType.HEIGHT).getText(),
-					 wdhField = getDimTF(DimType.WIDTH).getText();
+			 String lenField = getDimText(DimType.LENGTH),
+					 hgtField = getDimText(DimType.HEIGHT),
+					 wdhField = getDimText(DimType.WIDTH);
 
 			 if (lenField != null && !lenField.equals("")) {
 				 // Read length input
@@ -1420,8 +1458,8 @@ public class WindowManager {
 			 final Float[] dimensions = new Float[] { null, null };
 
 			 // Pull from the dim fields
-			 String radField = getDimTF(DimType.RADIUS).getText(),
-					 hgtField = getDimTF(DimType.HEIGHT).getText();
+			 String radField = getDimText(DimType.RADIUS),
+					 hgtField = getDimText(DimType.HEIGHT);
 
 			 if (radField != null && !radField.equals("")) {
 				 // Read radius input
@@ -1466,16 +1504,6 @@ public class WindowManager {
 	 public EEMapping getEEMapping() {
 		 return (EEMapping)getDropdown("EEDisplay").getActiveLabelValue();
 	 }
-	 
-	 /**
-	  * Returns the name of the active menu, which corresponds to the label of
-	  * the active button on the top button bar in the RobotRun application.
-	  * 
-	  * @return	The name of the current menu
-	  */
-	 public String getMenuName() {
-		 return windowTabs.getActiveButtonName();
-	 }
 
 	 /**
 	  * TODO
@@ -1485,14 +1513,9 @@ public class WindowManager {
 			 // null values represent an uninitialized field
 			 final Float[] dimensions = new Float[] { null };
 
-			 String activeWindow = getMenuName(), sclField;
+			 String sclField;
 			 // Pull from the Dim fields
-			 if (activeWindow != null && activeWindow.equals("Create")) {
-				 sclField = getDimTF(DimType.SCALE).getText();
-
-			 } else {
-				 sclField = getDimTF(null).getText();
-			 }
+			 sclField = getDimText(DimType.SCALE);
 
 			 if (sclField != null && !sclField.equals("")) {
 				 // Read scale input
@@ -1581,9 +1604,7 @@ public class WindowManager {
 	  *             value is invalid
 	  */
 	 public Scenario initializeScenario() {
-		 String activeButtonLabel = getMenuName();
-
-		 if (activeButtonLabel != null && activeButtonLabel.equals("Scenario")) {
+		 if (menu == WindowTab.SCENARIO) {
 			 String name = getTextField("ScenarioName").getText();
 
 			 if (name != null) {
@@ -1648,7 +1669,7 @@ public class WindowManager {
 	  * @return	If the active menu is a pendant
 	  */
 	 public boolean isPendantActive() {
-		 return getMenuName().equals("Robot1") || getMenuName().equals("Robot2");
+		 return menu == WindowTab.ROBOT1 || menu == WindowTab.ROBOT2;
 	 }
 
 	 /**
@@ -1726,6 +1747,24 @@ public class WindowManager {
 			 g.setVisible(setVisible);
 		 }
 	 }
+	
+	/**
+	 * Updates the current menu of the UI and communicates with the PApplet to
+	 * update the active robot, if necessary.
+	 * 
+	 * @param newView	The new menu to render
+	 */
+	public void updateActRobot(WindowTab newView) {
+		menu = newView;
+		
+		// Update active robot if necessary
+		if (menu == WindowTab.ROBOT1) {
+			app.setRobot(0);
+			
+		} else if (menu == WindowTab.ROBOT2) {
+			app.setRobot(1);
+		}
+	}
 	 
 	/**
 	 * Updates the tabs that are available in the applications main window.
@@ -1734,7 +1773,7 @@ public class WindowManager {
 	 */
 	public boolean toggleSecondRobot() {
 		
-		if (getMenuName().equals("Robot2")) {
+		if (menu == WindowTab.ROBOT2) {
 			windowTabs.setLabel("Hide");
 		}
 		
@@ -1828,17 +1867,34 @@ public class WindowManager {
 	  */
 	 private int[] updateDimLblAndFieldPositions(int initialXPos, int initialYPos) {
 		 int[] relPos = new int[] { initialXPos, initialYPos };
+		 int ddlIdx = 0;
+		 
+		 // Update the dimension dropdowns
+		 for (ddlIdx = 0; ddlIdx < DIM_DDL; ++ddlIdx) {
+			 DropdownList dimDdl = getDropdown( String.format("DimDdl%d", ddlIdx) );
+			 
+			 if (!dimDdl.isVisible()) { break; }
 
-		 // Update position and label text of the dimension fields based on the selected shape from the Shape dropDown List
-		 for (int idxDim = 0; idxDim < 3; ++idxDim) {
-			 Textfield dimField = getTextField( String.format("Dim%d", idxDim) );
-
-			 if (!dimField.isVisible()) { break; }
-
-			 Textarea dimLbl = getTextArea( String.format("Dim%dLbl", idxDim) ).setPosition(relPos[0], relPos[1]);
+			 Textarea dimLbl = getTextArea( String.format("DimLbl%d", ddlIdx) )
+					 .setPosition(relPos[0], relPos[1]);
 			 
 			 relPos = relativePosition(dimLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-			 dimField.setPosition(relPos[0], relPos[1]);
+			 dimDdl.setPosition(relPos[0], relPos[1]);
+			 
+			 relPos = relativePosition(dimLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 }
+		 
+		 // Update the dimension text fields
+		 for (int idx = 0; idx < DIM_TXT; ++idx) {
+			 Textfield dimTxt = getTextField( String.format("Dim%d", idx) );
+			 
+			 if (!dimTxt.isVisible()) { break; }
+
+			 Textarea dimLbl = getTextArea( String.format("DimLbl%d", idx + ddlIdx) )
+					 .setPosition(relPos[0], relPos[1]);
+			 
+			 relPos = relativePosition(dimLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+			 dimTxt.setPosition(relPos[0], relPos[1]);
 			 
 			 relPos = relativePosition(dimLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 }
@@ -1851,56 +1907,71 @@ public class WindowManager {
 	  * the create world object window based on which shape type is chosen from the shape dropdown list.
 	  */
 	 private void updateDimLblsAndFields() {
-		 String activeButtonLabel = getMenuName();
 		 String[] lblNames = new String[0];
+		 int txtFields = 0, ddlFields = 0;
 
-		 if (activeButtonLabel != null) {
-			 if (activeButtonLabel.equals("Create")) {
-				 ShapeType selectedShape = (ShapeType)getDropdown("Shape").getActiveLabelValue();
+		 if (menu == WindowTab.CREATE) {
+			 ShapeType selectedShape = (ShapeType)getDropdown("Shape").getActiveLabelValue();
 
-				 // Define the label text and the number of dimensionos fields to display
-				 if (selectedShape == ShapeType.BOX) {
+			 // Define the label text and the number of dimensionos fields to display
+			 if (selectedShape == ShapeType.BOX) {
+				 lblNames = new String[] { "Length:", "Height:", "Width" };
+				 txtFields = 3;
+
+			 } else if (selectedShape == ShapeType.CYLINDER) {
+				 lblNames = new String[] { "Radius", "Height" };
+				 txtFields = 2;
+
+			 } else if (selectedShape == ShapeType.MODEL) {
+				 lblNames = new String[] { "Source:", "Scale:", };
+				 txtFields = 1;
+				 ddlFields = 1;
+			 }
+
+		 } else if (menu == WindowTab.EDIT) {
+			 Object val = getDropdown("Object").getActiveLabelValue();
+
+			 if (val instanceof WorldObject) {
+				 Shape s = ((WorldObject)val).getForm();
+
+				 if (s instanceof Box) {
 					 lblNames = new String[] { "Length:", "Height:", "Width" };
+					 txtFields = 3;
 
-				 } else if (selectedShape == ShapeType.CYLINDER) {
+				 } else if (s instanceof Cylinder) {
 					 lblNames = new String[] { "Radius", "Height" };
+					 txtFields = 2;
 
-				 } else if (selectedShape == ShapeType.MODEL) {
-					 lblNames = new String[] { "Source:", "Scale:", };
+				 } else if (s instanceof ModelShape) {
+					 lblNames = new String[] { "Scale:" };
+					 txtFields = 1;
 				 }
-
-			 } else if (activeButtonLabel.equals("Edit")) {
-				 Object val = getDropdown("Object").getActiveLabelValue();
-
-				 if (val instanceof WorldObject) {
-					 Shape s = ((WorldObject)val).getForm();
-
-					 if (s instanceof Box) {
-						 lblNames = new String[] { "Length:", "Height:", "Width" };
-
-					 } else if (s instanceof Cylinder) {
-						 lblNames = new String[] { "Radius", "Height" };
-
-					 } else if (s instanceof ModelShape) {
-						 lblNames = new String[] { "Scale:" };
-					 }
-				 }
-
 			 }
 		 }
-
-		 for (int idxDim = 0; idxDim < 3; ++idxDim) {
+		 
+		 // Update dimension labels, dropdowns, and text fields
+		 
+		 for (int idx = 0; idx < DIM_LBL; ++idx) {
+			 Textarea ta = getTextArea( String.format("DimLbl%d", idx) );
 			 
-			 if (idxDim < lblNames.length) {
-				 // Show a number of dimension fields and labels equal to the value of dimSize
-				 getTextArea( String.format("Dim%dLbl", idxDim) ).setText( lblNames[idxDim] ).show();
-				 getTextField( String.format("Dim%d", idxDim) ).show();
-
+			 if (idx < lblNames.length) {
+				 ta.setText( lblNames[idx] ).show();
+				 
 			 } else {
-				 // Hide remaining dimension fields and labels
-				 getTextArea( String.format("Dim%dLbl", idxDim) ).hide();
-				 getTextField( String.format("Dim%d", idxDim) ).hide();
+				 ta.hide();
 			 }
+		 }
+		 
+		 for (int idx = 0; idx < DIM_DDL; ++idx) {
+			 DropdownList ddl = getDropdown( String.format("DimDdl%d", idx) );
+			 
+			 ddl = (idx < ddlFields) ? ddl.show() : ddl.hide();
+		 }
+		 
+		 for (int idx = 0; idx < DIM_TXT; ++idx) {
+			 Textfield tf = getTextField( String.format("Dim%d", idx) );
+			 
+			 tf = (idx < txtFields) ? tf.show() : tf.hide();
 		 }
 	 }
 
@@ -2072,8 +2143,21 @@ public class WindowManager {
 	  * contain world objects.
 	  */
 	 public void updateListContents() {
-		 MyDropdownList dropdown;
+		 MyDropdownList dropdown = getDropdown("DimDdl0");
+		 ArrayList<String> files = DataManagement.getDataFileNames();
 		 
+		 if (files != null) {
+			 dropdown.clear();
+			 
+			 // Initialize the source dropdown list
+			 for (String name : files) {
+				 dropdown.addItem(name.substring(0, name.length() - 4), name);
+			 }
+			 
+		 } else {
+			 System.err.println("Missing data subfolder!");
+		 }
+				 
 		 if (app.activeScenario != null) {
 			 dropdown = getDropdown("Object");
 			 dropdown.clear();
@@ -2190,9 +2274,7 @@ public class WindowManager {
 	  * based on the current button tab that is active.
 	  */
 	 public void updateWindowContentsPositions() {
-		 String windowState = getMenuName();
-
-		 if (windowState == null || windowState.equals("Hide")) {
+		 if (menu == null) {
 			 // Window is hidden
 			 background.hide();
 			 getButton("FrontView").hide();
@@ -2204,19 +2286,19 @@ public class WindowManager {
 
 			 return;
 
-		 } else if (windowState.equals("Create")) {
+		 } else if (menu == WindowTab.CREATE) {
 			 // Create window
 			 updateCreateWindowContentPositions();
 
-		 } else if (windowState.equals("Edit")) {
+		 } else if (menu == WindowTab.EDIT) {
 			 // Edit window
 			 updateEditWindowContentPositions();
 
-		 } else if (windowState.equals("Scenario")) {
+		 } else if (menu == WindowTab.SCENARIO) {
 			 // Scenario window
 			 updateScenarioWindowContentPositions();
 			 
-		 } else if (windowState.equals("Misc")) {
+		 } else if (menu == WindowTab.MISC) {
 			// Miscellaneous window
 			 updateMiscWindowContentPositions();
 		 }
@@ -2246,9 +2328,8 @@ public class WindowManager {
 	  * the screen to clear the image of the previous window.
 	  */
 	 public void updateWindowDisplay() {
-		 String windowState = getMenuName();
 		 		 
-		 if (windowState == null || windowState.equals("Hide")) {
+		 if (menu == null) {
 			 // Hide any window
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
@@ -2259,7 +2340,8 @@ public class WindowManager {
 
 			 updateWindowContentsPositions();
 
-		 } else if (windowState.equals("Robot1") || windowState.equals("Robot2")) {
+		 } else if (menu == WindowTab.ROBOT1 || menu == WindowTab.ROBOT2) {
+			 
 			 // Show pendant
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
@@ -2273,7 +2355,7 @@ public class WindowManager {
 
 			 app.g1.show();
 
-		 } else if (windowState.equals("Create")) {
+		 } else if (menu == WindowTab.CREATE) {
 			 // Show world object creation window
 			 app.g1.hide();
 			 setGroupVisible(editObjWindow, false);
@@ -2290,7 +2372,7 @@ public class WindowManager {
 				 resetListLabels();
 			 }
 
-		 } else if (windowState.equals("Edit")) {
+		 } else if (menu == WindowTab.EDIT) {
 			 // Show world object edit window
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
@@ -2307,7 +2389,7 @@ public class WindowManager {
 				 resetListLabels();
 			 }
 
-		 } else if (windowState.equals("Scenario")) {
+		 } else if (menu == WindowTab.SCENARIO) {
 			 // Show scenario creating/saving/loading
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
@@ -2324,7 +2406,7 @@ public class WindowManager {
 				 resetListLabels();
 			 }
 			 
-		 } else if (windowState.equals("Misc")) {
+		 } else if (menu == WindowTab.MISC) {
 			 // Show miscellaneous window
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);

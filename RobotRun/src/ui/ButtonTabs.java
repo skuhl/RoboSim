@@ -4,37 +4,36 @@ import java.util.List;
 import java.util.Map;
 
 import controlP5.ButtonBar;
+import controlP5.ControlEvent;
 import controlP5.ControlP5;
 import robot.RobotRun;
+import window.WindowManager;
+import window.WindowTab;
 
 /**
- * A extension of ControlP5's ButtonBar object that actually bloody
- * lets you figure out which button is active in a reasonable manner.
+ * A extension of ControlP5's ButtonBar object that works with the WindowManager
+ * to control the main UI view.
+ * 
+ * @author Joshua Hooker
  */
 public class ButtonTabs extends ButtonBar {
 	
-	private String selectedButtonName;
+	private WindowManager manager;
 
-	public ButtonTabs(ControlP5 parent, String name) {
+	public ButtonTabs(WindowManager m, ControlP5 parent, String name) {
 		super(parent, name);
-		selectedButtonName = "Hide";
+		manager = m;
 	}
-
+	
 	/**
-	 * Return the name of the button which is currenty active, or
-	 * null if no button is active.
+	 * Gets the label for the button, which is active, in this button bar.
+	 * 
+	 * @return	The label of the active button
 	 */
-	public String getActiveButtonName() {
-		return selectedButtonName;
-	}
-
-	public void onClick() {
-		// Update active button state
-		super.onClick();
-
-		@SuppressWarnings("unchecked")
-		List<HashMap<?, ?>> items = this.getItems();
-		selectedButtonName = null;
+	@SuppressWarnings("unchecked")
+	private String getActButLbl() {
+		List<HashMap<?, ?>> items = getItems();
+		
 		// Determine which button is active
 		for (HashMap<?, ?> item : items) {
 			assert item.get("selected") instanceof Boolean;
@@ -42,16 +41,42 @@ public class ButtonTabs extends ButtonBar {
 			
 			if (value) {
 				// Update selectedButtonName
-				selectedButtonName = (String)item.get("name");
+				return (String)item.get("name");
 			}
 		}
 		
-		// Set the active robot based on which tab was selected
-		 if (selectedButtonName.equals("Robot1")) {
-			 RobotRun.getInstance().setRobot(0);
-			 
-		 } else if (selectedButtonName.equals("Robot2")) {
-			 RobotRun.getInstance().setRobot(1);
-		 }
+		// No active button?
+		return null;
+	}
+	
+	@Override
+	public void onClick() {
+		// Update active button state
+		super.onClick();
+		
+		// Update the window based on the button selected
+		String actLbl = getActButLbl();
+		
+		if (actLbl.equals("Robot1")) {
+			manager.updateActRobot( WindowTab.ROBOT1 );
+			
+		} else if (actLbl.equals("Robot2")) {
+			manager.updateActRobot( WindowTab.ROBOT2 );
+			
+		} else if (actLbl.equals("Create")) {
+			manager.updateActRobot( WindowTab.CREATE );
+			
+		} else if (actLbl.equals("Edit")) {
+			manager.updateActRobot( WindowTab.EDIT );
+			
+		} else if (actLbl.equals("Scenario")) {
+			manager.updateActRobot( WindowTab.SCENARIO );
+			
+		} else if (actLbl.equals("Misc")) {
+			manager.updateActRobot( WindowTab.MISC );
+			
+		} else {
+			manager.updateActRobot( null );
+		}
 	}
 }
