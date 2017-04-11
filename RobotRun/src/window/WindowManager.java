@@ -866,7 +866,31 @@ public class WindowManager implements ControlListener {
 				
 				if (selected != null) {
 					
-					// TODO initialize other fields
+					// Initialize the dimension fields
+					if (selected.getForm() instanceof Box) {
+						getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.LENGTH)) );
+						getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
+						getTextField("Dim2").setText( String.format("%4.3f", selected.getForm().getDim(DimType.WIDTH)) );
+						
+					} else if (selected.getForm() instanceof Cylinder) {
+						getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.RADIUS)) );
+						getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
+						
+						
+					} else if (selected.getForm() instanceof ModelShape) {
+						getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.SCALE)) );
+					}
+					
+					// Initialize the position and orientation fields
+					PVector position = RobotRun.convertNativeToWorld(selected.getLocalCenter());
+					PVector wpr =  RobotRun.matrixToEuler(selected.getLocalOrientationAxes()).mult(RobotRun.RAD_TO_DEG);
+					
+					getTextField("XCur").setText( String.format("%4.3f", position.x) );
+					getTextField("YCur").setText( String.format("%4.3f", position.y) );
+					getTextField("ZCur").setText( String.format("%4.3f", position.z) );
+					getTextField("WCur").setText( String.format("%4.3f", -wpr.x) );
+					getTextField("PCur").setText( String.format("%4.3f", -wpr.z) );
+					getTextField("RCur").setText( String.format("%4.3f", wpr.y) );
 					
 					// Initialize the reference dropdown
 					MyDropdownList ddl = getDropdown("Fixture");
@@ -962,93 +986,8 @@ public class WindowManager implements ControlListener {
 	 public void clearSharedInputFields() {
 		 clearGroupInputFields(sharedElements);
 		 updateDimLblsAndFields();
-	 } 
-	 
-	 /**
-	  * Returns the button, with the given name, if it exists in one of the UI
-	  * (excluding the pendant). If a non-button UI element exists in the UI,
-	  * then a ClassCastException will be thrown. If no UI element with the
-	  * given name exists, then null is returned.
-	  * 
-	  * @param name	Then name of a button in the UI
-	  * @return		The button with the given name or null
-	  * @throws ClassCastException	If a non-button UI element with the given
-	  * 							name exists in the UI
-	  */
-	 private Button getButton(String name) throws ClassCastException {
-		 return (Button) UIManager.get(name);
 	 }
 	 
-	 /**
-	  * Returns a text-field, which corresponds to the given dimension type.
-	  * The mapping from DimType to text-fields is:
-	  * 	LENGTH, RADIUS, null	->	Dim0 text-field
-	  * 	HEIGHT, SCALE			->	Dim1 text-field
-	  * 	WIDTH					->	Dim2 text-field
-	  * 
-	  * @param name	A type of world object dimension, which corresponds to a
-	  * 			text-field input in the UI
-	  * @return		The text-field corresponding to the given dimension type
-	  * @throws ClassCastException	Really shouldn't happen
-	  */
-	 private String getDimText(DimType t) throws ClassCastException {
-		 
-		 if (t == DimType.WIDTH) {
-			 return ( (Textfield) UIManager.get("Dim2") ).getText();
-			 
-		 } else if (t == DimType.HEIGHT) {
-			 return ( (Textfield) UIManager.get("Dim1") ).getText();
-			 
-		 } else {
-			 return ( (Textfield) UIManager.get("Dim0") ).getText();
-		 }
-	 }
-	 
-	 /**
-	  * Returns the drop-down, with the given name, if it exists in one of the
-	  * UI (excluding the pendant). If a non-drop-down UI element exists in the
-	  * UI, then a ClassCastException will be thrown. If no UI element with the
-	  * given name exists, then null is returned.
-	  * 
-	  * @param name	Then name of a drop-down in the UI
-	  * @return		The drop-down with the given name or null
-	  * @throws ClassCastException	If a non-drop-down UI element with the given
-	  * 							name exists in the UI
-	  */
-	 private MyDropdownList getDropdown(String name) throws ClassCastException {
-		 return (MyDropdownList) UIManager.get(name);
-	 }
-	 
-	 /**
-	  * Returns the text-area, with the given name, if it exists in one of the
-	  * UI (excluding the pendant). If a non-text-area UI element exists in the
-	  * UI, then a ClassCastException will be thrown. If no UI element with the
-	  * given name exists, then null is returned.
-	  * 
-	  * @param name	Then name of a text-area in the UI
-	  * @return		The text-area with the given name or null
-	  * @throws ClassCastException	If a non-text-area UI element with the given
-	  * 							name exists in the UI
-	  */
-	 private Textarea getTextArea(String name) throws ClassCastException {
-		 return (Textarea) UIManager.get(name);
-	 }
-	 
-	 /**
-	  * Returns the text-field, with the given name, if it exists in one of the
-	  * UI (excluding the pendant). If a non-text-field UI element exists in the
-	  * UI, then a ClassCastException will be thrown. If no UI element with the
-	  * given name exists, then null is returned.
-	  * 
-	  * @param name	Then name of a text-field in the UI
-	  * @return		The text-field with the given name or null
-	  * @throws ClassCastException	If a non-text-field UI element with the given
-	  * 							name exists in the UI
-	  */
-	 private Textfield getTextField(String name) throws ClassCastException {
-		 return (Textfield) UIManager.get(name);
-	 }
-
 	 /**
 	  * Creates a world object form the input fields in the Create window.
 	  */
@@ -1405,7 +1344,7 @@ public class WindowManager implements ControlListener {
 		 }
 
 	 }
-
+	 
 	 /**
 	  * Returns the scenario associated with the label that is active
 	  * for the scenario drop-down list.
@@ -1511,6 +1450,21 @@ public class WindowManager implements ControlListener {
 			 return null;
 		 }
 	 }
+	 
+	 /**
+	  * Returns the button, with the given name, if it exists in one of the UI
+	  * (excluding the pendant). If a non-button UI element exists in the UI,
+	  * then a ClassCastException will be thrown. If no UI element with the
+	  * given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a button in the UI
+	  * @return		The button with the given name or null
+	  * @throws ClassCastException	If a non-button UI element with the given
+	  * 							name exists in the UI
+	  */
+	 private Button getButton(String name) throws ClassCastException {
+		 return (Button) UIManager.get(name);
+	 }
 
 	 /**
 	  *TODO
@@ -1556,6 +1510,46 @@ public class WindowManager implements ControlListener {
 			 RobotRun.println("Missing parameter!");
 			 return null;
 		 }
+	 }
+	 
+	 /**
+	  * Returns a text-field, which corresponds to the given dimension type.
+	  * The mapping from DimType to text-fields is:
+	  * 	LENGTH, RADIUS, null	->	Dim0 text-field
+	  * 	HEIGHT, SCALE			->	Dim1 text-field
+	  * 	WIDTH					->	Dim2 text-field
+	  * 
+	  * @param name	A type of world object dimension, which corresponds to a
+	  * 			text-field input in the UI
+	  * @return		The text-field corresponding to the given dimension type
+	  * @throws ClassCastException	Really shouldn't happen
+	  */
+	 private String getDimText(DimType t) throws ClassCastException {
+		 
+		 if (t == DimType.WIDTH) {
+			 return ( (Textfield) UIManager.get("Dim2") ).getText();
+			 
+		 } else if (t == DimType.HEIGHT) {
+			 return ( (Textfield) UIManager.get("Dim1") ).getText();
+			 
+		 } else {
+			 return ( (Textfield) UIManager.get("Dim0") ).getText();
+		 }
+	 }
+	 
+	 /**
+	  * Returns the drop-down, with the given name, if it exists in one of the
+	  * UI (excluding the pendant). If a non-drop-down UI element exists in the
+	  * UI, then a ClassCastException will be thrown. If no UI element with the
+	  * given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a drop-down in the UI
+	  * @return		The drop-down with the given name or null
+	  * @throws ClassCastException	If a non-drop-down UI element with the given
+	  * 							name exists in the UI
+	  */
+	 private MyDropdownList getDropdown(String name) throws ClassCastException {
+		 return (MyDropdownList) UIManager.get(name);
 	 }
 	 
 	 /**
@@ -1656,6 +1650,36 @@ public class WindowManager implements ControlListener {
 	  */
 	 public boolean getRobotButtonState() {
 		 return getButton("ToggleRobot").isOn();
+	 }
+	 
+	 /**
+	  * Returns the text-area, with the given name, if it exists in one of the
+	  * UI (excluding the pendant). If a non-text-area UI element exists in the
+	  * UI, then a ClassCastException will be thrown. If no UI element with the
+	  * given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a text-area in the UI
+	  * @return		The text-area with the given name or null
+	  * @throws ClassCastException	If a non-text-area UI element with the given
+	  * 							name exists in the UI
+	  */
+	 private Textarea getTextArea(String name) throws ClassCastException {
+		 return (Textarea) UIManager.get(name);
+	 }
+	 
+	 /**
+	  * Returns the text-field, with the given name, if it exists in one of the
+	  * UI (excluding the pendant). If a non-text-field UI element exists in the
+	  * UI, then a ClassCastException will be thrown. If no UI element with the
+	  * given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a text-field in the UI
+	  * @return		The text-field with the given name or null
+	  * @throws ClassCastException	If a non-text-field UI element with the given
+	  * 							name exists in the UI
+	  */
+	 private Textfield getTextField(String name) throws ClassCastException {
+		 return (Textfield) UIManager.get(name);
 	 }
 
 	 /**
