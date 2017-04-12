@@ -45,7 +45,7 @@ public class WindowManager implements ControlListener {
 			mLblWidth = 86,
 			sLblWidth = 60,
 			fieldHeight = 20,
-			fieldWidth = 95,
+			fieldWidth = 110,
 			lButtonWidth = 88,
 			mButtonWidth = 56,
 			sButtonWidth = 26,
@@ -330,34 +330,6 @@ public class WindowManager implements ControlListener {
 			 .setColorBackground(bkgrdColor)
 			 .setColorForeground(bkgrdColor)
 			 .moveTo(editObjWindow);
-		 
-		 UIManager.addTextarea("AFLbl", "Auto Fill", 0, 0, lLblWidth, fieldHeight)
-			 .setFont(medium)
-			 .setColor(fieldTxtColor)
-			 .setColorActive(fieldActColor)
-			 .setColorBackground(bkgrdColor)
-			 .setColorForeground(bkgrdColor)
-			 .moveTo(editObjWindow);
-		 
-		 UIManager.addButton("DefIntoCur")
-				  .setCaptionLabel("Default")
-				  .setColorValue(buttonTxtColor)
-				  .setColorBackground(buttonDefColor)
-				  .setColorActive(buttonActColor)
-				  .moveTo(editObjWindow)
-				  .setPosition(0, 0)
-				  .setSize(mButtonWidth, sButtonHeight)
-				  .getCaptionLabel().setFont(small);
-		 
-		 UIManager.addButton("CurIntoDef")
-				  .setCaptionLabel("Current")
-				  .setColorValue(buttonTxtColor)
-				  .setColorBackground(buttonDefColor)
-				  .setColorActive(buttonActColor)
-				  .moveTo(editObjWindow)
-				  .setPosition(0, 0)
-				  .setSize(mButtonWidth, sButtonHeight)
-				  .getCaptionLabel().setFont(small);
 
 		 UIManager.addTextarea("XLbl", "X Position:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -376,14 +348,14 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 (new MyTextfield(UIManager, "XDef", 0, 0, fieldWidth, fieldHeight))
-			 .setColor(fieldTxtColor)
-			 .setColorCursor(fieldCurColor)
-			 .setColorActive(fieldActColor)
-			 .setColorLabel(bkgrdColor)
-			 .setColorBackground(fieldBkgrdColor)
-			 .setColorForeground(fieldFrgrdColor)
-			 .moveTo(editObjWindow);
+		 UIManager.addTextarea("XDef")
+			 	  .setSize(fieldWidth, fieldHeight)
+				  .setColor(fieldTxtColor)
+				  .setColorActive(fieldActColor)
+				  .setColorLabel(bkgrdColor)
+				  .setColorBackground(fieldBkgrdColor)
+				  .setColorForeground(fieldFrgrdColor)
+				  .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("YLbl", "Y Position:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -402,22 +374,22 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 (new MyTextfield(UIManager, "YDef", 0, 0, fieldWidth, fieldHeight))
-			 .setColor(fieldTxtColor)
-			 .setColorCursor(fieldCurColor)
-			 .setColorActive(fieldActColor)
-			 .setColorLabel(bkgrdColor)
-			 .setColorBackground(fieldBkgrdColor)
-			 .setColorForeground(fieldFrgrdColor)
-			 .moveTo(editObjWindow);
+		 UIManager.addTextarea("YDef")
+	 	  		.setSize(fieldWidth, fieldHeight)
+	 	  		.setColor(fieldTxtColor)
+	 	  		.setColorActive(fieldActColor)
+	 	  		.setColorLabel(bkgrdColor)
+	 	  		.setColorBackground(fieldBkgrdColor)
+	 	  		.setColorForeground(fieldFrgrdColor)
+	 	  		.moveTo(editObjWindow);
 
 		 UIManager.addTextarea("ZLbl", "Z Position:", 0, 0, lLblWidth, fieldHeight)
-				 .setFont(medium)
-				 .setColor(fieldTxtColor)
-				 .setColorActive(fieldActColor)
-				 .setColorBackground(bkgrdColor)
-				 .setColorForeground(bkgrdColor)
-				 .moveTo(editObjWindow);
+				  .setFont(medium)
+				  .setColor(fieldTxtColor)
+				  .setColorActive(fieldActColor)
+				  .setColorBackground(bkgrdColor)
+				  .setColorForeground(bkgrdColor)
+				  .moveTo(editObjWindow);
 
 		 (new MyTextfield(UIManager, "ZCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
@@ -428,14 +400,14 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 (new MyTextfield(UIManager, "ZDef", 0, 0, fieldWidth, fieldHeight))
-			 .setColor(fieldTxtColor)
-			 .setColorCursor(fieldCurColor)
-			 .setColorActive(fieldActColor)
-			 .setColorLabel(bkgrdColor)
-			 .setColorBackground(fieldBkgrdColor)
-			 .setColorForeground(fieldFrgrdColor)
-			 .moveTo(editObjWindow);
+		 UIManager.addTextarea("ZDef")
+	 	  		  .setSize(fieldWidth, fieldHeight)
+	 	  		  .setColor(fieldTxtColor)
+	 	  		  .setColorActive(fieldActColor)
+	 	  		  .setColorLabel(bkgrdColor)
+	 	  		  .setColorBackground(fieldBkgrdColor)
+	 	  		  .setColorForeground(fieldFrgrdColor)
+	 	  		  .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("WLbl", "W Rotation:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -454,14 +426,14 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 (new MyTextfield(UIManager, "WDef", 0, 0, fieldWidth, fieldHeight))
-			 .setColor(fieldTxtColor)
-			 .setColorCursor(fieldCurColor)
-			 .setColorActive(fieldActColor)
-			 .setColorLabel(bkgrdColor)
-			 .setColorBackground(fieldBkgrdColor)
-			 .setColorForeground(fieldFrgrdColor)
-			 .moveTo(editObjWindow);
+		 UIManager.addTextarea("WDef")
+	 	  		  .setSize(fieldWidth, fieldHeight)
+	 	  		  .setColor(fieldTxtColor)
+	 	  		  .setColorActive(fieldActColor)
+	 	  		  .setColorLabel(bkgrdColor)
+	 	  		  .setColorBackground(fieldBkgrdColor)
+	 	  		  .setColorForeground(fieldFrgrdColor)
+	 	  		  .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("PLbl", "P Rotation:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -480,14 +452,14 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 (new MyTextfield(UIManager, "PDef", 0, 0, fieldWidth, fieldHeight))
-			 .setColor(fieldTxtColor)
-			 .setColorCursor(fieldCurColor)
-			 .setColorActive(fieldActColor)
-			 .setColorLabel(bkgrdColor)
-			 .setColorBackground(fieldBkgrdColor)
-			 .setColorForeground(fieldFrgrdColor)
-			 .moveTo(editObjWindow);
+		 UIManager.addTextarea("PDef")
+		 		  .setSize(fieldWidth, fieldHeight)
+		 		  .setColor(fieldTxtColor)
+		 		  .setColorActive(fieldActColor)
+		 		  .setColorLabel(bkgrdColor)
+		 		  .setColorBackground(fieldBkgrdColor)
+		 		  .setColorForeground(fieldFrgrdColor)
+		 		  .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("RLbl", "R Rotation:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -506,14 +478,14 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 (new MyTextfield(UIManager, "RDef", 0, 0, fieldWidth, fieldHeight))
-			 .setColor(fieldTxtColor)
-			 .setColorCursor(fieldCurColor)
-			 .setColorActive(fieldActColor)
-			 .setColorLabel(bkgrdColor)
-			 .setColorBackground(fieldBkgrdColor)
-			 .setColorForeground(fieldFrgrdColor)
-			 .moveTo(editObjWindow);
+		 UIManager.addTextarea("RDef")
+	 	  		  .setSize(fieldWidth, fieldHeight)
+	 	  		  .setColor(fieldTxtColor)
+	 	  		  .setColorActive(fieldActColor)
+	 	  		  .setColorLabel(bkgrdColor)
+	 	  		  .setColorBackground(fieldBkgrdColor)
+	 	  		  .setColorForeground(fieldFrgrdColor)
+	 	  		  .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("RefLbl", "Reference:", 0, 0, lLblWidth, sButtonHeight)
 				 .setFont(medium)
@@ -522,15 +494,33 @@ public class WindowManager implements ControlListener {
 				 .setColorBackground(bkgrdColor)
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
-
-		 UIManager.addButton("UpdateWldObj")
-				 .setCaptionLabel("Confirm")
+		 
+		 UIManager.addButton("MoveToCur")
+				 .setCaptionLabel("Move to Current")
 				 .setColorValue(buttonTxtColor)
 				 .setColorBackground(buttonDefColor)
 				 .setColorActive(buttonActColor)
 				 .moveTo(editObjWindow)
-				 .setSize(mButtonWidth, sButtonHeight)
+				 .setSize(fieldWidth, sButtonHeight)
 				 .getCaptionLabel().setFont(small);
+		 
+		 UIManager.addButton("UpdateWODef")
+		  		  .setCaptionLabel("Update Default")
+		  		  .setColorValue(buttonTxtColor)
+		  		  .setColorBackground(buttonDefColor)
+		  		  .setColorActive(buttonActColor)
+		  		  .moveTo(editObjWindow)
+		  		  .setSize(fieldWidth, sButtonHeight)
+		  		  .getCaptionLabel().setFont(small);
+		 
+		 UIManager.addButton("MoveToDef")
+		 		  .setCaptionLabel("Move to Default")
+		 		  .setColorValue(buttonTxtColor)
+		 		  .setColorBackground(buttonDefColor)
+		 		  .setColorActive(buttonActColor)
+		 		  .moveTo(editObjWindow)
+		 		  .setSize(fieldWidth, sButtonHeight)
+		 		  .getCaptionLabel().setFont(small);
 
 		 UIManager.addButton("DeleteWldObj")
 				 .setCaptionLabel("Delete")
@@ -772,57 +762,6 @@ public class WindowManager implements ControlListener {
 		 dropdown.addItem("Parts", 0.0f);
 		 dropdown.addItem("Fixtures", 1.0f);
 	 }
-	 
-	 /**
-	  * Sets the current position and orientation inputs fields to the values of
-	  * the active part's default position and orientation.
-	  */
-	 public void autoFillCurFields() {
-		 WorldObject active = getActiveWorldObject();
-		 
-		 if (active instanceof Part) {
-			 Part p = (Part)active;
-			 // Get the part's default position and orientation
-			 PVector pos = p.getDefaultCenter();
-			 PVector wpr = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
-					 			   .mult(RobotRun.RAD_TO_DEG);
-			 
-			 pos = RobotRun.convertNativeToWorld(pos);
-			 
-			 // Fill the current position and orientation fields in the edit window
-			 getTextField("XCur").setText( Float.toString(pos.x) );
-			 getTextField("YCur").setText( Float.toString(pos.y) );
-			 getTextField("ZCur").setText( Float.toString(pos.z) );
-			 getTextField("WCur").setText( Float.toString(-wpr.x) );
-			 getTextField("PCur").setText( Float.toString(-wpr.z) );
-			 getTextField("RCur").setText( Float.toString(wpr.y) );
-		 }
-	 }
-	 
-	 /**
-	  * Sets the default position and orientation inputs fields to the values of
-	  * the active part's current position and orientation.
-	  */
-	 public void autoFillDefFields() {
-		 WorldObject active = getActiveWorldObject();
-		 
-		 if (active instanceof Part) {
-			 // Get the part's current position and orientation
-			 PVector pos = active.getLocalCenter();
-			 PVector wpr = RobotRun.matrixToEuler( active.getLocalOrientationAxes() )
-					 			   .mult(RobotRun.RAD_TO_DEG);
-			 
-			 pos = RobotRun.convertNativeToWorld(pos);
-			 
-			 // Fill the default position and orientation fields in the edit window
-			 getTextField("XDef").setText( Float.toString(pos.x) );
-			 getTextField("YDef").setText( Float.toString(pos.y) );
-			 getTextField("ZDef").setText( Float.toString(pos.z) );
-			 getTextField("WDef").setText( Float.toString(-wpr.x) );
-			 getTextField("PDef").setText( Float.toString(-wpr.z) );
-			 getTextField("RDef").setText( Float.toString(wpr.y) );
-		 }
-	 }
 	
 	/**
 	 * Deal with value changes in certain controllers.
@@ -880,16 +819,8 @@ public class WindowManager implements ControlListener {
 						getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.SCALE)) );
 					}
 					
-					// Initialize the position and orientation fields
-					PVector position = RobotRun.convertNativeToWorld(selected.getLocalCenter());
-					PVector wpr =  RobotRun.matrixToEuler(selected.getLocalOrientationAxes()).mult(RobotRun.RAD_TO_DEG);
-					
-					getTextField("XCur").setText( String.format("%4.3f", position.x) );
-					getTextField("YCur").setText( String.format("%4.3f", position.y) );
-					getTextField("ZCur").setText( String.format("%4.3f", position.z) );
-					getTextField("WCur").setText( String.format("%4.3f", -wpr.x) );
-					getTextField("PCur").setText( String.format("%4.3f", -wpr.z) );
-					getTextField("RCur").setText( String.format("%4.3f", wpr.y) );
+					fillCurWithCur();
+					fillDefWithDef();
 					
 					// Initialize the reference dropdown
 					MyDropdownList ddl = getDropdown("Fixture");
@@ -910,6 +841,22 @@ public class WindowManager implements ControlListener {
 					}
 					
 				 }
+				
+			 } else if (arg0.isFrom(getDropdown("Fixture"))) {
+				WorldObject selected = getActiveWorldObject();
+				
+				if (selected instanceof Part) {
+					// Set the reference of the Part to the currently active fixture
+					Part p = (Part)selected;
+					Fixture refFixture = (Fixture)getDropdown("Fixture").getSelectedItem();
+					
+					if (p.getFixtureRef() != refFixture) {
+						/* Save the previous version of the world object on the
+						 * undo stack */
+						app.updateScenarioUndo( (WorldObject)p.clone() );
+						p.setFixtureRef(refFixture);
+					}
+				}
 			 }
 			 
 			 if (arg0.isFrom( getDropdown("Object") ) || arg0.isFrom( getDropdown("Shape") )) {
@@ -1135,213 +1082,112 @@ public class WindowManager implements ControlListener {
 
 		 if (app.activeScenario != null) {
 			 ret = app.activeScenario.removeWorldObject( getActiveWorldObject() );
+			 clearAllInputFields();
 		 }
 
 		 return ret;
 	 }
-
+	 
 	 /**
-	  * Eit the position and orientation (as well as the fixture reference for Parts)
-	  * of the currently selected World Object in the Object dropdown list.
+	  * Puts the current position and orientation values of the selected object,
+	  * in the edit window, into the position and orientaiton input fields.
 	  */
-	 public void editWorldObject() {
-		 WorldObject toEdit = getActiveWorldObject();
-		 RoboticArm model = RobotRun.getActiveRobot();
+	 private void fillCurWithCur() {
+		 WorldObject active = getActiveWorldObject();
+		 // Get the part's default position and orientation
+		 PVector pos = active.getLocalCenter();
+		 PVector wpr = RobotRun.matrixToEuler( active.getLocalOrientationAxes() )
+				 			   .mult(RobotRun.RAD_TO_DEG);
 		 
-		 if (toEdit != null) {
+		 pos = RobotRun.convertNativeToWorld(pos);
+		 
+		 // Fill the current position and orientation fields in the edit window
+		 getTextField("XCur").setText( String.format("%4.3f", pos.x) );
+		 getTextField("YCur").setText( String.format("%4.3f", pos.y) );
+		 getTextField("ZCur").setText( String.format("%4.3f", pos.z) );
+		 getTextField("WCur").setText( String.format("%4.3f", -wpr.x) );
+		 getTextField("PCur").setText( String.format("%4.3f", -wpr.z) );
+		 getTextField("RCur").setText( String.format("%4.3f", wpr.y) );
+	 }
+	 
+	 /**
+	  * Puts the default position and orientation values of the selected object,
+	  * in the edit window, into the current position and orientation input
+	  * fields.
+	  */
+	 public void fillCurWithDef() {
+		 WorldObject active = getActiveWorldObject();
+		 
+		 if (active instanceof Part) {
+			 Part p = (Part)active;
+			 // Get the part's current position and orientation
+			 PVector pos = p.getDefaultCenter();
+			 PVector wpr = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
+					 			   .mult(RobotRun.RAD_TO_DEG);
 			 
-			 if (model != null && toEdit == model.held) {
-				 // Cannot edit an object being held by the Robot
-				 RobotRun.println("Cannot edit an object currently being held by the Robot!");
-				 return;
-			 }
-
-			 try {
-				 boolean dimChanged = false, edited = false;
-				 WorldObject objSaveState = (WorldObject)toEdit.clone();
-				 Shape s = toEdit.getForm();
-
-				 if (s instanceof Box) {
-					 Float[] newDims = getBoxDimensions();
-
-					 if (newDims[0] != null) {
-						 // Update the box's length
-						 s.setDim(newDims[0], DimType.LENGTH);
-						 dimChanged = true;
-					 }
-
-					 if (newDims[1] != null) {
-						 // Update the box's height
-						 s.setDim(newDims[1], DimType.HEIGHT);
-						 dimChanged = true;
-					 }
-
-					 if (newDims[2] != null) {
-						 // Update the box's width
-						 s.setDim(newDims[2], DimType.WIDTH);
-						 dimChanged = true;
-					 }
-
-				 } else if (s instanceof Cylinder) {
-					 Float[] newDims = getCylinderDimensions();
-
-					 if (newDims[0] != null) {
-						 // Update the cylinder's radius
-						 s.setDim(newDims[0], DimType.RADIUS);
-						 dimChanged = true;
-					 }
-
-					 if (newDims[1] != null) {
-						 // Update the cylinder's height
-						 s.setDim(newDims[1], DimType.HEIGHT);
-						 dimChanged = true;
-					 }
-
-				 } else if (s instanceof ModelShape) {
-					 Float[] newDims = getModelDimensions();
-
-					 if (newDims[0] != null) {
-						 // Update the model's scale value
-						 s.setDim(newDims[0], DimType.SCALE);
-						 dimChanged = true;
-					 }
-				 }
-
-				 if (dimChanged && toEdit instanceof Part) {
-					 // Update the bounding box dimensions of a part
-					 ((Part)toEdit).updateOBBDims();
-				 }
-				 
-				 edited = dimChanged;
-
-				 // Convert origin position into the World Frame
-				 PVector oPosition = RobotRun.convertNativeToWorld( toEdit.getLocalCenter() ),
-						 oWPR = RobotRun.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RobotRun.RAD_TO_DEG);
-				 Float[] inputValues = getOrientationValues();
-				 // Update position and orientation
-				 if (inputValues[0] != null) {
-					 oPosition.x = inputValues[0];
-					 edited = true;
-				 }
-				 
-				 if (inputValues[1] != null) {
-					 oPosition.y = inputValues[1];
-					 edited = true;
-				 }
-				 
-				 if (inputValues[2] != null) {
-					 oPosition.z = inputValues[2];
-					 edited = true;
-				 }
-				 
-				 if (inputValues[3] != null) {
-					 oWPR.x = -inputValues[3];
-					 edited = true;
-				 }
-				 
-				 if (inputValues[5] != null) {
-					 oWPR.y = -inputValues[5];
-					 edited = true;
-				 }
-				 
-				 if (inputValues[4] != null) {
-					 oWPR.z = inputValues[4];
-					 edited = true;
-				 }
-
-				 // Convert values from the World to the Native coordinate system
-				 PVector position = RobotRun.convertWorldToNative( oPosition );
-				 PVector wpr = oWPR.mult(RobotRun.DEG_TO_RAD);
-				 float[][] orientation = RobotRun.eulerToMatrix(wpr);
-				 // Update the Objects position and orientaion
-				 toEdit.setLocalCenter(position);
-				 toEdit.setLocalOrientationAxes(orientation);
-
-				 if (toEdit instanceof Part) {
-					Part p = (Part)toEdit;
-					PVector defaultPos = RobotRun.convertNativeToWorld( p.getDefaultCenter() );
-					PVector defaultWPR = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() ).mult(RobotRun.RAD_TO_DEG);
-					
-					// Update default position and orientation
-					 if (inputValues[6] != null) {
-						 defaultPos.x = inputValues[6];
-						 edited = true;
-					 }
-					 
-					 if (inputValues[7] != null) {
-						 defaultPos.y = inputValues[7];
-						 edited = true;
-					 }
-					 
-					 if (inputValues[8] != null) {
-						 defaultPos.z = inputValues[8];
-						 edited = true;
-					 }
-					 
-					 if (inputValues[9] != null) {
-						 defaultWPR.x = -inputValues[9];
-						 edited = true;
-					 }
-					 
-					 if (inputValues[11] != null) {
-						 defaultWPR.y = -inputValues[11];
-						 edited = true;
-					 }
-					 
-					 if (inputValues[10] != null) {
-						 defaultWPR.z = inputValues[10];
-						 edited = true;
-					 }
-
-					 // Convert values from the World to the Native coordinate system
-					 position = RobotRun.convertWorldToNative( defaultPos );
-					 wpr = defaultWPR.mult(RobotRun.DEG_TO_RAD);
-					 orientation = RobotRun.eulerToMatrix(wpr);
-					 // Update the Object's default position and orientation
-					 p.setDefaultCenter(position);
-					 p.setDefaultOrientationAxes(orientation);
-					 
-					 // Set the reference of the Part to the currently active fixture
-					 Fixture refFixture = (Fixture)getDropdown("Fixture").getSelectedItem();
-					 
-					 if (p.getFixtureRef() != refFixture) {
-						 p.setFixtureRef(refFixture);
-						 edited = true;
-					 }
-				 }
-				 
-				 if (edited) {
-					 /* Save the previous version of the world object on the
-					  * undo stack */
-					 app.updateScenarioUndo(objSaveState);
-				 }
-				 
-			 } catch (NullPointerException NPEx) {
-				 RobotRun.println("Missing parameter!");
-				 NPEx.printStackTrace();
-				 return;
-			 }
-		 } else {
-			 RobotRun.println("No object selected!");
+			 pos = RobotRun.convertNativeToWorld(pos);
+			 
+			 // Fill the default position and orientation fields in the edit window
+			 getTextField("XCur").setText( String.format("%4.3f", pos.x) );
+			 getTextField("YCur").setText( String.format("%4.3f", pos.y) );
+			 getTextField("ZCur").setText( String.format("%4.3f", pos.z) );
+			 getTextField("WCur").setText( String.format("%4.3f", -wpr.x) );
+			 getTextField("PCur").setText( String.format("%4.3f", -wpr.z) );
+			 getTextField("RCur").setText( String.format("%4.3f", wpr.y) );
 		 }
-
-		 /* If the edited object is a fixture, then update the orientation
-		  * of all parts, which reference this fixture, in this scenario. */
-		 if (toEdit instanceof Fixture) {
-			 if (app.activeScenario != null) {
-
-				 for (WorldObject wldObj : app.activeScenario) {
-					 if (wldObj instanceof Part) {
-						 Part p = (Part)wldObj;
-
-						 if (p.getFixtureRef() == toEdit) {
-							 p.updateAbsoluteOrientation();
-						 }
-					 }
-				 }
-			 }
+	 }
+	 
+	 /**
+	  * Puts the current position and orientation values of the selected object,
+	  * in the edit window, into the default position and orientation text
+	  * fields.
+	  */
+	 public void fillDefWithCur() {
+		 WorldObject active = getActiveWorldObject();
+		 
+		 if (active instanceof Part) {
+			 // Get the part's default position and orientation
+			 PVector pos = active.getLocalCenter();
+			 PVector wpr = RobotRun.matrixToEuler( active.getLocalOrientationAxes() )
+					 			   .mult(RobotRun.RAD_TO_DEG);
+			 
+			 pos = RobotRun.convertNativeToWorld(pos);
+			 
+			 // Fill the default position and orientation fields in the edit window
+			 getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
+			 getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
+			 getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
+			 getTextArea("WDef").setText( String.format("%4.3f", -wpr.x) );
+			 getTextArea("PDef").setText( String.format("%4.3f", -wpr.z) );
+			 getTextArea("RDef").setText( String.format("%4.3f", wpr.y) );
 		 }
-
+	 }
+	 
+	 /**
+	  * Puts the default position and orientation values of the selected
+	  * object, in the edit window, into the default position and orientation
+	  * text fields.
+	  */
+	 private void fillDefWithDef() {
+		 WorldObject active = getActiveWorldObject();
+		 
+		 if (active instanceof Part) {
+			 Part p = (Part)active;
+			 // Get the part's current position and orientation
+			 PVector pos = p.getDefaultCenter();
+			 PVector wpr = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
+					 			   .mult(RobotRun.RAD_TO_DEG);
+			 
+			 pos = RobotRun.convertNativeToWorld(pos);
+			 
+			 // Fill the default position and orientation fields in the edit window
+			 getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
+			 getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
+			 getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
+			 getTextArea("WDef").setText( String.format("%4.3f", -wpr.x) );
+			 getTextArea("PDef").setText( String.format("%4.3f", -wpr.z) );
+			 getTextArea("RDef").setText( String.format("%4.3f", wpr.y) );
+		 }
 	 }
 	 
 	 /**
@@ -1605,22 +1451,60 @@ public class WindowManager implements ControlListener {
 
 	 /**
 	  * TODO
+	  * 
+	  * @return
 	  */
-	 private Float[] getOrientationValues() {
+	 private Float[] getCurrentValues() {
 		 try {
 			 // Pull from x, y, z, w, p, r, fields input fields
 			 String[] orienVals = new String[] {
 					getTextField("XCur").getText(), getTextField("YCur").getText(),
 					getTextField("ZCur").getText(), getTextField("WCur").getText(),
-					getTextField("PCur").getText(), getTextField("RCur").getText(),
-					getTextField("XDef").getText(), getTextField("YDef").getText(),
-					getTextField("ZDef").getText(), getTextField("WDef").getText(),
-					getTextField("PDef").getText(), getTextField("RDef").getText()
+					getTextField("PCur").getText(), getTextField("RCur").getText()
 			 };
 			 
 			 // NaN indicates an uninitialized field
 			 Float[] values = new Float[] { null, null, null, null, null, null,
 					 						null, null, null, null, null, null };
+			 
+			 for (int valIdx = 0; valIdx < orienVals.length; ++valIdx) {
+				// Update the orientation value
+				 if (orienVals[valIdx] != null && !orienVals[valIdx].equals("")) {
+					 float val = Float.parseFloat(orienVals[valIdx]);
+					 // Bring value within the range [-9999, 9999]
+					 val = RobotRun.max(-9999f, RobotRun.min(val, 9999f));
+					 values[valIdx] = val;
+				 }
+			 }
+
+			 return values;
+
+		 } catch (NumberFormatException NFEx) {
+			 RobotRun.println("Invalid number input!");
+			 return null;
+
+		 } catch (NullPointerException NPEx) {
+			 RobotRun.println("Missing parameter!");
+			 return null;
+		 }
+	 }
+	 
+	 /**
+	  * TODO
+	  * 
+	  * @return
+	  */
+	 private Float[] getDefaultValues() {
+		 try {
+			 // Pull from x, y, z, w, p, r, fields input fields
+			 String[] orienVals = new String[] {
+					getTextArea("XDef").getText(), getTextArea("YDef").getText(),
+					getTextArea("ZDef").getText(), getTextArea("WDef").getText(),
+					getTextArea("PDef").getText(), getTextArea("RDef").getText()
+			 };
+			 
+			 // NaN indicates an uninitialized field
+			 Float[] values = new Float[] { null, null, null, null, null, null };
 			 
 			 for (int valIdx = 0; valIdx < orienVals.length; ++valIdx) {
 				// Update the orientation value
@@ -2071,6 +1955,7 @@ public class WindowManager implements ControlListener {
 	  */
 	 private void updateEditWindowContentPositions() {
 		 updateDimLblsAndFields();
+		 getButton("ClearFields").hide();
 
 		 // Object list dropdown and label
 		 int[] relPos = new int[] { offsetX, offsetX };
@@ -2093,23 +1978,9 @@ public class WindowManager implements ControlListener {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
 			 getTextArea("Default").setPosition(relPos[0], relPos[1]).show();
 			 
-			 // Auto fill buttons row
-			 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-			 c = getTextArea("AFLbl").setPosition(relPos[0], relPos[1]).show();
-			 
-			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-			 c0 = getButton("DefIntoCur").setPosition(relPos[0], relPos[1]).show();
-			 
-			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX +
-					 fieldWidth - mButtonWidth, 0);
-			 c0 = getButton("CurIntoDef").setPosition(relPos[0], relPos[1]).show();
-			 
 		 } else {
 			 // Only show them for parts
 			 getTextArea("Default").hide();
-			 getTextArea("AFLbl").hide();
-			 getButton("DefIntoCur").hide();
-			 getButton("CurIntoDef").hide();
 		 }
 		 
 		 // X label and fields
@@ -2121,10 +1992,10 @@ public class WindowManager implements ControlListener {
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("XDef").setPosition(relPos[0], relPos[1]).show();
+			 getTextArea("XDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("XDef").hide();
+			 getTextArea("XDef").hide();
 		 }
 		 
 		 // Y label and fields
@@ -2136,10 +2007,10 @@ public class WindowManager implements ControlListener {
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("YDef").setPosition(relPos[0], relPos[1]).show();
+			 getTextArea("YDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("YDef").hide();
+			 getTextArea("YDef").hide();
 		 }
 		 
 		 // Z label and fields
@@ -2151,10 +2022,10 @@ public class WindowManager implements ControlListener {
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("ZDef").setPosition(relPos[0], relPos[1]).show();
+			 getTextArea("ZDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("ZDef").hide();
+			 getTextArea("ZDef").hide();
 		 }
 		 
 		 // W label and fields
@@ -2166,10 +2037,10 @@ public class WindowManager implements ControlListener {
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("WDef").setPosition(relPos[0], relPos[1]).show();
+			 getTextArea("WDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("WDef").hide();
+			 getTextArea("WDef").hide();
 		 }
 		 
 		 // P label and fields
@@ -2181,10 +2052,10 @@ public class WindowManager implements ControlListener {
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("PDef").setPosition(relPos[0], relPos[1]).show();
+			 getTextArea("PDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("PDef").hide();
+			 getTextArea("PDef").hide();
 		 }
 		 
 		 // R label and fields
@@ -2195,33 +2066,46 @@ public class WindowManager implements ControlListener {
 		 c0 = getTextField("RCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
-			/* Default orientation and fixture references are only relevant for
-			 * fixtures */
 			relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			getTextField("RDef").setPosition(relPos[0], relPos[1]).show();
-			
-			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
-			
-			relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX,
-					RobotRun.abs(fieldHeight - dropItemHeight) / 2);
-			getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
+			getTextArea("RDef").setPosition(relPos[0], relPos[1]).show();
 			
 		 } else {
-			getTextField("RDef").hide();
+			getTextArea("RDef").hide();
+		 }
+		 
+		 // Move to current button
+		 relPos = relativePosition(c0, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 c = getButton("MoveToCur").setPosition(relPos[0], relPos[1]);
+		 
+		 if (isPart) {
+			 /* Default values and fixture references are only relevant for parts */
+			 
+			 // Update default button
+			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+			 getButton("UpdateWODef").setPosition(relPos[0], relPos[1]).show();
+			
+			 // Move to default button
+			 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			 c0 = getButton("MoveToDef").setPosition(relPos[0], relPos[1]).show();
+			 
+			 relPos =  new int[] { offsetX, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
+			 c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
+			
+			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX,
+					RobotRun.abs(fieldHeight - dropItemHeight) / 2);
+			 getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
+			
+		 } else {
+			getButton("UpdateWODef").hide();
+			getButton("MoveToDef").hide();
 			getTextArea("RefLbl").hide();
 			getDropdown("Fixture").hide();
 		 }
 		 
-		 // Confirm button
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getButton("UpdateWldObj").setPosition(relPos[0], relPos[1]);
-		 // Clear button
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-		 c = getButton("ClearFields").setPosition(relPos[0], relPos[1]);
 		 // Delete button
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getButton("DeleteWldObj").setPosition(relPos[0], relPos[1]);
+		 
 		 // Update window background display
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 background.setBackgroundHeight(relPos[1])
@@ -2512,6 +2396,223 @@ public class WindowManager implements ControlListener {
 				 updateListContents();
 				 resetListLabels();
 			 }
+		 }
+	 }
+	 
+	 /**
+	  * Updates the dimensions as well as the current position and orientation
+	  * of a world object.
+	  */
+	 public void updateWOCurrent() {
+		 WorldObject toEdit = getActiveWorldObject();
+		 RoboticArm model = RobotRun.getActiveRobot();
+		 
+		 if (toEdit != null) {
+			 
+			 if (model != null && toEdit == model.held) {
+				 // Cannot edit an object being held by the Robot
+				 RobotRun.println("Cannot edit an object currently being held by the Robot!");
+				 return;
+			 }
+
+			 try {
+				 boolean dimChanged = false, edited = false;
+				 WorldObject objSaveState = (WorldObject)toEdit.clone();
+				 Shape s = toEdit.getForm();
+
+				 if (s instanceof Box) {
+					 Float[] newDims = getBoxDimensions();
+
+					 if (newDims[0] != null) {
+						 // Update the box's length
+						 s.setDim(newDims[0], DimType.LENGTH);
+						 dimChanged = true;
+					 }
+
+					 if (newDims[1] != null) {
+						 // Update the box's height
+						 s.setDim(newDims[1], DimType.HEIGHT);
+						 dimChanged = true;
+					 }
+
+					 if (newDims[2] != null) {
+						 // Update the box's width
+						 s.setDim(newDims[2], DimType.WIDTH);
+						 dimChanged = true;
+					 }
+
+				 } else if (s instanceof Cylinder) {
+					 Float[] newDims = getCylinderDimensions();
+
+					 if (newDims[0] != null) {
+						 // Update the cylinder's radius
+						 s.setDim(newDims[0], DimType.RADIUS);
+						 dimChanged = true;
+					 }
+
+					 if (newDims[1] != null) {
+						 // Update the cylinder's height
+						 s.setDim(newDims[1], DimType.HEIGHT);
+						 dimChanged = true;
+					 }
+
+				 } else if (s instanceof ModelShape) {
+					 Float[] newDims = getModelDimensions();
+
+					 if (newDims[0] != null) {
+						 // Update the model's scale value
+						 s.setDim(newDims[0], DimType.SCALE);
+						 dimChanged = true;
+					 }
+				 }
+
+				 if (dimChanged && toEdit instanceof Part) {
+					 // Update the bounding box dimensions of a part
+					 ((Part)toEdit).updateOBBDims();
+				 }
+				 
+				 edited = dimChanged;
+
+				 // Convert origin position into the World Frame
+				 PVector oPosition = RobotRun.convertNativeToWorld( toEdit.getLocalCenter() ),
+						 oWPR = RobotRun.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RobotRun.RAD_TO_DEG);
+				 Float[] inputValues = getCurrentValues();
+				 // Update position and orientation
+				 if (inputValues[0] != null) {
+					 oPosition.x = inputValues[0];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[1] != null) {
+					 oPosition.y = inputValues[1];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[2] != null) {
+					 oPosition.z = inputValues[2];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[3] != null) {
+					 oWPR.x = -inputValues[3];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[5] != null) {
+					 oWPR.y = -inputValues[5];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[4] != null) {
+					 oWPR.z = inputValues[4];
+					 edited = true;
+				 }
+
+				 // Convert values from the World to the Native coordinate system
+				 PVector position = RobotRun.convertWorldToNative( oPosition );
+				 PVector wpr = oWPR.mult(RobotRun.DEG_TO_RAD);
+				 float[][] orientation = RobotRun.eulerToMatrix(wpr);
+				 // Update the Objects position and orientaion
+				 toEdit.setLocalCenter(position);
+				 toEdit.setLocalOrientationAxes(orientation);
+				 
+				 if (edited) {
+					 /* Save the previous version of the world object on the
+					  * undo stack */
+					 app.updateScenarioUndo(objSaveState);
+				 }
+				 
+			 } catch (NullPointerException NPEx) {
+				 RobotRun.println("Missing parameter!");
+				 NPEx.printStackTrace();
+				 return;
+			 }
+			 
+		 } else {
+			 RobotRun.println("No object selected!");
+		 }
+
+		 /* If the edited object is a fixture, then update the orientation
+		  * of all parts, which reference this fixture, in this scenario. */
+		 if (toEdit instanceof Fixture) {
+			 if (app.activeScenario != null) {
+
+				 for (WorldObject wldObj : app.activeScenario) {
+					 if (wldObj instanceof Part) {
+						 Part p = (Part)wldObj;
+
+						 if (p.getFixtureRef() == toEdit) {
+							 p.updateAbsoluteOrientation();
+						 }
+					 }
+				 }
+			 }
+		 }
+
+	 }
+	 
+	 /**
+	  * Updates the default position and orientation values of a part based on
+	  * the input fields in the edit window.
+	  */
+	 public void updateWODefault() {
+		 WorldObject toEdit = getActiveWorldObject();
+		 WorldObject savedState = (WorldObject)toEdit.clone();
+		 
+		 if (toEdit instanceof Part) {
+			Part p = (Part)toEdit;
+			PVector defaultPos = RobotRun.convertNativeToWorld( p.getDefaultCenter() );
+			PVector defaultWPR = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
+										 .mult(RobotRun.RAD_TO_DEG);
+			Float[] inputValues = getCurrentValues();
+			boolean edited = false;
+			
+			// Update default position and orientation
+			 if (inputValues[0] != null) {
+				 defaultPos.x = inputValues[0];
+				 edited = true;
+			 }
+			 
+			 if (inputValues[1] != null) {
+				 defaultPos.y = inputValues[1];
+				 edited = true;
+			 }
+			 
+			 if (inputValues[2] != null) {
+				 defaultPos.z = inputValues[2];
+				 edited = true;
+			 }
+			 
+			 if (inputValues[3] != null) {
+				 defaultWPR.x = -inputValues[3];
+				 edited = true;
+			 }
+			 
+			 if (inputValues[4] != null) {
+				 defaultWPR.y = -inputValues[4];
+				 edited = true;
+			 }
+			 
+			 if (inputValues[5] != null) {
+				 defaultWPR.z = inputValues[5];
+				 edited = true;
+			 }
+
+			 // Convert values from the World to the Native coordinate system
+			 PVector position = RobotRun.convertWorldToNative( defaultPos );
+			 PVector wpr = defaultWPR.mult(RobotRun.DEG_TO_RAD);
+			 float[][] orientation = RobotRun.eulerToMatrix(wpr);
+			 // Update the Object's default position and orientation
+			 p.setDefaultCenter(position);
+			 p.setDefaultOrientationAxes(orientation);
+			 
+			 if (edited) {
+				 /* Save the previous version of the world object on the
+				  * undo stack */
+				 app.updateScenarioUndo(savedState);
+			 }
+			 
+			 fillDefWithDef();
 		 }
 	 }
 }

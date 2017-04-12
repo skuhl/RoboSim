@@ -2059,29 +2059,11 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-	
-	/**
-	 * In the object edit window, fill the default position and orientation
-	 * inputs fields with the values of the active part's current position
-	 * and orientation.
-	 */
-	public void CurIntoDef() {
-		getManager().autoFillDefFields();
-	}
 
 	// Data button
 	public void da() {
 		resetStack();
 		nextScreen(ScreenMode.NAV_DATA);
-	}
-	
-	/**
-	 * In the object edit window, fill the current position and orientation
-	 * inputs fields with the values of the active part's default position
-	 * and orientation.
-	 */
-	public void DefIntoCur() {
-		getManager().autoFillCurFields();
 	}
 
 	public void DeleteWldObj() {
@@ -7289,6 +7271,31 @@ public class RobotRun extends PApplet {
 			camera.changeScale(0.95f);
 		}
 	}
+	
+	/**
+	 * Updates the current position and orientation of a selected object to the
+	 * inputed values in the edit window.
+	 */
+	public void MoveToCur() {
+		// Only allow world object editing when no program is executing
+		if (!isProgramRunning()) {
+			getManager().updateWOCurrent();
+			DataManagement.saveScenarios(this);
+		}
+	}
+	
+	/**
+	 * Updates the current position and orientation of a selected world object
+	 * to that of its default fields.
+	 */
+	public void MoveToDef() {
+		// Only allow world object editing when no program is executing
+		if (!isProgramRunning()) {
+			getManager().fillCurWithDef();
+			getManager().updateWOCurrent();
+			DataManagement.saveScenarios(this);
+		}
+	}
 
 	// Menu button
 	public void mu() {
@@ -8487,18 +8494,13 @@ public class RobotRun extends PApplet {
 		
 		scenarioUndo.push(saveState);
 	}
-
+	
 	/**
-	 * Confirm changes made to the orientation and position of the selected
-	 * world object.
+	 * Updates the default position and orientation of a world object based on
+	 * the input fields in the edit window.
 	 */
-	public void UpdateWldObj() {
-		
-		// Only allow world object editing when no program is executing
-		if (!isProgramRunning()) {
-			getManager().editWorldObject();
-			DataManagement.saveScenarios(this);
-		}
+	public void UpdateWODef() {
+		getManager().updateWODefault();
 	}
 
 	/**
