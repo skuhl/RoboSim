@@ -1,5 +1,6 @@
 package ui;
 import processing.core.PVector;
+import robot.RQuaternion;
 import robot.RobotRun;
 
 /**
@@ -17,7 +18,7 @@ public class Camera {
 	 * Creates a camera with the default position, orientation and scale.
 	 */
 	public Camera() {
-		position = new PVector(0f, 0f, -500f);
+		position = new PVector(0f, 0f, 0f);
 		orientation = new PVector(0f, 0f, 0f);
 		scale = 2f;
 	}
@@ -25,27 +26,20 @@ public class Camera {
 	/**
 	 * Apply the camer's scale, position, and orientation to the current matrix.
 	 */
-	public void apply() {
-		RobotRun app = RobotRun.getInstance();
+	public void apply(RobotRun app) {
+		PVector screenPos = new PVector(position.x + app.width / 2f, position.y + app.height / 2f, position.z);
 		
-		app.beginCamera();
-		app.camera();
-		
-		// Apply camera translations
-		app.translate(position.x + app.width / 2f, position.y + app.height / 2f, position.z);
-
-		// Apply camera rotations
-		app.rotateX(orientation.x);
-		app.rotateY(orientation.y);
-
-		// Apply camera scaling
 		float horizontalMargin = scale * app.width / 2f,
 				verticalMargin = scale * app.height / 2f,
-				near = scale * position.z,
+				near = scale * screenPos.z,
 				far = scale * 5000f;
-		app.ortho(-horizontalMargin, horizontalMargin, -verticalMargin, verticalMargin, near, far);
 		
-		app.endCamera();
+		// Apply orthogonal camera view
+		app.ortho(screenPos.x - horizontalMargin, screenPos.x + horizontalMargin,
+				screenPos.y - verticalMargin, screenPos.y + verticalMargin, near, far);
+		
+		app.rotateX(orientation.x);
+		app.rotateY(orientation.y);
 	}
 
 	/**
@@ -79,8 +73,8 @@ public class Camera {
 	 * Change the camera's position by the given values.
 	 */
 	public void move(float x, float y, float z) {
-		float horzontialLimit = MAX_SCALE * RobotRun.getInstance().width / 3f,
-				verticalLimit = MAX_SCALE * RobotRun.getInstance().height / 3f;
+		float horzontialLimit = MAX_SCALE * 9999f,
+				verticalLimit = MAX_SCALE * 9999f;
 
 		position.add( new PVector(x, y, z) );
 		// Apply camera position restrictions
@@ -94,9 +88,9 @@ public class Camera {
 	 * default position, orientation and scale.
 	 */
 	public void reset() {
-		position.x = 0;
-		position.y = 0;
-		position.z = -500f;
+		position.x = 0f;
+		position.y = 0f;
+		position.z = 0f;
 		orientation.x = 0f;
 		orientation.y = 0f;
 		orientation.z = 0f;

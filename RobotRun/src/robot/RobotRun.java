@@ -2359,7 +2359,7 @@ public class RobotRun extends PApplet {
 		noFill();
 
 		pushMatrix();
-		camera.apply();
+		camera.apply(this);
 		
 		updateAndDrawObjects(activeScenario, getActiveRobot());
 		
@@ -7247,7 +7247,7 @@ public class RobotRun extends PApplet {
 		if (mouseButton == CENTER) {
 			// Drag the center mouse button to pan the camera
 			float transScale = camera.getScale();
-			camera.move(transScale * (mouseX - pmouseX), transScale * (mouseY - pmouseY), 0);
+			camera.move(transScale * (pmouseX - mouseX), transScale * (mouseY - pmouseY), 0);
 		}
 
 		if (mouseButton == RIGHT) {
