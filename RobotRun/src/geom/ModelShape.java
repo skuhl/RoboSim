@@ -7,6 +7,7 @@ import robot.RobotRun;
  * A complex shape formed from a .stl source file.
  */
 public class ModelShape extends Shape {
+	private RobotRun app;
 	private PShape form;
 	private PVector centerOffset, baseDims;
 	private float scale;
@@ -20,12 +21,13 @@ public class ModelShape extends Shape {
 	 * @throws NullPointerException  if the given filename is
 	 *         not a valid .stl file in RobotRun/data/
 	 */
-	public ModelShape(String filename, int fill) throws NullPointerException {
+	public ModelShape(String filename, int fill, RobotRun app) throws NullPointerException {
 		super(fill, null);
+		this.app = app;
 		srcFilePath = filename;
 		scale = 1f;
 
-		form = RobotRun.getInstance().loadSTLModel(filename, fill);
+		form = app.loadSTLModel(filename, fill);
 		iniDimensions();
 	}
 
@@ -37,21 +39,28 @@ public class ModelShape extends Shape {
 	 * @throws NullPointerException  if the given filename is
 	 *         not a valid .stl file in RobotRun/data/
 	 */
-	public ModelShape(String filename, int fill, float scale) throws NullPointerException {
+	public ModelShape(String filename, int fill, float scale, RobotRun app) throws NullPointerException {
 		super(fill, null);
+		this.app = app;
 		srcFilePath = filename;
 		this.scale = 1f;
 
-		form = RobotRun.getInstance().loadSTLModel(filename, fill);
+		form = app.loadSTLModel(filename, fill);
 		iniDimensions();
 
 		setDim(scale, DimType.SCALE);
 	}
-
+	
 	@Override
 	public Object clone() {
-		// Created from source file
-		return new ModelShape(srcFilePath, getFillValue(), scale);
+		try {
+			// Created from source file
+			return new ModelShape(srcFilePath, getFillValue(), scale, app);
+		
+		} catch (NullPointerException NPEx) {
+			// Invalid source file
+			return null;
+		}
 	}
 
 	public void draw() {

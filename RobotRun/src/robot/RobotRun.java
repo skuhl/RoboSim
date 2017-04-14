@@ -86,7 +86,6 @@ public class RobotRun extends PApplet {
 	}
 	
 	public static PFont fnt_con14;
-	
 	public static PFont fnt_con12;
 	public static PFont fnt_conB;
 	
@@ -950,7 +949,7 @@ public class RobotRun extends PApplet {
 	public Group g1, g2;
 	Button bt_record_normal, 
 	bt_ee_normal;
-	String workingText; // when entering text or a number
+	StringBuilder workingText; // when entering text or a number
 
 	String workingTextSuffix;
 	boolean speedInPercentage;
@@ -1034,11 +1033,11 @@ public class RobotRun extends PApplet {
 	public void addNumber(String number) {
 		if(mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
 			if (workingText.length() < NUM_ENTRY_LEN) {
-				workingText += number;
+				workingText.append(number);
 			}
 		}
 		else if(mode == ScreenMode.SET_MV_INSTR_SPD) {
-			workingText += number;
+			workingText.append(number);
 			options.set(1, workingText + workingTextSuffix);
 		}
 		else if(mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
@@ -1056,9 +1055,7 @@ public class RobotRun extends PApplet {
 		}
 		else if(mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 			// Replace current entry with a number
-			StringBuilder temp = new StringBuilder(workingText);
-			temp.setCharAt(contents.getColumnIdx(), number.charAt(0));
-			workingText = temp.toString();
+			workingText.setCharAt(contents.getColumnIdx(), number.charAt(0));
 		}
 
 		updateScreen();
@@ -1179,7 +1176,7 @@ public class RobotRun extends PApplet {
 			break;  
 		case ACTIVE_FRAMES:
 			updateActiveFramesDisplay();
-			workingText = Integer.toString(getActiveRobot().getActiveUserFrame() + 1);
+			workingText = new StringBuilder( getActiveRobot().getActiveUserFrame() + 1 );
 			contents.setLineIdx(min(contents.getLineIdx() + 1, contents.size() - 1));
 			break;
 		default:
@@ -1237,26 +1234,26 @@ public class RobotRun extends PApplet {
 
 				if(isShift()) {
 					// Delete key function
-					if(workingText.length() > 1) {
-						workingText = workingText.substring(1, workingText.length());
-						contents.setColumnIdx(min(contents.getColumnIdx(), workingText.length() - 1));
-					}  else {
-						workingText = "\0";
+					if(workingText.length() >= 1) {
+						workingText.deleteCharAt( contents.getColumnIdx() );
+						contents.setColumnIdx(Math.max(0, Math.min(contents.getColumnIdx(), workingText.length() - 1)));
 					}
-
-					contents.setColumnIdx(max(0, min(contents.getColumnIdx(), contents.get(contents.getLineIdx()).size() - 1)));
+					
 				} else if (mode.getType() == ScreenType.TYPE_EXPR_EDIT) {
 					contents.setColumnIdx(contents.getColumnIdx() + ((contents.getColumnIdx() + 4 < options.size()) ? 4 : 0));
+					
 				} else {
 					// Add an insert element if the length of the current comment is less than 16
 					int len = workingText.length();
-					if(len <= TEXT_ENTRY_LEN && contents.getColumnIdx() == workingText.length() - 1 && workingText.charAt(len - 1) != '\0') {
-						workingText += '\0';
+					if(len <= TEXT_ENTRY_LEN && contents.getColumnIdx() == workingText.length() - 1 &&
+							(workingText.length() == 0 || workingText.charAt(len - 1) != '\0')) {
+						
+						workingText.append('\0');
 						// Update contents to the new string
 						updateScreen();
 					}
 
-					contents.setColumnIdx(min(contents.getColumnIdx() + 1, contents.get(contents.getLineIdx()).size() - 1));
+					contents.setColumnIdx(min(contents.getColumnIdx() + 1, workingText.length() - 1));
 				}
 
 				// Reset function key states
@@ -1381,7 +1378,7 @@ public class RobotRun extends PApplet {
 			break;
 		case ACTIVE_FRAMES:
 			updateActiveFramesDisplay();
-			workingText = Integer.toString(getActiveRobot().getActiveToolFrame() + 1);
+			workingText = new StringBuilder( getActiveRobot().getActiveToolFrame() + 1 );
 			contents.moveUp(false);
 			break;
 		default:
@@ -1476,12 +1473,10 @@ public class RobotRun extends PApplet {
 
 	public void BKSPC() {
 		if(mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
+			
 			// Functions as a backspace key
-			if(workingText.length() > 1) {
-				workingText = workingText.substring(0, workingText.length() - 1);
-			} 
-			else {
-				workingText = "";
+			if(workingText.length() > 0) {
+				workingText.deleteCharAt( workingText.length() - 1 );
 			}
 
 		} else if(mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
@@ -1505,41 +1500,24 @@ public class RobotRun extends PApplet {
 				}
 			}
 		} else if(mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
+			
 			// Delete/Backspace function
-			if(workingText.length() > 1) {
-				int sdx = contents.getColumnIdx();
+			if(workingText.length() >= 1) {
+				int colIdx = contents.getColumnIdx();
 				
-				if (!isShift()) {
-					// Backspace removes previous character
-					--sdx;
-				}
-				
-				if (sdx == workingText.length() - 1 && workingText.charAt(sdx) == '\0') {
-					// Ignore an insert position
-					--sdx;
-				}
-				
-				if (sdx <= 0) {
+				if (colIdx < 1) {
 					// Remove the beginning character
-					workingText = workingText.substring(1);
+					workingText.deleteCharAt(0);
 					
-				} else if (sdx < workingText.length()) {
+				} else if (colIdx < workingText.length()) {
 					// Remove the character
-					workingText = workingText.substring(0, sdx) + workingText.substring(sdx + 1);
-					
-					if (!isShift()) {
-						// Shift position for backspace
-						contents.setColumnIdx( contents.getColumnIdx() - 1 );
-					}
+					workingText.deleteCharAt(colIdx - 1);	
 				}
 				
-				contents.setColumnIdx(min(contents.getColumnIdx(), workingText.length() - 1));
-				
-			} else {
-				workingText = "\0";
+				contents.setColumnIdx( Math.max(0, Math.min(colIdx - 1, workingText.length() - 1)) );
 			}
 
-			for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+			for (int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
 		}
 
 		updateScreen();
@@ -2081,29 +2059,11 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-	
-	/**
-	 * In the object edit window, fill the default position and orientation
-	 * inputs fields with the values of the active part's current position
-	 * and orientation.
-	 */
-	public void CurIntoDef() {
-		getManager().autoFillDefFields();
-	}
 
 	// Data button
 	public void da() {
 		resetStack();
 		nextScreen(ScreenMode.NAV_DATA);
-	}
-	
-	/**
-	 * In the object edit window, fill the current position and orientation
-	 * inputs fields with the values of the active part's default position
-	 * and orientation.
-	 */
-	public void DefIntoCur() {
-		getManager().autoFillCurFields();
 	}
 
 	public void DeleteWldObj() {
@@ -2386,6 +2346,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void draw() {
+		
 		// Apply the camera for drawing objects
 		directionalLight(255, 255, 255, 1, 1, 0);
 		ambientLight(150, 150, 150);
@@ -2544,10 +2505,8 @@ public class RobotRun extends PApplet {
 			// Use uppercase character
 			newChar = (char)(newChar - 32);
 		}
-
-		StringBuilder temp = new StringBuilder(workingText);
-		temp.setCharAt(contents.getColumnIdx(), newChar);
-		workingText = temp.toString();
+		
+		workingText.setCharAt(contents.getColumnIdx(), newChar);
 
 		// Update current letter state
 		letterStates[fIdx] = (letterStates[fIdx] + 1) % 6;
@@ -2697,13 +2656,13 @@ public class RobotRun extends PApplet {
 
 			//Program nav and edit
 		case PROG_CREATE:
-			if(!workingText.equals("\0")) {
+			if(workingText.length() > 0 && !workingText.equals("\0")) {
 				if (workingText.charAt(workingText.length() - 1) == '\0') {
 					// Remove insert character
-					workingText = workingText.substring(0, workingText.length() - 1);
+					workingText.deleteCharAt(workingText.length() - 1);
 				}
 
-				int new_prog = getActiveRobot().addProgram(new Program(workingText, activeRobot));
+				int new_prog = getActiveRobot().addProgram(new Program(workingText.toString(), activeRobot));
 				getActiveRobot().setActiveProgIdx(new_prog);
 				getActiveRobot().setActiveInstIdx(0);
 				contents.reset();
@@ -2713,16 +2672,16 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case PROG_RENAME:
-			if(!workingText.equals("\0")) {
+			if(workingText.length() > 0 && !workingText.equals("\0")) {
 				if (workingText.charAt(workingText.length() - 1) == '\0') {
 					// Remove insert character
-					workingText = workingText.substring(0, workingText.length() - 1);
+					workingText.deleteCharAt(workingText.length() - 1);
 				}
 				// Rename the active program
 				Program prog = getActiveRobot().getActiveProg();
 				
 				if (prog != null) {
-					prog.setName(workingText);
+					prog.setName(workingText.toString());
 					getActiveRobot().setActiveInstIdx(0);
 					DataManagement.saveRobotData(activeRobot, 1);
 				}
@@ -2733,17 +2692,17 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case PROG_COPY:
-			if(!workingText.equals("\0")) {
+			if(workingText.length() > 0 && !workingText.equals("\0")) {
 				if (workingText.charAt(workingText.length() - 1) == '\0') {
 					// Remove insert character
-					workingText = workingText.substring(0, workingText.length() - 1);
+					workingText.deleteCharAt(workingText.length() - 1);
 				}
 
 				Program prog = getActiveRobot().getActiveProg();
 				
 				if (prog != null) {
 					Program newProg = prog.clone();
-					newProg.setName(workingText);
+					newProg.setName(workingText.toString());
 					int new_prog = getActiveRobot().addProgram(newProg);
 					getActiveRobot().setActiveProgIdx(new_prog);
 					getActiveRobot().setActiveInstIdx(0);
@@ -2920,7 +2879,7 @@ public class RobotRun extends PApplet {
 			line = getSelectedLine();
 			m = line == 0 ? m : m.getSecondaryPoint();
 
-			float tempSpeed = Float.parseFloat(workingText);
+			float tempSpeed = Float.parseFloat(workingText.toString());
 			if(tempSpeed >= 5.0f) {
 				if(speedInPercentage) {
 					if(tempSpeed > 100) tempSpeed = 10; 
@@ -2936,7 +2895,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_MV_INSTR_IDX:
 			try {
-				int tempRegister = Integer.parseInt(workingText);
+				int tempRegister = Integer.parseInt(workingText.toString());
 				int lbound = 1, ubound;
 
 				if (m.usesGPosReg()) {
@@ -2963,7 +2922,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_MV_INSTR_TERM:
 			try {
-				int tempTerm = Integer.parseInt(workingText);
+				int tempTerm = Integer.parseInt(workingText.toString());
 				line = getSelectedLine();
 				m = line == 0 ? m : m.getSecondaryPoint();
 
@@ -2976,7 +2935,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_MV_INSTR_OFFSET:
 			try {
-				int tempRegister = Integer.parseInt(workingText) - 1;
+				int tempRegister = Integer.parseInt(workingText.toString()) - 1;
 				line = getSelectedLine();
 				m = line == 0 ? m : m.getSecondaryPoint();
 
@@ -3149,7 +3108,7 @@ public class RobotRun extends PApplet {
 		case INPUT_PREG_IDX1:
 		case INPUT_PREG_IDX2:
 			try {
-				int idx = Integer.parseInt(workingText);
+				int idx = Integer.parseInt(workingText.toString());
 				
 				if (mode == ScreenMode.INPUT_DREG_IDX) {
 					
@@ -3194,7 +3153,7 @@ public class RobotRun extends PApplet {
 			break;
 		case INPUT_CONST:
 			try{
-				float data = Float.parseFloat(workingText);
+				float data = Float.parseFloat(workingText.toString());
 				opEdit.set(data);
 			} catch(NumberFormatException e) {}
 
@@ -3237,7 +3196,7 @@ public class RobotRun extends PApplet {
 		case SET_SELECT_ARGVAL:
 			try {
 				s = (SelectStatement)inst;
-				float f = Float.parseFloat(workingText);
+				float f = Float.parseFloat(workingText.toString());
 
 				if(opEdit.type == ExpressionElement.UNINIT) {
 					opEdit.set(f);
@@ -3265,7 +3224,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_IO_INSTR_IDX:
 			try {
-				int tempReg = Integer.parseInt(workingText);
+				int tempReg = Integer.parseInt(workingText.toString());
 
 				if(tempReg < 0 || tempReg >= 5) {
 					System.out.println("Invalid index!");
@@ -3293,7 +3252,7 @@ public class RobotRun extends PApplet {
 			break;      
 		case SET_FRAME_INSTR_IDX:
 			try {
-				int frameIdx = Integer.parseInt(workingText) - 1;
+				int frameIdx = Integer.parseInt(workingText.toString()) - 1;
 
 				if(frameIdx >= -1 && frameIdx < Fields.FRAME_SIZE){
 					fInst = (FrameInstruction)inst;
@@ -3325,7 +3284,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_REG_EXPR_IDX1:
 			try {
-				int idx = Integer.parseInt(workingText);
+				int idx = Integer.parseInt(workingText.toString());
 				regStmt = (RegisterStatement)inst;
 				Register reg = regStmt.getReg();
 
@@ -3361,7 +3320,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_REG_EXPR_IDX2:
 			try {
-				int idx = Integer.parseInt(workingText);
+				int idx = Integer.parseInt(workingText.toString());
 
 				if (idx < 1 || idx > 6) {
 					println("Invalid position index!"); 
@@ -3379,7 +3338,7 @@ public class RobotRun extends PApplet {
 			//Jump/ Label instruction edit
 		case SET_LBL_NUM:
 			try {
-				int idx = Integer.parseInt(workingText);
+				int idx = Integer.parseInt(workingText.toString());
 
 				if (idx < 0 || idx > 99) {
 					println("Invalid label index!");
@@ -3393,7 +3352,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_JUMP_TGT:
 			try {
-				int lblNum = Integer.parseInt(workingText);
+				int lblNum = Integer.parseInt(workingText.toString());
 				int lblIdx = p.findLabelIdx(lblNum);
 
 				if(inst instanceof IfStatement) {
@@ -3517,7 +3476,7 @@ public class RobotRun extends PApplet {
 			lastScreen();  
 			break;
 		case JUMP_TO_LINE:
-			int jumpToInst = Integer.parseInt(workingText) - 1;
+			int jumpToInst = Integer.parseInt(workingText.toString()) - 1;
 			getActiveRobot().setActiveInstIdx(max(0, min(jumpToInst, p.getInstructions().size() - 1)));
 
 			lastScreen();
@@ -3548,7 +3507,7 @@ public class RobotRun extends PApplet {
 
 			try {
 				// Copy the comment of the curent Data register to the Data register at the specified index
-				regIdx = Integer.parseInt(workingText) - 1;
+				regIdx = Integer.parseInt(workingText.toString()) - 1;
 				getActiveRobot().getDReg(regIdx).comment = getActiveRobot().getDReg(active_index).comment;
 				DataManagement.saveRobotData(activeRobot, 3);
 				
@@ -3565,7 +3524,7 @@ public class RobotRun extends PApplet {
 
 			try {
 				// Copy the value of the curent Data register to the Data register at the specified index
-				regIdx = Integer.parseInt(workingText) - 1;
+				regIdx = Integer.parseInt(workingText.toString()) - 1;
 				getActiveRobot().getDReg(regIdx).value = getActiveRobot().getDReg(active_index).value;
 				DataManagement.saveRobotData(activeRobot, 3);
 				
@@ -3582,7 +3541,7 @@ public class RobotRun extends PApplet {
 
 			try {
 				// Copy the comment of the curent Position register to the Position register at the specified index
-				regIdx = Integer.parseInt(workingText) - 1;
+				regIdx = Integer.parseInt(workingText.toString()) - 1;
 				getActiveRobot().getPReg(regIdx).comment = getActiveRobot().getPReg(active_index).comment;
 				DataManagement.saveRobotData(activeRobot, 3);
 				
@@ -3599,7 +3558,7 @@ public class RobotRun extends PApplet {
 
 			try {
 				// Copy the point of the curent Position register to the Position register at the specified index
-				regIdx = Integer.parseInt(workingText) - 1;
+				regIdx = Integer.parseInt(workingText.toString()) - 1;
 				getActiveRobot().getPReg(regIdx).point = getActiveRobot().getPReg(active_index).point.clone();
 				DataManagement.saveRobotData(activeRobot, 3);
 				
@@ -3616,7 +3575,7 @@ public class RobotRun extends PApplet {
 
 			try {
 				// Read inputed Float value
-				f = Float.parseFloat(workingText);
+				f = Float.parseFloat(workingText.toString());
 				// Clamp the value between -9999 and 9999, inclusive
 				f = max(-9999f, min(f, 9999f));
 				System.out.printf("Index; %d\n", active_index);
@@ -3668,24 +3627,24 @@ public class RobotRun extends PApplet {
 		case EDIT_PREG_COM:
 			if (!workingText.equals("\0")) {
 				if(workingText.charAt(  workingText.length() - 1  ) == '\0') {
-					workingText = workingText.substring(0, workingText.length() - 1);
+					workingText.deleteCharAt( workingText.length() - 1 );
 				}
 				// Save the inputed comment to the selected register
-				getActiveRobot().getPReg(active_index).comment = workingText;
+				getActiveRobot().getPReg(active_index).comment = workingText.toString();
 				DataManagement.saveRobotData(activeRobot, 3);
-				workingText = "";
+				workingText = new StringBuilder();
 				lastScreen();
 			}
 			break;
 		case EDIT_DREG_COM:
 			if (!workingText.equals("\0")) {
 				if(workingText.charAt(  workingText.length() - 1  ) == '\0') {
-					workingText = workingText.substring(0, workingText.length() - 1);
+					workingText.deleteCharAt( workingText.length() - 1 );
 				}
-				// Save the inputed comment to the selected register\
-				getActiveRobot().getDReg(active_index).comment = workingText;
+				// Save the inputed comment to the selected register
+				getActiveRobot().getDReg(active_index).comment = workingText.toString();
 				DataManagement.saveRobotData(activeRobot, 3);
-				workingText = "";
+				workingText = new StringBuilder();
 				lastScreen();
 			}
 			break;
@@ -4061,7 +4020,7 @@ public class RobotRun extends PApplet {
 			break;
 		case CONFIRM_INSERT:
 			try {
-				int lines_to_insert = Integer.parseInt(workingText);
+				int lines_to_insert = Integer.parseInt(workingText.toString());
 				for(int i = 0; i < lines_to_insert; i += 1)
 					p.getInstructions().add(activeRobot.getActiveInstIdx(), new Instruction());
 
@@ -4120,7 +4079,7 @@ public class RobotRun extends PApplet {
 			for(Instruction instruct: p.getInstructions()){
 				s = (lineIdx + 1) + ") " + instruct.toString();
 
-				if(s.toUpperCase().contains(workingText.toUpperCase())){
+				if(s.toUpperCase().contains(workingText.toString().toUpperCase())){
 					break;
 				}
 
@@ -4452,11 +4411,11 @@ public class RobotRun extends PApplet {
 		case ACTIVE_FRAMES:
 			/* workingText corresponds to the active row's index display */
 			if (this.contents.getLineIdx() == 0) {
-				contents.addLine("Tool: ", workingText);
+				contents.addLine("Tool: ", workingText.toString());
 				contents.addLine("User: ", Integer.toString(getActiveRobot().getActiveUserFrame() + 1));
 			} else {
 				contents.addLine("Tool: ", Integer.toString(getActiveRobot().getActiveToolFrame() + 1));
-				contents.addLine("User: ", workingText);
+				contents.addLine("User: ", workingText.toString());
 			}
 			break;
 
@@ -6027,7 +5986,7 @@ public class RobotRun extends PApplet {
 	public void ITEM() {
 		if(mode == ScreenMode.NAV_PROG_INSTR) {
 			options.reset();
-			workingText = "";
+			workingText = new StringBuilder();
 			nextScreen(ScreenMode.JUMP_TO_LINE);
 		}
 	}
@@ -6101,22 +6060,18 @@ public class RobotRun extends PApplet {
 					((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9') ||
 					  key == '.' || key == '@' || key == '*' || key == '_')) {
 				
-				StringBuilder temp;
-				// Insert the typed character
-				if (workingText.length() > 0 && workingText.charAt(contents.getColumnIdx()) != '\0') {
-					temp = new StringBuilder(workingText.substring(0, contents.getColumnIdx()) + "\0" + workingText.substring(contents.getColumnIdx(), workingText.length()));
+				contents.setColumnIdx( Math.max(0, contents.getColumnIdx()) );
+				
+				if (contents.getColumnIdx() >= workingText.length()) {
+					workingText.append(key);
 					
 				} else {
-					temp = new StringBuilder(workingText); 
+					workingText.insert(contents.getColumnIdx(), key);
 				}
-
-				temp.setCharAt(contents.getColumnIdx(), key);
-				workingText = temp.toString();
-
+				
 				// Add an insert element if the length of the current comment is less than 16
-				int len = workingText.length();
-				if(len <= TEXT_ENTRY_LEN && contents.getColumnIdx() == workingText.length() - 1 && workingText.charAt(len - 1) != '\0') {
-					workingText += '\0';
+				if (workingText.length() == 1 && workingText.charAt(0) != '\0') {
+					workingText.append('\0');
 				}
 
 				contents.setColumnIdx(min(contents.getColumnIdx() + 1, workingText.length() - 1));
@@ -6128,7 +6083,7 @@ public class RobotRun extends PApplet {
 				
 				if ((key >= '0' && key <= '9') || key == '.') {
 					// Append the value
-					workingText += key;
+					workingText.append(key);
 					
 					// Update contents to the new string
 					updateScreen();
@@ -6137,10 +6092,10 @@ public class RobotRun extends PApplet {
 				} else if (key == '-') {
 					// Negate the value
 					if (workingText.length() >= 1 && workingText.charAt(0) == '-') {
-						workingText = workingText.substring(1);
+						workingText.deleteCharAt(0);
 						
 					} else {
-						workingText = "-" + workingText;
+						workingText.insert(0, '-');
 					}
 					
 					// Update contents to the new string
@@ -6261,9 +6216,10 @@ public class RobotRun extends PApplet {
 
 			// Mutliply current number by -1
 			if(workingText.length() > 0 && workingText.charAt(0) == '-') {
-				workingText = workingText.substring(1);
+				workingText = workingText.deleteCharAt(0);
+				
 			} else {
-				workingText = "-" + workingText;
+				workingText.insert(0, '-');
 			}
 
 		}
@@ -6795,6 +6751,34 @@ public class RobotRun extends PApplet {
 			contents.addLine(getRobot(rid).getProgram(i).getName());
 		}
 	}
+	
+	/**
+	 * Loads all the models for a robot.
+	 * 
+	 * @return	A list of the models for the robot
+	 */
+	private PShape[] loadRobotModels() {
+		PShape[] models = new PShape[13];
+		// End Effectors
+		models[0] = loadSTLModel("SUCTION.stl", color(108, 206, 214));
+		models[1] = loadSTLModel("GRIPPER.stl", color(108, 206, 214));
+		models[2] = loadSTLModel("PINCER.stl", color(200, 200, 0));
+		models[2].scale(1f);
+		models[3] = loadSTLModel("POINTER.stl", color(108, 206, 214));
+		models[4] = loadSTLModel("GLUE_GUN.stl", color(108, 206, 214));
+		models[5] = loadSTLModel("WIELDER.stl", color(108, 206, 214));
+
+		// Body/joint models
+		models[6] = loadSTLModel("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
+		models[7] = loadSTLModel("ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
+		models[8] = loadSTLModel("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
+		models[9] = loadSTLModel("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
+		models[10] = loadSTLModel("ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
+		models[11] = loadSTLModel("ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0));
+		models[12] = loadSTLModel("ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40));
+		
+		return models;
+	}
 
 	public void loadScreen() {
 		setProgramRunning(false);
@@ -6826,7 +6810,7 @@ public class RobotRun extends PApplet {
 		case ACTIVE_FRAMES:
 			contents.setLineIdx(0);
 			contents.setColumnIdx(1);
-			workingText = Integer.toString(getActiveRobot().getActiveToolFrame() + 1);
+			workingText = new StringBuilder(getActiveRobot().getActiveToolFrame() + 1);
 			break;
 		case SELECT_FRAME_MODE:
 			active_index = 0;
@@ -6875,21 +6859,22 @@ public class RobotRun extends PApplet {
 			contents.setLineIdx(1);
 			contents.setColumnIdx(0);
 			options.reset();
-			workingText = "\0";
+			workingText = new StringBuilder("\0");
+			System.out.println( workingText.length() );
 			break;
 		case PROG_RENAME:
 			getActiveRobot().setActiveProgIdx(contents.getLineIdx());
 			contents.setLineIdx(1);
 			contents.setColumnIdx(0);
 			options.reset();
-			workingText = getActiveRobot().getActiveProg().getName();
+			workingText = new StringBuilder(getActiveRobot().getActiveProg().getName());
 			break;
 		case PROG_COPY:
 			getActiveRobot().setActiveProgIdx(contents.getLineIdx());
 			contents.setLineIdx(1);
 			contents.setColumnIdx(0);
 			options.reset();
-			workingText = "\0";
+			workingText = new StringBuilder("\0");
 			break;
 		case NAV_PROG_INSTR:
 			//need to enforce row/ column select limits based on 
@@ -6905,7 +6890,7 @@ public class RobotRun extends PApplet {
 			contents.reset();
 			break;
 		case CONFIRM_INSERT:
-			workingText = "";
+			workingText = new StringBuilder();
 			break;
 		case SELECT_INSTR_INSERT:
 		case SELECT_JMP_LBL:
@@ -6926,14 +6911,14 @@ public class RobotRun extends PApplet {
 		case INPUT_PREG_IDX1:
 		case INPUT_PREG_IDX2:
 		case INPUT_CONST:
-			workingText = "";
+			workingText = new StringBuilder();
 			break;
 		case SET_IO_INSTR_IDX:
 		case SET_JUMP_TGT:
 		case SET_LBL_NUM:
 			contents.setColumnIdx(1);
 			options.reset();
-			workingText = ""; 
+			workingText = new StringBuilder(); 
 			break;
 		case SET_MV_INSTR_TYPE:
 
@@ -6960,7 +6945,7 @@ public class RobotRun extends PApplet {
 			}
 
 			options.reset();
-			workingText = Integer.toString(instSpd);
+			workingText = new StringBuilder(instSpd);
 			break;
 		case SET_MV_INSTR_REG_TYPE:
 
@@ -6973,18 +6958,18 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_MV_INSTR_IDX:
 			options.reset();
-			workingText = Integer.toString(mInst.getPositionNum() + 1);
+			workingText = new StringBuilder(mInst.getPositionNum() + 1);
 			break;
 		case SET_MV_INSTR_TERM:
 			options.reset();
-			workingText = Integer.toString(mInst.getTermination());
+			workingText = new StringBuilder(mInst.getTermination());
 			break;
 		case SET_FRAME_INSTR_IDX:
 		case SET_SELECT_ARGVAL:
 		case SET_REG_EXPR_IDX1:
 		case SET_REG_EXPR_IDX2:
 			options.reset();
-			workingText = "";
+			workingText = new StringBuilder();
 			break;
 		case SET_IO_INSTR_STATE:
 		case SET_FRM_INSTR_TYPE:
@@ -7051,13 +7036,13 @@ public class RobotRun extends PApplet {
 		case CP_DREG_VAL:
 			loadDataRegisters();
 			options.setLineIdx(1);
-			workingText = Integer.toString((active_index + 1));
+			workingText = new StringBuilder((active_index + 1));
 			break;
 		case CP_PREG_COM:
 		case CP_PREG_PT:
 			loadPositionRegisters();
 			options.setLineIdx(1);
-			workingText = Integer.toString((active_index + 1));
+			workingText = new StringBuilder((active_index + 1));
 			break;
 		case EDIT_DREG_COM:
 			contents.setLineIdx(1);
@@ -7066,10 +7051,10 @@ public class RobotRun extends PApplet {
 
 			String c = getActiveRobot().getDReg(active_index).comment;
 			if(c != null && c.length() > 0) {
-				workingText = c;
+				workingText = new StringBuilder(c);
 			}
 			else {
-				workingText = "\0";
+				workingText = new StringBuilder("\0");
 			}
 
 			break;   
@@ -7080,10 +7065,10 @@ public class RobotRun extends PApplet {
 			
 			c = getActiveRobot().getPReg(active_index).comment;
 			if(c != null && c.length() > 0) {
-				workingText = c;
+				workingText = new StringBuilder(c);
 			}
 			else {
-				workingText = "\0";
+				workingText = new StringBuilder("\0");
 			}
 
 			println(workingText.length());
@@ -7094,9 +7079,10 @@ public class RobotRun extends PApplet {
 			// Bring up float input menu
 			Float val = getActiveRobot().getDReg(active_index).value;
 			if(val != null) {
-				workingText = Float.toString(val);
+				workingText = new StringBuilder(val.toString());
+				
 			} else {
-				workingText = "";
+				workingText = new StringBuilder();
 			}
 			break;
 		case EDIT_PREG:
@@ -7283,6 +7269,31 @@ public class RobotRun extends PApplet {
 			camera.changeScale(1.05f);
 		} else if (e < 0) {
 			camera.changeScale(0.95f);
+		}
+	}
+	
+	/**
+	 * Updates the current position and orientation of a selected object to the
+	 * inputed values in the edit window.
+	 */
+	public void MoveToCur() {
+		// Only allow world object editing when no program is executing
+		if (!isProgramRunning()) {
+			getManager().updateWOCurrent();
+			DataManagement.saveScenarios(this);
+		}
+	}
+	
+	/**
+	 * Updates the current position and orientation of a selected world object
+	 * to that of its default fields.
+	 */
+	public void MoveToDef() {
+		// Only allow world object editing when no program is executing
+		if (!isProgramRunning()) {
+			getManager().fillCurWithDef();
+			getManager().updateWOCurrent();
+			DataManagement.saveScenarios(this);
 		}
 	}
 
@@ -7606,13 +7617,15 @@ public class RobotRun extends PApplet {
 
 				contents.get(contents.getLineIdx()).set(1, value);
 			}
+			
 		} else if(mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
 
 			if(workingText.length() < NUM_ENTRY_LEN) {
-				workingText += ".";
+				workingText.append('.');
 			}
+			
 		} else if(mode != ScreenMode.EDIT_DREG_COM) {
-			workingText += ".";
+			workingText.append('.');
 		}
 
 		updateScreen();
@@ -7770,10 +7783,14 @@ public class RobotRun extends PApplet {
 	}
 
 	public void settings() {  size(1080, 720, P3D); }
-
+	
+	@Override
 	public void setup() {
+		super.setup();
+		
 		instance = this;
 		letterStates = new int[] {0, 0, 0, 0, 0};
+		workingText = new StringBuilder();
 		
 		g1_px = 0; 
 		g1_py = Fields.SMALL_BUTTON - 14; // the left-top corner of group 1
@@ -7794,33 +7811,41 @@ public class RobotRun extends PApplet {
 
 		//load model and save data
 		robots = new HashMap<Integer, RoboticArm>();
-		robots.put(0, new RoboticArm(0, new PVector(200, 300, 200)));
-		robots.put(1, new RoboticArm(1, new PVector(200, 300, -750)));
 		
-		for (RoboticArm r : robots.values()) {
-			r.setDefaultRobotPoint();
+		try {
+			robots.put(0, new RoboticArm(0, new PVector(200, 300, 200), loadRobotModels()));
+			robots.put(1, new RoboticArm(1, new PVector(200, 300, -750), loadRobotModels()));
+			
+			for (RoboticArm r : robots.values()) {
+				r.setDefaultRobotPoint();
+			}
+			
+			setActiveRobot(robots.get(0));
+			
+			intermediatePositions = new ArrayList<Point>();
+			activeScenario = null;
+			
+			DataManagement.initialize(this);
+			DataManagement.loadState(this);
+			
+			//set up UI
+			cp5 = new ControlP5(this);
+			// Explicitly draw the ControlP5 elements
+			cp5.setAutoDraw(false);
+			setManager(new WindowManager(this, cp5, fnt_con12, fnt_con14));
+			display_stack = new Stack<ScreenMode>();
+			contents = new MenuScroll(this, "cont", ITEMS_TO_SHOW, 10, 20);
+			options = new MenuScroll(this, "opt", 3, 10, 180);
+			gui();
+
+			buffer = new ArrayList<String>();
+			displayPoint = null;
+			
+		} catch (NullPointerException NPEx) {
+			
+			// TODO write to a log
+			NPEx.printStackTrace();
 		}
-		
-		setActiveRobot(robots.get(0));
-		
-		intermediatePositions = new ArrayList<Point>();
-		activeScenario = null;
-		
-		DataManagement.initialize(this);
-		DataManagement.loadState(this);
-
-		//set up UI
-		cp5 = new ControlP5(this);
-		// Explicitly draw the ControlP5 elements
-		cp5.setAutoDraw(false);
-		setManager(new WindowManager(this, cp5, fnt_con12, fnt_con14));
-		display_stack = new Stack<ScreenMode>();
-		contents = new MenuScroll(this, "cont", ITEMS_TO_SHOW, 10, 20);
-		options = new MenuScroll(this, "opt", 3, 10, 180);
-		gui();
-
-		buffer = new ArrayList<String>();
-		displayPoint = null;
 	}
 
 	public void SETUP() {
@@ -8233,9 +8258,9 @@ public class RobotRun extends PApplet {
 	 * current value of workingText
 	 */
 	public void updateActiveFramesDisplay() {
-		// Attempt to parse the inputted integer value
+		// Attempt to parse the inputed integer value
 		try {
-			int frameIdx = Integer.parseInt(workingText) - 1;
+			int frameIdx = Integer.parseInt( workingText.toString() ) - 1;
 
 			if (frameIdx >= -1 && frameIdx < 10) {
 				// Update the appropriate active Frame index
@@ -8253,12 +8278,13 @@ public class RobotRun extends PApplet {
 		}
 		// Update display
 		if (contents.getLineIdx() == 0) {
-			workingText = Integer.toString(getActiveRobot().getActiveToolFrame() + 1);
+			workingText = new StringBuilder( getActiveRobot().getActiveToolFrame() + 1 );
+			
 		} else {
-			workingText = Integer.toString(getActiveRobot().getActiveUserFrame() + 1);
+			workingText = new StringBuilder( getActiveRobot().getActiveUserFrame() + 1 );
 		}
 
-		contents.get(contents.getLineIdx()).set(contents.getColumnIdx(), workingText);
+		contents.get(contents.getLineIdx()).set(contents.getColumnIdx(), workingText.toString());
 		updateScreen();
 	}
 
@@ -8468,18 +8494,13 @@ public class RobotRun extends PApplet {
 		
 		scenarioUndo.push(saveState);
 	}
-
+	
 	/**
-	 * Confirm changes made to the orientation and position of the selected
-	 * world object.
+	 * Updates the default position and orientation of a world object based on
+	 * the input fields in the edit window.
 	 */
-	public void UpdateWldObj() {
-		
-		// Only allow world object editing when no program is executing
-		if (!isProgramRunning()) {
-			getManager().editWorldObject();
-			DataManagement.saveScenarios(this);
-		}
+	public void UpdateWODef() {
+		getManager().updateWODefault();
 	}
 
 	/**
@@ -8537,6 +8558,7 @@ public class RobotRun extends PApplet {
 
 			println("Write to buffer successful.");
 			out.close();
+			
 		} catch(Exception Ex) {
 			Ex.printStackTrace();
 			return 1;

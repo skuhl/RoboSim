@@ -1,16 +1,18 @@
 package window;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import controlP5.Background;
 import controlP5.Button;
+import controlP5.ControlEvent;
+import controlP5.ControlListener;
 import controlP5.ControlP5;
 import controlP5.ControllerInterface;
 import controlP5.DropdownList;
 import controlP5.Group;
 import controlP5.Textarea;
-import controlP5.Textfield;
 import geom.Box;
 import geom.Cylinder;
 import geom.DimType;
@@ -22,6 +24,7 @@ import geom.WorldObject;
 import processing.core.PFont;
 import processing.core.PVector;
 import robot.RoboticArm;
+import robot.DataManagement;
 import robot.EEMapping;
 import robot.Fixture;
 import robot.RobotRun;
@@ -29,9 +32,11 @@ import robot.Scenario;
 import ui.AxesDisplay;
 import ui.ButtonTabs;
 import ui.MyDropdownList;
+import ui.MyTextfield;
 import ui.RelativePoint;
 
-public class WindowManager {
+public class WindowManager implements ControlListener {
+	
 	public static final int offsetX = 10,
 			distBtwFieldsY = 15,
 			distLblToFieldX = 5,
@@ -40,7 +45,7 @@ public class WindowManager {
 			mLblWidth = 86,
 			sLblWidth = 60,
 			fieldHeight = 20,
-			fieldWidth = 95,
+			fieldWidth = 110,
 			lButtonWidth = 88,
 			mButtonWidth = 56,
 			sButtonWidth = 26,
@@ -49,10 +54,15 @@ public class WindowManager {
 			sdropItemWidth = 80,
 			mdropItemWidth = 90,
 			ldropItemWidth = 120,
-			dropItemHeight = 21;
+			dropItemHeight = 21,
+			DIM_LBL = 3,
+			DIM_TXT = 3,
+			DIM_DDL = 1;
 
 	private final ControlP5 UIManager;
 	private final RobotRun app;
+	
+	private WindowTab menu;
 
 	private Group createObjWindow, editObjWindow,
 	sharedElements, scenarioWindow, miscWindow;
@@ -68,8 +78,11 @@ public class WindowManager {
 	 */
 	 public WindowManager(RobotRun appRef, ControlP5 manager, PFont small, PFont medium) {
 		// Initialize content fields
-		 UIManager = manager;
+		 UIManager = manager;		 
 		 app = appRef;
+		 menu = null;
+		 
+		 manager.addListener(this);
 
 		 buttonDefColor = app.color(70);
 		 buttonActColor = app.color(220, 40, 40);
@@ -88,7 +101,7 @@ public class WindowManager {
 		 String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
 		 
 		 // Create window tab bar
-		 windowTabs = (ButtonTabs)(new ButtonTabs(UIManager, "List:")
+		 windowTabs = (ButtonTabs)(new ButtonTabs(UIManager, "Tabs")
 				 // Sets button text color
 				 .setColorValue(buttonTxtColor)
 				 .setColorBackground(buttonDefColor)
@@ -199,7 +212,7 @@ public class WindowManager {
 
 		 // Initialize window contents
 		 for (int idx = 0; idx < 3; ++idx) {
-			 UIManager.addTextarea(String.format("Dim%dLbl", idx), String.format("Dim(%d):", idx), 0, 0, mLblWidth, sButtonHeight)
+			 UIManager.addTextarea(String.format("DimLbl%d", idx), String.format("Dim(%d):", idx), 0, 0, mLblWidth, sButtonHeight)
 					 .setFont(medium)
 					 .setColor(fieldTxtColor)
 					 .setColorActive(fieldActColor)
@@ -207,7 +220,7 @@ public class WindowManager {
 					 .setColorForeground(bkgrdColor)
 					 .moveTo(sharedElements);
 
-			 UIManager.addTextfield(String.format("Dim%d", idx), 0, 0, fieldWidth, fieldHeight)
+			 (new MyTextfield(UIManager, String.format("Dim%d", idx), 0, 0, fieldWidth, fieldHeight))
 					 .setColor(fieldTxtColor)
 					 .setColorCursor(fieldCurColor)
 					 .setColorActive(fieldActColor)
@@ -233,7 +246,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(createObjWindow);
 
-		 UIManager.addTextfield("ObjName", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "ObjName", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -317,34 +330,6 @@ public class WindowManager {
 			 .setColorBackground(bkgrdColor)
 			 .setColorForeground(bkgrdColor)
 			 .moveTo(editObjWindow);
-		 
-		 UIManager.addTextarea("AFLbl", "Auto Fill", 0, 0, lLblWidth, fieldHeight)
-			 .setFont(medium)
-			 .setColor(fieldTxtColor)
-			 .setColorActive(fieldActColor)
-			 .setColorBackground(bkgrdColor)
-			 .setColorForeground(bkgrdColor)
-			 .moveTo(editObjWindow);
-		 
-		 UIManager.addButton("DefIntoCur")
-				  .setCaptionLabel("Default")
-				  .setColorValue(buttonTxtColor)
-				  .setColorBackground(buttonDefColor)
-				  .setColorActive(buttonActColor)
-				  .moveTo(editObjWindow)
-				  .setPosition(0, 0)
-				  .setSize(mButtonWidth, sButtonHeight)
-				  .getCaptionLabel().setFont(small);
-		 
-		 UIManager.addButton("CurIntoDef")
-				  .setCaptionLabel("Current")
-				  .setColorValue(buttonTxtColor)
-				  .setColorBackground(buttonDefColor)
-				  .setColorActive(buttonActColor)
-				  .moveTo(editObjWindow)
-				  .setPosition(0, 0)
-				  .setSize(mButtonWidth, sButtonHeight)
-				  .getCaptionLabel().setFont(small);
 
 		 UIManager.addTextarea("XLbl", "X Position:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -354,7 +339,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("XCur", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "XCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -363,14 +348,14 @@ public class WindowManager {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("XDef", 0, 0, fieldWidth, fieldHeight)
-			 .setColor(fieldTxtColor)
-			 .setColorCursor(fieldCurColor)
-			 .setColorActive(fieldActColor)
-			 .setColorLabel(bkgrdColor)
-			 .setColorBackground(fieldBkgrdColor)
-			 .setColorForeground(fieldFrgrdColor)
-			 .moveTo(editObjWindow);
+		 UIManager.addTextarea("XDef")
+			 	  .setSize(fieldWidth, fieldHeight)
+				  .setColor(fieldTxtColor)
+				  .setColorActive(fieldActColor)
+				  .setColorLabel(bkgrdColor)
+				  .setColorBackground(fieldBkgrdColor)
+				  .setColorForeground(fieldFrgrdColor)
+				  .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("YLbl", "Y Position:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -380,7 +365,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("YCur", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "YCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -389,24 +374,24 @@ public class WindowManager {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("YDef", 0, 0, fieldWidth, fieldHeight)
-			 .setColor(fieldTxtColor)
-			 .setColorCursor(fieldCurColor)
-			 .setColorActive(fieldActColor)
-			 .setColorLabel(bkgrdColor)
-			 .setColorBackground(fieldBkgrdColor)
-			 .setColorForeground(fieldFrgrdColor)
-			 .moveTo(editObjWindow);
+		 UIManager.addTextarea("YDef")
+	 	  		.setSize(fieldWidth, fieldHeight)
+	 	  		.setColor(fieldTxtColor)
+	 	  		.setColorActive(fieldActColor)
+	 	  		.setColorLabel(bkgrdColor)
+	 	  		.setColorBackground(fieldBkgrdColor)
+	 	  		.setColorForeground(fieldFrgrdColor)
+	 	  		.moveTo(editObjWindow);
 
 		 UIManager.addTextarea("ZLbl", "Z Position:", 0, 0, lLblWidth, fieldHeight)
-				 .setFont(medium)
-				 .setColor(fieldTxtColor)
-				 .setColorActive(fieldActColor)
-				 .setColorBackground(bkgrdColor)
-				 .setColorForeground(bkgrdColor)
-				 .moveTo(editObjWindow);
+				  .setFont(medium)
+				  .setColor(fieldTxtColor)
+				  .setColorActive(fieldActColor)
+				  .setColorBackground(bkgrdColor)
+				  .setColorForeground(bkgrdColor)
+				  .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("ZCur", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "ZCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -415,14 +400,14 @@ public class WindowManager {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("ZDef", 0, 0, fieldWidth, fieldHeight)
-			 .setColor(fieldTxtColor)
-			 .setColorCursor(fieldCurColor)
-			 .setColorActive(fieldActColor)
-			 .setColorLabel(bkgrdColor)
-			 .setColorBackground(fieldBkgrdColor)
-			 .setColorForeground(fieldFrgrdColor)
-			 .moveTo(editObjWindow);
+		 UIManager.addTextarea("ZDef")
+	 	  		  .setSize(fieldWidth, fieldHeight)
+	 	  		  .setColor(fieldTxtColor)
+	 	  		  .setColorActive(fieldActColor)
+	 	  		  .setColorLabel(bkgrdColor)
+	 	  		  .setColorBackground(fieldBkgrdColor)
+	 	  		  .setColorForeground(fieldFrgrdColor)
+	 	  		  .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("WLbl", "W Rotation:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -432,7 +417,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("WCur", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "WCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -441,14 +426,14 @@ public class WindowManager {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("WDef", 0, 0, fieldWidth, fieldHeight)
-			 .setColor(fieldTxtColor)
-			 .setColorCursor(fieldCurColor)
-			 .setColorActive(fieldActColor)
-			 .setColorLabel(bkgrdColor)
-			 .setColorBackground(fieldBkgrdColor)
-			 .setColorForeground(fieldFrgrdColor)
-			 .moveTo(editObjWindow);
+		 UIManager.addTextarea("WDef")
+	 	  		  .setSize(fieldWidth, fieldHeight)
+	 	  		  .setColor(fieldTxtColor)
+	 	  		  .setColorActive(fieldActColor)
+	 	  		  .setColorLabel(bkgrdColor)
+	 	  		  .setColorBackground(fieldBkgrdColor)
+	 	  		  .setColorForeground(fieldFrgrdColor)
+	 	  		  .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("PLbl", "P Rotation:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -458,7 +443,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("PCur", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "PCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -467,14 +452,14 @@ public class WindowManager {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("PDef", 0, 0, fieldWidth, fieldHeight)
-			 .setColor(fieldTxtColor)
-			 .setColorCursor(fieldCurColor)
-			 .setColorActive(fieldActColor)
-			 .setColorLabel(bkgrdColor)
-			 .setColorBackground(fieldBkgrdColor)
-			 .setColorForeground(fieldFrgrdColor)
-			 .moveTo(editObjWindow);
+		 UIManager.addTextarea("PDef")
+		 		  .setSize(fieldWidth, fieldHeight)
+		 		  .setColor(fieldTxtColor)
+		 		  .setColorActive(fieldActColor)
+		 		  .setColorLabel(bkgrdColor)
+		 		  .setColorBackground(fieldBkgrdColor)
+		 		  .setColorForeground(fieldFrgrdColor)
+		 		  .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("RLbl", "R Rotation:", 0, 0, lLblWidth, fieldHeight)
 				 .setFont(medium)
@@ -484,7 +469,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
 
-		 UIManager.addTextfield("RCur", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "RCur", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -493,14 +478,14 @@ public class WindowManager {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(editObjWindow);
 		 
-		 UIManager.addTextfield("RDef", 0, 0, fieldWidth, fieldHeight)
-			 .setColor(fieldTxtColor)
-			 .setColorCursor(fieldCurColor)
-			 .setColorActive(fieldActColor)
-			 .setColorLabel(bkgrdColor)
-			 .setColorBackground(fieldBkgrdColor)
-			 .setColorForeground(fieldFrgrdColor)
-			 .moveTo(editObjWindow);
+		 UIManager.addTextarea("RDef")
+	 	  		  .setSize(fieldWidth, fieldHeight)
+	 	  		  .setColor(fieldTxtColor)
+	 	  		  .setColorActive(fieldActColor)
+	 	  		  .setColorLabel(bkgrdColor)
+	 	  		  .setColorBackground(fieldBkgrdColor)
+	 	  		  .setColorForeground(fieldFrgrdColor)
+	 	  		  .moveTo(editObjWindow);
 
 		 UIManager.addTextarea("RefLbl", "Reference:", 0, 0, lLblWidth, sButtonHeight)
 				 .setFont(medium)
@@ -509,15 +494,33 @@ public class WindowManager {
 				 .setColorBackground(bkgrdColor)
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(editObjWindow);
-
-		 UIManager.addButton("UpdateWldObj")
-				 .setCaptionLabel("Confirm")
+		 
+		 UIManager.addButton("MoveToCur")
+				 .setCaptionLabel("Move to Current")
 				 .setColorValue(buttonTxtColor)
 				 .setColorBackground(buttonDefColor)
 				 .setColorActive(buttonActColor)
 				 .moveTo(editObjWindow)
-				 .setSize(mButtonWidth, sButtonHeight)
+				 .setSize(fieldWidth, sButtonHeight)
 				 .getCaptionLabel().setFont(small);
+		 
+		 UIManager.addButton("UpdateWODef")
+		  		  .setCaptionLabel("Update Default")
+		  		  .setColorValue(buttonTxtColor)
+		  		  .setColorBackground(buttonDefColor)
+		  		  .setColorActive(buttonActColor)
+		  		  .moveTo(editObjWindow)
+		  		  .setSize(fieldWidth, sButtonHeight)
+		  		  .getCaptionLabel().setFont(small);
+		 
+		 UIManager.addButton("MoveToDef")
+		 		  .setCaptionLabel("Move to Default")
+		 		  .setColorValue(buttonTxtColor)
+		 		  .setColorBackground(buttonDefColor)
+		 		  .setColorActive(buttonActColor)
+		 		  .moveTo(editObjWindow)
+		 		  .setSize(fieldWidth, sButtonHeight)
+		 		  .getCaptionLabel().setFont(small);
 
 		 UIManager.addButton("DeleteWldObj")
 				 .setCaptionLabel("Delete")
@@ -536,7 +539,7 @@ public class WindowManager {
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(scenarioWindow);
 
-		 UIManager.addTextfield("ScenarioName", 0, 0, fieldWidth, fieldHeight)
+		 (new MyTextfield(UIManager, "ScenarioName", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -620,7 +623,7 @@ public class WindowManager {
 		 dropdown.addItem(EEMapping.DOT.toString(), EEMapping.DOT);
 		 dropdown.addItem(EEMapping.LINE.toString(), EEMapping.LINE);
 		 dropdown.addItem(EEMapping.NONE.toString(), EEMapping.NONE);
-		 dropdown.setActiveLabel(EEMapping.DOT.toString());
+		 dropdown.setValue(0);
 		 
 		 dropdown = (MyDropdownList)((new MyDropdownList(UIManager, "AxesDisplay"))
 				 .setSize(ldropItemWidth, 4 * dropItemHeight)
@@ -636,7 +639,7 @@ public class WindowManager {
 		 dropdown.addItem(AxesDisplay.AXES.toString(), AxesDisplay.AXES);
 		 dropdown.addItem(AxesDisplay.GRID.toString(), AxesDisplay.GRID);
 		 dropdown.addItem(AxesDisplay.NONE.toString(), AxesDisplay.NONE);
-		 dropdown.setActiveLabel(AxesDisplay.AXES.toString());
+		 dropdown.setValue(0);
 		 
 		 dropdown = (MyDropdownList)((new MyDropdownList(UIManager, "Scenario"))
 				 .setSize(ldropItemWidth, 4 * dropItemHeight)
@@ -658,6 +661,21 @@ public class WindowManager {
 				 .setColorActive(buttonActColor)
 				 .moveTo(editObjWindow)
 				 .close());
+		 
+		 for (int idx = 0; idx < 1; ++idx) {
+			 // Dropdown lists for the dimension fields of an object
+			 dropdown = (MyDropdownList)((new MyDropdownList(UIManager, String.format("DimDdl%d", idx)))
+					 .setSize(ldropItemWidth, 4 * dropItemHeight)
+					 .setBarHeight(dropItemHeight)
+					 .setItemHeight(dropItemHeight)
+					 .setColorValue(buttonTxtColor)
+					 .setColorBackground(buttonDefColor)
+					 .setColorActive(buttonActColor)
+					 .moveTo(sharedElements)
+					 .close());
+			 
+			 dropdown.getCaptionLabel().setFont(small);
+		 }
 
 		 dropdown.getCaptionLabel().setFont(small);
 		 dropdown = (MyDropdownList)((new MyDropdownList(UIManager, "Object"))
@@ -744,57 +762,111 @@ public class WindowManager {
 		 dropdown.addItem("Parts", 0.0f);
 		 dropdown.addItem("Fixtures", 1.0f);
 	 }
-	 
-	 /**
-	  * Sets the current position and orientation inputs fields to the values of
-	  * the active part's default position and orientation.
-	  */
-	 public void autoFillCurFields() {
-		 WorldObject active = getActiveWorldObject();
-		 
-		 if (active instanceof Part) {
-			 Part p = (Part)active;
-			 // Get the part's default position and orientation
-			 PVector pos = p.getDefaultCenter();
-			 PVector wpr = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
-					 			   .mult(RobotRun.RAD_TO_DEG);
+	
+	/**
+	 * Deal with value changes in certain controllers.
+	 * 
+	 * @param arg0	The value change event
+	 */
+	@Override
+	public void controlEvent(ControlEvent arg0) {
+		
+		if (arg0.isFrom(windowTabs)) {
+			// Update the window based on the button tab selected
+			String actLbl = windowTabs.getActButLbl();
+			
+			if (actLbl.equals("Robot1")) {
+				updateView( WindowTab.ROBOT1 );
+				
+			} else if (actLbl.equals("Robot2")) {
+				updateView( WindowTab.ROBOT2 );
+				
+			} else if (actLbl.equals("Create")) {
+				updateView( WindowTab.CREATE );
+				
+			} else if (actLbl.equals("Edit")) {
+				updateView( WindowTab.EDIT );
+				
+			} else if (actLbl.equals("Scenario")) {
+				updateView( WindowTab.SCENARIO );
+				
+			} else if (actLbl.equals("Misc")) {
+				updateView( WindowTab.MISC );
+				
+			} else {
+				updateView( null );
+			}
 			 
-			 pos = RobotRun.convertNativeToWorld(pos);
+		 } else {
+			 if (arg0.isFrom( getDropdown("Object") )) {
+				// Initialize the input fields on the edit menu
+				WorldObject selected = getActiveWorldObject();
+				
+				if (selected != null) {
+					
+					// Initialize the dimension fields
+					if (selected.getForm() instanceof Box) {
+						getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.LENGTH)) );
+						getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
+						getTextField("Dim2").setText( String.format("%4.3f", selected.getForm().getDim(DimType.WIDTH)) );
+						
+					} else if (selected.getForm() instanceof Cylinder) {
+						getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.RADIUS)) );
+						getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
+						
+						
+					} else if (selected.getForm() instanceof ModelShape) {
+						getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.SCALE)) );
+					}
+					
+					fillCurWithCur();
+					fillDefWithDef();
+					
+					// Initialize the reference dropdown
+					MyDropdownList ddl = getDropdown("Fixture");
+					
+					if (selected instanceof Part) {
+					
+						Fixture ref = ((Part)selected).getFixtureRef();
+						
+						if (ref == null) {
+							ddl.setValue(0);
+						 
+						} else {
+							ddl.setItem(ref);
+						}
+					
+					} else {
+						ddl.setValue(0);
+					}
+					
+				 }
+				
+			 } else if (arg0.isFrom(getDropdown("Fixture"))) {
+				WorldObject selected = getActiveWorldObject();
+				
+				if (selected instanceof Part) {
+					// Set the reference of the Part to the currently active fixture
+					Part p = (Part)selected;
+					Fixture refFixture = (Fixture)getDropdown("Fixture").getSelectedItem();
+					
+					if (p.getFixtureRef() != refFixture) {
+						/* Save the previous version of the world object on the
+						 * undo stack */
+						app.updateScenarioUndo( (WorldObject)p.clone() );
+						p.setFixtureRef(refFixture);
+					}
+				}
+			 }
 			 
-			 // Fill the current position and orientation fields in the edit window
-			 getTextField("XCur").setText( Float.toString(pos.x) );
-			 getTextField("YCur").setText( Float.toString(pos.y) );
-			 getTextField("ZCur").setText( Float.toString(pos.z) );
-			 getTextField("WCur").setText( Float.toString(-wpr.x) );
-			 getTextField("PCur").setText( Float.toString(-wpr.z) );
-			 getTextField("RCur").setText( Float.toString(wpr.y) );
+			 if (arg0.isFrom( getDropdown("Object") ) || arg0.isFrom( getDropdown("Shape") )) {
+				 /* The selected item in these dropdown lists influence the
+				  * layout of the menu */
+				 updateWindowContentsPositions();
+			 }
 		 }
-	 }
-	 
-	 /**
-	  * Sets the default position and orientation inputs fields to the values of
-	  * the active part's current position and orientation.
-	  */
-	 public void autoFillDefFields() {
-		 WorldObject active = getActiveWorldObject();
-		 
-		 if (active instanceof Part) {
-			 // Get the part's current position and orientation
-			 PVector pos = active.getLocalCenter();
-			 PVector wpr = RobotRun.matrixToEuler( active.getLocalOrientationAxes() )
-					 			   .mult(RobotRun.RAD_TO_DEG);
-			 
-			 pos = RobotRun.convertNativeToWorld(pos);
-			 
-			 // Fill the default position and orientation fields in the edit window
-			 getTextField("XDef").setText( Float.toString(pos.x) );
-			 getTextField("YDef").setText( Float.toString(pos.y) );
-			 getTextField("ZDef").setText( Float.toString(pos.z) );
-			 getTextField("WDef").setText( Float.toString(-wpr.x) );
-			 getTextField("PDef").setText( Float.toString(-wpr.z) );
-			 getTextField("RDef").setText( Float.toString(wpr.y) );
-		 }
-	 }
+			
+	}
 
 	 /**
 	  * Reinitialize any and all input fields
@@ -805,14 +877,13 @@ public class WindowManager {
 	 }
 	 
 	 public void clearInputsFields() {
-		 String winName = getMenuName();
 		 
-		 if (winName.equals("Create")) {
+		 if (menu == WindowTab.CREATE) {
 			 clearGroupInputFields(createObjWindow);
 			 clearSharedInputFields();
 			 updateCreateWindowContentPositions();
 			 
-		 } else if (winName.equals("Edit")) {
+		 } else if (menu == WindowTab.EDIT) {
 			 clearGroupInputFields(editObjWindow);
 			 clearSharedInputFields();
 			 updateEditWindowContentPositions();
@@ -830,16 +901,16 @@ public class WindowManager {
 
 			 if (g == null || controller.getParent().equals(g)) {
 
-				 if (controller instanceof Textfield) {
+				 if (controller instanceof MyTextfield) {
 					 // Clear anything inputted into the text field
-					 controller = ((Textfield)controller).setValue("");
+					 controller = ((MyTextfield)controller).setValue("");
 					 
 				 } else if (controller instanceof MyDropdownList) {
 					 // Reset the caption label of each dropdown list and close the list
 					 MyDropdownList dropdown = (MyDropdownList)controller;
 					 
 					 if(!dropdown.getParent().equals(miscWindow)) {
-						 dropdown.resetLabel();
+						 dropdown.setValue(-1);
 						 dropdown.close();
 					 }
 				 }
@@ -861,99 +932,14 @@ public class WindowManager {
 	 public void clearSharedInputFields() {
 		 clearGroupInputFields(sharedElements);
 		 updateDimLblsAndFields();
-	 } 
-	 
-	 /**
-	  * Returns the button, with the given name, if it exists in one of the UI
-	  * (excluding the pendant). If a non-button UI element exists in the UI,
-	  * then a ClassCastException will be thrown. If no UI element with the
-	  * given name exists, then null is returned.
-	  * 
-	  * @param name	Then name of a button in the UI
-	  * @return		The button with the given name or null
-	  * @throws ClassCastException	If a non-button UI element with the given
-	  * 							name exists in the UI
-	  */
-	 private Button getButton(String name) throws ClassCastException {
-		 return (Button) UIManager.get(name);
 	 }
 	 
-	 /**
-	  * Returns a text-field, which corresponds to the given dimension type.
-	  * The mapping from DimType to text-fields is:
-	  * 	LENGTH, RADIUS, null	->	Dim0 text-field
-	  * 	HEIGHT, SCALE			->	Dim1 text-field
-	  * 	WIDTH					->	Dim2 text-field
-	  * 
-	  * @param name	A type of world object dimension, which corresponds to a
-	  * 			text-field input in the UI
-	  * @return		The text-field corresponding to the given dimension type
-	  * @throws ClassCastException	Really shouldn't happen
-	  */
-	 private Textfield getDimTF(DimType t) throws ClassCastException {
-		 
-		 if (t == DimType.WIDTH) {
-			 return (Textfield) UIManager.get("Dim2");
-			 
-		 } else if (t == DimType.HEIGHT || t == DimType.SCALE) {
-			 return (Textfield) UIManager.get("Dim1");
-			 
-		 } else {
-			 return (Textfield) UIManager.get("Dim0");
-		 }
-	 }
-	 
-	 /**
-	  * Returns the drop-down, with the given name, if it exists in one of the
-	  * UI (excluding the pendant). If a non-drop-down UI element exists in the
-	  * UI, then a ClassCastException will be thrown. If no UI element with the
-	  * given name exists, then null is returned.
-	  * 
-	  * @param name	Then name of a drop-down in the UI
-	  * @return		The drop-down with the given name or null
-	  * @throws ClassCastException	If a non-drop-down UI element with the given
-	  * 							name exists in the UI
-	  */
-	 private MyDropdownList getDropdown(String name) throws ClassCastException {
-		 return (MyDropdownList) UIManager.get(name);
-	 }
-	 
-	 /**
-	  * Returns the text-area, with the given name, if it exists in one of the
-	  * UI (excluding the pendant). If a non-text-area UI element exists in the
-	  * UI, then a ClassCastException will be thrown. If no UI element with the
-	  * given name exists, then null is returned.
-	  * 
-	  * @param name	Then name of a text-area in the UI
-	  * @return		The text-area with the given name or null
-	  * @throws ClassCastException	If a non-text-area UI element with the given
-	  * 							name exists in the UI
-	  */
-	 private Textarea getTextArea(String name) throws ClassCastException {
-		 return (Textarea) UIManager.get(name);
-	 }
-	 
-	 /**
-	  * Returns the text-field, with the given name, if it exists in one of the
-	  * UI (excluding the pendant). If a non-text-field UI element exists in the
-	  * UI, then a ClassCastException will be thrown. If no UI element with the
-	  * given name exists, then null is returned.
-	  * 
-	  * @param name	Then name of a text-field in the UI
-	  * @return		The text-field with the given name or null
-	  * @throws ClassCastException	If a non-text-field UI element with the given
-	  * 							name exists in the UI
-	  */
-	 private Textfield getTextField(String name) throws ClassCastException {
-		 return (Textfield) UIManager.get(name);
-	 }
-
 	 /**
 	  * Creates a world object form the input fields in the Create window.
 	  */
 	 public WorldObject createWorldObject() {
 		 // Check the object type dropdown list
-		 Object val = getDropdown("ObjType").getActiveLabelValue();
+		 Object val = getDropdown("ObjType").getSelectedItem();
 		 // Determine if the object to be create is a Fixture or a Part
 		 Float objectType = 0.0f;
 
@@ -971,13 +957,13 @@ public class WindowManager {
 				 // Create a Part
 				 String name = getTextField("ObjName").getText();
 
-				 ShapeType type = (ShapeType)getDropdown("Shape").getActiveLabelValue();
+				 ShapeType type = (ShapeType)getDropdown("Shape").getSelectedItem();
 
-				 int fill = (Integer)getDropdown("Fill").getActiveLabelValue();
+				 int fill = (Integer)getDropdown("Fill").getSelectedItem();
 
 				 switch(type) {
 				 case BOX:
-					 int strokeVal = (Integer)getDropdown("Outline").getActiveLabelValue();
+					 int strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
 					 Float[] shapeDims = getBoxDimensions();
 					 // Construct a box shape
 					 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
@@ -986,7 +972,7 @@ public class WindowManager {
 					 break;
 
 				 case CYLINDER:
-					 strokeVal = (Integer)getDropdown("Outline").getActiveLabelValue();
+					 strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
 					 shapeDims = getCylinderDimensions();
 					 // Construct a cylinder
 					 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
@@ -995,7 +981,7 @@ public class WindowManager {
 					 break;
 
 				 case MODEL:
-					 String srcFile = getDimTF(null).getText();
+					 String srcFile = (String) getDropdown("DimDdl0").getSelectedItem();
 					 shapeDims = getModelDimensions();
 					 // Construct a complex model
 					 if (shapeDims != null) {
@@ -1003,9 +989,9 @@ public class WindowManager {
 
 						 if (shapeDims[0] != null) {
 							 // Define shape scale
-							 model = new ModelShape(srcFile, fill, shapeDims[0]);
+							 model = new ModelShape(srcFile, fill, shapeDims[0], app);
 						 } else {
-							 model = new ModelShape(srcFile, fill);
+							 model = new ModelShape(srcFile, fill, app);
 						 }
 
 						 wldObj = new Part(name, model);
@@ -1017,13 +1003,13 @@ public class WindowManager {
 			 } else if (objectType == 1.0f) {
 				 // Create a fixture
 				 String name = getTextField("ObjName").getText();
-				 ShapeType type = (ShapeType)getDropdown("Shape").getActiveLabelValue();
+				 ShapeType type = (ShapeType)getDropdown("Shape").getSelectedItem();
 
-				 int fill = (Integer)getDropdown("Fill").getActiveLabelValue();
+				 int fill = (Integer)getDropdown("Fill").getSelectedItem();
 
 				 switch(type) {
 				 case BOX:
-					 int strokeVal = (Integer)getDropdown("Outline").getActiveLabelValue();
+					 int strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
 					 Float[] shapeDims = getBoxDimensions();
 					 // Construct a box shape
 					 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
@@ -1032,7 +1018,7 @@ public class WindowManager {
 					 break;
 
 				 case CYLINDER:
-					 strokeVal = (Integer)getDropdown("Outline").getActiveLabelValue();
+					 strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
 					 shapeDims = getCylinderDimensions();
 					 // Construct a cylinder
 					 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
@@ -1041,16 +1027,16 @@ public class WindowManager {
 					 break;
 
 				 case MODEL:
-					 String srcFile = getDimTF(null).getText();
+					 String srcFile = (String) getDropdown("DimDdl0").getSelectedItem();
 					 shapeDims = getModelDimensions();
 					 // Construct a complex model
 					 ModelShape model;
 
 					 if (shapeDims != null && shapeDims[0] != null) {
 						 // Define model scale value
-						 model = new ModelShape(srcFile, fill, shapeDims[0]);
+						 model = new ModelShape(srcFile, fill, shapeDims[0], app);
 					 } else {
-						 model = new ModelShape(srcFile, fill);
+						 model = new ModelShape(srcFile, fill, app);
 					 }
 
 					 wldObj = new Fixture(name, model);
@@ -1062,14 +1048,17 @@ public class WindowManager {
 		 } catch (NullPointerException NPEx) {
 			 RobotRun.println("Missing parameter!");
 			 NPEx.printStackTrace();
+			 return null;
 			 
 		 } catch (ClassCastException CCEx) {
 			 RobotRun.println("Invalid field?");
 			 CCEx.printStackTrace();
+			 return null;
 			 
 		 } catch (IndexOutOfBoundsException IOOBEx) {
 			 RobotRun.println("Missing field?");
 			 IOOBEx.printStackTrace();
+			 return null;
 		 }
 
 		 app.popMatrix();
@@ -1093,214 +1082,114 @@ public class WindowManager {
 
 		 if (app.activeScenario != null) {
 			 ret = app.activeScenario.removeWorldObject( getActiveWorldObject() );
+			 clearAllInputFields();
 		 }
 
 		 return ret;
 	 }
-
+	 
 	 /**
-	  * Eit the position and orientation (as well as the fixture reference for Parts)
-	  * of the currently selected World Object in the Object dropdown list.
+	  * Puts the current position and orientation values of the selected object,
+	  * in the edit window, into the position and orientaiton input fields.
 	  */
-	 public void editWorldObject() {
-		 WorldObject toEdit = getActiveWorldObject();
-		 RoboticArm model = RobotRun.getActiveRobot();
+	 private void fillCurWithCur() {
+		 WorldObject active = getActiveWorldObject();
+		 // Get the part's default position and orientation
+		 PVector pos = active.getLocalCenter();
+		 PVector wpr = RobotRun.matrixToEuler( active.getLocalOrientationAxes() )
+				 			   .mult(RobotRun.RAD_TO_DEG);
 		 
-		 if (toEdit != null) {
-			 
-			 if (model != null && toEdit == model.held) {
-				 // Cannot edit an object being held by the Robot
-				 RobotRun.println("Cannot edit an object currently being held by the Robot!");
-				 return;
-			 }
-
-			 try {
-				 boolean dimChanged = false, edited = false;
-				 WorldObject objSaveState = (WorldObject)toEdit.clone();
-				 Shape s = toEdit.getForm();
-
-				 if (s instanceof Box) {
-					 Float[] newDims = getBoxDimensions();
-
-					 if (newDims[0] != null) {
-						 // Update the box's length
-						 s.setDim(newDims[0], DimType.LENGTH);
-						 dimChanged = true;
-					 }
-
-					 if (newDims[1] != null) {
-						 // Update the box's height
-						 s.setDim(newDims[1], DimType.HEIGHT);
-						 dimChanged = true;
-					 }
-
-					 if (newDims[2] != null) {
-						 // Update the box's width
-						 s.setDim(newDims[2], DimType.WIDTH);
-						 dimChanged = true;
-					 }
-
-				 } else if (s instanceof Cylinder) {
-					 Float[] newDims = getCylinderDimensions();
-
-					 if (newDims[0] != null) {
-						 // Update the cylinder's radius
-						 s.setDim(newDims[0], DimType.RADIUS);
-						 dimChanged = true;
-					 }
-
-					 if (newDims[1] != null) {
-						 // Update the cylinder's height
-						 s.setDim(newDims[1], DimType.HEIGHT);
-						 dimChanged = true;
-					 }
-
-				 } else if (s instanceof ModelShape) {
-					 Float[] newDims = getModelDimensions();
-
-					 if (newDims[0] != null) {
-						 // Update the model's scale value
-						 s.setDim(newDims[0], DimType.SCALE);
-						 dimChanged = true;
-					 }
-				 }
-
-				 if (dimChanged && toEdit instanceof Part) {
-					 // Update the bounding box dimensions of a part
-					 ((Part)toEdit).updateOBBDims();
-				 }
-				 
-				 edited = dimChanged;
-
-				 // Convert origin position into the World Frame
-				 PVector oPosition = RobotRun.convertNativeToWorld( toEdit.getLocalCenter() ),
-						 oWPR = RobotRun.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RobotRun.RAD_TO_DEG);
-				 Float[] inputValues = getOrientationValues();
-				 // Update position and orientation
-				 if (inputValues[0] != null) {
-					 oPosition.x = inputValues[0];
-					 edited = true;
-				 }
-				 
-				 if (inputValues[1] != null) {
-					 oPosition.y = inputValues[1];
-					 edited = true;
-				 }
-				 
-				 if (inputValues[2] != null) {
-					 oPosition.z = inputValues[2];
-					 edited = true;
-				 }
-				 
-				 if (inputValues[3] != null) {
-					 oWPR.x = -inputValues[3];
-					 edited = true;
-				 }
-				 
-				 if (inputValues[5] != null) {
-					 oWPR.y = -inputValues[5];
-					 edited = true;
-				 }
-				 
-				 if (inputValues[4] != null) {
-					 oWPR.z = inputValues[4];
-					 edited = true;
-				 }
-
-				 // Convert values from the World to the Native coordinate system
-				 PVector position = RobotRun.convertWorldToNative( oPosition );
-				 PVector wpr = oWPR.mult(RobotRun.DEG_TO_RAD);
-				 float[][] orientation = RobotRun.eulerToMatrix(wpr);
-				 // Update the Objects position and orientaion
-				 toEdit.setLocalCenter(position);
-				 toEdit.setLocalOrientationAxes(orientation);
-
-				 if (toEdit instanceof Part) {
-					Part p = (Part)toEdit;
-					PVector defaultPos = RobotRun.convertNativeToWorld( p.getDefaultCenter() );
-					PVector defaultWPR = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() ).mult(RobotRun.RAD_TO_DEG);
-					
-					// Update default position and orientation
-					 if (inputValues[6] != null) {
-						 defaultPos.x = inputValues[6];
-						 edited = true;
-					 }
-					 
-					 if (inputValues[7] != null) {
-						 defaultPos.y = inputValues[7];
-						 edited = true;
-					 }
-					 
-					 if (inputValues[8] != null) {
-						 defaultPos.z = inputValues[8];
-						 edited = true;
-					 }
-					 
-					 if (inputValues[9] != null) {
-						 defaultWPR.x = -inputValues[9];
-						 edited = true;
-					 }
-					 
-					 if (inputValues[11] != null) {
-						 defaultWPR.y = -inputValues[11];
-						 edited = true;
-					 }
-					 
-					 if (inputValues[10] != null) {
-						 defaultWPR.z = inputValues[10];
-						 edited = true;
-					 }
-
-					 // Convert values from the World to the Native coordinate system
-					 position = RobotRun.convertWorldToNative( defaultPos );
-					 wpr = defaultWPR.mult(RobotRun.DEG_TO_RAD);
-					 orientation = RobotRun.eulerToMatrix(wpr);
-					 // Update the Object's default position and orientation
-					 p.setDefaultCenter(position);
-					 p.setDefaultOrientationAxes(orientation);
-					 
-					 // Set the reference of the Part to the currently active fixture
-					 Fixture refFixture = (Fixture)getDropdown("Fixture").getActiveLabelValue();
-					 
-					 if (p.getFixtureRef() != refFixture) {
-						 p.setFixtureRef(refFixture);
-						 edited = true;
-					 }
-				 }
-				 
-				 if (edited) {
-					 /* Save the previous version of the world object on the
-					  * undo stack */
-					 app.updateScenarioUndo(objSaveState);
-				 }
-				 
-			 } catch (NullPointerException NPEx) {
-				 RobotRun.println("Missing parameter!");
-				 NPEx.printStackTrace();
-			 }
-		 } else {
-			 RobotRun.println("No object selected!");
-		 }
-
-		 /* If the edited object is a fixture, then update the orientation
-		  * of all parts, which reference this fixture, in this scenario. */
-		 if (toEdit instanceof Fixture) {
-			 if (app.activeScenario != null) {
-
-				 for (WorldObject wldObj : app.activeScenario) {
-					 if (wldObj instanceof Part) {
-						 Part p = (Part)wldObj;
-
-						 if (p.getFixtureRef() == toEdit) {
-							 p.updateAbsoluteOrientation();
-						 }
-					 }
-				 }
-			 }
-		 }
-
+		 pos = RobotRun.convertNativeToWorld(pos);
+		 
+		 // Fill the current position and orientation fields in the edit window
+		 getTextField("XCur").setText( String.format("%4.3f", pos.x) );
+		 getTextField("YCur").setText( String.format("%4.3f", pos.y) );
+		 getTextField("ZCur").setText( String.format("%4.3f", pos.z) );
+		 getTextField("WCur").setText( String.format("%4.3f", -wpr.x) );
+		 getTextField("PCur").setText( String.format("%4.3f", -wpr.z) );
+		 getTextField("RCur").setText( String.format("%4.3f", wpr.y) );
 	 }
-
+	 
+	 /**
+	  * Puts the default position and orientation values of the selected object,
+	  * in the edit window, into the current position and orientation input
+	  * fields.
+	  */
+	 public void fillCurWithDef() {
+		 WorldObject active = getActiveWorldObject();
+		 
+		 if (active instanceof Part) {
+			 Part p = (Part)active;
+			 // Get the part's current position and orientation
+			 PVector pos = p.getDefaultCenter();
+			 PVector wpr = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
+					 			   .mult(RobotRun.RAD_TO_DEG);
+			 
+			 pos = RobotRun.convertNativeToWorld(pos);
+			 
+			 // Fill the default position and orientation fields in the edit window
+			 getTextField("XCur").setText( String.format("%4.3f", pos.x) );
+			 getTextField("YCur").setText( String.format("%4.3f", pos.y) );
+			 getTextField("ZCur").setText( String.format("%4.3f", pos.z) );
+			 getTextField("WCur").setText( String.format("%4.3f", -wpr.x) );
+			 getTextField("PCur").setText( String.format("%4.3f", -wpr.z) );
+			 getTextField("RCur").setText( String.format("%4.3f", wpr.y) );
+		 }
+	 }
+	 
+	 /**
+	  * Puts the current position and orientation values of the selected object,
+	  * in the edit window, into the default position and orientation text
+	  * fields.
+	  */
+	 public void fillDefWithCur() {
+		 WorldObject active = getActiveWorldObject();
+		 
+		 if (active instanceof Part) {
+			 // Get the part's default position and orientation
+			 PVector pos = active.getLocalCenter();
+			 PVector wpr = RobotRun.matrixToEuler( active.getLocalOrientationAxes() )
+					 			   .mult(RobotRun.RAD_TO_DEG);
+			 
+			 pos = RobotRun.convertNativeToWorld(pos);
+			 
+			 // Fill the default position and orientation fields in the edit window
+			 getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
+			 getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
+			 getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
+			 getTextArea("WDef").setText( String.format("%4.3f", -wpr.x) );
+			 getTextArea("PDef").setText( String.format("%4.3f", -wpr.z) );
+			 getTextArea("RDef").setText( String.format("%4.3f", wpr.y) );
+		 }
+	 }
+	 
+	 /**
+	  * Puts the default position and orientation values of the selected
+	  * object, in the edit window, into the default position and orientation
+	  * text fields.
+	  */
+	 private void fillDefWithDef() {
+		 WorldObject active = getActiveWorldObject();
+		 
+		 if (active instanceof Part) {
+			 Part p = (Part)active;
+			 // Get the part's current position and orientation
+			 PVector pos = p.getDefaultCenter();
+			 PVector wpr = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
+					 			   .mult(RobotRun.RAD_TO_DEG);
+			 
+			 pos = RobotRun.convertNativeToWorld(pos);
+			 
+			 // Fill the default position and orientation fields in the edit window
+			 getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
+			 getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
+			 getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
+			 getTextArea("WDef").setText( String.format("%4.3f", -wpr.x) );
+			 getTextArea("PDef").setText( String.format("%4.3f", -wpr.z) );
+			 getTextArea("RDef").setText( String.format("%4.3f", wpr.y) );
+		 }
+	 }
+	 
 	 /**
 	  * Returns the scenario associated with the label that is active
 	  * for the scenario drop-down list.
@@ -1308,10 +1197,9 @@ public class WindowManager {
 	  * @returning  The index value or null if no such index exists
 	  */
 	 public Scenario getActiveScenario() {
-		 String activeButtonLabel = getMenuName();
 
-		 if (activeButtonLabel != null && activeButtonLabel.equals("Scenario")) {
-			 Object val = getDropdown("Scenario").getActiveLabelValue();
+		 if (menu == WindowTab.SCENARIO) {
+			 Object val = getDropdown("Scenario").getSelectedItem();
 
 			 if (val instanceof Scenario) {
 				 // Set the active scenario index
@@ -1330,10 +1218,11 @@ public class WindowManager {
 	  * in the world object editing menu.
 	  */
 	 public WorldObject getActiveWorldObject() {
-		 Object wldObj = getDropdown("Object").getActiveLabelValue();
+		 Object wldObj = getDropdown("Object").getSelectedItem();
 
 		 if (editObjWindow.isVisible() && wldObj instanceof WorldObject) {
 			 return (WorldObject)wldObj;
+			 
 		 } else {
 			 return null;
 		 }
@@ -1346,7 +1235,7 @@ public class WindowManager {
 	  * @return	The active axes display state
 	  */
 	 public AxesDisplay getAxesDisplay() {
-		 return (AxesDisplay)getDropdown("AxesDisplay").getActiveLabelValue();
+		 return (AxesDisplay)getDropdown("AxesDisplay").getSelectedItem();
 	 }
 
 	 /**
@@ -1358,9 +1247,9 @@ public class WindowManager {
 			 final Float[] dimensions = new Float[] { null, null, null };
 
 			 // Pull from the dim fields
-			 String lenField = getDimTF(DimType.LENGTH).getText(),
-					 hgtField = getDimTF(DimType.HEIGHT).getText(),
-					 wdhField = getDimTF(DimType.WIDTH).getText();
+			 String lenField = getDimText(DimType.LENGTH),
+					 hgtField = getDimText(DimType.HEIGHT),
+					 wdhField = getDimText(DimType.WIDTH);
 
 			 if (lenField != null && !lenField.equals("")) {
 				 // Read length input
@@ -1406,6 +1295,21 @@ public class WindowManager {
 			 return null;
 		 }
 	 }
+	 
+	 /**
+	  * Returns the button, with the given name, if it exists in one of the UI
+	  * (excluding the pendant). If a non-button UI element exists in the UI,
+	  * then a ClassCastException will be thrown. If no UI element with the
+	  * given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a button in the UI
+	  * @return		The button with the given name or null
+	  * @throws ClassCastException	If a non-button UI element with the given
+	  * 							name exists in the UI
+	  */
+	 private Button getButton(String name) throws ClassCastException {
+		 return (Button) UIManager.get(name);
+	 }
 
 	 /**
 	  *TODO
@@ -1416,8 +1320,8 @@ public class WindowManager {
 			 final Float[] dimensions = new Float[] { null, null };
 
 			 // Pull from the dim fields
-			 String radField = getDimTF(DimType.RADIUS).getText(),
-					 hgtField = getDimTF(DimType.HEIGHT).getText();
+			 String radField = getDimText(DimType.RADIUS),
+					 hgtField = getDimText(DimType.HEIGHT);
 
 			 if (radField != null && !radField.equals("")) {
 				 // Read radius input
@@ -1454,23 +1358,53 @@ public class WindowManager {
 	 }
 	 
 	 /**
+	  * Returns a text-field, which corresponds to the given dimension type.
+	  * The mapping from DimType to text-fields is:
+	  * 	LENGTH, RADIUS, null	->	Dim0 text-field
+	  * 	HEIGHT, SCALE			->	Dim1 text-field
+	  * 	WIDTH					->	Dim2 text-field
+	  * 
+	  * @param name	A type of world object dimension, which corresponds to a
+	  * 			text-field input in the UI
+	  * @return		The text-field corresponding to the given dimension type
+	  * @throws ClassCastException	Really shouldn't happen
+	  */
+	 private String getDimText(DimType t) throws ClassCastException {
+		 
+		 if (t == DimType.WIDTH) {
+			 return ( (MyTextfield) UIManager.get("Dim2") ).getText();
+			 
+		 } else if (t == DimType.HEIGHT) {
+			 return ( (MyTextfield) UIManager.get("Dim1") ).getText();
+			 
+		 } else {
+			 return ( (MyTextfield) UIManager.get("Dim0") ).getText();
+		 }
+	 }
+	 
+	 /**
+	  * Returns the drop-down, with the given name, if it exists in one of the
+	  * UI (excluding the pendant). If a non-drop-down UI element exists in the
+	  * UI, then a ClassCastException will be thrown. If no UI element with the
+	  * given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a drop-down in the UI
+	  * @return		The drop-down with the given name or null
+	  * @throws ClassCastException	If a non-drop-down UI element with the given
+	  * 							name exists in the UI
+	  */
+	 private MyDropdownList getDropdown(String name) throws ClassCastException {
+		 return (MyDropdownList) UIManager.get(name);
+	 }
+	 
+	 /**
 	  * Returns the end effector mapping associated with the ee mapping
 	  * dropdown list.
 	  * 
 	  * @return	The active EEE Mapping state
 	  */
 	 public EEMapping getEEMapping() {
-		 return (EEMapping)getDropdown("EEDisplay").getActiveLabelValue();
-	 }
-	 
-	 /**
-	  * Returns the name of the active menu, which corresponds to the label of
-	  * the active button on the top button bar in the RobotRun application.
-	  * 
-	  * @return	The name of the current menu
-	  */
-	 public String getMenuName() {
-		 return windowTabs.getActiveButtonName();
+		 return (EEMapping)getDropdown("EEDisplay").getSelectedItem();
 	 }
 
 	 /**
@@ -1481,14 +1415,9 @@ public class WindowManager {
 			 // null values represent an uninitialized field
 			 final Float[] dimensions = new Float[] { null };
 
-			 String activeWindow = getMenuName(), sclField;
+			 String sclField;
 			 // Pull from the Dim fields
-			 if (activeWindow != null && activeWindow.equals("Create")) {
-				 sclField = getDimTF(DimType.SCALE).getText();
-
-			 } else {
-				 sclField = getDimTF(null).getText();
-			 }
+			 sclField = getDimText(DimType.SCALE);
 
 			 if (sclField != null && !sclField.equals("")) {
 				 // Read scale input
@@ -1522,17 +1451,16 @@ public class WindowManager {
 
 	 /**
 	  * TODO
+	  * 
+	  * @return
 	  */
-	 private Float[] getOrientationValues() {
+	 private Float[] getCurrentValues() {
 		 try {
 			 // Pull from x, y, z, w, p, r, fields input fields
 			 String[] orienVals = new String[] {
 					getTextField("XCur").getText(), getTextField("YCur").getText(),
 					getTextField("ZCur").getText(), getTextField("WCur").getText(),
-					getTextField("PCur").getText(), getTextField("RCur").getText(),
-					getTextField("XDef").getText(), getTextField("YDef").getText(),
-					getTextField("ZDef").getText(), getTextField("WDef").getText(),
-					getTextField("PDef").getText(), getTextField("RDef").getText()
+					getTextField("PCur").getText(), getTextField("RCur").getText()
 			 };
 			 
 			 // NaN indicates an uninitialized field
@@ -1562,10 +1490,79 @@ public class WindowManager {
 	 }
 	 
 	 /**
+	  * TODO
+	  * 
+	  * @return
+	  */
+	 private Float[] getDefaultValues() {
+		 try {
+			 // Pull from x, y, z, w, p, r, fields input fields
+			 String[] orienVals = new String[] {
+					getTextArea("XDef").getText(), getTextArea("YDef").getText(),
+					getTextArea("ZDef").getText(), getTextArea("WDef").getText(),
+					getTextArea("PDef").getText(), getTextArea("RDef").getText()
+			 };
+			 
+			 // NaN indicates an uninitialized field
+			 Float[] values = new Float[] { null, null, null, null, null, null };
+			 
+			 for (int valIdx = 0; valIdx < orienVals.length; ++valIdx) {
+				// Update the orientation value
+				 if (orienVals[valIdx] != null && !orienVals[valIdx].equals("")) {
+					 float val = Float.parseFloat(orienVals[valIdx]);
+					 // Bring value within the range [-9999, 9999]
+					 val = RobotRun.max(-9999f, RobotRun.min(val, 9999f));
+					 values[valIdx] = val;
+				 }
+			 }
+
+			 return values;
+
+		 } catch (NumberFormatException NFEx) {
+			 RobotRun.println("Invalid number input!");
+			 return null;
+
+		 } catch (NullPointerException NPEx) {
+			 RobotRun.println("Missing parameter!");
+			 return null;
+		 }
+	 }
+	 
+	 /**
 	  * @return	Whether or not the robot display button is on
 	  */
 	 public boolean getRobotButtonState() {
 		 return getButton("ToggleRobot").isOn();
+	 }
+	 
+	 /**
+	  * Returns the text-area, with the given name, if it exists in one of the
+	  * UI (excluding the pendant). If a non-text-area UI element exists in the
+	  * UI, then a ClassCastException will be thrown. If no UI element with the
+	  * given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a text-area in the UI
+	  * @return		The text-area with the given name or null
+	  * @throws ClassCastException	If a non-text-area UI element with the given
+	  * 							name exists in the UI
+	  */
+	 private Textarea getTextArea(String name) throws ClassCastException {
+		 return (Textarea) UIManager.get(name);
+	 }
+	 
+	 /**
+	  * Returns the text-field, with the given name, if it exists in one of the
+	  * UI (excluding the pendant). If a non-text-field UI element exists in the
+	  * UI, then a ClassCastException will be thrown. If no UI element with the
+	  * given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a text-field in the UI
+	  * @return		The text-field with the given name or null
+	  * @throws ClassCastException	If a non-text-field UI element with the given
+	  * 							name exists in the UI
+	  */
+	 private MyTextfield getTextField(String name) throws ClassCastException {
+		 return (MyTextfield) UIManager.get(name);
 	 }
 
 	 /**
@@ -1577,9 +1574,7 @@ public class WindowManager {
 	  *             value is invalid
 	  */
 	 public Scenario initializeScenario() {
-		 String activeButtonLabel = getMenuName();
-
-		 if (activeButtonLabel != null && activeButtonLabel.equals("Scenario")) {
+		 if (menu == WindowTab.SCENARIO) {
 			 String name = getTextField("ScenarioName").getText();
 
 			 if (name != null) {
@@ -1615,7 +1610,7 @@ public class WindowManager {
 		 List<ControllerInterface<?>> controllers = UIManager.getAll();
 		 
 		 for (ControllerInterface<?> c : controllers) {
-			 if (c instanceof Textfield && ((Textfield) c).isFocus()) {
+			 if (c instanceof MyTextfield && ((MyTextfield) c).isFocus()) {
 				 return true;
 			 }
 		 }
@@ -1644,7 +1639,7 @@ public class WindowManager {
 	  * @return	If the active menu is a pendant
 	  */
 	 public boolean isPendantActive() {
-		 return getMenuName().equals("Robot1") || getMenuName().equals("Robot2");
+		 return menu == WindowTab.ROBOT1 || menu == WindowTab.ROBOT2;
 	 }
 
 	 /**
@@ -1700,7 +1695,7 @@ public class WindowManager {
 		 
 		 for (ControllerInterface<?> c : controllers) {
 			 if (c instanceof MyDropdownList && !c.getParent().equals(miscWindow)) {
-				 ((MyDropdownList)c).resetLabel();
+				 ((MyDropdownList)c).setValue(-1);
 				 
 			 } else if (c.getName().length() > 4 && c.getName().substring(0, 4).equals("Dim") ||
 					 c.getName().equals("RefLbl")) {
@@ -1722,6 +1717,24 @@ public class WindowManager {
 			 g.setVisible(setVisible);
 		 }
 	 }
+	
+	/**
+	 * Updates the current menu of the UI and communicates with the PApplet to
+	 * update the active robot, if necessary.
+	 * 
+	 * @param newView	The new menu to render
+	 */
+	private void updateView(WindowTab newView) {
+		menu = newView;
+		
+		// Update active robot if necessary
+		if (menu == WindowTab.ROBOT1) {
+			app.setRobot(0);
+			
+		} else if (menu == WindowTab.ROBOT2) {
+			app.setRobot(1);
+		}
+	}
 	 
 	/**
 	 * Updates the tabs that are available in the applications main window.
@@ -1730,7 +1743,7 @@ public class WindowManager {
 	 */
 	public boolean toggleSecondRobot() {
 		
-		if (getMenuName().equals("Robot2")) {
+		if (menu == WindowTab.ROBOT2) {
 			windowTabs.setLabel("Hide");
 		}
 		
@@ -1784,7 +1797,7 @@ public class WindowManager {
 		 getDropdown("Fill").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 Object val = getDropdown("Shape").getActiveLabelValue();
+		 Object val = getDropdown("Shape").getSelectedItem();
 
 		 if (val == ShapeType.MODEL) {
 			 // No stroke color for Model Shapes
@@ -1824,17 +1837,34 @@ public class WindowManager {
 	  */
 	 private int[] updateDimLblAndFieldPositions(int initialXPos, int initialYPos) {
 		 int[] relPos = new int[] { initialXPos, initialYPos };
+		 int ddlIdx = 0;
+		 
+		 // Update the dimension dropdowns
+		 for (ddlIdx = 0; ddlIdx < DIM_DDL; ++ddlIdx) {
+			 DropdownList dimDdl = getDropdown( String.format("DimDdl%d", ddlIdx) );
+			 
+			 if (!dimDdl.isVisible()) { break; }
 
-		 // Update position and label text of the dimension fields based on the selected shape from the Shape dropDown List
-		 for (int idxDim = 0; idxDim < 3; ++idxDim) {
-			 Textfield dimField = getTextField( String.format("Dim%d", idxDim) );
-
-			 if (!dimField.isVisible()) { break; }
-
-			 Textarea dimLbl = getTextArea( String.format("Dim%dLbl", idxDim) ).setPosition(relPos[0], relPos[1]);
+			 Textarea dimLbl = getTextArea( String.format("DimLbl%d", ddlIdx) )
+					 .setPosition(relPos[0], relPos[1]);
 			 
 			 relPos = relativePosition(dimLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-			 dimField.setPosition(relPos[0], relPos[1]);
+			 dimDdl.setPosition(relPos[0], relPos[1]);
+			 
+			 relPos = relativePosition(dimLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 }
+		 
+		 // Update the dimension text fields
+		 for (int idx = 0; idx < DIM_TXT; ++idx) {
+			 MyTextfield dimTxt = getTextField( String.format("Dim%d", idx) );
+			 
+			 if (!dimTxt.isVisible()) { break; }
+
+			 Textarea dimLbl = getTextArea( String.format("DimLbl%d", idx + ddlIdx) )
+					 .setPosition(relPos[0], relPos[1]);
+			 
+			 relPos = relativePosition(dimLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+			 dimTxt.setPosition(relPos[0], relPos[1]);
 			 
 			 relPos = relativePosition(dimLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 }
@@ -1847,56 +1877,76 @@ public class WindowManager {
 	  * the create world object window based on which shape type is chosen from the shape dropdown list.
 	  */
 	 private void updateDimLblsAndFields() {
-		 String activeButtonLabel = getMenuName();
 		 String[] lblNames = new String[0];
+		 int txtFields = 0, ddlFields = 0;
 
-		 if (activeButtonLabel != null) {
-			 if (activeButtonLabel.equals("Create")) {
-				 ShapeType selectedShape = (ShapeType)getDropdown("Shape").getActiveLabelValue();
+		 if (menu == WindowTab.CREATE) {
+			 ShapeType selectedShape = (ShapeType)getDropdown("Shape").getSelectedItem();
 
-				 // Define the label text and the number of dimensionos fields to display
-				 if (selectedShape == ShapeType.BOX) {
+			 // Define the label text and the number of dimensionos fields to display
+			 if (selectedShape == ShapeType.BOX) {
+				 lblNames = new String[] { "Length:", "Height:", "Width" };
+				 txtFields = 3;
+
+			 } else if (selectedShape == ShapeType.CYLINDER) {
+				 lblNames = new String[] { "Radius", "Height" };
+				 txtFields = 2;
+
+			 } else if (selectedShape == ShapeType.MODEL) {
+				 lblNames = new String[] { "Source:", "Scale:", };
+				 txtFields = 1;
+				 ddlFields = 1;
+			 }
+
+		 } else if (menu == WindowTab.EDIT) {
+			 Object val = getDropdown("Object").getSelectedItem();
+
+			 if (val instanceof WorldObject) {
+				 Shape s = ((WorldObject)val).getForm();
+
+				 if (s instanceof Box) {
 					 lblNames = new String[] { "Length:", "Height:", "Width" };
+					 txtFields = 3;
 
-				 } else if (selectedShape == ShapeType.CYLINDER) {
+				 } else if (s instanceof Cylinder) {
 					 lblNames = new String[] { "Radius", "Height" };
+					 txtFields = 2;
 
-				 } else if (selectedShape == ShapeType.MODEL) {
-					 lblNames = new String[] { "Source:", "Scale:", };
+				 } else if (s instanceof ModelShape) {
+					 lblNames = new String[] { "Scale:" };
+					 txtFields = 1;
 				 }
-
-			 } else if (activeButtonLabel.equals("Edit")) {
-				 Object val = getDropdown("Object").getActiveLabelValue();
-
-				 if (val instanceof WorldObject) {
-					 Shape s = ((WorldObject)val).getForm();
-
-					 if (s instanceof Box) {
-						 lblNames = new String[] { "Length:", "Height:", "Width" };
-
-					 } else if (s instanceof Cylinder) {
-						 lblNames = new String[] { "Radius", "Height" };
-
-					 } else if (s instanceof ModelShape) {
-						 lblNames = new String[] { "Scale:" };
-					 }
-				 }
-
 			 }
 		 }
-
-		 for (int idxDim = 0; idxDim < 3; ++idxDim) {
+		 
+		 // Update dimension labels, dropdowns, and text fields
+		 
+		 for (int idx = 0; idx < DIM_LBL; ++idx) {
+			 Textarea ta = getTextArea( String.format("DimLbl%d", idx) );
 			 
-			 if (idxDim < lblNames.length) {
-				 // Show a number of dimension fields and labels equal to the value of dimSize
-				 getTextArea( String.format("Dim%dLbl", idxDim) ).setText( lblNames[idxDim] ).show();
-				 getTextField( String.format("Dim%d", idxDim) ).show();
-
+			 if (idx < lblNames.length) {
+				 ta.setText( lblNames[idx] ).show();
+				 
 			 } else {
-				 // Hide remaining dimension fields and labels
-				 getTextArea( String.format("Dim%dLbl", idxDim) ).hide();
-				 getTextField( String.format("Dim%d", idxDim) ).hide();
+				 ta.hide();
 			 }
+		 }
+		 
+		 for (int idx = 0; idx < DIM_DDL; ++idx) {
+			 DropdownList ddl = getDropdown( String.format("DimDdl%d", idx) );
+			 
+			 ddl = (idx < ddlFields) ? ddl.show() : ddl.hide();
+		 }
+		 
+		 for (int idx = 0; idx < DIM_TXT; ++idx) {
+			MyTextfield tf = getTextField( String.format("Dim%d", idx) );
+			
+			if (idx < txtFields) {
+				tf.show();
+				
+			} else {
+				tf.hide();
+			}
 		 }
 	 }
 
@@ -1905,6 +1955,7 @@ public class WindowManager {
 	  */
 	 private void updateEditWindowContentPositions() {
 		 updateDimLblsAndFields();
+		 getButton("ClearFields").hide();
 
 		 // Object list dropdown and label
 		 int[] relPos = new int[] { offsetX, offsetX };
@@ -1927,23 +1978,9 @@ public class WindowManager {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
 			 getTextArea("Default").setPosition(relPos[0], relPos[1]).show();
 			 
-			 // Auto fill buttons row
-			 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-			 c = getTextArea("AFLbl").setPosition(relPos[0], relPos[1]).show();
-			 
-			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-			 c0 = getButton("DefIntoCur").setPosition(relPos[0], relPos[1]).show();
-			 
-			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX +
-					 fieldWidth - mButtonWidth, 0);
-			 c0 = getButton("CurIntoDef").setPosition(relPos[0], relPos[1]).show();
-			 
 		 } else {
 			 // Only show them for parts
 			 getTextArea("Default").hide();
-			 getTextArea("AFLbl").hide();
-			 getButton("DefIntoCur").hide();
-			 getButton("CurIntoDef").hide();
 		 }
 		 
 		 // X label and fields
@@ -1955,10 +1992,10 @@ public class WindowManager {
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("XDef").setPosition(relPos[0], relPos[1]).show();
+			 getTextArea("XDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("XDef").hide();
+			 getTextArea("XDef").hide();
 		 }
 		 
 		 // Y label and fields
@@ -1970,10 +2007,10 @@ public class WindowManager {
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("YDef").setPosition(relPos[0], relPos[1]).show();
+			 getTextArea("YDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("YDef").hide();
+			 getTextArea("YDef").hide();
 		 }
 		 
 		 // Z label and fields
@@ -1985,10 +2022,10 @@ public class WindowManager {
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("ZDef").setPosition(relPos[0], relPos[1]).show();
+			 getTextArea("ZDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("ZDef").hide();
+			 getTextArea("ZDef").hide();
 		 }
 		 
 		 // W label and fields
@@ -2000,10 +2037,10 @@ public class WindowManager {
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("WDef").setPosition(relPos[0], relPos[1]).show();
+			 getTextArea("WDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("WDef").hide();
+			 getTextArea("WDef").hide();
 		 }
 		 
 		 // P label and fields
@@ -2015,10 +2052,10 @@ public class WindowManager {
 		 
 		 if (isPart) {
 			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			 getTextField("PDef").setPosition(relPos[0], relPos[1]).show();
+			 getTextArea("PDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
-			 getTextField("PDef").hide();
+			 getTextArea("PDef").hide();
 		 }
 		 
 		 // R label and fields
@@ -2029,33 +2066,46 @@ public class WindowManager {
 		 c0 = getTextField("RCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
-			/* Default orientation and fixture references are only relevant for
-			 * fixtures */
 			relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-			getTextField("RDef").setPosition(relPos[0], relPos[1]).show();
-			
-			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
-			
-			relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX,
-					RobotRun.abs(fieldHeight - dropItemHeight) / 2);
-			getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
+			getTextArea("RDef").setPosition(relPos[0], relPos[1]).show();
 			
 		 } else {
-			getTextField("RDef").hide();
+			getTextArea("RDef").hide();
+		 }
+		 
+		 // Move to current button
+		 relPos = relativePosition(c0, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 c = getButton("MoveToCur").setPosition(relPos[0], relPos[1]);
+		 
+		 if (isPart) {
+			 /* Default values and fixture references are only relevant for parts */
+			 
+			 // Update default button
+			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+			 getButton("UpdateWODef").setPosition(relPos[0], relPos[1]).show();
+			
+			 // Move to default button
+			 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			 c0 = getButton("MoveToDef").setPosition(relPos[0], relPos[1]).show();
+			 
+			 relPos =  new int[] { offsetX, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
+			 c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
+			
+			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX,
+					RobotRun.abs(fieldHeight - dropItemHeight) / 2);
+			 getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
+			
+		 } else {
+			getButton("UpdateWODef").hide();
+			getButton("MoveToDef").hide();
 			getTextArea("RefLbl").hide();
 			getDropdown("Fixture").hide();
 		 }
 		 
-		 // Confirm button
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getButton("UpdateWldObj").setPosition(relPos[0], relPos[1]);
-		 // Clear button
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
-		 c = getButton("ClearFields").setPosition(relPos[0], relPos[1]);
 		 // Delete button
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getButton("DeleteWldObj").setPosition(relPos[0], relPos[1]);
+		 
 		 // Update window background display
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 background.setBackgroundHeight(relPos[1])
@@ -2068,8 +2118,21 @@ public class WindowManager {
 	  * contain world objects.
 	  */
 	 public void updateListContents() {
-		 MyDropdownList dropdown;
+		 MyDropdownList dropdown = getDropdown("DimDdl0");
+		 ArrayList<String> files = DataManagement.getDataFileNames();
 		 
+		 if (files != null) {
+			 dropdown.clear();
+			 
+			 // Initialize the source dropdown list
+			 for (String name : files) {
+				 dropdown.addItem(name.substring(0, name.length() - 4), name);
+			 }
+			 
+		 } else {
+			 System.err.println("Missing data subfolder!");
+		 }
+				 
 		 if (app.activeScenario != null) {
 			 dropdown = getDropdown("Object");
 			 dropdown.clear();
@@ -2086,8 +2149,8 @@ public class WindowManager {
 				 }
 			 }
 			 // Update each dropdownlist's active label
-			 limbo.updateActiveLabel();
-			 dropdown.updateActiveLabel();
+			 //limbo.updateActiveLabel();
+			 //dropdown.updateActiveLabel();
 		 }
 
 		 dropdown = getDropdown("Scenario");
@@ -2097,7 +2160,7 @@ public class WindowManager {
 			 Scenario s = app.SCENARIOS.get(idx);
 			 dropdown.addItem(s.getName(), s);
 		 }
-		 dropdown.updateActiveLabel();
+		 //dropdown.updateActiveLabel();
 	 }
 
 	 /**
@@ -2186,9 +2249,7 @@ public class WindowManager {
 	  * based on the current button tab that is active.
 	  */
 	 public void updateWindowContentsPositions() {
-		 String windowState = getMenuName();
-
-		 if (windowState == null || windowState.equals("Hide")) {
+		 if (menu == null) {
 			 // Window is hidden
 			 background.hide();
 			 getButton("FrontView").hide();
@@ -2200,19 +2261,19 @@ public class WindowManager {
 
 			 return;
 
-		 } else if (windowState.equals("Create")) {
+		 } else if (menu == WindowTab.CREATE) {
 			 // Create window
 			 updateCreateWindowContentPositions();
 
-		 } else if (windowState.equals("Edit")) {
+		 } else if (menu == WindowTab.EDIT) {
 			 // Edit window
 			 updateEditWindowContentPositions();
 
-		 } else if (windowState.equals("Scenario")) {
+		 } else if (menu == WindowTab.SCENARIO) {
 			 // Scenario window
 			 updateScenarioWindowContentPositions();
 			 
-		 } else if (windowState.equals("Misc")) {
+		 } else if (menu == WindowTab.MISC) {
 			// Miscellaneous window
 			 updateMiscWindowContentPositions();
 		 }
@@ -2242,9 +2303,8 @@ public class WindowManager {
 	  * the screen to clear the image of the previous window.
 	  */
 	 public void updateWindowDisplay() {
-		 String windowState = getMenuName();
 		 		 
-		 if (windowState == null || windowState.equals("Hide")) {
+		 if (menu == null) {
 			 // Hide any window
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
@@ -2255,7 +2315,8 @@ public class WindowManager {
 
 			 updateWindowContentsPositions();
 
-		 } else if (windowState.equals("Robot1") || windowState.equals("Robot2")) {
+		 } else if (menu == WindowTab.ROBOT1 || menu == WindowTab.ROBOT2) {
+			 
 			 // Show pendant
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
@@ -2269,7 +2330,7 @@ public class WindowManager {
 
 			 app.g1.show();
 
-		 } else if (windowState.equals("Create")) {
+		 } else if (menu == WindowTab.CREATE) {
 			 // Show world object creation window
 			 app.g1.hide();
 			 setGroupVisible(editObjWindow, false);
@@ -2286,7 +2347,7 @@ public class WindowManager {
 				 resetListLabels();
 			 }
 
-		 } else if (windowState.equals("Edit")) {
+		 } else if (menu == WindowTab.EDIT) {
 			 // Show world object edit window
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
@@ -2303,7 +2364,7 @@ public class WindowManager {
 				 resetListLabels();
 			 }
 
-		 } else if (windowState.equals("Scenario")) {
+		 } else if (menu == WindowTab.SCENARIO) {
 			 // Show scenario creating/saving/loading
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
@@ -2320,7 +2381,7 @@ public class WindowManager {
 				 resetListLabels();
 			 }
 			 
-		 } else if (windowState.equals("Misc")) {
+		 } else if (menu == WindowTab.MISC) {
 			 // Show miscellaneous window
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
@@ -2335,6 +2396,223 @@ public class WindowManager {
 				 updateListContents();
 				 resetListLabels();
 			 }
+		 }
+	 }
+	 
+	 /**
+	  * Updates the dimensions as well as the current position and orientation
+	  * of a world object.
+	  */
+	 public void updateWOCurrent() {
+		 WorldObject toEdit = getActiveWorldObject();
+		 RoboticArm model = RobotRun.getActiveRobot();
+		 
+		 if (toEdit != null) {
+			 
+			 if (model != null && toEdit == model.held) {
+				 // Cannot edit an object being held by the Robot
+				 RobotRun.println("Cannot edit an object currently being held by the Robot!");
+				 return;
+			 }
+
+			 try {
+				 boolean dimChanged = false, edited = false;
+				 WorldObject objSaveState = (WorldObject)toEdit.clone();
+				 Shape s = toEdit.getForm();
+
+				 if (s instanceof Box) {
+					 Float[] newDims = getBoxDimensions();
+
+					 if (newDims[0] != null) {
+						 // Update the box's length
+						 s.setDim(newDims[0], DimType.LENGTH);
+						 dimChanged = true;
+					 }
+
+					 if (newDims[1] != null) {
+						 // Update the box's height
+						 s.setDim(newDims[1], DimType.HEIGHT);
+						 dimChanged = true;
+					 }
+
+					 if (newDims[2] != null) {
+						 // Update the box's width
+						 s.setDim(newDims[2], DimType.WIDTH);
+						 dimChanged = true;
+					 }
+
+				 } else if (s instanceof Cylinder) {
+					 Float[] newDims = getCylinderDimensions();
+
+					 if (newDims[0] != null) {
+						 // Update the cylinder's radius
+						 s.setDim(newDims[0], DimType.RADIUS);
+						 dimChanged = true;
+					 }
+
+					 if (newDims[1] != null) {
+						 // Update the cylinder's height
+						 s.setDim(newDims[1], DimType.HEIGHT);
+						 dimChanged = true;
+					 }
+
+				 } else if (s instanceof ModelShape) {
+					 Float[] newDims = getModelDimensions();
+
+					 if (newDims[0] != null) {
+						 // Update the model's scale value
+						 s.setDim(newDims[0], DimType.SCALE);
+						 dimChanged = true;
+					 }
+				 }
+
+				 if (dimChanged && toEdit instanceof Part) {
+					 // Update the bounding box dimensions of a part
+					 ((Part)toEdit).updateOBBDims();
+				 }
+				 
+				 edited = dimChanged;
+
+				 // Convert origin position into the World Frame
+				 PVector oPosition = RobotRun.convertNativeToWorld( toEdit.getLocalCenter() ),
+						 oWPR = RobotRun.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RobotRun.RAD_TO_DEG);
+				 Float[] inputValues = getCurrentValues();
+				 // Update position and orientation
+				 if (inputValues[0] != null) {
+					 oPosition.x = inputValues[0];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[1] != null) {
+					 oPosition.y = inputValues[1];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[2] != null) {
+					 oPosition.z = inputValues[2];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[3] != null) {
+					 oWPR.x = -inputValues[3];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[5] != null) {
+					 oWPR.y = -inputValues[5];
+					 edited = true;
+				 }
+				 
+				 if (inputValues[4] != null) {
+					 oWPR.z = inputValues[4];
+					 edited = true;
+				 }
+
+				 // Convert values from the World to the Native coordinate system
+				 PVector position = RobotRun.convertWorldToNative( oPosition );
+				 PVector wpr = oWPR.mult(RobotRun.DEG_TO_RAD);
+				 float[][] orientation = RobotRun.eulerToMatrix(wpr);
+				 // Update the Objects position and orientaion
+				 toEdit.setLocalCenter(position);
+				 toEdit.setLocalOrientationAxes(orientation);
+				 
+				 if (edited) {
+					 /* Save the previous version of the world object on the
+					  * undo stack */
+					 app.updateScenarioUndo(objSaveState);
+				 }
+				 
+			 } catch (NullPointerException NPEx) {
+				 RobotRun.println("Missing parameter!");
+				 NPEx.printStackTrace();
+				 return;
+			 }
+			 
+		 } else {
+			 RobotRun.println("No object selected!");
+		 }
+
+		 /* If the edited object is a fixture, then update the orientation
+		  * of all parts, which reference this fixture, in this scenario. */
+		 if (toEdit instanceof Fixture) {
+			 if (app.activeScenario != null) {
+
+				 for (WorldObject wldObj : app.activeScenario) {
+					 if (wldObj instanceof Part) {
+						 Part p = (Part)wldObj;
+
+						 if (p.getFixtureRef() == toEdit) {
+							 p.updateAbsoluteOrientation();
+						 }
+					 }
+				 }
+			 }
+		 }
+
+	 }
+	 
+	 /**
+	  * Updates the default position and orientation values of a part based on
+	  * the input fields in the edit window.
+	  */
+	 public void updateWODefault() {
+		 WorldObject toEdit = getActiveWorldObject();
+		 WorldObject savedState = (WorldObject)toEdit.clone();
+		 
+		 if (toEdit instanceof Part) {
+			Part p = (Part)toEdit;
+			PVector defaultPos = RobotRun.convertNativeToWorld( p.getDefaultCenter() );
+			PVector defaultWPR = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
+										 .mult(RobotRun.RAD_TO_DEG);
+			Float[] inputValues = getCurrentValues();
+			boolean edited = false;
+			
+			// Update default position and orientation
+			 if (inputValues[0] != null) {
+				 defaultPos.x = inputValues[0];
+				 edited = true;
+			 }
+			 
+			 if (inputValues[1] != null) {
+				 defaultPos.y = inputValues[1];
+				 edited = true;
+			 }
+			 
+			 if (inputValues[2] != null) {
+				 defaultPos.z = inputValues[2];
+				 edited = true;
+			 }
+			 
+			 if (inputValues[3] != null) {
+				 defaultWPR.x = -inputValues[3];
+				 edited = true;
+			 }
+			 
+			 if (inputValues[4] != null) {
+				 defaultWPR.y = -inputValues[4];
+				 edited = true;
+			 }
+			 
+			 if (inputValues[5] != null) {
+				 defaultWPR.z = inputValues[5];
+				 edited = true;
+			 }
+
+			 // Convert values from the World to the Native coordinate system
+			 PVector position = RobotRun.convertWorldToNative( defaultPos );
+			 PVector wpr = defaultWPR.mult(RobotRun.DEG_TO_RAD);
+			 float[][] orientation = RobotRun.eulerToMatrix(wpr);
+			 // Update the Object's default position and orientation
+			 p.setDefaultCenter(position);
+			 p.setDefaultOrientationAxes(orientation);
+			 
+			 if (edited) {
+				 /* Save the previous version of the world object on the
+				  * undo stack */
+				 app.updateScenarioUndo(savedState);
+			 }
+			 
+			 fillDefWithDef();
 		 }
 	 }
 }

@@ -8,6 +8,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.ArrayList;
 
 import expression.AtomicExpression;
@@ -26,8 +28,10 @@ import geom.ModelShape;
 import geom.Part;
 import geom.Point;
 import geom.Shape;
+import geom.Triangle;
 import geom.WorldObject;
 import global.Fields;
+import processing.core.PShape;
 import processing.core.PVector;
 import programming.CallInstruction;
 import programming.FrameInstruction;
@@ -55,7 +59,7 @@ import regs.Register;
  */
 public abstract class DataManagement {
 	
-	private static String parentDirPath, scenarioDirPath;
+	private static String dataDir, parentDirPath, scenarioDirPath;
 	
 	static {
 		parentDirPath = null;
@@ -64,8 +68,37 @@ public abstract class DataManagement {
 	
 	// Must be called when RobotRun starts!!!!
 	public static void initialize(RobotRun process) {
+		dataDir = process.sketchPath("data/");
 		parentDirPath = process.sketchPath("tmp/");
 		scenarioDirPath = parentDirPath + "scenarios/";
+	}
+	
+	/**
+	 * Returns a list of all the names of files in the data sub directory
+	 * with the .stl file extension.
+	 * 
+	 * @return	A list of model files
+	 */
+	public static ArrayList<String> getDataFileNames() {
+		File data = new File(dataDir);
+		
+		if (!data.exists() || data.isFile()) {
+			// Missing data directory
+			return null;
+		}
+		// Search for all .stl files
+		File[] dataFiles = data.listFiles();
+		ArrayList<String> fileNames = new ArrayList<String>(dataFiles.length);
+		
+		for (File file : dataFiles) {
+			String name = file.getName();
+			// Check file extension and type
+			if (file.isFile() && (name.endsWith(".stl") || name.endsWith(".STL"))) {
+				fileNames.add(name);
+			}
+		}
+		
+		return fileNames;
 	}
 	
 	private static ExpressionElement loadExpressionElement(RoboticArm robot,
@@ -543,7 +576,7 @@ public abstract class DataManagement {
 			return 4;
 		}
 	}
-
+	
 	private static PVector loadPVector(DataInputStream in) throws IOException {
 		// Read flag byte
 		int val = in.readByte();
@@ -671,7 +704,7 @@ public abstract class DataManagement {
 		}
 	}
 
-	private static Scenario loadScenario(DataInputStream in) throws IOException, NullPointerException {
+	private static Scenario loadScenario(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
 		// Read flag byte
 		byte flag = in.readByte();
 
@@ -691,30 +724,33 @@ public abstract class DataManagement {
 			int size = in.readInt();
 			// Read all the world objects contained in the scenario
 			while (size-- > 0) {
-				Object loadedObject = loadWorldObject(in);
-
-				if (loadedObject instanceof WorldObject) {
-					// Add all normal world objects to the scenario
-					s.addWorldObject( (WorldObject)loadedObject );
-
-					if (loadedObject instanceof Fixture) {
-						// Save an extra reference of each fixture
-						fixtures.add( (Fixture)loadedObject );
-					}
-
-				} else if (loadedObject instanceof LoadedPart) {
-					LoadedPart lPart = (LoadedPart)loadedObject;
-
-					if (lPart.part != null) {
-						// Save the part in the scenario
-						s.addWorldObject(lPart.part);
-
-						if (lPart.referenceName != null) {
-							// Save any part with a defined reference
-							partsWithReferences.add(lPart);
+				try {
+					Object loadedObject = loadWorldObject(in, app);
+	
+					if (loadedObject instanceof WorldObject) {
+						// Add all normal world objects to the scenario
+						s.addWorldObject( (WorldObject)loadedObject );
+	
+						if (loadedObject instanceof Fixture) {
+							// Save an extra reference of each fixture
+							fixtures.add( (Fixture)loadedObject );
+						}
+	
+					} else if (loadedObject instanceof LoadedPart) {
+						LoadedPart lPart = (LoadedPart)loadedObject;
+	
+						if (lPart.part != null) {
+							// Save the part in the scenario
+							s.addWorldObject(lPart.part);
+	
+							if (lPart.referenceName != null) {
+								// Save any part with a defined reference
+								partsWithReferences.add(lPart);
+							}
 						}
 					}
-				}
+					
+				} catch (NullPointerException NPEx) {/* Invalid model source file */}
 			}
 			
 			// Set all the Part's references
@@ -763,7 +799,7 @@ public abstract class DataManagement {
 				FileInputStream in = new FileInputStream(activeFile);
 				DataInputStream dataIn = new DataInputStream(in);
 				
-				Scenario s = loadScenario(dataIn);
+				Scenario s = loadScenario(dataIn, process);
 				
 				if (s != null) {
 					process.SCENARIOS.add(s);
@@ -788,7 +824,7 @@ public abstract class DataManagement {
 		return 0;
 	}
 
-	private static Shape loadShape(DataInputStream in) throws IOException, NullPointerException {
+	private static Shape loadShape(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
 		// Read flag byte
 		byte flag = in.readByte();
 		Shape shape = null;
@@ -818,7 +854,7 @@ public abstract class DataManagement {
 				float scale = in.readFloat();
 				String srcPath = in.readUTF();
 				// Creates a complex shape from the srcPath located in RobotRun/data/
-				shape = new ModelShape(srcPath, fill, scale);
+				shape = new ModelShape(srcPath, fill, scale, app);
 			}
 		}
 
@@ -831,7 +867,7 @@ public abstract class DataManagement {
 		loadRobotData(process.getRobot(1));
 	}
 
-	private static Object loadWorldObject(DataInputStream in) throws IOException, NullPointerException {
+	private static Object loadWorldObject(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
 		// Load the flag byte
 		byte flag = in.readByte();
 		Object wldObjFields = null;
@@ -839,7 +875,7 @@ public abstract class DataManagement {
 		if (flag != 0) {
 			// Load the name and shape of the object
 			String name = in.readUTF();
-			Shape form = loadShape(in);
+			Shape form = loadShape(in, app);
 			// Load the object's local orientation
 			PVector center = loadPVector(in);
 			float[][] orientationAxes = loadFloatArray2D(in);
