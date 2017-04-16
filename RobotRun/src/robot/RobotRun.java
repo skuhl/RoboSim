@@ -1041,16 +1041,12 @@ public class RobotRun extends PApplet {
 			options.set(1, workingText + workingTextSuffix);
 		}
 		else if(mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-			if(contents.getLineIdx() >= 0 && contents.getLineIdx() < contents.size()) {
-				String value = contents.get(contents.getLineIdx()).get(1) + number;
-
-				if(value.length() > 9) {
-					// Max length of a an input value
-					value = value.substring(0,  9);
-				}
-
-				// Concatenate the new digit
-				contents.get(contents.getLineIdx()).set(1, value);
+			DisplayLine entry = contents.get( contents.getLineIdx() );
+			int idx = contents.getColumnIdx();
+			
+			if (entry.size() < 10) {
+				entry.add(idx, number);
+				contents.setColumnIdx(idx + 1);
 			}
 		}
 		else if(mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
@@ -1129,10 +1125,6 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case SET_CALL_PROG:
-		case DIRECT_ENTRY_TOOL:
-		case DIRECT_ENTRY_USER:
-		case EDIT_PREG:
-		case EDIT_MINST_POS:
 		case SET_MACRO_PROG:
 		case NAV_IOREG:
 			contents.moveDown(shift);
@@ -1184,6 +1176,9 @@ public class RobotRun extends PApplet {
 				options.moveDown(false);
 				// Reset function key states
 				for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+				
+			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
+				contents.moveDown(false);
 			}
 		}  
 
@@ -1208,6 +1203,10 @@ public class RobotRun extends PApplet {
 				contents.setColumnIdx(max(0, contents.getColumnIdx() - 1));
 				// Reset function key states 
 				for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+				
+			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
+				contents.setColumnIdx( Math.max(1, contents.getColumnIdx() - 1)  );
+				
 			} else if(mode.getType() == ScreenType.TYPE_EXPR_EDIT) {  
 				contents.setColumnIdx(contents.getColumnIdx() - ((contents.getColumnIdx() - 4 >= options.size()) ? 4 : 0));
 			}
@@ -1260,22 +1259,28 @@ public class RobotRun extends PApplet {
 				for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
 				
 			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
+				DisplayLine entry = contents.get( contents.getLineIdx() );
+				int idx = contents.getColumnIdx();
+				int size = entry.size();
 				
 				// Delete a digit from the beginning of the number entry
-				if(isShift()) {
-					String entry = contents.get(contents.getLineIdx()).get(1);
-
-					if (entry.length() > 1 && !(entry.length() == 2 && entry.charAt(0) == '-')) {
-
-						if(entry.charAt(0) == '-') {
-							// Keep negative sign until the last digit is removed
-							contents.get(contents.getLineIdx()).set(1, "-" + entry.substring(2, entry.length()));
-						} else {
-							contents.get(contents.getLineIdx()).set(1, entry.substring(1, entry.length()));
-						}
+				if(isShift()) {	
+					if (size > 2) {
+						entry.remove(idx);
+					
 					} else {
-						contents.get(contents.getLineIdx()).set(1, "");
+						// Leave at least one space value entry
+						entry.set(idx, "\0");
 					}
+					
+				} else {
+					
+					if (idx == (entry.size() - 1) && entry.size() < 10) {
+						entry.add("\0");
+					}
+					
+					// Move to the right one digit
+					contents.setColumnIdx( Math.min(idx + 1, size - 1) );
 				}
 			}
 		}
@@ -1333,10 +1338,6 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_CALL_PROG:
 		case SET_MACRO_PROG:
-		case DIRECT_ENTRY_TOOL:
-		case DIRECT_ENTRY_USER:
-		case EDIT_PREG:
-		case EDIT_MINST_POS:
 		case NAV_IOREG:
 			contents.moveUp(isShift());
 			break;
@@ -1386,6 +1387,9 @@ public class RobotRun extends PApplet {
 				options.moveUp(false); 
 				// Reset function key states
 				for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+				
+			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
+				contents.moveUp(false);
 			}
 		}
 
@@ -1480,25 +1484,21 @@ public class RobotRun extends PApplet {
 			}
 
 		} else if(mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-
-			// backspace function for current row
-			if(contents.getLineIdx() >= 0 && contents.getLineIdx() < contents.size()) {
-				String value = contents.get(contents.getLineIdx()).get(1);
-
-				if (value.length() == 1) {
-					contents.get(contents.getLineIdx()).set(1, "");
-					
-				} else if(value.length() > 1) {
-
-					if (value.length() == 2 && value.charAt(0) == '-') {
-						// Do not remove line prefix until the last digit is removed
-						contents.get(contents.getLineIdx()).set(1, "");
-						
-					} else {
-						contents.get(contents.getLineIdx()).set(1, value.substring(0, value.length() - 1));
-					}
+			DisplayLine entry = contents.get( contents.getLineIdx() );
+			int idx = contents.getColumnIdx();
+			
+			if (entry.size() > 2) {
+				
+				if (idx > 1) {
+					contents.setColumnIdx(idx - 1);
 				}
+				
+				entry.remove(idx);
+				
+			} else {
+				entry.set(idx, "\0");
 			}
+			
 		} else if(mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 			
 			// Delete/Backspace function
@@ -2016,7 +2016,13 @@ public class RobotRun extends PApplet {
 		
 		try {
 			for(int idx = 0; idx < inputs.length; ++idx) {
-				String inputStr = contents.get(idx).get(contents.getColumnIdx());
+				DisplayLine value = contents.get(idx);
+				String inputStr = new String();
+				
+				for (int sdx = 0; sdx < value.size(); ++sdx) {
+					inputStr += value.get(sdx);
+				}
+				
 				inputs[idx] = Float.parseFloat(inputStr);
 				// Bring the input values with the range [-9999, 9999]
 				inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
@@ -2625,7 +2631,12 @@ public class RobotRun extends PApplet {
 			try {
 				// Parse each input value
 				for(int val = 0; val < inputs.length; ++val) {
-					String str = contents.get(val).get(1);
+					DisplayLine value = contents.get(val);
+					String str = new String();
+					
+					for (int sdx = 0; sdx < value.size(); ++sdx) {
+						str += value.get(sdx);
+					}
 
 					if(str.length() < 0) {
 						// No value entered
@@ -6200,16 +6211,12 @@ public class RobotRun extends PApplet {
 
 	public void LINE() {
 		if(mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-
-			if(contents.getLineIdx() >= 0 && contents.getLineIdx() < contents.size()) {
-				String value = contents.get(contents.getLineIdx()).get(1);
-
-				// Mutliply current number by -1
-				if(value.length() > 0 && value.charAt(0) == '-') {
-					contents.get(contents.getLineIdx()).set(1, value.substring(1, value.length()));
-				} else {
-					contents.get(contents.getLineIdx()).set(1, "-" + value);
-				}
+			DisplayLine entry = contents.get( contents.getLineIdx() );
+			int idx = contents.getColumnIdx();
+			
+			if (entry.size() < 10) {
+				entry.add(idx, "-");
+				contents.setColumnIdx(idx + 1);
 			}
 
 		} else if(mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
@@ -6711,7 +6718,7 @@ public class RobotRun extends PApplet {
 			String[][] entries;
 			
 			if (isCartesian) {
-				// Display Cartesian values
+				// List Cartesian values
 				entries = pt.toCartesianStringArray();
 				
 			} else {
@@ -6720,7 +6727,14 @@ public class RobotRun extends PApplet {
 			}
 	
 			for(int idx = 0; idx < entries.length; ++idx) {
-				contents.addLine(entries[idx][0], entries[idx][1]);
+				String[] line = new String[ entries[idx][1].length() + 1 ];
+				line[0] = entries[idx][0];
+				// Give each character in the value String it own column
+				for (int sdx = 0; sdx < entries[idx][1].length(); ++sdx) {
+					line[sdx + 1] = Character.toString( entries[idx][1].charAt(sdx) );
+				}
+				
+				contents.addLine(line);
 			}
 		}
 	}
@@ -7604,18 +7618,12 @@ public class RobotRun extends PApplet {
 
 	public void PERIOD() {
 		if(mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-
-			if(contents.getLineIdx() >= 0 && contents.getLineIdx() < contents.size()) {
-
-				// Add decimal point
-				String value = contents.get(contents.getLineIdx()).get(1) + ".";
-
-				if(value.length() > 9) {
-					// Max length of a an input value
-					value = value.substring(0,  9);
-				}
-
-				contents.get(contents.getLineIdx()).set(1, value);
+			DisplayLine entry = contents.get( contents.getLineIdx() );
+			int idx = contents.getColumnIdx();
+			
+			if (entry.size() < 10) {
+				entry.add(idx, ".");
+				contents.setColumnIdx(idx + 1);
 			}
 			
 		} else if(mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
