@@ -1490,7 +1490,7 @@ public class RobotRun extends PApplet {
 			if (entry.size() > 2) {
 				
 				if (idx > 1) {
-					contents.setColumnIdx(idx - 1);
+					contents.setColumnIdx( --idx );
 				}
 				
 				entry.remove(idx);
@@ -2008,49 +2008,6 @@ public class RobotRun extends PApplet {
 		coordinateSystem[1] = y;
 		coordinateSystem[2] = z;
 		return coordinateSystem;
-	}
-
-	public Point parsePosFromContents(boolean isCartesian) {
-		// Obtain point inputs from UI display text
-		float[] inputs = new float[6];
-		
-		try {
-			for(int idx = 0; idx < inputs.length; ++idx) {
-				DisplayLine value = contents.get(idx);
-				String inputStr = new String();
-				
-				for (int sdx = 0; sdx < value.size(); ++sdx) {
-					inputStr += value.get(sdx);
-				}
-				
-				inputs[idx] = Float.parseFloat(inputStr);
-				// Bring the input values with the range [-9999, 9999]
-				inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
-			}
-			
-			if (isCartesian) {
-				PVector position = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
-				// Convert the angles from degrees to radians, then convert from World to Native frame, and finally convert to a quaternion
-				RQuaternion orientation = eulerToQuat( (new PVector(-inputs[3], inputs[5], -inputs[4]).mult(DEG_TO_RAD)) );
-
-				// Use default the Robot's joint angles for computing inverse kinematics
-				float[] jointAngles = inverseKinematics(activeRobot, new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
-				return new Point(position, orientation, jointAngles);
-				
-			} else {
-				// Bring angles within range: (0, TWO_PI)
-				for(int idx = 0; idx < inputs.length; ++idx) {
-					inputs[idx] = mod2PI(inputs[idx] * DEG_TO_RAD);
-				}
-
-				return nativeRobotEEPoint(activeRobot, inputs);
-			}
-			
-		} catch (NumberFormatException NFEx) {
-			// Invalid input
-			println("Values must be real numbers!");
-			return null;
-		}		
 	}
 
 	public void CreateWldObj() {
@@ -2633,8 +2590,16 @@ public class RobotRun extends PApplet {
 				for(int val = 0; val < inputs.length; ++val) {
 					DisplayLine value = contents.get(val);
 					String str = new String();
+					int sdx;
 					
-					for (int sdx = 0; sdx < value.size(); ++sdx) {
+					/* Combine all columns related to the value, ignoring the
+					 * prefix and last columns */
+					for (sdx = 1; sdx < (value.size() - 1); ++sdx) {
+						str += value.get(sdx);
+					}
+					
+					// Ignore any trailing blank spaces
+					if (!value.get(sdx).equals("\0")) {
 						str += value.get(sdx);
 					}
 
@@ -6295,8 +6260,15 @@ public class RobotRun extends PApplet {
 	public void loadFrameDirectEntry(Frame f) {
 		String[][] entries = f.directEntryStringArray();
 
-		for (int line = 0; line < entries.length; ++line) {
-			contents.addLine(entries[line][0], entries[line][1]);
+		for (int idx = 0; idx < entries.length; ++idx) {
+			String[] line = new String[ entries[idx][1].length() + 1 ];
+			line[0] = entries[idx][0];
+			// Give each character in the value String it own column
+			for (int sdx = 0; sdx < entries[idx][1].length(); ++sdx) {
+				line[sdx + 1] = Character.toString( entries[idx][1].charAt(sdx) );
+			}
+			
+			contents.addLine(line);
 		}
 	}
 	
@@ -7552,6 +7524,57 @@ public class RobotRun extends PApplet {
 
 	public void NUM9() {
 		addNumber("9");
+	}
+	
+	public Point parsePosFromContents(boolean isCartesian) {
+		// Obtain point inputs from UI display text
+		float[] inputs = new float[6];
+		
+		try {
+			for(int idx = 0; idx < inputs.length; ++idx) {
+				DisplayLine value = contents.get(idx);
+				String inputStr = new String();
+				int sdx;
+				
+				/* Combine all columns related to the value, ignoring the prefix
+				 * and last column */ 
+				for (sdx = 1; sdx < (value.size() - 1); ++sdx) {
+					inputStr += value.get(sdx);
+				}
+				
+				// Ignore any trailing blank spaces
+				if (!value.get(sdx).equals("\0")) {
+					inputStr += value.get(sdx);
+				}
+				
+				inputs[idx] = Float.parseFloat(inputStr);
+				// Bring the input values with the range [-9999, 9999]
+				inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
+			}
+			
+			if (isCartesian) {
+				PVector position = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
+				// Convert the angles from degrees to radians, then convert from World to Native frame, and finally convert to a quaternion
+				RQuaternion orientation = eulerToQuat( (new PVector(-inputs[3], inputs[5], -inputs[4]).mult(DEG_TO_RAD)) );
+
+				// Use default the Robot's joint angles for computing inverse kinematics
+				float[] jointAngles = inverseKinematics(activeRobot, new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
+				return new Point(position, orientation, jointAngles);
+				
+			} else {
+				// Bring angles within range: (0, TWO_PI)
+				for(int idx = 0; idx < inputs.length; ++idx) {
+					inputs[idx] = mod2PI(inputs[idx] * DEG_TO_RAD);
+				}
+
+				return nativeRobotEEPoint(activeRobot, inputs);
+			}
+			
+		} catch (NumberFormatException NFEx) {
+			// Invalid input
+			println("Values must be real numbers!");
+			return null;
+		}		
 	}
 
 	public void pasteInstructions() {
