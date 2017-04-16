@@ -1168,8 +1168,11 @@ public class RobotRun extends PApplet {
 			break;  
 		case ACTIVE_FRAMES:
 			updateActiveFramesDisplay();
-			workingText = new StringBuilder( getActiveRobot().getActiveUserFrame() + 1 );
-			contents.setLineIdx(min(contents.getLineIdx() + 1, contents.size() - 1));
+			workingText = new StringBuilder(
+						Integer.toString(getActiveRobot().getActiveUserFrame() + 1)
+					);
+			
+			contents.moveDown(false);
 			break;
 		default:
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
@@ -1379,7 +1382,9 @@ public class RobotRun extends PApplet {
 			break;
 		case ACTIVE_FRAMES:
 			updateActiveFramesDisplay();
-			workingText = new StringBuilder( getActiveRobot().getActiveToolFrame() + 1 );
+			workingText = new StringBuilder(
+						Integer.toString(getActiveRobot().getActiveToolFrame() + 1)
+					);
 			contents.moveUp(false);
 			break;
 		default:
@@ -1855,6 +1860,7 @@ public class RobotRun extends PApplet {
 	public void COORD() {
 		if(isShift()) {
 			nextScreen(ScreenMode.ACTIVE_FRAMES);
+			
 		} else {  
 			// Update the coordinate mode
 			coordFrameTransition();
@@ -3799,6 +3805,7 @@ public class RobotRun extends PApplet {
 		case ACTIVE_FRAMES:
 			if(contents.getLineIdx() == 0) {
 				nextScreen(ScreenMode.NAV_TOOL_FRAMES);
+				
 			} else if(contents.getLineIdx() == 1) {
 				nextScreen(ScreenMode.NAV_USER_FRAMES);
 			}
@@ -4386,9 +4393,10 @@ public class RobotRun extends PApplet {
 
 		case ACTIVE_FRAMES:
 			/* workingText corresponds to the active row's index display */
-			if (this.contents.getLineIdx() == 0) {
+			if (contents.getLineIdx() == 0) {
 				contents.addLine("Tool: ", workingText.toString());
 				contents.addLine("User: ", Integer.toString(getActiveRobot().getActiveUserFrame() + 1));
+				
 			} else {
 				contents.addLine("Tool: ", Integer.toString(getActiveRobot().getActiveToolFrame() + 1));
 				contents.addLine("User: ", workingText.toString());
@@ -6811,7 +6819,9 @@ public class RobotRun extends PApplet {
 		case ACTIVE_FRAMES:
 			contents.setLineIdx(0);
 			contents.setColumnIdx(1);
-			workingText = new StringBuilder(getActiveRobot().getActiveToolFrame() + 1);
+			workingText = new StringBuilder(
+						Integer.toString(getActiveRobot().getActiveToolFrame() + 1)
+					);
 			break;
 		case SELECT_FRAME_MODE:
 			active_index = 0;
@@ -8324,10 +8334,14 @@ public class RobotRun extends PApplet {
 		}
 		// Update display
 		if (contents.getLineIdx() == 0) {
-			workingText = new StringBuilder( getActiveRobot().getActiveToolFrame() + 1 );
+			workingText = new StringBuilder(
+						Integer.toString(getActiveRobot().getActiveToolFrame() + 1)
+					);
 			
 		} else {
-			workingText = new StringBuilder( getActiveRobot().getActiveUserFrame() + 1 );
+			workingText = new StringBuilder(
+					Integer.toString(getActiveRobot().getActiveUserFrame() + 1)
+				);
 		}
 
 		contents.get(contents.getLineIdx()).set(contents.getColumnIdx(), workingText.toString());
