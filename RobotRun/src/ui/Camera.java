@@ -18,7 +18,7 @@ public class Camera {
 	 * Creates a camera with the default position, orientation and scale.
 	 */
 	public Camera() {
-		position = new PVector(0f, 0f, 0f);
+		position = new PVector(0f, 0f, -500f);
 		orientation = new PVector(0f, 0f, 0f);
 		scale = 2f;
 	}
@@ -36,7 +36,7 @@ public class Camera {
 		
 		// Apply orthogonal camera view
 		app.ortho(screenPos.x - horizontalMargin, screenPos.x + horizontalMargin,
-				screenPos.y - verticalMargin, screenPos.y + verticalMargin, near, far);
+				screenPos.y - verticalMargin, screenPos.y + verticalMargin, 10f, far);
 		
 		app.rotateX(orientation.x);
 		app.rotateY(orientation.y);
@@ -90,7 +90,7 @@ public class Camera {
 	public void reset() {
 		position.x = 0f;
 		position.y = 0f;
-		position.z = 0f;
+		position.z = -500f;
 		orientation.x = 0f;
 		orientation.y = 0f;
 		orientation.z = 0f;
