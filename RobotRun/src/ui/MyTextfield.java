@@ -1,9 +1,7 @@
 package ui;
 
 import controlP5.ControlP5;
-import controlP5.ControllerGroup;
 import controlP5.Textfield;
-import processing.event.KeyEvent;
 
 /**
  * My version of the Textfield, that will hopefully fix the delete key function ...
@@ -27,17 +25,25 @@ public class MyTextfield extends Textfield {
 	}
 	
 	@Override
-	public void keyEvent(KeyEvent e) {
+	public void keyEvent(processing.event.KeyEvent e) {
 		
-		// TODO Remap delete key
+		/* TODO find out if the KeyEvent is pressed or released *
 		if (e.getKeyCode() == 147) {
-			/* System.out.printf("Remap: %s\n", this.keyMapping.get(e.getKeyCode())); */
-			KeyEvent copy = new KeyEvent(e.getNative(), e.getMillis(), e.getAction(), e.getModifiers(), e.getKey(), DELETE);
-			super.keyEvent(copy);
+			
+			if ( !e.isAutoRepeat() && _myTextBuffer.length() > 0
+					&& _myTextBufferIndex < _myTextBuffer.length() && _myTextBufferIndex > 0 ) {
+				
+				_myTextBuffer.deleteCharAt( _myTextBufferIndex );
+				
+				if ( _myTextBufferIndex > 0 && _myTextBuffer.length() <= _myTextBufferIndex) {
+					_myTextBufferIndex = _myTextBuffer.length() - 1;
+				}
+			}
 			
 		} else {
 			super.keyEvent(e);
 		}
+		/**/
 	}
 	
 }
