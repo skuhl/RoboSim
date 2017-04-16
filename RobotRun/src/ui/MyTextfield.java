@@ -27,9 +27,8 @@ public class MyTextfield extends Textfield {
 	@Override
 	public void keyEvent(processing.event.KeyEvent e) {
 		
-		/* TODO find out if the KeyEvent is pressed or released *
 		if (e.getKeyCode() == 147) {
-			
+			/* TODO find out if the KeyEvent is pressed or released *
 			if ( !e.isAutoRepeat() && _myTextBuffer.length() > 0
 					&& _myTextBufferIndex < _myTextBuffer.length() && _myTextBufferIndex > 0 ) {
 				
@@ -39,11 +38,10 @@ public class MyTextfield extends Textfield {
 					_myTextBufferIndex = _myTextBuffer.length() - 1;
 				}
 			}
+			/**/
 			
 		} else {
 			super.keyEvent(e);
 		}
-		/**/
-	}
-	
+	}	
 }
