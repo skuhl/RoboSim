@@ -5081,7 +5081,7 @@ public class RobotRun extends PApplet {
 			options.addLine("1 Frames"           );
 			options.addLine("2 Macros"           );
 			options.addLine("3 Manual Fncts"     );
-			options.addLine("4 I/O Registers");
+			options.addLine("4 I/O Registers"	 );
 			break;
 		
 		case NAV_PROG_INSTR:
