@@ -6078,6 +6078,21 @@ public class RobotRun extends PApplet {
 					updateScreen();
 					return;	
 				}
+				
+			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
+				
+				if ((key >= '0' && key <= '9') || key == '-' || key == '.') {
+					DisplayLine entry = contents.get( contents.getLineIdx() );
+					int idx = contents.getColumnIdx();
+					
+					if (entry.size() < 10) {
+						entry.add(idx, Character.toString(key));
+						contents.setColumnIdx(idx + 1);
+					}
+					
+					updateScreen();
+					return;
+				}
 			}
 			
 			// Pendant button shortcuts
