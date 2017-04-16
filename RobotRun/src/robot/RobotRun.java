@@ -78,11 +78,11 @@ public class RobotRun extends PApplet {
 									 {  0,  0,  1 },
 									 {  0, -1,  0 } };
 		
-		 letters = new char[][] {{'a', 'b', 'c', 'd', 'e', 'f'},
-								 {'g', 'h', 'i', 'j', 'k', 'l'},
-								 {'m', 'n', 'o', 'p', 'q', 'r'},
-								 {'s', 't', 'u', 'v', 'w', 'x'},
-								 {'y', 'z', '_', '@', '*', '.'}};
+		letters = new char[][] {{'a', 'b', 'c', 'd', 'e', 'f'},
+								{'g', 'h', 'i', 'j', 'k', 'l'},
+								{'m', 'n', 'o', 'p', 'q', 'r'},
+								{'s', 't', 'u', 'v', 'w', 'x'},
+								{'y', 'z', '_', '@', '*', '.'}};
 	}
 	
 	public static PFont fnt_con14;
@@ -5088,7 +5088,7 @@ public class RobotRun extends PApplet {
 			Program p = activeRobot.getActiveProg();
 			int aInst = activeRobot.getActiveInstIdx();
 			/* Really buggy for empty/spare programs, I will fix it later
-			 * 		- Joshua
+			 * 		- Joshua */
 			if (p.getInstructions().size() > 0 && aInst >= 0 && aInst < p.getInstructions().size()) {
 				Instruction inst = p.getInstruction( activeRobot.getActiveInstIdx() );
 				
