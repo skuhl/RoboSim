@@ -78,11 +78,11 @@ public class RobotRun extends PApplet {
 									 {  0,  0,  1 },
 									 {  0, -1,  0 } };
 		
-		 letters = new char[][] {{'a', 'b', 'c', 'd', 'e', 'f'},
-								 {'g', 'h', 'i', 'j', 'k', 'l'},
-								 {'m', 'n', 'o', 'p', 'q', 'r'},
-								 {'s', 't', 'u', 'v', 'w', 'x'},
-								 {'y', 'z', '_', '@', '*', '.'}};
+		letters = new char[][] {{'a', 'b', 'c', 'd', 'e', 'f'},
+								{'g', 'h', 'i', 'j', 'k', 'l'},
+								{'m', 'n', 'o', 'p', 'q', 'r'},
+								{'s', 't', 'u', 'v', 'w', 'x'},
+								{'y', 'z', '_', '@', '*', '.'}};
 	}
 	
 	public static PFont fnt_con14;
@@ -1041,16 +1041,12 @@ public class RobotRun extends PApplet {
 			options.set(1, workingText + workingTextSuffix);
 		}
 		else if(mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-			if(contents.getLineIdx() >= 0 && contents.getLineIdx() < contents.size()) {
-				String value = contents.get(contents.getLineIdx()).get(1) + number;
-
-				if(value.length() > 9) {
-					// Max length of a an input value
-					value = value.substring(0,  9);
-				}
-
-				// Concatenate the new digit
-				contents.get(contents.getLineIdx()).set(1, value);
+			DisplayLine entry = contents.get( contents.getLineIdx() );
+			int idx = contents.getColumnIdx();
+			
+			if (entry.size() < 10) {
+				entry.add(idx, number);
+				contents.setColumnIdx(idx + 1);
 			}
 		}
 		else if(mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
@@ -1129,10 +1125,6 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case SET_CALL_PROG:
-		case DIRECT_ENTRY_TOOL:
-		case DIRECT_ENTRY_USER:
-		case EDIT_PREG:
-		case EDIT_MINST_POS:
 		case SET_MACRO_PROG:
 		case NAV_IOREG:
 			contents.moveDown(shift);
@@ -1176,14 +1168,20 @@ public class RobotRun extends PApplet {
 			break;  
 		case ACTIVE_FRAMES:
 			updateActiveFramesDisplay();
-			workingText = new StringBuilder( getActiveRobot().getActiveUserFrame() + 1 );
-			contents.setLineIdx(min(contents.getLineIdx() + 1, contents.size() - 1));
+			workingText = new StringBuilder(
+						Integer.toString(getActiveRobot().getActiveUserFrame() + 1)
+					);
+			
+			contents.moveDown(false);
 			break;
 		default:
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 				options.moveDown(false);
 				// Reset function key states
 				for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+				
+			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
+				contents.moveDown(false);
 			}
 		}  
 
@@ -1208,6 +1206,10 @@ public class RobotRun extends PApplet {
 				contents.setColumnIdx(max(0, contents.getColumnIdx() - 1));
 				// Reset function key states 
 				for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+				
+			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
+				contents.setColumnIdx( Math.max(1, contents.getColumnIdx() - 1)  );
+				
 			} else if(mode.getType() == ScreenType.TYPE_EXPR_EDIT) {  
 				contents.setColumnIdx(contents.getColumnIdx() - ((contents.getColumnIdx() - 4 >= options.size()) ? 4 : 0));
 			}
@@ -1260,22 +1262,28 @@ public class RobotRun extends PApplet {
 				for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
 				
 			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
+				DisplayLine entry = contents.get( contents.getLineIdx() );
+				int idx = contents.getColumnIdx();
+				int size = entry.size();
 				
 				// Delete a digit from the beginning of the number entry
-				if(isShift()) {
-					String entry = contents.get(contents.getLineIdx()).get(1);
-
-					if (entry.length() > 1 && !(entry.length() == 2 && entry.charAt(0) == '-')) {
-
-						if(entry.charAt(0) == '-') {
-							// Keep negative sign until the last digit is removed
-							contents.get(contents.getLineIdx()).set(1, "-" + entry.substring(2, entry.length()));
-						} else {
-							contents.get(contents.getLineIdx()).set(1, entry.substring(1, entry.length()));
-						}
+				if(isShift()) {	
+					if (size > 2) {
+						entry.remove(idx);
+					
 					} else {
-						contents.get(contents.getLineIdx()).set(1, "");
+						// Leave at least one space value entry
+						entry.set(idx, "\0");
 					}
+					
+				} else {
+					
+					if (idx == (entry.size() - 1) && !entry.get(idx).equals("\0") && entry.size() < 10) {
+						entry.add("\0");
+					}
+					
+					// Move to the right one digit
+					contents.setColumnIdx( Math.min(idx + 1, size - 1) );
 				}
 			}
 		}
@@ -1333,10 +1341,6 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_CALL_PROG:
 		case SET_MACRO_PROG:
-		case DIRECT_ENTRY_TOOL:
-		case DIRECT_ENTRY_USER:
-		case EDIT_PREG:
-		case EDIT_MINST_POS:
 		case NAV_IOREG:
 			contents.moveUp(isShift());
 			break;
@@ -1378,7 +1382,9 @@ public class RobotRun extends PApplet {
 			break;
 		case ACTIVE_FRAMES:
 			updateActiveFramesDisplay();
-			workingText = new StringBuilder( getActiveRobot().getActiveToolFrame() + 1 );
+			workingText = new StringBuilder(
+						Integer.toString(getActiveRobot().getActiveToolFrame() + 1)
+					);
 			contents.moveUp(false);
 			break;
 		default:
@@ -1386,6 +1392,9 @@ public class RobotRun extends PApplet {
 				options.moveUp(false); 
 				// Reset function key states
 				for(int idx = 0; idx < letterStates.length; ++idx) { letterStates[idx] = 0; }
+				
+			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
+				contents.moveUp(false);
 			}
 		}
 
@@ -1480,25 +1489,21 @@ public class RobotRun extends PApplet {
 			}
 
 		} else if(mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-
-			// backspace function for current row
-			if(contents.getLineIdx() >= 0 && contents.getLineIdx() < contents.size()) {
-				String value = contents.get(contents.getLineIdx()).get(1);
-
-				if (value.length() == 1) {
-					contents.get(contents.getLineIdx()).set(1, "");
-					
-				} else if(value.length() > 1) {
-
-					if (value.length() == 2 && value.charAt(0) == '-') {
-						// Do not remove line prefix until the last digit is removed
-						contents.get(contents.getLineIdx()).set(1, "");
-						
-					} else {
-						contents.get(contents.getLineIdx()).set(1, value.substring(0, value.length() - 1));
-					}
+			DisplayLine entry = contents.get( contents.getLineIdx() );
+			int idx = contents.getColumnIdx();
+			
+			if (entry.size() > 2) {
+				
+				if (idx > 1) {
+					contents.setColumnIdx( --idx );
 				}
+				
+				entry.remove(idx);
+				
+			} else {
+				entry.set(idx, "\0");
 			}
+			
 		} else if(mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 			
 			// Delete/Backspace function
@@ -1855,6 +1860,7 @@ public class RobotRun extends PApplet {
 	public void COORD() {
 		if(isShift()) {
 			nextScreen(ScreenMode.ACTIVE_FRAMES);
+			
 		} else {  
 			// Update the coordinate mode
 			coordFrameTransition();
@@ -2008,43 +2014,6 @@ public class RobotRun extends PApplet {
 		coordinateSystem[1] = y;
 		coordinateSystem[2] = z;
 		return coordinateSystem;
-	}
-
-	public Point parsePosFromContents(boolean isCartesian) {
-		// Obtain point inputs from UI display text
-		float[] inputs = new float[6];
-		
-		try {
-			for(int idx = 0; idx < inputs.length; ++idx) {
-				String inputStr = contents.get(idx).get(contents.getColumnIdx());
-				inputs[idx] = Float.parseFloat(inputStr);
-				// Bring the input values with the range [-9999, 9999]
-				inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
-			}
-			
-			if (isCartesian) {
-				PVector position = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
-				// Convert the angles from degrees to radians, then convert from World to Native frame, and finally convert to a quaternion
-				RQuaternion orientation = eulerToQuat( (new PVector(-inputs[3], inputs[5], -inputs[4]).mult(DEG_TO_RAD)) );
-
-				// Use default the Robot's joint angles for computing inverse kinematics
-				float[] jointAngles = inverseKinematics(activeRobot, new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
-				return new Point(position, orientation, jointAngles);
-				
-			} else {
-				// Bring angles within range: (0, TWO_PI)
-				for(int idx = 0; idx < inputs.length; ++idx) {
-					inputs[idx] = mod2PI(inputs[idx] * DEG_TO_RAD);
-				}
-
-				return nativeRobotEEPoint(activeRobot, inputs);
-			}
-			
-		} catch (NumberFormatException NFEx) {
-			// Invalid input
-			println("Values must be real numbers!");
-			return null;
-		}		
 	}
 
 	public void CreateWldObj() {
@@ -2625,7 +2594,20 @@ public class RobotRun extends PApplet {
 			try {
 				// Parse each input value
 				for(int val = 0; val < inputs.length; ++val) {
-					String str = contents.get(val).get(1);
+					DisplayLine value = contents.get(val);
+					String str = new String();
+					int sdx;
+					
+					/* Combine all columns related to the value, ignoring the
+					 * prefix and last columns */
+					for (sdx = 1; sdx < (value.size() - 1); ++sdx) {
+						str += value.get(sdx);
+					}
+					
+					// Ignore any trailing blank spaces
+					if (!value.get(sdx).equals("\0")) {
+						str += value.get(sdx);
+					}
 
 					if(str.length() < 0) {
 						// No value entered
@@ -3823,6 +3805,7 @@ public class RobotRun extends PApplet {
 		case ACTIVE_FRAMES:
 			if(contents.getLineIdx() == 0) {
 				nextScreen(ScreenMode.NAV_TOOL_FRAMES);
+				
 			} else if(contents.getLineIdx() == 1) {
 				nextScreen(ScreenMode.NAV_USER_FRAMES);
 			}
@@ -4410,9 +4393,10 @@ public class RobotRun extends PApplet {
 
 		case ACTIVE_FRAMES:
 			/* workingText corresponds to the active row's index display */
-			if (this.contents.getLineIdx() == 0) {
+			if (contents.getLineIdx() == 0) {
 				contents.addLine("Tool: ", workingText.toString());
 				contents.addLine("User: ", Integer.toString(getActiveRobot().getActiveUserFrame() + 1));
+				
 			} else {
 				contents.addLine("Tool: ", Integer.toString(getActiveRobot().getActiveToolFrame() + 1));
 				contents.addLine("User: ", workingText.toString());
@@ -5081,14 +5065,14 @@ public class RobotRun extends PApplet {
 			options.addLine("1 Frames"           );
 			options.addLine("2 Macros"           );
 			options.addLine("3 Manual Fncts"     );
-			options.addLine("4 I/O Registers");
+			options.addLine("4 I/O Registers"	 );
 			break;
 		
 		case NAV_PROG_INSTR:
 			Program p = activeRobot.getActiveProg();
 			int aInst = activeRobot.getActiveInstIdx();
 			/* Really buggy for empty/spare programs, I will fix it later
-			 * 		- Joshua
+			 * 		- Joshua */
 			if (p.getInstructions().size() > 0 && aInst >= 0 && aInst < p.getInstructions().size()) {
 				Instruction inst = p.getInstruction( activeRobot.getActiveInstIdx() );
 				
@@ -6102,6 +6086,21 @@ public class RobotRun extends PApplet {
 					updateScreen();
 					return;	
 				}
+				
+			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
+				
+				if ((key >= '0' && key <= '9') || key == '-' || key == '.') {
+					DisplayLine entry = contents.get( contents.getLineIdx() );
+					int idx = contents.getColumnIdx();
+					
+					if (entry.size() < 10) {
+						entry.add(idx, Character.toString(key));
+						contents.setColumnIdx(idx + 1);
+					}
+					
+					updateScreen();
+					return;
+				}
 			}
 			
 			// Pendant button shortcuts
@@ -6200,16 +6199,12 @@ public class RobotRun extends PApplet {
 
 	public void LINE() {
 		if(mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-
-			if(contents.getLineIdx() >= 0 && contents.getLineIdx() < contents.size()) {
-				String value = contents.get(contents.getLineIdx()).get(1);
-
-				// Mutliply current number by -1
-				if(value.length() > 0 && value.charAt(0) == '-') {
-					contents.get(contents.getLineIdx()).set(1, value.substring(1, value.length()));
-				} else {
-					contents.get(contents.getLineIdx()).set(1, "-" + value);
-				}
+			DisplayLine entry = contents.get( contents.getLineIdx() );
+			int idx = contents.getColumnIdx();
+			
+			if (entry.size() < 10) {
+				entry.add(idx, "-");
+				contents.setColumnIdx(idx + 1);
 			}
 
 		} else if(mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
@@ -6288,8 +6283,15 @@ public class RobotRun extends PApplet {
 	public void loadFrameDirectEntry(Frame f) {
 		String[][] entries = f.directEntryStringArray();
 
-		for (int line = 0; line < entries.length; ++line) {
-			contents.addLine(entries[line][0], entries[line][1]);
+		for (int idx = 0; idx < entries.length; ++idx) {
+			String[] line = new String[ entries[idx][1].length() + 1 ];
+			line[0] = entries[idx][0];
+			// Give each character in the value String it own column
+			for (int sdx = 0; sdx < entries[idx][1].length(); ++sdx) {
+				line[sdx + 1] = Character.toString( entries[idx][1].charAt(sdx) );
+			}
+			
+			contents.addLine(line);
 		}
 	}
 	
@@ -6711,7 +6713,7 @@ public class RobotRun extends PApplet {
 			String[][] entries;
 			
 			if (isCartesian) {
-				// Display Cartesian values
+				// List Cartesian values
 				entries = pt.toCartesianStringArray();
 				
 			} else {
@@ -6720,7 +6722,14 @@ public class RobotRun extends PApplet {
 			}
 	
 			for(int idx = 0; idx < entries.length; ++idx) {
-				contents.addLine(entries[idx][0], entries[idx][1]);
+				String[] line = new String[ entries[idx][1].length() + 1 ];
+				line[0] = entries[idx][0];
+				// Give each character in the value String it own column
+				for (int sdx = 0; sdx < entries[idx][1].length(); ++sdx) {
+					line[sdx + 1] = Character.toString( entries[idx][1].charAt(sdx) );
+				}
+				
+				contents.addLine(line);
 			}
 		}
 	}
@@ -6810,7 +6819,9 @@ public class RobotRun extends PApplet {
 		case ACTIVE_FRAMES:
 			contents.setLineIdx(0);
 			contents.setColumnIdx(1);
-			workingText = new StringBuilder(getActiveRobot().getActiveToolFrame() + 1);
+			workingText = new StringBuilder(
+						Integer.toString(getActiveRobot().getActiveToolFrame() + 1)
+					);
 			break;
 		case SELECT_FRAME_MODE:
 			active_index = 0;
@@ -7539,6 +7550,57 @@ public class RobotRun extends PApplet {
 	public void NUM9() {
 		addNumber("9");
 	}
+	
+	public Point parsePosFromContents(boolean isCartesian) {
+		// Obtain point inputs from UI display text
+		float[] inputs = new float[6];
+		
+		try {
+			for(int idx = 0; idx < inputs.length; ++idx) {
+				DisplayLine value = contents.get(idx);
+				String inputStr = new String();
+				int sdx;
+				
+				/* Combine all columns related to the value, ignoring the prefix
+				 * and last column */ 
+				for (sdx = 1; sdx < (value.size() - 1); ++sdx) {
+					inputStr += value.get(sdx);
+				}
+				
+				// Ignore any trailing blank spaces
+				if (!value.get(sdx).equals("\0")) {
+					inputStr += value.get(sdx);
+				}
+				
+				inputs[idx] = Float.parseFloat(inputStr);
+				// Bring the input values with the range [-9999, 9999]
+				inputs[idx] = max(-9999f, min(inputs[idx], 9999f));
+			}
+			
+			if (isCartesian) {
+				PVector position = convertWorldToNative( new PVector(inputs[0], inputs[1], inputs[2]) );
+				// Convert the angles from degrees to radians, then convert from World to Native frame, and finally convert to a quaternion
+				RQuaternion orientation = eulerToQuat( (new PVector(-inputs[3], inputs[5], -inputs[4]).mult(DEG_TO_RAD)) );
+
+				// Use default the Robot's joint angles for computing inverse kinematics
+				float[] jointAngles = inverseKinematics(activeRobot, new float[] {0f, 0f, 0f, 0f, 0f, 0f}, position, orientation);
+				return new Point(position, orientation, jointAngles);
+				
+			} else {
+				// Bring angles within range: (0, TWO_PI)
+				for(int idx = 0; idx < inputs.length; ++idx) {
+					inputs[idx] = mod2PI(inputs[idx] * DEG_TO_RAD);
+				}
+
+				return nativeRobotEEPoint(activeRobot, inputs);
+			}
+			
+		} catch (NumberFormatException NFEx) {
+			// Invalid input
+			println("Values must be real numbers!");
+			return null;
+		}		
+	}
 
 	public void pasteInstructions() {
 		pasteInstructions(0);
@@ -7604,18 +7666,12 @@ public class RobotRun extends PApplet {
 
 	public void PERIOD() {
 		if(mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-
-			if(contents.getLineIdx() >= 0 && contents.getLineIdx() < contents.size()) {
-
-				// Add decimal point
-				String value = contents.get(contents.getLineIdx()).get(1) + ".";
-
-				if(value.length() > 9) {
-					// Max length of a an input value
-					value = value.substring(0,  9);
-				}
-
-				contents.get(contents.getLineIdx()).set(1, value);
+			DisplayLine entry = contents.get( contents.getLineIdx() );
+			int idx = contents.getColumnIdx();
+			
+			if (entry.size() < 10) {
+				entry.add(idx, ".");
+				contents.setColumnIdx(idx + 1);
 			}
 			
 		} else if(mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
@@ -8278,10 +8334,14 @@ public class RobotRun extends PApplet {
 		}
 		// Update display
 		if (contents.getLineIdx() == 0) {
-			workingText = new StringBuilder( getActiveRobot().getActiveToolFrame() + 1 );
+			workingText = new StringBuilder(
+						Integer.toString(getActiveRobot().getActiveToolFrame() + 1)
+					);
 			
 		} else {
-			workingText = new StringBuilder( getActiveRobot().getActiveUserFrame() + 1 );
+			workingText = new StringBuilder(
+					Integer.toString(getActiveRobot().getActiveUserFrame() + 1)
+				);
 		}
 
 		contents.get(contents.getLineIdx()).set(contents.getColumnIdx(), workingText.toString());
