@@ -1278,7 +1278,7 @@ public class RobotRun extends PApplet {
 					
 				} else {
 					
-					if (idx == (entry.size() - 1) && entry.size() < 10) {
+					if (idx == (entry.size() - 1) && !entry.get(idx).equals("\0") && entry.size() < 10) {
 						entry.add("\0");
 					}
 					
