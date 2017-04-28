@@ -7706,6 +7706,22 @@ public class RobotRun extends PApplet {
 			motionFault = false;
 		}
 	}
+	
+	/**
+	 * Restores all parts in the current scenario to their default position and
+	 * orientation.
+	 */
+	public void ResDefs() {
+		
+		for (WorldObject wo : activeScenario) {
+			// Only applies to parts
+			if (wo instanceof Part) {
+				Part p = (Part)wo;
+				p.setLocalCenter( p.getDefaultCenter() );
+				p.setLocalOrientationAxes( p.getDefaultOrientationAxes() );
+			}
+		}
+	}
 
 	//turn of highlighting on all active movement buttons
 	public void resetButtonColors() {

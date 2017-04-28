@@ -42,7 +42,6 @@ public class MyTextfield extends Textfield {
 					} else if (_myTextBufferIndex > 0) {
 						_myTextBuffer.deleteCharAt( --_myTextBufferIndex );
 					}
-					
 				}
 			}	
 			

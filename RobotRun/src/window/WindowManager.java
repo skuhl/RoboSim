@@ -529,6 +529,15 @@ public class WindowManager implements ControlListener {
 		 		  .moveTo(editObjWindow)
 		 		  .setSize(fieldWidth, sButtonHeight)
 		 		  .getCaptionLabel().setFont(small);
+		 
+		 UIManager.addButton("ResDefs")
+		 		  .setCaptionLabel("Restore Defaults")
+				  .setColorValue(buttonTxtColor)
+				  .setColorBackground(buttonDefColor)
+				  .setColorActive(buttonActColor)
+				  .moveTo(editObjWindow)
+				  .setSize(lLblWidth, sButtonHeight)
+				  .getCaptionLabel().setFont(small);
 
 		 UIManager.addButton("DeleteWldObj")
 				 .setCaptionLabel("Delete")
@@ -2143,6 +2152,10 @@ public class WindowManager implements ControlListener {
 			 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			 c0 = getButton("MoveToDef").setPosition(relPos[0], relPos[1]).show();
 			 
+			 // Restore Defaults button
+			 relPos = relativePosition(c0, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			 c0 = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
+			 
 			 relPos =  new int[] { offsetX, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
 			 c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
 			
@@ -2155,6 +2168,10 @@ public class WindowManager implements ControlListener {
 			getButton("MoveToDef").hide();
 			getTextArea("RefLbl").hide();
 			getDropdown("Fixture").hide();
+			
+			// Restore Defaults button
+			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			c = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
 		 }
 		 
 		 // Delete button
