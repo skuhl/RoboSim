@@ -71,6 +71,12 @@ public class WindowManager implements ControlListener {
 	private final Background background;
 
 	private final int buttonDefColor, buttonActColor;
+	
+	/**
+	 * Determine which input to use for importing a shape for a world object
+	 * when it is created.
+	 */
+	private String lastModImport;
 
 	/**
 	 * Creates a new window with the given ControlP5 object as the parent
@@ -86,7 +92,9 @@ public class WindowManager implements ControlListener {
 
 		 buttonDefColor = app.color(70);
 		 buttonActColor = app.color(220, 40, 40);
-
+		 
+		 lastModImport = null;
+		 
 		 // Create some temporary color and dimension variables
 		 int bkgrdColor = app.color(210),
 			fieldTxtColor = app.color(0),
@@ -864,6 +872,15 @@ public class WindowManager implements ControlListener {
 				  * layout of the menu */
 				 updateWindowContentsPositions();
 			 }
+			 
+			 if (arg0.isFrom("Dim0") && menu == WindowTab.CREATE) {
+				 System.out.println(arg0.getName());
+				 lastModImport = arg0.getName();
+				 
+			 } else if (arg0.isFrom("DimDdl0") && menu == WindowTab.CREATE) {
+				 System.out.println("THERE");
+				 lastModImport = arg0.getName();
+			 }
 		 }
 			
 	}
@@ -981,7 +998,7 @@ public class WindowManager implements ControlListener {
 					 break;
 
 				 case MODEL:
-					 String srcFile = (String) getDropdown("DimDdl0").getSelectedItem();
+					 String srcFile = getShapeSourceFile();
 					 shapeDims = getModelDimensions();
 					 // Construct a complex model
 					 if (shapeDims != null) {
@@ -1027,7 +1044,7 @@ public class WindowManager implements ControlListener {
 					 break;
 
 				 case MODEL:
-					 String srcFile = (String) getDropdown("DimDdl0").getSelectedItem();
+					 String srcFile = getShapeSourceFile();
 					 shapeDims = getModelDimensions();
 					 // Construct a complex model
 					 ModelShape model;
@@ -1048,17 +1065,17 @@ public class WindowManager implements ControlListener {
 		 } catch (NullPointerException NPEx) {
 			 RobotRun.println("Missing parameter!");
 			 NPEx.printStackTrace();
-			 return null;
+			 wldObj = null;
 			 
 		 } catch (ClassCastException CCEx) {
 			 RobotRun.println("Invalid field?");
 			 CCEx.printStackTrace();
-			 return null;
+			 wldObj = null;
 			 
 		 } catch (IndexOutOfBoundsException IOOBEx) {
 			 RobotRun.println("Missing field?");
 			 IOOBEx.printStackTrace();
-			 return null;
+			 wldObj = null;
 		 }
 
 		 app.popMatrix();
@@ -1361,8 +1378,10 @@ public class WindowManager implements ControlListener {
 	  * Returns a text-field, which corresponds to the given dimension type.
 	  * The mapping from DimType to text-fields is:
 	  * 	LENGTH, RADIUS, null	->	Dim0 text-field
-	  * 	HEIGHT, SCALE			->	Dim1 text-field
+	  * 	HEIGHT					->	Dim1 text-field
 	  * 	WIDTH					->	Dim2 text-field
+	  * 	SCALE					->	Dim0 or Dim1 text-field
+	  * 	*depends on what window tab is active
 	  * 
 	  * @param name	A type of world object dimension, which corresponds to a
 	  * 			text-field input in the UI
@@ -1376,6 +1395,16 @@ public class WindowManager implements ControlListener {
 			 
 		 } else if (t == DimType.HEIGHT) {
 			 return ( (MyTextfield) UIManager.get("Dim1") ).getText();
+			 
+		 } if (t == DimType.SCALE) {
+			 int dimNum = 0;
+			
+			 if (menu == WindowTab.CREATE) {
+				// Different text field in the create window tab
+				dimNum = 1;
+			 }
+			 
+			 return ( (MyTextfield) UIManager.get( String.format("Dim%d", dimNum) ) ).getText();
 			 
 		 } else {
 			 return ( (MyTextfield) UIManager.get("Dim0") ).getText();
@@ -1533,6 +1562,36 @@ public class WindowManager implements ControlListener {
 	  */
 	 public boolean getRobotButtonState() {
 		 return getButton("ToggleRobot").isOn();
+	 }
+	 
+	 /**
+	  * TODO
+	  * 
+	  * @return	The name of the .stl file to use as a model for a world object
+	  */
+	 private String getShapeSourceFile() {
+		String filename = null;
+		 
+		if (menu == WindowTab.CREATE) {
+			/* Determine which method of the source file input was edited last
+			 * and use that input method as the source file */
+			ControllerInterface<?> c = UIManager.get(lastModImport);
+			
+			if (c instanceof MyTextfield) {
+				filename = ((MyTextfield)c).getText();
+				
+			} else if (c instanceof MyDropdownList) {
+				try {
+					filename = (String) ((MyDropdownList)c).getSelectedItem();
+					
+				} catch (ClassCastException CCEx) {
+					// Should not happen!
+					CCEx.printStackTrace();;
+				}
+			}
+		}
+			 
+		return filename;
 	 }
 	 
 	 /**
@@ -1893,8 +1952,8 @@ public class WindowManager implements ControlListener {
 				 txtFields = 2;
 
 			 } else if (selectedShape == ShapeType.MODEL) {
-				 lblNames = new String[] { "Source:", "Scale:", };
-				 txtFields = 1;
+				 lblNames = new String[] { "Source (1):", "Source (2):", "Scale:", };
+				 txtFields = 2;
 				 ddlFields = 1;
 			 }
 

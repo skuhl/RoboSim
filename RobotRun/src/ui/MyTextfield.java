@@ -1,5 +1,7 @@
 package ui;
 
+import com.sun.glass.events.KeyEvent;
+
 import controlP5.ControlP5;
 import controlP5.Textfield;
 
@@ -28,20 +30,48 @@ public class MyTextfield extends Textfield {
 	public void keyEvent(processing.event.KeyEvent e) {
 		
 		if (e.getKeyCode() == 147) {
-			/* TODO find out if the KeyEvent is pressed or released *
-			if ( !e.isAutoRepeat() && _myTextBuffer.length() > 0
-					&& _myTextBufferIndex < _myTextBuffer.length() && _myTextBufferIndex > 0 ) {
+			
+			if (isUserInteraction && isTexfieldActive && isActive &&
+					e.getAction() == processing.event.KeyEvent.PRESS) {
+					
+				/* TODO fix edge cases *
+				int rmAtIdx = _myTextBufferIndex;
 				
-				_myTextBuffer.deleteCharAt( _myTextBufferIndex );
-				
-				if ( _myTextBufferIndex > 0 && _myTextBuffer.length() <= _myTextBufferIndex) {
-					_myTextBufferIndex = _myTextBuffer.length() - 1;
+				if (rmAtIdx > 0 && _myTextBufferIndex < _myTextBuffer.length()) {
+					--rmAtIdx;
 				}
-			}
-			/**/
+				
+				if (_myTextBuffer.length() > 0 && rmAtIdx < _myTextBuffer.length()
+						&& rmAtIdx > 0) {
+					
+					_myTextBuffer.deleteCharAt( rmAtIdx );
+					
+					if ( _myTextBufferIndex > 0) {
+						--_myTextBufferIndex;
+						
+					} else if (_myTextBufferIndex >= _myTextBuffer.length()) {
+						_myTextBufferIndex = _myTextBuffer.length() - 1;
+					}
+				}
+				/**/
+			}	
 			
 		} else {
 			super.keyEvent(e);
 		}
-	}	
+		
+		if (isUserInteraction && isTexfieldActive && isActive &&
+				e.getAction() == processing.event.KeyEvent.PRESS) {
+			// Set value every time a key is pressed
+			setValue(e.getKeyCode());
+		}
+	}
+	
+	@Override
+	public Textfield setValue(float newValue) {
+		// Broadcast control events for text field input
+		super.setValue(newValue);
+		broadcast( FLOAT );
+		return this;
+	}
 }
