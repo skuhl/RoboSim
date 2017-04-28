@@ -220,7 +220,7 @@ public class WindowManager implements ControlListener {
 
 		 // Initialize window contents
 		 for (int idx = 0; idx < 3; ++idx) {
-			 UIManager.addTextarea(String.format("DimLbl%d", idx), String.format("Dim(%d):", idx), 0, 0, mLblWidth, sButtonHeight)
+			 UIManager.addTextarea(String.format("DimLbl%d", idx), String.format("Dim(%d):", idx), 0, 0, fieldWidth, sButtonHeight)
 					 .setFont(medium)
 					 .setColor(fieldTxtColor)
 					 .setColorActive(fieldActColor)
@@ -873,13 +873,9 @@ public class WindowManager implements ControlListener {
 				 updateWindowContentsPositions();
 			 }
 			 
-			 if (arg0.isFrom("Dim0") && menu == WindowTab.CREATE) {
-				 System.out.println(arg0.getName());
-				 lastModImport = arg0.getName();
-				 
-			 } else if (arg0.isFrom("DimDdl0") && menu == WindowTab.CREATE) {
-				 System.out.println("THERE");
-				 lastModImport = arg0.getName();
+			 // Update source input field focus
+			 if (menu == WindowTab.CREATE && (arg0.isFrom("DimDdl0") || arg0.isFrom("Dim0"))) {
+				lastModImport = arg0.getName();
 			 }
 		 }
 			
@@ -979,42 +975,42 @@ public class WindowManager implements ControlListener {
 				 int fill = (Integer)getDropdown("Fill").getSelectedItem();
 
 				 switch(type) {
-				 case BOX:
-					 int strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
-					 Float[] shapeDims = getBoxDimensions();
-					 // Construct a box shape
-					 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
-						 wldObj = new Part(name, fill, strokeVal, shapeDims[0], shapeDims[1], shapeDims[2]);
-					 }
-					 break;
-
-				 case CYLINDER:
-					 strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
-					 shapeDims = getCylinderDimensions();
-					 // Construct a cylinder
-					 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
-						 wldObj = new Part(name, fill, strokeVal, shapeDims[0], shapeDims[1]);
-					 }
-					 break;
-
-				 case MODEL:
-					 String srcFile = getShapeSourceFile();
-					 shapeDims = getModelDimensions();
-					 // Construct a complex model
-					 if (shapeDims != null) {
-						 ModelShape model;
-
-						 if (shapeDims[0] != null) {
-							 // Define shape scale
-							 model = new ModelShape(srcFile, fill, shapeDims[0], app);
-						 } else {
-							 model = new ModelShape(srcFile, fill, app);
+					 case BOX:
+						 int strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
+						 Float[] shapeDims = getBoxDimensions();
+						 // Construct a box shape
+						 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
+							 wldObj = new Part(name, fill, strokeVal, shapeDims[0], shapeDims[1], shapeDims[2]);
 						 }
-
-						 wldObj = new Part(name, model);
-					 }
-					 break;
-				 default:
+						 break;
+	
+					 case CYLINDER:
+						 strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
+						 shapeDims = getCylinderDimensions();
+						 // Construct a cylinder
+						 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
+							 wldObj = new Part(name, fill, strokeVal, shapeDims[0], shapeDims[1]);
+						 }
+						 break;
+	
+					 case MODEL:
+						 String srcFile = getShapeSourceFile();
+						 shapeDims = getModelDimensions();
+						 // Construct a complex model
+						 if (shapeDims != null) {
+							 ModelShape model;
+	
+							 if (shapeDims[0] != null) {
+								 // Define shape scale
+								 model = new ModelShape(srcFile, fill, shapeDims[0], app);
+							 } else {
+								 model = new ModelShape(srcFile, fill, app);
+							 }
+	
+							 wldObj = new Part(name, model);
+						 }
+						 break;
+					 default:
 				 }
 
 			 } else if (objectType == 1.0f) {
@@ -1025,40 +1021,40 @@ public class WindowManager implements ControlListener {
 				 int fill = (Integer)getDropdown("Fill").getSelectedItem();
 
 				 switch(type) {
-				 case BOX:
-					 int strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
-					 Float[] shapeDims = getBoxDimensions();
-					 // Construct a box shape
-					 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
-						 wldObj = new Fixture(name, fill, strokeVal, shapeDims[0], shapeDims[1], shapeDims[2]);
-					 }
-					 break;
-
-				 case CYLINDER:
-					 strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
-					 shapeDims = getCylinderDimensions();
-					 // Construct a cylinder
-					 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
-						 wldObj = new Fixture(name, fill, strokeVal, shapeDims[0], shapeDims[1]);
-					 }
-					 break;
-
-				 case MODEL:
-					 String srcFile = getShapeSourceFile();
-					 shapeDims = getModelDimensions();
-					 // Construct a complex model
-					 ModelShape model;
-
-					 if (shapeDims != null && shapeDims[0] != null) {
-						 // Define model scale value
-						 model = new ModelShape(srcFile, fill, shapeDims[0], app);
-					 } else {
-						 model = new ModelShape(srcFile, fill, app);
-					 }
-
-					 wldObj = new Fixture(name, model);
-					 break;
-				 default:
+					 case BOX:
+						 int strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
+						 Float[] shapeDims = getBoxDimensions();
+						 // Construct a box shape
+						 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
+							 wldObj = new Fixture(name, fill, strokeVal, shapeDims[0], shapeDims[1], shapeDims[2]);
+						 }
+						 break;
+	
+					 case CYLINDER:
+						 strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
+						 shapeDims = getCylinderDimensions();
+						 // Construct a cylinder
+						 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
+							 wldObj = new Fixture(name, fill, strokeVal, shapeDims[0], shapeDims[1]);
+						 }
+						 break;
+	
+					 case MODEL:
+						 String srcFile = getShapeSourceFile();
+						 shapeDims = getModelDimensions();
+						 // Construct a complex model
+						 ModelShape model;
+	
+						 if (shapeDims != null && shapeDims[0] != null) {
+							 // Define model scale value
+							 model = new ModelShape(srcFile, fill, shapeDims[0], app);
+						 } else {
+							 model = new ModelShape(srcFile, fill, app);
+						 }
+	
+						 wldObj = new Fixture(name, model);
+						 break;
+					 default:
 				 }
 			 }
 
