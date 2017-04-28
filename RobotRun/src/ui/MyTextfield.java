@@ -30,30 +30,20 @@ public class MyTextfield extends Textfield {
 	public void keyEvent(processing.event.KeyEvent e) {
 		
 		if (e.getKeyCode() == 147) {
-			
+			// Deletes a character in the text buffer
 			if (isUserInteraction && isTexfieldActive && isActive &&
 					e.getAction() == processing.event.KeyEvent.PRESS) {
-					
-				/* TODO fix edge cases *
-				int rmAtIdx = _myTextBufferIndex;
 				
-				if (rmAtIdx > 0 && _myTextBufferIndex < _myTextBuffer.length()) {
-					--rmAtIdx;
-				}
-				
-				if (_myTextBuffer.length() > 0 && rmAtIdx < _myTextBuffer.length()
-						&& rmAtIdx > 0) {
+				if (_myTextBuffer.length() > 0) {
 					
-					_myTextBuffer.deleteCharAt( rmAtIdx );
-					
-					if ( _myTextBufferIndex > 0) {
-						--_myTextBufferIndex;
+					if (_myTextBufferIndex < _myTextBuffer.length()) {
+						_myTextBuffer.deleteCharAt( _myTextBufferIndex );
 						
-					} else if (_myTextBufferIndex >= _myTextBuffer.length()) {
-						_myTextBufferIndex = _myTextBuffer.length() - 1;
+					} else if (_myTextBufferIndex > 0) {
+						_myTextBuffer.deleteCharAt( --_myTextBufferIndex );
 					}
+					
 				}
-				/**/
 			}	
 			
 		} else {
