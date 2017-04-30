@@ -2292,6 +2292,8 @@ public class WindowManager implements ControlListener {
 				 Scenario selected = (Scenario) scenarioList.getSelectedItem();
 				 
 				 if (selected != null) {
+					 // Remove the backup for the old file
+					DataManagement.removeScenario(selected.getName());
 					selected.setName(newName);
 					
 				 	updateListContents();
@@ -2707,12 +2709,12 @@ public class WindowManager implements ControlListener {
 				 }
 				 
 				 if (inputValues[5] != null) {
-					 oWPR.y = -inputValues[5];
+					 oWPR.y = inputValues[5];
 					 edited = true;
 				 }
 				 
 				 if (inputValues[4] != null) {
-					 oWPR.z = inputValues[4];
+					 oWPR.z = -inputValues[4];
 					 edited = true;
 				 }
 
@@ -2796,13 +2798,13 @@ public class WindowManager implements ControlListener {
 				 edited = true;
 			 }
 			 
-			 if (inputValues[4] != null) {
-				 defaultWPR.y = -inputValues[4];
+			 if (inputValues[5] != null) {
+				 defaultWPR.y = inputValues[5];
 				 edited = true;
 			 }
 			 
-			 if (inputValues[5] != null) {
-				 defaultWPR.z = inputValues[5];
+			 if (inputValues[4] != null) {
+				 defaultWPR.z = -inputValues[4];
 				 edited = true;
 			 }
 

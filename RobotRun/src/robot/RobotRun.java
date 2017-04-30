@@ -5937,7 +5937,7 @@ public class RobotRun extends PApplet {
 			}
 			
 		} else {
-			if (isProgramRunning()) {
+			if (!isProgramRunning()) {
 				// Map I/O to the robot's end effector state, if shift is off
 				activeRobot.toggleEEState();
 			}

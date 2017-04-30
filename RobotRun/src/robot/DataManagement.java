@@ -910,6 +910,26 @@ public abstract class DataManagement {
 
 		return wldObjFields;
 	}
+	
+	/**
+	 * Removes the save file for the scenario with the given name.
+	 * 
+	 * @param name	The name of the scenario, of which to remove the back file
+	 */
+	public static void removeScenario(String name) {
+		
+		File f = new File(DataManagement.scenarioDirPath + name + ".bin");
+		
+		try {
+			if (f.exists() && f.isFile()) {
+				f.delete();
+			}
+			
+		} catch (SecurityException SEx) {
+			// Issue with file permissions
+			SEx.printStackTrace();
+		}
+	}
 
 	private static void saveExpressionElement(ExpressionElement ee,
 			DataOutputStream out) throws IOException {
