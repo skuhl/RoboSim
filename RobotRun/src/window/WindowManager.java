@@ -578,9 +578,12 @@ public class WindowManager implements ControlListener {
 		for (Toggle t : rb.getItems()) {
 			t.getCaptionLabel().setFont(medium);
 		}
-
+		
+		rb.activate("New");
+		
 		 UIManager.addTextarea("SInstructions")
-		 		 .setSize(background.getWidth() - (2 * offsetX), sButtonHeight * 2)
+		 		 .setSize(background.getWidth() - (2 * offsetX), 54)
+		 		 .hideScrollbar()
 		 		 .setText("N/A")
 				 .setFont(small)
 				 .setColor(fieldTxtColor)
@@ -2352,7 +2355,7 @@ public class WindowManager implements ControlListener {
 			// Scenario instructions
 			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			ta.setPosition(relPos[0], relPos[1]);
-			ta.setText("Select the scenario you wish to rename and enter the new name into the text field below.");
+			ta.setText("Select the scenario you wish to rename from the dorpdown list and enter the new name into the text field below. Press RENAME to confirm the scenario's new name.");
 			// Scenario dropdown list
 			relPos = relativePosition(ta, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			mdl.setPosition(relPos[0], relPos[1]).show();
@@ -2368,13 +2371,13 @@ public class WindowManager implements ControlListener {
 			// Scenario instructions
 			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			ta.setPosition(relPos[0], relPos[1]);
-			ta.setText("Select the scenario you wish to set as active and press set to confirm your choice.");
+			ta.setText("Select the scenario you wish to set as active from the dropdown list. Press SET to confirm your choice. A scenario name has to be unique, consist of only letters and numbers, and be of length less than 16.");
 			// Scenario dropdown list
 			relPos = relativePosition(ta, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c = mdl.setPosition(relPos[0], relPos[1]).show();
 			
 			// Scenario confirm button
-			relPos = relativePosition(mtf, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = relativePosition(mdl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c = b.setPosition(relPos[0], relPos[1]);
 			b.getCaptionLabel().setText("Set");
 			
@@ -2384,7 +2387,7 @@ public class WindowManager implements ControlListener {
 			// Scenario instructions
 			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			ta.setPosition(relPos[0], relPos[1]);
-			ta.setText("Enter the name of the scenario you wish to create and press the button to confirm.");
+			ta.setText("Enter the name of the scenario you wish to create and press CONFIRM. A scenario name has to be unique, consist of only letters and numbers, and be of length less than 16.");
 			// Scenario input field
 			relPos = relativePosition(ta, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			mtf.setPosition(relPos[0], relPos[1]).show();
