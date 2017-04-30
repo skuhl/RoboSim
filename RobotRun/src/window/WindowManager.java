@@ -12,7 +12,9 @@ import controlP5.ControlP5;
 import controlP5.ControllerInterface;
 import controlP5.DropdownList;
 import controlP5.Group;
+import controlP5.RadioButton;
 import controlP5.Textarea;
+import controlP5.Toggle;
 import geom.Box;
 import geom.Cylinder;
 import geom.DimType;
@@ -38,6 +40,7 @@ import ui.RelativePoint;
 public class WindowManager implements ControlListener {
 	
 	public static final int offsetX = 10,
+			radioDim = 16,
 			distBtwFieldsY = 15,
 			distLblToFieldX = 5,
 			distFieldToFieldX = 20,
@@ -529,6 +532,15 @@ public class WindowManager implements ControlListener {
 		 		  .moveTo(editObjWindow)
 		 		  .setSize(fieldWidth, sButtonHeight)
 		 		  .getCaptionLabel().setFont(small);
+		 
+		 UIManager.addButton("ResDefs")
+		 		  .setCaptionLabel("Restore Defaults")
+				  .setColorValue(buttonTxtColor)
+				  .setColorBackground(buttonDefColor)
+				  .setColorActive(buttonActColor)
+				  .moveTo(editObjWindow)
+				  .setSize(lLblWidth, sButtonHeight)
+				  .getCaptionLabel().setFont(small);
 
 		 UIManager.addButton("DeleteWldObj")
 				 .setCaptionLabel("Delete")
@@ -538,16 +550,49 @@ public class WindowManager implements ControlListener {
 				 .moveTo(editObjWindow)
 				 .setSize(mButtonWidth, sButtonHeight)
 				 .getCaptionLabel().setFont(small);
-
-		 UIManager.addTextarea("NewScenarioLbl", "Name:", 0, 0, sLblWidth, fieldHeight)
+		
+		UIManager.addTextarea("SOptLbl")
+				 .setSize(mLblWidth, fieldHeight)
+				 .setText("Options:")
 				 .setFont(medium)
 				 .setColor(fieldTxtColor)
 				 .setColorActive(fieldActColor)
 				 .setColorBackground(bkgrdColor)
 				 .setColorForeground(bkgrdColor)
 				 .moveTo(scenarioWindow);
-
-		 (new MyTextfield(UIManager, "ScenarioName", 0, 0, fieldWidth, fieldHeight))
+		
+		RadioButton rb = UIManager.addRadioButton("ScenarioOpt", 0, 0)
+				.setColorValue(buttonDefColor)
+				.setColorLabel(fieldTxtColor)
+				.setColorActive(buttonActColor)
+				.setBackgroundColor(bkgrdColor)
+				.moveTo(scenarioWindow)
+				.setSize(radioDim, radioDim)
+				.setBackgroundHeight(radioDim * 3);
+		
+		//  Add elements
+		rb.addItem("New", 0f);
+		rb.addItem("Set", 1f);
+		rb.addItem("Rename", 2f);
+		// Initialize labels
+		for (Toggle t : rb.getItems()) {
+			t.getCaptionLabel().setFont(medium);
+		}
+		
+		rb.activate("New");
+		
+		 UIManager.addTextarea("SInstructions")
+		 		 .setSize(background.getWidth() - (2 * offsetX), 54)
+		 		 .hideScrollbar()
+		 		 .setText("N/A")
+				 .setFont(small)
+				 .setColor(fieldTxtColor)
+				 .setColorActive(fieldActColor)
+				 .setColorBackground(bkgrdColor)
+				 .setColorForeground(bkgrdColor)
+				 .moveTo(scenarioWindow);
+		 
+		 (new MyTextfield(UIManager, "SInput", 0, 0, fieldWidth, fieldHeight))
 				 .setColor(fieldTxtColor)
 				 .setColorCursor(fieldCurColor)
 				 .setColorActive(fieldActColor)
@@ -556,31 +601,14 @@ public class WindowManager implements ControlListener {
 				 .setColorForeground(fieldFrgrdColor)
 				 .moveTo(scenarioWindow);
 
-		 UIManager.addButton("NewScenario")
-				 .setCaptionLabel("New")
-				 .setColorValue(buttonTxtColor)
-				 .setColorBackground(buttonDefColor)
-				 .setColorActive(buttonActColor)
-				 .moveTo(scenarioWindow)
-				 .setSize(mButtonWidth, sButtonHeight)
-				 .getCaptionLabel().setFont(small);
-
-		 UIManager.addTextarea("ActiveScenarioLbl", "Scenario:", 0, 0, lLblWidth, sButtonHeight)
-				 .setFont(medium)
-				 .setColor(fieldTxtColor)
-				 .setColorActive(fieldActColor)
-				 .setColorBackground(bkgrdColor)
-				 .setColorForeground(bkgrdColor)
-				 .moveTo(scenarioWindow);
-		 
-		 UIManager.addButton("SetScenario")
-				 .setCaptionLabel("Load")
-				 .setColorValue(buttonTxtColor)
-				 .setColorBackground(buttonDefColor)
-				 .setColorActive(buttonActColor)
-				 .moveTo(scenarioWindow)
-				 .setSize(mButtonWidth, sButtonHeight)
-				 .getCaptionLabel().setFont(small);
+		 UIManager.addButton("SConfirm")
+				  .setCaptionLabel("N/A")
+				  .setColorValue(buttonTxtColor)
+				  .setColorBackground(buttonDefColor)
+				  .setColorActive(buttonActColor)
+				  .moveTo(scenarioWindow)
+				  .setSize(mButtonWidth, sButtonHeight)
+				  .getCaptionLabel().setFont(small);
 		
 		 UIManager.addTextarea("ActiveAxesDisplay", "Axes Display:", 0, 0, lLblWidth, sButtonHeight)
 				 .setFont(medium)
@@ -806,7 +834,7 @@ public class WindowManager implements ControlListener {
 			}
 			 
 		 } else {
-			 if (arg0.isFrom( getDropdown("Object") )) {
+			 if (arg0.isFrom("Object")) {
 				// Initialize the input fields on the edit menu
 				WorldObject selected = getActiveWorldObject();
 				
@@ -850,7 +878,7 @@ public class WindowManager implements ControlListener {
 					
 				 }
 				
-			 } else if (arg0.isFrom(getDropdown("Fixture"))) {
+			 } else if (arg0.isFrom("Fixture")) {
 				WorldObject selected = getActiveWorldObject();
 				
 				if (selected instanceof Part) {
@@ -865,20 +893,23 @@ public class WindowManager implements ControlListener {
 						p.setFixtureRef(refFixture);
 					}
 				}
+				
+			 } else if (arg0.isFrom("DimDdl0") || arg0.isFrom("Dim0")) {
+				
+				if (menu == WindowTab.CREATE) {
+					// Update source input field focus
+					lastModImport = arg0.getName();
+				}
+				
 			 }
 			 
-			 if (arg0.isFrom( getDropdown("Object") ) || arg0.isFrom( getDropdown("Shape") )) {
-				 /* The selected item in these dropdown lists influence the
-				  * layout of the menu */
+			 if (arg0.isFrom("Object") || arg0.isFrom("Shape") ||
+					 arg0.isFrom("ScenarioOpt")) {
+				 /* The selected item in these lists influence the layout of
+				  * the menu */
 				 updateWindowContentsPositions();
 			 }
-			 
-			 // Update source input field focus
-			 if (menu == WindowTab.CREATE && (arg0.isFrom("DimDdl0") || arg0.isFrom("Dim0"))) {
-				lastModImport = arg0.getName();
-			 }
 		 }
-			
 	}
 
 	 /**
@@ -1554,6 +1585,21 @@ public class WindowManager implements ControlListener {
 	 }
 	 
 	 /**
+	  * Returns the radio button, with the given name, if it exists in one of
+	  * the UI (excluding the pendant). If a non-radio button UI element exists
+	  * in the UI, then a ClassCastException will be thrown. If no UI element
+	  * with the given name exists, then null is returned.
+	  * 
+	  * @param name	Then name of a radio button in the UI
+	  * @return		The radio button with the given name or null
+	  * @throws ClassCastException	If a non-radio button UI element with the
+	  * 							given name exists in the UI
+	  */
+	 public RadioButton getRadioButton(String name) throws ClassCastException {
+		 return (RadioButton) UIManager.get(name);
+	 }
+	 
+	 /**
 	  * @return	Whether or not the robot display button is on
 	  */
 	 public boolean getRobotButtonState() {
@@ -1708,9 +1754,14 @@ public class WindowManager implements ControlListener {
 		 if (obj instanceof Group) {
 			 // getHeight() does not function the same for Group objects for some reason ...
 			 objDimensions = new float[] { obj.getWidth(), ((Group)obj).getBackgroundHeight() };
+			 
 		 } else if (obj instanceof DropdownList) {
 			 // Ignore the number of items displayed by the DropdownList, when it is open
 			 objDimensions = new float[] { obj.getWidth(), ((DropdownList)obj).getBarHeight() };
+			 
+		 } else if (obj instanceof RadioButton) {
+			 objDimensions = new float[] { obj.getWidth(), ((RadioButton) obj).getBackgroundHeight() };
+			 
 		 } else {
 			 objDimensions = new float[] { obj.getWidth(), obj.getHeight() };
 		 }
@@ -2143,6 +2194,10 @@ public class WindowManager implements ControlListener {
 			 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			 c0 = getButton("MoveToDef").setPosition(relPos[0], relPos[1]).show();
 			 
+			 // Restore Defaults button
+			 relPos = relativePosition(c0, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			 c0 = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
+			 
 			 relPos =  new int[] { offsetX, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
 			 c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
 			
@@ -2155,6 +2210,10 @@ public class WindowManager implements ControlListener {
 			getButton("MoveToDef").hide();
 			getTextArea("RefLbl").hide();
 			getDropdown("Fixture").hide();
+			
+			// Restore Defaults button
+			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			c = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
 		 }
 		 
 		 // Delete button
@@ -2217,35 +2276,134 @@ public class WindowManager implements ControlListener {
 		 }
 		 //dropdown.updateActiveLabel();
 	 }
+	 
+	 /**
+	  * TODO
+	  * 
+	  * @param scenarios
+	  * @return
+	  */
+	 public int updateScenarios(ArrayList<Scenario> scenarios) {
+		 float val = getRadioButton("ScenarioOpt").getValue();
+		 MyDropdownList scenarioList = getDropdown("Scenario");
+		 
+		 if (val == 2f) {
+			 // Rename a scenario
+			 String newName = validScenarioName(getTextField("SInput").getText(), scenarios);
+			 
+			 if (newName != null) {
+				 Scenario selected = (Scenario) scenarioList.getSelectedItem();
+				 
+				 if (selected != null) {
+					 // Remove the backup for the old file
+					DataManagement.removeScenario(selected.getName());
+					selected.setName(newName);
+					
+				 	updateListContents();
+				 	scenarioList.setItem(selected);
+				 	return 0;
+				 	
+				 } else {
+					 return -3;
+				 }
+				 
+			 } else {
+				 return -4;
+			 }
+			 
+		 } else if (val == 1f) {
+			 // Set a scenario
+			 Scenario selected = (Scenario) scenarioList.getSelectedItem();
+			 return (selected != null) ? 1 : -2;
+			 
+		 } else {
+			 // Create a scenario
+			 String name = validScenarioName(getTextField("SInput").getText(), scenarios);
+			 
+			 if (name != null) {
+				 Scenario newScenario = new Scenario(name);
+				 scenarios.add(newScenario);
+				 
+				 updateListContents();
+				 scenarioList.setItem(newScenario);
+				 return 2;
+				 
+			 } else {
+				 return -1;
+			 }
+		 }
+	 }
 
 	 /**
 	  * Updates the positions of all the contents of the scenario window.
 	  */
 	 public void updateScenarioWindowContentPositions() {
-		 // New scenario name label
-		 int[] relPos = new int[] { offsetX, offsetX };
-		 ControllerInterface<?> c = getTextArea("NewScenarioLbl").setPosition(relPos[0], relPos[1]);
-		 // New scenario name field
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 getTextField("ScenarioName").setPosition(relPos[0], relPos[1]);
-		 // New scenario button
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getButton("NewScenario").setPosition(relPos[0], relPos[1]);
-		 // Scenario dropdown list and label
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, 2 * distBtwFieldsY);
-		 c = getTextArea("ActiveScenarioLbl").setPosition(relPos[0], relPos[1]);
-
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
-		 getDropdown("Scenario").setPosition(relPos[0], relPos[1]);
-		 // Set scenario button
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 c = getButton("SetScenario").setPosition(relPos[0], relPos[1]);
-		 
-		 // Update window background display
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 background.setBackgroundHeight(relPos[1])
-		 .setHeight(relPos[1])
-		 .show();
+		// Scenario options label and radio buttons
+		int[] relPos = new int[] { offsetX, offsetX };
+		ControllerInterface<?> c = getTextArea("SOptLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, 0);
+		c = getRadioButton("ScenarioOpt").setPosition(relPos[0], relPos[1]);
+		
+		float val = c.getValue();
+		Textarea ta = getTextArea("SInstructions");
+		MyDropdownList mdl = getDropdown("Scenario");
+		MyTextfield mtf = getTextField("SInput");
+		Button b = getButton("SConfirm");
+		
+		if (val == 2f) {
+			// Scenario instructions
+			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			ta.setPosition(relPos[0], relPos[1]);
+			ta.setText("Select the scenario you wish to rename from the dorpdown list and enter the new name into the text field below. Press RENAME to confirm the scenario's new name.");
+			// Scenario dropdown list
+			relPos = relativePosition(ta, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			mdl.setPosition(relPos[0], relPos[1]).show();
+			// Scenario input field
+			relPos = relativePosition(mdl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			mtf.setPosition(relPos[0], relPos[1]).show();
+			// Scenario confirm button
+			relPos = relativePosition(mtf, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			c = b.setPosition(relPos[0], relPos[1]);
+			b.getCaptionLabel().setText("Rename");
+			
+		} else if (val == 1f) {
+			// Scenario instructions
+			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			ta.setPosition(relPos[0], relPos[1]);
+			ta.setText("Select the scenario you wish to set as active from the dropdown list. Press SET to confirm your choice. A scenario name has to be unique, consist of only letters and numbers, and be of length less than 16.");
+			// Scenario dropdown list
+			relPos = relativePosition(ta, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			c = mdl.setPosition(relPos[0], relPos[1]).show();
+			
+			// Scenario confirm button
+			relPos = relativePosition(mdl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			c = b.setPosition(relPos[0], relPos[1]);
+			b.getCaptionLabel().setText("Set");
+			
+			mtf.hide();
+			
+		} else {
+			// Scenario instructions
+			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			ta.setPosition(relPos[0], relPos[1]);
+			ta.setText("Enter the name of the scenario you wish to create and press CONFIRM. A scenario name has to be unique, consist of only letters and numbers, and be of length less than 16.");
+			// Scenario input field
+			relPos = relativePosition(ta, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			mtf.setPosition(relPos[0], relPos[1]).show();
+			// Scenario confirm button
+			relPos = relativePosition(mtf, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			c = b.setPosition(relPos[0], relPos[1]);
+			b.getCaptionLabel().setText("Create");
+			
+			mdl.hide();
+		}
+		
+		// Update window background display
+		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		background.setBackgroundHeight(relPos[1])
+				  .setHeight(relPos[1])
+				  .show();
 	 }
 	 
 	/**
@@ -2554,12 +2712,12 @@ public class WindowManager implements ControlListener {
 				 }
 				 
 				 if (inputValues[5] != null) {
-					 oWPR.y = -inputValues[5];
+					 oWPR.y = inputValues[5];
 					 edited = true;
 				 }
 				 
 				 if (inputValues[4] != null) {
-					 oWPR.z = inputValues[4];
+					 oWPR.z = -inputValues[4];
 					 edited = true;
 				 }
 
@@ -2643,13 +2801,13 @@ public class WindowManager implements ControlListener {
 				 edited = true;
 			 }
 			 
-			 if (inputValues[4] != null) {
-				 defaultWPR.y = -inputValues[4];
+			 if (inputValues[5] != null) {
+				 defaultWPR.y = inputValues[5];
 				 edited = true;
 			 }
 			 
-			 if (inputValues[5] != null) {
-				 defaultWPR.z = inputValues[5];
+			 if (inputValues[4] != null) {
+				 defaultWPR.z = -inputValues[4];
 				 edited = true;
 			 }
 
@@ -2669,5 +2827,35 @@ public class WindowManager implements ControlListener {
 			 
 			 fillDefWithDef();
 		 }
+	 }
+	 
+	 /**
+	  * TODO
+	  * 
+	  * @param name
+	  * @param scenarios
+	  * @return
+	  */
+	 private static String validScenarioName(String name, ArrayList<Scenario> scenarios) {
+		// Names only consist of letters and numbers
+		 if (Pattern.matches("[a-zA-Z0-9]+", name)) {
+
+			 for (Scenario s : scenarios) {
+				 if (s.getName().equals(name)) {
+					 // Duplicate name
+					 return null;
+				 }
+			 }
+
+			 if (name.length() > 16) {
+				 // Names have a max length of 16 characters
+				 name = name.substring(0, 16);
+			 }
+
+			 return name;
+		 }
+		 
+		 // Invalid characters
+		 return null;
 	 }
 }

@@ -5937,7 +5937,7 @@ public class RobotRun extends PApplet {
 			}
 			
 		} else {
-			if (isProgramRunning()) {
+			if (!isProgramRunning()) {
 				// Map I/O to the robot's end effector state, if shift is off
 				activeRobot.toggleEEState();
 			}
@@ -7476,16 +7476,6 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void NewScenario() {
-		Scenario newScenario = getManager().initializeScenario();
-
-		if (newScenario != null) {
-			// Add the new scenario
-			SCENARIOS.add(newScenario);
-			DataManagement.saveScenarios(this);
-		}
-	}
-
 	public void newSelectStatement() {
 		Program p = getActiveRobot().getActiveProg();
 		SelectStatement stmt = new SelectStatement();
@@ -7706,6 +7696,22 @@ public class RobotRun extends PApplet {
 			motionFault = false;
 		}
 	}
+	
+	/**
+	 * Restores all parts in the current scenario to their default position and
+	 * orientation.
+	 */
+	public void ResDefs() {
+		
+		for (WorldObject wo : activeScenario) {
+			// Only applies to parts
+			if (wo instanceof Part) {
+				Part p = (Part)wo;
+				p.setLocalCenter( p.getDefaultCenter() );
+				p.setLocalOrientationAxes( p.getDefaultOrientationAxes() );
+			}
+		}
+	}
 
 	//turn of highlighting on all active movement buttons
 	public void resetButtonColors() {
@@ -7753,6 +7759,23 @@ public class RobotRun extends PApplet {
 		// Right view
 		camera.reset();
 		camera.rotate(0, 3f * PI / 2f, 0);
+	}
+	
+	/**
+	 * Deals with the confirm functionality of the scenario window.
+	 */
+	public void SConfirm() {
+		int ret = getManager().updateScenarios(SCENARIOS);
+		
+		if (ret > 0) {
+			activeScenario = getManager().getActiveScenario();
+			DataManagement.saveScenarios(this);
+			
+		} else if (ret == 0) {
+			DataManagement.saveScenarios(this);
+		}
+		
+		System.out.println( String.format("SConfirm: %d\n", ret) );
 	}
 
 	// Select button
@@ -7806,23 +7829,6 @@ public class RobotRun extends PApplet {
 				 * default screen */
 				nextScreen(ScreenMode.DEFAULT);
 			}
-		}
-	}
-	
-	/**
-	 * Sets the active scenario based on the scenario dropdown in the scenario
-	 * window and clears the scenario undo stack.
-	 */
-	public void SetScenario() {
-		/* Get the scenario, which is associated with the scenario
-		 * dropdownlist's label */
-		Scenario limbo = getManager().getActiveScenario();
-		
-		if (limbo != null) {
-			// Set the active scenario to a copy of the loaded scenario
-			activeScenario = limbo;
-			// Clear scenario undo stack
-			scenarioUndo.clear();
 		}
 	}
 
