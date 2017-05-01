@@ -5091,23 +5091,25 @@ public class RobotRun extends PApplet {
 		case NAV_PROG_INSTR:
 			Program p = activeRobot.getActiveProg();
 			int aInst = activeRobot.getActiveInstIdx();
-			/* Really buggy for empty/spare programs, I will fix it later
-			 * 		- Joshua */
+			
 			if (p.getInstructions().size() > 0 && aInst >= 0 && aInst < p.getInstructions().size()) {
 				Instruction inst = p.getInstruction( activeRobot.getActiveInstIdx() );
 				
 				if (inst instanceof MotionInstruction && contents.getColumnIdx() == 3) {
 					// Show the position associated with the active motion instruction
 					MotionInstruction mInst = (MotionInstruction)inst;
-					boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
-					String[] pregEntry = mInst.getPoint(p).toLineStringArray(isCartesian);
-	
-					for (String line : pregEntry) {
-						options.addLine(line);
+					
+					if (mInst.getPoint(p) != null) {
+						boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
+						String[] pregEntry = mInst.getPoint(p).toLineStringArray(isCartesian);
+		
+						for (String line : pregEntry) {
+							options.addLine(line);
+						}
 					}
 				}
 			}
-			/**/
+			
 			break;
 			
 		case EDIT_IOREG:
