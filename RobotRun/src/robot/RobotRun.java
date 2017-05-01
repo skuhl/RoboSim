@@ -1306,17 +1306,23 @@ public class RobotRun extends PApplet {
 		case SELECT_CUT_COPY:
 		case SELECT_INSTR_DELETE:
 			if (!isProgramRunning()) {
-				// Lock movement when a program is running
-				Instruction i = getActiveRobot().getActiveInstruction();
-				int prevLine = getSelectedLine();
-				getActiveRobot().setActiveInstIdx(contents.moveUp(isShift()));
-				int curLine = getSelectedLine();
-
-				//special case for select statement column navigation
-				if((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 0) {
-					if(prevLine == 1) {
-						contents.setColumnIdx(contents.getColumnIdx() + 3);
+				try {
+					// Lock movement when a program is running
+					Instruction i = getActiveRobot().getActiveInstruction();
+					int prevLine = getSelectedLine();
+					getActiveRobot().setActiveInstIdx(contents.moveUp(isShift()));
+					int curLine = getSelectedLine();
+	
+					//special case for select statement column navigation
+					if((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 0) {
+						if(prevLine == 1) {
+							contents.setColumnIdx(contents.getColumnIdx() + 3);
+						}
 					}
+					
+				} catch (IndexOutOfBoundsException IOOBEx) {
+					// Issue with loading a program, not sure if this helps ...
+					IOOBEx.printStackTrace();
 				}
 
 
@@ -2398,6 +2404,14 @@ public class RobotRun extends PApplet {
 			nextScreen(ScreenMode.NAV_PROG_INSTR);
 			
 		} else {
+			RoboticArm arm = getActiveRobot();
+			
+			if (arm.numOfPrograms() > 0) {
+				arm.setActiveProgIdx(0);
+			}
+			
+			contents.reset();
+			resetStack();
 			nextScreen(ScreenMode.NAV_PROGRAMS);
 		}
 	}

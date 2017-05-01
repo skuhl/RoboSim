@@ -572,7 +572,7 @@ public class WindowManager implements ControlListener {
 		
 		//  Add elements
 		rb.addItem("New", 0f);
-		rb.addItem("Set", 1f);
+		rb.addItem("Load", 1f);
 		rb.addItem("Rename", 2f);
 		// Initialize labels
 		for (Toggle t : rb.getItems()) {
@@ -1546,45 +1546,6 @@ public class WindowManager implements ControlListener {
 	 }
 	 
 	 /**
-	  * TODO
-	  * 
-	  * @return
-	  */
-	 private Float[] getDefaultValues() {
-		 try {
-			 // Pull from x, y, z, w, p, r, fields input fields
-			 String[] orienVals = new String[] {
-					getTextArea("XDef").getText(), getTextArea("YDef").getText(),
-					getTextArea("ZDef").getText(), getTextArea("WDef").getText(),
-					getTextArea("PDef").getText(), getTextArea("RDef").getText()
-			 };
-			 
-			 // NaN indicates an uninitialized field
-			 Float[] values = new Float[] { null, null, null, null, null, null };
-			 
-			 for (int valIdx = 0; valIdx < orienVals.length; ++valIdx) {
-				// Update the orientation value
-				 if (orienVals[valIdx] != null && !orienVals[valIdx].equals("")) {
-					 float val = Float.parseFloat(orienVals[valIdx]);
-					 // Bring value within the range [-9999, 9999]
-					 val = RobotRun.max(-9999f, RobotRun.min(val, 9999f));
-					 values[valIdx] = val;
-				 }
-			 }
-
-			 return values;
-
-		 } catch (NumberFormatException NFEx) {
-			 RobotRun.println("Invalid number input!");
-			 return null;
-
-		 } catch (NullPointerException NPEx) {
-			 RobotRun.println("Missing parameter!");
-			 return null;
-		 }
-	 }
-	 
-	 /**
 	  * Returns the radio button, with the given name, if it exists in one of
 	  * the UI (excluding the pendant). If a non-radio button UI element exists
 	  * in the UI, then a ClassCastException will be thrown. If no UI element
@@ -2371,7 +2332,7 @@ public class WindowManager implements ControlListener {
 			// Scenario instructions
 			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			ta.setPosition(relPos[0], relPos[1]);
-			ta.setText("Select the scenario you wish to set as active from the dropdown list. Press SET to confirm your choice. A scenario name has to be unique, consist of only letters and numbers, and be of length less than 16.");
+			ta.setText("Select the scenario you wish to set as active from the dropdown list. Press LOAD to confirm your choice. A scenario name has to be unique, consist of only letters and numbers, and be of length less than 16.");
 			// Scenario dropdown list
 			relPos = relativePosition(ta, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c = mdl.setPosition(relPos[0], relPos[1]).show();
@@ -2379,7 +2340,7 @@ public class WindowManager implements ControlListener {
 			// Scenario confirm button
 			relPos = relativePosition(mdl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c = b.setPosition(relPos[0], relPos[1]);
-			b.getCaptionLabel().setText("Set");
+			b.getCaptionLabel().setText("Load");
 			
 			mtf.hide();
 			
