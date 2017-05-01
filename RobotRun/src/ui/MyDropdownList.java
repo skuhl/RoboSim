@@ -42,6 +42,27 @@ public class MyDropdownList extends DropdownList {
 		return null;
 	}
 	
+	/**
+	 * Returns the label associated with item that is currently selected in the
+	 * dropdown list or null, if not item is currently selected.
+	 * 
+	 * @return	The label associated with the selected item or null
+	 */
+	private String getSelectedLabel() {
+		try {
+			int idx = (int)getValue();
+			Map<String, Object> associatedObjects = getItem(idx);
+
+			if (associatedObjects != null) {
+				return (String) associatedObjects.get("name");
+			}
+			
+		} catch (IndexOutOfBoundsException IOOBEx) {/* No elements */}
+		
+		// No element selected
+		return null;
+	}
+	
 	@Override
 	protected void onRelease() {
 		try {
@@ -74,7 +95,7 @@ public class MyDropdownList extends DropdownList {
 		for (Object o : getItems()) {
 			HashMap<String, Object> map = (HashMap<String, Object>)o;
 			
-			if (map != null && e != null && e == map.get("value")) {
+			if (map != null && e == map.get("value")) {
 				// The object exists in the list
 				setValue(val);
 				return true;
@@ -92,13 +113,13 @@ public class MyDropdownList extends DropdownList {
 	 * in the list.
 	 */
 	private void updateLabel() {
-		Object e = getSelectedItem();
-		
-		if (e == null) {
+		String label = getSelectedLabel();
+	
+		if (label == null) {
 			getCaptionLabel().setText( getName() );
 			
 		} else {
-			getCaptionLabel().setText( e.toString() );
+			getCaptionLabel().setText( label );
 		}
 	}
 }

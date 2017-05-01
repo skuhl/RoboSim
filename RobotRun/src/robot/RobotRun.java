@@ -1201,6 +1201,9 @@ public class RobotRun extends PApplet {
 		case NAV_PREGS:
 			contents.setColumnIdx(max(0, contents.getColumnIdx() - 1));
 			break;
+		case SELECT_IO_INSTR_REG:
+			options.setColumnIdx(max(1, options.getColumnIdx() - 1));
+			break;
 		default:
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 				contents.setColumnIdx(max(0, contents.getColumnIdx() - 1));
@@ -1230,6 +1233,9 @@ public class RobotRun extends PApplet {
 		case NAV_MACROS:
 		case NAV_PREGS:
 			contents.setColumnIdx(min(contents.getColumnIdx() + 1, contents.get(contents.getLineIdx()).size() - 1));
+			break;
+		case SELECT_IO_INSTR_REG:
+			options.setColumnIdx(min(options.getColumnIdx() + 1, options.get(options.getLineIdx()).size() - 1));
 			break;
 		default:
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
@@ -1306,17 +1312,23 @@ public class RobotRun extends PApplet {
 		case SELECT_CUT_COPY:
 		case SELECT_INSTR_DELETE:
 			if (!isProgramRunning()) {
-				// Lock movement when a program is running
-				Instruction i = getActiveRobot().getActiveInstruction();
-				int prevLine = getSelectedLine();
-				getActiveRobot().setActiveInstIdx(contents.moveUp(isShift()));
-				int curLine = getSelectedLine();
-
-				//special case for select statement column navigation
-				if((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 0) {
-					if(prevLine == 1) {
-						contents.setColumnIdx(contents.getColumnIdx() + 3);
+				try {
+					// Lock movement when a program is running
+					Instruction i = getActiveRobot().getActiveInstruction();
+					int prevLine = getSelectedLine();
+					getActiveRobot().setActiveInstIdx(contents.moveUp(isShift()));
+					int curLine = getSelectedLine();
+	
+					//special case for select statement column navigation
+					if((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 0) {
+						if(prevLine == 1) {
+							contents.setColumnIdx(contents.getColumnIdx() + 3);
+						}
 					}
+					
+				} catch (IndexOutOfBoundsException IOOBEx) {
+					// Issue with loading a program, not sure if this helps ...
+					IOOBEx.printStackTrace();
 				}
 
 
@@ -2398,6 +2410,14 @@ public class RobotRun extends PApplet {
 			nextScreen(ScreenMode.NAV_PROG_INSTR);
 			
 		} else {
+			RoboticArm arm = getActiveRobot();
+			
+			if (arm.numOfPrograms() > 0) {
+				arm.setActiveProgIdx(0);
+			}
+			
+			contents.reset();
+			resetStack();
 			nextScreen(ScreenMode.NAV_PROGRAMS);
 		}
 	}
@@ -2769,7 +2789,7 @@ public class RobotRun extends PApplet {
 
 			break;
 		case SELECT_IO_INSTR_REG:
-			newIOInstruction();
+			newIOInstruction( options.getColumnIdx() );
 			display_stack.pop();
 			lastScreen();
 			break;
@@ -6611,7 +6631,6 @@ public class RobotRun extends PApplet {
 	public void loadIORegisters() {
 		for(int i = 0; i < RoboticArm.IOREG_NUM; i += 1){
 			IORegister ioReg = getActiveRobot().getIOReg(i);
-			String state = (ioReg.state == Fields.ON) ? "ON" : "OFF";
 			String ee;
 
 			if (ioReg.comment != null) {
@@ -6620,7 +6639,7 @@ public class RobotRun extends PApplet {
 				ee = "UINIT";
 			}
 
-			options.addLine(String.format("IO[%d:%-8s] = %s", i + 1, ee, state));
+			options.addLine(String.format("IO[%d:%-8s] = ", i + 1, ee), "ON", "OFF");
 		}
 	}
 
@@ -6915,6 +6934,10 @@ public class RobotRun extends PApplet {
 		case SET_BOOL_EXPR_ARG:
 		case SET_EXPR_OP:
 			options.reset();
+			break;
+		case SELECT_IO_INSTR_REG:
+			options.setLineIdx(0);
+			options.setColumnIdx(1);
 			break;
 		case SET_MV_INSTR_OFFSET:
 		case INPUT_DREG_IDX:
@@ -7290,6 +7313,7 @@ public class RobotRun extends PApplet {
 	public void MoveToCur() {
 		// Only allow world object editing when no program is executing
 		if (!isProgramRunning()) {
+			updateScenarioUndo( manager.getActiveWorldObject() );
 			getManager().updateWOCurrent();
 			DataManagement.saveScenarios(this);
 		}
@@ -7302,6 +7326,7 @@ public class RobotRun extends PApplet {
 	public void MoveToDef() {
 		// Only allow world object editing when no program is executing
 		if (!isProgramRunning()) {
+			updateScenarioUndo( manager.getActiveWorldObject() );
 			getManager().fillCurWithDef();
 			getManager().updateWOCurrent();
 			DataManagement.saveScenarios(this);
@@ -7376,12 +7401,14 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void newIOInstruction() {
+	public void newIOInstruction(int columnIdx) {
 		Program p = getActiveRobot().getActiveProg();
-		IOInstruction io = new IOInstruction(options.getLineIdx(), Fields.OFF);
+		IOInstruction io = new IOInstruction(options.getLineIdx(),
+				(columnIdx == 1) ? Fields.ON : Fields.OFF);
 
 		if(getActiveRobot().getActiveInstIdx() != p.getInstructions().size()) {
 			p.overwriteInstruction(getActiveRobot().getActiveInstIdx(), io);
+			
 		} else {
 			p.addInstruction(io);
 		}
@@ -8262,7 +8289,7 @@ public class RobotRun extends PApplet {
 	 * Toggle bounding box display on or off.
 	 */
 	public void ToggleOBBs() {
-		getManager().updateMiscWindowContentPositions();
+		getManager().updateWindowContentsPositions();
 	}
 	
 	/**
@@ -8275,7 +8302,7 @@ public class RobotRun extends PApplet {
 			activeRobot = robots.get(0);
 		}
 		
-		getManager().updateMiscWindowContentPositions();
+		getManager().updateWindowContentsPositions();
 		updateScreen();
 	}
 
@@ -8312,6 +8339,7 @@ public class RobotRun extends PApplet {
 		if (!scenarioUndo.empty()) {
 			activeScenario.put( scenarioUndo.pop() );
 			manager.updateListContents();
+			manager.updateEditWindowFields();
 		}
 	}
 
@@ -8553,7 +8581,7 @@ public class RobotRun extends PApplet {
 	public void updateScenarioUndo(WorldObject saveState) {
 		
 		// Only the latest 10 world object save states can be undone
-		if (scenarioUndo.size() >= 10) {
+		if (scenarioUndo.size() >= 40) {
 			// Not sure if size - 1 should be used instead
 			scenarioUndo.remove(0);
 		}
@@ -8566,6 +8594,7 @@ public class RobotRun extends PApplet {
 	 * the input fields in the edit window.
 	 */
 	public void UpdateWODef() {
+		updateScenarioUndo( manager.getActiveWorldObject() );
 		getManager().updateWODefault();
 	}
 
