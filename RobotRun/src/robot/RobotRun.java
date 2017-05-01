@@ -1201,6 +1201,9 @@ public class RobotRun extends PApplet {
 		case NAV_PREGS:
 			contents.setColumnIdx(max(0, contents.getColumnIdx() - 1));
 			break;
+		case SELECT_IO_INSTR_REG:
+			options.setColumnIdx(max(1, options.getColumnIdx() - 1));
+			break;
 		default:
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 				contents.setColumnIdx(max(0, contents.getColumnIdx() - 1));
@@ -1230,6 +1233,9 @@ public class RobotRun extends PApplet {
 		case NAV_MACROS:
 		case NAV_PREGS:
 			contents.setColumnIdx(min(contents.getColumnIdx() + 1, contents.get(contents.getLineIdx()).size() - 1));
+			break;
+		case SELECT_IO_INSTR_REG:
+			options.setColumnIdx(min(options.getColumnIdx() + 1, options.get(options.getLineIdx()).size() - 1));
 			break;
 		default:
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
@@ -2783,7 +2789,7 @@ public class RobotRun extends PApplet {
 
 			break;
 		case SELECT_IO_INSTR_REG:
-			newIOInstruction();
+			newIOInstruction( options.getColumnIdx() );
 			display_stack.pop();
 			lastScreen();
 			break;
@@ -6625,7 +6631,6 @@ public class RobotRun extends PApplet {
 	public void loadIORegisters() {
 		for(int i = 0; i < RoboticArm.IOREG_NUM; i += 1){
 			IORegister ioReg = getActiveRobot().getIOReg(i);
-			String state = (ioReg.state == Fields.ON) ? "ON" : "OFF";
 			String ee;
 
 			if (ioReg.comment != null) {
@@ -6634,7 +6639,7 @@ public class RobotRun extends PApplet {
 				ee = "UINIT";
 			}
 
-			options.addLine(String.format("IO[%d:%-8s] = %s", i + 1, ee, state));
+			options.addLine(String.format("IO[%d:%-8s] = ", i + 1, ee), "ON", "OFF");
 		}
 	}
 
@@ -6929,6 +6934,10 @@ public class RobotRun extends PApplet {
 		case SET_BOOL_EXPR_ARG:
 		case SET_EXPR_OP:
 			options.reset();
+			break;
+		case SELECT_IO_INSTR_REG:
+			options.setLineIdx(0);
+			options.setColumnIdx(1);
 			break;
 		case SET_MV_INSTR_OFFSET:
 		case INPUT_DREG_IDX:
@@ -7390,12 +7399,14 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void newIOInstruction() {
+	public void newIOInstruction(int columnIdx) {
 		Program p = getActiveRobot().getActiveProg();
-		IOInstruction io = new IOInstruction(options.getLineIdx(), Fields.OFF);
+		IOInstruction io = new IOInstruction(options.getLineIdx(),
+				(columnIdx == 1) ? Fields.ON : Fields.OFF);
 
 		if(getActiveRobot().getActiveInstIdx() != p.getInstructions().size()) {
 			p.overwriteInstruction(getActiveRobot().getActiveInstIdx(), io);
+			
 		} else {
 			p.addInstruction(io);
 		}
