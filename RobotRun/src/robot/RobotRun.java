@@ -7313,6 +7313,7 @@ public class RobotRun extends PApplet {
 	public void MoveToCur() {
 		// Only allow world object editing when no program is executing
 		if (!isProgramRunning()) {
+			updateScenarioUndo( manager.getActiveWorldObject() );
 			getManager().updateWOCurrent();
 			DataManagement.saveScenarios(this);
 		}
@@ -7325,6 +7326,7 @@ public class RobotRun extends PApplet {
 	public void MoveToDef() {
 		// Only allow world object editing when no program is executing
 		if (!isProgramRunning()) {
+			updateScenarioUndo( manager.getActiveWorldObject() );
 			getManager().fillCurWithDef();
 			getManager().updateWOCurrent();
 			DataManagement.saveScenarios(this);
@@ -8287,7 +8289,7 @@ public class RobotRun extends PApplet {
 	 * Toggle bounding box display on or off.
 	 */
 	public void ToggleOBBs() {
-		getManager().updateMiscWindowContentPositions();
+		getManager().updateWindowContentsPositions();
 	}
 	
 	/**
@@ -8300,7 +8302,7 @@ public class RobotRun extends PApplet {
 			activeRobot = robots.get(0);
 		}
 		
-		getManager().updateMiscWindowContentPositions();
+		getManager().updateWindowContentsPositions();
 		updateScreen();
 	}
 
@@ -8337,6 +8339,7 @@ public class RobotRun extends PApplet {
 		if (!scenarioUndo.empty()) {
 			activeScenario.put( scenarioUndo.pop() );
 			manager.updateListContents();
+			manager.updateEditWindowFields();
 		}
 	}
 
@@ -8578,7 +8581,7 @@ public class RobotRun extends PApplet {
 	public void updateScenarioUndo(WorldObject saveState) {
 		
 		// Only the latest 10 world object save states can be undone
-		if (scenarioUndo.size() >= 10) {
+		if (scenarioUndo.size() >= 40) {
 			// Not sure if size - 1 should be used instead
 			scenarioUndo.remove(0);
 		}
@@ -8591,6 +8594,7 @@ public class RobotRun extends PApplet {
 	 * the input fields in the edit window.
 	 */
 	public void UpdateWODef() {
+		updateScenarioUndo( manager.getActiveWorldObject() );
 		getManager().updateWODefault();
 	}
 

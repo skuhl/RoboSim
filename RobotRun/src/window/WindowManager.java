@@ -842,42 +842,8 @@ public class WindowManager implements ControlListener {
 			 }
 			 
 			 if (arg0.isFrom("Object")) {
-				// Initialize the input fields on the edit menu
-				WorldObject selected = getActiveWorldObject();
-				
-				if (selected != null) {
-					
-					// Initialize the dimension fields
-					if (selected.getForm() instanceof Box) {
-						getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.LENGTH)) );
-						getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
-						getTextField("Dim2").setText( String.format("%4.3f", selected.getForm().getDim(DimType.WIDTH)) );
-						
-					} else if (selected.getForm() instanceof Cylinder) {
-						getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.RADIUS)) );
-						getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
-						
-						
-					} else if (selected.getForm() instanceof ModelShape) {
-						getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.SCALE)) );
-					}
-					
-					fillCurWithCur();
-					fillDefWithDef();
-					
-					// Initialize the reference dropdown
-					MyDropdownList ddl = getDropdown("Fixture");
-					
-					if (selected instanceof Part) {
-					
-						Fixture ref = ((Part)selected).getFixtureRef();
-						ddl.setItem(ref);
-					
-					} else {
-						ddl.setValue(0);
-					}
-					
-				 }
+				// Update the input fields on the edit menu
+				updateEditWindowFields();
 				
 			 } else if (arg0.isFrom("Fixture")) {
 				WorldObject selected = getActiveWorldObject();
@@ -2010,6 +1976,48 @@ public class WindowManager implements ControlListener {
 			}
 		 }
 	 }
+	 
+	 /**
+	  * Sets the dimension text fields, current text fields, default text areas,
+	  * as well as the reference dropdown list in the edit window based on the
+	  * currently selected world object, in the Object dropdown list.
+	  */
+	 public void updateEditWindowFields() {
+		 WorldObject selected = getActiveWorldObject();
+		 
+		 if (selected != null) {
+				// Set the dimension fields
+				if (selected.getForm() instanceof Box) {
+					getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.LENGTH)) );
+					getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
+					getTextField("Dim2").setText( String.format("%4.3f", selected.getForm().getDim(DimType.WIDTH)) );
+					
+				} else if (selected.getForm() instanceof Cylinder) {
+					getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.RADIUS)) );
+					getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
+					
+					
+				} else if (selected.getForm() instanceof ModelShape) {
+					getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.SCALE)) );
+				}
+				
+				fillCurWithCur();
+				fillDefWithDef();
+				
+				// Set the reference dropdown
+				MyDropdownList ddl = getDropdown("Fixture");
+				
+				if (selected instanceof Part) {
+				
+					Fixture ref = ((Part)selected).getFixtureRef();
+					ddl.setItem(ref);
+				
+				} else {
+					ddl.setValue(0);
+				}
+				
+			 }
+	 }
 
 	 /**
 	  * Updates the positions of all the contents of the world object editing window.
@@ -2289,7 +2297,7 @@ public class WindowManager implements ControlListener {
 	 /**
 	  * Updates the positions of all the contents of the scenario window.
 	  */
-	 public void updateScenarioWindowContentPositions() {
+	 private void updateScenarioWindowContentPositions() {
 		// Scenario options label and radio buttons
 		int[] relPos = new int[] { offsetX, offsetX };
 		ControllerInterface<?> c = getTextArea("SOptLbl").setPosition(relPos[0], relPos[1]);
@@ -2361,7 +2369,7 @@ public class WindowManager implements ControlListener {
 	/**
 	 * Updates the positions of all the contents of the miscellaneous window.
 	 */
-	public void updateMiscWindowContentPositions() {
+	private void updateMiscWindowContentPositions() {
 		// Axes Display label
 		int[] relPos = new int[] { offsetX, offsetX };
 		ControllerInterface<?> c = getTextArea("ActiveAxesDisplay").setPosition(relPos[0], relPos[1]);
