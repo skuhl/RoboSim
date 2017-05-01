@@ -834,6 +834,13 @@ public class WindowManager implements ControlListener {
 			}
 			 
 		 } else {
+			 if (arg0.isFrom("Object") || arg0.isFrom("Shape") ||
+					 arg0.isFrom("ScenarioOpt")) {
+				 /* The selected item in these lists influence the layout of
+				  * the menu */
+				 updateWindowContentsPositions();
+			 }
+			 
 			 if (arg0.isFrom("Object")) {
 				// Initialize the input fields on the edit menu
 				WorldObject selected = getActiveWorldObject();
@@ -864,13 +871,7 @@ public class WindowManager implements ControlListener {
 					if (selected instanceof Part) {
 					
 						Fixture ref = ((Part)selected).getFixtureRef();
-						
-						if (ref == null) {
-							ddl.setValue(0);
-						 
-						} else {
-							ddl.setItem(ref);
-						}
+						ddl.setItem(ref);
 					
 					} else {
 						ddl.setValue(0);
@@ -901,13 +902,6 @@ public class WindowManager implements ControlListener {
 					lastModImport = arg0.getName();
 				}
 				
-			 }
-			 
-			 if (arg0.isFrom("Object") || arg0.isFrom("Shape") ||
-					 arg0.isFrom("ScenarioOpt")) {
-				 /* The selected item in these lists influence the layout of
-				  * the menu */
-				 updateWindowContentsPositions();
 			 }
 		 }
 	}
@@ -2211,6 +2205,7 @@ public class WindowManager implements ControlListener {
 		 if (app.activeScenario != null) {
 			 dropdown = getDropdown("Object");
 			 dropdown.clear();
+			 
 			 MyDropdownList limbo = getDropdown("Fixture");
 			 limbo.clear();
 			 limbo.addItem("None", null);
@@ -2223,9 +2218,6 @@ public class WindowManager implements ControlListener {
 					 limbo.addItem(wldObj.toString(), wldObj);
 				 }
 			 }
-			 // Update each dropdownlist's active label
-			 //limbo.updateActiveLabel();
-			 //dropdown.updateActiveLabel();
 		 }
 
 		 dropdown = getDropdown("Scenario");
@@ -2235,7 +2227,6 @@ public class WindowManager implements ControlListener {
 			 Scenario s = app.SCENARIOS.get(idx);
 			 dropdown.addItem(s.getName(), s);
 		 }
-		 //dropdown.updateActiveLabel();
 	 }
 	 
 	 /**
