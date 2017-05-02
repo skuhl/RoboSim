@@ -7364,6 +7364,7 @@ public class RobotRun extends PApplet {
 		// Only allow world object editing when no program is executing
 		if (!isProgramRunning()) {
 			WorldObject savedState = (WorldObject) manager.getSelectedWO().clone();
+			getManager().fillCurWithDef();
 			
 			if ( getManager().updateWOCurrent() ) {
 				/* If the object was modified, then save the previous state of
