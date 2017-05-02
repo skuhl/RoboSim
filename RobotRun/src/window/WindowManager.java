@@ -40,27 +40,27 @@ import ui.RelativePoint;
 public class WindowManager implements ControlListener {
 	
 	public static final int offsetX = 10,
-			radioDim = 16,
-			distBtwFieldsY = 15,
-			distLblToFieldX = 5,
-			distFieldToFieldX = 20,
-			lLblWidth = 120,
-			mLblWidth = 86,
-			sLblWidth = 60,
-			fieldHeight = 20,
-			fieldWidth = 110,
-			lButtonWidth = 88,
-			mButtonWidth = 56,
-			sButtonWidth = 26,
-			sButtonHeight = 26,
-			tButtonHeight = 20,
-			sdropItemWidth = 80,
-			mdropItemWidth = 90,
-			ldropItemWidth = 120,
-			dropItemHeight = 21,
-			DIM_LBL = 3,
-			DIM_TXT = 3,
-			DIM_DDL = 1;
+							radioDim = 16,
+							distBtwFieldsY = 15,
+							distLblToFieldX = 5,
+							distFieldToFieldX = 20,
+							lLblWidth = 120,
+							mLblWidth = 86,
+							sLblWidth = 60,
+							fieldHeight = 20,
+							fieldWidth = 110,
+							lButtonWidth = 88,
+							mButtonWidth = 56,
+							sButtonWidth = 26,
+							sButtonHeight = 26,
+							tButtonHeight = 20,
+							sdropItemWidth = 80,
+							mdropItemWidth = 90,
+							ldropItemWidth = 120,
+							dropItemHeight = 21,
+							DIM_LBL = 3,
+							DIM_TXT = 3,
+							DIM_DDL = 1;
 
 	private final ControlP5 UIManager;
 	private final RobotRun app;
@@ -1518,8 +1518,7 @@ public class WindowManager implements ControlListener {
 			 };
 			 
 			 // NaN indicates an uninitialized field
-			 Float[] values = new Float[] { null, null, null, null, null, null,
-					 						null, null, null, null, null, null };
+			 Float[] values = new Float[] { null, null, null, null, null, null };
 			 
 			 for (int valIdx = 0; valIdx < orienVals.length; ++valIdx) {
 				// Update the orientation value
@@ -1703,7 +1702,15 @@ public class WindowManager implements ControlListener {
 	 }
 
 	 /**
-	  * Returns a position that is relative to the dimensions and position of the Controller object given.
+	  * Returns a position that is relative to the dimensions and position of
+	  * the Controller object given.
+	  * 
+	  * @param obj		The element, with respect to which to perform the
+	  * 				calculation
+	  * @param pos		The corner reference point (TOP-LEFT, BOTTOM-RIGHT, etc.)
+	  * @param offsetX	The x position offset from obj's position
+	  * @param offsetY	The y position offset from obj's position
+	  * @return			A doubleton containing the absolute x and y positions
 	  */
 	 private <T> int[] relativePosition(ControllerInterface<T> obj, RelativePoint pos, int offsetX, int offsetY) {
 		 int[] relPosition = new int[] { 0, 0 };
@@ -1726,27 +1733,27 @@ public class WindowManager implements ControlListener {
 		 }
 
 		 switch(pos) {
-		 case TOP_RIGHT:
-			 relPosition[0] = (int)(objPosition[0] + objDimensions[0] + offsetX);
-			 relPosition[1] = (int)(objPosition[1] + offsetY);
-			 break;
-
-		 case TOP_LEFT:
-			 relPosition[0] = (int)(objPosition[0] + offsetX);
-			 relPosition[1] = (int)(objPosition[1] + offsetY);
-			 break;
-
-		 case BOTTOM_RIGHT:
-			 relPosition[0] = (int)(objPosition[0] + objDimensions[0] + offsetX);
-			 relPosition[1] = (int)(objPosition[1] + objDimensions[1] + offsetY);
-			 break;
-
-		 case BOTTOM_LEFT:
-			 relPosition[0] = (int)(objPosition[0] + offsetX);
-			 relPosition[1] = (int)(objPosition[1] + objDimensions[1] + offsetY);
-			 break;
-
-		 default:
+			 case TOP_RIGHT:
+				 relPosition[0] = (int)(objPosition[0] + objDimensions[0] + offsetX);
+				 relPosition[1] = (int)(objPosition[1] + offsetY);
+				 break;
+	
+			 case TOP_LEFT:
+				 relPosition[0] = (int)(objPosition[0] + offsetX);
+				 relPosition[1] = (int)(objPosition[1] + offsetY);
+				 break;
+	
+			 case BOTTOM_RIGHT:
+				 relPosition[0] = (int)(objPosition[0] + objDimensions[0] + offsetX);
+				 relPosition[1] = (int)(objPosition[1] + objDimensions[1] + offsetY);
+				 break;
+	
+			 case BOTTOM_LEFT:
+				 relPosition[0] = (int)(objPosition[0] + offsetX);
+				 relPosition[1] = (int)(objPosition[1] + objDimensions[1] + offsetY);
+				 break;
+	
+			 default:
 		 }
 
 		 return relPosition;
@@ -2343,13 +2350,13 @@ public class WindowManager implements ControlListener {
 		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, 0);
 		c = getRadioButton("ScenarioOpt").setPosition(relPos[0], relPos[1]);
 		
-		float val = c.getValue();
+		float winVar = c.getValue();
 		Textarea ta = getTextArea("SInstructions");
 		MyDropdownList mdl = getDropdown("Scenario");
 		MyTextfield mtf = getTextField("SInput");
 		Button b = getButton("SConfirm");
 		
-		if (val == 2f) {
+		if (winVar == 2f) { // Rename scenario variation
 			// Scenario instructions
 			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			ta.setPosition(relPos[0], relPos[1]);
@@ -2365,7 +2372,7 @@ public class WindowManager implements ControlListener {
 			c = b.setPosition(relPos[0], relPos[1]);
 			b.getCaptionLabel().setText("Rename");
 			
-		} else if (val == 1f) {
+		} else if (winVar == 1f) { // Load scenario variation
 			// Scenario instructions
 			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			ta.setPosition(relPos[0], relPos[1]);
@@ -2381,7 +2388,7 @@ public class WindowManager implements ControlListener {
 			
 			mtf.hide();
 			
-		} else {
+		} else { // New scenario variation
 			// Scenario instructions
 			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			ta.setPosition(relPos[0], relPos[1]);
@@ -2426,7 +2433,7 @@ public class WindowManager implements ControlListener {
 		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		Button b = getButton("ToggleOBBs").setPosition(relPos[0], relPos[1]);
 
-		// Update button color based on the value of the object display flag
+		// Update button color based on the state of the button
 		if (b.isOn()) {
 			b.setLabel("Show OBBs");
 			b.setColorBackground(buttonActColor);
@@ -2440,7 +2447,7 @@ public class WindowManager implements ControlListener {
 		relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		b = getButton("ToggleRobot").setPosition(relPos[0], relPos[1]);
 		
-		// Update button color based on the value of the object display flag
+		// Update button color based on the state of the button
 		if (b.isOn()) {
 			b.setColorBackground(buttonActColor);
 			
@@ -2509,9 +2516,7 @@ public class WindowManager implements ControlListener {
 
 	 /**
 	  * Updates the current active window display based on the selected button on
-	  * windowTabs. Due to some problems with hiding groups with the ControlP5
-	  * object, when a new window is brought up a large white sphere is drawn oer
-	  * the screen to clear the image of the previous window.
+	  * windowTabs.
 	  */
 	 public void updateWindowDisplay() {
 		 		 
@@ -2726,7 +2731,7 @@ public class WindowManager implements ControlListener {
 				 PVector position = RobotRun.convertWorldToNative( oPosition );
 				 PVector wpr = oWPR.mult(RobotRun.DEG_TO_RAD);
 				 float[][] orientation = RobotRun.eulerToMatrix(wpr);
-				 // Update the Objects position and orientaion
+				 // Update the Objects position and orientation
 				 toEdit.setLocalCenter(position);
 				 toEdit.setLocalOrientationAxes(orientation);
 				 
@@ -2772,6 +2777,7 @@ public class WindowManager implements ControlListener {
 		 
 		 if (toEdit instanceof Part) {
 			Part p = (Part)toEdit;
+			// Pull the object's current position and orientation
 			PVector defaultPos = RobotRun.convertNativeToWorld( p.getDefaultCenter() );
 			PVector defaultWPR = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
 										 .mult(RobotRun.RAD_TO_DEG);
