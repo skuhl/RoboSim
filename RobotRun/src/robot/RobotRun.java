@@ -4,6 +4,7 @@ import java.awt.event.KeyEvent;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
@@ -464,10 +465,20 @@ public class RobotRun extends PApplet {
 			float dist = PVector.dist(cPoint.position, tgtPosition);
 			float rDist = rDelta.magnitude();
 			//check whether our current position is within tolerance
-			if ( (dist < (getActiveRobot().getLiveSpeed() / 100f)) && (rDist < (0.00005f * getActiveRobot().getLiveSpeed())) ) { break; }
+			if ( (dist < (getActiveRobot().getLiveSpeed() / 100f)) &&
+					(rDist < (0.00005f * getActiveRobot().getLiveSpeed())) ) {
+				break;
+			}
 
 			//calculate jacobian, 'J', and its inverse
 			float[][] J = calculateJacobian(model, angles, true);
+			/**
+			if ( (dist < (getActiveRobot().getLiveSpeed() / 100f)) &&
+					(rDist < (0.00005f * getActiveRobot().getLiveSpeed())) ) {
+				
+				System.out.printf("%s\n", Arrays.toString(J));
+			}
+			/**/
 			RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
 			RealMatrix JInverse = new SingularValueDecomposition(m).getSolver().getInverse();
 
@@ -482,7 +493,7 @@ public class RobotRun extends PApplet {
 				cumulativeOffset += dAngle[i];
 				//prevents IK algorithm from producing unrealistic motion
 				if(Math.abs(cumulativeOffset) > Fields.PI) {
-					System.out.println("Optimal solution not found.");
+					//System.out.println("Optimal solution not found.");
 					//return null;
 				}
 				angles[i] += dAngle[i];
@@ -493,6 +504,7 @@ public class RobotRun extends PApplet {
 			//System.out.println(String.format("IK result for cycle %d: [%f, %f, %f, %f, %f, %f]", count, angles[0], angles[1], angles[2], angles[3], angles[4], angles[5]));
 			count += 1;
 			if (count == limit) {
+				System.out.printf("%s\n", Arrays.toString(J));
 				return null;
 			}
 		}
@@ -5108,23 +5120,25 @@ public class RobotRun extends PApplet {
 		case NAV_PROG_INSTR:
 			Program p = activeRobot.getActiveProg();
 			int aInst = activeRobot.getActiveInstIdx();
-			/* Really buggy for empty/spare programs, I will fix it later
-			 * 		- Joshua */
+			
 			if (p.getInstructions().size() > 0 && aInst >= 0 && aInst < p.getInstructions().size()) {
 				Instruction inst = p.getInstruction( activeRobot.getActiveInstIdx() );
 				
 				if (inst instanceof MotionInstruction && contents.getColumnIdx() == 3) {
 					// Show the position associated with the active motion instruction
 					MotionInstruction mInst = (MotionInstruction)inst;
-					boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
-					String[] pregEntry = mInst.getPoint(p).toLineStringArray(isCartesian);
-	
-					for (String line : pregEntry) {
-						options.addLine(line);
+					
+					if (mInst.getPoint(p) != null) {
+						boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
+						String[] pregEntry = mInst.getPoint(p).toLineStringArray(isCartesian);
+		
+						for (String line : pregEntry) {
+							options.addLine(line);
+						}
 					}
 				}
 			}
-			/**/
+			
 			break;
 			
 		case EDIT_IOREG:
