@@ -267,13 +267,19 @@ public class Program {
 	}
 	
 	/**
+	 * Updates the position associated with the motion instruction's secondary
+	 * position index. The old point associated with the position is returned.
 	 * 
-	 * 
-	 * @param instIdx
-	 * @param newPt
-	 * @return
-	 * @throws ClassCastException
-	 * @throws NullPointerException
+	 * @param instIdx	The index of a motion instruction in this program
+	 * @param newPt		The new point to store at the motion instruction's
+	 * 					associated position
+	 * @return			The previous point stored at the position associated
+	 * 					with the instruction
+	 * @throws ClassCastException	If the instruction indexed at instIdx is
+	 * 								not a motion instruction
+	 * @throws NullPointerException	If the given point is null or the instruction
+	 * 								indexed at instIdx is not a motion type
+	 * 								instruction
 	 */
 	public Point updateMCInstPosition(int instIdx, Point newPt) throws
 		ClassCastException, NullPointerException {
@@ -304,21 +310,33 @@ public class Program {
 	}
 	
 	/**
+	 * Updates the position associated with the motion instruction at the given
+	 * instruction index to the given point. The old point associated with the
+	 * position is returned.
 	 * 
-	 * 
-	 * @param instIdx
-	 * @param newPt
-	 * @return
-	 * @throws ClassCastException
-	 * @throws NullPointerException
+	 * @param instIdx	The index of a motion instruction in this program
+	 * @param newPt		The new point to store at the motion instruction's
+	 * 					associated position
+	 * @return			The previous point stored at the position associated
+	 * 					with the instruction
+	 * @throws ClassCastException	If the instruction indexed at instIdx is
+	 * 								not a motion instruction
+	 * @throws NullPointerException	If the given point is null
 	 */
 	public Point updateMInstPosition(int instIdx, Point newPt) throws
 		ClassCastException, NullPointerException {
 		
-		int posNum = ((MotionInstruction) getInstruction(instIdx) ).getPositionNum();
-		
 		if (newPt != null) {
-			return LPosReg.put(posNum, newPt);
+			MotionInstruction mInst = (MotionInstruction)getInstruction(instIdx);
+			int posNum = mInst.getPositionNum();
+			
+			if (posNum == -1) {
+				// In the case the instruction's position is unintialized
+				posNum = nextPosition;
+				mInst.setPositionNum(posNum);
+			}
+			
+			return setPosition(posNum, newPt);
 		}
 		
 		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
