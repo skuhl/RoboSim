@@ -1010,6 +1010,10 @@ public class RoboticArm {
 	public int getLiveSpeed() {
 		return liveSpeed;
 	}
+	
+	public RQuaternion getOrientation() {
+		return RobotRun.matrixToQuat(getOrientationMatrix());
+	}
 
 	/* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
 	 * the end effector's current x, y, z axes with respect to the current frame.

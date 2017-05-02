@@ -69,6 +69,7 @@ public class RobotRun extends PApplet {
 	/*        GUI Stuff            */
 	/*******************************/
 	
+	RobotCamera c;
 	public static final float[][] WORLD_AXES;
 	private static final char[][] letters;
 	
@@ -2388,6 +2389,22 @@ public class RobotRun extends PApplet {
 			}
 		}
 		/**/
+	
+		c.setOrientation(activeRobot.getOrientation());
+		PVector near[] = c.getPlane(90, 1, 10);
+		PVector far[] = c.getPlane(90, 1, 100);
+		for(int i = 0; i < 4; i += 1) {
+			pushMatrix();
+			stroke(0);
+			translate(-near[i].x, -near[i].z, near[i].y);
+			sphere(5);
+			popMatrix();
+			pushMatrix();
+			stroke(0);
+			translate(-far[i].x, -far[i].z, far[i].y);
+			sphere(5);
+			popMatrix();
+		}
 		
 		noLights();
 		noStroke();
@@ -7929,6 +7946,7 @@ public class RobotRun extends PApplet {
 
 			buffer = new ArrayList<String>();
 			displayPoint = null;
+			c = new RobotCamera(200, 200, 200, robots.get(0).getOrientation(), 90, 1, 10, 100, null);
 			
 		} catch (NullPointerException NPEx) {
 			

@@ -29,12 +29,26 @@ public class RobotCamera {
 		scene = s;
 	}
 	
+	public RobotCamera setOrientation(RQuaternion o) {
+		camOrient = o;
+		return this;
+	}
+	
 	public WorldObject getNearestObjectInFrame() {
+		float minDist = Float.MAX_VALUE;
+		WorldObject closeObj = null;
 		for(WorldObject o : getObjectsInFrame()) {
+			PVector objCenter = o.getLocalCenter();
+			PVector toObj = new PVector(objCenter.x - camPos.x, objCenter.y - camPos.y, objCenter.z - camPos.z);
 			
+			float dist = toObj.mag();
+			if(minDist > dist) {
+				minDist = dist;
+				closeObj = o;
+			}
 		}
 		
-		return null;
+		return closeObj;
 	}
 	
 	/**
@@ -44,11 +58,15 @@ public class RobotCamera {
 	 * @return The list of WorldObjects that fall inside of the camera view frustum.
 	 */
 	public ArrayList<WorldObject> getObjectsInFrame() {
+		ArrayList<WorldObject> objList = new ArrayList<WorldObject>();
+		
 		for(WorldObject o : scene.getObjectList()) {
-			
+			if(checkObjectInFrame(o) >= 1) {
+				objList.add(o);
+			}
 		}
 		
-		return null;
+		return objList;
 	}
 	
 	/**
@@ -60,20 +78,53 @@ public class RobotCamera {
 	 * 		   or 2 if the object is fully in frame.
 	 */
 	public int checkObjectInFrame(WorldObject o) {
-		PVector[] nearPlane = getPlane(camFOV, camAspectRatio, camClipNear);
-		PVector[] farPlane = getPlane(camFOV, camAspectRatio, camClipFar);
-		
 		PVector objCenter = o.getLocalCenter();
-		
-		if(o.getForm() instanceof Box) {
-			float len = o.getForm().getDim(DimType.LENGTH);
-			float wid = o.getForm().getDim(DimType.WIDTH);
-			float hgt = o.getForm().getDim(DimType.HEIGHT);
-			
-			
+		if(checkPointInFrame(objCenter)) {
+			return 1;
 		}
 		
 		return 0;
+	}
+	
+	public boolean checkPointInFrame(PVector p) {
+		float coord[][] = camOrient.toMatrix();
+		
+		PVector upVect = new PVector(coord[0][0], -coord[0][2], coord[0][1]);
+		PVector ltVect = new PVector(coord[1][0], -coord[1][2], coord[1][1]);
+		PVector lookVect = new PVector(coord[2][0], -coord[2][2], coord[2][1]);
+		PVector toObj = new PVector(p.x - camPos.x, p.y - camPos.y, p.z - camPos.z);
+		
+		float dist = toObj.dot(lookVect);
+		if(dist > camClipFar || dist < camClipNear) { return false;	}
+		
+		float width = getPlaneWidth(camFOV, camAspectRatio, dist);
+		float height = getPlaneHeight(camFOV, camAspectRatio, dist);
+		
+		float distW = toObj.dot(ltVect) + (width / 2);
+		float distH = toObj.dot(upVect) + (height / 2);
+		
+		if(distW <= width && distW >= 0 && distH <= height && distH >= 0) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public float getPlaneHeight(float fov, float aspectRatio, float dist) {
+		// Field of view must be in the range of (0, 90) degrees
+		if(fov >= 180 || fov <= 0) { return -1; }
+		float diagonal = 2*(float)Math.tan(fov/2)*dist;
+		float height = (float)Math.sqrt(diagonal*diagonal / (1 + aspectRatio*aspectRatio));
+		
+		return height;
+	}
+	
+	public float getPlaneWidth(float fov, float aspectRatio, float dist) {
+		// Field of view must be in the range of (0, 90) degrees
+		if(fov >= 180 || fov <= 0) { return -1; }
+		float width = getPlaneHeight(fov, aspectRatio, dist) * aspectRatio;
+		
+		return width;
 	}
 	
 	/**
@@ -88,18 +139,17 @@ public class RobotCamera {
 	 * @return A 4 element array containing the locations of the corners of the plane in the following
 	 * 		   order: top left, top right bottom left, bottom right
 	 */
-	private PVector[] getPlane(float fov, float aspectRatio, float dist) {
+	public PVector[] getPlane(float fov, float aspectRatio, float dist) {
 		// Field of view must be in the range of (0, 90) degrees
-		if(fov >= 90 || fov <= 0) { return null; }
-		float diagonal = 2*(float)Math.tan(fov/2)*dist;
-		float height = (float)Math.sqrt(diagonal*diagonal / (1 + fov*fov));
-		float width = height * fov;
+		if(fov >= 180 || fov <= 0) { return null; }
+		float height = getPlaneHeight(fov, aspectRatio, dist);
+		float width = getPlaneWidth(fov, aspectRatio, dist);
 		
 		// Produce a coordinate system based on camera orientation
 		float[][] coord = RobotRun.quatToMatrix(camOrient);
-		PVector lookVect = new PVector(coord[0][0], coord[0][1], coord[0][2]);
-		PVector ltVect = new PVector(coord[1][0], coord[1][1], coord[1][2]);
-		PVector upVect = new PVector(coord[2][0], coord[2][1], coord[2][2]);
+		PVector upVect = new PVector(coord[0][0], -coord[0][2], coord[0][1]);
+		PVector ltVect = new PVector(coord[1][0], -coord[1][2], coord[1][1]);
+		PVector lookVect = new PVector(coord[2][0], -coord[2][2], coord[2][1]);
 		
 		PVector center = new PVector(camPos.x + lookVect.x * dist,
 									 camPos.y + lookVect.y * dist,
