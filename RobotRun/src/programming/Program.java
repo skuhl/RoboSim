@@ -265,6 +265,64 @@ public class Program {
 	public int size() {
 		return instructions.size();
 	}
+	
+	/**
+	 * 
+	 * 
+	 * @param instIdx
+	 * @param newPt
+	 * @return
+	 * @throws ClassCastException
+	 * @throws NullPointerException
+	 */
+	public Point updateMCInstPosition(int instIdx, Point newPt) throws
+		ClassCastException, NullPointerException {
+		
+		MotionInstruction mInst = (MotionInstruction) getInstruction(instIdx);
+		MotionInstruction sndMInst = mInst.getSecondaryPoint();
+		
+		if (mInst.getMotionType() != Fields.MTYPE_CIRCULAR || sndMInst == null) {
+			throw new NullPointerException(
+					String.format("Instruction at %d is not a circular motion instruction!",
+					instIdx)
+				);	
+		}
+		
+		if (newPt != null) {
+			int posNum = sndMInst.getPositionNum();
+			
+			if (posNum == -1) {
+				// In the case of an uninitialized position
+				posNum = nextPosition;
+				sndMInst.setPositionNum(posNum);
+			}
+			
+			return setPosition(posNum, newPt);
+		}
+		
+		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param instIdx
+	 * @param newPt
+	 * @return
+	 * @throws ClassCastException
+	 * @throws NullPointerException
+	 */
+	public Point updateMInstPosition(int instIdx, Point newPt) throws
+		ClassCastException, NullPointerException {
+		
+		int posNum = ((MotionInstruction) getInstruction(instIdx) ).getPositionNum();
+		
+		if (newPt != null) {
+			return LPosReg.put(posNum, newPt);
+		}
+		
+		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
+	}
 
 	/**
 	 * Updates the index of the lowest uninitialized position in the program.
@@ -274,12 +332,12 @@ public class Program {
 	private void updateNextPosition() {
 		if (LPosReg.size() >= 1000) {
 			// Move to the next position if the position set is full
-			++nextPosition;
+			nextPosition = (nextPosition + 1) % 1000;
 
 		} else {
 			// Find the next empty position
 			while (LPosReg.get(nextPosition) != null) {
-				++nextPosition;
+				nextPosition = (nextPosition + 1) % 1000;
 			}
 		}
 	}

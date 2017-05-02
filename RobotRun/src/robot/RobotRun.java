@@ -3958,7 +3958,56 @@ public class RobotRun extends PApplet {
 			Instruction inst = getActiveRobot().getActiveInstruction();
 			int selectIdx = getSelectedIdx();
 			
-			if(inst instanceof IfStatement) {
+			if (inst instanceof MotionInstruction) {
+				RoboticArm r = getActiveRobot();
+				Point pt = nativeRobotEEPoint(r, r.getJointAngles());
+				Frame active = r.getActiveFrame(CoordFrame.USER);
+
+				if (active != null) {
+					// Convert into currently active frame
+					pt = applyFrame(getActiveRobot(), pt, active.getOrigin(), active.getOrientation());
+				}
+				
+				Program p = r.getActiveProg();
+				int actInst = r.getActiveInstIdx();
+				
+				if (getSelectedLine() == 1) {
+					// Update the secondary position in a circular motion instruction
+					p.updateMCInstPosition(actInst, pt);
+					
+				} else {
+					// Update the position associated with the active motion instruction
+					p.updateMInstPosition(actInst, pt);
+				}
+				
+				MotionInstruction mInst = (MotionInstruction)inst;
+				
+				if (getSelectedLine() > 0) {
+					// Update the secondary point
+					mInst = mInst.getSecondaryPoint();
+				}
+				
+				// Update the motion instruction's fields
+				CoordFrame coord = r.getCurCoordFrame();
+				
+				if (coord == CoordFrame.JOINT) {
+					mInst.setMotionType(Fields.MTYPE_JOINT);
+					mInst.setSpeed(0.5f);
+					
+				} else {
+					/* Keep circular motion instructions as circular motion
+					 * instructions in world, tool, or user frame modes */
+					if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
+						mInst.setMotionType(Fields.MTYPE_LINEAR);
+					}
+					
+					mInst.setSpeed(50f * r.motorSpeed / 100f);
+				}
+				
+				mInst.setToolFrame(r.getActiveToolFrame());
+				mInst.setUserFrame(r.getActiveUserFrame());
+				
+			} else if(inst instanceof IfStatement) {
 				IfStatement stmt = (IfStatement)inst;
 
 				if(stmt.getExpr() instanceof Expression && selectIdx >= 2) {
@@ -4570,7 +4619,7 @@ public class RobotRun extends PApplet {
 			// F1, F4, F5f
 			funct[0] = "[New Pt]";
 			funct[1] = "[New Ins]";
-			funct[2] = "";
+			funct[2] = "[Ovr Pt]";
 			funct[3] = "[Edit]";
 			funct[4] = (contents.getColumnIdx() == 0) ? "[Opt]" : "";
 			if(inst instanceof MotionInstruction) {
@@ -5124,13 +5173,14 @@ public class RobotRun extends PApplet {
 			if (p.getInstructions().size() > 0 && aInst >= 0 && aInst < p.getInstructions().size()) {
 				Instruction inst = p.getInstruction( activeRobot.getActiveInstIdx() );
 				
-				if (inst instanceof MotionInstruction && contents.getColumnIdx() == 3) {
+				if (inst instanceof MotionInstruction && contents.getColumnIdx() == 4) {
 					// Show the position associated with the active motion instruction
 					MotionInstruction mInst = (MotionInstruction)inst;
+					Point pt = mInst.getPoint(p);
 					
-					if (mInst.getPoint(p) != null) {
+					if (pt != null) {
 						boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
-						String[] pregEntry = mInst.getPoint(p).toLineStringArray(isCartesian);
+						String[] pregEntry = pt.toLineStringArray(isCartesian);
 		
 						for (String line : pregEntry) {
 							options.addLine(line);
@@ -7479,14 +7529,22 @@ public class RobotRun extends PApplet {
 			p.addInstruction(l);
 		}
 	}
-
+	
+	/**
+	 * Adds a new position to the active program representing the active robot's
+	 * current position and orientation. In addition, the active instruction of
+	 * the active program is overridden with a new motion instruction. If the
+	 * override instruction is a motion instruction, then the current motion
+	 * instruction will simply be updated.
+	 */
 	public void newMotionInstruction() {
-		Point pt = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles());
-		Frame active = getActiveRobot().getActiveFrame(CoordFrame.USER);
+		RoboticArm r = getActiveRobot();
+		Point pt = nativeRobotEEPoint(r, r.getJointAngles());
+		Frame active = r.getActiveFrame(CoordFrame.USER);
 
 		if (active != null) {
 			// Convert into currently active frame
-			pt = applyFrame(getActiveRobot(), pt, active.getOrigin(), active.getOrientation());
+			pt = applyFrame(r, pt, active.getOrigin(), active.getOrientation());
 
 			if (Fields.DEBUG) {
 				System.out.printf("New: %s\n", convertNativeToWorld(pt.position));
@@ -7494,32 +7552,65 @@ public class RobotRun extends PApplet {
 		}
 
 		Program prog = getActiveRobot().getActiveProg();
+		int instIdx = r.getActiveInstIdx();
 		int reg = prog.getNextPosition();
-
-		if(getSelectedLine() > 0) {
-			// Update the secondary point of a circular instruction
-			MotionInstruction m = (MotionInstruction)getActiveRobot().getActiveInstruction();
-			m.getSecondaryPoint().setPositionNum(reg);
-			prog.setPosition(reg, pt);
-		}
-		else {
-			MotionInstruction insert = new MotionInstruction(
-					getActiveRobot().getCurCoordFrame() == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR,
-					getActiveRobot().getActiveInstIdx(),
-					false,
-					(getActiveRobot().getCurCoordFrame() == CoordFrame.JOINT ? 50 : 50 * getActiveRobot().motorSpeed) / 100f,
-					0,
-					getActiveRobot().getActiveUserFrame(),
-					getActiveRobot().getActiveToolFrame());
-
-			prog.setPosition(getActiveRobot().getActiveInstIdx(), pt);
-
-			if(getActiveRobot().getActiveInstIdx() != prog.getInstructions().size()) {
-				// overwrite current instruction
-				prog.overwriteInstruction(getActiveRobot().getActiveInstIdx(), insert);
-			} else {
-				prog.addInstruction(insert);
+		
+		prog.setPosition(reg, pt);
+		
+		if (instIdx < prog.getInstructions().size()) {
+			// Check if the active instruction is a motion instruction
+			Instruction i = prog.getInstruction(r.getActiveInstIdx());
+			
+			if (i instanceof MotionInstruction) {
+				// Modify the existing motion instruction
+				MotionInstruction mInst = (MotionInstruction)i;
+				
+				if (getSelectedLine() > 0) {
+					/* update the position of the secondary point of a circular
+					 * instruction */
+					mInst = mInst.getSecondaryPoint();
+				}
+				
+				// Update the motion instruction's fields
+				CoordFrame coord = r.getCurCoordFrame();
+				
+				if (coord == CoordFrame.JOINT) {
+					mInst.setMotionType(Fields.MTYPE_JOINT);
+					mInst.setSpeed(0.5f);
+					
+				} else {
+					/* Keep circular motion instructions as circular motion
+					 * instructions in world, tool, or user frame modes */
+					if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
+						mInst.setMotionType(Fields.MTYPE_LINEAR);
+					}
+					
+					mInst.setSpeed(50f * r.motorSpeed / 100f);
+				}
+				
+				mInst.setPositionNum(reg);
+				mInst.setToolFrame(r.getActiveToolFrame());
+				mInst.setUserFrame(r.getActiveUserFrame());
+				return;	
 			}
+		}
+		
+		MotionInstruction insert = new MotionInstruction(
+				getActiveRobot().getCurCoordFrame() == CoordFrame.JOINT ? MTYPE_JOINT : MTYPE_LINEAR,
+				reg,
+				false,
+				(getActiveRobot().getCurCoordFrame() == CoordFrame.JOINT ? 50 : 50 * getActiveRobot().motorSpeed) / 100f,
+				0,
+				getActiveRobot().getActiveUserFrame(),
+				getActiveRobot().getActiveToolFrame());
+
+		if(getActiveRobot().getActiveInstIdx() != prog.getInstructions().size()) {
+			// Overwrite an existing non-motion instruction
+			prog.overwriteInstruction(getActiveRobot().getActiveInstIdx(), insert);
+			
+		} else {
+			// Insert the new motion instruction
+			prog.addInstruction(insert);
 		}
 	} 
 
