@@ -8,8 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.util.ArrayList;
 
 import expression.AtomicExpression;
@@ -28,10 +26,8 @@ import geom.ModelShape;
 import geom.Part;
 import geom.Point;
 import geom.Shape;
-import geom.Triangle;
 import geom.WorldObject;
 import global.Fields;
-import processing.core.PShape;
 import processing.core.PVector;
 import programming.CallInstruction;
 import programming.FrameInstruction;
@@ -776,11 +772,10 @@ public abstract class DataManagement {
 		}
 		
 		File[] scenarioFiles = src.listFiles();
-		File activeFile = null;
+		File activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");;
 		
+		String activeName = null;
 		try {
-			String activeName = null;
-			activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");
 			
 			if (activeFile.exists()) {
 				FileInputStream in = new FileInputStream(activeFile);
@@ -792,14 +787,23 @@ public abstract class DataManagement {
 				dataIn.close();
 				in.close();
 			}
+		
+		} catch (IOException IOEx) {
+			System.err.println("The active scenario file is corrupt!");
+			// An error occurred with loading a scenario from a file
+			IOEx.printStackTrace();
+		}
+		
+		// Load each scenario from their respective files
+		for (File scenarioFile : scenarioFiles) {
+			Scenario s = null;
 			
-			// Load each scenario from their respective files
-			for (File scenarioFile : scenarioFiles) {
+			try {
 				activeFile = scenarioFile;
 				FileInputStream in = new FileInputStream(activeFile);
 				DataInputStream dataIn = new DataInputStream(in);
 				
-				Scenario s = loadScenario(dataIn, process);
+				s = loadScenario(dataIn, process);
 				
 				if (s != null) {
 					process.SCENARIOS.add(s);
@@ -812,13 +816,15 @@ public abstract class DataManagement {
 				
 				dataIn.close();
 				in.close();
-			}
 			
-		} catch (IOException IOEx) {
-			System.err.printf("An error occured with reading form file, %s.", activeFile.getName());
-			// An error occurred with loading a scenario from a file
-			IOEx.printStackTrace();
-			return 2;
+			} catch (FileNotFoundException FNFEx) {
+				System.out.printf("File %s does not exist in \\tmp\\scenarios.\n", activeFile.getName());
+				FNFEx.printStackTrace();
+				
+			} catch (IOException IOEx) {
+				System.out.printf("File, %s, in \\tmp\\scenarios is corrupt!\n", activeFile.getName());
+				IOEx.printStackTrace();
+			}
 		}
 		
 		return 0;
