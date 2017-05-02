@@ -800,7 +800,7 @@ public class WindowManager implements ControlListener {
 	 }
 	
 	/**
-	 * Deal with value changes in certain controllers.
+	 * Handles value changes in certain controllers.
 	 * 
 	 * @param arg0	The value change event
 	 */
@@ -846,7 +846,7 @@ public class WindowManager implements ControlListener {
 				updateEditWindowFields();
 				
 			 } else if (arg0.isFrom("Fixture")) {
-				WorldObject selected = getActiveWorldObject();
+				WorldObject selected = getSelectedWO();
 				
 				if (selected instanceof Part) {
 					// Set the reference of the Part to the currently active fixture
@@ -880,6 +880,10 @@ public class WindowManager implements ControlListener {
 		 updateDimLblsAndFields();
 	 }
 	 
+	 /**
+	  * Clear only the input fields in either the create or edit windows, if it
+	  * is active.
+	  */
 	 public void clearInputsFields() {
 		 
 		 if (menu == WindowTab.CREATE) {
@@ -1085,7 +1089,7 @@ public class WindowManager implements ControlListener {
 		 int ret = -1;
 
 		 if (app.activeScenario != null) {
-			 ret = app.activeScenario.removeWorldObject( getActiveWorldObject() );
+			 ret = app.activeScenario.removeWorldObject( getSelectedWO() );
 			 clearAllInputFields();
 		 }
 
@@ -1094,10 +1098,10 @@ public class WindowManager implements ControlListener {
 	 
 	 /**
 	  * Puts the current position and orientation values of the selected object,
-	  * in the edit window, into the position and orientaiton input fields.
+	  * in the position and orientation input fields of the edit window.
 	  */
 	 private void fillCurWithCur() {
-		 WorldObject active = getActiveWorldObject();
+		 WorldObject active = getSelectedWO();
 		 // Get the part's default position and orientation
 		 PVector pos = active.getLocalCenter();
 		 PVector wpr = RobotRun.matrixToEuler( active.getLocalOrientationAxes() )
@@ -1116,11 +1120,11 @@ public class WindowManager implements ControlListener {
 	 
 	 /**
 	  * Puts the default position and orientation values of the selected object,
-	  * in the edit window, into the current position and orientation input
-	  * fields.
+	  * into the current position and orientation input fields of the edit
+	  * window.
 	  */
 	 public void fillCurWithDef() {
-		 WorldObject active = getActiveWorldObject();
+		 WorldObject active = getSelectedWO();
 		 
 		 if (active instanceof Part) {
 			 Part p = (Part)active;
@@ -1147,7 +1151,7 @@ public class WindowManager implements ControlListener {
 	  * fields.
 	  */
 	 public void fillDefWithCur() {
-		 WorldObject active = getActiveWorldObject();
+		 WorldObject active = getSelectedWO();
 		 
 		 if (active instanceof Part) {
 			 // Get the part's default position and orientation
@@ -1173,7 +1177,7 @@ public class WindowManager implements ControlListener {
 	  * text fields.
 	  */
 	 private void fillDefWithDef() {
-		 WorldObject active = getActiveWorldObject();
+		 WorldObject active = getSelectedWO();
 		 
 		 if (active instanceof Part) {
 			 Part p = (Part)active;
@@ -1208,6 +1212,7 @@ public class WindowManager implements ControlListener {
 			 if (val instanceof Scenario) {
 				 // Set the active scenario index
 				 return (Scenario)val;
+				 
 			 } else if (val != null) {
 				 // Invalid entry in the dropdown list
 				 System.out.printf("Invalid class type: %d!\n", val.getClass());
@@ -1221,7 +1226,7 @@ public class WindowManager implements ControlListener {
 	  * Returns the object that is currently being edited
 	  * in the world object editing menu.
 	  */
-	 public WorldObject getActiveWorldObject() {
+	 public WorldObject getSelectedWO() {
 		 Object wldObj = getDropdown("Object").getSelectedItem();
 
 		 if (editObjWindow.isVisible() && wldObj instanceof WorldObject) {
@@ -1243,7 +1248,18 @@ public class WindowManager implements ControlListener {
 	 }
 
 	 /**
-	  * TODO
+	  * Returns a post-processed list of the user's input for the dimensions of
+	  * the box world object (i.e. length, height, width). Valid values for a
+	  * box's dimensions are between 10 and 800, inclusive. Any inputed value
+	  * that is positive and outside the valid range is clamped to the valid
+	  * range. So, if the user inputed 900 for the length, then it would be
+	  * changed to 800. However, if a input is not a number or negative, then
+	  * no other inputs are processed and null is returned. Although, if a
+	  * field is left blank (i.e. ""), then that field is ignored. The array of
+	  * processed input returned contains three Float objects. If any of the
+	  * input was ignored, then its corresponding array element will be null.
+	  * 
+	  * @return a 3-element array: [length, height, width], or null
 	  */
 	 private Float[] getBoxDimensions() {
 		 try {
@@ -1316,7 +1332,18 @@ public class WindowManager implements ControlListener {
 	 }
 
 	 /**
-	  *TODO
+	  * Returns a post-processed list of the user's input for the dimensions of
+	  * the cylinder world object (i.e. radius and height). Valid values for a
+	  * cylinder's dimensions are between 5 and 800, inclusive. Any inputed value
+	  * that is positive and outside the valid range is clamped to the valid
+	  * range. So, if the user inputed 2 for the radius, then it would be
+	  * changed to 5. However, if a input is not a number or negative, then
+	  * no other inputs are processed and null is returned. Although, if a
+	  * field is left blank (i.e. ""), then that field is ignored. The array of
+	  * processed input returned contains two Float objects. If any of the
+	  * input was ignored, then its corresponding array element will be null.
+	  * 
+	  * @return a 3-element array: [radius, height], or null
 	  */
 	 private Float[] getCylinderDimensions() {
 		 try {
@@ -1424,7 +1451,18 @@ public class WindowManager implements ControlListener {
 	 }
 
 	 /**
-	  * TODO
+	  * Returns a post-processed list of the user's input for the dimensions of
+	  * the model world object (i.e. scale). Valid values for a model's
+	  * dimensions are between 1 and 50, inclusive. Any inputed value that is
+	  * positive and outside the valid range is clamped to the valid range. So,
+	  * if the user inputed 100 for the length, then it would be changed to 50.
+	  * However, if a input is not a number or negative, then no other inputs
+	  * are processed and null is returned. Although, if a field is left blank
+	  * (i.e. ""), then that field is ignored. The array of processed input
+	  * returned contains one Float object. If any of the input was ignored,
+	  * then its corresponding array element will be null.
+	  * 
+	  * @return a 3-element array: [scale], or null
 	  */
 	 private Float[] getModelDimensions() {
 		 try {
@@ -1983,7 +2021,7 @@ public class WindowManager implements ControlListener {
 	  * currently selected world object, in the Object dropdown list.
 	  */
 	 public void updateEditWindowFields() {
-		 WorldObject selected = getActiveWorldObject();
+		 WorldObject selected = getSelectedWO();
 		 
 		 if (selected != null) {
 				// Set the dimension fields
@@ -2030,7 +2068,7 @@ public class WindowManager implements ControlListener {
 		 int[] relPos = new int[] { offsetX, offsetX };
 		 ControllerInterface<?> c = getTextArea("ObjLabel").setPosition(relPos[0], relPos[1]),
 				 				c0 = null;
-		 boolean isPart = getActiveWorldObject() instanceof Part;
+		 boolean isPart = getSelectedWO() instanceof Part;
 		 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
 		 getDropdown("Object").setPosition(relPos[0], relPos[1]);
@@ -2574,23 +2612,26 @@ public class WindowManager implements ControlListener {
 	 
 	 /**
 	  * Updates the dimensions as well as the current position and orientation
-	  * of a world object.
+	  * as well as the dimensions (and the fixture reference for parts) of the
+	  * selected world object.
+	  * 
+	  * @return	if the selected world object was successfully modified 
 	  */
-	 public void updateWOCurrent() {
-		 WorldObject toEdit = getActiveWorldObject();
+	 public boolean updateWOCurrent() {
+		 WorldObject toEdit = getSelectedWO();
 		 RoboticArm model = RobotRun.getActiveRobot();
+		 boolean edited = false;
 		 
 		 if (toEdit != null) {
 			 
 			 if (model != null && toEdit == model.held) {
 				 // Cannot edit an object being held by the Robot
 				 RobotRun.println("Cannot edit an object currently being held by the Robot!");
-				 return;
+				 return false;
 			 }
 
 			 try {
-				 boolean dimChanged = false, edited = false;
-				 WorldObject objSaveState = (WorldObject)toEdit.clone();
+				 boolean dimChanged = false;
 				 Shape s = toEdit.getForm();
 
 				 if (s instanceof Box) {
@@ -2689,16 +2730,10 @@ public class WindowManager implements ControlListener {
 				 toEdit.setLocalCenter(position);
 				 toEdit.setLocalOrientationAxes(orientation);
 				 
-				 if (edited) {
-					 /* Save the previous version of the world object on the
-					  * undo stack */
-					 app.updateScenarioUndo(objSaveState);
-				 }
-				 
 			 } catch (NullPointerException NPEx) {
 				 RobotRun.println("Missing parameter!");
 				 NPEx.printStackTrace();
-				 return;
+				 return false;
 			 }
 			 
 		 } else {
@@ -2721,16 +2756,19 @@ public class WindowManager implements ControlListener {
 				 }
 			 }
 		 }
-
+		 
+		 return edited;
 	 }
 	 
 	 /**
 	  * Updates the default position and orientation values of a part based on
 	  * the input fields in the edit window.
+	  * 
+	  * @return	if the selected was successfully modified
 	  */
-	 public void updateWODefault() {
-		 WorldObject toEdit = getActiveWorldObject();
-		 WorldObject savedState = (WorldObject)toEdit.clone();
+	 public boolean updateWODefault() {
+		 WorldObject toEdit = getSelectedWO();
+		 boolean edited = false;
 		 
 		 if (toEdit instanceof Part) {
 			Part p = (Part)toEdit;
@@ -2738,7 +2776,6 @@ public class WindowManager implements ControlListener {
 			PVector defaultWPR = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
 										 .mult(RobotRun.RAD_TO_DEG);
 			Float[] inputValues = getCurrentValues();
-			boolean edited = false;
 			
 			// Update default position and orientation
 			 if (inputValues[0] != null) {
@@ -2779,37 +2816,39 @@ public class WindowManager implements ControlListener {
 			 p.setDefaultCenter(position);
 			 p.setDefaultOrientationAxes(orientation);
 			 
-			 if (edited) {
-				 /* Save the previous version of the world object on the
-				  * undo stack */
-				 app.updateScenarioUndo(savedState);
-			 }
-			 
 			 fillDefWithDef();
 		 }
+		 
+		 return edited;
 	 }
 	 
 	 /**
-	  * TODO
+	  * Determine if the given string is a valid name to give to a scenario. A
+	  * scenario name must consist only of letters and numbers, be unique
+	  * amongst all scenarios, and be of length less than or equal to 26. If
+	  * the given name is not a valid name, then null is returned. However, in
+	  * the case when the name is too long, then the name is trimmed first,
+	  * before verifying that the other two criteria hold for the trimmed name. 
 	  * 
-	  * @param name
-	  * @param scenarios
-	  * @return
+	  * @param name			The string to verify as a scenario name
+	  * @param scenarios	The current list of scenarios in the application
+	  * @return				The string (or a trimmed version) if the name is
+	  * 					valid, null otherwise
 	  */
 	 private static String validScenarioName(String name, ArrayList<Scenario> scenarios) {
 		// Names only consist of letters and numbers
 		 if (Pattern.matches("[a-zA-Z0-9]+", name)) {
+			 
+			 if (name.length() > 16) {
+				 // Names have a max length of 16 characters
+				 name = name.substring(0, 16);
+			 }
 
 			 for (Scenario s : scenarios) {
 				 if (s.getName().equals(name)) {
 					 // Duplicate name
 					 return null;
 				 }
-			 }
-
-			 if (name.length() > 16) {
-				 // Names have a max length of 16 characters
-				 name = name.substring(0, 16);
 			 }
 
 			 return name;

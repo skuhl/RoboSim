@@ -2062,7 +2062,7 @@ public class RobotRun extends PApplet {
 
 	public void DeleteWldObj() {
 		// Delete focused world object and add to the scenario undo stack
-		updateScenarioUndo( manager.getActiveWorldObject() );
+		updateScenarioUndo( manager.getSelectedWO() );
 		int ret = getManager().deleteActiveWorldObject();
 		DataManagement.saveScenarios(this);
 		if (Fields.DEBUG) { System.out.printf("World Object removed: %d\n", ret); }
@@ -2360,7 +2360,7 @@ public class RobotRun extends PApplet {
 		displayAxes();
 		displayTeachPoints();
 
-		WorldObject wldObj = getManager().getActiveWorldObject();
+		WorldObject wldObj = getManager().getSelectedWO();
 
 		if (wldObj != null) {
 			pushMatrix();
@@ -7344,8 +7344,14 @@ public class RobotRun extends PApplet {
 	public void MoveToCur() {
 		// Only allow world object editing when no program is executing
 		if (!isProgramRunning()) {
-			updateScenarioUndo( manager.getActiveWorldObject() );
-			getManager().updateWOCurrent();
+			WorldObject savedState = (WorldObject) manager.getSelectedWO().clone();
+			
+			if (getManager().updateWOCurrent()) {
+				/* If the object was modified, then save the previous state of
+				 * the object */
+				updateScenarioUndo(savedState);
+			}
+			
 			DataManagement.saveScenarios(this);
 		}
 	}
@@ -7357,9 +7363,14 @@ public class RobotRun extends PApplet {
 	public void MoveToDef() {
 		// Only allow world object editing when no program is executing
 		if (!isProgramRunning()) {
-			updateScenarioUndo( manager.getActiveWorldObject() );
-			getManager().fillCurWithDef();
-			getManager().updateWOCurrent();
+			WorldObject savedState = (WorldObject) manager.getSelectedWO().clone();
+			
+			if ( getManager().updateWOCurrent() ) {
+				/* If the object was modified, then save the previous state of
+				 * the object */
+				updateScenarioUndo(savedState);
+			}
+			
 			DataManagement.saveScenarios(this);
 		}
 	}
@@ -7764,6 +7775,7 @@ public class RobotRun extends PApplet {
 		for (WorldObject wo : activeScenario) {
 			// Only applies to parts
 			if (wo instanceof Part) {
+				updateScenarioUndo( (WorldObject) wo.clone() );
 				Part p = (Part)wo;
 				p.setLocalCenter( p.getDefaultCenter() );
 				p.setLocalOrientationAxes( p.getDefaultOrientationAxes() );
@@ -8135,7 +8147,7 @@ public class RobotRun extends PApplet {
 			lastTextPositionY += 20;
 		}
 
-		WorldObject toEdit = getManager().getActiveWorldObject();
+		WorldObject toEdit = getManager().getSelectedWO();
 		// Display the position and orientation of the active world object
 		if (toEdit != null) {
 			String[] dimFields = toEdit.dimFieldsToStringArray();
@@ -8626,8 +8638,13 @@ public class RobotRun extends PApplet {
 	 * the input fields in the edit window.
 	 */
 	public void UpdateWODef() {
-		updateScenarioUndo( manager.getActiveWorldObject() );
-		getManager().updateWODefault();
+		WorldObject saveState = (WorldObject) manager.getSelectedWO().clone();
+		
+		if ( getManager().updateWODefault() ) {
+			/* If the object was modified, then save the previous state of the
+			 * object */
+			updateScenarioUndo(saveState);
+		}
 	}
 
 	/**
