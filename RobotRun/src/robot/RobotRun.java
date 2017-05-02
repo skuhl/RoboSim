@@ -2400,7 +2400,7 @@ public class RobotRun extends PApplet {
 				count += 1;
 			}
 		}
-		/**/
+		/**
 	
 		c.setOrientation(activeRobot.getOrientation());
 		PVector near[] = c.getPlane(90, 1, 10);
@@ -2417,6 +2417,8 @@ public class RobotRun extends PApplet {
 			sphere(5);
 			popMatrix();
 		}
+		
+		/**/
 		
 		noLights();
 		noStroke();
