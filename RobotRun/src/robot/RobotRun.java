@@ -63,19 +63,48 @@ import window.MenuScroll;
 import window.WindowManager;
 
 public class RobotRun extends PApplet {
-	public static final int EXEC_SUCCESS = 0, EXEC_FAILURE = 1, EXEC_PARTIAL = 2;
 	
-	private static RobotRun instance;
-	/*******************************/
-	/*        GUI Stuff            */
-	/*******************************/
-	
-	RobotCamera c;
+	/**
+	 * The rotation matrix representing the world axes orientation.
+	 */
 	public static final float[][] WORLD_AXES;
+	
+	/**
+	 * A set of letters, used by the pendant function keys, when the users is
+	 * inputing a text entry.
+	 */
 	private static final char[][] letters;
 	
+	/**
+	 * The maximum number of lines to show on the pedant's main view.
+	 */
+	private static final int ITEMS_TO_SHOW;
+	
+	/**
+	 * The maximum character length for a number input
+	 */
+	private static final int NUM_ENTRY_LEN;
+	
+	/**
+	 * The maximum character length for texy entries
+	 */
+	private static final int TEXT_ENTRY_LEN;
+	
+	/**
+	 * A reference to the this applet object.
+	 */
+	private static RobotRun instance;
+	
+	RobotCamera c;
+	
+	public static PFont fnt_con14;
+	public static PFont fnt_con12;
+	public static PFont fnt_conB;
+	
+	/**
+	 * Initialize all static fields
+	 */
 	static {
-		instance = null;
 		WORLD_AXES = new float[][] { { -1,  0,  0 },
 									 {  0,  0,  1 },
 									 {  0, -1,  0 } };
@@ -85,11 +114,15 @@ public class RobotRun extends PApplet {
 								{'m', 'n', 'o', 'p', 'q', 'r'},
 								{'s', 't', 'u', 'v', 'w', 'x'},
 								{'y', 'z', '_', '@', '*', '.'}};
+		
+		ITEMS_TO_SHOW = 8;
+		NUM_ENTRY_LEN = 16;
+		TEXT_ENTRY_LEN = 16;						
+		instance = null;
+		fnt_con14 = null;
+		fnt_con12 = null;
+		fnt_conB = null;
 	}
-	
-	public static PFont fnt_con14;
-	public static PFont fnt_con12;
-	public static PFont fnt_conB;
 	
 	/**
 	 * Determines if the lies within the range of angles that span from rangeStart to rangeEnd,
@@ -908,30 +941,35 @@ public class RobotRun extends PApplet {
 		return ret;
 	}
 	
-	public MenuScroll contents;
-	public MenuScroll options;
 	public final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
-	public Scenario activeScenario;
 	private final Stack<WorldObject> scenarioUndo = new Stack<WorldObject>();
-	private Camera camera;
+	private final HashMap<Integer, RoboticArm> robots = new HashMap<Integer, RoboticArm>();
+	
+	public Scenario activeScenario;
+	
 	private RoboticArm activeRobot;
 	
-	private HashMap<Integer, RoboticArm> robots;
-	private ControlP5 cp5;
+	private Camera camera;
 	
+	private ControlP5 cp5;
 	private WindowManager manager;
+	
+	private ScreenMode mode;
+	private MenuScroll contents;
+	private MenuScroll options;
+	
 	private Stack<ScreenMode> display_stack;
 	private ArrayList<Macro> macros = new ArrayList<Macro>();
 	private Macro[] SU_macro_bindings = new Macro[7];
 	private Macro edit_macro;
-	/*******************************/
-	/*      Global Variables       */
-	/*******************************/
+	
+	private boolean shift = false; // Is shift button pressed or not?
+	private boolean step = false; // Is step button pressed or not?
+	private boolean motionFault = false; //indicates motion error with the Robot
 
 	// for Execution
 	public boolean execSingleInst = false;
-
-	public boolean motionFault = false; //indicates motion error with the Robot
+	
 	/*******************************/
 	/*      Debugging Stuff        */
 	/*******************************/
@@ -942,17 +980,11 @@ public class RobotRun extends PApplet {
 	
 	int temp_select = 0;
 
-	/*****************************************************************************************************************
- NOTE: All the below methods assume that current matrix has the camrea applied!
-	 *****************************************************************************************************************/
 
-	private boolean shift = false; // Is shift button pressed or not?
-
-	private boolean step = false; // Is step button pressed or not?
 
 	private int record = Fields.OFF;
 
-	ScreenMode mode;
+	
 
 	int g1_px, g1_py; // the left-top corner of group 1
 
@@ -961,20 +993,29 @@ public class RobotRun extends PApplet {
 	int display_width, display_height; // height and width of display screen
 	public Group g1, g2;
 	Button bt_record_normal, 
-	bt_ee_normal;
-	StringBuilder workingText; // when entering text or a number
-
-	String workingTextSuffix;
+		   bt_ee_normal;
+	
+	/**
+	 * A temporary storage string for user input in the pendant window.
+	 */
+	private StringBuilder workingText; // when entering text or a number
+	/**
+	 * Used with rendering of workingText.
+	 */
+	private String workingTextSuffix;
 	boolean speedInPercentage;
+	
 
-	final int ITEMS_TO_SHOW = 8, // how many programs/ instructions to display on screen
-			NUM_ENTRY_LEN = 16, // Maximum character length for a number input
-			TEXT_ENTRY_LEN = 16; // Maximum character length for text entry
-	// Index of the current frame (Tool or User) selecting when in the Frame menus
-	int curFrameIdx = -1;
-
-	// The Frame being taught, during a frame teaching process
-	Frame teachFrame = null;
+	
+	/**
+	 * Index of the current frame (Tool or User) selecting when in the Frame menus
+	 */
+	private int curFrameIdx = -1;
+	
+	/**
+	 * The Frame being taught, during a frame teaching process
+	 */
+	private Frame teachFrame = null;
 
 	// Expression operand currently being edited
 	public ExprOperand opEdit = null;
@@ -3702,13 +3743,13 @@ public class RobotRun extends PApplet {
 				return true;
 			}
 
-			int ret = EXEC_SUCCESS;
+			int ret = 0;
 			if(intermediatePositions.size() > 0) {
 				Point tgtPoint = intermediatePositions.get(interMotionIdx);
 				ret = getActiveRobot().jumpTo(tgtPoint.position, tgtPoint.orientation);
 			}
 
-			if(ret == EXEC_FAILURE) {
+			if(ret == 1) {
 				triggerFault();
 				return true;
 			}
@@ -7368,6 +7409,11 @@ public class RobotRun extends PApplet {
 
 		return (mStr + "\n");
 	}
+	
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		
+	}
 
 	public void mouseDragged(MouseEvent e) {
 		if (mouseButton == CENTER) {
@@ -8045,7 +8091,6 @@ public class RobotRun extends PApplet {
 		camera = new Camera();
 
 		//load model and save data
-		robots = new HashMap<Integer, RoboticArm>();
 		
 		try {
 			robots.put(0, new RoboticArm(0, new PVector(200, 300, 200), loadRobotModels()));

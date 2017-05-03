@@ -1236,11 +1236,11 @@ public class RoboticArm {
 			}
 
 			RobotRun.getInstance().triggerFault();
-			return RobotRun.EXEC_FAILURE;
+			return 1;
 		}
 
 		setJointAngles(destAngles);
-		return RobotRun.EXEC_SUCCESS;
+		return 0;
 	}
 
 	/**

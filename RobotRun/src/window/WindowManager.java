@@ -8,6 +8,9 @@ import java.util.regex.Pattern;
 
 import controlP5.Background;
 import controlP5.Button;
+import controlP5.ButtonBar;
+import controlP5.CallbackEvent;
+import controlP5.CallbackListener;
 import controlP5.ControlEvent;
 import controlP5.ControlListener;
 import controlP5.ControlP5;
@@ -16,6 +19,7 @@ import controlP5.DropdownList;
 import controlP5.Group;
 import controlP5.RadioButton;
 import controlP5.Textarea;
+import controlP5.Textfield;
 import controlP5.Toggle;
 import geom.Box;
 import geom.Cylinder;
@@ -39,7 +43,7 @@ import ui.MyDropdownList;
 import ui.MyTextfield;
 import ui.RelativePoint;
 
-public class WindowManager implements ControlListener {
+public class WindowManager implements ControlListener, CallbackListener {
 	
 	public static final int offsetX = 10,
 							radioDim = 16,
@@ -69,6 +73,18 @@ public class WindowManager implements ControlListener {
 
 	private final ControlP5 UIManager;
 	private final RobotRun app;
+	
+	/**
+	 * Maps each controller's name to a previous mouse even, which was
+	 * triggered on the controller.
+	 */
+	private final HashMap<String, Integer> mouseEventFor;
+	
+	/**
+	 * My instance of ControlP5's mouse event, updated with callback events
+	 */
+	private int mouseState;
+	private boolean isMouseDown;
 	
 	private WindowTab menu;
 
@@ -103,9 +119,11 @@ public class WindowManager implements ControlListener {
 		UIManager = manager;		 
 		app = appRef;
 		menu = null;
+		mouseEventFor = new HashMap<String, Integer>();
 		lastModImport = null;
 		
 		manager.addListener(this);
+		manager.addCallback(this);
 
 		int[] relPos = new int[] { 0, 0 };
 		
@@ -532,6 +550,50 @@ public class WindowManager implements ControlListener {
 				
 			 }
 		 }
+	}
+	
+	@Override
+	public void controlEvent(CallbackEvent arg0) {
+		// TODO Handle mouse drags
+		
+		/**/
+		ControllerInterface<?> t = arg0.getController();
+		
+		if (t instanceof Button || t instanceof ButtonBar || t instanceof DropdownList || t instanceof Textfield) {
+			
+			if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_PRESS) {
+				mouseEventFor.put(t.getName(), arg0.getAction());
+				
+				
+				System.out.printf("Mouse pressed over %s\n", t.getName());
+				
+			} else if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_CLICK) {
+				mouseEventFor.put(t.getName(), arg0.getAction());
+				
+				
+				System.out.printf("Mouse clicked over %s\n", t.getName());
+				
+			} else if (arg0.getAction() == ControlP5.ACTION_LEAVE) {
+				mouseEventFor.put(t.getName(), arg0.getAction());
+				
+				
+				System.out.printf("Mouse left %s\n", t.getName());
+				
+			} else if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_RELEASE) {
+				
+				Integer mouseEvent = mouseEventFor.get(t.getName());
+				
+				if (mouseEvent != null && mouseEvent == ControlP5.ACTION_PRESS) {
+					mouseEventFor.put(t.getName(), ControlP5.ACTION_RELEASE);
+					
+					
+					System.out.printf("Mouse drag-clicked over %s\n", t.getName());
+				}
+			}
+			
+		}
+		/**/
+		
 	}
 
 	 /**
