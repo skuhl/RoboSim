@@ -555,7 +555,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 	@Override
 	public void controlEvent(CallbackEvent arg0) {
 		
-		/* TODO Handle mouse drags */
+		/* TODO Handle mouse drags *
 		
 		ControllerInterface<?> t = arg0.getController();
 		
