@@ -4180,7 +4180,7 @@ public class RobotRun extends PApplet {
 			int posIdx = 0;
 
 			//make a copy of the current positions in p
-			for(int i = 0; i < 1000; i += 1){
+			for (int i = 0; i < 1000; i += 1) {
 				pTemp[i] = p.getPosition(i);
 			}
 
@@ -4189,11 +4189,22 @@ public class RobotRun extends PApplet {
 			//rearrange positions
 			for(int i = 0; i < p.getInstructions().size(); i += 1) {
 				Instruction instr = p.getInstruction(i);
-				if(instr instanceof MotionInstruction) {
-					int instructPos = ((MotionInstruction)instr).getPositionNum();
-					p.setPosition(posIdx, pTemp[instructPos]);
-					((MotionInstruction)instr).setPositionNum(posIdx);
-					posIdx += 1;
+				
+				if (instr instanceof MotionInstruction) {
+					// Update the primary position
+					MotionInstruction mInst = ((MotionInstruction)instr);
+					p.setPosition(posIdx, pTemp[ mInst.getPositionNum() ]);
+					mInst.setPositionNum( posIdx++ );
+					
+					if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR &&
+							mInst.getSecondaryPoint() != null) {
+						
+						/* Update position for secondary point of a circular
+						 * motion instruction */
+						mInst = mInst.getSecondaryPoint();
+						p.setPosition(posIdx, pTemp[ mInst.getPositionNum() ]);
+						mInst.setPositionNum( posIdx++ );
+					}
 				}
 			}
 
