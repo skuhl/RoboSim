@@ -304,7 +304,7 @@ public class RoboticArm {
 	public float activateLiveJointMotion(int joint, int dir) {
 		RobotRun app = RobotRun.getInstance();
 
-		if (!app.isShift() || app.motionFault) {
+		if (!app.isShift() || app.motion) {
 			// Only move when shift is set and there is no error
 			return 0f;
 		}
