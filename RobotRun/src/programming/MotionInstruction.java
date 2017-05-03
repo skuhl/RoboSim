@@ -2,8 +2,8 @@ package programming;
 import frame.Frame;
 import geom.Point;
 import global.Fields;
-import robot.RoboticArm;
 import robot.RobotRun;
+import robot.RoboticArm;
 
 public final class MotionInstruction extends Instruction  {
 	private int motionType;
@@ -82,7 +82,7 @@ public final class MotionInstruction extends Instruction  {
 			pt = RobotRun.getActiveRobot().getPReg(positionNum).point;   
 
 		} else if(positionNum != -1) {
-			pt = parent.LPosReg.get(positionNum);
+			pt = parent.getPosition(positionNum);
 		}
 
 		if (pt != null) {
@@ -95,7 +95,7 @@ public final class MotionInstruction extends Instruction  {
 	public MotionInstruction getSecondaryPoint() { return circSubInstr; }
 	public float getSpeed() { return speed; }
 	public float getSpeedForExec(RoboticArm model) {
-		if(motionType == RobotRun.getInstance().MTYPE_JOINT) return speed;
+		if(motionType == Fields.MTYPE_JOINT) return speed;
 		else return (speed / model.motorSpeed);
 	}
 	public int getTermination() { return termination; }
@@ -151,7 +151,7 @@ public final class MotionInstruction extends Instruction  {
 		String[] fields;
 		int instrLen, subInstrLen;
 
-		if(motionType == RobotRun.getInstance().MTYPE_CIRCULAR) {
+		if(motionType == Fields.MTYPE_CIRCULAR) {
 			instrLen = offsetActive ? 7 : 6;
 			subInstrLen = circSubInstr.offsetActive ? 5 : 4;      
 			fields = new String[instrLen + subInstrLen];
@@ -191,7 +191,7 @@ public final class MotionInstruction extends Instruction  {
 		}
 
 		// Speed
-		if (motionType == RobotRun.getInstance().MTYPE_JOINT) {
+		if (motionType == Fields.MTYPE_JOINT) {
 			fields[3] = String.format("%d%%", Math.round(speed * 100));
 		} else {
 			fields[3] = String.format("%dmm/s", (int)(speed));
@@ -212,7 +212,7 @@ public final class MotionInstruction extends Instruction  {
 			}
 		}
 
-		if(motionType == RobotRun.getInstance().MTYPE_CIRCULAR) {
+		if(motionType == Fields.MTYPE_CIRCULAR) {
 			String[] secondary = circSubInstr.toStringArray();
 			fields[instrLen - 1] = "\n";
 			fields[instrLen] = ":" + secondary[1];

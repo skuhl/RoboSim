@@ -25,11 +25,6 @@ import regs.PositionRegister;
 import window.DisplayLine;
 
 public class RoboticArm {
-	/* The number of the user and tool frames, the number of the position and
-	 * data registers, and the number of I/O registers */
-	public static final int FRAME_NUM = 10;
-	public static final int DPREG_NUM = 100;
-	public static final int IOREG_NUM = 5;
 	
 	private final PVector BASE_POSITION; // The position of the center of the Robot's base segment
 	public final int RID; // The unique ID associated with a Robot
@@ -46,7 +41,7 @@ public class RoboticArm {
 	// The set of frames associated with a Robot
 	private Frame[] toolFrames, userFrames;
 	// The current Coordinate Frame for the Robot
-	private CoordFrame curCoordFrame = CoordFrame.JOINT;
+	private CoordFrame curCoordFrame;
 	
 	// Indices of currently active frames
 	private int activeUserFrame,
@@ -54,7 +49,6 @@ public class RoboticArm {
 	// The registers associated with a Robot
 	private DataRegister[] DREG;
 	private PositionRegister[] PREG;
-	
 	private IORegister[] IOREG;
 
 	// The end effectors of the Robot
@@ -67,6 +61,11 @@ public class RoboticArm {
 	public int endEffectorState;
 
 	public RobotMotion motionType;
+	
+	/**
+	 * Has the robot run into an issue with inverse kinematics?
+	 */
+	private boolean motionFault;
 
 	private ArrayList<Model> segments = new ArrayList<Model>();
 	public int type;
@@ -113,22 +112,23 @@ public class RoboticArm {
 		
 		// Initializes the frames
 		
-		toolFrames = new Frame[FRAME_NUM];
-		userFrames = new Frame[FRAME_NUM];
+		toolFrames = new Frame[Fields.FRAME_NUM];
+		userFrames = new Frame[Fields.FRAME_NUM];
 		
 		for (idx = 0; idx < toolFrames.length; ++idx) {
 			toolFrames[idx] = new ToolFrame();
 			userFrames[idx] = new UserFrame();
 		}
 		
+		curCoordFrame = CoordFrame.JOINT;
 		activeUserFrame = -1;
 		activeToolFrame = -1;
 		
 		// Initialize the registers
 		
-		DREG = new DataRegister[DPREG_NUM];
-		PREG = new PositionRegister[DPREG_NUM];
-		IOREG = new IORegister[IOREG_NUM];
+		DREG = new DataRegister[Fields.DPREG_NUM];
+		PREG = new PositionRegister[Fields.DPREG_NUM];
+		IOREG = new IORegister[Fields.IOREG_NUM];
 		
 		for (idx = 0; idx < DREG.length; ++idx) {
 			DREG[idx] = new DataRegister(idx);
@@ -164,6 +164,8 @@ public class RoboticArm {
 		eeMWielder = new Model("wielder", robotModels[5]);
 
 		motionType = RobotMotion.HALTED;
+		motionFault = false;
+		
 		// Base
 		Model base = new Model("base", robotModels[6]);
 		base.rotations[1] = true;
@@ -304,7 +306,7 @@ public class RoboticArm {
 	public float activateLiveJointMotion(int joint, int dir) {
 		RobotRun app = RobotRun.getInstance();
 
-		if (!app.isShift() || app.motion) {
+		if (!app.isShift() || motionFault) {
 			// Only move when shift is set and there is no error
 			return 0f;
 		}
@@ -329,7 +331,7 @@ public class RoboticArm {
 	public float activateLiveWorldMotion(int axis, int dir) {
 		RobotRun app = RobotRun.getInstance();
 		
-		if (!app.isShift() || app.motionFault) {
+		if (!app.isShift() || motionFault) {
 			// Only move when shift is set and there is no error
 			return 0f;
 		}
@@ -1011,6 +1013,8 @@ public class RoboticArm {
 		return liveSpeed;
 	}
 	
+	public boolean hasMotionFault() { return motionFault; }
+	
 	public RQuaternion getOrientation() {
 		return RobotRun.matrixToQuat(getOrientationMatrix());
 	}
@@ -1513,6 +1517,10 @@ public class RoboticArm {
 	public void setLiveSpeed(int liveSpeed) {
 		this.liveSpeed = liveSpeed;
 	}
+	
+	public void setMotionFault(boolean flag) {
+		motionFault = flag;
+	}
 
 	/**
 	 * Sets the Model's target joint angles to the given set of angles and updates the
@@ -1630,7 +1638,7 @@ public class RoboticArm {
 	 * THIS METHOD MUST BE CALLED WHEN THE FIRST ROBOT IS CREATED!
 	 */
 	public void updateRobot() {
-		if (!RobotRun.getInstance().motionFault) {
+		if (!motionFault) {
 			// Execute arm movement
 			if(RobotRun.getInstance().isProgramRunning()) {
 				// Run active program

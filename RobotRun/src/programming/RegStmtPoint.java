@@ -2,9 +2,9 @@ package programming;
 import java.util.Arrays;
 
 import robot.RQuaternion;
+import robot.RobotRun;
 import geom.Point;
 import processing.core.PVector;
-import robot.RobotRun;
 
 /**
  * This class defines a Point, which stores a position and orientation

@@ -11,9 +11,7 @@ import robot.RoboticArm;
 import window.DisplayLine;
 
 public class Program {
-	String name;
-	//TODO have program only reference the robot to which it is assigned rather
-	//than the whole program instance
+	private String name;
 	private RoboticArm robot;
 	private int nextPosition;
 
@@ -21,8 +19,8 @@ public class Program {
 	 * The positions associated with this program, which are
 	 * stored in reference to the current User frame
 	 */
-	HashMap<Integer, Point> LPosReg;
-	ArrayList<Instruction> instructions;
+	private HashMap<Integer, Point> LPosReg;
+	private ArrayList<Instruction> instructions;
 
 	public Program(String s, RoboticArm r) {
 		name = s;
@@ -132,9 +130,9 @@ public class Program {
 	}
 
 	/**
-	 * Get the position assocaited with the given index.
+	 * Get the position associated with the given index.
 	 * 
-	 * @param idx  The indexx corresopnding to a position in the program
+	 * @param idx  The index corresponding to a position in the program
 	 */
 	public Point getPosition(int idx) {
 		return LPosReg.get(idx);

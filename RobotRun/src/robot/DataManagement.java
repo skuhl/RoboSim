@@ -597,7 +597,7 @@ public abstract class DataManagement {
 			FileInputStream in = new FileInputStream(src);
 			DataInputStream dataIn = new DataInputStream(in);
 
-			int size = Math.max(0, Math.min(dataIn.readInt(), RoboticArm.DPREG_NUM));
+			int size = Math.max(0, Math.min(dataIn.readInt(), Fields.DPREG_NUM));
 
 			// Load the Register entries
 			while(size-- > 0) {
@@ -620,7 +620,7 @@ public abstract class DataManagement {
 				}
 			}
 
-			size = Math.max(0, Math.min(dataIn.readInt(), RoboticArm.DPREG_NUM));
+			size = Math.max(0, Math.min(dataIn.readInt(), Fields.DPREG_NUM));
 
 			// Load the Position Register entries
 			while(size-- > 0) {
@@ -1124,14 +1124,14 @@ public abstract class DataManagement {
 			DataOutputStream dataOut = new DataOutputStream(out);
 
 			// Save Tool Frames
-			dataOut.writeInt(Fields.FRAME_SIZE);
-			for (int idx = 0; idx < Fields.FRAME_SIZE; ++idx) {
+			dataOut.writeInt(Fields.FRAME_NUM);
+			for (int idx = 0; idx < Fields.FRAME_NUM; ++idx) {
 				saveFrame(robot.getToolFrame(idx), dataOut);
 			}
 			
 			// Save User Frames
-			dataOut.writeInt(Fields.FRAME_SIZE);
-			for (int idx = 0; idx < Fields.FRAME_SIZE; ++idx) {
+			dataOut.writeInt(Fields.FRAME_NUM);
+			for (int idx = 0; idx < Fields.FRAME_NUM; ++idx) {
 				saveFrame(robot.getUserFrame(idx), dataOut);
 			}
 
@@ -1452,7 +1452,7 @@ public abstract class DataManagement {
 					initializedPR = new ArrayList<Integer>();
 
 			// Count the number of initialized entries and save their indices
-			for(int idx = 0; idx < RoboticArm.DPREG_NUM; ++idx) {
+			for(int idx = 0; idx < Fields.DPREG_NUM; ++idx) {
 				DataRegister dReg = robot.getDReg(idx);
 				PositionRegister pReg = robot.getPReg(idx);
 				
