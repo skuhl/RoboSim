@@ -555,49 +555,49 @@ public class WindowManager implements ControlListener, CallbackListener {
 	@Override
 	public void controlEvent(CallbackEvent arg0) {
 		
-		/* TODO Handle mouse drags *
+		/* Handle mouse drags */
 		
 		ControllerInterface<?> t = arg0.getController();
 		
 		if (t.isVisible()) {
 			
-			if (t instanceof Button || t instanceof ButtonBar || t instanceof DropdownList || t instanceof Textfield) {
+			if (t instanceof Button || t instanceof ButtonBar || t instanceof MyDropdownList || t instanceof MyTextfield) {
 				
 				if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_PRESS) {
 					mouseEventFor.put(t.getName(), arg0.getAction());
-					
-					
-					System.out.printf("Mouse pressed over %s\n", t.getName());
-					
-				} else if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_CLICK) {
-					mouseEventFor.put(t.getName(), arg0.getAction());
-					
-					
-					System.out.printf("Mouse clicked over %s\n", t.getName());
+					//System.out.printf("Mouse pressed over %s\n", t.getName());
 					
 				} else if (arg0.getAction() == ControlP5.ACTION_LEAVE) {
 					mouseEventFor.put(t.getName(), arg0.getAction());
-					
-					
-					System.out.printf("Mouse left %s\n", t.getName());
+					//System.out.printf("Mouse left %s\n", t.getName());
 					
 				} else if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_RELEASE) {
 					
 					Integer mouseEvent = mouseEventFor.get(t.getName());
 					
-					if (mouseEvent != null && mouseEvent == ControlP5.ACTION_PRESS) {
+					if (mouseEvent != null && mouseEvent == ControlP5.ACTION_PRESS && app.isMouseDragged()) {
 						mouseEventFor.put(t.getName(), ControlP5.ACTION_RELEASE);
 						
+						if (t instanceof Button) {
+							((Button) t).onClick(this);
+							
+						} else if (t instanceof ButtonBar) {
+							((ButtonBar) t).onClick(this);
+							
+						} else if (t instanceof MyDropdownList) {
+							((MyDropdownList) t).onClick(this);
+							
+						} else if (t instanceof MyTextfield) {
+							((MyTextfield) t).onClick(this);
+						}
 						
-						System.out.printf("Mouse drag-clicked over %s\n", t.getName());
+						//System.out.printf("Mouse drag-clicked over %s\n", t.getName());
 					}
 				}
 				
 			}
 			
 		}
-		
-		/**/
 		
 	}
 

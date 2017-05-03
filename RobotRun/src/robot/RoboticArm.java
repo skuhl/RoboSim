@@ -99,8 +99,6 @@ public class RoboticArm {
 	 * @param basePos	The center position of the Robot's base segment
 	 */
 	public RoboticArm(int rid, PVector basePos, PShape[] robotModels) {
-		RobotRun app = RobotRun.getInstance();
-		
 		int idx;
 		
 		RID = rid;
