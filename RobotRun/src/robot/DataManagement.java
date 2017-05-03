@@ -767,32 +767,13 @@ public abstract class DataManagement {
 		
 		if (!src.exists() || !src.isDirectory()) {
 			// No files to load
-			process.activeScenario = null;
 			return 1;
 		}
 		
 		File[] scenarioFiles = src.listFiles();
-		File activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");;
+		File activeFile = null;
 		
-		String activeName = null;
-		try {
-			
-			if (activeFile.exists()) {
-				FileInputStream in = new FileInputStream(activeFile);
-				DataInputStream dataIn = new DataInputStream(in);
-				
-				// Read the name of the active scenario
-				activeName = dataIn.readUTF();
-				
-				dataIn.close();
-				in.close();
-			}
-		
-		} catch (IOException IOEx) {
-			System.err.println("The active scenario file is corrupt!");
-			// An error occurred with loading a scenario from a file
-			IOEx.printStackTrace();
-		}
+		ArrayList<Scenario> scenarioList = process.getScenarios();
 		
 		// Load each scenario from their respective files
 		for (File scenarioFile : scenarioFiles) {
@@ -806,12 +787,7 @@ public abstract class DataManagement {
 				s = loadScenario(dataIn, process);
 				
 				if (s != null) {
-					process.SCENARIOS.add(s);
-					
-					if (activeName != null && s.getName().equals(activeName)) {
-						// Set the active scenario
-						process.activeScenario = s;
-					}
+					scenarioList.add(s);
 				}
 				
 				dataIn.close();
@@ -825,6 +801,28 @@ public abstract class DataManagement {
 				System.out.printf("File, %s, in \\tmp\\scenarios is corrupt!\n", activeFile.getName());
 				IOEx.printStackTrace();
 			}
+		}
+		
+		activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");;
+		
+		try {
+			
+			if (activeFile.exists()) {
+				FileInputStream in = new FileInputStream(activeFile);
+				DataInputStream dataIn = new DataInputStream(in);
+				
+				// Read the name of the active scenario
+				String activeName = dataIn.readUTF();
+				process.setActiveScenario(activeName);
+				
+				dataIn.close();
+				in.close();
+			}
+		
+		} catch (IOException IOEx) {
+			System.err.println("The active scenario file is corrupt!");
+			// An error occurred with loading a scenario from a file
+			IOEx.printStackTrace();
 		}
 		
 		return 0;
@@ -1652,8 +1650,10 @@ public abstract class DataManagement {
 	
 	public static void saveScenarios(RobotRun process) {
 		validateParentDir();
-		saveScenarioBytes(process.SCENARIOS, (process.activeScenario == null) ?
-				null : process.activeScenario.getName(), scenarioDirPath);
+		
+		Scenario as = process.getActiveScenario();
+		saveScenarioBytes(process.getScenarios(), (as == null) ? null : as.getName(),
+				scenarioDirPath);
 	}
 
 	private static void saveShape(Shape shape, DataOutputStream out) throws IOException {
@@ -1703,8 +1703,8 @@ public abstract class DataManagement {
 	
 	public static void saveState(RobotRun process) {
 		validateParentDir();
-		saveScenarioBytes(process.SCENARIOS, (process.activeScenario == null) ?
-				null : process.activeScenario.getName(), scenarioDirPath);
+		saveScenarioBytes(process.getScenarios(), (process.getActiveScenario() == null) ?
+				null : process.getActiveScenario().getName(), scenarioDirPath);
 		saveRobotData(process.getRobot(0), 7);
 		saveRobotData(process.getRobot(1), 7);
 	}

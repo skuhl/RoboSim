@@ -554,44 +554,49 @@ public class WindowManager implements ControlListener, CallbackListener {
 	
 	@Override
 	public void controlEvent(CallbackEvent arg0) {
-		// TODO Handle mouse drags
 		
-		/**/
+		/* TODO Handle mouse drags */
+		
 		ControllerInterface<?> t = arg0.getController();
 		
-		if (t instanceof Button || t instanceof ButtonBar || t instanceof DropdownList || t instanceof Textfield) {
+		if (t.isVisible()) {
 			
-			if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_PRESS) {
-				mouseEventFor.put(t.getName(), arg0.getAction());
+			if (t instanceof Button || t instanceof ButtonBar || t instanceof DropdownList || t instanceof Textfield) {
 				
-				
-				System.out.printf("Mouse pressed over %s\n", t.getName());
-				
-			} else if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_CLICK) {
-				mouseEventFor.put(t.getName(), arg0.getAction());
-				
-				
-				System.out.printf("Mouse clicked over %s\n", t.getName());
-				
-			} else if (arg0.getAction() == ControlP5.ACTION_LEAVE) {
-				mouseEventFor.put(t.getName(), arg0.getAction());
-				
-				
-				System.out.printf("Mouse left %s\n", t.getName());
-				
-			} else if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_RELEASE) {
-				
-				Integer mouseEvent = mouseEventFor.get(t.getName());
-				
-				if (mouseEvent != null && mouseEvent == ControlP5.ACTION_PRESS) {
-					mouseEventFor.put(t.getName(), ControlP5.ACTION_RELEASE);
+				if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_PRESS) {
+					mouseEventFor.put(t.getName(), arg0.getAction());
 					
 					
-					System.out.printf("Mouse drag-clicked over %s\n", t.getName());
+					System.out.printf("Mouse pressed over %s\n", t.getName());
+					
+				} else if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_CLICK) {
+					mouseEventFor.put(t.getName(), arg0.getAction());
+					
+					
+					System.out.printf("Mouse clicked over %s\n", t.getName());
+					
+				} else if (arg0.getAction() == ControlP5.ACTION_LEAVE) {
+					mouseEventFor.put(t.getName(), arg0.getAction());
+					
+					
+					System.out.printf("Mouse left %s\n", t.getName());
+					
+				} else if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_RELEASE) {
+					
+					Integer mouseEvent = mouseEventFor.get(t.getName());
+					
+					if (mouseEvent != null && mouseEvent == ControlP5.ACTION_PRESS) {
+						mouseEventFor.put(t.getName(), ControlP5.ACTION_RELEASE);
+						
+						
+						System.out.printf("Mouse drag-clicked over %s\n", t.getName());
+					}
 				}
+				
 			}
 			
 		}
+		
 		/**/
 		
 	}
@@ -812,8 +817,8 @@ public class WindowManager implements ControlListener, CallbackListener {
 	 public int deleteActiveWorldObject() {
 		 int ret = -1;
 
-		 if (app.activeScenario != null) {
-			 ret = app.activeScenario.removeWorldObject( getSelectedWO() );
+		 if (app.getActiveScenario() != null) {
+			 ret = app.getActiveScenario().removeWorldObject( getSelectedWO() );
 			 clearAllInputFields();
 		 }
 
@@ -1364,7 +1369,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 				 // Names only consist of letters and numbers
 				 if (Pattern.matches("[a-zA-Z0-9]+", name)) {
 
-					 for (Scenario s : app.SCENARIOS) {
+					 for (Scenario s : app.getScenarios()) {
 						 if (s.getName().equals(name)) {
 							 // Duplicate name
 							 RobotRun.println("Names must be unique!");
@@ -1979,7 +1984,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 			 System.err.println("Missing data subfolder!");
 		 }
 				 
-		 if (app.activeScenario != null) {
+		 if (app.getActiveScenario() != null) {
 			 dropdown = getDropdown("Object");
 			 dropdown.clear();
 			 
@@ -1987,7 +1992,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 			 limbo.clear();
 			 limbo.addItem("None", null);
 			 
-			 for (WorldObject wldObj : app.activeScenario) {
+			 for (WorldObject wldObj : app.getActiveScenario()) {
 				 dropdown.addItem(wldObj.toString(), wldObj);
 
 				 if (wldObj instanceof Fixture) {
@@ -1999,9 +2004,12 @@ public class WindowManager implements ControlListener, CallbackListener {
 
 		 dropdown = getDropdown("Scenario");
 		 dropdown.clear();
-		 for (int idx = 0; idx < app.SCENARIOS.size(); ++idx) {
+		 
+		 ArrayList<Scenario> scenarios = app.getScenarios();
+		 
+		 for (int idx = 0; idx < scenarios.size(); ++idx) {
 			 // Load all scenario indices
-			 Scenario s = app.SCENARIOS.get(idx);
+			 Scenario s = scenarios.get(idx);
 			 dropdown.addItem(s.getName(), s);
 		 }
 	 }
@@ -2472,9 +2480,9 @@ public class WindowManager implements ControlListener, CallbackListener {
 		 /* If the edited object is a fixture, then update the orientation
 		  * of all parts, which reference this fixture, in this scenario. */
 		 if (toEdit instanceof Fixture) {
-			 if (app.activeScenario != null) {
+			 if (app.getActiveScenario() != null) {
 
-				 for (WorldObject wldObj : app.activeScenario) {
+				 for (WorldObject wldObj : app.getActiveScenario()) {
 					 if (wldObj instanceof Part) {
 						 Part p = (Part)wldObj;
 

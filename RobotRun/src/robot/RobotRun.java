@@ -68,7 +68,7 @@ public class RobotRun extends PApplet {
 	 * A set of letters, used by the pendant function keys, when the users is
 	 * inputing a text entry.
 	 */
-	private static final char[][] letters;
+	private static final char[][] LETTERS;
 
 	/**
 	 * The maximum number of lines to show on the pedant's main view.
@@ -100,7 +100,7 @@ public class RobotRun extends PApplet {
 	 * Initialize all static fields
 	 */
 	static {
-		letters = new char[][] { { 'a', 'b', 'c', 'd', 'e', 'f' }, { 'g', 'h', 'i', 'j', 'k', 'l' },
+		LETTERS = new char[][] { { 'a', 'b', 'c', 'd', 'e', 'f' }, { 'g', 'h', 'i', 'j', 'k', 'l' },
 				{ 'm', 'n', 'o', 'p', 'q', 'r' }, { 's', 't', 'u', 'v', 'w', 'x' }, { 'y', 'z', '_', '@', '*', '.' } };
 
 		ITEMS_TO_SHOW = 8;
@@ -547,7 +547,7 @@ public class RobotRun extends PApplet {
 				// update joint angles
 				cumulativeOffset += dAngle[i];
 				// prevents IK algorithm from producing unrealistic motion
-				if (Math.abs(cumulativeOffset) > Fields.PI) {
+				if (Math.abs(cumulativeOffset) > RobotRun.PI) {
 					// System.out.println("Optimal solution not found.");
 					// return null;
 				}
@@ -995,14 +995,12 @@ public class RobotRun extends PApplet {
 		return ret;
 	}
 
-	public final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
-	private final Stack<WorldObject> scenarioUndo = new Stack<WorldObject>();
-	private final HashMap<Integer, RoboticArm> robots = new HashMap<Integer, RoboticArm>();
+	private final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
+	private final Stack<WorldObject> SCENARIO_UNDO = new Stack<WorldObject>();
+	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<Integer, RoboticArm>();
 
-	public Scenario activeScenario;
-
+	private Scenario activeScenario;
 	private RoboticArm activeRobot;
-
 	private Camera camera;
 
 	private ControlP5 cp5;
@@ -1687,7 +1685,7 @@ public class RobotRun extends PApplet {
 		PVector vec2 = new PVector(c.x - center.x, c.y - center.y, c.z - center.z);
 		float theta = atan2(vec1.cross(vec2).dot(n), vec1.dot(vec2));
 		if (theta < 0)
-			theta += Fields.TWO_PI;
+			theta += RobotRun.TWO_PI;
 		// finally, draw an arc through all 3 points by rotating the u
 		// vector around our normal vector
 		float angle = 0, mu = 0;
@@ -2631,7 +2629,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void editTextEntry(int fIdx) {
-		char newChar = letters[fIdx][letterStates[fIdx]];
+		char newChar = LETTERS[fIdx][letterStates[fIdx]];
 		if (options.getLineIdx() == 0 && !(fIdx == 4 && letterStates[fIdx] > 1)) {
 			// Use uppercase character
 			newChar = (char) (newChar - 32);
@@ -4540,10 +4538,14 @@ public class RobotRun extends PApplet {
 	public static RoboticArm getActiveRobot() {
 		return instance.activeRobot;
 	}
+	
+	public Scenario getActiveScenario() {
+		return activeScenario;
+	}
 
 	public RoboticArm getInactiveRobot() {
 		try {
-			return robots.get((activeRobot.getRID() + 1) % 2);
+			return ROBOTS.get((activeRobot.getRID() + 1) % 2);
 
 		} catch (Exception Ex) {
 			return null;
@@ -5546,7 +5548,7 @@ public class RobotRun extends PApplet {
 	 * @return The robot with the given ID
 	 */
 	public RoboticArm getRobot(int rid) {
-		return robots.get(rid);
+		return ROBOTS.get(rid);
 	}
 
 	/**
@@ -5574,7 +5576,9 @@ public class RobotRun extends PApplet {
 		return rMatrix;
 	}
 
-	/* Text generation methods */
+	public ArrayList<Scenario> getScenarios() {
+		return SCENARIOS;
+	}
 
 	public int getSelectedIdx() {
 		if (mode.getType() == ScreenType.TYPE_LINE_SELECT)
@@ -7877,12 +7881,12 @@ public class RobotRun extends PApplet {
 	 *            The ID of the Robot to call
 	 */
 	public void returnRobot(int rid) {
-		if (rid >= 0 && rid < robots.size() && robots.get(rid) != activeRobot) {
+		if (rid >= 0 && rid < ROBOTS.size() && ROBOTS.get(rid) != activeRobot) {
 			if (activeRobot != null) {
 				hd();
 			}
 
-			activeRobot = robots.get(rid);
+			activeRobot = ROBOTS.get(rid);
 
 			// Resume execution of the Robot's active program
 			if (activeRobot.getActiveProg() != null) {
@@ -7926,9 +7930,26 @@ public class RobotRun extends PApplet {
 		resetStack();
 		nextScreen(ScreenMode.NAV_PROGRAMS);
 	}
-
-	public void setActiveRobot(RoboticArm activeRobot) {
-		this.activeRobot = activeRobot;
+	
+	/**
+	 * Sets the scenario with the given name as the active scenario in the
+	 * application, if a scenario with the given name exists.
+	 * 
+	 * @param name	The name of the scenario to set as active
+	 * @return		Whether the scenario with the given name was
+	 * 				successfully set as active
+	 */
+	protected boolean setActiveScenario(String name) {
+		
+		for (Scenario s : SCENARIOS) {
+			if (s.getName().equals(name)) {
+				activeScenario = s;
+				return true;
+			}
+		}
+		
+		return false;
+		
 	}
 
 	public void setExecutingInstruction(boolean executingInstruction) {
@@ -7959,11 +7980,11 @@ public class RobotRun extends PApplet {
 	 *            The index of the new active Robot
 	 */
 	public void setRobot(int rdx) {
-		if (rdx >= 0 && rdx < robots.size() && robots.get(rdx) != getActiveRobot()) {
+		if (rdx >= 0 && rdx < ROBOTS.size() && ROBOTS.get(rdx) != getActiveRobot()) {
 			hd();
 
 			RoboticArm prevActive = activeRobot;
-			activeRobot = robots.get(rdx);
+			activeRobot = ROBOTS.get(rdx);
 
 			if (prevActive != activeRobot) {
 				/*
@@ -7998,7 +8019,7 @@ public class RobotRun extends PApplet {
 		instance = this;
 		letterStates = new int[] { 0, 0, 0, 0, 0 };
 		workingText = new StringBuilder();
-
+		
 		g1_px = 0;
 		g1_py = Fields.SMALL_BUTTON - 14; // the left-top corner of group 1
 		g1_width = 440;
@@ -8015,18 +8036,19 @@ public class RobotRun extends PApplet {
 		fnt_conB = createFont("data/ConsolasBold.ttf", 12);
 
 		camera = new Camera();
+		activeScenario = null;
 
 		// load model and save data
 
 		try {
-			robots.put(0, new RoboticArm(0, new PVector(200, 300, 200), loadRobotModels()));
-			robots.put(1, new RoboticArm(1, new PVector(200, 300, -750), loadRobotModels()));
+			ROBOTS.put(0, new RoboticArm(0, new PVector(200, 300, 200), loadRobotModels()));
+			ROBOTS.put(1, new RoboticArm(1, new PVector(200, 300, -750), loadRobotModels()));
 
-			for (RoboticArm r : robots.values()) {
+			for (RoboticArm r : ROBOTS.values()) {
 				r.setDefaultRobotPoint();
 			}
 
-			setActiveRobot(robots.get(0));
+			activeRobot = ROBOTS.get(0);
 
 			intermediatePositions = new ArrayList<Point>();
 			activeScenario = null;
@@ -8046,7 +8068,7 @@ public class RobotRun extends PApplet {
 
 			buffer = new ArrayList<String>();
 			displayPoint = null;
-			c = new RobotCamera(200, 200, 200, robots.get(0).getOrientation(), 90, 1, 10, 100, null);
+			c = new RobotCamera(200, 200, 200, ROBOTS.get(0).getOrientation(), 90, 1, 10, 100, null);
 
 		} catch (NullPointerException NPEx) {
 
@@ -8427,8 +8449,8 @@ public class RobotRun extends PApplet {
 	public void ToggleRobot() {
 		boolean robotRemoved = getManager().toggleSecondRobot();
 		// Reset the active robot to the first if the second robot is removed
-		if (robotRemoved && activeRobot != robots.get(0)) {
-			activeRobot = robots.get(0);
+		if (robotRemoved && activeRobot != ROBOTS.get(0)) {
+			activeRobot = ROBOTS.get(0);
 		}
 
 		getManager().updateWindowContentsPositions();
@@ -8471,8 +8493,8 @@ public class RobotRun extends PApplet {
 	 * Revert the most recent change to the active scenario
 	 */
 	public void undoScenarioEdit() {
-		if (!scenarioUndo.empty()) {
-			activeScenario.put(scenarioUndo.pop());
+		if (!SCENARIO_UNDO.empty()) {
+			activeScenario.put(SCENARIO_UNDO.pop());
 			manager.updateListContents();
 			manager.updateEditWindowFields();
 		}
@@ -8537,7 +8559,7 @@ public class RobotRun extends PApplet {
 				CallFrame ret = model.popCallStack();
 
 				if (ret != null) {
-					RoboticArm tgtDevice = robots.get(ret.getTgtRID());
+					RoboticArm tgtDevice = ROBOTS.get(ret.getTgtRID());
 					tgtDevice.setActiveProgIdx(ret.getTgtProgID());
 					tgtDevice.setActiveInstIdx(ret.getTgtInstID());
 					activeRobot = tgtDevice;
@@ -8563,7 +8585,7 @@ public class RobotRun extends PApplet {
 
 		if (getManager().getRobotButtonState()) {
 			// Draw all robots
-			for (RoboticArm r : robots.values()) {
+			for (RoboticArm r : ROBOTS.values()) {
 				r.draw();
 			}
 
@@ -8701,12 +8723,12 @@ public class RobotRun extends PApplet {
 	public void updateScenarioUndo(WorldObject saveState) {
 
 		// Only the latest 10 world object save states can be undone
-		if (scenarioUndo.size() >= 40) {
+		if (SCENARIO_UNDO.size() >= 40) {
 			// Not sure if size - 1 should be used instead
-			scenarioUndo.remove(0);
+			SCENARIO_UNDO.remove(0);
 		}
 
-		scenarioUndo.push(saveState);
+		SCENARIO_UNDO.push(saveState);
 	}
 
 	/**

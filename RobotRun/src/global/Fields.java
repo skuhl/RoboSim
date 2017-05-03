@@ -1,8 +1,6 @@
 package global;
 
-import processing.core.PApplet;
-
-public class Fields extends PApplet {
+public abstract class Fields {
 	
 	public static final boolean DEBUG = true;
 	

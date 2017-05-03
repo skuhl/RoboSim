@@ -99,6 +99,8 @@ public class RoboticArm {
 	 * @param basePos	The center position of the Robot's base segment
 	 */
 	public RoboticArm(int rid, PVector basePos, PShape[] robotModels) {
+		RobotRun app = RobotRun.getInstance();
+		
 		int idx;
 		
 		RID = rid;
@@ -169,36 +171,36 @@ public class RoboticArm {
 		// Base
 		Model base = new Model("base", robotModels[6]);
 		base.rotations[1] = true;
-		base.jointRanges[1] = new PVector(0, Fields.TWO_PI);
-		base.rotationSpeed = Fields.radians(150)/60.0f;
+		base.jointRanges[1] = new PVector(0, RobotRun.TWO_PI);
+		base.rotationSpeed = RobotRun.radians(150)/60.0f;
 		// Joint 1
 		Model axis1 = new Model("axis_1", robotModels[7]);
 		axis1.rotations[2] = true;
 		axis1.jointRanges[2] = new PVector(4.34f, 2.01f);
-		axis1.rotationSpeed = Fields.radians(150)/60.0f;
+		axis1.rotationSpeed = RobotRun.radians(150)/60.0f;
 		// Joint 2
 		Model axis2 = new Model("axis_2", robotModels[8]);
 		axis2.rotations[2] = true;
 		axis2.jointRanges[2] = new PVector(5.027f, 4.363f);
-		axis2.rotationSpeed = Fields.radians(200)/60.0f;
+		axis2.rotationSpeed = RobotRun.radians(200)/60.0f;
 		// Joint 3
 		Model axis3 = new Model("axis_3", robotModels[9]);
 		axis3.rotations[0] = true;
-		axis3.jointRanges[0] = new PVector(0, Fields.TWO_PI);
-		axis3.rotationSpeed = Fields.radians(250)/60.0f;
+		axis3.jointRanges[0] = new PVector(0, RobotRun.TWO_PI);
+		axis3.rotationSpeed = RobotRun.radians(250)/60.0f;
 		// Joint 4
 		Model axis4 = new Model("axis_4", robotModels[10]);
 		axis4.rotations[2] = true;
-		axis4.jointRanges[2] = new PVector(240f * Fields.DEG_TO_RAD, 130f * Fields.DEG_TO_RAD);
+		axis4.jointRanges[2] = new PVector(240f * RobotRun.DEG_TO_RAD, 130f * RobotRun.DEG_TO_RAD);
 		/** Origin bounds
 		axis4.jointRanges[2] = new PVector(59f * Fields.PI / 40f, 11f * Fields.PI / 20f);
 		/**/
-		axis4.rotationSpeed = Fields.radians(250)/60.0f;
+		axis4.rotationSpeed = RobotRun.radians(250)/60.0f;
 		// Joint 5
 		Model axis5 = new Model("axis_5", robotModels[11]);
 		axis5.rotations[0] = true;
-		axis5.jointRanges[0] = new PVector(0, Fields.TWO_PI);
-		axis5.rotationSpeed = Fields.radians(420)/60.0f;
+		axis5.jointRanges[0] = new PVector(0, RobotRun.TWO_PI);
+		axis5.rotationSpeed = RobotRun.radians(420)/60.0f;
 		// Joint 6
 		Model axis6 = new Model("axis_6", robotModels[12]);
 		segments.add(base);
@@ -403,7 +405,7 @@ public class RoboticArm {
 	 * @param angle  The angle in question
 	 */
 	public boolean anglePermitted(int joint, float angle) {
-		joint = Fields.abs(joint) % 6;
+		joint = RobotRun.abs(joint) % 6;
 		// Get the joint's range bounds
 		PVector rangeBounds = getJointRange(joint);
 		return RobotRun.angleWithinBounds(RobotRun.mod2PI(angle), rangeBounds.x, rangeBounds.y);
@@ -625,77 +627,77 @@ public class RoboticArm {
 		RobotRun.getInstance().translate(BASE_POSITION.x, BASE_POSITION.y,
 						BASE_POSITION.z);
 
-		RobotRun.getInstance().rotateZ(Fields.PI);
-		RobotRun.getInstance().rotateY(Fields.PI/2);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
+		RobotRun.getInstance().rotateY(RobotRun.PI/2);
 		segments.get(0).draw();
-		RobotRun.getInstance().rotateY(-Fields.PI/2);
-		RobotRun.getInstance().rotateZ(-Fields.PI);
+		RobotRun.getInstance().rotateY(-RobotRun.PI/2);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI);
 
 		RobotRun.getInstance().fill(50);
 
 		RobotRun.getInstance().translate(-50, -166, -358); // -115, -213, -413
-		RobotRun.getInstance().rotateZ(Fields.PI);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
 		RobotRun.getInstance().translate(150, 0, 150);
-		RobotRun.getInstance().rotateX(Fields.PI);
+		RobotRun.getInstance().rotateX(RobotRun.PI);
 		RobotRun.getInstance().rotateY(segments.get(0).currentRotations[1]);
-		RobotRun.getInstance().rotateX(-Fields.PI);
+		RobotRun.getInstance().rotateX(-RobotRun.PI);
 		RobotRun.getInstance().translate(-150, 0, -150);
 		segments.get(1).draw();
-		RobotRun.getInstance().rotateZ(-Fields.PI);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI);
 
 		RobotRun.getInstance().fill(200, 200, 0);
 
 		RobotRun.getInstance().translate(-115, -85, 180);
-		RobotRun.getInstance().rotateZ(Fields.PI);
-		RobotRun.getInstance().rotateY(Fields.PI/2);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
+		RobotRun.getInstance().rotateY(RobotRun.PI/2);
 		RobotRun.getInstance().translate(0, 62, 62);
 		RobotRun.getInstance().rotateX(segments.get(1).currentRotations[2]);
 		RobotRun.getInstance().translate(0, -62, -62);
 		segments.get(2).draw();
-		RobotRun.getInstance().rotateY(-Fields.PI/2);
-		RobotRun.getInstance().rotateZ(-Fields.PI);
+		RobotRun.getInstance().rotateY(-RobotRun.PI/2);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI);
 
 		RobotRun.getInstance().fill(50);
 
 		RobotRun.getInstance().translate(0, -500, -50);
-		RobotRun.getInstance().rotateZ(Fields.PI);
-		RobotRun.getInstance().rotateY(Fields.PI/2);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
+		RobotRun.getInstance().rotateY(RobotRun.PI/2);
 		RobotRun.getInstance().translate(0, 75, 75);
-		RobotRun.getInstance().rotateZ(Fields.PI);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
 		RobotRun.getInstance().rotateX(segments.get(2).currentRotations[2]);
-		RobotRun.getInstance().rotateZ(-Fields.PI);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI);
 		RobotRun.getInstance().translate(0, -75, -75);
 		segments.get(3).draw();
-		RobotRun.getInstance().rotateY(Fields.PI/2);
-		RobotRun.getInstance().rotateZ(-Fields.PI);
+		RobotRun.getInstance().rotateY(RobotRun.PI/2);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI);
 
 		RobotRun.getInstance().translate(745, -150, 150);
-		RobotRun.getInstance().rotateZ(Fields.PI/2);
-		RobotRun.getInstance().rotateY(Fields.PI/2);
+		RobotRun.getInstance().rotateZ(RobotRun.PI/2);
+		RobotRun.getInstance().rotateY(RobotRun.PI/2);
 		RobotRun.getInstance().translate(70, 0, 70);
 		RobotRun.getInstance().rotateY(segments.get(3).currentRotations[0]);
 		RobotRun.getInstance().translate(-70, 0, -70);
 		segments.get(4).draw();
-		RobotRun.getInstance().rotateY(-Fields.PI/2);
-		RobotRun.getInstance().rotateZ(-Fields.PI/2);
+		RobotRun.getInstance().rotateY(-RobotRun.PI/2);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI/2);
 
 		RobotRun.getInstance().fill(200, 200, 0);
 
 		RobotRun.getInstance().translate(-115, 130, -124);
-		RobotRun.getInstance().rotateZ(Fields.PI);
-		RobotRun.getInstance().rotateY(-Fields.PI/2);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
+		RobotRun.getInstance().rotateY(-RobotRun.PI/2);
 		RobotRun.getInstance().translate(0, 50, 50);
 		RobotRun.getInstance().rotateX(segments.get(4).currentRotations[2]);
 		RobotRun.getInstance().translate(0, -50, -50);
 		segments.get(5).draw();
-		RobotRun.getInstance().rotateY(Fields.PI/2);
-		RobotRun.getInstance().rotateZ(-Fields.PI);
+		RobotRun.getInstance().rotateY(RobotRun.PI/2);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI);
 
 		RobotRun.getInstance().fill(50);
 
 		RobotRun.getInstance().translate(150, -10, 95);
-		RobotRun.getInstance().rotateY(-Fields.PI/2);
-		RobotRun.getInstance().rotateZ(Fields.PI);
+		RobotRun.getInstance().rotateY(-RobotRun.PI/2);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
 		RobotRun.getInstance().translate(45, 45, 0);
 		RobotRun.getInstance().rotateZ(segments.get(5).currentRotations[0]);
 		RobotRun.getInstance().translate(-45, -45, 0);
@@ -785,7 +787,7 @@ public class RoboticArm {
 			// Apply rotational motion vector
 			if (rotationalMotion()) {
 				// Respond to user defined movement
-				float theta = Fields.DEG_TO_RAD * 0.025f * liveSpeed;
+				float theta = RobotRun.DEG_TO_RAD * 0.025f * liveSpeed;
 				PVector rotation = new PVector(-jogRot[0], -jogRot[2], jogRot[1]);
 
 				if (invFrameOrientation != null) {
@@ -997,7 +999,7 @@ public class RoboticArm {
 	 *               for the joint corresponding to the given index.
 	 */
 	public PVector getJointRange(int joint) {
-		joint = Fields.abs(joint) % 6;
+		joint = RobotRun.abs(joint) % 6;
 		Model seg = segments.get(joint);
 
 		for (int axes = 0; axes < 3; ++axes) {
@@ -1160,7 +1162,7 @@ public class RoboticArm {
 		for(Model a : segments) {
 			for(int r = 0; r < 3; r++) {
 				if(a.rotations[r]) {
-					float distToDest = Fields.abs(a.currentRotations[r] - a.targetRotations[r]);
+					float distToDest = RobotRun.abs(a.currentRotations[r] - a.targetRotations[r]);
 
 					if (distToDest <= 0.0001f) {
 						// Destination (basically) met
@@ -1470,9 +1472,9 @@ public class RoboticArm {
 			for(int j = 0; j < 3; j += 1) {
 				if(segments.get(i).rotations[j]) {
 					segments.get(i).currentRotations[j] = rot[i];
-					segments.get(i).currentRotations[j] %= Fields.TWO_PI;
+					segments.get(i).currentRotations[j] %= RobotRun.TWO_PI;
 					if(segments.get(i).currentRotations[j] < 0) {
-						segments.get(i).currentRotations[j] += Fields.TWO_PI;
+						segments.get(i).currentRotations[j] += RobotRun.TWO_PI;
 					}
 				}
 			}
@@ -1546,7 +1548,7 @@ public class RoboticArm {
 					float dist_t = RobotRun.minimumDistance(a.currentRotations[r], a.targetRotations[r]);
 
 					// check joint movement range
-					if(a.jointRanges[r].x == 0 && a.jointRanges[r].y == Fields.TWO_PI) {
+					if(a.jointRanges[r].x == 0 && a.jointRanges[r].y == RobotRun.TWO_PI) {
 						a.rotationDirections[r] = (dist_t < 0) ? -1 : 1;
 					}
 					else {  
@@ -1596,7 +1598,7 @@ public class RoboticArm {
 		}
 
 		updateIORegister();
-		checkPickupCollision(RobotRun.getInstance().activeScenario);
+		checkPickupCollision(RobotRun.getInstance().getActiveScenario());
 	}
 	
 	/**
@@ -1706,15 +1708,15 @@ public class RoboticArm {
 
 		// Center the End Effector on the Robot's faceplate and draw it.
 		if(ee == EEType.SUCTION) {
-			RobotRun.getInstance().rotateY(Fields.PI);
+			RobotRun.getInstance().rotateY(RobotRun.PI);
 			RobotRun.getInstance().translate(-88, -37, 0);
 			eeMSuction.draw();
 
 		} else if(ee == EEType.CLAW) {
-			RobotRun.getInstance().rotateY(Fields.PI);
+			RobotRun.getInstance().rotateY(RobotRun.PI);
 			RobotRun.getInstance().translate(-88, 0, 0);
 			eeMClaw.draw();
-			RobotRun.getInstance().rotateZ(Fields.PI/2);
+			RobotRun.getInstance().rotateZ(RobotRun.PI/2);
 
 			if(eeState == Fields.OFF) {
 				// Draw open grippers
@@ -1731,19 +1733,19 @@ public class RoboticArm {
 				eeMClawPincer.draw();
 			}
 		} else if (ee == EEType.POINTER) {
-			RobotRun.getInstance().rotateY(Fields.PI);
-			RobotRun.getInstance().rotateZ(Fields.PI);
+			RobotRun.getInstance().rotateY(RobotRun.PI);
+			RobotRun.getInstance().rotateZ(RobotRun.PI);
 			RobotRun.getInstance().translate(45, -45, 10);
 			eeMPointer.draw();
 
 		} else if (ee == EEType.GLUE_GUN) {
-			RobotRun.getInstance().rotateZ(Fields.PI);
+			RobotRun.getInstance().rotateZ(RobotRun.PI);
 			RobotRun.getInstance().translate(-48, -46, -12);
 			eeMGlueGun.draw();
 
 		} else if (ee == EEType.WIELDER) {
-			RobotRun.getInstance().rotateY(Fields.PI);
-			RobotRun.getInstance().rotateZ(Fields.PI);
+			RobotRun.getInstance().rotateY(RobotRun.PI);
+			RobotRun.getInstance().rotateZ(RobotRun.PI);
 			RobotRun.getInstance().translate(46, -44, 10);
 			eeMWielder.draw();
 		}
@@ -1765,8 +1767,8 @@ public class RoboticArm {
 		RobotRun.getInstance().translate(BASE_POSITION.x, BASE_POSITION.y,
 				BASE_POSITION.z);
 
-		RobotRun.getInstance().rotateZ(Fields.PI);
-		RobotRun.getInstance().rotateY(Fields.PI/2);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
+		RobotRun.getInstance().rotateY(RobotRun.PI/2);
 		RobotRun.getInstance().translate(200, 50, 200);
 		// Segment 0
 		armOBBs[0].setCoordinateSystem();
@@ -1776,27 +1778,27 @@ public class RoboticArm {
 
 		RobotRun.getInstance().translate(-200, -150, -200);
 
-		RobotRun.getInstance().rotateY(-Fields.PI/2);
-		RobotRun.getInstance().rotateZ(-Fields.PI);
+		RobotRun.getInstance().rotateY(-RobotRun.PI/2);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI);
 
 		RobotRun.getInstance().translate(-50, -166, -358);
-		RobotRun.getInstance().rotateZ(Fields.PI);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
 		RobotRun.getInstance().translate(150, 0, 150);
-		RobotRun.getInstance().rotateX(Fields.PI);
+		RobotRun.getInstance().rotateX(RobotRun.PI);
 		RobotRun.getInstance().rotateY(segments.get(0).currentRotations[1]);
-		RobotRun.getInstance().rotateX(-Fields.PI);
+		RobotRun.getInstance().rotateX(-RobotRun.PI);
 		RobotRun.getInstance().translate(10, 95, 0);
-		RobotRun.getInstance().rotateZ(-0.1f * Fields.PI);
+		RobotRun.getInstance().rotateZ(-0.1f * RobotRun.PI);
 		// Segment 1
 		armOBBs[2].setCoordinateSystem();
 
-		RobotRun.getInstance().rotateZ(0.1f * Fields.PI);
+		RobotRun.getInstance().rotateZ(0.1f * RobotRun.PI);
 		RobotRun.getInstance().translate(-160, -95, -150);
-		RobotRun.getInstance().rotateZ(-Fields.PI);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI);
 
 		RobotRun.getInstance().translate(-115, -85, 180);
-		RobotRun.getInstance().rotateZ(Fields.PI);
-		RobotRun.getInstance().rotateY(Fields.PI/2);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
+		RobotRun.getInstance().rotateY(RobotRun.PI/2);
 		RobotRun.getInstance().translate(0, 62, 62);
 		RobotRun.getInstance().rotateX(segments.get(1).currentRotations[2]);
 		RobotRun.getInstance().translate(30, 240, 0);
@@ -1804,27 +1806,27 @@ public class RoboticArm {
 		armOBBs[3].setCoordinateSystem();
 
 		RobotRun.getInstance().translate(-30, -302, -62);
-		RobotRun.getInstance().rotateY(-Fields.PI/2);
-		RobotRun.getInstance().rotateZ(-Fields.PI);
+		RobotRun.getInstance().rotateY(-RobotRun.PI/2);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI);
 
 		RobotRun.getInstance().translate(0, -500, -50);
-		RobotRun.getInstance().rotateZ(Fields.PI);
-		RobotRun.getInstance().rotateY(Fields.PI/2);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
+		RobotRun.getInstance().rotateY(RobotRun.PI/2);
 		RobotRun.getInstance().translate(0, 75, 75);
-		RobotRun.getInstance().rotateZ(Fields.PI);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
 		RobotRun.getInstance().rotateX(segments.get(2).currentRotations[2]);
-		RobotRun.getInstance().rotateZ(-Fields.PI);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI);
 		RobotRun.getInstance().translate(75, 0, 0);
 		// Segment 3
 		armOBBs[4].setCoordinateSystem();
 
 		RobotRun.getInstance().translate(-75, -75, -75);
-		RobotRun.getInstance().rotateY(Fields.PI/2);
-		RobotRun.getInstance().rotateZ(-Fields.PI);
+		RobotRun.getInstance().rotateY(RobotRun.PI/2);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI);
 
 		RobotRun.getInstance().translate(745, -150, 150);
-		RobotRun.getInstance().rotateZ(Fields.PI/2);
-		RobotRun.getInstance().rotateY(Fields.PI/2);
+		RobotRun.getInstance().rotateZ(RobotRun.PI/2);
+		RobotRun.getInstance().rotateY(RobotRun.PI/2);
 		RobotRun.getInstance().translate(70, 0, 70);
 		RobotRun.getInstance().rotateY(segments.get(3).currentRotations[0]);
 		RobotRun.getInstance().translate(5, 75, 5);
@@ -1836,22 +1838,22 @@ public class RoboticArm {
 
 		RobotRun.getInstance().translate(-75, -370, -75);
 
-		RobotRun.getInstance().rotateY(-Fields.PI/2);
-		RobotRun.getInstance().rotateZ(-Fields.PI/2);
+		RobotRun.getInstance().rotateY(-RobotRun.PI/2);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI/2);
 
 		RobotRun.getInstance().translate(-115, 130, -124);
-		RobotRun.getInstance().rotateZ(Fields.PI);
-		RobotRun.getInstance().rotateY(-Fields.PI/2);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
+		RobotRun.getInstance().rotateY(-RobotRun.PI/2);
 		RobotRun.getInstance().translate(0, 50, 50);
 		RobotRun.getInstance().rotateX(segments.get(4).currentRotations[2]);
 		RobotRun.getInstance().translate(0, -50, -50);
 		// Segment 5
-		RobotRun.getInstance().rotateY(Fields.PI/2);
-		RobotRun.getInstance().rotateZ(-Fields.PI);
+		RobotRun.getInstance().rotateY(RobotRun.PI/2);
+		RobotRun.getInstance().rotateZ(-RobotRun.PI);
 
 		RobotRun.getInstance().translate(150, -10, 95);
-		RobotRun.getInstance().rotateY(-Fields.PI/2);
-		RobotRun.getInstance().rotateZ(Fields.PI);
+		RobotRun.getInstance().rotateY(-RobotRun.PI/2);
+		RobotRun.getInstance().rotateZ(RobotRun.PI);
 		RobotRun.getInstance().translate(45, 45, 0);
 		RobotRun.getInstance().rotateZ(segments.get(5).currentRotations[0]);
 		RobotRun.getInstance().translate(-45, -45, 0);

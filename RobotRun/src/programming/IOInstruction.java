@@ -1,6 +1,7 @@
 package programming;
 import global.Fields;
 import robot.RobotRun;
+import robot.RoboticArm;
 
 public class IOInstruction extends Instruction {
 	int state;
@@ -25,8 +26,10 @@ public class IOInstruction extends Instruction {
 		return copy;
 	}
 	public int execute() {
-		RobotRun.getActiveRobot().endEffectorState = state;
-		RobotRun.getActiveRobot().checkPickupCollision(RobotRun.getInstance().activeScenario);
+		RoboticArm r = RobotRun.getActiveRobot();
+		
+		r.endEffectorState = state;
+		r.checkPickupCollision( RobotRun.getInstance().getActiveScenario() );
 		return 0;
 	}
 	public int getReg(){ return reg; }
