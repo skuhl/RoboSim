@@ -10,6 +10,7 @@ public class Instruction {
 	/**
 	 * Create an independent replica of this instruction.
 	 */
+	@Override
 	public Instruction clone() {
 		Instruction copy = new Instruction();
 		copy.setIsCommented( isCommented() );
@@ -25,6 +26,7 @@ public class Instruction {
 
 	public void toggleCommented() { com = !com; }
 
+	@Override
 	public String toString() {
 		String[] fields = toStringArray();
 		String str = new String();

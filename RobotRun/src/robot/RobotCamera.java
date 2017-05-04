@@ -3,9 +3,7 @@ package robot;
 import java.util.ArrayList;
 
 import geom.Box;
-import geom.DimType;
 import geom.WorldObject;
-import global.Fields;
 import processing.core.PVector;
 
 public class RobotCamera {
@@ -74,7 +72,7 @@ public class RobotCamera {
 	 * @return The list of WorldObjects that fall inside of the camera view frustum.
 	 */
 	public ArrayList<WorldObject> getObjectsInFrame() {
-		ArrayList<WorldObject> objList = new ArrayList<WorldObject>();
+		ArrayList<WorldObject> objList = new ArrayList<>();
 		
 		for(WorldObject o : scene.getObjectList()) {
 			if(checkObjectInFrame(o) >= 1) {

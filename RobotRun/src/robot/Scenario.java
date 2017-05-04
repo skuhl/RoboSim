@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import geom.Part;
 import geom.WorldObject;
+import processing.core.PApplet;
 
 /**
  * A storage class for a collection of objects with an associated name for the collection.
@@ -21,7 +22,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 */
 	public Scenario(String n) {
 		name = n;
-		objList = new ArrayList<WorldObject>();
+		objList = new ArrayList<>();
 	}
 
 	/**
@@ -36,7 +37,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 */
 	private <T extends WorldObject> String addSuffixForDuplicateName(String originName, ArrayList<T> wldObjList) {
 		int nameLen = originName.length();
-		ArrayList<Integer> suffixes = new ArrayList<Integer>();
+		ArrayList<Integer> suffixes = new ArrayList<>();
 
 		for (T wldObj : wldObjList) {
 			String objName = wldObj.getName();
@@ -100,9 +101,9 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		if (newObject == null || objList.contains(newObject)) {
 			// Ignore nulls and duplicates
 			if (newObject == null) {
-				RobotRun.println("New Object is null");
+				PApplet.println("New Object is null");
 			} else {
-				RobotRun.println("New Object is: " + newObject.toString());
+				PApplet.println("New Object is: " + newObject.toString());
 			}
 
 			return false;
@@ -147,8 +148,8 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	@Override
 	public Object clone() {
 		Scenario copy = new Scenario(name);
-		ArrayList<Fixture> fixtures = new ArrayList<Fixture>();
-		ArrayList<Part> parts = new ArrayList<Part>();
+		ArrayList<Fixture> fixtures = new ArrayList<>();
+		ArrayList<Part> parts = new ArrayList<>();
 
 
 		for (WorldObject obj : this) {

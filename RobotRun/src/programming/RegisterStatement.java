@@ -48,11 +48,13 @@ public class RegisterStatement extends Instruction {
 		expr = e;
 	}
 	
+	@Override
 	public Instruction clone() {
-		Instruction copy = new RegisterStatement(reg, posIdx, (Expression)expr.clone());    
+		Instruction copy = new RegisterStatement(reg, posIdx, expr.clone());    
 		return copy;
 	}
 	
+	@Override
 	public int execute() {
 		ExprOperand result = expr.evaluate();
 
@@ -114,6 +116,7 @@ public class RegisterStatement extends Instruction {
 	 * Convert the entire statement to a set of Strings, where each
 	 * operator and operand is a separate String Object.
 	 */
+	@Override
 	public String[] toStringArray() {
 		String[] ret;
 		String[] exprString = expr.toStringArray();
