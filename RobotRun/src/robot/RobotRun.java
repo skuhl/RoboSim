@@ -233,6 +233,8 @@ public class RobotRun extends PApplet {
 		instance.rotateZ(PI);
 		instance.translate(45, 45, 0);
 		instance.rotateZ(jointAngles[5]);
+		instance.rotateX(PI);
+		instance.rotateY(PI/2);
 	}
 
 	/**
@@ -2113,7 +2115,7 @@ public class RobotRun extends PApplet {
 		}
 		// Convert the angles from degrees to radians, then convert from World
 		// to Native frame
-		wpr = (new PVector(-inputs[3], inputs[5], -inputs[4])).mult(DEG_TO_RAD);
+		wpr = (new PVector(inputs[3], inputs[4], inputs[5])).mult(DEG_TO_RAD);
 
 		// Save direct entry values
 		taughtFrame.setDEOrigin(origin);
@@ -2121,7 +2123,7 @@ public class RobotRun extends PApplet {
 		taughtFrame.setFrame(2);
 
 		if (Fields.DEBUG) {
-			wpr = quatToEuler(taughtFrame.getDEOrientationOffset()).mult(RAD_TO_DEG);
+			wpr = RobotRun.quatToEuler(taughtFrame.getDEOrientationOffset()).mult(DEG_TO_RAD);
 			System.out.printf("\n\n%s\n%s\nFrame set: %d\n", origin.toString(), wpr.toString(), curFrameIdx);
 		}
 
@@ -2363,10 +2365,11 @@ public class RobotRun extends PApplet {
 
 		pushMatrix();
 		// Transform to the reference frame defined by the axes vectors
-		applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x, axesVectors[0][1],
-				axesVectors[1][1], axesVectors[2][1], origin.y, axesVectors[0][2], axesVectors[1][2], axesVectors[2][2],
-				origin.z, 0, 0, 0, 1);
-
+		applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
+					axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
+					axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
+					0, 0, 0, 1);
+		
 		// X axis
 		stroke(255, 0, 0);
 		line(-axesLength, 0, 0, axesLength, 0, 0);
@@ -2529,6 +2532,9 @@ public class RobotRun extends PApplet {
 			// Display the point with its local orientation axes
 			displayOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
 		}
+		
+		Point pt = nativeRobotEEPoint(activeRobot, activeRobot.getJointAngles());
+		displayOriginAxes(pt.position, RobotRun.convertNativeToWorld( pt.orientation.toMatrix() ), 200f, 0);
 		
 		/*TESTING CODE: DRAW INTERMEDIATE POINTS*
 		if(Fields.DEBUG && intermediatePositions != null) {
@@ -5622,7 +5628,8 @@ public class RobotRun extends PApplet {
 		// Calculate origin point
 		PVector origin = getCoordFromMatrix(0f, 0f, 0f),
 				// Create axes vectors
-				vx = getCoordFromMatrix(1f, 0f, 0f).sub(origin), vy = getCoordFromMatrix(0f, 1f, 0f).sub(origin),
+				vx = getCoordFromMatrix(1f, 0f, 0f).sub(origin),
+				vy = getCoordFromMatrix(0f, 1f, 0f).sub(origin),
 				vz = getCoordFromMatrix(0f, 0f, 1f).sub(origin);
 		// Save values in a 3x3 rotation matrix
 		rMatrix[0][0] = vx.x;

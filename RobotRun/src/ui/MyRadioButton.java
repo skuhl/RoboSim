@@ -1,12 +1,14 @@
 package ui;
 
+import controlP5.ControlEvent;
 import controlP5.ControlP5;
 import controlP5.RadioButton;
+import controlP5.Toggle;
 
 /**
  * An extension of controlP5's RadioButton class, which has some necessary
  * methods for accessing fields in a RadioButton, which can be set by the
- * using.
+ * user.
  * 
  * @author Joshua Hooker
  */
@@ -60,9 +62,29 @@ public class MyRadioButton extends RadioButton {
 	 * 			the radio button set
 	 */
 	public int getItemsPerRow() {
+		
+		(new Toggle(null, "name")).onClick(null);
+		
 		return itemsPerRow;
 	}
 	
 	/* My rant ends here */
 	
+	@Override
+	public void controlEvent(ControlEvent arg0) {
+		boolean[] toggleStates = new boolean[ _myRadioToggles.size() ];
+		Toggle toToggle = null;
+		
+		
+		for (Toggle t : _myRadioToggles) {
+			
+			if (t == arg0.getController()) {
+				System.out.printf("%s %s %f\n", getName(), arg0.getController().getName(), arg0.getValue());
+				
+				
+				
+			}
+			
+		}	
+	}
 }

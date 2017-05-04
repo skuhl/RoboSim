@@ -231,7 +231,7 @@ public class RoboticArm {
 		eePickupOBBs = new HashMap<EEType, ArrayList<BoundingBox>>();
 		// Faceplate
 		ArrayList<BoundingBox> limbo = new ArrayList<BoundingBox>();
-		limbo.add( new BoundingBox(96, 96, 36) );
+		limbo.add( new BoundingBox(36, 96, 96) );
 		eeOBBsMap.put(EEType.NONE, limbo);
 		// Cannot pickup
 		limbo = new ArrayList<BoundingBox>();
@@ -239,25 +239,25 @@ public class RoboticArm {
 
 		// Claw Gripper
 		limbo = new ArrayList<BoundingBox>();
-		limbo.add( new BoundingBox(96, 96, 54) );
-		limbo.add( new BoundingBox(89, 21, 31) );
-		limbo.add( new BoundingBox(89, 21, 31) );
+		limbo.add( new BoundingBox(54, 96, 96) );
+		limbo.add( new BoundingBox(31, 21, 89) );
+		limbo.add( new BoundingBox(31, 21, 89) );
 		eeOBBsMap.put(EEType.CLAW, limbo);
 		// In between the grippers
 		limbo = new ArrayList<BoundingBox>();
-		limbo.add(new BoundingBox(55, 3, 15) );
+		limbo.add(new BoundingBox(15, 3, 55) );
 		limbo.get(0).setColor(RobotRun.getInstance().color(0, 0, 255));
 		eePickupOBBs.put(EEType.CLAW, limbo);
 
 		// Suction 
 		limbo = new ArrayList<BoundingBox>();
-		limbo.add( new BoundingBox(96, 96, 54) );
-		limbo.add( new BoundingBox(37, 37, 82) );
+		limbo.add( new BoundingBox(54, 96, 96) );
+		limbo.add( new BoundingBox(82, 37, 37) );
 		limbo.add( new BoundingBox(37, 62, 37) );
 		eeOBBsMap.put(EEType.SUCTION, limbo);
 		// One for each suction cup
 		limbo = new ArrayList<BoundingBox>();
-		limbo.add(new BoundingBox(25, 25, 3) );
+		limbo.add(new BoundingBox(3, 25, 25) );
 		limbo.get(0).setColor(RobotRun.getInstance().color(0, 0, 255));
 		limbo.add(new BoundingBox(25, 3, 25) );
 		limbo.get(1).setColor(RobotRun.getInstance().color(0, 0, 255));
@@ -1837,37 +1837,37 @@ public class RoboticArm {
 		switch(current) {
 			case NONE:
 				// Face Plate EE
-				RobotRun.getInstance().translate(0, 0, 12);
+				RobotRun.getInstance().translate(12, 0, 0);
 				curEEOBBs.get(0).setCoordinateSystem();
-				RobotRun.getInstance().translate(0, 0, -12);
+				RobotRun.getInstance().translate(-12, 0, 0);
 				break;
 	
 			case CLAW:
 				// Claw Gripper EE
-				RobotRun.getInstance().translate(0, 0, 3);
+				RobotRun.getInstance().translate(3, 0, 0);
 				curEEOBBs.get(0).setCoordinateSystem();
 	
-				RobotRun.getInstance().translate(-2, 0, -57);
+				RobotRun.getInstance().translate(-57, 0, -2);
 				curPUEEOBBs.get(0).setCoordinateSystem();
 	
 				if (endEffectorState == Fields.OFF) {
 					// When claw is open
-					RobotRun.getInstance().translate(0, 27, 0);
+					RobotRun.getInstance().translate(0, -27, 0);
 					curEEOBBs.get(1).setCoordinateSystem();
-					RobotRun.getInstance().translate(0, -54, 0);
+					RobotRun.getInstance().translate(0, 54, 0);
 					curEEOBBs.get(2).setCoordinateSystem();
-					RobotRun.getInstance().translate(0, 27, 0);
+					RobotRun.getInstance().translate(0, -27, 0);
 	
 				} else if (endEffectorState == Fields.ON) {
 					// When claw is closed
-					RobotRun.getInstance().translate(0, 10, 0);
+					RobotRun.getInstance().translate(0, -10, 0);
 					curEEOBBs.get(1).setCoordinateSystem();
-					RobotRun.getInstance().translate(0, -20, 0);
+					RobotRun.getInstance().translate(0, 20, 0);
 					curEEOBBs.get(2).setCoordinateSystem();
-					RobotRun.getInstance().translate(0, 10, 0);
+					RobotRun.getInstance().translate(0, -10, 0);
 				}
 	
-				RobotRun.getInstance().translate(2, 0, 54);
+				RobotRun.getInstance().translate(54, 0, 2);
 				break;
 	
 			case SUCTION:
@@ -1875,21 +1875,21 @@ public class RoboticArm {
 				RobotRun.getInstance().translate(0, 0, 3);
 				curEEOBBs.get(0).setCoordinateSystem();
 	
-				RobotRun.getInstance().translate(-2, 0, -67);
+				RobotRun.getInstance().translate(-67, 0, -2);
 				BoundingBox limbo = curEEOBBs.get(1);
 				limbo.setCoordinateSystem();
 	
 				float dist = -43;
-				RobotRun.getInstance().translate(0, 0, dist);
+				RobotRun.getInstance().translate(dist, 0, 0);
 				curPUEEOBBs.get(0).setCoordinateSystem();
-				RobotRun.getInstance().translate(0, -50, 19 - dist);
+				RobotRun.getInstance().translate(19 - dist, 50, 0);
 				limbo = curEEOBBs.get(2);
 				limbo.setCoordinateSystem();
 	
 				dist = -33;
-				RobotRun.getInstance().translate(0, dist, 0);
+				RobotRun.getInstance().translate(0, -dist, 0);
 				curPUEEOBBs.get(1).setCoordinateSystem();
-				RobotRun.getInstance().translate(2, 50 - dist, 45);
+				RobotRun.getInstance().translate(45, dist - 50, 2);
 				break;
 	
 			case POINTER:

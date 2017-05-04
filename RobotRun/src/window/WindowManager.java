@@ -466,6 +466,8 @@ public class WindowManager implements ControlListener {
 			t.getCaptionLabel().setFont(lblFont);
 		}
 		
+		UIManager.addListener(rb);
+		
 		return rb;
 	}
 	
