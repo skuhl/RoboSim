@@ -137,7 +137,7 @@ public class Point  {
 	}
 
 	/**
-	 * Returns a string array, where each entry is one of the values of the Cartiesian
+	 * Returns a string array, where each entry is one of the values of the Cartesian
 	 * represent of the Point: (X, Y, Z, W, P, and R) and their respective labels.
 	 * 
 	 * @return  A 6x2-element String array
@@ -161,22 +161,7 @@ public class Point  {
 			angles = new PVector(Float.NaN, Float.NaN, Float.NaN);
 		} else {
 			// Display in degrees
-			float[][] axes = orientation.toMatrix();
-			float[][] transform = new float[3][3];
-			
-			transform[0][0] = -axes[0][0];
-			transform[0][1] = -axes[0][1];
-			transform[0][2] = -axes[0][2];
-			
-			transform[1][0] = axes[2][0];
-			transform[1][1] = axes[2][1];
-			transform[1][2] = axes[2][2];
-			
-			transform[2][0] = -axes[1][0];
-			transform[2][1] = -axes[1][1];
-			transform[2][2] = -axes[1][2];
-			
-			angles = RobotRun.matrixToEuler(transform).mult(RobotRun.RAD_TO_DEG);
+			angles = RobotRun.quatToEuler(orientation).mult(RobotRun.RAD_TO_DEG);
 		}
 
 		entries[0][0] = "X: ";
