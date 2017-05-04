@@ -2533,9 +2533,6 @@ public class RobotRun extends PApplet {
 			displayOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
 		}
 		
-		Point pt = nativeRobotEEPoint(activeRobot, activeRobot.getJointAngles());
-		displayOriginAxes(pt.position, RobotRun.convertNativeToWorld( pt.orientation.toMatrix() ), 200f, 0);
-		
 		/*TESTING CODE: DRAW INTERMEDIATE POINTS*
 		if(Fields.DEBUG && intermediatePositions != null) {
 			int count = 0;
