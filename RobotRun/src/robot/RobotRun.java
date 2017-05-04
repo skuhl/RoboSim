@@ -94,7 +94,6 @@ public class RobotRun extends PApplet {
 	private static RobotRun instance;
 
 	RobotCamera c;
-	Fixture f;
 
 	public static PFont fnt_con14;
 	public static PFont fnt_con12;
@@ -726,29 +725,6 @@ public class RobotRun extends PApplet {
 
 		return temp;
 	}
-	
-	/* Vincent : USE THIS METHOD FOR THE ROBOT CAMERA */
-	
-	/**
-	 * The robot's end effector position and orientation is computed in the
-	 * native coordinate system. Also, the orientation of the point is with
-	 * respective the Robot's default orientation (i.e. when the Robot's joint
-	 * angles are all 0, then the orientation is the identity quaternion) as
-	 * opposed to the native coordinate system.
-	 * 
-	 * @return	The Robot's current position and orientation, in terms of the
-	 * 			Robot's default orientation
-	 */
-	public static Point nativeActiveRobotEEWOO() {
-		RoboticArm r = RobotRun.getActiveRobot();
-		Point ee = RobotRun.nativeRobotEEPoint(r, r.getJointAngles());
-		
-		// Remove the Robot end effector's default orientation
-		Point defEE = r.getDefaultPoint();
-		ee.orientation = RQuaternion.mult(defEE.orientation, ee.orientation);
-		
-		return ee;
-	}
 
 	/**
 	 * Returns the Robot's End Effector position according to the active Tool
@@ -815,6 +791,8 @@ public class RobotRun extends PApplet {
 		applyModelRotation(model, jointAngles);
 		// Apply offset
 		PVector ee = instance.getCoordFromMatrix(offset.x, offset.y, offset.z);
+		instance.rotateY(PI/2);
+		instance.rotateX(-PI/2);
 		float[][] orientationMatrix = instance.getRotationMatrix();
 		instance.popMatrix();
 		// Return a Point containing the EE position, orientation, and joint
@@ -2547,8 +2525,8 @@ public class RobotRun extends PApplet {
 		}
 		/**/
 		
-		/* Camera Test Code *
-		Point p = RobotRun.nativeActiveRobotEEWOO();
+		/*Camera Test Code */
+		/*Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
 		c.setOrientation(p.orientation);
 		displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
 		
@@ -2588,8 +2566,7 @@ public class RobotRun extends PApplet {
 		for(int i = 0; i < 3; i += 1) {
 			System.out.println(String.format("[%12f, %12f, %12f]", transmat[i][0], transmat[i][1], transmat[i][2]));
 		}
-		System.out.println();
-		/**/
+		System.out.println();*/
 
 		noLights();
 		noStroke();
