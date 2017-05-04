@@ -91,12 +91,10 @@ public class RobotRun extends PApplet {
 	 */
 	private static RobotRun instance;
 
-	RobotCamera c;
-
 	public static PFont fnt_con14;
+
 	public static PFont fnt_con12;
 	public static PFont fnt_conB;
-
 	/**
 	 * Initialize all static fields
 	 */
@@ -308,15 +306,6 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Converts the given vector form the left-hand Native Coordinate System to
-	 * the right-hand World Frame Coordinate System.
-	 */
-	public static PVector convertNativeToWorld(PVector v) {
-		float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), Fields.WORLD_AXES);
-		return transformVector(v, invertHCMatrix(tMatrix));
-	}
-
-	/**
 	 * Converts the rotation matrix from the native coordinate frame to the
 	 * world frame.
 	 * 
@@ -329,6 +318,15 @@ public class RobotRun extends PApplet {
 		RealMatrix worldAxes = new Array2DRowRealMatrix(floatToDouble(Fields.WORLD_AXES, 3, 3));
 
 		return RobotRun.doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
+	}
+
+	/**
+	 * Converts the given vector form the left-hand Native Coordinate System to
+	 * the right-hand World Frame Coordinate System.
+	 */
+	public static PVector convertNativeToWorld(PVector v) {
+		float[][] tMatrix = transformationMatrix(new PVector(0f, 0f, 0f), Fields.WORLD_AXES);
+		return transformVector(v, invertHCMatrix(tMatrix));
 	}
 
 	/**
@@ -460,11 +458,8 @@ public class RobotRun extends PApplet {
 		return r;
 	}
 
-	/**
-	 * @return the active axes display state
-	 */
-	public AxesDisplay getAxesState() {
-		return getManager().getAxesDisplay();
+	public static RoboticArm getActiveRobot() {
+		return instance.activeRobot;
 	}
 
 	/**
@@ -613,7 +608,7 @@ public class RobotRun extends PApplet {
 
 		return inverse;
 	}
-	
+
 	public static void main(String[] args) {
 		String[] appletArgs = new String[] { "robot.RobotRun" };
 
@@ -624,7 +619,7 @@ public class RobotRun extends PApplet {
 			PApplet.main(appletArgs);
 		}
 	}
-
+	
 	// calculates euler angles from rotation matrix
 	public static PVector matrixToEuler(float[][] r) {
 		float yRot1, xRot1, zRot1;
@@ -813,7 +808,7 @@ public class RobotRun extends PApplet {
 
 		return u;
 	}
-	
+
 	public static void printMat(float[][] mat) {
 		for(int i = 0; i < mat.length; i += 1) {
 			System.out.print("[");
@@ -825,7 +820,7 @@ public class RobotRun extends PApplet {
 		}
 		System.out.println();
 	}
-
+	
 	// calculates euler angles from quaternion
 	public static PVector quatToEuler(RQuaternion q) {
 		float[][] r = q.toMatrix();
@@ -1013,6 +1008,8 @@ public class RobotRun extends PApplet {
 		return ret;
 	}
 
+	RobotCamera c;
+
 	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
 	private final Stack<WorldObject> SCENARIO_UNDO = new Stack<>();
 	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
@@ -1035,6 +1032,7 @@ public class RobotRun extends PApplet {
 
 	private boolean shift = false; // Is shift button pressed or not?
 	private boolean step = false; // Is step button pressed or not?
+	private boolean keyRot = false;
 	
 	// Indicates whether a program is currently running
 	private boolean programRunning = false;
@@ -1516,33 +1514,6 @@ public class RobotRun extends PApplet {
 		camera.rotate(0, PI, 0);
 	}
 
-	public void bd() {
-		// Backwards is only functional when executing a program one instruction
-		// at a time
-		if (mode == ScreenMode.NAV_PROG_INSTR && isShift() && isStep()) {
-			Program p = activeRobot.getActiveProg();
-			int instrIdx = activeRobot.getActiveInstIdx();
-
-			// Execute the previous motion instruction
-			if (p != null && instrIdx > 1 && p.getInstruction(instrIdx - 2) instanceof MotionInstruction) {
-				// Stop robot motion and normal program execution
-				hd();
-				setProgramRunning(false);
-
-				activeRobot.setActiveInstIdx(instrIdx - 2);
-				execSingleInst = true;
-
-				// Safeguard against editing a program while it is running
-				contents.setColumnIdx(0);
-
-				contents.moveUp(false);
-				contents.moveUp(false);
-
-				setProgramRunning(true);
-			}
-		}
-	}
-
 	/**
 	 * Initiate a new circular motion instruction according to FANUC
 	 * methodology.
@@ -1658,6 +1629,33 @@ public class RobotRun extends PApplet {
 		// Bottom view
 		camera.reset();
 		camera.rotate(PI / 2f, 0, 0);
+	}
+
+	public void bwd() {
+		// Backwards is only functional when executing a program one instruction
+		// at a time
+		if (mode == ScreenMode.NAV_PROG_INSTR && isShift() && isStep()) {
+			Program p = activeRobot.getActiveProg();
+			int instrIdx = activeRobot.getActiveInstIdx();
+
+			// Execute the previous motion instruction
+			if (p != null && instrIdx > 1 && p.getInstruction(instrIdx - 2) instanceof MotionInstruction) {
+				// Stop robot motion and normal program execution
+				hold();
+				setProgramRunning(false);
+
+				activeRobot.setActiveInstIdx(instrIdx - 2);
+				execSingleInst = true;
+
+				// Safeguard against editing a program while it is running
+				contents.setColumnIdx(0);
+
+				contents.moveUp(false);
+				contents.moveUp(false);
+
+				setProgramRunning(true);
+			}
+		}
 	}
 
 	/**
@@ -2008,7 +2006,7 @@ public class RobotRun extends PApplet {
 	public void coordFrameTransition() {
 		RoboticArm r = getActiveRobot();
 		// Stop Robot movement
-		hd();
+		hold();
 
 		// Increment the current coordinate frame
 		switch (r.getCurCoordFrame()) {
@@ -2171,7 +2169,7 @@ public class RobotRun extends PApplet {
 	}
 
 	// Data button
-	public void da() {
+	public void data() {
 		resetStack();
 		nextScreen(ScreenMode.NAV_DATA);
 	}
@@ -2477,6 +2475,13 @@ public class RobotRun extends PApplet {
 	}
 
 	@Override
+	public void dispose() {
+		// Save data before exiting
+		DataManagement.saveState(this);
+		super.dispose();
+	}
+
+	@Override
 	public void draw() {
 
 		// Apply the camera for drawing objects
@@ -2560,8 +2565,7 @@ public class RobotRun extends PApplet {
 			popMatrix();
 		}
 		//System.out.println(c.checkObjectInFrame(f));
-		float[][] mat = c.getOrientationMat();
-		RobotRun.printMat(mat);
+		//RobotRun.printMat(c.getOrientationMat());
 
 		noLights();
 		noStroke();
@@ -2579,7 +2583,7 @@ public class RobotRun extends PApplet {
 	 * program, if one exists. Otherwise, the program navigation view is
 	 * rendered.
 	 */
-	public void ed() {
+	public void edit() {
 		if (activeRobot.getActiveProg() != null) {
 			nextScreen(ScreenMode.NAV_PROG_INSTR);
 
@@ -4384,7 +4388,7 @@ public class RobotRun extends PApplet {
 		case NAV_PREGS:
 			if (isShift() && !isProgramRunning()) {
 				// Stop any prior jogging motion
-				hd();
+				hold();
 
 				// Move To function
 				PositionRegister pReg = activeRobot.getPReg(active_index);
@@ -4549,10 +4553,15 @@ public class RobotRun extends PApplet {
 		updateScreen();
 	}
 
-	public void fd() {
+	public void FrontView() {
+		// Default view
+		camera.reset();
+	}
+
+	public void fwd() {
 		if (mode == ScreenMode.NAV_PROG_INSTR && !isProgramRunning() && isShift()) {
 			// Stop any prior Robot movement
-			hd();
+			hold();
 			// Safeguard against editing a program while it is running
 			contents.setColumnIdx(0);
 
@@ -4563,27 +4572,16 @@ public class RobotRun extends PApplet {
 			setProgramRunning(true);
 		}
 	}
-
-	public void FrontView() {
-		// Default view
-		camera.reset();
-	}
-
-	public static RoboticArm getActiveRobot() {
-		return instance.activeRobot;
-	}
 	
 	public Scenario getActiveScenario() {
 		return activeScenario;
 	}
 
-	public RoboticArm getInactiveRobot() {
-		try {
-			return ROBOTS.get((activeRobot.getRID() + 1) % 2);
-
-		} catch (Exception Ex) {
-			return null;
-		}
+	/**
+	 * @return the active axes display state
+	 */
+	public AxesDisplay getAxesState() {
+		return getManager().getAxesDisplay();
 	}
 
 	public Camera getCamera() {
@@ -4752,6 +4750,159 @@ public class RobotRun extends PApplet {
 
 	public ControlP5 getCp5() {
 		return cp5;
+	}
+
+	public void getEditScreen(Instruction ins, int selectIdx) {
+		if (ins instanceof MotionInstruction) {
+			if (getSelectedLine() == 0) {
+				// edit movement instruction line 1
+				switch (contents.getColumnIdx()) {
+				case 2: // motion type
+					nextScreen(ScreenMode.SET_MV_INSTR_TYPE);
+					break;
+				case 3: // register type
+					nextScreen(ScreenMode.SET_MV_INSTR_REG_TYPE);
+					break;
+				case 4: // register
+					nextScreen(ScreenMode.SET_MV_INSTR_IDX);
+					break;
+				case 5: // speed
+					nextScreen(ScreenMode.SET_MV_INSTR_SPD);
+					break;
+				case 6: // termination type
+					nextScreen(ScreenMode.SET_MV_INSTR_TERM);
+					break;
+				case 7: // offset register
+					nextScreen(ScreenMode.SET_MV_INSTR_OFFSET);
+					break;
+				}
+			} else {
+				// edit movement instruciton line 2 (circular only)
+				switch (contents.getColumnIdx()) {
+				case 0: // register type
+					nextScreen(ScreenMode.SET_MV_INSTR_REG_TYPE);
+					break;
+				case 1: // register
+					nextScreen(ScreenMode.SET_MV_INSTR_IDX);
+					break;
+				case 2: // speed
+					nextScreen(ScreenMode.SET_MV_INSTR_SPD);
+					break;
+				case 3: // termination type
+					nextScreen(ScreenMode.SET_MV_INSTR_TERM);
+					break;
+				case 4: // offset register
+					nextScreen(ScreenMode.SET_MV_INSTR_OFFSET);
+					break;
+				}
+			}
+		} else if (ins instanceof FrameInstruction) {
+			switch (selectIdx) {
+			case 1:
+				nextScreen(ScreenMode.SET_FRM_INSTR_TYPE);
+				break;
+			case 2:
+				nextScreen(ScreenMode.SET_FRAME_INSTR_IDX);
+				break;
+			}
+		} else if (ins instanceof IOInstruction) {
+			switch (selectIdx) {
+			case 1:
+				nextScreen(ScreenMode.SET_IO_INSTR_IDX);
+				break;
+			case 2:
+				nextScreen(ScreenMode.SET_IO_INSTR_STATE);
+				break;
+			}
+		} else if (ins instanceof LabelInstruction) {
+			nextScreen(ScreenMode.SET_LBL_NUM);
+		} else if (ins instanceof JumpInstruction) {
+			nextScreen(ScreenMode.SET_JUMP_TGT);
+		} else if (ins instanceof CallInstruction) {
+			if (((CallInstruction) ins).getTgtDevice() != null) {
+				editIdx = ((CallInstruction) ins).getTgtDevice().RID;
+
+			} else {
+				editIdx = -1;
+			}
+
+			nextScreen(ScreenMode.SET_CALL_PROG);
+		} else if (ins instanceof IfStatement) {
+			IfStatement stmt = (IfStatement) ins;
+
+			if (stmt.getExpr() instanceof Expression) {
+				int len = stmt.getExpr().getLength();
+
+				if (selectIdx >= 3 && selectIdx < len + 1) {
+					editExpression((Expression) stmt.getExpr(), selectIdx - 3);
+				} else if (selectIdx == len + 2) {
+					nextScreen(ScreenMode.SET_IF_STMT_ACT);
+				} else if (selectIdx == len + 3) {
+					if (stmt.getInstr() instanceof JumpInstruction) {
+						nextScreen(ScreenMode.SET_JUMP_TGT);
+					} else if (stmt.getInstr() instanceof CallInstruction) {
+						editIdx = ((CallInstruction) stmt.getInstr()).getTgtDevice().RID;
+						nextScreen(ScreenMode.SET_CALL_PROG);
+					}
+				}
+			} else if (stmt.getExpr() instanceof AtomicExpression) {
+				if (selectIdx == 2) {
+					opEdit = stmt.getExpr().getArg1();
+					nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
+				} else if (selectIdx == 3) {
+					opEdit = stmt.getExpr();
+					nextScreen(ScreenMode.SET_EXPR_OP);
+				} else if (selectIdx == 4) {
+					opEdit = stmt.getExpr().getArg2();
+					nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
+				} else if (selectIdx == 5) {
+					nextScreen(ScreenMode.SET_IF_STMT_ACT);
+				} else {
+					if (stmt.getInstr() instanceof JumpInstruction) {
+						nextScreen(ScreenMode.SET_JUMP_TGT);
+					} else if (stmt.getInstr() instanceof CallInstruction) {
+						editIdx = ((CallInstruction) stmt.getInstr()).getTgtDevice().RID;
+						nextScreen(ScreenMode.SET_CALL_PROG);
+					}
+				}
+			}
+		} else if (ins instanceof SelectStatement) {
+			SelectStatement stmt = (SelectStatement) ins;
+
+			if (selectIdx == 2) {
+				opEdit = stmt.getArg();
+				nextScreen(ScreenMode.SET_SELECT_STMT_ARG);
+			} else if ((selectIdx - 3) % 3 == 0 && selectIdx > 2) {
+				opEdit = stmt.getCases().get((selectIdx - 3) / 3);
+				nextScreen(ScreenMode.SET_SELECT_STMT_ARG);
+			} else if ((selectIdx - 3) % 3 == 1) {
+				editIdx = (selectIdx - 3) / 3;
+				nextScreen(ScreenMode.SET_SELECT_STMT_ACT);
+			} else if ((selectIdx - 3) % 3 == 2) {
+				editIdx = (selectIdx - 3) / 3;
+				Instruction toExec = stmt.getInstrs().get(editIdx);
+				if (toExec instanceof JumpInstruction) {
+					nextScreen(ScreenMode.SET_JUMP_TGT);
+				} else if (toExec instanceof CallInstruction) {
+					editIdx = ((CallInstruction) toExec).getTgtDevice().RID;
+					nextScreen(ScreenMode.SET_CALL_PROG);
+				}
+			}
+		} else if (ins instanceof RegisterStatement) {
+			RegisterStatement stmt = (RegisterStatement) ins;
+			int len = stmt.getExpr().getLength();
+			int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
+
+			if (selectIdx == 1) {
+				nextScreen(ScreenMode.SET_REG_EXPR_TYPE);
+			} else if (selectIdx == 2) {
+				nextScreen(ScreenMode.SET_REG_EXPR_IDX1);
+			} else if (selectIdx == 3 && stmt.getPosIdx() != -1) {
+				nextScreen(ScreenMode.SET_REG_EXPR_IDX2);
+			} else if (selectIdx >= rLen + 1 && selectIdx <= len + rLen) {
+				editExpression(stmt.getExpr(), selectIdx - (rLen + 2));
+			}
+		}
 	}
 
 	/**
@@ -5137,156 +5288,12 @@ public class RobotRun extends PApplet {
 		return header;
 	}
 
-	public void getEditScreen(Instruction ins, int selectIdx) {
-		if (ins instanceof MotionInstruction) {
-			if (getSelectedLine() == 0) {
-				// edit movement instruction line 1
-				switch (contents.getColumnIdx()) {
-				case 2: // motion type
-					nextScreen(ScreenMode.SET_MV_INSTR_TYPE);
-					break;
-				case 3: // register type
-					nextScreen(ScreenMode.SET_MV_INSTR_REG_TYPE);
-					break;
-				case 4: // register
-					nextScreen(ScreenMode.SET_MV_INSTR_IDX);
-					break;
-				case 5: // speed
-					nextScreen(ScreenMode.SET_MV_INSTR_SPD);
-					break;
-				case 6: // termination type
-					nextScreen(ScreenMode.SET_MV_INSTR_TERM);
-					break;
-				case 7: // offset register
-					nextScreen(ScreenMode.SET_MV_INSTR_OFFSET);
-					break;
-				}
-			} else {
-				// edit movement instruciton line 2 (circular only)
-				switch (contents.getColumnIdx()) {
-				case 0: // register type
-					nextScreen(ScreenMode.SET_MV_INSTR_REG_TYPE);
-					break;
-				case 1: // register
-					nextScreen(ScreenMode.SET_MV_INSTR_IDX);
-					break;
-				case 2: // speed
-					nextScreen(ScreenMode.SET_MV_INSTR_SPD);
-					break;
-				case 3: // termination type
-					nextScreen(ScreenMode.SET_MV_INSTR_TERM);
-					break;
-				case 4: // offset register
-					nextScreen(ScreenMode.SET_MV_INSTR_OFFSET);
-					break;
-				}
-			}
-		} else if (ins instanceof FrameInstruction) {
-			switch (selectIdx) {
-			case 1:
-				nextScreen(ScreenMode.SET_FRM_INSTR_TYPE);
-				break;
-			case 2:
-				nextScreen(ScreenMode.SET_FRAME_INSTR_IDX);
-				break;
-			}
-		} else if (ins instanceof IOInstruction) {
-			switch (selectIdx) {
-			case 1:
-				nextScreen(ScreenMode.SET_IO_INSTR_IDX);
-				break;
-			case 2:
-				nextScreen(ScreenMode.SET_IO_INSTR_STATE);
-				break;
-			}
-		} else if (ins instanceof LabelInstruction) {
-			nextScreen(ScreenMode.SET_LBL_NUM);
-		} else if (ins instanceof JumpInstruction) {
-			nextScreen(ScreenMode.SET_JUMP_TGT);
-		} else if (ins instanceof CallInstruction) {
-			if (((CallInstruction) ins).getTgtDevice() != null) {
-				editIdx = ((CallInstruction) ins).getTgtDevice().RID;
+	public RoboticArm getInactiveRobot() {
+		try {
+			return ROBOTS.get((activeRobot.getRID() + 1) % 2);
 
-			} else {
-				editIdx = -1;
-			}
-
-			nextScreen(ScreenMode.SET_CALL_PROG);
-		} else if (ins instanceof IfStatement) {
-			IfStatement stmt = (IfStatement) ins;
-
-			if (stmt.getExpr() instanceof Expression) {
-				int len = stmt.getExpr().getLength();
-
-				if (selectIdx >= 3 && selectIdx < len + 1) {
-					editExpression((Expression) stmt.getExpr(), selectIdx - 3);
-				} else if (selectIdx == len + 2) {
-					nextScreen(ScreenMode.SET_IF_STMT_ACT);
-				} else if (selectIdx == len + 3) {
-					if (stmt.getInstr() instanceof JumpInstruction) {
-						nextScreen(ScreenMode.SET_JUMP_TGT);
-					} else if (stmt.getInstr() instanceof CallInstruction) {
-						editIdx = ((CallInstruction) stmt.getInstr()).getTgtDevice().RID;
-						nextScreen(ScreenMode.SET_CALL_PROG);
-					}
-				}
-			} else if (stmt.getExpr() instanceof AtomicExpression) {
-				if (selectIdx == 2) {
-					opEdit = stmt.getExpr().getArg1();
-					nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
-				} else if (selectIdx == 3) {
-					opEdit = stmt.getExpr();
-					nextScreen(ScreenMode.SET_EXPR_OP);
-				} else if (selectIdx == 4) {
-					opEdit = stmt.getExpr().getArg2();
-					nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
-				} else if (selectIdx == 5) {
-					nextScreen(ScreenMode.SET_IF_STMT_ACT);
-				} else {
-					if (stmt.getInstr() instanceof JumpInstruction) {
-						nextScreen(ScreenMode.SET_JUMP_TGT);
-					} else if (stmt.getInstr() instanceof CallInstruction) {
-						editIdx = ((CallInstruction) stmt.getInstr()).getTgtDevice().RID;
-						nextScreen(ScreenMode.SET_CALL_PROG);
-					}
-				}
-			}
-		} else if (ins instanceof SelectStatement) {
-			SelectStatement stmt = (SelectStatement) ins;
-
-			if (selectIdx == 2) {
-				opEdit = stmt.getArg();
-				nextScreen(ScreenMode.SET_SELECT_STMT_ARG);
-			} else if ((selectIdx - 3) % 3 == 0 && selectIdx > 2) {
-				opEdit = stmt.getCases().get((selectIdx - 3) / 3);
-				nextScreen(ScreenMode.SET_SELECT_STMT_ARG);
-			} else if ((selectIdx - 3) % 3 == 1) {
-				editIdx = (selectIdx - 3) / 3;
-				nextScreen(ScreenMode.SET_SELECT_STMT_ACT);
-			} else if ((selectIdx - 3) % 3 == 2) {
-				editIdx = (selectIdx - 3) / 3;
-				Instruction toExec = stmt.getInstrs().get(editIdx);
-				if (toExec instanceof JumpInstruction) {
-					nextScreen(ScreenMode.SET_JUMP_TGT);
-				} else if (toExec instanceof CallInstruction) {
-					editIdx = ((CallInstruction) toExec).getTgtDevice().RID;
-					nextScreen(ScreenMode.SET_CALL_PROG);
-				}
-			}
-		} else if (ins instanceof RegisterStatement) {
-			RegisterStatement stmt = (RegisterStatement) ins;
-			int len = stmt.getExpr().getLength();
-			int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
-
-			if (selectIdx == 1) {
-				nextScreen(ScreenMode.SET_REG_EXPR_TYPE);
-			} else if (selectIdx == 2) {
-				nextScreen(ScreenMode.SET_REG_EXPR_IDX1);
-			} else if (selectIdx == 3 && stmt.getPosIdx() != -1) {
-				nextScreen(ScreenMode.SET_REG_EXPR_IDX2);
-			} else if (selectIdx >= rLen + 1 && selectIdx <= len + rLen) {
-				editExpression(stmt.getExpr(), selectIdx - (rLen + 2));
-			}
+		} catch (Exception Ex) {
+			return null;
 		}
 	}
 
@@ -5699,99 +5706,127 @@ public class RobotRun extends PApplet {
 
 		int record_normal_px = WindowManager.lButtonWidth * 5 + Fields.LARGE_BUTTON + 1;
 		int record_normal_py = 0;
-		PImage[] record = { loadImage("images/record-35x20.png"), loadImage("images/record-over.png"),
-				loadImage("images/record-on.png") };
-		bt_record_normal = cp5.addButton("record_normal").setPosition(record_normal_px, record_normal_py)
-				.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON).setImages(record).updateSize();
+		PImage[] record = { loadImage("images/record-35x20.png"), 
+							loadImage("images/record-over.png"),
+							loadImage("images/record-on.png") };
+		bt_record_normal = cp5.addButton("record_normal")
+							  .setPosition(record_normal_px, record_normal_py)
+							  .setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+							  .setImages(record)
+							  .updateSize();
 
 		int EE_normal_px = record_normal_px + Fields.LARGE_BUTTON + 1;
 		int EE_normal_py = 0;
-		PImage[] EE = { loadImage("images/EE_35x20.png"), loadImage("images/EE_over.png"),
-				loadImage("images/EE_down.png") };
-		bt_ee_normal = cp5.addButton("EE").setPosition(EE_normal_px, EE_normal_py)
-				.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON).setImages(EE).updateSize();
+		PImage[] EE = { loadImage("images/EE_35x20.png"), 
+						loadImage("images/EE_over.png"),
+						loadImage("images/EE_down.png") };
+		bt_ee_normal = cp5.addButton("EE")
+						  .setPosition(EE_normal_px, EE_normal_py)
+						  .setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+						  .setImages(EE)
+						  .updateSize();
 
 		/******************** Function Row ********************/
 
 		int f1_px = display_px;
 		int f1_py = display_py + display_height + 2;
 		int f_width = display_width / 5 - 1;
-		cp5.addButton("f1").setPosition(f1_px, f1_py).setSize(f_width, Fields.LARGE_BUTTON).setCaptionLabel("F1")
-				.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		cp5.addButton("f1").setPosition(f1_px, f1_py)
+						   .setSize(f_width, Fields.LARGE_BUTTON)
+						   .setCaptionLabel("F1")
+						   .setColorBackground(Fields.BUTTON_DEFAULT)
+						   .setColorCaptionLabel(Fields.BUTTON_TEXT)
+						   .moveTo(g1);
 
 		int f2_px = f1_px + f_width + 1;
 		int f2_py = f1_py;
-		cp5.addButton("f2").setPosition(f2_px, f2_py).setSize(f_width, Fields.LARGE_BUTTON).setCaptionLabel("F2")
-				.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		cp5.addButton("f2").setPosition(f2_px, f2_py)
+						   .setSize(f_width, Fields.LARGE_BUTTON)
+						   .setCaptionLabel("F2")
+						   .setColorBackground(Fields.BUTTON_DEFAULT)
+						   .setColorCaptionLabel(Fields.BUTTON_TEXT)
+						   .moveTo(g1);
 
 		int f3_px = f2_px + f_width + 1;
 		int f3_py = f2_py;
-		cp5.addButton("f3").setPosition(f3_px, f3_py).setSize(f_width, Fields.LARGE_BUTTON).setCaptionLabel("F3")
-				.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		cp5.addButton("f3").setPosition(f3_px, f3_py)
+						   .setSize(f_width, Fields.LARGE_BUTTON)
+						   .setCaptionLabel("F3")
+						   .setColorBackground(Fields.BUTTON_DEFAULT)
+						   .setColorCaptionLabel(Fields.BUTTON_TEXT)
+						   .moveTo(g1);
 
 		int f4_px = f3_px + f_width + 1;
 		int f4_py = f3_py;
-		cp5.addButton("f4").setPosition(f4_px, f4_py).setSize(f_width, Fields.LARGE_BUTTON).setCaptionLabel("F4")
-				.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		cp5.addButton("f4").setPosition(f4_px, f4_py)
+						   .setSize(f_width, Fields.LARGE_BUTTON)
+						   .setCaptionLabel("F4")
+						   .setColorBackground(Fields.BUTTON_DEFAULT)
+						   .setColorCaptionLabel(Fields.BUTTON_TEXT)
+						   .moveTo(g1);
 
 		int f5_px = f4_px + f_width + 1;
 		int f5_py = f4_py;
-		cp5.addButton("f5").setPosition(f5_px, f5_py).setSize(f_width, Fields.LARGE_BUTTON).setCaptionLabel("F5")
-				.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		cp5.addButton("f5").setPosition(f5_px, f5_py)
+						   .setSize(f_width, Fields.LARGE_BUTTON)
+						   .setCaptionLabel("F5")
+						   .setColorBackground(Fields.BUTTON_DEFAULT)
+						   .setColorCaptionLabel(Fields.BUTTON_TEXT)
+						   .moveTo(g1);
 
 		/********************** Step/Shift Row **********************/
 
 		int st_px = f1_px;
 		int st_py = f1_py + button_offsetY + 10;
-		cp5.addButton("st").setPosition(st_px, st_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
+		cp5.addButton("step").setPosition(st_px, st_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
 				.setCaptionLabel("STEP").setColorBackground(Fields.BUTTON_DEFAULT)
 				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int mu_px = st_px + Fields.LARGE_BUTTON + 19;
 		int mu_py = st_py;
-		cp5.addButton("mu").setPosition(mu_px, mu_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		cp5.addButton("menu").setPosition(mu_px, mu_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 				.setCaptionLabel("MENU").setColorBackground(Fields.BUTTON_DEFAULT)
 				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int se_px = mu_px + Fields.LARGE_BUTTON + 15;
 		int se_py = mu_py;
-		cp5.addButton("se").setPosition(se_px, se_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		cp5.addButton("select").setPosition(se_px, se_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 				.setCaptionLabel("SELECT").setColorBackground(Fields.BUTTON_DEFAULT)
 				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int ed_px = se_px + button_offsetX;
 		int ed_py = se_py;
-		cp5.addButton("ed").setPosition(ed_px, ed_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		cp5.addButton("edit").setPosition(ed_px, ed_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 				.setCaptionLabel("EDIT").setColorBackground(Fields.BUTTON_DEFAULT)
 				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int da_px = ed_px + button_offsetX;
 		int da_py = ed_py;
-		cp5.addButton("da").setPosition(da_px, da_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		cp5.addButton("data").setPosition(da_px, da_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 				.setCaptionLabel("DATA").setColorBackground(Fields.BUTTON_DEFAULT)
 				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int fn_px = da_px + Fields.LARGE_BUTTON + 15;
 		int fn_py = da_py;
-		cp5.addButton("Fn").setPosition(fn_px, fn_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		cp5.addButton("fctn").setPosition(fn_px, fn_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 				.setCaptionLabel("FCTN").setColorBackground(Fields.BUTTON_DEFAULT)
 				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int sf_px = fn_px + Fields.LARGE_BUTTON + 19;
 		int sf_py = fn_py;
-		cp5.addButton("sf").setPosition(sf_px, sf_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
+		cp5.addButton("shift").setPosition(sf_px, sf_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
 				.setCaptionLabel("SHIFT").setColorBackground(Fields.BUTTON_DEFAULT)
 				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int pr_px = mu_px;
 		int pr_py = mu_py + button_offsetY;
-		cp5.addButton("pr").setPosition(pr_px, pr_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		cp5.addButton("prev").setPosition(pr_px, pr_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 				.setCaptionLabel("PREV").setColorBackground(Fields.BUTTON_DEFAULT)
 				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int ne_px = fn_px;
 		int ne_py = mu_py + button_offsetY;
-		cp5.addButton("ne").setPosition(ne_px, ne_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		cp5.addButton("next").setPosition(ne_px, ne_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 				.setCaptionLabel("NEXT").setColorBackground(Fields.BUTTON_DEFAULT)
 				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
@@ -5938,19 +5973,19 @@ public class RobotRun extends PApplet {
 
 		int hd_px = STATUS_px + 3 * button_offsetX / 2;
 		int hd_py = g2_offsetY;
-		cp5.addButton("hd").setPosition(hd_px, hd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		cp5.addButton("hold").setPosition(hd_px, hd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 				.setCaptionLabel("HOLD").setColorBackground(Fields.BUTTON_DEFAULT)
 				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int fd_px = hd_px;
 		int fd_py = hd_py + button_offsetY;
-		cp5.addButton("fd").setPosition(fd_px, fd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		cp5.addButton("fwd").setPosition(fd_px, fd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 				.setCaptionLabel("FWD").setColorBackground(Fields.BUTTON_DEFAULT)
 				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int bd_px = fd_px;
 		int bd_py = fd_py + button_offsetY;
-		cp5.addButton("bd").setPosition(bd_px, bd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		cp5.addButton("bwd").setPosition(bd_px, bd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 				.setCaptionLabel("BWD").setColorBackground(Fields.BUTTON_DEFAULT)
 				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
@@ -6000,7 +6035,7 @@ public class RobotRun extends PApplet {
 	}// End UI setup
 
 	/* Stops all of the Robot's movement */
-	public void hd() {
+	public void hold() {
 		// Reset button highlighting
 		resetButtonColors();
 		// Stop program execution, which halts the robot
@@ -6100,7 +6135,7 @@ public class RobotRun extends PApplet {
 	public void JOINT6_POS() {
 		updateRobotJogMotion(5, 1);
 	}
-
+	
 	@Override
 	public void keyPressed() {
 
@@ -6243,11 +6278,69 @@ public class RobotRun extends PApplet {
 			// Write anything stored in the String buffer to a text file
 			writeBuffer();
 
-		} else if (key == 'y') {
-			// Apply another set of default Robot joint angles
-			float[] rot = { PI, 0, 0, 0, 0, PI };
-			getActiveRobot().setJointAngles(rot);
-			intermediatePositions.clear();
+		} else if (keyCode == KeyEvent.VK_SHIFT) {
+			shift();
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD0) {
+			keyRot = !keyRot;
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD1) {
+			if(keyRot) JOINT6_NEG();
+			else	   JOINT3_NEG();
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD2) {
+			if(keyRot) JOINT6_POS();
+			else	   JOINT3_POS();
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD4) {
+			if(keyRot) JOINT5_NEG();
+			else	   JOINT2_NEG();
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD5) {
+			if(keyRot) JOINT5_POS();
+			else	   JOINT2_POS();
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD7) {
+			if(keyRot) JOINT4_NEG();
+			else	   JOINT1_NEG();
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD8) {
+			if(keyRot) JOINT4_POS();
+			else	   JOINT1_POS();
+			
+		}
+	}
+
+	public void keyReleased() {
+		if(keyCode == KeyEvent.VK_SHIFT) {
+			shift();
+		} else if (keyCode == KeyEvent.VK_NUMPAD0) {
+			keyRot = !keyRot;
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD1) {
+			if(keyRot) JOINT6_NEG();
+			else	   JOINT3_NEG();
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD2) {
+			if(keyRot) JOINT6_POS();
+			else	   JOINT3_POS();
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD4) {
+			if(keyRot) JOINT5_NEG();
+			else	   JOINT2_NEG();
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD5) {
+			if(keyRot) JOINT5_POS();
+			else	   JOINT2_POS();
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD7) {
+			if(keyRot) JOINT4_NEG();
+			else	   JOINT1_NEG();
+			
+		} else if (keyCode == KeyEvent.VK_NUMPAD8) {
+			if(keyRot) JOINT4_POS();
+			else	   JOINT1_POS();
+			
 		}
 	}
 
@@ -6775,22 +6868,6 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	/**
-	 * Loads all position registers into the contents of the pendant display.
-	 */
-	public void loadPositionRegisters() {
-		// Display a subset of the list of registers
-		for (int idx = 0; idx < Fields.DPREG_NUM; ++idx) {
-			PositionRegister reg = activeRobot.getPReg(idx);
-			// Display the comment associated with a specific Register entry
-			String regLbl = reg.toStringWithComm();
-			// Display Register edit prompt (* if uninitialized)
-			String regEntry = (reg.point == null) ? "*" : "...Edit...";
-
-			contents.addLine(regLbl, regEntry);
-		}
-	}
-
 	public void loadPosition(Point pt, boolean isCartesian) {
 
 		if (pt == null) {
@@ -6818,6 +6895,22 @@ public class RobotRun extends PApplet {
 
 				contents.addLine(line);
 			}
+		}
+	}
+
+	/**
+	 * Loads all position registers into the contents of the pendant display.
+	 */
+	public void loadPositionRegisters() {
+		// Display a subset of the list of registers
+		for (int idx = 0; idx < Fields.DPREG_NUM; ++idx) {
+			PositionRegister reg = activeRobot.getPReg(idx);
+			// Display the comment associated with a specific Register entry
+			String regLbl = reg.toStringWithComm();
+			// Display Register edit prompt (* if uninitialized)
+			String regEntry = (reg.point == null) ? "*" : "...Edit...";
+
+			contents.addLine(regLbl, regEntry);
 		}
 	}
 
@@ -6947,7 +7040,7 @@ public class RobotRun extends PApplet {
 		// Programs and instructions
 		case NAV_PROGRAMS:
 			// Stop Robot movement (i.e. program execution)
-			hd();
+			hold();
 			contents.setLineIdx(getActiveRobot().getActiveProgIdx());
 			contents.setColumnIdx(0);
 			getActiveRobot().setActiveInstIdx(0);
@@ -7354,6 +7447,12 @@ public class RobotRun extends PApplet {
 		return (mStr + "\n");
 	}
 
+	// Menu button
+	public void menu() {
+		resetStack();
+		nextScreen(ScreenMode.NAV_MAIN_MENU);
+	}
+
 	public void mouseDragged(MouseEvent e) {
 		if (mouseButton == CENTER) {
 			// Drag the center mouse button to pan the camera
@@ -7427,12 +7526,6 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	// Menu button
-	public void mu() {
-		resetStack();
-		nextScreen(ScreenMode.NAV_MAIN_MENU);
-	}
-
 	public void MVMU() {
 		if (getSU_macro_bindings()[2] != null && isShift()) {
 			getSU_macro_bindings()[2].execute();
@@ -7447,17 +7540,6 @@ public class RobotRun extends PApplet {
 			p.overwriteInstruction(getActiveRobot().getActiveInstIdx(), call);
 		} else {
 			p.addInstruction(call);
-		}
-	}
-
-	public void newRobotCallInstruction() {
-		Program p = getActiveRobot().getActiveProg();
-		CallInstruction rcall = new CallInstruction(getInactiveRobot());
-
-		if (getActiveRobot().getActiveInstIdx() != p.getInstructions().size()) {
-			p.overwriteInstruction(getActiveRobot().getActiveInstIdx(), rcall);
-		} else {
-			p.addInstruction(rcall);
 		}
 	}
 
@@ -7634,6 +7716,17 @@ public class RobotRun extends PApplet {
 			p.overwriteInstruction(getActiveRobot().getActiveInstIdx(), stmt);
 		} else {
 			p.addInstruction(stmt);
+		}
+	}
+
+	public void newRobotCallInstruction() {
+		Program p = getActiveRobot().getActiveProg();
+		CallInstruction rcall = new CallInstruction(getInactiveRobot());
+
+		if (getActiveRobot().getActiveInstIdx() != p.getInstructions().size()) {
+			p.overwriteInstruction(getActiveRobot().getActiveInstIdx(), rcall);
+		} else {
+			p.addInstruction(rcall);
 		}
 	}
 
@@ -7855,20 +7948,8 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void pr() {
+	public void prev() {
 		lastScreen();
-	}
-
-	public void RESET() {
-		if (isShift()) {
-			hd();
-			// Reset motion fault for the active robot
-			RoboticArm r = getActiveRobot();
-
-			if (r != null) {
-				r.setMotionFault(false);
-			}
-		}
 	}
 
 	/**
@@ -7884,6 +7965,18 @@ public class RobotRun extends PApplet {
 				Part p = (Part) wo;
 				p.setLocalCenter(p.getDefaultCenter());
 				p.setLocalOrientationAxes(p.getDefaultOrientationAxes());
+			}
+		}
+	}
+
+	public void RESET() {
+		if (isShift()) {
+			hold();
+			// Reset motion fault for the active robot
+			RoboticArm r = getActiveRobot();
+
+			if (r != null) {
+				r.setMotionFault(false);
 			}
 		}
 	}
@@ -7915,7 +8008,7 @@ public class RobotRun extends PApplet {
 	public void returnRobot(int rid) {
 		if (rid >= 0 && rid < ROBOTS.size() && ROBOTS.get(rid) != activeRobot) {
 			if (activeRobot != null) {
-				hd();
+				hold();
 			}
 
 			activeRobot = ROBOTS.get(rid);
@@ -7925,7 +8018,7 @@ public class RobotRun extends PApplet {
 				nextScreen(ScreenMode.NAV_PROG_INSTR);
 
 				if (!shift) {
-					sf();
+					shift();
 				}
 			}
 		}
@@ -7953,16 +8046,16 @@ public class RobotRun extends PApplet {
 
 		System.out.println(String.format("SConfirm: %d\n", ret));
 	}
-
+	
 	// Select button
-	public void se() {
+	public void select() {
 		getActiveRobot().setActiveProgIdx(0);
 		getActiveRobot().setActiveInstIdx(-1);
 
 		resetStack();
 		nextScreen(ScreenMode.NAV_PROGRAMS);
 	}
-	
+
 	/**
 	 * Sets the scenario with the given name as the active scenario in the
 	 * application, if a scenario with the given name exists.
@@ -8013,7 +8106,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void setRobot(int rdx) {
 		if (rdx >= 0 && rdx < ROBOTS.size() && ROBOTS.get(rdx) != getActiveRobot()) {
-			hd();
+			hold();
 
 			RoboticArm prevActive = activeRobot;
 			activeRobot = ROBOTS.get(rdx);
@@ -8177,14 +8270,14 @@ public class RobotRun extends PApplet {
 	} // end setUpInstruction
 
 	// toggle shift on/ off and button highlight
-	public void sf() {
+	public void shift() {
 		if (!isShift()) {
-			((Button) cp5.get("sf")).setColorBackground(Fields.BUTTON_ACTIVE);
+			((Button) cp5.get("shift")).setColorBackground(Fields.BUTTON_ACTIVE);
 
 		} else {
 			// Stop Robot jog movement when shift is off
-			hd();
-			((Button) cp5.get("sf")).setColorBackground(Fields.BUTTON_DEFAULT);
+			hold();
+			((Button) cp5.get("shift")).setColorBackground(Fields.BUTTON_DEFAULT);
 		}
 
 		setShift(!isShift());
@@ -8427,29 +8520,22 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	// toggle step on/off and button highlight
-	public void st() {
-		if (!isStep()) {
-			((Button) cp5.get("st")).setColorBackground(Fields.BUTTON_ACTIVE);
-		} else {
-			((Button) cp5.get("st")).setColorBackground(Fields.BUTTON_DEFAULT);
-		}
-
-		setStep(!isStep());
-		updateScreen();
-	}
-
-	@Override
-	public void dispose() {
-		// Save data before exiting
-		DataManagement.saveState(this);
-		super.dispose();
-	}
-
 	public void STATUS() {
 		if (getSU_macro_bindings()[4] != null && isShift()) {
 			getSU_macro_bindings()[4].execute();
 		}
+	}
+
+	// toggle step on/off and button highlight
+	public void step() {
+		if (!isStep()) {
+			((Button) cp5.get("step")).setColorBackground(Fields.BUTTON_ACTIVE);
+		} else {
+			((Button) cp5.get("step")).setColorBackground(Fields.BUTTON_DEFAULT);
+		}
+
+		setStep(!isStep());
+		updateScreen();
 	}
 
 	/**
@@ -8514,7 +8600,7 @@ public class RobotRun extends PApplet {
 	 * execution.
 	 */
 	public void triggerFault() {
-		hd();
+		hold();
 
 		RoboticArm r = getActiveRobot();
 
@@ -8643,7 +8729,7 @@ public class RobotRun extends PApplet {
 				&& getActiveRobot().getActiveToolFrame() < Fields.FRAME_NUM)) {
 			getActiveRobot().setCurCoordFrame(CoordFrame.WORLD);
 			// Stop Robot movement
-			hd();
+			hold();
 		}
 
 		// Return to the World Frame, if no User Frame is active
@@ -8651,7 +8737,7 @@ public class RobotRun extends PApplet {
 				&& getActiveRobot().getActiveUserFrame() < Fields.FRAME_NUM)) {
 			getActiveRobot().setCurCoordFrame(CoordFrame.WORLD);
 			// Stop Robot movement
-			hd();
+			hold();
 		}
 	}
 
@@ -8694,6 +8780,23 @@ public class RobotRun extends PApplet {
 				posButton.setColorBackground(Fields.BUTTON_DEFAULT);
 			}
 		}
+	}
+
+	/**
+	 * Push a world object onto the undo stack for world objects.
+	 * 
+	 * @param saveState
+	 *            The world object to save
+	 */
+	public void updateScenarioUndo(WorldObject saveState) {
+
+		// Only the latest 10 world object save states can be undone
+		if (SCENARIO_UNDO.size() >= 40) {
+			// Not sure if size - 1 should be used instead
+			SCENARIO_UNDO.remove(0);
+		}
+
+		SCENARIO_UNDO.push(saveState);
 	}
 
 	// update text displayed on screen
@@ -8747,23 +8850,6 @@ public class RobotRun extends PApplet {
 					.setColorValue(Fields.UI_DARK).setColorBackground(Fields.UI_LIGHT).hideScrollbar().moveTo(g1);
 		}
 	} // end updateScreen()
-
-	/**
-	 * Push a world object onto the undo stack for world objects.
-	 * 
-	 * @param saveState
-	 *            The world object to save
-	 */
-	public void updateScenarioUndo(WorldObject saveState) {
-
-		// Only the latest 10 world object save states can be undone
-		if (SCENARIO_UNDO.size() >= 40) {
-			// Not sure if size - 1 should be used instead
-			SCENARIO_UNDO.remove(0);
-		}
-
-		SCENARIO_UNDO.push(saveState);
-	}
 
 	/**
 	 * Updates the default position and orientation of a world object based on
