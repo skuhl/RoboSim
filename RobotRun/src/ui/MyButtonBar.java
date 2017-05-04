@@ -11,14 +11,15 @@ import window.WindowManager;
 import window.WindowTab;
 
 /**
- * A extension of ControlP5's ButtonBar object that works with the WindowManager
- * to control the main UI view.
+ * A extension of ControlP5's ButtonBar class, which includes a method to get
+ * the label of the active button on the bar as well as functionality for
+ * drag clicks.
  * 
  * @author Joshua Hooker
  */
-public class ButtonTabs extends ButtonBar {
+public class MyButtonBar extends ButtonBar {
 
-	public ButtonTabs(ControlP5 parent, String name) {
+	public MyButtonBar(ControlP5 parent, String name) {
 		super(parent, name);
 	}
 	
@@ -44,5 +45,11 @@ public class ButtonTabs extends ButtonBar {
 		
 		// No active button?
 		return null;
+	}
+	
+	@Override
+	protected void onEndDrag() {
+		// Allow drag clicks
+		onClick();
 	}
 }

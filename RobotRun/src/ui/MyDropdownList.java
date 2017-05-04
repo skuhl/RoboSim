@@ -3,6 +3,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import controlP5.CallbackEvent;
+import controlP5.CallbackListener;
 import controlP5.ControlP5;
 import controlP5.ControllerGroup;
 import controlP5.DropdownList;
@@ -10,16 +11,21 @@ import robot.RobotRun;
 
 /**
  * An extension of the DropdownList class in ControlP5 that allows easier access
- * of the currently selected element's value.
+ * of the currently selected element's value as well as functionality for
+ * controlEvents involving the change in value of the dropdown list.
+ * 
+ * @author Joshua Hooker
  */
 public class MyDropdownList extends DropdownList {
 	
-	protected MyDropdownList( ControlP5 theControlP5 , ControllerGroup< ? > theGroup , String theName , int theX , int theY , int theW , int theH ) {
-		super( theControlP5 , theGroup , theName , theX , theY , theW , theH );
-	}
-
-	public MyDropdownList( ControlP5 theControlP5 , String theName ) {
+	public MyDropdownList(ControlP5 theControlP5, String theName) {
 		super(theControlP5, theName);
+	}
+	
+	protected MyDropdownList(ControlP5 theControlP5, ControllerGroup<?> theGroup,
+			String theName, int theX, int theY, int theW, int theH) {
+		
+		super(theControlP5, theGroup, theName, theX, theY, theW, theH);
 	}
 	
 	/**
@@ -65,6 +71,22 @@ public class MyDropdownList extends DropdownList {
 	}
 	
 	@Override
+	protected void onDrag() {
+		// Show what element is selected while dragging the mouse
+		onMove();
+	}
+	
+	@Override
+	protected void onEndDrag() {
+		// Allow drag clicks
+		
+		// I hate you controlP5
+		isDragged = false;
+		this.onRelease();
+		isDragged = true;
+	}
+	
+	@Override
 	protected void onRelease() {
 		try {
 			super.onRelease();
@@ -75,7 +97,7 @@ public class MyDropdownList extends DropdownList {
 	}
 	
 	@Override
-	public DropdownList setValue(float newValue) {
+	public MyDropdownList setValue(float newValue) {
 		super.setValue(newValue);
 		updateLabel();
 		return this;

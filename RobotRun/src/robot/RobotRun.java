@@ -1021,11 +1021,6 @@ public class RobotRun extends PApplet {
 
 		return ret;
 	}
-	
-	/**
-	 * Whether the mouse is currently being dragged or not.
-	 */
-	private boolean mouseDrag;
 
 	private final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
 	private final Stack<WorldObject> SCENARIO_UNDO = new Stack<WorldObject>();
@@ -6057,10 +6052,6 @@ public class RobotRun extends PApplet {
 	public boolean isExecutingInstruction() {
 		return executingInstruction;
 	}
-	
-	public boolean isMouseDragged() {
-		return mouseDrag;
-	}
 
 	public boolean isProgramRunning() {
 		return programRunning;
@@ -7389,11 +7380,6 @@ public class RobotRun extends PApplet {
 		return (mStr + "\n");
 	}
 
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		mouseDrag = false;
-	}
-
 	public void mouseDragged(MouseEvent e) {
 		if (mouseButton == CENTER) {
 			// Drag the center mouse button to pan the camera
@@ -7405,10 +7391,6 @@ public class RobotRun extends PApplet {
 			// Drag right mouse button to rotate the camera
 			float rotScale = DEG_TO_RAD / 4f;
 			camera.rotate(rotScale * (mouseY - pmouseY), rotScale * (mouseX - pmouseX), 0);
-		}
-		
-		if (mouseButton == LEFT) {
-			mouseDrag = true;
 		}
 	}
 
@@ -8094,8 +8076,6 @@ public class RobotRun extends PApplet {
 		instance = this;
 		letterStates = new int[] { 0, 0, 0, 0, 0 };
 		workingText = new StringBuilder();
-		
-		mouseDrag = false;
 		
 		g1_px = 0;
 		g1_py = Fields.SMALL_BUTTON - 14; // the left-top corner of group 1

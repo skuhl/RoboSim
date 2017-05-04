@@ -8,9 +8,6 @@ import java.util.regex.Pattern;
 
 import controlP5.Background;
 import controlP5.Button;
-import controlP5.ButtonBar;
-import controlP5.CallbackEvent;
-import controlP5.CallbackListener;
 import controlP5.ControlEvent;
 import controlP5.ControlListener;
 import controlP5.ControlP5;
@@ -19,7 +16,6 @@ import controlP5.DropdownList;
 import controlP5.Group;
 import controlP5.RadioButton;
 import controlP5.Textarea;
-import controlP5.Textfield;
 import controlP5.Toggle;
 import geom.Box;
 import geom.Cylinder;
@@ -38,12 +34,13 @@ import robot.Fixture;
 import robot.RobotRun;
 import robot.Scenario;
 import ui.AxesDisplay;
-import ui.ButtonTabs;
+import ui.MyButton;
+import ui.MyButtonBar;
 import ui.MyDropdownList;
 import ui.MyTextfield;
 import ui.RelativePoint;
 
-public class WindowManager implements ControlListener, CallbackListener {
+public class WindowManager implements ControlListener {
 	
 	public static final int offsetX = 10,
 							radioDim = 16,
@@ -74,24 +71,12 @@ public class WindowManager implements ControlListener, CallbackListener {
 	private final ControlP5 UIManager;
 	private final RobotRun app;
 	
-	/**
-	 * Maps each controller's name to a previous mouse even, which was
-	 * triggered on the controller.
-	 */
-	private final HashMap<String, Integer> mouseEventFor;
-	
-	/**
-	 * My instance of ControlP5's mouse event, updated with callback events
-	 */
-	private int mouseState;
-	private boolean isMouseDown;
-	
 	private WindowTab menu;
 
 	private Group createObjWindow, editObjWindow,
 				  sharedElements, scenarioWindow, miscWindow;
 	
-	private final ButtonTabs windowTabs;
+	private final MyButtonBar windowTabs;
 	private final Background background;
 	
 	/**
@@ -119,18 +104,16 @@ public class WindowManager implements ControlListener, CallbackListener {
 		UIManager = manager;		 
 		app = appRef;
 		menu = null;
-		mouseEventFor = new HashMap<String, Integer>();
 		lastModImport = null;
 		
 		manager.addListener(this);
-		manager.addCallback(this);
 
 		int[] relPos = new int[] { 0, 0 };
 		
 		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
 		
 		// Create window tab bar
-		windowTabs = (ButtonTabs)(new ButtonTabs(UIManager, "Tabs")
+		windowTabs = (MyButtonBar)(new MyButtonBar(UIManager, "Tabs")
 			 // Sets button text color
 			 .setColorValue(B_TEXT_C)
 			 .setColorBackground(B_DEFAULT_C)
@@ -323,18 +306,19 @@ public class WindowManager implements ControlListener, CallbackListener {
 	 * @param lblFont
 	 * @return
 	 */
-	private Button addButton(String name, String lblTxt, Group parent, int wdh,
+	private MyButton addButton(String name, String lblTxt, Group parent, int wdh,
 			int hgt, PFont lblFont) {
 		
-		Button b = UIManager.addButton(name)
-				 			.setCaptionLabel(lblTxt)
-				 			.setColorValue(B_TEXT_C)
-				 			.setColorBackground(B_DEFAULT_C)
-				 			.setColorActive(B_DEFAULT_C)
-				 			.moveTo(parent)
-				 			.setSize(wdh, hgt);
+		MyButton b = new MyButton(UIManager, name);
 		
-		b.getCaptionLabel().setFont(lblFont);
+		b.setCaptionLabel(lblTxt)
+		 .setColorValue(B_TEXT_C)
+		 .setColorBackground(B_DEFAULT_C)
+		 .setColorActive(B_DEFAULT_C)
+	 	 .moveTo(parent)
+		 .setSize(wdh, hgt)
+		 .getCaptionLabel().setFont(lblFont);
+		
 		return b;
 	}
 	
@@ -550,55 +534,6 @@ public class WindowManager implements ControlListener, CallbackListener {
 				
 			 }
 		 }
-	}
-	
-	@Override
-	public void controlEvent(CallbackEvent arg0) {
-		
-		/* Handle mouse drags */
-		
-		ControllerInterface<?> t = arg0.getController();
-		
-		if (t.isVisible()) {
-			
-			if (t instanceof Button || t instanceof ButtonBar || t instanceof MyDropdownList || t instanceof MyTextfield) {
-				
-				if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_PRESS) {
-					mouseEventFor.put(t.getName(), arg0.getAction());
-					//System.out.printf("Mouse pressed over %s\n", t.getName());
-					
-				} else if (arg0.getAction() == ControlP5.ACTION_LEAVE) {
-					mouseEventFor.put(t.getName(), arg0.getAction());
-					//System.out.printf("Mouse left %s\n", t.getName());
-					
-				} else if (t.isMouseOver() && arg0.getAction() == ControlP5.ACTION_RELEASE) {
-					
-					Integer mouseEvent = mouseEventFor.get(t.getName());
-					
-					if (mouseEvent != null && mouseEvent == ControlP5.ACTION_PRESS && app.isMouseDragged()) {
-						mouseEventFor.put(t.getName(), ControlP5.ACTION_RELEASE);
-						
-						if (t instanceof Button) {
-							((Button) t).onClick(this);
-							
-						} else if (t instanceof ButtonBar) {
-							((ButtonBar) t).onClick(this);
-							
-						} else if (t instanceof MyDropdownList) {
-							((MyDropdownList) t).onClick(this);
-							
-						} else if (t instanceof MyTextfield) {
-							((MyTextfield) t).onClick(this);
-						}
-						
-						//System.out.printf("Mouse drag-clicked over %s\n", t.getName());
-					}
-				}
-				
-			}
-			
-		}
-		
 	}
 
 	 /**

@@ -6,7 +6,8 @@ import controlP5.ControlP5;
 import controlP5.Textfield;
 
 /**
- * My version of the Textfield, that will hopefully fix the delete key function ...
+ * My version of the Textfield, that includes the correct functionality for
+ * the delete key as well as controlEvents for entering text in the textfield.
  * 
  * @author Joshua Hooker
  */
