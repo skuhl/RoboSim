@@ -1,6 +1,6 @@
 package robot;
 
-import processing.core.*;
+import processing.core.PVector;
 
 /**
  * A form of orientation in the complex plain.

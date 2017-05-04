@@ -84,7 +84,7 @@ public abstract class DataManagement {
 		}
 		// Search for all .stl files
 		File[] dataFiles = data.listFiles();
-		ArrayList<String> fileNames = new ArrayList<String>(dataFiles.length);
+		ArrayList<String> fileNames = new ArrayList<>(dataFiles.length);
 		
 		for (File file : dataFiles) {
 			String name = file.getName();
@@ -146,7 +146,7 @@ public abstract class DataManagement {
 
 			} else if (opType == ExpressionElement.DREG ||
 					opType == ExpressionElement.IOREG ||
-					opType == Expression.PREG ||
+					opType == ExpressionElement.PREG ||
 					opType == ExpressionElement.PREG_IDX) {
 				// Note: the register value of the operand is set to null!
 
@@ -426,14 +426,14 @@ public abstract class DataManagement {
 			boolean isCommented = in.readBoolean();
 			ExprOperand arg = (ExprOperand)loadExpressionElement(robot, in);
 			
-			ArrayList<ExprOperand> cases = new ArrayList<ExprOperand>();
+			ArrayList<ExprOperand> cases = new ArrayList<>();
 			int size = in.readInt();
 			
 			while (size-- > 0) {
 				cases.add( (ExprOperand)loadExpressionElement(robot, in) );
 			}
 			
-			ArrayList<Instruction> insts = new ArrayList<Instruction>();
+			ArrayList<Instruction> insts = new ArrayList<>();
 			size = in.readInt();
 			
 			while (size-- > 0) {
@@ -712,9 +712,9 @@ public abstract class DataManagement {
 			String name = in.readUTF();
 			Scenario s = new Scenario(name);
 			// An extra set of only the loaded fixtures
-			ArrayList<Fixture> fixtures = new ArrayList<Fixture>();
+			ArrayList<Fixture> fixtures = new ArrayList<>();
 			// A list of parts which have a fixture reference defined
-			ArrayList<LoadedPart> partsWithReferences = new ArrayList<LoadedPart>();
+			ArrayList<LoadedPart> partsWithReferences = new ArrayList<>();
 
 			// Read the number of objects in the scenario
 			int size = in.readInt();
@@ -991,7 +991,7 @@ public abstract class DataManagement {
 
 				} else if (eo.type == ExpressionElement.DREG ||
 						eo.type == ExpressionElement.IOREG ||
-						eo.type == Expression.PREG ||
+						eo.type == ExpressionElement.PREG ||
 						eo.type == ExpressionElement.PREG_IDX) {
 
 					// Data, Position, or IO register
@@ -1446,8 +1446,8 @@ public abstract class DataManagement {
 			int numOfREntries = 0,
 				numOfPREntries = 0;
 
-			ArrayList<Integer> initializedR = new ArrayList<Integer>(),
-					initializedPR = new ArrayList<Integer>();
+			ArrayList<Integer> initializedR = new ArrayList<>(),
+					initializedPR = new ArrayList<>();
 
 			// Count the number of initialized entries and save their indices
 			for(int idx = 0; idx < Fields.DPREG_NUM; ++idx) {

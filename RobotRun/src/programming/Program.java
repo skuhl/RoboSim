@@ -3,7 +3,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
-
 import geom.Point;
 import global.Fields;
 import robot.RobotRun;
@@ -26,8 +25,8 @@ public class Program {
 		name = s;
 		robot = r;
 		nextPosition = 0;
-		LPosReg = new HashMap<Integer, Point>();
-		instructions = new ArrayList<Instruction>();
+		LPosReg = new HashMap<>();
+		instructions = new ArrayList<>();
 	}
 
 	public void addInstruction(Instruction i) {
@@ -59,6 +58,7 @@ public class Program {
 	/**
 	 * Return an independent replica of this program object.
 	 */
+	@Override
 	public Program clone() {
 		Program copy = new Program(name, robot);
 
@@ -158,7 +158,7 @@ public class Program {
 	}
 	
 	public ArrayList<DisplayLine> printInstrList() {
-		ArrayList<DisplayLine> instruct_list = new ArrayList<DisplayLine>();
+		ArrayList<DisplayLine> instruct_list = new ArrayList<>();
 		int tokenOffset = Fields.TXT_PAD - Fields.PAD_OFFSET;
 
 		Program p = this;

@@ -1,9 +1,10 @@
 package frame;
-import robot.RoboticArm;
+import geom.Point;
+import processing.core.PConstants;
+import processing.core.PVector;
 import robot.RQuaternion;
 import robot.RobotRun;
-import geom.Point;
-import processing.core.PVector;
+import robot.RoboticArm;
 
 public class ToolFrame extends Frame {
 	// The TCP offset associated with this frame
@@ -171,7 +172,7 @@ public class ToolFrame extends Frame {
 
 		PVector displayOffset;
 		// Convert angles to degrees
-		PVector wpr = RobotRun.quatToEuler(orientationOffset).mult(RobotRun.RAD_TO_DEG);
+		PVector wpr = RobotRun.quatToEuler(orientationOffset).mult(PConstants.RAD_TO_DEG);
 
 		displayOffset = getTCPOffset();
 

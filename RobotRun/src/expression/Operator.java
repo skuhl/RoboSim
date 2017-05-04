@@ -56,6 +56,7 @@ public enum Operator implements ExpressionElement {
 		type = t;
 	}
 
+	@Override
 	public int getLength() {
 		return 1;
 	}
@@ -87,10 +88,12 @@ public enum Operator implements ExpressionElement {
 		}
 	}
 
+	@Override
 	public String toString() {
 		return symbol;
 	}
 
+	@Override
 	public String[] toStringArray() {
 		return new String[] { toString() };
 	}

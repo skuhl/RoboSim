@@ -1,7 +1,5 @@
 package ui;
 
-import com.sun.glass.events.KeyEvent;
-
 import controlP5.ControlP5;
 import controlP5.Textfield;
 
