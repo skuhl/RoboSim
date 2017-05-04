@@ -231,7 +231,7 @@ public class RoboticArm {
 
 		eeOBBsMap = new HashMap<>();
 		eePickupOBBs = new HashMap<>();
-		// FaceplateD
+		// Faceplate
 		ArrayList<BoundingBox> limbo = new ArrayList<BoundingBox>();
 		limbo.add( new BoundingBox(36, 96, 96) );
 		eeOBBsMap.put(EEType.NONE, limbo);
