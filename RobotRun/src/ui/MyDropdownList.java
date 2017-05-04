@@ -80,10 +80,10 @@ public class MyDropdownList extends DropdownList {
 	protected void onEndDrag() {
 		// Allow drag clicks
 		
-		// I hate you controlP5
-		isDragged = false;
-		this.onRelease();
-		isDragged = true;
+		// I hate you, controlP5
+		this.isDragged = false;
+		onRelease();
+		this.isDragged = true;
 	}
 	
 	@Override
