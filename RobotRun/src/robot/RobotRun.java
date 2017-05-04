@@ -7367,15 +7367,6 @@ public class RobotRun extends PApplet {
 		return (mStr + "\n");
 	}
 
-<<<<<<< HEAD
-=======
-	@Override
-	public void mouseReleased(MouseEvent e) {
-
-	}
-
-	@Override
->>>>>>> d7651ac1415ce5ac14afcdc74ad107bdce76fde4
 	public void mouseDragged(MouseEvent e) {
 		if (mouseButton == CENTER) {
 			// Drag the center mouse button to pan the camera

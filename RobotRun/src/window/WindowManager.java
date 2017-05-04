@@ -8,11 +8,6 @@ import java.util.regex.Pattern;
 
 import controlP5.Background;
 import controlP5.Button;
-<<<<<<< HEAD
-=======
-import controlP5.CallbackEvent;
-import controlP5.CallbackListener;
->>>>>>> d7651ac1415ce5ac14afcdc74ad107bdce76fde4
 import controlP5.ControlEvent;
 import controlP5.ControlListener;
 import controlP5.ControlP5;
@@ -141,10 +136,7 @@ public class WindowManager implements ControlListener {
 		UIManager = manager;		 
 		app = appRef;
 		menu = null;
-<<<<<<< HEAD
-=======
-		mouseEventFor = new HashMap<>();
->>>>>>> d7651ac1415ce5ac14afcdc74ad107bdce76fde4
+		
 		lastModImport = null;
 		
 		manager.addListener(this);
