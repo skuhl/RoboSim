@@ -2534,23 +2534,6 @@ public class RobotRun extends PApplet {
 			// Display the point with its local orientation axes
 			displayOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
 		}
-<<<<<<< HEAD
-
-		/*
-		 * TESTING CODE: DRAW INTERMEDIATE POINTS* if(Fields.DEBUG &&
-		 * intermediatePositions != null) { int count = 0; for(Point p :
-		 * intermediatePositions) { if(count % 4 == 0) { pushMatrix();
-		 * stroke(0); translate(p.position.x, p.position.y, p.position.z);
-		 * sphere(5); popMatrix(); }
-		 * 
-		 * count += 1; } } /
-		 **/
-		
-		c.setOrientation(activeRobot.getOrientation());
-		PVector near[] = c.getPlane(90, 1, 10);
-		PVector far[] = c.getPlane(90, 1, 100);
-		for (int i = 0; i < 4; i += 1) {
-=======
 		
 		/*TESTING CODE: DRAW INTERMEDIATE POINTS*
 		if(Fields.DEBUG && intermediatePositions != null) {
@@ -2577,7 +2560,6 @@ public class RobotRun extends PApplet {
 		PVector near[] = c.getPlane(90, 2, 10);
 		PVector far[] = c.getPlane(90, 2, 100);
 		for(int i = 0; i < 4; i += 1) {
->>>>>>> 86cffc5822aea641b72f4bc70cb35cbc2af2558e
 			pushMatrix();
 			stroke(0);
 			translate(near[i].x, near[i].y, near[i].z);
