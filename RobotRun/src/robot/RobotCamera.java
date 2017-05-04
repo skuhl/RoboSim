@@ -29,6 +29,18 @@ public class RobotCamera {
 		scene = s;
 	}
 	
+	public static void main(String args[]) {
+		RobotCamera c = new RobotCamera(200, 0, 200, new RQuaternion(), 90, 1, 10, 500, null);
+		Box b = new Box(0, 5, 100);
+		float[][] axes = new float[][] { {1, 0, 0},
+									 	  {0, 1, 0},
+									 	  {0, 0, 1} };
+		CoordinateSystem coord = new CoordinateSystem(new PVector(250, 0, 200), axes);
+		Fixture f = new Fixture("test", b, coord);
+		
+		System.out.println("is object in frame? " + c.checkObjectInFrame(f));
+	}
+	
 	public RobotCamera setOrientation(RQuaternion o) {
 		camOrient = o;
 		return this;
@@ -49,6 +61,10 @@ public class RobotCamera {
 		}
 		
 		return closeObj;
+	}
+	
+	public float[][] getOrientationMat() {
+		return camOrient.toMatrix();
 	}
 	
 	/**
@@ -79,6 +95,7 @@ public class RobotCamera {
 	 */
 	public int checkObjectInFrame(WorldObject o) {
 		PVector objCenter = o.getLocalCenter();
+		System.out.println("obj loc: " + objCenter.toString());
 		if(checkPointInFrame(objCenter)) {
 			return 1;
 		}
@@ -88,13 +105,15 @@ public class RobotCamera {
 	
 	public boolean checkPointInFrame(PVector p) {
 		float coord[][] = camOrient.toMatrix();
+		PVector lookVect = new PVector(coord[0][0], coord[0][1], coord[0][2]);
+		PVector ltVect = new PVector(coord[1][0], coord[1][1], coord[1][2]);
+		PVector upVect = new PVector(coord[2][0], coord[2][1], coord[2][2]);
 		
-		PVector upVect = new PVector(coord[0][0], -coord[0][2], coord[0][1]);
-		PVector ltVect = new PVector(coord[1][0], -coord[1][2], coord[1][1]);
-		PVector lookVect = new PVector(coord[2][0], -coord[2][2], coord[2][1]);
 		PVector toObj = new PVector(p.x - camPos.x, p.y - camPos.y, p.z - camPos.z);
-		
+		System.out.println("to obj: " + toObj.toString());
+		System.out.println("look vec: " + lookVect.toString());
 		float dist = toObj.dot(lookVect);
+		System.out.println("dist: " + dist);
 		if(dist > camClipFar || dist < camClipNear) { return false;	}
 		
 		float width = getPlaneWidth(camFOV, camAspectRatio, dist);
@@ -146,10 +165,10 @@ public class RobotCamera {
 		float width = getPlaneWidth(fov, aspectRatio, dist);
 		
 		// Produce a coordinate system based on camera orientation
-		float[][] coord = RobotRun.quatToMatrix(camOrient);
-		PVector upVect = new PVector(coord[0][0], -coord[0][2], coord[0][1]);
-		PVector ltVect = new PVector(coord[1][0], -coord[1][2], coord[1][1]);
-		PVector lookVect = new PVector(coord[2][0], -coord[2][2], coord[2][1]);
+		float[][] coord = camOrient.toMatrix();
+		PVector lookVect = new PVector(coord[0][0], coord[0][1], coord[0][2]);
+		PVector ltVect = new PVector(coord[1][0], coord[1][1], coord[1][2]);
+		PVector upVect = new PVector(coord[2][0], coord[2][1], coord[2][2]);
 		
 		PVector center = new PVector(camPos.x + lookVect.x * dist,
 									 camPos.y + lookVect.y * dist,

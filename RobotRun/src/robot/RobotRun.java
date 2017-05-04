@@ -13,6 +13,8 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
+import com.sun.prism.paint.Color;
+
 import controlP5.Button;
 import controlP5.ControlP5;
 import controlP5.Group;
@@ -26,6 +28,7 @@ import frame.CoordFrame;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
+import geom.Box;
 import geom.Part;
 import geom.Point;
 import geom.Triangle;
@@ -71,6 +74,7 @@ public class RobotRun extends PApplet {
 	/*******************************/
 	
 	RobotCamera c;
+	Fixture f;
 	public static final float[][] WORLD_AXES;
 	private static final char[][] letters;
 	
@@ -550,6 +554,7 @@ public class RobotRun extends PApplet {
 
 		return inverse;
 	}
+	
 	public static void main(String[] args) {
 		String[] appletArgs = new String[] { "robot.RobotRun" };
 		
@@ -717,6 +722,8 @@ public class RobotRun extends PApplet {
 		applyModelRotation(model, jointAngles);
 		// Apply offset
 		PVector ee = instance.getCoordFromMatrix(offset.x, offset.y, offset.z);
+		instance.rotateY(PI/2);
+		instance.rotateX(-PI/2);
 		float[][] orientationMatrix = instance.getRotationMatrix();
 		instance.popMatrix();
 		// Return a Point containing the EE position, orientation, and joint angles
@@ -2401,28 +2408,55 @@ public class RobotRun extends PApplet {
 			}
 		}
 		/**/
-	
-		c.setOrientation(activeRobot.getOrientation());
-		PVector near[] = c.getPlane(90, 1, 10);
-		PVector far[] = c.getPlane(90, 1, 100);
+		
+		/*Camera Test Code */
+		/*Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
+		c.setOrientation(p.orientation);
+		displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
+		
+		PVector near[] = c.getPlane(90, 2, 10);
+		PVector far[] = c.getPlane(90, 2, 100);
 		for(int i = 0; i < 4; i += 1) {
 			pushMatrix();
 			stroke(0);
-			translate(-near[i].x, -near[i].z, near[i].y);
+			translate(near[i].x, near[i].y, near[i].z);
 			sphere(5);
 			popMatrix();
 			pushMatrix();
 			stroke(0);
-			translate(-far[i].x, -far[i].z, far[i].y);
+			translate(far[i].x, far[i].y, far[i].z);
 			sphere(5);
 			popMatrix();
+			pushMatrix();
+			stroke(50);
+			translate(f.getLocalCenter().x, f.getLocalCenter().y, f.getLocalCenter().z);
+			sphere(10);
+			popMatrix();
 		}
+		//System.out.println(c.checkObjectInFrame(f));
+		float[][] mat = c.getOrientationMat();
+		float[][] transmat = new float[3][3];
+		transmat[0][0] = -mat[0][0];
+		transmat[0][1] = -mat[0][1];
+		transmat[0][2] = -mat[0][2];
+		
+		transmat[1][0] = mat[2][0];
+		transmat[1][1] = mat[2][1];
+		transmat[1][2] = mat[2][2];
+		
+		transmat[2][0] = -mat[1][0];
+		transmat[2][1] = -mat[1][1];
+		transmat[2][2] = -mat[1][2];
+		for(int i = 0; i < 3; i += 1) {
+			System.out.println(String.format("[%12f, %12f, %12f]", transmat[i][0], transmat[i][1], transmat[i][2]));
+		}
+		System.out.println();*/
 		
 		noLights();
 		noStroke();
 		popMatrix();
 		
-		hint(DISABLE_DEPTH_TEST);
+		hint(DISABLE_DEPTH_TEST); 
 		// Apply the camera for drawing text and windows
 		ortho();
 		showMainDisplayText();
@@ -7960,7 +7994,13 @@ public class RobotRun extends PApplet {
 
 			buffer = new ArrayList<String>();
 			displayPoint = null;
-			c = new RobotCamera(200, 200, 200, robots.get(0).getOrientation(), 90, 1, 10, 100, null);
+			c = new RobotCamera(-200, -200, 0, robots.get(0).getOrientation(), 90, 1, 10, 100, null);
+			Box b = new Box(0, 5, 100);
+			float[][] axes = new float[][] { {1, 0, 0},
+										 	 {0, 1, 0},
+										 	 {0, 0, 1} };
+			CoordinateSystem coord = new CoordinateSystem(new PVector(-250, -200, 0), axes);
+			f = new Fixture("test", b, coord);
 			
 		} catch (NullPointerException NPEx) {
 			
