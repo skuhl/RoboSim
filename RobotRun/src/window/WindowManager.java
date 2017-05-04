@@ -37,11 +37,16 @@ import ui.AxesDisplay;
 import ui.MyButton;
 import ui.MyButtonBar;
 import ui.MyDropdownList;
+import ui.MyRadioButton;
 import ui.MyTextfield;
 import ui.RelativePoint;
 
 public class WindowManager implements ControlListener {
 	
+	/**
+	 * A dimension value (length, width, displacement, etc.), which is used to
+	 * format the layout of a window tab's visible elements.
+	 */
 	public static final int offsetX = 10,
 							radioDim = 16,
 							distBtwFieldsY = 15,
@@ -65,18 +70,43 @@ public class WindowManager implements ControlListener {
 							DIM_TXT = 3,
 							DIM_DDL = 1;
 	
+	/**
+	 * A color in the UI's color scheme.
+	 */
 	private final int BG_C, F_TEXT_C, F_CURSOR_C, F_ACTIVE_C, F_BG_C, F_FG_C,
 					  B_TEXT_C, B_DEFAULT_C, B_ACTIVE_C;
 
+	/**
+	 * The manager object, which contains all the UI elements.
+	 */
 	private final ControlP5 UIManager;
+	
+	/**
+	 * A reference to the application, in which the UI resides.
+	 */
 	private final RobotRun app;
 	
+	/**
+	 * The current state of the window tabs, which determines what window tab
+	 * is rendered.
+	 */
 	private WindowTab menu;
-
+	
+	/**
+	 * A group, which defines a set of elements belonging to a window tab, or
+	 * shared amongst the window tabs.
+	 */
 	private Group createObjWindow, editObjWindow,
 				  sharedElements, scenarioWindow, miscWindow;
 	
+	/**
+	 * The button bar controlling the window tab selection.
+	 */
 	private final MyButtonBar windowTabs;
+	
+	/**
+	 * The background shared amongst all windows
+	 */
 	private final Background background;
 	
 	/**
@@ -90,7 +120,7 @@ public class WindowManager implements ControlListener {
 	 * and the given fonts which will be applied to the text in the window.
 	 */
 	public WindowManager(RobotRun appRef, ControlP5 manager, PFont small, PFont medium) {
-		// Initialize content fields
+		// Initialize color scheme fields
 		BG_C = appRef.color(210);
 		F_TEXT_C = appRef.color(0);
 		F_CURSOR_C = appRef.color(0);
@@ -107,12 +137,15 @@ public class WindowManager implements ControlListener {
 		lastModImport = null;
 		
 		manager.addListener(this);
-
+		
+		/* A local reference to a position in the UI [x, y] used to position UI
+		 * elements relative to other UI elements */
 		int[] relPos = new int[] { 0, 0 };
 		
+		// The default set of labels for window tabs
 		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
 		
-		// Create window tab bar
+		// Initialize the window tab selection bar
 		windowTabs = (MyButtonBar)(new MyButtonBar(UIManager, "Tabs")
 			 // Sets button text color
 			 .setColorValue(B_TEXT_C)
@@ -132,7 +165,7 @@ public class WindowManager implements ControlListener {
 		addButton("TopView", "T", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
 		addButton("BottomView", "Bt", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
 		
-		// Initialize the window background
+		// Initialize the shared window background
 		relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_LEFT, 0, 0);
 		background = UIManager.addBackground("WindowBackground")
 							  .setPosition(relPos[0], relPos[1])
@@ -146,7 +179,7 @@ public class WindowManager implements ControlListener {
 		scenarioWindow = addGroup("SCENARIO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscWindow = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 
-		// Elements shared amongst the create and edit windows
+		// Initialize the elements shared amongst the create and edit windows
 		for (int idx = 0; idx < 3; ++idx) {
 			addTextarea(String.format("DimLbl%d", idx), String.format("Dim(%d):", idx),
 					sharedElements, fieldWidth, sButtonHeight, medium);
@@ -157,7 +190,7 @@ public class WindowManager implements ControlListener {
 		
 		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, small);
 		
-		// Create world object window elements
+		// Initialize the world object creation window elements
 		addTextarea("ObjTypeLbl", "Type:", createObjWindow, mLblWidth, sButtonHeight, medium);
 
 		addTextarea("ObjNameLbl", "Name:", createObjWindow, sLblWidth, fieldHeight, medium);
@@ -169,7 +202,7 @@ public class WindowManager implements ControlListener {
 
 		addButton("CreateWldObj", "Create", createObjWindow, mButtonWidth, sButtonHeight, small);
 		
-		// Edit world object window elements
+		// Initialize the world object edit window elements
 		addTextarea("ObjLabel", "Object:", editObjWindow, mLblWidth, fieldHeight, medium);
 		
 		addTextarea("Blank", "Inputs", editObjWindow, lLblWidth, fieldHeight, medium);
@@ -210,14 +243,19 @@ public class WindowManager implements ControlListener {
 
 		addButton("DeleteWldObj", "Delete", editObjWindow, mButtonWidth, sButtonHeight, small);
 		
-		// Scenario window elements
+		// Initialize the scenario window elements
 		addTextarea("SOptLbl", "Options:", scenarioWindow, mLblWidth, fieldHeight, medium);
 		
 		HashMap<Float, String> toggles = new HashMap<Float, String>();
 		toggles.put(0f, "New");
 		toggles.put(1f, "Load");
 		toggles.put(2f, "Rename");
-		addRadioButtons("ScenarioOpt", scenarioWindow, radioDim, radioDim, medium, toggles, 0f);
+		
+		RadioButton rb = addRadioButtons("ScenarioOpt", scenarioWindow, radioDim, radioDim, medium, toggles, 0f);
+		Toggle t = rb.getItem(0);
+		
+		rb.setItemsPerRow(3);
+		rb.setSpacingColumn( (background.getWidth() - 2 * offsetX - 3 * t.getWidth()) / 3 );
 		
 		addTextarea("SInstructions", "N/A", scenarioWindow, background.getWidth() - (2 * offsetX),
 				54, small).hideScrollbar();
@@ -225,14 +263,18 @@ public class WindowManager implements ControlListener {
 		addTextfield("SInput", scenarioWindow, fieldWidth, fieldHeight, medium);
 		addButton("SConfirm", "N/A", scenarioWindow, mButtonWidth, sButtonHeight, small);
 		
-		// Miscellaneous window elements
+		// Initialize the miscellaneous window elements
 		addTextarea("ActiveAxesDisplay", "Axes Display:", miscWindow, lLblWidth, sButtonHeight, medium);
 		addTextarea("ActiveEEDisplay", "EE Display:", miscWindow, lLblWidth, sButtonHeight, medium);
 		
 		addButton("ToggleOBBs", "Hide OBBs", miscWindow, lButtonWidth, sButtonHeight, small);
 		addButton("ToggleRobot", "Add Robot", miscWindow, lButtonWidth, sButtonHeight, small);
 
-		// Dropdown list elements
+		/* Initialize dropdown list elements
+		 * 
+		 * NOTE: the order in which the dropdown lists matters!
+		 * 		(Adding the dropdown lists last places them in front of the
+		 * other UI elements, which is important, when the list is open) */
 		DropdownList ddlLimbo = addDropdown("EEDisplay", miscWindow, ldropItemWidth, dropItemHeight, 4,
 				small);
 		ddlLimbo.addItem(EEMapping.DOT.toString(), EEMapping.DOT)
@@ -251,7 +293,7 @@ public class WindowManager implements ControlListener {
 		addDropdown("Fixture", editObjWindow, ldropItemWidth, dropItemHeight, 4, small);
 		 
 		for (int idx = 0; idx < 1; ++idx) {
-			// Dropdown lists for the dimension fields of an object
+			// dimension field dropdown lists
 			addDropdown(String.format("DimDdl%d", idx), sharedElements, ldropItemWidth,
 					dropItemHeight, 4, small);
 		}
@@ -296,15 +338,19 @@ public class WindowManager implements ControlListener {
 	}
 	
 	/**
-	 * TODO
+	 * Adds a button with the given name, label, parent, width, height, and font
+	 * to the UI. The UI's color scheme for a button are applied to the newly
+	 * added button.
 	 * 
-	 * @param name
-	 * @param lblTxt
-	 * @param parent
-	 * @param wdh
-	 * @param hgt
-	 * @param lblFont
-	 * @return
+	 * @param name		The name (or ID) of the UI element, which must unique
+	 * 					amongst all other UI elements!
+	 * @param lblTxt	The button's label or the text displayed on the button,
+	 * 					when it is rendered
+	 * @param parent	The window group, to which this button belongs
+	 * @param wdh		The width of the button
+	 * @param hgt		The length of the button
+	 * @param lblFont	The button's label font
+	 * @return			A reference to the new button
 	 */
 	private MyButton addButton(String name, String lblTxt, Group parent, int wdh,
 			int hgt, PFont lblFont) {
@@ -323,15 +369,21 @@ public class WindowManager implements ControlListener {
 	}
 	
 	/**
-	 * TODO
+	 * Adds an empty dropdown list with the given name, parent, label
+	 * dimensions, list display length, and label font to the UI. The UI's
+	 * color scheme is applied to the new dropdown list.
 	 * 
-	 * @param name
-	 * @param parent
-	 * @param lblWdh
-	 * @param lblHgt
-	 * @param listLen
-	 * @param lblFont
-	 * @return
+	 * @param name		The name (or ID) of the UI element, which must unique
+	 * 					amongst all other UI elements!
+	 * @param parent	The window group, to which this dropdown list belongs
+	 * @param lblWdh	The width of the dropdown list's label (as well as the
+	 * 					label for a single element)
+	 * @param lblHgt	The height of the dropdown list's label (as well as a
+	 * 					the label for single element in the list)
+	 * @param listLen	The maximum number of list elements to display at once
+	 * 					(the display is scrollable)
+	 * @param lblFont	The dropdown list's label font
+	 * @return			A reference to the new dropdown list
 	 */
 	private MyDropdownList addDropdown(String name, Group parent, int lblWdh,
 			int lblHgt, int listLen, PFont lblFont) {
@@ -352,14 +404,17 @@ public class WindowManager implements ControlListener {
 	}
 	
 	/**
-	 * TODO
+	 * Adds a new group to the UI. In this UI, a group defines a list of
+	 * elements rendered in a single window, or that are shared amongst
+	 * multiple windows.
 	 * 
-	 * @param name
-	 * @param posX
-	 * @param posY
-	 * @param wdh
-	 * @param hgt
-	 * @return
+	 * @param name	The name (or ID) of the UI group element, which must be
+	 * 				unique amongst all UI elements!
+	 * @param posX	The absolute (or reference) x position of the UI group
+	 * @param posY	The absolute (or reference) y position of the UI group
+	 * @param wdh	The width of the group element
+	 * @param hgt	The height of the group element
+	 * @return		A reference to the new group
 	 */
 	private Group addGroup(String name, int posX, int posY, int wdh, int hgt) {
 		return UIManager.addGroup(name).setPosition(posX, posY)
@@ -380,20 +435,19 @@ public class WindowManager implements ControlListener {
 	 * @param iniActive
 	 * @return
 	 */
-	private RadioButton addRadioButtons(String name, Group parent, int togWdh,
+	private MyRadioButton addRadioButtons(String name, Group parent, int togWdh,
 			int togHgt, PFont lblFont, HashMap<Float, String> elements,
 			Float iniActive) {
 		
-		RadioButton rb = UIManager.addRadioButton(name)
-				.setColorValue(B_DEFAULT_C)
-				.setColorLabel(F_TEXT_C)
-				.setColorActive(B_ACTIVE_C)
-				.setBackgroundColor(BG_C)
-				.moveTo(parent)
-				.setSize(togWdh, togHgt);
+		MyRadioButton rb = new MyRadioButton(UIManager, name);
+		rb.setColorValue(B_DEFAULT_C)
+		  .setColorLabel(F_TEXT_C)
+		  .setColorActive(B_ACTIVE_C)
+		  .setBackgroundColor(BG_C)
+		  .moveTo(parent)
+		  .setSize(togWdh, togHgt);
 		
 		if (elements != null) {
-			rb.setBackgroundHeight(togHgt * elements.size());
 			// Add elements
 			Set<Float> keys = elements.keySet();
 			
@@ -416,15 +470,18 @@ public class WindowManager implements ControlListener {
 	}
 	
 	/**
-	 * TODO
+	 * Adds a text area to the UI with the given name, text, parent,
+	 * width, height, and label font. A text area cannot be directly
+	 * modified by the user. Also, by default text areas are scrollable.
 	 * 
-	 * @param name
-	 * @param iniTxt
-	 * @param parent
-	 * @param wdh
-	 * @param hgt
-	 * @param lblFont
-	 * @return
+	 * @param name		The name (or ID) of the UI element, which must be
+	 * 					unique amongst all UI elements!
+	 * @param iniTxt	The text to be displayed in text area
+	 * @param parent	The window group, to which this text area belongs
+	 * @param wdh		The width of the text area
+	 * @param hgt		The height of the text area
+	 * @param lblFont	The font of the text area's text
+	 * @return			A reference to the new text area
 	 */
 	private Textarea addTextarea(String name, String iniTxt, Group parent,
 			int wdh, int hgt, PFont lblFont) {
@@ -439,14 +496,16 @@ public class WindowManager implements ControlListener {
 	}
 	
 	/**
-	 * TODO
+	 * Adds a text field to the UI with the given name, parent, width, height,
+	 * and text font.
 	 * 
-	 * @param name
-	 * @param parent
-	 * @param wdh
-	 * @param hgt
-	 * @param lblFont
-	 * @return
+	 * @param name		The name (or ID) of the UI element, which must be
+	 * 					unique amongst all UI elements!
+	 * @param parent	The window group, to which this text field belongs
+	 * @param wdh		The width of the text field
+	 * @param hgt		The height of the text field
+	 * @param lblFont	The text field's font
+	 * @return			A reference to the new text field
 	 */
 	private MyTextfield addTextfield(String name, Group parent, int wdh,
 			int hgt, PFont lblFont) {
@@ -1217,8 +1276,8 @@ public class WindowManager implements ControlListener {
 	  * @throws ClassCastException	If a non-radio button UI element with the
 	  * 							given name exists in the UI
 	  */
-	 public RadioButton getRadioButton(String name) throws ClassCastException {
-		 return (RadioButton) UIManager.get(name);
+	 public MyRadioButton getRadioButton(String name) throws ClassCastException {
+		 return (MyRadioButton) UIManager.get(name);
 	 }
 	 
 	 /**
@@ -1389,8 +1448,10 @@ public class WindowManager implements ControlListener {
 			 // Ignore the number of items displayed by the DropdownList, when it is open
 			 objDimensions = new float[] { obj.getWidth(), ((DropdownList)obj).getBarHeight() };
 			 
-		 } else if (obj instanceof RadioButton) {
-			 objDimensions = new float[] { obj.getWidth(), ((RadioButton) obj).getBackgroundHeight() };
+		 } else if (obj instanceof MyRadioButton) {
+			MyRadioButton rb = (MyRadioButton)obj;
+			
+			objDimensions = new float[] { obj.getWidth(), rb.getTotalHeight() };
 			 
 		 } else {
 			 objDimensions = new float[] { obj.getWidth(), obj.getHeight() };
@@ -2188,7 +2249,7 @@ public class WindowManager implements ControlListener {
 	 public void updateWindowDisplay() {
 		 		 
 		 if (menu == null) {
-			 // Hide any window
+			 // Hide all windows
 			 app.g1.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
