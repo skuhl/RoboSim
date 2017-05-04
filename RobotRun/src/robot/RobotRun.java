@@ -792,8 +792,6 @@ public class RobotRun extends PApplet {
 		applyModelRotation(model, jointAngles);
 		// Apply offset
 		PVector ee = instance.getCoordFromMatrix(offset.x, offset.y, offset.z);
-		instance.rotateY(PI/2);
-		instance.rotateX(-PI/2);
 		float[][] orientationMatrix = instance.getRotationMatrix();
 		instance.popMatrix();
 		// Return a Point containing the EE position, orientation, and joint
@@ -812,6 +810,18 @@ public class RobotRun extends PApplet {
 		}
 
 		return u;
+	}
+	
+	public static void printMat(float[][] mat) {
+		for(int i = 0; i < mat.length; i += 1) {
+			System.out.print("[");
+			for(int j = 0; j < mat[0].length; j += 1) {
+				if(j < mat[0].length - 1) System.out.print(String.format("%12f, ", mat[i][j]));
+				else 					  System.out.print(String.format("%12f", mat[i][j]));
+			}
+			System.out.println("]");
+		}
+		System.out.println();
 	}
 
 	// calculates euler angles from quaternion
@@ -2528,10 +2538,10 @@ public class RobotRun extends PApplet {
 		/**/
 		
 		/*Camera Test Code */
-		//Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
-		//c.setOrientation(p.orientation);
-		//displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
-		/*
+		/*Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
+		c.setOrientation(p.orientation);
+		displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
+		
 		PVector near[] = c.getPlane(90, 2, 10);
 		PVector far[] = c.getPlane(90, 2, 100);
 		for(int i = 0; i < 4; i += 1) {
@@ -2544,11 +2554,6 @@ public class RobotRun extends PApplet {
 			stroke(0);
 			translate(far[i].x, far[i].y, far[i].z);
 			sphere(5);
-			popMatrix();
-			pushMatrix();
-			stroke(50);
-			translate(f.getLocalCenter().x, f.getLocalCenter().y, f.getLocalCenter().z);
-			sphere(10);
 			popMatrix();
 		}
 		//System.out.println(c.checkObjectInFrame(f));
@@ -2564,11 +2569,9 @@ public class RobotRun extends PApplet {
 		
 		transmat[2][0] = -mat[1][0];
 		transmat[2][1] = -mat[1][1];
-		transmat[2][2] = -mat[1][2];
-		for(int i = 0; i < 3; i += 1) {
-			System.out.println(String.format("[%12f, %12f, %12f]", transmat[i][0], transmat[i][1], transmat[i][2]));
-		}
-		System.out.println();*/
+		transmat[2][2] = -mat[1][2];*/
+
+		//RobotRun.printMat(transmat);
 
 		noLights();
 		noStroke();
