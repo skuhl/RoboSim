@@ -2567,14 +2567,13 @@ public class RobotRun extends PApplet {
 			popMatrix();
 			pushMatrix();
 			stroke(50);
-			//translate(f.getLocalCenter().x, f.getLocalCenter().y, f.getLocalCenter().z);
+			translate(f.getLocalCenter().x, f.getLocalCenter().y, f.getLocalCenter().z);
 			sphere(10);
 			popMatrix();
 		}
 		//System.out.println(c.checkObjectInFrame(f));
 		float[][] mat = c.getOrientationMat();
 		float[][] transmat = new float[3][3];
-		
 		transmat[0][0] = -mat[0][0];
 		transmat[0][1] = -mat[0][1];
 		transmat[0][2] = -mat[0][2];
@@ -2586,7 +2585,6 @@ public class RobotRun extends PApplet {
 		transmat[2][0] = -mat[1][0];
 		transmat[2][1] = -mat[1][1];
 		transmat[2][2] = -mat[1][2];
-		
 		for(int i = 0; i < 3; i += 1) {
 			System.out.println(String.format("[%12f, %12f, %12f]", transmat[i][0], transmat[i][1], transmat[i][2]));
 		}
