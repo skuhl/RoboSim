@@ -1,8 +1,9 @@
 package frame;
+import geom.Point;
+import processing.core.PConstants;
+import processing.core.PVector;
 import robot.RQuaternion;
 import robot.RobotRun;
-import geom.Point;
-import processing.core.PVector;
 
 public class UserFrame extends Frame {
 	private PVector origin;
@@ -136,7 +137,7 @@ public class UserFrame extends Frame {
 
 		PVector displayOrigin;
 		// Convert angles to degrees and to the World Coordinate Frame
-		PVector wpr = RobotRun.quatToEuler(orientationOffset).mult(RobotRun.RAD_TO_DEG);
+		PVector wpr = RobotRun.quatToEuler(orientationOffset).mult(PConstants.RAD_TO_DEG);
 
 		// Convert to World frame reference
 		displayOrigin = RobotRun.convertNativeToWorld(origin);

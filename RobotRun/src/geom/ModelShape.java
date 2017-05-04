@@ -63,6 +63,7 @@ public class ModelShape extends Shape {
 		}
 	}
 
+	@Override
 	public void draw() {
 		RobotRun.getInstance().pushMatrix();
 		// Draw shape, where its center is at (0, 0, 0)

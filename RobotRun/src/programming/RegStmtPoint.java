@@ -1,10 +1,10 @@
 package programming;
 import java.util.Arrays;
 
-import robot.RQuaternion;
-import robot.RobotRun;
 import geom.Point;
 import processing.core.PVector;
+import robot.RQuaternion;
+import robot.RobotRun;
 
 /**
  * This class defines a Point, which stores a position and orientation
@@ -78,6 +78,7 @@ public class RegStmtPoint {
 	/**
 	 * Returns an independent replica of this point object.
 	 */
+	@Override
 	public RegStmtPoint clone() {
 		return new RegStmtPoint(getValues(), isCartesian);
 	}
@@ -134,6 +135,7 @@ public class RegStmtPoint {
 		}
 	}
 
+	@Override
 	public String toString() {
 		if (isCartesian) {
 			// X, Y, Z, W, P, R

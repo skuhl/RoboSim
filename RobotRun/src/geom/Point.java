@@ -1,6 +1,6 @@
 package geom;
 
-import global.Fields;
+import processing.core.PConstants;
 import processing.core.PVector;
 import robot.RQuaternion;
 import robot.RobotRun;
@@ -66,6 +66,7 @@ public class Point  {
 		return p3;
 	}
 
+	@Override
 	public Point clone() {
 		return new Point(position.copy(), (RQuaternion)orientation.clone(), angles.clone());
 	}
@@ -84,9 +85,9 @@ public class Point  {
 		case 7:   return position.z;
 		case 8:   return -position.y;
 		// Orientation
-		case 9:   return -RobotRun.RAD_TO_DEG*RobotRun.quatToEuler(orientation).array()[0];
-		case 10:  return -RobotRun.RAD_TO_DEG*RobotRun.quatToEuler(orientation).array()[2];
-		case 11:  return RobotRun.RAD_TO_DEG*RobotRun.quatToEuler(orientation).array()[1];
+		case 9:   return -PConstants.RAD_TO_DEG*RobotRun.quatToEuler(orientation).array()[0];
+		case 10:  return -PConstants.RAD_TO_DEG*RobotRun.quatToEuler(orientation).array()[2];
+		case 11:  return PConstants.RAD_TO_DEG*RobotRun.quatToEuler(orientation).array()[1];
 		default:
 		}
 
@@ -137,7 +138,7 @@ public class Point  {
 	}
 
 	/**
-	 * Returns a string array, where each entry is one of the values of the Cartesian
+	 * Returns a string array, where each entry is one of the values of the Cartiesian
 	 * represent of the Point: (X, Y, Z, W, P, and R) and their respective labels.
 	 * 
 	 * @return  A 6x2-element String array
@@ -196,7 +197,7 @@ public class Point  {
 			if (angles == null) {
 				entries[idx][1] = Float.toString(Float.NaN);
 			} else {
-				entries[idx][1] = String.format("%4.3f", angles[idx] * RobotRun.RAD_TO_DEG);
+				entries[idx][1] = String.format("%4.3f", angles[idx] * PConstants.RAD_TO_DEG);
 			}
 		}
 
@@ -234,6 +235,7 @@ public class Point  {
 		return line;
 	}
 
+	@Override
 	public String toString() {
 		return String.format("P: { %s, %s }", position, orientation);
 	}
