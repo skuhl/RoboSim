@@ -31,8 +31,8 @@ public class RobotCamera {
 		RobotCamera c = new RobotCamera(200, 0, 200, new RQuaternion(), 90, 1, 10, 500, null);
 		Box b = new Box(0, 5, 100);
 		float[][] axes = new float[][] { {1, 0, 0},
-									 	  {0, 1, 0},
-									 	  {0, 0, 1} };
+									 	 {0, 1, 0},
+									 	 {0, 0, 1} };
 		CoordinateSystem coord = new CoordinateSystem(new PVector(250, 0, 200), axes);
 		Fixture f = new Fixture("test", b, coord);
 		
@@ -43,6 +43,23 @@ public class RobotCamera {
 		camOrient = o;
 		return this;
 	}
+	
+	public PVector getLookVect() {
+		double x = -1 + 2*Math.pow(camOrient.y(), 2) + 2*Math.pow(camOrient.z(), 2);
+		double y = -2*camOrient.x()*camOrient.y() + 2*camOrient.z()*camOrient.w();
+		double z = -2*camOrient.x()*camOrient.z() - 2*camOrient.y()*camOrient.w();
+		
+		return new PVector((float)x, (float)y, (float)z);
+	}
+	
+	public PVector getUpVect() {
+		double x = -2*camOrient.x()*camOrient.y() - 2*camOrient.z()*camOrient.w();
+		double y = -1 + 2*Math.pow(camOrient.x(), 2) + 2*Math.pow(camOrient.z(), 2);
+		double z = -2*camOrient.y()*camOrient.z() + 2*camOrient.x()*camOrient.w();
+		
+		return new PVector((float)x, (float)y, (float)z);
+	}
+	
 	
 	public WorldObject getNearestObjectInFrame() {
 		float minDist = Float.MAX_VALUE;
@@ -102,10 +119,9 @@ public class RobotCamera {
 	}
 	
 	public boolean checkPointInFrame(PVector p) {
-		float coord[][] = camOrient.toMatrix();
-		PVector lookVect = new PVector(coord[0][0], coord[0][1], coord[0][2]);
-		PVector ltVect = new PVector(coord[1][0], coord[1][1], coord[1][2]);
-		PVector upVect = new PVector(coord[2][0], coord[2][1], coord[2][2]);
+		PVector lookVect = getLookVect();
+		PVector upVect = getUpVect();
+		PVector ltVect = lookVect.cross(upVect);
 		
 		PVector toObj = new PVector(p.x - camPos.x, p.y - camPos.y, p.z - camPos.z);
 		System.out.println("to obj: " + toObj.toString());
@@ -163,10 +179,9 @@ public class RobotCamera {
 		float width = getPlaneWidth(fov, aspectRatio, dist);
 		
 		// Produce a coordinate system based on camera orientation
-		float[][] coord = camOrient.toMatrix();
-		PVector lookVect = new PVector(coord[0][0], coord[0][1], coord[0][2]);
-		PVector ltVect = new PVector(coord[1][0], coord[1][1], coord[1][2]);
-		PVector upVect = new PVector(coord[2][0], coord[2][1], coord[2][2]);
+		PVector lookVect = getLookVect();
+		PVector upVect = getUpVect();
+		PVector ltVect = lookVect.cross(upVect);
 		
 		PVector center = new PVector(camPos.x + lookVect.x * dist,
 									 camPos.y + lookVect.y * dist,
