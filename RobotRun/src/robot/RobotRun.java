@@ -2541,7 +2541,7 @@ public class RobotRun extends PApplet {
 		/**/
 		
 		/*Camera Test Code */
-		/*Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
+		Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
 		c.setOrientation(p.orientation);
 		displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
 		
@@ -2561,20 +2561,7 @@ public class RobotRun extends PApplet {
 		}
 		//System.out.println(c.checkObjectInFrame(f));
 		float[][] mat = c.getOrientationMat();
-		float[][] transmat = new float[3][3];
-		transmat[0][0] = -mat[0][0];
-		transmat[0][1] = -mat[0][1];
-		transmat[0][2] = -mat[0][2];
-		
-		transmat[1][0] = mat[2][0];
-		transmat[1][1] = mat[2][1];
-		transmat[1][2] = mat[2][2];
-		
-		transmat[2][0] = -mat[1][0];
-		transmat[2][1] = -mat[1][1];
-		transmat[2][2] = -mat[1][2];*/
-
-		//RobotRun.printMat(transmat);
+		RobotRun.printMat(mat);
 
 		noLights();
 		noStroke();
