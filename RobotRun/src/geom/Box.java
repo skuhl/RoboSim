@@ -60,6 +60,7 @@ public class Box extends Shape {
 		return new Box(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
 	}
 
+	@Override
 	public void draw() {
 		// Apply colors
 		applyColors();

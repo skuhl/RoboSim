@@ -5,11 +5,13 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
-import robot.RQuaternion;
-import robot.RobotRun;
 import geom.Point;
 import global.Fields;
+import processing.core.PApplet;
+import processing.core.PConstants;
 import processing.core.PVector;
+import robot.RQuaternion;
+import robot.RobotRun;
 
 public abstract class Frame {
 	// The orientation of the frame in the form of a unit quaternion
@@ -125,7 +127,7 @@ public abstract class Frame {
 
 		for(int idx = 0; idx < avg_TCP.getDimension(); ++idx) {
 			// Extremely high values may indicate that the given points are invalid
-			if(RobotRun.abs((float)avg_TCP.getEntry(idx)) > 1000.0f) {
+			if(PApplet.abs((float)avg_TCP.getEntry(idx)) > 1000.0f) {
 				return null;
 			}
 		}
@@ -211,7 +213,7 @@ public abstract class Frame {
 			wpr = new PVector(0f, 0f, 0f);
 		} else {
 			// Display in degrees
-			wpr = RobotRun.quatToEuler(getDEOrientationOffset()).mult(RobotRun.RAD_TO_DEG);
+			wpr = RobotRun.quatToEuler(getDEOrientationOffset()).mult(PConstants.RAD_TO_DEG);
 		}
 
 		entries[0][0] = "X: ";

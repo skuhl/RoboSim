@@ -29,7 +29,7 @@ public class MenuScroll {
 		xPos = x;
 		yPos = y;
 		
-		lines = new ArrayList<DisplayLine>();
+		lines = new ArrayList<>();
 		
 		lineIdx = 0;
 		columnIdx = 0;

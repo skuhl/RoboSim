@@ -64,6 +64,7 @@ public class ExprOperand implements ExpressionElement {
 		regVal = pReg;
 	}
 
+	@Override
 	public ExprOperand clone() {
 		switch(type) {
 		case ExpressionElement.UNINIT: return new ExprOperand();
@@ -101,6 +102,7 @@ public class ExprOperand implements ExpressionElement {
 		}
 	}
 
+	@Override
 	public int getLength() {
 		return (type == PREG_IDX) ? 2 : 1;
 	}
@@ -189,6 +191,7 @@ public class ExprOperand implements ExpressionElement {
 		this.boolVal = boolVal;
 	}
 
+	@Override
 	public String toString(){
 		String s = "";
 		switch(type){
@@ -227,6 +230,7 @@ public class ExprOperand implements ExpressionElement {
 		return s;
 	}
 
+	@Override
 	public String[] toStringArray() {
 		if(type == PREG_IDX) {
 			String rNum = (regVal == null || regVal.idx < 0) ? "..." : Integer.toString(regVal.idx + 1);

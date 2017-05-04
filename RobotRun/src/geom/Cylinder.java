@@ -1,4 +1,6 @@
 package geom;
+import processing.core.PApplet;
+import processing.core.PConstants;
 import robot.RobotRun;
 
 /**
@@ -36,6 +38,7 @@ public class Cylinder extends Shape {
 	 * Based off of the algorithm defined on Vormplus blog at:
 	 * http://vormplus.be/blog/article/drawing-a-cylinder-with-processing
 	 */
+	@Override
 	public void draw() {
 		applyColors();
 
@@ -50,11 +53,11 @@ public class Cylinder extends Shape {
 		RobotRun.getInstance().ellipse(0f, 0f, diameter, diameter);
 		RobotRun.getInstance().translate(0f, 0f, halfHeight);
 
-		RobotRun.getInstance().beginShape(RobotRun.TRIANGLE_STRIP);
+		RobotRun.getInstance().beginShape(PConstants.TRIANGLE_STRIP);
 		// Draw a string of triangles around the circumference of the Cylinders top and bottom.
 		for (int degree = 0; degree <= 360; ++degree) {
-			float pos_x = RobotRun.cos(RobotRun.DEG_TO_RAD * degree) * radius,
-					pos_y = RobotRun.sin(RobotRun.DEG_TO_RAD * degree) * radius;
+			float pos_x = PApplet.cos(PConstants.DEG_TO_RAD * degree) * radius,
+					pos_y = PApplet.sin(PConstants.DEG_TO_RAD * degree) * radius;
 
 			RobotRun.getInstance().vertex(pos_x, pos_y, halfHeight);
 			RobotRun.getInstance().vertex(pos_x, pos_y, -halfHeight);
