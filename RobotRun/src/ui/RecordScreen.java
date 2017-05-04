@@ -11,6 +11,7 @@ public class RecordScreen implements Runnable {
 		System.out.format("Record screen...\n");
 	}
 	
+	@Override
 	public void run() {
 		try{ 
 			// create a timestamp and attach it to the filename

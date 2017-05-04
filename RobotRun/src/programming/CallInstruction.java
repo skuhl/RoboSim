@@ -16,12 +16,14 @@ public class CallInstruction extends Instruction {
 		progIdx = pdx;
 	}
 
+	@Override
 	public Instruction clone() {
 		return new CallInstruction(tgtDevice, progIdx);
 	}
 
 	// Getters and setters for a call instruction's program id field
 
+	@Override
 	public int execute() {
 		//Test validity of progIdx
 		if (progIdx < 0 || progIdx >= tgtDevice.numOfPrograms()) {
@@ -62,6 +64,7 @@ public class CallInstruction extends Instruction {
 	
 	public void setTgtDevice(RoboticArm tgt) { tgtDevice = tgt; }
 
+	@Override
 	public String toString() {
 		if(tgtDevice == RobotRun.getActiveRobot()) {
 			return "Call " + progName();
@@ -71,6 +74,7 @@ public class CallInstruction extends Instruction {
 		}
 	}
 
+	@Override
 	public String[] toStringArray() {
 		String[] ret = new String[2];
 		ret[0] = (tgtDevice == RobotRun.getActiveRobot()) ? "Call" : "RCall";

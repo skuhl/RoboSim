@@ -46,6 +46,7 @@ public class BoundingBox {
 	/**
 	 * Return a replicate of this world object's Bounding Box
 	 */
+	@Override
 	public BoundingBox clone() {
 		RobotRun.getInstance().pushMatrix();
 		localOrientation.apply();

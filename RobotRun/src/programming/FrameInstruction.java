@@ -18,12 +18,14 @@ public class FrameInstruction extends Instruction {
 		setFrameIdx(r);
 	}
 
+	@Override
 	public Instruction clone() {
 		Instruction copy = new FrameInstruction(frameType, getFrameIdx());
 		copy.setIsCommented( isCommented() );
 
 		return copy;
 	}
+	@Override
 	public int execute() {    
 		if (frameType == Fields.FTYPE_TOOL) {
 			RobotRun.getActiveRobot().setActiveToolFrame(getFrameIdx());
@@ -52,6 +54,7 @@ public class FrameInstruction extends Instruction {
 
 	public void setReg(int r){ setFrameIdx(r); }
 
+	@Override
 	public String[] toStringArray() {
 		String[] fields = new String[2];
 		// Frame type
