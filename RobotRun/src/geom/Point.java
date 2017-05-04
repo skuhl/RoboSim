@@ -176,7 +176,7 @@ public class Point  {
 			transform[2][1] = -axes[1][1];
 			transform[2][2] = -axes[1][2];
 			
-			angles = RobotRun.matrixToEuler(transform).mult(Fields.RAD_TO_DEG);
+			angles = RobotRun.matrixToEuler(transform).mult(RobotRun.RAD_TO_DEG);
 		}
 
 		entries[0][0] = "X: ";

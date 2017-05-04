@@ -1,4 +1,5 @@
 package programming;
+import global.Fields;
 import robot.RobotRun;
 
 public class FrameInstruction extends Instruction {
@@ -24,10 +25,10 @@ public class FrameInstruction extends Instruction {
 		return copy;
 	}
 	public int execute() {    
-		if (frameType == RobotRun.getInstance().FTYPE_TOOL) {
+		if (frameType == Fields.FTYPE_TOOL) {
 			RobotRun.getActiveRobot().setActiveToolFrame(getFrameIdx());
 			
-		} else if (frameType == RobotRun.getInstance().FTYPE_USER) {
+		} else if (frameType == Fields.FTYPE_USER) {
 			RobotRun.getActiveRobot().setActiveUserFrame(getFrameIdx());
 		}
 		
@@ -54,9 +55,9 @@ public class FrameInstruction extends Instruction {
 	public String[] toStringArray() {
 		String[] fields = new String[2];
 		// Frame type
-		if (frameType == RobotRun.getInstance().FTYPE_TOOL) {
+		if (frameType == Fields.FTYPE_TOOL) {
 			fields[0] = "TFRAME_NUM =";
-		} else if (frameType == RobotRun.getInstance().FTYPE_USER) {
+		} else if (frameType == Fields.FTYPE_USER) {
 			fields[0] = "UFRAME_NUM =";
 		} else {
 			fields[0] = "?FRAME_NUM =";

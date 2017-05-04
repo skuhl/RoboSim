@@ -2,4 +2,4 @@
 *.out
 RobotRun/img/Thumbs.db
 RobotRun/bin/*
-/RobotRun/tmp/*
+RobotRun/tmp/*

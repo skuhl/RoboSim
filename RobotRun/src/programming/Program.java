@@ -11,9 +11,7 @@ import robot.RoboticArm;
 import window.DisplayLine;
 
 public class Program {
-	String name;
-	//TODO have program only reference the robot to which it is assigned rather
-	//than the whole program instance
+	private String name;
 	private RoboticArm robot;
 	private int nextPosition;
 
@@ -21,8 +19,8 @@ public class Program {
 	 * The positions associated with this program, which are
 	 * stored in reference to the current User frame
 	 */
-	HashMap<Integer, Point> LPosReg;
-	ArrayList<Instruction> instructions;
+	private HashMap<Integer, Point> LPosReg;
+	private ArrayList<Instruction> instructions;
 
 	public Program(String s, RoboticArm r) {
 		name = s;
@@ -132,9 +130,9 @@ public class Program {
 	}
 
 	/**
-	 * Get the position assocaited with the given index.
+	 * Get the position associated with the given index.
 	 * 
-	 * @param idx  The indexx corresopnding to a position in the program
+	 * @param idx  The index corresponding to a position in the program
 	 */
 	public Point getPosition(int idx) {
 		return LPosReg.get(idx);
@@ -265,6 +263,82 @@ public class Program {
 	public int size() {
 		return instructions.size();
 	}
+	
+	/**
+	 * Updates the position associated with the motion instruction's secondary
+	 * position index. The old point associated with the position is returned.
+	 * 
+	 * @param instIdx	The index of a motion instruction in this program
+	 * @param newPt		The new point to store at the motion instruction's
+	 * 					associated position
+	 * @return			The previous point stored at the position associated
+	 * 					with the instruction
+	 * @throws ClassCastException	If the instruction indexed at instIdx is
+	 * 								not a motion instruction
+	 * @throws NullPointerException	If the given point is null or the instruction
+	 * 								indexed at instIdx is not a motion type
+	 * 								instruction
+	 */
+	public Point updateMCInstPosition(int instIdx, Point newPt) throws
+		ClassCastException, NullPointerException {
+		
+		MotionInstruction mInst = (MotionInstruction) getInstruction(instIdx);
+		MotionInstruction sndMInst = mInst.getSecondaryPoint();
+		
+		if (mInst.getMotionType() != Fields.MTYPE_CIRCULAR || sndMInst == null) {
+			throw new NullPointerException(
+					String.format("Instruction at %d is not a circular motion instruction!",
+					instIdx)
+				);	
+		}
+		
+		if (newPt != null) {
+			int posNum = sndMInst.getPositionNum();
+			
+			if (posNum == -1) {
+				// In the case of an uninitialized position
+				posNum = nextPosition;
+				sndMInst.setPositionNum(posNum);
+			}
+			
+			return setPosition(posNum, newPt);
+		}
+		
+		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
+	}
+	
+	/**
+	 * Updates the position associated with the motion instruction at the given
+	 * instruction index to the given point. The old point associated with the
+	 * position is returned.
+	 * 
+	 * @param instIdx	The index of a motion instruction in this program
+	 * @param newPt		The new point to store at the motion instruction's
+	 * 					associated position
+	 * @return			The previous point stored at the position associated
+	 * 					with the instruction
+	 * @throws ClassCastException	If the instruction indexed at instIdx is
+	 * 								not a motion instruction
+	 * @throws NullPointerException	If the given point is null
+	 */
+	public Point updateMInstPosition(int instIdx, Point newPt) throws
+		ClassCastException, NullPointerException {
+		
+		if (newPt != null) {
+			MotionInstruction mInst = (MotionInstruction)getInstruction(instIdx);
+			int posNum = mInst.getPositionNum();
+			
+			if (posNum == -1) {
+				// In the case the instruction's position is unintialized
+				posNum = nextPosition;
+				mInst.setPositionNum(posNum);
+			}
+			
+			return setPosition(posNum, newPt);
+		}
+		
+		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
+	}
 
 	/**
 	 * Updates the index of the lowest uninitialized position in the program.
@@ -274,12 +348,12 @@ public class Program {
 	private void updateNextPosition() {
 		if (LPosReg.size() >= 1000) {
 			// Move to the next position if the position set is full
-			++nextPosition;
+			nextPosition = (nextPosition + 1) % 1000;
 
 		} else {
 			// Find the next empty position
 			while (LPosReg.get(nextPosition) != null) {
-				++nextPosition;
+				nextPosition = (nextPosition + 1) % 1000;
 			}
 		}
 	}

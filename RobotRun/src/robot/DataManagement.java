@@ -597,7 +597,7 @@ public abstract class DataManagement {
 			FileInputStream in = new FileInputStream(src);
 			DataInputStream dataIn = new DataInputStream(in);
 
-			int size = Math.max(0, Math.min(dataIn.readInt(), RoboticArm.DPREG_NUM));
+			int size = Math.max(0, Math.min(dataIn.readInt(), Fields.DPREG_NUM));
 
 			// Load the Register entries
 			while(size-- > 0) {
@@ -620,7 +620,7 @@ public abstract class DataManagement {
 				}
 			}
 
-			size = Math.max(0, Math.min(dataIn.readInt(), RoboticArm.DPREG_NUM));
+			size = Math.max(0, Math.min(dataIn.readInt(), Fields.DPREG_NUM));
 
 			// Load the Position Register entries
 			while(size-- > 0) {
@@ -767,32 +767,13 @@ public abstract class DataManagement {
 		
 		if (!src.exists() || !src.isDirectory()) {
 			// No files to load
-			process.activeScenario = null;
 			return 1;
 		}
 		
 		File[] scenarioFiles = src.listFiles();
-		File activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");;
+		File activeFile = null;
 		
-		String activeName = null;
-		try {
-			
-			if (activeFile.exists()) {
-				FileInputStream in = new FileInputStream(activeFile);
-				DataInputStream dataIn = new DataInputStream(in);
-				
-				// Read the name of the active scenario
-				activeName = dataIn.readUTF();
-				
-				dataIn.close();
-				in.close();
-			}
-		
-		} catch (IOException IOEx) {
-			System.err.println("The active scenario file is corrupt!");
-			// An error occurred with loading a scenario from a file
-			IOEx.printStackTrace();
-		}
+		ArrayList<Scenario> scenarioList = process.getScenarios();
 		
 		// Load each scenario from their respective files
 		for (File scenarioFile : scenarioFiles) {
@@ -806,12 +787,7 @@ public abstract class DataManagement {
 				s = loadScenario(dataIn, process);
 				
 				if (s != null) {
-					process.SCENARIOS.add(s);
-					
-					if (activeName != null && s.getName().equals(activeName)) {
-						// Set the active scenario
-						process.activeScenario = s;
-					}
+					scenarioList.add(s);
 				}
 				
 				dataIn.close();
@@ -825,6 +801,28 @@ public abstract class DataManagement {
 				System.out.printf("File, %s, in \\tmp\\scenarios is corrupt!\n", activeFile.getName());
 				IOEx.printStackTrace();
 			}
+		}
+		
+		activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");;
+		
+		try {
+			
+			if (activeFile.exists()) {
+				FileInputStream in = new FileInputStream(activeFile);
+				DataInputStream dataIn = new DataInputStream(in);
+				
+				// Read the name of the active scenario
+				String activeName = dataIn.readUTF();
+				process.setActiveScenario(activeName);
+				
+				dataIn.close();
+				in.close();
+			}
+		
+		} catch (IOException IOEx) {
+			System.err.println("The active scenario file is corrupt!");
+			// An error occurred with loading a scenario from a file
+			IOEx.printStackTrace();
 		}
 		
 		return 0;
@@ -1124,14 +1122,14 @@ public abstract class DataManagement {
 			DataOutputStream dataOut = new DataOutputStream(out);
 
 			// Save Tool Frames
-			dataOut.writeInt(Fields.FRAME_SIZE);
-			for (int idx = 0; idx < Fields.FRAME_SIZE; ++idx) {
+			dataOut.writeInt(Fields.FRAME_NUM);
+			for (int idx = 0; idx < Fields.FRAME_NUM; ++idx) {
 				saveFrame(robot.getToolFrame(idx), dataOut);
 			}
 			
 			// Save User Frames
-			dataOut.writeInt(Fields.FRAME_SIZE);
-			for (int idx = 0; idx < Fields.FRAME_SIZE; ++idx) {
+			dataOut.writeInt(Fields.FRAME_NUM);
+			for (int idx = 0; idx < Fields.FRAME_NUM; ++idx) {
 				saveFrame(robot.getUserFrame(idx), dataOut);
 			}
 
@@ -1452,7 +1450,7 @@ public abstract class DataManagement {
 					initializedPR = new ArrayList<Integer>();
 
 			// Count the number of initialized entries and save their indices
-			for(int idx = 0; idx < RoboticArm.DPREG_NUM; ++idx) {
+			for(int idx = 0; idx < Fields.DPREG_NUM; ++idx) {
 				DataRegister dReg = robot.getDReg(idx);
 				PositionRegister pReg = robot.getPReg(idx);
 				
@@ -1652,8 +1650,10 @@ public abstract class DataManagement {
 	
 	public static void saveScenarios(RobotRun process) {
 		validateParentDir();
-		saveScenarioBytes(process.SCENARIOS, (process.activeScenario == null) ?
-				null : process.activeScenario.getName(), scenarioDirPath);
+		
+		Scenario as = process.getActiveScenario();
+		saveScenarioBytes(process.getScenarios(), (as == null) ? null : as.getName(),
+				scenarioDirPath);
 	}
 
 	private static void saveShape(Shape shape, DataOutputStream out) throws IOException {
@@ -1703,8 +1703,8 @@ public abstract class DataManagement {
 	
 	public static void saveState(RobotRun process) {
 		validateParentDir();
-		saveScenarioBytes(process.SCENARIOS, (process.activeScenario == null) ?
-				null : process.activeScenario.getName(), scenarioDirPath);
+		saveScenarioBytes(process.getScenarios(), (process.getActiveScenario() == null) ?
+				null : process.getActiveScenario().getName(), scenarioDirPath);
 		saveRobotData(process.getRobot(0), 7);
 		saveRobotData(process.getRobot(1), 7);
 	}

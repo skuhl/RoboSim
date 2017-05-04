@@ -6,10 +6,10 @@ import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
 import robot.RQuaternion;
+import robot.RobotRun;
 import geom.Point;
 import global.Fields;
 import processing.core.PVector;
-import robot.RobotRun;
 
 public abstract class Frame {
 	// The orientation of the frame in the form of a unit quaternion
@@ -179,7 +179,7 @@ public abstract class Frame {
 		axesRefWorld[2][2] = zAxis.z;
 
 		RealMatrix axes = new Array2DRowRealMatrix(RobotRun.floatToDouble(axesRefWorld, 3, 3)),
-				worldAxes =  new Array2DRowRealMatrix(RobotRun.floatToDouble(RobotRun.WORLD_AXES, 3, 3)),
+				worldAxes =  new Array2DRowRealMatrix(RobotRun.floatToDouble(Fields.WORLD_AXES, 3, 3)),
 				invWorldAxes = (new SingularValueDecomposition(worldAxes)).getSolver().getInverse();
 		// Remove the World frame transformation from the axes vectors
 		return RobotRun.doubleToFloat(invWorldAxes.multiply(axes).getData(), 3, 3);
