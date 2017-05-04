@@ -231,21 +231,15 @@ public class RoboticArm {
 
 		eeOBBsMap = new HashMap<>();
 		eePickupOBBs = new HashMap<>();
-		// Faceplate
-<<<<<<< HEAD
+		// FaceplateD
 		ArrayList<BoundingBox> limbo = new ArrayList<BoundingBox>();
 		limbo.add( new BoundingBox(36, 96, 96) );
-=======
-		ArrayList<BoundingBox> limbo = new ArrayList<>();
-		limbo.add( new BoundingBox(96, 96, 36) );
->>>>>>> d7651ac1415ce5ac14afcdc74ad107bdce76fde4
 		eeOBBsMap.put(EEType.NONE, limbo);
 		// Cannot pickup
 		limbo = new ArrayList<>();
 		eePickupOBBs.put(EEType.NONE, limbo);
 
 		// Claw Gripper
-<<<<<<< HEAD
 		limbo = new ArrayList<BoundingBox>();
 		limbo.add( new BoundingBox(54, 96, 96) );
 		limbo.add( new BoundingBox(31, 21, 89) );
@@ -254,21 +248,10 @@ public class RoboticArm {
 		// In between the grippers
 		limbo = new ArrayList<BoundingBox>();
 		limbo.add(new BoundingBox(15, 3, 55) );
-=======
-		limbo = new ArrayList<>();
-		limbo.add( new BoundingBox(96, 96, 54) );
-		limbo.add( new BoundingBox(89, 21, 31) );
-		limbo.add( new BoundingBox(89, 21, 31) );
-		eeOBBsMap.put(EEType.CLAW, limbo);
-		// In between the grippers
-		limbo = new ArrayList<>();
-		limbo.add(new BoundingBox(55, 3, 15) );
->>>>>>> d7651ac1415ce5ac14afcdc74ad107bdce76fde4
 		limbo.get(0).setColor(RobotRun.getInstance().color(0, 0, 255));
 		eePickupOBBs.put(EEType.CLAW, limbo);
 
-		// Suction 
-<<<<<<< HEAD
+		// Suction
 		limbo = new ArrayList<BoundingBox>();
 		limbo.add( new BoundingBox(54, 96, 96) );
 		limbo.add( new BoundingBox(82, 37, 37) );
@@ -277,16 +260,6 @@ public class RoboticArm {
 		// One for each suction cup
 		limbo = new ArrayList<BoundingBox>();
 		limbo.add(new BoundingBox(3, 25, 25) );
-=======
-		limbo = new ArrayList<>();
-		limbo.add( new BoundingBox(96, 96, 54) );
-		limbo.add( new BoundingBox(37, 37, 82) );
-		limbo.add( new BoundingBox(37, 62, 37) );
-		eeOBBsMap.put(EEType.SUCTION, limbo);
-		// One for each suction cup
-		limbo = new ArrayList<>();
-		limbo.add(new BoundingBox(25, 25, 3) );
->>>>>>> d7651ac1415ce5ac14afcdc74ad107bdce76fde4
 		limbo.get(0).setColor(RobotRun.getInstance().color(0, 0, 255));
 		limbo.add(new BoundingBox(25, 3, 25) );
 		limbo.get(1).setColor(RobotRun.getInstance().color(0, 0, 255));
