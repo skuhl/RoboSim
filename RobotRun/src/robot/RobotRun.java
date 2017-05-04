@@ -13,6 +13,8 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
+import com.sun.prism.paint.Color;
+
 import controlP5.Button;
 import controlP5.ControlP5;
 import controlP5.Group;
@@ -26,6 +28,7 @@ import frame.CoordFrame;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
+import geom.Box;
 import geom.Part;
 import geom.Point;
 import geom.Triangle;
@@ -91,6 +94,7 @@ public class RobotRun extends PApplet {
 	private static RobotRun instance;
 
 	RobotCamera c;
+	Fixture f;
 
 	public static PFont fnt_con14;
 	public static PFont fnt_con12;
@@ -607,7 +611,7 @@ public class RobotRun extends PApplet {
 
 		return inverse;
 	}
-
+	
 	public static void main(String[] args) {
 		String[] appletArgs = new String[] { "robot.RobotRun" };
 
@@ -721,6 +725,29 @@ public class RobotRun extends PApplet {
 		}
 
 		return temp;
+	}
+	
+	/* Vincent : USE THIS METHOD FOR THE ROBOT CAMERA */
+	
+	/**
+	 * The robot's end effector position and orientation is computed in the
+	 * native coordinate system. Also, the orientation of the point is with
+	 * respective the Robot's default orientation (i.e. when the Robot's joint
+	 * angles are all 0, then the orientation is the identity quaternion) as
+	 * opposed to the native coordinate system.
+	 * 
+	 * @return	The Robot's current position and orientation, in terms of the
+	 * 			Robot's default orientation
+	 */
+	public static Point nativeActiveRobotEEWOO() {
+		RoboticArm r = RobotRun.getActiveRobot();
+		Point ee = RobotRun.nativeRobotEEPoint(r, r.getJointAngles());
+		
+		// Remove the Robot end effector's default orientation
+		Point defEE = r.getDefaultPoint();
+		ee.orientation = RQuaternion.mult(defEE.orientation, ee.orientation);
+		
+		return ee;
 	}
 
 	/**
@@ -2507,6 +2534,7 @@ public class RobotRun extends PApplet {
 			// Display the point with its local orientation axes
 			displayOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
 		}
+<<<<<<< HEAD
 
 		/*
 		 * TESTING CODE: DRAW INTERMEDIATE POINTS* if(Fields.DEBUG &&
@@ -2522,17 +2550,69 @@ public class RobotRun extends PApplet {
 		PVector near[] = c.getPlane(90, 1, 10);
 		PVector far[] = c.getPlane(90, 1, 100);
 		for (int i = 0; i < 4; i += 1) {
+=======
+		
+		/*TESTING CODE: DRAW INTERMEDIATE POINTS*
+		if(Fields.DEBUG && intermediatePositions != null) {
+			int count = 0;
+			for(Point p : intermediatePositions) {
+				if(count % 4 == 0) {
+					pushMatrix();
+					stroke(0);
+					translate(p.position.x, p.position.y, p.position.z);
+					sphere(5);
+					popMatrix();
+				}
+				
+				count += 1;
+			}
+		}
+		/**/
+		
+		/* Camera Test Code *
+		Point p = RobotRun.nativeActiveRobotEEWOO();
+		c.setOrientation(p.orientation);
+		displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
+		
+		PVector near[] = c.getPlane(90, 2, 10);
+		PVector far[] = c.getPlane(90, 2, 100);
+		for(int i = 0; i < 4; i += 1) {
+>>>>>>> 86cffc5822aea641b72f4bc70cb35cbc2af2558e
 			pushMatrix();
 			stroke(0);
-			translate(-near[i].x, -near[i].z, near[i].y);
+			translate(near[i].x, near[i].y, near[i].z);
 			sphere(5);
 			popMatrix();
 			pushMatrix();
 			stroke(0);
-			translate(-far[i].x, -far[i].z, far[i].y);
+			translate(far[i].x, far[i].y, far[i].z);
 			sphere(5);
+			popMatrix();
+			pushMatrix();
+			stroke(50);
+			translate(f.getLocalCenter().x, f.getLocalCenter().y, f.getLocalCenter().z);
+			sphere(10);
 			popMatrix();
 		}
+		//System.out.println(c.checkObjectInFrame(f));
+		float[][] mat = c.getOrientationMat();
+		float[][] transmat = new float[3][3];
+		transmat[0][0] = -mat[0][0];
+		transmat[0][1] = -mat[0][1];
+		transmat[0][2] = -mat[0][2];
+		
+		transmat[1][0] = mat[2][0];
+		transmat[1][1] = mat[2][1];
+		transmat[1][2] = mat[2][2];
+		
+		transmat[2][0] = -mat[1][0];
+		transmat[2][1] = -mat[1][1];
+		transmat[2][2] = -mat[1][2];
+		for(int i = 0; i < 3; i += 1) {
+			System.out.println(String.format("[%12f, %12f, %12f]", transmat[i][0], transmat[i][1], transmat[i][2]));
+		}
+		System.out.println();
+		/**/
 
 		noLights();
 		noStroke();
@@ -8083,8 +8163,9 @@ public class RobotRun extends PApplet {
 
 			buffer = new ArrayList<String>();
 			displayPoint = null;
-			c = new RobotCamera(200, 200, 200, ROBOTS.get(0).getOrientation(), 90, 1, 10, 100, null);
-
+			
+			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 10, 100, null);
+			
 		} catch (NullPointerException NPEx) {
 
 			// TODO write to a log

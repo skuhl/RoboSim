@@ -1,5 +1,6 @@
 package geom;
 
+import global.Fields;
 import processing.core.PVector;
 import robot.RQuaternion;
 import robot.RobotRun;
@@ -136,7 +137,7 @@ public class Point  {
 	}
 
 	/**
-	 * Returns a string array, where each entry is one of the values of the Cartiesian
+	 * Returns a string array, where each entry is one of the values of the Cartesian
 	 * represent of the Point: (X, Y, Z, W, P, and R) and their respective labels.
 	 * 
 	 * @return  A 6x2-element String array
