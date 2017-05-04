@@ -427,16 +427,19 @@ public class WindowManager implements ControlListener {
 	}
 	
 	/**
-	 * TODO
+	 * Adds a new radio button to the UI with the given name, parent, toggle
+	 * dimensions, toggle label font, list of toggles, and the value of the
+	 * initially active toggle. 
 	 * 
-	 * @param name
-	 * @param parent
-	 * @param togWdh
-	 * @param togHgt
-	 * @param lblFont
-	 * @param elements
-	 * @param iniActive
-	 * @return
+	 * @param name		The name (or ID) of the UI element, which must be
+	 * 					unique amongst all UI elements!
+	 * @param parent	The window group, to which this radio button belongs
+	 * @param togWdh	The width of a toggle element
+	 * @param togHgt	The height of a toggle element
+	 * @param lblFont	The font for the labels of the toggle elements
+	 * @param elements	The list of toggles in the radio button
+	 * @param iniActive	The value of the toggle, which is initially active
+	 * @return			A reference to the new radio button
 	 */
 	private MyRadioButton addRadioButtons(String name, Group parent, int togWdh,
 			int togHgt, PFont lblFont, HashMap<Float, String> elements,
@@ -468,8 +471,6 @@ public class WindowManager implements ControlListener {
 		for (Toggle t : items) {
 			t.getCaptionLabel().setFont(lblFont);
 		}
-		
-		UIManager.addListener(rb);
 		
 		return rb;
 	}

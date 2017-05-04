@@ -94,7 +94,7 @@ public class MyDropdownList extends DropdownList {
 	}
 	
 	@Override
-	public MyDropdownList setValue(float newValue) {
+	public DropdownList setValue(float newValue) {
 		super.setValue(newValue);
 		updateLabel();
 		return this;

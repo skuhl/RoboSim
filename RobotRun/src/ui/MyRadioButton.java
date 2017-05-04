@@ -2,6 +2,7 @@ package ui;
 
 import controlP5.ControlEvent;
 import controlP5.ControlP5;
+import controlP5.Controller;
 import controlP5.RadioButton;
 import controlP5.Toggle;
 
@@ -69,22 +70,4 @@ public class MyRadioButton extends RadioButton {
 	}
 	
 	/* My rant ends here */
-	
-	@Override
-	public void controlEvent(ControlEvent arg0) {
-		boolean[] toggleStates = new boolean[ _myRadioToggles.size() ];
-		Toggle toToggle = null;
-		
-		
-		for (Toggle t : _myRadioToggles) {
-			
-			if (t == arg0.getController()) {
-				System.out.printf("%s %s %f\n", getName(), arg0.getController().getName(), arg0.getValue());
-				
-				
-				
-			}
-			
-		}	
-	}
 }

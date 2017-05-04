@@ -7341,7 +7341,7 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Returns a string represenation of the given matrix.
+	 * Returns a string representation of the given matrix.
 	 * 
 	 * @param matrix
 	 *            A non-null matrix
