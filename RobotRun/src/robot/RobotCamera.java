@@ -7,26 +7,6 @@ import geom.WorldObject;
 import processing.core.PVector;
 
 public class RobotCamera {
-	private PVector camPos;
-	private RQuaternion camOrient;
-	private float camFOV; // Angle between the diagonals of the camera view frustum, in degrees
-	private float camAspectRatio; // Ratio of horizontal : vertical camera frustum size 
-	
-	private float camClipNear; // The distance from the camera to the near clipping plane
-	private float camClipFar; // The distance from the camera to the far clipping plane
-	private Scenario scene;
-	
-	public RobotCamera(float posX, float posY, float posZ, RQuaternion q, 
-			float fov, float ar, float near, float far, Scenario s) {
-		camPos = new PVector(posX, posY, posZ);
-		camOrient = q;
-		camFOV = fov;
-		camAspectRatio = ar;
-		camClipNear = near;
-		camClipFar = far;
-		scene = s;
-	}
-	
 	public static void main(String args[]) {
 		RobotCamera c = new RobotCamera(200, 0, 200, new RQuaternion(), 90, 1, 10, 500, null);
 		Box b = new Box(0, 5, 100);
@@ -39,65 +19,25 @@ public class RobotCamera {
 		System.out.println("is object in frame? " + c.checkObjectInFrame(f));
 	}
 	
-	public RobotCamera setOrientation(RQuaternion o) {
-		camOrient = o;
-		return this;
-	}
+	private float camAspectRatio; // Ratio of horizontal : vertical camera frustum size 
+	private float camClipFar; // The distance from the camera to the far clipping plane
+	private float camClipNear; // The distance from the camera to the near clipping plane
 	
-	public PVector getLookVect() {
-		double x = -1 + 2*Math.pow(camOrient.y(), 2) + 2*Math.pow(camOrient.z(), 2);
-		double y = -2*camOrient.x()*camOrient.y() + 2*camOrient.z()*camOrient.w();
-		double z = -2*camOrient.x()*camOrient.z() - 2*camOrient.y()*camOrient.w();
-		
-		return new PVector((float)x, (float)y, (float)z);
-	}
+	private float camFOV; // Angle between the diagonals of the camera view frustum, in degrees
+	private RQuaternion camOrient;
+	private PVector camPos;
 	
-	public PVector getUpVect() {
-		double x = -2*camOrient.x()*camOrient.y() - 2*camOrient.z()*camOrient.w();
-		double y = -1 + 2*Math.pow(camOrient.x(), 2) + 2*Math.pow(camOrient.z(), 2);
-		double z = -2*camOrient.y()*camOrient.z() + 2*camOrient.x()*camOrient.w();
-		
-		return new PVector((float)x, (float)y, (float)z);
-	}
+	private Scenario scene;
 	
-	
-	public WorldObject getNearestObjectInFrame() {
-		float minDist = Float.MAX_VALUE;
-		WorldObject closeObj = null;
-		for(WorldObject o : getObjectsInFrame()) {
-			PVector objCenter = o.getLocalCenter();
-			PVector toObj = new PVector(objCenter.x - camPos.x, objCenter.y - camPos.y, objCenter.z - camPos.z);
-			
-			float dist = toObj.mag();
-			if(minDist > dist) {
-				minDist = dist;
-				closeObj = o;
-			}
-		}
-		
-		return closeObj;
-	}
-	
-	public float[][] getOrientationMat() {
-		return camOrient.toMatrix();
-	}
-	
-	/**
-	 * Performs frustum culling on all objects in scene to obtain a list of the objects
-	 * that fall inside the view frustum.
-	 * 
-	 * @return The list of WorldObjects that fall inside of the camera view frustum.
-	 */
-	public ArrayList<WorldObject> getObjectsInFrame() {
-		ArrayList<WorldObject> objList = new ArrayList<>();
-		
-		for(WorldObject o : scene.getObjectList()) {
-			if(checkObjectInFrame(o) >= 1) {
-				objList.add(o);
-			}
-		}
-		
-		return objList;
+	public RobotCamera(float posX, float posY, float posZ, RQuaternion q, 
+			float fov, float ar, float near, float far, Scenario s) {
+		camPos = new PVector(posX, posY, posZ);
+		camOrient = q;
+		camFOV = fov;
+		camAspectRatio = ar;
+		camClipNear = near;
+		camClipFar = far;
+		scene = s;
 	}
 	
 	/**
@@ -119,8 +59,8 @@ public class RobotCamera {
 	}
 	
 	public boolean checkPointInFrame(PVector p) {
-		PVector lookVect = getLookVect();
-		PVector upVect = getUpVect();
+		PVector lookVect = getVectLook();
+		PVector upVect = getVectUp();
 		PVector ltVect = lookVect.cross(upVect);
 		
 		PVector toObj = new PVector(p.x - camPos.x, p.y - camPos.y, p.z - camPos.z);
@@ -143,21 +83,44 @@ public class RobotCamera {
 		return false;
 	}
 	
-	public float getPlaneHeight(float fov, float aspectRatio, float dist) {
-		// Field of view must be in the range of (0, 90) degrees
-		if(fov >= 180 || fov <= 0) { return -1; }
-		float diagonal = 2*(float)Math.tan(fov/2)*dist;
-		float height = (float)Math.sqrt(diagonal*diagonal / (1 + aspectRatio*aspectRatio));
+	public WorldObject getNearestObjectInFrame() {
+		float minDist = Float.MAX_VALUE;
+		WorldObject closeObj = null;
+		for(WorldObject o : getObjectsInFrame()) {
+			PVector objCenter = o.getLocalCenter();
+			PVector toObj = new PVector(objCenter.x - camPos.x, objCenter.y - camPos.y, objCenter.z - camPos.z);
+			
+			float dist = toObj.mag();
+			if(minDist > dist) {
+				minDist = dist;
+				closeObj = o;
+			}
+		}
 		
-		return height;
+		return closeObj;
 	}
 	
-	public float getPlaneWidth(float fov, float aspectRatio, float dist) {
-		// Field of view must be in the range of (0, 90) degrees
-		if(fov >= 180 || fov <= 0) { return -1; }
-		float width = getPlaneHeight(fov, aspectRatio, dist) * aspectRatio;
+	
+	/**
+	 * Performs frustum culling on all objects in scene to obtain a list of the objects
+	 * that fall inside the view frustum.
+	 * 
+	 * @return The list of WorldObjects that fall inside of the camera view frustum.
+	 */
+	public ArrayList<WorldObject> getObjectsInFrame() {
+		ArrayList<WorldObject> objList = new ArrayList<>();
 		
-		return width;
+		for(WorldObject o : scene.getObjectList()) {
+			if(checkObjectInFrame(o) >= 1) {
+				objList.add(o);
+			}
+		}
+		
+		return objList;
+	}
+	
+	public float[][] getOrientationMat() {
+		return camOrient.toMatrix();
 	}
 	
 	/**
@@ -179,8 +142,8 @@ public class RobotCamera {
 		float width = getPlaneWidth(fov, aspectRatio, dist);
 		
 		// Produce a coordinate system based on camera orientation
-		PVector lookVect = getLookVect();
-		PVector upVect = getUpVect();
+		PVector lookVect = getVectLook();
+		PVector upVect = getVectUp();
 		PVector ltVect = lookVect.cross(upVect);
 		
 		PVector center = new PVector(camPos.x + lookVect.x * dist,
@@ -201,5 +164,43 @@ public class RobotCamera {
 				  				 center.z - upVect.z * height / 2 - ltVect.z * width / 2);
 		
 		return new PVector[] {tl, tr, bl, br};
+	}
+	
+	public float getPlaneHeight(float fov, float aspectRatio, float dist) {
+		// Field of view must be in the range of (0, 90) degrees
+		if(fov >= 180 || fov <= 0) { return -1; }
+		float diagonal = 2*(float)Math.tan(fov/2)*dist;
+		float height = (float)Math.sqrt(diagonal*diagonal / (1 + aspectRatio*aspectRatio));
+		
+		return height;
+	}
+	
+	public float getPlaneWidth(float fov, float aspectRatio, float dist) {
+		// Field of view must be in the range of (0, 90) degrees
+		if(fov >= 180 || fov <= 0) { return -1; }
+		float width = getPlaneHeight(fov, aspectRatio, dist) * aspectRatio;
+		
+		return width;
+	}
+	
+	public PVector getVectLook() {
+		double x = -1 + 2*Math.pow(camOrient.y(), 2) + 2*Math.pow(camOrient.z(), 2);
+		double y = -2*camOrient.x()*camOrient.y() + 2*camOrient.z()*camOrient.w();
+		double z = -2*camOrient.x()*camOrient.z() - 2*camOrient.y()*camOrient.w();
+		
+		return new PVector((float)x, (float)y, (float)z);
+	}
+	
+	public PVector getVectUp() {
+		double x = -2*camOrient.x()*camOrient.y() - 2*camOrient.z()*camOrient.w();
+		double y = -1 + 2*Math.pow(camOrient.x(), 2) + 2*Math.pow(camOrient.z(), 2);
+		double z = -2*camOrient.y()*camOrient.z() + 2*camOrient.x()*camOrient.w();
+		
+		return new PVector((float)x, (float)y, (float)z);
+	}
+	
+	public RobotCamera setOrientation(RQuaternion o) {
+		camOrient = o;
+		return this;
 	}
 }

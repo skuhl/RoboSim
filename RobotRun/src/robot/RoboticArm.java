@@ -817,7 +817,7 @@ public class RoboticArm {
 							System.out.printf("A[i%d, n=%d]: %f\n", i, n, trialAngle);
 							model.jointsMoving[n] = 0;
 							RobotRun.getInstance().updateRobotJogMotion(i, 0);
-							RobotRun.getInstance().hd();
+							RobotRun.getInstance().hold();
 						}
 					}
 				}
@@ -1944,7 +1944,7 @@ public class RoboticArm {
 				}
 
 				if (doneMoving) {
-					RobotRun.getInstance().hd();
+					RobotRun.getInstance().hold();
 				}
 
 			} else if (modelInMotion()) {
