@@ -60,6 +60,7 @@ public final class MotionInstruction extends Instruction  {
 	public boolean checkFrames(int activeToolIdx, int activeFrameIdx) {
 		return (toolFrame == activeToolIdx) && (userFrame == activeFrameIdx);
 	}
+	@Override
 	public Instruction clone() {
 		Instruction copy = new MotionInstruction(motionType, positionNum, isGPosReg, speed, termination, userFrame, toolFrame);
 		copy.setIsCommented( isCommented() );
@@ -147,6 +148,7 @@ public final class MotionInstruction extends Instruction  {
 
 	public boolean toggleOffsetActive() { return (offsetActive = !offsetActive); }
 
+	@Override
 	public String[] toStringArray() {
 		String[] fields;
 		int instrLen, subInstrLen;

@@ -7,6 +7,7 @@ public class LabelInstruction extends Instruction {
 		labelNum = num;
 	}
 
+	@Override
 	public Instruction clone() {
 		Instruction copy = new LabelInstruction(labelNum);
 		copy.setIsCommented( isCommented() );
@@ -17,6 +18,7 @@ public class LabelInstruction extends Instruction {
 
 	public void setLabelNum(int n) { labelNum = n; }
 
+	@Override
 	public String[] toStringArray() {
 		String[] fields = new String[1];
 		// Label number

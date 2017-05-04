@@ -39,10 +39,11 @@ public class SelectStatement extends Instruction {
 		getInstrs().add(i);
 	}
 
+	@Override
 	public Instruction clone() {   
 		ExprOperand newArg = getArg().clone();
-		ArrayList<ExprOperand> cList = new ArrayList<ExprOperand>();
-		ArrayList<Instruction> iList = new ArrayList<Instruction>();
+		ArrayList<ExprOperand> cList = new ArrayList<>();
+		ArrayList<Instruction> iList = new ArrayList<>();
 
 		for(ExprOperand o : getCases()) {
 			cList.add(o.clone());
@@ -68,6 +69,7 @@ public class SelectStatement extends Instruction {
 		}
 	}
 
+	@Override
 	public int execute() {
 		for(int i = 0; i < getCases().size(); i += 1) {
 			ExprOperand c = getCases().get(i);
@@ -118,10 +120,12 @@ public class SelectStatement extends Instruction {
 		this.instrs = instrs;
 	}
 
+	@Override
 	public String toString() {
 		return "";
 	}
 
+	@Override
 	public String[] toStringArray() {
 		String[] ret = new String[2 + 4*getCases().size()];
 		ret[0] = "SELECT";

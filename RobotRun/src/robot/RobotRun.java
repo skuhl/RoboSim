@@ -13,8 +13,6 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
-import com.sun.prism.paint.Color;
-
 import controlP5.Button;
 import controlP5.ControlP5;
 import controlP5.Group;
@@ -28,13 +26,13 @@ import frame.CoordFrame;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
-import geom.Box;
 import geom.Part;
 import geom.Point;
 import geom.Triangle;
 import geom.WorldObject;
 import global.Fields;
 import processing.core.PApplet;
+import processing.core.PConstants;
 import processing.core.PFont;
 import processing.core.PImage;
 import processing.core.PMatrix3D;
@@ -103,8 +101,11 @@ public class RobotRun extends PApplet {
 	 * Initialize all static fields
 	 */
 	static {
-		LETTERS = new char[][] { { 'a', 'b', 'c', 'd', 'e', 'f' }, { 'g', 'h', 'i', 'j', 'k', 'l' },
-				{ 'm', 'n', 'o', 'p', 'q', 'r' }, { 's', 't', 'u', 'v', 'w', 'x' }, { 'y', 'z', '_', '@', '*', '.' } };
+		LETTERS = new char[][] { { 'a', 'b', 'c', 'd', 'e', 'f' }, 
+								 { 'g', 'h', 'i', 'j', 'k', 'l' },
+								 { 'm', 'n', 'o', 'p', 'q', 'r' }, 
+								 { 's', 't', 'u', 'v', 'w', 'x' }, 
+								 { 'y', 'z', '_', '@', '*', '.' } };
 
 		ITEMS_TO_SHOW = 8;
 		NUM_ENTRY_LEN = 16;
@@ -450,7 +451,7 @@ public class RobotRun extends PApplet {
 
 		for (int i = 0; i < l; i += 1) {
 			for (int j = 0; j < w; j += 1) {
-				r[i][j] = (double) m[i][j];
+				r[i][j] = m[i][j];
 			}
 		}
 
@@ -550,7 +551,7 @@ public class RobotRun extends PApplet {
 				// update joint angles
 				cumulativeOffset += dAngle[i];
 				// prevents IK algorithm from producing unrealistic motion
-				if (Math.abs(cumulativeOffset) > RobotRun.PI) {
+				if (Math.abs(cumulativeOffset) > PConstants.PI) {
 					// System.out.println("Optimal solution not found.");
 					// return null;
 				}
@@ -1000,9 +1001,9 @@ public class RobotRun extends PApplet {
 		return ret;
 	}
 
-	private final ArrayList<Scenario> SCENARIOS = new ArrayList<Scenario>();
-	private final Stack<WorldObject> SCENARIO_UNDO = new Stack<WorldObject>();
-	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<Integer, RoboticArm>();
+	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
+	private final Stack<WorldObject> SCENARIO_UNDO = new Stack<>();
+	private final HashMap<Integer, RoboticArm> ROBOTS = new HashMap<>();
 
 	private Scenario activeScenario;
 	private RoboticArm activeRobot;
@@ -1016,7 +1017,7 @@ public class RobotRun extends PApplet {
 	private MenuScroll options;
 
 	private Stack<ScreenMode> display_stack;
-	private ArrayList<Macro> macros = new ArrayList<Macro>();
+	private ArrayList<Macro> macros = new ArrayList<>();
 	private Macro[] SU_macro_bindings = new Macro[7];
 	private Macro edit_macro;
 
@@ -1074,10 +1075,10 @@ public class RobotRun extends PApplet {
 	int lastLine;
 
 	// store numbers pressed by the user
-	ArrayList<Integer> nums = new ArrayList<Integer>();
+	ArrayList<Integer> nums = new ArrayList<>();
 
 	// container for instructions being coppied/ cut and pasted
-	ArrayList<Instruction> clipBoard = new ArrayList<Instruction>();
+	ArrayList<Instruction> clipBoard = new ArrayList<>();
 
 	// string for displaying error message to user
 	String err = null;
@@ -1690,13 +1691,13 @@ public class RobotRun extends PApplet {
 		PVector vec2 = new PVector(c.x - center.x, c.y - center.y, c.z - center.z);
 		float theta = atan2(vec1.cross(vec2).dot(n), vec1.dot(vec2));
 		if (theta < 0)
-			theta += RobotRun.TWO_PI;
+			theta += PConstants.TWO_PI;
 		// finally, draw an arc through all 3 points by rotating the u
 		// vector around our normal vector
 		float angle = 0, mu = 0;
 		int numPoints = (int) (r * theta / distanceBetweenPoints);
 		float inc = 1 / (float) numPoints;
-		float angleInc = (theta) / (float) numPoints;
+		float angleInc = (theta) / numPoints;
 		for (int i = 0; i < numPoints; i += 1) {
 			PVector pos = RQuaternion.rotateVectorAroundAxis(u, n, angle).mult(r).add(center);
 			if (i == numPoints - 1)
@@ -1744,7 +1745,7 @@ public class RobotRun extends PApplet {
 		RQuaternion q3 = next.orientation;
 		RQuaternion qi = new RQuaternion();
 
-		ArrayList<Point> secondaryTargets = new ArrayList<Point>();
+		ArrayList<Point> secondaryTargets = new ArrayList<>();
 		float d1 = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
 		float d2 = dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
 		int numberOfPoints = 0;
@@ -1755,7 +1756,7 @@ public class RobotRun extends PApplet {
 		}
 
 		float mu = 0;
-		float increment = 1.0f / (float) numberOfPoints;
+		float increment = 1.0f / numberOfPoints;
 		for (int n = 0; n < numberOfPoints; n++) {
 			mu += increment;
 			qi = RQuaternion.SLERP(q2, q3, mu);
@@ -1764,7 +1765,7 @@ public class RobotRun extends PApplet {
 		}
 
 		mu = 0;
-		int transitionPoint = (int) ((float) numberOfPoints * percentage);
+		int transitionPoint = (int) (numberOfPoints * percentage);
 		for (int n = 0; n < transitionPoint; n++) {
 			mu += increment;
 			qi = RQuaternion.SLERP(q1, q2, mu);
@@ -1850,7 +1851,7 @@ public class RobotRun extends PApplet {
 		float dist = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) + 100f * q1.dist(q2);
 		int numberOfPoints = (int) (dist / distanceBetweenPoints);
 
-		float increment = 1.0f / (float) numberOfPoints;
+		float increment = 1.0f / numberOfPoints;
 		for (int n = 0; n < numberOfPoints; n++) {
 			mu += increment;
 
@@ -2462,6 +2463,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
+	@Override
 	public void draw() {
 
 		// Apply the camera for drawing objects
@@ -2526,10 +2528,10 @@ public class RobotRun extends PApplet {
 		/**/
 		
 		/*Camera Test Code */
-		/*Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
-		c.setOrientation(p.orientation);
-		displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
-		
+		//Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
+		//c.setOrientation(p.orientation);
+		//displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
+		/*
 		PVector near[] = c.getPlane(90, 2, 10);
 		PVector far[] = c.getPlane(90, 2, 100);
 		for(int i = 0; i < 4; i += 1) {
@@ -4204,7 +4206,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SELECT_CUT_COPY:
 			ArrayList<Instruction> instructions = getActiveRobot().getActiveProg().getInstructions();
-			clipBoard = new ArrayList<Instruction>();
+			clipBoard = new ArrayList<>();
 
 			int remIdx = 0;
 			for (int i = 0; i < instructions.size(); i += 1) {
@@ -4307,7 +4309,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SELECT_CUT_COPY:
 			inst = p.getInstructions();
-			clipBoard = new ArrayList<Instruction>();
+			clipBoard = new ArrayList<>();
 
 			for (int i = 0; i < inst.size(); i += 1) {
 				if (contents.isSelected(i))
@@ -5237,13 +5239,13 @@ public class RobotRun extends PApplet {
 				}
 			} else if (stmt.getExpr() instanceof AtomicExpression) {
 				if (selectIdx == 2) {
-					opEdit = ((AtomicExpression) stmt.getExpr()).getArg1();
+					opEdit = stmt.getExpr().getArg1();
 					nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
 				} else if (selectIdx == 3) {
 					opEdit = stmt.getExpr();
 					nextScreen(ScreenMode.SET_EXPR_OP);
 				} else if (selectIdx == 4) {
-					opEdit = ((AtomicExpression) stmt.getExpr()).getArg2();
+					opEdit = stmt.getExpr().getArg2();
 					nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
 				} else if (selectIdx == 5) {
 					nextScreen(ScreenMode.SET_IF_STMT_ACT);
@@ -6105,6 +6107,7 @@ public class RobotRun extends PApplet {
 		updateRobotJogMotion(5, 1);
 	}
 
+	@Override
 	public void keyPressed() {
 
 		if (key == 27) {
@@ -6616,7 +6619,7 @@ public class RobotRun extends PApplet {
 
 	// prepare for displaying motion instructions on screen
 	public ArrayList<DisplayLine> loadInstructions(int programID) {
-		ArrayList<DisplayLine> instruct_list = new ArrayList<DisplayLine>();
+		ArrayList<DisplayLine> instruct_list = new ArrayList<>();
 		int tokenOffset = Fields.TXT_PAD - Fields.PAD_OFFSET;
 
 		Program p = getActiveRobot().getProgram(programID);
@@ -6748,7 +6751,7 @@ public class RobotRun extends PApplet {
 	public void loadPointList() {
 		if (teachFrame != null) {
 
-			ArrayList<String> temp = new ArrayList<String>();
+			ArrayList<String> temp = new ArrayList<>();
 			// Display TCP teach points
 			if (mode == ScreenMode.TEACH_3PT_TOOL || mode == ScreenMode.TEACH_6PT) {
 				temp.add("First Approach Point: ");
@@ -7219,7 +7222,7 @@ public class RobotRun extends PApplet {
 	 *             located in RobotRun/data/
 	 */
 	public PShape loadSTLModel(String filename, int fill) throws NullPointerException {
-		ArrayList<Triangle> triangles = new ArrayList<Triangle>();
+		ArrayList<Triangle> triangles = new ArrayList<>();
 		byte[] data = loadBytes(filename);
 
 		int n = 84; // skip header and number of triangles
@@ -7362,6 +7365,7 @@ public class RobotRun extends PApplet {
 
 	}
 
+	@Override
 	public void mouseDragged(MouseEvent e) {
 		if (mouseButton == CENTER) {
 			// Drag the center mouse button to pan the camera
@@ -7376,6 +7380,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
+	@Override
 	public void mouseWheel(MouseEvent event) {
 		if (getManager() != null && getManager().isMouseOverADropdownList()) {
 			// Disable zomming when selecting an element from a dropdown list
@@ -7774,7 +7779,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void pasteInstructions(int options) {
-		ArrayList<Instruction> pasteList = new ArrayList<Instruction>();
+		ArrayList<Instruction> pasteList = new ArrayList<>();
 		Program p = getActiveRobot().getActiveProg();
 
 		/* Pre-process instructions for insertion into program. */
@@ -8047,6 +8052,7 @@ public class RobotRun extends PApplet {
 		SU_macro_bindings = sU_macro_bindings;
 	}
 
+	@Override
 	public void settings() {
 		size(1080, 720, P3D);
 	}
@@ -8089,7 +8095,7 @@ public class RobotRun extends PApplet {
 
 			activeRobot = ROBOTS.get(0);
 
-			intermediatePositions = new ArrayList<Point>();
+			intermediatePositions = new ArrayList<>();
 			activeScenario = null;
 
 			DataManagement.initialize(this);
@@ -8100,12 +8106,12 @@ public class RobotRun extends PApplet {
 			// Explicitly draw the ControlP5 elements
 			cp5.setAutoDraw(false);
 			setManager(new WindowManager(this, cp5, fnt_con12, fnt_con14));
-			display_stack = new Stack<ScreenMode>();
+			display_stack = new Stack<>();
 			contents = new MenuScroll(this, "cont", ITEMS_TO_SHOW, 10, 20);
 			options = new MenuScroll(this, "opt", 3, 10, 180);
 			gui();
 
-			buffer = new ArrayList<String>();
+			buffer = new ArrayList<>();
 			displayPoint = null;
 			
 			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 10, 100, null);

@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 
 import controlP5.Background;
 import controlP5.Button;
-import controlP5.ButtonBar;
 import controlP5.CallbackEvent;
 import controlP5.CallbackListener;
 import controlP5.ControlEvent;
@@ -19,7 +18,6 @@ import controlP5.DropdownList;
 import controlP5.Group;
 import controlP5.RadioButton;
 import controlP5.Textarea;
-import controlP5.Textfield;
 import controlP5.Toggle;
 import geom.Box;
 import geom.Cylinder;
@@ -29,13 +27,15 @@ import geom.Part;
 import geom.Shape;
 import geom.ShapeType;
 import geom.WorldObject;
+import processing.core.PApplet;
+import processing.core.PConstants;
 import processing.core.PFont;
 import processing.core.PVector;
-import robot.RoboticArm;
 import robot.DataManagement;
 import robot.EEMapping;
 import robot.Fixture;
 import robot.RobotRun;
+import robot.RoboticArm;
 import robot.Scenario;
 import ui.AxesDisplay;
 import ui.ButtonTabs;
@@ -119,7 +119,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 		UIManager = manager;		 
 		app = appRef;
 		menu = null;
-		mouseEventFor = new HashMap<String, Integer>();
+		mouseEventFor = new HashMap<>();
 		lastModImport = null;
 		
 		manager.addListener(this);
@@ -230,7 +230,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 		// Scenario window elements
 		addTextarea("SOptLbl", "Options:", scenarioWindow, mLblWidth, fieldHeight, medium);
 		
-		HashMap<Float, String> toggles = new HashMap<Float, String>();
+		HashMap<Float, String> toggles = new HashMap<>();
 		toggles.put(0f, "New");
 		toggles.put(1f, "Load");
 		toggles.put(2f, "Rename");
@@ -783,17 +783,17 @@ public class WindowManager implements ControlListener, CallbackListener {
 			 }
 
 		 } catch (NullPointerException NPEx) {
-			 RobotRun.println("Missing parameter!");
+			 PApplet.println("Missing parameter!");
 			 NPEx.printStackTrace();
 			 wldObj = null;
 			 
 		 } catch (ClassCastException CCEx) {
-			 RobotRun.println("Invalid field?");
+			 PApplet.println("Invalid field?");
 			 CCEx.printStackTrace();
 			 wldObj = null;
 			 
 		 } catch (IndexOutOfBoundsException IOOBEx) {
-			 RobotRun.println("Missing field?");
+			 PApplet.println("Missing field?");
 			 IOOBEx.printStackTrace();
 			 wldObj = null;
 		 }
@@ -834,7 +834,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 		 // Get the part's default position and orientation
 		 PVector pos = active.getLocalCenter();
 		 PVector wpr = RobotRun.matrixToEuler( active.getLocalOrientationAxes() )
-				 			   .mult(RobotRun.RAD_TO_DEG);
+				 			   .mult(PConstants.RAD_TO_DEG);
 		 
 		 pos = RobotRun.convertNativeToWorld(pos);
 		 
@@ -860,7 +860,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 			 // Get the part's current position and orientation
 			 PVector pos = p.getDefaultCenter();
 			 PVector wpr = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
-					 			   .mult(RobotRun.RAD_TO_DEG);
+					 			   .mult(PConstants.RAD_TO_DEG);
 			 
 			 pos = RobotRun.convertNativeToWorld(pos);
 			 
@@ -886,7 +886,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 			 // Get the part's default position and orientation
 			 PVector pos = active.getLocalCenter();
 			 PVector wpr = RobotRun.matrixToEuler( active.getLocalOrientationAxes() )
-					 			   .mult(RobotRun.RAD_TO_DEG);
+					 			   .mult(PConstants.RAD_TO_DEG);
 			 
 			 pos = RobotRun.convertNativeToWorld(pos);
 			 
@@ -913,7 +913,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 			 // Get the part's current position and orientation
 			 PVector pos = p.getDefaultCenter();
 			 PVector wpr = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
-					 			   .mult(RobotRun.RAD_TO_DEG);
+					 			   .mult(PConstants.RAD_TO_DEG);
 			 
 			 pos = RobotRun.convertNativeToWorld(pos);
 			 
@@ -1008,7 +1008,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 					 throw new NumberFormatException("Invalid length value!");
 				 }
 				 // Length cap of 800
-				 dimensions[0] = RobotRun.max(10, RobotRun.min(val, 800f));
+				 dimensions[0] = PApplet.max(10, PApplet.min(val, 800f));
 			 }
 
 			 if (hgtField != null && !hgtField.equals("")) {
@@ -1019,7 +1019,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 					 throw new NumberFormatException("Invalid height value!");
 				 }
 				 // Height cap of 800
-				 dimensions[1] = RobotRun.max(10, RobotRun.min(val, 800f));
+				 dimensions[1] = PApplet.max(10, PApplet.min(val, 800f));
 			 }
 
 			 if (wdhField != null && !wdhField.equals("")) {
@@ -1030,17 +1030,17 @@ public class WindowManager implements ControlListener, CallbackListener {
 					 throw new NumberFormatException("Invalid width value!");
 				 }
 				 // Width cap of 800
-				 dimensions[2] = RobotRun.max(10, RobotRun.min(val, 800f));
+				 dimensions[2] = PApplet.max(10, PApplet.min(val, 800f));
 			 }
 
 			 return dimensions;
 
 		 } catch (NumberFormatException NFEx) {
-			 RobotRun.println("Invalid number input!");
+			 PApplet.println("Invalid number input!");
 			 return null;
 
 		 } catch (NullPointerException NPEx) {
-			 RobotRun.println("Missing parameter!");
+			 PApplet.println("Missing parameter!");
 			 return null;
 		 }
 	 }
@@ -1091,7 +1091,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 					 throw new NumberFormatException("Invalid length value!");
 				 }
 				 // Radius cap of 9999
-				 dimensions[0] = RobotRun.max(5, RobotRun.min(val, 800f));
+				 dimensions[0] = PApplet.max(5, PApplet.min(val, 800f));
 			 }
 
 			 if (hgtField != null && !hgtField.equals("")) {
@@ -1102,17 +1102,17 @@ public class WindowManager implements ControlListener, CallbackListener {
 					 throw new NumberFormatException("Invalid height value!");
 				 }
 				 // Height cap of 9999
-				 dimensions[1] = RobotRun.max(10, RobotRun.min(val, 800f));
+				 dimensions[1] = PApplet.max(10, PApplet.min(val, 800f));
 			 }
 
 			 return dimensions;
 
 		 } catch (NumberFormatException NFEx) {
-			 RobotRun.println("Invalid number input!");
+			 PApplet.println("Invalid number input!");
 			 return null;
 
 		 } catch (NullPointerException NPEx) {
-			 RobotRun.println("Missing parameter!");
+			 PApplet.println("Missing parameter!");
 			 return null;
 		 }
 	 }
@@ -1210,17 +1210,17 @@ public class WindowManager implements ControlListener, CallbackListener {
 					 throw new NumberFormatException("Invalid scale value");
 				 }
 				 // Scale cap of 50
-				 dimensions[0] = RobotRun.min(val, 50f);
+				 dimensions[0] = PApplet.min(val, 50f);
 			 }
 
 			 return dimensions;
 
 		 } catch (NumberFormatException NFEx) {
-			 RobotRun.println(NFEx.getMessage());
+			 PApplet.println(NFEx.getMessage());
 			 return null;
 
 		 } catch (NullPointerException NPEx) {
-			 RobotRun.println("Missing parameter!");
+			 PApplet.println("Missing parameter!");
 			 return null;
 		 }
 	 }
@@ -1254,7 +1254,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 				 if (orienVals[valIdx] != null && !orienVals[valIdx].equals("")) {
 					 float val = Float.parseFloat(orienVals[valIdx]);
 					 // Bring value within the range [-9999, 9999]
-					 val = RobotRun.max(-9999f, RobotRun.min(val, 9999f));
+					 val = PApplet.max(-9999f, PApplet.min(val, 9999f));
 					 values[valIdx] = val;
 				 }
 			 }
@@ -1262,11 +1262,11 @@ public class WindowManager implements ControlListener, CallbackListener {
 			 return values;
 
 		 } catch (NumberFormatException NFEx) {
-			 RobotRun.println("Invalid number input!");
+			 PApplet.println("Invalid number input!");
 			 return null;
 
 		 } catch (NullPointerException NPEx) {
-			 RobotRun.println("Missing parameter!");
+			 PApplet.println("Missing parameter!");
 			 return null;
 		 }
 	 }
@@ -1372,7 +1372,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 					 for (Scenario s : app.getScenarios()) {
 						 if (s.getName().equals(name)) {
 							 // Duplicate name
-							 RobotRun.println("Names must be unique!");
+							 PApplet.println("Names must be unique!");
 							 return null;
 						 }
 					 }
@@ -1585,7 +1585,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("ShapeLbl").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
+		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
 		 getDropdown("Shape").setPosition(relPos[0], relPos[1]);
 		 // Dimension label and fields
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
@@ -1594,7 +1594,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 		 // Fill color label and dropdown
 		 c = getTextArea("FillLbl").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
+		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
 		 getDropdown("Fill").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
@@ -1608,7 +1608,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 		 } else {
 			 // Outline color label and dropdown
 			 c = getTextArea("OutlineLbl").setPosition(relPos[0], relPos[1]).show();
-			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, RobotRun.abs(fieldHeight - dropItemHeight) / 2);
+			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
 
 			 getDropdown("Outline").setPosition(relPos[0], relPos[1]).show();
 			 relPos = relativePosition(c, RelativePoint.BOTTOM_RIGHT, distLblToFieldX, distBtwFieldsY);
@@ -1939,7 +1939,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 			 c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
 			
 			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX,
-					RobotRun.abs(fieldHeight - dropItemHeight) / 2);
+					PApplet.abs(fieldHeight - dropItemHeight) / 2);
 			 getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
 			
 		 } else {
@@ -2363,7 +2363,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 			 
 			 if (model != null && toEdit == model.held) {
 				 // Cannot edit an object being held by the Robot
-				 RobotRun.println("Cannot edit an object currently being held by the Robot!");
+				 PApplet.println("Cannot edit an object currently being held by the Robot!");
 				 return false;
 			 }
 
@@ -2426,7 +2426,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 
 				 // Convert origin position into the World Frame
 				 PVector oPosition = RobotRun.convertNativeToWorld( toEdit.getLocalCenter() ),
-						 oWPR = RobotRun.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RobotRun.RAD_TO_DEG);
+						 oWPR = RobotRun.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(PConstants.RAD_TO_DEG);
 				 Float[] inputValues = getCurrentValues();
 				 // Update position and orientation
 				 if (inputValues[0] != null) {
@@ -2461,20 +2461,20 @@ public class WindowManager implements ControlListener, CallbackListener {
 
 				 // Convert values from the World to the Native coordinate system
 				 PVector position = RobotRun.convertWorldToNative( oPosition );
-				 PVector wpr = oWPR.mult(RobotRun.DEG_TO_RAD);
+				 PVector wpr = oWPR.mult(PConstants.DEG_TO_RAD);
 				 float[][] orientation = RobotRun.eulerToMatrix(wpr);
 				 // Update the Objects position and orientation
 				 toEdit.setLocalCenter(position);
 				 toEdit.setLocalOrientationAxes(orientation);
 				 
 			 } catch (NullPointerException NPEx) {
-				 RobotRun.println("Missing parameter!");
+				 PApplet.println("Missing parameter!");
 				 NPEx.printStackTrace();
 				 return false;
 			 }
 			 
 		 } else {
-			 RobotRun.println("No object selected!");
+			 PApplet.println("No object selected!");
 		 }
 
 		 /* If the edited object is a fixture, then update the orientation
@@ -2512,7 +2512,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 			// Pull the object's current position and orientation
 			PVector defaultPos = RobotRun.convertNativeToWorld( p.getDefaultCenter() );
 			PVector defaultWPR = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
-										 .mult(RobotRun.RAD_TO_DEG);
+										 .mult(PConstants.RAD_TO_DEG);
 			Float[] inputValues = getCurrentValues();
 			
 			// Update default position and orientation
@@ -2548,7 +2548,7 @@ public class WindowManager implements ControlListener, CallbackListener {
 
 			 // Convert values from the World to the Native coordinate system
 			 PVector position = RobotRun.convertWorldToNative( defaultPos );
-			 PVector wpr = defaultWPR.mult(RobotRun.DEG_TO_RAD);
+			 PVector wpr = defaultWPR.mult(PConstants.DEG_TO_RAD);
 			 float[][] orientation = RobotRun.eulerToMatrix(wpr);
 			 // Update the Object's default position and orientation
 			 p.setDefaultCenter(position);

@@ -53,6 +53,7 @@ public class Macro {
 
 	public void setProgram(int idx) { progIdx = idx; }
 
+	@Override
 	public String toString() {
 		String[] str = toStringArray();
 		return str[0] + " " + str[1] + " " + str[2];
