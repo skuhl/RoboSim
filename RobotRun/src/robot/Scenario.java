@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
+import geom.Fixture;
 import geom.Part;
 import geom.WorldObject;
 import processing.core.PApplet;
@@ -398,7 +399,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 					RobotRun.applyModelRotation(model, model.getJointAngles());
 
-					float[][] invEETMatrix = RobotRun.invertHCMatrix(RobotRun.getActiveRobot().oldEEOrientation);
+					float[][] invEETMatrix = RobotRun.invertHCMatrix(RobotRun.getActiveRobot().getOldOrientation());
 					RobotRun.getInstance().applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
 							invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
 							invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
