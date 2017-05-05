@@ -28,10 +28,7 @@ public class IOInstruction extends Instruction {
 	}
 	@Override
 	public int execute() {
-		RoboticArm r = RobotRun.getActiveRobot();
-		
-		r.endEffectorState = state;
-		r.checkPickupCollision( RobotRun.getInstance().getActiveScenario() );
+		RobotRun.getActiveRobot().setEEState(state);
 		return 0;
 	}
 	public int getReg(){ return reg; }
