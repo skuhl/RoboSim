@@ -11,25 +11,18 @@ import programming.Program;
  */
 public class InstState {
 	
-	public Program parent;
 	public int originIdx;
 	public Instruction inst;
-	public InstUndo type;
 	
 	/**
-	 * Initialize the instruction state with an instruction and the type of
-	 * operation performed on the instruction.
+	 * Initialize the instruction state with an instruction.
 	 * 
-	 * @param p		The program, to which the instruction belongs
 	 * @param odx	The index of the instruction in the parent program
 	 * @param i		The instruction state
-	 * @param t		The type of operation performed
 	 */
-	public InstState(Program p, int odx, Instruction i, InstUndo t) {
-		parent = p;
+	public InstState(int odx, Instruction i) {
 		originIdx = odx;
 		inst = i;
-		type = t;
 	}
 	
 }
