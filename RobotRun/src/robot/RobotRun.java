@@ -458,8 +458,8 @@ public class RobotRun extends PApplet {
 	int g1_width, g1_height; // group 1's width and height
 	int display_px, display_py; // the left-top corner of display screen
 	int display_width, display_height; // height and width of display screen
-	public Group g1, g2;
-	Button bt_record_normal, bt_ee_normal;
+	//public Group g1, g2;
+	//Button bt_record_normal, bt_ee_normal;
 
 	/**
 	 * A temporary storage string for user input in the pendant window.
@@ -1421,7 +1421,7 @@ public class RobotRun extends PApplet {
 		List<Textarea> displayText = cp5.getAll(Textarea.class);
 		for (Textarea t : displayText) {
 			// ONLY remove text areas from the Pendant!
-			if (t.getParent().equals(g1)) {
+			if (t.getParent().equals( manager.pendantWindow )) {
 				cp5.remove(t.getName());
 			}
 		}
@@ -2053,7 +2053,7 @@ public class RobotRun extends PApplet {
 		hint(DISABLE_DEPTH_TEST);
 		// Apply the camera for drawing text and windows
 		ortho();
-		showMainDisplayText();
+		renderUI();
 		cp5.draw();
 	}
 
@@ -5193,7 +5193,7 @@ public class RobotRun extends PApplet {
 	public void gui() {
 		display_stack.push(ScreenMode.DEFAULT);
 		mode = display_stack.peek();
-
+		/**
 		// group 1: display and function buttons
 		g1 = cp5.addGroup("DISPLAY")
 			.setPosition(Fields.G1_PX, g1_py)
@@ -5202,14 +5202,14 @@ public class RobotRun extends PApplet {
 			.setHeight(g1_height)
 			.setBackgroundHeight(g1_height)
 			.hideBar();
-
+		
 		cp5.addTextarea("txt")
 			.setPosition(display_px, 0)
 			.setSize(display_width, display_height)
 			.setColorBackground(Fields.UI_LIGHT)
 			.moveTo(g1);
 
-		/********************** Top row buttons **********************/
+		/********************** Top row buttons **********************
 
 		// calculate how much space each button will be given
 		int button_offsetX = Fields.LARGE_BUTTON + 1;
@@ -5237,7 +5237,7 @@ public class RobotRun extends PApplet {
 			.setImages(EE)
 			.updateSize();
 
-		/******************** Function Row ********************/
+		/******************** Function Row ********************
 
 		int f1_px = display_px;
 		int f1_py = display_py + display_height + 2;
@@ -5285,7 +5285,7 @@ public class RobotRun extends PApplet {
 		.setColorCaptionLabel(Fields.BUTTON_TEXT)
 		.moveTo(g1);
 
-		/********************** Step/Shift Row **********************/
+		/********************** Step/Shift Row **********************
 
 		int st_px = f1_px;
 		int st_py = f1_py + button_offsetY + 10;
@@ -5341,7 +5341,7 @@ public class RobotRun extends PApplet {
 		.setCaptionLabel("NEXT").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
-		/*********************** Arrow Keys ***********************/
+		/*********************** Arrow Keys ***********************
 		button_offsetY = Fields.SMALL_BUTTON + 1;
 
 		PImage[] imgs_arrow_up = { loadImage("images/arrow-up.png"), loadImage("images/arrow-up_over.png"),
@@ -5377,7 +5377,7 @@ public class RobotRun extends PApplet {
 		// --------------------------------------------------------------//
 		int g2_offsetY = display_py + display_height + 4 * Fields.LARGE_BUTTON - 10;
 
-		/********************** Numpad Block *********************/
+		/********************** Numpad Block *********************
 
 		int LINE_px = ed_px - 7 * button_offsetX / 2;
 		int LINE_py = g2_offsetY + 5 * button_offsetY;
@@ -5442,7 +5442,7 @@ public class RobotRun extends PApplet {
 		.setCaptionLabel("ITEM").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
-		/*********************** Util Block *************************/
+		/*********************** Util Block *************************
 
 		int ENTER_px = ed_px;
 		int ENTER_py = g2_offsetY;
@@ -5480,7 +5480,7 @@ public class RobotRun extends PApplet {
 		.setCaptionLabel("STATUS").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
-		/******************** Joint Control Block *******************/
+		/******************** Joint Control Block *******************
 
 		int hd_px = STATUS_px + 3 * button_offsetX / 2;
 		int hd_py = g2_offsetY;
@@ -5543,6 +5543,7 @@ public class RobotRun extends PApplet {
 		for (Button b : buttons) {
 			b.getCaptionLabel().setFont(fnt_conB);
 		}
+		/**/
 	}// End UI setup
 
 	/* Stops all of the Robot's movement */
@@ -7551,6 +7552,17 @@ public class RobotRun extends PApplet {
 	public void setup() {
 		super.setup();
 		
+		PImage[][] buttonImages = new PImage[][] {
+			
+			{ loadImage("images/record-35x20.png"), loadImage("images/record-over.png"), loadImage("images/record-on.png") },
+			{ loadImage("images/EE_35x20.png"), loadImage("images/EE_over.png"), loadImage("images/EE_down.png") },
+			{ loadImage("images/arrow-up.png"), loadImage("images/arrow-up_over.png"), loadImage("images/arrow-up_down.png") },
+			{ loadImage("images/arrow-down.png"), loadImage("images/arrow-down_over.png"), loadImage("images/arrow-down_down.png") },
+			{ loadImage("images/arrow-l.png"), loadImage("images/arrow-l_over.png"), loadImage("images/arrow-l_down.png") },
+			{ loadImage("images/arrow-r.png"), loadImage("images/arrow-r_over.png"), loadImage("images/arrow-r_down.png") }
+			
+		};
+		
 		instance = this;
 		letterStates = new int[] { 0, 0, 0, 0, 0 };
 		workingText = new StringBuilder();
@@ -7595,7 +7607,7 @@ public class RobotRun extends PApplet {
 			cp5 = new ControlP5(this);
 			// Explicitly draw the ControlP5 elements
 			cp5.setAutoDraw(false);
-			setManager(new WindowManager(this, cp5, fnt_con12, fnt_con14));
+			setManager(new WindowManager(this, cp5, buttonImages, fnt_con12, fnt_con14, fnt_conB));
 			display_stack = new Stack<>();
 			contents = new MenuScroll(this, "cont", ITEMS_TO_SHOW, 10, 20);
 			options = new MenuScroll(this, "opt", 3, 10, 180);
@@ -7699,29 +7711,24 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Displays important information in the upper-right corner of the screen.
+	 * Displays all the windows and the right-hand text display.
 	 */
-	public void showMainDisplayText() {
+	public void renderUI() {
 		textFont(fnt_con14, 14);
 		fill(0);
 		textAlign(RIGHT, TOP);
+		
+		RoboticArm r = getActiveRobot();
 		int lastTextPositionX = width - 20, lastTextPositionY = 20;
-		String coordFrame = "Coordinate Frame: ";
-
-		switch (getActiveRobot().getCurCoordFrame()) {
-		case JOINT:
-			coordFrame += "Joint";
-			break;
-		case WORLD:
-			coordFrame += "World";
-			break;
-		case TOOL:
-			coordFrame += "Tool";
-			break;
-		case USER:
-			coordFrame += "User";
-			break;
-		default:
+		CoordFrame coord = r.getCurCoordFrame();
+		String coordFrame;
+		
+		if (coord == null) {
+			// Invalid state for coordinate frame
+			coordFrame = "Coordinate Frame: N/A";
+			
+		} else {
+			coordFrame = "Coordinate Frame: " + coord.toString();
 		}
 
 		Point RP = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles());
@@ -7756,7 +7763,7 @@ public class RobotRun extends PApplet {
 			lastTextPositionY += 20;
 		}
 
-		Frame active = getActiveRobot().getActiveFrame(CoordFrame.USER);
+		Frame active = r.getActiveFrame(CoordFrame.USER);
 
 		if (active != null) {
 			// Display Robot's current position and orientation in the currently
@@ -7843,48 +7850,47 @@ public class RobotRun extends PApplet {
 				lastTextPositionY += 20;
 			}
 		}
-
+		
+		fill(215, 0, 0);
 		lastTextPositionY += 20;
+
+		// Display a message when there is an error with the Robot's
+		// movement
+		if (r.hasMotionFault()) {
+			text("Motion Fault (press SHIFT + Reset)", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		// Display a message if the Robot is in motion
+		if (r.modelInMotion()) {
+			text("Robot is moving", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		if (isProgramRunning()) {
+			text("Program executing", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		// Display a message while the robot is carrying an object
+		if (r.held != null) {
+			text("Object held", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+
+			PVector held_pos = r.held.getLocalCenter();
+			String obj_pos = String.format("(%f, %f, %f)", held_pos.x, held_pos.y, held_pos.z);
+			text(obj_pos, lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+		
+		fill(0);
+
 		// Display the current axes display state
 		text(String.format("Axes Display: %s", getAxesState().name()), lastTextPositionX, height - 50);
 
 		if (getAxesState() == AxesDisplay.GRID) {
 			// Display the current ee mapping state
 			text(String.format("EE Mapping: %s", getEEMapping().name()), lastTextPositionX, height - 30);
-		}
-
-		if (Fields.DEBUG) {
-			RoboticArm r = getActiveRobot();
-			fill(215, 0, 0);
-
-			// Display a message when there is an error with the Robot's
-			// movement
-			if (r.hasMotionFault()) {
-				text("Motion Fault (press SHIFT + Reset)", lastTextPositionX, lastTextPositionY);
-				lastTextPositionY += 20;
-			}
-
-			// Display a message if the Robot is in motion
-			if (r.modelInMotion()) {
-				text("Robot is moving", lastTextPositionX, lastTextPositionY);
-				lastTextPositionY += 20;
-			}
-
-			if (isProgramRunning()) {
-				text("Program executing", lastTextPositionX, lastTextPositionY);
-				lastTextPositionY += 20;
-			}
-
-			// Display a message while the robot is carrying an object
-			if (r.held != null) {
-				text("Object held", lastTextPositionX, lastTextPositionY);
-				lastTextPositionY += 20;
-
-				PVector held_pos = r.held.getLocalCenter();
-				String obj_pos = String.format("(%f, %f, %f)", held_pos.x, held_pos.y, held_pos.z);
-				text(obj_pos, lastTextPositionX, lastTextPositionY);
-				lastTextPositionY += 20;
-			}
 		}
 
 		getManager().updateWindowDisplay();
@@ -8223,7 +8229,7 @@ public class RobotRun extends PApplet {
 
 		// draw display background
 		cp5.addTextarea("txt").setPosition(display_px, display_py).setSize(display_width, display_height)
-		.setColorBackground(Fields.UI_LIGHT).moveTo(g1);
+		.setColorBackground(Fields.UI_LIGHT).moveTo(manager.pendantWindow);
 
 		String header = null;
 		// display the name of the program that is being edited
@@ -8233,7 +8239,7 @@ public class RobotRun extends PApplet {
 			// Display header field
 			cp5.addTextarea("header").setText(" " + header).setFont(fnt_con14).setPosition(next_px, next_py)
 			.setSize(display_width, 20).setColorValue(Fields.UI_LIGHT).setColorBackground(Fields.UI_DARK)
-			.hideScrollbar().show().moveTo(g1);
+			.hideScrollbar().show().moveTo(manager.pendantWindow);
 
 			next_py += 20;
 		}
@@ -8261,7 +8267,7 @@ public class RobotRun extends PApplet {
 			cp5.addTextarea("lf" + i).setText(funct[i]).setFont(fnt_con12)
 			// Keep function labels in their original place
 			.setPosition(display_width * i / 5 + 15, display_height - g1_py).setSize(display_width / 5 - 5, 20)
-			.setColorValue(Fields.UI_DARK).setColorBackground(Fields.UI_LIGHT).hideScrollbar().moveTo(g1);
+			.setColorValue(Fields.UI_DARK).setColorBackground(Fields.UI_LIGHT).hideScrollbar().moveTo(manager.pendantWindow);
 		}
 	} // end updateScreen()
 
