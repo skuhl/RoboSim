@@ -2021,10 +2021,11 @@ public class RobotRun extends PApplet {
 		}
 		/**/
 
-		/*Camera Test Code */
+		/*Camera Test Code *
 		Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
 		c.setOrientation(p.orientation);
 		displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
+		/**/
 
 		PVector near[] = c.getPlane(90, 2, 10);
 		PVector far[] = c.getPlane(90, 2, 100);
@@ -2042,6 +2043,8 @@ public class RobotRun extends PApplet {
 		}
 		//System.out.println(c.checkObjectInFrame(f));
 		//RobotRun.printMat(c.getOrientationMat());
+		/**/
+		 
 
 		noLights();
 		noStroke();
