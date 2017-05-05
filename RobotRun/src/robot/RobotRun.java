@@ -1421,7 +1421,7 @@ public class RobotRun extends PApplet {
 						workingText.append('\0');
 					}
 
-					contents.setColumnIdx(min(contents.getColumnIdx() + 1, len - 1));
+					contents.setColumnIdx(min(columnIdx + 1,  workingText.length() - 1));
 					updateScreen();
 				}
 
