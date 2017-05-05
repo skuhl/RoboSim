@@ -27,7 +27,6 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import screen.InstState;
-import screen.InstUndo;
 import window.DisplayLine;
 
 public class RoboticArm {

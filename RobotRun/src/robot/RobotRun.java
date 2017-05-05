@@ -6253,7 +6253,7 @@ public class RobotRun extends PApplet {
 					return;
 					
 				}
-			} 
+			}
 			else {
 				// Pendant button shortcuts
 				switch(keyCode) {
@@ -6265,9 +6265,18 @@ public class RobotRun extends PApplet {
 				case KeyEvent.VK_UP:			arrow_up(); break;
 				}
 			}
-		} 
+		}
 		
+		// Pendant button shortcuts
 		switch(keyCode) {
+		case KeyEvent.VK_UP:			arrow_up(); break;
+		case KeyEvent.VK_SHIFT:
+			if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) {
+				// Suppress shift shortcut for text entries
+				shift(true);
+			}
+			
+			break;
 		case KeyEvent.VK_U: 		JOINT1_NEG(); break;
 		case KeyEvent.VK_I:			JOINT1_POS(); break;
 		case KeyEvent.VK_J: 		JOINT2_NEG(); break;
@@ -6282,10 +6291,8 @@ public class RobotRun extends PApplet {
 		case KeyEvent.VK_SLASH:		JOINT6_POS(); break;
 		case KeyEvent.VK_MINUS:		spddn(); break;
 		case KeyEvent.VK_EQUALS:	spdup(); break;
-		case KeyEvent.VK_SHIFT:		shift(true); break;
 		case KeyEvent.VK_CONTROL:	ctrl = true; break;
 		}
-<<<<<<< HEAD
 
 		// General key functions
 		if (key == 'f') {
@@ -6308,10 +6315,7 @@ public class RobotRun extends PApplet {
 				updateScreen();
 			}
 			
-		} else if (key == 'm') {
-=======
-		
-		if (ctrl && keyCode == KeyEvent.VK_T) {
+		} else if (ctrl && keyCode == KeyEvent.VK_T) {
 			// Write anything stored in the String buffer to a text file
 			writeBuffer();
 		} else if (ctrl && keyCode == KeyEvent.VK_S) {
@@ -6319,8 +6323,8 @@ public class RobotRun extends PApplet {
 			DataManagement.saveState(this);
 		} else if (ctrl && keyCode == KeyEvent.VK_Z) {
 			undoScenarioEdit();
+			
 		} else if (key == 'q') {
->>>>>>> 2d459735155a62f196c723061f9a91b396b7fcf6
 			// Print the current mode to the console
 			println(mode.toString());
 		} else if (key == 'e') {
@@ -6334,23 +6338,11 @@ public class RobotRun extends PApplet {
 			getActiveRobot().releaseHeldObject();
 			getActiveRobot().setJointAngles(rot);
 			intermediatePositions.clear();
-
-		} else if (key == 'f') {
-			// Display the User and Tool frames associated with the current
-			// motion instruction
-			if (Fields.DEBUG && mode == ScreenMode.NAV_PROG_INSTR
-					&& (contents.getColumnIdx() == 3 || contents.getColumnIdx() == 4)) {
-				Instruction inst = getActiveRobot().getActiveInstruction();
-
-				if (inst instanceof MotionInstruction) {
-					MotionInstruction mInst = (MotionInstruction) inst;
-					System.out.printf("\nUser frame: %d\nTool frame: %d\n", mInst.getUserFrame(), mInst.getToolFrame());
-				}
-			}
 		}
 	}
 
 	public void keyReleased() {
+		
 		switch(keyCode) {
 		case KeyEvent.VK_U: 		JOINT1_NEG(); break;
 		case KeyEvent.VK_I:			JOINT1_POS(); break;
@@ -6364,9 +6356,15 @@ public class RobotRun extends PApplet {
 		case KeyEvent.VK_SEMICOLON: JOINT5_POS(); break;
 		case KeyEvent.VK_PERIOD: 	JOINT6_NEG(); break;
 		case KeyEvent.VK_SLASH:		JOINT6_POS(); break;
-		case KeyEvent.VK_SHIFT:		shift(false); break;
+		case KeyEvent.VK_SHIFT:
+			if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) {
+				// Suppress shift shortcut for text entries
+				shift(false);
+			}
+			
+			break;
 		case KeyEvent.VK_CONTROL:	ctrl = false; break;
-		}
+			}
 	}
 
 	/**
