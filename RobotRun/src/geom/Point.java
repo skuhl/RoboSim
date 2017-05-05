@@ -84,9 +84,9 @@ public class Point  {
 		case 7:   return position.z;
 		case 8:   return -position.y;
 		// Orientation
-		case 9:   return -PConstants.RAD_TO_DEG*RobotRun.quatToEuler(orientation).array()[0];
-		case 10:  return -PConstants.RAD_TO_DEG*RobotRun.quatToEuler(orientation).array()[2];
-		case 11:  return PConstants.RAD_TO_DEG*RobotRun.quatToEuler(orientation).array()[1];
+		case 9:   return -PConstants.RAD_TO_DEG*RMath.quatToEuler(orientation).array()[0];
+		case 10:  return -PConstants.RAD_TO_DEG*RMath.quatToEuler(orientation).array()[2];
+		case 11:  return PConstants.RAD_TO_DEG*RMath.quatToEuler(orientation).array()[1];
 		default:
 		}
 
@@ -99,12 +99,12 @@ public class Point  {
 	public Point negate() {
 		position = position.mult(-1);
 		orientation = RQuaternion.scalarMult(-1, orientation);
-		angles = RobotRun.vectorScalarMult(angles, -1);
+		angles = RMath.vectorScalarMult(angles, -1);
 		return this;
 	}
 
 	public void setValue(int idx, float value) {
-		PVector vec = RobotRun.quatToEuler(orientation);
+		PVector vec = RMath.quatToEuler(orientation);
 
 		switch(idx) {
 		// Joint angles
@@ -124,13 +124,13 @@ public class Point  {
 		break;
 		// Orientation
 		case 9:   vec.x = -value;
-		orientation = RobotRun.eulerToQuat(vec);
+		orientation = RMath.eulerToQuat(vec);
 		break;
 		case 10:  vec.z = -value;
-		orientation = RobotRun.eulerToQuat(vec);
+		orientation = RMath.eulerToQuat(vec);
 		break;
 		case 11:  vec.y = value;
-		orientation = RobotRun.eulerToQuat(vec);
+		orientation = RMath.eulerToQuat(vec);
 		break;
 		default:
 		}
@@ -161,7 +161,7 @@ public class Point  {
 			angles = new PVector(Float.NaN, Float.NaN, Float.NaN);
 		} else {
 			// Display in degrees
-			angles = RobotRun.quatToEuler(orientation).mult(RobotRun.RAD_TO_DEG);
+			angles = RMath.quatToEuler(orientation).mult(RMath.RAD_TO_DEG);
 		}
 
 		entries[0][0] = "X: ";
