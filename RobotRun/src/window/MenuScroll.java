@@ -93,7 +93,7 @@ public class MenuScroll {
 				.setSize(10, 20)
 				.setColorBackground(bg)
 				.hideScrollbar()
-				.moveTo(robotRun.g1);
+				.moveTo(robotRun.getManager().pendantWindow);
 			}
 
 			itemNo += 1;
@@ -139,7 +139,7 @@ public class MenuScroll {
 				.setColorValue(txt)
 				.setColorBackground(bg)
 				.hideScrollbar()
-				.moveTo(robotRun.g1);
+				.moveTo(robotRun.getManager().pendantWindow);
 
 				itemNo += 1;
 				next_px += temp.get(j).length()*Fields.CHAR_WDTH + (Fields.TXT_PAD - 8);
@@ -156,7 +156,7 @@ public class MenuScroll {
 				.setSize(10, 20)
 				.setColorBackground(txt)
 				.hideScrollbar()
-				.moveTo(robotRun.g1);
+				.moveTo(robotRun.getManager().pendantWindow);
 			}
 
 			next_px = 0;

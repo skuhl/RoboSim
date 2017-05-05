@@ -27,9 +27,11 @@ import geom.RMath;
 import geom.Shape;
 import geom.ShapeType;
 import geom.WorldObject;
+import global.Fields;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PFont;
+import processing.core.PImage;
 import processing.core.PVector;
 import robot.DataManagement;
 import robot.EEMapping;
@@ -99,7 +101,7 @@ public class WindowManager implements ControlListener {
 	 * A group, which defines a set of elements belonging to a window tab, or
 	 * shared amongst the window tabs.
 	 */
-	private Group createObjWindow, editObjWindow,
+	public Group pendantWindow, createObjWindow, editObjWindow,
 				  sharedElements, scenarioWindow, miscWindow;
 	
 	/**
@@ -122,7 +124,7 @@ public class WindowManager implements ControlListener {
 	 * Creates a new window with the given ControlP5 object as the parent
 	 * and the given fonts which will be applied to the text in the window.
 	 */
-	public WindowManager(RobotRun appRef, ControlP5 manager, PFont small, PFont medium) {
+	public WindowManager(RobotRun appRef, ControlP5 manager, PImage[][] buttonImages, PFont small, PFont medium, PFont bond) {
 		// Initialize color scheme fields
 		BG_C = appRef.color(210);
 		F_TEXT_C = appRef.color(0);
@@ -177,11 +179,14 @@ public class WindowManager implements ControlListener {
 							  .setSize(windowTabs.getWidth(), 0);
 
 		// Initialize the window groups
+		pendantWindow = addGroup("Pendant", 0, 2 * offsetX, 440, 720);
 		sharedElements = addGroup("SHARED", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		createObjWindow = addGroup("CREATEOBJ", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		editObjWindow = addGroup("EDITOBJ", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		scenarioWindow = addGroup("SCENARIO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscWindow = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
+		
+		pendant(buttonImages, bond);
 
 		// Initialize the elements shared amongst the create and edit windows
 		for (int idx = 0; idx < 3; ++idx) {
@@ -339,6 +344,342 @@ public class WindowManager implements ControlListener {
 				3, small);
 		ddlLimbo.addItem("Parts", 0.0f)
 				.addItem("Fixtures", 1.0f);
+	}
+	
+	private void pendant(PImage[][] buttonImages, PFont bond) {
+		
+		int display_width = pendantWindow.getWidth() - 20;
+		int display_height = 280; // height and width of display screen
+		
+		int[] relPos = new int[] { offsetX, 0 };
+		
+		UIManager.addTextarea("txt")
+			.setPosition(relPos[0], relPos[1])
+			.setSize(display_width, display_height)
+			.setColorBackground(Fields.UI_LIGHT)
+			.moveTo(pendantWindow);
+
+		/********************** Top row buttons **********************/
+
+		// calculate how much space each button will be given
+		int button_offsetX = Fields.LARGE_BUTTON + 1;
+		int button_offsetY = Fields.LARGE_BUTTON + 1;
+
+		int record_normal_px = WindowManager.lButtonWidth * 5 + Fields.LARGE_BUTTON + 1;
+		int record_normal_py = 0;
+		
+		UIManager.addButton("record_normal")
+			.setPosition(record_normal_px, record_normal_py)
+			.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+			.setImages(buttonImages[0])
+			.updateSize();
+
+		int EE_normal_px = record_normal_px + Fields.LARGE_BUTTON + 1;
+		int EE_normal_py = 0;
+		UIManager.addButton("EE")
+			.setPosition(EE_normal_px, EE_normal_py)
+			.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+			.setImages(buttonImages[1])
+			.updateSize();
+
+		/******************** Function Row ********************/
+		
+		int f1_px = offsetX;
+		int f1_py = 0 + display_height + 2;
+		int f_width = display_width / 5 - 1;
+		UIManager.addButton("f1").setPosition(f1_px, f1_py)
+		.setSize(f_width, Fields.LARGE_BUTTON)
+		.setCaptionLabel("F1")
+		.setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(pendantWindow);
+
+		int f2_px = f1_px + f_width + 1;
+		int f2_py = f1_py;
+		UIManager.addButton("f2").setPosition(f2_px, f2_py)
+		.setSize(f_width, Fields.LARGE_BUTTON)
+		.setCaptionLabel("F2")
+		.setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(pendantWindow);
+
+		int f3_px = f2_px + f_width + 1;
+		int f3_py = f2_py;
+		UIManager.addButton("f3").setPosition(f3_px, f3_py)
+		.setSize(f_width, Fields.LARGE_BUTTON)
+		.setCaptionLabel("F3")
+		.setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(pendantWindow);
+
+		int f4_px = f3_px + f_width + 1;
+		int f4_py = f3_py;
+		UIManager.addButton("f4").setPosition(f4_px, f4_py)
+		.setSize(f_width, Fields.LARGE_BUTTON)
+		.setCaptionLabel("F4")
+		.setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(pendantWindow);
+
+		int f5_px = f4_px + f_width + 1;
+		int f5_py = f4_py;
+		UIManager.addButton("f5").setPosition(f5_px, f5_py)
+		.setSize(f_width, Fields.LARGE_BUTTON)
+		.setCaptionLabel("F5")
+		.setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(pendantWindow);
+
+		/********************** Step/Shift Row **********************/
+
+		int st_px = f1_px;
+		int st_py = f1_py + button_offsetY + 10;
+		UIManager.addButton("step").setPosition(st_px, st_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
+		.setCaptionLabel("STEP").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int mu_px = st_px + Fields.LARGE_BUTTON + 19;
+		int mu_py = st_py;
+		UIManager.addButton("menu").setPosition(mu_px, mu_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("MENU").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int se_px = mu_px + Fields.LARGE_BUTTON + 15;
+		int se_py = mu_py;
+		UIManager.addButton("select").setPosition(se_px, se_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("SELECT").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int ed_px = se_px + button_offsetX;
+		int ed_py = se_py;
+		UIManager.addButton("edit").setPosition(ed_px, ed_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("EDIT").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int da_px = ed_px + button_offsetX;
+		int da_py = ed_py;
+		UIManager.addButton("data").setPosition(da_px, da_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("DATA").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int fn_px = da_px + Fields.LARGE_BUTTON + 15;
+		int fn_py = da_py;
+		UIManager.addButton("fctn").setPosition(fn_px, fn_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("FCTN").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int sf_px = fn_px + Fields.LARGE_BUTTON + 19;
+		int sf_py = fn_py;
+		UIManager.addButton("shift").setPosition(sf_px, sf_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
+		.setCaptionLabel("SHIFT").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int pr_px = mu_px;
+		int pr_py = mu_py + button_offsetY;
+		UIManager.addButton("prev").setPosition(pr_px, pr_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("PREV").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int ne_px = fn_px;
+		int ne_py = mu_py + button_offsetY;
+		UIManager.addButton("next").setPosition(ne_px, ne_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("NEXT").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		/*********************** Arrow Keys ***********************/
+		button_offsetY = Fields.SMALL_BUTTON + 1;
+
+		int up_px = ed_px + 5;
+		int up_py = ed_py + button_offsetY + 10;
+		UIManager.addButton("arrow_up").setPosition(up_px, up_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+		.setImages(buttonImages[2]).updateSize().moveTo(pendantWindow);
+
+		int dn_px = up_px;
+		int dn_py = up_py + button_offsetY;
+		UIManager.addButton("arrow_dn").setPosition(dn_px, dn_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+		.setImages(buttonImages[3]).updateSize().moveTo(pendantWindow);
+		
+		int lt_px = dn_px - button_offsetX;
+		int lt_py = dn_py - button_offsetY / 2;
+		UIManager.addButton("arrow_lt").setPosition(lt_px, lt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+		.setImages(buttonImages[4]).updateSize().moveTo(pendantWindow);
+		
+		int rt_px = dn_px + button_offsetX;
+		int rt_py = lt_py;
+		UIManager.addButton("arrow_rt").setPosition(rt_px, rt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+		.setImages(buttonImages[5]).updateSize().moveTo(pendantWindow);
+
+		// --------------------------------------------------------------//
+		// Group 2 //
+		// --------------------------------------------------------------//
+		int g2_offsetY = 0 + display_height + 4 * Fields.LARGE_BUTTON - 10;
+
+		/********************** Numpad Block *********************/
+
+		int LINE_px = ed_px - 7 * button_offsetX / 2;
+		int LINE_py = g2_offsetY + 5 * button_offsetY;
+		UIManager.addButton("LINE").setPosition(LINE_px, LINE_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("-").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(pendantWindow);
+
+		int PERIOD_px = LINE_px + button_offsetX;
+		int PERIOD_py = LINE_py - button_offsetY;
+		UIManager.addButton("PERIOD").setPosition(PERIOD_px, PERIOD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel(".").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(pendantWindow);
+
+		int COMMA_px = PERIOD_px + button_offsetX;
+		int COMMA_py = PERIOD_py;
+		UIManager.addButton("COMMA").setPosition(COMMA_px, COMMA_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel(",").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(pendantWindow);
+
+		int POSN_px = LINE_px + button_offsetX;
+		int POSN_py = LINE_py;
+		UIManager.addButton("POSN").setPosition(POSN_px, POSN_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("POSN").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int IO_px = POSN_px + button_offsetX;
+		int IO_py = POSN_py;
+		UIManager.addButton("IO").setPosition(IO_px, IO_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("I/O").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int NUM_px = LINE_px;
+		int NUM_py = LINE_py - button_offsetY;
+		for (int i = 0; i < 10; i += 1) {
+			UIManager.addButton("NUM" + i).setPosition(NUM_px, NUM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+			.setCaptionLabel("" + i).setColorBackground(Fields.BUTTON_DEFAULT)
+			.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+			if (i % 3 == 0) {
+				NUM_px = LINE_px;
+				NUM_py -= button_offsetY;
+			} else {
+				NUM_px += button_offsetX;
+			}
+		}
+
+		int RESET_px = LINE_px;
+		int RESET_py = NUM_py;
+		UIManager.addButton("RESET").setPosition(RESET_px, RESET_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("RESET").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int BKSPC_px = RESET_px + button_offsetX;
+		int BKSPC_py = RESET_py;
+		UIManager.addButton("BKSPC").setPosition(BKSPC_px, BKSPC_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("BKSPC").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int ITEM_px = BKSPC_px + button_offsetX;
+		int ITEM_py = BKSPC_py;
+		UIManager.addButton("ITEM").setPosition(ITEM_px, ITEM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("ITEM").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		/*********************** Util Block *************************/
+
+		int ENTER_px = ed_px;
+		int ENTER_py = g2_offsetY;
+		UIManager.addButton("ENTER").setPosition(ENTER_px, ENTER_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("ENTER").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int TOOL1_px = ENTER_px;
+		int TOOL1_py = ENTER_py + button_offsetY;
+		UIManager.addButton("TOOL1").setPosition(TOOL1_px, TOOL1_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("TOOL1").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int TOOL2_px = TOOL1_px;
+		int TOOL2_py = TOOL1_py + button_offsetY;
+		UIManager.addButton("TOOL2").setPosition(TOOL2_px, TOOL2_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("TOOL2").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int MOVEMENU_px = TOOL2_px;
+		int MOVEMENU_py = TOOL2_py + button_offsetY;
+		UIManager.addButton("MVMU").setPosition(MOVEMENU_px, MOVEMENU_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("MVMU").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int SETUP_px = MOVEMENU_px;
+		int SETUP_py = MOVEMENU_py + button_offsetY;
+		UIManager.addButton("SETUP").setPosition(SETUP_px, SETUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("SETUP").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int STATUS_px = SETUP_px;
+		int STATUS_py = SETUP_py + button_offsetY;
+		UIManager.addButton("status").setPosition(STATUS_px, STATUS_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("STATUS").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		/******************** Joint Control Block *******************/
+
+		int hd_px = STATUS_px + 3 * button_offsetX / 2;
+		int hd_py = g2_offsetY;
+		UIManager.addButton("hold").setPosition(hd_px, hd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("HOLD").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int fd_px = hd_px;
+		int fd_py = hd_py + button_offsetY;
+		UIManager.addButton("fwd").setPosition(fd_px, fd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("FWD").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int bd_px = fd_px;
+		int bd_py = fd_py + button_offsetY;
+		UIManager.addButton("bwd").setPosition(bd_px, bd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("BWD").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int COORD_px = bd_px;
+		int COORD_py = bd_py + button_offsetY;
+		UIManager.addButton("coord").setPosition(COORD_px, COORD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("COORD").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int SPEEDUP_px = COORD_px;
+		int SPEEDUP_py = COORD_py + button_offsetY;
+		UIManager.addButton("spdup").setPosition(SPEEDUP_px, SPEEDUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("+%").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int SLOWDOWN_px = SPEEDUP_px;
+		int SLOWDOWN_py = SPEEDUP_py + button_offsetY;
+		UIManager.addButton("spddn").setPosition(SLOWDOWN_px, SLOWDOWN_py)
+		.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel("-%")
+		.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+
+		int JOINT_px = SLOWDOWN_px + button_offsetX;
+		int JOINT_py = g2_offsetY;
+		String[] labels = { " -X\n(J1)", " +X\n(J1)", " -Y\n(J2)", " +Y\n(J2)", " -Z\n(J3)", " +Z\n(J3)", "-XR\n(J4)",
+				"+XR\n(J4)", "-YR\n(J5)", "+YR\n(J5)", "-ZR\n(J6)", "+ZR\n(J6)" };
+
+		for (int i = 1; i <= 6; i += 1) {
+			UIManager.addButton("JOINT" + i + "_NEG").setPosition(JOINT_px, JOINT_py)
+			.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2])
+			.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow)
+			.getCaptionLabel().alignY(app.TOP);
+
+			JOINT_px += Fields.LARGE_BUTTON + 1;
+			UIManager.addButton("JOINT" + i + "_POS").setPosition(JOINT_px, JOINT_py)
+			.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2 + 1])
+			.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow)
+			.getCaptionLabel().alignY(app.TOP);
+
+			JOINT_px = SLOWDOWN_px + button_offsetX;
+			JOINT_py += Fields.SMALL_BUTTON + 1;
+		}
+
+		List<Button> buttons = UIManager.getAll(Button.class);
+		for (Button b : buttons) {
+			b.getCaptionLabel().setFont(bond);
+		}
 	}
 	
 	/**
@@ -2257,7 +2598,7 @@ public class WindowManager implements ControlListener {
 		 		 
 		 if (menu == null) {
 			 // Hide all windows
-			 app.g1.hide();
+			 pendantWindow.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
@@ -2275,15 +2616,15 @@ public class WindowManager implements ControlListener {
 			 setGroupVisible(scenarioWindow, false);
 			 setGroupVisible(miscWindow, false);
 			 
-			 if (!app.g1.isVisible()) {
+			 if (!pendantWindow.isVisible()) {
 				 updateWindowContentsPositions();
 			 }
 
-			 app.g1.show();
+			 pendantWindow.show();
 
 		 } else if (menu == WindowTab.CREATE) {
 			 // Show world object creation window
-			 app.g1.hide();
+			 pendantWindow.hide();
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(scenarioWindow, false);
 			 setGroupVisible(miscWindow, false);
@@ -2300,7 +2641,7 @@ public class WindowManager implements ControlListener {
 
 		 } else if (menu == WindowTab.EDIT) {
 			 // Show world object edit window
-			 app.g1.hide();
+			 pendantWindow.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(scenarioWindow, false);
 			 setGroupVisible(miscWindow, false);
@@ -2317,7 +2658,7 @@ public class WindowManager implements ControlListener {
 
 		 } else if (menu == WindowTab.SCENARIO) {
 			 // Show scenario creating/saving/loading
-			 app.g1.hide();
+			 pendantWindow.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
@@ -2334,7 +2675,7 @@ public class WindowManager implements ControlListener {
 			 
 		 } else if (menu == WindowTab.MISC) {
 			 // Show miscellaneous window
-			 app.g1.hide();
+			 pendantWindow.hide();
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
