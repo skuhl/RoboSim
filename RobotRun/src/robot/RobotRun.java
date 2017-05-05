@@ -64,7 +64,7 @@ import window.MenuScroll;
 import window.WindowManager;
 
 public class RobotRun extends PApplet {
-	
+
 	/**
 	 * A set of letters, used by the pendant function keys, when the users is
 	 * inputing a text entry.
@@ -100,18 +100,18 @@ public class RobotRun extends PApplet {
 	 */
 	static {
 		LETTERS = new char[][] { { 'a', 'b', 'c', 'd', 'e', 'f' }, 
-								 { 'g', 'h', 'i', 'j', 'k', 'l' },
-								 { 'm', 'n', 'o', 'p', 'q', 'r' }, 
-								 { 's', 't', 'u', 'v', 'w', 'x' }, 
-								 { 'y', 'z', '_', '@', '*', '.' } };
+			{ 'g', 'h', 'i', 'j', 'k', 'l' },
+			{ 'm', 'n', 'o', 'p', 'q', 'r' }, 
+			{ 's', 't', 'u', 'v', 'w', 'x' }, 
+			{ 'y', 'z', '_', '@', '*', '.' } };
 
-		ITEMS_TO_SHOW = 8;
-		NUM_ENTRY_LEN = 16;
-		TEXT_ENTRY_LEN = 16;
-		instance = null;
-		fnt_con14 = null;
-		fnt_con12 = null;
-		fnt_conB = null;
+			ITEMS_TO_SHOW = 8;
+			NUM_ENTRY_LEN = 16;
+			TEXT_ENTRY_LEN = 16;
+			instance = null;
+			fnt_con14 = null;
+			fnt_con12 = null;
+			fnt_conB = null;
 	}
 
 	/**
@@ -619,7 +619,7 @@ public class RobotRun extends PApplet {
 			PApplet.main(appletArgs);
 		}
 	}
-	
+
 	// calculates euler angles from rotation matrix
 	public static PVector matrixToEuler(float[][] r) {
 		float yRot1, xRot1, zRot1;
@@ -820,7 +820,7 @@ public class RobotRun extends PApplet {
 		}
 		System.out.println();
 	}
-	
+
 	// calculates euler angles from quaternion
 	public static PVector quatToEuler(RQuaternion q) {
 		float[][] r = q.toMatrix();
@@ -1032,8 +1032,8 @@ public class RobotRun extends PApplet {
 
 	private boolean shift = false; // Is shift button pressed or not?
 	private boolean step = false; // Is step button pressed or not?
-	private boolean keyRot = false;
-	
+	private boolean ctrl = false;
+
 	// Indicates whether a program is currently running
 	private boolean programRunning = false;
 	private boolean executingInstruction = false;
@@ -1094,10 +1094,10 @@ public class RobotRun extends PApplet {
 	String err = null;
 
 	public int prev_select = -1; // saves row_select value if next screen also
-									// utilizes this variable
+	// utilizes this variable
 
 	public int active_index = 0; // index of the cursor with respect to the
-									// first element on screen
+	// first element on screen
 	// how many textlabels have been created for display
 	int index_contents = 0, index_options = 100, index_nums = 1000;
 
@@ -1117,7 +1117,7 @@ public class RobotRun extends PApplet {
 	float distanceBetweenPoints = 5.0f;
 
 	int interMotionIdx = -1;
-	
+
 	private ArrayList<String> buffer;
 	private Point displayPoint;
 
@@ -1981,12 +1981,12 @@ public class RobotRun extends PApplet {
 			return vectorConvertFrom(perp2, plane[0], plane[1], plane[2]);
 	}
 
-	public void COORD() {
+	public void coord() {
 		if (isShift()) {
 			nextScreen(ScreenMode.ACTIVE_FRAMES);
 
 		} else {
-			// Update the coordinate mode
+			// Update the coordinate modeke
 			coordFrameTransition();
 			updateScreen();
 		}
@@ -2353,10 +2353,10 @@ public class RobotRun extends PApplet {
 		pushMatrix();
 		// Transform to the reference frame defined by the axes vectors
 		applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
-					axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
-					axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
-					0, 0, 0, 1);
-		
+				axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
+				axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
+				0, 0, 0, 1);
+
 		// X axis
 		stroke(255, 0, 0);
 		line(-axesLength, 0, 0, axesLength, 0, 0);
@@ -2527,7 +2527,7 @@ public class RobotRun extends PApplet {
 			// Display the point with its local orientation axes
 			displayOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
 		}
-		
+
 		/*TESTING CODE: DRAW INTERMEDIATE POINTS*
 		if(Fields.DEBUG && intermediatePositions != null) {
 			int count = 0;
@@ -2539,17 +2539,17 @@ public class RobotRun extends PApplet {
 					sphere(5);
 					popMatrix();
 				}
-				
+
 				count += 1;
 			}
 		}
 		/**/
-		
+
 		/*Camera Test Code */
 		Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
 		c.setOrientation(p.orientation);
 		displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
-		
+
 		PVector near[] = c.getPlane(90, 2, 10);
 		PVector far[] = c.getPlane(90, 2, 100);
 		for(int i = 0; i < 4; i += 1) {
@@ -2728,7 +2728,7 @@ public class RobotRun extends PApplet {
 
 			lastScreen();
 			break;
-		// Frame nav and edit
+			// Frame nav and edit
 		case SELECT_FRAME_MODE:
 			if (options.getLineIdx() == 0) {
 				nextScreen(ScreenMode.NAV_TOOL_FRAMES);
@@ -2831,7 +2831,7 @@ public class RobotRun extends PApplet {
 			}
 			break;
 
-		// Program nav and edit
+			// Program nav and edit
 		case PROG_CREATE:
 			if (workingText.length() > 0 && !workingText.equals("\0")) {
 				if (workingText.charAt(workingText.length() - 1) == '\0') {
@@ -2899,7 +2899,7 @@ public class RobotRun extends PApplet {
 			}
 			break;
 
-		// Instruction options menu
+			// Instruction options menu
 		case NAV_INSTR_MENU:
 
 			switch (options.getLineIdx()) {
@@ -2933,7 +2933,7 @@ public class RobotRun extends PApplet {
 
 			break;
 
-		// Instruction insert menus
+			// Instruction insert menus
 		case SELECT_INSTR_INSERT:
 			switch (options.getLineIdx()) {
 			case 0: // I/O
@@ -3024,7 +3024,7 @@ public class RobotRun extends PApplet {
 
 			break;
 
-		// Movement instruction edit
+			// Movement instruction edit
 		case SET_MV_INSTR_TYPE:
 			if (options.getLineIdx() == 0) {
 				if (m.getMotionType() != Fields.MTYPE_JOINT)
@@ -3098,7 +3098,7 @@ public class RobotRun extends PApplet {
 
 				m.setPositionNum(tempRegister - 1);
 			} catch (NumberFormatException NFEx) {
-				/* Ignore invalid numbers */ }
+			/* Ignore invalid numbers */ }
 
 			lastScreen();
 			break;
@@ -3112,7 +3112,7 @@ public class RobotRun extends PApplet {
 					m.setTermination(tempTerm);
 				}
 			} catch (NumberFormatException NFEx) {
-				/* Ignore invalid input */ }
+			/* Ignore invalid input */ }
 
 			lastScreen();
 			break;
@@ -3136,12 +3136,12 @@ public class RobotRun extends PApplet {
 
 				m.setOffset(tempRegister);
 			} catch (NumberFormatException NFEx) {
-				/* Ignore invalid numbers */ }
+			/* Ignore invalid numbers */ }
 
 			lastScreen();
 			break;
 
-		// Expression edit
+			// Expression edit
 		case SET_EXPR_ARG:
 			Expression expr = (Expression) opEdit;
 
@@ -3354,7 +3354,7 @@ public class RobotRun extends PApplet {
 			lastScreen();
 			break;
 
-		// Select statement edit
+			// Select statement edit
 		case SET_SELECT_STMT_ACT:
 			SelectStatement s = (SelectStatement) inst;
 			int i = (getSelectedIdx() - 3) / 3;
@@ -3396,7 +3396,7 @@ public class RobotRun extends PApplet {
 			lastScreen();
 			break;
 
-		// IO instruction edit
+			// IO instruction edit
 		case SET_IO_INSTR_STATE:
 			IOInstruction ioInst = (IOInstruction) inst;
 
@@ -3420,12 +3420,12 @@ public class RobotRun extends PApplet {
 					ioInst.setReg(tempReg);
 				}
 			} catch (NumberFormatException NFEx) {
-				/* Ignore invalid input */ }
+			/* Ignore invalid input */ }
 
 			lastScreen();
 			break;
 
-		// Frame instruction edit
+			// Frame instruction edit
 		case SET_FRM_INSTR_TYPE:
 			FrameInstruction fInst = (FrameInstruction) inst;
 
@@ -3445,12 +3445,12 @@ public class RobotRun extends PApplet {
 					fInst.setReg(frameIdx);
 				}
 			} catch (NumberFormatException NFEx) {
-				/* Ignore invalid input */ }
+			/* Ignore invalid input */ }
 
 			lastScreen();
 			break;
 
-		// Register statement edit
+			// Register statement edit
 		case SET_REG_EXPR_TYPE:
 			RegisterStatement regStmt = (RegisterStatement) inst;
 			display_stack.pop();
@@ -3500,7 +3500,7 @@ public class RobotRun extends PApplet {
 					}
 				}
 			} catch (NumberFormatException NFEx) {
-				/* Ignore invalid input */ }
+			/* Ignore invalid input */ }
 
 			lastScreen();
 			break;
@@ -3517,12 +3517,12 @@ public class RobotRun extends PApplet {
 					}
 				}
 			} catch (NumberFormatException NFEx) {
-				/* Ignore invalid input */ }
+			/* Ignore invalid input */ }
 
 			lastScreen();
 			break;
 
-		// Jump/ Label instruction edit
+			// Jump/ Label instruction edit
 		case SET_LBL_NUM:
 			try {
 				int idx = Integer.parseInt(workingText.toString());
@@ -3533,7 +3533,7 @@ public class RobotRun extends PApplet {
 					((LabelInstruction) inst).setLabelNum(idx);
 				}
 			} catch (NumberFormatException NFEx) {
-				/* Ignore invalid input */ }
+			/* Ignore invalid input */ }
 
 			lastScreen();
 			break;
@@ -3557,12 +3557,12 @@ public class RobotRun extends PApplet {
 					}
 				}
 			} catch (NumberFormatException NFEx) {
-				/* Ignore invalid input */ }
+			/* Ignore invalid input */ }
 
 			lastScreen();
 			break;
 
-		// Call instruction edit
+			// Call instruction edit
 		case SET_CALL_PROG:
 			if (inst instanceof IfStatement) {
 				IfStatement ifStmt = (IfStatement) inst;
@@ -3579,7 +3579,7 @@ public class RobotRun extends PApplet {
 			lastScreen();
 			break;
 
-		// Macro edit screens
+			// Macro edit screens
 		case SET_MACRO_PROG:
 			if (edit_macro == null) {
 				edit_macro = new Macro(contents.getLineIdx());
@@ -3609,7 +3609,7 @@ public class RobotRun extends PApplet {
 			macros.get(macro_idx).execute();
 			break;
 
-		// Program instruction editing and navigation
+			// Program instruction editing and navigation
 		case SELECT_CUT_COPY:
 		case SELECT_INSTR_DELETE:
 			contents.toggleSelect(getActiveRobot().getActiveInstIdx());
@@ -4572,7 +4572,7 @@ public class RobotRun extends PApplet {
 			setProgramRunning(true);
 		}
 	}
-	
+
 	public Scenario getActiveScenario() {
 		return activeScenario;
 	}
@@ -4609,7 +4609,7 @@ public class RobotRun extends PApplet {
 			loadTextInput();
 			break;
 
-		// View instructions
+			// View instructions
 		case CONFIRM_INSERT:
 		case CONFIRM_RENUM:
 		case FIND_REPL:
@@ -4665,14 +4665,14 @@ public class RobotRun extends PApplet {
 			}
 			break;
 
-		// View frame details
+			// View frame details
 		case NAV_TOOL_FRAMES:
 			loadFrames(CoordFrame.TOOL);
 			break;
 		case NAV_USER_FRAMES:
 			loadFrames(CoordFrame.USER);
 			break;
-		// View frame details
+			// View frame details
 		case TFRAME_DETAIL:
 		case TEACH_3PT_TOOL:
 		case TEACH_6PT:
@@ -4700,7 +4700,7 @@ public class RobotRun extends PApplet {
 			loadPositionRegisters();
 			break;
 
-		// View/ edit macros
+			// View/ edit macros
 		case NAV_MACROS:
 		case SET_MACRO_TYPE:
 		case SET_MACRO_BINDING:
@@ -4711,7 +4711,7 @@ public class RobotRun extends PApplet {
 			loadManualFunct();
 			break;
 
-		// View/ edit registers
+			// View/ edit registers
 		case NAV_DREGS:
 			loadDataRegisters();
 			break;
@@ -5366,7 +5366,7 @@ public class RobotRun extends PApplet {
 			options.addLine("Delete selected program?");
 			break;
 
-		// Instruction options
+			// Instruction options
 		case NAV_INSTR_MENU:
 			options.addLine("1 Insert");
 			options.addLine("2 Delete");
@@ -5407,7 +5407,7 @@ public class RobotRun extends PApplet {
 			options.addLine("Select lines to comment/uncomment.");
 			break;
 
-		// Instruction edit options
+			// Instruction edit options
 		case SET_MV_INSTR_TYPE:
 		case SET_MV_INSTR_REG_TYPE:
 		case SET_MV_INSTR_IDX:
@@ -5439,7 +5439,7 @@ public class RobotRun extends PApplet {
 			loadInstrEdit(mode);
 			break;
 
-		// Insert instructions (non-movemet)
+			// Insert instructions (non-movemet)
 		case SELECT_INSTR_INSERT:
 			options.addLine("1. I/O");
 			options.addLine("2. Frames");
@@ -5478,7 +5478,7 @@ public class RobotRun extends PApplet {
 			options.addLine("2. JMP LBL[...]");
 			break;
 
-		// Frame navigation and edit menus
+			// Frame navigation and edit menus
 		case SELECT_FRAME_MODE:
 			options.addLine("1. Tool Frame");
 			options.addLine("2. User Frame");
@@ -5500,7 +5500,7 @@ public class RobotRun extends PApplet {
 			loadPointList();
 			break;
 
-		// Macro edit menus
+			// Macro edit menus
 		case SET_MACRO_TYPE:
 			options.addLine("1. Shift + User Key");
 			options.addLine("2. Manual Function");
@@ -5515,7 +5515,7 @@ public class RobotRun extends PApplet {
 			options.addLine("7. I/O");
 			break;
 
-		// Data navigation and edit menus
+			// Data navigation and edit menus
 		case NAV_DATA:
 			options.addLine("1. Data Registers");
 			options.addLine("2. Position Registers");
@@ -5559,7 +5559,7 @@ public class RobotRun extends PApplet {
 			options.addLine("\0" + workingText);
 			break;
 
-		// Misc functions
+			// Misc functions
 		case JUMP_TO_LINE:
 			options.addLine("Use number keys to enter line number to jump to");
 			options.addLine("\0" + workingText);
@@ -5692,11 +5692,19 @@ public class RobotRun extends PApplet {
 		mode = display_stack.peek();
 
 		// group 1: display and function buttons
-		g1 = cp5.addGroup("DISPLAY").setPosition(Fields.G1_PX, g1_py).setBackgroundColor(color(127, 127, 127, 100))
-				.setWidth(g1_width).setHeight(g1_height).setBackgroundHeight(g1_height).hideBar();
+		g1 = cp5.addGroup("DISPLAY")
+			.setPosition(Fields.G1_PX, g1_py)
+			.setBackgroundColor(color(127, 127, 127, 100))
+			.setWidth(g1_width)
+			.setHeight(g1_height)
+			.setBackgroundHeight(g1_height)
+			.hideBar();
 
-		cp5.addTextarea("txt").setPosition(display_px, 0).setSize(display_width, display_height)
-				.setColorBackground(Fields.UI_LIGHT).moveTo(g1);
+		cp5.addTextarea("txt")
+			.setPosition(display_px, 0)
+			.setSize(display_width, display_height)
+			.setColorBackground(Fields.UI_LIGHT)
+			.moveTo(g1);
 
 		/********************** Top row buttons **********************/
 
@@ -5707,24 +5715,24 @@ public class RobotRun extends PApplet {
 		int record_normal_px = WindowManager.lButtonWidth * 5 + Fields.LARGE_BUTTON + 1;
 		int record_normal_py = 0;
 		PImage[] record = { loadImage("images/record-35x20.png"), 
-							loadImage("images/record-over.png"),
-							loadImage("images/record-on.png") };
+			loadImage("images/record-over.png"),
+			loadImage("images/record-on.png") };
 		bt_record_normal = cp5.addButton("record_normal")
-							  .setPosition(record_normal_px, record_normal_py)
-							  .setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-							  .setImages(record)
-							  .updateSize();
+			.setPosition(record_normal_px, record_normal_py)
+			.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+			.setImages(record)
+			.updateSize();
 
 		int EE_normal_px = record_normal_px + Fields.LARGE_BUTTON + 1;
 		int EE_normal_py = 0;
 		PImage[] EE = { loadImage("images/EE_35x20.png"), 
-						loadImage("images/EE_over.png"),
-						loadImage("images/EE_down.png") };
+			loadImage("images/EE_over.png"),
+			loadImage("images/EE_down.png") };
 		bt_ee_normal = cp5.addButton("EE")
-						  .setPosition(EE_normal_px, EE_normal_py)
-						  .setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-						  .setImages(EE)
-						  .updateSize();
+			.setPosition(EE_normal_px, EE_normal_py)
+			.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+			.setImages(EE)
+			.updateSize();
 
 		/******************** Function Row ********************/
 
@@ -5732,103 +5740,103 @@ public class RobotRun extends PApplet {
 		int f1_py = display_py + display_height + 2;
 		int f_width = display_width / 5 - 1;
 		cp5.addButton("f1").setPosition(f1_px, f1_py)
-						   .setSize(f_width, Fields.LARGE_BUTTON)
-						   .setCaptionLabel("F1")
-						   .setColorBackground(Fields.BUTTON_DEFAULT)
-						   .setColorCaptionLabel(Fields.BUTTON_TEXT)
-						   .moveTo(g1);
+		.setSize(f_width, Fields.LARGE_BUTTON)
+		.setCaptionLabel("F1")
+		.setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(g1);
 
 		int f2_px = f1_px + f_width + 1;
 		int f2_py = f1_py;
 		cp5.addButton("f2").setPosition(f2_px, f2_py)
-						   .setSize(f_width, Fields.LARGE_BUTTON)
-						   .setCaptionLabel("F2")
-						   .setColorBackground(Fields.BUTTON_DEFAULT)
-						   .setColorCaptionLabel(Fields.BUTTON_TEXT)
-						   .moveTo(g1);
+		.setSize(f_width, Fields.LARGE_BUTTON)
+		.setCaptionLabel("F2")
+		.setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(g1);
 
 		int f3_px = f2_px + f_width + 1;
 		int f3_py = f2_py;
 		cp5.addButton("f3").setPosition(f3_px, f3_py)
-						   .setSize(f_width, Fields.LARGE_BUTTON)
-						   .setCaptionLabel("F3")
-						   .setColorBackground(Fields.BUTTON_DEFAULT)
-						   .setColorCaptionLabel(Fields.BUTTON_TEXT)
-						   .moveTo(g1);
+		.setSize(f_width, Fields.LARGE_BUTTON)
+		.setCaptionLabel("F3")
+		.setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(g1);
 
 		int f4_px = f3_px + f_width + 1;
 		int f4_py = f3_py;
 		cp5.addButton("f4").setPosition(f4_px, f4_py)
-						   .setSize(f_width, Fields.LARGE_BUTTON)
-						   .setCaptionLabel("F4")
-						   .setColorBackground(Fields.BUTTON_DEFAULT)
-						   .setColorCaptionLabel(Fields.BUTTON_TEXT)
-						   .moveTo(g1);
+		.setSize(f_width, Fields.LARGE_BUTTON)
+		.setCaptionLabel("F4")
+		.setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(g1);
 
 		int f5_px = f4_px + f_width + 1;
 		int f5_py = f4_py;
 		cp5.addButton("f5").setPosition(f5_px, f5_py)
-						   .setSize(f_width, Fields.LARGE_BUTTON)
-						   .setCaptionLabel("F5")
-						   .setColorBackground(Fields.BUTTON_DEFAULT)
-						   .setColorCaptionLabel(Fields.BUTTON_TEXT)
-						   .moveTo(g1);
+		.setSize(f_width, Fields.LARGE_BUTTON)
+		.setCaptionLabel("F5")
+		.setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(g1);
 
 		/********************** Step/Shift Row **********************/
 
 		int st_px = f1_px;
 		int st_py = f1_py + button_offsetY + 10;
 		cp5.addButton("step").setPosition(st_px, st_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
-				.setCaptionLabel("STEP").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("STEP").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int mu_px = st_px + Fields.LARGE_BUTTON + 19;
 		int mu_py = st_py;
 		cp5.addButton("menu").setPosition(mu_px, mu_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("MENU").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("MENU").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int se_px = mu_px + Fields.LARGE_BUTTON + 15;
 		int se_py = mu_py;
 		cp5.addButton("select").setPosition(se_px, se_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("SELECT").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("SELECT").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int ed_px = se_px + button_offsetX;
 		int ed_py = se_py;
 		cp5.addButton("edit").setPosition(ed_px, ed_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("EDIT").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("EDIT").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int da_px = ed_px + button_offsetX;
 		int da_py = ed_py;
 		cp5.addButton("data").setPosition(da_px, da_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("DATA").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("DATA").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int fn_px = da_px + Fields.LARGE_BUTTON + 15;
 		int fn_py = da_py;
 		cp5.addButton("fctn").setPosition(fn_px, fn_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("FCTN").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("FCTN").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int sf_px = fn_px + Fields.LARGE_BUTTON + 19;
 		int sf_py = fn_py;
 		cp5.addButton("shift").setPosition(sf_px, sf_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
-				.setCaptionLabel("SHIFT").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("SHIFT").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int pr_px = mu_px;
 		int pr_py = mu_py + button_offsetY;
 		cp5.addButton("prev").setPosition(pr_px, pr_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("PREV").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("PREV").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int ne_px = fn_px;
 		int ne_py = mu_py + button_offsetY;
 		cp5.addButton("next").setPosition(ne_px, ne_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("NEXT").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("NEXT").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		/*********************** Arrow Keys ***********************/
 		button_offsetY = Fields.SMALL_BUTTON + 1;
@@ -5838,28 +5846,28 @@ public class RobotRun extends PApplet {
 		int up_px = ed_px + 5;
 		int up_py = ed_py + button_offsetY + 10;
 		cp5.addButton("arrow_up").setPosition(up_px, up_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-				.setImages(imgs_arrow_up).updateSize().moveTo(g1);
+		.setImages(imgs_arrow_up).updateSize().moveTo(g1);
 
 		PImage[] imgs_arrow_down = { loadImage("images/arrow-down.png"), loadImage("images/arrow-down_over.png"),
 				loadImage("images/arrow-down_down.png") };
 		int dn_px = up_px;
 		int dn_py = up_py + button_offsetY;
 		cp5.addButton("arrow_dn").setPosition(dn_px, dn_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-				.setImages(imgs_arrow_down).updateSize().moveTo(g1);
+		.setImages(imgs_arrow_down).updateSize().moveTo(g1);
 
 		PImage[] imgs_arrow_l = { loadImage("images/arrow-l.png"), loadImage("images/arrow-l_over.png"),
 				loadImage("images/arrow-l_down.png") };
 		int lt_px = dn_px - button_offsetX;
 		int lt_py = dn_py - button_offsetY / 2;
 		cp5.addButton("arrow_lt").setPosition(lt_px, lt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-				.setImages(imgs_arrow_l).updateSize().moveTo(g1);
+		.setImages(imgs_arrow_l).updateSize().moveTo(g1);
 
 		PImage[] imgs_arrow_r = { loadImage("images/arrow-r.png"), loadImage("images/arrow-r_over.png"),
 				loadImage("images/arrow-r_down.png") };
 		int rt_px = dn_px + button_offsetX;
 		int rt_py = lt_py;
 		cp5.addButton("arrow_rt").setPosition(rt_px, rt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-				.setImages(imgs_arrow_r).updateSize().moveTo(g1);
+		.setImages(imgs_arrow_r).updateSize().moveTo(g1);
 
 		// --------------------------------------------------------------//
 		// Group 2 //
@@ -5871,39 +5879,39 @@ public class RobotRun extends PApplet {
 		int LINE_px = ed_px - 7 * button_offsetX / 2;
 		int LINE_py = g2_offsetY + 5 * button_offsetY;
 		cp5.addButton("LINE").setPosition(LINE_px, LINE_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("-").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
-				.moveTo(g1);
+		.setCaptionLabel("-").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(g1);
 
 		int PERIOD_px = LINE_px + button_offsetX;
 		int PERIOD_py = LINE_py - button_offsetY;
 		cp5.addButton("PERIOD").setPosition(PERIOD_px, PERIOD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel(".").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
-				.moveTo(g1);
+		.setCaptionLabel(".").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(g1);
 
 		int COMMA_px = PERIOD_px + button_offsetX;
 		int COMMA_py = PERIOD_py;
 		cp5.addButton("COMMA").setPosition(COMMA_px, COMMA_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel(",").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
-				.moveTo(g1);
+		.setCaptionLabel(",").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.moveTo(g1);
 
 		int POSN_px = LINE_px + button_offsetX;
 		int POSN_py = LINE_py;
 		cp5.addButton("POSN").setPosition(POSN_px, POSN_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("POSN").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("POSN").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int IO_px = POSN_px + button_offsetX;
 		int IO_py = POSN_py;
 		cp5.addButton("IO").setPosition(IO_px, IO_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("I/O").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("I/O").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int NUM_px = LINE_px;
 		int NUM_py = LINE_py - button_offsetY;
 		for (int i = 0; i < 10; i += 1) {
 			cp5.addButton("NUM" + i).setPosition(NUM_px, NUM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-					.setCaptionLabel("" + i).setColorBackground(Fields.BUTTON_DEFAULT)
-					.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+			.setCaptionLabel("" + i).setColorBackground(Fields.BUTTON_DEFAULT)
+			.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 			if (i % 3 == 0) {
 				NUM_px = LINE_px;
@@ -5916,96 +5924,96 @@ public class RobotRun extends PApplet {
 		int RESET_px = LINE_px;
 		int RESET_py = NUM_py;
 		cp5.addButton("RESET").setPosition(RESET_px, RESET_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("RESET").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("RESET").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int BKSPC_px = RESET_px + button_offsetX;
 		int BKSPC_py = RESET_py;
 		cp5.addButton("BKSPC").setPosition(BKSPC_px, BKSPC_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("BKSPC").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("BKSPC").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int ITEM_px = BKSPC_px + button_offsetX;
 		int ITEM_py = BKSPC_py;
 		cp5.addButton("ITEM").setPosition(ITEM_px, ITEM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("ITEM").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("ITEM").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		/*********************** Util Block *************************/
 
 		int ENTER_px = ed_px;
 		int ENTER_py = g2_offsetY;
 		cp5.addButton("ENTER").setPosition(ENTER_px, ENTER_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("ENTER").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("ENTER").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int TOOL1_px = ENTER_px;
 		int TOOL1_py = ENTER_py + button_offsetY;
 		cp5.addButton("TOOL1").setPosition(TOOL1_px, TOOL1_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("TOOL1").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("TOOL1").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int TOOL2_px = TOOL1_px;
 		int TOOL2_py = TOOL1_py + button_offsetY;
 		cp5.addButton("TOOL2").setPosition(TOOL2_px, TOOL2_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("TOOL2").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("TOOL2").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int MOVEMENU_px = TOOL2_px;
 		int MOVEMENU_py = TOOL2_py + button_offsetY;
 		cp5.addButton("MVMU").setPosition(MOVEMENU_px, MOVEMENU_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("MVMU").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("MVMU").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int SETUP_px = MOVEMENU_px;
 		int SETUP_py = MOVEMENU_py + button_offsetY;
 		cp5.addButton("SETUP").setPosition(SETUP_px, SETUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("SETUP").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("SETUP").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int STATUS_px = SETUP_px;
 		int STATUS_py = SETUP_py + button_offsetY;
-		cp5.addButton("STATUS").setPosition(STATUS_px, STATUS_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("STATUS").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		cp5.addButton("status").setPosition(STATUS_px, STATUS_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("STATUS").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		/******************** Joint Control Block *******************/
 
 		int hd_px = STATUS_px + 3 * button_offsetX / 2;
 		int hd_py = g2_offsetY;
 		cp5.addButton("hold").setPosition(hd_px, hd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("HOLD").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("HOLD").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int fd_px = hd_px;
 		int fd_py = hd_py + button_offsetY;
 		cp5.addButton("fwd").setPosition(fd_px, fd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("FWD").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("FWD").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int bd_px = fd_px;
 		int bd_py = fd_py + button_offsetY;
 		cp5.addButton("bwd").setPosition(bd_px, bd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("BWD").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		.setCaptionLabel("BWD").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int COORD_px = bd_px;
 		int COORD_py = bd_py + button_offsetY;
-		cp5.addButton("COORD").setPosition(COORD_px, COORD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("COORD").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		cp5.addButton("coord").setPosition(COORD_px, COORD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("COORD").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int SPEEDUP_px = COORD_px;
 		int SPEEDUP_py = COORD_py + button_offsetY;
-		cp5.addButton("SPEEDUP").setPosition(SPEEDUP_px, SPEEDUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-				.setCaptionLabel("+%").setColorBackground(Fields.BUTTON_DEFAULT)
-				.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		cp5.addButton("spdup").setPosition(SPEEDUP_px, SPEEDUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		.setCaptionLabel("+%").setColorBackground(Fields.BUTTON_DEFAULT)
+		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int SLOWDOWN_px = SPEEDUP_px;
 		int SLOWDOWN_py = SPEEDUP_py + button_offsetY;
-		cp5.addButton("SLOWDOWN").setPosition(SLOWDOWN_px, SLOWDOWN_py)
-				.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel("-%")
-				.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
+		cp5.addButton("spddn").setPosition(SLOWDOWN_px, SLOWDOWN_py)
+		.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel("-%")
+		.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
 
 		int JOINT_px = SLOWDOWN_px + button_offsetX;
 		int JOINT_py = g2_offsetY;
@@ -6014,15 +6022,15 @@ public class RobotRun extends PApplet {
 
 		for (int i = 1; i <= 6; i += 1) {
 			cp5.addButton("JOINT" + i + "_NEG").setPosition(JOINT_px, JOINT_py)
-					.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2])
-					.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1)
-					.getCaptionLabel().alignY(TOP);
+			.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2])
+			.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1)
+			.getCaptionLabel().alignY(TOP);
 
 			JOINT_px += Fields.LARGE_BUTTON + 1;
 			cp5.addButton("JOINT" + i + "_POS").setPosition(JOINT_px, JOINT_py)
-					.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2 + 1])
-					.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1)
-					.getCaptionLabel().alignY(TOP);
+			.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2 + 1])
+			.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1)
+			.getCaptionLabel().alignY(TOP);
 
 			JOINT_px = SLOWDOWN_px + button_offsetX;
 			JOINT_py += Fields.SMALL_BUTTON + 1;
@@ -6135,21 +6143,18 @@ public class RobotRun extends PApplet {
 	public void JOINT6_POS() {
 		updateRobotJogMotion(5, 1);
 	}
-	
+
 	@Override
 	public void keyPressed() {
 
 		if (key == 27) {
 			// Disable the window exiting function of the 'esc' key
 			key = 0;
-		}
-
-		if (getManager() != null && getManager().isATextFieldActive()) {
+		} else if (getManager() != null && getManager().isATextFieldActive()) {
 			// Disable key events when typing in a text field
 			return;
 
 		} else if (getManager() != null && getManager().isPendantActive()) {
-
 			// Key input for text entries
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY && workingText.length() < TEXT_ENTRY_LEN
 					&& ((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9')
@@ -6213,31 +6218,62 @@ public class RobotRun extends PApplet {
 					updateScreen();
 					return;
 				}
+			} else {
+				// Pendant button shortcuts
+				switch(keyCode) {
+				case KeyEvent.VK_ENTER:			ENTER(); break;
+				case KeyEvent.VK_BACK_SPACE:	BKSPC(); break;
+				case KeyEvent.VK_DOWN:			arrow_dn(); break;
+				case KeyEvent.VK_LEFT:			arrow_lt(); break;
+				case KeyEvent.VK_RIGHT:			arrow_rt(); break;
+				case KeyEvent.VK_UP:			arrow_up(); break;
+				}
 			}
-
-			// Pendant button shortcuts
-			if (keyCode == KeyEvent.VK_ENTER) {
-				ENTER();
-
-			} else if (keyCode == KeyEvent.VK_BACK_SPACE) {
-				BKSPC();
-
-			} else if (keyCode == KeyEvent.VK_DOWN) {
-				arrow_dn();
-
-			} else if (keyCode == KeyEvent.VK_LEFT) {
-				arrow_lt();
-
-			} else if (keyCode == KeyEvent.VK_RIGHT) {
-				arrow_rt();
-
-			} else if (keyCode == KeyEvent.VK_UP) {
-				arrow_up();
-			}
+		} 
+		
+		switch(keyCode) {
+		case KeyEvent.VK_U: 		JOINT1_NEG(); break;
+		case KeyEvent.VK_I:			JOINT1_POS(); break;
+		case KeyEvent.VK_J: 		JOINT2_NEG(); break;
+		case KeyEvent.VK_K: 		JOINT2_POS(); break;
+		case KeyEvent.VK_M: 		JOINT3_NEG(); break;
+		case KeyEvent.VK_COMMA:		JOINT3_POS(); break;
+		case KeyEvent.VK_O: 		JOINT4_NEG(); break;
+		case KeyEvent.VK_P:			JOINT4_POS(); break;
+		case KeyEvent.VK_L: 		JOINT5_NEG(); break;
+		case KeyEvent.VK_SEMICOLON: JOINT5_POS(); break;
+		case KeyEvent.VK_PERIOD: 	JOINT6_NEG(); break;
+		case KeyEvent.VK_SLASH:		JOINT6_POS(); break;
+		case KeyEvent.VK_MINUS:		spddn(); break;
+		case KeyEvent.VK_EQUALS:	spdup(); break;
+		case KeyEvent.VK_SHIFT:		shift(true); break;
+		case KeyEvent.VK_CONTROL:	ctrl = true; break;
 		}
+		
+		if (ctrl && keyCode == KeyEvent.VK_T) {
+			// Write anything stored in the String buffer to a text file
+			writeBuffer();
+		} else if (ctrl && keyCode == KeyEvent.VK_S) {
+			// Save EVERYTHING!
+			DataManagement.saveState(this);
+		} else if (ctrl && keyCode == KeyEvent.VK_Z) {
+			undoScenarioEdit();
+		} else if (key == 'q') {
+			// Print the current mode to the console
+			println(mode.toString());
+		} else if (key == 'e') {
+			// Toggle the Robot's End Effector state
+			if (!isProgramRunning()) {
+				getActiveRobot().toggleEEState();
+			}
+		} else if (key == 'r') {
+			// Restore default Robot joint angles
+			float[] rot = { 0, 0, 0, 0, 0, 0 };
+			getActiveRobot().releaseHeldObject();
+			getActiveRobot().setJointAngles(rot);
+			intermediatePositions.clear();
 
-		// General key functions
-		if (key == 'f') {
+		} else if (key == 'f') {
 			// Display the User and Tool frames associated with the current
 			// motion instruction
 			if (Fields.DEBUG && mode == ScreenMode.NAV_PROG_INSTR
@@ -6249,98 +6285,25 @@ public class RobotRun extends PApplet {
 					System.out.printf("\nUser frame: %d\nTool frame: %d\n", mInst.getUserFrame(), mInst.getToolFrame());
 				}
 			}
-
-		} else if (key == 'm') {
-			// Print the current mode to the console
-			println(mode.toString());
-
-		} else if (key == 'p') {
-			// Toggle the Robot's End Effector state
-			if (!isProgramRunning()) {
-				getActiveRobot().toggleEEState();
-			}
-
-		} else if (key == 's') {
-			// Save EVERYTHING!
-			DataManagement.saveState(this);
-
-		} else if (key == 't') {
-			// Restore default Robot joint angles
-			float[] rot = { 0, 0, 0, 0, 0, 0 };
-			getActiveRobot().releaseHeldObject();
-			getActiveRobot().setJointAngles(rot);
-			intermediatePositions.clear();
-
-		} else if (key == 'u') {
-			undoScenarioEdit();
-
-		} else if (key == 'w') {
-			// Write anything stored in the String buffer to a text file
-			writeBuffer();
-
-		} else if (keyCode == KeyEvent.VK_SHIFT) {
-			shift();
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD0) {
-			keyRot = !keyRot;
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD1) {
-			if(keyRot) JOINT6_NEG();
-			else	   JOINT3_NEG();
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD2) {
-			if(keyRot) JOINT6_POS();
-			else	   JOINT3_POS();
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD4) {
-			if(keyRot) JOINT5_NEG();
-			else	   JOINT2_NEG();
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD5) {
-			if(keyRot) JOINT5_POS();
-			else	   JOINT2_POS();
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD7) {
-			if(keyRot) JOINT4_NEG();
-			else	   JOINT1_NEG();
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD8) {
-			if(keyRot) JOINT4_POS();
-			else	   JOINT1_POS();
-			
 		}
 	}
 
 	public void keyReleased() {
-		if(keyCode == KeyEvent.VK_SHIFT) {
-			shift();
-		} else if (keyCode == KeyEvent.VK_NUMPAD0) {
-			keyRot = !keyRot;
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD1) {
-			if(keyRot) JOINT6_NEG();
-			else	   JOINT3_NEG();
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD2) {
-			if(keyRot) JOINT6_POS();
-			else	   JOINT3_POS();
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD4) {
-			if(keyRot) JOINT5_NEG();
-			else	   JOINT2_NEG();
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD5) {
-			if(keyRot) JOINT5_POS();
-			else	   JOINT2_POS();
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD7) {
-			if(keyRot) JOINT4_NEG();
-			else	   JOINT1_NEG();
-			
-		} else if (keyCode == KeyEvent.VK_NUMPAD8) {
-			if(keyRot) JOINT4_POS();
-			else	   JOINT1_POS();
-			
+		switch(keyCode) {
+		case KeyEvent.VK_U: 		JOINT1_NEG(); break;
+		case KeyEvent.VK_I:			JOINT1_POS(); break;
+		case KeyEvent.VK_J: 		JOINT2_NEG(); break;
+		case KeyEvent.VK_K: 		JOINT2_POS(); break;
+		case KeyEvent.VK_M: 		JOINT3_NEG(); break;
+		case KeyEvent.VK_COMMA:		JOINT3_POS(); break;
+		case KeyEvent.VK_O: 		JOINT4_NEG(); break;
+		case KeyEvent.VK_P:			JOINT4_POS(); break;
+		case KeyEvent.VK_L: 		JOINT5_NEG(); break;
+		case KeyEvent.VK_SEMICOLON: JOINT5_POS(); break;
+		case KeyEvent.VK_PERIOD: 	JOINT6_NEG(); break;
+		case KeyEvent.VK_SLASH:		JOINT6_POS(); break;
+		case KeyEvent.VK_SHIFT:		shift(false); break;
+		case KeyEvent.VK_CONTROL:	ctrl = false; break;
 		}
 	}
 
@@ -6996,7 +6959,7 @@ public class RobotRun extends PApplet {
 		case NAV_IOREG:
 			contents.setColumnIdx(1);
 			break;
-		// Frames
+			// Frames
 		case ACTIVE_FRAMES:
 			contents.setLineIdx(0);
 			contents.setColumnIdx(1);
@@ -7037,7 +7000,7 @@ public class RobotRun extends PApplet {
 			contents.setColumnIdx(-1);
 			break;
 
-		// Programs and instructions
+			// Programs and instructions
 		case NAV_PROGRAMS:
 			// Stop Robot movement (i.e. program execution)
 			hold();
@@ -7187,7 +7150,7 @@ public class RobotRun extends PApplet {
 			contents.setColumnIdx(0);
 			break;
 
-		// Macros
+			// Macros
 		case NAV_MACROS:
 			contents.setLineIdx(active_index);
 			break;
@@ -7199,7 +7162,7 @@ public class RobotRun extends PApplet {
 			options.reset();
 			break;
 
-		// Registers
+			// Registers
 		case NAV_DATA:
 			options.reset();
 			active_index = 0;
@@ -7683,9 +7646,9 @@ public class RobotRun extends PApplet {
 
 		MotionInstruction insert = new MotionInstruction(
 				getActiveRobot().getCurCoordFrame() == CoordFrame.JOINT ? Fields.MTYPE_JOINT : Fields.MTYPE_LINEAR, reg, false,
-				(getActiveRobot().getCurCoordFrame() == CoordFrame.JOINT ? 50 : 50 * getActiveRobot().motorSpeed)
+						(getActiveRobot().getCurCoordFrame() == CoordFrame.JOINT ? 50 : 50 * getActiveRobot().motorSpeed)
 						/ 100f,
-				0, getActiveRobot().getActiveUserFrame(), getActiveRobot().getActiveToolFrame());
+						0, getActiveRobot().getActiveUserFrame(), getActiveRobot().getActiveToolFrame());
 
 		if (getActiveRobot().getActiveInstIdx() != prog.getInstructions().size()) {
 			// Overwrite an existing non-motion instruction
@@ -8046,7 +8009,7 @@ public class RobotRun extends PApplet {
 
 		System.out.println(String.format("SConfirm: %d\n", ret));
 	}
-	
+
 	// Select button
 	public void select() {
 		getActiveRobot().setActiveProgIdx(0);
@@ -8065,16 +8028,16 @@ public class RobotRun extends PApplet {
 	 * 				successfully set as active
 	 */
 	protected boolean setActiveScenario(String name) {
-		
+
 		for (Scenario s : SCENARIOS) {
 			if (s.getName().equals(name)) {
 				activeScenario = s;
 				return true;
 			}
 		}
-		
+
 		return false;
-		
+
 	}
 
 	public void setExecutingInstruction(boolean executingInstruction) {
@@ -8145,7 +8108,7 @@ public class RobotRun extends PApplet {
 		instance = this;
 		letterStates = new int[] { 0, 0, 0, 0, 0 };
 		workingText = new StringBuilder();
-		
+
 		g1_px = 0;
 		g1_py = Fields.SMALL_BUTTON - 14; // the left-top corner of group 1
 		g1_width = 440;
@@ -8194,9 +8157,9 @@ public class RobotRun extends PApplet {
 
 			buffer = new ArrayList<>();
 			displayPoint = null;
-			
+
 			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 10, 100, null);
-			
+
 		} catch (NullPointerException NPEx) {
 
 			// TODO write to a log
@@ -8271,7 +8234,12 @@ public class RobotRun extends PApplet {
 
 	// toggle shift on/ off and button highlight
 	public void shift() {
-		if (!isShift()) {
+		shift(!this.shift);
+	}
+
+	// set shift value to 'b'
+	public void shift(boolean b) {
+		if (b) {
 			((Button) cp5.get("shift")).setColorBackground(Fields.BUTTON_ACTIVE);
 
 		} else {
@@ -8280,7 +8248,7 @@ public class RobotRun extends PApplet {
 			((Button) cp5.get("shift")).setColorBackground(Fields.BUTTON_DEFAULT);
 		}
 
-		setShift(!isShift());
+		setShift(b);
 		updateScreen();
 	}
 
@@ -8476,7 +8444,7 @@ public class RobotRun extends PApplet {
 		getManager().updateWindowDisplay();
 	}
 
-	public void SLOWDOWN() {
+	public void spddn() {
 		int curSpeed = activeRobot.getLiveSpeed();
 		// Reduce the speed at which the Robot jogs
 		if (isShift()) {
@@ -8498,7 +8466,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void SPEEDUP() {
+	public void spdup() {
 		int curSpeed = activeRobot.getLiveSpeed();
 		// Increase the speed at which the Robot jogs
 		if (isShift()) {
@@ -8520,7 +8488,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void STATUS() {
+	public void status() {
 		if (getSU_macro_bindings()[4] != null && isShift()) {
 			getSU_macro_bindings()[4].execute();
 		}
@@ -8809,7 +8777,7 @@ public class RobotRun extends PApplet {
 
 		// draw display background
 		cp5.addTextarea("txt").setPosition(display_px, display_py).setSize(display_width, display_height)
-				.setColorBackground(Fields.UI_LIGHT).moveTo(g1);
+		.setColorBackground(Fields.UI_LIGHT).moveTo(g1);
 
 		String header = null;
 		// display the name of the program that is being edited
@@ -8818,8 +8786,8 @@ public class RobotRun extends PApplet {
 		if (header != null) {
 			// Display header field
 			cp5.addTextarea("header").setText(" " + header).setFont(fnt_con14).setPosition(next_px, next_py)
-					.setSize(display_width, 20).setColorValue(Fields.UI_LIGHT).setColorBackground(Fields.UI_DARK)
-					.hideScrollbar().show().moveTo(g1);
+			.setSize(display_width, 20).setColorValue(Fields.UI_LIGHT).setColorBackground(Fields.UI_DARK)
+			.hideScrollbar().show().moveTo(g1);
 
 			next_py += 20;
 		}
@@ -8845,9 +8813,9 @@ public class RobotRun extends PApplet {
 		// set f button text labels
 		for (int i = 0; i < 5; i += 1) {
 			cp5.addTextarea("lf" + i).setText(funct[i]).setFont(fnt_con12)
-					// Keep function labels in their original place
-					.setPosition(display_width * i / 5 + 15, display_height - g1_py).setSize(display_width / 5 - 5, 20)
-					.setColorValue(Fields.UI_DARK).setColorBackground(Fields.UI_LIGHT).hideScrollbar().moveTo(g1);
+			// Keep function labels in their original place
+			.setPosition(display_width * i / 5 + 15, display_height - g1_py).setSize(display_width / 5 - 5, 20)
+			.setColorValue(Fields.UI_DARK).setColorBackground(Fields.UI_LIGHT).hideScrollbar().moveTo(g1);
 		}
 	} // end updateScreen()
 
