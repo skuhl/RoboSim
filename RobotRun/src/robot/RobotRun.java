@@ -26,6 +26,7 @@ import frame.CoordFrame;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
+import geom.Fixture;
 import geom.Part;
 import geom.Point;
 import geom.Triangle;
@@ -55,6 +56,7 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
+import screen.InstState;
 import screen.ScreenMode;
 import screen.ScreenType;
 import ui.AxesDisplay;
@@ -5357,7 +5359,7 @@ public class RobotRun extends PApplet {
 
 	public RoboticArm getInactiveRobot() {
 		try {
-			return ROBOTS.get((activeRobot.getRID() + 1) % 2);
+			return ROBOTS.get((activeRobot.RID + 1) % 2);
 
 		} catch (Exception Ex) {
 			return null;
@@ -8135,7 +8137,7 @@ public class RobotRun extends PApplet {
 	@Override
 	public void setup() {
 		super.setup();
-
+		
 		instance = this;
 		letterStates = new int[] { 0, 0, 0, 0, 0 };
 		workingText = new StringBuilder();
