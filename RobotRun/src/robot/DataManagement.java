@@ -522,7 +522,7 @@ public abstract class DataManagement {
 			while(numOfInst-- > 0) {
 				// Read in each instruction
 				Instruction inst = loadInstruction(robot, in);
-				prog.addInstruction(inst);
+				prog.addInstAtEnd(inst);
 			}
 
 			return prog;
@@ -1364,9 +1364,9 @@ public abstract class DataManagement {
 			// End of saved positions
 			out.writeInt(-1);
 
-			out.writeInt(p.getInstructions().size());
+			out.writeInt(p.getNumOfInst());
 			// Save each instruction
-			for(Instruction inst : p.getInstructions()) {
+			for(Instruction inst : p) {
 				saveInstruction(inst, out);
 			}
 		}

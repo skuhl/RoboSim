@@ -24,6 +24,8 @@ import programming.Program;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
+import screen.InstState;
+import screen.InstUndo;
 import window.DisplayLine;
 
 public class RoboticArm {
@@ -93,6 +95,11 @@ public class RoboticArm {
 	 * with this robot.
 	 */
 	private final Stack<CallFrame> CALL_STACK;
+	
+	/**
+	 * A stack of previous states of instructions that the user has since edited.
+	 */
+	private final Stack<InstState> PROG_UNDO;
 	
 	/**
 	 * The data register associated with this robot.
@@ -195,6 +202,7 @@ public class RoboticArm {
 		// Initialize program fields
 		PROGRAM = new ArrayList<>();
 		CALL_STACK = new Stack<>();
+		PROG_UNDO = new Stack<>();
 		
 		activeProgIdx = -1;
 		activeInstIdx = -1;
@@ -377,6 +385,44 @@ public class RoboticArm {
 		RobotRun.applyModelRotation(this, getJointAngles());
 		oldEEOrientation = RobotRun.getInstance().getTransformationMatrix();
 		RobotRun.getInstance().popMatrix();
+	}
+	
+	public Instruction replaceInstAt(int idx, Instruction inst) {
+		Program p = getActiveProg();
+		Instruction replaced = null;
+		
+		// Valid active program and instruction index
+		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {	
+			replaced = p.replaceInstAt(idx, inst);
+			
+			pushInstState(idx, replaced.clone());
+			
+			if (Fields.DEBUG) {
+				System.out.printf("\nREPLACE %d %s\n\n", idx, inst.getClass());
+			}
+		}
+		
+		return replaced;
+		
+	}
+	
+	public Instruction getInstToEdit(int idx) {
+		Program p = getActiveProg();
+		
+		// Valid active program and instruction index
+		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
+			Instruction inst = p.getInstAt(idx);
+			
+			pushInstState(idx, inst.clone());
+			
+			if (Fields.DEBUG) {
+				System.out.printf("\nEDIT %d %s\n\n", idx, inst.getClass());
+			}
+			
+			return inst;
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -1023,7 +1069,7 @@ public class RoboticArm {
 			return null;
 		}
 		
-		return prog.getInstruction(activeInstIdx);
+		return prog.getInstAt(activeInstIdx);
 	}
 	
 	/**
@@ -1473,6 +1519,24 @@ public class RoboticArm {
 		
 		return null;
 	}
+	
+	/**
+	 * TODO
+	 */
+	public void popInstructionUndo() {
+		
+		if (!PROG_UNDO.isEmpty()) {
+			InstState state = PROG_UNDO.pop();
+			Program p = getActiveProg();
+			
+			if (p != null) {
+				p.replaceInstAt(state.originIdx, state.inst);
+			}
+			
+		} else if (Fields.DEBUG) {
+			System.out.println("Empty program undo stack!");
+		}
+	}
 			
 	/**
 	 * TODO
@@ -1511,6 +1575,21 @@ public class RoboticArm {
 		
 		activeProgIdx = -1;
 		activeInstIdx = -1;		
+	}
+	
+	/**
+	 * TODO
+	 * 
+	 * @param idx
+	 * @param inst
+	 */
+	private void pushInstState(int idx, Instruction inst) {
+		
+		if (PROG_UNDO.size() > 35) {
+			PROG_UNDO.remove(0);
+		}
+		
+		PROG_UNDO.push(new InstState(idx, inst));
 	}
 
 	/**
@@ -1578,7 +1657,7 @@ public class RoboticArm {
 	public boolean setActiveInstIdx(int instIdx) {
 		Program prog = getActiveProg();
 		
-		if (prog != null && instIdx >= 0 && instIdx <= prog.getInstructions().size()) {
+		if (prog != null && instIdx >= 0 && instIdx <= prog.getNumOfInst()) {
 			// Set the active instruction
 			activeInstIdx = instIdx;
 			return true;
@@ -1598,6 +1677,11 @@ public class RoboticArm {
 	 */
 	public boolean setActiveProgIdx(int progIdx) {
 		if (progIdx >= 0 && progIdx < PROGRAM.size()) {
+			
+			if (activeProgIdx != progIdx) {
+				PROG_UNDO.clear();
+			}
+			
 			// Set the active program
 			activeProgIdx = progIdx;
 			return true;
