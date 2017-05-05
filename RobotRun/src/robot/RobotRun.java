@@ -6138,7 +6138,7 @@ public class RobotRun extends PApplet {
 	
 	@Override
 	public void keyPressed() {
-
+		
 		if (key == 27) {
 			// Disable the window exiting function of the 'esc' key
 			key = 0;
@@ -6233,6 +6233,16 @@ public class RobotRun extends PApplet {
 
 			} else if (keyCode == KeyEvent.VK_UP) {
 				arrow_up();
+				
+			} else if (keyCode == KeyEvent.VK_SHIFT) {
+				
+				if (!(mode.getType() == ScreenType.TYPE_TEXT_ENTRY ||
+						mode.getType() == ScreenType.TYPE_NUM_ENTRY)) {
+					// Only use pendant shift functionality outside of input menus
+					shift();
+					key = 0;
+				}
+				
 			}
 		}
 
@@ -6278,9 +6288,6 @@ public class RobotRun extends PApplet {
 			// Write anything stored in the String buffer to a text file
 			writeBuffer();
 
-		} else if (keyCode == KeyEvent.VK_SHIFT) {
-			shift();
-			
 		} else if (keyCode == KeyEvent.VK_NUMPAD0) {
 			keyRot = !keyRot;
 			
@@ -6312,8 +6319,21 @@ public class RobotRun extends PApplet {
 	}
 
 	public void keyReleased() {
-		if(keyCode == KeyEvent.VK_SHIFT) {
-			shift();
+		
+		if (getManager() != null && getManager().isPendantActive()) {
+			// Only allow keys functions when the pendant is active
+			if(keyCode == KeyEvent.VK_SHIFT) {
+				
+				if (!(mode.getType() == ScreenType.TYPE_TEXT_ENTRY ||
+						mode.getType() == ScreenType.TYPE_NUM_ENTRY)) {
+					
+					// Only use pendant shift functionality outside of input menus
+					shift();
+					key = 0;
+				}
+					
+			}
+			
 		} else if (keyCode == KeyEvent.VK_NUMPAD0) {
 			keyRot = !keyRot;
 			
