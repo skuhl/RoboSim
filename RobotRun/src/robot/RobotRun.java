@@ -29,6 +29,7 @@ import frame.UserFrame;
 import geom.Fixture;
 import geom.Part;
 import geom.Point;
+import geom.RQuaternion;
 import geom.Triangle;
 import geom.WorldObject;
 import global.Fields;
@@ -1128,7 +1129,6 @@ public class RobotRun extends PApplet {
 	 * @return
 	 */
 	private void characterInput(char c) {
-		
 		if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY && workingText.length() < TEXT_ENTRY_LEN
 				&& ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
 						|| c == '.' || c == '@' || c == '*' || c == '_')) {

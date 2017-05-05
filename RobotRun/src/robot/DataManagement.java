@@ -26,6 +26,7 @@ import geom.LoadedPart;
 import geom.ModelShape;
 import geom.Part;
 import geom.Point;
+import geom.RQuaternion;
 import geom.Shape;
 import geom.WorldObject;
 import global.Fields;
