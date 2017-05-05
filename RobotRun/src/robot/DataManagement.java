@@ -21,6 +21,7 @@ import frame.UserFrame;
 import geom.Box;
 import geom.Cylinder;
 import geom.DimType;
+import geom.Fixture;
 import geom.LoadedPart;
 import geom.ModelShape;
 import geom.Part;
@@ -667,7 +668,7 @@ public abstract class DataManagement {
 	}
 
 	private static int loadRobotData(RoboticArm robot) {
-		File srcDir = new File( String.format("%srobot%d/", parentDirPath, robot.getRID()) );
+		File srcDir = new File( String.format("%srobot%d/", parentDirPath, robot.RID) );
 		
 		if (!srcDir.exists() || !srcDir.isDirectory()) {
 			// No such directory exists
@@ -1524,7 +1525,7 @@ public abstract class DataManagement {
 
 	public static int saveRobotData(RoboticArm robot, int dataFlag) {
 		validateParentDir();
-		File destDir = new File( String.format("%srobot%d/", parentDirPath, robot.getRID()) );
+		File destDir = new File( String.format("%srobot%d/", parentDirPath, robot.RID) );
 		
 		// Initialize and possibly create the robot directory
 		if (!destDir.exists()) {

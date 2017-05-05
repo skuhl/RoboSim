@@ -30,8 +30,10 @@ public class CallInstruction extends Instruction {
 			return -1;
 		}
 		
+		RoboticArm r = RobotRun.getActiveRobot();
+		
 		// Save the current program state on tgt robot
-		tgtDevice.pushActiveProg();
+		tgtDevice.pushActiveProg(r);
 		// Set the new program state
 		tgtDevice.setActiveProgIdx(progIdx);
 		tgtDevice.setActiveInstIdx(0);

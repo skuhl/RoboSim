@@ -3,7 +3,6 @@ import processing.core.PApplet;
 import processing.core.PVector;
 import robot.BoundingBox;
 import robot.CoordinateSystem;
-import robot.Fixture;
 import robot.RobotRun;
 
 /**

@@ -1,9 +1,6 @@
-package robot;
-import geom.Box;
-import geom.Cylinder;
-import geom.ModelShape;
-import geom.Shape;
-import geom.WorldObject;
+package geom;
+import robot.CoordinateSystem;
+import robot.RobotRun;
 
 /**
  * A world object whose Coordinate System can be referenced by a Part
