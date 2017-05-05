@@ -14,6 +14,7 @@ import frame.UserFrame;
 import geom.BoundingBox;
 import geom.Part;
 import geom.Point;
+import geom.RMath;
 import geom.RQuaternion;
 import geom.WorldObject;
 import global.Fields;
@@ -494,7 +495,7 @@ public class RoboticArm {
 		joint = PApplet.abs(joint) % 6;
 		// Get the joint's range bounds
 		PVector rangeBounds = getJointRange(joint);
-		return RobotRun.angleWithinBounds(RobotRun.mod2PI(angle), rangeBounds.x, rangeBounds.y);
+		return RobotRun.angleWithinBounds(RMath.mod2PI(angle), rangeBounds.x, rangeBounds.y);
 	}
 	
 	/**
@@ -895,7 +896,7 @@ public class RoboticArm {
 					if(model.rotations[n]) {
 						float trialAngle = model.currentRotations[n] +
 								model.rotationSpeed * model.jointsMoving[n] * liveSpeed / 100f;
-						trialAngle = RobotRun.mod2PI(trialAngle);
+						trialAngle = RMath.mod2PI(trialAngle);
 						
 						if(model.anglePermitted(n, trialAngle)) {
 							model.currentRotations[n] = trialAngle;
@@ -1191,7 +1192,7 @@ public class RoboticArm {
 	}
 	
 	public RQuaternion getOrientation() {
-		return RobotRun.matrixToQuat(getOrientationMatrix());
+		return RMath.matrixToQuat(getOrientationMatrix());
 	}
 	
 	/* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
@@ -1213,11 +1214,11 @@ public class RoboticArm {
 	 */
 	public float[][] getOrientationMatrix(float[][] frame) {
 		float[][] m = getOrientationMatrix();
-		RealMatrix A = new Array2DRowRealMatrix(RobotRun.floatToDouble(m, 3, 3));
-		RealMatrix B = new Array2DRowRealMatrix(RobotRun.floatToDouble(frame, 3, 3));
+		RealMatrix A = new Array2DRowRealMatrix(RMath.floatToDouble(m, 3, 3));
+		RealMatrix B = new Array2DRowRealMatrix(RMath.floatToDouble(frame, 3, 3));
 		RealMatrix AB = A.multiply(B.transpose());
 
-		return RobotRun.doubleToFloat(AB.getData(), 3, 3);
+		return RMath.doubleToFloat(AB.getData(), 3, 3);
 	}
 
 	/**
@@ -1341,12 +1342,12 @@ public class RoboticArm {
 					} else if (distToDest >= (a.rotationSpeed * speed)) {
 						done = false;
 						a.currentRotations[r] += a.rotationSpeed * a.rotationDirections[r] * speed;
-						a.currentRotations[r] = RobotRun.mod2PI(a.currentRotations[r]);
+						a.currentRotations[r] = RMath.mod2PI(a.currentRotations[r]);
 
 					} else if (distToDest > 0.0001f) {
 						// Destination too close to move at current speed
 						a.currentRotations[r] = a.targetRotations[r];
-						a.currentRotations[r] = RobotRun.mod2PI(a.currentRotations[r]);
+						a.currentRotations[r] = RMath.mod2PI(a.currentRotations[r]);
 					}
 				}
 			}
@@ -1387,7 +1388,7 @@ public class RoboticArm {
 		boolean invalidAngle = false;
 		float[] srcAngles = getJointAngles();
 		// Calculate the joint angles for the desired position and orientation
-		float[] destAngles = RobotRun.inverseKinematics(this, srcAngles, destPosition, destOrientation);
+		float[] destAngles = RMath.inverseKinematics(this, srcAngles, destPosition, destOrientation);
 
 		// Check the destination joint angles with each joint's range of valid joint angles
 		for(int joint = 0; !(destAngles == null) && joint < 6; joint += 1) {
@@ -1743,7 +1744,7 @@ public class RoboticArm {
 			for(int r = 0; r < 3; r++) {
 				if(a.rotations[r]) {
 					// The minimum distance between the current and target joint angles
-					float dist_t = RobotRun.minimumDistance(a.currentRotations[r], a.targetRotations[r]);
+					float dist_t = RMath.minimumDistance(a.currentRotations[r], a.targetRotations[r]);
 
 					// check joint movement range
 					if(a.jointRanges[r].x == 0 && a.jointRanges[r].y == PConstants.TWO_PI) {
@@ -1755,10 +1756,10 @@ public class RoboticArm {
 						 * longer angle, otherwise choose the shortest angle path. */
 
 						// The minimum distance from the current joint angle to the lower bound of the joint's range
-						float dist_lb = RobotRun.minimumDistance(a.currentRotations[r], a.jointRanges[r].x);
+						float dist_lb = RMath.minimumDistance(a.currentRotations[r], a.jointRanges[r].x);
 
 						// The minimum distance from the current joint angle to the upper bound of the joint's range
-						float dist_ub = RobotRun.minimumDistance(a.currentRotations[r], a.jointRanges[r].y);
+						float dist_ub = RMath.minimumDistance(a.currentRotations[r], a.jointRanges[r].y);
 
 						if(dist_t < 0) {
 							if( (dist_lb < 0 && dist_lb > dist_t) || (dist_ub < 0 && dist_ub > dist_t) ) {

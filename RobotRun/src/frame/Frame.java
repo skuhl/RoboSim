@@ -6,6 +6,7 @@ import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
 import geom.Point;
+import geom.RMath;
 import geom.RQuaternion;
 import global.Fields;
 import processing.core.PApplet;
@@ -59,25 +60,25 @@ public abstract class Frame {
 
 			if (counter == 0) {
 				/* Case 3: C = point 1 */
-				Ar = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori2, 3, 3));
-				Br = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori3, 3, 3));
-				Cr = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori1, 3, 3));
+				Ar = new Array2DRowRealMatrix(RMath.floatToDouble(ori2, 3, 3));
+				Br = new Array2DRowRealMatrix(RMath.floatToDouble(ori3, 3, 3));
+				Cr = new Array2DRowRealMatrix(RMath.floatToDouble(ori1, 3, 3));
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos1, 2), PVector.add(pos2, pos3));
 
 			} else if (counter == 1) {
 				/* Case 2: C = point 2 */
-				Ar = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori3, 3, 3));
-				Br = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori1, 3, 3));
-				Cr = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori2, 3, 3));
+				Ar = new Array2DRowRealMatrix(RMath.floatToDouble(ori3, 3, 3));
+				Br = new Array2DRowRealMatrix(RMath.floatToDouble(ori1, 3, 3));
+				Cr = new Array2DRowRealMatrix(RMath.floatToDouble(ori2, 3, 3));
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos2, 2), PVector.add(pos3, pos1));
 
 			} else if (counter == 2) {
 				/* Case 1: C = point 3 */
-				Ar = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori1, 3, 3));
-				Br = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori2, 3, 3));
-				Cr = new Array2DRowRealMatrix(RobotRun.floatToDouble(ori3, 3, 3));
+				Ar = new Array2DRowRealMatrix(RMath.floatToDouble(ori1, 3, 3));
+				Br = new Array2DRowRealMatrix(RMath.floatToDouble(ori2, 3, 3));
+				Cr = new Array2DRowRealMatrix(RMath.floatToDouble(ori3, 3, 3));
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos3, 2), PVector.add(pos1, pos2));
 
@@ -114,7 +115,7 @@ public abstract class Frame {
 			avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
 
 			if (Fields.DEBUG) {
-				System.out.printf("\n%s\n\n", RobotRun.getInstance().matrixToString( RobotRun.doubleToFloat(R.getData(), 3, 3) ));
+				System.out.printf("\n%s\n\n", RobotRun.getInstance().matrixToString( RMath.doubleToFloat(R.getData(), 3, 3) ));
 			}
 		}
 
@@ -180,11 +181,11 @@ public abstract class Frame {
 		axesRefWorld[2][1] = zAxis.y;
 		axesRefWorld[2][2] = zAxis.z;
 
-		RealMatrix axes = new Array2DRowRealMatrix(RobotRun.floatToDouble(axesRefWorld, 3, 3)),
-				worldAxes =  new Array2DRowRealMatrix(RobotRun.floatToDouble(Fields.WORLD_AXES, 3, 3)),
+		RealMatrix axes = new Array2DRowRealMatrix(RMath.floatToDouble(axesRefWorld, 3, 3)),
+				worldAxes =  new Array2DRowRealMatrix(RMath.floatToDouble(Fields.WORLD_AXES, 3, 3)),
 				invWorldAxes = (new SingularValueDecomposition(worldAxes)).getSolver().getInverse();
 		// Remove the World frame transformation from the axes vectors
-		return RobotRun.doubleToFloat(invWorldAxes.multiply(axes).getData(), 3, 3);
+		return RMath.doubleToFloat(invWorldAxes.multiply(axes).getData(), 3, 3);
 	}
 
 	/**
@@ -213,7 +214,7 @@ public abstract class Frame {
 			wpr = new PVector(0f, 0f, 0f);
 		} else {
 			// Display in degrees
-			wpr = RobotRun.quatToEuler(getDEOrientationOffset()).mult(PConstants.RAD_TO_DEG);
+			wpr = RMath.quatToEuler(getDEOrientationOffset()).mult(PConstants.RAD_TO_DEG);
 		}
 
 		entries[0][0] = "X: ";

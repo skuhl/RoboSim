@@ -23,6 +23,7 @@ import geom.DimType;
 import geom.Fixture;
 import geom.ModelShape;
 import geom.Part;
+import geom.RMath;
 import geom.Shape;
 import geom.ShapeType;
 import geom.WorldObject;
@@ -833,8 +834,8 @@ public class WindowManager implements ControlListener {
 		 WorldObject active = getSelectedWO();
 		 // Get the part's default position and orientation
 		 PVector pos = active.getLocalCenter();
-		 PVector wpr = RobotRun.matrixToEuler( active.getLocalOrientationAxes() )
-				 			   .mult(PConstants.RAD_TO_DEG);
+		 PVector wpr = RMath.matrixToEuler( active.getLocalOrientationAxes() )
+				 			.mult(PConstants.RAD_TO_DEG);
 		 
 		 pos = RobotRun.convertNativeToWorld(pos);
 		 
@@ -859,8 +860,8 @@ public class WindowManager implements ControlListener {
 			 Part p = (Part)active;
 			 // Get the part's current position and orientation
 			 PVector pos = p.getDefaultCenter();
-			 PVector wpr = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
-					 			   .mult(PConstants.RAD_TO_DEG);
+			 PVector wpr = RMath.matrixToEuler( p.getDefaultOrientationAxes() )
+					 			.mult(PConstants.RAD_TO_DEG);
 			 
 			 pos = RobotRun.convertNativeToWorld(pos);
 			 
@@ -885,8 +886,8 @@ public class WindowManager implements ControlListener {
 		 if (active instanceof Part) {
 			 // Get the part's default position and orientation
 			 PVector pos = active.getLocalCenter();
-			 PVector wpr = RobotRun.matrixToEuler( active.getLocalOrientationAxes() )
-					 			   .mult(PConstants.RAD_TO_DEG);
+			 PVector wpr = RMath.matrixToEuler( active.getLocalOrientationAxes() )
+					 			.mult(PConstants.RAD_TO_DEG);
 			 
 			 pos = RobotRun.convertNativeToWorld(pos);
 			 
@@ -912,8 +913,8 @@ public class WindowManager implements ControlListener {
 			 Part p = (Part)active;
 			 // Get the part's current position and orientation
 			 PVector pos = p.getDefaultCenter();
-			 PVector wpr = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
-					 			   .mult(PConstants.RAD_TO_DEG);
+			 PVector wpr = RMath.matrixToEuler( p.getDefaultOrientationAxes() )
+					 			.mult(PConstants.RAD_TO_DEG);
 			 
 			 pos = RobotRun.convertNativeToWorld(pos);
 			 
@@ -2428,7 +2429,7 @@ public class WindowManager implements ControlListener {
 
 				 // Convert origin position into the World Frame
 				 PVector oPosition = RobotRun.convertNativeToWorld( toEdit.getLocalCenter() ),
-						 oWPR = RobotRun.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(PConstants.RAD_TO_DEG);
+						 oWPR = RMath.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(PConstants.RAD_TO_DEG);
 				 Float[] inputValues = getCurrentValues();
 				 // Update position and orientation
 				 if (inputValues[0] != null) {
@@ -2464,7 +2465,7 @@ public class WindowManager implements ControlListener {
 				 // Convert values from the World to the Native coordinate system
 				 PVector position = RobotRun.convertWorldToNative( oPosition );
 				 PVector wpr = oWPR.mult(PConstants.DEG_TO_RAD);
-				 float[][] orientation = RobotRun.eulerToMatrix(wpr);
+				 float[][] orientation = RMath.eulerToMatrix(wpr);
 				 // Update the Objects position and orientation
 				 toEdit.setLocalCenter(position);
 				 toEdit.setLocalOrientationAxes(orientation);
@@ -2513,8 +2514,8 @@ public class WindowManager implements ControlListener {
 			Part p = (Part)toEdit;
 			// Pull the object's current position and orientation
 			PVector defaultPos = RobotRun.convertNativeToWorld( p.getDefaultCenter() );
-			PVector defaultWPR = RobotRun.matrixToEuler( p.getDefaultOrientationAxes() )
-										 .mult(PConstants.RAD_TO_DEG);
+			PVector defaultWPR = RMath.matrixToEuler( p.getDefaultOrientationAxes() )
+									  .mult(PConstants.RAD_TO_DEG);
 			Float[] inputValues = getCurrentValues();
 			
 			// Update default position and orientation
@@ -2551,7 +2552,7 @@ public class WindowManager implements ControlListener {
 			 // Convert values from the World to the Native coordinate system
 			 PVector position = RobotRun.convertWorldToNative( defaultPos );
 			 PVector wpr = defaultWPR.mult(PConstants.DEG_TO_RAD);
-			 float[][] orientation = RobotRun.eulerToMatrix(wpr);
+			 float[][] orientation = RMath.eulerToMatrix(wpr);
 			 // Update the Object's default position and orientation
 			 p.setDefaultCenter(position);
 			 p.setDefaultOrientationAxes(orientation);
