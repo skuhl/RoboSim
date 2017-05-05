@@ -2371,31 +2371,34 @@ public class RobotRun extends PApplet {
 		case NAV_INSTR_MENU:
 
 			switch (options.getLineIdx()) {
-			case 0: // Insert
+			case 0: // Undo
+				getActiveRobot().popInstructionUndo();
+				lastScreen();
+				break;
+			case 1: // Insert
 				nextScreen(ScreenMode.CONFIRM_INSERT);
 				break;
-			case 1: // Delete
+			case 2: // Delete
 				contents.resetSelection(p.getNumOfInst());
 				nextScreen(ScreenMode.SELECT_INSTR_DELETE);
 				break;
-			case 2: // Cut/Copy
+			case 3: // Cut/Copy
 				contents.resetSelection(p.getNumOfInst());
 				nextScreen(ScreenMode.SELECT_CUT_COPY);
 				break;
-			case 3: // Paste
+			case 4: // Paste
 				nextScreen(ScreenMode.SELECT_PASTE_OPT);
 				break;
-			case 4: // Find/Replace
+			case 5: // Find/Replace
 				nextScreen(ScreenMode.FIND_REPL);
 				break;
-			case 5: // Renumber
+			case 6: // Renumber
 				nextScreen(ScreenMode.CONFIRM_RENUM);
 				break;
-			case 6: // Comment
+			case 7: // Comment
 				contents.resetSelection(p.getNumOfInst());
 				nextScreen(ScreenMode.SELECT_COMMENT);
 				break;
-			case 7: // Undo
 			case 8: // Remark
 			}
 
@@ -4865,14 +4868,14 @@ public class RobotRun extends PApplet {
 
 			// Instruction options
 		case NAV_INSTR_MENU:
-			options.addLine("1 Insert");
-			options.addLine("2 Delete");
-			options.addLine("3 Cut/ Copy");
-			options.addLine("4 Paste");
-			options.addLine("5 Find/ Replace");
-			options.addLine("6 Renumber");
-			options.addLine("7 Comment");
-			options.addLine("8 Remark");
+			options.addLine("1 Undo");
+			options.addLine("2 Insert");
+			options.addLine("3 Delete");
+			options.addLine("4 Cut/ Copy");
+			options.addLine("5 Paste");
+			options.addLine("6 Find/ Replace");
+			options.addLine("7 Renumber");
+			options.addLine("8 Comment");
 			break;
 		case CONFIRM_INSERT:
 			options.addLine("Enter number of lines to insert:");
