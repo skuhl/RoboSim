@@ -106,7 +106,7 @@ public class RobotRun extends PApplet {
 								 { 'y', 'z', '_', '@', '*', '.' } };
 
 		ITEMS_TO_SHOW = 8;
-		NUM_ENTRY_LEN = 16;
+		NUM_ENTRY_LEN = 9;
 		TEXT_ENTRY_LEN = 16;
 		instance = null;
 		fnt_con14 = null;
@@ -1120,7 +1120,72 @@ public class RobotRun extends PApplet {
 	
 	private ArrayList<String> buffer;
 	private Point displayPoint;
+	
+	/**
+	 * TODO
+	 * 
+	 * @param c
+	 * @return
+	 */
+	private void characterInput(char c) {
+		
+		if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY && workingText.length() < TEXT_ENTRY_LEN
+				&& ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+						|| c == '.' || c == '@' || c == '*' || c == '_')) {
 
+			int columnIdx = contents.getColumnIdx();
+
+			if (workingText.length() == 0 || columnIdx >= workingText.length()) {
+				workingText.append(c);
+
+			} else {
+				workingText.insert(columnIdx, c);
+			}
+			// Edge case of adding a character to an empty text entry
+			if (workingText.length() == 1 && workingText.charAt(0) != '\0') {
+				workingText.append('\0');
+				++columnIdx;
+			}
+
+			contents.setColumnIdx(min(columnIdx + 1, workingText.length() - 1));
+
+		} else if (mode.getType() == ScreenType.TYPE_NUM_ENTRY && workingText.length() < NUM_ENTRY_LEN) {
+			
+			if (mode == ScreenMode.SET_MV_INSTR_SPD) {
+				// Special case for motion instruction speed number entry
+				if ((c >= '0' && c <= '9') && workingText.length() < 4) {
+					workingText.append(c);
+				}
+				
+			} else if ((c >= '0' && c <= '9') || c == '.' || c == '-') {
+				// Append the character
+				workingText.append(c);
+			}
+
+		} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
+
+			if ((c >= '0' && c <= '9') || c == '-' || c == '.') {
+				DisplayLine entry = contents.get(contents.getLineIdx());
+				int idx = contents.getColumnIdx();
+				
+				if (entry.get(idx) == "\0") {
+					entry.set(idx, Character.toString(c));
+					arrow_rt();
+					
+				// Include prefix in length	
+				} else if (entry.size() < (NUM_ENTRY_LEN + 1)) {
+					entry.add(idx, Character.toString(c));
+					arrow_rt();
+				}
+			}
+			
+		}
+		
+		// Update the screen after a character insertion
+		updateScreen();
+	}
+	
+	/* REMOVE AFTER TESTING TEXT ENTRIES *
 	public void addNumber(String number) {
 		if (mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
 			if (workingText.length() < NUM_ENTRY_LEN) {
@@ -1144,6 +1209,7 @@ public class RobotRun extends PApplet {
 
 		updateScreen();
 	}
+	/**/
 
 	/**
 	 * @return Whether or not bounding boxes are displayed
@@ -1347,15 +1413,16 @@ public class RobotRun extends PApplet {
 					// Add an insert element if the length of the current
 					// comment is less than 16
 					int len = workingText.length();
-					if (len <= TEXT_ENTRY_LEN && contents.getColumnIdx() == workingText.length() - 1
-							&& (workingText.length() == 0 || workingText.charAt(len - 1) != '\0')) {
+					int columnIdx = contents.getColumnIdx();
+					
+					if (len <= TEXT_ENTRY_LEN && columnIdx == len - 1 &&
+							(len == 0 || workingText.charAt(len - 1) != '\0')) {
 
 						workingText.append('\0');
-						// Update contents to the new string
-						updateScreen();
 					}
 
-					contents.setColumnIdx(min(contents.getColumnIdx() + 1, workingText.length() - 1));
+					contents.setColumnIdx(min(contents.getColumnIdx() + 1, len - 1));
+					updateScreen();
 				}
 
 				// Reset function key states
@@ -1385,7 +1452,7 @@ public class RobotRun extends PApplet {
 					}
 
 					// Move to the right one digit
-					contents.setColumnIdx(Math.min(idx + 1, size - 1));
+					contents.setColumnIdx(Math.min(idx + 1, entry.size() - 1));
 				}
 			}
 		}
@@ -6149,69 +6216,16 @@ public class RobotRun extends PApplet {
 			return;
 
 		} else if (getManager() != null && getManager().isPendantActive()) {
-
-			// Key input for text entries
-			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY && workingText.length() < TEXT_ENTRY_LEN
-					&& ((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9')
-							|| key == '.' || key == '@' || key == '*' || key == '_')) {
-
-				contents.setColumnIdx(Math.max(0, contents.getColumnIdx()));
-
-				if (contents.getColumnIdx() >= workingText.length()) {
-					workingText.append(key);
-
-				} else {
-					workingText.insert(contents.getColumnIdx(), key);
-				}
-
-				// Add an insert element if the length of the current comment is
-				// less than 16
-				if (workingText.length() == 1 && workingText.charAt(0) != '\0') {
-					workingText.append('\0');
-				}
-
-				contents.setColumnIdx(min(contents.getColumnIdx() + 1, workingText.length() - 1));
-				// Update contents to the new string
-				updateScreen();
-				return;
-
-			} else if (mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
-
-				if ((key >= '0' && key <= '9') || key == '.') {
-					// Append the value
-					workingText.append(key);
-
-					// Update contents to the new string
-					updateScreen();
+			
+			if (mode.getType() == ScreenType.TYPE_NUM_ENTRY || mode.getType() == ScreenType.TYPE_POINT_ENTRY
+					|| mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
+				
+				if (((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9')
+						|| key == '-' || key == '.' || key == '@' || key == '*' || key == '_')) {
+					// Suppress other key events when entering text for the pendant
+					characterInput(key);
 					return;
-
-				} else if (key == '-') {
-					// Negate the value
-					if (workingText.length() >= 1 && workingText.charAt(0) == '-') {
-						workingText.deleteCharAt(0);
-
-					} else {
-						workingText.insert(0, '-');
-					}
-
-					// Update contents to the new string
-					updateScreen();
-					return;
-				}
-
-			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-
-				if ((key >= '0' && key <= '9') || key == '-' || key == '.') {
-					DisplayLine entry = contents.get(contents.getLineIdx());
-					int idx = contents.getColumnIdx();
-
-					if (entry.size() < 10) {
-						entry.add(idx, Character.toString(key));
-						contents.setColumnIdx(idx + 1);
-					}
-
-					updateScreen();
-					return;
+					
 				}
 			}
 
@@ -6393,28 +6407,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void LINE() {
-		if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-			DisplayLine entry = contents.get(contents.getLineIdx());
-			int idx = contents.getColumnIdx();
-
-			if (entry.size() < 10) {
-				entry.add(idx, "-");
-				contents.setColumnIdx(idx + 1);
-			}
-
-		} else if (mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
-
-			// Mutliply current number by -1
-			if (workingText.length() > 0 && workingText.charAt(0) == '-') {
-				workingText = workingText.deleteCharAt(0);
-
-			} else {
-				workingText.insert(0, '-');
-			}
-
-		}
-
-		updateScreen();
+		characterInput('-');
 	}
 
 	public void loadDataRegisters() {
@@ -7779,43 +7772,43 @@ public class RobotRun extends PApplet {
 	}
 
 	public void NUM0() {
-		addNumber("0");
+		characterInput('0');
 	}
 
 	public void NUM1() {
-		addNumber("1");
+		characterInput('1');
 	}
 
 	public void NUM2() {
-		addNumber("2");
+		characterInput('2');
 	}
 
 	public void NUM3() {
-		addNumber("3");
+		characterInput('3');
 	}
 
 	public void NUM4() {
-		addNumber("4");
+		characterInput('4');
 	}
 
 	public void NUM5() {
-		addNumber("5");
+		characterInput('5');
 	}
 
 	public void NUM6() {
-		addNumber("6");
+		characterInput('6');
 	}
 
 	public void NUM7() {
-		addNumber("7");
+		characterInput('7');
 	}
 
 	public void NUM8() {
-		addNumber("8");
+		characterInput('8');
 	}
 
 	public void NUM9() {
-		addNumber("9");
+		characterInput('9');
 	}
 
 	public Point parsePosFromContents(boolean isCartesian) {
@@ -7940,26 +7933,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void PERIOD() {
-		if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-			DisplayLine entry = contents.get(contents.getLineIdx());
-			int idx = contents.getColumnIdx();
-
-			if (entry.size() < 10) {
-				entry.add(idx, ".");
-				contents.setColumnIdx(idx + 1);
-			}
-
-		} else if (mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
-
-			if (workingText.length() < NUM_ENTRY_LEN) {
-				workingText.append('.');
-			}
-
-		} else if (mode != ScreenMode.EDIT_DREG_COM) {
-			workingText.append('.');
-		}
-
-		updateScreen();
+		characterInput('.');
 	}
 
 	public void POSN() {
