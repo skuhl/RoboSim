@@ -1,4 +1,5 @@
 package ui;
+import geom.RMath;
 import processing.core.PConstants;
 import processing.core.PVector;
 import robot.RobotRun;
@@ -112,8 +113,8 @@ public class Camera {
 
 		orientation.add( rotation );
 		// Apply camera rotation restrictions
-		orientation.x = RobotRun.mod2PI(orientation.x);
-		orientation.y = RobotRun.mod2PI(orientation.y);
+		orientation.x = RMath.mod2PI(orientation.x);
+		orientation.y = RMath.mod2PI(orientation.y);
 		orientation.z = 0f;//mod2PI(orientation.z);
 	}
 	
