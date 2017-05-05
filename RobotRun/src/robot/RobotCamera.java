@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import geom.Box;
 import geom.Fixture;
+import geom.RQuaternion;
 import geom.WorldObject;
 import processing.core.PVector;
 

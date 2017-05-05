@@ -1,7 +1,7 @@
-package robot;
-import geom.Box;
-import geom.DimType;
+package geom;
 import processing.core.PVector;
+import robot.CoordinateSystem;
+import robot.RobotRun;
 
 /**
  * A box object with its own local Coordinate system.
