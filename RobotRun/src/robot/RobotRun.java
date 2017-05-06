@@ -4,14 +4,12 @@ import java.awt.event.KeyEvent;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.SingularValueDecomposition;
 
 import controlP5.Button;
 import controlP5.ControlP5;
@@ -2026,8 +2024,8 @@ public class RobotRun extends PApplet {
 		c.setOrientation(p.orientation);
 		displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
 
-		PVector near[] = c.getPlane(90, 2, 10);
-		PVector far[] = c.getPlane(90, 2, 100);
+		PVector near[] = c.getPlane(10);
+		PVector far[] = c.getPlane(100);
 		for(int i = 0; i < 4; i += 1) {
 			pushMatrix();
 			stroke(0);
@@ -5681,14 +5679,8 @@ public class RobotRun extends PApplet {
 		
 		// Pendant button shortcuts
 		switch(keyCode) {
-		case KeyEvent.VK_UP:			arrow_up(); break;
-		case KeyEvent.VK_SHIFT:
-			if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) {
-				// Suppress shift shortcut for text entries
-				shift(true);
-			}
-			
-			break;
+		case KeyEvent.VK_SHIFT:		if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
+										shift(true); break;
 		case KeyEvent.VK_U: 		JOINT1_NEG(); break;
 		case KeyEvent.VK_I:			JOINT1_POS(); break;
 		case KeyEvent.VK_J: 		JOINT2_NEG(); break;
@@ -5756,6 +5748,8 @@ public class RobotRun extends PApplet {
 	public void keyReleased() {
 		
 		switch(keyCode) {
+		case KeyEvent.VK_SHIFT: 	if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
+										shift(false); break;
 		case KeyEvent.VK_U: 		JOINT1_NEG(); break;
 		case KeyEvent.VK_I:			JOINT1_POS(); break;
 		case KeyEvent.VK_J: 		JOINT2_NEG(); break;
@@ -5768,13 +5762,6 @@ public class RobotRun extends PApplet {
 		case KeyEvent.VK_SEMICOLON: JOINT5_POS(); break;
 		case KeyEvent.VK_PERIOD: 	JOINT6_NEG(); break;
 		case KeyEvent.VK_SLASH:		JOINT6_POS(); break;
-		case KeyEvent.VK_SHIFT:
-			if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) {
-				// Suppress shift shortcut for text entries
-				shift(false);
-			}
-			
-			break;
 		case KeyEvent.VK_CONTROL:	ctrl = false; break;
 			}
 	}
