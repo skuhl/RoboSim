@@ -38,6 +38,8 @@ import robot.EEMapping;
 import robot.RobotRun;
 import robot.RoboticArm;
 import robot.Scenario;
+import screen.ScreenMode;
+import screen.ScreenType;
 import ui.AxesDisplay;
 import ui.MyButton;
 import ui.MyButtonBar;
@@ -46,7 +48,7 @@ import ui.MyRadioButton;
 import ui.MyTextfield;
 import ui.RelativePoint;
 
-public class WindowManager implements ControlListener {
+public class WGUI implements ControlListener {
 	
 	/**
 	 * A dimension value (length, width, displacement, etc.), which is used to
@@ -71,6 +73,11 @@ public class WindowManager implements ControlListener {
 							mdropItemWidth = 90,
 							ldropItemWidth = 120,
 							dropItemHeight = 21,
+							pendant_tf = Fields.SMALL_BUTTON - 14,
+							display_px = 10,
+							display_py = 0,
+							display_width = 420,
+							display_height = 280,
 							DIM_LBL = 3,
 							DIM_TXT = 3,
 							DIM_DDL = 1;
@@ -84,7 +91,7 @@ public class WindowManager implements ControlListener {
 	/**
 	 * The manager object, which contains all the UI elements.
 	 */
-	private final ControlP5 UIManager;
+	private final ControlP5 manager;
 	
 	/**
 	 * A reference to the application, in which the UI resides.
@@ -124,25 +131,27 @@ public class WindowManager implements ControlListener {
 	 * Creates a new window with the given ControlP5 object as the parent
 	 * and the given fonts which will be applied to the text in the window.
 	 */
-	public WindowManager(RobotRun appRef, ControlP5 manager, PImage[][] buttonImages, PFont small, PFont medium, PFont bond) {
-		// Initialize color scheme fields
-		BG_C = appRef.color(210);
-		F_TEXT_C = appRef.color(0);
-		F_CURSOR_C = appRef.color(0);
-		F_ACTIVE_C = appRef.color(255, 0, 0);
-		F_BG_C = appRef.color(255);
-		F_FG_C = appRef.color(0);
-		B_TEXT_C = appRef.color(255);
-		B_DEFAULT_C = appRef.color(70);
-		B_ACTIVE_C = appRef.color(220, 40, 40);
-		
-		UIManager = manager;		 
+	public WGUI(RobotRun appRef, PImage[][] buttonImages) {
 		app = appRef;
-		menu = null;
 		
-		lastModImport = null;
+		// Initialize color scheme fields
+		BG_C = app.color(210);
+		F_TEXT_C = app.color(0);
+		F_CURSOR_C = app.color(0);
+		F_ACTIVE_C = app.color(255, 0, 0);
+		F_BG_C = app.color(255);
+		F_FG_C = app.color(0);
+		B_TEXT_C = app.color(255);
+		B_DEFAULT_C = app.color(70);
+		B_ACTIVE_C = app.color(220, 40, 40);
 		
+		manager = new ControlP5(appRef);
+		// Explicitly draw the ControlP5 elements
+		manager.setAutoDraw(false);
 		manager.addListener(this);
+		
+		menu = null;
+		lastModImport = null;
 		
 		/* A local reference to a position in the UI [x, y] used to position UI
 		 * elements relative to other UI elements */
@@ -152,7 +161,7 @@ public class WindowManager implements ControlListener {
 		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
 		
 		// Initialize the window tab selection bar
-		windowTabs = (MyButtonBar)(new MyButtonBar(UIManager, "Tabs")
+		windowTabs = (MyButtonBar)(new MyButtonBar(manager, "Tabs")
 			 // Sets button text color
 			 .setColorValue(B_TEXT_C)
 			 .setColorBackground(B_DEFAULT_C)
@@ -161,22 +170,22 @@ public class WindowManager implements ControlListener {
 			 .setSize(440, tButtonHeight))
 			 .addItems(windowList);
 		
-		windowTabs.getCaptionLabel().setFont(medium);
+		windowTabs.getCaptionLabel().setFont(Fields.medium);
 
 		// Initialize camera view buttons
-		addButton("FrontView", "F", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
-		addButton("BackView", "Bk", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
-		addButton("LeftView", "L", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
-		addButton("RightView", "R", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
-		addButton("TopView", "T", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
-		addButton("BottomView", "Bt", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
+		addButton("FrontView", "F", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("BackView", "Bk", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("LeftView", "L", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("RightView", "R", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("TopView", "T", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("BottomView", "Bt", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
 		
 		// Initialize the shared window background
 		relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_LEFT, 0, 0);
-		background = UIManager.addBackground("WindowBackground")
-							  .setPosition(relPos[0], relPos[1])
-							  .setBackgroundColor(BG_C)
-							  .setSize(windowTabs.getWidth(), 0);
+		background = manager.addBackground("WindowBackground")
+							.setPosition(relPos[0], relPos[1])
+							.setBackgroundColor(BG_C)
+							.setSize(windowTabs.getWidth(), 0);
 
 		// Initialize the window groups
 		pendantWindow = addGroup("Pendant", 0, 2 * offsetX, 440, 720);
@@ -186,98 +195,98 @@ public class WindowManager implements ControlListener {
 		scenarioWindow = addGroup("SCENARIO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscWindow = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		
-		pendant(buttonImages, bond);
+		pendant(buttonImages);
 
 		// Initialize the elements shared amongst the create and edit windows
 		for (int idx = 0; idx < 3; ++idx) {
 			addTextarea(String.format("DimLbl%d", idx), String.format("Dim(%d):", idx),
-					sharedElements, fieldWidth, sButtonHeight, medium);
+					sharedElements, fieldWidth, sButtonHeight, Fields.medium);
 			
 			addTextfield(String.format("Dim%d", idx), sharedElements, fieldWidth,
-					fieldHeight, medium);
+					fieldHeight, Fields.medium);
 		}
 		
-		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, small);
+		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
 		
 		// Initialize the world object creation window elements
-		addTextarea("ObjTypeLbl", "Type:", createObjWindow, mLblWidth, sButtonHeight, medium);
+		addTextarea("ObjTypeLbl", "Type:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
 
-		addTextarea("ObjNameLbl", "Name:", createObjWindow, sLblWidth, fieldHeight, medium);
-		addTextfield("ObjName", createObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("ObjNameLbl", "Name:", createObjWindow, sLblWidth, fieldHeight, Fields.medium);
+		addTextfield("ObjName", createObjWindow, fieldWidth, fieldHeight, Fields.medium);
 
-		addTextarea("ShapeLbl", "Shape:", createObjWindow, mLblWidth, sButtonHeight, medium);
-		addTextarea("FillLbl", "Fill:", createObjWindow, mLblWidth, sButtonHeight, medium);
-		addTextarea("OutlineLbl", "Outline:", createObjWindow, mLblWidth, sButtonHeight, medium);
+		addTextarea("ShapeLbl", "Shape:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("FillLbl", "Fill:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("OutlineLbl", "Outline:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
 
-		addButton("CreateWldObj", "Create", createObjWindow, mButtonWidth, sButtonHeight, small);
+		addButton("CreateWldObj", "Create", createObjWindow, mButtonWidth, sButtonHeight, Fields.small);
 		
 		// Initialize the world object edit window elements
-		addTextarea("ObjLabel", "Object:", editObjWindow, mLblWidth, fieldHeight, medium);
+		addTextarea("ObjLabel", "Object:", editObjWindow, mLblWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("Blank", "Inputs", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextarea("Current", "Current", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("Default", "Default", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("Blank", "Inputs", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextarea("Current", "Current", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("Default", "Default", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 
-		addTextarea("XLbl", "X Position:", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextfield("XCur", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("XDef", "N/A", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("XLbl", "X Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("XCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("XDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("YLbl", "Y Position:", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextfield("YCur", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("YDef", "N/A", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("YLbl", "Y Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("YCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("YDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("ZLbl", "Z Position:", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextfield("ZCur", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("ZDef", "N/A", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("ZLbl", "Z Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("ZCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("ZDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("WLbl", "X Rotation:", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextfield("WCur", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("WDef", "N/A", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("WLbl", "X Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("WCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("WDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("PLbl", "Y Rotation:", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextfield("PCur", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("PDef", "N/A", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("PLbl", "Y Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("PCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("PDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("RLbl", "Z Rotation:", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextfield("RCur", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("RDef", "N/A", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("RLbl", "Z Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("RCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("RDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("RefLbl", "Reference:", editObjWindow, lLblWidth, sButtonHeight, medium);
+		addTextarea("RefLbl", "Reference:", editObjWindow, lLblWidth, sButtonHeight, Fields.medium);
 		
-		addButton("MoveToCur", "Move to Current", editObjWindow, fieldWidth, sButtonHeight, small);
-		addButton("UpdateWODef", "Update Default", editObjWindow, fieldWidth, sButtonHeight, small);
-		addButton("MoveToDef", "Move to Default", editObjWindow, fieldWidth, sButtonHeight, small);
+		addButton("MoveToCur", "Move to Current", editObjWindow, fieldWidth, sButtonHeight, Fields.small);
+		addButton("UpdateWODef", "Update Default", editObjWindow, fieldWidth, sButtonHeight, Fields.small);
+		addButton("MoveToDef", "Move to Default", editObjWindow, fieldWidth, sButtonHeight, Fields.small);
 		
-		addButton("ResDefs", "Restore Defaults", editObjWindow, lLblWidth, sButtonHeight, small);
+		addButton("ResDefs", "Restore Defaults", editObjWindow, lLblWidth, sButtonHeight, Fields.small);
 
-		addButton("DeleteWldObj", "Delete", editObjWindow, mButtonWidth, sButtonHeight, small);
+		addButton("DeleteWldObj", "Delete", editObjWindow, mButtonWidth, sButtonHeight, Fields.small);
 		
 		// Initialize the scenario window elements
-		addTextarea("SOptLbl", "Options:", scenarioWindow, mLblWidth, fieldHeight, medium);
+		addTextarea("SOptLbl", "Options:", scenarioWindow, mLblWidth, fieldHeight, Fields.medium);
 		
 		HashMap<Float, String> toggles = new HashMap<>();
 		toggles.put(0f, "New");
 		toggles.put(1f, "Load");
 		toggles.put(2f, "Rename");
 		
-		RadioButton rb = addRadioButtons("ScenarioOpt", scenarioWindow, radioDim, radioDim, medium, toggles, 0f);
+		RadioButton rb = addRadioButtons("ScenarioOpt", scenarioWindow, radioDim, radioDim, Fields.medium, toggles, 0f);
 		Toggle t = rb.getItem(0);
 		
 		rb.setItemsPerRow(3);
 		rb.setSpacingColumn( (background.getWidth() - 2 * offsetX - 3 * t.getWidth()) / 3 );
 		
 		addTextarea("SInstructions", "N/A", scenarioWindow, background.getWidth() - (2 * offsetX),
-				54, small).hideScrollbar();
+				54, Fields.small).hideScrollbar();
 		
-		addTextfield("SInput", scenarioWindow, fieldWidth, fieldHeight, medium);
-		addButton("SConfirm", "N/A", scenarioWindow, mButtonWidth, sButtonHeight, small);
+		addTextfield("SInput", scenarioWindow, fieldWidth, fieldHeight, Fields.medium);
+		addButton("SConfirm", "N/A", scenarioWindow, mButtonWidth, sButtonHeight, Fields.small);
 		
 		// Initialize the miscellaneous window elements
-		addTextarea("ActiveAxesDisplay", "Axes Display:", miscWindow, lLblWidth, sButtonHeight, medium);
-		addTextarea("ActiveEEDisplay", "EE Display:", miscWindow, lLblWidth, sButtonHeight, medium);
+		addTextarea("ActiveAxesDisplay", "Axes Display:", miscWindow, lLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("ActiveEEDisplay", "EE Display:", miscWindow, lLblWidth, sButtonHeight, Fields.medium);
 		
-		addButton("ToggleOBBs", "Hide OBBs", miscWindow, lButtonWidth, sButtonHeight, small);
-		addButton("ToggleRobot", "Add Robot", miscWindow, lButtonWidth, sButtonHeight, small);
+		addButton("ToggleOBBs", "Hide OBBs", miscWindow, lButtonWidth, sButtonHeight, Fields.small);
+		addButton("ToggleRobot", "Add Robot", miscWindow, lButtonWidth, sButtonHeight, Fields.small);
 
 		/* Initialize dropdown list elements
 		 * 
@@ -285,32 +294,32 @@ public class WindowManager implements ControlListener {
 		 * 		(Adding the dropdown lists last places them in front of the
 		 * other UI elements, which is important, when the list is open) */
 		DropdownList ddlLimbo = addDropdown("EEDisplay", miscWindow, ldropItemWidth, dropItemHeight, 4,
-				small);
+				Fields.small);
 		ddlLimbo.addItem(EEMapping.DOT.toString(), EEMapping.DOT)
 				.addItem(EEMapping.LINE.toString(), EEMapping.LINE)
 				.addItem(EEMapping.NONE.toString(), EEMapping.NONE)
 				.setValue(0);
 		
 		ddlLimbo = addDropdown("AxesDisplay", miscWindow, ldropItemWidth, dropItemHeight, 4,
-				small);
+				Fields.small);
 		ddlLimbo.addItem(AxesDisplay.AXES.toString(), AxesDisplay.AXES)
 				.addItem(AxesDisplay.GRID.toString(), AxesDisplay.GRID)
 				.addItem(AxesDisplay.NONE.toString(), AxesDisplay.NONE)
 				.setValue(0);
 		
-		addDropdown("Scenario", scenarioWindow, ldropItemWidth, dropItemHeight, 4, small);
-		addDropdown("Fixture", editObjWindow, ldropItemWidth, dropItemHeight, 4, small);
+		addDropdown("Scenario", scenarioWindow, ldropItemWidth, dropItemHeight, 4, Fields.small);
+		addDropdown("Fixture", editObjWindow, ldropItemWidth, dropItemHeight, 4, Fields.small);
 		 
 		for (int idx = 0; idx < 1; ++idx) {
 			// dimension field dropdown lists
 			addDropdown(String.format("DimDdl%d", idx), sharedElements, ldropItemWidth,
-					dropItemHeight, 4, small);
+					dropItemHeight, 4, Fields.small);
 		}
 		
-		addDropdown("Object", editObjWindow, ldropItemWidth, dropItemHeight, 4, small);
+		addDropdown("Object", editObjWindow, ldropItemWidth, dropItemHeight, 4, Fields.small);
 		
 		ddlLimbo = addDropdown("Outline", createObjWindow, sdropItemWidth, dropItemHeight,
-				4, small);
+				4, Fields.small);
 		ddlLimbo.addItem("black", app.color(0))
 				.addItem("red", app.color(255, 0, 0))
 				.addItem("green", app.color(0, 255, 0))
@@ -321,7 +330,7 @@ public class WindowManager implements ControlListener {
 				.addItem("purple", app.color(90, 0, 255));
 
 		ddlLimbo = addDropdown("Fill", createObjWindow, mdropItemWidth, dropItemHeight,
-				4, small);
+				4, Fields.small);
 		ddlLimbo.addItem("white", app.color(255))
 				.addItem("black", app.color(0))
 				.addItem("red", app.color(255, 0, 0))
@@ -335,25 +344,25 @@ public class WindowManager implements ControlListener {
 				.addItem("dark green", app.color(0, 100, 15));
 
 		ddlLimbo = addDropdown("Shape", createObjWindow, sdropItemWidth, dropItemHeight,
-				4, small);
+				4, Fields.small);
 		ddlLimbo.addItem("Box", ShapeType.BOX)
 				.addItem("Cylinder", ShapeType.CYLINDER)
 				.addItem("Import", ShapeType.MODEL);
 
 		ddlLimbo = addDropdown("ObjType", createObjWindow, sdropItemWidth, dropItemHeight,
-				3, small);
+				3, Fields.small);
 		ddlLimbo.addItem("Parts", 0.0f)
 				.addItem("Fixtures", 1.0f);
 	}
 	
-	private void pendant(PImage[][] buttonImages, PFont bond) {
+	private void pendant(PImage[][] buttonImages) {
 		
 		int display_width = pendantWindow.getWidth() - 20;
 		int display_height = 280; // height and width of display screen
 		
 		int[] relPos = new int[] { offsetX, 0 };
 		
-		UIManager.addTextarea("txt")
+		manager.addTextarea("txt")
 			.setPosition(relPos[0], relPos[1])
 			.setSize(display_width, display_height)
 			.setColorBackground(Fields.UI_LIGHT)
@@ -365,10 +374,10 @@ public class WindowManager implements ControlListener {
 		int button_offsetX = Fields.LARGE_BUTTON + 1;
 		int button_offsetY = Fields.LARGE_BUTTON + 1;
 
-		int record_normal_px = WindowManager.lButtonWidth * 5 + Fields.LARGE_BUTTON + 1;
+		int record_normal_px = WGUI.lButtonWidth * 5 + Fields.LARGE_BUTTON + 1;
 		int record_normal_py = 0;
 		
-		UIManager.addButton("record_normal")
+		manager.addButton("record_normal")
 			.setPosition(record_normal_px, record_normal_py)
 			.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
 			.setImages(buttonImages[0])
@@ -376,7 +385,7 @@ public class WindowManager implements ControlListener {
 
 		int EE_normal_px = record_normal_px + Fields.LARGE_BUTTON + 1;
 		int EE_normal_py = 0;
-		UIManager.addButton("EE")
+		manager.addButton("EE")
 			.setPosition(EE_normal_px, EE_normal_py)
 			.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
 			.setImages(buttonImages[1])
@@ -387,7 +396,7 @@ public class WindowManager implements ControlListener {
 		int f1_px = offsetX;
 		int f1_py = 0 + display_height + 2;
 		int f_width = display_width / 5 - 1;
-		UIManager.addButton("f1").setPosition(f1_px, f1_py)
+		manager.addButton("f1").setPosition(f1_px, f1_py)
 		.setSize(f_width, Fields.LARGE_BUTTON)
 		.setCaptionLabel("F1")
 		.setColorBackground(Fields.BUTTON_DEFAULT)
@@ -396,7 +405,7 @@ public class WindowManager implements ControlListener {
 
 		int f2_px = f1_px + f_width + 1;
 		int f2_py = f1_py;
-		UIManager.addButton("f2").setPosition(f2_px, f2_py)
+		manager.addButton("f2").setPosition(f2_px, f2_py)
 		.setSize(f_width, Fields.LARGE_BUTTON)
 		.setCaptionLabel("F2")
 		.setColorBackground(Fields.BUTTON_DEFAULT)
@@ -405,7 +414,7 @@ public class WindowManager implements ControlListener {
 
 		int f3_px = f2_px + f_width + 1;
 		int f3_py = f2_py;
-		UIManager.addButton("f3").setPosition(f3_px, f3_py)
+		manager.addButton("f3").setPosition(f3_px, f3_py)
 		.setSize(f_width, Fields.LARGE_BUTTON)
 		.setCaptionLabel("F3")
 		.setColorBackground(Fields.BUTTON_DEFAULT)
@@ -414,7 +423,7 @@ public class WindowManager implements ControlListener {
 
 		int f4_px = f3_px + f_width + 1;
 		int f4_py = f3_py;
-		UIManager.addButton("f4").setPosition(f4_px, f4_py)
+		manager.addButton("f4").setPosition(f4_px, f4_py)
 		.setSize(f_width, Fields.LARGE_BUTTON)
 		.setCaptionLabel("F4")
 		.setColorBackground(Fields.BUTTON_DEFAULT)
@@ -423,7 +432,7 @@ public class WindowManager implements ControlListener {
 
 		int f5_px = f4_px + f_width + 1;
 		int f5_py = f4_py;
-		UIManager.addButton("f5").setPosition(f5_px, f5_py)
+		manager.addButton("f5").setPosition(f5_px, f5_py)
 		.setSize(f_width, Fields.LARGE_BUTTON)
 		.setCaptionLabel("F5")
 		.setColorBackground(Fields.BUTTON_DEFAULT)
@@ -434,55 +443,55 @@ public class WindowManager implements ControlListener {
 
 		int st_px = f1_px;
 		int st_py = f1_py + button_offsetY + 10;
-		UIManager.addButton("step").setPosition(st_px, st_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
+		manager.addButton("step").setPosition(st_px, st_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
 		.setCaptionLabel("STEP").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int mu_px = st_px + Fields.LARGE_BUTTON + 19;
 		int mu_py = st_py;
-		UIManager.addButton("menu").setPosition(mu_px, mu_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("menu").setPosition(mu_px, mu_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("MENU").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int se_px = mu_px + Fields.LARGE_BUTTON + 15;
 		int se_py = mu_py;
-		UIManager.addButton("select").setPosition(se_px, se_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("select").setPosition(se_px, se_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("SELECT").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int ed_px = se_px + button_offsetX;
 		int ed_py = se_py;
-		UIManager.addButton("edit").setPosition(ed_px, ed_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("edit").setPosition(ed_px, ed_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("EDIT").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int da_px = ed_px + button_offsetX;
 		int da_py = ed_py;
-		UIManager.addButton("data").setPosition(da_px, da_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("data").setPosition(da_px, da_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("DATA").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int fn_px = da_px + Fields.LARGE_BUTTON + 15;
 		int fn_py = da_py;
-		UIManager.addButton("fctn").setPosition(fn_px, fn_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("fctn").setPosition(fn_px, fn_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("FCTN").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int sf_px = fn_px + Fields.LARGE_BUTTON + 19;
 		int sf_py = fn_py;
-		UIManager.addButton("shift").setPosition(sf_px, sf_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
+		manager.addButton("shift").setPosition(sf_px, sf_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
 		.setCaptionLabel("SHIFT").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int pr_px = mu_px;
 		int pr_py = mu_py + button_offsetY;
-		UIManager.addButton("prev").setPosition(pr_px, pr_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("prev").setPosition(pr_px, pr_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("PREV").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int ne_px = fn_px;
 		int ne_py = mu_py + button_offsetY;
-		UIManager.addButton("next").setPosition(ne_px, ne_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("next").setPosition(ne_px, ne_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("NEXT").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
@@ -491,22 +500,22 @@ public class WindowManager implements ControlListener {
 
 		int up_px = ed_px + 5;
 		int up_py = ed_py + button_offsetY + 10;
-		UIManager.addButton("arrow_up").setPosition(up_px, up_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("arrow_up").setPosition(up_px, up_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
 		.setImages(buttonImages[2]).updateSize().moveTo(pendantWindow);
 
 		int dn_px = up_px;
 		int dn_py = up_py + button_offsetY;
-		UIManager.addButton("arrow_dn").setPosition(dn_px, dn_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("arrow_dn").setPosition(dn_px, dn_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
 		.setImages(buttonImages[3]).updateSize().moveTo(pendantWindow);
 		
 		int lt_px = dn_px - button_offsetX;
 		int lt_py = dn_py - button_offsetY / 2;
-		UIManager.addButton("arrow_lt").setPosition(lt_px, lt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("arrow_lt").setPosition(lt_px, lt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
 		.setImages(buttonImages[4]).updateSize().moveTo(pendantWindow);
 		
 		int rt_px = dn_px + button_offsetX;
 		int rt_py = lt_py;
-		UIManager.addButton("arrow_rt").setPosition(rt_px, rt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("arrow_rt").setPosition(rt_px, rt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
 		.setImages(buttonImages[5]).updateSize().moveTo(pendantWindow);
 
 		// --------------------------------------------------------------//
@@ -518,38 +527,38 @@ public class WindowManager implements ControlListener {
 
 		int LINE_px = ed_px - 7 * button_offsetX / 2;
 		int LINE_py = g2_offsetY + 5 * button_offsetY;
-		UIManager.addButton("LINE").setPosition(LINE_px, LINE_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("LINE").setPosition(LINE_px, LINE_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("-").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
 		.moveTo(pendantWindow);
 
 		int PERIOD_px = LINE_px + button_offsetX;
 		int PERIOD_py = LINE_py - button_offsetY;
-		UIManager.addButton("PERIOD").setPosition(PERIOD_px, PERIOD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("PERIOD").setPosition(PERIOD_px, PERIOD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel(".").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
 		.moveTo(pendantWindow);
 
 		int COMMA_px = PERIOD_px + button_offsetX;
 		int COMMA_py = PERIOD_py;
-		UIManager.addButton("COMMA").setPosition(COMMA_px, COMMA_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("COMMA").setPosition(COMMA_px, COMMA_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel(",").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
 		.moveTo(pendantWindow);
 
 		int POSN_px = LINE_px + button_offsetX;
 		int POSN_py = LINE_py;
-		UIManager.addButton("POSN").setPosition(POSN_px, POSN_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("POSN").setPosition(POSN_px, POSN_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("POSN").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int IO_px = POSN_px + button_offsetX;
 		int IO_py = POSN_py;
-		UIManager.addButton("IO").setPosition(IO_px, IO_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("IO").setPosition(IO_px, IO_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("I/O").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int NUM_px = LINE_px;
 		int NUM_py = LINE_py - button_offsetY;
 		for (int i = 0; i < 10; i += 1) {
-			UIManager.addButton("NUM" + i).setPosition(NUM_px, NUM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+			manager.addButton("NUM" + i).setPosition(NUM_px, NUM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 			.setCaptionLabel("" + i).setColorBackground(Fields.BUTTON_DEFAULT)
 			.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
@@ -563,19 +572,19 @@ public class WindowManager implements ControlListener {
 
 		int RESET_px = LINE_px;
 		int RESET_py = NUM_py;
-		UIManager.addButton("RESET").setPosition(RESET_px, RESET_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("RESET").setPosition(RESET_px, RESET_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("RESET").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int BKSPC_px = RESET_px + button_offsetX;
 		int BKSPC_py = RESET_py;
-		UIManager.addButton("BKSPC").setPosition(BKSPC_px, BKSPC_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("BKSPC").setPosition(BKSPC_px, BKSPC_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("BKSPC").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int ITEM_px = BKSPC_px + button_offsetX;
 		int ITEM_py = BKSPC_py;
-		UIManager.addButton("ITEM").setPosition(ITEM_px, ITEM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("ITEM").setPosition(ITEM_px, ITEM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("ITEM").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
@@ -583,37 +592,37 @@ public class WindowManager implements ControlListener {
 
 		int ENTER_px = ed_px;
 		int ENTER_py = g2_offsetY;
-		UIManager.addButton("ENTER").setPosition(ENTER_px, ENTER_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("ENTER").setPosition(ENTER_px, ENTER_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("ENTER").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int TOOL1_px = ENTER_px;
 		int TOOL1_py = ENTER_py + button_offsetY;
-		UIManager.addButton("TOOL1").setPosition(TOOL1_px, TOOL1_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("TOOL1").setPosition(TOOL1_px, TOOL1_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("TOOL1").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int TOOL2_px = TOOL1_px;
 		int TOOL2_py = TOOL1_py + button_offsetY;
-		UIManager.addButton("TOOL2").setPosition(TOOL2_px, TOOL2_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("TOOL2").setPosition(TOOL2_px, TOOL2_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("TOOL2").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int MOVEMENU_px = TOOL2_px;
 		int MOVEMENU_py = TOOL2_py + button_offsetY;
-		UIManager.addButton("MVMU").setPosition(MOVEMENU_px, MOVEMENU_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("MVMU").setPosition(MOVEMENU_px, MOVEMENU_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("MVMU").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int SETUP_px = MOVEMENU_px;
 		int SETUP_py = MOVEMENU_py + button_offsetY;
-		UIManager.addButton("SETUP").setPosition(SETUP_px, SETUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("SETUP").setPosition(SETUP_px, SETUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("SETUP").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int STATUS_px = SETUP_px;
 		int STATUS_py = SETUP_py + button_offsetY;
-		UIManager.addButton("status").setPosition(STATUS_px, STATUS_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("status").setPosition(STATUS_px, STATUS_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("STATUS").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
@@ -621,37 +630,37 @@ public class WindowManager implements ControlListener {
 
 		int hd_px = STATUS_px + 3 * button_offsetX / 2;
 		int hd_py = g2_offsetY;
-		UIManager.addButton("hold").setPosition(hd_px, hd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("hold").setPosition(hd_px, hd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("HOLD").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int fd_px = hd_px;
 		int fd_py = hd_py + button_offsetY;
-		UIManager.addButton("fwd").setPosition(fd_px, fd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("fwd").setPosition(fd_px, fd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("FWD").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int bd_px = fd_px;
 		int bd_py = fd_py + button_offsetY;
-		UIManager.addButton("bwd").setPosition(bd_px, bd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("bwd").setPosition(bd_px, bd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("BWD").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int COORD_px = bd_px;
 		int COORD_py = bd_py + button_offsetY;
-		UIManager.addButton("coord").setPosition(COORD_px, COORD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("coord").setPosition(COORD_px, COORD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("COORD").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int SPEEDUP_px = COORD_px;
 		int SPEEDUP_py = COORD_py + button_offsetY;
-		UIManager.addButton("spdup").setPosition(SPEEDUP_px, SPEEDUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
+		manager.addButton("spdup").setPosition(SPEEDUP_px, SPEEDUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
 		.setCaptionLabel("+%").setColorBackground(Fields.BUTTON_DEFAULT)
 		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
 		int SLOWDOWN_px = SPEEDUP_px;
 		int SLOWDOWN_py = SPEEDUP_py + button_offsetY;
-		UIManager.addButton("spddn").setPosition(SLOWDOWN_px, SLOWDOWN_py)
+		manager.addButton("spddn").setPosition(SLOWDOWN_px, SLOWDOWN_py)
 		.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel("-%")
 		.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
 
@@ -661,24 +670,24 @@ public class WindowManager implements ControlListener {
 				"+XR\n(J4)", "-YR\n(J5)", "+YR\n(J5)", "-ZR\n(J6)", "+ZR\n(J6)" };
 
 		for (int i = 1; i <= 6; i += 1) {
-			UIManager.addButton("JOINT" + i + "_NEG").setPosition(JOINT_px, JOINT_py)
+			manager.addButton("JOINT" + i + "_NEG").setPosition(JOINT_px, JOINT_py)
 			.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2])
 			.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow)
-			.getCaptionLabel().alignY(app.TOP);
+			.getCaptionLabel().alignY(RobotRun.TOP);
 
 			JOINT_px += Fields.LARGE_BUTTON + 1;
-			UIManager.addButton("JOINT" + i + "_POS").setPosition(JOINT_px, JOINT_py)
+			manager.addButton("JOINT" + i + "_POS").setPosition(JOINT_px, JOINT_py)
 			.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2 + 1])
 			.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow)
-			.getCaptionLabel().alignY(app.TOP);
+			.getCaptionLabel().alignY(RobotRun.TOP);
 
 			JOINT_px = SLOWDOWN_px + button_offsetX;
 			JOINT_py += Fields.SMALL_BUTTON + 1;
 		}
 
-		List<Button> buttons = UIManager.getAll(Button.class);
+		List<Button> buttons = manager.getAll(Button.class);
 		for (Button b : buttons) {
-			b.getCaptionLabel().setFont(bond);
+			b.getCaptionLabel().setFont(Fields.bond);
 		}
 	}
 	
@@ -700,7 +709,7 @@ public class WindowManager implements ControlListener {
 	private MyButton addButton(String name, String lblTxt, Group parent, int wdh,
 			int hgt, PFont lblFont) {
 		
-		MyButton b = new MyButton(UIManager, name);
+		MyButton b = new MyButton(manager, name);
 		
 		b.setCaptionLabel(lblTxt)
 		 .setColorValue(B_TEXT_C)
@@ -733,7 +742,7 @@ public class WindowManager implements ControlListener {
 	private MyDropdownList addDropdown(String name, Group parent, int lblWdh,
 			int lblHgt, int listLen, PFont lblFont) {
 		
-		MyDropdownList dropdown = new MyDropdownList(UIManager, name);
+		MyDropdownList dropdown = new MyDropdownList(manager, name);
 		
 		dropdown.setSize(lblWdh, lblHgt * listLen)
 				.setBarHeight(lblHgt)
@@ -762,7 +771,7 @@ public class WindowManager implements ControlListener {
 	 * @return		A reference to the new group
 	 */
 	private Group addGroup(String name, int posX, int posY, int wdh, int hgt) {
-		return UIManager.addGroup(name).setPosition(posX, posY)
+		return manager.addGroup(name).setPosition(posX, posY)
 				 .setBackgroundColor(BG_C)
 				 .setSize(wdh, hgt)
 				 .hideBar();
@@ -787,7 +796,7 @@ public class WindowManager implements ControlListener {
 			int togHgt, PFont lblFont, HashMap<Float, String> elements,
 			Float iniActive) {
 		
-		MyRadioButton rb = new MyRadioButton(UIManager, name);
+		MyRadioButton rb = new MyRadioButton(manager, name);
 		rb.setColorValue(B_DEFAULT_C)
 		  .setColorLabel(F_TEXT_C)
 		  .setColorActive(B_ACTIVE_C)
@@ -834,7 +843,7 @@ public class WindowManager implements ControlListener {
 	private Textarea addTextarea(String name, String iniTxt, Group parent,
 			int wdh, int hgt, PFont lblFont) {
 		
-		return UIManager.addTextarea(name, iniTxt, 0, 0, wdh, hgt)
+		return manager.addTextarea(name, iniTxt, 0, 0, wdh, hgt)
 						.setFont(lblFont)
 						.setColor(F_TEXT_C)
 						.setColorActive(F_ACTIVE_C)
@@ -858,7 +867,7 @@ public class WindowManager implements ControlListener {
 	private MyTextfield addTextfield(String name, Group parent, int wdh,
 			int hgt, PFont lblFont) {
 		
-		MyTextfield t = new MyTextfield(UIManager, name, 0, 0, wdh, hgt);
+		MyTextfield t = new MyTextfield(manager, name, 0, 0, wdh, hgt);
 		t.setColor(F_TEXT_C)
 		 .setColorCursor(F_CURSOR_C)
 		 .setColorActive(F_CURSOR_C)
@@ -942,6 +951,8 @@ public class WindowManager implements ControlListener {
 			 }
 		 }
 	}
+	
+	
 
 	 /**
 	  * Reinitialize any and all input fields
@@ -974,7 +985,7 @@ public class WindowManager implements ControlListener {
 	  * input; currently only text fields and dropdown lists are updated.
 	  */
 	 public void clearGroupInputFields(Group g) {
-		 List<ControllerInterface<?>> contents = UIManager.getAll();
+		 List<ControllerInterface<?>> contents = manager.getAll();
 
 		 for (ControllerInterface<?> controller : contents) {
 
@@ -1004,6 +1015,23 @@ public class WindowManager implements ControlListener {
 		 clearGroupInputFields(scenarioWindow);
 		 updateDimLblsAndFields();
 	 }
+	 
+	/*
+	 * Removes all text on screen and prepares the UI to transition to a new
+	 * screen display.
+	 */
+	public void clearScreen() {
+		// remove all text labels on screen
+		List<Textarea> displayText = manager.getAll(Textarea.class);
+		for (Textarea t : displayText) {
+			// ONLY remove text areas from the Pendant!
+			if (t.getParent().equals( pendantWindow )) {
+				manager.remove(t.getName());
+			}
+		}
+
+		manager.update();
+	}
 
 	 /**
 	  * Reinitialize the input fields for any shared contents
@@ -1399,7 +1427,7 @@ public class WindowManager implements ControlListener {
 	  * 							name exists in the UI
 	  */
 	 private Button getButton(String name) throws ClassCastException {
-		 return (Button) UIManager.get(name);
+		 return (Button) manager.get(name);
 	 }
 
 	 /**
@@ -1476,10 +1504,10 @@ public class WindowManager implements ControlListener {
 	 private String getDimText(DimType t) throws ClassCastException {
 		 
 		 if (t == DimType.WIDTH) {
-			 return ( (MyTextfield) UIManager.get("Dim2") ).getText();
+			 return ( (MyTextfield) manager.get("Dim2") ).getText();
 			 
 		 } else if (t == DimType.HEIGHT) {
-			 return ( (MyTextfield) UIManager.get("Dim1") ).getText();
+			 return ( (MyTextfield) manager.get("Dim1") ).getText();
 			 
 		 } if (t == DimType.SCALE) {
 			 int dimNum = 0;
@@ -1489,10 +1517,10 @@ public class WindowManager implements ControlListener {
 				dimNum = 1;
 			 }
 			 
-			 return ( (MyTextfield) UIManager.get( String.format("Dim%d", dimNum) ) ).getText();
+			 return ( (MyTextfield) manager.get( String.format("Dim%d", dimNum) ) ).getText();
 			 
 		 } else {
-			 return ( (MyTextfield) UIManager.get("Dim0") ).getText();
+			 return ( (MyTextfield) manager.get("Dim0") ).getText();
 		 }
 	 }
 	 
@@ -1508,7 +1536,7 @@ public class WindowManager implements ControlListener {
 	  * 							name exists in the UI
 	  */
 	 private MyDropdownList getDropdown(String name) throws ClassCastException {
-		 return (MyDropdownList) UIManager.get(name);
+		 return (MyDropdownList) manager.get(name);
 	 }
 	 
 	 /**
@@ -1625,7 +1653,7 @@ public class WindowManager implements ControlListener {
 	  * 							given name exists in the UI
 	  */
 	 public MyRadioButton getRadioButton(String name) throws ClassCastException {
-		 return (MyRadioButton) UIManager.get(name);
+		 return (MyRadioButton) manager.get(name);
 	 }
 	 
 	 /**
@@ -1646,7 +1674,7 @@ public class WindowManager implements ControlListener {
 		if (menu == WindowTab.CREATE) {
 			/* Determine which method of the source file input was edited last
 			 * and use that input method as the source file */
-			ControllerInterface<?> c = UIManager.get(lastModImport);
+			ControllerInterface<?> c = manager.get(lastModImport);
 			
 			if (c instanceof MyTextfield) {
 				filename = ((MyTextfield)c).getText();
@@ -1677,7 +1705,7 @@ public class WindowManager implements ControlListener {
 	  * 							name exists in the UI
 	  */
 	 private Textarea getTextArea(String name) throws ClassCastException {
-		 return (Textarea) UIManager.get(name);
+		 return (Textarea) manager.get(name);
 	 }
 	 
 	 /**
@@ -1692,7 +1720,7 @@ public class WindowManager implements ControlListener {
 	  * 							name exists in the UI
 	  */
 	 private MyTextfield getTextField(String name) throws ClassCastException {
-		 return (MyTextfield) UIManager.get(name);
+		 return (MyTextfield) manager.get(name);
 	 }
 
 	 /**
@@ -1737,7 +1765,7 @@ public class WindowManager implements ControlListener {
 	  * Determines whether a single text field is active.
 	  */
 	 public boolean isATextFieldActive() {
-		 List<ControllerInterface<?>> controllers = UIManager.getAll();
+		 List<ControllerInterface<?>> controllers = manager.getAll();
 		 
 		 for (ControllerInterface<?> c : controllers) {
 			 if (c instanceof MyTextfield && ((MyTextfield) c).isFocus()) {
@@ -1752,7 +1780,7 @@ public class WindowManager implements ControlListener {
 	  * Determines whether the mouse is over a dropdown list.
 	  */
 	 public boolean isMouseOverADropdownList() {
-		 List<ControllerInterface<?>> controllers = UIManager.getAll();
+		 List<ControllerInterface<?>> controllers = manager.getAll();
 		 
 		 for (ControllerInterface<?> c : controllers) {
 			 if (c instanceof MyDropdownList && c.isMouseOver()) {
@@ -1831,12 +1859,19 @@ public class WindowManager implements ControlListener {
 
 		 return relPosition;
 	 }
+	 
+	 public void resetButtonColors() {
+		for (int i = 1; i <= 6; i += 1) {
+			((Button) manager.get("JOINT" + i + "_NEG")).setColorBackground(Fields.BUTTON_DEFAULT);
+			((Button) manager.get("JOINT" + i + "_POS")).setColorBackground(Fields.BUTTON_DEFAULT);
+		}
+	}
 
 	 /**
 	  * Reset the base label of every dropdown list.
 	  */
 	 private void resetListLabels() {
-		 List<ControllerInterface<?>> controllers = UIManager.getAll();
+		 List<ControllerInterface<?>> controllers = manager.getAll();
 		 
 		 for (ControllerInterface<?> c : controllers) {
 			 if (c instanceof MyDropdownList && !c.getParent().equals(miscWindow)) {
@@ -2307,6 +2342,25 @@ public class WindowManager implements ControlListener {
 		 .setHeight(relPos[1])
 		 .show();
 	 }
+	 
+	 public void updateJogButtons(int set, float newDir) {
+		Button negButton = ((Button) manager.get("JOINT" + (set + 1) + "_NEG")),
+				posButton = ((Button) manager.get("JOINT" + (set + 1) + "_POS"));
+
+		if (newDir > 0) {
+			// Positive motion
+			negButton.setColorBackground(Fields.BUTTON_DEFAULT);
+			posButton.setColorBackground(Fields.BUTTON_ACTIVE);
+		} else if (newDir < 0) {
+			// Negative motion
+			negButton.setColorBackground(Fields.BUTTON_ACTIVE);
+			posButton.setColorBackground(Fields.BUTTON_DEFAULT);
+		} else {
+			// No motion
+			negButton.setColorBackground(Fields.BUTTON_DEFAULT);
+			posButton.setColorBackground(Fields.BUTTON_DEFAULT);
+		}
+	 }
 
 	 /**
 	  * Update the contents of the two dropdown menus that
@@ -2357,6 +2411,168 @@ public class WindowManager implements ControlListener {
 			 dropdown.addItem(s.getName(), s);
 		 }
 	 }
+	 
+	public void updatePendantScreen() {
+		ScreenMode m = app.getMode();
+		int next_px = display_px;
+		int next_py = display_py;
+		// int txt, bg;
+
+		clearScreen();
+
+		// draw display background
+		manager.addTextarea("txt").setPosition(display_px, display_py).setSize(display_width, display_height)
+		.setColorBackground(Fields.UI_LIGHT).moveTo(pendantWindow);
+
+		String header = null;
+		// display the name of the program that is being edited
+		header = app.getHeader(m);
+
+		if (header != null) {
+			// Display header field
+			manager.addTextarea("header").setText(" " + header).setFont(Fields.small).setPosition(next_px, next_py)
+			.setSize(display_width, 20).setColorValue(Fields.UI_LIGHT).setColorBackground(Fields.UI_DARK)
+			.hideScrollbar().show().moveTo(pendantWindow);
+
+			next_py += 20;
+		}
+		
+		app.getContents(m);
+		app.getOptions(m);
+		
+		MenuScroll contents = app.getContentsMenu();
+		MenuScroll options = app.getOptionsMenu();
+
+		if (contents.size() == 0) {
+			options.setLocation(10, 20);
+			options.setMaxDisplay(8);
+		} else {
+			options.setLocation(10, 199);
+			options.setMaxDisplay(3);
+		}
+
+		drawLines(contents);
+		drawLines(options);
+
+		// display hints for function keys
+		String[] funct;
+		funct = app.getFunctionLabels(m);
+
+		// set f button text labels
+		for (int i = 0; i < 5; i += 1) {
+			manager.addTextarea("lf" + i).setText(funct[i]).setFont(Fields.small)
+			// Keep function labels in their original place
+			.setPosition(display_width * i / 5 + 15, display_height - pendant_tf).setSize(display_width / 5 - 5, 20)
+			.setColorValue(Fields.UI_DARK).setColorBackground(Fields.UI_LIGHT).hideScrollbar().moveTo(pendantWindow);
+		}
+	}
+	
+	/**
+	 * @param screen
+	 */
+	public void drawLines(MenuScroll menu) {
+		ScreenMode m = app.getMode();
+		DisplayLine active;
+		boolean selectMode = false;
+		
+		if(m.getType() == ScreenType.TYPE_LINE_SELECT) { selectMode = true; } 
+		
+		menu.updateRenderIndices();
+		active = (menu.size() > 0) ? menu.get( menu.getLineIdx() ) : null;
+				
+		int next_px = 0, next_py = 0; 
+		int itemNo = 0, lineNo = 0;
+		int bg, txt, selectInd = -1;
+		
+		for(int i = menu.getRenderStart(); i < menu.size() && lineNo < menu.getMaxDisplay(); i += 1) {
+			//get current line
+			DisplayLine temp = menu.get(i);
+			next_px = temp.getxAlign();
+
+			if(i == 0 || menu.get(i - 1).getItemIdx() != menu.get(i).getItemIdx()) {
+				selectInd = menu.get(i).getItemIdx();
+				if (active.getItemIdx() == selectInd) { bg = Fields.UI_DARK;  }
+				else												{ bg = Fields.UI_LIGHT; }
+				
+				//leading row select indicator []
+				manager.addTextarea(menu.getName() + itemNo)
+				.setText("")
+				.setPosition(menu.getXPos() + next_px, menu.getYPos() + next_py)
+				.setSize(10, 20)
+				.setColorBackground(bg)
+				.hideScrollbar()
+				.moveTo(pendantWindow);
+			}
+
+			itemNo += 1;
+			next_px += 10;
+			
+			//draw each element in current line
+			for(int j = 0; j < temp.size(); j += 1) {
+				if(i == menu.getLineIdx()) {
+					if(j == menu.getColumnIdx() && !selectMode){
+						//highlight selected row + column
+						txt = Fields.UI_LIGHT;
+						bg = Fields.UI_DARK;          
+					} 
+					else if(selectMode && menu.isSelected(temp.getItemIdx())) {
+						//highlight selected line
+						txt = Fields.UI_LIGHT;
+						bg = Fields.UI_DARK;
+					}
+					else {
+						txt = Fields.UI_DARK;
+						bg = Fields.UI_LIGHT;
+					}
+				} else if(selectMode && menu.isSelected(temp.getItemIdx())) {
+					//highlight any currently selected lines
+					txt = Fields.UI_LIGHT;
+					bg = Fields.UI_DARK;
+				} else {
+					//display normal row
+					txt = Fields.UI_DARK;
+					bg = Fields.UI_LIGHT;
+				}
+
+				//grey text for comme also this
+				if(temp.size() > 0 && temp.get(0).contains("//")) {
+					txt = app.color(127);
+				}
+
+				manager.addTextarea(menu.getName() + itemNo)
+				.setText(temp.get(j))
+				.setFont(Fields.small)
+				.setPosition(menu.getXPos() + next_px, menu.getYPos() + next_py)
+				.setSize(temp.get(j).length()*Fields.CHAR_WDTH + Fields.TXT_PAD, 20)
+				.setColorValue(txt)
+				.setColorBackground(bg)
+				.hideScrollbar()
+				.moveTo(pendantWindow);
+
+				itemNo += 1;
+				next_px += temp.get(j).length()*Fields.CHAR_WDTH + (Fields.TXT_PAD - 8);
+			} //end draw line elements
+
+			//Trailing row select indicator []
+			if(i == menu.size() - 1 || menu.get(i).getItemIdx() != menu.get(i + 1).getItemIdx()) {
+				if (active.getItemIdx() == selectInd) { txt = Fields.UI_DARK;  }
+				else												{ txt = Fields.UI_LIGHT; }
+				
+				manager.addTextarea(menu.getName() + itemNo)
+				.setText("")
+				.setPosition(menu.getXPos() + next_px, menu.getYPos() + next_py)
+				.setSize(10, 20)
+				.setColorBackground(txt)
+				.hideScrollbar()
+				.moveTo(pendantWindow);
+			}
+
+			next_px = 0;
+			next_py += 20;
+			itemNo += 1;
+			lineNo += 1;
+		}//end display contents
+	}
 	 
 	 /**
 	  * TODO
@@ -2485,6 +2701,38 @@ public class WindowManager implements ControlListener {
 		background.setBackgroundHeight(relPos[1])
 				  .setHeight(relPos[1])
 				  .show();
+	 }
+	 
+	/**
+	 * Update the color of the shift button
+	 */
+	public void updateShiftButton(boolean state) {
+		Button b = (Button) manager.get("shift");
+		
+		if (state) {
+			b.setColorBackground(Fields.BUTTON_ACTIVE);
+			
+		} else {
+			b.setColorBackground(Fields.BUTTON_DEFAULT);
+		}
+		
+		updatePendantScreen();
+	}
+	
+	/**
+	 * Update the color of the set button
+	 */
+	public void updateStepButton(boolean state) {
+		Button b = (Button) manager.get("step");
+		
+		if (state) {
+			b.setColorBackground(Fields.BUTTON_ACTIVE);
+			
+		} else {
+			b.setColorBackground(Fields.BUTTON_DEFAULT);
+		}
+		
+		updatePendantScreen();
 	 }
 	 
 	/**
@@ -2689,6 +2937,8 @@ public class WindowManager implements ControlListener {
 				 resetListLabels();
 			 }
 		 }
+		 
+		 manager.draw();
 	 }
 	 
 	 /**

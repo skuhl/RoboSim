@@ -49,6 +49,8 @@ public class DisplayLine {
 	public int getItemIdx() {
 		return itemIdx;
 	}
+	
+
 
 	public int getxAlign() {
 		return xAlign;
