@@ -1941,14 +1941,13 @@ public class WGUI implements ControlListener {
 	/**
 	 * TODO
 	 * 
-	 * @param mode
 	 * @param header
 	 * @param contents
 	 * @param options
 	 * @param funcLbls
 	 */
-	public void renderPendantScreen(ScreenMode mode, String header,
-			MenuScroll contents, MenuScroll options, String[] funcLbls) {
+	public void renderPendantScreen(String header, MenuScroll contents,
+			MenuScroll options, String[] funcLbls) {
 		
 		Textarea headerLbl = getTextArea("header");
 

@@ -8101,8 +8101,8 @@ public class RobotRun extends PApplet {
 		updateContents();
 		updateOptions();
 		
-		getManager().renderPendantScreen(mode, getHeader(mode),
-				getContentsMenu(), getOptionsMenu(), getFunctionLabels(mode));
+		getManager().renderPendantScreen(getHeader(mode), getContentsMenu(),
+				getOptionsMenu(), getFunctionLabels(mode));
 	}
 	
 	
