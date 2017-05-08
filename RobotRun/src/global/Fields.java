@@ -38,13 +38,13 @@ public abstract class Fields {
 	public static final int PAD_OFFSET = 8;
 	
 	public static final int G1_PX = 0, 
-			G1_PY = SMALL_BUTTON - 14, // the left-top corner of group 1
-			G1_WIDTH = 440, 
-			G1_HEIGHT = 720, // group 1's width and height
-			DISPLAY_PX = 10,
-			DISPLAY_PY = 0, // the left-top corner of display screen
-			DISPLAY_WIDTH = G1_WIDTH - 20,
-			DISPLAY_HEIGHT = 280; // height and width of display screen
+							G1_PY = SMALL_BUTTON - 14, // the left-top corner of group 1
+							G1_WIDTH = 440, 
+							G1_HEIGHT = 720, // group 1's width and height
+							DISPLAY_PX = 10,
+							DISPLAY_PY = 0, // the left-top corner of display screen
+							DISPLAY_WIDTH = G1_WIDTH - 20,
+							DISPLAY_HEIGHT = 280; // height and width of display screen
 	
 	public static final int PASTE_DEFAULT = 0,
 			PASTE_REVERSE = 0b1,

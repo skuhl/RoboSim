@@ -73,11 +73,6 @@ public class WGUI implements ControlListener {
 							mdropItemWidth = 90,
 							ldropItemWidth = 120,
 							dropItemHeight = 21,
-							pendant_tf = Fields.SMALL_BUTTON - 14,
-							display_px = 10,
-							display_py = 0,
-							display_width = 420,
-							display_height = 280,
 							DIM_LBL = 3,
 							DIM_TXT = 3,
 							DIM_DDL = 1;
@@ -108,8 +103,13 @@ public class WGUI implements ControlListener {
 	 * A group, which defines a set of elements belonging to a window tab, or
 	 * shared amongst the window tabs.
 	 */
-	public Group pendantWindow, createObjWindow, editObjWindow,
-				  sharedElements, scenarioWindow, miscWindow;
+	public final Group pendantWindow, createObjWindow, editObjWindow,
+						sharedElements, scenarioWindow, miscWindow;
+	
+	/**
+	 * Temporary group for refactoring pendant window rendering.
+	 */
+	private final Group limbo;
 	
 	/**
 	 * The button bar controlling the window tab selection.
@@ -120,6 +120,12 @@ public class WGUI implements ControlListener {
 	 * The background shared amongst all windows
 	 */
 	private final Background background;
+	
+	/**
+	 * A cached set of text-areas used to display the pendant contents and
+	 * options output.
+	 */
+	private final ArrayList<Textarea> displayLines;
 	
 	/**
 	 * Determine which input to use for importing a shape for a world object
@@ -152,6 +158,7 @@ public class WGUI implements ControlListener {
 		
 		menu = null;
 		lastModImport = null;
+		displayLines = new ArrayList<>();
 		
 		/* A local reference to a position in the UI [x, y] used to position UI
 		 * elements relative to other UI elements */
@@ -171,14 +178,6 @@ public class WGUI implements ControlListener {
 			 .addItems(windowList);
 		
 		windowTabs.getCaptionLabel().setFont(Fields.medium);
-
-		// Initialize camera view buttons
-		addButton("FrontView", "F", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("BackView", "Bk", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("LeftView", "L", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("RightView", "R", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("TopView", "T", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("BottomView", "Bt", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
 		
 		// Initialize the shared window background
 		relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_LEFT, 0, 0);
@@ -194,6 +193,15 @@ public class WGUI implements ControlListener {
 		editObjWindow = addGroup("EDITOBJ", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		scenarioWindow = addGroup("SCENARIO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscWindow = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
+		limbo = addGroup("LIMBO", 0, 2 * offsetX, windowTabs.getWidth(), 0);
+		
+		// Initialize camera view buttons
+		addButton("FrontView", "F", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("BackView", "Bk", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("LeftView", "L", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("RightView", "R", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("TopView", "T", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("BottomView", "Bt", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
 		
 		pendant(buttonImages);
 
@@ -362,12 +370,10 @@ public class WGUI implements ControlListener {
 		
 		int[] relPos = new int[] { offsetX, 0 };
 		
-		manager.addTextarea("txt")
-			.setPosition(relPos[0], relPos[1])
-			.setSize(display_width, display_height)
-			.setColorBackground(Fields.UI_LIGHT)
-			.moveTo(pendantWindow);
-
+		Textarea t = addTextarea("txt", "", pendantWindow, Fields.DISPLAY_PX,
+				Fields.DISPLAY_PY, Fields.DISPLAY_WIDTH, Fields.DISPLAY_HEIGHT,
+				Fields.BUTTON_TEXT, Fields.UI_LIGHT, Fields.small);
+		
 		/********************** Top row buttons **********************/
 
 		// calculate how much space each button will be given
@@ -390,12 +396,38 @@ public class WGUI implements ControlListener {
 			.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
 			.setImages(buttonImages[1])
 			.updateSize();
-
+		
+		/******************* Pendant Screen ********************/
+		
+		// Pendant header
+		addTextarea("header", "\0", pendantWindow, Fields.DISPLAY_PX,
+				Fields.DISPLAY_PY, Fields.DISPLAY_WIDTH, 20,
+				Fields.UI_LIGHT, Fields.UI_DARK, Fields.medium);
+		
+		// Start with 25 text-areas for pendant output
+		for (int idx = 0; idx < 25; ++idx) {
+			displayLines.add( addTextarea(String.format("ps%d", idx), "\0",
+					pendantWindow, 0, 0, 10, 20, Fields.UI_DARK,
+					Fields.UI_LIGHT, Fields.medium) );
+		}
+		
+		// Function button labels
+		for (int i = 0; i < 5; i += 1) {
+			// Calculate the position of each function label
+			int posX = Fields.DISPLAY_WIDTH * i / 5 + 15;
+			int posY = Fields.DISPLAY_HEIGHT - Fields.G1_PY;
+			
+			addTextarea("fl" + i, "\0", pendantWindow, posX, posY,
+					Fields.DISPLAY_WIDTH / 5 - 5, 20, 0, Fields.UI_LIGHT,
+					Fields.small);
+		}
+		
 		/******************** Function Row ********************/
 		
 		int f1_px = offsetX;
 		int f1_py = 0 + display_height + 2;
 		int f_width = display_width / 5 - 1;
+		
 		manager.addButton("f1").setPosition(f1_px, f1_py)
 		.setSize(f_width, Fields.LARGE_BUTTON)
 		.setCaptionLabel("F1")
@@ -844,12 +876,41 @@ public class WGUI implements ControlListener {
 			int wdh, int hgt, PFont lblFont) {
 		
 		return manager.addTextarea(name, iniTxt, 0, 0, wdh, hgt)
-						.setFont(lblFont)
-						.setColor(F_TEXT_C)
-						.setColorActive(F_ACTIVE_C)
-						.setColorBackground(BG_C)
-						.setColorForeground(BG_C)
-						.moveTo(parent);
+					  .setFont(lblFont)
+					  .setColor(F_TEXT_C)
+					  .setColorActive(F_ACTIVE_C)
+					  .setColorBackground(BG_C)
+					  .setColorForeground(BG_C)
+					  .moveTo(parent);
+	}
+	
+	/**
+	 * TODO
+	 * 
+	 * @param name
+	 * @param iniTxt
+	 * @param parent
+	 * @param posX
+	 * @param posY
+	 * @param wdh
+	 * @param hgt
+	 * @param txtColor
+	 * @param bgColor
+	 * @param lblFont
+	 * @return
+	 */
+	private Textarea addTextarea(String name, String iniTxt, Group parent,
+			int posX, int posY, int wdh, int hgt, int txtColor, int bgColor,
+			PFont lblFont) {
+		
+		return manager.addTextarea(name, iniTxt, posX, posY, wdh, hgt)
+				.setFont(lblFont)
+				.setColor(txtColor)
+				.setColorActive(F_ACTIVE_C)
+				.setColorBackground(bgColor)
+				.setColorForeground(BG_C)
+				.moveTo(parent)
+				.hideScrollbar();
 	}
 	
 	/**
@@ -1015,23 +1076,6 @@ public class WGUI implements ControlListener {
 		 clearGroupInputFields(scenarioWindow);
 		 updateDimLblsAndFields();
 	 }
-	 
-	/*
-	 * Removes all text on screen and prepares the UI to transition to a new
-	 * screen display.
-	 */
-	public void clearScreen() {
-		// remove all text labels on screen
-		List<Textarea> displayText = manager.getAll(Textarea.class);
-		for (Textarea t : displayText) {
-			// ONLY remove text areas from the Pendant!
-			if (t.getParent().equals( pendantWindow )) {
-				manager.remove(t.getName());
-			}
-		}
-
-		manager.update();
-	}
 
 	 /**
 	  * Reinitialize the input fields for any shared contents
@@ -1429,6 +1473,45 @@ public class WGUI implements ControlListener {
 	 private Button getButton(String name) throws ClassCastException {
 		 return (Button) manager.get(name);
 	 }
+	 
+	 /**
+	  * TODO
+	  * 
+	  * @return
+	  */
+	 private Float[] getCurrentValues() {
+		 try {
+			 // Pull from x, y, z, w, p, r, fields input fields
+			 String[] orienVals = new String[] {
+					getTextField("XCur").getText(), getTextField("YCur").getText(),
+					getTextField("ZCur").getText(), getTextField("WCur").getText(),
+					getTextField("PCur").getText(), getTextField("RCur").getText()
+			 };
+			 
+			 // NaN indicates an uninitialized field
+			 Float[] values = new Float[] { null, null, null, null, null, null };
+			 
+			 for (int valIdx = 0; valIdx < orienVals.length; ++valIdx) {
+				// Update the orientation value
+				 if (orienVals[valIdx] != null && !orienVals[valIdx].equals("")) {
+					 float val = Float.parseFloat(orienVals[valIdx]);
+					 // Bring value within the range [-9999, 9999]
+					 val = PApplet.max(-9999f, PApplet.min(val, 9999f));
+					 values[valIdx] = val;
+				 }
+			 }
+
+			 return values;
+
+		 } catch (NumberFormatException NFEx) {
+			 PApplet.println("Invalid number input!");
+			 return null;
+
+		 } catch (NullPointerException NPEx) {
+			 PApplet.println("Missing parameter!");
+			 return null;
+		 }
+	 }
 
 	 /**
 	  * Returns a post-processed list of the user's input for the dimensions of
@@ -1601,45 +1684,37 @@ public class WGUI implements ControlListener {
 	 public boolean getOBBButtonState() {
 		 return !getButton("ToggleOBBs").isOn();
 	 }
-
-	 /**
-	  * TODO
-	  * 
-	  * @return
-	  */
-	 private Float[] getCurrentValues() {
-		 try {
-			 // Pull from x, y, z, w, p, r, fields input fields
-			 String[] orienVals = new String[] {
-					getTextField("XCur").getText(), getTextField("YCur").getText(),
-					getTextField("ZCur").getText(), getTextField("WCur").getText(),
-					getTextField("PCur").getText(), getTextField("RCur").getText()
-			 };
-			 
-			 // NaN indicates an uninitialized field
-			 Float[] values = new Float[] { null, null, null, null, null, null };
-			 
-			 for (int valIdx = 0; valIdx < orienVals.length; ++valIdx) {
-				// Update the orientation value
-				 if (orienVals[valIdx] != null && !orienVals[valIdx].equals("")) {
-					 float val = Float.parseFloat(orienVals[valIdx]);
-					 // Bring value within the range [-9999, 9999]
-					 val = PApplet.max(-9999f, PApplet.min(val, 9999f));
-					 values[valIdx] = val;
-				 }
-			 }
-
-			 return values;
-
-		 } catch (NumberFormatException NFEx) {
-			 PApplet.println("Invalid number input!");
-			 return null;
-
-		 } catch (NullPointerException NPEx) {
-			 PApplet.println("Missing parameter!");
-			 return null;
-		 }
-	 }
+	 
+	/**
+	 * Get the pendant display text-area with the given index. If the given
+	 * index is equal to the number of existing text-areas (i.e. 1 index out of
+	 * bounds), then more text-areas to the list of text-ares to accommodate
+	 * the given index.
+	 * 
+	 * @param TAIdx	The index of a pendant display text-area
+	 * @return		The text area with the given index
+	 */
+	private Textarea getPendantDisplayTA(int TAIdx) {
+		
+		if (TAIdx >= 0 && TAIdx <= displayLines.size()) {
+			
+			if (TAIdx == displayLines.size()) {
+				// Increase the number of text areas used for output
+				int newSize = 3 * displayLines.size() / 2;
+				
+				for (int idx = displayLines.size(); idx < newSize; ++idx) {
+					displayLines.add( idx, addTextarea(String.format("ps%d", idx),
+							"\0", pendantWindow, 0, 0, 10, 20, Fields.UI_DARK,
+							Fields.UI_LIGHT, Fields.medium) );
+				}
+			}
+			
+			return displayLines.get(TAIdx).show();
+		}
+		
+		// Invalid input
+		return null;
+	}
 	 
 	 /**
 	  * Returns the radio button, with the given name, if it exists in one of
@@ -1722,6 +1797,15 @@ public class WGUI implements ControlListener {
 	 private MyTextfield getTextField(String name) throws ClassCastException {
 		 return (MyTextfield) manager.get(name);
 	 }
+	 
+	/*
+	 * Hides all the text areas related to the pendant's main display.
+	 */
+	public void hidePendantScreen() {
+		for (Textarea t : displayLines) {
+			t.hide();
+		}
+	}
 
 	 /**
 	  * Creates a new scenario with the name pulled from the scenario name text field.
@@ -1889,32 +1973,14 @@ public class WGUI implements ControlListener {
 	 }
 
 	 /**
-	  * Only update the group visiblility if it does not
-	  * match the given visiblity flag.
+	  * Only update the group visibility if it does not
+	  * match the given visibility flag.
 	  */
 	 private void setGroupVisible(Group g, boolean setVisible) {
 		 if (g.isVisible() != setVisible) {
 			 g.setVisible(setVisible);
 		 }
 	 }
-	
-	/**
-	 * Updates the current menu of the UI and communicates with the PApplet to
-	 * update the active robot, if necessary.
-	 * 
-	 * @param newView	The new menu to render
-	 */
-	private void updateView(WindowTab newView) {
-		menu = newView;
-		
-		// Update active robot if necessary
-		if (menu == WindowTab.ROBOT1) {
-			app.setRobot(0);
-			
-		} else if (menu == WindowTab.ROBOT2) {
-			app.setRobot(1);
-		}
-	}
 	 
 	/**
 	 * Updates the tabs that are available in the applications main window.
@@ -2414,28 +2480,19 @@ public class WGUI implements ControlListener {
 	 
 	public void updatePendantScreen() {
 		ScreenMode m = app.getMode();
-		int next_px = display_px;
-		int next_py = display_py;
-		// int txt, bg;
-
-		clearScreen();
-
-		// draw display background
-		manager.addTextarea("txt").setPosition(display_px, display_py).setSize(display_width, display_height)
-		.setColorBackground(Fields.UI_LIGHT).moveTo(pendantWindow);
-
-		String header = null;
-		// display the name of the program that is being edited
-		header = app.getHeader(m);
+		
+		Textarea headerLbl = getTextArea("header");
+		String header = app.getHeader(m);
 
 		if (header != null) {
 			// Display header field
-			manager.addTextarea("header").setText(" " + header).setFont(Fields.small).setPosition(next_px, next_py)
-			.setSize(display_width, 20).setColorValue(Fields.UI_LIGHT).setColorBackground(Fields.UI_DARK)
-			.hideScrollbar().show().moveTo(pendantWindow);
-
-			next_py += 20;
+			headerLbl.setText(header);
+			
+		} else {
+			headerLbl.hide();
 		}
+		
+		hidePendantScreen();
 		
 		app.getContents(m);
 		app.getOptions(m);
@@ -2446,31 +2503,25 @@ public class WGUI implements ControlListener {
 		if (contents.size() == 0) {
 			options.setLocation(10, 20);
 			options.setMaxDisplay(8);
+			
 		} else {
 			options.setLocation(10, 199);
 			options.setMaxDisplay(3);
 		}
 
-		drawLines(contents);
-		drawLines(options);
-
+		int lastTAIdx = drawLines(contents, 0);
+		lastTAIdx = drawLines(options, lastTAIdx);
+		
 		// display hints for function keys
-		String[] funct;
-		funct = app.getFunctionLabels(m);
+		String[] funct = app.getFunctionLabels(m);
 
 		// set f button text labels
 		for (int i = 0; i < 5; i += 1) {
-			manager.addTextarea("lf" + i).setText(funct[i]).setFont(Fields.small)
-			// Keep function labels in their original place
-			.setPosition(display_width * i / 5 + 15, display_height - pendant_tf).setSize(display_width / 5 - 5, 20)
-			.setColorValue(Fields.UI_DARK).setColorBackground(Fields.UI_LIGHT).hideScrollbar().moveTo(pendantWindow);
+			getTextArea("fl" + i).setText(funct[i]);
 		}
 	}
 	
-	/**
-	 * @param screen
-	 */
-	public void drawLines(MenuScroll menu) {
+	public int drawLines(MenuScroll menu, int TAIdx) {
 		ScreenMode m = app.getMode();
 		DisplayLine active;
 		boolean selectMode = false;
@@ -2480,8 +2531,8 @@ public class WGUI implements ControlListener {
 		menu.updateRenderIndices();
 		active = (menu.size() > 0) ? menu.get( menu.getLineIdx() ) : null;
 				
-		int next_px = 0, next_py = 0; 
-		int itemNo = 0, lineNo = 0;
+		int next_px = menu.getXPos() + 5, next_py = menu.getYPos(); 
+		int lineNo = 0;
 		int bg, txt, selectInd = -1;
 		
 		for(int i = menu.getRenderStart(); i < menu.size() && lineNo < menu.getMaxDisplay(); i += 1) {
@@ -2495,16 +2546,12 @@ public class WGUI implements ControlListener {
 				else												{ bg = Fields.UI_LIGHT; }
 				
 				//leading row select indicator []
-				manager.addTextarea(menu.getName() + itemNo)
-				.setText("")
-				.setPosition(menu.getXPos() + next_px, menu.getYPos() + next_py)
-				.setSize(10, 20)
-				.setColorBackground(bg)
-				.hideScrollbar()
-				.moveTo(pendantWindow);
+				getPendantDisplayTA(TAIdx++).setText("")
+									   .setPosition(next_px, next_py)
+									   .setSize(10, 20)
+									   .setColorBackground(bg);
 			}
 
-			itemNo += 1;
 			next_px += 10;
 			
 			//draw each element in current line
@@ -2534,22 +2581,17 @@ public class WGUI implements ControlListener {
 					bg = Fields.UI_LIGHT;
 				}
 
-				//grey text for comme also this
+				//grey text for comment also this
 				if(temp.size() > 0 && temp.get(0).contains("//")) {
 					txt = app.color(127);
 				}
 
-				manager.addTextarea(menu.getName() + itemNo)
-				.setText(temp.get(j))
-				.setFont(Fields.small)
-				.setPosition(menu.getXPos() + next_px, menu.getYPos() + next_py)
-				.setSize(temp.get(j).length()*Fields.CHAR_WDTH + Fields.TXT_PAD, 20)
-				.setColorValue(txt)
-				.setColorBackground(bg)
-				.hideScrollbar()
-				.moveTo(pendantWindow);
+				getPendantDisplayTA(TAIdx++).setText(temp.get(j))
+									   .setPosition(next_px, next_py)
+									   .setSize(temp.get(j).length()*Fields.CHAR_WDTH + Fields.TXT_PAD, 20)
+									   .setColorValue(txt)
+									   .setColorBackground(bg);
 
-				itemNo += 1;
 				next_px += temp.get(j).length()*Fields.CHAR_WDTH + (Fields.TXT_PAD - 8);
 			} //end draw line elements
 
@@ -2558,20 +2600,18 @@ public class WGUI implements ControlListener {
 				if (active.getItemIdx() == selectInd) { txt = Fields.UI_DARK;  }
 				else												{ txt = Fields.UI_LIGHT; }
 				
-				manager.addTextarea(menu.getName() + itemNo)
-				.setText("")
-				.setPosition(menu.getXPos() + next_px, menu.getYPos() + next_py)
-				.setSize(10, 20)
-				.setColorBackground(txt)
-				.hideScrollbar()
-				.moveTo(pendantWindow);
+				getPendantDisplayTA(TAIdx++).setText("")
+									   .setPosition(next_px, next_py)
+									   .setSize(10, 20)
+									   .setColorBackground(txt);
 			}
 
 			next_px = 0;
 			next_py += 20;
-			itemNo += 1;
 			lineNo += 1;
 		}//end display contents
+		
+		return TAIdx;
 	}
 	 
 	 /**
@@ -2785,6 +2825,24 @@ public class WGUI implements ControlListener {
 		.setHeight(relPos[1])
 		.show();
 	 }
+	
+	/**
+	 * Updates the current menu of the UI and communicates with the PApplet to
+	 * update the active robot, if necessary.
+	 * 
+	 * @param newView	The new menu to render
+	 */
+	private void updateView(WindowTab newView) {
+		menu = newView;
+		
+		// Update active robot if necessary
+		if (menu == WindowTab.ROBOT1) {
+			app.setRobot(0);
+			
+		} else if (menu == WindowTab.ROBOT2) {
+			app.setRobot(1);
+		}
+	}
 
 	 /**
 	  * Updates the positions of all the elements in the active window
@@ -2846,7 +2904,8 @@ public class WGUI implements ControlListener {
 		 		 
 		 if (menu == null) {
 			 // Hide all windows
-			 pendantWindow.hide();
+			 setGroupVisible(pendantWindow, false);
+			 setGroupVisible(limbo, false);
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
@@ -2856,7 +2915,6 @@ public class WGUI implements ControlListener {
 			 updateWindowContentsPositions();
 
 		 } else if (menu == WindowTab.ROBOT1 || menu == WindowTab.ROBOT2) {
-			 
 			 // Show pendant
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
@@ -2865,14 +2923,16 @@ public class WGUI implements ControlListener {
 			 setGroupVisible(miscWindow, false);
 			 
 			 if (!pendantWindow.isVisible()) {
+				 setGroupVisible(pendantWindow, true);
+				 setGroupVisible(limbo, true);
+				 
 				 updateWindowContentsPositions();
 			 }
 
-			 pendantWindow.show();
-
 		 } else if (menu == WindowTab.CREATE) {
 			 // Show world object creation window
-			 pendantWindow.hide();
+			 setGroupVisible(pendantWindow, false);
+			 setGroupVisible(limbo, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(scenarioWindow, false);
 			 setGroupVisible(miscWindow, false);
@@ -2889,7 +2949,8 @@ public class WGUI implements ControlListener {
 
 		 } else if (menu == WindowTab.EDIT) {
 			 // Show world object edit window
-			 pendantWindow.hide();
+			 setGroupVisible(pendantWindow, false);
+			 setGroupVisible(limbo, false);
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(scenarioWindow, false);
 			 setGroupVisible(miscWindow, false);
@@ -2906,7 +2967,8 @@ public class WGUI implements ControlListener {
 
 		 } else if (menu == WindowTab.SCENARIO) {
 			 // Show scenario creating/saving/loading
-			 pendantWindow.hide();
+			 setGroupVisible(pendantWindow, false);
+			 setGroupVisible(limbo, false);
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
@@ -2923,7 +2985,8 @@ public class WGUI implements ControlListener {
 			 
 		 } else if (menu == WindowTab.MISC) {
 			 // Show miscellaneous window
-			 pendantWindow.hide();
+			 setGroupVisible(pendantWindow, false);
+			 setGroupVisible(limbo, false);
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);

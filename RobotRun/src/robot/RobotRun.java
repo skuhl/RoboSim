@@ -5,16 +5,11 @@ import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Stack;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 
-import controlP5.Button;
-import controlP5.ControlP5;
-import controlP5.Group;
-import controlP5.Textarea;
 import expression.AtomicExpression;
 import expression.ExprOperand;
 import expression.Expression;
@@ -34,7 +29,6 @@ import geom.WorldObject;
 import global.Fields;
 import processing.core.PApplet;
 import processing.core.PConstants;
-import processing.core.PFont;
 import processing.core.PImage;
 import processing.core.PMatrix3D;
 import processing.core.PShape;
@@ -455,14 +449,6 @@ public class RobotRun extends PApplet {
 	private int record = Fields.OFF;
 	
 	/**
-	int g1_px, g1_py; // the left-top corner of group 1
-
-	int g1_width, g1_height; // group 1's width and height
-	int display_px, display_py; // the left-top corner of display screen
-	int display_width, display_height; // height and width of display screen
-	/**/
-	
-	/**
 	 * A temporary storage string for user input in the pendant window.
 	 */
 	private StringBuilder workingText;
@@ -508,9 +494,6 @@ public class RobotRun extends PApplet {
 	// utilizes this variable
 
 	public int active_index = 0; // index of the cursor with respect to the
-	// first element on screen
-	// how many textlabels have been created for display
-	int index_contents = 0, index_options = 100, index_nums = 1000;
 
 	/**
 	 * Used for comment name input. The user can cycle through the six states
@@ -594,32 +577,6 @@ public class RobotRun extends PApplet {
 		// Update the screen after a character insertion
 		UI.updatePendantScreen();
 	}
-	
-	/* REMOVE AFTER TESTING TEXT ENTRIES *
-	public void addNumber(String number) {
-		if (mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
-			if (workingText.length() < NUM_ENTRY_LEN) {
-				workingText.append(number);
-			}
-		} else if (mode == ScreenMode.SET_MV_INSTR_SPD) {
-			workingText.append(number);
-			options.set(1, workingText + workingTextSuffix);
-		} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-			DisplayLine entry = contents.get(contents.getLineIdx());
-			int idx = contents.getColumnIdx();
-
-			if (entry.size() < 10) {
-				entry.add(idx, number);
-				contents.setColumnIdx(idx + 1);
-			}
-		} else if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-			// Replace current entry with a number
-			workingText.setCharAt(contents.getColumnIdx(), number.charAt(0));
-		}
-
-		UI.updatePendantScreen();
-	}
-	/**/
 
 	/**
 	 * @return Whether or not bounding boxes are displayed
@@ -729,7 +686,6 @@ public class RobotRun extends PApplet {
 		case SET_EXPR_OP:
 		case SET_IO_INSTR_STATE:
 			options.moveDown(false);
-			// opt_select = min(opt_select + 1, options.size() - 1);
 			break;
 		case ACTIVE_FRAMES:
 			updateActiveFramesDisplay();
@@ -5152,8 +5108,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void gui() {
-		display_stack.push(ScreenMode.DEFAULT);
-		mode = display_stack.peek();
+		
 		/**
 		// group 1: display and function buttons
 		g1 = cp5.addGroup("DISPLAY")
@@ -6145,7 +6100,7 @@ public class RobotRun extends PApplet {
 
 					line = new DisplayLine(i, xPos);
 					xPos += field.length() * Fields.CHAR_WDTH + tokenOffset;
-				} else if (xPos > WGUI.display_width - 10) {
+				} else if (xPos > Fields.DISPLAY_WIDTH - 10) {
 					instruct_list.add(line);
 					xPos = 2 * Fields.CHAR_WDTH + tokenOffset;
 
@@ -7532,16 +7487,6 @@ public class RobotRun extends PApplet {
 		letterStates = new int[] { 0, 0, 0, 0, 0 };
 		workingText = new StringBuilder();
 		
-		/* TODO REMOVE AFTER PEDANT REFACTOR *
-		g1_px = 0;
-		g1_py = Fields.SMALL_BUTTON - 14; // the left-top corner of group 1
-		g1_width = 440;
-		g1_height = 720; // group 1's width and height
-		display_px = 10;
-		display_py = 0; // the left-top corner of display screen
-		display_width = g1_width - 20;
-		display_height = 280; // height and width of display screen
-		/**/
 		// size(1200, 800, P3D);
 		// create font and text display background
 		Fields.medium = createFont("data/Consolas.ttf", 14);
@@ -7569,18 +7514,15 @@ public class RobotRun extends PApplet {
 			DataManagement.initialize(this);
 			DataManagement.loadState(this);
 			
-			
-			/* set up UI TODO REMOVE AFTER PEDANT REFACTOR * 
-			cp5 = new ControlP5(this);
-			// Explicitly draw the ControlP5 elements
-			cp5.setAutoDraw(false);
-			/**/
-			setManager(new WGUI(this, buttonImages));
 			display_stack = new Stack<>();
+			display_stack.push(ScreenMode.DEFAULT);
+			mode = display_stack.peek();
+			
 			contents = new MenuScroll(this, "cont", ITEMS_TO_SHOW, 10, 20);
 			options = new MenuScroll(this, "opt", 3, 10, 180);
-			gui();
-
+			
+			setManager(new WGUI(this, buttonImages));
+			
 			buffer = new ArrayList<>();
 			displayPoint = null;
 
