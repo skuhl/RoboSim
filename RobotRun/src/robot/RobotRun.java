@@ -5665,17 +5665,16 @@ public class RobotRun extends PApplet {
 					characterInput(key);
 					return;
 					
-				}
-			}
-			else {
-				// Pendant button shortcuts
-				switch(keyCode) {
-				case KeyEvent.VK_ENTER:			ENTER(); break;
-				case KeyEvent.VK_BACK_SPACE:	BKSPC(); break;
-				case KeyEvent.VK_DOWN:			arrow_dn(); break;
-				case KeyEvent.VK_LEFT:			arrow_lt(); break;
-				case KeyEvent.VK_RIGHT:			arrow_rt(); break;
-				case KeyEvent.VK_UP:			arrow_up(); break;
+				} else {
+					// Pendant button shortcuts
+					switch(keyCode) {
+					case KeyEvent.VK_ENTER:			ENTER(); break;
+					case KeyEvent.VK_BACK_SPACE:	BKSPC(); break;
+					case KeyEvent.VK_DOWN:			arrow_dn(); break;
+					case KeyEvent.VK_LEFT:			arrow_lt(); break;
+					case KeyEvent.VK_RIGHT:			arrow_rt(); break;
+					case KeyEvent.VK_UP:			arrow_up(); break;
+					}
 				}
 			}
 		}
