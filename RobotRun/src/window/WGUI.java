@@ -829,7 +829,10 @@ public class WGUI implements ControlListener {
 		// Set label fonts
 		List<Toggle> items = rb.getItems();
 		for (Toggle t : items) {
-			t.getCaptionLabel().setFont(lblFont);
+			t.setColorBackground(Fields.B_DEFAULT_C)
+			 .setColorLabel(Fields.F_TEXT_C)
+			 .setColorActive(Fields.B_ACTIVE_C)
+			 .getCaptionLabel().setFont(lblFont);
 		}
 		
 		return rb;
@@ -858,7 +861,8 @@ public class WGUI implements ControlListener {
 					  .setColorActive(Fields.F_ACTIVE_C)
 					  .setColorBackground(Fields.BG_C)
 					  .setColorForeground(Fields.BG_C)
-					  .moveTo(parent);
+					  .moveTo(parent)
+					  .hideScrollbar();
 	}
 	
 	/**
