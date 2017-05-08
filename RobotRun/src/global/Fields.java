@@ -1,5 +1,7 @@
 package global;
 
+import processing.core.PFont;
+
 public abstract class Fields {
 	
 	public static final boolean DEBUG = true;
@@ -55,4 +57,6 @@ public abstract class Fields {
 			BUTTON_TEXT = -986896,
 			UI_LIGHT = -986896,
 			UI_DARK = -14145496;
+	
+	public static PFont small, medium, bond;
 }

@@ -62,7 +62,7 @@ import ui.AxesDisplay;
 import ui.Camera;
 import window.DisplayLine;
 import window.MenuScroll;
-import window.WindowManager;
+import window.WGUI;
 
 public class RobotRun extends PApplet {
 
@@ -73,11 +73,12 @@ public class RobotRun extends PApplet {
 	private static final int NUM_ENTRY_LEN;
 	private static final int TEXT_ENTRY_LEN;
 	private static RobotRun instance;
-
+	
+	/* TODO REMOVE AFTER PEDANT REFACTOR
 	public static PFont fnt_con14;
 	public static PFont fnt_con12;
 	public static PFont fnt_conB;
-	
+	/**/
 	/* Initialize all static fields */
 	static {
 		LETTERS = new char[][] { { 'a', 'b', 'c', 'd', 'e', 'f' }, 
@@ -90,8 +91,10 @@ public class RobotRun extends PApplet {
 		NUM_ENTRY_LEN = 9;
 		TEXT_ENTRY_LEN = 16;
 		instance = null;
+		/** TODO REMOVE AFTER PEDANT REFACTOR
 		fnt_con14 = null;
 		fnt_con12 = null;
+		/**/
 	}
 
 	/**
@@ -426,8 +429,8 @@ public class RobotRun extends PApplet {
 	private RoboticArm activeRobot;
 	private Camera camera;
 
-	private ControlP5 cp5;
-	private WindowManager manager;
+	//private ControlP5 cp5;
+	private WGUI UI;
 
 	private ScreenMode mode;
 	private MenuScroll contents;
@@ -450,15 +453,15 @@ public class RobotRun extends PApplet {
 	int temp_select = 0;
 
 	private int record = Fields.OFF;
-
+	
+	/**
 	int g1_px, g1_py; // the left-top corner of group 1
 
 	int g1_width, g1_height; // group 1's width and height
 	int display_px, display_py; // the left-top corner of display screen
 	int display_width, display_height; // height and width of display screen
-	//public Group g1, g2;
-	//Button bt_record_normal, bt_ee_normal;
-
+	/**/
+	
 	/**
 	 * A temporary storage string for user input in the pendant window.
 	 */
@@ -589,7 +592,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		// Update the screen after a character insertion
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 	
 	/* REMOVE AFTER TESTING TEXT ENTRIES *
@@ -614,7 +617,7 @@ public class RobotRun extends PApplet {
 			workingText.setCharAt(contents.getColumnIdx(), number.charAt(0));
 		}
 
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 	/**/
 
@@ -747,7 +750,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 
 	public void arrow_lt() {
@@ -783,7 +786,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 
 	public void arrow_rt() {
@@ -829,7 +832,7 @@ public class RobotRun extends PApplet {
 					}
 
 					contents.setColumnIdx(min(columnIdx + 1,  workingText.length() - 1));
-					updateScreen();
+					UI.updatePendantScreen();
 				}
 
 				// Reset function key states
@@ -864,7 +867,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 
 	public void arrow_up() {
@@ -979,7 +982,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 
 	public void BackView() {
@@ -1096,7 +1099,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 
 	public void BottomView() {
@@ -1376,55 +1379,11 @@ public class RobotRun extends PApplet {
 		return new PVector(h, k, a.z);
 	}
 
-	public void clearContents() {
-		for (int i = 0; i < index_contents; i += 1) {
-			if (cp5.getGroup(Integer.toString(i)) != null)
-				cp5.getGroup(Integer.toString(i)).remove();
-		}
-
-		index_contents = 0;
-	}
-
 	/**
 	 * Clears all input fields in the world object creation and edit windows.
 	 */
 	public void ClearFields() {
 		getManager().clearInputsFields();
-	}
-
-	public void clearNums() {
-		for (int i = 1000; i < index_nums; i += 1) {
-			if (cp5.getGroup(Integer.toString(i)) != null)
-				cp5.getGroup(Integer.toString(i)).remove();
-		}
-
-		index_nums = 1000;
-	}
-
-	public void clearOptions() {
-		for (int i = 100; i < index_options; i += 1) {
-			if (cp5.getGroup(Integer.toString(i)) != null)
-				cp5.getGroup(Integer.toString(i)).remove();
-		}
-
-		index_options = 100;
-	}
-
-	/*
-	 * Removes all text on screen and prepares the UI to transition to a new
-	 * screen display.
-	 */
-	public void clearScreen() {
-		// remove all text labels on screen
-		List<Textarea> displayText = cp5.getAll(Textarea.class);
-		for (Textarea t : displayText) {
-			// ONLY remove text areas from the Pendant!
-			if (t.getParent().equals( manager.pendantWindow )) {
-				cp5.remove(t.getName());
-			}
-		}
-
-		cp5.update();
 	}
 
 	/**
@@ -1462,7 +1421,7 @@ public class RobotRun extends PApplet {
 		} else {
 			// Update the coordinate modeke
 			coordFrameTransition();
-			updateScreen();
+			UI.updatePendantScreen();
 		}
 	}
 
@@ -1650,7 +1609,7 @@ public class RobotRun extends PApplet {
 
 	public void DeleteWldObj() {
 		// Delete focused world object and add to the scenario undo stack
-		updateScenarioUndo(manager.getSelectedWO());
+		updateScenarioUndo(UI.getSelectedWO());
 		int ret = getManager().deleteActiveWorldObject();
 		DataManagement.saveScenarios(this);
 		if (Fields.DEBUG) {
@@ -1843,7 +1802,7 @@ public class RobotRun extends PApplet {
 
 		// Draw a sphere on the positive direction for each axis
 		float dotPos = max(100f, min(axesLength, 500));
-		textFont(fnt_conB, 18);
+		textFont(Fields.bond, 18);
 
 		stroke(originColor);
 		sphere(4);
@@ -2052,7 +2011,7 @@ public class RobotRun extends PApplet {
 		// Apply the camera for drawing text and windows
 		ortho();
 		renderUI();
-		cp5.draw();
+		
 	}
 
 	/**
@@ -2275,7 +2234,7 @@ public class RobotRun extends PApplet {
 
 					if (str.length() < 0) {
 						// No value entered
-						updateScreen();
+						UI.updatePendantScreen();
 						println("All entries must have a value!");
 						return;
 					}
@@ -3105,7 +3064,7 @@ public class RobotRun extends PApplet {
 		case SELECT_CUT_COPY:
 		case SELECT_INSTR_DELETE:
 			contents.toggleSelect(getActiveRobot().getActiveInstIdx());
-			updateScreen();
+			UI.updatePendantScreen();
 			break;
 		case SELECT_PASTE_OPT:
 			if (options.getLineIdx() == 0) {
@@ -3133,7 +3092,7 @@ public class RobotRun extends PApplet {
 		case SELECT_COMMENT:
 			r.getInstToEdit( r.getActiveInstIdx() ).toggleCommented();
 
-			updateScreen();
+			UI.updatePendantScreen();
 			break;
 		case EDIT_MINST_POS:
 			MotionInstruction mInst = (MotionInstruction) r.getInstToEdit( r.getActiveInstIdx() );
@@ -3446,7 +3405,7 @@ public class RobotRun extends PApplet {
 		if (nextInstr == -1) {
 			// If a command fails
 			triggerFault();
-			updateScreen();
+			UI.updatePendantScreen();
 			return true;
 
 		} else if (!isExecutingInstruction()) {
@@ -3458,7 +3417,7 @@ public class RobotRun extends PApplet {
 				contents.setLineIdx(getInstrLine(getActiveRobot().getActiveInstIdx()));
 		}
 
-		updateScreen();
+		UI.updatePendantScreen();
 
 		return !isExecutingInstruction() && this.execSingleInst;
 	}// end executeProgram
@@ -3475,7 +3434,7 @@ public class RobotRun extends PApplet {
 
 				if (getSelectedLine() == 0) {
 					contents.setLineIdx(contents.getLineIdx() + 1);
-					updateScreen();
+					UI.updatePendantScreen();
 					if (getSelectedLine() == 0) {
 						getActiveRobot().setActiveInstIdx(getActiveRobot().getActiveInstIdx() + 1);
 					}
@@ -3486,7 +3445,7 @@ public class RobotRun extends PApplet {
 			if (isShift()) {
 				// Reset the highlighted frame in the tool frame list
 				getActiveRobot().getToolFrame(active_index).reset();
-				updateScreen();
+				UI.updatePendantScreen();
 			} else {
 				// Set the current tool frame
 				getActiveRobot().setActiveToolFrame(active_index);
@@ -3497,7 +3456,7 @@ public class RobotRun extends PApplet {
 			if (isShift()) {
 				// Reset the highlighted frame in the user frames list
 				getActiveRobot().getUserFrame(active_index).reset();
-				updateScreen();
+				UI.updatePendantScreen();
 			} else {
 				// Set the current user frame
 				getActiveRobot().setActiveUserFrame(active_index);
@@ -3542,7 +3501,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 
 	public void f2() {
@@ -3595,7 +3554,7 @@ public class RobotRun extends PApplet {
 		default:
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 				editTextEntry(1);
-				updateScreen();
+				UI.updatePendantScreen();
 			}
 		}
 	}
@@ -3672,7 +3631,7 @@ public class RobotRun extends PApplet {
 				if (stmt.getExpr() instanceof Expression && selectIdx >= 2) {
 					r.getInstToEdit( r.getActiveInstIdx() );
 					((Expression) stmt.getExpr()).insertElement(selectIdx - 3);
-					updateScreen();
+					UI.updatePendantScreen();
 					arrow_rt();
 				}
 			} else if (inst instanceof SelectStatement) {
@@ -3681,7 +3640,7 @@ public class RobotRun extends PApplet {
 				if (selectIdx >= 3) {
 					r.getInstToEdit( r.getActiveInstIdx() );
 					stmt.addCase();
-					updateScreen();
+					UI.updatePendantScreen();
 					arrow_dn();
 				}
 			} else if (inst instanceof RegisterStatement) {
@@ -3691,12 +3650,12 @@ public class RobotRun extends PApplet {
 				if (selectIdx > rLen) {
 					r.getInstToEdit( r.getActiveInstIdx() );
 					stmt.getExpr().insertElement(selectIdx - (rLen + 2));
-					updateScreen();
+					UI.updatePendantScreen();
 					arrow_rt();
 				}
 			}
 
-			updateScreen();
+			UI.updatePendantScreen();
 			break;
 		case SELECT_CUT_COPY:
 			Program p = r.getActiveProg();
@@ -3739,7 +3698,7 @@ public class RobotRun extends PApplet {
 		default:
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 				editTextEntry(2);
-				updateScreen();
+				UI.updatePendantScreen();
 			}
 		}
 	}
@@ -3942,7 +3901,7 @@ public class RobotRun extends PApplet {
 
 		}
 
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 
 	public void f5() {
@@ -4016,7 +3975,7 @@ public class RobotRun extends PApplet {
 
 				teachFrame.setPoint(pt, options.getLineIdx());
 				DataManagement.saveRobotData(activeRobot, 2);
-				updateScreen();
+				UI.updatePendantScreen();
 			}
 			break;
 		case CONFIRM_PROG_DELETE:
@@ -4055,7 +4014,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 
 	public void FrontView() {
@@ -4251,10 +4210,6 @@ public class RobotRun extends PApplet {
 		vector.z = modelZ(x, y, z);
 
 		return vector;
-	}
-
-	public ControlP5 getCp5() {
-		return cp5;
 	}
 
 	public void getEditScreen(Instruction ins, int selectIdx) {
@@ -4823,8 +4778,12 @@ public class RobotRun extends PApplet {
 		return row;
 	}
 
-	public WindowManager getManager() {
-		return manager;
+	public WGUI getManager() {
+		return UI;
+	}
+	
+	public ScreenMode getMode() {
+		return mode;
 	}
 
 	// Options menu text
@@ -5551,7 +5510,7 @@ public class RobotRun extends PApplet {
 	/* Stops all of the Robot's movement */
 	public void hold() {
 		// Reset button highlighting
-		resetButtonColors();
+		getManager().resetButtonColors();
 		// Stop program execution, which halts the robot
 		activeRobot.halt();
 		setProgramRunning(false);
@@ -5684,17 +5643,18 @@ public class RobotRun extends PApplet {
 					characterInput(key);
 					return;
 					
-				} else {
-					// Pendant button shortcuts
-					switch(keyCode) {
-					case KeyEvent.VK_ENTER:			ENTER(); break;
-					case KeyEvent.VK_BACK_SPACE:	BKSPC(); break;
-					case KeyEvent.VK_DOWN:			arrow_dn(); break;
-					case KeyEvent.VK_LEFT:			arrow_lt(); break;
-					case KeyEvent.VK_RIGHT:			arrow_rt(); break;
-					case KeyEvent.VK_UP:			arrow_up(); break;
-					}
 				}
+				
+			}
+			
+			// Pendant button shortcuts
+			switch(keyCode) {
+				case KeyEvent.VK_ENTER:			ENTER(); break;
+				case KeyEvent.VK_BACK_SPACE:	BKSPC(); break;
+				case KeyEvent.VK_DOWN:			arrow_dn(); break;
+				case KeyEvent.VK_LEFT:			arrow_lt(); break;
+				case KeyEvent.VK_RIGHT:			arrow_rt(); break;
+				case KeyEvent.VK_UP:			arrow_up(); break;
 			}
 		}
 		
@@ -5737,7 +5697,7 @@ public class RobotRun extends PApplet {
 			// Test instruction undo
 			if (mode == ScreenMode.NAV_PROG_INSTR) {
 				getActiveRobot().popInstructionUndo();
-				updateScreen();
+				UI.updatePendantScreen();
 			}
 			
 		} else if (ctrl && keyCode == KeyEvent.VK_T) {
@@ -6185,7 +6145,7 @@ public class RobotRun extends PApplet {
 
 					line = new DisplayLine(i, xPos);
 					xPos += field.length() * Fields.CHAR_WDTH + tokenOffset;
-				} else if (xPos > display_width - 10) {
+				} else if (xPos > WGUI.display_width - 10) {
 					instruct_list.add(line);
 					xPos = 2 * Fields.CHAR_WDTH + tokenOffset;
 
@@ -6720,7 +6680,7 @@ public class RobotRun extends PApplet {
 			break;
 		}
 
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 
 	/**
@@ -6913,7 +6873,7 @@ public class RobotRun extends PApplet {
 	public void MoveToCur() {
 		// Only allow world object editing when no program is executing
 		if (!isProgramRunning()) {
-			WorldObject savedState = (WorldObject) manager.getSelectedWO().clone();
+			WorldObject savedState = (WorldObject) UI.getSelectedWO().clone();
 
 			if (getManager().updateWOCurrent()) {
 				/*
@@ -6934,7 +6894,7 @@ public class RobotRun extends PApplet {
 	public void MoveToDef() {
 		// Only allow world object editing when no program is executing
 		if (!isProgramRunning()) {
-			WorldObject savedState = (WorldObject) manager.getSelectedWO().clone();
+			WorldObject savedState = (WorldObject) UI.getSelectedWO().clone();
 			getManager().fillCurWithDef();
 
 			if (getManager().updateWOCurrent()) {
@@ -7396,14 +7356,6 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	// turn of highlighting on all active movement buttons
-	public void resetButtonColors() {
-		for (int i = 1; i <= 6; i += 1) {
-			((Button) cp5.get("JOINT" + i + "_NEG")).setColorBackground(Fields.BUTTON_DEFAULT);
-			((Button) cp5.get("JOINT" + i + "_POS")).setColorBackground(Fields.BUTTON_DEFAULT);
-		}
-	}
-
 	public void resetStack() {
 		// Stop a program from executing when transition screens
 		setProgramRunning(false);
@@ -7496,8 +7448,8 @@ public class RobotRun extends PApplet {
 		this.executingInstruction = executingInstruction;
 	}
 
-	public void setManager(WindowManager manager) {
-		this.manager = manager;
+	private void setManager(WGUI ui) {
+		this.UI = ui;
 	}
 
 	public void setProgramRunning(boolean programRunning) {
@@ -7538,23 +7490,18 @@ public class RobotRun extends PApplet {
 
 	public void setShift(boolean flag) {
 		
-		if (shift != flag) {
-			// Update the color of the shift button
-			int butColor = (flag) ? Fields.BUTTON_ACTIVE : Fields.BUTTON_DEFAULT;
-			((Button) cp5.get("shift")).setColorBackground(butColor);
-		}
-		
 		if (!flag) {
 			// Stop Robot jog movement when shift is off
 			hold();
 		}
 
 		shift = flag;
-		updateScreen();
+		UI.updateShiftButton(shift);
 	}
 
 	public void setStep(boolean step) {
 		this.step = step;
+		UI.updateStepButton(this.step);
 	}
 
 	public void setSU_macro_bindings(Macro[] sU_macro_bindings) {
@@ -7584,7 +7531,8 @@ public class RobotRun extends PApplet {
 		instance = this;
 		letterStates = new int[] { 0, 0, 0, 0, 0 };
 		workingText = new StringBuilder();
-
+		
+		/* TODO REMOVE AFTER PEDANT REFACTOR *
 		g1_px = 0;
 		g1_py = Fields.SMALL_BUTTON - 14; // the left-top corner of group 1
 		g1_width = 440;
@@ -7593,12 +7541,12 @@ public class RobotRun extends PApplet {
 		display_py = 0; // the left-top corner of display screen
 		display_width = g1_width - 20;
 		display_height = 280; // height and width of display screen
-
+		/**/
 		// size(1200, 800, P3D);
 		// create font and text display background
-		fnt_con14 = createFont("data/Consolas.ttf", 14);
-		fnt_con12 = createFont("data/Consolas.ttf", 12);
-		fnt_conB = createFont("data/ConsolasBold.ttf", 12);
+		Fields.medium = createFont("data/Consolas.ttf", 14);
+		Fields.small = createFont("data/Consolas.ttf", 12);
+		Fields.bond = createFont("data/ConsolasBold.ttf", 12);
 
 		camera = new Camera();
 		activeScenario = null;
@@ -7620,12 +7568,14 @@ public class RobotRun extends PApplet {
 
 			DataManagement.initialize(this);
 			DataManagement.loadState(this);
-
-			// set up UI
+			
+			
+			/* set up UI TODO REMOVE AFTER PEDANT REFACTOR * 
 			cp5 = new ControlP5(this);
 			// Explicitly draw the ControlP5 elements
 			cp5.setAutoDraw(false);
-			setManager(new WindowManager(this, cp5, buttonImages, fnt_con12, fnt_con14, fnt_conB));
+			/**/
+			setManager(new WGUI(this, buttonImages));
 			display_stack = new Stack<>();
 			contents = new MenuScroll(this, "cont", ITEMS_TO_SHOW, 10, 20);
 			options = new MenuScroll(this, "opt", 3, 10, 180);
@@ -7717,7 +7667,7 @@ public class RobotRun extends PApplet {
 	 * Displays all the windows and the right-hand text display.
 	 */
 	public void renderUI() {
-		textFont(fnt_con14, 14);
+		textFont(Fields.medium, 14);
 		fill(0);
 		textAlign(RIGHT, TOP);
 		
@@ -7951,14 +7901,7 @@ public class RobotRun extends PApplet {
 
 	// toggle step on/off and button highlight
 	public void step() {
-		if (!isStep()) {
-			((Button) cp5.get("step")).setColorBackground(Fields.BUTTON_ACTIVE);
-		} else {
-			((Button) cp5.get("step")).setColorBackground(Fields.BUTTON_DEFAULT);
-		}
-
 		setStep(!isStep());
-		updateScreen();
 	}
 
 	/**
@@ -7997,7 +7940,7 @@ public class RobotRun extends PApplet {
 		}
 
 		getManager().updateWindowContentsPositions();
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 
 	public void TOOL1() {
@@ -8038,8 +7981,8 @@ public class RobotRun extends PApplet {
 	public void undoScenarioEdit() {
 		if (!SCENARIO_UNDO.empty()) {
 			activeScenario.put(SCENARIO_UNDO.pop());
-			manager.updateListContents();
-			manager.updateEditWindowFields();
+			UI.updateListContents();
+			UI.updateEditWindowFields();
 		}
 	}
 
@@ -8075,7 +8018,7 @@ public class RobotRun extends PApplet {
 		}
 
 		contents.get(contents.getLineIdx()).set(contents.getColumnIdx(), workingText.toString());
-		updateScreen();
+		UI.updatePendantScreen();
 	}
 
 	/**
@@ -8110,7 +8053,7 @@ public class RobotRun extends PApplet {
 					// Update the display
 					getContentsMenu().setLineIdx(model.getActiveInstIdx());
 					getContentsMenu().setColumnIdx(0);
-					updateScreen();
+					UI.updatePendantScreen();
 				}
 			}
 		}
@@ -8173,35 +8116,20 @@ public class RobotRun extends PApplet {
 		lastScreen();
 	}
 
-	public void updateRobotJogMotion(int button, int direction) {
+	public void updateRobotJogMotion(int set, int direction) {
 		// Only six jog button pairs exist
-		if (button >= 0 && button < 6) {
+		if (set >= 0 && set < 6) {
 			float newDir;
 
 			if (getActiveRobot().getCurCoordFrame() == CoordFrame.JOINT) {
 				// Move single joint
-				newDir = getActiveRobot().activateLiveJointMotion(button, direction);
+				newDir = getActiveRobot().activateLiveJointMotion(set, direction);
 			} else {
 				// Move entire robot in a single axis plane
-				newDir = getActiveRobot().activateLiveWorldMotion(button, direction);
+				newDir = getActiveRobot().activateLiveWorldMotion(set, direction);
 			}
-
-			Button negButton = ((Button) cp5.get("JOINT" + (button + 1) + "_NEG")),
-					posButton = ((Button) cp5.get("JOINT" + (button + 1) + "_POS"));
-
-			if (newDir > 0) {
-				// Positive motion
-				negButton.setColorBackground(Fields.BUTTON_DEFAULT);
-				posButton.setColorBackground(Fields.BUTTON_ACTIVE);
-			} else if (newDir < 0) {
-				// Negative motion
-				negButton.setColorBackground(Fields.BUTTON_ACTIVE);
-				posButton.setColorBackground(Fields.BUTTON_DEFAULT);
-			} else {
-				// No motion
-				negButton.setColorBackground(Fields.BUTTON_DEFAULT);
-				posButton.setColorBackground(Fields.BUTTON_DEFAULT);
-			}
+			
+			UI.updateJogButtons(set, newDir);
 		}
 	}
 
@@ -8222,17 +8150,17 @@ public class RobotRun extends PApplet {
 		SCENARIO_UNDO.push(saveState);
 	}
 
-	// update text displayed on screen
-	public void updateScreen() {
+	/* update text displayed on screen TODO REMOVE AFTER PEDANT REFACTOR *
+	public void UI.updatePendantScreen() {
 		int next_px = display_px;
 		int next_py = display_py;
 		// int txt, bg;
 
-		clearScreen();
+		UI.clearScreen();
 
 		// draw display background
 		cp5.addTextarea("txt").setPosition(display_px, display_py).setSize(display_width, display_height)
-		.setColorBackground(Fields.UI_LIGHT).moveTo(manager.pendantWindow);
+		.setColorBackground(Fields.UI_LIGHT).moveTo(UI.pendantWindow);
 
 		String header = null;
 		// display the name of the program that is being edited
@@ -8242,7 +8170,7 @@ public class RobotRun extends PApplet {
 			// Display header field
 			cp5.addTextarea("header").setText(" " + header).setFont(fnt_con14).setPosition(next_px, next_py)
 			.setSize(display_width, 20).setColorValue(Fields.UI_LIGHT).setColorBackground(Fields.UI_DARK)
-			.hideScrollbar().show().moveTo(manager.pendantWindow);
+			.hideScrollbar().show().moveTo(UI.pendantWindow);
 
 			next_py += 20;
 		}
@@ -8270,16 +8198,17 @@ public class RobotRun extends PApplet {
 			cp5.addTextarea("lf" + i).setText(funct[i]).setFont(fnt_con12)
 			// Keep function labels in their original place
 			.setPosition(display_width * i / 5 + 15, display_height - g1_py).setSize(display_width / 5 - 5, 20)
-			.setColorValue(Fields.UI_DARK).setColorBackground(Fields.UI_LIGHT).hideScrollbar().moveTo(manager.pendantWindow);
+			.setColorValue(Fields.UI_DARK).setColorBackground(Fields.UI_LIGHT).hideScrollbar().moveTo(UI.pendantWindow);
 		}
-	} // end updateScreen()
+	}
+	/**/
 
 	/**
 	 * Updates the default position and orientation of a world object based on
 	 * the input fields in the edit window.
 	 */
 	public void UpdateWODef() {
-		WorldObject saveState = (WorldObject) manager.getSelectedWO().clone();
+		WorldObject saveState = (WorldObject) UI.getSelectedWO().clone();
 
 		if (getManager().updateWODefault()) {
 			/*
