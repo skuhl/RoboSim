@@ -3,9 +3,13 @@ package robot;
 import java.util.ArrayList;
 
 import geom.Box;
+import geom.Cylinder;
+import geom.DimType;
 import geom.Fixture;
+import geom.ModelShape;
 import geom.RQuaternion;
 import geom.WorldObject;
+import processing.core.PShape;
 import processing.core.PVector;
 
 public class RobotCamera {
@@ -29,17 +33,18 @@ public class RobotCamera {
 	private RQuaternion camOrient;
 	private PVector camPos;
 	
+	private float sensitivity;
 	private Scenario scene;
 	
 	public RobotCamera(float posX, float posY, float posZ, RQuaternion q, 
-			float fov, float ar, float near, float far, Scenario s) {
+			float fov, float ar, float near, float far, Scenario sc) {
 		camPos = new PVector(posX, posY, posZ);
 		camOrient = q;
 		camFOV = fov;
 		camAspectRatio = ar;
 		camClipNear = near;
 		camClipFar = far;
-		scene = s;
+		scene = sc;
 	}
 	
 	/**
@@ -47,17 +52,55 @@ public class RobotCamera {
 	 * partially in the camera view frustum.
 	 * 
 	 * @param o The WorldObject to be tested.
-	 * @return 0 if the object is not at all in frame, 1 if the object is partially in frame,
-	 * 		   or 2 if the object is fully in frame.
+	 * @return  
 	 */
-	public int checkObjectInFrame(WorldObject o) {
+	public boolean checkObjectInFrame(WorldObject o) {
 		PVector objCenter = o.getLocalCenter();
 		System.out.println("obj loc: " + objCenter.toString());
-		if(checkPointInFrame(objCenter)) {
-			return 1;
+		
+		if(!checkPointInFrame(objCenter)) return false;
+			
+		if(o.getForm() instanceof Box) {
+			//TODO should probably make sure that camera axes agree with camera look direction
+			float l = o.getForm().getDim(DimType.LENGTH);
+			float w = o.getForm().getDim(DimType.WIDTH);
+			float h = o.getForm().getDim(DimType.HEIGHT);
+			
+			float[][] objCoord = o.getLocalOrientationAxes();
+			PVector objAxisX = new PVector(objCoord[0][0], objCoord[0][1], objCoord[0][2]);
+			PVector objAxisY = new PVector(objCoord[1][0], objCoord[1][1], objCoord[1][2]);
+			PVector objAxisZ = new PVector(objCoord[2][0], objCoord[2][1], objCoord[2][2]);
+			
+			PVector camAxisX = getVectLook();
+			PVector camAxisZ = getVectUp();
+			PVector camAxisY = camAxisX.cross(camAxisZ);
+			
+			//Projected dimensions of box on to camera axes 
+			float dimX = l*objAxisX.dot(camAxisX) + w*objAxisY.dot(camAxisX) + h*objAxisZ.dot(camAxisX);
+			float dimY = l*objAxisX.dot(camAxisY) + w*objAxisY.dot(camAxisY) + h*objAxisZ.dot(camAxisY);
+			float dimZ = l*objAxisX.dot(camAxisZ) + w*objAxisY.dot(camAxisZ) + h*objAxisZ.dot(camAxisZ);
+			
+			
+		}
+		else if (o.getForm() instanceof Cylinder) {
+			
+		}
+		else {
+			int vertCount = 0;
+			PShape model = ((ModelShape)o.getForm()).getModel();
+			
+			for(int i = 0; i < model.getVertexCount(); i += 1) {
+				if(checkPointInFrame(model.getVertex(i))) {
+					vertCount += 1;
+				}
+			}
+			
+			if(vertCount / (float)model.getVertexCount() >= 0.75) {
+				return true;
+			}
 		}
 		
-		return 0;
+		return false;
 	}
 	
 	public boolean checkPointInFrame(PVector p) {
@@ -72,8 +115,8 @@ public class RobotCamera {
 		System.out.println("dist: " + dist);
 		if(dist > camClipFar || dist < camClipNear) { return false;	}
 		
-		float width = getPlaneWidth(camFOV, camAspectRatio, dist);
-		float height = getPlaneHeight(camFOV, camAspectRatio, dist);
+		float width = getPlaneWidth(dist);
+		float height = getPlaneHeight(dist);
 		
 		float distW = toObj.dot(ltVect) + (width / 2);
 		float distH = toObj.dot(upVect) + (height / 2);
@@ -113,7 +156,7 @@ public class RobotCamera {
 		ArrayList<WorldObject> objList = new ArrayList<>();
 		
 		for(WorldObject o : scene.getObjectList()) {
-			if(checkObjectInFrame(o) >= 1) {
+			if(checkObjectInFrame(o)) {
 				objList.add(o);
 			}
 		}
@@ -137,11 +180,11 @@ public class RobotCamera {
 	 * @return A 4 element array containing the locations of the corners of the plane in the following
 	 * 		   order: top left, top right bottom left, bottom right
 	 */
-	public PVector[] getPlane(float fov, float aspectRatio, float dist) {
+	public PVector[] getPlane(float dist) {
 		// Field of view must be in the range of (0, 90) degrees
-		if(fov >= 180 || fov <= 0) { return null; }
-		float height = getPlaneHeight(fov, aspectRatio, dist);
-		float width = getPlaneWidth(fov, aspectRatio, dist);
+		if(camFOV >= 180 || camFOV <= 0) { return null; }
+		float height = getPlaneHeight(dist);
+		float width = getPlaneWidth(dist);
 		
 		// Produce a coordinate system based on camera orientation
 		PVector lookVect = getVectLook();
@@ -168,19 +211,19 @@ public class RobotCamera {
 		return new PVector[] {tl, tr, bl, br};
 	}
 	
-	public float getPlaneHeight(float fov, float aspectRatio, float dist) {
+	public float getPlaneHeight(float dist) {
 		// Field of view must be in the range of (0, 90) degrees
-		if(fov >= 180 || fov <= 0) { return -1; }
-		float diagonal = 2*(float)Math.tan(fov/2)*dist;
-		float height = (float)Math.sqrt(diagonal*diagonal / (1 + aspectRatio*aspectRatio));
+		if(camFOV >= 180 || camFOV <= 0) { return -1; }
+		float diagonal = 2*(float)Math.tan(camFOV/2)*dist;
+		float height = (float)Math.sqrt(diagonal*diagonal / (1 + camAspectRatio*camAspectRatio));
 		
 		return height;
 	}
 	
-	public float getPlaneWidth(float fov, float aspectRatio, float dist) {
+	public float getPlaneWidth(float dist) {
 		// Field of view must be in the range of (0, 90) degrees
-		if(fov >= 180 || fov <= 0) { return -1; }
-		float width = getPlaneHeight(fov, aspectRatio, dist) * aspectRatio;
+		if(camFOV >= 180 || camFOV <= 0) { return -1; }
+		float width = getPlaneHeight(dist) * camAspectRatio;
 		
 		return width;
 	}
