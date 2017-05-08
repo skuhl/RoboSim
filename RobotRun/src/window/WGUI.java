@@ -446,11 +446,29 @@ public class WGUI implements ControlListener {
 
 		int RESET_px = LINE_px;
 		int RESET_py = NUM_py;
+		
 		int BKSPC_px = RESET_px + button_offsetX;
 		int BKSPC_py = RESET_py;
 
 		int ITEM_px = BKSPC_px + button_offsetX;
 		int ITEM_py = BKSPC_py;
+		int ENTER_px = ed_px;
+		int ENTER_py = g2_offsetY;
+
+		int TOOL1_px = ENTER_px;
+		int TOOL1_py = ENTER_py + button_offsetY;
+
+		int TOOL2_px = TOOL1_px;
+		int TOOL2_py = TOOL1_py + button_offsetY;
+
+		int MOVEMENU_px = TOOL2_px;
+		int MOVEMENU_py = TOOL2_py + button_offsetY;
+
+		int SETUP_px = MOVEMENU_px;
+		int SETUP_py = MOVEMENU_py + button_offsetY;
+
+		int STATUS_px = SETUP_px;
+		int STATUS_py = SETUP_py + button_offsetY;
 		
 		// Pendant screen background?
 		c1 = addTextarea("txt", "", pendantWindow, offsetX, 0,
@@ -575,7 +593,7 @@ public class WGUI implements ControlListener {
 		
 		// Reset button column
 		
-		float btmColsY = c2.getPosition()[1] + c2.getWidth() + smLrDiff / 2;
+		float btmColsY = (float)Math.ceil(c2.getPosition()[1] + c2.getWidth() + 11);
 		float resPosX = getButton("step").getPosition()[0];
 		c1 = addButton("RESET", "RESET", pendantWindow, resPosX, btmColsY,
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
@@ -655,18 +673,18 @@ public class WGUI implements ControlListener {
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		
-		// Util Block
+		// Util button column
 		
 		relPos = relativePosition(getButton("arrow_dn"), RelativePoint.BOTTOM_LEFT,
-				-smLrDiff / 2, 11);
-		c1 = addButton("ENTER", "ENTER", pendantWindow, relPos[0], relPos[1],
+				-smLrDiff / 2, 10);
+		c1 = addButton("ENTER", "ENTER", pendantWindow, relPos[0], btmColsY,
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("TOOL1", "TOOL1", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("TOOL2", "TOOL2", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
@@ -682,26 +700,19 @@ public class WGUI implements ControlListener {
 		c2 = addButton("status", "STATUS", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		/*********************** Util Block *************************/
-
-		int ENTER_px = ed_px;
-		int ENTER_py = g2_offsetY;
-
-		int TOOL1_px = ENTER_px;
-		int TOOL1_py = ENTER_py + button_offsetY;
-
-		int TOOL2_px = TOOL1_px;
-		int TOOL2_py = TOOL1_py + button_offsetY;
-
-		int MOVEMENU_px = TOOL2_px;
-		int MOVEMENU_py = TOOL2_py + button_offsetY;
-
-		int SETUP_px = MOVEMENU_px;
-		int SETUP_py = MOVEMENU_py + button_offsetY;
-
-		int STATUS_px = SETUP_px;
-		int STATUS_py = SETUP_py + button_offsetY;
-
+		
+		// TODO Positive jog buttons column
+		
+		
+		
+		// TODO Negative jog buttons column
+		
+		
+		
+		// TODO Miscellaneous column
+		
+		
+		
 		/******************** Joint Control Block *******************/
 
 		int hd_px = STATUS_px + 3 * button_offsetX / 2;
