@@ -423,7 +423,6 @@ public class RobotRun extends PApplet {
 	private RoboticArm activeRobot;
 	private Camera camera;
 
-	//private ControlP5 cp5;
 	private WGUI UI;
 
 	private ScreenMode mode;
@@ -575,7 +574,7 @@ public class RobotRun extends PApplet {
 		}
 		
 		// Update the screen after a character insertion
-		UI.updatePendantScreen();
+		updatePendantScreen();
 	}
 
 	/**
@@ -706,7 +705,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		UI.updatePendantScreen();
+		updatePendantScreen();
 	}
 
 	public void arrow_lt() {
@@ -742,7 +741,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		UI.updatePendantScreen();
+		updatePendantScreen();
 	}
 
 	public void arrow_rt() {
@@ -788,7 +787,7 @@ public class RobotRun extends PApplet {
 					}
 
 					contents.setColumnIdx(min(columnIdx + 1,  workingText.length() - 1));
-					UI.updatePendantScreen();
+					updatePendantScreen();
 				}
 
 				// Reset function key states
@@ -823,7 +822,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		UI.updatePendantScreen();
+		updatePendantScreen();
 	}
 
 	public void arrow_up() {
@@ -938,7 +937,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		UI.updatePendantScreen();
+		updatePendantScreen();
 	}
 
 	public void BackView() {
@@ -1055,7 +1054,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		UI.updatePendantScreen();
+		updatePendantScreen();
 	}
 
 	public void BottomView() {
@@ -1377,7 +1376,7 @@ public class RobotRun extends PApplet {
 		} else {
 			// Update the coordinate modeke
 			coordFrameTransition();
-			UI.updatePendantScreen();
+			updatePendantScreen();
 		}
 	}
 
@@ -1573,295 +1572,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	/**
-	 * Displays coordinate frame associated with the current Coordinate frame.
-	 * The active User frame is displayed in the User and Tool Coordinate
-	 * Frames. The World frame is display in the World Coordinate frame and the
-	 * Tool Coordinate Frame in the case that no active User frame is set. The
-	 * active Tool frame axes are displayed in the Tool frame in addition to the
-	 * current User (or World) frame. Nothing is displayed in the Joint
-	 * Coordinate Frame.
-	 */
-	public void displayAxes() {
 
-		Point eePoint = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles());
-
-		if (getAxesState() == AxesDisplay.AXES && getActiveRobot().getCurCoordFrame() == CoordFrame.TOOL) {
-			Frame activeTool = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
-
-			// Draw the axes of the active Tool frame at the Robot End Effector
-			displayOriginAxes(eePoint.position, convertNativeToWorld(activeTool.getNativeAxisVectors()), 200f,
-					color(255, 0, 255));
-		} else {
-			// Draw axes of the Robot's End Effector frame for testing purposes
-			// displayOriginAxes(eePoint.position,
-			// eePoint.orientation.toMatrix(), 200f, color(255, 0, 255));
-
-			/* Draw a pink point for the Robot's current End Effecot position */
-			pushMatrix();
-			translate(eePoint.position.x, eePoint.position.y, eePoint.position.z);
-
-			stroke(color(255, 0, 255));
-			noFill();
-			sphere(4);
-
-			popMatrix();
-		}
-
-		if (getAxesState() == AxesDisplay.AXES) {
-			// Display axes
-			if (getActiveRobot().getCurCoordFrame() != CoordFrame.JOINT) {
-				Frame activeUser = getActiveRobot().getActiveFrame(CoordFrame.USER);
-
-				if (getActiveRobot().getCurCoordFrame() != CoordFrame.WORLD && activeUser != null) {
-					// Draw the axes of the active User frame
-					displayOriginAxes(activeUser.getOrigin(), convertNativeToWorld(activeUser.getNativeAxisVectors()),
-							10000f, color(0));
-
-				} else {
-					// Draw the axes of the World frame
-					displayOriginAxes(new PVector(0f, 0f, 0f), Fields.WORLD_AXES, 10000f, color(0));
-				}
-			}
-
-		} else if (getAxesState() == AxesDisplay.GRID) {
-			// Display gridlines spanning from axes of the current frame
-			Frame active;
-			float[][] displayAxes;
-			PVector displayOrigin;
-
-			switch (getActiveRobot().getCurCoordFrame()) {
-			case JOINT:
-			case WORLD:
-				displayAxes = new float[][] { { 1f, 0f, 0f }, { 0f, 1f, 0f }, { 0f, 0f, 1f } };
-				displayOrigin = new PVector(0f, 0f, 0f);
-				break;
-			case TOOL:
-				active = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
-				displayAxes = active.getNativeAxisVectors();
-				displayOrigin = eePoint.position;
-				break;
-			case USER:
-				active = getActiveRobot().getActiveFrame(CoordFrame.USER);
-				displayAxes = active.getNativeAxisVectors();
-				displayOrigin = active.getOrigin();
-				break;
-			default:
-				// No gridlines are displayed in the Joint Coordinate Frame
-				return;
-			}
-
-			// Draw grid lines every 100 units, from -3500 to 3500, in the x and
-			// y plane, on the floor plane
-			displayGridlines(displayAxes, displayOrigin, 35, 100);
-		}
-	}
-
-	/**
-	 * Gridlines are drawn, spanning from two of the three axes defined by the
-	 * given axes vector set. The two axes that form a plane that has the lowest
-	 * offset of the xz-plane (hence the two vectors with the minimum y-values)
-	 * are chosen to be mapped to the xz-plane and their reflection on the
-	 * xz-plane are drawn the along with a grid is formed from the the two
-	 * reflection axes at the base of the Robot.
-	 * 
-	 * @param axesVectors
-	 *            A rotation matrix (in row major order) that defines the axes
-	 *            of the frame to map to the xz-plane
-	 * @param origin
-	 *            The xz-origin at which to drawn the reflection axes
-	 * @param halfNumOfLines
-	 *            Half the number of lines to draw for one of the axes
-	 * @param distBwtLines
-	 *            The distance between each gridline
-	 */
-	public void displayGridlines(float[][] axesVectors, PVector origin, int halfNumOfLines, float distBwtLines) {
-		int vectorPX = -1, vectorPZ = -1;
-
-		// Find the two vectors with the minimum y values
-		for (int v = 0; v < axesVectors.length; ++v) {
-			int limboX = (v + 1) % axesVectors.length, limboY = (limboX + 1) % axesVectors.length;
-			// Compare the y value of the current vector to those of the other
-			// two vectors
-			if (abs(axesVectors[v][1]) >= abs(axesVectors[limboX][1])
-					&& abs(axesVectors[v][1]) >= abs(axesVectors[limboY][1])) {
-				vectorPX = limboX;
-				vectorPZ = limboY;
-				break;
-			}
-		}
-
-		if (vectorPX == -1 || vectorPZ == -1) {
-			println("Invalid axes-origin pair for grid lines!");
-			return;
-		}
-
-		pushMatrix();
-		// Map the chosen two axes vectors to the xz-plane at the y-position of
-		// the Robot's base
-		applyMatrix(axesVectors[vectorPX][0], 0, axesVectors[vectorPZ][0], origin.x, 0, 1, 0,
-				getActiveRobot().getBasePosition().y, axesVectors[vectorPX][2], 0, axesVectors[vectorPZ][2], origin.z,
-				0, 0, 0, 1);
-
-		float lineLen = halfNumOfLines * distBwtLines;
-
-		// Draw axes lines in red
-		stroke(255, 0, 0);
-		line(-lineLen, 0, 0, lineLen, 0, 0);
-		line(0, 0, -lineLen, 0, 0, lineLen);
-		// Draw remaining gridlines in black
-		stroke(25, 25, 25);
-		for (int linePosScale = 1; linePosScale <= halfNumOfLines; ++linePosScale) {
-			line(distBwtLines * linePosScale, 0, -lineLen, distBwtLines * linePosScale, 0, lineLen);
-			line(-lineLen, 0, distBwtLines * linePosScale, lineLen, 0, distBwtLines * linePosScale);
-
-			line(-distBwtLines * linePosScale, 0, -lineLen, -distBwtLines * linePosScale, 0, lineLen);
-			line(-lineLen, 0, -distBwtLines * linePosScale, lineLen, 0, -distBwtLines * linePosScale);
-		}
-
-		popMatrix();
-		mapToRobotBasePlane();
-	}
-
-	/**
-	 * Given a set of 3 orthogonal unit vectors a point in space, lines are
-	 * drawn for each of the three vectors, which intersect at the origin point.
-	 *
-	 * @param origin
-	 *            A point in space representing the intersection of the three
-	 *            unit vectors
-	 * @param axesVectors
-	 *            A set of three orthogonal unti vectors
-	 * @param axesLength
-	 *            The length, to which the all axes, will be drawn
-	 * @param originColor
-	 *            The color of the point to draw at the origin
-	 */
-	public void displayOriginAxes(PVector origin, float[][] axesVectors, float axesLength, int originColor) {
-
-		pushMatrix();
-		// Transform to the reference frame defined by the axes vectors
-		applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
-				axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
-				axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
-				0, 0, 0, 1);
-
-		// X axis
-		stroke(255, 0, 0);
-		line(-axesLength, 0, 0, axesLength, 0, 0);
-		// Y axis
-		stroke(0, 255, 0);
-		line(0, -axesLength, 0, 0, axesLength, 0);
-		// Z axis
-		stroke(0, 0, 255);
-		line(0, 0, -axesLength, 0, 0, axesLength);
-
-		// Draw a sphere on the positive direction for each axis
-		float dotPos = max(100f, min(axesLength, 500));
-		textFont(Fields.bond, 18);
-
-		stroke(originColor);
-		sphere(4);
-		stroke(0);
-		translate(dotPos, 0, 0);
-		sphere(4);
-
-		pushMatrix();
-		rotateX(-PI / 2f);
-		rotateY(-PI);
-		text("X-axis", 0, 0, 0);
-		popMatrix();
-
-		translate(-dotPos, dotPos, 0);
-		sphere(4);
-
-		pushMatrix();
-		rotateX(-PI / 2f);
-		rotateY(-PI);
-		text("Y-axis", 0, 0, 0);
-		popMatrix();
-
-		translate(0, -dotPos, dotPos);
-		sphere(4);
-
-		pushMatrix();
-		rotateX(-PI / 2f);
-		rotateY(-PI);
-		text("Z-axis", 0, 0, 0);
-		popMatrix();
-
-		popMatrix();
-	}
-
-	/**
-	 * Display any currently taught points during the processes of either the
-	 * 3-Point, 4-Point, or 6-Point Methods.
-	 */
-	public void displayTeachPoints() {
-		// Teach points are displayed only while the Robot is being taught a
-		// frame
-		if (teachFrame != null && mode.getType() == ScreenType.TYPE_TEACH_POINTS) {
-
-			int size = 3;
-
-			if (mode == ScreenMode.TEACH_6PT && teachFrame instanceof ToolFrame) {
-				size = 6;
-			} else if (mode == ScreenMode.TEACH_4PT && teachFrame instanceof UserFrame) {
-				size = 4;
-			}
-
-			for (int idx = 0; idx < size; ++idx) {
-				Point pt = teachFrame.getPoint(idx);
-
-				if (pt != null) {
-					pushMatrix();
-					// Applies the point's position
-					translate(pt.position.x, pt.position.y, pt.position.z);
-
-					// Draw color-coded sphere for the point
-					noFill();
-					int pointColor = color(255, 0, 255);
-
-					if (teachFrame instanceof ToolFrame) {
-
-						if (idx < 3) {
-							// TCP teach points
-							pointColor = color(130, 130, 130);
-						} else if (idx == 3) {
-							// Orient origin point
-							pointColor = color(255, 130, 0);
-						} else if (idx == 4) {
-							// Axes X-Direction point
-							pointColor = color(255, 0, 0);
-						} else if (idx == 5) {
-							// Axes Y-Diretion point
-							pointColor = color(0, 255, 0);
-						}
-					} else if (teachFrame instanceof UserFrame) {
-
-						if (idx == 0) {
-							// Orient origin point
-							pointColor = color(255, 130, 0);
-						} else if (idx == 1) {
-							// Axes X-Diretion point
-							pointColor = color(255, 0, 0);
-						} else if (idx == 2) {
-							// Axes Y-Diretion point
-							pointColor = color(0, 255, 0);
-						} else if (idx == 3) {
-							// Axes Origin point
-							pointColor = color(0, 0, 255);
-						}
-					}
-
-					stroke(pointColor);
-					sphere(3);
-
-					popMatrix();
-				}
-			}
-		}
-	}
 
 	@Override
 	public void dispose() {
@@ -1889,8 +1600,8 @@ public class RobotRun extends PApplet {
 
 		updateAndDrawObjects(activeScenario, getActiveRobot());
 
-		displayAxes();
-		displayTeachPoints();
+		renderCoordAxes();
+		renderTeachPoints();
 
 		WorldObject wldObj = getManager().getSelectedWO();
 
@@ -1906,7 +1617,7 @@ public class RobotRun extends PApplet {
 				}
 			}
 
-			displayOriginAxes(wldObj.getLocalCenter(), convertNativeToWorld(wldObj.getLocalOrientationAxes()), 500f,
+			renderOriginAxes(wldObj.getLocalCenter(), convertNativeToWorld(wldObj.getLocalOrientationAxes()), 500f,
 					color(0));
 
 			popMatrix();
@@ -1914,7 +1625,7 @@ public class RobotRun extends PApplet {
 
 		if (displayPoint != null) {
 			// Display the point with its local orientation axes
-			displayOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
+			renderOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
 		}
 
 		/*TESTING CODE: DRAW INTERMEDIATE POINTS*
@@ -2190,7 +1901,7 @@ public class RobotRun extends PApplet {
 
 					if (str.length() < 0) {
 						// No value entered
-						UI.updatePendantScreen();
+						updatePendantScreen();
 						println("All entries must have a value!");
 						return;
 					}
@@ -3020,7 +2731,7 @@ public class RobotRun extends PApplet {
 		case SELECT_CUT_COPY:
 		case SELECT_INSTR_DELETE:
 			contents.toggleSelect(getActiveRobot().getActiveInstIdx());
-			UI.updatePendantScreen();
+			updatePendantScreen();
 			break;
 		case SELECT_PASTE_OPT:
 			if (options.getLineIdx() == 0) {
@@ -3048,7 +2759,7 @@ public class RobotRun extends PApplet {
 		case SELECT_COMMENT:
 			r.getInstToEdit( r.getActiveInstIdx() ).toggleCommented();
 
-			UI.updatePendantScreen();
+			updatePendantScreen();
 			break;
 		case EDIT_MINST_POS:
 			MotionInstruction mInst = (MotionInstruction) r.getInstToEdit( r.getActiveInstIdx() );
@@ -3361,7 +3072,7 @@ public class RobotRun extends PApplet {
 		if (nextInstr == -1) {
 			// If a command fails
 			triggerFault();
-			UI.updatePendantScreen();
+			updatePendantScreen();
 			return true;
 
 		} else if (!isExecutingInstruction()) {
@@ -3373,7 +3084,7 @@ public class RobotRun extends PApplet {
 				contents.setLineIdx(getInstrLine(getActiveRobot().getActiveInstIdx()));
 		}
 
-		UI.updatePendantScreen();
+		updatePendantScreen();
 
 		return !isExecutingInstruction() && this.execSingleInst;
 	}// end executeProgram
@@ -3390,7 +3101,7 @@ public class RobotRun extends PApplet {
 
 				if (getSelectedLine() == 0) {
 					contents.setLineIdx(contents.getLineIdx() + 1);
-					UI.updatePendantScreen();
+					updatePendantScreen();
 					if (getSelectedLine() == 0) {
 						getActiveRobot().setActiveInstIdx(getActiveRobot().getActiveInstIdx() + 1);
 					}
@@ -3401,7 +3112,7 @@ public class RobotRun extends PApplet {
 			if (isShift()) {
 				// Reset the highlighted frame in the tool frame list
 				getActiveRobot().getToolFrame(active_index).reset();
-				UI.updatePendantScreen();
+				updatePendantScreen();
 			} else {
 				// Set the current tool frame
 				getActiveRobot().setActiveToolFrame(active_index);
@@ -3412,7 +3123,7 @@ public class RobotRun extends PApplet {
 			if (isShift()) {
 				// Reset the highlighted frame in the user frames list
 				getActiveRobot().getUserFrame(active_index).reset();
-				UI.updatePendantScreen();
+				updatePendantScreen();
 			} else {
 				// Set the current user frame
 				getActiveRobot().setActiveUserFrame(active_index);
@@ -3457,7 +3168,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		UI.updatePendantScreen();
+		updatePendantScreen();
 	}
 
 	public void f2() {
@@ -3510,7 +3221,7 @@ public class RobotRun extends PApplet {
 		default:
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 				editTextEntry(1);
-				UI.updatePendantScreen();
+				updatePendantScreen();
 			}
 		}
 	}
@@ -3587,7 +3298,7 @@ public class RobotRun extends PApplet {
 				if (stmt.getExpr() instanceof Expression && selectIdx >= 2) {
 					r.getInstToEdit( r.getActiveInstIdx() );
 					((Expression) stmt.getExpr()).insertElement(selectIdx - 3);
-					UI.updatePendantScreen();
+					updatePendantScreen();
 					arrow_rt();
 				}
 			} else if (inst instanceof SelectStatement) {
@@ -3596,7 +3307,7 @@ public class RobotRun extends PApplet {
 				if (selectIdx >= 3) {
 					r.getInstToEdit( r.getActiveInstIdx() );
 					stmt.addCase();
-					UI.updatePendantScreen();
+					updatePendantScreen();
 					arrow_dn();
 				}
 			} else if (inst instanceof RegisterStatement) {
@@ -3606,12 +3317,12 @@ public class RobotRun extends PApplet {
 				if (selectIdx > rLen) {
 					r.getInstToEdit( r.getActiveInstIdx() );
 					stmt.getExpr().insertElement(selectIdx - (rLen + 2));
-					UI.updatePendantScreen();
+					updatePendantScreen();
 					arrow_rt();
 				}
 			}
 
-			UI.updatePendantScreen();
+			updatePendantScreen();
 			break;
 		case SELECT_CUT_COPY:
 			Program p = r.getActiveProg();
@@ -3654,7 +3365,7 @@ public class RobotRun extends PApplet {
 		default:
 			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 				editTextEntry(2);
-				UI.updatePendantScreen();
+				updatePendantScreen();
 			}
 		}
 	}
@@ -3857,7 +3568,7 @@ public class RobotRun extends PApplet {
 
 		}
 
-		UI.updatePendantScreen();
+		updatePendantScreen();
 	}
 
 	public void f5() {
@@ -3931,7 +3642,7 @@ public class RobotRun extends PApplet {
 
 				teachFrame.setPoint(pt, options.getLineIdx());
 				DataManagement.saveRobotData(activeRobot, 2);
-				UI.updatePendantScreen();
+				updatePendantScreen();
 			}
 			break;
 		case CONFIRM_PROG_DELETE:
@@ -3970,7 +3681,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 
-		UI.updatePendantScreen();
+		updatePendantScreen();
 	}
 
 	public void FrontView() {
@@ -4006,148 +3717,6 @@ public class RobotRun extends PApplet {
 
 	public Camera getCamera() {
 		return camera;
-	}
-
-	// Main display content text
-	public void getContents(ScreenMode mode) {
-		ArrayList<DisplayLine> prevContents = contents.copyContents();
-		contents.clear();
-
-		switch (mode) {
-		// Program list navigation/ edit
-		case NAV_PROGRAMS:
-		case SET_MACRO_PROG:
-			loadPrograms();
-			break;
-		case SET_CALL_PROG:
-			loadPrograms(editIdx);
-			break;
-
-		case PROG_CREATE:
-		case PROG_RENAME:
-		case PROG_COPY:
-			loadTextInput();
-			break;
-
-			// View instructions
-		case CONFIRM_INSERT:
-		case CONFIRM_RENUM:
-		case FIND_REPL:
-		case NAV_PROG_INSTR:
-		case SELECT_INSTR_DELETE:
-		case SELECT_COMMENT:
-		case SELECT_CUT_COPY:
-		case SELECT_PASTE_OPT:
-		case SET_MV_INSTR_TYPE:
-		case SET_MV_INSTR_REG_TYPE:
-		case SET_MV_INSTR_IDX:
-		case SET_MV_INSTR_SPD:
-		case SET_MV_INSTR_TERM:
-		case SET_MV_INSTR_OFFSET:
-		case SET_IO_INSTR_STATE:
-		case SET_IO_INSTR_IDX:
-		case SET_FRM_INSTR_TYPE:
-		case SET_FRAME_INSTR_IDX:
-		case SET_REG_EXPR_TYPE:
-		case SET_REG_EXPR_IDX1:
-		case SET_REG_EXPR_IDX2:
-		case SET_IF_STMT_ACT:
-		case SET_SELECT_STMT_ARG:
-		case SET_SELECT_ARGVAL:
-		case SET_SELECT_STMT_ACT:
-		case SET_EXPR_ARG:
-		case SET_BOOL_EXPR_ARG:
-		case SET_EXPR_OP:
-		case INPUT_DREG_IDX:
-		case INPUT_IOREG_IDX:
-		case INPUT_PREG_IDX1:
-		case INPUT_PREG_IDX2:
-		case INPUT_CONST:
-		case SET_BOOL_CONST:
-		case SET_LBL_NUM:
-		case SET_JUMP_TGT:
-			contents.setContents(loadInstructions(getActiveRobot().getActiveProgIdx()));
-			break;
-
-		case EDIT_MINST_POS:
-			contents.setContents(prevContents);
-			break;
-
-		case ACTIVE_FRAMES:
-			/* workingText corresponds to the active row's index display */
-			if (contents.getLineIdx() == 0) {
-				contents.addLine("Tool: ", workingText.toString());
-				contents.addLine("User: ", Integer.toString(getActiveRobot().getActiveUserFrame() + 1));
-
-			} else {
-				contents.addLine("Tool: ", Integer.toString(getActiveRobot().getActiveToolFrame() + 1));
-				contents.addLine("User: ", workingText.toString());
-			}
-			break;
-
-			// View frame details
-		case NAV_TOOL_FRAMES:
-			loadFrames(CoordFrame.TOOL);
-			break;
-		case NAV_USER_FRAMES:
-			loadFrames(CoordFrame.USER);
-			break;
-			// View frame details
-		case TFRAME_DETAIL:
-		case TEACH_3PT_TOOL:
-		case TEACH_6PT:
-		case UFRAME_DETAIL:
-		case TEACH_3PT_USER:
-		case TEACH_4PT:
-		case DIRECT_ENTRY_USER:
-		case DIRECT_ENTRY_TOOL:
-		case FRAME_METHOD_USER:
-		case FRAME_METHOD_TOOL:
-		case EDIT_PREG:
-		case EDIT_IOREG:
-			contents.setContents(prevContents);
-			break;
-
-		case EDIT_DREG_VAL:
-		case CP_DREG_COM:
-		case CP_DREG_VAL:
-		case CP_PREG_COM:
-		case CP_PREG_PT:
-			contents.setContents(prevContents);
-			break;
-
-		case SWAP_PT_TYPE:
-			loadPositionRegisters();
-			break;
-
-			// View/ edit macros
-		case NAV_MACROS:
-		case SET_MACRO_TYPE:
-		case SET_MACRO_BINDING:
-			loadMacros();
-			break;
-
-		case NAV_MF_MACROS:
-			loadManualFunct();
-			break;
-
-			// View/ edit registers
-		case NAV_DREGS:
-			loadDataRegisters();
-			break;
-		case NAV_PREGS:
-			loadPositionRegisters();
-			break;
-		case EDIT_DREG_COM:
-		case EDIT_PREG_COM:
-			loadTextInput();
-			break;
-		case NAV_IOREG:
-			loadIORegistersIntoContents();
-			break;
-		default:
-			break;
-		}
 	}
 
 	public MenuScroll getContentsMenu() {
@@ -4741,256 +4310,8 @@ public class RobotRun extends PApplet {
 	public ScreenMode getMode() {
 		return mode;
 	}
-
-	// Options menu text
-	public void getOptions(ScreenMode mode) {
-		options.clear();
-
-		switch (mode) {
-		// Main menu and submenus
-		case NAV_MAIN_MENU:
-			options.addLine("1 Frames");
-			options.addLine("2 Macros");
-			options.addLine("3 Manual Fncts");
-			options.addLine("4 I/O Registers");
-			break;
-
-		case NAV_PROG_INSTR:
-			Program p = activeRobot.getActiveProg();
-			Instruction inst = activeRobot.getActiveInstruction();
-
-			if (inst instanceof MotionInstruction && contents.getColumnIdx() == 4) {
-				// Show the position associated with the active motion
-				// instruction
-				MotionInstruction mInst = (MotionInstruction) inst;
-				Point pt = mInst.getPoint(p);
-
-				if (pt != null) {
-					boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
-					String[] pregEntry = pt.toLineStringArray(isCartesian);
-
-					for (String line : pregEntry) {
-						options.addLine(line);
-					}
-				}
-			}
-
-			break;
-
-		case EDIT_IOREG:
-			options.addLine("OFF");
-			options.addLine("ON");
-			break;
-
-		case CONFIRM_PROG_DELETE:
-			options.addLine("Delete selected program?");
-			break;
-
-			// Instruction options
-		case NAV_INSTR_MENU:
-			options.addLine("1 Undo");
-			options.addLine("2 Insert");
-			options.addLine("3 Delete");
-			options.addLine("4 Cut/ Copy");
-			options.addLine("5 Paste");
-			options.addLine("6 Find/ Replace");
-			options.addLine("7 Renumber");
-			options.addLine("8 Comment");
-			break;
-		case CONFIRM_INSERT:
-			options.addLine("Enter number of lines to insert:");
-			options.addLine("\0" + workingText);
-			break;
-		case SELECT_INSTR_DELETE:
-			options.addLine("Select lines to delete (ENTER).");
-			break;
-		case SELECT_CUT_COPY:
-			options.addLine("Select lines to cut/ copy (ENTER).");
-			break;
-		case SELECT_PASTE_OPT:
-			options.addLine("1 Logic");
-			options.addLine("2 Position");
-			options.addLine("3 Pos ID");
-			options.addLine("4 R Logic");
-			options.addLine("5 R Position");
-			options.addLine("6 R Pos ID");
-			options.addLine("7 RM Pos ID");
-			break;
-		case FIND_REPL:
-			options.addLine("Enter text to search for:");
-			options.addLine("\0" + workingText);
-			break;
-		case CONFIRM_RENUM:
-			options.addLine("Renumber program positions?");
-			break;
-		case SELECT_COMMENT:
-			options.addLine("Select lines to comment/uncomment.");
-			break;
-
-			// Instruction edit options
-		case SET_MV_INSTR_TYPE:
-		case SET_MV_INSTR_REG_TYPE:
-		case SET_MV_INSTR_IDX:
-		case SET_MV_INSTR_SPD:
-		case SET_MV_INSTR_TERM:
-		case SET_MV_INSTR_OFFSET:
-		case SET_IO_INSTR_STATE:
-		case SET_IO_INSTR_IDX:
-		case SET_FRM_INSTR_TYPE:
-		case SET_FRAME_INSTR_IDX:
-		case SET_REG_EXPR_TYPE:
-		case SET_REG_EXPR_IDX1:
-		case SET_REG_EXPR_IDX2:
-		case SET_IF_STMT_ACT:
-		case SET_SELECT_STMT_ARG:
-		case SET_SELECT_ARGVAL:
-		case SET_SELECT_STMT_ACT:
-		case SET_EXPR_ARG:
-		case SET_BOOL_EXPR_ARG:
-		case SET_EXPR_OP:
-		case INPUT_DREG_IDX:
-		case INPUT_IOREG_IDX:
-		case INPUT_PREG_IDX1:
-		case INPUT_PREG_IDX2:
-		case INPUT_CONST:
-		case SET_BOOL_CONST:
-		case SET_LBL_NUM:
-		case SET_JUMP_TGT:
-			loadInstrEdit(mode);
-			break;
-
-			// Insert instructions (non-movemet)
-		case SELECT_INSTR_INSERT:
-			options.addLine("1. I/O");
-			options.addLine("2. Frames");
-			options.addLine("3. Registers");
-			options.addLine("4. IF/SELECT");
-			options.addLine("5. JMP/LBL");
-			options.addLine("6. CALL");
-			/*
-			 * Only allow the user to add robot call instructions when the
-			 * second robot is in the application
-			 */
-			if (getManager().getRobotButtonState()) {
-				options.addLine("6. RCALL");
-			}
-			break;
-		case SELECT_IO_INSTR_REG:
-			loadIORegisters();
-			break;
-		case SELECT_FRAME_INSTR_TYPE:
-			options.addLine("1. TFRAME_NUM = ...");
-			options.addLine("2. UFRAME_NUM = ...");
-			break;
-		case SELECT_REG_STMT:
-			options.addLine("1. R[x] = (...)");
-			options.addLine("2. IO[x] = (...)");
-			options.addLine("3. PR[x] = (...)");
-			options.addLine("4. PR[x, y] = (...)");
-			break;
-		case SELECT_COND_STMT:
-			options.addLine("1. IF Stmt");
-			options.addLine("2. IF (...)");
-			options.addLine("3. SELECT Stmt");
-			break;
-		case SELECT_JMP_LBL:
-			options.addLine("1. LBL[...]");
-			options.addLine("2. JMP LBL[...]");
-			break;
-
-			// Frame navigation and edit menus
-		case SELECT_FRAME_MODE:
-			options.addLine("1. Tool Frame");
-			options.addLine("2. User Frame");
-			break;
-		case FRAME_METHOD_TOOL:
-			options.addLine("1. Three Point Method");
-			options.addLine("2. Six Point Method");
-			options.addLine("3. Direct Entry Method");
-			break;
-		case FRAME_METHOD_USER:
-			options.addLine("1. Three Point Method");
-			options.addLine("2. Four Point Method");
-			options.addLine("3. Direct Entry Method");
-			break;
-		case TEACH_3PT_TOOL:
-		case TEACH_3PT_USER:
-		case TEACH_4PT:
-		case TEACH_6PT:
-			loadPointList();
-			break;
-
-			// Macro edit menus
-		case SET_MACRO_TYPE:
-			options.addLine("1. Shift + User Key");
-			options.addLine("2. Manual Function");
-			break;
-		case SET_MACRO_BINDING:
-			options.addLine("1. Tool 1");
-			options.addLine("2. Tool 2");
-			options.addLine("3. MVMU");
-			options.addLine("4. Setup");
-			options.addLine("5. Status");
-			options.addLine("6. POSN");
-			options.addLine("7. I/O");
-			break;
-
-			// Data navigation and edit menus
-		case NAV_DATA:
-			options.addLine("1. Data Registers");
-			options.addLine("2. Position Registers");
-			break;
-		case NAV_PREGS:
-			PositionRegister pReg = activeRobot.getPReg(active_index);
-			Point pt = pReg.point;
-			// Display the point with the Position register of the highlighted
-			// line, when viewing the Position registers
-			if (pt != null) {
-				String[] pregEntry = pt.toLineStringArray(pReg.isCartesian);
-
-				for (String line : pregEntry) {
-					options.addLine(line);
-				}
-			}
-
-			break;
-		case CP_DREG_COM:
-			options.addLine(String.format("Move R[%d]'s comment to:", active_index + 1));
-			options.addLine(String.format("R[%s]", workingText));
-			break;
-		case CP_DREG_VAL:
-			options.addLine(String.format("Move R[%d]'s value to:", active_index + 1));
-			options.addLine(String.format("R[%s]", workingText));
-			break;
-		case CP_PREG_COM:
-			options.addLine(String.format("Move PR[%d]'s comment to:", active_index + 1));
-			options.addLine(String.format("PR[%s]", workingText));
-			break;
-		case CP_PREG_PT:
-			options.addLine(String.format("Move PR[%d]'s point to:", active_index + 1));
-			options.addLine(String.format("PR[%s]", workingText));
-			break;
-		case SWAP_PT_TYPE:
-			options.addLine("1. Cartesian");
-			options.addLine("2. Joint");
-			break;
-		case EDIT_DREG_VAL:
-			options.addLine(String.format("Input R[%d]'s value:", active_index + 1));
-			options.addLine("\0" + workingText);
-			break;
-
-			// Misc functions
-		case JUMP_TO_LINE:
-			options.addLine("Use number keys to enter line number to jump to");
-			options.addLine("\0" + workingText);
-			break;
-		default:
-			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				options.addLine("1. Uppercase");
-				options.addLine("1. Lowercase");
-			}
-		}
-	}
+	
+	
 
 	public MenuScroll getOptionsMenu() {
 		return options;
@@ -5652,7 +4973,7 @@ public class RobotRun extends PApplet {
 			// Test instruction undo
 			if (mode == ScreenMode.NAV_PROG_INSTR) {
 				getActiveRobot().popInstructionUndo();
-				UI.updatePendantScreen();
+				updatePendantScreen();
 			}
 			
 		} else if (ctrl && keyCode == KeyEvent.VK_T) {
@@ -6635,7 +5956,7 @@ public class RobotRun extends PApplet {
 			break;
 		}
 
-		UI.updatePendantScreen();
+		updatePendantScreen();
 	}
 
 	/**
@@ -7281,6 +6602,482 @@ public class RobotRun extends PApplet {
 	public void prev() {
 		lastScreen();
 	}
+	
+	/**
+	 * Displays coordinate frame associated with the current Coordinate frame.
+	 * The active User frame is displayed in the User and Tool Coordinate
+	 * Frames. The World frame is display in the World Coordinate frame and the
+	 * Tool Coordinate Frame in the case that no active User frame is set. The
+	 * active Tool frame axes are displayed in the Tool frame in addition to the
+	 * current User (or World) frame. Nothing is displayed in the Joint
+	 * Coordinate Frame.
+	 */
+	public void renderCoordAxes() {
+
+		Point eePoint = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles());
+
+		if (getAxesState() == AxesDisplay.AXES && getActiveRobot().getCurCoordFrame() == CoordFrame.TOOL) {
+			Frame activeTool = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
+
+			// Draw the axes of the active Tool frame at the Robot End Effector
+			renderOriginAxes(eePoint.position, convertNativeToWorld(activeTool.getNativeAxisVectors()), 200f,
+					color(255, 0, 255));
+		} else {
+			// Draw axes of the Robot's End Effector frame for testing purposes
+			// displayOriginAxes(eePoint.position,
+			// eePoint.orientation.toMatrix(), 200f, color(255, 0, 255));
+
+			/* Draw a pink point for the Robot's current End Effecot position */
+			pushMatrix();
+			translate(eePoint.position.x, eePoint.position.y, eePoint.position.z);
+
+			stroke(color(255, 0, 255));
+			noFill();
+			sphere(4);
+
+			popMatrix();
+		}
+
+		if (getAxesState() == AxesDisplay.AXES) {
+			// Display axes
+			if (getActiveRobot().getCurCoordFrame() != CoordFrame.JOINT) {
+				Frame activeUser = getActiveRobot().getActiveFrame(CoordFrame.USER);
+
+				if (getActiveRobot().getCurCoordFrame() != CoordFrame.WORLD && activeUser != null) {
+					// Draw the axes of the active User frame
+					renderOriginAxes(activeUser.getOrigin(), convertNativeToWorld(activeUser.getNativeAxisVectors()),
+							10000f, color(0));
+
+				} else {
+					// Draw the axes of the World frame
+					renderOriginAxes(new PVector(0f, 0f, 0f), Fields.WORLD_AXES, 10000f, color(0));
+				}
+			}
+
+		} else if (getAxesState() == AxesDisplay.GRID) {
+			// Display gridlines spanning from axes of the current frame
+			Frame active;
+			float[][] displayAxes;
+			PVector displayOrigin;
+
+			switch (getActiveRobot().getCurCoordFrame()) {
+			case JOINT:
+			case WORLD:
+				displayAxes = new float[][] { { 1f, 0f, 0f }, { 0f, 1f, 0f }, { 0f, 0f, 1f } };
+				displayOrigin = new PVector(0f, 0f, 0f);
+				break;
+			case TOOL:
+				active = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
+				displayAxes = active.getNativeAxisVectors();
+				displayOrigin = eePoint.position;
+				break;
+			case USER:
+				active = getActiveRobot().getActiveFrame(CoordFrame.USER);
+				displayAxes = active.getNativeAxisVectors();
+				displayOrigin = active.getOrigin();
+				break;
+			default:
+				// No gridlines are displayed in the Joint Coordinate Frame
+				return;
+			}
+
+			// Draw grid lines every 100 units, from -3500 to 3500, in the x and
+			// y plane, on the floor plane
+			renderGridlines(displayAxes, displayOrigin, 35, 100);
+		}
+	}
+
+	/**
+	 * Gridlines are drawn, spanning from two of the three axes defined by the
+	 * given axes vector set. The two axes that form a plane that has the lowest
+	 * offset of the xz-plane (hence the two vectors with the minimum y-values)
+	 * are chosen to be mapped to the xz-plane and their reflection on the
+	 * xz-plane are drawn the along with a grid is formed from the the two
+	 * reflection axes at the base of the Robot.
+	 * 
+	 * @param axesVectors
+	 *            A rotation matrix (in row major order) that defines the axes
+	 *            of the frame to map to the xz-plane
+	 * @param origin
+	 *            The xz-origin at which to drawn the reflection axes
+	 * @param halfNumOfLines
+	 *            Half the number of lines to draw for one of the axes
+	 * @param distBwtLines
+	 *            The distance between each gridline
+	 */
+	public void renderGridlines(float[][] axesVectors, PVector origin, int halfNumOfLines, float distBwtLines) {
+		int vectorPX = -1, vectorPZ = -1;
+
+		// Find the two vectors with the minimum y values
+		for (int v = 0; v < axesVectors.length; ++v) {
+			int limboX = (v + 1) % axesVectors.length, limboY = (limboX + 1) % axesVectors.length;
+			// Compare the y value of the current vector to those of the other
+			// two vectors
+			if (abs(axesVectors[v][1]) >= abs(axesVectors[limboX][1])
+					&& abs(axesVectors[v][1]) >= abs(axesVectors[limboY][1])) {
+				vectorPX = limboX;
+				vectorPZ = limboY;
+				break;
+			}
+		}
+
+		if (vectorPX == -1 || vectorPZ == -1) {
+			println("Invalid axes-origin pair for grid lines!");
+			return;
+		}
+
+		pushMatrix();
+		// Map the chosen two axes vectors to the xz-plane at the y-position of
+		// the Robot's base
+		applyMatrix(axesVectors[vectorPX][0], 0, axesVectors[vectorPZ][0], origin.x, 0, 1, 0,
+				getActiveRobot().getBasePosition().y, axesVectors[vectorPX][2], 0, axesVectors[vectorPZ][2], origin.z,
+				0, 0, 0, 1);
+
+		float lineLen = halfNumOfLines * distBwtLines;
+
+		// Draw axes lines in red
+		stroke(255, 0, 0);
+		line(-lineLen, 0, 0, lineLen, 0, 0);
+		line(0, 0, -lineLen, 0, 0, lineLen);
+		// Draw remaining gridlines in black
+		stroke(25, 25, 25);
+		for (int linePosScale = 1; linePosScale <= halfNumOfLines; ++linePosScale) {
+			line(distBwtLines * linePosScale, 0, -lineLen, distBwtLines * linePosScale, 0, lineLen);
+			line(-lineLen, 0, distBwtLines * linePosScale, lineLen, 0, distBwtLines * linePosScale);
+
+			line(-distBwtLines * linePosScale, 0, -lineLen, -distBwtLines * linePosScale, 0, lineLen);
+			line(-lineLen, 0, -distBwtLines * linePosScale, lineLen, 0, -distBwtLines * linePosScale);
+		}
+
+		popMatrix();
+		mapToRobotBasePlane();
+	}
+
+	/**
+	 * Given a set of 3 orthogonal unit vectors a point in space, lines are
+	 * drawn for each of the three vectors, which intersect at the origin point.
+	 *
+	 * @param origin
+	 *            A point in space representing the intersection of the three
+	 *            unit vectors
+	 * @param axesVectors
+	 *            A set of three orthogonal unti vectors
+	 * @param axesLength
+	 *            The length, to which the all axes, will be drawn
+	 * @param originColor
+	 *            The color of the point to draw at the origin
+	 */
+	public void renderOriginAxes(PVector origin, float[][] axesVectors, float axesLength, int originColor) {
+
+		pushMatrix();
+		// Transform to the reference frame defined by the axes vectors
+		applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
+				axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
+				axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
+				0, 0, 0, 1);
+
+		// X axis
+		stroke(255, 0, 0);
+		line(-axesLength, 0, 0, axesLength, 0, 0);
+		// Y axis
+		stroke(0, 255, 0);
+		line(0, -axesLength, 0, 0, axesLength, 0);
+		// Z axis
+		stroke(0, 0, 255);
+		line(0, 0, -axesLength, 0, 0, axesLength);
+
+		// Draw a sphere on the positive direction for each axis
+		float dotPos = max(100f, min(axesLength, 500));
+		textFont(Fields.bond, 18);
+
+		stroke(originColor);
+		sphere(4);
+		stroke(0);
+		translate(dotPos, 0, 0);
+		sphere(4);
+
+		pushMatrix();
+		rotateX(-PI / 2f);
+		rotateY(-PI);
+		text("X-axis", 0, 0, 0);
+		popMatrix();
+
+		translate(-dotPos, dotPos, 0);
+		sphere(4);
+
+		pushMatrix();
+		rotateX(-PI / 2f);
+		rotateY(-PI);
+		text("Y-axis", 0, 0, 0);
+		popMatrix();
+
+		translate(0, -dotPos, dotPos);
+		sphere(4);
+
+		pushMatrix();
+		rotateX(-PI / 2f);
+		rotateY(-PI);
+		text("Z-axis", 0, 0, 0);
+		popMatrix();
+
+		popMatrix();
+	}
+
+	/**
+	 * Display any currently taught points during the processes of either the
+	 * 3-Point, 4-Point, or 6-Point Methods.
+	 */
+	public void renderTeachPoints() {
+		// Teach points are displayed only while the Robot is being taught a
+		// frame
+		if (teachFrame != null && mode.getType() == ScreenType.TYPE_TEACH_POINTS) {
+
+			int size = 3;
+
+			if (mode == ScreenMode.TEACH_6PT && teachFrame instanceof ToolFrame) {
+				size = 6;
+			} else if (mode == ScreenMode.TEACH_4PT && teachFrame instanceof UserFrame) {
+				size = 4;
+			}
+
+			for (int idx = 0; idx < size; ++idx) {
+				Point pt = teachFrame.getPoint(idx);
+
+				if (pt != null) {
+					pushMatrix();
+					// Applies the point's position
+					translate(pt.position.x, pt.position.y, pt.position.z);
+
+					// Draw color-coded sphere for the point
+					noFill();
+					int pointColor = color(255, 0, 255);
+
+					if (teachFrame instanceof ToolFrame) {
+
+						if (idx < 3) {
+							// TCP teach points
+							pointColor = color(130, 130, 130);
+						} else if (idx == 3) {
+							// Orient origin point
+							pointColor = color(255, 130, 0);
+						} else if (idx == 4) {
+							// Axes X-Direction point
+							pointColor = color(255, 0, 0);
+						} else if (idx == 5) {
+							// Axes Y-Diretion point
+							pointColor = color(0, 255, 0);
+						}
+					} else if (teachFrame instanceof UserFrame) {
+
+						if (idx == 0) {
+							// Orient origin point
+							pointColor = color(255, 130, 0);
+						} else if (idx == 1) {
+							// Axes X-Diretion point
+							pointColor = color(255, 0, 0);
+						} else if (idx == 2) {
+							// Axes Y-Diretion point
+							pointColor = color(0, 255, 0);
+						} else if (idx == 3) {
+							// Axes Origin point
+							pointColor = color(0, 0, 255);
+						}
+					}
+
+					stroke(pointColor);
+					sphere(3);
+
+					popMatrix();
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Displays all the windows and the right-hand text display.
+	 */
+	public void renderUI() {
+		textFont(Fields.medium, 14);
+		fill(0);
+		textAlign(RIGHT, TOP);
+		
+		RoboticArm r = getActiveRobot();
+		int lastTextPositionX = width - 20, lastTextPositionY = 20;
+		CoordFrame coord = r.getCurCoordFrame();
+		String coordFrame;
+		
+		if (coord == null) {
+			// Invalid state for coordinate frame
+			coordFrame = "Coordinate Frame: N/A";
+			
+		} else {
+			coordFrame = "Coordinate Frame: " + coord.toString();
+		}
+
+		Point RP = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles());
+
+		String[] cartesian = RP.toLineStringArray(true), joints = RP.toLineStringArray(false);
+		// Display the current Coordinate Frame name
+		text(coordFrame, lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+		// Display the Robot's speed value as a percent
+		text(String.format("Jog Speed: %d%%", activeRobot.getLiveSpeed()), lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+		// Display the title of the currently active scenario
+		String scenarioTitle;
+
+		if (activeScenario != null) {
+			scenarioTitle = "Scenario: " + activeScenario.getName();
+		} else {
+			scenarioTitle = "No active scenario";
+		}
+
+		text(scenarioTitle, lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 40;
+		// Display the Robot's current position and orientation ini the World
+		// frame
+		text("Robot Position and Orientation", lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+		text("World", lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+
+		for (String line : cartesian) {
+			text(line, lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		Frame active = r.getActiveFrame(CoordFrame.USER);
+
+		if (active != null) {
+			// Display Robot's current position and orientation in the currently
+			// active User frame
+			RP.position = convertToFrame(RP.position, active.getOrigin(), active.getOrientation());
+			RP.orientation = active.getOrientation().transformQuaternion(RP.orientation);
+			cartesian = RP.toLineStringArray(true);
+
+			lastTextPositionY += 20;
+			text(String.format("User: %d", getActiveRobot().getActiveUserFrame() + 1), lastTextPositionX,
+					lastTextPositionY);
+			lastTextPositionY += 20;
+
+			for (String line : cartesian) {
+				text(line, lastTextPositionX, lastTextPositionY);
+				lastTextPositionY += 20;
+			}
+		}
+
+		lastTextPositionY += 20;
+		// Display the Robot's current joint angle values
+		text("Joint", lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+		for (String line : joints) {
+			text(line, lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		WorldObject toEdit = getManager().getSelectedWO();
+		// Display the position and orientation of the active world object
+		if (toEdit != null) {
+			String[] dimFields = toEdit.dimFieldsToStringArray();
+			// Convert the values into the World Coordinate System
+			PVector position = convertNativeToWorld(toEdit.getLocalCenter());
+			PVector wpr = RMath.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RAD_TO_DEG);
+			// Create a set of uniform Strings
+			String[] fields = new String[] { String.format("X: %4.3f", position.x),
+					String.format("Y: %4.3f", position.y), String.format("Z: %4.3f", position.z),
+					String.format("W: %4.3f", -wpr.x), String.format("P: %4.3f", -wpr.z),
+					String.format("R: %4.3f", wpr.y) };
+
+			lastTextPositionY += 20;
+			text(toEdit.getName(), lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+			String dimDisplay = "";
+			// Display the dimensions of the world object (if any)
+			for (int idx = 0; idx < dimFields.length; ++idx) {
+				if ((idx + 1) < dimFields.length) {
+					dimDisplay += String.format("%-12s", dimFields[idx]);
+
+				} else {
+					dimDisplay += String.format("%s", dimFields[idx]);
+				}
+			}
+
+			text(dimDisplay, lastTextPositionX, lastTextPositionY);
+
+			lastTextPositionY += 20;
+			// Add space padding
+			text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX,
+					lastTextPositionY);
+			lastTextPositionY += 20;
+			text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]), lastTextPositionX,
+					lastTextPositionY);
+			lastTextPositionY += 20;
+
+			if (toEdit instanceof Part) {
+				Part p = (Part) toEdit;
+				// Convert the values into the World Coordinate System
+				position = convertNativeToWorld(p.getDefaultCenter());
+				wpr = RMath.matrixToEuler(p.getDefaultOrientationAxes()).mult(RAD_TO_DEG);
+				// Create a set of uniform Strings
+				fields = new String[] { String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
+						String.format("Z: %4.3f", position.z), String.format("W: %4.3f", -wpr.x),
+						String.format("P: %4.3f", -wpr.z), String.format("R: %4.3f", wpr.y) };
+
+				lastTextPositionY += 20;
+				// Add space padding
+				text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX,
+						lastTextPositionY);
+				lastTextPositionY += 20;
+				text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]), lastTextPositionX,
+						lastTextPositionY);
+				lastTextPositionY += 20;
+			}
+		}
+		
+		fill(215, 0, 0);
+		lastTextPositionY += 20;
+
+		// Display a message when there is an error with the Robot's
+		// movement
+		if (r.hasMotionFault()) {
+			text("Motion Fault (press SHIFT + Reset)", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		// Display a message if the Robot is in motion
+		if (r.modelInMotion()) {
+			text("Robot is moving", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		if (isProgramRunning()) {
+			text("Program executing", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		// Display a message while the robot is carrying an object
+		if (r.held != null) {
+			text("Object held", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+
+			PVector held_pos = r.held.getLocalCenter();
+			String obj_pos = String.format("(%f, %f, %f)", held_pos.x, held_pos.y, held_pos.z);
+			text(obj_pos, lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+		
+		fill(0);
+
+		// Display the current axes display state
+		text(String.format("Axes Display: %s", getAxesState().name()), lastTextPositionX, height - 50);
+
+		if (getAxesState() == AxesDisplay.GRID) {
+			// Display the current ee mapping state
+			text(String.format("EE Mapping: %s", getEEMapping().name()), lastTextPositionX, height - 30);
+		}
+
+		getManager().updateWindowDisplay();
+	}
 
 	/**
 	 * Restores all parts in the current scenario to their default position and
@@ -7605,192 +7402,6 @@ public class RobotRun extends PApplet {
 		setShift(!shift);
 	}
 
-	/**
-	 * Displays all the windows and the right-hand text display.
-	 */
-	public void renderUI() {
-		textFont(Fields.medium, 14);
-		fill(0);
-		textAlign(RIGHT, TOP);
-		
-		RoboticArm r = getActiveRobot();
-		int lastTextPositionX = width - 20, lastTextPositionY = 20;
-		CoordFrame coord = r.getCurCoordFrame();
-		String coordFrame;
-		
-		if (coord == null) {
-			// Invalid state for coordinate frame
-			coordFrame = "Coordinate Frame: N/A";
-			
-		} else {
-			coordFrame = "Coordinate Frame: " + coord.toString();
-		}
-
-		Point RP = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles());
-
-		String[] cartesian = RP.toLineStringArray(true), joints = RP.toLineStringArray(false);
-		// Display the current Coordinate Frame name
-		text(coordFrame, lastTextPositionX, lastTextPositionY);
-		lastTextPositionY += 20;
-		// Display the Robot's speed value as a percent
-		text(String.format("Jog Speed: %d%%", activeRobot.getLiveSpeed()), lastTextPositionX, lastTextPositionY);
-		lastTextPositionY += 20;
-		// Display the title of the currently active scenario
-		String scenarioTitle;
-
-		if (activeScenario != null) {
-			scenarioTitle = "Scenario: " + activeScenario.getName();
-		} else {
-			scenarioTitle = "No active scenario";
-		}
-
-		text(scenarioTitle, lastTextPositionX, lastTextPositionY);
-		lastTextPositionY += 40;
-		// Display the Robot's current position and orientation ini the World
-		// frame
-		text("Robot Position and Orientation", lastTextPositionX, lastTextPositionY);
-		lastTextPositionY += 20;
-		text("World", lastTextPositionX, lastTextPositionY);
-		lastTextPositionY += 20;
-
-		for (String line : cartesian) {
-			text(line, lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-
-		Frame active = r.getActiveFrame(CoordFrame.USER);
-
-		if (active != null) {
-			// Display Robot's current position and orientation in the currently
-			// active User frame
-			RP.position = convertToFrame(RP.position, active.getOrigin(), active.getOrientation());
-			RP.orientation = active.getOrientation().transformQuaternion(RP.orientation);
-			cartesian = RP.toLineStringArray(true);
-
-			lastTextPositionY += 20;
-			text(String.format("User: %d", getActiveRobot().getActiveUserFrame() + 1), lastTextPositionX,
-					lastTextPositionY);
-			lastTextPositionY += 20;
-
-			for (String line : cartesian) {
-				text(line, lastTextPositionX, lastTextPositionY);
-				lastTextPositionY += 20;
-			}
-		}
-
-		lastTextPositionY += 20;
-		// Display the Robot's current joint angle values
-		text("Joint", lastTextPositionX, lastTextPositionY);
-		lastTextPositionY += 20;
-		for (String line : joints) {
-			text(line, lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-
-		WorldObject toEdit = getManager().getSelectedWO();
-		// Display the position and orientation of the active world object
-		if (toEdit != null) {
-			String[] dimFields = toEdit.dimFieldsToStringArray();
-			// Convert the values into the World Coordinate System
-			PVector position = convertNativeToWorld(toEdit.getLocalCenter());
-			PVector wpr = RMath.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RAD_TO_DEG);
-			// Create a set of uniform Strings
-			String[] fields = new String[] { String.format("X: %4.3f", position.x),
-					String.format("Y: %4.3f", position.y), String.format("Z: %4.3f", position.z),
-					String.format("W: %4.3f", -wpr.x), String.format("P: %4.3f", -wpr.z),
-					String.format("R: %4.3f", wpr.y) };
-
-			lastTextPositionY += 20;
-			text(toEdit.getName(), lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-			String dimDisplay = "";
-			// Display the dimensions of the world object (if any)
-			for (int idx = 0; idx < dimFields.length; ++idx) {
-				if ((idx + 1) < dimFields.length) {
-					dimDisplay += String.format("%-12s", dimFields[idx]);
-
-				} else {
-					dimDisplay += String.format("%s", dimFields[idx]);
-				}
-			}
-
-			text(dimDisplay, lastTextPositionX, lastTextPositionY);
-
-			lastTextPositionY += 20;
-			// Add space padding
-			text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX,
-					lastTextPositionY);
-			lastTextPositionY += 20;
-			text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]), lastTextPositionX,
-					lastTextPositionY);
-			lastTextPositionY += 20;
-
-			if (toEdit instanceof Part) {
-				Part p = (Part) toEdit;
-				// Convert the values into the World Coordinate System
-				position = convertNativeToWorld(p.getDefaultCenter());
-				wpr = RMath.matrixToEuler(p.getDefaultOrientationAxes()).mult(RAD_TO_DEG);
-				// Create a set of uniform Strings
-				fields = new String[] { String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
-						String.format("Z: %4.3f", position.z), String.format("W: %4.3f", -wpr.x),
-						String.format("P: %4.3f", -wpr.z), String.format("R: %4.3f", wpr.y) };
-
-				lastTextPositionY += 20;
-				// Add space padding
-				text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX,
-						lastTextPositionY);
-				lastTextPositionY += 20;
-				text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]), lastTextPositionX,
-						lastTextPositionY);
-				lastTextPositionY += 20;
-			}
-		}
-		
-		fill(215, 0, 0);
-		lastTextPositionY += 20;
-
-		// Display a message when there is an error with the Robot's
-		// movement
-		if (r.hasMotionFault()) {
-			text("Motion Fault (press SHIFT + Reset)", lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-
-		// Display a message if the Robot is in motion
-		if (r.modelInMotion()) {
-			text("Robot is moving", lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-
-		if (isProgramRunning()) {
-			text("Program executing", lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-
-		// Display a message while the robot is carrying an object
-		if (r.held != null) {
-			text("Object held", lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-
-			PVector held_pos = r.held.getLocalCenter();
-			String obj_pos = String.format("(%f, %f, %f)", held_pos.x, held_pos.y, held_pos.z);
-			text(obj_pos, lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-		
-		fill(0);
-
-		// Display the current axes display state
-		text(String.format("Axes Display: %s", getAxesState().name()), lastTextPositionX, height - 50);
-
-		if (getAxesState() == AxesDisplay.GRID) {
-			// Display the current ee mapping state
-			text(String.format("EE Mapping: %s", getEEMapping().name()), lastTextPositionX, height - 30);
-		}
-
-		getManager().updateWindowDisplay();
-	}
-
 	public void spddn() {
 		int curSpeed = activeRobot.getLiveSpeed();
 		// Reduce the speed at which the Robot jogs
@@ -7882,7 +7493,7 @@ public class RobotRun extends PApplet {
 		}
 
 		getManager().updateWindowContentsPositions();
-		UI.updatePendantScreen();
+		updatePendantScreen();
 	}
 
 	public void TOOL1() {
@@ -7960,7 +7571,7 @@ public class RobotRun extends PApplet {
 		}
 
 		contents.get(contents.getLineIdx()).set(contents.getColumnIdx(), workingText.toString());
-		UI.updatePendantScreen();
+		updatePendantScreen();
 	}
 
 	/**
@@ -7995,7 +7606,7 @@ public class RobotRun extends PApplet {
 					// Update the display
 					getContentsMenu().setLineIdx(model.getActiveInstIdx());
 					getContentsMenu().setColumnIdx(0);
-					UI.updatePendantScreen();
+					updatePendantScreen();
 				}
 			}
 		}
@@ -8023,6 +7634,147 @@ public class RobotRun extends PApplet {
 		}
 
 		model.updatePreviousEEOrientation();
+	}
+	
+	public void updateContents() {
+		ArrayList<DisplayLine> prevContents = contents.copyContents();
+		contents.clear();
+
+		switch (mode) {
+		// Program list navigation/ edit
+		case NAV_PROGRAMS:
+		case SET_MACRO_PROG:
+			loadPrograms();
+			break;
+		case SET_CALL_PROG:
+			loadPrograms(editIdx);
+			break;
+
+		case PROG_CREATE:
+		case PROG_RENAME:
+		case PROG_COPY:
+			loadTextInput();
+			break;
+
+			// View instructions
+		case CONFIRM_INSERT:
+		case CONFIRM_RENUM:
+		case FIND_REPL:
+		case NAV_PROG_INSTR:
+		case SELECT_INSTR_DELETE:
+		case SELECT_COMMENT:
+		case SELECT_CUT_COPY:
+		case SELECT_PASTE_OPT:
+		case SET_MV_INSTR_TYPE:
+		case SET_MV_INSTR_REG_TYPE:
+		case SET_MV_INSTR_IDX:
+		case SET_MV_INSTR_SPD:
+		case SET_MV_INSTR_TERM:
+		case SET_MV_INSTR_OFFSET:
+		case SET_IO_INSTR_STATE:
+		case SET_IO_INSTR_IDX:
+		case SET_FRM_INSTR_TYPE:
+		case SET_FRAME_INSTR_IDX:
+		case SET_REG_EXPR_TYPE:
+		case SET_REG_EXPR_IDX1:
+		case SET_REG_EXPR_IDX2:
+		case SET_IF_STMT_ACT:
+		case SET_SELECT_STMT_ARG:
+		case SET_SELECT_ARGVAL:
+		case SET_SELECT_STMT_ACT:
+		case SET_EXPR_ARG:
+		case SET_BOOL_EXPR_ARG:
+		case SET_EXPR_OP:
+		case INPUT_DREG_IDX:
+		case INPUT_IOREG_IDX:
+		case INPUT_PREG_IDX1:
+		case INPUT_PREG_IDX2:
+		case INPUT_CONST:
+		case SET_BOOL_CONST:
+		case SET_LBL_NUM:
+		case SET_JUMP_TGT:
+			contents.setContents(loadInstructions(getActiveRobot().getActiveProgIdx()));
+			break;
+
+		case EDIT_MINST_POS:
+			contents.setContents(prevContents);
+			break;
+
+		case ACTIVE_FRAMES:
+			/* workingText corresponds to the active row's index display */
+			if (contents.getLineIdx() == 0) {
+				contents.addLine("Tool: ", workingText.toString());
+				contents.addLine("User: ", Integer.toString(getActiveRobot().getActiveUserFrame() + 1));
+
+			} else {
+				contents.addLine("Tool: ", Integer.toString(getActiveRobot().getActiveToolFrame() + 1));
+				contents.addLine("User: ", workingText.toString());
+			}
+			break;
+
+			// View frame details
+		case NAV_TOOL_FRAMES:
+			loadFrames(CoordFrame.TOOL);
+			break;
+		case NAV_USER_FRAMES:
+			loadFrames(CoordFrame.USER);
+			break;
+			// View frame details
+		case TFRAME_DETAIL:
+		case TEACH_3PT_TOOL:
+		case TEACH_6PT:
+		case UFRAME_DETAIL:
+		case TEACH_3PT_USER:
+		case TEACH_4PT:
+		case DIRECT_ENTRY_USER:
+		case DIRECT_ENTRY_TOOL:
+		case FRAME_METHOD_USER:
+		case FRAME_METHOD_TOOL:
+		case EDIT_PREG:
+		case EDIT_IOREG:
+			contents.setContents(prevContents);
+			break;
+
+		case EDIT_DREG_VAL:
+		case CP_DREG_COM:
+		case CP_DREG_VAL:
+		case CP_PREG_COM:
+		case CP_PREG_PT:
+			contents.setContents(prevContents);
+			break;
+
+		case SWAP_PT_TYPE:
+			loadPositionRegisters();
+			break;
+
+			// View/ edit macros
+		case NAV_MACROS:
+		case SET_MACRO_TYPE:
+		case SET_MACRO_BINDING:
+			loadMacros();
+			break;
+
+		case NAV_MF_MACROS:
+			loadManualFunct();
+			break;
+
+			// View/ edit registers
+		case NAV_DREGS:
+			loadDataRegisters();
+			break;
+		case NAV_PREGS:
+			loadPositionRegisters();
+			break;
+		case EDIT_DREG_COM:
+		case EDIT_PREG_COM:
+			loadTextInput();
+			break;
+		case NAV_IOREG:
+			loadIORegistersIntoContents();
+			break;
+		default:
+			break;
+		}
 	}
 
 	/**
@@ -8056,6 +7808,255 @@ public class RobotRun extends PApplet {
 		int instSize = getActiveRobot().getActiveProg().getNumOfInst();
 		getActiveRobot().setActiveInstIdx(min(getActiveRobot().getActiveInstIdx(), instSize));
 		lastScreen();
+	}
+	
+	public void updateOptions() {
+		options.clear();
+
+		switch (mode) {
+		// Main menu and submenus
+		case NAV_MAIN_MENU:
+			options.addLine("1 Frames");
+			options.addLine("2 Macros");
+			options.addLine("3 Manual Fncts");
+			options.addLine("4 I/O Registers");
+			break;
+
+		case NAV_PROG_INSTR:
+			Program p = activeRobot.getActiveProg();
+			Instruction inst = activeRobot.getActiveInstruction();
+
+			if (inst instanceof MotionInstruction && contents.getColumnIdx() == 4) {
+				// Show the position associated with the active motion
+				// instruction
+				MotionInstruction mInst = (MotionInstruction) inst;
+				Point pt = mInst.getPoint(p);
+
+				if (pt != null) {
+					boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
+					String[] pregEntry = pt.toLineStringArray(isCartesian);
+
+					for (String line : pregEntry) {
+						options.addLine(line);
+					}
+				}
+			}
+
+			break;
+
+		case EDIT_IOREG:
+			options.addLine("OFF");
+			options.addLine("ON");
+			break;
+
+		case CONFIRM_PROG_DELETE:
+			options.addLine("Delete selected program?");
+			break;
+
+			// Instruction options
+		case NAV_INSTR_MENU:
+			options.addLine("1 Undo");
+			options.addLine("2 Insert");
+			options.addLine("3 Delete");
+			options.addLine("4 Cut/ Copy");
+			options.addLine("5 Paste");
+			options.addLine("6 Find/ Replace");
+			options.addLine("7 Renumber");
+			options.addLine("8 Comment");
+			break;
+		case CONFIRM_INSERT:
+			options.addLine("Enter number of lines to insert:");
+			options.addLine("\0" + workingText);
+			break;
+		case SELECT_INSTR_DELETE:
+			options.addLine("Select lines to delete (ENTER).");
+			break;
+		case SELECT_CUT_COPY:
+			options.addLine("Select lines to cut/ copy (ENTER).");
+			break;
+		case SELECT_PASTE_OPT:
+			options.addLine("1 Logic");
+			options.addLine("2 Position");
+			options.addLine("3 Pos ID");
+			options.addLine("4 R Logic");
+			options.addLine("5 R Position");
+			options.addLine("6 R Pos ID");
+			options.addLine("7 RM Pos ID");
+			break;
+		case FIND_REPL:
+			options.addLine("Enter text to search for:");
+			options.addLine("\0" + workingText);
+			break;
+		case CONFIRM_RENUM:
+			options.addLine("Renumber program positions?");
+			break;
+		case SELECT_COMMENT:
+			options.addLine("Select lines to comment/uncomment.");
+			break;
+
+			// Instruction edit options
+		case SET_MV_INSTR_TYPE:
+		case SET_MV_INSTR_REG_TYPE:
+		case SET_MV_INSTR_IDX:
+		case SET_MV_INSTR_SPD:
+		case SET_MV_INSTR_TERM:
+		case SET_MV_INSTR_OFFSET:
+		case SET_IO_INSTR_STATE:
+		case SET_IO_INSTR_IDX:
+		case SET_FRM_INSTR_TYPE:
+		case SET_FRAME_INSTR_IDX:
+		case SET_REG_EXPR_TYPE:
+		case SET_REG_EXPR_IDX1:
+		case SET_REG_EXPR_IDX2:
+		case SET_IF_STMT_ACT:
+		case SET_SELECT_STMT_ARG:
+		case SET_SELECT_ARGVAL:
+		case SET_SELECT_STMT_ACT:
+		case SET_EXPR_ARG:
+		case SET_BOOL_EXPR_ARG:
+		case SET_EXPR_OP:
+		case INPUT_DREG_IDX:
+		case INPUT_IOREG_IDX:
+		case INPUT_PREG_IDX1:
+		case INPUT_PREG_IDX2:
+		case INPUT_CONST:
+		case SET_BOOL_CONST:
+		case SET_LBL_NUM:
+		case SET_JUMP_TGT:
+			loadInstrEdit(mode);
+			break;
+
+			// Insert instructions (non-movemet)
+		case SELECT_INSTR_INSERT:
+			options.addLine("1. I/O");
+			options.addLine("2. Frames");
+			options.addLine("3. Registers");
+			options.addLine("4. IF/SELECT");
+			options.addLine("5. JMP/LBL");
+			options.addLine("6. CALL");
+			/*
+			 * Only allow the user to add robot call instructions when the
+			 * second robot is in the application
+			 */
+			if (getManager().getRobotButtonState()) {
+				options.addLine("6. RCALL");
+			}
+			break;
+		case SELECT_IO_INSTR_REG:
+			loadIORegisters();
+			break;
+		case SELECT_FRAME_INSTR_TYPE:
+			options.addLine("1. TFRAME_NUM = ...");
+			options.addLine("2. UFRAME_NUM = ...");
+			break;
+		case SELECT_REG_STMT:
+			options.addLine("1. R[x] = (...)");
+			options.addLine("2. IO[x] = (...)");
+			options.addLine("3. PR[x] = (...)");
+			options.addLine("4. PR[x, y] = (...)");
+			break;
+		case SELECT_COND_STMT:
+			options.addLine("1. IF Stmt");
+			options.addLine("2. IF (...)");
+			options.addLine("3. SELECT Stmt");
+			break;
+		case SELECT_JMP_LBL:
+			options.addLine("1. LBL[...]");
+			options.addLine("2. JMP LBL[...]");
+			break;
+
+			// Frame navigation and edit menus
+		case SELECT_FRAME_MODE:
+			options.addLine("1. Tool Frame");
+			options.addLine("2. User Frame");
+			break;
+		case FRAME_METHOD_TOOL:
+			options.addLine("1. Three Point Method");
+			options.addLine("2. Six Point Method");
+			options.addLine("3. Direct Entry Method");
+			break;
+		case FRAME_METHOD_USER:
+			options.addLine("1. Three Point Method");
+			options.addLine("2. Four Point Method");
+			options.addLine("3. Direct Entry Method");
+			break;
+		case TEACH_3PT_TOOL:
+		case TEACH_3PT_USER:
+		case TEACH_4PT:
+		case TEACH_6PT:
+			loadPointList();
+			break;
+
+			// Macro edit menus
+		case SET_MACRO_TYPE:
+			options.addLine("1. Shift + User Key");
+			options.addLine("2. Manual Function");
+			break;
+		case SET_MACRO_BINDING:
+			options.addLine("1. Tool 1");
+			options.addLine("2. Tool 2");
+			options.addLine("3. MVMU");
+			options.addLine("4. Setup");
+			options.addLine("5. Status");
+			options.addLine("6. POSN");
+			options.addLine("7. I/O");
+			break;
+
+			// Data navigation and edit menus
+		case NAV_DATA:
+			options.addLine("1. Data Registers");
+			options.addLine("2. Position Registers");
+			break;
+		case NAV_PREGS:
+			PositionRegister pReg = activeRobot.getPReg(active_index);
+			Point pt = pReg.point;
+			// Display the point with the Position register of the highlighted
+			// line, when viewing the Position registers
+			if (pt != null) {
+				String[] pregEntry = pt.toLineStringArray(pReg.isCartesian);
+
+				for (String line : pregEntry) {
+					options.addLine(line);
+				}
+			}
+
+			break;
+		case CP_DREG_COM:
+			options.addLine(String.format("Move R[%d]'s comment to:", active_index + 1));
+			options.addLine(String.format("R[%s]", workingText));
+			break;
+		case CP_DREG_VAL:
+			options.addLine(String.format("Move R[%d]'s value to:", active_index + 1));
+			options.addLine(String.format("R[%s]", workingText));
+			break;
+		case CP_PREG_COM:
+			options.addLine(String.format("Move PR[%d]'s comment to:", active_index + 1));
+			options.addLine(String.format("PR[%s]", workingText));
+			break;
+		case CP_PREG_PT:
+			options.addLine(String.format("Move PR[%d]'s point to:", active_index + 1));
+			options.addLine(String.format("PR[%s]", workingText));
+			break;
+		case SWAP_PT_TYPE:
+			options.addLine("1. Cartesian");
+			options.addLine("2. Joint");
+			break;
+		case EDIT_DREG_VAL:
+			options.addLine(String.format("Input R[%d]'s value:", active_index + 1));
+			options.addLine("\0" + workingText);
+			break;
+
+			// Misc functions
+		case JUMP_TO_LINE:
+			options.addLine("Use number keys to enter line number to jump to");
+			options.addLine("\0" + workingText);
+			break;
+		default:
+			if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
+				options.addLine("1. Uppercase");
+				options.addLine("1. Lowercase");
+			}
+		}
 	}
 
 	public void updateRobotJogMotion(int set, int direction) {
@@ -8091,60 +8092,20 @@ public class RobotRun extends PApplet {
 
 		SCENARIO_UNDO.push(saveState);
 	}
-
-	/* update text displayed on screen TODO REMOVE AFTER PEDANT REFACTOR *
-	public void UI.updatePendantScreen() {
-		int next_px = display_px;
-		int next_py = display_py;
-		// int txt, bg;
-
-		UI.clearScreen();
-
-		// draw display background
-		cp5.addTextarea("txt").setPosition(display_px, display_py).setSize(display_width, display_height)
-		.setColorBackground(Fields.UI_LIGHT).moveTo(UI.pendantWindow);
-
-		String header = null;
-		// display the name of the program that is being edited
-		header = getHeader(mode);
-
-		if (header != null) {
-			// Display header field
-			cp5.addTextarea("header").setText(" " + header).setFont(fnt_con14).setPosition(next_px, next_py)
-			.setSize(display_width, 20).setColorValue(Fields.UI_LIGHT).setColorBackground(Fields.UI_DARK)
-			.hideScrollbar().show().moveTo(UI.pendantWindow);
-
-			next_py += 20;
-		}
-
-		getContents(mode);
-		getOptions(mode);
-
-		if (contents.size() == 0) {
-			options.setLocation(10, 20);
-			options.setMaxDisplay(8);
-		} else {
-			options.setLocation(10, 199);
-			options.setMaxDisplay(3);
-		}
-
-		contents.drawLines(mode);
-		options.drawLines(mode);
-
-		// display hints for function keys
-		String[] funct;
-		funct = getFunctionLabels(mode);
-
-		// set f button text labels
-		for (int i = 0; i < 5; i += 1) {
-			cp5.addTextarea("lf" + i).setText(funct[i]).setFont(fnt_con12)
-			// Keep function labels in their original place
-			.setPosition(display_width * i / 5 + 15, display_height - g1_py).setSize(display_width / 5 - 5, 20)
-			.setColorValue(Fields.UI_DARK).setColorBackground(Fields.UI_LIGHT).hideScrollbar().moveTo(UI.pendantWindow);
-		}
+	
+	/**
+	 * Update the header, contents, options, and function button labels on the
+	 * pendant.
+	 */
+	public void updatePendantScreen() {
+		updateContents();
+		updateOptions();
+		
+		getManager().renderPendantScreen(mode, getHeader(mode),
+				getContentsMenu(), getOptionsMenu(), getFunctionLabels(mode));
 	}
-	/**/
-
+	
+	
 	/**
 	 * Updates the default position and orientation of a world object based on
 	 * the input fields in the edit window.

@@ -40,7 +40,7 @@ public class CallInstruction extends Instruction {
 		RobotRun.getInstance().setRobot(tgtDevice.RID);
 		// Update the screen
 		RobotRun.getInstance().getContentsMenu().reset();
-		RobotRun.getInstance().getManager().updatePendantScreen();
+		RobotRun.getInstance().updatePendantScreen();
 
 		return 0;
 	}

@@ -187,7 +187,7 @@ public class WGUI implements ControlListener {
 							.setSize(windowTabs.getWidth(), 0);
 
 		// Initialize the window groups
-		pendantWindow = addGroup("Pendant", 0, 2 * offsetX, 440, 720);
+		pendantWindow = addGroup("PENDANT", 0, 2 * offsetX, 440, 720);
 		sharedElements = addGroup("SHARED", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		createObjWindow = addGroup("CREATEOBJ", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		editObjWindow = addGroup("EDITOBJ", relPos[0], relPos[1], windowTabs.getWidth(), 0);
@@ -364,13 +364,10 @@ public class WGUI implements ControlListener {
 	}
 	
 	private void pendant(PImage[][] buttonImages) {
-		
-		int display_width = pendantWindow.getWidth() - 20;
-		int display_height = 280; // height and width of display screen
-		
+				
 		int[] relPos = new int[] { offsetX, 0 };
 		
-		Textarea t = addTextarea("txt", "", pendantWindow, Fields.DISPLAY_PX,
+		addTextarea("txt", "", pendantWindow, Fields.DISPLAY_PX,
 				Fields.DISPLAY_PY, Fields.DISPLAY_WIDTH, Fields.DISPLAY_HEIGHT,
 				Fields.BUTTON_TEXT, Fields.UI_LIGHT, Fields.small);
 		
@@ -425,8 +422,8 @@ public class WGUI implements ControlListener {
 		/******************** Function Row ********************/
 		
 		int f1_px = offsetX;
-		int f1_py = 0 + display_height + 2;
-		int f_width = display_width / 5 - 1;
+		int f1_py = 0 + Fields.DISPLAY_HEIGHT + 2;
+		int f_width = Fields.DISPLAY_WIDTH / 5 - 1;
 		
 		manager.addButton("f1").setPosition(f1_px, f1_py)
 		.setSize(f_width, Fields.LARGE_BUTTON)
@@ -550,10 +547,7 @@ public class WGUI implements ControlListener {
 		manager.addButton("arrow_rt").setPosition(rt_px, rt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
 		.setImages(buttonImages[5]).updateSize().moveTo(pendantWindow);
 
-		// --------------------------------------------------------------//
-		// Group 2 //
-		// --------------------------------------------------------------//
-		int g2_offsetY = 0 + display_height + 4 * Fields.LARGE_BUTTON - 10;
+		int g2_offsetY = 0 + Fields.DISPLAY_HEIGHT + 4 * Fields.LARGE_BUTTON - 10;
 
 		/********************** Numpad Block *********************/
 
@@ -1944,6 +1938,140 @@ public class WGUI implements ControlListener {
 		 return relPosition;
 	 }
 	 
+	/**
+	 * TODO
+	 * 
+	 * @param mode
+	 * @param header
+	 * @param contents
+	 * @param options
+	 * @param funcLbls
+	 */
+	public void renderPendantScreen(ScreenMode mode, String header,
+			MenuScroll contents, MenuScroll options, String[] funcLbls) {
+		
+		Textarea headerLbl = getTextArea("header");
+
+		if (header != null) {
+			// Display header field
+			headerLbl.setText(header);
+			
+		} else {
+			headerLbl.hide();
+		}
+		
+		hidePendantScreen();
+
+		if (contents.size() == 0) {
+			options.setLocation(10, 20);
+			options.setMaxDisplay(8);
+			
+		} else {
+			options.setLocation(10, 199);
+			options.setMaxDisplay(3);
+		}
+
+		int lastTAIdx = renderMenu(contents, 0);
+		lastTAIdx = renderMenu(options, lastTAIdx);
+
+		// set f button text labels
+		for (int i = 0; i < 5; i += 1) {
+			getTextArea("fl" + i).setText(funcLbls[i]);
+		}
+	}
+	
+	public int renderMenu(MenuScroll menu, int TAIdx) {
+		ScreenMode m = app.getMode();
+		DisplayLine active;
+		boolean selectMode = false;
+		
+		if(m.getType() == ScreenType.TYPE_LINE_SELECT) { selectMode = true; } 
+		
+		menu.updateRenderIndices();
+		active = (menu.size() > 0) ? menu.get( menu.getLineIdx() ) : null;
+		
+		int lineNo = 0;
+		int bg, txt, selectInd = -1;
+		int next_py = menu.getYPos();
+		
+		for(int i = menu.getRenderStart(); i < menu.size() && lineNo < menu.getMaxDisplay(); i += 1) {
+			//get current line
+			DisplayLine temp = menu.get(i);
+			int next_px = temp.getxAlign() + menu.getXPos();
+
+			if(i == 0 || menu.get(i - 1).getItemIdx() != menu.get(i).getItemIdx()) {
+				selectInd = menu.get(i).getItemIdx();
+				if (active.getItemIdx() == selectInd) { bg = Fields.UI_DARK;  }
+				else												{ bg = Fields.UI_LIGHT; }
+				
+				//leading row select indicator []
+				getPendantDisplayTA(TAIdx++).setText("")
+									   .setPosition(next_px, next_py)
+									   .setSize(10, 20)
+									   .setColorBackground(bg);
+			}
+
+			next_px += 10;
+			
+			//draw each element in current line
+			for(int j = 0; j < temp.size(); j += 1) {
+				if(i == menu.getLineIdx()) {
+					if(j == menu.getColumnIdx() && !selectMode){
+						//highlight selected row + column
+						txt = Fields.UI_LIGHT;
+						bg = Fields.UI_DARK;          
+					} 
+					else if(selectMode && menu.isSelected(temp.getItemIdx())) {
+						//highlight selected line
+						txt = Fields.UI_LIGHT;
+						bg = Fields.UI_DARK;
+					}
+					else {
+						txt = Fields.UI_DARK;
+						bg = Fields.UI_LIGHT;
+					}
+				} else if(selectMode && menu.isSelected(temp.getItemIdx())) {
+					//highlight any currently selected lines
+					txt = Fields.UI_LIGHT;
+					bg = Fields.UI_DARK;
+				} else {
+					//display normal row
+					txt = Fields.UI_DARK;
+					bg = Fields.UI_LIGHT;
+				}
+
+				//grey text for comment also this
+				if(temp.size() > 0 && temp.get(0).contains("//")) {
+					txt = app.color(127);
+				}
+
+				getPendantDisplayTA(TAIdx++).setText(temp.get(j))
+									   .setPosition(next_px, next_py)
+									   .setSize(temp.get(j).length()*Fields.CHAR_WDTH + Fields.TXT_PAD, 20)
+									   .setColorValue(txt)
+									   .setColorBackground(bg);
+
+				next_px += temp.get(j).length()*Fields.CHAR_WDTH + (Fields.TXT_PAD - 8);
+			} //end draw line elements
+
+			//Trailing row select indicator []
+			if(i == menu.size() - 1 || menu.get(i).getItemIdx() != menu.get(i + 1).getItemIdx()) {
+				if (active.getItemIdx() == selectInd) { txt = Fields.UI_DARK;  }
+				else												{ txt = Fields.UI_LIGHT; }
+				
+				getPendantDisplayTA(TAIdx++).setText("")
+									   .setPosition(next_px, next_py)
+									   .setSize(10, 20)
+									   .setColorBackground(txt);
+			}
+
+			next_py += 20;
+			lineNo += 1;
+		}//end display contents
+		
+		return TAIdx;
+	}
+	 
 	 public void resetButtonColors() {
 		for (int i = 1; i <= 6; i += 1) {
 			((Button) manager.get("JOINT" + i + "_NEG")).setColorBackground(Fields.BUTTON_DEFAULT);
@@ -2478,142 +2606,6 @@ public class WGUI implements ControlListener {
 		 }
 	 }
 	 
-	public void updatePendantScreen() {
-		ScreenMode m = app.getMode();
-		
-		Textarea headerLbl = getTextArea("header");
-		String header = app.getHeader(m);
-
-		if (header != null) {
-			// Display header field
-			headerLbl.setText(header);
-			
-		} else {
-			headerLbl.hide();
-		}
-		
-		hidePendantScreen();
-		
-		app.getContents(m);
-		app.getOptions(m);
-		
-		MenuScroll contents = app.getContentsMenu();
-		MenuScroll options = app.getOptionsMenu();
-
-		if (contents.size() == 0) {
-			options.setLocation(10, 20);
-			options.setMaxDisplay(8);
-			
-		} else {
-			options.setLocation(10, 199);
-			options.setMaxDisplay(3);
-		}
-
-		int lastTAIdx = drawLines(contents, 0);
-		lastTAIdx = drawLines(options, lastTAIdx);
-		
-		// display hints for function keys
-		String[] funct = app.getFunctionLabels(m);
-
-		// set f button text labels
-		for (int i = 0; i < 5; i += 1) {
-			getTextArea("fl" + i).setText(funct[i]);
-		}
-	}
-	
-	public int drawLines(MenuScroll menu, int TAIdx) {
-		ScreenMode m = app.getMode();
-		DisplayLine active;
-		boolean selectMode = false;
-		
-		if(m.getType() == ScreenType.TYPE_LINE_SELECT) { selectMode = true; } 
-		
-		menu.updateRenderIndices();
-		active = (menu.size() > 0) ? menu.get( menu.getLineIdx() ) : null;
-				
-		int next_px = menu.getXPos() + 5, next_py = menu.getYPos(); 
-		int lineNo = 0;
-		int bg, txt, selectInd = -1;
-		
-		for(int i = menu.getRenderStart(); i < menu.size() && lineNo < menu.getMaxDisplay(); i += 1) {
-			//get current line
-			DisplayLine temp = menu.get(i);
-			next_px = temp.getxAlign();
-
-			if(i == 0 || menu.get(i - 1).getItemIdx() != menu.get(i).getItemIdx()) {
-				selectInd = menu.get(i).getItemIdx();
-				if (active.getItemIdx() == selectInd) { bg = Fields.UI_DARK;  }
-				else												{ bg = Fields.UI_LIGHT; }
-				
-				//leading row select indicator []
-				getPendantDisplayTA(TAIdx++).setText("")
-									   .setPosition(next_px, next_py)
-									   .setSize(10, 20)
-									   .setColorBackground(bg);
-			}
-
-			next_px += 10;
-			
-			//draw each element in current line
-			for(int j = 0; j < temp.size(); j += 1) {
-				if(i == menu.getLineIdx()) {
-					if(j == menu.getColumnIdx() && !selectMode){
-						//highlight selected row + column
-						txt = Fields.UI_LIGHT;
-						bg = Fields.UI_DARK;          
-					} 
-					else if(selectMode && menu.isSelected(temp.getItemIdx())) {
-						//highlight selected line
-						txt = Fields.UI_LIGHT;
-						bg = Fields.UI_DARK;
-					}
-					else {
-						txt = Fields.UI_DARK;
-						bg = Fields.UI_LIGHT;
-					}
-				} else if(selectMode && menu.isSelected(temp.getItemIdx())) {
-					//highlight any currently selected lines
-					txt = Fields.UI_LIGHT;
-					bg = Fields.UI_DARK;
-				} else {
-					//display normal row
-					txt = Fields.UI_DARK;
-					bg = Fields.UI_LIGHT;
-				}
-
-				//grey text for comment also this
-				if(temp.size() > 0 && temp.get(0).contains("//")) {
-					txt = app.color(127);
-				}
-
-				getPendantDisplayTA(TAIdx++).setText(temp.get(j))
-									   .setPosition(next_px, next_py)
-									   .setSize(temp.get(j).length()*Fields.CHAR_WDTH + Fields.TXT_PAD, 20)
-									   .setColorValue(txt)
-									   .setColorBackground(bg);
-
-				next_px += temp.get(j).length()*Fields.CHAR_WDTH + (Fields.TXT_PAD - 8);
-			} //end draw line elements
-
-			//Trailing row select indicator []
-			if(i == menu.size() - 1 || menu.get(i).getItemIdx() != menu.get(i + 1).getItemIdx()) {
-				if (active.getItemIdx() == selectInd) { txt = Fields.UI_DARK;  }
-				else												{ txt = Fields.UI_LIGHT; }
-				
-				getPendantDisplayTA(TAIdx++).setText("")
-									   .setPosition(next_px, next_py)
-									   .setSize(10, 20)
-									   .setColorBackground(txt);
-			}
-
-			next_px = 0;
-			next_py += 20;
-			lineNo += 1;
-		}//end display contents
-		
-		return TAIdx;
-	}
-	 
 	 /**
 	  * TODO
 	  * 
@@ -2756,7 +2748,7 @@ public class WGUI implements ControlListener {
 			b.setColorBackground(Fields.BUTTON_DEFAULT);
 		}
 		
-		updatePendantScreen();
+		updateWindowDisplay();
 	}
 	
 	/**
@@ -2772,7 +2764,7 @@ public class WGUI implements ControlListener {
 			b.setColorBackground(Fields.BUTTON_DEFAULT);
 		}
 		
-		updatePendantScreen();
+		updateWindowDisplay();
 	 }
 	 
 	/**

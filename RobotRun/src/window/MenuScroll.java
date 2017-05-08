@@ -2,10 +2,7 @@ package window;
 
 import java.util.ArrayList;
 
-import global.Fields;
 import robot.RobotRun;
-import screen.ScreenMode;
-import screen.ScreenType;
 
 public class MenuScroll {
 	private final RobotRun robotRun;
