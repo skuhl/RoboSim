@@ -62,8 +62,8 @@ public abstract class Fields {
 							B_TEXT_C = -1,
 							B_DEFAULT_C = -12171706,
 							B_ACTIVE_C = -2349016,
-							UI_LIGHT = -986896,
-							UI_DARK = -14145496;
+							UI_LIGHT_C = -986896,
+							UI_DARK_C = -14145496;
 	
 	/**
 	 * A font used for rendering text in the UI.

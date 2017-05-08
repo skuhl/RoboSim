@@ -145,7 +145,8 @@ public class WGUI implements ControlListener {
 		
 		/* A local reference to a position in the UI [x, y] used to position UI
 		 * elements relative to other UI elements */
-		int[] relPos = new int[] { 0, 0 };
+		float[] relPos = new float[] { 0f, 0f };
+		ControllerInterface<?> c = null;
 		
 		// The default set of labels for window tabs
 		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
@@ -177,6 +178,12 @@ public class WGUI implements ControlListener {
 		scenarioWindow = addGroup("SCENARIO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscWindow = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		limbo = addGroup("LIMBO", 0, 2 * offsetX, windowTabs.getWidth(), 0);
+		
+		relPos = relativePosition(windowTabs, RelativePoint.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
+		c = addButton("record", buttonImages[0], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
+		
+		relPos = relativePosition(c, RelativePoint.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
+		addButton("EE", buttonImages[1], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 		
 		// Initialize camera view buttons
 		addButton("FrontView", "F", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
@@ -347,14 +354,8 @@ public class WGUI implements ControlListener {
 	}
 	
 	private void pendant(PImage[][] buttonImages) {
-				
-		int[] relPos = new int[] { offsetX, 0 };
-		
-		addTextarea("txt", "", pendantWindow, offsetX, 0,
-				Fields.PENDANT_SCREEN_WIDTH, Fields.PENDANT_SCREEN_HEIGHT,
-				Fields.B_TEXT_C, Fields.UI_LIGHT, Fields.small);
-		
-		/********************** Top row buttons **********************/
+		ControllerInterface<?> c1 = null, c2 = null;
+		float[] relPos = new float[] { offsetX, 0 };
 
 		// calculate how much space each button will be given
 		int button_offsetX = Fields.LARGE_BUTTON + 1;
@@ -363,32 +364,109 @@ public class WGUI implements ControlListener {
 		int record_normal_px = WGUI.lButtonWidth * 5 + Fields.LARGE_BUTTON + 1;
 		int record_normal_py = 0;
 		
-		manager.addButton("record_normal")
-			.setPosition(record_normal_px, record_normal_py)
-			.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-			.setImages(buttonImages[0])
-			.updateSize();
-
 		int EE_normal_px = record_normal_px + Fields.LARGE_BUTTON + 1;
 		int EE_normal_py = 0;
-		manager.addButton("EE")
-			.setPosition(EE_normal_px, EE_normal_py)
-			.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-			.setImages(buttonImages[1])
-			.updateSize();
 		
-		/******************* Pendant Screen ********************/
+		int f1_px = offsetX;
+		int f1_py = 0 + Fields.PENDANT_SCREEN_HEIGHT + 2;
+		int f_width = Fields.PENDANT_SCREEN_WIDTH / 5 - 1;
+		
+		int f2_px = f1_px + f_width + 1;
+		int f2_py = f1_py;
+		
+		int f3_px = f2_px + f_width + 1;
+		int f3_py = f2_py;
+		
+		int f4_px = f3_px + f_width + 1;
+		int f4_py = f3_py;
+		
+		int f5_px = f4_px + f_width + 1;
+		int f5_py = f4_py;
+		
+		int st_px = f1_px;
+		int st_py = f1_py + button_offsetY + 10;
+
+		int mu_px = st_px + Fields.LARGE_BUTTON + 19;
+		int mu_py = st_py;
+
+		int se_px = mu_px + Fields.LARGE_BUTTON + 15;
+		int se_py = mu_py;
+
+		int ed_px = se_px + button_offsetX;
+		int ed_py = se_py;
+
+		int da_px = ed_px + button_offsetX;
+		int da_py = ed_py;
+
+		int fn_px = da_px + Fields.LARGE_BUTTON + 15;
+		int fn_py = da_py;
+		
+		int sf_px = fn_px + Fields.LARGE_BUTTON + 19;
+		int sf_py = fn_py;
+		
+		int pr_px = mu_px;
+		int pr_py = mu_py + button_offsetY;
+		
+		int ne_px = fn_px;
+		int ne_py = mu_py + button_offsetY;
+		
+		button_offsetY = Fields.SMALL_BUTTON + 1;
+
+		int up_px = ed_px + 5;
+		int up_py = ed_py + button_offsetY + 10;
+
+		int dn_px = up_px;
+		int dn_py = up_py + button_offsetY;
+		
+		int lt_px = dn_px - button_offsetX;
+		int lt_py = dn_py - button_offsetY / 2;
+		
+		int rt_px = dn_px + button_offsetX;
+		int rt_py = lt_py;
+		
+		int g2_offsetY = 0 + Fields.PENDANT_SCREEN_HEIGHT + 4 * Fields.LARGE_BUTTON - 10;
+		
+		int LINE_px = ed_px - 7 * button_offsetX / 2;
+		int LINE_py = g2_offsetY + 5 * button_offsetY;
+
+		int PERIOD_px = LINE_px + button_offsetX;
+		int PERIOD_py = LINE_py - button_offsetY;
+
+		int COMMA_px = PERIOD_px + button_offsetX;
+		int COMMA_py = PERIOD_py;
+
+		int POSN_px = LINE_px + button_offsetX;
+		int POSN_py = LINE_py;
+
+		int IO_px = POSN_px + button_offsetX;
+		int IO_py = POSN_py;
+
+		int NUM_px = LINE_px;
+		int NUM_py = LINE_py - button_offsetY;
+
+		int RESET_px = LINE_px;
+		int RESET_py = NUM_py;
+		int BKSPC_px = RESET_px + button_offsetX;
+		int BKSPC_py = RESET_py;
+
+		int ITEM_px = BKSPC_px + button_offsetX;
+		int ITEM_py = BKSPC_py;
+		
+		// Pendant screen background?
+		c1 = addTextarea("txt", "", pendantWindow, offsetX, 0,
+				Fields.PENDANT_SCREEN_WIDTH, Fields.PENDANT_SCREEN_HEIGHT,
+				Fields.B_TEXT_C, Fields.UI_LIGHT_C, Fields.small);
 		
 		// Pendant header
 		addTextarea("header", "\0", pendantWindow, offsetX,	0,
-				Fields.PENDANT_SCREEN_WIDTH, 20, Fields.UI_LIGHT,
-				Fields.UI_DARK, Fields.medium);
+				Fields.PENDANT_SCREEN_WIDTH, 20, Fields.UI_LIGHT_C,
+				Fields.UI_DARK_C, Fields.medium);
 		
 		// Start with 25 text-areas for pendant output
 		for (int idx = 0; idx < 25; ++idx) {
 			displayLines.add( addTextarea(String.format("ps%d", idx), "\0",
-					pendantWindow, 0, 0, 10, 20, Fields.UI_DARK,
-					Fields.UI_LIGHT, Fields.medium) );
+					pendantWindow, 10, 0, 10, 20, Fields.UI_DARK_C,
+					Fields.UI_LIGHT_C, Fields.medium) );
 		}
 		
 		// Function button labels
@@ -398,242 +476,231 @@ public class WGUI implements ControlListener {
 			int posY = Fields.PENDANT_SCREEN_HEIGHT - Fields.PENDANT_Y;
 			
 			addTextarea("fl" + i, "\0", pendantWindow, posX, posY,
-					Fields.PENDANT_SCREEN_WIDTH / 5 - 5, 20, 0, Fields.UI_LIGHT,
+					Fields.PENDANT_SCREEN_WIDTH / 5 - 5, 20, 0, Fields.UI_LIGHT_C,
 					Fields.small);
 		}
 		
-		/******************** Function Row ********************/
+		// Function buttons
 		
-		int f1_px = offsetX;
-		int f1_py = 0 + Fields.PENDANT_SCREEN_HEIGHT + 2;
-		int f_width = Fields.PENDANT_SCREEN_WIDTH / 5 - 1;
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 2);
+		c1 = addButton("f1", "F1", pendantWindow, relPos[0], relPos[1],
+				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 		
-		manager.addButton("f1").setPosition(f1_px, f1_py)
-		.setSize(f_width, Fields.LARGE_BUTTON)
-		.setCaptionLabel("F1")
-		.setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C)
-		.moveTo(pendantWindow);
-
-		int f2_px = f1_px + f_width + 1;
-		int f2_py = f1_py;
-		manager.addButton("f2").setPosition(f2_px, f2_py)
-		.setSize(f_width, Fields.LARGE_BUTTON)
-		.setCaptionLabel("F2")
-		.setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C)
-		.moveTo(pendantWindow);
-
-		int f3_px = f2_px + f_width + 1;
-		int f3_py = f2_py;
-		manager.addButton("f3").setPosition(f3_px, f3_py)
-		.setSize(f_width, Fields.LARGE_BUTTON)
-		.setCaptionLabel("F3")
-		.setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C)
-		.moveTo(pendantWindow);
-
-		int f4_px = f3_px + f_width + 1;
-		int f4_py = f3_py;
-		manager.addButton("f4").setPosition(f4_px, f4_py)
-		.setSize(f_width, Fields.LARGE_BUTTON)
-		.setCaptionLabel("F4")
-		.setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C)
-		.moveTo(pendantWindow);
-
-		int f5_px = f4_px + f_width + 1;
-		int f5_py = f4_py;
-		manager.addButton("f5").setPosition(f5_px, f5_py)
-		.setSize(f_width, Fields.LARGE_BUTTON)
-		.setCaptionLabel("F5")
-		.setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C)
-		.moveTo(pendantWindow);
-
-		/********************** Step/Shift Row **********************/
-
-		int st_px = f1_px;
-		int st_py = f1_py + button_offsetY + 10;
-		manager.addButton("step").setPosition(st_px, st_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
-		.setCaptionLabel("STEP").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int mu_px = st_px + Fields.LARGE_BUTTON + 19;
-		int mu_py = st_py;
-		manager.addButton("menu").setPosition(mu_px, mu_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("MENU").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int se_px = mu_px + Fields.LARGE_BUTTON + 15;
-		int se_py = mu_py;
-		manager.addButton("select").setPosition(se_px, se_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("SELECT").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int ed_px = se_px + button_offsetX;
-		int ed_py = se_py;
-		manager.addButton("edit").setPosition(ed_px, ed_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("EDIT").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int da_px = ed_px + button_offsetX;
-		int da_py = ed_py;
-		manager.addButton("data").setPosition(da_px, da_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("DATA").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int fn_px = da_px + Fields.LARGE_BUTTON + 15;
-		int fn_py = da_py;
-		manager.addButton("fctn").setPosition(fn_px, fn_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("FCTN").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int sf_px = fn_px + Fields.LARGE_BUTTON + 19;
-		int sf_py = fn_py;
-		manager.addButton("shift").setPosition(sf_px, sf_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
-		.setCaptionLabel("SHIFT").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int pr_px = mu_px;
-		int pr_py = mu_py + button_offsetY;
-		manager.addButton("prev").setPosition(pr_px, pr_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("PREV").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int ne_px = fn_px;
-		int ne_py = mu_py + button_offsetY;
-		manager.addButton("next").setPosition(ne_px, ne_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("NEXT").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		/*********************** Arrow Keys ***********************/
-		button_offsetY = Fields.SMALL_BUTTON + 1;
-
-		int up_px = ed_px + 5;
-		int up_py = ed_py + button_offsetY + 10;
-		manager.addButton("arrow_up").setPosition(up_px, up_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-		.setImages(buttonImages[2]).updateSize().moveTo(pendantWindow);
-
-		int dn_px = up_px;
-		int dn_py = up_py + button_offsetY;
-		manager.addButton("arrow_dn").setPosition(dn_px, dn_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-		.setImages(buttonImages[3]).updateSize().moveTo(pendantWindow);
+		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 1, 0);
+		c2 = addButton("f2", "F2", pendantWindow, relPos[0], relPos[1],
+				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 		
-		int lt_px = dn_px - button_offsetX;
-		int lt_py = dn_py - button_offsetY / 2;
-		manager.addButton("arrow_lt").setPosition(lt_px, lt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-		.setImages(buttonImages[4]).updateSize().moveTo(pendantWindow);
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		c2 = addButton("f3", "F3", pendantWindow, relPos[0], relPos[1],
+				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 		
-		int rt_px = dn_px + button_offsetX;
-		int rt_py = lt_py;
-		manager.addButton("arrow_rt").setPosition(rt_px, rt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-		.setImages(buttonImages[5]).updateSize().moveTo(pendantWindow);
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		c2 = addButton("f4", "F4", pendantWindow, relPos[0], relPos[1],
+				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		c2 = addButton("f5", "F5", pendantWindow, relPos[0], relPos[1],
+				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
+		
+		
+		// Step button
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 11);
+		c1 = addButton("step", "STEP", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.LARGE_BUTTON, Fields.bond);
+		
+		// Menu button
+		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 19, 0);
+		c1 = addButton("menu", "MENU", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Previous button
+		float smLrDiff = Fields.LARGE_BUTTON - Fields.SMALL_BUTTON;
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0,	smLrDiff +
+				16);
+		addButton("prev", "PREV", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Select button
+		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 15, 0);
+		c2 = addButton("select", "SELECT", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Edit button
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		c2 = addButton("edit", "EDIT", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Data button
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		c2 = addButton("data", "DATA", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Function-Control button
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 15, 0);
+		c2 = addButton("fctn", "FCTN", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Next button
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0,	smLrDiff +
+				16);
+		addButton("next", "NEXT", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Shift button
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 19, 0);
+		addButton("shift", "SHIFT", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.LARGE_BUTTON, Fields.bond);
 
-		int g2_offsetY = 0 + Fields.PENDANT_SCREEN_HEIGHT + 4 * Fields.LARGE_BUTTON - 10;
+		// Arrow buttons
+		
+		relPos = relativePosition(getButton("edit"), RelativePoint.BOTTOM_LEFT,
+				smLrDiff / 2, 11);
+		c2 = addButton("arrow_up", pendantWindow, buttonImages[2], relPos[0],
+				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("arrow_dn", pendantWindow, buttonImages[3], relPos[0],
+				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
+		
+		relPos = relativePosition(getButton("select"), RelativePoint.BOTTOM_LEFT,
+				smLrDiff / 2, smLrDiff + 16);
+		addButton("arrow_lt", pendantWindow, buttonImages[4], relPos[0],
+				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
+		
+		relPos = relativePosition(getButton("data"), RelativePoint.BOTTOM_LEFT,
+				smLrDiff / 2, smLrDiff + 16);
+		addButton("arrow_rt", pendantWindow, buttonImages[5], relPos[0],
+				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
+		
+		
+		// Reset button column
+		
+		float btmColsY = c2.getPosition()[1] + c2.getWidth() + smLrDiff / 2;
+		float resPosX = getButton("step").getPosition()[0];
+		c1 = addButton("RESET", "RESET", pendantWindow, resPosX, btmColsY,
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("NUM7", "7", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("NUM4", "4", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("NUM1", "1", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("NUM0", "0", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("LINE", "LINE", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		
+		// Backspace button column
+		
+		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 1, 0);
+		c1 = addButton("BKSPC", "BKSPC", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("NUM8", "8", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("NUM5", "5", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("NUM2", "2", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("PERIOD", "PERIOD", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("POSN", "POSN", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
-		/********************** Numpad Block *********************/
-
-		int LINE_px = ed_px - 7 * button_offsetX / 2;
-		int LINE_py = g2_offsetY + 5 * button_offsetY;
-		manager.addButton("LINE").setPosition(LINE_px, LINE_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("-").setColorBackground(Fields.B_DEFAULT_C).setColorCaptionLabel(Fields.B_TEXT_C)
-		.moveTo(pendantWindow);
-
-		int PERIOD_px = LINE_px + button_offsetX;
-		int PERIOD_py = LINE_py - button_offsetY;
-		manager.addButton("PERIOD").setPosition(PERIOD_px, PERIOD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel(".").setColorBackground(Fields.B_DEFAULT_C).setColorCaptionLabel(Fields.B_TEXT_C)
-		.moveTo(pendantWindow);
-
-		int COMMA_px = PERIOD_px + button_offsetX;
-		int COMMA_py = PERIOD_py;
-		manager.addButton("COMMA").setPosition(COMMA_px, COMMA_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel(",").setColorBackground(Fields.B_DEFAULT_C).setColorCaptionLabel(Fields.B_TEXT_C)
-		.moveTo(pendantWindow);
-
-		int POSN_px = LINE_px + button_offsetX;
-		int POSN_py = LINE_py;
-		manager.addButton("POSN").setPosition(POSN_px, POSN_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("POSN").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int IO_px = POSN_px + button_offsetX;
-		int IO_py = POSN_py;
-		manager.addButton("IO").setPosition(IO_px, IO_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("I/O").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int NUM_px = LINE_px;
-		int NUM_py = LINE_py - button_offsetY;
-		for (int i = 0; i < 10; i += 1) {
-			manager.addButton("NUM" + i).setPosition(NUM_px, NUM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-			.setCaptionLabel("" + i).setColorBackground(Fields.B_DEFAULT_C)
-			.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-			if (i % 3 == 0) {
-				NUM_px = LINE_px;
-				NUM_py -= button_offsetY;
-			} else {
-				NUM_px += button_offsetX;
-			}
-		}
-
-		int RESET_px = LINE_px;
-		int RESET_py = NUM_py;
-		manager.addButton("RESET").setPosition(RESET_px, RESET_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("RESET").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int BKSPC_px = RESET_px + button_offsetX;
-		int BKSPC_py = RESET_py;
-		manager.addButton("BKSPC").setPosition(BKSPC_px, BKSPC_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("BKSPC").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int ITEM_px = BKSPC_px + button_offsetX;
-		int ITEM_py = BKSPC_py;
-		manager.addButton("ITEM").setPosition(ITEM_px, ITEM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("ITEM").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
+		
+		// Item button column
+		
+		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 1, 0);
+		c1 = addButton("ITEM", "ITEM", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("NUM9", "9", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("NUM6", "6", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("NUM3", "3", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("COMMA", "COMMA", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("IO", "I/O", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		
+		// Util Block
+		
+		relPos = relativePosition(getButton("arrow_dn"), RelativePoint.BOTTOM_LEFT,
+				-smLrDiff / 2, 11);
+		c1 = addButton("ENTER", "ENTER", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("TOOL1", "TOOL1", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("TOOL2", "TOOL2", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("MVMU", "MVMU", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("SETUP", "SETUP", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("status", "STATUS", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
 		/*********************** Util Block *************************/
 
 		int ENTER_px = ed_px;
 		int ENTER_py = g2_offsetY;
-		manager.addButton("ENTER").setPosition(ENTER_px, ENTER_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("ENTER").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int TOOL1_px = ENTER_px;
 		int TOOL1_py = ENTER_py + button_offsetY;
-		manager.addButton("TOOL1").setPosition(TOOL1_px, TOOL1_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("TOOL1").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int TOOL2_px = TOOL1_px;
 		int TOOL2_py = TOOL1_py + button_offsetY;
-		manager.addButton("TOOL2").setPosition(TOOL2_px, TOOL2_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("TOOL2").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int MOVEMENU_px = TOOL2_px;
 		int MOVEMENU_py = TOOL2_py + button_offsetY;
-		manager.addButton("MVMU").setPosition(MOVEMENU_px, MOVEMENU_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("MVMU").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int SETUP_px = MOVEMENU_px;
 		int SETUP_py = MOVEMENU_py + button_offsetY;
-		manager.addButton("SETUP").setPosition(SETUP_px, SETUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("SETUP").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int STATUS_px = SETUP_px;
 		int STATUS_py = SETUP_py + button_offsetY;
-		manager.addButton("status").setPosition(STATUS_px, STATUS_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("STATUS").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		/******************** Joint Control Block *******************/
 
@@ -732,6 +799,86 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
+	 * TODO
+	 * 
+	 * @param name
+	 * @param lblTxt
+	 * @param parent
+	 * @param posX
+	 * @param posY
+	 * @param wdh
+	 * @param hgt
+	 * @param lblFont
+	 * @return
+	 */
+	private MyButton addButton(String name, String lblTxt, Group parent,
+			float posX, float posY, int wdh, int hgt, PFont lblFont) {
+		
+		MyButton b = new MyButton(manager, name);
+		
+		b.setCaptionLabel(lblTxt)
+		 .setColorValue(Fields.B_TEXT_C)
+		 .setColorBackground(Fields.B_DEFAULT_C)
+		 .setColorActive(Fields.B_DEFAULT_C)
+		 .setPosition(posX, posY)
+	 	 .moveTo(parent)
+		 .setSize(wdh, hgt)
+		 .getCaptionLabel().setFont(lblFont);
+		
+		return b;
+	}
+	
+	/**
+	 * TODO
+	 * 
+	 * @param name
+	 * @param imgLbls
+	 * @param posX
+	 * @param posY
+	 * @param wdh
+	 * @param hgt
+	 * @return
+	 */
+	private MyButton addButton(String name, PImage[] imgLbls, float posX,
+			float posY, int wdh, int hgt) {
+		
+		MyButton b = new MyButton(manager, name);
+		
+		b.setImages(imgLbls)
+		 .setPosition(posX, posY)
+		 .setSize(wdh, hgt)
+		 .updateSize();
+		
+		return b;
+	}
+	
+	/**
+	 * TODO
+	 * 
+	 * @param name
+	 * @param parent
+	 * @param imgLbls
+	 * @param posX
+	 * @param posY
+	 * @param wdh
+	 * @param hgt
+	 * @return
+	 */
+	private MyButton addButton(String name, Group parent, PImage[] imgLbls,
+			float posX, float posY, int wdh, int hgt) {
+		
+		MyButton b = new MyButton(manager, name);
+		
+		b.setImages(imgLbls)
+		 .moveTo(parent)
+		 .setPosition(posX, posY)
+		 .setSize(wdh, hgt)
+		 .updateSize();
+		
+		return b;
+	}
+	
+	/**
 	 * Adds an empty dropdown list with the given name, parent, label
 	 * dimensions, list display length, and label font to the UI. The UI's
 	 * color scheme is applied to the new dropdown list.
@@ -779,7 +926,7 @@ public class WGUI implements ControlListener {
 	 * @param hgt	The height of the group element
 	 * @return		A reference to the new group
 	 */
-	private Group addGroup(String name, int posX, int posY, int wdh, int hgt) {
+	private Group addGroup(String name, float posX, float posY, int wdh, int hgt) {
 		return manager.addGroup(name).setPosition(posX, posY)
 				 .setBackgroundColor(Fields.BG_C)
 				 .setSize(wdh, hgt)
@@ -1685,8 +1832,8 @@ public class WGUI implements ControlListener {
 				
 				for (int idx = displayLines.size(); idx < newSize; ++idx) {
 					displayLines.add( idx, addTextarea(String.format("ps%d", idx),
-							"\0", pendantWindow, 0, 0, 10, 20, Fields.UI_DARK,
-							Fields.UI_LIGHT, Fields.medium) );
+							"\0", pendantWindow, 0, 0, 10, 20, Fields.UI_DARK_C,
+							Fields.UI_LIGHT_C, Fields.medium) );
 				}
 			}
 			
@@ -1876,8 +2023,8 @@ public class WGUI implements ControlListener {
 	  * @param offsetY	The y position offset from obj's position
 	  * @return			A doubleton containing the absolute x and y positions
 	  */
-	 private <T> int[] relativePosition(ControllerInterface<T> obj, RelativePoint pos, int offsetX, int offsetY) {
-		 int[] relPosition = new int[] { 0, 0 };
+	 private <T> float[] relativePosition(ControllerInterface<T> obj, RelativePoint pos, float offsetX, float offsetY) {
+		 float[] relPosition = new float[] { 0f, 0f };
 		 float[] objPosition = obj.getPosition();
 		 float[] objDimensions;
 
@@ -1940,7 +2087,7 @@ public class WGUI implements ControlListener {
 
 		if (header != null) {
 			// Display header field
-			headerLbl.setText(header);
+			headerLbl.setText(header).show();
 			
 		} else {
 			headerLbl.hide();
@@ -1987,8 +2134,8 @@ public class WGUI implements ControlListener {
 
 			if(i == 0 || menu.get(i - 1).getItemIdx() != menu.get(i).getItemIdx()) {
 				selectInd = menu.get(i).getItemIdx();
-				if (active.getItemIdx() == selectInd) { bg = Fields.UI_DARK;  }
-				else												{ bg = Fields.UI_LIGHT; }
+				if (active.getItemIdx() == selectInd) { bg = Fields.UI_DARK_C;  }
+				else												{ bg = Fields.UI_LIGHT_C; }
 				
 				//leading row select indicator []
 				getPendantDisplayTA(TAIdx++).setText("")
@@ -2004,26 +2151,26 @@ public class WGUI implements ControlListener {
 				if(i == menu.getLineIdx()) {
 					if(j == menu.getColumnIdx() && !selectMode){
 						//highlight selected row + column
-						txt = Fields.UI_LIGHT;
-						bg = Fields.UI_DARK;          
+						txt = Fields.UI_LIGHT_C;
+						bg = Fields.UI_DARK_C;          
 					} 
 					else if(selectMode && menu.isSelected(temp.getItemIdx())) {
 						//highlight selected line
-						txt = Fields.UI_LIGHT;
-						bg = Fields.UI_DARK;
+						txt = Fields.UI_LIGHT_C;
+						bg = Fields.UI_DARK_C;
 					}
 					else {
-						txt = Fields.UI_DARK;
-						bg = Fields.UI_LIGHT;
+						txt = Fields.UI_DARK_C;
+						bg = Fields.UI_LIGHT_C;
 					}
 				} else if(selectMode && menu.isSelected(temp.getItemIdx())) {
 					//highlight any currently selected lines
-					txt = Fields.UI_LIGHT;
-					bg = Fields.UI_DARK;
+					txt = Fields.UI_LIGHT_C;
+					bg = Fields.UI_DARK_C;
 				} else {
 					//display normal row
-					txt = Fields.UI_DARK;
-					bg = Fields.UI_LIGHT;
+					txt = Fields.UI_DARK_C;
+					bg = Fields.UI_LIGHT_C;
 				}
 
 				//grey text for comment also this
@@ -2042,8 +2189,8 @@ public class WGUI implements ControlListener {
 
 			//Trailing row select indicator []
 			if(i == menu.size() - 1 || menu.get(i).getItemIdx() != menu.get(i + 1).getItemIdx()) {
-				if (active.getItemIdx() == selectInd) { txt = Fields.UI_DARK;  }
-				else												{ txt = Fields.UI_LIGHT; }
+				if (active.getItemIdx() == selectInd) { txt = Fields.UI_DARK_C;  }
+				else												{ txt = Fields.UI_LIGHT_C; }
 				
 				getPendantDisplayTA(TAIdx++).setText("")
 									   .setPosition(next_px, next_py)
@@ -2129,7 +2276,7 @@ public class WGUI implements ControlListener {
 		 updateDimLblsAndFields();
 
 		 // Object Type dropdown list and label
-		 int[] relPos = new int[] { offsetX, offsetX };
+		 float[] relPos = new float[] { offsetX, offsetX };
 		 ControllerInterface<?> c = getTextArea("ObjTypeLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
@@ -2180,8 +2327,8 @@ public class WGUI implements ControlListener {
 		 c = getButton("ClearFields").setPosition(relPos[0], relPos[1]);
 		 // Update window background display
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 background.setBackgroundHeight(relPos[1])
-		 .setHeight(relPos[1])
+		 background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
+		 .setHeight( (int)Math.ceil( relPos[1] ) )
 		 .show();
 	 }
 
@@ -2195,8 +2342,8 @@ public class WGUI implements ControlListener {
 	  * @param initialYPos  The y position of the first text area-field pair
 	  * @returning          The x and y position of the last visible text area  in a 2-element integer array
 	  */
-	 private int[] updateDimLblAndFieldPositions(int initialXPos, int initialYPos) {
-		 int[] relPos = new int[] { initialXPos, initialYPos };
+	 private float[] updateDimLblAndFieldPositions(float initialXPos, float initialYPos) {
+		 float[] relPos = new float[] { initialXPos, initialYPos };
 		 int ddlIdx = 0;
 		 
 		 // Update the dimension dropdowns
@@ -2360,7 +2507,7 @@ public class WGUI implements ControlListener {
 		 getButton("ClearFields").hide();
 
 		 // Object list dropdown and label
-		 int[] relPos = new int[] { offsetX, offsetX };
+		 float[] relPos = new float[] { offsetX, offsetX };
 		 ControllerInterface<?> c = getTextArea("ObjLabel").setPosition(relPos[0], relPos[1]),
 				 				c0 = null;
 		 boolean isPart = getSelectedWO() instanceof Part;
@@ -2494,7 +2641,7 @@ public class WGUI implements ControlListener {
 			 relPos = relativePosition(c0, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			 c0 = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
 			 
-			 relPos =  new int[] { offsetX, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
+			 relPos =  new float[] { offsetX, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
 			 c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
 			
 			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX,
@@ -2518,8 +2665,8 @@ public class WGUI implements ControlListener {
 		 
 		 // Update window background display
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 background.setBackgroundHeight(relPos[1])
-		 .setHeight(relPos[1])
+		 background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
+		 .setHeight( (int)Math.ceil( relPos[1] ) )
 		 .show();
 	 }
 	 
@@ -2654,7 +2801,7 @@ public class WGUI implements ControlListener {
 	  */
 	 private void updateScenarioWindowContentPositions() {
 		// Scenario options label and radio buttons
-		int[] relPos = new int[] { offsetX, offsetX };
+		float[] relPos = new float[] { offsetX, offsetX };
 		ControllerInterface<?> c = getTextArea("SOptLbl").setPosition(relPos[0], relPos[1]);
 		
 		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, 0);
@@ -2716,8 +2863,8 @@ public class WGUI implements ControlListener {
 		
 		// Update window background display
 		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		background.setBackgroundHeight(relPos[1])
-				  .setHeight(relPos[1])
+		background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
+				  .setHeight( (int)Math.ceil( relPos[1] ) )
 				  .show();
 	 }
 	 
@@ -2758,7 +2905,7 @@ public class WGUI implements ControlListener {
 	 */
 	private void updateMiscWindowContentPositions() {
 		// Axes Display label
-		int[] relPos = new int[] { offsetX, offsetX };
+		float[] relPos = new float[] { offsetX, offsetX };
 		ControllerInterface<?> c = getTextArea("ActiveAxesDisplay").setPosition(relPos[0], relPos[1]);
 		// Axes Display dropdown
 		relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
@@ -2799,8 +2946,8 @@ public class WGUI implements ControlListener {
 	
 		// Update window background display
 		relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		background.setBackgroundHeight(relPos[1])
-		.setHeight(relPos[1])
+		background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
+		.setHeight( (int)Math.ceil( relPos[1] ) )
 		.show();
 	 }
 	
@@ -2857,7 +3004,7 @@ public class WGUI implements ControlListener {
 		 }
 
 		 // Update the camera view buttons
-		 int[] relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_RIGHT, offsetX, 0);
+		 float[] relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_RIGHT, offsetX, 0);
 
 		 Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
 		 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
