@@ -349,4 +349,18 @@ public class MenuScroll {
 	public boolean toggleSelect(int idx) {
 		return lineSelect[idx] = !lineSelect[idx];
 	}
+	
+	@Override
+	public String toString() {
+		String out = new String();
+		
+		for (DisplayLine l : lines) {
+			
+			out += l.toString();
+			
+		}
+		
+		
+		return out;
+	}
 }
