@@ -220,7 +220,7 @@ public class Program implements Iterable<Instruction> {
 
 					line = new DisplayLine(i, xPos);
 					xPos += field.length()*Fields.CHAR_WDTH + tokenOffset;
-				} else if(xPos > Fields.DISPLAY_WIDTH - 10) {
+				} else if(xPos > Fields.PENDANT_SCREEN_WIDTH - 10) {
 					instruct_list.add(line);
 					xPos = 2*Fields.CHAR_WDTH + tokenOffset;
 

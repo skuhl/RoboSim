@@ -37,14 +37,12 @@ public abstract class Fields {
 	public static final int TXT_PAD = 18;
 	public static final int PAD_OFFSET = 8;
 	
-	public static final int G1_PX = 0, 
-							G1_PY = SMALL_BUTTON - 14, // the left-top corner of group 1
-							G1_WIDTH = 440, 
-							G1_HEIGHT = 720, // group 1's width and height
-							DISPLAY_PX = 10,
-							DISPLAY_PY = 0, // the left-top corner of display screen
-							DISPLAY_WIDTH = G1_WIDTH - 20,
-							DISPLAY_HEIGHT = 280; // height and width of display screen
+	public static final int PENDANT_X = 0, 
+							PENDANT_Y = SMALL_BUTTON - 14,
+							PENDANT_WIDTH = 440, 
+							PENDANT_HEIGHT = 720,
+							PENDANT_SCREEN_WIDTH = PENDANT_WIDTH - 20,
+							PENDANT_SCREEN_HEIGHT = 280;
 	
 	public static final int PASTE_DEFAULT = 0,
 			PASTE_REVERSE = 0b1,
@@ -52,11 +50,23 @@ public abstract class Fields {
 			NEW_POSITION = 0b100,
 			REVERSE_MOTION = 0b1000;
 	
-	public static final int BUTTON_DEFAULT = -12171706,
-			BUTTON_ACTIVE = -2349016,
-			BUTTON_TEXT = -986896,
-			UI_LIGHT = -986896,
-			UI_DARK = -14145496;
+	/**
+	 * A color in the UI's color scheme.
+	 */
+	public static final int BG_C = -2960686,
+							F_TEXT_C = -16777216,
+							F_CURSOR_C = -16777216,
+							F_ACTIVE_C = -65536,
+							F_BG_C = -1,
+							F_FG_C = -16777216,
+							B_TEXT_C = -1,
+							B_DEFAULT_C = -12171706,
+							B_ACTIVE_C = -2349016,
+							UI_LIGHT = -986896,
+							UI_DARK = -14145496;
 	
+	/**
+	 * A font used for rendering text in the UI.
+	 */
 	public static PFont small, medium, bond;
 }
