@@ -76,12 +76,6 @@ public class WGUI implements ControlListener {
 							DIM_LBL = 3,
 							DIM_TXT = 3,
 							DIM_DDL = 1;
-	
-	/**
-	 * A color in the UI's color scheme.
-	 */
-	private final int BG_C, F_TEXT_C, F_CURSOR_C, F_ACTIVE_C, F_BG_C, F_FG_C,
-					  B_TEXT_C, B_DEFAULT_C, B_ACTIVE_C;
 
 	/**
 	 * The manager object, which contains all the UI elements.
@@ -140,17 +134,6 @@ public class WGUI implements ControlListener {
 	public WGUI(RobotRun appRef, PImage[][] buttonImages) {
 		app = appRef;
 		
-		// Initialize color scheme fields
-		BG_C = app.color(210);
-		F_TEXT_C = app.color(0);
-		F_CURSOR_C = app.color(0);
-		F_ACTIVE_C = app.color(255, 0, 0);
-		F_BG_C = app.color(255);
-		F_FG_C = app.color(0);
-		B_TEXT_C = app.color(255);
-		B_DEFAULT_C = app.color(70);
-		B_ACTIVE_C = app.color(220, 40, 40);
-		
 		manager = new ControlP5(appRef);
 		// Explicitly draw the ControlP5 elements
 		manager.setAutoDraw(false);
@@ -170,11 +153,11 @@ public class WGUI implements ControlListener {
 		// Initialize the window tab selection bar
 		windowTabs = (MyButtonBar)(new MyButtonBar(manager, "Tabs")
 			 // Sets button text color
-			 .setColorValue(B_TEXT_C)
-			 .setColorBackground(B_DEFAULT_C)
-			 .setColorActive(B_ACTIVE_C)
+			 .setColorValue(Fields.B_TEXT_C)
+			 .setColorBackground(Fields.B_DEFAULT_C)
+			 .setColorActive(Fields.B_ACTIVE_C)
 			 .setPosition(relPos[0], relPos[1])
-			 .setSize(440, tButtonHeight))
+			 .setSize(Fields.PENDANT_WIDTH, tButtonHeight))
 			 .addItems(windowList);
 		
 		windowTabs.getCaptionLabel().setFont(Fields.medium);
@@ -183,7 +166,7 @@ public class WGUI implements ControlListener {
 		relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_LEFT, 0, 0);
 		background = manager.addBackground("WindowBackground")
 							.setPosition(relPos[0], relPos[1])
-							.setBackgroundColor(BG_C)
+							.setBackgroundColor(Fields.BG_C)
 							.setSize(windowTabs.getWidth(), 0);
 
 		// Initialize the window groups
@@ -367,9 +350,9 @@ public class WGUI implements ControlListener {
 				
 		int[] relPos = new int[] { offsetX, 0 };
 		
-		addTextarea("txt", "", pendantWindow, Fields.DISPLAY_PX,
-				Fields.DISPLAY_PY, Fields.DISPLAY_WIDTH, Fields.DISPLAY_HEIGHT,
-				Fields.BUTTON_TEXT, Fields.UI_LIGHT, Fields.small);
+		addTextarea("txt", "", pendantWindow, offsetX, 0,
+				Fields.PENDANT_SCREEN_WIDTH, Fields.PENDANT_SCREEN_HEIGHT,
+				Fields.B_TEXT_C, Fields.UI_LIGHT, Fields.small);
 		
 		/********************** Top row buttons **********************/
 
@@ -397,9 +380,9 @@ public class WGUI implements ControlListener {
 		/******************* Pendant Screen ********************/
 		
 		// Pendant header
-		addTextarea("header", "\0", pendantWindow, Fields.DISPLAY_PX,
-				Fields.DISPLAY_PY, Fields.DISPLAY_WIDTH, 20,
-				Fields.UI_LIGHT, Fields.UI_DARK, Fields.medium);
+		addTextarea("header", "\0", pendantWindow, offsetX,	0,
+				Fields.PENDANT_SCREEN_WIDTH, 20, Fields.UI_LIGHT,
+				Fields.UI_DARK, Fields.medium);
 		
 		// Start with 25 text-areas for pendant output
 		for (int idx = 0; idx < 25; ++idx) {
@@ -411,25 +394,25 @@ public class WGUI implements ControlListener {
 		// Function button labels
 		for (int i = 0; i < 5; i += 1) {
 			// Calculate the position of each function label
-			int posX = Fields.DISPLAY_WIDTH * i / 5 + 15;
-			int posY = Fields.DISPLAY_HEIGHT - Fields.G1_PY;
+			int posX = Fields.PENDANT_SCREEN_WIDTH * i / 5 + 15;
+			int posY = Fields.PENDANT_SCREEN_HEIGHT - Fields.PENDANT_Y;
 			
 			addTextarea("fl" + i, "\0", pendantWindow, posX, posY,
-					Fields.DISPLAY_WIDTH / 5 - 5, 20, 0, Fields.UI_LIGHT,
+					Fields.PENDANT_SCREEN_WIDTH / 5 - 5, 20, 0, Fields.UI_LIGHT,
 					Fields.small);
 		}
 		
 		/******************** Function Row ********************/
 		
 		int f1_px = offsetX;
-		int f1_py = 0 + Fields.DISPLAY_HEIGHT + 2;
-		int f_width = Fields.DISPLAY_WIDTH / 5 - 1;
+		int f1_py = 0 + Fields.PENDANT_SCREEN_HEIGHT + 2;
+		int f_width = Fields.PENDANT_SCREEN_WIDTH / 5 - 1;
 		
 		manager.addButton("f1").setPosition(f1_px, f1_py)
 		.setSize(f_width, Fields.LARGE_BUTTON)
 		.setCaptionLabel("F1")
-		.setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C)
 		.moveTo(pendantWindow);
 
 		int f2_px = f1_px + f_width + 1;
@@ -437,8 +420,8 @@ public class WGUI implements ControlListener {
 		manager.addButton("f2").setPosition(f2_px, f2_py)
 		.setSize(f_width, Fields.LARGE_BUTTON)
 		.setCaptionLabel("F2")
-		.setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C)
 		.moveTo(pendantWindow);
 
 		int f3_px = f2_px + f_width + 1;
@@ -446,8 +429,8 @@ public class WGUI implements ControlListener {
 		manager.addButton("f3").setPosition(f3_px, f3_py)
 		.setSize(f_width, Fields.LARGE_BUTTON)
 		.setCaptionLabel("F3")
-		.setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C)
 		.moveTo(pendantWindow);
 
 		int f4_px = f3_px + f_width + 1;
@@ -455,8 +438,8 @@ public class WGUI implements ControlListener {
 		manager.addButton("f4").setPosition(f4_px, f4_py)
 		.setSize(f_width, Fields.LARGE_BUTTON)
 		.setCaptionLabel("F4")
-		.setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C)
 		.moveTo(pendantWindow);
 
 		int f5_px = f4_px + f_width + 1;
@@ -464,8 +447,8 @@ public class WGUI implements ControlListener {
 		manager.addButton("f5").setPosition(f5_px, f5_py)
 		.setSize(f_width, Fields.LARGE_BUTTON)
 		.setCaptionLabel("F5")
-		.setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C)
 		.moveTo(pendantWindow);
 
 		/********************** Step/Shift Row **********************/
@@ -473,56 +456,56 @@ public class WGUI implements ControlListener {
 		int st_px = f1_px;
 		int st_py = f1_py + button_offsetY + 10;
 		manager.addButton("step").setPosition(st_px, st_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
-		.setCaptionLabel("STEP").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("STEP").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int mu_px = st_px + Fields.LARGE_BUTTON + 19;
 		int mu_py = st_py;
 		manager.addButton("menu").setPosition(mu_px, mu_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("MENU").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("MENU").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int se_px = mu_px + Fields.LARGE_BUTTON + 15;
 		int se_py = mu_py;
 		manager.addButton("select").setPosition(se_px, se_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("SELECT").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("SELECT").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int ed_px = se_px + button_offsetX;
 		int ed_py = se_py;
 		manager.addButton("edit").setPosition(ed_px, ed_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("EDIT").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("EDIT").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int da_px = ed_px + button_offsetX;
 		int da_py = ed_py;
 		manager.addButton("data").setPosition(da_px, da_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("DATA").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("DATA").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int fn_px = da_px + Fields.LARGE_BUTTON + 15;
 		int fn_py = da_py;
 		manager.addButton("fctn").setPosition(fn_px, fn_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("FCTN").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("FCTN").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int sf_px = fn_px + Fields.LARGE_BUTTON + 19;
 		int sf_py = fn_py;
 		manager.addButton("shift").setPosition(sf_px, sf_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
-		.setCaptionLabel("SHIFT").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("SHIFT").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int pr_px = mu_px;
 		int pr_py = mu_py + button_offsetY;
 		manager.addButton("prev").setPosition(pr_px, pr_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("PREV").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("PREV").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int ne_px = fn_px;
 		int ne_py = mu_py + button_offsetY;
 		manager.addButton("next").setPosition(ne_px, ne_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("NEXT").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("NEXT").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		/*********************** Arrow Keys ***********************/
 		button_offsetY = Fields.SMALL_BUTTON + 1;
@@ -547,46 +530,46 @@ public class WGUI implements ControlListener {
 		manager.addButton("arrow_rt").setPosition(rt_px, rt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
 		.setImages(buttonImages[5]).updateSize().moveTo(pendantWindow);
 
-		int g2_offsetY = 0 + Fields.DISPLAY_HEIGHT + 4 * Fields.LARGE_BUTTON - 10;
+		int g2_offsetY = 0 + Fields.PENDANT_SCREEN_HEIGHT + 4 * Fields.LARGE_BUTTON - 10;
 
 		/********************** Numpad Block *********************/
 
 		int LINE_px = ed_px - 7 * button_offsetX / 2;
 		int LINE_py = g2_offsetY + 5 * button_offsetY;
 		manager.addButton("LINE").setPosition(LINE_px, LINE_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("-").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.setCaptionLabel("-").setColorBackground(Fields.B_DEFAULT_C).setColorCaptionLabel(Fields.B_TEXT_C)
 		.moveTo(pendantWindow);
 
 		int PERIOD_px = LINE_px + button_offsetX;
 		int PERIOD_py = LINE_py - button_offsetY;
 		manager.addButton("PERIOD").setPosition(PERIOD_px, PERIOD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel(".").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.setCaptionLabel(".").setColorBackground(Fields.B_DEFAULT_C).setColorCaptionLabel(Fields.B_TEXT_C)
 		.moveTo(pendantWindow);
 
 		int COMMA_px = PERIOD_px + button_offsetX;
 		int COMMA_py = PERIOD_py;
 		manager.addButton("COMMA").setPosition(COMMA_px, COMMA_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel(",").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
+		.setCaptionLabel(",").setColorBackground(Fields.B_DEFAULT_C).setColorCaptionLabel(Fields.B_TEXT_C)
 		.moveTo(pendantWindow);
 
 		int POSN_px = LINE_px + button_offsetX;
 		int POSN_py = LINE_py;
 		manager.addButton("POSN").setPosition(POSN_px, POSN_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("POSN").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("POSN").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int IO_px = POSN_px + button_offsetX;
 		int IO_py = POSN_py;
 		manager.addButton("IO").setPosition(IO_px, IO_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("I/O").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("I/O").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int NUM_px = LINE_px;
 		int NUM_py = LINE_py - button_offsetY;
 		for (int i = 0; i < 10; i += 1) {
 			manager.addButton("NUM" + i).setPosition(NUM_px, NUM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-			.setCaptionLabel("" + i).setColorBackground(Fields.BUTTON_DEFAULT)
-			.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+			.setCaptionLabel("" + i).setColorBackground(Fields.B_DEFAULT_C)
+			.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 			if (i % 3 == 0) {
 				NUM_px = LINE_px;
@@ -599,96 +582,96 @@ public class WGUI implements ControlListener {
 		int RESET_px = LINE_px;
 		int RESET_py = NUM_py;
 		manager.addButton("RESET").setPosition(RESET_px, RESET_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("RESET").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("RESET").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int BKSPC_px = RESET_px + button_offsetX;
 		int BKSPC_py = RESET_py;
 		manager.addButton("BKSPC").setPosition(BKSPC_px, BKSPC_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("BKSPC").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("BKSPC").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int ITEM_px = BKSPC_px + button_offsetX;
 		int ITEM_py = BKSPC_py;
 		manager.addButton("ITEM").setPosition(ITEM_px, ITEM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("ITEM").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("ITEM").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		/*********************** Util Block *************************/
 
 		int ENTER_px = ed_px;
 		int ENTER_py = g2_offsetY;
 		manager.addButton("ENTER").setPosition(ENTER_px, ENTER_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("ENTER").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("ENTER").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int TOOL1_px = ENTER_px;
 		int TOOL1_py = ENTER_py + button_offsetY;
 		manager.addButton("TOOL1").setPosition(TOOL1_px, TOOL1_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("TOOL1").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("TOOL1").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int TOOL2_px = TOOL1_px;
 		int TOOL2_py = TOOL1_py + button_offsetY;
 		manager.addButton("TOOL2").setPosition(TOOL2_px, TOOL2_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("TOOL2").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("TOOL2").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int MOVEMENU_px = TOOL2_px;
 		int MOVEMENU_py = TOOL2_py + button_offsetY;
 		manager.addButton("MVMU").setPosition(MOVEMENU_px, MOVEMENU_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("MVMU").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("MVMU").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int SETUP_px = MOVEMENU_px;
 		int SETUP_py = MOVEMENU_py + button_offsetY;
 		manager.addButton("SETUP").setPosition(SETUP_px, SETUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("SETUP").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("SETUP").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int STATUS_px = SETUP_px;
 		int STATUS_py = SETUP_py + button_offsetY;
 		manager.addButton("status").setPosition(STATUS_px, STATUS_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("STATUS").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("STATUS").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		/******************** Joint Control Block *******************/
 
 		int hd_px = STATUS_px + 3 * button_offsetX / 2;
 		int hd_py = g2_offsetY;
 		manager.addButton("hold").setPosition(hd_px, hd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("HOLD").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("HOLD").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int fd_px = hd_px;
 		int fd_py = hd_py + button_offsetY;
 		manager.addButton("fwd").setPosition(fd_px, fd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("FWD").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("FWD").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int bd_px = fd_px;
 		int bd_py = fd_py + button_offsetY;
 		manager.addButton("bwd").setPosition(bd_px, bd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("BWD").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("BWD").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int COORD_px = bd_px;
 		int COORD_py = bd_py + button_offsetY;
 		manager.addButton("coord").setPosition(COORD_px, COORD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("COORD").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("COORD").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int SPEEDUP_px = COORD_px;
 		int SPEEDUP_py = COORD_py + button_offsetY;
 		manager.addButton("spdup").setPosition(SPEEDUP_px, SPEEDUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("+%").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setCaptionLabel("+%").setColorBackground(Fields.B_DEFAULT_C)
+		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int SLOWDOWN_px = SPEEDUP_px;
 		int SLOWDOWN_py = SPEEDUP_py + button_offsetY;
 		manager.addButton("spddn").setPosition(SLOWDOWN_px, SLOWDOWN_py)
 		.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel("-%")
-		.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow);
+		.setColorBackground(Fields.B_DEFAULT_C).setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
 
 		int JOINT_px = SLOWDOWN_px + button_offsetX;
 		int JOINT_py = g2_offsetY;
@@ -698,13 +681,13 @@ public class WGUI implements ControlListener {
 		for (int i = 1; i <= 6; i += 1) {
 			manager.addButton("JOINT" + i + "_NEG").setPosition(JOINT_px, JOINT_py)
 			.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2])
-			.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow)
+			.setColorBackground(Fields.B_DEFAULT_C).setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow)
 			.getCaptionLabel().alignY(RobotRun.TOP);
 
 			JOINT_px += Fields.LARGE_BUTTON + 1;
 			manager.addButton("JOINT" + i + "_POS").setPosition(JOINT_px, JOINT_py)
 			.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2 + 1])
-			.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(pendantWindow)
+			.setColorBackground(Fields.B_DEFAULT_C).setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow)
 			.getCaptionLabel().alignY(RobotRun.TOP);
 
 			JOINT_px = SLOWDOWN_px + button_offsetX;
@@ -738,9 +721,9 @@ public class WGUI implements ControlListener {
 		MyButton b = new MyButton(manager, name);
 		
 		b.setCaptionLabel(lblTxt)
-		 .setColorValue(B_TEXT_C)
-		 .setColorBackground(B_DEFAULT_C)
-		 .setColorActive(B_DEFAULT_C)
+		 .setColorValue(Fields.B_TEXT_C)
+		 .setColorBackground(Fields.B_DEFAULT_C)
+		 .setColorActive(Fields.B_DEFAULT_C)
 	 	 .moveTo(parent)
 		 .setSize(wdh, hgt)
 		 .getCaptionLabel().setFont(lblFont);
@@ -773,9 +756,9 @@ public class WGUI implements ControlListener {
 		dropdown.setSize(lblWdh, lblHgt * listLen)
 				.setBarHeight(lblHgt)
 				.setItemHeight(lblHgt)
-				.setColorValue(B_TEXT_C)
-				.setColorBackground(B_DEFAULT_C)
-				.setColorActive(B_ACTIVE_C)
+				.setColorValue(Fields.B_TEXT_C)
+				.setColorBackground(Fields.B_DEFAULT_C)
+				.setColorActive(Fields.B_ACTIVE_C)
 				.moveTo(parent)
 				.close()
 				.getCaptionLabel().setFont(lblFont);
@@ -798,7 +781,7 @@ public class WGUI implements ControlListener {
 	 */
 	private Group addGroup(String name, int posX, int posY, int wdh, int hgt) {
 		return manager.addGroup(name).setPosition(posX, posY)
-				 .setBackgroundColor(BG_C)
+				 .setBackgroundColor(Fields.BG_C)
 				 .setSize(wdh, hgt)
 				 .hideBar();
 	}
@@ -823,10 +806,10 @@ public class WGUI implements ControlListener {
 			Float iniActive) {
 		
 		MyRadioButton rb = new MyRadioButton(manager, name);
-		rb.setColorValue(B_DEFAULT_C)
-		  .setColorLabel(F_TEXT_C)
-		  .setColorActive(B_ACTIVE_C)
-		  .setBackgroundColor(BG_C)
+		rb.setColorValue(Fields.B_DEFAULT_C)
+		  .setColorLabel(Fields.F_TEXT_C)
+		  .setColorActive(Fields.B_ACTIVE_C)
+		  .setBackgroundColor(Fields.BG_C)
 		  .moveTo(parent)
 		  .setSize(togWdh, togHgt);
 		
@@ -871,10 +854,10 @@ public class WGUI implements ControlListener {
 		
 		return manager.addTextarea(name, iniTxt, 0, 0, wdh, hgt)
 					  .setFont(lblFont)
-					  .setColor(F_TEXT_C)
-					  .setColorActive(F_ACTIVE_C)
-					  .setColorBackground(BG_C)
-					  .setColorForeground(BG_C)
+					  .setColor(Fields.F_TEXT_C)
+					  .setColorActive(Fields.F_ACTIVE_C)
+					  .setColorBackground(Fields.BG_C)
+					  .setColorForeground(Fields.BG_C)
 					  .moveTo(parent);
 	}
 	
@@ -900,9 +883,9 @@ public class WGUI implements ControlListener {
 		return manager.addTextarea(name, iniTxt, posX, posY, wdh, hgt)
 				.setFont(lblFont)
 				.setColor(txtColor)
-				.setColorActive(F_ACTIVE_C)
+				.setColorActive(Fields.F_ACTIVE_C)
 				.setColorBackground(bgColor)
-				.setColorForeground(BG_C)
+				.setColorForeground(Fields.BG_C)
 				.moveTo(parent)
 				.hideScrollbar();
 	}
@@ -923,12 +906,12 @@ public class WGUI implements ControlListener {
 			int hgt, PFont lblFont) {
 		
 		MyTextfield t = new MyTextfield(manager, name, 0, 0, wdh, hgt);
-		t.setColor(F_TEXT_C)
-		 .setColorCursor(F_CURSOR_C)
-		 .setColorActive(F_CURSOR_C)
-		 .setColorLabel(BG_C)
-		 .setColorBackground(F_BG_C)
-		 .setColorForeground(F_FG_C)
+		t.setColor(Fields.F_TEXT_C)
+		 .setColorCursor(Fields.F_CURSOR_C)
+		 .setColorActive(Fields.F_CURSOR_C)
+		 .setColorLabel(Fields.BG_C)
+		 .setColorBackground(Fields.F_BG_C)
+		 .setColorForeground(Fields.F_FG_C)
 		 .moveTo(parent);
 		
 		return t;
@@ -2073,8 +2056,8 @@ public class WGUI implements ControlListener {
 	 
 	 public void resetButtonColors() {
 		for (int i = 1; i <= 6; i += 1) {
-			((Button) manager.get("JOINT" + i + "_NEG")).setColorBackground(Fields.BUTTON_DEFAULT);
-			((Button) manager.get("JOINT" + i + "_POS")).setColorBackground(Fields.BUTTON_DEFAULT);
+			((Button) manager.get("JOINT" + i + "_NEG")).setColorBackground(Fields.B_DEFAULT_C);
+			((Button) manager.get("JOINT" + i + "_POS")).setColorBackground(Fields.B_DEFAULT_C);
 		}
 	}
 
@@ -2542,16 +2525,16 @@ public class WGUI implements ControlListener {
 
 		if (newDir > 0) {
 			// Positive motion
-			negButton.setColorBackground(Fields.BUTTON_DEFAULT);
-			posButton.setColorBackground(Fields.BUTTON_ACTIVE);
+			negButton.setColorBackground(Fields.B_DEFAULT_C);
+			posButton.setColorBackground(Fields.B_ACTIVE_C);
 		} else if (newDir < 0) {
 			// Negative motion
-			negButton.setColorBackground(Fields.BUTTON_ACTIVE);
-			posButton.setColorBackground(Fields.BUTTON_DEFAULT);
+			negButton.setColorBackground(Fields.B_ACTIVE_C);
+			posButton.setColorBackground(Fields.B_DEFAULT_C);
 		} else {
 			// No motion
-			negButton.setColorBackground(Fields.BUTTON_DEFAULT);
-			posButton.setColorBackground(Fields.BUTTON_DEFAULT);
+			negButton.setColorBackground(Fields.B_DEFAULT_C);
+			posButton.setColorBackground(Fields.B_DEFAULT_C);
 		}
 	 }
 
@@ -2741,10 +2724,10 @@ public class WGUI implements ControlListener {
 		Button b = (Button) manager.get("shift");
 		
 		if (state) {
-			b.setColorBackground(Fields.BUTTON_ACTIVE);
+			b.setColorBackground(Fields.B_ACTIVE_C);
 			
 		} else {
-			b.setColorBackground(Fields.BUTTON_DEFAULT);
+			b.setColorBackground(Fields.B_DEFAULT_C);
 		}
 		
 		updateWindowDisplay();
@@ -2757,10 +2740,10 @@ public class WGUI implements ControlListener {
 		Button b = (Button) manager.get("step");
 		
 		if (state) {
-			b.setColorBackground(Fields.BUTTON_ACTIVE);
+			b.setColorBackground(Fields.B_ACTIVE_C);
 			
 		} else {
-			b.setColorBackground(Fields.BUTTON_DEFAULT);
+			b.setColorBackground(Fields.B_DEFAULT_C);
 		}
 		
 		updateWindowDisplay();
@@ -2791,11 +2774,11 @@ public class WGUI implements ControlListener {
 		// Update button color based on the state of the button
 		if (b.isOn()) {
 			b.setLabel("Show OBBs");
-			b.setColorBackground(B_ACTIVE_C);
+			b.setColorBackground(Fields.B_ACTIVE_C);
 			
 		} else {
 			b.setLabel("Hide OBBs");
-			b.setColorBackground(B_DEFAULT_C);
+			b.setColorBackground(Fields.B_DEFAULT_C);
 		}
 		
 		// Second robot toggle button
@@ -2804,10 +2787,10 @@ public class WGUI implements ControlListener {
 		
 		// Update button color based on the state of the button
 		if (b.isOn()) {
-			b.setColorBackground(B_ACTIVE_C);
+			b.setColorBackground(Fields.B_ACTIVE_C);
 			
 		} else {
-			b.setColorBackground(B_DEFAULT_C);
+			b.setColorBackground(Fields.B_DEFAULT_C);
 		}
 	
 		// Update window background display
