@@ -73,4 +73,9 @@ public class DisplayLine {
 	public int size() {
 		return fields.size();
 	}
+	
+	@Override
+	public String toString() {
+		return fields.toString();
+	}
 }
