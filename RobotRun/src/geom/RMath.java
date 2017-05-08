@@ -518,7 +518,7 @@ public class RMath {
 
 		return transform;
 	}
-
+	
 	/*
 	 * Transforms the given vector from the coordinate system defined by the
 	 * given transformation matrix (row major order).
