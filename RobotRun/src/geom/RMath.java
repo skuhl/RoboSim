@@ -63,6 +63,14 @@ public class RMath {
 
 		return J;
 	}
+	
+	public static int clamp(int in, int min, int max) {
+		return Math.min(max, Math.max(min, in));
+	}
+	
+	public static float clamp(float in, float min, float max) {
+		return Math.min(max, Math.max(min, in));
+	}
 
 	// converts a double array to a float array
 	public static float[][] doubleToFloat(double[][] m, int l, int w) {
