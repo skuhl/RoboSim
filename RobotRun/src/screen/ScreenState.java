@@ -11,7 +11,7 @@ public class ScreenState {
 	public int conLnIdx, conColIdx, conRenIdx, optLnIdx, optRenIdx;
 	
 	public ScreenState(ScreenMode mode, int conLnIdx, int conColIdx,
-			int colRenIdx, int optLnIdx, int optRenIdx) {
+			int conRenIdx, int optLnIdx, int optRenIdx) {
 		
 		this.mode = mode;
 		this.conLnIdx = conLnIdx;
