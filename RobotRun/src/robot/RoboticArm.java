@@ -389,44 +389,6 @@ public class RoboticArm {
 		RobotRun.getInstance().popMatrix();
 	}
 	
-	public Instruction replaceInstAt(int idx, Instruction inst) {
-		Program p = getActiveProg();
-		Instruction replaced = null;
-		
-		// Valid active program and instruction index
-		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {	
-			replaced = p.replaceInstAt(idx, inst);
-			
-			pushInstState(idx, replaced.clone());
-			
-			if (Fields.DEBUG) {
-				System.out.printf("\nREPLACE %d %s\n\n", idx, inst.getClass());
-			}
-		}
-		
-		return replaced;
-		
-	}
-	
-	public Instruction getInstToEdit(int idx) {
-		Program p = getActiveProg();
-		
-		// Valid active program and instruction index
-		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
-			Instruction inst = p.getInstAt(idx);
-			
-			pushInstState(idx, inst.clone());
-			
-			if (Fields.DEBUG) {
-				System.out.printf("\nEDIT %d %s\n\n", idx, inst.getClass());
-			}
-			
-			return inst;
-		}
-		
-		return null;
-	}
-	
 	/**
 	 * Updates the motion of one of the Robot's joints based on
 	 * the joint index given and the value of dir (-/+ 1). The
@@ -1154,6 +1116,38 @@ public class RoboticArm {
 	public int getEEState() {
 		return endEffectorState;
 	}
+	
+	/**
+	 * A wrapper method for getting an instruction from the active program. A
+	 * copy of the instruction is placed on the program undo stack for this
+	 * active program.
+	 * 
+	 * NOTE: only use this method, if you intend to edit the instruction
+	 * 		 returned by this method!!!!
+	 * 
+	 * @param idx	The index of the instruction in the active program's list
+	 * 				of instructions
+	 * @return		The instruction at the given index, in the active program's
+	 * 				list of instructions
+	 */
+	public Instruction getInstToEdit(int idx) {
+		Program p = getActiveProg();
+		
+		// Valid active program and instruction index
+		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
+			Instruction inst = p.getInstAt(idx);
+			
+			pushInstState(idx, inst.clone());
+			
+			if (Fields.DEBUG) {
+				//System.out.printf("\nEDIT %d %s\n\n", idx, inst.getClass());
+			}
+			
+			return inst;
+		}
+		
+		return null;
+	}
 
 	/**
 	 * Returns the I/O register, associated with the given index, of the Robot,
@@ -1367,10 +1361,11 @@ public class RoboticArm {
 	public boolean hasMotionFault() { return motionFault; }
 
 	/**
-	 * TODO
+	 * Updates the robot's joint angles, for the current target rotation, based on
+	 * the given speed value.
 	 * 
-	 * @param speed
-	 * @return
+	 * @param speed	The speed of the robot's joint motion
+	 * @return		If the robot has reached its target joint angles
 	 */
 	public boolean interpolateRotation(float speed) {
 		boolean done = true;
@@ -1402,7 +1397,7 @@ public class RoboticArm {
 	}
 
 	/**
-	 * @reutrn	True if at least one joint of the Robot is in motion.
+	 * @return	True if at least one joint of the Robot is in motion.
 	 */
 	public boolean jointMotion() {
 		for(Model m : SEGMENTS) {
@@ -1523,7 +1518,8 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO
+	 * If the robot's program undo stack is not empty, then the top
+	 * modification is popped off the stack and reverted in the active program.
 	 */
 	public void popInstructionUndo() {
 		
@@ -1541,9 +1537,11 @@ public class RoboticArm {
 	}
 			
 	/**
-	 * TODO
+	 * Returns a list of display lines, which contain the program instruction
+	 * list output for the pendant display.
 	 * 
-	 * @return
+	 * @return	A list of display lines for the pendant display, representing
+	 * 			the list instructions in the program
 	 */
 	public ArrayList<DisplayLine> printProgList() {
 		int size = numOfPrograms();
@@ -1580,10 +1578,12 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO
+	 * Pushes the given instruction and instruction index onto the robot's
+	 * program undo stack. If the stack size exceeds the maximum undo size,
+	 * then the oldest undo is removed from the stack
 	 * 
-	 * @param idx
-	 * @param inst
+	 * @param idx	The index of the instruction in the active program
+	 * @param inst	The instruction of which to save the state
 	 */
 	private void pushInstState(int idx, Instruction inst) {
 		
@@ -1623,6 +1623,34 @@ public class RoboticArm {
 			// Invalid index
 			return null;
 		}
+	}
+	
+	/**
+	 * A wrapper method for replacing an instruction in the active program of
+	 * this robot. The replacement is added onto the program undo stack for the
+	 * active program.
+	 * 
+	 * @param idx	The index of the instruction to replace
+	 * @param inst	The new instruction to add into the active program
+	 * @return		The instruction, which was replaced by the given
+	 * 				instruction
+	 */
+	public Instruction replaceInstAt(int idx, Instruction inst) {
+		Program p = getActiveProg();
+		Instruction replaced = null;
+		
+		// Valid active program and instruction index
+		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {	
+			replaced = p.replaceInstAt(idx, inst);
+			
+			pushInstState(idx, replaced.clone());
+			
+			if (Fields.DEBUG) {
+				//System.out.printf("\nREPLACE %d %s\n\n", idx, inst.getClass());
+			}
+		}
+		
+		return replaced;
 	}
 
 	/**
