@@ -67,16 +67,7 @@ public class RobotRun extends PApplet {
 	private static final int NUM_ENTRY_LEN;
 	private static final int TEXT_ENTRY_LEN;
 	private static RobotRun instance;
-<<<<<<< HEAD
-	
-	/* TODO REMOVE AFTER PEDANT REFACTOR
-=======
-	public static WorldObject f;
->>>>>>> fab81f0f3ebe23100bd4f7cfb3f26372e5d7c696
-	public static PFont fnt_con14;
-	public static PFont fnt_con12;
-	public static PFont fnt_conB;
-	/**/
+
 	/* Initialize all static fields */
 	static {
 		LETTERS = new char[][] { { 'a', 'b', 'c', 'd', 'e', 'f' }, 
@@ -89,10 +80,6 @@ public class RobotRun extends PApplet {
 		NUM_ENTRY_LEN = 9;
 		TEXT_ENTRY_LEN = 16;
 		instance = null;
-		/** TODO REMOVE AFTER PEDANT REFACTOR
-		fnt_con14 = null;
-		fnt_con12 = null;
-		/**/
 	}
 
 	/**
@@ -1555,6 +1542,11 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
+	
+	// Dash button
+	public void dash() {
+		characterInput('-');
+	}
 
 	// Data button
 	public void data() {
@@ -1571,8 +1563,6 @@ public class RobotRun extends PApplet {
 			System.out.printf("World Object removed: %d\n", ret);
 		}
 	}
-
-
 
 	@Override
 	public void dispose() {
@@ -1686,274 +1676,6 @@ public class RobotRun extends PApplet {
 	 * program, if one exists. Otherwise, the program navigation view is
 	 * rendered.
 	 */
-<<<<<<< HEAD
-=======
-	public void displayOriginAxes(PVector origin, float[][] axesVectors, float axesLength, int originColor) {
-
-		pushMatrix();
-		// Transform to the reference frame defined by the axes vectors
-		applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
-				axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
-				axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
-				0, 0, 0, 1);
-
-		// X axis
-		stroke(255, 0, 0);
-		line(-axesLength, 0, 0, axesLength, 0, 0);
-		// Y axis
-		stroke(0, 255, 0);
-		line(0, -axesLength, 0, 0, axesLength, 0);
-		// Z axis
-		stroke(0, 0, 255);
-		line(0, 0, -axesLength, 0, 0, axesLength);
-
-		// Draw a sphere on the positive direction for each axis
-		float dotPos = max(100f, min(axesLength, 500));
-		textFont(fnt_conB, 18);
-
-		stroke(originColor);
-		sphere(4);
-		stroke(0);
-		translate(dotPos, 0, 0);
-		sphere(4);
-
-		pushMatrix();
-		rotateX(-PI / 2f);
-		rotateY(-PI);
-		text("X-axis", 0, 0, 0);
-		popMatrix();
-
-		translate(-dotPos, dotPos, 0);
-		sphere(4);
-
-		pushMatrix();
-		rotateX(-PI / 2f);
-		rotateY(-PI);
-		text("Y-axis", 0, 0, 0);
-		popMatrix();
-
-		translate(0, -dotPos, dotPos);
-		sphere(4);
-
-		pushMatrix();
-		rotateX(-PI / 2f);
-		rotateY(-PI);
-		text("Z-axis", 0, 0, 0);
-		popMatrix();
-
-		popMatrix();
-	}
-
-	/**
-	 * Display any currently taught points during the processes of either the
-	 * 3-Point, 4-Point, or 6-Point Methods.
-	 */
-	public void displayTeachPoints() {
-		// Teach points are displayed only while the Robot is being taught a
-		// frame
-		if (teachFrame != null && mode.getType() == ScreenType.TYPE_TEACH_POINTS) {
-
-			int size = 3;
-
-			if (mode == ScreenMode.TEACH_6PT && teachFrame instanceof ToolFrame) {
-				size = 6;
-			} else if (mode == ScreenMode.TEACH_4PT && teachFrame instanceof UserFrame) {
-				size = 4;
-			}
-
-			for (int idx = 0; idx < size; ++idx) {
-				Point pt = teachFrame.getPoint(idx);
-
-				if (pt != null) {
-					pushMatrix();
-					// Applies the point's position
-					translate(pt.position.x, pt.position.y, pt.position.z);
-
-					// Draw color-coded sphere for the point
-					noFill();
-					int pointColor = color(255, 0, 255);
-
-					if (teachFrame instanceof ToolFrame) {
-
-						if (idx < 3) {
-							// TCP teach points
-							pointColor = color(130, 130, 130);
-						} else if (idx == 3) {
-							// Orient origin point
-							pointColor = color(255, 130, 0);
-						} else if (idx == 4) {
-							// Axes X-Direction point
-							pointColor = color(255, 0, 0);
-						} else if (idx == 5) {
-							// Axes Y-Diretion point
-							pointColor = color(0, 255, 0);
-						}
-					} else if (teachFrame instanceof UserFrame) {
-
-						if (idx == 0) {
-							// Orient origin point
-							pointColor = color(255, 130, 0);
-						} else if (idx == 1) {
-							// Axes X-Diretion point
-							pointColor = color(255, 0, 0);
-						} else if (idx == 2) {
-							// Axes Y-Diretion point
-							pointColor = color(0, 255, 0);
-						} else if (idx == 3) {
-							// Axes Origin point
-							pointColor = color(0, 0, 255);
-						}
-					}
-
-					stroke(pointColor);
-					sphere(3);
-
-					popMatrix();
-				}
-			}
-		}
-	}
-
-	@Override
-	public void dispose() {
-		// Save data before exiting
-		DataManagement.saveState(this);
-		super.dispose();
-	}
-
-	@Override
-	public void draw() {
-
-		// Apply the camera for drawing objects
-		directionalLight(255, 255, 255, 1, 1, 0);
-		ambientLight(150, 150, 150);
-
-		background(127);
-
-		hint(ENABLE_DEPTH_TEST);
-		background(255);
-		noStroke();
-		noFill();
-
-		pushMatrix();
-		camera.apply();
-
-		updateAndDrawObjects(activeScenario, getActiveRobot());
-
-		displayAxes();
-		displayTeachPoints();
-
-		WorldObject wldObj = getManager().getSelectedWO();
-
-		if (wldObj != null) {
-			pushMatrix();
-
-			if (wldObj instanceof Part) {
-				Fixture reference = ((Part) wldObj).getFixtureRef();
-
-				if (reference != null) {
-					// Draw part's orientation with reference to its fixture
-					reference.applyCoordinateSystem();
-				}
-			}
-
-			displayOriginAxes(wldObj.getLocalCenter(), convertNativeToWorld(wldObj.getLocalOrientationAxes()), 500f,
-					color(0));
-
-			popMatrix();
-		}
-
-		if (displayPoint != null) {
-			// Display the point with its local orientation axes
-			displayOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
-		}
-
-		/*TESTING CODE: DRAW INTERMEDIATE POINTS*
-		if(Fields.DEBUG && intermediatePositions != null) {
-			int count = 0;
-			for(Point p : intermediatePositions) {
-				if(count % 4 == 0) {
-					pushMatrix();
-					stroke(0);
-					translate(p.position.x, p.position.y, p.position.z);
-					sphere(5);
-					popMatrix();
-				}
-
-				count += 1;
-			}
-		}
-		/**/
-
-		/*Camera Test Code *
-		Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
-		float[][] axes = RMath.quatToMatrix(p.orientation);
-		c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[1][0], axes[1][1], axes[1][2]), -PI/2)));
-		c.setPosition(p.position);
-		displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
-		/**/
-
-		PVector near[] = c.getPlaneNear();
-		PVector far[] = c.getPlaneFar();
-		pushMatrix();
-		stroke(255, 126, 0, 255);
-		//fill(255, 126, 0, 100);
-		beginShape();
-		//Top
-		vertex(near[0].x, near[0].y, near[0].z);
-		vertex(far[0].x, far[0].y, far[0].z);
-		vertex(far[1].x, far[1].y, far[1].z);
-		vertex(near[1].x, near[1].y, near[1].z);
-		//Right
-		vertex(near[1].x, near[1].y, near[1].z);
-		vertex(far[1].x, far[1].y, far[1].z);
-		vertex(far[3].x, far[3].y, far[3].z);
-		vertex(near[3].x, near[3].y, near[3].z);
-		//Bottom
-		vertex(near[3].x, near[3].y, near[3].z);
-		vertex(far[3].x, far[3].y, far[3].z);
-		vertex(far[2].x, far[2].y, far[2].z);
-		vertex(near[2].x, near[2].y, near[2].z);
-		//Left
-		vertex(near[2].x, near[2].y, near[2].z);
-		vertex(far[2].x, far[2].y, far[2].z);
-		vertex(far[0].x, far[0].y, far[0].z);
-		vertex(near[0].x, near[0].y, near[0].z);
-		//Near
-		vertex(near[1].x, near[1].y, near[1].z);
-		vertex(near[3].x, near[3].y, near[3].z);
-		vertex(near[2].x, near[2].y, near[2].z);
-		vertex(near[0].x, near[0].y, near[0].z);
-		endShape(CLOSE);
-		popMatrix();
-		
-		
-		pushMatrix();
-		f.draw();
-		popMatrix();
-		
-		c.checkObjectInFrame(f);
-		//RobotRun.printMat(c.getOrientationMat());
-		/**/
-		 
-
-		noLights();
-		noStroke();
-		popMatrix();
-
-		hint(DISABLE_DEPTH_TEST);
-		// Apply the camera for drawing text and windows
-		ortho();
-		showMainDisplayText();
-		cp5.draw();
-	}
-
-	/**
-	 * Function of the edit button: renders the instruction view of the active
-	 * program, if one exists. Otherwise, the program navigation view is
-	 * rendered.
-	 */
->>>>>>> fab81f0f3ebe23100bd4f7cfb3f26372e5d7c696
 	public void edit() {
 		if (activeRobot.getActiveProg() != null) {
 			nextScreen(ScreenMode.NAV_PROG_INSTR);
@@ -4439,6 +4161,10 @@ public class RobotRun extends PApplet {
 		case ACTIVE_FRAMES:
 			header = "ACTIVE FRAMES";
 			break;
+		case SELECT_FRAME_MODE:
+			header = "FRAME MODE";
+			break;
+			
 		case NAV_TOOL_FRAMES:
 			header = "TOOL FRAMES";
 			break;
@@ -4962,10 +4688,6 @@ public class RobotRun extends PApplet {
 		// Left view
 		camera.reset();
 		camera.rotate(0, PI / 2f, 0);
-	}
-
-	public void dash() {
-		characterInput('-');
 	}
 
 	public void loadDataRegisters() {
@@ -6752,43 +6474,9 @@ public class RobotRun extends PApplet {
 				size = 4;
 			}
 
-<<<<<<< HEAD
 			for (int idx = 0; idx < size; ++idx) {
 				Point pt = teachFrame.getPoint(idx);
-=======
-			activeRobot = ROBOTS.get(0);
-
-			intermediatePositions = new ArrayList<>();
-			activeScenario = null;
-
-			DataManagement.initialize(this);
-			DataManagement.loadState(this);
-
-			// set up UI
-			cp5 = new ControlP5(this);
-			// Explicitly draw the ControlP5 elements
-			cp5.setAutoDraw(false);
-			setManager(new WindowManager(this, cp5, fnt_con12, fnt_con14));
-			display_stack = new Stack<>();
-			contents = new MenuScroll(this, "cont", ITEMS_TO_SHOW, 10, 20);
-			options = new MenuScroll(this, "opt", 3, 10, 180);
-			gui();
-
-			buffer = new ArrayList<>();
-			displayPoint = null;
-
-			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 30, 300, null);
-			f = new Fixture("test", 120, 5, 50, 100, 200);
-			f.setLocalCenter(new PVector(-750, -300, 0));
-			
-		} catch (NullPointerException NPEx) {
-
-			// TODO write to a log
-			NPEx.printStackTrace();
-		}
-	}
->>>>>>> fab81f0f3ebe23100bd4f7cfb3f26372e5d7c696
-
+				
 				if (pt != null) {
 					pushMatrix();
 					// Applies the point's position
@@ -7197,6 +6885,7 @@ public class RobotRun extends PApplet {
 
 		shift = flag;
 		UI.updateShiftButton(shift);
+		updatePendantScreen();
 	}
 
 	public void setStep(boolean step) {

@@ -146,7 +146,7 @@ public class WGUI implements ControlListener {
 		/* A local reference to a position in the UI [x, y] used to position UI
 		 * elements relative to other UI elements */
 		float[] relPos = new float[] { 0f, 0f };
-		ControllerInterface<?> c = null;
+		ControllerInterface<?> c1 = null, c2 = null;
 		
 		// The default set of labels for window tabs
 		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
@@ -180,9 +180,9 @@ public class WGUI implements ControlListener {
 		limbo = addGroup("LIMBO", 0, 2 * offsetX, windowTabs.getWidth(), 0);
 		
 		relPos = relativePosition(windowTabs, RelativePoint.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
-		c = addButton("record", buttonImages[0], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
+		c1 = addButton("record", buttonImages[0], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 		
-		relPos = relativePosition(c, RelativePoint.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
+		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
 		addButton("EE", buttonImages[1], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 		
 		// Initialize camera view buttons
@@ -192,170 +192,6 @@ public class WGUI implements ControlListener {
 		addButton("RightView", "R", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton("TopView", "T", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton("BottomView", "Bt", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		
-		pendant(buttonImages);
-
-		// Initialize the elements shared amongst the create and edit windows
-		for (int idx = 0; idx < 3; ++idx) {
-			addTextarea(String.format("DimLbl%d", idx), String.format("Dim(%d):", idx),
-					sharedElements, fieldWidth, sButtonHeight, Fields.medium);
-			
-			addTextfield(String.format("Dim%d", idx), sharedElements, fieldWidth,
-					fieldHeight, Fields.medium);
-		}
-		
-		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
-		
-		// Initialize the world object creation window elements
-		addTextarea("ObjTypeLbl", "Type:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
-
-		addTextarea("ObjNameLbl", "Name:", createObjWindow, sLblWidth, fieldHeight, Fields.medium);
-		addTextfield("ObjName", createObjWindow, fieldWidth, fieldHeight, Fields.medium);
-
-		addTextarea("ShapeLbl", "Shape:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
-		addTextarea("FillLbl", "Fill:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
-		addTextarea("OutlineLbl", "Outline:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
-
-		addButton("CreateWldObj", "Create", createObjWindow, mButtonWidth, sButtonHeight, Fields.small);
-		
-		// Initialize the world object edit window elements
-		addTextarea("ObjLabel", "Object:", editObjWindow, mLblWidth, fieldHeight, Fields.medium);
-		
-		addTextarea("Blank", "Inputs", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextarea("Current", "Current", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		addTextarea("Default", "Default", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-
-		addTextarea("XLbl", "X Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("XCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		addTextarea("XDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		
-		addTextarea("YLbl", "Y Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("YCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		addTextarea("YDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		
-		addTextarea("ZLbl", "Z Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("ZCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		addTextarea("ZDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		
-		addTextarea("WLbl", "X Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("WCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		addTextarea("WDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		
-		addTextarea("PLbl", "Y Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("PCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		addTextarea("PDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		
-		addTextarea("RLbl", "Z Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("RCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		addTextarea("RDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
-		
-		addTextarea("RefLbl", "Reference:", editObjWindow, lLblWidth, sButtonHeight, Fields.medium);
-		
-		addButton("MoveToCur", "Move to Current", editObjWindow, fieldWidth, sButtonHeight, Fields.small);
-		addButton("UpdateWODef", "Update Default", editObjWindow, fieldWidth, sButtonHeight, Fields.small);
-		addButton("MoveToDef", "Move to Default", editObjWindow, fieldWidth, sButtonHeight, Fields.small);
-		
-		addButton("ResDefs", "Restore Defaults", editObjWindow, lLblWidth, sButtonHeight, Fields.small);
-
-		addButton("DeleteWldObj", "Delete", editObjWindow, mButtonWidth, sButtonHeight, Fields.small);
-		
-		// Initialize the scenario window elements
-		addTextarea("SOptLbl", "Options:", scenarioWindow, mLblWidth, fieldHeight, Fields.medium);
-		
-		HashMap<Float, String> toggles = new HashMap<>();
-		toggles.put(0f, "New");
-		toggles.put(1f, "Load");
-		toggles.put(2f, "Rename");
-		
-		RadioButton rb = addRadioButtons("ScenarioOpt", scenarioWindow, radioDim, radioDim, Fields.medium, toggles, 0f);
-		Toggle t = rb.getItem(0);
-		
-		rb.setItemsPerRow(3);
-		rb.setSpacingColumn( (background.getWidth() - 2 * offsetX - 3 * t.getWidth()) / 3 );
-		
-		addTextarea("SInstructions", "N/A", scenarioWindow, background.getWidth() - (2 * offsetX),
-				54, Fields.small).hideScrollbar();
-		
-		addTextfield("SInput", scenarioWindow, fieldWidth, fieldHeight, Fields.medium);
-		addButton("SConfirm", "N/A", scenarioWindow, mButtonWidth, sButtonHeight, Fields.small);
-		
-		// Initialize the miscellaneous window elements
-		addTextarea("ActiveAxesDisplay", "Axes Display:", miscWindow, lLblWidth, sButtonHeight, Fields.medium);
-		addTextarea("ActiveEEDisplay", "EE Display:", miscWindow, lLblWidth, sButtonHeight, Fields.medium);
-		
-		addButton("ToggleOBBs", "Hide OBBs", miscWindow, lButtonWidth, sButtonHeight, Fields.small);
-		addButton("ToggleRobot", "Add Robot", miscWindow, lButtonWidth, sButtonHeight, Fields.small);
-
-		/* Initialize dropdown list elements
-		 * 
-		 * NOTE: the order in which the dropdown lists matters!
-		 * 		(Adding the dropdown lists last places them in front of the
-		 * other UI elements, which is important, when the list is open) */
-		DropdownList ddlLimbo = addDropdown("EEDisplay", miscWindow, ldropItemWidth, dropItemHeight, 4,
-				Fields.small);
-		ddlLimbo.addItem(EEMapping.DOT.toString(), EEMapping.DOT)
-				.addItem(EEMapping.LINE.toString(), EEMapping.LINE)
-				.addItem(EEMapping.NONE.toString(), EEMapping.NONE)
-				.setValue(0);
-		
-		ddlLimbo = addDropdown("AxesDisplay", miscWindow, ldropItemWidth, dropItemHeight, 4,
-				Fields.small);
-		ddlLimbo.addItem(AxesDisplay.AXES.toString(), AxesDisplay.AXES)
-				.addItem(AxesDisplay.GRID.toString(), AxesDisplay.GRID)
-				.addItem(AxesDisplay.NONE.toString(), AxesDisplay.NONE)
-				.setValue(0);
-		
-		addDropdown("Scenario", scenarioWindow, ldropItemWidth, dropItemHeight, 4, Fields.small);
-		addDropdown("Fixture", editObjWindow, ldropItemWidth, dropItemHeight, 4, Fields.small);
-		 
-		for (int idx = 0; idx < 1; ++idx) {
-			// dimension field dropdown lists
-			addDropdown(String.format("DimDdl%d", idx), sharedElements, ldropItemWidth,
-					dropItemHeight, 4, Fields.small);
-		}
-		
-		addDropdown("Object", editObjWindow, ldropItemWidth, dropItemHeight, 4, Fields.small);
-		
-		ddlLimbo = addDropdown("Outline", createObjWindow, sdropItemWidth, dropItemHeight,
-				4, Fields.small);
-		ddlLimbo.addItem("black", app.color(0))
-				.addItem("red", app.color(255, 0, 0))
-				.addItem("green", app.color(0, 255, 0))
-				.addItem("blue", app.color(0, 0, 255))
-				.addItem("orange", app.color(255, 60, 0))
-				.addItem("yellow", app.color(255, 255, 0))
-				.addItem("pink", app.color(255, 0, 255))
-				.addItem("purple", app.color(90, 0, 255));
-
-		ddlLimbo = addDropdown("Fill", createObjWindow, mdropItemWidth, dropItemHeight,
-				4, Fields.small);
-		ddlLimbo.addItem("white", app.color(255))
-				.addItem("black", app.color(0))
-				.addItem("red", app.color(255, 0, 0))
-				.addItem("green", app.color(0, 255, 0))
-				.addItem("blue", app.color(0, 0, 255))
-				.addItem("orange", app.color(255, 60, 0))
-				.addItem("yellow", app.color(255, 255, 0))
-				.addItem("pink", app.color(255, 0, 255))
-				.addItem("purple", app.color(90, 0, 255))
-				.addItem("sky blue", app.color(0, 255, 255))
-				.addItem("dark green", app.color(0, 100, 15));
-
-		ddlLimbo = addDropdown("Shape", createObjWindow, sdropItemWidth, dropItemHeight,
-				4, Fields.small);
-		ddlLimbo.addItem("Box", ShapeType.BOX)
-				.addItem("Cylinder", ShapeType.CYLINDER)
-				.addItem("Import", ShapeType.MODEL);
-
-		ddlLimbo = addDropdown("ObjType", createObjWindow, sdropItemWidth, dropItemHeight,
-				3, Fields.small);
-		ddlLimbo.addItem("Parts", 0.0f)
-				.addItem("Fixtures", 1.0f);
-	}
-	
-	private void pendant(PImage[][] buttonImages) {
-		ControllerInterface<?> c1 = null, c2 = null;
-		float[] relPos = new float[] { offsetX, 0 };
 		
 		// Pendant screen background?
 		c1 = addTextarea("txt", "", pendantWindow, offsetX, 0,
@@ -650,6 +486,163 @@ public class WGUI implements ControlListener {
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("spddn", "-%", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+
+		// Initialize the elements shared amongst the create and edit windows
+		for (int idx = 0; idx < 3; ++idx) {
+			addTextarea(String.format("DimLbl%d", idx), String.format("Dim(%d):", idx),
+					sharedElements, fieldWidth, sButtonHeight, Fields.medium);
+			
+			addTextfield(String.format("Dim%d", idx), sharedElements, fieldWidth,
+					fieldHeight, Fields.medium);
+		}
+		
+		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
+		
+		// Initialize the world object creation window elements
+		addTextarea("ObjTypeLbl", "Type:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
+
+		addTextarea("ObjNameLbl", "Name:", createObjWindow, sLblWidth, fieldHeight, Fields.medium);
+		addTextfield("ObjName", createObjWindow, fieldWidth, fieldHeight, Fields.medium);
+
+		addTextarea("ShapeLbl", "Shape:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("FillLbl", "Fill:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("OutlineLbl", "Outline:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
+
+		addButton("CreateWldObj", "Create", createObjWindow, mButtonWidth, sButtonHeight, Fields.small);
+		
+		// Initialize the world object edit window elements
+		addTextarea("ObjLabel", "Object:", editObjWindow, mLblWidth, fieldHeight, Fields.medium);
+		
+		addTextarea("Blank", "Inputs", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextarea("Current", "Current", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("Default", "Default", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+
+		addTextarea("XLbl", "X Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("XCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("XDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		
+		addTextarea("YLbl", "Y Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("YCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("YDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		
+		addTextarea("ZLbl", "Z Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("ZCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("ZDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		
+		addTextarea("WLbl", "X Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("WCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("WDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		
+		addTextarea("PLbl", "Y Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("PCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("PDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		
+		addTextarea("RLbl", "Z Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("RCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("RDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		
+		addTextarea("RefLbl", "Reference:", editObjWindow, lLblWidth, sButtonHeight, Fields.medium);
+		
+		addButton("MoveToCur", "Move to Current", editObjWindow, fieldWidth, sButtonHeight, Fields.small);
+		addButton("UpdateWODef", "Update Default", editObjWindow, fieldWidth, sButtonHeight, Fields.small);
+		addButton("MoveToDef", "Move to Default", editObjWindow, fieldWidth, sButtonHeight, Fields.small);
+		
+		addButton("ResDefs", "Restore Defaults", editObjWindow, lLblWidth, sButtonHeight, Fields.small);
+
+		addButton("DeleteWldObj", "Delete", editObjWindow, mButtonWidth, sButtonHeight, Fields.small);
+		
+		// Initialize the scenario window elements
+		addTextarea("SOptLbl", "Options:", scenarioWindow, mLblWidth, fieldHeight, Fields.medium);
+		
+		HashMap<Float, String> toggles = new HashMap<>();
+		toggles.put(0f, "New");
+		toggles.put(1f, "Load");
+		toggles.put(2f, "Rename");
+		
+		RadioButton rb = addRadioButtons("ScenarioOpt", scenarioWindow, radioDim, radioDim, Fields.medium, toggles, 0f);
+		Toggle t = rb.getItem(0);
+		
+		rb.setItemsPerRow(3);
+		rb.setSpacingColumn( (background.getWidth() - 2 * offsetX - 3 * t.getWidth()) / 3 );
+		
+		addTextarea("SInstructions", "N/A", scenarioWindow, background.getWidth() - (2 * offsetX),
+				54, Fields.small).hideScrollbar();
+		
+		addTextfield("SInput", scenarioWindow, fieldWidth, fieldHeight, Fields.medium);
+		addButton("SConfirm", "N/A", scenarioWindow, mButtonWidth, sButtonHeight, Fields.small);
+		
+		// Initialize the miscellaneous window elements
+		addTextarea("ActiveAxesDisplay", "Axes Display:", miscWindow, lLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("ActiveEEDisplay", "EE Display:", miscWindow, lLblWidth, sButtonHeight, Fields.medium);
+		
+		addButton("ToggleOBBs", "Hide OBBs", miscWindow, lButtonWidth, sButtonHeight, Fields.small);
+		addButton("ToggleRobot", "Add Robot", miscWindow, lButtonWidth, sButtonHeight, Fields.small);
+
+		/* Initialize dropdown list elements
+		 * 
+		 * NOTE: the order in which the dropdown lists matters!
+		 * 		(Adding the dropdown lists last places them in front of the
+		 * other UI elements, which is important, when the list is open) */
+		DropdownList ddlLimbo = addDropdown("EEDisplay", miscWindow, ldropItemWidth, dropItemHeight, 4,
+				Fields.small);
+		ddlLimbo.addItem(EEMapping.DOT.toString(), EEMapping.DOT)
+				.addItem(EEMapping.LINE.toString(), EEMapping.LINE)
+				.addItem(EEMapping.NONE.toString(), EEMapping.NONE)
+				.setValue(0);
+		
+		ddlLimbo = addDropdown("AxesDisplay", miscWindow, ldropItemWidth, dropItemHeight, 4,
+				Fields.small);
+		ddlLimbo.addItem(AxesDisplay.AXES.toString(), AxesDisplay.AXES)
+				.addItem(AxesDisplay.GRID.toString(), AxesDisplay.GRID)
+				.addItem(AxesDisplay.NONE.toString(), AxesDisplay.NONE)
+				.setValue(0);
+		
+		addDropdown("Scenario", scenarioWindow, ldropItemWidth, dropItemHeight, 4, Fields.small);
+		addDropdown("Fixture", editObjWindow, ldropItemWidth, dropItemHeight, 4, Fields.small);
+		 
+		for (int idx = 0; idx < 1; ++idx) {
+			// dimension field dropdown lists
+			addDropdown(String.format("DimDdl%d", idx), sharedElements, ldropItemWidth,
+					dropItemHeight, 4, Fields.small);
+		}
+		
+		addDropdown("Object", editObjWindow, ldropItemWidth, dropItemHeight, 4, Fields.small);
+		
+		ddlLimbo = addDropdown("Outline", createObjWindow, sdropItemWidth, dropItemHeight,
+				4, Fields.small);
+		ddlLimbo.addItem("black", app.color(0))
+				.addItem("red", app.color(255, 0, 0))
+				.addItem("green", app.color(0, 255, 0))
+				.addItem("blue", app.color(0, 0, 255))
+				.addItem("orange", app.color(255, 60, 0))
+				.addItem("yellow", app.color(255, 255, 0))
+				.addItem("pink", app.color(255, 0, 255))
+				.addItem("purple", app.color(90, 0, 255));
+
+		ddlLimbo = addDropdown("Fill", createObjWindow, mdropItemWidth, dropItemHeight,
+				4, Fields.small);
+		ddlLimbo.addItem("white", app.color(255))
+				.addItem("black", app.color(0))
+				.addItem("red", app.color(255, 0, 0))
+				.addItem("green", app.color(0, 255, 0))
+				.addItem("blue", app.color(0, 0, 255))
+				.addItem("orange", app.color(255, 60, 0))
+				.addItem("yellow", app.color(255, 255, 0))
+				.addItem("pink", app.color(255, 0, 255))
+				.addItem("purple", app.color(90, 0, 255))
+				.addItem("sky blue", app.color(0, 255, 255))
+				.addItem("dark green", app.color(0, 100, 15));
+
+		ddlLimbo = addDropdown("Shape", createObjWindow, sdropItemWidth, dropItemHeight,
+				4, Fields.small);
+		ddlLimbo.addItem("Box", ShapeType.BOX)
+				.addItem("Cylinder", ShapeType.CYLINDER)
+				.addItem("Import", ShapeType.MODEL);
+
+		ddlLimbo = addDropdown("ObjType", createObjWindow, sdropItemWidth, dropItemHeight,
+				3, Fields.small);
+		ddlLimbo.addItem("Parts", 0.0f)
+				.addItem("Fixtures", 1.0f);
 	}
 	
 	/**
