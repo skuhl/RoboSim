@@ -2015,12 +2015,13 @@ public class RobotRun extends PApplet {
 		}
 		/**/
 
-		/*Camera Test Code */
+		/*Camera Test Code *
 		Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
 		float[][] axes = RMath.quatToMatrix(p.orientation);
 		c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[1][0], axes[1][1], axes[1][2]), -PI/2)));
 		c.setPosition(p.position);
 		displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
+		/**/
 
 		PVector near[] = c.getPlaneNear();
 		PVector far[] = c.getPlaneFar();
@@ -2063,6 +2064,8 @@ public class RobotRun extends PApplet {
 		
 		c.checkObjectInFrame(f);
 		//RobotRun.printMat(c.getOrientationMat());
+		/**/
+		 
 
 		noLights();
 		noStroke();
@@ -4668,6 +4671,10 @@ public class RobotRun extends PApplet {
 			break;
 		case CONFIRM_INSERT:
 		case CONFIRM_RENUM:
+		case INPUT_DREG_IDX:
+		case INPUT_IOREG_IDX:
+		case INPUT_PREG_IDX1:
+		case INPUT_PREG_IDX2:
 		case NAV_PROG_INSTR:
 		case NAV_INSTR_MENU:
 		case SET_MV_INSTR_SPD:
@@ -5668,6 +5675,20 @@ public class RobotRun extends PApplet {
 	@Override
 	public void keyPressed() {
 		
+		if (key == 'd') {
+			// Debug output key
+			if (mode == ScreenMode.INPUT_PREG_IDX2 || mode == ScreenMode.INPUT_PREG_IDX1) {
+				
+				System.out.println(options);
+				
+			} else {
+				
+				System.out.println(isShift());
+				
+			}
+			
+		}
+
 		if (key == 27) {
 			// Disable the window exiting function of the 'esc' key
 			key = 0;
@@ -5685,17 +5706,16 @@ public class RobotRun extends PApplet {
 					characterInput(key);
 					return;
 					
-				}
-			}
-			else {
-				// Pendant button shortcuts
-				switch(keyCode) {
-				case KeyEvent.VK_ENTER:			ENTER(); break;
-				case KeyEvent.VK_BACK_SPACE:	BKSPC(); break;
-				case KeyEvent.VK_DOWN:			arrow_dn(); break;
-				case KeyEvent.VK_LEFT:			arrow_lt(); break;
-				case KeyEvent.VK_RIGHT:			arrow_rt(); break;
-				case KeyEvent.VK_UP:			arrow_up(); break;
+				} else {
+					// Pendant button shortcuts
+					switch(keyCode) {
+					case KeyEvent.VK_ENTER:			ENTER(); break;
+					case KeyEvent.VK_BACK_SPACE:	BKSPC(); break;
+					case KeyEvent.VK_DOWN:			arrow_dn(); break;
+					case KeyEvent.VK_LEFT:			arrow_lt(); break;
+					case KeyEvent.VK_RIGHT:			arrow_rt(); break;
+					case KeyEvent.VK_UP:			arrow_up(); break;
+					}
 				}
 			}
 		}
@@ -5703,7 +5723,7 @@ public class RobotRun extends PApplet {
 		// Pendant button shortcuts
 		switch(keyCode) {
 		case KeyEvent.VK_SHIFT:		if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
-										shift(true); break;
+										setShift(true); break;
 		case KeyEvent.VK_U: 		JOINT1_NEG(); break;
 		case KeyEvent.VK_I:			JOINT1_POS(); break;
 		case KeyEvent.VK_J: 		JOINT2_NEG(); break;
@@ -5765,6 +5785,7 @@ public class RobotRun extends PApplet {
 			getActiveRobot().releaseHeldObject();
 			getActiveRobot().setJointAngles(rot);
 			intermediatePositions.clear();
+			
 		}
 	}
 
@@ -5772,7 +5793,7 @@ public class RobotRun extends PApplet {
 		
 		switch(keyCode) {
 		case KeyEvent.VK_SHIFT: 	if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
-										shift(false); break;
+										setShift(false); break;
 		case KeyEvent.VK_U: 		JOINT1_NEG(); break;
 		case KeyEvent.VK_I:			JOINT1_POS(); break;
 		case KeyEvent.VK_J: 		JOINT2_NEG(); break;
@@ -7537,8 +7558,21 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void setShift(boolean shift) {
-		this.shift = shift;
+	public void setShift(boolean flag) {
+		
+		if (shift != flag) {
+			// Update the color of the shift button
+			int butColor = (flag) ? Fields.BUTTON_ACTIVE : Fields.BUTTON_DEFAULT;
+			((Button) cp5.get("shift")).setColorBackground(butColor);
+		}
+		
+		if (!flag) {
+			// Stop Robot jog movement when shift is off
+			hold();
+		}
+
+		shift = flag;
+		updateScreen();
 	}
 
 	public void setStep(boolean step) {
@@ -7689,22 +7723,7 @@ public class RobotRun extends PApplet {
 
 	// toggle shift on/ off and button highlight
 	public void shift() {
-		shift(!this.shift);
-	}
-
-	// set shift value to 'b'
-	public void shift(boolean b) {
-		if (b) {
-			((Button) cp5.get("shift")).setColorBackground(Fields.BUTTON_ACTIVE);
-
-		} else {
-			// Stop Robot jog movement when shift is off
-			hold();
-			((Button) cp5.get("shift")).setColorBackground(Fields.BUTTON_DEFAULT);
-		}
-
-		setShift(b);
-		updateScreen();
+		setShift(!shift);
 	}
 
 	/**
