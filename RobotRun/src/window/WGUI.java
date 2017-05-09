@@ -684,17 +684,21 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO
+	 * Adds a button to the UI with the given name, label, parent, xy position,
+	 * width, height, and font. The UI's color scheme is applied to the button.
 	 * 
-	 * @param name
-	 * @param lblTxt
-	 * @param parent
-	 * @param posX
-	 * @param posY
-	 * @param wdh
-	 * @param hgt
-	 * @param lblFont
-	 * @return
+	 * @param name		The name (or ID) of the button, which must be unique
+	 * 					amongst all controllers in the UI!
+	 * @param lblTxt	The text which will be rendered on the button
+	 * @param parent	The window group, to which this button belongs
+	 * @param posX		The x position of the button relative to the position
+	 * 					of its parent
+	 * @param posY		The y position of the button relative to the position
+	 * 					of its parent
+	 * @param wdh		The width of the button
+	 * @param hgt		The height of the button
+	 * @param lblFont	The font of the button label's text
+	 * @return			A reference to the new button
 	 */
 	private MyButton addButton(String name, String lblTxt, Group parent,
 			float posX, float posY, int wdh, int hgt, PFont lblFont) {
@@ -714,15 +718,20 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO
+	 * Adds a button to the UI with the given name, image labels, xy position,
+	 * width, and height. The parent of the button is the top element of the
+	 * UI.
 	 * 
-	 * @param name
-	 * @param imgLbls
-	 * @param posX
-	 * @param posY
-	 * @param wdh
-	 * @param hgt
-	 * @return
+	 * @param name		The name (or ID) of the button, which must be unique
+	 * 					amongst all UI elements!
+	 * @param imgLbls	A list of images, which will be rendered on the button.
+	 * @param posX		The x position of the button relative to the position
+	 * 					of its parent
+	 * @param posY		The y position of the button relative to the position
+	 * 					of its parent
+	 * @param wdh		The width of the button
+	 * @param hgt		The height of the button
+	 * @return			A reference to the new button
 	 */
 	private MyButton addButton(String name, PImage[] imgLbls, float posX,
 			float posY, int wdh, int hgt) {
@@ -738,16 +747,20 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO
+	 * Adds a button to the UI with the given name, parent, image labels, xy
+	 * position, width, and height.
 	 * 
-	 * @param name
-	 * @param parent
-	 * @param imgLbls
-	 * @param posX
-	 * @param posY
-	 * @param wdh
-	 * @param hgt
-	 * @return
+	 * @param name		The name (or ID) of the button, which must be unique
+	 * 					amongst all UI elements!
+	 * @param parent	The window group, to which this button belongs
+	 * @param imgLbls	A list of images, which will be rendered on the button
+	 * @param posX		The x position of the button relative to the position
+	 * 					of its parent
+	 * @param posY		The y position of the button relative to the position
+	 * 					of its parent
+	 * @param wdh		The width of the button
+	 * @param hgt		The height of the button
+	 * @return			A reference to the new button
 	 */
 	private MyButton addButton(String name, Group parent, PImage[] imgLbls,
 			float posX, float posY, int wdh, int hgt) {
@@ -898,18 +911,22 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO
+	 * Adds a text-are with the given name, text, parent, xy position, width,
+	 * height, text color, background color, and font to the UI.
 	 * 
-	 * @param name
-	 * @param iniTxt
-	 * @param parent
-	 * @param posX
-	 * @param posY
-	 * @param wdh
-	 * @param hgt
-	 * @param txtColor
-	 * @param bgColor
-	 * @param lblFont
+	 * @param name		The name (or ID) of the text-area, which must be unique
+	 * 					amongst all UI elements
+	 * @param iniTxt	The text rendered in the text-area
+	 * @param parent	The window group, to which this text-area belongs
+	 * @param posX		The x position of the text-area relative to the
+	 * 					position of its parent
+	 * @param posY		The y position of the text-area relative to the
+	 * 					position of its parent
+	 * @param wdh		The width of the text-area
+	 * @param hgt		The height of the text-area
+	 * @param txtColor	The color of the text-area's text
+	 * @param bgColor	The color of the text-area's background
+	 * @param lblFont	The font of the text-area
 	 * @return
 	 */
 	private Textarea addTextarea(String name, String iniTxt, Group parent,
@@ -1488,20 +1505,31 @@ public class WGUI implements ControlListener {
 	 }
 	 
 	 /**
-	  * TODO
+	  * Parses a six-element float array from the six orientation input
+	  * text-fields in the edit window UI elements. Each value is validated as
+	  * a floating-point number and clamped within the bounds [-9999, 9999]. If
+	  * the input for a field is blank or null, then its value in the array
+	  * will also be null. However, if the input for any of the fields is not a
+	  * real number, then a null array is returned. The first three elements of
+	  * the array correspond to an xyz position input and the last three
+	  * correspond to a wpr euler angle rotation set in degrees. Both of these
+	  * values are assumed to correspond to a position and orientation with
+	  * respect to the world frame 
 	  * 
-	  * @return
+	  * @return	A list of input values from the orientation text-fields in the
+	  * 		world object edit window
 	  */
 	 private Float[] getCurrentValues() {
 		 try {
-			 // Pull from x, y, z, w, p, r, fields input fields
+			 /* Pull from x, y, z, w, p, r, input values from their
+			  * corresponding text-fields */
 			 String[] orienVals = new String[] {
 					getTextField("XCur").getText(), getTextField("YCur").getText(),
 					getTextField("ZCur").getText(), getTextField("WCur").getText(),
 					getTextField("PCur").getText(), getTextField("RCur").getText()
 			 };
 			 
-			 // NaN indicates an uninitialized field
+			 // Null indicates an uninitialized field
 			 Float[] values = new Float[] { null, null, null, null, null, null };
 			 
 			 for (int valIdx = 0; valIdx < orienVals.length; ++valIdx) {
@@ -1752,7 +1780,10 @@ public class WGUI implements ControlListener {
 	 }
 	 
 	 /**
-	  * TODO
+	  * Parses the name of a .stl model source file from one of two input
+	  * fields: a text-field or dropdown list. The one used is dependent on
+	  * which of the two fields that the user edited last
+	  * (i.e.e lastModImport).
 	  * 
 	  * @return	The name of the .stl file to use as a model for a world object
 	  */
@@ -1958,12 +1989,12 @@ public class WGUI implements ControlListener {
 	 }
 	 
 	/**
-	 * TODO
+	 * Renders all the text on the pendant's screen based on the given input.
 	 * 
-	 * @param header
-	 * @param contents
-	 * @param options
-	 * @param funcLbls
+	 * @param header	The header of the pendant screen
+	 * @param contents	The main content fields
+	 * @param options	The option fields
+	 * @param funcLbls	The function button labels
 	 */
 	public void renderPendantScreen(String header, MenuScroll contents,
 			MenuScroll options, String[] funcLbls) {
@@ -1988,16 +2019,29 @@ public class WGUI implements ControlListener {
 			options.setLocation(10, 199);
 			options.setMaxDisplay(3);
 		}
-
+		
+		/* Keep track of the pendant display text-field indexes last used by
+		 * each menu. */
 		int lastTAIdx = renderMenu(contents, 0);
 		lastTAIdx = renderMenu(options, lastTAIdx);
 
-		// set f button text labels
+		// Set the labels for each function button
 		for (int i = 0; i < 5; i += 1) {
 			getTextArea("fl" + i).setText(funcLbls[i]);
 		}
 	}
 	
+	/**
+	 * Renders the text and text highlighting for the given menu. The TAIdx
+	 * field indicates the index of the first text-field, in the list of
+	 * pendant display text-fields, to use for rendering the menu. In addition,
+	 * the index of the next unused text-field is returned by this method.
+	 * 
+	 * @param menu	The menu contents to display on the pendant
+	 * @param TAIdx	The index of the first text-field in displayLines to use
+	 * 				for rendering the contents of menu.
+	 * @return		The index of the next unused text-field in displayLines
+	 */
 	public int renderMenu(MenuScroll menu, int TAIdx) {
 		ScreenMode m = app.getMode();
 		DisplayLine active;
@@ -2577,16 +2621,42 @@ public class WGUI implements ControlListener {
 	 }
 	 
 	 /**
-	  * TODO
+	  * Updates the background color of the robot jog buttons corresponding to
+	  * the given pair index based on the given direction value. The are six
+	  * pairs of jog buttons, where each pair corresponds to a distinct robot
+	  * joint and axis motion.
 	  * 
-	  * @param set
-	  * @param newDir
+	  * Pair index		Motion
+	  * 0		->		joint 1 and x-axis translational
+	  * 1		->		joint 2 and y-axis translational
+	  * 2		->		joint 3 and z-axis translational
+	  * 3		->		joint 4 and x-axis rotational
+	  * 4		->		joint 5 and y-axis rotation
+	  * 5		->		joint 6 and z axis rotation
+	  * 
+	  * One button in a pair represent positive motion and the other negative
+	  * motion. Only one button in a pair is active at one time, so if the
+	  * inactive button is activated, then the active button becomes inactive.
+	  * If neither are active, then the inactive button, which is pressed
+	  * becomes active. If a button in a pair is active, then its background
+	  * color becomes B_ACTIVE_C, otherwise it is B_DEFAULT_C.
+	  * 
+	  * The sign of the newDir parameter defines the direction of motion
+	  * corresponding to a button pair.
+	  * 
+	  * If newDir > 0, then the positive button becomes active
+	  * If newDir == 0, then both buttons become inactive
+	  * If newDir < 0, then the negative button becomes active
+	  * 
+	  * 
+	  * @param pair		The index of a jog button pair
+	  * @param newDir	The new motion direction
 	  */
-	 public void updateJogButtons(int set, float newDir) {
+	 public void updateJogButtons(int pair, float newDir) {
 		// Positive jog button is active when the direction is positive
-		updateButtonBgColor(String.format("joint%d_pos", set + 1), newDir > 0);
+		updateButtonBgColor(String.format("joint%d_pos", pair + 1), newDir > 0);
 		// Negative jog button is active when the direction is negative
-		updateButtonBgColor(String.format("joint%d_neg", set + 1), newDir < 0);
+		updateButtonBgColor(String.format("joint%d_neg", pair + 1), newDir < 0);
 	 }
 
 	 /**
@@ -2640,10 +2710,25 @@ public class WGUI implements ControlListener {
 	 }
 	 
 	 /**
-	  * TODO
+	  * Updates the scenarios list based on the scenario edit window.
 	  * 
-	  * @param scenarios
-	  * @return
+	  * In the new subwindow, the user can create a new screnario, which will
+	  * be added to the list of scenarios and set active.
+	  * In the Load subwindow, the user can set an inactive scenario as active.
+	  * In the rename subwindow, the user can rename an existing scenario.
+	  * 
+	  * The return value describes the result of the scenario list
+	  * modification. A negative value indicates that an error occurred.
+	  * 
+	  * @param scenarios	The current list of scenarios
+	  * @return				 0	An existing scenario is successfully renamed,
+	  * 					 1	A new scenario is successfully added to the
+	  * 					 	list of scenarios,
+	  * 					 2	An existing scenario is successfully renamed,
+	  * 					-1	The name for a new scenario is invalid,
+	  * 					-2	A new scenario failed to be created,
+	  * 					-3	No scenario is selected to be renamed,
+	  * 					-4	The replacement name for a scenario is invalid
 	  */
 	 public int updateScenarios(ArrayList<Scenario> scenarios) {
 		 float val = getRadioButton("ScenarioOpt").getValue();

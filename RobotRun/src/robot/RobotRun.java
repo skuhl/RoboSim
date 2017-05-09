@@ -581,7 +581,7 @@ public class RobotRun extends PApplet {
 	 * @return Whether or not bounding boxes are displayed
 	 */
 	public boolean areOBBsDisplayed() {
-		return getManager().getOBBButtonState();
+		return UI.getOBBButtonState();
 	}
 
 	public String arrayToString(float[] array) {
@@ -1338,7 +1338,7 @@ public class RobotRun extends PApplet {
 	 * Clears all input fields in the world object creation and edit windows.
 	 */
 	public void ClearFields() {
-		getManager().clearInputsFields();
+		UI.clearInputsFields();
 	}
 
 	/**
@@ -1546,7 +1546,7 @@ public class RobotRun extends PApplet {
 	public void CreateWldObj() {
 		/* Create a world object from the input fields in the Create window. */
 		if (activeScenario != null) {
-			WorldObject newObject = getManager().createWorldObject();
+			WorldObject newObject = UI.createWorldObject();
 
 			if (newObject != null) {
 				newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
@@ -1565,7 +1565,7 @@ public class RobotRun extends PApplet {
 	public void DeleteWldObj() {
 		// Delete focused world object and add to the scenario undo stack
 		updateScenarioUndo(UI.getSelectedWO());
-		int ret = getManager().deleteActiveWorldObject();
+		int ret = UI.deleteActiveWorldObject();
 		DataManagement.saveScenarios(this);
 		if (Fields.DEBUG) {
 			System.out.printf("World Object removed: %d\n", ret);
@@ -1603,7 +1603,7 @@ public class RobotRun extends PApplet {
 		renderCoordAxes();
 		renderTeachPoints();
 
-		WorldObject wldObj = getManager().getSelectedWO();
+		WorldObject wldObj = UI.getSelectedWO();
 
 		if (wldObj != null) {
 			pushMatrix();
@@ -3042,7 +3042,7 @@ public class RobotRun extends PApplet {
 
 				if (((CallInstruction) activeInstr).getTgtDevice() != activeRobot) {
 					// Call an inactive Robot's program
-					if (getManager().getRobotButtonState()) {
+					if (UI.getRobotButtonState()) {
 						nextInstr = activeInstr.execute();
 					} else {
 						// No second robot in application
@@ -3712,7 +3712,7 @@ public class RobotRun extends PApplet {
 	 * @return the active axes display state
 	 */
 	public AxesDisplay getAxesState() {
-		return getManager().getAxesDisplay();
+		return UI.getAxesDisplay();
 	}
 
 	public Camera getCamera() {
@@ -3894,7 +3894,7 @@ public class RobotRun extends PApplet {
 	 * @return The active End Effector mapping state
 	 */
 	public EEMapping getEEMapping() {
-		return getManager().getEEMapping();
+		return UI.getEEMapping();
 	}
 
 	// Function label text
@@ -4303,7 +4303,7 @@ public class RobotRun extends PApplet {
 		return row;
 	}
 
-	public WGUI getManager() {
+	public WGUI getUI() {
 		return UI;
 	}
 	
@@ -4311,8 +4311,6 @@ public class RobotRun extends PApplet {
 		return mode;
 	}
 	
-	
-
 	public MenuScroll getOptionsMenu() {
 		return options;
 	}
@@ -4464,7 +4462,7 @@ public class RobotRun extends PApplet {
 	 * @return Whether or not the second robot is used in the application
 	 */
 	public boolean isSecondRobotUsed() {
-		return getManager().getRobotButtonState();
+		return UI.getRobotButtonState();
 	}
 
 	public boolean isShift() {
@@ -4551,11 +4549,11 @@ public class RobotRun extends PApplet {
 		if (key == 27) {
 			// Disable the window exiting function of the 'esc' key
 			key = 0;
-		} else if (getManager() != null && getManager().isATextFieldActive()) {
+		} else if (UI != null && UI.isATextFieldActive()) {
 			// Disable key events when typing in a text field
 			return;
 
-		} else if (getManager() != null && getManager().isPendantActive()) {
+		} else if (UI != null && UI.isPendantActive()) {
 			if (mode.getType() == ScreenType.TYPE_NUM_ENTRY || mode.getType() == ScreenType.TYPE_POINT_ENTRY
 					|| mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 				
@@ -5774,7 +5772,7 @@ public class RobotRun extends PApplet {
 
 	@Override
 	public void mouseWheel(MouseEvent event) {
-		if (getManager() != null && getManager().isMouseOverADropdownList()) {
+		if (UI != null && UI.isMouseOverADropdownList()) {
 			// Disable zomming when selecting an element from a dropdown list
 			return;
 		}
@@ -5797,7 +5795,7 @@ public class RobotRun extends PApplet {
 		if (!isProgramRunning()) {
 			WorldObject savedState = (WorldObject) UI.getSelectedWO().clone();
 
-			if (getManager().updateWOCurrent()) {
+			if (UI.updateWOCurrent()) {
 				/*
 				 * If the object was modified, then save the previous state of
 				 * the object
@@ -5817,9 +5815,9 @@ public class RobotRun extends PApplet {
 		// Only allow world object editing when no program is executing
 		if (!isProgramRunning()) {
 			WorldObject savedState = (WorldObject) UI.getSelectedWO().clone();
-			getManager().fillCurWithDef();
+			UI.fillCurWithDef();
 
-			if (getManager().updateWOCurrent()) {
+			if (UI.updateWOCurrent()) {
 				/*
 				 * If the object was modified, then save the previous state of
 				 * the object
@@ -6621,7 +6619,7 @@ public class RobotRun extends PApplet {
 			lastTextPositionY += 20;
 		}
 
-		WorldObject toEdit = getManager().getSelectedWO();
+		WorldObject toEdit = UI.getSelectedWO();
 		// Display the position and orientation of the active world object
 		if (toEdit != null) {
 			String[] dimFields = toEdit.dimFieldsToStringArray();
@@ -6722,7 +6720,7 @@ public class RobotRun extends PApplet {
 			text(String.format("EE Mapping: %s", getEEMapping().name()), lastTextPositionX, height - 30);
 		}
 
-		getManager().updateWindowDisplay();
+		UI.updateWindowDisplay();
 	}
 
 	/**
@@ -6799,10 +6797,10 @@ public class RobotRun extends PApplet {
 	 * Deals with the confirm functionality of the scenario window.
 	 */
 	public void SConfirm() {
-		int ret = getManager().updateScenarios(SCENARIOS);
+		int ret = UI.updateScenarios(SCENARIOS);
 
 		if (ret > 0) {
-			activeScenario = getManager().getActiveScenario();
+			activeScenario = UI.getActiveScenario();
 			DataManagement.saveScenarios(this);
 
 		} else if (ret == 0) {
@@ -7127,20 +7125,20 @@ public class RobotRun extends PApplet {
 	 * Toggle bounding box display on or off.
 	 */
 	public void ToggleOBBs() {
-		getManager().updateWindowContentsPositions();
+		UI.updateWindowContentsPositions();
 	}
 
 	/**
 	 * Toggle the second Robot on or off.
 	 */
 	public void ToggleRobot() {
-		boolean robotRemoved = getManager().toggleSecondRobot();
+		boolean robotRemoved = UI.toggleSecondRobot();
 		// Reset the active robot to the first if the second robot is removed
 		if (robotRemoved && activeRobot != ROBOTS.get(0)) {
 			activeRobot = ROBOTS.get(0);
 		}
 
-		getManager().updateWindowContentsPositions();
+		UI.updateWindowContentsPositions();
 		updatePendantScreen();
 	}
 
@@ -7270,7 +7268,7 @@ public class RobotRun extends PApplet {
 			s.updateAndDrawObjects(model);
 		}
 
-		if (getManager().getRobotButtonState()) {
+		if (UI.getRobotButtonState()) {
 			// Draw all robots
 			for (RoboticArm r : ROBOTS.values()) {
 				r.draw();
@@ -7586,7 +7584,7 @@ public class RobotRun extends PApplet {
 			 * Only allow the user to add robot call instructions when the
 			 * second robot is in the application
 			 */
-			if (getManager().getRobotButtonState()) {
+			if (UI.getRobotButtonState()) {
 				options.addLine("6. RCALL");
 			}
 			break;
@@ -7749,7 +7747,7 @@ public class RobotRun extends PApplet {
 		updateContents();
 		updateOptions();
 		
-		getManager().renderPendantScreen(getHeader(mode), getContentsMenu(),
+		UI.renderPendantScreen(getHeader(mode), getContentsMenu(),
 				getOptionsMenu(), getFunctionLabels(mode));
 	}
 	
@@ -7761,7 +7759,7 @@ public class RobotRun extends PApplet {
 	public void UpdateWODef() {
 		WorldObject saveState = (WorldObject) UI.getSelectedWO().clone();
 
-		if (getManager().updateWODefault()) {
+		if (UI.updateWODefault()) {
 			/*
 			 * If the object was modified, then save the previous state of the
 			 * object
