@@ -3,8 +3,8 @@ import robot.RobotRun;
 import robot.RoboticArm;
 
 public class CallInstruction extends Instruction {
-	RoboticArm tgtDevice;
-	Program tgt;
+	private RoboticArm tgtDevice;
+	private Program tgt;
 
 	public CallInstruction(RoboticArm robot) {
 		tgtDevice = robot;
