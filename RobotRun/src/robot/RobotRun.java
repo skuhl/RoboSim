@@ -4428,366 +4428,12 @@ public class RobotRun extends PApplet {
 		return transform;
 	}
 
-	public void gui() {
-		
-		/**
-		// group 1: display and function buttons
-		g1 = cp5.addGroup("DISPLAY")
-			.setPosition(Fields.G1_PX, g1_py)
-			.setBackgroundColor(color(127, 127, 127, 100))
-			.setWidth(g1_width)
-			.setHeight(g1_height)
-			.setBackgroundHeight(g1_height)
-			.hideBar();
-		
-		cp5.addTextarea("txt")
-			.setPosition(display_px, 0)
-			.setSize(display_width, display_height)
-			.setColorBackground(Fields.UI_LIGHT)
-			.moveTo(g1);
-
-		/********************** Top row buttons **********************
-
-		// calculate how much space each button will be given
-		int button_offsetX = Fields.LARGE_BUTTON + 1;
-		int button_offsetY = Fields.LARGE_BUTTON + 1;
-
-		int record_normal_px = WindowManager.lButtonWidth * 5 + Fields.LARGE_BUTTON + 1;
-		int record_normal_py = 0;
-		PImage[] record = { loadImage("images/record-35x20.png"), 
-			loadImage("images/record-over.png"),
-			loadImage("images/record-on.png") };
-		bt_record_normal = cp5.addButton("record_normal")
-			.setPosition(record_normal_px, record_normal_py)
-			.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-			.setImages(record)
-			.updateSize();
-
-		int EE_normal_px = record_normal_px + Fields.LARGE_BUTTON + 1;
-		int EE_normal_py = 0;
-		PImage[] EE = { loadImage("images/EE_35x20.png"), 
-			loadImage("images/EE_over.png"),
-			loadImage("images/EE_down.png") };
-		bt_ee_normal = cp5.addButton("EE")
-			.setPosition(EE_normal_px, EE_normal_py)
-			.setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-			.setImages(EE)
-			.updateSize();
-
-		/******************** Function Row ********************
-
-		int f1_px = display_px;
-		int f1_py = display_py + display_height + 2;
-		int f_width = display_width / 5 - 1;
-		cp5.addButton("f1").setPosition(f1_px, f1_py)
-		.setSize(f_width, Fields.LARGE_BUTTON)
-		.setCaptionLabel("F1")
-		.setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT)
-		.moveTo(g1);
-
-		int f2_px = f1_px + f_width + 1;
-		int f2_py = f1_py;
-		cp5.addButton("f2").setPosition(f2_px, f2_py)
-		.setSize(f_width, Fields.LARGE_BUTTON)
-		.setCaptionLabel("F2")
-		.setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT)
-		.moveTo(g1);
-
-		int f3_px = f2_px + f_width + 1;
-		int f3_py = f2_py;
-		cp5.addButton("f3").setPosition(f3_px, f3_py)
-		.setSize(f_width, Fields.LARGE_BUTTON)
-		.setCaptionLabel("F3")
-		.setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT)
-		.moveTo(g1);
-
-		int f4_px = f3_px + f_width + 1;
-		int f4_py = f3_py;
-		cp5.addButton("f4").setPosition(f4_px, f4_py)
-		.setSize(f_width, Fields.LARGE_BUTTON)
-		.setCaptionLabel("F4")
-		.setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT)
-		.moveTo(g1);
-
-		int f5_px = f4_px + f_width + 1;
-		int f5_py = f4_py;
-		cp5.addButton("f5").setPosition(f5_px, f5_py)
-		.setSize(f_width, Fields.LARGE_BUTTON)
-		.setCaptionLabel("F5")
-		.setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT)
-		.moveTo(g1);
-
-		/********************** Step/Shift Row **********************
-
-		int st_px = f1_px;
-		int st_py = f1_py + button_offsetY + 10;
-		cp5.addButton("step").setPosition(st_px, st_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
-		.setCaptionLabel("STEP").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int mu_px = st_px + Fields.LARGE_BUTTON + 19;
-		int mu_py = st_py;
-		cp5.addButton("menu").setPosition(mu_px, mu_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("MENU").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int se_px = mu_px + Fields.LARGE_BUTTON + 15;
-		int se_py = mu_py;
-		cp5.addButton("select").setPosition(se_px, se_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("SELECT").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int ed_px = se_px + button_offsetX;
-		int ed_py = se_py;
-		cp5.addButton("edit").setPosition(ed_px, ed_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("EDIT").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int da_px = ed_px + button_offsetX;
-		int da_py = ed_py;
-		cp5.addButton("data").setPosition(da_px, da_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("DATA").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int fn_px = da_px + Fields.LARGE_BUTTON + 15;
-		int fn_py = da_py;
-		cp5.addButton("fctn").setPosition(fn_px, fn_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("FCTN").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int sf_px = fn_px + Fields.LARGE_BUTTON + 19;
-		int sf_py = fn_py;
-		cp5.addButton("shift").setPosition(sf_px, sf_py).setSize(Fields.LARGE_BUTTON, Fields.LARGE_BUTTON)
-		.setCaptionLabel("SHIFT").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int pr_px = mu_px;
-		int pr_py = mu_py + button_offsetY;
-		cp5.addButton("prev").setPosition(pr_px, pr_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("PREV").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int ne_px = fn_px;
-		int ne_py = mu_py + button_offsetY;
-		cp5.addButton("next").setPosition(ne_px, ne_py + 15).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("NEXT").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		/*********************** Arrow Keys ***********************
-		button_offsetY = Fields.SMALL_BUTTON + 1;
-
-		PImage[] imgs_arrow_up = { loadImage("images/arrow-up.png"), loadImage("images/arrow-up_over.png"),
-				loadImage("images/arrow-up_down.png") };
-		int up_px = ed_px + 5;
-		int up_py = ed_py + button_offsetY + 10;
-		cp5.addButton("arrow_up").setPosition(up_px, up_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-		.setImages(imgs_arrow_up).updateSize().moveTo(g1);
-
-		PImage[] imgs_arrow_down = { loadImage("images/arrow-down.png"), loadImage("images/arrow-down_over.png"),
-				loadImage("images/arrow-down_down.png") };
-		int dn_px = up_px;
-		int dn_py = up_py + button_offsetY;
-		cp5.addButton("arrow_dn").setPosition(dn_px, dn_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-		.setImages(imgs_arrow_down).updateSize().moveTo(g1);
-
-		PImage[] imgs_arrow_l = { loadImage("images/arrow-l.png"), loadImage("images/arrow-l_over.png"),
-				loadImage("images/arrow-l_down.png") };
-		int lt_px = dn_px - button_offsetX;
-		int lt_py = dn_py - button_offsetY / 2;
-		cp5.addButton("arrow_lt").setPosition(lt_px, lt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-		.setImages(imgs_arrow_l).updateSize().moveTo(g1);
-
-		PImage[] imgs_arrow_r = { loadImage("images/arrow-r.png"), loadImage("images/arrow-r_over.png"),
-				loadImage("images/arrow-r_down.png") };
-		int rt_px = dn_px + button_offsetX;
-		int rt_py = lt_py;
-		cp5.addButton("arrow_rt").setPosition(rt_px, rt_py).setSize(Fields.SMALL_BUTTON, Fields.SMALL_BUTTON)
-		.setImages(imgs_arrow_r).updateSize().moveTo(g1);
-
-		// --------------------------------------------------------------//
-		// Group 2 //
-		// --------------------------------------------------------------//
-		int g2_offsetY = display_py + display_height + 4 * Fields.LARGE_BUTTON - 10;
-
-		/********************** Numpad Block *********************
-
-		int LINE_px = ed_px - 7 * button_offsetX / 2;
-		int LINE_py = g2_offsetY + 5 * button_offsetY;
-		cp5.addButton("LINE").setPosition(LINE_px, LINE_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("-").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
-		.moveTo(g1);
-
-		int PERIOD_px = LINE_px + button_offsetX;
-		int PERIOD_py = LINE_py - button_offsetY;
-		cp5.addButton("PERIOD").setPosition(PERIOD_px, PERIOD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel(".").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
-		.moveTo(g1);
-
-		int COMMA_px = PERIOD_px + button_offsetX;
-		int COMMA_py = PERIOD_py;
-		cp5.addButton("COMMA").setPosition(COMMA_px, COMMA_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel(",").setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT)
-		.moveTo(g1);
-
-		int POSN_px = LINE_px + button_offsetX;
-		int POSN_py = LINE_py;
-		cp5.addButton("POSN").setPosition(POSN_px, POSN_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("POSN").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int IO_px = POSN_px + button_offsetX;
-		int IO_py = POSN_py;
-		cp5.addButton("IO").setPosition(IO_px, IO_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("I/O").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int NUM_px = LINE_px;
-		int NUM_py = LINE_py - button_offsetY;
-		for (int i = 0; i < 10; i += 1) {
-			cp5.addButton("NUM" + i).setPosition(NUM_px, NUM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-			.setCaptionLabel("" + i).setColorBackground(Fields.BUTTON_DEFAULT)
-			.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-			if (i % 3 == 0) {
-				NUM_px = LINE_px;
-				NUM_py -= button_offsetY;
-			} else {
-				NUM_px += button_offsetX;
-			}
-		}
-
-		int RESET_px = LINE_px;
-		int RESET_py = NUM_py;
-		cp5.addButton("RESET").setPosition(RESET_px, RESET_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("RESET").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int BKSPC_px = RESET_px + button_offsetX;
-		int BKSPC_py = RESET_py;
-		cp5.addButton("BKSPC").setPosition(BKSPC_px, BKSPC_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("BKSPC").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int ITEM_px = BKSPC_px + button_offsetX;
-		int ITEM_py = BKSPC_py;
-		cp5.addButton("ITEM").setPosition(ITEM_px, ITEM_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("ITEM").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		/*********************** Util Block *************************
-
-		int ENTER_px = ed_px;
-		int ENTER_py = g2_offsetY;
-		cp5.addButton("ENTER").setPosition(ENTER_px, ENTER_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("ENTER").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int TOOL1_px = ENTER_px;
-		int TOOL1_py = ENTER_py + button_offsetY;
-		cp5.addButton("TOOL1").setPosition(TOOL1_px, TOOL1_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("TOOL1").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int TOOL2_px = TOOL1_px;
-		int TOOL2_py = TOOL1_py + button_offsetY;
-		cp5.addButton("TOOL2").setPosition(TOOL2_px, TOOL2_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("TOOL2").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int MOVEMENU_px = TOOL2_px;
-		int MOVEMENU_py = TOOL2_py + button_offsetY;
-		cp5.addButton("MVMU").setPosition(MOVEMENU_px, MOVEMENU_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("MVMU").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int SETUP_px = MOVEMENU_px;
-		int SETUP_py = MOVEMENU_py + button_offsetY;
-		cp5.addButton("SETUP").setPosition(SETUP_px, SETUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("SETUP").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int STATUS_px = SETUP_px;
-		int STATUS_py = SETUP_py + button_offsetY;
-		cp5.addButton("status").setPosition(STATUS_px, STATUS_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("STATUS").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		/******************** Joint Control Block *******************
-
-		int hd_px = STATUS_px + 3 * button_offsetX / 2;
-		int hd_py = g2_offsetY;
-		cp5.addButton("hold").setPosition(hd_px, hd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("HOLD").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int fd_px = hd_px;
-		int fd_py = hd_py + button_offsetY;
-		cp5.addButton("fwd").setPosition(fd_px, fd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("FWD").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int bd_px = fd_px;
-		int bd_py = fd_py + button_offsetY;
-		cp5.addButton("bwd").setPosition(bd_px, bd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("BWD").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int COORD_px = bd_px;
-		int COORD_py = bd_py + button_offsetY;
-		cp5.addButton("coord").setPosition(COORD_px, COORD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("COORD").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int SPEEDUP_px = COORD_px;
-		int SPEEDUP_py = COORD_py + button_offsetY;
-		cp5.addButton("spdup").setPosition(SPEEDUP_px, SPEEDUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("+%").setColorBackground(Fields.BUTTON_DEFAULT)
-		.setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int SLOWDOWN_px = SPEEDUP_px;
-		int SLOWDOWN_py = SPEEDUP_py + button_offsetY;
-		cp5.addButton("spddn").setPosition(SLOWDOWN_px, SLOWDOWN_py)
-		.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel("-%")
-		.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1);
-
-		int JOINT_px = SLOWDOWN_px + button_offsetX;
-		int JOINT_py = g2_offsetY;
-		String[] labels = { " -X\n(J1)", " +X\n(J1)", " -Y\n(J2)", " +Y\n(J2)", " -Z\n(J3)", " +Z\n(J3)", "-XR\n(J4)",
-				"+XR\n(J4)", "-YR\n(J5)", "+YR\n(J5)", "-ZR\n(J6)", "+ZR\n(J6)" };
-
-		for (int i = 1; i <= 6; i += 1) {
-			cp5.addButton("JOINT" + i + "_NEG").setPosition(JOINT_px, JOINT_py)
-			.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2])
-			.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1)
-			.getCaptionLabel().alignY(TOP);
-
-			JOINT_px += Fields.LARGE_BUTTON + 1;
-			cp5.addButton("JOINT" + i + "_POS").setPosition(JOINT_px, JOINT_py)
-			.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2 + 1])
-			.setColorBackground(Fields.BUTTON_DEFAULT).setColorCaptionLabel(Fields.BUTTON_TEXT).moveTo(g1)
-			.getCaptionLabel().alignY(TOP);
-
-			JOINT_px = SLOWDOWN_px + button_offsetX;
-			JOINT_py += Fields.SMALL_BUTTON + 1;
-		}
-
-		List<Button> buttons = cp5.getAll(Button.class);
-		for (Button b : buttons) {
-			b.getCaptionLabel().setFont(fnt_conB);
-		}
-		/**/
-	}// End UI setup
-
-	/* Stops all of the Robot's movement */
+	/**
+	 * Stops all robot motion and program execution.
+	 */
 	public void hold() {
-		// Reset button highlighting
-		getManager().resetButtonColors();
-		// Stop program execution, which halts the robot
+		// Stop all robot motion and program execution
+		UI.resetJogButtons();
 		activeRobot.halt();
 		setProgramRunning(false);
 	}
@@ -4837,51 +4483,51 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void JOINT1_NEG() {
+	public void joint1_neg() {
 		updateRobotJogMotion(0, -1);
 	}
 
-	public void JOINT1_POS() {
+	public void joint1_pos() {
 		updateRobotJogMotion(0, 1);
 	}
 
-	public void JOINT2_NEG() {
+	public void joint2_neg() {
 		updateRobotJogMotion(1, -1);
 	}
 
-	public void JOINT2_POS() {
+	public void joint2_pos() {
 		updateRobotJogMotion(1, 1);
 	}
 
-	public void JOINT3_NEG() {
+	public void joint3_neg() {
 		updateRobotJogMotion(2, -1);
 	}
 
-	public void JOINT3_POS() {
+	public void joint3_pos() {
 		updateRobotJogMotion(2, 1);
 	}
 
-	public void JOINT4_NEG() {
+	public void joint4_neg() {
 		updateRobotJogMotion(3, -1);
 	}
 
-	public void JOINT4_POS() {
+	public void joint4_pos() {
 		updateRobotJogMotion(3, 1);
 	}
 
-	public void JOINT5_NEG() {
+	public void joint5_neg() {
 		updateRobotJogMotion(4, -1);
 	}
 
-	public void JOINT5_POS() {
+	public void joint5_pos() {
 		updateRobotJogMotion(4, 1);
 	}
 
-	public void JOINT6_NEG() {
+	public void joint6_neg() {
 		updateRobotJogMotion(5, -1);
 	}
 
-	public void JOINT6_POS() {
+	public void joint6_pos() {
 		updateRobotJogMotion(5, 1);
 	}
 
@@ -4938,18 +4584,18 @@ public class RobotRun extends PApplet {
 		switch(keyCode) {
 		case KeyEvent.VK_SHIFT:		if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
 										setShift(true); break;
-		case KeyEvent.VK_U: 		JOINT1_NEG(); break;
-		case KeyEvent.VK_I:			JOINT1_POS(); break;
-		case KeyEvent.VK_J: 		JOINT2_NEG(); break;
-		case KeyEvent.VK_K: 		JOINT2_POS(); break;
-		case KeyEvent.VK_M: 		JOINT3_NEG(); break;
-		case KeyEvent.VK_COMMA:		JOINT3_POS(); break;
-		case KeyEvent.VK_O: 		JOINT4_NEG(); break;
-		case KeyEvent.VK_P:			JOINT4_POS(); break;
-		case KeyEvent.VK_L: 		JOINT5_NEG(); break;
-		case KeyEvent.VK_SEMICOLON: JOINT5_POS(); break;
-		case KeyEvent.VK_PERIOD: 	JOINT6_NEG(); break;
-		case KeyEvent.VK_SLASH:		JOINT6_POS(); break;
+		case KeyEvent.VK_U: 		joint1_neg(); break;
+		case KeyEvent.VK_I:			joint1_pos(); break;
+		case KeyEvent.VK_J: 		joint2_neg(); break;
+		case KeyEvent.VK_K: 		joint2_pos(); break;
+		case KeyEvent.VK_M: 		joint3_neg(); break;
+		case KeyEvent.VK_COMMA:		joint3_pos(); break;
+		case KeyEvent.VK_O: 		joint4_neg(); break;
+		case KeyEvent.VK_P:			joint4_pos(); break;
+		case KeyEvent.VK_L: 		joint5_neg(); break;
+		case KeyEvent.VK_SEMICOLON: joint5_pos(); break;
+		case KeyEvent.VK_PERIOD: 	joint6_neg(); break;
+		case KeyEvent.VK_SLASH:		joint6_pos(); break;
 		case KeyEvent.VK_MINUS:		spddn(); break;
 		case KeyEvent.VK_EQUALS:	spdup(); break;
 		case KeyEvent.VK_CONTROL:	ctrl = true; break;
@@ -5008,18 +4654,18 @@ public class RobotRun extends PApplet {
 		switch(keyCode) {
 		case KeyEvent.VK_SHIFT: 	if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
 										setShift(false); break;
-		case KeyEvent.VK_U: 		JOINT1_NEG(); break;
-		case KeyEvent.VK_I:			JOINT1_POS(); break;
-		case KeyEvent.VK_J: 		JOINT2_NEG(); break;
-		case KeyEvent.VK_K: 		JOINT2_POS(); break;
-		case KeyEvent.VK_M: 		JOINT3_NEG(); break;
-		case KeyEvent.VK_COMMA:		JOINT3_POS(); break;
-		case KeyEvent.VK_O: 		JOINT4_NEG(); break;
-		case KeyEvent.VK_P:			JOINT4_POS(); break;
-		case KeyEvent.VK_L: 		JOINT5_NEG(); break;
-		case KeyEvent.VK_SEMICOLON: JOINT5_POS(); break;
-		case KeyEvent.VK_PERIOD: 	JOINT6_NEG(); break;
-		case KeyEvent.VK_SLASH:		JOINT6_POS(); break;
+		case KeyEvent.VK_U: 		joint1_neg(); break;
+		case KeyEvent.VK_I:			joint1_pos(); break;
+		case KeyEvent.VK_J: 		joint2_neg(); break;
+		case KeyEvent.VK_K: 		joint2_pos(); break;
+		case KeyEvent.VK_M: 		joint3_neg(); break;
+		case KeyEvent.VK_COMMA:		joint3_pos(); break;
+		case KeyEvent.VK_O: 		joint4_neg(); break;
+		case KeyEvent.VK_P:			joint4_pos(); break;
+		case KeyEvent.VK_L: 		joint5_neg(); break;
+		case KeyEvent.VK_SEMICOLON: joint5_pos(); break;
+		case KeyEvent.VK_PERIOD: 	joint6_neg(); break;
+		case KeyEvent.VK_SLASH:		joint6_pos(); break;
 		case KeyEvent.VK_CONTROL:	ctrl = false; break;
 			}
 	}
@@ -7244,7 +6890,9 @@ public class RobotRun extends PApplet {
 		
 		if (!flag) {
 			// Stop Robot jog movement when shift is off
-			hold();
+			// Stop all robot motion and program execution
+			UI.resetJogButtons();
+			activeRobot.halt();
 		}
 
 		shift = flag;
