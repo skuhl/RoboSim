@@ -42,7 +42,6 @@ public enum ScreenMode implements DisplayMode {
 	NAV_PREGS(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_DREGS(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_IOREG(ScreenType.TYPE_LIST_CONTENTS),
-	SET_CALL_PROG(ScreenType.TYPE_LIST_CONTENTS),
 	SET_MACRO_PROG(ScreenType.TYPE_LIST_CONTENTS),
 
 	/*
@@ -77,6 +76,7 @@ public enum ScreenMode implements DisplayMode {
 	SELECT_PASTE_OPT(ScreenType.TYPE_OPT_MENU),
 	SET_MACRO_TYPE(ScreenType.TYPE_OPT_MENU),
 	SET_MACRO_BINDING(ScreenType.TYPE_OPT_MENU),
+	SET_CALL_PROG(ScreenType.TYPE_OPT_MENU),
 
 	/*
 	 * Screens involving the entry of text, either via keyboard input or function buttons

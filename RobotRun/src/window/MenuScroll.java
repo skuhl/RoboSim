@@ -71,6 +71,22 @@ public class MenuScroll {
 		return null;
 	}
 	
+	/**
+	 * TODO comment
+	 * 
+	 * @return
+	 */
+	public int getActiveIndex() {
+		
+		DisplayLine active = getActiveLine();
+		
+		if (active != null) {
+			return active.getItemIdx();
+		}
+		
+		return -1;
+	}
+	
 	public int getColumnIdx() {
 		return columnIdx;
 	}

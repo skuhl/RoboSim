@@ -1298,6 +1298,24 @@ public class RoboticArm {
 			return null;
 		}
 	}
+	
+	/**
+	 * TODO comment
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public Program getProgram(String name) {
+		for (Program p : PROGRAM) {
+			if (p.getName().equals(name)) {
+				return p;
+			}
+			
+		}
+		
+		// No such program exists
+		return null;
+	}
 
 	/**
 	 * Returns the tool frame, associated with the given index, of the Robot,
@@ -1717,6 +1735,24 @@ public class RoboticArm {
 			return true;
 		}
 		
+		return false;
+	}
+	
+	/**
+	 * TODO  comment
+	 * 
+	 * @param active
+	 * @return
+	 */
+	public boolean setActiveProg(Program active) {
+		for (int idx = 0; idx < PROGRAM.size(); ++idx) {
+			if (PROGRAM.get(idx) == active) {
+				activeProgIdx = idx;
+				return true;
+			}
+		}
+		
+		// Not a valid program for this robot
 		return false;
 	}
 	
