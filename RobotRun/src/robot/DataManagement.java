@@ -383,10 +383,10 @@ public abstract class DataManagement {
 		} else if (instType == 7) {
 			boolean isCommented = in.readBoolean();
 			int tgtRID = in.readInt();
-			int pdx = in.readInt();
+			String pName = in.readUTF();
 			
 			RoboticArm tgt = RobotRun.getInstance().getRobot(tgtRID);
-			inst = new CallInstruction(tgt, pdx);
+			inst = new CallInstruction(tgt, tgt.getProgram(pName));
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 8) {
@@ -1229,7 +1229,7 @@ public abstract class DataManagement {
 				out.writeInt(c_inst.getTgtDevice().RID);
 			}
 			
-			out.writeInt(c_inst.getProgIdx());
+			out.writeUTF( c_inst.getProg().getName() );
 
 		} else if (inst instanceof RegisterStatement) {
 			RegisterStatement rs = (RegisterStatement)inst;
