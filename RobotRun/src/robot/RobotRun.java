@@ -2647,7 +2647,8 @@ public class RobotRun extends PApplet {
 			// Call instruction edit
 		case SET_CALL_PROG:
 			Instruction cInst = r.getInstToEdit( r.getActiveInstIdx() );
-			Program tgt = r.getProgram( options.getActiveIndex() );
+			RoboticArm tgtDevice = ROBOTS.get( editIdx );
+			Program tgt = tgtDevice.getProgram( options.getActiveIndex() );
 			
 			if (cInst instanceof IfStatement) {
 				IfStatement ifStmt = (IfStatement) cInst;
@@ -7632,7 +7633,15 @@ public class RobotRun extends PApplet {
 			loadInstrEdit(mode);
 			break;
 		case SET_CALL_PROG:
-			options.setContents( loadPrograms(activeRobot) );
+			RoboticArm r = ROBOTS.get(editIdx);
+			
+			if (r == null) {
+				options.addLine( new DisplayLine(-1, 0, "Invalid editIdx") );
+				
+			} else {
+				// List the robot's program names
+				options.setContents( loadPrograms( ROBOTS.get(editIdx) ) );
+			}
 			
 			break;
 			// Insert instructions (non-movemet)

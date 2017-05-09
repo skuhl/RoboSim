@@ -90,7 +90,7 @@ public class RoboticArm {
 	/**
 	 * The list of programs associated with this robot.
 	 */
-	private final ArrayList<Program> PROGRAM;
+	private final ArrayList<Program> PROGRAMS;
 	
 	/**
 	 * A program execution call stack for previously active programs associated
@@ -202,7 +202,7 @@ public class RoboticArm {
 		BASE_POSITION = basePos;
 		
 		// Initialize program fields
-		PROGRAM = new ArrayList<>();
+		PROGRAMS = new ArrayList<>();
 		CALL_STACK = new Stack<>();
 		PROG_UNDO = new Stack<>();
 		
@@ -478,12 +478,12 @@ public class RoboticArm {
 		} else {
 			int idx = 0;
 
-			if(PROGRAM.size() < 1) {
-				PROGRAM.add(p);
+			if(PROGRAMS.size() < 1) {
+				PROGRAMS.add(p);
 				
 			}  else {
-				while(idx < PROGRAM.size() && PROGRAM.get(idx).getName().compareTo(p.getName()) < 0) { ++idx; }
-				PROGRAM.add(idx, p);
+				while(idx < PROGRAMS.size() && PROGRAMS.get(idx).getName().compareTo(p.getName()) < 0) { ++idx; }
+				PROGRAMS.add(idx, p);
 			}
 
 			return idx;
@@ -1040,12 +1040,12 @@ public class RoboticArm {
 	 * @return	The active for this Robot, or null if no program is active
 	 */
 	public Program getActiveProg() {
-		if (activeProgIdx < 0 || activeProgIdx >= PROGRAM.size()) {
+		if (activeProgIdx < 0 || activeProgIdx >= PROGRAMS.size()) {
 			// Invalid program index
 			return null;
 		}
 		
-		return PROGRAM.get(activeProgIdx);
+		return PROGRAMS.get(activeProgIdx);
 	}
 
 	/**
@@ -1290,8 +1290,8 @@ public class RoboticArm {
 	 * 				index is invalid.
 	 */
 	public Program getProgram(int pdx) {
-		if (pdx >= 0 && pdx < PROGRAM.size()) {
-			return PROGRAM.get(pdx);
+		if (pdx >= 0 && pdx < PROGRAMS.size()) {
+			return PROGRAMS.get(pdx);
 			
 		} else {
 			// Invalid index
@@ -1306,7 +1306,7 @@ public class RoboticArm {
 	 * @return
 	 */
 	public Program getProgram(String name) {
-		for (Program p : PROGRAM) {
+		for (Program p : PROGRAMS) {
 			if (p.getName().equals(name)) {
 				return p;
 			}
@@ -1514,7 +1514,7 @@ public class RoboticArm {
 	 * Returns the number of programs associated with the Robot.
 	 */
 	public int numOfPrograms() {
-		return PROGRAM.size();
+		return PROGRAMS.size();
 	}
 	
 	/**
@@ -1569,7 +1569,7 @@ public class RoboticArm {
 
 		ArrayList<DisplayLine> progList = new ArrayList<>();
 		for(int i = 0; i < size; i += 1) {
-			progList.add(new DisplayLine(i, 0, PROGRAM.get(i).getName()));
+			progList.add(new DisplayLine(i, 0, PROGRAMS.get(i).getName()));
 		}
 		
 		return progList;
@@ -1633,9 +1633,9 @@ public class RoboticArm {
 	 * 				is invalid
 	 */
 	public Program removeProgram(int pdx) {
-		if (pdx >= 0 && pdx < PROGRAM.size()) {
+		if (pdx >= 0 && pdx < PROGRAMS.size()) {
 			// Return the removed program
-			return PROGRAM.remove(pdx);
+			return PROGRAMS.remove(pdx);
 			
 		} else {
 			// Invalid index
@@ -1724,7 +1724,7 @@ public class RoboticArm {
 	 * @return			Whether the given index is valid
 	 */
 	public boolean setActiveProgIdx(int progIdx) {
-		if (progIdx >= 0 && progIdx < PROGRAM.size()) {
+		if (progIdx >= 0 && progIdx < PROGRAMS.size()) {
 			
 			if (activeProgIdx != progIdx) {
 				PROG_UNDO.clear();
@@ -1745,8 +1745,8 @@ public class RoboticArm {
 	 * @return
 	 */
 	public boolean setActiveProg(Program active) {
-		for (int idx = 0; idx < PROGRAM.size(); ++idx) {
-			if (PROGRAM.get(idx) == active) {
+		for (int idx = 0; idx < PROGRAMS.size(); ++idx) {
+			if (PROGRAMS.get(idx) == active) {
 				activeProgIdx = idx;
 				return true;
 			}
