@@ -4530,6 +4530,7 @@ public class RobotRun extends PApplet {
 			// Debug output key
 			if (mode == ScreenMode.INPUT_PREG_IDX2 || mode == ScreenMode.INPUT_PREG_IDX1) {
 				
+				updatePendantScreen();
 				System.out.println(options);
 				
 			} else {
@@ -5398,6 +5399,7 @@ public class RobotRun extends PApplet {
 		case INPUT_PREG_IDX1:
 		case INPUT_PREG_IDX2:
 		case INPUT_CONST:
+			options.reset();
 			workingText = new StringBuilder();
 			break;
 		case SET_IO_INSTR_IDX:
