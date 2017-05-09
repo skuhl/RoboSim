@@ -3,6 +3,7 @@ package ui;
 import controlP5.Button;
 import controlP5.ControlP5;
 import controlP5.ControllerGroup;
+import global.Fields;
 
 /**
  * An extension to the ControlP5 Button class that allows drag clicks.

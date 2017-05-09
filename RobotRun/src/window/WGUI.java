@@ -356,119 +356,6 @@ public class WGUI implements ControlListener {
 	private void pendant(PImage[][] buttonImages) {
 		ControllerInterface<?> c1 = null, c2 = null;
 		float[] relPos = new float[] { offsetX, 0 };
-
-		// calculate how much space each button will be given
-		int button_offsetX = Fields.LARGE_BUTTON + 1;
-		int button_offsetY = Fields.LARGE_BUTTON + 1;
-
-		int record_normal_px = WGUI.lButtonWidth * 5 + Fields.LARGE_BUTTON + 1;
-		int record_normal_py = 0;
-		
-		int EE_normal_px = record_normal_px + Fields.LARGE_BUTTON + 1;
-		int EE_normal_py = 0;
-		
-		int f1_px = offsetX;
-		int f1_py = 0 + Fields.PENDANT_SCREEN_HEIGHT + 2;
-		int f_width = Fields.PENDANT_SCREEN_WIDTH / 5 - 1;
-		
-		int f2_px = f1_px + f_width + 1;
-		int f2_py = f1_py;
-		
-		int f3_px = f2_px + f_width + 1;
-		int f3_py = f2_py;
-		
-		int f4_px = f3_px + f_width + 1;
-		int f4_py = f3_py;
-		
-		int f5_px = f4_px + f_width + 1;
-		int f5_py = f4_py;
-		
-		int st_px = f1_px;
-		int st_py = f1_py + button_offsetY + 10;
-
-		int mu_px = st_px + Fields.LARGE_BUTTON + 19;
-		int mu_py = st_py;
-
-		int se_px = mu_px + Fields.LARGE_BUTTON + 15;
-		int se_py = mu_py;
-
-		int ed_px = se_px + button_offsetX;
-		int ed_py = se_py;
-
-		int da_px = ed_px + button_offsetX;
-		int da_py = ed_py;
-
-		int fn_px = da_px + Fields.LARGE_BUTTON + 15;
-		int fn_py = da_py;
-		
-		int sf_px = fn_px + Fields.LARGE_BUTTON + 19;
-		int sf_py = fn_py;
-		
-		int pr_px = mu_px;
-		int pr_py = mu_py + button_offsetY;
-		
-		int ne_px = fn_px;
-		int ne_py = mu_py + button_offsetY;
-		
-		button_offsetY = Fields.SMALL_BUTTON + 1;
-
-		int up_px = ed_px + 5;
-		int up_py = ed_py + button_offsetY + 10;
-
-		int dn_px = up_px;
-		int dn_py = up_py + button_offsetY;
-		
-		int lt_px = dn_px - button_offsetX;
-		int lt_py = dn_py - button_offsetY / 2;
-		
-		int rt_px = dn_px + button_offsetX;
-		int rt_py = lt_py;
-		
-		int g2_offsetY = 0 + Fields.PENDANT_SCREEN_HEIGHT + 4 * Fields.LARGE_BUTTON - 10;
-		
-		int LINE_px = ed_px - 7 * button_offsetX / 2;
-		int LINE_py = g2_offsetY + 5 * button_offsetY;
-
-		int PERIOD_px = LINE_px + button_offsetX;
-		int PERIOD_py = LINE_py - button_offsetY;
-
-		int COMMA_px = PERIOD_px + button_offsetX;
-		int COMMA_py = PERIOD_py;
-
-		int POSN_px = LINE_px + button_offsetX;
-		int POSN_py = LINE_py;
-
-		int IO_px = POSN_px + button_offsetX;
-		int IO_py = POSN_py;
-
-		int NUM_px = LINE_px;
-		int NUM_py = LINE_py - button_offsetY;
-
-		int RESET_px = LINE_px;
-		int RESET_py = NUM_py;
-		
-		int BKSPC_px = RESET_px + button_offsetX;
-		int BKSPC_py = RESET_py;
-
-		int ITEM_px = BKSPC_px + button_offsetX;
-		int ITEM_py = BKSPC_py;
-		int ENTER_px = ed_px;
-		int ENTER_py = g2_offsetY;
-
-		int TOOL1_px = ENTER_px;
-		int TOOL1_py = ENTER_py + button_offsetY;
-
-		int TOOL2_px = TOOL1_px;
-		int TOOL2_py = TOOL1_py + button_offsetY;
-
-		int MOVEMENU_px = TOOL2_px;
-		int MOVEMENU_py = TOOL2_py + button_offsetY;
-
-		int SETUP_px = MOVEMENU_px;
-		int SETUP_py = MOVEMENU_py + button_offsetY;
-
-		int STATUS_px = SETUP_px;
-		int STATUS_py = SETUP_py + button_offsetY;
 		
 		// Pendant screen background?
 		c1 = addTextarea("txt", "", pendantWindow, offsetX, 0,
@@ -701,81 +588,68 @@ public class WGUI implements ControlListener {
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		
-		// TODO Positive jog buttons column
+		// Jog button columns
 		
+		c1 = getButton("shift");
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 0);
+		relPos[1] = btmColsY;
 		
+		float[] relPos2 = relativePosition(c1, RelativePoint.BOTTOM_LEFT,
+				-Fields.LARGE_BUTTON - 1, 0);
+		relPos2[1] = btmColsY;
 		
-		// TODO Negative jog buttons column
-		
-		
-		
-		// TODO Miscellaneous column
-		
-		
-		
-		/******************** Joint Control Block *******************/
-
-		int hd_px = STATUS_px + 3 * button_offsetX / 2;
-		int hd_py = g2_offsetY;
-		manager.addButton("hold").setPosition(hd_px, hd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("HOLD").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int fd_px = hd_px;
-		int fd_py = hd_py + button_offsetY;
-		manager.addButton("fwd").setPosition(fd_px, fd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("FWD").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int bd_px = fd_px;
-		int bd_py = fd_py + button_offsetY;
-		manager.addButton("bwd").setPosition(bd_px, bd_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("BWD").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int COORD_px = bd_px;
-		int COORD_py = bd_py + button_offsetY;
-		manager.addButton("coord").setPosition(COORD_px, COORD_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("COORD").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int SPEEDUP_px = COORD_px;
-		int SPEEDUP_py = COORD_py + button_offsetY;
-		manager.addButton("spdup").setPosition(SPEEDUP_px, SPEEDUP_py).setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON)
-		.setCaptionLabel("+%").setColorBackground(Fields.B_DEFAULT_C)
-		.setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int SLOWDOWN_px = SPEEDUP_px;
-		int SLOWDOWN_py = SPEEDUP_py + button_offsetY;
-		manager.addButton("spddn").setPosition(SLOWDOWN_px, SLOWDOWN_py)
-		.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel("-%")
-		.setColorBackground(Fields.B_DEFAULT_C).setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow);
-
-		int JOINT_px = SLOWDOWN_px + button_offsetX;
-		int JOINT_py = g2_offsetY;
-		String[] labels = { " -X\n(J1)", " +X\n(J1)", " -Y\n(J2)", " +Y\n(J2)", " -Z\n(J3)", " +Z\n(J3)", "-XR\n(J4)",
-				"+XR\n(J4)", "-YR\n(J5)", "+YR\n(J5)", "-ZR\n(J6)", "+ZR\n(J6)" };
-
-		for (int i = 1; i <= 6; i += 1) {
-			manager.addButton("JOINT" + i + "_NEG").setPosition(JOINT_px, JOINT_py)
-			.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2])
-			.setColorBackground(Fields.B_DEFAULT_C).setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow)
-			.getCaptionLabel().alignY(RobotRun.TOP);
-
-			JOINT_px += Fields.LARGE_BUTTON + 1;
-			manager.addButton("JOINT" + i + "_POS").setPosition(JOINT_px, JOINT_py)
-			.setSize(Fields.LARGE_BUTTON, Fields.SMALL_BUTTON).setCaptionLabel(labels[(i - 1) * 2 + 1])
-			.setColorBackground(Fields.B_DEFAULT_C).setColorCaptionLabel(Fields.B_TEXT_C).moveTo(pendantWindow)
-			.getCaptionLabel().alignY(RobotRun.TOP);
-
-			JOINT_px = SLOWDOWN_px + button_offsetX;
-			JOINT_py += Fields.SMALL_BUTTON + 1;
+		for (int idx = 1; idx <= 6; ++idx) {
+			
+			int sym = 88 + (idx - 1) % 3;
+			String name = String.format("joint%d_pos", idx);
+			String format = (idx < 4) ? " +%c\n(J%d)" : "+%cR\n(J%d)";
+			String lbl = String.format(format, sym, idx);
+			
+			MyButton b = addButton(name, lbl, pendantWindow, relPos[0], relPos[1],
+					Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+			
+			b.getCaptionLabel().alignY(RobotRun.TOP);
+			relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, 1);
+			
+			name = String.format("joint%d_neg", idx);
+			format = (idx < 4) ? " -%c\n(J%d)" : "-%cR\n(J%d)";
+			lbl = String.format(format, sym, idx);
+			
+			b = addButton(name, lbl, pendantWindow, relPos2[0], relPos2[1],
+					Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+			
+			b.getCaptionLabel().alignY(RobotRun.TOP);
+			relPos2 = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, 1);
 		}
-
-		List<Button> buttons = manager.getAll(Button.class);
-		for (Button b : buttons) {
-			b.getCaptionLabel().setFont(Fields.bond);
-		}
+		
+		
+		// Hold button column
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT,
+				-2 * (Fields.LARGE_BUTTON + 1), 0);
+		relPos[1] = btmColsY;
+		c1 = addButton("hold", "HOLD", pendantWindow, relPos[0],
+				btmColsY, Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("fwd", "FWD", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("bwd", "BWD", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("coord", "COORD", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("spdup", "+%", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("spddn", "-%", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 	}
 	
 	/**
@@ -801,7 +675,7 @@ public class WGUI implements ControlListener {
 		b.setCaptionLabel(lblTxt)
 		 .setColorValue(Fields.B_TEXT_C)
 		 .setColorBackground(Fields.B_DEFAULT_C)
-		 .setColorActive(Fields.B_DEFAULT_C)
+		 .setColorActive(Fields.B_ACTIVE_C)
 	 	 .moveTo(parent)
 		 .setSize(wdh, hgt)
 		 .getCaptionLabel().setFont(lblFont);
@@ -830,7 +704,7 @@ public class WGUI implements ControlListener {
 		b.setCaptionLabel(lblTxt)
 		 .setColorValue(Fields.B_TEXT_C)
 		 .setColorBackground(Fields.B_DEFAULT_C)
-		 .setColorActive(Fields.B_DEFAULT_C)
+		 .setColorActive(Fields.B_ACTIVE_C)
 		 .setPosition(posX, posY)
 	 	 .moveTo(parent)
 		 .setSize(wdh, hgt)
@@ -1609,8 +1483,8 @@ public class WGUI implements ControlListener {
 	  * @throws ClassCastException	If a non-button UI element with the given
 	  * 							name exists in the UI
 	  */
-	 private Button getButton(String name) throws ClassCastException {
-		 return (Button) manager.get(name);
+	 private MyButton getButton(String name) throws ClassCastException {
+		 return (MyButton) manager.get(name);
 	 }
 	 
 	 /**
@@ -2216,10 +2090,13 @@ public class WGUI implements ControlListener {
 		return TAIdx;
 	}
 	 
-	 public void resetButtonColors() {
-		for (int i = 1; i <= 6; i += 1) {
-			((Button) manager.get("JOINT" + i + "_NEG")).setColorBackground(Fields.B_DEFAULT_C);
-			((Button) manager.get("JOINT" + i + "_POS")).setColorBackground(Fields.B_DEFAULT_C);
+	/**
+	 * Resets the background color of all the jog buttons.
+	 */
+	public void resetJogButtons() {
+		for (int idx = 1; idx <= 6; idx += 1) {
+			updateButtonBgColor( String.format("joint%d_pos", idx) , false);
+			updateButtonBgColor( String.format("joint%d_neg", idx) , false);
 		}
 	}
 
@@ -2278,6 +2155,24 @@ public class WGUI implements ControlListener {
 		}
 		
 		return tr.isOn();
+	}
+	
+	/**
+	 * Updates the background color of the button with the given name based off
+	 * the given state (i.e. true is active, false is inactive).
+	 * 
+	 * @param name	The name of the button of which to update the background
+	 * @param state	The indicator of what color to set as the button's background
+	 */
+	private void updateButtonBgColor(String name, boolean state) {
+		MyButton b = getButton(name);
+		// Set the color of the button's background based off its state
+		if (state) {
+			b.setColorBackground(Fields.B_ACTIVE_C);
+			
+		} else {
+			b.setColorBackground(Fields.B_DEFAULT_C);
+		}
 	}
 
 	 /**
@@ -2681,23 +2576,17 @@ public class WGUI implements ControlListener {
 		 .show();
 	 }
 	 
+	 /**
+	  * TODO
+	  * 
+	  * @param set
+	  * @param newDir
+	  */
 	 public void updateJogButtons(int set, float newDir) {
-		Button negButton = ((Button) manager.get("JOINT" + (set + 1) + "_NEG")),
-				posButton = ((Button) manager.get("JOINT" + (set + 1) + "_POS"));
-
-		if (newDir > 0) {
-			// Positive motion
-			negButton.setColorBackground(Fields.B_DEFAULT_C);
-			posButton.setColorBackground(Fields.B_ACTIVE_C);
-		} else if (newDir < 0) {
-			// Negative motion
-			negButton.setColorBackground(Fields.B_ACTIVE_C);
-			posButton.setColorBackground(Fields.B_DEFAULT_C);
-		} else {
-			// No motion
-			negButton.setColorBackground(Fields.B_DEFAULT_C);
-			posButton.setColorBackground(Fields.B_DEFAULT_C);
-		}
+		// Positive jog button is active when the direction is positive
+		updateButtonBgColor(String.format("joint%d_pos", set + 1), newDir > 0);
+		// Negative jog button is active when the direction is negative
+		updateButtonBgColor(String.format("joint%d_neg", set + 1), newDir < 0);
 	 }
 
 	 /**
@@ -2880,34 +2769,24 @@ public class WGUI implements ControlListener {
 	 }
 	 
 	/**
-	 * Update the color of the shift button
+	 * Update the color of the shift button based off the given state value
+	 * (i.e. true is active, false is inactive).
+	 * 
+	 * @param state	The state of the shift button
 	 */
 	public void updateShiftButton(boolean state) {
-		Button b = (Button) manager.get("shift");
-		
-		if (state) {
-			b.setColorBackground(Fields.B_ACTIVE_C);
-			
-		} else {
-			b.setColorBackground(Fields.B_DEFAULT_C);
-		}
-		
+		updateButtonBgColor("shift", state);
 		updateWindowDisplay();
 	}
 	
 	/**
-	 * Update the color of the set button
+	 * Update the color of the set button based off the given state value (i.e.
+	 * true is active, false is inactive).
+	 * 
+	 * @param state	The state of the step button
 	 */
 	public void updateStepButton(boolean state) {
-		Button b = (Button) manager.get("step");
-		
-		if (state) {
-			b.setColorBackground(Fields.B_ACTIVE_C);
-			
-		} else {
-			b.setColorBackground(Fields.B_DEFAULT_C);
-		}
-		
+		updateButtonBgColor("step", state);
 		updateWindowDisplay();
 	 }
 	 
@@ -2932,28 +2811,22 @@ public class WGUI implements ControlListener {
 		// Bounding box display toggle button
 		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		Button b = getButton("ToggleOBBs").setPosition(relPos[0], relPos[1]);
-
+		
 		// Update button color based on the state of the button
 		if (b.isOn()) {
 			b.setLabel("Show OBBs");
-			b.setColorBackground(Fields.B_ACTIVE_C);
 			
 		} else {
 			b.setLabel("Hide OBBs");
-			b.setColorBackground(Fields.B_DEFAULT_C);
 		}
+		updateButtonBgColor(b.getName(), b.isOn());
 		
 		// Second robot toggle button
 		relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		b = getButton("ToggleRobot").setPosition(relPos[0], relPos[1]);
 		
 		// Update button color based on the state of the button
-		if (b.isOn()) {
-			b.setColorBackground(Fields.B_ACTIVE_C);
-			
-		} else {
-			b.setColorBackground(Fields.B_DEFAULT_C);
-		}
+		updateButtonBgColor(b.getName(), b.isOn());
 	
 		// Update window background display
 		relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
