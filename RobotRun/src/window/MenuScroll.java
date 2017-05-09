@@ -2,11 +2,7 @@ package window;
 
 import java.util.ArrayList;
 
-<<<<<<< HEAD
-=======
 import geom.RMath;
-import global.Fields;
->>>>>>> fab81f0f3ebe23100bd4f7cfb3f26372e5d7c696
 import robot.RobotRun;
 
 public class MenuScroll {
@@ -57,120 +53,6 @@ public class MenuScroll {
 		lines.clear();
 	}
 	
-<<<<<<< HEAD
-=======
-	/**
-	 * @param screen
-	 */
-	public void drawLines(ScreenMode screen) {
-		boolean selectMode = false;
-		if(screen.getType() == ScreenType.TYPE_LINE_SELECT) { selectMode = true; } 
-		
-		if(lines.size() > 0) {
-			lineIdx = RMath.clamp(lineIdx, 0, lines.size() - 1);
-			columnIdx = RMath.clamp(columnIdx, 0, lines.get(lineIdx).size() - 1);
-			renderStart = RMath.clamp(renderStart, lineIdx - (maxDisp - 1), lineIdx);
-		} else {
-			lineIdx = 0;
-			columnIdx = 0;
-			renderStart = 0;
-		}
-				
-		int next_px = 0, next_py = 0; 
-		int itemNo = 0, lineNo = 0;
-		int bg, txt, selectInd = -1;
-		
-		for(int i = renderStart; i < lines.size() && lineNo < maxDisp; i += 1) {
-			//get current line
-			DisplayLine temp = lines.get(i);
-			next_px = temp.getxAlign();
-
-			if(i == 0 || lines.get(i - 1).getItemIdx() != lines.get(i).getItemIdx()) {
-				selectInd = lines.get(i).getItemIdx();
-				if(lines.get(lineIdx).getItemIdx() == selectInd) { bg = Fields.UI_DARK;  }
-				else												{ bg = Fields.UI_LIGHT; }
-				
-				//leading row select indicator []
-				robotRun.getCp5().addTextarea(name + itemNo)
-				.setText("")
-				.setPosition(xPos + next_px, yPos + next_py)
-				.setSize(10, 20)
-				.setColorBackground(bg)
-				.hideScrollbar()
-				.moveTo(robotRun.g1);
-			}
-
-			itemNo += 1;
-			next_px += 10;
-			
-			//draw each element in current line
-			for(int j = 0; j < temp.size(); j += 1) {
-				if(i == lineIdx) {
-					if(j == columnIdx && !selectMode){
-						//highlight selected row + column
-						txt = Fields.UI_LIGHT;
-						bg = Fields.UI_DARK;          
-					} 
-					else if(selectMode && lineSelect != null && !lineSelect[temp.getItemIdx()]) {
-						//highlight selected line
-						txt = Fields.UI_LIGHT;
-						bg = Fields.UI_DARK;
-					}
-					else {
-						txt = Fields.UI_DARK;
-						bg = Fields.UI_LIGHT;
-					}
-				} else if(selectMode && lineSelect != null && lineSelect[temp.getItemIdx()]) {
-					//highlight any currently selected lines
-					txt = Fields.UI_LIGHT;
-					bg = Fields.UI_DARK;
-				} else {
-					//display normal row
-					txt = Fields.UI_DARK;
-					bg = Fields.UI_LIGHT;
-				}
-
-				//grey text for comme also this
-				if(temp.size() > 0 && temp.get(0).contains("//")) {
-					txt = robotRun.color(127);
-				}
-
-				robotRun.getCp5().addTextarea(name + itemNo)
-				.setText(temp.get(j))
-				.setFont(RobotRun.fnt_con14)
-				.setPosition(xPos + next_px, yPos + next_py)
-				.setSize(temp.get(j).length()*Fields.CHAR_WDTH + Fields.TXT_PAD, 20)
-				.setColorValue(txt)
-				.setColorBackground(bg)
-				.hideScrollbar()
-				.moveTo(robotRun.g1);
-
-				itemNo += 1;
-				next_px += temp.get(j).length()*Fields.CHAR_WDTH + (Fields.TXT_PAD - 8);
-			} //end draw line elements
-
-			//Trailing row select indicator []
-			if(i == lines.size() - 1 || lines.get(i).getItemIdx() != lines.get(i + 1).getItemIdx()) {
-				if(lines.get(lineIdx).getItemIdx() == selectInd) { txt = Fields.UI_DARK;  }
-				else												{ txt = Fields.UI_LIGHT; }
-				
-				robotRun.getCp5().addTextarea(name + itemNo)
-				.setText("")
-				.setPosition(xPos + next_px, yPos + next_py)
-				.setSize(10, 20)
-				.setColorBackground(txt)
-				.hideScrollbar()
-				.moveTo(robotRun.g1);
-			}
-
-			next_px = 0;
-			next_py += 20;
-			itemNo += 1;
-			lineNo += 1;
-		}//end display contents
-	}
-	
->>>>>>> fab81f0f3ebe23100bd4f7cfb3f26372e5d7c696
 	public DisplayLine get(int i) {
 		return lines.get(i);
 	}
@@ -390,9 +272,9 @@ public class MenuScroll {
 	 */
 	public void updateRenderIndices() {
 		if(lines.size() > 0) {
-			lineIdx = RobotRun.clamp(lineIdx, 0, lines.size() - 1);
-			columnIdx = RobotRun.clamp(columnIdx, 0, lines.get(lineIdx).size() - 1);
-			renderStart = RobotRun.clamp(renderStart, lineIdx - (maxDisp - 1), lineIdx);
+			lineIdx = RMath.clamp(lineIdx, 0, lines.size() - 1);
+			columnIdx = RMath.clamp(columnIdx, 0, lines.get(lineIdx).size() - 1);
+			renderStart = RMath.clamp(renderStart, lineIdx - (maxDisp - 1), lineIdx);
 			
 		} else {
 			lineIdx = 0;
