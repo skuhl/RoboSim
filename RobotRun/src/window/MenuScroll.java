@@ -57,6 +57,20 @@ public class MenuScroll {
 		return lines.get(i);
 	}
 	
+	/**
+	 * TODO comment
+	 * 
+	 * @return
+	 */
+	public DisplayLine getActiveLine() {
+		if (lineIdx >= 0 && lineIdx < lines.size()) {
+			return lines.get(lineIdx);
+		}
+		
+		// No active line
+		return null;
+	}
+	
 	public int getColumnIdx() {
 		return columnIdx;
 	}
@@ -194,6 +208,7 @@ public class MenuScroll {
 	}
 	
 	public void reset() {
+		lines.clear();
 		lineIdx = 0;
 		columnIdx = 0;
 		renderStart = 0;
@@ -243,6 +258,10 @@ public class MenuScroll {
 
 	public void setLineIdx(int i) {
 		lineIdx = i;
+	}
+	
+	public void setRenderStart(int renStart) {
+		renderStart = renStart;
 	}
 	
 	public int size() {
