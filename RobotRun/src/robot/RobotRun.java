@@ -73,7 +73,7 @@ public class RobotRun extends PApplet {
 	private static final int NUM_ENTRY_LEN;
 	private static final int TEXT_ENTRY_LEN;
 	private static RobotRun instance;
-
+	public static WorldObject f;
 	public static PFont fnt_con14;
 	public static PFont fnt_con12;
 	public static PFont fnt_conB;
@@ -213,10 +213,6 @@ public class RobotRun extends PApplet {
 		instance.rotateZ(jointAngles[5]);
 		instance.rotateX(PI);
 		instance.rotateY(PI/2);
-	}
-
-	public static int clamp(int in, int min, int max) {
-		return min(max, max(min, in));
 	}
 
 	/**
@@ -2021,24 +2017,51 @@ public class RobotRun extends PApplet {
 
 		/*Camera Test Code */
 		Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
-		c.setOrientation(p.orientation);
+		float[][] axes = RMath.quatToMatrix(p.orientation);
+		c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[1][0], axes[1][1], axes[1][2]), -PI/2)));
+		c.setPosition(p.position);
 		displayOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
 
-		PVector near[] = c.getPlane(10);
-		PVector far[] = c.getPlane(100);
-		for(int i = 0; i < 4; i += 1) {
-			pushMatrix();
-			stroke(0);
-			translate(near[i].x, near[i].y, near[i].z);
-			sphere(5);
-			popMatrix();
-			pushMatrix();
-			stroke(0);
-			translate(far[i].x, far[i].y, far[i].z);
-			sphere(5);
-			popMatrix();
-		}
-		//System.out.println(c.checkObjectInFrame(f));
+		PVector near[] = c.getPlaneNear();
+		PVector far[] = c.getPlaneFar();
+		pushMatrix();
+		stroke(255, 126, 0, 255);
+		//fill(255, 126, 0, 100);
+		beginShape();
+		//Top
+		vertex(near[0].x, near[0].y, near[0].z);
+		vertex(far[0].x, far[0].y, far[0].z);
+		vertex(far[1].x, far[1].y, far[1].z);
+		vertex(near[1].x, near[1].y, near[1].z);
+		//Right
+		vertex(near[1].x, near[1].y, near[1].z);
+		vertex(far[1].x, far[1].y, far[1].z);
+		vertex(far[3].x, far[3].y, far[3].z);
+		vertex(near[3].x, near[3].y, near[3].z);
+		//Bottom
+		vertex(near[3].x, near[3].y, near[3].z);
+		vertex(far[3].x, far[3].y, far[3].z);
+		vertex(far[2].x, far[2].y, far[2].z);
+		vertex(near[2].x, near[2].y, near[2].z);
+		//Left
+		vertex(near[2].x, near[2].y, near[2].z);
+		vertex(far[2].x, far[2].y, far[2].z);
+		vertex(far[0].x, far[0].y, far[0].z);
+		vertex(near[0].x, near[0].y, near[0].z);
+		//Near
+		vertex(near[1].x, near[1].y, near[1].z);
+		vertex(near[3].x, near[3].y, near[3].z);
+		vertex(near[2].x, near[2].y, near[2].z);
+		vertex(near[0].x, near[0].y, near[0].z);
+		endShape(CLOSE);
+		popMatrix();
+		
+		
+		pushMatrix();
+		f.draw();
+		popMatrix();
+		
+		c.checkObjectInFrame(f);
 		//RobotRun.printMat(c.getOrientationMat());
 
 		noLights();
@@ -7588,8 +7611,10 @@ public class RobotRun extends PApplet {
 			buffer = new ArrayList<>();
 			displayPoint = null;
 
-			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 10, 100, null);
-
+			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 30, 300, null);
+			f = new Fixture("test", 120, 5, 50, 100, 200);
+			f.setLocalCenter(new PVector(-750, -300, 0));
+			
 		} catch (NullPointerException NPEx) {
 
 			// TODO write to a log

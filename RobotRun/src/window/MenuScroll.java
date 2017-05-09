@@ -2,6 +2,7 @@ package window;
 
 import java.util.ArrayList;
 
+import geom.RMath;
 import global.Fields;
 import robot.RobotRun;
 import screen.ScreenMode;
@@ -63,9 +64,9 @@ public class MenuScroll {
 		if(screen.getType() == ScreenType.TYPE_LINE_SELECT) { selectMode = true; } 
 		
 		if(lines.size() > 0) {
-			lineIdx = RobotRun.clamp(lineIdx, 0, lines.size() - 1);
-			columnIdx = RobotRun.clamp(columnIdx, 0, lines.get(lineIdx).size() - 1);
-			renderStart = RobotRun.clamp(renderStart, lineIdx - (maxDisp - 1), lineIdx);
+			lineIdx = RMath.clamp(lineIdx, 0, lines.size() - 1);
+			columnIdx = RMath.clamp(columnIdx, 0, lines.get(lineIdx).size() - 1);
+			renderStart = RMath.clamp(renderStart, lineIdx - (maxDisp - 1), lineIdx);
 		} else {
 			lineIdx = 0;
 			columnIdx = 0;

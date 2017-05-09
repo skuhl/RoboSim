@@ -11,7 +11,7 @@ public class Fixture extends WorldObject {
 	/**
 	 * Create a cube object with the given colors and dimension
 	 */
-	public Fixture(RobotRun robotRun, String n, int fill, int strokeVal, float edgeLen) {
+	public Fixture(String n, int fill, int strokeVal, float edgeLen) {
 		super(n, new Box(fill, strokeVal, edgeLen));
 	}
 
