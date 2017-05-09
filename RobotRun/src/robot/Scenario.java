@@ -440,7 +440,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					}
 				}
 
-				if (p == RobotRun.getInstance().getManager().getSelectedWO()) {
+				if (p == RobotRun.getInstance().getUI().getSelectedWO()) {
 					p.setBBColor(RobotRun.getInstance().color(255, 255, 0));
 				}
 			}
