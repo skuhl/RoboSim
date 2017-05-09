@@ -482,81 +482,81 @@ public class WGUI implements ControlListener {
 		
 		float btmColsY = (float)Math.ceil(c2.getPosition()[1] + c2.getWidth() + 11);
 		float resPosX = getButton("step").getPosition()[0];
-		c1 = addButton("RESET", "RESET", pendantWindow, resPosX, btmColsY,
+		c1 = addButton("reset", "RESET", pendantWindow, resPosX, btmColsY,
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("NUM7", "7", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("num7", "7", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("NUM4", "4", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("num4", "4", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("NUM1", "1", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("num1", "1", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("NUM0", "0", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("num0", "0", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("LINE", "LINE", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("dash", "-", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		
 		// Backspace button column
 		
 		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 1, 0);
-		c1 = addButton("BKSPC", "BKSPC", pendantWindow, relPos[0], relPos[1],
+		c1 = addButton("bkspc", "BKSPC", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("NUM8", "8", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("num8", "8", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("NUM5", "5", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("num5", "5", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("NUM2", "2", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("num2", "2", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("PERIOD", "PERIOD", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("period", ".", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("POSN", "POSN", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("posn", "POSN", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		
 		// Item button column
 		
 		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 1, 0);
-		c1 = addButton("ITEM", "ITEM", pendantWindow, relPos[0], relPos[1],
+		c1 = addButton("item", "ITEM", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("NUM9", "9", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("num9", "9", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("NUM6", "6", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("num6", "6", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("NUM3", "3", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("num3", "3", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("COMMA", "COMMA", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("comma", ",", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("IO", "I/O", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("io", "I/O", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		
@@ -564,19 +564,19 @@ public class WGUI implements ControlListener {
 		
 		relPos = relativePosition(getButton("arrow_dn"), RelativePoint.BOTTOM_LEFT,
 				-smLrDiff / 2, 10);
-		c1 = addButton("ENTER", "ENTER", pendantWindow, relPos[0], btmColsY,
+		c1 = addButton("enter", "ENTER", pendantWindow, relPos[0], btmColsY,
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("TOOL1", "TOOL1", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("tool1", "TOOL1", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("TOOL2", "TOOL2", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("tool2", "TOOL2", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("MVMU", "MVMU", pendantWindow, relPos[0], relPos[1],
+		c2 = addButton("mvmu", "MVMU", pendantWindow, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);

@@ -1007,7 +1007,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void BKSPC() {
+	public void bkspc() {
 		if (mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
 
 			// Functions as a backspace key
@@ -1792,7 +1792,7 @@ public class RobotRun extends PApplet {
 		getActiveRobot().cycleEndEffector();
 	}
 
-	public void ENTER() {
+	public void enter() {
 		RoboticArm r = getActiveRobot();
 		Program p = r.getActiveProg();
 
@@ -4436,7 +4436,7 @@ public class RobotRun extends PApplet {
 		setProgramRunning(false);
 	}
 
-	public void IO() {
+	public void io() {
 		if (isShift()) {
 			if (getSU_macro_bindings()[6] != null) {
 				getSU_macro_bindings()[6].execute();
@@ -4473,7 +4473,7 @@ public class RobotRun extends PApplet {
 		return step;
 	}
 
-	public void ITEM() {
+	public void item() {
 		if (mode == ScreenMode.NAV_PROG_INSTR) {
 			options.reset();
 			workingText = new StringBuilder();
@@ -4569,8 +4569,8 @@ public class RobotRun extends PApplet {
 			
 			// Pendant button shortcuts
 			switch(keyCode) {
-				case KeyEvent.VK_ENTER:			ENTER(); break;
-				case KeyEvent.VK_BACK_SPACE:	BKSPC(); break;
+				case KeyEvent.VK_ENTER:			enter(); break;
+				case KeyEvent.VK_BACK_SPACE:	bkspc(); break;
 				case KeyEvent.VK_DOWN:			arrow_dn(); break;
 				case KeyEvent.VK_LEFT:			arrow_lt(); break;
 				case KeyEvent.VK_RIGHT:			arrow_rt(); break;
@@ -4696,7 +4696,7 @@ public class RobotRun extends PApplet {
 		camera.rotate(0, PI / 2f, 0);
 	}
 
-	public void LINE() {
+	public void dash() {
 		characterInput('-');
 	}
 
@@ -5829,7 +5829,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void MVMU() {
+	public void mvmu() {
 		if (getSU_macro_bindings()[2] != null && isShift()) {
 			getSU_macro_bindings()[2].execute();
 		}
@@ -6072,43 +6072,43 @@ public class RobotRun extends PApplet {
 		loadScreen();
 	}
 
-	public void NUM0() {
+	public void num0() {
 		characterInput('0');
 	}
 
-	public void NUM1() {
+	public void num1() {
 		characterInput('1');
 	}
 
-	public void NUM2() {
+	public void num2() {
 		characterInput('2');
 	}
 
-	public void NUM3() {
+	public void num3() {
 		characterInput('3');
 	}
 
-	public void NUM4() {
+	public void num4() {
 		characterInput('4');
 	}
 
-	public void NUM5() {
+	public void num5() {
 		characterInput('5');
 	}
 
-	public void NUM6() {
+	public void num6() {
 		characterInput('6');
 	}
 
-	public void NUM7() {
+	public void num7() {
 		characterInput('7');
 	}
 
-	public void NUM8() {
+	public void num8() {
 		characterInput('8');
 	}
 
-	public void NUM9() {
+	public void num9() {
 		characterInput('9');
 	}
 
@@ -6233,11 +6233,11 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void PERIOD() {
+	public void period() {
 		characterInput('.');
 	}
 
-	public void POSN() {
+	public void posn() {
 		if (getSU_macro_bindings()[5] != null && isShift()) {
 			getSU_macro_bindings()[5].execute();
 		}
@@ -6740,7 +6740,7 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void RESET() {
+	public void reset() {
 		if (isShift()) {
 			hold();
 			// Reset motion fault for the active robot
@@ -7142,13 +7142,13 @@ public class RobotRun extends PApplet {
 		updatePendantScreen();
 	}
 
-	public void TOOL1() {
+	public void tool1() {
 		if (getSU_macro_bindings()[0] != null && isShift()) {
 			getSU_macro_bindings()[0].execute();
 		}
 	}
 
-	public void TOOL2() {
+	public void tool2() {
 		if (getSU_macro_bindings()[1] != null && isShift()) {
 			getSU_macro_bindings()[1].execute();
 		}
@@ -7471,8 +7471,9 @@ public class RobotRun extends PApplet {
 		case NAV_PROG_INSTR:
 			Program p = activeRobot.getActiveProg();
 			Instruction inst = activeRobot.getActiveInstruction();
-
-			if (inst instanceof MotionInstruction && contents.getColumnIdx() == 4) {
+			int colIdx = contents.getColumnIdx();
+			
+			if (inst instanceof MotionInstruction && (colIdx == 3 || colIdx == 4)) {
 				// Show the position associated with the active motion
 				// instruction
 				MotionInstruction mInst = (MotionInstruction) inst;
@@ -7485,6 +7486,9 @@ public class RobotRun extends PApplet {
 					for (String line : pregEntry) {
 						options.addLine(line);
 					}
+					
+				} else {
+					options.addLine("Uninitialized");
 				}
 			}
 
