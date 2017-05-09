@@ -5399,10 +5399,12 @@ public class RobotRun extends PApplet {
 		case SET_EXPR_OP:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			break;
 		case SELECT_IO_INSTR_REG:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			options.setLineIdx(0);
 			options.setColumnIdx(1);
 			break;
@@ -5414,6 +5416,7 @@ public class RobotRun extends PApplet {
 		case INPUT_CONST:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			workingText = new StringBuilder();
 			break;
 		case SET_IO_INSTR_IDX:
@@ -5421,11 +5424,13 @@ public class RobotRun extends PApplet {
 		case SET_LBL_NUM:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			workingText = new StringBuilder();
 			break;
 		case SET_MV_INSTR_TYPE:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			
 			switch (mInst.getMotionType()) {
 			case Fields.MTYPE_JOINT:
@@ -5442,6 +5447,7 @@ public class RobotRun extends PApplet {
 		case SET_MV_INSTR_SPD:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			int instSpd;
 			// Convert speed into an integer value
 			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
@@ -5455,6 +5461,7 @@ public class RobotRun extends PApplet {
 		case SET_MV_INSTR_REG_TYPE:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			
 			if (mInst.usesGPosReg()) {
 				options.setLineIdx(1);
@@ -5465,11 +5472,13 @@ public class RobotRun extends PApplet {
 		case SET_MV_INSTR_IDX:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			workingText = new StringBuilder(mInst.getPositionNum() + 1);
 			break;
 		case SET_MV_INSTR_TERM:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			workingText = new StringBuilder(mInst.getTermination());
 			break;
 		case SET_FRAME_INSTR_IDX:
@@ -5478,6 +5487,7 @@ public class RobotRun extends PApplet {
 		case SET_REG_EXPR_IDX2:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			workingText = new StringBuilder();
 			break;
 		case SET_IO_INSTR_STATE:
@@ -5485,10 +5495,12 @@ public class RobotRun extends PApplet {
 		case SET_REG_EXPR_TYPE:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			break;
 		case EDIT_MINST_POS:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			// Load in the position associated with the active motion
 			// instruction
 			mInst = (MotionInstruction) activeRobot.getActiveInstruction();
@@ -5543,6 +5555,7 @@ public class RobotRun extends PApplet {
 			loadDataRegisters();
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			options.setLineIdx(1);
 			workingText = new StringBuilder((active_index + 1));
 			break;
@@ -5551,6 +5564,7 @@ public class RobotRun extends PApplet {
 			loadPositionRegisters();
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			options.setLineIdx(1);
 			workingText = new StringBuilder((active_index + 1));
 			break;
@@ -5583,6 +5597,7 @@ public class RobotRun extends PApplet {
 			loadDataRegisters();
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			// Bring up float input menu
 			Float val = getActiveRobot().getDReg(active_index).value;
 			if (val != null) {
