@@ -244,7 +244,7 @@ public class RobotRun extends PApplet {
 	 * the right-hand World Frame Coordinate System.
 	 */
 	public static PVector convertNativeToWorld(PVector v) {
-		return RMath.rotateVector(v, Fields.NATIVE_AXES);
+		return RMath.rotateVector(v, Fields.WORLD_AXES);
 	}
 
 	/**
@@ -270,7 +270,7 @@ public class RobotRun extends PApplet {
 	 * System to the left-hand Native Coordinate System.
 	 */
 	public static PVector convertWorldToNative(PVector v) {
-		return RMath.rotateVector(v, Fields.WORLD_AXES);
+		return RMath.rotateVector(v, Fields.NATIVE_AXES);
 	}
 
 	public static RoboticArm getActiveRobot() {
@@ -552,6 +552,41 @@ public class RobotRun extends PApplet {
 		
 		// Update the screen after a character insertion
 		updatePendantScreen();
+	}
+	
+	/**
+	 * Wrapper method for applying the coordinate frame defined by the given
+	 * column major transformation matrix.
+	 * 
+	 * @param tMatrix	A 4x4 column major transformation matrix
+	 */
+	public void applyMatrix(float[][] tMatrix) {
+		super.applyMatrix(
+				tMatrix[0][0], tMatrix[1][0], tMatrix[2][0], tMatrix[0][3],
+				tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[1][3],
+				tMatrix[0][2], tMatrix[1][2], tMatrix[2][2], tMatrix[2][3],
+				// Ignore scaling
+				0, 0, 0, 1
+		);
+	}
+	
+	/**
+	 * Wrapper method for applying the coordinate frame defined by the given
+	 * row major rotation matrix and position vector.
+	 * 
+	 * @param origin		The origin of the coordinate frame with respect
+	 * 						to the native coordinate system
+	 * @param axesVectors	A 3x3 row major rotation matrix, which represents
+	 * 						the orientation of the coordinate frame with
+	 * 						respect to the native coordinate system
+	 */
+	public void applyMatrix(PVector origin, float[][] axesVectors) {
+		super.applyMatrix(
+				axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
+				axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
+				axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
+				0, 0, 0, 1
+		);
 	}
 
 	/**
@@ -4448,7 +4483,7 @@ public class RobotRun extends PApplet {
 		transform[3][2] = 0;
 		transform[3][3] = 1;
 
-		return transform;
+return transform;
 	}
 
 	/**
@@ -6474,9 +6509,12 @@ public class RobotRun extends PApplet {
 		pushMatrix();
 		// Map the chosen two axes vectors to the xz-plane at the y-position of
 		// the Robot's base
-		applyMatrix(axesVectors[vectorPX][0], 0, axesVectors[vectorPZ][0], origin.x, 0, 1, 0,
-				getActiveRobot().getBasePosition().y, axesVectors[vectorPX][2], 0, axesVectors[vectorPZ][2], origin.z,
-				0, 0, 0, 1);
+		applyMatrix(
+				axesVectors[vectorPX][0], 0, axesVectors[vectorPZ][0], origin.x,
+				0, 1, 0, getActiveRobot().getBasePosition().y,
+				axesVectors[vectorPX][2], 0, axesVectors[vectorPZ][2], origin.z,
+				0, 0, 0, 1
+		);
 
 		float lineLen = halfNumOfLines * distBwtLines;
 
@@ -6516,10 +6554,7 @@ public class RobotRun extends PApplet {
 
 		pushMatrix();
 		// Transform to the reference frame defined by the axes vectors
-		applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
-					axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
-					axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
-					0, 0, 0, 1);
+		applyMatrix(origin, axesVectors);
 
 		// X axis
 		stroke(255, 0, 0);
@@ -7082,22 +7117,44 @@ public class RobotRun extends PApplet {
 			NPEx.printStackTrace();
 		}
 		
+		
 		pushMatrix();
+		
 		resetMatrix();
+		translate(-15, 0, -300);
+		rotateX(-PI);
 		
-		applyMatrix( 1f, 0f, 0f, -1f,
-					 0f, 0f, -1f, -15f,
-					 0f, 1f, 0f, -16f,
-					 0f, 0f, 0f, 1f);
-		printMatrix();
+		PVector lastPos = this.getCoordFromMatrix(0f, 0f, 0f);
+		float[][] lastOrient = this.getRotationMatrix();
+		System.out.printf("Last\n%s\n%s\n", lastPos, RMath.toString(lastOrient));
 		
-		float[][] tMatrix = this.getTransformationMatrix();
 		
-		System.out.println( RMath.toString(tMatrix) );
+		resetMatrix();
+		translate(24, 5, -300);
+		rotateX(PI / 2);
+		PVector curPos = this.getCoordFromMatrix(0f, 0f, 0f);
+		float[][] curOrient = getRotationMatrix();
+		System.out.printf("Cur\n%s\n", RMath.toString(curOrient));
+		
+		RealMatrix rmLastOrient = new Array2DRowRealMatrix( RMath.floatToDouble(lastOrient, 3, 3) );
+		RealMatrix rmCurOrient = new Array2DRowRealMatrix( RMath.floatToDouble(curOrient, 3, 3) );
+		float[][] deltaOrient = RMath.doubleToFloat(rmCurOrient.multiply(rmLastOrient).getData(), 3, 3);
+		
+		System.out.printf("Delta\n%s\n%s\n", curPos.sub(lastPos), RMath.toString(deltaOrient));
+		
+		resetMatrix();
+		translate(120, 15, 34);
+		rotateX( 10f * DEG_TO_RAD );
+		float[][] position = getTransformationMatrix();
+		System.out.printf("Position\n%s\n", RMath.toString(position));
+		
+		
+		resetMatrix();
+		applyMatrix(position);
+		float[][] newPosition = getTransformationMatrix();
+		System.out.printf("New Position\n%s\n", RMath.toString(newPosition));
 		
 		popMatrix();
-		
-		
 	}
 
 	public void SETUP() {

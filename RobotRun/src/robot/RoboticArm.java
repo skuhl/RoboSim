@@ -173,11 +173,8 @@ public class RoboticArm {
 	 */
 	private int activeUserFrame, activeToolFrame;
 	
-	/** 
-	 * A reference to the previous orientation of the robot. This is used when
-	 * moving a part, which is held by the robot.
-	 */
-	private float[][] oldEEOrientation;
+	
+	private float[][] lastEEOrientation;
 
 	/**
 	 * Creates a robot with the given ID at the given position with the given
@@ -385,7 +382,7 @@ public class RoboticArm {
 		// Initializes the old transformation matrix for the arm model
 		RobotRun.getInstance().pushMatrix();
 		RobotRun.applyModelRotation(this, getJointAngles());
-		oldEEOrientation = RobotRun.getInstance().getTransformationMatrix();
+		lastEEOrientation = RobotRun.getInstance().getTransformationMatrix();
 		RobotRun.getInstance().popMatrix();
 	}
 	
@@ -1226,8 +1223,8 @@ public class RoboticArm {
 		return liveSpeed;
 	}
 	
-	public float[][] getOldOrientation() {
-		return oldEEOrientation;
+	public float[][] getLastEEOrientation() {
+		return lastEEOrientation;
 	}
 	
 	public RQuaternion getOrientation() {
@@ -2165,12 +2162,14 @@ public class RoboticArm {
 	 * the object held by the Robot.
 	 */
 	public void updatePreviousEEOrientation() {
-		RobotRun.getInstance().pushMatrix();
-		RobotRun.getInstance().resetMatrix();
+		RobotRun app = RobotRun.getInstance();
+		
+		app.pushMatrix();
+		app.resetMatrix();
 		RobotRun.applyModelRotation(this, getJointAngles());
 		// Keep track of the old coordinate frame of the armModel
-		oldEEOrientation = RobotRun.getInstance().getTransformationMatrix();
-		RobotRun.getInstance().popMatrix();
+		lastEEOrientation = app.getTransformationMatrix();
+		app.popMatrix();
 	}
 	
 	/**

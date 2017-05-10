@@ -302,6 +302,7 @@ public class Part extends WorldObject {
 
 	public void setLocalCoordinateSystem() {
 		super.setCoordinateSystem();
+		updateAbsoluteOrientation();
 	}
 	
 	public void setDefaultCenter(PVector newCenter) {
