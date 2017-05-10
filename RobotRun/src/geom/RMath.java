@@ -355,7 +355,7 @@ public class RMath {
 			limboQ[2] = (r[1][2] + r[2][1]) / S;
 			limboQ[3] = S / 4;
 		}
-
+		
 		RQuaternion q = new RQuaternion(limboQ[0], limboQ[1], limboQ[2], limboQ[3]);
 		q.normalize();
 
@@ -527,20 +527,42 @@ public class RMath {
 		return transform;
 	}
 	
+	public static float[][] mat4fMultiply(float[][] m1, float[][] m2) {
+		float[][] mr = new float[4][4];
+		
+		if(m1.length != 4 || m2.length != 4 || m1[0].length != 4 || m2[0].length != 4) {
+			return null;
+		}
+		
+		for(int i = 0; i < 4; i += 1) {
+			mr[0][i] = m1[0][0]*m2[0][i] + m1[0][1]*m2[1][i] + m1[0][2]*m2[2][i] + m1[0][3]*m2[3][i];
+			mr[1][i] = m1[1][0]*m2[0][i] + m1[1][1]*m2[1][i] + m1[1][2]*m2[2][i] + m1[1][3]*m2[3][i];
+			mr[2][i] = m1[2][0]*m2[0][i] + m1[2][1]*m2[1][i] + m1[2][2]*m2[2][i] + m1[2][3]*m2[3][i];
+			mr[3][i] = m1[3][0]*m2[0][i] + m1[3][1]*m2[1][i] + m1[3][2]*m2[2][i] + m1[3][3]*m2[3][i];
+		}
+		
+		return mr;
+	}
+	
 	/*
 	 * Transforms the given vector from the coordinate system defined by the
 	 * given transformation matrix (row major order).
 	 */
-	public static PVector transformVector(PVector v, float[][] tMatrix) {
+	public static PVector vectorMatrixMult(PVector v, float[][] tMatrix) {
 		if (tMatrix.length != 4 || tMatrix[0].length != 4) {
 			return null;
 		}
 
 		PVector u = new PVector();
 		// Apply the transformation matrix to the given vector
-		u.x = v.x * tMatrix[0][0] + v.y * tMatrix[1][0] + v.z * tMatrix[2][0] + tMatrix[0][3];
-		u.y = v.x * tMatrix[0][1] + v.y * tMatrix[1][1] + v.z * tMatrix[2][1] + tMatrix[1][3];
-		u.z = v.x * tMatrix[0][2] + v.y * tMatrix[1][2] + v.z * tMatrix[2][2] + tMatrix[2][3];
+		u.x = v.x * tMatrix[0][0] + v.y * tMatrix[0][1] + v.z * tMatrix[0][2] + tMatrix[0][3];
+		u.y = v.x * tMatrix[1][0] + v.y * tMatrix[1][1] + v.z * tMatrix[1][2] + tMatrix[1][3];
+		u.z = v.x * tMatrix[2][0] + v.y * tMatrix[2][1] + v.z * tMatrix[2][2] + tMatrix[2][3];
+		float w = tMatrix[3][0] + tMatrix[3][1] + tMatrix[3][2] + tMatrix[3][3];
+		
+		if(w != 1) {
+			u.div(w);
+		}
 
 		return u;
 	}
