@@ -1635,18 +1635,21 @@ public class RobotRun extends PApplet {
 		}
 		/**/
 
-		/*Camera Test Code
+		/*Camera Test Code*/
+		Fixture f = new Fixture("test", 160, 0, 50, 100, 200);
+		f.setLocalCenter(new PVector(-700, -300, 0));
 		Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
 		float[][] axes = RMath.quatToMatrix(p.orientation);
 		c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[1][0], axes[1][1], axes[1][2]), -PI/2)));
 		c.setPosition(p.position);
 		renderOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
-
+		
 		PVector near[] = c.getPlaneNear();
 		PVector far[] = c.getPlaneFar();
+		PVector view[] = c.getPlane(c.checkObjectInFrame(f, true));
 		pushMatrix();
 		stroke(255, 126, 0, 255);
-		fill(255, 126, 0, 255);
+		//dfill(255, 126, 0, 255);
 		beginShape();
 		//Top
 		vertex(near[0].x, near[0].y, near[0].z);
@@ -1673,14 +1676,22 @@ public class RobotRun extends PApplet {
 		vertex(near[3].x, near[3].y, near[3].z);
 		vertex(near[2].x, near[2].y, near[2].z);
 		vertex(near[0].x, near[0].y, near[0].z);
-		endShape(CLOSE);
+		endShape();
+		
+		fill(255, 126, 0, 126);
+		beginShape();
+		vertex(view[0].x, view[0].y, view[0].z);
+		vertex(view[1].x, view[1].y, view[1].z);
+		vertex(view[3].x, view[3].y, view[3].z);
+		vertex(view[2].x, view[2].y, view[2].z);
+		endShape();
 		popMatrix();
-				
+						
 		pushMatrix();
 		f.draw();
 		popMatrix();
 		
-		c.checkObjectInFrame(f);
+		c.checkObjectInFrame(f, false);
 		/*for(int i = 0; i < 8; i += 1) {
 			pushMatrix();
 			stroke(0);
@@ -6994,7 +7005,7 @@ public class RobotRun extends PApplet {
 			buffer = new ArrayList<>();
 			displayPoint = null;
 
-			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 10, 100, null);
+			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 30, 300, null);
 
 		} catch (NullPointerException NPEx) {
 
