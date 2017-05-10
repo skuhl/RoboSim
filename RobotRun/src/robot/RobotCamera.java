@@ -44,7 +44,7 @@ public class RobotCamera {
 	 * @param o The WorldObject to be tested.
 	 * @return  
 	 */
-	public float checkObjectInFrame(WorldObject o) {
+	public float checkObjectInFrame(WorldObject o, boolean func) {
 		PVector objCenter = o.getLocalCenter();
 		float len, wid, hgt;
 			
@@ -86,10 +86,6 @@ public class RobotCamera {
 		
 		System.out.println("x dist: " + distX);
 		System.out.println("y dist: " + distY);
-		
-		//Calculate the width and height of our frustum view plane
-		float pWidth = getPlaneWidth(distZ);
-		float pHeight = getPlaneHeight(distZ);
 		
 		/*float r = getPlaneWidth(camClipNear)/2;
 		float l = -r;
@@ -143,6 +139,14 @@ public class RobotCamera {
 		float dimX = Math.abs(len*objAxisX.dot(ltVect) + hgt*objAxisY.dot(ltVect) + wid*objAxisZ.dot(ltVect));
 		float dimY = Math.abs(len*objAxisX.dot(upVect) + hgt*objAxisY.dot(upVect) + wid*objAxisZ.dot(upVect));
 		
+		if(func) return distZ - dimZ/2;
+		
+		//Calculate the width and height of our frustum view plane
+		float pWidth = getPlaneWidth(distZ - dimZ/2);
+		float pHeight = getPlaneHeight(distZ - dimZ/2);
+		
+		System.out.println(String.format("plane width: %4f, plane height: %4f", pWidth, pHeight));
+		
 		//Calculate signed distance from center of object to near edge of view plane
 		float aZ = Math.min(distX - camClipNear, camClipFar - distX); //???
 		float aX = (pWidth/2 - distX);
@@ -152,8 +156,9 @@ public class RobotCamera {
 		float visX = Math.min(RMath.clamp(dimX/2 + aX, 0, dimX), pWidth);
 		float visY = Math.min(RMath.clamp(dimY/2 + aY, 0, dimY), pHeight);
 		
-		System.out.println(String.format("x: %4f / %4f, y: %4f / %4f", visX, dimX, visY, dimY));
+		System.out.println(String.format("x: %4f / %4f, y: %4f / %4f, ax: %4f, ay: %4f", visX, dimX, visY, dimY, aX, aY));
 		System.out.println("area est: " + (visX/dimX) * (visY/dimY));
+		System.out.println();
 		
 		return (visX/dimX) * (visY/dimY);
 		//return objVertices;
