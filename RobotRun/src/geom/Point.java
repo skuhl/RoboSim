@@ -126,10 +126,10 @@ public class Point  {
 		case 9:   vec.x = -value;
 		orientation = RMath.eulerToQuat(vec);
 		break;
-		case 10:  vec.z = -value;
+		case 10:  vec.z = value;
 		orientation = RMath.eulerToQuat(vec);
 		break;
-		case 11:  vec.y = value;
+		case 11:  vec.y = -value;
 		orientation = RMath.eulerToQuat(vec);
 		break;
 		default:
@@ -174,9 +174,9 @@ public class Point  {
 		entries[3][0] = "W: ";
 		entries[3][1] = String.format("%4.3f", -angles.x);
 		entries[4][0] = "P: ";
-		entries[4][1] = String.format("%4.3f", -angles.z);
+		entries[4][1] = String.format("%4.3f", angles.z);
 		entries[5][0] = "R: ";
-		entries[5][1] = String.format("%4.3f", angles.y);
+		entries[5][1] = String.format("%4.3f", -angles.y);
 
 		return entries;
 	}

@@ -1,4 +1,9 @@
 package geom;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
+
+import global.Fields;
 import processing.core.PVector;
 import robot.CoordinateSystem;
 import robot.RobotRun;
@@ -34,6 +39,27 @@ public class BoundingBox {
 		localOrientation = new CoordinateSystem();
 		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), len, hgt, wdh);
 	}
+	
+	public static void main(String[] args) {
+		float[][] rotMatrix = new float[][] {
+			{ 1, 2, 3 },
+			{ 3, 4, 5 },
+			{ 6, 7, 8 }
+		};
+		
+		float[][] tMatrix = RMath.transformationMatrix(new PVector(-15, 4, 35), rotMatrix);
+		
+		System.out.printf("%s\n%s\n", RMath.toString(rotMatrix), RMath.toString(tMatrix));
+		
+		
+		PVector v = new PVector(-13, 5, 11);
+		PVector u = RMath.rotateVector(v, Fields.WORLD_AXES);
+		
+		PVector w = new PVector(10, -15, 20);
+		PVector y = RMath.rotateVector(w, Fields.NATIVE_AXES);
+		
+		System.out.printf("v: %s\nu: %s\nw: %s\ny: %s\n", v, u, w, y);
+	}
 
 	/**
 	 * Apply the Coordinate System of the bounding-box onto the
@@ -65,10 +91,10 @@ public class BoundingBox {
 	public boolean collision(PVector point) {
 		// Convert the point to the current reference frame
 		float[][] tMatrix = RMath.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
-		PVector relPosition = RMath.transformVector(point, RMath.invertHCMatrix(tMatrix));
+		PVector relPosition = RMath.vectorMatrixMult(point, RMath.invertHCMatrix(tMatrix));
 
 		PVector OBBDim = getDims();
-		// Determine if the point iw within the bounding-box of this object
+		// Determine if the point is within the bounding-box of this object
 		boolean is_inside = relPosition.x >= -(OBBDim.x / 2f) && relPosition.x <= (OBBDim.x / 2f)
 				&& relPosition.y >= -(OBBDim.y / 2f) && relPosition.y <= (OBBDim.y / 2f)
 				&& relPosition.z >= -(OBBDim.z / 2f) && relPosition.z <= (OBBDim.z / 2f);

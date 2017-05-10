@@ -182,8 +182,8 @@ public class ToolFrame extends Frame {
 		values[2] = String.format("Z: %4.3f", displayOffset.z);
 		// Display angles in terms of the World frame
 		values[3] = String.format("W: %4.3f", -wpr.x);
-		values[4] = String.format("P: %4.3f", -wpr.z);
-		values[5] = String.format("R: %4.3f", wpr.y);
+		values[4] = String.format("P: %4.3f", wpr.z);
+		values[5] = String.format("R: %4.3f", -wpr.y);
 
 		return values;
 	}

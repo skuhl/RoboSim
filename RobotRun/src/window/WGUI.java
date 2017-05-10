@@ -1280,8 +1280,8 @@ public class WGUI implements ControlListener {
 		 getTextField("YCur").setText( String.format("%4.3f", pos.y) );
 		 getTextField("ZCur").setText( String.format("%4.3f", pos.z) );
 		 getTextField("WCur").setText( String.format("%4.3f", -wpr.x) );
-		 getTextField("PCur").setText( String.format("%4.3f", -wpr.z) );
-		 getTextField("RCur").setText( String.format("%4.3f", wpr.y) );
+		 getTextField("PCur").setText( String.format("%4.3f", wpr.z) );
+		 getTextField("RCur").setText( String.format("%4.3f", -wpr.y) );
 	 }
 	 
 	 /**
@@ -1306,8 +1306,8 @@ public class WGUI implements ControlListener {
 			 getTextField("YCur").setText( String.format("%4.3f", pos.y) );
 			 getTextField("ZCur").setText( String.format("%4.3f", pos.z) );
 			 getTextField("WCur").setText( String.format("%4.3f", -wpr.x) );
-			 getTextField("PCur").setText( String.format("%4.3f", -wpr.z) );
-			 getTextField("RCur").setText( String.format("%4.3f", wpr.y) );
+			 getTextField("PCur").setText( String.format("%4.3f", wpr.z) );
+			 getTextField("RCur").setText( String.format("%4.3f", -wpr.y) );
 		 }
 	 }
 	 
@@ -1332,8 +1332,8 @@ public class WGUI implements ControlListener {
 			 getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
 			 getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
 			 getTextArea("WDef").setText( String.format("%4.3f", -wpr.x) );
-			 getTextArea("PDef").setText( String.format("%4.3f", -wpr.z) );
-			 getTextArea("RDef").setText( String.format("%4.3f", wpr.y) );
+			 getTextArea("PDef").setText( String.format("%4.3f", wpr.z) );
+			 getTextArea("RDef").setText( String.format("%4.3f", -wpr.y) );
 		 }
 	 }
 	 
@@ -1359,8 +1359,8 @@ public class WGUI implements ControlListener {
 			 getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
 			 getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
 			 getTextArea("WDef").setText( String.format("%4.3f", -wpr.x) );
-			 getTextArea("PDef").setText( String.format("%4.3f", -wpr.z) );
-			 getTextArea("RDef").setText( String.format("%4.3f", wpr.y) );
+			 getTextArea("PDef").setText( String.format("%4.3f", wpr.z) );
+			 getTextArea("RDef").setText( String.format("%4.3f", -wpr.y) );
 		 }
 	 }
 	 
@@ -3194,12 +3194,12 @@ public class WGUI implements ControlListener {
 				 }
 				 
 				 if (inputValues[5] != null) {
-					 oWPR.y = inputValues[5];
+					 oWPR.y = -inputValues[5];
 					 edited = true;
 				 }
 				 
 				 if (inputValues[4] != null) {
-					 oWPR.z = -inputValues[4];
+					 oWPR.z = inputValues[4];
 					 edited = true;
 				 }
 
@@ -3281,12 +3281,12 @@ public class WGUI implements ControlListener {
 			 }
 			 
 			 if (inputValues[5] != null) {
-				 defaultWPR.y = inputValues[5];
+				 defaultWPR.y = -inputValues[5];
 				 edited = true;
 			 }
 			 
 			 if (inputValues[4] != null) {
-				 defaultWPR.z = -inputValues[4];
+				 defaultWPR.z = inputValues[4];
 				 edited = true;
 			 }
 

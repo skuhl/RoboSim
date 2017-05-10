@@ -260,7 +260,7 @@ public class RMath {
 	}
 
 	/**
-	 * Find the inverse of the given 4x4 Homogeneous Coordinate Matrix.
+	 * Find the inverse of the given column major 4x4 Homogeneous Coordinate Matrix.
 	 * 
 	 * This method is based off of the algorithm found on this webpage:
 	 * https://web.archive.org/web/20130806093214/http://www-graphics.stanford.edu/
@@ -274,9 +274,10 @@ public class RMath {
 		float[][] inverse = new float[4][4];
 
 		/*
-		 * [ ux vx wx tx ] -1 [ ux uy uz -dot(u, t) ] [ uy vy wy ty ] = [ vx vy
-		 * vz -dot(v, t) ] [ uz vz wz tz ] [ wx wy wz -dot(w, t) ] [ 0 0 0 1 ] [
-		 * 0 0 0 1 ]
+		 * [ ux vx wx tx ] -1		[ ux uy uz -dot(u, t) ]
+		 * [ uy vy wy ty ]		=	[ vx vy vz -dot(v, t) ]
+		 * [ uz vz wz tz ]			[ wx wy wz -dot(w, t) ]
+		 * [  0  0  0  1 ]			[  0  0  0          1 ]
 		 */
 		inverse[0][0] = m[0][0];
 		inverse[0][1] = m[1][0];
@@ -355,7 +356,7 @@ public class RMath {
 			limboQ[2] = (r[1][2] + r[2][1]) / S;
 			limboQ[3] = S / 4;
 		}
-
+		
 		RQuaternion q = new RQuaternion(limboQ[0], limboQ[1], limboQ[2], limboQ[3]);
 		q.normalize();
 
@@ -508,15 +509,15 @@ public class RMath {
 		float[][] transform = new float[4][4];
 
 		transform[0][0] = axes[0][0];
-		transform[1][0] = axes[1][0];
-		transform[2][0] = axes[2][0];
+		transform[1][0] = axes[0][1];
+		transform[2][0] = axes[0][2];
 		transform[3][0] = 0;
-		transform[0][1] = axes[0][1];
+		transform[0][1] = axes[1][0];
 		transform[1][1] = axes[1][1];
-		transform[2][1] = axes[2][1];
+		transform[2][1] = axes[1][2];
 		transform[3][1] = 0;
-		transform[0][2] = axes[0][2];
-		transform[1][2] = axes[1][2];
+		transform[0][2] = axes[2][0];
+		transform[1][2] = axes[2][1];
 		transform[2][2] = axes[2][2];
 		transform[3][2] = 0;
 		transform[0][3] = origin.x;
@@ -527,20 +528,63 @@ public class RMath {
 		return transform;
 	}
 	
+	public static float[][] mat4fMultiply(float[][] m1, float[][] m2) {
+		float[][] mr = new float[4][4];
+		
+		if(m1.length != 4 || m2.length != 4 || m1[0].length != 4 || m2[0].length != 4) {
+			return null;
+		}
+		
+		for(int i = 0; i < 4; i += 1) {
+			mr[0][i] = m1[0][0]*m2[0][i] + m1[0][1]*m2[1][i] + m1[0][2]*m2[2][i] + m1[0][3]*m2[3][i];
+			mr[1][i] = m1[1][0]*m2[0][i] + m1[1][1]*m2[1][i] + m1[1][2]*m2[2][i] + m1[1][3]*m2[3][i];
+			mr[2][i] = m1[2][0]*m2[0][i] + m1[2][1]*m2[1][i] + m1[2][2]*m2[2][i] + m1[2][3]*m2[3][i];
+			mr[3][i] = m1[3][0]*m2[0][i] + m1[3][1]*m2[1][i] + m1[3][2]*m2[2][i] + m1[3][3]*m2[3][i];
+		}
+		
+		return mr;
+	}
+	
+	/**
+	 * TODO
+	 * 
+	 * @param v
+	 * @param rMatrix
+	 * @return
+	 */
+	public static PVector rotateVector(PVector v, float[][] rMatrix) {
+		if (rMatrix.length != 3 || rMatrix[0].length != 3) {
+			return null;
+		}
+		
+		PVector u = new PVector();
+		// Apply the transformation matrix to the given vector
+		u.x = v.x * rMatrix[0][0] + v.y * rMatrix[1][0] + v.z * rMatrix[2][0];
+		u.y = v.x * rMatrix[0][1] + v.y * rMatrix[1][1] + v.z * rMatrix[2][1];
+		u.z = v.x * rMatrix[0][2] + v.y * rMatrix[1][2] + v.z * rMatrix[2][2];
+
+		return u;
+	}
+	
 	/*
 	 * Transforms the given vector from the coordinate system defined by the
-	 * given transformation matrix (row major order).
+	 * given transformation matrix (column major order).
 	 */
-	public static PVector transformVector(PVector v, float[][] tMatrix) {
+	public static PVector vectorMatrixMult(PVector v, float[][] tMatrix) {
 		if (tMatrix.length != 4 || tMatrix[0].length != 4) {
 			return null;
 		}
 
 		PVector u = new PVector();
 		// Apply the transformation matrix to the given vector
-		u.x = v.x * tMatrix[0][0] + v.y * tMatrix[1][0] + v.z * tMatrix[2][0] + tMatrix[0][3];
-		u.y = v.x * tMatrix[0][1] + v.y * tMatrix[1][1] + v.z * tMatrix[2][1] + tMatrix[1][3];
-		u.z = v.x * tMatrix[0][2] + v.y * tMatrix[1][2] + v.z * tMatrix[2][2] + tMatrix[2][3];
+		u.x = v.x * tMatrix[0][0] + v.y * tMatrix[0][1] + v.z * tMatrix[0][2] + tMatrix[0][3];
+		u.y = v.x * tMatrix[1][0] + v.y * tMatrix[1][1] + v.z * tMatrix[1][2] + tMatrix[1][3];
+		u.z = v.x * tMatrix[2][0] + v.y * tMatrix[2][1] + v.z * tMatrix[2][2] + tMatrix[2][3];
+		float w = tMatrix[3][0] + tMatrix[3][1] + tMatrix[3][2] + tMatrix[3][3];
+		
+		if(w != 1) {
+			u.div(w);
+		}
 
 		return u;
 	}
@@ -554,4 +598,33 @@ public class RMath {
 
 		return ret;
 	}
+	
+	/**
+	 * Returns a string that represents the given rotation (3x3) or
+	 * transformation (4x4) matrix. The rotation portion of a
+	 * transformation matrix as well as a rotation matrix are in
+	 * row major order.
+	 * 
+	 * @param matrix	A rotation or transformation matrix
+	 * @return			The string representation of the given matrix
+	 */
+	public static String toString(float[][] matrix) {
+		String str = new String();
+		
+		for (int row = 0; row < matrix.length; ++row) {
+			str += "[ ";
+			
+			for (int column = 0; column < matrix[row].length; ++column) {
+				String val = String.format("%4.3f", matrix[row][column]);
+				// Add padding
+				str += String.format("%9s ", val);
+			}
+			
+			str += "]\n";
+		}
+		
+		
+		return str;
+	}
+	
 }

@@ -391,7 +391,9 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					     E  - previous Robot end effector orientation
 					     P  - current part loval orientation
 					 ***********************************************/
-
+					
+					// TODO fix this
+					
 					Fixture refFixture = p.getFixtureRef();
 
 					if (refFixture != null) {
@@ -400,11 +402,11 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 					RobotRun.applyModelRotation(model, model.getJointAngles());
 
-					float[][] invEETMatrix = RMath.invertHCMatrix(RobotRun.getActiveRobot().getOldOrientation());
-					RobotRun.getInstance().applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
-							invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
-							invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
-							0,                 0,                   0,                  1);
+					float[][] invEETMatrix = RMath.invertHCMatrix( model.getOldOrientation() );
+					RobotRun.getInstance().applyMatrix(invEETMatrix[0][0], invEETMatrix[0][1], invEETMatrix[0][2], invEETMatrix[0][3],
+														invEETMatrix[1][0], invEETMatrix[1][1], invEETMatrix[1][2], invEETMatrix[1][3],
+														invEETMatrix[2][0], invEETMatrix[2][1], invEETMatrix[2][2], invEETMatrix[2][3],
+														0,                 0,                   0,                  1);
 
 					p.applyCoordinateSystem();
 					// Update the world object's position and orientation
