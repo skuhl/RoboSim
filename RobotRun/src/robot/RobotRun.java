@@ -256,7 +256,7 @@ public class RobotRun extends PApplet {
 	 */
 	public static PVector convertNativeToWorld(PVector v) {
 		float[][] tMatrix = RMath.transformationMatrix(new PVector(0f, 0f, 0f), Fields.WORLD_AXES);
-		return RMath.transformVector(v, RMath.invertHCMatrix(tMatrix));
+		return RMath.vectorMatrixMult(v, RMath.invertHCMatrix(tMatrix));
 	}
 
 	/**
@@ -283,7 +283,7 @@ public class RobotRun extends PApplet {
 	 */
 	public static PVector convertWorldToNative(PVector v) {
 		float[][] tMatrix = RMath.transformationMatrix(new PVector(0f, 0f, 0f), Fields.WORLD_AXES);
-		return RMath.transformVector(v, tMatrix);
+		return RMath.vectorMatrixMult(v, tMatrix);
 	}
 
 	public static RoboticArm getActiveRobot() {
@@ -2015,7 +2015,7 @@ public class RobotRun extends PApplet {
 		}
 		/**/
 
-		/*Camera Test Code *
+		/*Camera Test Code */
 		Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
 		float[][] axes = RMath.quatToMatrix(p.orientation);
 		c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[1][0], axes[1][1], axes[1][2]), -PI/2)));
@@ -2027,7 +2027,7 @@ public class RobotRun extends PApplet {
 		PVector far[] = c.getPlaneFar();
 		pushMatrix();
 		stroke(255, 126, 0, 255);
-		//fill(255, 126, 0, 100);
+		fill(255, 126, 0, 255);
 		beginShape();
 		//Top
 		vertex(near[0].x, near[0].y, near[0].z);
@@ -2063,6 +2063,14 @@ public class RobotRun extends PApplet {
 		popMatrix();
 		
 		c.checkObjectInFrame(f);
+		/*for(int i = 0; i < 8; i += 1) {
+			pushMatrix();
+			stroke(0);
+			translate(p.position.x-30, p.position.y, p.position.z);
+			translate(obj[i].x, obj[i].y, obj[i].z);
+			sphere(1);
+			popMatrix();
+		}
 		//RobotRun.printMat(c.getOrientationMat());
 		/**/
 		 
