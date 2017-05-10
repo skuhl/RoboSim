@@ -27,15 +27,19 @@ import geom.RMath;
 import geom.Shape;
 import geom.ShapeType;
 import geom.WorldObject;
+import global.Fields;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PFont;
+import processing.core.PImage;
 import processing.core.PVector;
 import robot.DataManagement;
 import robot.EEMapping;
 import robot.RobotRun;
 import robot.RoboticArm;
 import robot.Scenario;
+import screen.ScreenMode;
+import screen.ScreenType;
 import ui.AxesDisplay;
 import ui.MyButton;
 import ui.MyButtonBar;
@@ -44,7 +48,7 @@ import ui.MyRadioButton;
 import ui.MyTextfield;
 import ui.RelativePoint;
 
-public class WindowManager implements ControlListener {
+public class WGUI implements ControlListener {
 	
 	/**
 	 * A dimension value (length, width, displacement, etc.), which is used to
@@ -72,17 +76,11 @@ public class WindowManager implements ControlListener {
 							DIM_LBL = 3,
 							DIM_TXT = 3,
 							DIM_DDL = 1;
-	
-	/**
-	 * A color in the UI's color scheme.
-	 */
-	private final int BG_C, F_TEXT_C, F_CURSOR_C, F_ACTIVE_C, F_BG_C, F_FG_C,
-					  B_TEXT_C, B_DEFAULT_C, B_ACTIVE_C;
 
 	/**
 	 * The manager object, which contains all the UI elements.
 	 */
-	private final ControlP5 UIManager;
+	private final ControlP5 manager;
 	
 	/**
 	 * A reference to the application, in which the UI resides.
@@ -99,8 +97,13 @@ public class WindowManager implements ControlListener {
 	 * A group, which defines a set of elements belonging to a window tab, or
 	 * shared amongst the window tabs.
 	 */
-	private Group createObjWindow, editObjWindow,
-				  sharedElements, scenarioWindow, miscWindow;
+	public final Group pendantWindow, createObjWindow, editObjWindow,
+						sharedElements, scenarioWindow, miscWindow;
+	
+	/**
+	 * Temporary group for refactoring pendant window rendering.
+	 */
+	private final Group limbo;
 	
 	/**
 	 * The button bar controlling the window tab selection.
@@ -113,6 +116,12 @@ public class WindowManager implements ControlListener {
 	private final Background background;
 	
 	/**
+	 * A cached set of text-areas used to display the pendant contents and
+	 * options output.
+	 */
+	private final ArrayList<Textarea> displayLines;
+	
+	/**
 	 * Determine which input to use for importing a shape for a world object
 	 * when it is created.
 	 */
@@ -122,157 +131,452 @@ public class WindowManager implements ControlListener {
 	 * Creates a new window with the given ControlP5 object as the parent
 	 * and the given fonts which will be applied to the text in the window.
 	 */
-	public WindowManager(RobotRun appRef, ControlP5 manager, PFont small, PFont medium) {
-		// Initialize color scheme fields
-		BG_C = appRef.color(210);
-		F_TEXT_C = appRef.color(0);
-		F_CURSOR_C = appRef.color(0);
-		F_ACTIVE_C = appRef.color(255, 0, 0);
-		F_BG_C = appRef.color(255);
-		F_FG_C = appRef.color(0);
-		B_TEXT_C = appRef.color(255);
-		B_DEFAULT_C = appRef.color(70);
-		B_ACTIVE_C = appRef.color(220, 40, 40);
-		
-		UIManager = manager;		 
+	public WGUI(RobotRun appRef, PImage[][] buttonImages) {
 		app = appRef;
-		menu = null;
 		
-		lastModImport = null;
-		
+		manager = new ControlP5(appRef);
+		// Explicitly draw the ControlP5 elements
+		manager.setAutoDraw(false);
 		manager.addListener(this);
+		
+		menu = null;
+		lastModImport = null;
+		displayLines = new ArrayList<>();
 		
 		/* A local reference to a position in the UI [x, y] used to position UI
 		 * elements relative to other UI elements */
-		int[] relPos = new int[] { 0, 0 };
+		float[] relPos = new float[] { 0f, 0f };
+		ControllerInterface<?> c1 = null, c2 = null;
 		
 		// The default set of labels for window tabs
 		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
 		
 		// Initialize the window tab selection bar
-		windowTabs = (MyButtonBar)(new MyButtonBar(UIManager, "Tabs")
+		windowTabs = (MyButtonBar)(new MyButtonBar(manager, "Tabs")
 			 // Sets button text color
-			 .setColorValue(B_TEXT_C)
-			 .setColorBackground(B_DEFAULT_C)
-			 .setColorActive(B_ACTIVE_C)
+			 .setColorValue(Fields.B_TEXT_C)
+			 .setColorBackground(Fields.B_DEFAULT_C)
+			 .setColorActive(Fields.B_ACTIVE_C)
 			 .setPosition(relPos[0], relPos[1])
-			 .setSize(440, tButtonHeight))
+			 .setSize(Fields.PENDANT_WIDTH, tButtonHeight))
 			 .addItems(windowList);
 		
-		windowTabs.getCaptionLabel().setFont(medium);
-
-		// Initialize camera view buttons
-		addButton("FrontView", "F", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
-		addButton("BackView", "Bk", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
-		addButton("LeftView", "L", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
-		addButton("RightView", "R", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
-		addButton("TopView", "T", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
-		addButton("BottomView", "Bt", createObjWindow, sButtonWidth, sButtonHeight, small).hide();
+		windowTabs.getCaptionLabel().setFont(Fields.medium);
 		
 		// Initialize the shared window background
 		relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_LEFT, 0, 0);
-		background = UIManager.addBackground("WindowBackground")
-							  .setPosition(relPos[0], relPos[1])
-							  .setBackgroundColor(BG_C)
-							  .setSize(windowTabs.getWidth(), 0);
+		background = manager.addBackground("WindowBackground")
+							.setPosition(relPos[0], relPos[1])
+							.setBackgroundColor(Fields.BG_C)
+							.setSize(windowTabs.getWidth(), 0);
 
 		// Initialize the window groups
+		pendantWindow = addGroup("PENDANT", 0, 2 * offsetX, 440, 720);
 		sharedElements = addGroup("SHARED", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		createObjWindow = addGroup("CREATEOBJ", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		editObjWindow = addGroup("EDITOBJ", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		scenarioWindow = addGroup("SCENARIO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscWindow = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
+		limbo = addGroup("LIMBO", 0, 2 * offsetX, windowTabs.getWidth(), 0);
+		
+		relPos = relativePosition(windowTabs, RelativePoint.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
+		c1 = addButton("record", buttonImages[0], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
+		
+		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
+		addButton("EE", buttonImages[1], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
+		
+		// Initialize camera view buttons
+		addButton("FrontView", "F", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("BackView", "Bk", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("LeftView", "L", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("RightView", "R", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("TopView", "T", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("BottomView", "Bt", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		
+		// Pendant screen background?
+		c1 = addTextarea("txt", "", pendantWindow, offsetX, 0,
+				Fields.PENDANT_SCREEN_WIDTH, Fields.PENDANT_SCREEN_HEIGHT,
+				Fields.B_TEXT_C, Fields.UI_LIGHT_C, Fields.small);
+		
+		// Pendant header
+		addTextarea("header", "\0", pendantWindow, offsetX,	0,
+				Fields.PENDANT_SCREEN_WIDTH, 20, Fields.UI_LIGHT_C,
+				Fields.UI_DARK_C, Fields.medium);
+		
+		// Start with 25 text-areas for pendant output
+		for (int idx = 0; idx < 25; ++idx) {
+			displayLines.add( addTextarea(String.format("ps%d", idx), "\0",
+					pendantWindow, 10, 0, 10, 20, Fields.UI_DARK_C,
+					Fields.UI_LIGHT_C, Fields.medium) );
+		}
+		
+		// Function button labels
+		for (int i = 0; i < 5; i += 1) {
+			// Calculate the position of each function label
+			int posX = Fields.PENDANT_SCREEN_WIDTH * i / 5 + 15;
+			int posY = Fields.PENDANT_SCREEN_HEIGHT - Fields.PENDANT_Y;
+			
+			addTextarea("fl" + i, "\0", pendantWindow, posX, posY,
+					Fields.PENDANT_SCREEN_WIDTH / 5 - 5, 20, 0, Fields.UI_LIGHT_C,
+					Fields.small);
+		}
+		
+		// Function buttons
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 2);
+		c1 = addButton("f1", "F1", pendantWindow, relPos[0], relPos[1],
+				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 1, 0);
+		c2 = addButton("f2", "F2", pendantWindow, relPos[0], relPos[1],
+				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		c2 = addButton("f3", "F3", pendantWindow, relPos[0], relPos[1],
+				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		c2 = addButton("f4", "F4", pendantWindow, relPos[0], relPos[1],
+				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		c2 = addButton("f5", "F5", pendantWindow, relPos[0], relPos[1],
+				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
+		
+		
+		// Step button
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 11);
+		c1 = addButton("step", "STEP", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.LARGE_BUTTON, Fields.bond);
+		
+		// Menu button
+		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 19, 0);
+		c1 = addButton("menu", "MENU", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Previous button
+		float smLrDiff = Fields.LARGE_BUTTON - Fields.SMALL_BUTTON;
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0,	smLrDiff +
+				16);
+		addButton("prev", "PREV", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Select button
+		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 15, 0);
+		c2 = addButton("select", "SELECT", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Edit button
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		c2 = addButton("edit", "EDIT", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Data button
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		c2 = addButton("data", "DATA", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Function-Control button
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 15, 0);
+		c2 = addButton("fctn", "FCTN", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Next button
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0,	smLrDiff +
+				16);
+		addButton("next", "NEXT", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		// Shift button
+		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 19, 0);
+		addButton("shift", "SHIFT", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.LARGE_BUTTON, Fields.bond);
+
+		// Arrow buttons
+		
+		relPos = relativePosition(getButton("edit"), RelativePoint.BOTTOM_LEFT,
+				smLrDiff / 2, 11);
+		c2 = addButton("arrow_up", pendantWindow, buttonImages[2], relPos[0],
+				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("arrow_dn", pendantWindow, buttonImages[3], relPos[0],
+				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
+		
+		relPos = relativePosition(getButton("select"), RelativePoint.BOTTOM_LEFT,
+				smLrDiff / 2, smLrDiff + 16);
+		addButton("arrow_lt", pendantWindow, buttonImages[4], relPos[0],
+				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
+		
+		relPos = relativePosition(getButton("data"), RelativePoint.BOTTOM_LEFT,
+				smLrDiff / 2, smLrDiff + 16);
+		addButton("arrow_rt", pendantWindow, buttonImages[5], relPos[0],
+				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
+		
+		
+		// Reset button column
+		
+		float btmColsY = (float)Math.ceil(c2.getPosition()[1] + c2.getWidth() + 11);
+		float resPosX = getButton("step").getPosition()[0];
+		c1 = addButton("reset", "RESET", pendantWindow, resPosX, btmColsY,
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("num7", "7", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("num4", "4", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("num1", "1", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("num0", "0", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("dash", "-", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		
+		// Backspace button column
+		
+		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 1, 0);
+		c1 = addButton("bkspc", "BKSPC", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("num8", "8", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("num5", "5", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("num2", "2", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("period", ".", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("posn", "POSN", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+
+		
+		// Item button column
+		
+		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 1, 0);
+		c1 = addButton("item", "ITEM", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("num9", "9", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("num6", "6", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("num3", "3", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("comma", ",", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("io", "I/O", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		
+		// Util button column
+		
+		relPos = relativePosition(getButton("arrow_dn"), RelativePoint.BOTTOM_LEFT,
+				-smLrDiff / 2, 10);
+		c1 = addButton("enter", "ENTER", pendantWindow, relPos[0], btmColsY,
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("tool1", "TOOL1", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("tool2", "TOOL2", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("mvmu", "MVMU", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("SETUP", "SETUP", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("status", "STATUS", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		
+		// Jog button columns
+		
+		c1 = getButton("shift");
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 0);
+		relPos[1] = btmColsY;
+		
+		float[] relPos2 = relativePosition(c1, RelativePoint.BOTTOM_LEFT,
+				-Fields.LARGE_BUTTON - 1, 0);
+		relPos2[1] = btmColsY;
+		
+		for (int idx = 1; idx <= 6; ++idx) {
+			
+			int sym = 88 + (idx - 1) % 3;
+			String name = String.format("joint%d_pos", idx);
+			String format = (idx < 4) ? " +%c\n(J%d)" : "+%cR\n(J%d)";
+			String lbl = String.format(format, sym, idx);
+			
+			MyButton b = addButton(name, lbl, pendantWindow, relPos[0], relPos[1],
+					Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+			
+			b.getCaptionLabel().alignY(RobotRun.TOP);
+			relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, 1);
+			
+			name = String.format("joint%d_neg", idx);
+			format = (idx < 4) ? " -%c\n(J%d)" : "-%cR\n(J%d)";
+			lbl = String.format(format, sym, idx);
+			
+			b = addButton(name, lbl, pendantWindow, relPos2[0], relPos2[1],
+					Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+			
+			b.getCaptionLabel().alignY(RobotRun.TOP);
+			relPos2 = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, 1);
+		}
+		
+		
+		// Hold button column
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT,
+				-2 * (Fields.LARGE_BUTTON + 1), 0);
+		relPos[1] = btmColsY;
+		c1 = addButton("hold", "HOLD", pendantWindow, relPos[0],
+				btmColsY, Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("fwd", "FWD", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("bwd", "BWD", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("coord", "COORD", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("spdup", "+%", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
+		
+		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		c2 = addButton("spddn", "-%", pendantWindow, relPos[0], relPos[1],
+				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		// Initialize the elements shared amongst the create and edit windows
 		for (int idx = 0; idx < 3; ++idx) {
 			addTextarea(String.format("DimLbl%d", idx), String.format("Dim(%d):", idx),
-					sharedElements, fieldWidth, sButtonHeight, medium);
+					sharedElements, fieldWidth, sButtonHeight, Fields.medium);
 			
 			addTextfield(String.format("Dim%d", idx), sharedElements, fieldWidth,
-					fieldHeight, medium);
+					fieldHeight, Fields.medium);
 		}
 		
-		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, small);
+		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
 		
 		// Initialize the world object creation window elements
-		addTextarea("ObjTypeLbl", "Type:", createObjWindow, mLblWidth, sButtonHeight, medium);
+		addTextarea("ObjTypeLbl", "Type:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
 
-		addTextarea("ObjNameLbl", "Name:", createObjWindow, sLblWidth, fieldHeight, medium);
-		addTextfield("ObjName", createObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("ObjNameLbl", "Name:", createObjWindow, sLblWidth, fieldHeight, Fields.medium);
+		addTextfield("ObjName", createObjWindow, fieldWidth, fieldHeight, Fields.medium);
 
-		addTextarea("ShapeLbl", "Shape:", createObjWindow, mLblWidth, sButtonHeight, medium);
-		addTextarea("FillLbl", "Fill:", createObjWindow, mLblWidth, sButtonHeight, medium);
-		addTextarea("OutlineLbl", "Outline:", createObjWindow, mLblWidth, sButtonHeight, medium);
+		addTextarea("ShapeLbl", "Shape:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("FillLbl", "Fill:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("OutlineLbl", "Outline:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
 
-		addButton("CreateWldObj", "Create", createObjWindow, mButtonWidth, sButtonHeight, small);
+		addButton("CreateWldObj", "Create", createObjWindow, mButtonWidth, sButtonHeight, Fields.small);
 		
 		// Initialize the world object edit window elements
-		addTextarea("ObjLabel", "Object:", editObjWindow, mLblWidth, fieldHeight, medium);
+		addTextarea("ObjLabel", "Object:", editObjWindow, mLblWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("Blank", "Inputs", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextarea("Current", "Current", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("Default", "Default", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("Blank", "Inputs", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextarea("Current", "Current", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("Default", "Default", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 
-		addTextarea("XLbl", "X Position:", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextfield("XCur", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("XDef", "N/A", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("XLbl", "X Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("XCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("XDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("YLbl", "Y Position:", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextfield("YCur", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("YDef", "N/A", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("YLbl", "Y Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("YCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("YDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("ZLbl", "Z Position:", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextfield("ZCur", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("ZDef", "N/A", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("ZLbl", "Z Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("ZCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("ZDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("WLbl", "X Rotation:", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextfield("WCur", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("WDef", "N/A", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("WLbl", "X Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("WCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("WDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("PLbl", "Y Rotation:", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextfield("PCur", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("PDef", "N/A", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("PLbl", "Y Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("PCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("PDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("RLbl", "Z Rotation:", editObjWindow, lLblWidth, fieldHeight, medium);
-		addTextfield("RCur", editObjWindow, fieldWidth, fieldHeight, medium);
-		addTextarea("RDef", "N/A", editObjWindow, fieldWidth, fieldHeight, medium);
+		addTextarea("RLbl", "Z Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("RCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("RDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
-		addTextarea("RefLbl", "Reference:", editObjWindow, lLblWidth, sButtonHeight, medium);
+		addTextarea("RefLbl", "Reference:", editObjWindow, lLblWidth, sButtonHeight, Fields.medium);
 		
-		addButton("MoveToCur", "Move to Current", editObjWindow, fieldWidth, sButtonHeight, small);
-		addButton("UpdateWODef", "Update Default", editObjWindow, fieldWidth, sButtonHeight, small);
-		addButton("MoveToDef", "Move to Default", editObjWindow, fieldWidth, sButtonHeight, small);
+		addButton("MoveToCur", "Move to Current", editObjWindow, fieldWidth, sButtonHeight, Fields.small);
+		addButton("UpdateWODef", "Update Default", editObjWindow, fieldWidth, sButtonHeight, Fields.small);
+		addButton("MoveToDef", "Move to Default", editObjWindow, fieldWidth, sButtonHeight, Fields.small);
 		
-		addButton("ResDefs", "Restore Defaults", editObjWindow, lLblWidth, sButtonHeight, small);
+		addButton("ResDefs", "Restore Defaults", editObjWindow, lLblWidth, sButtonHeight, Fields.small);
 
-		addButton("DeleteWldObj", "Delete", editObjWindow, mButtonWidth, sButtonHeight, small);
+		addButton("DeleteWldObj", "Delete", editObjWindow, mButtonWidth, sButtonHeight, Fields.small);
 		
 		// Initialize the scenario window elements
-		addTextarea("SOptLbl", "Options:", scenarioWindow, mLblWidth, fieldHeight, medium);
+		addTextarea("SOptLbl", "Options:", scenarioWindow, mLblWidth, fieldHeight, Fields.medium);
 		
 		HashMap<Float, String> toggles = new HashMap<>();
 		toggles.put(0f, "New");
 		toggles.put(1f, "Load");
 		toggles.put(2f, "Rename");
 		
-		RadioButton rb = addRadioButtons("ScenarioOpt", scenarioWindow, radioDim, radioDim, medium, toggles, 0f);
+		RadioButton rb = addRadioButtons("ScenarioOpt", scenarioWindow, radioDim, radioDim, Fields.medium, toggles, 0f);
 		Toggle t = rb.getItem(0);
 		
 		rb.setItemsPerRow(3);
 		rb.setSpacingColumn( (background.getWidth() - 2 * offsetX - 3 * t.getWidth()) / 3 );
 		
 		addTextarea("SInstructions", "N/A", scenarioWindow, background.getWidth() - (2 * offsetX),
-				54, small).hideScrollbar();
+				54, Fields.small).hideScrollbar();
 		
-		addTextfield("SInput", scenarioWindow, fieldWidth, fieldHeight, medium);
-		addButton("SConfirm", "N/A", scenarioWindow, mButtonWidth, sButtonHeight, small);
+		addTextfield("SInput", scenarioWindow, fieldWidth, fieldHeight, Fields.medium);
+		addButton("SConfirm", "N/A", scenarioWindow, mButtonWidth, sButtonHeight, Fields.small);
 		
 		// Initialize the miscellaneous window elements
-		addTextarea("ActiveAxesDisplay", "Axes Display:", miscWindow, lLblWidth, sButtonHeight, medium);
-		addTextarea("ActiveEEDisplay", "EE Display:", miscWindow, lLblWidth, sButtonHeight, medium);
+		addTextarea("ActiveAxesDisplay", "Axes Display:", miscWindow, lLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("ActiveEEDisplay", "EE Display:", miscWindow, lLblWidth, sButtonHeight, Fields.medium);
 		
-		addButton("ToggleOBBs", "Hide OBBs", miscWindow, lButtonWidth, sButtonHeight, small);
-		addButton("ToggleRobot", "Add Robot", miscWindow, lButtonWidth, sButtonHeight, small);
+		addButton("ToggleOBBs", "Hide OBBs", miscWindow, lButtonWidth, sButtonHeight, Fields.small);
+		addButton("ToggleRobot", "Add Robot", miscWindow, lButtonWidth, sButtonHeight, Fields.small);
 
 		/* Initialize dropdown list elements
 		 * 
@@ -280,32 +584,32 @@ public class WindowManager implements ControlListener {
 		 * 		(Adding the dropdown lists last places them in front of the
 		 * other UI elements, which is important, when the list is open) */
 		DropdownList ddlLimbo = addDropdown("EEDisplay", miscWindow, ldropItemWidth, dropItemHeight, 4,
-				small);
+				Fields.small);
 		ddlLimbo.addItem(EEMapping.DOT.toString(), EEMapping.DOT)
 				.addItem(EEMapping.LINE.toString(), EEMapping.LINE)
 				.addItem(EEMapping.NONE.toString(), EEMapping.NONE)
 				.setValue(0);
 		
 		ddlLimbo = addDropdown("AxesDisplay", miscWindow, ldropItemWidth, dropItemHeight, 4,
-				small);
+				Fields.small);
 		ddlLimbo.addItem(AxesDisplay.AXES.toString(), AxesDisplay.AXES)
 				.addItem(AxesDisplay.GRID.toString(), AxesDisplay.GRID)
 				.addItem(AxesDisplay.NONE.toString(), AxesDisplay.NONE)
 				.setValue(0);
 		
-		addDropdown("Scenario", scenarioWindow, ldropItemWidth, dropItemHeight, 4, small);
-		addDropdown("Fixture", editObjWindow, ldropItemWidth, dropItemHeight, 4, small);
+		addDropdown("Scenario", scenarioWindow, ldropItemWidth, dropItemHeight, 4, Fields.small);
+		addDropdown("Fixture", editObjWindow, ldropItemWidth, dropItemHeight, 4, Fields.small);
 		 
 		for (int idx = 0; idx < 1; ++idx) {
 			// dimension field dropdown lists
 			addDropdown(String.format("DimDdl%d", idx), sharedElements, ldropItemWidth,
-					dropItemHeight, 4, small);
+					dropItemHeight, 4, Fields.small);
 		}
 		
-		addDropdown("Object", editObjWindow, ldropItemWidth, dropItemHeight, 4, small);
+		addDropdown("Object", editObjWindow, ldropItemWidth, dropItemHeight, 4, Fields.small);
 		
 		ddlLimbo = addDropdown("Outline", createObjWindow, sdropItemWidth, dropItemHeight,
-				4, small);
+				4, Fields.small);
 		ddlLimbo.addItem("black", app.color(0))
 				.addItem("red", app.color(255, 0, 0))
 				.addItem("green", app.color(0, 255, 0))
@@ -316,7 +620,7 @@ public class WindowManager implements ControlListener {
 				.addItem("purple", app.color(90, 0, 255));
 
 		ddlLimbo = addDropdown("Fill", createObjWindow, mdropItemWidth, dropItemHeight,
-				4, small);
+				4, Fields.small);
 		ddlLimbo.addItem("white", app.color(255))
 				.addItem("black", app.color(0))
 				.addItem("red", app.color(255, 0, 0))
@@ -330,13 +634,13 @@ public class WindowManager implements ControlListener {
 				.addItem("dark green", app.color(0, 100, 15));
 
 		ddlLimbo = addDropdown("Shape", createObjWindow, sdropItemWidth, dropItemHeight,
-				4, small);
+				4, Fields.small);
 		ddlLimbo.addItem("Box", ShapeType.BOX)
 				.addItem("Cylinder", ShapeType.CYLINDER)
 				.addItem("Import", ShapeType.MODEL);
 
 		ddlLimbo = addDropdown("ObjType", createObjWindow, sdropItemWidth, dropItemHeight,
-				3, small);
+				3, Fields.small);
 		ddlLimbo.addItem("Parts", 0.0f)
 				.addItem("Fixtures", 1.0f);
 	}
@@ -359,15 +663,108 @@ public class WindowManager implements ControlListener {
 	private MyButton addButton(String name, String lblTxt, Group parent, int wdh,
 			int hgt, PFont lblFont) {
 		
-		MyButton b = new MyButton(UIManager, name);
+		MyButton b = new MyButton(manager, name);
 		
 		b.setCaptionLabel(lblTxt)
-		 .setColorValue(B_TEXT_C)
-		 .setColorBackground(B_DEFAULT_C)
-		 .setColorActive(B_DEFAULT_C)
+		 .setColorValue(Fields.B_TEXT_C)
+		 .setColorBackground(Fields.B_DEFAULT_C)
+		 .setColorActive(Fields.B_ACTIVE_C)
 	 	 .moveTo(parent)
 		 .setSize(wdh, hgt)
 		 .getCaptionLabel().setFont(lblFont);
+		
+		return b;
+	}
+	
+	/**
+	 * Adds a button to the UI with the given name, label, parent, xy position,
+	 * width, height, and font. The UI's color scheme is applied to the button.
+	 * 
+	 * @param name		The name (or ID) of the button, which must be unique
+	 * 					amongst all controllers in the UI!
+	 * @param lblTxt	The text which will be rendered on the button
+	 * @param parent	The window group, to which this button belongs
+	 * @param posX		The x position of the button relative to the position
+	 * 					of its parent
+	 * @param posY		The y position of the button relative to the position
+	 * 					of its parent
+	 * @param wdh		The width of the button
+	 * @param hgt		The height of the button
+	 * @param lblFont	The font of the button label's text
+	 * @return			A reference to the new button
+	 */
+	private MyButton addButton(String name, String lblTxt, Group parent,
+			float posX, float posY, int wdh, int hgt, PFont lblFont) {
+		
+		MyButton b = new MyButton(manager, name);
+		
+		b.setCaptionLabel(lblTxt)
+		 .setColorValue(Fields.B_TEXT_C)
+		 .setColorBackground(Fields.B_DEFAULT_C)
+		 .setColorActive(Fields.B_ACTIVE_C)
+		 .setPosition(posX, posY)
+	 	 .moveTo(parent)
+		 .setSize(wdh, hgt)
+		 .getCaptionLabel().setFont(lblFont);
+		
+		return b;
+	}
+	
+	/**
+	 * Adds a button to the UI with the given name, image labels, xy position,
+	 * width, and height. The parent of the button is the top element of the
+	 * UI.
+	 * 
+	 * @param name		The name (or ID) of the button, which must be unique
+	 * 					amongst all UI elements!
+	 * @param imgLbls	A list of images, which will be rendered on the button.
+	 * @param posX		The x position of the button relative to the position
+	 * 					of its parent
+	 * @param posY		The y position of the button relative to the position
+	 * 					of its parent
+	 * @param wdh		The width of the button
+	 * @param hgt		The height of the button
+	 * @return			A reference to the new button
+	 */
+	private MyButton addButton(String name, PImage[] imgLbls, float posX,
+			float posY, int wdh, int hgt) {
+		
+		MyButton b = new MyButton(manager, name);
+		
+		b.setImages(imgLbls)
+		 .setPosition(posX, posY)
+		 .setSize(wdh, hgt)
+		 .updateSize();
+		
+		return b;
+	}
+	
+	/**
+	 * Adds a button to the UI with the given name, parent, image labels, xy
+	 * position, width, and height.
+	 * 
+	 * @param name		The name (or ID) of the button, which must be unique
+	 * 					amongst all UI elements!
+	 * @param parent	The window group, to which this button belongs
+	 * @param imgLbls	A list of images, which will be rendered on the button
+	 * @param posX		The x position of the button relative to the position
+	 * 					of its parent
+	 * @param posY		The y position of the button relative to the position
+	 * 					of its parent
+	 * @param wdh		The width of the button
+	 * @param hgt		The height of the button
+	 * @return			A reference to the new button
+	 */
+	private MyButton addButton(String name, Group parent, PImage[] imgLbls,
+			float posX, float posY, int wdh, int hgt) {
+		
+		MyButton b = new MyButton(manager, name);
+		
+		b.setImages(imgLbls)
+		 .moveTo(parent)
+		 .setPosition(posX, posY)
+		 .setSize(wdh, hgt)
+		 .updateSize();
 		
 		return b;
 	}
@@ -392,14 +789,14 @@ public class WindowManager implements ControlListener {
 	private MyDropdownList addDropdown(String name, Group parent, int lblWdh,
 			int lblHgt, int listLen, PFont lblFont) {
 		
-		MyDropdownList dropdown = new MyDropdownList(UIManager, name);
+		MyDropdownList dropdown = new MyDropdownList(manager, name);
 		
 		dropdown.setSize(lblWdh, lblHgt * listLen)
 				.setBarHeight(lblHgt)
 				.setItemHeight(lblHgt)
-				.setColorValue(B_TEXT_C)
-				.setColorBackground(B_DEFAULT_C)
-				.setColorActive(B_ACTIVE_C)
+				.setColorValue(Fields.B_TEXT_C)
+				.setColorBackground(Fields.B_DEFAULT_C)
+				.setColorActive(Fields.B_ACTIVE_C)
 				.moveTo(parent)
 				.close()
 				.getCaptionLabel().setFont(lblFont);
@@ -420,9 +817,9 @@ public class WindowManager implements ControlListener {
 	 * @param hgt	The height of the group element
 	 * @return		A reference to the new group
 	 */
-	private Group addGroup(String name, int posX, int posY, int wdh, int hgt) {
-		return UIManager.addGroup(name).setPosition(posX, posY)
-				 .setBackgroundColor(BG_C)
+	private Group addGroup(String name, float posX, float posY, int wdh, int hgt) {
+		return manager.addGroup(name).setPosition(posX, posY)
+				 .setBackgroundColor(Fields.BG_C)
 				 .setSize(wdh, hgt)
 				 .hideBar();
 	}
@@ -446,11 +843,11 @@ public class WindowManager implements ControlListener {
 			int togHgt, PFont lblFont, HashMap<Float, String> elements,
 			Float iniActive) {
 		
-		MyRadioButton rb = new MyRadioButton(UIManager, name);
-		rb.setColorValue(B_DEFAULT_C)
-		  .setColorLabel(F_TEXT_C)
-		  .setColorActive(B_ACTIVE_C)
-		  .setBackgroundColor(BG_C)
+		MyRadioButton rb = new MyRadioButton(manager, name);
+		rb.setColorValue(Fields.B_DEFAULT_C)
+		  .setColorLabel(Fields.F_TEXT_C)
+		  .setColorActive(Fields.B_ACTIVE_C)
+		  .setBackgroundColor(Fields.BG_C)
 		  .moveTo(parent)
 		  .setSize(togWdh, togHgt);
 		
@@ -470,7 +867,10 @@ public class WindowManager implements ControlListener {
 		// Set label fonts
 		List<Toggle> items = rb.getItems();
 		for (Toggle t : items) {
-			t.getCaptionLabel().setFont(lblFont);
+			t.setColorBackground(Fields.B_DEFAULT_C)
+			 .setColorLabel(Fields.F_TEXT_C)
+			 .setColorActive(Fields.B_ACTIVE_C)
+			 .getCaptionLabel().setFont(lblFont);
 		}
 		
 		return rb;
@@ -493,13 +893,47 @@ public class WindowManager implements ControlListener {
 	private Textarea addTextarea(String name, String iniTxt, Group parent,
 			int wdh, int hgt, PFont lblFont) {
 		
-		return UIManager.addTextarea(name, iniTxt, 0, 0, wdh, hgt)
-						.setFont(lblFont)
-						.setColor(F_TEXT_C)
-						.setColorActive(F_ACTIVE_C)
-						.setColorBackground(BG_C)
-						.setColorForeground(BG_C)
-						.moveTo(parent);
+		return manager.addTextarea(name, iniTxt, 0, 0, wdh, hgt)
+					  .setFont(lblFont)
+					  .setColor(Fields.F_TEXT_C)
+					  .setColorActive(Fields.F_ACTIVE_C)
+					  .setColorBackground(Fields.BG_C)
+					  .setColorForeground(Fields.BG_C)
+					  .moveTo(parent)
+					  .hideScrollbar();
+	}
+	
+	/**
+	 * Adds a text-are with the given name, text, parent, xy position, width,
+	 * height, text color, background color, and font to the UI.
+	 * 
+	 * @param name		The name (or ID) of the text-area, which must be unique
+	 * 					amongst all UI elements
+	 * @param iniTxt	The text rendered in the text-area
+	 * @param parent	The window group, to which this text-area belongs
+	 * @param posX		The x position of the text-area relative to the
+	 * 					position of its parent
+	 * @param posY		The y position of the text-area relative to the
+	 * 					position of its parent
+	 * @param wdh		The width of the text-area
+	 * @param hgt		The height of the text-area
+	 * @param txtColor	The color of the text-area's text
+	 * @param bgColor	The color of the text-area's background
+	 * @param lblFont	The font of the text-area
+	 * @return
+	 */
+	private Textarea addTextarea(String name, String iniTxt, Group parent,
+			int posX, int posY, int wdh, int hgt, int txtColor, int bgColor,
+			PFont lblFont) {
+		
+		return manager.addTextarea(name, iniTxt, posX, posY, wdh, hgt)
+				.setFont(lblFont)
+				.setColor(txtColor)
+				.setColorActive(Fields.F_ACTIVE_C)
+				.setColorBackground(bgColor)
+				.setColorForeground(Fields.BG_C)
+				.moveTo(parent)
+				.hideScrollbar();
 	}
 	
 	/**
@@ -517,13 +951,13 @@ public class WindowManager implements ControlListener {
 	private MyTextfield addTextfield(String name, Group parent, int wdh,
 			int hgt, PFont lblFont) {
 		
-		MyTextfield t = new MyTextfield(UIManager, name, 0, 0, wdh, hgt);
-		t.setColor(F_TEXT_C)
-		 .setColorCursor(F_CURSOR_C)
-		 .setColorActive(F_CURSOR_C)
-		 .setColorLabel(BG_C)
-		 .setColorBackground(F_BG_C)
-		 .setColorForeground(F_FG_C)
+		MyTextfield t = new MyTextfield(manager, name, 0, 0, wdh, hgt);
+		t.setColor(Fields.F_TEXT_C)
+		 .setColorCursor(Fields.F_CURSOR_C)
+		 .setColorActive(Fields.F_CURSOR_C)
+		 .setColorLabel(Fields.BG_C)
+		 .setColorBackground(Fields.F_BG_C)
+		 .setColorForeground(Fields.F_FG_C)
 		 .moveTo(parent);
 		
 		return t;
@@ -601,6 +1035,8 @@ public class WindowManager implements ControlListener {
 			 }
 		 }
 	}
+	
+	
 
 	 /**
 	  * Reinitialize any and all input fields
@@ -633,7 +1069,7 @@ public class WindowManager implements ControlListener {
 	  * input; currently only text fields and dropdown lists are updated.
 	  */
 	 public void clearGroupInputFields(Group g) {
-		 List<ControllerInterface<?>> contents = UIManager.getAll();
+		 List<ControllerInterface<?>> contents = manager.getAll();
 
 		 for (ControllerInterface<?> controller : contents) {
 
@@ -1057,8 +1493,58 @@ public class WindowManager implements ControlListener {
 	  * @throws ClassCastException	If a non-button UI element with the given
 	  * 							name exists in the UI
 	  */
-	 private Button getButton(String name) throws ClassCastException {
-		 return (Button) UIManager.get(name);
+	 private MyButton getButton(String name) throws ClassCastException {
+		 return (MyButton) manager.get(name);
+	 }
+	 
+	 /**
+	  * Parses a six-element float array from the six orientation input
+	  * text-fields in the edit window UI elements. Each value is validated as
+	  * a floating-point number and clamped within the bounds [-9999, 9999]. If
+	  * the input for a field is blank or null, then its value in the array
+	  * will also be null. However, if the input for any of the fields is not a
+	  * real number, then a null array is returned. The first three elements of
+	  * the array correspond to an xyz position input and the last three
+	  * correspond to a wpr euler angle rotation set in degrees. Both of these
+	  * values are assumed to correspond to a position and orientation with
+	  * respect to the world frame 
+	  * 
+	  * @return	A list of input values from the orientation text-fields in the
+	  * 		world object edit window
+	  */
+	 private Float[] getCurrentValues() {
+		 try {
+			 /* Pull from x, y, z, w, p, r, input values from their
+			  * corresponding text-fields */
+			 String[] orienVals = new String[] {
+					getTextField("XCur").getText(), getTextField("YCur").getText(),
+					getTextField("ZCur").getText(), getTextField("WCur").getText(),
+					getTextField("PCur").getText(), getTextField("RCur").getText()
+			 };
+			 
+			 // Null indicates an uninitialized field
+			 Float[] values = new Float[] { null, null, null, null, null, null };
+			 
+			 for (int valIdx = 0; valIdx < orienVals.length; ++valIdx) {
+				// Update the orientation value
+				 if (orienVals[valIdx] != null && !orienVals[valIdx].equals("")) {
+					 float val = Float.parseFloat(orienVals[valIdx]);
+					 // Bring value within the range [-9999, 9999]
+					 val = PApplet.max(-9999f, PApplet.min(val, 9999f));
+					 values[valIdx] = val;
+				 }
+			 }
+
+			 return values;
+
+		 } catch (NumberFormatException NFEx) {
+			 PApplet.println("Invalid number input!");
+			 return null;
+
+		 } catch (NullPointerException NPEx) {
+			 PApplet.println("Missing parameter!");
+			 return null;
+		 }
 	 }
 
 	 /**
@@ -1135,10 +1621,10 @@ public class WindowManager implements ControlListener {
 	 private String getDimText(DimType t) throws ClassCastException {
 		 
 		 if (t == DimType.WIDTH) {
-			 return ( (MyTextfield) UIManager.get("Dim2") ).getText();
+			 return ( (MyTextfield) manager.get("Dim2") ).getText();
 			 
 		 } else if (t == DimType.HEIGHT) {
-			 return ( (MyTextfield) UIManager.get("Dim1") ).getText();
+			 return ( (MyTextfield) manager.get("Dim1") ).getText();
 			 
 		 } if (t == DimType.SCALE) {
 			 int dimNum = 0;
@@ -1148,10 +1634,10 @@ public class WindowManager implements ControlListener {
 				dimNum = 1;
 			 }
 			 
-			 return ( (MyTextfield) UIManager.get( String.format("Dim%d", dimNum) ) ).getText();
+			 return ( (MyTextfield) manager.get( String.format("Dim%d", dimNum) ) ).getText();
 			 
 		 } else {
-			 return ( (MyTextfield) UIManager.get("Dim0") ).getText();
+			 return ( (MyTextfield) manager.get("Dim0") ).getText();
 		 }
 	 }
 	 
@@ -1167,7 +1653,7 @@ public class WindowManager implements ControlListener {
 	  * 							name exists in the UI
 	  */
 	 private MyDropdownList getDropdown(String name) throws ClassCastException {
-		 return (MyDropdownList) UIManager.get(name);
+		 return (MyDropdownList) manager.get(name);
 	 }
 	 
 	 /**
@@ -1232,45 +1718,37 @@ public class WindowManager implements ControlListener {
 	 public boolean getOBBButtonState() {
 		 return !getButton("ToggleOBBs").isOn();
 	 }
-
-	 /**
-	  * TODO
-	  * 
-	  * @return
-	  */
-	 private Float[] getCurrentValues() {
-		 try {
-			 // Pull from x, y, z, w, p, r, fields input fields
-			 String[] orienVals = new String[] {
-					getTextField("XCur").getText(), getTextField("YCur").getText(),
-					getTextField("ZCur").getText(), getTextField("WCur").getText(),
-					getTextField("PCur").getText(), getTextField("RCur").getText()
-			 };
-			 
-			 // NaN indicates an uninitialized field
-			 Float[] values = new Float[] { null, null, null, null, null, null };
-			 
-			 for (int valIdx = 0; valIdx < orienVals.length; ++valIdx) {
-				// Update the orientation value
-				 if (orienVals[valIdx] != null && !orienVals[valIdx].equals("")) {
-					 float val = Float.parseFloat(orienVals[valIdx]);
-					 // Bring value within the range [-9999, 9999]
-					 val = PApplet.max(-9999f, PApplet.min(val, 9999f));
-					 values[valIdx] = val;
-				 }
-			 }
-
-			 return values;
-
-		 } catch (NumberFormatException NFEx) {
-			 PApplet.println("Invalid number input!");
-			 return null;
-
-		 } catch (NullPointerException NPEx) {
-			 PApplet.println("Missing parameter!");
-			 return null;
-		 }
-	 }
+	 
+	/**
+	 * Get the pendant display text-area with the given index. If the given
+	 * index is equal to the number of existing text-areas (i.e. 1 index out of
+	 * bounds), then more text-areas to the list of text-ares to accommodate
+	 * the given index.
+	 * 
+	 * @param TAIdx	The index of a pendant display text-area
+	 * @return		The text area with the given index
+	 */
+	private Textarea getPendantDisplayTA(int TAIdx) {
+		
+		if (TAIdx >= 0 && TAIdx <= displayLines.size()) {
+			
+			if (TAIdx == displayLines.size()) {
+				// Increase the number of text areas used for output
+				int newSize = 3 * displayLines.size() / 2;
+				
+				for (int idx = displayLines.size(); idx < newSize; ++idx) {
+					displayLines.add( idx, addTextarea(String.format("ps%d", idx),
+							"\0", pendantWindow, 0, 0, 10, 20, Fields.UI_DARK_C,
+							Fields.UI_LIGHT_C, Fields.medium) );
+				}
+			}
+			
+			return displayLines.get(TAIdx).show();
+		}
+		
+		// Invalid input
+		return null;
+	}
 	 
 	 /**
 	  * Returns the radio button, with the given name, if it exists in one of
@@ -1284,7 +1762,7 @@ public class WindowManager implements ControlListener {
 	  * 							given name exists in the UI
 	  */
 	 public MyRadioButton getRadioButton(String name) throws ClassCastException {
-		 return (MyRadioButton) UIManager.get(name);
+		 return (MyRadioButton) manager.get(name);
 	 }
 	 
 	 /**
@@ -1295,7 +1773,10 @@ public class WindowManager implements ControlListener {
 	 }
 	 
 	 /**
-	  * TODO
+	  * Parses the name of a .stl model source file from one of two input
+	  * fields: a text-field or dropdown list. The one used is dependent on
+	  * which of the two fields that the user edited last
+	  * (i.e.e lastModImport).
 	  * 
 	  * @return	The name of the .stl file to use as a model for a world object
 	  */
@@ -1305,7 +1786,7 @@ public class WindowManager implements ControlListener {
 		if (menu == WindowTab.CREATE) {
 			/* Determine which method of the source file input was edited last
 			 * and use that input method as the source file */
-			ControllerInterface<?> c = UIManager.get(lastModImport);
+			ControllerInterface<?> c = manager.get(lastModImport);
 			
 			if (c instanceof MyTextfield) {
 				filename = ((MyTextfield)c).getText();
@@ -1336,7 +1817,7 @@ public class WindowManager implements ControlListener {
 	  * 							name exists in the UI
 	  */
 	 private Textarea getTextArea(String name) throws ClassCastException {
-		 return (Textarea) UIManager.get(name);
+		 return (Textarea) manager.get(name);
 	 }
 	 
 	 /**
@@ -1351,8 +1832,17 @@ public class WindowManager implements ControlListener {
 	  * 							name exists in the UI
 	  */
 	 private MyTextfield getTextField(String name) throws ClassCastException {
-		 return (MyTextfield) UIManager.get(name);
+		 return (MyTextfield) manager.get(name);
 	 }
+	 
+	/*
+	 * Hides all the text areas related to the pendant's main display.
+	 */
+	public void hidePendantScreen() {
+		for (Textarea t : displayLines) {
+			t.hide();
+		}
+	}
 
 	 /**
 	  * Creates a new scenario with the name pulled from the scenario name text field.
@@ -1396,7 +1886,7 @@ public class WindowManager implements ControlListener {
 	  * Determines whether a single text field is active.
 	  */
 	 public boolean isATextFieldActive() {
-		 List<ControllerInterface<?>> controllers = UIManager.getAll();
+		 List<ControllerInterface<?>> controllers = manager.getAll();
 		 
 		 for (ControllerInterface<?> c : controllers) {
 			 if (c instanceof MyTextfield && ((MyTextfield) c).isFocus()) {
@@ -1411,7 +1901,7 @@ public class WindowManager implements ControlListener {
 	  * Determines whether the mouse is over a dropdown list.
 	  */
 	 public boolean isMouseOverADropdownList() {
-		 List<ControllerInterface<?>> controllers = UIManager.getAll();
+		 List<ControllerInterface<?>> controllers = manager.getAll();
 		 
 		 for (ControllerInterface<?> c : controllers) {
 			 if (c instanceof MyDropdownList && c.isMouseOver()) {
@@ -1442,8 +1932,8 @@ public class WindowManager implements ControlListener {
 	  * @param offsetY	The y position offset from obj's position
 	  * @return			A doubleton containing the absolute x and y positions
 	  */
-	 private <T> int[] relativePosition(ControllerInterface<T> obj, RelativePoint pos, int offsetX, int offsetY) {
-		 int[] relPosition = new int[] { 0, 0 };
+	 private <T> float[] relativePosition(ControllerInterface<T> obj, RelativePoint pos, float offsetX, float offsetY) {
+		 float[] relPosition = new float[] { 0f, 0f };
 		 float[] objPosition = obj.getPosition();
 		 float[] objDimensions;
 
@@ -1490,12 +1980,168 @@ public class WindowManager implements ControlListener {
 
 		 return relPosition;
 	 }
+	 
+	/**
+	 * Renders all the text on the pendant's screen based on the given input.
+	 * 
+	 * @param header	The header of the pendant screen
+	 * @param contents	The main content fields
+	 * @param options	The option fields
+	 * @param funcLbls	The function button labels
+	 */
+	public void renderPendantScreen(String header, MenuScroll contents,
+			MenuScroll options, String[] funcLbls) {
+		
+		Textarea headerLbl = getTextArea("header");
+
+		if (header != null) {
+			// Display header field
+			headerLbl.setText(header).show();
+			
+		} else {
+			headerLbl.hide();
+		}
+		
+		hidePendantScreen();
+
+		if (contents.size() == 0) {
+			options.setLocation(10, 20);
+			options.setMaxDisplay(8);
+			
+		} else {
+			options.setLocation(10, 199);
+			options.setMaxDisplay(3);
+		}
+		
+		/* Keep track of the pendant display text-field indexes last used by
+		 * each menu. */
+		int lastTAIdx = renderMenu(contents, 0);
+		lastTAIdx = renderMenu(options, lastTAIdx);
+
+		// Set the labels for each function button
+		for (int i = 0; i < 5; i += 1) {
+			getTextArea("fl" + i).setText(funcLbls[i]);
+		}
+	}
+	
+	/**
+	 * Renders the text and text highlighting for the given menu. The TAIdx
+	 * field indicates the index of the first text-field, in the list of
+	 * pendant display text-fields, to use for rendering the menu. In addition,
+	 * the index of the next unused text-field is returned by this method.
+	 * 
+	 * @param menu	The menu contents to display on the pendant
+	 * @param TAIdx	The index of the first text-field in displayLines to use
+	 * 				for rendering the contents of menu.
+	 * @return		The index of the next unused text-field in displayLines
+	 */
+	public int renderMenu(MenuScroll menu, int TAIdx) {
+		ScreenMode m = app.getMode();
+		DisplayLine active;
+		boolean selectMode = false;
+		
+		if(m.getType() == ScreenType.TYPE_LINE_SELECT) { selectMode = true; } 
+		
+		menu.updateRenderIndices();
+		active = (menu.size() > 0) ? menu.get( menu.getLineIdx() ) : null;
+		
+		int lineNo = 0;
+		int bg, txt, selectInd = -1;
+		int next_py = menu.getYPos();
+		
+		for(int i = menu.getRenderStart(); i < menu.size() && lineNo < menu.getMaxDisplay(); i += 1) {
+			//get current line
+			DisplayLine temp = menu.get(i);
+			int next_px = temp.getxAlign() + menu.getXPos();
+
+			if(i == 0 || menu.get(i - 1).getItemIdx() != menu.get(i).getItemIdx()) {
+				selectInd = menu.get(i).getItemIdx();
+				if (active.getItemIdx() == selectInd) { bg = Fields.UI_DARK_C;  }
+				else												{ bg = Fields.UI_LIGHT_C; }
+				
+				//leading row select indicator []
+				getPendantDisplayTA(TAIdx++).setText("")
+									   .setPosition(next_px, next_py)
+									   .setSize(10, 20)
+									   .setColorBackground(bg);
+			}
+
+			next_px += 10;
+			
+			//draw each element in current line
+			for(int j = 0; j < temp.size(); j += 1) {
+				if(i == menu.getLineIdx()) {
+					if(j == menu.getColumnIdx() && !selectMode){
+						//highlight selected row + column
+						txt = Fields.UI_LIGHT_C;
+						bg = Fields.UI_DARK_C;          
+					} 
+					else if(selectMode && menu.isSelected(temp.getItemIdx())) {
+						//highlight selected line
+						txt = Fields.UI_LIGHT_C;
+						bg = Fields.UI_DARK_C;
+					}
+					else {
+						txt = Fields.UI_DARK_C;
+						bg = Fields.UI_LIGHT_C;
+					}
+				} else if(selectMode && menu.isSelected(temp.getItemIdx())) {
+					//highlight any currently selected lines
+					txt = Fields.UI_LIGHT_C;
+					bg = Fields.UI_DARK_C;
+				} else {
+					//display normal row
+					txt = Fields.UI_DARK_C;
+					bg = Fields.UI_LIGHT_C;
+				}
+
+				//grey text for comment also this
+				if(temp.size() > 0 && temp.get(0).contains("//")) {
+					txt = app.color(127);
+				}
+
+				getPendantDisplayTA(TAIdx++).setText(temp.get(j))
+									   .setPosition(next_px, next_py)
+									   .setSize(temp.get(j).length()*Fields.CHAR_WDTH + Fields.TXT_PAD, 20)
+									   .setColorValue(txt)
+									   .setColorBackground(bg);
+
+				next_px += temp.get(j).length()*Fields.CHAR_WDTH + (Fields.TXT_PAD - 8);
+			} //end draw line elements
+
+			//Trailing row select indicator []
+			if(i == menu.size() - 1 || menu.get(i).getItemIdx() != menu.get(i + 1).getItemIdx()) {
+				if (active.getItemIdx() == selectInd) { txt = Fields.UI_DARK_C;  }
+				else												{ txt = Fields.UI_LIGHT_C; }
+				
+				getPendantDisplayTA(TAIdx++).setText("")
+									   .setPosition(next_px, next_py)
+									   .setSize(10, 20)
+									   .setColorBackground(txt);
+			}
+
+			next_py += 20;
+			lineNo += 1;
+		}//end display contents
+		
+		return TAIdx;
+	}
+	 
+	/**
+	 * Resets the background color of all the jog buttons.
+	 */
+	public void resetJogButtons() {
+		for (int idx = 1; idx <= 6; idx += 1) {
+			updateButtonBgColor( String.format("joint%d_pos", idx) , false);
+			updateButtonBgColor( String.format("joint%d_neg", idx) , false);
+		}
+	}
 
 	 /**
 	  * Reset the base label of every dropdown list.
 	  */
 	 private void resetListLabels() {
-		 List<ControllerInterface<?>> controllers = UIManager.getAll();
+		 List<ControllerInterface<?>> controllers = manager.getAll();
 		 
 		 for (ControllerInterface<?> c : controllers) {
 			 if (c instanceof MyDropdownList && !c.getParent().equals(miscWindow)) {
@@ -1513,32 +2159,14 @@ public class WindowManager implements ControlListener {
 	 }
 
 	 /**
-	  * Only update the group visiblility if it does not
-	  * match the given visiblity flag.
+	  * Only update the group visibility if it does not
+	  * match the given visibility flag.
 	  */
 	 private void setGroupVisible(Group g, boolean setVisible) {
 		 if (g.isVisible() != setVisible) {
 			 g.setVisible(setVisible);
 		 }
 	 }
-	
-	/**
-	 * Updates the current menu of the UI and communicates with the PApplet to
-	 * update the active robot, if necessary.
-	 * 
-	 * @param newView	The new menu to render
-	 */
-	private void updateView(WindowTab newView) {
-		menu = newView;
-		
-		// Update active robot if necessary
-		if (menu == WindowTab.ROBOT1) {
-			app.setRobot(0);
-			
-		} else if (menu == WindowTab.ROBOT2) {
-			app.setRobot(1);
-		}
-	}
 	 
 	/**
 	 * Updates the tabs that are available in the applications main window.
@@ -1565,6 +2193,24 @@ public class WindowManager implements ControlListener {
 		
 		return tr.isOn();
 	}
+	
+	/**
+	 * Updates the background color of the button with the given name based off
+	 * the given state (i.e. true is active, false is inactive).
+	 * 
+	 * @param name	The name of the button of which to update the background
+	 * @param state	The indicator of what color to set as the button's background
+	 */
+	private void updateButtonBgColor(String name, boolean state) {
+		MyButton b = getButton(name);
+		// Set the color of the button's background based off its state
+		if (state) {
+			b.setColorBackground(Fields.B_ACTIVE_C);
+			
+		} else {
+			b.setColorBackground(Fields.B_DEFAULT_C);
+		}
+	}
 
 	 /**
 	  * Updates the positions of all the contents of the world object creation window.
@@ -1573,7 +2219,7 @@ public class WindowManager implements ControlListener {
 		 updateDimLblsAndFields();
 
 		 // Object Type dropdown list and label
-		 int[] relPos = new int[] { offsetX, offsetX };
+		 float[] relPos = new float[] { offsetX, offsetX };
 		 ControllerInterface<?> c = getTextArea("ObjTypeLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
@@ -1624,8 +2270,8 @@ public class WindowManager implements ControlListener {
 		 c = getButton("ClearFields").setPosition(relPos[0], relPos[1]);
 		 // Update window background display
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 background.setBackgroundHeight(relPos[1])
-		 .setHeight(relPos[1])
+		 background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
+		 .setHeight( (int)Math.ceil( relPos[1] ) )
 		 .show();
 	 }
 
@@ -1639,8 +2285,8 @@ public class WindowManager implements ControlListener {
 	  * @param initialYPos  The y position of the first text area-field pair
 	  * @returning          The x and y position of the last visible text area  in a 2-element integer array
 	  */
-	 private int[] updateDimLblAndFieldPositions(int initialXPos, int initialYPos) {
-		 int[] relPos = new int[] { initialXPos, initialYPos };
+	 private float[] updateDimLblAndFieldPositions(float initialXPos, float initialYPos) {
+		 float[] relPos = new float[] { initialXPos, initialYPos };
 		 int ddlIdx = 0;
 		 
 		 // Update the dimension dropdowns
@@ -1804,7 +2450,7 @@ public class WindowManager implements ControlListener {
 		 getButton("ClearFields").hide();
 
 		 // Object list dropdown and label
-		 int[] relPos = new int[] { offsetX, offsetX };
+		 float[] relPos = new float[] { offsetX, offsetX };
 		 ControllerInterface<?> c = getTextArea("ObjLabel").setPosition(relPos[0], relPos[1]),
 				 				c0 = null;
 		 boolean isPart = getSelectedWO() instanceof Part;
@@ -1938,7 +2584,7 @@ public class WindowManager implements ControlListener {
 			 relPos = relativePosition(c0, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			 c0 = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
 			 
-			 relPos =  new int[] { offsetX, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
+			 relPos =  new float[] { offsetX, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
 			 c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
 			
 			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX,
@@ -1962,9 +2608,48 @@ public class WindowManager implements ControlListener {
 		 
 		 // Update window background display
 		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 background.setBackgroundHeight(relPos[1])
-		 .setHeight(relPos[1])
+		 background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
+		 .setHeight( (int)Math.ceil( relPos[1] ) )
 		 .show();
+	 }
+	 
+	 /**
+	  * Updates the background color of the robot jog buttons corresponding to
+	  * the given pair index based on the given direction value. The are six
+	  * pairs of jog buttons, where each pair corresponds to a distinct robot
+	  * joint and axis motion.
+	  * 
+	  * Pair index		Motion
+	  * 0		->		joint 1 and x-axis translational
+	  * 1		->		joint 2 and y-axis translational
+	  * 2		->		joint 3 and z-axis translational
+	  * 3		->		joint 4 and x-axis rotational
+	  * 4		->		joint 5 and y-axis rotation
+	  * 5		->		joint 6 and z axis rotation
+	  * 
+	  * One button in a pair represent positive motion and the other negative
+	  * motion. Only one button in a pair is active at one time, so if the
+	  * inactive button is activated, then the active button becomes inactive.
+	  * If neither are active, then the inactive button, which is pressed
+	  * becomes active. If a button in a pair is active, then its background
+	  * color becomes B_ACTIVE_C, otherwise it is B_DEFAULT_C.
+	  * 
+	  * The sign of the newDir parameter defines the direction of motion
+	  * corresponding to a button pair.
+	  * 
+	  * If newDir > 0, then the positive button becomes active
+	  * If newDir == 0, then both buttons become inactive
+	  * If newDir < 0, then the negative button becomes active
+	  * 
+	  * 
+	  * @param pair		The index of a jog button pair
+	  * @param newDir	The new motion direction
+	  */
+	 public void updateJogButtons(int pair, float newDir) {
+		// Positive jog button is active when the direction is positive
+		updateButtonBgColor(String.format("joint%d_pos", pair + 1), newDir > 0);
+		// Negative jog button is active when the direction is negative
+		updateButtonBgColor(String.format("joint%d_neg", pair + 1), newDir < 0);
 	 }
 
 	 /**
@@ -2018,10 +2703,25 @@ public class WindowManager implements ControlListener {
 	 }
 	 
 	 /**
-	  * TODO
+	  * Updates the scenarios list based on the scenario edit window.
 	  * 
-	  * @param scenarios
-	  * @return
+	  * In the new subwindow, the user can create a new screnario, which will
+	  * be added to the list of scenarios and set active.
+	  * In the Load subwindow, the user can set an inactive scenario as active.
+	  * In the rename subwindow, the user can rename an existing scenario.
+	  * 
+	  * The return value describes the result of the scenario list
+	  * modification. A negative value indicates that an error occurred.
+	  * 
+	  * @param scenarios	The current list of scenarios
+	  * @return				 0	An existing scenario is successfully renamed,
+	  * 					 1	A new scenario is successfully added to the
+	  * 					 	list of scenarios,
+	  * 					 2	An existing scenario is successfully renamed,
+	  * 					-1	The name for a new scenario is invalid,
+	  * 					-2	A new scenario failed to be created,
+	  * 					-3	No scenario is selected to be renamed,
+	  * 					-4	The replacement name for a scenario is invalid
 	  */
 	 public int updateScenarios(ArrayList<Scenario> scenarios) {
 		 float val = getRadioButton("ScenarioOpt").getValue();
@@ -2079,7 +2779,7 @@ public class WindowManager implements ControlListener {
 	  */
 	 private void updateScenarioWindowContentPositions() {
 		// Scenario options label and radio buttons
-		int[] relPos = new int[] { offsetX, offsetX };
+		float[] relPos = new float[] { offsetX, offsetX };
 		ControllerInterface<?> c = getTextArea("SOptLbl").setPosition(relPos[0], relPos[1]);
 		
 		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, 0);
@@ -2141,9 +2841,31 @@ public class WindowManager implements ControlListener {
 		
 		// Update window background display
 		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		background.setBackgroundHeight(relPos[1])
-				  .setHeight(relPos[1])
+		background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
+				  .setHeight( (int)Math.ceil( relPos[1] ) )
 				  .show();
+	 }
+	 
+	/**
+	 * Update the color of the shift button based off the given state value
+	 * (i.e. true is active, false is inactive).
+	 * 
+	 * @param state	The state of the shift button
+	 */
+	public void updateShiftButton(boolean state) {
+		updateButtonBgColor("shift", state);
+		updateWindowDisplay();
+	}
+	
+	/**
+	 * Update the color of the set button based off the given state value (i.e.
+	 * true is active, false is inactive).
+	 * 
+	 * @param state	The state of the step button
+	 */
+	public void updateStepButton(boolean state) {
+		updateButtonBgColor("step", state);
+		updateWindowDisplay();
 	 }
 	 
 	/**
@@ -2151,7 +2873,7 @@ public class WindowManager implements ControlListener {
 	 */
 	private void updateMiscWindowContentPositions() {
 		// Axes Display label
-		int[] relPos = new int[] { offsetX, offsetX };
+		float[] relPos = new float[] { offsetX, offsetX };
 		ControllerInterface<?> c = getTextArea("ActiveAxesDisplay").setPosition(relPos[0], relPos[1]);
 		// Axes Display dropdown
 		relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
@@ -2167,35 +2889,47 @@ public class WindowManager implements ControlListener {
 		// Bounding box display toggle button
 		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		Button b = getButton("ToggleOBBs").setPosition(relPos[0], relPos[1]);
-
+		
 		// Update button color based on the state of the button
 		if (b.isOn()) {
 			b.setLabel("Show OBBs");
-			b.setColorBackground(B_ACTIVE_C);
 			
 		} else {
 			b.setLabel("Hide OBBs");
-			b.setColorBackground(B_DEFAULT_C);
 		}
+		updateButtonBgColor(b.getName(), b.isOn());
 		
 		// Second robot toggle button
 		relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 		b = getButton("ToggleRobot").setPosition(relPos[0], relPos[1]);
 		
 		// Update button color based on the state of the button
-		if (b.isOn()) {
-			b.setColorBackground(B_ACTIVE_C);
-			
-		} else {
-			b.setColorBackground(B_DEFAULT_C);
-		}
+		updateButtonBgColor(b.getName(), b.isOn());
 	
 		// Update window background display
 		relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
-		background.setBackgroundHeight(relPos[1])
-		.setHeight(relPos[1])
+		background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
+		.setHeight( (int)Math.ceil( relPos[1] ) )
 		.show();
 	 }
+	
+	/**
+	 * Updates the current menu of the UI and communicates with the PApplet to
+	 * update the active robot, if necessary.
+	 * 
+	 * @param newView	The new menu to render
+	 */
+	private void updateView(WindowTab newView) {
+		menu = newView;
+		
+		// Update active robot if necessary
+		if (menu == WindowTab.ROBOT1) {
+			app.setRobot(0);
+			
+		} else if (menu == WindowTab.ROBOT2) {
+			app.setRobot(1);
+		}
+	}
 
 	 /**
 	  * Updates the positions of all the elements in the active window
@@ -2232,7 +2966,7 @@ public class WindowManager implements ControlListener {
 		 }
 
 		 // Update the camera view buttons
-		 int[] relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_RIGHT, offsetX, 0);
+		 float[] relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_RIGHT, offsetX, 0);
 
 		 Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
 		 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
@@ -2257,7 +2991,8 @@ public class WindowManager implements ControlListener {
 		 		 
 		 if (menu == null) {
 			 // Hide all windows
-			 app.g1.hide();
+			 setGroupVisible(pendantWindow, false);
+			 setGroupVisible(limbo, false);
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
@@ -2267,7 +3002,6 @@ public class WindowManager implements ControlListener {
 			 updateWindowContentsPositions();
 
 		 } else if (menu == WindowTab.ROBOT1 || menu == WindowTab.ROBOT2) {
-			 
 			 // Show pendant
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
@@ -2275,15 +3009,17 @@ public class WindowManager implements ControlListener {
 			 setGroupVisible(scenarioWindow, false);
 			 setGroupVisible(miscWindow, false);
 			 
-			 if (!app.g1.isVisible()) {
+			 if (!pendantWindow.isVisible()) {
+				 setGroupVisible(pendantWindow, true);
+				 setGroupVisible(limbo, true);
+				 
 				 updateWindowContentsPositions();
 			 }
 
-			 app.g1.show();
-
 		 } else if (menu == WindowTab.CREATE) {
 			 // Show world object creation window
-			 app.g1.hide();
+			 setGroupVisible(pendantWindow, false);
+			 setGroupVisible(limbo, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(scenarioWindow, false);
 			 setGroupVisible(miscWindow, false);
@@ -2300,7 +3036,8 @@ public class WindowManager implements ControlListener {
 
 		 } else if (menu == WindowTab.EDIT) {
 			 // Show world object edit window
-			 app.g1.hide();
+			 setGroupVisible(pendantWindow, false);
+			 setGroupVisible(limbo, false);
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(scenarioWindow, false);
 			 setGroupVisible(miscWindow, false);
@@ -2317,7 +3054,8 @@ public class WindowManager implements ControlListener {
 
 		 } else if (menu == WindowTab.SCENARIO) {
 			 // Show scenario creating/saving/loading
-			 app.g1.hide();
+			 setGroupVisible(pendantWindow, false);
+			 setGroupVisible(limbo, false);
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
@@ -2334,7 +3072,8 @@ public class WindowManager implements ControlListener {
 			 
 		 } else if (menu == WindowTab.MISC) {
 			 // Show miscellaneous window
-			 app.g1.hide();
+			 setGroupVisible(pendantWindow, false);
+			 setGroupVisible(limbo, false);
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
@@ -2348,6 +3087,8 @@ public class WindowManager implements ControlListener {
 				 resetListLabels();
 			 }
 		 }
+		 
+		 manager.draw();
 	 }
 	 
 	 /**
