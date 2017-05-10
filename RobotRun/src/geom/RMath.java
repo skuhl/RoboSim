@@ -274,10 +274,9 @@ public class RMath {
 		float[][] inverse = new float[4][4];
 
 		/*
-		 * [ ux vx wx tx ] -1		[ ux uy uz -dot(u, t) ]
-		 * [ uy vy wy ty ]		=	[ vx vy vz -dot(v, t) ]
-		 * [ uz vz wz tz ]			[ wx wy wz -dot(w, t) ]
-		 * [  0  0  0  1 ]			[  0  0  0          1 ]
+		 * [ ux vx wx tx ] -1 [ ux uy uz -dot(u, t) ] [ uy vy wy ty ] = [ vx vy
+		 * vz -dot(v, t) ] [ uz vz wz tz ] [ wx wy wz -dot(w, t) ] [ 0 0 0 1 ] [
+		 * 0 0 0 1 ]
 		 */
 		inverse[0][0] = m[0][0];
 		inverse[0][1] = m[1][0];
@@ -559,9 +558,9 @@ public class RMath {
 		
 		PVector u = new PVector();
 		// Apply the transformation matrix to the given vector
-		u.x = v.x * rMatrix[0][0] + v.y * rMatrix[1][0] + v.z * rMatrix[2][0];
-		u.y = v.x * rMatrix[0][1] + v.y * rMatrix[1][1] + v.z * rMatrix[2][1];
-		u.z = v.x * rMatrix[0][2] + v.y * rMatrix[1][2] + v.z * rMatrix[2][2];
+		u.x = v.x * rMatrix[0][0] + v.y * rMatrix[0][1] + v.z * rMatrix[0][2];
+		u.y = v.x * rMatrix[1][0] + v.y * rMatrix[1][1] + v.z * rMatrix[1][2];
+		u.z = v.x * rMatrix[2][0] + v.y * rMatrix[2][1] + v.z * rMatrix[2][2];
 
 		return u;
 	}
