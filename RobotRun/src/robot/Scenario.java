@@ -3,11 +3,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
+
 import geom.Fixture;
 import geom.Part;
 import geom.RMath;
 import geom.WorldObject;
 import processing.core.PApplet;
+import processing.core.PVector;
 
 /**
  * A storage class for a collection of objects with an associated name for the collection.
@@ -391,9 +395,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					     E  - previous Robot end effector orientation
 					     P  - current part loval orientation
 					 ***********************************************/
-					
-					// TODO fix this
-					
+
 					Fixture refFixture = p.getFixtureRef();
 
 					if (refFixture != null) {
@@ -401,12 +403,8 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					}
 
 					RobotRun.applyModelRotation(model, model.getJointAngles());
-
-					float[][] invEETMatrix = RMath.invertHCMatrix( model.getOldOrientation() );
-					RobotRun.getInstance().applyMatrix(invEETMatrix[0][0], invEETMatrix[0][1], invEETMatrix[0][2], invEETMatrix[0][3],
-														invEETMatrix[1][0], invEETMatrix[1][1], invEETMatrix[1][2], invEETMatrix[1][3],
-														invEETMatrix[2][0], invEETMatrix[2][1], invEETMatrix[2][2], invEETMatrix[2][3],
-														0,                 0,                   0,                  1);
+					float[][] invEETMatrix = RMath.invertHCMatrix(RobotRun.getActiveRobot().getLastEEOrientation());
+					RobotRun.getInstance().applyMatrix(invEETMatrix);
 
 					p.applyCoordinateSystem();
 					// Update the world object's position and orientation
