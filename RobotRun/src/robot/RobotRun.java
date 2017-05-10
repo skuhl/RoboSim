@@ -244,8 +244,7 @@ public class RobotRun extends PApplet {
 	 * the right-hand World Frame Coordinate System.
 	 */
 	public static PVector convertNativeToWorld(PVector v) {
-		float[][] tMatrix = RMath.transformationMatrix(new PVector(0f, 0f, 0f), Fields.WORLD_AXES);
-		return RMath.vectorMatrixMult(v, RMath.invertHCMatrix(tMatrix));
+		return RMath.rotateVector(v, Fields.NATIVE_AXES);
 	}
 
 	/**
@@ -271,8 +270,7 @@ public class RobotRun extends PApplet {
 	 * System to the left-hand Native Coordinate System.
 	 */
 	public static PVector convertWorldToNative(PVector v) {
-		float[][] tMatrix = RMath.transformationMatrix(new PVector(0f, 0f, 0f), Fields.WORLD_AXES);
-		return RMath.vectorMatrixMult(v, tMatrix);
+		return RMath.rotateVector(v, Fields.WORLD_AXES);
 	}
 
 	public static RoboticArm getActiveRobot() {
@@ -1478,7 +1476,7 @@ public class RobotRun extends PApplet {
 		}
 		// Convert the angles from degrees to radians, then convert from World
 		// to Native frame
-		wpr = (new PVector(inputs[3], inputs[4], inputs[5])).mult(DEG_TO_RAD);
+		wpr = (new PVector(-inputs[3], -inputs[5], inputs[4])).mult(DEG_TO_RAD);
 
 		// Save direct entry values
 		taughtFrame.setDEOrigin(origin);
@@ -6187,7 +6185,7 @@ public class RobotRun extends PApplet {
 				PVector position = convertWorldToNative(new PVector(inputs[0], inputs[1], inputs[2]));
 				// Convert the angles from degrees to radians, then convert from
 				// World to Native frame, and finally convert to a quaternion
-				RQuaternion orientation = RMath.eulerToQuat((new PVector(-inputs[3], inputs[5], -inputs[4])
+				RQuaternion orientation = RMath.eulerToQuat((new PVector(-inputs[3], -inputs[5], inputs[4])
 											   .mult(DEG_TO_RAD)));
 
 				// Use default the Robot's joint angles for computing inverse
@@ -6494,9 +6492,9 @@ public class RobotRun extends PApplet {
 		pushMatrix();
 		// Transform to the reference frame defined by the axes vectors
 		applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
-				axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
-				axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
-				0, 0, 0, 1);
+					axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
+					axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
+					0, 0, 0, 1);
 
 		// X axis
 		stroke(255, 0, 0);
@@ -6707,8 +6705,8 @@ public class RobotRun extends PApplet {
 			// Create a set of uniform Strings
 			String[] fields = new String[] { String.format("X: %4.3f", position.x),
 					String.format("Y: %4.3f", position.y), String.format("Z: %4.3f", position.z),
-					String.format("W: %4.3f", -wpr.x), String.format("P: %4.3f", -wpr.z),
-					String.format("R: %4.3f", wpr.y) };
+					String.format("W: %4.3f", -wpr.x), String.format("P: %4.3f", wpr.z),
+					String.format("R: %4.3f", -wpr.y) };
 
 			lastTextPositionY += 20;
 			text(toEdit.getName(), lastTextPositionX, lastTextPositionY);
@@ -6743,7 +6741,7 @@ public class RobotRun extends PApplet {
 				// Create a set of uniform Strings
 				fields = new String[] { String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
 						String.format("Z: %4.3f", position.z), String.format("W: %4.3f", -wpr.x),
-						String.format("P: %4.3f", -wpr.z), String.format("R: %4.3f", wpr.y) };
+						String.format("P: %4.3f", wpr.z), String.format("R: %4.3f", -wpr.y) };
 
 				lastTextPositionY += 20;
 				// Add space padding
@@ -7058,6 +7056,23 @@ public class RobotRun extends PApplet {
 			// TODO write to a log
 			NPEx.printStackTrace();
 		}
+		
+		pushMatrix();
+		resetMatrix();
+		
+		applyMatrix( 1f, 0f, 0f, -1f,
+					 0f, 0f, -1f, -15f,
+					 0f, 1f, 0f, -16f,
+					 0f, 0f, 0f, 1f);
+		printMatrix();
+		
+		float[][] tMatrix = this.getTransformationMatrix();
+		
+		System.out.println( RMath.toString(tMatrix) );
+		
+		popMatrix();
+		
+		
 	}
 
 	public void SETUP() {
