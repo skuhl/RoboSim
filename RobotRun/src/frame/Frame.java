@@ -182,8 +182,7 @@ public abstract class Frame {
 		axesRefWorld[2][2] = zAxis.z;
 
 		RealMatrix axes = new Array2DRowRealMatrix(RMath.floatToDouble(axesRefWorld, 3, 3)),
-				worldAxes =  new Array2DRowRealMatrix(RMath.floatToDouble(Fields.WORLD_AXES, 3, 3)),
-				invWorldAxes = (new SingularValueDecomposition(worldAxes)).getSolver().getInverse();
+				invWorldAxes =  new Array2DRowRealMatrix(RMath.floatToDouble(Fields.NATIVE_AXES, 3, 3));
 		// Remove the World frame transformation from the axes vectors
 		return RMath.doubleToFloat(invWorldAxes.multiply(axes).getData(), 3, 3);
 	}
@@ -214,7 +213,7 @@ public abstract class Frame {
 			wpr = new PVector(0f, 0f, 0f);
 		} else {
 			// Display in degrees
-			wpr = RMath.quatToEuler(getDEOrientationOffset()).mult(PConstants.RAD_TO_DEG);
+			wpr = RMath.quatToEuler(getDEOrientationOffset()).mult(RobotRun.RAD_TO_DEG);
 		}
 
 		entries[0][0] = "X: ";
@@ -227,9 +226,9 @@ public abstract class Frame {
 		entries[3][0] = "W: ";
 		entries[3][1] = String.format("%4.3f", -wpr.x);
 		entries[4][0] = "P: ";
-		entries[4][1] = String.format("%4.3f", -wpr.z);
+		entries[4][1] = String.format("%4.3f", wpr.z);
 		entries[5][0] = "R: ";
-		entries[5][1] = String.format("%4.3f", wpr.y);
+		entries[5][1] = String.format("%4.3f", -wpr.y);
 
 		return entries;
 	}

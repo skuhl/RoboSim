@@ -572,6 +572,12 @@ public abstract class DataManagement {
 			System.err.printf("%s is corrupt!\n", src.getName());
 			CCEx.printStackTrace();
 			return 4;
+			
+		} catch (NegativeArraySizeException NASEx) {
+			// Issue with loading program points
+			System.err.printf("%s is corrupt!\n", src.getName());
+			NASEx.printStackTrace();
+			return 5;
 		}
 	}
 	
