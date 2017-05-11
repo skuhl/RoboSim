@@ -271,31 +271,33 @@ public class RMath {
 			return null;
 		}
 
-		float[][] inverse = new float[4][4];
-
+		float[][] inv = new float[4][4];
+		
 		/*
-		 * [ ux vx wx tx ] -1 [ ux uy uz -dot(u, t) ] [ uy vy wy ty ] = [ vx vy
-		 * vz -dot(v, t) ] [ uz vz wz tz ] [ wx wy wz -dot(w, t) ] [ 0 0 0 1 ] [
-		 * 0 0 0 1 ]
+		 * [ ux uy uz 0 ] -1		[       ux         vx         wx    0 ]
+		 * [ vx vy vz 0 ]		=	[       uy         vy         wy    0 ]
+		 * [ vx vy vz 0 ]			[       uy         vy         wy    0 ]
+		 * [ tx ty tz 1 ]			[ -dot(u, t) -dot(v, t) -dot(w, t)  1 ]
 		 */
-		inverse[0][0] = m[0][0];
-		inverse[0][1] = m[1][0];
-		inverse[0][2] = m[2][0];
-		inverse[0][3] = -(m[0][0] * m[0][3] + m[0][1] * m[1][3] + m[0][2] * m[2][3]);
-		inverse[1][0] = m[0][1];
-		inverse[1][1] = m[1][1];
-		inverse[1][2] = m[2][1];
-		inverse[1][3] = -(m[1][0] * m[0][3] + m[1][1] * m[1][3] + m[1][2] * m[2][3]);
-		inverse[2][0] = m[0][2];
-		inverse[2][1] = m[1][2];
-		inverse[2][2] = m[2][2];
-		inverse[2][3] = -(m[2][0] * m[0][3] + m[2][1] * m[1][3] + m[2][2] * m[2][3]);
-		inverse[3][0] = 0;
-		inverse[3][1] = 0;
-		inverse[3][2] = 0;
-		inverse[3][3] = 1;
+		inv[0][0] = m[0][0];
+		inv[0][1] = m[1][0];
+		inv[0][2] = m[2][0];
+		inv[0][3] = 0;
+		inv[1][0] = m[0][1];
+		inv[1][1] = m[1][1];
+		inv[1][2] = m[2][1];
+		inv[1][3] = 0;
+		inv[2][0] = m[0][2];
+		inv[2][1] = m[1][2];
+		inv[2][2] = m[2][2];
+		inv[2][3] = 0;
+		
+		inv[3][0] = -(m[0][0] * m[3][0] + m[0][1] * m[3][1] + m[0][2] * m[3][2]);
+		inv[3][1] = -(m[1][0] * m[3][0] + m[1][1] * m[3][1] + m[1][2] * m[3][2]);
+		inv[3][2] = -(m[2][0] * m[3][0] + m[2][1] * m[3][1] + m[2][2] * m[3][2]);
+		inv[3][3] = 1;
 
-		return inverse;
+		return inv;
 	}
 
 	// calculates euler angles from rotation matrix
@@ -501,27 +503,28 @@ public class RMath {
 	 *            a 3x3 rotatin matrix (row major order) representing the unit
 	 *            vector axes offset of the new Coordinate Frame from the Native
 	 *            Coordinate Frame
-	 * @returning the 4x4 transformation matrix (column major order) formed from
+	 * @returning the 4x4 transformation matrix (row major order) formed from
 	 *            the given origin and axes offset
 	 */
 	public static float[][] transformationMatrix(PVector origin, float[][] axes) {
 		float[][] transform = new float[4][4];
-
+		
 		transform[0][0] = axes[0][0];
-		transform[1][0] = axes[0][1];
-		transform[2][0] = axes[0][2];
-		transform[3][0] = 0;
-		transform[0][1] = axes[1][0];
+		transform[0][1] = axes[0][1];
+		transform[0][2] = axes[0][2];
+		transform[0][3] = 0;
+		transform[1][0] = axes[1][0];
 		transform[1][1] = axes[1][1];
-		transform[2][1] = axes[1][2];
-		transform[3][1] = 0;
-		transform[0][2] = axes[2][0];
-		transform[1][2] = axes[2][1];
+		transform[1][2] = axes[1][2];
+		transform[1][3] = 0;
+		transform[2][0] = axes[2][0];
+		transform[2][1] = axes[2][1];
 		transform[2][2] = axes[2][2];
-		transform[3][2] = 0;
-		transform[0][3] = origin.x;
-		transform[1][3] = origin.y;
-		transform[2][3] = origin.z;
+		transform[2][3] = 0;
+		
+		transform[3][0] = origin.x;
+		transform[3][1] = origin.y;
+		transform[3][2] = origin.z;
 		transform[3][3] = 1;
 
 		return transform;
@@ -565,9 +568,12 @@ public class RMath {
 		return u;
 	}
 	
-	/*
-	 * Transforms the given vector from the coordinate system defined by the
-	 * given transformation matrix (column major order).
+	/**
+	 * TODO
+	 * 
+	 * @param v
+	 * @param tMatrix
+	 * @return
 	 */
 	public static PVector vectorMatrixMult(PVector v, float[][] tMatrix) {
 		if (tMatrix.length != 4 || tMatrix[0].length != 4) {
@@ -576,10 +582,10 @@ public class RMath {
 
 		PVector u = new PVector();
 		// Apply the transformation matrix to the given vector
-		u.x = v.x * tMatrix[0][0] + v.y * tMatrix[0][1] + v.z * tMatrix[0][2] + tMatrix[0][3];
-		u.y = v.x * tMatrix[1][0] + v.y * tMatrix[1][1] + v.z * tMatrix[1][2] + tMatrix[1][3];
-		u.z = v.x * tMatrix[2][0] + v.y * tMatrix[2][1] + v.z * tMatrix[2][2] + tMatrix[2][3];
-		float w = tMatrix[3][0] + tMatrix[3][1] + tMatrix[3][2] + tMatrix[3][3];
+		u.x = v.x * tMatrix[0][0] + v.y * tMatrix[0][1] + v.z * tMatrix[0][2] + tMatrix[3][0];
+		u.y = v.x * tMatrix[1][0] + v.y * tMatrix[1][1] + v.z * tMatrix[1][2] + tMatrix[3][1];
+		u.z = v.x * tMatrix[2][0] + v.y * tMatrix[2][1] + v.z * tMatrix[2][2] + tMatrix[3][2];
+		float w = tMatrix[0][3] + tMatrix[1][3] + tMatrix[2][3] + tMatrix[3][3];
 		
 		if(w != 1) {
 			u.div(w);

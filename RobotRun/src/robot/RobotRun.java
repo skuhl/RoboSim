@@ -562,9 +562,9 @@ public class RobotRun extends PApplet {
 	 */
 	public void applyMatrix(float[][] tMatrix) {
 		super.applyMatrix(
-				tMatrix[0][0], tMatrix[1][0], tMatrix[2][0], tMatrix[0][3],
-				tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[1][3],
-				tMatrix[0][2], tMatrix[1][2], tMatrix[2][2], tMatrix[2][3],
+				tMatrix[0][0], tMatrix[1][0], tMatrix[2][0], tMatrix[3][0],
+				tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[3][1],
+				tMatrix[0][2], tMatrix[1][2], tMatrix[2][2], tMatrix[3][2],
 				// Ignore scaling
 				0, 0, 0, 1
 		);
@@ -4450,37 +4450,35 @@ public class RobotRun extends PApplet {
 		return SU_macro_bindings;
 	}
 
-	/*
-	 * Returns a 4x4 vector array which reflects the current transform matrix on
-	 * the top of the stack (ignores scaling values though)
+	/**
+	 * TODO
+	 * 
+	 * @return
 	 */
 	public float[][] getTransformationMatrix() {
 		float[][] transform = new float[4][4];
 
-		// Caculate four vectors corresponding to the four columns of the
-		// transform matrix
 		PVector origin = getCoordFromMatrix(0, 0, 0);
 		PVector xAxis = getCoordFromMatrix(1, 0, 0).sub(origin);
 		PVector yAxis = getCoordFromMatrix(0, 1, 0).sub(origin);
 		PVector zAxis = getCoordFromMatrix(0, 0, 1).sub(origin);
 
-		// Place the values of each vector in the correct cells of the transform
-		// matrix
 		transform[0][0] = xAxis.x;
 		transform[0][1] = xAxis.y;
 		transform[0][2] = xAxis.z;
-		transform[0][3] = origin.x;
+		transform[0][3] = 0;
 		transform[1][0] = yAxis.x;
 		transform[1][1] = yAxis.y;
 		transform[1][2] = yAxis.z;
-		transform[1][3] = origin.y;
+		transform[1][3] = 0;
 		transform[2][0] = zAxis.x;
 		transform[2][1] = zAxis.y;
 		transform[2][2] = zAxis.z;
-		transform[2][3] = origin.z;
-		transform[3][0] = 0;
-		transform[3][1] = 0;
-		transform[3][2] = 0;
+		transform[2][3] = 0;
+		
+		transform[3][0] = origin.x;
+		transform[3][1] = origin.y;
+		transform[3][2] = origin.z;
 		transform[3][3] = 1;
 
 return transform;
@@ -7116,45 +7114,6 @@ return transform;
 			// TODO write to a log
 			NPEx.printStackTrace();
 		}
-		
-		
-		pushMatrix();
-		
-		resetMatrix();
-		translate(-15, 0, -300);
-		rotateX(-PI);
-		
-		PVector lastPos = this.getCoordFromMatrix(0f, 0f, 0f);
-		float[][] lastOrient = this.getRotationMatrix();
-		System.out.printf("Last\n%s\n%s\n", lastPos, RMath.toString(lastOrient));
-		
-		
-		resetMatrix();
-		translate(24, 5, -300);
-		rotateX(PI / 2);
-		PVector curPos = this.getCoordFromMatrix(0f, 0f, 0f);
-		float[][] curOrient = getRotationMatrix();
-		System.out.printf("Cur\n%s\n", RMath.toString(curOrient));
-		
-		RealMatrix rmLastOrient = new Array2DRowRealMatrix( RMath.floatToDouble(lastOrient, 3, 3) );
-		RealMatrix rmCurOrient = new Array2DRowRealMatrix( RMath.floatToDouble(curOrient, 3, 3) );
-		float[][] deltaOrient = RMath.doubleToFloat(rmCurOrient.multiply(rmLastOrient).getData(), 3, 3);
-		
-		System.out.printf("Delta\n%s\n%s\n", curPos.sub(lastPos), RMath.toString(deltaOrient));
-		
-		resetMatrix();
-		translate(120, 15, 34);
-		rotateX( 10f * DEG_TO_RAD );
-		float[][] position = getTransformationMatrix();
-		System.out.printf("Position\n%s\n", RMath.toString(position));
-		
-		
-		resetMatrix();
-		applyMatrix(position);
-		float[][] newPosition = getTransformationMatrix();
-		System.out.printf("New Position\n%s\n", RMath.toString(newPosition));
-		
-		popMatrix();
 	}
 
 	public void SETUP() {
