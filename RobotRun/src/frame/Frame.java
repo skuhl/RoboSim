@@ -10,7 +10,6 @@ import geom.RMath;
 import geom.RQuaternion;
 import global.Fields;
 import processing.core.PApplet;
-import processing.core.PConstants;
 import processing.core.PVector;
 import robot.RobotRun;
 

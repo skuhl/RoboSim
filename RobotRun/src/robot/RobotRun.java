@@ -510,6 +510,7 @@ public class RobotRun extends PApplet {
 						contents.getColumnIdx(), active_index, contents.getRenderStart());
 			}
 			break;
+		case NAV_DATA:
 		case SET_MACRO_PROG:
 		case NAV_IOREG:
 			contents.moveDown(shift);
@@ -533,7 +534,6 @@ public class RobotRun extends PApplet {
 		case TEACH_3PT_TOOL:
 		case TEACH_4PT:
 		case TEACH_6PT:
-		case NAV_DATA:
 		case SWAP_PT_TYPE:
 		case SET_MV_INSTR_TYPE:
 		case SET_MV_INSTR_REG_TYPE:
@@ -743,6 +743,7 @@ public class RobotRun extends PApplet {
 						contents.getColumnIdx(), active_index, contents.getRenderStart());
 			}
 			break;
+		case NAV_DATA:
 		case SET_MACRO_PROG:
 		case NAV_IOREG:
 			contents.moveUp(isShift());
@@ -766,7 +767,6 @@ public class RobotRun extends PApplet {
 		case TEACH_3PT_TOOL:
 		case TEACH_4PT:
 		case TEACH_6PT:
-		case NAV_DATA:
 		case SWAP_PT_TYPE:
 		case SET_MV_INSTR_TYPE:
 		case SET_MV_INSTR_REG_TYPE:
@@ -2716,10 +2716,12 @@ public class RobotRun extends PApplet {
 			break;
 
 		case NAV_DATA:
-			if (options.getLineIdx() == 0) {
+			int select = contents.getLineIdx();
+			
+			if (select == 0) {
 				// Data Register Menu
 				nextScreen(ScreenMode.NAV_DREGS);
-			} else if (options.getLineIdx() == 1) {
+			} else if (select == 1) {
 				// Position Register Menu
 				nextScreen(ScreenMode.NAV_PREGS);
 			}
@@ -5153,7 +5155,6 @@ public class RobotRun extends PApplet {
 	public void loadPositionRegisters() {
 		// Display a subset of the list of registers
 		for (int idx = 0; idx < Fields.DPREG_NUM; ++idx) {
-			DisplayLine line;
 			PositionRegister reg = activeRobot.getPReg(idx);
 			// Display the comment associated with a specific Register entry
 			String regLbl = reg.toStringWithComm();
@@ -7365,7 +7366,10 @@ public class RobotRun extends PApplet {
 		case EDIT_MINST_POS:
 			contents.setContents(prevContents);
 			break;
-
+		case NAV_DATA:
+			contents.addLine("1. Data Registers");
+			contents.addLine("2. Position Registers");
+			break;
 		case ACTIVE_FRAMES:
 			/* workingText corresponds to the active row's index display */
 			if (contents.getLineIdx() == 0) {
@@ -7681,12 +7685,6 @@ public class RobotRun extends PApplet {
 			options.addLine("5. Status");
 			options.addLine("6. POSN");
 			options.addLine("7. I/O");
-			break;
-
-			// Data navigation and edit menus
-		case NAV_DATA:
-			options.addLine("1. Data Registers");
-			options.addLine("2. Position Registers");
 			break;
 		case NAV_PREGS:
 			PositionRegister pReg = activeRobot.getPReg(active_index);
