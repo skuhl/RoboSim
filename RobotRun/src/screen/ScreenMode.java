@@ -61,8 +61,6 @@ public enum ScreenMode implements DisplayMode {
 	/*
 	 * Screens used to display a context-based list of options to the user
 	 */
-	FRAME_METHOD_TOOL(ScreenType.TYPE_OPT_MENU),
-	FRAME_METHOD_USER(ScreenType.TYPE_OPT_MENU),
 	NAV_INSTR_MENU(ScreenType.TYPE_OPT_MENU),
 	NAV_MAIN_MENU(ScreenType.TYPE_OPT_MENU),
 	EDIT_IOREG(ScreenType.TYPE_OPT_MENU),

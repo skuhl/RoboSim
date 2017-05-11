@@ -519,8 +519,6 @@ public class RobotRun extends PApplet {
 		case EDIT_IOREG:
 		case NAV_INSTR_MENU:
 		case SELECT_FRAME_MODE:
-		case FRAME_METHOD_USER:
-		case FRAME_METHOD_TOOL:
 		case SELECT_INSTR_INSERT:
 		case SELECT_IO_INSTR_REG:
 		case SELECT_FRAME_INSTR_TYPE:
@@ -752,8 +750,6 @@ public class RobotRun extends PApplet {
 		case EDIT_IOREG:
 		case NAV_INSTR_MENU:
 		case SELECT_FRAME_MODE:
-		case FRAME_METHOD_USER:
-		case FRAME_METHOD_TOOL:
 		case SELECT_INSTR_INSERT:
 		case SELECT_IO_INSTR_REG:
 		case SELECT_FRAME_INSTR_TYPE:
@@ -1752,7 +1748,7 @@ public class RobotRun extends PApplet {
 			curFrameIdx = contents.getActiveIndex();
 			nextScreen(ScreenMode.UFRAME_DETAIL);
 			break;
-		case FRAME_METHOD_USER:
+		case UFRAME_DETAIL:
 			// User Frame teaching methods
 			teachFrame = getActiveRobot().getUserFrame(curFrameIdx);
 			if (options.getLineIdx() == 0) {
@@ -1763,7 +1759,7 @@ public class RobotRun extends PApplet {
 				nextScreen(ScreenMode.DIRECT_ENTRY_USER);
 			}
 			break;
-		case FRAME_METHOD_TOOL:
+		case TFRAME_DETAIL:
 			teachFrame = getActiveRobot().getToolFrame(curFrameIdx);
 			// Tool Frame teaching methods
 			if (options.getLineIdx() == 0) {
@@ -3119,18 +3115,10 @@ public class RobotRun extends PApplet {
 		case SELECT_CUT_COPY:
 			nextScreen(ScreenMode.SELECT_PASTE_OPT);
 			break;
-		case TFRAME_DETAIL:
-			switchScreen(ScreenMode.FRAME_METHOD_TOOL);
-			// nextScreen(Screen.TOOL_FRAME_METHODS);
-			break;
 		case TEACH_3PT_TOOL:
 		case TEACH_6PT:
 		case DIRECT_ENTRY_TOOL:
 			lastScreen();
-			break;
-		case UFRAME_DETAIL:
-			switchScreen(ScreenMode.FRAME_METHOD_USER);
-			// nextScreen(Screen.USER_FRAME_METHODS);
 			break;
 		case TEACH_3PT_USER:
 		case TEACH_4PT:
@@ -4104,13 +4092,13 @@ public class RobotRun extends PApplet {
 		case SET_CALL_PROG:
 			header = "SELECT CALL TARGET";
 			break;
+			
 		case ACTIVE_FRAMES:
 			header = "ACTIVE FRAMES";
 			break;
 		case SELECT_FRAME_MODE:
 			header = "FRAME MODE";
 			break;
-			
 		case NAV_TOOL_FRAMES:
 			header = "TOOL FRAMES";
 			break;
@@ -4118,30 +4106,28 @@ public class RobotRun extends PApplet {
 			header = "USER FRAMES";
 			break;
 		case TFRAME_DETAIL:
-			header = String.format("TOOL FRAME: %d", curFrameIdx + 1);
+			header = String.format("TOOL %d: DETAIL", curFrameIdx + 1);
 			break;
 		case UFRAME_DETAIL:
-			header = String.format("USER FRAME: %d", curFrameIdx + 1);
-			break;
-		case FRAME_METHOD_TOOL:
-			header = String.format("TOOL FRAME: %d", curFrameIdx + 1);
-			break;
-		case FRAME_METHOD_USER:
-			header = String.format("USER FRAME: %d", curFrameIdx + 1);
+			header = String.format("USER %d: DETAIL", curFrameIdx + 1);
 			break;
 		case TEACH_3PT_TOOL:
+			header = String.format("TOOL %d: 3P METHOD", curFrameIdx + 1);
+			break;
 		case TEACH_3PT_USER:
-			header = "THREE POINT METHOD";
+			header = String.format("USER %d: 3P METHOD", curFrameIdx + 1);
 			break;
 		case TEACH_4PT:
-			header = "FOUR POINT METHOD";
+			header = String.format("USER %d: 4P METHOD", curFrameIdx + 1);
 			break;
 		case TEACH_6PT:
-			header = "SIX POINT METHOD";
+			header = String.format("TOOL %d: 6P METHOD", curFrameIdx + 1);
 			break;
 		case DIRECT_ENTRY_TOOL:
+			header = String.format("TOOL %d: DIRECT ENTRY", curFrameIdx + 1);
+			break;
 		case DIRECT_ENTRY_USER:
-			header = "DIRECT ENTRY METHOD";
+			header = String.format("USER %d: DIRECT ENTRY", curFrameIdx + 1);
 			break;
 		case NAV_MACROS:
 		case SET_MACRO_TYPE:
@@ -4154,60 +4140,54 @@ public class RobotRun extends PApplet {
 		case SET_MACRO_PROG:
 			header = "SELECT MACRO PROGRAM";
 			break;
+			
 		case NAV_DATA:
 			header = "VIEW REGISTERS";
 			break;
 		case NAV_DREGS:
-		case CP_DREG_COM:
-		case CP_DREG_VAL:
 			header = "REGISTERS";
 			break;
 		case NAV_PREGS:
 			header = "POSTION REGISTERS";
 			break;
-		case CP_PREG_COM:
-		case CP_PREG_PT:
-		case SWAP_PT_TYPE:
-			header = "POSTION REGISTERS";
-			break;
 		case EDIT_DREG_VAL:
-			header = "DATA REGISTER: ";
-			String dRegComm = getActiveRobot().getDReg(active_index).comment;
-
-			if (dRegComm != null) {
-				// Show comment if it exists
-				header += dRegComm;
-			} else {
-				header += Integer.toString(active_index + 1);
-			}
-
-			break;
-		case EDIT_PREG:
-			header = "POSITION REGISTER: ";
-			String pRegComm = getActiveRobot().getPReg(active_index).comment;
-
-			if (pRegComm != null) {
-				// Show comment if it exists
-				header += pRegComm;
-			} else {
-				header += Integer.toString(active_index + 1);
-			}
-
+			Register reg = getActiveRobot().getDReg(active_index);
+			header = String.format("%s: VALUE EDIT", reg.getLabel());
 			break;
 		case EDIT_DREG_COM:
-			header = String.format("Enter a name for R[%d]", active_index + 1);
+			header = String.format("R[%d]: COMMENT EDIT", active_index + 1);
 			break;
-
+		case CP_DREG_VAL:
+			reg = getActiveRobot().getDReg(active_index);
+			header = String.format("%s: VALUE COPY", reg.getLabel());
+			break;
+		case EDIT_PREG:
+			reg = getActiveRobot().getPReg(active_index);	
+			header = String.format("%s: POSITION EDIT", reg.getLabel());
+			break;
 		case EDIT_PREG_COM:
-			header = String.format("Enter a name for PR[%d]", active_index + 1);
+			header = String.format("PR[%d]: COMMENT EDIT", active_index + 1);
+			break;
+		case CP_PREG_PT:
+			reg = getActiveRobot().getPReg(active_index);
+			header = String.format("%s: POSITION COPY", reg.getLabel());
+			break;
+		case SWAP_PT_TYPE:
+			reg = getActiveRobot().getPReg(active_index);
+			header = String.format("%s: TYPE EDIT", reg.getLabel());
+			break;
+		case CP_PREG_COM:
+		case CP_DREG_COM:
+			reg = getActiveRobot().getDReg(active_index);
+			header = String.format("%s: COMMENT COPY", reg.getLabel());
 			break;
 
 		case NAV_IOREG:
-			header = "IO Registers";
+			header = "I/O REGISTERS";
 			break;
 
 		case EDIT_IOREG:
-			header = "SET IO REGISTER";
+			header = "SET I/O REGISTER";
 			break;
 
 		default:
@@ -4681,49 +4661,62 @@ public class RobotRun extends PApplet {
 	 * r values associated with the Frame at curFrameIdx in either the Tool
 	 * Frames or User Frames, based on the value of super_mode.
 	 */
-	public void loadFrameDetail(CoordFrame coordFrame) {
-		// Display the frame set name as well as the index of the currently
-		// selected frame
+	public ArrayList<DisplayLine> loadFrameDetail(RoboticArm r, CoordFrame coordFrame, int fdx) {
+		
+		ArrayList<DisplayLine> lines = new ArrayList<>();
+		Frame f = null;
+		
 		if (coordFrame == CoordFrame.TOOL) {
-			String[] fields = getActiveRobot().getToolFrame(curFrameIdx).toLineStringArray();
-			// Place each value in the frame on a separate lien
-			for (String field : fields) {
-				contents.addLine(field);
-			}
-
+			f = r.getToolFrame(fdx);
+			
 		} else if (coordFrame == CoordFrame.USER) {
-			String[] fields = getActiveRobot().getUserFrame(curFrameIdx).toLineStringArray();
-			// Place each value in the frame on a separate lien
-			for (String field : fields) {
-				contents.addLine(field);
-			}
-
+			f = r.getUserFrame(fdx);
 		}
+		
+		if (f != null) {
+			String[] fields = f.toLineStringArray();
+			
+			for (String field : fields) {
+				lines.add(new DisplayLine(-1, 0, field));
+			}
+			
+		} else {
+			// Invalid coordFrame or frame index
+			lines.add(new DisplayLine(-1, 0, String.format("CoordFrame=%s", coordFrame) ));
+			lines.add(new DisplayLine(-1, 0, String.format("Frame Index=%d", fdx) ));
+		}
+		
+		return lines;
 	}
 
 	/**
-	 * Takes the values associated with the given Frame's direct entry values
-	 * (X, Y, Z, W, P, R) and fills a 2D ArrayList, where the first column is
-	 * the prefix for the value in the second column.
+	 * TODO
 	 * 
 	 * @param f
-	 *            The frame to be displayed for editing
-	 * @returning A 2D ArrayList with the prefixes and values associated with
-	 *            the Frame
+	 * @return
 	 */
-	public void loadFrameDirectEntry(Frame f) {
-		String[][] entries = f.directEntryStringArray();
-
-		for (int idx = 0; idx < entries.length; ++idx) {
-			String[] line = new String[entries[idx][1].length() + 1];
-			line[0] = entries[idx][0];
-			// Give each character in the value String it own column
-			for (int sdx = 0; sdx < entries[idx][1].length(); ++sdx) {
-				line[sdx + 1] = Character.toString(entries[idx][1].charAt(sdx));
+	public ArrayList<DisplayLine> loadFrameDirectEntry(Frame f) {
+		ArrayList<DisplayLine> lines = new ArrayList<>();
+		
+		if (f instanceof Frame) {
+			String[][] entries = f.directEntryStringArray();
+	
+			for (int idx = 0; idx < entries.length; ++idx) {
+				String[] line = new String[entries[idx][1].length() + 1];
+				line[0] = entries[idx][0];
+				// Give each character in the value String it own column
+				for (int sdx = 0; sdx < entries[idx][1].length(); ++sdx) {
+					line[sdx + 1] = Character.toString(entries[idx][1].charAt(sdx));
+				}
+	
+				lines.add(new DisplayLine(-1, 0, line));
 			}
-
-			contents.addLine(line);
+			
+		} else {
+			lines.add(new DisplayLine(-1, 0, "Null frame"));
 		}
+		
+		return lines;
 	}
 
 	/**
@@ -5083,40 +5076,64 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Displays the points along with their respective titles for the current
-	 * frame teach method (discluding the Direct Entry method).
+	 * TODO
+	 * 
+	 * @param f
+	 * @param teachMethod
+	 * @return
 	 */
-	public void loadPointList() {
-		if (teachFrame != null) {
-
-			ArrayList<String> temp = new ArrayList<>();
-			// Display TCP teach points
-			if (mode == ScreenMode.TEACH_3PT_TOOL || mode == ScreenMode.TEACH_6PT) {
-				temp.add("First Approach Point: ");
-				temp.add("Second Approach Point: ");
-				temp.add("Third Approach Point: ");
+	public ArrayList<DisplayLine> loadPointList(Frame f, int teachMethod) {
+		ArrayList<DisplayLine> lines = new ArrayList<>();
+		boolean validMethod = teachMethod == 0 || teachMethod == 1;
+		
+		
+		if (f instanceof ToolFrame && validMethod) {
+			
+			String out = (f.getPoint(0) == null) ? "UNINIT" : "RECORDED";
+			lines.add(new DisplayLine(0, 0, "First Approach Point: " + out));
+			
+			out = (f.getPoint(1) == null) ? "UNINIT" : "RECORDED";
+			lines.add(new DisplayLine(1, 0, "Second Approach Point: " + out));
+			
+			out = (f.getPoint(2) == null) ? "UNINIT" : "RECORDED";
+			lines.add(new DisplayLine(2, 0, "Third Approach Point: " + out));
+			
+			if (teachMethod == 1) {
+				out = (f.getPoint(3) == null) ? "UNINIT" : "RECORDED";
+				lines.add(new DisplayLine(3, 0, "Orient Origin Point: " + out));
+				
+				out = (f.getPoint(4) == null) ? "UNINIT" : "RECORDED";
+				lines.add(new DisplayLine(4, 0, "X Axis Point: " + out));
+				
+				out = (f.getPoint(5) == null) ? "UNINIT" : "RECORDED";
+				lines.add(new DisplayLine(5, 0, "Y Axis Point: " + out));
 			}
-			// Display Axes Vectors teach points
-			if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT || mode == ScreenMode.TEACH_6PT) {
-				temp.add("Orient Origin Point: ");
-				temp.add("X Axis Point: ");
-				temp.add("Y Axis Point: ");
+			
+		} else if (f instanceof UserFrame && validMethod) {
+			
+			String out = (f.getPoint(0) == null) ? "UNINIT" : "RECORDED";
+			lines.add(new DisplayLine(0, 0, "Orient Origin Point: " + out));
+			
+			out = (f.getPoint(1) == null) ? "UNINIT" : "RECORDED";
+			lines.add(new DisplayLine(1, 0, "X Axis Point: " + out));
+			
+			out = (f.getPoint(2) == null) ? "UNINIT" : "RECORDED";
+			lines.add(new DisplayLine(2, 0, "Y Axis Point: " + out));
+			
+			if (teachMethod == 1) {
+				out = (f.getPoint(3) == null) ? "UNINIT" : "RECORDED";
+				lines.add(new DisplayLine(3, 0, "Origin: " + out));
 			}
-			// Display origin offset point
-			if (mode == ScreenMode.TEACH_4PT) {
-				// Name of fourth point for the four point method?
-				temp.add("Origin: ");
-			}
-
-			// Determine if the point has been set yet
-			for (int idx = 0; idx < temp.size(); ++idx) {
-				// Add each line to options
-				options.addLine(temp.get(idx) + ((teachFrame.getPoint(idx) != null) ? "RECORDED" : "UNINIT"));
-			}
+			
 		} else {
-			// No teach points
-			options.addLine("Error: teachFrame not set!");
+			lines.add(new DisplayLine(-1, 0,
+					(f == null) ? "Null frame" : f.getClass().toString())
+					);
+			lines.add(new DisplayLine(-1, 0, String.format("Method: %d",
+					teachMethod)));
 		}
+		
+		return lines;
 	}
 
 	public void loadPosition(Point pt, boolean isCartesian) {
@@ -5270,35 +5287,24 @@ public class RobotRun extends PApplet {
 			break;
 		case NAV_TOOL_FRAMES:
 		case NAV_USER_FRAMES:
-			contents.setLineIdx(active_index * 2);
+			contents.setLineIdx(0);
 			contents.setColumnIdx(0);
 			break;
-
 		case TEACH_3PT_USER:
 		case TEACH_4PT:
-			loadPointList();
-		case UFRAME_DETAIL:
-			loadFrameDetail(CoordFrame.USER);
+			contents.setLineIdx(-1);
+			contents.setColumnIdx(-1);
 			break;
-
 		case TEACH_3PT_TOOL:
 		case TEACH_6PT:
-			loadPointList();
+			contents.setLineIdx(-1);
+			contents.setColumnIdx(-1);
+			break;
 		case TFRAME_DETAIL:
-			loadFrameDetail(CoordFrame.TOOL);
-			break;
-
-		case FRAME_METHOD_TOOL:
-			loadFrameDetail(CoordFrame.TOOL);
+		case UFRAME_DETAIL:
 			contents.setLineIdx(-1);
 			contents.setColumnIdx(-1);
 			break;
-		case FRAME_METHOD_USER:
-			loadFrameDetail(CoordFrame.USER);
-			contents.setLineIdx(-1);
-			contents.setColumnIdx(-1);
-			break;
-
 			// Programs and instructions
 		case NAV_PROGRAMS:
 			contents.setLineIdx(getActiveRobot().getActiveProgIdx());
@@ -5487,10 +5493,18 @@ public class RobotRun extends PApplet {
 			contents.setColumnIdx(0);
 			break;
 		case DIRECT_ENTRY_TOOL:
-		case DIRECT_ENTRY_USER:
-			loadFrameDirectEntry(teachFrame);
 			contents.setLineIdx(0);
 			contents.setColumnIdx(1);
+			contents.setLines(
+				loadFrameDirectEntry( getActiveRobot().getToolFrame(curFrameIdx) )
+			);
+			break;
+		case DIRECT_ENTRY_USER:
+			contents.setLineIdx(0);
+			contents.setColumnIdx(1);
+			contents.setLines(
+				loadFrameDirectEntry( getActiveRobot().getUserFrame(curFrameIdx) )
+			);
 			break;
 		case NAV_INSTR_MENU:
 			break;
@@ -7313,7 +7327,7 @@ public class RobotRun extends PApplet {
 		// Program list navigation/ edit
 		case NAV_PROGRAMS:
 		case SET_MACRO_PROG:
-			contents.setContents( loadPrograms(activeRobot) );
+			contents.setLines( loadPrograms(activeRobot) );
 			break;
 			
 		case PROG_CREATE:
@@ -7360,11 +7374,11 @@ public class RobotRun extends PApplet {
 		case SET_LBL_NUM:
 		case SET_JUMP_TGT:
 		case SET_CALL_PROG:
-			contents.setContents(loadInstructions(getActiveRobot().getActiveProgIdx()));
+			contents.setLines(loadInstructions(getActiveRobot().getActiveProgIdx()));
 			break;
 
 		case EDIT_MINST_POS:
-			contents.setContents(prevContents);
+			contents.setLines(prevContents);
 			break;
 		case NAV_DATA:
 			contents.addLine("1. Data Registers");
@@ -7393,24 +7407,27 @@ public class RobotRun extends PApplet {
 		case TFRAME_DETAIL:
 		case TEACH_3PT_TOOL:
 		case TEACH_6PT:
+			ArrayList<DisplayLine> details = loadFrameDetail(getActiveRobot(),
+					CoordFrame.TOOL, curFrameIdx);
+			contents.setLines(details);
+			break;
 		case UFRAME_DETAIL:
 		case TEACH_3PT_USER:
 		case TEACH_4PT:
-		case DIRECT_ENTRY_USER:
-		case DIRECT_ENTRY_TOOL:
-		case FRAME_METHOD_USER:
-		case FRAME_METHOD_TOOL:
+			details = loadFrameDetail(getActiveRobot(),	CoordFrame.USER,
+					curFrameIdx);
+			contents.setLines(details);
+			break;
 		case EDIT_PREG:
 		case EDIT_IOREG:
-			contents.setContents(prevContents);
-			break;
-
+		case DIRECT_ENTRY_TOOL:
+		case DIRECT_ENTRY_USER:
 		case EDIT_DREG_VAL:
 		case CP_DREG_COM:
 		case CP_DREG_VAL:
 		case CP_PREG_COM:
 		case CP_PREG_PT:
-			contents.setContents(prevContents);
+			contents.setLines(prevContents);
 			break;
 
 		case SWAP_PT_TYPE:
@@ -7607,7 +7624,7 @@ public class RobotRun extends PApplet {
 				
 			} else {
 				// List the robot's program names
-				options.setContents( loadPrograms( ROBOTS.get(editIdx) ) );
+				options.setLines( loadPrograms( ROBOTS.get(editIdx) ) );
 			}
 			
 			break;
@@ -7655,21 +7672,36 @@ public class RobotRun extends PApplet {
 			options.addLine("1. Tool Frame");
 			options.addLine("2. User Frame");
 			break;
-		case FRAME_METHOD_TOOL:
+		case TFRAME_DETAIL:
 			options.addLine("1. Three Point Method");
 			options.addLine("2. Six Point Method");
 			options.addLine("3. Direct Entry Method");
 			break;
-		case FRAME_METHOD_USER:
+		case UFRAME_DETAIL:
 			options.addLine("1. Three Point Method");
 			options.addLine("2. Four Point Method");
 			options.addLine("3. Direct Entry Method");
 			break;
 		case TEACH_3PT_TOOL:
+			r = getActiveRobot();
+			ArrayList<DisplayLine> lines =
+					loadPointList(r.getToolFrame(curFrameIdx), 0);
+			options.setLines(lines);
+			break;
 		case TEACH_3PT_USER:
+			r = getActiveRobot();
+			lines = loadPointList(r.getUserFrame(curFrameIdx), 0);
+			options.setLines(lines);
+			break;
 		case TEACH_4PT:
+			r = getActiveRobot();
+			lines = loadPointList(r.getUserFrame(curFrameIdx), 1);
+			options.setLines(lines);
+			break;
 		case TEACH_6PT:
-			loadPointList();
+			r = getActiveRobot();
+			lines = loadPointList(r.getToolFrame(curFrameIdx), 1);
+			options.setLines(lines);
 			break;
 
 			// Macro edit menus
