@@ -27,8 +27,8 @@ import programming.Program;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
+import screen.DisplayLine;
 import screen.InstState;
-import window.DisplayLine;
 
 public class RoboticArm {
 	/**
@@ -499,7 +499,7 @@ public class RoboticArm {
 		joint = PApplet.abs(joint) % 6;
 		// Get the joint's range bounds
 		PVector rangeBounds = getJointRange(joint);
-		return RobotRun.angleWithinBounds(RMath.mod2PI(angle), rangeBounds.x, rangeBounds.y);
+		return RMath.angleWithinBounds(RMath.mod2PI(angle), rangeBounds.x, rangeBounds.y);
 	}
 	
 	/**

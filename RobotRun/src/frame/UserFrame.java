@@ -141,7 +141,7 @@ public class UserFrame extends Frame {
 		PVector wpr = RMath.quatToEuler(orientationOffset).mult(PConstants.RAD_TO_DEG);
 
 		// Convert to World frame reference
-		displayOrigin = RobotRun.convertNativeToWorld(origin);
+		displayOrigin = RMath.vToWorld(origin);
 
 		values[0] = String.format("X: %4.3f", displayOrigin.x);
 		values[1] = String.format("Y: %4.3f", displayOrigin.y);

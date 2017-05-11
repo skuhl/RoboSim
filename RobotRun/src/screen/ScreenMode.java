@@ -1,7 +1,5 @@
 package screen;
 
-import window.DisplayMode;
-
 public enum ScreenMode implements DisplayMode {
 
 	/* 
@@ -77,6 +75,7 @@ public enum ScreenMode implements DisplayMode {
 	SET_MACRO_TYPE(ScreenType.TYPE_OPT_MENU),
 	SET_MACRO_BINDING(ScreenType.TYPE_OPT_MENU),
 	SET_CALL_PROG(ScreenType.TYPE_OPT_MENU),
+	SWAP_PT_TYPE(ScreenType.TYPE_OPT_MENU),
 
 	/*
 	 * Screens involving the entry of text, either via keyboard input or function buttons
@@ -136,7 +135,7 @@ public enum ScreenMode implements DisplayMode {
 	/*
 	 * Miscellaneous screens/ not otherwise categorized
 	 */
-	SWAP_PT_TYPE,
+	
 	UFRAME_DETAIL,
 	TFRAME_DETAIL,
 	SELECT_REG_STMT,

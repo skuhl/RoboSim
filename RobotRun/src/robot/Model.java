@@ -1,5 +1,6 @@
 package robot;
 
+import geom.RMath;
 import processing.core.PShape;
 import processing.core.PVector;
 
@@ -28,7 +29,7 @@ public class Model {
 	}
 
 	public boolean anglePermitted(int idx, float angle) {
-		return RobotRun.angleWithinBounds(angle, jointRanges[idx].x, jointRanges[idx].y);
+		return RMath.angleWithinBounds(angle, jointRanges[idx].x, jointRanges[idx].y);
 	}
 
 	public void draw() {

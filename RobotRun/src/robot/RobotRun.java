@@ -50,13 +50,13 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
+import screen.DisplayLine;
+import screen.MenuScroll;
 import screen.ScreenMode;
 import screen.ScreenState;
 import screen.ScreenType;
 import ui.AxesDisplay;
 import ui.Camera;
-import window.DisplayLine;
-import window.MenuScroll;
 import window.WGUI;
 
 public class RobotRun extends PApplet {
@@ -83,62 +83,9 @@ public class RobotRun extends PApplet {
 		instance = null;
 	}
 
-	/**
-	 * Determines if the lies within the range of angles that span from
-	 * rangeStart to rangeEnd, going clockwise around the Unit Cycle. It is
-	 * assumed that all parameters are in radians and within the range [0,
-	 * TWO_PI).
-	 * 
-	 * @param angleToVerify
-	 *            the angle in question
-	 * @param rangeStart
-	 *            the 'lower bounds' of the angle range to check
-	 * @param rangeEnd
-	 *            the 'upper bounds' of the angle range to check
-	 */
-	public static boolean angleWithinBounds(float angleToVerify, float rangeStart, float rangeEnd) {
 
-		if (rangeStart < rangeEnd) {
-			// Joint range does not overlap TWO_PI
-			return (angleToVerify - rangeStart) > -0.0001f && (angleToVerify - rangeEnd) < 0.0001f;
-			// return angleToVerify >= rangeStart && angleToVerify <= rangeEnd;
-		} else {
-			// Joint range overlaps TWO_PI
-			return !((angleToVerify - rangeEnd) > -0.0001f && (angleToVerify - rangeStart) < 0.0001f);
-			// return !(angleToVerify > rangeEnd && angleToVerify < rangeStart);
-		}
-	}
 
-	/**
-	 * Converts the given point, pt, into the Coordinate System defined by the
-	 * given origin vector and rotation quaternion axes. The joint angles
-	 * associated with the point will be transformed as well, though, if inverse
-	 * kinematics fails, then the original joint angles are used instead.
-	 * 
-	 * @param model
-	 *            The Robot to which the frame belongs
-	 * @param pt
-	 *            A point with initialized position and orientation
-	 * @param origin
-	 *            The origin of the Coordinate System
-	 * @param axes
-	 *            The axes of the Coordinate System representing as a rotation
-	 *            quanternion
-	 * @returning The point, pt, interms of the given frame's Coordinate System
-	 */
-	public static Point applyFrame(RoboticArm model, Point pt, PVector origin, RQuaternion axes) {
-		PVector position = convertToFrame(pt.position, origin, axes);
-		RQuaternion orientation = axes.transformQuaternion(pt.orientation);
-		// Update joint angles associated with the point
-		float[] newJointAngles = RMath.inverseKinematics(model, pt.angles, position, orientation);
-
-		if (newJointAngles != null) {
-			return new Point(position, orientation, newJointAngles);
-		} else {
-			// If inverse kinematics fails use the old angles
-			return new Point(position, orientation, pt.angles);
-		}
-	}
+	
 
 	/**
 	 * Applies the rotations and translations of the Robot Arm to get to the
@@ -205,26 +152,6 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Converts the given vector, u, from the Coordinate System defined by the
-	 * given origin vector and rotation quaternion axes.
-	 * 
-	 * @param v
-	 *            A vector in the XYZ vector space
-	 * @param origin
-	 *            The origin of the Coordinate System
-	 * @param axes
-	 *            The axes of the Coordinate System representing as a rotation
-	 *            quanternion
-	 * @returning The vector, u, in the Native frame
-	 */
-	public static PVector convertFromFrame(PVector u, PVector origin, RQuaternion axes) {
-		RQuaternion invAxes = axes.conjugate();
-		invAxes.normalize();
-		PVector vRotated = invAxes.rotateVector(u);
-		return vRotated.add(origin);
-	}
-
-	/**
 	 * Converts the rotation matrix from the native coordinate frame to the
 	 * world frame.
 	 * 
@@ -238,40 +165,8 @@ public class RobotRun extends PApplet {
 
 		return RMath.doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
 	}
-
-	/**
-	 * Converts the given vector form the left-hand Native Coordinate System to
-	 * the right-hand World Frame Coordinate System.
-	 */
-	public static PVector convertNativeToWorld(PVector v) {
-		return RMath.rotateVector(v, Fields.WORLD_AXES);
-	}
-
-	/**
-	 * Converts the given vector, v, into the Coordinate System defined by the
-	 * given origin vector and rotation quaternion axes.
-	 * 
-	 * @param v
-	 *            A vector in the XYZ vector space
-	 * @param origin
-	 *            The origin of the Coordinate System
-	 * @param axes
-	 *            The axes of the Coordinate System representing as a rotation
-	 *            quanternion
-	 * @returning The vector, v, interms of the given frame's Coordinate System
-	 */
-	public static PVector convertToFrame(PVector v, PVector origin, RQuaternion axes) {
-		PVector vOffset = PVector.sub(v, origin);
-		return axes.rotateVector(vOffset);
-	}
-
-	/**
-	 * Converts the given vector form the right-hand World Frame Coordinate
-	 * System to the left-hand Native Coordinate System.
-	 */
-	public static PVector convertWorldToNative(PVector v) {
-		return RMath.rotateVector(v, Fields.NATIVE_AXES);
-	}
+	
+	
 
 	public static RoboticArm getActiveRobot() {
 		return instance.activeRobot;
@@ -367,37 +262,7 @@ public class RobotRun extends PApplet {
 		return new Point(ee, RMath.matrixToQuat(orientationMatrix), jointAngles);
 	}
 
-	/**
-	 * Converts the given point, pt, from the Coordinate System defined by the
-	 * given origin vector and rotation quaternion axes. The joint angles
-	 * associated with the point will be transformed as well, though, if inverse
-	 * kinematics fails, then the original joint angles are used instead.
-	 * 
-	 * @param model
-	 *            The Robot, to which the frame belongs
-	 * @param pt
-	 *            A point with initialized position and orientation
-	 * @param origin
-	 *            The origin of the Coordinate System
-	 * @param axes
-	 *            The axes of the Coordinate System representing as a rotation
-	 *            quanternion
-	 * @returning The point, pt, interms of the given frame's Coordinate System
-	 */
-	public static Point removeFrame(RoboticArm model, Point pt, PVector origin, RQuaternion axes) {
-		PVector position = convertFromFrame(pt.position, origin, axes);
-		RQuaternion orientation = RQuaternion.mult(pt.orientation, axes);
-
-		// Update joint angles associated with the point
-		float[] newJointAngles = RMath.inverseKinematics(model, pt.angles, position, orientation);
-
-		if (newJointAngles != null) {
-			return new Point(position, orientation, newJointAngles);
-		} else {
-			// If inverse kinematics fails use the old angles
-			return new Point(position, orientation, pt.angles);
-		}
-	}
+	
 
 	RobotCamera c;
 
@@ -1482,7 +1347,7 @@ public class RobotRun extends PApplet {
 		PVector origin, wpr;
 
 		if (taughtFrame instanceof UserFrame) {
-			origin = convertWorldToNative(new PVector(inputs[0], inputs[1], inputs[2]));
+			origin = RMath.vFromWorld(new PVector(inputs[0], inputs[1], inputs[2]));
 		} else {
 			// Tool frame origins are actually an offset of the Robot's EE
 			// position
@@ -3303,7 +3168,7 @@ public class RobotRun extends PApplet {
 
 				if (active != null) {
 					// Convert into currently active frame
-					pt = applyFrame(getActiveRobot(), pt, active.getOrigin(), active.getOrientation());
+					pt = RMath.applyFrame(getActiveRobot(), pt, active.getOrigin(), active.getOrientation());
 				}
 
 				Program p = r.getActiveProg();
@@ -3574,26 +3439,28 @@ public class RobotRun extends PApplet {
 				hold();
 
 				// Move To function
-				PositionRegister pReg = activeRobot.getPReg(active_index);
-				Point pt = pReg.point.clone();
+				PositionRegister pReg = r.getPReg( contents.getActiveIndex() );
 
-				if (pt != null) {
+				if (pReg.point != null) {
+					System.out.println(pReg.point);
+					Point pt = pReg.point.clone();
 					// Move the Robot to the select point
 					if (pReg.isCartesian) {
-						Frame active = activeRobot.getActiveFrame(CoordFrame.USER);
-
-						if (active != null) {
-							pt = removeFrame(activeRobot, pt, active.getOrigin(), active.getOrientation());
+						
+						if (r.getCurCoordFrame() == CoordFrame.USER) {
+							// Move in terms of the user frame
+							Frame active = r.getActiveFrame(CoordFrame.USER);
+							pt = RMath.removeFrame(r, pt, active.getOrigin(), active.getOrientation());
 
 							if (Fields.DEBUG) {
 								System.out.printf("pt: %s\n", pt.position.toString());
 							}
 						}
 
-						activeRobot.moveTo(pt.position, pt.orientation);
+						r.moveTo(pt.position, pt.orientation);
 
 					} else {
-						activeRobot.moveTo(pt.angles);
+						r.moveTo(pt.angles);
 					}
 				} else {
 					println("Position register is uninitialized!");
@@ -3714,21 +3581,21 @@ public class RobotRun extends PApplet {
 			updateInstructions();
 			break;
 		case NAV_PREGS:
-			PositionRegister pReg = activeRobot.getPReg(active_index);
+			PositionRegister pReg = r.getPReg( contents.getActiveIndex() );
 
 			if (isShift() && pReg != null) {
 				// Save the Robot's current position and joint angles
-				Point curRP = nativeRobotEEPoint(activeRobot, activeRobot.getJointAngles());
-				Frame active = activeRobot.getActiveFrame(CoordFrame.USER);
+				Point curRP = nativeRobotEEPoint(r, r.getJointAngles());
+				Frame active = r.getActiveFrame(CoordFrame.USER);
 
 				if (active != null) {
 					// Save Cartesian values in terms of the active User frame
-					curRP = applyFrame(activeRobot, curRP, active.getOrigin(), active.getOrientation());
+					curRP = RMath.applyFrame(r, curRP, active.getOrigin(), active.getOrientation());
 				}
 
 				pReg.point = curRP;
 				pReg.isCartesian = true;
-				DataManagement.saveRobotData(activeRobot, 3);
+				DataManagement.saveRobotData(r, 3);
 			}
 			break;
 		default:
@@ -4392,18 +4259,19 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Returns a 3x3 rotation matrix of the current transformation matrix on the
-	 * stack (in row major order).
+	 * Copies the current rotation on the top matrix of Processing's matrix
+	 * stack to a 3x3 floating-point array.
+	 * 
+	 * @return	A row major orthogonal rotation matrix
 	 */
 	public float[][] getRotationMatrix() {
 		float[][] rMatrix = new float[3][3];
-		// Calculate origin point
+		// Pull the origin and axes vectors from the matrix stack
 		PVector origin = getCoordFromMatrix(0f, 0f, 0f),
-				// Create axes vectors
 				vx = getCoordFromMatrix(1f, 0f, 0f).sub(origin),
 				vy = getCoordFromMatrix(0f, 1f, 0f).sub(origin),
 				vz = getCoordFromMatrix(0f, 0f, 1f).sub(origin);
-		// Save values in a 3x3 rotation matrix
+		
 		rMatrix[0][0] = vx.x;
 		rMatrix[0][1] = vx.y;
 		rMatrix[0][2] = vx.z;
@@ -4451,9 +4319,11 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * TODO
+	 * Copies the current rotation and translations of the top matrix on
+	 * Processing's matrix stack to a 4x4 floating-point array. Any scaling
+	 * is ignored. 
 	 * 
-	 * @return
+	 * @return	A 4x4 row major transformation matrix
 	 */
 	public float[][] getTransformationMatrix() {
 		float[][] transform = new float[4][4];
@@ -4481,7 +4351,7 @@ public class RobotRun extends PApplet {
 		transform[3][2] = origin.z;
 		transform[3][3] = 1;
 
-return transform;
+		return transform;
 	}
 
 	/**
@@ -4789,7 +4659,7 @@ return transform;
 				regEntry = "*";
 			}
 
-			contents.addLine(regLbl, regEntry);
+			contents.addLine(new DisplayLine(idx, 0 , regLbl, regEntry));
 		}
 	}
 
@@ -5060,7 +4930,7 @@ return transform;
 
 				if (castIns.getUserFrame() != -1) {
 					Frame uFrame = getActiveRobot().getUserFrame(castIns.getUserFrame());
-					displayPoint = removeFrame(getActiveRobot(), p, uFrame.getOrigin(), uFrame.getOrientation());
+					displayPoint = RMath.removeFrame(getActiveRobot(), p, uFrame.getOrigin(), uFrame.getOrientation());
 
 				} else {
 					displayPoint = p;
@@ -5272,13 +5142,14 @@ return transform;
 	public void loadPositionRegisters() {
 		// Display a subset of the list of registers
 		for (int idx = 0; idx < Fields.DPREG_NUM; ++idx) {
+			DisplayLine line;
 			PositionRegister reg = activeRobot.getPReg(idx);
 			// Display the comment associated with a specific Register entry
 			String regLbl = reg.toStringWithComm();
 			// Display Register edit prompt (* if uninitialized)
 			String regEntry = (reg.point == null) ? "*" : "...Edit...";
-
-			contents.addLine(regLbl, regEntry);
+			
+			contents.addLine( new DisplayLine(idx, 0, regLbl, regEntry) );
 		}
 	}
 	
@@ -5612,6 +5483,9 @@ return transform;
 		case NAV_INSTR_MENU:
 			break;
 		case SWAP_PT_TYPE:
+			contents.setLineIdx( prev.conLnIdx );
+			contents.setColumnIdx( prev.conColIdx );
+			contents.setRenderStart(  prev.conRenIdx );
 			break;
 		case CP_DREG_COM:
 		case CP_DREG_VAL:
@@ -6026,10 +5900,10 @@ return transform;
 
 		if (active != null) {
 			// Convert into currently active frame
-			pt = applyFrame(r, pt, active.getOrigin(), active.getOrientation());
+			pt = RMath.applyFrame(r, pt, active.getOrigin(), active.getOrientation());
 
 			if (Fields.DEBUG) {
-				System.out.printf("New: %s\n", convertNativeToWorld(pt.position));
+				System.out.printf("New: %s\n", RMath.vToWorld(pt.position));
 			}
 		}
 
@@ -6240,7 +6114,7 @@ return transform;
 			}
 
 			if (isCartesian) {
-				PVector position = convertWorldToNative(new PVector(inputs[0], inputs[1], inputs[2]));
+				PVector position = RMath.vFromWorld(new PVector(inputs[0], inputs[1], inputs[2]));
 				// Convert the angles from degrees to radians, then convert from
 				// World to Native frame, and finally convert to a quaternion
 				RQuaternion orientation = RMath.eulerToQuat((new PVector(-inputs[3], -inputs[5], inputs[4])
@@ -6729,7 +6603,7 @@ return transform;
 		if (active != null) {
 			// Display Robot's current position and orientation in the currently
 			// active User frame
-			RP.position = convertToFrame(RP.position, active.getOrigin(), active.getOrientation());
+			RP.position = RMath.vToFrame(RP.position, active.getOrigin(), active.getOrientation());
 			RP.orientation = active.getOrientation().transformQuaternion(RP.orientation);
 			cartesian = RP.toLineStringArray(true);
 
@@ -6758,7 +6632,7 @@ return transform;
 		if (toEdit != null) {
 			String[] dimFields = toEdit.dimFieldsToStringArray();
 			// Convert the values into the World Coordinate System
-			PVector position = convertNativeToWorld(toEdit.getLocalCenter());
+			PVector position = RMath.vToWorld(toEdit.getLocalCenter());
 			PVector wpr = RMath.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RAD_TO_DEG);
 			// Create a set of uniform Strings
 			String[] fields = new String[] { String.format("X: %4.3f", position.x),
@@ -6794,7 +6668,7 @@ return transform;
 			if (toEdit instanceof Part) {
 				Part p = (Part) toEdit;
 				// Convert the values into the World Coordinate System
-				position = convertNativeToWorld(p.getDefaultCenter());
+				position = RMath.vToWorld(p.getDefaultCenter());
 				wpr = RMath.matrixToEuler(p.getDefaultOrientationAxes()).mult(RAD_TO_DEG);
 				// Create a set of uniform Strings
 				fields = new String[] { String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
