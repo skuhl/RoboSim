@@ -41,6 +41,22 @@ public abstract class Register {
 		return String.format("%s[%3d: %-16s]", regPrefix(), idx + 1, comm);
 	}
 	
+	/**
+	 * A variant of the register toString().
+	 * 
+	 * @return	A string representation of the register's comment or label
+	 */
+	public String getLabel() {
+		
+		if (comment == null || comment.equals("")) {
+			return String.format("%s[%d]", regPrefix(), idx + 1);
+			
+		} else {
+			return String.format("%s[%s]", regPrefix(), comment);
+		}
+		
+	}
+	
 	@Override
 	public String toString() {
 		String idxStr = (idx < 0) ? "..." : Integer.toString(idx + 1);

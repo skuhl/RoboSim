@@ -263,11 +263,6 @@ public class MenuScroll {
 		return this;
 	}
 	
-	public MenuScroll setContents(ArrayList<DisplayLine> c) {
-		lines = c;
-		return this;
-	}
-	
 	public void setColumnIdx(int i) {
 		columnIdx = i;
 	}
