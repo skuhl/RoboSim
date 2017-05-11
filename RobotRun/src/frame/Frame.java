@@ -202,7 +202,7 @@ public abstract class Frame {
 		} else {
 			// Use previous value if it exists
 			if (this instanceof UserFrame) {
-				xyz = RobotRun.convertNativeToWorld(getDEOrigin());
+				xyz = RMath.vToWorld(getDEOrigin());
 			} else {
 				// Tool Frame origins are an offset of the Robot's End Effector
 				xyz = getDEOrigin();

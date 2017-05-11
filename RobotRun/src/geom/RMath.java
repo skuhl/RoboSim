@@ -6,6 +6,7 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
+import global.Fields;
 import processing.core.PConstants;
 import processing.core.PVector;
 import robot.RobotRun;
@@ -17,6 +18,63 @@ public class RMath {
 	
 	static final float PI = RobotRun.PI;
 	static final float TWO_PI = RobotRun.TWO_PI;
+	
+	/**
+	 * Determines if the lies within the range of angles that span from
+	 * rangeStart to rangeEnd, going clockwise around the Unit Cycle. It is
+	 * assumed that all parameters are in radians and within the range [0,
+	 * TWO_PI).
+	 * 
+	 * @param angleToVerify
+	 *            the angle in question
+	 * @param rangeStart
+	 *            the 'lower bounds' of the angle range to check
+	 * @param rangeEnd
+	 *            the 'upper bounds' of the angle range to check
+	 */
+	public static boolean angleWithinBounds(float angleToVerify, float rangeStart, float rangeEnd) {
+
+		if (rangeStart < rangeEnd) {
+			// Joint range does not overlap TWO_PI
+			return (angleToVerify - rangeStart) > -0.0001f && (angleToVerify - rangeEnd) < 0.0001f;
+			// return angleToVerify >= rangeStart && angleToVerify <= rangeEnd;
+		} else {
+			// Joint range overlaps TWO_PI
+			return !((angleToVerify - rangeEnd) > -0.0001f && (angleToVerify - rangeStart) < 0.0001f);
+			// return !(angleToVerify > rangeEnd && angleToVerify < rangeStart);
+		}
+	}
+	
+	/**
+	 * Converts the given point, pt, into the Coordinate System defined by the
+	 * given origin vector and rotation quaternion axes. The joint angles
+	 * associated with the point will be transformed as well, though, if inverse
+	 * kinematics fails, then the original joint angles are used instead.
+	 * 
+	 * @param model
+	 *            The Robot to which the frame belongs
+	 * @param pt
+	 *            A point with initialized position and orientation
+	 * @param origin
+	 *            The origin of the Coordinate System
+	 * @param axes
+	 *            The axes of the Coordinate System representing as a rotation
+	 *            quanternion
+	 * @returning The point, pt, interms of the given frame's Coordinate System
+	 */
+	public static Point applyFrame(RoboticArm model, Point pt, PVector origin, RQuaternion axes) {
+		PVector position = vToFrame(pt.position, origin, axes);
+		RQuaternion orientation = axes.transformQuaternion(pt.orientation);
+		// Update joint angles associated with the point
+		float[] newJointAngles = RMath.inverseKinematics(model, pt.angles, position, orientation);
+
+		if (newJointAngles != null) {
+			return new Point(position, orientation, newJointAngles);
+		} else {
+			// If inverse kinematics fails use the old angles
+			return new Point(position, orientation, pt.angles);
+		}
+	}
 
 	/**
 	 * Calculate the Jacobian matrix for the robotic arm for a given set of
@@ -71,7 +129,7 @@ public class RMath {
 	public static float clamp(float in, float min, float max) {
 		return Math.min(max, Math.max(min, in));
 	}
-
+	
 	// converts a double array to a float array
 	public static float[][] doubleToFloat(double[][] m, int l, int w) {
 		float[][] r = new float[l][w];
@@ -251,7 +309,7 @@ public class RMath {
 			// angles[3], angles[4], angles[5]));
 			count += 1;
 			if (count == limit) {
-				System.out.printf("%s\n", Arrays.toString(J));
+				System.out.printf("%s\n", toString(J));
 				return null;
 			}
 		}
@@ -260,7 +318,7 @@ public class RMath {
 	}
 
 	/**
-	 * Find the inverse of the given column major 4x4 Homogeneous Coordinate Matrix.
+	 * Computes the inverse of the given row major 4x4 Homogeneous Coordinate Matrix.
 	 * 
 	 * This method is based off of the algorithm found on this webpage:
 	 * https://web.archive.org/web/20130806093214/http://www-graphics.stanford.edu/
@@ -279,6 +337,7 @@ public class RMath {
 		 * [ vx vy vz 0 ]			[       uy         vy         wy    0 ]
 		 * [ tx ty tz 1 ]			[ -dot(u, t) -dot(v, t) -dot(w, t)  1 ]
 		 */
+		
 		inv[0][0] = m[0][0];
 		inv[0][1] = m[1][0];
 		inv[0][2] = m[2][0];
@@ -458,6 +517,38 @@ public class RMath {
 
 		return r;
 	}
+	
+	/**
+	 * Converts the given point, pt, from the Coordinate System defined by the
+	 * given origin vector and rotation quaternion axes. The joint angles
+	 * associated with the point will be transformed as well, though, if inverse
+	 * kinematics fails, then the original joint angles are used instead.
+	 * 
+	 * @param model
+	 *            The Robot, to which the frame belongs
+	 * @param pt
+	 *            A point with initialized position and orientation
+	 * @param origin
+	 *            The origin of the Coordinate System
+	 * @param axes
+	 *            The axes of the Coordinate System representing as a rotation
+	 *            quanternion
+	 * @returning The point, pt, interms of the given frame's Coordinate System
+	 */
+	public static Point removeFrame(RoboticArm model, Point pt, PVector origin, RQuaternion axes) {
+		PVector position = vFromFrame(pt.position, origin, axes);
+		RQuaternion orientation = RQuaternion.mult(pt.orientation, axes);
+
+		// Update joint angles associated with the point
+		float[] newJointAngles = RMath.inverseKinematics(model, pt.angles, position, orientation);
+
+		if (newJointAngles != null) {
+			return new Point(position, orientation, newJointAngles);
+		} else {
+			// If inverse kinematics fails use the old angles
+			return new Point(position, orientation, pt.angles);
+		}
+	}
 
 	// Rotates the matrix 'm' by an angle 'theta' around the given 'axis'
 	public static float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
@@ -548,44 +639,45 @@ public class RMath {
 	}
 	
 	/**
-	 * TODO
+	 * Transforms the given position vector, v, by the given rotation matrix,
+	 * r.
 	 * 
-	 * @param v
-	 * @param rMatrix
-	 * @return
+	 * @param v	A xyz position vector
+	 * @param r	An orthogonal rotation matrix
+	 * @return	The product of v rotated by r
 	 */
-	public static PVector rotateVector(PVector v, float[][] rMatrix) {
-		if (rMatrix.length != 3 || rMatrix[0].length != 3) {
+	public static PVector rotateVector(PVector v, float[][] r) {
+		if (r.length != 3 || r[0].length != 3) {
 			return null;
 		}
 		
 		PVector u = new PVector();
-		// Apply the transformation matrix to the given vector
-		u.x = v.x * rMatrix[0][0] + v.y * rMatrix[0][1] + v.z * rMatrix[0][2];
-		u.y = v.x * rMatrix[1][0] + v.y * rMatrix[1][1] + v.z * rMatrix[1][2];
-		u.z = v.x * rMatrix[2][0] + v.y * rMatrix[2][1] + v.z * rMatrix[2][2];
+		// Apply the rotation matrix to the given vector
+		u.x = v.x * r[0][0] + v.y * r[0][1] + v.z * r[0][2];
+		u.y = v.x * r[1][0] + v.y * r[1][1] + v.z * r[1][2];
+		u.z = v.x * r[2][0] + v.y * r[2][1] + v.z * r[2][2];
 
 		return u;
 	}
 	
 	/**
-	 * TODO
+	 * Transforms the given position vector v, by the transformation matrix, t.
 	 * 
-	 * @param v
-	 * @param tMatrix
-	 * @return
+	 * @param v	A xyz position vector
+	 * @param t	A row major tranformation matrix
+	 * @return	The product of v transformed by t
 	 */
-	public static PVector vectorMatrixMult(PVector v, float[][] tMatrix) {
-		if (tMatrix.length != 4 || tMatrix[0].length != 4) {
+	public static PVector vectorMatrixMult(PVector v, float[][] t) {
+		if (t.length != 4 || t[0].length != 4) {
 			return null;
 		}
 
 		PVector u = new PVector();
 		// Apply the transformation matrix to the given vector
-		u.x = v.x * tMatrix[0][0] + v.y * tMatrix[0][1] + v.z * tMatrix[0][2] + tMatrix[3][0];
-		u.y = v.x * tMatrix[1][0] + v.y * tMatrix[1][1] + v.z * tMatrix[1][2] + tMatrix[3][1];
-		u.z = v.x * tMatrix[2][0] + v.y * tMatrix[2][1] + v.z * tMatrix[2][2] + tMatrix[3][2];
-		float w = tMatrix[0][3] + tMatrix[1][3] + tMatrix[2][3] + tMatrix[3][3];
+		u.x = v.x * t[0][0] + v.y * t[0][1] + v.z * t[0][2] + t[3][0];
+		u.y = v.x * t[1][0] + v.y * t[1][1] + v.z * t[1][2] + t[3][1];
+		u.z = v.x * t[2][0] + v.y * t[2][1] + v.z * t[2][2] + t[3][2];
+		float w = t[0][3] + t[1][3] + t[2][3] + t[3][3];
 		
 		if(w != 1) {
 			u.div(w);
@@ -605,12 +697,81 @@ public class RMath {
 	}
 	
 	/**
-	 * Returns a string that represents the given rotation (3x3) or
-	 * transformation (4x4) matrix. The rotation portion of a
-	 * transformation matrix as well as a rotation matrix are in
-	 * row major order.
+	 * Converts the given vector, u, from the Coordinate System defined by the
+	 * given origin vector and rotation quaternion axes.
 	 * 
-	 * @param matrix	A rotation or transformation matrix
+	 * @param v
+	 *            A vector in the XYZ vector space
+	 * @param origin
+	 *            The origin of the Coordinate System
+	 * @param axes
+	 *            The axes of the Coordinate System representing as a rotation
+	 *            quanternion
+	 * @returning The vector, u, in the Native frame
+	 */
+	public static PVector vFromFrame(PVector u, PVector origin, RQuaternion axes) {
+		RQuaternion invAxes = axes.conjugate();
+		invAxes.normalize();
+		PVector vRotated = invAxes.rotateVector(u);
+		return vRotated.add(origin);
+	}
+	
+	/**
+	 * Applies the inverse of the world coordinate frame onto the given
+	 * position vector, effectively removing the world coordinate frame
+	 * transformation.
+	 * 
+	 * @param v	a xyz position vector
+	 * @return	v transformed by the inverse world coordinate system
+	 */
+	public static PVector vFromWorld(PVector v) {
+		return RMath.rotateVector(v, Fields.NATIVE_AXES);
+	}
+	
+	/**
+	 * Converts the given vector, v, into the Coordinate System defined by the
+	 * given origin vector and rotation quaternion axes.
+	 * 
+	 * @param v
+	 *            A vector in the XYZ vector space
+	 * @param origin
+	 *            The origin of the Coordinate System
+	 * @param axes
+	 *            The axes of the Coordinate System representing as a rotation
+	 *            quanternion
+	 * @returning The vector, v, interms of the given frame's Coordinate System
+	 */
+	public static PVector vToFrame(PVector v, PVector origin, RQuaternion axes) {
+		PVector vOffset = PVector.sub(v, origin);
+		return axes.rotateVector(vOffset);
+	}
+	
+	/**
+	 * Transforms the given position vector into the world coordinate frame.
+	 * 
+	 * @param v	a xyz position vector
+	 * @return	v transformed by the world coordinate frame
+	 */
+	public static PVector vToWorld(PVector v) {
+		return RMath.rotateVector(v, Fields.WORLD_AXES);
+	}
+	
+	/**
+	 * Returns a string that represents the given floating-point matrix in the
+	 * format:
+	 * 
+	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
+	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
+	 *   .
+	 *   .
+	 *   .
+	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
+	 * 
+	 * The precision of each element is 4 digits before and 3 digits after the
+	 * decimal point. In addition, space padding is applied for non-negative
+	 * values.
+	 * 
+	 * @param matrix	A floating-point matrix
 	 * @return			The string representation of the given matrix
 	 */
 	public static String toString(float[][] matrix) {

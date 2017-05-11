@@ -1,5 +1,7 @@
 package geom;
 
+import java.util.Arrays;
+
 import processing.core.PConstants;
 import processing.core.PVector;
 import robot.RobotRun;
@@ -151,7 +153,7 @@ public class Point  {
 			pos = new PVector(Float.NaN, Float.NaN, Float.NaN);
 		} else {
 			// Display in terms of the World Frame
-			pos = RobotRun.convertNativeToWorld(position);
+			pos = RMath.vToWorld(position);
 		}
 
 		// Convert Quaternion to Euler Angles
@@ -236,6 +238,7 @@ public class Point  {
 
 	@Override
 	public String toString() {
-		return String.format("P: { %s, %s }", position, orientation);
+		return String.format("P=%s O=%s J=%s", position, orientation,
+				Arrays.toString(angles));
 	}
 } // end Point class
