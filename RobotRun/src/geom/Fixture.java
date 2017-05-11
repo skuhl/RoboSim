@@ -54,7 +54,9 @@ public class Fixture extends WorldObject {
 	public void removeCoordinateSystem() {
 		float[][] tMatrix = RMath.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
 		tMatrix = RMath.invertHCMatrix(tMatrix);
-
+		
+		
+		
 		RobotRun.getInstance().applyMatrix(tMatrix);
 	}
 }
