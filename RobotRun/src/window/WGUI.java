@@ -188,12 +188,12 @@ public class WGUI implements ControlListener {
 		addButton("EE", buttonImages[1], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 		
 		// Initialize camera view buttons
-		addButton("FrontView", "F", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("BackView", "Bk", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("LeftView", "L", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("RightView", "R", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("TopView", "T", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("BottomView", "Bt", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("FrontView", "F", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("BackView", "Bk", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("LeftView", "L", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("RightView", "R", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("TopView", "T", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("BottomView", "Bt", sButtonWidth, sButtonHeight, Fields.small).hide();
 		
 		// Pendant screen background?
 		c1 = addTextarea("txt", "", pendantWindow, offsetX, 0,
@@ -706,6 +706,33 @@ public class WGUI implements ControlListener {
 		 .setColorActive(Fields.B_ACTIVE_C)
 		 .setPosition(posX, posY)
 	 	 .moveTo(parent)
+		 .setSize(wdh, hgt)
+		 .getCaptionLabel().setFont(lblFont);
+		
+		return b;
+	}
+	
+	/**
+	 * Adds a button to the UI with the given name, label text, width, height,
+	 * and font.
+	 * 
+	 * @param name		The name (or ID) of the button, which must be unique
+	 * 					amongst all UI elements!
+	 * @param lblTxt	The text displayed on the button
+	 * @param wdh		The width of the button
+	 * @param hgt		The height of the button
+	 * @param lblFont	The button text's font
+	 * @return			A reference to the new button
+	 */
+	private MyButton addButton(String name, String lblTxt, int wdh, int hgt,
+			PFont lblFont) {
+		
+		MyButton b = new MyButton(manager, name);
+		
+		b.setCaptionLabel(lblTxt)
+		 .setColorValue(Fields.B_TEXT_C)
+		 .setColorBackground(Fields.B_DEFAULT_C)
+		 .setColorActive(Fields.B_ACTIVE_C)
 		 .setSize(wdh, hgt)
 		 .getCaptionLabel().setFont(lblFont);
 		

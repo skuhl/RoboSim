@@ -460,7 +460,14 @@ public class RobotRun extends PApplet {
 	public boolean areOBBsDisplayed() {
 		return UI.getOBBButtonState();
 	}
-
+	
+	/**
+	 * Pendant DOWN button
+	 * 
+	 * Moves down one element in a list displayed on the pendant screen.
+	 * Depending on what menu is active this may move the list pointer
+	 * in either the content or options menu.
+	 */
 	public void arrow_dn() {
 		switch (mode) {
 		case NAV_PROGRAMS:
@@ -571,6 +578,13 @@ public class RobotRun extends PApplet {
 		updatePendantScreen();
 	}
 
+	/**
+	 * Pendant LEFT button
+	 * 
+	 * Moves one column to the left on a list element display on the pendant's
+	 * screen. Depending on what menu is active, this may move the pointer in
+	 * either the content or options menu.
+	 */
 	public void arrow_lt() {
 		switch (mode) {
 		case NAV_PROG_INSTR:
@@ -606,7 +620,16 @@ public class RobotRun extends PApplet {
 
 		updatePendantScreen();
 	}
-
+	
+	/**
+	 * Pendant RIGHT button
+	 * 
+	 * Moves one column to the right in a list element display on the
+	 * pendant's screen. Depending on what menu is active, this may move the
+	 * pointer in either the content or options menu. In addition, when shift
+	 * is active, the RIGHT button functions as a delete button in number,
+	 * text, and point entry menus.
+	 */
 	public void arrow_rt() {
 		switch (mode) {
 		case NAV_PROG_INSTR:
@@ -687,7 +710,14 @@ public class RobotRun extends PApplet {
 
 		updatePendantScreen();
 	}
-
+	
+	/**
+	 * Pendant UP button
+	 * 
+	 * Moves up one element in a list displayed on the pendant screen.
+	 * Depending on what menu is active this may move the list pointer
+	 * in either the content or options menu.
+	 */
 	public void arrow_up() {
 		switch (mode) {
 		case NAV_PROGRAMS:
@@ -800,7 +830,13 @@ public class RobotRun extends PApplet {
 
 		updatePendantScreen();
 	}
-
+	
+	/**
+	 * Camera Bk button
+	 * 
+	 * Sets the camera to the default back view, which looks down the positive
+	 * x-axis in the world coordinate system.
+	 */
 	public void BackView() {
 		// Back view
 		camera.reset();
@@ -1424,7 +1460,6 @@ public class RobotRun extends PApplet {
 
 	// Data button
 	public void data() {
-		resetStack();
 		nextScreen(ScreenMode.NAV_DATA);
 	}
 
@@ -4466,10 +4501,12 @@ public class RobotRun extends PApplet {
 	public void keyPressed() {
 		
 		if (key == 'd') {
+			
 			// Debug output key
+			/**/
 			updatePendantScreen();
 			System.out.println(options);
-			
+			/**/
 		}
 
 		if (key == 27) {
@@ -5726,7 +5763,6 @@ public class RobotRun extends PApplet {
 
 	// Menu button
 	public void menu() {
-		resetStack();
 		nextScreen(ScreenMode.NAV_MAIN_MENU);
 	}
 
@@ -6829,12 +6865,13 @@ public class RobotRun extends PApplet {
 		System.out.println(String.format("SConfirm: %d\n", ret));
 	}
 
-	// Select button
+	/**
+	 * Pendant SELECT button
+	 * 
+	 * Transitions to the program navigation menu, where the user can manage
+	 * their programs.
+	 */
 	public void select() {
-		getActiveRobot().setActiveProgIdx(0);
-		getActiveRobot().setActiveInstIdx(-1);
-
-		resetStack();
 		nextScreen(ScreenMode.NAV_PROGRAMS);
 	}
 
