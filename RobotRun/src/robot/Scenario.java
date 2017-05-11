@@ -3,15 +3,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.RealMatrix;
-
 import geom.Fixture;
 import geom.Part;
 import geom.RMath;
 import geom.WorldObject;
 import processing.core.PApplet;
-import processing.core.PVector;
 
 /**
  * A storage class for a collection of objects with an associated name for the collection.

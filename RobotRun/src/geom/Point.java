@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import processing.core.PConstants;
 import processing.core.PVector;
-import robot.RobotRun;
 
 public class Point  {
 	// X, Y, Z

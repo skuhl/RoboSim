@@ -28,7 +28,7 @@ public enum ScreenMode implements DisplayMode {
 	SET_EXPR_OP(ScreenType.TYPE_EXPR_EDIT),
 
 	/*
-	 * Screens used to display a sereal list of contents for the user to
+	 * Screens used to display a several list of contents for the user to
 	 * examine and interact with
 	 */
 	NAV_MACROS(ScreenType.TYPE_LIST_CONTENTS),
@@ -37,6 +37,7 @@ public enum ScreenMode implements DisplayMode {
 	NAV_TOOL_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_USER_FRAMES(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_PROGRAMS(ScreenType.TYPE_LIST_CONTENTS),
+	NAV_DATA(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_PREGS(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_DREGS(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_IOREG(ScreenType.TYPE_LIST_CONTENTS),
@@ -75,7 +76,10 @@ public enum ScreenMode implements DisplayMode {
 	SET_MACRO_TYPE(ScreenType.TYPE_OPT_MENU),
 	SET_MACRO_BINDING(ScreenType.TYPE_OPT_MENU),
 	SET_CALL_PROG(ScreenType.TYPE_OPT_MENU),
+	SELECT_REG_STMT(ScreenType.TYPE_OPT_MENU),
 	SWAP_PT_TYPE(ScreenType.TYPE_OPT_MENU),
+	UFRAME_DETAIL(ScreenType.TYPE_OPT_MENU),
+	TFRAME_DETAIL(ScreenType.TYPE_OPT_MENU),
 
 	/*
 	 * Screens involving the entry of text, either via keyboard input or function buttons
@@ -88,7 +92,7 @@ public enum ScreenMode implements DisplayMode {
 	PROG_RENAME(ScreenType.TYPE_TEXT_ENTRY),
 
 	/*
-	 * Screens involving the entry of numeric values via either a physical num pad or
+	 * Screens involving the entry of numeric values via either a physical numpad or
 	 * the virtual numpad included in the simulator UI
 	 */
 	ACTIVE_FRAMES(ScreenType.TYPE_NUM_ENTRY),
@@ -131,15 +135,9 @@ public enum ScreenMode implements DisplayMode {
 	DIRECT_ENTRY_USER(ScreenType.TYPE_POINT_ENTRY),
 	EDIT_PREG(ScreenType.TYPE_POINT_ENTRY),
 	EDIT_MINST_POS(ScreenType.TYPE_POINT_ENTRY),
-
-	/*
-	 * Miscellaneous screens/ not otherwise categorized
-	 */
 	
-	UFRAME_DETAIL,
-	TFRAME_DETAIL,
-	SELECT_REG_STMT,
-	NAV_DATA;
+	
+	;
 
 	final ScreenType type;
 
