@@ -1646,7 +1646,8 @@ public class RobotRun extends PApplet {
 		
 		PVector near[] = c.getPlaneNear();
 		PVector far[] = c.getPlaneFar();
-		PVector view[] = c.getPlane(c.checkObjectInFrame(f, true));
+		PVector view1[] = c.getPlane(c.getDistanceToObject(f, 0));
+		PVector view2[] = c.getPlane(c.getDistanceToObject(f, 1));
 		pushMatrix();
 		stroke(255, 126, 0, 255);
 		//dfill(255, 126, 0, 255);
@@ -1680,18 +1681,26 @@ public class RobotRun extends PApplet {
 		
 		fill(255, 126, 0, 126);
 		beginShape();
-		vertex(view[0].x, view[0].y, view[0].z);
-		vertex(view[1].x, view[1].y, view[1].z);
-		vertex(view[3].x, view[3].y, view[3].z);
-		vertex(view[2].x, view[2].y, view[2].z);
+		vertex(view1[0].x, view1[0].y, view1[0].z);
+		vertex(view1[1].x, view1[1].y, view1[1].z);
+		vertex(view1[3].x, view1[3].y, view1[3].z);
+		vertex(view1[2].x, view1[2].y, view1[2].z);
 		endShape();
+		
+		beginShape();
+		vertex(view2[0].x, view2[0].y, view2[0].z);
+		vertex(view2[1].x, view2[1].y, view2[1].z);
+		vertex(view2[3].x, view2[3].y, view2[3].z);
+		vertex(view2[2].x, view2[2].y, view2[2].z);
+		endShape();
+		
 		popMatrix();
 						
 		pushMatrix();
 		f.draw();
 		popMatrix();
 		
-		c.checkObjectInFrame(f, false);
+		PVector[] obj = c.checkObjectInFrame(f, 2);
 		/*for(int i = 0; i < 8; i += 1) {
 			pushMatrix();
 			stroke(0);
@@ -4587,22 +4596,22 @@ public class RobotRun extends PApplet {
 		if (key == 27) {
 			// Disable the window exiting function of the 'esc' key
 			key = 0;
-		} else if (UI != null && UI.isATextFieldActive()) {
+		}
+		else if (UI != null && UI.isATextFieldActive()) {
 			// Disable key events when typing in a text field
 			return;
-
-		} else if (UI != null && UI.isPendantActive()) {
-			if (mode.getType() == ScreenType.TYPE_NUM_ENTRY || mode.getType() == ScreenType.TYPE_POINT_ENTRY
+		} 
+		else if (UI != null && UI.isPendantActive()) {
+			if (mode.getType() == ScreenType.TYPE_NUM_ENTRY 
+					|| mode.getType() == ScreenType.TYPE_POINT_ENTRY
 					|| mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
 				
 				if (((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9')
 						|| key == '-' || key == '.' || key == '@' || key == '*' || key == '_')) {
 					// Suppress other key events when entering text for the pendant
 					characterInput(key);
-					return;
-					
+					return;	
 				}
-				
 			}
 			
 			// Pendant button shortcuts
@@ -4650,38 +4659,44 @@ public class RobotRun extends PApplet {
 					System.out.printf("\nUser frame: %d\nTool frame: %d\n", mInst.getUserFrame(), mInst.getToolFrame());
 				}
 			}
-
-		} else if (key == 'a') {
+		}
+		else if (key == 'a') {
 			// Test instruction undo
 			if (mode == ScreenMode.NAV_PROG_INSTR) {
 				getActiveRobot().popInstructionUndo();
 				updatePendantScreen();
 			}
-			
-		} else if (ctrl && keyCode == KeyEvent.VK_T) {
+		} 
+		else if (ctrl && keyCode == KeyEvent.VK_T) {
 			// Write anything stored in the String buffer to a text file
 			writeBuffer();
-		} else if (ctrl && keyCode == KeyEvent.VK_S) {
+		}
+		else if (ctrl && keyCode == KeyEvent.VK_S) {
 			// Save EVERYTHING!
 			DataManagement.saveState(this);
-		} else if (ctrl && keyCode == KeyEvent.VK_Z) {
+		}
+		else if (ctrl && keyCode == KeyEvent.VK_Z) {
 			undoScenarioEdit();
-			
-		} else if (key == 'q') {
+		}
+		else if (key == 'q') {
 			// Print the current mode to the console
 			println(mode.toString());
-		} else if (key == 'e') {
+		} 
+		else if (key == 'e') {
 			// Toggle the Robot's End Effector state
 			if (!isProgramRunning()) {
 				getActiveRobot().toggleEEState();
 			}
-		} else if (key == 'r') {
+		} 
+		else if (key == 'r') {
 			// Restore default Robot joint angles
 			float[] rot = { 0, 0, 0, 0, 0, 0 };
 			getActiveRobot().releaseHeldObject();
 			getActiveRobot().setJointAngles(rot);
-			intermediatePositions.clear();
-			
+			intermediatePositions.clear();	
+		}
+		else if(key == 'c') {
+			coord();
 		}
 	}
 
