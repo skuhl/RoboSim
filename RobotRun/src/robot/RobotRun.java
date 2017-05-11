@@ -1513,7 +1513,7 @@ public class RobotRun extends PApplet {
 		}
 		/**/
 
-		/*Camera Test Code*/
+		/*Camera Test Code*
 		Fixture f = new Fixture("test", 160, 0, 50, 100, 200);
 		f.setLocalCenter(new PVector(-700, -300, 0));
 		Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
