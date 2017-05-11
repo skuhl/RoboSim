@@ -280,7 +280,7 @@ public class RobotRun extends PApplet {
 	private MenuScroll contents;
 	private MenuScroll options;
 
-	private Stack<ScreenState> display_stack;
+	private Stack<ScreenState> screenStates;
 	private ArrayList<Macro> macros = new ArrayList<>();
 	private Macro[] SU_macro_bindings = new Macro[7];
 	private Macro edit_macro;
@@ -1966,7 +1966,7 @@ public class RobotRun extends PApplet {
 			break;
 		case SELECT_IO_INSTR_REG:
 			newIOInstruction(options.getColumnIdx());
-			display_stack.pop();
+			screenStates.pop();
 			lastScreen();
 			break;
 		case SELECT_FRAME_INSTR_TYPE:
@@ -1976,12 +1976,12 @@ public class RobotRun extends PApplet {
 				newFrameInstruction(Fields.FTYPE_USER);
 			}
 
-			display_stack.pop();
+			screenStates.pop();
 			switchScreen(ScreenMode.SET_FRAME_INSTR_IDX);
 			break;
 		case SELECT_REG_STMT:
-			display_stack.pop();
-			display_stack.pop();
+			screenStates.pop();
+			screenStates.pop();
 
 			if (options.getLineIdx() == 0) {
 				newRegisterStatement(new DataRegister());
@@ -1991,29 +1991,32 @@ public class RobotRun extends PApplet {
 				newRegisterStatement(new PositionRegister());
 			} else {
 				newRegisterStatement(new PositionRegister(), 0);
-				pushScreen(ScreenMode.SET_REG_EXPR_IDX2, -1, -1, 0, 1, 0);
+				ScreenState instEdit = screenStates.peek();
+				pushScreen(ScreenMode.SET_REG_EXPR_IDX2, instEdit.conLnIdx,
+						instEdit.conColIdx, instEdit.conRenIdx, 0,
+						0);
 			}
 
-			nextScreen(ScreenMode.SET_REG_EXPR_IDX1);
+			loadScreen(ScreenMode.SET_REG_EXPR_IDX1);
 			break;
 		case SELECT_COND_STMT:
 			if (options.getLineIdx() == 0) {
 				newIfStatement();
-				display_stack.pop();
+				screenStates.pop();
 				switchScreen(ScreenMode.SET_EXPR_OP);
 			} else if (options.getLineIdx() == 1) {
 				newIfExpression();
-				display_stack.pop();
+				screenStates.pop();
 				lastScreen();
 			} else {
 				newSelectStatement();
-				display_stack.pop();
+				screenStates.pop();
 				lastScreen();
 			}
 
 			break;
 		case SELECT_JMP_LBL:
-			display_stack.pop();
+			screenStates.pop();
 
 			if (options.getLineIdx() == 0) {
 				newLabel();
@@ -2171,9 +2174,11 @@ public class RobotRun extends PApplet {
 			} else if (options.getLineIdx() == 3) {
 				ExprOperand operand = new ExprOperand(new PositionRegister(), 0);
 				opEdit = expr.setOperand(editIdx, operand);
-				display_stack.pop();
-				pushScreen(ScreenMode.INPUT_PREG_IDX2, -1, -1, 0, 1, 0);
-				nextScreen(ScreenMode.INPUT_PREG_IDX1);
+				screenStates.pop();
+				pushScreen(ScreenMode.INPUT_PREG_IDX2, contents.getLineIdx(),
+						contents.getColumnIdx(), contents.getRenderStart(), 0,
+						0);
+				loadScreen(ScreenMode.INPUT_PREG_IDX1);
 			} else if (options.getLineIdx() == 4) {
 				// set arg to new expression
 				Expression oper = new Expression();
@@ -2410,7 +2415,7 @@ public class RobotRun extends PApplet {
 			} catch (NumberFormatException ex) {
 			}
 
-			display_stack.pop();
+			screenStates.pop();
 			lastScreen();
 			break;
 
@@ -2471,20 +2476,28 @@ public class RobotRun extends PApplet {
 			// Register statement edit
 		case SET_REG_EXPR_TYPE:
 			RegisterStatement regStmt = (RegisterStatement) r.getInstToEdit( r.getActiveInstIdx() );
-			display_stack.pop();
-
-			if (options.getLineIdx() == 0) {
-				regStmt.setRegister(new DataRegister());
-			} else if (options.getLineIdx() == 1) {
-				regStmt.setRegister(new IORegister());
-			} else if (options.getLineIdx() == 2) {
-				regStmt.setRegister(new PositionRegister());
-			} else {
+			
+			if (options.getLineIdx() == 3) {
 				regStmt.setRegister(new PositionRegister(), 0);
-				pushScreen(ScreenMode.SET_REG_EXPR_IDX2, -1, -1, 0, 1, 0);
+				
+				screenStates.pop();
+				pushScreen(ScreenMode.SET_REG_EXPR_IDX2, contents.getLineIdx(),
+						contents.getColumnIdx(), contents.getRenderStart(), 0,
+						0);
+				loadScreen(ScreenMode.SET_REG_EXPR_IDX1);
+				
+			} else {
+				if (options.getLineIdx() == 0) {
+					regStmt.setRegister(new DataRegister());
+				} else if (options.getLineIdx() == 1) {
+					regStmt.setRegister(new IORegister());
+				} else if (options.getLineIdx() == 2) {
+					regStmt.setRegister(new PositionRegister());
+				}
+				
+				switchScreen(ScreenMode.SET_REG_EXPR_IDX1);
 			}
-
-			nextScreen(ScreenMode.SET_REG_EXPR_IDX1);
+			
 			break;
 		case SET_REG_EXPR_IDX1:
 			try {
@@ -2660,14 +2673,14 @@ public class RobotRun extends PApplet {
 			
 			ScreenState prev = null;
 			
-			while (!display_stack.isEmpty()) {
-				prev = display_stack.peek();
+			while (!screenStates.isEmpty()) {
+				prev = screenStates.peek();
 				
 				if (prev.mode == ScreenMode.NAV_INSTR_MENU) {
 					break;
 				}
 				
-				display_stack.pop();
+				screenStates.pop();
 			}
 			
 			lastScreen();
@@ -2999,8 +3012,8 @@ public class RobotRun extends PApplet {
 			int size = program.getNumOfInst() + 1;
 			r.setActiveInstIdx(max(0, min(nextInstr, size - 1)));
 			
-			if (!display_stack.isEmpty()) {
-				ScreenState prev = display_stack.peek();
+			if (!screenStates.isEmpty()) {
+				ScreenState prev = screenStates.peek();
 				
 				if (prev.mode == ScreenMode.NAV_PROG_INSTR) {
 					int activeInst = r.getActiveInstIdx();
@@ -3351,7 +3364,7 @@ public class RobotRun extends PApplet {
 				}
 			}
 
-			display_stack.pop();
+			screenStates.pop();
 			updateInstructions();
 			break;
 		case SELECT_CUT_COPY:
@@ -3377,12 +3390,12 @@ public class RobotRun extends PApplet {
 				lineIdx += 1;
 			}
 
-			display_stack.pop();
+			screenStates.pop();
 			getActiveRobot().setActiveInstIdx(lineIdx);
 			updateInstructions();
 			break;
 		case SELECT_COMMENT:
-			display_stack.pop();
+			screenStates.pop();
 			updateInstructions();
 			break;
 		case CONFIRM_RENUM:
@@ -3419,7 +3432,7 @@ public class RobotRun extends PApplet {
 				}
 			}
 
-			display_stack.pop();
+			screenStates.pop();
 			updateInstructions();
 			break;
 		case NAV_MACROS:
@@ -3578,7 +3591,7 @@ public class RobotRun extends PApplet {
 		case CONFIRM_RENUM:
 		case FIND_REPL:
 		case SELECT_CUT_COPY:
-			display_stack.pop();
+			screenStates.pop();
 			updateInstructions();
 			break;
 		case NAV_PREGS:
@@ -4069,6 +4082,7 @@ public class RobotRun extends PApplet {
 		case SET_EXPR_ARG:
 		case SET_BOOL_EXPR_ARG:
 		case SET_JUMP_TGT:
+		case SET_LBL_NUM:
 		case SELECT_CUT_COPY:
 		case SELECT_INSTR_DELETE:
 			header = activeRobot.getActiveProg().getName();
@@ -4396,7 +4410,6 @@ public class RobotRun extends PApplet {
 
 	public void item() {
 		if (mode == ScreenMode.NAV_PROG_INSTR) {
-			workingText = new StringBuilder();
 			nextScreen(ScreenMode.JUMP_TO_LINE);
 		}
 	}
@@ -4454,16 +4467,8 @@ public class RobotRun extends PApplet {
 		
 		if (key == 'd') {
 			// Debug output key
-			if (mode == ScreenMode.INPUT_PREG_IDX2 || mode == ScreenMode.INPUT_PREG_IDX1) {
-				
-				updatePendantScreen();
-				System.out.println(options);
-				
-			} else {
-				
-				System.out.println(isShift());
-				
-			}
+			updatePendantScreen();
+			System.out.println(options);
 			
 		}
 
@@ -4593,17 +4598,18 @@ public class RobotRun extends PApplet {
 	 * Transitions the display to the previous screen that the user was on.
 	 */
 	public boolean lastScreen() {
-		ScreenState cur = display_stack.peek();
+		ScreenState cur = screenStates.peek();
 		
 		if (cur.mode != ScreenMode.DEFAULT) {
-			display_stack.pop();
-			cur = display_stack.peek();
+			screenStates.pop();
+			cur = screenStates.peek();
 			
 			if (Fields.DEBUG) {
 				System.out.printf("%s => %s\n", mode, cur);
 			}
 			// Update mode and menu indices
 			mode = cur.mode;
+			workingText = new StringBuilder();
 			contents.clear();
 			contents.setLineIdx(cur.conLnIdx);
 			contents.setColumnIdx(cur.conColIdx);
@@ -5243,14 +5249,19 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment
+	 * Sets the given screen mode as the active mode. In the process thereof,
+	 * the contents and options menus are updated and redrawn based on the new
+	 * active screen and the previous screen. In addition, the active screen
+	 * state is pushed onto the stack.
 	 * 
-	 * @param m
+	 * @param m	The new active screen mode
 	 */
 	public void loadScreen(ScreenMode m) {
-		ScreenState prev = display_stack.peek();
+		ScreenState prev = screenStates.peek();
 		
+		mode = m;
 		setProgramRunning(false);
+		workingText = new StringBuilder();
 		contents.reset();
 		options.reset();
 		
@@ -5318,13 +5329,13 @@ public class RobotRun extends PApplet {
 			System.out.println(workingText.length());
 			break;
 		case PROG_RENAME:
-			getActiveRobot().setActiveProgIdx(contents.getLineIdx());
+			getActiveRobot().setActiveProgIdx(prev.conLnIdx);
 			contents.setLineIdx(1);
 			contents.setColumnIdx(0);
 			workingText = new StringBuilder(getActiveRobot().getActiveProg().getName());
 			break;
 		case PROG_COPY:
-			getActiveRobot().setActiveProgIdx(contents.getLineIdx());
+			getActiveRobot().setActiveProgIdx(prev.conLnIdx);
 			contents.setLineIdx(1);
 			contents.setColumnIdx(0);
 			workingText = new StringBuilder("\0");
@@ -5334,9 +5345,6 @@ public class RobotRun extends PApplet {
 		case SET_CALL_PROG:
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
-			break;
-		case CONFIRM_INSERT:
-			workingText = new StringBuilder();
 			break;
 		case SELECT_INSTR_INSERT:
 		case SELECT_JMP_LBL:
@@ -5357,7 +5365,6 @@ public class RobotRun extends PApplet {
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
 			contents.setRenderStart(  prev.conRenIdx );
-			options.setLineIdx(0);
 			options.setColumnIdx(1);
 			break;
 		case SET_MV_INSTR_OFFSET:
@@ -5369,7 +5376,6 @@ public class RobotRun extends PApplet {
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
 			contents.setRenderStart(  prev.conRenIdx );
-			workingText = new StringBuilder();
 			break;
 		case SET_IO_INSTR_IDX:
 		case SET_JUMP_TGT:
@@ -5377,7 +5383,6 @@ public class RobotRun extends PApplet {
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
 			contents.setRenderStart(  prev.conRenIdx );
-			workingText = new StringBuilder();
 			break;
 		case SET_MV_INSTR_TYPE:
 			contents.setLineIdx( prev.conLnIdx );
@@ -5440,7 +5445,6 @@ public class RobotRun extends PApplet {
 			contents.setLineIdx( prev.conLnIdx );
 			contents.setColumnIdx( prev.conColIdx );
 			contents.setRenderStart(  prev.conRenIdx );
-			workingText = new StringBuilder();
 			break;
 		case SET_IO_INSTR_STATE:
 		case SET_FRM_INSTR_TYPE:
@@ -5471,36 +5475,21 @@ public class RobotRun extends PApplet {
 		case NAV_MACROS:
 			contents.setLineIdx(active_index);
 			break;
-		case SET_MACRO_PROG:
-			contents.setLineIdx(0);
-			break;
-		case SET_MACRO_TYPE:
-		case SET_MACRO_BINDING:
-			break;
-
-			// Registers
-		case NAV_DATA:
-			active_index = 0;
-			break;
 		case NAV_DREGS:
 			loadDataRegisters();
 			contents.setLineIdx(active_index);
-			contents.setColumnIdx(0);
 			break;
 		case NAV_PREGS:
 			loadPositionRegisters();
 			contents.setLineIdx(active_index);
-			contents.setColumnIdx(0);
 			break;
 		case DIRECT_ENTRY_TOOL:
-			contents.setLineIdx(0);
 			contents.setColumnIdx(1);
 			contents.setLines(
 				loadFrameDirectEntry( getActiveRobot().getToolFrame(curFrameIdx) )
 			);
 			break;
 		case DIRECT_ENTRY_USER:
-			contents.setLineIdx(0);
 			contents.setColumnIdx(1);
 			contents.setLines(
 				loadFrameDirectEntry( getActiveRobot().getUserFrame(curFrameIdx) )
@@ -5533,7 +5522,6 @@ public class RobotRun extends PApplet {
 			break;
 		case EDIT_DREG_COM:
 			contents.setLineIdx(1);
-			contents.setColumnIdx(0);
 
 			String c = getActiveRobot().getDReg(active_index).comment;
 			if (c != null && c.length() > 0) {
@@ -5545,7 +5533,6 @@ public class RobotRun extends PApplet {
 			break;
 		case EDIT_PREG_COM:
 			contents.setLineIdx(1);
-			contents.setColumnIdx(0);
 
 			c = getActiveRobot().getPReg(active_index).comment;
 			if (c != null && c.length() > 0) {
@@ -5566,8 +5553,6 @@ public class RobotRun extends PApplet {
 			if (val != null) {
 				workingText = new StringBuilder(val.toString());
 
-			} else {
-				workingText = new StringBuilder();
 			}
 			break;
 		case EDIT_PREG:
@@ -5581,7 +5566,6 @@ public class RobotRun extends PApplet {
 				loadPosition(pReg.point, pReg.isCartesian);
 			}
 
-			contents.setLineIdx(0);
 			contents.setColumnIdx(1);
 			break;
 		default:
@@ -6046,20 +6030,19 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Transitions the display to the given screen and pushes that screen onto
-	 * the stack.
+	 * Updates the save state of the active screen and loads the given screen
+	 * mode afterwards.
 	 * 
-	 * @param next
-	 *            The new screen mode
+	 * @param nextScreen	The new screen mode
 	 */
-	public void nextScreen(ScreenMode next) {
+	public void nextScreen(ScreenMode nextScreen) {
 		if (Fields.DEBUG) {
-			System.out.printf("%s => %s\n", mode, next);
+			System.out.printf("%s => %s\n", mode, nextScreen);
 		}
 		
-		if (!display_stack.isEmpty()) {
-			ScreenState cur = display_stack.peek();
-			// Save current screen state
+		if (!screenStates.isEmpty()) {
+			ScreenState cur = screenStates.peek();
+			// Update the current screen state
 			cur.conLnIdx = contents.getLineIdx();
 			cur.conColIdx = contents.getColumnIdx();
 			cur.conRenIdx = contents.getRenderStart();
@@ -6067,8 +6050,8 @@ public class RobotRun extends PApplet {
 			cur.optRenIdx = options.getRenderStart();
 		}
 		
-		mode = next;
-		loadScreen(next);
+		// Load the new screen
+		loadScreen(nextScreen);
 	}
 
 	public void num0() {
@@ -6247,25 +6230,24 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment
+	 * Pushes the current state of the screen, contents, and options fields
+	 * onto the screen state stack.
 	 */
 	private void pushActiveScreen() {
-		
 		pushScreen(mode, contents.getLineIdx(), contents.getColumnIdx(),
 				contents.getRenderStart(), options.getLineIdx(),
 				options.getRenderStart());
-		
 	}
 	
 	/**
-	 * TODO comment
+	 * Pushes a save state with the given values onto the screen state stack.
 	 * 
-	 * @param mode
-	 * @param conLnIdx
-	 * @param conColIdx
-	 * @param conRenIdx
-	 * @param optLnIdx
-	 * @param optRenIdx
+	 * @param mode			The screen mode
+	 * @param conLnIdx		The line index of the contents menu
+	 * @param conColIdx		The column index of the contents menu
+	 * @param conRenIdx		The render start index of the contents menu
+	 * @param optLnIdx		The line index of the options menu
+	 * @param optRenIdx		The render start index of the options menu
 	 */
 	private void pushScreen(ScreenMode mode, int conLnIdx, int conColIdx,
 			int conRenIdx, int optLnIdx, int optRenIdx) {
@@ -6273,11 +6255,11 @@ public class RobotRun extends PApplet {
 		ScreenState curState = new ScreenState(mode, conLnIdx, conColIdx,
 				conRenIdx, optLnIdx, optRenIdx);
 		
-		if (display_stack.size() > 10) {
-			display_stack.remove(0);
+		if (screenStates.size() > 10) {
+			screenStates.remove(0);
 		}
 		
-		display_stack.push(curState);
+		screenStates.push(curState);
 		
 	}
 	
@@ -6792,7 +6774,7 @@ public class RobotRun extends PApplet {
 	public void resetStack() {
 		// Stop a program from executing when transition screens
 		setProgramRunning(false);
-		display_stack.clear();
+		screenStates.clear();
 
 		mode = ScreenMode.DEFAULT;
 		pushScreen(mode, -1, -1, 0, -1, 0);
@@ -6995,7 +6977,7 @@ public class RobotRun extends PApplet {
 			DataManagement.initialize(this);
 			DataManagement.loadState(this);
 			
-			display_stack = new Stack<>();
+			screenStates = new Stack<>();
 			mode = ScreenMode.DEFAULT;
 			pushScreen(ScreenMode.DEFAULT, -1, -1, 0, -1, 0);
 			
@@ -7142,19 +7124,18 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Transitions to the given screen without saving the current screen on the
-	 * stack.
+	 * Removes the current screen from the screen state stack and loads the
+	 * given screen mode.
 	 * 
-	 * @param nextScreen
-	 *            The new screen mode
+	 * @param nextScreen	The new screen mode
 	 */
 	public void switchScreen(ScreenMode nextScreen) {
 		if (Fields.DEBUG) {
 			System.out.printf("%s => %s\n", mode, nextScreen);
 		}
 
-		display_stack.pop();
-		mode = nextScreen;
+		screenStates.pop();
+		// Load the new screen
 		loadScreen(nextScreen);
 	}
 
