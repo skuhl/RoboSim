@@ -835,7 +835,7 @@ public class RobotRun extends PApplet {
 	 * Camera Bk button
 	 * 
 	 * Sets the camera to the default back view, which looks down the positive
-	 * x-axis in the world coordinate system.
+	 * x-axis of the world coordinate system.
 	 */
 	public void BackView() {
 		// Back view
@@ -903,7 +903,12 @@ public class RobotRun extends PApplet {
 			getActiveRobot().jumpTo(tgtPoint.position, tgtPoint.orientation);
 		}
 	}
-
+	
+	/**
+	 * Pendant BKSPC button
+	 * 
+	 * Functions as a backspace key for number, text, and point input menus.
+	 */
 	public void bkspc() {
 		if (mode.getType() == ScreenType.TYPE_NUM_ENTRY) {
 
@@ -953,13 +958,25 @@ public class RobotRun extends PApplet {
 
 		updatePendantScreen();
 	}
-
+	
+	/**
+	 * Camera Bt button
+	 * 
+	 * Sets the camera to point down the positive z-axis of the world coordinate
+	 * frame, so as to view the bottom of the robot.
+	 */
 	public void BottomView() {
 		// Bottom view
 		camera.reset();
 		camera.rotate(PI / 2f, 0, 0);
 	}
-
+	
+	/**
+	 * Pendant BWD button
+	 * 
+	 * Executes a motion instruction two instructions prior to the active
+	 * instruction (if one exists).
+	 */
 	public void bwd() {
 		// Backwards is only functional when executing a program one instruction
 		// at a time
@@ -1232,7 +1249,10 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Clears all input fields in the world object creation and edit windows.
+	 * Clear button shared between the Create and Edit windows
+	 * 
+	 * Clears all input fields (textfields, dropdownlist, etc.) in the world
+	 * object creation and edit windows.
 	 */
 	public void ClearFields() {
 		UI.clearInputsFields();
@@ -1265,7 +1285,14 @@ public class RobotRun extends PApplet {
 		else
 			return vectorConvertFrom(perp2, plane[0], plane[1], plane[2]);
 	}
-
+	
+	/**
+	 * Pendant COORD button
+	 * 
+	 * If shift is off, then this button will change the coordinate frame of
+	 * the active robot. If shift is on, then this button will change to the
+	 * active frames menu on the pendant.
+	 */
 	public void coord() {
 		if (isShift()) {
 			nextScreen(ScreenMode.ACTIVE_FRAMES);
@@ -1439,9 +1466,17 @@ public class RobotRun extends PApplet {
 		coordinateSystem[2] = z;
 		return coordinateSystem;
 	}
-
+	
+	/**
+	 * Create button in the Create window
+	 * 
+	 * Pulls the user's input from the input fields (name, shape type,
+	 * dimensions, colors, etc.) in the Create window and attempts to create a
+	 * new world object from the user's input. If creation of a world object
+	 * was successful, then the new object is added to the active scenario and
+	 * all data is saved.
+	 */
 	public void CreateWldObj() {
-		/* Create a world object from the input fields in the Create window. */
 		if (activeScenario != null) {
 			WorldObject newObject = UI.createWorldObject();
 
@@ -1453,16 +1488,31 @@ public class RobotRun extends PApplet {
 		}
 	}
 	
-	// Dash button
+	/**
+	 * Pendant - button
+	 * 
+	 * Appends the '-' character to input for number, text, and point entry
+	 * menus.
+	 */
 	public void dash() {
 		characterInput('-');
 	}
 
-	// Data button
+	/**
+	 * Pendant DATA button
+	 * 
+	 * Displays a list of the register navigation menus (i.e. data or position
+	 * registers).
+	 */
 	public void data() {
 		nextScreen(ScreenMode.NAV_DATA);
 	}
-
+	
+	/**
+	 * Delete button in the edit window
+	 * 
+	 * Removes the selected world object from the active scenario.
+	 */
 	public void DeleteWldObj() {
 		// Delete focused world object and add to the scenario undo stack
 		updateScenarioUndo(UI.getSelectedWO());
@@ -1625,9 +1675,11 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Function of the edit button: renders the instruction view of the active
-	 * program, if one exists. Otherwise, the program navigation view is
-	 * rendered.
+	 * Pendant EDIT button
+	 * 
+	 * Links to the active program's instruction navigation menu, except in the
+	 * select screen, where it will open the instruction navigation menu for
+	 * the selected program
 	 */
 	public void edit() {
 		if (activeRobot.getActiveProg() != null) {
@@ -1728,11 +1780,21 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
+	/**
+	 * EE button
+	 * 
+	 * Changes the end effector of the active robot.
+	 */
 	public void EE() {
 		getActiveRobot().cycleEndEffector();
 	}
-
+	
+	/**
+	 * Pendant ENTER button
+	 * 
+	 * Functions as a confirmation button for almost all menus.
+	 */
 	public void enter() {
 		RoboticArm r = getActiveRobot();
 		Program p = r.getActiveProg();
@@ -3062,7 +3124,14 @@ public class RobotRun extends PApplet {
 
 		return !isExecutingInstruction() && this.execSingleInst;
 	}// end executeProgram
-
+	
+	/**
+	 * Pendant F1 button
+	 * 
+	 * Function varies amongst menus. A hint label will appear in the pendant
+	 * screen above a function button, which has an action in the current
+	 * menu.
+	 */
 	public void f1() {
 		switch (mode) {
 		case NAV_PROGRAMS:
@@ -3149,7 +3218,14 @@ public class RobotRun extends PApplet {
 
 		updatePendantScreen();
 	}
-
+	
+	/**
+	 * Pendant F2 button
+	 * 
+	 * Function varies amongst menus. A hint label will appear in the pendant
+	 * screen above a function button, which has an action in the current
+	 * menu.
+	 */
 	public void f2() {
 		switch (mode) {
 		case NAV_PROGRAMS:
@@ -3196,7 +3272,14 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
+	/**
+	 * Pendant F3 button
+	 * 
+	 * Function varies amongst menus. A hint label will appear in the pendant
+	 * screen above a function button, which has an action in the current
+	 * menu.
+	 */
 	public void f3() {
 		RoboticArm r = getActiveRobot();
 		
@@ -3340,7 +3423,14 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
+	/**
+	 * Pendant F4 button
+	 * 
+	 * Function varies amongst menus. A hint label will appear in the pendant
+	 * screen above a function button, which has an action in the current
+	 * menu.
+	 */
 	public void f4() {
 		RoboticArm r = getActiveRobot();
 		Program p = r.getActiveProg();
@@ -3543,7 +3633,14 @@ public class RobotRun extends PApplet {
 
 		updatePendantScreen();
 	}
-
+	
+	/**
+	 * Pendant F5 button
+	 * 
+	 * Function varies amongst menus. A hint label will appear in the pendant
+	 * screen above a function button, which has an action in the current
+	 * menu.
+	 */
 	public void f5() {
 		RoboticArm r = getActiveRobot();
 		Instruction inst = r.getActiveInstruction();
@@ -3655,12 +3752,25 @@ public class RobotRun extends PApplet {
 
 		updatePendantScreen();
 	}
-
+	
+	/**
+	 * Camera F button
+	 * 
+	 * Sets the camera to the default position, facing down the negative y-axis
+	 * of the world coordinate system.
+	 */
 	public void FrontView() {
 		// Default view
 		camera.reset();
 	}
-
+	
+	/**
+	 * Pendant FWD button
+	 * 
+	 * Executes instructions in the instruction navigation of a program. If
+	 * step is active, then only one instruction is executed at a time,
+	 * otherwise the entire program is executed.
+	 */
 	public void fwd() {
 		if (mode == ScreenMode.NAV_PROG_INSTR && !isProgramRunning() && isShift()) {
 			// Stop any prior Robot movement
@@ -4397,6 +4507,8 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
+	 * Pendant HOLD button
+	 * 
 	 * Stops all robot motion and program execution.
 	 */
 	public void hold() {
@@ -4405,7 +4517,14 @@ public class RobotRun extends PApplet {
 		activeRobot.halt();
 		setProgramRunning(false);
 	}
-
+	
+	/**
+	 * Pendant I/O button
+	 * 
+	 * If shift is inactive, then this button toggles the state of the active
+	 * robot's active end effector. If shift is active, then this button
+	 * executes the program binded with a macro to this button.
+	 */
 	public void io() {
 		if (isShift()) {
 			if (getSU_macro_bindings()[6] != null) {
@@ -4442,57 +4561,146 @@ public class RobotRun extends PApplet {
 	public boolean isStep() {
 		return step;
 	}
-
+	
+	/**
+	 * Pendant ITEM button
+	 * 
+	 * Not sure what this does ...
+	 */
 	public void item() {
 		if (mode == ScreenMode.NAV_PROG_INSTR) {
 			nextScreen(ScreenMode.JUMP_TO_LINE);
 		}
 	}
 
+	/**
+	 * Pendant -X/(J1) button
+	 * 
+	 * This button jogs the active robot with reference to its active coordinate
+	 * frame. In addition, this button is paired with +X/(J1) in such a way that
+	 * at most one of the two can be active at one time.
+	 */
 	public void joint1_neg() {
 		updateRobotJogMotion(0, -1);
 	}
 
+	/**
+	 * Pendant +X/(J1) button
+	 * 
+	 * This button jogs the active robot with reference to its active coordinate
+	 * frame. In addition, this button is paired with -X/(J1) in such a way that
+	 * at most one of the two can be active at one time.
+	 */
 	public void joint1_pos() {
 		updateRobotJogMotion(0, 1);
 	}
-
+	
+	/**
+	 * Pendant -Y/(J2) button
+	 * 
+	 * This button jogs the active robot with reference to its active coordinate
+	 * frame. In addition, this button is paired with +Y/(J2) in such a way that
+	 * at most one of the two can be active at one time.
+	 */
 	public void joint2_neg() {
 		updateRobotJogMotion(1, -1);
 	}
 
+	/**
+	 * Pendant +Y/(J2) button
+	 * 
+	 * This button jogs the active robot with reference to its active coordinate
+	 * frame. In addition, this button is paired with -Y/(J2) in such a way that
+	 * at most one of the two can be active at one time.
+	 */
 	public void joint2_pos() {
 		updateRobotJogMotion(1, 1);
 	}
-
+	
+	/**
+	 * Pendant -Z/(J3) button
+	 * 
+	 * This button jogs the active robot with reference to its active coordinate
+	 * frame. In addition, this button is paired with +Z/(J3) in such a way that
+	 * at most one of the two can be active at one time.
+	 */
 	public void joint3_neg() {
 		updateRobotJogMotion(2, -1);
 	}
-
+	
+	/**
+	 * Pendant +Z/(J3) button
+	 * 
+	 * This button jogs the active robot with reference to its active coordinate
+	 * frame. In addition, this button is paired with -Z/(J3) in such a way that
+	 * at most one of the two can be active at one time.
+	 */
 	public void joint3_pos() {
 		updateRobotJogMotion(2, 1);
 	}
-
+	
+	/**
+	 * Pendant -XR/(J4) button
+	 * 
+	 * This button jogs the active robot with reference to its active coordinate
+	 * frame. In addition, this button is paired with +XR/(J4) in such a way that
+	 * at most one of the two can be active at one time.
+	 */
 	public void joint4_neg() {
 		updateRobotJogMotion(3, -1);
 	}
-
+	
+	/**
+	 * Pendant +XR/(J4) button
+	 * 
+	 * This button jogs the active robot with reference to its active coordinate
+	 * frame. In addition, this button is paired with -XR/(J4) in such a way that
+	 * at most one of the two can be active at one time.
+	 */
 	public void joint4_pos() {
 		updateRobotJogMotion(3, 1);
 	}
-
+	
+	/**
+	 * Pendant -YR/(J5) button
+	 * 
+	 * This button jogs the active robot with reference to its active coordinate
+	 * frame. In addition, this button is paired with +YR/(J5) in such a way that
+	 * at most one of the two can be active at one time.
+	 */
 	public void joint5_neg() {
 		updateRobotJogMotion(4, -1);
 	}
-
+	
+	/**
+	 * Pendant +YR/(J5) button
+	 * 
+	 * This button jogs the active robot with reference to its active coordinate
+	 * frame. In addition, this button is paired with -YR/(J5) in such a way that
+	 * at most one of the two can be active at one time.
+	 */
 	public void joint5_pos() {
 		updateRobotJogMotion(4, 1);
 	}
-
+	
+	/**
+	 * Pendant -ZR/(J6) button
+	 * 
+	 * This button jogs the active robot with reference to its active coordinate
+	 * frame. In addition, this button is paired with +ZR/(J6) in such a way that
+	 * at most one of the two can be active at one time.
+	 */
 	public void joint6_neg() {
 		updateRobotJogMotion(5, -1);
 	}
-
+	
+	/**
+	 * Pendant +YR/(J5) button
+	 * 
+	 * This button jogs the active robot with reference to its active coordinate
+	 * frame. In addition, this button is paired with -YR/(J5) in such a way that
+	 * at most one of the two can be active at one time.
+	 */
 	public void joint6_pos() {
 		updateRobotJogMotion(5, 1);
 	}
@@ -4632,7 +4840,10 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Transitions the display to the previous screen that the user was on.
+	 * Pulls off the current screen state from the screen state stack and loads
+	 * the previous screen state as the active screen state.
+	 * 
+	 * @return	If a previous screen exists
 	 */
 	public boolean lastScreen() {
 		ScreenState cur = screenStates.peek();
@@ -4666,7 +4877,13 @@ public class RobotRun extends PApplet {
 		
 		return false;
 	}
-
+	
+	/**
+	 * Camera L button
+	 * 
+	 * Sets the camera facing down the negative x-axis of the world coordinate
+	 * frame.
+	 */
 	public void LeftView() {
 		// Left view
 		camera.reset();
@@ -5761,7 +5978,11 @@ public class RobotRun extends PApplet {
 		return (mStr + "\n");
 	}
 
-	// Menu button
+	/**
+	 * Pendant MENU button
+	 * 
+	 * A list of miscellaneous sub menus (frames, marcos, I/O registers).
+	 */
 	public void menu() {
 		nextScreen(ScreenMode.NAV_MAIN_MENU);
 	}
@@ -5797,6 +6018,8 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
+	 * Move to Current button in the edit window
+	 * 
 	 * Updates the current position and orientation of a selected object to the
 	 * inputed values in the edit window.
 	 */
@@ -5818,6 +6041,8 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
+	 * Move to Default button in the edit window
+	 * 
 	 * Updates the current position and orientation of a selected world object
 	 * to that of its default fields.
 	 */
@@ -5838,7 +6063,12 @@ public class RobotRun extends PApplet {
 			DataManagement.saveScenarios(this);
 		}
 	}
-
+	
+	/**
+	 * Pendant MVMU button
+	 * 
+	 * A button used for macro binding
+	 */
 	public void mvmu() {
 		if (getSU_macro_bindings()[2] != null && isShift()) {
 			getSU_macro_bindings()[2].execute();
@@ -6089,43 +6319,103 @@ public class RobotRun extends PApplet {
 		// Load the new screen
 		loadScreen(nextScreen);
 	}
-
+	
+	/**
+	 * Pendant '0' button
+	 * 
+	 * Appends a '0' character to input for the text, number, and point entry
+	 * menus.
+	 */
 	public void num0() {
 		characterInput('0');
 	}
-
+	
+	/**
+	 * Pendant '1' button
+	 * 
+	 * Appends a '1' character to input for the text, number, and point entry
+	 * menus.
+	 */
 	public void num1() {
 		characterInput('1');
 	}
-
+	
+	/**
+	 * Pendant '2' button
+	 * 
+	 * Appends a '2' character to input for the text, number, and point entry
+	 * menus.
+	 */
 	public void num2() {
 		characterInput('2');
 	}
-
+	
+	/**
+	 * Pendant '3' button
+	 * 
+	 * Appends a '3' character to input for the text, number, and point entry
+	 * menus.
+	 */
 	public void num3() {
 		characterInput('3');
 	}
-
+	
+	/**
+	 * Pendant '4' button
+	 * 
+	 * Appends a '4' character to input for the text, number, and point entry
+	 * menus.
+	 */
 	public void num4() {
 		characterInput('4');
 	}
-
+	
+	/**
+	 * Pendant '5' button
+	 * 
+	 * Appends a '5' character to input for the text, number, and point entry
+	 * menus.
+	 */
 	public void num5() {
 		characterInput('5');
 	}
-
+	
+	/**
+	 * Pendant '6' button
+	 * 
+	 * Appends a '6' character to input for the text, number, and point entry
+	 * menus.
+	 */
 	public void num6() {
 		characterInput('6');
 	}
-
+	
+	/**
+	 * Pendant '7' button
+	 * 
+	 * Appends a '7' character to input for the text, number, and point entry
+	 * menus.
+	 */
 	public void num7() {
 		characterInput('7');
 	}
-
+	
+	/**
+	 * Pendant '8' button
+	 * 
+	 * Appends a '8' character to input for the text, number, and point entry
+	 * menus.
+	 */
 	public void num8() {
 		characterInput('8');
 	}
-
+	
+	/**
+	 * Pendant '9' button
+	 * 
+	 * Appends a '9' character to input for the text, number, and point entry
+	 * menus.
+	 */
 	public void num9() {
 		characterInput('9');
 	}
@@ -6250,17 +6540,33 @@ public class RobotRun extends PApplet {
 			p.addInstAt(getActiveRobot().getActiveInstIdx() + i, instr);
 		}
 	}
-
+	
+	/**
+	 * Pendant '.' buttom
+	 * 
+	 * Appends a '.' character to input in the text, number, and point entry
+	 * menus.
+	 */
 	public void period() {
 		characterInput('.');
 	}
-
+	
+	/**
+	 * Pendant POSN button
+	 * 
+	 * A button used for marcos binding.
+	 */
 	public void posn() {
 		if (getSU_macro_bindings()[5] != null && isShift()) {
 			getSU_macro_bindings()[5].execute();
 		}
 	}
-
+	
+	/**
+	 * Pendant PREV button
+	 * 
+	 * Transitions to the previous menu screen, if one exists.
+	 */
 	public void prev() {
 		lastScreen();
 	}
@@ -6791,7 +7097,13 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
+	/**
+	 * Pendant RESET button
+	 * 
+	 * Resets the motion fault flag for the active robot, when the motion fault
+	 * flag is set on.
+	 */
 	public void reset() {
 		if (isShift()) {
 			hold();
@@ -6805,7 +7117,8 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment
+	 * Clears the screen state stack and sets the default screen as the active
+	 * screen.
 	 */
 	public void resetStack() {
 		// Stop a program from executing when transition screens
@@ -6841,7 +7154,13 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
+	/**
+	 * Camera R button
+	 * 
+	 * Sets the camera to point down the positive x-axis of the world
+	 * coordinate frame.
+	 */
 	public void RightView() {
 		// Right view
 		camera.reset();
@@ -6849,7 +7168,11 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Deals with the confirm functionality of the scenario window.
+	 * The scenario window confirmation button
+	 * 
+	 * Deals with the confirm functionality of the scenario window (i.e.
+	 * setting the new name of a scenario, creating a new scenario,
+	 * loading an inactive scenario).
 	 */
 	public void SConfirm() {
 		int ret = UI.updateScenarios(SCENARIOS);
@@ -7034,7 +7357,12 @@ public class RobotRun extends PApplet {
 			NPEx.printStackTrace();
 		}
 	}
-
+	
+	/**
+	 * Pendant SETUP button
+	 * 
+	 * A button used for binding macros.
+	 */
 	public void SETUP() {
 		if (getSU_macro_bindings()[3] != null && isShift()) {
 			getSU_macro_bindings()[3].execute();
@@ -7100,11 +7428,22 @@ public class RobotRun extends PApplet {
 		return true;
 	} // end setUpInstruction
 
-	// toggle shift on/ off and button highlight
+
+	/**
+	 * Pendant SHIFT button
+	 * 
+	 * Toggles the shift state on or off. Shift is required to be on for
+	 * anything involving robot motion or point recording.
+	 */
 	public void shift() {
 		setShift(!shift);
 	}
-
+	
+	/**
+	 * Pendant +% button
+	 * 
+	 * Increases the robot's jog speed.
+	 */
 	public void spddn() {
 		int curSpeed = activeRobot.getLiveSpeed();
 		// Reduce the speed at which the Robot jogs
@@ -7126,7 +7465,12 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
+	/**
+	 * Pendant -% button
+	 * 
+	 * Decreases the robot's jog speed.
+	 */
 	public void spdup() {
 		int curSpeed = activeRobot.getLiveSpeed();
 		// Increase the speed at which the Robot jogs
@@ -7148,14 +7492,24 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
+	/**
+	 * Pendant STATUS button
+	 * 
+	 * A button used for macros.
+	 */
 	public void status() {
 		if (getSU_macro_bindings()[4] != null && isShift()) {
 			getSU_macro_bindings()[4].execute();
 		}
 	}
 
-	// toggle step on/off and button highlight
+	/**
+	 * Pendant STEP button
+	 * 
+	 * Toggles the step state on or off. When step is on, then instructions
+	 * will be executed one at a time as opposed to all at once.
+	 */
 	public void step() {
 		setStep(!isStep());
 	}
@@ -7177,14 +7531,18 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Toggle bounding box display on or off.
+	 * HIDE/SHOW OBBBS button in the miscellaneous window
+	 * 
+	 * Toggles bounding box display on or off.
 	 */
 	public void ToggleOBBs() {
 		UI.updateWindowContentsPositions();
 	}
 
 	/**
-	 * Toggle the second Robot on or off.
+	 * ADD/REMOVE ROBOT button in the miscellaneous window
+	 * 
+	 * Toggles the second Robot on or off.
 	 */
 	public void ToggleRobot() {
 		boolean robotRemoved = UI.toggleSecondRobot();
@@ -7196,19 +7554,35 @@ public class RobotRun extends PApplet {
 		UI.updateWindowContentsPositions();
 		updatePendantScreen();
 	}
-
+	
+	/**
+	 * Pendant TOOl1 button
+	 * 
+	 * A button used for binding marcos.
+	 */
 	public void tool1() {
 		if (getSU_macro_bindings()[0] != null && isShift()) {
 			getSU_macro_bindings()[0].execute();
 		}
 	}
-
+	
+	/**
+	 * Pendant TOOl2 button
+	 * 
+	 * A button used for binding marcos.
+	 */
 	public void tool2() {
 		if (getSU_macro_bindings()[1] != null && isShift()) {
 			getSU_macro_bindings()[1].execute();
 		}
 	}
 
+	/**
+	 * Camera T button
+	 * 
+	 * Sets the camera to point down the negative z-axis of the world
+	 * coordinate frame.
+	 */
 	public void TopView() {
 		// Top view
 		camera.reset();
@@ -7836,6 +8210,8 @@ public class RobotRun extends PApplet {
 	
 	
 	/**
+	 * Update Default button in the edit window
+	 * 
 	 * Updates the default position and orientation of a world object based on
 	 * the input fields in the edit window.
 	 */
