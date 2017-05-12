@@ -33,7 +33,6 @@ import geom.Shape;
 import geom.WorldObject;
 import global.Fields;
 import processing.core.PVector;
-import programming.CallInstPlaceholder;
 import programming.CallInstruction;
 import programming.FrameInstruction;
 import programming.IOInstruction;
@@ -60,7 +59,7 @@ import regs.Register;
  */
 public abstract class DataManagement {
 	
-	protected static String dataDirPath, errDirPath, tmpDirPath, scenarioDirPath;
+	private static String dataDirPath, errDirPath, tmpDirPath, scenarioDirPath;
 	
 	static {
 		dataDirPath = null;
@@ -429,7 +428,7 @@ public abstract class DataManagement {
 			
 			RoboticArm tgt = RobotRun.getInstance().getRobot(tgtRID);
 			
-			inst = new CallInstPlaceholder(tgt, pName);
+			inst = new CallInstruction(tgt, pName);
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 8) {
@@ -602,13 +601,13 @@ public abstract class DataManagement {
 			// Reached the end of src unexpectedly
 			System.err.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
 			EOFEx.printStackTrace();
-			return 3;
+			return 2;
 
 		} catch (IOException IOEx) {
 			// An error occurred with reading from src
 			System.err.printf("%s is corrupt!\n", src.getName());
 			IOEx.printStackTrace();
-			return 2;
+			return 3;
 			
 		} catch (ClassCastException CCEx) {
 			/* An error occurred with casting between objects while loading a
@@ -941,37 +940,111 @@ public abstract class DataManagement {
 		loadRobotData(process.getRobot(1));
 		
 		RoboticArm r = process.getRobot(0);
-		
+		/**
+		 * Loop through all programs and update call instructions, so that they
+		 * reference the correct target program.
+		 */
 		for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
 			Program p = r.getProgram(pdx);
-			/* For all call instructions, replace the placeholder instructions
-			 * with real call instructions */
+			
 			for (int idx = 0; idx < p.size(); ++idx) {
 				Instruction inst = p.getInstAt(idx);
 				
-				if (inst instanceof CallInstPlaceholder) {
-					CallInstPlaceholder ciph = (CallInstPlaceholder)inst;
+				if (inst instanceof CallInstruction) {
+					// Update a top call instruction
+					CallInstruction cInst = (CallInstruction)inst;
 					
-					Program tgt = ciph.tgtDevice.getProgram(ciph.tgtName);
-					p.replaceInstAt(idx, new CallInstruction(ciph.tgtDevice, tgt));
+					if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
+						Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+						cInst.setProg(tgt);
+					}
+					
+				} else if (inst instanceof SelectStatement) {
+					// Update call instructions in a select statement
+					SelectStatement stmt = (SelectStatement)inst;
+					ArrayList<Instruction> instList = stmt.getInstrs();
+					
+					for (Instruction caseInst : instList) {
+						
+						if (caseInst instanceof CallInstruction) {
+							CallInstruction cInst = (CallInstruction)caseInst;
+							
+							if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
+								Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+								cInst.setProg(tgt);
+							}
+						}
+						
+					}
+					
+				} else if (inst instanceof IfStatement) {
+					// Update a call instruction in a if statement
+					IfStatement stmt = (IfStatement)inst;
+					Instruction subInst = stmt.getInstr();
+					
+					if (subInst instanceof CallInstruction) {
+						CallInstruction cInst = (CallInstruction)subInst;
+						
+						if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
+							Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+							cInst.setProg(tgt);
+						}
+					}
 				}
 			}
 		}
 		
 		r = process.getRobot(1);
-		
+		/**
+		 * Loop through all programs and update call instructions, so that they
+		 * reference the correct target program.
+		 */
 		for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
 			Program p = r.getProgram(pdx);
-			/* For all call instructions, replace the placeholder instructions
-			 * with real call instructions */
+			
 			for (int idx = 0; idx < p.size(); ++idx) {
 				Instruction inst = p.getInstAt(idx);
 				
-				if (inst instanceof CallInstPlaceholder) {
-					CallInstPlaceholder ciph = (CallInstPlaceholder)inst;
+				if (inst instanceof CallInstruction) {
+					// Update a top call instruction
+					CallInstruction cInst = (CallInstruction)inst;
 					
-					Program tgt = ciph.tgtDevice.getProgram(ciph.tgtName);
-					p.replaceInstAt(idx, new CallInstruction(ciph.tgtDevice, tgt));
+					if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
+						Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+						cInst.setProg(tgt);
+					}
+					
+				} else if (inst instanceof SelectStatement) {
+					// Update call instructions in a select statement
+					SelectStatement stmt = (SelectStatement)inst;
+					ArrayList<Instruction> instList = stmt.getInstrs();
+					
+					for (Instruction caseInst : instList) {
+						
+						if (caseInst instanceof CallInstruction) {
+							CallInstruction cInst = (CallInstruction)caseInst;
+							
+							if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
+								Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+								cInst.setProg(tgt);
+							}
+						}
+						
+					}
+					
+				} else if (inst instanceof IfStatement) {
+					// Update call instructions in a if statement
+					IfStatement stmt = (IfStatement)inst;
+					Instruction subInst = stmt.getInstr();
+					
+					if (subInst instanceof CallInstruction) {
+						CallInstruction cInst = (CallInstruction)subInst;
+						
+						if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
+							Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+							cInst.setProg(tgt);
+						}
+					}
 				}
 			}
 		}

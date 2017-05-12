@@ -515,12 +515,12 @@ public class RobotRun extends PApplet {
 						contents.getColumnIdx(), active_index, contents.getRenderStart());
 			}
 			break;
+		case NAV_MAIN_MENU:
 		case NAV_DATA:
 		case SET_MACRO_PROG:
 		case NAV_IOREG:
 			contents.moveDown(shift);
 			break;
-		case NAV_MAIN_MENU:
 		case EDIT_IOREG:
 		case NAV_INSTR_MENU:
 		case SELECT_FRAME_MODE:
@@ -769,12 +769,12 @@ public class RobotRun extends PApplet {
 						contents.getColumnIdx(), active_index, contents.getRenderStart());
 			}
 			break;
+		case NAV_MAIN_MENU:
 		case NAV_DATA:
 		case SET_MACRO_PROG:
 		case NAV_IOREG:
 			contents.moveUp(isShift());
 			break;
-		case NAV_MAIN_MENU:
 		case EDIT_IOREG:
 		case NAV_INSTR_MENU:
 		case SELECT_FRAME_MODE:
@@ -1822,16 +1822,16 @@ public class RobotRun extends PApplet {
 		switch (mode) {
 		// Main menu
 		case NAV_MAIN_MENU:
-			if (options.getLineIdx() == 0) { // Frames
+			if (contents.getLineIdx() == 0) { // Frames
 				nextScreen(ScreenMode.SELECT_FRAME_MODE);
 
-			} else if (options.getLineIdx() == 1) { // Macros
+			} else if (contents.getLineIdx() == 1) { // Macros
 				nextScreen(ScreenMode.NAV_MACROS);
 
-			} else if (options.getLineIdx() == 2) { // Manual Functions
+			} else if (contents.getLineIdx() == 2) { // Manual Functions
 				nextScreen(ScreenMode.NAV_MF_MACROS);
 
-			} else if (options.getLineIdx() == 3) {
+			} else if (contents.getLineIdx() == 3) {
 				nextScreen(ScreenMode.NAV_IOREG);
 			}
 
@@ -2009,7 +2009,6 @@ public class RobotRun extends PApplet {
 		case NAV_PROGRAMS:
 			if (getActiveRobot().numOfPrograms() != 0) {
 				getActiveRobot().setActiveInstIdx(0);
-				//contents.reset();
 				nextScreen(ScreenMode.NAV_PROG_INSTR);
 			}
 			break;
@@ -2076,8 +2075,16 @@ public class RobotRun extends PApplet {
 				break;
 			case 6: // RobotCall
 				newRobotCallInstruction();
-				editIdx = getInactiveRobot().RID;
-				switchScreen(ScreenMode.SET_CALL_PROG);
+				RoboticArm inactive = getInactiveRobot();
+				
+				if (inactive.numOfPrograms() > 0) {
+					editIdx = getInactiveRobot().RID;
+					switchScreen(ScreenMode.SET_CALL_PROG);
+					
+				} else {
+					// No programs exist in the inactive robot
+					lastScreen();
+				}
 			}
 
 			break;
@@ -2333,9 +2340,16 @@ public class RobotRun extends PApplet {
 				editIdx = activeRobot.RID;
 				switchScreen(ScreenMode.SET_CALL_PROG);
 			} else {
-				stmt.setInstr(new CallInstruction(getInactiveRobot()));
-				editIdx = getInactiveRobot().RID;
-				switchScreen(ScreenMode.SET_CALL_PROG);
+				RoboticArm inactive = getInactiveRobot();
+				stmt.setInstr(new CallInstruction(inactive));
+				
+				if (inactive.numOfPrograms() > 0) {
+					switchScreen(ScreenMode.SET_CALL_PROG);
+					
+				} else {
+					// No programs from which to choose
+					lastScreen();
+				}
 			}
 
 			break;
@@ -2501,7 +2515,7 @@ public class RobotRun extends PApplet {
 
 			if (options.getLineIdx() == 0) {
 				s.getInstrs().set(i, new JumpInstruction());
-			} else if (options.getLineIdx() == 0) {
+			} else if (options.getLineIdx() == 1) {
 				s.getInstrs().set(i, new CallInstruction(activeRobot));
 			} else {
 				s.getInstrs().set(i, new CallInstruction(getInactiveRobot()));
@@ -2710,28 +2724,28 @@ public class RobotRun extends PApplet {
 
 			lastScreen();
 			break;
-
-			// Call instruction edit
 		case SET_CALL_PROG:
-			Instruction cInst = r.getInstToEdit( r.getActiveInstIdx() );
-			RoboticArm tgtDevice = ROBOTS.get( editIdx );
-			Program tgt = tgtDevice.getProgram( options.getActiveIndex() );
+			Instruction inst = r.getInstToEdit( r.getActiveInstIdx() );
+			CallInstruction cInst;
 			
-			if (cInst instanceof IfStatement) {
-				IfStatement ifStmt = (IfStatement) cInst;
-				((CallInstruction) ifStmt.getInstr()).setProg(tgt);
-			} else if (cInst instanceof SelectStatement) {
-				SelectStatement sStmt = (SelectStatement) cInst;
-				CallInstruction c = (CallInstruction) sStmt.getInstrs().get(editIdx);
-				c.setProg(tgt);
+			// Get the call instruction
+			if (inst instanceof IfStatement) {
+				cInst = (CallInstruction) ((IfStatement) inst).getInstr();
+				
+			} else if (inst instanceof SelectStatement) {
+				SelectStatement sStmt = (SelectStatement) inst;
+				cInst = (CallInstruction) sStmt.getInstrs().get(editIdx);
+				
 			} else {
-				CallInstruction call = (CallInstruction) cInst;
-				call.setProg(tgt);
+				cInst =  (CallInstruction) inst;
 			}
+			
+			// Set the program of the call instruction
+			Program tgt = cInst.getTgtDevice().getProgram( options.getActiveIndex() );
+			cInst.setProg(tgt);
 
 			lastScreen();
 			break;
-
 			// Macro edit screens
 		case SET_MACRO_PROG:
 			if (edit_macro == null) {
@@ -3926,7 +3940,6 @@ public class RobotRun extends PApplet {
 					if (stmt.getInstr() instanceof JumpInstruction) {
 						nextScreen(ScreenMode.SET_JUMP_TGT);
 					} else if (stmt.getInstr() instanceof CallInstruction) {
-						editIdx = ((CallInstruction) stmt.getInstr()).getTgtDevice().RID;
 						nextScreen(ScreenMode.SET_CALL_PROG);
 					}
 				}
@@ -3946,7 +3959,6 @@ public class RobotRun extends PApplet {
 					if (stmt.getInstr() instanceof JumpInstruction) {
 						nextScreen(ScreenMode.SET_JUMP_TGT);
 					} else if (stmt.getInstr() instanceof CallInstruction) {
-						editIdx = ((CallInstruction) stmt.getInstr()).getTgtDevice().RID;
 						nextScreen(ScreenMode.SET_CALL_PROG);
 					}
 				}
@@ -3969,7 +3981,6 @@ public class RobotRun extends PApplet {
 				if (toExec instanceof JumpInstruction) {
 					nextScreen(ScreenMode.SET_JUMP_TGT);
 				} else if (toExec instanceof CallInstruction) {
-					editIdx = ((CallInstruction) toExec).getTgtDevice().RID;
 					nextScreen(ScreenMode.SET_CALL_PROG);
 				}
 			}
@@ -4469,7 +4480,7 @@ public class RobotRun extends PApplet {
 				break;
 			idx += contents.get(i).size();
 		}
-
+		System.out.println(idx);
 		return idx;
 	}
 
@@ -5558,70 +5569,45 @@ public class RobotRun extends PApplet {
 		;
 
 		switch (mode) {
-		// Main menu
-		case NAV_MAIN_MENU:
-			active_index = 0;
-			contents.setColumnIdx(0);
-			break;
 		case NAV_IOREG:
 			contents.setColumnIdx(1);
 			break;
 			// Frames
 		case ACTIVE_FRAMES:
-			contents.setLineIdx(0);
 			contents.setColumnIdx(1);
 			workingText = new StringBuilder(Integer.toString(getActiveRobot().getActiveToolFrame() + 1));
 			break;
-		case SELECT_FRAME_MODE:
-			active_index = 0;
-			break;
-		case NAV_TOOL_FRAMES:
-		case NAV_USER_FRAMES:
-			contents.setLineIdx(0);
-			contents.setColumnIdx(0);
-			break;
 		case TEACH_3PT_USER:
 		case TEACH_4PT:
-			contents.setLineIdx(-1);
-			contents.setColumnIdx(-1);
-			break;
 		case TEACH_3PT_TOOL:
 		case TEACH_6PT:
-			contents.setLineIdx(-1);
-			contents.setColumnIdx(-1);
-			break;
 		case TFRAME_DETAIL:
 		case UFRAME_DETAIL:
 			contents.setLineIdx(-1);
 			contents.setColumnIdx(-1);
 			break;
-			// Programs and instructions
 		case NAV_PROGRAMS:
-			contents.setLineIdx(getActiveRobot().getActiveProgIdx());
-			contents.setColumnIdx(0);
-			getActiveRobot().setActiveInstIdx(0);
+			RoboticArm r = getActiveRobot();
+			r.setActiveProgIdx(0);
+			r.setActiveInstIdx(0);
+			
+			contents.setLineIdx( r.getActiveProgIdx() );
 			break;
 		case PROG_CREATE:
 			contents.setLineIdx(1);
-			contents.setColumnIdx(0);
-			workingText = new StringBuilder("\0");
 			break;
 		case PROG_RENAME:
 			getActiveRobot().setActiveProgIdx(prev.conLnIdx);
 			contents.setLineIdx(1);
-			contents.setColumnIdx(0);
 			workingText = new StringBuilder(getActiveRobot().getActiveProg().getName());
 			break;
 		case PROG_COPY:
 			getActiveRobot().setActiveProgIdx(prev.conLnIdx);
 			contents.setLineIdx(1);
-			contents.setColumnIdx(0);
-			workingText = new StringBuilder("\0");
-			break;
-		case NAV_PROG_INSTR:
 			break;
 		case SET_CALL_PROG:
 			contents.setLineIdx( prev.conLnIdx );
+			contents.setRenderStart( prev.conRenIdx );
 			contents.setColumnIdx( prev.conColIdx );
 			break;
 		case SELECT_INSTR_INSERT:
@@ -5746,20 +5732,18 @@ public class RobotRun extends PApplet {
 			Program p = getActiveRobot().getActiveProg();
 			int size = p.getNumOfInst() - 1;
 			getActiveRobot().setActiveInstIdx(max(0, min(getActiveRobot().getActiveInstIdx(), size)));
-			contents.setColumnIdx(0);
 			break;
 
 			// Macros
 		case NAV_MACROS:
-			contents.setLineIdx(active_index);
+			contents.setLineIdx( prev.conLnIdx );
 			break;
 		case NAV_DREGS:
 			loadDataRegisters();
-			contents.setLineIdx(active_index);
 			break;
 		case NAV_PREGS:
 			loadPositionRegisters();
-			contents.setLineIdx(active_index);
+			options.setLineIdx(-1);
 			break;
 		case DIRECT_ENTRY_TOOL:
 			contents.setColumnIdx(1);
@@ -7743,6 +7727,13 @@ public class RobotRun extends PApplet {
 		contents.clear();
 
 		switch (mode) {
+		// Main menu and submenus
+		case NAV_MAIN_MENU:
+			contents.addLine("1 Frames");
+			contents.addLine("2 Macros");
+			contents.addLine("3 Manual Fncts");
+			contents.addLine("4 I/O Registers");
+			break;
 		// Program list navigation/ edit
 		case NAV_PROGRAMS:
 		case SET_MACRO_PROG:
@@ -7920,14 +7911,6 @@ public class RobotRun extends PApplet {
 		options.clear();
 
 		switch (mode) {
-		// Main menu and submenus
-		case NAV_MAIN_MENU:
-			options.addLine("1 Frames");
-			options.addLine("2 Macros");
-			options.addLine("3 Manual Fncts");
-			options.addLine("4 I/O Registers");
-			break;
-
 		case NAV_PROG_INSTR:
 			Program p = activeRobot.getActiveProg();
 			Instruction inst = activeRobot.getActiveInstruction();
@@ -8036,18 +8019,27 @@ public class RobotRun extends PApplet {
 			loadInstrEdit(mode);
 			break;
 		case SET_CALL_PROG:
-			RoboticArm r = ROBOTS.get(editIdx);
+			RoboticArm r = getActiveRobot();
+			inst = r.getInstToEdit( r.getActiveInstIdx() );
+			CallInstruction cInst;
 			
-			if (r == null) {
-				options.addLine( new DisplayLine(-1, 0, "Invalid editIdx") );
+			// Get the call instruction
+			if (inst instanceof IfStatement) {
+				cInst = (CallInstruction) ((IfStatement) inst).getInstr();
+				
+			} else if (inst instanceof SelectStatement) {
+				SelectStatement sStmt = (SelectStatement) inst;
+				cInst = (CallInstruction) sStmt.getInstrs().get(editIdx);
 				
 			} else {
-				// List the robot's program names
-				options.setLines( loadPrograms( ROBOTS.get(editIdx) ) );
+				cInst =  (CallInstruction) inst;
 			}
+						
+			// List the robot's program names
+			options.setLines( loadPrograms( cInst.getTgtDevice() ) );
 			
 			break;
-			// Insert instructions (non-movemet)
+			// Insert instructions (non-movement)
 		case SELECT_INSTR_INSERT:
 			options.addLine("1. I/O");
 			options.addLine("2. Frames");
