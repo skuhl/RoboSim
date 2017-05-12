@@ -1453,7 +1453,7 @@ public class RoboticArm {
 				
 				if (Fields.DEBUG) {
 					PVector rangeBounds = getJointRange(joint);
-					System.out.printf("Invalid angle: J[%d] = %4.3f -> %4.3f : [%4.3f - %4.3f]\n", joint, getJointAngles()[joint],
+					System.err.printf("Invalid angle: J[%d] = %4.3f -> %4.3f : [%4.3f - %4.3f]\n", joint, getJointAngles()[joint],
 							destAngles[joint], rangeBounds.x, rangeBounds.y);
 				}
 				

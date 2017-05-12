@@ -1410,7 +1410,7 @@ public class WGUI implements ControlListener {
 				 
 			 } else if (val != null) {
 				 // Invalid entry in the dropdown list
-				 System.out.printf("Invalid class type: %d!\n", val.getClass());
+				 System.err.printf("Invalid class type: %d!\n", val.getClass());
 			 }
 		 }
 
