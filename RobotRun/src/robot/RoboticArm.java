@@ -15,6 +15,7 @@ import geom.BoundingBox;
 import geom.Part;
 import geom.Point;
 import geom.RMath;
+import geom.RMatrix;
 import geom.RQuaternion;
 import geom.WorldObject;
 import global.Fields;
@@ -1253,11 +1254,11 @@ public class RoboticArm {
 	 */
 	public float[][] getOrientationMatrix(float[][] frame) {
 		float[][] m = getOrientationMatrix();
-		RealMatrix A = new Array2DRowRealMatrix(RMath.floatToDouble(m, 3, 3));
-		RealMatrix B = new Array2DRowRealMatrix(RMath.floatToDouble(frame, 3, 3));
-		RealMatrix AB = A.multiply(B.transpose());
+		RMatrix A = new RMatrix(m);
+		RMatrix B = new RMatrix(frame);
+		RMatrix AB = (RMatrix)A.multiply(B.transpose());
 
-		return RMath.doubleToFloat(AB.getData(), 3, 3);
+		return AB.getFloatData();
 	}
 
 	/**

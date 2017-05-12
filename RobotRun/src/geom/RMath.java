@@ -73,11 +73,12 @@ public class RMath {
 	}
 
 	// converts a double array to a float array
-	public static float[][] doubleToFloat(double[][] m, int l, int w) {
-		float[][] r = new float[l][w];
+	public static float[][] doubleToFloat(double[][] m) {
+		if(m.length <= 0) return null;
+		float[][] r = new float[m.length][m[0].length];
 
-		for (int i = 0; i < l; i += 1) {
-			for (int j = 0; j < w; j += 1) {
+		for (int i = 0; i < m.length; i += 1) {
+			for (int j = 0; j < m[0].length; j += 1) {
 				r[i][j] = (float) m[i][j];
 			}
 		}
@@ -147,11 +148,12 @@ public class RMath {
 	}
 
 	// converts a float array to a double array
-	public static double[][] floatToDouble(float[][] m, int l, int w) {
-		double[][] r = new double[l][w];
+	public static double[][] floatToDouble(float[][] m) {
+		if(m.length <= 0) return null;
+		double[][] r = new double[m.length][m[0].length];
 
-		for (int i = 0; i < l; i += 1) {
-			for (int j = 0; j < w; j += 1) {
+		for (int i = 0; i < m.length; i += 1) {
+			for (int j = 0; j < m[0].length; j += 1) {
 				r[i][j] = m[i][j];
 			}
 		}
@@ -224,8 +226,8 @@ public class RMath {
 			 * 
 			 * System.out.printf("%s\n", Arrays.toString(J)); } /
 			 **/
-			RealMatrix m = new Array2DRowRealMatrix(floatToDouble(J, 7, 6));
-			RealMatrix JInverse = new SingularValueDecomposition(m).getSolver().getInverse();
+			RMatrix m = new RMatrix(J);
+			RMatrix JInverse = m.getSVD();
 
 			// calculate and apply joint angular changes
 			float[] dAngle = { 0, 0, 0, 0, 0, 0 };
@@ -297,6 +299,23 @@ public class RMath {
 
 		return inverse;
 	}
+	
+	public static float[][] mat4fMultiply(float[][] m1, float[][] m2) {
+		float[][] mr = new float[4][4];
+		
+		if(m1.length != 4 || m2.length != 4 || m1[0].length != 4 || m2[0].length != 4) {
+			return null;
+		}
+		
+		for(int i = 0; i < 4; i += 1) {
+			mr[0][i] = m1[0][0]*m2[0][i] + m1[0][1]*m2[1][i] + m1[0][2]*m2[2][i] + m1[0][3]*m2[3][i];
+			mr[1][i] = m1[1][0]*m2[0][i] + m1[1][1]*m2[1][i] + m1[1][2]*m2[2][i] + m1[1][3]*m2[3][i];
+			mr[2][i] = m1[2][0]*m2[0][i] + m1[2][1]*m2[1][i] + m1[2][2]*m2[2][i] + m1[2][3]*m2[3][i];
+			mr[3][i] = m1[3][0]*m2[0][i] + m1[3][1]*m2[1][i] + m1[3][2]*m2[2][i] + m1[3][3]*m2[3][i];
+		}
+		
+		return mr;
+	}
 
 	// calculates euler angles from rotation matrix
 	public static PVector matrixToEuler(float[][] r) {
@@ -324,7 +343,7 @@ public class RMath {
 		wpr = new PVector(xRot1, yRot1, zRot1);
 		return wpr;
 	}
-
+	
 	// calculates quaternion from rotation matrix
 	public static RQuaternion matrixToQuat(float[][] r) {
 		float[] limboQ = new float[4];
@@ -483,11 +502,11 @@ public class RMath {
 		r[2][1] = z * y * t + x * s;
 		r[2][2] = z * z * t + c;
 
-		RealMatrix M = new Array2DRowRealMatrix(floatToDouble(m, 3, 3));
-		RealMatrix R = new Array2DRowRealMatrix(floatToDouble(r, 3, 3));
-		RealMatrix MR = M.multiply(R);
+		RMatrix M = new RMatrix(m);
+		RMatrix R = new RMatrix(r);
+		RMatrix MR = M.multiply(R);
 
-		return doubleToFloat(MR.getData(), 3, 3);
+		return MR.getFloatData();
 	}
 
 	/**
@@ -525,23 +544,6 @@ public class RMath {
 		transform[3][3] = 1;
 
 		return transform;
-	}
-	
-	public static float[][] mat4fMultiply(float[][] m1, float[][] m2) {
-		float[][] mr = new float[4][4];
-		
-		if(m1.length != 4 || m2.length != 4 || m1[0].length != 4 || m2[0].length != 4) {
-			return null;
-		}
-		
-		for(int i = 0; i < 4; i += 1) {
-			mr[0][i] = m1[0][0]*m2[0][i] + m1[0][1]*m2[1][i] + m1[0][2]*m2[2][i] + m1[0][3]*m2[3][i];
-			mr[1][i] = m1[1][0]*m2[0][i] + m1[1][1]*m2[1][i] + m1[1][2]*m2[2][i] + m1[1][3]*m2[3][i];
-			mr[2][i] = m1[2][0]*m2[0][i] + m1[2][1]*m2[1][i] + m1[2][2]*m2[2][i] + m1[2][3]*m2[3][i];
-			mr[3][i] = m1[3][0]*m2[0][i] + m1[3][1]*m2[1][i] + m1[3][2]*m2[2][i] + m1[3][3]*m2[3][i];
-		}
-		
-		return mr;
 	}
 	
 	/*

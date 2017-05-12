@@ -7,6 +7,7 @@ import org.apache.commons.math3.linear.SingularValueDecomposition;
 
 import geom.Point;
 import geom.RMath;
+import geom.RMatrix;
 import geom.RQuaternion;
 import global.Fields;
 import processing.core.PApplet;
@@ -60,25 +61,25 @@ public abstract class Frame {
 
 			if (counter == 0) {
 				/* Case 3: C = point 1 */
-				Ar = new Array2DRowRealMatrix(RMath.floatToDouble(ori2, 3, 3));
-				Br = new Array2DRowRealMatrix(RMath.floatToDouble(ori3, 3, 3));
-				Cr = new Array2DRowRealMatrix(RMath.floatToDouble(ori1, 3, 3));
+				Ar = new RMatrix((ori2));
+				Br = new RMatrix((ori3));
+				Cr = new RMatrix((ori1));
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos1, 2), PVector.add(pos2, pos3));
 
 			} else if (counter == 1) {
 				/* Case 2: C = point 2 */
-				Ar = new Array2DRowRealMatrix(RMath.floatToDouble(ori3, 3, 3));
-				Br = new Array2DRowRealMatrix(RMath.floatToDouble(ori1, 3, 3));
-				Cr = new Array2DRowRealMatrix(RMath.floatToDouble(ori2, 3, 3));
+				Ar = new RMatrix((ori3));
+				Br = new RMatrix((ori1));
+				Cr = new RMatrix((ori2));
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos2, 2), PVector.add(pos3, pos1));
 
 			} else if (counter == 2) {
 				/* Case 1: C = point 3 */
-				Ar = new Array2DRowRealMatrix(RMath.floatToDouble(ori1, 3, 3));
-				Br = new Array2DRowRealMatrix(RMath.floatToDouble(ori2, 3, 3));
-				Cr = new Array2DRowRealMatrix(RMath.floatToDouble(ori3, 3, 3));
+				Ar = new RMatrix((ori1));
+				Br = new RMatrix((ori2));
+				Cr = new RMatrix((ori3));
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos3, 2), PVector.add(pos1, pos2));
 
@@ -109,13 +110,13 @@ public abstract class Frame {
 
 			RealVector b = new ArrayRealVector(new double[] { vt.x, vt.y, vt.z }, false);
 			/* Ar + Br - 2Cr */
-			RealMatrix R = ( ( Ar.add(Br) ).subtract( Cr.scalarMultiply(2) ) ).transpose();
+			RMatrix R = (RMatrix)(Ar.add(Br)).subtract(Cr.scalarMultiply(2)).transpose();
 
 			/* (R ^ -1) * b */
 			avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
 
 			if (Fields.DEBUG) {
-				System.out.printf("\n%s\n\n", RobotRun.getInstance().matrixToString( RMath.doubleToFloat(R.getData(), 3, 3) ));
+				System.out.printf("\n%s\n\n", RobotRun.getInstance().matrixToString(R.getFloatData()));
 			}
 		}
 
@@ -181,11 +182,11 @@ public abstract class Frame {
 		axesRefWorld[2][1] = zAxis.y;
 		axesRefWorld[2][2] = zAxis.z;
 
-		RealMatrix axes = new Array2DRowRealMatrix(RMath.floatToDouble(axesRefWorld, 3, 3)),
-				worldAxes =  new Array2DRowRealMatrix(RMath.floatToDouble(Fields.WORLD_AXES, 3, 3)),
-				invWorldAxes = (new SingularValueDecomposition(worldAxes)).getSolver().getInverse();
+		RMatrix axes = new RMatrix((axesRefWorld)),
+				worldAxes =  new RMatrix((Fields.WORLD_AXES)),
+				invWorldAxes = worldAxes.getSVD();
 		// Remove the World frame transformation from the axes vectors
-		return RMath.doubleToFloat(invWorldAxes.multiply(axes).getData(), 3, 3);
+		return invWorldAxes.multiply(axes).getFloatData();
 	}
 
 	/**
