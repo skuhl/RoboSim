@@ -1,8 +1,9 @@
 package geom;
 
+import java.util.Arrays;
+
 import processing.core.PConstants;
 import processing.core.PVector;
-import robot.RobotRun;
 
 public class Point  {
 	// X, Y, Z
@@ -126,10 +127,10 @@ public class Point  {
 		case 9:   vec.x = -value;
 		orientation = RMath.eulerToQuat(vec);
 		break;
-		case 10:  vec.z = -value;
+		case 10:  vec.z = value;
 		orientation = RMath.eulerToQuat(vec);
 		break;
-		case 11:  vec.y = value;
+		case 11:  vec.y = -value;
 		orientation = RMath.eulerToQuat(vec);
 		break;
 		default:
@@ -151,7 +152,7 @@ public class Point  {
 			pos = new PVector(Float.NaN, Float.NaN, Float.NaN);
 		} else {
 			// Display in terms of the World Frame
-			pos = RobotRun.convertNativeToWorld(position);
+			pos = RMath.vToWorld(position);
 		}
 
 		// Convert Quaternion to Euler Angles
@@ -174,9 +175,9 @@ public class Point  {
 		entries[3][0] = "W: ";
 		entries[3][1] = String.format("%4.3f", -angles.x);
 		entries[4][0] = "P: ";
-		entries[4][1] = String.format("%4.3f", -angles.z);
+		entries[4][1] = String.format("%4.3f", angles.z);
 		entries[5][0] = "R: ";
-		entries[5][1] = String.format("%4.3f", angles.y);
+		entries[5][1] = String.format("%4.3f", -angles.y);
 
 		return entries;
 	}
@@ -236,6 +237,7 @@ public class Point  {
 
 	@Override
 	public String toString() {
-		return String.format("P: { %s, %s }", position, orientation);
+		return String.format("P=%s O=%s J=%s", position, orientation,
+				Arrays.toString(angles));
 	}
 } // end Point class

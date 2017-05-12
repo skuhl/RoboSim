@@ -8,7 +8,7 @@ import geom.Point;
 import global.Fields;
 import robot.RobotRun;
 import robot.RoboticArm;
-import window.DisplayLine;
+import screen.DisplayLine;
 
 public class Program implements Iterable<Instruction> {
 	/**

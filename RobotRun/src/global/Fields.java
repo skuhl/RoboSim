@@ -25,11 +25,25 @@ public abstract class Fields {
 	public static final int FTYPE_USER = 1;
 	
 	/**
-	 * The rotation matrix representing the world axes orientation.
+	 * The rotation matrix representing the world coordinate system in terms of
+	 * the native coordinate system.
 	 */
-	public static final float[][] WORLD_AXES = new float[][] { { -1, 0,  0 },
-															   {  0, 0,  1 },
-															   {  0, -1, 0 } };
+	public static final float[][] WORLD_AXES = new float[][] {
+		{ -1,  0,  0 },
+		{  0,  0,  1 },
+		{  0, -1,  0 }
+		
+	};
+	
+	/**
+	 * The rotation matrix representing the native coordinate system in terms
+	 * of the world coordinate system.
+	 */
+	public static final float[][] NATIVE_AXES = new float[][] {
+		{ -1,  0,  0 },
+		{  0,  0, -1 },
+		{  0,  1,  0 }
+	};
 	
 	public static final int SMALL_BUTTON = 35;
 	public static final int LARGE_BUTTON = 50;

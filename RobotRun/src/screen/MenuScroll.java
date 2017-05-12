@@ -1,4 +1,4 @@
-package window;
+package screen;
 
 import java.util.ArrayList;
 
@@ -55,6 +55,36 @@ public class MenuScroll {
 	
 	public DisplayLine get(int i) {
 		return lines.get(i);
+	}
+	
+	/**
+	 * TODO comment
+	 * 
+	 * @return
+	 */
+	public DisplayLine getActiveLine() {
+		if (lineIdx >= 0 && lineIdx < lines.size()) {
+			return lines.get(lineIdx);
+		}
+		
+		// No active line
+		return null;
+	}
+	
+	/**
+	 * TODO comment
+	 * 
+	 * @return
+	 */
+	public int getActiveIndex() {
+		
+		DisplayLine active = getActiveLine();
+		
+		if (active != null) {
+			return active.getItemIdx();
+		}
+		
+		return -1;
 	}
 	
 	public int getColumnIdx() {
@@ -194,6 +224,7 @@ public class MenuScroll {
 	}
 	
 	public void reset() {
+		lines.clear();
 		lineIdx = 0;
 		columnIdx = 0;
 		renderStart = 0;
@@ -232,17 +263,16 @@ public class MenuScroll {
 		return this;
 	}
 	
-	public MenuScroll setContents(ArrayList<DisplayLine> c) {
-		lines = c;
-		return this;
-	}
-	
 	public void setColumnIdx(int i) {
 		columnIdx = i;
 	}
 
 	public void setLineIdx(int i) {
 		lineIdx = i;
+	}
+	
+	public void setRenderStart(int renStart) {
+		renderStart = renStart;
 	}
 	
 	public int size() {

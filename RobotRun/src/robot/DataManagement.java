@@ -31,6 +31,7 @@ import geom.Shape;
 import geom.WorldObject;
 import global.Fields;
 import processing.core.PVector;
+import programming.CallInstPlaceholder;
 import programming.CallInstruction;
 import programming.FrameInstruction;
 import programming.IOInstruction;
@@ -383,10 +384,11 @@ public abstract class DataManagement {
 		} else if (instType == 7) {
 			boolean isCommented = in.readBoolean();
 			int tgtRID = in.readInt();
-			int pdx = in.readInt();
+			String pName = in.readUTF();
 			
 			RoboticArm tgt = RobotRun.getInstance().getRobot(tgtRID);
-			inst = new CallInstruction(tgt, pdx);
+			
+			inst = new CallInstPlaceholder(tgt, pName);
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 8) {
@@ -538,7 +540,7 @@ public abstract class DataManagement {
 			DataInputStream dataIn = new DataInputStream(in);
 			// Read the number of programs stored in src
 			int size = Math.max(0, Math.min(dataIn.readInt(), 200));
-
+			
 			while(size-- > 0) {
 				// Read each program from src
 				robot.addProgram( loadProgram(robot, dataIn) );
@@ -546,6 +548,7 @@ public abstract class DataManagement {
 
 			dataIn.close();
 			in.close();
+			
 			return 0;
 
 		} catch (FileNotFoundException FNFEx) {
@@ -572,6 +575,12 @@ public abstract class DataManagement {
 			System.err.printf("%s is corrupt!\n", src.getName());
 			CCEx.printStackTrace();
 			return 4;
+			
+		} catch (NegativeArraySizeException NASEx) {
+			// Issue with loading program points
+			System.err.printf("%s is corrupt!\n", src.getName());
+			NASEx.printStackTrace();
+			return 5;
 		}
 	}
 	
@@ -871,6 +880,42 @@ public abstract class DataManagement {
 		loadScenarioBytes(process, scenarioDirPath);
 		loadRobotData(process.getRobot(0));
 		loadRobotData(process.getRobot(1));
+		
+		RoboticArm r = process.getRobot(0);
+		
+		for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
+			Program p = r.getProgram(pdx);
+			/* For all call instructions, replace the placeholder instructions
+			 * with real call instructions */
+			for (int idx = 0; idx < p.size(); ++idx) {
+				Instruction inst = p.getInstAt(idx);
+				
+				if (inst instanceof CallInstPlaceholder) {
+					CallInstPlaceholder ciph = (CallInstPlaceholder)inst;
+					
+					Program tgt = ciph.tgtDevice.getProgram(ciph.tgtName);
+					p.replaceInstAt(idx, new CallInstruction(ciph.tgtDevice, tgt));
+				}
+			}
+		}
+		
+		r = process.getRobot(1);
+		
+		for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
+			Program p = r.getProgram(pdx);
+			/* For all call instructions, replace the placeholder instructions
+			 * with real call instructions */
+			for (int idx = 0; idx < p.size(); ++idx) {
+				Instruction inst = p.getInstAt(idx);
+				
+				if (inst instanceof CallInstPlaceholder) {
+					CallInstPlaceholder ciph = (CallInstPlaceholder)inst;
+					
+					Program tgt = ciph.tgtDevice.getProgram(ciph.tgtName);
+					p.replaceInstAt(idx, new CallInstruction(ciph.tgtDevice, tgt));
+				}
+			}
+		}
 	}
 
 	private static Object loadWorldObject(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
@@ -1229,7 +1274,12 @@ public abstract class DataManagement {
 				out.writeInt(c_inst.getTgtDevice().RID);
 			}
 			
-			out.writeInt(c_inst.getProgIdx());
+			if (c_inst.getProg() == null) {
+				out.writeUTF("N/A");
+				
+			} else {
+				out.writeUTF( c_inst.getProg().getName() );
+			}
 
 		} else if (inst instanceof RegisterStatement) {
 			RegisterStatement rs = (RegisterStatement)inst;

@@ -3,39 +3,34 @@ import robot.RobotRun;
 import robot.RoboticArm;
 
 public class CallInstruction extends Instruction {
-	int progIdx;
-	RoboticArm tgtDevice;
+	private RoboticArm tgtDevice;
+	private Program tgt;
 
 	public CallInstruction(RoboticArm robot) {
 		tgtDevice = robot;
-		progIdx = -1;
+		tgt = null;
 	}
 		
-	public CallInstruction(RoboticArm tgt, int pdx) {
-		tgtDevice = tgt;
-		progIdx = pdx;
+	public CallInstruction(RoboticArm tgtDevice, Program tgt) {
+		this.tgtDevice = tgtDevice;
+		this.tgt = tgt;
 	}
 
 	@Override
 	public Instruction clone() {
-		return new CallInstruction(tgtDevice, progIdx);
+		return new CallInstruction(tgtDevice, tgt);
 	}
 
 	// Getters and setters for a call instruction's program id field
 
 	@Override
-	public int execute() {
-		//Test validity of progIdx
-		if (progIdx < 0 || progIdx >= tgtDevice.numOfPrograms()) {
-			return -1;
-		}
-		
+	public int execute() {		
 		RoboticArm r = RobotRun.getActiveRobot();
 		
 		// Save the current program state on tgt robot
 		tgtDevice.pushActiveProg(r);
 		// Set the new program state
-		tgtDevice.setActiveProgIdx(progIdx);
+		tgtDevice.setActiveProg(tgt);
 		tgtDevice.setActiveInstIdx(0);
 		RobotRun.getInstance().setRobot(tgtDevice.RID);
 		// Update the screen
@@ -45,7 +40,7 @@ public class CallInstruction extends Instruction {
 		return 0;
 	}
 	
-	public int getProgIdx() { return progIdx; }
+	public Program getProg() { return tgt; }
 	
 	public RoboticArm getTgtDevice() { return tgtDevice; }
 
@@ -55,14 +50,10 @@ public class CallInstruction extends Instruction {
 	 * is invalid.
 	 */
 	private String progName() {
-		if (tgtDevice != null && tgtDevice.getProgram(progIdx) != null) {
-			return tgtDevice.getProgram(progIdx).getName();
-		}
-
-		return "...";
+		return (tgt == null) ? "..." : tgt.getName();
 	}
 
-	public void setProgIdx(int pdx) { progIdx = pdx; }
+	public void setProg(Program p) { tgt = p; }
 	
 	public void setTgtDevice(RoboticArm tgt) { tgtDevice = tgt; }
 
