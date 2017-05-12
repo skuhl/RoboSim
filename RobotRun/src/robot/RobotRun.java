@@ -7367,7 +7367,7 @@ public class RobotRun extends PApplet {
 			throw NPEx;
 		}
 		
-		
+		/**
 		pushMatrix();
 		resetMatrix();
 		translate(15, -2, 12);
@@ -7383,7 +7383,7 @@ public class RobotRun extends PApplet {
 		
 		System.out.printf("%s\n%s\n%s\n", x, y, z);
 		
-		/**/
+		/**
 		
 		float[][] t = getTransformationMatrix();
 		System.out.println( RMath.toString(t) );
@@ -7396,8 +7396,9 @@ public class RobotRun extends PApplet {
 		);
 		printMatrix();
 		
-		/**/
+		/**
 		popMatrix();
+		/**/
 		
 	}
 	
