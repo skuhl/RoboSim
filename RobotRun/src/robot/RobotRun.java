@@ -421,15 +421,15 @@ public class RobotRun extends PApplet {
 	 * Wrapper method for applying the coordinate frame defined by the given
 	 * column major transformation matrix.
 	 * 
-	 * @param tMatrix	A 4x4 column major transformation matrix
+	 * @param tMatrix	A 4x4 row major transformation matrix
 	 */
 	public void applyMatrix(float[][] tMatrix) {
+		// Transpose the rotation portion, because Processing
 		super.applyMatrix(
-				tMatrix[0][0], tMatrix[1][0], tMatrix[2][0], tMatrix[3][0],
-				tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[3][1],
-				tMatrix[0][2], tMatrix[1][2], tMatrix[2][2], tMatrix[3][2],
-				// Ignore scaling
-				0, 0, 0, 1
+				tMatrix[0][0], tMatrix[1][0], tMatrix[2][0], tMatrix[0][3],
+				tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[1][3],
+				tMatrix[0][2], tMatrix[1][2], tMatrix[2][2], tMatrix[2][3],
+				tMatrix[3][0], tMatrix[3][1], tMatrix[3][2], tMatrix[3][3]
 		);
 	}
 	
@@ -444,6 +444,7 @@ public class RobotRun extends PApplet {
 	 * 						respect to the native coordinate system
 	 */
 	public void applyMatrix(PVector origin, float[][] axesVectors) {
+		// Transpose the rotation portion, because Processing
 		super.applyMatrix(
 				axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
 				axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
@@ -4517,19 +4518,18 @@ public class RobotRun extends PApplet {
 		transform[0][0] = xAxis.x;
 		transform[0][1] = xAxis.y;
 		transform[0][2] = xAxis.z;
-		transform[0][3] = 0;
+		transform[0][3] = origin.x;
 		transform[1][0] = yAxis.x;
 		transform[1][1] = yAxis.y;
 		transform[1][2] = yAxis.z;
-		transform[1][3] = 0;
+		transform[1][3] = origin.y;
 		transform[2][0] = zAxis.x;
 		transform[2][1] = zAxis.y;
 		transform[2][2] = zAxis.z;
-		transform[2][3] = 0;
-		
-		transform[3][0] = origin.x;
-		transform[3][1] = origin.y;
-		transform[3][2] = origin.z;
+		transform[2][3] = origin.z;
+		transform[3][0] = 0;
+		transform[3][1] = 0;
+		transform[3][2] = 0;
 		transform[3][3] = 1;
 
 		return transform;
@@ -7366,6 +7366,38 @@ public class RobotRun extends PApplet {
 			DataManagement.errLog(NPEx);
 			throw NPEx;
 		}
+		
+		
+		pushMatrix();
+		resetMatrix();
+		translate(15, -2, 12);
+		rotateX(-PI / 2f);
+		rotateY(-PI / 2f);
+		printMatrix();
+		
+		/**
+		PVector origin = getCoordFromMatrix(0, 0, 0);
+		PVector x = getCoordFromMatrix(1, 0, 0).sub(origin);
+		PVector y = getCoordFromMatrix(0, 1, 0).sub(origin);
+		PVector z = getCoordFromMatrix(0, 0, 1).sub(origin);
+		
+		System.out.printf("%s\n%s\n%s\n", x, y, z);
+		
+		/**/
+		
+		float[][] t = getTransformationMatrix();
+		System.out.println( RMath.toString(t) );
+		resetMatrix();
+		applyMatrix(
+				t[0][0], t[0][1], t[0][2], t[0][3],
+				t[1][0], t[1][1], t[1][2], t[1][3],
+				t[2][0], t[2][1], t[2][2], t[2][3],
+				t[3][0], t[3][1], t[3][2], t[3][3]
+		);
+		printMatrix();
+		
+		/**/
+		popMatrix();
 		
 	}
 	

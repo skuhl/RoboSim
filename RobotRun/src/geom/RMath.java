@@ -332,28 +332,26 @@ public class RMath {
 		float[][] inv = new float[4][4];
 		
 		/*
-		 * [ ux uy uz 0 ] -1		[       ux         vx         wx    0 ]
-		 * [ vx vy vz 0 ]		=	[       uy         vy         wy    0 ]
-		 * [ vx vy vz 0 ]			[       uy         vy         wy    0 ]
-		 * [ tx ty tz 1 ]			[ -dot(u, t) -dot(v, t) -dot(w, t)  1 ]
+		 * [ ux uy uz tz ] -1		[ ux vx wx -dot(u, t) ]
+		 * [ vx vy vz ty ]		=	[ uy vy wy -dot(v, t) ]
+		 * [ vx vy vz tw ]			[ uy vy wy -dot(w, t) ]
+		 * [  0  0  0  1 ]			[  0  0  0          1 ]
 		 */
-		
 		inv[0][0] = m[0][0];
 		inv[0][1] = m[1][0];
 		inv[0][2] = m[2][0];
-		inv[0][3] = 0;
+		inv[0][3] = -(m[0][0] * m[0][3] + m[0][1] * m[1][3] + m[0][2] * m[2][3]);
 		inv[1][0] = m[0][1];
 		inv[1][1] = m[1][1];
 		inv[1][2] = m[2][1];
-		inv[1][3] = 0;
+		inv[1][3] = -(m[1][0] * m[0][3] + m[1][1] * m[1][3] + m[1][2] * m[2][3]);
 		inv[2][0] = m[0][2];
 		inv[2][1] = m[1][2];
 		inv[2][2] = m[2][2];
-		inv[2][3] = 0;
-		
-		inv[3][0] = -(m[0][0] * m[3][0] + m[0][1] * m[3][1] + m[0][2] * m[3][2]);
-		inv[3][1] = -(m[1][0] * m[3][0] + m[1][1] * m[3][1] + m[1][2] * m[3][2]);
-		inv[3][2] = -(m[2][0] * m[3][0] + m[2][1] * m[3][1] + m[2][2] * m[3][2]);
+		inv[2][3] = -(m[2][0] * m[0][3] + m[2][1] * m[1][3] + m[2][2] * m[2][3]);
+		inv[3][0] = 0;
+		inv[3][1] = 0;
+		inv[3][2] = 0;
 		inv[3][3] = 1;
 
 		return inv;
@@ -620,19 +618,18 @@ public class RMath {
 		transform[0][0] = axes[0][0];
 		transform[0][1] = axes[0][1];
 		transform[0][2] = axes[0][2];
-		transform[0][3] = 0;
+		transform[0][3] = origin.x;
 		transform[1][0] = axes[1][0];
 		transform[1][1] = axes[1][1];
 		transform[1][2] = axes[1][2];
-		transform[1][3] = 0;
+		transform[1][3] = origin.y;
 		transform[2][0] = axes[2][0];
 		transform[2][1] = axes[2][1];
 		transform[2][2] = axes[2][2];
-		transform[2][3] = 0;
-		
-		transform[3][0] = origin.x;
-		transform[3][1] = origin.y;
-		transform[3][2] = origin.z;
+		transform[2][3] = origin.z;
+		transform[3][0] = 0;
+		transform[3][1] = 0;
+		transform[3][2] = 0;
 		transform[3][3] = 1;
 
 		return transform;
@@ -670,10 +667,10 @@ public class RMath {
 
 		PVector u = new PVector();
 		// Apply the transformation matrix to the given vector
-		u.x = v.x * t[0][0] + v.y * t[0][1] + v.z * t[0][2] + t[3][0];
-		u.y = v.x * t[1][0] + v.y * t[1][1] + v.z * t[1][2] + t[3][1];
-		u.z = v.x * t[2][0] + v.y * t[2][1] + v.z * t[2][2] + t[3][2];
-		float w = t[0][3] + t[1][3] + t[2][3] + t[3][3];
+		u.x = v.x * t[0][0] + v.y * t[0][1] + v.z * t[0][2] + t[0][3];
+		u.y = v.x * t[1][0] + v.y * t[1][1] + v.z * t[1][2] + t[1][3];
+		u.z = v.x * t[2][0] + v.y * t[2][1] + v.z * t[2][2] + t[2][3];
+		float w = t[3][0] + t[3][1] + t[3][2] + t[3][3];
 		
 		if(w != 1) {
 			u.div(w);
