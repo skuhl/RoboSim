@@ -254,6 +254,7 @@ public class RobotRun extends PApplet {
 		// Apply offset
 		PVector ee = instance.getCoordFromMatrix(offset.x, offset.y, offset.z);
 		float[][] orientationMatrix = instance.getRotationMatrix();
+		RMath.printMat(orientationMatrix);
 		instance.popMatrix();
 		// Return a Point containing the EE position, orientation, and joint
 		// angles
@@ -446,9 +447,9 @@ public class RobotRun extends PApplet {
 	public void applyMatrix(PVector origin, float[][] axesVectors) {
 		// Transpose the rotation portion, because Processing
 		super.applyMatrix(
-				axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
-				axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
-				axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
+				axesVectors[0][0], axesVectors[0][1], axesVectors[0][2], origin.x,
+				axesVectors[1][0], axesVectors[1][1], axesVectors[1][2], origin.y,
+				axesVectors[2][0], axesVectors[2][1], axesVectors[2][2], origin.z,
 				0, 0, 0, 1
 		);
 	}
@@ -4508,7 +4509,7 @@ public class RobotRun extends PApplet {
 	 * @return	A 4x4 row major transformation matrix
 	 */
 	public float[][] getTransformationMatrix() {
-		float[][] transform = new float[4][4];
+		float[][] transform = new float[3][3];
 
 		PVector origin = getCoordFromMatrix(0, 0, 0);
 		PVector xAxis = getCoordFromMatrix(1, 0, 0).sub(origin);
@@ -4518,21 +4519,14 @@ public class RobotRun extends PApplet {
 		transform[0][0] = xAxis.x;
 		transform[0][1] = xAxis.y;
 		transform[0][2] = xAxis.z;
-		transform[0][3] = origin.x;
 		transform[1][0] = yAxis.x;
 		transform[1][1] = yAxis.y;
 		transform[1][2] = yAxis.z;
-		transform[1][3] = origin.y;
 		transform[2][0] = zAxis.x;
 		transform[2][1] = zAxis.y;
 		transform[2][2] = zAxis.z;
-		transform[2][3] = origin.z;
-		transform[3][0] = 0;
-		transform[3][1] = 0;
-		transform[3][2] = 0;
-		transform[3][3] = 1;
 
-		return transform;
+		return RMath.transformationMatrix(origin, transform);
 	}
 
 	/**
@@ -4744,6 +4738,10 @@ public class RobotRun extends PApplet {
 			updatePendantScreen();
 			System.out.println(options);
 			/**/
+		} 
+		
+		if (key == 'z' || key == 'Z') {
+			//getActiveRobot().moveTo(new float[] {11.793f, 11.090f, 10.209f, 181.997f, 273.451f, 196.603f});
 		}
 
 		if (key == 27) {
