@@ -302,13 +302,14 @@ public class MenuScroll {
 	 */
 	public void updateRenderIndices() {
 		if(lines.size() > 0) {
-			lineIdx = RMath.clamp(lineIdx, 0, lines.size() - 1);
-			columnIdx = RMath.clamp(columnIdx, 0, lines.get(lineIdx).size() - 1);
-			renderStart = RMath.clamp(renderStart, lineIdx - (maxDisp - 1), lineIdx);
+			lineIdx = RMath.clamp(lineIdx, -1, lines.size() - 1);
+			int limboLnIdx = (lineIdx == -1) ? 0 : lineIdx;
+			columnIdx = RMath.clamp(columnIdx, -1, lines.get(limboLnIdx).size() - 1);
+			renderStart = RMath.clamp(renderStart, limboLnIdx - (maxDisp - 1), limboLnIdx);
 			
 		} else {
-			lineIdx = 0;
-			columnIdx = 0;
+			lineIdx = -1;
+			columnIdx = -1;
 			renderStart = 0;
 		}	
 	}

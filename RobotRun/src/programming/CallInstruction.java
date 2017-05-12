@@ -3,17 +3,35 @@ import robot.RobotRun;
 import robot.RoboticArm;
 
 public class CallInstruction extends Instruction {
+	
 	private RoboticArm tgtDevice;
 	private Program tgt;
+	
+	/**
+	 * Primarily used for loading programs. Since programs are loaded
+	 * sequentially, some call instructions need a temporary
+	 * reference to a program. This field is NOT always equivalent
+	 * with the tgt's name, since the user can rename programs.
+	 */
+	private String loadedName;
 
 	public CallInstruction(RoboticArm robot) {
 		tgtDevice = robot;
 		tgt = null;
+		loadedName = "...";
 	}
 		
 	public CallInstruction(RoboticArm tgtDevice, Program tgt) {
 		this.tgtDevice = tgtDevice;
 		this.tgt = tgt;
+
+		loadedName = null;
+	}
+	
+	public CallInstruction(RoboticArm tgtDevice, String tgtName) {
+		this.tgtDevice = tgtDevice;
+		tgt= null;
+		this.loadedName = tgtName;
 	}
 
 	@Override
@@ -24,7 +42,7 @@ public class CallInstruction extends Instruction {
 	// Getters and setters for a call instruction's program id field
 
 	@Override
-	public int execute() {		
+	public int execute() {
 		RoboticArm r = RobotRun.getActiveRobot();
 		
 		// Save the current program state on tgt robot
@@ -42,28 +60,25 @@ public class CallInstruction extends Instruction {
 	
 	public Program getProg() { return tgt; }
 	
+	public String getLoadedName() { return loadedName; }
+	
 	public RoboticArm getTgtDevice() { return tgtDevice; }
-
-	/**
-	 * Returns the name of the program associated with this call
-	 * statement, or "..." if the call statement's program index
-	 * is invalid.
-	 */
-	private String progName() {
-		return (tgt == null) ? "..." : tgt.getName();
-	}
 
 	public void setProg(Program p) { tgt = p; }
 	
 	public void setTgtDevice(RoboticArm tgt) { tgtDevice = tgt; }
+	
+	private String getProgName() {
+		return (tgt == null) ? "..." : tgt.getName();
+	}
 
 	@Override
 	public String toString() {
 		if(tgtDevice == RobotRun.getActiveRobot()) {
-			return "Call " + progName();
+			return "Call " + getProgName();
 			
 		} else {
-			return "RCall " + progName();
+			return "RCall " + getProgName();
 		}
 	}
 
@@ -71,7 +86,7 @@ public class CallInstruction extends Instruction {
 	public String[] toStringArray() {
 		String[] ret = new String[2];
 		ret[0] = (tgtDevice == RobotRun.getActiveRobot()) ? "Call" : "RCall";
-		ret[1] = progName();
+		ret[1] = getProgName();
 
 		return ret;
 	}

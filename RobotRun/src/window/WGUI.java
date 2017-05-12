@@ -2072,7 +2072,7 @@ public class WGUI implements ControlListener {
 		if(m.getType() == ScreenType.TYPE_LINE_SELECT) { selectMode = true; } 
 		
 		menu.updateRenderIndices();
-		active = (menu.size() > 0) ? menu.get( menu.getLineIdx() ) : null;
+		active = menu.getActiveLine();
 		
 		int lineNo = 0;
 		int bg, txt, selectInd = -1;
@@ -2085,8 +2085,13 @@ public class WGUI implements ControlListener {
 
 			if(i == 0 || menu.get(i - 1).getItemIdx() != menu.get(i).getItemIdx()) {
 				selectInd = menu.get(i).getItemIdx();
-				if (active.getItemIdx() == selectInd) { bg = Fields.UI_DARK_C;  }
-				else												{ bg = Fields.UI_LIGHT_C; }
+				
+				if (active != null && active.getItemIdx() == selectInd) {
+					bg = Fields.UI_DARK_C;
+					
+				} else {
+					bg = Fields.UI_LIGHT_C;
+				}
 				
 				//leading row select indicator []
 				getPendantDisplayTA(TAIdx++).setText("")
@@ -2140,8 +2145,13 @@ public class WGUI implements ControlListener {
 
 			//Trailing row select indicator []
 			if(i == menu.size() - 1 || menu.get(i).getItemIdx() != menu.get(i + 1).getItemIdx()) {
-				if (active.getItemIdx() == selectInd) { txt = Fields.UI_DARK_C;  }
-				else												{ txt = Fields.UI_LIGHT_C; }
+				
+				if (active != null && active.getItemIdx() == selectInd) {
+					txt = Fields.UI_DARK_C;
+					
+				} else {
+					txt = Fields.UI_LIGHT_C;
+				}
 				
 				getPendantDisplayTA(TAIdx++).setText("")
 									   .setPosition(next_px, next_py)
