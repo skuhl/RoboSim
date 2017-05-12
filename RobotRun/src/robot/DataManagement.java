@@ -8,6 +8,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import expression.AtomicExpression;
@@ -58,18 +60,58 @@ import regs.Register;
  */
 public abstract class DataManagement {
 	
-	private static String dataDir, parentDirPath, scenarioDirPath;
+	protected static String dataDirPath, errDirPath, tmpDirPath, scenarioDirPath;
 	
 	static {
-		parentDirPath = null;
+		dataDirPath = null;
+		errDirPath = null;
+		tmpDirPath = null;
 		scenarioDirPath = null;
 	}
 	
 	// Must be called when RobotRun starts!!!!
 	public static void initialize(RobotRun process) {
-		dataDir = process.sketchPath("data/");
-		parentDirPath = process.sketchPath("tmp/");
-		scenarioDirPath = parentDirPath + "scenarios/";
+		dataDirPath = process.sketchPath("data\\");
+		errDirPath = process.sketchPath("err\\");
+		tmpDirPath = process.sketchPath("tmp\\");
+		scenarioDirPath = process.sketchPath(tmpDirPath + "scenarios\\");
+	}
+	
+	/**
+	 * Prints the given error's stack trace to a log file in the err sub
+	 * directory. The file's name is the day-month-year-hour-minute the
+	 * error occured.
+	 * 
+	 * @param Ex	the error for which to print the stack trace
+	 */
+	public static void errLog(Exception Ex) {
+		try {
+			File errDir = new File(errDirPath);
+			// create the err subdirectory
+			if (!errDir.exists()) {
+				errDir.mkdir();
+			}
+			
+			LocalDateTime now = LocalDateTime.now();
+			// Use current day, month, year, hour, and minute as file name
+			String time = String.format("%s%02d-%02d-%d-%02d-%02d.log", errDirPath,
+					now.getDayOfMonth(), now.getMonthValue(), now.getYear(),
+					now.getHour(), now.getMinute());
+			
+			File errLog = new File(time);
+			
+			if (!errLog.exists()) {
+				errLog.createNewFile();
+			}
+			
+			PrintWriter out = new PrintWriter(errLog);
+			Ex.printStackTrace(out);
+			out.close();
+			
+		} catch (IOException IOEx) {
+			// Could not create error log file
+			IOEx.printStackTrace();
+		}
 	}
 	
 	/**
@@ -79,7 +121,7 @@ public abstract class DataManagement {
 	 * @return	A list of model files
 	 */
 	public static ArrayList<String> getDataFileNames() {
-		File data = new File(dataDir);
+		File data = new File(dataDirPath);
 		
 		if (!data.exists() || data.isFile()) {
 			// Missing data directory
@@ -258,7 +300,6 @@ public abstract class DataManagement {
 
 		// Read axes quaternion values
 		ref.setOrientation( loadRQuaternion(in) );
-		//System.out.printf("%s\n", ref.getOrientation());
 		
 		// Read in orientation points (and tooltip teach points for tool frames)
 		for (int idx = 0; idx < len; ++idx) {
@@ -303,19 +344,19 @@ public abstract class DataManagement {
 
 		} catch (FileNotFoundException FNFEx) {
 			// Could not find src
-			System.out.printf("%s does not exist!\n", src.getName());
+			System.err.printf("%s does not exist!\n", src.getName());
 			FNFEx.printStackTrace();
 			return 1;
 
 		} catch (EOFException EOFEx) {
 			// Reached the end of src unexpectedly
-			System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
+			System.err.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
 			EOFEx.printStackTrace();
 			return 3;
 
 		} catch (IOException IOEx) {
 			// Error with reading from src
-			System.out.printf("%s is corrupt!\n", src.getName());
+			System.err.printf("%s is corrupt!\n", src.getName());
 			IOEx.printStackTrace();
 			return 2;
 		}
@@ -553,19 +594,19 @@ public abstract class DataManagement {
 
 		} catch (FileNotFoundException FNFEx) {
 			// Could not locate src
-			System.out.printf("%s does not exist!\n", src.getName());
+			System.err.printf("%s does not exist!\n", src.getName());
 			FNFEx.printStackTrace();
 			return 1;
 
 		} catch (EOFException EOFEx) {
 			// Reached the end of src unexpectedly
-			System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
+			System.err.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
 			EOFEx.printStackTrace();
 			return 3;
 
 		} catch (IOException IOEx) {
 			// An error occurred with reading from src
-			System.out.printf("%s is corrupt!\n", src.getName());
+			System.err.printf("%s is corrupt!\n", src.getName());
 			IOEx.printStackTrace();
 			return 2;
 			
@@ -659,26 +700,26 @@ public abstract class DataManagement {
 
 		} catch (FileNotFoundException FNFEx) {
 			// Could not be located src
-			System.out.printf("%s does not exist!\n", src.getName());
+			System.err.printf("%s does not exist!\n", src.getName());
 			FNFEx.printStackTrace();
 			return 1;
 
 		} catch (EOFException EOFEx) {
 			// Unexpectedly reached the end of src
-			System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
+			System.err.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
 			EOFEx.printStackTrace();
 			return 3;
 
 		} catch (IOException IOEx) {
 			// Error occrued while reading from src
-			System.out.printf("%s is corrupt!\n", src.getName());
+			System.err.printf("%s is corrupt!\n", src.getName());
 			IOEx.printStackTrace();
 			return 2;
 		}
 	}
 
 	private static int loadRobotData(RoboticArm robot) {
-		File srcDir = new File( String.format("%srobot%d/", parentDirPath, robot.RID) );
+		File srcDir = new File( String.format("%srobot%d/", tmpDirPath, robot.RID) );
 		
 		if (!srcDir.exists() || !srcDir.isDirectory()) {
 			// No such directory exists
@@ -757,7 +798,14 @@ public abstract class DataManagement {
 						}
 					}
 					
-				} catch (NullPointerException NPEx) {/* Invalid model source file */}
+				} catch (NullPointerException NPEx) {
+					/* Invalid model source file name */
+					System.err.println( NPEx.getMessage() );
+					
+				} catch (RuntimeException REx) {
+					/* Invalid model source file name */
+					System.err.println( REx.getMessage() );
+				}
 			}
 			
 			// Set all the Part's references
@@ -805,11 +853,11 @@ public abstract class DataManagement {
 				in.close();
 			
 			} catch (FileNotFoundException FNFEx) {
-				System.out.printf("File %s does not exist in \\tmp\\scenarios.\n", activeFile.getName());
+				System.err.printf("File %s does not exist in \\tmp\\scenarios.\n", activeFile.getName());
 				FNFEx.printStackTrace();
 				
 			} catch (IOException IOEx) {
-				System.out.printf("File, %s, in \\tmp\\scenarios is corrupt!\n", activeFile.getName());
+				System.err.printf("File, %s, in \\tmp\\scenarios is corrupt!\n", activeFile.getName());
 				IOEx.printStackTrace();
 			}
 		}
@@ -839,7 +887,9 @@ public abstract class DataManagement {
 		return 0;
 	}
 
-	private static Shape loadShape(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
+	private static Shape loadShape(DataInputStream in, RobotRun app) throws IOException,
+			NullPointerException, RuntimeException {
+		
 		// Read flag byte
 		byte flag = in.readByte();
 		Shape shape = null;
@@ -868,6 +918,15 @@ public abstract class DataManagement {
 			} else if (flag == 3) {
 				float scale = in.readFloat();
 				String srcPath = in.readUTF();
+				
+				File src = new File(DataManagement.dataDirPath + srcPath);
+				
+				if (!src.exists() || src.isDirectory()) {
+					String error = String.format("Source file, %s, does not exist in %s",
+							srcPath, DataManagement.dataDirPath);
+					throw new NullPointerException(error);
+				}
+				
 				// Creates a complex shape from the srcPath located in RobotRun/data/
 				shape = new ModelShape(srcPath, fill, scale, app);
 			}
@@ -1186,13 +1245,13 @@ public abstract class DataManagement {
 
 		} catch (FileNotFoundException FNFEx) {
 			// Could not find dest
-			System.out.printf("%s does not exist!\n", dest.getName());
+			System.err.printf("%s does not exist!\n", dest.getName());
 			FNFEx.printStackTrace();
 			return 1;
 
 		} catch (IOException IOEx) {
 			// Error with writing to dest
-			System.out.printf("%s is corrupt!\n", dest.getName());
+			System.err.printf("%s is corrupt!\n", dest.getName());
 			IOEx.printStackTrace();
 			return 2;
 		}
@@ -1431,9 +1490,9 @@ public abstract class DataManagement {
 			if(!dest.exists()) {      
 				try {
 					dest.createNewFile();
-					System.out.printf("Successfully created %s.\n", dest.getName());
+					System.err.printf("Successfully created %s.\n", dest.getName());
 				} catch (IOException IOEx) {
-					System.out.printf("Could not create %s ...\n", dest.getName());
+					System.err.printf("Could not create %s ...\n", dest.getName());
 					IOEx.printStackTrace();
 					return 1;
 				}
@@ -1455,13 +1514,13 @@ public abstract class DataManagement {
 
 		} catch (FileNotFoundException FNFEx) {
 			// Could not locate dest
-			System.out.printf("%s does not exist!\n", dest.getName());
+			System.err.printf("%s does not exist!\n", dest.getName());
 			FNFEx.printStackTrace();
 			return 1;
 
 		} catch (IOException IOEx) {
 			// An error occurred with writing to dest
-			System.out.printf("%s is corrupt!\n", dest.getName());
+			System.err.printf("%s is corrupt!\n", dest.getName());
 			IOEx.printStackTrace();
 			return 2;
 		}
@@ -1562,21 +1621,21 @@ public abstract class DataManagement {
 
 		} catch (FileNotFoundException FNFEx) {
 			// Could not be located dest
-			System.out.printf("%s does not exist!\n", dest.getName());
+			System.err.printf("%s does not exist!\n", dest.getName());
 			FNFEx.printStackTrace();
 			return 1;
 
 		} catch (IOException IOEx) {
 			// Error occured while reading from dest
-			System.out.printf("%s is corrupt!\n", dest.getName());
+			System.err.printf("%s is corrupt!\n", dest.getName());
 			IOEx.printStackTrace();
 			return 2;
 		}
 	}
 
 	public static int saveRobotData(RoboticArm robot, int dataFlag) {
-		validateParentDir();
-		File destDir = new File( String.format("%srobot%d/", parentDirPath, robot.RID) );
+		validateTmpDir();
+		File destDir = new File( String.format("%srobot%d/", tmpDirPath, robot.RID) );
 		
 		// Initialize and possibly create the robot directory
 		if (!destDir.exists()) {
@@ -1701,7 +1760,7 @@ public abstract class DataManagement {
 	}
 	
 	public static void saveScenarios(RobotRun process) {
-		validateParentDir();
+		validateTmpDir();
 		
 		Scenario as = process.getActiveScenario();
 		saveScenarioBytes(process.getScenarios(), (as == null) ? null : as.getName(),
@@ -1754,7 +1813,7 @@ public abstract class DataManagement {
 	}
 	
 	public static void saveState(RobotRun process) {
-		validateParentDir();
+		validateTmpDir();
 		saveScenarioBytes(process.getScenarios(), (process.getActiveScenario() == null) ?
 				null : process.getActiveScenario().getName(), scenarioDirPath);
 		saveRobotData(process.getRobot(0), 7);
@@ -1803,12 +1862,12 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static void validateParentDir() {
-		File parentDir = new File(parentDirPath);
+	private static void validateTmpDir() {
+		File tmpDir = new File(tmpDirPath);
 		
-		if (!parentDir.exists()) {
+		if (!tmpDir.exists()) {
 			// Create the directory if it does not exist
-			parentDir.mkdir();
+			tmpDir.mkdir();
 		}
 	}
 }

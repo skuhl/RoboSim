@@ -1530,164 +1530,168 @@ public class RobotRun extends PApplet {
 
 	@Override
 	public void draw() {
-
-		// Apply the camera for drawing objects
-		directionalLight(255, 255, 255, 1, 1, 0);
-		ambientLight(150, 150, 150);
-
-		background(127);
-
-		hint(ENABLE_DEPTH_TEST);
-		background(255);
-		noStroke();
-		noFill();
-
-		pushMatrix();
-		camera.apply();
-
-		updateAndDrawObjects(activeScenario, getActiveRobot());
-
-		renderCoordAxes();
-		renderTeachPoints();
-
-		WorldObject wldObj = UI.getSelectedWO();
-
-		if (wldObj != null) {
-			pushMatrix();
-
-			if (wldObj instanceof Part) {
-				Fixture reference = ((Part) wldObj).getFixtureRef();
-
-				if (reference != null) {
-					// Draw part's orientation with reference to its fixture
-					reference.applyCoordinateSystem();
-				}
-			}
-
-			renderOriginAxes(wldObj.getLocalCenter(), convertNativeToWorld(wldObj.getLocalOrientationAxes()), 500f,
-					color(0));
-
-			popMatrix();
-		}
-
-		if (displayPoint != null) {
-			// Display the point with its local orientation axes
-			renderOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
-		}
-
-		/*TESTING CODE: DRAW INTERMEDIATE POINTS*
-		if(Fields.DEBUG && intermediatePositions != null) {
-			int count = 0;
-			for(Point p : intermediatePositions) {
-				if(count % 4 == 0) {
-					pushMatrix();
-					stroke(0);
-					translate(p.position.x, p.position.y, p.position.z);
-					sphere(5);
-					popMatrix();
-				}
-
-				count += 1;
-			}
-		}
-		/**/
-
-		/*Camera Test Code*
-		Fixture f = new Fixture("test", 160, 0, 50, 100, 200);
-		f.setLocalCenter(new PVector(-700, -300, 0));
-		Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
-		float[][] axes = RMath.quatToMatrix(p.orientation);
-		c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[1][0], axes[1][1], axes[1][2]), -PI/2)));
-		c.setPosition(p.position);
-		renderOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
-		
-		PVector near[] = c.getPlaneNear();
-		PVector far[] = c.getPlaneFar();
-		PVector view1[] = c.getPlane(c.getDistanceToObject(f, 0));
-		PVector view2[] = c.getPlane(c.getDistanceToObject(f, 1));
-		pushMatrix();
-		stroke(255, 126, 0, 255);
-		//dfill(255, 126, 0, 255);
-		beginShape();
-		//Top
-		vertex(near[0].x, near[0].y, near[0].z);
-		vertex(far[0].x, far[0].y, far[0].z);
-		vertex(far[1].x, far[1].y, far[1].z);
-		vertex(near[1].x, near[1].y, near[1].z);
-		//Right
-		vertex(near[1].x, near[1].y, near[1].z);
-		vertex(far[1].x, far[1].y, far[1].z);
-		vertex(far[3].x, far[3].y, far[3].z);
-		vertex(near[3].x, near[3].y, near[3].z);
-		//Bottom
-		vertex(near[3].x, near[3].y, near[3].z);
-		vertex(far[3].x, far[3].y, far[3].z);
-		vertex(far[2].x, far[2].y, far[2].z);
-		vertex(near[2].x, near[2].y, near[2].z);
-		//Left
-		vertex(near[2].x, near[2].y, near[2].z);
-		vertex(far[2].x, far[2].y, far[2].z);
-		vertex(far[0].x, far[0].y, far[0].z);
-		vertex(near[0].x, near[0].y, near[0].z);
-		//Near
-		vertex(near[1].x, near[1].y, near[1].z);
-		vertex(near[3].x, near[3].y, near[3].z);
-		vertex(near[2].x, near[2].y, near[2].z);
-		vertex(near[0].x, near[0].y, near[0].z);
-		endShape();
-		
-		fill(255, 126, 0, 126);
-		beginShape();
-		vertex(view1[0].x, view1[0].y, view1[0].z);
-		vertex(view1[1].x, view1[1].y, view1[1].z);
-		vertex(view1[3].x, view1[3].y, view1[3].z);
-		vertex(view1[2].x, view1[2].y, view1[2].z);
-		endShape();
-		
-		beginShape();
-		vertex(view2[0].x, view2[0].y, view2[0].z);
-		vertex(view2[1].x, view2[1].y, view2[1].z);
-		vertex(view2[3].x, view2[3].y, view2[3].z);
-		vertex(view2[2].x, view2[2].y, view2[2].z);
-		endShape();
-		
-		popMatrix();
-						
-		pushMatrix();
-		f.draw();
-		popMatrix();
-		
-		PVector[] obj = c.checkObjectInFrame(f, 2);
+		try {
+			// Apply the camera for drawing objects
+			directionalLight(255, 255, 255, 1, 1, 0);
+			ambientLight(150, 150, 150);
 	
-		pushMatrix();
-		stroke(0);
-		translate(p.position.x, p.position.y, p.position.z);
-		beginShape();
-		vertex(obj[0].x, obj[0].y, obj[0].z);
-		vertex(obj[1].x, obj[1].y, obj[1].z);
-		vertex(obj[3].x, obj[3].y, obj[3].z);
-		vertex(obj[2].x, obj[2].y, obj[2].z);
-		vertex(obj[0].x, obj[0].y, obj[0].z);
-		vertex(obj[4].x, obj[4].y, obj[4].z);
-		vertex(obj[5].x, obj[5].y, obj[5].z);
-		vertex(obj[7].x, obj[7].y, obj[7].z);
-		vertex(obj[6].x, obj[6].y, obj[6].z);
-		vertex(obj[4].x, obj[4].y, obj[4].z);
-		endShape();
-		popMatrix();
-		//RobotRun.printMat(c.getOrientationMat());
-		/**/
-		 
-
-		noLights();
-		noStroke();
-		popMatrix();
-
-		hint(DISABLE_DEPTH_TEST);
-		// Apply the camera for drawing text and windows
-		ortho();
-		renderUI();
+			background(127);
+	
+			hint(ENABLE_DEPTH_TEST);
+			background(255);
+			noStroke();
+			noFill();
+	
+			pushMatrix();
+			camera.apply();
+	
+			updateAndDrawObjects(activeScenario, getActiveRobot());
+	
+			renderCoordAxes();
+			renderTeachPoints();
+	
+			WorldObject wldObj = UI.getSelectedWO();
+	
+			if (wldObj != null) {
+				pushMatrix();
+	
+				if (wldObj instanceof Part) {
+					Fixture reference = ((Part) wldObj).getFixtureRef();
+	
+					if (reference != null) {
+						// Draw part's orientation with reference to its fixture
+						reference.applyCoordinateSystem();
+					}
+				}
+	
+				renderOriginAxes(wldObj.getLocalCenter(), convertNativeToWorld(wldObj.getLocalOrientationAxes()), 500f,
+						color(0));
+	
+				popMatrix();
+			}
+	
+			if (displayPoint != null) {
+				// Display the point with its local orientation axes
+				renderOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
+			}
+	
+			/*TESTING CODE: DRAW INTERMEDIATE POINTS*
+			if(Fields.DEBUG && intermediatePositions != null) {
+				int count = 0;
+				for(Point p : intermediatePositions) {
+					if(count % 4 == 0) {
+						pushMatrix();
+						stroke(0);
+						translate(p.position.x, p.position.y, p.position.z);
+						sphere(5);
+						popMatrix();
+					}
+	
+					count += 1;
+				}
+			}
+			/**/
+	
+			/*Camera Test Code*
+			Fixture f = new Fixture("test", 160, 0, 50, 100, 200);
+			f.setLocalCenter(new PVector(-700, -300, 0));
+			Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
+			float[][] axes = RMath.quatToMatrix(p.orientation);
+			c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[1][0], axes[1][1], axes[1][2]), -PI/2)));
+			c.setPosition(p.position);
+			renderOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
+			
+			PVector near[] = c.getPlaneNear();
+			PVector far[] = c.getPlaneFar();
+			PVector view1[] = c.getPlane(c.getDistanceToObject(f, 0));
+			PVector view2[] = c.getPlane(c.getDistanceToObject(f, 1));
+			pushMatrix();
+			stroke(255, 126, 0, 255);
+			//dfill(255, 126, 0, 255);
+			beginShape();
+			//Top
+			vertex(near[0].x, near[0].y, near[0].z);
+			vertex(far[0].x, far[0].y, far[0].z);
+			vertex(far[1].x, far[1].y, far[1].z);
+			vertex(near[1].x, near[1].y, near[1].z);
+			//Right
+			vertex(near[1].x, near[1].y, near[1].z);
+			vertex(far[1].x, far[1].y, far[1].z);
+			vertex(far[3].x, far[3].y, far[3].z);
+			vertex(near[3].x, near[3].y, near[3].z);
+			//Bottom
+			vertex(near[3].x, near[3].y, near[3].z);
+			vertex(far[3].x, far[3].y, far[3].z);
+			vertex(far[2].x, far[2].y, far[2].z);
+			vertex(near[2].x, near[2].y, near[2].z);
+			//Left
+			vertex(near[2].x, near[2].y, near[2].z);
+			vertex(far[2].x, far[2].y, far[2].z);
+			vertex(far[0].x, far[0].y, far[0].z);
+			vertex(near[0].x, near[0].y, near[0].z);
+			//Near
+			vertex(near[1].x, near[1].y, near[1].z);
+			vertex(near[3].x, near[3].y, near[3].z);
+			vertex(near[2].x, near[2].y, near[2].z);
+			vertex(near[0].x, near[0].y, near[0].z);
+			endShape();
+			
+			fill(255, 126, 0, 126);
+			beginShape();
+			vertex(view1[0].x, view1[0].y, view1[0].z);
+			vertex(view1[1].x, view1[1].y, view1[1].z);
+			vertex(view1[3].x, view1[3].y, view1[3].z);
+			vertex(view1[2].x, view1[2].y, view1[2].z);
+			endShape();
+			
+			beginShape();
+			vertex(view2[0].x, view2[0].y, view2[0].z);
+			vertex(view2[1].x, view2[1].y, view2[1].z);
+			vertex(view2[3].x, view2[3].y, view2[3].z);
+			vertex(view2[2].x, view2[2].y, view2[2].z);
+			endShape();
+			
+			popMatrix();
+							
+			pushMatrix();
+			f.draw();
+			popMatrix();
+			
+			PVector[] obj = c.checkObjectInFrame(f, 2);
 		
+			pushMatrix();
+			stroke(0);
+			translate(p.position.x, p.position.y, p.position.z);
+			beginShape();
+			vertex(obj[0].x, obj[0].y, obj[0].z);
+			vertex(obj[1].x, obj[1].y, obj[1].z);
+			vertex(obj[3].x, obj[3].y, obj[3].z);
+			vertex(obj[2].x, obj[2].y, obj[2].z);
+			vertex(obj[0].x, obj[0].y, obj[0].z);
+			vertex(obj[4].x, obj[4].y, obj[4].z);
+			vertex(obj[5].x, obj[5].y, obj[5].z);
+			vertex(obj[7].x, obj[7].y, obj[7].z);
+			vertex(obj[6].x, obj[6].y, obj[6].z);
+			vertex(obj[4].x, obj[4].y, obj[4].z);
+			endShape();
+			popMatrix();
+			//RobotRun.printMat(c.getOrientationMat());
+			/**/
+			 
+	
+			noLights();
+			noStroke();
+			popMatrix();
+	
+			hint(DISABLE_DEPTH_TEST);
+			// Apply the camera for drawing text and windows
+			ortho();
+			renderUI();
+			
+		} catch (Exception Ex) {
+			DataManagement.errLog(Ex);
+			throw Ex;
+		}
 	}
 
 	/**
@@ -2425,7 +2429,7 @@ public class RobotRun extends PApplet {
 				if (mode == ScreenMode.INPUT_DREG_IDX) {
 
 					if (idx < 1 || idx > 100) {
-						System.out.println("Invalid index!");
+						System.err.println("Invalid index!");
 
 					} else {
 						r.getInstToEdit( r.getActiveInstIdx() );
@@ -2435,7 +2439,7 @@ public class RobotRun extends PApplet {
 				} else if (mode == ScreenMode.INPUT_PREG_IDX1) {
 
 					if (idx < 1 || idx > 100) {
-						System.out.println("Invalid index!");
+						System.err.println("Invalid index!");
 
 					} else {
 						r.getInstToEdit( r.getActiveInstIdx() );
@@ -2445,7 +2449,7 @@ public class RobotRun extends PApplet {
 				} else if (mode == ScreenMode.INPUT_PREG_IDX2) {
 
 					if (idx < 1 || idx > 6) {
-						System.out.println("Invalid index!");
+						System.err.println("Invalid index!");
 
 					} else {
 						r.getInstToEdit( r.getActiveInstIdx() );
@@ -2455,7 +2459,7 @@ public class RobotRun extends PApplet {
 				} else if (mode == ScreenMode.INPUT_IOREG_IDX) {
 
 					if (idx < 1 || idx > 5) {
-						System.out.println("Invalid index!");
+						System.err.println("Invalid index!");
 
 					} else {
 						r.getInstToEdit( r.getActiveInstIdx() );
@@ -2549,7 +2553,7 @@ public class RobotRun extends PApplet {
 				int tempReg = Integer.parseInt(workingText.toString());
 
 				if (tempReg < 1 || tempReg >= 6) {
-					System.out.println("Invalid index!");
+					System.err.println("Invalid index!");
 
 				} else {
 					ioInst = (IOInstruction) r.getInstToEdit( r.getActiveInstIdx() );
@@ -2928,7 +2932,6 @@ public class RobotRun extends PApplet {
 				f = Float.parseFloat(workingText.toString());
 				// Clamp the value between -9999 and 9999, inclusive
 				f = max(-9999f, min(f, 9999f));
-				System.out.printf("Index; %d\n", active_index);
 				DataRegister dReg = getActiveRobot().getDReg(active_index);
 
 				if (dReg != null) {
@@ -3597,7 +3600,6 @@ public class RobotRun extends PApplet {
 				PositionRegister pReg = r.getPReg( contents.getActiveIndex() );
 
 				if (pReg.point != null) {
-					System.out.println(pReg.point);
 					Point pt = pReg.point.clone();
 					// Move the Robot to the select point
 					if (pReg.isCartesian) {
@@ -5503,6 +5505,7 @@ public class RobotRun extends PApplet {
 	 */
 	private PShape[] loadRobotModels() {
 		PShape[] models = new PShape[13];
+		
 		// End Effectors
 		models[0] = loadSTLModel("SUCTION.stl", color(108, 206, 214));
 		models[1] = loadSTLModel("GRIPPER.stl", color(108, 206, 214));
@@ -5602,7 +5605,6 @@ public class RobotRun extends PApplet {
 			contents.setLineIdx(1);
 			contents.setColumnIdx(0);
 			workingText = new StringBuilder("\0");
-			System.out.println(workingText.length());
 			break;
 		case PROG_RENAME:
 			getActiveRobot().setActiveProgIdx(prev.conLnIdx);
@@ -7206,8 +7208,10 @@ public class RobotRun extends PApplet {
 		} else if (ret == 0) {
 			DataManagement.saveScenarios(this);
 		}
-
-		System.out.println(String.format("SConfirm: %d\n", ret));
+		
+		if (Fields.DEBUG) {
+			System.out.println(String.format("SConfirm: %d\n", ret));
+		}
 	}
 
 	/**
@@ -7334,9 +7338,9 @@ public class RobotRun extends PApplet {
 		
 		// size(1200, 800, P3D);
 		// create font and text display background
-		Fields.medium = createFont("data/Consolas.ttf", 14);
-		Fields.small = createFont("data/Consolas.ttf", 12);
-		Fields.bond = createFont("data/ConsolasBold.ttf", 12);
+		Fields.medium = createFont("fonts/Consolas.ttf", 14);
+		Fields.small = createFont("fonts/Consolas.ttf", 12);
+		Fields.bond = createFont("fonts/ConsolasBold.ttf", 12);
 
 		camera = new Camera();
 		activeScenario = null;
@@ -7344,6 +7348,8 @@ public class RobotRun extends PApplet {
 		// load model and save data
 
 		try {
+			DataManagement.initialize(this);
+			
 			ROBOTS.put(0, new RoboticArm(0, new PVector(200, 300, 200), loadRobotModels()));
 			ROBOTS.put(1, new RoboticArm(1, new PVector(200, 300, -750), loadRobotModels()));
 
@@ -7355,8 +7361,7 @@ public class RobotRun extends PApplet {
 
 			intermediatePositions = new ArrayList<>();
 			activeScenario = null;
-
-			DataManagement.initialize(this);
+			
 			DataManagement.loadState(this);
 			
 			screenStates = new Stack<>();
@@ -7374,10 +7379,10 @@ public class RobotRun extends PApplet {
 			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 30, 300, null);
 
 		} catch (NullPointerException NPEx) {
-
-			// TODO write to a log
-			NPEx.printStackTrace();
+			DataManagement.errLog(NPEx);
+			throw NPEx;
 		}
+		
 	}
 	
 	/**
