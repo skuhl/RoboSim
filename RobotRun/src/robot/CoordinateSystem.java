@@ -33,10 +33,7 @@ public class CoordinateSystem implements Cloneable {
 	 * Apply the coordinate system's origin and axes to the current transformation matrix.
 	 */
 	public void apply() {
-		RobotRun.getInstance().applyMatrix(axesVectors[0][0], axesVectors[1][0], axesVectors[2][0], origin.x,
-										   axesVectors[0][1], axesVectors[1][1], axesVectors[2][1], origin.y,
-										   axesVectors[0][2], axesVectors[1][2], axesVectors[2][2], origin.z,
-										   				   0,				  0,                 0,        1);
+		RobotRun.getInstance().applyMatrix(origin, axesVectors);
 	}
 
 	@Override

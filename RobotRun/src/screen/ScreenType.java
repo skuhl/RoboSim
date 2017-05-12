@@ -1,7 +1,5 @@
 package screen;
 
-import window.DisplayMode;
-
 public enum ScreenType implements DisplayMode {
 	TYPE_DEFAULT,
 	TYPE_OPT_MENU,

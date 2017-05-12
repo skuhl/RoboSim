@@ -28,8 +28,8 @@ import programming.Program;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
+import screen.DisplayLine;
 import screen.InstState;
-import window.DisplayLine;
 
 public class RoboticArm {
 	/**
@@ -91,7 +91,7 @@ public class RoboticArm {
 	/**
 	 * The list of programs associated with this robot.
 	 */
-	private final ArrayList<Program> PROGRAM;
+	private final ArrayList<Program> PROGRAMS;
 	
 	/**
 	 * A program execution call stack for previously active programs associated
@@ -174,11 +174,8 @@ public class RoboticArm {
 	 */
 	private int activeUserFrame, activeToolFrame;
 	
-	/** 
-	 * A reference to the previous orientation of the robot. This is used when
-	 * moving a part, which is held by the robot.
-	 */
-	private float[][] oldEEOrientation;
+	
+	private float[][] lastEEOrientation;
 
 	/**
 	 * Creates a robot with the given ID at the given position with the given
@@ -203,7 +200,7 @@ public class RoboticArm {
 		BASE_POSITION = basePos;
 		
 		// Initialize program fields
-		PROGRAM = new ArrayList<>();
+		PROGRAMS = new ArrayList<>();
 		CALL_STACK = new Stack<>();
 		PROG_UNDO = new Stack<>();
 		
@@ -386,7 +383,7 @@ public class RoboticArm {
 		// Initializes the old transformation matrix for the arm model
 		RobotRun.getInstance().pushMatrix();
 		RobotRun.applyModelRotation(this, getJointAngles());
-		oldEEOrientation = RobotRun.getInstance().getTransformationMatrix();
+		lastEEOrientation = RobotRun.getInstance().getTransformationMatrix();
 		RobotRun.getInstance().popMatrix();
 	}
 	
@@ -479,12 +476,12 @@ public class RoboticArm {
 		} else {
 			int idx = 0;
 
-			if(PROGRAM.size() < 1) {
-				PROGRAM.add(p);
+			if(PROGRAMS.size() < 1) {
+				PROGRAMS.add(p);
 				
 			}  else {
-				while(idx < PROGRAM.size() && PROGRAM.get(idx).getName().compareTo(p.getName()) < 0) { ++idx; }
-				PROGRAM.add(idx, p);
+				while(idx < PROGRAMS.size() && PROGRAMS.get(idx).getName().compareTo(p.getName()) < 0) { ++idx; }
+				PROGRAMS.add(idx, p);
 			}
 
 			return idx;
@@ -503,7 +500,7 @@ public class RoboticArm {
 		joint = PApplet.abs(joint) % 6;
 		// Get the joint's range bounds
 		PVector rangeBounds = getJointRange(joint);
-		return RobotRun.angleWithinBounds(RMath.mod2PI(angle), rangeBounds.x, rangeBounds.y);
+		return RMath.angleWithinBounds(RMath.mod2PI(angle), rangeBounds.x, rangeBounds.y);
 	}
 	
 	/**
@@ -1041,12 +1038,12 @@ public class RoboticArm {
 	 * @return	The active for this Robot, or null if no program is active
 	 */
 	public Program getActiveProg() {
-		if (activeProgIdx < 0 || activeProgIdx >= PROGRAM.size()) {
+		if (activeProgIdx < 0 || activeProgIdx >= PROGRAMS.size()) {
 			// Invalid program index
 			return null;
 		}
 		
-		return PROGRAM.get(activeProgIdx);
+		return PROGRAMS.get(activeProgIdx);
 	}
 
 	/**
@@ -1227,8 +1224,8 @@ public class RoboticArm {
 		return liveSpeed;
 	}
 	
-	public float[][] getOldOrientation() {
-		return oldEEOrientation;
+	public float[][] getLastEEOrientation() {
+		return lastEEOrientation;
 	}
 	
 	public RQuaternion getOrientation() {
@@ -1291,13 +1288,31 @@ public class RoboticArm {
 	 * 				index is invalid.
 	 */
 	public Program getProgram(int pdx) {
-		if (pdx >= 0 && pdx < PROGRAM.size()) {
-			return PROGRAM.get(pdx);
+		if (pdx >= 0 && pdx < PROGRAMS.size()) {
+			return PROGRAMS.get(pdx);
 			
 		} else {
 			// Invalid index
 			return null;
 		}
+	}
+	
+	/**
+	 * TODO comment
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public Program getProgram(String name) {
+		for (Program p : PROGRAMS) {
+			if (p.getName().equals(name)) {
+				return p;
+			}
+			
+		}
+		
+		// No such program exists
+		return null;
 	}
 
 	/**
@@ -1497,7 +1512,7 @@ public class RoboticArm {
 	 * Returns the number of programs associated with the Robot.
 	 */
 	public int numOfPrograms() {
-		return PROGRAM.size();
+		return PROGRAMS.size();
 	}
 	
 	/**
@@ -1552,7 +1567,7 @@ public class RoboticArm {
 
 		ArrayList<DisplayLine> progList = new ArrayList<>();
 		for(int i = 0; i < size; i += 1) {
-			progList.add(new DisplayLine(i, 0, PROGRAM.get(i).getName()));
+			progList.add(new DisplayLine(i, 0, PROGRAMS.get(i).getName()));
 		}
 		
 		return progList;
@@ -1616,9 +1631,9 @@ public class RoboticArm {
 	 * 				is invalid
 	 */
 	public Program removeProgram(int pdx) {
-		if (pdx >= 0 && pdx < PROGRAM.size()) {
+		if (pdx >= 0 && pdx < PROGRAMS.size()) {
 			// Return the removed program
-			return PROGRAM.remove(pdx);
+			return PROGRAMS.remove(pdx);
 			
 		} else {
 			// Invalid index
@@ -1707,7 +1722,7 @@ public class RoboticArm {
 	 * @return			Whether the given index is valid
 	 */
 	public boolean setActiveProgIdx(int progIdx) {
-		if (progIdx >= 0 && progIdx < PROGRAM.size()) {
+		if (progIdx >= 0 && progIdx < PROGRAMS.size()) {
 			
 			if (activeProgIdx != progIdx) {
 				PROG_UNDO.clear();
@@ -1718,6 +1733,24 @@ public class RoboticArm {
 			return true;
 		}
 		
+		return false;
+	}
+	
+	/**
+	 * TODO  comment
+	 * 
+	 * @param active
+	 * @return
+	 */
+	public boolean setActiveProg(Program active) {
+		for (int idx = 0; idx < PROGRAMS.size(); ++idx) {
+			if (PROGRAMS.get(idx) == active) {
+				activeProgIdx = idx;
+				return true;
+			}
+		}
+		
+		// Not a valid program for this robot
 		return false;
 	}
 	
@@ -2130,12 +2163,14 @@ public class RoboticArm {
 	 * the object held by the Robot.
 	 */
 	public void updatePreviousEEOrientation() {
-		RobotRun.getInstance().pushMatrix();
-		RobotRun.getInstance().resetMatrix();
+		RobotRun app = RobotRun.getInstance();
+		
+		app.pushMatrix();
+		app.resetMatrix();
 		RobotRun.applyModelRotation(this, getJointAngles());
 		// Keep track of the old coordinate frame of the armModel
-		oldEEOrientation = RobotRun.getInstance().getTransformationMatrix();
-		RobotRun.getInstance().popMatrix();
+		lastEEOrientation = app.getTransformationMatrix();
+		app.popMatrix();
 	}
 	
 	/**

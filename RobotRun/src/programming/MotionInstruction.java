@@ -1,6 +1,7 @@
 package programming;
 import frame.Frame;
 import geom.Point;
+import geom.RMath;
 import global.Fields;
 import robot.RobotRun;
 import robot.RoboticArm;
@@ -127,7 +128,7 @@ public final class MotionInstruction extends Instruction  {
 			// Convert point into the Native Coordinate System
 			RoboticArm model = RobotRun.getActiveRobot();
 			Frame active = model.getUserFrame(userFrame);
-			pt = RobotRun.removeFrame(model, pt, active.getOrigin(), active.getOrientation());
+			pt = RMath.removeFrame(model, pt, active.getOrigin(), active.getOrientation());
 		}
 
 		return pt.add(offset);

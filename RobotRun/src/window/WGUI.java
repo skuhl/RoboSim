@@ -38,6 +38,8 @@ import robot.EEMapping;
 import robot.RobotRun;
 import robot.RoboticArm;
 import robot.Scenario;
+import screen.DisplayLine;
+import screen.MenuScroll;
 import screen.ScreenMode;
 import screen.ScreenType;
 import ui.AxesDisplay;
@@ -186,12 +188,12 @@ public class WGUI implements ControlListener {
 		addButton("EE", buttonImages[1], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 		
 		// Initialize camera view buttons
-		addButton("FrontView", "F", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("BackView", "Bk", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("LeftView", "L", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("RightView", "R", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("TopView", "T", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
-		addButton("BottomView", "Bt", createObjWindow, sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("FrontView", "F", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("BackView", "Bk", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("LeftView", "L", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("RightView", "R", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("TopView", "T", sButtonWidth, sButtonHeight, Fields.small).hide();
+		addButton("BottomView", "Bt", sButtonWidth, sButtonHeight, Fields.small).hide();
 		
 		// Pendant screen background?
 		c1 = addTextarea("txt", "", pendantWindow, offsetX, 0,
@@ -704,6 +706,33 @@ public class WGUI implements ControlListener {
 		 .setColorActive(Fields.B_ACTIVE_C)
 		 .setPosition(posX, posY)
 	 	 .moveTo(parent)
+		 .setSize(wdh, hgt)
+		 .getCaptionLabel().setFont(lblFont);
+		
+		return b;
+	}
+	
+	/**
+	 * Adds a button to the UI with the given name, label text, width, height,
+	 * and font.
+	 * 
+	 * @param name		The name (or ID) of the button, which must be unique
+	 * 					amongst all UI elements!
+	 * @param lblTxt	The text displayed on the button
+	 * @param wdh		The width of the button
+	 * @param hgt		The height of the button
+	 * @param lblFont	The button text's font
+	 * @return			A reference to the new button
+	 */
+	private MyButton addButton(String name, String lblTxt, int wdh, int hgt,
+			PFont lblFont) {
+		
+		MyButton b = new MyButton(manager, name);
+		
+		b.setCaptionLabel(lblTxt)
+		 .setColorValue(Fields.B_TEXT_C)
+		 .setColorBackground(Fields.B_DEFAULT_C)
+		 .setColorActive(Fields.B_ACTIVE_C)
 		 .setSize(wdh, hgt)
 		 .getCaptionLabel().setFont(lblFont);
 		
@@ -1273,15 +1302,15 @@ public class WGUI implements ControlListener {
 		 PVector wpr = RMath.matrixToEuler( active.getLocalOrientationAxes() )
 				 			.mult(PConstants.RAD_TO_DEG);
 		 
-		 pos = RobotRun.convertNativeToWorld(pos);
+		 pos = RMath.vToWorld(pos);
 		 
 		 // Fill the current position and orientation fields in the edit window
 		 getTextField("XCur").setText( String.format("%4.3f", pos.x) );
 		 getTextField("YCur").setText( String.format("%4.3f", pos.y) );
 		 getTextField("ZCur").setText( String.format("%4.3f", pos.z) );
 		 getTextField("WCur").setText( String.format("%4.3f", -wpr.x) );
-		 getTextField("PCur").setText( String.format("%4.3f", -wpr.z) );
-		 getTextField("RCur").setText( String.format("%4.3f", wpr.y) );
+		 getTextField("PCur").setText( String.format("%4.3f", wpr.z) );
+		 getTextField("RCur").setText( String.format("%4.3f", -wpr.y) );
 	 }
 	 
 	 /**
@@ -1299,15 +1328,15 @@ public class WGUI implements ControlListener {
 			 PVector wpr = RMath.matrixToEuler( p.getDefaultOrientationAxes() )
 					 			.mult(PConstants.RAD_TO_DEG);
 			 
-			 pos = RobotRun.convertNativeToWorld(pos);
+			 pos = RMath.vToWorld(pos);
 			 
 			 // Fill the default position and orientation fields in the edit window
 			 getTextField("XCur").setText( String.format("%4.3f", pos.x) );
 			 getTextField("YCur").setText( String.format("%4.3f", pos.y) );
 			 getTextField("ZCur").setText( String.format("%4.3f", pos.z) );
 			 getTextField("WCur").setText( String.format("%4.3f", -wpr.x) );
-			 getTextField("PCur").setText( String.format("%4.3f", -wpr.z) );
-			 getTextField("RCur").setText( String.format("%4.3f", wpr.y) );
+			 getTextField("PCur").setText( String.format("%4.3f", wpr.z) );
+			 getTextField("RCur").setText( String.format("%4.3f", -wpr.y) );
 		 }
 	 }
 	 
@@ -1325,15 +1354,15 @@ public class WGUI implements ControlListener {
 			 PVector wpr = RMath.matrixToEuler( active.getLocalOrientationAxes() )
 					 			.mult(PConstants.RAD_TO_DEG);
 			 
-			 pos = RobotRun.convertNativeToWorld(pos);
+			 pos = RMath.vToWorld(pos);
 			 
 			 // Fill the default position and orientation fields in the edit window
 			 getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
 			 getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
 			 getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
 			 getTextArea("WDef").setText( String.format("%4.3f", -wpr.x) );
-			 getTextArea("PDef").setText( String.format("%4.3f", -wpr.z) );
-			 getTextArea("RDef").setText( String.format("%4.3f", wpr.y) );
+			 getTextArea("PDef").setText( String.format("%4.3f", wpr.z) );
+			 getTextArea("RDef").setText( String.format("%4.3f", -wpr.y) );
 		 }
 	 }
 	 
@@ -1352,15 +1381,15 @@ public class WGUI implements ControlListener {
 			 PVector wpr = RMath.matrixToEuler( p.getDefaultOrientationAxes() )
 					 			.mult(PConstants.RAD_TO_DEG);
 			 
-			 pos = RobotRun.convertNativeToWorld(pos);
+			 pos = RMath.vToWorld(pos);
 			 
 			 // Fill the default position and orientation fields in the edit window
 			 getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
 			 getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
 			 getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
 			 getTextArea("WDef").setText( String.format("%4.3f", -wpr.x) );
-			 getTextArea("PDef").setText( String.format("%4.3f", -wpr.z) );
-			 getTextArea("RDef").setText( String.format("%4.3f", wpr.y) );
+			 getTextArea("PDef").setText( String.format("%4.3f", wpr.z) );
+			 getTextArea("RDef").setText( String.format("%4.3f", -wpr.y) );
 		 }
 	 }
 	 
@@ -3169,7 +3198,7 @@ public class WGUI implements ControlListener {
 				 edited = dimChanged;
 
 				 // Convert origin position into the World Frame
-				 PVector oPosition = RobotRun.convertNativeToWorld( toEdit.getLocalCenter() ),
+				 PVector oPosition = RMath.vToWorld( toEdit.getLocalCenter() ),
 						 oWPR = RMath.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(PConstants.RAD_TO_DEG);
 				 Float[] inputValues = getCurrentValues();
 				 // Update position and orientation
@@ -3194,17 +3223,17 @@ public class WGUI implements ControlListener {
 				 }
 				 
 				 if (inputValues[5] != null) {
-					 oWPR.y = inputValues[5];
+					 oWPR.y = -inputValues[5];
 					 edited = true;
 				 }
 				 
 				 if (inputValues[4] != null) {
-					 oWPR.z = -inputValues[4];
+					 oWPR.z = inputValues[4];
 					 edited = true;
 				 }
 
 				 // Convert values from the World to the Native coordinate system
-				 PVector position = RobotRun.convertWorldToNative( oPosition );
+				 PVector position = RMath.vFromWorld( oPosition );
 				 PVector wpr = oWPR.mult(PConstants.DEG_TO_RAD);
 				 float[][] orientation = RMath.eulerToMatrix(wpr);
 				 // Update the Objects position and orientation
@@ -3254,7 +3283,7 @@ public class WGUI implements ControlListener {
 		 if (toEdit instanceof Part) {
 			Part p = (Part)toEdit;
 			// Pull the object's current position and orientation
-			PVector defaultPos = RobotRun.convertNativeToWorld( p.getDefaultCenter() );
+			PVector defaultPos = RMath.vToWorld( p.getDefaultCenter() );
 			PVector defaultWPR = RMath.matrixToEuler( p.getDefaultOrientationAxes() )
 									  .mult(PConstants.RAD_TO_DEG);
 			Float[] inputValues = getCurrentValues();
@@ -3281,17 +3310,17 @@ public class WGUI implements ControlListener {
 			 }
 			 
 			 if (inputValues[5] != null) {
-				 defaultWPR.y = inputValues[5];
+				 defaultWPR.y = -inputValues[5];
 				 edited = true;
 			 }
 			 
 			 if (inputValues[4] != null) {
-				 defaultWPR.z = -inputValues[4];
+				 defaultWPR.z = inputValues[4];
 				 edited = true;
 			 }
 
 			 // Convert values from the World to the Native coordinate system
-			 PVector position = RobotRun.convertWorldToNative( defaultPos );
+			 PVector position = RMath.vFromWorld( defaultPos );
 			 PVector wpr = defaultWPR.mult(PConstants.DEG_TO_RAD);
 			 float[][] orientation = RMath.eulerToMatrix(wpr);
 			 // Update the Object's default position and orientation
