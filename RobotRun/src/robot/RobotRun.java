@@ -7,9 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.RealMatrix;
-
 import expression.AtomicExpression;
 import expression.ExprOperand;
 import expression.Expression;
@@ -23,6 +20,7 @@ import geom.Fixture;
 import geom.Part;
 import geom.Point;
 import geom.RMath;
+import geom.RMatrix;
 import geom.RQuaternion;
 import geom.Triangle;
 import geom.WorldObject;
@@ -232,10 +230,10 @@ public class RobotRun extends PApplet {
 	 * @return The rotation matrix in terms of the world frame
 	 */
 	public static float[][] convertNativeToWorld(float[][] orienMat) {
-		RealMatrix frameAxes = new Array2DRowRealMatrix(RMath.floatToDouble(orienMat, 3, 3));
-		RealMatrix worldAxes = new Array2DRowRealMatrix(RMath.floatToDouble(Fields.WORLD_AXES, 3, 3));
+		RMatrix frameAxes = new RMatrix(orienMat);
+		RMatrix worldAxes = new RMatrix(Fields.WORLD_AXES);
 
-		return RMath.doubleToFloat(worldAxes.multiply(frameAxes).getData(), 3, 3);
+		return worldAxes.multiply(frameAxes).getFloatData();
 	}
 
 	/**
@@ -1701,14 +1699,23 @@ public class RobotRun extends PApplet {
 		popMatrix();
 		
 		PVector[] obj = c.checkObjectInFrame(f, 2);
-		/*for(int i = 0; i < 8; i += 1) {
-			pushMatrix();
-			stroke(0);
-			translate(p.position.x-30, p.position.y, p.position.z);
-			translate(obj[i].x, obj[i].y, obj[i].z);
-			sphere(1);
-			popMatrix();
-		}
+	
+		pushMatrix();
+		stroke(0);
+		translate(p.position.x, p.position.y, p.position.z);
+		beginShape();
+		vertex(obj[0].x, obj[0].y, obj[0].z);
+		vertex(obj[1].x, obj[1].y, obj[1].z);
+		vertex(obj[3].x, obj[3].y, obj[3].z);
+		vertex(obj[2].x, obj[2].y, obj[2].z);
+		vertex(obj[0].x, obj[0].y, obj[0].z);
+		vertex(obj[4].x, obj[4].y, obj[4].z);
+		vertex(obj[5].x, obj[5].y, obj[5].z);
+		vertex(obj[7].x, obj[7].y, obj[7].z);
+		vertex(obj[6].x, obj[6].y, obj[6].z);
+		vertex(obj[4].x, obj[4].y, obj[4].z);
+		endShape();
+		popMatrix();
 		//RobotRun.printMat(c.getOrientationMat());
 		/**/
 		 
@@ -4718,7 +4725,7 @@ public class RobotRun extends PApplet {
 		case KeyEvent.VK_PERIOD: 	joint6_neg(); break;
 		case KeyEvent.VK_SLASH:		joint6_pos(); break;
 		case KeyEvent.VK_CONTROL:	ctrl = false; break;
-			}
+		}
 	}
 
 	/**
