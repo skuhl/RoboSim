@@ -247,14 +247,14 @@ public class RobotRun extends PApplet {
 	 *            given joint angles
 	 */
 	public static Point nativeRobotPointOffset(RoboticArm model, float[] jointAngles, PVector offset) {
-
 		instance.pushMatrix();
 		instance.resetMatrix();
 		applyModelRotation(model, jointAngles);
+		System.out.println("Stack mat:");
+		instance.printMatrix();
 		// Apply offset
 		PVector ee = instance.getCoordFromMatrix(offset.x, offset.y, offset.z);
 		float[][] orientationMatrix = instance.getRotationMatrix();
-		RMath.printMat(orientationMatrix);
 		instance.popMatrix();
 		// Return a Point containing the EE position, orientation, and joint
 		// angles
@@ -446,12 +446,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void applyMatrix(PVector origin, float[][] axesVectors) {
 		// Transpose the rotation portion, because Processing
-		super.applyMatrix(
-				axesVectors[0][0], axesVectors[0][1], axesVectors[0][2], origin.x,
-				axesVectors[1][0], axesVectors[1][1], axesVectors[1][2], origin.y,
-				axesVectors[2][0], axesVectors[2][1], axesVectors[2][2], origin.z,
-				0, 0, 0, 1
-		);
+		this.applyMatrix(RMath.transformationMatrix(origin, axesVectors));
 	}
 
 	/**
@@ -1593,12 +1588,12 @@ public class RobotRun extends PApplet {
 				}
 			}
 			/**/
-	
-			/*Camera Test Code*
+			printMatrix();
+			/*Camera Test Code*/
 			Fixture f = new Fixture("test", 160, 0, 50, 100, 200);
 			f.setLocalCenter(new PVector(-700, -300, 0));
 			Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
-			float[][] axes = RMath.quatToMatrix(p.orientation);
+			float[][] axes = p.orientation.toMatrix();
 			c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[1][0], axes[1][1], axes[1][2]), -PI/2)));
 			c.setPosition(p.position);
 			renderOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
@@ -1659,7 +1654,7 @@ public class RobotRun extends PApplet {
 			f.draw();
 			popMatrix();
 			
-			PVector[] obj = c.checkObjectInFrame(f, 2);
+			/*PVector[] obj = c.checkObjectInFrame(f, 2);
 		
 			pushMatrix();
 			stroke(0);
@@ -4448,22 +4443,20 @@ public class RobotRun extends PApplet {
 	 * @return	A row major orthogonal rotation matrix
 	 */
 	public float[][] getRotationMatrix() {
-		float[][] rMatrix = new float[3][3];
 		// Pull the origin and axes vectors from the matrix stack
 		PVector origin = getCoordFromMatrix(0f, 0f, 0f),
 				vx = getCoordFromMatrix(1f, 0f, 0f).sub(origin),
 				vy = getCoordFromMatrix(0f, 1f, 0f).sub(origin),
 				vz = getCoordFromMatrix(0f, 0f, 1f).sub(origin);
 		
-		rMatrix[0][0] = vx.x;
-		rMatrix[0][1] = vx.y;
-		rMatrix[0][2] = vx.z;
-		rMatrix[1][0] = vy.x;
-		rMatrix[1][1] = vy.y;
-		rMatrix[1][2] = vy.z;
-		rMatrix[2][0] = vz.x;
-		rMatrix[2][1] = vz.y;
-		rMatrix[2][2] = vz.z;
+		float[][] rMatrix = new float[][] {
+			{vx.x, vx.y, vx.z},
+			{vy.x, vy.y, vy.z},
+			{vz.x, vz.y, vz.z}
+		};
+		
+		System.out.println("Rotation mat:");//TODO
+		RMath.printMat(rMatrix);
 
 		return rMatrix;
 	}
@@ -6783,7 +6776,6 @@ public class RobotRun extends PApplet {
 		pushMatrix();
 		// Transform to the reference frame defined by the axes vectors
 		applyMatrix(origin, axesVectors);
-
 		// X axis
 		stroke(255, 0, 0);
 		line(-axesLength, 0, 0, axesLength, 0, 0);
@@ -7318,7 +7310,6 @@ public class RobotRun extends PApplet {
 		letterStates = new int[] { 0, 0, 0, 0, 0 };
 		workingText = new StringBuilder();
 		
-		// size(1200, 800, P3D);
 		// create font and text display background
 		Fields.medium = createFont("fonts/Consolas.ttf", 14);
 		Fields.small = createFont("fonts/Consolas.ttf", 12);
@@ -7365,7 +7356,7 @@ public class RobotRun extends PApplet {
 			throw NPEx;
 		}
 		
-		
+		/* *
 		pushMatrix();
 		resetMatrix();
 		translate(15, -2, 12);
@@ -7373,7 +7364,6 @@ public class RobotRun extends PApplet {
 		rotateY(-PI / 2f);
 		printMatrix();
 		
-		/**
 		PVector origin = getCoordFromMatrix(0, 0, 0);
 		PVector x = getCoordFromMatrix(1, 0, 0).sub(origin);
 		PVector y = getCoordFromMatrix(0, 1, 0).sub(origin);
@@ -7381,7 +7371,7 @@ public class RobotRun extends PApplet {
 		
 		System.out.printf("%s\n%s\n%s\n", x, y, z);
 		
-		/**/
+		/*
 		
 		float[][] t = getTransformationMatrix();
 		System.out.println( RMath.toString(t) );
@@ -7393,10 +7383,8 @@ public class RobotRun extends PApplet {
 				t[3][0], t[3][1], t[3][2], t[3][3]
 		);
 		printMatrix();
-		
-		/**/
 		popMatrix();
-		
+		/**/
 	}
 	
 	/**
