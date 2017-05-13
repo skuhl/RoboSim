@@ -5,13 +5,11 @@ import java.util.ArrayList;
 import geom.Box;
 import geom.Cylinder;
 import geom.DimType;
-import geom.Fixture;
 import geom.ModelShape;
 import geom.RMath;
 import geom.RMatrix;
 import geom.RQuaternion;
 import geom.WorldObject;
-import processing.core.PShape;
 import processing.core.PVector;
 
 public class RobotCamera {
@@ -337,7 +335,7 @@ public class RobotCamera {
 		};
 		
 		System.out.println("Rmat");
-		RMath.printMat(tRot);
+		RMath.printMat(rot);
 		System.out.println("Tmat");
 		RMath.printMat(trans);
 		
