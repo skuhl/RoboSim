@@ -250,8 +250,10 @@ public class RobotRun extends PApplet {
 		instance.pushMatrix();
 		instance.resetMatrix();
 		applyModelRotation(model, jointAngles);
+		/* TODO *
 		System.out.println("Stack mat:");
 		instance.printMatrix();
+		/**/
 		// Apply offset
 		PVector ee = instance.getCoordFromMatrix(offset.x, offset.y, offset.z);
 		float[][] orientationMatrix = instance.getRotationMatrix();
@@ -1587,9 +1589,9 @@ public class RobotRun extends PApplet {
 					count += 1;
 				}
 			}
-			/**/
+			/**
 			printMatrix();
-			/*Camera Test Code*/
+			/*Camera Test Code*
 			Fixture f = new Fixture("test", 160, 0, 50, 100, 200);
 			f.setLocalCenter(new PVector(-700, -300, 0));
 			Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
@@ -4455,9 +4457,10 @@ public class RobotRun extends PApplet {
 			{vz.x, vz.y, vz.z}
 		};
 		
-		System.out.println("Rotation mat:");//TODO
+		/* TODO *
+		System.out.println("Rotation mat:");
 		RMath.printMat(rMatrix);
-
+		/**/
 		return rMatrix;
 	}
 
