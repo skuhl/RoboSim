@@ -1,42 +1,40 @@
 package programming;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Set;
-
 
 import geom.Point;
 import global.Fields;
 import robot.RobotRun;
 import robot.RoboticArm;
-import window.DisplayLine;
+import screen.DisplayLine;
 
-public class Program {
-	String name;
-	//TODO have program only reference the robot to which it is assigned rather
-	//than the whole program instance
-	private RoboticArm robot;
-	private int nextPosition;
-
+public class Program implements Iterable<Instruction> {
 	/**
 	 * The positions associated with this program, which are
 	 * stored in reference to the current User frame
 	 */
-	HashMap<Integer, Point> LPosReg;
-	ArrayList<Instruction> instructions;
+	private final HashMap<Integer, Point> LPosReg;
+	private final ArrayList<Instruction> instructions;
+	
+	private String name;
+	private RoboticArm robot;
+	private int nextPosition;
 
 	public Program(String s, RoboticArm r) {
 		name = s;
 		robot = r;
 		nextPosition = 0;
-		LPosReg = new HashMap<Integer, Point>();
-		instructions = new ArrayList<Instruction>();
+		LPosReg = new HashMap<>();
+		instructions = new ArrayList<>();
 	}
 
-	public void addInstruction(Instruction i) {
+	public void addInstAtEnd(Instruction i) {
 		instructions.add(i);
 	}
 
-	public void addInstruction(int idx, Instruction i) {
+	public void addInstAt(int idx, Instruction i) {
 		instructions.add(idx, i);
 	}
 
@@ -61,6 +59,7 @@ public class Program {
 	/**
 	 * Return an independent replica of this program object.
 	 */
+	@Override
 	public Program clone() {
 		Program copy = new Program(name, robot);
 
@@ -73,7 +72,7 @@ public class Program {
 
 		// Copy instructions
 		for (Instruction inst : instructions) {
-			copy.addInstruction(inst.clone());
+			copy.addInstAtEnd(inst.clone());
 		}
 
 		return copy;
@@ -100,12 +99,12 @@ public class Program {
 		return -1;
 	}
 
-	public Instruction getInstruction(int i){
+	public Instruction getInstAt(int i){
 		return instructions.get(i);
 	}
-
-	public ArrayList<Instruction> getInstructions() {
-		return instructions;
+	
+	public int getNumOfInst() {
+		return instructions.size();
 	}
 
 	public LabelInstruction getLabel(int n){    
@@ -132,9 +131,9 @@ public class Program {
 	}
 
 	/**
-	 * Get the position assocaited with the given index.
+	 * Get the position associated with the given index.
 	 * 
-	 * @param idx  The indexx corresopnding to a position in the program
+	 * @param idx  The index corresponding to a position in the program
 	 */
 	public Point getPosition(int idx) {
 		return LPosReg.get(idx);
@@ -147,28 +146,33 @@ public class Program {
 		return LPosReg.keySet();
 	}
 
-	public int getRegistersLength() {
+	public int getNumOfLReg() {
 		return LPosReg.size();
 	}
 	
 	public RoboticArm getRobot() {
 		return robot;
 	}
+	
+	@Override
+	public Iterator<Instruction> iterator() {
+		return instructions.iterator();
+	}
 
-	public void overwriteInstruction(int idx, Instruction i) {
-		instructions.set(idx, i);
+	public Instruction replaceInstAt(int idx, Instruction i) {
+		return instructions.set(idx, i);
 	}
 	
 	public ArrayList<DisplayLine> printInstrList() {
-		ArrayList<DisplayLine> instruct_list = new ArrayList<DisplayLine>();
+		ArrayList<DisplayLine> instruct_list = new ArrayList<>();
 		int tokenOffset = Fields.TXT_PAD - Fields.PAD_OFFSET;
 
 		Program p = this;
-		int size = p.getInstructions().size();
+		int size = p.getNumOfInst();
 
 		for(int i = 0; i < size; i+= 1) {
 			DisplayLine line = new DisplayLine(i);
-			Instruction instr = p.getInstruction(i);
+			Instruction instr = p.getInstAt(i);
 			int xPos = 10;
 
 			// Add line number
@@ -216,7 +220,7 @@ public class Program {
 
 					line = new DisplayLine(i, xPos);
 					xPos += field.length()*Fields.CHAR_WDTH + tokenOffset;
-				} else if(xPos > Fields.DISPLAY_WIDTH - 10) {
+				} else if(xPos > Fields.PENDANT_SCREEN_WIDTH - 10) {
 					instruct_list.add(line);
 					xPos = 2*Fields.CHAR_WDTH + tokenOffset;
 
@@ -234,6 +238,10 @@ public class Program {
 		}
 
 		return instruct_list;
+	}
+	
+	public Instruction rmInstAt(int idx) {
+		return instructions.remove(idx);
 	}
 
 	public void setName(String n) { name = n; }
@@ -284,7 +292,7 @@ public class Program {
 	public Point updateMCInstPosition(int instIdx, Point newPt) throws
 		ClassCastException, NullPointerException {
 		
-		MotionInstruction mInst = (MotionInstruction) getInstruction(instIdx);
+		MotionInstruction mInst = (MotionInstruction) getInstAt(instIdx);
 		MotionInstruction sndMInst = mInst.getSecondaryPoint();
 		
 		if (mInst.getMotionType() != Fields.MTYPE_CIRCULAR || sndMInst == null) {
@@ -327,7 +335,7 @@ public class Program {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			MotionInstruction mInst = (MotionInstruction)getInstruction(instIdx);
+			MotionInstruction mInst = (MotionInstruction)getInstAt(instIdx);
 			int posNum = mInst.getPositionNum();
 			
 			if (posNum == -1) {
@@ -359,4 +367,4 @@ public class Program {
 			}
 		}
 	}
-} // end Program class
+}

@@ -3,8 +3,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
+import geom.Fixture;
 import geom.Part;
+import geom.RMath;
+import geom.RMatrix;
 import geom.WorldObject;
+import processing.core.PApplet;
 
 /**
  * A storage class for a collection of objects with an associated name for the collection.
@@ -21,7 +25,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 */
 	public Scenario(String n) {
 		name = n;
-		objList = new ArrayList<WorldObject>();
+		objList = new ArrayList<>();
 	}
 
 	/**
@@ -36,7 +40,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 */
 	private <T extends WorldObject> String addSuffixForDuplicateName(String originName, ArrayList<T> wldObjList) {
 		int nameLen = originName.length();
-		ArrayList<Integer> suffixes = new ArrayList<Integer>();
+		ArrayList<Integer> suffixes = new ArrayList<>();
 
 		for (T wldObj : wldObjList) {
 			String objName = wldObj.getName();
@@ -100,9 +104,9 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		if (newObject == null || objList.contains(newObject)) {
 			// Ignore nulls and duplicates
 			if (newObject == null) {
-				RobotRun.println("New Object is null");
+				PApplet.println("New Object is null");
 			} else {
-				RobotRun.println("New Object is: " + newObject.toString());
+				PApplet.println("New Object is: " + newObject.toString());
 			}
 
 			return false;
@@ -147,8 +151,8 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	@Override
 	public Object clone() {
 		Scenario copy = new Scenario(name);
-		ArrayList<Fixture> fixtures = new ArrayList<Fixture>();
-		ArrayList<Part> parts = new ArrayList<Part>();
+		ArrayList<Fixture> fixtures = new ArrayList<>();
+		ArrayList<Part> parts = new ArrayList<>();
 
 
 		for (WorldObject obj : this) {
@@ -386,7 +390,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					     R  - part fixture reference orientation
 					     E' - current Robot end effector orientation
 					     E  - previous Robot end effector orientation
-					     P  - current part loval orientation
+					     P  - current part local orientation
 					 ***********************************************/
 
 					Fixture refFixture = p.getFixtureRef();
@@ -396,13 +400,8 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					}
 
 					RobotRun.applyModelRotation(model, model.getJointAngles());
-
-					float[][] invEETMatrix = RobotRun.invertHCMatrix(RobotRun.getActiveRobot().oldEEOrientation);
-					RobotRun.getInstance().applyMatrix(invEETMatrix[0][0], invEETMatrix[1][0], invEETMatrix[2][0], invEETMatrix[0][3],
-							invEETMatrix[0][1], invEETMatrix[1][1], invEETMatrix[2][1], invEETMatrix[1][3],
-							invEETMatrix[0][2], invEETMatrix[1][2], invEETMatrix[2][2], invEETMatrix[2][3],
-							0,                 0,                   0,                  1);
-
+					RMatrix invMat = new RMatrix(RobotRun.getActiveRobot().getLastEEOrientation());
+					RobotRun.getInstance().applyMatrix(invMat.getSVD().getFloatData());
 					p.applyCoordinateSystem();
 					// Update the world object's position and orientation
 					p.setLocalCoordinateSystem();
@@ -437,7 +436,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					}
 				}
 
-				if (p == RobotRun.getInstance().getManager().getSelectedWO()) {
+				if (p == RobotRun.getInstance().getUI().getSelectedWO()) {
 					p.setBBColor(RobotRun.getInstance().color(255, 255, 0));
 				}
 			}

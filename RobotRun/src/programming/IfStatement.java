@@ -40,6 +40,7 @@ public class IfStatement extends Instruction {
 		instr = i;
 	}
 	
+	@Override
 	public Instruction clone() {
 		Instruction copy;
 		
@@ -56,6 +57,7 @@ public class IfStatement extends Instruction {
 		return copy;
 	}
 
+	@Override
 	public int execute() {
 		ExprOperand result = expr.evaluate();
 
@@ -85,21 +87,27 @@ public class IfStatement extends Instruction {
 		this.instr = instr;
 	}
 
+	@Override
 	public String toString() {
 		return "IF " + expr.toString() + " : " + instr.toString();
 	}
 
+	@Override
 	public String[] toStringArray() {
 		String[] exprArray = expr.toStringArray();
-		String[] instArray, ret;
+		String[] ret;
+		
 		if(instr == null) {
 			ret = new String[exprArray.length + 2];
 			ret[ret.length - 1] = "...";
+			
 		} else {
-			ret = new String[exprArray.length + 3];
-			instArray = instr.toStringArray();
-			ret[ret.length - 2] = instArray[0];
-			ret[ret.length - 1] = instArray[1];
+			String[] instArray = instr.toStringArray();
+			ret = new String[exprArray.length + instArray.length + 1];
+			
+			for (int idx = 0; idx < instArray.length; ++idx) {
+				ret[idx + exprArray.length + 1] = instArray[idx];
+			}
 		}
 
 		ret[0] = "IF";

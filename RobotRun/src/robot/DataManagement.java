@@ -8,6 +8,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import expression.AtomicExpression;
@@ -21,10 +23,12 @@ import frame.UserFrame;
 import geom.Box;
 import geom.Cylinder;
 import geom.DimType;
+import geom.Fixture;
 import geom.LoadedPart;
 import geom.ModelShape;
 import geom.Part;
 import geom.Point;
+import geom.RQuaternion;
 import geom.Shape;
 import geom.WorldObject;
 import global.Fields;
@@ -55,18 +59,58 @@ import regs.Register;
  */
 public abstract class DataManagement {
 	
-	private static String dataDir, parentDirPath, scenarioDirPath;
+	private static String dataDirPath, errDirPath, tmpDirPath, scenarioDirPath;
 	
 	static {
-		parentDirPath = null;
+		dataDirPath = null;
+		errDirPath = null;
+		tmpDirPath = null;
 		scenarioDirPath = null;
 	}
 	
 	// Must be called when RobotRun starts!!!!
 	public static void initialize(RobotRun process) {
-		dataDir = process.sketchPath("data/");
-		parentDirPath = process.sketchPath("tmp/");
-		scenarioDirPath = parentDirPath + "scenarios/";
+		dataDirPath = process.sketchPath("data\\");
+		errDirPath = process.sketchPath("err\\");
+		tmpDirPath = process.sketchPath("tmp\\");
+		scenarioDirPath = process.sketchPath(tmpDirPath + "scenarios\\");
+	}
+	
+	/**
+	 * Prints the given error's stack trace to a log file in the err sub
+	 * directory. The file's name is the day-month-year-hour-minute the
+	 * error occured.
+	 * 
+	 * @param Ex	the error for which to print the stack trace
+	 */
+	public static void errLog(Exception Ex) {
+		try {
+			File errDir = new File(errDirPath);
+			// create the err subdirectory
+			if (!errDir.exists()) {
+				errDir.mkdir();
+			}
+			
+			LocalDateTime now = LocalDateTime.now();
+			// Use current day, month, year, hour, and minute as file name
+			String time = String.format("%s%02d-%02d-%d-%02d-%02d.log", errDirPath,
+					now.getDayOfMonth(), now.getMonthValue(), now.getYear(),
+					now.getHour(), now.getMinute());
+			
+			File errLog = new File(time);
+			
+			if (!errLog.exists()) {
+				errLog.createNewFile();
+			}
+			
+			PrintWriter out = new PrintWriter(errLog);
+			Ex.printStackTrace(out);
+			out.close();
+			
+		} catch (IOException IOEx) {
+			// Could not create error log file
+			IOEx.printStackTrace();
+		}
 	}
 	
 	/**
@@ -76,7 +120,7 @@ public abstract class DataManagement {
 	 * @return	A list of model files
 	 */
 	public static ArrayList<String> getDataFileNames() {
-		File data = new File(dataDir);
+		File data = new File(dataDirPath);
 		
 		if (!data.exists() || data.isFile()) {
 			// Missing data directory
@@ -84,7 +128,7 @@ public abstract class DataManagement {
 		}
 		// Search for all .stl files
 		File[] dataFiles = data.listFiles();
-		ArrayList<String> fileNames = new ArrayList<String>(dataFiles.length);
+		ArrayList<String> fileNames = new ArrayList<>(dataFiles.length);
 		
 		for (File file : dataFiles) {
 			String name = file.getName();
@@ -146,7 +190,7 @@ public abstract class DataManagement {
 
 			} else if (opType == ExpressionElement.DREG ||
 					opType == ExpressionElement.IOREG ||
-					opType == Expression.PREG ||
+					opType == ExpressionElement.PREG ||
 					opType == ExpressionElement.PREG_IDX) {
 				// Note: the register value of the operand is set to null!
 
@@ -255,7 +299,6 @@ public abstract class DataManagement {
 
 		// Read axes quaternion values
 		ref.setOrientation( loadRQuaternion(in) );
-		//System.out.printf("%s\n", ref.getOrientation());
 		
 		// Read in orientation points (and tooltip teach points for tool frames)
 		for (int idx = 0; idx < len; ++idx) {
@@ -300,19 +343,19 @@ public abstract class DataManagement {
 
 		} catch (FileNotFoundException FNFEx) {
 			// Could not find src
-			System.out.printf("%s does not exist!\n", src.getName());
+			System.err.printf("%s does not exist!\n", src.getName());
 			FNFEx.printStackTrace();
 			return 1;
 
 		} catch (EOFException EOFEx) {
 			// Reached the end of src unexpectedly
-			System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
+			System.err.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
 			EOFEx.printStackTrace();
 			return 3;
 
 		} catch (IOException IOEx) {
 			// Error with reading from src
-			System.out.printf("%s is corrupt!\n", src.getName());
+			System.err.printf("%s is corrupt!\n", src.getName());
 			IOEx.printStackTrace();
 			return 2;
 		}
@@ -381,10 +424,11 @@ public abstract class DataManagement {
 		} else if (instType == 7) {
 			boolean isCommented = in.readBoolean();
 			int tgtRID = in.readInt();
-			int pdx = in.readInt();
+			String pName = in.readUTF();
 			
 			RoboticArm tgt = RobotRun.getInstance().getRobot(tgtRID);
-			inst = new CallInstruction(tgt, pdx);
+			
+			inst = new CallInstruction(tgt, pName);
 			inst.setIsCommented(isCommented);
 
 		} else if (instType == 8) {
@@ -426,14 +470,14 @@ public abstract class DataManagement {
 			boolean isCommented = in.readBoolean();
 			ExprOperand arg = (ExprOperand)loadExpressionElement(robot, in);
 			
-			ArrayList<ExprOperand> cases = new ArrayList<ExprOperand>();
+			ArrayList<ExprOperand> cases = new ArrayList<>();
 			int size = in.readInt();
 			
 			while (size-- > 0) {
 				cases.add( (ExprOperand)loadExpressionElement(robot, in) );
 			}
 			
-			ArrayList<Instruction> insts = new ArrayList<Instruction>();
+			ArrayList<Instruction> insts = new ArrayList<>();
 			size = in.readInt();
 			
 			while (size-- > 0) {
@@ -521,7 +565,7 @@ public abstract class DataManagement {
 			while(numOfInst-- > 0) {
 				// Read in each instruction
 				Instruction inst = loadInstruction(robot, in);
-				prog.addInstruction(inst);
+				prog.addInstAtEnd(inst);
 			}
 
 			return prog;
@@ -536,7 +580,7 @@ public abstract class DataManagement {
 			DataInputStream dataIn = new DataInputStream(in);
 			// Read the number of programs stored in src
 			int size = Math.max(0, Math.min(dataIn.readInt(), 200));
-
+			
 			while(size-- > 0) {
 				// Read each program from src
 				robot.addProgram( loadProgram(robot, dataIn) );
@@ -544,25 +588,26 @@ public abstract class DataManagement {
 
 			dataIn.close();
 			in.close();
+			
 			return 0;
 
 		} catch (FileNotFoundException FNFEx) {
 			// Could not locate src
-			System.out.printf("%s does not exist!\n", src.getName());
+			System.err.printf("%s does not exist!\n", src.getName());
 			FNFEx.printStackTrace();
 			return 1;
 
 		} catch (EOFException EOFEx) {
 			// Reached the end of src unexpectedly
-			System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
+			System.err.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
 			EOFEx.printStackTrace();
-			return 3;
+			return 2;
 
 		} catch (IOException IOEx) {
 			// An error occurred with reading from src
-			System.out.printf("%s is corrupt!\n", src.getName());
+			System.err.printf("%s is corrupt!\n", src.getName());
 			IOEx.printStackTrace();
-			return 2;
+			return 3;
 			
 		} catch (ClassCastException CCEx) {
 			/* An error occurred with casting between objects while loading a
@@ -570,6 +615,12 @@ public abstract class DataManagement {
 			System.err.printf("%s is corrupt!\n", src.getName());
 			CCEx.printStackTrace();
 			return 4;
+			
+		} catch (NegativeArraySizeException NASEx) {
+			// Issue with loading program points
+			System.err.printf("%s is corrupt!\n", src.getName());
+			NASEx.printStackTrace();
+			return 5;
 		}
 	}
 	
@@ -597,7 +648,7 @@ public abstract class DataManagement {
 			FileInputStream in = new FileInputStream(src);
 			DataInputStream dataIn = new DataInputStream(in);
 
-			int size = Math.max(0, Math.min(dataIn.readInt(), RoboticArm.DPREG_NUM));
+			int size = Math.max(0, Math.min(dataIn.readInt(), Fields.DPREG_NUM));
 
 			// Load the Register entries
 			while(size-- > 0) {
@@ -620,7 +671,7 @@ public abstract class DataManagement {
 				}
 			}
 
-			size = Math.max(0, Math.min(dataIn.readInt(), RoboticArm.DPREG_NUM));
+			size = Math.max(0, Math.min(dataIn.readInt(), Fields.DPREG_NUM));
 
 			// Load the Position Register entries
 			while(size-- > 0) {
@@ -648,26 +699,26 @@ public abstract class DataManagement {
 
 		} catch (FileNotFoundException FNFEx) {
 			// Could not be located src
-			System.out.printf("%s does not exist!\n", src.getName());
+			System.err.printf("%s does not exist!\n", src.getName());
 			FNFEx.printStackTrace();
 			return 1;
 
 		} catch (EOFException EOFEx) {
 			// Unexpectedly reached the end of src
-			System.out.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
+			System.err.printf("End of file, %s, was reached unexpectedly!\n", src.getName());
 			EOFEx.printStackTrace();
 			return 3;
 
 		} catch (IOException IOEx) {
 			// Error occrued while reading from src
-			System.out.printf("%s is corrupt!\n", src.getName());
+			System.err.printf("%s is corrupt!\n", src.getName());
 			IOEx.printStackTrace();
 			return 2;
 		}
 	}
 
 	private static int loadRobotData(RoboticArm robot) {
-		File srcDir = new File( String.format("%srobot%d/", parentDirPath, robot.getRID()) );
+		File srcDir = new File( String.format("%srobot%d/", tmpDirPath, robot.RID) );
 		
 		if (!srcDir.exists() || !srcDir.isDirectory()) {
 			// No such directory exists
@@ -712,9 +763,9 @@ public abstract class DataManagement {
 			String name = in.readUTF();
 			Scenario s = new Scenario(name);
 			// An extra set of only the loaded fixtures
-			ArrayList<Fixture> fixtures = new ArrayList<Fixture>();
+			ArrayList<Fixture> fixtures = new ArrayList<>();
 			// A list of parts which have a fixture reference defined
-			ArrayList<LoadedPart> partsWithReferences = new ArrayList<LoadedPart>();
+			ArrayList<LoadedPart> partsWithReferences = new ArrayList<>();
 
 			// Read the number of objects in the scenario
 			int size = in.readInt();
@@ -746,7 +797,14 @@ public abstract class DataManagement {
 						}
 					}
 					
-				} catch (NullPointerException NPEx) {/* Invalid model source file */}
+				} catch (NullPointerException NPEx) {
+					/* Invalid model source file name */
+					System.err.println( NPEx.getMessage() );
+					
+				} catch (RuntimeException REx) {
+					/* Invalid model source file name */
+					System.err.println( REx.getMessage() );
+				}
 			}
 			
 			// Set all the Part's references
@@ -767,32 +825,13 @@ public abstract class DataManagement {
 		
 		if (!src.exists() || !src.isDirectory()) {
 			// No files to load
-			process.activeScenario = null;
 			return 1;
 		}
 		
 		File[] scenarioFiles = src.listFiles();
-		File activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");;
+		File activeFile = null;
 		
-		String activeName = null;
-		try {
-			
-			if (activeFile.exists()) {
-				FileInputStream in = new FileInputStream(activeFile);
-				DataInputStream dataIn = new DataInputStream(in);
-				
-				// Read the name of the active scenario
-				activeName = dataIn.readUTF();
-				
-				dataIn.close();
-				in.close();
-			}
-		
-		} catch (IOException IOEx) {
-			System.err.println("The active scenario file is corrupt!");
-			// An error occurred with loading a scenario from a file
-			IOEx.printStackTrace();
-		}
+		ArrayList<Scenario> scenarioList = process.getScenarios();
 		
 		// Load each scenario from their respective files
 		for (File scenarioFile : scenarioFiles) {
@@ -806,31 +845,50 @@ public abstract class DataManagement {
 				s = loadScenario(dataIn, process);
 				
 				if (s != null) {
-					process.SCENARIOS.add(s);
-					
-					if (activeName != null && s.getName().equals(activeName)) {
-						// Set the active scenario
-						process.activeScenario = s;
-					}
+					scenarioList.add(s);
 				}
 				
 				dataIn.close();
 				in.close();
 			
 			} catch (FileNotFoundException FNFEx) {
-				System.out.printf("File %s does not exist in \\tmp\\scenarios.\n", activeFile.getName());
+				System.err.printf("File %s does not exist in \\tmp\\scenarios.\n", activeFile.getName());
 				FNFEx.printStackTrace();
 				
 			} catch (IOException IOEx) {
-				System.out.printf("File, %s, in \\tmp\\scenarios is corrupt!\n", activeFile.getName());
+				System.err.printf("File, %s, in \\tmp\\scenarios is corrupt!\n", activeFile.getName());
 				IOEx.printStackTrace();
 			}
+		}
+		
+		activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");;
+		
+		try {
+			
+			if (activeFile.exists()) {
+				FileInputStream in = new FileInputStream(activeFile);
+				DataInputStream dataIn = new DataInputStream(in);
+				
+				// Read the name of the active scenario
+				String activeName = dataIn.readUTF();
+				process.setActiveScenario(activeName);
+				
+				dataIn.close();
+				in.close();
+			}
+		
+		} catch (IOException IOEx) {
+			System.err.println("The active scenario file is corrupt!");
+			// An error occurred with loading a scenario from a file
+			IOEx.printStackTrace();
 		}
 		
 		return 0;
 	}
 
-	private static Shape loadShape(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
+	private static Shape loadShape(DataInputStream in, RobotRun app) throws IOException,
+			NullPointerException, RuntimeException {
+		
 		// Read flag byte
 		byte flag = in.readByte();
 		Shape shape = null;
@@ -859,6 +917,15 @@ public abstract class DataManagement {
 			} else if (flag == 3) {
 				float scale = in.readFloat();
 				String srcPath = in.readUTF();
+				
+				File src = new File(DataManagement.dataDirPath + srcPath);
+				
+				if (!src.exists() || src.isDirectory()) {
+					String error = String.format("Source file, %s, does not exist in %s",
+							srcPath, DataManagement.dataDirPath);
+					throw new NullPointerException(error);
+				}
+				
 				// Creates a complex shape from the srcPath located in RobotRun/data/
 				shape = new ModelShape(srcPath, fill, scale, app);
 			}
@@ -871,6 +938,116 @@ public abstract class DataManagement {
 		loadScenarioBytes(process, scenarioDirPath);
 		loadRobotData(process.getRobot(0));
 		loadRobotData(process.getRobot(1));
+		
+		RoboticArm r = process.getRobot(0);
+		/**
+		 * Loop through all programs and update call instructions, so that they
+		 * reference the correct target program.
+		 */
+		for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
+			Program p = r.getProgram(pdx);
+			
+			for (int idx = 0; idx < p.size(); ++idx) {
+				Instruction inst = p.getInstAt(idx);
+				
+				if (inst instanceof CallInstruction) {
+					// Update a top call instruction
+					CallInstruction cInst = (CallInstruction)inst;
+					
+					if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
+						Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+						cInst.setProg(tgt);
+					}
+					
+				} else if (inst instanceof SelectStatement) {
+					// Update call instructions in a select statement
+					SelectStatement stmt = (SelectStatement)inst;
+					ArrayList<Instruction> instList = stmt.getInstrs();
+					
+					for (Instruction caseInst : instList) {
+						
+						if (caseInst instanceof CallInstruction) {
+							CallInstruction cInst = (CallInstruction)caseInst;
+							
+							if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
+								Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+								cInst.setProg(tgt);
+							}
+						}
+						
+					}
+					
+				} else if (inst instanceof IfStatement) {
+					// Update a call instruction in a if statement
+					IfStatement stmt = (IfStatement)inst;
+					Instruction subInst = stmt.getInstr();
+					
+					if (subInst instanceof CallInstruction) {
+						CallInstruction cInst = (CallInstruction)subInst;
+						
+						if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
+							Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+							cInst.setProg(tgt);
+						}
+					}
+				}
+			}
+		}
+		
+		r = process.getRobot(1);
+		/**
+		 * Loop through all programs and update call instructions, so that they
+		 * reference the correct target program.
+		 */
+		for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
+			Program p = r.getProgram(pdx);
+			
+			for (int idx = 0; idx < p.size(); ++idx) {
+				Instruction inst = p.getInstAt(idx);
+				
+				if (inst instanceof CallInstruction) {
+					// Update a top call instruction
+					CallInstruction cInst = (CallInstruction)inst;
+					
+					if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
+						Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+						cInst.setProg(tgt);
+					}
+					
+				} else if (inst instanceof SelectStatement) {
+					// Update call instructions in a select statement
+					SelectStatement stmt = (SelectStatement)inst;
+					ArrayList<Instruction> instList = stmt.getInstrs();
+					
+					for (Instruction caseInst : instList) {
+						
+						if (caseInst instanceof CallInstruction) {
+							CallInstruction cInst = (CallInstruction)caseInst;
+							
+							if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
+								Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+								cInst.setProg(tgt);
+							}
+						}
+						
+					}
+					
+				} else if (inst instanceof IfStatement) {
+					// Update call instructions in a if statement
+					IfStatement stmt = (IfStatement)inst;
+					Instruction subInst = stmt.getInstr();
+					
+					if (subInst instanceof CallInstruction) {
+						CallInstruction cInst = (CallInstruction)subInst;
+						
+						if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
+							Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
+							cInst.setProg(tgt);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	private static Object loadWorldObject(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
@@ -993,7 +1170,7 @@ public abstract class DataManagement {
 
 				} else if (eo.type == ExpressionElement.DREG ||
 						eo.type == ExpressionElement.IOREG ||
-						eo.type == Expression.PREG ||
+						eo.type == ExpressionElement.PREG ||
 						eo.type == ExpressionElement.PREG_IDX) {
 
 					// Data, Position, or IO register
@@ -1124,14 +1301,14 @@ public abstract class DataManagement {
 			DataOutputStream dataOut = new DataOutputStream(out);
 
 			// Save Tool Frames
-			dataOut.writeInt(Fields.FRAME_SIZE);
-			for (int idx = 0; idx < Fields.FRAME_SIZE; ++idx) {
+			dataOut.writeInt(Fields.FRAME_NUM);
+			for (int idx = 0; idx < Fields.FRAME_NUM; ++idx) {
 				saveFrame(robot.getToolFrame(idx), dataOut);
 			}
 			
 			// Save User Frames
-			dataOut.writeInt(Fields.FRAME_SIZE);
-			for (int idx = 0; idx < Fields.FRAME_SIZE; ++idx) {
+			dataOut.writeInt(Fields.FRAME_NUM);
+			for (int idx = 0; idx < Fields.FRAME_NUM; ++idx) {
 				saveFrame(robot.getUserFrame(idx), dataOut);
 			}
 
@@ -1141,13 +1318,13 @@ public abstract class DataManagement {
 
 		} catch (FileNotFoundException FNFEx) {
 			// Could not find dest
-			System.out.printf("%s does not exist!\n", dest.getName());
+			System.err.printf("%s does not exist!\n", dest.getName());
 			FNFEx.printStackTrace();
 			return 1;
 
 		} catch (IOException IOEx) {
 			// Error with writing to dest
-			System.out.printf("%s is corrupt!\n", dest.getName());
+			System.err.printf("%s is corrupt!\n", dest.getName());
 			IOEx.printStackTrace();
 			return 2;
 		}
@@ -1229,7 +1406,12 @@ public abstract class DataManagement {
 				out.writeInt(c_inst.getTgtDevice().RID);
 			}
 			
-			out.writeInt(c_inst.getProgIdx());
+			if (c_inst.getProg() == null) {
+				out.writeUTF("N/A");
+				
+			} else {
+				out.writeUTF( c_inst.getProg().getName() );
+			}
 
 		} else if (inst instanceof RegisterStatement) {
 			RegisterStatement rs = (RegisterStatement)inst;
@@ -1365,9 +1547,9 @@ public abstract class DataManagement {
 			// End of saved positions
 			out.writeInt(-1);
 
-			out.writeInt(p.getInstructions().size());
+			out.writeInt(p.getNumOfInst());
 			// Save each instruction
-			for(Instruction inst : p.getInstructions()) {
+			for(Instruction inst : p) {
 				saveInstruction(inst, out);
 			}
 		}
@@ -1381,9 +1563,9 @@ public abstract class DataManagement {
 			if(!dest.exists()) {      
 				try {
 					dest.createNewFile();
-					System.out.printf("Successfully created %s.\n", dest.getName());
+					System.err.printf("Successfully created %s.\n", dest.getName());
 				} catch (IOException IOEx) {
-					System.out.printf("Could not create %s ...\n", dest.getName());
+					System.err.printf("Could not create %s ...\n", dest.getName());
 					IOEx.printStackTrace();
 					return 1;
 				}
@@ -1405,13 +1587,13 @@ public abstract class DataManagement {
 
 		} catch (FileNotFoundException FNFEx) {
 			// Could not locate dest
-			System.out.printf("%s does not exist!\n", dest.getName());
+			System.err.printf("%s does not exist!\n", dest.getName());
 			FNFEx.printStackTrace();
 			return 1;
 
 		} catch (IOException IOEx) {
 			// An error occurred with writing to dest
-			System.out.printf("%s is corrupt!\n", dest.getName());
+			System.err.printf("%s is corrupt!\n", dest.getName());
 			IOEx.printStackTrace();
 			return 2;
 		}
@@ -1448,11 +1630,11 @@ public abstract class DataManagement {
 			int numOfREntries = 0,
 				numOfPREntries = 0;
 
-			ArrayList<Integer> initializedR = new ArrayList<Integer>(),
-					initializedPR = new ArrayList<Integer>();
+			ArrayList<Integer> initializedR = new ArrayList<>(),
+					initializedPR = new ArrayList<>();
 
 			// Count the number of initialized entries and save their indices
-			for(int idx = 0; idx < RoboticArm.DPREG_NUM; ++idx) {
+			for(int idx = 0; idx < Fields.DPREG_NUM; ++idx) {
 				DataRegister dReg = robot.getDReg(idx);
 				PositionRegister pReg = robot.getPReg(idx);
 				
@@ -1512,21 +1694,21 @@ public abstract class DataManagement {
 
 		} catch (FileNotFoundException FNFEx) {
 			// Could not be located dest
-			System.out.printf("%s does not exist!\n", dest.getName());
+			System.err.printf("%s does not exist!\n", dest.getName());
 			FNFEx.printStackTrace();
 			return 1;
 
 		} catch (IOException IOEx) {
 			// Error occured while reading from dest
-			System.out.printf("%s is corrupt!\n", dest.getName());
+			System.err.printf("%s is corrupt!\n", dest.getName());
 			IOEx.printStackTrace();
 			return 2;
 		}
 	}
 
 	public static int saveRobotData(RoboticArm robot, int dataFlag) {
-		validateParentDir();
-		File destDir = new File( String.format("%srobot%d/", parentDirPath, robot.getRID()) );
+		validateTmpDir();
+		File destDir = new File( String.format("%srobot%d/", tmpDirPath, robot.RID) );
 		
 		// Initialize and possibly create the robot directory
 		if (!destDir.exists()) {
@@ -1651,9 +1833,11 @@ public abstract class DataManagement {
 	}
 	
 	public static void saveScenarios(RobotRun process) {
-		validateParentDir();
-		saveScenarioBytes(process.SCENARIOS, (process.activeScenario == null) ?
-				null : process.activeScenario.getName(), scenarioDirPath);
+		validateTmpDir();
+		
+		Scenario as = process.getActiveScenario();
+		saveScenarioBytes(process.getScenarios(), (as == null) ? null : as.getName(),
+				scenarioDirPath);
 	}
 
 	private static void saveShape(Shape shape, DataOutputStream out) throws IOException {
@@ -1702,9 +1886,9 @@ public abstract class DataManagement {
 	}
 	
 	public static void saveState(RobotRun process) {
-		validateParentDir();
-		saveScenarioBytes(process.SCENARIOS, (process.activeScenario == null) ?
-				null : process.activeScenario.getName(), scenarioDirPath);
+		validateTmpDir();
+		saveScenarioBytes(process.getScenarios(), (process.getActiveScenario() == null) ?
+				null : process.getActiveScenario().getName(), scenarioDirPath);
 		saveRobotData(process.getRobot(0), 7);
 		saveRobotData(process.getRobot(1), 7);
 	}
@@ -1751,12 +1935,12 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static void validateParentDir() {
-		File parentDir = new File(parentDirPath);
+	private static void validateTmpDir() {
+		File tmpDir = new File(tmpDirPath);
 		
-		if (!parentDir.exists()) {
+		if (!tmpDir.exists()) {
 			// Create the directory if it does not exist
-			parentDir.mkdir();
+			tmpDir.mkdir();
 		}
 	}
 }

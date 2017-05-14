@@ -1,6 +1,6 @@
-package robot;
+package geom;
 
-import processing.core.*;
+import processing.core.PVector;
 
 /**
  * A form of orientation in the complex plain.
@@ -241,6 +241,11 @@ public class RQuaternion {
 		return null;
 	}
 	
+	public float x() { return x; }
+	public float y() { return y; }
+	public float z() { return z; }
+	public float w() { return w; }
+	
 	/**
 	 * Transforms this into its conjugate.
 	 */
@@ -260,24 +265,28 @@ public class RQuaternion {
 	/**
 	 * Rotates this by q.
 	 */
-	public void mult(RQuaternion q) {
+	public RQuaternion mult(RQuaternion q) {
 		float oldW = w, oldX = x, oldY = y, oldZ = z;
 
 		w = oldW * q.w - oldX * q.x - oldY * q.y - oldZ * q.z;
 		x = oldW * q.x + oldX * q.w + oldY * q.z - oldZ * q.y;
 		y = oldW * q.y - oldX * q.z + oldY * q.w + oldZ * q.x;
 		z = oldW * q.z + oldX * q.y - oldY * q.x + oldZ * q.w;
+		
+		return this;
 	}
 	
 	/**
 	 * Converts this into its unit quaternion form.
 	 */
-	public void normalize() {
+	public RQuaternion normalize() {
 		float mag = magnitude();
 		w /= mag;
 		x /= mag;
 		y /= mag;
 		z /= mag;
+		
+		return this;
 	}
 	
 	/**

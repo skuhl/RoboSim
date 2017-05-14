@@ -1,7 +1,6 @@
 package geom;
 import processing.core.PVector;
 import robot.CoordinateSystem;
-import robot.Fixture;
 import robot.RobotRun;
 
 /**
@@ -135,6 +134,7 @@ public abstract class WorldObject implements Cloneable {
 
 	public void setName(String newName) { name = newName; }
 
+	@Override
 	public String toString() { return name; }
 	/**
 	 * Updates all non-null values of the object's center position.

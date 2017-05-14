@@ -1,8 +1,9 @@
 package frame;
-import robot.RQuaternion;
 import geom.Point;
+import geom.RMath;
+import geom.RQuaternion;
+import processing.core.PConstants;
 import processing.core.PVector;
-import robot.RobotRun;
 
 public class UserFrame extends Frame {
 	private PVector origin;
@@ -89,7 +90,7 @@ public class UserFrame extends Frame {
 				return false;
 			}
 
-			setOrientation( RobotRun.matrixToQuat(newAxesVectors) );
+			setOrientation( RMath.matrixToQuat(newAxesVectors) );
 			setOrigin(newOrigin);
 			return true;
 		}
@@ -136,18 +137,18 @@ public class UserFrame extends Frame {
 
 		PVector displayOrigin;
 		// Convert angles to degrees and to the World Coordinate Frame
-		PVector wpr = RobotRun.quatToEuler(orientationOffset).mult(RobotRun.RAD_TO_DEG);
+		PVector wpr = RMath.quatToEuler(orientationOffset).mult(PConstants.RAD_TO_DEG);
 
 		// Convert to World frame reference
-		displayOrigin = RobotRun.convertNativeToWorld(origin);
+		displayOrigin = RMath.vToWorld(origin);
 
 		values[0] = String.format("X: %4.3f", displayOrigin.x);
 		values[1] = String.format("Y: %4.3f", displayOrigin.y);
 		values[2] = String.format("Z: %4.3f", displayOrigin.z);
 		// Display angles in terms of the World frame
 		values[3] = String.format("W: %4.3f", -wpr.x);
-		values[4] = String.format("P: %4.3f", -wpr.z);
-		values[5] = String.format("R: %4.3f", wpr.y);
+		values[4] = String.format("P: %4.3f", wpr.z);
+		values[5] = String.format("R: %4.3f", -wpr.y);
 
 		return values;
 	}

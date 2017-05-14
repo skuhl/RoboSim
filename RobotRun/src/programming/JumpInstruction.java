@@ -1,4 +1,5 @@
 package programming;
+import processing.core.PApplet;
 import robot.RobotRun;
 
 public class JumpInstruction extends Instruction {
@@ -12,6 +13,7 @@ public class JumpInstruction extends Instruction {
 		setTgtLblNum(l);
 	}
 
+	@Override
 	public Instruction clone() {
 		Instruction copy = new JumpInstruction(getTgtLblNum());
 		copy.setIsCommented( isCommented() );
@@ -22,6 +24,7 @@ public class JumpInstruction extends Instruction {
 	/**
 	 * Returns the index of the instruction to which to jump.
 	 */
+	@Override
 	public int execute() {
 		Program p = RobotRun.getActiveRobot().getActiveProg();
 
@@ -32,11 +35,11 @@ public class JumpInstruction extends Instruction {
 				// Return destination instruction index
 				return lblIdx;
 			} else {
-				RobotRun.println("Invalid jump instruction!");
+				PApplet.println("Invalid jump instruction!");
 				return -1;
 			}
 		} else {
-			RobotRun.println("No active program!");
+			PApplet.println("No active program!");
 			return -1;
 		}
 	}
@@ -49,6 +52,7 @@ public class JumpInstruction extends Instruction {
 		this.tgtLblNum = tgtLblNum;
 	}
 
+	@Override
 	public String[] toStringArray() {
 		String[] ret;
 		// Target label number
