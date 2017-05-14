@@ -2834,7 +2834,7 @@ public class WGUI implements ControlListener {
 			// Scenario instructions
 			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			ta.setPosition(relPos[0], relPos[1]);
-			ta.setText("Select the scenario you wish to rename from the dorpdown list and enter the new name into the text field below. Press RENAME to confirm the scenario's new name.");
+			ta.setText("Select the scenario you wish to rename from the dropdown list and enter the new name into the text field below. Press RENAME to confirm the scenario's new name.");
 			// Scenario dropdown list
 			relPos = relativePosition(ta, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			mdl.setPosition(relPos[0], relPos[1]).show();
@@ -2850,7 +2850,7 @@ public class WGUI implements ControlListener {
 			// Scenario instructions
 			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			ta.setPosition(relPos[0], relPos[1]);
-			ta.setText("Select the scenario you wish to set as active from the dropdown list. Press LOAD to confirm your choice. A scenario name has to be unique, consist of only letters and numbers, and be of length less than 16.");
+			ta.setText("Select the scenario you wish to set as active from the dropdown list. Press LOAD to confirm your choice.");
 			// Scenario dropdown list
 			relPos = relativePosition(ta, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c = mdl.setPosition(relPos[0], relPos[1]).show();
