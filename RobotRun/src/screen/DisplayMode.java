@@ -1,3 +1,3 @@
-package window;
+package screen;
 
 public interface DisplayMode {}

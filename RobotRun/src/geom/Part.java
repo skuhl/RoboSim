@@ -1,8 +1,7 @@
 package geom;
+import processing.core.PApplet;
 import processing.core.PVector;
-import robot.BoundingBox;
 import robot.CoordinateSystem;
-import robot.Fixture;
 import robot.RobotRun;
 
 /**
@@ -238,6 +237,7 @@ public class Part extends WorldObject {
 	 * orientation, in the local orientation of the part's
 	 * fixture reference.
 	 */
+	@Override
 	public void draw() {
 		RobotRun.getInstance().pushMatrix();
 		applyCoordinateSystem();
@@ -302,6 +302,7 @@ public class Part extends WorldObject {
 
 	public void setLocalCoordinateSystem() {
 		super.setCoordinateSystem();
+		updateAbsoluteOrientation();
 	}
 	
 	public void setDefaultCenter(PVector newCenter) {
@@ -366,8 +367,8 @@ public class Part extends WorldObject {
 
 		if (s instanceof Box || s instanceof ModelShape) {
 			// Update the OBB dimensions for a box or complex part
-			minAddition = 0.1f * RobotRun.min(s.getDim(DimType.LENGTH),
-					RobotRun.min(s.getDim(DimType.HEIGHT),
+			minAddition = 0.1f * PApplet.min(s.getDim(DimType.LENGTH),
+					PApplet.min(s.getDim(DimType.HEIGHT),
 							s.getDim(DimType.WIDTH)));
 
 			absOBB.setDim(s.getDim(DimType.LENGTH) + minAddition, DimType.LENGTH);
@@ -376,7 +377,7 @@ public class Part extends WorldObject {
 
 		} else if (s instanceof Cylinder) {
 			// Update the OBB dimensions for a cylindrical part
-			minAddition =  RobotRun.min(0.12f * s.getDim(DimType.RADIUS),
+			minAddition =  PApplet.min(0.12f * s.getDim(DimType.RADIUS),
 					0.1f * s.getDim(DimType.HEIGHT));
 
 			absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.LENGTH);

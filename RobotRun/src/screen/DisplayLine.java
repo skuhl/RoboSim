@@ -1,4 +1,4 @@
-package window;
+package screen;
 import java.util.ArrayList;
 
 public class DisplayLine {
@@ -7,25 +7,25 @@ public class DisplayLine {
 	private int xAlign;
 
 	public DisplayLine() {
-		fields = new ArrayList<String>();
+		fields = new ArrayList<>();
 		setItemIdx(-1);
 		setxAlign(0);
 	}
 
 	public DisplayLine(int idx) {
-		fields = new ArrayList<String>();
+		fields = new ArrayList<>();
 		setItemIdx(idx);
 		setxAlign(0);
 	}
 
 	public DisplayLine(int idx, int align) {
-		fields = new ArrayList<String>();
+		fields = new ArrayList<>();
 		setItemIdx(idx);
 		setxAlign(align);
 	}
 	
 	public DisplayLine(int idx, int align, String... strings) {
-		fields = new ArrayList<String>();
+		fields = new ArrayList<>();
 		for(String col : strings) {
 			fields.add(col);
 		}
@@ -49,6 +49,8 @@ public class DisplayLine {
 	public int getItemIdx() {
 		return itemIdx;
 	}
+	
+
 
 	public int getxAlign() {
 		return xAlign;
@@ -72,5 +74,10 @@ public class DisplayLine {
 
 	public int size() {
 		return fields.size();
+	}
+	
+	@Override
+	public String toString() {
+		return fields.toString();
 	}
 }

@@ -1,9 +1,6 @@
-package robot;
-import geom.Box;
-import geom.Cylinder;
-import geom.ModelShape;
-import geom.Shape;
-import geom.WorldObject;
+package geom;
+import robot.CoordinateSystem;
+import robot.RobotRun;
 
 /**
  * A world object whose Coordinate System can be referenced by a Part
@@ -14,7 +11,7 @@ public class Fixture extends WorldObject {
 	/**
 	 * Create a cube object with the given colors and dimension
 	 */
-	public Fixture(RobotRun robotRun, String n, int fill, int strokeVal, float edgeLen) {
+	public Fixture(String n, int fill, int strokeVal, float edgeLen) {
 		super(n, new Box(fill, strokeVal, edgeLen));
 	}
 
@@ -55,12 +52,11 @@ public class Fixture extends WorldObject {
 	 * Applies the inverse of this Fixture's Coordinate System's transformation matrix to the matrix stack.
 	 */
 	public void removeCoordinateSystem() {
-		float[][] tMatrix = RobotRun.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
-		tMatrix = RobotRun.invertHCMatrix(tMatrix);
-
-		RobotRun.getInstance().applyMatrix(tMatrix[0][0], tMatrix[1][0], tMatrix[2][0], tMatrix[0][3],
-				tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[1][3],
-				tMatrix[0][2], tMatrix[1][2], tMatrix[2][2], tMatrix[2][3],
-				0,             0,             0,             1);
+		float[][] tMatrix = RMath.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
+		tMatrix = RMath.invertHCMatrix(tMatrix);
+		
+		
+		
+		RobotRun.getInstance().applyMatrix(tMatrix);
 	}
 }

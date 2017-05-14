@@ -1,4 +1,6 @@
 package ui;
+import geom.RMath;
+import processing.core.PConstants;
 import processing.core.PVector;
 import robot.RobotRun;
 
@@ -58,6 +60,7 @@ public class Camera {
 	/**
 	 * Returns an independent replica of the Camera object.
 	 */
+	@Override
 	public Camera clone() {
 		Camera copy = new Camera();
 		// Copy position, orientation, and scale
@@ -110,8 +113,8 @@ public class Camera {
 
 		orientation.add( rotation );
 		// Apply camera rotation restrictions
-		orientation.x = RobotRun.mod2PI(orientation.x);
-		orientation.y = RobotRun.mod2PI(orientation.y);
+		orientation.x = RMath.mod2PI(orientation.x);
+		orientation.y = RMath.mod2PI(orientation.y);
 		orientation.z = 0f;//mod2PI(orientation.z);
 	}
 	
@@ -134,7 +137,7 @@ public class Camera {
 	public String[] toStringArray() {
 		String[] fields = new String[8];
 		// Display rotation in degrees
-		PVector inDegrees = PVector.mult(orientation, RobotRun.RAD_TO_DEG);
+		PVector inDegrees = PVector.mult(orientation, PConstants.RAD_TO_DEG);
 
 		fields[0] = "Camera Fields";
 		fields[1] = String.format("X: %6.9f", position.x);

@@ -9,18 +9,22 @@ public class ScreenProgs extends Screen {
 		super(ScreenMode.NAV_PROGRAMS, r);
 	}
 	
+	@Override
 	void loadHeader() {
 		header = "PROGRAMS";
 	}
 	
+	@Override
 	void loadContents() {
-		contents.setLines(robotRun.getActiveRobot().printProgList());
+		contents.setLines(RobotRun.getActiveRobot().printProgList());
 	}
 	
+	@Override
 	void loadOptions() {}
 	
+	@Override
 	void loadLabels() {
-		if(robotRun.getActiveRobot().numOfPrograms() > 0) {
+		if(RobotRun.getActiveRobot().numOfPrograms() > 0) {
 			labels[1] = "[Rename]";
 			labels[2] = "[Delete]";
 			labels[3] = "[Copy]";
@@ -35,7 +39,7 @@ public class ScreenProgs extends Screen {
 	
 	@Override
 	public void loadVars() {
-		robotRun.hd();
+		robotRun.hold();
 		contents.setLineIdx(RobotRun.getActiveRobot().getActiveProgIdx());
 		contents.setColumnIdx(0);
 		RobotRun.getActiveRobot().setActiveInstIdx(0);
@@ -48,21 +52,21 @@ public class ScreenProgs extends Screen {
 
 	@Override
 	public void actionUp() {
-		robotRun.getActiveRobot().setActiveProgIdx(contents.moveUp(robotRun.isShift()));
+		RobotRun.getActiveRobot().setActiveProgIdx(contents.moveUp(robotRun.isShift()));
 
 		if(Fields.DEBUG) {
 			System.out.printf("\nOpt: %d\nProg: %d\nTRS: %d\n\n",
-					options.getLineIdx(), robotRun.getActiveRobot().getActiveProgIdx(), contents.getRenderStart());
+					options.getLineIdx(), RobotRun.getActiveRobot().getActiveProgIdx(), contents.getRenderStart());
 		}
 	}
 
 	@Override
 	public void actionDn() {
-		robotRun.getActiveRobot().setActiveProgIdx(contents.moveDown(robotRun.isShift()));
+		RobotRun.getActiveRobot().setActiveProgIdx(contents.moveDown(robotRun.isShift()));
 
 		if(Fields.DEBUG) {
 			System.out.printf("\nRow: %d\nProg: %d\nTRS: %d\n\n",  
-				contents.getLineIdx(), robotRun.getActiveRobot().getActiveProgIdx(), contents.getRenderStart());
+				contents.getLineIdx(), RobotRun.getActiveRobot().getActiveProgIdx(), contents.getRenderStart());
 		}
 	}
 
@@ -74,8 +78,8 @@ public class ScreenProgs extends Screen {
 
 	@Override
 	public void actionEntr() {
-		if(robotRun.getActiveRobot().numOfPrograms() != 0) {
-			robotRun.getActiveRobot().setActiveInstIdx(0);
+		if(RobotRun.getActiveRobot().numOfPrograms() != 0) {
+			RobotRun.getActiveRobot().setActiveInstIdx(0);
 			contents.reset();
 			robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
 		}
@@ -88,21 +92,21 @@ public class ScreenProgs extends Screen {
 
 	@Override
 	public void actionF2() {
-		if(robotRun.getActiveRobot().numOfPrograms() > 0) {
+		if(RobotRun.getActiveRobot().numOfPrograms() > 0) {
 			robotRun.nextScreen(ScreenMode.PROG_RENAME);
 		}
 	}
 
 	@Override
 	public void actionF3() {
-		if(robotRun.getActiveRobot().numOfPrograms() > 0) {
+		if(RobotRun.getActiveRobot().numOfPrograms() > 0) {
 			robotRun.nextScreen(ScreenMode.CONFIRM_PROG_DELETE);
 		}
 	}
 
 	@Override
 	public void actionF4() {
-		if(robotRun.getActiveRobot().numOfPrograms() > 0) {
+		if(RobotRun.getActiveRobot().numOfPrograms() > 0) {
 			robotRun.nextScreen(ScreenMode.PROG_COPY);
 		}
 	}

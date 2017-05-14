@@ -1,12 +1,12 @@
 package ui;
 
-import com.sun.glass.events.KeyEvent;
-
 import controlP5.ControlP5;
 import controlP5.Textfield;
 
 /**
- * My version of the Textfield, that will hopefully fix the delete key function ...
+ * An extension of controlP5's Textfield class, which includes the correct
+ * functionality for the delete key as well as controlEvents for entering
+ * text in a text field.
  * 
  * @author Joshua Hooker
  */
