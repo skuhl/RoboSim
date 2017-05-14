@@ -4998,7 +4998,7 @@ public class RobotRun extends PApplet {
 					line[sdx + 1] = Character.toString(entries[idx][1].charAt(sdx));
 				}
 	
-				lines.add(new DisplayLine(-1, 0, line));
+				lines.add(new DisplayLine(idx, 0, line));
 			}
 			
 		} else {
@@ -5717,13 +5717,30 @@ public class RobotRun extends PApplet {
 			contents.setRenderStart(  prev.conRenIdx );
 			// Load in the position associated with the active motion
 			// instruction
-			mInst = (MotionInstruction) activeRobot.getActiveInstruction();
-			loadPosition(mInst.getPoint(activeRobot.getActiveProg()), mInst.getMotionType() != Fields.MTYPE_JOINT);
+			r = getActiveRobot();
+			mInst = (MotionInstruction) r.getActiveInstruction();
+			Program p = getActiveRobot().getActiveProg();
+			Point pt = mInst.getPoint(p);
+			
+			// Initialize the point if it is null
+			if (pt == null) {
+				pt = new Point();
+				
+				if (mInst.usesGPosReg()) {
+					PositionRegister pReg = r.getPReg(mInst.getPositionNum());
+					pReg.point = pt;
+					
+				} else {
+					p.setPosition(mInst.getPositionNum(), pt);
+				}
+			}
+			
+			loadPosition(pt, mInst.getMotionType() != Fields.MTYPE_JOINT);
 			break;
 		case SELECT_INSTR_DELETE:
 		case SELECT_COMMENT:
 		case SELECT_CUT_COPY:
-			Program p = getActiveRobot().getActiveProg();
+			p = getActiveRobot().getActiveProg();
 			int size = p.getNumOfInst() - 1;
 			getActiveRobot().setActiveInstIdx(max(0, min(getActiveRobot().getActiveInstIdx(), size)));
 			break;
