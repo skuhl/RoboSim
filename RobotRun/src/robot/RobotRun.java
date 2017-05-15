@@ -4489,7 +4489,7 @@ public class RobotRun extends PApplet {
 				break;
 			idx += contents.get(i).size();
 		}
-		System.out.println(idx);
+		
 		return idx;
 	}
 
