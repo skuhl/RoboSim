@@ -2120,9 +2120,10 @@ public class WGUI implements ControlListener {
 						bg = Fields.UI_LIGHT_C;
 					}
 				} else if(selectMode && menu.isSelected(temp.getItemIdx())) {
-					//highlight any currently selected lines
+					/* highlight any currently selected lines a different color
+					 * then the active line */
 					txt = Fields.UI_LIGHT_C;
-					bg = Fields.UI_DARK_C;
+					bg = app.color(125, 125, 153);
 				} else {
 					//display normal row
 					txt = Fields.UI_DARK_C;

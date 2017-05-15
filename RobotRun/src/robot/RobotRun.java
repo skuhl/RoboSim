@@ -5124,11 +5124,11 @@ public class RobotRun extends PApplet {
 					options.addLine("1. + ");
 					options.addLine("2. - ");
 					options.addLine("3. * ");
-					options.addLine("4. / ");
-					options.addLine("5. | ");
-					options.addLine("6. % ");
+					options.addLine("4. / (Division)");
+					options.addLine("5. | (Integer Division)");
+					options.addLine("6. % (Modulus)");
 					options.addLine("7. = ");
-					options.addLine("8. <> ");
+					options.addLine("8. <> (Not Equal)");
 					options.addLine("9. > ");
 					options.addLine("10. < ");
 					options.addLine("11. >= ");
@@ -5140,9 +5140,9 @@ public class RobotRun extends PApplet {
 					options.addLine("1. + ");
 					options.addLine("2. - ");
 					options.addLine("3. * ");
-					options.addLine("4. / ");
-					options.addLine("5. | ");
-					options.addLine("6. % ");
+					options.addLine("4. / (Division)");
+					options.addLine("5. | (Integer Division)");
+					options.addLine("6. % (Modulus)");
 				}
 			} else {
 				options.addLine("1. ... =  ...");
@@ -5187,7 +5187,10 @@ public class RobotRun extends PApplet {
 		case SET_SELECT_STMT_ACT:
 			options.addLine("JMP LBL[x]");
 			options.addLine("CALL");
-			options.addLine("RCALL");
+			
+			if ( UI.getRobotButtonState() ) {
+				options.addLine("RCALL");
+			}
 			break;
 		case SET_SELECT_STMT_ARG:
 			options.addLine("R[x]");
