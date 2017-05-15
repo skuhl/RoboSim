@@ -52,7 +52,6 @@ public class RobotCamera {
 			len = ((Box)o.getForm()).getDim(DimType.LENGTH);
 			wid = ((Box)o.getForm()).getDim(DimType.WIDTH);
 			hgt = ((Box)o.getForm()).getDim(DimType.HEIGHT);
-			
 		}
 		else if (o.getForm() instanceof Cylinder) {
 			len = ((Cylinder)o.getForm()).getDim(DimType.RADIUS);
@@ -120,11 +119,11 @@ public class RobotCamera {
 		objVertices[7] = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
 		
 		for(int i = 0; i < 8; i += 1) {
-			//System.out.println("v" + i + ": " + objVertices[i].toString());
+			System.out.println("v" + i + ": " + objVertices[i].toString());
 			objVertices[i] = vMat.multiply(objVertices[i]);
 			//objVertices[i] = RMath.vectorMatrixMult(objVertices[i], pMat2);
 			//objVertices[i].add(getVectLook().mult(camClipNear));
-			//System.out.println("v" + i + ": " + objVertices[i].toString());
+			System.out.println("v" + i + ": " + objVertices[i].toString());
 		}/**/
 		System.out.println();
 		
