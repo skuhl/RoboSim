@@ -25,7 +25,7 @@ public class RMatrix extends Array2DRowRealMatrix {
 		RMatrix m = new RMatrix(new float[][] {{v.x}, {v.y}, {v.z}, {1}});
 		RMatrix result = this.multiply(m);
 		float[][] data = result.getFloatData();
-		return new PVector(data[0][0], data[1][0], data[2][0]);
+		return new PVector(data[0][0], data[1][0], data[2][0]).div(data[3][0]);
 	}
 	
 	public float[][] getFloatData() {
