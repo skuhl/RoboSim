@@ -7375,52 +7375,6 @@ public class RobotRun extends PApplet {
 			DataManagement.errLog(NPEx);
 			throw NPEx;
 		}
-		
-<<<<<<< HEAD
-		/**
-=======
-		/* *
->>>>>>> 7b4841c4cc4872d22d3701b13ceb3b281d10e7eb
-		pushMatrix();
-		resetMatrix();
-		translate(15, -2, 12);
-		rotateX(-PI / 2f);
-		rotateY(-PI / 2f);
-		printMatrix();
-		
-		PVector origin = getCoordFromMatrix(0, 0, 0);
-		PVector x = getCoordFromMatrix(1, 0, 0).sub(origin);
-		PVector y = getCoordFromMatrix(0, 1, 0).sub(origin);
-		PVector z = getCoordFromMatrix(0, 0, 1).sub(origin);
-		
-		System.out.printf("%s\n%s\n%s\n", x, y, z);
-		
-<<<<<<< HEAD
-		/**
-=======
-		/*
->>>>>>> 7b4841c4cc4872d22d3701b13ceb3b281d10e7eb
-		
-		float[][] t = getTransformationMatrix();
-		System.out.println( RMath.toString(t) );
-		resetMatrix();
-		applyMatrix(
-				t[0][0], t[0][1], t[0][2], t[0][3],
-				t[1][0], t[1][1], t[1][2], t[1][3],
-				t[2][0], t[2][1], t[2][2], t[2][3],
-				t[3][0], t[3][1], t[3][2], t[3][3]
-		);
-		printMatrix();
-<<<<<<< HEAD
-		
-		/**
-		popMatrix();
-		/**/
-		
-=======
-		popMatrix();
-		/**/
->>>>>>> 7b4841c4cc4872d22d3701b13ceb3b281d10e7eb
 	}
 	
 	/**
