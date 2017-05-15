@@ -80,11 +80,7 @@ public class RobotRun extends PApplet {
 		TEXT_ENTRY_LEN = 16;
 		instance = null;
 	}
-
-
-
 	
-
 	/**
 	 * Applies the rotations and translations of the Robot Arm to get to the
 	 * face plate center, given the set of six joint angles, each corresponding
@@ -1591,7 +1587,7 @@ public class RobotRun extends PApplet {
 			}
 			/**
 			printMatrix();
-			/*Camera Test Code*
+			/*Camera Test Code*/
 			Fixture f = new Fixture("test", 160, 0, 50, 100, 200);
 			f.setLocalCenter(new PVector(-700, -300, 0));
 			Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
@@ -1656,7 +1652,7 @@ public class RobotRun extends PApplet {
 			f.draw();
 			popMatrix();
 			
-			/*PVector[] obj = c.checkObjectInFrame(f, 2);
+			PVector[] obj = c.checkObjectInFrame(f, 2);
 		
 			pushMatrix();
 			stroke(0);
