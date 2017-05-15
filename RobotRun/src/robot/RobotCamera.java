@@ -93,7 +93,6 @@ public class RobotCamera {
 		float f = camClipFar;
 		
 		RMatrix vMat = getViewMat();
-		RMath.printMat(vMat.getFloatData());
 		float[][] pMat1 = new float[][] {
 			{1, 0, 0, 0},
 			{0, 1, 0, 0},
@@ -101,12 +100,12 @@ public class RobotCamera {
 			{0, 0, -f*n/(f-n), 0}
 		};
 		
-		float[][] pMat2 = new float[][] { 
+		RMatrix pMat2 = new RMatrix(new float[][] {
 			{2*n/(r-l), 0, 0, 0},
 			{0, 2*n/(t-b), 0, 0},
 			{(r+l)/(r-l), (t+b)/(t-b), -(f+n)/(f-n), -1},
 			{0, 0, -(2*f*n)/(f-n), 0}
-		};
+		});
 		
 		PVector[] objVertices = new PVector[8];
 		objVertices[0] = new PVector(objCenter.x + len/2, objCenter.y + hgt/2, objCenter.z + wid/2);
@@ -118,12 +117,17 @@ public class RobotCamera {
 		objVertices[6] = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z + wid/2);
 		objVertices[7] = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
 		
+		System.out.println("c: " + objCenter.toString());
+		objCenter = vMat.multiply(objCenter);
+		objCenter = pMat2.rTranspose().multiply(objCenter);
+		System.out.println("c: " + objCenter.toString());
+		
 		for(int i = 0; i < 8; i += 1) {
-			System.out.println("v" + i + ": " + objVertices[i].toString());
+			//System.out.println("v" + i + ": " + objVertices[i].toString());
 			objVertices[i] = vMat.multiply(objVertices[i]);
-			//objVertices[i] = RMath.vectorMatrixMult(objVertices[i], pMat2);
+			objVertices[i] = pMat2.rTranspose().multiply(objVertices[i]);
 			//objVertices[i].add(getVectLook().mult(camClipNear));
-			System.out.println("v" + i + ": " + objVertices[i].toString());
+			//System.out.println("v" + i + ": " + objVertices[i].toString());
 		}/**/
 		System.out.println();
 		
@@ -242,7 +246,7 @@ public class RobotCamera {
 		float dimZ = Math.abs(len*objAxisX.dot(lookVect)) + Math.abs(hgt*objAxisY.dot(lookVect)) + Math.abs(wid*objAxisZ.dot(lookVect));
 		
 		if(func == 0) return distZ - dimZ/2;
-		if(func == 1) return distZ;
+		if(func == 1) return distZ + dimZ/2;
 		return 0;
 	}
 	
