@@ -3502,7 +3502,7 @@ public class RobotRun extends PApplet {
 			int progIdx = getActiveRobot().getActiveProgIdx();
 
 			if (progIdx >= 0 && progIdx < getActiveRobot().numOfPrograms()) {
-				getActiveRobot().removeProgram(progIdx);
+				getActiveRobot().rmProgAt(progIdx);
 
 				if (getActiveRobot().getActiveProgIdx() >= getActiveRobot().numOfPrograms()) {
 					getActiveRobot().setActiveProgIdx(getActiveRobot().numOfPrograms() - 1);
@@ -3513,11 +3513,12 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case SELECT_INSTR_DELETE:
+			r = getActiveRobot();
 			int instrIdx = 0;
 
 			for (int i = 0; i < contents.getSelection().length; i += 1) {
 				if (contents.isSelected(i)) {
-					p.rmInstAt(instrIdx);
+					r.rmInstAt(instrIdx);
 				} else {
 					instrIdx += 1;
 				}
