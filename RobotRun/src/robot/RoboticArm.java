@@ -1641,8 +1641,10 @@ public class RoboticArm {
 	 */
 	public Program rmProgAt(int pdx) {
 		if (pdx >= 0 && pdx < PROGRAMS.size()) {
+			Program removed = PROGRAMS.remove(pdx);
+			setActiveProgIdx(-1);
 			// Return the removed program
-			return PROGRAMS.remove(pdx);
+			return removed;
 			
 		} else {
 			// Invalid index

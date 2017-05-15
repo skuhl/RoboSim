@@ -465,7 +465,7 @@ public class RobotRun extends PApplet {
 	public void arrow_dn() {
 		switch (mode) {
 		case NAV_PROGRAMS:
-			getActiveRobot().setActiveProgIdx(contents.moveDown(isShift()));
+			contents.moveDown(isShift());
 
 			if (Fields.DEBUG) {
 				System.out.printf("\nRow: %d\nProg: %d\nTRS: %d\n\n", contents.getLineIdx(),
@@ -715,7 +715,7 @@ public class RobotRun extends PApplet {
 	public void arrow_up() {
 		switch (mode) {
 		case NAV_PROGRAMS:
-			getActiveRobot().setActiveProgIdx(contents.moveUp(isShift()));
+			contents.moveUp(isShift());
 
 			if (Fields.DEBUG) {
 				System.out.printf("\nOpt: %d\nProg: %d\nTRS: %d\n\n", options.getLineIdx(),
@@ -1703,15 +1703,20 @@ public class RobotRun extends PApplet {
 	 * the selected program
 	 */
 	public void edit() {
-		if (activeRobot.getActiveProg() != null) {
+		RoboticArm r = getActiveRobot();
+		
+		if (mode == ScreenMode.NAV_PROGRAMS) {
+			// Load the selected program
+			r.setActiveProgIdx( contents.getActiveIndex() );
+			r.setActiveInstIdx(0);
 			nextScreen(ScreenMode.NAV_PROG_INSTR);
-		} else {
-			RoboticArm arm = getActiveRobot();
-
-			if (arm.numOfPrograms() > 0) {
-				arm.setActiveProgIdx(0);
-			}
 			
+		} else if (r.getActiveProg() != null) {
+			// Load the current active program
+			nextScreen(ScreenMode.NAV_PROG_INSTR);
+			
+		} else {
+			// Load the program navigation menu
 			resetStack();
 			nextScreen(ScreenMode.NAV_PROGRAMS);
 		}
@@ -1981,8 +1986,7 @@ public class RobotRun extends PApplet {
 					DataManagement.saveRobotData(activeRobot, 1);
 				}
 
-				resetStack();
-				nextScreen(ScreenMode.NAV_PROGRAMS);
+				lastScreen();
 			}
 			break;
 		case PROG_COPY:
@@ -2003,13 +2007,13 @@ public class RobotRun extends PApplet {
 					DataManagement.saveRobotData(activeRobot, 1);
 				}
 
-				resetStack();
-				nextScreen(ScreenMode.NAV_PROGRAMS);
+				lastScreen();
 			}
 			break;
 		case NAV_PROGRAMS:
-			if (getActiveRobot().numOfPrograms() != 0) {
-				getActiveRobot().setActiveInstIdx(0);
+			r = getActiveRobot();
+			if (r.numOfPrograms() != 0) {
+				r.setActiveProgIdx( contents.getActiveIndex() );
 				nextScreen(ScreenMode.NAV_PROG_INSTR);
 			}
 			break;
@@ -3319,7 +3323,9 @@ public class RobotRun extends PApplet {
 		
 		switch (mode) {
 		case NAV_PROGRAMS:
-			if (getActiveRobot().numOfPrograms() > 0) {
+			r = getActiveRobot();
+			if (r.numOfPrograms() > 0) {
+				r.setActiveProgIdx( contents.getActiveIndex() );
 				nextScreen(ScreenMode.CONFIRM_PROG_DELETE);
 			}
 			break;
@@ -3499,16 +3505,11 @@ public class RobotRun extends PApplet {
 			lastScreen();
 			break;
 		case CONFIRM_PROG_DELETE:
-			int progIdx = getActiveRobot().getActiveProgIdx();
+			r = getActiveRobot();
+			int progIdx = r.getActiveProgIdx();
 
-			if (progIdx >= 0 && progIdx < getActiveRobot().numOfPrograms()) {
-				getActiveRobot().rmProgAt(progIdx);
-
-				if (getActiveRobot().getActiveProgIdx() >= getActiveRobot().numOfPrograms()) {
-					getActiveRobot().setActiveProgIdx(getActiveRobot().numOfPrograms() - 1);
-					contents.setLineIdx(min(getActiveRobot().getActiveProgIdx(), ITEMS_TO_SHOW - 1));
-				}
-
+			if (progIdx >= 0 && progIdx < r.numOfPrograms()) {
+				r.rmProgAt(progIdx);
 				lastScreen();
 			}
 			break;
@@ -5326,12 +5327,10 @@ public class RobotRun extends PApplet {
 			instruct_list.add(line);
 		}
 
-		//if (mode.getType() != ScreenType.TYPE_LINE_SELECT) {
-			DisplayLine endl = new DisplayLine(size);
-			endl.add("[End]");
+		DisplayLine endl = new DisplayLine(size);
+		endl.add("[End]");
 
-			instruct_list.add(endl);
-		//}
+		instruct_list.add(endl);
 
 		return instruct_list;
 	}
@@ -5596,8 +5595,11 @@ public class RobotRun extends PApplet {
 			break;
 		case NAV_PROGRAMS:
 			RoboticArm r = getActiveRobot();
-			r.setActiveProgIdx(0);
-			r.setActiveInstIdx(0);
+			
+			if (r.getActiveProg() == null) {
+				r.setActiveProgIdx(0);
+				r.setActiveInstIdx(0);
+			}
 			
 			contents.setLineIdx( r.getActiveProgIdx() );
 			break;
@@ -5781,8 +5783,6 @@ public class RobotRun extends PApplet {
 			contents.setLines(
 				loadFrameDirectEntry( getActiveRobot().getUserFrame(curFrameIdx) )
 			);
-			break;
-		case NAV_INSTR_MENU:
 			break;
 		case SWAP_PT_TYPE:
 			contents.setLineIdx( prev.conLnIdx );
@@ -5982,33 +5982,6 @@ public class RobotRun extends PApplet {
 		default:
 			// No EE grid mapping
 		}
-	}
-
-	/**
-	 * Returns a string representation of the given matrix.
-	 * 
-	 * @param matrix
-	 *            A non-null matrix
-	 */
-	public String matrixToString(float[][] matrix) {
-		String mStr = "";
-
-		for (int row = 0; row < matrix.length; ++row) {
-			mStr += "\n[";
-
-			for (int col = 0; col < matrix[0].length; ++col) {
-				// Account for the negative sign character
-				if (matrix[row][col] >= 0) {
-					mStr += " ";
-				}
-
-				mStr += String.format(" %5.6f", matrix[row][col]);
-			}
-
-			mStr += "  ]";
-		}
-
-		return (mStr + "\n");
 	}
 
 	/**
