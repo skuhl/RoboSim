@@ -425,6 +425,8 @@ public class RobotRun extends PApplet {
 	 */
 	public void applyMatrix(float[][] tMatrix) {
 		// Transpose the rotation portion, because Processing
+		//TODO I have no idea why the rotation needs to be transposed here,
+		//but it works for now
 		super.applyMatrix(
 				tMatrix[0][0], tMatrix[1][0], tMatrix[2][0], tMatrix[0][3],
 				tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[1][3],
@@ -1599,8 +1601,8 @@ public class RobotRun extends PApplet {
 			
 			PVector near[] = c.getPlaneNear();
 			PVector far[] = c.getPlaneFar();
-			PVector view1[] = c.getPlane(c.getDistanceToObject(f, 0));
-			PVector view2[] = c.getPlane(c.getDistanceToObject(f, 1));
+			//PVector view1[] = c.getPlane(c.getDistanceToObject(f, 0));
+			PVector view2[] = c.getPlane(c.getDistanceToObject(f, 2));
 			pushMatrix();
 			stroke(255, 126, 0, 255);
 			//dfill(255, 126, 0, 255);
@@ -1632,13 +1634,13 @@ public class RobotRun extends PApplet {
 			vertex(near[0].x, near[0].y, near[0].z);
 			endShape();
 			
-			fill(255, 126, 0, 126);
+			/*fill(255, 126, 0, 126);
 			beginShape();
 			vertex(view1[0].x, view1[0].y, view1[0].z);
 			vertex(view1[1].x, view1[1].y, view1[1].z);
 			vertex(view1[3].x, view1[3].y, view1[3].z);
 			vertex(view1[2].x, view1[2].y, view1[2].z);
-			endShape();
+			endShape();*/
 			
 			beginShape();
 			vertex(view2[0].x, view2[0].y, view2[0].z);
@@ -1649,18 +1651,24 @@ public class RobotRun extends PApplet {
 			
 			popMatrix();
 							
-			pushMatrix();
-			f.draw();
-			popMatrix();
+			//pushMatrix();
+			//f.draw();
+			//popMatrix();
 			
 			PVector[] obj = new PVector[8]; 
 			PVector objCenter = f.getLocalCenter();
+			pushMatrix();
+			translate(objCenter.x, objCenter.y, objCenter.z);
+			stroke(0);
+			sphere(5);
+			popMatrix();
+			
 			float len = f.getForm().getDim(DimType.LENGTH);
 			float wid = f.getForm().getDim(DimType.WIDTH);
 			float hgt = f.getForm().getDim(DimType.HEIGHT);
 			
-			c.checkObjectInFrame(f, 2);
-			obj[0] = new PVector(objCenter.x + len/2, objCenter.y + hgt/2, objCenter.z + wid/2);
+			c.checkObjectInFrame(f);
+			/*obj[0] = new PVector(objCenter.x + len/2, objCenter.y + hgt/2, objCenter.z + wid/2);
 			obj[1] = new PVector(objCenter.x + len/2, objCenter.y + hgt/2, objCenter.z - wid/2);
 			obj[2] = new PVector(objCenter.x + len/2, objCenter.y - hgt/2, objCenter.z + wid/2);
 			obj[3] = new PVector(objCenter.x + len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
@@ -1670,16 +1678,15 @@ public class RobotRun extends PApplet {
 			obj[7] = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
 			
 			for(int i = 0; i < 8; i += 1) {
-			pushMatrix();
-			stroke(i*20);
-			translate(obj[i].x, obj[i].y, obj[i].z);
-			sphere(5);
-			popMatrix();
+				pushMatrix();
+				stroke(i*20);
+				translate(obj[i].x, obj[i].y, obj[i].z);
+				sphere(5);
+				popMatrix();
 			}
 			//RobotRun.printMat(c.getOrientationMat());
 			/**/
-			 
-	
+			
 			noLights();
 			noStroke();
 			popMatrix();
