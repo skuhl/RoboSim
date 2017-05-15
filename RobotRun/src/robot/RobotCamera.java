@@ -109,12 +109,6 @@ public class RobotCamera {
 			{0, 0, -(2*f*n)/(f-n), 0}
 		};
 		
-		//RMath.printMat(pMat2);
-		
-		System.out.println("c: " + objCenter.toString());
-		PVector o1 = RMath.vectorMatrixMult(objCenter, vMat.getFloatData());
-		System.out.println("cc: " + o1.toString());
-		
 		PVector[] objVertices = new PVector[8];
 		objVertices[0] = new PVector(objCenter.x + len/2, objCenter.y + hgt/2, objCenter.z + wid/2);
 		objVertices[1] = new PVector(objCenter.x + len/2, objCenter.y + hgt/2, objCenter.z - wid/2);
@@ -321,9 +315,9 @@ public class RobotCamera {
 	public RMatrix getViewMat() {
 		float[][] rot = getOrientationMat().getFloatData();
 		float[][] tRot = new float[][] {
-			{rot[0][0], rot[1][0], rot[2][0], 0},
-			{rot[0][1], rot[1][1], rot[2][1], 0},
-			{-rot[0][2], -rot[1][2], -rot[2][2], 0},
+			{rot[0][0], rot[1][0], -rot[2][0], 0},
+			{rot[0][1], rot[1][1], -rot[2][1], 0},
+			{rot[0][2], rot[1][2], -rot[2][2], 0},
 			{0, 0, 0, 1}
 		};
 		
@@ -333,11 +327,6 @@ public class RobotCamera {
 			{0, 0, 1, -camPos.z},
 			{0, 0, 0, 1},
 		};
-		
-		System.out.println("Rmat");
-		RMath.printMat(rot);
-		System.out.println("Tmat");
-		RMath.printMat(trans);
 		
 		return new RMatrix(RMath.mat4fMultiply(tRot, trans));
 	}
