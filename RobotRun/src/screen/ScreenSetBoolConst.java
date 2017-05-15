@@ -15,7 +15,7 @@ public class ScreenSetBoolConst extends Screen {
 
 	@Override
 	void loadContents() {
-		contents.setLines(robotRun.loadInstructions(RobotRun.getActiveRobot().getActiveProgIdx()));
+		contents.setLines(robotRun.loadInstructions(RobotRun.getActiveRobot().getActiveProg()));
 	}
 
 	@Override
