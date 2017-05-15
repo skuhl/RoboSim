@@ -16,6 +16,7 @@ import frame.CoordFrame;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
+import geom.DimType;
 import geom.Fixture;
 import geom.Part;
 import geom.Point;
@@ -80,11 +81,7 @@ public class RobotRun extends PApplet {
 		TEXT_ENTRY_LEN = 16;
 		instance = null;
 	}
-
-
-
 	
-
 	/**
 	 * Applies the rotations and translations of the Robot Arm to get to the
 	 * face plate center, given the set of six joint angles, each corresponding
@@ -1591,7 +1588,7 @@ public class RobotRun extends PApplet {
 			}
 			/**
 			printMatrix();
-			/*Camera Test Code*
+			/*Camera Test Code*/
 			Fixture f = new Fixture("test", 160, 0, 50, 100, 200);
 			f.setLocalCenter(new PVector(-700, -300, 0));
 			Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
@@ -1656,24 +1653,29 @@ public class RobotRun extends PApplet {
 			f.draw();
 			popMatrix();
 			
-			/*PVector[] obj = c.checkObjectInFrame(f, 2);
-		
+			PVector[] obj = new PVector[8]; 
+			PVector objCenter = f.getLocalCenter();
+			float len = f.getForm().getDim(DimType.LENGTH);
+			float wid = f.getForm().getDim(DimType.WIDTH);
+			float hgt = f.getForm().getDim(DimType.HEIGHT);
+			
+			c.checkObjectInFrame(f, 2);
+			obj[0] = new PVector(objCenter.x + len/2, objCenter.y + hgt/2, objCenter.z + wid/2);
+			obj[1] = new PVector(objCenter.x + len/2, objCenter.y + hgt/2, objCenter.z - wid/2);
+			obj[2] = new PVector(objCenter.x + len/2, objCenter.y - hgt/2, objCenter.z + wid/2);
+			obj[3] = new PVector(objCenter.x + len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
+			obj[4] = new PVector(objCenter.x - len/2, objCenter.y + hgt/2, objCenter.z + wid/2);
+			obj[5] = new PVector(objCenter.x - len/2, objCenter.y + hgt/2, objCenter.z - wid/2);
+			obj[6] = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z + wid/2);
+			obj[7] = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
+			
+			for(int i = 0; i < 8; i += 1) {
 			pushMatrix();
-			stroke(0);
-			translate(p.position.x, p.position.y, p.position.z);
-			beginShape();
-			vertex(obj[0].x, obj[0].y, obj[0].z);
-			vertex(obj[1].x, obj[1].y, obj[1].z);
-			vertex(obj[3].x, obj[3].y, obj[3].z);
-			vertex(obj[2].x, obj[2].y, obj[2].z);
-			vertex(obj[0].x, obj[0].y, obj[0].z);
-			vertex(obj[4].x, obj[4].y, obj[4].z);
-			vertex(obj[5].x, obj[5].y, obj[5].z);
-			vertex(obj[7].x, obj[7].y, obj[7].z);
-			vertex(obj[6].x, obj[6].y, obj[6].z);
-			vertex(obj[4].x, obj[4].y, obj[4].z);
-			endShape();
+			stroke(i*20);
+			translate(obj[i].x, obj[i].y, obj[i].z);
+			sphere(5);
 			popMatrix();
+			}
 			//RobotRun.printMat(c.getOrientationMat());
 			/**/
 			 
@@ -7375,36 +7377,6 @@ public class RobotRun extends PApplet {
 			DataManagement.errLog(NPEx);
 			throw NPEx;
 		}
-		
-		/* *
-		pushMatrix();
-		resetMatrix();
-		translate(15, -2, 12);
-		rotateX(-PI / 2f);
-		rotateY(-PI / 2f);
-		printMatrix();
-		
-		PVector origin = getCoordFromMatrix(0, 0, 0);
-		PVector x = getCoordFromMatrix(1, 0, 0).sub(origin);
-		PVector y = getCoordFromMatrix(0, 1, 0).sub(origin);
-		PVector z = getCoordFromMatrix(0, 0, 1).sub(origin);
-		
-		System.out.printf("%s\n%s\n%s\n", x, y, z);
-		
-		/*
-		
-		float[][] t = getTransformationMatrix();
-		System.out.println( RMath.toString(t) );
-		resetMatrix();
-		applyMatrix(
-				t[0][0], t[0][1], t[0][2], t[0][3],
-				t[1][0], t[1][1], t[1][2], t[1][3],
-				t[2][0], t[2][1], t[2][2], t[2][3],
-				t[3][0], t[3][1], t[3][2], t[3][3]
-		);
-		printMatrix();
-		popMatrix();
-		/**/
 	}
 	
 	/**
