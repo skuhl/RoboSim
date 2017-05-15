@@ -43,7 +43,7 @@ public class RobotCamera {
 	 * @param o The WorldObject to be tested.
 	 * @return  
 	 */
-	public PVector[] checkObjectInFrame(WorldObject o, int func) {
+	public PVector[] checkObjectInFrame(WorldObject o) {
 		PVector objCenter = o.getLocalCenter();
 		float len, wid, hgt;
 			
@@ -93,6 +93,7 @@ public class RobotCamera {
 		float f = camClipFar;
 		
 		RMatrix vMat = getViewMat();
+		RMath.printMat(vMat.getFloatData());
 		float[][] pMat1 = new float[][] {
 			{1, 0, 0, 0},
 			{0, 1, 0, 0},
@@ -118,8 +119,9 @@ public class RobotCamera {
 		objVertices[7] = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
 		
 		System.out.println("c: " + objCenter.toString());
-		objCenter = vMat.multiply(objCenter);
-		objCenter = pMat2.rTranspose().multiply(objCenter);
+		objCenter = RMath.vectorMatrixMult(objCenter, vMat.getFloatData());
+		//objCenter = vMat.multiply(objCenter);
+		//objCenter = pMat2.rTranspose().multiply(objCenter);
 		System.out.println("c: " + objCenter.toString());
 		
 		for(int i = 0; i < 8; i += 1) {
@@ -247,6 +249,7 @@ public class RobotCamera {
 		
 		if(func == 0) return distZ - dimZ/2;
 		if(func == 1) return distZ + dimZ/2;
+		if(func == 2) return distZ;
 		return 0;
 	}
 	
@@ -318,9 +321,9 @@ public class RobotCamera {
 	public RMatrix getViewMat() {
 		float[][] rot = getOrientationMat().getFloatData();
 		float[][] tRot = new float[][] {
-			{rot[0][0], rot[1][0], -rot[2][0], 0},
-			{rot[0][1], rot[1][1], -rot[2][1], 0},
-			{rot[0][2], rot[1][2], -rot[2][2], 0},
+			{rot[0][0], rot[0][1], rot[0][2], 0},
+			{rot[1][0], rot[1][1], rot[1][2], 0},
+			{-rot[2][0], -rot[2][1], -rot[2][2], 0},
 			{0, 0, 0, 1}
 		};
 		
