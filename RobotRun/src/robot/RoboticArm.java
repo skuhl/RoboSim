@@ -1639,6 +1639,36 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * Reorders the program list of the robot, so that the programs are in
+	 * alphabetical order.
+	 */
+	@SuppressWarnings("unchecked")
+	public void reorderPrograms() {
+		// Move programs to a temporary list
+		ArrayList<Program> limboList = (ArrayList<Program>) PROGRAMS.clone();
+		PROGRAMS.clear();
+		
+		for (int pdx = 0; pdx < limboList.size(); ++pdx) {
+			int insertIdx = PROGRAMS.size() - 1;
+			Program toInsert = limboList.get(pdx);
+			
+			if (PROGRAMS.size() > 0) {
+				Program predecessor = PROGRAMS.get(insertIdx);
+				/* Search to new list from back to front to find where to
+				 * insert the program */
+				while (predecessor.getName().compareTo(toInsert.getName()) > 0 ) {
+					
+					if (--insertIdx < 0) { break; }
+					predecessor = PROGRAMS.get(insertIdx);
+				}
+			}
+			
+			PROGRAMS.add(insertIdx + 1, toInsert);
+		}
+		
+	}
+	
+	/**
 	 * A wrapper method for replacing an instruction in the active program of
 	 * this robot. The replacement is added onto the program undo stack for the
 	 * active program.

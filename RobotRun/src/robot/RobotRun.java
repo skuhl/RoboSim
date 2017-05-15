@@ -1977,7 +1977,7 @@ public class RobotRun extends PApplet {
 
 				if (prog != null) {
 					prog.setName(workingText.toString());
-					getActiveRobot().setActiveInstIdx(0);
+					getActiveRobot().reorderPrograms();
 					DataManagement.saveRobotData(activeRobot, 1);
 				}
 
