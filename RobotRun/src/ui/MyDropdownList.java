@@ -132,7 +132,7 @@ public class MyDropdownList extends DropdownList {
 	 * Updates the label for the dropdown based on the currently selected item
 	 * in the list.
 	 */
-	private void updateLabel() {
+	protected void updateLabel() {
 		String label = getSelectedLabel();
 	
 		if (label == null) {
