@@ -3576,8 +3576,12 @@ public class RobotRun extends PApplet {
 				if (instr instanceof MotionInstruction) {
 					// Update the primary position
 					MotionInstruction mInst = ((MotionInstruction) instr);
-					p.setPosition(posIdx, pTemp[mInst.getPositionNum()]);
-					mInst.setPositionNum(posIdx++);
+					int oldPosNum = mInst.getPositionNum();
+					
+					if (oldPosNum >= 0 && oldPosNum < pTemp.length) {
+						p.setPosition(posIdx, pTemp[oldPosNum]);
+						mInst.setPositionNum(posIdx++);
+					}
 
 					if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR && mInst.getSecondaryPoint() != null) {
 
@@ -3586,8 +3590,12 @@ public class RobotRun extends PApplet {
 						 * motion instruction
 						 */
 						mInst = mInst.getSecondaryPoint();
-						p.setPosition(posIdx, pTemp[mInst.getPositionNum()]);
-						mInst.setPositionNum(posIdx++);
+						oldPosNum = mInst.getPositionNum();
+						
+						if (oldPosNum >= 0 && oldPosNum < pTemp.length) {
+							p.setPosition(posIdx, pTemp[oldPosNum]);
+							mInst.setPositionNum(posIdx++);
+						}
 					}
 				}
 			}
@@ -5318,12 +5326,12 @@ public class RobotRun extends PApplet {
 			instruct_list.add(line);
 		}
 
-		if (mode.getType() != ScreenType.TYPE_LINE_SELECT) {
+		//if (mode.getType() != ScreenType.TYPE_LINE_SELECT) {
 			DisplayLine endl = new DisplayLine(size);
 			endl.add("[End]");
 
 			instruct_list.add(endl);
-		}
+		//}
 
 		return instruct_list;
 	}
