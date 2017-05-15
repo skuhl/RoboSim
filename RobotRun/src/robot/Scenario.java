@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 import geom.Fixture;
 import geom.Part;
 import geom.RMath;
+import geom.RMatrix;
 import geom.WorldObject;
 import processing.core.PApplet;
 
@@ -389,7 +390,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					     R  - part fixture reference orientation
 					     E' - current Robot end effector orientation
 					     E  - previous Robot end effector orientation
-					     P  - current part loval orientation
+					     P  - current part local orientation
 					 ***********************************************/
 
 					Fixture refFixture = p.getFixtureRef();
@@ -399,9 +400,8 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					}
 
 					RobotRun.applyModelRotation(model, model.getJointAngles());
-					float[][] invEETMatrix = RMath.invertHCMatrix(RobotRun.getActiveRobot().getLastEEOrientation());
-					RobotRun.getInstance().applyMatrix(invEETMatrix);
-
+					RMatrix invMat = new RMatrix(RobotRun.getActiveRobot().getLastEEOrientation());
+					RobotRun.getInstance().applyMatrix(invMat.getSVD().getFloatData());
 					p.applyCoordinateSystem();
 					// Update the world object's position and orientation
 					p.setLocalCoordinateSystem();

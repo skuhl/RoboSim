@@ -221,7 +221,7 @@ public class Part extends WorldObject {
 	 * with this world object.
 	 */
 	public boolean collision(Part obj) {
-		return collision3D(absOBB, obj.getOBB());
+		return collision3D(absOBB, obj.absOBB);
 	}
 
 	/**

@@ -3,5 +3,10 @@
 *.log
 RobotRun/img/Thumbs.db
 RobotRun/bin/*
+<<<<<<< HEAD
+RobotRun/tmp/robot0
+RobotRun/tmp/robot1
+=======
 RobotRun/tmp/*
 RobotRun/err/*
+>>>>>>> dev
