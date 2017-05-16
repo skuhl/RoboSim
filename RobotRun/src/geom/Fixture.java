@@ -52,7 +52,7 @@ public class Fixture extends WorldObject {
 	 * Applies the inverse of this Fixture's Coordinate System's transformation matrix to the matrix stack.
 	 */
 	public void removeCoordinateSystem() {
-		float[][] tMatrix = RMath.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
+		RMatrix tMatrix = RMath.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
 		tMatrix = RMath.invertHCMatrix(tMatrix);
 		
 		

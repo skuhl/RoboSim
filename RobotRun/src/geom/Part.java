@@ -21,8 +21,8 @@ public class Part extends WorldObject {
 	 */
 	public static boolean collision3D(BoundingBox A, BoundingBox B) {
 		// Rows are x, y, z axis vectors for A and B: Ax, Ay, Az, Bx, By, and Bz
-		float[][] axes_A = A.getOrientationAxes();
-		float[][] axes_B = B.getOrientationAxes();
+		float[][] axes_A = A.getOrientationAxes().getFloatData();
+		float[][] axes_B = B.getOrientationAxes().getFloatData();
 
 		// Rotation matrices to convert B into A's coordinate system
 		float[][] rotMatrix = new float[3][3];
@@ -268,7 +268,7 @@ public class Part extends WorldObject {
 		return defaultOrientation.getOrigin();
 	}
 
-	public float[][] getDefaultOrientationAxes() {
+	public RMatrix getDefaultOrientationAxes() {
 		return defaultOrientation.getAxes();
 	}
 
@@ -309,12 +309,12 @@ public class Part extends WorldObject {
 		defaultOrientation.setOrigin(newCenter);
 	}
 	
-	public void setDefaultOrientationAxes(float[][] newAxes) {
+	public void setDefaultOrientationAxes(RMatrix newAxes) {
 		defaultOrientation.setAxes(newAxes);
 	}
 
 	@Override
-	public void setLocalOrientationAxes(float[][] newAxes) {
+	public void setLocalOrientationAxes(RMatrix newAxes) {
 		super.setLocalOrientationAxes(newAxes);
 		updateAbsoluteOrientation();
 	}

@@ -110,7 +110,7 @@ public abstract class WorldObject implements Cloneable {
 		return localOrientation.getOrigin();
 		}
 
-	public float[][] getLocalOrientationAxes() {
+	public RMatrix getLocalOrientationAxes() {
 		return localOrientation.getAxes();
 	}
 
@@ -128,7 +128,7 @@ public abstract class WorldObject implements Cloneable {
 		localOrientation.setOrigin(newCenter);
 	}
 	
-	public void setLocalOrientationAxes(float[][] newAxes) {
+	public void setLocalOrientationAxes(RMatrix newAxes) {
 		localOrientation.setAxes(newAxes);
 	}
 

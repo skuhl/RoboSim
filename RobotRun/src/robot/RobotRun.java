@@ -150,15 +150,12 @@ public class RobotRun extends PApplet {
 	 * Converts the rotation matrix from the native coordinate frame to the
 	 * world frame.
 	 * 
-	 * @param orienMat
-	 *            A valid rotation matrix
+	 * @param rMat A valid rotation matrix
 	 * @return The rotation matrix in terms of the world frame
 	 */
-	public static float[][] convertNativeToWorld(float[][] orienMat) {
-		RMatrix frameAxes = new RMatrix(orienMat);
+	public static RMatrix convertNativeToWorld(RMatrix rMat) {
 		RMatrix worldAxes = new RMatrix(Fields.WORLD_AXES);
-
-		return worldAxes.multiply(frameAxes).getFloatData();
+		return worldAxes.multiply(rMat);
 	}
 	
 	
@@ -253,7 +250,7 @@ public class RobotRun extends PApplet {
 		/**/
 		// Apply offset
 		PVector ee = instance.getCoordFromMatrix(offset.x, offset.y, offset.z);
-		float[][] orientationMatrix = instance.getRotationMatrix();
+		RMatrix orientationMatrix = instance.getRotationMatrix();
 		instance.popMatrix();
 		// Return a Point containing the EE position, orientation, and joint
 		// angles
@@ -423,14 +420,12 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @param tMatrix	A 4x4 row major transformation matrix
 	 */
-	public void applyMatrix(float[][] tMatrix) {
-		// Transpose the rotation portion, because Processing
-		//TODO I have no idea why the rotation needs to be transposed here,
-		//but it works for now
+	public void applyMatrix(RMatrix mat) {
+		float[][] tMatrix = mat.getFloatData();
 		super.applyMatrix(
-				tMatrix[0][0], tMatrix[1][0], tMatrix[2][0], tMatrix[0][3],
-				tMatrix[0][1], tMatrix[1][1], tMatrix[2][1], tMatrix[1][3],
-				tMatrix[0][2], tMatrix[1][2], tMatrix[2][2], tMatrix[2][3],
+				tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], tMatrix[0][3],
+				tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], tMatrix[1][3],
+				tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], tMatrix[2][3],
 				tMatrix[3][0], tMatrix[3][1], tMatrix[3][2], tMatrix[3][3]
 		);
 	}
@@ -445,7 +440,7 @@ public class RobotRun extends PApplet {
 	 * 						the orientation of the coordinate frame with
 	 * 						respect to the native coordinate system
 	 */
-	public void applyMatrix(PVector origin, float[][] axesVectors) {
+	public void applyMatrix(PVector origin, RMatrix axesVectors) {
 		// Transpose the rotation portion, because Processing
 		this.applyMatrix(RMath.transformationMatrix(origin, axesVectors));
 	}
@@ -1590,12 +1585,12 @@ public class RobotRun extends PApplet {
 			}
 			/**
 			printMatrix();
-			/*Camera Test Code*/
+			/*Camera Test Code*
 			Fixture f = new Fixture("test", 160, 0, 50, 100, 200);
 			f.setLocalCenter(new PVector(-700, -300, 0));
 			Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
-			float[][] axes = p.orientation.toMatrix();
-			c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[1][0], axes[1][1], axes[1][2]), -PI/2)));
+			float[][] axes = p.orientation.toMatrix().getFloatData();
+			c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[0][1], axes[1][1], axes[2][1]), -PI/2)));
 			c.setPosition(p.position);
 			renderOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
 			
@@ -1634,13 +1629,13 @@ public class RobotRun extends PApplet {
 			vertex(near[0].x, near[0].y, near[0].z);
 			endShape();
 			
-			/*fill(255, 126, 0, 126);
+			fill(255, 126, 0, 126);
 			beginShape();
 			vertex(view1[0].x, view1[0].y, view1[0].z);
 			vertex(view1[1].x, view1[1].y, view1[1].z);
 			vertex(view1[3].x, view1[3].y, view1[3].z);
 			vertex(view1[2].x, view1[2].y, view1[2].z);
-			endShape();*/
+			endShape();
 			
 			beginShape();
 			vertex(view2[0].x, view2[0].y, view2[0].z);
@@ -4453,7 +4448,7 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @return	A row major orthogonal rotation matrix
 	 */
-	public float[][] getRotationMatrix() {
+	public RMatrix getRotationMatrix() {
 		// Pull the origin and axes vectors from the matrix stack
 		PVector origin = getCoordFromMatrix(0f, 0f, 0f),
 				vx = getCoordFromMatrix(1f, 0f, 0f).sub(origin),
@@ -4461,16 +4456,16 @@ public class RobotRun extends PApplet {
 				vz = getCoordFromMatrix(0f, 0f, 1f).sub(origin);
 		
 		float[][] rMatrix = new float[][] {
-			{vx.x, vx.y, vx.z},
-			{vy.x, vy.y, vy.z},
-			{vz.x, vz.y, vz.z}
+			{vx.x, vy.x, vz.x},
+			{vx.y, vy.y, vz.y},
+			{vx.z, vy.z, vz.z}
 		};
 		
 		/* TODO *
 		System.out.println("Rotation mat:");
 		RMath.printMat(rMatrix);
 		/**/
-		return rMatrix;
+		return new RMatrix(rMatrix);
 	}
 
 	public ArrayList<Scenario> getScenarios() {
@@ -4513,7 +4508,7 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @return	A 4x4 row major transformation matrix
 	 */
-	public float[][] getTransformationMatrix() {
+	public RMatrix getTransformationMatrix() {
 		float[][] transform = new float[3][3];
 
 		PVector origin = getCoordFromMatrix(0, 0, 0);
@@ -4522,16 +4517,16 @@ public class RobotRun extends PApplet {
 		PVector zAxis = getCoordFromMatrix(0, 0, 1).sub(origin);
 
 		transform[0][0] = xAxis.x;
-		transform[0][1] = xAxis.y;
-		transform[0][2] = xAxis.z;
-		transform[1][0] = yAxis.x;
+		transform[1][0] = xAxis.y;
+		transform[2][0] = xAxis.z;
+		transform[0][1] = yAxis.x;
 		transform[1][1] = yAxis.y;
-		transform[1][2] = yAxis.z;
-		transform[2][0] = zAxis.x;
-		transform[2][1] = zAxis.y;
+		transform[2][1] = yAxis.z;
+		transform[0][2] = zAxis.x;
+		transform[1][2] = zAxis.y;
 		transform[2][2] = zAxis.z;
 
-		return RMath.transformationMatrix(origin, transform);
+		return RMath.transformationMatrix(origin, new RMatrix(transform));
 	}
 
 	/**
@@ -4850,6 +4845,9 @@ public class RobotRun extends PApplet {
 			getActiveRobot().releaseHeldObject();
 			getActiveRobot().setJointAngles(rot);
 			intermediatePositions.clear();	
+		}
+		else if(key == 'R') {
+			reset();
 		}
 		else if(key == 'c') {
 			coord();
@@ -6680,20 +6678,20 @@ public class RobotRun extends PApplet {
 
 				} else {
 					// Draw the axes of the World frame
-					renderOriginAxes(new PVector(0f, 0f, 0f), Fields.WORLD_AXES, 10000f, color(0));
+					renderOriginAxes(new PVector(0f, 0f, 0f), Fields.WORLD_AXES_MAT, 10000f, color(0));
 				}
 			}
 
 		} else if (getAxesState() == AxesDisplay.GRID) {
 			// Display gridlines spanning from axes of the current frame
 			Frame active;
-			float[][] displayAxes;
+			RMatrix displayAxes;
 			PVector displayOrigin;
 
 			switch (getActiveRobot().getCurCoordFrame()) {
 			case JOINT:
 			case WORLD:
-				displayAxes = new float[][] { { 1f, 0f, 0f }, { 0f, 1f, 0f }, { 0f, 0f, 1f } };
+				displayAxes = Fields.IDENTITY_MAT;
 				displayOrigin = new PVector(0f, 0f, 0f);
 				break;
 			case TOOL:
@@ -6735,16 +6733,17 @@ public class RobotRun extends PApplet {
 	 * @param distBwtLines
 	 *            The distance between each gridline
 	 */
-	public void renderGridlines(float[][] axesVectors, PVector origin, int halfNumOfLines, float distBwtLines) {
+	public void renderGridlines(RMatrix axesVectors, PVector origin, int halfNumOfLines, float distBwtLines) {
+		float[][] axesDat = axesVectors.getFloatData();
 		int vectorPX = -1, vectorPZ = -1;
 
 		// Find the two vectors with the minimum y values
-		for (int v = 0; v < axesVectors.length; ++v) {
-			int limboX = (v + 1) % axesVectors.length, limboY = (limboX + 1) % axesVectors.length;
+		for (int v = 0; v < axesDat.length; ++v) {
+			int limboX = (v + 1) % axesDat.length, limboY = (limboX + 1) % axesDat.length;
 			// Compare the y value of the current vector to those of the other
 			// two vectors
-			if (abs(axesVectors[v][1]) >= abs(axesVectors[limboX][1])
-					&& abs(axesVectors[v][1]) >= abs(axesVectors[limboY][1])) {
+			if (abs(axesDat[v][1]) >= abs(axesDat[limboX][1])
+					&& abs(axesDat[v][1]) >= abs(axesDat[limboY][1])) {
 				vectorPX = limboX;
 				vectorPZ = limboY;
 				break;
@@ -6760,9 +6759,9 @@ public class RobotRun extends PApplet {
 		// Map the chosen two axes vectors to the xz-plane at the y-position of
 		// the Robot's base
 		applyMatrix(
-				axesVectors[vectorPX][0], 0, axesVectors[vectorPZ][0], origin.x,
+				axesDat[vectorPX][0], 0, axesDat[vectorPZ][0], origin.x,
 				0, 1, 0, getActiveRobot().getBasePosition().y,
-				axesVectors[vectorPX][2], 0, axesVectors[vectorPZ][2], origin.z,
+				axesDat[vectorPX][2], 0, axesDat[vectorPZ][2], origin.z,
 				0, 0, 0, 1
 		);
 
@@ -6800,7 +6799,7 @@ public class RobotRun extends PApplet {
 	 * @param originColor
 	 *            The color of the point to draw at the origin
 	 */
-	public void renderOriginAxes(PVector origin, float[][] axesVectors, float axesLength, int originColor) {
+	public void renderOriginAxes(PVector origin, RMatrix axesVectors, float axesLength, int originColor) {
 
 		pushMatrix();
 		// Transform to the reference frame defined by the axes vectors
@@ -7378,7 +7377,7 @@ public class RobotRun extends PApplet {
 			buffer = new ArrayList<>();
 			displayPoint = null;
 
-			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 30, 300, null);
+			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, .3f, 300, null);
 
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);

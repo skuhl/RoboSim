@@ -38,15 +38,15 @@ public class BoundingBox {
 	}
 	
 	public static void main(String[] args) {
-		float[][] rotMatrix = new float[][] {
+		RMatrix rotMatrix = new RMatrix(new float[][] {
 			{ 1, 2, 3 },
 			{ 3, 4, 5 },
 			{ 6, 7, 8 }
-		};
+		});
 		
-		float[][] tMatrix = RMath.transformationMatrix(new PVector(-15, 4, 35), rotMatrix);
+		RMatrix tMatrix = RMath.transformationMatrix(new PVector(-15, 4, 35), rotMatrix);
 		
-		System.out.printf("%s\n%s\n", RMath.toString(rotMatrix), RMath.toString(tMatrix));
+		System.out.printf("%s\n%s\n", rotMatrix.toString(), tMatrix.toString());
 		
 		
 		PVector v = new PVector(-13, 5, 11);
@@ -87,7 +87,7 @@ public class BoundingBox {
 	 */
 	public boolean collision(PVector point) {
 		// Convert the point to the current reference frame
-		float[][] tMatrix = RMath.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
+		RMatrix tMatrix = RMath.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
 		PVector relPosition = RMath.vectorMatrixMult(point, RMath.invertHCMatrix(tMatrix));
 
 		PVector OBBDim = getDims();
@@ -136,7 +136,7 @@ public class BoundingBox {
 		return dims;
 	}
 
-	public float[][] getOrientationAxes() {
+	public RMatrix getOrientationAxes() {
 		return localOrientation.getAxes();
 	}
 
@@ -187,7 +187,7 @@ public class BoundingBox {
 	 * Reset the object's orientation axes; the given rotation
 	 * matrix should be in row major order!
 	 */
-	public void setOrientationAxes(float[][] newOrientation) {
+	public void setOrientationAxes(RMatrix newOrientation) {
 		localOrientation.setAxes(newOrientation);
 	}
 }

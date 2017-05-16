@@ -172,7 +172,7 @@ public class RoboticArm {
 	private int activeUserFrame, activeToolFrame;
 	
 	
-	private float[][] lastEEOrientation;
+	private RMatrix lastEEOrientation;
 
 	/**
 	 * Creates a robot with the given ID at the given position with the given
@@ -1221,7 +1221,7 @@ public class RoboticArm {
 		return liveSpeed;
 	}
 	
-	public float[][] getLastEEOrientation() {
+	public RMatrix getLastEEOrientation() {
 		return lastEEOrientation;
 	}
 	
@@ -1232,11 +1232,11 @@ public class RoboticArm {
 	/* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
 	 * the end effector's current x, y, z axes with respect to the current frame.
 	 */
-	public float[][] getOrientationMatrix() {
+	public RMatrix getOrientationMatrix() {
 		RobotRun.getInstance().pushMatrix();
 		RobotRun.getInstance().resetMatrix();
 		RobotRun.applyModelRotation(this, getJointAngles());
-		float[][] matrix = RobotRun.getInstance().getRotationMatrix();
+		RMatrix matrix = RobotRun.getInstance().getRotationMatrix();
 		RobotRun.getInstance().popMatrix();
 
 		return matrix;
@@ -1246,11 +1246,10 @@ public class RoboticArm {
 	 * the end effector's current x, y, z axes with respect to an arbitrary coordinate
 	 * system specified by the rotation matrix 'frame.'
 	 */
-	public float[][] getOrientationMatrix(float[][] frame) {
-		float[][] m = getOrientationMatrix();
-		RMatrix A = new RMatrix(m);
+	public float[][] getOrientationMatrix(RMatrix frame) {
+		RMatrix A = getOrientationMatrix();
 		RMatrix B = new RMatrix(frame);
-		RMatrix AB = (RMatrix)A.multiply(B.transpose());
+		RMatrix AB = A.multiply(B);
 
 		return AB.getFloatData();
 	}

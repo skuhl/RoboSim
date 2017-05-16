@@ -93,7 +93,7 @@ public class RobotCamera {
 		float f = camClipFar;
 		
 		RMatrix vMat = getViewMat();
-		RMath.printMat(vMat.getFloatData());
+		//RMath.printMat(vMat.getFloatData());
 		float[][] pMat1 = new float[][] {
 			{1, 0, 0, 0},
 			{0, 1, 0, 0},
@@ -102,12 +102,13 @@ public class RobotCamera {
 		};
 		
 		RMatrix pMat2 = new RMatrix(new float[][] {
-			{2*n/(r-l), 0, 0, 0},
-			{0, 2*n/(t-b), 0, 0},
-			{(r+l)/(r-l), (t+b)/(t-b), -(f+n)/(f-n), -1},
-			{0, 0, -(2*f*n)/(f-n), 0}
+			{2*n/(r-l), 0, (r+l)/(r-l), 0},
+			{0, 2*n/(t-b), (t+b)/(t-b), 0},
+			{0, 0, -(f+n)/(f-n), -(2*f*n)/(f-n)},
+			{0, 0, -1, 0}
 		});
 		
+		RMath.printMat(pMat2);
 		PVector[] objVertices = new PVector[8];
 		objVertices[0] = new PVector(objCenter.x + len/2, objCenter.y + hgt/2, objCenter.z + wid/2);
 		objVertices[1] = new PVector(objCenter.x + len/2, objCenter.y + hgt/2, objCenter.z - wid/2);
@@ -118,11 +119,11 @@ public class RobotCamera {
 		objVertices[6] = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z + wid/2);
 		objVertices[7] = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
 		
-		System.out.println("c: " + objCenter.toString());
-		objCenter = RMath.vectorMatrixMult(objCenter, vMat.getFloatData());
-		//objCenter = vMat.multiply(objCenter);
-		//objCenter = pMat2.rTranspose().multiply(objCenter);
-		System.out.println("c: " + objCenter.toString());
+		objCenter = vMat.multiply(objCenter);
+		System.out.println("co: " + objCenter.toString());
+		objCenter = RMath.vectorMatrixMult(objCenter, pMat2);
+		//objCenter = pMat2.multiply(objCenter);
+		System.out.println("ct: " + objCenter.toString());
 		
 		for(int i = 0; i < 8; i += 1) {
 			//System.out.println("v" + i + ": " + objVertices[i].toString());
@@ -239,7 +240,7 @@ public class RobotCamera {
 		if(distZ < camClipNear) return 0;
 		
 		//Generate object axes and produce the diagonal vector of the object
-		float[][] objCoord = o.getLocalOrientationAxes();
+		float[][] objCoord = o.getLocalOrientationAxes().getFloatData();
 		PVector objAxisX = new PVector(objCoord[0][0], objCoord[0][1], objCoord[0][2]);
 		PVector objAxisY = new PVector(objCoord[1][0], objCoord[1][1], objCoord[1][2]);
 		PVector objAxisZ = new PVector(objCoord[2][0], objCoord[2][1], objCoord[2][2]);
@@ -320,21 +321,19 @@ public class RobotCamera {
 	
 	public RMatrix getViewMat() {
 		float[][] rot = getOrientationMat().getFloatData();
-		float[][] tRot = new float[][] {
-			{rot[0][0], rot[0][1], rot[0][2], 0},
-			{rot[1][0], rot[1][1], rot[1][2], 0},
-			{-rot[2][0], -rot[2][1], -rot[2][2], 0},
+		
+		float tPosX = -camPos.x*rot[0][0] - camPos.y*rot[1][0] - camPos.z*rot[2][0];
+		float tPosY = -camPos.x*rot[0][1] - camPos.y*rot[1][1] - camPos.z*rot[2][1];
+		float tPosZ =  camPos.x*rot[0][2] + camPos.y*rot[1][2] + camPos.z*rot[2][2];
+		
+		float[][] vMat = new float[][] {
+			{ rot[0][0],  rot[1][0],  rot[2][0], tPosX},
+			{ rot[0][1],  rot[1][1],  rot[2][1], tPosY},
+			{-rot[0][2], -rot[1][2], -rot[2][2], tPosZ},
 			{0, 0, 0, 1}
 		};
-		
-		float[][] trans = new float[][] {
-			{1, 0, 0, -camPos.x},
-			{0, 1, 0, -camPos.y},
-			{0, 0, 1, -camPos.z},
-			{0, 0, 0, 1},
-		};
-		
-		return new RMatrix(RMath.mat4fMultiply(tRot, trans));
+				
+		return new RMatrix(vMat);
 	}
 	
 	/**
