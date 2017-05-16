@@ -233,10 +233,6 @@ public class RobotRun extends PApplet {
 		instance.pushMatrix();
 		instance.resetMatrix();
 		applyModelRotation(model, jointAngles);
-		/* TODO *
-		System.out.println("Stack mat:");
-		instance.printMatrix();
-		/**/
 		// Apply offset
 		PVector ee = instance.getCoordFromMatrix(offset.x, offset.y, offset.z);
 		RMatrix orientationMatrix = instance.getRotationMatrix();
@@ -4886,6 +4882,7 @@ public class RobotRun extends PApplet {
 		ScreenState cur = screenStates.peek();
 		
 		if (cur.mode != ScreenMode.DEFAULT) {
+			RoboticArm r = getActiveRobot();
 			screenStates.pop();
 			cur = screenStates.peek();
 			
@@ -4904,10 +4901,24 @@ public class RobotRun extends PApplet {
 			options.setLineIdx(cur.optLnIdx);
 			options.setRenderStart(cur.optRenIdx);
 			
-			workingText = new StringBuilder();
+			switch (mode) {
+			case ACTIVE_FRAMES:
+				String idxTxt;
+				
+				if (contents.getLineIdx() == 0) {
+					idxTxt = Integer.toString(r.getActiveToolFrame() + 1);
+					
+				} else {
+					idxTxt = Integer.toString(r.getActiveUserFrame() + 1);
+				}
+				
+				workingText = new StringBuilder(idxTxt);
+				break;
+			default:
+				workingText = new StringBuilder();
+			}
 			
 			updatePendantScreen();
-			
 			return true;
 		}
 		
@@ -8179,7 +8190,6 @@ public class RobotRun extends PApplet {
 		UI.renderPendantScreen(getHeader(mode), getContentsMenu(),
 				getOptionsMenu(), getFunctionLabels(mode));
 	}
-	
 	
 	/**
 	 * Update Default button in the edit window
