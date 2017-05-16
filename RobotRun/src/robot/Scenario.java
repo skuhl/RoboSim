@@ -401,7 +401,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 					RobotRun.applyModelRotation(model, model.getJointAngles());
 					RMatrix invMat = new RMatrix(RobotRun.getActiveRobot().getLastEEOrientation());
-					RobotRun.getInstance().applyMatrix(invMat.getSVD().getFloatData());
+					RobotRun.getInstance().applyMatrix(invMat.getInverse());
 					p.applyCoordinateSystem();
 					// Update the world object's position and orientation
 					p.setLocalCoordinateSystem();

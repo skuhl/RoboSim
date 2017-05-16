@@ -1,7 +1,9 @@
 package frame;
 import geom.Point;
 import geom.RMath;
+import geom.RMatrix;
 import geom.RQuaternion;
+import global.Fields;
 import processing.core.PConstants;
 import processing.core.PVector;
 import robot.RobotRun;
@@ -109,7 +111,7 @@ public class ToolFrame extends Frame {
 				return false;
 			}
 
-			float[][] pt1_ori = TCPTeachPoints[0].orientation.toMatrix(),
+			RMatrix pt1_ori = TCPTeachPoints[0].orientation.toMatrix(),
 					pt2_ori = TCPTeachPoints[1].orientation.toMatrix(),
 					pt3_ori = TCPTeachPoints[2].orientation.toMatrix();
 
@@ -117,10 +119,10 @@ public class ToolFrame extends Frame {
 					TCPTeachPoints[1].position, pt2_ori,
 					TCPTeachPoints[2].position, pt3_ori);
 
-			float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(super.getPoint(0).position,
+			RMatrix newAxesVectors = (method == 1) ? createAxesFromThreePoints(super.getPoint(0).position,
 					super.getPoint(1).position,
 					super.getPoint(2).position)
-					: new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
+					: Fields.IDENTITY_MAT;
 
 					if (newTCP == null || newAxesVectors == null) {
 						// Invalid point set for the TCP or the coordinate axes

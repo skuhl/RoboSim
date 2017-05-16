@@ -24,6 +24,7 @@ import geom.Fixture;
 import geom.ModelShape;
 import geom.Part;
 import geom.RMath;
+import geom.RMatrix;
 import geom.Shape;
 import geom.ShapeType;
 import geom.WorldObject;
@@ -3245,7 +3246,7 @@ public class WGUI implements ControlListener {
 				 // Convert values from the World to the Native coordinate system
 				 PVector position = RMath.vFromWorld( oPosition );
 				 PVector wpr = oWPR.mult(PConstants.DEG_TO_RAD);
-				 float[][] orientation = RMath.eulerToMatrix(wpr);
+				 RMatrix orientation = RMath.eulerToMatrix(wpr);
 				 // Update the Objects position and orientation
 				 toEdit.setLocalCenter(position);
 				 toEdit.setLocalOrientationAxes(orientation);
@@ -3332,7 +3333,7 @@ public class WGUI implements ControlListener {
 			 // Convert values from the World to the Native coordinate system
 			 PVector position = RMath.vFromWorld( defaultPos );
 			 PVector wpr = defaultWPR.mult(PConstants.DEG_TO_RAD);
-			 float[][] orientation = RMath.eulerToMatrix(wpr);
+			 RMatrix orientation = RMath.eulerToMatrix(wpr);
 			 // Update the Object's default position and orientation
 			 p.setDefaultCenter(position);
 			 p.setDefaultOrientationAxes(orientation);

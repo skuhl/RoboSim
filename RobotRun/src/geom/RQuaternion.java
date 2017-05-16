@@ -350,35 +350,20 @@ public class RQuaternion {
 	 * Returns the 3x3 rotation matrix corresponding
 	 * to this [quaternion].
 	 */
-	public float[][] toMatrix() {
+	public RMatrix toMatrix() {
 		float[][] r = new float[3][3];
 
-		r[0][0] = 1 - 2 * (y * y + z * z);
-		r[0][1] = 2 * (x * y - w * z);
-		r[0][2] = 2 * (w * y + x * z);
-		r[1][0] = 2 * (x * y + w * z);
-		r[1][1] = 1 - 2 * (x * x + z * z);
-		r[1][2] = 2 * (y * z - w * x);
-		r[2][0] = 2 * (x * z - w * y);
-		r[2][1] = 2 * (w * x + y * z);
-		r[2][2] = 1 - 2 * (x * x + y * y);
+		r[0][0] = 1 - 2 * (y*y + z*z);
+		r[1][0] = 2 * (x*y - w*z);
+		r[2][0] = 2 * (w*y + x*z);
+		r[0][1] = 2 * (x*y + w*z);
+		r[1][1] = 1 - 2 * (x*x + z*z);
+		r[2][1] = 2 * (y*z - w*x);
+		r[0][2] = 2 * (x*z - w*y);
+		r[1][2] = 2 * (w*x + y*z);
+		r[2][2] = 1 - 2 * (x*x + y*y);
 
-		float[] magnitudes = new float[3];
-
-		for(int v = 0; v < r.length; ++v) {
-			// Find the magnitude of each axis vector
-			for(int e = 0; e < r[0].length; ++e) {
-				magnitudes[v] += Math.pow(r[v][e], 2);
-			}
-
-			magnitudes[v] = (float)Math.sqrt(magnitudes[v]);
-			// Normalize each vector
-			for(int e = 0; e < r.length; ++e) {
-				r[v][e] /= magnitudes[v];
-			}
-		}
-
-		return r;
+		return new RMatrix(r).normalize();
 	}
 
 	/**

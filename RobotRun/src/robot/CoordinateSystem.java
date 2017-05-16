@@ -1,4 +1,5 @@
 package robot;
+import geom.RMatrix;
 import processing.core.PVector;
 
 /**
@@ -7,7 +8,7 @@ import processing.core.PVector;
 public class CoordinateSystem implements Cloneable {
 	private PVector origin;
 	/* A 3x3 rotation matrix */
-	private float[][] axesVectors;
+	private RMatrix axesVectors;
 
 	public CoordinateSystem() {
 		/* Pull origin and axes from the current transformation matrix */
@@ -18,15 +19,9 @@ public class CoordinateSystem implements Cloneable {
 	/**
 	 * Create a coordinate syste with the given origin and 3x3 rotation matrix.
 	 */
-	public CoordinateSystem(PVector origin, float[][] axes) {
+	public CoordinateSystem(PVector origin, RMatrix axes) {
 		this.origin = origin.copy();
-		axesVectors = new float[3][3];
-		// Copy axes into axesVectors
-		for (int row = 0; row < 3; ++row) {
-			for (int col = 0; col < 3; ++col) {
-				axesVectors[row][col] = axes[row][col];
-			}
-		}
+		axesVectors = axes.copy();
 	}
 
 	/**
@@ -38,41 +33,17 @@ public class CoordinateSystem implements Cloneable {
 
 	@Override
 	public Object clone() {
-		float[][] axesCopy = new float[3][3];
-
-		// Copy axes into axesVectors
-		for (int row = 0; row < 3; ++row) {
-			for (int col = 0; col < 3; ++col) {
-				axesCopy[row][col] = axesVectors[row][col];
-			}
-		}
-
-		return new CoordinateSystem(origin.copy(), axesCopy);
+		return new CoordinateSystem(origin.copy(), axesVectors.copy());
 	}
 
 	/**
-	 * Return this coordinate system's axes in row major order.
+	 * Return this coordinate system's axes.
 	 */
-	public float[][] getAxes() {
-		return axesVectors;
-	}
-
+	public RMatrix getAxes() { return axesVectors; }
 	public PVector getOrigin() { return origin; }
 
-	/**
-	 * Reset the coordinate system's axes vectors and return the
-	 * old axes; the given rotation matrix should be in row
-	 * major order!
-	 */
-	public void setAxes(float[][] newAxes) {
-		axesVectors = new float[3][3];
-
-		// Copy axes into axesVectors
-		for (int row = 0; row < 3; ++row) {
-			for (int col = 0; col < 3; ++col) {
-				axesVectors[row][col] = newAxes[row][col];
-			}
-		}
+	public void setAxes(RMatrix newAxes) {
+		axesVectors = newAxes;
 	}
 
 	public void setOrigin(PVector newCenter) {

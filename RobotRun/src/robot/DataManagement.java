@@ -28,6 +28,7 @@ import geom.LoadedPart;
 import geom.ModelShape;
 import geom.Part;
 import geom.Point;
+import geom.RMatrix;
 import geom.RQuaternion;
 import geom.Shape;
 import geom.WorldObject;
@@ -1064,14 +1065,14 @@ public abstract class DataManagement {
 			float[][] orientationAxes = loadFloatArray2D(in);
 			CoordinateSystem localOrientation = new CoordinateSystem();
 			localOrientation.setOrigin(center);
-			localOrientation.setAxes(orientationAxes);
+			localOrientation.setAxes(new RMatrix(orientationAxes));
 
 			if (flag == 1) {
 				center = loadPVector(in);
 				orientationAxes = loadFloatArray2D(in);
 				CoordinateSystem defaultOrientation = new CoordinateSystem();
 				defaultOrientation.setOrigin(center);
-				defaultOrientation.setAxes(orientationAxes);
+				defaultOrientation.setAxes(new RMatrix(orientationAxes));
 				
 				// Load the part's bounding-box and fixture reference name
 				PVector OBBDims = loadPVector(in);
@@ -1913,7 +1914,7 @@ public abstract class DataManagement {
 			saveShape(wldObj.getForm(), out);
 			// Save the local orientation of the object
 			savePVector(wldObj.getLocalCenter(), out);
-			saveFloatArray2D(wldObj.getLocalOrientationAxes(), out);
+			saveFloatArray2D(wldObj.getLocalOrientationAxes().getFloatData(), out);
 			
 			if (wldObj instanceof Part) {
 				Part part = (Part)wldObj;
@@ -1921,7 +1922,7 @@ public abstract class DataManagement {
 				
 				// Save the default orientation of the part
 				savePVector(part.getDefaultCenter(), out);
-				saveFloatArray2D(part.getDefaultOrientationAxes(), out);
+				saveFloatArray2D(part.getDefaultOrientationAxes().getFloatData(), out);
 				
 				savePVector(part.getOBBDims(), out);
 

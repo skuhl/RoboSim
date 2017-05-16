@@ -1,5 +1,6 @@
 package global;
 
+import geom.RMatrix;
 import processing.core.PFont;
 
 public abstract class Fields {
@@ -24,16 +25,26 @@ public abstract class Fields {
 	public static final int FTYPE_TOOL = 0;
 	public static final int FTYPE_USER = 1;
 	
+	public static final float[][] IDENTITY = new float[][] {
+		{ 1, 0, 0 },
+		{ 0, 1, 0 },
+		{ 0, 0, 1 }
+	};
+	
+	public static final RMatrix IDENTITY_MAT = new RMatrix(IDENTITY);
+	
 	/**
 	 * The rotation matrix representing the world coordinate system in terms of
 	 * the native coordinate system.
 	 */
 	public static final float[][] WORLD_AXES = new float[][] {
 		{ -1,  0,  0 },
-		{  0,  0,  1 },
-		{  0, -1,  0 }
+		{  0,  0, -1 },
+		{  0,  1,  0 }
 		
 	};
+	
+	public static final RMatrix WORLD_AXES_MAT = new RMatrix(WORLD_AXES); 
 	
 	/**
 	 * The rotation matrix representing the native coordinate system in terms
@@ -41,9 +52,11 @@ public abstract class Fields {
 	 */
 	public static final float[][] NATIVE_AXES = new float[][] {
 		{ -1,  0,  0 },
-		{  0,  0, -1 },
-		{  0,  1,  0 }
+		{  0,  0,  1 },
+		{  0, -1,  0 }
 	};
+	
+	public static final RMatrix NATIVE_AXES_MAT = new RMatrix(NATIVE_AXES);
 	
 	public static final int SMALL_BUTTON = 35;
 	public static final int LARGE_BUTTON = 50;

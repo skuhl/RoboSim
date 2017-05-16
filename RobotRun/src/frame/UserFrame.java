@@ -1,6 +1,7 @@
 package frame;
 import geom.Point;
 import geom.RMath;
+import geom.RMatrix;
 import geom.RQuaternion;
 import processing.core.PConstants;
 import processing.core.PVector;
@@ -81,7 +82,7 @@ public class UserFrame extends Frame {
 			// 3-Point or 4-Point Method
 
 			PVector newOrigin = (mode == 0) ? getPoint(0).position : getOrientOrigin().position;
-			float[][] newAxesVectors = createAxesFromThreePoints(getPoint(0).position,
+			RMatrix newAxesVectors = createAxesFromThreePoints(getPoint(0).position,
 					getPoint(1).position,
 					getPoint(2).position);
 
