@@ -153,21 +153,24 @@ public class Expression extends AtomicExpression {
 	}
 
 	public void removeElement(int edit_idx) {
-		if(elementList.size() > 1) {
+		if(elementList.size() > 1 && edit_idx >= 0) {
 			int[] elements = mapToEdit();
-			int start_idx = getStartingIdx(elements[edit_idx]);
-			ExpressionElement e = elementList.get(elements[edit_idx]);
-
-			if(e instanceof Expression) {
-				if(edit_idx == start_idx || edit_idx == start_idx + e.getLength() - 1) {
+			
+			if (edit_idx < elements.length) {
+				int start_idx = getStartingIdx(elements[edit_idx]);
+				ExpressionElement e = elementList.get(elements[edit_idx]);
+	
+				if(e instanceof Expression) {
+					if(edit_idx == start_idx || edit_idx == start_idx + e.getLength() - 1) {
+						elementList.remove(elements[edit_idx]);
+					} else {
+						edit_idx -= (start_idx + 1);
+						((Expression)e).removeElement(edit_idx);
+					}
+				} 
+				else {
 					elementList.remove(elements[edit_idx]);
-				} else {
-					edit_idx -= (start_idx + 1);
-					((Expression)e).removeElement(edit_idx);
 				}
-			} 
-			else {
-				elementList.remove(elements[edit_idx]);
 			}
 		}
 	}

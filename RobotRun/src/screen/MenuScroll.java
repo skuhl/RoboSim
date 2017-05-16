@@ -137,7 +137,8 @@ public class MenuScroll {
 	}
 	
 	public boolean isSelected(int idx) {
-		return lineSelect != null && lineSelect[idx];
+		return lineSelect != null && idx >= 0 && idx < lineSelect.length
+				&& lineSelect[idx];
 	}
 	
 	public int moveDown(boolean page) {
@@ -280,7 +281,11 @@ public class MenuScroll {
 	}
 	
 	public boolean toggleSelect(int idx) {
-		return lineSelect[idx] = !lineSelect[idx];
+		if (lineSelect != null && idx >= 0 && idx < lineSelect.length) {
+			return lineSelect[idx] = !lineSelect[idx];
+		}
+		
+		return false;
 	}
 	
 	@Override
