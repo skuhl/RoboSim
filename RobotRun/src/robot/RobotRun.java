@@ -27,6 +27,7 @@ import geom.WorldObject;
 import global.Fields;
 import processing.core.PApplet;
 import processing.core.PConstants;
+import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PMatrix3D;
 import processing.core.PShape;
@@ -55,6 +56,7 @@ import screen.ScreenState;
 import screen.ScreenType;
 import ui.AxesDisplay;
 import ui.Camera;
+import ui.KeyCodeMap;
 import window.WGUI;
 
 public class RobotRun extends PApplet {
@@ -255,6 +257,7 @@ public class RobotRun extends PApplet {
 	private Camera camera;
 
 	private WGUI UI;
+	private KeyCodeMap keyCodeMap;
 
 	private ScreenMode mode;
 	private MenuScroll contents;
@@ -1672,6 +1675,19 @@ public class RobotRun extends PApplet {
 			// Apply the camera for drawing text and windows
 			ortho();
 			renderUI();
+			
+			
+			PGraphics pg = getGraphics();
+			
+			pg.pushMatrix();
+			pg.pushStyle();
+			
+			pg.fill(255, 0, 0);
+			pg.translate(width / 2f, height / 2f);
+			pg.rect(0, 0, 25, 25);
+			
+			pg.popStyle();
+			pg.popMatrix();
 			
 		} catch (Exception Ex) {
 			DataManagement.errLog(Ex);
@@ -4414,9 +4430,9 @@ public class RobotRun extends PApplet {
 
 		return row;
 	}
-
-	public WGUI getUI() {
-		return UI;
+	
+	public KeyCodeMap getKeyCodeMap() {
+		return keyCodeMap;
 	}
 	
 	public ScreenMode getMode() {
@@ -4524,6 +4540,10 @@ public class RobotRun extends PApplet {
 		transform[2][2] = zAxis.z;
 
 		return RMath.transformationMatrix(origin, new RMatrix(transform));
+	}
+	
+	public WGUI getUI() {
+		return UI;
 	}
 
 	/**
@@ -4727,6 +4747,7 @@ public class RobotRun extends PApplet {
 
 	@Override
 	public void keyPressed() {
+		keyCodeMap.keyPressed(keyCode, key);
 		
 		if (key == 'd') {
 			
@@ -4852,6 +4873,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void keyReleased() {
+		keyCodeMap.keyReleased(keyCode, key);
 		
 		switch(keyCode) {
 		case KeyEvent.VK_SHIFT: 	if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
@@ -7178,6 +7200,7 @@ public class RobotRun extends PApplet {
 		// load model and save data
 
 		try {
+			keyCodeMap = new KeyCodeMap();
 			DataManagement.initialize(this);
 			
 			ROBOTS.put(0, new RoboticArm(0, new PVector(200, 300, 200), loadRobotModels()));

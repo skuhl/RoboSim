@@ -2,11 +2,8 @@ package ui;
 
 import controlP5.ControlFont;
 import controlP5.ControlP5;
-import controlP5.ControlWindow;
 import controlP5.ControlWindow.Pointer;
 import controlP5.Textfield;
-import global.Fields;
-import processing.core.PApplet;
 import processing.core.PGraphics;
 
 /**
@@ -19,14 +16,10 @@ import processing.core.PGraphics;
 public class MyTextfield extends Textfield {
 	
 	private PGraphics buffer;
-	private int dragIdxBegin, dragIdxEnd;
 	
 	public MyTextfield(ControlP5 theControlP5, String theName) {
 		super( theControlP5, theControlP5.getDefaultTab(), theName, "", 0, 0,
 				199, 19);
-		
-		dragIdxBegin = -1;
-		dragIdxEnd = -1;
 	}
 	
 	public MyTextfield(ControlP5 theControlP5, String theName, int theX,
@@ -36,55 +29,15 @@ public class MyTextfield extends Textfield {
 				theY, theWidth, theHeight);
 		
 		theControlP5.register(theControlP5.papplet, theName, this);
-		dragIdxBegin = -1;
-		dragIdxEnd = -1;
 	}
-
-	@Override
-	public void draw( PGraphics theGraphics ) {
-
-		theGraphics.pushStyle( );
-		theGraphics.fill( color.getBackground( ) );
-		theGraphics.pushMatrix( );
-		theGraphics.translate( x( position ) , y( position ) );
-		theGraphics.rect( 0 , 0 , getWidth( ) , getHeight( ) );
-		theGraphics.noStroke( );
-
-		theGraphics.fill( _myColorCursor );
-		theGraphics.pushMatrix( );
-		theGraphics.pushStyle( );
-
-		buffer.beginDraw( );
-		buffer.background( 0 , 0 );
-		final String text = passCheck( getText( ) );
-		final int textWidth = ControlFont.getWidthFor( text.substring( 0 , _myTextBufferIndex ) , _myValueLabel , buffer );
-		final int dif = PApplet.max( textWidth - _myValueLabel.getWidth( ) , 0 );
-		final int _myTextBufferIndexPosition = ControlFont.getWidthFor( text.substring( 0 , _myTextBufferIndex ) , _myValueLabel , buffer );
-		_myValueLabel.setText( text );
-		_myValueLabel.draw( buffer , -dif , 0 , this );
-		buffer.noStroke( );
-		if ( isTexfieldActive ) {
-			if ( !cp5.papplet.keyPressed ) {
-				buffer.fill( _myColorCursor , PApplet.abs( PApplet.sin( cp5.papplet.frameCount * 0.05f )) * 255 );
-			} else {
-				buffer.fill( _myColorCursor );
-			}
-			buffer.rect( PApplet.max( 1 , PApplet.min( _myTextBufferIndexPosition , _myValueLabel.getWidth( ) - 3 ) ) , 0 , 1 , getHeight( ) );
-		}
-		buffer.endDraw( );
-		theGraphics.image( buffer , 0 , 0 );
-
-		theGraphics.popStyle( );
-		theGraphics.popMatrix( );
-
-		theGraphics.fill( isTexfieldActive ? color.getActive( ) : color.getForeground( ) );
-		theGraphics.rect( 0 , 0 , getWidth( ) , 1 );
-		theGraphics.rect( 0 , getHeight( ) - 1 , getWidth( ) , 1 );
-		theGraphics.rect( -1 , 0 , 1 , getHeight( ) );
-		theGraphics.rect( getWidth( ) , 0 , 1 , getHeight( ) );
-		_myCaptionLabel.draw( theGraphics , 0 , 0 , this );
-		theGraphics.popMatrix( );
-		theGraphics.popStyle( );
+	
+	/**
+	 * Append the given character to end of the textfield's input.
+	 * 
+	 * @param c	The character to append
+	 */
+	public void append(Character c) {
+		setText( getText() + Character.toString(c) );
 	}
 	
 	/**
@@ -168,18 +121,6 @@ public class MyTextfield extends Textfield {
 		}
 		
 		return TBIdx;
-	}
-	
-	@Override
-	protected void onEndDrag() {
-		dragIdxEnd = mouseXToIdx();
-		System.out.printf("End: %d\n", dragIdxEnd);
-	}
-	
-	@Override
-	protected void onStartDrag() {
-		dragIdxBegin = mouseXToIdx();
-		System.out.printf("Start: %d\n", dragIdxBegin);
 	}
 	
 	/**
