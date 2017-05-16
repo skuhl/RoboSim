@@ -3680,15 +3680,18 @@ public class RobotRun extends PApplet {
 		
 		switch (mode) {
 		case NAV_PROG_INSTR:
-			int selectLine = getSelectedLine();
 			int selectIdx = getSelectedIdx();	
 
 			if (selectIdx == 0) {
 				nextScreen(ScreenMode.NAV_INSTR_MENU);
 			} else if (inst instanceof MotionInstruction) {
-				if (selectIdx == 3 || (contents.getColumnIdx() == 0 && selectLine == 1)) {
+				MotionInstruction mInst = (MotionInstruction)inst;
+				
+				if (contents.getColumnIdx() == 3 && !mInst.usesGPosReg()) {
+					// Only allow editing of local position registers
 					nextScreen(ScreenMode.EDIT_MINST_POS);
 				}
+				
 			} else if (inst instanceof IfStatement) {
 				IfStatement stmt = (IfStatement) inst;
 				if (stmt.getExpr() instanceof Expression) {
@@ -4039,7 +4042,15 @@ public class RobotRun extends PApplet {
 			funct[3] = "[Edit]";
 			funct[4] = (contents.getColumnIdx() == 0) ? "[Opt]" : "";
 			if (inst instanceof MotionInstruction) {
-				funct[4] = (contents.getColumnIdx() == 3) ? "[Reg]" : funct[4];
+				MotionInstruction mInst = (MotionInstruction)inst;
+				
+				if (!mInst.usesGPosReg() && contents.getColumnIdx() == 3) {
+					funct[4] = "[Reg]";
+					
+				} else {
+					funct[4] = "";
+				}
+				
 			} else if (inst instanceof IfStatement) {
 				IfStatement stmt = (IfStatement) inst;
 				int selectIdx = getSelectedIdx();
