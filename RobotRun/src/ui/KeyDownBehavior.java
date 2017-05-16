@@ -75,6 +75,8 @@ public class KeyDownBehavior extends ControlBehavior {
 		
 	}
 	
+	/* TODO deal with double-typing issue */
+	
 	@Override
 	public void update() {
 		/**/
