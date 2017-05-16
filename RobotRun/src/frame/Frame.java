@@ -12,7 +12,6 @@ import geom.RQuaternion;
 import global.Fields;
 import processing.core.PApplet;
 import processing.core.PVector;
-import robot.RobotRun;
 
 public abstract class Frame {
 	// The orientation of the frame in the form of a unit quaternion
@@ -215,7 +214,7 @@ public abstract class Frame {
 			wpr = new PVector(0f, 0f, 0f);
 		} else {
 			// Display in degrees
-			wpr = RMath.quatToEuler(getDEOrientationOffset()).mult(RobotRun.RAD_TO_DEG);
+			wpr = RMath.nQuatToWEuler(DEOrientationOffset);
 		}
 
 		entries[0][0] = "X: ";
@@ -226,11 +225,11 @@ public abstract class Frame {
 		entries[2][1] = String.format("%4.3f", xyz.z);
 		// Display in terms of the World frame
 		entries[3][0] = "W: ";
-		entries[3][1] = String.format("%4.3f", -wpr.x);
+		entries[3][1] = String.format("%4.3f", wpr.x);
 		entries[4][0] = "P: ";
-		entries[4][1] = String.format("%4.3f", wpr.z);
+		entries[4][1] = String.format("%4.3f", -wpr.y);
 		entries[5][0] = "R: ";
-		entries[5][1] = String.format("%4.3f", -wpr.y);
+		entries[5][1] = String.format("%4.3f", wpr.z);
 
 		return entries;
 	}

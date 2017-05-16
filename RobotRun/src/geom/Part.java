@@ -253,11 +253,6 @@ public class Part extends WorldObject {
 	public Fixture getFixtureRef() { return reference; }
 
 	/**
-	 * Return a reference to this object's bounding-box.
-	 */ 
-	private BoundingBox getOBB() { return absOBB; }
-
-	/**
 	 * Get the dimensions of the part's bounding-box
 	 */
 	public PVector getOBBDims() {

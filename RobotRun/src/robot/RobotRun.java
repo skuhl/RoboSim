@@ -145,16 +145,7 @@ public class RobotRun extends PApplet {
 		instance.rotateY(PI/2);
 	}
 
-	/**
-	 * Converts the rotation matrix from the native coordinate frame to the
-	 * world frame.
-	 * 
-	 * @param rMat A valid rotation matrix
-	 * @return The rotation matrix in terms of the world frame
-	 */
-	public static RMatrix convertNativeToWorld(RMatrix rMat) {
-		return rMat.multiply(Fields.WORLD_AXES_MAT);
-	}
+	
 	
 	
 
@@ -1400,17 +1391,15 @@ public class RobotRun extends PApplet {
 			// position
 			origin = new PVector(inputs[0], inputs[1], inputs[2]);
 		}
-		// Convert the angles from degrees to radians, then convert from World
-		// to Native frame
-		wpr = (new PVector(-inputs[3], -inputs[5], inputs[4])).mult(DEG_TO_RAD);
+		
+		wpr = new PVector(inputs[3], inputs[4], inputs[5]);
 
 		// Save direct entry values
 		taughtFrame.setDEOrigin(origin);
-		taughtFrame.setDEOrientationOffset(RMath.eulerToQuat(wpr));
+		taughtFrame.setDEOrientationOffset( RMath.wEulerToNQuat(wpr) );
 		taughtFrame.setFrame(2);
 
 		if (Fields.DEBUG) {
-			wpr = RMath.quatToEuler(taughtFrame.getDEOrientationOffset()).mult(DEG_TO_RAD);
 			System.out.printf("\n\n%s\n%s\nFrame set: %d\n", origin.toString(), wpr.toString(), curFrameIdx);
 		}
 
@@ -1554,8 +1543,8 @@ public class RobotRun extends PApplet {
 					}
 				}
 	
-				renderOriginAxes(wldObj.getLocalCenter(), convertNativeToWorld(wldObj.getLocalOrientationAxes()), 500f,
-						color(0));
+				renderOriginAxes(wldObj.getLocalCenter(), RMath.rMatToWorld(wldObj.getLocalOrientationAxes()),
+						500f, color(0));
 	
 				popMatrix();
 			}
@@ -6294,10 +6283,10 @@ public class RobotRun extends PApplet {
 
 			if (isCartesian) {
 				PVector position = RMath.vFromWorld(new PVector(inputs[0], inputs[1], inputs[2]));
+				PVector wpr = new PVector(inputs[3], inputs[4], inputs[5]);
 				// Convert the angles from degrees to radians, then convert from
 				// World to Native frame, and finally convert to a quaternion
-				RQuaternion orientation = RMath.eulerToQuat((new PVector(-inputs[3], -inputs[5], inputs[4])
-											   .mult(DEG_TO_RAD)));
+				RQuaternion orientation = RMath.wEulerToNQuat(wpr);
 
 				// Use default the Robot's joint angles for computing inverse
 				// kinematics
@@ -6466,13 +6455,10 @@ public class RobotRun extends PApplet {
 			Frame activeTool = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
 
 			// Draw the axes of the active Tool frame at the Robot End Effector
-			renderOriginAxes(eePoint.position, convertNativeToWorld(activeTool.getNativeAxisVectors()), 200f,
-					color(255, 0, 255));
+			renderOriginAxes(eePoint.position, RMath.rMatToWorld(activeTool.getNativeAxisVectors()),
+					200f, color(255, 0, 255));
+			
 		} else {
-			// Draw axes of the Robot's End Effector frame for testing purposes
-			// displayOriginAxes(eePoint.position,
-			// eePoint.orientation.toMatrix(), 200f, color(255, 0, 255));
-
 			/* Draw a pink point for the Robot's current End Effecot position */
 			pushMatrix();
 			translate(eePoint.position.x, eePoint.position.y, eePoint.position.z);
@@ -6491,7 +6477,7 @@ public class RobotRun extends PApplet {
 
 				if (getActiveRobot().getCurCoordFrame() != CoordFrame.WORLD && activeUser != null) {
 					// Draw the axes of the active User frame
-					renderOriginAxes(activeUser.getOrigin(), convertNativeToWorld(activeUser.getNativeAxisVectors()),
+					renderOriginAxes(activeUser.getOrigin(), RMath.rMatToWorld(activeUser.getNativeAxisVectors()),
 							10000f, color(0));
 
 				} else {
@@ -6827,12 +6813,13 @@ public class RobotRun extends PApplet {
 			String[] dimFields = toEdit.dimFieldsToStringArray();
 			// Convert the values into the World Coordinate System
 			PVector position = RMath.vToWorld(toEdit.getLocalCenter());
-			PVector wpr = RMath.matrixToEuler(toEdit.getLocalOrientationAxes()).mult(RAD_TO_DEG);
+			PVector wpr = RMath.nRMatToWEuler( toEdit.getLocalOrientationAxes() );
 			// Create a set of uniform Strings
-			String[] fields = new String[] { String.format("X: %4.3f", position.x),
-					String.format("Y: %4.3f", position.y), String.format("Z: %4.3f", position.z),
-					String.format("W: %4.3f", -wpr.x), String.format("P: %4.3f", wpr.z),
-					String.format("R: %4.3f", -wpr.y) };
+			String[] fields = new String[] {
+					String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
+					String.format("Z: %4.3f", position.z), String.format("W: %4.3f", wpr.x),
+					String.format("P: %4.3f", wpr.y), String.format("R: %4.3f", wpr.z)
+			};
 
 			lastTextPositionY += 20;
 			text(toEdit.getName(), lastTextPositionX, lastTextPositionY);
@@ -6862,12 +6849,14 @@ public class RobotRun extends PApplet {
 			if (toEdit instanceof Part) {
 				Part p = (Part) toEdit;
 				// Convert the values into the World Coordinate System
-				position = RMath.vToWorld(p.getDefaultCenter());
-				wpr = RMath.matrixToEuler(p.getDefaultOrientationAxes()).mult(RAD_TO_DEG);
+				position = RMath.vToWorld( p.getDefaultCenter() );
+				wpr = RMath.nRMatToWEuler( p.getDefaultOrientationAxes() );
 				// Create a set of uniform Strings
-				fields = new String[] { String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
-						String.format("Z: %4.3f", position.z), String.format("W: %4.3f", -wpr.x),
-						String.format("P: %4.3f", wpr.z), String.format("R: %4.3f", -wpr.y) };
+				fields = new String[] {
+						String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
+						String.format("Z: %4.3f", position.z), String.format("W: %4.3f", wpr.x),
+						String.format("P: %4.3f", wpr.y), String.format("R: %4.3f", wpr.z)
+				};
 
 				lastTextPositionY += 20;
 				// Add space padding

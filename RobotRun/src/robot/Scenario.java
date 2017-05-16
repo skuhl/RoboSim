@@ -5,7 +5,6 @@ import java.util.regex.Pattern;
 
 import geom.Fixture;
 import geom.Part;
-import geom.RMath;
 import geom.RMatrix;
 import geom.WorldObject;
 import processing.core.PApplet;

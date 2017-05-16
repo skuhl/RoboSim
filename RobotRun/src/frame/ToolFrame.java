@@ -4,7 +4,6 @@ import geom.RMath;
 import geom.RMatrix;
 import geom.RQuaternion;
 import global.Fields;
-import processing.core.PConstants;
 import processing.core.PVector;
 import robot.RobotRun;
 import robot.RoboticArm;
@@ -168,8 +167,8 @@ public class ToolFrame extends Frame {
 		}
 	}
 
-	// Getter and Setter for TCP offset value
 	public void setTCPOffset(PVector newOffset) { TCPOffset = newOffset; }
+	
 	/**
 	 * Returns a string array, where each entry is one of
 	 * the Tool frame's TCP offset or orientation values:
@@ -179,12 +178,11 @@ public class ToolFrame extends Frame {
 	 */
 	@Override
 	public String[] toStringArray() {
-
 		String[] values = new String[6];
 
 		PVector displayOffset;
 		// Convert angles to degrees
-		PVector wpr = RMath.quatToEuler(orientationOffset).mult(PConstants.RAD_TO_DEG);
+		PVector wpr = RMath.nQuatToWEuler(orientationOffset);
 
 		displayOffset = getTCPOffset();
 
@@ -192,9 +190,9 @@ public class ToolFrame extends Frame {
 		values[1] = String.format("Y: %4.3f", displayOffset.y);
 		values[2] = String.format("Z: %4.3f", displayOffset.z);
 		// Display angles in terms of the World frame
-		values[3] = String.format("W: %4.3f", -wpr.x);
-		values[4] = String.format("P: %4.3f", wpr.z);
-		values[5] = String.format("R: %4.3f", -wpr.y);
+		values[3] = String.format("W: %4.3f", wpr.x);
+		values[4] = String.format("P: %4.3f", wpr.y);
+		values[5] = String.format("R: %4.3f", wpr.z);
 
 		return values;
 	}
