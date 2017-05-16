@@ -1676,19 +1676,6 @@ public class RobotRun extends PApplet {
 			ortho();
 			renderUI();
 			
-			
-			PGraphics pg = getGraphics();
-			
-			pg.pushMatrix();
-			pg.pushStyle();
-			
-			pg.fill(255, 0, 0);
-			pg.translate(width / 2f, height / 2f);
-			pg.rect(0, 0, 25, 25);
-			
-			pg.popStyle();
-			pg.popMatrix();
-			
 		} catch (Exception Ex) {
 			DataManagement.errLog(Ex);
 			throw Ex;
