@@ -26,6 +26,7 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import screen.DisplayLine;
+import screen.InstOp;
 import screen.InstState;
 
 public class RoboticArm {
@@ -1132,7 +1133,7 @@ public class RoboticArm {
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
 			Instruction inst = p.getInstAt(idx);
 			
-			pushInstState(idx, inst.clone());
+			pushInstState(InstOp.REPLACED, idx, inst.clone());
 			
 			if (Fields.DEBUG) {
 				//System.out.printf("\nEDIT %d %s\n\n", idx, inst.getClass());
@@ -1540,7 +1541,18 @@ public class RoboticArm {
 			Program p = getActiveProg();
 			
 			if (p != null) {
-				p.replaceInstAt(state.originIdx, state.inst);
+				
+				if (state.operation == InstOp.REPLACED) {
+					// Replace the new instruction with the previous version
+					p.replaceInstAt(state.originIdx, state.inst);
+					
+				} else if (state.operation == InstOp.REMOVED) {
+					// Re-insert the removed instruction
+					p.addInstAt(state.originIdx, state.inst);
+					
+				} else {
+					System.err.printf("Invalid program state!\n", state);
+				}
 			}
 			
 		} else if (Fields.DEBUG) {
@@ -1597,13 +1609,13 @@ public class RoboticArm {
 	 * @param idx	The index of the instruction in the active program
 	 * @param inst	The instruction of which to save the state
 	 */
-	private void pushInstState(int idx, Instruction inst) {
+	private void pushInstState(InstOp op, int idx, Instruction inst) {
 		
 		if (PROG_UNDO.size() > 35) {
 			PROG_UNDO.remove(0);
 		}
 		
-		PROG_UNDO.push(new InstState(idx, inst));
+		PROG_UNDO.push(new InstState(op, idx, inst));
 	}
 
 	/**
@@ -1626,15 +1638,70 @@ public class RoboticArm {
 	 * @return		The program that was removed, or null if the index given
 	 * 				is invalid
 	 */
-	public Program removeProgram(int pdx) {
+	public Program rmProgAt(int pdx) {
 		if (pdx >= 0 && pdx < PROGRAMS.size()) {
+			Program removed = PROGRAMS.remove(pdx);
+			setActiveProgIdx(-1);
 			// Return the removed program
-			return PROGRAMS.remove(pdx);
+			return removed;
 			
 		} else {
 			// Invalid index
 			return null;
 		}
+	}
+	
+	/**
+	 * A wrapper method for removing an instruction from the active program of
+	 * this robot. The removal is added onto the program undo stack for the
+	 * active program.
+	 * 
+	 * @param idx	The index of the instruction to remove
+	 * @return		The instruction, which was removed
+	 */
+	public Instruction rmInstAt(int idx) {
+		Program p = getActiveProg();
+		Instruction removed = null;
+		
+		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
+			removed = p.rmInstAt(idx);
+			
+			if (removed != null) {
+				pushInstState(InstOp.REMOVED, idx, removed);
+			}
+		}
+		
+		return removed;
+	}
+	
+	/**
+	 * Reorders the program list of the robot, so that the programs are in
+	 * alphabetical order.
+	 */
+	@SuppressWarnings("unchecked")
+	public void reorderPrograms() {
+		// Move programs to a temporary list
+		ArrayList<Program> limboList = (ArrayList<Program>) PROGRAMS.clone();
+		PROGRAMS.clear();
+		
+		for (int pdx = 0; pdx < limboList.size(); ++pdx) {
+			int insertIdx = PROGRAMS.size() - 1;
+			Program toInsert = limboList.get(pdx);
+			
+			if (PROGRAMS.size() > 0) {
+				Program predecessor = PROGRAMS.get(insertIdx);
+				/* Search to new list from back to front to find where to
+				 * insert the program */
+				while (predecessor.getName().compareTo(toInsert.getName()) > 0 ) {
+					
+					if (--insertIdx < 0) { break; }
+					predecessor = PROGRAMS.get(insertIdx);
+				}
+			}
+			
+			PROGRAMS.add(insertIdx + 1, toInsert);
+		}
+		
 	}
 	
 	/**
@@ -1655,7 +1722,7 @@ public class RoboticArm {
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {	
 			replaced = p.replaceInstAt(idx, inst);
 			
-			pushInstState(idx, replaced.clone());
+			pushInstState(InstOp.REPLACED, idx, replaced.clone());
 			
 			if (Fields.DEBUG) {
 				//System.out.printf("\nREPLACE %d %s\n\n", idx, inst.getClass());

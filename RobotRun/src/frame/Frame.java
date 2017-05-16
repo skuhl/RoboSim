@@ -1,5 +1,5 @@
 package frame;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -109,13 +109,14 @@ public abstract class Frame {
 
 			RealVector b = new ArrayRealVector(new double[] { vt.x, vt.y, vt.z }, false);
 			/* Ar + Br - 2Cr */
-			RMatrix R = (RMatrix)(Ar.add(Br)).subtract(Cr.scalarMultiply(2)).transpose();
+			RealMatrix R = (Ar.add(Br)).subtract(Cr.scalarMultiply(2)).transpose();
 
 			/* (R ^ -1) * b */
 			avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
 
 			if (Fields.DEBUG) {
-				System.out.printf("\n%s\n\n", RobotRun.getInstance().matrixToString(R.getFloatData()));
+				float[][] m = RMath.doubleToFloat( R.getData() );
+				System.out.printf("\n%s\n\n", RMath.toString(m));
 			}
 		}
 
@@ -123,7 +124,8 @@ public abstract class Frame {
 		avg_TCP = avg_TCP.mapMultiply( 1.0f / 3.0f );
 
 		if(Fields.DEBUG) {
-			System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
+			System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n",
+					avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
 		}
 
 		for(int idx = 0; idx < avg_TCP.getDimension(); ++idx) {

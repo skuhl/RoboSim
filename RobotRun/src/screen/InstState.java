@@ -10,18 +10,27 @@ import programming.Instruction;
  */
 public class InstState {
 	
+	public InstOp operation;
 	public int originIdx;
 	public Instruction inst;
 	
 	/**
 	 * Initialize the instruction state with an instruction.
 	 * 
+	 * @param op	The operation performed on the instruction
 	 * @param odx	The index of the instruction in the parent program
 	 * @param i		The instruction state
 	 */
-	public InstState(int odx, Instruction i) {
+	public InstState(InstOp op, int odx, Instruction i) {
+		operation = op;
 		originIdx = odx;
 		inst = i;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("op=%s odx=%d inst=%s", operation, originIdx,
+				inst);
 	}
 	
 }

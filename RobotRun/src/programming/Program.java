@@ -255,7 +255,7 @@ public class Program implements Iterable<Instruction> {
 	 * @return     The previous position value
 	 */
 	public Point setPosition(int idx, Point pt) {
-		if (pt != null && idx >= 0 && idx < 1000) {
+		if (idx >= 0 && idx < 1000) {
 			Point prevPt = LPosReg.get(idx);
 			LPosReg.put(idx, pt);
 
