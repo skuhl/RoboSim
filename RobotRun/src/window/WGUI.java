@@ -43,6 +43,8 @@ import screen.MenuScroll;
 import screen.ScreenMode;
 import screen.ScreenType;
 import ui.AxesDisplay;
+import ui.KeyDownBehavior;
+import ui.KeyCodeMap;
 import ui.MyButton;
 import ui.MyButtonBar;
 import ui.MyDropdownList;
@@ -495,7 +497,7 @@ public class WGUI implements ControlListener {
 					sharedElements, fieldWidth, sButtonHeight, Fields.medium);
 			
 			addTextfield(String.format("Dim%d", idx), sharedElements, fieldWidth,
-					fieldHeight, Fields.medium);
+					fieldHeight, Fields.medium, app.getKeyCodeMap());
 		}
 		
 		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
@@ -504,7 +506,7 @@ public class WGUI implements ControlListener {
 		addTextarea("ObjTypeLbl", "Type:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
 
 		addTextarea("ObjNameLbl", "Name:", createObjWindow, sLblWidth, fieldHeight, Fields.medium);
-		addTextfield("ObjName", createObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("ObjName", createObjWindow, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("ShapeLbl", "Shape:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("FillLbl", "Fill:", createObjWindow, mLblWidth, sButtonHeight, Fields.medium);
@@ -520,27 +522,27 @@ public class WGUI implements ControlListener {
 		addTextarea("Default", "Default", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 
 		addTextarea("XLbl", "X Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("XCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("XCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		addTextarea("XDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
 		addTextarea("YLbl", "Y Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("YCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("YCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		addTextarea("YDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
 		addTextarea("ZLbl", "Z Position:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("ZCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("ZCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		addTextarea("ZDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
 		addTextarea("WLbl", "X Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("WCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("WCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		addTextarea("WDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
 		addTextarea("PLbl", "Y Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("PCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("PCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		addTextarea("PDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
 		addTextarea("RLbl", "Z Rotation:", editObjWindow, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("RCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("RCur", editObjWindow, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		addTextarea("RDef", "N/A", editObjWindow, fieldWidth, fieldHeight, Fields.medium);
 		
 		addTextarea("RefLbl", "Reference:", editObjWindow, lLblWidth, sButtonHeight, Fields.medium);
@@ -570,7 +572,7 @@ public class WGUI implements ControlListener {
 		addTextarea("SInstructions", "N/A", scenarioWindow, background.getWidth() - (2 * offsetX),
 				54, Fields.small).hideScrollbar();
 		
-		addTextfield("SInput", scenarioWindow, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("SInput", scenarioWindow, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		addButton("SConfirm", "N/A", scenarioWindow, mButtonWidth, sButtonHeight, Fields.small);
 		
 		// Initialize the miscellaneous window elements
@@ -975,10 +977,11 @@ public class WGUI implements ControlListener {
 	 * @param wdh		The width of the text field
 	 * @param hgt		The height of the text field
 	 * @param lblFont	The text field's font
+	 * @param keys
 	 * @return			A reference to the new text field
 	 */
 	private MyTextfield addTextfield(String name, Group parent, int wdh,
-			int hgt, PFont lblFont) {
+			int hgt, PFont lblFont, KeyCodeMap keys) {
 		
 		MyTextfield t = new MyTextfield(manager, name, 0, 0, wdh, hgt);
 		t.setColor(Fields.F_TEXT_C)
@@ -987,7 +990,8 @@ public class WGUI implements ControlListener {
 		 .setColorLabel(Fields.BG_C)
 		 .setColorBackground(Fields.F_BG_C)
 		 .setColorForeground(Fields.F_FG_C)
-		 .moveTo(parent);
+		 .moveTo(parent)
+		 .setBehavior(new KeyDownBehavior(keys));
 		
 		return t;
 	}
