@@ -1,5 +1,7 @@
 package geom;
 
+import org.apache.commons.math3.linear.RealMatrix;
+
 import global.Fields;
 import processing.core.PConstants;
 import processing.core.PVector;
@@ -306,23 +308,23 @@ public class RMath {
 		float[][] inv = new float[4][4];
 		
 		/*
-		 * [ ux uy uz tz ] -1		[ ux vx wx -dot(u, t) ]
-		 * [ vx vy vz ty ]		=	[ uy vy wy -dot(v, t) ]
-		 * [ vx vy vz tw ]			[ uy vy wy -dot(w, t) ]
+		 * [ ux ux wx tz ] -1		[ ux uy uz -dot(u, t) ]
+		 * [ uy uy wy ty ]		=	[ vx vy vz -dot(v, t) ]
+		 * [ uz uz wz tw ]			[ wx wy wz -dot(w, t) ]
 		 * [  0  0  0  1 ]			[  0  0  0          1 ]
 		 */
 		inv[0][0] = d[0][0];
 		inv[0][1] = d[1][0];
 		inv[0][2] = d[2][0];
-		inv[0][3] = -(d[0][0] * d[0][3] + d[0][1] * d[1][3] + d[0][2] * d[2][3]);
+		inv[0][3] = -(d[0][0] * d[0][3] + d[1][0] * d[1][3] + d[2][0] * d[2][3]);
 		inv[1][0] = d[0][1];
 		inv[1][1] = d[1][1];
 		inv[1][2] = d[2][1];
-		inv[1][3] = -(d[1][0] * d[0][3] + d[1][1] * d[1][3] + d[1][2] * d[2][3]);
+		inv[1][3] = -(d[0][1] * d[0][3] + d[1][1] * d[1][3] + d[2][1] * d[2][3]);
 		inv[2][0] = d[0][2];
 		inv[2][1] = d[1][2];
 		inv[2][2] = d[2][2];
-		inv[2][3] = -(d[2][0] * d[0][3] + d[2][1] * d[1][3] + d[2][2] * d[2][3]);
+		inv[2][3] = -(d[0][2] * d[0][3] + d[1][2] * d[1][3] + d[2][2] * d[2][3]);
 		inv[3][0] = 0;
 		inv[3][1] = 0;
 		inv[3][2] = 0;
@@ -423,6 +425,44 @@ public class RMath {
 			
 			for (int column = 0; column < matrix[row].length; ++column) {
 				String val = String.format("%4.3f", matrix[row][column]);
+				// Add padding
+				str += String.format("%9s ", val);
+			}
+			
+			str += "]\n";
+		}
+		
+		
+		return str;
+	}
+	
+	/**
+	 * Returns a string that represents the given floating-point matrix in the
+	 * format:
+	 * 
+	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
+	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
+	 *   .
+	 *   .
+	 *   .
+	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
+	 * 
+	 * The precision of each element is 4 digits before and 3 digits after the
+	 * decimal point. In addition, space padding is applied for non-negative
+	 * values.
+	 * 
+	 * @param matrix	A floating-point matrix
+	 * @return			The string representation of the given matrix
+	 */
+	public static String matrixToString(RealMatrix m) {
+		double[][] data = m.getData();
+		String str = new String();
+		
+		for (int row = 0; row < data.length; ++row) {
+			str += "[ ";
+			
+			for (int column = 0; column < data[row].length; ++column) {
+				String val = String.format("%4.3f", data[row][column]);
 				// Add padding
 				str += String.format("%9s ", val);
 			}
@@ -546,38 +586,6 @@ public class RMath {
 			return new Point(position, orientation, pt.angles);
 		}
 	}
-
-	// Rotates the matrix 'm' by an angle 'theta' around the given 'axis'
-	public static RMatrix rotateAxisVector(RMatrix m, float theta, PVector axis) {
-		float s = (float) Math.sin(theta);
-		float c = (float) Math.cos(theta);
-		float t = 1 - c;
-
-		if (c > 0.9f) {
-			t = (float)(2 * Math.sin(theta / 2) * Math.sin(theta / 2));
-		}
-
-		float x = axis.x;
-		float y = axis.y;
-		float z = axis.z;
-		
-		float[][] r = new float[3][3];
-
-		r[0][0] = x * x * t + c;
-		r[1][0] = x * y * t - z * s;
-		r[2][0] = x * z * t + y * s;
-		r[0][1] = y * x * t + z * s;
-		r[1][1] = y * y * t + c;
-		r[2][1] = y * z * t - x * s;
-		r[0][2] = z * x * t - y * s;
-		r[1][2] = z * y * t + x * s;
-		r[2][2] = z * z * t + c;
-		
-		RMatrix R = new RMatrix(r);
-		RMatrix MR = m.multiply(R);
-
-		return MR;
-	}
 	
 	/*
 	 * Transforms the given vector from the coordinate system defined by the
@@ -590,9 +598,9 @@ public class RMath {
 		
 		PVector u = new PVector();
 		// Apply the rotation matrix to the given vector
-		u.x = v.x * r[0][0] + v.y * r[0][1] + v.z * r[0][2];
-		u.y = v.x * r[1][0] + v.y * r[1][1] + v.z * r[1][2];
-		u.z = v.x * r[2][0] + v.y * r[2][1] + v.z * r[2][2];
+		u.x = v.x * r[0][0] + v.y * r[1][0] + v.z * r[2][0];
+		u.y = v.x * r[0][1] + v.y * r[1][1] + v.z * r[2][1];
+		u.z = v.x * r[0][2] + v.y * r[1][2] + v.z * r[2][2];
 
 		return u;
 	}
@@ -734,6 +742,32 @@ public class RMath {
 	 */
 	public static PVector vToWorld(PVector v) {
 		return RMath.rotateVector(v, Fields.WORLD_AXES);
+	}
+	
+	public static RQuaternion wEulerToNQuat(PVector wpr) {
+		
+		float limbo = wpr.y;
+		// Convert from world frame
+		wpr.x *= -1;
+		wpr.y = -wpr.z;
+		wpr.z = limbo;
+		
+		wpr.mult(DEG_TO_RAD);
+		
+		return RMath.eulerToQuat(wpr);
+	}
+	
+	public static PVector nQuatToWEuler(RQuaternion q) {
+		PVector wpr = quatToEuler(q);
+		wpr.mult(RAD_TO_DEG);
+		
+		float limbo = wpr.y;
+		// Convert to world frame
+		wpr.x *= -1;
+		wpr.y = wpr.z;
+		wpr.z = -limbo;
+		
+		return wpr;
 	}
 	
 }

@@ -55,8 +55,6 @@ public class Fixture extends WorldObject {
 		RMatrix tMatrix = RMath.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
 		tMatrix = RMath.invertHCMatrix(tMatrix);
 		
-		
-		
 		RobotRun.getInstance().applyMatrix(tMatrix);
 	}
 }
