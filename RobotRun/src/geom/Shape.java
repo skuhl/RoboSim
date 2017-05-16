@@ -53,6 +53,8 @@ public abstract class Shape implements Cloneable {
 	 *             such dimension exists
 	 */
 	public abstract float getDim(DimType dim);
+	
+	public abstract float[] getDimArray();
 
 	/* Getters and Setters for shapes fill and stroke colors */
 

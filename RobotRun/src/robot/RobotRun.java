@@ -144,11 +144,7 @@ public class RobotRun extends PApplet {
 		instance.rotateX(PI);
 		instance.rotateY(PI/2);
 	}
-
 	
-	
-	
-
 	public static RoboticArm getActiveRobot() {
 		return instance.activeRobot;
 	}
@@ -1578,11 +1574,8 @@ public class RobotRun extends PApplet {
 			
 			PVector near[] = c.getPlaneNear();
 			PVector far[] = c.getPlaneFar();
-			//PVector view1[] = c.getPlane(c.getDistanceToObject(f, 0));
-			PVector view2[] = c.getPlane(c.getDistanceToObject(f, 2));
 			pushMatrix();
 			stroke(255, 126, 0, 255);
-			//dfill(255, 126, 0, 255);
 			beginShape();
 			//Top
 			vertex(near[0].x, near[0].y, near[0].z);
@@ -1611,57 +1604,13 @@ public class RobotRun extends PApplet {
 			vertex(near[0].x, near[0].y, near[0].z);
 			endShape();
 			
-			fill(255, 126, 0, 126);
-			beginShape();
-			vertex(view1[0].x, view1[0].y, view1[0].z);
-			vertex(view1[1].x, view1[1].y, view1[1].z);
-			vertex(view1[3].x, view1[3].y, view1[3].z);
-			vertex(view1[2].x, view1[2].y, view1[2].z);
-			endShape();
-			
-			beginShape();
-			vertex(view2[0].x, view2[0].y, view2[0].z);
-			vertex(view2[1].x, view2[1].y, view2[1].z);
-			vertex(view2[3].x, view2[3].y, view2[3].z);
-			vertex(view2[2].x, view2[2].y, view2[2].z);
-			endShape();
-			
 			popMatrix();
 							
-			//pushMatrix();
-			//f.draw();
-			//popMatrix();
-			
-			PVector[] obj = new PVector[8]; 
-			PVector objCenter = f.getLocalCenter();
 			pushMatrix();
-			translate(objCenter.x, objCenter.y, objCenter.z);
-			stroke(0);
-			sphere(5);
+			f.draw();
 			popMatrix();
 			
-			float len = f.getForm().getDim(DimType.LENGTH);
-			float wid = f.getForm().getDim(DimType.WIDTH);
-			float hgt = f.getForm().getDim(DimType.HEIGHT);
-			
-			c.checkObjectInFrame(f);
-			/*obj[0] = new PVector(objCenter.x + len/2, objCenter.y + hgt/2, objCenter.z + wid/2);
-			obj[1] = new PVector(objCenter.x + len/2, objCenter.y + hgt/2, objCenter.z - wid/2);
-			obj[2] = new PVector(objCenter.x + len/2, objCenter.y - hgt/2, objCenter.z + wid/2);
-			obj[3] = new PVector(objCenter.x + len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
-			obj[4] = new PVector(objCenter.x - len/2, objCenter.y + hgt/2, objCenter.z + wid/2);
-			obj[5] = new PVector(objCenter.x - len/2, objCenter.y + hgt/2, objCenter.z - wid/2);
-			obj[6] = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z + wid/2);
-			obj[7] = new PVector(objCenter.x - len/2, objCenter.y - hgt/2, objCenter.z - wid/2);
-			
-			for(int i = 0; i < 8; i += 1) {
-				pushMatrix();
-				stroke(i*20);
-				translate(obj[i].x, obj[i].y, obj[i].z);
-				sphere(5);
-				popMatrix();
-			}
-			//RobotRun.printMat(c.getOrientationMat());
+			System.out.println(c.checkObjectInFrame(f));
 			/**/
 			
 			noLights();
@@ -6626,9 +6575,8 @@ public class RobotRun extends PApplet {
 	 *            The color of the point to draw at the origin
 	 */
 	public void renderOriginAxes(PVector origin, RMatrix axesVectors, float axesLength, int originColor) {
-
 		pushMatrix();
-		// Transform to the reference frame defined by the axes vectors
+		// Transform to the reference frame defined by the axes vectors		
 		applyMatrix(origin, axesVectors);
 		// X axis
 		stroke(255, 0, 0);
@@ -7206,7 +7154,7 @@ public class RobotRun extends PApplet {
 			buffer = new ArrayList<>();
 			displayPoint = null;
 
-			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, .3f, 300, null);
+			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 30, 300, null);
 
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);

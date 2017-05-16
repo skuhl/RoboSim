@@ -2259,7 +2259,8 @@ public class RoboticArm {
 				case MT_LINEAR:
 					doneMoving = RobotRun.getInstance().executeMotion(this, liveSpeed / 100.0f);
 					break;
-				default:
+				case HALTED:
+					break;
 				}
 
 				if (doneMoving) {

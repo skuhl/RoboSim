@@ -75,6 +75,15 @@ public class Cylinder extends Shape {
 		default:      return -1f;
 		}
 	}
+	
+	@Override
+	public float[] getDimArray() {
+		float[] dims = new float[3];
+		dims[0] = getDim(DimType.RADIUS);
+		dims[1] = getDim(DimType.HEIGHT);
+		dims[2] = getDim(DimType.RADIUS);
+		return dims;
+	}
 
 	@Override
 	public void setDim(Float newVal, DimType dim) {

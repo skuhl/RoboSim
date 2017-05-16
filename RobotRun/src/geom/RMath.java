@@ -1,7 +1,6 @@
 package geom;
 
 import org.apache.commons.math3.linear.RealMatrix;
-
 import global.Fields;
 import processing.core.PConstants;
 import processing.core.PVector;
