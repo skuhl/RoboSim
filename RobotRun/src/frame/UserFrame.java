@@ -3,7 +3,6 @@ import geom.Point;
 import geom.RMath;
 import geom.RMatrix;
 import geom.RQuaternion;
-import processing.core.PConstants;
 import processing.core.PVector;
 
 public class UserFrame extends Frame {
@@ -133,12 +132,11 @@ public class UserFrame extends Frame {
 	 */
 	@Override
 	public String[] toStringArray() {
-
 		String[] values = new String[6];
 
 		PVector displayOrigin;
 		// Convert angles to degrees and to the World Coordinate Frame
-		PVector wpr = RMath.quatToEuler(orientationOffset).mult(PConstants.RAD_TO_DEG);
+		PVector wpr = RMath.nQuatToWEuler(orientationOffset);
 
 		// Convert to World frame reference
 		displayOrigin = RMath.vToWorld(origin);
@@ -147,9 +145,9 @@ public class UserFrame extends Frame {
 		values[1] = String.format("Y: %4.3f", displayOrigin.y);
 		values[2] = String.format("Z: %4.3f", displayOrigin.z);
 		// Display angles in terms of the World frame
-		values[3] = String.format("W: %4.3f", -wpr.x);
-		values[4] = String.format("P: %4.3f", wpr.z);
-		values[5] = String.format("R: %4.3f", -wpr.y);
+		values[3] = String.format("W: %4.3f", wpr.x);
+		values[4] = String.format("P: %4.3f", wpr.y);
+		values[5] = String.format("R: %4.3f", wpr.z);
 
 		return values;
 	}

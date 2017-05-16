@@ -162,7 +162,7 @@ public class Point  {
 			angles = new PVector(Float.NaN, Float.NaN, Float.NaN);
 		} else {
 			// Display in degrees
-			angles = RMath.quatToEuler(orientation).mult(RMath.RAD_TO_DEG);
+			angles = RMath.nQuatToWEuler(orientation);
 		}
 
 		entries[0][0] = "X: ";
@@ -173,11 +173,11 @@ public class Point  {
 		entries[2][1] = String.format("%4.3f", pos.z);
 		// Display angles in terms of the World frame
 		entries[3][0] = "W: ";
-		entries[3][1] = String.format("%4.3f", -angles.x);
+		entries[3][1] = String.format("%4.3f", angles.x);
 		entries[4][0] = "P: ";
-		entries[4][1] = String.format("%4.3f", angles.z);
+		entries[4][1] = String.format("%4.3f", angles.y);
 		entries[5][0] = "R: ";
-		entries[5][1] = String.format("%4.3f", -angles.y);
+		entries[5][1] = String.format("%4.3f", angles.z);
 
 		return entries;
 	}

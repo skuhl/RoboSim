@@ -513,6 +513,52 @@ public class RMath {
 
 		return temp;
 	}
+	
+	/**
+	 * Takes a quaternion and converts it to euler angles, in degrees. Then the
+	 * world frame orientation is applied to the orientation.
+	 * 
+	 * @param q	A normalized quanternion
+	 * @return	A set of euler angles, in degrees, representing the orientation
+	 * 			of the quaternion with reference to the world frame
+	 */
+	public static PVector nQuatToWEuler(RQuaternion q) {
+		// Convert to euler angles
+		PVector wpr = quatToEuler(q);
+		wpr.mult(RAD_TO_DEG);
+		
+		float limbo = wpr.y;
+		// Convert to world frame
+		wpr.x *= -1;
+		wpr.y = wpr.z;
+		wpr.z = -limbo;
+		
+		return wpr;
+	}
+	
+	/**
+	 * Takes in a 3x3 rotation matrix and converts it to euler angles, in
+	 * degrees. Then, the world frame orientation is applied to the
+	 * orientation.
+	 * 
+	 * @param m	A 3x3 rotation matrix
+	 * @return	A set of euler angles, in degrees, representing the
+	 * 			orientation of the rotation matrix with reference to the world
+	 * 			frame
+	 */
+	public static PVector nRMatToWEuler(RMatrix m) {
+		// Convert to euler angles
+		PVector wpr = matrixToEuler(m);
+		wpr.mult(RAD_TO_DEG);
+		
+		float limbo = wpr.y;
+		// Convert to world frame
+		wpr.x *= -1;
+		wpr.y = wpr.z;
+		wpr.z = -limbo;
+		
+		return wpr;
+	}
 
 	public static void printMat(RMatrix mat) {
 		float[][] d = mat.getFloatData();
@@ -587,9 +633,24 @@ public class RMath {
 		}
 	}
 	
-	/*
-	 * Transforms the given vector from the coordinate system defined by the
-	 * given transformation matrix (row major order).
+	/**
+	 * Converts the rotation matrix from the native coordinate frame to the
+	 * world frame.
+	 * 
+	 * @param rMat	A valid rotation matrix
+	 * @return		The rotation matrix in terms of the world frame
+	 */
+	public static RMatrix rMatToWorld(RMatrix rMat) {
+		return rMat.multiply(Fields.WORLD_AXES_MAT);
+	}
+	
+	/**
+	 * Applies the orientation represented by the given 3x3 rotation matrix,
+	 * m, to the given position vector, v.
+	 * 
+	 * @param v	A 3D position vector
+	 * @param r	A 3x3 rotation matrix
+	 * @return	v rotated by m
 	 */
 	public static PVector rotateVector(PVector v, float[][] r) {
 		if (r.length != 3 || r[0].length != 3) {
@@ -744,30 +805,49 @@ public class RMath {
 		return RMath.rotateVector(v, Fields.WORLD_AXES);
 	}
 	
-	public static RQuaternion wEulerToNQuat(PVector wpr) {
-		
+
+	
+	/**
+	 * Takes a set of euler angles, in degrees, and applies the inverse of the
+	 * world frame to the orientation and converts the euler angles to a
+	 * 3x3 rotation matrix.
+	 * 
+	 * @param wpr	A set of euler angles, in degrees
+	 * @return		A rotation matrix representing the product of the given
+	 * 				orientation and the inverse of the world frame
+	 * 				orientation
+	 */
+	public static RMatrix wEulerToNRMat(PVector wpr) {
 		float limbo = wpr.y;
 		// Convert from world frame
 		wpr.x *= -1;
 		wpr.y = -wpr.z;
 		wpr.z = limbo;
+		// Convert to radians
+		wpr.mult(DEG_TO_RAD);
 		
+		return RMath.eulerToMatrix(wpr);
+	}
+	
+	/**
+	 * Takes a set of euler angles, in degrees and applies the inverse of the
+	 * world frame to the rotations and converts the euler angles to a
+	 * quaternion.
+	 * 
+	 * @param wpr	A set of euler angles, in degrees
+	 * @return		A quaternion representing the product of the given
+	 * 				orientation and the inverse of the world frame
+	 * 				orientation
+	 */
+	public static RQuaternion wEulerToNQuat(PVector wpr) {
+		float limbo = wpr.y;
+		// Convert from world frame
+		wpr.x *= -1;
+		wpr.y = -wpr.z;
+		wpr.z = limbo;
+		// Convert to radians
 		wpr.mult(DEG_TO_RAD);
 		
 		return RMath.eulerToQuat(wpr);
 	}
-	
-	public static PVector nQuatToWEuler(RQuaternion q) {
-		PVector wpr = quatToEuler(q);
-		wpr.mult(RAD_TO_DEG);
-		
-		float limbo = wpr.y;
-		// Convert to world frame
-		wpr.x *= -1;
-		wpr.y = wpr.z;
-		wpr.z = -limbo;
-		
-		return wpr;
-	}
-	
 }
