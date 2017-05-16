@@ -22,9 +22,7 @@ public class UserFrame extends Frame {
 	@Override
 	public RQuaternion getOrientation() { return orientationOffset; }
 
-	public Point getOrientOrigin() {
-		return orientOrigin;
-	}
+	public Point getOrientOrigin() { return orientOrigin; }
 
 	// Getter and Setters for the User frame's origin
 	@Override
