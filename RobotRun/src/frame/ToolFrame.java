@@ -29,9 +29,18 @@ public class ToolFrame extends Frame {
 	@Override
 	public RQuaternion getOrientation() {
 		RoboticArm model = RobotRun.getActiveRobot();
+		/**
 		RQuaternion robotOrientation = RobotRun.nativeRobotPoint(model, model.getJointAngles()).orientation;
 		// Tool frame axes orientation = (orientation offset x Model default orientation ^ -1) x Model current orientation
 		return RQuaternion.mult(model.getDefaultPoint().orientation.transformQuaternion(orientationOffset), robotOrientation);
+		/**/
+		Point cur = RobotRun.nativeRobotPoint(model, model.getJointAngles());
+		Point def = model.getDefaultPoint();
+		RQuaternion diff = cur.orientation.transformQuaternion(def.orientation.conjugate());
+		
+		return diff.transformQuaternion(((RQuaternion)orientationOffset.clone()));
+		
+		/**/
 	}
 	
 	/**
@@ -122,7 +131,7 @@ public class ToolFrame extends Frame {
 			RMatrix newAxesVectors = (method == 1) ? createAxesFromThreePoints(super.getPoint(0).position,
 					super.getPoint(1).position,
 					super.getPoint(2).position)
-					: Fields.IDENTITY_MAT;
+					: Fields.IDENTITY_MAT.copy();
 
 					if (newTCP == null || newAxesVectors == null) {
 						// Invalid point set for the TCP or the coordinate axes

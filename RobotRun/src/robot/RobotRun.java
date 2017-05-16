@@ -153,8 +153,7 @@ public class RobotRun extends PApplet {
 	 * @return The rotation matrix in terms of the world frame
 	 */
 	public static RMatrix convertNativeToWorld(RMatrix rMat) {
-		RMatrix worldAxes = new RMatrix(Fields.WORLD_AXES);
-		return worldAxes.multiply(rMat);
+		return rMat.multiply(Fields.WORLD_AXES_MAT);
 	}
 	
 	
@@ -1395,6 +1394,7 @@ public class RobotRun extends PApplet {
 
 		if (taughtFrame instanceof UserFrame) {
 			origin = RMath.vFromWorld(new PVector(inputs[0], inputs[1], inputs[2]));
+			
 		} else {
 			// Tool frame origins are actually an offset of the Robot's EE
 			// position
@@ -1941,6 +1941,7 @@ public class RobotRun extends PApplet {
 				}
 
 				createFrameDirectEntry(teachFrame, inputs);
+				
 			} catch (NumberFormatException NFEx) {
 				// Invalid number
 				println("Entries must be real numbers!");
@@ -1949,6 +1950,7 @@ public class RobotRun extends PApplet {
 
 			if (teachFrame instanceof UserFrame) {
 				nextScreen(ScreenMode.UFRAME_DETAIL);
+				
 			} else {
 				nextScreen(ScreenMode.TFRAME_DETAIL);
 			}
@@ -4464,10 +4466,6 @@ public class RobotRun extends PApplet {
 			{vx.z, vy.z, vz.z}
 		};
 		
-		/* TODO *
-		System.out.println("Rotation mat:");
-		RMath.printMat(rMatrix);
-		/**/
 		return new RMatrix(rMatrix);
 	}
 
@@ -5618,9 +5616,13 @@ public class RobotRun extends PApplet {
 			break;
 		case DIRECT_ENTRY_TOOL:
 			contents.setColumnIdx(1);
+			Frame tool = r.getToolFrame(curFrameIdx);
+			contents.setLines( loadFrameDirectEntry(tool) );
 			break;
 		case DIRECT_ENTRY_USER:
 			contents.setColumnIdx(1);
+			Frame user = r.getUserFrame(curFrameIdx);
+			contents.setLines( loadFrameDirectEntry(user) );
 			break;
 		case SWAP_PT_TYPE:
 			contents.setLineIdx( prev.conLnIdx );
@@ -6507,7 +6509,7 @@ public class RobotRun extends PApplet {
 			switch (getActiveRobot().getCurCoordFrame()) {
 			case JOINT:
 			case WORLD:
-				displayAxes = Fields.IDENTITY_MAT;
+				displayAxes = Fields.IDENTITY_MAT.copy();
 				displayOrigin = new PVector(0f, 0f, 0f);
 				break;
 			case TOOL:

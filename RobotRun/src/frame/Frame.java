@@ -109,14 +109,14 @@ public abstract class Frame {
 
 			RealVector b = new ArrayRealVector(new double[] { vt.x, vt.y, vt.z }, false);
 			/* Ar + Br - 2Cr */
-			RealMatrix R = (Ar.add(Br)).subtract(Cr.scalarMultiply(2)).transpose();
+			RealMatrix R = (Ar.add(Br)).subtract(Cr.scalarMultiply(2));
 
 			/* (R ^ -1) * b */
 			avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
 
 			if (Fields.DEBUG) {
 				float[][] m = RMath.doubleToFloat( R.getData() );
-				System.out.printf("\n%s\n\n", RMath.toString(m));
+				System.out.printf("\n%s\n\n", RMath.matrixToString(m));
 			}
 		}
 
@@ -158,11 +158,12 @@ public abstract class Frame {
 		float[][] axesRefWorld = new float[3][3];
 		PVector xAxis = PVector.sub(p2, p1);
 		PVector yAxis = PVector.sub(p3, p1);
-		PVector zAxis = yAxis.cross(xAxis);
-
-		yAxis = xAxis.cross(zAxis);
-		// Create unit vectors
 		xAxis.normalize();
+		yAxis.normalize();
+		
+		PVector zAxis = PVector.mult(xAxis, -1).cross(yAxis);
+		yAxis = zAxis.cross( PVector.mult(xAxis, -1) );
+		// Create unit vectors
 		yAxis.normalize();
 		zAxis.normalize();
 
@@ -183,10 +184,9 @@ public abstract class Frame {
 		axesRefWorld[1][2] = zAxis.y;
 		axesRefWorld[2][2] = zAxis.z;
 
-		RMatrix axes = new RMatrix((axesRefWorld)),
-				invWorldAxes = new RMatrix(Fields.NATIVE_AXES);
+		RMatrix axes = new RMatrix(axesRefWorld);
 		// Remove the World frame transformation from the axes vectors
-		return invWorldAxes.multiply(axes);
+		return  axes.multiply(Fields.NATIVE_AXES_MAT);
 	}
 
 	/**

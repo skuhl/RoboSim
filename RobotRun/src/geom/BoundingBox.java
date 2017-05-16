@@ -2,6 +2,9 @@ package geom;
 
 import java.util.ArrayList;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
+
 import global.Fields;
 import processing.core.PVector;
 import programming.Program;
@@ -41,12 +44,39 @@ public class BoundingBox {
 	}
 	
 	public static void main(String[] args) {
-<<<<<<< HEAD
-		RMatrix rotMatrix = new RMatrix(new float[][] {
-=======
 		/**/
-		float[][] rotMatrix = new float[][] {
->>>>>>> current
+		RealMatrix m0 = new Array2DRowRealMatrix(
+				new double[][] {
+					{ -1,  0,  0 },
+					{  0,  0, -1 },
+					{  0,  1,  0 }
+				}
+		);
+		
+		RealMatrix m1 = new Array2DRowRealMatrix(
+				new double[][] {
+					{ -1,  0,  0 },
+					{  0,  0,  1 },
+					{  0, -1,  0 }
+				}
+		);
+		
+		RealMatrix m2 = new Array2DRowRealMatrix(
+				new double[][] {
+					{  0,  1,  0 },
+					{  1,  0,  0 },
+					{  0,  0, -1 }
+				}
+		);
+		
+		RealMatrix m3 = m2.multiply(m0);
+		
+		System.out.printf("M0:\n%s\nM1:\n%s\nM2:\n%s\nM3:\n%s\n",
+				RMath.matrixToString(m0), RMath.matrixToString(m1),
+				RMath.matrixToString(m2), RMath.matrixToString(m3));
+		
+		/**
+		RMatrix rotMatrix = new RMatrix(new float[][] {
 			{ 1, 2, 3 },
 			{ 3, 4, 5 },
 			{ 6, 7, 8 }
