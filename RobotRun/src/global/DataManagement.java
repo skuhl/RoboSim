@@ -1,4 +1,4 @@
-package robot;
+package global;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -21,6 +21,7 @@ import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.Box;
+import geom.CoordinateSystem;
 import geom.Cylinder;
 import geom.DimType;
 import geom.Fixture;
@@ -32,7 +33,6 @@ import geom.RMatrix;
 import geom.RQuaternion;
 import geom.Shape;
 import geom.WorldObject;
-import global.Fields;
 import processing.core.PVector;
 import programming.CallInstruction;
 import programming.FrameInstruction;
@@ -49,14 +49,16 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
+import robot.RobotRun;
+import robot.RoboticArm;
+import robot.Scenario;
 
 /**
  * Manages all the saving and loading of the program data to and from files.
  * All fields and methods are static, so no instance of the class is
  * necessary.
  * 
- * @author Joshua Hooker and Vincent Druckte
- * @version 1.0; 3 December 2016
+ * @author Joshua Hooker and Vincent Druckte6
  */
 public abstract class DataManagement {
 	

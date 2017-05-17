@@ -1,18 +1,26 @@
-package geom;
+package global;
 
 import org.apache.commons.math3.linear.RealMatrix;
-import global.Fields;
+
+import geom.Point;
+import geom.RMatrix;
+import geom.RQuaternion;
 import processing.core.PConstants;
 import processing.core.PVector;
 import robot.RobotRun;
 import robot.RoboticArm;
 
-public class RMath {
-	static final float DEG_TO_RAD = RobotRun.DEG_TO_RAD;
-	static final float PI = RobotRun.PI;
+/**
+ * TODO general comments
+ * 
+ * @author Vincent Druckte and Joshua Hooker
+ */
+public abstract class RMath {
+	public static final float DEG_TO_RAD = RobotRun.DEG_TO_RAD;
+	public static final float PI = RobotRun.PI;
 	
-	static final float RAD_TO_DEG = RobotRun.RAD_TO_DEG;
-	static final float TWO_PI = RobotRun.TWO_PI;
+	public static final float RAD_TO_DEG = RobotRun.RAD_TO_DEG;
+	public static final float TWO_PI = RobotRun.TWO_PI;
 	
 	/**
 	 * Determines if the lies within the range of angles that span from
@@ -283,7 +291,7 @@ public class RMath {
 			// angles[3], angles[4], angles[5]));
 			count += 1;
 			if (count == limit) {
-				System.out.printf("%s\n", J.toString());
+				Fields.debug("%s\n", J.toString());
 				return null;
 			}
 		}
