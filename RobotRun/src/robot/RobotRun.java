@@ -1,7 +1,6 @@
 package robot;
 
 import java.awt.event.KeyEvent;
-import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -336,7 +335,6 @@ public class RobotRun extends PApplet {
 
 	int interMotionIdx = -1;
 
-	private ArrayList<String> buffer;
 	private Point displayPoint;
 	
 	/**
@@ -4677,14 +4675,7 @@ public class RobotRun extends PApplet {
 		boolean ctrlDown = keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL);
 		keyCodeMap.keyPressed(keyCode, key);
 		
-		if (ctrlDown && key == 'd') {
-			
-			// Debug output key
-			/**/
-			updatePendantScreen();
-			Fields.debug(options.toString());
-			/**/
-		}
+		
 
 		if (key == 27) {
 			// Disable the window exiting function of the 'esc' key
@@ -4739,61 +4730,62 @@ public class RobotRun extends PApplet {
 		}
 
 		// General key functions
-		if (key == 'f') {
-			// Display the User and Tool frames associated with the current
-			// motion instruction
-			if (Fields.DEBUG && mode == ScreenMode.NAV_PROG_INSTR
-					&& (contents.getColumnIdx() == 3 || contents.getColumnIdx() == 4)) {
-				Instruction inst = getActiveRobot().getActiveInstruction();
-
-				if (inst instanceof MotionInstruction) {
-					MotionInstruction mInst = (MotionInstruction) inst;
-					Fields.debug("\nUser frame: %d\nTool frame: %d\n",
-							mInst.getUserFrame(), mInst.getToolFrame());
-				}
-			}
-		}
-		else if (key == 'a') {
-			// Test instruction undo
-			if (mode == ScreenMode.NAV_PROG_INSTR) {
-				getActiveRobot().popInstructionUndo();
+		if (ctrlDown) {
+			if (keyCode == KeyEvent.VK_D) {
+				/* Debug output *
 				updatePendantScreen();
+				/**/
+				Fields.debug(mode.toString());
+				/* Display the User and Tool frames associated with the current
+				 * motion instruction */
+				if (mode == ScreenMode.NAV_PROG_INSTR && (contents.getColumnIdx() == 3
+						|| contents.getColumnIdx() == 4)) {
+					
+					Instruction inst = getActiveRobot().getActiveInstruction();
+
+					if (inst instanceof MotionInstruction) {
+						MotionInstruction mInst = (MotionInstruction) inst;
+						Fields.debug("\nUser frame: %d\nTool frame: %d\n",
+								mInst.getUserFrame(), mInst.getToolFrame());
+					}
+				}
+				/**/
+				Fields.debug(options.toString());
+				/**/
+				
+			} else if ( keyCode == KeyEvent.VK_S) {
+				// Save EVERYTHING!
+				DataManagement.saveState(this);
+				
+			} else if (keyCode == KeyEvent.VK_Z) {
+				
+				if (UI != null) {
+					if (UI.isPendantActive()) {
+						undoScenarioEdit();
+					}
+				}
+				
+			} else if (keyCode == KeyEvent.VK_E) {
+				// Toggle the Robot's End Effector state
+				if (!isProgramRunning()) {
+					getActiveRobot().toggleEEState();
+				}
+				
+			} else if (keyCode == KeyEvent.VK_T) {
+				// Restore default Robot joint angles
+				float[] rot = { 0, 0, 0, 0, 0, 0 };
+				getActiveRobot().releaseHeldObject();
+				getActiveRobot().setJointAngles(rot);
+				intermediatePositions.clear();
+				
+			} else if (keyCode == KeyEvent.VK_R) {
+				reset();
+				
+			} else if (keyCode == KeyEvent.VK_C) {
+				coord();
 			}
-		} 
-		else if (ctrlDown && keyCode == KeyEvent.VK_T) {
-			// Write anything stored in the String buffer to a text file
-			writeBuffer();
 		}
-		else if (ctrlDown && keyCode == KeyEvent.VK_S) {
-			// Save EVERYTHING!
-			DataManagement.saveState(this);
-		}
-		else if (ctrlDown && keyCode == KeyEvent.VK_Z) {
-			undoScenarioEdit();
-		}
-		else if (key == 'q') {
-			// Print the current mode to the console
-			println(mode.toString());
-		} 
-		else if (key == 'e') {
-			// Toggle the Robot's End Effector state
-			if (!isProgramRunning()) {
-				getActiveRobot().toggleEEState();
-			}
-		} 
-		else if (key == 'r') {
-			// Restore default Robot joint angles
-			float[] rot = { 0, 0, 0, 0, 0, 0 };
-			getActiveRobot().releaseHeldObject();
-			getActiveRobot().setJointAngles(rot);
-			intermediatePositions.clear();	
-		}
-		else if(key == 'R') {
-			reset();
-		}
-		else if(key == 'c') {
-			coord();
-		}
+
 	}
 
 	public void keyReleased() {
@@ -7141,7 +7133,6 @@ public class RobotRun extends PApplet {
 			
 			setManager(new WGUI(this, buttonImages));
 			
-			buffer = new ArrayList<>();
 			displayPoint = null;
 
 			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 30, 300, null);
@@ -8185,28 +8176,5 @@ public class RobotRun extends PApplet {
 		PVector result = new PVector();
 		matrix.mult(point, result);
 		return result;
-	}
-
-	/**
-	 * Writes anything stored in the ArrayList String buffers to tmp\test.out.
-	 */
-	private int writeBuffer() {
-		try {
-			PrintWriter out = new PrintWriter(sketchPath("tmp/test.out"));
-
-			for (String line : buffer) {
-				out.print(line);
-			}
-
-			println("Write to buffer successful.");
-			out.close();
-
-		} catch (Exception Ex) {
-			Ex.printStackTrace();
-			return 1;
-		}
-
-		buffer.clear();
-		return 0;
 	}
 }
