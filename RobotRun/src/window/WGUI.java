@@ -1998,6 +1998,35 @@ public class WGUI implements ControlListener {
 
 		 return relPosition;
 	 }
+	
+	private static float[] getDimOf(ControllerInterface<?> c, int opt) {
+		float[] dims = new float[2];
+		
+		if (c instanceof Group) {
+			dims[0] = c.getWidth();
+			/* getHeight() does not function the same for Group objects for
+			 * some reason ... */
+			dims[1] = ((Group) c).getBackgroundHeight();
+			 
+		} else if (c instanceof DropdownList) {
+			dims[0] = c.getWidth();
+			/* Ignore the number of items displayed by the DropdownList, when
+			 * it is open */
+			dims[1] = ((DropdownList) c).getBarHeight();
+			 
+		} else if (c instanceof MyRadioButton) {
+			MyRadioButton rb = (MyRadioButton)c;
+			
+			dims[0] = rb.getTotalWidth();
+			dims[1] = rb.getTotalHeight();
+			 
+		} else {
+			dims[0] = c.getWidth();
+			dims[1] = c.getHeight();
+		}
+		
+		return dims;
+	}
 	 
 	/**
 	 * Renders all the text on the pendant's screen based on the given input.
