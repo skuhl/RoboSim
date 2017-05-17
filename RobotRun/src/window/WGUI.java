@@ -19,7 +19,7 @@ import controlP5.Textarea;
 import controlP5.Toggle;
 import enums.AxesDisplay;
 import enums.EEMapping;
-import enums.RelativePoint;
+import enums.Alignment;
 import enums.ScreenMode;
 import enums.ScreenType;
 import enums.ShapeType;
@@ -166,7 +166,7 @@ public class WGUI implements ControlListener {
 		windowTabs.setBehavior( new KeyDownMgmt(app.getKeyCodeMap()) );
 		
 		// Initialize the shared window background
-		relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_LEFT, 0, 0);
+		relPos = relativePosition(windowTabs, Alignment.BOTTOM_LEFT, 0, 0);
 		background = manager.addBackground("WindowBackground")
 							.setPosition(relPos[0], relPos[1])
 							.setBackgroundColor(Fields.BG_C)
@@ -180,10 +180,10 @@ public class WGUI implements ControlListener {
 		scenario = addGroup("SCENARIO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscellaneous = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		
-		relPos = relativePosition(windowTabs, RelativePoint.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
+		relPos = relativePosition(windowTabs, Alignment.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
 		c1 = addButton("record", buttonImages[0], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 		
-		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
+		relPos = relativePosition(c1, Alignment.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
 		addButton("EE", buttonImages[1], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 		
 		// Initialize camera view buttons
@@ -224,92 +224,92 @@ public class WGUI implements ControlListener {
 		
 		// Function buttons
 		
-		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 2);
+		relPos = relativePosition(c1, Alignment.BOTTOM_LEFT, 0, 2);
 		c1 = addButton("f1", "F1", pendant, relPos[0], relPos[1],
 				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 1, 0);
+		relPos = relativePosition(c1, Alignment.TOP_RIGHT, 1, 0);
 		c2 = addButton("f2", "F2", pendant, relPos[0], relPos[1],
 				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		relPos = relativePosition(c2, Alignment.TOP_RIGHT, 1, 0);
 		c2 = addButton("f3", "F3", pendant, relPos[0], relPos[1],
 				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		relPos = relativePosition(c2, Alignment.TOP_RIGHT, 1, 0);
 		c2 = addButton("f4", "F4", pendant, relPos[0], relPos[1],
 				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		relPos = relativePosition(c2, Alignment.TOP_RIGHT, 1, 0);
 		c2 = addButton("f5", "F5", pendant, relPos[0], relPos[1],
 				Fields.PENDANT_SCREEN_WIDTH / 5 - 1, Fields.LARGE_BUTTON, Fields.bond);
 		
 		
 		// Step button
-		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 11);
+		relPos = relativePosition(c1, Alignment.BOTTOM_LEFT, 0, 11);
 		c1 = addButton("step", "STEP", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.LARGE_BUTTON, Fields.bond);
 		
 		// Menu button
-		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 19, 0);
+		relPos = relativePosition(c1, Alignment.TOP_RIGHT, 19, 0);
 		c1 = addButton("menu", "MENU", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		// Previous button
 		float smLrDiff = Fields.LARGE_BUTTON - Fields.SMALL_BUTTON;
-		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0,	smLrDiff +
+		relPos = relativePosition(c1, Alignment.BOTTOM_LEFT, 0,	smLrDiff +
 				16);
 		addButton("prev", "PREV", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		// Select button
-		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 15, 0);
+		relPos = relativePosition(c1, Alignment.TOP_RIGHT, 15, 0);
 		c2 = addButton("select", "SELECT", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		// Edit button
-		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		relPos = relativePosition(c2, Alignment.TOP_RIGHT, 1, 0);
 		c2 = addButton("edit", "EDIT", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		// Data button
-		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 1, 0);
+		relPos = relativePosition(c2, Alignment.TOP_RIGHT, 1, 0);
 		c2 = addButton("data", "DATA", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		// Function-Control button
-		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 15, 0);
+		relPos = relativePosition(c2, Alignment.TOP_RIGHT, 15, 0);
 		c2 = addButton("fctn", "FCTN", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		// Next button
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0,	smLrDiff +
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0,	smLrDiff +
 				16);
 		addButton("next", "NEXT", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		// Shift button
-		relPos = relativePosition(c2, RelativePoint.TOP_RIGHT, 19, 0);
+		relPos = relativePosition(c2, Alignment.TOP_RIGHT, 19, 0);
 		addButton("shift", "SHIFT", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.LARGE_BUTTON, Fields.bond);
 
 		// Arrow buttons
 		
-		relPos = relativePosition(getButton("edit"), RelativePoint.BOTTOM_LEFT,
+		relPos = relativePosition(getButton("edit"), Alignment.BOTTOM_LEFT,
 				smLrDiff / 2, 11);
 		c2 = addButton("arrow_up", pendant, buttonImages[2], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("arrow_dn", pendant, buttonImages[3], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 		
-		relPos = relativePosition(getButton("select"), RelativePoint.BOTTOM_LEFT,
+		relPos = relativePosition(getButton("select"), Alignment.BOTTOM_LEFT,
 				smLrDiff / 2, smLrDiff + 16);
 		addButton("arrow_lt", pendant, buttonImages[4], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 		
-		relPos = relativePosition(getButton("data"), RelativePoint.BOTTOM_LEFT,
+		relPos = relativePosition(getButton("data"), Alignment.BOTTOM_LEFT,
 				smLrDiff / 2, smLrDiff + 16);
 		addButton("arrow_rt", pendant, buttonImages[5], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
@@ -322,105 +322,105 @@ public class WGUI implements ControlListener {
 		c1 = addButton("reset", "RESET", pendant, resPosX, btmColsY,
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c1, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("num7", "7", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("num4", "4", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("num1", "1", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("num0", "0", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("dash", "-", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		
 		// Backspace button column
 		
-		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 1, 0);
+		relPos = relativePosition(c1, Alignment.TOP_RIGHT, 1, 0);
 		c1 = addButton("bkspc", "BKSPC", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c1, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("num8", "8", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("num5", "5", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("num2", "2", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("period", ".", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("posn", "POSN", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		
 		// Item button column
 		
-		relPos = relativePosition(c1, RelativePoint.TOP_RIGHT, 1, 0);
+		relPos = relativePosition(c1, Alignment.TOP_RIGHT, 1, 0);
 		c1 = addButton("item", "ITEM", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c1, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("num9", "9", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("num6", "6", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("num3", "3", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("comma", ",", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("io", "I/O", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		
 		// Util button column
 		
-		relPos = relativePosition(getButton("arrow_dn"), RelativePoint.BOTTOM_LEFT,
+		relPos = relativePosition(getButton("arrow_dn"), Alignment.BOTTOM_LEFT,
 				-smLrDiff / 2, 10);
 		c1 = addButton("enter", "ENTER", pendant, relPos[0], btmColsY,
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c1, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("tool1", "TOOL1", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("tool2", "TOOL2", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("mvmu", "MVMU", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("SETUP", "SETUP", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("status", "STATUS", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
@@ -428,10 +428,10 @@ public class WGUI implements ControlListener {
 		// Jog button columns
 		
 		c1 = getButton("shift");
-		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 0);
+		relPos = relativePosition(c1, Alignment.BOTTOM_LEFT, 0, 0);
 		relPos[1] = btmColsY;
 		
-		float[] relPos2 = relativePosition(c1, RelativePoint.BOTTOM_LEFT,
+		float[] relPos2 = relativePosition(c1, Alignment.BOTTOM_LEFT,
 				-Fields.LARGE_BUTTON - 1, 0);
 		relPos2[1] = btmColsY;
 		
@@ -446,7 +446,7 @@ public class WGUI implements ControlListener {
 					Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 			
 			b.getCaptionLabel().alignY(RobotRun.TOP);
-			relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, 1);
+			relPos = relativePosition(b, Alignment.BOTTOM_LEFT, 0, 1);
 			
 			name = String.format("joint%d_neg", idx);
 			format = (idx < 4) ? " -%c\n(J%d)" : "-%cR\n(J%d)";
@@ -456,35 +456,35 @@ public class WGUI implements ControlListener {
 					Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 			
 			b.getCaptionLabel().alignY(RobotRun.TOP);
-			relPos2 = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, 1);
+			relPos2 = relativePosition(b, Alignment.BOTTOM_LEFT, 0, 1);
 		}
 		
 		
 		// Hold button column
 		
-		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT,
+		relPos = relativePosition(c1, Alignment.BOTTOM_LEFT,
 				-2 * (Fields.LARGE_BUTTON + 1), 0);
 		relPos[1] = btmColsY;
 		c1 = addButton("hold", "HOLD", pendant, relPos[0],
 				btmColsY, Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c1, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c1, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("fwd", "FWD", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("bwd", "BWD", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("coord", "COORD", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("spdup", "+%", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
-		relPos = relativePosition(c2, RelativePoint.BOTTOM_LEFT, 0, 1);
+		relPos = relativePosition(c2, Alignment.BOTTOM_LEFT, 0, 1);
 		c2 = addButton("spddn", "-%", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
@@ -584,7 +584,7 @@ public class WGUI implements ControlListener {
 		 * NOTE: the order in which the dropdown lists matters!
 		 * 		(Adding the dropdown lists last places them in front of the
 		 * other UI elements, which is important, when the list is open) */
-		DropdownList ddlLimbo = addDropdown("EEDisplay", miscellaneous, ldropItemWidth, dropItemHeight, 4,
+		MyDropdownList ddlLimbo = addDropdown("EEDisplay", miscellaneous, ldropItemWidth, dropItemHeight, 4,
 				Fields.small);
 		ddlLimbo.addItem(EEMapping.DOT.toString(), EEMapping.DOT)
 				.addItem(EEMapping.LINE.toString(), EEMapping.LINE)
@@ -642,6 +642,7 @@ public class WGUI implements ControlListener {
 
 		ddlLimbo = addDropdown("ObjType", createWO, sdropItemWidth, dropItemHeight,
 				3, Fields.small);
+		
 		ddlLimbo.addItem("Parts", 0.0f)
 				.addItem("Fixtures", 1.0f);
 	}
@@ -1066,130 +1067,127 @@ public class WGUI implements ControlListener {
 		 }
 	}
 	
+	/**
+	 * Reinitialize any and all input fields
+	 */
+	private void clearAllInputFields() {
+		clearGroupInputFields(null);
+		updateDimLblsAndFields();
+	}
 	
-
-	 /**
-	  * Reinitialize any and all input fields
-	  */
-	 private void clearAllInputFields() {
-		 clearGroupInputFields(null);
-		 updateDimLblsAndFields();
-	 }
-	 
-	 /**
-	  * Clear only the input fields in either the create or edit windows, if it
-	  * is active.
-	  */
-	 public void clearInputsFields() {
-		 
-		 if (menu == WindowTab.CREATE) {
-			 clearGroupInputFields(createWO);
-			 clearSharedInputFields();
-			 updateCreateWindowContentPositions();
+	/**
+	 * Clear only the input fields in either the create or edit windows, if it
+	 * is active.
+	 */
+	public void clearInputsFields() {
+		if (menu == WindowTab.CREATE) {
+			clearGroupInputFields(createWO);
+			clearSharedInputFields();
+			updateCreateWindowContentPositions();
 			 
-		 } else if (menu == WindowTab.EDIT) {
-			 clearGroupInputFields(editWO);
-			 clearSharedInputFields();
-			 updateEditWindowContentPositions();
-		 }
-	 }
+		} else if (menu == WindowTab.EDIT) {
+			clearGroupInputFields(editWO);
+			clearSharedInputFields();
+			updateEditWindowContentPositions();
+		}
+	}
 
-	 /**
-	  * Reinitializes any controller interface in the given group that accepts user
-	  * input; currently only text fields and dropdown lists are updated.
-	  */
-	 public void clearGroupInputFields(Group g) {
-		 List<ControllerInterface<?>> contents = manager.getAll();
+	/**
+	 * Reinitializes any controller interface in the given group that accepts user
+	 * input; currently only text fields and dropdown lists are updated.
+	 */
+	public void clearGroupInputFields(Group g) {
+		List<ControllerInterface<?>> contents = manager.getAll();
 
-		 for (ControllerInterface<?> controller : contents) {
+		for (ControllerInterface<?> controller : contents) {
 
-			 if (g == null || controller.getParent().equals(g)) {
+			if (g == null || controller.getParent().equals(g)) {
 
-				 if (controller instanceof MyTextfield) {
-					 // Clear anything inputted into the text field
-					 controller = ((MyTextfield)controller).setValue("");
-					 
-				 } else if (controller instanceof MyDropdownList) {
-					 // Reset the caption label of each dropdown list and close the list
-					 MyDropdownList dropdown = (MyDropdownList)controller;
-					 
-					 if(!dropdown.getParent().equals(miscellaneous)) {
-						 dropdown.setValue(-1);
-						 dropdown.close();
-					 }
-				 }
-			 }
-		 }
-	 }
+				if (controller instanceof MyTextfield) {
+					// Clear anything inputted into the text field
+					controller = ((MyTextfield)controller).setValue("");
+					
+				} else if (controller instanceof MyDropdownList) {
+					// Reset the caption label of each dropdown list and close the list
+					MyDropdownList dropdown = (MyDropdownList)controller;
+					
+					if(!dropdown.getParent().equals(miscellaneous)) {
+						dropdown.setValue(-1);
+						dropdown.close();
+					}
+				}
+			}
+		}
+	}
 
-	 /**
-	  * Reinitialize the input fields for any contents in the Scenario window
-	  */
-	 public void clearScenarioInputFields() {
-		 clearGroupInputFields(scenario);
-		 updateDimLblsAndFields();
-	 }
+	/**
+	 * Reinitialize the input fields for any contents in the Scenario window
+	 */
+	public void clearScenarioInputFields() {
+		clearGroupInputFields(scenario);
+		updateDimLblsAndFields();
+	}
 
-	 /**
-	  * Reinitialize the input fields for any shared contents
-	  */
-	 public void clearSharedInputFields() {
-		 clearGroupInputFields(sharedElements);
-		 updateDimLblsAndFields();
-	 }
+	/**
+	 * Reinitialize the input fields for any shared contents
+	 */
+	public void clearSharedInputFields() {
+		clearGroupInputFields(sharedElements);
+		updateDimLblsAndFields();
+	}
 	 
-	 /**
-	  * Creates a world object form the input fields in the Create window.
-	  */
-	 public WorldObject createWorldObject() {
-		 // Check the object type dropdown list
-		 Object val = getDropdown("ObjType").getSelectedItem();
-		 // Determine if the object to be create is a Fixture or a Part
-		 Float objectType = 0.0f;
+	/**
+	 * Creates a world object form the input fields in the Create window.
+	 */
+	public WorldObject createWorldObject() {
+		// Check the object type dropdown list
+		Object val = getDropdown("ObjType").getSelectedItem();
+		// Determine if the object to be create is a Fixture or a Part
+		Float objectType = 0.0f;
 
-		 if (val instanceof Float) {
-			 objectType = (Float)val;
-		 }
+		if (val instanceof Float) {
+			objectType = (Float)val;
+		}
 
-		 app.pushMatrix();
-		 app.resetMatrix();
-		 WorldObject wldObj = null;
+		app.pushMatrix();
+		app.resetMatrix();
+		WorldObject wldObj = null;
+		
+		try {
 
-		 try {
+			if (objectType == 0.0f) {
+				// Create a Part
+				String name = getTextField("ObjName").getText();
 
-			 if (objectType == 0.0f) {
-				 // Create a Part
-				 String name = getTextField("ObjName").getText();
+				ShapeType type = (ShapeType)getDropdown("Shape").getSelectedItem();
 
-				 ShapeType type = (ShapeType)getDropdown("Shape").getSelectedItem();
+				int fill = (Integer)getDropdown("Fill").getSelectedItem();
 
-				 int fill = (Integer)getDropdown("Fill").getSelectedItem();
-
-				 switch(type) {
-					 case BOX:
-						 int strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
-						 Float[] shapeDims = getBoxDimensions();
-						 // Construct a box shape
-						 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
-							 wldObj = new Part(name, fill, strokeVal, shapeDims[0], shapeDims[1], shapeDims[2]);
-						 }
-						 break;
+				switch(type) {
+					case BOX:
+						int strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
+						Float[] shapeDims = getBoxDimensions();
+						// Construct a box shape
+						if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
+							wldObj = new Part(name, fill, strokeVal, shapeDims[0], shapeDims[1], shapeDims[2]);
+						}
+						break;
 	
-					 case CYLINDER:
-						 strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
-						 shapeDims = getCylinderDimensions();
-						 // Construct a cylinder
-						 if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
-							 wldObj = new Part(name, fill, strokeVal, shapeDims[0], shapeDims[1]);
-						 }
-						 break;
+					case CYLINDER:
+						strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
+						shapeDims = getCylinderDimensions();
+						// Construct a cylinder
+						if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
+							wldObj = new Part(name, fill, strokeVal, shapeDims[0], shapeDims[1]);
+						}
+						break;
 	
-					 case MODEL:
-						 String srcFile = getShapeSourceFile();
-						 shapeDims = getModelDimensions();
-						 // Construct a complex model
-						 if (shapeDims != null) {
-							 ModelShape model;
+					case MODEL:
+						String srcFile = getShapeSourceFile();
+						shapeDims = getModelDimensions();
+						// Construct a complex model
+						if (shapeDims != null) {
+							ModelShape model;
 	
 							 if (shapeDims[0] != null) {
 								 // Define shape scale
@@ -1950,7 +1948,7 @@ public class WGUI implements ControlListener {
 	  * @param offsetY	The y position offset from obj's position
 	  * @return			A doubleton containing the absolute x and y positions
 	  */
-	 private <T> float[] relativePosition(ControllerInterface<T> obj, RelativePoint pos, float offsetX, float offsetY) {
+	 private <T> float[] relativePosition(ControllerInterface<T> obj, Alignment pos, float offsetX, float offsetY) {
 		 float[] relPosition = new float[] { 0f, 0f };
 		 float[] objPosition = obj.getPosition();
 		 float[] objDimensions;
@@ -1999,6 +1997,69 @@ public class WGUI implements ControlListener {
 		 return relPosition;
 	 }
 	
+	/**
+	 * TODO
+	 * 
+	 * @param refX
+	 * @param alignX
+	 * @param offX
+	 * @param refY
+	 * @param alignY
+	 * @param offY
+	 * @return
+	 */
+	private static float[] getRelativePos(ControllerInterface<?> refX,
+			Alignment alignX, int offX, ControllerInterface<?> refY,
+			Alignment alignY, int offY) {
+		
+		return new float[] {
+					getRelativePos(refX, alignX, offX, 0), 
+					getRelativePos(refY, alignY, offY, 1)
+				};
+	}
+	
+	/**
+	 * Calculates the absolute position from the position of the given
+	 * controller and the given alignment offset by the given offset
+	 * value along the given axis.
+	 * 
+	 * @param ref	The controller, with respect to which the position is
+	 * 				calculated
+	 * @param align	The alignment, with reference to the given controller, of
+	 * 				the calculated position 
+	 * @param off	The offset to apply to the position
+	 * @param axis	The axis on which to calculate the position (0 -> X, 1 ->
+	 * 				Y)
+	 * @return		
+	 */
+	private static float getRelativePos(ControllerInterface<?> ref,
+			Alignment align, int off, int axis) {
+		
+		float[] refPos = ref.getPosition();
+		float[] refDim = WGUI.getDimOf(ref, 0);
+		float pos;
+		
+		if (axis == 1) {
+			pos = off + refPos[1] + refDim[1] * align.factorY;
+			
+		} else {
+			pos = off + refPos[0] + refDim[0] * align.factorX;
+		}
+		
+		return pos;
+	}
+	
+	/**
+	 * Calculates the absolute dimensions of the given controller. Certain UI
+	 * elements such as a dropdown list have several height settings.
+	 * 
+	 * TODO	implement option feature for controllers such as the radio button
+	 * 		sets or dropdown lists
+	 * 
+	 * @param c		A UI element or controller
+	 * @param opt	Not currently implemented
+	 * @return		The dimensions of the given controller
+	 */
 	private static float[] getDimOf(ControllerInterface<?> c, int opt) {
 		float[] dims = new float[2];
 		
@@ -2280,31 +2341,31 @@ public class WGUI implements ControlListener {
 		 float[] relPos = new float[] { offsetX, offsetX };
 		 ControllerInterface<?> c = getTextArea("ObjTypeLbl").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		 getDropdown("ObjType").setPosition(relPos[0], relPos[1]);
 		 // Name label and field
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("ObjNameLbl").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		 getTextField("ObjName").setPosition(relPos[0], relPos[1]);
 		 // Shape type label and dropdown
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("ShapeLbl").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
 		 getDropdown("Shape").setPosition(relPos[0], relPos[1]);
 		 // Dimension label and fields
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
 
 		 // Fill color label and dropdown
 		 c = getTextArea("FillLbl").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
 		 getDropdown("Fill").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 Object val = getDropdown("Shape").getSelectedItem();
 
 		 if (val == ShapeType.MODEL) {
@@ -2317,18 +2378,18 @@ public class WGUI implements ControlListener {
 			 // Outline color label and dropdown
 			 c = getTextArea("OutlineLbl").setPosition(relPos[0], relPos[1]).show();
 			 
-			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
+			 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
 			 c = getDropdown("Outline").setPosition(relPos[0], relPos[1]).show();
 		 } 
 
 		 // Create button
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getButton("CreateWldObj").setPosition(relPos[0], relPos[1]);
 		 // Clear button
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, offsetX, 0);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, offsetX, 0);
 		 c = getButton("ClearFields").setPosition(relPos[0], relPos[1]);
 		 // Update window background display
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
 				   .setHeight( (int)Math.ceil( relPos[1] ) )
 				   .show();
@@ -2357,10 +2418,10 @@ public class WGUI implements ControlListener {
 			 Textarea dimLbl = getTextArea( String.format("DimLbl%d", ddlIdx) )
 					 .setPosition(relPos[0], relPos[1]);
 			 
-			 relPos = relativePosition(dimLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+			 relPos = relativePosition(dimLbl, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 			 dimDdl.setPosition(relPos[0], relPos[1]);
 			 
-			 relPos = relativePosition(dimLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			 relPos = relativePosition(dimLbl, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 }
 		 
 		 // Update the dimension text fields
@@ -2372,10 +2433,10 @@ public class WGUI implements ControlListener {
 			 Textarea dimLbl = getTextArea( String.format("DimLbl%d", idx + ddlIdx) )
 					 .setPosition(relPos[0], relPos[1]);
 			 
-			 relPos = relativePosition(dimLbl, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+			 relPos = relativePosition(dimLbl, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 			 dimTxt.setPosition(relPos[0], relPos[1]);
 			 
-			 relPos = relativePosition(dimLbl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			 relPos = relativePosition(dimLbl, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 }
 
 		 return relPos;
@@ -2514,19 +2575,19 @@ public class WGUI implements ControlListener {
 				 				c0 = null;
 		 boolean isPart = getSelectedWO() instanceof Part;
 		 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		 getDropdown("Object").setPosition(relPos[0], relPos[1]);
 		 // Dimension label and fields
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
 		// Orientation column labels
 		 c = getTextArea("Blank").setPosition(relPos[0], relPos[1]);
 		 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		 c0 = getTextArea("Current").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
-			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			 relPos = relativePosition(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
 			 getTextArea("Default").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
@@ -2535,14 +2596,14 @@ public class WGUI implements ControlListener {
 		 }
 		 
 		 // X label and fields
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("XLbl").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		 c0 = getTextField("XCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
-			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			 relPos = relativePosition(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
 			 getTextArea("XDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
@@ -2550,14 +2611,14 @@ public class WGUI implements ControlListener {
 		 }
 		 
 		 // Y label and fields
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("YLbl").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		 c0 = getTextField("YCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
-			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			 relPos = relativePosition(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
 			 getTextArea("YDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
@@ -2565,14 +2626,14 @@ public class WGUI implements ControlListener {
 		 }
 		 
 		 // Z label and fields
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("ZLbl").setPosition(relPos[0], relPos[1]);;
 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		 c0 = getTextField("ZCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
-			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			 relPos = relativePosition(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
 			 getTextArea("ZDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
@@ -2580,14 +2641,14 @@ public class WGUI implements ControlListener {
 		 }
 		 
 		 // W label and fields
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("WLbl").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		 c0 = getTextField("WCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
-			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			 relPos = relativePosition(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
 			 getTextArea("WDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
@@ -2595,14 +2656,14 @@ public class WGUI implements ControlListener {
 		 }
 		 
 		 // P label and fields
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("PLbl").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		 c0 = getTextField("PCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
-			 relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			 relPos = relativePosition(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
 			 getTextArea("PDef").setPosition(relPos[0], relPos[1]).show();
 			 
 		 } else {
@@ -2610,14 +2671,14 @@ public class WGUI implements ControlListener {
 		 }
 		 
 		 // R label and fields
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getTextArea("RLbl").setPosition(relPos[0], relPos[1]);
 
-		 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		 c0 = getTextField("RCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
-			relPos = relativePosition(c0, RelativePoint.TOP_RIGHT, distFieldToFieldX, 0);
+			relPos = relativePosition(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
 			getTextArea("RDef").setPosition(relPos[0], relPos[1]).show();
 			
 		 } else {
@@ -2625,28 +2686,28 @@ public class WGUI implements ControlListener {
 		 }
 		 
 		 // Move to current button
-		 relPos = relativePosition(c0, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getButton("MoveToCur").setPosition(relPos[0], relPos[1]);
 		 
 		 if (isPart) {
 			 /* Default values and fixture references are only relevant for parts */
 			 
 			 // Update default button
-			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+			 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 			 getButton("UpdateWODef").setPosition(relPos[0], relPos[1]).show();
 			
 			 // Move to default button
-			 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			 c0 = getButton("MoveToDef").setPosition(relPos[0], relPos[1]).show();
 			 
 			 // Restore Defaults button
-			 relPos = relativePosition(c0, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			 relPos = relativePosition(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			 c0 = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
 			 
 			 relPos =  new float[] { offsetX, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
 			 c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
 			
-			 relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX,
+			 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX,
 					PApplet.abs(fieldHeight - dropItemHeight) / 2);
 			 getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
 			
@@ -2657,16 +2718,16 @@ public class WGUI implements ControlListener {
 			getDropdown("Fixture").hide();
 			
 			// Restore Defaults button
-			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
 		 }
 		 
 		 // Delete button
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getButton("DeleteWldObj").setPosition(relPos[0], relPos[1]);
 		 
 		 // Update window background display
-		 relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
 		 .setHeight( (int)Math.ceil( relPos[1] ) )
 		 .show();
@@ -2841,7 +2902,7 @@ public class WGUI implements ControlListener {
 		float[] relPos = new float[] { offsetX, offsetX };
 		ControllerInterface<?> c = getTextArea("SOptLbl").setPosition(relPos[0], relPos[1]);
 		
-		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, 0);
+		relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, 0);
 		c = getRadioButton("ScenarioOpt").setPosition(relPos[0], relPos[1]);
 		
 		float winVar = c.getValue();
@@ -2852,31 +2913,31 @@ public class WGUI implements ControlListener {
 		
 		if (winVar == 2f) { // Rename scenario variation
 			// Scenario instructions
-			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			ta.setPosition(relPos[0], relPos[1]);
 			ta.setText("Select the scenario you wish to rename from the dropdown list and enter the new name into the text field below. Press RENAME to confirm the scenario's new name.");
 			// Scenario dropdown list
-			relPos = relativePosition(ta, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = relativePosition(ta, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			mdl.setPosition(relPos[0], relPos[1]).show();
 			// Scenario input field
-			relPos = relativePosition(mdl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = relativePosition(mdl, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			mtf.setPosition(relPos[0], relPos[1]).show();
 			// Scenario confirm button
-			relPos = relativePosition(mtf, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = relativePosition(mtf, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c = b.setPosition(relPos[0], relPos[1]);
 			b.getCaptionLabel().setText("Rename");
 			
 		} else if (winVar == 1f) { // Load scenario variation
 			// Scenario instructions
-			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			ta.setPosition(relPos[0], relPos[1]);
 			ta.setText("Select the scenario you wish to set as active from the dropdown list. Press LOAD to confirm your choice.");
 			// Scenario dropdown list
-			relPos = relativePosition(ta, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = relativePosition(ta, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c = mdl.setPosition(relPos[0], relPos[1]).show();
 			
 			// Scenario confirm button
-			relPos = relativePosition(mdl, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = relativePosition(mdl, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c = b.setPosition(relPos[0], relPos[1]);
 			b.getCaptionLabel().setText("Load");
 			
@@ -2884,14 +2945,14 @@ public class WGUI implements ControlListener {
 			
 		} else { // New scenario variation
 			// Scenario instructions
-			relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			ta.setPosition(relPos[0], relPos[1]);
 			ta.setText("Enter the name of the scenario you wish to create and press CONFIRM. A scenario name has to be unique, consist of only letters and numbers, and be of length less than 16.");
 			// Scenario input field
-			relPos = relativePosition(ta, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = relativePosition(ta, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			mtf.setPosition(relPos[0], relPos[1]).show();
 			// Scenario confirm button
-			relPos = relativePosition(mtf, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = relativePosition(mtf, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c = b.setPosition(relPos[0], relPos[1]);
 			b.getCaptionLabel().setText("Create");
 			
@@ -2899,7 +2960,7 @@ public class WGUI implements ControlListener {
 		}
 		
 		// Update window background display
-		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
 				  .setHeight( (int)Math.ceil( relPos[1] ) )
 				  .show();
@@ -2935,18 +2996,18 @@ public class WGUI implements ControlListener {
 		float[] relPos = new float[] { offsetX, offsetX };
 		ControllerInterface<?> c = getTextArea("ActiveAxesDisplay").setPosition(relPos[0], relPos[1]);
 		// Axes Display dropdown
-		relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getDropdown("AxesDisplay").setPosition(relPos[0], relPos[1]);
 		
 		// Axes Display label
-		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("ActiveEEDisplay").setPosition(relPos[0], relPos[1]);
 		// Axes Display dropdown
-		relPos = relativePosition(c, RelativePoint.TOP_RIGHT, distLblToFieldX, 0);
+		relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getDropdown("EEDisplay").setPosition(relPos[0], relPos[1]);
 		
 		// Bounding box display toggle button
-		relPos = relativePosition(c, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		Button b = getButton("ToggleOBBs").setPosition(relPos[0], relPos[1]);
 		
 		// Update button color based on the state of the button
@@ -2959,14 +3020,14 @@ public class WGUI implements ControlListener {
 		updateButtonBgColor(b.getName(), b.isOn());
 		
 		// Second robot toggle button
-		relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = relativePosition(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		b = getButton("ToggleRobot").setPosition(relPos[0], relPos[1]);
 		
 		// Update button color based on the state of the button
 		updateButtonBgColor(b.getName(), b.isOn());
 	
 		// Update window background display
-		relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = relativePosition(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
 		.setHeight( (int)Math.ceil( relPos[1] ) )
 		.show();
@@ -3025,18 +3086,18 @@ public class WGUI implements ControlListener {
 		 }
 
 		 // Update the camera view buttons
-		 float[] relPos = relativePosition(windowTabs, RelativePoint.BOTTOM_RIGHT, offsetX, 0);
+		 float[] relPos = relativePosition(windowTabs, Alignment.BOTTOM_RIGHT, offsetX, 0);
 
 		 Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
-		 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 b = getButton("BackView").setPosition(relPos[0], relPos[1]).show();
-		 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 b = getButton("LeftView").setPosition(relPos[0], relPos[1]).show();
-		 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 b = getButton("RightView").setPosition(relPos[0], relPos[1]).show();
-		 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 b = getButton("TopView").setPosition(relPos[0], relPos[1]).show();
-		 relPos = relativePosition(b, RelativePoint.BOTTOM_LEFT, 0, distBtwFieldsY);
+		 relPos = relativePosition(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 b = getButton("BottomView").setPosition(relPos[0], relPos[1]).show();
 
 		 updateListContents();
