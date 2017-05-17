@@ -1,5 +1,6 @@
 package screen;
 
+import enums.ScreenMode;
 import global.Fields;
 import robot.RobotRun;
 
@@ -53,21 +54,11 @@ public class ScreenProgs extends Screen {
 	@Override
 	public void actionUp() {
 		RobotRun.getActiveRobot().setActiveProgIdx(contents.moveUp(robotRun.isShift()));
-
-		if(Fields.DEBUG) {
-			System.out.printf("\nOpt: %d\nProg: %d\nTRS: %d\n\n",
-					options.getLineIdx(), RobotRun.getActiveRobot().getActiveProgIdx(), contents.getRenderStart());
-		}
 	}
 
 	@Override
 	public void actionDn() {
 		RobotRun.getActiveRobot().setActiveProgIdx(contents.moveDown(robotRun.isShift()));
-
-		if(Fields.DEBUG) {
-			System.out.printf("\nRow: %d\nProg: %d\nTRS: %d\n\n",  
-				contents.getLineIdx(), RobotRun.getActiveRobot().getActiveProgIdx(), contents.getRenderStart());
-		}
 	}
 
 	@Override

@@ -4,6 +4,8 @@ import processing.core.PVector;
 
 /**
  * A form of orientation in the complex plain.
+ * 
+ * @author Joshua Hooker
  */
 public class RQuaternion {
 	

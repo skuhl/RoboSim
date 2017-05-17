@@ -1,7 +1,6 @@
 package geom;
 import processing.core.PApplet;
 import processing.core.PVector;
-import robot.CoordinateSystem;
 import robot.RobotRun;
 
 /**

@@ -1,7 +1,7 @@
-package window;
+package enums;
 
 /**
- * Defines the different menu views that the user can interact with in the
+ * Defines the set of menu views, with which the user can interact in the
  * RobotRun application. 
  * 
  * @author Joshua Hooker

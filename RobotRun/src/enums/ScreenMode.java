@@ -1,5 +1,12 @@
-package screen;
+package enums;
 
+import screen.DisplayMode;
+
+/**
+ * Defines the set of screen modes available for the pendant menu system.
+ * 
+ * @author Vincent Druckte and Joshua Hooker
+ */
 public enum ScreenMode implements DisplayMode {
 
 	/* 

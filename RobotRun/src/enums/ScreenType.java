@@ -1,5 +1,13 @@
-package screen;
+package enums;
 
+import screen.DisplayMode;
+
+/**
+ * Defines the set of screen types, which group screen modes based on their
+ * functionality.
+ * 
+ * @author Vincent Druckte
+ */
 public enum ScreenType implements DisplayMode {
 	TYPE_DEFAULT,
 	TYPE_OPT_MENU,

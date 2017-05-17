@@ -2,6 +2,7 @@ package geom;
 
 import java.util.Arrays;
 
+import global.RMath;
 import processing.core.PConstants;
 import processing.core.PVector;
 

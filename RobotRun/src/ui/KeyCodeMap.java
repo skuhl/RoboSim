@@ -129,6 +129,7 @@ public class KeyCodeMap {
 		KeyData data = keyDownMap.get(codeOfLast);
 		
 		if (data != null && data.key >= 32 && data.key <= 126) {
+			// only return keys with valid text characters
 			return data.key;
 		}
 		

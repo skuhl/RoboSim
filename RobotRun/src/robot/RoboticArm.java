@@ -4,18 +4,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
 
-import frame.CoordFrame;
+import enums.CoordFrame;
+import enums.EEType;
+import enums.InstOp;
+import enums.RobotMotion;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
 import geom.Part;
 import geom.Point;
-import geom.RMath;
 import geom.RMatrix;
 import geom.RQuaternion;
 import geom.WorldObject;
 import global.Fields;
+import global.RMath;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PShape;
@@ -26,7 +29,6 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import screen.DisplayLine;
-import screen.InstOp;
 import screen.InstState;
 
 public class RoboticArm {
@@ -157,12 +159,6 @@ public class RoboticArm {
 	private RobotMotion motionType;
 	
 	/**
-	 * Indicates whether an issue occurred with inverse kinematics, when the
-	 * robot is moving in a Cartesian reference frame.
-	 */
-	private boolean motionFault;
-	
-	/**
 	 * The current coordinate frame of the robot.
 	 */
 	private CoordFrame curCoordFrame;
@@ -256,7 +252,6 @@ public class RoboticArm {
 		EEM_WIELDER = new Model("wielder", robotModels[5]);
 
 		motionType = RobotMotion.HALTED;
-		motionFault = false;
 		
 		// Base
 		Model base = new Model("base", robotModels[6]);
@@ -398,7 +393,7 @@ public class RoboticArm {
 	public float activateLiveJointMotion(int joint, int dir) {
 		RobotRun app = RobotRun.getInstance();
 
-		if (!app.isShift() || motionFault) {
+		if (!app.isShift() || hasMotionFault()) {
 			// Only move when shift is set and there is no error
 			return 0f;
 		}
@@ -423,7 +418,7 @@ public class RoboticArm {
 	public float activateLiveWorldMotion(int axis, int dir) {
 		RobotRun app = RobotRun.getInstance();
 		
-		if (!app.isShift() || motionFault) {
+		if (!app.isShift() || hasMotionFault()) {
 			// Only move when shift is set and there is no error
 			return 0f;
 		}
@@ -905,7 +900,7 @@ public class RoboticArm {
 							model.currentRotations[n] = trialAngle;
 						} 
 						else {
-							System.out.printf("A[i%d, n=%d]: %f\n", i, n, trialAngle);
+							Fields.debug("A[i%d, n=%d]: %f\n", i, n, trialAngle);
 							model.jointsMoving[n] = 0;
 							RobotRun.getInstance().updateRobotJogMotion(i, 0);
 							RobotRun.getInstance().hold();
@@ -1371,7 +1366,15 @@ public class RoboticArm {
 		motionType = RobotMotion.HALTED;
 	}
 
-	public boolean hasMotionFault() { return motionFault; }
+	/**
+	 * Indicates whether an issue occurred with inverse kinematics, when the
+	 * robot is moving in a Cartesian reference frame.
+	 * 
+	 * @return	Whether the robot has a motion fault
+	 */
+	public boolean hasMotionFault() {
+		return motionType == RobotMotion.MT_FAULT;
+	}
 
 	/**
 	 * Updates the robot's joint angles, for the current target rotation, based on
@@ -1448,12 +1451,10 @@ public class RoboticArm {
 			if (!anglePermitted(joint, destAngles[joint])) {
 				invalidAngle = true;
 				
-				if (Fields.DEBUG) {
-					PVector rangeBounds = getJointRange(joint);
-					System.err.printf("Invalid angle: J[%d] = %4.3f -> %4.3f : [%4.3f - %4.3f]\n", joint, getJointAngles()[joint],
-							destAngles[joint], rangeBounds.x, rangeBounds.y);
-				}
-				
+				PVector rangeBounds = getJointRange(joint);
+				System.err.printf("Invalid angle: J[%d] = %4.3f -> %4.3f : [%4.3f - %4.3f]\n",
+						joint, getJointAngles()[joint], destAngles[joint], rangeBounds.x,
+						rangeBounds.y);
 				break;
 			}
 		}
@@ -1462,8 +1463,9 @@ public class RoboticArm {
 		if ((destAngles == null) || invalidAngle) {
 			if (Fields.DEBUG) {
 				Point RP = RobotRun.nativeRobotEEPoint(this, getJointAngles());
-				System.out.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n", RP.position, destPosition,
-						RP.orientation, destOrientation);
+				Fields.debug("IK Failure ...\n%s -> %s\n%s -> %s\n\n",
+						RP.position, destPosition, RP.orientation,
+						destOrientation);
 			}
 
 			RobotRun.getInstance().triggerFault();
@@ -1489,8 +1491,11 @@ public class RoboticArm {
 	 * angles and the given set of joint angles.
 	 */
 	public void moveTo(float[] jointAngles) {
-		setupRotationInterpolation(jointAngles);
-		motionType = RobotMotion.MT_JOINT;
+		
+		if (!hasMotionFault()) {
+			setupRotationInterpolation(jointAngles);
+			motionType = RobotMotion.MT_JOINT;
+		}
 	}
 
 	/**
@@ -1499,10 +1504,13 @@ public class RoboticArm {
 	 * orientation.
 	 */
 	public void moveTo(PVector position, RQuaternion orientation) {
-		Point start = RobotRun.nativeRobotEEPoint(this, getJointAngles());
-		Point end = new Point(position.copy(), (RQuaternion)orientation.clone(), start.angles.clone());
-		RobotRun.getInstance().beginNewLinearMotion(start, end);
-		motionType = RobotMotion.MT_LINEAR;
+		
+		if (!hasMotionFault()) {
+			Point start = RobotRun.nativeRobotEEPoint(this, getJointAngles());
+			Point end = new Point(position.copy(), (RQuaternion)orientation.clone(), start.angles.clone());
+			RobotRun.getInstance().beginNewLinearMotion(start, end);
+			motionType = RobotMotion.MT_LINEAR;
+		}
 	}
 	
 	/**
@@ -1556,7 +1564,7 @@ public class RoboticArm {
 			}
 			
 		} else if (Fields.DEBUG) {
-			System.out.println("Empty program undo stack!");
+			Fields.debug("Empty program undo stack!");
 		}
 	}
 			
@@ -1927,8 +1935,13 @@ public class RoboticArm {
 		this.liveSpeed = liveSpeed;
 	}
 	
+	/**
+	 * Sets (or resets) the motion fault state for the robot.
+	 * 
+	 * @param flag	Whether the robot has a motion fault
+	 */
 	public void setMotionFault(boolean flag) {
-		motionFault = flag;
+		motionType = (flag) ? RobotMotion.MT_FAULT : RobotMotion.HALTED;
 	}
 
 	/**
@@ -2241,7 +2254,8 @@ public class RoboticArm {
 	 * THIS METHOD MUST BE CALLED WHEN THE FIRST ROBOT IS CREATED!
 	 */
 	public void updateRobot() {
-		if (!this.hasMotionFault()) {
+		
+		if (!hasMotionFault()) {
 			// Execute arm movement
 			if(RobotRun.getInstance().isProgramRunning()) {
 				// Run active program
@@ -2252,14 +2266,14 @@ public class RoboticArm {
 				// Move the Robot progressively to a point
 				boolean doneMoving = true;
 
-				switch (RobotRun.getActiveRobot().motionType) {
+				switch (motionType) {
 				case MT_JOINT:
 					doneMoving = interpolateRotation(liveSpeed / 100.0f);
 					break;
 				case MT_LINEAR:
 					doneMoving = RobotRun.getInstance().executeMotion(this, liveSpeed / 100.0f);
 					break;
-				case HALTED:
+				default:
 					break;
 				}
 

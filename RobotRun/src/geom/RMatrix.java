@@ -3,6 +3,7 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
+import global.RMath;
 import processing.core.PVector;
 
 public class RMatrix extends Array2DRowRealMatrix {

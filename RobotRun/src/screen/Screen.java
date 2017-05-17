@@ -1,5 +1,6 @@
 package screen;
 
+import enums.ScreenMode;
 import robot.RobotRun;
 
 public abstract class Screen {

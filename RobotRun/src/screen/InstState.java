@@ -1,5 +1,6 @@
 package screen;
 
+import enums.InstOp;
 import programming.Instruction;
 
 /**

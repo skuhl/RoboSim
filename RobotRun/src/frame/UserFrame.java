@@ -1,8 +1,8 @@
 package frame;
 import geom.Point;
-import geom.RMath;
 import geom.RMatrix;
 import geom.RQuaternion;
+import global.RMath;
 import processing.core.PVector;
 
 public class UserFrame extends Frame {
