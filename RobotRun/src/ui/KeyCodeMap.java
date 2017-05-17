@@ -74,9 +74,9 @@ public class KeyCodeMap {
 	 */
 	public void keyPressed(int code, char key) {
 		KeyData data = keyDownMap.get(code);
-		codeOfLast = code;
 		
 		if (code != codeOfLast) {
+			codeOfLast = code;
 			startTimeOfLast = System.currentTimeMillis();
 			downTimeOfLast = 0L;
 		}
@@ -167,8 +167,9 @@ public class KeyCodeMap {
 	 * Updates the time for which the last key was held down.
 	 */
 	public void update() {
-		long curTime = System.currentTimeMillis();
-		downTimeOfLast = curTime - startTimeOfLast;
+		if (startTimeOfLast >= 0) {
+			downTimeOfLast = System.currentTimeMillis() - startTimeOfLast;
+		}
 	}
 	
 	/**
