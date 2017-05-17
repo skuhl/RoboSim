@@ -106,11 +106,6 @@ public class WGUI implements ControlListener {
 						sharedElements, scenarioWindow, miscWindow;
 	
 	/**
-	 * Temporary group for refactoring pendant window rendering.
-	 */
-	private final Group limbo;
-	
-	/**
 	 * The button bar controlling the window tab selection.
 	 */
 	private final MyButtonBar windowTabs;
@@ -182,7 +177,6 @@ public class WGUI implements ControlListener {
 		editObjWindow = addGroup("EDITOBJ", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		scenarioWindow = addGroup("SCENARIO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscWindow = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
-		limbo = addGroup("LIMBO", 0, 2 * offsetX, windowTabs.getWidth(), 0);
 		
 		relPos = relativePosition(windowTabs, RelativePoint.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
 		c1 = addButton("record", buttonImages[0], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
@@ -3025,7 +3019,6 @@ public class WGUI implements ControlListener {
 		 if (menu == null) {
 			 // Hide all windows
 			 setGroupVisible(pendantWindow, false);
-			 setGroupVisible(limbo, false);
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
@@ -3044,7 +3037,6 @@ public class WGUI implements ControlListener {
 			 
 			 if (!pendantWindow.isVisible()) {
 				 setGroupVisible(pendantWindow, true);
-				 setGroupVisible(limbo, true);
 				 
 				 updateWindowContentsPositions();
 			 }
@@ -3052,7 +3044,6 @@ public class WGUI implements ControlListener {
 		 } else if (menu == WindowTab.CREATE) {
 			 // Show world object creation window
 			 setGroupVisible(pendantWindow, false);
-			 setGroupVisible(limbo, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(scenarioWindow, false);
 			 setGroupVisible(miscWindow, false);
@@ -3070,7 +3061,6 @@ public class WGUI implements ControlListener {
 		 } else if (menu == WindowTab.EDIT) {
 			 // Show world object edit window
 			 setGroupVisible(pendantWindow, false);
-			 setGroupVisible(limbo, false);
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(scenarioWindow, false);
 			 setGroupVisible(miscWindow, false);
@@ -3088,7 +3078,6 @@ public class WGUI implements ControlListener {
 		 } else if (menu == WindowTab.SCENARIO) {
 			 // Show scenario creating/saving/loading
 			 setGroupVisible(pendantWindow, false);
-			 setGroupVisible(limbo, false);
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
@@ -3106,7 +3095,6 @@ public class WGUI implements ControlListener {
 		 } else if (menu == WindowTab.MISC) {
 			 // Show miscellaneous window
 			 setGroupVisible(pendantWindow, false);
-			 setGroupVisible(limbo, false);
 			 setGroupVisible(createObjWindow, false);
 			 setGroupVisible(editObjWindow, false);
 			 setGroupVisible(sharedElements, false);
