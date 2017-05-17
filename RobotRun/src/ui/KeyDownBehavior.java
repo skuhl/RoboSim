@@ -56,13 +56,6 @@ public class KeyDownBehavior extends ControlBehavior {
 	 * Set the time for the next event and update the interval.
 	 */
 	protected void nextInterval() {
-		
-		if (interval > 100) {
-			interval /= 2;
-		}
-		
-		
-		
 		nextEvent = System.currentTimeMillis() + interval;
 	}
 	
@@ -70,7 +63,7 @@ public class KeyDownBehavior extends ControlBehavior {
 	 * Reset the interval.
 	 */
 	protected void resetInterval() {
-		interval = 3000;
+		interval = 400;
 		nextEvent = System.currentTimeMillis() + interval;
 		
 	}

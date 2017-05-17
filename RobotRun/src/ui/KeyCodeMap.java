@@ -28,11 +28,31 @@ public class KeyCodeMap {
 	private int codeOfLast;
 	
 	/**
+	 * When the last key pressed was first pressed.
+	 */
+	private long startTimeOfLast;
+	
+	/**
+	 * How long has the last key pressed been held down.
+	 */
+	private long downTimeOfLast;
+	
+	
+	/**
 	 * Initializes instance data.
 	 */
 	public KeyCodeMap() {
 		keyDownMap = new HashMap<>();
 		codeOfLast = 0;
+		startTimeOfLast = -1L;
+		downTimeOfLast = 0L;
+	}
+	
+	/**
+	 * @return	For how long has the last key pressed been held down
+	 */
+	public long getTimeOfLastKey() {
+		return downTimeOfLast;
 	}
 	
 	/**
@@ -56,6 +76,11 @@ public class KeyCodeMap {
 		KeyData data = keyDownMap.get(code);
 		codeOfLast = code;
 		
+		if (code != codeOfLast) {
+			startTimeOfLast = System.currentTimeMillis();
+			downTimeOfLast = 0L;
+		}
+		
 		if (data == null) {
 			// Add key data
 			data = new KeyData(key, true);
@@ -78,6 +103,8 @@ public class KeyCodeMap {
 		
 		if (code == codeOfLast) {
 			codeOfLast = 0;
+			startTimeOfLast = -1L;
+			downTimeOfLast = 0L;
 		}
 		
 		if (data == null) {
@@ -134,6 +161,14 @@ public class KeyCodeMap {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * Updates the time for which the last key was held down.
+	 */
+	public void update() {
+		long curTime = System.currentTimeMillis();
+		downTimeOfLast = curTime - startTimeOfLast;
 	}
 	
 	/**
