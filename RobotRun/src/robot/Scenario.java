@@ -8,6 +8,7 @@ import geom.Part;
 import geom.RMatrix;
 import geom.WorldObject;
 import processing.core.PApplet;
+import processing.core.PVector;
 
 /**
  * A storage class for a collection of objects with an associated name for the collection.
@@ -365,7 +366,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 * using the given ArmModel to detect collisions between world objects
 	 * and the armModel, and draws every object.
 	 */
-	public void updateAndDrawObjects(RoboticArm model) {
+	public void updateAndDrawObjects(RoboticArm robot) {
 		int numOfObjects = objList.size();
 
 		for (int idx = 0; idx < numOfObjects; ++idx) {
@@ -375,7 +376,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 				Part p = (Part)wldObj;
 
 				/* Update the transformation matrix of an object held by the Robotic Arm */
-				if(model != null && p == model.held && model.modelInMotion()) {
+				if(robot != null && p == robot.held && robot.modelInMotion()) {
 					RobotRun.getInstance().pushMatrix();
 					RobotRun.getInstance().resetMatrix();
 
@@ -398,7 +399,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 						refFixture.removeCoordinateSystem();
 					}
 
-					RobotRun.applyModelRotation(model, model.getJointAngles());
+					RobotRun.applyModelRotation(robot, robot.getJointAngles());
 					RMatrix invMat = new RMatrix(RobotRun.getActiveRobot().getLastEEOrientation());
 					RobotRun.getInstance().applyMatrix(invMat.getInverse());
 					p.applyCoordinateSystem();
@@ -407,10 +408,14 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					p.updateAbsoluteOrientation();
 					RobotRun.getInstance().popMatrix();
 				}
+				else if(p.getLocalCenter().y < 0) {
+					PVector c = wldObj.getLocalCenter();
+					wldObj.setLocalCenter(new PVector(c.x, c.y + 10, c.z));
+				}
 
 				/* Collision Detection */
 				if(RobotRun.getInstance().areOBBsDisplayed()) {
-					if( model != null && model.checkObjectCollision(p) ) {
+					if( robot != null && robot.checkObjectCollision(p) ) {
 						p.setBBColor(RobotRun.getInstance().color(255, 0, 0));
 					}
 
@@ -429,7 +434,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 						}
 					}
 
-					if (model != null && p != model.held && model.canPickup(p)) {
+					if (robot != null && p != robot.held && robot.canPickup(p)) {
 						// Change hit box color to indicate End Effector collision
 						p.setBBColor(RobotRun.getInstance().color(0, 0, 255));
 					}
@@ -439,6 +444,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					p.setBBColor(RobotRun.getInstance().color(255, 255, 0));
 				}
 			}
+			
 			// Draw the object
 			wldObj.draw();
 		}
