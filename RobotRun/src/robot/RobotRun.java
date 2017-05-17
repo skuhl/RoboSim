@@ -4674,8 +4674,6 @@ public class RobotRun extends PApplet {
 	public void keyPressed() {
 		boolean ctrlDown = keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL);
 		keyCodeMap.keyPressed(keyCode, key);
-		
-		
 
 		if (key == 27) {
 			// Disable the window exiting function of the 'esc' key
