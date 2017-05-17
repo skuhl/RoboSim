@@ -16,24 +16,6 @@ public class ModelShape extends Shape {
 	/**
 	 * Create a complex model from the soruce .stl file of the
 	 * given name, filename, stored in the '/RobotRun/data/'
-	 * with the given fill color.
-	 * 
-	 * @throws NullPointerException  if the given filename is
-	 *         not a valid .stl file in RobotRun/data/
-	 */
-	public ModelShape(String filename, int fill, RobotRun app) throws NullPointerException {
-		super(fill, null);
-		this.app = app;
-		srcFilePath = filename;
-		scale = 1f;
-
-		model = app.loadSTLModel(filename, fill);
-		iniDimensions();
-	}
-
-	/**
-	 * Create a complex model from the soruce .stl file of the
-	 * given name, filename, stored in the '/RobotRun/data/'
 	 * with the given fill color and scale value.
 	 * 
 	 * @throws NullPointerException  if the given filename is
@@ -49,6 +31,24 @@ public class ModelShape extends Shape {
 		iniDimensions();
 
 		setDim(scale, DimType.SCALE);
+	}
+
+	/**
+	 * Create a complex model from the soruce .stl file of the
+	 * given name, filename, stored in the '/RobotRun/data/'
+	 * with the given fill color.
+	 * 
+	 * @throws NullPointerException  if the given filename is
+	 *         not a valid .stl file in RobotRun/data/
+	 */
+	public ModelShape(String filename, int fill, RobotRun app) throws NullPointerException {
+		super(fill, null);
+		this.app = app;
+		srcFilePath = filename;
+		scale = 1f;
+
+		model = app.loadSTLModel(filename, fill);
+		iniDimensions();
 	}
 	
 	@Override
@@ -86,10 +86,19 @@ public class ModelShape extends Shape {
 		}
 	}
 	
+	@Override
+	public float[] getDimArray() {
+		float[] dims = new float[3];
+		dims[0] = getDim(DimType.LENGTH);
+		dims[1] = getDim(DimType.HEIGHT);
+		dims[2] = getDim(DimType.WIDTH);
+		return dims;
+	}
+	
 	public PShape getModel() {
 		return model;
 	}
-	
+
 	public String getSourcePath() { return srcFilePath; }
 
 	/**

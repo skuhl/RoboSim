@@ -77,6 +77,15 @@ public class Box extends Shape {
 		default:      return -1f;
 		}
 	}
+	
+	@Override
+	public float[] getDimArray() {
+		float[] dims = new float[3];
+		dims[0] = getDim(DimType.LENGTH);
+		dims[1] = getDim(DimType.HEIGHT);
+		dims[2] = getDim(DimType.WIDTH);
+		return dims;
+	}
 
 	@Override
 	public void setDim(Float newVal, DimType dim) {

@@ -1,7 +1,6 @@
 package programming;
 import global.Fields;
 import robot.RobotRun;
-import robot.RoboticArm;
 
 public class IOInstruction extends Instruction {
 	int state;
