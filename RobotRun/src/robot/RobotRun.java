@@ -339,6 +339,29 @@ public class RobotRun extends PApplet {
 	private Point displayPoint;
 	
 	/**
+	 * Applies the active camera to the matrix stack.
+	 * 
+	 * @param	The camera to apply
+	 */
+	public void applyCamera(Camera c) {
+		PVector cPos = c.getPosition();
+		PVector cOrien = c.getOrientation();
+		float horizontalMargin = c.getScale() * width / 2f,
+				verticalMargin = c.getScale() * height / 2f,
+				near = -5000f,
+				far = 5000f;
+		
+		translate(cPos.x + width / 2f, cPos.y + height / 2f,  cPos.z);
+
+		rotateX(cOrien.x);
+		rotateY(cOrien.y);
+		
+		// Apply orthogonal camera view
+		ortho(-horizontalMargin, horizontalMargin, -verticalMargin,
+				verticalMargin, near, far);
+	}
+	
+	/**
 	 * Wrapper method for applying the coordinate frame defined by the given
 	 * row major rotation matrix and position vector.
 	 * 
@@ -747,7 +770,7 @@ public class RobotRun extends PApplet {
 	public void BackView() {
 		// Back view
 		camera.reset();
-		camera.rotate(0, PI, 0);
+		camera.rotate(0f, PI, 0f);
 	}
 	
 	/**
@@ -875,7 +898,7 @@ public class RobotRun extends PApplet {
 	public void BottomView() {
 		// Bottom view
 		camera.reset();
-		camera.rotate(PI / 2f, 0, 0);
+		camera.rotate(PI / 2f, 0f, 0f);
 	}
 	
 	/**
@@ -1497,49 +1520,18 @@ public class RobotRun extends PApplet {
 	@Override
 	public void draw() {
 		try {
-			// Apply the camera for drawing objects
+			background(255);
+			
+			hint(ENABLE_DEPTH_TEST);
 			directionalLight(255, 255, 255, 1, 1, 0);
 			ambientLight(150, 150, 150);
 	
-			background(127);
-	
-			hint(ENABLE_DEPTH_TEST);
-			background(255);
-			noStroke();
-			noFill();
-	
 			pushMatrix();
-			camera.apply(this);
-			//printMatrix();
-			drawScene(activeScenario, getActiveRobot());
-	
+			// Apply the camera for drawing objects
+			applyCamera(camera);
 			renderCoordAxes();
+			renderScene(getActiveScenario(), getActiveRobot());
 			renderTeachPoints();
-	
-			WorldObject wldObj = UI.getSelectedWO();
-	
-			if (wldObj != null) {
-				pushMatrix();
-	
-				if (wldObj instanceof Part) {
-					Fixture reference = ((Part) wldObj).getFixtureRef();
-	
-					if (reference != null) {
-						// Draw part's orientation with reference to its fixture
-						reference.applyCoordinateSystem();
-					}
-				}
-	
-				renderOriginAxes(wldObj.getLocalCenter(), RMath.rMatToWorld(wldObj.getLocalOrientationAxes()),
-						500f, color(0));
-	
-				popMatrix();
-			}
-	
-			if (displayPoint != null) {
-				// Display the point with its local orientation axes
-				renderOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
-			}
 	
 			/*TESTING CODE: DRAW INTERMEDIATE POINTS*
 			if(Fields.DEBUG && intermediatePositions != null) {
@@ -1608,81 +1600,17 @@ public class RobotRun extends PApplet {
 			System.out.println(c.checkObjectInFrame(f));
 			/**/
 			
-			noLights();
-			noStroke();
 			popMatrix();
-	
+			
 			hint(DISABLE_DEPTH_TEST);
-			// Apply the camera for drawing text and windows
-			ortho();
+			noLights();
+			
 			renderUI();
 			
 		} catch (Exception Ex) {
 			DataManagement.errLog(Ex);
 			throw Ex;
 		}
-	}
-
-	/**
-	 * Updates the position and orientation of the Robot as well as all the
-	 * World Objects associated with the current scenario. Updates the bounding
-	 * box color, position and oientation of the Robot and all World Objects as
-	 * well. Finally, all the World Objects and the Robot are drawn.
-	 * 
-	 * @param s
-	 *            The currently active scenario
-	 * @param active
-	 *            The currently selected program
-	 * @param model
-	 *            The Robot Arm model
-	 */
-	public void drawScene(Scenario s, RoboticArm model) {
-		model.updateRobot();
-
-		if (RobotRun.getInstance().isProgramRunning()) {
-			Program ap = model.getActiveProg();
-
-			// Check the call stack for any waiting processes
-			if (ap != null && model.getActiveInstIdx() == ap.getNumOfInst()) {
-				CallFrame ret = model.popCallStack();
-
-				if (ret != null) {
-					RoboticArm tgtDevice = ROBOTS.get(ret.getTgtRID());
-					tgtDevice.setActiveProgIdx(ret.getTgtProgID());
-					tgtDevice.setActiveInstIdx(ret.getTgtInstID());
-					activeRobot = tgtDevice;
-
-					// Update the display
-					getContentsMenu().setLineIdx(model.getActiveInstIdx());
-					getContentsMenu().setColumnIdx(0);
-					updatePendantScreen();
-				}
-			}
-		}
-
-		if (s != null) {
-			s.resetObjectHitBoxColors();
-		}
-
-		model.resetOBBColors();
-		model.checkSelfCollisions();
-
-		if (s != null) {
-			s.updateAndDrawObjects(model);
-		}
-
-		if (UI.getRobotButtonState()) {
-			// Draw all robots
-			for (RoboticArm r : ROBOTS.values()) {
-				r.draw();
-			}
-
-		} else {
-			// Draw only the active robot
-			activeRobot.draw();
-		}
-
-		model.updatePreviousEEOrientation();
 	}
 
 	/**
@@ -4932,7 +4860,7 @@ public class RobotRun extends PApplet {
 	public void LeftView() {
 		// Left view
 		camera.reset();
-		camera.rotate(0, PI / 2f, 0);
+		camera.rotate(0f, PI / 2f, 0f);
 	}
 
 	/**
@@ -5845,30 +5773,29 @@ public class RobotRun extends PApplet {
 	public void mouseDragged(MouseEvent e) {
 		if (mouseButton == CENTER) {
 			// Drag the center mouse button to pan the camera
-			float transScale = camera.getScale();
-			camera.move(transScale * (pmouseX - mouseX), transScale * (mouseY - pmouseY), 0);
+			camera.translate(mouseX - pmouseX, mouseY - pmouseY, 0f);
 		}
 
 		if (mouseButton == RIGHT) {
 			// Drag right mouse button to rotate the camera
-			float rotScale = DEG_TO_RAD / 4f;
-			camera.rotate(rotScale * (mouseY - pmouseY), rotScale * (mouseX - pmouseX), 0);
+			camera.rotate(mouseY - pmouseY, mouseX - pmouseX, 0f);
 		}
 	}
 
 	@Override
 	public void mouseWheel(MouseEvent event) {
 		if (UI != null && UI.isMouseOverADropdownList()) {
-			// Disable zomming when selecting an element from a dropdown list
+			// Disable zooming when selecting an element from a dropdown list
 			return;
 		}
 
 		float e = event.getCount();
-		// Control scaling of the camera with the mouse wheel
+		/* Control scaling of the camera with the mouse wheel */
 		if (e > 0) {
-			camera.changeScale(1.05f);
+			camera.scale(1.05f);
+			
 		} else if (e < 0) {
-			camera.changeScale(0.95f);
+			camera.scale(0.95f);
 		}
 	}
 
@@ -6671,6 +6598,95 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
+	 * Updates the position and orientation of the Robot as well as all the
+	 * World Objects associated with the current scenario. Updates the bounding
+	 * box color, position and oientation of the Robot and all World Objects as
+	 * well. Finally, all the World Objects and the Robot are drawn.
+	 * 
+	 * @param s
+	 *            The currently active scenario
+	 * @param active
+	 *            The currently selected program
+	 * @param model
+	 *            The Robot Arm model
+	 */
+	public void renderScene(Scenario s, RoboticArm model) {
+		model.updateRobot();
+
+		if (RobotRun.getInstance().isProgramRunning()) {
+			Program ap = model.getActiveProg();
+
+			// Check the call stack for any waiting processes
+			if (ap != null && model.getActiveInstIdx() == ap.getNumOfInst()) {
+				CallFrame ret = model.popCallStack();
+
+				if (ret != null) {
+					RoboticArm tgtDevice = ROBOTS.get(ret.getTgtRID());
+					tgtDevice.setActiveProgIdx(ret.getTgtProgID());
+					tgtDevice.setActiveInstIdx(ret.getTgtInstID());
+					activeRobot = tgtDevice;
+
+					// Update the display
+					getContentsMenu().setLineIdx(model.getActiveInstIdx());
+					getContentsMenu().setColumnIdx(0);
+					updatePendantScreen();
+				}
+			}
+		}
+
+		if (s != null) {
+			s.resetObjectHitBoxColors();
+		}
+
+		model.resetOBBColors();
+		model.checkSelfCollisions();
+
+		if (s != null) {
+			s.updateAndDrawObjects(model);
+		}
+
+		if (UI.getRobotButtonState()) {
+			// Draw all robots
+			for (RoboticArm r : ROBOTS.values()) {
+				r.draw();
+			}
+
+		} else {
+			// Draw only the active robot
+			activeRobot.draw();
+		}
+		
+		/* Render the axes of the selected World Object */
+		
+		WorldObject wldObj = UI.getSelectedWO();
+		
+		if (wldObj != null) {
+			pushMatrix();
+
+			if (wldObj instanceof Part) {
+				Fixture reference = ((Part) wldObj).getFixtureRef();
+
+				if (reference != null) {
+					// Draw part's orientation with reference to its fixture
+					reference.applyCoordinateSystem();
+				}
+			}
+
+			renderOriginAxes(wldObj.getLocalCenter(), RMath.rMatToWorld(wldObj.getLocalOrientationAxes()),
+					500f, color(0));
+
+			popMatrix();
+		}
+
+		if (displayPoint != null) {
+			// Display the point with its local orientation axes
+			renderOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
+		}
+
+		model.updatePreviousEEOrientation();
+	}
+	
+	/**
 	 * Display any currently taught points during the processes of either the
 	 * 3-Point, 4-Point, or 6-Point Methods.
 	 */
@@ -6744,6 +6760,10 @@ public class RobotRun extends PApplet {
 	 * Displays all the windows and the right-hand text display.
 	 */
 	public void renderUI() {
+		pushMatrix();
+		ortho();
+		
+		pushStyle();
 		textFont(Fields.medium, 14);
 		fill(0);
 		textAlign(RIGHT, TOP);
@@ -6884,6 +6904,25 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
+		if (Fields.DEBUG) {
+			String[] fields = camera.toStringArray();
+			
+			lastTextPositionY += 20;
+			// Add space padding
+			text("Camera", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+			text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]),
+					lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+			text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]),
+					lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+			text(String.format("%s", fields[6]), lastTextPositionX,
+					lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+		
+		pushStyle();
 		fill(215, 0, 0);
 		lastTextPositionY += 20;
 
@@ -6916,7 +6955,7 @@ public class RobotRun extends PApplet {
 			lastTextPositionY += 20;
 		}
 		
-		fill(0);
+		popStyle();
 
 		// Display the current axes display state
 		text(String.format("Axes Display: %s", getAxesState().name()), lastTextPositionX, height - 50);
@@ -6926,7 +6965,11 @@ public class RobotRun extends PApplet {
 			text(String.format("EE Mapping: %s", getEEMapping().name()), lastTextPositionX, height - 30);
 		}
 
+		popStyle();
+		
 		UI.updateWindowDisplay();
+		
+		popMatrix();
 	}
 	
 	/**
@@ -7012,7 +7055,7 @@ public class RobotRun extends PApplet {
 	public void RightView() {
 		// Right view
 		camera.reset();
-		camera.rotate(0, 3f * PI / 2f, 0);
+		camera.rotate(0, 3f * PI / 2f, 0f);
 	}
 
 	/**
@@ -7430,7 +7473,7 @@ public class RobotRun extends PApplet {
 	public void TopView() {
 		// Top view
 		camera.reset();
-		camera.rotate(3f * PI / 2f, 0, 0);
+		camera.rotate(3f * PI / 2f, 0f, 0f);
 	}
 
 	/**

@@ -1,5 +1,8 @@
 package ui;
+
+import global.MyFloatFormat;
 import global.RMath;
+import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PVector;
 import robot.RobotRun;
@@ -9,45 +12,20 @@ import robot.RobotRun;
  * and the methods to manipulate apply the Camera's transformation.
  */
 public class Camera {
-	private static final float MAX_SCALE = 8f;
-	private PVector position,
+	private static final float MIN_SCALE = 0.25f, MAX_SCALE = 8f;
+	
+	private PVector position;
 	// Rotations in X, Y, Z in radians
-	orientation;
+	private PVector orientation;
 	private float scale;
-
+	
 	/**
 	 * Creates a camera with the default position, orientation and scale.
 	 */
 	public Camera() {
-		position = new PVector(0f, 0f, -500f);
+		position = new PVector(0f, 0f, 0f);
 		orientation = new PVector(0f, 0f, 0f);
 		scale = 2f;
-	}
-
-	/**
-	 * Apply the camer's scale, position, and orientation to the current matrix.
-	 */
-	public void apply(RobotRun app) {
-		PVector screenPos = new PVector(position.x + app.width / 2f, position.y + app.height / 2f, position.z);
-		
-		float horizontalMargin = scale * app.width / 2f,
-				verticalMargin = scale * app.height / 2f,
-				near = scale * screenPos.z,
-				far = scale * 5000f;
-		
-		// Apply orthogonal camera view
-		app.ortho(screenPos.x - horizontalMargin, screenPos.x + horizontalMargin,
-				screenPos.y - verticalMargin, screenPos.y + verticalMargin, near, far);
-		
-		app.rotateX(orientation.x);
-		app.rotateY(orientation.y);
-	}
-
-	/**
-	 * Change the scaling of the camera.
-	 */
-	public void changeScale(float multiplier) {
-		scale = Math.max(0.25f, Math.min(scale * multiplier, MAX_SCALE));
 	}
 
 	/**
@@ -64,26 +42,9 @@ public class Camera {
 		return copy;
 	}
 
-	public PVector getOrientation() { return orientation; }
-
-	// Getters for the Camera's position, orientation, and scale
-	public PVector getPosition() { return position; }
-
+	public PVector getOrientation() { return orientation.copy(); }
+	public PVector getPosition() { return position.copy(); }
 	public float getScale() { return scale; }
-
-	/**
-	 * Change the camera's position by the given values.
-	 */
-	public void move(float x, float y, float z) {
-		float horzontialLimit = MAX_SCALE * 9999f,
-				verticalLimit = MAX_SCALE * 9999f;
-
-		position.add( new PVector(x, y, z) );
-		// Apply camera position restrictions
-		position.x = Math.max(-horzontialLimit, Math.min(position.x, horzontialLimit));
-		position.y = Math.max(-verticalLimit, Math.min(position.y, verticalLimit));
-		position.z = Math.max(-1000f, Math.min(position.z, 1000f));
-	}
 
 	/**
 	 * Return the camera perspective to the
@@ -92,23 +53,46 @@ public class Camera {
 	public void reset() {
 		position.x = 0f;
 		position.y = 0f;
-		position.z = -500f;
+		position.z = 0f;
 		orientation.x = 0f;
 		orientation.y = 0f;
 		orientation.z = 0f;
 		scale = 2f;
 	}
-	/**
-	 * Change the camera's rotation by the given values.
-	 */
-	public void rotate(float w, float p, float r) {
-		PVector rotation = new PVector(w, p, r);
 
-		orientation.add( rotation );
+	/**
+	 * Rotates the camera by the given xyz-rotation.
+	 * 
+	 * @param dw	x-rotation
+	 * @param dp	y-rotation
+	 * @param dr	z-rotation
+	 */
+	public void rotate(float dw, float dp, float dr) {
+		PVector delta = new PVector(dw, dp, dr);
+		float deltaScale = RMath.DEG_TO_RAD / 4f;
+		
+		if (scale < 1f) {
+			// Only reduce rotation scaling
+			deltaScale *= scale;
+		}
+		
+		// Apply rotation
+		orientation.add( delta.mult(deltaScale) );
+		
 		// Apply camera rotation restrictions
 		orientation.x = RMath.mod2PI(orientation.x);
 		orientation.y = RMath.mod2PI(orientation.y);
-		orientation.z = 0f;//mod2PI(orientation.z);
+		orientation.z = RMath.mod2PI(orientation.z);
+	}
+	
+	/**
+	 * Scales the camera by the given multiplier
+	 * 
+	 * @param multiplier	The multiplier to apply to the camer's current
+	 * 						scale
+	 */
+	public void scale(float multiplier) {
+		scale = Math.max(MIN_SCALE, Math.min(scale * multiplier, MAX_SCALE));
 	}
 	
 	/**
@@ -116,31 +100,47 @@ public class Camera {
 	 * in the form of a formatted String array, where each
 	 * entry is one of the following values:
 	 * 
-	 * Title String
-	 * X - The camera's x -position value
-	 * Y - The camera's y-position value
-	 * Z - The camera's z-position value
-	 * W - The camera's x-rotation value
-	 * P - The camera's y-rotation value
-	 * R - The camera's z-rotation value
-	 * S - The camera's scale value
+	 * 0	The camera's x-position value
+	 * 1	The camera's y-position value
+	 * 2	The camera's z-position value
+	 * 3	The camera's x-rotation value
+	 * 4	The camera's y-rotation value
+	 * 5	The camera's z-rotation value
+	 * 6	The camera's scale value
 	 * 
-	 * @returning  A 6-element String array
+	 * @returning  A 7-element String array
 	 */
 	public String[] toStringArray() {
-		String[] fields = new String[8];
+		String[] fields = new String[7];
 		// Display rotation in degrees
 		PVector inDegrees = PVector.mult(orientation, PConstants.RAD_TO_DEG);
-
-		fields[0] = "Camera Fields";
-		fields[1] = String.format("X: %6.9f", position.x);
-		fields[2] = String.format("Y: %6.9f", position.y);
-		fields[3] = String.format("Z: %6.9f", position.z);
-		fields[4] = String.format("W: %6.9f", inDegrees.x);
-		fields[5] = String.format("P: %6.9f", inDegrees.y);
-		fields[6] = String.format("R: %6.9f", inDegrees.z);
-		fields[7] = String.format("S: %3.9f", scale);
-
+		
+		fields[0] = "X: " + MyFloatFormat.format(position.x);
+		fields[1] = "Y: " + MyFloatFormat.format(position.y);
+		fields[2] = "Z: " + MyFloatFormat.format(position.z);
+		fields[3] = "W: " + MyFloatFormat.format(inDegrees.x);
+		fields[4] = "P: " + MyFloatFormat.format(inDegrees.y);
+		fields[5] = "R: " + MyFloatFormat.format(inDegrees.z);
+		fields[6] = "S: " + MyFloatFormat.format(scale);
+		
 		return fields;
+	}
+	
+	/**
+	 * Translates the camera by the given xyz-translation.
+	 * 
+	 * @param dx	Change in x position
+	 * @param dy	Change in y position
+	 * @param dz	Change in z position
+	 */
+	public void translate(float dx, float dy, float dz) {
+		// Apply translation
+		PVector delta = new PVector(dx, dy, dz);
+		position.add( delta.mult(scale) );
+		
+		// Apply camera position restrictions
+		float limit = scale * 9999f;
+		position.x = Math.max(-limit, Math.min(position.x, limit));
+		position.y = Math.max(-limit, Math.min(position.y, limit));
 	}
 }
