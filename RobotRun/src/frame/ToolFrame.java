@@ -3,6 +3,7 @@ import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
 import global.Fields;
+import global.MyFloatFormat;
 import global.RMath;
 import processing.core.PVector;
 import robot.RobotRun;
@@ -174,18 +175,18 @@ public class ToolFrame extends Frame {
 		String[] values = new String[6];
 
 		PVector displayOffset;
-		// Convert angles to degrees
+		/* Convert orientation in to euler angles, in degree, with reference
+		 * to the world frame */
 		PVector wpr = RMath.nQuatToWEuler(orientationOffset);
 
 		displayOffset = getTCPOffset();
 
-		values[0] = String.format("X: %4.3f", displayOffset.x);
-		values[1] = String.format("Y: %4.3f", displayOffset.y);
-		values[2] = String.format("Z: %4.3f", displayOffset.z);
-		// Display angles in terms of the World frame
-		values[3] = String.format("W: %4.3f", wpr.x);
-		values[4] = String.format("P: %4.3f", wpr.y);
-		values[5] = String.format("R: %4.3f", wpr.z);
+		values[0] = MyFloatFormat.format(displayOffset.x);
+		values[1] = MyFloatFormat.format(displayOffset.y);
+		values[2] = MyFloatFormat.format(displayOffset.z);
+		values[3] = MyFloatFormat.format(wpr.x);
+		values[4] = MyFloatFormat.format(wpr.y);
+		values[5] = MyFloatFormat.format(wpr.z);
 
 		return values;
 	}

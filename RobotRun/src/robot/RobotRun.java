@@ -28,6 +28,7 @@ import geom.Triangle;
 import geom.WorldObject;
 import global.DataManagement;
 import global.Fields;
+import global.MyFloatFormat;
 import global.RMath;
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -6801,7 +6802,7 @@ public class RobotRun extends PApplet {
 
 		text(scenarioTitle, lastTextPositionX, lastTextPositionY);
 		lastTextPositionY += 40;
-		// Display the Robot's current position and orientation ini the World
+		// Display the Robot's current position and orientation in the World
 		// frame
 		text("Robot Position and Orientation", lastTextPositionX, lastTextPositionY);
 		lastTextPositionY += 20;
@@ -6849,12 +6850,7 @@ public class RobotRun extends PApplet {
 			// Convert the values into the World Coordinate System
 			PVector position = RMath.vToWorld(toEdit.getLocalCenter());
 			PVector wpr = RMath.nRMatToWEuler( toEdit.getLocalOrientationAxes() );
-			// Create a set of uniform Strings
-			String[] fields = new String[] {
-					String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
-					String.format("Z: %4.3f", position.z), String.format("W: %4.3f", wpr.x),
-					String.format("P: %4.3f", wpr.y), String.format("R: %4.3f", wpr.z)
-			};
+			
 
 			lastTextPositionY += 20;
 			text(toEdit.getName(), lastTextPositionX, lastTextPositionY);
@@ -6869,16 +6865,15 @@ public class RobotRun extends PApplet {
 					dimDisplay += String.format("%s", dimFields[idx]);
 				}
 			}
+			
+			// Create a set of uniform Strings
+			String[] lines = Fields.toLineStringArray(position, wpr);
 
 			text(dimDisplay, lastTextPositionX, lastTextPositionY);
-
 			lastTextPositionY += 20;
-			// Add space padding
-			text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX,
-					lastTextPositionY);
+			text(lines[0], lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
-			text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]), lastTextPositionX,
-					lastTextPositionY);
+			text(lines[1], lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 
 			if (toEdit instanceof Part) {
@@ -6886,41 +6881,35 @@ public class RobotRun extends PApplet {
 				// Convert the values into the World Coordinate System
 				position = RMath.vToWorld( p.getDefaultCenter() );
 				wpr = RMath.nRMatToWEuler( p.getDefaultOrientationAxes() );
+				
 				// Create a set of uniform Strings
-				fields = new String[] {
-						String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
-						String.format("Z: %4.3f", position.z), String.format("W: %4.3f", wpr.x),
-						String.format("P: %4.3f", wpr.y), String.format("R: %4.3f", wpr.z)
-				};
-
+				lines = Fields.toLineStringArray(position, wpr);
+				
 				lastTextPositionY += 20;
-				// Add space padding
-				text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX,
-						lastTextPositionY);
+				text(lines[0], lastTextPositionX, lastTextPositionY);
 				lastTextPositionY += 20;
-				text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]), lastTextPositionX,
-						lastTextPositionY);
+				text(lines[1], lastTextPositionX, lastTextPositionY);
 				lastTextPositionY += 20;
 			}
 		}
 		
+		/* Camera test output *
 		if (Fields.DEBUG) {
-			String[] fields = camera.toStringArray();
+			String[] lines = Fields.toLineStringArray(camera.getPosition(),
+					camera.getOrientation());
 			
 			lastTextPositionY += 20;
-			// Add space padding
 			text("Camera", lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
-			text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]),
-					lastTextPositionX, lastTextPositionY);
+			text(lines[0], lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
-			text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]),
-					lastTextPositionX, lastTextPositionY);
+			text(lines[1], lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
-			text(String.format("%s", fields[6]), lastTextPositionX,
+			text(MyFloatFormat.format(camera.getScale()), lastTextPositionX,
 					lastTextPositionY);
 			lastTextPositionY += 20;
 		}
+		/**/
 		
 		pushStyle();
 		fill(215, 0, 0);
