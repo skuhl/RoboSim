@@ -1,8 +1,9 @@
 package programming;
 import java.util.Arrays;
 
-import robot.RQuaternion;
 import geom.Point;
+import geom.RQuaternion;
+import global.RMath;
 import processing.core.PVector;
 import robot.RobotRun;
 
@@ -50,7 +51,7 @@ public class RegStmtPoint {
 		values = new float[6];
 		isCartesian = cartesian;
 		// Convert to W, P, R values
-		PVector wpr = RobotRun.quatToEuler(initial.orientation);
+		PVector wpr = RMath.quatToEuler(initial.orientation);
 		// Copy values into this point
 		getValues()[0] = initial.position.x;
 		getValues()[1] = initial.position.x;
@@ -78,6 +79,7 @@ public class RegStmtPoint {
 	/**
 	 * Returns an independent replica of this point object.
 	 */
+	@Override
 	public RegStmtPoint clone() {
 		return new RegStmtPoint(getValues(), isCartesian);
 	}
@@ -125,7 +127,7 @@ public class RegStmtPoint {
 			PVector position = new PVector(getValues()[0], getValues()[1], getValues()[2]),
 					wpr = new PVector(getValues()[3], getValues()[4], getValues()[5]);
 			// Convet back to quaternion
-			RQuaternion orientation = RobotRun.eulerToQuat(wpr);
+			RQuaternion orientation = RMath.eulerToQuat(wpr);
 			// TODO initialize angles?
 			return new Point(position, orientation);
 		} else {
@@ -134,6 +136,7 @@ public class RegStmtPoint {
 		}
 	}
 
+	@Override
 	public String toString() {
 		if (isCartesian) {
 			// X, Y, Z, W, P, R

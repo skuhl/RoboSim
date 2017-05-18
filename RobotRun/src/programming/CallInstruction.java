@@ -3,78 +3,90 @@ import robot.RobotRun;
 import robot.RoboticArm;
 
 public class CallInstruction extends Instruction {
-	int progIdx;
-	RoboticArm tgtDevice;
+	
+	private RoboticArm tgtDevice;
+	private Program tgt;
+	
+	/**
+	 * Primarily used for loading programs. Since programs are loaded
+	 * sequentially, some call instructions need a temporary
+	 * reference to a program. This field is NOT always equivalent
+	 * with the tgt's name, since the user can rename programs.
+	 */
+	private String loadedName;
 
 	public CallInstruction(RoboticArm robot) {
 		tgtDevice = robot;
-		progIdx = -1;
+		tgt = null;
+		loadedName = "...";
 	}
 		
-	public CallInstruction(RoboticArm tgt, int pdx) {
-		tgtDevice = tgt;
-		progIdx = pdx;
+	public CallInstruction(RoboticArm tgtDevice, Program tgt) {
+		this.tgtDevice = tgtDevice;
+		this.tgt = tgt;
+
+		loadedName = null;
+	}
+	
+	public CallInstruction(RoboticArm tgtDevice, String tgtName) {
+		this.tgtDevice = tgtDevice;
+		tgt= null;
+		this.loadedName = tgtName;
 	}
 
+	@Override
 	public Instruction clone() {
-		return new CallInstruction(tgtDevice, progIdx);
+		return new CallInstruction(tgtDevice, tgt);
 	}
 
 	// Getters and setters for a call instruction's program id field
 
+	@Override
 	public int execute() {
-		//Test validity of progIdx
-		if (progIdx < 0 || progIdx >= tgtDevice.numOfPrograms()) {
-			return -1;
-		}
+		RoboticArm r = RobotRun.getActiveRobot();
 		
 		// Save the current program state on tgt robot
-		tgtDevice.pushActiveProg();
+		tgtDevice.pushActiveProg(r);
 		// Set the new program state
-		tgtDevice.setActiveProgIdx(progIdx);
+		tgtDevice.setActiveProg(tgt);
 		tgtDevice.setActiveInstIdx(0);
-		RobotRun.getInstance().setActiveRobot(tgtDevice);
+		RobotRun.getInstance().setRobot(tgtDevice.RID);
 		// Update the screen
 		RobotRun.getInstance().getContentsMenu().reset();
-		RobotRun.getInstance().updateScreen();
+		RobotRun.getInstance().updatePendantScreen();
 
 		return 0;
 	}
 	
-	public int getProgIdx() { return progIdx; }
+	public Program getProg() { return tgt; }
+	
+	public String getLoadedName() { return loadedName; }
 	
 	public RoboticArm getTgtDevice() { return tgtDevice; }
 
-	/**
-	 * Returns the name of the program associated with this call
-	 * statement, or "..." if the call statement's program index
-	 * is invalid.
-	 */
-	private String progName() {
-		if (tgtDevice != null && tgtDevice.getProgram(progIdx) != null) {
-			return tgtDevice.getProgram(progIdx).getName();
-		}
-
-		return "...";
-	}
-
-	public void setProgIdx(int pdx) { progIdx = pdx; }
+	public void setProg(Program p) { tgt = p; }
 	
 	public void setTgtDevice(RoboticArm tgt) { tgtDevice = tgt; }
+	
+	private String getProgName() {
+		return (tgt == null) ? "..." : tgt.getName();
+	}
 
+	@Override
 	public String toString() {
 		if(tgtDevice == RobotRun.getActiveRobot()) {
-			return "Call " + progName();
+			return "Call " + getProgName();
 			
 		} else {
-			return "RCall " + progName();
+			return "RCall " + getProgName();
 		}
 	}
 
+	@Override
 	public String[] toStringArray() {
 		String[] ret = new String[2];
 		ret[0] = (tgtDevice == RobotRun.getActiveRobot()) ? "Call" : "RCall";
-		ret[1] = progName();
+		ret[1] = getProgName();
 
 		return ret;
 	}

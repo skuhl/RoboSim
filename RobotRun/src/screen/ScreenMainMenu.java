@@ -1,5 +1,6 @@
 package screen;
 
+import enums.ScreenMode;
 import robot.RobotRun;
 
 public class ScreenMainMenu extends Screen {
@@ -28,7 +29,6 @@ public class ScreenMainMenu extends Screen {
 
 	@Override
 	public void loadVars() {
-		robotRun.active_index = 0;
 		contents.reset();
 		contents.setColumnIdx(0);
 	}

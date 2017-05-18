@@ -1,7 +1,7 @@
 package screen;
 
+import enums.ScreenMode;
 import robot.RobotRun;
-import window.MenuScroll;
 
 public abstract class Screen {
 	public final ScreenMode mode;

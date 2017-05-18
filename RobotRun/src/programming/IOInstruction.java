@@ -18,15 +18,16 @@ public class IOInstruction extends Instruction {
 		reg = r;
 	}
 
+	@Override
 	public Instruction clone() {
 		Instruction copy = new IOInstruction(state, reg);
 		copy.setIsCommented( isCommented() );
 
 		return copy;
 	}
+	@Override
 	public int execute() {
-		RobotRun.getActiveRobot().endEffectorState = state;
-		RobotRun.getActiveRobot().checkPickupCollision(RobotRun.getInstance().activeScenario);
+		RobotRun.getActiveRobot().setEEState(state);
 		return 0;
 	}
 	public int getReg(){ return reg; }
@@ -36,6 +37,7 @@ public class IOInstruction extends Instruction {
 
 	public void setState(int s){ state = s; }
 
+	@Override
 	public String[] toStringArray() {
 		String[] fields = new String[2];
 		// Register index

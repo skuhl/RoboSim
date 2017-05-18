@@ -1,7 +1,5 @@
 package geom;
 import processing.core.PVector;
-import robot.CoordinateSystem;
-import robot.Fixture;
 import robot.RobotRun;
 
 /**
@@ -111,7 +109,7 @@ public abstract class WorldObject implements Cloneable {
 		return localOrientation.getOrigin();
 		}
 
-	public float[][] getLocalOrientationAxes() {
+	public RMatrix getLocalOrientationAxes() {
 		return localOrientation.getAxes();
 	}
 
@@ -129,12 +127,13 @@ public abstract class WorldObject implements Cloneable {
 		localOrientation.setOrigin(newCenter);
 	}
 	
-	public void setLocalOrientationAxes(float[][] newAxes) {
+	public void setLocalOrientationAxes(RMatrix newAxes) {
 		localOrientation.setAxes(newAxes);
 	}
 
 	public void setName(String newName) { name = newName; }
 
+	@Override
 	public String toString() { return name; }
 	/**
 	 * Updates all non-null values of the object's center position.

@@ -18,6 +18,7 @@ public interface ExpressionElement {
 	public static final int POSTN = 6;
 
 	public abstract int getLength();
+	@Override
 	public abstract String toString();
 	public abstract String[] toStringArray();
 }

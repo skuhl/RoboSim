@@ -60,6 +60,7 @@ public class Box extends Shape {
 		return new Box(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
 	}
 
+	@Override
 	public void draw() {
 		// Apply colors
 		applyColors();
@@ -75,6 +76,15 @@ public class Box extends Shape {
 		// Invalid dimension
 		default:      return -1f;
 		}
+	}
+	
+	@Override
+	public float[] getDimArray() {
+		float[] dims = new float[3];
+		dims[0] = getDim(DimType.LENGTH);
+		dims[1] = getDim(DimType.HEIGHT);
+		dims[2] = getDim(DimType.WIDTH);
+		return dims;
 	}
 
 	@Override

@@ -8,28 +8,10 @@ import robot.RobotRun;
  */
 public class ModelShape extends Shape {
 	private RobotRun app;
-	private PShape form;
+	private PShape model;
 	private PVector centerOffset, baseDims;
 	private float scale;
 	private String srcFilePath;
-
-	/**
-	 * Create a complex model from the soruce .stl file of the
-	 * given name, filename, stored in the '/RobotRun/data/'
-	 * with the given fill color.
-	 * 
-	 * @throws NullPointerException  if the given filename is
-	 *         not a valid .stl file in RobotRun/data/
-	 */
-	public ModelShape(String filename, int fill, RobotRun app) throws NullPointerException {
-		super(fill, null);
-		this.app = app;
-		srcFilePath = filename;
-		scale = 1f;
-
-		form = app.loadSTLModel(filename, fill);
-		iniDimensions();
-	}
 
 	/**
 	 * Create a complex model from the soruce .stl file of the
@@ -45,10 +27,28 @@ public class ModelShape extends Shape {
 		srcFilePath = filename;
 		this.scale = 1f;
 
-		form = app.loadSTLModel(filename, fill);
+		model = app.loadSTLModel(filename, fill);
 		iniDimensions();
 
 		setDim(scale, DimType.SCALE);
+	}
+
+	/**
+	 * Create a complex model from the soruce .stl file of the
+	 * given name, filename, stored in the '/RobotRun/data/'
+	 * with the given fill color.
+	 * 
+	 * @throws NullPointerException  if the given filename is
+	 *         not a valid .stl file in RobotRun/data/
+	 */
+	public ModelShape(String filename, int fill, RobotRun app) throws NullPointerException {
+		super(fill, null);
+		this.app = app;
+		srcFilePath = filename;
+		scale = 1f;
+
+		model = app.loadSTLModel(filename, fill);
+		iniDimensions();
 	}
 	
 	@Override
@@ -63,12 +63,13 @@ public class ModelShape extends Shape {
 		}
 	}
 
+	@Override
 	public void draw() {
 		RobotRun.getInstance().pushMatrix();
 		// Draw shape, where its center is at (0, 0, 0)
 		RobotRun.getInstance().translate(centerOffset.x, centerOffset.y, centerOffset.z);
 
-		RobotRun.getInstance().shape(form);
+		RobotRun.getInstance().shape(model);
 
 		RobotRun.getInstance().popMatrix();
 	}
@@ -84,6 +85,19 @@ public class ModelShape extends Shape {
 		default:     return -1f;
 		}
 	}
+	
+	@Override
+	public float[] getDimArray() {
+		float[] dims = new float[3];
+		dims[0] = getDim(DimType.LENGTH);
+		dims[1] = getDim(DimType.HEIGHT);
+		dims[2] = getDim(DimType.WIDTH);
+		return dims;
+	}
+	
+	public PShape getModel() {
+		return model;
+	}
 
 	public String getSourcePath() { return srcFilePath; }
 
@@ -97,11 +111,11 @@ public class ModelShape extends Shape {
 		PVector maximums = new PVector(Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE),
 				minimums = new PVector(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
 
-		int vertexCount = form.getVertexCount();
+		int vertexCount = model.getVertexCount();
 
 		// Calculate the maximum and minimum values for each dimension
 		for (int idx = 0; idx < vertexCount; ++idx) {
-			PVector v = form.getVertex(idx);
+			PVector v = model.getVertex(idx);
 
 			if (v.x > maximums.x) {
 				maximums.x = v.x;
@@ -138,7 +152,7 @@ public class ModelShape extends Shape {
 		case SCALE:
 			// Update the model's scale
 			centerOffset.mult(newVal / scale);
-			form.scale(newVal / scale);
+			model.scale(newVal / scale);
 			scale = newVal;
 			break;
 

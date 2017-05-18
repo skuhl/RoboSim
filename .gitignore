@@ -1,5 +1,12 @@
 *.bin
 *.out
+*.log
 RobotRun/img/Thumbs.db
 RobotRun/bin/*
-/RobotRun/tmp/*
+<<<<<<< HEAD
+RobotRun/tmp/robot0
+RobotRun/tmp/robot1
+=======
+RobotRun/tmp/*
+RobotRun/err/*
+>>>>>>> dev

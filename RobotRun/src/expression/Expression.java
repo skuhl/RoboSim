@@ -1,13 +1,13 @@
 package expression;
 import java.util.ArrayList;
 
-import robot.RobotRun;
+import processing.core.PApplet;
 
 public class Expression extends AtomicExpression {
 	private ArrayList<ExpressionElement> elementList;
 
 	public Expression() {
-		elementList = new ArrayList<ExpressionElement>();
+		elementList = new ArrayList<>();
 		elementList.add(new ExprOperand());
 	}
 
@@ -15,29 +15,31 @@ public class Expression extends AtomicExpression {
 		elementList = e;
 	}
 
+	@Override
 	public Expression clone() {
-		ArrayList<ExpressionElement> newList = new ArrayList<ExpressionElement>();
+		ArrayList<ExpressionElement> newList = new ArrayList<>();
 		for(ExpressionElement e : elementList) {
 			if(e instanceof ExprOperand) {
 				newList.add(((ExprOperand)e).clone());
 			} else {
-				newList.add((Operator)e);
+				newList.add(e);
 			}
 		}
 
 		return new Expression(newList);
 	}
 
+	@Override
 	public ExprOperand evaluate() {
 		if(elementList.get(0) instanceof Operator || elementList.size() % 2 != 1) { 
-			RobotRun.println("Expression formatting error");
+			PApplet.println("Expression formatting error");
 			return null;
 		}
 
 		ExprOperand result = (ExprOperand)elementList.get(0);    
 		for(int i = 1; i < elementList.size(); i += 2) {
 			if(!(elementList.get(i) instanceof Operator) || !(elementList.get(i + 1) instanceof ExprOperand)) {
-				RobotRun.println("Expression formatting error");
+				PApplet.println("Expression formatting error");
 				return null;
 			} 
 			else {
@@ -57,6 +59,7 @@ public class Expression extends AtomicExpression {
 		return elementList.get(idx);
 	}
 
+	@Override
 	public int getLength() {
 		int len = 2;
 		for(ExpressionElement e: elementList) {
@@ -150,21 +153,24 @@ public class Expression extends AtomicExpression {
 	}
 
 	public void removeElement(int edit_idx) {
-		if(elementList.size() > 1) {
+		if(elementList.size() > 1 && edit_idx >= 0) {
 			int[] elements = mapToEdit();
-			int start_idx = getStartingIdx(elements[edit_idx]);
-			ExpressionElement e = elementList.get(elements[edit_idx]);
-
-			if(e instanceof Expression) {
-				if(edit_idx == start_idx || edit_idx == start_idx + e.getLength() - 1) {
+			
+			if (edit_idx < elements.length) {
+				int start_idx = getStartingIdx(elements[edit_idx]);
+				ExpressionElement e = elementList.get(elements[edit_idx]);
+	
+				if(e instanceof Expression) {
+					if(edit_idx == start_idx || edit_idx == start_idx + e.getLength() - 1) {
+						elementList.remove(elements[edit_idx]);
+					} else {
+						edit_idx -= (start_idx + 1);
+						((Expression)e).removeElement(edit_idx);
+					}
+				} 
+				else {
 					elementList.remove(elements[edit_idx]);
-				} else {
-					edit_idx -= (start_idx + 1);
-					((Expression)e).removeElement(edit_idx);
 				}
-			} 
-			else {
-				elementList.remove(elements[edit_idx]);
 			}
 		}
 	}
@@ -189,6 +195,7 @@ public class Expression extends AtomicExpression {
 		}
 	}
 
+	@Override
 	public String toString() {
 		String ret = "(" + elementList.get(0).toString();
 		for(int i = 0; i < elementList.size(); i += 1) {
@@ -199,6 +206,7 @@ public class Expression extends AtomicExpression {
 		return ret;
 	}
 
+	@Override
 	public String[] toStringArray() {
 		String[] ret = new String[this.getLength()];
 		ret[0] = "(";

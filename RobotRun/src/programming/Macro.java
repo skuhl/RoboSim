@@ -23,7 +23,7 @@ public class Macro {
 		RobotRun app = RobotRun.getInstance();
 		
 		// Stop any prior Robot movement
-		app.hd();
+		app.hold();
 		// Safeguard against editing a program while it is running
 		app.getContentsMenu().setColumnIdx(0);
 		RobotRun.getActiveRobot().setActiveProgIdx(progIdx);
@@ -53,6 +53,7 @@ public class Macro {
 
 	public void setProgram(int idx) { progIdx = idx; }
 
+	@Override
 	public String toString() {
 		String[] str = toStringArray();
 		return str[0] + " " + str[1] + " " + str[2];

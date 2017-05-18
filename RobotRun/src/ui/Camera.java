@@ -1,4 +1,7 @@
 package ui;
+import global.RMath;
+import processing.core.PConstants;
+import processing.core.PMatrix;
 import processing.core.PVector;
 import robot.RQuaternion;
 import robot.RobotRun;
@@ -29,10 +32,29 @@ public class Camera {
 	public void apply(RobotRun app) {
 		PVector screenPos = new PVector(position.x + app.width / 2f, position.y + app.height / 2f, position.z);
 		
+<<<<<<< HEAD
 		float horizontalMargin = scale * app.width / 2f,
 				verticalMargin = scale * app.height / 2f,
 				near = scale * screenPos.z,
 				far = scale * 5000f;
+=======
+		app.beginCamera();
+		app.camera();
+		
+		// Apply camera translations
+		app.translate(position.x + app.width / 2f, position.y + app.height / 2f, position.z);
+		
+		// Apply camera rotations
+		app.rotateX(orientation.x);
+		app.rotateY(orientation.y);
+
+		// Apply camera scaling
+		float horizontalMargin = scale * app.width / 2f,
+				verticalMargin = scale * app.height / 2f,
+				near = -50000f,
+				far = 50000f;
+		app.ortho(-horizontalMargin, horizontalMargin, -verticalMargin, verticalMargin, near, far);
+>>>>>>> current
 		
 		// Apply orthogonal camera view
 		app.ortho(screenPos.x - horizontalMargin, screenPos.x + horizontalMargin,
@@ -52,6 +74,7 @@ public class Camera {
 	/**
 	 * Returns an independent replica of the Camera object.
 	 */
+	@Override
 	public Camera clone() {
 		Camera copy = new Camera();
 		// Copy position, orientation, and scale
@@ -104,8 +127,8 @@ public class Camera {
 
 		orientation.add( rotation );
 		// Apply camera rotation restrictions
-		orientation.x = RobotRun.mod2PI(orientation.x);
-		orientation.y = RobotRun.mod2PI(orientation.y);
+		orientation.x = RMath.mod2PI(orientation.x);
+		orientation.y = RMath.mod2PI(orientation.y);
 		orientation.z = 0f;//mod2PI(orientation.z);
 	}
 	
@@ -128,7 +151,7 @@ public class Camera {
 	public String[] toStringArray() {
 		String[] fields = new String[8];
 		// Display rotation in degrees
-		PVector inDegrees = PVector.mult(orientation, RobotRun.RAD_TO_DEG);
+		PVector inDegrees = PVector.mult(orientation, PConstants.RAD_TO_DEG);
 
 		fields[0] = "Camera Fields";
 		fields[1] = String.format("X: %6.9f", position.x);
