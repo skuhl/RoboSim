@@ -5307,22 +5307,22 @@ public class RobotRun extends PApplet {
 		PShape[] models = new PShape[13];
 		
 		// End Effectors
-		models[0] = loadSTLModel("SUCTION.stl", color(108, 206, 214));
-		models[1] = loadSTLModel("GRIPPER.stl", color(108, 206, 214));
-		models[2] = loadSTLModel("PINCER.stl", color(200, 200, 0));
+		models[0] = loadSTLModel("robot/EE/SUCTION.stl", color(108, 206, 214));
+		models[1] = loadSTLModel("robot/EE/GRIPPER.stl", color(108, 206, 214));
+		models[2] = loadSTLModel("robot/EE/PINCER.stl", color(200, 200, 0));
 		models[2].scale(1f);
-		models[3] = loadSTLModel("POINTER.stl", color(108, 206, 214));
-		models[4] = loadSTLModel("GLUE_GUN.stl", color(108, 206, 214));
-		models[5] = loadSTLModel("WIELDER.stl", color(108, 206, 214));
+		models[3] = loadSTLModel("robot/EE/POINTER.stl", color(108, 206, 214));
+		models[4] = loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214));
+		models[5] = loadSTLModel("robot/EE/WIELDER.stl", color(108, 206, 214));
 
 		// Body/joint models
-		models[6] = loadSTLModel("ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
-		models[7] = loadSTLModel("ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
-		models[8] = loadSTLModel("ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
-		models[9] = loadSTLModel("ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
-		models[10] = loadSTLModel("ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
-		models[11] = loadSTLModel("ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0));
-		models[12] = loadSTLModel("ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40));
+		models[6] = loadSTLModel("robot/ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
+		models[7] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
+		models[8] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
+		models[9] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
+		models[10] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
+		models[11] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0));
+		models[12] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40));
 
 		return models;
 	}
