@@ -800,6 +800,8 @@ public class RoboticArm {
 		drawEndEffector(activeEndEffector, endEffectorState);
 
 		RobotRun.getInstance().popMatrix();
+		curRobotPt = getRobotEEPosition();
+		System.out.println(curRobotPt.toString());
 		/* My sketchy work-around for drawing only the bounding boxes of the
 		 * active robot */
 		if (RobotRun.getActiveRobot() == this) {
@@ -808,7 +810,6 @@ public class RoboticArm {
 				}
 				
 				if(trace) {
-					curRobotPt = getRobotEEPosition();
 					drawTrace();
 				}
 		}
@@ -1429,7 +1430,7 @@ public class RoboticArm {
 		float[] matArray = new float[16];
 		mat.get(matArray);
 		
-		PVector pos = new PVector(matArray[3], matArray[7], matArray[9]);
+		PVector pos = new PVector(matArray[3], matArray[7], matArray[11]);
 		RMatrix orient = new RMatrix(new float[][]{
 			{matArray[0], matArray[1], matArray[2]},
 			{matArray[4], matArray[5], matArray[6]},
