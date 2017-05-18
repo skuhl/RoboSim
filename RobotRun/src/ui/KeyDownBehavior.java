@@ -2,6 +2,7 @@ package ui;
 
 import controlP5.ControlBehavior;
 import controlP5.Controller;
+import processing.core.PConstants;
 
 /**
  * Handles the key down functionality of text-fields.
@@ -80,10 +81,28 @@ public class KeyDownBehavior extends ControlBehavior {
 			/* When the controller is active, check every so often if a key is
 			 * down and update the text-field as necessary */
 			if (keyMap.getTimeOfLastKey() > 800 && System.currentTimeMillis() >= nextEvent) {
-				Character last = keyMap.lastKeyPressed();
+				int lastCode = keyMap.getCodeOfLastKeyHeld();
+				Character lastVal = keyMap.getValueofLastKeyHeld();
 				
-				if (last != null) {
-					controller.append(last.charValue());
+				if (lastVal != null) {
+					// Insert key events
+					controller.append(lastVal.charValue());
+					
+				} else {
+					// Other key events
+					if (lastCode == PConstants.BACKSPACE) {
+						controller.backspace();
+						
+					} else if (lastCode == 147) {
+						// Delete functionality
+						controller.delete();
+						
+					} else if (lastCode == PConstants.LEFT) {
+						controller.cursorLeft();
+						
+					} else if (lastCode == PConstants.RIGHT) {
+						controller.cursorRight();
+					}
 				}
 				
 				nextInterval();
