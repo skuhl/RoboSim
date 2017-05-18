@@ -6925,6 +6925,12 @@ public class RobotRun extends PApplet {
 		pushStyle();
 		fill(215, 0, 0);
 		lastTextPositionY += 20;
+		
+		if (record) {
+			text("Recording (press Ctrl + Shift + r)",
+					lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
 
 		// Display a message when there is an error with the Robot's
 		// movement
