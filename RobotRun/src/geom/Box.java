@@ -62,9 +62,13 @@ public class Box extends Shape {
 
 	@Override
 	public void draw() {
+		RobotRun app = RobotRun.getInstance();
+		
+		app.pushStyle();
 		// Apply colors
 		applyColors();
-		RobotRun.getInstance().box(dimensions.x, dimensions.y, dimensions.z);
+		app.box(dimensions.x, dimensions.y, dimensions.z);
+		app.popStyle();
 	}
 
 	@Override

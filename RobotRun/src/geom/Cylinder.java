@@ -40,30 +40,34 @@ public class Cylinder extends Shape {
 	 */
 	@Override
 	public void draw() {
+		RobotRun app = RobotRun.getInstance();
+		
+		app.pushStyle();
 		applyColors();
 
 		float halfHeight = height / 2,
 				diameter = 2 * radius;
 
-		RobotRun.getInstance().translate(0f, 0f, halfHeight);
+		app.translate(0f, 0f, halfHeight);
 		// Draw top of the cylinder
-		RobotRun.getInstance().ellipse(0f, 0f, diameter, diameter);
-		RobotRun.getInstance().translate(0f, 0f, -height);
+		app.ellipse(0f, 0f, diameter, diameter);
+		app.translate(0f, 0f, -height);
 		// Draw bottom of the cylinder
-		RobotRun.getInstance().ellipse(0f, 0f, diameter, diameter);
-		RobotRun.getInstance().translate(0f, 0f, halfHeight);
+		app.ellipse(0f, 0f, diameter, diameter);
+		app.translate(0f, 0f, halfHeight);
 
-		RobotRun.getInstance().beginShape(PConstants.TRIANGLE_STRIP);
+		app.beginShape(PConstants.TRIANGLE_STRIP);
 		// Draw a string of triangles around the circumference of the Cylinders top and bottom.
 		for (int degree = 0; degree <= 360; ++degree) {
 			float pos_x = PApplet.cos(PConstants.DEG_TO_RAD * degree) * radius,
 					pos_y = PApplet.sin(PConstants.DEG_TO_RAD * degree) * radius;
 
-			RobotRun.getInstance().vertex(pos_x, pos_y, halfHeight);
-			RobotRun.getInstance().vertex(pos_x, pos_y, -halfHeight);
+			app.vertex(pos_x, pos_y, halfHeight);
+			app.vertex(pos_x, pos_y, -halfHeight);
 		}
 
-		RobotRun.getInstance().endShape();
+		app.endShape();
+		app.popStyle();
 	}
 
 	@Override

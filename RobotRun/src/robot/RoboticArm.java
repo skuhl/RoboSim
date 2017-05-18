@@ -714,98 +714,103 @@ public class RoboticArm {
 	 * base position field.
 	 */
 	public void draw() {
-		RobotRun.getInstance().noStroke();
-		RobotRun.getInstance().fill(200, 200, 0);
+		RobotRun app = RobotRun.getInstance();
+		
+		app.pushStyle();
+		app.noStroke();
+		app.fill(200, 200, 0);
 
-		RobotRun.getInstance().pushMatrix();
-		RobotRun.getInstance().translate(BASE_POSITION.x, BASE_POSITION.y,
+		app.pushMatrix();
+		app.translate(BASE_POSITION.x, BASE_POSITION.y,
 						BASE_POSITION.z);
 
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().rotateY(PConstants.PI/2);
+		app.rotateZ(PConstants.PI);
+		app.rotateY(PConstants.PI/2);
 		SEGMENTS.get(0).draw();
-		RobotRun.getInstance().rotateY(-PConstants.PI/2);
-		RobotRun.getInstance().rotateZ(-PConstants.PI);
+		app.rotateY(-PConstants.PI/2);
+		app.rotateZ(-PConstants.PI);
 
-		RobotRun.getInstance().fill(50);
+		app.fill(50);
 
-		RobotRun.getInstance().translate(-50, -166, -358); // -115, -213, -413
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().translate(150, 0, 150);
-		RobotRun.getInstance().rotateX(PConstants.PI);
-		RobotRun.getInstance().rotateY(SEGMENTS.get(0).currentRotations[1]);
-		RobotRun.getInstance().rotateX(-PConstants.PI);
-		RobotRun.getInstance().translate(-150, 0, -150);
+		app.translate(-50, -166, -358); // -115, -213, -413
+		app.rotateZ(PConstants.PI);
+		app.translate(150, 0, 150);
+		app.rotateX(PConstants.PI);
+		app.rotateY(SEGMENTS.get(0).currentRotations[1]);
+		app.rotateX(-PConstants.PI);
+		app.translate(-150, 0, -150);
 		SEGMENTS.get(1).draw();
-		RobotRun.getInstance().rotateZ(-PConstants.PI);
+		app.rotateZ(-PConstants.PI);
 
-		RobotRun.getInstance().fill(200, 200, 0);
+		app.fill(200, 200, 0);
 
-		RobotRun.getInstance().translate(-115, -85, 180);
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().rotateY(PConstants.PI/2);
-		RobotRun.getInstance().translate(0, 62, 62);
-		RobotRun.getInstance().rotateX(SEGMENTS.get(1).currentRotations[2]);
-		RobotRun.getInstance().translate(0, -62, -62);
+		app.translate(-115, -85, 180);
+		app.rotateZ(PConstants.PI);
+		app.rotateY(PConstants.PI/2);
+		app.translate(0, 62, 62);
+		app.rotateX(SEGMENTS.get(1).currentRotations[2]);
+		app.translate(0, -62, -62);
 		SEGMENTS.get(2).draw();
-		RobotRun.getInstance().rotateY(-PConstants.PI/2);
-		RobotRun.getInstance().rotateZ(-PConstants.PI);
+		app.rotateY(-PConstants.PI/2);
+		app.rotateZ(-PConstants.PI);
 
-		RobotRun.getInstance().fill(50);
+		app.fill(50);
 
-		RobotRun.getInstance().translate(0, -500, -50);
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().rotateY(PConstants.PI/2);
-		RobotRun.getInstance().translate(0, 75, 75);
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().rotateX(SEGMENTS.get(2).currentRotations[2]);
-		RobotRun.getInstance().rotateZ(-PConstants.PI);
-		RobotRun.getInstance().translate(0, -75, -75);
+		app.translate(0, -500, -50);
+		app.rotateZ(PConstants.PI);
+		app.rotateY(PConstants.PI/2);
+		app.translate(0, 75, 75);
+		app.rotateZ(PConstants.PI);
+		app.rotateX(SEGMENTS.get(2).currentRotations[2]);
+		app.rotateZ(-PConstants.PI);
+		app.translate(0, -75, -75);
 		SEGMENTS.get(3).draw();
-		RobotRun.getInstance().rotateY(PConstants.PI/2);
-		RobotRun.getInstance().rotateZ(-PConstants.PI);
+		app.rotateY(PConstants.PI/2);
+		app.rotateZ(-PConstants.PI);
 
-		RobotRun.getInstance().translate(745, -150, 150);
-		RobotRun.getInstance().rotateZ(PConstants.PI/2);
-		RobotRun.getInstance().rotateY(PConstants.PI/2);
-		RobotRun.getInstance().translate(70, 0, 70);
-		RobotRun.getInstance().rotateY(SEGMENTS.get(3).currentRotations[0]);
-		RobotRun.getInstance().translate(-70, 0, -70);
+		app.translate(745, -150, 150);
+		app.rotateZ(PConstants.PI/2);
+		app.rotateY(PConstants.PI/2);
+		app.translate(70, 0, 70);
+		app.rotateY(SEGMENTS.get(3).currentRotations[0]);
+		app.translate(-70, 0, -70);
 		SEGMENTS.get(4).draw();
-		RobotRun.getInstance().rotateY(-PConstants.PI/2);
-		RobotRun.getInstance().rotateZ(-PConstants.PI/2);
+		app.rotateY(-PConstants.PI/2);
+		app.rotateZ(-PConstants.PI/2);
 
-		RobotRun.getInstance().fill(200, 200, 0);
+		app.fill(200, 200, 0);
 
-		RobotRun.getInstance().translate(-115, 130, -124);
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().rotateY(-PConstants.PI/2);
-		RobotRun.getInstance().translate(0, 50, 50);
-		RobotRun.getInstance().rotateX(SEGMENTS.get(4).currentRotations[2]);
-		RobotRun.getInstance().translate(0, -50, -50);
+		app.translate(-115, 130, -124);
+		app.rotateZ(PConstants.PI);
+		app.rotateY(-PConstants.PI/2);
+		app.translate(0, 50, 50);
+		app.rotateX(SEGMENTS.get(4).currentRotations[2]);
+		app.translate(0, -50, -50);
 		SEGMENTS.get(5).draw();
-		RobotRun.getInstance().rotateY(PConstants.PI/2);
-		RobotRun.getInstance().rotateZ(-PConstants.PI);
+		app.rotateY(PConstants.PI/2);
+		app.rotateZ(-PConstants.PI);
 
-		RobotRun.getInstance().fill(50);
+		app.fill(50);
 
-		RobotRun.getInstance().translate(150, -10, 95);
-		RobotRun.getInstance().rotateY(-PConstants.PI/2);
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().translate(45, 45, 0);
-		RobotRun.getInstance().rotateZ(SEGMENTS.get(5).currentRotations[0]);
-		RobotRun.getInstance().translate(-45, -45, 0);
+		app.translate(150, -10, 95);
+		app.rotateY(-PConstants.PI/2);
+		app.rotateZ(PConstants.PI);
+		app.translate(45, 45, 0);
+		app.rotateZ(SEGMENTS.get(5).currentRotations[0]);
+		app.translate(-45, -45, 0);
 		SEGMENTS.get(6).draw();
 
 		drawEndEffector(activeEndEffector, endEffectorState);
 
-		RobotRun.getInstance().popMatrix();
+		app.popMatrix();
+		app.popStyle();
+		
 		curRobotPt = getRobotEEPosition();
 		//System.out.println(curRobotPt.toString());
 		/* My sketchy work-around for drawing only the bounding boxes of the
 		 * active robot */
 		if (RobotRun.getActiveRobot() == this) {
-				if(RobotRun.getInstance().areOBBsDisplayed()) {
+				if(app.areOBBsDisplayed()) {
 					drawBoxes();
 				}
 				

@@ -65,13 +65,15 @@ public class ModelShape extends Shape {
 
 	@Override
 	public void draw() {
-		RobotRun.getInstance().pushMatrix();
+		RobotRun app = RobotRun.getInstance();
+		
+		app.pushMatrix();
+		
 		// Draw shape, where its center is at (0, 0, 0)
-		RobotRun.getInstance().translate(centerOffset.x, centerOffset.y, centerOffset.z);
-
-		RobotRun.getInstance().shape(model);
-
-		RobotRun.getInstance().popMatrix();
+		app.translate(centerOffset.x, centerOffset.y, centerOffset.z);
+		app.shape(model);
+		
+		app.popMatrix();
 	}
 
 	@Override
