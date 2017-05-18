@@ -801,7 +801,7 @@ public class RoboticArm {
 
 		RobotRun.getInstance().popMatrix();
 		curRobotPt = getRobotEEPosition();
-		System.out.println(curRobotPt.toString());
+		//System.out.println(curRobotPt.toString());
 		/* My sketchy work-around for drawing only the bounding boxes of the
 		 * active robot */
 		if (RobotRun.getActiveRobot() == this) {

@@ -24,7 +24,7 @@ public class MyRadioButton extends RadioButton {
 	 * @return	The total height compromised all toggles and spacing in a complete
 	 * 			column of toggles of the radio button
 	 */
-	public float getTotalHeight() {
+	public int getTotalHeight() {
 		return (_myRadioToggles.size() / itemsPerRow) * (_myHeight + spacingRow) - spacingRow;
 	}
 	
@@ -36,7 +36,7 @@ public class MyRadioButton extends RadioButton {
 	 * @return	The total width of all toggles and spacing in a single row of
 	 * 			the radio button
 	 */
-	public float getTotalWidth() {
+	public int getTotalWidth() {
 		return Math.min(_myRadioToggles.size(), itemsPerRow) * (_myWidth + spacingColumn) - spacingColumn;
 	}
 	

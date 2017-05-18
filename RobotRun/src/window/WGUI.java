@@ -146,7 +146,7 @@ public class WGUI implements ControlListener {
 		
 		/* A local reference to a position in the UI [x, y] used to position UI
 		 * elements relative to other UI elements */
-		float[] relPos = new float[] { 0f, 0f };
+		int[] relPos = new int[] { 0, 0 };
 		ControllerInterface<?> c1 = null, c2 = null;
 		
 		// The default set of labels for window tabs
@@ -256,7 +256,7 @@ public class WGUI implements ControlListener {
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
 		// Previous button
-		float smLrDiff = Fields.LARGE_BUTTON - Fields.SMALL_BUTTON;
+		int smLrDiff = Fields.LARGE_BUTTON - Fields.SMALL_BUTTON;
 		relPos = relativePosition(c1, Alignment.BOTTOM_LEFT, 0,	smLrDiff +
 				16);
 		addButton("prev", "PREV", pendant, relPos[0], relPos[1],
@@ -317,8 +317,8 @@ public class WGUI implements ControlListener {
 		
 		// Reset button column
 		
-		float btmColsY = (float)Math.ceil(c2.getPosition()[1] + c2.getWidth() + 11);
-		float resPosX = getButton("step").getPosition()[0];
+		int btmColsY = (int)Math.ceil(c2.getPosition()[1]) + c2.getWidth() + 11;
+		int resPosX = (int)Math.ceil(getButton("step").getPosition()[0]);
 		c1 = addButton("reset", "RESET", pendant, resPosX, btmColsY,
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 		
@@ -431,7 +431,7 @@ public class WGUI implements ControlListener {
 		relPos = relativePosition(c1, Alignment.BOTTOM_LEFT, 0, 0);
 		relPos[1] = btmColsY;
 		
-		float[] relPos2 = relativePosition(c1, Alignment.BOTTOM_LEFT,
+		int[] relPos2 = relativePosition(c1, Alignment.BOTTOM_LEFT,
 				-Fields.LARGE_BUTTON - 1, 0);
 		relPos2[1] = btmColsY;
 		
@@ -1948,7 +1948,11 @@ public class WGUI implements ControlListener {
 	  * @param offsetY	The y position offset from obj's position
 	  * @return			A doubleton containing the absolute x and y positions
 	  */
-	 private <T> float[] relativePosition(ControllerInterface<T> obj, Alignment pos, float offsetX, float offsetY) {
+	 private int[] relativePosition(ControllerInterface<?> obj, Alignment pos, int offsetX, int offsetY) {
+		 
+		 return getRelativePos(obj, pos, offsetX, obj, pos, offsetY);
+		 
+		 /**
 		 float[] relPosition = new float[] { 0f, 0f };
 		 float[] objPosition = obj.getPosition();
 		 float[] objDimensions;
@@ -1995,6 +1999,7 @@ public class WGUI implements ControlListener {
 		 }
 
 		 return relPosition;
+		 /**/
 	 }
 	
 	/**
@@ -2008,11 +2013,11 @@ public class WGUI implements ControlListener {
 	 * @param offY
 	 * @return
 	 */
-	private static float[] getRelativePos(ControllerInterface<?> refX,
+	private static int[] getRelativePos(ControllerInterface<?> refX,
 			Alignment alignX, int offX, ControllerInterface<?> refY,
 			Alignment alignY, int offY) {
 		
-		return new float[] {
+		return new int[] {
 					getRelativePos(refX, alignX, offX, 0), 
 					getRelativePos(refY, alignY, offY, 1)
 				};
@@ -2032,18 +2037,18 @@ public class WGUI implements ControlListener {
 	 * 				Y)
 	 * @return		
 	 */
-	private static float getRelativePos(ControllerInterface<?> ref,
+	private static int getRelativePos(ControllerInterface<?> ref,
 			Alignment align, int off, int axis) {
 		
 		float[] refPos = ref.getPosition();
-		float[] refDim = WGUI.getDimOf(ref, 0);
-		float pos;
+		int[] refDim = WGUI.getDimOf(ref, 0);
+		int pos;
 		
 		if (axis == 1) {
-			pos = off + refPos[1] + refDim[1] * align.factorY;
+			pos = off + (int)(refPos[1] + refDim[1] * align.factorY);
 			
 		} else {
-			pos = off + refPos[0] + refDim[0] * align.factorX;
+			pos = off + (int)(refPos[0] + refDim[0] * align.factorX);
 		}
 		
 		return pos;
@@ -2060,8 +2065,8 @@ public class WGUI implements ControlListener {
 	 * @param opt	Not currently implemented
 	 * @return		The dimensions of the given controller
 	 */
-	private static float[] getDimOf(ControllerInterface<?> c, int opt) {
-		float[] dims = new float[2];
+	private static int[] getDimOf(ControllerInterface<?> c, int opt) {
+		int[] dims = new int[2];
 		
 		if (c instanceof Group) {
 			dims[0] = c.getWidth();
@@ -2338,7 +2343,7 @@ public class WGUI implements ControlListener {
 		 updateDimLblsAndFields();
 
 		 // Object Type dropdown list and label
-		 float[] relPos = new float[] { offsetX, offsetX };
+		 int[] relPos = new int[] { offsetX, offsetX };
 		 ControllerInterface<?> c = getTextArea("ObjTypeLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
@@ -2405,8 +2410,8 @@ public class WGUI implements ControlListener {
 	  * @param initialYPos  The y position of the first text area-field pair
 	  * @returning          The x and y position of the last visible text area  in a 2-element integer array
 	  */
-	 private float[] updateDimLblAndFieldPositions(float initialXPos, float initialYPos) {
-		 float[] relPos = new float[] { initialXPos, initialYPos };
+	 private int[] updateDimLblAndFieldPositions(int initialXPos, int initialYPos) {
+		 int[] relPos = new int[] { initialXPos, initialYPos };
 		 int ddlIdx = 0;
 		 
 		 // Update the dimension dropdowns
@@ -2570,7 +2575,7 @@ public class WGUI implements ControlListener {
 		 getButton("ClearFields").hide();
 
 		 // Object list dropdown and label
-		 float[] relPos = new float[] { offsetX, offsetX };
+		 int[] relPos = new int[] { offsetX, offsetX };
 		 ControllerInterface<?> c = getTextArea("ObjLabel").setPosition(relPos[0], relPos[1]),
 				 				c0 = null;
 		 boolean isPart = getSelectedWO() instanceof Part;
@@ -2704,7 +2709,7 @@ public class WGUI implements ControlListener {
 			 relPos = relativePosition(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			 c0 = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
 			 
-			 relPos =  new float[] { offsetX, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
+			 relPos =  new int[] { offsetX, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
 			 c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
 			
 			 relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX,
@@ -2899,7 +2904,7 @@ public class WGUI implements ControlListener {
 	  */
 	 private void updateScenarioWindowContentPositions() {
 		// Scenario options label and radio buttons
-		float[] relPos = new float[] { offsetX, offsetX };
+		int[] relPos = new int[] { offsetX, offsetX };
 		ControllerInterface<?> c = getTextArea("SOptLbl").setPosition(relPos[0], relPos[1]);
 		
 		relPos = relativePosition(c, Alignment.BOTTOM_LEFT, 0, 0);
@@ -2993,7 +2998,7 @@ public class WGUI implements ControlListener {
 	 */
 	private void updateMiscWindowContentPositions() {
 		// Axes Display label
-		float[] relPos = new float[] { offsetX, offsetX };
+		int[] relPos = new int[] { offsetX, offsetX };
 		ControllerInterface<?> c = getTextArea("ActiveAxesDisplay").setPosition(relPos[0], relPos[1]);
 		// Axes Display dropdown
 		relPos = relativePosition(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
@@ -3086,7 +3091,7 @@ public class WGUI implements ControlListener {
 		 }
 
 		 // Update the camera view buttons
-		 float[] relPos = relativePosition(windowTabs, Alignment.BOTTOM_RIGHT, offsetX, 0);
+		 int[] relPos = relativePosition(windowTabs, Alignment.BOTTOM_RIGHT, offsetX, 0);
 
 		 Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
 		 relPos = relativePosition(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
