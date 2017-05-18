@@ -20,6 +20,7 @@ import controlP5.Textarea;
 import controlP5.Toggle;
 import enums.AxesDisplay;
 import enums.EEMapping;
+import enums.EEType;
 import enums.Alignment;
 import enums.ScreenMode;
 import enums.ScreenType;
@@ -180,12 +181,6 @@ public class WGUI implements ControlListener {
 		editWO = addGroup("EDITWO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		scenario = addGroup("SCENARIO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscellaneous = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
-		
-		relPos = getAbsPosFrom(windowTabs, Alignment.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
-		c1 = addButton("record", buttonImages[0], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
-		
-		relPos = getAbsPosFrom(c1, Alignment.TOP_RIGHT, Fields.LARGE_BUTTON + 1, 0);
-		addButton("EE", buttonImages[1], relPos[0], relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 		
 		// Initialize camera view buttons
 		addButton("FrontView", "F", sButtonWidth, sButtonHeight, Fields.small).hide();
@@ -574,6 +569,7 @@ public class WGUI implements ControlListener {
 		addButton("SConfirm", "N/A", scenario, mButtonWidth, sButtonHeight, Fields.small);
 		
 		// Initialize the miscellaneous window elements
+		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("ActiveAxesDisplay", "Axes Display:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("ActiveEEDisplay", "EE Display:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 		
@@ -585,19 +581,30 @@ public class WGUI implements ControlListener {
 		 * NOTE: the order in which the dropdown lists matters!
 		 * 		(Adding the dropdown lists last places them in front of the
 		 * other UI elements, which is important, when the list is open) */
-		MyDropdownList ddlLimbo = addDropdown("EEDisplay", miscellaneous, ldropItemWidth, dropItemHeight, 4,
-				Fields.small);
-		ddlLimbo.addItem(EEMapping.DOT.toString(), EEMapping.DOT)
-				.addItem(EEMapping.LINE.toString(), EEMapping.LINE)
-				.addItem(EEMapping.NONE.toString(), EEMapping.NONE)
-				.setValue(0);
+		MyDropdownList ddlLimbo = addDropdown("EEDisplay", miscellaneous,
+				ldropItemWidth, dropItemHeight, 3, Fields.small);
+		ddlLimbo.addItem(EEMapping.DOT.name(), EEMapping.DOT)
+				.addItem(EEMapping.LINE.name(), EEMapping.LINE)
+				.addItem(EEMapping.NONE.name(), EEMapping.NONE)
+				.setValue(0f);
 		
-		ddlLimbo = addDropdown("AxesDisplay", miscellaneous, ldropItemWidth, dropItemHeight, 4,
+		ddlLimbo = addDropdown("AxesDisplay", miscellaneous, ldropItemWidth,
+				dropItemHeight, 3,
 				Fields.small);
-		ddlLimbo.addItem(AxesDisplay.AXES.toString(), AxesDisplay.AXES)
-				.addItem(AxesDisplay.GRID.toString(), AxesDisplay.GRID)
-				.addItem(AxesDisplay.NONE.toString(), AxesDisplay.NONE)
-				.setValue(0);
+		ddlLimbo.addItem(AxesDisplay.AXES.name(), AxesDisplay.AXES)
+				.addItem(AxesDisplay.GRID.name(), AxesDisplay.GRID)
+				.addItem(AxesDisplay.NONE.name(), AxesDisplay.NONE)
+				.setValue(0f);
+		
+		ddlLimbo = addDropdown("RobotEE", miscellaneous, ldropItemWidth,
+				dropItemHeight, 4, Fields.small);
+		ddlLimbo.addItem("Faceplate", EEType.NONE)
+				.addItem(EEType.SUCTION.name(), EEType.SUCTION)
+				.addItem(EEType.CLAW.name(), EEType.CLAW)
+				.addItem(EEType.POINTER.name(), EEType.POINTER)
+				.addItem(EEType.GLUE_GUN.name(), EEType.GLUE_GUN)
+				.addItem(EEType.WIELDER.name(), EEType.WIELDER)
+				.setValue(0f);
 		
 		addDropdown("Scenario", scenario, ldropItemWidth, dropItemHeight, 4, Fields.small);
 		addDropdown("Fixture", editWO, ldropItemWidth, dropItemHeight, 4, Fields.small);
@@ -736,35 +743,6 @@ public class WGUI implements ControlListener {
 		 .setColorActive(Fields.B_ACTIVE_C)
 		 .setSize(wdh, hgt)
 		 .getCaptionLabel().setFont(lblFont);
-		
-		return b;
-	}
-	
-	/**
-	 * Adds a button to the UI with the given name, image labels, xy position,
-	 * width, and height. The parent of the button is the top element of the
-	 * UI.
-	 * 
-	 * @param name		The name (or ID) of the button, which must be unique
-	 * 					amongst all UI elements!
-	 * @param imgLbls	A list of images, which will be rendered on the button.
-	 * @param posX		The x position of the button relative to the position
-	 * 					of its parent
-	 * @param posY		The y position of the button relative to the position
-	 * 					of its parent
-	 * @param wdh		The width of the button
-	 * @param hgt		The height of the button
-	 * @return			A reference to the new button
-	 */
-	private MyButton addButton(String name, PImage[] imgLbls, float posX,
-			float posY, int wdh, int hgt) {
-		
-		MyButton b = new MyButton(manager, name);
-		
-		b.setImages(imgLbls)
-		 .setPosition(posX, posY)
-		 .setSize(wdh, hgt)
-		 .updateSize();
 		
 		return b;
 	}
@@ -1064,6 +1042,15 @@ public class WGUI implements ControlListener {
 					lastModImport = arg0.getName();
 				}
 				
+			 } else if (arg0.isFrom("RobotEE")) {
+				 RoboticArm r = RobotRun.getActiveRobot();
+				 
+				 if (r != null) {
+					 /* Link the active robot's end effector to the selected
+					  * item */
+					 MyDropdownList ddl = (MyDropdownList)arg0.getController();
+					 r.setActiveEE( (EEType)ddl.getSelectedItem() );
+				 }
 			 }
 		 }
 	}
@@ -2753,6 +2740,14 @@ public class WGUI implements ControlListener {
 			 Scenario s = scenarios.get(idx);
 			 dropdown.addItem(s.getName(), s);
 		 }
+		 
+		 RoboticArm r = app.getActiveRobot();
+		 
+		 if (r != null) {
+			 // Link the active robot's end effector to the dropdown list
+			 int activeEE = r.getActiveEE().ordinal();
+			 getDropdown("RobotEE").setValue(activeEE);
+		 }
 	 }
 	 
 	 /**
@@ -2926,9 +2921,17 @@ public class WGUI implements ControlListener {
 	 * Updates the positions of all the contents of the miscellaneous window.
 	 */
 	private void updateMiscWindowContentPositions() {
-		// Axes Display label
+		// Robot End Effector label
 		int[] relPos = new int[] { winMargin, winMargin };
-		ControllerInterface<?> c = getTextArea("ActiveAxesDisplay").setPosition(relPos[0], relPos[1]);
+		ControllerInterface<?> c = getTextArea("ActiveRobotEE")
+				.setPosition(relPos[0], relPos[1]);
+		// Robot End Effector dropdown
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getDropdown("RobotEE").setPosition(relPos[0], relPos[1]);
+		
+		// Axes Display label
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getTextArea("ActiveAxesDisplay").setPosition(relPos[0], relPos[1]);
 		// Axes Display dropdown
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getDropdown("AxesDisplay").setPosition(relPos[0], relPos[1]);
