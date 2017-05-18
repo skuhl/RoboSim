@@ -1,5 +1,7 @@
 package ui;
 
+import com.sun.glass.events.KeyEvent;
+
 import controlP5.ControlFont;
 import controlP5.ControlP5;
 import controlP5.ControlWindow.Pointer;
@@ -41,9 +43,55 @@ public class MyTextfield extends Textfield {
 	}
 	
 	/**
-	 * TODO
+	 * Deletes a character prior to the active string buffer index and
+	 * decrements the string buffer index 
+	 */
+	public void backspace() {
+		if (_myTextBuffer.length() > 0 && _myTextBufferIndex > 0) {
+			_myTextBuffer.deleteCharAt( --_myTextBufferIndex );
+		}
+	}
+	
+	/**
+	 * Move the text buffer cursor one character to the left.
+	 */
+	public void cursorLeft() {
+		if (_myTextBufferIndex > 0) {
+			_myTextBufferIndex = Math.max(0, _myTextBufferIndex - 1);
+		}
+	}
+	
+	/**
+	 * Move the text buffer cursor one character to the right.
+	 */
+	public void cursorRight() {
+		if (_myTextBufferIndex < _myTextBuffer.length()) {
+			_myTextBufferIndex = Math.min(_myTextBuffer.length(),
+					_myTextBufferIndex + 1);
+		}
+	}
+	
+	/**
+	 * Deletes a character at the active string buffer index in the text
+	 * buffer.
+	 */
+	public void delete() {
+		if (_myTextBuffer.length() > 0) {
+			
+			if (_myTextBufferIndex < _myTextBuffer.length()) {
+				_myTextBuffer.deleteCharAt( _myTextBufferIndex );
+				
+			} else if (_myTextBufferIndex > 0) {
+				_myTextBuffer.deleteCharAt( --_myTextBufferIndex );
+			}
+		}
+	}
+	
+	/**
+	 * Calculates the draw width of a string based on the text-field's label
+	 * and PGraphics buffer.
 	 * 
-	 * @return
+	 * @return	The draw width of the given string
 	 */
 	private int getTextWidthFor(String text) {
 		return ControlFont.getWidthFor(text, _myValueLabel, buffer);
@@ -57,15 +105,7 @@ public class MyTextfield extends Textfield {
 			if (isUserInteraction && isTexfieldActive && isActive &&
 					e.getAction() == processing.event.KeyEvent.PRESS) {
 				
-				if (_myTextBuffer.length() > 0) {
-					
-					if (_myTextBufferIndex < _myTextBuffer.length()) {
-						_myTextBuffer.deleteCharAt( _myTextBufferIndex );
-						
-					} else if (_myTextBufferIndex > 0) {
-						_myTextBuffer.deleteCharAt( --_myTextBufferIndex );
-					}
-				}
+				delete();
 			}	
 			
 		} else {
