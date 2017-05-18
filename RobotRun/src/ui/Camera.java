@@ -1,9 +1,7 @@
 package ui;
 import global.RMath;
 import processing.core.PConstants;
-import processing.core.PMatrix;
 import processing.core.PVector;
-import robot.RQuaternion;
 import robot.RobotRun;
 
 /**
@@ -32,33 +30,14 @@ public class Camera {
 	public void apply(RobotRun app) {
 		PVector screenPos = new PVector(position.x + app.width / 2f, position.y + app.height / 2f, position.z);
 		
-<<<<<<< HEAD
 		float horizontalMargin = scale * app.width / 2f,
 				verticalMargin = scale * app.height / 2f,
 				near = scale * screenPos.z,
 				far = scale * 5000f;
-=======
-		app.beginCamera();
-		app.camera();
-		
-		// Apply camera translations
-		app.translate(position.x + app.width / 2f, position.y + app.height / 2f, position.z);
-		
-		// Apply camera rotations
-		app.rotateX(orientation.x);
-		app.rotateY(orientation.y);
-
-		// Apply camera scaling
-		float horizontalMargin = scale * app.width / 2f,
-				verticalMargin = scale * app.height / 2f,
-				near = -50000f,
-				far = 50000f;
-		app.ortho(-horizontalMargin, horizontalMargin, -verticalMargin, verticalMargin, near, far);
->>>>>>> current
 		
 		// Apply orthogonal camera view
 		app.ortho(screenPos.x - horizontalMargin, screenPos.x + horizontalMargin,
-				screenPos.y - verticalMargin, screenPos.y + verticalMargin, 10f, far);
+				screenPos.y - verticalMargin, screenPos.y + verticalMargin, near, far);
 		
 		app.rotateX(orientation.x);
 		app.rotateY(orientation.y);
