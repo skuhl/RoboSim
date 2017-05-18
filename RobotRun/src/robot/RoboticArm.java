@@ -903,16 +903,25 @@ public class RoboticArm {
 			tracePts.add(curRobotPt.position);
 			return;
 		} 
-		else if(curRobotPt.position.copy().sub(tracePts.get(tracePts.size()-1)).mag() > 0.1) {
+		else if(curRobotPt.position.copy().sub(tracePts.get(tracePts.size()-1)).mag() > 0.5) {
 			tracePts.add(curRobotPt.position.copy());
 		}
 		
 		PVector lastPt = tracePts.get(0);
 		for(int i = 1; i < tracePts.size(); i += 1) {
 			PVector curPt = tracePts.get(i);
+			RobotRun.getInstance().stroke(0);
+			RobotRun.getInstance().strokeWeight(3);
+			RobotRun.getInstance().pushMatrix();
 			RobotRun.getInstance().line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y, curPt.z);
+			RobotRun.getInstance().popMatrix();
+			RobotRun.getInstance().strokeWeight(1);
 			lastPt = curPt;
 		}
+	}
+	
+	public void clearTrace() {
+		tracePts.clear();
 	}
 	
 	/**
