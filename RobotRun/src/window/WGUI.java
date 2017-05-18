@@ -2894,9 +2894,10 @@ public class WGUI implements ControlListener {
 		
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
-				  .setHeight( (int)Math.ceil( relPos[1] ) )
-				  .show();
+		background.setPosition(scenario.getPosition())
+			      .setBackgroundHeight(relPos[1])
+			      .setHeight(relPos[1])
+			      .show();
 	 }
 	 
 	/**
@@ -2961,9 +2962,10 @@ public class WGUI implements ControlListener {
 	
 		// Update window background display
 		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
-		.setHeight( (int)Math.ceil( relPos[1] ) )
-		.show();
+		background.setPosition(miscellaneous.getPosition())
+		   		  .setBackgroundHeight(relPos[1])
+		   		  .setHeight(relPos[1])
+		   		  .show();
 	 }
 	
 	/**
