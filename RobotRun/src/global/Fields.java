@@ -2,6 +2,7 @@ package global;
 
 import geom.RMatrix;
 import processing.core.PFont;
+import processing.core.PVector;
 
 /**
  * TODO general comments
@@ -172,6 +173,29 @@ public abstract class Fields {
 		small = null;
 		medium = null;
 		bond = null;
+	}
+	
+	/**
+	 * Creates a 2-element a string array, whose entries are formatted String
+	 * representations the given position and rotation.
+	 *
+	 * @param position	A 3D position vector
+	 * @param rotation	A set of euler angles (W, P, R)
+	 * @return  		A 2 element array [position, rotation]
+	 */
+	public static String[] toLineStringArray(PVector position, PVector rotation) {
+		
+		String strX = "X: " + MyFloatFormat.format(position.x);
+		String strY = "Y: " + MyFloatFormat.format(position.y);
+		String strZ = "Z: " + MyFloatFormat.format(position.z);
+		String strW = "W: " + MyFloatFormat.format(rotation.x);
+		String strP = "P: " + MyFloatFormat.format(rotation.x);
+		String strR = "R: " + MyFloatFormat.format(rotation.x);
+		
+		return new String[] {
+				String.format("%-12s %-12s %-12s", strX, strY, strZ),
+				String.format("%-12s %-12s %-12s", strW, strP, strR)
+		};
 	}
 	
 	/**

@@ -2,10 +2,8 @@ package ui;
 
 import global.MyFloatFormat;
 import global.RMath;
-import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PVector;
-import robot.RobotRun;
 
 /**
  * A class designed which contains the camera transformation values
