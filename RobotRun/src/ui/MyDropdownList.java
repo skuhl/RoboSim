@@ -1,24 +1,29 @@
 package ui;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import controlP5.ControlP5;
 import controlP5.ControllerGroup;
 import controlP5.DropdownList;
-import robot.RobotRun;
 
 /**
  * An extension of the DropdownList class in ControlP5 that allows easier access
- * of the currently selected element's value.
+ * of the currently selected element's value as well as functionality for
+ * controlEvents involving the change in value of the dropdown list.
+ * 
+ * @author Joshua Hooker
  */
 public class MyDropdownList extends DropdownList {
 	
-	protected MyDropdownList( ControlP5 theControlP5 , ControllerGroup< ? > theGroup , String theName , int theX , int theY , int theW , int theH ) {
-		super( theControlP5 , theGroup , theName , theX , theY , theW , theH );
-	}
-
-	public MyDropdownList( ControlP5 theControlP5 , String theName ) {
+	public MyDropdownList(ControlP5 theControlP5, String theName) {
 		super(theControlP5, theName);
+	}
+	
+	protected MyDropdownList(ControlP5 theControlP5, ControllerGroup<?> theGroup,
+			String theName, int theX, int theY, int theW, int theH) {
+		
+		super(theControlP5, theGroup, theName, theX, theY, theW, theH);
 	}
 	
 	/**
@@ -40,6 +45,43 @@ public class MyDropdownList extends DropdownList {
 		
 		// No element selected
 		return null;
+	}
+	
+	/**
+	 * Returns the label associated with item that is currently selected in the
+	 * dropdown list or null, if not item is currently selected.
+	 * 
+	 * @return	The label associated with the selected item or null
+	 */
+	private String getSelectedLabel() {
+		try {
+			int idx = (int)getValue();
+			Map<String, Object> associatedObjects = getItem(idx);
+
+			if (associatedObjects != null) {
+				return (String) associatedObjects.get("name");
+			}
+			
+		} catch (IndexOutOfBoundsException IOOBEx) {/* No elements */}
+		
+		// No element selected
+		return null;
+	}
+	
+	@Override
+	protected void onDrag() {
+		// Show what element is selected while dragging the mouse
+		onMove();
+	}
+	
+	@Override
+	protected void onEndDrag() {
+		// Allow drag clicks
+		
+		// I hate you, controlP5
+		this.isDragged = false;
+		onRelease();
+		this.isDragged = true;
 	}
 	
 	@Override
@@ -74,7 +116,7 @@ public class MyDropdownList extends DropdownList {
 		for (Object o : getItems()) {
 			HashMap<String, Object> map = (HashMap<String, Object>)o;
 			
-			if (map != null && e != null && e == map.get("value")) {
+			if (map != null && e == map.get("value")) {
 				// The object exists in the list
 				setValue(val);
 				return true;
@@ -91,14 +133,14 @@ public class MyDropdownList extends DropdownList {
 	 * Updates the label for the dropdown based on the currently selected item
 	 * in the list.
 	 */
-	private void updateLabel() {
-		Object e = getSelectedItem();
+	protected void updateLabel() {
+		String label = getSelectedLabel();
 		
-		if (e == null) {
+		if (label == null) {
 			getCaptionLabel().setText( getName() );
 			
 		} else {
-			getCaptionLabel().setText( e.toString() );
+			getCaptionLabel().setText( label );
 		}
 	}
 }

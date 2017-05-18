@@ -1,8 +1,10 @@
 package geom;
 
+import java.util.Arrays;
+
+import global.RMath;
+import processing.core.PConstants;
 import processing.core.PVector;
-import robot.RQuaternion;
-import robot.RobotRun;
 
 public class Point  {
 	// X, Y, Z
@@ -65,6 +67,7 @@ public class Point  {
 		return p3;
 	}
 
+	@Override
 	public Point clone() {
 		return new Point(position.copy(), (RQuaternion)orientation.clone(), angles.clone());
 	}
@@ -83,9 +86,9 @@ public class Point  {
 		case 7:   return position.z;
 		case 8:   return -position.y;
 		// Orientation
-		case 9:   return -RobotRun.RAD_TO_DEG*RobotRun.quatToEuler(orientation).array()[0];
-		case 10:  return -RobotRun.RAD_TO_DEG*RobotRun.quatToEuler(orientation).array()[2];
-		case 11:  return RobotRun.RAD_TO_DEG*RobotRun.quatToEuler(orientation).array()[1];
+		case 9:   return -PConstants.RAD_TO_DEG*RMath.quatToEuler(orientation).array()[0];
+		case 10:  return -PConstants.RAD_TO_DEG*RMath.quatToEuler(orientation).array()[2];
+		case 11:  return PConstants.RAD_TO_DEG*RMath.quatToEuler(orientation).array()[1];
 		default:
 		}
 
@@ -98,12 +101,12 @@ public class Point  {
 	public Point negate() {
 		position = position.mult(-1);
 		orientation = RQuaternion.scalarMult(-1, orientation);
-		angles = RobotRun.vectorScalarMult(angles, -1);
+		angles = RMath.vectorScalarMult(angles, -1);
 		return this;
 	}
 
 	public void setValue(int idx, float value) {
-		PVector vec = RobotRun.quatToEuler(orientation);
+		PVector vec = RMath.quatToEuler(orientation);
 
 		switch(idx) {
 		// Joint angles
@@ -123,13 +126,13 @@ public class Point  {
 		break;
 		// Orientation
 		case 9:   vec.x = -value;
-		orientation = RobotRun.eulerToQuat(vec);
+		orientation = RMath.eulerToQuat(vec);
 		break;
-		case 10:  vec.z = -value;
-		orientation = RobotRun.eulerToQuat(vec);
+		case 10:  vec.z = value;
+		orientation = RMath.eulerToQuat(vec);
 		break;
-		case 11:  vec.y = value;
-		orientation = RobotRun.eulerToQuat(vec);
+		case 11:  vec.y = -value;
+		orientation = RMath.eulerToQuat(vec);
 		break;
 		default:
 		}
@@ -150,7 +153,7 @@ public class Point  {
 			pos = new PVector(Float.NaN, Float.NaN, Float.NaN);
 		} else {
 			// Display in terms of the World Frame
-			pos = RobotRun.convertNativeToWorld(position);
+			pos = RMath.vToWorld(position);
 		}
 
 		// Convert Quaternion to Euler Angles
@@ -160,7 +163,7 @@ public class Point  {
 			angles = new PVector(Float.NaN, Float.NaN, Float.NaN);
 		} else {
 			// Display in degrees
-			angles = RobotRun.quatToEuler(orientation).mult(RobotRun.RAD_TO_DEG);
+			angles = RMath.nQuatToWEuler(orientation);
 		}
 
 		entries[0][0] = "X: ";
@@ -171,11 +174,11 @@ public class Point  {
 		entries[2][1] = String.format("%4.3f", pos.z);
 		// Display angles in terms of the World frame
 		entries[3][0] = "W: ";
-		entries[3][1] = String.format("%4.3f", -angles.x);
+		entries[3][1] = String.format("%4.3f", angles.x);
 		entries[4][0] = "P: ";
-		entries[4][1] = String.format("%4.3f", -angles.z);
+		entries[4][1] = String.format("%4.3f", angles.y);
 		entries[5][0] = "R: ";
-		entries[5][1] = String.format("%4.3f", angles.y);
+		entries[5][1] = String.format("%4.3f", angles.z);
 
 		return entries;
 	}
@@ -195,7 +198,7 @@ public class Point  {
 			if (angles == null) {
 				entries[idx][1] = Float.toString(Float.NaN);
 			} else {
-				entries[idx][1] = String.format("%4.3f", angles[idx] * RobotRun.RAD_TO_DEG);
+				entries[idx][1] = String.format("%4.3f", angles[idx] * PConstants.RAD_TO_DEG);
 			}
 		}
 
@@ -233,7 +236,9 @@ public class Point  {
 		return line;
 	}
 
+	@Override
 	public String toString() {
-		return String.format("P: { %s, %s }", position, orientation);
+		return String.format("P=%s O=%s J=%s", position, orientation,
+				Arrays.toString(angles));
 	}
 } // end Point class

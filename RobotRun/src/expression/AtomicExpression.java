@@ -27,6 +27,7 @@ public class AtomicExpression extends ExprOperand {
 		arg2 = new ExprOperand();
 	}
 
+	@Override
 	public AtomicExpression clone() {
 		return new AtomicExpression(arg1.clone(), arg2.clone(), getOp());
 	}
@@ -193,6 +194,7 @@ public class AtomicExpression extends ExprOperand {
 	public ExprOperand getArg1() { return arg1; }
 	public ExprOperand getArg2() { return arg2; }
 
+	@Override
 	public int getLength() {
 		if(getOp() == Operator.UNINIT) {
 			return 1;    
@@ -237,6 +239,7 @@ public class AtomicExpression extends ExprOperand {
 		setOp(o);
 	}
 
+	@Override
 	public String toString(){
 		String s = "";
 
@@ -259,6 +262,7 @@ public class AtomicExpression extends ExprOperand {
 		return s;
 	}
 
+	@Override
 	public String[] toStringArray() {
 		String[] s1, s2, ret;
 		String opString = "";
