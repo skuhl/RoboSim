@@ -670,43 +670,10 @@ public class RoboticArm {
 	 * NONE -> SUCTION -> CLAW -> POINTER -> GLUE_GUN -> WIELDER -> NONE
 	 */
 	public void cycleEndEffector() {
+		EEType[] values = EEType.values();
+		int nextEE = (activeEndEffector.ordinal() + 1) % values.length;
 		// Switch to the next End Effector in the cycle
-		switch (activeEndEffector) {
-		case NONE:
-			activeEndEffector = EEType.SUCTION;
-			break;
-
-		case SUCTION:
-			activeEndEffector = EEType.CLAW;
-			break;
-
-		case CLAW:
-			activeEndEffector = EEType.POINTER;
-			break;
-
-		case POINTER:
-			activeEndEffector = EEType.GLUE_GUN;
-			break;
-
-		case GLUE_GUN:
-			activeEndEffector = EEType.WIELDER;
-			break;
-
-		case WIELDER:
-		default:
-			activeEndEffector = EEType.NONE;
-			break;
-		}
-
-		IORegister associatedIO = getIORegisterFor(activeEndEffector);
-		// Update the end effector state
-		if (associatedIO != null) {
-			endEffectorState = associatedIO.state;
-		} else {
-			endEffectorState = Fields.OFF;
-		}
-
-		releaseHeldObject();
+		setActiveEE( values[nextEE] );
 	}
 	
 	/**
@@ -1018,6 +985,13 @@ public class RoboticArm {
 
 			jumpTo(tgtPosition, tgtOrientation);
 		}
+	}
+	
+	/**
+	 * @return	The robot's active end effector
+	 */
+	public EEType getActiveEE() {
+		return activeEndEffector;
 	}
 	
 	/**
@@ -1908,6 +1882,27 @@ public class RoboticArm {
 	 */
 	public boolean rotationalMotion() {
 		return jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0;
+	}
+	
+	/**
+	 * Sets the robot's active end effector and update the end effector state.
+	 * 
+	 * @param ee	A non-null end effector type
+	 */
+	public void setActiveEE(EEType ee) {
+		if (ee != null) {
+			activeEndEffector = ee;
+			
+			IORegister associatedIO = getIORegisterFor(activeEndEffector);
+			// Update the end effector state
+			if (associatedIO != null) {
+				endEffectorState = associatedIO.state;
+			} else {
+				endEffectorState = Fields.OFF;
+			}
+
+			releaseHeldObject();
+		}
 	}
 
 	/**
