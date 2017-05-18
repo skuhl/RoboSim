@@ -1,6 +1,7 @@
 package window;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -60,7 +61,7 @@ public class WGUI implements ControlListener {
 	 * A dimension value (length, width, displacement, etc.), which is used to
 	 * format the layout of a window tab's visible elements.
 	 */
-	public static final int offsetX = 10,
+	public static final int winMargin = 10,
 							radioDim = 16,
 							distBtwFieldsY = 15,
 							distLblToFieldX = 5,
@@ -173,7 +174,7 @@ public class WGUI implements ControlListener {
 							.setSize(windowTabs.getWidth(), 0);
 
 		// Initialize the window groups
-		pendant = addGroup("PENDANT", 0, 2 * offsetX, 440, 720);
+		pendant = addGroup("PENDANT", relPos[0], relPos[1], Fields.PENDANT_WIDTH, Fields.PENDANT_HEIGHT);
 		sharedElements = addGroup("SHARED", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		createWO = addGroup("CREATEWO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		editWO = addGroup("EDITWO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
@@ -195,12 +196,12 @@ public class WGUI implements ControlListener {
 		addButton("BottomView", "Bt", sButtonWidth, sButtonHeight, Fields.small).hide();
 		
 		// Pendant screen background?
-		c1 = addTextarea("txt", "", pendant, offsetX, 0,
+		c1 = addTextarea("txt", "", pendant, winMargin, 0,
 				Fields.PENDANT_SCREEN_WIDTH, Fields.PENDANT_SCREEN_HEIGHT,
 				Fields.B_TEXT_C, Fields.UI_LIGHT_C, Fields.small);
 		
 		// Pendant header
-		addTextarea("header", "\0", pendant, offsetX,	0,
+		addTextarea("header", "\0", pendant, winMargin,	0,
 				Fields.PENDANT_SCREEN_WIDTH, 20, Fields.UI_LIGHT_C,
 				Fields.UI_DARK_C, Fields.medium);
 		
@@ -564,9 +565,9 @@ public class WGUI implements ControlListener {
 		Toggle t = rb.getItem(0);
 		
 		rb.setItemsPerRow(3);
-		rb.setSpacingColumn( (windowTabs.getWidth() - 2 * offsetX - 3 * t.getWidth()) / 3 );
+		rb.setSpacingColumn( (windowTabs.getWidth() - 2 * winMargin - 3 * t.getWidth()) / 3 );
 		
-		addTextarea("SInstructions", "N/A", scenario, windowTabs.getWidth() - (2 * offsetX),
+		addTextarea("SInstructions", "N/A", scenario, windowTabs.getWidth() - (2 * winMargin),
 				54, Fields.small).hideScrollbar();
 		
 		addTextfield("SInput", scenario, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
@@ -1068,28 +1069,11 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * Reinitialize any and all input fields
+	 * Reinitializes all input fields (textfields, dropdown lists, etc.).
 	 */
-	private void clearAllInputFields() {
+	public void clearAllInputFields() {
 		clearGroupInputFields(null);
 		updateDimLblsAndFields();
-	}
-	
-	/**
-	 * Clear only the input fields in either the create or edit windows, if it
-	 * is active.
-	 */
-	public void clearInputsFields() {
-		if (menu == WindowTab.CREATE) {
-			clearGroupInputFields(createWO);
-			clearSharedInputFields();
-			updateCreateWindowContentPositions();
-			 
-		} else if (menu == WindowTab.EDIT) {
-			clearGroupInputFields(editWO);
-			clearSharedInputFields();
-			updateEditWindowContentPositions();
-		}
 	}
 
 	/**
@@ -1118,22 +1102,6 @@ public class WGUI implements ControlListener {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Reinitialize the input fields for any contents in the Scenario window
-	 */
-	public void clearScenarioInputFields() {
-		clearGroupInputFields(scenario);
-		updateDimLblsAndFields();
-	}
-
-	/**
-	 * Reinitialize the input fields for any shared contents
-	 */
-	public void clearSharedInputFields() {
-		clearGroupInputFields(sharedElements);
-		updateDimLblsAndFields();
 	}
 	 
 	/**
@@ -2300,7 +2268,7 @@ public class WGUI implements ControlListener {
 		 updateDimLblsAndFields();
 
 		 // Object Type dropdown list and label
-		 int[] relPos = new int[] { offsetX, offsetX };
+		 int[] relPos = new int[] { winMargin, winMargin };
 		 ControllerInterface<?> c = getTextArea("ObjTypeLbl").setPosition(relPos[0], relPos[1]);
 
 		 relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
@@ -2348,13 +2316,15 @@ public class WGUI implements ControlListener {
 		 relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		 c = getButton("CreateWldObj").setPosition(relPos[0], relPos[1]);
 		 // Clear button
-		 relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, offsetX, 0);
+		 relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, winMargin, 0);
 		 c = getButton("ClearFields").setPosition(relPos[0], relPos[1]);
+		 
 		 // Update window background display
 		 relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
-				   .setHeight( (int)Math.ceil( relPos[1] ) )
-				   .show();
+		 background.setPosition(createWO.getPosition())
+		 		   .setBackgroundHeight(relPos[1])
+		 		   .setHeight(relPos[1])
+		 		   .show();
 	 }
 
 	 /**
@@ -2491,37 +2461,37 @@ public class WGUI implements ControlListener {
 		 WorldObject selected = getSelectedWO();
 		 
 		 if (selected != null) {
-				// Set the dimension fields
-				if (selected.getForm() instanceof Box) {
-					getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.LENGTH)) );
-					getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
-					getTextField("Dim2").setText( String.format("%4.3f", selected.getForm().getDim(DimType.WIDTH)) );
-					
-				} else if (selected.getForm() instanceof Cylinder) {
-					getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.RADIUS)) );
-					getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
-					
-					
-				} else if (selected.getForm() instanceof ModelShape) {
-					getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.SCALE)) );
-				}
+			// Set the dimension fields
+			if (selected.getForm() instanceof Box) {
+				getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.LENGTH)) );
+				getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
+				getTextField("Dim2").setText( String.format("%4.3f", selected.getForm().getDim(DimType.WIDTH)) );
 				
-				fillCurWithCur();
-				fillDefWithDef();
+			} else if (selected.getForm() instanceof Cylinder) {
+				getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.RADIUS)) );
+				getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
 				
-				// Set the reference dropdown
-				MyDropdownList ddl = getDropdown("Fixture");
 				
-				if (selected instanceof Part) {
-				
-					Fixture ref = ((Part)selected).getFixtureRef();
-					ddl.setItem(ref);
-				
-				} else {
-					ddl.setValue(0);
-				}
-				
-			 }
+			} else if (selected.getForm() instanceof ModelShape) {
+				getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.SCALE)) );
+			}
+			
+			fillCurWithCur();
+			fillDefWithDef();
+			
+			// Set the reference dropdown
+			MyDropdownList ddl = getDropdown("Fixture");
+			
+			if (selected instanceof Part) {
+			
+				Fixture ref = ((Part)selected).getFixtureRef();
+				ddl.setItem(ref);
+			
+			} else {
+				ddl.setValue(0);
+			}
+			
+		 }
 	 }
 
 	 /**
@@ -2532,7 +2502,7 @@ public class WGUI implements ControlListener {
 		 getButton("ClearFields").hide();
 
 		 // Object list dropdown and label
-		 int[] relPos = new int[] { offsetX, offsetX };
+		 int[] relPos = new int[] { winMargin, winMargin };
 		 ControllerInterface<?> c = getTextArea("ObjLabel").setPosition(relPos[0], relPos[1]),
 				 				c0 = null;
 		 boolean isPart = getSelectedWO() instanceof Part;
@@ -2666,7 +2636,7 @@ public class WGUI implements ControlListener {
 			 relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			 c0 = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
 			 
-			 relPos =  new int[] { offsetX, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
+			 relPos =  new int[] { winMargin, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
 			 c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
 			
 			 relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX,
@@ -2690,9 +2660,10 @@ public class WGUI implements ControlListener {
 		 
 		 // Update window background display
 		 relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		 background.setBackgroundHeight( (int)Math.ceil( relPos[1] ) )
-		 .setHeight( (int)Math.ceil( relPos[1] ) )
-		 .show();
+		 background.setPosition(editWO.getPosition())
+		   .setBackgroundHeight(relPos[1])
+		   .setHeight(relPos[1])
+		   .show();
 	 }
 	 
 	 /**
@@ -2861,7 +2832,7 @@ public class WGUI implements ControlListener {
 	  */
 	 private void updateScenarioWindowContentPositions() {
 		// Scenario options label and radio buttons
-		int[] relPos = new int[] { offsetX, offsetX };
+		int[] relPos = new int[] { winMargin, winMargin };
 		ControllerInterface<?> c = getTextArea("SOptLbl").setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, 0);
@@ -2955,7 +2926,7 @@ public class WGUI implements ControlListener {
 	 */
 	private void updateMiscWindowContentPositions() {
 		// Axes Display label
-		int[] relPos = new int[] { offsetX, offsetX };
+		int[] relPos = new int[] { winMargin, winMargin };
 		ControllerInterface<?> c = getTextArea("ActiveAxesDisplay").setPosition(relPos[0], relPos[1]);
 		// Axes Display dropdown
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
@@ -3048,7 +3019,7 @@ public class WGUI implements ControlListener {
 		 }
 
 		 // Update the camera view buttons
-		 int[] relPos = getAbsPosFrom(windowTabs, Alignment.BOTTOM_RIGHT, offsetX, 0);
+		 int[] relPos = getAbsPosFrom(windowTabs, Alignment.BOTTOM_RIGHT, winMargin, 0);
 
 		 Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
 		 relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);

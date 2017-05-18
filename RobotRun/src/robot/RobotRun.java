@@ -1225,7 +1225,7 @@ public class RobotRun extends PApplet {
 	 * object creation and edit windows.
 	 */
 	public void ClearFields() {
-		UI.clearInputsFields();
+		UI.clearAllInputFields();
 	}
 
 	/**
