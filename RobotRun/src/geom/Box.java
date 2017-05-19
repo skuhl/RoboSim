@@ -24,7 +24,7 @@ public class Box extends Shape {
 	}
 
 	/**
-	 * Create an empty cube with the given color and dinemsion.
+	 * Create an empty cube with the given color and dimension.
 	 */
 	public Box(int strokeVal, float edgeLen) {
 		super(null, strokeVal);
@@ -32,7 +32,7 @@ public class Box extends Shape {
 	}
 
 	/**
-	 * Create an empty box with the given color and dinemsions.
+	 * Create an empty box with the given color and dimensions.
 	 */
 	public Box(int strokeVal, float len, float hgt, float wdh) {
 		super(null, strokeVal);
@@ -40,7 +40,7 @@ public class Box extends Shape {
 	}
 
 	/**
-	 * Create a cube with the given colors and dinemsion.
+	 * Create a cube with the given colors and dimension.
 	 */
 	public Box(int fill, int strokeVal, float edgeLen) {
 		super(fill, strokeVal);
@@ -48,7 +48,7 @@ public class Box extends Shape {
 	}
 
 	/**
-	 * Create a box with the given colors and dinemsions.
+	 * Create a box with the given colors and dimensions.
 	 */
 	public Box(int fill, int strokeVal, float len, float hgt, float wdh) {
 		super(fill, strokeVal);

@@ -45,7 +45,8 @@ public class Fixture extends WorldObject {
 
 	@Override
 	public Fixture clone() {
-		return new Fixture(getName(), (Shape)getForm().clone(), (CoordinateSystem)localOrientation.clone());
+		return new Fixture(getName(), getForm().clone(),
+				localOrientation.clone());
 	}
 
 	/**
