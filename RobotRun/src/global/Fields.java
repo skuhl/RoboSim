@@ -67,6 +67,11 @@ public abstract class Fields {
 	public static final int FTYPE_USER = 1;
 	
 	/**
+	 * The y position of the floor of the world.
+	 */
+	public static final float FLOOR_Y;
+	
+	/**
 	 * The 3x3 floating-point array representation of the identity matrix.
 	 */
 	public static final float[][] IDENTITY;
@@ -141,6 +146,8 @@ public abstract class Fields {
 	 * Initialize the static fields.
 	 */
 	static {
+		FLOOR_Y = 300f;
+		
 		IDENTITY = new float[][] {
 			{ 1, 0, 0 },
 			{ 0, 1, 0 },

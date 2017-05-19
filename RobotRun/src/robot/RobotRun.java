@@ -4757,7 +4757,7 @@ public class RobotRun extends PApplet {
 			} else if (keyCode == KeyEvent.VK_Z) {
 				// Scenario undo
 				if (UI != null) {
-					if (UI.isPendantActive()) {
+					if (!UI.isPendantActive()) {
 						undoScenarioEdit();
 					}
 				}	
@@ -5796,6 +5796,7 @@ public class RobotRun extends PApplet {
 	
 	@Override
 	public void mousePressed() {
+		/* Check if the mouse position is colliding with a world object */
 		if (mouseButton == LEFT) {
 			PVector mouse = new PVector(mouseX, mouseY, 0f);
 			
@@ -7264,8 +7265,8 @@ public class RobotRun extends PApplet {
 			keyCodeMap = new KeyCodeMap();
 			DataManagement.initialize(this);
 			
-			ROBOTS.put(0, new RoboticArm(0, new PVector(200, 300, 200), loadRobotModels()));
-			ROBOTS.put(1, new RoboticArm(1, new PVector(200, 300, -750), loadRobotModels()));
+			ROBOTS.put(0, new RoboticArm(0, new PVector(200, Fields.FLOOR_Y, 200), loadRobotModels()));
+			ROBOTS.put(1, new RoboticArm(1, new PVector(200, Fields.FLOOR_Y, -750), loadRobotModels()));
 
 			for (RoboticArm r : ROBOTS.values()) {
 				r.setDefaultRobotPoint();
@@ -7282,8 +7283,8 @@ public class RobotRun extends PApplet {
 			mode = ScreenMode.DEFAULT;
 			pushScreen(ScreenMode.DEFAULT, -1, -1, 0, -1, 0);
 			
-			contents = new MenuScroll(this, "cont", ITEMS_TO_SHOW, 10, 20);
-			options = new MenuScroll(this, "opt", 3, 10, 180);
+			contents = new MenuScroll("cont", ITEMS_TO_SHOW, 10, 20);
+			options = new MenuScroll("opt", 3, 10, 180);
 			
 			setManager(new WGUI(this, buttonImages));
 			

@@ -1,7 +1,6 @@
 package screen;
 
 import enums.ScreenMode;
-import global.Fields;
 import robot.RobotRun;
 
 public class ScreenProgs extends Screen {

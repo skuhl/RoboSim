@@ -3,10 +3,8 @@ package screen;
 import java.util.ArrayList;
 
 import global.RMath;
-import robot.RobotRun;
 
 public class MenuScroll {
-	private final RobotRun robotRun;
 	private final String name;
 	private int maxDisp;
 	private int xPos;
@@ -19,8 +17,7 @@ public class MenuScroll {
 	private int columnIdx;
 	private int renderStart;
 	
-	public MenuScroll(RobotRun r, String n, int max, int x, int y) {
-		robotRun = r;
+	public MenuScroll(String n, int max, int x, int y) {
 		name = n;
 		
 		maxDisp = max;
