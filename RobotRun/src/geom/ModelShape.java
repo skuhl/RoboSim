@@ -165,4 +165,9 @@ public class ModelShape extends Shape {
 		default:
 		}
 	}
+
+	@Override
+	public int getID() {
+		return MODEL_ID;
+	}
 }

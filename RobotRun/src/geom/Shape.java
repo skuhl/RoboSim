@@ -71,4 +71,6 @@ public abstract class Shape implements Cloneable {
 	public void setFillValue(Integer newVal) { fillCVal = newVal; }
 
 	public void setStrokeValue(Integer newVal) { strokeCVal = newVal; }
+
+	public abstract int getID();
 }

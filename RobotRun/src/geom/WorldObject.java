@@ -10,7 +10,7 @@ public abstract class WorldObject implements Cloneable {
 	protected CoordinateSystem localOrientation;
 	private String name;
 	private Shape form;
-
+	
 	public WorldObject() {
 		name = "Object";
 		form = new Box();
@@ -105,6 +105,8 @@ public abstract class WorldObject implements Cloneable {
 	// Getter and Setter methods for the World Object's local orientation, name, and form
 
 	public Shape getForm() { return form; }
+	
+	public int getObjectID() { return form.getID(); }
 
 	public PVector getLocalCenter() {
 		return localOrientation.getOrigin();

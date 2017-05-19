@@ -151,7 +151,7 @@ public class WGUI implements ControlListener {
 		ControllerInterface<?> c1 = null, c2 = null;
 
 		// The default set of labels for window tabs
-		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
+		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Camera", "Misc" };
 
 		// Initialize the window tab selection bar
 		windowTabs = (MyButtonBar)(new MyButtonBar(manager, "Tabs")

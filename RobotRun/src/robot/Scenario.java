@@ -20,6 +20,8 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 * A combine list of Parts and Fixtures
 	 */
 	private final ArrayList<WorldObject> objList;
+	
+	private boolean gravity = false;
 
 	/**
 	 * Create a new scenario of the given name.
