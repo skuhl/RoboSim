@@ -1551,13 +1551,12 @@ public class RobotRun extends PApplet {
 			}
 			/**
 			printMatrix();
-			/*Camera Test Code*/
+			/*Camera Test Code*
 			Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
 			float[][] axes = p.orientation.toMatrix().getFloatData();
 			c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[0][1], axes[1][1], axes[2][1]), -PI/2)));
 			c.setPosition(p.position);
 			renderOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
-			System.out.println(c.matchTaughtObject(0));
 			
 			PVector near[] = c.getPlaneNear();
 			PVector far[] = c.getPlaneFar();
@@ -1592,8 +1591,8 @@ public class RobotRun extends PApplet {
 			endShape();
 			
 			popMatrix();
-			
 			/**/
+			
 			popMatrix();
 			
 			hint(DISABLE_DEPTH_TEST);
