@@ -409,7 +409,9 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					p.updateAbsoluteOrientation();
 					RobotRun.getInstance().popMatrix();
 				}
-				else if (p.getFixtureRef() == null && p.getLocalCenter().y < 0f) {
+				else if (p.getFixtureRef() == null && p.getLocalCenter().y <
+						Fields.FLOOR_Y) {
+					
 					// Gravity
 					PVector c = wldObj.getLocalCenter();
 					wldObj.updateLocalCenter(null, c.y + 10, null);

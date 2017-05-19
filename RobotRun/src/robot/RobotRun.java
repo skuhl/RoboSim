@@ -771,7 +771,7 @@ public class RobotRun extends PApplet {
 	public void BackView() {
 		// Back view
 		camera.reset();
-		camera.rotate(0f, PI, 0f);
+		camera.setRotation(0f, PI, 0f);
 	}
 	
 	/**
@@ -899,7 +899,7 @@ public class RobotRun extends PApplet {
 	public void BottomView() {
 		// Bottom view
 		camera.reset();
-		camera.rotate(PI / 2f, 0f, 0f);
+		camera.setRotation(PI / 2f, 0f, 0f);
 	}
 	
 	/**
@@ -4872,7 +4872,7 @@ public class RobotRun extends PApplet {
 	public void LeftView() {
 		// Left view
 		camera.reset();
-		camera.rotate(0f, PI / 2f, 0f);
+		camera.setRotation(0f, PI / 2f, 0f);
 	}
 
 	/**
@@ -5799,8 +5799,9 @@ public class RobotRun extends PApplet {
 		/* Check if the mouse position is colliding with a world object */
 		if (mouseButton == LEFT) {
 			PVector mouse = new PVector(mouseX, mouseY, 0f);
+			int pixel = get(mouseX, mouseY);
 			
-			System.out.printf("%-16s : %s\n", "Mouse", mouse);
+			System.out.printf("\n%-16s : %s %#x\n", "Mouse", mouse, pixel);
 			
 			Scenario s = getActiveScenario();
 			
@@ -7100,7 +7101,7 @@ public class RobotRun extends PApplet {
 	public void RightView() {
 		// Right view
 		camera.reset();
-		camera.rotate(0, 3f * PI / 2f, 0f);
+		camera.setRotation(0, 3f * PI / 2f, 0f);
 	}
 
 	/**
@@ -7241,8 +7242,6 @@ public class RobotRun extends PApplet {
 			{ loadImage("images/arrow-r.png"), loadImage("images/arrow-r_over.png"), loadImage("images/arrow-r_down.png") }
 			
 		};
-		
-		System.out.printf("%d\n%d\n%d\n%d\n", color(0, 255, 0), color(255, 0, 0), color(0, 0, 255), color(255, 75, 0));
 		
 		instance = this;
 		letterStates = new int[] { 0, 0, 0, 0, 0 };
@@ -7523,7 +7522,7 @@ public class RobotRun extends PApplet {
 	public void TopView() {
 		// Top view
 		camera.reset();
-		camera.rotate(3f * PI / 2f, 0f, 0f);
+		camera.setRotation(3f * PI / 2f, 0f, 0f);
 	}
 
 	/**

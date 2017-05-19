@@ -14,7 +14,7 @@ public class Camera {
 	
 	private PVector position;
 	// Rotations in X, Y, Z in radians
-	private PVector orientation;
+	private PVector rotation;
 	private float scale;
 	
 	/**
@@ -22,7 +22,7 @@ public class Camera {
 	 */
 	public Camera() {
 		position = new PVector(0f, 0f, 0f);
-		orientation = new PVector(0f, 0f, 0f);
+		rotation = new PVector(0f, 0f, 0f);
 		scale = 2f;
 	}
 
@@ -34,13 +34,13 @@ public class Camera {
 		Camera copy = new Camera();
 		// Copy position, orientation, and scale
 		copy.position = position.copy();
-		copy.orientation = orientation.copy();
+		copy.rotation = rotation.copy();
 		copy.scale = scale;
 
 		return copy;
 	}
 
-	public PVector getOrientation() { return orientation.copy(); }
+	public PVector getOrientation() { return rotation.copy(); }
 	public PVector getPosition() { return position.copy(); }
 	public float getScale() { return scale; }
 
@@ -52,9 +52,9 @@ public class Camera {
 		position.x = 0f;
 		position.y = 0f;
 		position.z = 0f;
-		orientation.x = 0f;
-		orientation.y = 0f;
-		orientation.z = 0f;
+		rotation.x = 0f;
+		rotation.y = 0f;
+		rotation.z = 0f;
 		scale = 2f;
 	}
 
@@ -75,12 +75,12 @@ public class Camera {
 		}
 		
 		// Apply rotation
-		orientation.add( delta.mult(deltaScale) );
+		rotation.add( delta.mult(deltaScale) );
 		
 		// Apply camera rotation restrictions
-		orientation.x = RMath.mod2PI(orientation.x);
-		orientation.y = RMath.mod2PI(orientation.y);
-		orientation.z = RMath.mod2PI(orientation.z);
+		rotation.x = RMath.mod2PI(rotation.x);
+		rotation.y = RMath.mod2PI(rotation.y);
+		rotation.z = RMath.mod2PI(rotation.z);
 	}
 	
 	/**
@@ -91,6 +91,34 @@ public class Camera {
 	 */
 	public void scale(float multiplier) {
 		scale = Math.max(MIN_SCALE, Math.min(scale * multiplier, MAX_SCALE));
+	}
+	
+	/**
+	 * Set the position of the camera.
+	 * 
+	 * @param x	The x-axis position
+	 * @param y	The y-axis position
+	 * @param z	The z-axis position
+	 */
+	public void setPosition(float x, float y, float z) {
+		float limit = scale * 9999f / 2f;
+		
+		position.x = RMath.clamp(x, -limit, limit);
+		position.y = RMath.clamp(y, -limit, limit);
+		position.z = RMath.clamp(z, -limit, limit);
+	}
+	
+	/**
+	 * Set the rotation of the camera.
+	 * 
+	 * @param w	The x-axis rotation
+	 * @param p	The y-axis rotation
+	 * @param r	The z-axis rotation
+	 */
+	public void setRotation(float w, float p, float r) {		
+		rotation.x = RMath.mod2PI(w);
+		rotation.y = RMath.mod2PI(p);
+		rotation.z = RMath.mod2PI(r);
 	}
 	
 	/**
@@ -111,7 +139,7 @@ public class Camera {
 	public String[] toStringArray() {
 		String[] fields = new String[7];
 		// Display rotation in degrees
-		PVector inDegrees = PVector.mult(orientation, PConstants.RAD_TO_DEG);
+		PVector inDegrees = PVector.mult(rotation, PConstants.RAD_TO_DEG);
 		
 		fields[0] = "X: " + MyFloatFormat.format(position.x);
 		fields[1] = "Y: " + MyFloatFormat.format(position.y);
