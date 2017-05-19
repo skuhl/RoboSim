@@ -618,28 +618,28 @@ public class WGUI implements ControlListener {
 
 		ddlLimbo = addDropdown("Outline", createWO, sdropItemWidth, dropItemHeight,
 				4, Fields.small);
-		ddlLimbo.addItem("black", app.color(0))
-		.addItem("red", app.color(255, 0, 0))
-		.addItem("green", app.color(0, 255, 0))
-		.addItem("blue", app.color(0, 0, 255))
-		.addItem("orange", app.color(255, 60, 0))
-		.addItem("yellow", app.color(255, 255, 0))
-		.addItem("pink", app.color(255, 0, 255))
-		.addItem("purple", app.color(90, 0, 255));
+		ddlLimbo.addItem("black", Fields.BLACK)
+		.addItem("red", Fields.RED)
+		.addItem("green", Fields.GREEN)
+		.addItem("blue", Fields.BLUE)
+		.addItem("orange", Fields.ORANGE)
+		.addItem("yellow", Fields.YELLOW)
+		.addItem("pink", Fields.PINK)
+		.addItem("purple", Fields.PURPLE);
 
 		ddlLimbo = addDropdown("Fill", createWO, mdropItemWidth, dropItemHeight,
 				4, Fields.small);
-		ddlLimbo.addItem("white", app.color(255))
-		.addItem("black", app.color(0))
-		.addItem("red", app.color(255, 0, 0))
-		.addItem("green", app.color(0, 255, 0))
-		.addItem("blue", app.color(0, 0, 255))
-		.addItem("orange", app.color(255, 60, 0))
-		.addItem("yellow", app.color(255, 255, 0))
-		.addItem("pink", app.color(255, 0, 255))
-		.addItem("purple", app.color(90, 0, 255))
-		.addItem("sky blue", app.color(0, 255, 255))
-		.addItem("dark green", app.color(0, 100, 15));
+		ddlLimbo.addItem("white", Fields.WHITE)
+		.addItem("black", Fields.BLACK)
+		.addItem("red", Fields.RED)
+		.addItem("green", Fields.GREEN)
+		.addItem("blue", Fields.BLUE)
+		.addItem("orange", Fields.ORANGE)
+		.addItem("yellow", Fields.YELLOW)
+		.addItem("pink", Fields.PINK)
+		.addItem("purple", Fields.PURPLE)
+		.addItem("light blue", Fields.LT_BLUE)
+		.addItem("dark green", Fields.DK_GREEN);
 
 		ddlLimbo = addDropdown("Shape", createWO, sdropItemWidth, dropItemHeight,
 				4, Fields.small);

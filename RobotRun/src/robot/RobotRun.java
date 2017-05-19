@@ -5796,7 +5796,7 @@ public class RobotRun extends PApplet {
 	
 	@Override
 	public void mousePressed() {
-		/* Check if the mouse position is colliding with a world object */
+		/* Check if the mouse position is colliding with a world object *
 		if (mouseButton == LEFT) {
 			PVector mouse = new PVector(mouseX, mouseY, 0f);
 			int pixel = get(mouseX, mouseY);
@@ -5832,6 +5832,7 @@ public class RobotRun extends PApplet {
 				
 			}
 		}
+		/**/
 	}
 
 	@Override
