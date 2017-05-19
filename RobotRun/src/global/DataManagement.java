@@ -58,7 +58,7 @@ import robot.Scenario;
  * All fields and methods are static, so no instance of the class is
  * necessary.
  * 
- * @author Joshua Hooker and Vincent Druckte6
+ * @author Joshua Hooker and Vincent Druckte
  */
 public abstract class DataManagement {
 	
