@@ -2,6 +2,7 @@ package geom;
 
 import java.util.Arrays;
 
+import global.MyFloatFormat;
 import global.RMath;
 import processing.core.PConstants;
 import processing.core.PVector;
@@ -146,39 +147,22 @@ public class Point  {
 	 */
 	public String[][] toCartesianStringArray() {
 		String[][] entries = new String[6][2];
-
-		PVector pos;
-		if (position == null) {
-			// Uninitialized
-			pos = new PVector(Float.NaN, Float.NaN, Float.NaN);
-		} else {
-			// Display in terms of the World Frame
-			pos = RMath.vToWorld(position);
-		}
-
-		// Convert Quaternion to Euler Angles
-		PVector angles;
-		if (orientation == null) {
-			// Uninitialized
-			angles = new PVector(Float.NaN, Float.NaN, Float.NaN);
-		} else {
-			// Display in degrees
-			angles = RMath.nQuatToWEuler(orientation);
-		}
-
+		
+		PVector limbo = worldFramePosition();
 		entries[0][0] = "X: ";
-		entries[0][1] = String.format("%4.3f", pos.x);
+		entries[0][1] = String.format("%4.3f", limbo.x);
 		entries[1][0] = "Y: ";
-		entries[1][1] = String.format("%4.3f", pos.y);
+		entries[1][1] = String.format("%4.3f", limbo.y);
 		entries[2][0] = "Z: ";
-		entries[2][1] = String.format("%4.3f", pos.z);
-		// Display angles in terms of the World frame
+		entries[2][1] = String.format("%4.3f", limbo.z);
+
+		limbo = worldFrameOrientation();
 		entries[3][0] = "W: ";
-		entries[3][1] = String.format("%4.3f", angles.x);
+		entries[3][1] = String.format("%4.3f", limbo.x);
 		entries[4][0] = "P: ";
-		entries[4][1] = String.format("%4.3f", angles.y);
+		entries[4][1] = String.format("%4.3f", limbo.y);
 		entries[5][0] = "R: ";
-		entries[5][1] = String.format("%4.3f", angles.z);
+		entries[5][1] = String.format("%4.3f", limbo.z);
 
 		return entries;
 	}
@@ -198,7 +182,8 @@ public class Point  {
 			if (angles == null) {
 				entries[idx][1] = Float.toString(Float.NaN);
 			} else {
-				entries[idx][1] = String.format("%4.3f", angles[idx] * PConstants.RAD_TO_DEG);
+				entries[idx][1] = String.format("%4.3f", angles[idx]
+						* PConstants.RAD_TO_DEG);
 			}
 		}
 
@@ -216,24 +201,40 @@ public class Point  {
 	 * @returning               A 2-element String array
 	 */
 	public String[] toLineStringArray(boolean displayCartesian) {
-		String[][] entries;
-
+		String str0, str1, str2, str3, str4, str5;
+		
 		if (displayCartesian) {
-			entries = toCartesianStringArray();
+			PVector limbo = worldFramePosition();
+			str0 = "X: " + MyFloatFormat.format(limbo.x);
+			str1 = "Y: " + MyFloatFormat.format(limbo.y);
+			str2 = "Z: " + MyFloatFormat.format(limbo.z);
+			
+			limbo = worldFrameOrientation();
+			str3 = "W: " + MyFloatFormat.format(limbo.x);
+			str4 = "P: " + MyFloatFormat.format(limbo.y);
+			str5 = "R: " + MyFloatFormat.format(limbo.z);
+			
 		} else {
-			entries = toJointStringArray();
+			str0 = "J1: " + MyFloatFormat.format(angles[0]
+					* PConstants.RAD_TO_DEG);
+			str1 = "J2: " + MyFloatFormat.format(angles[1]
+					* PConstants.RAD_TO_DEG);
+			str2 = "J3: " + MyFloatFormat.format(angles[2]
+					* PConstants.RAD_TO_DEG);
+			str3 = "J4: " + MyFloatFormat.format(angles[3]
+					* PConstants.RAD_TO_DEG);
+			str4 = "J5: " + MyFloatFormat.format(angles[4]
+					* PConstants.RAD_TO_DEG);
+			str5 = "J6: " + MyFloatFormat.format(angles[5]
+					* PConstants.RAD_TO_DEG);
 		}
-
-
-		String[] line = new String[2];
-		// X, Y, Z with space buffers
-		line[0] = String.format("%-12s %-12s %s", entries[0][0].concat(entries[0][1]),
-				entries[1][0].concat(entries[1][1]), entries[2][0].concat(entries[2][1]));
-		// W, P, R with space buffers
-		line[1] = String.format("%-12s %-12s %s", entries[3][0].concat(entries[3][1]),
-				entries[4][0].concat(entries[4][1]), entries[5][0].concat(entries[5][1]));
-
-		return line;
+		
+		return new String[] {
+			// X, Y, Z with space buffers
+			String.format("%-13s %-13s %s", str0, str1, str2),
+			// W, P, R with space buffers
+			String.format("%-13s %-13s %s",  str3, str4, str5)
+		};
 	}
 
 	@Override
@@ -241,4 +242,28 @@ public class Point  {
 		return String.format("P=%s O=%s J=%s", position, orientation,
 				Arrays.toString(angles));
 	}
-} // end Point class
+	
+	/**
+	 * @return	The position of this point with reference to the world frame
+	 */
+	private PVector worldFrameOrientation() {
+		if (orientation == null) {
+			// Uninitialized
+			return new PVector(Float.NaN, Float.NaN, Float.NaN);
+		}
+		
+		return RMath.nQuatToWEuler(orientation);
+	}
+	
+	/**
+	 * @return	The orientation of the point with reference to the world frame
+	 */
+	private PVector worldFramePosition() {
+		if (position == null) {
+			// Uninitialized
+			return new PVector(Float.NaN, Float.NaN, Float.NaN);
+		}
+		
+		return RMath.vToWorld(position);
+	}
+}

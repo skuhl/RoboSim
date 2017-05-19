@@ -280,7 +280,7 @@ public class RobotRun extends PApplet {
 
 	int temp_select = 0;
 
-	private int record = Fields.OFF;
+	private boolean record;
 	
 	/**
 	 * A temporary storage string for user input in the pendant window.
@@ -1724,15 +1724,6 @@ public class RobotRun extends PApplet {
 				letterStates[idx] = 0;
 			}
 		}
-	}
-	
-	/**
-	 * EE button
-	 * 
-	 * Changes the end effector of the active robot.
-	 */
-	public void EE() {
-		getActiveRobot().cycleEndEffector();
 	}
 
 	/**
@@ -4360,7 +4351,7 @@ public class RobotRun extends PApplet {
 		return options;
 	}
 
-	public int getRecord() {
+	public boolean getRecord() {
 		return record;
 	}
 
@@ -4699,30 +4690,14 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
-		// Pendant button shortcuts
-		switch(keyCode) {
-		case KeyEvent.VK_SHIFT:		if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
-										setShift(true); break;
-		case KeyEvent.VK_U: 		joint1_neg(); break;
-		case KeyEvent.VK_I:			joint1_pos(); break;
-		case KeyEvent.VK_J: 		joint2_neg(); break;
-		case KeyEvent.VK_K: 		joint2_pos(); break;
-		case KeyEvent.VK_M: 		joint3_neg(); break;
-		case KeyEvent.VK_COMMA:		joint3_pos(); break;
-		case KeyEvent.VK_O: 		joint4_neg(); break;
-		case KeyEvent.VK_P:			joint4_pos(); break;
-		case KeyEvent.VK_L: 		joint5_neg(); break;
-		case KeyEvent.VK_SEMICOLON: joint5_pos(); break;
-		case KeyEvent.VK_PERIOD: 	joint6_neg(); break;
-		case KeyEvent.VK_SLASH:		joint6_pos(); break;
-		case KeyEvent.VK_MINUS:		spddn(); break;
-		case KeyEvent.VK_EQUALS:	spdup(); break;
-		case KeyEvent.VK_S:			blaster.shoot(); break;
-		}
-
 		// General key functions
 		if (ctrlDown) {
-			if (keyCode == KeyEvent.VK_D) {
+			
+			if (keyCode == KeyEvent.VK_C) {
+				// Cycle active coordinate frame
+				coord();
+				
+			} else if (keyCode == KeyEvent.VK_D) {
 				/* Debug output *
 				updatePendantScreen();
 				/**/
@@ -4744,19 +4719,14 @@ public class RobotRun extends PApplet {
 				Fields.debug(options.toString());
 				/**/
 				
-			} else if ( keyCode == KeyEvent.VK_S) {
-				// Save EVERYTHING!
-				DataManagement.saveState(this);
-				
-			} else if (keyCode == KeyEvent.VK_Z) {
-				
-				if (UI != null) {
-					if (UI.isPendantActive()) {
-						undoScenarioEdit();
-					}
+			} else if (keyCode == KeyEvent.VK_E) {
+				// Cycle End Effectors
+				if (!isProgramRunning()) {
+					getActiveRobot().cycleEndEffector();
+					UI.updateListContents();
 				}
 				
-			} else if (keyCode == KeyEvent.VK_E) {
+			} else if (keyCode == KeyEvent.VK_P) {
 				// Toggle the Robot's End Effector state
 				if (!isProgramRunning()) {
 					getActiveRobot().toggleEEState();
@@ -4770,11 +4740,52 @@ public class RobotRun extends PApplet {
 				intermediatePositions.clear();
 				
 			} else if (keyCode == KeyEvent.VK_R) {
-				reset();
 				
-			} else if (keyCode == KeyEvent.VK_C) {
-				coord();
+				if (keyCodeMap.isKeyDown(KeyEvent.VK_SHIFT)) {
+					// Toggle record state
+					setRecord( !getRecord() );
+					
+				} else {
+					// Rest motion fault
+					reset();
+				}
+				
+			} else if ( keyCode == KeyEvent.VK_S) {
+				// Save EVERYTHING!
+				DataManagement.saveState(this);
+				
+			} else if (keyCode == KeyEvent.VK_Z) {
+				// Scenario undo
+				if (UI != null) {
+					if (UI.isPendantActive()) {
+						undoScenarioEdit();
+					}
+				}	
 			}
+			
+		} else {
+			
+			// Pendant button shortcuts
+			switch(keyCode) {
+			case KeyEvent.VK_SHIFT:		if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
+											setShift(true); break;
+			case KeyEvent.VK_U: 		joint1_neg(); break;
+			case KeyEvent.VK_I:			joint1_pos(); break;
+			case KeyEvent.VK_J: 		joint2_neg(); break;
+			case KeyEvent.VK_K: 		joint2_pos(); break;
+			case KeyEvent.VK_M: 		joint3_neg(); break;
+			case KeyEvent.VK_COMMA:		joint3_pos(); break;
+			case KeyEvent.VK_O: 		joint4_neg(); break;
+			case KeyEvent.VK_P:			joint4_pos(); break;
+			case KeyEvent.VK_L: 		joint5_neg(); break;
+			case KeyEvent.VK_SEMICOLON: joint5_pos(); break;
+			case KeyEvent.VK_PERIOD: 	joint6_neg(); break;
+			case KeyEvent.VK_SLASH:		joint6_pos(); break;
+			case KeyEvent.VK_MINUS:		spddn(); break;
+			case KeyEvent.VK_EQUALS:	spdup(); break;
+			case KeyEvent.VK_S:			blaster.shoot(); break;
+			}
+			
 		}
 
 	}
@@ -6802,7 +6813,7 @@ public class RobotRun extends PApplet {
 
 		text(scenarioTitle, lastTextPositionX, lastTextPositionY);
 		lastTextPositionY += 40;
-		// Display the Robot's current position and orientation ini the World
+		// Display the Robot's current position and orientation in the World
 		// frame
 		text("Robot Position and Orientation", lastTextPositionX, lastTextPositionY);
 		lastTextPositionY += 20;
@@ -6850,12 +6861,7 @@ public class RobotRun extends PApplet {
 			// Convert the values into the World Coordinate System
 			PVector position = RMath.vToWorld(toEdit.getLocalCenter());
 			PVector wpr = RMath.nRMatToWEuler( toEdit.getLocalOrientationAxes() );
-			// Create a set of uniform Strings
-			String[] fields = new String[] {
-					String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
-					String.format("Z: %4.3f", position.z), String.format("W: %4.3f", wpr.x),
-					String.format("P: %4.3f", wpr.y), String.format("R: %4.3f", wpr.z)
-			};
+			
 
 			lastTextPositionY += 20;
 			text(toEdit.getName(), lastTextPositionX, lastTextPositionY);
@@ -6870,16 +6876,15 @@ public class RobotRun extends PApplet {
 					dimDisplay += String.format("%s", dimFields[idx]);
 				}
 			}
+			
+			// Create a set of uniform Strings
+			String[] lines = Fields.toLineStringArray(position, wpr);
 
 			text(dimDisplay, lastTextPositionX, lastTextPositionY);
-
 			lastTextPositionY += 20;
-			// Add space padding
-			text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX,
-					lastTextPositionY);
+			text(lines[0], lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
-			text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]), lastTextPositionX,
-					lastTextPositionY);
+			text(lines[1], lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 
 			if (toEdit instanceof Part) {
@@ -6887,45 +6892,45 @@ public class RobotRun extends PApplet {
 				// Convert the values into the World Coordinate System
 				position = RMath.vToWorld( p.getDefaultCenter() );
 				wpr = RMath.nRMatToWEuler( p.getDefaultOrientationAxes() );
+				
 				// Create a set of uniform Strings
-				fields = new String[] {
-						String.format("X: %4.3f", position.x), String.format("Y: %4.3f", position.y),
-						String.format("Z: %4.3f", position.z), String.format("W: %4.3f", wpr.x),
-						String.format("P: %4.3f", wpr.y), String.format("R: %4.3f", wpr.z)
-				};
-
+				lines = Fields.toLineStringArray(position, wpr);
+				
 				lastTextPositionY += 20;
-				// Add space padding
-				text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]), lastTextPositionX,
-						lastTextPositionY);
+				text(lines[0], lastTextPositionX, lastTextPositionY);
 				lastTextPositionY += 20;
-				text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]), lastTextPositionX,
-						lastTextPositionY);
+				text(lines[1], lastTextPositionX, lastTextPositionY);
 				lastTextPositionY += 20;
 			}
 		}
 		
+		/* Camera test output *
 		if (Fields.DEBUG) {
-			String[] fields = camera.toStringArray();
+			String[] lines = Fields.toLineStringArray(camera.getPosition(),
+					camera.getOrientation());
 			
 			lastTextPositionY += 20;
-			// Add space padding
 			text("Camera", lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
-			text(String.format("%-12s %-12s %s", fields[0], fields[1], fields[2]),
-					lastTextPositionX, lastTextPositionY);
+			text(lines[0], lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
-			text(String.format("%-12s %-12s %s", fields[3], fields[4], fields[5]),
-					lastTextPositionX, lastTextPositionY);
+			text(lines[1], lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
-			text(String.format("%s", fields[6]), lastTextPositionX,
+			text(MyFloatFormat.format(camera.getScale()), lastTextPositionX,
 					lastTextPositionY);
 			lastTextPositionY += 20;
 		}
+		/**/
 		
 		pushStyle();
 		fill(215, 0, 0);
 		lastTextPositionY += 20;
+		
+		if (record) {
+			text("Recording (press Ctrl + Shift + r)",
+					lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
 
 		// Display a message when there is an error with the Robot's
 		// movement
@@ -7127,8 +7132,8 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void setRecord(int record) {
-		this.record = record;
+	public void setRecord(boolean state) {
+		record = state;
 	}
 
 	/**
@@ -7208,7 +7213,8 @@ public class RobotRun extends PApplet {
 		Fields.medium = createFont("fonts/Consolas.ttf", 14);
 		Fields.small = createFont("fonts/Consolas.ttf", 12);
 		Fields.bond = createFont("fonts/ConsolasBold.ttf", 12);
-
+		
+		record = false;
 		camera = new Camera();
 		activeScenario = null;
 

@@ -29,7 +29,7 @@ public class RecordScreen implements Runnable {
 					"video=\"screen-capture-recorder\":audio=\"Microphone" + 
 					" (Conexant SmartAudio HD)\" " + filename );
 			Process proc = rt.exec(script); */
-			while(RobotRun.getInstance().getRecord() == Fields.ON) {
+			while(RobotRun.getInstance().getRecord()) {
 				Thread.sleep(4000);
 			}
 			rt.exec("taskkill /F /IM ffmpeg.exe"); // close ffmpeg
