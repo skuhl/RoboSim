@@ -10,6 +10,16 @@ import robot.RobotRun;
 public class Part extends WorldObject {
 	
 	/**
+	 * A scale factor for calculating the dimensions of a part's bounding box.
+	 */
+	private static final float OBB_DIM_SCALE, OBB_RAD_SCALE;
+	
+	static {
+		OBB_DIM_SCALE = 1.05f;
+		OBB_RAD_SCALE = 2.07f;
+	}
+	
+	/**
 	 * This algorithm uses the Separating Axis Theorm to project radi of each Box on to several 
 	 * axes to determine if a there is any overlap between the boxes. The method strongly resembles 
 	 * the method outlined in Section 4.4 of "Real Time Collision Detection" by Christer Ericson
@@ -144,7 +154,7 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, int fill, int strokeVal, float edgeLen) {
 		super(n, new Box(fill, strokeVal, edgeLen));
-		absOBB = new BoundingBox(edgeLen);
+		absOBB = new BoundingBox(OBB_DIM_SCALE * edgeLen);
 		defaultOrientation = (CoordinateSystem) localOrientation.clone();
 	}
 
@@ -153,7 +163,8 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, int fill, int strokeVal, float rad, float hgt) {
 		super(n, new Cylinder(fill, strokeVal, rad, hgt));
-		absOBB = new BoundingBox(2*rad, 2*rad, hgt);
+		absOBB = new BoundingBox(OBB_RAD_SCALE * rad, OBB_RAD_SCALE * rad,
+				OBB_DIM_SCALE * hgt);
 		defaultOrientation = (CoordinateSystem) localOrientation.clone();
 	}
 
@@ -162,7 +173,8 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
 		super(n, new Box(fill, strokeVal, len, hgt, wdh));
-		absOBB = new BoundingBox(len, hgt, wdh);
+		absOBB = new BoundingBox(OBB_DIM_SCALE * len, OBB_DIM_SCALE * hgt,
+				OBB_DIM_SCALE * wdh);
 		defaultOrientation = (CoordinateSystem) localOrientation.clone();
 	}
 
@@ -186,7 +198,8 @@ public class Part extends WorldObject {
 			CoordinateSystem def, Fixture fixRef) {
 		
 		super(n, s, local);
-		absOBB = new BoundingBox(OBBDims.x, OBBDims.y, OBBDims.z);
+		absOBB = new BoundingBox(OBB_DIM_SCALE * OBBDims.x,
+				OBB_DIM_SCALE * OBBDims.y, OBB_DIM_SCALE * OBBDims.z);
 		defaultOrientation = def;
 		setFixtureRef(fixRef);
 	}

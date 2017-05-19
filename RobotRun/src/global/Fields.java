@@ -189,8 +189,8 @@ public abstract class Fields {
 		String strY = "Y: " + MyFloatFormat.format(position.y);
 		String strZ = "Z: " + MyFloatFormat.format(position.z);
 		String strW = "W: " + MyFloatFormat.format(rotation.x);
-		String strP = "P: " + MyFloatFormat.format(rotation.x);
-		String strR = "R: " + MyFloatFormat.format(rotation.x);
+		String strP = "P: " + MyFloatFormat.format(rotation.y);
+		String strR = "R: " + MyFloatFormat.format(rotation.z);
 		
 		return new String[] {
 				String.format("%-12s %-12s %-12s", strX, strY, strZ),
