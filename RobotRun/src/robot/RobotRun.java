@@ -29,6 +29,7 @@ import geom.WorldObject;
 import global.DataManagement;
 import global.Fields;
 import global.RMath;
+import global.RegisteredModels;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PImage;
@@ -7200,6 +7201,8 @@ public class RobotRun extends PApplet {
 		instance = this;
 		letterStates = new int[] { 0, 0, 0, 0, 0 };
 		workingText = new StringBuilder();
+		
+		RegisteredModels.loadModelIDs();
 		
 		// create font and text display background
 		Fields.medium = createFont("fonts/Consolas.ttf", 14);

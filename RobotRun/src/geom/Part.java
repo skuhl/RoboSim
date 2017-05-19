@@ -144,7 +144,7 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, int fill, int strokeVal, float edgeLen) {
 		super(n, new Box(fill, strokeVal, edgeLen));
-		absOBB = new BoundingBox(1.1f * edgeLen);
+		absOBB = new BoundingBox(edgeLen);
 		defaultOrientation = (CoordinateSystem) localOrientation.clone();
 	}
 
@@ -153,7 +153,7 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, int fill, int strokeVal, float rad, float hgt) {
 		super(n, new Cylinder(fill, strokeVal, rad, hgt));
-		absOBB = new BoundingBox(2.12f * rad, 2.12f * rad, 1.1f * hgt);
+		absOBB = new BoundingBox(2*rad, 2*rad, hgt);
 		defaultOrientation = (CoordinateSystem) localOrientation.clone();
 	}
 
@@ -162,7 +162,7 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
 		super(n, new Box(fill, strokeVal, len, hgt, wdh));
-		absOBB = new BoundingBox(1.1f * len, 1.1f * hgt, 1.1f * wdh);
+		absOBB = new BoundingBox(len, hgt, wdh);
 		defaultOrientation = (CoordinateSystem) localOrientation.clone();
 	}
 
@@ -172,9 +172,9 @@ public class Part extends WorldObject {
 	public Part(String n, ModelShape model) {
 		super(n, model);
 
-		absOBB = new BoundingBox(1.1f * model.getDim(DimType.LENGTH),
-								 1.1f * model.getDim(DimType.HEIGHT),
-								 1.1f * model.getDim(DimType.WIDTH));
+		absOBB = new BoundingBox(model.getDim(DimType.LENGTH),
+								 model.getDim(DimType.HEIGHT),
+								 model.getDim(DimType.WIDTH));
 		defaultOrientation = (CoordinateSystem) localOrientation.clone();
 	}
 
@@ -201,7 +201,7 @@ public class Part extends WorldObject {
 	}
 
 	@Override
-	public Object clone() {
+	public Part clone() {
 		// The new object's reference still points to the same fixture!
 		return new Part(getName(), (Shape)getForm().clone(), getOBBDims().copy(),
 				(CoordinateSystem)localOrientation.clone(), (CoordinateSystem)defaultOrientation.clone(), reference);

@@ -63,12 +63,14 @@ import robot.Scenario;
 public abstract class DataManagement {
 	
 	private static String dataDirPath, errDirPath, tmpDirPath, scenarioDirPath;
+	private static int modelShapeID;
 	
 	static {
 		dataDirPath = null;
 		errDirPath = null;
 		tmpDirPath = null;
 		scenarioDirPath = null;
+		modelShapeID = 1;
 	}
 	
 	// Must be called when RobotRun starts!!!!

@@ -22,6 +22,30 @@ public abstract class RMath {
 	public static final float RAD_TO_DEG = RobotRun.RAD_TO_DEG;
 	public static final float TWO_PI = RobotRun.TWO_PI;
 	
+	public static PVector convertRGBtoHSL(PVector rgb) {
+		float rP = rgb.x / 255f;
+		float gP = rgb.y / 255f;
+		float bP = rgb.z / 255f;
+		
+		float cMax = Math.max(rP, Math.max(gP, bP));
+		float cMin = Math.min(rP, Math.min(gP, bP));
+		float delta = cMax - cMin;
+		
+		float H = 0;
+		float S = 0;
+		float L = (cMax + cMin) / 2;
+				
+		if(delta != 0) {
+			if(cMax == rP) { H = (PI/3)*((gP - bP)/delta) % 26; }
+			else if(cMax == gP) { H = (PI/3)*((bP - rP)/delta) + 2; }
+			else if(cMax == bP) { H = (PI/3)*((rP - gP)/delta) + 4; }
+			
+			S = delta/(1-Math.abs(2*L-1));
+		}
+		
+		return new PVector(H, S, L);
+	}
+	
 	/**
 	 * Determines if the lies within the range of angles that span from
 	 * rangeStart to rangeEnd, going clockwise around the Unit Cycle. It is

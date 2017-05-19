@@ -15,6 +15,7 @@ import robot.RobotRun;
  * A box object with its own local Coordinate system.
  */
 public class BoundingBox {
+	private static final float BOX_SCALE = 1.05f;	
 	private CoordinateSystem localOrientation;
 	/* The origin of the bounding box's local Coordinate System */
 	private Box boundingBox;
@@ -24,7 +25,7 @@ public class BoundingBox {
 	 */
 	public BoundingBox() {
 		localOrientation = new CoordinateSystem();
-		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), 10f);
+		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), BOX_SCALE * 10f);
 	}
 
 	/**
@@ -32,7 +33,7 @@ public class BoundingBox {
 	 */
 	public BoundingBox(float edgeLen) {
 		localOrientation = new CoordinateSystem();
-		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), edgeLen);
+		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), BOX_SCALE * edgeLen);
 	}
 
 	/**
@@ -40,7 +41,7 @@ public class BoundingBox {
 	 */
 	public BoundingBox(float len, float hgt, float wdh) {
 		localOrientation = new CoordinateSystem();
-		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), len, hgt, wdh);
+		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), BOX_SCALE* len, BOX_SCALE * hgt, BOX_SCALE * wdh);
 	}
 	
 	public static void main(String[] args) {

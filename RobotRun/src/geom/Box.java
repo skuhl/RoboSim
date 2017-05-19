@@ -6,7 +6,7 @@ import robot.RobotRun;
  * Defines the length, width, height values to draw a box.
  */
 public class Box extends Shape {
-
+	
 	/**
 	 * X -> length
 	 * Y -> Height

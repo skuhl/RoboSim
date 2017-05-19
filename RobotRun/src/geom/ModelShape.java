@@ -1,4 +1,5 @@
 package geom;
+import global.RegisteredModels;
 import processing.core.PShape;
 import processing.core.PVector;
 import robot.RobotRun;
@@ -7,6 +8,7 @@ import robot.RobotRun;
  * A complex shape formed from a .stl source file.
  */
 public class ModelShape extends Shape {
+	public final int MODEL_ID;
 	private RobotRun app;
 	private PShape model;
 	private PVector centerOffset, baseDims;
@@ -23,6 +25,7 @@ public class ModelShape extends Shape {
 	 */
 	public ModelShape(String filename, int fill, float scale, RobotRun app) throws NullPointerException {
 		super(fill, null);
+		MODEL_ID = RegisteredModels.modelIDList.get(filename);
 		this.app = app;
 		srcFilePath = filename;
 		this.scale = 1f;
@@ -43,6 +46,7 @@ public class ModelShape extends Shape {
 	 */
 	public ModelShape(String filename, int fill, RobotRun app) throws NullPointerException {
 		super(fill, null);
+		MODEL_ID = RegisteredModels.modelIDList.get(filename);
 		this.app = app;
 		srcFilePath = filename;
 		scale = 1f;

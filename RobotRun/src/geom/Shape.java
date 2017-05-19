@@ -6,8 +6,8 @@ import robot.RobotRun;
  * along with some methods necessarry for a shape.
  */
 public abstract class Shape implements Cloneable {
-	private Integer fillCVal,
-	strokeCVal;
+	private Integer fillCVal;
+	private Integer strokeCVal;
 
 	public Shape() {
 		fillCVal = RobotRun.getInstance().color(0);
