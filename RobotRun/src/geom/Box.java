@@ -112,4 +112,9 @@ public class Box extends Shape {
 		default:
 		}
 	}
+
+	@Override
+	public int getID() {
+		return -1;
+	}
 }

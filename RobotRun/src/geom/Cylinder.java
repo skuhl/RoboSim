@@ -105,4 +105,9 @@ public class Cylinder extends Shape {
 		default:
 		}
 	}
+
+	@Override
+	public int getID() {
+		return -1;
+	}
 }

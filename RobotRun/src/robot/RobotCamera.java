@@ -6,8 +6,11 @@ import geom.Box;
 import geom.Cylinder;
 import geom.DimType;
 import geom.ModelShape;
+import geom.Part;
+import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
+import geom.Shape;
 import geom.WorldObject;
 import global.RMath;
 import processing.core.PVector;
@@ -49,9 +52,43 @@ public class RobotCamera {
 			return null;
 		}
 		else {
-			taughtObjects.add(objs.get(0));
+			WorldObject teachObj = objs.get(0).clone();
+			RMatrix objOrient = teachObj.getLocalOrientationAxes();
+			RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
+			teachObj.setLocalOrientationAxes(viewOrient);
+			taughtObjects.add(teachObj);
+			
 			return taughtObjects;
 		}
+	}
+	
+	public boolean /*ArrayList<WorldObject>*/ matchTaughtObject(int idx) {
+		WorldObject objProto;
+		if(idx < taughtObjects.size()) {
+			objProto = taughtObjects.get(idx);
+		} else {
+			return false;
+		}
+		
+		ArrayList<WorldObject> inFrame = getObjectsInFrame();
+		ArrayList<WorldObject> objMatches = new ArrayList<WorldObject>();
+		
+		for(WorldObject o: inFrame) {
+			if(o.getObjectID() == objProto.getObjectID()) {
+				RMatrix objOrient = o.getLocalOrientationAxes();
+				RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
+				RMatrix oDiff = objProto.getLocalOrientationAxes().transpose().multiply(viewOrient);
+				float[][] axes = oDiff.getFloatData();
+				PVector zDiff = new PVector(axes[0][2], axes[1][2], axes[2][2]);
+				
+				if(Math.pow(zDiff.dot(new PVector(0, 0, 1)), 2) > 0.9) {
+					objMatches.add(o);
+					return true;
+				}
+			}
+		}
+		
+		return false;
 	}
 	
 	/**

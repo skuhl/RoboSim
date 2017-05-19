@@ -1551,14 +1551,13 @@ public class RobotRun extends PApplet {
 			}
 			/**
 			printMatrix();
-			/*Camera Test Code*
-			Fixture f = new Fixture("test", 160, 0, 50, 100, 200);
-			f.setLocalCenter(new PVector(-700, -300, 0));
+			/*Camera Test Code*/
 			Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
 			float[][] axes = p.orientation.toMatrix().getFloatData();
-			blaster.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[0][1], axes[1][1], axes[2][1]), PI)));
+			c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[0][1], axes[1][1], axes[2][1]), -PI/2)));
 			c.setPosition(p.position);
 			renderOriginAxes(p.position, p.orientation.toMatrix(), 300, 0);
+			System.out.println(c.matchTaughtObject(0));
 			
 			PVector near[] = c.getPlaneNear();
 			PVector far[] = c.getPlaneFar();
@@ -1593,14 +1592,8 @@ public class RobotRun extends PApplet {
 			endShape();
 			
 			popMatrix();
-							
-			pushMatrix();
-			f.draw();
-			popMatrix();
 			
-			System.out.println(c.checkObjectInFrame(f));
 			/**/
-			
 			popMatrix();
 			
 			hint(DISABLE_DEPTH_TEST);
@@ -4783,7 +4776,7 @@ public class RobotRun extends PApplet {
 			case KeyEvent.VK_SLASH:		joint6_pos(); break;
 			case KeyEvent.VK_MINUS:		spddn(); break;
 			case KeyEvent.VK_EQUALS:	spdup(); break;
-			case KeyEvent.VK_S:			blaster.shoot(); break;
+			case KeyEvent.VK_S:			c.teachObjectToCamera(); break;
 			}
 			
 		}
@@ -6665,7 +6658,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void renderScene(Scenario s, RoboticArm model) {
 		model.updateRobot();
-
+		
 		if (RobotRun.getInstance().isProgramRunning()) {
 			Program ap = model.getActiveProg();
 
@@ -7290,7 +7283,7 @@ public class RobotRun extends PApplet {
 			
 			displayPoint = null;
 
-			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 30, 300, null);
+			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 30, 300, this.getActiveScenario());
 			blaster = new RoboBlaster(new PVector(-500, -500, 0), new RQuaternion());
 
 		} catch (NullPointerException NPEx) {

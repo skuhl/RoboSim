@@ -380,7 +380,7 @@ public class RoboticArm {
 		EE_TO_PICK_OBBS.put(EEType.WIELDER, limbo);
 
 		held = null;
-		trace = true;
+		trace = false;
 		tracePts = new ArrayList<PVector>();
 		// Initializes the old transformation matrix for the arm model
 		RobotRun.getInstance().pushMatrix();

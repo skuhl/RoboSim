@@ -38,8 +38,9 @@ public class RMatrix extends Array2DRowRealMatrix {
 		return new RMatrix(s.getSolver().getInverse());
 	}
 	
-	public RMatrix rTranspose() {
-		return new RMatrix(this.transpose());
+	@Override
+	public RMatrix transpose() {
+		return new RMatrix(super.transpose());
 	}
 	
 	public RMatrix normalize() {
