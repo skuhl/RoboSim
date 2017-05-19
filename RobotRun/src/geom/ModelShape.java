@@ -56,7 +56,7 @@ public class ModelShape extends Shape {
 	}
 	
 	@Override
-	public Object clone() {
+	public ModelShape clone() {
 		try {
 			// Created from source file
 			return new ModelShape(srcFilePath, getFillValue(), scale, app);

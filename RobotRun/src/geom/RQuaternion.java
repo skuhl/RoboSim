@@ -7,7 +7,7 @@ import processing.core.PVector;
  * 
  * @author Joshua Hooker
  */
-public class RQuaternion {
+public class RQuaternion implements Cloneable {
 	
 	private float w, x, y, z;
 	
@@ -17,7 +17,7 @@ public class RQuaternion {
 	 * modified in the process.
 	 */
 	public static RQuaternion addValues(RQuaternion... quatChain) {
-		RQuaternion sum = quatChain[0].cloneInClass();
+		RQuaternion sum = quatChain[0].clone();
 		// Add values of all quaternions
 		for (int idx = 1; idx < quatChain.length; ++idx) {
 			sum.addValues(quatChain[idx]);
@@ -47,7 +47,7 @@ public class RQuaternion {
 	 * the process.
 	 */
 	public static RQuaternion mult(RQuaternion... quatChain) {
-		RQuaternion product = quatChain[0].cloneInClass();
+		RQuaternion product = quatChain[0].clone();
 		// Multiply quaternions in the order they are given
 		for (int idx = 1; idx < quatChain.length; ++idx) {
 			product.mult(quatChain[idx]);
@@ -61,7 +61,7 @@ public class RQuaternion {
 	 * changing q.
 	 */
 	public static RQuaternion normalize(RQuaternion q) {
-		RQuaternion copy = q.cloneInClass();
+		RQuaternion copy = q.clone();
 		q.normalize();
 		return copy;
 	}
@@ -71,7 +71,7 @@ public class RQuaternion {
 	 * assumed that axis is a unit vector.
 	 */	
 	public static RQuaternion rotateAroundAxis(RQuaternion q, PVector u, float theta) {
-		RQuaternion rotated = q.cloneInClass();
+		RQuaternion rotated = q.clone();
 		rotated.rotateAroundAxis(u, theta);
 		return rotated;
 	}
@@ -88,7 +88,7 @@ public class RQuaternion {
 	 * Returns q, scaled by scalar, without modifying q.
 	 */
 	public static RQuaternion scalarMult(float scalar, RQuaternion q) {
-		RQuaternion copy = q.cloneInClass();
+		RQuaternion copy = q.clone();
 		copy.scalarMult(scalar);
 		return copy;
 	}
@@ -107,7 +107,7 @@ public class RQuaternion {
 		}
 		
 		float cOmega = q1.dot(q2);
-		RQuaternion q3 = q2.cloneInClass(), q4;
+		RQuaternion q3 = q2.clone(), q4;
 		
 		if (cOmega < 0) {
 			cOmega *= -1;
@@ -179,14 +179,7 @@ public class RQuaternion {
 	}
 	
 	@Override
-	public Object clone() {
-		return cloneInClass();
-	}
-	
-	/**
-	 * Returns an independent replica of this.
-	 */
-	private RQuaternion cloneInClass() {
+	public RQuaternion clone() {
 		return new RQuaternion(w, x, y, z);
 	}
 	

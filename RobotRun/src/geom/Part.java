@@ -342,7 +342,7 @@ public class Part extends WorldObject {
 
 	/**
 	 * Update the Part's absolute (or world) orientation
-	 * based om its local orientation and fixture
+	 * based on its local orientation and fixture
 	 * reference's orientation.
 	 */
 	public void updateAbsoluteOrientation() {
@@ -374,7 +374,7 @@ public class Part extends WorldObject {
 
 		if (s instanceof Box || s instanceof ModelShape) {
 			// Update the OBB dimensions for a box or complex part
-			minAddition = 0.1f * PApplet.min(s.getDim(DimType.LENGTH),
+			minAddition = 0.05f * PApplet.min(s.getDim(DimType.LENGTH),
 					PApplet.min(s.getDim(DimType.HEIGHT),
 							s.getDim(DimType.WIDTH)));
 
@@ -384,8 +384,8 @@ public class Part extends WorldObject {
 
 		} else if (s instanceof Cylinder) {
 			// Update the OBB dimensions for a cylindrical part
-			minAddition =  PApplet.min(0.12f * s.getDim(DimType.RADIUS),
-					0.1f * s.getDim(DimType.HEIGHT));
+			minAddition =  PApplet.min(0.07f * s.getDim(DimType.RADIUS),
+					0.05f * s.getDim(DimType.HEIGHT));
 
 			absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.LENGTH);
 			absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.HEIGHT);

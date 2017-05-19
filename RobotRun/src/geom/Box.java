@@ -56,7 +56,7 @@ public class Box extends Shape {
 	}
 
 	@Override
-	public Object clone() {
+	public Box clone() {
 		return new Box(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
 	}
 
