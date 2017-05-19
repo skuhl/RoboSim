@@ -15,8 +15,8 @@ public class Part extends WorldObject {
 	private static final float OBB_DIM_SCALE, OBB_RAD_SCALE;
 	
 	static {
-		OBB_DIM_SCALE = 1.05f;
-		OBB_RAD_SCALE = 2.07f;
+		OBB_DIM_SCALE = 0.05f;
+		OBB_RAD_SCALE = 0.07f;
 	}
 	
 	/**
@@ -154,8 +154,9 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, int fill, int strokeVal, float edgeLen) {
 		super(n, new Box(fill, strokeVal, edgeLen));
-		absOBB = new BoundingBox(OBB_DIM_SCALE * edgeLen);
-		defaultOrientation = (CoordinateSystem) localOrientation.clone();
+		absOBB = new BoundingBox(edgeLen);
+		defaultOrientation = localOrientation.clone();
+		updateOBBDims();
 	}
 
 	/**
@@ -163,9 +164,9 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, int fill, int strokeVal, float rad, float hgt) {
 		super(n, new Cylinder(fill, strokeVal, rad, hgt));
-		absOBB = new BoundingBox(OBB_RAD_SCALE * rad, OBB_RAD_SCALE * rad,
-				OBB_DIM_SCALE * hgt);
-		defaultOrientation = (CoordinateSystem) localOrientation.clone();
+		absOBB = new BoundingBox(rad, rad, hgt);
+		defaultOrientation = localOrientation.clone();
+		updateOBBDims();
 	}
 
 	/**
@@ -173,9 +174,9 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
 		super(n, new Box(fill, strokeVal, len, hgt, wdh));
-		absOBB = new BoundingBox(OBB_DIM_SCALE * len, OBB_DIM_SCALE * hgt,
-				OBB_DIM_SCALE * wdh);
-		defaultOrientation = (CoordinateSystem) localOrientation.clone();
+		absOBB = new BoundingBox(len, hgt, wdh);
+		defaultOrientation = localOrientation.clone();
+		updateOBBDims();
 	}
 
 	/**
@@ -183,11 +184,11 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, ModelShape model) {
 		super(n, model);
-
 		absOBB = new BoundingBox(model.getDim(DimType.LENGTH),
 								 model.getDim(DimType.HEIGHT),
 								 model.getDim(DimType.WIDTH));
-		defaultOrientation = (CoordinateSystem) localOrientation.clone();
+		defaultOrientation = localOrientation.clone();
+		updateOBBDims();
 	}
 
 	/**
@@ -198,10 +199,10 @@ public class Part extends WorldObject {
 			CoordinateSystem def, Fixture fixRef) {
 		
 		super(n, s, local);
-		absOBB = new BoundingBox(OBB_DIM_SCALE * OBBDims.x,
-				OBB_DIM_SCALE * OBBDims.y, OBB_DIM_SCALE * OBBDims.z);
+		absOBB = new BoundingBox(OBBDims.x, OBBDims.y, OBBDims.z);
 		defaultOrientation = def;
 		setFixtureRef(fixRef);
+		updateOBBDims();
 	}
 
 	@Override
@@ -216,12 +217,13 @@ public class Part extends WorldObject {
 	@Override
 	public Part clone() {
 		// The new object's reference still points to the same fixture!
-		return new Part(getName(), (Shape)getForm().clone(), getOBBDims().copy(),
-				(CoordinateSystem)localOrientation.clone(), (CoordinateSystem)defaultOrientation.clone(), reference);
+		return new Part(getName(), getForm().clone(), getOBBDims().copy(),
+				localOrientation.clone(), defaultOrientation.clone(),
+				reference);
 	}
 
 	/**
-	 * Determies if the given bounding box is colliding
+	 * Determines if the given bounding box is colliding
 	 * with this Part's bounding box.
 	 */
 	public boolean collision(BoundingBox obb) {
@@ -374,7 +376,7 @@ public class Part extends WorldObject {
 
 		if (s instanceof Box || s instanceof ModelShape) {
 			// Update the OBB dimensions for a box or complex part
-			minAddition = 0.05f * PApplet.min(s.getDim(DimType.LENGTH),
+			minAddition = OBB_DIM_SCALE * PApplet.min(s.getDim(DimType.LENGTH),
 					PApplet.min(s.getDim(DimType.HEIGHT),
 							s.getDim(DimType.WIDTH)));
 
@@ -384,8 +386,8 @@ public class Part extends WorldObject {
 
 		} else if (s instanceof Cylinder) {
 			// Update the OBB dimensions for a cylindrical part
-			minAddition =  PApplet.min(0.07f * s.getDim(DimType.RADIUS),
-					0.05f * s.getDim(DimType.HEIGHT));
+			minAddition =  PApplet.min(OBB_RAD_SCALE * s.getDim(DimType.RADIUS),
+					OBB_DIM_SCALE * s.getDim(DimType.HEIGHT));
 
 			absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.LENGTH);
 			absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.HEIGHT);
