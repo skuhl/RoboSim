@@ -121,6 +121,12 @@ public abstract class Fields {
 			REVERSE_MOTION = 0b1000;
 	
 	/**
+	 * A color used to render the bounding box of a part that indicates the
+	 * state the bounding box.
+	 */
+	public static final int OBB_DEFAULT, OBB_COLLISION, OBB_SELECTED, OBB_HELD;
+	
+	/**
 	 * A color in the UI's color scheme.
 	 */
 	public static final int BG_C, F_TEXT_C, F_CURSOR_C, F_ACTIVE_C, F_BG_C,
@@ -157,6 +163,11 @@ public abstract class Fields {
 		IDENTITY_MAT = new RMatrix(IDENTITY);
 		WORLD_AXES_MAT = new RMatrix(WORLD_AXES);
 		NATIVE_AXES_MAT = new RMatrix(NATIVE_AXES);
+		
+		OBB_DEFAULT = -16711936;
+		OBB_COLLISION = -65536;
+		OBB_SELECTED = -46336;
+		OBB_HELD = -16776961;
 		
 		BG_C = -2960686;
 		F_TEXT_C = -16777216;

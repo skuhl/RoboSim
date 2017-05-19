@@ -7,6 +7,7 @@ import geom.Fixture;
 import geom.Part;
 import geom.RMatrix;
 import geom.WorldObject;
+import global.Fields;
 import processing.core.PApplet;
 import processing.core.PVector;
 
@@ -350,7 +351,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		for (WorldObject wldObj : objList) {
 			if (wldObj instanceof Part) {
 				// Reset all Part bounding-box colors
-				((Part)wldObj).setBBColor(RobotRun.getInstance().color(0, 255, 0));
+				((Part)wldObj).setBBColor(Fields.OBB_DEFAULT);
 			}
 		}
 	}
@@ -366,7 +367,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 * using the given ArmModel to detect collisions between world objects
 	 * and the armModel, and draws every object.
 	 */
-	public void updateAndDrawObjects(RoboticArm robot) {
+	public void updateAndRenderObjects(RoboticArm robot) {
 		int numOfObjects = objList.size();
 
 		for (int idx = 0; idx < numOfObjects; ++idx) {
@@ -416,7 +417,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 				/* Collision Detection */
 				if(RobotRun.getInstance().areOBBsDisplayed()) {
 					if( robot != null && robot.checkObjectCollision(p) ) {
-						p.setBBColor(RobotRun.getInstance().color(255, 0, 0));
+						p.setBBColor(Fields.OBB_COLLISION);
 					}
 
 					// Detect collision with other objects
@@ -427,8 +428,8 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 							if(p.collision(p2)) {
 								// Change hit box color to indicate Object collision
-								p.setBBColor(RobotRun.getInstance().color(255, 0, 0));
-								p2.setBBColor(RobotRun.getInstance().color(255, 0, 0));
+								p.setBBColor(Fields.OBB_COLLISION);
+								p2.setBBColor(Fields.OBB_COLLISION);
 								break;
 							}
 						}
@@ -436,12 +437,12 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 					if (robot != null && p != robot.held && robot.canPickup(p)) {
 						// Change hit box color to indicate End Effector collision
-						p.setBBColor(RobotRun.getInstance().color(0, 0, 255));
+						p.setBBColor(Fields.OBB_HELD);
 					}
 				}
 
 				if (p == RobotRun.getInstance().getUI().getSelectedWO()) {
-					p.setBBColor(RobotRun.getInstance().color(255, 255, 0));
+					p.setBBColor(Fields.OBB_SELECTED);
 				}
 			}
 			

@@ -5796,8 +5796,40 @@ public class RobotRun extends PApplet {
 	
 	@Override
 	public void mousePressed() {
-		PVector mouse = new PVector(mouseX, mouseY, 0f);
-		
+		if (mouseButton == LEFT) {
+			PVector mouse = new PVector(mouseX, mouseY, 0f);
+			
+			System.out.printf("%-16s : %s\n", "Mouse", mouse);
+			
+			Scenario s = getActiveScenario();
+			
+			if (s != null) {
+				
+				for (WorldObject wo : s) {
+					
+					pushMatrix();
+					resetMatrix();
+					PVector camPos = camera.getPosition();
+					PVector camOrien = camera.getOrientation();
+					
+					translate(camPos.x, camPos.y, camPos.z);
+					
+					rotateX(camOrien.x);
+					rotateY(camOrien.y);
+					rotateZ(camOrien.z);
+					
+					wo.applyCoordinateSystem();
+					float x = screenX(0f, 0f, 0f);
+					float y = screenY(0f, 0f, 0f);
+					float z = screenZ(0f, 0f, 0f);
+					
+					System.out.printf("%-16s : [ %4.3f, %4.3f, %4.3f ]\n", wo.getName(), x, y, z);
+					popMatrix();
+					
+				}
+				
+			}
+		}
 	}
 
 	@Override
@@ -6660,7 +6692,7 @@ public class RobotRun extends PApplet {
 		model.checkSelfCollisions();
 
 		if (s != null) {
-			s.updateAndDrawObjects(model);
+			s.updateAndRenderObjects(model);
 		}
 
 		if (UI.getRobotButtonState()) {
@@ -7208,6 +7240,8 @@ public class RobotRun extends PApplet {
 			{ loadImage("images/arrow-r.png"), loadImage("images/arrow-r_over.png"), loadImage("images/arrow-r_down.png") }
 			
 		};
+		
+		System.out.printf("%d\n%d\n%d\n%d\n", color(0, 255, 0), color(255, 0, 0), color(0, 0, 255), color(255, 75, 0));
 		
 		instance = this;
 		letterStates = new int[] { 0, 0, 0, 0, 0 };
