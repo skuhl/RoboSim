@@ -126,13 +126,19 @@ public abstract class Fields {
 			REVERSE_MOTION = 0b1000;
 	
 	/**
+	 * A color defining either the fill or outline color of a world object.
+	 */
+	public static final int BLACK, WHITE, RED, GREEN, BLUE, ORANGE, YELLOW,
+			PINK, PURPLE, LT_BLUE, DK_GREEN;
+	
+	/**
 	 * A color used to render the bounding box of a part that indicates the
 	 * state the bounding box.
 	 */
 	public static final int OBB_DEFAULT, OBB_COLLISION, OBB_SELECTED, OBB_HELD;
 	
 	/**
-	 * A color in the UI's color scheme.
+	 * A color used in the UI's color scheme.
 	 */
 	public static final int BG_C, F_TEXT_C, F_CURSOR_C, F_ACTIVE_C, F_BG_C,
 			F_FG_C, B_TEXT_C, B_DEFAULT_C, B_ACTIVE_C, UI_LIGHT_C, UI_DARK_C;
@@ -171,26 +177,94 @@ public abstract class Fields {
 		WORLD_AXES_MAT = new RMatrix(WORLD_AXES);
 		NATIVE_AXES_MAT = new RMatrix(NATIVE_AXES);
 		
-		OBB_DEFAULT = -16711936;
-		OBB_COLLISION = -65536;
-		OBB_SELECTED = -46336;
-		OBB_HELD = -16776961;
+		BLACK = 0xff000000;
+		WHITE = 0xffffffff;
+		RED = color(255, 0, 0);
+		GREEN = color(0, 255, 0);
+		BLUE = color(0, 0, 255);
+		ORANGE = color(255, 60, 0);
+		YELLOW = color(255, 255, 0);
+		PINK = color(255, 0, 255);
+		PURPLE = color(90, 0, 255);
+		LT_BLUE = color(0, 255, 255);
+		DK_GREEN = color(0, 100, 15);
 		
-		BG_C = -2960686;
-		F_TEXT_C = -16777216;
-		F_CURSOR_C = -16777216;
-		F_ACTIVE_C = -65536;
-		F_BG_C = -1;
-		F_FG_C = -16777216;
-		B_TEXT_C = -1;
-		B_DEFAULT_C = -12171706;
-		B_ACTIVE_C = -2349016;
-		UI_LIGHT_C = -986896;
-		UI_DARK_C = -14145496;
+		OBB_DEFAULT = GREEN;
+		OBB_COLLISION = RED;
+		OBB_SELECTED = ORANGE;
+		OBB_HELD = BLUE;
+		
+		BG_C = 0xffd2d2d2;
+		F_TEXT_C = BLACK;
+		F_CURSOR_C = BLACK;
+		F_ACTIVE_C = RED;
+		F_BG_C = WHITE;
+		F_FG_C = BLACK;
+		B_TEXT_C = WHITE;
+		B_DEFAULT_C = 0xff464646;
+		B_ACTIVE_C = 0xffdc2828;
+		UI_LIGHT_C = 0xfff0f0f0;
+		UI_DARK_C = 0xff282828;
 		
 		small = null;
 		medium = null;
 		bond = null;
+	}
+	
+	/**
+	 * Creates a 32-bit color from the given red, green, and blue byte values.
+	 * The alpha value is set to 255.
+	 * 
+	 * @param r	The red byte value of the color
+	 * @param g	The green byte value of the color
+	 * @param b	The blue byte value of the color
+	 * @return	A 32-bit color value
+	 */
+	public static int color(int r, int g, int b) {
+		return color(r, g, b, 255);
+	}
+	
+	/**
+	 * Creates a 32-bit color value from the given red, green, blue, and alpha
+	 * byte values.
+	 * 
+	 * @param r	The red byte value of the color
+	 * @param g	The green byte value of the color
+	 * @param b	The blue byte value of the color
+	 * @param a	The alpha byte value of the color
+	 * @return	A 32-bit color value
+	 */
+	public static int color(int r, int g, int b, int a) {
+		/*
+		 * a	24 - 31
+		 * r	16 - 23
+		 * g	8 - 15
+		 * b	0 - 7
+		 */
+		return (0xff000000 & (a << 24)) | (0xff0000 & (r << 16)) |
+				(0xff00 & (g << 8)) | (0xff & b);
+	}
+	
+	/**
+	 * Breaks up the given 32-bit color into the four parts of the color: red,
+	 * green, blue, alpha.
+	 * 
+	 * @param color	A 32-bit color value
+	 * @return		[red, green, blue, alpha]
+	 */
+	public static int[] rgba(int color) {
+		int[] portions = new int[4];
+		
+		// alpha
+		portions[0] = 0xff & (color >> 24);
+		// red
+		portions[1] = 0xff & (color >> 16);
+		// green
+		portions[2] = 0xff & (color >> 8);
+		// blue
+		portions[3] = 0xff & color;
+		
+		return portions;
 	}
 	
 	/**
