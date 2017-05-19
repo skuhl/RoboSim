@@ -3,6 +3,7 @@ package geom;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 
+import global.Fields;
 import global.RMath;
 import processing.core.PVector;
 import robot.RobotRun;
@@ -19,7 +20,7 @@ public class BoundingBox {
 	 */
 	public BoundingBox() {
 		localOrientation = new CoordinateSystem();
-		boxFrame = new Box(RobotRun.getInstance().color(0, 255, 0), 10f);
+		boxFrame = new Box(Fields.OBB_DEFAULT, 10f);
 	}
 
 	/**
@@ -29,7 +30,7 @@ public class BoundingBox {
 	 */
 	public BoundingBox(float edgeLen) {
 		localOrientation = new CoordinateSystem();
-		boxFrame = new Box(RobotRun.getInstance().color(0, 255, 0), edgeLen);
+		boxFrame = new Box(Fields.OBB_DEFAULT, edgeLen);
 	}
 
 	/**
@@ -41,7 +42,7 @@ public class BoundingBox {
 	 */
 	public BoundingBox(float len, float hgt, float wdh) {
 		localOrientation = new CoordinateSystem();
-		boxFrame = new Box(RobotRun.getInstance().color(0, 255, 0), len, hgt, wdh);
+		boxFrame = new Box(Fields.OBB_DEFAULT, len, hgt, wdh);
 	}
 	
 	/**
