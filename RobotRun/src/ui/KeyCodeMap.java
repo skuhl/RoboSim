@@ -148,11 +148,10 @@ public class KeyCodeMap {
 	}
 	
 	/**
-	 * The character of the last key to be held down and not released.
-	 * 
-	 * @return	The last character to be pressed and not released
+	 * @return	The character value of the last key to be held down and not
+	 * 			released
 	 */
-	public Character lastKeyPressed() {
+	public Character getValueofLastKeyHeld() {
 		KeyData data = keyDownMap.get(codeOfLast);
 		
 		if (data != null && data.key >= 32 && data.key <= 126) {
@@ -161,6 +160,13 @@ public class KeyCodeMap {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * @return	The code of the last key to be held down and not released 
+	 */
+	public int getCodeOfLastKeyHeld() {
+		return codeOfLast;
 	}
 	
 	/**
