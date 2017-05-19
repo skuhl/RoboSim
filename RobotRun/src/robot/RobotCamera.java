@@ -62,12 +62,12 @@ public class RobotCamera {
 		}
 	}
 	
-	public boolean /*ArrayList<WorldObject>*/ matchTaughtObject(int idx) {
+	public ArrayList<WorldObject> matchTaughtObject(int idx) {
 		WorldObject objProto;
 		if(idx < taughtObjects.size()) {
 			objProto = taughtObjects.get(idx);
 		} else {
-			return false;
+			return null;
 		}
 		
 		ArrayList<WorldObject> inFrame = getObjectsInFrame();
@@ -83,12 +83,11 @@ public class RobotCamera {
 				
 				if(Math.pow(zDiff.dot(new PVector(0, 0, 1)), 2) > 0.9) {
 					objMatches.add(o);
-					return true;
 				}
 			}
 		}
 		
-		return false;
+		return objMatches;
 	}
 	
 	/**
