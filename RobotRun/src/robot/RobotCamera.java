@@ -23,7 +23,10 @@ public class RobotCamera {
 	private PVector camPos;
 	
 	private float sensitivity;
+	private float lighting;
+	private float exposure;
 	private Scenario scene;
+	private ArrayList<WorldObject> taughtObjects;
 	
 	public RobotCamera(float posX, float posY, float posZ, RQuaternion q, 
 			float fov, float ar, float near, float far, Scenario sc) {
@@ -34,15 +37,29 @@ public class RobotCamera {
 		camClipNear = near;
 		camClipFar = far;
 		sensitivity = 0.75f;
+		lighting = 10.0f;
+		exposure = 0.1f;
 		scene = sc;
+		taughtObjects = new ArrayList<WorldObject>();
+	}
+	
+	public ArrayList<WorldObject> teachObjectToCamera() {
+		ArrayList<WorldObject> objs = getObjectsInFrame();
+		if(objs.size() > 1 || objs.size() <= 0) {
+			return null;
+		}
+		else {
+			taughtObjects.add(objs.get(0));
+			return taughtObjects;
+		}
 	}
 	
 	/**
 	 * Examines a given WorldObject to determine whether it falls fully or
 	 * partially in the camera view frustum.
 	 * 
-	 * @param o The WorldObject to be tested.
-	 * @return  
+	 * @param o The WorldObject to be tested
+	 * @return A float between 0 and 1 representing how far in frame the object is
 	 */
 	public float checkObjectInFrame(WorldObject o) {
 		PVector objCenter = o.getLocalCenter();
@@ -64,7 +81,7 @@ public class RobotCamera {
 			}
 		}
 		
-		return (float)(inView / (float)(RES*RES*RES));
+		return (inView / (float)(RES*RES*RES)) * lighting * exposure;
 	}
 	
 	public float[] getColinearDimensions(WorldObject o) {
@@ -76,7 +93,7 @@ public class RobotCamera {
 		PVector lookVect = getVectLook();
 		PVector upVect = getVectUp();
 		PVector ltVect = lookVect.cross(upVect);
-				
+		
 		//Generate object axes and produce the diagonal vector of the object
 		float[][] objCoord = o.getLocalOrientationAxes().getFloatData();
 		PVector objAxisX = new PVector(objCoord[0][0], objCoord[1][0], objCoord[2][0]);
@@ -87,7 +104,7 @@ public class RobotCamera {
 		float dimZ = Math.abs(len*objAxisX.dot(lookVect)) + Math.abs(hgt*objAxisY.dot(lookVect)) + Math.abs(wid*objAxisZ.dot(lookVect));
 		float dimX = Math.abs(len*objAxisX.dot(ltVect)) + Math.abs(hgt*objAxisY.dot(ltVect)) + Math.abs(wid*objAxisZ.dot(ltVect));
 		float dimY = Math.abs(len*objAxisX.dot(upVect)) + Math.abs(hgt*objAxisY.dot(upVect)) + Math.abs(wid*objAxisZ.dot(upVect));
-				
+		
 		//Create vector to object center point, find x, y, z offset components
 		/*PVector objCenter = o.getLocalCenter();
 		PVector toObj = new PVector(objCenter.x - camPos.x, objCenter.y - camPos.y, objCenter.z - camPos.z);

@@ -6,9 +6,9 @@ import robot.RobotRun;
  * Any object in the World other than the Robot.
  */
 public abstract class WorldObject implements Cloneable {
+	protected CoordinateSystem localOrientation;
 	private String name;
 	private Shape form;
-	protected CoordinateSystem localOrientation;
 
 	public WorldObject() {
 		name = "Object";
@@ -36,7 +36,7 @@ public abstract class WorldObject implements Cloneable {
 	}
 	
 	@Override
-	public abstract Object clone();
+	public abstract WorldObject clone();
 
 	/**
 	 * Returns a list of values with short prefix labels, which descibe

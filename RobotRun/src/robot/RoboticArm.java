@@ -2168,6 +2168,7 @@ public class RoboticArm {
 	
 	public boolean toggleTrace() {
 		trace = !trace;
+		clearTrace();
 		return trace;
 	}
 	
@@ -2187,7 +2188,7 @@ public class RoboticArm {
 	 * Updates the position and orientation of the hit
 	 * boxes related to the Robot Arm.
 	 */
-	private void updateCollisionOBBs() { 
+	private void updateCollisionOBBs() {
 		RobotRun.getInstance().noFill();
 		RobotRun.getInstance().stroke(0, 255, 0);
 
