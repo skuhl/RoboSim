@@ -32,7 +32,7 @@ public class CoordinateSystem implements Cloneable {
 	}
 
 	@Override
-	public Object clone() {
+	public CoordinateSystem clone() {
 		return new CoordinateSystem(origin.copy(), axesVectors.copy());
 	}
 

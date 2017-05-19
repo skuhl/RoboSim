@@ -12,31 +12,48 @@ import robot.RobotRun;
  */
 public class BoundingBox {
 	private CoordinateSystem localOrientation;
-	/* The origin of the bounding box's local Coordinate System */
-	private Box boundingBox;
+	private Box boxFrame;
 
 	/**
-	 * Create a cube object with the given colors and dimension
+	 * Create a bounding box with a default dimension.
 	 */
 	public BoundingBox() {
 		localOrientation = new CoordinateSystem();
-		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), 10f);
+		boxFrame = new Box(RobotRun.getInstance().color(0, 255, 0), 10f);
 	}
 
 	/**
-	 * Create a cube object with the given colors and dimension
+	 * Create a bounding box with the given dimension.
+	 * 
+	 * @param	The edge length of the bounding box
 	 */
 	public BoundingBox(float edgeLen) {
 		localOrientation = new CoordinateSystem();
-		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), edgeLen);
+		boxFrame = new Box(RobotRun.getInstance().color(0, 255, 0), edgeLen);
 	}
 
 	/**
-	 * Create a box object with the given colors and dimensions
+	 * Creates a bounding box with the given dimensions.
+	 * 
+	 * @param len	The length of the box
+	 * @param hgt	The height of the box
+	 * @param wdh	The width of the box
 	 */
 	public BoundingBox(float len, float hgt, float wdh) {
 		localOrientation = new CoordinateSystem();
-		boundingBox = new Box(RobotRun.getInstance().color(0, 255, 0), len, hgt, wdh);
+		boxFrame = new Box(RobotRun.getInstance().color(0, 255, 0), len, hgt, wdh);
+	}
+	
+	/**
+	 * Creates a bounding box with the given coordinate system and dimensions.
+	 * 
+	 * @param boxFrame			The frame of the bounding box
+	 * @param localOrientation	The orientation of the bounding box
+	 */
+	public BoundingBox(Box boxFrame, CoordinateSystem localOrientation) {
+		
+		this.localOrientation = localOrientation;
+		this.boxFrame = boxFrame;
 	}
 	
 	public static void main(String[] args) {
@@ -106,14 +123,8 @@ public class BoundingBox {
 	 */
 	@Override
 	public BoundingBox clone() {
-		RobotRun.getInstance().pushMatrix();
-		localOrientation.apply();
-		PVector dims = getDims();
-		BoundingBox copy = new BoundingBox(dims.x, dims.y, dims.z);
-		copy.setColor( boundingBox.getStrokeValue() );
-		RobotRun.getInstance().popMatrix();
-
-		return copy;
+		return new BoundingBox( boxFrame.clone(),
+				localOrientation.clone() );
 	}
 
 	/**
@@ -141,14 +152,14 @@ public class BoundingBox {
 		RobotRun.getInstance().pushMatrix();
 		// Draw shape in its own coordinate system
 		localOrientation.apply();
-		boundingBox.draw();
+		boxFrame.draw();
 		RobotRun.getInstance().popMatrix();
 	}
 
 	/**
 	 * Return a reference to this bounding-box's box.
 	 */
-	public Box getBox() { return boundingBox; }
+	public Box getBox() { return boxFrame; }
 
 	public PVector getCenter() { return localOrientation.getOrigin(); }
 
@@ -156,7 +167,7 @@ public class BoundingBox {
 	 * See Box.getDim()
 	 */
 	public float getDim(DimType dim) {
-		return boundingBox.getDim(dim);
+		return boxFrame.getDim(dim);
 	}
 
 	/**
@@ -165,9 +176,9 @@ public class BoundingBox {
 	 */
 	public PVector getDims() {
 		PVector dims = new PVector();
-		dims.x = boundingBox.getDim(DimType.LENGTH);
-		dims.y = boundingBox.getDim(DimType.HEIGHT);
-		dims.z = boundingBox.getDim(DimType.WIDTH);
+		dims.x = boxFrame.getDim(DimType.LENGTH);
+		dims.y = boxFrame.getDim(DimType.HEIGHT);
+		dims.z = boxFrame.getDim(DimType.WIDTH);
 		return dims;
 	}
 
@@ -187,7 +198,7 @@ public class BoundingBox {
 	 * to the given value.
 	 */
 	public void setColor(int newColor) {
-		boundingBox.setStrokeValue(newColor);
+		boxFrame.setStrokeValue(newColor);
 	}
 
 	/**
@@ -202,7 +213,7 @@ public class BoundingBox {
 	 * See Box.setDim()
 	 */
 	public void setDim(Float newVal, DimType dim) {
-		boundingBox.setDim(newVal, dim);
+		boxFrame.setDim(newVal, dim);
 	}
 
 	/**
@@ -213,9 +224,9 @@ public class BoundingBox {
 	 * Z -> width
 	 */
 	public void setDims(PVector newDims) {
-		boundingBox.setDim(newDims.x, DimType.LENGTH);
-		boundingBox.setDim(newDims.y, DimType.HEIGHT);
-		boundingBox.setDim(newDims.z, DimType.WIDTH);
+		boxFrame.setDim(newDims.x, DimType.LENGTH);
+		boxFrame.setDim(newDims.y, DimType.HEIGHT);
+		boxFrame.setDim(newDims.z, DimType.WIDTH);
 	}
 
 	/**

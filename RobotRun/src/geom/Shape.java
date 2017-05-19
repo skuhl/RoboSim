@@ -39,7 +39,7 @@ public abstract class Shape implements Cloneable {
 	}
 
 	@Override
-	public abstract Object clone();
+	public abstract Shape clone();
 
 	public abstract void draw();
 

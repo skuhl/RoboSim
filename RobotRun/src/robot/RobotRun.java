@@ -5793,6 +5793,12 @@ public class RobotRun extends PApplet {
 			camera.rotate(mouseY - pmouseY, mouseX - pmouseX, 0f);
 		}
 	}
+	
+	@Override
+	public void mousePressed() {
+		PVector mouse = new PVector(mouseX, mouseY, 0f);
+		
+	}
 
 	@Override
 	public void mouseWheel(MouseEvent event) {

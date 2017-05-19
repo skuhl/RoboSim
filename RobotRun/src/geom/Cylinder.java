@@ -28,7 +28,7 @@ public class Cylinder extends Shape {
 	}
 
 	@Override
-	public Object clone() {
+	public Cylinder clone() {
 		return new Cylinder(getFillValue(), getStrokeValue(), radius, height);
 	}
 
