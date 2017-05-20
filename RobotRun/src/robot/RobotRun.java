@@ -256,7 +256,6 @@ public class RobotRun extends PApplet {
 	private Scenario activeScenario;
 	private RoboticArm activeRobot;
 	private Camera camera;
-	private RoboBlaster blaster;
 
 	private WGUI UI;
 	private KeyCodeMap keyCodeMap;
@@ -7283,7 +7282,6 @@ public class RobotRun extends PApplet {
 			displayPoint = null;
 
 			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 30, 300, this.getActiveScenario());
-			blaster = new RoboBlaster(new PVector(-500, -500, 0), new RQuaternion());
 
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);

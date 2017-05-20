@@ -7,5 +7,5 @@ package enums;
  * @author Joshua Hooker
  */
 public enum WindowTab {
-	ROBOT1, ROBOT2, CREATE, EDIT, SCENARIO, MISC;
+	ROBOT1, ROBOT2, CREATE, EDIT, SCENARIO, CAMERA, MISC;
 }

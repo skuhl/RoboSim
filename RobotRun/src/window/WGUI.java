@@ -105,7 +105,7 @@ public class WGUI implements ControlListener {
 	 * shared amongst the window tabs.
 	 */
 	public final Group pendant, createWO, editWO, sharedElements, scenario,
-	miscellaneous;
+	camera, miscellaneous;
 
 	/**
 	 * The button bar controlling the window tab selection.
@@ -179,6 +179,7 @@ public class WGUI implements ControlListener {
 		createWO = addGroup("CREATEWO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		editWO = addGroup("EDITWO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		scenario = addGroup("SCENARIO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
+		camera = addGroup("CAMERA", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscellaneous = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 
 		// Initialize camera view buttons
@@ -278,7 +279,7 @@ public class WGUI implements ControlListener {
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
 
 		// Next button
-		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0,	smLrDiff +
+		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, smLrDiff +
 				16);
 		addButton("next", "NEXT", pendant, relPos[0], relPos[1],
 				Fields.LARGE_BUTTON, Fields.SMALL_BUTTON, Fields.bond);
@@ -567,6 +568,25 @@ public class WGUI implements ControlListener {
 		addTextfield("SInput", scenario, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		addButton("SConfirm", "N/A", scenario, mButtonWidth, sButtonHeight, Fields.small);
 
+		// Initialize the camera window
+		addTextarea("CXLbl", "X Position:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CXCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+
+		addTextarea("CYLbl", "Y Position:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CYCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+
+		addTextarea("CZLbl", "Z Position:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CZCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+
+		addTextarea("CWLbl", "X Rotation:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CWCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+
+		addTextarea("CPLbl", "Y Rotation:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CPCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+
+		addTextarea("CRLbl", "Z Rotation:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CRCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		
 		// Initialize the miscellaneous window elements
 		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("ActiveAxesDisplay", "Axes Display:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
@@ -998,7 +1018,10 @@ public class WGUI implements ControlListener {
 
 			} else if (actLbl.equals("Scenario")) {
 				updateView( WindowTab.SCENARIO );
-
+				
+			} else if (actLbl.equals("Camera")) {
+				updateView( WindowTab.CAMERA );
+				
 			} else if (actLbl.equals("Misc")) {
 				updateView( WindowTab.MISC );
 
@@ -2651,6 +2674,63 @@ public class WGUI implements ControlListener {
 		.setHeight(relPos[1])
 		.show();
 	}
+	
+	/**
+	 * Updates the positions of all the contents of the world object editing window.
+	 */
+	private void updateCameraWindowContentPositions() {
+		updateDimLblsAndFields();
+		getButton("ClearFields").hide();
+
+		// X label and fields
+		int[] relPos = new int[] { winMargin, winMargin };
+		ControllerInterface<?> c = getTextArea("CXLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CXCur").setPosition(relPos[0], relPos[1]);
+
+		// Y label and fields
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getTextArea("CYLbl").setPosition(relPos[0], relPos[1]);
+
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CYCur").setPosition(relPos[0], relPos[1]);
+
+		// Z label and fields
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getTextArea("CZLbl").setPosition(relPos[0], relPos[1]);;
+
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CZCur").setPosition(relPos[0], relPos[1]);
+
+		// W label and fields
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getTextArea("CWLbl").setPosition(relPos[0], relPos[1]);
+
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CWCur").setPosition(relPos[0], relPos[1]);
+
+		// P label and fields
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getTextArea("CPLbl").setPosition(relPos[0], relPos[1]);
+
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CPCur").setPosition(relPos[0], relPos[1]);
+
+		// R label and fields
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getTextArea("CRLbl").setPosition(relPos[0], relPos[1]);
+
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CRCur").setPosition(relPos[0], relPos[1]);
+
+		// Update window background display
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		background.setPosition(camera.getPosition())
+		.setBackgroundHeight(relPos[1])
+		.setHeight(relPos[1])
+		.show();
+	}
 
 	/**
 	 * Updates the background color of the robot jog buttons corresponding to
@@ -3016,7 +3096,11 @@ public class WGUI implements ControlListener {
 		} else if (menu == WindowTab.SCENARIO) {
 			// Scenario window
 			updateScenarioWindowContentPositions();
-
+		
+		} else if (menu == WindowTab.CAMERA) {
+			// Camera window
+			updateCameraWindowContentPositions();
+			
 		} else if (menu == WindowTab.MISC) {
 			// Miscellaneous window
 			updateMiscWindowContentPositions();
@@ -3053,6 +3137,7 @@ public class WGUI implements ControlListener {
 			setGroupVisible(editWO, false);
 			setGroupVisible(sharedElements, false);
 			setGroupVisible(scenario, false);
+			setGroupVisible(camera, false);
 			setGroupVisible(miscellaneous, false);
 
 			updateWindowContentsPositions();
@@ -3063,6 +3148,7 @@ public class WGUI implements ControlListener {
 			setGroupVisible(editWO, false);
 			setGroupVisible(sharedElements, false);
 			setGroupVisible(scenario, false);
+			setGroupVisible(camera, false);
 			setGroupVisible(miscellaneous, false);
 
 			if (!pendant.isVisible()) {
@@ -3076,6 +3162,7 @@ public class WGUI implements ControlListener {
 			setGroupVisible(pendant, false);
 			setGroupVisible(editWO, false);
 			setGroupVisible(scenario, false);
+			setGroupVisible(camera, false);
 			setGroupVisible(miscellaneous, false);
 
 			if (!createWO.isVisible()) {
@@ -3093,6 +3180,7 @@ public class WGUI implements ControlListener {
 			setGroupVisible(pendant, false);
 			setGroupVisible(createWO, false);
 			setGroupVisible(scenario, false);
+			setGroupVisible(camera, false);
 			setGroupVisible(miscellaneous, false);
 
 			if (!editWO.isVisible()) {
@@ -3111,6 +3199,7 @@ public class WGUI implements ControlListener {
 			setGroupVisible(createWO, false);
 			setGroupVisible(editWO, false);
 			setGroupVisible(sharedElements, false);
+			setGroupVisible(camera, false);
 			setGroupVisible(miscellaneous, false);
 
 			if (!scenario.isVisible()) {
@@ -3121,7 +3210,25 @@ public class WGUI implements ControlListener {
 				updateListContents();
 				resetListLabels();
 			}
+			
+		} else if (menu == WindowTab.CAMERA) {
+			setGroupVisible(pendant, false);
+			setGroupVisible(createWO, false);
+			setGroupVisible(editWO, false);
+			setGroupVisible(sharedElements, false);
+			setGroupVisible(scenario, false);
+			setGroupVisible(miscellaneous, false);
+			
+			if (!camera.isVisible()) {
+				setGroupVisible(camera, true);
+				setGroupVisible(sharedElements, true);
 
+				clearAllInputFields();
+				updateWindowContentsPositions();
+				updateListContents();
+				resetListLabels();
+			}
+			
 		} else if (menu == WindowTab.MISC) {
 			// Show miscellaneous window
 			setGroupVisible(pendant, false);
@@ -3129,6 +3236,7 @@ public class WGUI implements ControlListener {
 			setGroupVisible(editWO, false);
 			setGroupVisible(sharedElements, false);
 			setGroupVisible(scenario, false);
+			setGroupVisible(camera, false);
 
 			if (!miscellaneous.isVisible()) {
 				setGroupVisible(miscellaneous, true);
