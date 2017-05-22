@@ -1548,14 +1548,7 @@ public class RobotRun extends PApplet {
 					count += 1;
 				}
 			}
-			/**
-			printMatrix();
 			/*Camera Test Code*
-<<<<<<< HEAD
-			Fixture f = new Fixture("test", 160, 0, 50, 100, 200);
-			f.setLocalCenter(new PVector(-700, -300, 0));
-=======
->>>>>>> 9655ab8dcab0740988ad6764b91e2e701dc976cf
 			Point p = RobotRun.nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
 			float[][] axes = p.orientation.toMatrix().getFloatData();
 			c.setOrientation(p.orientation.mult(new RQuaternion(new PVector(axes[0][1], axes[1][1], axes[2][1]), -PI/2)));
