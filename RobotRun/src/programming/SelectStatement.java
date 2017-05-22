@@ -76,7 +76,8 @@ public class SelectStatement extends Instruction {
 			if(c == null) return -1;
 
 			//println("testing case " + i + " = " + cases.get(i).getDataVal() + " against " + arg.getDataVal());
-
+			
+			//TODO test select statements
 			if(c.type != ExpressionElement.UNINIT && getArg().getDataVal() == c.getDataVal()) {
 				Instruction instr = getInstrs().get(i);
 
@@ -87,9 +88,6 @@ public class SelectStatement extends Instruction {
 				}
 				
 				break;
-				
-			} else {
-				return -2;
 			}
 		}
 

@@ -2,15 +2,8 @@ package robot;
 
 import java.util.ArrayList;
 
-import geom.Box;
-import geom.Cylinder;
-import geom.DimType;
-import geom.ModelShape;
-import geom.Part;
-import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
-import geom.Shape;
 import geom.WorldObject;
 import global.RMath;
 import processing.core.PVector;
@@ -28,11 +21,10 @@ public class RobotCamera {
 	private float sensitivity;
 	private float lighting;
 	private float exposure;
-	private Scenario scene;
 	private ArrayList<WorldObject> taughtObjects;
 	
 	public RobotCamera(float posX, float posY, float posZ, RQuaternion q, 
-			float fov, float ar, float near, float far, Scenario sc) {
+			float fov, float ar, float near, float far) {
 		camPos = new PVector(posX, posY, posZ);
 		camOrient = q;
 		camFOV = fov;
@@ -42,12 +34,11 @@ public class RobotCamera {
 		sensitivity = 0.75f;
 		lighting = 10.0f;
 		exposure = 0.1f;
-		scene = sc;
 		taughtObjects = new ArrayList<WorldObject>();
 	}
 	
-	public ArrayList<WorldObject> teachObjectToCamera() {
-		ArrayList<WorldObject> objs = getObjectsInFrame();
+	public ArrayList<WorldObject> teachObjectToCamera(Scenario scene) {
+		ArrayList<WorldObject> objs = getObjectsInFrame(scene);
 		if(objs.size() > 1 || objs.size() <= 0) {
 			return null;
 		}
@@ -62,7 +53,7 @@ public class RobotCamera {
 		}
 	}
 	
-	public ArrayList<WorldObject> matchTaughtObject(int idx) {
+	public ArrayList<WorldObject> matchTaughtObject(int idx, Scenario scene) {
 		WorldObject objProto;
 		if(idx < taughtObjects.size()) {
 			objProto = taughtObjects.get(idx);
@@ -70,7 +61,7 @@ public class RobotCamera {
 			return null;
 		}
 		
-		ArrayList<WorldObject> inFrame = getObjectsInFrame();
+		ArrayList<WorldObject> inFrame = getObjectsInFrame(scene);
 		ArrayList<WorldObject> objMatches = new ArrayList<WorldObject>();
 		
 		for(WorldObject o: inFrame) {
@@ -120,11 +111,13 @@ public class RobotCamera {
 		return (inView / (float)(RES*RES*RES)) * lighting * exposure;
 	}
 	
+	@Deprecated
 	public float[] getColinearDimensions(WorldObject o) {
 		float[] dims = o.getForm().getDimArray();
 		float len = dims[0];
 		float hgt = dims[1];
 		float wid = dims[2];
+		
 		//Generate camera axes
 		PVector lookVect = getVectLook();
 		PVector upVect = getVectUp();
@@ -137,56 +130,34 @@ public class RobotCamera {
 		PVector objAxisZ = new PVector(objCoord[0][2], objCoord[1][2], objCoord[2][2]);
 		
 		//Projected "apparent" dimensions of box on to camera axes 
-		float dimZ = Math.abs(len*objAxisX.dot(lookVect)) + Math.abs(hgt*objAxisY.dot(lookVect)) + Math.abs(wid*objAxisZ.dot(lookVect));
 		float dimX = Math.abs(len*objAxisX.dot(ltVect)) + Math.abs(hgt*objAxisY.dot(ltVect)) + Math.abs(wid*objAxisZ.dot(ltVect));
 		float dimY = Math.abs(len*objAxisX.dot(upVect)) + Math.abs(hgt*objAxisY.dot(upVect)) + Math.abs(wid*objAxisZ.dot(upVect));
+		float dimZ = Math.abs(len*objAxisX.dot(lookVect)) + Math.abs(hgt*objAxisY.dot(lookVect)) + Math.abs(wid*objAxisZ.dot(lookVect));
 		
 		//Create vector to object center point, find x, y, z offset components
-		/*PVector objCenter = o.getLocalCenter();
+		PVector objCenter = o.getLocalCenter();
 		PVector toObj = new PVector(objCenter.x - camPos.x, objCenter.y - camPos.y, objCenter.z - camPos.z);
-		float distZ = toObj.dot(lookVect);
 		float distX = Math.abs(toObj.dot(ltVect));
 		float distY = Math.abs(toObj.dot(upVect));
+		float distZ = toObj.dot(lookVect);
 		
 		//Calculate the width and height of our frustum view plane
-		float pWidth = getPlaneWidth(distZ - dimZ/2);
-		float pHeight = getPlaneHeight(distZ - dimZ/2);
+		float pWidth = getPlaneWidth(distZ);
+		float pHeight = getPlaneHeight(distZ);
 		
 		System.out.println(String.format("plane width: %4f, plane height: %4f", pWidth, pHeight));
 		
 		//Calculate signed distance from center of object to near edge of view plane
-		float aZ = Math.min(distX - camClipNear, camClipFar - distX); //???
 		float aX = (pWidth/2 - distX);
 		float aY = (pHeight/2 - distY);
+		float aZ = Math.min(distZ - camClipNear, camClipFar - distZ);
 		
 		//Find the portion of the object projected dimensions that are in view
 		float visX = Math.min(RMath.clamp(dimX/2 + aX, 0, dimX), pWidth);
 		float visY = Math.min(RMath.clamp(dimY/2 + aY, 0, dimY), pHeight);
+		float visZ = Math.min(RMath.clamp(dimZ/2 + aZ, 0, dimZ), camClipFar - camClipNear);
 		
-		System.out.println(String.format("x: %4f / %4f, y: %4f / %4f, z: %4f, ax: %4f, ay: %4f", visX, dimX, visY, dimY, dimZ, aX, aY));
-		System.out.println("area est: " + (visX/dimX) * (visY/dimY));
-		System.out.println();
-		
-		//Calculate the width and height of our frustum view plane
-		pWidth = getPlaneWidth(distZ);
-		pHeight = getPlaneHeight(distZ);
-		
-		System.out.println(String.format("plane width: %4f, plane height: %4f", pWidth, pHeight));
-		
-		//Calculate signed distance from center of object to near edge of view plane
-		aX = (pWidth/2 - distX);
-		aY = (pHeight/2 - distY);
-		
-		//Find the portion of the object projected dimensions that are in view
-		visX = Math.min(RMath.clamp(dimX/2 + aX, 0, dimX), pWidth);
-		visY = Math.min(RMath.clamp(dimY/2 + aY, 0, dimY), pHeight);
-		
-		System.out.println(String.format("x: %4f / %4f, y: %4f / %4f, z: %4f, ax: %4f, ay: %4f", visX, dimX, visY, dimY, dimZ, aX, aY));
-		System.out.println("area est: " + (visX/dimX) * (visY/dimY));
-		System.out.println();
-		/* */
-		
-		return new float[] {dimX, dimY, dimZ};
+		return new float[] {visX, visY, visZ};
 	}
 	
 	public boolean checkPointInFrame(PVector p) {
@@ -217,10 +188,10 @@ public class RobotCamera {
 		camOrient = RMath.matrixToQuat(coord);
 	}
 	
-	public WorldObject getNearestObjectInFrame() {
+	public WorldObject getNearestObjectInFrame(Scenario scene) {
 		float minDist = Float.MAX_VALUE;
 		WorldObject closeObj = null;
-		for(WorldObject o : getObjectsInFrame()) {
+		for(WorldObject o : getObjectsInFrame(scene)) {
 			PVector objCenter = o.getLocalCenter();
 			PVector toObj = new PVector(objCenter.x - camPos.x, objCenter.y - camPos.y, objCenter.z - camPos.z);
 			
@@ -241,8 +212,9 @@ public class RobotCamera {
 	 * 
 	 * @return The list of WorldObjects that fall inside of the camera view frustum.
 	 */
-	public ArrayList<WorldObject> getObjectsInFrame() {
+	public ArrayList<WorldObject> getObjectsInFrame(Scenario scene) {
 		ArrayList<WorldObject> objList = new ArrayList<>();
+		if(scene == null) return objList;
 		
 		for(WorldObject o : scene.getObjectList()) {
 			if(checkPointInFrame(o.getLocalCenter()) && checkObjectInFrame(o) >= sensitivity) {
