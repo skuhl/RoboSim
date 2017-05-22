@@ -7005,7 +7005,7 @@ public class RobotRun extends PApplet {
 
 		popStyle();
 		
-		UI.updateWindowDisplay();
+		UI.updateAndDrawUI();
 		
 		popMatrix();
 	}
@@ -7463,7 +7463,7 @@ public class RobotRun extends PApplet {
 	 * Toggles bounding box display on or off.
 	 */
 	public void ToggleOBBs() {
-		UI.updateWindowContentsPositions();
+		UI.updateUIContentPositions();
 	}
 	
 	/**
@@ -7478,7 +7478,7 @@ public class RobotRun extends PApplet {
 			activeRobot = ROBOTS.get(0);
 		}
 
-		UI.updateWindowContentsPositions();
+		UI.updateUIContentPositions();
 		updatePendantScreen();
 	}
 	
