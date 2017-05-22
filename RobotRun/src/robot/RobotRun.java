@@ -6448,7 +6448,7 @@ public class RobotRun extends PApplet {
 					200f, Fields.color(255, 0, 255));
 			
 		} else {
-			/* Draw a pink point for the Robot's current End Effecot position */
+			/* Draw a pink point for the Robot's current End Effector position */
 			pushMatrix();
 			translate(eePoint.position.x, eePoint.position.y, eePoint.position.z);
 
@@ -6594,6 +6594,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void renderOriginAxes(PVector origin, RMatrix axesVectors, float axesLength, int originColor) {
 		pushMatrix();
+		pushStyle();
 		// Transform to the reference frame defined by the axes vectors		
 		applyMatrix(origin, axesVectors);
 		// X axis
@@ -6611,6 +6612,8 @@ public class RobotRun extends PApplet {
 		textFont(Fields.bond, 18);
 
 		stroke(originColor);
+		fill(Fields.BLACK);
+		
 		sphere(4);
 		stroke(0);
 		translate(dotPos, 0, 0);
@@ -6640,6 +6643,7 @@ public class RobotRun extends PApplet {
 		text("Z-axis", 0, 0, 0);
 		popMatrix();
 
+		popStyle();
 		popMatrix();
 	}
 	
