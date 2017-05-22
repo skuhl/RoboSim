@@ -4,8 +4,10 @@ import processing.core.PVector;
 
 /**
  * A form of orientation in the complex plain.
+ * 
+ * @author Joshua Hooker
  */
-public class RQuaternion {
+public class RQuaternion implements Cloneable {
 	
 	private float w, x, y, z;
 	
@@ -15,7 +17,7 @@ public class RQuaternion {
 	 * modified in the process.
 	 */
 	public static RQuaternion addValues(RQuaternion... quatChain) {
-		RQuaternion sum = quatChain[0].cloneInClass();
+		RQuaternion sum = quatChain[0].clone();
 		// Add values of all quaternions
 		for (int idx = 1; idx < quatChain.length; ++idx) {
 			sum.addValues(quatChain[idx]);
@@ -45,7 +47,7 @@ public class RQuaternion {
 	 * the process.
 	 */
 	public static RQuaternion mult(RQuaternion... quatChain) {
-		RQuaternion product = quatChain[0].cloneInClass();
+		RQuaternion product = quatChain[0].clone();
 		// Multiply quaternions in the order they are given
 		for (int idx = 1; idx < quatChain.length; ++idx) {
 			product.mult(quatChain[idx]);
@@ -59,7 +61,7 @@ public class RQuaternion {
 	 * changing q.
 	 */
 	public static RQuaternion normalize(RQuaternion q) {
-		RQuaternion copy = q.cloneInClass();
+		RQuaternion copy = q.clone();
 		q.normalize();
 		return copy;
 	}
@@ -69,7 +71,7 @@ public class RQuaternion {
 	 * assumed that axis is a unit vector.
 	 */	
 	public static RQuaternion rotateAroundAxis(RQuaternion q, PVector u, float theta) {
-		RQuaternion rotated = q.cloneInClass();
+		RQuaternion rotated = q.clone();
 		rotated.rotateAroundAxis(u, theta);
 		return rotated;
 	}
@@ -86,7 +88,7 @@ public class RQuaternion {
 	 * Returns q, scaled by scalar, without modifying q.
 	 */
 	public static RQuaternion scalarMult(float scalar, RQuaternion q) {
-		RQuaternion copy = q.cloneInClass();
+		RQuaternion copy = q.clone();
 		copy.scalarMult(scalar);
 		return copy;
 	}
@@ -105,7 +107,7 @@ public class RQuaternion {
 		}
 		
 		float cOmega = q1.dot(q2);
-		RQuaternion q3 = q2.cloneInClass(), q4;
+		RQuaternion q3 = q2.clone(), q4;
 		
 		if (cOmega < 0) {
 			cOmega *= -1;
@@ -177,14 +179,7 @@ public class RQuaternion {
 	}
 	
 	@Override
-	public Object clone() {
-		return cloneInClass();
-	}
-	
-	/**
-	 * Returns an independent replica of this.
-	 */
-	private RQuaternion cloneInClass() {
+	public RQuaternion clone() {
 		return new RQuaternion(w, x, y, z);
 	}
 	
@@ -350,35 +345,20 @@ public class RQuaternion {
 	 * Returns the 3x3 rotation matrix corresponding
 	 * to this [quaternion].
 	 */
-	public float[][] toMatrix() {
+	public RMatrix toMatrix() {
 		float[][] r = new float[3][3];
 
-		r[0][0] = 1 - 2 * (y * y + z * z);
-		r[0][1] = 2 * (x * y - w * z);
-		r[0][2] = 2 * (w * y + x * z);
-		r[1][0] = 2 * (x * y + w * z);
-		r[1][1] = 1 - 2 * (x * x + z * z);
-		r[1][2] = 2 * (y * z - w * x);
-		r[2][0] = 2 * (x * z - w * y);
-		r[2][1] = 2 * (w * x + y * z);
-		r[2][2] = 1 - 2 * (x * x + y * y);
+		r[0][0] = 1 - 2 * (y*y + z*z);
+		r[1][0] = 2 * (x*y - w*z);
+		r[2][0] = 2 * (w*y + x*z);
+		r[0][1] = 2 * (x*y + w*z);
+		r[1][1] = 1 - 2 * (x*x + z*z);
+		r[2][1] = 2 * (y*z - w*x);
+		r[0][2] = 2 * (x*z - w*y);
+		r[1][2] = 2 * (w*x + y*z);
+		r[2][2] = 1 - 2 * (x*x + y*y);
 
-		float[] magnitudes = new float[3];
-
-		for(int v = 0; v < r.length; ++v) {
-			// Find the magnitude of each axis vector
-			for(int e = 0; e < r[0].length; ++e) {
-				magnitudes[v] += Math.pow(r[v][e], 2);
-			}
-
-			magnitudes[v] = (float)Math.sqrt(magnitudes[v]);
-			// Normalize each vector
-			for(int e = 0; e < r.length; ++e) {
-				r[v][e] /= magnitudes[v];
-			}
-		}
-
-		return r;
+		return new RMatrix(r).normalize();
 	}
 
 	/**

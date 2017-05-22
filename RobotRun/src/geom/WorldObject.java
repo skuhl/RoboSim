@@ -1,16 +1,16 @@
 package geom;
+import global.MyFloatFormat;
 import processing.core.PVector;
-import robot.CoordinateSystem;
 import robot.RobotRun;
 
 /**
  * Any object in the World other than the Robot.
  */
 public abstract class WorldObject implements Cloneable {
+	protected CoordinateSystem localOrientation;
 	private String name;
 	private Shape form;
-	protected CoordinateSystem localOrientation;
-
+	
 	public WorldObject() {
 		name = "Object";
 		form = new Box();
@@ -37,7 +37,7 @@ public abstract class WorldObject implements Cloneable {
 	}
 	
 	@Override
-	public abstract Object clone();
+	public abstract WorldObject clone();
 
 	/**
 	 * Returns a list of values with short prefix labels, which descibe
@@ -52,15 +52,15 @@ public abstract class WorldObject implements Cloneable {
 		if (form instanceof Box) {
 			fields = new String[3];
 			// Add the box's length, height, and width values
-			fields[0] = String.format("L: %4.3f", form.getDim(DimType.LENGTH));
-			fields[1] = String.format("H: %4.3f", form.getDim(DimType.HEIGHT));
-			fields[2] = String.format("W: %4.3f", form.getDim(DimType.WIDTH));
+			fields[0] = "L: %4.3f" + MyFloatFormat.format(form.getDim(DimType.LENGTH));
+			fields[1] = "H: %4.3f" + MyFloatFormat.format(form.getDim(DimType.HEIGHT));
+			fields[2] = "W: %4.3f" + MyFloatFormat.format(form.getDim(DimType.WIDTH));
 
 		} else if (form instanceof Cylinder) {
 			fields = new String[2];
 			// Add the cylinder's radius and height values
-			fields[0] = String.format("R: %4.3f", form.getDim(DimType.RADIUS));
-			fields[1] = String.format("H: %4.3f", form.getDim(DimType.HEIGHT));
+			fields[0] = "R: %4.3f" + MyFloatFormat.format(form.getDim(DimType.RADIUS));
+			fields[1] = "H: %4.3f" + MyFloatFormat.format(form.getDim(DimType.HEIGHT));
 
 		} else if (form instanceof ModelShape) {
 
@@ -69,14 +69,14 @@ public abstract class WorldObject implements Cloneable {
 				fields = new String[4];
 				PVector dims = ((Part)this).getOBBDims();
 
-				fields[0] = String.format("S: %4.3f", form.getDim(DimType.SCALE));
-				fields[1] = String.format("L: %4.3f", dims.x);
-				fields[2] = String.format("H: %4.3f", dims.y);
-				fields[3] = String.format("W: %4.3f", dims.z);
+				fields[0] = "S: %4.3f" + MyFloatFormat.format(form.getDim(DimType.SCALE));
+				fields[1] = "L: %4.3f" + MyFloatFormat.format(dims.x);
+				fields[2] = "H: %4.3f" + MyFloatFormat.format(dims.y);
+				fields[3] = "W: %4.3f" + MyFloatFormat.format(dims.z);
 
 			} else if (this instanceof Fixture) {
 				fields = new String[1];
-				fields[0] = String.format("S: %4.3f", form.getDim(DimType.SCALE));
+				fields[0] = "S: %4.3f" + MyFloatFormat.format(form.getDim(DimType.SCALE));
 
 			} else {
 				// No dimensios to display
@@ -105,12 +105,14 @@ public abstract class WorldObject implements Cloneable {
 	// Getter and Setter methods for the World Object's local orientation, name, and form
 
 	public Shape getForm() { return form; }
+	
+	public int getObjectID() { return form.getID(); }
 
 	public PVector getLocalCenter() {
 		return localOrientation.getOrigin();
 		}
 
-	public float[][] getLocalOrientationAxes() {
+	public RMatrix getLocalOrientationAxes() {
 		return localOrientation.getAxes();
 	}
 
@@ -128,7 +130,7 @@ public abstract class WorldObject implements Cloneable {
 		localOrientation.setOrigin(newCenter);
 	}
 	
-	public void setLocalOrientationAxes(float[][] newAxes) {
+	public void setLocalOrientationAxes(RMatrix newAxes) {
 		localOrientation.setAxes(newAxes);
 	}
 

@@ -1,5 +1,5 @@
 package geom;
-import robot.CoordinateSystem;
+import global.RMath;
 import robot.RobotRun;
 
 /**
@@ -44,18 +44,17 @@ public class Fixture extends WorldObject {
 	}
 
 	@Override
-	public Object clone() {
-		return new Fixture(getName(), (Shape)getForm().clone(), (CoordinateSystem)localOrientation.clone());
+	public Fixture clone() {
+		return new Fixture(getName(), getForm().clone(),
+				localOrientation.clone());
 	}
 
 	/**
 	 * Applies the inverse of this Fixture's Coordinate System's transformation matrix to the matrix stack.
 	 */
 	public void removeCoordinateSystem() {
-		float[][] tMatrix = RMath.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
+		RMatrix tMatrix = RMath.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
 		tMatrix = RMath.invertHCMatrix(tMatrix);
-		
-		
 		
 		RobotRun.getInstance().applyMatrix(tMatrix);
 	}

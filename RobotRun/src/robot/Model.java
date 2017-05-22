@@ -1,6 +1,6 @@
 package robot;
 
-import geom.RMath;
+import global.RMath;
 import processing.core.PShape;
 import processing.core.PVector;
 

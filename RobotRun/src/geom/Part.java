@@ -1,7 +1,6 @@
 package geom;
 import processing.core.PApplet;
 import processing.core.PVector;
-import robot.CoordinateSystem;
 import robot.RobotRun;
 
 /**
@@ -9,6 +8,16 @@ import robot.RobotRun;
  * The bounding box holds the local coordinate system of the object.
  */
 public class Part extends WorldObject {
+	
+	/**
+	 * A scale factor for calculating the dimensions of a part's bounding box.
+	 */
+	private static final float OBB_DIM_SCALE, OBB_RAD_SCALE;
+	
+	static {
+		OBB_DIM_SCALE = 0.05f;
+		OBB_RAD_SCALE = 0.07f;
+	}
 	
 	/**
 	 * This algorithm uses the Separating Axis Theorm to project radi of each Box on to several 
@@ -21,8 +30,8 @@ public class Part extends WorldObject {
 	 */
 	public static boolean collision3D(BoundingBox A, BoundingBox B) {
 		// Rows are x, y, z axis vectors for A and B: Ax, Ay, Az, Bx, By, and Bz
-		float[][] axes_A = A.getOrientationAxes();
-		float[][] axes_B = B.getOrientationAxes();
+		float[][] axes_A = A.getOrientationAxes().getFloatData();
+		float[][] axes_B = B.getOrientationAxes().getFloatData();
 
 		// Rotation matrices to convert B into A's coordinate system
 		float[][] rotMatrix = new float[3][3];
@@ -145,8 +154,9 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, int fill, int strokeVal, float edgeLen) {
 		super(n, new Box(fill, strokeVal, edgeLen));
-		absOBB = new BoundingBox(1.1f * edgeLen);
-		defaultOrientation = (CoordinateSystem) localOrientation.clone();
+		absOBB = new BoundingBox(edgeLen);
+		defaultOrientation = localOrientation.clone();
+		updateOBBDims();
 	}
 
 	/**
@@ -154,8 +164,9 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, int fill, int strokeVal, float rad, float hgt) {
 		super(n, new Cylinder(fill, strokeVal, rad, hgt));
-		absOBB = new BoundingBox(2.12f * rad, 2.12f * rad, 1.1f * hgt);
-		defaultOrientation = (CoordinateSystem) localOrientation.clone();
+		absOBB = new BoundingBox(rad, rad, hgt);
+		defaultOrientation = localOrientation.clone();
+		updateOBBDims();
 	}
 
 	/**
@@ -163,8 +174,9 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
 		super(n, new Box(fill, strokeVal, len, hgt, wdh));
-		absOBB = new BoundingBox(1.1f * len, 1.1f * hgt, 1.1f * wdh);
-		defaultOrientation = (CoordinateSystem) localOrientation.clone();
+		absOBB = new BoundingBox(len, hgt, wdh);
+		defaultOrientation = localOrientation.clone();
+		updateOBBDims();
 	}
 
 	/**
@@ -172,11 +184,11 @@ public class Part extends WorldObject {
 	 */
 	public Part(String n, ModelShape model) {
 		super(n, model);
-
-		absOBB = new BoundingBox(1.1f * model.getDim(DimType.LENGTH),
-								 1.1f * model.getDim(DimType.HEIGHT),
-								 1.1f * model.getDim(DimType.WIDTH));
-		defaultOrientation = (CoordinateSystem) localOrientation.clone();
+		absOBB = new BoundingBox(model.getDim(DimType.LENGTH),
+								 model.getDim(DimType.HEIGHT),
+								 model.getDim(DimType.WIDTH));
+		defaultOrientation = localOrientation.clone();
+		updateOBBDims();
 	}
 
 	/**
@@ -190,6 +202,7 @@ public class Part extends WorldObject {
 		absOBB = new BoundingBox(OBBDims.x, OBBDims.y, OBBDims.z);
 		defaultOrientation = def;
 		setFixtureRef(fixRef);
+		updateOBBDims();
 	}
 
 	@Override
@@ -202,14 +215,15 @@ public class Part extends WorldObject {
 	}
 
 	@Override
-	public Object clone() {
+	public Part clone() {
 		// The new object's reference still points to the same fixture!
-		return new Part(getName(), (Shape)getForm().clone(), getOBBDims().copy(),
-				(CoordinateSystem)localOrientation.clone(), (CoordinateSystem)defaultOrientation.clone(), reference);
+		return new Part(getName(), getForm().clone(), getOBBDims().copy(),
+				localOrientation.clone(), defaultOrientation.clone(),
+				reference);
 	}
 
 	/**
-	 * Determies if the given bounding box is colliding
+	 * Determines if the given bounding box is colliding
 	 * with this Part's bounding box.
 	 */
 	public boolean collision(BoundingBox obb) {
@@ -253,11 +267,6 @@ public class Part extends WorldObject {
 	public Fixture getFixtureRef() { return reference; }
 
 	/**
-	 * Return a reference to this object's bounding-box.
-	 */ 
-	private BoundingBox getOBB() { return absOBB; }
-
-	/**
 	 * Get the dimensions of the part's bounding-box
 	 */
 	public PVector getOBBDims() {
@@ -268,7 +277,7 @@ public class Part extends WorldObject {
 		return defaultOrientation.getOrigin();
 	}
 
-	public float[][] getDefaultOrientationAxes() {
+	public RMatrix getDefaultOrientationAxes() {
 		return defaultOrientation.getAxes();
 	}
 
@@ -309,12 +318,12 @@ public class Part extends WorldObject {
 		defaultOrientation.setOrigin(newCenter);
 	}
 	
-	public void setDefaultOrientationAxes(float[][] newAxes) {
+	public void setDefaultOrientationAxes(RMatrix newAxes) {
 		defaultOrientation.setAxes(newAxes);
 	}
 
 	@Override
-	public void setLocalOrientationAxes(float[][] newAxes) {
+	public void setLocalOrientationAxes(RMatrix newAxes) {
 		super.setLocalOrientationAxes(newAxes);
 		updateAbsoluteOrientation();
 	}
@@ -335,7 +344,7 @@ public class Part extends WorldObject {
 
 	/**
 	 * Update the Part's absolute (or world) orientation
-	 * based om its local orientation and fixture
+	 * based on its local orientation and fixture
 	 * reference's orientation.
 	 */
 	public void updateAbsoluteOrientation() {
@@ -367,7 +376,7 @@ public class Part extends WorldObject {
 
 		if (s instanceof Box || s instanceof ModelShape) {
 			// Update the OBB dimensions for a box or complex part
-			minAddition = 0.1f * PApplet.min(s.getDim(DimType.LENGTH),
+			minAddition = OBB_DIM_SCALE * PApplet.min(s.getDim(DimType.LENGTH),
 					PApplet.min(s.getDim(DimType.HEIGHT),
 							s.getDim(DimType.WIDTH)));
 
@@ -377,8 +386,8 @@ public class Part extends WorldObject {
 
 		} else if (s instanceof Cylinder) {
 			// Update the OBB dimensions for a cylindrical part
-			minAddition =  PApplet.min(0.12f * s.getDim(DimType.RADIUS),
-					0.1f * s.getDim(DimType.HEIGHT));
+			minAddition =  PApplet.min(OBB_RAD_SCALE * s.getDim(DimType.RADIUS),
+					OBB_DIM_SCALE * s.getDim(DimType.HEIGHT));
 
 			absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.LENGTH);
 			absOBB.setDim(2f * s.getDim(DimType.RADIUS) + minAddition, DimType.HEIGHT);

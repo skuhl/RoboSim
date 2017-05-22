@@ -1,5 +1,6 @@
 package screen;
 
+import enums.ScreenMode;
 import robot.RobotRun;
 
 public abstract class Screen {
@@ -13,8 +14,8 @@ public abstract class Screen {
 	public Screen(ScreenMode m, RobotRun r) {
 		mode = m;
 		robotRun = r;
-		contents = new MenuScroll(r, "cont", 8, 10, 20);
-		options = new MenuScroll(r, "opt", 3, 10, 180);
+		contents = new MenuScroll("cont", 8, 10, 20);
+		options = new MenuScroll("opt", 3, 10, 180);
 		labels = new String[5];
 	}
 	

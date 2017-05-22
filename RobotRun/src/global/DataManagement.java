@@ -1,4 +1,4 @@
-package robot;
+package global;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -21,6 +21,7 @@ import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.Box;
+import geom.CoordinateSystem;
 import geom.Cylinder;
 import geom.DimType;
 import geom.Fixture;
@@ -28,10 +29,10 @@ import geom.LoadedPart;
 import geom.ModelShape;
 import geom.Part;
 import geom.Point;
+import geom.RMatrix;
 import geom.RQuaternion;
 import geom.Shape;
 import geom.WorldObject;
-import global.Fields;
 import processing.core.PVector;
 import programming.CallInstruction;
 import programming.FrameInstruction;
@@ -48,6 +49,9 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
+import robot.RobotRun;
+import robot.RoboticArm;
+import robot.Scenario;
 
 /**
  * Manages all the saving and loading of the program data to and from files.
@@ -55,7 +59,6 @@ import regs.Register;
  * necessary.
  * 
  * @author Joshua Hooker and Vincent Druckte
- * @version 1.0; 3 December 2016
  */
 public abstract class DataManagement {
 	
@@ -1064,14 +1067,14 @@ public abstract class DataManagement {
 			float[][] orientationAxes = loadFloatArray2D(in);
 			CoordinateSystem localOrientation = new CoordinateSystem();
 			localOrientation.setOrigin(center);
-			localOrientation.setAxes(orientationAxes);
+			localOrientation.setAxes(new RMatrix(orientationAxes));
 
 			if (flag == 1) {
 				center = loadPVector(in);
 				orientationAxes = loadFloatArray2D(in);
 				CoordinateSystem defaultOrientation = new CoordinateSystem();
 				defaultOrientation.setOrigin(center);
-				defaultOrientation.setAxes(orientationAxes);
+				defaultOrientation.setAxes(new RMatrix(orientationAxes));
 				
 				// Load the part's bounding-box and fixture reference name
 				PVector OBBDims = loadPVector(in);
@@ -1913,7 +1916,7 @@ public abstract class DataManagement {
 			saveShape(wldObj.getForm(), out);
 			// Save the local orientation of the object
 			savePVector(wldObj.getLocalCenter(), out);
-			saveFloatArray2D(wldObj.getLocalOrientationAxes(), out);
+			saveFloatArray2D(wldObj.getLocalOrientationAxes().getFloatData(), out);
 			
 			if (wldObj instanceof Part) {
 				Part part = (Part)wldObj;
@@ -1921,7 +1924,7 @@ public abstract class DataManagement {
 				
 				// Save the default orientation of the part
 				savePVector(part.getDefaultCenter(), out);
-				saveFloatArray2D(part.getDefaultOrientationAxes(), out);
+				saveFloatArray2D(part.getDefaultOrientationAxes().getFloatData(), out);
 				
 				savePVector(part.getOBBDims(), out);
 

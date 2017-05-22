@@ -1,8 +1,10 @@
 package frame;
 import geom.Point;
-import geom.RMath;
+import geom.RMatrix;
 import geom.RQuaternion;
-import processing.core.PConstants;
+import global.Fields;
+import global.MyFloatFormat;
+import global.RMath;
 import processing.core.PVector;
 import robot.RobotRun;
 import robot.RoboticArm;
@@ -27,9 +29,11 @@ public class ToolFrame extends Frame {
 	@Override
 	public RQuaternion getOrientation() {
 		RoboticArm model = RobotRun.getActiveRobot();
-		RQuaternion robotOrientation = RobotRun.nativeRobotPoint(model, model.getJointAngles()).orientation;
-		// Tool frame axes orientation = (orientation offset x Model default orientation ^ -1) x Model current orientation
-		return RQuaternion.mult(model.getDefaultPoint().orientation.transformQuaternion(orientationOffset), robotOrientation);
+		Point cur = RobotRun.nativeRobotPoint(model, model.getJointAngles());
+		Point def = model.getDefaultPoint();
+		RQuaternion diff = cur.orientation.transformQuaternion(def.orientation.conjugate());
+		
+		return diff.transformQuaternion(((RQuaternion)orientationOffset.clone()));
 	}
 	
 	/**
@@ -109,7 +113,7 @@ public class ToolFrame extends Frame {
 				return false;
 			}
 
-			float[][] pt1_ori = TCPTeachPoints[0].orientation.toMatrix(),
+			RMatrix pt1_ori = TCPTeachPoints[0].orientation.toMatrix(),
 					pt2_ori = TCPTeachPoints[1].orientation.toMatrix(),
 					pt3_ori = TCPTeachPoints[2].orientation.toMatrix();
 
@@ -117,10 +121,10 @@ public class ToolFrame extends Frame {
 					TCPTeachPoints[1].position, pt2_ori,
 					TCPTeachPoints[2].position, pt3_ori);
 
-			float[][] newAxesVectors = (method == 1) ? createAxesFromThreePoints(super.getPoint(0).position,
+			RMatrix newAxesVectors = (method == 1) ? createAxesFromThreePoints(super.getPoint(0).position,
 					super.getPoint(1).position,
 					super.getPoint(2).position)
-					: new float[][] { {1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
+					: Fields.IDENTITY_MAT.copy();
 
 					if (newTCP == null || newAxesVectors == null) {
 						// Invalid point set for the TCP or the coordinate axes
@@ -157,8 +161,8 @@ public class ToolFrame extends Frame {
 		}
 	}
 
-	// Getter and Setter for TCP offset value
 	public void setTCPOffset(PVector newOffset) { TCPOffset = newOffset; }
+	
 	/**
 	 * Returns a string array, where each entry is one of
 	 * the Tool frame's TCP offset or orientation values:
@@ -168,22 +172,21 @@ public class ToolFrame extends Frame {
 	 */
 	@Override
 	public String[] toStringArray() {
-
 		String[] values = new String[6];
 
 		PVector displayOffset;
-		// Convert angles to degrees
-		PVector wpr = RMath.quatToEuler(orientationOffset).mult(PConstants.RAD_TO_DEG);
+		/* Convert orientation in to euler angles, in degree, with reference
+		 * to the world frame */
+		PVector wpr = RMath.nQuatToWEuler(orientationOffset);
 
 		displayOffset = getTCPOffset();
 
-		values[0] = String.format("X: %4.3f", displayOffset.x);
-		values[1] = String.format("Y: %4.3f", displayOffset.y);
-		values[2] = String.format("Z: %4.3f", displayOffset.z);
-		// Display angles in terms of the World frame
-		values[3] = String.format("W: %4.3f", -wpr.x);
-		values[4] = String.format("P: %4.3f", wpr.z);
-		values[5] = String.format("R: %4.3f", -wpr.y);
+		values[0] = MyFloatFormat.format(displayOffset.x);
+		values[1] = MyFloatFormat.format(displayOffset.y);
+		values[2] = MyFloatFormat.format(displayOffset.z);
+		values[3] = MyFloatFormat.format(wpr.x);
+		values[4] = MyFloatFormat.format(wpr.y);
+		values[5] = MyFloatFormat.format(wpr.z);
 
 		return values;
 	}
