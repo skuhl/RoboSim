@@ -69,9 +69,9 @@ public class Camera {
 		PVector delta = new PVector(dw, dp, dr);
 		float deltaScale = RMath.DEG_TO_RAD / 4f;
 		
+		// Only scale rotations down
 		if (scale < 1f) {
-			// Only reduce rotation scaling
-			deltaScale *= scale;
+			delta.mult(scale);
 		}
 		
 		// Apply rotation
@@ -90,7 +90,7 @@ public class Camera {
 	 * 						scale
 	 */
 	public void scale(float multiplier) {
-		scale = Math.max(MIN_SCALE, Math.min(scale * multiplier, MAX_SCALE));
+		scale = RMath.clamp(scale * multiplier, MIN_SCALE, MAX_SCALE);
 	}
 	
 	/**
@@ -119,6 +119,15 @@ public class Camera {
 		rotation.x = RMath.mod2PI(w);
 		rotation.y = RMath.mod2PI(p);
 		rotation.z = RMath.mod2PI(r);
+	}
+	
+	/**
+	 * Set the camera's scale value.
+	 * 
+	 * @param scale	The new scale value of the camera
+	 */
+	public void setScale(float scale) {
+		this.scale = RMath.clamp(scale, MIN_SCALE, MAX_SCALE);
 	}
 	
 	/**
@@ -160,13 +169,13 @@ public class Camera {
 	 * @param dz	Change in z position
 	 */
 	public void translate(float dx, float dy, float dz) {
-		// Apply translation
 		PVector delta = new PVector(dx, dy, dz);
-		position.add( delta.mult(scale) );
-		
-		// Apply camera position restrictions
 		float limit = scale * 9999f;
-		position.x = Math.max(-limit, Math.min(position.x, limit));
-		position.y = Math.max(-limit, Math.min(position.y, limit));
+		delta.mult(scale);
+		
+		// Apply translation with position restrictions
+		position.x = RMath.clamp(position.x + delta.x, -limit, limit);
+		position.y = RMath.clamp(position.y + delta.y, -limit, limit);
+		position.z += delta.z;
 	}
 }

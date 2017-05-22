@@ -1,32 +1,61 @@
 package geom;
+import global.Fields;
 import processing.core.PVector;
 import robot.RobotRun;
 
+/**
+ * TODO comment
+ * 
+ * @author Joshua Hooker
+ */
 public class Ray {
-	/**
-	 * 
-	 */
-	private final RobotRun robotRun;
+
 	private PVector origin;
 	private PVector direction;
+	private int color;
+	private float length;
 
-	public Ray(RobotRun robotRun) {
-		this.robotRun = robotRun;
+	public Ray() {
 		origin = new PVector(0f, 0f, 0f);
 		direction = new PVector(1f, 1f, 1f);
+		color = Fields.BLACK;
+		length = 5000f;
 	}
 
-	public Ray(RobotRun robotRun, PVector origin, PVector pointOnRay) {
-		this.robotRun = robotRun;
+	public Ray(PVector origin, PVector pointOnRay, int color, float len) {
 		this.origin = origin.copy();
 		direction = pointOnRay.sub(origin);
 		direction.normalize();
+		this.color = color;
+		length = len;
 	}
-
-	public void draw() {
-		this.robotRun.stroke(0);
-		this.robotRun.noFill();
-		PVector endpoint = PVector.add(origin, PVector.mult(direction, 5000f));
-		this.robotRun.line(origin.x, origin.y, origin.z, endpoint.x, endpoint.y, endpoint.z);
+	
+	public int getColor() {
+		return color;
+	}
+	
+	public PVector getDirection() {
+		return direction;
+	}
+	
+	public float getLength() {
+		return length;
+	}
+	
+	public PVector getOrigin() {
+		return origin;
+	}
+	
+	public void setColor(int newColor) {
+		color = newColor;
+	}
+	
+	public void setLength(int newLen) {
+		length = newLen;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("origin=%s direct=%s", origin, direction);
 	}
 }

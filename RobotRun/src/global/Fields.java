@@ -257,6 +257,48 @@ public abstract class Fields {
 	}
 	
 	/**
+	 * Calculates the distance between two 32-bit colors, c0 and c1, using the
+	 * formula:
+	 * 
+	 * diff = ( (c0.alpha - c1.alpha) ^ 2 + (c0.red - c1.red) ^ 2 + (c0.green
+	 * 			- c1.green) ^ 2 + (c0.blue - c1.blue) ^ 2 ) ^ 1/2
+	 * 
+	 * @param c0	A 32-bit color value
+	 * @param c1	A 32-bit color value
+	 * @return		The total difference between c0 and c1 in Euclidean space
+	 */
+	public static float colorDiff(int c0, int c1) {
+		// Compute the rgba differences between c0 and c1
+		int[] diffs = rgbaDiffs(c0,  c1);
+		// Compute the square root of the sum of the rgba differences
+		return (float) Math.sqrt(diffs[0] + diffs[1] + diffs[2] + diffs[3]);
+	}
+	
+	/**
+	 * Calculates the square differences between the alpha, red, green, and
+	 * blue byte values in the 32-bit colors, c0 and c1.
+	 * 
+	 * @param c0	A 32-bit color value
+	 * @param c1	A 32-bit color value
+	 * @return		A 4-element array containing the square differences of c0
+	 * 				and c1's alpha, red, green, blue byte values.
+	 */
+	public static int[] rgbaDiffs(int c0, int c1) {
+		int[] diffs = new int[4];
+		// Separate each color into r, g, b, a portions
+		int[] c1_rgba = rgba(c0);
+		int[] c2_rgba = rgba(c1);
+		
+		// Calculate the square difference between the portions of c0 and c1
+		for (int idx = 0; idx < diffs.length; ++idx) {
+			int diff = c1_rgba[idx] - c2_rgba[idx];
+			diffs[idx] = diff * diff;
+		}
+		
+		return diffs;
+	}
+	
+	/**
 	 * Breaks up the given 32-bit color into the four parts of the color: red,
 	 * green, blue, alpha.
 	 * 

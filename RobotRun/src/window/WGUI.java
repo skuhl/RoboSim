@@ -135,7 +135,7 @@ public class WGUI implements ControlListener {
 	 */
 	public WGUI(RobotRun appRef, PImage[][] buttonImages) {
 		app = appRef;
-
+		
 		manager = new ControlP5(appRef);
 		// Explicitly draw the ControlP5 elements
 		manager.setAutoDraw(false);
@@ -190,11 +190,11 @@ public class WGUI implements ControlListener {
 		addButton("TopView", "T", sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton("BottomView", "Bt", sButtonWidth, sButtonHeight, Fields.small).hide();
 
-		// Pendant screen background?
-		c1 = addTextarea("txt", "", pendant, winMargin, 0,
+		// Pendant screen background
+		c1 = addTextarea("pendantScreen", "", pendant, winMargin, 0,
 				Fields.PENDANT_SCREEN_WIDTH, Fields.PENDANT_SCREEN_HEIGHT,
 				Fields.B_TEXT_C, Fields.UI_LIGHT_C, Fields.small);
-
+		
 		// Pendant header
 		addTextarea("header", "\0", pendant, winMargin,	0,
 				Fields.PENDANT_SCREEN_WIDTH, 20, Fields.UI_LIGHT_C,
@@ -1920,6 +1920,15 @@ public class WGUI implements ControlListener {
 
 		return false;
 	}
+	
+	/**
+	 * Was the last mouse interaction with the UI?
+	 * 
+	 * @return	Is the UI the current focus
+	 */
+	public boolean isFocus() {
+		return menu != null && manager.isMouseOver();
+	}
 
 	/**
 	 * Determines whether the mouse is over a dropdown list.
@@ -3084,6 +3093,7 @@ public class WGUI implements ControlListener {
 
 		manager.draw();
 	}
+	
 
 	/**
 	 * Updates the positions of all the elements in the active window
