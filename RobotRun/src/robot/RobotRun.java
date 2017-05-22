@@ -24,10 +24,12 @@ import geom.Part;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
+import geom.Ray;
 import geom.Triangle;
 import geom.WorldObject;
 import global.DataManagement;
 import global.Fields;
+import global.MyFloatFormat;
 import global.RMath;
 import global.RegisteredModels;
 import processing.core.PApplet;
@@ -339,6 +341,11 @@ public class RobotRun extends PApplet {
 	private Point displayPoint;
 	
 	/**
+	 * Testing for mouse press
+	 */
+	private Ray mouseRay, scaledMouseRay;
+	
+	/**
 	 * Applies the active camera to the matrix stack.
 	 * 
 	 * @param	The camera to apply
@@ -355,6 +362,7 @@ public class RobotRun extends PApplet {
 
 		rotateX(cOrien.x);
 		rotateY(cOrien.y);
+		rotateZ(cOrien.z);
 		
 		// Apply orthogonal camera view
 		ortho(-horizontalMargin, horizontalMargin, -verticalMargin,
@@ -1528,7 +1536,7 @@ public class RobotRun extends PApplet {
 			hint(ENABLE_DEPTH_TEST);
 			directionalLight(255, 255, 255, 1, 1, 0);
 			ambientLight(150, 150, 150);
-	
+			
 			pushMatrix();
 			// Apply the camera for drawing objects
 			applyCamera(camera);
@@ -1597,15 +1605,30 @@ public class RobotRun extends PApplet {
 			
 			popMatrix();
 			
-			hint(DISABLE_DEPTH_TEST);
-			noLights();
-			
 			renderUI();
 			
 		} catch (Exception Ex) {
 			DataManagement.errLog(Ex);
 			throw Ex;
 		}
+	}
+	
+	/**
+	 * Draws the given ray based on the matrix on the top of the stack.
+	 * 
+	 * @param r	A ray object
+	 */
+	public void drawRay(Ray r) {
+		pushStyle();
+		stroke(r.getColor());
+		noFill();
+		
+		PVector ro = r.getOrigin();
+		// Draw a long line
+		PVector endpoint = PVector.add(ro, PVector.mult(r.getDirection(), r.getLength()));
+		line(ro.x, ro.y, ro.z, endpoint.x, endpoint.y, endpoint.z);
+		
+		popStyle();
 	}
 
 	/**
@@ -3768,6 +3791,16 @@ public class RobotRun extends PApplet {
 
 		return vector;
 	}
+	
+	public PVector getCoordFromScreen(float x, float y, float z) {
+		return new PVector(
+				screenX(x, y, z),
+				screenY(x, y, z),
+				screenZ(x, y, z)
+			);
+		
+		
+	}
 
 	public void getEditScreen(Instruction ins, int selectIdx) {
 		if (ins instanceof MotionInstruction) {
@@ -5791,41 +5824,53 @@ public class RobotRun extends PApplet {
 	public void mousePressed() {
 		/* Check if the mouse position is colliding with a world object */
 		if (mouseButton == LEFT) {
-			PVector mouse = new PVector(mouseX, mouseY, 0f);
-			int pixel = get(mouseX, mouseY);
-			
-			System.out.printf("\n%-16s : %s %#x\n", "Mouse", mouse, pixel);
 			
 			Scenario s = getActiveScenario();
 			
-			if (s != null) {
+			if (!UI.isFocus() && s != null) {
+				PVector camPos = camera.getPosition();
+				camPos.x = camera.getScale() * (camPos.x + width / 2f);
+				camPos.y = camera.getScale() * (camPos.y + height / 2f);
+				camPos.z = camera.getScale() * camPos.z;
 				
+				PVector camOrien = camera.getOrientation();
+				
+				PVector mScreenPos = new PVector(mouseX, mouseY, camPos.z + 1500f);
+				mScreenPos.x *= camera.getScale();
+				mScreenPos.y *= camera.getScale();
+				
+				PVector mWorldPos, mDirect;
+				
+				pushMatrix();
+				resetMatrix();
+				// Apply the inverse of the camera's coordinate system
+				rotateZ(-camOrien.z);
+				rotateY(-camOrien.y);
+				rotateX(-camOrien.x);
+				
+				translate(-camPos.x, -camPos.y, -camPos.z);
+				
+				translate(mScreenPos.x, mScreenPos.y, mScreenPos.z);
+				
+				mWorldPos = getCoordFromMatrix(0f, 0f, 0f);
+				mDirect = getCoordFromMatrix(0f, 0f, -1f);
+				
+				mouseRay = new Ray(mWorldPos, mDirect, Fields.BLACK, 10000f);
+				
+				/**/
+				System.out.printf("Mouse:\n%s\n%s\n%s\n\n", mScreenPos, mWorldPos, mDirect);
+				
+				/**
 				for (WorldObject wo : s) {
-					
-					pushMatrix();
-					resetMatrix();
-					PVector camPos = camera.getPosition();
-					PVector camOrien = camera.getOrientation();
-					
-					translate(camPos.x, camPos.y, camPos.z);
-					
-					rotateX(camOrien.x);
-					rotateY(camOrien.y);
-					rotateZ(camOrien.z);
-					
-					wo.applyCoordinateSystem();
-					float x = screenX(0f, 0f, 0f);
-					float y = screenY(0f, 0f, 0f);
-					float z = screenZ(0f, 0f, 0f);
-					
-					System.out.printf("%-16s : [ %4.3f, %4.3f, %4.3f ]\n", wo.getName(), x, y, z);
-					popMatrix();
-					
+					// TODO
+					System.out.printf("%-16s %s\n", wo.getName(), wo.getLocalCenter());
 				}
 				
+				/**/
+				
+				popMatrix();
 			}
 		}
-		/**/
 	}
 
 	@Override
@@ -5837,12 +5882,21 @@ public class RobotRun extends PApplet {
 
 		float e = event.getCount();
 		/* Control scaling of the camera with the mouse wheel */
+		
+		if (e != 0) {
+			
+			float newScale = camera.getScale() + e * 0.1f;
+			camera.setScale(newScale);
+		}
+		
+		/**
 		if (e > 0) {
 			camera.scale(1.05f);
 			
 		} else if (e < 0) {
 			camera.scale(0.95f);
 		}
+		/**/
 	}
 
 	/**
@@ -6734,6 +6788,14 @@ public class RobotRun extends PApplet {
 		}
 
 		model.updatePreviousEEOrientation();
+		
+		if (mouseRay != null) {
+			drawRay(mouseRay);
+		}
+		
+		if (scaledMouseRay != null) {
+			drawRay(scaledMouseRay);
+		}
 	}
 	
 	/**
@@ -6810,6 +6872,9 @@ public class RobotRun extends PApplet {
 	 * Displays all the windows and the right-hand text display.
 	 */
 	public void renderUI() {
+		hint(DISABLE_DEPTH_TEST);
+		noLights();
+		
 		pushMatrix();
 		ortho();
 		
@@ -6942,7 +7007,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
-		/* Camera test output *
+		/* Camera test output */
 		if (Fields.DEBUG) {
 			String[] lines = Fields.toLineStringArray(camera.getPosition(),
 					camera.getOrientation());
@@ -7008,11 +7073,10 @@ public class RobotRun extends PApplet {
 			// Display the current ee mapping state
 			text(String.format("EE Mapping: %s", getEEMapping().name()), lastTextPositionX, height - 30);
 		}
-
-		popStyle();
 		
 		UI.updateAndDrawUI();
 		
+		popStyle();
 		popMatrix();
 	}
 	
@@ -7230,6 +7294,9 @@ public class RobotRun extends PApplet {
 	public void setup() {
 		super.setup();
 		
+		mouseRay = null;
+		scaledMouseRay = null;
+		
 		PImage[][] buttonImages = new PImage[][] {
 			
 			{ loadImage("images/record-35x20.png"), loadImage("images/record-over.png"), loadImage("images/record-on.png") },
@@ -7293,6 +7360,25 @@ public class RobotRun extends PApplet {
 			DataManagement.errLog(NPEx);
 			throw NPEx;
 		}
+		
+		pushMatrix();
+		resetMatrix();
+		
+		PVector w = getCoordFromMatrix(0f, 0f, 0f);
+		PVector u = getCoordFromMatrix(1f, 1f, 1f);
+		
+		float scale = 2f;
+		float hortMargin = scale * width / 2f;
+		float vertMargin = scale * height / 2f;
+		
+		ortho(-hortMargin, hortMargin, -vertMargin, vertMargin, -5000, 5000);
+		
+		PVector z = getCoordFromScreen(0f, 0f, 0f);
+		PVector v = getCoordFromScreen(1f, 1f, 1f);
+		
+		System.out.printf("%s - %s\n%s - %s\n", u, w, v, z);
+		
+		popMatrix();
 	}
 
 	/**
