@@ -1246,28 +1246,6 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Delete the world object that is selected in
-	 * the Object dropdown list, if any.
-	 * 
-	 * @returning  -1  if the active Scenario is null
-	 *              0  if the object was removed succesfully,
-	 *              1  if the object did not exist in the scenario,
-	 *              2  if the object was a Fixture that was removed
-	 *                 from the scenario and was referenced by at
-	 *                 least one Part in the scenario
-	 */
-	public int deleteActiveWorldObject() {
-		int ret = -1;
-
-		if (app.getActiveScenario() != null) {
-			ret = app.getActiveScenario().removeWorldObject( getSelectedWO() );
-			clearAllInputFields();
-		}
-
-		return ret;
-	}
-
-	/**
 	 * Puts the current position and orientation values of the selected object,
 	 * in the position and orientation input fields of the edit window.
 	 */
@@ -1311,29 +1289,6 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Puts the current position and orientation values of the selected object,
-	 * in the edit window, into the default position and orientation text
-	 * fields.
-	 */
-	public void fillDefWithCur() {
-		WorldObject active = getSelectedWO();
-
-		if (active instanceof Part) {
-			// Get the part's default position and orientation
-			PVector pos = RMath.vToWorld( active.getLocalCenter() );
-			PVector wpr = RMath.nRMatToWEuler( active.getLocalOrientationAxes() );
-
-			// Fill the default position and orientation fields in the edit window
-			getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
-			getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
-			getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
-			getTextArea("WDef").setText( String.format("%4.3f", wpr.x) );
-			getTextArea("PDef").setText( String.format("%4.3f", wpr.y) );
-			getTextArea("RDef").setText( String.format("%4.3f", wpr.z) );
-		}
-	}
-
-	/**
 	 * Puts the default position and orientation values of the selected
 	 * object, in the edit window, into the default position and orientation
 	 * text fields.
@@ -1354,45 +1309,6 @@ public class WGUI implements ControlListener {
 			getTextArea("WDef").setText( String.format("%4.3f", wpr.x) );
 			getTextArea("PDef").setText( String.format("%4.3f", wpr.y) );
 			getTextArea("RDef").setText( String.format("%4.3f", wpr.z) );
-		}
-	}
-
-	/**
-	 * Returns the scenario associated with the label that is active
-	 * for the scenario drop-down list.
-	 * 
-	 * @returning  The index value or null if no such index exists
-	 */
-	public Scenario getActiveScenario() {
-
-		if (menu == WindowTab.SCENARIO) {
-			Object val = getDropdown("Scenario").getSelectedItem();
-
-			if (val instanceof Scenario) {
-				// Set the active scenario index
-				return (Scenario)val;
-
-			} else if (val != null) {
-				// Invalid entry in the dropdown list
-				System.err.printf("Invalid class type: %d!\n", val.getClass());
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * Returns the object that is currently being edited
-	 * in the world object editing menu.
-	 */
-	public WorldObject getSelectedWO() {
-		Object wldObj = getDropdown("Object").getSelectedItem();
-
-		if (editWO.isVisible() && wldObj instanceof WorldObject) {
-			return (WorldObject)wldObj;
-
-		} else {
-			return null;
 		}
 	}
 
@@ -1878,6 +1794,45 @@ public class WGUI implements ControlListener {
 	public boolean getRobotButtonState() {
 		return getButton("ToggleRobot").isOn();
 	}
+	
+	/**
+	 * Returns the scenario associated with the label that is active
+	 * for the scenario drop-down list.
+	 * 
+	 * @returning  The index value or null if no such index exists
+	 */
+	public Scenario getSelectedScenario() {
+
+		if (menu == WindowTab.SCENARIO) {
+			Object val = getDropdown("Scenario").getSelectedItem();
+
+			if (val instanceof Scenario) {
+				// Set the active scenario index
+				return (Scenario)val;
+
+			} else if (val != null) {
+				// Invalid entry in the dropdown list
+				System.err.printf("Invalid class type: %d!\n", val.getClass());
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the object that is currently being edited
+	 * in the world object editing menu.
+	 */
+	public WorldObject getSelectedWO() {
+		Object wldObj = getDropdown("Object").getSelectedItem();
+
+		if (editWO.isVisible() && wldObj instanceof WorldObject) {
+			return (WorldObject)wldObj;
+
+		} else {
+			return null;
+		}
+	}
 
 	/**
 	 * Parses the name of a .stl model source file from one of two input
@@ -1949,44 +1904,6 @@ public class WGUI implements ControlListener {
 		for (Textarea t : displayLines) {
 			t.hide();
 		}
-	}
-
-	/**
-	 * Creates a new scenario with the name pulled from the scenario name text field.
-	 * If the name given is already given to another existing scenario, then no new
-	 * Scenario is created. Also, names can only consist of 16 letters or numbers.
-	 * 
-	 * @returning  A new Scenario object or null if the scenario name text field's
-	 *             value is invalid
-	 */
-	public Scenario initializeScenario() {
-		if (menu == WindowTab.SCENARIO) {
-			String name = getTextField("ScenarioName").getText();
-
-			if (name != null) {
-				// Names only consist of letters and numbers
-				if (Pattern.matches("[a-zA-Z0-9]+", name)) {
-
-					for (Scenario s : app.getScenarios()) {
-						if (s.getName().equals(name)) {
-							// Duplicate name
-							PApplet.println("Names must be unique!");
-							return null;
-						}
-					}
-
-					if (name.length() > 16) {
-						// Names have a max length of 16 characters
-						name = name.substring(0, 16);
-					}
-
-					return new Scenario(name);
-				}
-			}
-		}
-
-		// Invalid input or wrong window open 
-		return null;
 	}
 
 	/**

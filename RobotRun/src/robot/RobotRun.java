@@ -1504,10 +1504,13 @@ public class RobotRun extends PApplet {
 	 */
 	public void DeleteWldObj() {
 		// Delete focused world object and add to the scenario undo stack
-		updateScenarioUndo(UI.getSelectedWO());
-		int ret = UI.deleteActiveWorldObject();
-		DataManagement.saveScenarios(this);
+		WorldObject selected = UI.getSelectedWO();
+		
+		updateScenarioUndo( selected );
+		int ret = getActiveScenario().removeWorldObject( selected );
 		Fields.debug("World Object removed: %d\n", ret);
+		
+		DataManagement.saveScenarios(this);
 	}
 
 	@Override
@@ -7107,7 +7110,7 @@ public class RobotRun extends PApplet {
 		int ret = UI.updateScenarios(SCENARIOS);
 
 		if (ret > 0) {
-			activeScenario = UI.getActiveScenario();
+			activeScenario = UI.getSelectedScenario();
 			DataManagement.saveScenarios(this);
 
 		} else if (ret == 0) {
