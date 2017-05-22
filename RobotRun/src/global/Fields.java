@@ -212,6 +212,17 @@ public abstract class Fields {
 	}
 	
 	/**
+	 * Returns a 32-bit color from the value, which will be applied to the red,
+	 * green, and blue byte values of the color.
+	 * 
+	 * @param rgb	The gray intensity value
+	 * @return		A 32-bit color value
+	 */
+	public static int color(int rgb) {
+		return color(255, rgb, rgb, rgb);
+	}
+	
+	/**
 	 * Creates a 32-bit color from the given red, green, and blue byte values.
 	 * The alpha value is set to 255.
 	 * 
