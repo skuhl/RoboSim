@@ -5824,7 +5824,6 @@ public class RobotRun extends PApplet {
 	public void mousePressed() {
 		/* Check if the mouse position is colliding with a world object */
 		if (mouseButton == LEFT) {
-			
 			Scenario s = getActiveScenario();
 			
 			if (!UI.isFocus() && s != null) {
@@ -5847,17 +5846,18 @@ public class RobotRun extends PApplet {
 				rotateZ(-camOrien.z);
 				rotateY(-camOrien.y);
 				rotateX(-camOrien.x);
-				
 				translate(-camPos.x, -camPos.y, -camPos.z);
-				
+				// Get the mouse's position in the scene
 				translate(mScreenPos.x, mScreenPos.y, mScreenPos.z);
 				
+				/* Form a ray pointing out of the screen's z-axis, in the
+				 * native coordinate system */
 				mWorldPos = getCoordFromMatrix(0f, 0f, 0f);
 				mDirect = getCoordFromMatrix(0f, 0f, -1f);
 				
 				mouseRay = new Ray(mWorldPos, mDirect, Fields.BLACK, 10000f);
 				
-				/**/
+				/**
 				System.out.printf("Mouse:\n%s\n%s\n%s\n\n", mScreenPos, mWorldPos, mDirect);
 				
 				/**
@@ -7360,25 +7360,6 @@ public class RobotRun extends PApplet {
 			DataManagement.errLog(NPEx);
 			throw NPEx;
 		}
-		
-		pushMatrix();
-		resetMatrix();
-		
-		PVector w = getCoordFromMatrix(0f, 0f, 0f);
-		PVector u = getCoordFromMatrix(1f, 1f, 1f);
-		
-		float scale = 2f;
-		float hortMargin = scale * width / 2f;
-		float vertMargin = scale * height / 2f;
-		
-		ortho(-hortMargin, hortMargin, -vertMargin, vertMargin, -5000, 5000);
-		
-		PVector z = getCoordFromScreen(0f, 0f, 0f);
-		PVector v = getCoordFromScreen(1f, 1f, 1f);
-		
-		System.out.printf("%s - %s\n%s - %s\n", u, w, v, z);
-		
-		popMatrix();
 	}
 
 	/**
