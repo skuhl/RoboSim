@@ -4774,7 +4774,7 @@ public class RobotRun extends PApplet {
 			case KeyEvent.VK_SLASH:		joint6_pos(); break;
 			case KeyEvent.VK_MINUS:		spddn(); break;
 			case KeyEvent.VK_EQUALS:	spdup(); break;
-			case KeyEvent.VK_S:			c.teachObjectToCamera(); break;
+			case KeyEvent.VK_S:			c.teachObjectToCamera(getActiveScenario()); break;
 			}
 			
 		}
@@ -7281,7 +7281,7 @@ public class RobotRun extends PApplet {
 			
 			displayPoint = null;
 
-			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 30, 300, this.getActiveScenario());
+			c = new RobotCamera(-200, -200, 0, activeRobot.getOrientation(), 90, 1, 30, 300);
 
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);
