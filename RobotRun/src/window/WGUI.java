@@ -105,7 +105,7 @@ public class WGUI implements ControlListener {
 	 * shared amongst the window tabs.
 	 */
 	public final Group pendant, createWO, editWO, sharedElements, scenario,
-	camera, miscellaneous;
+			camera, miscellaneous;
 
 	/**
 	 * The button bar controlling the window tab selection.
@@ -1034,7 +1034,7 @@ public class WGUI implements ControlListener {
 					arg0.isFrom("ScenarioOpt")) {
 				/* The selected item in these lists influence the layout of
 				 * the menu */
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 			}
 
 			if (arg0.isFrom("Object")) {
@@ -2196,27 +2196,6 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Reset the base label of every dropdown list.
-	 */
-	private void resetListLabels() {
-		List<ControllerInterface<?>> controllers = manager.getAll();
-
-		for (ControllerInterface<?> c : controllers) {
-			if (c instanceof MyDropdownList && !c.getParent().equals(miscellaneous)) {
-				((MyDropdownList)c).setValue(-1);
-
-			} else if (c.getName().length() > 4 && c.getName().substring(0, 4).equals("Dim") ||
-					c.getName().equals("RefLbl")) {
-
-				c.hide();
-
-			}
-		}
-
-		updateDimLblsAndFields();
-	}
-
-	/**
 	 * Only update the group visibility if it does not
 	 * match the given visibility flag.
 	 */
@@ -2982,7 +2961,7 @@ public class WGUI implements ControlListener {
 	 */
 	public void updateShiftButton(boolean state) {
 		updateButtonBgColor("shift", state);
-		updateWindowDisplay();
+		updateAndDrawUI();
 	}
 
 	/**
@@ -2993,7 +2972,7 @@ public class WGUI implements ControlListener {
 	 */
 	public void updateStepButton(boolean state) {
 		updateButtonBgColor("step", state);
-		updateWindowDisplay();
+		updateAndDrawUI();
 	}
 
 	/**
@@ -3068,67 +3047,12 @@ public class WGUI implements ControlListener {
 		}
 	}
 
-	/**
-	 * Updates the positions of all the elements in the active window
-	 * based on the current button tab that is active.
-	 */
-	public void updateWindowContentsPositions() {
-		if (menu == null) {
-			// Window is hidden
-			background.hide();
-			getButton("FrontView").hide();
-			getButton("BackView").hide();
-			getButton("LeftView").hide();
-			getButton("RightView").hide();
-			getButton("TopView").hide();
-			getButton("BottomView").hide();
-
-			return;
-
-		} else if (menu == WindowTab.CREATE) {
-			// Create window
-			updateCreateWindowContentPositions();
-
-		} else if (menu == WindowTab.EDIT) {
-			// Edit window
-			updateEditWindowContentPositions();
-
-		} else if (menu == WindowTab.SCENARIO) {
-			// Scenario window
-			updateScenarioWindowContentPositions();
-		
-		} else if (menu == WindowTab.CAMERA) {
-			// Camera window
-			updateCameraWindowContentPositions();
-			
-		} else if (menu == WindowTab.MISC) {
-			// Miscellaneous window
-			updateMiscWindowContentPositions();
-		}
-
-		// Update the camera view buttons
-		int[] relPos = getAbsPosFrom(windowTabs, Alignment.BOTTOM_RIGHT, winMargin, 0);
-
-		Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("BackView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("LeftView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("RightView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("TopView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("BottomView").setPosition(relPos[0], relPos[1]).show();
-
-		updateListContents();
-	}
-
+	
 	/**
 	 * Updates the current active window display based on the selected button on
 	 * windowTabs.
 	 */
-	public void updateWindowDisplay() {
+	public void updateAndDrawUI() {
 
 		if (menu == null) {
 			// Hide all windows
@@ -3140,7 +3064,7 @@ public class WGUI implements ControlListener {
 			setGroupVisible(camera, false);
 			setGroupVisible(miscellaneous, false);
 
-			updateWindowContentsPositions();
+			updateUIContentPositions();
 
 		} else if (menu == WindowTab.ROBOT1 || menu == WindowTab.ROBOT2) {
 			// Show pendant
@@ -3154,7 +3078,7 @@ public class WGUI implements ControlListener {
 			if (!pendant.isVisible()) {
 				setGroupVisible(pendant, true);
 
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 			}
 
 		} else if (menu == WindowTab.CREATE) {
@@ -3170,9 +3094,8 @@ public class WGUI implements ControlListener {
 				setGroupVisible(sharedElements, true);
 
 				clearAllInputFields();
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 				updateListContents();
-				resetListLabels();
 			}
 
 		} else if (menu == WindowTab.EDIT) {
@@ -3188,9 +3111,8 @@ public class WGUI implements ControlListener {
 				setGroupVisible(sharedElements, true);
 
 				clearAllInputFields();
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 				updateListContents();
-				resetListLabels();
 			}
 
 		} else if (menu == WindowTab.SCENARIO) {
@@ -3206,9 +3128,8 @@ public class WGUI implements ControlListener {
 				setGroupVisible(scenario, true);
 
 				clearAllInputFields();
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 				updateListContents();
-				resetListLabels();
 			}
 			
 		} else if (menu == WindowTab.CAMERA) {
@@ -3224,9 +3145,7 @@ public class WGUI implements ControlListener {
 				setGroupVisible(sharedElements, true);
 
 				clearAllInputFields();
-				updateWindowContentsPositions();
-				updateListContents();
-				resetListLabels();
+				updateUIContentPositions();
 			}
 			
 		} else if (menu == WindowTab.MISC) {
@@ -3241,13 +3160,69 @@ public class WGUI implements ControlListener {
 			if (!miscellaneous.isVisible()) {
 				setGroupVisible(miscellaneous, true);
 
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 				updateListContents();
-				resetListLabels();
 			}
 		}
 
 		manager.draw();
+	}
+
+	/**
+	 * Updates the positions of all the elements in the active window
+	 * based on the current button tab that is active.
+	 */
+	public void updateUIContentPositions() {
+		if (menu == null) {
+			// Window is hidden
+			background.hide();
+			getButton("FrontView").hide();
+			getButton("BackView").hide();
+			getButton("LeftView").hide();
+			getButton("RightView").hide();
+			getButton("TopView").hide();
+			getButton("BottomView").hide();
+
+		} else {
+			
+			if (menu == WindowTab.CREATE) {
+				// Create window
+				updateCreateWindowContentPositions();
+	
+			} else if (menu == WindowTab.EDIT) {
+				// Edit window
+				updateEditWindowContentPositions();
+	
+			} else if (menu == WindowTab.SCENARIO) {
+				// Scenario window
+				updateScenarioWindowContentPositions();
+			
+			} else if (menu == WindowTab.CAMERA) {
+				// Camera window
+				updateCameraWindowContentPositions();
+				
+			} else if (menu == WindowTab.MISC) {
+				// Miscellaneous window
+				updateMiscWindowContentPositions();
+			}
+	
+			// Update the camera view buttons
+			int[] relPos = getAbsPosFrom(windowTabs, Alignment.BOTTOM_RIGHT, winMargin, 0);
+	
+			Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("BackView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("LeftView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("RightView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("TopView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("BottomView").setPosition(relPos[0], relPos[1]).show();
+	
+			updateListContents();
+		}
 	}
 
 	/**
