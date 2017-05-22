@@ -1,21 +1,50 @@
-package geom;
+package global;
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.SingularValueDecomposition;
 
-import global.Fields;
+import geom.Point;
+import geom.RMatrix;
+import geom.RQuaternion;
 import processing.core.PConstants;
 import processing.core.PVector;
 import robot.RobotRun;
 import robot.RoboticArm;
 
-public class RMath {
-	static final float DEG_TO_RAD = RobotRun.DEG_TO_RAD;
-	static final float RAD_TO_DEG = RobotRun.RAD_TO_DEG;
+/**
+ * TODO general comments
+ * 
+ * @author Vincent Druckte and Joshua Hooker
+ */
+public abstract class RMath {
+	public static final float DEG_TO_RAD = RobotRun.DEG_TO_RAD;
+	public static final float PI = RobotRun.PI;
 	
-	static final float PI = RobotRun.PI;
-	static final float TWO_PI = RobotRun.TWO_PI;
+	public static final float RAD_TO_DEG = RobotRun.RAD_TO_DEG;
+	public static final float TWO_PI = RobotRun.TWO_PI;
+	
+	public static PVector convertRGBtoHSL(PVector rgb) {
+		float rP = rgb.x / 255f;
+		float gP = rgb.y / 255f;
+		float bP = rgb.z / 255f;
+		
+		float cMax = Math.max(rP, Math.max(gP, bP));
+		float cMin = Math.min(rP, Math.min(gP, bP));
+		float delta = cMax - cMin;
+		
+		float H = 0;
+		float S = 0;
+		float L = (cMax + cMin) / 2;
+				
+		if(delta != 0) {
+			if(cMax == rP) { H = (PI/3)*((gP - bP)/delta) % 26; }
+			else if(cMax == gP) { H = (PI/3)*((bP - rP)/delta) + 2; }
+			else if(cMax == bP) { H = (PI/3)*((rP - gP)/delta) + 4; }
+			
+			S = delta/(1-Math.abs(2*L-1));
+		}
+		
+		return new PVector(H, S, L);
+	}
 	
 	/**
 	 * Determines if the lies within the range of angles that span from
@@ -80,7 +109,7 @@ public class RMath {
 	 * value. Each cell of the resulting matrix will describe the linear
 	 * approximation of the robot's motion for each joint in units per radian.
 	 */
-	public static float[][] calculateJacobian(RoboticArm model, float[] angles, boolean posOffset) {
+	public static RMatrix calculateJacobian(RoboticArm model, float[] angles, boolean posOffset) {
 		float dAngle = DEG_TO_RAD;
 		if (!posOffset) {
 			dAngle *= -1;
@@ -117,14 +146,14 @@ public class RMath {
 			angles[i] -= dAngle;
 		}
 
-		return J;
-	}
-	
-	public static int clamp(int in, int min, int max) {
-		return Math.min(max, Math.max(min, in));
+		return new RMatrix(J);
 	}
 	
 	public static float clamp(float in, float min, float max) {
+		return Math.min(max, Math.max(min, in));
+	}
+	
+	public static int clamp(int in, int min, int max) {
 		return Math.min(max, Math.max(min, in));
 	}
 	
@@ -143,43 +172,27 @@ public class RMath {
 	}
 
 	// calculates rotation matrix from euler angles
-	public static float[][] eulerToMatrix(PVector wpr) {
+	public static RMatrix eulerToMatrix(PVector wpr) {
 		float[][] r = new float[3][3];
 		float xRot = wpr.x;
 		float yRot = wpr.y;
 		float zRot = wpr.z;
 
 		r[0][0] = (float) Math.cos(yRot) * (float) Math.cos(zRot);
-		r[0][1] = (float) Math.sin(xRot) * (float) Math.sin(yRot) * (float) Math.cos(zRot)
+		r[1][0] = (float) Math.sin(xRot) * (float) Math.sin(yRot) * (float) Math.cos(zRot)
 				- (float) Math.cos(xRot) * (float) Math.sin(zRot);
-		r[0][2] = (float) Math.cos(xRot) * (float) Math.sin(yRot) * (float) Math.cos(zRot)
+		r[2][0] = (float) Math.cos(xRot) * (float) Math.sin(yRot) * (float) Math.cos(zRot)
 				+ (float) Math.sin(xRot) * (float) Math.sin(zRot);
-		r[1][0] = (float) Math.cos(yRot) * (float) Math.sin(zRot);
+		r[0][1] = (float) Math.cos(yRot) * (float) Math.sin(zRot);
 		r[1][1] = (float) Math.sin(xRot) * (float) Math.sin(yRot) * (float) Math.sin(zRot)
 				+ (float) Math.cos(xRot) * (float) Math.cos(zRot);
-		r[1][2] = (float) Math.cos(xRot) * (float) Math.sin(yRot) * (float) Math.sin(zRot)
+		r[2][1] = (float) Math.cos(xRot) * (float) Math.sin(yRot) * (float) Math.sin(zRot)
 				- (float) Math.sin(xRot) * (float) Math.cos(zRot);
-		r[2][0] = -(float) Math.sin(yRot);
-		r[2][1] = (float) Math.sin(xRot) * (float) Math.cos(yRot);
+		r[0][2] = -(float) Math.sin(yRot);
+		r[1][2] = (float) Math.sin(xRot) * (float) Math.cos(yRot);
 		r[2][2] = (float) Math.cos(xRot) * (float) Math.cos(yRot);
 
-		float[] magnitudes = new float[3];
-
-		for (int v = 0; v < r.length; ++v) {
-			// Find the magnitude of each axis vector
-			for (int e = 0; e < r[0].length; ++e) {
-				magnitudes[v] += (float) Math.pow(r[v][e], 2);
-			}
-
-			magnitudes[v] = (float) Math.sqrt(magnitudes[v]);
-			// Normalize each vector
-			for (int e = 0; e < r.length; ++e) {
-				r[v][e] /= magnitudes[v];
-			}
-		}
-		/**/
-
-		return r;
+		return new RMatrix(r).normalize();
 	}
 
 	/**
@@ -275,15 +288,8 @@ public class RMath {
 			}
 
 			// calculate jacobian, 'J', and its inverse
-			float[][] J = calculateJacobian(model, angles, true);
-			/**
-			 * if ( (dist < (getActiveRobot().getLiveSpeed() / 100f)) && (rDist
-			 * < (0.00005f * getActiveRobot().getLiveSpeed())) ) {
-			 * 
-			 * System.out.printf("%s\n", Arrays.toString(J)); } /
-			 **/
-			RMatrix m = new RMatrix(J);
-			RMatrix JInverse = m.getSVD();
+			RMatrix J = calculateJacobian(model, angles, true);
+			RMatrix JInverse = J.getInverse();
 
 			// calculate and apply joint angular changes
 			float[] dAngle = { 0, 0, 0, 0, 0, 0 };
@@ -309,7 +315,7 @@ public class RMath {
 			// angles[3], angles[4], angles[5]));
 			count += 1;
 			if (count == limit) {
-				System.out.printf("%s\n", toString(J));
+				Fields.debug("%s\n", J.toString());
 				return null;
 			}
 		}
@@ -324,76 +330,61 @@ public class RMath {
 	 * https://web.archive.org/web/20130806093214/http://www-graphics.stanford.edu/
 	 * courses/cs248-98-fall/Final/q4.html
 	 */
-	public static float[][] invertHCMatrix(float[][] m) {
-		if (m.length != 4 || m[0].length != 4) {
+	public static RMatrix invertHCMatrix(RMatrix mat) {
+		float[][] d = mat.getFloatData();
+		if (d.length != 4 || d[0].length != 4) {
 			return null;
 		}
 
 		float[][] inv = new float[4][4];
 		
 		/*
-		 * [ ux uy uz tz ] -1		[ ux vx wx -dot(u, t) ]
-		 * [ vx vy vz ty ]		=	[ uy vy wy -dot(v, t) ]
-		 * [ vx vy vz tw ]			[ uy vy wy -dot(w, t) ]
+		 * [ ux ux wx tz ] -1		[ ux uy uz -dot(u, t) ]
+		 * [ uy uy wy ty ]		=	[ vx vy vz -dot(v, t) ]
+		 * [ uz uz wz tw ]			[ wx wy wz -dot(w, t) ]
 		 * [  0  0  0  1 ]			[  0  0  0          1 ]
 		 */
-		inv[0][0] = m[0][0];
-		inv[0][1] = m[1][0];
-		inv[0][2] = m[2][0];
-		inv[0][3] = -(m[0][0] * m[0][3] + m[0][1] * m[1][3] + m[0][2] * m[2][3]);
-		inv[1][0] = m[0][1];
-		inv[1][1] = m[1][1];
-		inv[1][2] = m[2][1];
-		inv[1][3] = -(m[1][0] * m[0][3] + m[1][1] * m[1][3] + m[1][2] * m[2][3]);
-		inv[2][0] = m[0][2];
-		inv[2][1] = m[1][2];
-		inv[2][2] = m[2][2];
-		inv[2][3] = -(m[2][0] * m[0][3] + m[2][1] * m[1][3] + m[2][2] * m[2][3]);
+		inv[0][0] = d[0][0];
+		inv[0][1] = d[1][0];
+		inv[0][2] = d[2][0];
+		inv[0][3] = -(d[0][0] * d[0][3] + d[1][0] * d[1][3] + d[2][0] * d[2][3]);
+		inv[1][0] = d[0][1];
+		inv[1][1] = d[1][1];
+		inv[1][2] = d[2][1];
+		inv[1][3] = -(d[0][1] * d[0][3] + d[1][1] * d[1][3] + d[2][1] * d[2][3]);
+		inv[2][0] = d[0][2];
+		inv[2][1] = d[1][2];
+		inv[2][2] = d[2][2];
+		inv[2][3] = -(d[0][2] * d[0][3] + d[1][2] * d[1][3] + d[2][2] * d[2][3]);
 		inv[3][0] = 0;
 		inv[3][1] = 0;
 		inv[3][2] = 0;
 		inv[3][3] = 1;
 
-		return inv;
-	}
-	
-	public static float[][] mat4fMultiply(float[][] m1, float[][] m2) {
-		float[][] mr = new float[4][4];
-		
-		if(m1.length != 4 || m2.length != 4 || m1[0].length != 4 || m2[0].length != 4) {
-			return null;
-		}
-		
-		for(int i = 0; i < 4; i += 1) {
-			mr[0][i] = m1[0][0]*m2[0][i] + m1[0][1]*m2[1][i] + m1[0][2]*m2[2][i] + m1[0][3]*m2[3][i];
-			mr[1][i] = m1[1][0]*m2[0][i] + m1[1][1]*m2[1][i] + m1[1][2]*m2[2][i] + m1[1][3]*m2[3][i];
-			mr[2][i] = m1[2][0]*m2[0][i] + m1[2][1]*m2[1][i] + m1[2][2]*m2[2][i] + m1[2][3]*m2[3][i];
-			mr[3][i] = m1[3][0]*m2[0][i] + m1[3][1]*m2[1][i] + m1[3][2]*m2[2][i] + m1[3][3]*m2[3][i];
-		}
-		
-		return mr;
+		return new RMatrix(inv);
 	}
 
 	// calculates euler angles from rotation matrix
-	public static PVector matrixToEuler(float[][] r) {
+	public static PVector matrixToEuler(RMatrix m) {
+		float[][] r = m.getFloatData();
 		float yRot1, xRot1, zRot1;
 		PVector wpr;
 
-		if (r[2][0] != 1 && r[2][0] != -1) {
+		if (r[0][2] != 1 && r[0][2] != -1) {
 			// rotation about y-axis
-			yRot1 = -(float) Math.asin(r[2][0]);
+			yRot1 = -(float) Math.asin(r[0][2]);
 			// rotation about x-axis
-			xRot1 = (float) Math.atan2(r[2][1] / (float) Math.cos(yRot1), r[2][2] / (float) Math.cos(yRot1));
+			xRot1 = (float) Math.atan2(r[1][2] / (float) Math.cos(yRot1), r[2][2] / (float) Math.cos(yRot1));
 			// rotation about z-axis
-			zRot1 = (float) Math.atan2(r[1][0] / (float) Math.cos(yRot1), r[0][0] / (float) Math.cos(yRot1));
+			zRot1 = (float) Math.atan2(r[0][1] / (float) Math.cos(yRot1), r[0][0] / (float) Math.cos(yRot1));
 		} else {
 			zRot1 = 0;
-			if (r[2][0] == -1) {
+			if (r[0][2] == -1) {
 				yRot1 = PI / 2;
-				xRot1 = zRot1 + (float) Math.atan2(r[0][1], r[0][2]);
+				xRot1 = zRot1 + (float) Math.atan2(r[1][0], r[2][0]);
 			} else {
 				yRot1 = -PI / 2;
-				xRot1 = -zRot1 + (float) Math.atan2(-r[0][1], -r[0][2]);
+				xRot1 = -zRot1 + (float) Math.atan2(-r[1][0], -r[2][0]);
 			}
 		}
 
@@ -402,40 +393,116 @@ public class RMath {
 	}
 	
 	// calculates quaternion from rotation matrix
-	public static RQuaternion matrixToQuat(float[][] r) {
-		float[] limboQ = new float[4];
-		float tr = r[0][0] + r[1][1] + r[2][2];
+	public static RQuaternion matrixToQuat(RMatrix m) {
+		float[][] d = m.getFloatData();
+		float[] qVals = new float[4];
+		float diag = d[0][0] + d[1][1] + d[2][2];
 
-		if (tr > 0) {
-			float S = (float) Math.sqrt(1.0f + tr) * 2; // S=4*q[0]
-			limboQ[0] = S / 4;
-			limboQ[1] = (r[2][1] - r[1][2]) / S;
-			limboQ[2] = (r[0][2] - r[2][0]) / S;
-			limboQ[3] = (r[1][0] - r[0][1]) / S;
-		} else if (r[0][0] > r[1][1] & r[0][0] > r[2][2]) {
-			float S = (float) Math.sqrt(1.0f + r[0][0] - r[1][1] - r[2][2]) * 2; // S=4*q[1]
-			limboQ[0] = (r[2][1] - r[1][2]) / S;
-			limboQ[1] = S / 4;
-			limboQ[2] = (r[0][1] + r[1][0]) / S;
-			limboQ[3] = (r[0][2] + r[2][0]) / S;
-		} else if (r[1][1] > r[2][2]) {
-			float S = (float) Math.sqrt(1.0f + r[1][1] - r[0][0] - r[2][2]) * 2; // S=4*q[2]
-			limboQ[0] = (r[0][2] - r[2][0]) / S;
-			limboQ[1] = (r[0][1] + r[1][0]) / S;
-			limboQ[2] = S / 4;
-			limboQ[3] = (r[1][2] + r[2][1]) / S;
+		if (diag > 0) {
+			float S = (float) Math.sqrt(1.0f + diag) * 2; // S=4*q[0]
+			qVals[0] = S / 4;
+			qVals[1] = (d[1][2] - d[2][1]) / S;
+			qVals[2] = (d[2][0] - d[0][2]) / S;
+			qVals[3] = (d[0][1] - d[1][0]) / S;
+		} else if (d[0][0] > d[1][1] & d[0][0] > d[2][2]) {
+			float S = (float) Math.sqrt(1.0f + d[0][0] - d[1][1] - d[2][2]) * 2; // S=4*q[1]
+			qVals[0] = (d[1][2] - d[2][1]) / S;
+			qVals[1] = S / 4;
+			qVals[2] = (d[1][0] + d[0][1]) / S;
+			qVals[3] = (d[2][0] + d[0][2]) / S;
+		} else if (d[1][1] > d[2][2]) {
+			float S = (float) Math.sqrt(1.0f + d[1][1] - d[0][0] - d[2][2]) * 2; // S=4*q[2]
+			qVals[0] = (d[2][0] - d[0][2]) / S;
+			qVals[1] = (d[1][0] + d[0][1]) / S;
+			qVals[2] = S / 4;
+			qVals[3] = (d[2][1] + d[1][2]) / S;
 		} else {
-			float S = (float) Math.sqrt(1.0f + r[2][2] - r[0][0] - r[1][1]) * 2; // S=4*q[3]
-			limboQ[0] = (r[1][0] - r[0][1]) / S;
-			limboQ[1] = (r[0][2] + r[2][0]) / S;
-			limboQ[2] = (r[1][2] + r[2][1]) / S;
-			limboQ[3] = S / 4;
+			float S = (float) Math.sqrt(1.0f + d[2][2] - d[0][0] - d[1][1]) * 2; // S=4*q[3]
+			qVals[0] = (d[0][1] - d[1][0]) / S;
+			qVals[1] = (d[2][0] + d[0][2]) / S;
+			qVals[2] = (d[2][1] + d[1][2]) / S;
+			qVals[3] = S / 4;
 		}
 		
-		RQuaternion q = new RQuaternion(limboQ[0], limboQ[1], limboQ[2], limboQ[3]);
+		RQuaternion q = new RQuaternion(qVals[0], qVals[1], qVals[2], qVals[3]);
 		q.normalize();
 
 		return q;
+	}
+
+	/**
+	 * Returns a string that represents the given floating-point matrix in the
+	 * format:
+	 * 
+	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
+	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
+	 *   .
+	 *   .
+	 *   .
+	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
+	 * 
+	 * The precision of each element is 4 digits before and 3 digits after the
+	 * decimal point. In addition, space padding is applied for non-negative
+	 * values.
+	 * 
+	 * @param matrix	A floating-point matrix
+	 * @return			The string representation of the given matrix
+	 */
+	public static String matrixToString(float[][] matrix) {
+		String str = new String();
+		
+		for (int row = 0; row < matrix.length; ++row) {
+			str += "[ ";
+			
+			for (int column = 0; column < matrix[row].length; ++column) {
+				String val = String.format("%4.3f", matrix[row][column]);
+				// Add padding
+				str += String.format("%9s ", val);
+			}
+			
+			str += "]\n";
+		}
+		
+		
+		return str;
+	}
+	
+	/**
+	 * Returns a string that represents the given floating-point matrix in the
+	 * format:
+	 * 
+	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
+	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
+	 *   .
+	 *   .
+	 *   .
+	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
+	 * 
+	 * The precision of each element is 4 digits before and 3 digits after the
+	 * decimal point. In addition, space padding is applied for non-negative
+	 * values.
+	 * 
+	 * @param matrix	A floating-point matrix
+	 * @return			The string representation of the given matrix
+	 */
+	public static String matrixToString(RealMatrix m) {
+		double[][] data = m.getData();
+		String str = new String();
+		
+		for (int row = 0; row < data.length; ++row) {
+			str += "[ ";
+			
+			for (int column = 0; column < data[row].length; ++column) {
+				String val = String.format("%4.3f", data[row][column]);
+				// Add padding
+				str += String.format("%9s ", val);
+			}
+			
+			str += "]\n";
+		}
+		
+		
+		return str;
 	}
 
 	/**
@@ -477,15 +544,63 @@ public class RMath {
 
 		return temp;
 	}
+	
+	/**
+	 * Takes a quaternion and converts it to euler angles, in degrees. Then the
+	 * world frame orientation is applied to the orientation.
+	 * 
+	 * @param q	A normalized quanternion
+	 * @return	A set of euler angles, in degrees, representing the orientation
+	 * 			of the quaternion with reference to the world frame
+	 */
+	public static PVector nQuatToWEuler(RQuaternion q) {
+		// Convert to euler angles
+		PVector wpr = quatToEuler(q);
+		wpr.mult(RAD_TO_DEG);
+		
+		float limbo = wpr.y;
+		// Convert to world frame
+		wpr.x *= -1;
+		wpr.y = wpr.z;
+		wpr.z = -limbo;
+		
+		return wpr;
+	}
+	
+	/**
+	 * Takes in a 3x3 rotation matrix and converts it to euler angles, in
+	 * degrees. Then, the world frame orientation is applied to the
+	 * orientation.
+	 * 
+	 * @param m	A 3x3 rotation matrix
+	 * @return	A set of euler angles, in degrees, representing the
+	 * 			orientation of the rotation matrix with reference to the world
+	 * 			frame
+	 */
+	public static PVector nRMatToWEuler(RMatrix m) {
+		// Convert to euler angles
+		PVector wpr = matrixToEuler(m);
+		wpr.mult(RAD_TO_DEG);
+		
+		float limbo = wpr.y;
+		// Convert to world frame
+		wpr.x *= -1;
+		wpr.y = wpr.z;
+		wpr.z = -limbo;
+		
+		return wpr;
+	}
 
-	public static void printMat(float[][] mat) {
-		for (int i = 0; i < mat.length; i += 1) {
+	public static void printMat(RMatrix mat) {
+		float[][] d = mat.getFloatData();
+		
+		for (int i = 0; i < d.length; i += 1) {
 			System.out.print("[");
-			for (int j = 0; j < mat[0].length; j += 1) {
-				if (j < mat[0].length - 1) {
-					System.out.print(String.format("%12f, ", mat[i][j]));
+			for (int j = 0; j < d[0].length; j += 1) {
+				if (j < d[0].length - 1) {
+					System.out.print(String.format("%12f, ", d[i][j]));
 				} else {
-					System.out.print(String.format("%12f", mat[i][j]));
+					System.out.print(String.format("%12f", d[i][j]));
 				}
 			}
 			System.out.println("]");
@@ -495,44 +610,28 @@ public class RMath {
 
 	// calculates euler angles from quaternion
 	public static PVector quatToEuler(RQuaternion q) {
-		float[][] r = q.toMatrix();
+		RMatrix r = q.toMatrix();
 		PVector wpr = matrixToEuler(r);
 		return wpr;
 	}
-
+	
 	// calculates rotation matrix from quaternion
-	public static float[][] quatToMatrix(RQuaternion q) {
+	public static RMatrix quatToMatrix(RQuaternion q) {
 		float[][] r = new float[3][3];
 
 		r[0][0] = 1 - 2 * (q.getValue(2) * q.getValue(2) + q.getValue(3) * q.getValue(3));
-		r[0][1] = 2 * (q.getValue(1) * q.getValue(2) - q.getValue(0) * q.getValue(3));
-		r[0][2] = 2 * (q.getValue(0) * q.getValue(2) + q.getValue(1) * q.getValue(3));
-		r[1][0] = 2 * (q.getValue(1) * q.getValue(2) + q.getValue(0) * q.getValue(3));
+		r[1][0] = 2 * (q.getValue(1) * q.getValue(2) - q.getValue(0) * q.getValue(3));
+		r[2][0] = 2 * (q.getValue(0) * q.getValue(2) + q.getValue(1) * q.getValue(3));
+		r[0][1] = 2 * (q.getValue(1) * q.getValue(2) + q.getValue(0) * q.getValue(3));
 		r[1][1] = 1 - 2 * (q.getValue(1) * q.getValue(1) + q.getValue(3) * q.getValue(3));
-		r[1][2] = 2 * (q.getValue(2) * q.getValue(3) - q.getValue(0) * q.getValue(1));
-		r[2][0] = 2 * (q.getValue(1) * q.getValue(3) - q.getValue(0) * q.getValue(2));
-		r[2][1] = 2 * (q.getValue(0) * q.getValue(1) + q.getValue(2) * q.getValue(3));
+		r[2][1] = 2 * (q.getValue(2) * q.getValue(3) - q.getValue(0) * q.getValue(1));
+		r[0][2] = 2 * (q.getValue(1) * q.getValue(3) - q.getValue(0) * q.getValue(2));
+		r[1][2] = 2 * (q.getValue(0) * q.getValue(1) + q.getValue(2) * q.getValue(3));
 		r[2][2] = 1 - 2 * (q.getValue(1) * q.getValue(1) + q.getValue(2) * q.getValue(2));
 
-		float[] magnitudes = new float[3];
-
-		for (int v = 0; v < r.length; ++v) {
-			// Find the magnitude of each axis vector
-			for (int e = 0; e < r[0].length; ++e) {
-				magnitudes[v] += Math.pow(r[v][e], 2);
-			}
-
-			magnitudes[v] = (float) Math.sqrt(magnitudes[v]);
-			// Normalize each vector
-			for (int e = 0; e < r.length; ++e) {
-				r[v][e] /= magnitudes[v];
-			}
-		}
-		/**/
-
-		return r;
+		return new RMatrix(r).normalize();
 	}
-	
+
 	/**
 	 * Converts the given point, pt, from the Coordinate System defined by the
 	 * given origin vector and rotation quaternion axes. The joint angles
@@ -564,40 +663,40 @@ public class RMath {
 			return new Point(position, orientation, pt.angles);
 		}
 	}
-
-	// Rotates the matrix 'm' by an angle 'theta' around the given 'axis'
-	public static float[][] rotateAxisVector(float[][] m, float theta, PVector axis) {
-		float s = (float) Math.sin(theta);
-		float c = (float) Math.cos(theta);
-		float t = 1 - c;
-
-		if (c > 0.9f) {
-			t = (float)(2 * Math.sin(theta / 2) * Math.sin(theta / 2));
-		}
-
-		float x = axis.x;
-		float y = axis.y;
-		float z = axis.z;
-
-		float[][] r = new float[3][3];
-
-		r[0][0] = x * x * t + c;
-		r[0][1] = x * y * t - z * s;
-		r[0][2] = x * z * t + y * s;
-		r[1][0] = y * x * t + z * s;
-		r[1][1] = y * y * t + c;
-		r[1][2] = y * z * t - x * s;
-		r[2][0] = z * x * t - y * s;
-		r[2][1] = z * y * t + x * s;
-		r[2][2] = z * z * t + c;
-
-		RMatrix M = new RMatrix(m);
-		RMatrix R = new RMatrix(r);
-		RMatrix MR = M.multiply(R);
-
-		return MR.getFloatData();
+	
+	/**
+	 * Converts the rotation matrix from the native coordinate frame to the
+	 * world frame.
+	 * 
+	 * @param rMat	A valid rotation matrix
+	 * @return		The rotation matrix in terms of the world frame
+	 */
+	public static RMatrix rMatToWorld(RMatrix rMat) {
+		return rMat.multiply(Fields.WORLD_AXES_MAT);
 	}
+	
+	/**
+	 * Applies the orientation represented by the given 3x3 rotation matrix,
+	 * m, to the given position vector, v.
+	 * 
+	 * @param v	A 3D position vector
+	 * @param r	A 3x3 rotation matrix
+	 * @return	v rotated by m
+	 */
+	public static PVector rotateVector(PVector v, float[][] r) {
+		if (r.length != 3 || r[0].length != 3) {
+			return null;
+		}
+		
+		PVector u = new PVector();
+		// Apply the rotation matrix to the given vector
+		u.x = v.x * r[0][0] + v.y * r[1][0] + v.z * r[2][0];
+		u.y = v.x * r[0][1] + v.y * r[1][1] + v.z * r[2][1];
+		u.z = v.x * r[0][2] + v.y * r[1][2] + v.z * r[2][2];
 
+		return u;
+	}
+	
 	/**
 	 * Forms the 4x4 transformation matrix (row major order) form the given
 	 * origin offset and axes offset (row major order) of the Native Coordinate
@@ -612,68 +711,53 @@ public class RMath {
 	 * @returning the 4x4 transformation matrix (row major order) formed from
 	 *            the given origin and axes offset
 	 */
-	public static float[][] transformationMatrix(PVector origin, float[][] axes) {
-		float[][] transform = new float[4][4];
+	public static RMatrix transformationMatrix(PVector origin, RMatrix axes) {
+		float[][] d = axes.getFloatData();
+		float[][] mat = new float[4][4];
 		
-		transform[0][0] = axes[0][0];
-		transform[0][1] = axes[0][1];
-		transform[0][2] = axes[0][2];
-		transform[0][3] = origin.x;
+		mat[0][0] = d[0][0];
+		mat[0][1] = d[0][1];
+		mat[0][2] = d[0][2];
+		mat[0][3] = origin.x;
 		
-		transform[1][0] = axes[1][0];
-		transform[1][1] = axes[1][1];
-		transform[1][2] = axes[1][2];
-		transform[1][3] = origin.y;
+		mat[1][0] = d[1][0];
+		mat[1][1] = d[1][1];
+		mat[1][2] = d[1][2];
+		mat[1][3] = origin.y;
 		
-		transform[2][0] = axes[2][0];
-		transform[2][1] = axes[2][1];
-		transform[2][2] = axes[2][2];
-		transform[2][3] = origin.z;
+		mat[2][0] = d[2][0];
+		mat[2][1] = d[2][1];
+		mat[2][2] = d[2][2];
+		mat[2][3] = origin.z;
 		
-		transform[3][0] = 0;
-		transform[3][1] = 0;
-		transform[3][2] = 0;
-		transform[3][3] = 1;
-
-		return transform;
+		mat[3][0] = 0;
+		mat[3][1] = 0;
+		mat[3][2] = 0;
+		mat[3][3] = 1;
+		
+		return new RMatrix(mat);
 	}
-	
-	/*
-	 * Transforms the given vector from the coordinate system defined by the
-	 * given transformation matrix (row major order).
-	 */
-	public static PVector rotateVector(PVector v, float[][] r) {
-		if (r.length != 3 || r[0].length != 3) {
-			return null;
-		}
-		
-		PVector u = new PVector();
-		// Apply the rotation matrix to the given vector
-		u.x = v.x * r[0][0] + v.y * r[0][1] + v.z * r[0][2];
-		u.y = v.x * r[1][0] + v.y * r[1][1] + v.z * r[1][2];
-		u.z = v.x * r[2][0] + v.y * r[2][1] + v.z * r[2][2];
 
-		return u;
-	}
-	
 	/**
-	 * Transforms the given position vector v, by the transformation matrix, t.
+	 * Multiplies a 3 element vector, v, by the given 4x4 transformation matrix, t.
 	 * 
-	 * @param v	A xyz position vector
-	 * @param t	A row major tranformation matrix
-	 * @return	The product of v transformed by t
+	 * @param v	A 3D position vector
+	 * @param t	A column-major, 4x4 transformation matrix
+	 * @return	A vector containing the product of v and t
 	 */
-	public static PVector vectorMatrixMult(PVector v, float[][] t) {
-		if (t.length != 4 || t[0].length != 4) {
+	public static PVector vectorMatrixMult(PVector v, RMatrix mat) {
+		float[][] d = mat.getFloatData();
+		
+		if (d.length != 4 || d[0].length != 4) {
 			return null;
 		}
 
 		PVector u = new PVector();
 		// Apply the transformation matrix to the given vector
-		u.x = v.x * t[0][0] + v.y * t[0][1] + v.z * t[0][2] + t[0][3];
-		u.y = v.x * t[1][0] + v.y * t[1][1] + v.z * t[1][2] + t[1][3];
-		u.z = v.x * t[2][0] + v.y * t[2][1] + v.z * t[2][2] + t[2][3];
-		float w = v.x*t[3][0] + v.y*t[3][1] + v.z*t[3][2] + t[3][3];
+		u.x = v.x * d[0][0] + v.y * d[0][1] + v.z * d[0][2] + d[0][3];
+		u.y = v.x * d[1][0] + v.y * d[1][1] + v.z * d[1][2] + d[1][3];
+		u.z = v.x * d[2][0] + v.y * d[2][1] + v.z * d[2][2] + d[2][3];
+		float w = v.x*d[3][0] + v.y*d[3][1] + v.z*d[3][2] + d[3][3];
 		
 		if(w != 1) {
 			u.div(w);
@@ -681,7 +765,7 @@ public class RMath {
 
 		return u;
 	}
-
+	
 	// returns the result of a vector 'v' multiplied by scalar 's'
 	public static float[] vectorScalarMult(float[] v, float s) {
 		float[] ret = new float[v.length];
@@ -752,41 +836,49 @@ public class RMath {
 		return RMath.rotateVector(v, Fields.WORLD_AXES);
 	}
 	
+
+	
 	/**
-	 * Returns a string that represents the given floating-point matrix in the
-	 * format:
+	 * Takes a set of euler angles, in degrees, and applies the inverse of the
+	 * world frame to the orientation and converts the euler angles to a
+	 * 3x3 rotation matrix.
 	 * 
-	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
-	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
-	 *   .
-	 *   .
-	 *   .
-	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
-	 * 
-	 * The precision of each element is 4 digits before and 3 digits after the
-	 * decimal point. In addition, space padding is applied for non-negative
-	 * values.
-	 * 
-	 * @param matrix	A floating-point matrix
-	 * @return			The string representation of the given matrix
+	 * @param wpr	A set of euler angles, in degrees
+	 * @return		A rotation matrix representing the product of the given
+	 * 				orientation and the inverse of the world frame
+	 * 				orientation
 	 */
-	public static String toString(float[][] matrix) {
-		String str = new String();
+	public static RMatrix wEulerToNRMat(PVector wpr) {
+		float limbo = wpr.y;
+		// Convert from world frame
+		wpr.x *= -1;
+		wpr.y = -wpr.z;
+		wpr.z = limbo;
+		// Convert to radians
+		wpr.mult(DEG_TO_RAD);
 		
-		for (int row = 0; row < matrix.length; ++row) {
-			str += "[ ";
-			
-			for (int column = 0; column < matrix[row].length; ++column) {
-				String val = String.format("%4.3f", matrix[row][column]);
-				// Add padding
-				str += String.format("%9s ", val);
-			}
-			
-			str += "]\n";
-		}
-		
-		
-		return str;
+		return RMath.eulerToMatrix(wpr);
 	}
 	
+	/**
+	 * Takes a set of euler angles, in degrees and applies the inverse of the
+	 * world frame to the rotations and converts the euler angles to a
+	 * quaternion.
+	 * 
+	 * @param wpr	A set of euler angles, in degrees
+	 * @return		A quaternion representing the product of the given
+	 * 				orientation and the inverse of the world frame
+	 * 				orientation
+	 */
+	public static RQuaternion wEulerToNQuat(PVector wpr) {
+		float limbo = wpr.y;
+		// Convert from world frame
+		wpr.x *= -1;
+		wpr.y = -wpr.z;
+		wpr.z = limbo;
+		// Convert to radians
+		wpr.mult(DEG_TO_RAD);
+		
+		return RMath.eulerToQuat(wpr);
+	}
 }

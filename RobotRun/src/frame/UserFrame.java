@@ -1,8 +1,9 @@
 package frame;
 import geom.Point;
-import geom.RMath;
+import geom.RMatrix;
 import geom.RQuaternion;
-import processing.core.PConstants;
+import global.MyFloatFormat;
+import global.RMath;
 import processing.core.PVector;
 
 public class UserFrame extends Frame {
@@ -22,9 +23,7 @@ public class UserFrame extends Frame {
 	@Override
 	public RQuaternion getOrientation() { return orientationOffset; }
 
-	public Point getOrientOrigin() {
-		return orientOrigin;
-	}
+	public Point getOrientOrigin() { return orientOrigin; }
 
 	// Getter and Setters for the User frame's origin
 	@Override
@@ -81,7 +80,7 @@ public class UserFrame extends Frame {
 			// 3-Point or 4-Point Method
 
 			PVector newOrigin = (mode == 0) ? getPoint(0).position : getOrientOrigin().position;
-			float[][] newAxesVectors = createAxesFromThreePoints(getPoint(0).position,
+			RMatrix newAxesVectors = createAxesFromThreePoints(getPoint(0).position,
 					getPoint(1).position,
 					getPoint(2).position);
 
@@ -132,23 +131,20 @@ public class UserFrame extends Frame {
 	 */
 	@Override
 	public String[] toStringArray() {
-
 		String[] values = new String[6];
+		
+		// Convert to world frame reference
+		PVector displayOrigin = RMath.vToWorld(origin);
+		/* Convert orientation in to euler angles, in degree, with reference
+		 * to the world frame */
+		PVector wpr = RMath.nQuatToWEuler(orientationOffset);
 
-		PVector displayOrigin;
-		// Convert angles to degrees and to the World Coordinate Frame
-		PVector wpr = RMath.quatToEuler(orientationOffset).mult(PConstants.RAD_TO_DEG);
-
-		// Convert to World frame reference
-		displayOrigin = RMath.vToWorld(origin);
-
-		values[0] = String.format("X: %4.3f", displayOrigin.x);
-		values[1] = String.format("Y: %4.3f", displayOrigin.y);
-		values[2] = String.format("Z: %4.3f", displayOrigin.z);
-		// Display angles in terms of the World frame
-		values[3] = String.format("W: %4.3f", -wpr.x);
-		values[4] = String.format("P: %4.3f", wpr.z);
-		values[5] = String.format("R: %4.3f", -wpr.y);
+		values[0] = MyFloatFormat.format(displayOrigin.x);
+		values[1] = MyFloatFormat.format(displayOrigin.y);
+		values[2] = MyFloatFormat.format( displayOrigin.z);
+		values[3] = MyFloatFormat.format(wpr.x);
+		values[4] = MyFloatFormat.format(wpr.y);
+		values[5] = MyFloatFormat.format(wpr.z);
 
 		return values;
 	}

@@ -2,11 +2,9 @@ package screen;
 
 import java.util.ArrayList;
 
-import geom.RMath;
-import robot.RobotRun;
+import global.RMath;
 
 public class MenuScroll {
-	private final RobotRun robotRun;
 	private final String name;
 	private int maxDisp;
 	private int xPos;
@@ -19,8 +17,7 @@ public class MenuScroll {
 	private int columnIdx;
 	private int renderStart;
 	
-	public MenuScroll(RobotRun r, String n, int max, int x, int y) {
-		robotRun = r;
+	public MenuScroll(String n, int max, int x, int y) {
 		name = n;
 		
 		maxDisp = max;
@@ -137,7 +134,8 @@ public class MenuScroll {
 	}
 	
 	public boolean isSelected(int idx) {
-		return lineSelect != null && lineSelect[idx];
+		return lineSelect != null && idx >= 0 && idx < lineSelect.length
+				&& lineSelect[idx];
 	}
 	
 	public int moveDown(boolean page) {
@@ -280,7 +278,11 @@ public class MenuScroll {
 	}
 	
 	public boolean toggleSelect(int idx) {
-		return lineSelect[idx] = !lineSelect[idx];
+		if (lineSelect != null && idx >= 0 && idx < lineSelect.length) {
+			return lineSelect[idx] = !lineSelect[idx];
+		}
+		
+		return false;
 	}
 	
 	@Override

@@ -1,18 +1,17 @@
 package frame;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
 import geom.Point;
-import geom.RMath;
 import geom.RMatrix;
 import geom.RQuaternion;
 import global.Fields;
+import global.RMath;
 import processing.core.PApplet;
 import processing.core.PVector;
-import robot.RobotRun;
 
 public abstract class Frame {
 	// The orientation of the frame in the form of a unit quaternion
@@ -46,9 +45,9 @@ public abstract class Frame {
 	 * @return      The new TCP for the Robot, null is returned if the given points
 	 *              are invalid
 	 */
-	public double[] calculateTCPFromThreePoints(PVector pos1, float[][] ori1, 
-			PVector pos2, float[][] ori2, 
-			PVector pos3, float[][] ori3) {
+	public double[] calculateTCPFromThreePoints(PVector pos1, RMatrix ori1, 
+			PVector pos2, RMatrix ori2, 
+			PVector pos3, RMatrix ori3) {
 
 		RealVector avg_TCP = new ArrayRealVector(new double[] {0.0f, 0.0f, 0.0f} , false);
 		int counter = 3;
@@ -60,25 +59,25 @@ public abstract class Frame {
 
 			if (counter == 0) {
 				/* Case 3: C = point 1 */
-				Ar = new RMatrix((ori2));
-				Br = new RMatrix((ori3));
-				Cr = new RMatrix((ori1));
+				Ar = ori2;
+				Br = ori3;
+				Cr = ori1;
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos1, 2), PVector.add(pos2, pos3));
 
 			} else if (counter == 1) {
 				/* Case 2: C = point 2 */
-				Ar = new RMatrix((ori3));
-				Br = new RMatrix((ori1));
-				Cr = new RMatrix((ori2));
+				Ar = ori3;
+				Br = ori1;
+				Cr = ori2;
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos2, 2), PVector.add(pos3, pos1));
 
 			} else if (counter == 2) {
 				/* Case 1: C = point 3 */
-				Ar = new RMatrix((ori1));
-				Br = new RMatrix((ori2));
-				Cr = new RMatrix((ori3));
+				Ar = ori1;
+				Br = ori2;
+				Cr = ori3;
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos3, 2), PVector.add(pos1, pos2));
 
@@ -109,22 +108,20 @@ public abstract class Frame {
 
 			RealVector b = new ArrayRealVector(new double[] { vt.x, vt.y, vt.z }, false);
 			/* Ar + Br - 2Cr */
-			RMatrix R = (RMatrix)(Ar.add(Br)).subtract(Cr.scalarMultiply(2)).transpose();
+			RealMatrix R = (Ar.add(Br)).subtract(Cr.scalarMultiply(2));
 
 			/* (R ^ -1) * b */
 			avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
 
-			if (Fields.DEBUG) {
-				System.out.printf("\n%s\n\n", RobotRun.getInstance().matrixToString(R.getFloatData()));
-			}
+			float[][] m = RMath.doubleToFloat( R.getData() );
+			Fields.debug("\n%s\n\n", RMath.matrixToString(m));
 		}
 
 		/* Take the average of the three cases: where C = the first point, the second point, and the third point */
 		avg_TCP = avg_TCP.mapMultiply( 1.0f / 3.0f );
 
-		if(Fields.DEBUG) {
-			System.out.printf("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n", avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
-		}
+		Fields.debug("(Ar + Br - 2Cr) ^ -1 * (2Ct - At - Bt):\n\n[%5.4f]\n[%5.4f]\n[%5.4f]\n\n",
+					avg_TCP.getEntry(0), avg_TCP.getEntry(1), avg_TCP.getEntry(2));
 
 		for(int idx = 0; idx < avg_TCP.getDimension(); ++idx) {
 			// Extremely high values may indicate that the given points are invalid
@@ -152,15 +149,16 @@ public abstract class Frame {
 	 * @return        a set of three unit vectors that represent an axes (row
 	 *                major order)
 	 */
-	public float[][] createAxesFromThreePoints(PVector p1, PVector p2, PVector p3) {
+	public RMatrix createAxesFromThreePoints(PVector p1, PVector p2, PVector p3) {
 		float[][] axesRefWorld = new float[3][3];
 		PVector xAxis = PVector.sub(p2, p1);
 		PVector yAxis = PVector.sub(p3, p1);
-		PVector zAxis = yAxis.cross(xAxis);
-
-		yAxis = xAxis.cross(zAxis);
-		// Create unit vectors
 		xAxis.normalize();
+		yAxis.normalize();
+		
+		PVector zAxis = PVector.mult(xAxis, -1).cross(yAxis);
+		yAxis = zAxis.cross( PVector.mult(xAxis, -1) );
+		// Create unit vectors
 		yAxis.normalize();
 		zAxis.normalize();
 
@@ -172,19 +170,18 @@ public abstract class Frame {
 		}
 
 		axesRefWorld[0][0] = xAxis.x;
-		axesRefWorld[0][1] = xAxis.y;
-		axesRefWorld[0][2] = xAxis.z;
-		axesRefWorld[1][0] = yAxis.x;
+		axesRefWorld[1][0] = xAxis.y;
+		axesRefWorld[2][0] = xAxis.z;
+		axesRefWorld[0][1] = yAxis.x;
 		axesRefWorld[1][1] = yAxis.y;
-		axesRefWorld[1][2] = yAxis.z;
-		axesRefWorld[2][0] = zAxis.x;
-		axesRefWorld[2][1] = zAxis.y;
+		axesRefWorld[2][1] = yAxis.z;
+		axesRefWorld[0][2] = zAxis.x;
+		axesRefWorld[1][2] = zAxis.y;
 		axesRefWorld[2][2] = zAxis.z;
 
-		RMatrix axes = new RMatrix((axesRefWorld)),
-				invWorldAxes = new RMatrix(Fields.NATIVE_AXES);
+		RMatrix axes = new RMatrix(axesRefWorld);
 		// Remove the World frame transformation from the axes vectors
-		return invWorldAxes.multiply(axes).getFloatData();
+		return  axes.multiply(Fields.NATIVE_AXES_MAT);
 	}
 
 	/**
@@ -213,7 +210,7 @@ public abstract class Frame {
 			wpr = new PVector(0f, 0f, 0f);
 		} else {
 			// Display in degrees
-			wpr = RMath.quatToEuler(getDEOrientationOffset()).mult(RobotRun.RAD_TO_DEG);
+			wpr = RMath.nQuatToWEuler(DEOrientationOffset);
 		}
 
 		entries[0][0] = "X: ";
@@ -224,11 +221,11 @@ public abstract class Frame {
 		entries[2][1] = String.format("%4.3f", xyz.z);
 		// Display in terms of the World frame
 		entries[3][0] = "W: ";
-		entries[3][1] = String.format("%4.3f", -wpr.x);
+		entries[3][1] = String.format("%4.3f", wpr.x);
 		entries[4][0] = "P: ";
-		entries[4][1] = String.format("%4.3f", wpr.z);
+		entries[4][1] = String.format("%4.3f", -wpr.y);
 		entries[5][0] = "R: ";
-		entries[5][1] = String.format("%4.3f", -wpr.y);
+		entries[5][1] = String.format("%4.3f", wpr.z);
 
 		return entries;
 	}
@@ -243,7 +240,7 @@ public abstract class Frame {
 
 	/* Returns a set of axes unit vectors representing the axes
 	 * of the frame in reference to the Native Coordinate System. */
-	public float[][] getNativeAxisVectors() { return getOrientation().toMatrix(); }
+	public RMatrix getNativeAxisVectors() { return getOrientation().toMatrix(); }
 
 	/**
 	 * Returns the orientation of the axes for this frame.

@@ -3,6 +3,7 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 
+import global.RMath;
 import processing.core.PVector;
 
 public class RMatrix extends Array2DRowRealMatrix {
@@ -32,12 +33,39 @@ public class RMatrix extends Array2DRowRealMatrix {
 		return RMath.doubleToFloat(getData());
 	}
 	
-	public RMatrix getSVD() {
+	public RMatrix getInverse() {
 		SingularValueDecomposition s = new SingularValueDecomposition(this);
 		return new RMatrix(s.getSolver().getInverse());
 	}
 	
-	public RMatrix rTranspose() {
-		return new RMatrix(this.transpose());
+	@Override
+	public RMatrix transpose() {
+		return new RMatrix(super.transpose());
+	}
+	
+	public RMatrix normalize() {
+		float[][] d = getFloatData();
+		float mag = 0;
+		
+		for (int i = 0; i < d.length; i += 1) {
+			// Find the magnitude of each axis vector
+			for (int j = 0; j < d[0].length; j += 1) {
+				mag += Math.pow(d[j][i], 2);
+			}
+
+			mag = (float) Math.sqrt(mag);
+			// Normalize each vector
+			for (int j = 0; j < d.length; j += 1) {
+				this.setEntry(j, i, d[j][i] /= mag);
+			}
+			
+			mag = 0;
+		}
+		
+		return this;
+	}
+	
+	public RMatrix copy() {
+		return new RMatrix(this.getFloatData());
 	}
 }

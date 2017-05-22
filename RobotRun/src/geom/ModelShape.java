@@ -1,4 +1,5 @@
 package geom;
+import global.RegisteredModels;
 import processing.core.PShape;
 import processing.core.PVector;
 import robot.RobotRun;
@@ -7,29 +8,12 @@ import robot.RobotRun;
  * A complex shape formed from a .stl source file.
  */
 public class ModelShape extends Shape {
+	public final int MODEL_ID;
 	private RobotRun app;
 	private PShape model;
 	private PVector centerOffset, baseDims;
 	private float scale;
 	private String srcFilePath;
-
-	/**
-	 * Create a complex model from the soruce .stl file of the
-	 * given name, filename, stored in the '/RobotRun/data/'
-	 * with the given fill color.
-	 * 
-	 * @throws NullPointerException  if the given filename is
-	 *         not a valid .stl file in RobotRun/data/
-	 */
-	public ModelShape(String filename, int fill, RobotRun app) throws NullPointerException {
-		super(fill, null);
-		this.app = app;
-		srcFilePath = filename;
-		scale = 1f;
-
-		model = app.loadSTLModel(filename, fill);
-		iniDimensions();
-	}
 
 	/**
 	 * Create a complex model from the soruce .stl file of the
@@ -41,6 +25,7 @@ public class ModelShape extends Shape {
 	 */
 	public ModelShape(String filename, int fill, float scale, RobotRun app) throws NullPointerException {
 		super(fill, null);
+		MODEL_ID = RegisteredModels.modelIDList.get(filename);
 		this.app = app;
 		srcFilePath = filename;
 		this.scale = 1f;
@@ -50,9 +35,28 @@ public class ModelShape extends Shape {
 
 		setDim(scale, DimType.SCALE);
 	}
+
+	/**
+	 * Create a complex model from the soruce .stl file of the
+	 * given name, filename, stored in the '/RobotRun/data/'
+	 * with the given fill color.
+	 * 
+	 * @throws NullPointerException  if the given filename is
+	 *         not a valid .stl file in RobotRun/data/
+	 */
+	public ModelShape(String filename, int fill, RobotRun app) throws NullPointerException {
+		super(fill, null);
+		MODEL_ID = RegisteredModels.modelIDList.get(filename);
+		this.app = app;
+		srcFilePath = filename;
+		scale = 1f;
+
+		model = app.loadSTLModel(filename, fill);
+		iniDimensions();
+	}
 	
 	@Override
-	public Object clone() {
+	public ModelShape clone() {
 		try {
 			// Created from source file
 			return new ModelShape(srcFilePath, getFillValue(), scale, app);
@@ -65,13 +69,15 @@ public class ModelShape extends Shape {
 
 	@Override
 	public void draw() {
-		RobotRun.getInstance().pushMatrix();
+		RobotRun app = RobotRun.getInstance();
+		
+		app.pushMatrix();
+		
 		// Draw shape, where its center is at (0, 0, 0)
-		RobotRun.getInstance().translate(centerOffset.x, centerOffset.y, centerOffset.z);
-
-		RobotRun.getInstance().shape(model);
-
-		RobotRun.getInstance().popMatrix();
+		app.translate(centerOffset.x, centerOffset.y, centerOffset.z);
+		app.shape(model);
+		
+		app.popMatrix();
 	}
 
 	@Override
@@ -86,10 +92,19 @@ public class ModelShape extends Shape {
 		}
 	}
 	
+	@Override
+	public float[] getDimArray() {
+		float[] dims = new float[3];
+		dims[0] = getDim(DimType.LENGTH);
+		dims[1] = getDim(DimType.HEIGHT);
+		dims[2] = getDim(DimType.WIDTH);
+		return dims;
+	}
+	
 	public PShape getModel() {
 		return model;
 	}
-	
+
 	public String getSourcePath() { return srcFilePath; }
 
 	/**
@@ -149,5 +164,10 @@ public class ModelShape extends Shape {
 
 		default:
 		}
+	}
+
+	@Override
+	public int getID() {
+		return MODEL_ID;
 	}
 }

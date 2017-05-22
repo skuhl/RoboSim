@@ -6,7 +6,7 @@ import robot.RobotRun;
  * Defines the length, width, height values to draw a box.
  */
 public class Box extends Shape {
-
+	
 	/**
 	 * X -> length
 	 * Y -> Height
@@ -24,7 +24,7 @@ public class Box extends Shape {
 	}
 
 	/**
-	 * Create an empty cube with the given color and dinemsion.
+	 * Create an empty cube with the given color and dimension.
 	 */
 	public Box(int strokeVal, float edgeLen) {
 		super(null, strokeVal);
@@ -32,7 +32,7 @@ public class Box extends Shape {
 	}
 
 	/**
-	 * Create an empty box with the given color and dinemsions.
+	 * Create an empty box with the given color and dimensions.
 	 */
 	public Box(int strokeVal, float len, float hgt, float wdh) {
 		super(null, strokeVal);
@@ -40,7 +40,7 @@ public class Box extends Shape {
 	}
 
 	/**
-	 * Create a cube with the given colors and dinemsion.
+	 * Create a cube with the given colors and dimension.
 	 */
 	public Box(int fill, int strokeVal, float edgeLen) {
 		super(fill, strokeVal);
@@ -48,7 +48,7 @@ public class Box extends Shape {
 	}
 
 	/**
-	 * Create a box with the given colors and dinemsions.
+	 * Create a box with the given colors and dimensions.
 	 */
 	public Box(int fill, int strokeVal, float len, float hgt, float wdh) {
 		super(fill, strokeVal);
@@ -56,15 +56,19 @@ public class Box extends Shape {
 	}
 
 	@Override
-	public Object clone() {
+	public Box clone() {
 		return new Box(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
 	}
 
 	@Override
 	public void draw() {
+		RobotRun app = RobotRun.getInstance();
+		
+		app.pushStyle();
 		// Apply colors
 		applyColors();
-		RobotRun.getInstance().box(dimensions.x, dimensions.y, dimensions.z);
+		app.box(dimensions.x, dimensions.y, dimensions.z);
+		app.popStyle();
 	}
 
 	@Override
@@ -76,6 +80,15 @@ public class Box extends Shape {
 		// Invalid dimension
 		default:      return -1f;
 		}
+	}
+	
+	@Override
+	public float[] getDimArray() {
+		float[] dims = new float[3];
+		dims[0] = getDim(DimType.LENGTH);
+		dims[1] = getDim(DimType.HEIGHT);
+		dims[2] = getDim(DimType.WIDTH);
+		return dims;
 	}
 
 	@Override
@@ -98,5 +111,10 @@ public class Box extends Shape {
 			// Invalid dimension
 		default:
 		}
+	}
+
+	@Override
+	public int getID() {
+		return -1;
 	}
 }

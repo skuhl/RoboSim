@@ -6,8 +6,8 @@ import robot.RobotRun;
  * along with some methods necessarry for a shape.
  */
 public abstract class Shape implements Cloneable {
-	private Integer fillCVal,
-	strokeCVal;
+	private Integer fillCVal;
+	private Integer strokeCVal;
 
 	public Shape() {
 		fillCVal = RobotRun.getInstance().color(0);
@@ -39,7 +39,7 @@ public abstract class Shape implements Cloneable {
 	}
 
 	@Override
-	public abstract Object clone();
+	public abstract Shape clone();
 
 	public abstract void draw();
 
@@ -53,6 +53,8 @@ public abstract class Shape implements Cloneable {
 	 *             such dimension exists
 	 */
 	public abstract float getDim(DimType dim);
+	
+	public abstract float[] getDimArray();
 
 	/* Getters and Setters for shapes fill and stroke colors */
 
@@ -69,4 +71,6 @@ public abstract class Shape implements Cloneable {
 	public void setFillValue(Integer newVal) { fillCVal = newVal; }
 
 	public void setStrokeValue(Integer newVal) { strokeCVal = newVal; }
+
+	public abstract int getID();
 }
