@@ -5313,22 +5313,22 @@ public class RobotRun extends PApplet {
 		PShape[] models = new PShape[13];
 		
 		// End Effectors
-		models[0] = loadSTLModel("robot/EE/SUCTION.stl", color(108, 206, 214));
-		models[1] = loadSTLModel("robot/EE/GRIPPER.stl", color(108, 206, 214));
-		models[2] = loadSTLModel("robot/EE/PINCER.stl", color(200, 200, 0));
+		models[0] = loadSTLModel("robot/EE/SUCTION.stl", Fields.color(108, 206, 214));
+		models[1] = loadSTLModel("robot/EE/GRIPPER.stl", Fields.color(108, 206, 214));
+		models[2] = loadSTLModel("robot/EE/PINCER.stl", Fields.color(200, 200, 0));
 		models[2].scale(1f);
-		models[3] = loadSTLModel("robot/EE/POINTER.stl", color(108, 206, 214));
-		models[4] = loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214));
-		models[5] = loadSTLModel("robot/EE/WIELDER.stl", color(108, 206, 214));
+		models[3] = loadSTLModel("robot/EE/POINTER.stl", Fields.color(108, 206, 214));
+		models[4] = loadSTLModel("robot/EE/GLUE_GUN.stl", Fields.color(108, 206, 214));
+		models[5] = loadSTLModel("robot/EE/WIELDER.stl", Fields.color(108, 206, 214));
 
 		// Body/joint models
-		models[6] = loadSTLModel("robot/ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
-		models[7] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
-		models[8] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
-		models[9] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
-		models[10] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
-		models[11] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0));
-		models[12] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40));
+		models[6] = loadSTLModel("robot/ROBOT_MODEL_1_BASE.STL", Fields.color(200, 200, 0));
+		models[7] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS1.STL", Fields.color(40, 40, 40));
+		models[8] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS2.STL", Fields.color(200, 200, 0));
+		models[9] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS3.STL", Fields.color(40, 40, 40));
+		models[10] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS4.STL", Fields.color(40, 40, 40));
+		models[11] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS5.STL", Fields.color(200, 200, 0));
+		models[12] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS6.STL", Fields.color(40, 40, 40));
 
 		return models;
 	}
@@ -5733,13 +5733,12 @@ public class RobotRun extends PApplet {
 	 * any other value, nothing is drawn
 	 */
 	public void mapToRobotBasePlane() {
-
 		PVector basePos = getActiveRobot().getBasePosition();
 		PVector ee_pos = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles()).position;
 
 		// Change color of the EE mapping based on if it lies below or above the
 		// ground plane
-		int c = (ee_pos.y <= basePos.y) ? color(255, 0, 0) : color(150, 0, 255);
+		int c = (ee_pos.y <= basePos.y) ? Fields.color(255, 0, 0) : Fields.color(150, 0, 255);
 
 		// Toggle EE mapping type with 'e'
 		switch (getEEMapping()) {
@@ -5790,7 +5789,7 @@ public class RobotRun extends PApplet {
 	
 	@Override
 	public void mousePressed() {
-		/* Check if the mouse position is colliding with a world object *
+		/* Check if the mouse position is colliding with a world object */
 		if (mouseButton == LEFT) {
 			PVector mouse = new PVector(mouseX, mouseY, 0f);
 			int pixel = get(mouseX, mouseY);
@@ -6446,14 +6445,14 @@ public class RobotRun extends PApplet {
 
 			// Draw the axes of the active Tool frame at the Robot End Effector
 			renderOriginAxes(eePoint.position, RMath.rMatToWorld(activeTool.getNativeAxisVectors()),
-					200f, color(255, 0, 255));
+					200f, Fields.color(255, 0, 255));
 			
 		} else {
 			/* Draw a pink point for the Robot's current End Effecot position */
 			pushMatrix();
 			translate(eePoint.position.x, eePoint.position.y, eePoint.position.z);
 
-			stroke(color(255, 0, 255));
+			stroke(Fields.color(255, 0, 255));
 			noFill();
 			sphere(4);
 
@@ -6468,11 +6467,11 @@ public class RobotRun extends PApplet {
 				if (getActiveRobot().getCurCoordFrame() != CoordFrame.WORLD && activeUser != null) {
 					// Draw the axes of the active User frame
 					renderOriginAxes(activeUser.getOrigin(), RMath.rMatToWorld(activeUser.getNativeAxisVectors()),
-							10000f, color(0));
+							10000f, Fields.BLACK);
 
 				} else {
 					// Draw the axes of the World frame
-					renderOriginAxes(new PVector(0f, 0f, 0f), Fields.WORLD_AXES_MAT, 10000f, color(0));
+					renderOriginAxes(new PVector(0f, 0f, 0f), Fields.WORLD_AXES_MAT, 10000f, Fields.BLACK);
 				}
 			}
 
@@ -6720,14 +6719,14 @@ public class RobotRun extends PApplet {
 			}
 
 			renderOriginAxes(wldObj.getLocalCenter(), RMath.rMatToWorld(wldObj.getLocalOrientationAxes()),
-					500f, color(0));
+					500f, Fields.BLACK);
 
 			popMatrix();
 		}
 
 		if (displayPoint != null) {
 			// Display the point with its local orientation axes
-			renderOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
+			renderOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, Fields.color(0, 100, 15));
 		}
 
 		model.updatePreviousEEOrientation();
@@ -6760,37 +6759,37 @@ public class RobotRun extends PApplet {
 
 					// Draw color-coded sphere for the point
 					noFill();
-					int pointColor = color(255, 0, 255);
+					int pointColor = Fields.color(255, 0, 255);
 
 					if (teachFrame instanceof ToolFrame) {
 
 						if (idx < 3) {
 							// TCP teach points
-							pointColor = color(130, 130, 130);
+							pointColor = Fields.color(130, 130, 130);
 						} else if (idx == 3) {
 							// Orient origin point
-							pointColor = color(255, 130, 0);
+							pointColor = Fields.color(255, 130, 0);
 						} else if (idx == 4) {
 							// Axes X-Direction point
-							pointColor = color(255, 0, 0);
+							pointColor = Fields.color(255, 0, 0);
 						} else if (idx == 5) {
 							// Axes Y-Diretion point
-							pointColor = color(0, 255, 0);
+							pointColor = Fields.color(0, 255, 0);
 						}
 					} else if (teachFrame instanceof UserFrame) {
 
 						if (idx == 0) {
 							// Orient origin point
-							pointColor = color(255, 130, 0);
+							pointColor = Fields.color(255, 130, 0);
 						} else if (idx == 1) {
 							// Axes X-Diretion point
-							pointColor = color(255, 0, 0);
+							pointColor = Fields.color(255, 0, 0);
 						} else if (idx == 2) {
 							// Axes Y-Diretion point
-							pointColor = color(0, 255, 0);
+							pointColor = Fields.color(0, 255, 0);
 						} else if (idx == 3) {
 							// Axes Origin point
-							pointColor = color(0, 0, 255);
+							pointColor = Fields.color(0, 0, 255);
 						}
 					}
 
