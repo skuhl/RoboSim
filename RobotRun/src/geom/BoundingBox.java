@@ -1,5 +1,7 @@
 package geom;
 
+import java.util.Arrays;
+
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 
@@ -128,10 +130,115 @@ public class BoundingBox {
 				localOrientation.clone() );
 	}
 	
-	public Object collision(Ray ray) {
-		// TODO
+	public PVector collision(Ray ray) {
+		Float rayWeight = null;
+		PVector origin = localOrientation.getOrigin();
+		float[][] axes = localOrientation.getAxes().getFloatData();
+		// Transform ray into the coordinate frame of the bounding box
+		PVector rayOrigin = RMath.rotateVector(PVector.sub(ray.getOrigin(), origin), axes);
+		PVector rayDirect = RMath.rotateVector(ray.getDirection(), axes);
 		
-		return null;
+		float[] dims = boxFrame.getDimArray();
+		
+		dims[0] /= 2f;
+		dims[1] /= 2f;
+		dims[2] /= 2f;
+		
+		// Calculate the points on the planes of each of the bounding box's sides
+		PVector[] P0 = new PVector[] {
+				
+				new PVector(dims[0], 0f, 0f),
+				new PVector(0f, dims[1], 0f),
+				new PVector(0f, 0f, dims[2]),
+				new PVector(-dims[0], 0f, 0f),
+				new PVector(0f, -dims[1], 0f),
+				new PVector(0f, 0f, -dims[2]),
+		};
+		
+		// Calculate the vectors normal to each of the bounding boxe's sides
+		PVector[] N = new PVector[] {
+				
+				new PVector(1, 0, 0),
+				new PVector(0, 1, 0),
+				new PVector(0, 0, 1),
+				new PVector(-1, 0, 0),
+				new PVector(0, -1, 0),
+				new PVector(0, 0, -1)
+				
+		};
+		
+		for (int c = 0; c < 6; ++c) {
+			
+			if (PVector.dot(N[c], rayOrigin) == 0) {
+				/* The plane formed by P0[c] and N[c] runs parallel to the ray
+				 * formed by the given ray */
+				continue;
+			}
+			
+			float E = N[c].x * (rayOrigin.x - P0[c].x) +
+					  N[c].y * (rayOrigin.y - P0[c].y) +
+					  N[c].z * (rayOrigin.z - P0[c].z);
+			
+			float G = N[c].x * rayDirect.x +
+					  N[c].y * rayDirect.y +
+					  N[c].z * rayDirect.z;
+			
+			if (G == 0f) {
+				String msg = String.format("G = 0 for N=%s P0=%s R=%s",
+						N[c], P0[c], ray);
+				throw new ArithmeticException(msg);
+			}
+			
+			float t = -E / G;
+			
+			if (t < 0) {
+				// t < 0 -> the collision would occur before the origin of the ray
+				System.out.printf("t = %f for N=%s P0=%s R=%s\n", t, N[c], P0[c], ray);
+				
+			} else {
+				PVector ptOnRay = PVector.add(rayOrigin, PVector.mult(rayDirect, t));
+				float[] ptOnRayArray = new float[] { ptOnRay.x, ptOnRay.y, ptOnRay.z };
+				int dimToCheck0 = (c + 1) % 3;
+				int dimToCheck1 = (dimToCheck0 + 1) % 3;
+				
+				if (ptOnRayArray[dimToCheck0] >= -dims[dimToCheck0] && ptOnRayArray[dimToCheck0] <= dims[dimToCheck0] &&
+					ptOnRayArray[dimToCheck1] >= -dims[dimToCheck1] && ptOnRayArray[dimToCheck1] <= dims[dimToCheck1]) {
+					
+					if (rayWeight == null) {
+						rayWeight = t;
+						
+					} else {
+						PVector collision = PVector.add(rayOrigin, PVector.mult(rayDirect, rayWeight));
+						// Find the closest collision
+						if (PVector.dist(rayOrigin, ptOnRay) < PVector.dist(rayOrigin, collision)) {
+							rayWeight = t;
+						}
+					}
+					
+				} else {
+					// Point is outside the bounds of the bounding box
+					System.out.printf("Out of bounds: origin=%s dim=%s pt=%s\n",
+							origin, Arrays.toString(dims), ptOnRay);
+				}
+			}
+			
+		}
+		
+		if (rayWeight == null) {
+			// No collision
+			return null;
+			
+		} else {
+			/**/
+			return PVector.add(ray.getOrigin(),  PVector.mult(ray.getDirection(), rayWeight));
+			
+			/**
+			PVector collision = PVector.add(ray.getOrigin(),  PVector.mult(ray.getDirection(), rayWeight));
+			RMatrix invAxes = localOrientation.getAxes().getInverse();
+			
+			return RMath.rotateVector(collision, invAxes.getFloatData()).add(origin);
+			/**/
+		}
 	}
 
 	/**

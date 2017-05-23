@@ -338,9 +338,14 @@ public class RobotRun extends PApplet {
 	private Point displayPoint;
 	
 	/**
-	 * Testing for mouse press
+	 * Testing for mouse interactions with world objects.
 	 */
-	private Ray mouseRay, scaledMouseRay;
+	private Ray mouseRay;
+	
+	/**
+	 * Testing for mouse interactions with world objects.
+	 */
+	private ArrayList<PVector> collisions;
 	
 	/**
 	 * Applies the active camera to the matrix stack.
@@ -1555,7 +1560,7 @@ public class RobotRun extends PApplet {
 		
 		PVector ro = r.getOrigin();
 		// Draw a long line
-		PVector endpoint = PVector.add(ro, PVector.mult(r.getDirection(), r.getLength()));
+		PVector endpoint = PVector.add(ro, PVector.mult(r.getDirection(), r.getDrawLength()));
 		line(ro.x, ro.y, ro.z, endpoint.x, endpoint.y, endpoint.z);
 		
 		popStyle();
@@ -5741,8 +5746,8 @@ public class RobotRun extends PApplet {
 				PVector mScreenPos = new PVector(mouseX, mouseY, camPos.z + 1500f);
 				mScreenPos.x *= camera.getScale();
 				mScreenPos.y *= camera.getScale();
-				
-				PVector mWorldPos, mDirect;
+
+				PVector mWorldPos, ptOnMRay;
 				
 				pushMatrix();
 				resetMatrix();
@@ -5757,17 +5762,42 @@ public class RobotRun extends PApplet {
 				/* Form a ray pointing out of the screen's z-axis, in the
 				 * native coordinate system */
 				mWorldPos = getCoordFromMatrix(0f, 0f, 0f);
-				mDirect = getCoordFromMatrix(0f, 0f, -1f);
+				ptOnMRay = getCoordFromMatrix(0f, 0f, -1f);
 				
-				mouseRay = new Ray(mWorldPos, mDirect, Fields.BLACK, 10000f);
+				if (mouseRay == null) {
+					mouseRay = new Ray(mWorldPos, ptOnMRay, 10000f, Fields.BLACK);
+					
+				} else {
+					PVector mDirect = PVector.sub(ptOnMRay, mWorldPos);
+					mDirect.normalize();
+					
+					mouseRay.setOrigin(mWorldPos);
+					mouseRay.setDirection(mDirect);
+				}
 				
 				/**/
-				System.out.printf("Mouse:\n%s\n%s\n%s\n\n", mScreenPos, mWorldPos, mDirect);
+				System.out.printf("Mouse:\n%s\n%s\n%s\n\n", mScreenPos, mWorldPos, ptOnMRay);
 				
 				/**/
+				collisions.clear();
+				
 				for (WorldObject wo : s) {
-					// TODO checkout ray OBB collisions
-					System.out.printf("%-16s %s\n", wo.getName(), wo.getLocalCenter());
+					System.out.printf("%-16s\n", wo.getName());
+					
+					try {
+						// TODO checkout ray OBB collisions	
+						Object collisionPt = wo.collision(mouseRay);
+						
+						if (collisionPt instanceof PVector) {
+							collisions.add((PVector)collisionPt);
+							System.out.printf("Collision: %s\n", collisionPt);
+						}
+						
+					} catch (ArithmeticException AEx) {
+						AEx.printStackTrace();
+					}
+					
+					System.out.println();
 				}
 				
 				/**/
@@ -6662,9 +6692,18 @@ public class RobotRun extends PApplet {
 			drawRay(mouseRay);
 		}
 		
-		if (scaledMouseRay != null) {
-			drawRay(scaledMouseRay);
+		pushStyle();
+		fill(Fields.RED);
+		stroke(Fields.RED);
+		
+		for (PVector pt : collisions) {
+			pushMatrix();
+			translate(pt.x, pt.y, pt.z);
+			sphere(10);
+			popMatrix();
 		}
+		
+		popStyle();
 	}
 	
 	/**
@@ -7160,7 +7199,7 @@ public class RobotRun extends PApplet {
 		super.setup();
 		
 		mouseRay = null;
-		scaledMouseRay = null;
+		collisions = new ArrayList<>();
 		
 		PImage[][] buttonImages = new PImage[][] {
 			
