@@ -15,6 +15,7 @@ import controlP5.ControllerInterface;
 import controlP5.DropdownList;
 import controlP5.Group;
 import controlP5.RadioButton;
+import controlP5.Slider;
 import controlP5.Textarea;
 import controlP5.Toggle;
 import enums.AxesDisplay;
@@ -41,6 +42,7 @@ import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PImage;
 import processing.core.PVector;
+import robot.RobotCamera;
 import robot.RobotRun;
 import robot.RoboticArm;
 import robot.Scenario;
@@ -70,7 +72,8 @@ public class WGUI implements ControlListener {
 			mLblWidth = 86,
 			sLblWidth = 60,
 			fieldHeight = 20,
-			fieldWidth = 110,
+			fieldWidthMed = 110,
+			fieldWidthSm = 70,
 			lButtonWidth = 88,
 			mButtonWidth = 56,
 			sButtonWidth = 26,
@@ -487,9 +490,9 @@ public class WGUI implements ControlListener {
 		// Initialize the elements shared amongst the create and edit windows
 		for (int idx = 0; idx < 3; ++idx) {
 			addTextarea(String.format("DimLbl%d", idx), String.format("Dim(%d):", idx),
-					sharedElements, fieldWidth, sButtonHeight, Fields.medium);
+					sharedElements, fieldWidthMed, sButtonHeight, Fields.medium);
 
-			addTextfield(String.format("Dim%d", idx), sharedElements, fieldWidth,
+			addTextfield(String.format("Dim%d", idx), sharedElements, fieldWidthMed,
 					fieldHeight, Fields.medium, app.getKeyCodeMap());
 		}
 
@@ -499,7 +502,7 @@ public class WGUI implements ControlListener {
 		addTextarea("ObjTypeLbl", "Type:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 
 		addTextarea("ObjNameLbl", "Name:", createWO, sLblWidth, fieldHeight, Fields.medium);
-		addTextfield("ObjName", createWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("ObjName", createWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("ShapeLbl", "Shape:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("FillLbl", "Fill:", createWO, mLblWidth, sButtonHeight, Fields.medium);
@@ -511,38 +514,38 @@ public class WGUI implements ControlListener {
 		addTextarea("ObjLabel", "Object:", editWO, mLblWidth, fieldHeight, Fields.medium);
 
 		addTextarea("Blank", "Inputs", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextarea("Current", "Current", editWO, fieldWidth, fieldHeight, Fields.medium);
-		addTextarea("Default", "Default", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("Current", "Current", editWO, fieldWidthMed, fieldHeight, Fields.medium);
+		addTextarea("Default", "Default", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("XLbl", "X Position:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("XCur", editWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("XDef", "N/A", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("XCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("XDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("YLbl", "Y Position:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("YCur", editWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("YDef", "N/A", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("YCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("YDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("ZLbl", "Z Position:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("ZCur", editWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("ZDef", "N/A", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("ZCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("ZDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("WLbl", "X Rotation:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("WCur", editWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("WDef", "N/A", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("WCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("WDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("PLbl", "Y Rotation:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("PCur", editWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("PDef", "N/A", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("PCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("PDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("RLbl", "Z Rotation:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("RCur", editWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("RDef", "N/A", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("RCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("RDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("RefLbl", "Reference:", editWO, lLblWidth, sButtonHeight, Fields.medium);
 
-		addButton("MoveToCur", "Move to Current", editWO, fieldWidth, sButtonHeight, Fields.small);
-		addButton("UpdateWODef", "Update Default", editWO, fieldWidth, sButtonHeight, Fields.small);
-		addButton("MoveToDef", "Move to Default", editWO, fieldWidth, sButtonHeight, Fields.small);
+		addButton("MoveToCur", "Move to Current", editWO, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton("UpdateWODef", "Update Default", editWO, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton("MoveToDef", "Move to Default", editWO, fieldWidthMed, sButtonHeight, Fields.small);
 
 		addButton("ResDefs", "Restore Defaults", editWO, lLblWidth, sButtonHeight, Fields.small);
 
@@ -565,27 +568,45 @@ public class WGUI implements ControlListener {
 		addTextarea("SInstructions", "N/A", scenario, windowTabs.getWidth() - (2 * winMargin),
 				54, Fields.small).hideScrollbar();
 
-		addTextfield("SInput", scenario, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("SInput", scenario, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		addButton("SConfirm", "N/A", scenario, mButtonWidth, sButtonHeight, Fields.small);
 
 		// Initialize the camera window
+		//TODO
 		addTextarea("CXLbl", "X Position:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CXCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("CXCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("CYLbl", "Y Position:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CYCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("CYCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("CZLbl", "Z Position:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CZCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("CZCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("CWLbl", "X Rotation:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CWCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("CWCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("CPLbl", "Y Rotation:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CPCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("CPCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("CRLbl", "Z Rotation:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CRCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("CRCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		
+		addTextarea("CFOVLbl", "FOV:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CFOVCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		
+		addTextarea("CAspectLbl", "Aspect Ratio:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CAspectCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		
+		addTextarea("CCNearLbl", "Near Clip:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CCNearCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		
+		addTextarea("CCFarLbl", "Far Clip:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CCFarCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		
+		addSlider("CBright", camera, fieldWidthMed, fieldHeight, 0f, 10f, 1f, Fields.medium);
+		addSlider("CExp", camera, fieldWidthMed, fieldHeight, 0.01f, 1f, 0.1f, Fields.medium);
+		
+		addButton("UpdateCam", "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
 		
 		// Initialize the miscellaneous window elements
 		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
@@ -903,6 +924,21 @@ public class WGUI implements ControlListener {
 		return rb;
 	}
 
+	private Slider addSlider(String name, Group parent, int wdh, int hgt, float min, float max,
+			float def, PFont lblFont) {
+		Slider s = new Slider(manager, name);
+		s.setColorValue(Fields.B_DEFAULT_C)
+		.setColorLabel(Fields.F_TEXT_C)
+		.setColorActive(Fields.B_ACTIVE_C)
+		.setMin(min)
+		.setMax(max)
+		.setDefaultValue(def)
+		.moveTo(parent)
+		.setSize(wdh, hgt);
+		
+		return s;
+	}
+	
 	/**
 	 * Adds a text area to the UI with the given name, text, parent,
 	 * width, height, and label font. A text area cannot be directly
@@ -1495,7 +1531,7 @@ public class WGUI implements ControlListener {
 	 * @return	A list of input values from the orientation text-fields in the
 	 * 		world object edit window
 	 */
-	private Float[] getCurrentValues() {
+	private Float[] getCurrentWOValues() {
 		try {
 			/* Pull from x, y, z, w, p, r, input values from their
 			 * corresponding text-fields */
@@ -1865,6 +1901,10 @@ public class WGUI implements ControlListener {
 		}
 
 		return filename;
+	}
+	
+	private Slider getSlider(String name) {
+		return (Slider) manager.get(name);
 	}
 
 	/**
@@ -2404,7 +2444,30 @@ public class WGUI implements ControlListener {
 			} else {
 				ddl.setValue(0);
 			}
-
+		}
+	}
+	
+	public void updateCameraWindowFields() {//TODO
+		if(app.getCamera() != null) {
+			RobotCamera c = app.getRobotCamera();
+			PVector pos = c.getPosition();
+			PVector ori = RMath.quatToEuler(c.getOrientation());
+			getTextField("CXCur").setText(String.format("%4.3f", pos.x));
+			getTextField("CYCur").setText(String.format("%4.3f", pos.y));
+			getTextField("CZCur").setText(String.format("%4.3f", pos.z));
+			
+			getTextField("CWCur").setText(String.format("%4.3f", ori.x));
+			getTextField("CPCur").setText(String.format("%4.3f", ori.y));
+			getTextField("CRCur").setText(String.format("%4.3f", ori.z));
+			
+			getTextField("CCNearCur").setText(String.format("%4.3f", c.getNearClipDist()));
+			getTextField("CCFarCur").setText(String.format("%4.3f", c.getFarClipDist()));
+			
+			getTextField("CFOVCur").setText(String.format("%4.3f", c.getFOV()));
+			getTextField("CAspectCur").setText(String.format("%4.3f", c.getAspectRatio()));
+			
+			getSlider("CBright").setValue(c.getBrightness());
+			getSlider("CExp").setValue(c.getExposure());
 		}
 	}
 
@@ -2584,51 +2647,88 @@ public class WGUI implements ControlListener {
 	 * Updates the positions of all the contents of the world object editing window.
 	 */
 	private void updateCameraWindowContentPositions() {
-		updateDimLblsAndFields();
-		getButton("ClearFields").hide();
-
 		// X label and fields
 		int[] relPos = new int[] { winMargin, winMargin };
-		ControllerInterface<?> c = getTextArea("CXLbl").setPosition(relPos[0], relPos[1]);
+		ControllerInterface<?> c0, c = getTextArea("CXLbl").setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CXCur").setPosition(relPos[0], relPos[1]);
+		c0 = getTextField("CXCur").setPosition(relPos[0], relPos[1]);
 
+		// Cam clip near label and fields
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		c0 = getTextArea("CCNearLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CCNearCur").setPosition(relPos[0], relPos[1]);
+		
 		// Y label and fields
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("CYLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CYCur").setPosition(relPos[0], relPos[1]);
+		c0 = getTextField("CYCur").setPosition(relPos[0], relPos[1]);
+		
+		// Cam clip far label and fields
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		c0 = getTextArea("CCFarLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CCFarCur").setPosition(relPos[0], relPos[1]);
 
 		// Z label and fields
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("CZLbl").setPosition(relPos[0], relPos[1]);;
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CZCur").setPosition(relPos[0], relPos[1]);
+		c0 = getTextField("CZCur").setPosition(relPos[0], relPos[1]);
+		
+		// FOV label and fields
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		c0 = getTextArea("CFOVLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CFOVCur").setPosition(relPos[0], relPos[1]);
 
 		// W label and fields
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("CWLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CWCur").setPosition(relPos[0], relPos[1]);
+		c0 = getTextField("CWCur").setPosition(relPos[0], relPos[1]);
+		
+		// Aspect ratio label and fields
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		c0 = getTextArea("CAspectLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CAspectCur").setPosition(relPos[0], relPos[1]);
 
 		// P label and fields
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("CPLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CPCur").setPosition(relPos[0], relPos[1]);
+		c0 = getTextField("CPCur").setPosition(relPos[0], relPos[1]);
+		
+		// Brightness slider 
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		getSlider("CBright").setPosition(relPos[0], relPos[1]);
 
 		// R label and fields
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("CRLbl").setPosition(relPos[0], relPos[1]);
-
+		
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CRCur").setPosition(relPos[0], relPos[1]);
-
+		c0 = getTextField("CRCur").setPosition(relPos[0], relPos[1]);
+		
+		// Shutter speed timer
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		getSlider("CExp").setPosition(relPos[0], relPos[1]);
+		
+		// Cam update button
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getButton("UpdateCam").setPosition(relPos[0], relPos[1]);
+		
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		background.setPosition(camera.getPosition())
@@ -3071,7 +3171,12 @@ public class WGUI implements ControlListener {
 				setGroupVisible(sharedElements, true);
 
 				clearAllInputFields();
+<<<<<<< HEAD
 				updateUIContentPositions();
+=======
+				updateCameraWindowFields();
+				updateWindowContentsPositions();
+>>>>>>> 522f9369f5a46d97f238b455d229c5978958817f
 			}
 			
 		} else if (menu == WindowTab.MISC) {
@@ -3154,8 +3259,7 @@ public class WGUI implements ControlListener {
 
 	/**
 	 * Updates the dimensions as well as the current position and orientation
-	 * as well as the dimensions (and the fixture reference for parts) of the
-	 * selected world object.
+	 * (and the fixture reference for parts) of the selected world object.
 	 * 
 	 * @return	if the selected world object was successfully modified 
 	 */
@@ -3232,7 +3336,7 @@ public class WGUI implements ControlListener {
 				// Convert origin position into the World Frame
 				PVector oPosition = RMath.vToWorld( toEdit.getLocalCenter() );
 				PVector oWPR = RMath.nRMatToWEuler( toEdit.getLocalOrientationAxes() );
-				Float[] inputValues = getCurrentValues();
+				Float[] inputValues = getCurrentWOValues();
 				// Update position and orientation
 				if (inputValues[0] != null) {
 					oPosition.x = inputValues[0];
@@ -3316,7 +3420,7 @@ public class WGUI implements ControlListener {
 			// Pull the object's current position and orientation
 			PVector defaultPos = RMath.vToWorld( p.getDefaultCenter() );
 			PVector defaultWPR = RMath.nRMatToWEuler( p.getDefaultOrientationAxes() );
-			Float[] inputValues = getCurrentValues();
+			Float[] inputValues = getCurrentWOValues();
 
 			// Update default position and orientation
 			if (inputValues[0] != null) {
@@ -3396,5 +3500,36 @@ public class WGUI implements ControlListener {
 
 		// Invalid characters
 		return null;
+	}
+
+	public void updateCameraCurrent() {
+		try {
+			float x = -Float.parseFloat(getTextField("CXCur").getText());
+			float y = -Float.parseFloat(getTextField("CZCur").getText());
+			float z = Float.parseFloat(getTextField("CYCur").getText());
+			
+			float w = -Float.parseFloat(getTextField("CWCur").getText());
+			float p = -Float.parseFloat(getTextField("CRCur").getText());
+			float r = Float.parseFloat(getTextField("CPCur").getText());
+			
+			float clipNear = Float.parseFloat(getTextField("CCNearCur").getText());
+			float clipFar = Float.parseFloat(getTextField("CCFarCur").getText());
+			
+			float fov = Float.parseFloat(getTextField("CFOVCur").getText());
+			float aspect = Float.parseFloat(getTextField("CAspectCur").getText());
+			
+			float br = getSlider("CBright").getValue();
+			float exp = getSlider("CExp").getValue();
+			
+			app.getRobotCamera().update(x, y, z, w, p, r, fov, aspect, clipNear, clipFar, br, exp);
+		}
+		catch(Exception e) { e.printStackTrace(); }
+		/*catch (NumberFormatException NFEx) {
+			PApplet.println("Invalid number input!");
+
+		} 
+		catch (NullPointerException NPEx) {
+			PApplet.println("Missing parameter!");
+		}*/
 	}
 }

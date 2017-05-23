@@ -15,13 +15,13 @@ import processing.core.PVector;
  * A storage class for a collection of objects with an associated name for the collection.
  */
 public class Scenario implements Iterable<WorldObject>, Cloneable {
+	private boolean gravity;
 	private String name;
+	
 	/**
 	 * A combine list of Parts and Fixtures
 	 */
 	private final ArrayList<WorldObject> objList;
-	
-	private boolean gravity = false;
 
 	/**
 	 * Create a new scenario of the given name.
@@ -29,6 +29,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	public Scenario(String n) {
 		name = n;
 		objList = new ArrayList<>();
+		gravity = false;
 	}
 
 	/**
@@ -93,7 +94,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		// Concatenate the origin name with the new suffix
 		return String.format("%s%d", originName, suffix);
 	}
-
+	
 	/**
 	 * Add the given world object to the scenario. Though, if the name of
 	 * the given world object does not only contain letter and number
@@ -137,7 +138,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 		return false;
 	}
-
+	
 	/**
 	 * Only adds the given world objects that are non-null and do
 	 * not already exist in the scenario.
@@ -219,6 +220,10 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 	public String getName() { return name; }
 
+	public ArrayList<WorldObject> getObjectList() {
+		return objList;
+	}
+
 	/**
 	 * Return the world object that corresponds to the given index in
 	 * the list of world objects contained in this scenario, or null
@@ -235,14 +240,54 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 		return null;
 	}
-	
-	public ArrayList<WorldObject> getObjectList() {
-		return objList;
-	}
 
+	public boolean isGravity() {
+		return gravity;
+	}
+	
 	@Override
 	public Iterator<WorldObject> iterator() {
 		return objList.iterator();
+	}
+
+	/**
+	 * Replaces the world object, in the scenario, which has the same name as
+	 * the given world object. If no world object with the given world
+	 * object's name exists in the scenario, then the object is added to the
+	 * scenario.
+	 * 
+	 * @param newObj	The new world object
+	 * @return			The object that was replaced, or null if the newObj is
+	 * 					null or was added to the scenario
+	 */
+	public WorldObject put(WorldObject newObj) {
+		if (newObj != null) {
+			WorldObject replaced = null;
+			
+			for (int idx = 0; idx < objList.size(); ++idx) {
+				// Find the world object with the same name as newObj
+				if (objList.get(idx).getName().equals(newObj.getName())) {
+					replaced = objList.set(idx, newObj);
+				}
+			}
+			
+			// Update all part references to the replaced fixture
+			if (replaced instanceof Fixture) {
+				for (WorldObject w : objList) {
+					if (w instanceof Part && ((Part) w).getFixtureRef() == replaced) {
+						((Part)w).setFixtureRef((Fixture)newObj);
+					}
+				}
+			}
+			
+			if (replaced != null) {
+				return replaced;
+			}
+			
+			addWorldObject(newObj);
+		}
+		
+		return null;
 	}
 
 	/**
@@ -306,46 +351,6 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 	
 	/**
-	 * Replaces the world object, in the scenario, which has the same name as
-	 * the given world object. If no world object with the given world
-	 * object's name exists in the scenario, then the object is added to the
-	 * scenario.
-	 * 
-	 * @param newObj	The new world object
-	 * @return			The object that was replaced, or null if the newObj is
-	 * 					null or was added to the scenario
-	 */
-	public WorldObject put(WorldObject newObj) {
-		if (newObj != null) {
-			WorldObject replaced = null;
-			
-			for (int idx = 0; idx < objList.size(); ++idx) {
-				// Find the world object with the same name as newObj
-				if (objList.get(idx).getName().equals(newObj.getName())) {
-					replaced = objList.set(idx, newObj);
-				}
-			}
-			
-			// Update all part references to the replaced fixture
-			if (replaced instanceof Fixture) {
-				for (WorldObject w : objList) {
-					if (w instanceof Part && ((Part) w).getFixtureRef() == replaced) {
-						((Part)w).setFixtureRef((Fixture)newObj);
-					}
-				}
-			}
-			
-			if (replaced != null) {
-				return replaced;
-			}
-			
-			addWorldObject(newObj);
-		}
-		
-		return null;
-	}
-
-	/**
 	 * Return the color of all the object's bounding
 	 * boxes to normal (green).
 	 */
@@ -359,7 +364,12 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 
 	public void setName(String newName) { name = newName; }
+
 	public int size() { return objList.size(); }
+	public boolean toggleGravity() {
+		gravity = !gravity;
+		return gravity;
+	}
 
 	@Override
 	public String toString() { return name; }
