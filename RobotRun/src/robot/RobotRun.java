@@ -11,6 +11,7 @@ import enums.CoordFrame;
 import enums.EEMapping;
 import enums.ScreenMode;
 import enums.ScreenType;
+import enums.WindowTab;
 import expression.AtomicExpression;
 import expression.ExprOperand;
 import expression.Expression;
@@ -20,14 +21,18 @@ import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.Fixture;
+import geom.ModelShape;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
+import geom.Ray;
+import geom.Shape;
 import geom.Triangle;
 import geom.WorldObject;
 import global.DataManagement;
 import global.Fields;
+import global.MyFloatFormat;
 import global.RMath;
 import global.RegisteredModels;
 import processing.core.PApplet;
@@ -336,6 +341,17 @@ public class RobotRun extends PApplet {
 	private Point displayPoint;
 	
 	/**
+	 * Defines the mouse's position mapped from the screen into the active
+	 * scenario.
+	 */
+	private Ray mouseRay;
+	
+	/**
+	 * Stores points of collision between the mouse ray and world objects.
+	 */
+	private ArrayList<PVector> collisions;
+	
+	/**
 	 * Applies the active camera to the matrix stack.
 	 * 
 	 * @param	The camera to apply
@@ -352,6 +368,7 @@ public class RobotRun extends PApplet {
 
 		rotateX(cOrien.x);
 		rotateY(cOrien.y);
+		rotateZ(cOrien.z);
 		
 		// Apply orthogonal camera view
 		ortho(-horizontalMargin, horizontalMargin, -verticalMargin,
@@ -1154,6 +1171,84 @@ public class RobotRun extends PApplet {
 		denominator *= 2;
 		return numerator / denominator;
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param ray
+	 * @param scenario
+	 * @param robot
+	 */
+	public void checkForCollisionsInScene(Ray ray, Scenario scenario,
+			RoboticArm robot) {
+		
+		PVector closestCollPt = null;
+		WorldObject collidedWith = null;
+		collisions.clear();
+		
+		// Check collision with the robots
+		closestCollPt = ROBOTS.get(0).closestCollision(mouseRay);
+		
+		if (UI.getRobotButtonState()) {
+			PVector collPt = ROBOTS.get(1).closestCollision(mouseRay);
+			
+			if (collPt != null && (closestCollPt == null ||
+					PVector.dist(ray.getOrigin(), collPt) <
+					PVector.dist(ray.getOrigin(), closestCollPt))) {
+				
+				closestCollPt = collPt;
+			}
+		}
+		
+		// Check collision with world objects
+		
+		for (WorldObject wo : scenario) {
+			PVector collPt = wo.collision(mouseRay);
+			
+			if (collPt != null && (closestCollPt == null ||
+					PVector.dist(ray.getOrigin(), collPt) <
+					PVector.dist(ray.getOrigin(), closestCollPt))) {
+				
+				if (wo instanceof Fixture) {
+					Shape form = wo.getForm();
+					
+					if (form instanceof ModelShape) {
+						/* Check if the color at the mouse position matches
+						 * the model's fill color. */
+						int fill = form.getFillValue();
+						int pixel = get(mouseX, mouseY);
+						
+						if (Fields.colorDiff(pixel, fill) < 200) {
+							collidedWith = wo;
+							closestCollPt = collPt;
+						}
+						
+					} else {
+						// Fixture with a non-model shape
+						collidedWith = wo;
+						closestCollPt = collPt;
+					}
+					
+				} else {
+					// Part
+					collidedWith = wo;
+					closestCollPt = collPt;
+				}
+			}
+		}
+		
+		if (collidedWith != null) {
+			
+			if (UI.getMenu() == WindowTab.EDIT) {
+				UI.setSelectedWO(collidedWith);
+			}
+			
+		}
+		
+		if (closestCollPt != null) {
+			collisions.add(closestCollPt);
+		}
+	}
 
 	/**
 	 * Finds the circle center of 3 points. (That is, find the center of a
@@ -1438,10 +1533,13 @@ public class RobotRun extends PApplet {
 	 */
 	public void DeleteWldObj() {
 		// Delete focused world object and add to the scenario undo stack
-		updateScenarioUndo(UI.getSelectedWO());
-		int ret = UI.deleteActiveWorldObject();
-		DataManagement.saveScenarios(this);
+		WorldObject selected = UI.getSelectedWO();
+		
+		updateScenarioUndo( selected );
+		int ret = getActiveScenario().removeWorldObject( selected );
 		Fields.debug("World Object removed: %d\n", ret);
+		
+		DataManagement.saveScenarios(this);
 	}
 	
 	@Override
@@ -1459,7 +1557,7 @@ public class RobotRun extends PApplet {
 			hint(ENABLE_DEPTH_TEST);
 			directionalLight(255, 255, 255, 1, 1, 0);
 			ambientLight(150, 150, 150);
-	
+			
 			pushMatrix();
 			// Apply the camera for drawing objects
 			applyCamera(camera);
@@ -1525,15 +1623,30 @@ public class RobotRun extends PApplet {
 			
 			popMatrix();
 			
-			hint(DISABLE_DEPTH_TEST);
-			noLights();
-			
 			renderUI();
 			
 		} catch (Exception Ex) {
 			DataManagement.errLog(Ex);
 			throw Ex;
 		}
+	}
+	
+	/**
+	 * Draws the given ray based on the matrix on the top of the stack.
+	 * 
+	 * @param r	A ray object
+	 */
+	public void drawRay(Ray r) {
+		pushStyle();
+		stroke(r.getColor());
+		noFill();
+		
+		PVector ro = r.getOrigin();
+		// Draw a long line
+		PVector endpoint = PVector.add(ro, PVector.mult(r.getDirection(), r.getDrawLength()));
+		line(ro.x, ro.y, ro.z, endpoint.x, endpoint.y, endpoint.z);
+		
+		popStyle();
 	}
 
 	/**
@@ -3696,6 +3809,16 @@ public class RobotRun extends PApplet {
 
 		return vector;
 	}
+	
+	public PVector getCoordFromScreen(float x, float y, float z) {
+		return new PVector(
+				screenX(x, y, z),
+				screenY(x, y, z),
+				screenZ(x, y, z)
+			);
+		
+		
+	}
 
 	public void getEditScreen(Instruction ins, int selectIdx) {
 		if (ins instanceof MotionInstruction) {
@@ -5636,13 +5759,12 @@ public class RobotRun extends PApplet {
 	 * any other value, nothing is drawn
 	 */
 	public void mapToRobotBasePlane() {
-
 		PVector basePos = getActiveRobot().getBasePosition();
 		PVector ee_pos = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles()).position;
 
 		// Change color of the EE mapping based on if it lies below or above the
 		// ground plane
-		int c = (ee_pos.y <= basePos.y) ? color(255, 0, 0) : color(150, 0, 255);
+		int c = (ee_pos.y <= basePos.y) ? Fields.color(255, 0, 0) : Fields.color(150, 0, 255);
 
 		// Toggle EE mapping type with 'e'
 		switch (getEEMapping()) {
@@ -5693,43 +5815,54 @@ public class RobotRun extends PApplet {
 
 	@Override
 	public void mousePressed() {
-		/* Check if the mouse position is colliding with a world object *
+		
 		if (mouseButton == LEFT) {
-			PVector mouse = new PVector(mouseX, mouseY, 0f);
-			int pixel = get(mouseX, mouseY);
 			
-			System.out.printf("\n%-16s : %s %#x\n", "Mouse", mouse, pixel);
-			
-			Scenario s = getActiveScenario();
-			
-			if (s != null) {
+			/* Check if the mouse position is colliding with a world object */
+			if (!UI.isFocus() && activeRobot != null && activeScenario != null) {
+				PVector camPos = camera.getPosition();
+				camPos.x += width / 2f * camera.getScale();
+				camPos.y += height / 2f * camera.getScale();
 				
-				for (WorldObject wo : s) {
+				PVector camOrien = camera.getOrientation();
+				
+				PVector mScreenPos = new PVector(mouseX, mouseY, camPos.z + 1500f);
+				mScreenPos.x *= camera.getScale();
+				mScreenPos.y *= camera.getScale();
+
+				PVector mWorldPos, ptOnMRay;
+				
+				pushMatrix();
+				resetMatrix();
+				// Apply the inverse of the camera's coordinate system
+				rotateZ(-camOrien.z);
+				rotateY(-camOrien.y);
+				rotateX(-camOrien.x);
+				translate(-camPos.x, -camPos.y, -camPos.z);
+				
+				translate(mScreenPos.x, mScreenPos.y, mScreenPos.z);
+				
+				/* Form a ray pointing out of the screen's z-axis, in the
+				 * native coordinate system */
+				mWorldPos = getCoordFromMatrix(0f, 0f, 0f);
+				ptOnMRay = getCoordFromMatrix(0f, 0f, -1f);
+				
+				popMatrix();
+				
+				if (mouseRay == null) {
+					mouseRay = new Ray(mWorldPos, ptOnMRay, 10000f, Fields.BLACK);
 					
-					pushMatrix();
-					resetMatrix();
-					PVector camPos = camera.getPosition();
-					PVector camOrien = camera.getOrientation();
+				} else {
+					PVector mDirect = PVector.sub(ptOnMRay, mWorldPos);
+					mDirect.normalize();
 					
-					translate(camPos.x, camPos.y, camPos.z);
-					
-					rotateX(camOrien.x);
-					rotateY(camOrien.y);
-					rotateZ(camOrien.z);
-					
-					wo.applyCoordinateSystem();
-					float x = screenX(0f, 0f, 0f);
-					float y = screenY(0f, 0f, 0f);
-					float z = screenZ(0f, 0f, 0f);
-					
-					System.out.printf("%-16s : [ %4.3f, %4.3f, %4.3f ]\n", wo.getName(), x, y, z);
-					popMatrix();
-					
+					mouseRay.setOrigin(mWorldPos);
+					mouseRay.setDirection(mDirect);
 				}
 				
+				checkForCollisionsInScene(mouseRay, activeScenario, activeRobot);
 			}
 		}
-		/**/
 	}
 
 	@Override
@@ -5739,14 +5872,22 @@ public class RobotRun extends PApplet {
 			return;
 		}
 
-		float e = event.getCount();
+		float wheelCount = event.getCount();
 		/* Control scaling of the camera with the mouse wheel */
-		if (e > 0) {
+		if (wheelCount > 0) {
 			camera.scale(1.05f);
 			
-		} else if (e < 0) {
+		} else if (wheelCount < 0) {
 			camera.scale(0.95f);
 		}
+		
+		/**
+		if (e != 0) {
+			float newScale = camera.getScale() + wheelCount * 0.1f;
+			camera.setScale(newScale);
+		}
+		
+		/**/
 	}
 
 	/**
@@ -6315,14 +6456,14 @@ public class RobotRun extends PApplet {
 
 			// Draw the axes of the active Tool frame at the Robot End Effector
 			renderOriginAxes(eePoint.position, RMath.rMatToWorld(activeTool.getNativeAxisVectors()),
-					200f, color(255, 0, 255));
+					200f, Fields.color(255, 0, 255));
 			
 		} else {
-			/* Draw a pink point for the Robot's current End Effecot position */
+			/* Draw a pink point for the Robot's current End Effector position */
 			pushMatrix();
 			translate(eePoint.position.x, eePoint.position.y, eePoint.position.z);
 
-			stroke(color(255, 0, 255));
+			stroke(Fields.color(255, 0, 255));
 			noFill();
 			sphere(4);
 
@@ -6337,11 +6478,11 @@ public class RobotRun extends PApplet {
 				if (getActiveRobot().getCurCoordFrame() != CoordFrame.WORLD && activeUser != null) {
 					// Draw the axes of the active User frame
 					renderOriginAxes(activeUser.getOrigin(), RMath.rMatToWorld(activeUser.getNativeAxisVectors()),
-							10000f, color(0));
+							10000f, Fields.BLACK);
 
 				} else {
 					// Draw the axes of the World frame
-					renderOriginAxes(new PVector(0f, 0f, 0f), Fields.WORLD_AXES_MAT, 10000f, color(0));
+					renderOriginAxes(new PVector(0f, 0f, 0f), Fields.WORLD_AXES_MAT, 10000f, Fields.BLACK);
 				}
 			}
 
@@ -6464,6 +6605,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void renderOriginAxes(PVector origin, RMatrix axesVectors, float axesLength, int originColor) {
 		pushMatrix();
+		pushStyle();
 		// Transform to the reference frame defined by the axes vectors		
 		applyMatrix(origin, axesVectors);
 		// X axis
@@ -6481,6 +6623,8 @@ public class RobotRun extends PApplet {
 		textFont(Fields.bond, 18);
 
 		stroke(originColor);
+		fill(Fields.BLACK);
+		
 		sphere(4);
 		stroke(0);
 		translate(dotPos, 0, 0);
@@ -6510,6 +6654,7 @@ public class RobotRun extends PApplet {
 		text("Z-axis", 0, 0, 0);
 		popMatrix();
 
+		popStyle();
 		popMatrix();
 	}
 	
@@ -6589,17 +6734,38 @@ public class RobotRun extends PApplet {
 			}
 
 			renderOriginAxes(wldObj.getLocalCenter(), RMath.rMatToWorld(wldObj.getLocalOrientationAxes()),
-					500f, color(0));
+					500f, Fields.BLACK);
 
 			popMatrix();
 		}
 
 		if (displayPoint != null) {
 			// Display the point with its local orientation axes
-			renderOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, color(0, 100, 15));
+			renderOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, Fields.color(0, 100, 15));
 		}
 
 		model.updatePreviousEEOrientation();
+		
+		if (Fields.DEBUG) {
+			if (mouseRay != null) {
+				// Draw the ray representing a mouse click in the scene
+				drawRay(mouseRay);
+			}
+			
+			pushStyle();
+			fill(Fields.RED);
+			stroke(Fields.RED);
+			/* Draw all points of collision between world objects and the mouse
+			 * ray */
+			for (PVector pt : collisions) {
+				pushMatrix();
+				translate(pt.x, pt.y, pt.z);
+				sphere(3);
+				popMatrix();
+			}
+			
+			popStyle();
+		}
 	}
 	
 	/**
@@ -6629,37 +6795,37 @@ public class RobotRun extends PApplet {
 
 					// Draw color-coded sphere for the point
 					noFill();
-					int pointColor = color(255, 0, 255);
+					int pointColor = Fields.color(255, 0, 255);
 
 					if (teachFrame instanceof ToolFrame) {
 
 						if (idx < 3) {
 							// TCP teach points
-							pointColor = color(130, 130, 130);
+							pointColor = Fields.color(130, 130, 130);
 						} else if (idx == 3) {
 							// Orient origin point
-							pointColor = color(255, 130, 0);
+							pointColor = Fields.color(255, 130, 0);
 						} else if (idx == 4) {
 							// Axes X-Direction point
-							pointColor = color(255, 0, 0);
+							pointColor = Fields.color(255, 0, 0);
 						} else if (idx == 5) {
 							// Axes Y-Diretion point
-							pointColor = color(0, 255, 0);
+							pointColor = Fields.color(0, 255, 0);
 						}
 					} else if (teachFrame instanceof UserFrame) {
 
 						if (idx == 0) {
 							// Orient origin point
-							pointColor = color(255, 130, 0);
+							pointColor = Fields.color(255, 130, 0);
 						} else if (idx == 1) {
 							// Axes X-Diretion point
-							pointColor = color(255, 0, 0);
+							pointColor = Fields.color(255, 0, 0);
 						} else if (idx == 2) {
 							// Axes Y-Diretion point
-							pointColor = color(0, 255, 0);
+							pointColor = Fields.color(0, 255, 0);
 						} else if (idx == 3) {
 							// Axes Origin point
-							pointColor = color(0, 0, 255);
+							pointColor = Fields.color(0, 0, 255);
 						}
 					}
 
@@ -6676,6 +6842,9 @@ public class RobotRun extends PApplet {
 	 * Displays all the windows and the right-hand text display.
 	 */
 	public void renderUI() {
+		hint(DISABLE_DEPTH_TEST);
+		noLights();
+		
 		pushMatrix();
 		ortho();
 		
@@ -6808,7 +6977,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
-		/* Camera test output *
+		/* Camera test output */
 		if (Fields.DEBUG) {
 			String[] lines = Fields.toLineStringArray(camera.getPosition(),
 					camera.getOrientation());
@@ -6874,11 +7043,10 @@ public class RobotRun extends PApplet {
 			// Display the current ee mapping state
 			text(String.format("EE Mapping: %s", getEEMapping().name()), lastTextPositionX, height - 30);
 		}
-
+		
+		UI.updateAndDrawUI();
+		
 		popStyle();
-		
-		UI.updateWindowDisplay();
-		
 		popMatrix();
 	}
 
@@ -6979,7 +7147,7 @@ public class RobotRun extends PApplet {
 		int ret = UI.updateScenarios(SCENARIOS);
 
 		if (ret > 0) {
-			activeScenario = UI.getActiveScenario();
+			activeScenario = UI.getSelectedScenario();
 			DataManagement.saveScenarios(this);
 
 		} else if (ret == 0) {
@@ -7091,6 +7259,9 @@ public class RobotRun extends PApplet {
 	@Override
 	public void setup() {
 		super.setup();
+		
+		mouseRay = null;
+		collisions = new ArrayList<>();
 		
 		PImage[][] buttonImages = new PImage[][] {
 			
@@ -7331,7 +7502,7 @@ public class RobotRun extends PApplet {
 	 * Toggles bounding box display on or off.
 	 */
 	public void ToggleOBBs() {
-		UI.updateWindowContentsPositions();
+		UI.updateUIContentPositions();
 	}
 	
 	/**
@@ -7346,7 +7517,7 @@ public class RobotRun extends PApplet {
 			activeRobot = ROBOTS.get(0);
 		}
 
-		UI.updateWindowContentsPositions();
+		UI.updateUIContentPositions();
 		updatePendantScreen();
 	}
 	

@@ -1,17 +1,18 @@
 package geom;
+import global.Fields;
 import robot.RobotRun;
 
 /**
  * A simple class that defines the stroke and fill color for a shape
- * along with some methods necessarry for a shape.
+ * along with some methods necessary for a shape.
  */
 public abstract class Shape implements Cloneable {
 	private Integer fillCVal;
 	private Integer strokeCVal;
 
 	public Shape() {
-		fillCVal = RobotRun.getInstance().color(0);
-		strokeCVal = RobotRun.getInstance().color(225);
+		fillCVal = Fields.BLACK;
+		strokeCVal = Fields.WHITE;
 	}
 
 	public Shape(Integer fill, Integer strokeVal) {
