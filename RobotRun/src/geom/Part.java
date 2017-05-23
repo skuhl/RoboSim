@@ -239,7 +239,7 @@ public class Part extends WorldObject {
 	}
 	
 	@Override
-	public Object collision(Ray ray) {
+	public PVector collision(Ray ray) {
 		return absOBB.collision(ray);
 	}
 

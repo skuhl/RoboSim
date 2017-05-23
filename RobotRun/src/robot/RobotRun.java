@@ -338,12 +338,13 @@ public class RobotRun extends PApplet {
 	private Point displayPoint;
 	
 	/**
-	 * Testing for mouse interactions with world objects.
+	 * Defines the mouse's position mapped from the screen into the active
+	 * scenario.
 	 */
 	private Ray mouseRay;
 	
 	/**
-	 * Testing for mouse interactions with world objects.
+	 * Stores points of collision between the mouse ray and world objects.
 	 */
 	private ArrayList<PVector> collisions;
 	
@@ -5756,13 +5757,15 @@ public class RobotRun extends PApplet {
 				rotateY(-camOrien.y);
 				rotateX(-camOrien.x);
 				translate(-camPos.x, -camPos.y, -camPos.z);
-				// Get the mouse's position in the scene
+				
 				translate(mScreenPos.x, mScreenPos.y, mScreenPos.z);
 				
 				/* Form a ray pointing out of the screen's z-axis, in the
 				 * native coordinate system */
 				mWorldPos = getCoordFromMatrix(0f, 0f, 0f);
 				ptOnMRay = getCoordFromMatrix(0f, 0f, -1f);
+				
+				popMatrix();
 				
 				if (mouseRay == null) {
 					mouseRay = new Ray(mWorldPos, ptOnMRay, 10000f, Fields.BLACK);
@@ -5775,17 +5778,17 @@ public class RobotRun extends PApplet {
 					mouseRay.setDirection(mDirect);
 				}
 				
-				/**/
+				/**
 				System.out.printf("Mouse:\n%s\n%s\n%s\n\n", mScreenPos, mWorldPos, ptOnMRay);
 				
 				/**/
+				
 				collisions.clear();
 				
 				for (WorldObject wo : s) {
 					System.out.printf("%-16s\n", wo.getName());
 					
 					try {
-						// TODO checkout ray OBB collisions	
 						Object collisionPt = wo.collision(mouseRay);
 						
 						if (collisionPt instanceof PVector) {
@@ -5799,10 +5802,6 @@ public class RobotRun extends PApplet {
 					
 					System.out.println();
 				}
-				
-				/**/
-				
-				popMatrix();
 			}
 		}
 	}
@@ -6688,22 +6687,26 @@ public class RobotRun extends PApplet {
 
 		model.updatePreviousEEOrientation();
 		
-		if (mouseRay != null) {
-			drawRay(mouseRay);
+		if (Fields.DEBUG) {
+			if (mouseRay != null) {
+				// Draw the ray representing a mouse click in the scene
+				drawRay(mouseRay);
+			}
+			
+			pushStyle();
+			fill(Fields.RED);
+			stroke(Fields.RED);
+			/* Draw all points of collision between world objects and the mouse
+			 * ray */
+			for (PVector pt : collisions) {
+				pushMatrix();
+				translate(pt.x, pt.y, pt.z);
+				sphere(10);
+				popMatrix();
+			}
+			
+			popStyle();
 		}
-		
-		pushStyle();
-		fill(Fields.RED);
-		stroke(Fields.RED);
-		
-		for (PVector pt : collisions) {
-			pushMatrix();
-			translate(pt.x, pt.y, pt.z);
-			sphere(10);
-			popMatrix();
-		}
-		
-		popStyle();
 	}
 	
 	/**

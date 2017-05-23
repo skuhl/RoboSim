@@ -130,6 +130,19 @@ public class BoundingBox {
 				localOrientation.clone() );
 	}
 	
+	/**
+	 * Calculates the point of collision between this bounding box and the
+	 * given ray that is closest to the ray. If no collision exists, then null
+	 * is returned.
+	 * 
+	 * Inspired by:
+	 * https://stackoverflow.com/questions/5666222/3d-line-plane-intersection
+	 * http://math.mit.edu/classes/18.02/notes/lecture5compl-09.pdf
+	 * 
+	 * @param ray	A ray with a defined origin and direction
+	 * @return		The point of collision between this bounding box and the
+	 * 				given ray, closest to the ray
+	 */
 	public PVector collision(Ray ray) {
 		Float rayWeight = null;
 		PVector origin = localOrientation.getOrigin();
@@ -152,7 +165,8 @@ public class BoundingBox {
 				new PVector(0f, 0f, dims[2]),
 				new PVector(-dims[0], 0f, 0f),
 				new PVector(0f, -dims[1], 0f),
-				new PVector(0f, 0f, -dims[2]),
+				new PVector(0f, 0f, -dims[2])
+				
 		};
 		
 		// Calculate the vectors normal to each of the bounding boxe's sides
@@ -229,15 +243,7 @@ public class BoundingBox {
 			return null;
 			
 		} else {
-			/**/
 			return PVector.add(ray.getOrigin(),  PVector.mult(ray.getDirection(), rayWeight));
-			
-			/**
-			PVector collision = PVector.add(ray.getOrigin(),  PVector.mult(ray.getDirection(), rayWeight));
-			RMatrix invAxes = localOrientation.getAxes().getInverse();
-			
-			return RMath.rotateVector(collision, invAxes.getFloatData()).add(origin);
-			/**/
 		}
 	}
 

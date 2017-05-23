@@ -37,12 +37,23 @@ public abstract class WorldObject implements Cloneable {
 	}
 	
 	/**
-	 * Checks if the given ray collides with this world object.
+	 * Calculates the point of collision between this world object and the
+	 * given ray that is closest to the ray. If no collision exists, then null
+	 * is returned.
 	 * 
-	 * @param ray	A ray with a start position and direction vector
-	 * @return		TODO
+	 * Inspired by:
+	 * https://stackoverflow.com/questions/5666222/3d-line-plane-intersection
+	 * http://math.mit.edu/classes/18.02/notes/lecture5compl-09.pdf
+	 * 
+	 * @param ray	A ray with a defined origin and direction
+	 * @return		The point of collision between this bounding box and the
+	 * 				given ray, closest to the ray
 	 */
-	public abstract Object collision(Ray ray);
+	public PVector collision(Ray ray) {
+		// TODO
+		
+		return null;
+	}
 	
 	@Override
 	public abstract WorldObject clone();
