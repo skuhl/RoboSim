@@ -3171,12 +3171,8 @@ public class WGUI implements ControlListener {
 				setGroupVisible(sharedElements, true);
 
 				clearAllInputFields();
-<<<<<<< HEAD
-				updateUIContentPositions();
-=======
 				updateCameraWindowFields();
-				updateWindowContentsPositions();
->>>>>>> 522f9369f5a46d97f238b455d229c5978958817f
+				updateUIContentPositions();
 			}
 			
 		} else if (menu == WindowTab.MISC) {

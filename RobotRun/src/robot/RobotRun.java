@@ -5270,35 +5270,6 @@ public class RobotRun extends PApplet {
 		
 		return progList;
 	}
-<<<<<<< HEAD
-	
-	/**
-	 * Loads all the models for a robot.
-	 * 
-	 * @return A list of the models for the robot
-	 */
-	private PShape[] loadRobotModels() {
-		PShape[] models = new PShape[13];
-		
-		// End Effectors
-		models[0] = loadSTLModel("robot/EE/SUCTION.stl", Fields.color(108, 206, 214));
-		models[1] = loadSTLModel("robot/EE/GRIPPER.stl", Fields.color(108, 206, 214));
-		models[2] = loadSTLModel("robot/EE/PINCER.stl", Fields.color(200, 200, 0));
-		models[2].scale(1f);
-		models[3] = loadSTLModel("robot/EE/POINTER.stl", Fields.color(108, 206, 214));
-		models[4] = loadSTLModel("robot/EE/GLUE_GUN.stl", Fields.color(108, 206, 214));
-		models[5] = loadSTLModel("robot/EE/WIELDER.stl", Fields.color(108, 206, 214));
-
-		// Body/joint models
-		models[6] = loadSTLModel("robot/ROBOT_MODEL_1_BASE.STL", Fields.color(200, 200, 0));
-		models[7] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS1.STL", Fields.color(40, 40, 40));
-		models[8] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS2.STL", Fields.color(200, 200, 0));
-		models[9] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS3.STL", Fields.color(40, 40, 40));
-		models[10] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS4.STL", Fields.color(40, 40, 40));
-		models[11] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS5.STL", Fields.color(200, 200, 0));
-		models[12] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS6.STL", Fields.color(40, 40, 40));
-=======
->>>>>>> 522f9369f5a46d97f238b455d229c5978958817f
 
 	/**
 	 * Sets the given screen mode as the active mode. In the process thereof,
