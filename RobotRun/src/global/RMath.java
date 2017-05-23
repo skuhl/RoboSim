@@ -177,20 +177,18 @@ public abstract class RMath {
 		float xRot = wpr.x;
 		float yRot = wpr.y;
 		float zRot = wpr.z;
-
-		r[0][0] = (float) Math.cos(yRot) * (float) Math.cos(zRot);
-		r[1][0] = (float) Math.sin(xRot) * (float) Math.sin(yRot) * (float) Math.cos(zRot)
-				- (float) Math.cos(xRot) * (float) Math.sin(zRot);
-		r[2][0] = (float) Math.cos(xRot) * (float) Math.sin(yRot) * (float) Math.cos(zRot)
-				+ (float) Math.sin(xRot) * (float) Math.sin(zRot);
-		r[0][1] = (float) Math.cos(yRot) * (float) Math.sin(zRot);
-		r[1][1] = (float) Math.sin(xRot) * (float) Math.sin(yRot) * (float) Math.sin(zRot)
-				+ (float) Math.cos(xRot) * (float) Math.cos(zRot);
-		r[2][1] = (float) Math.cos(xRot) * (float) Math.sin(yRot) * (float) Math.sin(zRot)
-				- (float) Math.sin(xRot) * (float) Math.cos(zRot);
-		r[0][2] = -(float) Math.sin(yRot);
-		r[1][2] = (float) Math.sin(xRot) * (float) Math.cos(yRot);
-		r[2][2] = (float) Math.cos(xRot) * (float) Math.cos(yRot);
+		
+		float c1 = (float)Math.cos(xRot);
+		float c2 = (float)Math.cos(yRot);
+		float c3 = (float)Math.cos(zRot);
+		
+		float s1 = (float)Math.sin(xRot);
+		float s2 = (float)Math.sin(yRot);
+		float s3 = (float)Math.sin(zRot);
+				
+		r[0][0] = c2 * c3;	r[0][1] = c1 * s3 + c3 * s1 * s2;	r[0][2] = s1 * s3 - c1 * c3 * s2;	
+		r[1][0] = -c2 * s3;	r[1][1] = c1 * c3 - s1 * s2 * s3;	r[1][2] = c3 * s1 + c1 * s2 * s3;
+		r[2][0] = s2;		r[2][1] = -c2 * s1;					r[2][2] = c1 * c2;
 
 		return new RMatrix(r).normalize();
 	}
@@ -199,7 +197,9 @@ public abstract class RMath {
 	 * Converts the given Euler angle set values to a quaternion
 	 */
 	public static RQuaternion eulerToQuat(PVector wpr) {
-		float w, x, y, z;
+		RMatrix m = eulerToMatrix(wpr);
+		
+		/*float w, x, y, z;
 		float xRot = wpr.x;
 		float yRot = wpr.y;
 		float zRot = wpr.z;
@@ -211,9 +211,9 @@ public abstract class RMath {
 		y = (float) Math.cos(xRot / 2) * (float) Math.sin(yRot / 2) * (float) Math.cos(zRot / 2)
 				+ (float) Math.sin(xRot / 2) * (float) Math.cos(yRot / 2) * (float) Math.sin(zRot / 2);
 		z = (float) Math.cos(xRot / 2) * (float) Math.cos(yRot / 2) * (float) Math.sin(zRot / 2)
-				- (float) Math.sin(xRot / 2) * (float) Math.sin(yRot / 2) * (float) Math.cos(zRot / 2);
+				- (float) Math.sin(xRot / 2) * (float) Math.sin(yRot / 2) * (float) Math.cos(zRot / 2);*/
 
-		return new RQuaternion(w, x, y, z);
+		return matrixToQuat(m);
 	}
 
 	// converts a float array to a double array

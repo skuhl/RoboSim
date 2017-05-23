@@ -1482,8 +1482,9 @@ public class RobotRun extends PApplet {
 					count += 1;
 				}
 			}
-			/**
-			printMatrix();
+			/**/
+			
+			
 			/*Camera Test Code*/
 			renderOriginAxes(rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
 			
