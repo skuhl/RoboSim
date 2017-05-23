@@ -1,5 +1,8 @@
 package geom;
+import java.util.Arrays;
+
 import global.MyFloatFormat;
+import global.RMath;
 import processing.core.PVector;
 import robot.RobotRun;
 
@@ -50,8 +53,69 @@ public abstract class WorldObject implements Cloneable {
 	 * 				given ray, closest to the ray
 	 */
 	public PVector collision(Ray ray) {
-		// TODO
+		PVector origin = localOrientation.getOrigin();
+		float[][] axes = localOrientation.getAxes().getFloatData();
+		// Transform ray into the coordinate frame of the bounding box
+		PVector rayOrigin = RMath.rotateVector(PVector.sub(ray.getOrigin(), origin), axes);
+		PVector rayDirect = RMath.rotateVector(ray.getDirection(), axes);
 		
+		float[] dims = form.getDimArray();
+		dims[0] /= 2f;
+		dims[1] /= 2f;
+		dims[2] /= 2f;
+		
+		int[] planeAxes = new int[] {
+			(rayOrigin.x < 0) ? -1 : 1,
+			(rayOrigin.y < 0) ? -1 : 1,
+			(rayOrigin.z < 0) ? -1 : 1
+		};
+		
+		for (int planeAxis = 0; planeAxis < planeAxes.length; ++planeAxis) {
+			
+			float E, G;
+			
+			if (planeAxis == 0) {
+				E = planeAxes[0] * (rayOrigin.x - (planeAxes[0] * dims[0]));
+				G = planeAxes[0] * rayDirect.x;
+				
+			} else if (planeAxis == 1) {
+				E = planeAxes[1] * (rayOrigin.y - (planeAxes[1] * dims[1]));
+				G = planeAxes[1] * rayDirect.y;
+				
+			} else {
+				E = planeAxes[2] * (rayOrigin.z - (planeAxes[2] * dims[2]));
+				G = planeAxes[2] * rayDirect.z;
+				
+			}
+			
+			if (G == 0f) {
+				String msg = String.format("G = 0 for A=%f R=%s",
+						planeAxes[planeAxis] * dims[planeAxis], ray);
+				throw new ArithmeticException(msg);
+				
+			} else {
+				float t = -E / G;
+				
+				if (t >= 0) {
+					PVector ptOnRay = PVector.add(rayOrigin, PVector.mult(rayDirect, t));
+					float[] ptOnRayArray = new float[] { ptOnRay.x, ptOnRay.y, ptOnRay.z };
+					int dimToCheck0 = (planeAxis + 1) % 3;
+					int dimToCheck1 = (dimToCheck0 + 1) % 3;
+					
+					if (ptOnRayArray[dimToCheck0] >= -dims[dimToCheck0] &&
+						ptOnRayArray[dimToCheck0] <= dims[dimToCheck0] &&
+						ptOnRayArray[dimToCheck1] >= -dims[dimToCheck1] &&
+						ptOnRayArray[dimToCheck1] <= dims[dimToCheck1]) {
+						
+						// Collision exists
+						return PVector.add(ray.getOrigin(),  PVector.mult(ray.getDirection(), t));
+						
+					}
+				}
+			}
+		}
+		
+		// No collision
 		return null;
 	}
 	
