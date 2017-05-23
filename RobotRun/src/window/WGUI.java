@@ -1039,8 +1039,11 @@ public class WGUI implements ControlListener {
 		if (arg0.isFrom(windowTabs)) {
 			// Update the window based on the button tab selected
 			String actLbl = windowTabs.getActButLbl();
-
-			if (actLbl.equals("Robot1")) {
+			
+			if (actLbl == null) {
+				updateView( null );
+				
+			} else if (actLbl.equals("Robot1")) {
 				updateView( WindowTab.ROBOT1 );
 
 			} else if (actLbl.equals("Robot2")) {
@@ -1060,7 +1063,7 @@ public class WGUI implements ControlListener {
 				
 			} else if (actLbl.equals("Misc")) {
 				updateView( WindowTab.MISC );
-
+				
 			} else {
 				updateView( null );
 			}
@@ -1724,6 +1727,13 @@ public class WGUI implements ControlListener {
 	public EEMapping getEEMapping() {
 		return (EEMapping)getDropdown("EEDisplay").getSelectedItem();
 	}
+	
+	/**
+	 * @return	The active window
+	 */
+	public WindowTab getMenu() {
+		return menu;
+	}
 
 	/**
 	 * Returns a post-processed list of the user's input for the dimensions of
@@ -1862,7 +1872,7 @@ public class WGUI implements ControlListener {
 	public WorldObject getSelectedWO() {
 		Object wldObj = getDropdown("Object").getSelectedItem();
 
-		if (editWO.isVisible() && wldObj instanceof WorldObject) {
+		if (wldObj instanceof WorldObject) {
 			return (WorldObject)wldObj;
 
 		} else {
@@ -2168,6 +2178,17 @@ public class WGUI implements ControlListener {
 	private void setGroupVisible(Group g, boolean setVisible) {
 		if (g.isVisible() != setVisible) {
 			g.setVisible(setVisible);
+		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param wo
+	 */
+	public void setSelectedWO(WorldObject wo) {
+		if (menu == WindowTab.EDIT) {
+			getDropdown("Object").setItem(wo);
 		}
 	}
 
