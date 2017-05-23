@@ -2546,6 +2546,7 @@ public class WGUI implements ControlListener {
 			RobotCamera c = app.getRobotCamera();
 			PVector pos = RMath.vToWorld(c.getPosition());
 			PVector ori = RMath.nQuatToWEuler(c.getOrientation());
+			
 			getTextField("CXCur").setText(String.format("%4.3f", pos.x));
 			getTextField("CYCur").setText(String.format("%4.3f", pos.y));
 			getTextField("CZCur").setText(String.format("%4.3f", pos.z));

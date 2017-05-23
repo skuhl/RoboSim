@@ -367,28 +367,32 @@ public abstract class RMath {
 	// calculates euler angles from rotation matrix
 	public static PVector matrixToEuler(RMatrix m) {
 		float[][] r = m.getFloatData();
-		float yRot1, xRot1, zRot1;
+		float x, y, z;
 		PVector wpr;
 
-		if (r[0][2] != 1 && r[0][2] != -1) {
+		/*if (r[2][0] != 1 && r[2][0] != -1) {
 			// rotation about y-axis
-			yRot1 = -(float) Math.asin(r[0][2]);
+			yRot1 = (float) Math.asin(r[2][0]);
 			// rotation about x-axis
-			xRot1 = (float) Math.atan2(r[1][2] / (float) Math.cos(yRot1), r[2][2] / (float) Math.cos(yRot1));
+			xRot1 = (float) Math.atan2(r[2][1] / Math.cos(yRot1), r[2][2] / Math.cos(yRot1));
 			// rotation about z-axis
-			zRot1 = (float) Math.atan2(r[0][1] / (float) Math.cos(yRot1), r[0][0] / (float) Math.cos(yRot1));
+			zRot1 = (float) Math.atan2(r[1][0] / Math.cos(yRot1), r[0][0] / Math.cos(yRot1));
 		} else {
 			zRot1 = 0;
-			if (r[0][2] == -1) {
-				yRot1 = PI / 2;
-				xRot1 = zRot1 + (float) Math.atan2(r[1][0], r[2][0]);
-			} else {
+			if (r[2][0] == -1) {
 				yRot1 = -PI / 2;
-				xRot1 = -zRot1 + (float) Math.atan2(-r[1][0], -r[2][0]);
+				xRot1 = -zRot1 + (float) Math.atan2(r[1][0], r[2][0]);
+			} else {
+				yRot1 = PI / 2;
+				xRot1 = zRot1 + (float) Math.atan2(-r[1][0], -r[2][0]);
 			}
-		}
+		}*/
+		
+		x = (float) Math.atan2(-r[2][1], r[2][2]);
+		y = (float) Math.atan2(r[2][0], Math.sqrt(r[2][1]*r[2][1] + r[2][2]*r[2][2]));
+		z = (float) Math.atan2(-r[1][0], r[0][0]);
 
-		wpr = new PVector(xRot1, yRot1, zRot1);
+		wpr = new PVector(x, y, z);
 		return wpr;
 	}
 	
@@ -611,8 +615,7 @@ public abstract class RMath {
 	// calculates euler angles from quaternion
 	public static PVector quatToEuler(RQuaternion q) {
 		RMatrix r = q.toMatrix();
-		PVector wpr = matrixToEuler(r);
-		return wpr;
+		return matrixToEuler(r);
 	}
 	
 	// calculates rotation matrix from quaternion
