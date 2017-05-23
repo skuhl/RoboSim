@@ -1,5 +1,8 @@
 package geom;
+import java.util.Arrays;
+
 import global.MyFloatFormat;
+import global.RMath;
 import processing.core.PVector;
 import robot.RobotRun;
 
@@ -36,11 +39,90 @@ public abstract class WorldObject implements Cloneable {
 		localOrientation.apply();
 	}
 	
+	/**
+	 * Calculates the point of collision between this world object and the
+	 * given ray that is closest to the ray. If no collision exists, then null
+	 * is returned.
+	 * 
+	 * Inspired by:
+	 * https://stackoverflow.com/questions/5666222/3d-line-plane-intersection
+	 * http://math.mit.edu/classes/18.02/notes/lecture5compl-09.pdf
+	 * 
+	 * @param ray	A ray with a defined origin and direction
+	 * @return		The point of collision between this bounding box and the
+	 * 				given ray, closest to the ray
+	 */
+	public PVector collision(Ray ray) {
+		PVector origin = localOrientation.getOrigin();
+		float[][] axes = localOrientation.getAxes().getFloatData();
+		// Transform ray into the coordinate frame of the bounding box
+		PVector rayOrigin = RMath.rotateVector(PVector.sub(ray.getOrigin(), origin), axes);
+		PVector rayDirect = RMath.rotateVector(ray.getDirection(), axes);
+		
+		float[] dims = form.getDimArray();
+		dims[0] /= 2f;
+		dims[1] /= 2f;
+		dims[2] /= 2f;
+		
+		int[] planeAxes = new int[] {
+			(rayOrigin.x < 0) ? -1 : 1,
+			(rayOrigin.y < 0) ? -1 : 1,
+			(rayOrigin.z < 0) ? -1 : 1
+		};
+		
+		for (int planeAxis = 0; planeAxis < planeAxes.length; ++planeAxis) {
+			
+			float E, G;
+			
+			if (planeAxis == 0) {
+				E = planeAxes[0] * (rayOrigin.x - (planeAxes[0] * dims[0]));
+				G = planeAxes[0] * rayDirect.x;
+				
+			} else if (planeAxis == 1) {
+				E = planeAxes[1] * (rayOrigin.y - (planeAxes[1] * dims[1]));
+				G = planeAxes[1] * rayDirect.y;
+				
+			} else {
+				E = planeAxes[2] * (rayOrigin.z - (planeAxes[2] * dims[2]));
+				G = planeAxes[2] * rayDirect.z;
+				
+			}
+			
+			if (G == 0f) {
+				System.err.printf("G = 0 for A=%f R=%s\n", planeAxes[planeAxis] *
+						dims[planeAxis], ray);
+				
+			} else {
+				float t = -E / G;
+				
+				if (t >= 0) {
+					PVector ptOnRay = PVector.add(rayOrigin, PVector.mult(rayDirect, t));
+					float[] ptOnRayArray = new float[] { ptOnRay.x, ptOnRay.y, ptOnRay.z };
+					int dimToCheck0 = (planeAxis + 1) % 3;
+					int dimToCheck1 = (dimToCheck0 + 1) % 3;
+					
+					if (ptOnRayArray[dimToCheck0] >= -dims[dimToCheck0] &&
+						ptOnRayArray[dimToCheck0] <= dims[dimToCheck0] &&
+						ptOnRayArray[dimToCheck1] >= -dims[dimToCheck1] &&
+						ptOnRayArray[dimToCheck1] <= dims[dimToCheck1]) {
+						
+						// Collision exists
+						return PVector.add(ray.getOrigin(),  PVector.mult(ray.getDirection(), t));
+						
+					}
+				}
+			}
+		}
+		
+		// No collision
+		return null;
+	}
+	
 	@Override
 	public abstract WorldObject clone();
 
 	/**
-	 * Returns a list of values with short prefix labels, which descibe
+	 * Returns a list of values with short prefix labels, which describe
 	 * the dimensions of the this world object's shape (except for Model
 	 * shapes, because their dimensions are unknown).
 	 * 
@@ -52,15 +134,15 @@ public abstract class WorldObject implements Cloneable {
 		if (form instanceof Box) {
 			fields = new String[3];
 			// Add the box's length, height, and width values
-			fields[0] = "L: %4.3f" + MyFloatFormat.format(form.getDim(DimType.LENGTH));
-			fields[1] = "H: %4.3f" + MyFloatFormat.format(form.getDim(DimType.HEIGHT));
-			fields[2] = "W: %4.3f" + MyFloatFormat.format(form.getDim(DimType.WIDTH));
+			fields[0] = "L: " + MyFloatFormat.format(form.getDim(DimType.LENGTH));
+			fields[1] = "H: " + MyFloatFormat.format(form.getDim(DimType.HEIGHT));
+			fields[2] = "W: " + MyFloatFormat.format(form.getDim(DimType.WIDTH));
 
 		} else if (form instanceof Cylinder) {
 			fields = new String[2];
 			// Add the cylinder's radius and height values
-			fields[0] = "R: %4.3f" + MyFloatFormat.format(form.getDim(DimType.RADIUS));
-			fields[1] = "H: %4.3f" + MyFloatFormat.format(form.getDim(DimType.HEIGHT));
+			fields[0] = "R: " + MyFloatFormat.format(form.getDim(DimType.RADIUS));
+			fields[1] = "H: " + MyFloatFormat.format(form.getDim(DimType.HEIGHT));
 
 		} else if (form instanceof ModelShape) {
 
@@ -69,14 +151,14 @@ public abstract class WorldObject implements Cloneable {
 				fields = new String[4];
 				PVector dims = ((Part)this).getOBBDims();
 
-				fields[0] = "S: %4.3f" + MyFloatFormat.format(form.getDim(DimType.SCALE));
-				fields[1] = "L: %4.3f" + MyFloatFormat.format(dims.x);
-				fields[2] = "H: %4.3f" + MyFloatFormat.format(dims.y);
-				fields[3] = "W: %4.3f" + MyFloatFormat.format(dims.z);
+				fields[0] = "S: " + MyFloatFormat.format(form.getDim(DimType.SCALE));
+				fields[1] = "L: " + MyFloatFormat.format(dims.x);
+				fields[2] = "H: " + MyFloatFormat.format(dims.y);
+				fields[3] = "W: " + MyFloatFormat.format(dims.z);
 
 			} else if (this instanceof Fixture) {
 				fields = new String[1];
-				fields[0] = "S: %4.3f" + MyFloatFormat.format(form.getDim(DimType.SCALE));
+				fields[0] = "S: " + MyFloatFormat.format(form.getDim(DimType.SCALE));
 
 			} else {
 				// No dimensios to display

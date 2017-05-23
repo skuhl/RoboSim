@@ -16,6 +16,7 @@ import geom.Part;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
+import geom.Ray;
 import geom.WorldObject;
 import global.Fields;
 import global.RMath;
@@ -341,7 +342,7 @@ public class RoboticArm {
 		// In between the grippers
 		limbo = new ArrayList<BoundingBox>();
 		limbo.add(new BoundingBox(15, 3, 55) );
-		limbo.get(0).setColor(RobotRun.getInstance().color(0, 0, 255));
+		limbo.get(0).setColor(Fields.OBB_DEFAULT);
 		EE_TO_PICK_OBBS.put(EEType.CLAW, limbo);
 
 		// Suction
@@ -353,9 +354,9 @@ public class RoboticArm {
 		// One for each suction cup
 		limbo = new ArrayList<BoundingBox>();
 		limbo.add(new BoundingBox(3, 25, 25) );
-		limbo.get(0).setColor(RobotRun.getInstance().color(0, 0, 255));
+		limbo.get(0).setColor(Fields.OBB_DEFAULT);
 		limbo.add(new BoundingBox(25, 3, 25) );
-		limbo.get(1).setColor(RobotRun.getInstance().color(0, 0, 255));
+		limbo.get(1).setColor(Fields.OBB_DEFAULT);
 		EE_TO_PICK_OBBS.put(EEType.SUCTION, limbo);
 
 		// Pointer
@@ -547,7 +548,7 @@ public class RoboticArm {
 
 		for(BoundingBox b : ARM_OBBS) {
 			if( obj.collision(b) ) {
-				b.setColor(RobotRun.getInstance().color(255, 0, 0));
+				b.setColor(Fields.OBB_COLLISION);
 				collision = true;
 			}
 		}
@@ -556,7 +557,7 @@ public class RoboticArm {
 
 		for(BoundingBox b : eeHBs) {
 			if(obj.collision(b)) {
-				b.setColor(RobotRun.getInstance().color(255, 0, 0));
+				b.setColor(Fields.OBB_COLLISION);
 				collision = true;
 			}
 		}
@@ -634,8 +635,8 @@ public class RoboticArm {
 		 */
 		for(int idx = 0; idx < check_pairs.length - 1; idx += 2) {
 			if( Part.collision3D(ARM_OBBS[ check_pairs[idx] ], ARM_OBBS[ check_pairs[idx + 1] ]) ) {
-				ARM_OBBS[ check_pairs[idx] ].setColor(RobotRun.getInstance().color(255, 0, 0));
-				ARM_OBBS[ check_pairs[idx + 1] ].setColor(RobotRun.getInstance().color(255, 0, 0));
+				ARM_OBBS[ check_pairs[idx] ].setColor(Fields.OBB_COLLISION);
+				ARM_OBBS[ check_pairs[idx + 1] ].setColor(Fields.OBB_COLLISION);
 				collision = true;
 			}
 		}
@@ -646,8 +647,8 @@ public class RoboticArm {
 		for(BoundingBox hb : eeHB) {
 			for(int idx = 0; idx < 4; ++idx) {
 				if(Part.collision3D(hb, ARM_OBBS[idx]) ) {
-					hb.setColor(RobotRun.getInstance().color(255, 0, 0));
-					ARM_OBBS[idx].setColor(RobotRun.getInstance().color(255, 0, 0));
+					hb.setColor(Fields.OBB_COLLISION);
+					ARM_OBBS[idx].setColor(Fields.OBB_COLLISION);
 					collision = true;
 				}
 			}
@@ -661,6 +662,46 @@ public class RoboticArm {
 	 */
 	public void clearCallStack() {
 		CALL_STACK.clear();
+	}
+	
+	/**
+	 * Checks if the given ray collides with any of the robot's bounding boxes.
+	 * If the ray does collides with a bounding box, then the position of the
+	 * collision, which is closest the ray's origin is returned.
+	 * 
+	 * @param ray	A ray with a defined position and direction
+	 * @return		The closest collision point with a robot bounding box
+	 */
+	public PVector closestCollision(Ray ray) {
+		PVector closestCollPt = null;
+		
+		for(BoundingBox b : ARM_OBBS) {
+			PVector collPt = b.collision(ray);
+			
+			if (collPt != null && (closestCollPt == null ||
+					PVector.dist(ray.getOrigin(), collPt) <
+					PVector.dist(ray.getOrigin(), closestCollPt))) {
+				
+				// Find the closest collision to the ray origin
+				closestCollPt = collPt;
+			}
+		}
+
+		ArrayList<BoundingBox> eeHBs = EE_TO_OBBS.get(activeEndEffector);
+
+		for(BoundingBox b : eeHBs) {
+			PVector collPt = b.collision(ray);
+
+			if (collPt != null && (closestCollPt == null ||
+					PVector.dist(ray.getOrigin(), collPt) <
+					PVector.dist(ray.getOrigin(), closestCollPt))) {
+				
+				// Find the closest collision to the ray origin
+				closestCollPt = collPt;
+			}
+		}
+		
+		return closestCollPt;
 	}
 	
 	/**
@@ -1822,13 +1863,13 @@ public class RoboticArm {
 	 */
 	public void resetOBBColors() {
 		for(BoundingBox b : ARM_OBBS) {
-			b.setColor(RobotRun.getInstance().color(0, 255, 0));
+			b.setColor(Fields.OBB_DEFAULT);
 		}
 
 		ArrayList<BoundingBox> eeHB = EE_TO_OBBS.get(activeEndEffector);
 
 		for(BoundingBox b : eeHB) {
-			b.setColor(RobotRun.getInstance().color(0, 255, 0));
+			b.setColor(Fields.OBB_DEFAULT);
 		}
 	}
 	

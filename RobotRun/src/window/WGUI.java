@@ -108,7 +108,7 @@ public class WGUI implements ControlListener {
 	 * shared amongst the window tabs.
 	 */
 	public final Group pendant, createWO, editWO, sharedElements, scenario,
-	camera, miscellaneous;
+			camera, miscellaneous;
 
 	/**
 	 * The button bar controlling the window tab selection.
@@ -138,7 +138,7 @@ public class WGUI implements ControlListener {
 	 */
 	public WGUI(RobotRun appRef, PImage[][] buttonImages) {
 		app = appRef;
-
+		
 		manager = new ControlP5(appRef);
 		// Explicitly draw the ControlP5 elements
 		manager.setAutoDraw(false);
@@ -193,11 +193,11 @@ public class WGUI implements ControlListener {
 		addButton("TopView", "T", sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton("BottomView", "Bt", sButtonWidth, sButtonHeight, Fields.small).hide();
 
-		// Pendant screen background?
-		c1 = addTextarea("txt", "", pendant, winMargin, 0,
+		// Pendant screen background
+		c1 = addTextarea("pendantScreen", "", pendant, winMargin, 0,
 				Fields.PENDANT_SCREEN_WIDTH, Fields.PENDANT_SCREEN_HEIGHT,
 				Fields.B_TEXT_C, Fields.UI_LIGHT_C, Fields.small);
-
+		
 		// Pendant header
 		addTextarea("header", "\0", pendant, winMargin,	0,
 				Fields.PENDANT_SCREEN_WIDTH, 20, Fields.UI_LIGHT_C,
@@ -1038,8 +1038,11 @@ public class WGUI implements ControlListener {
 		if (arg0.isFrom(windowTabs)) {
 			// Update the window based on the button tab selected
 			String actLbl = windowTabs.getActButLbl();
-
-			if (actLbl.equals("Robot1")) {
+			
+			if (actLbl == null) {
+				updateView( null );
+				
+			} else if (actLbl.equals("Robot1")) {
 				updateView( WindowTab.ROBOT1 );
 
 			} else if (actLbl.equals("Robot2")) {
@@ -1059,7 +1062,7 @@ public class WGUI implements ControlListener {
 				
 			} else if (actLbl.equals("Misc")) {
 				updateView( WindowTab.MISC );
-
+				
 			} else {
 				updateView( null );
 			}
@@ -1069,7 +1072,7 @@ public class WGUI implements ControlListener {
 					arg0.isFrom("ScenarioOpt")) {
 				/* The selected item in these lists influence the layout of
 				 * the menu */
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 			}
 
 			if (arg0.isFrom("Object")) {
@@ -1281,28 +1284,6 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Delete the world object that is selected in
-	 * the Object dropdown list, if any.
-	 * 
-	 * @returning  -1  if the active Scenario is null
-	 *              0  if the object was removed succesfully,
-	 *              1  if the object did not exist in the scenario,
-	 *              2  if the object was a Fixture that was removed
-	 *                 from the scenario and was referenced by at
-	 *                 least one Part in the scenario
-	 */
-	public int deleteActiveWorldObject() {
-		int ret = -1;
-
-		if (app.getActiveScenario() != null) {
-			ret = app.getActiveScenario().removeWorldObject( getSelectedWO() );
-			clearAllInputFields();
-		}
-
-		return ret;
-	}
-
-	/**
 	 * Puts the current position and orientation values of the selected object,
 	 * in the position and orientation input fields of the edit window.
 	 */
@@ -1346,29 +1327,6 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Puts the current position and orientation values of the selected object,
-	 * in the edit window, into the default position and orientation text
-	 * fields.
-	 */
-	public void fillDefWithCur() {
-		WorldObject active = getSelectedWO();
-
-		if (active instanceof Part) {
-			// Get the part's default position and orientation
-			PVector pos = RMath.vToWorld( active.getLocalCenter() );
-			PVector wpr = RMath.nRMatToWEuler( active.getLocalOrientationAxes() );
-
-			// Fill the default position and orientation fields in the edit window
-			getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
-			getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
-			getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
-			getTextArea("WDef").setText( String.format("%4.3f", wpr.x) );
-			getTextArea("PDef").setText( String.format("%4.3f", wpr.y) );
-			getTextArea("RDef").setText( String.format("%4.3f", wpr.z) );
-		}
-	}
-
-	/**
 	 * Puts the default position and orientation values of the selected
 	 * object, in the edit window, into the default position and orientation
 	 * text fields.
@@ -1389,45 +1347,6 @@ public class WGUI implements ControlListener {
 			getTextArea("WDef").setText( String.format("%4.3f", wpr.x) );
 			getTextArea("PDef").setText( String.format("%4.3f", wpr.y) );
 			getTextArea("RDef").setText( String.format("%4.3f", wpr.z) );
-		}
-	}
-
-	/**
-	 * Returns the scenario associated with the label that is active
-	 * for the scenario drop-down list.
-	 * 
-	 * @returning  The index value or null if no such index exists
-	 */
-	public Scenario getActiveScenario() {
-
-		if (menu == WindowTab.SCENARIO) {
-			Object val = getDropdown("Scenario").getSelectedItem();
-
-			if (val instanceof Scenario) {
-				// Set the active scenario index
-				return (Scenario)val;
-
-			} else if (val != null) {
-				// Invalid entry in the dropdown list
-				System.err.printf("Invalid class type: %d!\n", val.getClass());
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * Returns the object that is currently being edited
-	 * in the world object editing menu.
-	 */
-	public WorldObject getSelectedWO() {
-		Object wldObj = getDropdown("Object").getSelectedItem();
-
-		if (editWO.isVisible() && wldObj instanceof WorldObject) {
-			return (WorldObject)wldObj;
-
-		} else {
-			return null;
 		}
 	}
 
@@ -1807,6 +1726,13 @@ public class WGUI implements ControlListener {
 	public EEMapping getEEMapping() {
 		return (EEMapping)getDropdown("EEDisplay").getSelectedItem();
 	}
+	
+	/**
+	 * @return	The active window
+	 */
+	public WindowTab getMenu() {
+		return menu;
+	}
 
 	/**
 	 * Returns a post-processed list of the user's input for the dimensions of
@@ -1913,6 +1839,45 @@ public class WGUI implements ControlListener {
 	public boolean getRobotButtonState() {
 		return getButton("ToggleRobot").isOn();
 	}
+	
+	/**
+	 * Returns the scenario associated with the label that is active
+	 * for the scenario drop-down list.
+	 * 
+	 * @returning  The index value or null if no such index exists
+	 */
+	public Scenario getSelectedScenario() {
+
+		if (menu == WindowTab.SCENARIO) {
+			Object val = getDropdown("Scenario").getSelectedItem();
+
+			if (val instanceof Scenario) {
+				// Set the active scenario index
+				return (Scenario)val;
+
+			} else if (val != null) {
+				// Invalid entry in the dropdown list
+				System.err.printf("Invalid class type: %d!\n", val.getClass());
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the object that is currently being edited
+	 * in the world object editing menu.
+	 */
+	public WorldObject getSelectedWO() {
+		Object wldObj = getDropdown("Object").getSelectedItem();
+
+		if (wldObj instanceof WorldObject) {
+			return (WorldObject)wldObj;
+
+		} else {
+			return null;
+		}
+	}
 
 	/**
 	 * Parses the name of a .stl model source file from one of two input
@@ -1991,44 +1956,6 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Creates a new scenario with the name pulled from the scenario name text field.
-	 * If the name given is already given to another existing scenario, then no new
-	 * Scenario is created. Also, names can only consist of 16 letters or numbers.
-	 * 
-	 * @returning  A new Scenario object or null if the scenario name text field's
-	 *             value is invalid
-	 */
-	public Scenario initializeScenario() {
-		if (menu == WindowTab.SCENARIO) {
-			String name = getTextField("ScenarioName").getText();
-
-			if (name != null) {
-				// Names only consist of letters and numbers
-				if (Pattern.matches("[a-zA-Z0-9]+", name)) {
-
-					for (Scenario s : app.getScenarios()) {
-						if (s.getName().equals(name)) {
-							// Duplicate name
-							PApplet.println("Names must be unique!");
-							return null;
-						}
-					}
-
-					if (name.length() > 16) {
-						// Names have a max length of 16 characters
-						name = name.substring(0, 16);
-					}
-
-					return new Scenario(name);
-				}
-			}
-		}
-
-		// Invalid input or wrong window open 
-		return null;
-	}
-
-	/**
 	 * Determines whether a single text field is active.
 	 */
 	public boolean isATextFieldActive() {
@@ -2041,6 +1968,15 @@ public class WGUI implements ControlListener {
 		}
 
 		return false;
+	}
+	
+	/**
+	 * Was the last mouse interaction with the UI?
+	 * 
+	 * @return	Is the UI the current focus
+	 */
+	public boolean isFocus() {
+		return menu != null && manager.isMouseOver();
 	}
 
 	/**
@@ -2180,7 +2116,7 @@ public class WGUI implements ControlListener {
 					/* highlight any currently selected lines a different color
 					 * then the active line */
 					txt = Fields.UI_LIGHT_C;
-					bg = app.color(125, 125, 153);
+					bg = Fields.color(125, 125, 153);
 				} else {
 					//display normal row
 					txt = Fields.UI_DARK_C;
@@ -2189,7 +2125,7 @@ public class WGUI implements ControlListener {
 
 				//grey text for comment also this
 				if(temp.size() > 0 && temp.get(0).contains("//")) {
-					txt = app.color(127);
+					txt = Fields.color(127);
 				}
 
 				getPendantDisplayTA(TAIdx++).setText(temp.get(j))
@@ -2235,33 +2171,23 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Reset the base label of every dropdown list.
-	 */
-	private void resetListLabels() {
-		List<ControllerInterface<?>> controllers = manager.getAll();
-
-		for (ControllerInterface<?> c : controllers) {
-			if (c instanceof MyDropdownList && !c.getParent().equals(miscellaneous)) {
-				((MyDropdownList)c).setValue(-1);
-
-			} else if (c.getName().length() > 4 && c.getName().substring(0, 4).equals("Dim") ||
-					c.getName().equals("RefLbl")) {
-
-				c.hide();
-
-			}
-		}
-
-		updateDimLblsAndFields();
-	}
-
-	/**
 	 * Only update the group visibility if it does not
 	 * match the given visibility flag.
 	 */
 	private void setGroupVisible(Group g, boolean setVisible) {
 		if (g.isVisible() != setVisible) {
 			g.setVisible(setVisible);
+		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param wo
+	 */
+	public void setSelectedWO(WorldObject wo) {
+		if (menu == WindowTab.EDIT) {
+			getDropdown("Object").setItem(wo);
 		}
 	}
 
@@ -3081,7 +3007,7 @@ public class WGUI implements ControlListener {
 	 */
 	public void updateShiftButton(boolean state) {
 		updateButtonBgColor("shift", state);
-		updateWindowDisplay();
+		updateAndDrawUI();
 	}
 
 	/**
@@ -3092,7 +3018,7 @@ public class WGUI implements ControlListener {
 	 */
 	public void updateStepButton(boolean state) {
 		updateButtonBgColor("step", state);
-		updateWindowDisplay();
+		updateAndDrawUI();
 	}
 
 	/**
@@ -3167,67 +3093,12 @@ public class WGUI implements ControlListener {
 		}
 	}
 
-	/**
-	 * Updates the positions of all the elements in the active window
-	 * based on the current button tab that is active.
-	 */
-	public void updateWindowContentsPositions() {
-		if (menu == null) {
-			// Window is hidden
-			background.hide();
-			getButton("FrontView").hide();
-			getButton("BackView").hide();
-			getButton("LeftView").hide();
-			getButton("RightView").hide();
-			getButton("TopView").hide();
-			getButton("BottomView").hide();
-
-			return;
-
-		} else if (menu == WindowTab.CREATE) {
-			// Create window
-			updateCreateWindowContentPositions();
-
-		} else if (menu == WindowTab.EDIT) {
-			// Edit window
-			updateEditWindowContentPositions();
-
-		} else if (menu == WindowTab.SCENARIO) {
-			// Scenario window
-			updateScenarioWindowContentPositions();
-		
-		} else if (menu == WindowTab.CAMERA) {
-			// Camera window
-			updateCameraWindowContentPositions();
-			
-		} else if (menu == WindowTab.MISC) {
-			// Miscellaneous window
-			updateMiscWindowContentPositions();
-		}
-
-		// Update the camera view buttons
-		int[] relPos = getAbsPosFrom(windowTabs, Alignment.BOTTOM_RIGHT, winMargin, 0);
-
-		Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("BackView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("LeftView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("RightView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("TopView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("BottomView").setPosition(relPos[0], relPos[1]).show();
-
-		updateListContents();
-	}
-
+	
 	/**
 	 * Updates the current active window display based on the selected button on
 	 * windowTabs.
 	 */
-	public void updateWindowDisplay() {
+	public void updateAndDrawUI() {
 
 		if (menu == null) {
 			// Hide all windows
@@ -3239,7 +3110,7 @@ public class WGUI implements ControlListener {
 			setGroupVisible(camera, false);
 			setGroupVisible(miscellaneous, false);
 
-			updateWindowContentsPositions();
+			updateUIContentPositions();
 
 		} else if (menu == WindowTab.ROBOT1 || menu == WindowTab.ROBOT2) {
 			// Show pendant
@@ -3253,7 +3124,7 @@ public class WGUI implements ControlListener {
 			if (!pendant.isVisible()) {
 				setGroupVisible(pendant, true);
 
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 			}
 
 		} else if (menu == WindowTab.CREATE) {
@@ -3269,9 +3140,8 @@ public class WGUI implements ControlListener {
 				setGroupVisible(sharedElements, true);
 
 				clearAllInputFields();
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 				updateListContents();
-				resetListLabels();
 			}
 
 		} else if (menu == WindowTab.EDIT) {
@@ -3287,9 +3157,8 @@ public class WGUI implements ControlListener {
 				setGroupVisible(sharedElements, true);
 
 				clearAllInputFields();
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 				updateListContents();
-				resetListLabels();
 			}
 
 		} else if (menu == WindowTab.SCENARIO) {
@@ -3305,9 +3174,8 @@ public class WGUI implements ControlListener {
 				setGroupVisible(scenario, true);
 
 				clearAllInputFields();
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 				updateListContents();
-				resetListLabels();
 			}
 			
 		} else if (menu == WindowTab.CAMERA) {
@@ -3324,7 +3192,7 @@ public class WGUI implements ControlListener {
 
 				clearAllInputFields();
 				updateCameraWindowFields();
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 			}
 			
 		} else if (menu == WindowTab.MISC) {
@@ -3339,13 +3207,70 @@ public class WGUI implements ControlListener {
 			if (!miscellaneous.isVisible()) {
 				setGroupVisible(miscellaneous, true);
 
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 				updateListContents();
-				resetListLabels();
 			}
 		}
 
 		manager.draw();
+	}
+	
+
+	/**
+	 * Updates the positions of all the elements in the active window
+	 * based on the current button tab that is active.
+	 */
+	public void updateUIContentPositions() {
+		if (menu == null) {
+			// Window is hidden
+			background.hide();
+			getButton("FrontView").hide();
+			getButton("BackView").hide();
+			getButton("LeftView").hide();
+			getButton("RightView").hide();
+			getButton("TopView").hide();
+			getButton("BottomView").hide();
+
+		} else {
+			
+			if (menu == WindowTab.CREATE) {
+				// Create window
+				updateCreateWindowContentPositions();
+	
+			} else if (menu == WindowTab.EDIT) {
+				// Edit window
+				updateEditWindowContentPositions();
+	
+			} else if (menu == WindowTab.SCENARIO) {
+				// Scenario window
+				updateScenarioWindowContentPositions();
+			
+			} else if (menu == WindowTab.CAMERA) {
+				// Camera window
+				updateCameraWindowContentPositions();
+				
+			} else if (menu == WindowTab.MISC) {
+				// Miscellaneous window
+				updateMiscWindowContentPositions();
+			}
+	
+			// Update the camera view buttons
+			int[] relPos = getAbsPosFrom(windowTabs, Alignment.BOTTOM_RIGHT, winMargin, 0);
+	
+			Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("BackView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("LeftView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("RightView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("TopView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("BottomView").setPosition(relPos[0], relPos[1]).show();
+	
+			updateListContents();
+		}
 	}
 
 	/**
