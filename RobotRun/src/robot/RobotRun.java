@@ -20,11 +20,13 @@ import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.Fixture;
+import geom.ModelShape;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
 import geom.Ray;
+import geom.Shape;
 import geom.Triangle;
 import geom.WorldObject;
 import global.DataManagement;
@@ -1167,6 +1169,79 @@ public class RobotRun extends PApplet {
 		float denominator = (x2 * y3 - x3 * y2) - (x1 * y3 - x3 * y1) + (x1 * y2 - x2 * y1);
 		denominator *= 2;
 		return numerator / denominator;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param ray
+	 * @param scenario
+	 * @param robot
+	 */
+	public void checkForCollisionsInScene(Ray ray, Scenario scenario,
+			RoboticArm robot) {
+		
+		PVector closestCollPt = null;
+		collisions.clear();
+		
+		// Check collision with the robots
+		
+		closestCollPt = ROBOTS.get(0).closestCollision(mouseRay);
+		
+		if (UI.getRobotButtonState()) {
+			PVector collPt = ROBOTS.get(1).closestCollision(mouseRay);
+			
+			if (collPt != null && (closestCollPt == null ||
+					PVector.dist(ray.getOrigin(), collPt) <
+					PVector.dist(ray.getOrigin(), closestCollPt))) {
+				
+				closestCollPt = collPt;
+			}
+		}
+		
+		// Check collision with world objects
+		
+		for (WorldObject wo : scenario) {
+			
+			try {
+				PVector collPt = wo.collision(mouseRay);
+				
+				if (collPt != null && (closestCollPt == null ||
+						PVector.dist(ray.getOrigin(), collPt) <
+						PVector.dist(ray.getOrigin(), closestCollPt))) {
+					
+					if (wo instanceof Fixture) {
+						Shape form = wo.getForm();
+						
+						if (form instanceof ModelShape) {
+							/* Check if the color at the mouse position matches
+							 * the model's fill color. */
+							int fill = form.getFillValue();
+							int pixel = get(mouseX, mouseY);
+							
+							if (Fields.colorDiff(pixel, fill) < 200) {
+								closestCollPt = collPt;
+							}
+							
+						} else {
+							// Fixture with a non-model shape
+							closestCollPt = collPt;
+						}
+						
+					} else {
+						// Part
+						closestCollPt = collPt;
+					}
+				}
+				
+			} catch (ArithmeticException AEx) {
+				AEx.printStackTrace();
+			}
+		}
+		
+		if (closestCollPt != null) {
+			collisions.add(closestCollPt);
+		}
 	}
 
 	/**
@@ -5733,11 +5808,11 @@ public class RobotRun extends PApplet {
 
 	@Override
 	public void mousePressed() {
-		/* Check if the mouse position is colliding with a world object */
+		
 		if (mouseButton == LEFT) {
-			Scenario s = getActiveScenario();
 			
-			if (!UI.isFocus() && s != null) {
+			/* Check if the mouse position is colliding with a world object */
+			if (!UI.isFocus() && activeRobot != null && activeScenario != null) {
 				PVector camPos = camera.getPosition();
 				camPos.x += width / 2f * camera.getScale();
 				camPos.y += height / 2f * camera.getScale();
@@ -5778,30 +5853,7 @@ public class RobotRun extends PApplet {
 					mouseRay.setDirection(mDirect);
 				}
 				
-				/**
-				System.out.printf("Mouse:\n%s\n%s\n%s\n\n", mScreenPos, mWorldPos, ptOnMRay);
-				
-				/**/
-				
-				collisions.clear();
-				
-				for (WorldObject wo : s) {
-					System.out.printf("%-16s\n", wo.getName());
-					
-					try {
-						Object collisionPt = wo.collision(mouseRay);
-						
-						if (collisionPt instanceof PVector) {
-							collisions.add((PVector)collisionPt);
-							System.out.printf("Collision: %s\n", collisionPt);
-						}
-						
-					} catch (ArithmeticException AEx) {
-						AEx.printStackTrace();
-					}
-					
-					System.out.println();
-				}
+				checkForCollisionsInScene(mouseRay, activeScenario, activeRobot);
 			}
 		}
 	}
@@ -6701,7 +6753,7 @@ public class RobotRun extends PApplet {
 			for (PVector pt : collisions) {
 				pushMatrix();
 				translate(pt.x, pt.y, pt.z);
-				sphere(10);
+				sphere(3);
 				popMatrix();
 			}
 			

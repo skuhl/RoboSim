@@ -16,6 +16,7 @@ import geom.Part;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
+import geom.Ray;
 import geom.WorldObject;
 import global.Fields;
 import global.RMath;
@@ -661,6 +662,46 @@ public class RoboticArm {
 	 */
 	public void clearCallStack() {
 		CALL_STACK.clear();
+	}
+	
+	/**
+	 * Checks if the given ray collides with any of the robot's bounding boxes.
+	 * If the ray does collides with a bounding box, then the position of the
+	 * collision, which is closest the ray's origin is returned.
+	 * 
+	 * @param ray	A ray with a defined position and direction
+	 * @return		The closest collision point with a robot bounding box
+	 */
+	public PVector closestCollision(Ray ray) {
+		PVector closestCollPt = null;
+		
+		for(BoundingBox b : ARM_OBBS) {
+			PVector collPt = b.collision(ray);
+			
+			if (collPt != null && (closestCollPt == null ||
+					PVector.dist(ray.getOrigin(), collPt) <
+					PVector.dist(ray.getOrigin(), closestCollPt))) {
+				
+				// Find the closest collision to the ray origin
+				closestCollPt = collPt;
+			}
+		}
+
+		ArrayList<BoundingBox> eeHBs = EE_TO_OBBS.get(activeEndEffector);
+
+		for(BoundingBox b : eeHBs) {
+			PVector collPt = b.collision(ray);
+
+			if (collPt != null && (closestCollPt == null ||
+					PVector.dist(ray.getOrigin(), collPt) <
+					PVector.dist(ray.getOrigin(), closestCollPt))) {
+				
+				// Find the closest collision to the ray origin
+				closestCollPt = collPt;
+			}
+		}
+		
+		return closestCollPt;
 	}
 	
 	/**

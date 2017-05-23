@@ -58,60 +58,6 @@ public class BoundingBox {
 		this.localOrientation = localOrientation;
 		this.boxFrame = boxFrame;
 	}
-	
-	public static void main(String[] args) {
-		/**/
-		RealMatrix m0 = new Array2DRowRealMatrix(
-				new double[][] {
-					{ -1,  0,  0 },
-					{  0,  0, -1 },
-					{  0,  1,  0 }
-				}
-		);
-		
-		RealMatrix m1 = new Array2DRowRealMatrix(
-				new double[][] {
-					{ -1,  0,  0 },
-					{  0,  0,  1 },
-					{  0, -1,  0 }
-				}
-		);
-		
-		RealMatrix m2 = new Array2DRowRealMatrix(
-				new double[][] {
-					{  0,  1,  0 },
-					{  1,  0,  0 },
-					{  0,  0, -1 }
-				}
-		);
-		
-		RealMatrix m3 = m2.multiply(m0);
-		
-		System.out.printf("M0:\n%s\nM1:\n%s\nM2:\n%s\nM3:\n%s\n",
-				RMath.matrixToString(m0), RMath.matrixToString(m1),
-				RMath.matrixToString(m2), RMath.matrixToString(m3));
-		
-		/**
-		RMatrix rotMatrix = new RMatrix(new float[][] {
-			{ 1, 2, 3 },
-			{ 3, 4, 5 },
-			{ 6, 7, 8 }
-		});
-		
-		RMatrix tMatrix = RMath.transformationMatrix(new PVector(-15, 4, 35), rotMatrix);
-		
-		System.out.printf("%s\n%s\n", rotMatrix.toString(), tMatrix.toString());
-		
-		
-		PVector v = new PVector(-13, 5, 11);
-		PVector u = RMath.rotateVector(v, Fields.WORLD_AXES);
-		
-		PVector w = new PVector(10, -15, 20);
-		PVector y = RMath.rotateVector(w, Fields.NATIVE_AXES);
-		
-		System.out.printf("v: %s\nu: %s\nw: %s\ny: %s\n", v, u, w, y);
-		/**/
-	}
 
 	/**
 	 * Apply the Coordinate System of the bounding-box onto the
@@ -144,7 +90,6 @@ public class BoundingBox {
 	 * 				given ray, closest to the ray
 	 */
 	public PVector collision(Ray ray) {
-		Float rayWeight = null;
 		PVector origin = localOrientation.getOrigin();
 		float[][] axes = localOrientation.getAxes().getFloatData();
 		// Transform ray into the coordinate frame of the bounding box
@@ -152,99 +97,63 @@ public class BoundingBox {
 		PVector rayDirect = RMath.rotateVector(ray.getDirection(), axes);
 		
 		float[] dims = boxFrame.getDimArray();
-		
 		dims[0] /= 2f;
 		dims[1] /= 2f;
 		dims[2] /= 2f;
 		
-		// Calculate the points on the planes of each of the bounding box's sides
-		PVector[] P0 = new PVector[] {
-				
-				new PVector(dims[0], 0f, 0f),
-				new PVector(0f, dims[1], 0f),
-				new PVector(0f, 0f, dims[2]),
-				new PVector(-dims[0], 0f, 0f),
-				new PVector(0f, -dims[1], 0f),
-				new PVector(0f, 0f, -dims[2])
-				
+		int[] planeAxes = new int[] {
+			(rayOrigin.x < 0) ? -1 : 1,
+			(rayOrigin.y < 0) ? -1 : 1,
+			(rayOrigin.z < 0) ? -1 : 1
 		};
 		
-		// Calculate the vectors normal to each of the bounding boxe's sides
-		PVector[] N = new PVector[] {
+		for (int planeAxis = 0; planeAxis < planeAxes.length; ++planeAxis) {
+			
+			float E, G;
+			
+			if (planeAxis == 0) {
+				E = planeAxes[0] * (rayOrigin.x - (planeAxes[0] * dims[0]));
+				G = planeAxes[0] * rayDirect.x;
 				
-				new PVector(1, 0, 0),
-				new PVector(0, 1, 0),
-				new PVector(0, 0, 1),
-				new PVector(-1, 0, 0),
-				new PVector(0, -1, 0),
-				new PVector(0, 0, -1)
-				
-		};
-		
-		for (int c = 0; c < 6; ++c) {
-			
-			if (PVector.dot(N[c], rayOrigin) == 0) {
-				/* The plane formed by P0[c] and N[c] runs parallel to the ray
-				 * formed by the given ray */
-				continue;
-			}
-			
-			float E = N[c].x * (rayOrigin.x - P0[c].x) +
-					  N[c].y * (rayOrigin.y - P0[c].y) +
-					  N[c].z * (rayOrigin.z - P0[c].z);
-			
-			float G = N[c].x * rayDirect.x +
-					  N[c].y * rayDirect.y +
-					  N[c].z * rayDirect.z;
-			
-			if (G == 0f) {
-				String msg = String.format("G = 0 for N=%s P0=%s R=%s",
-						N[c], P0[c], ray);
-				throw new ArithmeticException(msg);
-			}
-			
-			float t = -E / G;
-			
-			if (t < 0) {
-				// t < 0 -> the collision would occur before the origin of the ray
-				System.out.printf("t = %f for N=%s P0=%s R=%s\n", t, N[c], P0[c], ray);
+			} else if (planeAxis == 1) {
+				E = planeAxes[1] * (rayOrigin.y - (planeAxes[1] * dims[1]));
+				G = planeAxes[1] * rayDirect.y;
 				
 			} else {
-				PVector ptOnRay = PVector.add(rayOrigin, PVector.mult(rayDirect, t));
-				float[] ptOnRayArray = new float[] { ptOnRay.x, ptOnRay.y, ptOnRay.z };
-				int dimToCheck0 = (c + 1) % 3;
-				int dimToCheck1 = (dimToCheck0 + 1) % 3;
+				E = planeAxes[2] * (rayOrigin.z - (planeAxes[2] * dims[2]));
+				G = planeAxes[2] * rayDirect.z;
 				
-				if (ptOnRayArray[dimToCheck0] >= -dims[dimToCheck0] && ptOnRayArray[dimToCheck0] <= dims[dimToCheck0] &&
-					ptOnRayArray[dimToCheck1] >= -dims[dimToCheck1] && ptOnRayArray[dimToCheck1] <= dims[dimToCheck1]) {
-					
-					if (rayWeight == null) {
-						rayWeight = t;
-						
-					} else {
-						PVector collision = PVector.add(rayOrigin, PVector.mult(rayDirect, rayWeight));
-						// Find the closest collision
-						if (PVector.dist(rayOrigin, ptOnRay) < PVector.dist(rayOrigin, collision)) {
-							rayWeight = t;
-						}
-					}
-					
-				} else {
-					// Point is outside the bounds of the bounding box
-					System.out.printf("Out of bounds: origin=%s dim=%s pt=%s\n",
-							origin, Arrays.toString(dims), ptOnRay);
-				}
 			}
 			
+			if (G == 0f) {
+				String msg = String.format("G = 0 for A=%f R=%s",
+						planeAxes[planeAxis] * dims[planeAxis], ray);
+				throw new ArithmeticException(msg);
+				
+			} else {
+				float t = -E / G;
+				
+				if (t >= 0) {
+					PVector ptOnRay = PVector.add(rayOrigin, PVector.mult(rayDirect, t));
+					float[] ptOnRayArray = new float[] { ptOnRay.x, ptOnRay.y, ptOnRay.z };
+					int dimToCheck0 = (planeAxis + 1) % 3;
+					int dimToCheck1 = (dimToCheck0 + 1) % 3;
+					
+					if (ptOnRayArray[dimToCheck0] >= -dims[dimToCheck0] &&
+						ptOnRayArray[dimToCheck0] <= dims[dimToCheck0] &&
+						ptOnRayArray[dimToCheck1] >= -dims[dimToCheck1] &&
+						ptOnRayArray[dimToCheck1] <= dims[dimToCheck1]) {
+						
+						// Collision exists
+						return PVector.add(ray.getOrigin(),  PVector.mult(ray.getDirection(), t));
+						
+					}
+				}
+			}
 		}
 		
-		if (rayWeight == null) {
-			// No collision
-			return null;
-			
-		} else {
-			return PVector.add(ray.getOrigin(),  PVector.mult(ray.getDirection(), rayWeight));
-		}
+		// No collision
+		return null;
 	}
 
 	/**
