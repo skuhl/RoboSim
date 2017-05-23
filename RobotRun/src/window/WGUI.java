@@ -572,7 +572,6 @@ public class WGUI implements ControlListener {
 		addButton("SConfirm", "N/A", scenario, mButtonWidth, sButtonHeight, Fields.small);
 
 		// Initialize the camera window
-		//TODO
 		addTextarea("CXLbl", "X Position:", camera, lLblWidth, fieldHeight, Fields.medium);
 		addTextfield("CXCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
@@ -2281,11 +2280,11 @@ public class WGUI implements ControlListener {
 		Button tr = getButton("ToggleRobot");
 
 		if (tr.isOn()) {
-			windowTabs.setItems(new String[] { "Hide", "Robot1", "Robot2", "Create", "Edit", "Scenario", "Misc" });
+			windowTabs.setItems(new String[] { "Hide", "Robot1", "Robot2", "Create", "Edit", "Scenario", "Camera", "Misc" });
 			tr.setLabel("Remove Robot");
 
 		} else {
-			windowTabs.setItems(new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" });
+			windowTabs.setItems(new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Camera", "Misc" });
 			tr.setLabel("Add Robot");
 		}
 
@@ -2542,11 +2541,11 @@ public class WGUI implements ControlListener {
 		}
 	}
 	
-	public void updateCameraWindowFields() {//TODO
+	public void updateCameraWindowFields() {
 		if(app.getCamera() != null) {
 			RobotCamera c = app.getRobotCamera();
-			PVector pos = c.getPosition();
-			PVector ori = RMath.quatToEuler(c.getOrientation());
+			PVector pos = RMath.vToWorld(c.getPosition());
+			PVector ori = RMath.nQuatToWEuler(c.getOrientation());
 			getTextField("CXCur").setText(String.format("%4.3f", pos.x));
 			getTextField("CYCur").setText(String.format("%4.3f", pos.y));
 			getTextField("CZCur").setText(String.format("%4.3f", pos.z));
@@ -3596,13 +3595,16 @@ public class WGUI implements ControlListener {
 
 	public void updateCameraCurrent() {
 		try {
-			float x = -Float.parseFloat(getTextField("CXCur").getText());
-			float y = -Float.parseFloat(getTextField("CZCur").getText());
-			float z = Float.parseFloat(getTextField("CYCur").getText());
+			float x = Float.parseFloat(getTextField("CXCur").getText());
+			float y = Float.parseFloat(getTextField("CYCur").getText());
+			float z = Float.parseFloat(getTextField("CZCur").getText());
 			
-			float w = -Float.parseFloat(getTextField("CWCur").getText());
-			float p = -Float.parseFloat(getTextField("CRCur").getText());
-			float r = Float.parseFloat(getTextField("CPCur").getText());
+			float w = Float.parseFloat(getTextField("CWCur").getText());
+			float p = Float.parseFloat(getTextField("CPCur").getText());
+			float r = Float.parseFloat(getTextField("CRCur").getText());
+			
+			PVector pos = new PVector(x, y, z);
+			PVector rot = new PVector(w, p, r);
 			
 			float clipNear = Float.parseFloat(getTextField("CCNearCur").getText());
 			float clipFar = Float.parseFloat(getTextField("CCFarCur").getText());
@@ -3613,15 +3615,14 @@ public class WGUI implements ControlListener {
 			float br = getSlider("CBright").getValue();
 			float exp = getSlider("CExp").getValue();
 			
-			app.getRobotCamera().update(x, y, z, w, p, r, fov, aspect, clipNear, clipFar, br, exp);
+			app.getRobotCamera().update(pos, rot, fov, aspect, clipNear, clipFar, br, exp);
 		}
-		catch(Exception e) { e.printStackTrace(); }
-		/*catch (NumberFormatException NFEx) {
+		catch (NumberFormatException NFEx) {
 			PApplet.println("Invalid number input!");
 
 		} 
 		catch (NullPointerException NPEx) {
 			PApplet.println("Missing parameter!");
-		}*/
+		}
 	}
 }

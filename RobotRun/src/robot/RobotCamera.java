@@ -38,10 +38,10 @@ public class RobotCamera {
 	}
 	
 	public RobotCamera() {
-		camPos = new PVector();
+		camPos = new PVector(-1000, -500, 0);
 		camOrient = new RQuaternion();
-		camFOV = 90;
-		camAspectRatio = 1;
+		camFOV = 75;
+		camAspectRatio = 1.5f;
 		camClipNear = 0.5f;
 		camClipFar = 1000;
 		sensitivity = 0.75f;
@@ -51,10 +51,10 @@ public class RobotCamera {
 		
 	}
 	
-	public RobotCamera update(float posX, float posY, float posZ, float rotX, float rotY, float rotZ,
-			float fov, float ar, float near, float far, float br, float exp) {
-		camPos = new PVector(posX, posY, posZ);
-		camOrient = RMath.eulerToQuat(new PVector(rotX, rotY, rotZ).mult(RobotRun.DEG_TO_RAD));
+	public RobotCamera update(PVector pos, PVector rot,	float fov, float ar, 
+			float near, float far, float br, float exp) {
+		camPos = RMath.vFromWorld(pos);
+		camOrient = RMath.wEulerToNQuat(rot);
 		camFOV = fov;
 		camAspectRatio = ar;
 		camClipNear = near;
