@@ -19,7 +19,7 @@ public class RobotCamera {
 	private PVector camPos;
 	
 	private float sensitivity;
-	private float lighting;
+	private float brightness;
 	private float exposure;
 	private ArrayList<WorldObject> taughtObjects;
 	
@@ -32,53 +32,50 @@ public class RobotCamera {
 		camClipNear = near;
 		camClipFar = far;
 		sensitivity = 0.75f;
-		lighting = 10.0f;
+		brightness = 10.0f;
 		exposure = 0.1f;
 		taughtObjects = new ArrayList<WorldObject>();
 	}
 	
-	public ArrayList<WorldObject> teachObjectToCamera(Scenario scene) {
-		ArrayList<WorldObject> objs = getObjectsInFrame(scene);
-		if(objs.size() > 1 || objs.size() <= 0) {
-			return null;
-		}
-		else {
-			WorldObject teachObj = objs.get(0).clone();
-			RMatrix objOrient = teachObj.getLocalOrientationAxes();
-			RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
-			teachObj.setLocalOrientationAxes(viewOrient);
-			taughtObjects.add(teachObj);
-			
-			return taughtObjects;
-		}
+	public RobotCamera() {
+		camPos = new PVector();
+		camOrient = new RQuaternion();
+		camFOV = 90;
+		camAspectRatio = 1;
+		camClipNear = 0.5f;
+		camClipFar = 1000;
+		sensitivity = 0.75f;
+		brightness = 10.0f;
+		exposure = 0.1f;
+		taughtObjects = new ArrayList<WorldObject>();
+		
 	}
 	
-	public ArrayList<WorldObject> matchTaughtObject(int idx, Scenario scene) {
-		WorldObject objProto;
-		if(idx < taughtObjects.size()) {
-			objProto = taughtObjects.get(idx);
-		} else {
-			return null;
-		}
+	public RobotCamera update(float posX, float posY, float posZ, float rotX, float rotY, float rotZ,
+			float fov, float ar, float near, float far, float br, float exp) {
+		camPos = new PVector(posX, posY, posZ);
+		camOrient = RMath.eulerToQuat(new PVector(rotX, rotY, rotZ).mult(RobotRun.DEG_TO_RAD));
+		camFOV = fov;
+		camAspectRatio = ar;
+		camClipNear = near;
+		camClipFar = far;
+		brightness = br;
+		exposure = exp;
+		return this;
+	}
+	
+	public void camLookAt(PVector p, PVector up) {
+		PVector toObj = camPos.sub(p).normalize();
+		PVector lt = up.cross(toObj);
+		PVector orthoUp = toObj.cross(lt);
 		
-		ArrayList<WorldObject> inFrame = getObjectsInFrame(scene);
-		ArrayList<WorldObject> objMatches = new ArrayList<WorldObject>();
+		RMatrix coord = new RMatrix(new float[][] {
+			{lt.x, orthoUp.x, toObj.x},
+			{lt.y, orthoUp.y, toObj.y},
+			{lt.z, orthoUp.z, toObj.z}
+		});
 		
-		for(WorldObject o: inFrame) {
-			if(o.getObjectID() == objProto.getObjectID()) {
-				RMatrix objOrient = o.getLocalOrientationAxes();
-				RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
-				RMatrix oDiff = objProto.getLocalOrientationAxes().transpose().multiply(viewOrient);
-				float[][] axes = oDiff.getFloatData();
-				PVector zDiff = new PVector(axes[0][2], axes[1][2], axes[2][2]);
-				
-				if(Math.pow(zDiff.dot(new PVector(0, 0, 1)), 2) > 0.9) {
-					objMatches.add(o);
-				}
-			}
-		}
-		
-		return objMatches;
+		camOrient = RMath.matrixToQuat(coord);
 	}
 	
 	/**
@@ -108,7 +105,21 @@ public class RobotCamera {
 			}
 		}
 		
-		return (inView / (float)(RES*RES*RES)) * lighting * exposure;
+		return (inView / (float)(RES*RES*RES)) * brightness * exposure;
+	}
+	
+	public boolean checkPointInFrame(PVector p) {
+		RMatrix vMat = getViewMat();
+		RMatrix pMat = getPerspProjMat();
+		
+		PVector tp = pMat.multiply(vMat.multiply(p));
+		
+		if(Math.abs(tp.x) < 1 && Math.abs(tp.y) < 1) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 	
 	@Deprecated
@@ -160,34 +171,6 @@ public class RobotCamera {
 		return new float[] {visX, visY, visZ};
 	}
 	
-	public boolean checkPointInFrame(PVector p) {
-		RMatrix vMat = getViewMat();
-		RMatrix pMat = getPerspProjMat();
-		
-		PVector tp = pMat.multiply(vMat.multiply(p));
-		
-		if(Math.abs(tp.x) < 1 && Math.abs(tp.y) < 1) {
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-	
-	public void camLookAt(PVector p, PVector up) {
-		PVector toObj = camPos.sub(p).normalize();
-		PVector lt = up.cross(toObj);
-		PVector orthoUp = toObj.cross(lt);
-		
-		RMatrix coord = new RMatrix(new float[][] {
-			{lt.x, orthoUp.x, toObj.x},
-			{lt.y, orthoUp.y, toObj.y},
-			{lt.z, orthoUp.z, toObj.z}
-		});
-		
-		camOrient = RMath.matrixToQuat(coord);
-	}
-	
 	public WorldObject getNearestObjectInFrame(Scenario scene) {
 		float minDist = Float.MAX_VALUE;
 		WorldObject closeObj = null;
@@ -204,7 +187,6 @@ public class RobotCamera {
 		
 		return closeObj;
 	}
-	
 	
 	/**
 	 * Performs frustum culling on all objects in scene to obtain a list of the objects
@@ -225,25 +207,12 @@ public class RobotCamera {
 		return objList;
 	}
 	
+	public RQuaternion getOrientation() { 
+		return camOrient; 
+	}
+		
 	public RMatrix getOrientationMat() {
 		return new RMatrix(camOrient.toMatrix());
-	}
-	
-	public RMatrix getViewMat() {
-		float[][] rot = getOrientationMat().getFloatData();
-		
-		float tPosX = -camPos.x*rot[0][0] - camPos.y*rot[1][0] - camPos.z*rot[2][0];
-		float tPosY = -camPos.x*rot[0][1] - camPos.y*rot[1][1] - camPos.z*rot[2][1];
-		float tPosZ =  camPos.x*rot[0][2] + camPos.y*rot[1][2] + camPos.z*rot[2][2];
-		
-		float[][] vMat = new float[][] {
-			{ rot[0][0],  rot[1][0],  rot[2][0], tPosX},
-			{ rot[0][1],  rot[1][1],  rot[2][1], tPosY},
-			{-rot[0][2], -rot[1][2], -rot[2][2], tPosZ},
-			{0, 0, 0, 1}
-		};
-				
-		return new RMatrix(vMat);
 	}
 	
 	public RMatrix getPerspProjMat() {
@@ -306,10 +275,6 @@ public class RobotCamera {
 		return new PVector[] {tl, tr, bl, br};
 	}
 	
-	public PVector[] getPlaneNear() {
-		return getPlane(camClipNear);
-	}
-	
 	public PVector[] getPlaneFar() {
 		return getPlane(camClipFar);
 	}
@@ -322,12 +287,20 @@ public class RobotCamera {
 		return height;
 	}
 	
+	public PVector[] getPlaneNear() {
+		return getPlane(camClipNear);
+	}
+	
 	public float getPlaneWidth(float dist) {
 		// Field of view must be in the range of (0, 90) degrees
 		if(camFOV >= 180 || camFOV <= 0) { return -1; }
 		float width = 2*(float)Math.tan((camFOV/2)*RobotRun.DEG_TO_RAD)*dist;
 		
 		return width;
+	}
+	
+	public PVector getPosition() { 
+		return camPos; 
 	}
 	
 	public PVector getVectLook() {
@@ -348,9 +321,49 @@ public class RobotCamera {
 		return new PVector((float)x, (float)y, (float)z);
 	}
 	
-	public RobotCamera setOrientation(RQuaternion o) {
-		camOrient = o;
-		return this;
+	public RMatrix getViewMat() {
+		float[][] rot = getOrientationMat().getFloatData();
+		
+		float tPosX = -camPos.x*rot[0][0] - camPos.y*rot[1][0] - camPos.z*rot[2][0];
+		float tPosY = -camPos.x*rot[0][1] - camPos.y*rot[1][1] - camPos.z*rot[2][1];
+		float tPosZ =  camPos.x*rot[0][2] + camPos.y*rot[1][2] + camPos.z*rot[2][2];
+		
+		float[][] vMat = new float[][] {
+			{ rot[0][0],  rot[1][0],  rot[2][0], tPosX},
+			{ rot[0][1],  rot[1][1],  rot[2][1], tPosY},
+			{-rot[0][2], -rot[1][2], -rot[2][2], tPosZ},
+			{0, 0, 0, 1}
+		};
+				
+		return new RMatrix(vMat);
+	}
+	
+	public ArrayList<WorldObject> matchTaughtObject(int idx, Scenario scene) {
+		WorldObject objProto;
+		if(idx < taughtObjects.size()) {
+			objProto = taughtObjects.get(idx);
+		} else {
+			return null;
+		}
+		
+		ArrayList<WorldObject> inFrame = getObjectsInFrame(scene);
+		ArrayList<WorldObject> objMatches = new ArrayList<WorldObject>();
+		
+		for(WorldObject o: inFrame) {
+			if(o.getObjectID() == objProto.getObjectID()) {
+				RMatrix objOrient = o.getLocalOrientationAxes();
+				RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
+				RMatrix oDiff = objProto.getLocalOrientationAxes().transpose().multiply(viewOrient);
+				float[][] axes = oDiff.getFloatData();
+				PVector zDiff = new PVector(axes[0][2], axes[1][2], axes[2][2]);
+				
+				if(Math.pow(zDiff.dot(new PVector(0, 0, 1)), 2) > 0.9) {
+					objMatches.add(o);
+				}
+			}
+		}
+		
+		return objMatches;
 	}
 	
 	public RobotCamera setOrientation(PVector o) {
@@ -358,8 +371,53 @@ public class RobotCamera {
 		return this;
 	}
 	
+	public RobotCamera setOrientation(RQuaternion o) {
+		camOrient = o;
+		return this;
+	}
+	
 	public RobotCamera setPosition(PVector p) {
 		camPos = p;
 		return this;
+	}
+	
+	public ArrayList<WorldObject> teachObjectToCamera(Scenario scene) {
+		ArrayList<WorldObject> objs = getObjectsInFrame(scene);
+		if(objs.size() > 1 || objs.size() <= 0) {
+			return null;
+		}
+		else {
+			WorldObject teachObj = objs.get(0).clone();
+			RMatrix objOrient = teachObj.getLocalOrientationAxes();
+			RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
+			teachObj.setLocalOrientationAxes(viewOrient);
+			taughtObjects.add(teachObj);
+			
+			return taughtObjects;
+		}
+	}
+
+	public float getBrightness() {
+		return brightness;
+	}
+
+	public float getExposure() {
+		return exposure;
+	}
+
+	public float getNearClipDist() {
+		return camClipNear;
+	}
+	
+	public float getFarClipDist() {
+		return camClipFar;
+	}
+
+	public float getFOV() {
+		return camFOV;
+	}
+	
+	public float getAspectRatio() {
+		return camAspectRatio;
 	}
 }
