@@ -5733,9 +5733,8 @@ public class RobotRun extends PApplet {
 			
 			if (!UI.isFocus() && s != null) {
 				PVector camPos = camera.getPosition();
-				camPos.x = camera.getScale() * (camPos.x + width / 2f);
-				camPos.y = camera.getScale() * (camPos.y + height / 2f);
-				camPos.z = camera.getScale() * camPos.z;
+				camPos.x += width / 2f * camera.getScale();
+				camPos.y += height / 2f * camera.getScale();
 				
 				PVector camOrien = camera.getOrientation();
 				
@@ -5762,12 +5761,12 @@ public class RobotRun extends PApplet {
 				
 				mouseRay = new Ray(mWorldPos, mDirect, Fields.BLACK, 10000f);
 				
-				/**
+				/**/
 				System.out.printf("Mouse:\n%s\n%s\n%s\n\n", mScreenPos, mWorldPos, mDirect);
 				
-				/**
+				/**/
 				for (WorldObject wo : s) {
-					// TODO
+					// TODO checkout ray OBB collisions
 					System.out.printf("%-16s %s\n", wo.getName(), wo.getLocalCenter());
 				}
 				
@@ -5785,22 +5784,21 @@ public class RobotRun extends PApplet {
 			return;
 		}
 
-		float e = event.getCount();
+		float wheelCount = event.getCount();
 		/* Control scaling of the camera with the mouse wheel */
-		
-		if (e != 0) {
+		if (wheelCount > 0) {
+			camera.scale(1.05f);
 			
-			float newScale = camera.getScale() + e * 0.1f;
-			camera.setScale(newScale);
+		} else if (wheelCount < 0) {
+			camera.scale(0.95f);
 		}
 		
 		/**
-		if (e > 0) {
-			camera.scale(1.05f);
-			
-		} else if (e < 0) {
-			camera.scale(0.95f);
+		if (e != 0) {
+			float newScale = camera.getScale() + wheelCount * 0.1f;
+			camera.setScale(newScale);
 		}
+		
 		/**/
 	}
 

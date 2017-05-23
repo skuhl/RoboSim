@@ -48,6 +48,12 @@ public class Fixture extends WorldObject {
 		return new Fixture(getName(), getForm().clone(),
 				localOrientation.clone());
 	}
+	
+	@Override
+	public Object collision(Ray ray) {
+		// TODO
+		return null;
+	}
 
 	/**
 	 * Applies the inverse of this Fixture's Coordinate System's transformation matrix to the matrix stack.

@@ -10,7 +10,7 @@ import processing.core.PVector;
  * and the methods to manipulate apply the Camera's transformation.
  */
 public class Camera {
-	private static final float MIN_SCALE = 0.25f, MAX_SCALE = 8f;
+	private static final float MIN_SCALE = 0.2f, MAX_SCALE = 8f;
 	
 	private PVector position;
 	// Rotations in X, Y, Z in radians

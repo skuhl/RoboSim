@@ -127,23 +127,11 @@ public class BoundingBox {
 		return new BoundingBox( boxFrame.clone(),
 				localOrientation.clone() );
 	}
-
-	/**
-	 * Determine of a single position, in Native Coordinates, is with
-	 * the bounding box of the this world object.
-	 */
-	public boolean collision(PVector point) {
-		// Convert the point to the current reference frame
-		RMatrix tMatrix = RMath.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
-		PVector relPosition = RMath.vectorMatrixMult(point, RMath.invertHCMatrix(tMatrix));
-
-		PVector OBBDim = getDims();
-		// Determine if the point is within the bounding-box of this object
-		boolean is_inside = relPosition.x >= -(OBBDim.x / 2f) && relPosition.x <= (OBBDim.x / 2f)
-				&& relPosition.y >= -(OBBDim.y / 2f) && relPosition.y <= (OBBDim.y / 2f)
-				&& relPosition.z >= -(OBBDim.z / 2f) && relPosition.z <= (OBBDim.z / 2f);
-
-				return is_inside;
+	
+	public Object collision(Ray ray) {
+		// TODO
+		
+		return null;
 	}
 
 	/**
