@@ -42,6 +42,7 @@ import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PImage;
 import processing.core.PVector;
+import robot.RobotCamera;
 import robot.RobotRun;
 import robot.RoboticArm;
 import robot.Scenario;
@@ -603,7 +604,7 @@ public class WGUI implements ControlListener {
 		addTextfield("CCFarCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		
 		addSlider("CBright", camera, fieldWidthMed, fieldHeight, 0f, 10f, 1f, Fields.medium);
-		addSlider("CSpeed", camera, fieldWidthMed, fieldHeight, 0.01f, 1f, 0.1f, Fields.medium);
+		addSlider("CExp", camera, fieldWidthMed, fieldHeight, 0.01f, 1f, 0.1f, Fields.medium);
 		
 		addButton("UpdateCam", "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
 		
@@ -1614,7 +1615,7 @@ public class WGUI implements ControlListener {
 	 * @return	A list of input values from the orientation text-fields in the
 	 * 		world object edit window
 	 */
-	private Float[] getCurrentValues() {
+	private Float[] getCurrentWOValues() {
 		try {
 			/* Pull from x, y, z, w, p, r, input values from their
 			 * corresponding text-fields */
@@ -2538,7 +2539,30 @@ public class WGUI implements ControlListener {
 			} else {
 				ddl.setValue(0);
 			}
-
+		}
+	}
+	
+	public void updateCameraWindowFields() {//TODO
+		if(app.getCamera() != null) {
+			RobotCamera c = app.getRobotCamera();
+			PVector pos = c.getPosition();
+			PVector ori = RMath.quatToEuler(c.getOrientation());
+			getTextField("CXCur").setText(String.format("%4.3f", pos.x));
+			getTextField("CYCur").setText(String.format("%4.3f", pos.y));
+			getTextField("CZCur").setText(String.format("%4.3f", pos.z));
+			
+			getTextField("CWCur").setText(String.format("%4.3f", ori.x));
+			getTextField("CPCur").setText(String.format("%4.3f", ori.y));
+			getTextField("CRCur").setText(String.format("%4.3f", ori.z));
+			
+			getTextField("CCNearCur").setText(String.format("%4.3f", c.getNearClipDist()));
+			getTextField("CCFarCur").setText(String.format("%4.3f", c.getFarClipDist()));
+			
+			getTextField("CFOVCur").setText(String.format("%4.3f", c.getFOV()));
+			getTextField("CAspectCur").setText(String.format("%4.3f", c.getAspectRatio()));
+			
+			getSlider("CBright").setValue(c.getBrightness());
+			getSlider("CExp").setValue(c.getExposure());
 		}
 	}
 
@@ -2718,9 +2742,6 @@ public class WGUI implements ControlListener {
 	 * Updates the positions of all the contents of the world object editing window.
 	 */
 	private void updateCameraWindowContentPositions() {
-		updateDimLblsAndFields();
-		getButton("ClearFields").hide();
-
 		// X label and fields
 		int[] relPos = new int[] { winMargin, winMargin };
 		ControllerInterface<?> c0, c = getTextArea("CXLbl").setPosition(relPos[0], relPos[1]);
@@ -2797,7 +2818,7 @@ public class WGUI implements ControlListener {
 		
 		// Shutter speed timer
 		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-		getSlider("CSpeed").setPosition(relPos[0], relPos[1]);
+		getSlider("CExp").setPosition(relPos[0], relPos[1]);
 		
 		// Cam update button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
@@ -3303,9 +3324,8 @@ public class WGUI implements ControlListener {
 				setGroupVisible(sharedElements, true);
 
 				clearAllInputFields();
+				updateCameraWindowFields();
 				updateWindowContentsPositions();
-				updateListContents();
-				resetListLabels();
 			}
 			
 		} else if (menu == WindowTab.MISC) {
@@ -3331,8 +3351,7 @@ public class WGUI implements ControlListener {
 
 	/**
 	 * Updates the dimensions as well as the current position and orientation
-	 * as well as the dimensions (and the fixture reference for parts) of the
-	 * selected world object.
+	 * (and the fixture reference for parts) of the selected world object.
 	 * 
 	 * @return	if the selected world object was successfully modified 
 	 */
@@ -3409,7 +3428,7 @@ public class WGUI implements ControlListener {
 				// Convert origin position into the World Frame
 				PVector oPosition = RMath.vToWorld( toEdit.getLocalCenter() );
 				PVector oWPR = RMath.nRMatToWEuler( toEdit.getLocalOrientationAxes() );
-				Float[] inputValues = getCurrentValues();
+				Float[] inputValues = getCurrentWOValues();
 				// Update position and orientation
 				if (inputValues[0] != null) {
 					oPosition.x = inputValues[0];
@@ -3493,7 +3512,7 @@ public class WGUI implements ControlListener {
 			// Pull the object's current position and orientation
 			PVector defaultPos = RMath.vToWorld( p.getDefaultCenter() );
 			PVector defaultWPR = RMath.nRMatToWEuler( p.getDefaultOrientationAxes() );
-			Float[] inputValues = getCurrentValues();
+			Float[] inputValues = getCurrentWOValues();
 
 			// Update default position and orientation
 			if (inputValues[0] != null) {
@@ -3573,5 +3592,36 @@ public class WGUI implements ControlListener {
 
 		// Invalid characters
 		return null;
+	}
+
+	public void updateCameraCurrent() {
+		try {
+			float x = -Float.parseFloat(getTextField("CXCur").getText());
+			float y = -Float.parseFloat(getTextField("CZCur").getText());
+			float z = Float.parseFloat(getTextField("CYCur").getText());
+			
+			float w = -Float.parseFloat(getTextField("CWCur").getText());
+			float p = -Float.parseFloat(getTextField("CRCur").getText());
+			float r = Float.parseFloat(getTextField("CPCur").getText());
+			
+			float clipNear = Float.parseFloat(getTextField("CCNearCur").getText());
+			float clipFar = Float.parseFloat(getTextField("CCFarCur").getText());
+			
+			float fov = Float.parseFloat(getTextField("CFOVCur").getText());
+			float aspect = Float.parseFloat(getTextField("CAspectCur").getText());
+			
+			float br = getSlider("CBright").getValue();
+			float exp = getSlider("CExp").getValue();
+			
+			app.getRobotCamera().update(x, y, z, w, p, r, fov, aspect, clipNear, clipFar, br, exp);
+		}
+		catch(Exception e) { e.printStackTrace(); }
+		/*catch (NumberFormatException NFEx) {
+			PApplet.println("Invalid number input!");
+
+		} 
+		catch (NullPointerException NPEx) {
+			PApplet.println("Missing parameter!");
+		}*/
 	}
 }
