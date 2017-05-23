@@ -36,6 +36,14 @@ public abstract class WorldObject implements Cloneable {
 		localOrientation.apply();
 	}
 	
+	/**
+	 * Checks if the given ray collides with this world object.
+	 * 
+	 * @param ray	A ray with a start position and direction vector
+	 * @return		TODO
+	 */
+	public abstract Object collision(Ray ray);
+	
 	@Override
 	public abstract WorldObject clone();
 
