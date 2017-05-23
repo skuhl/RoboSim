@@ -11,6 +11,7 @@ import enums.CoordFrame;
 import enums.EEMapping;
 import enums.ScreenMode;
 import enums.ScreenType;
+import enums.WindowTab;
 import expression.AtomicExpression;
 import expression.ExprOperand;
 import expression.Expression;
@@ -1182,10 +1183,10 @@ public class RobotRun extends PApplet {
 			RoboticArm robot) {
 		
 		PVector closestCollPt = null;
+		WorldObject collidedWith = null;
 		collisions.clear();
 		
 		// Check collision with the robots
-		
 		closestCollPt = ROBOTS.get(0).closestCollision(mouseRay);
 		
 		if (UI.getRobotButtonState()) {
@@ -1202,41 +1203,46 @@ public class RobotRun extends PApplet {
 		// Check collision with world objects
 		
 		for (WorldObject wo : scenario) {
+			PVector collPt = wo.collision(mouseRay);
 			
-			try {
-				PVector collPt = wo.collision(mouseRay);
+			if (collPt != null && (closestCollPt == null ||
+					PVector.dist(ray.getOrigin(), collPt) <
+					PVector.dist(ray.getOrigin(), closestCollPt))) {
 				
-				if (collPt != null && (closestCollPt == null ||
-						PVector.dist(ray.getOrigin(), collPt) <
-						PVector.dist(ray.getOrigin(), closestCollPt))) {
+				if (wo instanceof Fixture) {
+					Shape form = wo.getForm();
 					
-					if (wo instanceof Fixture) {
-						Shape form = wo.getForm();
+					if (form instanceof ModelShape) {
+						/* Check if the color at the mouse position matches
+						 * the model's fill color. */
+						int fill = form.getFillValue();
+						int pixel = get(mouseX, mouseY);
 						
-						if (form instanceof ModelShape) {
-							/* Check if the color at the mouse position matches
-							 * the model's fill color. */
-							int fill = form.getFillValue();
-							int pixel = get(mouseX, mouseY);
-							
-							if (Fields.colorDiff(pixel, fill) < 200) {
-								closestCollPt = collPt;
-							}
-							
-						} else {
-							// Fixture with a non-model shape
+						if (Fields.colorDiff(pixel, fill) < 200) {
+							collidedWith = wo;
 							closestCollPt = collPt;
 						}
 						
 					} else {
-						// Part
+						// Fixture with a non-model shape
+						collidedWith = wo;
 						closestCollPt = collPt;
 					}
+					
+				} else {
+					// Part
+					collidedWith = wo;
+					closestCollPt = collPt;
 				}
-				
-			} catch (ArithmeticException AEx) {
-				AEx.printStackTrace();
 			}
+		}
+		
+		if (collidedWith != null) {
+			
+			if (UI.getMenu() == WindowTab.EDIT) {
+				UI.setSelectedWO(collidedWith);
+			}
+			
 		}
 		
 		if (closestCollPt != null) {

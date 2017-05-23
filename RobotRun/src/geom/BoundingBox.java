@@ -126,9 +126,8 @@ public class BoundingBox {
 			}
 			
 			if (G == 0f) {
-				String msg = String.format("G = 0 for A=%f R=%s",
-						planeAxes[planeAxis] * dims[planeAxis], ray);
-				throw new ArithmeticException(msg);
+				System.err.printf("G = 0 for A=%f R=%s\n", planeAxes[planeAxis] *
+						dims[planeAxis], ray);
 				
 			} else {
 				float t = -E / G;
