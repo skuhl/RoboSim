@@ -237,13 +237,10 @@ public class Part extends WorldObject {
 	public boolean collision(Part obj) {
 		return collision3D(absOBB, obj.absOBB);
 	}
-
-	/**
-	 * Determine if the given point is within
-	 * this object's bounding box.
-	 */
-	public boolean collision(PVector point) {
-		return absOBB.collision(point);
+	
+	@Override
+	public PVector collision(Ray ray) {
+		return absOBB.collision(ray);
 	}
 
 	/**
