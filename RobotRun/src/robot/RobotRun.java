@@ -11,7 +11,6 @@ import enums.CoordFrame;
 import enums.EEMapping;
 import enums.ScreenMode;
 import enums.ScreenType;
-import enums.WindowTab;
 import expression.AtomicExpression;
 import expression.ExprOperand;
 import expression.Expression;
@@ -1237,13 +1236,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
-		if (collidedWith != null) {
-			
-			if (UI.getMenu() == WindowTab.EDIT) {
-				UI.setSelectedWO(collidedWith);
-			}
-			
-		}
+		UI.setSelectedWO(collidedWith);
 		
 		if (closestCollPt != null) {
 			collisions.add(closestCollPt);
@@ -5898,18 +5891,25 @@ public class RobotRun extends PApplet {
 	 */
 	public void MoveToCur() {
 		// Only allow world object editing when no program is executing
-		if (!isProgramRunning() && UI.getSelectedWO() != null) {
-			WorldObject savedState = (WorldObject) UI.getSelectedWO().clone();
-
-			if (UI.updateWOCurrent()) {
-				/*
-				 * If the object was modified, then save the previous state of
-				 * the object
-				 */
-				updateScenarioUndo(savedState);
+		if (!isProgramRunning()) {
+			RoboticArm r = getActiveRobot();
+			WorldObject selectedWO = UI.getSelectedWO();
+			
+			if (selectedWO instanceof Fixture || (selectedWO instanceof Part &&
+					(r == null || r.held != selectedWO))) {
+				
+				WorldObject savedState = selectedWO.clone();
+	
+				if (UI.updateWOCurrent(selectedWO)) {
+					/*
+					 * If the object was modified, then save the previous state
+					 * of the object
+					 */
+					updateScenarioUndo(savedState);
+				}
+	
+				DataManagement.saveScenarios(this);
 			}
-
-			DataManagement.saveScenarios(this);
 		}
 	}
 	
@@ -5921,19 +5921,21 @@ public class RobotRun extends PApplet {
 	 */
 	public void MoveToDef() {
 		// Only allow world object editing when no program is executing
-		if (!isProgramRunning() && UI.getSelectedWO() != null) {
-			WorldObject savedState = (WorldObject) UI.getSelectedWO().clone();
-			UI.fillCurWithDef();
+		if (!isProgramRunning()) {
+			RoboticArm r = getActiveRobot();
+			WorldObject selectedWO = UI.getSelectedWO();
+			
+			if (selectedWO instanceof Part && (r == null || r.held != selectedWO)) {
+				WorldObject savedState = (WorldObject) selectedWO.clone();
+				UI.fillCurWithDef( (Part)selectedWO );
 
-			if (UI.updateWOCurrent()) {
-				/*
-				 * If the object was modified, then save the previous state of
-				 * the object
-				 */
-				updateScenarioUndo(savedState);
+				if (UI.updateWOCurrent(selectedWO)) {
+					// If the part was modified, then save its previous state
+					updateScenarioUndo(savedState);
+				}
+
+				DataManagement.saveScenarios(this);
 			}
-
-			DataManagement.saveScenarios(this);
 		}
 	}
 
@@ -7180,6 +7182,11 @@ public class RobotRun extends PApplet {
 		for (Scenario s : SCENARIOS) {
 			if (s.getName().equals(name)) {
 				activeScenario = s;
+				
+				if (UI != null) {
+					UI.setSelectedWO(null);
+				}
+				
 				return true;
 			}
 		}
@@ -7574,9 +7581,9 @@ public class RobotRun extends PApplet {
 	 */
 	public void undoScenarioEdit() {
 		if (!SCENARIO_UNDO.empty()) {
-			activeScenario.put(SCENARIO_UNDO.pop());
+			activeScenario.put( SCENARIO_UNDO.pop() );
 			UI.updateListContents();
-			UI.updateEditWindowFields();
+			UI.updateEditWindowFields( UI.getSelectedWO() );
 		}
 	}
 	
@@ -8253,14 +8260,15 @@ public class RobotRun extends PApplet {
 	 * the input fields in the edit window.
 	 */
 	public void UpdateWODef() {
-		WorldObject saveState = (WorldObject) UI.getSelectedWO().clone();
-
-		if (UI.updateWODefault()) {
-			/*
-			 * If the object was modified, then save the previous state of the
-			 * object
-			 */
-			updateScenarioUndo(saveState);
+		WorldObject selectedWO = UI.getSelectedWO();
+		// Only parts have a default position and orientation
+		if (selectedWO instanceof Part) {
+			WorldObject saveState = selectedWO.clone();
+			
+			if (UI.updateWODefault( (Part)selectedWO )) {
+				// If the part was modified, then save its previous state
+				updateScenarioUndo(saveState);
+			}
 		}
 	}
 	
