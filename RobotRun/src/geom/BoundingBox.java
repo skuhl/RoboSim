@@ -16,7 +16,7 @@ public class BoundingBox {
 	 * Create a bounding box with a default dimension.
 	 */
 	public BoundingBox() {
-		localOrientation = new CoordinateSystem();
+		localOrientation = CoordinateSystem.getDefault();
 		boxFrame = new Box(Fields.OBB_DEFAULT, 10f);
 	}
 
@@ -26,7 +26,7 @@ public class BoundingBox {
 	 * @param	The edge length of the bounding box
 	 */
 	public BoundingBox(float edgeLen) {
-		localOrientation = new CoordinateSystem();
+		localOrientation = CoordinateSystem.getDefault();
 		boxFrame = new Box(Fields.OBB_DEFAULT, edgeLen);
 	}
 
@@ -38,7 +38,7 @@ public class BoundingBox {
 	 * @param wdh	The width of the box
 	 */
 	public BoundingBox(float len, float hgt, float wdh) {
-		localOrientation = new CoordinateSystem();
+		localOrientation = CoordinateSystem.getDefault();
 		boxFrame = new Box(Fields.OBB_DEFAULT, len, hgt, wdh);
 	}
 	
@@ -49,7 +49,6 @@ public class BoundingBox {
 	 * @param localOrientation	The orientation of the bounding box
 	 */
 	public BoundingBox(Box boxFrame, CoordinateSystem localOrientation) {
-		
 		this.localOrientation = localOrientation;
 		this.boxFrame = boxFrame;
 	}
@@ -83,14 +82,6 @@ public class BoundingBox {
 		
 		System.out.printf("%s\n%s\n%s\n%s\n%s\n\n", e1, m2, e2, m3, e3);
 		
-	}
-	
-	/**
-	 * Apply the Coordinate System of the bounding-box onto the
-	 * current transformation matrix.
-	 */
-	public void applyCoordinateSystem() {
-		localOrientation.apply();
 	}
 
 	/**
@@ -186,20 +177,9 @@ public class BoundingBox {
 	}
 
 	/**
-	 * Draw both the object and its bounding box;
-	 */
-	public void draw() {
-		RobotRun.getInstance().pushMatrix();
-		// Draw shape in its own coordinate system
-		localOrientation.apply();
-		boxFrame.draw();
-		RobotRun.getInstance().popMatrix();
-	}
-
-	/**
 	 * Return a reference to this bounding-box's box.
 	 */
-	public Box getBox() { return boxFrame; }
+	public Box getFrame() { return boxFrame; }
 
 	public PVector getCenter() { return localOrientation.getOrigin(); }
 
@@ -245,8 +225,9 @@ public class BoundingBox {
 	 * Reset the bounding-box's coordinate system to the current
 	 * transformation matrix.
 	 */
-	public void setCoordinateSystem() {
-		localOrientation = new CoordinateSystem();
+	public void setCoordinateSystem(CoordinateSystem newCS) {
+		localOrientation.setOrigin(newCS.getOrigin());
+		localOrientation.setAxes(newCS.getAxes());
 	}
 
 	/**
@@ -273,7 +254,7 @@ public class BoundingBox {
 	 * Reset the object's orientation axes; the given rotation
 	 * matrix should be in row major order!
 	 */
-	public void setOrientationAxes(RMatrix newOrientation) {
+	public void setOrientation(RMatrix newOrientation) {
 		localOrientation.setAxes(newOrientation);
 	}
 }

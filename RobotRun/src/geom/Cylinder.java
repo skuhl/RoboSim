@@ -32,44 +32,6 @@ public class Cylinder extends Shape {
 		return new Cylinder(getFillValue(), getStrokeValue(), radius, height);
 	}
 
-	/**
-	 * Assumes the center of the cylinder is halfway between the top and bottom of of the cylinder.
-	 * 
-	 * Based off of the algorithm defined on Vormplus blog at:
-	 * http://vormplus.be/blog/article/drawing-a-cylinder-with-processing
-	 */
-	@Override
-	public void draw() {
-		RobotRun app = RobotRun.getInstance();
-		
-		app.pushStyle();
-		applyColors();
-
-		float halfHeight = height / 2,
-				diameter = 2 * radius;
-
-		app.translate(0f, 0f, halfHeight);
-		// Draw top of the cylinder
-		app.ellipse(0f, 0f, diameter, diameter);
-		app.translate(0f, 0f, -height);
-		// Draw bottom of the cylinder
-		app.ellipse(0f, 0f, diameter, diameter);
-		app.translate(0f, 0f, halfHeight);
-
-		app.beginShape(PConstants.TRIANGLE_STRIP);
-		// Draw a string of triangles around the circumference of the Cylinders top and bottom.
-		for (int degree = 0; degree <= 360; ++degree) {
-			float pos_x = PApplet.cos(PConstants.DEG_TO_RAD * degree) * radius,
-					pos_y = PApplet.sin(PConstants.DEG_TO_RAD * degree) * radius;
-
-			app.vertex(pos_x, pos_y, halfHeight);
-			app.vertex(pos_x, pos_y, -halfHeight);
-		}
-
-		app.endShape();
-		app.popStyle();
-	}
-
 	@Override
 	public float getDim(DimType dim) {
 		switch(dim) {

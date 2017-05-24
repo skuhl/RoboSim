@@ -59,30 +59,30 @@ public class RoboticArm {
 	/**
 	 * A list of the robot's arm segment models.
 	 */
-	private final ArrayList<Model> SEGMENTS;
+	protected final ArrayList<Model> SEGMENTS;
 	
 	/**
 	 * A model for one of the robot's end effectors
 	 */
-	private final Model EEM_SUCTION, EEM_CLAW, EEM_CLAW_PINCER, EEM_POINTER,
+	protected final Model EEM_SUCTION, EEM_CLAW, EEM_CLAW_PINCER, EEM_POINTER,
 						EEM_GLUE_GUN, EEM_WIELDER;
 	
 	/**
 	 * The set of bounding boxes for the robot's arm segments.
 	 */
-	private final BoundingBox[] ARM_OBBS;
+	protected final BoundingBox[] ARM_OBBS;
 	
 	/**
 	 * A set mapping each end effector to its respective bounding boxes.
 	 */
-	private final HashMap<EEType, ArrayList<BoundingBox>> EE_TO_OBBS;
+	protected final HashMap<EEType, ArrayList<BoundingBox>> EE_TO_OBBS;
 	
 	/**
 	 * A set mapping each end effector to its pickup bounding boxes. As of now,
 	 * only the claw and suction end effector have pickup boxes, since they are
 	 * the only end effectors that can be used to pickup parts.
 	 */
-	private final HashMap<EEType, ArrayList<BoundingBox>> EE_TO_PICK_OBBS;
+	protected final HashMap<EEType, ArrayList<BoundingBox>> EE_TO_PICK_OBBS;
 	
 	/**
 	 * A set mapping each end effector to the index of its I/O register
@@ -173,11 +173,9 @@ public class RoboticArm {
 	
 	private RMatrix lastEEOrientation;
 	
-	private Point curRobotPt;
-	
 	private boolean trace;
 	
-	private ArrayList<PVector> tracePts;
+	protected ArrayList<PVector> tracePts;
 
 	/**
 	 * Creates a robot with the given ID at the given position with the given
@@ -342,7 +340,7 @@ public class RoboticArm {
 		// In between the grippers
 		limbo = new ArrayList<BoundingBox>();
 		limbo.add(new BoundingBox(15, 3, 55) );
-		limbo.get(0).setColor(Fields.OBB_DEFAULT);
+		limbo.get(0).setColor(Fields.OBB_HELD);
 		EE_TO_PICK_OBBS.put(EEType.CLAW, limbo);
 
 		// Suction
@@ -354,9 +352,9 @@ public class RoboticArm {
 		// One for each suction cup
 		limbo = new ArrayList<BoundingBox>();
 		limbo.add(new BoundingBox(3, 25, 25) );
-		limbo.get(0).setColor(Fields.OBB_DEFAULT);
+		limbo.get(0).setColor(Fields.OBB_HELD);
 		limbo.add(new BoundingBox(25, 3, 25) );
-		limbo.get(1).setColor(Fields.OBB_DEFAULT);
+		limbo.get(1).setColor(Fields.OBB_HELD);
 		EE_TO_PICK_OBBS.put(EEType.SUCTION, limbo);
 
 		// Pointer
@@ -715,217 +713,6 @@ public class RoboticArm {
 		int nextEE = (activeEndEffector.ordinal() + 1) % values.length;
 		// Switch to the next End Effector in the cycle
 		setActiveEE( values[nextEE] );
-	}
-	
-	/**
-	 * Draws the robot arm model, with the center of its base at the robot's
-	 * base position field.
-	 */
-	public void draw() {
-		RobotRun app = RobotRun.getInstance();
-		
-		app.pushStyle();
-		app.noStroke();
-		app.fill(200, 200, 0);
-
-		app.pushMatrix();
-		app.translate(BASE_POSITION.x, BASE_POSITION.y,
-						BASE_POSITION.z);
-
-		app.rotateZ(PConstants.PI);
-		app.rotateY(PConstants.PI/2);
-		SEGMENTS.get(0).draw();
-		app.rotateY(-PConstants.PI/2);
-		app.rotateZ(-PConstants.PI);
-
-		app.fill(50);
-
-		app.translate(-50, -166, -358); // -115, -213, -413
-		app.rotateZ(PConstants.PI);
-		app.translate(150, 0, 150);
-		app.rotateX(PConstants.PI);
-		app.rotateY(SEGMENTS.get(0).currentRotations[1]);
-		app.rotateX(-PConstants.PI);
-		app.translate(-150, 0, -150);
-		SEGMENTS.get(1).draw();
-		app.rotateZ(-PConstants.PI);
-
-		app.fill(200, 200, 0);
-
-		app.translate(-115, -85, 180);
-		app.rotateZ(PConstants.PI);
-		app.rotateY(PConstants.PI/2);
-		app.translate(0, 62, 62);
-		app.rotateX(SEGMENTS.get(1).currentRotations[2]);
-		app.translate(0, -62, -62);
-		SEGMENTS.get(2).draw();
-		app.rotateY(-PConstants.PI/2);
-		app.rotateZ(-PConstants.PI);
-
-		app.fill(50);
-
-		app.translate(0, -500, -50);
-		app.rotateZ(PConstants.PI);
-		app.rotateY(PConstants.PI/2);
-		app.translate(0, 75, 75);
-		app.rotateZ(PConstants.PI);
-		app.rotateX(SEGMENTS.get(2).currentRotations[2]);
-		app.rotateZ(-PConstants.PI);
-		app.translate(0, -75, -75);
-		SEGMENTS.get(3).draw();
-		app.rotateY(PConstants.PI/2);
-		app.rotateZ(-PConstants.PI);
-
-		app.translate(745, -150, 150);
-		app.rotateZ(PConstants.PI/2);
-		app.rotateY(PConstants.PI/2);
-		app.translate(70, 0, 70);
-		app.rotateY(SEGMENTS.get(3).currentRotations[0]);
-		app.translate(-70, 0, -70);
-		SEGMENTS.get(4).draw();
-		app.rotateY(-PConstants.PI/2);
-		app.rotateZ(-PConstants.PI/2);
-
-		app.fill(200, 200, 0);
-
-		app.translate(-115, 130, -124);
-		app.rotateZ(PConstants.PI);
-		app.rotateY(-PConstants.PI/2);
-		app.translate(0, 50, 50);
-		app.rotateX(SEGMENTS.get(4).currentRotations[2]);
-		app.translate(0, -50, -50);
-		SEGMENTS.get(5).draw();
-		app.rotateY(PConstants.PI/2);
-		app.rotateZ(-PConstants.PI);
-
-		app.fill(50);
-
-		app.translate(150, -10, 95);
-		app.rotateY(-PConstants.PI/2);
-		app.rotateZ(PConstants.PI);
-		app.translate(45, 45, 0);
-		app.rotateZ(SEGMENTS.get(5).currentRotations[0]);
-		app.translate(-45, -45, 0);
-		SEGMENTS.get(6).draw();
-
-		drawEndEffector(activeEndEffector, endEffectorState);
-
-		app.popMatrix();
-		app.popStyle();
-		
-		curRobotPt = getRobotEEPosition();
-		//System.out.println(curRobotPt.toString());
-		/* My sketchy work-around for drawing only the bounding boxes of the
-		 * active robot */
-		if (RobotRun.getActiveRobot() == this) {
-				if(app.areOBBsDisplayed()) {
-					drawBoxes();
-				}
-				
-				if(trace) {
-					drawTrace();
-				}
-		}
-	}
-	
-	/* Draws the Robot Arm's hit boxes in the world */
-	private void drawBoxes() {
-		// Draw hit boxes of the body poriotn of the Robot Arm
-		for(BoundingBox b : ARM_OBBS) {
-			b.draw();
-		}
-
-		ArrayList<BoundingBox> curEEHitBoxes = EE_TO_OBBS.get(activeEndEffector);
-
-		// Draw End Effector hit boxes
-		for(BoundingBox b : curEEHitBoxes) {
-			b.draw();
-		}
-
-		curEEHitBoxes = EE_TO_PICK_OBBS.get(activeEndEffector);
-		// Draw Pickup hit boxes
-		for (BoundingBox b : curEEHitBoxes) {
-			b.draw();
-		}
-	}
-	
-	/**
-	 * Draw the End Effector model associated with the given
-	 * End Effector type in the current coordinate system.
-	 * 
-	 * @param ee       The End Effector to draw
-	 * @param eeState  The state of the End Effector to be drawn
-	 */
-	private void drawEndEffector(EEType ee, int eeState) {
-		RobotRun.getInstance().pushMatrix();
-
-		// Center the End Effector on the Robot's faceplate and draw it.
-		if(ee == EEType.SUCTION) {
-			RobotRun.getInstance().rotateY(PConstants.PI);
-			RobotRun.getInstance().translate(-88, -37, 0);
-			EEM_SUCTION.draw();
-
-		} else if(ee == EEType.CLAW) {
-			RobotRun.getInstance().rotateY(PConstants.PI);
-			RobotRun.getInstance().translate(-88, 0, 0);
-			EEM_CLAW.draw();
-			RobotRun.getInstance().rotateZ(PConstants.PI/2);
-
-			if(eeState == Fields.OFF) {
-				// Draw open grippers
-				RobotRun.getInstance().translate(10, -85, 30);
-				EEM_CLAW_PINCER.draw();
-				RobotRun.getInstance().translate(55, 0, 0);
-				EEM_CLAW_PINCER.draw();
-
-			} else if(eeState == Fields.ON) {
-				// Draw closed grippers
-				RobotRun.getInstance().translate(28, -85, 30);
-				EEM_CLAW_PINCER.draw();
-				RobotRun.getInstance().translate(20, 0, 0);
-				EEM_CLAW_PINCER.draw();
-			}
-		} else if (ee == EEType.POINTER) {
-			RobotRun.getInstance().rotateY(PConstants.PI);
-			RobotRun.getInstance().rotateZ(PConstants.PI);
-			RobotRun.getInstance().translate(45, -45, 10);
-			EEM_POINTER.draw();
-
-		} else if (ee == EEType.GLUE_GUN) {
-			RobotRun.getInstance().rotateZ(PConstants.PI);
-			RobotRun.getInstance().translate(-48, -46, -12);
-			EEM_GLUE_GUN.draw();
-
-		} else if (ee == EEType.WIELDER) {
-			RobotRun.getInstance().rotateY(PConstants.PI);
-			RobotRun.getInstance().rotateZ(PConstants.PI);
-			RobotRun.getInstance().translate(46, -44, 10);
-			EEM_WIELDER.draw();
-		}
-		
-		RobotRun.getInstance().popMatrix();
-	}
-
-	private void drawTrace() {
-		if(tracePts.isEmpty()) {
-			tracePts.add(curRobotPt.position);
-			return;
-		} 
-		else if(curRobotPt.position.copy().sub(tracePts.get(tracePts.size()-1)).mag() > 0.5) {
-			tracePts.add(curRobotPt.position.copy());
-		}
-		
-		PVector lastPt = tracePts.get(0);
-		for(int i = 1; i < tracePts.size(); i += 1) {
-			PVector curPt = tracePts.get(i);
-			RobotRun.getInstance().stroke(0);
-			RobotRun.getInstance().strokeWeight(3);
-			RobotRun.getInstance().pushMatrix();
-			RobotRun.getInstance().line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y, curPt.z);
-			RobotRun.getInstance().popMatrix();
-			RobotRun.getInstance().strokeWeight(1);
-			lastPt = curPt;
-		}
 	}
 	
 	public void clearTrace() {
@@ -1572,6 +1359,10 @@ public class RoboticArm {
 		}
 		
 		return done;
+	}
+	
+	public boolean isTrace() {
+		return trace;
 	}
 
 	/**
@@ -2224,110 +2015,111 @@ public class RoboticArm {
 	 * Updates the position and orientation of the hit
 	 * boxes related to the Robot Arm.
 	 */
-	private void updateCollisionOBBs() {
-		RobotRun.getInstance().noFill();
-		RobotRun.getInstance().stroke(0, 255, 0);
+	private void updateCollisionOBBs(RobotRun app) {
+		app.noFill();
+		app.stroke(0, 255, 0);
 
-		RobotRun.getInstance().pushMatrix();
-		RobotRun.getInstance().resetMatrix();
+		app.pushMatrix();
+		app.resetMatrix();
 
-		RobotRun.getInstance().translate(BASE_POSITION.x, BASE_POSITION.y,
+		app.translate(BASE_POSITION.x, BASE_POSITION.y,
 				BASE_POSITION.z);
 
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().rotateY(PConstants.PI/2);
-		RobotRun.getInstance().translate(200, 50, 200);
+		app.rotateZ(PConstants.PI);
+		app.rotateY(PConstants.PI/2);
+		app.translate(200, 50, 200);
 		// Segment 0
-		ARM_OBBS[0].setCoordinateSystem();
+		app.getCoordFromMatrix(ARM_OBBS[0]);
 
-		RobotRun.getInstance().translate(0, 100, 0);
-		ARM_OBBS[1].setCoordinateSystem();
+		app.translate(0, 100, 0);
+		app.getCoordFromMatrix(ARM_OBBS[1]);
 
-		RobotRun.getInstance().translate(-200, -150, -200);
+		app.translate(-200, -150, -200);
 
-		RobotRun.getInstance().rotateY(-PConstants.PI/2);
-		RobotRun.getInstance().rotateZ(-PConstants.PI);
+		app.rotateY(-PConstants.PI/2);
+		app.rotateZ(-PConstants.PI);
 
-		RobotRun.getInstance().translate(-50, -166, -358);
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().translate(150, 0, 150);
-		RobotRun.getInstance().rotateX(PConstants.PI);
-		RobotRun.getInstance().rotateY(SEGMENTS.get(0).currentRotations[1]);
-		RobotRun.getInstance().rotateX(-PConstants.PI);
-		RobotRun.getInstance().translate(10, 95, 0);
-		RobotRun.getInstance().rotateZ(-0.1f * PConstants.PI);
+		app.translate(-50, -166, -358);
+		app.rotateZ(PConstants.PI);
+		app.translate(150, 0, 150);
+		app.rotateX(PConstants.PI);
+		app.rotateY(SEGMENTS.get(0).currentRotations[1]);
+		app.rotateX(-PConstants.PI);
+		app.translate(10, 95, 0);
+		app.rotateZ(-0.1f * PConstants.PI);
 		// Segment 1
-		ARM_OBBS[2].setCoordinateSystem();
+		app.getCoordFromMatrix(ARM_OBBS[2]);
 
-		RobotRun.getInstance().rotateZ(0.1f * PConstants.PI);
-		RobotRun.getInstance().translate(-160, -95, -150);
-		RobotRun.getInstance().rotateZ(-PConstants.PI);
+		app.rotateZ(0.1f * PConstants.PI);
+		app.translate(-160, -95, -150);
+		app.rotateZ(-PConstants.PI);
 
-		RobotRun.getInstance().translate(-115, -85, 180);
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().rotateY(PConstants.PI/2);
-		RobotRun.getInstance().translate(0, 62, 62);
-		RobotRun.getInstance().rotateX(SEGMENTS.get(1).currentRotations[2]);
-		RobotRun.getInstance().translate(30, 240, 0);
+		app.translate(-115, -85, 180);
+		app.rotateZ(PConstants.PI);
+		app.rotateY(PConstants.PI/2);
+		app.translate(0, 62, 62);
+		app.rotateX(SEGMENTS.get(1).currentRotations[2]);
+		app.translate(30, 240, 0);
 		// Segment 2
-		ARM_OBBS[3].setCoordinateSystem();
+		app.getCoordFromMatrix(ARM_OBBS[3]);
 
-		RobotRun.getInstance().translate(-30, -302, -62);
-		RobotRun.getInstance().rotateY(-PConstants.PI/2);
-		RobotRun.getInstance().rotateZ(-PConstants.PI);
+		app.translate(-30, -302, -62);
+		app.rotateY(-PConstants.PI/2);
+		app.rotateZ(-PConstants.PI);
 
-		RobotRun.getInstance().translate(0, -500, -50);
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().rotateY(PConstants.PI/2);
-		RobotRun.getInstance().translate(0, 75, 75);
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().rotateX(SEGMENTS.get(2).currentRotations[2]);
-		RobotRun.getInstance().rotateZ(-PConstants.PI);
-		RobotRun.getInstance().translate(75, 0, 0);
+		app.translate(0, -500, -50);
+		app.rotateZ(PConstants.PI);
+		app.rotateY(PConstants.PI/2);
+		app.translate(0, 75, 75);
+		app.rotateZ(PConstants.PI);
+		app.rotateX(SEGMENTS.get(2).currentRotations[2]);
+		app.rotateZ(-PConstants.PI);
+		app.translate(75, 0, 0);
 		// Segment 3
-		ARM_OBBS[4].setCoordinateSystem();
+		app.getCoordFromMatrix(ARM_OBBS[4]);
 
-		RobotRun.getInstance().translate(-75, -75, -75);
-		RobotRun.getInstance().rotateY(PConstants.PI/2);
-		RobotRun.getInstance().rotateZ(-PConstants.PI);
+		app.translate(-75, -75, -75);
+		app.rotateY(PConstants.PI/2);
+		app.rotateZ(-PConstants.PI);
 
-		RobotRun.getInstance().translate(745, -150, 150);
-		RobotRun.getInstance().rotateZ(PConstants.PI/2);
-		RobotRun.getInstance().rotateY(PConstants.PI/2);
-		RobotRun.getInstance().translate(70, 0, 70);
-		RobotRun.getInstance().rotateY(SEGMENTS.get(3).currentRotations[0]);
-		RobotRun.getInstance().translate(5, 75, 5);
-		// Segment 4
-		ARM_OBBS[5].setCoordinateSystem();
+		app.translate(745, -150, 150);
+		app.rotateZ(PConstants.PI/2);
+		app.rotateY(PConstants.PI/2);
+		app.translate(70, 0, 70);
+		app.rotateY(SEGMENTS.get(3).currentRotations[0]);
+		app.translate(5, 75, 5);
+		// Segment 4;
+		app.getCoordFromMatrix(ARM_OBBS[5]);
+		
 
-		RobotRun.getInstance().translate(0, 295, 0);
-		ARM_OBBS[6].setCoordinateSystem();
+		app.translate(0, 295, 0);
+		app.getCoordFromMatrix(ARM_OBBS[6]);
 
-		RobotRun.getInstance().translate(-75, -370, -75);
+		app.translate(-75, -370, -75);
 
-		RobotRun.getInstance().rotateY(-PConstants.PI/2);
-		RobotRun.getInstance().rotateZ(-PConstants.PI/2);
+		app.rotateY(-PConstants.PI/2);
+		app.rotateZ(-PConstants.PI/2);
 
-		RobotRun.getInstance().translate(-115, 130, -124);
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().rotateY(-PConstants.PI/2);
-		RobotRun.getInstance().translate(0, 50, 50);
-		RobotRun.getInstance().rotateX(SEGMENTS.get(4).currentRotations[2]);
-		RobotRun.getInstance().translate(0, -50, -50);
+		app.translate(-115, 130, -124);
+		app.rotateZ(PConstants.PI);
+		app.rotateY(-PConstants.PI/2);
+		app.translate(0, 50, 50);
+		app.rotateX(SEGMENTS.get(4).currentRotations[2]);
+		app.translate(0, -50, -50);
 		// Segment 5
-		RobotRun.getInstance().rotateY(PConstants.PI/2);
-		RobotRun.getInstance().rotateZ(-PConstants.PI);
+		app.rotateY(PConstants.PI/2);
+		app.rotateZ(-PConstants.PI);
 
-		RobotRun.getInstance().translate(150, -10, 95);
-		RobotRun.getInstance().rotateY(-PConstants.PI/2);
-		RobotRun.getInstance().rotateZ(PConstants.PI);
-		RobotRun.getInstance().translate(45, 45, 0);
-		RobotRun.getInstance().rotateZ(SEGMENTS.get(5).currentRotations[0]);
-		RobotRun.getInstance().translate(-45, -45, 0);
-		RobotRun.getInstance().popMatrix();
+		app.translate(150, -10, 95);
+		app.rotateY(-PConstants.PI/2);
+		app.rotateZ(PConstants.PI);
+		app.translate(45, 45, 0);
+		app.rotateZ(SEGMENTS.get(5).currentRotations[0]);
+		app.translate(-45, -45, 0);
+		app.popMatrix();
 
 		// End Effector
-		updateOBBBoxesForEE(activeEndEffector);
+		updateOBBBoxesForEE(activeEndEffector, app);
 	}
 
 	/**
@@ -2347,7 +2139,7 @@ public class RoboticArm {
 	 * Updates position and orientation of the hit boxes associated
 	 * with the given End Effector.
 	 */
-	private void updateOBBBoxesForEE(EEType current) {
+	private void updateOBBBoxesForEE(EEType current, RobotRun app) {
 		ArrayList<BoundingBox> curEEOBBs = EE_TO_OBBS.get(current),
 							   curPUEEOBBs = EE_TO_PICK_OBBS.get(current);
 
@@ -2359,32 +2151,32 @@ public class RoboticArm {
 			case NONE:
 				// Face Plate EE
 				RobotRun.getInstance().translate(12, 0, 0);
-				curEEOBBs.get(0).setCoordinateSystem();
+				app.getCoordFromMatrix( curEEOBBs.get(0) );
 				RobotRun.getInstance().translate(-12, 0, 0);
 				break;
 	
 			case CLAW:
 				// Claw Gripper EE
 				RobotRun.getInstance().translate(3, 0, 0);
-				curEEOBBs.get(0).setCoordinateSystem();
+				app.getCoordFromMatrix( curEEOBBs.get(0) );
 	
 				RobotRun.getInstance().translate(-57, 0, -2);
-				curPUEEOBBs.get(0).setCoordinateSystem();
+				app.getCoordFromMatrix( curPUEEOBBs.get(0) );
 	
 				if (endEffectorState == Fields.OFF) {
 					// When claw is open
 					RobotRun.getInstance().translate(0, -27, 0);
-					curEEOBBs.get(1).setCoordinateSystem();
+					app.getCoordFromMatrix( curEEOBBs.get(1) );
 					RobotRun.getInstance().translate(0, 54, 0);
-					curEEOBBs.get(2).setCoordinateSystem();
+					app.getCoordFromMatrix( curEEOBBs.get(2) );
 					RobotRun.getInstance().translate(0, -27, 0);
 	
 				} else if (endEffectorState == Fields.ON) {
 					// When claw is closed
 					RobotRun.getInstance().translate(0, -10, 0);
-					curEEOBBs.get(1).setCoordinateSystem();
+					app.getCoordFromMatrix( curEEOBBs.get(1) );
 					RobotRun.getInstance().translate(0, 20, 0);
-					curEEOBBs.get(2).setCoordinateSystem();
+					app.getCoordFromMatrix( curEEOBBs.get(2) );
 					RobotRun.getInstance().translate(0, -10, 0);
 				}
 	
@@ -2394,22 +2186,22 @@ public class RoboticArm {
 			case SUCTION:
 				// Suction EE
 				RobotRun.getInstance().translate(0, 0, 3);
-				curEEOBBs.get(0).setCoordinateSystem();
+				app.getCoordFromMatrix( curEEOBBs.get(0) );
 	
 				RobotRun.getInstance().translate(-67, 0, -2);
 				BoundingBox limbo = curEEOBBs.get(1);
-				limbo.setCoordinateSystem();
+				app.getCoordFromMatrix( limbo );
 	
 				float dist = -43;
 				RobotRun.getInstance().translate(dist, 0, 0);
-				curPUEEOBBs.get(0).setCoordinateSystem();
+				app.getCoordFromMatrix( curPUEEOBBs.get(0) );
 				RobotRun.getInstance().translate(19 - dist, 50, 0);
 				limbo = curEEOBBs.get(2);
-				limbo.setCoordinateSystem();
+				app.getCoordFromMatrix( limbo );
 	
 				dist = -33;
 				RobotRun.getInstance().translate(0, -dist, 0);
-				curPUEEOBBs.get(1).setCoordinateSystem();
+				app.getCoordFromMatrix( curPUEEOBBs.get(1) );
 				RobotRun.getInstance().translate(45, dist - 50, 2);
 				break;
 	
@@ -2442,7 +2234,7 @@ public class RoboticArm {
 	 * Sets the Robot's default position and orientation in a static variable.
 	 * THIS METHOD MUST BE CALLED WHEN THE FIRST ROBOT IS CREATED!
 	 */
-	public void updateRobot() {
+	public void updateRobot(RobotRun app) {
 		
 		if (!hasMotionFault()) {
 			// Execute arm movement
@@ -2477,6 +2269,6 @@ public class RoboticArm {
 			}
 		}
 
-		updateCollisionOBBs();
+		updateCollisionOBBs(app);
 	}
 }

@@ -66,18 +66,14 @@ public class ModelShape extends Shape {
 			return null;
 		}
 	}
-
-	@Override
-	public void draw() {
-		RobotRun app = RobotRun.getInstance();
-		
-		app.pushMatrix();
-		
-		// Draw shape, where its center is at (0, 0, 0)
-		app.translate(centerOffset.x, centerOffset.y, centerOffset.z);
-		app.shape(model);
-		
-		app.popMatrix();
+	
+	/**
+	 * @return	The center offset associated with this model
+	 */
+	public float[] getCenterOffset() {
+		return new float[] {
+				centerOffset.x, centerOffset.y, centerOffset.z
+		};
 	}
 
 	@Override

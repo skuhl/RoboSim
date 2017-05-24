@@ -207,15 +207,6 @@ public class Part extends WorldObject {
 	}
 
 	@Override
-	public void applyCoordinateSystem() {
-		absOBB.applyCoordinateSystem();
-	}
-
-	public void applyLocalCoordinateSystem() {
-		super.applyCoordinateSystem();
-	}
-
-	@Override
 	public Part clone() {
 		// The new object's reference still points to the same fixture!
 		return new Part(getName(), getForm().clone(), getOBBDims().copy(),
@@ -243,27 +234,24 @@ public class Part extends WorldObject {
 	public PVector collision(Ray ray) {
 		return absOBB.collision(ray);
 	}
-
+	
 	/**
-	 * Draw both the object and its bounding box in its local
-	 * orientation, in the local orientation of the part's
-	 * fixture reference.
+	 * @return	The absolute center of the part (without respect to its fixture
+	 * 			reference)
 	 */
-	@Override
-	public void draw() {
-		RobotRun.getInstance().pushMatrix();
-		applyCoordinateSystem();
-		getForm().draw();
-		
-		if (RobotRun.getInstance().areOBBsDisplayed()) {
-			absOBB.getBox().draw();
-		}
-		
-		RobotRun.getInstance().popMatrix();
+	public PVector getCenter() {
+		return absOBB.getCenter();
 	}
 
 	public Fixture getFixtureRef() { return reference; }
-
+	
+	/**
+	 * @return	The bounding box of the part
+	 */
+	public Box getOBBFrame() {
+		return absOBB.getFrame();
+	}
+	
 	/**
 	 * Get the dimensions of the part's bounding-box
 	 */
@@ -271,11 +259,19 @@ public class Part extends WorldObject {
 		return absOBB.getDims();
 	}
 	
+	/**
+	 * @return	The absolute orientation of the part (without respect to its
+	 * 			fixture reference)
+	 */
+	public RMatrix getOrientation() {
+		return absOBB.getOrientationAxes();
+	}
+	
 	public PVector getDefaultCenter() {
 		return defaultOrientation.getOrigin();
 	}
 
-	public RMatrix getDefaultOrientationAxes() {
+	public RMatrix getDefaultOrientation() {
 		return defaultOrientation.getAxes();
 	}
 	
@@ -283,7 +279,8 @@ public class Part extends WorldObject {
 	public void rotateAroundAxis(PVector axis, float angle) {
 		
 		if (reference != null) {
-			RMatrix refRMat = reference.getLocalOrientationAxes();
+			// rotate with respect to the part's fixture reference
+			RMatrix refRMat = reference.getLocalOrientation();
 			axis = RMath.rotateVector(axis, refRMat.getFloatData());
 		}
 		
@@ -302,11 +299,6 @@ public class Part extends WorldObject {
 		absOBB.setColor(newColor);
 	}
 
-	@Override
-	public void setCoordinateSystem() {
-		absOBB.setCoordinateSystem();
-	}
-
 	/**
 	 * Set the fixture reference of this part and
 	 * update its absolute orientation.
@@ -321,23 +313,18 @@ public class Part extends WorldObject {
 		super.setLocalCenter(newCenter);
 		updateAbsoluteOrientation();
 	}
-
-	public void setLocalCoordinateSystem() {
-		super.setCoordinateSystem();
-		updateAbsoluteOrientation();
-	}
 	
 	public void setDefaultCenter(PVector newCenter) {
 		defaultOrientation.setOrigin(newCenter);
 	}
 	
-	public void setDefaultOrientationAxes(RMatrix newAxes) {
+	public void setDefaultOrientation(RMatrix newAxes) {
 		defaultOrientation.setAxes(newAxes);
 	}
 
 	@Override
-	public void setLocalOrientationAxes(RMatrix newAxes) {
-		super.setLocalOrientationAxes(newAxes);
+	public void setLocalOrientation(RMatrix newAxes) {
+		super.setLocalOrientation(newAxes);
 		updateAbsoluteOrientation();
 	}
 
@@ -360,7 +347,8 @@ public class Part extends WorldObject {
 		PVector delta = new PVector(dx, dy, dz);
 		
 		if (reference != null) {
-			RMatrix refRMat = reference.getLocalOrientationAxes();
+			// translate with respect to the part's fixture reference
+			RMatrix refRMat = reference.getLocalOrientation();
 			delta = RMath.rotateVector(delta, refRMat.getFloatData());
 		}
 		
@@ -374,32 +362,21 @@ public class Part extends WorldObject {
 	 * reference's orientation.
 	 */
 	public void updateAbsoluteOrientation() {
-		RobotRun.getInstance().pushMatrix();
-		RobotRun.getInstance().resetMatrix();
-
-		if (reference != null) {
-			reference.applyCoordinateSystem();
-		}
-
-		super.applyCoordinateSystem();
-		absOBB.setCoordinateSystem();
-		RobotRun.getInstance().popMatrix();
-	}
-	
-	/**
-	 * Updates the local orientation of the part from its absolute orientation.
-	 */
-	public void updateLocalOrientation() {
-		RobotRun.getInstance().pushMatrix();
-		RobotRun.getInstance().resetMatrix();
+		PVector origin = localOrientation.getOrigin().copy();
+		RMatrix rMat = localOrientation.getAxes().copy();
 		
 		if (reference != null) {
-			reference.removeCoordinateSystem();
+			PVector RefOrigin = reference.getLocalCenter();
+			RMatrix refRMat = reference.getLocalOrientation();
+			
+			origin = RMath.rotateVector(origin, refRMat.getInverse().getFloatData());
+			origin.add(RefOrigin);
+			
+			rMat = refRMat.multiply(rMat);
 		}
 		
-		absOBB.applyCoordinateSystem();
-		this.localOrientation = new CoordinateSystem();
-		RobotRun.getInstance().popMatrix();
+		absOBB.setCenter(origin);
+		absOBB.setOrientation(rMat);
 	}
 
 	@Override
