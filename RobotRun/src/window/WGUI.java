@@ -1076,15 +1076,19 @@ public class WGUI implements ControlListener {
 			}
 
 			if (arg0.isFrom("Object")) {
-				// Update the input fields on the edit menu
-				updateEditWindowFields();
+				WorldObject selectedWO = getSelectedWO();
+				
+				if (selectedWO != null) {
+					// Update the input fields on the edit menu
+					updateEditWindowFields(selectedWO);
+				}
 
 			} else if (arg0.isFrom("Fixture")) {
-				WorldObject selected = getSelectedWO();
-
-				if (selected instanceof Part) {
+				WorldObject selectedWO = getSelectedWO();
+				
+				if (menu == WindowTab.EDIT && selectedWO instanceof Part) {
 					// Set the reference of the Part to the currently active fixture
-					Part p = (Part)selected;
+					Part p = (Part)selectedWO;
 					Fixture refFixture = (Fixture)getDropdown("Fixture").getSelectedItem();
 
 					if (p.getFixtureRef() != refFixture) {
@@ -1284,14 +1288,14 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Puts the current position and orientation values of the selected object,
-	 * in the position and orientation input fields of the edit window.
+	 * TODO comment this
+	 * 
+	 * @param selected
 	 */
-	private void fillCurWithCur() {
-		WorldObject active = getSelectedWO();
+	private void fillCurWithCur(WorldObject selected) {
 		// Get the part's default position and orientation
-		PVector pos = RMath.vToWorld( active.getLocalCenter() );
-		PVector wpr = RMath.nRMatToWEuler( active.getLocalOrientationAxes() );
+		PVector pos = RMath.vToWorld( selected.getLocalCenter() );
+		PVector wpr = RMath.nRMatToWEuler( selected.getLocalOrientationAxes() );
 
 		// Fill the current position and orientation fields in the edit window
 		getTextField("XCur").setText( String.format("%4.3f", pos.x) );
@@ -1303,51 +1307,41 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Puts the default position and orientation values of the selected object,
-	 * into the current position and orientation input fields of the edit
-	 * window.
+	 * TODO comment this
+	 * 
+	 * @param selected
 	 */
-	public void fillCurWithDef() {
-		WorldObject active = getSelectedWO();
+	public void fillCurWithDef(Part selected) {
+		// Get the part's current position and orientation
+		PVector pos = RMath.vToWorld( selected.getDefaultCenter() );
+		PVector wpr = RMath.nRMatToWEuler( selected.getDefaultOrientationAxes() );
 
-		if (active instanceof Part) {
-			Part p = (Part)active;
-			// Get the part's current position and orientation
-			PVector pos = RMath.vToWorld( p.getDefaultCenter() );
-			PVector wpr = RMath.nRMatToWEuler( p.getDefaultOrientationAxes() );
-
-			// Fill the default position and orientation fields in the edit window
-			getTextField("XCur").setText( String.format("%4.3f", pos.x) );
-			getTextField("YCur").setText( String.format("%4.3f", pos.y) );
-			getTextField("ZCur").setText( String.format("%4.3f", pos.z) );
-			getTextField("WCur").setText( String.format("%4.3f", wpr.x) );
-			getTextField("PCur").setText( String.format("%4.3f", wpr.y) );
-			getTextField("RCur").setText( String.format("%4.3f", wpr.z) );
-		}
+		// Fill the default position and orientation fields in the edit window
+		getTextField("XCur").setText( String.format("%4.3f", pos.x) );
+		getTextField("YCur").setText( String.format("%4.3f", pos.y) );
+		getTextField("ZCur").setText( String.format("%4.3f", pos.z) );
+		getTextField("WCur").setText( String.format("%4.3f", wpr.x) );
+		getTextField("PCur").setText( String.format("%4.3f", wpr.y) );
+		getTextField("RCur").setText( String.format("%4.3f", wpr.z) );
 	}
 
 	/**
-	 * Puts the default position and orientation values of the selected
-	 * object, in the edit window, into the default position and orientation
-	 * text fields.
+	 * TODO comment this
+	 * 
+	 * @param selected
 	 */
-	private void fillDefWithDef() {
-		WorldObject active = getSelectedWO();
+	private void fillDefWithDef(Part selected) {
+		// Get the part's current position and orientation
+		PVector pos = RMath.vToWorld( selected.getDefaultCenter() );
+		PVector wpr = RMath.nRMatToWEuler( selected.getDefaultOrientationAxes() );
 
-		if (active instanceof Part) {
-			Part p = (Part)active;
-			// Get the part's current position and orientation
-			PVector pos = RMath.vToWorld( p.getDefaultCenter() );
-			PVector wpr = RMath.nRMatToWEuler( p.getDefaultOrientationAxes() );
-
-			// Fill the default position and orientation fields in the edit window
-			getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
-			getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
-			getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
-			getTextArea("WDef").setText( String.format("%4.3f", wpr.x) );
-			getTextArea("PDef").setText( String.format("%4.3f", wpr.y) );
-			getTextArea("RDef").setText( String.format("%4.3f", wpr.z) );
-		}
+		// Fill the default position and orientation fields in the edit window
+		getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
+		getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
+		getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
+		getTextArea("WDef").setText( String.format("%4.3f", wpr.x) );
+		getTextArea("PDef").setText( String.format("%4.3f", wpr.y) );
+		getTextArea("RDef").setText( String.format("%4.3f", wpr.z) );
 	}
 
 	/**
@@ -1864,9 +1858,9 @@ public class WGUI implements ControlListener {
 		return null;
 	}
 
+
 	/**
-	 * Returns the object that is currently being edited
-	 * in the world object editing menu.
+	 * @return	The world object currently selected in the Object dropdown list
 	 */
 	public WorldObject getSelectedWO() {
 		Object wldObj = getDropdown("Object").getSelectedItem();
@@ -2186,8 +2180,10 @@ public class WGUI implements ControlListener {
 	 * @param wo
 	 */
 	public void setSelectedWO(WorldObject wo) {
-		if (menu == WindowTab.EDIT) {
-			getDropdown("Object").setItem(wo);
+		
+		if (menu == null || menu == WindowTab.EDIT) {
+			updateView(WindowTab.EDIT);
+			getDropdown("Object").setItem(wo);	
 		}
 	}
 
@@ -2427,43 +2423,42 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Sets the dimension text fields, current text fields, default text areas,
-	 * as well as the reference dropdown list in the edit window based on the
-	 * currently selected world object, in the Object dropdown list.
+	 * TODO comment this
+	 * 
+	 * @param selected
 	 */
-	public void updateEditWindowFields() {
-		WorldObject selected = getSelectedWO();
+	public void updateEditWindowFields(WorldObject selected) {
+		Shape form = selected.getForm();
+		
+		// Set the dimension fields
+		if (form instanceof Box) {
+			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.LENGTH)) );
+			getTextField("Dim1").setText( String.format("%4.3f", form.getDim(DimType.HEIGHT)) );
+			getTextField("Dim2").setText( String.format("%4.3f", form.getDim(DimType.WIDTH)) );
 
-		if (selected != null) {
-			// Set the dimension fields
-			if (selected.getForm() instanceof Box) {
-				getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.LENGTH)) );
-				getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
-				getTextField("Dim2").setText( String.format("%4.3f", selected.getForm().getDim(DimType.WIDTH)) );
-
-			} else if (selected.getForm() instanceof Cylinder) {
-				getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.RADIUS)) );
-				getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
+		} else if (form instanceof Cylinder) {
+			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.RADIUS)) );
+			getTextField("Dim1").setText( String.format("%4.3f", form.getDim(DimType.HEIGHT)) );
 
 
-			} else if (selected.getForm() instanceof ModelShape) {
-				getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.SCALE)) );
-			}
+		} else if (form instanceof ModelShape) {
+			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.SCALE)) );
+		}
 
-			fillCurWithCur();
-			fillDefWithDef();
+		fillCurWithCur(selected);
 
-			// Set the reference dropdown
-			MyDropdownList ddl = getDropdown("Fixture");
+		// Set the reference dropdown
+		MyDropdownList ddl = getDropdown("Fixture");
 
-			if (selected instanceof Part) {
+		if (selected instanceof Part) {
+			Part p = (Part)selected;
+			fillDefWithDef(p);
+			
+			Fixture ref = p.getFixtureRef();
+			ddl.setItem(ref);
 
-				Fixture ref = ((Part)selected).getFixtureRef();
-				ddl.setItem(ref);
-
-			} else {
-				ddl.setValue(0);
-			}
+		} else {
+			ddl.setValue(0);
 		}
 	}
 	
@@ -3092,6 +3087,8 @@ public class WGUI implements ControlListener {
 		} else if (menu == WindowTab.ROBOT2) {
 			app.setRobot(1);
 		}
+		
+		updateAndDrawUI();
 	}
 
 	
@@ -3110,7 +3107,8 @@ public class WGUI implements ControlListener {
 			setGroupVisible(scenario, false);
 			setGroupVisible(camera, false);
 			setGroupVisible(miscellaneous, false);
-
+			
+			clearAllInputFields();
 			updateUIContentPositions();
 
 		} else if (menu == WindowTab.ROBOT1 || menu == WindowTab.ROBOT2) {
@@ -3124,7 +3122,8 @@ public class WGUI implements ControlListener {
 
 			if (!pendant.isVisible()) {
 				setGroupVisible(pendant, true);
-
+				
+				clearAllInputFields();
 				updateUIContentPositions();
 			}
 
@@ -3207,7 +3206,8 @@ public class WGUI implements ControlListener {
 
 			if (!miscellaneous.isVisible()) {
 				setGroupVisible(miscellaneous, true);
-
+				
+				clearAllInputFields();
 				updateUIContentPositions();
 				updateListContents();
 			}
@@ -3278,140 +3278,136 @@ public class WGUI implements ControlListener {
 	 * Updates the dimensions as well as the current position and orientation
 	 * (and the fixture reference for parts) of the selected world object.
 	 * 
-	 * @return	if the selected world object was successfully modified 
+	 * @param selectedWO	The object of which to update the position and
+	 * 						orientation
+	 * @return				If the selected world object was successfully
+	 * 						modified 
 	 */
-	public boolean updateWOCurrent() {
-		WorldObject toEdit = getSelectedWO();
+	public boolean updateWOCurrent(WorldObject selectWO) {
 		RoboticArm model = RobotRun.getActiveRobot();
 		boolean edited = false;
+		
+		if (model != null && selectWO == model.held) {
+			// Cannot edit an object being held by the Robot
+			PApplet.println("Cannot edit an object currently being held by the Robot!");
+			return false;
+		}
 
-		if (toEdit != null) {
+		try {
+			boolean dimChanged = false;
+			Shape s = selectWO.getForm();
 
-			if (model != null && toEdit == model.held) {
-				// Cannot edit an object being held by the Robot
-				PApplet.println("Cannot edit an object currently being held by the Robot!");
-				return false;
+			if (s instanceof Box) {
+				Float[] newDims = getBoxDimensions();
+
+				if (newDims[0] != null) {
+					// Update the box's length
+					s.setDim(newDims[0], DimType.LENGTH);
+					dimChanged = true;
+				}
+
+				if (newDims[1] != null) {
+					// Update the box's height
+					s.setDim(newDims[1], DimType.HEIGHT);
+					dimChanged = true;
+				}
+
+				if (newDims[2] != null) {
+					// Update the box's width
+					s.setDim(newDims[2], DimType.WIDTH);
+					dimChanged = true;
+				}
+
+			} else if (s instanceof Cylinder) {
+				Float[] newDims = getCylinderDimensions();
+
+				if (newDims[0] != null) {
+					// Update the cylinder's radius
+					s.setDim(newDims[0], DimType.RADIUS);
+					dimChanged = true;
+				}
+
+				if (newDims[1] != null) {
+					// Update the cylinder's height
+					s.setDim(newDims[1], DimType.HEIGHT);
+					dimChanged = true;
+				}
+
+			} else if (s instanceof ModelShape) {
+				Float[] newDims = getModelDimensions();
+
+				if (newDims[0] != null) {
+					// Update the model's scale value
+					s.setDim(newDims[0], DimType.SCALE);
+					dimChanged = true;
+				}
 			}
 
-			try {
-				boolean dimChanged = false;
-				Shape s = toEdit.getForm();
-
-				if (s instanceof Box) {
-					Float[] newDims = getBoxDimensions();
-
-					if (newDims[0] != null) {
-						// Update the box's length
-						s.setDim(newDims[0], DimType.LENGTH);
-						dimChanged = true;
-					}
-
-					if (newDims[1] != null) {
-						// Update the box's height
-						s.setDim(newDims[1], DimType.HEIGHT);
-						dimChanged = true;
-					}
-
-					if (newDims[2] != null) {
-						// Update the box's width
-						s.setDim(newDims[2], DimType.WIDTH);
-						dimChanged = true;
-					}
-
-				} else if (s instanceof Cylinder) {
-					Float[] newDims = getCylinderDimensions();
-
-					if (newDims[0] != null) {
-						// Update the cylinder's radius
-						s.setDim(newDims[0], DimType.RADIUS);
-						dimChanged = true;
-					}
-
-					if (newDims[1] != null) {
-						// Update the cylinder's height
-						s.setDim(newDims[1], DimType.HEIGHT);
-						dimChanged = true;
-					}
-
-				} else if (s instanceof ModelShape) {
-					Float[] newDims = getModelDimensions();
-
-					if (newDims[0] != null) {
-						// Update the model's scale value
-						s.setDim(newDims[0], DimType.SCALE);
-						dimChanged = true;
-					}
-				}
-
-				if (dimChanged && toEdit instanceof Part) {
-					// Update the bounding box dimensions of a part
-					((Part)toEdit).updateOBBDims();
-				}
-
-				edited = dimChanged;
-
-				// Convert origin position into the World Frame
-				PVector oPosition = RMath.vToWorld( toEdit.getLocalCenter() );
-				PVector oWPR = RMath.nRMatToWEuler( toEdit.getLocalOrientationAxes() );
-				Float[] inputValues = getCurrentWOValues();
-				// Update position and orientation
-				if (inputValues[0] != null) {
-					oPosition.x = inputValues[0];
-					edited = true;
-				}
-
-				if (inputValues[1] != null) {
-					oPosition.y = inputValues[1];
-					edited = true;
-				}
-
-				if (inputValues[2] != null) {
-					oPosition.z = inputValues[2];
-					edited = true;
-				}
-
-				if (inputValues[3] != null) {
-					oWPR.x = inputValues[3];
-					edited = true;
-				}
-
-				if (inputValues[4] != null) {
-					oWPR.y = inputValues[4];
-					edited = true;
-				}
-
-				if (inputValues[5] != null) {
-					oWPR.z = inputValues[5];
-					edited = true;
-				}
-
-				// Convert values from the World to the Native coordinate system
-				PVector position = RMath.vFromWorld( oPosition );
-				RMatrix orientation = RMath.wEulerToNRMat(oWPR);
-				// Update the Objects position and orientation
-				toEdit.setLocalCenter(position);
-				toEdit.setLocalOrientationAxes(orientation);
-
-			} catch (NullPointerException NPEx) {
-				PApplet.println("Missing parameter!");
-				NPEx.printStackTrace();
-				return false;
+			if (dimChanged && selectWO instanceof Part) {
+				// Update the bounding box dimensions of a part
+				((Part)selectWO).updateOBBDims();
 			}
 
-		} else {
-			PApplet.println("No object selected!");
+			edited = dimChanged;
+
+			// Convert origin position into the World Frame
+			PVector oPosition = RMath.vToWorld( selectWO.getLocalCenter() );
+			PVector oWPR = RMath.nRMatToWEuler( selectWO.getLocalOrientationAxes() );
+			Float[] inputValues = getCurrentWOValues();
+			// Update position and orientation
+			if (inputValues[0] != null) {
+				oPosition.x = inputValues[0];
+				edited = true;
+			}
+
+			if (inputValues[1] != null) {
+				oPosition.y = inputValues[1];
+				edited = true;
+			}
+
+			if (inputValues[2] != null) {
+				oPosition.z = inputValues[2];
+				edited = true;
+			}
+
+			if (inputValues[3] != null) {
+				oWPR.x = inputValues[3];
+				edited = true;
+			}
+
+			if (inputValues[4] != null) {
+				oWPR.y = inputValues[4];
+				edited = true;
+			}
+
+			if (inputValues[5] != null) {
+				oWPR.z = inputValues[5];
+				edited = true;
+			}
+
+			// Convert values from the World to the Native coordinate system
+			PVector position = RMath.vFromWorld( oPosition );
+			RMatrix orientation = RMath.wEulerToNRMat(oWPR);
+			// Update the Objects position and orientation
+			selectWO.setLocalCenter(position);
+			selectWO.setLocalOrientationAxes(orientation);
+
+		} catch (NullPointerException NPEx) {
+			PApplet.println("Missing parameter!");
+			NPEx.printStackTrace();
+			return false;
 		}
 
 		/* If the edited object is a fixture, then update the orientation
 		 * of all parts, which reference this fixture, in this scenario. */
-		if (toEdit instanceof Fixture) {
+		if (selectWO instanceof Fixture) {
 			if (app.getActiveScenario() != null) {
 
 				for (WorldObject wldObj : app.getActiveScenario()) {
 					if (wldObj instanceof Part) {
 						Part p = (Part)wldObj;
 
-						if (p.getFixtureRef() == toEdit) {
+						if (p.getFixtureRef() == selectWO) {
 							p.updateAbsoluteOrientation();
 						}
 					}
@@ -3426,60 +3422,57 @@ public class WGUI implements ControlListener {
 	 * Updates the default position and orientation values of a part based on
 	 * the input fields in the edit window.
 	 * 
-	 * @return	if the selected was successfully modified
+	 * @param selectedPart	The part, of which to update the default position
+	 * 						and orientation
+	 * @return				If the part was successfully modified
 	 */
-	public boolean updateWODefault() {
-		WorldObject toEdit = getSelectedWO();
+	public boolean updateWODefault(Part selectedPart) {
 		boolean edited = false;
+		// Pull the object's current position and orientation
+		PVector defaultPos = RMath.vToWorld( selectedPart.getDefaultCenter() );
+		PVector defaultWPR = RMath.nRMatToWEuler( selectedPart.getDefaultOrientationAxes() );
+		Float[] inputValues = getCurrentWOValues();
 
-		if (toEdit instanceof Part) {
-			Part p = (Part)toEdit;
-			// Pull the object's current position and orientation
-			PVector defaultPos = RMath.vToWorld( p.getDefaultCenter() );
-			PVector defaultWPR = RMath.nRMatToWEuler( p.getDefaultOrientationAxes() );
-			Float[] inputValues = getCurrentWOValues();
-
-			// Update default position and orientation
-			if (inputValues[0] != null) {
-				defaultPos.x = inputValues[0];
-				edited = true;
-			}
-
-			if (inputValues[1] != null) {
-				defaultPos.y = inputValues[1];
-				edited = true;
-			}
-
-			if (inputValues[2] != null) {
-				defaultPos.z = inputValues[2];
-				edited = true;
-			}
-
-			if (inputValues[3] != null) {
-				defaultWPR.x = inputValues[3];
-				edited = true;
-			}
-
-			if (inputValues[4] != null) {
-				defaultWPR.y = inputValues[4];
-				edited = true;
-			}
-
-			if (inputValues[5] != null) {
-				defaultWPR.z = inputValues[5];
-				edited = true;
-			}
-
-			// Convert values from the World to the Native coordinate system
-			PVector position = RMath.vFromWorld( defaultPos );
-			RMatrix orientation = RMath.wEulerToNRMat(defaultWPR);
-			// Update the Object's default position and orientation
-			p.setDefaultCenter(position);
-			p.setDefaultOrientationAxes(orientation);
-
-			fillDefWithDef();
+		// Update default position and orientation
+		if (inputValues[0] != null) {
+			defaultPos.x = inputValues[0];
+			edited = true;
 		}
 
+		if (inputValues[1] != null) {
+			defaultPos.y = inputValues[1];
+			edited = true;
+		}
+
+		if (inputValues[2] != null) {
+			defaultPos.z = inputValues[2];
+			edited = true;
+		}
+
+		if (inputValues[3] != null) {
+			defaultWPR.x = inputValues[3];
+			edited = true;
+		}
+
+		if (inputValues[4] != null) {
+			defaultWPR.y = inputValues[4];
+			edited = true;
+		}
+
+		if (inputValues[5] != null) {
+			defaultWPR.z = inputValues[5];
+			edited = true;
+		}
+
+		// Convert values from the World to the Native coordinate system
+		PVector position = RMath.vFromWorld( defaultPos );
+		RMatrix orientation = RMath.wEulerToNRMat(defaultWPR);
+		// Update the Object's default position and orientation
+		selectedPart.setDefaultCenter(position);
+		selectedPart.setDefaultOrientationAxes(orientation);
+
+		fillDefWithDef(selectedPart);
+		
 		return edited;
 	}
 

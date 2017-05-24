@@ -1,10 +1,5 @@
 package geom;
 
-import java.util.Arrays;
-
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.RealMatrix;
-
 import global.Fields;
 import global.RMath;
 import processing.core.PVector;
