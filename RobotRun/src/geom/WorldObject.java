@@ -1,5 +1,6 @@
 package geom;
 
+import global.Fields;
 import global.MyFloatFormat;
 import global.RMath;
 import processing.core.PVector;
@@ -88,8 +89,12 @@ public abstract class WorldObject implements Cloneable {
 			}
 			
 			if (G == 0f) {
-				System.err.printf("G = 0 for A=%f R=%s\n", planeAxes[planeAxis] *
-						dims[planeAxis], ray);
+				/**
+				if (Fields.DEBUG) {
+					System.err.printf("G = 0 for A=%f R=%s\n",
+							planeAxes[planeAxis] * dims[planeAxis], ray);
+				}
+				/**/
 				
 			} else {
 				float t = -E / G;
@@ -219,6 +224,22 @@ public abstract class WorldObject implements Cloneable {
 
 	@Override
 	public String toString() { return name; }
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param dx
+	 * @param dy
+	 * @param dz
+	 */
+	public void translate(float dx, float dy, float dz) {
+		PVector center = localOrientation.getOrigin();
+		// Apply translation with the limits for an object's position
+		center.x = RMath.clamp(center.x + dx, -9999f, 9999f);
+		center.y = RMath.clamp(center.y + dy, -9999f, 9999f);
+		center.z = RMath.clamp(center.z + dz, -9999f, 9999f);
+	}
+	
 	/**
 	 * Updates all non-null values of the object's center position.
 	 * If a given value is null, then the origin value remains unchanged.

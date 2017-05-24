@@ -338,6 +338,12 @@ public class Part extends WorldObject {
 	public void setOBBDimenions(PVector newDims) {
 		absOBB.setDims(newDims);
 	}
+	
+	@Override
+	public void translate(float dx, float dy, float dz) {
+		super.translate(dx, dy, dz);
+		updateAbsoluteOrientation();
+	}
 
 	/**
 	 * Update the Part's absolute (or world) orientation
