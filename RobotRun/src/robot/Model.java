@@ -31,9 +31,9 @@ public class Model {
 	public boolean anglePermitted(int idx, float angle) {
 		return RMath.angleWithinBounds(angle, jointRanges[idx].x, jointRanges[idx].y);
 	}
-
-	public void draw() {
-		RobotRun.getInstance().shape(mesh);
+	
+	public PShape getShape() {
+		return mesh;
 	}
 
 } // end Model class

@@ -1295,7 +1295,7 @@ public class WGUI implements ControlListener {
 	public void fillCurWithCur(WorldObject selected) {
 		// Get the part's default position and orientation
 		PVector pos = RMath.vToWorld( selected.getLocalCenter() );
-		PVector wpr = RMath.nRMatToWEuler( selected.getLocalOrientationAxes() );
+		PVector wpr = RMath.nRMatToWEuler( selected.getLocalOrientation() );
 
 		// Fill the current position and orientation fields in the edit window
 		getTextField("XCur").setText( String.format("%4.3f", pos.x) );
@@ -1314,7 +1314,7 @@ public class WGUI implements ControlListener {
 	public void fillCurWithDef(Part selected) {
 		// Get the part's current position and orientation
 		PVector pos = RMath.vToWorld( selected.getDefaultCenter() );
-		PVector wpr = RMath.nRMatToWEuler( selected.getDefaultOrientationAxes() );
+		PVector wpr = RMath.nRMatToWEuler( selected.getDefaultOrientation() );
 
 		// Fill the default position and orientation fields in the edit window
 		getTextField("XCur").setText( String.format("%4.3f", pos.x) );
@@ -1333,7 +1333,7 @@ public class WGUI implements ControlListener {
 	private void fillDefWithDef(Part selected) {
 		// Get the part's current position and orientation
 		PVector pos = RMath.vToWorld( selected.getDefaultCenter() );
-		PVector wpr = RMath.nRMatToWEuler( selected.getDefaultOrientationAxes() );
+		PVector wpr = RMath.nRMatToWEuler( selected.getDefaultOrientation() );
 
 		// Fill the default position and orientation fields in the edit window
 		getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
@@ -3352,7 +3352,7 @@ public class WGUI implements ControlListener {
 
 			// Convert origin position into the World Frame
 			PVector oPosition = RMath.vToWorld( selectWO.getLocalCenter() );
-			PVector oWPR = RMath.nRMatToWEuler( selectWO.getLocalOrientationAxes() );
+			PVector oWPR = RMath.nRMatToWEuler( selectWO.getLocalOrientation() );
 			Float[] inputValues = getCurrentWOValues();
 			// Update position and orientation
 			if (inputValues[0] != null) {
@@ -3390,7 +3390,7 @@ public class WGUI implements ControlListener {
 			RMatrix orientation = RMath.wEulerToNRMat(oWPR);
 			// Update the Objects position and orientation
 			selectWO.setLocalCenter(position);
-			selectWO.setLocalOrientationAxes(orientation);
+			selectWO.setLocalOrientation(orientation);
 
 		} catch (NullPointerException NPEx) {
 			PApplet.println("Missing parameter!");
@@ -3430,7 +3430,7 @@ public class WGUI implements ControlListener {
 		boolean edited = false;
 		// Pull the object's current position and orientation
 		PVector defaultPos = RMath.vToWorld( selectedPart.getDefaultCenter() );
-		PVector defaultWPR = RMath.nRMatToWEuler( selectedPart.getDefaultOrientationAxes() );
+		PVector defaultWPR = RMath.nRMatToWEuler( selectedPart.getDefaultOrientation() );
 		Float[] inputValues = getCurrentWOValues();
 
 		// Update default position and orientation
@@ -3469,7 +3469,7 @@ public class WGUI implements ControlListener {
 		RMatrix orientation = RMath.wEulerToNRMat(defaultWPR);
 		// Update the Object's default position and orientation
 		selectedPart.setDefaultCenter(position);
-		selectedPart.setDefaultOrientationAxes(orientation);
+		selectedPart.setDefaultOrientation(orientation);
 
 		fillDefWithDef(selectedPart);
 		

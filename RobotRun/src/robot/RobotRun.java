@@ -9,6 +9,7 @@ import java.util.Stack;
 import enums.AxesDisplay;
 import enums.CoordFrame;
 import enums.EEMapping;
+import enums.EEType;
 import enums.ScreenMode;
 import enums.ScreenType;
 import enums.WindowTab;
@@ -20,6 +21,11 @@ import expression.Operator;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
+import geom.BoundingBox;
+import geom.Box;
+import geom.CoordinateSystem;
+import geom.Cylinder;
+import geom.DimType;
 import geom.Fixture;
 import geom.ModelShape;
 import geom.Part;
@@ -378,6 +384,15 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
+	 * Apply the given coordinate system onto the matrix stack
+	 * 
+	 * @param cs	The coordinate system to apply
+	 */
+	public void applyCoord(CoordinateSystem cs) {
+		applyCoord(cs.getOrigin(), cs.getAxes());
+	}
+	
+	/**
 	 * Wrapper method for applying the coordinate frame defined by the given
 	 * row major rotation matrix and position vector.
 	 * 
@@ -387,7 +402,7 @@ public class RobotRun extends PApplet {
 	 * 						the orientation of the coordinate frame with
 	 * 						respect to the native coordinate system
 	 */
-	public void applyMatrix(PVector origin, RMatrix axesVectors) {
+	public void applyCoord(PVector origin, RMatrix axesVectors) {
 		// Transpose the rotation portion, because Processing
 		this.applyMatrix(RMath.transformationMatrix(origin, axesVectors));
 	}
@@ -1175,24 +1190,50 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Checks for collisions between the given ray and objects in the scene
+	 * (parts and fixtures in the active scenario as well as visible robots).
+	 * The world object, closest to the ray, with which the ray collides is
+	 * returned, if the closest collision is not with the robot. Otherwise null
+	 * is returned.
 	 * 
-	 * @param ray
-	 * @param scenario
-	 * @param robot
+	 * @param ray	The ray, for which to check collisions in the scene
+	 * @return		The closest object, with which the ray collided
 	 */
-	public WorldObject checkForCollisionsInScene(Ray ray, Scenario scenario,
-			RoboticArm robot) {
+	private WorldObject checkForCollisionsInScene(Ray ray) {
+		Scenario active = this.getActiveScenario();
+		
+		if (UI.getRobotButtonState()) {
+			return checkForRayCollisions(ray, active, ROBOTS.get(0));
+			
+		} else {
+			return checkForRayCollisions(ray, active, ROBOTS.get(0),
+					ROBOTS.get(1));
+		}
+		
+	}
+	
+	/**
+	 * Checks for collisions between the given ray and fixtures and parts in
+	 * the given scenario and the given robots). The world object, closest to
+	 * the ray, with which the ray collides is returned, if the closest
+	 * collision is not with the robot. Otherwise null is returned.
+	 * 
+	 * @param ray		A ray, for which to check collisions
+	 * @param scenario	The scenario, with which to check collisions with the
+	 * 					given ray
+	 * @param robot		The robots, which which to check collisions with the
+	 * 					given ray
+	 */
+	private WorldObject checkForRayCollisions(Ray ray, Scenario scenario,
+			RoboticArm... robots) {
 		
 		PVector closestCollPt = null;
 		WorldObject collidedWith = null;
 		collisions.clear();
 		
 		// Check collision with the robots
-		closestCollPt = ROBOTS.get(0).closestCollision(mouseRay);
-		
-		if (UI.getRobotButtonState()) {
-			PVector collPt = ROBOTS.get(1).closestCollision(mouseRay);
+		for (RoboticArm r : robots) {
+			PVector collPt = r.closestCollision(mouseRay);
 			
 			if (collPt != null && (closestCollPt == null ||
 					PVector.dist(ray.getOrigin(), collPt) <
@@ -1626,11 +1667,330 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param r	The robotic arm to draw
+	 */
+	private void draw(RoboticArm r) {
+		PVector base = r.getBasePosition();
+		float[] jointAngles = r.getJointAngles();
+		EEType activeEE = r.getActiveEE();
+		int eeState = r.getEEState();
+		
+		pushStyle();
+		noStroke();
+		fill(200, 200, 0);
+
+		pushMatrix();
+		translate(base.x, base.y, base.z);
+
+		rotateZ(PConstants.PI);
+		rotateY(PConstants.PI/2);
+		shape( r.SEGMENTS.get(0).getShape() );
+		rotateY(-PConstants.PI/2);
+		rotateZ(-PConstants.PI);
+
+		fill(50);
+
+		translate(-50, -166, -358); // -115, -213, -413
+		rotateZ(PConstants.PI);
+		translate(150, 0, 150);
+		rotateX(PConstants.PI);
+		rotateY(jointAngles[0]);
+		rotateX(-PConstants.PI);
+		translate(-150, 0, -150);
+		shape( r.SEGMENTS.get(1).getShape() );
+		rotateZ(-PConstants.PI);
+
+		fill(200, 200, 0);
+
+		translate(-115, -85, 180);
+		rotateZ(PConstants.PI);
+		rotateY(PConstants.PI/2);
+		translate(0, 62, 62);
+		rotateX(jointAngles[1]);
+		translate(0, -62, -62);
+		shape( r.SEGMENTS.get(2).getShape() );
+		rotateY(-PConstants.PI/2);
+		rotateZ(-PConstants.PI);
+
+		fill(50);
+
+		translate(0, -500, -50);
+		rotateZ(PConstants.PI);
+		rotateY(PConstants.PI/2);
+		translate(0, 75, 75);
+		rotateZ(PConstants.PI);
+		rotateX(jointAngles[2]);
+		rotateZ(-PConstants.PI);
+		translate(0, -75, -75);
+		shape( r.SEGMENTS.get(3).getShape() );
+		rotateY(PConstants.PI/2);
+		rotateZ(-PConstants.PI);
+
+		translate(745, -150, 150);
+		rotateZ(PConstants.PI/2);
+		rotateY(PConstants.PI/2);
+		translate(70, 0, 70);
+		rotateY(jointAngles[3]);
+		translate(-70, 0, -70);
+		shape( r.SEGMENTS.get(4).getShape() );
+		rotateY(-PConstants.PI/2);
+		rotateZ(-PConstants.PI/2);
+
+		fill(200, 200, 0);
+
+		translate(-115, 130, -124);
+		rotateZ(PConstants.PI);
+		rotateY(-PConstants.PI/2);
+		translate(0, 50, 50);
+		rotateX(jointAngles[4]);
+		translate(0, -50, -50);
+		shape( r.SEGMENTS.get(5).getShape() );
+		rotateY(PConstants.PI/2);
+		rotateZ(-PConstants.PI);
+
+		fill(50);
+
+		translate(150, -10, 95);
+		rotateY(-PConstants.PI/2);
+		rotateZ(PConstants.PI);
+		translate(45, 45, 0);
+		rotateZ(jointAngles[5]);
+		translate(-45, -45, 0);
+		shape( r.SEGMENTS.get(6).getShape() );
+
+		
+		pushMatrix();
+
+		// Center the End Effector on the Robot's faceplate and draw it.
+		if(activeEE == EEType.SUCTION) {
+			rotateY(PConstants.PI);
+			translate(-88, -37, 0);
+			shape( r.EEM_SUCTION.getShape() );
+
+		} else if(activeEE == EEType.CLAW) {
+			rotateY(PConstants.PI);
+			translate(-88, 0, 0);
+			shape( r.EEM_CLAW.getShape() );
+			rotateZ(PConstants.PI/2);
+
+			if(eeState == Fields.OFF) {
+				// Draw open grippers
+				translate(10, -85, 30);
+				shape( r.EEM_CLAW_PINCER.getShape() );
+				translate(55, 0, 0);
+				shape( r.EEM_CLAW_PINCER.getShape() );
+
+			} else if(eeState == Fields.ON) {
+				// Draw closed grippers
+				translate(28, -85, 30);
+				shape( r.EEM_CLAW_PINCER.getShape() );
+				translate(20, 0, 0);
+				shape( r.EEM_CLAW_PINCER.getShape() );
+			}
+		} else if (activeEE == EEType.POINTER) {
+			rotateY(PConstants.PI);
+			rotateZ(PConstants.PI);
+			translate(45, -45, 10);
+			shape( r.EEM_POINTER.getShape() );
+
+		} else if (activeEE == EEType.GLUE_GUN) {
+			rotateZ(PConstants.PI);
+			translate(-48, -46, -12);
+			shape( r.EEM_GLUE_GUN.getShape() );
+
+		} else if (activeEE == EEType.WIELDER) {
+			rotateY(PConstants.PI);
+			rotateZ(PConstants.PI);
+			translate(46, -44, 10);
+			shape( r.EEM_WIELDER.getShape() );
+		}
+		
+		popMatrix();
+
+		
+		popMatrix();
+		popStyle();
+		
+		/* My sketchy work-around for drawing only the bounding boxes of the
+		 * active robot */
+		if (r == getActiveRobot()) {
+			
+			if(areOBBsDisplayed()) {
+				// Draw hit boxes of the body poriotn of the Robot Arm
+				for(BoundingBox b : r.ARM_OBBS) {
+					draw(b);
+				}
+
+				ArrayList<BoundingBox> curEEHitBoxes = r.EE_TO_OBBS.get(activeEE);
+
+				// Draw End Effector hit boxes
+				for(BoundingBox b : curEEHitBoxes) {
+					draw(b);
+				}
+
+				curEEHitBoxes = r.EE_TO_PICK_OBBS.get(activeEE);
+				// Draw Pickup hit boxes
+				for (BoundingBox b : curEEHitBoxes) {
+					draw(b);
+				}
+			}
+			
+			if(r.isTrace()) {
+				drawTrace(r);
+			}
+		}
+		
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param r	
+	 */
+	private void drawTrace(RoboticArm r) {
+		Point eePos = RobotRun.nativeRobotEEPoint(r, r.getJointAngles());
+		
+		if(r.tracePts.isEmpty()) {
+			r.tracePts.add(eePos.position);
+			return;
+		} 
+		else if(eePos.position.copy().sub(r.tracePts.get(r.tracePts.size()-1)).mag() > 0.5) {
+			r.tracePts.add(eePos.position.copy());
+		}
+		
+		PVector lastPt = r.tracePts.get(0);
+		for(int i = 1; i < r.tracePts.size(); i += 1) {
+			PVector curPt = r.tracePts.get(i);
+			RobotRun.getInstance().stroke(0);
+			RobotRun.getInstance().strokeWeight(3);
+			RobotRun.getInstance().pushMatrix();
+			RobotRun.getInstance().line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y, curPt.z);
+			RobotRun.getInstance().popMatrix();
+			RobotRun.getInstance().strokeWeight(1);
+			lastPt = curPt;
+		}	
+	}
+	
+	/**
+	 * Draws the given world object with respect to the top matrix and the
+	 * object's orientation.
+	 * 
+	 * @param wo	The world object to draw
+	 */
+	private void draw(WorldObject wo) {
+		pushMatrix();
+		
+		if (wo instanceof Part) {
+			Part p = (Part)wo;
+			// Draw parts with respect to their fixture reference
+			applyCoord(p.getCenter(), p.getOrientation());
+			draw(wo.getForm());
+			
+			if (areOBBsDisplayed()) {
+				draw( p.getOBBFrame() );
+			}
+			
+		} else {
+			// Draw the world object in its own coordinate system
+			applyCoord(wo.getLocalCenter(), wo.getLocalOrientation());
+			draw(wo.getForm());
+		}
+		
+		popMatrix();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param obb	The bounding box to draw
+	 */
+	private void draw(BoundingBox obb) {
+		pushMatrix();
+		applyCoord(obb.getCenter(), obb.getOrientationAxes());
+		
+		draw(obb.getFrame());
+		
+		popMatrix();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param s
+	 */
+	private void draw(Shape s) {
+		pushStyle();
+		
+		if (s.getFillValue() == null) {
+			noFill();
+			
+		} else {
+			fill(s.getFillValue());
+		}
+		
+		if (s.getStrokeValue() == null) {
+			noStroke();
+			
+		} else {
+			stroke(s.getStrokeValue());
+		}
+		
+		if (s instanceof Box) {
+			box(
+				s.getDim(DimType.LENGTH),
+				s.getDim(DimType.HEIGHT),
+				s.getDim(DimType.WIDTH)
+			);
+			
+		} else if (s instanceof Cylinder) {
+			/**
+			 * Assumes the center of the cylinder is halfway between the top and bottom of of the cylinder.
+			 * 
+			 * Based off of the algorithm defined on Vormplus blog at:
+			 * http://vormplus.be/blog/article/drawing-a-cylinder-with-processing
+			 */
+			float halfHeight = s.getDim(DimType.HEIGHT) / 2,
+					diameter = 2 * s.getDim(DimType.RADIUS);
+
+			translate(0f, 0f, halfHeight);
+			// Draw top of the cylinder
+			ellipse(0f, 0f, diameter, diameter);
+			translate(0f, 0f, -s.getDim(DimType.HEIGHT));
+			// Draw bottom of the cylinder
+			ellipse(0f, 0f, diameter, diameter);
+			translate(0f, 0f, halfHeight);
+
+			beginShape(PConstants.TRIANGLE_STRIP);
+			// Draw a string of triangles around the circumference of the Cylinders top and bottom.
+			for (int degree = 0; degree <= 360; ++degree) {
+				float pos_x = PApplet.cos(DEG_TO_RAD * degree) * s.getDim(DimType.RADIUS),
+						pos_y = PApplet.sin(DEG_TO_RAD * degree) * s.getDim(DimType.RADIUS);
+
+				vertex(pos_x, pos_y, halfHeight);
+				vertex(pos_x, pos_y, -halfHeight);
+			}
+
+			endShape();
+			
+		} else if (s instanceof ModelShape) {
+			ModelShape mShape = (ModelShape)s;
+			float[] offset = mShape.getCenterOffset();
+			
+			translate(offset[0], offset[1], offset[2]);
+			shape(mShape.getModel());
+		}
+		
+		popStyle();
+	}
+	
+	/**
 	 * Draws the given ray based on the matrix on the top of the stack.
 	 * 
 	 * @param r	A ray object
 	 */
-	public void drawRay(Ray r) {
+	private void drawRay(Ray r) {
 		pushStyle();
 		stroke(r.getColor());
 		noFill();
@@ -3789,6 +4149,47 @@ public class RobotRun extends PApplet {
 	public MenuScroll getContentsMenu() {
 		return contents;
 	}
+	
+	/**
+	 * Pulls the origin and orientation from the top of the matrix stack and
+	 * creates a coordinate system from them.
+	 * 
+	 * @return	A coordinate system system representing the top of matrix
+	 */
+	public CoordinateSystem getCoordFromMatrix() {
+		PVector origin = getCoordFromMatrix(0f, 0f, 0f);
+		RMatrix axes = getRotationMatrix();
+		
+		return new CoordinateSystem(origin, axes);
+	}
+	
+	/**
+	 * Sets the given coordinate system to match the top of the matrix stack.
+	 * 
+	 * @param cs	The coordinate system to set as the top of the matrix stack
+	 */
+	public void getCoordFromMatrix(CoordinateSystem cs) {
+		PVector origin = getCoordFromMatrix(0f, 0f, 0f);
+		RMatrix axes = getRotationMatrix();
+		
+		cs.setOrigin(origin);
+		cs.setAxes(axes);
+	}
+	
+	/**
+	 * Sets the coordinate system of the given bounding box to match the top
+	 * of the matrix stack.
+	 * 
+	 * @param obb	The bounding box, of which to set the coordinate system to 
+	 * 				the top of the matrix stack
+	 */
+	public void getCoordFromMatrix(BoundingBox obb) {
+		PVector center = getCoordFromMatrix(0f, 0f, 0f);
+		RMatrix orientation = getRotationMatrix();
+		
+		obb.setCenter(center);
+		obb.setOrientation(orientation);
+	}
 
 	/*
 	 * This method transforms the given coordinates into a vector in the
@@ -4919,10 +5320,12 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * TODO
+	 * Loads the data registers of the given robotic arm into a list of display
+	 * lines, which can be rendered onto the pendant screen.
 	 * 
-	 * @param r
-	 * @return
+	 * @param r	The robotic arm, from which to load the data registers
+	 * @return	The list of display lines representing the given robot's data
+	 * 			registers
 	 */
 	public ArrayList<DisplayLine> loadDataRegisters(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
@@ -5828,32 +6231,14 @@ public class RobotRun extends PApplet {
 			}
 	
 			if (mouseButton == RIGHT) {
-				
-				/* TODO Drag right mouse button to rotate the object *
-				float angle_x = (mouseY - pmouseY) * RobotRun.DEG_TO_RAD / 4f;
-				float angle_y = (mouseX - pmouseX) * RobotRun.DEG_TO_RAD / 4f;
-				PVector axis_x = RMath.rotateVector(new PVector(1f, 0f, 0f), camRMat);
-				PVector axis_y = RMath.rotateVector(new PVector(0f, 1f, 0f), camRMat);
-				axis_x.normalize();
-				axis_y.normalize();
-				
-				System.out.printf("r=[%f, %f] x=%s y=%s\n", angle_x, angle_y, axis_x, axis_y);
-				
-				selectedWO.rotateAroundAxis(axis_x, angle_x);
-				selectedWO.rotateAroundAxis(axis_y, angle_y);
-				/**/
-				
-				/*
-				 * x = x0 + ta
-				 * y = y0 + tb
-				 * 
-				 */
-				
+				// Drag the right mouse button to rotate the object
 				float mouseXDiff = mouseX - pmouseX;
 				float mouseYDiff = mouseY - pmouseY;
 				float mouseDiff = (float) Math.sqrt(mouseXDiff * mouseXDiff + mouseYDiff * mouseYDiff);
 				float angle = RobotRun.DEG_TO_RAD * mouseDiff / 4f;
 				
+				/* Form an axis perpendicular to the line formed by the previous
+				 * and current mouse position to use as the axis of rotation. */
 				PVector m = new PVector(mouseX - pmouseX, mouseY - pmouseY, 0f);
 				PVector n = new PVector(0, 0, 1f);
 				PVector axis = RMath.rotateVector(n.cross(m).normalize(), camRMat);
@@ -5941,8 +6326,7 @@ public class RobotRun extends PApplet {
 				mouseRay.setDirection(mDirect);
 			}
 			// Check for collisions with objects in the scene
-			WorldObject collision = checkForCollisionsInScene(mouseRay,
-					activeScenario, activeRobot);
+			WorldObject collision = checkForCollisionsInScene(mouseRay);
 			
 			if (mouseButton == LEFT) {
 				UI.setSelectedWO(collision);
@@ -6711,7 +7095,7 @@ public class RobotRun extends PApplet {
 		pushMatrix();
 		pushStyle();
 		// Transform to the reference frame defined by the axes vectors		
-		applyMatrix(origin, axesVectors);
+		applyCoord(origin, axesVectors);
 		// X axis
 		stroke(255, 0, 0);
 		line(-axesLength, 0, 0, axesLength, 0, 0);
@@ -6776,7 +7160,7 @@ public class RobotRun extends PApplet {
 	 *            The Robot Arm model
 	 */
 	public void renderScene(Scenario s, RoboticArm model) {
-		model.updateRobot();
+		model.updateRobot(this);
 		
 		if (RobotRun.getInstance().isProgramRunning()) {
 			Program ap = model.getActiveProg();
@@ -6807,18 +7191,107 @@ public class RobotRun extends PApplet {
 		model.checkSelfCollisions();
 
 		if (s != null) {
-			s.updateAndRenderObjects(model, UI.getSelectedWO());
+			WorldObject selected = UI.getSelectedWO();
+			int numOfObjects = s.size();
+
+			for (int idx = 0; idx < numOfObjects; ++idx) {
+				WorldObject wldObj = s.getWorldObject(idx);
+
+				if (wldObj instanceof Part) {
+					Part p = (Part)wldObj;
+
+					/* Update the transformation matrix of an object held by the Robotic Arm */
+					if(model != null && p == model.held && model.modelInMotion()) {
+						pushMatrix();
+						resetMatrix();
+
+						/***********************************************
+						     Moving a part with the Robot:
+						
+						     P' = R^-1 x E' x E^-1 x P
+						
+						     where:
+						     P' - new part local orientation
+						     R  - part fixture reference orientation
+						     E' - current Robot end effector orientation
+						     E  - previous Robot end effector orientation
+						     P  - current part local orientation
+						 ***********************************************/
+
+						Fixture refFixture = p.getFixtureRef();
+
+						if (refFixture != null) {
+							refFixture.removeCoordinateSystem();
+						}
+
+						RobotRun.applyModelRotation(model, model.getJointAngles());
+						RMatrix invMat = new RMatrix(getActiveRobot().getLastEEOrientation());
+						applyMatrix(invMat.getInverse());
+						applyCoord(p.getCenter(), p.getOrientation());
+						
+						// Update the world object's position and orientation
+						p.setLocalCenter( getCoordFromMatrix(0f, 0f, 0f) );
+						p.setLocalOrientation( getRotationMatrix() );
+						
+						popMatrix();
+					}
+					
+					
+					if (p != model.held && p != selected &&
+							p.getFixtureRef() == null &&
+							p.getLocalCenter().y < Fields.FLOOR_Y) {
+						
+						// Apply gravity
+						PVector c = wldObj.getLocalCenter();
+						wldObj.updateLocalCenter(null, c.y + 10, null);
+					}
+
+					/* Collision Detection */
+					if(areOBBsDisplayed()) {
+						if( model != null && model.checkObjectCollision(p) ) {
+							p.setBBColor(Fields.OBB_COLLISION);
+						}
+
+						// Detect collision with other objects
+						for(int cdx = idx + 1; cdx < s.size(); ++cdx) {
+
+							if (s.getWorldObject(cdx) instanceof Part) {
+								Part p2 = (Part)s.getWorldObject(cdx);
+
+								if(p.collision(p2)) {
+									// Change hit box color to indicate Object collision
+									p.setBBColor(Fields.OBB_COLLISION);
+									p2.setBBColor(Fields.OBB_COLLISION);
+									break;
+								}
+							}
+						}
+
+						if (model != null && p != model.held && model.canPickup(p)) {
+							// Change hit box color to indicate End Effector collision
+							p.setBBColor(Fields.OBB_HELD);
+						}
+					}
+
+					if (p == selected) {
+						p.setBBColor(Fields.OBB_SELECTED);
+					}
+				}
+				
+				// Draw the object
+				draw(wldObj);
+			}
 		}
 
 		if (UI.getRobotButtonState()) {
 			// Draw all robots
 			for (RoboticArm r : ROBOTS.values()) {
-				r.draw();
+				draw(r);
 			}
 
 		} else {
 			// Draw only the active robot
-			activeRobot.draw();
+			draw(activeRobot);
 		}
 		
 		/* Render the axes of the selected World Object */
@@ -6826,21 +7299,20 @@ public class RobotRun extends PApplet {
 		WorldObject wldObj = UI.getSelectedWO();
 		
 		if (wldObj != null) {
-			pushMatrix();
-
+			PVector origin;
+			RMatrix orientation;
+			
 			if (wldObj instanceof Part) {
-				Fixture reference = ((Part) wldObj).getFixtureRef();
-
-				if (reference != null) {
-					// Draw part's orientation with reference to its fixture
-					reference.applyCoordinateSystem();
-				}
+				origin = ((Part) wldObj).getCenter();
+				orientation = ((Part) wldObj).getOrientation();
+				
+			} else {
+				origin = wldObj.getLocalCenter();
+				orientation = wldObj.getLocalOrientation();
 			}
 
-			renderOriginAxes(wldObj.getLocalCenter(), RMath.rMatToWorld(wldObj.getLocalOrientationAxes()),
-					500f, Fields.BLACK);
-
-			popMatrix();
+			renderOriginAxes(origin, RMath.rMatToWorld(orientation), 500f,
+					Fields.BLACK);
 		}
 
 		if (displayPoint != null) {
@@ -7037,7 +7509,7 @@ public class RobotRun extends PApplet {
 			String[] dimFields = toEdit.dimFieldsToStringArray();
 			// Convert the values into the World Coordinate System
 			PVector position = RMath.vToWorld(toEdit.getLocalCenter());
-			PVector wpr = RMath.nRMatToWEuler( toEdit.getLocalOrientationAxes() );
+			PVector wpr = RMath.nRMatToWEuler( toEdit.getLocalOrientation() );
 			
 
 			lastTextPositionY += 20;
@@ -7068,7 +7540,7 @@ public class RobotRun extends PApplet {
 				Part p = (Part) toEdit;
 				// Convert the values into the World Coordinate System
 				position = RMath.vToWorld( p.getDefaultCenter() );
-				wpr = RMath.nRMatToWEuler( p.getDefaultOrientationAxes() );
+				wpr = RMath.nRMatToWEuler( p.getDefaultOrientation() );
 				
 				// Create a set of uniform Strings
 				lines = Fields.toLineStringArray(position, wpr);
@@ -7166,7 +7638,7 @@ public class RobotRun extends PApplet {
 				updateScenarioUndo((WorldObject) wo.clone());
 				Part p = (Part) wo;
 				p.setLocalCenter(p.getDefaultCenter());
-				p.setLocalOrientationAxes(p.getDefaultOrientationAxes());
+				p.setLocalOrientation(p.getDefaultOrientation());
 			}
 		}
 	}
@@ -8420,10 +8892,10 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * TODO
+	 * Updates the appropiate user input buffer based on the active pendant
+	 * screen.
 	 * 
-	 * @param c
-	 * @return
+	 * @param c	The character input by the user
 	 */
 	private void characterInput(char c) {
 		if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY && workingText.length() < TEXT_ENTRY_LEN

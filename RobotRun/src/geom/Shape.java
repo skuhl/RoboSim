@@ -20,29 +20,8 @@ public abstract class Shape implements Cloneable {
 		strokeCVal = strokeVal;
 	}
 
-	/**
-	 * Apply stroke and fill colors.
-	 */
-	protected void applyColors() {
-		if (strokeCVal == null) {
-			RobotRun.getInstance().noStroke();
-
-		} else {
-			RobotRun.getInstance().stroke(strokeCVal);
-		}
-
-		if (fillCVal == null) {
-			RobotRun.getInstance().noFill();
-
-		} else {
-			RobotRun.getInstance().fill(fillCVal);
-		} 
-	}
-
 	@Override
 	public abstract Shape clone();
-
-	public abstract void draw();
 
 	/**
 	 * Returns the value of the given dimension associated with

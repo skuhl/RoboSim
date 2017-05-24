@@ -365,11 +365,13 @@ public abstract class RMath {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Forms a rotation matrix from the given unit vector, u, and angle of
+	 * rotation. theta, about u.
 	 * 
-	 * @param u
-	 * @param theta
-	 * @return
+	 * @param u		A unit vector representing the axis of rotation
+	 * @param theta	The angle of rotaiton around u
+	 * @return		The rotation matrix representing the rotation of theta
+	 * 				around u.
 	 */
 	public static RMatrix matFromAxisAndAngle(PVector u, float theta) {
 		float[][] rMat = new float[3][3];

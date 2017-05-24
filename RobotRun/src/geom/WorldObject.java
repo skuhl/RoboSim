@@ -17,26 +17,19 @@ public abstract class WorldObject implements Cloneable {
 	public WorldObject() {
 		name = "Object";
 		form = new Box();
-		localOrientation = new CoordinateSystem();
+		localOrientation = CoordinateSystem.getDefault();
 	}
 
 	public WorldObject(String n, Shape f) {
 		name = n;
 		form = f;
-		localOrientation = new CoordinateSystem();
+		localOrientation = CoordinateSystem.getDefault();
 	}
 
 	public WorldObject(String n, Shape f, CoordinateSystem cs) {
 		name = n;
 		form = f;
 		localOrientation = cs;
-	}
-
-	/**
-	 * Apply the local Coordinate System of the World Object.
-	 */
-	public void applyCoordinateSystem() {
-		localOrientation.apply();
 	}
 	
 	/**
@@ -177,17 +170,6 @@ public abstract class WorldObject implements Cloneable {
 		return fields;
 	}
 
-	/**
-	 * Draw the world object in its local orientation.
-	 */
-	public void draw() {
-		RobotRun.getInstance().pushMatrix();
-		// Draw shape in its own coordinate system
-		applyCoordinateSystem();
-		form.draw();
-		RobotRun.getInstance().popMatrix();
-	}
-
 	// Getter and Setter methods for the World Object's local orientation, name, and form
 
 	public Shape getForm() { return form; }
@@ -198,17 +180,18 @@ public abstract class WorldObject implements Cloneable {
 		return localOrientation.getOrigin();
 	}
 
-	public RMatrix getLocalOrientationAxes() {
+	public RMatrix getLocalOrientation() {
 		return localOrientation.getAxes();
 	}
 
 	public String getName() { return name; }
 	
 	/**
-	 * TODO
+	 * Rotates the world object about the axis represented by the given unit
+	 * vector by the given angle value.
 	 * 
-	 * @param axis
-	 * @param theta
+	 * @param axis	The unit vector representing the axis of rotation
+	 * @param theta	the angle of rotation around the given axis
 	 */
 	public void rotateAroundAxis(PVector axis, float angle) {
 		
@@ -218,19 +201,11 @@ public abstract class WorldObject implements Cloneable {
 		localOrientation.setAxes( rotation.multiply(orientation) );
 	}
 
-	/**
-	 * Transform the World Object's local Coordinate System to
-	 * the current transformation matrix.
-	 */
-	public void setCoordinateSystem() {
-		localOrientation = new CoordinateSystem();
-	}
-
 	public void setLocalCenter(PVector newCenter) {
 		localOrientation.setOrigin(newCenter);
 	}
 	
-	public void setLocalOrientationAxes(RMatrix newAxes) {
+	public void setLocalOrientation(RMatrix newAxes) {
 		localOrientation.setAxes(newAxes);
 	}
 
@@ -240,11 +215,13 @@ public abstract class WorldObject implements Cloneable {
 	public String toString() { return name; }
 	
 	/**
-	 * TODO comment this
+	 * Moves the world object's center position by the given x, y, z
+	 * translations. Although, none of the object's positions can be less than
+	 * -9999f or greater than 9999f.
 	 * 
-	 * @param dx
-	 * @param dy
-	 * @param dz
+	 * @param dx	The change in x position
+	 * @param dy	The change in y position
+	 * @param dz	The change in z position
 	 */
 	public void translate(float dx, float dy, float dz) {
 		PVector center = localOrientation.getOrigin();

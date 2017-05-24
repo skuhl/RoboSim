@@ -16,7 +16,6 @@ public class Box extends Shape {
 
 	/**
 	 * Create a cube, with an edge length of 10.
-	 * @param robotRun TODO
 	 */
 	public Box() {
 		super();
@@ -58,17 +57,6 @@ public class Box extends Shape {
 	@Override
 	public Box clone() {
 		return new Box(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
-	}
-
-	@Override
-	public void draw() {
-		RobotRun app = RobotRun.getInstance();
-		
-		app.pushStyle();
-		// Apply colors
-		applyColors();
-		app.box(dimensions.x, dimensions.y, dimensions.z);
-		app.popStyle();
 	}
 
 	@Override

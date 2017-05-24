@@ -1064,15 +1064,15 @@ public abstract class DataManagement {
 			Shape form = loadShape(in, app);
 			// Load the object's local orientation
 			PVector center = loadPVector(in);
-			float[][] orientationAxes = loadFloatArray2D(in);
-			CoordinateSystem localOrientation = new CoordinateSystem();
+			RMatrix orientationAxes = new RMatrix( loadFloatArray2D(in) );
+			CoordinateSystem localOrientation = new CoordinateSystem(center, orientationAxes);
 			localOrientation.setOrigin(center);
 			localOrientation.setAxes(new RMatrix(orientationAxes));
 
 			if (flag == 1) {
 				center = loadPVector(in);
-				orientationAxes = loadFloatArray2D(in);
-				CoordinateSystem defaultOrientation = new CoordinateSystem();
+				orientationAxes = new RMatrix( loadFloatArray2D(in) );
+				CoordinateSystem defaultOrientation = new CoordinateSystem(center, orientationAxes);
 				defaultOrientation.setOrigin(center);
 				defaultOrientation.setAxes(new RMatrix(orientationAxes));
 				
@@ -1916,7 +1916,7 @@ public abstract class DataManagement {
 			saveShape(wldObj.getForm(), out);
 			// Save the local orientation of the object
 			savePVector(wldObj.getLocalCenter(), out);
-			saveFloatArray2D(wldObj.getLocalOrientationAxes().getFloatData(), out);
+			saveFloatArray2D(wldObj.getLocalOrientation().getFloatData(), out);
 			
 			if (wldObj instanceof Part) {
 				Part part = (Part)wldObj;
@@ -1924,7 +1924,7 @@ public abstract class DataManagement {
 				
 				// Save the default orientation of the part
 				savePVector(part.getDefaultCenter(), out);
-				saveFloatArray2D(part.getDefaultOrientationAxes().getFloatData(), out);
+				saveFloatArray2D(part.getDefaultOrientation().getFloatData(), out);
 				
 				savePVector(part.getOBBDims(), out);
 

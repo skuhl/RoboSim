@@ -135,7 +135,7 @@ public class RobotCamera {
 		PVector ltVect = lookVect.cross(upVect);
 		
 		//Generate object axes and produce the diagonal vector of the object
-		float[][] objCoord = o.getLocalOrientationAxes().getFloatData();
+		float[][] objCoord = o.getLocalOrientation().getFloatData();
 		PVector objAxisX = new PVector(objCoord[0][0], objCoord[1][0], objCoord[2][0]);
 		PVector objAxisY = new PVector(objCoord[0][1], objCoord[1][1], objCoord[2][1]);
 		PVector objAxisZ = new PVector(objCoord[0][2], objCoord[1][2], objCoord[2][2]);
@@ -351,9 +351,9 @@ public class RobotCamera {
 		
 		for(WorldObject o: inFrame) {
 			if(o.getObjectID() == objProto.getObjectID()) {
-				RMatrix objOrient = o.getLocalOrientationAxes();
+				RMatrix objOrient = o.getLocalOrientation();
 				RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
-				RMatrix oDiff = objProto.getLocalOrientationAxes().transpose().multiply(viewOrient);
+				RMatrix oDiff = objProto.getLocalOrientation().transpose().multiply(viewOrient);
 				float[][] axes = oDiff.getFloatData();
 				PVector zDiff = new PVector(axes[0][2], axes[1][2], axes[2][2]);
 				
@@ -388,9 +388,9 @@ public class RobotCamera {
 		}
 		else {
 			WorldObject teachObj = objs.get(0).clone();
-			RMatrix objOrient = teachObj.getLocalOrientationAxes();
+			RMatrix objOrient = teachObj.getLocalOrientation();
 			RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
-			teachObj.setLocalOrientationAxes(viewOrient);
+			teachObj.setLocalOrientation(viewOrient);
 			taughtObjects.add(teachObj);
 			
 			return taughtObjects;
