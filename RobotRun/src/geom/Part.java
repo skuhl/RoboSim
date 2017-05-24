@@ -1,4 +1,5 @@
 package geom;
+import global.RMath;
 import processing.core.PApplet;
 import processing.core.PVector;
 import robot.RobotRun;
@@ -277,6 +278,21 @@ public class Part extends WorldObject {
 	public RMatrix getDefaultOrientationAxes() {
 		return defaultOrientation.getAxes();
 	}
+	
+	@Override
+	public void rotateAroundAxis(PVector axis, float angle) {
+		
+		if (reference != null) {
+			RMatrix refRMat = reference.getLocalOrientationAxes();
+			axis = RMath.rotateVector(axis, refRMat.getFloatData());
+		}
+		
+		RMatrix orientation = localOrientation.getAxes();
+		RMatrix rotation = RMath.matFromAxisAndAngle(axis, angle);
+		
+		localOrientation.setAxes( rotation.multiply(orientation) );
+		updateAbsoluteOrientation();
+	}
 
 	/**
 	 * Sets the stroke color of the world's bounding-box
@@ -341,7 +357,14 @@ public class Part extends WorldObject {
 	
 	@Override
 	public void translate(float dx, float dy, float dz) {
-		super.translate(dx, dy, dz);
+		PVector delta = new PVector(dx, dy, dz);
+		
+		if (reference != null) {
+			RMatrix refRMat = reference.getLocalOrientationAxes();
+			delta = RMath.rotateVector(delta, refRMat.getFloatData());
+		}
+		
+		super.translate(delta.x, delta.y, delta.z);
 		updateAbsoluteOrientation();
 	}
 
@@ -360,6 +383,22 @@ public class Part extends WorldObject {
 
 		super.applyCoordinateSystem();
 		absOBB.setCoordinateSystem();
+		RobotRun.getInstance().popMatrix();
+	}
+	
+	/**
+	 * Updates the local orientation of the part from its absolute orientation.
+	 */
+	public void updateLocalOrientation() {
+		RobotRun.getInstance().pushMatrix();
+		RobotRun.getInstance().resetMatrix();
+		
+		if (reference != null) {
+			reference.removeCoordinateSystem();
+		}
+		
+		absOBB.applyCoordinateSystem();
+		this.localOrientation = new CoordinateSystem();
 		RobotRun.getInstance().popMatrix();
 	}
 
