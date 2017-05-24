@@ -152,8 +152,12 @@ public class BoundingBox {
 			}
 			
 			if (G == 0f) {
-				System.err.printf("G = 0 for A=%f R=%s\n", planeAxes[planeAxis] *
-						dims[planeAxis], ray);
+				/**
+				if (Fields.DEBUG) {
+					System.err.printf("G = 0 for A=%f R=%s\n",
+							planeAxes[planeAxis] * dims[planeAxis], ray);
+				}
+				/**/
 				
 			} else {
 				float t = -E / G;

@@ -379,7 +379,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 * using the given ArmModel to detect collisions between world objects
 	 * and the armModel, and draws every object.
 	 */
-	public void updateAndRenderObjects(RoboticArm robot) {
+	public void updateAndRenderObjects(RoboticArm robot, WorldObject selected) {
 		int numOfObjects = objList.size();
 
 		for (int idx = 0; idx < numOfObjects; ++idx) {
@@ -421,10 +421,10 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 					p.updateAbsoluteOrientation();
 					RobotRun.getInstance().popMatrix();
 				}
-				else if (p.getFixtureRef() == null && p.getLocalCenter().y <
-						Fields.FLOOR_Y) {
+				else if (p != selected && p.getFixtureRef() == null &&
+						p.getLocalCenter().y < Fields.FLOOR_Y) {
 					
-					// Gravity
+					// Apply gravity
 					PVector c = wldObj.getLocalCenter();
 					wldObj.updateLocalCenter(null, c.y + 10, null);
 				}

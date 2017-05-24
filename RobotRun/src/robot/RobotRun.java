@@ -11,6 +11,7 @@ import enums.CoordFrame;
 import enums.EEMapping;
 import enums.ScreenMode;
 import enums.ScreenType;
+import enums.WindowTab;
 import expression.AtomicExpression;
 import expression.ExprOperand;
 import expression.Expression;
@@ -338,6 +339,8 @@ public class RobotRun extends PApplet {
 	int interMotionIdx = -1;
 
 	private Point displayPoint;
+	
+	private WorldObject mouseOverWO;
 	
 	/**
 	 * Defines the mouse's position mapped from the screen into the active
@@ -1178,7 +1181,7 @@ public class RobotRun extends PApplet {
 	 * @param scenario
 	 * @param robot
 	 */
-	public void checkForCollisionsInScene(Ray ray, Scenario scenario,
+	public WorldObject checkForCollisionsInScene(Ray ray, Scenario scenario,
 			RoboticArm robot) {
 		
 		PVector closestCollPt = null;
@@ -1236,11 +1239,11 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
-		UI.setSelectedWO(collidedWith);
-		
 		if (closestCollPt != null) {
 			collisions.add(closestCollPt);
 		}
+		
+		return collidedWith;
 	}
 
 	/**
@@ -1558,7 +1561,7 @@ public class RobotRun extends PApplet {
 			renderScene(getActiveScenario(), getActiveRobot());
 			renderTeachPoints();
 	
-			/*TESTING CODE: DRAW INTERMEDIATE POINTS*
+			/* TESTING CODE: DRAW INTERMEDIATE POINTS *
 			if(Fields.DEBUG && intermediatePositions != null) {
 				int count = 0;
 				for(Point p : intermediatePositions) {
@@ -1573,10 +1576,8 @@ public class RobotRun extends PApplet {
 					count += 1;
 				}
 			}
-			/**/
 			
-			
-			/*Camera Test Code*/
+			/* Camera Test Code */
 			renderOriginAxes(rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
 			
 			PVector near[] = rCamera.getPlaneNear();
@@ -5795,67 +5796,122 @@ public class RobotRun extends PApplet {
 	}
 
 	public void mouseDragged(MouseEvent e) {
-		if (mouseButton == CENTER) {
-			// Drag the center mouse button to pan the camera
-			camera.translate(mouseX - pmouseX, mouseY - pmouseY, 0f);
-		}
-
-		if (mouseButton == RIGHT) {
-			// Drag right mouse button to rotate the camera
-			camera.rotate(mouseY - pmouseY, mouseX - pmouseX, 0f);
+		WorldObject selectedWO = UI.getSelectedWO();
+		
+		// Manipulate the selected world object
+		if (selectedWO != null && selectedWO == mouseOverWO) {
+			
+			if (mouseButton == CENTER) {
+				// Drag the center mouse button to move the object
+				PVector camOrien = camera.getOrientation();
+				PVector translation = new PVector(
+						camera.getScale() * (mouseX - pmouseX),
+						camera.getScale() * (mouseY - pmouseY),
+						0f
+				);
+				
+				pushMatrix();
+				resetMatrix();
+				rotateZ(-camOrien.z);
+				rotateY(-camOrien.y);
+				rotateX(-camOrien.x);
+				
+				RMatrix rotation = getRotationMatrix().getInverse();
+				
+				popMatrix();
+				/* Translate the world object with respect to the native
+				 * coordinate system */
+				translation = RMath.rotateVector(translation, rotation.getFloatData());
+				
+				selectedWO.translate(translation.x, translation.y, translation.z);
+			}
+	
+			if (mouseButton == RIGHT) {
+				// TODO Drag right mouse button to rotate the object
+				
+			}
+			
+		// Manipulate the camera otherwise
+		} else {
+			
+			if (mouseButton == CENTER) {
+				// Drag the center mouse button to pan the camera
+				camera.translate(mouseX - pmouseX, mouseY - pmouseY, 0f);
+			}
+	
+			if (mouseButton == RIGHT) {
+				// Drag right mouse button to rotate the camera
+				camera.rotate(mouseY - pmouseY, mouseX - pmouseX, 0f);
+			}
 		}
 	}
 
 	@Override
 	public void mousePressed() {
-		
-		if (mouseButton == LEFT) {
 			
-			/* Check if the mouse position is colliding with a world object */
-			if (!UI.isFocus() && activeRobot != null && activeScenario != null) {
-				PVector camPos = camera.getPosition();
-				camPos.x += width / 2f * camera.getScale();
-				camPos.y += height / 2f * camera.getScale();
-				
-				PVector camOrien = camera.getOrientation();
-				
-				PVector mScreenPos = new PVector(mouseX, mouseY, camPos.z + 1500f);
-				mScreenPos.x *= camera.getScale();
-				mScreenPos.y *= camera.getScale();
+		/* Check if the mouse position is colliding with a world object */
+		if (!isProgramRunning() && !UI.isFocus() && activeRobot != null &&
+				activeScenario != null) {
+			
+			// Scale the camera and mouse positions
+			
+			PVector camPos = camera.getPosition();
+			camPos.x += width / 2f * camera.getScale();
+			camPos.y += height / 2f * camera.getScale();
+			
+			PVector camOrien = camera.getOrientation();
+			
+			PVector mScreenPos = new PVector(mouseX, mouseY, camPos.z + 1500f);
+			mScreenPos.x *= camera.getScale();
+			mScreenPos.y *= camera.getScale();
 
-				PVector mWorldPos, ptOnMRay;
+			PVector mWorldPos, ptOnMRay;
+			
+			pushMatrix();
+			resetMatrix();
+			// Apply the inverse of the camera's coordinate system
+			rotateZ(-camOrien.z);
+			rotateY(-camOrien.y);
+			rotateX(-camOrien.x);
+			translate(-camPos.x, -camPos.y, -camPos.z);
+			
+			translate(mScreenPos.x, mScreenPos.y, mScreenPos.z);
+			
+			/* Form a ray pointing out of the screen's z-axis, in the
+			 * native coordinate system */
+			mWorldPos = getCoordFromMatrix(0f, 0f, 0f);
+			ptOnMRay = getCoordFromMatrix(0f, 0f, -1f);
+			
+			popMatrix();
+			// Set the mouse ray origin and direction
+			if (mouseRay == null) {
+				mouseRay = new Ray(mWorldPos, ptOnMRay, 10000f, Fields.BLACK);
 				
-				pushMatrix();
-				resetMatrix();
-				// Apply the inverse of the camera's coordinate system
-				rotateZ(-camOrien.z);
-				rotateY(-camOrien.y);
-				rotateX(-camOrien.x);
-				translate(-camPos.x, -camPos.y, -camPos.z);
+			} else {
+				PVector mDirect = PVector.sub(ptOnMRay, mWorldPos);
+				mDirect.normalize();
 				
-				translate(mScreenPos.x, mScreenPos.y, mScreenPos.z);
-				
-				/* Form a ray pointing out of the screen's z-axis, in the
-				 * native coordinate system */
-				mWorldPos = getCoordFromMatrix(0f, 0f, 0f);
-				ptOnMRay = getCoordFromMatrix(0f, 0f, -1f);
-				
-				popMatrix();
-				
-				if (mouseRay == null) {
-					mouseRay = new Ray(mWorldPos, ptOnMRay, 10000f, Fields.BLACK);
-					
-				} else {
-					PVector mDirect = PVector.sub(ptOnMRay, mWorldPos);
-					mDirect.normalize();
-					
-					mouseRay.setOrigin(mWorldPos);
-					mouseRay.setDirection(mDirect);
-				}
-				
-				checkForCollisionsInScene(mouseRay, activeScenario, activeRobot);
+				mouseRay.setOrigin(mWorldPos);
+				mouseRay.setDirection(mDirect);
 			}
+			// Check for collisions with objects in the scene
+			WorldObject collision = checkForCollisionsInScene(mouseRay,
+					activeScenario, activeRobot);
+			
+			if (mouseButton == LEFT) {
+				UI.setSelectedWO(collision);
+			}
+			
+			mouseOverWO = collision;
+			
+		} else {
+			mouseOverWO = null;
 		}
+	}
+	
+	@Override
+	public void mouseReleased() {
+		mouseOverWO = null;
 	}
 
 	@Override
@@ -6705,7 +6761,7 @@ public class RobotRun extends PApplet {
 		model.checkSelfCollisions();
 
 		if (s != null) {
-			s.updateAndRenderObjects(model);
+			s.updateAndRenderObjects(model, UI.getSelectedWO());
 		}
 
 		if (UI.getRobotButtonState()) {
@@ -7267,6 +7323,7 @@ public class RobotRun extends PApplet {
 	public void setup() {
 		super.setup();
 		
+		mouseOverWO = null;
 		mouseRay = null;
 		collisions = new ArrayList<>();
 		
