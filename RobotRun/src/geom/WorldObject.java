@@ -196,13 +196,27 @@ public abstract class WorldObject implements Cloneable {
 
 	public PVector getLocalCenter() {
 		return localOrientation.getOrigin();
-		}
+	}
 
 	public RMatrix getLocalOrientationAxes() {
 		return localOrientation.getAxes();
 	}
 
 	public String getName() { return name; }
+	
+	/**
+	 * TODO
+	 * 
+	 * @param axis
+	 * @param theta
+	 */
+	public void rotateAroundAxis(PVector axis, float angle) {
+		
+		RMatrix rotation = RMath.matFromAxisAndAngle(axis, angle);
+		RMatrix orientation = localOrientation.getAxes();
+		
+		localOrientation.setAxes( rotation.multiply(orientation) );
+	}
 
 	/**
 	 * Transform the World Object's local Coordinate System to

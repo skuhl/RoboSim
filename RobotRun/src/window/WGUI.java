@@ -1292,7 +1292,7 @@ public class WGUI implements ControlListener {
 	 * 
 	 * @param selected
 	 */
-	private void fillCurWithCur(WorldObject selected) {
+	public void fillCurWithCur(WorldObject selected) {
 		// Get the part's default position and orientation
 		PVector pos = RMath.vToWorld( selected.getLocalCenter() );
 		PVector wpr = RMath.nRMatToWEuler( selected.getLocalOrientationAxes() );

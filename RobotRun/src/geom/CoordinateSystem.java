@@ -49,4 +49,9 @@ public class CoordinateSystem implements Cloneable {
 	public void setOrigin(PVector newCenter) {
 		origin = newCenter;
 	}
+
+	public void setOrientationAxes(RMatrix multiply) {
+		// TODO Auto-generated method stub
+		
+	}
 }

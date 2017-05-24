@@ -363,6 +363,33 @@ public abstract class RMath {
 
 		return new RMatrix(inv);
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param u
+	 * @param theta
+	 * @return
+	 */
+	public static RMatrix matFromAxisAndAngle(PVector u, float theta) {
+		float[][] rMat = new float[3][3];
+		
+		float ct = (float)Math.cos(theta);
+		float st = (float)Math.sin(theta);
+		float one_ct = 1f - ct;
+		
+		rMat[0][0] = ct + u.x * u.x * one_ct;
+		rMat[0][1] = u.x * u.y * one_ct - u.z * st;
+		rMat[0][2] = u.x * u.z * one_ct + u.y * st;
+		rMat[1][0] = u.y * u.x * one_ct + u.z * st;
+		rMat[1][1] = ct + u.y * u.y * one_ct;
+		rMat[1][2] = u.y * u.z * one_ct - u.x * st;
+		rMat[2][0] = u.z * u.x * one_ct - u.y * st;
+		rMat[2][1] = u.z * u.y * one_ct + u.x * st;
+		rMat[2][2] = ct + u.z * u.z * one_ct;
+		
+		return new RMatrix(rMat);
+	}
 
 	// calculates euler angles from rotation matrix
 	public static PVector matrixToEuler(RMatrix m) {

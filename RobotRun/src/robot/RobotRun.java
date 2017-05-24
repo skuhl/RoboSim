@@ -5800,35 +5800,81 @@ public class RobotRun extends PApplet {
 		
 		// Manipulate the selected world object
 		if (selectedWO != null && selectedWO == mouseOverWO) {
+			PVector camOrien = camera.getOrientation();
+			
+			pushMatrix();
+			resetMatrix();
+			rotateX(camOrien.x);
+			rotateY(camOrien.y);
+			rotateZ(camOrien.z);
+			
+			float[][] camRMat = getRotationMatrix().getFloatData();
+			
+			popMatrix();
 			
 			if (mouseButton == CENTER) {
 				// Drag the center mouse button to move the object
-				PVector camOrien = camera.getOrientation();
 				PVector translation = new PVector(
 						camera.getScale() * (mouseX - pmouseX),
 						camera.getScale() * (mouseY - pmouseY),
 						0f
 				);
 				
-				pushMatrix();
-				resetMatrix();
-				rotateZ(-camOrien.z);
-				rotateY(-camOrien.y);
-				rotateX(-camOrien.x);
-				
-				RMatrix rotation = getRotationMatrix().getInverse();
-				
-				popMatrix();
 				/* Translate the world object with respect to the native
 				 * coordinate system */
-				translation = RMath.rotateVector(translation, rotation.getFloatData());
+				translation = RMath.rotateVector(translation, camRMat);
 				
 				selectedWO.translate(translation.x, translation.y, translation.z);
 			}
 	
 			if (mouseButton == RIGHT) {
-				// TODO Drag right mouse button to rotate the object
 				
+				/* TODO Drag right mouse button to rotate the object *
+				float angle_x = (mouseY - pmouseY) * RobotRun.DEG_TO_RAD / 4f;
+				float angle_y = (mouseX - pmouseX) * RobotRun.DEG_TO_RAD / 4f;
+				PVector axis_x = RMath.rotateVector(new PVector(1f, 0f, 0f), camRMat);
+				PVector axis_y = RMath.rotateVector(new PVector(0f, 1f, 0f), camRMat);
+				axis_x.normalize();
+				axis_y.normalize();
+				
+				System.out.printf("r=[%f, %f] x=%s y=%s\n", angle_x, angle_y, axis_x, axis_y);
+				
+				selectedWO.rotateAroundAxis(axis_x, angle_x);
+				selectedWO.rotateAroundAxis(axis_y, angle_y);
+				/**/
+				
+				/*
+				 * x = x0 + ta
+				 * y = y0 + tb
+				 * 
+				 */
+				
+				float mouseXDiff = mouseX - pmouseX;
+				float mouseYDiff = mouseY - pmouseY;
+				float mouseDiff = (float) Math.sqrt(mouseXDiff * mouseXDiff + mouseYDiff * mouseYDiff);
+				float angle = RobotRun.DEG_TO_RAD * mouseDiff / 4f;
+				
+				PVector m = new PVector(mouseX - pmouseX, mouseY - pmouseY, 0f);
+				PVector n = new PVector(0, 0, 1f);
+				PVector axis = RMath.rotateVector(n.cross(m).normalize(), camRMat);
+				
+				selectedWO.rotateAroundAxis(axis, angle);
+			}
+			
+			UI.fillCurWithCur(selectedWO);
+			
+			/* If the edited object is a fixture, then update the orientation
+			 * of all parts, which reference this fixture, in this scenario. */
+			if (selectedWO instanceof Fixture) {
+				for (WorldObject wldObj : getActiveScenario()) {
+					if (wldObj instanceof Part) {
+						Part p = (Part)wldObj;
+
+						if (p.getFixtureRef() == selectedWO) {
+							p.updateAbsoluteOrientation();
+						}
+					}
+				}
 			}
 			
 		// Manipulate the camera otherwise
@@ -7038,7 +7084,7 @@ public class RobotRun extends PApplet {
 		/* Camera test output */
 		if (Fields.DEBUG) {
 			String[] lines = Fields.toLineStringArray(camera.getPosition(),
-					camera.getOrientation());
+					camera.getOrientation().mult(RobotRun.RAD_TO_DEG));
 			
 			lastTextPositionY += 20;
 			text("Camera", lastTextPositionX, lastTextPositionY);
