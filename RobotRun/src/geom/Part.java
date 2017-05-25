@@ -41,20 +41,18 @@ public class Part extends WorldObject {
 		for(int v = 0; v < axes_A.length; v += 1) {
 			for(int u = 0; u < axes_B.length; u += 1) {
 				// PLEASE do not change to matrix multiplication
-				rotMatrix[v][u] = axes_A[v][0] * axes_B[u][0] +  axes_A[v][1] * axes_B[u][1] +  axes_A[v][2] * axes_B[u][2];
+				rotMatrix[v][u] = axes_A[0][v] * axes_B[0][u] +  axes_A[1][v] * axes_B[1][u] +  axes_A[2][v] * axes_B[2][u];
 				// Add offset for values close to zero (parallel axes)
 				absRotMatrix[v][u] = Math.abs(rotMatrix[v][u]) + 0.00000000175f;
 			}
 		}
 
 		// T = B's position - A's
-		PVector posA = new PVector().set(A.getCenter());
-		PVector posB = new PVector().set(B.getCenter());
-		PVector limbo = posB.sub(posA);
+		PVector posA = A.getCenter().copy();
+		PVector posB = B.getCenter().copy();
 		// Convert T into A's coordinate frame
-		float[] T = new float[] { limbo.dot(new PVector().set(axes_A[0])), 
-				limbo.dot(new PVector().set(axes_A[1])), 
-				limbo.dot(new PVector().set(axes_A[2])) };
+		PVector limbo = RMath.rotateVector(posB.sub(posA), axes_A);
+		float[] T = new float[] { limbo.x, limbo.y, limbo.z };
 
 		float radiA, radiB;
 
