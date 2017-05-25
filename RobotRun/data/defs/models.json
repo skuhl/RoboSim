@@ -1,0 +1,43 @@
+{
+	"objList": [
+		{
+			"objectID": 1,
+			"objectFamilyID": 1,
+			"objectFileName": "circsheet.stl",
+			"selectAreas": [
+				{
+					"areaID": 1,
+					"x1": 20,
+					"y1": 20,
+					"x2": 50,
+					"y2": 50
+				},
+				{
+					"areaID": 2,
+					"x1": 70,
+					"y1": 100,
+					"x2": 90,
+					"y2": 150
+				}
+			]
+		},
+		{
+			"objectID": 2,
+			"objectFamilyID": 2,
+			"objectFileName": "grinder.stl",
+			"selectAreas": []
+		},
+		{
+			"objectID": 3,
+			"objectFamilyID": 3,
+			"objectFileName": "inclinedblock.stl",
+			"selectAreas": []
+		},
+		{
+			"objectID": 4,
+			"objectFamilyID": 4,
+			"objectFileName": "table.stl",
+			"selectAreas": []
+		}
+	]
+}
