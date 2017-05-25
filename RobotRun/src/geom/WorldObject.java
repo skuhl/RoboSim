@@ -1,5 +1,4 @@
 package geom;
-import java.util.Arrays;
 
 import global.MyFloatFormat;
 import global.RMath;

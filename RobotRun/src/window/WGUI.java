@@ -40,6 +40,7 @@ import global.Fields;
 import global.RMath;
 import processing.core.PApplet;
 import processing.core.PFont;
+import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
 import robot.RobotCamera;
@@ -59,10 +60,8 @@ import ui.MyTextfield;
 
 public class WGUI implements ControlListener {
 
-	/**
-	 * A dimension value (length, width, displacement, etc.), which is used to
-	 * format the layout of a window tab's visible elements.
-	 */
+	/** Standard dimension values (length, width, displacement, etc.) used to
+	 *  position a window tab's visible elements. */
 	public static final int winMargin = 10,
 			radioDim = 16,
 			distBtwFieldsY = 15,
@@ -87,55 +86,37 @@ public class WGUI implements ControlListener {
 			DIM_TXT = 3,
 			DIM_DDL = 1;
 
-	/**
-	 * The manager object, which contains all the UI elements.
-	 */
+	/** The manager object, which contains all the UI elements. */
 	private final ControlP5 manager;
 
-	/**
-	 * A reference to the application, in which the UI resides.
-	 */
+	/** A reference to the application, in which the UI resides. */
 	private final RobotRun app;
 
-	/**
-	 * The current state of the window tabs, which determines what window tab
-	 * is rendered.
-	 */
+	/** The current state of the window tabs, which determines what window tab
+	 *  is rendered. */
 	private WindowTab menu;
 
-	/**
-	 * A group, which defines a set of elements belonging to a window tab, or
-	 * shared amongst the window tabs.
-	 */
+	/** A group, which defines a set of elements belonging to a window tab, or
+	 *  shared amongst the window tabs. */
 	public final Group pendant, createWO, editWO, sharedElements, scenario,
 			camera, miscellaneous;
 
-	/**
-	 * The button bar controlling the window tab selection.
-	 */
+	/** The button bar controlling the window tab selection. */
 	private final MyButtonBar windowTabs;
 
-	/**
-	 * The background shared amongst all windows
-	 */
+	/** The background shared amongst all windows */
 	private final Background background;
 
-	/**
-	 * A cached set of text-areas used to display the pendant contents and
-	 * options output.
-	 */
+	/** A cached set of text-areas used to display the pendant contents and
+	 *  options output. */
 	private final ArrayList<Textarea> displayLines;
 
-	/**
-	 * Determine which input to use for importing a shape for a world object
-	 * when it is created.
-	 */
+	/** Determine which input to use for importing a shape for a world object
+	 *  when it is created. */
 	private String lastModImport;
 
-	/**
-	 * Creates a new window with the given ControlP5 object as the parent
-	 * and the given fonts which will be applied to the text in the window.
-	 */
+	/** Creates a new window with the given ControlP5 object as the parent
+	 *  and the given fonts which will be applied to the text in the window. */
 	public WGUI(RobotRun appRef, PImage[][] buttonImages) {
 		app = appRef;
 		
@@ -1206,9 +1187,9 @@ public class WGUI implements ControlListener {
 
 						if (shapeDims[0] != null) {
 							// Define shape scale
-							model = new ModelShape(srcFile, fill, shapeDims[0], app);
+							model = new ModelShape(srcFile, fill, shapeDims[0]);
 						} else {
-							model = new ModelShape(srcFile, fill, app);
+							model = new ModelShape(srcFile, fill);
 						}
 
 						wldObj = new Part(name, model);
@@ -1251,9 +1232,9 @@ public class WGUI implements ControlListener {
 
 					if (shapeDims != null && shapeDims[0] != null) {
 						// Define model scale value
-						model = new ModelShape(srcFile, fill, shapeDims[0], app);
+						model = new ModelShape(srcFile, fill, shapeDims[0]);
 					} else {
-						model = new ModelShape(srcFile, fill, app);
+						model = new ModelShape(srcFile, fill);
 					}
 
 					wldObj = new Fixture(name, model);
@@ -2181,9 +2162,10 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Sets selected object in the "Object" drop down menu to the
+	 * given WorldObject, 'wo.'
 	 * 
-	 * @param wo
+	 * @param wo The world object to be set.
 	 */
 	public void setSelectedWO(WorldObject wo) {
 		if (menu == WindowTab.EDIT) {
@@ -2467,7 +2449,7 @@ public class WGUI implements ControlListener {
 		}
 	}
 	
-	public void updateCameraWindowFields() {
+	public void updateCameraWindowFields() { //TODO
 		if(app.getCamera() != null) {
 			RobotCamera c = app.getRobotCamera();
 			PVector pos = RMath.vToWorld(c.getPosition());
@@ -2749,6 +2731,8 @@ public class WGUI implements ControlListener {
 		// Cam update button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getButton("UpdateCam").setPosition(relPos[0], relPos[1]);
+		
+		//TODO
 		
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
