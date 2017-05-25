@@ -1,5 +1,9 @@
 package geom;
+
+import java.util.ArrayList;
+
 import global.RegisteredModels;
+import processing.core.PGraphics;
 import processing.core.PShape;
 import processing.core.PVector;
 import robot.RobotRun;
@@ -8,33 +12,16 @@ import robot.RobotRun;
  * A complex shape formed from a .stl source file.
  */
 public class ModelShape extends Shape {
-	public final int MODEL_ID;
-	private RobotRun app;
-	private PShape model;
+	//private RobotRun app;
 	private PVector centerOffset, baseDims;
-	private float scale;
+	private float mdlScale;
+	
+	private PShape model;
+	public final int model_id;
+	private PGraphics preview;
+	
+	private ArrayList<CamSelectArea> selectAreas;
 	private String srcFilePath;
-
-	/**
-	 * Create a complex model from the soruce .stl file of the
-	 * given name, filename, stored in the '/RobotRun/data/'
-	 * with the given fill color and scale value.
-	 * 
-	 * @throws NullPointerException  if the given filename is
-	 *         not a valid .stl file in RobotRun/data/
-	 */
-	public ModelShape(String filename, int fill, float scale, RobotRun app) throws NullPointerException {
-		super(fill, null);
-		MODEL_ID = RegisteredModels.modelIDList.get(filename);
-		this.app = app;
-		srcFilePath = filename;
-		this.scale = 1f;
-
-		model = app.loadSTLModel(filename, fill);
-		iniDimensions();
-
-		setDim(scale, DimType.SCALE);
-	}
 
 	/**
 	 * Create a complex model from the soruce .stl file of the
@@ -44,22 +31,55 @@ public class ModelShape extends Shape {
 	 * @throws NullPointerException  if the given filename is
 	 *         not a valid .stl file in RobotRun/data/
 	 */
-	public ModelShape(String filename, int fill, RobotRun app) throws NullPointerException {
+	public ModelShape(String filename, int fill) throws NullPointerException {
 		super(fill, null);
-		MODEL_ID = RegisteredModels.modelIDList.get(filename);
-		this.app = app;
+		model_id = RegisteredModels.modelIDList.get(filename);
 		srcFilePath = filename;
-		scale = 1f;
-
-		model = app.loadSTLModel(filename, fill);
+		
+		mdlScale = 1f;
+		model = RobotRun.getInstance().loadSTLModel(filename, fill);
+		preview = loadModelPreview();
+		selectAreas = new ArrayList<CamSelectArea>();
+		
+		loadSelectAreas();
 		iniDimensions();
 	}
+
+	/**
+	 * Create a complex model from the soruce .stl file of the
+	 * given name, filename, stored in the '/RobotRun/data/'
+	 * with the given fill color and scale value.
+	 * 
+	 * @throws NullPointerException  if the given filename is
+	 *         not a valid .stl file in RobotRun/data/
+	 */
+	public ModelShape(String filename, int fill, float scale) throws NullPointerException {
+		super(fill, null);
+		model_id = RegisteredModels.modelIDList.get(filename);
+		srcFilePath = filename;
+		
+		mdlScale = scale;
+		model = RobotRun.getInstance().loadSTLModel(filename, fill);
+		selectAreas = new ArrayList<CamSelectArea>();
+		
+		loadSelectAreas();
+		iniDimensions();
+		setDim(scale, DimType.SCALE);
+	}
 	
+	private void loadSelectAreas() {
+		if(RegisteredModels.modelAreasOfInterest.get(model_id) != null) {
+			for(CamSelectArea c: RegisteredModels.modelAreasOfInterest.get(model_id)) {
+				selectAreas.add(c.copy());
+			}
+		}
+	}
+
 	@Override
 	public ModelShape clone() {
 		try {
 			// Created from source file
-			return new ModelShape(srcFilePath, getFillValue(), scale, app);
+			return new ModelShape(srcFilePath, getFillValue(), mdlScale);
 		
 		} catch (NullPointerException NPEx) {
 			// Invalid source file
@@ -67,6 +87,7 @@ public class ModelShape extends Shape {
 		}
 	}
 	
+<<<<<<< HEAD
 	/**
 	 * @return	The center offset associated with this model
 	 */
@@ -74,20 +95,33 @@ public class ModelShape extends Shape {
 		return new float[] {
 				centerOffset.x, centerOffset.y, centerOffset.z
 		};
+=======
+	@Override
+	public void draw() {
+		RobotRun app = RobotRun.getInstance();
+		
+		app.pushMatrix();
+		
+		// Draw shape, where its center is at (0, 0, 0)
+		app.translate(centerOffset.x, centerOffset.y, centerOffset.z);
+		app.shape(model);
+		
+		app.popMatrix();
+>>>>>>> 3b23bf04b45c8db6645480b0f01caaafb85ae44a
 	}
 
 	@Override
 	public float getDim(DimType dim) {
 		switch(dim) {
 		// Determine dimension based on the scale
-		case LENGTH: return scale * (baseDims.x);
-		case HEIGHT: return scale * (baseDims.y);
-		case WIDTH:  return scale * (baseDims.z);
-		case SCALE:  return scale;
+		case LENGTH: return mdlScale * (baseDims.x);
+		case HEIGHT: return mdlScale * (baseDims.y);
+		case WIDTH:  return mdlScale * (baseDims.z);
+		case SCALE:  return mdlScale;
 		default:     return -1f;
 		}
 	}
-	
+
 	@Override
 	public float[] getDimArray() {
 		float[] dims = new float[3];
@@ -95,6 +129,11 @@ public class ModelShape extends Shape {
 		dims[1] = getDim(DimType.HEIGHT);
 		dims[2] = getDim(DimType.WIDTH);
 		return dims;
+	}
+	
+	@Override
+	public int getID() {
+		return model_id;
 	}
 	
 	public PShape getModel() {
@@ -147,23 +186,41 @@ public class ModelShape extends Shape {
 		baseDims = PVector.sub(maximums, minimums);
 		centerOffset = PVector.add(minimums, PVector.mult(baseDims, 0.5f)).mult(-1);
 	}
+	
+	public PGraphics getModelPreview() {
+		return preview;
+	}
+
+	private PGraphics loadModelPreview() {
+		PGraphics img = RobotRun.getInstance().createGraphics(150, 200);
+		img.beginDraw();
+		img.ortho();
+		img.lights();
+		img.background(255);
+		img.stroke(0);
+		img.translate(75, 100, 0);
+		img.shape(model);
+		img.translate(-75, -100, 10 + model.depth/2);
+		for(CamSelectArea c: selectAreas) {
+			//TODO draw select boxes
+		}
+		
+		img.endDraw();
+		
+		return img;
+	}
 
 	@Override
 	public void setDim(Float newVal, DimType dim) {
 		switch(dim) {
 		case SCALE:
 			// Update the model's scale
-			centerOffset.mult(newVal / scale);
-			model.scale(newVal / scale);
-			scale = newVal;
+			centerOffset.mult(newVal / mdlScale);
+			model.scale(newVal / mdlScale);
+			mdlScale = newVal;
 			break;
 
 		default:
 		}
-	}
-
-	@Override
-	public int getID() {
-		return MODEL_ID;
 	}
 }

@@ -43,6 +43,7 @@ import global.RMath;
 import global.RegisteredModels;
 import processing.core.PApplet;
 import processing.core.PConstants;
+import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PMatrix3D;
 import processing.core.PShape;
@@ -1590,7 +1591,6 @@ public class RobotRun extends PApplet {
 	public void draw() {
 		try {
 			background(255);
-			
 			hint(ENABLE_DEPTH_TEST);
 			directionalLight(255, 255, 255, 1, 1, 0);
 			ambientLight(150, 150, 150);
@@ -1617,8 +1617,14 @@ public class RobotRun extends PApplet {
 					count += 1;
 				}
 			}
+<<<<<<< HEAD
 			
 			/* Camera Test Code */
+=======
+			/**/
+			
+			/*Camera Test Code*/
+>>>>>>> 3b23bf04b45c8db6645480b0f01caaafb85ae44a
 			renderOriginAxes(rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
 			
 			PVector near[] = rCamera.getPlaneNear();
@@ -7860,7 +7866,7 @@ public class RobotRun extends PApplet {
 		letterStates = new int[] { 0, 0, 0, 0, 0 };
 		workingText = new StringBuilder();
 		
-		RegisteredModels.loadModelIDs();
+		RegisteredModels.loadModelDefs();
 		
 		// create font and text display background
 		Fields.medium = createFont("fonts/Consolas.ttf", 14);
@@ -7870,9 +7876,10 @@ public class RobotRun extends PApplet {
 		record = false;
 		camera = new Camera();
 		activeScenario = null;
-
+		
+		background(255);
+		
 		// load model and save data
-
 		try {
 			keyCodeMap = new KeyCodeMap();
 			DataManagement.initialize(this);
