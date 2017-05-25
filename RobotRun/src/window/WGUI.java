@@ -31,6 +31,7 @@ import geom.Cylinder;
 import geom.DimType;
 import geom.Fixture;
 import geom.ModelShape;
+import geom.MyPShape;
 import geom.Part;
 import geom.RMatrix;
 import geom.Shape;
@@ -1187,16 +1188,17 @@ public class WGUI implements ControlListener {
 					shapeDims = getModelDimensions();
 					// Construct a complex model
 					if (shapeDims != null) {
-						ModelShape model;
+						MyPShape model = app.loadSTLModel(srcFile, fill);
+						ModelShape shape;
 
 						if (shapeDims[0] != null) {
 							// Define shape scale
-							model = new ModelShape(srcFile, fill, shapeDims[0]);
+							shape = new ModelShape(srcFile, model, fill, shapeDims[0]);
 						} else {
-							model = new ModelShape(srcFile, fill);
+							shape = new ModelShape(srcFile, model, fill);
 						}
 
-						wldObj = new Part(name, model);
+						wldObj = new Part(name, shape);
 					}
 					break;
 				default:
@@ -1232,16 +1234,17 @@ public class WGUI implements ControlListener {
 					String srcFile = getShapeSourceFile();
 					shapeDims = getModelDimensions();
 					// Construct a complex model
-					ModelShape model;
+					MyPShape model = app.loadSTLModel(srcFile, fill);
+					ModelShape shape;
 
 					if (shapeDims != null && shapeDims[0] != null) {
 						// Define model scale value
-						model = new ModelShape(srcFile, fill, shapeDims[0]);
+						shape = new ModelShape(srcFile, model, fill, shapeDims[0]);
 					} else {
-						model = new ModelShape(srcFile, fill);
+						shape = new ModelShape(srcFile, model, fill);
 					}
 
-					wldObj = new Fixture(name, model);
+					wldObj = new Fixture(name, shape);
 					break;
 				default:
 				}

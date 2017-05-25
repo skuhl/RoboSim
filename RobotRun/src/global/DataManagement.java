@@ -27,6 +27,7 @@ import geom.DimType;
 import geom.Fixture;
 import geom.LoadedPart;
 import geom.ModelShape;
+import geom.MyPShape;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
@@ -929,8 +930,10 @@ public abstract class DataManagement {
 					throw new NullPointerException(error);
 				}
 				
+				MyPShape model = app.loadSTLModel(srcPath, fill);
+				
 				// Creates a complex shape from the srcPath located in RobotRun/data/
-				shape = new ModelShape(srcPath, fill, scale);
+				shape = new ModelShape(srcPath, model, fill, scale);
 			}
 		}
 

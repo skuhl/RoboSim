@@ -28,6 +28,7 @@ import geom.Cylinder;
 import geom.DimType;
 import geom.Fixture;
 import geom.ModelShape;
+import geom.MyPShape;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
@@ -49,6 +50,7 @@ import processing.core.PMatrix3D;
 import processing.core.PShape;
 import processing.core.PVector;
 import processing.event.MouseEvent;
+import processing.opengl.PGraphicsOpenGL;
 import programming.CallInstruction;
 import programming.FrameInstruction;
 import programming.IOInstruction;
@@ -6081,7 +6083,7 @@ public class RobotRun extends PApplet {
 	 *             if the given filename does not pertain to a valid .stl file
 	 *             located in RobotRun/data/
 	 */
-	public PShape loadSTLModel(String filename, int fill) throws NullPointerException {
+	public MyPShape loadSTLModel(String filename, int fill) throws NullPointerException, ClassCastException {
 		ArrayList<Triangle> triangles = new ArrayList<>();
 		byte[] data = loadBytes(filename);
 
@@ -6115,7 +6117,7 @@ public class RobotRun extends PApplet {
 			n += 2; // skip meaningless "attribute byte count"
 		}
 
-		PShape mesh = createShape();
+		MyPShape mesh = new MyPShape((PGraphicsOpenGL)getGraphics(), PShape.GEOMETRY);
 		mesh.beginShape(TRIANGLES);
 		mesh.noStroke();
 		mesh.fill(fill);
