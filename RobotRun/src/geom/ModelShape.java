@@ -40,6 +40,7 @@ public class ModelShape extends Shape {
 		
 		mdlScale = 1f;
 		this.model = model;
+		model.setFill(fill);
 		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
 		
@@ -62,6 +63,7 @@ public class ModelShape extends Shape {
 		
 		mdlScale = 1f;
 		this.model = model;
+		model.setFill(fill);
 		selectAreas = new ArrayList<CamSelectArea>();
 		
 		loadSelectAreas();
@@ -81,6 +83,16 @@ public class ModelShape extends Shape {
 	public ModelShape clone() {
 		return new ModelShape(srcFilePath, model.clone(), getFillValue(),
 				mdlScale);
+	}
+	
+	@Override
+	public void draw(PGraphics g) {
+		g.pushMatrix();
+		g.translate(centerOffset.x, centerOffset.y, centerOffset.z);
+		
+		g.shape(model);
+		
+		g.popMatrix();
 	}
 	
 	/**

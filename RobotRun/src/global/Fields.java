@@ -1,7 +1,9 @@
 package global;
 
+import geom.CoordinateSystem;
 import geom.RMatrix;
 import processing.core.PFont;
+import processing.core.PGraphics;
 import processing.core.PShape;
 import processing.core.PVector;
 
@@ -210,6 +212,51 @@ public abstract class Fields {
 		small = null;
 		medium = null;
 		bond = null;
+	}
+	
+	/**
+	 * Applies the given coordinate system to the given graphics object.
+	 * 
+	 * @param g		The graphics object to transform
+	 * @param cs	The coordinate system to apply to g
+	 */
+	public static void transform(PGraphics g, CoordinateSystem cs) {
+		transform(g, cs.getOrigin(), cs.getAxes());
+	}
+	
+	/**
+	 * Applies the given rotation and translation to the graphics object.
+	 * 
+	 * @param g				The graphics object to transform
+	 * @param translation	The translation to apply to g
+	 * @param rotation		The rotation to apply to g
+	 */
+	public static void transform(PGraphics g, PVector translation, RMatrix rotation) {
+		
+		g.applyMatrix(
+				(float)rotation.getEntry(0, 0), (float)rotation.getEntry(0, 1), (float)rotation.getEntry(0, 2), translation.x,
+				(float)rotation.getEntry(1, 0), (float)rotation.getEntry(1, 1), (float)rotation.getEntry(1, 2), translation.y,
+				(float)rotation.getEntry(2, 0), (float)rotation.getEntry(2, 1), (float)rotation.getEntry(2, 2), translation.z,
+				0f, 0f, 0f, 1f
+		);
+		
+	}
+	
+	/**
+	 * Applies the given rotation to the graphics object.
+	 * 
+	 * @param g			The graphics object to rotate
+	 * @param rotation	The rotation to apply to g
+	 */
+	public static void rotate(PGraphics g, RMatrix rotation) {
+		
+		g.applyMatrix(
+				(float)rotation.getEntry(0, 0), (float)rotation.getEntry(0, 1), (float)rotation.getEntry(0, 2), 0f,
+				(float)rotation.getEntry(1, 0), (float)rotation.getEntry(1, 1), (float)rotation.getEntry(1, 2), 0f,
+				(float)rotation.getEntry(2, 0), (float)rotation.getEntry(2, 1), (float)rotation.getEntry(2, 2), 0f,
+				0f, 0f, 0f, 1f
+		);
+		
 	}
 	
 	/**

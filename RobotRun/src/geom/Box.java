@@ -1,4 +1,5 @@
 package geom;
+import processing.core.PGraphics;
 import processing.core.PVector;
 import robot.RobotRun;
 
@@ -57,6 +58,16 @@ public class Box extends Shape {
 	@Override
 	public Box clone() {
 		return new Box(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
+	}
+	
+	@Override
+	public void draw(PGraphics g) {
+		g.pushStyle();
+		applyStyle(g);
+		
+		g.box(dimensions.x, dimensions.y, dimensions.z);
+		
+		g.popStyle();
 	}
 
 	@Override

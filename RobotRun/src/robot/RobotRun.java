@@ -1602,7 +1602,10 @@ public class RobotRun extends PApplet {
 			applyCamera(camera);
 			renderCoordAxes();
 			renderScene(getActiveScenario(), getActiveRobot());
-			renderTeachPoints();
+			
+			if (teachFrame != null && mode.getType() == ScreenType.TYPE_TEACH_POINTS) {
+				renderTeachPoints(teachFrame);
+			}
 	
 			/* TESTING CODE: DRAW INTERMEDIATE POINTS *
 			if(Fields.DEBUG && intermediatePositions != null) {
@@ -1666,345 +1669,6 @@ public class RobotRun extends PApplet {
 			DataManagement.errLog(Ex);
 			throw Ex;
 		}
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param r	The robotic arm to draw
-	 */
-	private void draw(RoboticArm r) {
-		PVector base = r.getBasePosition();
-		float[] jointAngles = r.getJointAngles();
-		EEType activeEE = r.getActiveEE();
-		int eeState = r.getEEState();
-		
-		pushStyle();
-		noStroke();
-		fill(200, 200, 0);
-
-		pushMatrix();
-		translate(base.x, base.y, base.z);
-
-		rotateZ(PConstants.PI);
-		rotateY(PConstants.PI/2);
-		shape( r.SEGMENTS.get(0).getShape() );
-		rotateY(-PConstants.PI/2);
-		rotateZ(-PConstants.PI);
-
-		fill(50);
-
-		translate(-50, -166, -358); // -115, -213, -413
-		rotateZ(PConstants.PI);
-		translate(150, 0, 150);
-		rotateX(PConstants.PI);
-		rotateY(jointAngles[0]);
-		rotateX(-PConstants.PI);
-		translate(-150, 0, -150);
-		shape( r.SEGMENTS.get(1).getShape() );
-		rotateZ(-PConstants.PI);
-
-		fill(200, 200, 0);
-
-		translate(-115, -85, 180);
-		rotateZ(PConstants.PI);
-		rotateY(PConstants.PI/2);
-		translate(0, 62, 62);
-		rotateX(jointAngles[1]);
-		translate(0, -62, -62);
-		shape( r.SEGMENTS.get(2).getShape() );
-		rotateY(-PConstants.PI/2);
-		rotateZ(-PConstants.PI);
-
-		fill(50);
-
-		translate(0, -500, -50);
-		rotateZ(PConstants.PI);
-		rotateY(PConstants.PI/2);
-		translate(0, 75, 75);
-		rotateZ(PConstants.PI);
-		rotateX(jointAngles[2]);
-		rotateZ(-PConstants.PI);
-		translate(0, -75, -75);
-		shape( r.SEGMENTS.get(3).getShape() );
-		rotateY(PConstants.PI/2);
-		rotateZ(-PConstants.PI);
-
-		translate(745, -150, 150);
-		rotateZ(PConstants.PI/2);
-		rotateY(PConstants.PI/2);
-		translate(70, 0, 70);
-		rotateY(jointAngles[3]);
-		translate(-70, 0, -70);
-		shape( r.SEGMENTS.get(4).getShape() );
-		rotateY(-PConstants.PI/2);
-		rotateZ(-PConstants.PI/2);
-
-		fill(200, 200, 0);
-
-		translate(-115, 130, -124);
-		rotateZ(PConstants.PI);
-		rotateY(-PConstants.PI/2);
-		translate(0, 50, 50);
-		rotateX(jointAngles[4]);
-		translate(0, -50, -50);
-		shape( r.SEGMENTS.get(5).getShape() );
-		rotateY(PConstants.PI/2);
-		rotateZ(-PConstants.PI);
-
-		fill(50);
-
-		translate(150, -10, 95);
-		rotateY(-PConstants.PI/2);
-		rotateZ(PConstants.PI);
-		translate(45, 45, 0);
-		rotateZ(jointAngles[5]);
-		translate(-45, -45, 0);
-		shape( r.SEGMENTS.get(6).getShape() );
-
-		
-		pushMatrix();
-
-		// Center the End Effector on the Robot's faceplate and draw it.
-		if(activeEE == EEType.SUCTION) {
-			rotateY(PConstants.PI);
-			translate(-88, -37, 0);
-			shape( r.EEM_SUCTION.getShape() );
-
-		} else if(activeEE == EEType.CLAW) {
-			rotateY(PConstants.PI);
-			translate(-88, 0, 0);
-			shape( r.EEM_CLAW.getShape() );
-			rotateZ(PConstants.PI/2);
-
-			if(eeState == Fields.OFF) {
-				// Draw open grippers
-				translate(10, -85, 30);
-				shape( r.EEM_CLAW_PINCER.getShape() );
-				translate(55, 0, 0);
-				shape( r.EEM_CLAW_PINCER.getShape() );
-
-			} else if(eeState == Fields.ON) {
-				// Draw closed grippers
-				translate(28, -85, 30);
-				shape( r.EEM_CLAW_PINCER.getShape() );
-				translate(20, 0, 0);
-				shape( r.EEM_CLAW_PINCER.getShape() );
-			}
-		} else if (activeEE == EEType.POINTER) {
-			rotateY(PConstants.PI);
-			rotateZ(PConstants.PI);
-			translate(45, -45, 10);
-			shape( r.EEM_POINTER.getShape() );
-
-		} else if (activeEE == EEType.GLUE_GUN) {
-			rotateZ(PConstants.PI);
-			translate(-48, -46, -12);
-			shape( r.EEM_GLUE_GUN.getShape() );
-
-		} else if (activeEE == EEType.WIELDER) {
-			rotateY(PConstants.PI);
-			rotateZ(PConstants.PI);
-			translate(46, -44, 10);
-			shape( r.EEM_WIELDER.getShape() );
-		}
-		
-		popMatrix();
-
-		
-		popMatrix();
-		popStyle();
-		
-		/* My sketchy work-around for drawing only the bounding boxes of the
-		 * active robot */
-		if (r == getActiveRobot()) {
-			
-			if(areOBBsDisplayed()) {
-				// Draw hit boxes of the body poriotn of the Robot Arm
-				for(BoundingBox b : r.ARM_OBBS) {
-					draw(b);
-				}
-
-				ArrayList<BoundingBox> curEEHitBoxes = r.EE_TO_OBBS.get(activeEE);
-
-				// Draw End Effector hit boxes
-				for(BoundingBox b : curEEHitBoxes) {
-					draw(b);
-				}
-
-				curEEHitBoxes = r.EE_TO_PICK_OBBS.get(activeEE);
-				// Draw Pickup hit boxes
-				for (BoundingBox b : curEEHitBoxes) {
-					draw(b);
-				}
-			}
-			
-			if(r.isTrace()) {
-				drawTrace(r);
-			}
-		}
-		
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param r	
-	 */
-	private void drawTrace(RoboticArm r) {
-		Point eePos = RobotRun.nativeRobotEEPoint(r, r.getJointAngles());
-		
-		if(r.tracePts.isEmpty()) {
-			r.tracePts.add(eePos.position);
-			return;
-		} 
-		else if(eePos.position.copy().sub(r.tracePts.get(r.tracePts.size()-1)).mag() > 0.5) {
-			r.tracePts.add(eePos.position.copy());
-		}
-		
-		PVector lastPt = r.tracePts.get(0);
-		for(int i = 1; i < r.tracePts.size(); i += 1) {
-			PVector curPt = r.tracePts.get(i);
-			RobotRun.getInstance().stroke(0);
-			RobotRun.getInstance().strokeWeight(3);
-			RobotRun.getInstance().pushMatrix();
-			RobotRun.getInstance().line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y, curPt.z);
-			RobotRun.getInstance().popMatrix();
-			RobotRun.getInstance().strokeWeight(1);
-			lastPt = curPt;
-		}	
-	}
-	
-	/**
-	 * Draws the given world object with respect to the top matrix and the
-	 * object's orientation.
-	 * 
-	 * @param wo	The world object to draw
-	 */
-	private void draw(WorldObject wo) {
-		pushMatrix();
-		
-		if (wo instanceof Part) {
-			Part p = (Part)wo;
-			// Draw parts with respect to their fixture reference
-			applyCoord(p.getCenter(), p.getOrientation());
-			draw(wo.getForm());
-			
-			if (areOBBsDisplayed()) {
-				draw( p.getOBBFrame() );
-			}
-			
-		} else {
-			// Draw the world object in its own coordinate system
-			applyCoord(wo.getLocalCenter(), wo.getLocalOrientation());
-			draw(wo.getForm());
-		}
-		
-		popMatrix();
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param obb	The bounding box to draw
-	 */
-	private void draw(BoundingBox obb) {
-		pushMatrix();
-		applyCoord(obb.getCenter(), obb.getOrientationAxes());
-		
-		draw(obb.getFrame());
-		
-		popMatrix();
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param s
-	 */
-	private void draw(Shape s) {
-		pushStyle();
-		pushMatrix();
-		
-		if (s.getFillValue() == null) {
-			noFill();
-			
-		} else {
-			fill(s.getFillValue());
-		}
-		
-		if (s.getStrokeValue() == null) {
-			noStroke();
-			
-		} else {
-			stroke(s.getStrokeValue());
-		}
-		
-		if (s instanceof Box) {
-			box(
-				s.getDim(DimType.LENGTH),
-				s.getDim(DimType.HEIGHT),
-				s.getDim(DimType.WIDTH)
-			);
-			
-		} else if (s instanceof Cylinder) {
-			/**
-			 * Assumes the center of the cylinder is halfway between the top and bottom of of the cylinder.
-			 * 
-			 * Based off of the algorithm defined on Vormplus blog at:
-			 * http://vormplus.be/blog/article/drawing-a-cylinder-with-processing
-			 */
-			float halfHeight = s.getDim(DimType.HEIGHT) / 2,
-					diameter = 2 * s.getDim(DimType.RADIUS);
-
-			translate(0f, 0f, halfHeight);
-			// Draw top of the cylinder
-			ellipse(0f, 0f, diameter, diameter);
-			translate(0f, 0f, -s.getDim(DimType.HEIGHT));
-			// Draw bottom of the cylinder
-			ellipse(0f, 0f, diameter, diameter);
-			translate(0f, 0f, halfHeight);
-
-			beginShape(PConstants.TRIANGLE_STRIP);
-			// Draw a string of triangles around the circumference of the Cylinders top and bottom.
-			for (int degree = 0; degree <= 360; ++degree) {
-				float pos_x = PApplet.cos(DEG_TO_RAD * degree) * s.getDim(DimType.RADIUS),
-						pos_y = PApplet.sin(DEG_TO_RAD * degree) * s.getDim(DimType.RADIUS);
-
-				vertex(pos_x, pos_y, halfHeight);
-				vertex(pos_x, pos_y, -halfHeight);
-			}
-
-			endShape();
-			
-		} else if (s instanceof ModelShape) {
-			ModelShape mShape = (ModelShape)s;
-			float[] offset = mShape.getCenterOffset();
-			
-			translate(offset[0], offset[1], offset[2]);
-			shape(mShape.getModel());
-		}
-		
-		popMatrix();
-		popStyle();
-	}
-	
-	/**
-	 * Draws the given ray based on the matrix on the top of the stack.
-	 * 
-	 * @param r	A ray object
-	 */
-	private void drawRay(Ray r) {
-		pushStyle();
-		stroke(r.getColor());
-		noFill();
-		
-		PVector ro = r.getOrigin();
-		// Draw a long line
-		PVector endpoint = PVector.add(ro, PVector.mult(r.getDirection(), r.getDrawLength()));
-		line(ro.x, ro.y, ro.z, endpoint.x, endpoint.y, endpoint.z);
-		
-		popStyle();
 	}
 
 	/**
@@ -7159,25 +6823,25 @@ public class RobotRun extends PApplet {
 	/**
 	 * Updates the position and orientation of the Robot as well as all the
 	 * World Objects associated with the current scenario. Updates the bounding
-	 * box color, position and oientation of the Robot and all World Objects as
+	 * box color, position and orientation of the Robot and all World Objects as
 	 * well. Finally, all the World Objects and the Robot are drawn.
 	 * 
 	 * @param s
 	 *            The currently active scenario
 	 * @param active
 	 *            The currently selected program
-	 * @param model
+	 * @param robot
 	 *            The Robot Arm model
 	 */
-	public void renderScene(Scenario s, RoboticArm model) {
-		model.updateRobot(this);
+	public void renderScene(Scenario s, RoboticArm robot) {
+		robot.updateRobot(this);
 		
-		if (RobotRun.getInstance().isProgramRunning()) {
-			Program ap = model.getActiveProg();
+		if (isProgramRunning()) {
+			Program ap = robot.getActiveProg();
 
 			// Check the call stack for any waiting processes
-			if (ap != null && model.getActiveInstIdx() == ap.getNumOfInst()) {
-				CallFrame ret = model.popCallStack();
+			if (ap != null && robot.getActiveInstIdx() == ap.getNumOfInst()) {
+				CallFrame ret = robot.popCallStack();
 
 				if (ret != null) {
 					RoboticArm tgtDevice = ROBOTS.get(ret.getTgtRID());
@@ -7186,7 +6850,7 @@ public class RobotRun extends PApplet {
 					activeRobot = tgtDevice;
 
 					// Update the display
-					getContentsMenu().setLineIdx(model.getActiveInstIdx());
+					getContentsMenu().setLineIdx(robot.getActiveInstIdx());
 					getContentsMenu().setColumnIdx(0);
 					updatePendantScreen();
 				}
@@ -7197,8 +6861,8 @@ public class RobotRun extends PApplet {
 			s.resetObjectHitBoxColors();
 		}
 
-		model.resetOBBColors();
-		model.checkSelfCollisions();
+		robot.resetOBBColors();
+		robot.checkSelfCollisions();
 
 		if (s != null) {
 			WorldObject selected = UI.getSelectedWO();
@@ -7211,7 +6875,7 @@ public class RobotRun extends PApplet {
 					Part p = (Part)wldObj;
 
 					/* Update the transformation matrix of an object held by the Robotic Arm */
-					if(model != null && p == model.held && model.modelInMotion()) {
+					if(robot != null && p == robot.held && robot.modelInMotion()) {
 						pushMatrix();
 						resetMatrix();
 
@@ -7234,8 +6898,8 @@ public class RobotRun extends PApplet {
 							refFixture.removeCoordinateSystem();
 						}
 
-						RobotRun.applyModelRotation(model, model.getJointAngles());
-						RMatrix invMat = new RMatrix(getActiveRobot().getLastEEOrientation());
+						RobotRun.applyModelRotation(robot, robot.getJointAngles());
+						RMatrix invMat = new RMatrix(robot.getLastEEOrientation());
 						applyMatrix(invMat.getInverse());
 						applyCoord(p.getCenter(), p.getOrientation());
 						
@@ -7247,7 +6911,7 @@ public class RobotRun extends PApplet {
 					}
 					
 					
-					if (p != model.held && p != selected &&
+					if (p != robot.held && p != selected &&
 							p.getFixtureRef() == null &&
 							p.getLocalCenter().y < Fields.FLOOR_Y) {
 						
@@ -7258,7 +6922,7 @@ public class RobotRun extends PApplet {
 
 					/* Collision Detection */
 					if(areOBBsDisplayed()) {
-						if( model != null && model.checkObjectCollision(p) ) {
+						if( robot != null && robot.checkObjectCollision(p) ) {
 							p.setBBColor(Fields.OBB_COLLISION);
 						}
 
@@ -7277,7 +6941,7 @@ public class RobotRun extends PApplet {
 							}
 						}
 
-						if (model != null && p != model.held && model.canPickup(p)) {
+						if (robot != null && p != robot.held && robot.canPickup(p)) {
 							// Change hit box color to indicate End Effector collision
 							p.setBBColor(Fields.OBB_HELD);
 						}
@@ -7289,19 +6953,24 @@ public class RobotRun extends PApplet {
 				}
 				
 				// Draw the object
-				draw(wldObj);
+				if (wldObj instanceof Part) {
+					((Part)wldObj).draw(getGraphics(), UI.getOBBButtonState());
+					
+				} else {
+					wldObj.draw(getGraphics());
+				}
 			}
 		}
 
 		if (UI.getRobotButtonState()) {
 			// Draw all robots
 			for (RoboticArm r : ROBOTS.values()) {
-				draw(r);
+				r.draw(getGraphics(), r == robot);
 			}
 
 		} else {
 			// Draw only the active robot
-			draw(activeRobot);
+			robot.draw(getGraphics(), true);
 		}
 		
 		/* Render the axes of the selected World Object */
@@ -7324,18 +6993,22 @@ public class RobotRun extends PApplet {
 			renderOriginAxes(origin, RMath.rMatToWorld(orientation), 500f,
 					Fields.BLACK);
 		}
-
+		
+		/* TEST OUTPUT */
+		
 		if (displayPoint != null) {
 			// Display the point with its local orientation axes
-			renderOriginAxes(displayPoint.position, displayPoint.orientation.toMatrix(), 100f, Fields.color(0, 100, 15));
+			renderOriginAxes(displayPoint.position,
+					displayPoint.orientation.toMatrix(), 100f,
+					Fields.color(0, 100, 15));
 		}
 
-		model.updatePreviousEEOrientation();
+		robot.updatePreviousEEOrientation();
 		
 		if (Fields.DEBUG) {
 			if (mouseRay != null) {
 				// Draw the ray representing a mouse click in the scene
-				drawRay(mouseRay);
+				mouseRay.draw(getGraphics());
 			}
 			
 			pushStyle();
@@ -7352,74 +7025,72 @@ public class RobotRun extends PApplet {
 			
 			popStyle();
 		}
+		
+		/**/
 	}
 	
 	/**
-	 * Display any currently taught points during the processes of either the
-	 * 3-Point, 4-Point, or 6-Point Methods.
+	 * TODO comment this
+	 * 
+	 * @param frame
 	 */
-	public void renderTeachPoints() {
-		// Teach points are displayed only while the Robot is being taught a
-		// frame
-		if (teachFrame != null && mode.getType() == ScreenType.TYPE_TEACH_POINTS) {
+	public void renderTeachPoints(Frame frame) {
+		int size = 3;
 
-			int size = 3;
+		if (mode == ScreenMode.TEACH_6PT && teachFrame instanceof ToolFrame) {
+			size = 6;
+		} else if (mode == ScreenMode.TEACH_4PT && teachFrame instanceof UserFrame) {
+			size = 4;
+		}
 
-			if (mode == ScreenMode.TEACH_6PT && teachFrame instanceof ToolFrame) {
-				size = 6;
-			} else if (mode == ScreenMode.TEACH_4PT && teachFrame instanceof UserFrame) {
-				size = 4;
-			}
+		for (int idx = 0; idx < size; ++idx) {
+			Point pt = teachFrame.getPoint(idx);
+			
+			if (pt != null) {
+				pushMatrix();
+				// Applies the point's position
+				translate(pt.position.x, pt.position.y, pt.position.z);
 
-			for (int idx = 0; idx < size; ++idx) {
-				Point pt = teachFrame.getPoint(idx);
-				
-				if (pt != null) {
-					pushMatrix();
-					// Applies the point's position
-					translate(pt.position.x, pt.position.y, pt.position.z);
+				// Draw color-coded sphere for the point
+				noFill();
+				int pointColor = Fields.color(255, 0, 255);
 
-					// Draw color-coded sphere for the point
-					noFill();
-					int pointColor = Fields.color(255, 0, 255);
+				if (teachFrame instanceof ToolFrame) {
 
-					if (teachFrame instanceof ToolFrame) {
-
-						if (idx < 3) {
-							// TCP teach points
-							pointColor = Fields.color(130, 130, 130);
-						} else if (idx == 3) {
-							// Orient origin point
-							pointColor = Fields.color(255, 130, 0);
-						} else if (idx == 4) {
-							// Axes X-Direction point
-							pointColor = Fields.color(255, 0, 0);
-						} else if (idx == 5) {
-							// Axes Y-Diretion point
-							pointColor = Fields.color(0, 255, 0);
-						}
-					} else if (teachFrame instanceof UserFrame) {
-
-						if (idx == 0) {
-							// Orient origin point
-							pointColor = Fields.color(255, 130, 0);
-						} else if (idx == 1) {
-							// Axes X-Diretion point
-							pointColor = Fields.color(255, 0, 0);
-						} else if (idx == 2) {
-							// Axes Y-Diretion point
-							pointColor = Fields.color(0, 255, 0);
-						} else if (idx == 3) {
-							// Axes Origin point
-							pointColor = Fields.color(0, 0, 255);
-						}
+					if (idx < 3) {
+						// TCP teach points
+						pointColor = Fields.color(130, 130, 130);
+					} else if (idx == 3) {
+						// Orient origin point
+						pointColor = Fields.color(255, 130, 0);
+					} else if (idx == 4) {
+						// Axes X-Direction point
+						pointColor = Fields.color(255, 0, 0);
+					} else if (idx == 5) {
+						// Axes Y-Diretion point
+						pointColor = Fields.color(0, 255, 0);
 					}
+				} else if (teachFrame instanceof UserFrame) {
 
-					stroke(pointColor);
-					sphere(3);
-
-					popMatrix();
+					if (idx == 0) {
+						// Orient origin point
+						pointColor = Fields.color(255, 130, 0);
+					} else if (idx == 1) {
+						// Axes X-Diretion point
+						pointColor = Fields.color(255, 0, 0);
+					} else if (idx == 2) {
+						// Axes Y-Diretion point
+						pointColor = Fields.color(0, 255, 0);
+					} else if (idx == 3) {
+						// Axes Origin point
+						pointColor = Fields.color(0, 0, 255);
+					}
 				}
+
+				stroke(pointColor);
+				sphere(3);
+
+				popMatrix();
 			}
 		}
 	}

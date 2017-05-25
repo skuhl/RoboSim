@@ -1,5 +1,6 @@
 package geom;
 import global.Fields;
+import processing.core.PGraphics;
 import robot.RobotRun;
 
 /**
@@ -19,9 +20,39 @@ public abstract class Shape implements Cloneable {
 		fillCVal = fill;
 		strokeCVal = strokeVal;
 	}
+	
+	/**
+	 * Applies the shape's stroke and outline colors to the given graphics.
+	 * 
+	 * @param g	The graphics to which to apply this shape's style
+	 */
+	protected void applyStyle(PGraphics g) {
+		
+		if (fillCVal != null) {
+			g.fill(fillCVal);
+			
+		} else {
+			g.noFill();
+		}
+		
+		if (strokeCVal != null) {
+			g.stroke(strokeCVal);
+			
+		} else {
+			g.noStroke();
+		}
+		
+	}
 
 	@Override
 	public abstract Shape clone();
+	
+	/**
+	 * Draws the shape with its stroke and outline values.
+	 * 
+	 * @param g	the graphics used to render this shape
+	 */
+	public abstract void draw(PGraphics g);
 
 	/**
 	 * Returns the value of the given dimension associated with

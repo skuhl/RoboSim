@@ -1,6 +1,7 @@
 package geom;
 
 import global.Fields;
+import processing.core.PGraphics;
 import processing.core.PVector;
 
 /**
@@ -23,7 +24,7 @@ public class Ray {
 	/**
 	 * The color, with which the ray will be drawn.
 	 */
-	private int color;
+	private int strokeCVal;
 	
 	/**
 	 * The length, from the origin, of the portion of the ray, which will be
@@ -38,7 +39,7 @@ public class Ray {
 	public Ray() {
 		origin = new PVector(0f, 0f, 0f);
 		direction = new PVector(1f, 1f, 1f);
-		color = Fields.BLACK;
+		strokeCVal = Fields.BLACK;
 		drawLength = 5000f;
 	}
 	
@@ -55,7 +56,7 @@ public class Ray {
 		this.origin = origin;
 		direction = PVector.sub(pointOnRay, origin);
 		direction.normalize();
-		this.color = color;
+		this.strokeCVal = color;
 		drawLength = drawnLen;
 	}
 	
@@ -71,19 +72,39 @@ public class Ray {
 	public Ray(PVector origin, PVector direct, int color, float len) {
 		this.origin = origin;
 		direction = direct;
-		this.color = color;
+		this.strokeCVal = color;
 		drawLength = len;
 	}
 	
 	@Override
 	public Ray clone() {
-		return new Ray(origin.copy(), direction.copy(), color, drawLength);
+		return new Ray(origin.copy(), direction.copy(), strokeCVal,
+				drawLength);
+	}
+	
+	/**
+	 * Draws the ray with the given graphics.
+	 * 
+	 * @param g	the graphics used to draw the ray
+	 */
+	public void draw(PGraphics g) {
+		g.pushStyle();
+		g.stroke(strokeCVal);
+		g.noFill();
+		
+		// Define the endpoint of the line
+		PVector endpoint = PVector.mult(direction, drawLength);
+		endpoint.add(origin);
+		g.line(origin.x, origin.y, origin.z, endpoint.x, endpoint.y,
+				endpoint.z);
+		
+		g.popStyle();
 	}
 	
 	// Getter and setter methods
 	
 	public int getColor() {
-		return color;
+		return strokeCVal;
 	}
 	
 	public PVector getDirection() {
@@ -99,7 +120,7 @@ public class Ray {
 	}
 	
 	public void setColor(int newColor) {
-		color = newColor;
+		strokeCVal = newColor;
 	}
 	
 	public PVector setDirection(PVector newDirect) {
@@ -121,6 +142,6 @@ public class Ray {
 	@Override
 	public String toString() {
 		return String.format("(origin=%s direct=%s length=%9.3f color=%d)",
-				origin, direction, drawLength, color);
+				origin, direction, drawLength, strokeCVal);
 	}
 }
