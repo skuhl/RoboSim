@@ -19,6 +19,6 @@
 	<classpathentry kind="lib" path="lib/jogl-all-natives-windows-amd64.jar"/>
 	<classpathentry kind="lib" path="lib/jogl-all-natives-windows-i586.jar"/>
 	<classpathentry kind="lib" path="lib/jogl-all.jar"/>
-	<classpathentry kind="lib" path="C:/Users/vtdrusch/Documents/workspace/RobotRun/RobotRun/lib/json-20170516.jar"/>
+	<classpathentry kind="lib" path="lib/json-20170516.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

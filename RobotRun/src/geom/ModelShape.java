@@ -58,7 +58,7 @@ public class ModelShape extends Shape {
 		model_id = RegisteredModels.modelIDList.get(filename);
 		srcFilePath = filename;
 		
-		mdlScale = scale;
+		mdlScale = 1f;
 		model = RobotRun.getInstance().loadSTLModel(filename, fill);
 		selectAreas = new ArrayList<CamSelectArea>();
 		
@@ -87,7 +87,6 @@ public class ModelShape extends Shape {
 		}
 	}
 	
-<<<<<<< HEAD
 	/**
 	 * @return	The center offset associated with this model
 	 */
@@ -95,19 +94,6 @@ public class ModelShape extends Shape {
 		return new float[] {
 				centerOffset.x, centerOffset.y, centerOffset.z
 		};
-=======
-	@Override
-	public void draw() {
-		RobotRun app = RobotRun.getInstance();
-		
-		app.pushMatrix();
-		
-		// Draw shape, where its center is at (0, 0, 0)
-		app.translate(centerOffset.x, centerOffset.y, centerOffset.z);
-		app.shape(model);
-		
-		app.popMatrix();
->>>>>>> 3b23bf04b45c8db6645480b0f01caaafb85ae44a
 	}
 
 	@Override
