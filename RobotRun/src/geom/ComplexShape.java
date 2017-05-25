@@ -11,11 +11,11 @@ import robot.RobotRun;
 /**
  * A complex shape formed from a .stl source file.
  */
-public class ModelShape extends Shape {
+public class ComplexShape extends RShape {
 	
 	private String srcFilePath;
 	
-	private MyPShape model;
+	private MyPShape form;
 	private PVector centerOffset, baseDims;
 	
 	private float mdlScale;
@@ -33,13 +33,13 @@ public class ModelShape extends Shape {
 	 * @throws NullPointerException  if the given filename is
 	 *         not a valid .stl file in RobotRun/data/
 	 */
-	public ModelShape(String filename, MyPShape model, int fill) {
+	public ComplexShape(String filename, MyPShape model, int fill) {
 		super(fill, null);
 		model_id = RegisteredModels.modelIDList.get(filename);
 		srcFilePath = filename;
 		
 		mdlScale = 1f;
-		this.model = model;
+		this.form = model;
 		model.setFill(fill);
 		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
@@ -56,13 +56,13 @@ public class ModelShape extends Shape {
 	 * @throws NullPointerException  if the given filename is
 	 *         not a valid .stl file in RobotRun/data/
 	 */
-	public ModelShape(String filename, MyPShape model, int fill, float scale) {
+	public ComplexShape(String filename, MyPShape model, int fill, float scale) {
 		super(fill, null);
 		model_id = RegisteredModels.modelIDList.get(filename);
 		srcFilePath = filename;
 		
 		mdlScale = 1f;
-		this.model = model;
+		this.form = model;
 		model.setFill(fill);
 		selectAreas = new ArrayList<CamSelectArea>();
 		
@@ -80,8 +80,8 @@ public class ModelShape extends Shape {
 	}
 
 	@Override
-	public ModelShape clone() {
-		return new ModelShape(srcFilePath, model.clone(), getFillValue(),
+	public ComplexShape clone() {
+		return new ComplexShape(srcFilePath, form.clone(), getFillValue(),
 				mdlScale);
 	}
 	
@@ -90,7 +90,7 @@ public class ModelShape extends Shape {
 		g.pushMatrix();
 		g.translate(centerOffset.x, centerOffset.y, centerOffset.z);
 		
-		g.shape(model);
+		g.shape(form);
 		
 		g.popMatrix();
 	}
@@ -130,8 +130,8 @@ public class ModelShape extends Shape {
 		return model_id;
 	}
 	
-	public PShape getModel() {
-		return model;
+	public PShape getForm() {
+		return form;
 	}
 
 	public String getSourcePath() { return srcFilePath; }
@@ -146,11 +146,11 @@ public class ModelShape extends Shape {
 		PVector maximums = new PVector(Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE),
 				minimums = new PVector(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
 
-		int vertexCount = model.getVertexCount();
+		int vertexCount = form.getVertexCount();
 
 		// Calculate the maximum and minimum values for each dimension
 		for (int idx = 0; idx < vertexCount; ++idx) {
-			PVector v = model.getVertex(idx);
+			PVector v = form.getVertex(idx);
 
 			if (v.x > maximums.x) {
 				maximums.x = v.x;
@@ -193,8 +193,8 @@ public class ModelShape extends Shape {
 		img.background(255);
 		img.stroke(0);
 		img.translate(75, 100, 0);
-		img.shape(model);
-		img.translate(-75, -100, 10 + model.depth/2);
+		img.shape(form);
+		img.translate(-75, -100, 10 + form.depth/2);
 		for(CamSelectArea c: selectAreas) {
 			//TODO draw select boxes
 		}
@@ -210,7 +210,7 @@ public class ModelShape extends Shape {
 		case SCALE:
 			// Update the model's scale
 			centerOffset.mult(newVal / mdlScale);
-			model.scale(newVal / mdlScale);
+			form.scale(newVal / mdlScale);
 			mdlScale = newVal;
 			break;
 

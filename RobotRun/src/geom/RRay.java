@@ -9,7 +9,7 @@ import processing.core.PVector;
  * 
  * @author Joshua Hooker
  */
-public class Ray {
+public class RRay {
 	
 	/**
 	 * The origin of the ray.
@@ -36,7 +36,7 @@ public class Ray {
 	 * Creates a ray pointing in the position xyz direction starting at the
 	 * coordinate system origin.
 	 */
-	public Ray() {
+	public RRay() {
 		origin = new PVector(0f, 0f, 0f);
 		direction = new PVector(1f, 1f, 1f);
 		strokeCVal = Fields.BLACK;
@@ -52,7 +52,7 @@ public class Ray {
 	 * @param drawnLen		How much of the ray is drawn
 	 * @param color			The color with which the ray will be drawn
 	 */
-	public Ray(PVector origin, PVector pointOnRay, float drawnLen, int color) {
+	public RRay(PVector origin, PVector pointOnRay, float drawnLen, int color) {
 		this.origin = origin;
 		direction = PVector.sub(pointOnRay, origin);
 		direction.normalize();
@@ -69,7 +69,7 @@ public class Ray {
 	 * @param drawnLen		How much of the ray is drawn
 	 * @param color			The color with which the ray will be drawn
 	 */
-	public Ray(PVector origin, PVector direct, int color, float len) {
+	public RRay(PVector origin, PVector direct, int color, float len) {
 		this.origin = origin;
 		direction = direct;
 		this.strokeCVal = color;
@@ -77,8 +77,8 @@ public class Ray {
 	}
 	
 	@Override
-	public Ray clone() {
-		return new Ray(origin.copy(), direction.copy(), strokeCVal,
+	public RRay clone() {
+		return new RRay(origin.copy(), direction.copy(), strokeCVal,
 				drawLength);
 	}
 	

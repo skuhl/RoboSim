@@ -7,31 +7,31 @@ import robot.RobotRun;
 /**
  * Defines the radius and height to draw a uniform cylinder
  */
-public class Cylinder extends Shape {
+public class RCylinder extends RShape {
 	
 	private float radius, height;
 
-	public Cylinder() {
+	public RCylinder() {
 		super();
 		radius = 10f;
 		height = 10f;
 	}
 
-	public Cylinder(int fill, int strokeVal, float rad, float hgt) {
+	public RCylinder(int fill, int strokeVal, float rad, float hgt) {
 		super(fill, strokeVal);
 		radius = rad;
 		height = hgt;
 	}
 
-	public Cylinder(RobotRun robotRun, int strokeVal, float rad, float hgt) {
+	public RCylinder(RobotRun robotRun, int strokeVal, float rad, float hgt) {
 		super(strokeVal, strokeVal);
 		radius = rad;
 		height = hgt;
 	}
 
 	@Override
-	public Cylinder clone() {
-		return new Cylinder(getFillValue(), getStrokeValue(), radius, height);
+	public RCylinder clone() {
+		return new RCylinder(getFillValue(), getStrokeValue(), radius, height);
 	}
 	
 	@Override

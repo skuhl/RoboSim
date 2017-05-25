@@ -26,15 +26,15 @@ import enums.ScreenMode;
 import enums.ScreenType;
 import enums.ShapeType;
 import enums.WindowTab;
-import geom.Box;
-import geom.Cylinder;
+import geom.RBox;
+import geom.RCylinder;
 import geom.DimType;
 import geom.Fixture;
-import geom.ModelShape;
+import geom.ComplexShape;
 import geom.MyPShape;
 import geom.Part;
 import geom.RMatrix;
-import geom.Shape;
+import geom.RShape;
 import geom.WorldObject;
 import global.DataManagement;
 import global.Fields;
@@ -1189,13 +1189,13 @@ public class WGUI implements ControlListener {
 					// Construct a complex model
 					if (shapeDims != null) {
 						MyPShape model = app.loadSTLModel(srcFile, fill);
-						ModelShape shape;
+						ComplexShape shape;
 
 						if (shapeDims[0] != null) {
 							// Define shape scale
-							shape = new ModelShape(srcFile, model, fill, shapeDims[0]);
+							shape = new ComplexShape(srcFile, model, fill, shapeDims[0]);
 						} else {
-							shape = new ModelShape(srcFile, model, fill);
+							shape = new ComplexShape(srcFile, model, fill);
 						}
 
 						wldObj = new Part(name, shape);
@@ -1234,14 +1234,14 @@ public class WGUI implements ControlListener {
 					String srcFile = getShapeSourceFile();
 					shapeDims = getModelDimensions();
 					// Construct a complex model
-					MyPShape model = app.loadSTLModel(srcFile, fill);
-					ModelShape shape;
+					MyPShape form = app.loadSTLModel(srcFile, fill);
+					ComplexShape shape;
 
 					if (shapeDims != null && shapeDims[0] != null) {
 						// Define model scale value
-						shape = new ModelShape(srcFile, model, fill, shapeDims[0]);
+						shape = new ComplexShape(srcFile, form, fill, shapeDims[0]);
 					} else {
-						shape = new ModelShape(srcFile, model, fill);
+						shape = new ComplexShape(srcFile, form, fill);
 					}
 
 					wldObj = new Fixture(name, shape);
@@ -2359,17 +2359,17 @@ public class WGUI implements ControlListener {
 			Object val = getDropdown("Object").getSelectedItem();
 
 			if (val instanceof WorldObject) {
-				Shape s = ((WorldObject)val).getForm();
+				RShape s = ((WorldObject)val).getForm();
 
-				if (s instanceof Box) {
+				if (s instanceof RBox) {
 					lblNames = new String[] { "Length:", "Height:", "Width" };
 					txtFields = 3;
 
-				} else if (s instanceof Cylinder) {
+				} else if (s instanceof RCylinder) {
 					lblNames = new String[] { "Radius", "Height" };
 					txtFields = 2;
 
-				} else if (s instanceof ModelShape) {
+				} else if (s instanceof ComplexShape) {
 					lblNames = new String[] { "Scale:" };
 					txtFields = 1;
 				}
@@ -2413,20 +2413,20 @@ public class WGUI implements ControlListener {
 	 * @param selected
 	 */
 	public void updateEditWindowFields(WorldObject selected) {
-		Shape form = selected.getForm();
+		RShape form = selected.getForm();
 		
 		// Set the dimension fields
-		if (form instanceof Box) {
+		if (form instanceof RBox) {
 			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.LENGTH)) );
 			getTextField("Dim1").setText( String.format("%4.3f", form.getDim(DimType.HEIGHT)) );
 			getTextField("Dim2").setText( String.format("%4.3f", form.getDim(DimType.WIDTH)) );
 
-		} else if (form instanceof Cylinder) {
+		} else if (form instanceof RCylinder) {
 			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.RADIUS)) );
 			getTextField("Dim1").setText( String.format("%4.3f", form.getDim(DimType.HEIGHT)) );
 
 
-		} else if (form instanceof ModelShape) {
+		} else if (form instanceof ComplexShape) {
 			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.SCALE)) );
 		}
 
@@ -3263,7 +3263,7 @@ public class WGUI implements ControlListener {
 
 	/**
 	 * Updates the dimensions as well as the current position and orientation
-	 * (and the fixture reference for parts) of the selected world object.
+	 * of the selected world object.
 	 * 
 	 * @param selectedWO	The object of which to update the position and
 	 * 						orientation
@@ -3271,20 +3271,13 @@ public class WGUI implements ControlListener {
 	 * 						modified 
 	 */
 	public boolean updateWOCurrent(WorldObject selectWO) {
-		RoboticArm model = RobotRun.getActiveRobot();
 		boolean edited = false;
-		
-		if (model != null && selectWO == model.held) {
-			// Cannot edit an object being held by the Robot
-			PApplet.println("Cannot edit an object currently being held by the Robot!");
-			return false;
-		}
 
 		try {
 			boolean dimChanged = false;
-			Shape s = selectWO.getForm();
+			RShape s = selectWO.getForm();
 
-			if (s instanceof Box) {
+			if (s instanceof RBox) {
 				Float[] newDims = getBoxDimensions();
 
 				if (newDims[0] != null) {
@@ -3305,7 +3298,7 @@ public class WGUI implements ControlListener {
 					dimChanged = true;
 				}
 
-			} else if (s instanceof Cylinder) {
+			} else if (s instanceof RCylinder) {
 				Float[] newDims = getCylinderDimensions();
 
 				if (newDims[0] != null) {
@@ -3320,7 +3313,7 @@ public class WGUI implements ControlListener {
 					dimChanged = true;
 				}
 
-			} else if (s instanceof ModelShape) {
+			} else if (s instanceof ComplexShape) {
 				Float[] newDims = getModelDimensions();
 
 				if (newDims[0] != null) {
@@ -3383,23 +3376,6 @@ public class WGUI implements ControlListener {
 			PApplet.println("Missing parameter!");
 			NPEx.printStackTrace();
 			return false;
-		}
-
-		/* If the edited object is a fixture, then update the orientation
-		 * of all parts, which reference this fixture, in this scenario. */
-		if (selectWO instanceof Fixture) {
-			if (app.getActiveScenario() != null) {
-
-				for (WorldObject wldObj : app.getActiveScenario()) {
-					if (wldObj instanceof Part) {
-						Part p = (Part)wldObj;
-
-						if (p.getFixtureRef() == selectWO) {
-							p.updateAbsoluteOrientation();
-						}
-					}
-				}
-			}
 		}
 
 		return edited;

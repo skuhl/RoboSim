@@ -16,7 +16,7 @@ import geom.Part;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
-import geom.Ray;
+import geom.RRay;
 import geom.WorldObject;
 import global.Fields;
 import global.RMath;
@@ -671,7 +671,7 @@ public class RoboticArm {
 	 * @param ray	A ray with a defined position and direction
 	 * @return		The closest collision point with a robot bounding box
 	 */
-	public PVector closestCollision(Ray ray) {
+	public PVector closestCollision(RRay ray) {
 		PVector closestCollPt = null;
 		
 		for(BoundingBox b : ARM_OBBS) {
