@@ -1,5 +1,7 @@
 package global;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -8,7 +10,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -33,8 +37,11 @@ import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
 import geom.Shape;
+import geom.Triangle;
 import geom.WorldObject;
+import processing.core.PShape;
 import processing.core.PVector;
+import processing.opengl.PGraphicsOpenGL;
 import programming.CallInstruction;
 import programming.FrameInstruction;
 import programming.IOInstruction;
