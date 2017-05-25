@@ -242,6 +242,17 @@ public abstract class Fields {
 		
 	}
 	
+	public static void transform(PGraphics g, RMatrix tMat) {
+		
+		g.applyMatrix(
+				(float)tMat.getEntry(0, 0), (float)tMat.getEntry(0, 1), (float)tMat.getEntry(0, 2), (float)tMat.getEntry(0, 3),
+				(float)tMat.getEntry(1, 0), (float)tMat.getEntry(1, 1), (float)tMat.getEntry(1, 2), (float)tMat.getEntry(1, 3),
+				(float)tMat.getEntry(2, 0), (float)tMat.getEntry(2, 1), (float)tMat.getEntry(2, 2), (float)tMat.getEntry(2, 3),
+				(float)tMat.getEntry(3, 0), (float)tMat.getEntry(3, 1), (float)tMat.getEntry(3, 2), (float)tMat.getEntry(3, 3)
+		);
+		
+	}
+	
 	/**
 	 * Applies the given rotation to the graphics object.
 	 * 
