@@ -930,7 +930,7 @@ public abstract class DataManagement {
 				}
 				
 				// Creates a complex shape from the srcPath located in RobotRun/data/
-				shape = new ModelShape(srcPath, fill, scale, app);
+				shape = new ModelShape(srcPath, fill, scale);
 			}
 		}
 
