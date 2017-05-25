@@ -3,6 +3,7 @@ package geom;
 import global.Fields;
 import global.MyFloatFormat;
 import global.RMath;
+import processing.core.PGraphics;
 import processing.core.PVector;
 import robot.RobotRun;
 
@@ -168,6 +169,20 @@ public abstract class WorldObject implements Cloneable {
 		}
 
 		return fields;
+	}
+	
+	/**
+	 * Draws the world object in its own coordinate frame.
+	 * 
+	 * @param g	The graphics used to render the object
+	 */
+	public void draw(PGraphics g) {
+		g.pushMatrix();
+		Fields.transform(g, this.localOrientation);
+		
+		form.draw(g);
+		
+		g.popMatrix();
 	}
 
 	// Getter and Setter methods for the World Object's local orientation, name, and form

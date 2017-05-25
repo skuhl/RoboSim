@@ -1,6 +1,8 @@
 package geom;
+import global.Fields;
 import global.RMath;
 import processing.core.PApplet;
+import processing.core.PGraphics;
 import processing.core.PVector;
 import robot.RobotRun;
 
@@ -231,6 +233,31 @@ public class Part extends WorldObject {
 	@Override
 	public PVector collision(Ray ray) {
 		return absOBB.collision(ray);
+	}
+	
+	@Override
+	public void draw(PGraphics g) {
+		draw(g, true);
+	}
+	
+	/**
+	 * Parts the part and its bounding box (depending on the value of drawOBBs)
+	 * in the absolute coordinate frame of part.
+	 * 
+	 * @param g			The graphics used to draw the part
+	 * @param drawOBBs	Whether to render the bounding boxes
+	 */
+	public void draw(PGraphics g, boolean drawOBBs) {
+		g.pushMatrix();
+		Fields.transform(g, absOBB.getCenter(), absOBB.getOrientationAxes());
+		
+		getForm().draw(g);
+		
+		if (drawOBBs) {
+			absOBB.getFrame().draw(g);
+		}
+		
+		g.popMatrix();
 	}
 	
 	/**
