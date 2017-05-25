@@ -6082,6 +6082,9 @@ public class RobotRun extends PApplet {
 	 * @throws NullPointerException
 	 *             if the given filename does not pertain to a valid .stl file
 	 *             located in RobotRun/data/
+	 * @throws ClassCastException
+	 * 				if the application does not use processing's opengl
+	 * 				graphics library
 	 */
 	public MyPShape loadSTLModel(String filename, int fill) throws NullPointerException, ClassCastException {
 		ArrayList<Triangle> triangles = new ArrayList<>();
@@ -6116,17 +6119,19 @@ public class RobotRun extends PApplet {
 			triangles.add(t);
 			n += 2; // skip meaningless "attribute byte count"
 		}
-
+		
 		MyPShape mesh = new MyPShape((PGraphicsOpenGL)getGraphics(), PShape.GEOMETRY);
 		mesh.beginShape(TRIANGLES);
 		mesh.noStroke();
 		mesh.fill(fill);
+		
 		for (Triangle t : triangles) {
 			mesh.normal(t.components[0].x, t.components[0].y, t.components[0].z);
 			mesh.vertex(t.components[1].x, t.components[1].y, t.components[1].z);
 			mesh.vertex(t.components[2].x, t.components[2].y, t.components[2].z);
 			mesh.vertex(t.components[3].x, t.components[3].y, t.components[3].z);
 		}
+		
 		mesh.endShape();
 
 		return mesh;
