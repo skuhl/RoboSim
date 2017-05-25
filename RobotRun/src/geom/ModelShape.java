@@ -12,16 +12,18 @@ import robot.RobotRun;
  * A complex shape formed from a .stl source file.
  */
 public class ModelShape extends Shape {
-	//private RobotRun app;
+	
+	private String srcFilePath;
+	
+	private MyPShape model;
 	private PVector centerOffset, baseDims;
+	
 	private float mdlScale;
 	
-	private PShape model;
 	public final int model_id;
 	private PGraphics preview;
 	
 	private ArrayList<CamSelectArea> selectAreas;
-	private String srcFilePath;
 
 	/**
 	 * Create a complex model from the soruce .stl file of the
@@ -31,13 +33,13 @@ public class ModelShape extends Shape {
 	 * @throws NullPointerException  if the given filename is
 	 *         not a valid .stl file in RobotRun/data/
 	 */
-	public ModelShape(String filename, int fill) throws NullPointerException {
+	public ModelShape(String filename, MyPShape model, int fill) {
 		super(fill, null);
 		model_id = RegisteredModels.modelIDList.get(filename);
 		srcFilePath = filename;
 		
 		mdlScale = 1f;
-		model = RobotRun.getInstance().loadSTLModel(filename, fill);
+		this.model = model;
 		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
 		
@@ -53,13 +55,13 @@ public class ModelShape extends Shape {
 	 * @throws NullPointerException  if the given filename is
 	 *         not a valid .stl file in RobotRun/data/
 	 */
-	public ModelShape(String filename, int fill, float scale) throws NullPointerException {
+	public ModelShape(String filename, MyPShape model, int fill, float scale) {
 		super(fill, null);
 		model_id = RegisteredModels.modelIDList.get(filename);
 		srcFilePath = filename;
 		
 		mdlScale = 1f;
-		model = RobotRun.getInstance().loadSTLModel(filename, fill);
+		this.model = model;
 		selectAreas = new ArrayList<CamSelectArea>();
 		
 		loadSelectAreas();
@@ -77,14 +79,8 @@ public class ModelShape extends Shape {
 
 	@Override
 	public ModelShape clone() {
-		try {
-			// Created from source file
-			return new ModelShape(srcFilePath, getFillValue(), mdlScale);
-		
-		} catch (NullPointerException NPEx) {
-			// Invalid source file
-			return null;
-		}
+		return new ModelShape(srcFilePath, model.clone(), getFillValue(),
+				mdlScale);
 	}
 	
 	/**
