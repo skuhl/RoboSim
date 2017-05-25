@@ -7241,19 +7241,16 @@ public class RobotRun extends PApplet {
 		}
 		
 		/* Camera test output */
-		if (Fields.DEBUG) {
-			String[] lines = Fields.toLineStringArray(camera.getPosition(),
-					camera.getOrientation().mult(RobotRun.RAD_TO_DEG));
+		if (Fields.DEBUG && activeRobot != null) {
+			Point pt = activeRobot.getFacePlatePoint();
+			String[] lines = pt.toLineStringArray(true);
 			
 			lastTextPositionY += 20;
-			text("Camera", lastTextPositionX, lastTextPositionY);
+			text("Robot", lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 			text(lines[0], lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 			text(lines[1], lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-			text(MyFloatFormat.format(camera.getScale()), lastTextPositionX,
-					lastTextPositionY);
 			lastTextPositionY += 20;
 		}
 		/**/
@@ -7596,6 +7593,142 @@ public class RobotRun extends PApplet {
 			DataManagement.errLog(NPEx);
 			throw NPEx;
 		}
+		
+		pushMatrix();
+		resetMatrix();
+		
+		pushMatrix();
+		g.rotateZ(PConstants.PI);
+		g.rotateY(PConstants.PI/2);
+		System.out.println("Pre Base");
+		printMatrix();
+		popMatrix();
+		
+		// base
+		pushMatrix();
+		g.rotateY(-PConstants.PI/2);
+		g.rotateZ(-PConstants.PI);
+		g.translate(-50, -166, -358); // -115, -213, -413
+		g.rotateZ(PConstants.PI);
+		g.translate(150, 0, 150);
+		g.rotateX(PConstants.PI);
+		System.out.println("Pre joint 0");
+		printMatrix();
+		popMatrix();
+		
+		// joint 0
+		pushMatrix();
+		g.rotateX(-PConstants.PI);
+		g.translate(-150, 0, -150);
+		System.out.println("Pre segment 0");
+		printMatrix();
+		popMatrix();
+		
+		// segment 0
+		pushMatrix();
+		g.rotateZ(-PConstants.PI);
+		g.translate(-115, -85, 180);
+		g.rotateZ(PConstants.PI);
+		g.rotateY(PConstants.PI/2);
+		g.translate(0, 62, 62);
+		System.out.println("Pre joint 1");
+		printMatrix();
+		popMatrix();
+		
+		// joint 1
+		pushMatrix();
+		g.translate(0, -62, -62);
+		System.out.println("Pre segment 1");
+		printMatrix();
+		popMatrix();
+		
+		// segment 1
+		pushMatrix();
+		g.rotateY(-PConstants.PI/2);
+		g.rotateZ(-PConstants.PI);
+		g.translate(0, -500, -50);
+		g.rotateZ(PConstants.PI);
+		g.rotateY(PConstants.PI/2);
+		g.translate(0, 75, 75);
+		g.rotateZ(PConstants.PI);
+		System.out.println("Pre joint 2");
+		printMatrix();
+		popMatrix();
+		
+		// joint 2
+		pushMatrix();
+		g.rotateZ(-PConstants.PI);
+		g.translate(0, -75, -75);
+		System.out.println("Pre segment 2");
+		printMatrix();
+		popMatrix();
+		
+		// segment 2
+		pushMatrix();
+		g.rotateY(PConstants.PI/2);
+		g.rotateZ(-PConstants.PI);
+		g.translate(745, -150, 150);
+		g.rotateZ(PConstants.PI/2);
+		g.rotateY(PConstants.PI/2);
+		g.translate(70, 0, 70);
+		System.out.println("Pre joint 3");
+		printMatrix();
+		popMatrix();
+		
+		// joint 3
+		pushMatrix();
+		g.translate(-70, 0, -70);
+		System.out.println("Pre segment 3");
+		printMatrix();
+		popMatrix();
+		
+		// segment 3
+		pushMatrix();
+		g.rotateY(-PConstants.PI/2);
+		g.rotateZ(-PConstants.PI/2);
+		g.translate(-115, 130, -124);
+		g.rotateZ(PConstants.PI);
+		g.rotateY(-PConstants.PI/2);
+		g.translate(0, 50, 50);
+		System.out.println("Pre joint 4");
+		printMatrix();
+		popMatrix();
+		
+		// joint 4
+		pushMatrix();
+		g.translate(0, -50, -50);
+		System.out.println("Pre segment 4");
+		printMatrix();
+		popMatrix();
+		
+		// segment 4
+		pushMatrix();
+		g.rotateY(PConstants.PI/2);
+		g.rotateZ(-PConstants.PI);
+		g.translate(150, -10, 95);
+		g.rotateY(-PConstants.PI/2);
+		g.rotateZ(PConstants.PI);
+		g.translate(45, 45, 0);
+		System.out.println("Pre joint 5");
+		printMatrix();
+		popMatrix();
+		
+		// joint 5
+		pushMatrix();
+		g.translate(-45, -45, 0);
+		System.out.println("Pre segment 5");
+		printMatrix();
+		popMatrix();
+		
+		// segment 5
+		pushMatrix();
+		rotateX(PI);
+		rotateY(PI/2);
+		System.out.println("Post segment 5");
+		printMatrix();
+		popMatrix();
+		
+		popMatrix();
 	}
 
 	/**

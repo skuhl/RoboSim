@@ -730,6 +730,36 @@ public abstract class RMath {
 	}
 	
 	/**
+	 * Wrapper method for matFromAxisAndAngle().
+	 */
+	public static RMatrix tMatFromAxisAndAngle(PVector u, float theta) {
+		float[][] tMat = new float[4][4];
+		
+		float ct = (float)Math.cos(theta);
+		float st = (float)Math.sin(theta);
+		float one_ct = 1f - ct;
+		
+		tMat[0][0] = ct + u.x * u.x * one_ct;
+		tMat[0][1] = u.x * u.y * one_ct - u.z * st;
+		tMat[0][2] = u.x * u.z * one_ct + u.y * st;
+		tMat[0][3] = 0f;
+		tMat[1][0] = u.y * u.x * one_ct + u.z * st;
+		tMat[1][1] = ct + u.y * u.y * one_ct;
+		tMat[1][2] = u.y * u.z * one_ct - u.x * st;
+		tMat[1][3] = 0f;
+		tMat[2][0] = u.z * u.x * one_ct - u.y * st;
+		tMat[2][1] = u.z * u.y * one_ct + u.x * st;
+		tMat[2][2] = ct + u.z * u.z * one_ct;
+		tMat[2][3] = 0f;
+		tMat[3][0] = 0f;
+		tMat[3][1] = 0f;
+		tMat[3][2] = 0f;
+		tMat[3][3] = 1f;
+		
+		return new RMatrix(tMat);
+	}
+	
+	/**
 	 * Forms the 4x4 transformation matrix (row major order) form the given
 	 * origin offset and axes offset (row major order) of the Native Coordinate
 	 * system.
