@@ -1358,7 +1358,7 @@ public class RobotRun extends PApplet {
 			nextScreen(ScreenMode.ACTIVE_FRAMES);
 
 		} else {
-			// Update the coordinate modeke
+			// Update the coordinate frame
 			coordFrameTransition();
 			updatePendantScreen();
 		}
@@ -5140,8 +5140,9 @@ public class RobotRun extends PApplet {
 		if (ctrlDown) {
 			
 			if (keyCode == KeyEvent.VK_C) {
-				// Cycle active coordinate frame
-				coord();
+				// Update the coordinate frame
+				coordFrameTransition();
+				updatePendantScreen();
 				
 			} else if (keyCode == KeyEvent.VK_D) {
 				/* Debug output *
