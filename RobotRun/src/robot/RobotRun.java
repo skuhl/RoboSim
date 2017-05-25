@@ -1617,14 +1617,8 @@ public class RobotRun extends PApplet {
 					count += 1;
 				}
 			}
-<<<<<<< HEAD
 			
 			/* Camera Test Code */
-=======
-			/**/
-			
-			/*Camera Test Code*/
->>>>>>> 3b23bf04b45c8db6645480b0f01caaafb85ae44a
 			renderOriginAxes(rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
 			
 			PVector near[] = rCamera.getPlaneNear();
@@ -1928,6 +1922,7 @@ public class RobotRun extends PApplet {
 	 */
 	private void draw(Shape s) {
 		pushStyle();
+		pushMatrix();
 		
 		if (s.getFillValue() == null) {
 			noFill();
@@ -1988,6 +1983,7 @@ public class RobotRun extends PApplet {
 			shape(mShape.getModel());
 		}
 		
+		popMatrix();
 		popStyle();
 	}
 	
