@@ -1,12 +1,12 @@
 package geom;
+
 import processing.core.PGraphics;
 import processing.core.PVector;
-import robot.RobotRun;
 
 /**
  * Defines the length, width, height values to draw a box.
  */
-public class Box extends Shape {
+public class RBox extends RShape {
 	
 	/**
 	 * X -> length
@@ -18,7 +18,7 @@ public class Box extends Shape {
 	/**
 	 * Create a cube, with an edge length of 10.
 	 */
-	public Box() {
+	public RBox() {
 		super();
 		dimensions = new PVector(10f, 10f, 10f);
 	}
@@ -26,7 +26,7 @@ public class Box extends Shape {
 	/**
 	 * Create an empty cube with the given color and dimension.
 	 */
-	public Box(int strokeVal, float edgeLen) {
+	public RBox(int strokeVal, float edgeLen) {
 		super(null, strokeVal);
 		dimensions = new PVector(edgeLen, edgeLen, edgeLen);
 	}
@@ -34,7 +34,7 @@ public class Box extends Shape {
 	/**
 	 * Create an empty box with the given color and dimensions.
 	 */
-	public Box(int strokeVal, float len, float hgt, float wdh) {
+	public RBox(int strokeVal, float len, float hgt, float wdh) {
 		super(null, strokeVal);
 		dimensions = new PVector(len, hgt, wdh);
 	}
@@ -42,7 +42,7 @@ public class Box extends Shape {
 	/**
 	 * Create a cube with the given colors and dimension.
 	 */
-	public Box(int fill, int strokeVal, float edgeLen) {
+	public RBox(int fill, int strokeVal, float edgeLen) {
 		super(fill, strokeVal);
 		dimensions = new PVector(edgeLen, edgeLen, edgeLen);
 	}
@@ -50,14 +50,14 @@ public class Box extends Shape {
 	/**
 	 * Create a box with the given colors and dimensions.
 	 */
-	public Box(int fill, int strokeVal, float len, float hgt, float wdh) {
+	public RBox(int fill, int strokeVal, float len, float hgt, float wdh) {
 		super(fill, strokeVal);
 		dimensions = new PVector(len, hgt, wdh);
 	}
 
 	@Override
-	public Box clone() {
-		return new Box(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
+	public RBox clone() {
+		return new RBox(getFillValue(), getStrokeValue(), dimensions.x, dimensions.y, dimensions.z);
 	}
 	
 	@Override

@@ -22,19 +22,19 @@ import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
-import geom.Box;
+import geom.RBox;
 import geom.CoordinateSystem;
-import geom.Cylinder;
+import geom.RCylinder;
 import geom.DimType;
 import geom.Fixture;
-import geom.ModelShape;
+import geom.ComplexShape;
 import geom.MyPShape;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
-import geom.Ray;
-import geom.Shape;
+import geom.RRay;
+import geom.RShape;
 import geom.Triangle;
 import geom.WorldObject;
 import global.DataManagement;
@@ -355,7 +355,7 @@ public class RobotRun extends PApplet {
 	 * Defines the mouse's position mapped from the screen into the active
 	 * scenario.
 	 */
-	private Ray mouseRay;
+	private RRay mouseRay;
 	
 	/**
 	 * Stores points of collision between the mouse ray and world objects.
@@ -384,15 +384,6 @@ public class RobotRun extends PApplet {
 		// Apply orthogonal camera view
 		ortho(-horizontalMargin, horizontalMargin, -verticalMargin,
 				verticalMargin, near, far);
-	}
-	
-	/**
-	 * Apply the given coordinate system onto the matrix stack
-	 * 
-	 * @param cs	The coordinate system to apply
-	 */
-	public void applyCoord(CoordinateSystem cs) {
-		applyCoord(cs.getOrigin(), cs.getAxes());
 	}
 	
 	/**
@@ -1202,7 +1193,7 @@ public class RobotRun extends PApplet {
 	 * @param ray	The ray, for which to check collisions in the scene
 	 * @return		The closest object, with which the ray collided
 	 */
-	private WorldObject checkForCollisionsInScene(Ray ray) {
+	private WorldObject checkForCollisionsInScene(RRay ray) {
 		Scenario active = this.getActiveScenario();
 		
 		if (UI.getRobotButtonState()) {
@@ -1227,7 +1218,7 @@ public class RobotRun extends PApplet {
 	 * @param robot		The robots, which which to check collisions with the
 	 * 					given ray
 	 */
-	private WorldObject checkForRayCollisions(Ray ray, Scenario scenario,
+	private WorldObject checkForRayCollisions(RRay ray, Scenario scenario,
 			RoboticArm... robots) {
 		
 		PVector closestCollPt = null;
@@ -1256,9 +1247,9 @@ public class RobotRun extends PApplet {
 					PVector.dist(ray.getOrigin(), closestCollPt))) {
 				
 				if (wo instanceof Fixture) {
-					Shape form = wo.getForm();
+					RShape form = wo.getForm();
 					
-					if (form instanceof ModelShape) {
+					if (form instanceof ComplexShape) {
 						/* Check if the color at the mouse position matches
 						 * the model's fill color. */
 						int fill = form.getFillValue();
@@ -5990,7 +5981,7 @@ public class RobotRun extends PApplet {
 			popMatrix();
 			// Set the mouse ray origin and direction
 			if (mouseRay == null) {
-				mouseRay = new Ray(mWorldPos, ptOnMRay, 10000f, Fields.BLACK);
+				mouseRay = new RRay(mWorldPos, ptOnMRay, 10000f, Fields.BLACK);
 				
 			} else {
 				PVector mDirect = PVector.sub(ptOnMRay, mWorldPos);
@@ -6066,6 +6057,21 @@ public class RobotRun extends PApplet {
 					 * of the object
 					 */
 					updateScenarioUndo(savedState);
+					
+					/* If the edited object is a fixture, then update the orientation
+					 * of all parts, which reference this fixture, in this scenario. */
+					if (selectedWO instanceof Fixture && getActiveScenario() != null) {
+
+						for (WorldObject wldObj : getActiveScenario()) {
+							if (wldObj instanceof Part) {
+								Part p = (Part)wldObj;
+
+								if (p.getFixtureRef() == selectedWO) {
+									p.updateAbsoluteOrientation();
+								}
+							}
+						}
+					}
 				}
 	
 				DataManagement.saveScenarios(this);
@@ -6682,7 +6688,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Gridlines are drawn, spanning from two of the three axes defined by the
+	 * Grid lines are drawn, spanning from two of the three axes defined by the
 	 * given axes vector set. The two axes that form a plane that has the lowest
 	 * offset of the xz-plane (hence the two vectors with the minimum y-values)
 	 * are chosen to be mapped to the xz-plane and their reflection on the
@@ -6697,7 +6703,7 @@ public class RobotRun extends PApplet {
 	 * @param halfNumOfLines
 	 *            Half the number of lines to draw for one of the axes
 	 * @param distBwtLines
-	 *            The distance between each gridline
+	 *            The distance between each grid line
 	 */
 	public void renderGridlines(RMatrix axesVectors, PVector origin, int halfNumOfLines, float distBwtLines) {
 		float[][] axesDat = axesVectors.getFloatData();

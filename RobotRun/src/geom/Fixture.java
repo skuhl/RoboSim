@@ -12,34 +12,34 @@ public class Fixture extends WorldObject {
 	 * Create a cube object with the given colors and dimension
 	 */
 	public Fixture(String n, int fill, int strokeVal, float edgeLen) {
-		super(n, new Box(fill, strokeVal, edgeLen));
+		super(n, new RBox(fill, strokeVal, edgeLen));
 	}
 
 	/**
 	 * Creates a cylinder object with the given colors and dimensions.
 	 */
 	public Fixture(String n, int fill, int strokeVal, float rad, float hgt) {
-		super(n, new Cylinder(fill, strokeVal, rad, hgt));
+		super(n, new RCylinder(fill, strokeVal, rad, hgt));
 	}
 
 	/**
 	 * Create a box object with the given colors and dimensions
 	 */
 	public Fixture(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
-		super(n, new Box(fill, strokeVal, len, hgt, wdh));
+		super(n, new RBox(fill, strokeVal, len, hgt, wdh));
 	}
 
 	/**
 	 * Creates a fixture with the given name and shape.
 	 */
-	public Fixture(String n, ModelShape model) {
+	public Fixture(String n, ComplexShape model) {
 		super(n, model);
 	}
 
 	/**
 	 * Creates a fixture with the given name and shape, and coordinate system.
 	 */
-	public Fixture(String n, Shape s, CoordinateSystem cs) {
+	public Fixture(String n, RShape s, CoordinateSystem cs) {
 		super(n, s, cs);
 	}
 

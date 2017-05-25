@@ -5,7 +5,6 @@ import global.MyFloatFormat;
 import global.RMath;
 import processing.core.PGraphics;
 import processing.core.PVector;
-import robot.RobotRun;
 
 /**
  * Any object in the World other than the Robot.
@@ -13,21 +12,21 @@ import robot.RobotRun;
 public abstract class WorldObject implements Cloneable {
 	protected CoordinateSystem localOrientation;
 	private String name;
-	private Shape form;
+	private RShape form;
 	
 	public WorldObject() {
 		name = "Object";
-		form = new Box();
-		localOrientation = CoordinateSystem.getDefault();
+		form = new RBox();
+		localOrientation = new CoordinateSystem();
 	}
 
-	public WorldObject(String n, Shape f) {
+	public WorldObject(String n, RShape f) {
 		name = n;
 		form = f;
-		localOrientation = CoordinateSystem.getDefault();
+		localOrientation = new CoordinateSystem();
 	}
 
-	public WorldObject(String n, Shape f, CoordinateSystem cs) {
+	public WorldObject(String n, RShape f, CoordinateSystem cs) {
 		name = n;
 		form = f;
 		localOrientation = cs;
@@ -46,7 +45,7 @@ public abstract class WorldObject implements Cloneable {
 	 * @return		The point of collision between this bounding box and the
 	 * 				given ray, closest to the ray
 	 */
-	public PVector collision(Ray ray) {
+	public PVector collision(RRay ray) {
 		PVector origin = localOrientation.getOrigin();
 		float[][] axes = localOrientation.getAxes().getFloatData();
 		// Transform ray into the coordinate frame of the bounding box
@@ -129,20 +128,20 @@ public abstract class WorldObject implements Cloneable {
 	public String[] dimFieldsToStringArray() {
 		String[] fields;
 
-		if (form instanceof Box) {
+		if (form instanceof RBox) {
 			fields = new String[3];
 			// Add the box's length, height, and width values
 			fields[0] = "L: " + MyFloatFormat.format(form.getDim(DimType.LENGTH));
 			fields[1] = "H: " + MyFloatFormat.format(form.getDim(DimType.HEIGHT));
 			fields[2] = "W: " + MyFloatFormat.format(form.getDim(DimType.WIDTH));
 
-		} else if (form instanceof Cylinder) {
+		} else if (form instanceof RCylinder) {
 			fields = new String[2];
 			// Add the cylinder's radius and height values
 			fields[0] = "R: " + MyFloatFormat.format(form.getDim(DimType.RADIUS));
 			fields[1] = "H: " + MyFloatFormat.format(form.getDim(DimType.HEIGHT));
 
-		} else if (form instanceof ModelShape) {
+		} else if (form instanceof ComplexShape) {
 
 			if (this instanceof Part)  {
 				// Use bounding-box dimensions instead
@@ -187,7 +186,7 @@ public abstract class WorldObject implements Cloneable {
 
 	// Getter and Setter methods for the World Object's local orientation, name, and form
 
-	public Shape getForm() { return form; }
+	public RShape getForm() { return form; }
 	
 	public int getObjectID() { return form.getID(); }
 

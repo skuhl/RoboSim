@@ -3,21 +3,20 @@ package geom;
 import global.Fields;
 import global.RMath;
 import processing.core.PVector;
-import robot.RobotRun;
 
 /**
  * A box object with its own local Coordinate system.
  */
 public class BoundingBox {
 	private CoordinateSystem localOrientation;
-	private Box boxFrame;
+	private RBox boxFrame;
 
 	/**
 	 * Create a bounding box with a default dimension.
 	 */
 	public BoundingBox() {
-		localOrientation = CoordinateSystem.getDefault();
-		boxFrame = new Box(Fields.OBB_DEFAULT, 10f);
+		localOrientation = new CoordinateSystem();
+		boxFrame = new RBox(Fields.OBB_DEFAULT, 10f);
 	}
 
 	/**
@@ -26,8 +25,8 @@ public class BoundingBox {
 	 * @param	The edge length of the bounding box
 	 */
 	public BoundingBox(float edgeLen) {
-		localOrientation = CoordinateSystem.getDefault();
-		boxFrame = new Box(Fields.OBB_DEFAULT, edgeLen);
+		localOrientation = new CoordinateSystem();
+		boxFrame = new RBox(Fields.OBB_DEFAULT, edgeLen);
 	}
 
 	/**
@@ -38,8 +37,8 @@ public class BoundingBox {
 	 * @param wdh	The width of the box
 	 */
 	public BoundingBox(float len, float hgt, float wdh) {
-		localOrientation = CoordinateSystem.getDefault();
-		boxFrame = new Box(Fields.OBB_DEFAULT, len, hgt, wdh);
+		localOrientation = new CoordinateSystem();
+		boxFrame = new RBox(Fields.OBB_DEFAULT, len, hgt, wdh);
 	}
 	
 	/**
@@ -48,7 +47,7 @@ public class BoundingBox {
 	 * @param boxFrame			The frame of the bounding box
 	 * @param localOrientation	The orientation of the bounding box
 	 */
-	public BoundingBox(Box boxFrame, CoordinateSystem localOrientation) {
+	public BoundingBox(RBox boxFrame, CoordinateSystem localOrientation) {
 		this.localOrientation = localOrientation;
 		this.boxFrame = boxFrame;
 	}
@@ -106,7 +105,7 @@ public class BoundingBox {
 	 * @return		The point of collision between this bounding box and the
 	 * 				given ray, closest to the ray
 	 */
-	public PVector collision(Ray ray) {
+	public PVector collision(RRay ray) {
 		PVector origin = localOrientation.getOrigin();
 		float[][] axes = localOrientation.getAxes().getFloatData();
 		// Transform ray into the coordinate frame of the bounding box
@@ -179,7 +178,7 @@ public class BoundingBox {
 	/**
 	 * Return a reference to this bounding-box's box.
 	 */
-	public Box getFrame() { return boxFrame; }
+	public RBox getFrame() { return boxFrame; }
 
 	public PVector getCenter() { return localOrientation.getOrigin(); }
 

@@ -1,22 +1,22 @@
 package geom;
+
 import global.Fields;
 import processing.core.PGraphics;
-import robot.RobotRun;
 
 /**
  * A simple class that defines the stroke and fill color for a shape
  * along with some methods necessary for a shape.
  */
-public abstract class Shape implements Cloneable {
+public abstract class RShape implements Cloneable {
 	private Integer fillCVal;
 	private Integer strokeCVal;
 
-	public Shape() {
+	public RShape() {
 		fillCVal = Fields.BLACK;
 		strokeCVal = Fields.WHITE;
 	}
 
-	public Shape(Integer fill, Integer strokeVal) {
+	public RShape(Integer fill, Integer strokeVal) {
 		fillCVal = fill;
 		strokeCVal = strokeVal;
 	}
@@ -45,7 +45,7 @@ public abstract class Shape implements Cloneable {
 	}
 
 	@Override
-	public abstract Shape clone();
+	public abstract RShape clone();
 	
 	/**
 	 * Draws the shape with its stroke and outline values.

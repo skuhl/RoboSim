@@ -1,7 +1,7 @@
 package geom;
+
 import global.Fields;
 import processing.core.PVector;
-import robot.RobotRun;
 
 /**
  * Defines a coordinate system comprised of a position origin and rotation
@@ -23,12 +23,13 @@ public class CoordinateSystem implements Cloneable {
 	private RMatrix axesVectors;
 	
 	/**
+	 * The standard coordinate system with origin (0, 0, 0) and the identity
+	 * matrix as the orientation.
+	 */
 	public CoordinateSystem() {
-		/* Pull origin and axes from the current transformation matrix *
-		origin = RobotRun.getInstance().getCoordFromMatrix(0f, 0f, 0f);
-		axesVectors = RobotRun.getInstance().getRotationMatrix();
+		origin = new PVector(0f, 0f, 0f);
+		axesVectors = Fields.IDENTITY_MAT.copy();
 	}
-	/**/
 
 	/**
 	 * Creates a coordinate system with the given origin and orientation.
@@ -39,21 +40,6 @@ public class CoordinateSystem implements Cloneable {
 	public CoordinateSystem(PVector origin, RMatrix axes) {
 		this.origin = origin;
 		axesVectors = axes;
-	}
-	
-	/**
-	 * @return	An instance of the default coordinate system
-	 */
-	public static CoordinateSystem getDefault() {
-		return new CoordinateSystem(new PVector(0f, 0f, 0f),
-				Fields.IDENTITY_MAT.copy());
-	}
-
-	/**
-	 * Apply the coordinate system's origin and axes to the current transformation matrix.
-	 */
-	public void apply() {
-		RobotRun.getInstance().applyCoord(origin, axesVectors);
 	}
 
 	@Override

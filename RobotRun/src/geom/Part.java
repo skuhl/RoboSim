@@ -1,10 +1,10 @@
 package geom;
+
 import global.Fields;
 import global.RMath;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PVector;
-import robot.RobotRun;
 
 /**
  * Defines a world object, which has a shape, a bounding box and a reference to a fixture.
@@ -154,7 +154,7 @@ public class Part extends WorldObject {
 	 * Create a cube object with the given colors and dimension
 	 */
 	public Part(String n, int fill, int strokeVal, float edgeLen) {
-		super(n, new Box(fill, strokeVal, edgeLen));
+		super(n, new RBox(fill, strokeVal, edgeLen));
 		absOBB = new BoundingBox(edgeLen);
 		defaultOrientation = localOrientation.clone();
 		updateOBBDims();
@@ -164,7 +164,7 @@ public class Part extends WorldObject {
 	 * Creates a cylinder objects with the given colors and dimensions.
 	 */
 	public Part(String n, int fill, int strokeVal, float rad, float hgt) {
-		super(n, new Cylinder(fill, strokeVal, rad, hgt));
+		super(n, new RCylinder(fill, strokeVal, rad, hgt));
 		absOBB = new BoundingBox(rad, rad, hgt);
 		defaultOrientation = localOrientation.clone();
 		updateOBBDims();
@@ -174,7 +174,7 @@ public class Part extends WorldObject {
 	 * Create a box object with the given colors and dimensions
 	 */
 	public Part(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
-		super(n, new Box(fill, strokeVal, len, hgt, wdh));
+		super(n, new RBox(fill, strokeVal, len, hgt, wdh));
 		absOBB = new BoundingBox(len, hgt, wdh);
 		defaultOrientation = localOrientation.clone();
 		updateOBBDims();
@@ -183,7 +183,7 @@ public class Part extends WorldObject {
 	/**
 	 * Define a complex object as a part.
 	 */
-	public Part(String n, ModelShape model) {
+	public Part(String n, ComplexShape model) {
 		super(n, model);
 		absOBB = new BoundingBox(model.getDim(DimType.LENGTH),
 								 model.getDim(DimType.HEIGHT),
@@ -196,7 +196,7 @@ public class Part extends WorldObject {
 	 * Creates a Part with the given name, shape, bounding-box dimensions,
 	 * default orientation and fixture reference.
 	 */
-	public Part(String n, Shape s, PVector OBBDims, CoordinateSystem local,
+	public Part(String n, RShape s, PVector OBBDims, CoordinateSystem local,
 			CoordinateSystem def, Fixture fixRef) {
 		
 		super(n, s, local);
@@ -231,7 +231,7 @@ public class Part extends WorldObject {
 	}
 	
 	@Override
-	public PVector collision(Ray ray) {
+	public PVector collision(RRay ray) {
 		return absOBB.collision(ray);
 	}
 	
@@ -273,7 +273,7 @@ public class Part extends WorldObject {
 	/**
 	 * @return	The bounding box of the part
 	 */
-	public Box getOBBFrame() {
+	public RBox getOBBFrame() {
 		return absOBB.getFrame();
 	}
 	
@@ -415,10 +415,10 @@ public class Part extends WorldObject {
 	 * dimensions of its form.
 	 */
 	public void updateOBBDims() {
-		Shape s = getForm();
+		RShape s = getForm();
 		float minAddition = Float.MAX_VALUE;
 
-		if (s instanceof Box || s instanceof ModelShape) {
+		if (s instanceof RBox || s instanceof ComplexShape) {
 			// Update the OBB dimensions for a box or complex part
 			minAddition = OBB_DIM_SCALE * PApplet.min(s.getDim(DimType.LENGTH),
 					PApplet.min(s.getDim(DimType.HEIGHT),
@@ -428,7 +428,7 @@ public class Part extends WorldObject {
 			absOBB.setDim(s.getDim(DimType.HEIGHT) + minAddition, DimType.HEIGHT);
 			absOBB.setDim(s.getDim(DimType.WIDTH) + minAddition, DimType.WIDTH);
 
-		} else if (s instanceof Cylinder) {
+		} else if (s instanceof RCylinder) {
 			// Update the OBB dimensions for a cylindrical part
 			minAddition =  PApplet.min(OBB_RAD_SCALE * s.getDim(DimType.RADIUS),
 					OBB_DIM_SCALE * s.getDim(DimType.HEIGHT));
