@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
 
-import org.apache.commons.math3.linear.RealMatrix;
-
 import enums.CoordFrame;
 import enums.EEType;
 import enums.InstOp;
@@ -25,7 +23,6 @@ import global.RMath;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
-import processing.core.PMatrix;
 import processing.core.PShape;
 import processing.core.PVector;
 import programming.Instruction;
@@ -942,6 +939,8 @@ public class RoboticArm {
 		g.noFill();
 		
 		g.pushMatrix();
+		g.rotateX(PConstants.PI);
+		g.rotateY(PConstants.PI / 2f);
 		g.translate(tipPos.x, tipPos.y, tipPos.z);
 		
 		g.sphere(4);
@@ -1270,7 +1269,20 @@ public class RoboticArm {
 		
 		RQuaternion orientation = RMath.matrixToQuat(eeOrien);
 		
-		return new Point(position, orientation);
+		return new Point(position, orientation, jointAngles);
+	}
+	
+	public Point getToolTipPoint() {
+		Frame activeTool = getActiveFrame(CoordFrame.TOOL);
+		Point toolTip = getFacePlatePoint();
+		
+		if (activeTool instanceof ToolFrame) {
+			PVector toolOrigin = ((ToolFrame) activeTool).getTCPOffset();
+			RQuaternion invOrien = toolTip.orientation.conjugate();
+			toolTip.position.add( invOrien.rotateVector(toolOrigin) );
+		}
+		
+		return toolTip;
 	}
 
 	/**

@@ -29,7 +29,10 @@ public class ToolFrame extends Frame {
 	@Override
 	public RQuaternion getOrientation() {
 		RoboticArm model = RobotRun.getActiveRobot();
+		/**
 		Point cur = RobotRun.nativeRobotPoint(model, model.getJointAngles());
+		/**/
+		Point cur = model.getToolTipPoint();
 		Point def = model.getDefaultPoint();
 		RQuaternion diff = cur.orientation.transformQuaternion(def.orientation.conjugate());
 		

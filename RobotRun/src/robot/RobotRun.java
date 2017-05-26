@@ -6543,27 +6543,16 @@ public class RobotRun extends PApplet {
 	 * Coordinate Frame.
 	 */
 	public void renderCoordAxes() {
-
-		Point eePoint = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles());
+		Point toolTip = activeRobot.getToolTipPoint();
 
 		if (getAxesState() == AxesDisplay.AXES && getActiveRobot().getCurCoordFrame() == CoordFrame.TOOL) {
 			Frame activeTool = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
 
 			// Draw the axes of the active Tool frame at the Robot End Effector
-			renderOriginAxes(eePoint.position, RMath.rMatToWorld(activeTool.getNativeAxisVectors()),
+			renderOriginAxes(toolTip.position, RMath.rMatToWorld(activeTool.getNativeAxisVectors()),
 					200f, Fields.color(255, 0, 255));
 			
-		} /*else {
-			/* Draw a pink point for the Robot's current End Effector position 
-			pushMatrix();
-			translate(eePoint.position.x, eePoint.position.y, eePoint.position.z);
-
-			stroke(Fields.color(255, 0, 255));
-			noFill();
-			sphere(4);
-
-			popMatrix();
-		}*/
+		}
 
 		if (getAxesState() == AxesDisplay.AXES) {
 			// Display axes
@@ -6596,7 +6585,7 @@ public class RobotRun extends PApplet {
 			case TOOL:
 				active = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
 				displayAxes = active.getNativeAxisVectors();
-				displayOrigin = eePoint.position;
+				displayOrigin = toolTip.position;
 				break;
 			case USER:
 				active = getActiveRobot().getActiveFrame(CoordFrame.USER);
@@ -7168,7 +7157,7 @@ public class RobotRun extends PApplet {
 		
 		/* Camera test output */
 		if (Fields.DEBUG && activeRobot != null) {
-			Point pt = activeRobot.getFacePlatePoint();
+			Point pt = activeRobot.getToolTipPoint();
 			String[] lines = pt.toLineStringArray(true);
 			
 			lastTextPositionY += 20;
