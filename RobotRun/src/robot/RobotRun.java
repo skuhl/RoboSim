@@ -1379,20 +1379,6 @@ public class RobotRun extends PApplet {
 			r.setCoordFrame(CoordFrame.JOINT);
 			break;
 		}
-
-		/* Skip the Tool Frame, if there is no active frame
-		if (r.getCurCoordFrame() == CoordFrame.TOOL
-				&& !(r.getActiveToolIdx() >= 0 && r.getActiveToolIdx() < Fields.FRAME_NUM)) {
-			r.setCurCoordFrame(CoordFrame.USER);
-		}
-
-		// Skip the User Frame, if there is no active frame
-		if (r.getCurCoordFrame() == CoordFrame.USER
-				&& !(r.getActiveUserIdx() >= 0 && r.getActiveUserIdx() < Fields.FRAME_NUM)) {
-			r.setCurCoordFrame(CoordFrame.JOINT);
-		}
-		 */
-		//updateCoordFrame();
 	}
 
 	/* Arrow keys */
@@ -1416,13 +1402,11 @@ public class RobotRun extends PApplet {
 			if (frame instanceof ToolFrame) {
 				// Update the current frame of the Robot Arm
 				getActiveRobot().setActiveToolFrame(curFrameIdx);
-				updateCoordFrame();
 
 				DataManagement.saveRobotData(activeRobot, 2);
 			} else {
 				// Update the current frame of the Robot Arm
 				getActiveRobot().setActiveUserFrame(curFrameIdx);
-				updateCoordFrame();
 
 				DataManagement.saveRobotData(activeRobot, 2);
 			}
@@ -1473,8 +1457,7 @@ public class RobotRun extends PApplet {
 			// Update the current frame of the Robot Arm
 			getActiveRobot().setActiveUserFrame(curFrameIdx);
 		}
-
-		updateCoordFrame();
+		
 		DataManagement.saveRobotData(activeRobot, 2);
 	}
 
@@ -3159,7 +3142,6 @@ public class RobotRun extends PApplet {
 			} else {
 				// Set the current tool frame
 				getActiveRobot().setActiveToolFrame(frame);
-				updateCoordFrame();
 			}
 			
 			break;
@@ -3173,7 +3155,6 @@ public class RobotRun extends PApplet {
 			} else {
 				// Set the current user frame
 				getActiveRobot().setActiveUserFrame(frame);
-				updateCoordFrame();
 			}
 			break;
 		case ACTIVE_FRAMES:
@@ -6685,9 +6666,10 @@ public class RobotRun extends PApplet {
 		
 		AxesDisplay axesType = getAxesState();
 		
-		if (axesType != AxesDisplay.NONE && (robot.getCurCoordFrame() == CoordFrame.WORLD
-				|| (robot.getCurCoordFrame() != CoordFrame.JOINT
-				&& robot.getActiveUser() == null))) {
+		if (axesType != AxesDisplay.NONE &&
+				robot.getCurCoordFrame() != CoordFrame.JOINT &&
+				(robot.getCurCoordFrame() == CoordFrame.WORLD ||
+				 robot.getActiveUser() == null)) {
 			
 			// Render the world frame
 			PVector origin = new PVector(0f, 0f, 0f);
@@ -7742,8 +7724,6 @@ public class RobotRun extends PApplet {
 				} else {
 					getActiveRobot().setActiveUserFrame(frameIdx);
 				}
-
-				updateCoordFrame();
 			}
 
 		} catch (NumberFormatException NFEx) {
@@ -7902,30 +7882,6 @@ public class RobotRun extends PApplet {
 			break;
 		default:
 			break;
-		}
-	}
-
-	/**
-	 * Transition back to the World Frame, if the current Frame is Tool or User
-	 * and there are no active frame set for that Coordinate Frame. This method
-	 * will halt the motion of the Robot if the active frame is changed.
-	 */
-	public void updateCoordFrame() {
-
-		// Return to the World Frame, if no User Frame is active
-		if (getActiveRobot().getCurCoordFrame() == CoordFrame.TOOL && !(getActiveRobot().getActiveToolIdx() >= 0
-				&& getActiveRobot().getActiveToolIdx() < Fields.FRAME_NUM)) {
-			getActiveRobot().setCoordFrame(CoordFrame.WORLD);
-			// Stop Robot movement
-			hold();
-		}
-
-		// Return to the World Frame, if no User Frame is active
-		if (getActiveRobot().getCurCoordFrame() == CoordFrame.USER && !(getActiveRobot().getActiveUserIdx() >= 0
-				&& getActiveRobot().getActiveUserIdx() < Fields.FRAME_NUM)) {
-			getActiveRobot().setCoordFrame(CoordFrame.WORLD);
-			// Stop Robot movement
-			hold();
 		}
 	}
 
