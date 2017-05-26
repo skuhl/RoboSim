@@ -86,36 +86,39 @@ public class WGUI implements ControlListener {
 			DIM_LBL = 3,
 			DIM_TXT = 3,
 			DIM_DDL = 1;
-
+	
+	public static final String[] tabs = { "Hide", "Robot1", "Robot2", "Create", 
+										  "Edit", "Scenario", "Camera", "Misc" };
+	
 	/** The manager object, which contains all the UI elements. */
 	private final ControlP5 manager;
-
+	
 	/** A reference to the application, in which the UI resides. */
 	private final RobotRun app;
-
+	
 	/** The current state of the window tabs, which determines what window tab
 	 *  is rendered. */
 	private WindowTab menu;
-
+	
 	/** A group, which defines a set of elements belonging to a window tab, or
 	 *  shared amongst the window tabs. */
 	public final Group pendant, createWO, editWO, sharedElements, scenario,
 			camera, miscellaneous;
-
+	
 	/** The button bar controlling the window tab selection. */
 	private final MyButtonBar windowTabs;
-
+	
 	/** The background shared amongst all windows */
 	private final Background background;
-
+	
 	/** A cached set of text-areas used to display the pendant contents and
 	 *  options output. */
 	private final ArrayList<Textarea> displayLines;
-
+	
 	/** Determine which input to use for importing a shape for a world object
 	 *  when it is created. */
 	private String lastModImport;
-
+	
 	/** Creates a new window with the given ControlP5 object as the parent
 	 *  and the given fonts which will be applied to the text in the window. */
 	public WGUI(RobotRun appRef, PImage[][] buttonImages) {
@@ -136,8 +139,8 @@ public class WGUI implements ControlListener {
 		ControllerInterface<?> c1 = null, c2 = null;
 
 		// The default set of labels for window tabs
-		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Camera", "Misc" };
-
+		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
+		
 		// Initialize the window tab selection bar
 		windowTabs = (MyButtonBar)(new MyButtonBar(manager, "Tabs")
 				// Sets button text color
@@ -588,6 +591,10 @@ public class WGUI implements ControlListener {
 		addSlider("CExp", camera, fieldWidthMed, fieldHeight, 0.01f, 1f, 0.1f, Fields.medium);
 		
 		addButton("UpdateCam", "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
+		addDropdown("CamObjects", camera, ldropItemWidth, dropItemHeight, 0, Fields.small);
+		addButton("CamObjPreview", "ObjPreview", camera, 150, 200, Fields.small);
+		addButton("TeachCamObj", "Teach Object", camera, fieldWidthMed, sButtonHeight, Fields.small);
+		//TODO
 		
 		// Initialize the miscellaneous window elements
 		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
@@ -596,6 +603,7 @@ public class WGUI implements ControlListener {
 
 		addButton("ToggleOBBs", "Hide OBBs", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
 		addButton("ToggleRobot", "Add Robot", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
+		addButton("ToggleCamera", "Enable RCam", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
 
 		/* Initialize dropdown list elements
 		 * 
@@ -1051,7 +1059,7 @@ public class WGUI implements ControlListener {
 
 		} else {
 			if (arg0.isFrom("Object") || arg0.isFrom("Shape") ||
-					arg0.isFrom("ScenarioOpt")) {
+					arg0.isFrom("ScenarioOpt") || arg0.isFrom("CamObjects")) {
 				/* The selected item in these lists influence the layout of
 				 * the menu */
 				updateUIContentPositions();
@@ -2185,17 +2193,47 @@ public class WGUI implements ControlListener {
 
 		// Remove or add the second Robot based on the HideRobot button
 		Button tr = getButton("ToggleRobot");
-
-		if (tr.isOn()) {
-			windowTabs.setItems(new String[] { "Hide", "Robot1", "Robot2", "Create", "Edit", "Scenario", "Camera", "Misc" });
+		if(tr.isOn()) {
 			tr.setLabel("Remove Robot");
-
-		} else {
-			windowTabs.setItems(new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Camera", "Misc" });
+		}
+		else {
 			tr.setLabel("Add Robot");
 		}
 
+		updateWindowTabs();
 		return tr.isOn();
+	}
+	
+	public boolean toggleCamera() {
+		
+		if (menu == WindowTab.CAMERA) {
+			windowTabs.setLabel("Hide");
+		}
+
+		// Remove or add the second Robot based on the HideRobot button
+		Button tc = getButton("ToggleCamera");
+		if(tc.isOn()) {
+			tc.setLabel("Disable RCam");
+		}
+		else {
+			tc.setLabel("Enable RCam");
+		}
+
+		updateWindowTabs();
+		return tc.isOn();
+	}
+	
+	private void updateWindowTabs() {
+		windowTabs.clear();
+		windowTabs.setItems(WGUI.tabs);
+		
+		if(!getButton("ToggleRobot").isOn()) {
+			windowTabs.removeItem("Robot2");
+		}
+		
+		if(!getButton("ToggleCamera").isOn()) {
+			windowTabs.removeItem("Camera");
+		}
 	}
 
 	/**
@@ -2730,7 +2768,24 @@ public class WGUI implements ControlListener {
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getButton("UpdateCam").setPosition(relPos[0], relPos[1]);
 		
-		//TODO
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getButton("CamObjPreview").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getButton("TeachCamObj").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getDropdown("CamObjects").setPosition(relPos[0], relPos[1]);
+		
+		WorldObject o = (WorldObject)getDropdown("CamObjects").getSelectedItem();
+		if(o != null) {
+			PGraphics preview = ((ComplexShape)o.getForm()).getModelPreview();
+			getButton("CamObjPreview").setImage(preview);
+			getButton("CamObjPreview").show();
+		}
+		else {
+			getButton("CamObjPreview").hide();
+		}
 		
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
@@ -2808,11 +2863,11 @@ public class WGUI implements ControlListener {
 			limbo.addItem("None", null);
 
 			for (WorldObject wldObj : app.getActiveScenario()) {
-				dropdown.addItem(wldObj.toString(), wldObj);
+				dropdown.addItem(wldObj.getName(), wldObj);
 
 				if (wldObj instanceof Fixture) {
 					// Load all fixtures from the active scenario
-					limbo.addItem(wldObj.toString(), wldObj);
+					limbo.addItem(wldObj.getName(), wldObj);
 				}
 			}
 		}
@@ -2834,6 +2889,18 @@ public class WGUI implements ControlListener {
 			// Link the active robot's end effector to the dropdown list
 			int activeEE = r.getActiveEE().ordinal();
 			getDropdown("RobotEE").setValue(activeEE);
+		}
+	}
+	
+	public void updateCameraListContents() {
+		if(app.getRobotCamera() != null) {
+			MyDropdownList d = getDropdown("CamObjects"); 
+			
+			for(WorldObject o: app.getRobotCamera().getTaughtObjects()) {
+				d.addItem(o.getName(), o);
+			}
+			
+			d.setSize(ldropItemWidth, dropItemHeight * (app.getRobotCamera().getTaughtObjects().size() + 1));
 		}
 	}
 
@@ -3046,6 +3113,11 @@ public class WGUI implements ControlListener {
 		// Second robot toggle button
 		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		b = getButton("ToggleRobot").setPosition(relPos[0], relPos[1]);
+		
+		updateButtonBgColor(b.getName(), b.isOn());
+		
+		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		b = getButton("ToggleCamera").setPosition(relPos[0], relPos[1]);
 
 		// Update button color based on the state of the button
 		updateButtonBgColor(b.getName(), b.isOn());
@@ -3128,7 +3200,6 @@ public class WGUI implements ControlListener {
 
 				clearAllInputFields();
 				updateUIContentPositions();
-				updateListContents();
 			}
 
 		} else if (menu == WindowTab.EDIT) {
@@ -3145,7 +3216,6 @@ public class WGUI implements ControlListener {
 
 				clearAllInputFields();
 				updateUIContentPositions();
-				updateListContents();
 			}
 
 		} else if (menu == WindowTab.SCENARIO) {
@@ -3162,7 +3232,6 @@ public class WGUI implements ControlListener {
 
 				clearAllInputFields();
 				updateUIContentPositions();
-				updateListContents();
 			}
 			
 		} else if (menu == WindowTab.CAMERA) {
@@ -3180,6 +3249,7 @@ public class WGUI implements ControlListener {
 				clearAllInputFields();
 				updateCameraWindowFields();
 				updateUIContentPositions();
+				updateCameraListContents();
 			}
 			
 		} else if (menu == WindowTab.MISC) {
@@ -3196,7 +3266,6 @@ public class WGUI implements ControlListener {
 				
 				clearAllInputFields();
 				updateUIContentPositions();
-				updateListContents();
 			}
 		}
 

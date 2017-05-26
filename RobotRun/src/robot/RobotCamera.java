@@ -38,7 +38,7 @@ public class RobotCamera {
 	}
 	
 	public RobotCamera() {
-		camPos = new PVector(-1000, -500, 0);
+		camPos = new PVector(-500, 300, 500);
 		camOrient = new RQuaternion();
 		camFOV = 75;
 		camAspectRatio = 1.5f;
@@ -392,7 +392,6 @@ public class RobotCamera {
 			RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
 			teachObj.setLocalOrientation(viewOrient);
 			taughtObjects.add(teachObj);
-			
 			return taughtObjects;
 		}
 	}
@@ -419,5 +418,9 @@ public class RobotCamera {
 	
 	public float getAspectRatio() {
 		return camAspectRatio;
+	}
+
+	public ArrayList<WorldObject> getTaughtObjects() {
+		return taughtObjects;
 	}
 }
