@@ -634,7 +634,7 @@ public class WGUI implements ControlListener {
 		.addItem(EEType.GLUE_GUN.name(), EEType.GLUE_GUN)
 		.addItem(EEType.WIELDER.name(), EEType.WIELDER)
 		.setValue(0f);
-
+		
 		addDropdown("Scenario", scenario, ldropItemWidth, dropItemHeight, 4, Fields.small);
 		addDropdown("Fixture", editWO, ldropItemWidth, dropItemHeight, 4, Fields.small);
 
@@ -1024,7 +1024,6 @@ public class WGUI implements ControlListener {
 	 */
 	@Override
 	public void controlEvent(ControlEvent arg0) {
-
 		if (arg0.isFrom(windowTabs)) {
 			// Update the window based on the button tab selected
 			String actLbl = windowTabs.getActButLbl();
@@ -2776,10 +2775,10 @@ public class WGUI implements ControlListener {
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getDropdown("CamObjects").setPosition(relPos[0], relPos[1]);
-		
+
 		WorldObject o = (WorldObject)getDropdown("CamObjects").getSelectedItem();
 		if(o != null) {
-			PGraphics preview = ((ComplexShape)o.getForm()).getModelPreview();
+			PGraphics preview = ((ComplexShape)o.getForm()).getModelPreview(o.getLocalOrientation());
 			getButton("CamObjPreview").setImage(preview);
 			getButton("CamObjPreview").show();
 		}
@@ -2895,6 +2894,7 @@ public class WGUI implements ControlListener {
 	public void updateCameraListContents() {
 		if(app.getRobotCamera() != null) {
 			MyDropdownList d = getDropdown("CamObjects"); 
+			d.clear();
 			
 			for(WorldObject o: app.getRobotCamera().getTaughtObjects()) {
 				d.addItem(o.getName(), o);

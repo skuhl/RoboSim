@@ -86,11 +86,8 @@ public class MyDropdownList extends DropdownList {
 	
 	@Override
 	protected void onRelease() {
-		try {
+		if(this.getItems().size() != 0) {
 			super.onRelease();
-			
-		} catch (IndexOutOfBoundsException IOOBEx) {
-			/* Empty lists throw exceptions */
 		}
 	}
 	

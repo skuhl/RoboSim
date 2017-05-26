@@ -391,6 +391,15 @@ public class RobotCamera {
 			RMatrix objOrient = teachObj.getLocalOrientation();
 			RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
 			teachObj.setLocalOrientation(viewOrient);
+			
+			for(int i = 0; i < taughtObjects.size(); i += 1) {
+				WorldObject o = taughtObjects.get(i);
+				if(o.getName().compareTo(teachObj.getName()) == 0) {
+					taughtObjects.set(i, teachObj);
+					return taughtObjects;
+				}
+			}
+			
 			taughtObjects.add(teachObj);
 			return taughtObjects;
 		}

@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.HashMap;
 
 import geom.CamSelectArea;
+import geom.CamSelectView;
 import processing.data.JSONArray;
 import processing.data.JSONObject;
 import robot.RobotRun;
@@ -29,11 +30,21 @@ public class RegisteredModels {
 			for(int j = 0; j < selectList.size(); j += 1) {
 				JSONObject area = selectList.getJSONObject(j);
 				int id = area.getInt("areaID");
-				float x1 = area.getInt("x1");
-				float y1 = area.getInt("y1");
-				float x2 = area.getInt("x2");
-				float y2 = area.getInt("y2");
-				selectAreas[j] = new CamSelectArea(id, x1, y1, x2, y2);		
+				
+				JSONArray viewList = area.getJSONArray("views");
+				CamSelectView[] views = new CamSelectView[viewList.size()];
+				
+				for(int k = 0; k < viewList.size(); k += 1) {
+					JSONObject view = viewList.getJSONObject(k);
+					String align = view.getString("align");
+					float x1 = view.getInt("x1");
+					float y1 = view.getInt("y1");
+					float x2 = view.getInt("x2");
+					float y2 = view.getInt("y2");
+					views[k] = new CamSelectView(align, x1, y1, x2, y2);
+				}
+				
+				selectAreas[j] = new CamSelectArea(id, views);	
 			}
 			
 			modelAreasOfInterest.put(objID, selectAreas);

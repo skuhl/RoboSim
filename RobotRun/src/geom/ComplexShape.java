@@ -18,11 +18,10 @@ public class ComplexShape extends RShape {
 	private MyPShape model;
 	private PVector centerOffset, baseDims;
 	
-	private float mdlScale;
-	
-	public final int model_id;
 	private PGraphics preview;
 	
+	private float mdlScale;
+	public final int model_id;
 	private ArrayList<CamSelectArea> selectAreas;
 
 	/**
@@ -41,7 +40,6 @@ public class ComplexShape extends RShape {
 		mdlScale = 1f;
 		model = mdl;
 		model.setFill(fill);
-		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
 		
 		loadSelectAreas();
@@ -61,9 +59,8 @@ public class ComplexShape extends RShape {
 		model_id = RegisteredModels.modelIDList.get(filename);
 		srcFilePath = filename;
 		
-		mdlScale = scale;
+		mdlScale = 1f;
 		model = mdl;
-		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
 		
 		loadSelectAreas();
@@ -181,29 +178,33 @@ public class ComplexShape extends RShape {
 		centerOffset = PVector.add(minimums, PVector.mult(baseDims, 0.5f)).mult(-1);
 	}
 	
-	public PGraphics getModelPreview() {
+	public PGraphics getModelPreview(RMatrix m) {
 		if(preview == null) {
-			preview = loadModelPreview();
+			PGraphics img = RobotRun.getInstance().createGraphics(150, 200, RobotRun.P3D);
+			float[][] rMat = m.getFloatData();
+			img.beginDraw();
+			img.ortho();
+			img.lights();
+			img.background(255);
+			img.stroke(0);
+			img.translate(75, 100, 0);
+			img.applyMatrix(
+					rMat[0][0], rMat[1][0], rMat[2][0], 0,
+					rMat[0][1], rMat[1][1], rMat[2][1], 0,
+					rMat[0][2], rMat[1][2], rMat[2][2], 0,
+					0, 0, 0, 1
+			);
+			img.scale(2/mdlScale);
+			img.shape(model);
+			img.translate(-75, -100, 10 + model.depth/2);
+			//TODO draw select boxes
+			
+			img.endDraw();
+			
+			preview = img;
 		}
 		
 		return preview;
-	}
-
-	private PGraphics loadModelPreview() {
-		PGraphics img = RobotRun.getInstance().createGraphics(150, 200, RobotRun.P3D);
-		img.beginDraw();
-		img.ortho();
-		img.lights();
-		img.background(255);
-		img.stroke(0);
-		img.translate(75, 100, 0);
-		img.shape(model);
-		img.translate(-75, -100, 10 + model.depth/2);
-		//TODO draw select boxes
-			
-		img.endDraw();
-		
-		return img;
 	}
 
 	@Override
