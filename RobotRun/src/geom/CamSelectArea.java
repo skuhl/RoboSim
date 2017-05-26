@@ -1,24 +1,21 @@
 package geom;
 
-import processing.core.PVector;
-
 public class CamSelectArea {
 	public final int area_id;
+	private CamSelectView[] selectViews;
 	private int state;
 	
-	private final float x1;
-	private final float y1;
-	private final float x2;
-	private final float y2;
 		
-	public CamSelectArea(int id, float x1, float y1, float x2, float y2) {
+	public CamSelectArea(int id, CamSelectView... views) {
 		area_id = id;
+		selectViews = new CamSelectView[6];
 		state = 0;
 		
-		this.x1 = x1;
-		this.y1 = y1;
-		this.x2 = x2;
-		this.y2 = y2;
+		for(CamSelectView v: views) {
+			if(v != null) {
+				selectViews[v.getViewAlign()] = v.copy();
+			}
+		}
 	}
 	
 	public CamSelectArea emphasizeArea() {
@@ -39,15 +36,7 @@ public class CamSelectArea {
 		return (state == -1);
 	}
 	
-	public PVector getTopLeftBound() {
-		return new PVector(x1, y1);
-	}
-	
-	public PVector getTopRightBound() {
-		return new PVector(x2, y2);
-	}
-	
 	public CamSelectArea copy() {
-		return new CamSelectArea(area_id, x1, y1, x2, y2);
+		return new CamSelectArea(area_id, selectViews);
 	}
 }
