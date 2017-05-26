@@ -780,7 +780,9 @@ public class RoboticArm {
 
 		g.pushMatrix();
 		
-		if (axesType != AxesDisplay.NONE && curCoordFrame == CoordFrame.USER) {
+		if (axesType != AxesDisplay.NONE && (curCoordFrame == CoordFrame.USER
+				|| curCoordFrame == CoordFrame.TOOL)) {
+			
 			UserFrame activeUser = getActiveUser();
 			// Render the active user frame
 			if (activeUser != null) {
@@ -1150,9 +1152,8 @@ public class RoboticArm {
 				ToolFrame activeTool = getActiveTool();
 				
 				if (activeTool != null) {
-					RQuaternion frameOrien = activeTool.getOrientationOffset();
-					RQuaternion diff = RQuaternion.mult(robotPoint.orientation.conjugate(), curPoint.orientation, frameOrien);
-					invFrameOrientation = diff.conjugate();
+					RQuaternion diff = curPoint.orientation.transformQuaternion(robotPoint.orientation.conjugate());
+					invFrameOrientation = diff.transformQuaternion(activeTool.getOrientationOffset().clone()).conjugate();
 				}
 				
 			} else if (curCoordFrame == CoordFrame.USER) {
@@ -1214,38 +1215,6 @@ public class RoboticArm {
 	public EEType getActiveEE() {
 		return activeEndEffector;
 	}
-	
-	/**
-	 * Returns the active Tool frame TOOL, or the active User frame for USER. For either
-	 * CoordFrame WORLD or JOINT null is always returned. If null is given as a parameter,
-	 * then the active Coordinate Frame System is checked.
-	 * 
-	 * @param coord  The Coordinate Frame System to check for an active frame,
-	 *               or null to check the current active Frame System.
-	 *
-	public Frame getActiveFrame(CoordFrame coord) {
-		if (coord == null) {
-			// Use current coordinate Frame
-			coord = curCoordFrame;
-		}
-
-		// Determine if a frame is active in the given Coordinate Frame
-		if (coord == CoordFrame.USER && activeUserIdx >= 0 &&
-				activeUserIdx < USER_FRAMES.length) {
-			// active User frame
-			return USER_FRAMES[activeUserIdx];
-			
-		} else if (coord == CoordFrame.TOOL && activeToolIdx >= 0 &&
-				activeToolIdx < TOOL_FRAMES.length) {
-			// active Tool frame
-			return TOOL_FRAMES[activeToolIdx];
-			
-		} else {
-			// no active frame
-			return null;
-		}
-	}
-	/**/
 	
 	/**
 	 * @return	The index of the active program's active instruction
@@ -1472,8 +1441,6 @@ public class RoboticArm {
 					uFrame.getOrigin(), uOrien);
 			
 			toolTip.orientation = uOrien.transformQuaternion(toolTip.orientation);
-			
-			return toolTip;
 		}
 		
 		return toolTip;

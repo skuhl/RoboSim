@@ -33,10 +33,6 @@ public class FrameInstruction extends Instruction {
 		} else if (frameType == Fields.FTYPE_USER) {
 			RobotRun.getActiveRobot().setActiveUserFrame(getFrameIdx());
 		}
-		
-		// Update the current active frames
-		RobotRun.getInstance().updateCoordFrame();
-
 		return 0;
 	}
 	public int getFrameIdx() {
