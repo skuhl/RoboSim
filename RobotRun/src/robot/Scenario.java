@@ -6,12 +6,9 @@ import java.util.regex.Pattern;
 
 import geom.Fixture;
 import geom.Part;
-import geom.RMatrix;
 import geom.WorldObject;
 import global.Fields;
 import processing.core.PApplet;
-import processing.core.PGraphics;
-import processing.core.PVector;
 
 /**
  * A storage class for a collection of objects with an associated name for the collection.
@@ -112,7 +109,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 			if (newObject == null) {
 				PApplet.println("New Object is null");
 			} else {
-				PApplet.println("New Object is: " + newObject.toString());
+				PApplet.println("New Object is: " + newObject.getName());
 			}
 
 			return false;

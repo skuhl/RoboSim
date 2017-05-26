@@ -9,10 +9,8 @@ import java.util.Stack;
 import enums.AxesDisplay;
 import enums.CoordFrame;
 import enums.EEMapping;
-import enums.EEType;
 import enums.ScreenMode;
 import enums.ScreenType;
-import enums.WindowTab;
 import expression.AtomicExpression;
 import expression.ExprOperand;
 import expression.Expression;
@@ -22,10 +20,7 @@ import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
-import geom.RBox;
 import geom.CoordinateSystem;
-import geom.RCylinder;
-import geom.DimType;
 import geom.Fixture;
 import geom.ComplexShape;
 import geom.MyPShape;
@@ -44,7 +39,6 @@ import global.RMath;
 import global.RegisteredModels;
 import processing.core.PApplet;
 import processing.core.PConstants;
-import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PMatrix3D;
 import processing.core.PShape;
@@ -282,6 +276,7 @@ public class RobotRun extends PApplet {
 
 	private boolean shift = false; // Is shift button pressed or not?
 	private boolean step = false; // Is step button pressed or not?
+	private boolean camEnable = false;
 
 	// Indicates whether a program is currently running
 	private boolean programRunning = false;
@@ -351,10 +346,8 @@ public class RobotRun extends PApplet {
 	
 	private WorldObject mouseOverWO;
 	
-	/**
-	 * Defines the mouse's position mapped from the screen into the active
-	 * scenario.
-	 */
+	/** Defines the mouse's position mapped from the screen into the active
+	 * scenario. */
 	private RRay mouseRay;
 	
 	/**
@@ -1614,43 +1607,55 @@ public class RobotRun extends PApplet {
 				}
 			}
 			
-			/* Camera Test Code */
-			renderOriginAxes(rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
-			
-			PVector near[] = rCamera.getPlaneNear();
-			PVector far[] = rCamera.getPlaneFar();
-			pushMatrix();
-			stroke(255, 126, 0, 255);
-			beginShape();
-			//Top
-			vertex(near[0].x, near[0].y, near[0].z);
-			vertex(far[0].x, far[0].y, far[0].z);
-			vertex(far[1].x, far[1].y, far[1].z);
-			vertex(near[1].x, near[1].y, near[1].z);
-			//Right
-			vertex(near[1].x, near[1].y, near[1].z);
-			vertex(far[1].x, far[1].y, far[1].z);
-			vertex(far[3].x, far[3].y, far[3].z);
-			vertex(near[3].x, near[3].y, near[3].z);
-			//Bottom
-			vertex(near[3].x, near[3].y, near[3].z);
-			vertex(far[3].x, far[3].y, far[3].z);
-			vertex(far[2].x, far[2].y, far[2].z);
-			vertex(near[2].x, near[2].y, near[2].z);
-			//Left
-			vertex(near[2].x, near[2].y, near[2].z);
-			vertex(far[2].x, far[2].y, far[2].z);
-			vertex(far[0].x, far[0].y, far[0].z);
-			vertex(near[0].x, near[0].y, near[0].z);
-			//Near
-			vertex(near[1].x, near[1].y, near[1].z);
-			vertex(near[3].x, near[3].y, near[3].z);
-			vertex(near[2].x, near[2].y, near[2].z);
-			vertex(near[0].x, near[0].y, near[0].z);
-			endShape();
-			
-			popMatrix();
-			/**/
+			/*Camera Test Code*/
+			if(camEnable) {
+				renderOriginAxes(rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
+				
+				PVector near[] = rCamera.getPlaneNear();
+				PVector far[] = rCamera.getPlaneFar();
+				pushMatrix();
+				stroke(255, 126, 0, 255);
+				beginShape();
+				//Top
+				vertex(near[0].x, near[0].y, near[0].z);
+				vertex(far[0].x, far[0].y, far[0].z);
+				vertex(far[1].x, far[1].y, far[1].z);
+				vertex(near[1].x, near[1].y, near[1].z);
+				//Right
+				vertex(near[1].x, near[1].y, near[1].z);
+				vertex(far[1].x, far[1].y, far[1].z);
+				vertex(far[3].x, far[3].y, far[3].z);
+				vertex(near[3].x, near[3].y, near[3].z);
+				//Bottom
+				vertex(near[3].x, near[3].y, near[3].z);
+				vertex(far[3].x, far[3].y, far[3].z);
+				vertex(far[2].x, far[2].y, far[2].z);
+				vertex(near[2].x, near[2].y, near[2].z);
+				//Left
+				vertex(near[2].x, near[2].y, near[2].z);
+				vertex(far[2].x, far[2].y, far[2].z);
+				vertex(far[0].x, far[0].y, far[0].z);
+				vertex(near[0].x, near[0].y, near[0].z);
+				//Near
+				vertex(near[1].x, near[1].y, near[1].z);
+				vertex(near[3].x, near[3].y, near[3].z);
+				vertex(near[2].x, near[2].y, near[2].z);
+				vertex(near[0].x, near[0].y, near[0].z);
+				endShape();
+				
+				popMatrix();
+				
+				if(rCamera.getTaughtObjects().size() > 0) {
+					WorldObject o = rCamera.getTaughtObjects().get(0);
+					if(o.getForm() instanceof ComplexShape) {
+						pushMatrix();
+						resetMatrix();
+						image(((ComplexShape)o.getForm()).getModelPreview(), 0, 0);
+						popMatrix();
+					}
+					
+				}
+			}
 			
 			popMatrix();
 			
@@ -7570,6 +7575,7 @@ public class RobotRun extends PApplet {
 			}
 
 			activeRobot = ROBOTS.get(0);
+			rCamera = new RobotCamera();
 
 			intermediatePositions = new ArrayList<>();
 			activeScenario = null;
@@ -7586,8 +7592,6 @@ public class RobotRun extends PApplet {
 			setManager(new WGUI(this, buttonImages));
 			
 			displayPoint = null;
-
-			rCamera = new RobotCamera();
 
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);
@@ -7899,6 +7903,14 @@ public class RobotRun extends PApplet {
 		loadScreen(nextScreen);
 	}
 	
+	public void TeachCamObj() {
+		if(activeScenario != null) {
+			rCamera.teachObjectToCamera(activeScenario);
+		}
+		
+		UI.updateCameraListContents();
+	}
+	
 	/**
 	 * HIDE/SHOW OBBBS button in the miscellaneous window
 	 * 
@@ -7920,6 +7932,13 @@ public class RobotRun extends PApplet {
 			activeRobot = ROBOTS.get(0);
 		}
 
+		UI.updateUIContentPositions();
+		updatePendantScreen();
+	}
+	
+	public void ToggleCamera() {
+		camEnable = UI.toggleCamera();
+				
 		UI.updateUIContentPositions();
 		updatePendantScreen();
 	}
@@ -8610,7 +8629,6 @@ public class RobotRun extends PApplet {
 
 	public void UpdateCam() {
 		if (rCamera != null) {
-			System.out.println("updating camera");
 			UI.updateCameraCurrent();
 		}
 	}
