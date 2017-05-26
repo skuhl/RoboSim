@@ -197,12 +197,12 @@ public class RobotRun extends PApplet {
 	 * @returning The Robot's End Effector position
 	 */
 	public static Point nativeRobotEEPoint(RoboticArm model, float[] jointAngles) {
-		Frame activeTool = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
+		ToolFrame activeTool = getActiveRobot().getActiveTool();
 		PVector offset;
 
 		if (activeTool != null) {
 			// Apply the Tool Tip
-			offset = ((ToolFrame) activeTool).getTCPOffset();
+			offset = activeTool.getTCPOffset();
 		} else {
 			offset = new PVector(0f, 0f, 0f);
 		}
@@ -340,8 +340,6 @@ public class RobotRun extends PApplet {
 	float distanceBetweenPoints = 5.0f;
 
 	int interMotionIdx = -1;
-
-	private Point displayPoint;
 	
 	private WorldObject mouseOverWO;
 	
@@ -509,7 +507,7 @@ public class RobotRun extends PApplet {
 			break;
 		case ACTIVE_FRAMES:
 			updateActiveFramesDisplay();
-			workingText = new StringBuilder(Integer.toString(getActiveRobot().getActiveUserFrame() + 1));
+			workingText = new StringBuilder(Integer.toString(getActiveRobot().getActiveUserIdx() + 1));
 
 			contents.moveDown(false);
 			break;
@@ -759,7 +757,7 @@ public class RobotRun extends PApplet {
 			break;
 		case ACTIVE_FRAMES:
 			updateActiveFramesDisplay();
-			workingText = new StringBuilder(Integer.toString(getActiveRobot().getActiveToolFrame() + 1));
+			workingText = new StringBuilder(Integer.toString(getActiveRobot().getActiveToolIdx() + 1));
 			contents.moveUp(false);
 			break;
 		default:
@@ -1366,35 +1364,35 @@ public class RobotRun extends PApplet {
 		// Increment the current coordinate frame
 		switch (r.getCurCoordFrame()) {
 		case JOINT:
-			r.setCurCoordFrame(CoordFrame.WORLD);
+			r.setCoordFrame(CoordFrame.WORLD);
 			break;
 
 		case WORLD:
-			r.setCurCoordFrame(CoordFrame.TOOL);
+			r.setCoordFrame(CoordFrame.TOOL);
 			break;
 
 		case TOOL:
-			r.setCurCoordFrame(CoordFrame.USER);
+			r.setCoordFrame(CoordFrame.USER);
 			break;
 
 		case USER:
-			r.setCurCoordFrame(CoordFrame.JOINT);
+			r.setCoordFrame(CoordFrame.JOINT);
 			break;
 		}
 
-		// Skip the Tool Frame, if there is no active frame
+		/* Skip the Tool Frame, if there is no active frame
 		if (r.getCurCoordFrame() == CoordFrame.TOOL
-				&& !(r.getActiveToolFrame() >= 0 && r.getActiveToolFrame() < Fields.FRAME_NUM)) {
+				&& !(r.getActiveToolIdx() >= 0 && r.getActiveToolIdx() < Fields.FRAME_NUM)) {
 			r.setCurCoordFrame(CoordFrame.USER);
 		}
 
 		// Skip the User Frame, if there is no active frame
 		if (r.getCurCoordFrame() == CoordFrame.USER
-				&& !(r.getActiveUserFrame() >= 0 && r.getActiveUserFrame() < Fields.FRAME_NUM)) {
+				&& !(r.getActiveUserIdx() >= 0 && r.getActiveUserIdx() < Fields.FRAME_NUM)) {
 			r.setCurCoordFrame(CoordFrame.JOINT);
 		}
-
-		updateCoordFrame();
+		 */
+		//updateCoordFrame();
 	}
 
 	/* Arrow keys */
@@ -1583,7 +1581,6 @@ public class RobotRun extends PApplet {
 			pushMatrix();
 			// Apply the camera for drawing objects
 			applyCamera(camera);
-			renderCoordAxes();
 			renderScene(getActiveScenario(), getActiveRobot());
 			
 			if (teachFrame != null && mode.getType() == ScreenType.TYPE_TEACH_POINTS) {
@@ -1608,7 +1605,7 @@ public class RobotRun extends PApplet {
 			
 			/*Camera Test Code*/
 			if(camEnable) {
-				renderOriginAxes(rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
+				Fields.draw(getGraphics(), rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
 				
 				PVector near[] = rCamera.getPlaneNear();
 				PVector far[] = rCamera.getPlaneFar();
@@ -2800,7 +2797,6 @@ public class RobotRun extends PApplet {
 				DataManagement.saveRobotData(activeRobot, 1);
 			}
 
-			displayPoint = null;
 			lastScreen();
 			break;
 		case FIND_REPL:
@@ -3299,6 +3295,7 @@ public class RobotRun extends PApplet {
 
 			if (inst instanceof MotionInstruction) {
 				r.getInstToEdit( r.getActiveInstIdx() );
+				/* TODO REMOVE AFTER REFACTOR *
 				Point pt = nativeRobotEEPoint(r, r.getJointAngles());
 				Frame active = r.getActiveFrame(CoordFrame.USER);
 
@@ -3306,7 +3303,10 @@ public class RobotRun extends PApplet {
 					// Convert into currently active frame
 					pt = RMath.applyFrame(getActiveRobot(), pt, active.getOrigin(), active.getOrientation());
 				}
-
+				/**/
+				
+				Point pt = getActiveRobot().getToolTipPoint();
+				
 				Program p = r.getActiveProg();
 				int actInst = r.getActiveInstIdx();
 
@@ -3347,8 +3347,8 @@ public class RobotRun extends PApplet {
 					mInst.setSpeed(50f * r.motorSpeed / 100f);
 				}
 
-				mInst.setToolFrame(r.getActiveToolFrame());
-				mInst.setUserFrame(r.getActiveUserFrame());
+				mInst.setToolFrame(r.getActiveToolIdx());
+				mInst.setUserFrame(r.getActiveUserIdx());
 
 			} else if (inst instanceof IfStatement) {
 				IfStatement stmt = (IfStatement) inst;
@@ -3595,8 +3595,8 @@ public class RobotRun extends PApplet {
 						
 						if (r.getCurCoordFrame() == CoordFrame.USER) {
 							// Move in terms of the user frame
-							Frame active = r.getActiveFrame(CoordFrame.USER);
-							pt = RMath.removeFrame(r, pt, active.getOrigin(), active.getOrientation());
+							UserFrame uFrame = r.getActiveUser();
+							pt = RMath.removeFrame(r, pt, uFrame.getOrigin(), uFrame.getOrientation());
 
 							Fields.debug("pt: %s\n", pt.position.toString());
 						}
@@ -3739,6 +3739,7 @@ public class RobotRun extends PApplet {
 
 			if (isShift() && pReg != null) {
 				// Save the Robot's current position and joint angles
+				/* TODO REMOVE AFTER REFACTOR *
 				Point curRP = nativeRobotEEPoint(r, r.getJointAngles());
 				Frame active = r.getActiveFrame(CoordFrame.USER);
 
@@ -3746,8 +3747,11 @@ public class RobotRun extends PApplet {
 					// Save Cartesian values in terms of the active User frame
 					curRP = RMath.applyFrame(r, curRP, active.getOrigin(), active.getOrientation());
 				}
-
+				
 				pReg.point = curRP;
+				/**/
+				
+				pReg.point = activeRobot.getToolTipPoint();
 				pReg.isCartesian = true;
 				DataManagement.saveRobotData(r, 3);
 			}
@@ -4917,10 +4921,10 @@ public class RobotRun extends PApplet {
 				String idxTxt;
 				
 				if (contents.getLineIdx() == 0) {
-					idxTxt = Integer.toString(r.getActiveToolFrame() + 1);
+					idxTxt = Integer.toString(r.getActiveToolIdx() + 1);
 					
 				} else {
-					idxTxt = Integer.toString(r.getActiveUserFrame() + 1);
+					idxTxt = Integer.toString(r.getActiveUserIdx() + 1);
 				}
 				
 				workingText = new StringBuilder(idxTxt);
@@ -5433,7 +5437,7 @@ public class RobotRun extends PApplet {
 			// Frames
 		case ACTIVE_FRAMES:
 			contents.setColumnIdx(1);
-			workingText = new StringBuilder(Integer.toString(getActiveRobot().getActiveToolFrame() + 1));
+			workingText = new StringBuilder(Integer.toString(getActiveRobot().getActiveToolIdx() + 1));
 			break;
 		case TEACH_3PT_USER:
 		case TEACH_4PT:
@@ -6139,6 +6143,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void newMotionInstruction() {
 		RoboticArm r = getActiveRobot();
+		/* TODO REMOVE AFTER REFACTOR *
 		Point pt = nativeRobotEEPoint(r, r.getJointAngles());
 		Frame active = r.getActiveFrame(CoordFrame.USER);
 
@@ -6148,7 +6153,10 @@ public class RobotRun extends PApplet {
 
 			Fields.debug("New: %s\n", RMath.vToWorld(pt.position));
 		}
-
+		/**/
+		
+		Point pt = activeRobot.getToolTipPoint();
+		
 		Program prog = getActiveRobot().getActiveProg();
 		int instIdx = r.getActiveInstIdx();
 		int reg = prog.getNextPosition();
@@ -6191,8 +6199,8 @@ public class RobotRun extends PApplet {
 				}
 
 				mInst.setPositionNum(reg);
-				mInst.setToolFrame(r.getActiveToolFrame());
-				mInst.setUserFrame(r.getActiveUserFrame());
+				mInst.setToolFrame(r.getActiveToolIdx());
+				mInst.setUserFrame(r.getActiveUserIdx());
 				return;
 			}
 		}
@@ -6201,7 +6209,7 @@ public class RobotRun extends PApplet {
 				getActiveRobot().getCurCoordFrame() == CoordFrame.JOINT ? Fields.MTYPE_JOINT : Fields.MTYPE_LINEAR, reg, false,
 						(getActiveRobot().getCurCoordFrame() == CoordFrame.JOINT ? 50 : 50 * getActiveRobot().motorSpeed)
 						/ 100f,
-						0, getActiveRobot().getActiveUserFrame(), getActiveRobot().getActiveToolFrame());
+						0, getActiveRobot().getActiveUserIdx(), getActiveRobot().getActiveToolIdx());
 
 		if (getActiveRobot().getActiveInstIdx() != prog.getNumOfInst()) {
 			// Overwrite an existing non-motion instruction
@@ -6534,214 +6542,6 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Displays coordinate frame associated with the current Coordinate frame.
-	 * The active User frame is displayed in the User and Tool Coordinate
-	 * Frames. The World frame is display in the World Coordinate frame and the
-	 * Tool Coordinate Frame in the case that no active User frame is set. The
-	 * active Tool frame axes are displayed in the Tool frame in addition to the
-	 * current User (or World) frame. Nothing is displayed in the Joint
-	 * Coordinate Frame.
-	 */
-	public void renderCoordAxes() {
-		Point toolTip = activeRobot.getToolTipPoint();
-
-		if (getAxesState() == AxesDisplay.AXES && getActiveRobot().getCurCoordFrame() == CoordFrame.TOOL) {
-			Frame activeTool = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
-
-			// Draw the axes of the active Tool frame at the Robot End Effector
-			renderOriginAxes(toolTip.position, RMath.rMatToWorld(activeTool.getNativeAxisVectors()),
-					200f, Fields.color(255, 0, 255));
-			
-		}
-
-		if (getAxesState() == AxesDisplay.AXES) {
-			// Display axes
-			if (getActiveRobot().getCurCoordFrame() != CoordFrame.JOINT) {
-				Frame activeUser = getActiveRobot().getActiveFrame(CoordFrame.USER);
-
-				if (getActiveRobot().getCurCoordFrame() != CoordFrame.WORLD && activeUser != null) {
-					// Draw the axes of the active User frame
-					renderOriginAxes(activeUser.getOrigin(), RMath.rMatToWorld(activeUser.getNativeAxisVectors()),
-							10000f, Fields.BLACK);
-
-				} else {
-					// Draw the axes of the World frame
-					renderOriginAxes(new PVector(0f, 0f, 0f), Fields.WORLD_AXES_MAT, 10000f, Fields.BLACK);
-				}
-			}
-
-		} else if (getAxesState() == AxesDisplay.GRID) {
-			// Display gridlines spanning from axes of the current frame
-			Frame active;
-			RMatrix displayAxes;
-			PVector displayOrigin;
-
-			switch (getActiveRobot().getCurCoordFrame()) {
-			case JOINT:
-			case WORLD:
-				displayAxes = Fields.IDENTITY_MAT.copy();
-				displayOrigin = new PVector(0f, 0f, 0f);
-				break;
-			case TOOL:
-				active = getActiveRobot().getActiveFrame(CoordFrame.TOOL);
-				displayAxes = active.getNativeAxisVectors();
-				displayOrigin = toolTip.position;
-				break;
-			case USER:
-				active = getActiveRobot().getActiveFrame(CoordFrame.USER);
-				displayAxes = active.getNativeAxisVectors();
-				displayOrigin = active.getOrigin();
-				break;
-			default:
-				// No gridlines are displayed in the Joint Coordinate Frame
-				return;
-			}
-
-			// Draw grid lines every 100 units, from -3500 to 3500, in the x and
-			// y plane, on the floor plane
-			renderGridlines(displayAxes, displayOrigin, 35, 100);
-		}
-	}
-	
-	/**
-	 * Grid lines are drawn, spanning from two of the three axes defined by the
-	 * given axes vector set. The two axes that form a plane that has the lowest
-	 * offset of the xz-plane (hence the two vectors with the minimum y-values)
-	 * are chosen to be mapped to the xz-plane and their reflection on the
-	 * xz-plane are drawn the along with a grid is formed from the the two
-	 * reflection axes at the base of the Robot.
-	 * 
-	 * @param axesVectors
-	 *            A rotation matrix (in row major order) that defines the axes
-	 *            of the frame to map to the xz-plane
-	 * @param origin
-	 *            The xz-origin at which to drawn the reflection axes
-	 * @param halfNumOfLines
-	 *            Half the number of lines to draw for one of the axes
-	 * @param distBwtLines
-	 *            The distance between each grid line
-	 */
-	public void renderGridlines(RMatrix axesVectors, PVector origin, int halfNumOfLines, float distBwtLines) {
-		float[][] axesDat = axesVectors.getFloatData();
-		int vectorPX = -1, vectorPZ = -1;
-
-		// Find the two vectors with the minimum y values
-		for (int v = 0; v < axesDat.length; ++v) {
-			int limboX = (v + 1) % axesDat.length, limboY = (limboX + 1) % axesDat.length;
-			// Compare the y value of the current vector to those of the other
-			// two vectors
-			if (abs(axesDat[v][1]) >= abs(axesDat[limboX][1])
-					&& abs(axesDat[v][1]) >= abs(axesDat[limboY][1])) {
-				vectorPX = limboX;
-				vectorPZ = limboY;
-				break;
-			}
-		}
-
-		if (vectorPX == -1 || vectorPZ == -1) {
-			println("Invalid axes-origin pair for grid lines!");
-			return;
-		}
-
-		pushMatrix();
-		// Map the chosen two axes vectors to the xz-plane at the y-position of
-		// the Robot's base
-		applyMatrix(
-				axesDat[vectorPX][0], 0, axesDat[vectorPZ][0], origin.x,
-				0, 1, 0, getActiveRobot().getBasePosition().y,
-				axesDat[vectorPX][2], 0, axesDat[vectorPZ][2], origin.z,
-				0, 0, 0, 1
-		);
-
-		float lineLen = halfNumOfLines * distBwtLines;
-
-		// Draw axes lines in red
-		stroke(255, 0, 0);
-		line(-lineLen, 0, 0, lineLen, 0, 0);
-		line(0, 0, -lineLen, 0, 0, lineLen);
-		// Draw remaining gridlines in black
-		stroke(25, 25, 25);
-		for (int linePosScale = 1; linePosScale <= halfNumOfLines; ++linePosScale) {
-			line(distBwtLines * linePosScale, 0, -lineLen, distBwtLines * linePosScale, 0, lineLen);
-			line(-lineLen, 0, distBwtLines * linePosScale, lineLen, 0, distBwtLines * linePosScale);
-
-			line(-distBwtLines * linePosScale, 0, -lineLen, -distBwtLines * linePosScale, 0, lineLen);
-			line(-lineLen, 0, -distBwtLines * linePosScale, lineLen, 0, -distBwtLines * linePosScale);
-		}
-
-		popMatrix();
-	}
-	
-	/**
-	 * Given a set of 3 orthogonal unit vectors a point in space, lines are
-	 * drawn for each of the three vectors, which intersect at the origin point.
-	 *
-	 * @param origin
-	 *            A point in space representing the intersection of the three
-	 *            unit vectors
-	 * @param axesVectors
-	 *            A set of three orthogonal unti vectors
-	 * @param axesLength
-	 *            The length, to which the all axes, will be drawn
-	 * @param originColor
-	 *            The color of the point to draw at the origin
-	 */
-	public void renderOriginAxes(PVector origin, RMatrix axesVectors, float axesLength, int originColor) {
-		pushMatrix();
-		pushStyle();
-		// Transform to the reference frame defined by the axes vectors		
-		applyCoord(origin, axesVectors);
-		// X axis
-		stroke(255, 0, 0);
-		line(-axesLength, 0, 0, axesLength, 0, 0);
-		// Y axis
-		stroke(0, 255, 0);
-		line(0, -axesLength, 0, 0, axesLength, 0);
-		// Z axis
-		stroke(0, 0, 255);
-		line(0, 0, -axesLength, 0, 0, axesLength);
-
-		// Draw a sphere on the positive direction for each axis
-		float dotPos = max(100f, min(axesLength, 500));
-		textFont(Fields.bond, 18);
-
-		stroke(originColor);
-		fill(Fields.BLACK);
-		
-		sphere(4);
-		stroke(0);
-		translate(dotPos, 0, 0);
-		sphere(4);
-
-		pushMatrix();
-		rotateX(-PI / 2f);
-		rotateY(-PI);
-		text("X-axis", 0, 0, 0);
-		popMatrix();
-
-		translate(-dotPos, dotPos, 0);
-		sphere(4);
-
-		pushMatrix();
-		rotateX(-PI / 2f);
-		rotateY(-PI);
-		text("Y-axis", 0, 0, 0);
-		popMatrix();
-
-		translate(0, -dotPos, dotPos);
-		sphere(4);
-
-		pushMatrix();
-		rotateX(-PI / 2f);
-		rotateY(-PI);
-		text("Z-axis", 0, 0, 0);
-		popMatrix();
-
-		popStyle();
-		popMatrix();
-	}
-	
-	/**
 	 * Updates the position and orientation of the Robot as well as all the
 	 * World Objects associated with the current scenario. Updates the bounding
 	 * box color, position and orientation of the Robot and all World Objects as
@@ -6882,16 +6682,44 @@ public class RobotRun extends PApplet {
 				}
 			}
 		}
+		
+		AxesDisplay axesType = getAxesState();
+		
+		if (axesType != AxesDisplay.NONE && (robot.getCurCoordFrame() == CoordFrame.WORLD
+				|| (robot.getCurCoordFrame() != CoordFrame.JOINT
+				&& robot.getActiveUser() == null))) {
+			
+			// Render the world frame
+			PVector origin = new PVector(0f, 0f, 0f);
+			
+			if (axesType == AxesDisplay.AXES) {
+				Fields.draw(getGraphics(), origin, Fields.WORLD_AXES_MAT,
+						10000f, Fields.BLACK);
+				
+			} else if (axesType == AxesDisplay.GRID) {
+				robot.drawGridlines(getGraphics(), Fields.WORLD_AXES_MAT,
+						origin, 35, 100f);
+			}
+		}
+		
 
 		if (UI.getRobotButtonState()) {
 			// Draw all robots
 			for (RoboticArm r : ROBOTS.values()) {
-				r.draw(getGraphics(), r == robot);
+				
+				if (r == robot) {
+					// active robot
+					r.draw(getGraphics(), true, axesType);
+					
+				} else {
+					r.draw(getGraphics(), false, AxesDisplay.NONE);
+				}
+				
 			}
 
 		} else {
 			// Draw only the active robot
-			robot.draw(getGraphics(), true);
+			robot.draw(getGraphics(), true, axesType);
 		}
 		
 		/* Render the axes of the selected World Object */
@@ -6911,18 +6739,11 @@ public class RobotRun extends PApplet {
 				orientation = wldObj.getLocalOrientation();
 			}
 
-			renderOriginAxes(origin, RMath.rMatToWorld(orientation), 500f,
-					Fields.BLACK);
+			Fields.draw(getGraphics(), origin, RMath.rMatToWorld(orientation),
+					500f, Fields.BLACK);
 		}
 		
 		/* TEST OUTPUT */
-		
-		if (displayPoint != null) {
-			// Display the point with its local orientation axes
-			renderOriginAxes(displayPoint.position,
-					displayPoint.orientation.toMatrix(), 100f,
-					Fields.color(0, 100, 15));
-		}
 
 		robot.updatePreviousEEOrientation();
 		
@@ -7076,7 +6897,7 @@ public class RobotRun extends PApplet {
 			lastTextPositionY += 20;
 		}
 
-		Frame active = r.getActiveFrame(CoordFrame.USER);
+		UserFrame active = r.getActiveUser();
 
 		if (active != null) {
 			// Display Robot's current position and orientation in the currently
@@ -7086,7 +6907,7 @@ public class RobotRun extends PApplet {
 			cartesian = RP.toLineStringArray(true);
 
 			lastTextPositionY += 20;
-			text(String.format("User: %d", getActiveRobot().getActiveUserFrame() + 1), lastTextPositionX,
+			text(String.format("User: %d", getActiveRobot().getActiveUserIdx() + 1), lastTextPositionX,
 					lastTextPositionY);
 			lastTextPositionY += 20;
 
@@ -7495,8 +7316,6 @@ public class RobotRun extends PApplet {
 			options = new MenuScroll("opt", 3, 10, 180);
 			
 			setManager(new WGUI(this, buttonImages));
-			
-			displayPoint = null;
 
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);
@@ -7665,11 +7484,11 @@ public class RobotRun extends PApplet {
 	public boolean setUpInstruction(Program program, RoboticArm model, MotionInstruction instruction) {
 		Point start = nativeRobotEEPoint(getActiveRobot(), model.getJointAngles());
 
-		if (!instruction.checkFrames(getActiveRobot().getActiveToolFrame(), getActiveRobot().getActiveUserFrame())) {
+		if (!instruction.checkFrames(getActiveRobot().getActiveToolIdx(), getActiveRobot().getActiveUserIdx())) {
 			// Current Frames must match the instruction's frames
 			Fields.debug("Tool frame: %d : %d\nUser frame: %d : %d\n\n", instruction.getToolFrame(),
-					getActiveRobot().getActiveToolFrame(), instruction.getUserFrame(),
-					getActiveRobot().getActiveUserFrame());
+					getActiveRobot().getActiveToolIdx(), instruction.getUserFrame(),
+					getActiveRobot().getActiveUserIdx());
 			return false;
 		} else if (instruction.getVector(program) == null) {
 			return false;
@@ -7932,10 +7751,10 @@ public class RobotRun extends PApplet {
 		}
 		// Update display
 		if (contents.getLineIdx() == 0) {
-			workingText = new StringBuilder(Integer.toString(getActiveRobot().getActiveToolFrame() + 1));
+			workingText = new StringBuilder(Integer.toString(getActiveRobot().getActiveToolIdx() + 1));
 
 		} else {
-			workingText = new StringBuilder(Integer.toString(getActiveRobot().getActiveUserFrame() + 1));
+			workingText = new StringBuilder(Integer.toString(getActiveRobot().getActiveUserIdx() + 1));
 		}
 
 		contents.getActiveLine().set(contents.getColumnIdx(), workingText.toString());
@@ -8016,10 +7835,10 @@ public class RobotRun extends PApplet {
 			/* workingText corresponds to the active row's index display */
 			if (contents.getLineIdx() == 0) {
 				contents.addLine("Tool: ", workingText.toString());
-				contents.addLine("User: ", Integer.toString(r.getActiveUserFrame() + 1));
+				contents.addLine("User: ", Integer.toString(r.getActiveUserIdx() + 1));
 
 			} else {
-				contents.addLine("Tool: ", Integer.toString(r.getActiveToolFrame() + 1));
+				contents.addLine("Tool: ", Integer.toString(r.getActiveToolIdx() + 1));
 				contents.addLine("User: ", workingText.toString());
 			}
 			break;
@@ -8094,17 +7913,17 @@ public class RobotRun extends PApplet {
 	public void updateCoordFrame() {
 
 		// Return to the World Frame, if no User Frame is active
-		if (getActiveRobot().getCurCoordFrame() == CoordFrame.TOOL && !(getActiveRobot().getActiveToolFrame() >= 0
-				&& getActiveRobot().getActiveToolFrame() < Fields.FRAME_NUM)) {
-			getActiveRobot().setCurCoordFrame(CoordFrame.WORLD);
+		if (getActiveRobot().getCurCoordFrame() == CoordFrame.TOOL && !(getActiveRobot().getActiveToolIdx() >= 0
+				&& getActiveRobot().getActiveToolIdx() < Fields.FRAME_NUM)) {
+			getActiveRobot().setCoordFrame(CoordFrame.WORLD);
 			// Stop Robot movement
 			hold();
 		}
 
 		// Return to the World Frame, if no User Frame is active
-		if (getActiveRobot().getCurCoordFrame() == CoordFrame.USER && !(getActiveRobot().getActiveUserFrame() >= 0
-				&& getActiveRobot().getActiveUserFrame() < Fields.FRAME_NUM)) {
-			getActiveRobot().setCurCoordFrame(CoordFrame.WORLD);
+		if (getActiveRobot().getCurCoordFrame() == CoordFrame.USER && !(getActiveRobot().getActiveUserIdx() >= 0
+				&& getActiveRobot().getActiveUserIdx() < Fields.FRAME_NUM)) {
+			getActiveRobot().setCoordFrame(CoordFrame.WORLD);
 			// Stop Robot movement
 			hold();
 		}

@@ -2,6 +2,7 @@ package global;
 
 import geom.CoordinateSystem;
 import geom.RMatrix;
+import processing.core.PConstants;
 import processing.core.PFont;
 import processing.core.PGraphics;
 import processing.core.PVector;
@@ -330,6 +331,72 @@ public abstract class Fields {
 		int[] diffs = rgbaDiffs(c0,  c1);
 		// Compute the square root of the sum of the rgba differences
 		return (float) Math.sqrt(diffs[0] + diffs[1] + diffs[2] + diffs[3]);
+	}
+	
+	/**
+	 * TODO comments this
+	 * 
+	 * @param g
+	 * @param origin
+	 * @param axesVectors
+	 * @param axesLength
+	 * @param originColor
+	 */
+	public static void draw(PGraphics g, PVector origin, RMatrix axesVectors,
+			float axesLength, int originColor) {
+		
+		g.pushMatrix();
+		g.pushStyle();
+		// Transform to the reference frame defined by the axes vectors		
+		Fields.transform(g, origin, axesVectors);
+		// X axis
+		g.stroke(255, 0, 0);
+		g.line(-axesLength, 0, 0, axesLength, 0, 0);
+		// Y axis
+		g.stroke(0, 255, 0);
+		g.line(0, -axesLength, 0, 0, axesLength, 0);
+		// Z axis
+		g.stroke(0, 0, 255);
+		g.line(0, 0, -axesLength, 0, 0, axesLength);
+
+		// Draw a sphere on the positive direction for each axis
+		float dotPos = RMath.clamp(axesLength, 100f, 500f);
+		g.textFont(Fields.bond, 18);
+
+		g.stroke(originColor);
+		g.fill(Fields.BLACK);
+		
+		g.sphere(4);
+		g.stroke(0);
+		g.translate(dotPos, 0, 0);
+		g.sphere(4);
+
+		g.pushMatrix();
+		g.rotateX(-PConstants.PI / 2f);
+		g.rotateY(-PConstants.PI);
+		g.text("X-axis", 0, 0, 0);
+		g.popMatrix();
+
+		g.translate(-dotPos, dotPos, 0);
+		g.sphere(4);
+
+		g.pushMatrix();
+		g.rotateX(-PConstants.PI / 2f);
+		g.rotateY(-PConstants.PI);
+		g.text("Y-axis", 0, 0, 0);
+		g.popMatrix();
+
+		g.translate(0, -dotPos, dotPos);
+		g.sphere(4);
+
+		g.pushMatrix();
+		g.rotateX(-PConstants.PI / 2f);
+		g.rotateY(-PConstants.PI);
+		g.text("Z-axis", 0, 0, 0);
+		g.popMatrix();
+
+		g.popStyle();
+		g.popMatrix();
 	}
 	
 	/**
