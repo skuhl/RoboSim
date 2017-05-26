@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
 
+import enums.AxesDisplay;
 import enums.CoordFrame;
 import enums.EEType;
 import enums.InstOp;
@@ -130,12 +131,12 @@ public class RoboticArm {
 	/**
 	 * A set of user-defined frames associated with this robot. 
 	 */
-	private final ToolFrame[] toolFrames;
+	private final ToolFrame[] TOOL_FRAMES;
 	
 	/**
 	 * A set of user-defined frames associated with this robot.
 	 */
-	private final UserFrame[] userFrames;
+	private final UserFrame[] USER_FRAMES;
 	
 	/**
 	 * The initial position and orientation of the robot.
@@ -179,7 +180,7 @@ public class RoboticArm {
 	/**
 	 * An index corresponding to the active frame for this robot.
 	 */
-	private int activeUserFrame, activeToolFrame;
+	private int activeUserIdx, activeToolIdx;
 	
 	
 	private RMatrix lastEEOrientation;
@@ -221,17 +222,17 @@ public class RoboticArm {
 		
 		// Initializes the frames
 		
-		toolFrames = new ToolFrame[Fields.FRAME_NUM];
-		userFrames = new UserFrame[Fields.FRAME_NUM];
+		TOOL_FRAMES = new ToolFrame[Fields.FRAME_NUM];
+		USER_FRAMES = new UserFrame[Fields.FRAME_NUM];
 		
-		for (idx = 0; idx < toolFrames.length; ++idx) {
-			toolFrames[idx] = new ToolFrame();
-			userFrames[idx] = new UserFrame();
+		for (idx = 0; idx < TOOL_FRAMES.length; ++idx) {
+			TOOL_FRAMES[idx] = new ToolFrame();
+			USER_FRAMES[idx] = new UserFrame();
 		}
 		
 		curCoordFrame = CoordFrame.JOINT;
-		activeUserFrame = -1;
-		activeToolFrame = -1;
+		activeUserIdx = -1;
+		activeToolIdx = -1;
 		
 		// Initialize the registers
 		
@@ -515,6 +516,35 @@ public class RoboticArm {
 		PVector rangeBounds = getJointRange(joint);
 		return RMath.angleWithinBounds(RMath.mod2PI(angle), rangeBounds.x, rangeBounds.y);
 	}
+	
+	/**
+	 * Converts the given point, pt, into the Coordinate System defined by the
+	 * given origin vector and rotation quaternion axes. The joint angles
+	 * associated with the point will be transformed as well, though, if inverse
+	 * kinematics fails, then the original joint angles are used instead.
+	 * 
+	 * @param pt
+	 *            A point with initialized position and orientation
+	 * @param origin
+	 *            The origin of the Coordinate System
+	 * @param axes
+	 *            The axes of the Coordinate System representing as a rotation
+	 *            quanternion
+	 * @returning The point, pt, interms of the given coordinate system
+	 */
+	public Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
+		PVector position = RMath.vToFrame(pt.position, origin, axes);
+		RQuaternion orientation = axes.transformQuaternion(pt.orientation);
+		// Update joint angles associated with the point
+		float[] newJointAngles = RMath.inverseKinematics(this, pt.angles, position, orientation);
+
+		if (newJointAngles != null) {
+			return new Point(position, orientation, newJointAngles);
+		} else {
+			// If inverse kinematics fails use the old angles
+			return new Point(position, orientation, pt.angles);
+		}
+	}
 
 	/**
 	 * Determines if the given part's bounding box is colliding with the
@@ -734,9 +764,11 @@ public class RoboticArm {
 	/**
 	 * Draws the robotic arm along with its bounding boxes.
 	 * 
-	 * @param g	The graphics used to render the robot
+	 * @param g			The graphics used to render the robot
+	 * @param drawOBBs	
+	 * @param axesType
 	 */
-	public void draw(PGraphics g, boolean drawOBBs) {
+	public void draw(PGraphics g, boolean drawOBBs, AxesDisplay axesType) {
 		
 		float[] jointAngles = getJointAngles();
 		
@@ -747,6 +779,22 @@ public class RoboticArm {
 		g.fill(200, 200, 0);
 
 		g.pushMatrix();
+		
+		if (axesType != AxesDisplay.NONE && curCoordFrame == CoordFrame.USER) {
+			UserFrame activeUser = getActiveUser();
+			// Render the active user frame
+			if (activeUser != null) {
+				RMatrix userAxes = RMath.rMatToWorld(activeUser.getNativeAxisVectors());
+				
+				if (axesType == AxesDisplay.AXES) {
+					Fields.draw(g, activeUser.getOrigin(), userAxes, 10000f, Fields.ORANGE);
+					
+				} else if (axesType == AxesDisplay.GRID) {
+					drawGridlines(g, userAxes, activeUser.getOrigin(), 35, 100);
+				}
+			}
+		}
+		
 		g.translate(BASE_POSITION.x, BASE_POSITION.y, BASE_POSITION.z);
 
 		g.rotateZ(PConstants.PI);
@@ -877,7 +925,9 @@ public class RoboticArm {
 		
 		/* DRAW TOOL TIP */
 		
-		drawToolTip(g);
+		g.rotateX(PConstants.PI);
+		g.rotateY(PConstants.PI/2);
+		drawToolTip(g, axesType);
 
 		g.popMatrix();
 		g.popStyle();
@@ -921,32 +971,110 @@ public class RoboticArm {
 	/**
 	 * TODO comment this
 	 * 
-	 * @param g	The graphics object used to render the tool tip position
+	 * @param g			The graphics object used to render the tool tip position
+	 * @param axesType
 	 */
-	private void drawToolTip(PGraphics g) {
-		PVector tipPos;
-		Frame activeTool = getActiveFrame(CoordFrame.TOOL);
+	private void drawToolTip(PGraphics g, AxesDisplay axesType) {
 		
-		if (activeTool instanceof ToolFrame) {
-			tipPos = ((ToolFrame)activeTool).getTCPOffset();
+		ToolFrame activeTool = getActiveTool();
+		
+		if (axesType != AxesDisplay.NONE && curCoordFrame == CoordFrame.TOOL
+				&& activeTool != null) {
+			
+			// Render the active tool frame at the position of the tooltip
+			RMatrix toolAxes = RMath.rMatToWorld(activeTool.getOrientationOffset().toMatrix());
+			
+			if (axesType == AxesDisplay.AXES) {
+				Fields.draw(g, activeTool.getTCPOffset(), toolAxes, 500f,
+						Fields.PINK);
+				
+			} else if (axesType == AxesDisplay.GRID) {
+				drawGridlines(g, toolAxes, activeTool.getTCPOffset(), 35, 100);
+			}
 			
 		} else {
-			tipPos = new PVector(0f, 0f, 0f);
+			// Render a point at the position of the tooltip
+			g.pushStyle();
+			g.stroke(Fields.PINK);
+			g.noFill();
+			
+			g.pushMatrix();
+			
+			if (activeTool != null) {
+				// Apply active tool frame offset
+				PVector tipPos = activeTool.getTCPOffset();
+				g.translate(tipPos.x, tipPos.y, tipPos.z);
+			}
+			
+			
+			g.sphere(4);
+			
+			g.popMatrix();
+			g.popStyle();
 		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param g
+	 * @param axesVectors
+	 * @param origin
+	 * @param halfNumOfLines
+	 * @param distBwtLines
+	 */
+	public void drawGridlines(PGraphics g, RMatrix axesVectors, PVector origin,
+			int halfNumOfLines, float distBwtLines) {
 		
-		g.pushStyle();
-		g.stroke(Fields.PINK);
-		g.noFill();
-		
+		float[][] axesDat = axesVectors.getFloatData();
+		int vectorPX = -1, vectorPZ = -1;
+
+		// Find the two vectors with the minimum y values
+		for (int v = 0; v < axesDat.length; ++v) {
+			int limboX = (v + 1) % axesDat.length;
+			int limboY = (limboX + 1) % axesDat.length;
+			// Compare the y value of the current vector to those of the other
+			// two vectors
+			if (Math.abs(axesDat[v][1]) >= Math.abs(axesDat[limboX][1])
+					&& Math.abs(axesDat[v][1]) >= Math.abs(axesDat[limboY][1])) {
+				vectorPX = limboX;
+				vectorPZ = limboY;
+				break;
+			}
+		}
+
+		if (vectorPX == -1 || vectorPZ == -1) {
+			Fields.debug("Invalid axes-origin pair for grid lines!");
+			return;
+		}
+
 		g.pushMatrix();
-		g.rotateX(PConstants.PI);
-		g.rotateY(PConstants.PI / 2f);
-		g.translate(tipPos.x, tipPos.y, tipPos.z);
-		
-		g.sphere(4);
-		
+		// Map the chosen two axes vectors to the xz-plane at the y-position of
+		// the Robot's base
+		g.applyMatrix(
+				axesDat[vectorPX][0], 0, axesDat[vectorPZ][0], origin.x,
+				0, 1, 0, BASE_POSITION.y,
+				axesDat[vectorPX][2], 0, axesDat[vectorPZ][2], origin.z,
+				0, 0, 0, 1
+		);
+
+		float lineLen = halfNumOfLines * distBwtLines;
+
+		// Draw axes lines in red
+		g.stroke(255, 0, 0);
+		g.line(-lineLen, 0, 0, lineLen, 0, 0);
+		g.line(0, 0, -lineLen, 0, 0, lineLen);
+		// Draw remaining gridlines in black
+		g.stroke(25, 25, 25);
+		for (int linePosScale = 1; linePosScale <= halfNumOfLines; ++linePosScale) {
+			g.line(distBwtLines * linePosScale, 0, -lineLen, distBwtLines * linePosScale, 0, lineLen);
+			g.line(-lineLen, 0, distBwtLines * linePosScale, lineLen, 0, distBwtLines * linePosScale);
+
+			g.line(-distBwtLines * linePosScale, 0, -lineLen, -distBwtLines * linePosScale, 0, lineLen);
+			g.line(-lineLen, 0, -distBwtLines * linePosScale, lineLen, 0, -distBwtLines * linePosScale);
+		}
+
 		g.popMatrix();
-		g.popStyle();
 	}
 	
 	/**
@@ -1015,23 +1143,25 @@ public class RoboticArm {
 
 		} else {
 			// Jog in the World, Tool or User Frame
+			Point curPoint = RobotRun.nativeRobotEEPoint(this, getJointAngles());
 			RQuaternion invFrameOrientation = null;
-
+			
 			if (curCoordFrame == CoordFrame.TOOL) {
-				Frame curFrame = getActiveFrame(CoordFrame.TOOL);
-
-				if (curFrame != null) {
-					invFrameOrientation = curFrame.getOrientation().conjugate();
+				ToolFrame activeTool = getActiveTool();
+				
+				if (activeTool != null) {
+					RQuaternion frameOrien = activeTool.getOrientationOffset();
+					RQuaternion diff = RQuaternion.mult(robotPoint.orientation.conjugate(), curPoint.orientation, frameOrien);
+					invFrameOrientation = diff.conjugate();
 				}
+				
 			} else if (curCoordFrame == CoordFrame.USER) {
-				Frame curFrame = getActiveFrame(CoordFrame.USER);
-
-				if (curFrame != null) {
-					invFrameOrientation = curFrame.getOrientation().conjugate();
+				UserFrame activeUser = getActiveUser();
+				
+				if (activeUser != null) {
+					invFrameOrientation = activeUser.getOrientation().conjugate();
 				}
 			}
-
-			Point curPoint = RobotRun.nativeRobotEEPoint(this, getJointAngles());
 
 			// Apply translational motion vector
 			if (translationalMotion()) {
@@ -1092,7 +1222,7 @@ public class RoboticArm {
 	 * 
 	 * @param coord  The Coordinate Frame System to check for an active frame,
 	 *               or null to check the current active Frame System.
-	 */
+	 *
 	public Frame getActiveFrame(CoordFrame coord) {
 		if (coord == null) {
 			// Use current coordinate Frame
@@ -1100,21 +1230,22 @@ public class RoboticArm {
 		}
 
 		// Determine if a frame is active in the given Coordinate Frame
-		if (coord == CoordFrame.USER && activeUserFrame >= 0 &&
-				activeUserFrame < userFrames.length) {
+		if (coord == CoordFrame.USER && activeUserIdx >= 0 &&
+				activeUserIdx < USER_FRAMES.length) {
 			// active User frame
-			return userFrames[activeUserFrame];
+			return USER_FRAMES[activeUserIdx];
 			
-		} else if (coord == CoordFrame.TOOL && activeToolFrame >= 0 &&
-				activeToolFrame < toolFrames.length) {
+		} else if (coord == CoordFrame.TOOL && activeToolIdx >= 0 &&
+				activeToolIdx < TOOL_FRAMES.length) {
 			// active Tool frame
-			return toolFrames[activeToolFrame];
+			return TOOL_FRAMES[activeToolIdx];
 			
 		} else {
 			// no active frame
 			return null;
 		}
 	}
+	/**/
 	
 	/**
 	 * @return	The index of the active program's active instruction
@@ -1158,17 +1289,41 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * @return	The active tool frame or null if no tool frame is active
+	 */
+	public ToolFrame getActiveTool() {
+		
+		if (activeToolIdx == -1) {
+			return null;
+		}
+		
+		return TOOL_FRAMES[activeToolIdx];
+	}
+	
+	/**
 	 * @return	The ID for the Robot's active tool frame
 	 */
-	public int getActiveToolFrame() {
-		return activeToolFrame;
+	public int getActiveToolIdx() {
+		return activeToolIdx;
+	}
+	
+	/**
+	 * @return	The active tool frame or null if no tool frame is active
+	 */
+	public UserFrame getActiveUser() {
+		
+		if (activeUserIdx == -1) {
+			return null;
+		}
+		
+		return USER_FRAMES[activeUserIdx];
 	}
 	
 	/**
 	 * @return	The ID for the Robot's active user frame
 	 */
-	public int getActiveUserFrame() {
-		return activeUserFrame;
+	public int getActiveUserIdx() {
+		return activeUserIdx;
 	}
 
 	/**
@@ -1213,15 +1368,23 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Calculates the position and orientation of the roobt's faceplate based
-	 * on the native coordinate system.
-	 * 
-	 * @return	A point representing the robot faceplate's current position
+	 * @return	A point representing the robot's current faceplate posiiton
 	 * 			and orientation
 	 */
 	public Point getFacePlatePoint() {
+		return getFacePlatePoint( getJointAngles() );
+	}
+	
+	/**
+	 * Calculates the position and orientation of the roobt's faceplate based
+	 * on the native coordinate system and the given joint angles.
+	 * 
+	 * @jointAngles	The angles used to calculate the point
+	 * @return		A point representing the robot faceplate's position and
+	 * 				orientation
+	 */
+	public Point getFacePlatePoint(float[] jointAngles) {
 		// Calculate the rotation matrices for the robot's joint angles
-		float[] jointAngles = getJointAngles();
 		RMatrix joint0Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 1f, 0f),
 				jointAngles[0]);
 		RMatrix joint1Orien = RMath.tMatFromAxisAndAngle(new PVector(1f, 0f, 0f),
@@ -1272,14 +1435,45 @@ public class RoboticArm {
 		return new Point(position, orientation, jointAngles);
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
 	public Point getToolTipPoint() {
-		Frame activeTool = getActiveFrame(CoordFrame.TOOL);
+		UserFrame activeUser = getActiveUser();
+		
+		if (activeUser != null) {
+			getToolTipPoint(activeUser);
+		}
+		
+		return getToolTipPoint(null);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param frame
+	 * @return
+	 */
+	public Point getToolTipPoint(UserFrame uFrame) {
+		ToolFrame activeTool = getActiveTool();
 		Point toolTip = getFacePlatePoint();
 		
-		if (activeTool instanceof ToolFrame) {
-			PVector toolOrigin = ((ToolFrame) activeTool).getTCPOffset();
+		if (activeTool != null) {
+			PVector toolOrigin = activeTool.getTCPOffset();
 			RQuaternion invOrien = toolTip.orientation.conjugate();
 			toolTip.position.add( invOrien.rotateVector(toolOrigin) );
+		}
+		
+		if (uFrame != null) {
+			RQuaternion uOrien = uFrame.getOrientation();
+			toolTip.position = RMath.vToFrame(toolTip.position,
+					uFrame.getOrigin(), uOrien);
+			
+			toolTip.orientation = uOrien.transformQuaternion(toolTip.orientation);
+			
+			return toolTip;
 		}
 		
 		return toolTip;
@@ -1503,8 +1697,8 @@ public class RoboticArm {
 	 * 				the given index is invalid.
 	 */
 	public Frame getToolFrame(int fdx) {
-		if (fdx >= 0 && fdx < toolFrames.length) {
-			return toolFrames[fdx];
+		if (fdx >= 0 && fdx < TOOL_FRAMES.length) {
+			return TOOL_FRAMES[fdx];
 			
 		} else {
 			// Invalid index
@@ -1522,8 +1716,8 @@ public class RoboticArm {
 	 * 				the given index is invalid.
 	 */
 	public Frame getUserFrame(int fdx) {
-		if (fdx >= 0 && fdx < userFrames.length) {
-			return userFrames[fdx];
+		if (fdx >= 0 && fdx < USER_FRAMES.length) {
+			return USER_FRAMES[fdx];
 			
 		} else {
 			// Invalid index
@@ -1902,6 +2096,37 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * Converts the given point, pt, from the Coordinate System defined by the
+	 * given origin vector and rotation quaternion axes. The joint angles
+	 * associated with the point will be transformed as well, though, if inverse
+	 * kinematics fails, then the original joint angles are used instead.
+	 * 
+	 * @param pt
+	 *            A point with initialized position and orientation
+	 * @param origin
+	 *            The origin of the Coordinate System
+	 * @param axes
+	 *            The axes of the Coordinate System representing as a rotation
+	 *            quanternion
+	 * @returning The point, pt, interms of the given coordinate system
+	 */
+	public Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
+		PVector position = RMath.vFromFrame(pt.position, origin, axes);
+		RQuaternion orientation = RQuaternion.mult(pt.orientation, axes);
+
+		// Update joint angles associated with the point
+		float[] newJointAngles = RMath.inverseKinematics(this, pt.angles,
+				position, orientation);
+
+		if (newJointAngles != null) {
+			return new Point(position, orientation, newJointAngles);
+		} else {
+			// If inverse kinematics fails use the old angles
+			return new Point(position, orientation, pt.angles);
+		}
+	}
+	
+	/**
 	 * A wrapper method for removing an instruction from the active program of
 	 * this robot. The removal is added onto the program undo stack for the
 	 * active program.
@@ -2042,23 +2267,23 @@ public class RoboticArm {
 	 * @param activeToolFrame	The robot's new active tool frame index
 	 */
 	public void setActiveToolFrame(int activeToolFrame) {
-		this.activeToolFrame = activeToolFrame;
+		this.activeToolIdx = activeToolFrame;
 	}
 	
 	/**
 	 * Sets this robot's active user frame index to the given value.
 	 * 
-	 * @param activeToolFrame	The robot's new active user frame index
+	 * @param activeToolIdx	The robot's new active user frame index
 	 */
 	public void setActiveUserFrame(int activeUserFrame) {
-		this.activeUserFrame = activeUserFrame;
+		this.activeUserIdx = activeUserFrame;
 	}
 
 	/**
 	 * Update the Robot's current coordinate frame.
 	 * @param newFrame	The new coordinate frame
 	 */
-	public void setCurCoordFrame(CoordFrame newFrame) {
+	public void setCoordFrame(CoordFrame newFrame) {
 		curCoordFrame = newFrame;
 	}
 

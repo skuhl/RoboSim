@@ -358,7 +358,7 @@ public abstract class RMath {
 			// angles[3], angles[4], angles[5]));
 			count += 1;
 			if (count == limit) {
-				Fields.debug("%s\n", J.toString());
+				//Fields.debug("IK\n%s\n", J.toString());
 				return null;
 			}
 		}

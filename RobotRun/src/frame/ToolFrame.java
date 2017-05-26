@@ -28,15 +28,19 @@ public class ToolFrame extends Frame {
 	
 	@Override
 	public RQuaternion getOrientation() {
+		/**
 		RoboticArm model = RobotRun.getActiveRobot();
 		/**
 		Point cur = RobotRun.nativeRobotPoint(model, model.getJointAngles());
-		/**/
-		Point cur = model.getToolTipPoint();
+		/**
+		Point cur = model.getToolTipPoint(null);
 		Point def = model.getDefaultPoint();
 		RQuaternion diff = cur.orientation.transformQuaternion(def.orientation.conjugate());
 		
 		return diff.transformQuaternion(((RQuaternion)orientationOffset.clone()));
+		/**/
+		
+		return orientationOffset;
 	}
 	
 	/**
@@ -105,9 +109,10 @@ public class ToolFrame extends Frame {
 				return false;
 			}
 
-			setTCPOffset(getDEOrigin());
-			setOrientation( (RQuaternion)getDEOrientationOffset().clone() );
+			setTCPOffset(getDEOrigin().copy());
+			setOrientation(getDEOrientationOffset().clone());
 			return true;
+			
 		} else if (method >= 0 && method < 2 && TCPTeachPoints[0] != null && TCPTeachPoints[1] != null && TCPTeachPoints[2] != null) {
 			// 3-Point or 6-Point Method
 
@@ -164,7 +169,9 @@ public class ToolFrame extends Frame {
 		}
 	}
 
-	public void setTCPOffset(PVector newOffset) { TCPOffset = newOffset; }
+	public void setTCPOffset(PVector newOffset) {
+		TCPOffset = newOffset;
+	}
 	
 	/**
 	 * Returns a string array, where each entry is one of
