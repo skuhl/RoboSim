@@ -6,6 +6,7 @@ import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
 import processing.core.PConstants;
+import processing.core.PGraphics;
 import processing.core.PVector;
 import robot.RobotRun;
 import robot.RoboticArm;
@@ -228,6 +229,48 @@ public abstract class RMath {
 		}
 
 		return r;
+	}
+	
+	/**
+	 * Returns the position defined by x, y, and z in g's coordinate frame in
+	 * terms of the native coordinate frame.
+	 * 
+	 * @param g	A graphics object
+	 * @param x	The x position in terms of g's coordinate frame
+	 * @param y	The y position in terms of g's coordinate frame
+	 * @param z The z position in terms of g's coordinate frame
+	 * @return	The native coordinate frame position
+	 */
+	public static PVector getPosition(PGraphics g, float x, float y, float z) {
+		PVector position = new PVector();
+		position.x = g.modelX(x, y, z);
+		position.y = g.modelY(x, y, z);
+		position.z = g.modelZ(x, y, z);
+		
+		return position;
+	}
+	
+	/**
+	 * Returns the current orientation of the given graphics object in the form
+	 * of a 3x3 rotation matrix.
+	 * 
+	 * @param g	A graphics object
+	 * @return	The orientation axes of g
+	 */
+	public static RMatrix getOrientationAxes(PGraphics g) {
+		// Pull the origin and axes vectors from the g's orientation
+		PVector origin = getPosition(g, 0f, 0f, 0f),
+				vx = getPosition(g, 1f, 0f, 0f).sub(origin),
+				vy = getPosition(g, 0f, 1f, 0f).sub(origin),
+				vz = getPosition(g, 0f, 0f, 1f).sub(origin);
+		
+		float[][] rMatrix = new float[][] {
+			{vx.x, vy.x, vz.x},
+			{vx.y, vy.y, vz.y},
+			{vx.z, vy.z, vz.z}
+		};
+		
+		return new RMatrix(rMatrix);
 	}
 
 	/**
