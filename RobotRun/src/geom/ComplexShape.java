@@ -39,7 +39,7 @@ public class ComplexShape extends RShape {
 		srcFilePath = filename;
 		
 		mdlScale = 1f;
-		this.form = model;
+		form = model;
 		model.setFill(fill);
 		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
@@ -61,9 +61,9 @@ public class ComplexShape extends RShape {
 		model_id = RegisteredModels.modelIDList.get(filename);
 		srcFilePath = filename;
 		
-		mdlScale = 1f;
-		this.form = model;
-		model.setFill(fill);
+		mdlScale = scale;
+		model = RobotRun.getInstance().loadSTLModel(filename, fill);
+		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
 		
 		loadSelectAreas();
@@ -182,11 +182,15 @@ public class ComplexShape extends RShape {
 	}
 	
 	public PGraphics getModelPreview() {
+		if(preview == null) {
+			preview = loadModelPreview();
+		}
+		
 		return preview;
 	}
 
 	private PGraphics loadModelPreview() {
-		PGraphics img = RobotRun.getInstance().createGraphics(150, 200);
+		PGraphics img = RobotRun.getInstance().createGraphics(150, 200, RobotRun.P3D);
 		img.beginDraw();
 		img.ortho();
 		img.lights();
@@ -195,10 +199,8 @@ public class ComplexShape extends RShape {
 		img.translate(75, 100, 0);
 		img.shape(form);
 		img.translate(-75, -100, 10 + form.depth/2);
-		for(CamSelectArea c: selectAreas) {
-			//TODO draw select boxes
-		}
-		
+		//TODO draw select boxes
+			
 		img.endDraw();
 		
 		return img;

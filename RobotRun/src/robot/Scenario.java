@@ -112,7 +112,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 			if (newObject == null) {
 				PApplet.println("New Object is null");
 			} else {
-				PApplet.println("New Object is: " + newObject.toString());
+				PApplet.println("New Object is: " + newObject.getName());
 			}
 
 			return false;
