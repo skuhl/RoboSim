@@ -40,12 +40,11 @@ public class ComplexShape extends RShape {
 		
 		mdlScale = 1f;
 		model = mdl;
-		model.setFill(fill);
+		iniDimensions();
+		
 		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
-		
 		loadSelectAreas();
-		iniDimensions();
 	}
 
 	/**
@@ -60,15 +59,16 @@ public class ComplexShape extends RShape {
 		super(fill, null);
 		model_id = RegisteredModels.modelIDList.get(filename);
 		srcFilePath = filename;
-		
-		mdlScale = scale;
+		// The initial scale MUST be one in order for scaling to work properly!
+		mdlScale = 1f;
 		model = mdl;
+		iniDimensions();
+		// This sets the scale!
+		setDim(scale, DimType.SCALE);
+		
 		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
-		
 		loadSelectAreas();
-		iniDimensions();
-		setDim(scale, DimType.SCALE);
 	}
 	
 	private void loadSelectAreas() {

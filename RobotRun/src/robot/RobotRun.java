@@ -8,7 +8,6 @@ import java.util.Stack;
 
 import enums.AxesDisplay;
 import enums.CoordFrame;
-import enums.EEMapping;
 import enums.ScreenMode;
 import enums.ScreenType;
 import expression.AtomicExpression;
@@ -246,8 +245,8 @@ public class RobotRun extends PApplet {
 		instance.resetMatrix();
 		applyModelRotation(model, jointAngles);
 		// Apply offset
-		PVector ee = instance.getCoordFromMatrix(offset.x, offset.y, offset.z);
-		RMatrix orientationMatrix = instance.getRotationMatrix();
+		PVector ee = instance.getPosFromMatrix(offset.x, offset.y, offset.z);
+		RMatrix orientationMatrix = instance.getOrientation();
 		instance.popMatrix();
 		
 		return new Point(ee, RMath.matrixToQuat(orientationMatrix), jointAngles);
@@ -3821,8 +3820,8 @@ public class RobotRun extends PApplet {
 	 * @return	A coordinate system system representing the top of matrix
 	 */
 	public CoordinateSystem getCoordFromMatrix() {
-		PVector origin = getCoordFromMatrix(0f, 0f, 0f);
-		RMatrix axes = getRotationMatrix();
+		PVector origin = getPosFromMatrix(0f, 0f, 0f);
+		RMatrix axes = getOrientation();
 		
 		return new CoordinateSystem(origin, axes);
 	}
@@ -3833,8 +3832,8 @@ public class RobotRun extends PApplet {
 	 * @param cs	The coordinate system to set as the top of the matrix stack
 	 */
 	public void getCoordFromMatrix(CoordinateSystem cs) {
-		PVector origin = getCoordFromMatrix(0f, 0f, 0f);
-		RMatrix axes = getRotationMatrix();
+		PVector origin = getPosFromMatrix(0f, 0f, 0f);
+		RMatrix axes = getOrientation();
 		
 		cs.setOrigin(origin);
 		cs.setAxes(axes);
@@ -3848,35 +3847,11 @@ public class RobotRun extends PApplet {
 	 * 				the top of the matrix stack
 	 */
 	public void getCoordFromMatrix(BoundingBox obb) {
-		PVector center = getCoordFromMatrix(0f, 0f, 0f);
-		RMatrix orientation = getRotationMatrix();
+		PVector center = getPosFromMatrix(0f, 0f, 0f);
+		RMatrix orientation = getOrientation();
 		
 		obb.setCenter(center);
 		obb.setOrientation(orientation);
-	}
-
-	/*
-	 * This method transforms the given coordinates into a vector in the
-	 * Processing's native coordinate system.
-	 */
-	public PVector getCoordFromMatrix(float x, float y, float z) {
-		PVector vector = new PVector();
-
-		vector.x = modelX(x, y, z);
-		vector.y = modelY(x, y, z);
-		vector.z = modelZ(x, y, z);
-
-		return vector;
-	}
-	
-	public PVector getCoordFromScreen(float x, float y, float z) {
-		return new PVector(
-				screenX(x, y, z),
-				screenY(x, y, z),
-				screenZ(x, y, z)
-			);
-		
-		
 	}
 
 	public void getEditScreen(Instruction ins, int selectIdx) {
@@ -4027,13 +4002,6 @@ public class RobotRun extends PApplet {
 				editExpression(stmt.getExpr(), selectIdx - (rLen + 2));
 			}
 		}
-	}
-
-	/**
-	 * @return The active End Effector mapping state
-	 */
-	public EEMapping getEEMapping() {
-		return UI.getEEMapping();
 	}
 
 	// Function label text
@@ -4455,6 +4423,24 @@ public class RobotRun extends PApplet {
 		return options;
 	}
 	
+	/**
+	 * Copies the current rotation on the top matrix of Processing's matrix
+	 * stack to a 3x3 floating-point array.
+	 * 
+	 * @return	A row major orthogonal rotation matrix
+	 */
+	public RMatrix getOrientation() {
+		return RMath.getOrientationAxes(getGraphics());
+	}
+	
+	/*
+	 * This method transforms the given coordinates into a vector in the
+	 * Processing's native coordinate system.
+	 */
+	public PVector getPosFromMatrix(float x, float y, float z) {
+		return RMath.getPosition(getGraphics(), x, y, z);
+	}
+	
 	public boolean getRecord() {
 		return record;
 	}
@@ -4473,28 +4459,6 @@ public class RobotRun extends PApplet {
 
 	public RobotCamera getRobotCamera() {
 		return rCamera;
-	}
-	
-	/**
-	 * Copies the current rotation on the top matrix of Processing's matrix
-	 * stack to a 3x3 floating-point array.
-	 * 
-	 * @return	A row major orthogonal rotation matrix
-	 */
-	public RMatrix getRotationMatrix() {
-		// Pull the origin and axes vectors from the matrix stack
-		PVector origin = getCoordFromMatrix(0f, 0f, 0f),
-				vx = getCoordFromMatrix(1f, 0f, 0f).sub(origin),
-				vy = getCoordFromMatrix(0f, 1f, 0f).sub(origin),
-				vz = getCoordFromMatrix(0f, 0f, 1f).sub(origin);
-		
-		float[][] rMatrix = new float[][] {
-			{vx.x, vy.x, vz.x},
-			{vx.y, vy.y, vz.y},
-			{vx.z, vy.z, vz.z}
-		};
-		
-		return new RMatrix(rMatrix);
 	}
 
 	public ArrayList<Scenario> getScenarios() {
@@ -4540,10 +4504,10 @@ public class RobotRun extends PApplet {
 	public RMatrix getTransformationMatrix() {
 		float[][] transform = new float[3][3];
 
-		PVector origin = getCoordFromMatrix(0, 0, 0);
-		PVector xAxis = getCoordFromMatrix(1, 0, 0).sub(origin);
-		PVector yAxis = getCoordFromMatrix(0, 1, 0).sub(origin);
-		PVector zAxis = getCoordFromMatrix(0, 0, 1).sub(origin);
+		PVector origin = getPosFromMatrix(0, 0, 0);
+		PVector xAxis = getPosFromMatrix(1, 0, 0).sub(origin);
+		PVector yAxis = getPosFromMatrix(0, 1, 0).sub(origin);
+		PVector zAxis = getPosFromMatrix(0, 0, 1).sub(origin);
 
 		transform[0][0] = xAxis.x;
 		transform[1][0] = xAxis.y;
@@ -5818,48 +5782,6 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * This method will draw the End Effector grid mapping based on the value of
-	 * EE_MAPPING:
-	 *
-	 * 0 -> a line is drawn between the EE and the grid plane 1 -> a point is
-	 * drawn on the grid plane that corresponds to the EE's xz coordinates For
-	 * any other value, nothing is drawn
-	 */
-	public void mapToRobotBasePlane() {
-		PVector basePos = getActiveRobot().getBasePosition();
-		PVector ee_pos = nativeRobotEEPoint(getActiveRobot(), getActiveRobot().getJointAngles()).position;
-
-		// Change color of the EE mapping based on if it lies below or above the
-		// ground plane
-		int c = (ee_pos.y <= basePos.y) ? Fields.color(255, 0, 0) : Fields.color(150, 0, 255);
-
-		// Toggle EE mapping type with 'e'
-		switch (getEEMapping()) {
-		case LINE:
-			stroke(c);
-			// Draw a line, from the EE to the grid in the xy plane, parallel to
-			// the xy plane
-			line(ee_pos.x, ee_pos.y, ee_pos.z, ee_pos.x, basePos.y, ee_pos.z);
-			break;
-
-		case DOT:
-			noStroke();
-			fill(c);
-			// Draw a point, which maps the EE's position to the grid in the xy
-			// plane
-			pushMatrix();
-			rotateX(PI / 2);
-			translate(0, 0, -basePos.y);
-			ellipse(ee_pos.x, ee_pos.z, 10, 10);
-			popMatrix();
-			break;
-
-		default:
-			// No EE grid mapping
-		}
-	}
-
-	/**
 	 * Pendant MENU button
 	 * 
 	 * A list of miscellaneous sub menus (frames, marcos, I/O registers).
@@ -5881,7 +5803,7 @@ public class RobotRun extends PApplet {
 			rotateY(camOrien.y);
 			rotateZ(camOrien.z);
 			
-			float[][] camRMat = getRotationMatrix().getFloatData();
+			float[][] camRMat = getOrientation().getFloatData();
 			
 			popMatrix();
 			
@@ -5980,8 +5902,8 @@ public class RobotRun extends PApplet {
 			
 			/* Form a ray pointing out of the screen's z-axis, in the
 			 * native coordinate system */
-			mWorldPos = getCoordFromMatrix(0f, 0f, 0f);
-			ptOnMRay = getCoordFromMatrix(0f, 0f, -1f);
+			mWorldPos = getPosFromMatrix(0f, 0f, 0f);
+			ptOnMRay = getPosFromMatrix(0f, 0f, -1f);
 			
 			popMatrix();
 			// Set the mouse ray origin and direction
@@ -6631,8 +6553,8 @@ public class RobotRun extends PApplet {
 			renderOriginAxes(eePoint.position, RMath.rMatToWorld(activeTool.getNativeAxisVectors()),
 					200f, Fields.color(255, 0, 255));
 			
-		} else {
-			/* Draw a pink point for the Robot's current End Effector position */
+		} /*else {
+			/* Draw a pink point for the Robot's current End Effector position 
 			pushMatrix();
 			translate(eePoint.position.x, eePoint.position.y, eePoint.position.z);
 
@@ -6641,7 +6563,7 @@ public class RobotRun extends PApplet {
 			sphere(4);
 
 			popMatrix();
-		}
+		}*/
 
 		if (getAxesState() == AxesDisplay.AXES) {
 			// Display axes
@@ -6759,7 +6681,6 @@ public class RobotRun extends PApplet {
 		}
 
 		popMatrix();
-		mapToRobotBasePlane();
 	}
 	
 	/**
@@ -6915,8 +6836,8 @@ public class RobotRun extends PApplet {
 						applyCoord(p.getCenter(), p.getOrientation());
 						
 						// Update the world object's position and orientation
-						p.setLocalCenter( getCoordFromMatrix(0f, 0f, 0f) );
-						p.setLocalOrientation( getRotationMatrix() );
+						p.setLocalCenter( getPosFromMatrix(0f, 0f, 0f) );
+						p.setLocalOrientation( getOrientation() );
 						
 						popMatrix();
 					}
@@ -7303,11 +7224,6 @@ public class RobotRun extends PApplet {
 
 		// Display the current axes display state
 		text(String.format("Axes Display: %s", getAxesState().name()), lastTextPositionX, height - 50);
-
-		if (getAxesState() == AxesDisplay.GRID) {
-			// Display the current ee mapping state
-			text(String.format("EE Mapping: %s", getEEMapping().name()), lastTextPositionX, height - 30);
-		}
 		
 		UI.updateAndDrawUI();
 		
@@ -7567,8 +7483,8 @@ public class RobotRun extends PApplet {
 			keyCodeMap = new KeyCodeMap();
 			DataManagement.initialize(this);
 			
-			ROBOTS.put(0, new RoboticArm(0, new PVector(200, Fields.FLOOR_Y, 200), loadRobotModels()));
-			ROBOTS.put(1, new RoboticArm(1, new PVector(200, Fields.FLOOR_Y, -750), loadRobotModels()));
+			ROBOTS.put(0, new RoboticArm(0, new PVector(200, Fields.FLOOR_Y, 200), loadRobotModels(), loadRobotModelTransforms()));
+			ROBOTS.put(1, new RoboticArm(1, new PVector(200, Fields.FLOOR_Y, -750), loadRobotModels(), loadRobotModelTransforms()));
 
 			for (RoboticArm r : ROBOTS.values()) {
 				r.setDefaultRobotPoint();
@@ -8805,7 +8721,6 @@ public class RobotRun extends PApplet {
 		models[0] = loadSTLModel("robot/EE/SUCTION.stl", color(108, 206, 214));
 		models[1] = loadSTLModel("robot/EE/GRIPPER.stl", color(108, 206, 214));
 		models[2] = loadSTLModel("robot/EE/PINCER.stl", color(200, 200, 0));
-		models[2].scale(1f);
 		models[3] = loadSTLModel("robot/EE/POINTER.stl", color(108, 206, 214));
 		models[4] = loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214));
 		models[5] = loadSTLModel("robot/EE/WIELDER.stl", color(108, 206, 214));
@@ -8820,6 +8735,98 @@ public class RobotRun extends PApplet {
 		models[12] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40));
 
 		return models;
+	}
+	
+	
+	private ArrayList<RMatrix> loadRobotModelTransforms() {
+		
+		ArrayList<RMatrix> modelTransformations = new ArrayList<>();
+		
+		pushMatrix();
+		resetMatrix();
+		
+		// pre joint 0
+		pushMatrix();
+		translate(-50, -166, -358);
+		rotateZ(PI);
+		translate(150, 0, 150);
+		rotateX(PI);
+		modelTransformations.add( getTransformationMatrix() );
+		popMatrix();
+		
+		// post joint 0
+		pushMatrix();
+		rotateX(-PI);
+		translate(-150, 0, -150);
+		rotateZ(-PI);
+		translate(-115, -85, 180);
+		rotateZ(PI);
+		rotateY(PI / 2);
+		translate(0, 62, 62);
+		modelTransformations.add( getTransformationMatrix() );
+		popMatrix();
+		
+		// post joint 1
+		pushMatrix();
+		translate(0, -62, -62);
+		rotateY(-PI / 2);
+		rotateZ(-PI);
+		translate(0, -500, -50);
+		rotateZ(PI);
+		rotateY(PI / 2);
+		translate(0, 75, 75);
+		rotateZ(PI);
+		modelTransformations.add( getTransformationMatrix() );
+		popMatrix();
+		
+		// post joint 2
+		pushMatrix();
+		rotateZ(-PI);
+		translate(0, -75, -75);
+		rotateY(PI / 2);
+		rotateZ(-PI);
+		translate(745, -150, 150);
+		rotateZ(PI / 2);
+		rotateY(PI / 2);
+		translate(70, 0, 70);
+		modelTransformations.add( getTransformationMatrix() );
+		popMatrix();
+		
+		// post joint 3
+		pushMatrix();
+		translate(-70, 0, -70);
+		rotateY(-PI / 2);
+		rotateZ(-PI / 2);
+		translate(-115, 130, -124);
+		rotateZ(PI);
+		rotateY(-PI / 2);
+		translate(0, 50, 50);
+		modelTransformations.add( getTransformationMatrix() );
+		popMatrix();
+		
+		// post joint 4
+		pushMatrix();
+		translate(0, -50, -50);
+		rotateY(PI / 2);
+		rotateZ(-PI);
+		translate(150, -10, 95);
+		rotateY(-PI / 2);
+		rotateZ(PI);
+		translate(45, 45, 0);
+
+		modelTransformations.add( getTransformationMatrix() );
+		popMatrix();
+		
+		// post joint 5
+		pushMatrix();
+		rotateX(PI);
+		rotateY(PI/2);
+		modelTransformations.add( getTransformationMatrix() );
+		popMatrix();
+		
+		popMatrix();
+		
+		return modelTransformations;
 	}
 	
 	/**

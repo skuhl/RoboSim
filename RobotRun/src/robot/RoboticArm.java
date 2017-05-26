@@ -68,7 +68,7 @@ public class RoboticArm {
 	 * A set of matrices used for calculations the robot's end effector
 	 * position and draw the robot's segments.
 	 */
-	private final ArrayList<RMatrix> SEGMENT_ORIENTATIONS;
+	private final ArrayList<RMatrix> SEGMENT_TMATS;
 	
 	/**
 	 * A model for one of the robot's end effectors
@@ -133,7 +133,12 @@ public class RoboticArm {
 	/**
 	 * A set of user-defined frames associated with this robot. 
 	 */
-	private final Frame[] toolFrames, userFrames;
+	private final ToolFrame[] toolFrames;
+	
+	/**
+	 * A set of user-defined frames associated with this robot.
+	 */
+	private final UserFrame[] userFrames;
 	
 	/**
 	 * The initial position and orientation of the robot.
@@ -195,7 +200,7 @@ public class RoboticArm {
 	 * @param robotModels	The set of both the segment and end effector models
 	 * 						for this robot
 	 */
-	public RoboticArm(int rid, PVector basePos, PShape[] robotModels) {
+	public RoboticArm(int rid, PVector basePos, PShape[] robotModels, ArrayList<RMatrix> segmentTMats) {
 		int idx;
 		
 		jogLinear = new float[3];
@@ -206,7 +211,7 @@ public class RoboticArm {
 		
 		RID = rid;
 		SEGMENTS = new ArrayList<>();
-		SEGMENT_ORIENTATIONS = new ArrayList<>();
+		SEGMENT_TMATS = segmentTMats;
 		BASE_POSITION = basePos;
 		
 		// Initialize program fields
@@ -219,8 +224,8 @@ public class RoboticArm {
 		
 		// Initializes the frames
 		
-		toolFrames = new Frame[Fields.FRAME_NUM];
-		userFrames = new Frame[Fields.FRAME_NUM];
+		toolFrames = new ToolFrame[Fields.FRAME_NUM];
+		userFrames = new UserFrame[Fields.FRAME_NUM];
 		
 		for (idx = 0; idx < toolFrames.length; ++idx) {
 			toolFrames[idx] = new ToolFrame();
@@ -311,174 +316,6 @@ public class RoboticArm {
 		SEGMENTS.add(axis4);
 		SEGMENTS.add(axis5);
 		SEGMENTS.add(axis6);
-		
-		// Pre base
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ 0f, 0f, -1f, 0f },
-							{ 0f, -1f, 0f, 0f },
-							{ -1f, 0f, 0f, 0f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Pre joint 0
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ 0f, 0f, 1f, 208f },
-							{ 0f, -1f, 0f, 166f },
-							{ 1f, 0f, 0f, 200f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Pre segment 0
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ 1f, 0f, 0f, -150f },
-							{ 0f, -1f, 0f, 0f },
-							{ 0f, 0f, -1f, 150f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Pre joint 1
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ 0f, 0f, 1f, 177f },
-							{ 0f, 1f, 0f, 147f },
-							{ -1f, 0f, 0f, 180f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Pre segment 1
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ 1f, 0f, 0f, 0f },
-							{ 0f, 1f, 0f, -62f },
-							{ 0f, 0f, 1f, -62f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Pre joint 2
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ -1f, 0f, 0f, 50f },
-							{ 0f, -1f, 0f, 575f },
-							{ 0f, 0f, 1f, 75f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Pre segment 2
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ -1f, 0f, 0f, 0f },
-							{ 0f, -1f, 0f, 75f },
-							{ 0f, 0f, 1f, -75f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Pre joint 3
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ -1f, 0f, 0f, 80f },
-							{ 0f, 0f, -1f, 80f },
-							{ 0f, -1f, 0f, 745f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Pre segment 3
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ 1f, 0f, 0f, -70f },
-							{ 0f, 1f, 0f, 0f },
-							{ 0f, 0f, 1f, -70f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Pre joint 4
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ -1f, 0f, 0f, 124f },
-							{ 0f, 0f, -1f, 65f },
-							{ 0f, -1f, 0f, 80f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Pre segment 4
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ 1f, 0f, 0f, 0f },
-							{ 0f, 1f, 0f, -50f },
-							{ 0f, 0f, 1f, -50f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Pre joint 5
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ -1f, 0f, 0f, 50f },
-							{ 0f, 1f, 0f, 55f },
-							{ 0f, 0f,-1f, 150f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Pre segment 5
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ 1f, 0f, 0f, -45f },
-							{ 0f, 1f, 0f, -45f },
-							{ 0f, 0f, 1f, 0f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
-		
-		// Post segment 5
-		SEGMENT_ORIENTATIONS.add(
-				new RMatrix(
-						new float[][] {
-							{ 0f, 0f, 1f, 0f },
-							{ 0f, -1f, 0f, 0f },
-							{ 1f, 0f, 0f, 0f },
-							{ 0f, 0f, 0f, 1f }
-						}
-				)
-		);
 
 		for(idx = 0; idx < jogLinear.length; ++idx) {
 			jogLinear[idx] = 0;
@@ -906,7 +743,7 @@ public class RoboticArm {
 		
 		float[] jointAngles = getJointAngles();
 		
-		/* DRAW ROBOT SEGMENTS *
+		/* DRAW ROBOT SEGMENTS */
 		
 		g.pushStyle();
 		g.noStroke();
@@ -980,75 +817,21 @@ public class RoboticArm {
 		g.shape( SEGMENTS.get(5).getShape() );
 		g.rotateY(PConstants.PI/2);
 		g.rotateZ(-PConstants.PI);
-
+		
 		g.fill(50);
-
+		
 		g.translate(150, -10, 95);
 		g.rotateY(-PConstants.PI/2);
 		g.rotateZ(PConstants.PI);
 		g.translate(45, 45, 0);
 		g.rotateZ(jointAngles[5]);
+		
+		g.pushMatrix();
+		
 		g.translate(-45, -45, 0);
 		g.shape( SEGMENTS.get(6).getShape() );
 		
-		/**/
-		
-		
-		g.pushStyle();
-		g.noStroke();
-		g.fill(200, 200, 0);
-		
-		g.pushMatrix();
-		g.translate(BASE_POSITION.x, BASE_POSITION.y, BASE_POSITION.z);
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(0));
-		g.shape( SEGMENTS.get(0).getShape() );
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(1));
-		RMatrix joint0 = RMath.matFromAxisAndAngle(new PVector(0f, 1f, 0f),  jointAngles[0]);
-		Fields.rotate(g, joint0);
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(2));
-		g.shape( SEGMENTS.get(1).getShape() );
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(3));
-		RMatrix joint1 = RMath.matFromAxisAndAngle(new PVector(1f, 0f, 0f),  jointAngles[1]);
-		Fields.rotate(g, joint1);
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(4));
-		g.shape( SEGMENTS.get(2).getShape() );
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(5));
-		RMatrix joint2 = RMath.matFromAxisAndAngle(new PVector(1f, 0f, 0f),  jointAngles[2]);
-		Fields.rotate(g, joint2);
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(6));
-		g.shape( SEGMENTS.get(3).getShape() );
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(7));
-		RMatrix joint3 = RMath.matFromAxisAndAngle(new PVector(0f, 1f, 0f),  jointAngles[3]);
-		Fields.rotate(g, joint3);
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(8));
-		g.shape( SEGMENTS.get(4).getShape() );
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(9));
-		RMatrix joint4 = RMath.matFromAxisAndAngle(new PVector(1f, 0f, 0f),  jointAngles[4]);
-		Fields.rotate(g, joint4);
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(10));
-		g.shape( SEGMENTS.get(5).getShape() );
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(11));
-		RMatrix joint5 = RMath.matFromAxisAndAngle(new PVector(0f, 0f, 1f),  jointAngles[5]);
-		Fields.rotate(g, joint5);
-		
-		Fields.transform(g, SEGMENT_ORIENTATIONS.get(12));
-		g.shape( SEGMENTS.get(6).getShape() );
-		
-		/* DRAW END EFFECTOR */
-		
-		g.pushMatrix();
+		/* DRAW END EFFECTOR MODEL */
 
 		if (activeEndEffector == EEType.SUCTION) {
 			g.rotateY(PConstants.PI);
@@ -1094,6 +877,10 @@ public class RoboticArm {
 		}
 		
 		g.popMatrix();
+		
+		/* DRAW TOOL TIP */
+		
+		drawToolTip(g);
 
 		g.popMatrix();
 		g.popStyle();
@@ -1132,6 +919,35 @@ public class RoboticArm {
 		if(isTrace()) {
 			drawTrace(g);
 		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param g	The graphics object used to render the tool tip position
+	 */
+	private void drawToolTip(PGraphics g) {
+		PVector tipPos;
+		Frame activeTool = getActiveFrame(CoordFrame.TOOL);
+		
+		if (activeTool instanceof ToolFrame) {
+			tipPos = ((ToolFrame)activeTool).getTCPOffset();
+			
+		} else {
+			tipPos = new PVector(0f, 0f, 0f);
+		}
+		
+		g.pushStyle();
+		g.stroke(Fields.PINK);
+		g.noFill();
+		
+		g.pushMatrix();
+		g.translate(tipPos.x, tipPos.y, tipPos.z);
+		
+		g.sphere(4);
+		
+		g.popMatrix();
+		g.popStyle();
 	}
 	
 	/**
@@ -1431,26 +1247,19 @@ public class RoboticArm {
 				}
 				
 			)
-			.multiply(SEGMENT_ORIENTATIONS.get(0))
-			.multiply(SEGMENT_ORIENTATIONS.get(1))
+			.multiply(SEGMENT_TMATS.get(0))
 			.multiply(joint0Orien)
-			.multiply(SEGMENT_ORIENTATIONS.get(2))
-			.multiply(SEGMENT_ORIENTATIONS.get(3))
+			.multiply(SEGMENT_TMATS.get(1))
 			.multiply(joint1Orien)
-			.multiply(SEGMENT_ORIENTATIONS.get(4))
-			.multiply(SEGMENT_ORIENTATIONS.get(5))
+			.multiply(SEGMENT_TMATS.get(2))
 			.multiply(joint2Orien)
-			.multiply(SEGMENT_ORIENTATIONS.get(6))
-			.multiply(SEGMENT_ORIENTATIONS.get(7))
+			.multiply(SEGMENT_TMATS.get(3))
 			.multiply(joint3Orien)
-			.multiply(SEGMENT_ORIENTATIONS.get(8))
-			.multiply(SEGMENT_ORIENTATIONS.get(9))
+			.multiply(SEGMENT_TMATS.get(4))
 			.multiply(joint4Orien)
-			.multiply(SEGMENT_ORIENTATIONS.get(10))
-			.multiply(SEGMENT_ORIENTATIONS.get(11))
+			.multiply(SEGMENT_TMATS.get(5))
 			.multiply(joint5Orien)
-			.multiply(SEGMENT_ORIENTATIONS.get(12))
-			.multiply(SEGMENT_ORIENTATIONS.get(13));
+			.multiply(SEGMENT_TMATS.get(6));
 		
 		// Convert the orientation into the correct format for a Point
 		PVector position = new PVector(
@@ -1595,7 +1404,7 @@ public class RoboticArm {
 		RobotRun.getInstance().pushMatrix();
 		RobotRun.getInstance().resetMatrix();
 		RobotRun.applyModelRotation(this, getJointAngles());
-		RMatrix matrix = RobotRun.getInstance().getRotationMatrix();
+		RMatrix matrix = RobotRun.getInstance().getOrientation();
 		RobotRun.getInstance().popMatrix();
 
 		return matrix;

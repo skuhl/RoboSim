@@ -19,7 +19,6 @@ import controlP5.Slider;
 import controlP5.Textarea;
 import controlP5.Toggle;
 import enums.AxesDisplay;
-import enums.EEMapping;
 import enums.EEType;
 import enums.Alignment;
 import enums.ScreenMode;
@@ -599,7 +598,6 @@ public class WGUI implements ControlListener {
 		// Initialize the miscellaneous window elements
 		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("ActiveAxesDisplay", "Axes Display:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
-		addTextarea("ActiveEEDisplay", "EE Display:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 
 		addButton("ToggleOBBs", "Hide OBBs", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
 		addButton("ToggleRobot", "Add Robot", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
@@ -610,14 +608,7 @@ public class WGUI implements ControlListener {
 		 * NOTE: the order in which the dropdown lists matters!
 		 * 		(Adding the dropdown lists last places them in front of the
 		 * other UI elements, which is important, when the list is open) */
-		MyDropdownList ddlLimbo = addDropdown("EEDisplay", miscellaneous,
-				ldropItemWidth, dropItemHeight, 3, Fields.small);
-		ddlLimbo.addItem(EEMapping.DOT.name(), EEMapping.DOT)
-		.addItem(EEMapping.LINE.name(), EEMapping.LINE)
-		.addItem(EEMapping.NONE.name(), EEMapping.NONE)
-		.setValue(0f);
-
-		ddlLimbo = addDropdown("AxesDisplay", miscellaneous, ldropItemWidth,
+		MyDropdownList ddlLimbo = addDropdown("AxesDisplay", miscellaneous, ldropItemWidth,
 				dropItemHeight, 3,
 				Fields.small);
 		ddlLimbo.addItem(AxesDisplay.AXES.name(), AxesDisplay.AXES)
@@ -1701,16 +1692,6 @@ public class WGUI implements ControlListener {
 	 */
 	private MyDropdownList getDropdown(String name) throws ClassCastException {
 		return (MyDropdownList) manager.get(name);
-	}
-
-	/**
-	 * Returns the end effector mapping associated with the ee mapping
-	 * dropdown list.
-	 * 
-	 * @return	The active EEE Mapping state
-	 */
-	public EEMapping getEEMapping() {
-		return (EEMapping)getDropdown("EEDisplay").getSelectedItem();
 	}
 	
 	/**
@@ -3089,13 +3070,6 @@ public class WGUI implements ControlListener {
 		// Axes Display dropdown
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getDropdown("AxesDisplay").setPosition(relPos[0], relPos[1]);
-
-		// Axes Display label
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getTextArea("ActiveEEDisplay").setPosition(relPos[0], relPos[1]);
-		// Axes Display dropdown
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getDropdown("EEDisplay").setPosition(relPos[0], relPos[1]);
 
 		// Bounding box display toggle button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
