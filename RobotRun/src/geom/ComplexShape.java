@@ -15,7 +15,7 @@ public class ComplexShape extends RShape {
 	
 	private String srcFilePath;
 	
-	private MyPShape form;
+	private MyPShape model;
 	private PVector centerOffset, baseDims;
 	
 	private float mdlScale;
@@ -33,13 +33,13 @@ public class ComplexShape extends RShape {
 	 * @throws NullPointerException  if the given filename is
 	 *         not a valid .stl file in RobotRun/data/
 	 */
-	public ComplexShape(String filename, MyPShape model, int fill) {
+	public ComplexShape(String filename, MyPShape mdl, int fill) {
 		super(fill, null);
 		model_id = RegisteredModels.modelIDList.get(filename);
 		srcFilePath = filename;
 		
 		mdlScale = 1f;
-		this.form = model;
+		model = mdl;
 		model.setFill(fill);
 		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
@@ -56,14 +56,14 @@ public class ComplexShape extends RShape {
 	 * @throws NullPointerException  if the given filename is
 	 *         not a valid .stl file in RobotRun/data/
 	 */
-	public ComplexShape(String filename, MyPShape model, int fill, float scale) {
+	public ComplexShape(String filename, MyPShape mdl, int fill, float scale) {
 		super(fill, null);
 		model_id = RegisteredModels.modelIDList.get(filename);
 		srcFilePath = filename;
 		
-		mdlScale = 1f;
-		this.form = model;
-		model.setFill(fill);
+		mdlScale = scale;
+		model = mdl;
+		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
 		
 		loadSelectAreas();
@@ -81,7 +81,7 @@ public class ComplexShape extends RShape {
 
 	@Override
 	public ComplexShape clone() {
-		return new ComplexShape(srcFilePath, form.clone(), getFillValue(),
+		return new ComplexShape(srcFilePath, model.clone(), getFillValue(),
 				mdlScale);
 	}
 	
@@ -90,7 +90,7 @@ public class ComplexShape extends RShape {
 		g.pushMatrix();
 		g.translate(centerOffset.x, centerOffset.y, centerOffset.z);
 		
-		g.shape(form);
+		g.shape(model);
 		
 		g.popMatrix();
 	}
@@ -131,7 +131,7 @@ public class ComplexShape extends RShape {
 	}
 	
 	public PShape getForm() {
-		return form;
+		return model;
 	}
 
 	public String getSourcePath() { return srcFilePath; }
@@ -146,11 +146,11 @@ public class ComplexShape extends RShape {
 		PVector maximums = new PVector(Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE),
 				minimums = new PVector(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
 
-		int vertexCount = form.getVertexCount();
+		int vertexCount = model.getVertexCount();
 
 		// Calculate the maximum and minimum values for each dimension
 		for (int idx = 0; idx < vertexCount; ++idx) {
-			PVector v = form.getVertex(idx);
+			PVector v = model.getVertex(idx);
 
 			if (v.x > maximums.x) {
 				maximums.x = v.x;
@@ -182,23 +182,25 @@ public class ComplexShape extends RShape {
 	}
 	
 	public PGraphics getModelPreview() {
+		if(preview == null) {
+			preview = loadModelPreview();
+		}
+		
 		return preview;
 	}
 
 	private PGraphics loadModelPreview() {
-		PGraphics img = RobotRun.getInstance().createGraphics(150, 200);
+		PGraphics img = RobotRun.getInstance().createGraphics(150, 200, RobotRun.P3D);
 		img.beginDraw();
 		img.ortho();
 		img.lights();
 		img.background(255);
 		img.stroke(0);
 		img.translate(75, 100, 0);
-		img.shape(form);
-		img.translate(-75, -100, 10 + form.depth/2);
-		for(CamSelectArea c: selectAreas) {
-			//TODO draw select boxes
-		}
-		
+		img.shape(model);
+		img.translate(-75, -100, 10 + model.depth/2);
+		//TODO draw select boxes
+			
 		img.endDraw();
 		
 		return img;
@@ -210,7 +212,7 @@ public class ComplexShape extends RShape {
 		case SCALE:
 			// Update the model's scale
 			centerOffset.mult(newVal / mdlScale);
-			form.scale(newVal / mdlScale);
+			model.scale(newVal / mdlScale);
 			mdlScale = newVal;
 			break;
 

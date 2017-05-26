@@ -224,9 +224,6 @@ public abstract class WorldObject implements Cloneable {
 	}
 
 	public void setName(String newName) { name = newName; }
-
-	@Override
-	public String toString() { return name; }
 	
 	/**
 	 * Moves the world object's center position by the given x, y, z
