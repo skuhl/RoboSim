@@ -196,8 +196,23 @@ public class ComplexShape extends RShape {
 			);
 			img.scale(2/mdlScale);
 			img.shape(model);
-			img.translate(-75, -100, 10 + model.depth/2);
+			img.resetMatrix();
+			img.translate(-75, -100);
+			img.stroke(0, 255, 0);
+			img.fill(0, 255, 0);
 			//TODO draw select boxes
+			for(CamSelectArea a: selectAreas) {
+				CamSelectView v = a.getView(m);
+				if(v != null) {
+					System.out.println("Drawing area with id: " + a.area_id);
+					img.fill((a.area_id-1)*127, 255, 0);
+					PVector c = v.getCenter();
+					float w = v.getWidth();
+					float h = v.getHeight();
+					img.rect(c.x, c.y, w, h);
+					System.out.println("\tCentered at: " + c.toString() + ", wid: " + w + ", hgt" + h);
+				}
+			}
 			
 			img.endDraw();
 			
