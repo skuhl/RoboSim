@@ -3,10 +3,10 @@ package global;
 import java.io.File;
 import java.util.HashMap;
 
-import geom.CamSelectArea;
-import geom.CamSelectView;
 import processing.data.JSONArray;
 import processing.data.JSONObject;
+import robot.CamSelectArea;
+import robot.CamSelectView;
 import robot.RobotRun;
 
 public class RegisteredModels {
