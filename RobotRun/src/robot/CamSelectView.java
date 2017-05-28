@@ -4,15 +4,15 @@ import processing.core.PVector;
 
 public class CamSelectView {
 	public final int viewAlignment;
-	private final float x1;
-	private final float y1;
-	private final float x2;
-	private final float y2;
+	private final int x1;
+	private final int y1;
+	private final int x2;
+	private final int y2;
 	
-	public CamSelectView(String align, float x1, float y1, float x2, float y2) {
+	public CamSelectView(String align, int x1, int y1, int x2, int y2) {
 		switch(align) {
-		case "F": viewAlignment = 0; break; //Front/ -Z
-		case "R": viewAlignment = 1; break; //Rear/ +Z
+		case "F": viewAlignment = 0; break; //Front/ +Z
+		case "R": viewAlignment = 1; break; //Rear/ -Z
 		case "T": viewAlignment = 2; break; //Top/ +Y
 		case "B": viewAlignment = 3; break; //Bottom/ -Y
 		case "Lt": viewAlignment = 4; break; //Left/ +X
@@ -26,7 +26,7 @@ public class CamSelectView {
 		this.y2 = y2;
 	}
 	
-	private CamSelectView(int align, float x1, float x2, float y1, float y2) {
+	private CamSelectView(int align, int x1, int y1, int x2, int y2) {
 		viewAlignment = align;
 		this.x1 = x1;
 		this.y1 = y1;

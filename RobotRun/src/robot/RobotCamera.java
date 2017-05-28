@@ -38,7 +38,7 @@ public class RobotCamera {
 	}
 	
 	public RobotCamera() {
-		camPos = new PVector(-500, 300, 500);
+		camPos = new PVector(-500, 0, 500);
 		camOrient = new RQuaternion();
 		camFOV = 75;
 		camAspectRatio = 1.5f;

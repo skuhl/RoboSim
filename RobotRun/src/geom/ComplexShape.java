@@ -77,6 +77,23 @@ public class ComplexShape extends RShape {
 			}
 		}
 	}
+	
+	public CamSelectArea getSelectAreaClicked(int x, int y, RMatrix m) {
+		for(CamSelectArea a: selectAreas) {
+			CamSelectView v = a.getView(m);
+			
+			if(v != null) {
+				PVector tl = v.getTopLeftBound();
+				PVector br = v.getBottomRightBound();
+				
+				if(x >= tl.x && x <= br.x && y >= tl.y && y <= br.y) {
+					return a;
+				}
+			}
+		}
+		
+		return null;
+	}
 
 	@Override
 	public ComplexShape clone() {
@@ -200,19 +217,27 @@ public class ComplexShape extends RShape {
 			img.shape(model);
 			img.resetMatrix();
 			img.translate(-75, -100);
-			img.stroke(0, 255, 0);
-			img.fill(0, 255, 0);
-			//TODO draw select boxes
+						
 			for(CamSelectArea a: selectAreas) {
 				CamSelectView v = a.getView(m);
+				if(a.isEmphasized()) {
+					img.stroke(0, 255, 0);
+					img.fill(0, 255, 0, 126);
+				}
+				else if(a.isIgnored()) {
+					img.stroke(255, 0, 0);
+					img.fill(255, 0, 0, 126);
+				}
+				else {
+					img.stroke(0);
+					img.fill(0, 0, 0, 126);
+				}
+				
 				if(v != null) {
-					System.out.println("Drawing area with id: " + a.area_id);
-					img.fill((a.area_id-1)*127, 255, 0);
-					PVector c = v.getCenter();
+					PVector c = v.getTopLeftBound();
 					float w = v.getWidth();
 					float h = v.getHeight();
 					img.rect(c.x, c.y, w, h);
-					System.out.println("\tCentered at: " + c.toString() + ", wid: " + w + ", hgt" + h);
 				}
 			}
 			
@@ -222,6 +247,11 @@ public class ComplexShape extends RShape {
 		}
 		
 		return preview;
+	}
+	
+	public PGraphics updateModelPreview(RMatrix m) {
+		preview = null;
+		return getModelPreview(m);
 	}
 
 	@Override
