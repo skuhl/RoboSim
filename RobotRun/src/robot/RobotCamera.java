@@ -2,6 +2,7 @@ package robot;
 
 import java.util.ArrayList;
 
+import geom.ComplexShape;
 import geom.RMatrix;
 import geom.RQuaternion;
 import geom.WorldObject;
@@ -340,8 +341,11 @@ public class RobotCamera {
 	
 	public ArrayList<WorldObject> matchTaughtObject(int idx, Scenario scene) {
 		WorldObject objProto;
+		RMatrix objProtoOrient;
+		
 		if(idx < taughtObjects.size()) {
 			objProto = taughtObjects.get(idx);
+			objProtoOrient = objProto.getLocalOrientation();
 		} else {
 			return null;
 		}
@@ -350,15 +354,39 @@ public class RobotCamera {
 		ArrayList<WorldObject> objMatches = new ArrayList<WorldObject>();
 		
 		for(WorldObject o: inFrame) {
-			if(o.getObjectID() == objProto.getObjectID()) {
+			if(o.getModelFamilyID() == objProto.getModelFamilyID()) {
 				RMatrix objOrient = o.getLocalOrientation();
 				RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
-				RMatrix oDiff = objProto.getLocalOrientation().transpose().multiply(viewOrient);
+				RMatrix oDiff = objProtoOrient.transpose().multiply(viewOrient);
 				float[][] axes = oDiff.getFloatData();
 				PVector zDiff = new PVector(axes[0][2], axes[1][2], axes[2][2]);
 				
 				if(Math.pow(zDiff.dot(new PVector(0, 0, 1)), 2) > 0.9) {
-					objMatches.add(o);
+					if(o.getModelFamilyID() == -1) {
+						objMatches.add(o);
+					}
+					else {
+						ComplexShape protoMdl = (ComplexShape)objProto.getForm();
+						boolean objMatch = true;
+						
+						for(int i = 0; i < protoMdl.getNumSelectAreas() && objMatch; i += 1) {
+							CamSelectArea protoArea = protoMdl.getCamSelectArea(i);
+							if(protoArea.getView(objProtoOrient) != null && !protoArea.isIgnored()) {
+								if(protoArea.isEmphasized() && o.getModelID() != objProto.getModelID()) {
+									objMatch = false;
+								}
+								else if(!protoArea.isEmphasized()) {
+									if(Math.random() < 0.5) {
+										objMatch = false;
+									}
+								}
+							}
+						}
+						
+						if(objMatch) {
+							objMatches.add(o);
+						}
+					}
 				}
 			}
 		}
