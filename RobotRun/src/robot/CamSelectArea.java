@@ -1,5 +1,6 @@
-package geom;
+package robot;
 
+import geom.RMatrix;
 import processing.core.PVector;
 
 public class CamSelectArea {

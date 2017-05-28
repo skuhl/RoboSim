@@ -6,6 +6,8 @@ import global.RegisteredModels;
 import processing.core.PGraphics;
 import processing.core.PShape;
 import processing.core.PVector;
+import robot.CamSelectArea;
+import robot.CamSelectView;
 import robot.RobotRun;
 
 /**
