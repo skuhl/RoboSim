@@ -30,7 +30,7 @@ public class CamSelectArea {
 		float dotY = new PVector(0, 1, 0).dot(look);
 		float dotZ = new PVector(0, 0, 1).dot(look);
 				
-		if(true) {
+		if(false) {
 			if(dotZ > 0 && dotZ*dotZ > 0.9) { System.out.println("F");return selectViews[0]; }
 			if(dotZ < 0 && dotZ*dotZ > 0.9) { System.out.println("R");return selectViews[1]; }
 			if(dotY > 0 && dotY*dotY > 0.9) { System.out.println("T");return selectViews[2]; }

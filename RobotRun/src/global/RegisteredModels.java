@@ -11,6 +11,7 @@ import robot.RobotRun;
 
 public class RegisteredModels {
 	public static final HashMap<String, Integer> modelIDList = new HashMap<String, Integer>();
+	public static final HashMap<Integer, Integer> modelFamilyList = new HashMap<Integer, Integer>();
 	public static final HashMap<Integer, CamSelectArea[]> modelAreasOfInterest = new HashMap<Integer, CamSelectArea[]>();
 		
 	public static void loadModelDefs() {
@@ -21,8 +22,10 @@ public class RegisteredModels {
 			JSONObject obj = objList.getJSONObject(i);
 			String fileName = obj.getString("objectFileName");
 			int objID = obj.getInt("objectID");
-			
 			modelIDList.put(fileName, objID);
+			
+			int familyID = obj.getInt("objectFamilyID");
+			modelFamilyList.put(objID, familyID);
 			
 			JSONArray selectList = obj.getJSONArray("selectAreas");
 			CamSelectArea[] selectAreas = new CamSelectArea[selectList.size()];

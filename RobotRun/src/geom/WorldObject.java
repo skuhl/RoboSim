@@ -188,7 +188,9 @@ public abstract class WorldObject implements Cloneable {
 
 	public RShape getForm() { return form; }
 	
-	public int getObjectID() { return form.getID(); }
+	public int getModelID() { return form.getID(); }
+	
+	public int getModelFamilyID() { return form.getFamilyID(); }
 
 	public PVector getLocalCenter() {
 		return localOrientation.getOrigin();

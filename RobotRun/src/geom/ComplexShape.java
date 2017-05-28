@@ -23,7 +23,8 @@ public class ComplexShape extends RShape {
 	private PGraphics preview;
 	
 	private float mdlScale;
-	public final int model_id;
+	private final int model_id;
+	private final int model_family_id;
 	private ArrayList<CamSelectArea> selectAreas;
 
 	/**
@@ -37,6 +38,7 @@ public class ComplexShape extends RShape {
 	public ComplexShape(String filename, MyPShape mdl, int fill) {
 		super(fill, null);
 		model_id = RegisteredModels.modelIDList.get(filename);
+		model_family_id = RegisteredModels.modelFamilyList.get(model_id);
 		srcFilePath = filename;
 		
 		mdlScale = 1f;
@@ -44,7 +46,7 @@ public class ComplexShape extends RShape {
 		model.setFill(fill);
 		selectAreas = new ArrayList<CamSelectArea>();
 		
-		loadSelectAreas();
+		loadCamSelectAreas();
 		iniDimensions();
 	}
 
@@ -59,23 +61,32 @@ public class ComplexShape extends RShape {
 	public ComplexShape(String filename, MyPShape mdl, int fill, float scale) {
 		super(fill, null);
 		model_id = RegisteredModels.modelIDList.get(filename);
+		model_family_id = RegisteredModels.modelFamilyList.get(model_id);
 		srcFilePath = filename;
 		
 		mdlScale = 1f;
 		model = mdl;
 		selectAreas = new ArrayList<CamSelectArea>();
 		
-		loadSelectAreas();
+		loadCamSelectAreas();
 		iniDimensions();
 		setDim(scale, DimType.SCALE);
 	}
 	
-	private void loadSelectAreas() {
+	private void loadCamSelectAreas() {
 		if(RegisteredModels.modelAreasOfInterest.get(model_id) != null) {
 			for(CamSelectArea c: RegisteredModels.modelAreasOfInterest.get(model_id)) {
 				selectAreas.add(c.copy());
 			}
 		}
+	}
+	
+	public CamSelectArea getCamSelectArea(int i) {
+		return selectAreas.get(i);
+	}
+	
+	public int getNumSelectAreas() {
+		return selectAreas.size();
 	}
 	
 	public CamSelectArea getSelectAreaClicked(int x, int y, RMatrix m) {
@@ -144,6 +155,11 @@ public class ComplexShape extends RShape {
 	@Override
 	public int getID() {
 		return model_id;
+	}
+	
+	@Override
+	public int getFamilyID() {
+		return model_family_id;
 	}
 	
 	public PShape getForm() {

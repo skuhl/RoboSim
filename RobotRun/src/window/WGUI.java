@@ -1112,7 +1112,7 @@ public class WGUI implements ControlListener {
 				Pointer p = getButton("CamObjPreview").getPointer();
 				int x = p.x();
 				int y = p.y();
-				System.out.println("click at " + x + ", " + y);
+				
 				CamSelectArea a = ((ComplexShape)o.getForm()).getSelectAreaClicked(x, y, mdlOrient);
 				if(a != null) {
 					if(app.mouseButton == RobotRun.RIGHT && !a.isIgnored()) {
