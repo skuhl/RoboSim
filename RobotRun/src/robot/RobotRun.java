@@ -1528,6 +1528,9 @@ public class RobotRun extends PApplet {
 				DataManagement.saveScenarios(this);
 			}
 		}
+		else {
+			System.out.println("No active scenario!");
+		}
 	}
 	
 	/**

@@ -37,10 +37,10 @@ public class RegisteredModels {
 				for(int k = 0; k < viewList.size(); k += 1) {
 					JSONObject view = viewList.getJSONObject(k);
 					String align = view.getString("align");
-					float x1 = view.getInt("x1");
-					float y1 = view.getInt("y1");
-					float x2 = view.getInt("x2");
-					float y2 = view.getInt("y2");
+					int x1 = view.getInt("x1");
+					int y1 = view.getInt("y1");
+					int x2 = view.getInt("x2");
+					int y2 = view.getInt("y2");
 					views[k] = new CamSelectView(align, x1, y1, x2, y2);
 				}
 				
