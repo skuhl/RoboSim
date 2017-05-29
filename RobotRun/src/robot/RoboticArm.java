@@ -26,6 +26,7 @@ import processing.core.PGraphics;
 import processing.core.PShape;
 import processing.core.PVector;
 import programming.Instruction;
+import programming.MotionInstruction;
 import programming.Program;
 import regs.DataRegister;
 import regs.IORegister;
@@ -1404,7 +1405,7 @@ public class RoboticArm {
 		UserFrame activeUser = getActiveUser();
 		
 		if (activeUser != null) {
-			getToolTipPoint(activeUser);
+			return getToolTipPoint(activeUser);
 		}
 		
 		return getToolTipPoint(null);
@@ -2553,6 +2554,114 @@ public class RoboticArm {
 		if (associatedIO != null) {
 			associatedIO.state = endEffectorState;
 		}
+	}
+	
+	/**
+	 * Updates the position associated with the motion instruction's secondary
+	 * position index. The old point associated with the position is returned.
+	 * 
+	 * @param p			The program to edit
+	 * @param instIdx	The index of a motion instruction in this program
+	 * @param newPt		The new point to store at the motion instruction's
+	 * 					associated position
+	 * @return			The previous point stored at the position associated
+	 * 					with the instruction
+	 * @throws ClassCastException	If the instruction indexed at instIdx is
+	 * 								not a motion instruction
+	 * @throws NullPointerException	If the given point is null or the instruction
+	 * 								indexed at instIdx is not a motion type
+	 * 								instruction
+	 */
+	public Point updateMCInstPosition(Program p, int instIdx, Point newPt) throws
+		ClassCastException, NullPointerException {
+		
+		if (newPt != null) {
+			MotionInstruction mInst = (MotionInstruction) p.getInstAt(instIdx);
+			MotionInstruction sndMInst = mInst.getSecondaryPoint();
+			
+			if (mInst.getMotionType() != Fields.MTYPE_CIRCULAR || sndMInst == null) {
+				throw new NullPointerException(
+					String.format("Instruction at %d is not a circular motion instruction!",
+					instIdx)
+				);	
+			}
+			
+			int posNum = sndMInst.getPositionNum();
+			
+			if (mInst.usesGPosReg()) {
+				// Update a position register on the robot
+				PositionRegister pReg = getPReg(posNum);
+				
+				if (pReg != null) {
+					Point prevPt = pReg.point;
+					pReg.point = newPt;
+					return prevPt;
+				}
+				// Uninitialized position register
+				return null;
+				
+			} else {
+				// Update a position in the program
+				if (posNum == -1) {
+					// In the case of an uninitialized position
+					posNum = p.getNextPosition();
+					sndMInst.setPositionNum(posNum);
+				}
+				
+				return p.setPosition(posNum, newPt);
+			}
+		}
+		
+		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
+	}
+	
+	/**
+	 * Updates the position associated with the motion instruction at the given
+	 * instruction index to the given point. The old point associated with the
+	 * position is returned.
+	 * 
+	 * @param p			The program to edit
+	 * @param instIdx	The index of a motion instruction in this program
+	 * @param newPt		The new point to store at the motion instruction's
+	 * 					associated position
+	 * @return			The previous point stored at the position associated
+	 * 					with the instruction
+	 * @throws ClassCastException	If the instruction indexed at instIdx is
+	 * 								not a motion instruction
+	 * @throws NullPointerException	If the given point is null
+	 */
+	public Point updateMInstPosition(Program p, int instIdx, Point newPt) throws
+		ClassCastException, NullPointerException {
+		
+		if (newPt != null) {
+			MotionInstruction mInst = (MotionInstruction)p.getInstAt(instIdx);
+			int posNum = mInst.getPositionNum();
+			
+			if (mInst.usesGPosReg()) {
+				// Update a position register on the robot
+				PositionRegister pReg = getPReg(posNum);
+				
+				if (pReg != null) {
+					Point prevPt = pReg.point;
+					pReg.point = newPt;
+					return prevPt;
+				}
+				// Uninitialized position register
+				return null;
+				
+			} else {
+				// Update a position in the program
+				if (posNum == -1) {
+					// In the case of an uninitialized position
+					posNum = p.getNextPosition();
+					mInst.setPositionNum(posNum);
+				}
+				
+				return p.setPosition(posNum, newPt);
+			}
+		}
+		
+		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
 	}
 
 	/**

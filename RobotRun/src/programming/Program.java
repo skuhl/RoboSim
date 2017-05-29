@@ -257,97 +257,24 @@ public class Program implements Iterable<Instruction> {
 	public Point setPosition(int idx, Point pt) {
 		if (idx >= 0 && idx < 1000) {
 			Point prevPt = LPosReg.get(idx);
-			LPosReg.put(idx, pt);
+			
+			if (pt != null) {
+				LPosReg.put(idx, pt);
+			}
 
 			if (idx == nextPosition) {
 				// update the next position index if necessary
 				updateNextPosition();
 			}
-
+			
 			return prevPt;
 		}
-
+		
 		return null;
 	}
 
 	public int size() {
 		return instructions.size();
-	}
-	
-	/**
-	 * Updates the position associated with the motion instruction's secondary
-	 * position index. The old point associated with the position is returned.
-	 * 
-	 * @param instIdx	The index of a motion instruction in this program
-	 * @param newPt		The new point to store at the motion instruction's
-	 * 					associated position
-	 * @return			The previous point stored at the position associated
-	 * 					with the instruction
-	 * @throws ClassCastException	If the instruction indexed at instIdx is
-	 * 								not a motion instruction
-	 * @throws NullPointerException	If the given point is null or the instruction
-	 * 								indexed at instIdx is not a motion type
-	 * 								instruction
-	 */
-	public Point updateMCInstPosition(int instIdx, Point newPt) throws
-		ClassCastException, NullPointerException {
-		
-		MotionInstruction mInst = (MotionInstruction) getInstAt(instIdx);
-		MotionInstruction sndMInst = mInst.getSecondaryPoint();
-		
-		if (mInst.getMotionType() != Fields.MTYPE_CIRCULAR || sndMInst == null) {
-			throw new NullPointerException(
-					String.format("Instruction at %d is not a circular motion instruction!",
-					instIdx)
-				);	
-		}
-		
-		if (newPt != null) {
-			int posNum = sndMInst.getPositionNum();
-			
-			if (posNum == -1) {
-				// In the case of an uninitialized position
-				posNum = nextPosition;
-				sndMInst.setPositionNum(posNum);
-			}
-			
-			return setPosition(posNum, newPt);
-		}
-		
-		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
-	}
-	
-	/**
-	 * Updates the position associated with the motion instruction at the given
-	 * instruction index to the given point. The old point associated with the
-	 * position is returned.
-	 * 
-	 * @param instIdx	The index of a motion instruction in this program
-	 * @param newPt		The new point to store at the motion instruction's
-	 * 					associated position
-	 * @return			The previous point stored at the position associated
-	 * 					with the instruction
-	 * @throws ClassCastException	If the instruction indexed at instIdx is
-	 * 								not a motion instruction
-	 * @throws NullPointerException	If the given point is null
-	 */
-	public Point updateMInstPosition(int instIdx, Point newPt) throws
-		ClassCastException, NullPointerException {
-		
-		if (newPt != null) {
-			MotionInstruction mInst = (MotionInstruction)getInstAt(instIdx);
-			int posNum = mInst.getPositionNum();
-			
-			if (posNum == -1) {
-				// In the case the instruction's position is unintialized
-				posNum = nextPosition;
-				mInst.setPositionNum(posNum);
-			}
-			
-			return setPosition(posNum, newPt);
-		}
-		
-		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
 	}
 
 	/**
