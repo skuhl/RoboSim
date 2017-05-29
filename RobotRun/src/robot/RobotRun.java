@@ -1508,6 +1508,9 @@ public class RobotRun extends PApplet {
 				DataManagement.saveScenarios(this);
 			}
 		}
+		else {
+			System.out.println("No active scenario!");
+		}
 	}
 	
 	/**
@@ -1623,17 +1626,6 @@ public class RobotRun extends PApplet {
 				endShape();
 				
 				popMatrix();
-				
-				if(rCamera.getTaughtObjects().size() > 0) {
-					WorldObject o = rCamera.getTaughtObjects().get(0);
-					if(o.getForm() instanceof ComplexShape) {
-						pushMatrix();
-						resetMatrix();
-						image(((ComplexShape)o.getForm()).getModelPreview(), 0, 0);
-						popMatrix();
-					}
-					
-				}
 			}
 			
 			popMatrix();

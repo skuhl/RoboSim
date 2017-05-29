@@ -116,4 +116,8 @@ public class RBox extends RShape {
 	public int getID() {
 		return -1;
 	}
+	
+	public int getFamilyID() {
+		return -1;
+	}
 }

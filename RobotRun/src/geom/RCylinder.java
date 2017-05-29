@@ -113,4 +113,9 @@ public class RCylinder extends RShape {
 	public int getID() {
 		return -1;
 	}
+	
+	@Override
+	public int getFamilyID() {
+		return -1;
+	}
 }

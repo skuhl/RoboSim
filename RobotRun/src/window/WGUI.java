@@ -14,6 +14,7 @@ import controlP5.ControlP5;
 import controlP5.ControllerInterface;
 import controlP5.DropdownList;
 import controlP5.Group;
+import controlP5.Pointer;
 import controlP5.RadioButton;
 import controlP5.Slider;
 import controlP5.Textarea;
@@ -43,6 +44,7 @@ import processing.core.PFont;
 import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
+import robot.CamSelectArea;
 import robot.RobotCamera;
 import robot.RobotRun;
 import robot.RoboticArm;
@@ -625,7 +627,7 @@ public class WGUI implements ControlListener {
 		.addItem(EEType.GLUE_GUN.name(), EEType.GLUE_GUN)
 		.addItem(EEType.WIELDER.name(), EEType.WIELDER)
 		.setValue(0f);
-
+		
 		addDropdown("Scenario", scenario, ldropItemWidth, dropItemHeight, 4, Fields.small);
 		addDropdown("Fixture", editWO, ldropItemWidth, dropItemHeight, 4, Fields.small);
 
@@ -1015,7 +1017,6 @@ public class WGUI implements ControlListener {
 	 */
 	@Override
 	public void controlEvent(ControlEvent arg0) {
-
 		if (arg0.isFrom(windowTabs)) {
 			// Update the window based on the button tab selected
 			String actLbl = windowTabs.getActButLbl();
@@ -1096,6 +1097,28 @@ public class WGUI implements ControlListener {
 					MyDropdownList ddl = (MyDropdownList)arg0.getController();
 					r.setActiveEE( (EEType)ddl.getSelectedItem() );
 				}
+			} else if (arg0.isFrom("CamObjPreview")) {
+				WorldObject o = (WorldObject) getDropdown("CamObjects").getSelectedItem();	
+				RMatrix mdlOrient = o.getLocalOrientation();
+				Pointer p = getButton("CamObjPreview").getPointer();
+				int x = p.x();
+				int y = p.y();
+				
+				CamSelectArea a = ((ComplexShape)o.getForm()).getSelectAreaClicked(x, y, mdlOrient);
+				if(a != null) {
+					if(app.mouseButton == RobotRun.RIGHT && !a.isIgnored()) {
+						a.ignoreArea();
+					}
+					else if(app.mouseButton == RobotRun.LEFT && !a.isEmphasized()) {
+						a.emphasizeArea();
+					}
+					else {
+						a.clearArea();
+					}
+				}
+				
+				((ComplexShape)o.getForm()).updateModelPreview(mdlOrient);
+				updateUIContentPositions();
 			}
 		}
 	}
@@ -2757,10 +2780,10 @@ public class WGUI implements ControlListener {
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getDropdown("CamObjects").setPosition(relPos[0], relPos[1]);
-		
+
 		WorldObject o = (WorldObject)getDropdown("CamObjects").getSelectedItem();
 		if(o != null) {
-			PGraphics preview = ((ComplexShape)o.getForm()).getModelPreview();
+			PGraphics preview = ((ComplexShape)o.getForm()).getModelPreview(o.getLocalOrientation());
 			getButton("CamObjPreview").setImage(preview);
 			getButton("CamObjPreview").show();
 		}
@@ -2876,6 +2899,7 @@ public class WGUI implements ControlListener {
 	public void updateCameraListContents() {
 		if(app.getRobotCamera() != null) {
 			MyDropdownList d = getDropdown("CamObjects"); 
+			d.clear();
 			
 			for(WorldObject o: app.getRobotCamera().getTaughtObjects()) {
 				d.addItem(o.getName(), o);

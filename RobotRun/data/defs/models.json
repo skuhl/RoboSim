@@ -7,17 +7,34 @@
 			"selectAreas": [
 				{
 					"areaID": 1,
-					"x1": 20,
-					"y1": 20,
-					"x2": 50,
-					"y2": 50
+					"views": [
+						{
+							"align": "F",
+							"x1": 20,
+							"y1": 20,
+							"x2": 50,
+							"y2": 50
+						},
+						{
+							"align": "T",
+							"x1": 40,
+							"y1": 40,
+							"x2": 70,
+							"y2": 70
+						}						
+					]
 				},
 				{
 					"areaID": 2,
-					"x1": 70,
-					"y1": 100,
-					"x2": 90,
-					"y2": 150
+					"views": [
+						{
+							"align": "F",
+							"x1": 70,
+							"y1": 100,
+							"x2": 90,
+							"y2": 150
+						}
+					]
 				}
 			]
 		},
@@ -25,7 +42,39 @@
 			"objectID": 2,
 			"objectFamilyID": 2,
 			"objectFileName": "grinder.stl",
-			"selectAreas": []
+			"selectAreas": [
+				{
+					"areaID": 1,
+					"views": [
+						{
+							"align": "F",
+							"x1": 20,
+							"y1": 20,
+							"x2": 50,
+							"y2": 50
+						},
+						{
+							"align": "T",
+							"x1": 40,
+							"y1": 40,
+							"x2": 70,
+							"y2": 70
+						}						
+					]
+				},
+				{
+					"areaID": 2,
+					"views": [
+						{
+							"align": "F",
+							"x1": 70,
+							"y1": 100,
+							"x2": 90,
+							"y2": 150
+						}
+					]
+				}
+			]
 		},
 		{
 			"objectID": 3,
