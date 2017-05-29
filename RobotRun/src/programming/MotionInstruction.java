@@ -7,6 +7,7 @@ import robot.RobotRun;
 import robot.RoboticArm;
 
 public final class MotionInstruction extends Instruction  {
+	
 	private int motionType;
 	private int positionNum;
 	private int offsetRegNum;
@@ -17,6 +18,13 @@ public final class MotionInstruction extends Instruction  {
 	private int userFrame;
 	private int toolFrame;
 	private MotionInstruction circSubInstr;
+	
+	/**
+	 * Default constructor
+	 */
+	public MotionInstruction() {
+		// Doesn't do much ...
+	}
 
 	public MotionInstruction(int m, int p, boolean g, float s, int t) {
 		motionType = m;
