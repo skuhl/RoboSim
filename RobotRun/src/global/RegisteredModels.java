@@ -20,12 +20,12 @@ public class RegisteredModels {
 		
 		for(int i = 0; i < objList.size(); i += 1) {
 			JSONObject obj = objList.getJSONObject(i);
-			String fileName = obj.getString("objectFileName");
-			int objID = obj.getInt("objectID");
-			modelIDList.put(fileName, objID);
+			String fileName = obj.getString("modelFileName");
+			int mdlID = obj.getInt("modelID");
+			modelIDList.put(fileName, mdlID);
 			
-			int familyID = obj.getInt("objectFamilyID");
-			modelFamilyList.put(objID, familyID);
+			int familyID = obj.getInt("modelFamilyID");
+			modelFamilyList.put(mdlID, familyID);
 			
 			JSONArray selectList = obj.getJSONArray("selectAreas");
 			CamSelectArea[] selectAreas = new CamSelectArea[selectList.size()];
@@ -33,6 +33,7 @@ public class RegisteredModels {
 			for(int j = 0; j < selectList.size(); j += 1) {
 				JSONObject area = selectList.getJSONObject(j);
 				int id = area.getInt("areaID");
+				boolean isDefect = area.getInt("areaType") == 1;
 				
 				JSONArray viewList = area.getJSONArray("views");
 				CamSelectView[] views = new CamSelectView[viewList.size()];
@@ -47,10 +48,10 @@ public class RegisteredModels {
 					views[k] = new CamSelectView(align, x1, y1, x2, y2);
 				}
 				
-				selectAreas[j] = new CamSelectArea(id, views);	
+				selectAreas[j] = new CamSelectArea(id, isDefect, views);	
 			}
 			
-			modelAreasOfInterest.put(objID, selectAreas);
+			modelAreasOfInterest.put(mdlID, selectAreas);
 		}
 	}
 }

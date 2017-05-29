@@ -1,12 +1,13 @@
 {
 	"objList": [
 		{
-			"objectID": 1,
-			"objectFamilyID": 1,
-			"objectFileName": "circsheet.stl",
+			"modelID": 1,
+			"modelFamilyID": 1,
+			"modelFileName": "circsheet.stl",
 			"selectAreas": [
 				{
 					"areaID": 1,
+					"areaType": 0,
 					"views": [
 						{
 							"align": "F",
@@ -26,6 +27,7 @@
 				},
 				{
 					"areaID": 2,
+					"areaType": 1,
 					"views": [
 						{
 							"align": "F",
@@ -39,12 +41,13 @@
 			]
 		},
 		{
-			"objectID": 2,
-			"objectFamilyID": 2,
-			"objectFileName": "grinder.stl",
+			"modelID": 2,
+			"modelFamilyID": 2,
+			"modelFileName": "grinder.stl",
 			"selectAreas": [
 				{
 					"areaID": 1,
+					"areaType": 0,
 					"views": [
 						{
 							"align": "F",
@@ -64,6 +67,7 @@
 				},
 				{
 					"areaID": 2,
+					"areaType": 1,
 					"views": [
 						{
 							"align": "F",
@@ -77,15 +81,15 @@
 			]
 		},
 		{
-			"objectID": 3,
-			"objectFamilyID": 3,
-			"objectFileName": "inclinedblock.stl",
+			"modelID": 3,
+			"modelFamilyID": 3,
+			"modelFileName": "inclinedblock.stl",
 			"selectAreas": []
 		},
 		{
-			"objectID": 4,
-			"objectFamilyID": 4,
-			"objectFileName": "table.stl",
+			"modelID": 4,
+			"modelFamilyID": 4,
+			"modelFileName": "table.stl",
 			"selectAreas": []
 		}
 	]
