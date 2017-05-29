@@ -257,10 +257,7 @@ public class Program implements Iterable<Instruction> {
 	public Point setPosition(int idx, Point pt) {
 		if (idx >= 0 && idx < 1000) {
 			Point prevPt = LPosReg.get(idx);
-			
-			if (pt != null) {
-				LPosReg.put(idx, pt);
-			}
+			LPosReg.put(idx, pt);
 
 			if (idx == nextPosition) {
 				// update the next position index if necessary
