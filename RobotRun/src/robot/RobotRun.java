@@ -2220,14 +2220,16 @@ public class RobotRun extends PApplet {
 				line = getSelectedLine();
 				m = line == 0 ? m : m.getSecondaryPoint();
 
-				if (tempRegister < 1 || tempRegister > 1000) {
+				if (tempRegister < 0 || tempRegister > 999) {
 					// Invalid register index
 					err = "Only registers 1 - 1000 are legal!";
+					System.out.println(err);
 					lastScreen();
 					return;
 				} else if ((getActiveRobot().getPReg(tempRegister)).point == null) {
 					// Invalid register index
 					err = "This register is uninitailized!";
+					System.out.println(err);
 					lastScreen();
 					return;
 				}
@@ -4054,20 +4056,20 @@ public class RobotRun extends PApplet {
 			// F1, F4, F5f
 			funct[0] = "[New Pt]";
 			funct[1] = "[New Ins]";
-			funct[2] = (inst instanceof MotionInstruction) ? "[Ovr Pt]" : "";
+			funct[2] = "";
 			funct[3] = "[Edit]";
 			funct[4] = (contents.getColumnIdx() == 0) ? "[Opt]" : "";
+						
 			if (inst instanceof MotionInstruction) {
 				MotionInstruction mInst = (MotionInstruction)inst;
+				funct[2] = "[Ovr Pt]";
 				
 				if (!mInst.usesGPosReg() && contents.getColumnIdx() == 3) {
 					funct[4] = "[Reg]";
 					
-				} else {
-					funct[4] = "";
 				}
-				
-			} else if (inst instanceof IfStatement) {
+			} 
+			else if (inst instanceof IfStatement) {
 				IfStatement stmt = (IfStatement) inst;
 				int selectIdx = getSelectedIdx();
 
@@ -4079,14 +4081,16 @@ public class RobotRun extends PApplet {
 						funct[4] = "[Delete]";
 					}
 				}
-			} else if (inst instanceof SelectStatement) {
+			} 
+			else if (inst instanceof SelectStatement) {
 				int selectIdx = getSelectedIdx();
 
 				if (selectIdx >= 3) {
 					funct[2] = "[Insert]";
 					funct[4] = "[Delete]";
 				}
-			} else if (inst instanceof RegisterStatement) {
+			} 
+			else if (inst instanceof RegisterStatement) {
 				RegisterStatement stmt = (RegisterStatement) inst;
 				int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
 				int selectIdx = getSelectedIdx();
