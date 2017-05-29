@@ -811,23 +811,23 @@ public class RoboticArm {
 
 		g.rotateZ(PConstants.PI);
 		g.rotateY(PConstants.PI/2);
-		g.shape( SEGMENTS.get(0).getShape() );
+		SEGMENTS.get(0).draw(g);
 		g.rotateY(-PConstants.PI/2);
 		g.rotateZ(-PConstants.PI);
 
-		g.fill(50);
+		//g.fill(50);
 
-		g.translate(-50, -166, -358); // -115, -213, -413
+		g.translate(-50, -166, -358);
 		g.rotateZ(PConstants.PI);
 		g.translate(150, 0, 150);
 		g.rotateX(PConstants.PI);
 		g.rotateY(jointAngles[0]);
 		g.rotateX(-PConstants.PI);
 		g.translate(-150, 0, -150);
-		g.shape( SEGMENTS.get(1).getShape() );
+		SEGMENTS.get(1).draw(g);
 		g.rotateZ(-PConstants.PI);
 
-		g.fill(200, 200, 0);
+		//g.fill(200, 200, 0);
 
 		g.translate(-115, -85, 180);
 		g.rotateZ(PConstants.PI);
@@ -835,11 +835,11 @@ public class RoboticArm {
 		g.translate(0, 62, 62);
 		g.rotateX(jointAngles[1]);
 		g.translate(0, -62, -62);
-		g.shape( SEGMENTS.get(2).getShape() );
+		SEGMENTS.get(2).draw(g);
 		g.rotateY(-PConstants.PI/2);
 		g.rotateZ(-PConstants.PI);
 
-		g.fill(50);
+		//g.fill(50);
 
 		g.translate(0, -500, -50);
 		g.rotateZ(PConstants.PI);
@@ -849,7 +849,7 @@ public class RoboticArm {
 		g.rotateX(jointAngles[2]);
 		g.rotateZ(-PConstants.PI);
 		g.translate(0, -75, -75);
-		g.shape( SEGMENTS.get(3).getShape() );
+		SEGMENTS.get(3).draw(g);
 		g.rotateY(PConstants.PI/2);
 		g.rotateZ(-PConstants.PI);
 
@@ -859,11 +859,11 @@ public class RoboticArm {
 		g.translate(70, 0, 70);
 		g.rotateY(jointAngles[3]);
 		g.translate(-70, 0, -70);
-		g.shape( SEGMENTS.get(4).getShape() );
+		SEGMENTS.get(4).draw(g);
 		g.rotateY(-PConstants.PI/2);
 		g.rotateZ(-PConstants.PI/2);
 
-		g.fill(200, 200, 0);
+		//g.fill(200, 200, 0);
 
 		g.translate(-115, 130, -124);
 		g.rotateZ(PConstants.PI);
@@ -871,11 +871,11 @@ public class RoboticArm {
 		g.translate(0, 50, 50);
 		g.rotateX(jointAngles[4]);
 		g.translate(0, -50, -50);
-		g.shape( SEGMENTS.get(5).getShape() );
+		SEGMENTS.get(5).draw(g);
 		g.rotateY(PConstants.PI/2);
 		g.rotateZ(-PConstants.PI);
 		
-		g.fill(50);
+		//g.fill(50);
 		
 		g.translate(150, -10, 95);
 		g.rotateY(-PConstants.PI/2);
@@ -886,51 +886,51 @@ public class RoboticArm {
 		g.pushMatrix();
 		
 		g.translate(-45, -45, 0);
-		g.shape( SEGMENTS.get(6).getShape() );
+		SEGMENTS.get(6).draw(g);
 		
 		/* DRAW END EFFECTOR MODEL */
 
 		if (activeEndEffector == EEType.SUCTION) {
 			g.rotateY(PConstants.PI);
 			g.translate(-88, -37, 0);
-			g.shape( EEM_SUCTION.getShape() );
+			EEM_SUCTION.draw(g);
 
 		} else if(activeEndEffector == EEType.CLAW) {
 			g.rotateY(PConstants.PI);
 			g.translate(-88, 0, 0);
-			g.shape( EEM_CLAW.getShape() );
+			EEM_CLAW.draw(g);
 			g.rotateZ(PConstants.PI/2);
 
 			if(endEffectorState == Fields.OFF) {
 				// Draw open grippers
 				g.translate(10, -85, 30);
-				g.shape( EEM_CLAW_PINCER.getShape() );
+				EEM_CLAW_PINCER.draw(g);
 				g.translate(55, 0, 0);
-				g.shape( EEM_CLAW_PINCER.getShape() );
+				EEM_CLAW_PINCER.draw(g);
 
 			} else if(endEffectorState == Fields.ON) {
 				// Draw closed grippers
 				g.translate(28, -85, 30);
-				g.shape( EEM_CLAW_PINCER.getShape() );
+				EEM_CLAW_PINCER.draw(g);
 				g.translate(20, 0, 0);
-				g.shape( EEM_CLAW_PINCER.getShape() );
+				EEM_CLAW_PINCER.draw(g);
 			}
 		} else if (activeEndEffector == EEType.POINTER) {
 			g.rotateY(PConstants.PI);
 			g.rotateZ(PConstants.PI);
 			g.translate(45, -45, 10);
-			g.shape( EEM_POINTER.getShape() );
+			EEM_POINTER.draw(g);
 
 		} else if (activeEndEffector == EEType.GLUE_GUN) {
 			g.rotateZ(PConstants.PI);
 			g.translate(-48, -46, -12);
-			g.shape( EEM_GLUE_GUN.getShape() );
+			EEM_GLUE_GUN.draw(g);
 
 		} else if (activeEndEffector == EEType.WIELDER) {
 			g.rotateY(PConstants.PI);
 			g.rotateZ(PConstants.PI);
 			g.translate(46, -44, 10);
-			g.shape( EEM_WIELDER.getShape() );
+			EEM_WIELDER.draw(g);
 		}
 		
 		g.popMatrix();

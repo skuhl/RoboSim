@@ -1,11 +1,13 @@
 package robot;
 
 import global.RMath;
+import processing.core.PGraphics;
 import processing.core.PShape;
 import processing.core.PVector;
 
 public class Model {
-	public PShape mesh;
+	
+	private PShape model;
 	public String name;
 	public boolean[] rotations = new boolean[3]; // is rotating on this joint valid?
 	// Joint ranges follow a clockwise format running from the PVector.x to PVector.y, where PVector.x and PVector.y range from [0, TWO_PI]
@@ -16,8 +18,8 @@ public class Model {
 	public float rotationSpeed;
 	public float[] jointsMoving = new float[3]; // for live control using the joint buttons
 
-	public Model(String n, PShape mShape) {
-		mesh = mShape;
+	public Model(String n, PShape model) {
+		this.model = model;
 		name = n;
 		rotationSpeed = 0.01f;
 		
@@ -27,13 +29,18 @@ public class Model {
 			jointRanges[i] = null;
 		}
 	}
-
-	public boolean anglePermitted(int idx, float angle) {
-		return RMath.angleWithinBounds(angle, jointRanges[idx].x, jointRanges[idx].y);
+	
+	/**
+	 * Draws the model with the given graphics.
+	 * 
+	 * @param g	The graphics used to render the model
+	 */
+	public void draw(PGraphics g) {
+		g.shape(model);
 	}
 	
-	public PShape getShape() {
-		return mesh;
+	public boolean anglePermitted(int idx, float angle) {
+		return RMath.angleWithinBounds(angle, jointRanges[idx].x,
+				jointRanges[idx].y);
 	}
-
 }
