@@ -118,14 +118,21 @@ public abstract class RMath {
 
 		float[][] J = new float[7][6];
 		// get current ee position
+		/**/
+		Point curRP = model.getToolTipNative(angles);
+		/* TODO REMOVE AFTER REFACTOR *
 		Point curRP = RobotRun.nativeRobotEEPoint(model, angles);
-
+		/**/
 		// examine each segment of the arm
 		for (int i = 0; i < 6; i += 1) {
 			// test angular offset
 			angles[i] += dAngle;
 			// get updated ee position
+			/**/
+			Point newRP = model.getToolTipNative(angles);
+			/* TODO REMOVE AFTER REFACTOR *
 			Point newRP = RobotRun.nativeRobotEEPoint(model, angles);
+			/**/
 
 			if (curRP.orientation.dot(newRP.orientation) < 0f) {
 				// Use -q instead of q
@@ -301,7 +308,11 @@ public abstract class RMath {
 		float[] angles = srcAngles.clone();
 
 		while (count < limit) {
+			/**/
+			Point cPoint = model.getToolTipNative(angles);
+			/* TODO REMOVE AFTER REFACTOR *
 			Point cPoint = RobotRun.nativeRobotEEPoint(model, angles);
+			/**/
 			float cumulativeOffset = 0;
 
 			if (tgtOrientation.dot(cPoint.orientation) < 0f) {
@@ -326,7 +337,7 @@ public abstract class RMath {
 			float dist = PVector.dist(cPoint.position, tgtPosition);
 			float rDist = rDelta.magnitude();
 			// check whether our current position is within tolerance
-			if (dist < RobotRun.getActiveRobot().getLiveSpeed() / 100f && rDist < 0.00005f * RobotRun.getActiveRobot().getLiveSpeed()) {
+			if (dist <model.getLiveSpeed() / 100f && rDist < 0.00005f * model.getLiveSpeed()) {
 				break;
 			}
 

@@ -395,10 +395,13 @@ public class RoboticArm {
 		trace = false;
 		tracePts = new ArrayList<PVector>();
 		// Initializes the old transformation matrix for the arm model
+		lastEEOrientation = getRobotTransform( getJointAngles() );
+		/* REMOVE AFTER REFACTOR *
 		RobotRun.getInstance().pushMatrix();
 		RobotRun.applyModelRotation(this, getJointAngles());
 		lastEEOrientation = RobotRun.getInstance().getTransformationMatrix();
 		RobotRun.getInstance().popMatrix();
+		/**/
 	}
 	
 	/**
@@ -444,11 +447,12 @@ public class RoboticArm {
 			return 0f;
 		}
 
-		// Initiaize the Robot's destination
-		Point RP = RobotRun.nativeRobotEEPoint(this, getJointAngles());
+		/* Initiaize the Robot's destination */
+		// TODO REMOVE AFTER REFACTOR Point RP = RobotRun.nativeRobotEEPoint(this, getJointAngles());
+		Point RP = getToolTipNative();
 		tgtPosition = RP.position;
 		tgtOrientation = RP.orientation;
-
+		/**/
 
 		if(axis >= 0 && axis < 3) {
 			if(jogLinear[axis] == 0) {
@@ -762,11 +766,13 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Draws the robotic arm along with its bounding boxes.
+	 * Draws the robotic arm along with its bounding boxes and active
+	 * coordinate frame axes.
 	 * 
 	 * @param g			The graphics used to render the robot
-	 * @param drawOBBs	
-	 * @param axesType
+	 * @param drawOBBs	Whether to render the bounding boxes of the robot
+	 * @param axesType	Defines how to draw the axes of the active coordinate
+	 * 					frame of the robot
 	 */
 	public void draw(PGraphics g, boolean drawOBBs, AxesDisplay axesType) {
 		
@@ -936,7 +942,7 @@ public class RoboticArm {
 		/* DRAW BOUNDING BOXES */
 		
 		if (drawOBBs) {
-			// Draw hit boxes of the body poriotn of the Robot Arm
+			// Draw hit boxes of the body portion of the Robot Arm
 			for(BoundingBox b : ARM_OBBS) {
 				g.pushMatrix();
 				Fields.transform(g, b.getCenter(), b.getOrientationAxes());
@@ -964,7 +970,24 @@ public class RoboticArm {
 			}
 		}
 		
-		if(isTrace()) {
+		if (modelInMotion() && trace) {
+			Point tipPosNative = getToolTipNative();
+			// Update the robots trace points
+			if(tracePts.isEmpty()) {
+				tracePts.add(tipPosNative.position);
+				
+			} else {
+				PVector lastTracePt = tracePts.get(tracePts.size() - 1);
+				
+				if (PVector.sub(tipPosNative.position, lastTracePt).mag()
+						> 0.5f) {
+					
+					tracePts.add(tipPosNative.position);
+				}
+			}
+		}
+		
+		if (trace) {
 			drawTrace(g);
 		}
 	}
@@ -999,7 +1022,6 @@ public class RoboticArm {
 				PVector tipPos = activeTool.getTCPOffset();
 				g.translate(tipPos.x, tipPos.y, tipPos.z);
 			}
-			
 			
 			g.sphere(4);
 			
@@ -1076,32 +1098,24 @@ public class RoboticArm {
 	 * 
 	 * @param g	
 	 */
-	private void drawTrace(PGraphics g) {
-		Point eePos = RobotRun.nativeRobotEEPoint(this, getJointAngles());
-		
-		if(tracePts.isEmpty()) {
-			tracePts.add(eePos.position);
-			return;
-		} 
-		else if(eePos.position.copy().sub(tracePts.get(tracePts.size()-1)).mag() > 0.5) {
-			tracePts.add(eePos.position.copy());
-		}
-		
-		PVector lastPt = tracePts.get(0);
-		
-		g.pushStyle();
-		g.stroke(0);
-		g.strokeWeight(3);
-		
-		for(int i = 1; i < tracePts.size(); i += 1) {
-			PVector curPt = tracePts.get(i);
+	private void drawTrace(PGraphics g) {		
+		if (tracePts.size() > 1) {
+			PVector lastPt = tracePts.get(0);
 			
-			g.line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y, curPt.z);
+			g.pushStyle();
+			g.stroke(0);
+			g.strokeWeight(3);
 			
-			lastPt = curPt;
+			for(int i = 1; i < tracePts.size(); i += 1) {
+				PVector curPt = tracePts.get(i);
+				
+				g.line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y, curPt.z);
+				
+				lastPt = curPt;
+			}
+			
+			g.popStyle();
 		}
-		
-		g.popStyle();
 	}
 	
 	/**
@@ -1137,7 +1151,10 @@ public class RoboticArm {
 
 		} else {
 			// Jog in the World, Tool or User Frame
+			Point curPoint = getToolTipNative();
+			/* TODO REMOVE AFTER REFACTOR *
 			Point curPoint = RobotRun.nativeRobotEEPoint(this, getJointAngles());
+			/**/
 			RQuaternion invFrameOrientation = null;
 			
 			if (curCoordFrame == CoordFrame.TOOL) {
@@ -1329,7 +1346,7 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * @return	A point representing the robot's current faceplate posiiton
+	 * @return	A point representing the robot's current faceplate position
 	 * 			and orientation
 	 */
 	public Point getFacePlatePoint() {
@@ -1337,97 +1354,78 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Calculates the position and orientation of the roobt's faceplate based
+	 * Calculates the position and orientation of the robot's faceplate based
 	 * on the native coordinate system and the given joint angles.
 	 * 
-	 * @jointAngles	The angles used to calculate the point
+	 * @jointAngles	The angles used to calculate the robot's faceplate point
 	 * @return		A point representing the robot faceplate's position and
 	 * 				orientation
 	 */
 	public Point getFacePlatePoint(float[] jointAngles) {
-		// Calculate the rotation matrices for the robot's joint angles
-		RMatrix joint0Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 1f, 0f),
-				jointAngles[0]);
-		RMatrix joint1Orien = RMath.tMatFromAxisAndAngle(new PVector(1f, 0f, 0f),
-				jointAngles[1]);
-		RMatrix joint2Orien = RMath.tMatFromAxisAndAngle(new PVector(1f, 0f, 0f),
-				jointAngles[2]);
-		RMatrix joint3Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 1f, 0f),
-				jointAngles[3]);
-		RMatrix joint4Orien = RMath.tMatFromAxisAndAngle(new PVector(1f, 0f, 0f),
-				jointAngles[4]);
-		RMatrix joint5Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 0f, 1f),
-				jointAngles[5]);
-		
-		// Apply all the orientations of the robot's segments and joints
-		RMatrix eeOrien = new RMatrix(
-				
-				new float[][] {
-					{1f, 0f, 0f, BASE_POSITION.x},
-					{0f, 1f, 0f, BASE_POSITION.y},
-					{0f, 0f, 1f, BASE_POSITION.z},
-					{0f, 0f, 0f, 1f}
-				}
-				
-			)
-			.multiply(SEGMENT_TMATS.get(0))
-			.multiply(joint0Orien)
-			.multiply(SEGMENT_TMATS.get(1))
-			.multiply(joint1Orien)
-			.multiply(SEGMENT_TMATS.get(2))
-			.multiply(joint2Orien)
-			.multiply(SEGMENT_TMATS.get(3))
-			.multiply(joint3Orien)
-			.multiply(SEGMENT_TMATS.get(4))
-			.multiply(joint4Orien)
-			.multiply(SEGMENT_TMATS.get(5))
-			.multiply(joint5Orien)
-			.multiply(SEGMENT_TMATS.get(6));
+		RMatrix tipOrien = getRobotTransform(jointAngles);
 		
 		// Convert the orientation into the correct format for a Point
 		PVector position = new PVector(
-				 (float)eeOrien.getEntry(0, 3),
-				 (float)eeOrien.getEntry(1, 3),
-				 (float)eeOrien.getEntry(2, 3)
+				 (float)tipOrien.getEntry(0, 3),
+				 (float)tipOrien.getEntry(1, 3),
+				 (float)tipOrien.getEntry(2, 3)
 		);
 		
-		RQuaternion orientation = RMath.matrixToQuat(eeOrien);
+		RQuaternion orientation = RMath.matrixToQuat(tipOrien);
 		
 		return new Point(position, orientation, jointAngles);
 	}
 	
 	/**
-	 * TODO comment this
-	 * 
-	 * @return
+	 * @return	The robot's tooltip position and orientatio with respect to the
+	 * 			active user frame
 	 */
-	public Point getToolTipPoint() {
-		UserFrame activeUser = getActiveUser();
-		
-		if (activeUser != null) {
-			return getToolTipPoint(activeUser);
-		}
-		
-		return getToolTipPoint(null);
+	public Point getToolTipUser() {
+		return getToolTipPoint(getJointAngles(), getActiveTool(),
+				getActiveUser());
 	}
 	
 	/**
+	 * @return	The robot's tooltip position and orientation in native
+	 * 			coordinates
+	 */
+	public Point getToolTipNative() {
+		return getToolTipPoint(getJointAngles(), getActiveTool(), null);
+	}
+	
+	/**
+	 * Calculates the robot's tooltip position and orientation based off
+	 * the given joint angles and the robot's active tool frame's tooltip
+	 * offset.
+	 * 
+	 * @param jointAngles	A 6-element array of joint angles used to
+	 * 						calculate the robot's tooltip position
+	 * @return				The robot's tooltip position in native coordinates
+	 */
+	public Point getToolTipNative(float[] jointAngles) {
+		return getToolTipPoint(jointAngles, getActiveTool(), null);
+	}
+		
+	/**
 	 * TODO comment this
 	 * 
-	 * @param frame
+	 * @param jointAngles
+	 * @param tFrame
+	 * @param uFrame
 	 * @return
 	 */
-	public Point getToolTipPoint(UserFrame uFrame) {
-		ToolFrame activeTool = getActiveTool();
-		Point toolTip = getFacePlatePoint();
+	private Point getToolTipPoint(float[] jointAngles, ToolFrame tFrame, UserFrame uFrame) {
+		Point toolTip = getFacePlatePoint(jointAngles);
 		
-		if (activeTool != null) {
-			PVector toolOrigin = activeTool.getTCPOffset();
+		if (tFrame != null) {
+			// Apply the tooltip offset of the given tool frame
+			PVector toolOrigin = tFrame.getTCPOffset();
 			RQuaternion invOrien = toolTip.orientation.conjugate();
 			toolTip.position.add( invOrien.rotateVector(toolOrigin) );
 		}
 		
 		if (uFrame != null) {
+			// Apply the given user frame to the robot's tooltip position
 			RQuaternion uOrien = uFrame.getOrientation();
 			toolTip.position = RMath.vToFrame(toolTip.position,
 					uFrame.getOrigin(), uOrien);
@@ -1558,13 +1556,14 @@ public class RoboticArm {
 		return liveSpeed;
 	}
 	
+	/**
 	public RQuaternion getOrientation() {
 		return RMath.matrixToQuat(getOrientationMatrix());
 	}
 
 	/* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
 	 * the end effector's current x, y, z axes with respect to the current frame.
-	 */
+	 *
 	public RMatrix getOrientationMatrix() {
 		RobotRun.getInstance().pushMatrix();
 		RobotRun.getInstance().resetMatrix();
@@ -1578,7 +1577,7 @@ public class RoboticArm {
 	/* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
 	 * the end effector's current x, y, z axes with respect to an arbitrary coordinate
 	 * system specified by the rotation matrix 'frame.'
-	 */
+	 *
 	public float[][] getOrientationMatrix(RMatrix frame) {
 		RMatrix A = getOrientationMatrix();
 		RMatrix B = new RMatrix(frame);
@@ -1586,6 +1585,7 @@ public class RoboticArm {
 
 		return AB.getFloatData();
 	}
+	/**/
 	
 	/**
 	 * Returns the position register, associated with the given index, of the
@@ -1643,8 +1643,53 @@ public class RoboticArm {
 		// No such program exists
 		return null;
 	}
-
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param jointAngles
+	 * @return
+	 */
+	public RMatrix getRobotTransform(float[] jointAngles) {
+		// Calculate the rotation matrices for the robot's joint angles
+		RMatrix joint0Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 1f, 0f),
+				jointAngles[0]);
+		RMatrix joint1Orien = RMath.tMatFromAxisAndAngle(new PVector(1f, 0f, 0f),
+				jointAngles[1]);
+		RMatrix joint2Orien = RMath.tMatFromAxisAndAngle(new PVector(1f, 0f, 0f),
+				jointAngles[2]);
+		RMatrix joint3Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 1f, 0f),
+				jointAngles[3]);
+		RMatrix joint4Orien = RMath.tMatFromAxisAndAngle(new PVector(1f, 0f, 0f),
+				jointAngles[4]);
+		RMatrix joint5Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 0f, 1f),
+				jointAngles[5]);
+		
+		// Apply all the orientations of the robot's segments and joints
+		return new RMatrix(
+				
+				new float[][] {
+					{1f, 0f, 0f, BASE_POSITION.x},
+					{0f, 1f, 0f, BASE_POSITION.y},
+					{0f, 0f, 1f, BASE_POSITION.z},
+					{0f, 0f, 0f, 1f}
+				}
+				
+			)
+			.multiply(SEGMENT_TMATS.get(0))
+			.multiply(joint0Orien)
+			.multiply(SEGMENT_TMATS.get(1))
+			.multiply(joint1Orien)
+			.multiply(SEGMENT_TMATS.get(2))
+			.multiply(joint2Orien)
+			.multiply(SEGMENT_TMATS.get(3))
+			.multiply(joint3Orien)
+			.multiply(SEGMENT_TMATS.get(4))
+			.multiply(joint4Orien)
+			.multiply(SEGMENT_TMATS.get(5))
+			.multiply(joint5Orien)
+			.multiply(SEGMENT_TMATS.get(6));
+	}
 	
 	/**
 	 * Returns the tool frame, associated with the given index, of the Robot,
@@ -1805,7 +1850,10 @@ public class RoboticArm {
 		// Did we successfully find the desired angles?
 		if ((destAngles == null) || invalidAngle) {
 			if (Fields.DEBUG) {
+				Point RP = getToolTipNative();
+				/* TODO REMOVE AFTER REFACTOR *
 				Point RP = RobotRun.nativeRobotEEPoint(this, getJointAngles());
+				/**/
 				Fields.debug("IK Failure ...\n%s -> %s\n%s -> %s\n\n",
 						RP.position, destPosition, RP.orientation,
 						destOrientation);
@@ -1825,8 +1873,10 @@ public class RoboticArm {
 	 * @return	Whether the robot is moving in some way
 	 */
 	public boolean modelInMotion() {
-		return RobotRun.getInstance().isProgramRunning() || motionType != RobotMotion.HALTED ||
-				jointMotion() || translationalMotion() || rotationalMotion();
+		return RobotRun.getInstance().isProgramRunning() ||
+				(motionType != RobotMotion.HALTED &&
+				motionType != RobotMotion.MT_FAULT) || jointMotion() ||
+				translationalMotion() || rotationalMotion();
 	}
 
 	/**
@@ -1849,7 +1899,10 @@ public class RoboticArm {
 	public void moveTo(PVector position, RQuaternion orientation) {
 		
 		if (!hasMotionFault()) {
+			Point start = getToolTipNative();
+			/* TODO REMOVE AFTER REFACTOR *
 			Point start = RobotRun.nativeRobotEEPoint(this, getJointAngles());
+			/**/
 			Point end = new Point(position.copy(), (RQuaternion)orientation.clone(), start.angles.clone());
 			RobotRun.getInstance().beginNewLinearMotion(start, end);
 			motionType = RobotMotion.MT_LINEAR;
@@ -2253,8 +2306,13 @@ public class RoboticArm {
 	 */
 	protected void setDefaultRobotPoint() {
 		// Define the default Robot position and orientation
+		robotPoint = getFacePlatePoint(
+				new float[] { 0f, 0f, 0f, 0f, 0f, 0f }
+		);
+		/* TODO REMOVE AFTER REFACTOR *
 		robotPoint = RobotRun.nativeRobotPoint(this,
 				new float[] { 0f, 0f, 0f, 0f, 0f, 0f });
+		/**/
 	}
 	
 	/**
@@ -2536,11 +2594,13 @@ public class RoboticArm {
 		app.rotateZ(PConstants.PI);
 		app.translate(45, 45, 0);
 		app.rotateZ(SEGMENTS.get(5).currentRotations[0]);
-		app.translate(-45, -45, 0);
-		app.popMatrix();
-
+		app.rotateX(PConstants.PI);
+		app.rotateY(PConstants.PI/2);
+		
 		// End Effector
 		updateOBBBoxesForEE(activeEndEffector, app);
+		
+		app.popMatrix();
 	}
 
 	/**
@@ -2673,8 +2733,6 @@ public class RoboticArm {
 							   curPUEEOBBs = EE_TO_PICK_OBBS.get(current);
 
 		RobotRun.getInstance().pushMatrix();
-		RobotRun.getInstance().resetMatrix();
-		RobotRun.applyModelRotation(this, getJointAngles());
 		
 		switch(current) {
 			case NONE:
@@ -2749,6 +2807,8 @@ public class RoboticArm {
 	 * the object held by the Robot.
 	 */
 	public void updatePreviousEEOrientation() {
+		lastEEOrientation = getRobotTransform(getJointAngles());
+		/* REMOVE AFTER REFACTOR *
 		RobotRun app = RobotRun.getInstance();
 		
 		app.pushMatrix();
@@ -2757,6 +2817,7 @@ public class RoboticArm {
 		// Keep track of the old coordinate frame of the armModel
 		lastEEOrientation = app.getTransformationMatrix();
 		app.popMatrix();
+		/**/
 	}
 	
 	/**

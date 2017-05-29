@@ -1,14 +1,12 @@
 package programming;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
 import geom.Point;
-import global.Fields;
-import robot.RobotRun;
 import robot.RoboticArm;
-import screen.DisplayLine;
 
 public class Program implements Iterable<Instruction> {
 	/**
@@ -161,83 +159,6 @@ public class Program implements Iterable<Instruction> {
 
 	public Instruction replaceInstAt(int idx, Instruction i) {
 		return instructions.set(idx, i);
-	}
-	
-	public ArrayList<DisplayLine> printInstrList() {
-		ArrayList<DisplayLine> instruct_list = new ArrayList<>();
-		int tokenOffset = Fields.TXT_PAD - Fields.PAD_OFFSET;
-
-		Program p = this;
-		int size = p.getNumOfInst();
-
-		for(int i = 0; i < size; i+= 1) {
-			DisplayLine line = new DisplayLine(i);
-			Instruction instr = p.getInstAt(i);
-			int xPos = 10;
-
-			// Add line number
-			if (instr == null) {
-				line.add( String.format("%d) ...", i+1) );
-				continue;
-			} else if(instr.isCommented()) {
-				line.add("//"+Integer.toString(i+1) + ")");
-			} else {
-				line.add(Integer.toString(i+1) + ")");
-			}
-
-			int numWdth = line.get(line.size() - 1).length();
-			xPos += numWdth*Fields.CHAR_WDTH + tokenOffset;
-
-			if(instr instanceof MotionInstruction) {
-				// Show '@' at the an instrution, if the Robot's position is close to that position stored in the instruction's register
-				MotionInstruction a = (MotionInstruction)instr;
-				Point ee_point = RobotRun.nativeRobotEEPoint(robot, robot.getJointAngles());
-				Point instPt = a.getVector(p);
-
-				if(instPt != null && ee_point.position.dist(instPt.position) < (robot.getLiveSpeed() / 100f)) {
-					line.add("@");
-				}
-				else {
-					line.add("\0");
-				}
-
-				xPos += Fields.CHAR_WDTH + tokenOffset;
-			}
-
-			String[] fields = instr.toStringArray();
-
-			for (int j = 0; j < fields.length; j += 1) {
-				String field = fields[j];
-				xPos += field.length()*Fields.CHAR_WDTH + tokenOffset;
-
-				if(field.equals("\n") && j != fields.length - 1) {
-					instruct_list.add(line);
-					if(instr instanceof SelectStatement) {
-						xPos = 11*Fields.CHAR_WDTH + 3*tokenOffset;
-					} else {
-						xPos = 3*Fields.CHAR_WDTH + 3*tokenOffset;
-					}
-
-					line = new DisplayLine(i, xPos);
-					xPos += field.length()*Fields.CHAR_WDTH + tokenOffset;
-				} else if(xPos > Fields.PENDANT_SCREEN_WIDTH - 10) {
-					instruct_list.add(line);
-					xPos = 2*Fields.CHAR_WDTH + tokenOffset;
-
-					line = new DisplayLine(i, xPos);
-					field = ": " + field;
-					xPos += field.length()*Fields.CHAR_WDTH + tokenOffset;
-				}
-
-				if(!field.equals("\n")) {
-					line.add(field);
-				}
-			}
-
-			instruct_list.add(line);
-		}
-
-		return instruct_list;
 	}
 	
 	public Instruction rmInstAt(int idx) {
