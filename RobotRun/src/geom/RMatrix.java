@@ -14,6 +14,18 @@ public class RMatrix extends Array2DRowRealMatrix {
 		super(RMath.floatToDouble(f));
 	}
 	
+	public RMatrix(float m00, float m01, float m02, float m10, float m11,
+			float m12, float m20, float m21, float m22) {
+		
+		super(
+			new double[][] {
+				{ (double)m00, (double)m01, (double)m02 },
+				{ (double)m10, (double)m11, (double)m12 },
+				{ (double)m20, (double)m21, (double)m22 }
+			}
+		);
+	}
+	
 	public RMatrix(RealMatrix m) {
 		super(m.getData());
 	}

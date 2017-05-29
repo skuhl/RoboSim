@@ -87,8 +87,8 @@ public class RCylinder extends RShape {
 	public float[] getDimArray() {
 		float[] dims = new float[3];
 		dims[0] = 2*getDim(DimType.RADIUS);
-		dims[1] = getDim(DimType.HEIGHT);
-		dims[2] = 2*getDim(DimType.RADIUS);
+		dims[1] = 2*getDim(DimType.RADIUS);
+		dims[2] = getDim(DimType.HEIGHT);
 		return dims;
 	}
 
