@@ -9,7 +9,6 @@ import enums.CoordFrame;
 import enums.EEType;
 import enums.InstOp;
 import enums.RobotMotion;
-import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
@@ -780,8 +779,7 @@ public class RoboticArm {
 
 		g.pushMatrix();
 		
-		if (axesType != AxesDisplay.NONE && (curCoordFrame == CoordFrame.USER
-				|| curCoordFrame == CoordFrame.TOOL)) {
+		if (axesType != AxesDisplay.NONE && curCoordFrame == CoordFrame.USER) {
 			
 			UserFrame activeUser = getActiveUser();
 			// Render the active user frame
@@ -985,14 +983,7 @@ public class RoboticArm {
 			
 			// Render the active tool frame at the position of the tooltip
 			RMatrix toolAxes = RMath.rMatToWorld(activeTool.getOrientationOffset().toMatrix());
-			
-			if (axesType == AxesDisplay.AXES) {
-				Fields.draw(g, activeTool.getTCPOffset(), toolAxes, 500f,
-						Fields.PINK);
-				
-			} else if (axesType == AxesDisplay.GRID) {
-				drawGridlines(g, toolAxes, activeTool.getTCPOffset(), 35, 100);
-			}
+			Fields.draw(g, activeTool.getTCPOffset(), toolAxes, 500f, Fields.PINK);
 			
 		} else {
 			// Render a point at the position of the tooltip
@@ -1037,8 +1028,8 @@ public class RoboticArm {
 			int limboY = (limboX + 1) % axesDat.length;
 			// Compare the y value of the current vector to those of the other
 			// two vectors
-			if (Math.abs(axesDat[v][1]) >= Math.abs(axesDat[limboX][1])
-					&& Math.abs(axesDat[v][1]) >= Math.abs(axesDat[limboY][1])) {
+			if (Math.abs(axesDat[1][v]) >= Math.abs(axesDat[1][limboX])
+					&& Math.abs(axesDat[1][v]) >= Math.abs(axesDat[1][limboY])) {
 				vectorPX = limboX;
 				vectorPZ = limboY;
 				break;
@@ -1054,9 +1045,9 @@ public class RoboticArm {
 		// Map the chosen two axes vectors to the xz-plane at the y-position of
 		// the Robot's base
 		g.applyMatrix(
-				axesDat[vectorPX][0], 0, axesDat[vectorPZ][0], origin.x,
+				axesDat[0][vectorPX], 0, axesDat[0][vectorPZ], origin.x,
 				0, 1, 0, BASE_POSITION.y,
-				axesDat[vectorPX][2], 0, axesDat[vectorPZ][2], origin.z,
+				axesDat[2][vectorPX], 0, axesDat[2][vectorPZ], origin.z,
 				0, 0, 0, 1
 		);
 
@@ -1663,7 +1654,7 @@ public class RoboticArm {
 	 * @return		The tool frame associated with the given index, or null if
 	 * 				the given index is invalid.
 	 */
-	public Frame getToolFrame(int fdx) {
+	public ToolFrame getToolFrame(int fdx) {
 		if (fdx >= 0 && fdx < TOOL_FRAMES.length) {
 			return TOOL_FRAMES[fdx];
 			
@@ -1682,7 +1673,7 @@ public class RoboticArm {
 	 * @return		The user frame associated with the given index, or null if
 	 * 				the given index is invalid.
 	 */
-	public Frame getUserFrame(int fdx) {
+	public UserFrame getUserFrame(int fdx) {
 		if (fdx >= 0 && fdx < USER_FRAMES.length) {
 			return USER_FRAMES[fdx];
 			

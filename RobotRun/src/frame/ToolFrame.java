@@ -6,8 +6,6 @@ import global.Fields;
 import global.MyFloatFormat;
 import global.RMath;
 import processing.core.PVector;
-import robot.RobotRun;
-import robot.RoboticArm;
 
 public class ToolFrame extends Frame {
 	// The TCP offset associated with this frame
@@ -24,27 +22,8 @@ public class ToolFrame extends Frame {
 		TCPTeachPoints = new Point[] { null, null, null };
 	}
 	
-	/* NOTE: do not use getOrientation when saving a Tool Frame! */
-	
-	@Override
-	public RQuaternion getOrientation() {
-		/**
-		RoboticArm model = RobotRun.getActiveRobot();
-		/**
-		Point cur = RobotRun.nativeRobotPoint(model, model.getJointAngles());
-		/**
-		Point cur = model.getToolTipPoint(null);
-		Point def = model.getDefaultPoint();
-		RQuaternion diff = cur.orientation.transformQuaternion(def.orientation.conjugate());
-		
-		return diff.transformQuaternion(((RQuaternion)orientationOffset.clone()));
-		/**/
-		
-		return orientationOffset;
-	}
-	
 	/**
-	 * Simply returns the value of the frame's orientation offset.
+	 * Returns the value of the frame's orientation offset.
 	 * 
 	 * @return	The offset of the Robot's orientation associated with the tool
 	 * 			frame
@@ -52,12 +31,6 @@ public class ToolFrame extends Frame {
 	public RQuaternion getOrientationOffset() {
 		return orientationOffset;
 	}
-
-	/**
-	 * Tool Frames have no origin offset.
-	 */
-	@Override
-	public PVector getOrigin() { return new PVector(0f, 0f, 0f); }
 
 	@Override
 	public Point getPoint(int idx) {
