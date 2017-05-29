@@ -183,7 +183,7 @@ public class RoboticArm {
 	private int activeUserIdx, activeToolIdx;
 	
 	
-	private RMatrix lastEEOrientation;
+	private RMatrix lastTipTMatrix;
 	
 	private boolean trace;
 	
@@ -395,7 +395,7 @@ public class RoboticArm {
 		trace = false;
 		tracePts = new ArrayList<PVector>();
 		// Initializes the old transformation matrix for the arm model
-		lastEEOrientation = getRobotTransform( getJointAngles() );
+		lastTipTMatrix = getRobotTransform( getJointAngles() );
 		/* REMOVE AFTER REFACTOR *
 		RobotRun.getInstance().pushMatrix();
 		RobotRun.applyModelRotation(this, getJointAngles());
@@ -794,7 +794,7 @@ public class RoboticArm {
 				RMatrix userAxes = RMath.rMatToWorld(activeUser.getNativeAxisVectors());
 				
 				if (axesType == AxesDisplay.AXES) {
-					Fields.draw(g, activeUser.getOrigin(), userAxes, 10000f, Fields.ORANGE);
+					Fields.drawGridlines(g, activeUser.getOrigin(), userAxes, 10000f, Fields.ORANGE);
 					
 				} else if (axesType == AxesDisplay.GRID) {
 					drawGridlines(g, userAxes, activeUser.getOrigin(), 35, 100);
@@ -1007,7 +1007,7 @@ public class RoboticArm {
 			
 			// Render the active tool frame at the position of the tooltip
 			RMatrix toolAxes = RMath.rMatToWorld(activeTool.getOrientationOffset().toMatrix());
-			Fields.draw(g, activeTool.getTCPOffset(), toolAxes, 500f, Fields.PINK);
+			Fields.drawGridlines(g, activeTool.getTCPOffset(), toolAxes, 500f, Fields.PINK);
 			
 		} else {
 			// Render a point at the position of the tooltip
@@ -1548,8 +1548,8 @@ public class RoboticArm {
 		return new PVector(0f, 0f, 0f);
 	}
 
-	public RMatrix getLastEEOrientation() {
-		return lastEEOrientation;
+	public RMatrix getLastTipTMatrix() {
+		return lastTipTMatrix;
 	}
 
 	public int getLiveSpeed() {
@@ -2802,12 +2802,11 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Updates the reference to the Robot's previous
-	 * End Effector orientation, which is used to move
-	 * the object held by the Robot.
+	 * Updates the reference to the Robot's last tool tip position and
+	 * orientation, which is used to move the object held by the Robot.
 	 */
-	public void updatePreviousEEOrientation() {
-		lastEEOrientation = getRobotTransform(getJointAngles());
+	public void updateLastTipTMatrix() {
+		lastTipTMatrix = getRobotTransform(getJointAngles());
 		/* REMOVE AFTER REFACTOR *
 		RobotRun app = RobotRun.getInstance();
 		

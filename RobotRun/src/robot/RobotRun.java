@@ -1188,7 +1188,7 @@ public class RobotRun extends PApplet {
 	 * @return		The closest object, with which the ray collided
 	 */
 	private WorldObject checkForCollisionsInScene(RRay ray) {
-		Scenario active = this.getActiveScenario();
+		Scenario active = getActiveScenario();
 		
 		if (UI.getRobotButtonState()) {
 			return checkForRayCollisions(ray, active, ROBOTS.get(0));
@@ -1595,7 +1595,7 @@ public class RobotRun extends PApplet {
 			
 			/*Camera Test Code*/
 			if(camEnable) {
-				Fields.draw(getGraphics(), rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
+				Fields.drawGridlines(getGraphics(), rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
 				
 				PVector near[] = rCamera.getPlaneNear();
 				PVector far[] = rCamera.getPlaneFar();
@@ -6603,7 +6603,7 @@ public class RobotRun extends PApplet {
 						 ***********************************************/
 						
 						RMatrix curTip = active.getRobotTransform(active.getJointAngles());
-						RMatrix invMat = active.getLastEEOrientation().getInverse();
+						RMatrix invMat = active.getLastTipTMatrix().getInverse();
 						Fixture refFixture = p.getFixtureRef();
 						
 						pushMatrix();
@@ -6692,7 +6692,7 @@ public class RobotRun extends PApplet {
 			PVector origin = new PVector(0f, 0f, 0f);
 			
 			if (axesType == AxesDisplay.AXES) {
-				Fields.draw(getGraphics(), origin, Fields.WORLD_AXES_MAT,
+				Fields.drawGridlines(getGraphics(), origin, Fields.WORLD_AXES_MAT,
 						10000f, Fields.BLACK);
 				
 			} else if (axesType == AxesDisplay.GRID) {
@@ -6738,13 +6738,13 @@ public class RobotRun extends PApplet {
 				orientation = wldObj.getLocalOrientation();
 			}
 
-			Fields.draw(getGraphics(), origin, RMath.rMatToWorld(orientation),
+			Fields.drawGridlines(getGraphics(), origin, RMath.rMatToWorld(orientation),
 					500f, Fields.BLACK);
 		}
 		
 		/* TEST OUTPUT */
 
-		active.updatePreviousEEOrientation();
+		active.updateLastTipTMatrix();
 		
 		if (Fields.DEBUG) {
 			if (mouseRay != null) {

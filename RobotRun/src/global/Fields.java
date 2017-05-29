@@ -242,6 +242,12 @@ public abstract class Fields {
 		
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param g
+	 * @param tMat
+	 */
 	public static void transform(PGraphics g, RMatrix tMat) {
 		
 		g.applyMatrix(
@@ -342,8 +348,8 @@ public abstract class Fields {
 	 * @param axesLength
 	 * @param originColor
 	 */
-	public static void draw(PGraphics g, PVector origin, RMatrix axesVectors,
-			float axesLength, int originColor) {
+	public static void drawGridlines(PGraphics g, PVector origin,
+			RMatrix axesVectors, float axesLength, int originColor) {
 		
 		g.pushMatrix();
 		g.pushStyle();
