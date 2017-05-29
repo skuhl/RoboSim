@@ -1529,7 +1529,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 		else {
-			System.out.println("No active scenario!");
+			System.err.println("No active scenario!");
 		}
 	}
 	

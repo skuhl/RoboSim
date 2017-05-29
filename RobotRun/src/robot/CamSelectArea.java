@@ -5,12 +5,15 @@ import processing.core.PVector;
 
 public class CamSelectArea {
 	public final int area_id;
+	public final boolean isDefect;
+	
 	private CamSelectView[] selectViews;
 	private int state;
 	
 		
-	public CamSelectArea(int id, CamSelectView... views) {
+	public CamSelectArea(int id, boolean type, CamSelectView... views) {
 		area_id = id;
+		isDefect = type;
 		selectViews = new CamSelectView[6];
 		state = 0;
 		
@@ -75,6 +78,6 @@ public class CamSelectArea {
 	}
 	
 	public CamSelectArea copy() {
-		return new CamSelectArea(area_id, selectViews);
+		return new CamSelectArea(area_id, isDefect, selectViews);
 	}
 }

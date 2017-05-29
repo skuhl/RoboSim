@@ -373,15 +373,15 @@ public class RobotCamera {
 						for(int i = 0; i < protoMdl.getNumSelectAreas(); i += 1) {
 							CamSelectArea protoArea = protoMdl.getCamSelectArea(i);
 							if(protoArea.getView(objProtoOrient) != null && !protoArea.isIgnored()) {
-								if(protoArea.isEmphasized() && o.getModelID() != objProto.getModelID()) {
-									objMatch = false;
-									break;
-								}
-								else if(!protoArea.isEmphasized() && o.getModelID() != objProto.getModelID()) {
-									if(Math.random() < 0.5) {
+								if(protoArea.isEmphasized()) {
+									if(o.getModelID() != objProto.getModelID() || protoArea.isDefect) {
 										objMatch = false;
 										break;
 									}
+								}
+								else if(Math.random() < 0.5) {
+									objMatch = false;
+									break;
 								}
 							}
 						}
