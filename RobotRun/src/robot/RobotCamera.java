@@ -2,6 +2,7 @@ package robot;
 
 import java.util.ArrayList;
 
+import geom.ComplexShape;
 import geom.RMatrix;
 import geom.RQuaternion;
 import geom.WorldObject;
@@ -38,7 +39,7 @@ public class RobotCamera {
 	}
 	
 	public RobotCamera() {
-		camPos = new PVector(-500, 300, 500);
+		camPos = new PVector(-500, 0, 500);
 		camOrient = new RQuaternion();
 		camFOV = 75;
 		camAspectRatio = 1.5f;
@@ -340,8 +341,11 @@ public class RobotCamera {
 	
 	public ArrayList<WorldObject> matchTaughtObject(int idx, Scenario scene) {
 		WorldObject objProto;
+		RMatrix objProtoOrient;
+		
 		if(idx < taughtObjects.size()) {
 			objProto = taughtObjects.get(idx);
+			objProtoOrient = objProto.getLocalOrientation();
 		} else {
 			return null;
 		}
@@ -350,15 +354,42 @@ public class RobotCamera {
 		ArrayList<WorldObject> objMatches = new ArrayList<WorldObject>();
 		
 		for(WorldObject o: inFrame) {
-			if(o.getObjectID() == objProto.getObjectID()) {
+			if(o.getModelFamilyID() == objProto.getModelFamilyID()) {
 				RMatrix objOrient = o.getLocalOrientation();
 				RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
-				RMatrix oDiff = objProto.getLocalOrientation().transpose().multiply(viewOrient);
+				RMatrix oDiff = objProtoOrient.transpose().multiply(viewOrient);
 				float[][] axes = oDiff.getFloatData();
 				PVector zDiff = new PVector(axes[0][2], axes[1][2], axes[2][2]);
 				
 				if(Math.pow(zDiff.dot(new PVector(0, 0, 1)), 2) > 0.9) {
-					objMatches.add(o);
+					if(o.getModelFamilyID() == -1) {
+						objMatches.add(o);
+					}
+					else {
+						ComplexShape protoMdl = (ComplexShape)objProto.getForm();
+						boolean objMatch = true;
+						
+						//TODO handle mismatches due to emphasized/ unselected defects (reflections, etc.)
+						for(int i = 0; i < protoMdl.getNumSelectAreas(); i += 1) {
+							CamSelectArea protoArea = protoMdl.getCamSelectArea(i);
+							if(protoArea.getView(objProtoOrient) != null && !protoArea.isIgnored()) {
+								if(protoArea.isEmphasized() && o.getModelID() != objProto.getModelID()) {
+									objMatch = false;
+									break;
+								}
+								else if(!protoArea.isEmphasized() && o.getModelID() != objProto.getModelID()) {
+									if(Math.random() < 0.5) {
+										objMatch = false;
+										break;
+									}
+								}
+							}
+						}
+						
+						if(objMatch) {
+							objMatches.add(o);
+						}
+					}
 				}
 			}
 		}
@@ -391,6 +422,15 @@ public class RobotCamera {
 			RMatrix objOrient = teachObj.getLocalOrientation();
 			RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
 			teachObj.setLocalOrientation(viewOrient);
+			
+			for(int i = 0; i < taughtObjects.size(); i += 1) {
+				WorldObject o = taughtObjects.get(i);
+				if(o.getName().compareTo(teachObj.getName()) == 0) {
+					taughtObjects.set(i, teachObj);
+					return taughtObjects;
+				}
+			}
+			
 			taughtObjects.add(teachObj);
 			return taughtObjects;
 		}

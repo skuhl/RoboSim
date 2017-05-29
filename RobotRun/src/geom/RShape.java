@@ -84,4 +84,6 @@ public abstract class RShape implements Cloneable {
 	public void setStrokeValue(Integer newVal) { strokeCVal = newVal; }
 
 	public abstract int getID();
+
+	public abstract int getFamilyID();
 }

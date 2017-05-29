@@ -6,6 +6,8 @@ import global.RegisteredModels;
 import processing.core.PGraphics;
 import processing.core.PShape;
 import processing.core.PVector;
+import robot.CamSelectArea;
+import robot.CamSelectView;
 import robot.RobotRun;
 
 /**
@@ -18,11 +20,11 @@ public class ComplexShape extends RShape {
 	private MyPShape model;
 	private PVector centerOffset, baseDims;
 	
-	private float mdlScale;
-	
-	public final int model_id;
 	private PGraphics preview;
 	
+	private float mdlScale;
+	private final int model_id;
+	private final int model_family_id;
 	private ArrayList<CamSelectArea> selectAreas;
 
 	/**
@@ -36,15 +38,24 @@ public class ComplexShape extends RShape {
 	public ComplexShape(String filename, MyPShape mdl, int fill) {
 		super(fill, null);
 		model_id = RegisteredModels.modelIDList.get(filename);
+		model_family_id = RegisteredModels.modelFamilyList.get(model_id);
 		srcFilePath = filename;
 		
 		mdlScale = 1f;
 		model = mdl;
+<<<<<<< HEAD
 		iniDimensions();
 		
 		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
 		loadSelectAreas();
+=======
+		model.setFill(fill);
+		selectAreas = new ArrayList<CamSelectArea>();
+		
+		loadCamSelectAreas();
+		iniDimensions();
+>>>>>>> 098a75a4ae0da1a1f612c0b6e879f52f3481e4b4
 	}
 
 	/**
@@ -58,7 +69,9 @@ public class ComplexShape extends RShape {
 	public ComplexShape(String filename, MyPShape mdl, int fill, float scale) {
 		super(fill, null);
 		model_id = RegisteredModels.modelIDList.get(filename);
+		model_family_id = RegisteredModels.modelFamilyList.get(model_id);
 		srcFilePath = filename;
+<<<<<<< HEAD
 		// The initial scale MUST be one in order for scaling to work properly!
 		mdlScale = 1f;
 		model = mdl;
@@ -69,14 +82,49 @@ public class ComplexShape extends RShape {
 		preview = loadModelPreview();
 		selectAreas = new ArrayList<CamSelectArea>();
 		loadSelectAreas();
+=======
+		
+		mdlScale = 1f;
+		model = mdl;
+		selectAreas = new ArrayList<CamSelectArea>();
+		
+		loadCamSelectAreas();
+		iniDimensions();
+		setDim(scale, DimType.SCALE);
+>>>>>>> 098a75a4ae0da1a1f612c0b6e879f52f3481e4b4
 	}
 	
-	private void loadSelectAreas() {
+	private void loadCamSelectAreas() {
 		if(RegisteredModels.modelAreasOfInterest.get(model_id) != null) {
 			for(CamSelectArea c: RegisteredModels.modelAreasOfInterest.get(model_id)) {
 				selectAreas.add(c.copy());
 			}
 		}
+	}
+	
+	public CamSelectArea getCamSelectArea(int i) {
+		return selectAreas.get(i);
+	}
+	
+	public int getNumSelectAreas() {
+		return selectAreas.size();
+	}
+	
+	public CamSelectArea getSelectAreaClicked(int x, int y, RMatrix m) {
+		for(CamSelectArea a: selectAreas) {
+			CamSelectView v = a.getView(m);
+			
+			if(v != null) {
+				PVector tl = v.getTopLeftBound();
+				PVector br = v.getBottomRightBound();
+				
+				if(x >= tl.x && x <= br.x && y >= tl.y && y <= br.y) {
+					return a;
+				}
+			}
+		}
+		
+		return null;
 	}
 
 	@Override
@@ -130,6 +178,11 @@ public class ComplexShape extends RShape {
 		return model_id;
 	}
 	
+	@Override
+	public int getFamilyID() {
+		return model_family_id;
+	}
+	
 	public PShape getForm() {
 		return model;
 	}
@@ -181,29 +234,61 @@ public class ComplexShape extends RShape {
 		centerOffset = PVector.add(minimums, PVector.mult(baseDims, 0.5f)).mult(-1);
 	}
 	
-	public PGraphics getModelPreview() {
+	public PGraphics getModelPreview(RMatrix m) {
 		if(preview == null) {
-			preview = loadModelPreview();
+			PGraphics img = RobotRun.getInstance().createGraphics(150, 200, RobotRun.P3D);
+			float[][] rMat = m.getFloatData();
+			img.beginDraw();
+			img.ortho();
+			img.lights();
+			img.background(255);
+			img.stroke(0);
+			img.translate(75, 100, 0);
+			img.applyMatrix(
+					rMat[0][0], rMat[1][0], rMat[2][0], 0,
+					rMat[0][1], rMat[1][1], rMat[2][1], 0,
+					rMat[0][2], rMat[1][2], rMat[2][2], 0,
+					0, 0, 0, 1
+			);
+			img.scale(2/mdlScale);
+			img.shape(model);
+			img.resetMatrix();
+			img.translate(-75, -100);
+						
+			for(CamSelectArea a: selectAreas) {
+				CamSelectView v = a.getView(m);
+				if(a.isEmphasized()) {
+					img.stroke(0, 255, 0);
+					img.fill(0, 255, 0, 126);
+				}
+				else if(a.isIgnored()) {
+					img.stroke(255, 0, 0);
+					img.fill(255, 0, 0, 126);
+				}
+				else {
+					img.stroke(0);
+					img.fill(0, 0, 0, 126);
+				}
+				
+				if(v != null) {
+					PVector c = v.getTopLeftBound();
+					float w = v.getWidth();
+					float h = v.getHeight();
+					img.rect(c.x, c.y, w, h);
+				}
+			}
+			
+			img.endDraw();
+			
+			preview = img;
 		}
 		
 		return preview;
 	}
-
-	private PGraphics loadModelPreview() {
-		PGraphics img = RobotRun.getInstance().createGraphics(150, 200, RobotRun.P3D);
-		img.beginDraw();
-		img.ortho();
-		img.lights();
-		img.background(255);
-		img.stroke(0);
-		img.translate(75, 100, 0);
-		img.shape(model);
-		img.translate(-75, -100, 10 + model.depth/2);
-		//TODO draw select boxes
-			
-		img.endDraw();
-		
-		return img;
+	
+	public PGraphics updateModelPreview(RMatrix m) {
+		preview = null;
+		return getModelPreview(m);
 	}
 
 	@Override
