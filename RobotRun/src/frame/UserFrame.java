@@ -20,13 +20,10 @@ public class UserFrame extends Frame {
 		setOrientOrigin(null);
 	}
 	
-	@Override
 	public RQuaternion getOrientation() { return orientationOffset; }
 
 	public Point getOrientOrigin() { return orientOrigin; }
 
-	// Getter and Setters for the User frame's origin
-	@Override
 	public PVector getOrigin() { return origin; }
 
 	@Override

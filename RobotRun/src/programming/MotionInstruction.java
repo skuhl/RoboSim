@@ -1,5 +1,5 @@
 package programming;
-import frame.Frame;
+import frame.UserFrame;
 import geom.Point;
 import global.Fields;
 import global.RMath;
@@ -127,7 +127,7 @@ public final class MotionInstruction extends Instruction  {
 		if (userFrame != -1) {
 			// Convert point into the Native Coordinate System
 			RoboticArm model = RobotRun.getActiveRobot();
-			Frame active = model.getUserFrame(userFrame);
+			UserFrame active = model.getUserFrame(userFrame);
 			pt = RMath.removeFrame(model, pt, active.getOrigin(), active.getOrientation());
 		}
 

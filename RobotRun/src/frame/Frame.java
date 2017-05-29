@@ -243,17 +243,7 @@ public abstract class Frame {
 
 	/* Returns a set of axes unit vectors representing the axes
 	 * of the frame in reference to the Native Coordinate System. */
-	public RMatrix getNativeAxisVectors() { return getOrientation().toMatrix(); }
-
-	/**
-	 * Returns the orientation of the axes for this frame.
-	 */
-	public abstract RQuaternion getOrientation();
-
-	/**
-	 * Return the origin of this Frame's coordinate System.
-	 */
-	public abstract PVector getOrigin();
+	public RMatrix getNativeAxisVectors() { return orientationOffset.toMatrix(); }
 
 	/**
 	 * Returns the position of the teach point at the given index in the Frame's list

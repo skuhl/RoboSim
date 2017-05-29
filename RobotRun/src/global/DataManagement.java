@@ -1253,12 +1253,13 @@ public abstract class DataManagement {
 		int len;
 		
 		if (f instanceof UserFrame) {
+			UserFrame uFrame = (UserFrame)f;
 			// Write User frame origin
-			savePVector(f.getOrigin(), out);
+			savePVector(uFrame.getOrigin(), out);
 			len = 3;
 			
 			// Write frame axes
-			saveRQuaternion(f.getOrientation(), out);
+			saveRQuaternion(uFrame.getOrientation(), out);
 
 		} else {
 			ToolFrame tf = (ToolFrame)f;

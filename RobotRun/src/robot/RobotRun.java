@@ -33,7 +33,6 @@ import geom.Triangle;
 import geom.WorldObject;
 import global.DataManagement;
 import global.Fields;
-import global.MyFloatFormat;
 import global.RMath;
 import global.RegisteredModels;
 import processing.core.PApplet;
@@ -6659,9 +6658,10 @@ public class RobotRun extends PApplet {
 		AxesDisplay axesType = getAxesState();
 		
 		if (axesType != AxesDisplay.NONE &&
-				robot.getCurCoordFrame() != CoordFrame.JOINT &&
-				(robot.getCurCoordFrame() == CoordFrame.WORLD ||
-				 robot.getActiveUser() == null)) {
+			(robot.getCurCoordFrame() == CoordFrame.WORLD
+				|| robot.getCurCoordFrame() == CoordFrame.TOOL
+				|| (robot.getCurCoordFrame() == CoordFrame.USER
+					&& robot.getActiveUser() == null))) {
 			
 			// Render the world frame
 			PVector origin = new PVector(0f, 0f, 0f);
