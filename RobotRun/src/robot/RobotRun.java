@@ -7279,10 +7279,6 @@ public class RobotRun extends PApplet {
 			ROBOTS.put(0, new RoboticArm(0, new PVector(200, Fields.FLOOR_Y, 200), loadRobotModels(), loadRobotModelTransforms()));
 			ROBOTS.put(1, new RoboticArm(1, new PVector(200, Fields.FLOOR_Y, -750), loadRobotModels(), loadRobotModelTransforms()));
 
-			for (RoboticArm r : ROBOTS.values()) {
-				r.setDefaultRobotPoint();
-			}
-
 			activeRobot = ROBOTS.get(0);
 			rCamera = new RobotCamera();
 

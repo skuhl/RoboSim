@@ -394,6 +394,11 @@ public class RoboticArm {
 		held = null;
 		trace = false;
 		tracePts = new ArrayList<PVector>();
+		
+		robotPoint = getFacePlatePoint(
+				new float[] { 0f, 0f, 0f, 0f, 0f, 0f }
+		);
+		
 		// Initializes the old transformation matrix for the arm model
 		lastTipTMatrix = getRobotTransform( getJointAngles() );
 		/* REMOVE AFTER REFACTOR *
@@ -2298,22 +2303,6 @@ public class RoboticArm {
 	public void setCoordFrame(CoordFrame newFrame) {
 		curCoordFrame = newFrame;
 	}
-
-	/**
-	 * Sets the Robot's default position field. This method should ONLY be
-	 * called after the RobotRun's activeRobot field is set, since
-	 * nativeRobotPoint relies on that method.
-	 */
-	protected void setDefaultRobotPoint() {
-		// Define the default Robot position and orientation
-		robotPoint = getFacePlatePoint(
-				new float[] { 0f, 0f, 0f, 0f, 0f, 0f }
-		);
-		/* TODO REMOVE AFTER REFACTOR *
-		robotPoint = RobotRun.nativeRobotPoint(this,
-				new float[] { 0f, 0f, 0f, 0f, 0f, 0f });
-		/**/
-	}
 	
 	/**
 	 * Set the set of the robot's current end effector and update the part held
@@ -2819,10 +2808,6 @@ public class RoboticArm {
 		/**/
 	}
 	
-	/**
-	 * Sets the Robot's default position and orientation in a static variable.
-	 * THIS METHOD MUST BE CALLED WHEN THE FIRST ROBOT IS CREATED!
-	 */
 	public void updateRobot(RobotRun app) {
 		
 		if (!hasMotionFault()) {
