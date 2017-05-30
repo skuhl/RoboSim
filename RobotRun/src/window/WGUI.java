@@ -620,12 +620,12 @@ public class WGUI implements ControlListener {
 
 		ddlLimbo = addDropdown("RobotEE", miscellaneous, ldropItemWidth,
 				dropItemHeight, 4, Fields.small);
-		ddlLimbo.addItem("Faceplate", EEType.NONE)
-		.addItem(EEType.SUCTION.name(), EEType.SUCTION)
-		.addItem(EEType.CLAW.name(), EEType.CLAW)
-		.addItem(EEType.POINTER.name(), EEType.POINTER)
-		.addItem(EEType.GLUE_GUN.name(), EEType.GLUE_GUN)
-		.addItem(EEType.WIELDER.name(), EEType.WIELDER)
+		ddlLimbo.addItem("Faceplate", -1)
+		.addItem(EEType.SUCTION.name(), 0)
+		.addItem(EEType.CLAW.name(), 1)
+		.addItem(EEType.POINTER.name(), 2)
+		.addItem(EEType.GLUE_GUN.name(), 3)
+		.addItem(EEType.WIELDER.name(), 4)
 		.setValue(0f);
 		
 		addDropdown("Scenario", scenario, ldropItemWidth, dropItemHeight, 4, Fields.small);
@@ -1095,7 +1095,7 @@ public class WGUI implements ControlListener {
 					/* Link the active robot's end effector to the selected
 					 * item */
 					MyDropdownList ddl = (MyDropdownList)arg0.getController();
-					r.setActiveEE( (EEType)ddl.getSelectedItem() );
+					r.setActiveEE( (Integer)ddl.getSelectedItem() );
 				}
 			} else if (arg0.isFrom("CamObjPreview")) {
 				WorldObject o = (WorldObject) getDropdown("CamObjects").getSelectedItem();	
@@ -2891,8 +2891,8 @@ public class WGUI implements ControlListener {
 
 		if (r != null) {
 			// Link the active robot's end effector to the dropdown list
-			int activeEE = r.getActiveEE().ordinal();
-			getDropdown("RobotEE").setValue(activeEE);
+			int activeEE = r.getActiveEEIdx();
+			getDropdown("RobotEE").setValue(activeEE + 1);
 		}
 	}
 	
