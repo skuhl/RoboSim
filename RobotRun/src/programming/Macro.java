@@ -1,5 +1,5 @@
 package programming;
-import robot.RobotRun;
+import core.RobotRun;
 
 public class Macro {
 	boolean manual;

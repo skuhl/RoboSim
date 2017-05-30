@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
 
+import core.RobotRun;
+import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;
 import enums.EEType;
@@ -452,12 +454,10 @@ public class RoboticArm {
 			return 0f;
 		}
 
-		/* Initiaize the Robot's destination */
-		// TODO REMOVE AFTER REFACTOR Point RP = RobotRun.nativeRobotEEPoint(this, getJointAngles());
+		// Initiaize the Robot's destination
 		Point RP = getToolTipNative();
 		tgtPosition = RP.position;
 		tgtOrientation = RP.orientation;
-		/**/
 
 		if(axis >= 0 && axis < 3) {
 			if(jogLinear[axis] == 0) {
@@ -1157,9 +1157,6 @@ public class RoboticArm {
 		} else {
 			// Jog in the World, Tool or User Frame
 			Point curPoint = getToolTipNative();
-			/* TODO REMOVE AFTER REFACTOR *
-			Point curPoint = RobotRun.nativeRobotEEPoint(this, getJointAngles());
-			/**/
 			RQuaternion invFrameOrientation = null;
 			
 			if (curCoordFrame == CoordFrame.TOOL) {
@@ -1856,9 +1853,6 @@ public class RoboticArm {
 		if ((destAngles == null) || invalidAngle) {
 			if (Fields.DEBUG) {
 				Point RP = getToolTipNative();
-				/* TODO REMOVE AFTER REFACTOR *
-				Point RP = RobotRun.nativeRobotEEPoint(this, getJointAngles());
-				/**/
 				Fields.debug("IK Failure ...\n%s -> %s\n%s -> %s\n\n",
 						RP.position, destPosition, RP.orientation,
 						destOrientation);
@@ -1905,9 +1899,6 @@ public class RoboticArm {
 		
 		if (!hasMotionFault()) {
 			Point start = getToolTipNative();
-			/* TODO REMOVE AFTER REFACTOR *
-			Point start = RobotRun.nativeRobotEEPoint(this, getJointAngles());
-			/**/
 			Point end = new Point(position.copy(), (RQuaternion)orientation.clone(), start.angles.clone());
 			RobotRun.getInstance().beginNewLinearMotion(start, end);
 			motionType = RobotMotion.MT_LINEAR;
@@ -2838,7 +2829,7 @@ public class RoboticArm {
 
 			} else if (modelInMotion()) {
 				// Jog the Robot
-				app.intermediatePositions.clear();
+				app.getIntermediatePositions().clear();
 				executeLiveMotion();
 			}
 		}

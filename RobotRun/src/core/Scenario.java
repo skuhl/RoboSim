@@ -1,4 +1,4 @@
-package robot;
+package core;
 
 import java.util.ArrayList;
 import java.util.Iterator;

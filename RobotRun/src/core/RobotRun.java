@@ -1,4 +1,4 @@
-package robot;
+package core;
 
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
@@ -59,6 +59,8 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
+import robot.CallFrame;
+import robot.RoboticArm;
 import screen.DisplayLine;
 import screen.MenuScroll;
 import screen.ScreenState;
@@ -176,7 +178,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public static void main(String[] args) {
-		String[] appletArgs = new String[] { "robot.RobotRun" };
+		String[] appletArgs = new String[] { "core.RobotRun" };
 
 		if (args != null) {
 			PApplet.main(concat(appletArgs, args));
@@ -3278,18 +3280,8 @@ public class RobotRun extends PApplet {
 
 			if (inst instanceof MotionInstruction) {
 				r.getInstToEdit( activeRobot.getActiveInstIdx() );
-				/* TODO REMOVE AFTER REFACTOR *
-				Point pt = nativeRobotEEPoint(r, activeRobot.getJointAngles());
-				Frame active = activeRobot.getActiveFrame(CoordFrame.USER);
-
-				if (active != null) {
-					// Convert into currently active frame
-					pt = RMath.applyFrame(activeRobot, pt, active.getOrigin(), active.getOrientation());
-				}
-				/**/
 				
 				Point pt = r.getToolTipUser();
-				
 				Program p = r.getActiveProg();
 				int actInst = r.getActiveInstIdx();
 
@@ -3694,13 +3686,6 @@ public class RobotRun extends PApplet {
 			if (isShift()) {
 				// Save the Robot's current position and joint angles
 				Point pt;
-				/* TODO REMOVE AFTER REFACTOR *
-				if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT) {
-					pt = nativeRobotEEPoint(activeRobot, activeRobot.getJointAngles());
-				} else {
-					pt = nativeRobotPoint(activeRobot, activeRobot.getJointAngles());
-				}
-				/**/
 				
 				if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT) {
 					pt = activeRobot.getToolTipNative();
@@ -3729,17 +3714,6 @@ public class RobotRun extends PApplet {
 
 			if (isShift() && pReg != null) {
 				// Save the Robot's current position and joint angles
-				/* TODO REMOVE AFTER REFACTOR *
-				Point curRP = nativeRobotEEPoint(r, r.getJointAngles());
-				Frame active = r.getActiveFrame(CoordFrame.USER);
-
-				if (active != null) {
-					// Save Cartesian values in terms of the active User frame
-					curRP = RMath.applyFrame(r, curRP, active.getOrigin(), active.getOrientation());
-				}
-				
-				pReg.point = curRP;
-				/**/
 				
 				pReg.point = activeRobot.getToolTipUser();
 				pReg.isCartesian = true;
@@ -4405,6 +4379,10 @@ public class RobotRun extends PApplet {
 		}
 
 		return row;
+	}
+	
+	public ArrayList<Point> getIntermediatePositions() {
+		return intermediatePositions;
 	}
 
 	public KeyCodeMap getKeyCodeMap() {
@@ -5114,9 +5092,6 @@ public class RobotRun extends PApplet {
 				// close to that position stored in the instruction's register
 				MotionInstruction a = (MotionInstruction) instr;
 				Point tipPos = activeRobot.getToolTipNative();
-				/* TODO REMOVE AFTER REFACTOR *
-				Point tipPos = nativeRobotEEPoint(activeRobot, activeRobot.getJointAngles());
-				/**/
 				Point instPt = a.getVector(p);
 
 				if (instPt != null && tipPos.position.dist(instPt.position) < (activeRobot.getLiveSpeed() / 100f)) {
@@ -6138,19 +6113,6 @@ public class RobotRun extends PApplet {
 	 * instruction will simply be updated.
 	 */
 	public void newMotionInstruction() {
-		
-		/* TODO REMOVE AFTER REFACTOR *
-		Point pt = nativeRobotEEPoint(robot, robot.getJointAngles());
-		Frame active = robot.getActiveFrame(CoordFrame.USER);
-
-		if (active != null) {
-			// Convert into currently active frame
-			pt = RMath.applyFrame(robot, pt, active.getOrigin(), active.getOrientation());
-
-			Fields.debug("New: %s\n", RMath.vToWorld(pt.position));
-		}
-		/**/
-		
 		Program prog = activeRobot.getActiveProg();
 		
 		Point pt = activeRobot.getToolTipUser();
@@ -6429,9 +6391,6 @@ public class RobotRun extends PApplet {
 					inputs[idx] = RMath.mod2PI(inputs[idx] * DEG_TO_RAD);
 				}
 				
-				/* TODO REMOVE AFTER REFACTOR *
-				return nativeRobotEEPoint(activeRobot, inputs);
-				/**/
 				return activeRobot.getToolTipNative();
 			}
 
@@ -6616,10 +6575,6 @@ public class RobotRun extends PApplet {
 						if (refFixture != null) {
 							refFixture.removeCoordinateSystem();
 						}
-						
-						/* TODO REMOVE AFTER REFACTOR *
-						RobotRun.applyModelRotation(active, active.getJointAngles());
-						/**/
 						
 						applyMatrix(curTip);
 						applyMatrix(invMat);
@@ -6868,7 +6823,7 @@ public class RobotRun extends PApplet {
 			coordFrame = "Coordinate Frame: " + coord.toString();
 		}
 
-		Point RP = activeRobot.getToolTipNative();// TODO REMOVE AFTER REFACTOR nativeRobotEEPoint(activeRobot, activeRobot.getJointAngles());
+		Point RP = activeRobot.getToolTipNative();
 
 		String[] cartesian = RP.toLineStringArray(true), joints = RP.toLineStringArray(false);
 		// Display the current Coordinate Frame name
@@ -7466,9 +7421,6 @@ public class RobotRun extends PApplet {
 	 */
 	public boolean setUpInstruction(Program program, RoboticArm model, MotionInstruction instruction) {
 		Point start = model.getToolTipNative();
-		/* TODO REMOVE AFTER REFACTOR *
-		Point start = nativeRobotEEPoint(activeRobot, model.getJointAngles());
-		/**/
 		
 		if (!instruction.checkFrames(activeRobot.getActiveToolIdx(), activeRobot.getActiveUserIdx())) {
 			// Current Frames must match the instruction's frames
