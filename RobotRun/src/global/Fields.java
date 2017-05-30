@@ -40,11 +40,6 @@ public abstract class Fields {
 	public static final int DPREG_NUM = 100;
 	
 	/**
-	 * The maximum number of I/O registers associated with a robot.
-	 */
-	public static final int IOREG_NUM = 5;
-	
-	/**
 	 * The joint motion type of a motion instruction.
 	 */
 	public static final int MTYPE_JOINT = 0;

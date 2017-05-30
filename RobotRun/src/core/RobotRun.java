@@ -60,6 +60,10 @@ import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
 import robot.CallFrame;
+import robot.DrawAction;
+import robot.EndEffector;
+import robot.RSegWithJoint;
+import robot.RSegment;
 import robot.RoboticArm;
 import screen.DisplayLine;
 import screen.MenuScroll;
@@ -5153,7 +5157,7 @@ public class RobotRun extends PApplet {
 	public ArrayList<DisplayLine> loadIORegInst(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
-		for (int idx = 0; idx < Fields.IOREG_NUM; idx += 1) {
+		for (int idx = 0; idx < r.numOfEndEffectors(); idx += 1) {
 			IORegister ioReg = r.getIOReg(idx);
 			
 			String col0 = String.format("IO[%2d:%-10s] = ", idx + 1,
@@ -5173,7 +5177,7 @@ public class RobotRun extends PApplet {
 	public ArrayList<DisplayLine> loadIORegNav(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
-		for (int idx = 0; idx < Fields.IOREG_NUM; ++idx) {
+		for (int idx = 0; idx < r.numOfEndEffectors(); ++idx) {
 			IORegister ioReg = r.getIOReg(idx);
 			
 			String col0 = String.format("IO[%2d:%-10s] = ", idx + 1,
@@ -7230,8 +7234,11 @@ public class RobotRun extends PApplet {
 			keyCodeMap = new KeyCodeMap();
 			DataManagement.initialize(this);
 			
-			ROBOTS.put(0, new RoboticArm(0, new PVector(200, Fields.FLOOR_Y, 200), loadRobotModels(), loadRobotModelTransforms()));
-			ROBOTS.put(1, new RoboticArm(1, new PVector(200, Fields.FLOOR_Y, -750), loadRobotModels(), loadRobotModelTransforms()));
+			RoboticArm r = createRobot(0, new PVector(200, Fields.FLOOR_Y, 200));
+			ROBOTS.put(r.RID, r);
+			
+			r = createRobot(1, new PVector(200, Fields.FLOOR_Y, -750));
+			ROBOTS.put(r.RID, r);
 
 			activeRobot = ROBOTS.get(0);
 			rCamera = new RobotCamera();
@@ -8449,34 +8456,86 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Loads all the models for a robot.
+	 * Creates a robot with the given id and base position and initializes all
+	 * its segment and end effector data.
 	 * 
-	 * @return A list of the models for the robot
+	 * @param rid			The id of the robot, which must be unique amongst
+	 * 						all other robots
+	 * @param basePosition	The position of the robot's base segment
+	 * @return				The initialized robot
 	 */
-	private PShape[] loadRobotModels() {
-		PShape[] models = new PShape[13];
+	private RoboticArm createRobot(int rid, PVector basePosition) {
 		
-		// End Effectors
-		models[0] = loadSTLModel("robot/EE/SUCTION.stl", color(108, 206, 214));
-		models[1] = loadSTLModel("robot/EE/GRIPPER.stl", color(108, 206, 214));
-		models[2] = loadSTLModel("robot/EE/PINCER.stl", color(200, 200, 0));
-		models[3] = loadSTLModel("robot/EE/POINTER.stl", color(108, 206, 214));
-		models[4] = loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214));
-		models[5] = loadSTLModel("robot/EE/WIELDER.stl", color(108, 206, 214));
-
-		// Body/joint models
-		models[6] = loadSTLModel("robot/ROBOT_MODEL_1_BASE.STL", color(200, 200, 0));
-		models[7] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40));
-		models[8] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0));
-		models[9] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40));
-		models[10] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40));
-		models[11] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0));
-		models[12] = loadSTLModel("robot/ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40));
-
-		return models;
+		// TODO
+		
+		return null;
 	}
 	
+	/**
+	 * Loads the model data and defines the other data associated with a
+	 * robot's end effectors.
+	 * 
+	 * @return	The list of a robot's end effectors
+	 */
+	private EndEffector[] loadRobotEndEffectors() {
+		EndEffector[] eeList = new EndEffector[5];
+		
+		eeList[0] = new EndEffector(
+				loadSTLModel("robot/EE/SUCTION.stl", color(108, 206, 214)),
+				new BoundingBox[] { new BoundingBox(54, 96, 96), new BoundingBox(82, 37, 37), new BoundingBox(37, 62, 37) },
+				new DrawAction[0], // TODO define this
+				new BoundingBox[] { new BoundingBox(3, 25, 25), new BoundingBox(25, 3, 25) },
+				0,
+				"Suction"
+		);
+		
+		eeList[1] = new EndEffector(
+				new MyPShape[] {
+						loadSTLModel("robot/EE/GRIPPER.stl", color(108, 206, 214)),
+						loadSTLModel("robot/EE/PINCER.stl", color(200, 200, 0))
+				},
+				new BoundingBox[] { new BoundingBox(54, 96, 96), new BoundingBox(31, 21, 89), new BoundingBox(31, 21, 89) },
+				new DrawAction[0], // TODO define this
+				new BoundingBox[] { new BoundingBox(15, 3, 55) },
+				0,
+				"Gripper"
+		);
+		
+		eeList[2] = new EndEffector(
+				loadSTLModel("robot/EE/POINTER.stl", color(108, 206, 214)),
+				new BoundingBox[0],
+				new DrawAction[0], // TODO define this
+				new BoundingBox[0],
+				0,
+				"Pointer"
+		);
+		
+		eeList[3] = new EndEffector(
+				loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214)),
+				new BoundingBox[0],
+				new DrawAction[0], // TODO define this
+				new BoundingBox[0],
+				0,
+				"Glue Gun"
+		);
+		
+		eeList[4] = new EndEffector(
+				loadSTLModel("robot/EE/WIELDER.stl", color(108, 206, 214)),
+				new BoundingBox[0],
+				new DrawAction[0], // TODO define this
+				new BoundingBox[0],
+				0,
+				"WIELDER"
+		);
+		
+		return eeList;
+	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
 	private ArrayList<RMatrix> loadRobotModelTransforms() {
 		
 		ArrayList<RMatrix> modelTransformations = new ArrayList<>();
@@ -8566,6 +8625,66 @@ public class RobotRun extends PApplet {
 		popMatrix();
 		
 		return modelTransformations;
+	}
+	
+	/**
+	 * Loads the models for the robot's segments and initializes the robot's
+	 * segments.
+	 * 
+	 * @return	The set of segments of a robot
+	 */
+	private RSegment[] loadRobotSegments() {
+		RSegment[] segments = new RSegment[7];
+		
+		segments[0] = new RSegment(
+				loadSTLModel("robot/ROBOT_MODEL_1_BASE.STL", color(200, 200, 0)),
+				new BoundingBox[] { new BoundingBox(420, 115, 420) },
+				new DrawAction[0] // TODO define this
+		);
+		
+		segments[1] = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40)),
+				new BoundingBox[] { new BoundingBox(317, 85, 317), new BoundingBox(130, 185, 170) },
+				new DrawAction[0], // TODO define this
+				0, TWO_PI
+		);
+		
+		segments[2] = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0)),
+				new BoundingBox[] { new BoundingBox(74, 610, 135) },
+				new DrawAction[0], // TODO define this
+				4.34f, 2.01f
+		);
+		
+		segments[3] = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40)),
+				new BoundingBox[] { new BoundingBox(165, 165, 165) },
+				new DrawAction[0], // TODO define this
+				5.027f, 4.363f
+		);
+		
+		segments[4] = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_MODEL_1_AXIS4.STL", color(200, 200, 0)),
+				new BoundingBox[] { new BoundingBox(160, 160, 160) },
+				new DrawAction[0], // TODO define this
+				0, TWO_PI
+		);
+		
+		segments[5] = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_MODEL_1_AXIS5.STL", color(40, 40, 40)),
+				new BoundingBox[] { new BoundingBox(128, 430, 128) },
+				new DrawAction[0], // TODO define this
+				59f * PI / 40f, 11f * PI / 20f
+		);
+		
+		segments[6] = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_MODEL_1_AXIS6.STL", color(200, 200, 0)),
+				new BoundingBox[0],
+				new DrawAction[0], // TODO define this
+				0, TWO_PI
+		);
+		
+		return segments;
 	}
 	
 	/**

@@ -653,7 +653,7 @@ public class RoboticArm {
 	 * @return	If p can be picked up right now
 	 */
 	public boolean canPickup(Part p) {
-		EndEffector activeEE = getEE();
+		EndEffector activeEE = getActiveEE();
 		return activeEE != null && activeEE.canPickup(p);
 	}
 	
@@ -672,7 +672,7 @@ public class RoboticArm {
 			}
 		}
 		
-		if (getEE() != null && getEE().checkCollision(p) == 1) {
+		if (getActiveEE() != null && getActiveEE().checkCollision(p) == 1) {
 			collision = true;
 		}
 
@@ -693,7 +693,7 @@ public class RoboticArm {
 	 * 					2, if nothing occurs
 	 */
 	public int checkPickupCollision(Scenario scenario) {
-		EndEffector activeEE = getEE();
+		EndEffector activeEE = getActiveEE();
 		
 		if (activeEE != null && scenario != null) {
 			/* End Effector must be on and no object is currently held to be
@@ -799,7 +799,7 @@ public class RoboticArm {
 			closestCollPt = seg.closestCollision(ray);
 		}
 		
-		EndEffector activeEE = getEE();
+		EndEffector activeEE = getActiveEE();
 		
 		if (activeEE != null) {
 			PVector collPt = activeEE.closestCollision(ray);
@@ -849,7 +849,6 @@ public class RoboticArm {
 		
 		g.pushStyle();
 		g.noStroke();
-		g.fill(200, 200, 0);
 
 		g.pushMatrix();
 		
@@ -877,8 +876,6 @@ public class RoboticArm {
 		g.rotateY(-PConstants.PI/2);
 		g.rotateZ(-PConstants.PI);
 
-		//g.fill(50);
-
 		g.translate(-50, -166, -358);
 		g.rotateZ(PConstants.PI);
 		g.translate(150, 0, 150);
@@ -889,8 +886,6 @@ public class RoboticArm {
 		SEGMENTS[1].draw(g, drawOBBs);
 		g.rotateZ(-PConstants.PI);
 
-		//g.fill(200, 200, 0);
-
 		g.translate(-115, -85, 180);
 		g.rotateZ(PConstants.PI);
 		g.rotateY(PConstants.PI/2);
@@ -900,8 +895,6 @@ public class RoboticArm {
 		SEGMENTS[2].draw(g, drawOBBs);
 		g.rotateY(-PConstants.PI/2);
 		g.rotateZ(-PConstants.PI);
-
-		//g.fill(50);
 
 		g.translate(0, -500, -50);
 		g.rotateZ(PConstants.PI);
@@ -925,8 +918,6 @@ public class RoboticArm {
 		g.rotateY(-PConstants.PI/2);
 		g.rotateZ(-PConstants.PI/2);
 
-		//g.fill(200, 200, 0);
-
 		g.translate(-115, 130, -124);
 		g.rotateZ(PConstants.PI);
 		g.rotateY(-PConstants.PI/2);
@@ -936,8 +927,6 @@ public class RoboticArm {
 		SEGMENTS[5].draw(g, drawOBBs);
 		g.rotateY(PConstants.PI/2);
 		g.rotateZ(-PConstants.PI);
-		
-		//g.fill(50);
 		
 		g.translate(150, -10, 95);
 		g.rotateY(-PConstants.PI/2);
@@ -951,7 +940,7 @@ public class RoboticArm {
 		SEGMENTS[6].draw(g, drawOBBs);
 		
 		/* DRAW END EFFECTOR MODEL */
-		EndEffector activeEE = getEE();
+		EndEffector activeEE = getActiveEE();
 		
 		if (activeEE != null) {
 			int eeState = activeEE.getState();
@@ -1286,7 +1275,18 @@ public class RoboticArm {
 		}
 	}
 	
-	private EndEffector getEE() {
+	/**
+	 * @return	The index of the active end effector
+	 */
+	public int getActiveEEIdx() {
+		return activeEEIdx;
+	}
+	
+	/**
+	 * @return	The active end effector segment, or null if no end effector is
+	 * 			active
+	 */
+	private EndEffector getActiveEE() {
 		if (activeEEIdx != -1) {
 			return EE_LIST[activeEEIdx];
 		}
@@ -1509,7 +1509,7 @@ public class RoboticArm {
 	 * @return	The state of the robot's current end effector
 	 */
 	public int getEEState() {
-		EndEffector activeEE = getEE();
+		EndEffector activeEE = getActiveEE();
 		return (activeEE == null) ? Fields.OFF : activeEE.getState();
 	}
 	
@@ -1555,7 +1555,7 @@ public class RoboticArm {
 	 * 				if no end effector is active
 	 */
 	public IORegister getIOReg(int rdx) {
-		EndEffector activeEE = getEE();
+		EndEffector activeEE = getActiveEE();
 		
 		if (activeEE != null) {
 			return activeEE.reg;
@@ -1953,6 +1953,13 @@ public class RoboticArm {
 			motionType = RobotMotion.MT_LINEAR;
 		}
 	}
+	
+	/**
+	 * @return	The number of end effectors associated with this robot
+	 */
+	public int numOfEndEffectors() {
+		return EE_LIST.length;
+	}
 
 	/**
 	 * Returns the number of programs associated with the Robot.
@@ -2073,7 +2080,7 @@ public class RoboticArm {
 	 */
 	public void releaseHeldObject() {
 		if (heldPart != null) {
-			EndEffector activeEE = getEE();
+			EndEffector activeEE = getActiveEE();
 			
 			if (activeEE != null) {
 				activeEE.setState(Fields.OFF);
@@ -2150,7 +2157,7 @@ public class RoboticArm {
 			seg.resetOBBColors();
 		}
 		
-		EndEffector activeEE = getEE();
+		EndEffector activeEE = getActiveEE();
 		
 		if (activeEE != null) {
 			activeEE.resetOBBColors();
@@ -2349,7 +2356,7 @@ public class RoboticArm {
 	 * @param newState	The new state of the robot's end effector
 	 */
 	public void setEEState(int newState) {
-		EndEffector activeEE = getEE();
+		EndEffector activeEE = getActiveEE();
 		
 		if (activeEE != null && (newState == Fields.ON || newState == Fields.OFF)) {
 			activeEE.setState(newState);
@@ -2722,7 +2729,7 @@ public class RoboticArm {
 	 * with the given End Effector.
 	 */
 	private void updateOBBBoxesForEE(RobotRun app) {
-		EndEffector activeEE = getEE();
+		EndEffector activeEE = getActiveEE();
 
 		RobotRun.getInstance().pushMatrix();
 		
