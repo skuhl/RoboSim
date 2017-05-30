@@ -120,25 +120,22 @@ public final class MotionInstruction extends Instruction  {
 	 * @returning     The point associated with this instruction
 	 */
 	public Point getVector(Program parent) {
-		Point pt;
-		Point offset;
-
-		pt = getPoint(parent);
+		Point pt = getPoint(parent);
+		Point offset = new Point();
+		
 		if(pt == null) return null;
-
-		if(offsetRegNum != -1) {
-			offset = RobotRun.getActiveRobot().getPReg(offsetRegNum).point;
-		} else {
-			offset = new Point();
-		}
-
-		if (userFrame != -1) {
+		
+		if(userFrame != -1) {
 			// Convert point into the Native Coordinate System
 			RoboticArm model = RobotRun.getActiveRobot();
 			UserFrame active = model.getUserFrame(userFrame);
 			pt = RMath.removeFrame(model, pt, active.getOrigin(), active.getOrientation());
+			
+			if(offsetRegNum != -1) {
+				offset = RobotRun.getActiveRobot().getPReg(offsetRegNum).point;
+			}
 		}
-
+				
 		return pt.add(offset);
 	} // end getVector()
 	

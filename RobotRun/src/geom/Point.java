@@ -6,6 +6,7 @@ import global.MyFloatFormat;
 import global.RMath;
 import processing.core.PConstants;
 import processing.core.PVector;
+import robot.RobotRun;
 
 public class Point  {
 	// X, Y, Z
@@ -58,7 +59,7 @@ public class Point  {
 		float[] p3Joints = new float[6];
 
 		for(int i = 0; i < 6; i += 1) {
-			p3Joints[i] = angles[i] + p.angles[i];
+			p3Joints[i] = (angles[i] + p.angles[i]) % RobotRun.TWO_PI;
 		}
 
 		p3.position = p3Pos;
