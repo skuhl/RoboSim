@@ -712,6 +712,24 @@ public class RoboticArm {
 		/* DRAW BOUNDING BOXES */
 		
 		if (drawOBBs) {
+			SEGMENTS[0].OBBS[0].getFrame().draw(g);
+			SEGMENTS[1].OBBS[0].getFrame().draw(g);
+			SEGMENTS[1].OBBS[1].getFrame().draw(g);
+			SEGMENTS[2].OBBS[0].getFrame().draw(g);
+			SEGMENTS[3].OBBS[0].getFrame().draw(g);
+			SEGMENTS[4].OBBS[0].getFrame().draw(g);
+			SEGMENTS[4].OBBS[1].getFrame().draw(g);
+			SEGMENTS[5].OBBS[0].getFrame().draw(g);
+			
+			if (activeEEIdx == 0) {
+				activeEE.OBBS[0].getFrame().draw(g);
+				activeEE.OBBS[0].getFrame().draw(g);
+				activeEE.OBBS[0].getFrame().draw(g);
+				
+			} else if (activeEEIdx == 1) {
+				activeEE.OBBS[0].getFrame().draw(g);
+				activeEE.OBBS[0].getFrame().draw(g);
+			}
 			/* Draw hit boxes of the body portion of the Robot Arm *
 			for(BoundingBox b : ARM_OBBS) {
 				g.pushMatrix();
@@ -762,6 +780,8 @@ public class RoboticArm {
 			drawTrace(g);
 		}
 	}
+	
+	
 	
 	/**
 	 * TODO comment this
@@ -2173,9 +2193,6 @@ public class RoboticArm {
 	 * boxes related to the Robot Arm.
 	 */
 	private void updateCollisionOBBs(RobotRun app) {
-		app.noFill();
-		app.stroke(0, 255, 0);
-
 		app.pushMatrix();
 		app.resetMatrix();
 
@@ -2396,58 +2413,58 @@ public class RoboticArm {
 	private void updateOBBBoxesForEE(RobotRun app) {
 		EndEffector activeEE = getActiveEE();
 
-		RobotRun.getInstance().pushMatrix();
+		app.pushMatrix();
 		
 		if (activeEEIdx == 0) {
 			// Suction EE
-			RobotRun.getInstance().translate(0, 0, 3);
+			app.translate(0, 0, 3);
 			app.getCoordFromMatrix( activeEE.OBBS[0] );
 
-			RobotRun.getInstance().translate(-67, 0, -2);
+			app.translate(-67, 0, -2);
 			BoundingBox limbo = activeEE.OBBS[1];
 			app.getCoordFromMatrix( limbo );
 
 			float dist = -43;
-			RobotRun.getInstance().translate(dist, 0, 0);
+			app.translate(dist, 0, 0);
 			app.getCoordFromMatrix( activeEE.PICKUP_OBBS[0] );
-			RobotRun.getInstance().translate(19 - dist, 50, 0);
+			app.translate(19 - dist, 50, 0);
 			limbo = activeEE.OBBS[2];
 			app.getCoordFromMatrix( limbo );
 
 			dist = -33;
-			RobotRun.getInstance().translate(0, -dist, 0);
+			app.translate(0, -dist, 0);
 			app.getCoordFromMatrix( activeEE.PICKUP_OBBS[1] );
-			RobotRun.getInstance().translate(45, dist - 50, 2);
+			app.translate(45, dist - 50, 2);
 			
 		} else if (activeEEIdx == 1) {
 			// Claw Gripper EE
-			RobotRun.getInstance().translate(3, 0, 0);
+			app.translate(3, 0, 0);
 			app.getCoordFromMatrix( activeEE.OBBS[0] );
 
-			RobotRun.getInstance().translate(-57, 0, -2);
+			app.translate(-57, 0, -2);
 			app.getCoordFromMatrix( activeEE.PICKUP_OBBS[0] );
 
 			if (activeEE.getState() == Fields.OFF) {
 				// When claw is open
-				RobotRun.getInstance().translate(0, -27, 0);
+				app.translate(0, -27, 0);
 				app.getCoordFromMatrix( activeEE.OBBS[1] );
-				RobotRun.getInstance().translate(0, 54, 0);
+				app.translate(0, 54, 0);
 				app.getCoordFromMatrix( activeEE.OBBS[2] );
-				RobotRun.getInstance().translate(0, -27, 0);
+				app.translate(0, -27, 0);
 
 			} else if (activeEE.getState() == Fields.ON) {
 				// When claw is closed
-				RobotRun.getInstance().translate(0, -10, 0);
+				app.translate(0, -10, 0);
 				app.getCoordFromMatrix( activeEE.OBBS[1] );
-				RobotRun.getInstance().translate(0, 20, 0);
+				app.translate(0, 20, 0);
 				app.getCoordFromMatrix( activeEE.OBBS[2] );
-				RobotRun.getInstance().translate(0, -10, 0);
+				app.translate(0, -10, 0);
 			}
 
-			RobotRun.getInstance().translate(54, 0, 2);
+			app.translate(54, 0, 2);
 		}
 
-		RobotRun.getInstance().popMatrix();
+		app.popMatrix();
 	}
 	
 	/**
