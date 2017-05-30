@@ -1,7 +1,10 @@
 package geom;
+
+import global.Fields;
+import global.RMath;
 import processing.core.PApplet;
+import processing.core.PGraphics;
 import processing.core.PVector;
-import robot.RobotRun;
 
 /**
  * Defines a world object, which has a shape, a bounding box and a reference to a fixture.
@@ -40,20 +43,18 @@ public class Part extends WorldObject {
 		for(int v = 0; v < axes_A.length; v += 1) {
 			for(int u = 0; u < axes_B.length; u += 1) {
 				// PLEASE do not change to matrix multiplication
-				rotMatrix[v][u] = axes_A[v][0] * axes_B[u][0] +  axes_A[v][1] * axes_B[u][1] +  axes_A[v][2] * axes_B[u][2];
+				rotMatrix[v][u] = axes_A[0][v] * axes_B[0][u] +  axes_A[1][v] * axes_B[1][u] +  axes_A[2][v] * axes_B[2][u];
 				// Add offset for values close to zero (parallel axes)
 				absRotMatrix[v][u] = Math.abs(rotMatrix[v][u]) + 0.00000000175f;
 			}
 		}
 
 		// T = B's position - A's
-		PVector posA = new PVector().set(A.getCenter());
-		PVector posB = new PVector().set(B.getCenter());
-		PVector limbo = posB.sub(posA);
+		PVector posA = A.getCenter().copy();
+		PVector posB = B.getCenter().copy();
 		// Convert T into A's coordinate frame
-		float[] T = new float[] { limbo.dot(new PVector().set(axes_A[0])), 
-				limbo.dot(new PVector().set(axes_A[1])), 
-				limbo.dot(new PVector().set(axes_A[2])) };
+		PVector limbo = RMath.rotateVector(posB.sub(posA), axes_A);
+		float[] T = new float[] { limbo.x, limbo.y, limbo.z };
 
 		float radiA, radiB;
 
@@ -153,7 +154,7 @@ public class Part extends WorldObject {
 	 * Create a cube object with the given colors and dimension
 	 */
 	public Part(String n, int fill, int strokeVal, float edgeLen) {
-		super(n, new Box(fill, strokeVal, edgeLen));
+		super(n, new RBox(fill, strokeVal, edgeLen));
 		absOBB = new BoundingBox(edgeLen);
 		defaultOrientation = localOrientation.clone();
 		updateOBBDims();
@@ -163,7 +164,7 @@ public class Part extends WorldObject {
 	 * Creates a cylinder objects with the given colors and dimensions.
 	 */
 	public Part(String n, int fill, int strokeVal, float rad, float hgt) {
-		super(n, new Cylinder(fill, strokeVal, rad, hgt));
+		super(n, new RCylinder(fill, strokeVal, rad, hgt));
 		absOBB = new BoundingBox(rad, rad, hgt);
 		defaultOrientation = localOrientation.clone();
 		updateOBBDims();
@@ -173,7 +174,7 @@ public class Part extends WorldObject {
 	 * Create a box object with the given colors and dimensions
 	 */
 	public Part(String n, int fill, int strokeVal, float len, float hgt, float wdh) {
-		super(n, new Box(fill, strokeVal, len, hgt, wdh));
+		super(n, new RBox(fill, strokeVal, len, hgt, wdh));
 		absOBB = new BoundingBox(len, hgt, wdh);
 		defaultOrientation = localOrientation.clone();
 		updateOBBDims();
@@ -182,7 +183,7 @@ public class Part extends WorldObject {
 	/**
 	 * Define a complex object as a part.
 	 */
-	public Part(String n, ModelShape model) {
+	public Part(String n, ComplexShape model) {
 		super(n, model);
 		absOBB = new BoundingBox(model.getDim(DimType.LENGTH),
 								 model.getDim(DimType.HEIGHT),
@@ -195,7 +196,7 @@ public class Part extends WorldObject {
 	 * Creates a Part with the given name, shape, bounding-box dimensions,
 	 * default orientation and fixture reference.
 	 */
-	public Part(String n, Shape s, PVector OBBDims, CoordinateSystem local,
+	public Part(String n, RShape s, PVector OBBDims, CoordinateSystem local,
 			CoordinateSystem def, Fixture fixRef) {
 		
 		super(n, s, local);
@@ -203,15 +204,6 @@ public class Part extends WorldObject {
 		defaultOrientation = def;
 		setFixtureRef(fixRef);
 		updateOBBDims();
-	}
-
-	@Override
-	public void applyCoordinateSystem() {
-		absOBB.applyCoordinateSystem();
-	}
-
-	public void applyLocalCoordinateSystem() {
-		super.applyCoordinateSystem();
 	}
 
 	@Override
@@ -237,35 +229,54 @@ public class Part extends WorldObject {
 	public boolean collision(Part obj) {
 		return collision3D(absOBB, obj.absOBB);
 	}
-
-	/**
-	 * Determine if the given point is within
-	 * this object's bounding box.
-	 */
-	public boolean collision(PVector point) {
-		return absOBB.collision(point);
-	}
-
-	/**
-	 * Draw both the object and its bounding box in its local
-	 * orientation, in the local orientation of the part's
-	 * fixture reference.
-	 */
+	
 	@Override
-	public void draw() {
-		RobotRun.getInstance().pushMatrix();
-		applyCoordinateSystem();
-		getForm().draw();
+	public PVector collision(RRay ray) {
+		return absOBB.collision(ray);
+	}
+	
+	@Override
+	public void draw(PGraphics g) {
+		draw(g, true);
+	}
+	
+	/**
+	 * Parts the part and its bounding box (depending on the value of drawOBBs)
+	 * in the absolute coordinate frame of part.
+	 * 
+	 * @param g			The graphics used to draw the part
+	 * @param drawOBBs	Whether to render the bounding boxes
+	 */
+	public void draw(PGraphics g, boolean drawOBBs) {
+		g.pushMatrix();
+		Fields.transform(g, absOBB.getCenter(), absOBB.getOrientationAxes());
 		
-		if (RobotRun.getInstance().areOBBsDisplayed()) {
-			absOBB.getBox().draw();
+		getForm().draw(g);
+		
+		if (drawOBBs) {
+			absOBB.getFrame().draw(g);
 		}
 		
-		RobotRun.getInstance().popMatrix();
+		g.popMatrix();
+	}
+	
+	/**
+	 * @return	The absolute center of the part (without respect to its fixture
+	 * 			reference)
+	 */
+	public PVector getCenter() {
+		return absOBB.getCenter();
 	}
 
 	public Fixture getFixtureRef() { return reference; }
-
+	
+	/**
+	 * @return	The bounding box of the part
+	 */
+	public RBox getOBBFrame() {
+		return absOBB.getFrame();
+	}
+	
 	/**
 	 * Get the dimensions of the part's bounding-box
 	 */
@@ -273,12 +284,36 @@ public class Part extends WorldObject {
 		return absOBB.getDims();
 	}
 	
+	/**
+	 * @return	The absolute orientation of the part (without respect to its
+	 * 			fixture reference)
+	 */
+	public RMatrix getOrientation() {
+		return absOBB.getOrientationAxes();
+	}
+	
 	public PVector getDefaultCenter() {
 		return defaultOrientation.getOrigin();
 	}
 
-	public RMatrix getDefaultOrientationAxes() {
+	public RMatrix getDefaultOrientation() {
 		return defaultOrientation.getAxes();
+	}
+	
+	@Override
+	public void rotateAroundAxis(PVector axis, float angle) {
+		
+		if (reference != null) {
+			// rotate with respect to the part's fixture reference
+			RMatrix refRMat = reference.getLocalOrientation();
+			axis = RMath.rotateVector(axis, refRMat.getFloatData());
+		}
+		
+		RMatrix orientation = localOrientation.getAxes();
+		RMatrix rotation = RMath.matFromAxisAndAngle(axis, angle);
+		
+		localOrientation.setAxes( rotation.multiply(orientation) );
+		updateAbsoluteOrientation();
 	}
 
 	/**
@@ -287,11 +322,6 @@ public class Part extends WorldObject {
 	 */
 	public void setBBColor(int newColor) {
 		absOBB.setColor(newColor);
-	}
-
-	@Override
-	public void setCoordinateSystem() {
-		absOBB.setCoordinateSystem();
 	}
 
 	/**
@@ -308,23 +338,18 @@ public class Part extends WorldObject {
 		super.setLocalCenter(newCenter);
 		updateAbsoluteOrientation();
 	}
-
-	public void setLocalCoordinateSystem() {
-		super.setCoordinateSystem();
-		updateAbsoluteOrientation();
-	}
 	
 	public void setDefaultCenter(PVector newCenter) {
 		defaultOrientation.setOrigin(newCenter);
 	}
 	
-	public void setDefaultOrientationAxes(RMatrix newAxes) {
+	public void setDefaultOrientation(RMatrix newAxes) {
 		defaultOrientation.setAxes(newAxes);
 	}
 
 	@Override
-	public void setLocalOrientationAxes(RMatrix newAxes) {
-		super.setLocalOrientationAxes(newAxes);
+	public void setLocalOrientation(RMatrix newAxes) {
+		super.setLocalOrientation(newAxes);
 		updateAbsoluteOrientation();
 	}
 
@@ -341,6 +366,20 @@ public class Part extends WorldObject {
 	public void setOBBDimenions(PVector newDims) {
 		absOBB.setDims(newDims);
 	}
+	
+	@Override
+	public void translate(float dx, float dy, float dz) {
+		PVector delta = new PVector(dx, dy, dz);
+		
+		if (reference != null) {
+			// translate with respect to the part's fixture reference
+			RMatrix refRMat = reference.getLocalOrientation();
+			delta = RMath.rotateVector(delta, refRMat.getFloatData());
+		}
+		
+		super.translate(delta.x, delta.y, delta.z);
+		updateAbsoluteOrientation();
+	}
 
 	/**
 	 * Update the Part's absolute (or world) orientation
@@ -348,16 +387,21 @@ public class Part extends WorldObject {
 	 * reference's orientation.
 	 */
 	public void updateAbsoluteOrientation() {
-		RobotRun.getInstance().pushMatrix();
-		RobotRun.getInstance().resetMatrix();
-
+		PVector origin = localOrientation.getOrigin().copy();
+		RMatrix rMat = localOrientation.getAxes().copy();
+		
 		if (reference != null) {
-			reference.applyCoordinateSystem();
+			PVector RefOrigin = reference.getLocalCenter();
+			RMatrix refRMat = reference.getLocalOrientation();
+			
+			origin = RMath.rotateVector(origin, refRMat.getInverse().getFloatData());
+			origin.add(RefOrigin);
+			
+			rMat = refRMat.multiply(rMat);
 		}
-
-		super.applyCoordinateSystem();
-		absOBB.setCoordinateSystem();
-		RobotRun.getInstance().popMatrix();
+		
+		absOBB.setCenter(origin);
+		absOBB.setOrientation(rMat);
 	}
 
 	@Override
@@ -371,10 +415,10 @@ public class Part extends WorldObject {
 	 * dimensions of its form.
 	 */
 	public void updateOBBDims() {
-		Shape s = getForm();
+		RShape s = getForm();
 		float minAddition = Float.MAX_VALUE;
 
-		if (s instanceof Box || s instanceof ModelShape) {
+		if (s instanceof RBox || s instanceof ComplexShape) {
 			// Update the OBB dimensions for a box or complex part
 			minAddition = OBB_DIM_SCALE * PApplet.min(s.getDim(DimType.LENGTH),
 					PApplet.min(s.getDim(DimType.HEIGHT),
@@ -384,7 +428,7 @@ public class Part extends WorldObject {
 			absOBB.setDim(s.getDim(DimType.HEIGHT) + minAddition, DimType.HEIGHT);
 			absOBB.setDim(s.getDim(DimType.WIDTH) + minAddition, DimType.WIDTH);
 
-		} else if (s instanceof Cylinder) {
+		} else if (s instanceof RCylinder) {
 			// Update the OBB dimensions for a cylindrical part
 			minAddition =  PApplet.min(OBB_RAD_SCALE * s.getDim(DimType.RADIUS),
 					OBB_DIM_SCALE * s.getDim(DimType.HEIGHT));

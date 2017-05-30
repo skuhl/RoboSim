@@ -1,7 +1,9 @@
 package global;
 
+import geom.CoordinateSystem;
 import geom.RMatrix;
 import processing.core.PFont;
+import processing.core.PGraphics;
 import processing.core.PVector;
 
 /**
@@ -212,6 +214,62 @@ public abstract class Fields {
 	}
 	
 	/**
+	 * Applies the given coordinate system to the given graphics object.
+	 * 
+	 * @param g		The graphics object to transform
+	 * @param cs	The coordinate system to apply to g
+	 */
+	public static void transform(PGraphics g, CoordinateSystem cs) {
+		transform(g, cs.getOrigin(), cs.getAxes());
+	}
+	
+	/**
+	 * Applies the given rotation and translation to the graphics object.
+	 * 
+	 * @param g				The graphics object to transform
+	 * @param translation	The translation to apply to g
+	 * @param rotation		The rotation to apply to g
+	 */
+	public static void transform(PGraphics g, PVector translation, RMatrix rotation) {
+		
+		g.applyMatrix(
+				(float)rotation.getEntry(0, 0), (float)rotation.getEntry(0, 1), (float)rotation.getEntry(0, 2), translation.x,
+				(float)rotation.getEntry(1, 0), (float)rotation.getEntry(1, 1), (float)rotation.getEntry(1, 2), translation.y,
+				(float)rotation.getEntry(2, 0), (float)rotation.getEntry(2, 1), (float)rotation.getEntry(2, 2), translation.z,
+				0f, 0f, 0f, 1f
+		);
+		
+	}
+	
+	/**
+	 * Applies the given rotation to the graphics object.
+	 * 
+	 * @param g			The graphics object to rotate
+	 * @param rotation	The rotation to apply to g
+	 */
+	public static void rotate(PGraphics g, RMatrix rotation) {
+		
+		g.applyMatrix(
+				(float)rotation.getEntry(0, 0), (float)rotation.getEntry(0, 1), (float)rotation.getEntry(0, 2), 0f,
+				(float)rotation.getEntry(1, 0), (float)rotation.getEntry(1, 1), (float)rotation.getEntry(1, 2), 0f,
+				(float)rotation.getEntry(2, 0), (float)rotation.getEntry(2, 1), (float)rotation.getEntry(2, 2), 0f,
+				0f, 0f, 0f, 1f
+		);
+		
+	}
+	
+	/**
+	 * Returns a 32-bit color from the value, which will be applied to the red,
+	 * green, and blue byte values of the color.
+	 * 
+	 * @param rgb	The gray intensity value
+	 * @return		A 32-bit color value
+	 */
+	public static int color(int rgb) {
+		return color(255, rgb, rgb, rgb);
+	}
+	
+	/**
 	 * Creates a 32-bit color from the given red, green, and blue byte values.
 	 * The alpha value is set to 255.
 	 * 
@@ -243,6 +301,48 @@ public abstract class Fields {
 		 */
 		return (0xff000000 & (a << 24)) | (0xff0000 & (r << 16)) |
 				(0xff00 & (g << 8)) | (0xff & b);
+	}
+	
+	/**
+	 * Calculates the distance between two 32-bit colors, c0 and c1, using the
+	 * formula:
+	 * 
+	 * diff = ( (c0.alpha - c1.alpha) ^ 2 + (c0.red - c1.red) ^ 2 + (c0.green
+	 * 			- c1.green) ^ 2 + (c0.blue - c1.blue) ^ 2 ) ^ 1/2
+	 * 
+	 * @param c0	A 32-bit color value
+	 * @param c1	A 32-bit color value
+	 * @return		The total difference between c0 and c1 in Euclidean space
+	 */
+	public static float colorDiff(int c0, int c1) {
+		// Compute the rgba differences between c0 and c1
+		int[] diffs = rgbaDiffs(c0,  c1);
+		// Compute the square root of the sum of the rgba differences
+		return (float) Math.sqrt(diffs[0] + diffs[1] + diffs[2] + diffs[3]);
+	}
+	
+	/**
+	 * Calculates the square differences between the alpha, red, green, and
+	 * blue byte values in the 32-bit colors, c0 and c1.
+	 * 
+	 * @param c0	A 32-bit color value
+	 * @param c1	A 32-bit color value
+	 * @return		A 4-element array containing the square differences of c0
+	 * 				and c1's alpha, red, green, blue byte values.
+	 */
+	public static int[] rgbaDiffs(int c0, int c1) {
+		int[] diffs = new int[4];
+		// Separate each color into r, g, b, a portions
+		int[] c1_rgba = rgba(c0);
+		int[] c2_rgba = rgba(c1);
+		
+		// Calculate the square difference between the portions of c0 and c1
+		for (int idx = 0; idx < diffs.length; ++idx) {
+			int diff = c1_rgba[idx] - c2_rgba[idx];
+			diffs[idx] = diff * diff;
+		}
+		
+		return diffs;
 	}
 	
 	/**

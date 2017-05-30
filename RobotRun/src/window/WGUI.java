@@ -14,7 +14,9 @@ import controlP5.ControlP5;
 import controlP5.ControllerInterface;
 import controlP5.DropdownList;
 import controlP5.Group;
+import controlP5.Pointer;
 import controlP5.RadioButton;
+import controlP5.Slider;
 import controlP5.Textarea;
 import controlP5.Toggle;
 import enums.AxesDisplay;
@@ -25,22 +27,26 @@ import enums.ScreenMode;
 import enums.ScreenType;
 import enums.ShapeType;
 import enums.WindowTab;
-import geom.Box;
-import geom.Cylinder;
+import geom.RBox;
+import geom.RCylinder;
 import geom.DimType;
 import geom.Fixture;
-import geom.ModelShape;
+import geom.ComplexShape;
+import geom.MyPShape;
 import geom.Part;
 import geom.RMatrix;
-import geom.Shape;
+import geom.RShape;
 import geom.WorldObject;
 import global.DataManagement;
 import global.Fields;
 import global.RMath;
 import processing.core.PApplet;
 import processing.core.PFont;
+import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
+import robot.CamSelectArea;
+import robot.RobotCamera;
 import robot.RobotRun;
 import robot.RoboticArm;
 import robot.Scenario;
@@ -57,10 +63,8 @@ import ui.MyTextfield;
 
 public class WGUI implements ControlListener {
 
-	/**
-	 * A dimension value (length, width, displacement, etc.), which is used to
-	 * format the layout of a window tab's visible elements.
-	 */
+	/** Standard dimension values (length, width, displacement, etc.) used to
+	 *  position a window tab's visible elements. */
 	public static final int winMargin = 10,
 			radioDim = 16,
 			distBtwFieldsY = 15,
@@ -70,7 +74,8 @@ public class WGUI implements ControlListener {
 			mLblWidth = 86,
 			sLblWidth = 60,
 			fieldHeight = 20,
-			fieldWidth = 110,
+			fieldWidthMed = 110,
+			fieldWidthSm = 70,
 			lButtonWidth = 88,
 			mButtonWidth = 56,
 			sButtonWidth = 26,
@@ -83,59 +88,44 @@ public class WGUI implements ControlListener {
 			DIM_LBL = 3,
 			DIM_TXT = 3,
 			DIM_DDL = 1;
-
-	/**
-	 * The manager object, which contains all the UI elements.
-	 */
+	
+	public static final String[] tabs = { "Hide", "Robot1", "Robot2", "Create", 
+										  "Edit", "Scenario", "Camera", "Misc" };
+	
+	/** The manager object, which contains all the UI elements. */
 	private final ControlP5 manager;
-
-	/**
-	 * A reference to the application, in which the UI resides.
-	 */
+	
+	/** A reference to the application, in which the UI resides. */
 	private final RobotRun app;
-
-	/**
-	 * The current state of the window tabs, which determines what window tab
-	 * is rendered.
-	 */
+	
+	/** The current state of the window tabs, which determines what window tab
+	 *  is rendered. */
 	private WindowTab menu;
-
-	/**
-	 * A group, which defines a set of elements belonging to a window tab, or
-	 * shared amongst the window tabs.
-	 */
+	
+	/** A group, which defines a set of elements belonging to a window tab, or
+	 *  shared amongst the window tabs. */
 	public final Group pendant, createWO, editWO, sharedElements, scenario,
-	camera, miscellaneous;
-
-	/**
-	 * The button bar controlling the window tab selection.
-	 */
+			camera, miscellaneous;
+	
+	/** The button bar controlling the window tab selection. */
 	private final MyButtonBar windowTabs;
-
-	/**
-	 * The background shared amongst all windows
-	 */
+	
+	/** The background shared amongst all windows */
 	private final Background background;
-
-	/**
-	 * A cached set of text-areas used to display the pendant contents and
-	 * options output.
-	 */
+	
+	/** A cached set of text-areas used to display the pendant contents and
+	 *  options output. */
 	private final ArrayList<Textarea> displayLines;
-
-	/**
-	 * Determine which input to use for importing a shape for a world object
-	 * when it is created.
-	 */
+	
+	/** Determine which input to use for importing a shape for a world object
+	 *  when it is created. */
 	private String lastModImport;
-
-	/**
-	 * Creates a new window with the given ControlP5 object as the parent
-	 * and the given fonts which will be applied to the text in the window.
-	 */
+	
+	/** Creates a new window with the given ControlP5 object as the parent
+	 *  and the given fonts which will be applied to the text in the window. */
 	public WGUI(RobotRun appRef, PImage[][] buttonImages) {
 		app = appRef;
-
+		
 		manager = new ControlP5(appRef);
 		// Explicitly draw the ControlP5 elements
 		manager.setAutoDraw(false);
@@ -151,8 +141,8 @@ public class WGUI implements ControlListener {
 		ControllerInterface<?> c1 = null, c2 = null;
 
 		// The default set of labels for window tabs
-		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Camera", "Misc" };
-
+		String[] windowList = new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" };
+		
 		// Initialize the window tab selection bar
 		windowTabs = (MyButtonBar)(new MyButtonBar(manager, "Tabs")
 				// Sets button text color
@@ -190,11 +180,11 @@ public class WGUI implements ControlListener {
 		addButton("TopView", "T", sButtonWidth, sButtonHeight, Fields.small).hide();
 		addButton("BottomView", "Bt", sButtonWidth, sButtonHeight, Fields.small).hide();
 
-		// Pendant screen background?
-		c1 = addTextarea("txt", "", pendant, winMargin, 0,
+		// Pendant screen background
+		c1 = addTextarea("pendantScreen", "", pendant, winMargin, 0,
 				Fields.PENDANT_SCREEN_WIDTH, Fields.PENDANT_SCREEN_HEIGHT,
 				Fields.B_TEXT_C, Fields.UI_LIGHT_C, Fields.small);
-
+		
 		// Pendant header
 		addTextarea("header", "\0", pendant, winMargin,	0,
 				Fields.PENDANT_SCREEN_WIDTH, 20, Fields.UI_LIGHT_C,
@@ -487,9 +477,9 @@ public class WGUI implements ControlListener {
 		// Initialize the elements shared amongst the create and edit windows
 		for (int idx = 0; idx < 3; ++idx) {
 			addTextarea(String.format("DimLbl%d", idx), String.format("Dim(%d):", idx),
-					sharedElements, fieldWidth, sButtonHeight, Fields.medium);
+					sharedElements, fieldWidthMed, sButtonHeight, Fields.medium);
 
-			addTextfield(String.format("Dim%d", idx), sharedElements, fieldWidth,
+			addTextfield(String.format("Dim%d", idx), sharedElements, fieldWidthMed,
 					fieldHeight, Fields.medium, app.getKeyCodeMap());
 		}
 
@@ -499,7 +489,7 @@ public class WGUI implements ControlListener {
 		addTextarea("ObjTypeLbl", "Type:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 
 		addTextarea("ObjNameLbl", "Name:", createWO, sLblWidth, fieldHeight, Fields.medium);
-		addTextfield("ObjName", createWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("ObjName", createWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("ShapeLbl", "Shape:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("FillLbl", "Fill:", createWO, mLblWidth, sButtonHeight, Fields.medium);
@@ -511,38 +501,38 @@ public class WGUI implements ControlListener {
 		addTextarea("ObjLabel", "Object:", editWO, mLblWidth, fieldHeight, Fields.medium);
 
 		addTextarea("Blank", "Inputs", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextarea("Current", "Current", editWO, fieldWidth, fieldHeight, Fields.medium);
-		addTextarea("Default", "Default", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextarea("Current", "Current", editWO, fieldWidthMed, fieldHeight, Fields.medium);
+		addTextarea("Default", "Default", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("XLbl", "X Position:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("XCur", editWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("XDef", "N/A", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("XCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("XDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("YLbl", "Y Position:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("YCur", editWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("YDef", "N/A", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("YCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("YDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("ZLbl", "Z Position:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("ZCur", editWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("ZDef", "N/A", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("ZCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("ZDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("WLbl", "X Rotation:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("WCur", editWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("WDef", "N/A", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("WCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("WDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("PLbl", "Y Rotation:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("PCur", editWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("PDef", "N/A", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("PCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("PDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("RLbl", "Z Rotation:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("RCur", editWO, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("RDef", "N/A", editWO, fieldWidth, fieldHeight, Fields.medium);
+		addTextfield("RCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("RDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
 
 		addTextarea("RefLbl", "Reference:", editWO, lLblWidth, sButtonHeight, Fields.medium);
 
-		addButton("MoveToCur", "Move to Current", editWO, fieldWidth, sButtonHeight, Fields.small);
-		addButton("UpdateWODef", "Update Default", editWO, fieldWidth, sButtonHeight, Fields.small);
-		addButton("MoveToDef", "Move to Default", editWO, fieldWidth, sButtonHeight, Fields.small);
+		addButton("MoveToCur", "Move to Current", editWO, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton("UpdateWODef", "Update Default", editWO, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton("MoveToDef", "Move to Default", editWO, fieldWidthMed, sButtonHeight, Fields.small);
 
 		addButton("ResDefs", "Restore Defaults", editWO, lLblWidth, sButtonHeight, Fields.small);
 
@@ -565,27 +555,48 @@ public class WGUI implements ControlListener {
 		addTextarea("SInstructions", "N/A", scenario, windowTabs.getWidth() - (2 * winMargin),
 				54, Fields.small).hideScrollbar();
 
-		addTextfield("SInput", scenario, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("SInput", scenario, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		addButton("SConfirm", "N/A", scenario, mButtonWidth, sButtonHeight, Fields.small);
 
 		// Initialize the camera window
 		addTextarea("CXLbl", "X Position:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CXCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("CXCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("CYLbl", "Y Position:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CYCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("CYCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("CZLbl", "Z Position:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CZCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("CZCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("CWLbl", "X Rotation:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CWCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("CWCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("CPLbl", "Y Rotation:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CPCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("CPCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
 		addTextarea("CRLbl", "Z Rotation:", camera, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("CRCur", camera, fieldWidth, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextfield("CRCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		
+		addTextarea("CFOVLbl", "FOV:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CFOVCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		
+		addTextarea("CAspectLbl", "Aspect Ratio:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CAspectCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		
+		addTextarea("CCNearLbl", "Near Clip:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CCNearCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		
+		addTextarea("CCFarLbl", "Far Clip:", camera, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("CCFarCur", camera, fieldWidthSm, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		
+		addSlider("CBright", camera, fieldWidthMed, fieldHeight, 0f, 10f, 1f, Fields.medium);
+		addSlider("CExp", camera, fieldWidthMed, fieldHeight, 0.01f, 1f, 0.1f, Fields.medium);
+		
+		addButton("UpdateCam", "Update Camera", camera, fieldWidthMed, sButtonHeight, Fields.small);
+		addDropdown("CamObjects", camera, ldropItemWidth, dropItemHeight, 0, Fields.small);
+		addButton("CamObjPreview", "ObjPreview", camera, 150, 200, Fields.small);
+		addButton("TeachCamObj", "Teach Object", camera, fieldWidthMed, sButtonHeight, Fields.small);
+		//TODO
 		
 		// Initialize the miscellaneous window elements
 		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
@@ -594,6 +605,7 @@ public class WGUI implements ControlListener {
 
 		addButton("ToggleOBBs", "Hide OBBs", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
 		addButton("ToggleRobot", "Add Robot", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
+		addButton("ToggleCamera", "Enable RCam", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
 
 		/* Initialize dropdown list elements
 		 * 
@@ -624,7 +636,7 @@ public class WGUI implements ControlListener {
 		.addItem(EEType.GLUE_GUN.name(), EEType.GLUE_GUN)
 		.addItem(EEType.WIELDER.name(), EEType.WIELDER)
 		.setValue(0f);
-
+		
 		addDropdown("Scenario", scenario, ldropItemWidth, dropItemHeight, 4, Fields.small);
 		addDropdown("Fixture", editWO, ldropItemWidth, dropItemHeight, 4, Fields.small);
 
@@ -903,6 +915,21 @@ public class WGUI implements ControlListener {
 		return rb;
 	}
 
+	private Slider addSlider(String name, Group parent, int wdh, int hgt, float min, float max,
+			float def, PFont lblFont) {
+		Slider s = new Slider(manager, name);
+		s.setColorValue(Fields.B_DEFAULT_C)
+		.setColorLabel(Fields.F_TEXT_C)
+		.setColorActive(Fields.B_ACTIVE_C)
+		.setMin(min)
+		.setMax(max)
+		.setDefaultValue(def)
+		.moveTo(parent)
+		.setSize(wdh, hgt);
+		
+		return s;
+	}
+	
 	/**
 	 * Adds a text area to the UI with the given name, text, parent,
 	 * width, height, and label font. A text area cannot be directly
@@ -999,12 +1026,14 @@ public class WGUI implements ControlListener {
 	 */
 	@Override
 	public void controlEvent(ControlEvent arg0) {
-
 		if (arg0.isFrom(windowTabs)) {
 			// Update the window based on the button tab selected
 			String actLbl = windowTabs.getActButLbl();
-
-			if (actLbl.equals("Robot1")) {
+			
+			if (actLbl == null) {
+				updateView( null );
+				
+			} else if (actLbl.equals("Robot1")) {
 				updateView( WindowTab.ROBOT1 );
 
 			} else if (actLbl.equals("Robot2")) {
@@ -1024,29 +1053,33 @@ public class WGUI implements ControlListener {
 				
 			} else if (actLbl.equals("Misc")) {
 				updateView( WindowTab.MISC );
-
+				
 			} else {
 				updateView( null );
 			}
 
 		} else {
 			if (arg0.isFrom("Object") || arg0.isFrom("Shape") ||
-					arg0.isFrom("ScenarioOpt")) {
+					arg0.isFrom("ScenarioOpt") || arg0.isFrom("CamObjects")) {
 				/* The selected item in these lists influence the layout of
 				 * the menu */
-				updateWindowContentsPositions();
+				updateUIContentPositions();
 			}
 
 			if (arg0.isFrom("Object")) {
-				// Update the input fields on the edit menu
-				updateEditWindowFields();
+				WorldObject selectedWO = getSelectedWO();
+				
+				if (selectedWO != null) {
+					// Update the input fields on the edit menu
+					updateEditWindowFields(selectedWO);
+				}
 
 			} else if (arg0.isFrom("Fixture")) {
-				WorldObject selected = getSelectedWO();
-
-				if (selected instanceof Part) {
+				WorldObject selectedWO = getSelectedWO();
+				
+				if (menu == WindowTab.EDIT && selectedWO instanceof Part) {
 					// Set the reference of the Part to the currently active fixture
-					Part p = (Part)selected;
+					Part p = (Part)selectedWO;
 					Fixture refFixture = (Fixture)getDropdown("Fixture").getSelectedItem();
 
 					if (p.getFixtureRef() != refFixture) {
@@ -1073,6 +1106,28 @@ public class WGUI implements ControlListener {
 					MyDropdownList ddl = (MyDropdownList)arg0.getController();
 					r.setActiveEE( (EEType)ddl.getSelectedItem() );
 				}
+			} else if (arg0.isFrom("CamObjPreview")) {
+				WorldObject o = (WorldObject) getDropdown("CamObjects").getSelectedItem();	
+				RMatrix mdlOrient = o.getLocalOrientation();
+				Pointer p = getButton("CamObjPreview").getPointer();
+				int x = p.x();
+				int y = p.y();
+				
+				CamSelectArea a = ((ComplexShape)o.getForm()).getSelectAreaClicked(x, y, mdlOrient);
+				if(a != null) {
+					if(app.mouseButton == RobotRun.RIGHT && !a.isIgnored()) {
+						a.ignoreArea();
+					}
+					else if(app.mouseButton == RobotRun.LEFT && !a.isEmphasized()) {
+						a.emphasizeArea();
+					}
+					else {
+						a.clearArea();
+					}
+				}
+				
+				((ComplexShape)o.getForm()).updateModelPreview(mdlOrient);
+				updateUIContentPositions();
 			}
 		}
 	}
@@ -1164,16 +1219,17 @@ public class WGUI implements ControlListener {
 					shapeDims = getModelDimensions();
 					// Construct a complex model
 					if (shapeDims != null) {
-						ModelShape model;
+						MyPShape model = app.loadSTLModel(srcFile, fill);
+						ComplexShape shape;
 
 						if (shapeDims[0] != null) {
 							// Define shape scale
-							model = new ModelShape(srcFile, fill, shapeDims[0], app);
+							shape = new ComplexShape(srcFile, model, fill, shapeDims[0]);
 						} else {
-							model = new ModelShape(srcFile, fill, app);
+							shape = new ComplexShape(srcFile, model, fill);
 						}
 
-						wldObj = new Part(name, model);
+						wldObj = new Part(name, shape);
 					}
 					break;
 				default:
@@ -1209,16 +1265,17 @@ public class WGUI implements ControlListener {
 					String srcFile = getShapeSourceFile();
 					shapeDims = getModelDimensions();
 					// Construct a complex model
-					ModelShape model;
+					MyPShape form = app.loadSTLModel(srcFile, fill);
+					ComplexShape shape;
 
 					if (shapeDims != null && shapeDims[0] != null) {
 						// Define model scale value
-						model = new ModelShape(srcFile, fill, shapeDims[0], app);
+						shape = new ComplexShape(srcFile, form, fill, shapeDims[0]);
 					} else {
-						model = new ModelShape(srcFile, fill, app);
+						shape = new ComplexShape(srcFile, form, fill);
 					}
 
-					wldObj = new Fixture(name, model);
+					wldObj = new Fixture(name, shape);
 					break;
 				default:
 				}
@@ -1246,36 +1303,14 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Delete the world object that is selected in
-	 * the Object dropdown list, if any.
+	 * TODO comment this
 	 * 
-	 * @returning  -1  if the active Scenario is null
-	 *              0  if the object was removed succesfully,
-	 *              1  if the object did not exist in the scenario,
-	 *              2  if the object was a Fixture that was removed
-	 *                 from the scenario and was referenced by at
-	 *                 least one Part in the scenario
+	 * @param selected
 	 */
-	public int deleteActiveWorldObject() {
-		int ret = -1;
-
-		if (app.getActiveScenario() != null) {
-			ret = app.getActiveScenario().removeWorldObject( getSelectedWO() );
-			clearAllInputFields();
-		}
-
-		return ret;
-	}
-
-	/**
-	 * Puts the current position and orientation values of the selected object,
-	 * in the position and orientation input fields of the edit window.
-	 */
-	private void fillCurWithCur() {
-		WorldObject active = getSelectedWO();
+	public void fillCurWithCur(WorldObject selected) {
 		// Get the part's default position and orientation
-		PVector pos = RMath.vToWorld( active.getLocalCenter() );
-		PVector wpr = RMath.nRMatToWEuler( active.getLocalOrientationAxes() );
+		PVector pos = RMath.vToWorld( selected.getLocalCenter() );
+		PVector wpr = RMath.nRMatToWEuler( selected.getLocalOrientation() );
 
 		// Fill the current position and orientation fields in the edit window
 		getTextField("XCur").setText( String.format("%4.3f", pos.x) );
@@ -1287,113 +1322,41 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Puts the default position and orientation values of the selected object,
-	 * into the current position and orientation input fields of the edit
-	 * window.
-	 */
-	public void fillCurWithDef() {
-		WorldObject active = getSelectedWO();
-
-		if (active instanceof Part) {
-			Part p = (Part)active;
-			// Get the part's current position and orientation
-			PVector pos = RMath.vToWorld( p.getDefaultCenter() );
-			PVector wpr = RMath.nRMatToWEuler( p.getDefaultOrientationAxes() );
-
-			// Fill the default position and orientation fields in the edit window
-			getTextField("XCur").setText( String.format("%4.3f", pos.x) );
-			getTextField("YCur").setText( String.format("%4.3f", pos.y) );
-			getTextField("ZCur").setText( String.format("%4.3f", pos.z) );
-			getTextField("WCur").setText( String.format("%4.3f", wpr.x) );
-			getTextField("PCur").setText( String.format("%4.3f", wpr.y) );
-			getTextField("RCur").setText( String.format("%4.3f", wpr.z) );
-		}
-	}
-
-	/**
-	 * Puts the current position and orientation values of the selected object,
-	 * in the edit window, into the default position and orientation text
-	 * fields.
-	 */
-	public void fillDefWithCur() {
-		WorldObject active = getSelectedWO();
-
-		if (active instanceof Part) {
-			// Get the part's default position and orientation
-			PVector pos = RMath.vToWorld( active.getLocalCenter() );
-			PVector wpr = RMath.nRMatToWEuler( active.getLocalOrientationAxes() );
-
-			// Fill the default position and orientation fields in the edit window
-			getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
-			getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
-			getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
-			getTextArea("WDef").setText( String.format("%4.3f", wpr.x) );
-			getTextArea("PDef").setText( String.format("%4.3f", wpr.y) );
-			getTextArea("RDef").setText( String.format("%4.3f", wpr.z) );
-		}
-	}
-
-	/**
-	 * Puts the default position and orientation values of the selected
-	 * object, in the edit window, into the default position and orientation
-	 * text fields.
-	 */
-	private void fillDefWithDef() {
-		WorldObject active = getSelectedWO();
-
-		if (active instanceof Part) {
-			Part p = (Part)active;
-			// Get the part's current position and orientation
-			PVector pos = RMath.vToWorld( p.getDefaultCenter() );
-			PVector wpr = RMath.nRMatToWEuler( p.getDefaultOrientationAxes() );
-
-			// Fill the default position and orientation fields in the edit window
-			getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
-			getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
-			getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
-			getTextArea("WDef").setText( String.format("%4.3f", wpr.x) );
-			getTextArea("PDef").setText( String.format("%4.3f", wpr.y) );
-			getTextArea("RDef").setText( String.format("%4.3f", wpr.z) );
-		}
-	}
-
-	/**
-	 * Returns the scenario associated with the label that is active
-	 * for the scenario drop-down list.
+	 * TODO comment this
 	 * 
-	 * @returning  The index value or null if no such index exists
+	 * @param selected
 	 */
-	public Scenario getActiveScenario() {
+	public void fillCurWithDef(Part selected) {
+		// Get the part's current position and orientation
+		PVector pos = RMath.vToWorld( selected.getDefaultCenter() );
+		PVector wpr = RMath.nRMatToWEuler( selected.getDefaultOrientation() );
 
-		if (menu == WindowTab.SCENARIO) {
-			Object val = getDropdown("Scenario").getSelectedItem();
-
-			if (val instanceof Scenario) {
-				// Set the active scenario index
-				return (Scenario)val;
-
-			} else if (val != null) {
-				// Invalid entry in the dropdown list
-				System.err.printf("Invalid class type: %d!\n", val.getClass());
-			}
-		}
-
-		return null;
+		// Fill the default position and orientation fields in the edit window
+		getTextField("XCur").setText( String.format("%4.3f", pos.x) );
+		getTextField("YCur").setText( String.format("%4.3f", pos.y) );
+		getTextField("ZCur").setText( String.format("%4.3f", pos.z) );
+		getTextField("WCur").setText( String.format("%4.3f", wpr.x) );
+		getTextField("PCur").setText( String.format("%4.3f", wpr.y) );
+		getTextField("RCur").setText( String.format("%4.3f", wpr.z) );
 	}
 
 	/**
-	 * Returns the object that is currently being edited
-	 * in the world object editing menu.
+	 * TODO comment this
+	 * 
+	 * @param selected
 	 */
-	public WorldObject getSelectedWO() {
-		Object wldObj = getDropdown("Object").getSelectedItem();
+	private void fillDefWithDef(Part selected) {
+		// Get the part's current position and orientation
+		PVector pos = RMath.vToWorld( selected.getDefaultCenter() );
+		PVector wpr = RMath.nRMatToWEuler( selected.getDefaultOrientation() );
 
-		if (editWO.isVisible() && wldObj instanceof WorldObject) {
-			return (WorldObject)wldObj;
-
-		} else {
-			return null;
-		}
+		// Fill the default position and orientation fields in the edit window
+		getTextArea("XDef").setText( String.format("%4.3f", pos.x) );
+		getTextArea("YDef").setText( String.format("%4.3f", pos.y) );
+		getTextArea("ZDef").setText( String.format("%4.3f", pos.z) );
+		getTextArea("WDef").setText( String.format("%4.3f", wpr.x) );
+		getTextArea("PDef").setText( String.format("%4.3f", wpr.y) );
+		getTextArea("RDef").setText( String.format("%4.3f", wpr.z) );
 	}
 
 	/**
@@ -1579,7 +1542,7 @@ public class WGUI implements ControlListener {
 	 * @return	A list of input values from the orientation text-fields in the
 	 * 		world object edit window
 	 */
-	private Float[] getCurrentValues() {
+	private Float[] getCurrentWOValues() {
 		try {
 			/* Pull from x, y, z, w, p, r, input values from their
 			 * corresponding text-fields */
@@ -1772,6 +1735,13 @@ public class WGUI implements ControlListener {
 	public EEMapping getEEMapping() {
 		return (EEMapping)getDropdown("EEDisplay").getSelectedItem();
 	}
+	
+	/**
+	 * @return	The active window
+	 */
+	public WindowTab getMenu() {
+		return menu;
+	}
 
 	/**
 	 * Returns a post-processed list of the user's input for the dimensions of
@@ -1878,6 +1848,45 @@ public class WGUI implements ControlListener {
 	public boolean getRobotButtonState() {
 		return getButton("ToggleRobot").isOn();
 	}
+	
+	/**
+	 * Returns the scenario associated with the label that is active
+	 * for the scenario drop-down list.
+	 * 
+	 * @returning  The index value or null if no such index exists
+	 */
+	public Scenario getSelectedScenario() {
+
+		if (menu == WindowTab.SCENARIO) {
+			Object val = getDropdown("Scenario").getSelectedItem();
+
+			if (val instanceof Scenario) {
+				// Set the active scenario index
+				return (Scenario)val;
+
+			} else if (val != null) {
+				// Invalid entry in the dropdown list
+				System.err.printf("Invalid class type: %d!\n", val.getClass());
+			}
+		}
+
+		return null;
+	}
+
+
+	/**
+	 * @return	The world object currently selected in the Object dropdown list
+	 */
+	public WorldObject getSelectedWO() {
+		Object wldObj = getDropdown("Object").getSelectedItem();
+
+		if (wldObj instanceof WorldObject) {
+			return (WorldObject)wldObj;
+
+		} else {
+			return null;
+		}
+	}
 
 	/**
 	 * Parses the name of a .stl model source file from one of two input
@@ -1910,6 +1919,10 @@ public class WGUI implements ControlListener {
 		}
 
 		return filename;
+	}
+	
+	private Slider getSlider(String name) {
+		return (Slider) manager.get(name);
 	}
 
 	/**
@@ -1952,44 +1965,6 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Creates a new scenario with the name pulled from the scenario name text field.
-	 * If the name given is already given to another existing scenario, then no new
-	 * Scenario is created. Also, names can only consist of 16 letters or numbers.
-	 * 
-	 * @returning  A new Scenario object or null if the scenario name text field's
-	 *             value is invalid
-	 */
-	public Scenario initializeScenario() {
-		if (menu == WindowTab.SCENARIO) {
-			String name = getTextField("ScenarioName").getText();
-
-			if (name != null) {
-				// Names only consist of letters and numbers
-				if (Pattern.matches("[a-zA-Z0-9]+", name)) {
-
-					for (Scenario s : app.getScenarios()) {
-						if (s.getName().equals(name)) {
-							// Duplicate name
-							PApplet.println("Names must be unique!");
-							return null;
-						}
-					}
-
-					if (name.length() > 16) {
-						// Names have a max length of 16 characters
-						name = name.substring(0, 16);
-					}
-
-					return new Scenario(name);
-				}
-			}
-		}
-
-		// Invalid input or wrong window open 
-		return null;
-	}
-
-	/**
 	 * Determines whether a single text field is active.
 	 */
 	public boolean isATextFieldActive() {
@@ -2002,6 +1977,15 @@ public class WGUI implements ControlListener {
 		}
 
 		return false;
+	}
+	
+	/**
+	 * Was the last mouse interaction with the UI?
+	 * 
+	 * @return	Is the UI the current focus
+	 */
+	public boolean isFocus() {
+		return menu != null && manager.isMouseOver();
 	}
 
 	/**
@@ -2141,7 +2125,7 @@ public class WGUI implements ControlListener {
 					/* highlight any currently selected lines a different color
 					 * then the active line */
 					txt = Fields.UI_LIGHT_C;
-					bg = app.color(125, 125, 153);
+					bg = Fields.color(125, 125, 153);
 				} else {
 					//display normal row
 					txt = Fields.UI_DARK_C;
@@ -2150,7 +2134,7 @@ public class WGUI implements ControlListener {
 
 				//grey text for comment also this
 				if(temp.size() > 0 && temp.get(0).contains("//")) {
-					txt = app.color(127);
+					txt = Fields.color(127);
 				}
 
 				getPendantDisplayTA(TAIdx++).setText(temp.get(j))
@@ -2196,33 +2180,26 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Reset the base label of every dropdown list.
-	 */
-	private void resetListLabels() {
-		List<ControllerInterface<?>> controllers = manager.getAll();
-
-		for (ControllerInterface<?> c : controllers) {
-			if (c instanceof MyDropdownList && !c.getParent().equals(miscellaneous)) {
-				((MyDropdownList)c).setValue(-1);
-
-			} else if (c.getName().length() > 4 && c.getName().substring(0, 4).equals("Dim") ||
-					c.getName().equals("RefLbl")) {
-
-				c.hide();
-
-			}
-		}
-
-		updateDimLblsAndFields();
-	}
-
-	/**
 	 * Only update the group visibility if it does not
 	 * match the given visibility flag.
 	 */
 	private void setGroupVisible(Group g, boolean setVisible) {
 		if (g.isVisible() != setVisible) {
 			g.setVisible(setVisible);
+		}
+	}
+	
+	/**
+	 * Sets selected object in the "Object" drop down menu to the
+	 * given WorldObject, 'wo.'
+	 * 
+	 * @param wo The world object to be set.
+	 */
+	public void setSelectedWO(WorldObject wo) {
+		
+		if (wo != null && (menu == null || menu == WindowTab.EDIT)) {
+			getDropdown("Object").setItem(wo);
+			updateView(WindowTab.EDIT);
 		}
 	}
 
@@ -2239,17 +2216,47 @@ public class WGUI implements ControlListener {
 
 		// Remove or add the second Robot based on the HideRobot button
 		Button tr = getButton("ToggleRobot");
-
-		if (tr.isOn()) {
-			windowTabs.setItems(new String[] { "Hide", "Robot1", "Robot2", "Create", "Edit", "Scenario", "Misc" });
+		if(tr.isOn()) {
 			tr.setLabel("Remove Robot");
-
-		} else {
-			windowTabs.setItems(new String[] { "Hide", "Robot1", "Create", "Edit", "Scenario", "Misc" });
+		}
+		else {
 			tr.setLabel("Add Robot");
 		}
 
+		updateWindowTabs();
 		return tr.isOn();
+	}
+	
+	public boolean toggleCamera() {
+		
+		if (menu == WindowTab.CAMERA) {
+			windowTabs.setLabel("Hide");
+		}
+
+		// Remove or add the second Robot based on the HideRobot button
+		Button tc = getButton("ToggleCamera");
+		if(tc.isOn()) {
+			tc.setLabel("Disable RCam");
+		}
+		else {
+			tc.setLabel("Enable RCam");
+		}
+
+		updateWindowTabs();
+		return tc.isOn();
+	}
+	
+	private void updateWindowTabs() {
+		windowTabs.clear();
+		windowTabs.setItems(WGUI.tabs);
+		
+		if(!getButton("ToggleRobot").isOn()) {
+			windowTabs.removeItem("Robot2");
+		}
+		
+		if(!getButton("ToggleCamera").isOn()) {
+			windowTabs.removeItem("Camera");
+		}
 	}
 
 	/**
@@ -2413,17 +2420,17 @@ public class WGUI implements ControlListener {
 			Object val = getDropdown("Object").getSelectedItem();
 
 			if (val instanceof WorldObject) {
-				Shape s = ((WorldObject)val).getForm();
+				RShape s = ((WorldObject)val).getForm();
 
-				if (s instanceof Box) {
+				if (s instanceof RBox) {
 					lblNames = new String[] { "Length:", "Height:", "Width" };
 					txtFields = 3;
 
-				} else if (s instanceof Cylinder) {
+				} else if (s instanceof RCylinder) {
 					lblNames = new String[] { "Radius", "Height" };
 					txtFields = 2;
 
-				} else if (s instanceof ModelShape) {
+				} else if (s instanceof ComplexShape) {
 					lblNames = new String[] { "Scale:" };
 					txtFields = 1;
 				}
@@ -2462,44 +2469,67 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Sets the dimension text fields, current text fields, default text areas,
-	 * as well as the reference dropdown list in the edit window based on the
-	 * currently selected world object, in the Object dropdown list.
+	 * TODO comment this
+	 * 
+	 * @param selected
 	 */
-	public void updateEditWindowFields() {
-		WorldObject selected = getSelectedWO();
+	public void updateEditWindowFields(WorldObject selected) {
+		RShape form = selected.getForm();
+		
+		// Set the dimension fields
+		if (form instanceof RBox) {
+			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.LENGTH)) );
+			getTextField("Dim1").setText( String.format("%4.3f", form.getDim(DimType.HEIGHT)) );
+			getTextField("Dim2").setText( String.format("%4.3f", form.getDim(DimType.WIDTH)) );
 
-		if (selected != null) {
-			// Set the dimension fields
-			if (selected.getForm() instanceof Box) {
-				getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.LENGTH)) );
-				getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
-				getTextField("Dim2").setText( String.format("%4.3f", selected.getForm().getDim(DimType.WIDTH)) );
-
-			} else if (selected.getForm() instanceof Cylinder) {
-				getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.RADIUS)) );
-				getTextField("Dim1").setText( String.format("%4.3f", selected.getForm().getDim(DimType.HEIGHT)) );
+		} else if (form instanceof RCylinder) {
+			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.RADIUS)) );
+			getTextField("Dim1").setText( String.format("%4.3f", form.getDim(DimType.HEIGHT)) );
 
 
-			} else if (selected.getForm() instanceof ModelShape) {
-				getTextField("Dim0").setText( String.format("%4.3f", selected.getForm().getDim(DimType.SCALE)) );
-			}
+		} else if (form instanceof ComplexShape) {
+			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.SCALE)) );
+		}
 
-			fillCurWithCur();
-			fillDefWithDef();
+		fillCurWithCur(selected);
 
-			// Set the reference dropdown
-			MyDropdownList ddl = getDropdown("Fixture");
+		// Set the reference dropdown
+		MyDropdownList ddl = getDropdown("Fixture");
 
-			if (selected instanceof Part) {
+		if (selected instanceof Part) {
+			Part p = (Part)selected;
+			fillDefWithDef(p);
+			
+			Fixture ref = p.getFixtureRef();
+			ddl.setItem(ref);
 
-				Fixture ref = ((Part)selected).getFixtureRef();
-				ddl.setItem(ref);
-
-			} else {
-				ddl.setValue(0);
-			}
-
+		} else {
+			ddl.setValue(0);
+		}
+	}
+	
+	public void updateCameraWindowFields() { //TODO
+		if(app.getCamera() != null) {
+			RobotCamera c = app.getRobotCamera();
+			PVector pos = RMath.vToWorld(c.getPosition());
+			PVector ori = RMath.nQuatToWEuler(c.getOrientation());
+			
+			getTextField("CXCur").setText(String.format("%4.3f", pos.x));
+			getTextField("CYCur").setText(String.format("%4.3f", pos.y));
+			getTextField("CZCur").setText(String.format("%4.3f", pos.z));
+			
+			getTextField("CWCur").setText(String.format("%4.3f", ori.x));
+			getTextField("CPCur").setText(String.format("%4.3f", ori.y));
+			getTextField("CRCur").setText(String.format("%4.3f", ori.z));
+			
+			getTextField("CCNearCur").setText(String.format("%4.3f", c.getNearClipDist()));
+			getTextField("CCFarCur").setText(String.format("%4.3f", c.getFarClipDist()));
+			
+			getTextField("CFOVCur").setText(String.format("%4.3f", c.getFOV()));
+			getTextField("CAspectCur").setText(String.format("%4.3f", c.getAspectRatio()));
+			
+			getSlider("CBright").setValue(c.getBrightness());
+			getSlider("CExp").setValue(c.getExposure());
 		}
 	}
 
@@ -2679,51 +2709,107 @@ public class WGUI implements ControlListener {
 	 * Updates the positions of all the contents of the world object editing window.
 	 */
 	private void updateCameraWindowContentPositions() {
-		updateDimLblsAndFields();
-		getButton("ClearFields").hide();
-
 		// X label and fields
 		int[] relPos = new int[] { winMargin, winMargin };
-		ControllerInterface<?> c = getTextArea("CXLbl").setPosition(relPos[0], relPos[1]);
+		ControllerInterface<?> c0, c = getTextArea("CXLbl").setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CXCur").setPosition(relPos[0], relPos[1]);
+		c0 = getTextField("CXCur").setPosition(relPos[0], relPos[1]);
 
+		// Cam clip near label and fields
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		c0 = getTextArea("CCNearLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CCNearCur").setPosition(relPos[0], relPos[1]);
+		
 		// Y label and fields
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("CYLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CYCur").setPosition(relPos[0], relPos[1]);
+		c0 = getTextField("CYCur").setPosition(relPos[0], relPos[1]);
+		
+		// Cam clip far label and fields
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		c0 = getTextArea("CCFarLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CCFarCur").setPosition(relPos[0], relPos[1]);
 
 		// Z label and fields
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("CZLbl").setPosition(relPos[0], relPos[1]);;
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CZCur").setPosition(relPos[0], relPos[1]);
+		c0 = getTextField("CZCur").setPosition(relPos[0], relPos[1]);
+		
+		// FOV label and fields
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		c0 = getTextArea("CFOVLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CFOVCur").setPosition(relPos[0], relPos[1]);
 
 		// W label and fields
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("CWLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CWCur").setPosition(relPos[0], relPos[1]);
+		c0 = getTextField("CWCur").setPosition(relPos[0], relPos[1]);
+		
+		// Aspect ratio label and fields
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		c0 = getTextArea("CAspectLbl").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		getTextField("CAspectCur").setPosition(relPos[0], relPos[1]);
 
 		// P label and fields
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("CPLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CPCur").setPosition(relPos[0], relPos[1]);
+		c0 = getTextField("CPCur").setPosition(relPos[0], relPos[1]);
+		
+		// Brightness slider 
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		getSlider("CBright").setPosition(relPos[0], relPos[1]);
 
 		// R label and fields
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("CRLbl").setPosition(relPos[0], relPos[1]);
-
+		
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("CRCur").setPosition(relPos[0], relPos[1]);
+		c0 = getTextField("CRCur").setPosition(relPos[0], relPos[1]);
+		
+		// Shutter speed timer
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		getSlider("CExp").setPosition(relPos[0], relPos[1]);
+		
+		// Cam update button
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getButton("UpdateCam").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getButton("CamObjPreview").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getButton("TeachCamObj").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getDropdown("CamObjects").setPosition(relPos[0], relPos[1]);
 
+		WorldObject o = (WorldObject)getDropdown("CamObjects").getSelectedItem();
+		if(o != null) {
+			PGraphics preview = ((ComplexShape)o.getForm()).getModelPreview(o.getLocalOrientation());
+			getButton("CamObjPreview").setImage(preview);
+			getButton("CamObjPreview").show();
+		}
+		else {
+			getButton("CamObjPreview").hide();
+		}
+		
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		background.setPosition(camera.getPosition())
@@ -2800,11 +2886,11 @@ public class WGUI implements ControlListener {
 			limbo.addItem("None", null);
 
 			for (WorldObject wldObj : app.getActiveScenario()) {
-				dropdown.addItem(wldObj.toString(), wldObj);
+				dropdown.addItem(wldObj.getName(), wldObj);
 
 				if (wldObj instanceof Fixture) {
 					// Load all fixtures from the active scenario
-					limbo.addItem(wldObj.toString(), wldObj);
+					limbo.addItem(wldObj.getName(), wldObj);
 				}
 			}
 		}
@@ -2826,6 +2912,19 @@ public class WGUI implements ControlListener {
 			// Link the active robot's end effector to the dropdown list
 			int activeEE = r.getActiveEE().ordinal();
 			getDropdown("RobotEE").setValue(activeEE);
+		}
+	}
+	
+	public void updateCameraListContents() {
+		if(app.getRobotCamera() != null) {
+			MyDropdownList d = getDropdown("CamObjects"); 
+			d.clear();
+			
+			for(WorldObject o: app.getRobotCamera().getTaughtObjects()) {
+				d.addItem(o.getName(), o);
+			}
+			
+			d.setSize(ldropItemWidth, dropItemHeight * (app.getRobotCamera().getTaughtObjects().size() + 1));
 		}
 	}
 
@@ -2982,7 +3081,7 @@ public class WGUI implements ControlListener {
 	 */
 	public void updateShiftButton(boolean state) {
 		updateButtonBgColor("shift", state);
-		updateWindowDisplay();
+		updateAndDrawUI();
 	}
 
 	/**
@@ -2993,7 +3092,7 @@ public class WGUI implements ControlListener {
 	 */
 	public void updateStepButton(boolean state) {
 		updateButtonBgColor("step", state);
-		updateWindowDisplay();
+		updateAndDrawUI();
 	}
 
 	/**
@@ -3038,6 +3137,11 @@ public class WGUI implements ControlListener {
 		// Second robot toggle button
 		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		b = getButton("ToggleRobot").setPosition(relPos[0], relPos[1]);
+		
+		updateButtonBgColor(b.getName(), b.isOn());
+		
+		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		b = getButton("ToggleCamera").setPosition(relPos[0], relPos[1]);
 
 		// Update button color based on the state of the button
 		updateButtonBgColor(b.getName(), b.isOn());
@@ -3066,69 +3170,16 @@ public class WGUI implements ControlListener {
 		} else if (menu == WindowTab.ROBOT2) {
 			app.setRobot(1);
 		}
-	}
-
-	/**
-	 * Updates the positions of all the elements in the active window
-	 * based on the current button tab that is active.
-	 */
-	public void updateWindowContentsPositions() {
-		if (menu == null) {
-			// Window is hidden
-			background.hide();
-			getButton("FrontView").hide();
-			getButton("BackView").hide();
-			getButton("LeftView").hide();
-			getButton("RightView").hide();
-			getButton("TopView").hide();
-			getButton("BottomView").hide();
-
-			return;
-
-		} else if (menu == WindowTab.CREATE) {
-			// Create window
-			updateCreateWindowContentPositions();
-
-		} else if (menu == WindowTab.EDIT) {
-			// Edit window
-			updateEditWindowContentPositions();
-
-		} else if (menu == WindowTab.SCENARIO) {
-			// Scenario window
-			updateScenarioWindowContentPositions();
 		
-		} else if (menu == WindowTab.CAMERA) {
-			// Camera window
-			updateCameraWindowContentPositions();
-			
-		} else if (menu == WindowTab.MISC) {
-			// Miscellaneous window
-			updateMiscWindowContentPositions();
-		}
-
-		// Update the camera view buttons
-		int[] relPos = getAbsPosFrom(windowTabs, Alignment.BOTTOM_RIGHT, winMargin, 0);
-
-		Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("BackView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("LeftView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("RightView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("TopView").setPosition(relPos[0], relPos[1]).show();
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("BottomView").setPosition(relPos[0], relPos[1]).show();
-
-		updateListContents();
+		updateAndDrawUI();
 	}
 
+	
 	/**
 	 * Updates the current active window display based on the selected button on
 	 * windowTabs.
 	 */
-	public void updateWindowDisplay() {
+	public void updateAndDrawUI() {
 
 		if (menu == null) {
 			// Hide all windows
@@ -3139,8 +3190,9 @@ public class WGUI implements ControlListener {
 			setGroupVisible(scenario, false);
 			setGroupVisible(camera, false);
 			setGroupVisible(miscellaneous, false);
-
-			updateWindowContentsPositions();
+			
+			clearAllInputFields();
+			updateUIContentPositions();
 
 		} else if (menu == WindowTab.ROBOT1 || menu == WindowTab.ROBOT2) {
 			// Show pendant
@@ -3153,8 +3205,9 @@ public class WGUI implements ControlListener {
 
 			if (!pendant.isVisible()) {
 				setGroupVisible(pendant, true);
-
-				updateWindowContentsPositions();
+				
+				clearAllInputFields();
+				updateUIContentPositions();
 			}
 
 		} else if (menu == WindowTab.CREATE) {
@@ -3170,9 +3223,7 @@ public class WGUI implements ControlListener {
 				setGroupVisible(sharedElements, true);
 
 				clearAllInputFields();
-				updateWindowContentsPositions();
-				updateListContents();
-				resetListLabels();
+				updateUIContentPositions();
 			}
 
 		} else if (menu == WindowTab.EDIT) {
@@ -3188,9 +3239,7 @@ public class WGUI implements ControlListener {
 				setGroupVisible(sharedElements, true);
 
 				clearAllInputFields();
-				updateWindowContentsPositions();
-				updateListContents();
-				resetListLabels();
+				updateUIContentPositions();
 			}
 
 		} else if (menu == WindowTab.SCENARIO) {
@@ -3206,9 +3255,7 @@ public class WGUI implements ControlListener {
 				setGroupVisible(scenario, true);
 
 				clearAllInputFields();
-				updateWindowContentsPositions();
-				updateListContents();
-				resetListLabels();
+				updateUIContentPositions();
 			}
 			
 		} else if (menu == WindowTab.CAMERA) {
@@ -3224,9 +3271,9 @@ public class WGUI implements ControlListener {
 				setGroupVisible(sharedElements, true);
 
 				clearAllInputFields();
-				updateWindowContentsPositions();
-				updateListContents();
-				resetListLabels();
+				updateCameraWindowFields();
+				updateUIContentPositions();
+				updateCameraListContents();
 			}
 			
 		} else if (menu == WindowTab.MISC) {
@@ -3240,160 +3287,188 @@ public class WGUI implements ControlListener {
 
 			if (!miscellaneous.isVisible()) {
 				setGroupVisible(miscellaneous, true);
-
-				updateWindowContentsPositions();
-				updateListContents();
-				resetListLabels();
+				
+				clearAllInputFields();
+				updateUIContentPositions();
 			}
 		}
 
 		manager.draw();
 	}
+	
+
+	/**
+	 * Updates the positions of all the elements in the active window
+	 * based on the current button tab that is active.
+	 */
+	public void updateUIContentPositions() {
+		if (menu == null) {
+			// Window is hidden
+			background.hide();
+			getButton("FrontView").hide();
+			getButton("BackView").hide();
+			getButton("LeftView").hide();
+			getButton("RightView").hide();
+			getButton("TopView").hide();
+			getButton("BottomView").hide();
+
+		} else {
+			
+			if (menu == WindowTab.CREATE) {
+				// Create window
+				updateCreateWindowContentPositions();
+	
+			} else if (menu == WindowTab.EDIT) {
+				// Edit window
+				updateEditWindowContentPositions();
+	
+			} else if (menu == WindowTab.SCENARIO) {
+				// Scenario window
+				updateScenarioWindowContentPositions();
+			
+			} else if (menu == WindowTab.CAMERA) {
+				// Camera window
+				updateCameraWindowContentPositions();
+				
+			} else if (menu == WindowTab.MISC) {
+				// Miscellaneous window
+				updateMiscWindowContentPositions();
+			}
+	
+			// Update the camera view buttons
+			int[] relPos = getAbsPosFrom(windowTabs, Alignment.BOTTOM_RIGHT, winMargin, 0);
+	
+			Button b = getButton("FrontView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("BackView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("LeftView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("RightView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("TopView").setPosition(relPos[0], relPos[1]).show();
+			relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			b = getButton("BottomView").setPosition(relPos[0], relPos[1]).show();
+	
+			updateListContents();
+		}
+	}
 
 	/**
 	 * Updates the dimensions as well as the current position and orientation
-	 * as well as the dimensions (and the fixture reference for parts) of the
-	 * selected world object.
+	 * of the selected world object.
 	 * 
-	 * @return	if the selected world object was successfully modified 
+	 * @param selectedWO	The object of which to update the position and
+	 * 						orientation
+	 * @return				If the selected world object was successfully
+	 * 						modified 
 	 */
-	public boolean updateWOCurrent() {
-		WorldObject toEdit = getSelectedWO();
-		RoboticArm model = RobotRun.getActiveRobot();
+	public boolean updateWOCurrent(WorldObject selectWO) {
 		boolean edited = false;
 
-		if (toEdit != null) {
+		try {
+			boolean dimChanged = false;
+			RShape s = selectWO.getForm();
 
-			if (model != null && toEdit == model.held) {
-				// Cannot edit an object being held by the Robot
-				PApplet.println("Cannot edit an object currently being held by the Robot!");
-				return false;
-			}
+			if (s instanceof RBox) {
+				Float[] newDims = getBoxDimensions();
 
-			try {
-				boolean dimChanged = false;
-				Shape s = toEdit.getForm();
-
-				if (s instanceof Box) {
-					Float[] newDims = getBoxDimensions();
-
-					if (newDims[0] != null) {
-						// Update the box's length
-						s.setDim(newDims[0], DimType.LENGTH);
-						dimChanged = true;
-					}
-
-					if (newDims[1] != null) {
-						// Update the box's height
-						s.setDim(newDims[1], DimType.HEIGHT);
-						dimChanged = true;
-					}
-
-					if (newDims[2] != null) {
-						// Update the box's width
-						s.setDim(newDims[2], DimType.WIDTH);
-						dimChanged = true;
-					}
-
-				} else if (s instanceof Cylinder) {
-					Float[] newDims = getCylinderDimensions();
-
-					if (newDims[0] != null) {
-						// Update the cylinder's radius
-						s.setDim(newDims[0], DimType.RADIUS);
-						dimChanged = true;
-					}
-
-					if (newDims[1] != null) {
-						// Update the cylinder's height
-						s.setDim(newDims[1], DimType.HEIGHT);
-						dimChanged = true;
-					}
-
-				} else if (s instanceof ModelShape) {
-					Float[] newDims = getModelDimensions();
-
-					if (newDims[0] != null) {
-						// Update the model's scale value
-						s.setDim(newDims[0], DimType.SCALE);
-						dimChanged = true;
-					}
+				if (newDims[0] != null) {
+					// Update the box's length
+					s.setDim(newDims[0], DimType.LENGTH);
+					dimChanged = true;
 				}
 
-				if (dimChanged && toEdit instanceof Part) {
-					// Update the bounding box dimensions of a part
-					((Part)toEdit).updateOBBDims();
+				if (newDims[1] != null) {
+					// Update the box's height
+					s.setDim(newDims[1], DimType.HEIGHT);
+					dimChanged = true;
 				}
 
-				edited = dimChanged;
-
-				// Convert origin position into the World Frame
-				PVector oPosition = RMath.vToWorld( toEdit.getLocalCenter() );
-				PVector oWPR = RMath.nRMatToWEuler( toEdit.getLocalOrientationAxes() );
-				Float[] inputValues = getCurrentValues();
-				// Update position and orientation
-				if (inputValues[0] != null) {
-					oPosition.x = inputValues[0];
-					edited = true;
+				if (newDims[2] != null) {
+					// Update the box's width
+					s.setDim(newDims[2], DimType.WIDTH);
+					dimChanged = true;
 				}
 
-				if (inputValues[1] != null) {
-					oPosition.y = inputValues[1];
-					edited = true;
+			} else if (s instanceof RCylinder) {
+				Float[] newDims = getCylinderDimensions();
+
+				if (newDims[0] != null) {
+					// Update the cylinder's radius
+					s.setDim(newDims[0], DimType.RADIUS);
+					dimChanged = true;
 				}
 
-				if (inputValues[2] != null) {
-					oPosition.z = inputValues[2];
-					edited = true;
+				if (newDims[1] != null) {
+					// Update the cylinder's height
+					s.setDim(newDims[1], DimType.HEIGHT);
+					dimChanged = true;
 				}
 
-				if (inputValues[3] != null) {
-					oWPR.x = inputValues[3];
-					edited = true;
-				}
+			} else if (s instanceof ComplexShape) {
+				Float[] newDims = getModelDimensions();
 
-				if (inputValues[4] != null) {
-					oWPR.y = inputValues[4];
-					edited = true;
-				}
-
-				if (inputValues[5] != null) {
-					oWPR.z = inputValues[5];
-					edited = true;
-				}
-
-				// Convert values from the World to the Native coordinate system
-				PVector position = RMath.vFromWorld( oPosition );
-				RMatrix orientation = RMath.wEulerToNRMat(oWPR);
-				// Update the Objects position and orientation
-				toEdit.setLocalCenter(position);
-				toEdit.setLocalOrientationAxes(orientation);
-
-			} catch (NullPointerException NPEx) {
-				PApplet.println("Missing parameter!");
-				NPEx.printStackTrace();
-				return false;
-			}
-
-		} else {
-			PApplet.println("No object selected!");
-		}
-
-		/* If the edited object is a fixture, then update the orientation
-		 * of all parts, which reference this fixture, in this scenario. */
-		if (toEdit instanceof Fixture) {
-			if (app.getActiveScenario() != null) {
-
-				for (WorldObject wldObj : app.getActiveScenario()) {
-					if (wldObj instanceof Part) {
-						Part p = (Part)wldObj;
-
-						if (p.getFixtureRef() == toEdit) {
-							p.updateAbsoluteOrientation();
-						}
-					}
+				if (newDims[0] != null) {
+					// Update the model's scale value
+					s.setDim(newDims[0], DimType.SCALE);
+					dimChanged = true;
 				}
 			}
+
+			if (dimChanged && selectWO instanceof Part) {
+				// Update the bounding box dimensions of a part
+				((Part)selectWO).updateOBBDims();
+			}
+
+			edited = dimChanged;
+
+			// Convert origin position into the World Frame
+			PVector oPosition = RMath.vToWorld( selectWO.getLocalCenter() );
+			PVector oWPR = RMath.nRMatToWEuler( selectWO.getLocalOrientation() );
+			Float[] inputValues = getCurrentWOValues();
+			// Update position and orientation
+			if (inputValues[0] != null) {
+				oPosition.x = inputValues[0];
+				edited = true;
+			}
+
+			if (inputValues[1] != null) {
+				oPosition.y = inputValues[1];
+				edited = true;
+			}
+
+			if (inputValues[2] != null) {
+				oPosition.z = inputValues[2];
+				edited = true;
+			}
+
+			if (inputValues[3] != null) {
+				oWPR.x = inputValues[3];
+				edited = true;
+			}
+
+			if (inputValues[4] != null) {
+				oWPR.y = inputValues[4];
+				edited = true;
+			}
+
+			if (inputValues[5] != null) {
+				oWPR.z = inputValues[5];
+				edited = true;
+			}
+
+			// Convert values from the World to the Native coordinate system
+			PVector position = RMath.vFromWorld( oPosition );
+			RMatrix orientation = RMath.wEulerToNRMat(oWPR);
+			// Update the Objects position and orientation
+			selectWO.setLocalCenter(position);
+			selectWO.setLocalOrientation(orientation);
+
+		} catch (NullPointerException NPEx) {
+			PApplet.println("Missing parameter!");
+			NPEx.printStackTrace();
+			return false;
 		}
 
 		return edited;
@@ -3403,60 +3478,57 @@ public class WGUI implements ControlListener {
 	 * Updates the default position and orientation values of a part based on
 	 * the input fields in the edit window.
 	 * 
-	 * @return	if the selected was successfully modified
+	 * @param selectedPart	The part, of which to update the default position
+	 * 						and orientation
+	 * @return				If the part was successfully modified
 	 */
-	public boolean updateWODefault() {
-		WorldObject toEdit = getSelectedWO();
+	public boolean updateWODefault(Part selectedPart) {
 		boolean edited = false;
+		// Pull the object's current position and orientation
+		PVector defaultPos = RMath.vToWorld( selectedPart.getDefaultCenter() );
+		PVector defaultWPR = RMath.nRMatToWEuler( selectedPart.getDefaultOrientation() );
+		Float[] inputValues = getCurrentWOValues();
 
-		if (toEdit instanceof Part) {
-			Part p = (Part)toEdit;
-			// Pull the object's current position and orientation
-			PVector defaultPos = RMath.vToWorld( p.getDefaultCenter() );
-			PVector defaultWPR = RMath.nRMatToWEuler( p.getDefaultOrientationAxes() );
-			Float[] inputValues = getCurrentValues();
-
-			// Update default position and orientation
-			if (inputValues[0] != null) {
-				defaultPos.x = inputValues[0];
-				edited = true;
-			}
-
-			if (inputValues[1] != null) {
-				defaultPos.y = inputValues[1];
-				edited = true;
-			}
-
-			if (inputValues[2] != null) {
-				defaultPos.z = inputValues[2];
-				edited = true;
-			}
-
-			if (inputValues[3] != null) {
-				defaultWPR.x = inputValues[3];
-				edited = true;
-			}
-
-			if (inputValues[4] != null) {
-				defaultWPR.y = inputValues[4];
-				edited = true;
-			}
-
-			if (inputValues[5] != null) {
-				defaultWPR.z = inputValues[5];
-				edited = true;
-			}
-
-			// Convert values from the World to the Native coordinate system
-			PVector position = RMath.vFromWorld( defaultPos );
-			RMatrix orientation = RMath.wEulerToNRMat(defaultWPR);
-			// Update the Object's default position and orientation
-			p.setDefaultCenter(position);
-			p.setDefaultOrientationAxes(orientation);
-
-			fillDefWithDef();
+		// Update default position and orientation
+		if (inputValues[0] != null) {
+			defaultPos.x = inputValues[0];
+			edited = true;
 		}
 
+		if (inputValues[1] != null) {
+			defaultPos.y = inputValues[1];
+			edited = true;
+		}
+
+		if (inputValues[2] != null) {
+			defaultPos.z = inputValues[2];
+			edited = true;
+		}
+
+		if (inputValues[3] != null) {
+			defaultWPR.x = inputValues[3];
+			edited = true;
+		}
+
+		if (inputValues[4] != null) {
+			defaultWPR.y = inputValues[4];
+			edited = true;
+		}
+
+		if (inputValues[5] != null) {
+			defaultWPR.z = inputValues[5];
+			edited = true;
+		}
+
+		// Convert values from the World to the Native coordinate system
+		PVector position = RMath.vFromWorld( defaultPos );
+		RMatrix orientation = RMath.wEulerToNRMat(defaultWPR);
+		// Update the Object's default position and orientation
+		selectedPart.setDefaultCenter(position);
+		selectedPart.setDefaultOrientation(orientation);
+
+		fillDefWithDef(selectedPart);
+		
 		return edited;
 	}
 
@@ -3494,5 +3566,38 @@ public class WGUI implements ControlListener {
 
 		// Invalid characters
 		return null;
+	}
+
+	public void updateCameraCurrent() {
+		try {
+			float x = Float.parseFloat(getTextField("CXCur").getText());
+			float y = Float.parseFloat(getTextField("CYCur").getText());
+			float z = Float.parseFloat(getTextField("CZCur").getText());
+			
+			float w = Float.parseFloat(getTextField("CWCur").getText());
+			float p = Float.parseFloat(getTextField("CPCur").getText());
+			float r = Float.parseFloat(getTextField("CRCur").getText());
+			
+			PVector pos = new PVector(x, y, z);
+			PVector rot = new PVector(w, p, r);
+			
+			float clipNear = Float.parseFloat(getTextField("CCNearCur").getText());
+			float clipFar = Float.parseFloat(getTextField("CCFarCur").getText());
+			
+			float fov = Float.parseFloat(getTextField("CFOVCur").getText());
+			float aspect = Float.parseFloat(getTextField("CAspectCur").getText());
+			
+			float br = getSlider("CBright").getValue();
+			float exp = getSlider("CExp").getValue();
+			
+			app.getRobotCamera().update(pos, rot, fov, aspect, clipNear, clipFar, br, exp);
+		}
+		catch (NumberFormatException NFEx) {
+			PApplet.println("Invalid number input!");
+
+		} 
+		catch (NullPointerException NPEx) {
+			PApplet.println("Missing parameter!");
+		}
 	}
 }

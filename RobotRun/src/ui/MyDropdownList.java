@@ -86,11 +86,8 @@ public class MyDropdownList extends DropdownList {
 	
 	@Override
 	protected void onRelease() {
-		try {
+		if(this.getItems().size() != 0) {
 			super.onRelease();
-			
-		} catch (IndexOutOfBoundsException IOOBEx) {
-			/* Empty lists throw exceptions */
 		}
 	}
 	
@@ -103,7 +100,7 @@ public class MyDropdownList extends DropdownList {
 	
 	/**
 	 * If the given item exists in the list, then it is set as the selected
-	 * item and true is returned. Otherwise, the lsit remains unchanged and
+	 * item and true is returned. Otherwise, the list remains unchanged and
 	 * null is returned.
 	 * 
 	 * @param e	The item, in the list, to set
@@ -137,6 +134,7 @@ public class MyDropdownList extends DropdownList {
 		String label = getSelectedLabel();
 		
 		if (label == null) {
+			// No selected item
 			getCaptionLabel().setText( getName() );
 			
 		} else {

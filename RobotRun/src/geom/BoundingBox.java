@@ -1,26 +1,22 @@
 package geom;
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.RealMatrix;
-
 import global.Fields;
 import global.RMath;
 import processing.core.PVector;
-import robot.RobotRun;
 
 /**
  * A box object with its own local Coordinate system.
  */
 public class BoundingBox {
 	private CoordinateSystem localOrientation;
-	private Box boxFrame;
+	private RBox boxFrame;
 
 	/**
 	 * Create a bounding box with a default dimension.
 	 */
 	public BoundingBox() {
 		localOrientation = new CoordinateSystem();
-		boxFrame = new Box(Fields.OBB_DEFAULT, 10f);
+		boxFrame = new RBox(Fields.OBB_DEFAULT, 10f);
 	}
 
 	/**
@@ -30,7 +26,7 @@ public class BoundingBox {
 	 */
 	public BoundingBox(float edgeLen) {
 		localOrientation = new CoordinateSystem();
-		boxFrame = new Box(Fields.OBB_DEFAULT, edgeLen);
+		boxFrame = new RBox(Fields.OBB_DEFAULT, edgeLen);
 	}
 
 	/**
@@ -42,7 +38,7 @@ public class BoundingBox {
 	 */
 	public BoundingBox(float len, float hgt, float wdh) {
 		localOrientation = new CoordinateSystem();
-		boxFrame = new Box(Fields.OBB_DEFAULT, len, hgt, wdh);
+		boxFrame = new RBox(Fields.OBB_DEFAULT, len, hgt, wdh);
 	}
 	
 	/**
@@ -51,72 +47,40 @@ public class BoundingBox {
 	 * @param boxFrame			The frame of the bounding box
 	 * @param localOrientation	The orientation of the bounding box
 	 */
-	public BoundingBox(Box boxFrame, CoordinateSystem localOrientation) {
-		
+	public BoundingBox(RBox boxFrame, CoordinateSystem localOrientation) {
 		this.localOrientation = localOrientation;
 		this.boxFrame = boxFrame;
 	}
-	
-	public static void main(String[] args) {
-		/**/
-		RealMatrix m0 = new Array2DRowRealMatrix(
-				new double[][] {
-					{ -1,  0,  0 },
-					{  0,  0, -1 },
-					{  0,  1,  0 }
-				}
-		);
-		
-		RealMatrix m1 = new Array2DRowRealMatrix(
-				new double[][] {
-					{ -1,  0,  0 },
-					{  0,  0,  1 },
-					{  0, -1,  0 }
-				}
-		);
-		
-		RealMatrix m2 = new Array2DRowRealMatrix(
-				new double[][] {
-					{  0,  1,  0 },
-					{  1,  0,  0 },
-					{  0,  0, -1 }
-				}
-		);
-		
-		RealMatrix m3 = m2.multiply(m0);
-		
-		System.out.printf("M0:\n%s\nM1:\n%s\nM2:\n%s\nM3:\n%s\n",
-				RMath.matrixToString(m0), RMath.matrixToString(m1),
-				RMath.matrixToString(m2), RMath.matrixToString(m3));
-		
-		/**
-		RMatrix rotMatrix = new RMatrix(new float[][] {
-			{ 1, 2, 3 },
-			{ 3, 4, 5 },
-			{ 6, 7, 8 }
-		});
-		
-		RMatrix tMatrix = RMath.transformationMatrix(new PVector(-15, 4, 35), rotMatrix);
-		
-		System.out.printf("%s\n%s\n", rotMatrix.toString(), tMatrix.toString());
-		
-		
-		PVector v = new PVector(-13, 5, 11);
-		PVector u = RMath.rotateVector(v, Fields.WORLD_AXES);
-		
-		PVector w = new PVector(10, -15, 20);
-		PVector y = RMath.rotateVector(w, Fields.NATIVE_AXES);
-		
-		System.out.printf("v: %s\nu: %s\nw: %s\ny: %s\n", v, u, w, y);
-		/**/
-	}
 
 	/**
-	 * Apply the Coordinate System of the bounding-box onto the
-	 * current transformation matrix.
+	 * Testing of orientation conversion formulas.
+	 * 
+	 * @param args	Unused
 	 */
-	public void applyCoordinateSystem() {
-		localOrientation.apply();
+	public static void main(String[] args) {
+		
+		RMatrix m0 = new RMatrix( new float[][] {
+			
+			{  0,  0,  1},
+			{ -1,  0,  0},
+			{  0,  1,  0}
+			
+			}	
+		);
+		
+		PVector e0 = RMath.matrixToEuler(m0);
+		RMatrix m1 = RMath.eulerToMatrix(e0);
+		
+		System.out.printf("%s\n%s\n%s\n\n", m0, e0, m1);
+		
+		PVector e1 = new PVector(RMath.PI / 3f, - 2 * RMath.PI/ 3f, RMath.PI);
+		RMatrix m2 = RMath.eulerToMatrix(e1);
+		PVector e2 = RMath.matrixToEuler(m2);
+		RMatrix m3 = RMath.eulerToMatrix(e2);
+		PVector e3 = RMath.matrixToEuler(m3);
+		
+		System.out.printf("%s\n%s\n%s\n%s\n%s\n\n", e1, m2, e2, m3, e3);
+		
 	}
 
 	/**
@@ -127,40 +91,94 @@ public class BoundingBox {
 		return new BoundingBox( boxFrame.clone(),
 				localOrientation.clone() );
 	}
-
+	
 	/**
-	 * Determine of a single position, in Native Coordinates, is with
-	 * the bounding box of the this world object.
+	 * Calculates the point of collision between this bounding box and the
+	 * given ray that is closest to the ray. If no collision exists, then null
+	 * is returned.
+	 * 
+	 * Inspired by:
+	 * https://stackoverflow.com/questions/5666222/3d-line-plane-intersection
+	 * http://math.mit.edu/classes/18.02/notes/lecture5compl-09.pdf
+	 * 
+	 * @param ray	A ray with a defined origin and direction
+	 * @return		The point of collision between this bounding box and the
+	 * 				given ray, closest to the ray
 	 */
-	public boolean collision(PVector point) {
-		// Convert the point to the current reference frame
-		RMatrix tMatrix = RMath.transformationMatrix(localOrientation.getOrigin(), localOrientation.getAxes());
-		PVector relPosition = RMath.vectorMatrixMult(point, RMath.invertHCMatrix(tMatrix));
-
-		PVector OBBDim = getDims();
-		// Determine if the point is within the bounding-box of this object
-		boolean is_inside = relPosition.x >= -(OBBDim.x / 2f) && relPosition.x <= (OBBDim.x / 2f)
-				&& relPosition.y >= -(OBBDim.y / 2f) && relPosition.y <= (OBBDim.y / 2f)
-				&& relPosition.z >= -(OBBDim.z / 2f) && relPosition.z <= (OBBDim.z / 2f);
-
-				return is_inside;
-	}
-
-	/**
-	 * Draw both the object and its bounding box;
-	 */
-	public void draw() {
-		RobotRun.getInstance().pushMatrix();
-		// Draw shape in its own coordinate system
-		localOrientation.apply();
-		boxFrame.draw();
-		RobotRun.getInstance().popMatrix();
+	public PVector collision(RRay ray) {
+		PVector origin = localOrientation.getOrigin();
+		float[][] axes = localOrientation.getAxes().getFloatData();
+		// Transform ray into the coordinate frame of the bounding box
+		PVector rayOrigin = RMath.rotateVector(PVector.sub(ray.getOrigin(), origin), axes);
+		PVector rayDirect = RMath.rotateVector(ray.getDirection(), axes);
+		
+		float[] dims = boxFrame.getDimArray();
+		dims[0] /= 2f;
+		dims[1] /= 2f;
+		dims[2] /= 2f;
+		
+		int[] planeAxes = new int[] {
+			(rayOrigin.x < 0) ? -1 : 1,
+			(rayOrigin.y < 0) ? -1 : 1,
+			(rayOrigin.z < 0) ? -1 : 1
+		};
+		
+		for (int planeAxis = 0; planeAxis < planeAxes.length; ++planeAxis) {
+			
+			float E, G;
+			
+			if (planeAxis == 0) {
+				E = planeAxes[0] * (rayOrigin.x - (planeAxes[0] * dims[0]));
+				G = planeAxes[0] * rayDirect.x;
+				
+			} else if (planeAxis == 1) {
+				E = planeAxes[1] * (rayOrigin.y - (planeAxes[1] * dims[1]));
+				G = planeAxes[1] * rayDirect.y;
+				
+			} else {
+				E = planeAxes[2] * (rayOrigin.z - (planeAxes[2] * dims[2]));
+				G = planeAxes[2] * rayDirect.z;
+				
+			}
+			
+			if (G == 0f) {
+				/**
+				if (Fields.DEBUG) {
+					System.err.printf("G = 0 for A=%f R=%s\n",
+							planeAxes[planeAxis] * dims[planeAxis], ray);
+				}
+				/**/
+				
+			} else {
+				float t = -E / G;
+				
+				if (t >= 0) {
+					PVector ptOnRay = PVector.add(rayOrigin, PVector.mult(rayDirect, t));
+					float[] ptOnRayArray = new float[] { ptOnRay.x, ptOnRay.y, ptOnRay.z };
+					int dimToCheck0 = (planeAxis + 1) % 3;
+					int dimToCheck1 = (dimToCheck0 + 1) % 3;
+					
+					if (ptOnRayArray[dimToCheck0] >= -dims[dimToCheck0] &&
+						ptOnRayArray[dimToCheck0] <= dims[dimToCheck0] &&
+						ptOnRayArray[dimToCheck1] >= -dims[dimToCheck1] &&
+						ptOnRayArray[dimToCheck1] <= dims[dimToCheck1]) {
+						
+						// Collision exists
+						return PVector.add(ray.getOrigin(),  PVector.mult(ray.getDirection(), t));
+						
+					}
+				}
+			}
+		}
+		
+		// No collision
+		return null;
 	}
 
 	/**
 	 * Return a reference to this bounding-box's box.
 	 */
-	public Box getBox() { return boxFrame; }
+	public RBox getFrame() { return boxFrame; }
 
 	public PVector getCenter() { return localOrientation.getOrigin(); }
 
@@ -206,8 +224,9 @@ public class BoundingBox {
 	 * Reset the bounding-box's coordinate system to the current
 	 * transformation matrix.
 	 */
-	public void setCoordinateSystem() {
-		localOrientation = new CoordinateSystem();
+	public void setCoordinateSystem(CoordinateSystem newCS) {
+		localOrientation.setOrigin(newCS.getOrigin());
+		localOrientation.setAxes(newCS.getAxes());
 	}
 
 	/**
@@ -234,7 +253,7 @@ public class BoundingBox {
 	 * Reset the object's orientation axes; the given rotation
 	 * matrix should be in row major order!
 	 */
-	public void setOrientationAxes(RMatrix newOrientation) {
+	public void setOrientation(RMatrix newOrientation) {
 		localOrientation.setAxes(newOrientation);
 	}
 }

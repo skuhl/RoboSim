@@ -1,0 +1,96 @@
+{
+	"objList": [
+		{
+			"modelID": 1,
+			"modelFamilyID": 1,
+			"modelFileName": "circsheet.stl",
+			"selectAreas": [
+				{
+					"areaID": 1,
+					"areaType": 0,
+					"views": [
+						{
+							"align": "F",
+							"x1": 20,
+							"y1": 20,
+							"x2": 50,
+							"y2": 50
+						},
+						{
+							"align": "T",
+							"x1": 40,
+							"y1": 40,
+							"x2": 70,
+							"y2": 70
+						}						
+					]
+				},
+				{
+					"areaID": 2,
+					"areaType": 1,
+					"views": [
+						{
+							"align": "F",
+							"x1": 70,
+							"y1": 100,
+							"x2": 90,
+							"y2": 150
+						}
+					]
+				}
+			]
+		},
+		{
+			"modelID": 2,
+			"modelFamilyID": 2,
+			"modelFileName": "grinder.stl",
+			"selectAreas": [
+				{
+					"areaID": 1,
+					"areaType": 0,
+					"views": [
+						{
+							"align": "F",
+							"x1": 20,
+							"y1": 20,
+							"x2": 50,
+							"y2": 50
+						},
+						{
+							"align": "T",
+							"x1": 40,
+							"y1": 40,
+							"x2": 70,
+							"y2": 70
+						}						
+					]
+				},
+				{
+					"areaID": 2,
+					"areaType": 1,
+					"views": [
+						{
+							"align": "F",
+							"x1": 70,
+							"y1": 100,
+							"x2": 90,
+							"y2": 150
+						}
+					]
+				}
+			]
+		},
+		{
+			"modelID": 3,
+			"modelFamilyID": 3,
+			"modelFileName": "inclinedblock.stl",
+			"selectAreas": []
+		},
+		{
+			"modelID": 4,
+			"modelFamilyID": 4,
+			"modelFileName": "table.stl",
+			"selectAreas": []
+		}
+	]
+}

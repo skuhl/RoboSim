@@ -196,10 +196,12 @@ public abstract class Frame {
 
 		if (getDEOrigin() == null) {
 			xyz = new PVector(0f, 0f, 0f);
+			
 		} else {
 			// Use previous value if it exists
 			if (this instanceof UserFrame) {
 				xyz = RMath.vToWorld(getDEOrigin());
+				
 			} else {
 				// Tool Frame origins are an offset of the Robot's End Effector
 				xyz = getDEOrigin();
@@ -208,6 +210,7 @@ public abstract class Frame {
 
 		if (getDEOrientationOffset() == null) {
 			wpr = new PVector(0f, 0f, 0f);
+			
 		} else {
 			// Display in degrees
 			wpr = RMath.nQuatToWEuler(DEOrientationOffset);
@@ -223,7 +226,7 @@ public abstract class Frame {
 		entries[3][0] = "W: ";
 		entries[3][1] = String.format("%4.3f", wpr.x);
 		entries[4][0] = "P: ";
-		entries[4][1] = String.format("%4.3f", -wpr.y);
+		entries[4][1] = String.format("%4.3f", wpr.y);
 		entries[5][0] = "R: ";
 		entries[5][1] = String.format("%4.3f", wpr.z);
 
