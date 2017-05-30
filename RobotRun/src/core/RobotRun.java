@@ -4528,7 +4528,7 @@ public class RobotRun extends PApplet {
 		} else {
 			if (!isProgramRunning()) {
 				// Map I/O to the robot's end effector state, if shift is off
-				activeRobot.toggleEEState();
+				toggleEEState(activeRobot);
 			}
 		}
 	}
@@ -4776,7 +4776,7 @@ public class RobotRun extends PApplet {
 			} else if (keyCode == KeyEvent.VK_P) {
 				// Toggle the Robot's End Effector state
 				if (!isProgramRunning()) {
-					activeRobot.toggleEEState();
+					toggleEEState(activeRobot);
 				}
 				
 			} else if (keyCode == KeyEvent.VK_T) {
@@ -6599,7 +6599,7 @@ public class RobotRun extends PApplet {
 
 					/* Collision Detection */
 					if(areOBBsDisplayed()) {
-						if( active != null && active.checkObjectCollision(p) ) {
+						if( active != null && active.checkCollision(p) ) {
 							p.setBBColor(Fields.OBB_COLLISION);
 						}
 
@@ -7566,6 +7566,26 @@ public class RobotRun extends PApplet {
 		}
 		
 		UI.updateCameraListContents();
+	}
+	
+	/**
+	 * Toggle the given robot's state between ON and OFF. Pickup collisions
+	 * between this robot and the active scenario are checked based off the
+	 * robot's new end effector state.
+	 * 
+	 * @param robot	The robot for which to change the end effector state
+	 */
+	public void toggleEEState(RoboticArm robot) {
+		int curState = robot.getEEState();
+		
+		if (curState == Fields.ON) {
+			robot.setEEState(Fields.OFF);
+			
+		} else {
+			robot.setEEState(Fields.ON);
+		}
+		// Check pickup collisions in active scenario
+		robot.checkPickupCollision(activeScenario);
 	}
 	
 	/**
