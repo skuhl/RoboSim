@@ -10,6 +10,11 @@ public class IORegister extends Register {
 		super();
 		state = Fields.OFF;
 	}
+	
+	public IORegister(int idx, String name) {
+		super(idx, name);
+		state = Fields.OFF;
+	}
 
 	public IORegister(int i, String comm, int iniState) {
 		super(i, comm);
