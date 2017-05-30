@@ -1,14 +1,12 @@
 package robot;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Stack;
 
 import core.RobotRun;
 import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;
-import enums.EEType;
 import enums.InstOp;
 import enums.RobotMotion;
 import frame.ToolFrame;
@@ -25,7 +23,6 @@ import global.RMath;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
-import processing.core.PShape;
 import processing.core.PVector;
 import programming.Instruction;
 import programming.MotionInstruction;
@@ -79,57 +76,6 @@ public class RoboticArm {
 	private final ArrayList<RMatrix> SEGMENT_TMATS;
 	
 	/**
-	 * A list of the robot's arm segment models.
-	 *
-	private final ArrayList<Model> OLD_SEGMENTS;
-	
-	/**
-	 * A model for one of the robot's end effectors
-	 *
-	private final Model EEM_SUCTION, EEM_CLAW, EEM_CLAW_PINCER, EEM_POINTER,
-						EEM_GLUE_GUN, EEM_WIELDER;
-	
-	/**
-	 * The set of bounding boxes for the robot's arm segments.
-	 *
-	private final BoundingBox[] ARM_OBBS;
-	
-	/**
-	 * A set mapping each end effector to its respective bounding boxes.
-	 *
-	private final HashMap<EEType, ArrayList<BoundingBox>> EE_TO_OBBS;
-	
-	/**
-	 * A set mapping each end effector to its pickup bounding boxes. As of now,
-	 * only the claw and suction end effector have pickup boxes, since they are
-	 * the only end effectors that can be used to pickup parts.
-	 *
-	private final HashMap<EEType, ArrayList<BoundingBox>> EE_TO_PICK_OBBS;
-	
-	/**
-	 * A set mapping each end effector to the index of its I/O register
-	 * associated with this robot.
-	 *
-	private final HashMap<EEType, Integer> EE_TO_IOREG;
-	
-	/**
-	 * The I/O registers associated with this robot.
-	 *
-	private final IORegister[] IOREG;
-	
-	/**
-	 * The active end effector of the Robot/
-	 *
-	private EEType activeEndEffector;
-	
-	/**
-	 * The state (i.e. on or off) of the Robot's current end effector.
-	 *
-	private int endEffectorState;
-	
-	/**/
-	
-	/**
 	 * The list of programs associated with this robot.
 	 */
 	private final ArrayList<Program> PROGRAMS;
@@ -168,7 +114,7 @@ public class RoboticArm {
 	/**
 	 * The initial position and orientation of the robot.
 	 */
-	private Point robotPoint;
+	private final Point DEFAULT_POINT;
 	
 	/**
 	 * The index corresponding to the active end effector in EE_LIST.
@@ -273,6 +219,7 @@ public class RoboticArm {
 			USER_FRAMES[idx] = new UserFrame();
 		}
 		
+		motionType = RobotMotion.HALTED;
 		curCoordFrame = CoordFrame.JOINT;
 		activeUserIdx = -1;
 		activeToolIdx = -1;
@@ -289,7 +236,7 @@ public class RoboticArm {
 
 		heldPart = null;
 		
-		robotPoint = getFacePlatePoint(
+		DEFAULT_POINT = getFacePlatePoint(
 				new float[] { 0f, 0f, 0f, 0f, 0f, 0f }
 		);
 		
@@ -298,244 +245,6 @@ public class RoboticArm {
 		
 		trace = false;
 		tracePts = new ArrayList<PVector>();
-	}
-
-	/**
-	 * Creates a robot with the given ID at the given position with the given
-	 * segment and end effector models.
-	 * 
-	 * @param rid			The unique identifier associated with the Robot
-	 * @param basePos		The center position of the Robot's base segment
-	 * @param robotModels	The set of both the segment and end effector models
-	 * 						for this robot
-	 *
-	public RoboticArm(int rid, PVector basePos, PShape[] robotModels, ArrayList<RMatrix> segmentTMats) {
-		int idx;
-		
-		jogLinear = new float[3];
-		jogRot = new float[3];
-		
-		motorSpeed = 1000.0f; // speed in mm/sec
-		liveSpeed = 10;
-		
-		RID = rid;
-		OLD_SEGMENTS = new ArrayList<>();
-		SEGMENT_TMATS = segmentTMats;
-		BASE_POSITION = basePos;
-		
-		// Initialize program fields
-		PROGRAMS = new ArrayList<>();
-		CALL_STACK = new Stack<>();
-		PROG_UNDO = new Stack<>();
-		
-		activeProgIdx = -1;
-		activeInstIdx = -1;
-		
-		// Initializes the frames
-		
-		TOOL_FRAMES = new ToolFrame[Fields.FRAME_NUM];
-		USER_FRAMES = new UserFrame[Fields.FRAME_NUM];
-		
-		for (idx = 0; idx < TOOL_FRAMES.length; ++idx) {
-			TOOL_FRAMES[idx] = new ToolFrame();
-			USER_FRAMES[idx] = new UserFrame();
-		}
-		
-		curCoordFrame = CoordFrame.JOINT;
-		activeUserIdx = -1;
-		activeToolIdx = -1;
-		
-		// Initialize the registers
-		
-		DREG = new DataRegister[Fields.DPREG_NUM];
-		PREG = new PositionRegister[Fields.DPREG_NUM];
-		IOREG = new IORegister[Fields.IOREG_NUM];
-		
-		for (idx = 0; idx < DREG.length; ++idx) {
-			DREG[idx] = new DataRegister(idx);
-			PREG[idx] = new PositionRegister(idx);
-		}
-		
-		// Associated each End Effector with an I/O Register
-		idx = 0;
-		IOREG[idx] = new IORegister(idx++, (EEType.SUCTION).name(), Fields.OFF);
-		IOREG[idx] = new IORegister(idx++, (EEType.CLAW).name(), Fields.OFF);
-		IOREG[idx] = new IORegister(idx++, (EEType.POINTER).name(), Fields.OFF);
-		IOREG[idx] = new IORegister(idx++, (EEType.GLUE_GUN).name(), Fields.OFF);
-		IOREG[idx] = new IORegister(idx++, (EEType.WIELDER).name(), Fields.OFF);
-		
-		activeEndEffector = EEType.NONE;
-		endEffectorState = Fields.OFF;
-		// Initialize the End Effector to IO Register mapping
-		EE_TO_IOREG = new HashMap<>();
-		EE_TO_IOREG.put(EEType.SUCTION, 0);
-		EE_TO_IOREG.put(EEType.CLAW, 1);
-		EE_TO_IOREG.put(EEType.POINTER, 2);
-		EE_TO_IOREG.put(EEType.GLUE_GUN, 3);
-		EE_TO_IOREG.put(EEType.WIELDER, 4);
-
-		EEM_SUCTION = new Model("suction", robotModels[0]);
-		EEM_CLAW = new Model("grippers", robotModels[1]);
-		EEM_CLAW_PINCER = new Model("pincer", robotModels[2]);
-		EEM_POINTER = new Model("pointer", robotModels[3]);
-		EEM_GLUE_GUN = new Model("glue_gun", robotModels[4]);
-		EEM_WIELDER = new Model("wielder", robotModels[5]);
-
-		motionType = RobotMotion.HALTED;
-		
-		// Base
-		Model base = new Model("base", robotModels[6]);
-		base.rotations[1] = true;
-		base.jointRanges[1] = new PVector(0, PConstants.TWO_PI);
-		base.rotationSpeed = PApplet.radians(150)/60.0f;
-		// Joint 1
-		Model axis1 = new Model("axis_1", robotModels[7]);
-		axis1.rotations[2] = true;
-		axis1.jointRanges[2] = new PVector(4.34f, 2.01f);
-		axis1.rotationSpeed = PApplet.radians(150)/60.0f;
-		// Joint 2
-		Model axis2 = new Model("axis_2", robotModels[8]);
-		axis2.rotations[2] = true;
-		axis2.jointRanges[2] = new PVector(5.027f, 4.363f);
-		axis2.rotationSpeed = PApplet.radians(200)/60.0f;
-		// Joint 3
-		Model axis3 = new Model("axis_3", robotModels[9]);
-		axis3.rotations[0] = true;
-		axis3.jointRanges[0] = new PVector(0, PConstants.TWO_PI);
-		axis3.rotationSpeed = PApplet.radians(250)/60.0f;
-		// Joint 4
-		Model axis4 = new Model("axis_4", robotModels[10]);
-		axis4.rotations[2] = true;
-		axis4.jointRanges[2] = new PVector(240f * PConstants.DEG_TO_RAD, 130f * PConstants.DEG_TO_RAD);
-		/** Origin bounds
-		axis4.jointRanges[2] = new PVector(59f * Fields.PI / 40f, 11f * Fields.PI / 20f);
-		
-		axis4.rotationSpeed = PApplet.radians(250)/60.0f;
-		// Joint 5
-		Model axis5 = new Model("axis_5", robotModels[11]);
-		axis5.rotations[0] = true;
-		axis5.jointRanges[0] = new PVector(0, PConstants.TWO_PI);
-		axis5.rotationSpeed = PApplet.radians(420)/60.0f;
-		// Joint 6
-		Model axis6 = new Model("axis_6", robotModels[12]);
-		OLD_SEGMENTS.add(base);
-		OLD_SEGMENTS.add(axis1);
-		OLD_SEGMENTS.add(axis2);
-		OLD_SEGMENTS.add(axis3);
-		OLD_SEGMENTS.add(axis4);
-		OLD_SEGMENTS.add(axis5);
-		OLD_SEGMENTS.add(axis6);
-
-		for(idx = 0; idx < jogLinear.length; ++idx) {
-			jogLinear[idx] = 0;
-		}
-
-		for(idx = 0; idx < jogRot.length; ++idx) {
-			jogRot[idx] = 0;
-		}
-
-		/* Initializes dimensions of the Robot Arm's hit boxes *
-		ARM_OBBS = new BoundingBox[7];
-
-		ARM_OBBS[0] = new BoundingBox(420, 115, 420);
-		ARM_OBBS[1] = new BoundingBox(317, 85, 317);
-		ARM_OBBS[2] = new BoundingBox(130, 185, 170);
-		ARM_OBBS[3] = new BoundingBox(74, 610, 135);
-		ARM_OBBS[4] = new BoundingBox(165, 165, 165);
-		ARM_OBBS[5] = new BoundingBox(160, 160, 160);
-		ARM_OBBS[6] = new BoundingBox(128, 430, 128);
-
-		EE_TO_OBBS = new HashMap<>();
-		EE_TO_PICK_OBBS = new HashMap<>();
-		// Faceplate
-		ArrayList<BoundingBox> limbo = new ArrayList<BoundingBox>();
-		limbo.add( new BoundingBox(36, 96, 96) );
-		EE_TO_OBBS.put(EEType.NONE, limbo);
-		// Cannot pickup
-		limbo = new ArrayList<>();
-		EE_TO_PICK_OBBS.put(EEType.NONE, limbo);
-
-		// Claw Gripper
-		limbo = new ArrayList<BoundingBox>();
-		limbo.add( new BoundingBox(54, 96, 96) );
-		limbo.add( new BoundingBox(31, 21, 89) );
-		limbo.add( new BoundingBox(31, 21, 89) );
-		EE_TO_OBBS.put(EEType.CLAW, limbo);
-		// In between the grippers
-		limbo = new ArrayList<BoundingBox>();
-		limbo.add(new BoundingBox(15, 3, 55) );
-		limbo.get(0).setColor(Fields.OBB_HELD);
-		EE_TO_PICK_OBBS.put(EEType.CLAW, limbo);
-
-		// Suction
-		limbo = new ArrayList<BoundingBox>();
-		limbo.add( new BoundingBox(54, 96, 96) );
-		limbo.add( new BoundingBox(82, 37, 37) );
-		limbo.add( new BoundingBox(37, 62, 37) );
-		EE_TO_OBBS.put(EEType.SUCTION, limbo);
-		// One for each suction cup
-		limbo = new ArrayList<BoundingBox>();
-		limbo.add(new BoundingBox(3, 25, 25) );
-		limbo.get(0).setColor(Fields.OBB_HELD);
-		limbo.add(new BoundingBox(25, 3, 25) );
-		limbo.get(1).setColor(Fields.OBB_HELD);
-		EE_TO_PICK_OBBS.put(EEType.SUCTION, limbo);
-
-		// Pointer
-		limbo = new ArrayList<>();
-		EE_TO_OBBS.put(EEType.POINTER, limbo);
-		// Cannot pickup
-		limbo = new ArrayList<>();
-		EE_TO_PICK_OBBS.put(EEType.POINTER, limbo);
-
-		// Glue Gun
-		limbo = new ArrayList<>();
-		EE_TO_OBBS.put(EEType.GLUE_GUN, limbo);
-		// Cannot pickup
-		limbo = new ArrayList<>();
-		EE_TO_PICK_OBBS.put(EEType.GLUE_GUN, limbo);
-
-		// Wielder
-		limbo = new ArrayList<>();
-		EE_TO_OBBS.put(EEType.WIELDER, limbo);
-		// Cannot pickup
-		limbo = new ArrayList<>();
-		EE_TO_PICK_OBBS.put(EEType.WIELDER, limbo);
-
-		heldPart = null;
-		
-		robotPoint = getFacePlatePoint(
-				new float[] { 0f, 0f, 0f, 0f, 0f, 0f }
-		);
-		
-		// Initializes the old transformation matrix for the arm model
-		lastTipTMatrix = getRobotTransform( getJointAngles() );
-		
-		trace = false;
-		tracePts = new ArrayList<PVector>();
-	}
-	
-	/**/
-	
-	/**
-	 * Updates the motion of one of the Robot's joints based on
-	 * the joint index given and the value of dir (-/+ 1). The
-	 * Robot's joint indices range from 0 to 5. ifthe joint
-	 * Associate with the given index is already in motion,
-	 * in either direction, then calling this method for that
-	 * joint index will stop that joint's motion.
-	 * 
-	 * @returning  The new motion direction of the Robot
-	 */
-	public int activateLiveJointMotion(int joint, int dir) {
-		RobotRun app = RobotRun.getInstance();
-
-		if (!app.isShift() || hasMotionFault()) {
-			// Only move when shift is set and there is no error
-			return 0;
-		}
-
-		return setJointMotion(joint, dir);
 	}
 	
 	/**
@@ -1193,15 +902,15 @@ public class RoboticArm {
 				RSegWithJoint seg = getJointSegment(i);
 
 				if (seg.isJointInMotion()) {
-					float trialAngle = seg.getJointRotation() + seg.getJointMotion() * liveSpeed / 100f;
-					trialAngle = RMath.mod2PI(trialAngle);
+					float trialAngle = RMath.mod2PI(
+							seg.getJointRotation() +
+							seg.getJointMotion() * seg.SPEED_MODIFIER *
+							liveSpeed / 100f
+					);
 					
-					if(seg.anglePermitted(trialAngle)) {
-						seg.setJointRotation(trialAngle);
-						
-					} else {
+					if(!seg.setJointRotation(trialAngle)) {
 						Fields.debug("A[i%d, n=%d]: %f\n", i, trialAngle);
-						seg.setJointMotion(0f);
+						seg.setJointMotion(0);
 						// TODO REFACTOR THESE
 						RobotRun.getInstance().updateRobotJogMotion(i, 0);
 						RobotRun.getInstance().hold();
@@ -1218,7 +927,7 @@ public class RoboticArm {
 				ToolFrame activeTool = getActiveTool();
 				
 				if (activeTool != null) {
-					RQuaternion diff = curPoint.orientation.transformQuaternion(robotPoint.orientation.conjugate());
+					RQuaternion diff = curPoint.orientation.transformQuaternion(DEFAULT_POINT.orientation.conjugate());
 					invFrameOrientation = diff.transformQuaternion(activeTool.getOrientationOffset().clone()).conjugate();
 				}
 				
@@ -1392,7 +1101,7 @@ public class RoboticArm {
 	 * @return	A copy of the Robot's default position and orientation
 	 */
 	public Point getDefaultPoint() {
-		return robotPoint.clone();
+		return DEFAULT_POINT.clone();
 	}
 	
 	/**
@@ -1412,6 +1121,14 @@ public class RoboticArm {
 			// Invalid index
 			return null;
 		}
+	}
+	
+	/**
+	 * @return	The state of the robot's current end effector
+	 */
+	public int getEEState() {
+		EndEffector activeEE = getActiveEE();
+		return (activeEE == null) ? Fields.OFF : activeEE.getState();
 	}
 	
 	/**
@@ -1443,74 +1160,6 @@ public class RoboticArm {
 		RQuaternion orientation = RMath.matrixToQuat(tipOrien);
 		
 		return new Point(position, orientation, jointAngles);
-	}
-	
-	/**
-	 * @return	The robot's tooltip position and orientatio with respect to the
-	 * 			active user frame
-	 */
-	public Point getToolTipUser() {
-		return getToolTipPoint(getJointAngles(), getActiveTool(),
-				getActiveUser());
-	}
-	
-	/**
-	 * @return	The robot's tooltip position and orientation in native
-	 * 			coordinates
-	 */
-	public Point getToolTipNative() {
-		return getToolTipPoint(getJointAngles(), getActiveTool(), null);
-	}
-	
-	/**
-	 * Calculates the robot's tooltip position and orientation based off
-	 * the given joint angles and the robot's active tool frame's tooltip
-	 * offset.
-	 * 
-	 * @param jointAngles	A 6-element array of joint angles used to
-	 * 						calculate the robot's tooltip position
-	 * @return				The robot's tooltip position in native coordinates
-	 */
-	public Point getToolTipNative(float[] jointAngles) {
-		return getToolTipPoint(jointAngles, getActiveTool(), null);
-	}
-		
-	/**
-	 * TODO comment this
-	 * 
-	 * @param jointAngles
-	 * @param tFrame
-	 * @param uFrame
-	 * @return
-	 */
-	private Point getToolTipPoint(float[] jointAngles, ToolFrame tFrame, UserFrame uFrame) {
-		Point toolTip = getFacePlatePoint(jointAngles);
-		
-		if (tFrame != null) {
-			// Apply the tooltip offset of the given tool frame
-			PVector toolOrigin = tFrame.getTCPOffset();
-			RQuaternion invOrien = toolTip.orientation.conjugate();
-			toolTip.position.add( invOrien.rotateVector(toolOrigin) );
-		}
-		
-		if (uFrame != null) {
-			// Apply the given user frame to the robot's tooltip position
-			RQuaternion uOrien = uFrame.getOrientation();
-			toolTip.position = RMath.vToFrame(toolTip.position,
-					uFrame.getOrigin(), uOrien);
-			
-			toolTip.orientation = uOrien.transformQuaternion(toolTip.orientation);
-		}
-		
-		return toolTip;
-	}
-
-	/**
-	 * @return	The state of the robot's current end effector
-	 */
-	public int getEEState() {
-		EndEffector activeEE = getActiveEE();
-		return (activeEE == null) ? Fields.OFF : activeEE.getState();
 	}
 	
 	/**
@@ -1555,15 +1204,11 @@ public class RoboticArm {
 	 * 				if no end effector is active
 	 */
 	public IORegister getIOReg(int rdx) {
-		EndEffector activeEE = getActiveEE();
-		
-		if (activeEE != null) {
-			return activeEE.reg;
-			
-		} else {
-			// No active end effector
-			return null;
+		if (rdx >= 0 && rdx < EE_LIST.length) {
+			return EE_LIST[rdx].reg;
 		}
+		
+		return null;
 	}
 
 	/**
@@ -1602,37 +1247,6 @@ public class RoboticArm {
 	public int getLiveSpeed() {
 		return liveSpeed;
 	}
-	
-	/**
-	public RQuaternion getOrientation() {
-		return RMath.matrixToQuat(getOrientationMatrix());
-	}
-
-	/* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
-	 * the end effector's current x, y, z axes with respect to the current frame.
-	 *
-	public RMatrix getOrientationMatrix() {
-		RobotRun.getInstance().pushMatrix();
-		RobotRun.getInstance().resetMatrix();
-		RobotRun.applyModelRotation(this, getJointAngles());
-		RMatrix matrix = RobotRun.getInstance().getOrientation();
-		RobotRun.getInstance().popMatrix();
-
-		return matrix;
-	}
-	
-	/* Calculate and returns a 3x3 matrix whose columns are the unit vectors of
-	 * the end effector's current x, y, z axes with respect to an arbitrary coordinate
-	 * system specified by the rotation matrix 'frame.'
-	 *
-	public float[][] getOrientationMatrix(RMatrix frame) {
-		RMatrix A = getOrientationMatrix();
-		RMatrix B = new RMatrix(frame);
-		RMatrix AB = A.multiply(B);
-
-		return AB.getFloatData();
-	}
-	/**/
 	
 	/**
 	 * Returns the position register, associated with the given index, of the
@@ -1756,6 +1370,66 @@ public class RoboticArm {
 			return null;
 		}
 	}
+	
+	/**
+	 * @return	The robot's tooltip position and orientatio with respect to the
+	 * 			active user frame
+	 */
+	public Point getToolTipUser() {
+		return getToolTipPoint(getJointAngles(), getActiveTool(),
+				getActiveUser());
+	}
+	
+	/**
+	 * @return	The robot's tooltip position and orientation in native
+	 * 			coordinates
+	 */
+	public Point getToolTipNative() {
+		return getToolTipPoint(getJointAngles(), getActiveTool(), null);
+	}
+	
+	/**
+	 * Calculates the robot's tooltip position and orientation based off
+	 * the given joint angles and the robot's active tool frame's tooltip
+	 * offset.
+	 * 
+	 * @param jointAngles	A 6-element array of joint angles used to
+	 * 						calculate the robot's tooltip position
+	 * @return				The robot's tooltip position in native coordinates
+	 */
+	public Point getToolTipNative(float[] jointAngles) {
+		return getToolTipPoint(jointAngles, getActiveTool(), null);
+	}
+		
+	/**
+	 * TODO comment this
+	 * 
+	 * @param jointAngles
+	 * @param tFrame
+	 * @param uFrame
+	 * @return
+	 */
+	private Point getToolTipPoint(float[] jointAngles, ToolFrame tFrame, UserFrame uFrame) {
+		Point toolTip = getFacePlatePoint(jointAngles);
+		
+		if (tFrame != null) {
+			// Apply the tooltip offset of the given tool frame
+			PVector toolOrigin = tFrame.getTCPOffset();
+			RQuaternion invOrien = toolTip.orientation.conjugate();
+			toolTip.position.add( invOrien.rotateVector(toolOrigin) );
+		}
+		
+		if (uFrame != null) {
+			// Apply the given user frame to the robot's tooltip position
+			RQuaternion uOrien = uFrame.getOrientation();
+			toolTip.position = RMath.vToFrame(toolTip.position,
+					uFrame.getOrigin(), uOrien);
+			
+			toolTip.orientation = uOrien.transformQuaternion(toolTip.orientation);
+		}
+		
+		return toolTip;
+	}
 
 	/**
 	 * Returns the user frame, associated with the given index, of the Robot,
@@ -1781,7 +1455,7 @@ public class RoboticArm {
 	 */
 	public void halt() {
 		for (int jdx = 0; jdx < 6; ++jdx) {
-			getJointSegment(jdx).setJointMotion(0f);
+			getJointSegment(jdx).setJointMotion(0);
 		}
 
 		for(int idx = 0; idx < jogLinear.length; ++idx) {
@@ -1816,7 +1490,7 @@ public class RoboticArm {
 		boolean done = true;
 
 		for(int jdx = 0; jdx < 6; ++jdx) {
-			RSegWithJoint seg = this.getJointSegment(jdx);
+			RSegWithJoint seg = getJointSegment(jdx);
 			
 			if (seg.isJointInMotion()) {
 				float distToDest = PApplet.abs(seg.getJointRotation() - TGT_JOINTS[jdx]);
@@ -1825,10 +1499,12 @@ public class RoboticArm {
 					// Destination (basically) met
 					continue;
 
-				} else if (distToDest >= (seg.getMotionSpeed() * speed)) {
+				} else if (distToDest >= (seg.SPEED_MODIFIER * speed)) {
 					done = false;
 					float newRotation = RMath.mod2PI(seg.getJointRotation()
-							+ seg.getJointMotion() * speed);
+							+ seg.getJointMotion() * seg.SPEED_MODIFIER
+							* speed);
+					
 					seg.setJointRotation(newRotation);
 
 				} else if (distToDest > 0.0001f) {
@@ -1888,7 +1564,7 @@ public class RoboticArm {
 		for(int joint = 0; !(destAngles == null) && joint < 6; joint += 1) {
 			RSegWithJoint seg = getJointSegment(joint);
 			
-			if (seg.anglePermitted(destAngles[joint])) {
+			if (!seg.anglePermitted(destAngles[joint])) {
 				invalidAngle = true;
 				
 				System.err.printf("Invalid angle: J[%d] = %4.3f -> %4.3f : [%4.3f - %4.3f]\n",
@@ -1921,6 +1597,7 @@ public class RoboticArm {
 	 * @return	Whether the robot is moving in some way
 	 */
 	public boolean modelInMotion() {
+		// TODO REFACTOR THIS
 		return RobotRun.getInstance().isProgramRunning() ||
 				(motionType != RobotMotion.HALTED &&
 				motionType != RobotMotion.MT_FAULT) || jointMotion() ||
@@ -2353,13 +2030,14 @@ public class RoboticArm {
 	 * Set the set of the robot's current end effector and update the part held
 	 * by the robot.
 	 * 
-	 * @param newState	The new state of the robot's end effector
+	 * @param rdx		The index of the I/O register
+	 * @param newState	The new state of the I/O register
 	 */
-	public void setEEState(int newState) {
-		EndEffector activeEE = getActiveEE();
+	public void setEEState(int rdx, int newState) {
+		IORegister ioReg = this.getIOReg(rdx);
 		
-		if (activeEE != null && (newState == Fields.ON || newState == Fields.OFF)) {
-			activeEE.setState(newState);
+		if (ioReg != null) {
+			ioReg.state = newState;
 			// TODO REFACTOR THIS
 			checkPickupCollision(RobotRun.getInstance().getActiveScenario());
 		}
@@ -2390,21 +2068,14 @@ public class RoboticArm {
 		RSegWithJoint seg = getJointSegment(jdx);
 		
 		if (seg != null) {
-			float motion = seg.getJointMotion();
-			
 			if (seg.isJointInMotion()) {
-				seg.setJointMotion(0f);
+				seg.setJointMotion(0);
 				
 			} else {
-				seg.setJointMotion(dir * 100f * PConstants.DEG_TO_RAD / 60f);
+				seg.setJointMotion(dir);
 			}
 			
-			if (motion > 0f) {
-				return 1;
-				
-			} else if (motion < 0f) {
-				return -1;
-			}
+			return seg.getJointMotion();
 		}
 		
 		return 0;
@@ -2433,22 +2104,18 @@ public class RoboticArm {
 	 * rotation directions of each of the joint segments.
 	 */
 	public void setupRotationInterpolation(float[] tgtAngles) {
-		// Set the target angles for rotational interpolation
+		
 		for(int jdx = 0; jdx < 6; jdx++) {
+			// Set the target angle for rotational interpolation
 			TGT_JOINTS[jdx] = tgtAngles[jdx];
-		}
-
-		// Calculate whether it's faster to turn CW or CCW
-		for(int joint = 0; joint < 6; ++joint) {
-			RSegWithJoint seg = getJointSegment(joint);
+			
+			RSegWithJoint seg = getJointSegment(jdx);
 			// The minimum distance between the current and target joint angles
-			float dist_t = RMath.minimumDistance(seg.getJointRotation(), TGT_JOINTS[joint]);
-			float motion = seg.getJointMotion();
-			int dir = 0;
+			float dist_t = RMath.minimumDistance(seg.getJointRotation(), TGT_JOINTS[jdx]);
 			
 			// check joint movement range
 			if(seg.LOW_BOUND == 0f && seg.UP_BOUND == PConstants.TWO_PI) {
-				dir = (dist_t < 0) ? -1 : 1;
+				seg.setJointMotion((dist_t < 0) ? -1 : 1);
 				
 			} else {  
 				/* Determine if at least one bound lies within the range of the shortest angle
@@ -2464,24 +2131,22 @@ public class RoboticArm {
 				if(dist_t < 0) {
 					if( (dist_lb < 0 && dist_lb > dist_t) || (dist_ub < 0 && dist_ub > dist_t) ) {
 						// One or both bounds lie within the shortest path
-						dir = 1;
+						seg.setJointMotion(1);
 					} 
 					else {
-						dir = -1;
+						seg.setJointMotion(-1);
 					}
 				} 
 				else if(dist_t > 0) {
 					if( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {  
 						// One or both bounds lie within the shortest path
-						dir = -1;
+						seg.setJointMotion(-1);
 					} 
 					else {
-						dir = 1;
+						seg.setJointMotion(1);
 					}
 				}
 			}
-			
-			seg.setJointMotion(dir * motion);
 		}
 	}
 	

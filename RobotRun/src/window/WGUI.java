@@ -24,7 +24,6 @@ import core.RobotCamera;
 import core.RobotRun;
 import core.Scenario;
 import enums.AxesDisplay;
-import enums.EEType;
 import enums.Alignment;
 import enums.ScreenMode;
 import enums.ScreenType;
@@ -621,11 +620,11 @@ public class WGUI implements ControlListener {
 		ddlLimbo = addDropdown("RobotEE", miscellaneous, ldropItemWidth,
 				dropItemHeight, 4, Fields.small);
 		ddlLimbo.addItem("Faceplate", -1)
-		.addItem(EEType.SUCTION.name(), 0)
-		.addItem(EEType.CLAW.name(), 1)
-		.addItem(EEType.POINTER.name(), 2)
-		.addItem(EEType.GLUE_GUN.name(), 3)
-		.addItem(EEType.WIELDER.name(), 4)
+		.addItem("SUCTION", 0)
+		.addItem("GRIPPER", 1)
+		.addItem("POINTER", 2)
+		.addItem("GLUE GUN", 3)
+		.addItem("WIELDER", 4)
 		.setValue(0f);
 		
 		addDropdown("Scenario", scenario, ldropItemWidth, dropItemHeight, 4, Fields.small);

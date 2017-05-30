@@ -23,9 +23,14 @@ public class RSegWithJoint extends RSegment {
 	public final float LOW_BOUND;
 	
 	/**
-	 * The direction and magnitude of the joint's motion.
+	 * The speed modifier for this segment's joint.
 	 */
-	private float jointMotion;
+	public final float SPEED_MODIFIER;
+	
+	/**
+	 * The direction of the joint's motion.
+	 */
+	private int jointMotion;
 	
 	/**
 	 * The rotation of this segment's joint.
@@ -42,13 +47,14 @@ public class RSegWithJoint extends RSegment {
 	 * @param ub
 	 */
 	public RSegWithJoint(MyPShape model, BoundingBox[] obbs,
-			DrawAction[] drawActions, float lb, float ub) {
+			DrawAction[] drawActions, float speed, float lb, float ub) {
 		
 		super(model, obbs, drawActions);
 		
 		LOW_BOUND = lb;
 		UP_BOUND = ub;
-		jointMotion = 0f;
+		SPEED_MODIFIER = speed;
+		jointMotion = 0;
 		jointRotation = 0f;
 	}
 	
@@ -64,7 +70,7 @@ public class RSegWithJoint extends RSegment {
 		return RMath.angleWithinBounds(angle, LOW_BOUND, UP_BOUND);
 	}
 	
-	public float getJointMotion() {
+	public int getJointMotion() {
 		return jointMotion;
 	}
 	
@@ -77,25 +83,20 @@ public class RSegWithJoint extends RSegment {
 	}
 	
 	public boolean isJointInMotion() {
-		return Math.abs(jointMotion) >= 0.01f;
+		return jointMotion != 0;
 	}
 	
-	public void setJointMotion(float motion) {
-		jointMotion = motion;
-		
-		if (Math.abs(jointMotion) < 0.01f) {
-			motion = 0f;
-		}
+	public void setJointMotion(int dir) {
+		jointMotion = dir;
 	}
 	
-	public void setJointRotation(float newRotation) {
+	public boolean setJointRotation(float newRotation) {
 		// Validate the given rotation
 		if (anglePermitted(newRotation)) {
 			jointRotation = newRotation;
+			return true;
 		}
-	}
-	
-	public void updateJoint() {
-		// TODO
+		
+		return false;
 	}
 }
