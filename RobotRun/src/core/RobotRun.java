@@ -5949,7 +5949,7 @@ public class RobotRun extends PApplet {
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			if (selectedWO instanceof Fixture || (selectedWO instanceof Part &&
-					(r == null || r.held != selectedWO))) {
+					(r == null || r.isHeld((Part)selectedWO)))) {
 				
 				WorldObject savedState = selectedWO.clone();
 	
@@ -5993,7 +5993,7 @@ public class RobotRun extends PApplet {
 			RoboticArm r = activeRobot;
 			WorldObject selectedWO = UI.getSelectedWO();
 			
-			if (selectedWO instanceof Part && (r == null || r.held != selectedWO)) {
+			if (selectedWO instanceof Part && (r == null || r.isHeld((Part)selectedWO))) {
 				WorldObject savedState = (WorldObject) selectedWO.clone();
 				UI.fillCurWithDef( (Part)selectedWO );
 
@@ -6550,7 +6550,7 @@ public class RobotRun extends PApplet {
 					Part p = (Part)wldObj;
 
 					/* Update the transformation matrix of an object held by the Robotic Arm */
-					if(active != null && p == active.held && active.modelInMotion()) {
+					if(active != null && active.isHeld(p) && active.modelInMotion()) {
 						
 						/***********************************************
 						     Moving a part with the Robot:
@@ -6588,7 +6588,7 @@ public class RobotRun extends PApplet {
 					}
 					
 					
-					if (s.isGravity() && p != active.held && p != selected &&
+					if (s.isGravity() && active.isHeld(p) && p != selected &&
 							p.getFixtureRef() == null &&
 							p.getLocalCenter().y < Fields.FLOOR_Y) {
 						
@@ -6618,8 +6618,8 @@ public class RobotRun extends PApplet {
 							}
 						}
 
-						if (active != null && p != active.held && active.canPickup(p)) {
-							// Change hit box color to indicate End Effector collision
+						if (active != null && !active.isHeld(p) && active.canPickup(p)) {
+							// Change hit box color to indicate tool tip collision
 							p.setBBColor(Fields.OBB_HELD);
 						}
 					}
@@ -6962,13 +6962,8 @@ public class RobotRun extends PApplet {
 		}
 
 		// Display a message while the robot is carrying an object
-		if (r.held != null) {
+		if (!r.isHeld(null)) {
 			text("Object held", lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-
-			PVector held_pos = r.held.getLocalCenter();
-			String obj_pos = String.format("(%f, %f, %f)", held_pos.x, held_pos.y, held_pos.z);
-			text(obj_pos, lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 		}
 		
@@ -7659,6 +7654,10 @@ public class RobotRun extends PApplet {
 	public void undoScenarioEdit() {
 		if (!SCENARIO_UNDO.empty()) {
 			activeScenario.put( SCENARIO_UNDO.pop() );
+			/* Since objects are copied onto the undo stack, the robot may be
+			 * reference the wrong copy of an undone object. */
+			activeRobot.releaseHeldObject();
+			
 			UI.updateListContents();
 			UI.updateEditWindowFields( UI.getSelectedWO() );
 		}
