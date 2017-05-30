@@ -8392,8 +8392,8 @@ public class RobotRun extends PApplet {
 				0.1222f, 0f, TWO_PI
 		);
 		
-		EndEffector[] eeList = this.loadRobotEndEffectors();
-		ArrayList<RMatrix> segTransforms = this.loadRobotModelTransforms();
+		EndEffector[] eeList = loadRobotEndEffectors();
+		ArrayList<RMatrix> segTransforms = loadRobotModelTransforms();
 		
 		// TODO add selfCollision definition
 		
