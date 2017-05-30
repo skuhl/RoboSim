@@ -52,8 +52,6 @@ public class RoboticArm {
 	public int liveSpeed;
 	public float motorSpeed;
 	
-	public Part held;
-	
 	/**
 	 * The position of the center of the robot's base segment
 	 */
@@ -169,7 +167,7 @@ public class RoboticArm {
 	
 	/**
 	 * The robot's current motion state. This indicates whether the robot is
-	 * moving in the joint coordinate frame, a cartesian coordinate frame, or
+	 * moving in the joint coordinate frame, a Cartesian coordinate frame, or
 	 * is not moving.
 	 */
 	private RobotMotion motionType;
@@ -184,11 +182,25 @@ public class RoboticArm {
 	 */
 	private int activeUserIdx, activeToolIdx;
 	
+	/**
+	 * A reference for the part current held by the robot.
+	 */
+	private Part heldPart;
 	
+	/**
+	 * Defines the last orientation and position of the robot's tool tip.
+	 */
 	private RMatrix lastTipTMatrix;
 	
+	/**
+	 * Determines if the robot's tool tip position with be tracked and drawn.
+	 */
 	private boolean trace;
 	
+	/**
+	 * Defines a set of tool tip positions that are drawn to form a trace of
+	 * the robot's motion overtime.
+	 */
 	private ArrayList<PVector> tracePts;
 
 	/**
@@ -393,9 +405,7 @@ public class RoboticArm {
 		limbo = new ArrayList<>();
 		EE_TO_PICK_OBBS.put(EEType.WIELDER, limbo);
 
-		held = null;
-		trace = false;
-		tracePts = new ArrayList<PVector>();
+		heldPart = null;
 		
 		robotPoint = getFacePlatePoint(
 				new float[] { 0f, 0f, 0f, 0f, 0f, 0f }
@@ -403,12 +413,9 @@ public class RoboticArm {
 		
 		// Initializes the old transformation matrix for the arm model
 		lastTipTMatrix = getRobotTransform( getJointAngles() );
-		/* REMOVE AFTER REFACTOR *
-		RobotRun.getInstance().pushMatrix();
-		RobotRun.applyModelRotation(this, getJointAngles());
-		lastEEOrientation = RobotRun.getInstance().getTransformationMatrix();
-		RobotRun.getInstance().popMatrix();
-		/**/
+		
+		trace = false;
+		tracePts = new ArrayList<PVector>();
 	}
 	
 	/**
@@ -629,7 +636,7 @@ public class RoboticArm {
 	 */
 	public int checkPickupCollision(Scenario active) {
 		// End Effector must be on and no object is currently held to be able to pickup an object
-		if (endEffectorState == Fields.ON && held == null) {
+		if (endEffectorState == Fields.ON && heldPart == null) {
 			ArrayList<BoundingBox> curPUEEOBBs = EE_TO_PICK_OBBS.get(activeEndEffector);
 
 			// Can this End Effector pick up objects?
@@ -639,13 +646,13 @@ public class RoboticArm {
 					// Only parts can be picked up
 					if (wldObj instanceof Part && canPickup( (Part)wldObj )) {
 						// Pickup the object
-						held = (Part)wldObj;
+						heldPart = (Part)wldObj;
 						return 0;
 					}
 				}
 			}
 
-		} else if (endEffectorState == Fields.OFF && held != null) {
+		} else if (endEffectorState == Fields.OFF && heldPart != null) {
 			// Release the object
 			releaseHeldObject();
 			return 1;
@@ -1798,6 +1805,13 @@ public class RoboticArm {
 		return done;
 	}
 	
+	/**
+	 * @return	Is the given part being held by the robot
+	 */
+	public boolean isHeld(Part p) {
+		return p == heldPart;
+	}
+	
 	public boolean isTrace() {
 		return trace;
 	}
@@ -2023,10 +2037,10 @@ public class RoboticArm {
 	 * Then, update the Robot's End Effector status and IO Registers.
 	 */
 	public void releaseHeldObject() {
-		if (held != null) {
+		if (heldPart != null) {
 			endEffectorState = Fields.OFF;
 			updateIORegister();
-			held = null;
+			heldPart = null;
 		}
 	}
 
