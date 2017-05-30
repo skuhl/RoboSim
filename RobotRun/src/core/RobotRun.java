@@ -105,71 +105,6 @@ public class RobotRun extends PApplet {
 		instance = null;
 	}
 	
-	/**
-	 * Applies the rotations and translations of the Robot Arm to get to the
-	 * face plate center, given the set of six joint angles, each corresponding
-	 * to a joint of the Robot Arm and each within the bounds of [0, TWO_PI).
-	 * 
-	 * @param jointAngles
-	 *            A valid set of six joint angles (in radians) for the Robot
-	 *
-	public static void applyModelRotation(RoboticArm model, float[] jointAngles) {
-		PVector basePos = model.getBasePosition();
-
-		instance.translate(basePos.x, basePos.y, basePos.z);
-
-		instance.translate(-50, -166, -358); // -115, -213, -413
-		instance.rotateZ(PI);
-		instance.translate(150, 0, 150);
-		instance.rotateX(PI);
-		instance.rotateY(jointAngles[0]);
-		instance.rotateX(-PI);
-		instance.translate(-150, 0, -150);
-		instance.rotateZ(-PI);
-		instance.translate(-115, -85, 180);
-		instance.rotateZ(PI);
-		instance.rotateY(PI / 2);
-		instance.translate(0, 62, 62);
-		instance.rotateX(jointAngles[1]);
-		instance.translate(0, -62, -62);
-		instance.rotateY(-PI / 2);
-		instance.rotateZ(-PI);
-		instance.translate(0, -500, -50);
-		instance.rotateZ(PI);
-		instance.rotateY(PI / 2);
-		instance.translate(0, 75, 75);
-		instance.rotateZ(PI);
-		instance.rotateX(jointAngles[2]);
-		instance.rotateZ(-PI);
-		instance.translate(0, -75, -75);
-		instance.rotateY(PI / 2);
-		instance.rotateZ(-PI);
-		instance.translate(745, -150, 150);
-		instance.rotateZ(PI / 2);
-		instance.rotateY(PI / 2);
-		instance.translate(70, 0, 70);
-		instance.rotateY(jointAngles[3]);
-		instance.translate(-70, 0, -70);
-		instance.rotateY(-PI / 2);
-		instance.rotateZ(-PI / 2);
-		instance.translate(-115, 130, -124);
-		instance.rotateZ(PI);
-		instance.rotateY(-PI / 2);
-		instance.translate(0, 50, 50);
-		instance.rotateX(jointAngles[4]);
-		instance.translate(0, -50, -50);
-		instance.rotateY(PI / 2);
-		instance.rotateZ(-PI);
-		instance.translate(150, -10, 95);
-		instance.rotateY(-PI / 2);
-		instance.rotateZ(PI);
-		instance.translate(45, 45, 0);
-		instance.rotateZ(jointAngles[5]);
-		instance.rotateX(PI);
-		instance.rotateY(PI/2);
-	}
-	/**/
-	
 	public static RoboticArm getActiveRobot() {
 		return instance.activeRobot;
 	}
@@ -191,73 +126,6 @@ public class RobotRun extends PApplet {
 			PApplet.main(appletArgs);
 		}
 	}
-
-	/**
-	 * Returns the Robot's End Effector position according to the active Tool
-	 * Frame's offset in the native Coordinate System.
-	 * 
-	 * @param model
-	 *            The Robot model of which to base the position off
-	 * @param jointAngles
-	 *            A valid set of six joint angles (in radians) for the Robot
-	 * @returning The Robot's End Effector position
-	 *
-	public static Point nativeRobotEEPoint(RoboticArm model, float[] jointAngles) {
-		ToolFrame activeTool = getActiveRobot().getActiveTool();
-		PVector offset;
-
-		if (activeTool != null) {
-			// Apply the Tool Tip
-			offset = activeTool.getTCPOffset();
-		} else {
-			offset = new PVector(0f, 0f, 0f);
-		}
-
-		return nativeRobotPointOffset(model, jointAngles, offset);
-	}
-
-	/**
-	 * Returns a point containing the Robot's faceplate position and orientation
-	 * corresponding to the given joint angles, as well as the given joint
-	 * angles.
-	 * 
-	 * @param model
-	 *            The Robot model, of which to find the EE position
-	 * @param jointAngles
-	 *            A valid set of six joint angles (in radians) for the Robot
-	 * @returning The Robot's faceplate position and orientation corresponding
-	 *            to the given joint angles
-	 *
-	public static Point nativeRobotPoint(RoboticArm model, float[] jointAngles) {
-		return nativeRobotPointOffset(model, jointAngles, new PVector(0f, 0f, 0f));
-	}
-
-	/**
-	 * Returns a point containing the Robot's End Effector position and
-	 * orientation corresponding to the given joint angles, as well as the given
-	 * joint angles.
-	 * 
-	 * @param model
-	 *            The Robot model, of which to find the EE position
-	 * @param jointAngles
-	 *            A valid set of six joint angles (in radians) for the Robot
-	 * @param offset
-	 *            The End Effector offset in the form of a vector
-	 * @returning The Robot's EE position and orientation corresponding to the
-	 *            given joint angles
-	 *
-	public static Point nativeRobotPointOffset(RoboticArm model, float[] jointAngles, PVector offset) {
-		instance.pushMatrix();
-		instance.resetMatrix();
-		applyModelRotation(model, jointAngles);
-		// Apply offset
-		PVector ee = instance.getPosFromMatrix(offset.x, offset.y, offset.z);
-		RMatrix orientationMatrix = instance.getOrientation();
-		instance.popMatrix();
-		
-		return new Point(ee, RMath.matrixToQuat(orientationMatrix), jointAngles);
-	}
-	/**/
 
 	private final ArrayList<Scenario> SCENARIOS = new ArrayList<>();
 	private final Stack<WorldObject> SCENARIO_UNDO = new Stack<>();
@@ -7583,13 +7451,14 @@ public class RobotRun extends PApplet {
 	 * @param robot	The robot for which to change the end effector state
 	 */
 	public void toggleEEState(RoboticArm robot) {
+		int edx = robot.getActiveEEIdx();
 		int curState = robot.getEEState();
 		
 		if (curState == Fields.ON) {
-			robot.setEEState(Fields.OFF);
+			robot.setEEState(edx, Fields.OFF);
 			
 		} else {
-			robot.setEEState(Fields.ON);
+			robot.setEEState(edx, Fields.ON);
 		}
 		// Check pickup collisions in active scenario
 		robot.checkPickupCollision(activeScenario);
@@ -8297,12 +8166,13 @@ public class RobotRun extends PApplet {
 	
 	public void updateRobotJogMotion(int set, int direction) {
 		// Only six jog button pairs exist
-		if (set >= 0 && set < 6) {
+		if (isShift() && !activeRobot.hasMotionFault() && set >= 0 && set < 6) {
 			float newDir;
 
 			if (activeRobot.getCurCoordFrame() == CoordFrame.JOINT) {
 				// Move single joint
-				newDir = activeRobot.activateLiveJointMotion(set, direction);
+				newDir = activeRobot.setJointMotion(set, direction);
+				
 			} else {
 				// Move entire robot in a single axis plane
 				newDir = activeRobot.activateLiveWorldMotion(set, direction);
@@ -8466,9 +8336,69 @@ public class RobotRun extends PApplet {
 	 */
 	private RoboticArm createRobot(int rid, PVector basePosition) {
 		
-		// TODO
+		// Define the robot's segments
 		
-		return null;
+		RSegment base = new RSegment(
+				loadSTLModel("robot/ROBOT_MODEL_1_BASE.STL", color(200, 200, 0)),
+				new BoundingBox[] { new BoundingBox(420, 115, 420) },
+				new DrawAction[0] // TODO define this
+		);
+		
+		RSegWithJoint seg1 = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40)),
+				new BoundingBox[] {
+						new BoundingBox(317, 85, 317),
+						new BoundingBox(130, 185, 170)
+				},
+				new DrawAction[0], // TODO define this
+				0.0436f, 0f, TWO_PI
+		);
+		
+		RSegWithJoint seg2 = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0)),
+				new BoundingBox[] { new BoundingBox(74, 610, 135) },
+				new DrawAction[0], // TODO define this
+				0.0436f, 4.34f, 2.01f
+		);
+		
+		RSegWithJoint seg3 = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40)),
+				new BoundingBox[] { new BoundingBox(165, 165, 165) },
+				new DrawAction[0], // TODO define this
+				0.0582f, 5.027f, 4.363f
+		);
+		
+		RSegWithJoint seg4 = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40)),
+				new BoundingBox[] {
+						new BoundingBox(160, 160, 160),
+						new BoundingBox(128, 430, 128)
+				},
+				new DrawAction[0], // TODO define this
+				0.0727f, 0f, TWO_PI
+		);
+		
+		RSegWithJoint seg5 = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0)),
+				new BoundingBox[0],
+				new DrawAction[0], // TODO define this
+				0.0727f, 4.189f, 2.269f
+		);
+		
+		RSegWithJoint seg6 = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40)),
+				new BoundingBox[0],
+				new DrawAction[0], // TODO define this
+				0.1222f, 0f, TWO_PI
+		);
+		
+		EndEffector[] eeList = this.loadRobotEndEffectors();
+		ArrayList<RMatrix> segTransforms = this.loadRobotModelTransforms();
+		
+		// TODO add selfCollision definition
+		
+		return new RoboticArm(rid, basePosition, base, seg1, seg2, seg3, seg4,
+				seg5, seg6, eeList, segTransforms);
 	}
 	
 	/**
@@ -8625,66 +8555,6 @@ public class RobotRun extends PApplet {
 		popMatrix();
 		
 		return modelTransformations;
-	}
-	
-	/**
-	 * Loads the models for the robot's segments and initializes the robot's
-	 * segments.
-	 * 
-	 * @return	The set of segments of a robot
-	 */
-	private RSegment[] loadRobotSegments() {
-		RSegment[] segments = new RSegment[7];
-		
-		segments[0] = new RSegment(
-				loadSTLModel("robot/ROBOT_MODEL_1_BASE.STL", color(200, 200, 0)),
-				new BoundingBox[] { new BoundingBox(420, 115, 420) },
-				new DrawAction[0] // TODO define this
-		);
-		
-		segments[1] = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40)),
-				new BoundingBox[] { new BoundingBox(317, 85, 317), new BoundingBox(130, 185, 170) },
-				new DrawAction[0], // TODO define this
-				0, TWO_PI
-		);
-		
-		segments[2] = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0)),
-				new BoundingBox[] { new BoundingBox(74, 610, 135) },
-				new DrawAction[0], // TODO define this
-				4.34f, 2.01f
-		);
-		
-		segments[3] = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40)),
-				new BoundingBox[] { new BoundingBox(165, 165, 165) },
-				new DrawAction[0], // TODO define this
-				5.027f, 4.363f
-		);
-		
-		segments[4] = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_MODEL_1_AXIS4.STL", color(200, 200, 0)),
-				new BoundingBox[] { new BoundingBox(160, 160, 160) },
-				new DrawAction[0], // TODO define this
-				0, TWO_PI
-		);
-		
-		segments[5] = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_MODEL_1_AXIS5.STL", color(40, 40, 40)),
-				new BoundingBox[] { new BoundingBox(128, 430, 128) },
-				new DrawAction[0], // TODO define this
-				59f * PI / 40f, 11f * PI / 20f
-		);
-		
-		segments[6] = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_MODEL_1_AXIS6.STL", color(200, 200, 0)),
-				new BoundingBox[0],
-				new DrawAction[0], // TODO define this
-				0, TWO_PI
-		);
-		
-		return segments;
 	}
 	
 	/**
