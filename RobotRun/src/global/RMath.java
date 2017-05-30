@@ -2,13 +2,13 @@ package global;
 
 import org.apache.commons.math3.linear.RealMatrix;
 
+import core.RobotRun;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
-import robot.RobotRun;
 import robot.RoboticArm;
 
 /**
@@ -117,22 +117,15 @@ public abstract class RMath {
 		}
 
 		float[][] J = new float[7][6];
-		// get current ee position
-		/**/
+		// get current tooltip position
 		Point curRP = model.getToolTipNative(angles);
-		/* TODO REMOVE AFTER REFACTOR *
-		Point curRP = RobotRun.nativeRobotEEPoint(model, angles);
-		/**/
+		
 		// examine each segment of the arm
 		for (int i = 0; i < 6; i += 1) {
 			// test angular offset
 			angles[i] += dAngle;
-			// get updated ee position
-			/**/
+			// get updated tooltip position
 			Point newRP = model.getToolTipNative(angles);
-			/* TODO REMOVE AFTER REFACTOR *
-			Point newRP = RobotRun.nativeRobotEEPoint(model, angles);
-			/**/
 
 			if (curRP.orientation.dot(newRP.orientation) < 0f) {
 				// Use -q instead of q
@@ -308,11 +301,7 @@ public abstract class RMath {
 		float[] angles = srcAngles.clone();
 
 		while (count < limit) {
-			/**/
 			Point cPoint = model.getToolTipNative(angles);
-			/* TODO REMOVE AFTER REFACTOR *
-			Point cPoint = RobotRun.nativeRobotEEPoint(model, angles);
-			/**/
 			float cumulativeOffset = 0;
 
 			if (tgtOrientation.dot(cPoint.orientation) < 0f) {

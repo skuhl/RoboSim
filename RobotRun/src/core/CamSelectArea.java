@@ -1,4 +1,4 @@
-package robot;
+package core;
 
 import geom.RMatrix;
 import processing.core.PVector;

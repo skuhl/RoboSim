@@ -1,6 +1,6 @@
 package programming;
+import core.RobotRun;
 import global.Fields;
-import robot.RobotRun;
 
 public class FrameInstruction extends Instruction {
 	int frameType;

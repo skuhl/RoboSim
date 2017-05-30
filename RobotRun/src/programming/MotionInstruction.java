@@ -1,9 +1,9 @@
 package programming;
+import core.RobotRun;
 import frame.UserFrame;
 import geom.Point;
 import global.Fields;
 import global.RMath;
-import robot.RobotRun;
 import robot.RoboticArm;
 
 public final class MotionInstruction extends Instruction  {

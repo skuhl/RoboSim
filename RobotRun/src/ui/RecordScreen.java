@@ -2,8 +2,8 @@ package ui;
 
 import java.util.Calendar;
 
+import core.RobotRun;
 import global.Fields;
-import robot.RobotRun;
 
 public class RecordScreen implements Runnable {
 	

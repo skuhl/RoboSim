@@ -2,13 +2,13 @@ package geom;
 
 import java.util.ArrayList;
 
+import core.CamSelectArea;
+import core.CamSelectView;
+import core.RobotRun;
 import global.RegisteredModels;
 import processing.core.PGraphics;
 import processing.core.PShape;
 import processing.core.PVector;
-import robot.CamSelectArea;
-import robot.CamSelectView;
-import robot.RobotRun;
 
 /**
  * A complex shape formed from a .stl source file.

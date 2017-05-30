@@ -1,7 +1,7 @@
 package screen;
 
+import core.RobotRun;
 import enums.ScreenMode;
-import robot.RobotRun;
 
 public class ScreenMainMenu extends Screen {
 

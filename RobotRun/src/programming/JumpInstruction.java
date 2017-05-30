@@ -1,6 +1,6 @@
 package programming;
+import core.RobotRun;
 import processing.core.PApplet;
-import robot.RobotRun;
 
 public class JumpInstruction extends Instruction {
 	private int tgtLblNum;

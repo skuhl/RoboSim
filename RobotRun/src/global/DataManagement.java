@@ -12,6 +12,8 @@ import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+import core.RobotRun;
+import core.Scenario;
 import expression.AtomicExpression;
 import expression.ExprOperand;
 import expression.Expression;
@@ -50,9 +52,7 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
-import robot.RobotRun;
 import robot.RoboticArm;
-import robot.Scenario;
 
 /**
  * Manages all the saving and loading of the program data to and from files.
