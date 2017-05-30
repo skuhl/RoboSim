@@ -1,73 +1,76 @@
 package geom;
 import processing.core.PApplet;
 import processing.core.PConstants;
+import processing.core.PGraphics;
 import robot.RobotRun;
 
 /**
  * Defines the radius and height to draw a uniform cylinder
  */
-public class Cylinder extends Shape {
+public class RCylinder extends RShape {
+	
 	private float radius, height;
 
-	public Cylinder() {
+	public RCylinder() {
 		super();
 		radius = 10f;
 		height = 10f;
 	}
 
-	public Cylinder(int fill, int strokeVal, float rad, float hgt) {
+	public RCylinder(int fill, int strokeVal, float rad, float hgt) {
 		super(fill, strokeVal);
 		radius = rad;
 		height = hgt;
 	}
 
-	public Cylinder(RobotRun robotRun, int strokeVal, float rad, float hgt) {
+	public RCylinder(RobotRun robotRun, int strokeVal, float rad, float hgt) {
 		super(strokeVal, strokeVal);
 		radius = rad;
 		height = hgt;
 	}
 
 	@Override
-	public Cylinder clone() {
-		return new Cylinder(getFillValue(), getStrokeValue(), radius, height);
+	public RCylinder clone() {
+		return new RCylinder(getFillValue(), getStrokeValue(), radius, height);
 	}
-
-	/**
-	 * Assumes the center of the cylinder is halfway between the top and bottom of of the cylinder.
-	 * 
-	 * Based off of the algorithm defined on Vormplus blog at:
-	 * http://vormplus.be/blog/article/drawing-a-cylinder-with-processing
-	 */
+	
 	@Override
-	public void draw() {
-		RobotRun app = RobotRun.getInstance();
+	public void draw(PGraphics g) {
+		g.pushStyle();
+		applyStyle(g);
 		
-		app.pushStyle();
-		applyColors();
-
+		/**
+		 * Assumes the center of the cylinder is halfway between the top and
+		 * bottom of of the cylinder.
+		 * 
+		 * Based off of the algorithm defined on Vormplus blog at:
+		 * http://vormplus.be/blog/article/drawing-a-cylinder-with-processing
+		 */
 		float halfHeight = height / 2,
 				diameter = 2 * radius;
 
-		app.translate(0f, 0f, halfHeight);
+		g.translate(0f, 0f, halfHeight);
 		// Draw top of the cylinder
-		app.ellipse(0f, 0f, diameter, diameter);
-		app.translate(0f, 0f, -height);
+		g.ellipse(0f, 0f, diameter, diameter);
+		g.translate(0f, 0f, -height);
 		// Draw bottom of the cylinder
-		app.ellipse(0f, 0f, diameter, diameter);
-		app.translate(0f, 0f, halfHeight);
+		g.ellipse(0f, 0f, diameter, diameter);
+		g.translate(0f, 0f, halfHeight);
 
-		app.beginShape(PConstants.TRIANGLE_STRIP);
-		// Draw a string of triangles around the circumference of the Cylinders top and bottom.
+		g.beginShape(PConstants.TRIANGLE_STRIP);
+		/* Draw a string of triangles around the circumference of the Cylinders
+		 * top and bottom. */
 		for (int degree = 0; degree <= 360; ++degree) {
 			float pos_x = PApplet.cos(PConstants.DEG_TO_RAD * degree) * radius,
 					pos_y = PApplet.sin(PConstants.DEG_TO_RAD * degree) * radius;
 
-			app.vertex(pos_x, pos_y, halfHeight);
-			app.vertex(pos_x, pos_y, -halfHeight);
+			g.vertex(pos_x, pos_y, halfHeight);
+			g.vertex(pos_x, pos_y, -halfHeight);
 		}
 
-		app.endShape();
-		app.popStyle();
+		g.endShape();
+		
+		g.popStyle();
 	}
 
 	@Override
@@ -108,6 +111,11 @@ public class Cylinder extends Shape {
 
 	@Override
 	public int getID() {
+		return -1;
+	}
+	
+	@Override
+	public int getFamilyID() {
 		return -1;
 	}
 }

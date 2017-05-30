@@ -128,9 +128,10 @@ public class MyTextfield extends Textfield {
 	}
 	
 	/**
-	 * TODO
+	 * Converts the mouse's x position on the scene to an index of the
+	 * text-fields text buffer.
 	 * 
-	 * @return
+	 * @return	The text buffer index of the mouse's x position
 	 */
 	private int mouseXToIdx() {
 		int TBIdx = 0;

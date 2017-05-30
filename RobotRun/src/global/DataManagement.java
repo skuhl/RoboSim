@@ -20,18 +20,19 @@ import expression.Operator;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
-import geom.Box;
+import geom.RBox;
 import geom.CoordinateSystem;
-import geom.Cylinder;
+import geom.RCylinder;
 import geom.DimType;
 import geom.Fixture;
 import geom.LoadedPart;
-import geom.ModelShape;
+import geom.ComplexShape;
+import geom.MyPShape;
 import geom.Part;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
-import geom.Shape;
+import geom.RShape;
 import geom.WorldObject;
 import processing.core.PVector;
 import programming.CallInstruction;
@@ -889,12 +890,12 @@ public abstract class DataManagement {
 		return 0;
 	}
 
-	private static Shape loadShape(DataInputStream in, RobotRun app) throws IOException,
+	private static RShape loadShape(DataInputStream in, RobotRun app) throws IOException,
 			NullPointerException, RuntimeException {
 		
 		// Read flag byte
 		byte flag = in.readByte();
-		Shape shape = null;
+		RShape shape = null;
 
 		if (flag != 0) {
 			// Read fiil color
@@ -907,7 +908,7 @@ public abstract class DataManagement {
 						y = in.readFloat(),
 						z = in.readFloat();
 				// Create a box
-				shape = new Box(fill, strokeVal, x, y, z);
+				shape = new RBox(fill, strokeVal, x, y, z);
 
 			} else if (flag == 2) {
 				// Read stroke color
@@ -915,7 +916,7 @@ public abstract class DataManagement {
 				float radius = in.readFloat(),
 						hgt = in.readFloat();
 				// Create a cylinder
-				shape = new Cylinder(fill, strokeVal, radius, hgt);
+				shape = new RCylinder(fill, strokeVal, radius, hgt);
 
 			} else if (flag == 3) {
 				float scale = in.readFloat();
@@ -929,8 +930,10 @@ public abstract class DataManagement {
 					throw new NullPointerException(error);
 				}
 				
+				MyPShape form = app.loadSTLModel(srcPath, fill);
+				
 				// Creates a complex shape from the srcPath located in RobotRun/data/
-				shape = new ModelShape(srcPath, fill, scale, app);
+				shape = new ComplexShape(srcPath, form, fill, scale);
 			}
 		}
 
@@ -1061,18 +1064,18 @@ public abstract class DataManagement {
 		if (flag != 0) {
 			// Load the name and shape of the object
 			String name = in.readUTF();
-			Shape form = loadShape(in, app);
+			RShape form = loadShape(in, app);
 			// Load the object's local orientation
 			PVector center = loadPVector(in);
-			float[][] orientationAxes = loadFloatArray2D(in);
-			CoordinateSystem localOrientation = new CoordinateSystem();
+			RMatrix orientationAxes = new RMatrix( loadFloatArray2D(in) );
+			CoordinateSystem localOrientation = new CoordinateSystem(center, orientationAxes);
 			localOrientation.setOrigin(center);
 			localOrientation.setAxes(new RMatrix(orientationAxes));
 
 			if (flag == 1) {
 				center = loadPVector(in);
-				orientationAxes = loadFloatArray2D(in);
-				CoordinateSystem defaultOrientation = new CoordinateSystem();
+				orientationAxes = new RMatrix( loadFloatArray2D(in) );
+				CoordinateSystem defaultOrientation = new CoordinateSystem(center, orientationAxes);
 				defaultOrientation.setOrigin(center);
 				defaultOrientation.setAxes(new RMatrix(orientationAxes));
 				
@@ -1843,19 +1846,19 @@ public abstract class DataManagement {
 				scenarioDirPath);
 	}
 
-	private static void saveShape(Shape shape, DataOutputStream out) throws IOException {
+	private static void saveShape(RShape shape, DataOutputStream out) throws IOException {
 		if (shape == null) {
 			// Indicate the saved value is null
 			out.writeByte(0);
 
 		} else {
-			if (shape instanceof Box) {
+			if (shape instanceof RBox) {
 				// Indicate the saved value is a box
 				out.writeByte(1);
-			} else if (shape instanceof Cylinder) {
+			} else if (shape instanceof RCylinder) {
 				// Indicate the value saved is a cylinder
 				out.writeByte(2);
-			} else if (shape instanceof ModelShape) {
+			} else if (shape instanceof ComplexShape) {
 				// Indicate the value saved is a complex shape
 				out.writeByte(3);
 			}
@@ -1863,7 +1866,7 @@ public abstract class DataManagement {
 			// Write fill color value
 			saveInteger(shape.getFillValue(), out);
 
-			if (shape instanceof Box) {
+			if (shape instanceof RBox) {
 				// Write stroke value
 				saveInteger(shape.getStrokeValue(), out);
 				// Save length, height, and width of the box
@@ -1871,15 +1874,15 @@ public abstract class DataManagement {
 				out.writeFloat(shape.getDim(DimType.HEIGHT));
 				out.writeFloat(shape.getDim(DimType.WIDTH));
 
-			} else if (shape instanceof Cylinder) {
+			} else if (shape instanceof RCylinder) {
 				// Write stroke value
 				saveInteger(shape.getStrokeValue(), out);
 				// Save the radius and height of the cylinder
 				out.writeFloat(shape.getDim(DimType.RADIUS));
 				out.writeFloat(shape.getDim(DimType.HEIGHT));
 
-			} else if (shape instanceof ModelShape) {
-				ModelShape m = (ModelShape)shape;
+			} else if (shape instanceof ComplexShape) {
+				ComplexShape m = (ComplexShape)shape;
 
 				out.writeFloat(m.getDim(DimType.SCALE));
 				// Save the source path of the complex shape
@@ -1916,7 +1919,7 @@ public abstract class DataManagement {
 			saveShape(wldObj.getForm(), out);
 			// Save the local orientation of the object
 			savePVector(wldObj.getLocalCenter(), out);
-			saveFloatArray2D(wldObj.getLocalOrientationAxes().getFloatData(), out);
+			saveFloatArray2D(wldObj.getLocalOrientation().getFloatData(), out);
 			
 			if (wldObj instanceof Part) {
 				Part part = (Part)wldObj;
@@ -1924,7 +1927,7 @@ public abstract class DataManagement {
 				
 				// Save the default orientation of the part
 				savePVector(part.getDefaultCenter(), out);
-				saveFloatArray2D(part.getDefaultOrientationAxes().getFloatData(), out);
+				saveFloatArray2D(part.getDefaultOrientation().getFloatData(), out);
 				
 				savePVector(part.getOBBDims(), out);
 

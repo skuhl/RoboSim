@@ -177,20 +177,18 @@ public abstract class RMath {
 		float xRot = wpr.x;
 		float yRot = wpr.y;
 		float zRot = wpr.z;
-
-		r[0][0] = (float) Math.cos(yRot) * (float) Math.cos(zRot);
-		r[1][0] = (float) Math.sin(xRot) * (float) Math.sin(yRot) * (float) Math.cos(zRot)
-				- (float) Math.cos(xRot) * (float) Math.sin(zRot);
-		r[2][0] = (float) Math.cos(xRot) * (float) Math.sin(yRot) * (float) Math.cos(zRot)
-				+ (float) Math.sin(xRot) * (float) Math.sin(zRot);
-		r[0][1] = (float) Math.cos(yRot) * (float) Math.sin(zRot);
-		r[1][1] = (float) Math.sin(xRot) * (float) Math.sin(yRot) * (float) Math.sin(zRot)
-				+ (float) Math.cos(xRot) * (float) Math.cos(zRot);
-		r[2][1] = (float) Math.cos(xRot) * (float) Math.sin(yRot) * (float) Math.sin(zRot)
-				- (float) Math.sin(xRot) * (float) Math.cos(zRot);
-		r[0][2] = -(float) Math.sin(yRot);
-		r[1][2] = (float) Math.sin(xRot) * (float) Math.cos(yRot);
-		r[2][2] = (float) Math.cos(xRot) * (float) Math.cos(yRot);
+		
+		float c1 = (float)Math.cos(xRot);
+		float c2 = (float)Math.cos(yRot);
+		float c3 = (float)Math.cos(zRot);
+		
+		float s1 = (float)Math.sin(xRot);
+		float s2 = (float)Math.sin(yRot);
+		float s3 = (float)Math.sin(zRot);
+				
+		r[0][0] = c2 * c3;	r[0][1] = c1 * s3 + c3 * s1 * s2;	r[0][2] = s1 * s3 - c1 * c3 * s2;	
+		r[1][0] = -c2 * s3;	r[1][1] = c1 * c3 - s1 * s2 * s3;	r[1][2] = c3 * s1 + c1 * s2 * s3;
+		r[2][0] = s2;		r[2][1] = -c2 * s1;					r[2][2] = c1 * c2;
 
 		return new RMatrix(r).normalize();
 	}
@@ -199,7 +197,9 @@ public abstract class RMath {
 	 * Converts the given Euler angle set values to a quaternion
 	 */
 	public static RQuaternion eulerToQuat(PVector wpr) {
-		float w, x, y, z;
+		RMatrix m = eulerToMatrix(wpr);
+		
+		/*float w, x, y, z;
 		float xRot = wpr.x;
 		float yRot = wpr.y;
 		float zRot = wpr.z;
@@ -211,9 +211,9 @@ public abstract class RMath {
 		y = (float) Math.cos(xRot / 2) * (float) Math.sin(yRot / 2) * (float) Math.cos(zRot / 2)
 				+ (float) Math.sin(xRot / 2) * (float) Math.cos(yRot / 2) * (float) Math.sin(zRot / 2);
 		z = (float) Math.cos(xRot / 2) * (float) Math.cos(yRot / 2) * (float) Math.sin(zRot / 2)
-				- (float) Math.sin(xRot / 2) * (float) Math.sin(yRot / 2) * (float) Math.cos(zRot / 2);
+				- (float) Math.sin(xRot / 2) * (float) Math.sin(yRot / 2) * (float) Math.cos(zRot / 2);*/
 
-		return new RQuaternion(w, x, y, z);
+		return matrixToQuat(m);
 	}
 
 	// converts a float array to a double array
@@ -363,32 +363,65 @@ public abstract class RMath {
 
 		return new RMatrix(inv);
 	}
+	
+	/**
+	 * Forms a rotation matrix from the given unit vector, u, and angle of
+	 * rotation. theta, about u.
+	 * 
+	 * @param u		A unit vector representing the axis of rotation
+	 * @param theta	The angle of rotaiton around u
+	 * @return		The rotation matrix representing the rotation of theta
+	 * 				around u.
+	 */
+	public static RMatrix matFromAxisAndAngle(PVector u, float theta) {
+		float[][] rMat = new float[3][3];
+		
+		float ct = (float)Math.cos(theta);
+		float st = (float)Math.sin(theta);
+		float one_ct = 1f - ct;
+		
+		rMat[0][0] = ct + u.x * u.x * one_ct;
+		rMat[0][1] = u.x * u.y * one_ct - u.z * st;
+		rMat[0][2] = u.x * u.z * one_ct + u.y * st;
+		rMat[1][0] = u.y * u.x * one_ct + u.z * st;
+		rMat[1][1] = ct + u.y * u.y * one_ct;
+		rMat[1][2] = u.y * u.z * one_ct - u.x * st;
+		rMat[2][0] = u.z * u.x * one_ct - u.y * st;
+		rMat[2][1] = u.z * u.y * one_ct + u.x * st;
+		rMat[2][2] = ct + u.z * u.z * one_ct;
+		
+		return new RMatrix(rMat);
+	}
 
 	// calculates euler angles from rotation matrix
 	public static PVector matrixToEuler(RMatrix m) {
 		float[][] r = m.getFloatData();
-		float yRot1, xRot1, zRot1;
+		float x, y, z;
 		PVector wpr;
 
-		if (r[0][2] != 1 && r[0][2] != -1) {
+		/*if (r[2][0] != 1 && r[2][0] != -1) {
 			// rotation about y-axis
-			yRot1 = -(float) Math.asin(r[0][2]);
+			yRot1 = (float) Math.asin(r[2][0]);
 			// rotation about x-axis
-			xRot1 = (float) Math.atan2(r[1][2] / (float) Math.cos(yRot1), r[2][2] / (float) Math.cos(yRot1));
+			xRot1 = (float) Math.atan2(r[2][1] / Math.cos(yRot1), r[2][2] / Math.cos(yRot1));
 			// rotation about z-axis
-			zRot1 = (float) Math.atan2(r[0][1] / (float) Math.cos(yRot1), r[0][0] / (float) Math.cos(yRot1));
+			zRot1 = (float) Math.atan2(r[1][0] / Math.cos(yRot1), r[0][0] / Math.cos(yRot1));
 		} else {
 			zRot1 = 0;
-			if (r[0][2] == -1) {
-				yRot1 = PI / 2;
-				xRot1 = zRot1 + (float) Math.atan2(r[1][0], r[2][0]);
-			} else {
+			if (r[2][0] == -1) {
 				yRot1 = -PI / 2;
-				xRot1 = -zRot1 + (float) Math.atan2(-r[1][0], -r[2][0]);
+				xRot1 = -zRot1 + (float) Math.atan2(r[1][0], r[2][0]);
+			} else {
+				yRot1 = PI / 2;
+				xRot1 = zRot1 + (float) Math.atan2(-r[1][0], -r[2][0]);
 			}
-		}
+		}*/
+		
+		x = (float) Math.atan2(-r[2][1], r[2][2]);
+		y = (float) Math.atan2(r[2][0], Math.sqrt(r[2][1]*r[2][1] + r[2][2]*r[2][2]));
+		z = (float) Math.atan2(-r[1][0], r[0][0]);
 
-		wpr = new PVector(xRot1, yRot1, zRot1);
+		wpr = new PVector(x, y, z);
 		return wpr;
 	}
 	
@@ -611,8 +644,7 @@ public abstract class RMath {
 	// calculates euler angles from quaternion
 	public static PVector quatToEuler(RQuaternion q) {
 		RMatrix r = q.toMatrix();
-		PVector wpr = matrixToEuler(r);
-		return wpr;
+		return matrixToEuler(r);
 	}
 	
 	// calculates rotation matrix from quaternion

@@ -10,7 +10,7 @@ import robot.RoboticArm;
 public class Process {
 	private RoboticArm parent;
 	private int progIdx;
-	private int activeInst;
+	//private int activeInst;
 	
 	/**
 	 * Creates a process on the given Robot from the program of the given
@@ -22,7 +22,7 @@ public class Process {
 	public Process(RoboticArm p, int pdx) {
 		parent = p;
 		progIdx = pdx;
-		activeInst = -1;
+		//activeInst = -1;
 	}
 	
 	/**

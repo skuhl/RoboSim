@@ -1,27 +1,26 @@
 package robot;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
 import geom.Fixture;
 import geom.Part;
-import geom.RMatrix;
 import geom.WorldObject;
 import global.Fields;
 import processing.core.PApplet;
-import processing.core.PVector;
 
 /**
  * A storage class for a collection of objects with an associated name for the collection.
  */
 public class Scenario implements Iterable<WorldObject>, Cloneable {
+	private boolean gravity;
 	private String name;
+	
 	/**
 	 * A combine list of Parts and Fixtures
 	 */
 	private final ArrayList<WorldObject> objList;
-	
-	private boolean gravity = false;
 
 	/**
 	 * Create a new scenario of the given name.
@@ -29,6 +28,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	public Scenario(String n) {
 		name = n;
 		objList = new ArrayList<>();
+		gravity = false;
 	}
 
 	/**
@@ -93,7 +93,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		// Concatenate the origin name with the new suffix
 		return String.format("%s%d", originName, suffix);
 	}
-
+	
 	/**
 	 * Add the given world object to the scenario. Though, if the name of
 	 * the given world object does not only contain letter and number
@@ -109,7 +109,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 			if (newObject == null) {
 				PApplet.println("New Object is null");
 			} else {
-				PApplet.println("New Object is: " + newObject.toString());
+				PApplet.println("New Object is: " + newObject.getName());
 			}
 
 			return false;
@@ -137,7 +137,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 		return false;
 	}
-
+	
 	/**
 	 * Only adds the given world objects that are non-null and do
 	 * not already exist in the scenario.
@@ -219,6 +219,10 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 	public String getName() { return name; }
 
+	public ArrayList<WorldObject> getObjectList() {
+		return objList;
+	}
+
 	/**
 	 * Return the world object that corresponds to the given index in
 	 * the list of world objects contained in this scenario, or null
@@ -235,14 +239,54 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 
 		return null;
 	}
-	
-	public ArrayList<WorldObject> getObjectList() {
-		return objList;
-	}
 
+	public boolean isGravity() {
+		return gravity;
+	}
+	
 	@Override
 	public Iterator<WorldObject> iterator() {
 		return objList.iterator();
+	}
+
+	/**
+	 * Replaces the world object, in the scenario, which has the same name as
+	 * the given world object. If no world object with the given world
+	 * object's name exists in the scenario, then the object is added to the
+	 * scenario.
+	 * 
+	 * @param newObj	The new world object
+	 * @return			The object that was replaced, or null if the newObj is
+	 * 					null or was added to the scenario
+	 */
+	public WorldObject put(WorldObject newObj) {
+		if (newObj != null) {
+			WorldObject replaced = null;
+			
+			for (int idx = 0; idx < objList.size(); ++idx) {
+				// Find the world object with the same name as newObj
+				if (objList.get(idx).getName().equals(newObj.getName())) {
+					replaced = objList.set(idx, newObj);
+				}
+			}
+			
+			// Update all part references to the replaced fixture
+			if (replaced instanceof Fixture) {
+				for (WorldObject w : objList) {
+					if (w instanceof Part && ((Part) w).getFixtureRef() == replaced) {
+						((Part)w).setFixtureRef((Fixture)newObj);
+					}
+				}
+			}
+			
+			if (replaced != null) {
+				return replaced;
+			}
+			
+			addWorldObject(newObj);
+		}
+		
+		return null;
 	}
 
 	/**
@@ -306,46 +350,6 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 	
 	/**
-	 * Replaces the world object, in the scenario, which has the same name as
-	 * the given world object. If no world object with the given world
-	 * object's name exists in the scenario, then the object is added to the
-	 * scenario.
-	 * 
-	 * @param newObj	The new world object
-	 * @return			The object that was replaced, or null if the newObj is
-	 * 					null or was added to the scenario
-	 */
-	public WorldObject put(WorldObject newObj) {
-		if (newObj != null) {
-			WorldObject replaced = null;
-			
-			for (int idx = 0; idx < objList.size(); ++idx) {
-				// Find the world object with the same name as newObj
-				if (objList.get(idx).getName().equals(newObj.getName())) {
-					replaced = objList.set(idx, newObj);
-				}
-			}
-			
-			// Update all part references to the replaced fixture
-			if (replaced instanceof Fixture) {
-				for (WorldObject w : objList) {
-					if (w instanceof Part && ((Part) w).getFixtureRef() == replaced) {
-						((Part)w).setFixtureRef((Fixture)newObj);
-					}
-				}
-			}
-			
-			if (replaced != null) {
-				return replaced;
-			}
-			
-			addWorldObject(newObj);
-		}
-		
-		return null;
-	}
-
-	/**
 	 * Return the color of all the object's bounding
 	 * boxes to normal (green).
 	 */
@@ -359,100 +363,13 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	}
 
 	public void setName(String newName) { name = newName; }
+
 	public int size() { return objList.size(); }
+	public boolean toggleGravity() {
+		gravity = !gravity;
+		return gravity;
+	}
 
 	@Override
 	public String toString() { return name; }
-
-	/**
-	 * Updates the collision detection of all the Parts in the scenario,
-	 * using the given ArmModel to detect collisions between world objects
-	 * and the armModel, and draws every object.
-	 */
-	public void updateAndRenderObjects(RoboticArm robot) {
-		int numOfObjects = objList.size();
-
-		for (int idx = 0; idx < numOfObjects; ++idx) {
-			WorldObject wldObj = objList.get(idx);
-
-			if (wldObj instanceof Part) {
-				Part p = (Part)wldObj;
-
-				/* Update the transformation matrix of an object held by the Robotic Arm */
-				if(robot != null && p == robot.held && robot.modelInMotion()) {
-					RobotRun.getInstance().pushMatrix();
-					RobotRun.getInstance().resetMatrix();
-
-					/***********************************************
-					     Moving a part with the Robot:
-					
-					     P' = R^-1 x E' x E^-1 x P
-					
-					     where:
-					     P' - new part local orientation
-					     R  - part fixture reference orientation
-					     E' - current Robot end effector orientation
-					     E  - previous Robot end effector orientation
-					     P  - current part local orientation
-					 ***********************************************/
-
-					Fixture refFixture = p.getFixtureRef();
-
-					if (refFixture != null) {
-						refFixture.removeCoordinateSystem();
-					}
-
-					RobotRun.applyModelRotation(robot, robot.getJointAngles());
-					RMatrix invMat = new RMatrix(RobotRun.getActiveRobot().getLastEEOrientation());
-					RobotRun.getInstance().applyMatrix(invMat.getInverse());
-					p.applyCoordinateSystem();
-					// Update the world object's position and orientation
-					p.setLocalCoordinateSystem();
-					p.updateAbsoluteOrientation();
-					RobotRun.getInstance().popMatrix();
-				}
-				else if (p.getFixtureRef() == null && p.getLocalCenter().y <
-						Fields.FLOOR_Y) {
-					
-					// Gravity
-					PVector c = wldObj.getLocalCenter();
-					wldObj.updateLocalCenter(null, c.y + 10, null);
-				}
-
-				/* Collision Detection */
-				if(RobotRun.getInstance().areOBBsDisplayed()) {
-					if( robot != null && robot.checkObjectCollision(p) ) {
-						p.setBBColor(Fields.OBB_COLLISION);
-					}
-
-					// Detect collision with other objects
-					for(int cdx = idx + 1; cdx < objList.size(); ++cdx) {
-
-						if (objList.get(cdx) instanceof Part) {
-							Part p2 = (Part)objList.get(cdx);
-
-							if(p.collision(p2)) {
-								// Change hit box color to indicate Object collision
-								p.setBBColor(Fields.OBB_COLLISION);
-								p2.setBBColor(Fields.OBB_COLLISION);
-								break;
-							}
-						}
-					}
-
-					if (robot != null && p != robot.held && robot.canPickup(p)) {
-						// Change hit box color to indicate End Effector collision
-						p.setBBColor(Fields.OBB_HELD);
-					}
-				}
-
-				if (p == RobotRun.getInstance().getUI().getSelectedWO()) {
-					p.setBBColor(Fields.OBB_SELECTED);
-				}
-			}
-			
-			// Draw the object
-			wldObj.draw();
-		}
-	}
 }

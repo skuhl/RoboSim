@@ -1,47 +1,58 @@
 package geom;
-import robot.RobotRun;
+
+import global.Fields;
+import processing.core.PGraphics;
 
 /**
  * A simple class that defines the stroke and fill color for a shape
- * along with some methods necessarry for a shape.
+ * along with some methods necessary for a shape.
  */
-public abstract class Shape implements Cloneable {
+public abstract class RShape implements Cloneable {
 	private Integer fillCVal;
 	private Integer strokeCVal;
 
-	public Shape() {
-		fillCVal = RobotRun.getInstance().color(0);
-		strokeCVal = RobotRun.getInstance().color(225);
+	public RShape() {
+		fillCVal = Fields.BLACK;
+		strokeCVal = Fields.WHITE;
 	}
 
-	public Shape(Integer fill, Integer strokeVal) {
+	public RShape(Integer fill, Integer strokeVal) {
 		fillCVal = fill;
 		strokeCVal = strokeVal;
 	}
-
+	
 	/**
-	 * Apply stroke and fill colors.
+	 * Applies the shape's stroke and outline colors to the given graphics.
+	 * 
+	 * @param g	The graphics to which to apply this shape's style
 	 */
-	protected void applyColors() {
-		if (strokeCVal == null) {
-			RobotRun.getInstance().noStroke();
-
+	protected void applyStyle(PGraphics g) {
+		
+		if (fillCVal != null) {
+			g.fill(fillCVal);
+			
 		} else {
-			RobotRun.getInstance().stroke(strokeCVal);
+			g.noFill();
 		}
-
-		if (fillCVal == null) {
-			RobotRun.getInstance().noFill();
-
+		
+		if (strokeCVal != null) {
+			g.stroke(strokeCVal);
+			
 		} else {
-			RobotRun.getInstance().fill(fillCVal);
-		} 
+			g.noStroke();
+		}
+		
 	}
 
 	@Override
-	public abstract Shape clone();
-
-	public abstract void draw();
+	public abstract RShape clone();
+	
+	/**
+	 * Draws the shape with its stroke and outline values.
+	 * 
+	 * @param g	the graphics used to render this shape
+	 */
+	public abstract void draw(PGraphics g);
 
 	/**
 	 * Returns the value of the given dimension associated with
@@ -73,4 +84,6 @@ public abstract class Shape implements Cloneable {
 	public void setStrokeValue(Integer newVal) { strokeCVal = newVal; }
 
 	public abstract int getID();
+
+	public abstract int getFamilyID();
 }
