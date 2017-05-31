@@ -2298,7 +2298,7 @@ public class RobotRun extends PApplet {
 
 				} else if (mode == ScreenMode.INPUT_IOREG_IDX) {
 
-					if (idx < 1 || idx > 5) {
+					if (idx < 1 || idx > activeRobot.numOfEndEffectors()) {
 						System.err.println("Invalid index!");
 
 					} else {
@@ -2392,7 +2392,7 @@ public class RobotRun extends PApplet {
 			try {
 				int tempReg = Integer.parseInt(workingText.toString());
 
-				if (tempReg < 1 || tempReg >= 6) {
+				if (tempReg < 1 || tempReg >= activeRobot.numOfEndEffectors()) {
 					System.err.println("Invalid index!");
 
 				} else {
@@ -7320,7 +7320,7 @@ public class RobotRun extends PApplet {
 	 * @param robot	The robot for which to change the end effector state
 	 */
 	public void toggleEEState(RoboticArm robot) {
-		int edx = robot.getActiveEEIdx();
+		int edx = robot.getActiveEEIdx() - 1;
 		int curState = robot.getEEState();
 		
 		if (curState == Fields.ON) {
@@ -8206,43 +8206,29 @@ public class RobotRun extends PApplet {
 	private RoboticArm createRobot(int rid, PVector basePosition) {
 		
 		// Define the robot's segments
-		
+		FloatWrapper jointVariable = new FloatWrapper(0f);
 		DrawAction[] limbo = new DrawAction[] {
-				new GTranslate(basePosition),
-				new GRotateZ(PI),
-				new GRotateY(HALF_PI)
+				
 		};
 		
-		
-		
-		RSegment base = new RSegment(
-				loadSTLModel("robot/ROBOT_MODEL_1_BASE.STL", color(200, 200, 0)),
+		RSegWithJoint base = new RSegWithJoint(
+				loadSTLModel("robot/ROBOT_BASE.STL", color(200, 200, 0)),
 				new BoundingBox[] { new BoundingBox(420, 115, 420) },
-				limbo
+				limbo, jointVariable, 0.0436f, 0f, TWO_PI
 		);
 		
-		FloatWrapper jointVariable = new FloatWrapper(0f);
+		jointVariable = new FloatWrapper(0f);
 		limbo = new DrawAction[] {
-				new GRotateY(-HALF_PI),
-				new GRotateZ(-PI),
-				new GTranslate(-50f, -166f, -358f),
-				new GRotateZ(PI),
-				new GTranslate(150f, 0f, 150f),
-				new GRotateX(PI),
-				new GRotateY(jointVariable),
-				new GRotateX(-PI),
-				new GTranslate(-150, 0, -150),
 				
 		};
 		
 		RSegWithJoint seg1 = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40)),
+				loadSTLModel("robot/ROBOT_SEGMENT_1.STL", color(40, 40, 40)),
 				new BoundingBox[] {
 						new BoundingBox(317, 85, 317),
 						new BoundingBox(130, 185, 170)
 				},
-				new DrawAction[0], // TODO define this
-				jointVariable, 0.0436f, 0f, TWO_PI
+				limbo, jointVariable, 0.0436f, 4.34f, 2.01f
 		);
 		
 		jointVariable = new FloatWrapper(0f);
@@ -8251,10 +8237,9 @@ public class RobotRun extends PApplet {
 		};
 		
 		RSegWithJoint seg2 = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0)),
+				loadSTLModel("robot/ROBOT_SEGMENT_2.STL", color(200, 200, 0)),
 				new BoundingBox[] { new BoundingBox(74, 610, 135) },
-				limbo,
-				jointVariable, 0.0436f, 4.34f, 2.01f
+				limbo, jointVariable, 0.0582f, 1.955f, 1.134f
 		);
 		
 		jointVariable = new FloatWrapper(0f);
@@ -8263,10 +8248,9 @@ public class RobotRun extends PApplet {
 		};
 		
 		RSegWithJoint seg3 = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40)),
+				loadSTLModel("robot/ROBOT_SEGMENT_3.STL", color(40, 40, 40)),
 				new BoundingBox[] { new BoundingBox(165, 165, 165) },
-				limbo,
-				jointVariable, 0.0582f, 1.955f, 1.134f
+				limbo, jointVariable, 0.0727f, 0f, TWO_PI
 		);
 		
 		jointVariable = new FloatWrapper(0f);
@@ -8275,13 +8259,12 @@ public class RobotRun extends PApplet {
 		};
 		
 		RSegWithJoint seg4 = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40)),
+				loadSTLModel("robot/ROBOT_SEGMENT_4.STL", color(40, 40, 40)),
 				new BoundingBox[] {
 						new BoundingBox(160, 160, 160),
 						new BoundingBox(128, 430, 128)
 				},
-				limbo,
-				jointVariable, 0.0727f, 0f, TWO_PI
+				limbo, jointVariable, 0.0727f, 4.189f, 2.269f
 		);
 		
 		jointVariable = new FloatWrapper(0f);
@@ -8290,10 +8273,9 @@ public class RobotRun extends PApplet {
 		};
 		
 		RSegWithJoint seg5 = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0)),
+				loadSTLModel("robot/ROBOT_SEGMENT_5.STL", color(200, 200, 0)),
 				new BoundingBox[0],
-				limbo,
-				jointVariable, 0.0727f, 4.189f, 2.269f
+				limbo, jointVariable, 0.1222f, 0f, TWO_PI
 		);
 		
 		jointVariable = new FloatWrapper(0f);
@@ -8301,20 +8283,13 @@ public class RobotRun extends PApplet {
 				
 		};
 		
-		RSegWithJoint seg6 = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40)),
-				new BoundingBox[0],
-				limbo,
-				jointVariable, 0.1222f, 0f, TWO_PI
-		);
-		
 		EndEffector[] eeList = loadRobotEndEffectors();
 		ArrayList<RMatrix> segTransforms = loadRobotModelTransforms();
 		
 		// TODO add selfCollision definition
 		
 		return new RoboticArm(rid, basePosition, base, seg1, seg2, seg3, seg4,
-				seg5, seg6, eeList, segTransforms);
+				seg5, eeList, segTransforms);
 	}
 	
 	/**
@@ -8324,55 +8299,71 @@ public class RobotRun extends PApplet {
 	 * @return	The list of a robot's end effectors
 	 */
 	private EndEffector[] loadRobotEndEffectors() {
-		EndEffector[] eeList = new EndEffector[5];
+		EndEffector[] eeList = new EndEffector[] {
 		
-		eeList[0] = new EndEffector(
-				loadSTLModel("robot/EE/SUCTION.stl", color(108, 206, 214)),
-				new BoundingBox[] { new BoundingBox(54, 96, 96), new BoundingBox(82, 37, 37), new BoundingBox(37, 62, 37) },
-				new DrawAction[0], // TODO define this
-				new BoundingBox[] { new BoundingBox(3, 25, 25), new BoundingBox(25, 3, 25) },
-				0,
-				"Suction"
-		);
-		
-		eeList[1] = new EndEffector(
-				new MyPShape[] {
-						loadSTLModel("robot/EE/GRIPPER.stl", color(108, 206, 214)),
-						loadSTLModel("robot/EE/PINCER.stl", color(200, 200, 0))
-				},
-				new BoundingBox[] { new BoundingBox(54, 96, 96), new BoundingBox(31, 21, 89), new BoundingBox(31, 21, 89) },
-				new DrawAction[0], // TODO define this
-				new BoundingBox[] { new BoundingBox(15, 3, 55) },
-				0,
-				"Gripper"
-		);
-		
-		eeList[2] = new EndEffector(
-				loadSTLModel("robot/EE/POINTER.stl", color(108, 206, 214)),
-				new BoundingBox[0],
-				new DrawAction[0], // TODO define this
-				new BoundingBox[0],
-				0,
-				"Pointer"
-		);
-		
-		eeList[3] = new EndEffector(
-				loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214)),
-				new BoundingBox[0],
-				new DrawAction[0], // TODO define this
-				new BoundingBox[0],
-				0,
-				"Glue Gun"
-		);
-		
-		eeList[4] = new EndEffector(
-				loadSTLModel("robot/EE/WIELDER.stl", color(108, 206, 214)),
-				new BoundingBox[0],
-				new DrawAction[0], // TODO define this
-				new BoundingBox[0],
-				0,
-				"WIELDER"
-		);
+			new EndEffector(
+					loadSTLModel("robot/EE/FACEPLATE.STL", color(40, 40, 40)),
+					new BoundingBox[0],
+					new DrawAction[0], // TODO define this
+					new BoundingBox[0],
+					0,
+					"FACEPLATE"
+			),
+			
+			new EndEffector(
+					loadSTLModel("robot/EE/SUCTION.stl", color(108, 206, 214)),
+					new BoundingBox[] {
+							new BoundingBox(54, 96, 96),
+							new BoundingBox(82, 37, 37),
+							new BoundingBox(37, 62, 37)
+					},
+					new DrawAction[0], // TODO define this
+					new BoundingBox[] {
+							new BoundingBox(3, 25, 25),
+							new BoundingBox(25, 3, 25)
+					},
+					1, "SUCTION"
+			),
+			
+			new EndEffector(
+					new MyPShape[] {
+							loadSTLModel("robot/EE/GRIPPER.stl", color(108, 206, 214)),
+							loadSTLModel("robot/EE/PINCER.stl", color(200, 200, 0))
+					},
+					new BoundingBox[] {
+							new BoundingBox(54, 96, 96),
+							new BoundingBox(31, 21, 89),
+							new BoundingBox(31, 21, 89)
+					},
+					new DrawAction[0], // TODO define this
+					new BoundingBox[] { new BoundingBox(15, 3, 55) },
+					2, "GRIPPER"
+			),
+			
+			new EndEffector(
+					loadSTLModel("robot/EE/POINTER.stl", color(108, 206, 214)),
+					new BoundingBox[0],
+					new DrawAction[0], // TODO define this
+					new BoundingBox[0],
+					3, "POINTER"
+			),
+			
+			new EndEffector(
+					loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214)),
+					new BoundingBox[0],
+					new DrawAction[0], // TODO define this
+					new BoundingBox[0],
+					4, "GLUE GUN"
+			),
+			
+			new EndEffector(
+					loadSTLModel("robot/EE/WIELDER.stl", color(108, 206, 214)),
+					new BoundingBox[0],
+					new DrawAction[0], // TODO define this
+					new BoundingBox[0],
+					5, "WIELDER"
+			)
+		};
 		
 		return eeList;
 	}

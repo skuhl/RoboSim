@@ -619,12 +619,12 @@ public class WGUI implements ControlListener {
 
 		ddlLimbo = addDropdown("RobotEE", miscellaneous, ldropItemWidth,
 				dropItemHeight, 4, Fields.small);
-		ddlLimbo.addItem("Faceplate", -1)
-		.addItem("SUCTION", 0)
-		.addItem("GRIPPER", 1)
-		.addItem("POINTER", 2)
-		.addItem("GLUE GUN", 3)
-		.addItem("WIELDER", 4)
+		ddlLimbo.addItem("FACEPLATE", 0)
+		.addItem("SUCTION", 1)
+		.addItem("GRIPPER", 2)
+		.addItem("POINTER", 3)
+		.addItem("GLUE GUN", 4)
+		.addItem("WIELDER", 5)
 		.setValue(0f);
 		
 		addDropdown("Scenario", scenario, ldropItemWidth, dropItemHeight, 4, Fields.small);
@@ -2891,7 +2891,7 @@ public class WGUI implements ControlListener {
 		if (r != null) {
 			// Link the active robot's end effector to the dropdown list
 			int activeEE = r.getActiveEEIdx();
-			getDropdown("RobotEE").setValue(activeEE + 1);
+			getDropdown("RobotEE").setValue(activeEE);
 		}
 	}
 	
