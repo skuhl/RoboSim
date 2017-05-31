@@ -8,9 +8,9 @@ import geom.MyPShape;
  * @author Joshua Hooker
  */
 public class GDrawModel {
-	public final MyPShape model;
+	public final MyPShape MODEL;
 	
 	public GDrawModel(MyPShape model) {
-		this.model = model;
+		this.MODEL = model;
 	}
 }

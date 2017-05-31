@@ -1,4 +1,5 @@
 package programming;
+
 import core.RobotRun;
 import frame.UserFrame;
 import geom.Point;
@@ -6,8 +7,7 @@ import global.Fields;
 import global.RMath;
 import robot.RoboticArm;
 
-public final class MotionInstruction extends Instruction  {
-	
+public class MotionInstruction extends Instruction  {
 	private int motionType;
 	private int positionNum;
 	private int offsetRegNum;
@@ -26,14 +26,14 @@ public final class MotionInstruction extends Instruction  {
 		// Doesn't do much ...
 	}
 
-	public MotionInstruction(int m, int p, boolean g, float s, int t) {
-		motionType = m;
-		positionNum = p;
+	public MotionInstruction(int type, int pos, boolean globl, float spd, int term) {
+		motionType = type;
+		positionNum = pos;
 		offsetRegNum = -1;
 		offsetActive = false;
-		isGPosReg = g;
-		speed = s;
-		termination = t;
+		isGPosReg = globl;
+		speed = spd;
+		termination = term;
 		userFrame = -1;
 		toolFrame = -1;
 		if(motionType != -1) {
@@ -43,16 +43,16 @@ public final class MotionInstruction extends Instruction  {
 		}
 	}
 
-	public MotionInstruction(int m, int p, boolean g, float s, int t, int uf,
+	public MotionInstruction(int type, int pos, boolean globl, float spd, int term, int uf,
 			int tf) {
 		
-		motionType = m;
-		positionNum = p;
+		motionType = type;
+		positionNum = pos;
 		offsetRegNum = -1;
 		offsetActive = false;
-		isGPosReg = g;
-		speed = s;
-		termination = t;
+		isGPosReg = globl;
+		speed = spd;
+		termination = term;
 		userFrame = uf;
 		toolFrame = tf;
 		if(motionType != -1) {

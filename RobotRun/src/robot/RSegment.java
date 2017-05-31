@@ -52,7 +52,7 @@ public class RSegment {
 	 * Defines a segment with the given model set, bounding boxes, and draw
 	 * actions.
 	 * 
-	 * @param model			The models defining the shape of this segment
+	 * @param MODEL			The models defining the shape of this segment
 	 * @param obbs			The bounding boxes associated with this segment
 	 * @param drawActions	The bounding boxes associated with this segment
 	 */
@@ -154,31 +154,32 @@ public class RSegment {
 			
 		} else if (action instanceof GDrawModel) {
 			// Draw the specified model
-			g.shape( ((GDrawModel) action).model );
+			g.shape( ((GDrawModel) action).MODEL );
 			
 		} else if (action instanceof GDrawOBB) {
 			// Draw the shape associated with the given action
-			((GDrawOBB) action).obb.getFrame().draw(g);
+			((GDrawOBB) action).OBB.getFrame().draw(g);
 			
-		} else if (action instanceof GTranslation) {
-			GTranslation tAction = (GTranslation)action;
+		} else if (action instanceof GTranslate) {
+			GTranslate tAction = (GTranslate)action;
 			// Apply the translation associated with the given action
-			g.translate(tAction.transX, tAction.transY, tAction.transZ);
+			PVector t = tAction.TRANSLATION;
+			g.translate(t.x, t.y, t.z);
 			
 		} else if (action instanceof GRotateX) {
 			/* Rotate around the x-axis the rotation associated with the given
 			 * action */
-			g.rotateX( ((GRotateX) action).rotation );
+			g.rotateX( ((GRotateX) action).ROTATION.value );
 			
 		} else if (action instanceof GRotateY) {
 			/* Rotate around the y-axis the rotation associated with the given
 			 * action */
-			g.rotateY( ((GRotateY) action).rotation );
+			g.rotateY( ((GRotateY) action).ROTATION.value );
 			
 		} else if (action instanceof GRotateZ) {
 			/* Rotate around the z-axis the rotation associated with the given
 			 * action */
-			g.rotateZ( ((GRotateZ) action).rotation );
+			g.rotateZ( ((GRotateZ) action).ROTATION.value );
 			
 		} else {
 			// Invalid action

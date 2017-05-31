@@ -7,9 +7,13 @@ package robot;
  */
 public class GRotateY implements DrawAction {
 	
-	public final float rotation;
+	public final FloatWrapper ROTATION;
 	
 	public GRotateY(float rotY) {
-		rotation = rotY;
+		ROTATION = new FloatWrapper(rotY);
+	}
+	
+	public GRotateY(FloatWrapper rotYWrapper) {
+		ROTATION = rotYWrapper;
 	}
 }
