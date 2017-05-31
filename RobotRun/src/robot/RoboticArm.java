@@ -1681,6 +1681,10 @@ public class RoboticArm {
 			motionType = RobotMotion.MT_LINEAR;
 		}
 	}
+	
+	public void moveTo(Point p) {
+		moveTo(p.position, p.orientation);
+	}
 
 	/**
 	 * Returns the number of programs associated with the Robot.
