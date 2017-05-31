@@ -9,9 +9,9 @@ import geom.BoundingBox;
  */
 public class GDrawOBB implements DrawAction {
 	
-	public final BoundingBox obb;
+	public final BoundingBox OBB;
 	
 	public GDrawOBB(BoundingBox obb) {
-		this.obb = obb;
+		this.OBB = obb;
 	}
 }

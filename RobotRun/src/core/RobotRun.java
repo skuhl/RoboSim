@@ -62,6 +62,11 @@ import regs.Register;
 import robot.CallFrame;
 import robot.DrawAction;
 import robot.EndEffector;
+import robot.FloatWrapper;
+import robot.GRotateX;
+import robot.GRotateY;
+import robot.GRotateZ;
+import robot.GTranslate;
 import robot.RSegWithJoint;
 import robot.RSegment;
 import robot.RoboticArm;
@@ -788,7 +793,7 @@ public class RobotRun extends PApplet {
 	public void BottomView() {
 		// Bottom view
 		camera.reset();
-		camera.setRotation(PI / 2f, 0f, 0f);
+		camera.setRotation(HALF_PI, 0f, 0f);
 	}
 	
 	/**
@@ -1469,7 +1474,7 @@ public class RobotRun extends PApplet {
 			
 			/*Camera Test Code*/
 			if(camEnable) {
-				Fields.drawGridlines(getGraphics(), rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
+				Fields.drawAxes(getGraphics(), rCamera.getPosition(), rCamera.getOrientationMat(), 300, 0);
 				
 				PVector near[] = rCamera.getPlaneNear();
 				PVector far[] = rCamera.getPlaneFar();
@@ -4792,7 +4797,7 @@ public class RobotRun extends PApplet {
 	public void LeftView() {
 		// Left view
 		camera.reset();
-		camera.setRotation(0f, PI / 2f, 0f);
+		camera.setRotation(0f, HALF_PI, 0f);
 	}
 	
 	/**
@@ -6523,7 +6528,7 @@ public class RobotRun extends PApplet {
 			PVector origin = new PVector(0f, 0f, 0f);
 			
 			if (axesType == AxesDisplay.AXES) {
-				Fields.drawGridlines(getGraphics(), origin, Fields.WORLD_AXES_MAT,
+				Fields.drawAxes(getGraphics(), origin, Fields.WORLD_AXES_MAT,
 						10000f, Fields.BLACK);
 				
 			} else if (axesType == AxesDisplay.GRID) {
@@ -6569,7 +6574,7 @@ public class RobotRun extends PApplet {
 				orientation = wldObj.getLocalOrientation();
 			}
 
-			Fields.drawGridlines(getGraphics(), origin, RMath.rMatToWorld(orientation),
+			Fields.drawAxes(getGraphics(), origin, RMath.rMatToWorld(orientation),
 					500f, Fields.BLACK);
 		}
 		
@@ -6933,7 +6938,7 @@ public class RobotRun extends PApplet {
 	public void RightView() {
 		// Right view
 		camera.reset();
-		camera.setRotation(0, 3f * PI / 2f, 0f);
+		camera.setRotation(0, 3f * HALF_PI, 0f);
 	}
 	
 	/**
@@ -7129,142 +7134,6 @@ public class RobotRun extends PApplet {
 			DataManagement.errLog(NPEx);
 			throw NPEx;
 		}
-		
-		pushMatrix();
-		resetMatrix();
-		
-		pushMatrix();
-		g.rotateZ(PConstants.PI);
-		g.rotateY(PConstants.PI/2);
-		System.out.println("Pre Base");
-		printMatrix();
-		popMatrix();
-		
-		// base
-		pushMatrix();
-		g.rotateY(-PConstants.PI/2);
-		g.rotateZ(-PConstants.PI);
-		g.translate(-50, -166, -358); // -115, -213, -413
-		g.rotateZ(PConstants.PI);
-		g.translate(150, 0, 150);
-		g.rotateX(PConstants.PI);
-		System.out.println("Pre joint 0");
-		printMatrix();
-		popMatrix();
-		
-		// joint 0
-		pushMatrix();
-		g.rotateX(-PConstants.PI);
-		g.translate(-150, 0, -150);
-		System.out.println("Pre segment 0");
-		printMatrix();
-		popMatrix();
-		
-		// segment 0
-		pushMatrix();
-		g.rotateZ(-PConstants.PI);
-		g.translate(-115, -85, 180);
-		g.rotateZ(PConstants.PI);
-		g.rotateY(PConstants.PI/2);
-		g.translate(0, 62, 62);
-		System.out.println("Pre joint 1");
-		printMatrix();
-		popMatrix();
-		
-		// joint 1
-		pushMatrix();
-		g.translate(0, -62, -62);
-		System.out.println("Pre segment 1");
-		printMatrix();
-		popMatrix();
-		
-		// segment 1
-		pushMatrix();
-		g.rotateY(-PConstants.PI/2);
-		g.rotateZ(-PConstants.PI);
-		g.translate(0, -500, -50);
-		g.rotateZ(PConstants.PI);
-		g.rotateY(PConstants.PI/2);
-		g.translate(0, 75, 75);
-		g.rotateZ(PConstants.PI);
-		System.out.println("Pre joint 2");
-		printMatrix();
-		popMatrix();
-		
-		// joint 2
-		pushMatrix();
-		g.rotateZ(-PConstants.PI);
-		g.translate(0, -75, -75);
-		System.out.println("Pre segment 2");
-		printMatrix();
-		popMatrix();
-		
-		// segment 2
-		pushMatrix();
-		g.rotateY(PConstants.PI/2);
-		g.rotateZ(-PConstants.PI);
-		g.translate(745, -150, 150);
-		g.rotateZ(PConstants.PI/2);
-		g.rotateY(PConstants.PI/2);
-		g.translate(70, 0, 70);
-		System.out.println("Pre joint 3");
-		printMatrix();
-		popMatrix();
-		
-		// joint 3
-		pushMatrix();
-		g.translate(-70, 0, -70);
-		System.out.println("Pre segment 3");
-		printMatrix();
-		popMatrix();
-		
-		// segment 3
-		pushMatrix();
-		g.rotateY(-PConstants.PI/2);
-		g.rotateZ(-PConstants.PI/2);
-		g.translate(-115, 130, -124);
-		g.rotateZ(PConstants.PI);
-		g.rotateY(-PConstants.PI/2);
-		g.translate(0, 50, 50);
-		System.out.println("Pre joint 4");
-		printMatrix();
-		popMatrix();
-		
-		// joint 4
-		pushMatrix();
-		g.translate(0, -50, -50);
-		System.out.println("Pre segment 4");
-		printMatrix();
-		popMatrix();
-		
-		// segment 4
-		pushMatrix();
-		g.rotateY(PConstants.PI/2);
-		g.rotateZ(-PConstants.PI);
-		g.translate(150, -10, 95);
-		g.rotateY(-PConstants.PI/2);
-		g.rotateZ(PConstants.PI);
-		g.translate(45, 45, 0);
-		System.out.println("Pre joint 5");
-		printMatrix();
-		popMatrix();
-		
-		// joint 5
-		pushMatrix();
-		g.translate(-45, -45, 0);
-		System.out.println("Pre segment 5");
-		printMatrix();
-		popMatrix();
-		
-		// segment 5
-		pushMatrix();
-		rotateX(PI);
-		rotateY(PI/2);
-		System.out.println("Post segment 5");
-		printMatrix();
-		popMatrix();
-		
-		popMatrix();
 	}
 
 	/**
@@ -7527,7 +7396,7 @@ public class RobotRun extends PApplet {
 	public void TopView() {
 		// Top view
 		camera.reset();
-		camera.setRotation(3f * PI / 2f, 0f, 0f);
+		camera.setRotation(3f * HALF_PI, 0f, 0f);
 	}
 
 	/**
@@ -8338,11 +8207,33 @@ public class RobotRun extends PApplet {
 		
 		// Define the robot's segments
 		
+		DrawAction[] limbo = new DrawAction[] {
+				new GTranslate(basePosition),
+				new GRotateZ(PI),
+				new GRotateY(HALF_PI)
+		};
+		
+		
+		
 		RSegment base = new RSegment(
 				loadSTLModel("robot/ROBOT_MODEL_1_BASE.STL", color(200, 200, 0)),
 				new BoundingBox[] { new BoundingBox(420, 115, 420) },
-				new DrawAction[0] // TODO define this
+				limbo
 		);
+		
+		FloatWrapper jointVariable = new FloatWrapper(0f);
+		limbo = new DrawAction[] {
+				new GRotateY(-HALF_PI),
+				new GRotateZ(-PI),
+				new GTranslate(-50f, -166f, -358f),
+				new GRotateZ(PI),
+				new GTranslate(150f, 0f, 150f),
+				new GRotateX(PI),
+				new GRotateY(jointVariable),
+				new GRotateX(-PI),
+				new GTranslate(-150, 0, -150),
+				
+		};
 		
 		RSegWithJoint seg1 = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_MODEL_1_AXIS1.STL", color(40, 40, 40)),
@@ -8351,22 +8242,37 @@ public class RobotRun extends PApplet {
 						new BoundingBox(130, 185, 170)
 				},
 				new DrawAction[0], // TODO define this
-				0.0436f, 0f, TWO_PI
+				jointVariable, 0.0436f, 0f, TWO_PI
 		);
+		
+		jointVariable = new FloatWrapper(0f);
+		limbo = new DrawAction[] {
+				
+		};
 		
 		RSegWithJoint seg2 = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_MODEL_1_AXIS2.STL", color(200, 200, 0)),
 				new BoundingBox[] { new BoundingBox(74, 610, 135) },
-				new DrawAction[0], // TODO define this
-				0.0436f, 4.34f, 2.01f
+				limbo,
+				jointVariable, 0.0436f, 4.34f, 2.01f
 		);
+		
+		jointVariable = new FloatWrapper(0f);
+		limbo = new DrawAction[] {
+				
+		};
 		
 		RSegWithJoint seg3 = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_MODEL_1_AXIS3.STL", color(40, 40, 40)),
 				new BoundingBox[] { new BoundingBox(165, 165, 165) },
-				new DrawAction[0], // TODO define this
-				0.0582f, 5.027f, 4.363f
+				limbo,
+				jointVariable, 0.0582f, 1.955f, 1.134f
 		);
+		
+		jointVariable = new FloatWrapper(0f);
+		limbo = new DrawAction[] {
+				
+		};
 		
 		RSegWithJoint seg4 = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_MODEL_1_AXIS4.STL", color(40, 40, 40)),
@@ -8374,22 +8280,32 @@ public class RobotRun extends PApplet {
 						new BoundingBox(160, 160, 160),
 						new BoundingBox(128, 430, 128)
 				},
-				new DrawAction[0], // TODO define this
-				0.0727f, 0f, TWO_PI
+				limbo,
+				jointVariable, 0.0727f, 0f, TWO_PI
 		);
+		
+		jointVariable = new FloatWrapper(0f);
+		limbo = new DrawAction[] {
+				
+		};
 		
 		RSegWithJoint seg5 = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_MODEL_1_AXIS5.STL", color(200, 200, 0)),
 				new BoundingBox[0],
-				new DrawAction[0], // TODO define this
-				0.0727f, 4.189f, 2.269f
+				limbo,
+				jointVariable, 0.0727f, 4.189f, 2.269f
 		);
+		
+		jointVariable = new FloatWrapper(0f);
+		limbo = new DrawAction[] {
+				
+		};
 		
 		RSegWithJoint seg6 = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_MODEL_1_AXIS6.STL", color(40, 40, 40)),
 				new BoundingBox[0],
-				new DrawAction[0], // TODO define this
-				0.1222f, 0f, TWO_PI
+				limbo,
+				jointVariable, 0.1222f, 0f, TWO_PI
 		);
 		
 		EndEffector[] eeList = loadRobotEndEffectors();
@@ -8473,82 +8389,50 @@ public class RobotRun extends PApplet {
 		pushMatrix();
 		resetMatrix();
 		
-		// pre joint 0
+		// Pre first joint axis
 		pushMatrix();
-		translate(-50, -166, -358);
-		rotateZ(PI);
-		translate(150, 0, 150);
-		rotateX(PI);
-		modelTransformations.add( getTransformationMatrix() );
-		popMatrix();
-		
-		// post joint 0
-		pushMatrix();
-		rotateX(-PI);
+		translate(-50, -163, -50);
 		translate(-150, 0, -150);
-		rotateZ(-PI);
-		translate(-115, -85, 180);
-		rotateZ(PI);
-		rotateY(PI / 2);
-		translate(0, 62, 62);
 		modelTransformations.add( getTransformationMatrix() );
 		popMatrix();
 		
-		// post joint 1
+		// Post first joint axis
 		pushMatrix();
-		translate(0, -62, -62);
-		rotateY(-PI / 2);
-		rotateZ(-PI);
-		translate(0, -500, -50);
-		rotateZ(PI);
-		rotateY(PI / 2);
+		translate(150, 0, -150);
+		translate(-125, -75, 180);
+		translate(-62, -62, 0);
+		modelTransformations.add( getTransformationMatrix() );
+		popMatrix();
+		
+		// Post second joint axis
+		pushMatrix();
+		translate(62, 62, 0);
+		translate(10, -605, -200);
+		translate(-75, 45, 0);
+		modelTransformations.add( getTransformationMatrix() );
+		popMatrix();
+		
+		// Post third joint axis
+		pushMatrix();
+		translate(75, -45, 0);
+		translate(-725, 0, 0);
 		translate(0, 75, 75);
-		rotateZ(PI);
 		modelTransformations.add( getTransformationMatrix() );
 		popMatrix();
 		
-		// post joint 2
+		// Post fourth joint axis
 		pushMatrix();
-		rotateZ(-PI);
 		translate(0, -75, -75);
-		rotateY(PI / 2);
-		rotateZ(-PI);
-		translate(745, -150, 150);
-		rotateZ(PI / 2);
-		rotateY(PI / 2);
-		translate(70, 0, 70);
+		translate(120, 20, 25);
+		translate(-55, 55, 50);
 		modelTransformations.add( getTransformationMatrix() );
 		popMatrix();
 		
-		// post joint 3
+		// Post fifth joint axis
 		pushMatrix();
-		translate(-70, 0, -70);
-		rotateY(-PI / 2);
-		rotateZ(-PI / 2);
-		translate(-115, 130, -124);
-		rotateZ(PI);
-		rotateY(-PI / 2);
-		translate(0, 50, 50);
-		modelTransformations.add( getTransformationMatrix() );
-		popMatrix();
-		
-		// post joint 4
-		pushMatrix();
-		translate(0, -50, -50);
-		rotateY(PI / 2);
-		rotateZ(-PI);
-		translate(150, -10, 95);
-		rotateY(-PI / 2);
-		rotateZ(PI);
-		translate(45, 45, 0);
-
-		modelTransformations.add( getTransformationMatrix() );
-		popMatrix();
-		
-		// post joint 5
-		pushMatrix();
-		rotateX(PI);
-		rotateY(PI/2);
+		translate(55, -55, -50);
+		translate(-150, 10, 95);
+		translate(0, 45, -45);
 		modelTransformations.add( getTransformationMatrix() );
 		popMatrix();
 		

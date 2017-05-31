@@ -569,89 +569,106 @@ public class RoboticArm {
 				RMatrix userAxes = RMath.rMatToWorld(activeUser.getNativeAxisVectors());
 				
 				if (axesType == AxesDisplay.AXES) {
-					Fields.drawGridlines(g, activeUser.getOrigin(), userAxes, 10000f, Fields.ORANGE);
+					Fields.drawAxes(g, activeUser.getOrigin(), userAxes, 10000f, Fields.ORANGE);
 					
 				} else if (axesType == AxesDisplay.GRID) {
 					drawGridlines(g, userAxes, activeUser.getOrigin(), 35, 100);
 				}
 			}
 		}
-		
+		// Base position
 		g.translate(BASE_POSITION.x, BASE_POSITION.y, BASE_POSITION.z);
-
+		
 		g.rotateZ(PConstants.PI);
-		g.rotateY(PConstants.PI/2);
+		g.rotateY(PConstants.HALF_PI);
+		// Base segment
 		SEGMENTS[0].draw(g, drawOBBs);
-		g.rotateY(-PConstants.PI/2);
+		g.rotateY(-PConstants.HALF_PI);
 		g.rotateZ(-PConstants.PI);
-
-		g.translate(-50, -166, -358);
-		g.rotateZ(PConstants.PI);
-		g.translate(150, 0, 150);
-		g.rotateX(PConstants.PI);
-		g.rotateY(jointAngles[0]);
-		g.rotateX(-PConstants.PI);
+		
+		g.translate(-50, -163, -50);
+		
 		g.translate(-150, 0, -150);
+		// First joint axis
+		g.rotateY(jointAngles[0]);
+		g.translate(150, 0, -150);
+		
+		g.rotateX(PConstants.PI);
+		g.rotateY(PConstants.PI);
+		// First joint segment
 		SEGMENTS[1].draw(g, drawOBBs);
-		g.rotateZ(-PConstants.PI);
-
-		g.translate(-115, -85, 180);
+		g.rotateY(-PConstants.PI);
+		g.rotateX(-PConstants.PI);
+		
+		g.translate(-125, -75, 180);
+		g.translate(-62, -62, 0);
+		// Second joint axis
+		g.rotateZ(-jointAngles[1]);
+		g.translate(62, 62, 0);
+		
 		g.rotateZ(PConstants.PI);
-		g.rotateY(PConstants.PI/2);
-		g.translate(0, 62, 62);
-		g.rotateX(jointAngles[1]);
-		g.translate(0, -62, -62);
+		g.rotateY(PConstants.HALF_PI);
+		// Second joint segment
 		SEGMENTS[2].draw(g, drawOBBs);
-		g.rotateY(-PConstants.PI/2);
+		g.rotateY(-PConstants.HALF_PI);
 		g.rotateZ(-PConstants.PI);
-
-		g.translate(0, -500, -50);
-		g.rotateZ(PConstants.PI);
-		g.rotateY(PConstants.PI/2);
-		g.translate(0, 75, 75);
-		g.rotateZ(PConstants.PI);
-		g.rotateX(jointAngles[2]);
-		g.rotateZ(-PConstants.PI);
-		g.translate(0, -75, -75);
+		
+		g.translate(10, -605, -200);
+		
+		g.translate(-75, 45, 0);
+		// Third joint axis
+		g.rotateZ(-jointAngles[2]);
+		g.translate(75, -45, 0);
+		
+		g.rotateY(-PConstants.HALF_PI);
+		// Third joint segment
 		SEGMENTS[3].draw(g, drawOBBs);
-		g.rotateY(PConstants.PI/2);
-		g.rotateZ(-PConstants.PI);
-
-		g.translate(745, -150, 150);
-		g.rotateZ(PConstants.PI/2);
-		g.rotateY(PConstants.PI/2);
-		g.translate(70, 0, 70);
-		g.rotateY(jointAngles[3]);
-		g.translate(-70, 0, -70);
+		g.rotateY(PConstants.HALF_PI);
+		
+		g.translate(-725, 0, 0);
+				
+		g.translate(0, 75, 75);
+		// Fourth joint axis
+		g.rotateX(jointAngles[3]);
+		g.translate(0, -75, -75);
+		
+		g.rotateZ(-PConstants.HALF_PI);
+		g.rotateY(-PConstants.HALF_PI);
+		// Fourth joint segment
 		SEGMENTS[4].draw(g, drawOBBs);
-		g.rotateY(-PConstants.PI/2);
-		g.rotateZ(-PConstants.PI/2);
+		g.rotateY(PConstants.HALF_PI);
+		g.rotateZ(PConstants.HALF_PI);
+		
+		g.translate(120, 20, 25);
+		
+		g.translate(-55, 55, 50);
+		// Fifth joint axis
+		g.rotateZ(-jointAngles[4]);
+		g.translate(55, -55, -50);
 
-		g.translate(-115, 130, -124);
-		g.rotateZ(PConstants.PI);
-		g.rotateY(-PConstants.PI/2);
-		g.translate(0, 50, 50);
-		g.rotateX(jointAngles[4]);
-		g.translate(0, -50, -50);
+		g.rotateY(-PConstants.HALF_PI);
+		// Fifth joint segment
 		SEGMENTS[5].draw(g, drawOBBs);
-		g.rotateY(PConstants.PI/2);
-		g.rotateZ(-PConstants.PI);
+		g.rotateY(PConstants.HALF_PI);
 		
-		g.translate(150, -10, 95);
-		g.rotateY(-PConstants.PI/2);
-		g.rotateZ(PConstants.PI);
-		g.translate(45, 45, 0);
-		g.rotateZ(jointAngles[5]);
+		g.translate(-150, 10, 95);
 		
-		g.pushMatrix();
+		g.translate(0, 45, -45);
+		// Sixth joint axis
+		g.rotateX(-jointAngles[5]);
+		g.translate(0, -45, 45);
 		
-		g.translate(-45, -45, 0);
+		g.rotateY(PConstants.HALF_PI);
+		// Sixth joint segment
 		SEGMENTS[6].draw(g, drawOBBs);
+		g.rotateY(-PConstants.HALF_PI);
 		
 		/* DRAW END EFFECTOR MODEL */
 		EndEffector activeEE = getActiveEE();
 		
 		if (activeEE != null) {
+			g.pushMatrix();
+			
 			int eeState = activeEE.getState();
 			
 			if (activeEEIdx == 0) {
@@ -663,7 +680,7 @@ public class RoboticArm {
 				g.rotateY(PConstants.PI);
 				g.translate(-88, 0, 0);
 				EE_LIST[1].draw(g, drawOBBs);
-				g.rotateZ(PConstants.PI/2);
+				g.rotateZ(PConstants.HALF_PI);
 	
 				if(eeState == Fields.OFF) {
 					// Draw open grippers
@@ -696,15 +713,15 @@ public class RoboticArm {
 				g.translate(46, -44, 10);
 				EE_LIST[4].draw(g, drawOBBs);
 			}
+			
+			g.popMatrix();
 		}
-		
-		g.popMatrix();
 		
 		/* DRAW TOOL TIP */
 		
-		g.rotateX(PConstants.PI);
-		g.rotateY(PConstants.PI/2);
+		g.translate(0, 45, -45);
 		drawToolTip(g, axesType);
+		g.translate(0, -45, 45);
 
 		g.popMatrix();
 		g.popStyle();
@@ -712,24 +729,6 @@ public class RoboticArm {
 		/* DRAW BOUNDING BOXES */
 		
 		if (drawOBBs) {
-			SEGMENTS[0].OBBS[0].getFrame().draw(g);
-			SEGMENTS[1].OBBS[0].getFrame().draw(g);
-			SEGMENTS[1].OBBS[1].getFrame().draw(g);
-			SEGMENTS[2].OBBS[0].getFrame().draw(g);
-			SEGMENTS[3].OBBS[0].getFrame().draw(g);
-			SEGMENTS[4].OBBS[0].getFrame().draw(g);
-			SEGMENTS[4].OBBS[1].getFrame().draw(g);
-			SEGMENTS[5].OBBS[0].getFrame().draw(g);
-			
-			if (activeEEIdx == 0) {
-				activeEE.OBBS[0].getFrame().draw(g);
-				activeEE.OBBS[0].getFrame().draw(g);
-				activeEE.OBBS[0].getFrame().draw(g);
-				
-			} else if (activeEEIdx == 1) {
-				activeEE.OBBS[0].getFrame().draw(g);
-				activeEE.OBBS[0].getFrame().draw(g);
-			}
 			/* Draw hit boxes of the body portion of the Robot Arm *
 			for(BoundingBox b : ARM_OBBS) {
 				g.pushMatrix();
@@ -798,7 +797,7 @@ public class RoboticArm {
 			
 			// Render the active tool frame at the position of the tooltip
 			RMatrix toolAxes = RMath.rMatToWorld(activeTool.getOrientationOffset().toMatrix());
-			Fields.drawGridlines(g, activeTool.getTCPOffset(), toolAxes, 500f, Fields.PINK);
+			Fields.drawAxes(g, activeTool.getTCPOffset(), toolAxes, 500f, Fields.PINK);
 			
 		} else {
 			// Render a point at the position of the tooltip
@@ -1332,18 +1331,18 @@ public class RoboticArm {
 	 * @return
 	 */
 	public RMatrix getRobotTransform(float[] jointAngles) {
-		// Calculate the rotation matrices for the robot's joint angles
+		/* Calculate the rotation matrices for the robot's joint angles */
 		RMatrix joint0Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 1f, 0f),
 				jointAngles[0]);
-		RMatrix joint1Orien = RMath.tMatFromAxisAndAngle(new PVector(1f, 0f, 0f),
+		RMatrix joint1Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 0f, -1f),
 				jointAngles[1]);
-		RMatrix joint2Orien = RMath.tMatFromAxisAndAngle(new PVector(1f, 0f, 0f),
+		RMatrix joint2Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 0f, -1f),
 				jointAngles[2]);
-		RMatrix joint3Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 1f, 0f),
+		RMatrix joint3Orien = RMath.tMatFromAxisAndAngle(new PVector(1f, 0f, 0f),
 				jointAngles[3]);
-		RMatrix joint4Orien = RMath.tMatFromAxisAndAngle(new PVector(1f, 0f, 0f),
+		RMatrix joint4Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 0f, -1f),
 				jointAngles[4]);
-		RMatrix joint5Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 0f, 1f),
+		RMatrix joint5Orien = RMath.tMatFromAxisAndAngle(new PVector(-1f, 0f, 0f),
 				jointAngles[5]);
 		
 		// Apply all the orientations of the robot's segments and joints
@@ -1368,8 +1367,7 @@ public class RoboticArm {
 			.multiply(SEGMENT_TMATS.get(4))
 			.multiply(joint4Orien)
 			.multiply(SEGMENT_TMATS.get(5))
-			.multiply(joint5Orien)
-			.multiply(SEGMENT_TMATS.get(6));
+			.multiply(joint5Orien);
 	}
 	
 	/**
@@ -1649,6 +1647,10 @@ public class RoboticArm {
 			RobotRun.getInstance().beginNewLinearMotion(start, end);
 			motionType = RobotMotion.MT_LINEAR;
 		}
+	}
+	
+	public void moveTo(Point p) {
+		moveTo(p.position, p.orientation);
 	}
 	
 	/**
@@ -2200,7 +2202,7 @@ public class RoboticArm {
 				BASE_POSITION.z);
 
 		app.rotateZ(PConstants.PI);
-		app.rotateY(PConstants.PI/2);
+		app.rotateY(PConstants.HALF_PI);
 		app.translate(200, 50, 200);
 		// Segment 0
 		app.getCoordFromMatrix(SEGMENTS[0].OBBS[0]);
@@ -2210,7 +2212,7 @@ public class RoboticArm {
 
 		app.translate(-200, -150, -200);
 
-		app.rotateY(-PConstants.PI/2);
+		app.rotateY(-PConstants.HALF_PI);
 		app.rotateZ(-PConstants.PI);
 
 		app.translate(-50, -166, -358);
@@ -2230,7 +2232,7 @@ public class RoboticArm {
 
 		app.translate(-115, -85, 180);
 		app.rotateZ(PConstants.PI);
-		app.rotateY(PConstants.PI/2);
+		app.rotateY(PConstants.HALF_PI);
 		app.translate(0, 62, 62);
 		app.rotateX(getJointSegment(1).getJointRotation());
 		app.translate(30, 240, 0);
@@ -2238,12 +2240,12 @@ public class RoboticArm {
 		app.getCoordFromMatrix(SEGMENTS[2].OBBS[0]);
 
 		app.translate(-30, -302, -62);
-		app.rotateY(-PConstants.PI/2);
+		app.rotateY(-PConstants.HALF_PI);
 		app.rotateZ(-PConstants.PI);
 
 		app.translate(0, -500, -50);
 		app.rotateZ(PConstants.PI);
-		app.rotateY(PConstants.PI/2);
+		app.rotateY(PConstants.HALF_PI);
 		app.translate(0, 75, 75);
 		app.rotateZ(PConstants.PI);
 		app.rotateX(getJointSegment(2).getJointRotation());
@@ -2253,12 +2255,12 @@ public class RoboticArm {
 		app.getCoordFromMatrix(SEGMENTS[3].OBBS[0]);
 
 		app.translate(-75, -75, -75);
-		app.rotateY(PConstants.PI/2);
+		app.rotateY(PConstants.HALF_PI);
 		app.rotateZ(-PConstants.PI);
 
 		app.translate(745, -150, 150);
-		app.rotateZ(PConstants.PI/2);
-		app.rotateY(PConstants.PI/2);
+		app.rotateZ(PConstants.HALF_PI);
+		app.rotateY(PConstants.HALF_PI);
 		app.translate(70, 0, 70);
 		app.rotateY(getJointSegment(3).getJointRotation());
 		app.translate(5, 75, 5);
@@ -2271,26 +2273,26 @@ public class RoboticArm {
 
 		app.translate(-75, -370, -75);
 
-		app.rotateY(-PConstants.PI/2);
-		app.rotateZ(-PConstants.PI/2);
+		app.rotateY(-PConstants.HALF_PI);
+		app.rotateZ(-PConstants.HALF_PI);
 
 		app.translate(-115, 130, -124);
 		app.rotateZ(PConstants.PI);
-		app.rotateY(-PConstants.PI/2);
+		app.rotateY(-PConstants.HALF_PI);
 		app.translate(0, 50, 50);
 		app.rotateX(getJointSegment(4).getJointRotation());
 		app.translate(0, -50, -50);
 		// Segment 5
-		app.rotateY(PConstants.PI/2);
+		app.rotateY(PConstants.HALF_PI);
 		app.rotateZ(-PConstants.PI);
 
 		app.translate(150, -10, 95);
-		app.rotateY(-PConstants.PI/2);
+		app.rotateY(-PConstants.HALF_PI);
 		app.rotateZ(PConstants.PI);
 		app.translate(45, 45, 0);
 		app.rotateZ(getJointSegment(5).getJointRotation());
 		app.rotateX(PConstants.PI);
-		app.rotateY(PConstants.PI/2);
+		app.rotateY(PConstants.HALF_PI);
 		
 		// End Effector
 		updateOBBBoxesForEE(app);

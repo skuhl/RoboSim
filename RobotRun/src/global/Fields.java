@@ -343,13 +343,25 @@ public abstract class Fields {
 	 * @param axesLength
 	 * @param originColor
 	 */
-	public static void drawGridlines(PGraphics g, PVector origin,
+	public static void drawAxes(PGraphics g, PVector origin,
 			RMatrix axesVectors, float axesLength, int originColor) {
 		
 		g.pushMatrix();
-		g.pushStyle();
 		// Transform to the reference frame defined by the axes vectors		
 		Fields.transform(g, origin, axesVectors);
+		drawAxes(g, axesLength, originColor);
+		g.popMatrix();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param axesLength	The length of the rendered axes
+	 * @param originColor	The color of the point of origin of the axes
+	 */
+	public static void drawAxes(PGraphics g, float axesLength, int originColor) {
+		g.pushStyle();
+		
 		// X axis
 		g.stroke(255, 0, 0);
 		g.line(-axesLength, 0, 0, axesLength, 0, 0);
@@ -366,6 +378,8 @@ public abstract class Fields {
 
 		g.stroke(originColor);
 		g.fill(Fields.BLACK);
+		
+		g.pushMatrix();
 		
 		g.sphere(4);
 		g.stroke(0);
@@ -396,8 +410,8 @@ public abstract class Fields {
 		g.text("Z-axis", 0, 0, 0);
 		g.popMatrix();
 
-		g.popStyle();
 		g.popMatrix();
+		g.popStyle();
 	}
 	
 	/**

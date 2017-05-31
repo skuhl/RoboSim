@@ -35,7 +35,7 @@ public class RSegWithJoint extends RSegment {
 	/**
 	 * The rotation of this segment's joint.
 	 */
-	private float jointRotation;
+	private final FloatWrapper JOINT;
 	
 	/**
 	 * TODO comment this
@@ -47,7 +47,8 @@ public class RSegWithJoint extends RSegment {
 	 * @param ub
 	 */
 	public RSegWithJoint(MyPShape model, BoundingBox[] obbs,
-			DrawAction[] drawActions, float speed, float lb, float ub) {
+			DrawAction[] drawActions, FloatWrapper jointVar, float speed,
+			float lb, float ub) {
 		
 		super(model, obbs, drawActions);
 		
@@ -55,7 +56,7 @@ public class RSegWithJoint extends RSegment {
 		UP_BOUND = ub;
 		SPEED_MODIFIER = speed;
 		jointMotion = 0;
-		jointRotation = 0f;
+		JOINT = jointVar;
 	}
 	
 	/**
@@ -75,7 +76,7 @@ public class RSegWithJoint extends RSegment {
 	}
 	
 	public float getJointRotation() {
-		return jointRotation;
+		return JOINT.value;
 	}
 	
 	public float getMotionSpeed() {
@@ -93,7 +94,7 @@ public class RSegWithJoint extends RSegment {
 	public boolean setJointRotation(float newRotation) {
 		// Validate the given rotation
 		if (anglePermitted(newRotation)) {
-			jointRotation = newRotation;
+			JOINT.value = newRotation;
 			return true;
 		}
 		
