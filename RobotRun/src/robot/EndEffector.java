@@ -90,7 +90,7 @@ public class EndEffector extends RSegment {
 		}
 		
 		// No collision
-		return true;
+		return false;
 	}
 	
 	public int getIdx() {

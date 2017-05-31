@@ -62,7 +62,7 @@ public class RoboticArm {
 	/**
 	 * A list of the robot's arm segment models.
 	 */
-	private final RSegment[] SEGMENTS;
+	private final RSegWithJoint[] SEGMENT;
 	
 	/**
 	 * The list of the robot's end effectors.
@@ -171,7 +171,7 @@ public class RoboticArm {
 	 */
 	private ArrayList<PVector> tracePts;
 	
-	public RoboticArm(int rid, PVector basePos, RSegment base, RSegWithJoint seg0,
+	public RoboticArm(int rid, PVector basePos, RSegWithJoint base,
 			RSegWithJoint seg1, RSegWithJoint seg2, RSegWithJoint seg3,
 			RSegWithJoint seg4, RSegWithJoint seg5, EndEffector[] endEffectors,
 			ArrayList<RMatrix> segTMats) {
@@ -189,9 +189,8 @@ public class RoboticArm {
 		BASE_POSITION = basePos;
 		SEGMENT_TMATS = segTMats;
 		
-		SEGMENTS = new RSegment[] {
+		SEGMENT = new RSegWithJoint[] {
 				base,
-				seg0,
 				seg1,
 				seg2,
 				seg3,
@@ -200,6 +199,7 @@ public class RoboticArm {
 		};
 		
 		EE_LIST = endEffectors;
+		activeEEIdx = 0;
 		
 		// Initialize program fields
 		PROGRAMS = new ArrayList<>();
@@ -362,8 +362,7 @@ public class RoboticArm {
 	 * @return	If p can be picked up right now
 	 */
 	public boolean canPickup(Part p) {
-		EndEffector activeEE = getActiveEE();
-		return activeEE != null && activeEE.canPickup(p);
+		return getActiveEE().canPickup(p);
 	}
 	
 	/**
@@ -375,13 +374,13 @@ public class RoboticArm {
 	public boolean checkCollision(Part p) {
 		boolean collision = false;
 		
-		for (RSegment seg : SEGMENTS) {
+		for (RSegment seg : SEGMENT) {
 			if (seg.checkCollision(p) == 1) {
 				collision = true;
 			}
 		}
 		
-		if (getActiveEE() != null && getActiveEE().checkCollision(p) == 1) {
+		if (getActiveEE().checkCollision(p) == 1) {
 			collision = true;
 		}
 
@@ -402,9 +401,10 @@ public class RoboticArm {
 	 * 					2, if nothing occurs
 	 */
 	public int checkPickupCollision(Scenario scenario) {
-		EndEffector activeEE = getActiveEE();
 		
-		if (activeEE != null && scenario != null) {
+		if (scenario != null) {
+			EndEffector activeEE = getActiveEE();
+			
 			/* End Effector must be on and no object is currently held to be
 			 * able to pickup an object */
 			if (activeEE.canPickup() && activeEE.getState() == Fields.ON
@@ -425,7 +425,6 @@ public class RoboticArm {
 				return 1;
 			}
 		}
-
 
 		return 2;
 	}
@@ -504,22 +503,19 @@ public class RoboticArm {
 	public PVector closestCollision(RRay ray) {
 		PVector closestCollPt = null;
 		
-		for (RSegment seg : SEGMENTS) {
+		for (RSegment seg : SEGMENT) {
 			closestCollPt = seg.closestCollision(ray);
 		}
 		
 		EndEffector activeEE = getActiveEE();
+		PVector collPt = activeEE.closestCollision(ray);
 		
-		if (activeEE != null) {
-			PVector collPt = activeEE.closestCollision(ray);
+		if (collPt != null && (closestCollPt == null ||
+				PVector.dist(ray.getOrigin(), collPt) <
+				PVector.dist(ray.getOrigin(), closestCollPt))) {
 			
-			if (collPt != null && (closestCollPt == null ||
-					PVector.dist(ray.getOrigin(), collPt) <
-					PVector.dist(ray.getOrigin(), closestCollPt))) {
-				
-				// Find the closest collision to the ray origin
-				closestCollPt = collPt;
-			}
+			// Find the closest collision to the ray origin
+			closestCollPt = collPt;
 		}
 		
 		return closestCollPt;
@@ -532,8 +528,8 @@ public class RoboticArm {
 	 * NONE -> SUCTION -> CLAW -> POINTER -> GLUE_GUN -> WIELDER -> NONE
 	 */
 	public void cycleEndEffector() {
-		// Cycle through range [-1, EE_LIST.length - 1]
-		activeEEIdx = (activeEEIdx + 2) % (EE_LIST.length + 1) - 1;
+		// Cycle through range [0, EE_LIST.length - 1]
+		activeEEIdx = (activeEEIdx + 1) % (EE_LIST.length);
 		setActiveEE(activeEEIdx);
 	}
 	
@@ -554,7 +550,7 @@ public class RoboticArm {
 		
 		float[] jointAngles = getJointAngles();
 		
-		/* DRAW ROBOT SEGMENTS */
+		/* DRAW ROBOT SEGMENT */
 		
 		g.pushStyle();
 		g.noStroke();
@@ -576,13 +572,14 @@ public class RoboticArm {
 				}
 			}
 		}
+		
 		// Base position
 		g.translate(BASE_POSITION.x, BASE_POSITION.y, BASE_POSITION.z);
 		
 		g.rotateZ(PConstants.PI);
 		g.rotateY(PConstants.HALF_PI);
 		// Base segment
-		SEGMENTS[0].draw(g, drawOBBs);
+		SEGMENT[0].draw(g, drawOBBs);
 		g.rotateY(-PConstants.HALF_PI);
 		g.rotateZ(-PConstants.PI);
 		
@@ -596,7 +593,7 @@ public class RoboticArm {
 		g.rotateX(PConstants.PI);
 		g.rotateY(PConstants.PI);
 		// First joint segment
-		SEGMENTS[1].draw(g, drawOBBs);
+		SEGMENT[1].draw(g, drawOBBs);
 		g.rotateY(-PConstants.PI);
 		g.rotateX(-PConstants.PI);
 		
@@ -609,7 +606,7 @@ public class RoboticArm {
 		g.rotateZ(PConstants.PI);
 		g.rotateY(PConstants.HALF_PI);
 		// Second joint segment
-		SEGMENTS[2].draw(g, drawOBBs);
+		SEGMENT[2].draw(g, drawOBBs);
 		g.rotateY(-PConstants.HALF_PI);
 		g.rotateZ(-PConstants.PI);
 		
@@ -622,7 +619,7 @@ public class RoboticArm {
 		
 		g.rotateY(-PConstants.HALF_PI);
 		// Third joint segment
-		SEGMENTS[3].draw(g, drawOBBs);
+		SEGMENT[3].draw(g, drawOBBs);
 		g.rotateY(PConstants.HALF_PI);
 		
 		g.translate(-725, 0, 0);
@@ -635,7 +632,7 @@ public class RoboticArm {
 		g.rotateZ(-PConstants.HALF_PI);
 		g.rotateY(-PConstants.HALF_PI);
 		// Fourth joint segment
-		SEGMENTS[4].draw(g, drawOBBs);
+		SEGMENT[4].draw(g, drawOBBs);
 		g.rotateY(PConstants.HALF_PI);
 		g.rotateZ(PConstants.HALF_PI);
 		
@@ -648,7 +645,7 @@ public class RoboticArm {
 
 		g.rotateY(-PConstants.HALF_PI);
 		// Fifth joint segment
-		SEGMENTS[5].draw(g, drawOBBs);
+		SEGMENT[5].draw(g, drawOBBs);
 		g.rotateY(PConstants.HALF_PI);
 		
 		g.translate(-150, 10, 95);
@@ -658,64 +655,69 @@ public class RoboticArm {
 		g.rotateX(-jointAngles[5]);
 		g.translate(0, -45, 45);
 		
-		g.rotateY(PConstants.HALF_PI);
-		// Sixth joint segment
-		SEGMENTS[6].draw(g, drawOBBs);
-		g.rotateY(-PConstants.HALF_PI);
-		
 		/* DRAW END EFFECTOR MODEL */
+		g.pushMatrix();
+		
 		EndEffector activeEE = getActiveEE();
 		
-		if (activeEE != null) {
-			g.pushMatrix();
+		if (activeEEIdx == 0) {
+			// Faceplate
+			g.rotateY(PConstants.HALF_PI);
+			EE_LIST[0].draw(g, drawOBBs);
 			
-			int eeState = activeEE.getState();
+		} else if (activeEEIdx == 1) {
+			// Suction
+			g.translate(25, -37.5f, -90);
+			g.rotateY(-PConstants.HALF_PI);
+			EE_LIST[1].draw(g, drawOBBs);
+
+		} else if(activeEEIdx == 2) {
+			// Gripper
+			g.translate(25, 0, -90);
+			g.rotateY(-PConstants.HALF_PI);
+			EE_LIST[2].draw(g, drawOBBs);
+			g.rotateY(PConstants.HALF_PI);
 			
-			if (activeEEIdx == 0) {
-				g.rotateY(PConstants.PI);
-				g.translate(-88, -37, 0);
-				EE_LIST[0].draw(g, drawOBBs);
-	
-			} else if(activeEEIdx == 1) {
-				g.rotateY(PConstants.PI);
-				g.translate(-88, 0, 0);
-				EE_LIST[1].draw(g, drawOBBs);
-				g.rotateZ(PConstants.HALF_PI);
-	
-				if(eeState == Fields.OFF) {
-					// Draw open grippers
-					g.translate(10, -85, 30);
-					//EEM_CLAW_PINCER.draw(g);
-					g.translate(55, 0, 0);
-					//EEM_CLAW_PINCER.draw(g);
-	
-				} else if(eeState == Fields.ON) {
-					// Draw closed grippers
-					g.translate(28, -85, 30);
-					//EEM_CLAW_PINCER.draw(g);
-					g.translate(20, 0, 0);
-					//EEM_CLAW_PINCER.draw(g);
-				}
-			} else if (activeEEIdx == 2) {
-				g.rotateY(PConstants.PI);
-				g.rotateZ(PConstants.PI);
-				g.translate(45, -45, 10);
-				EE_LIST[2].draw(g, drawOBBs);
-	
-			} else if (activeEEIdx == 3) {
-				g.rotateZ(PConstants.PI);
-				g.translate(-48, -46, -12);
-				EE_LIST[3].draw(g, drawOBBs);
-	
-			} else if (activeEEIdx == 4) {
-				g.rotateY(PConstants.PI);
-				g.rotateZ(PConstants.PI);
-				g.translate(46, -44, 10);
-				EE_LIST[4].draw(g, drawOBBs);
+			g.translate(-32.5f, 10, 85);
+			
+			g.rotateY(-PConstants.HALF_PI);
+			g.rotateZ(PConstants.HALF_PI);
+			g.shape(EE_LIST[2].MODEL_SET[1]);
+			g.rotateZ(-PConstants.HALF_PI);
+			g.rotateY(PConstants.HALF_PI);
+			
+			if(activeEE.getState() == Fields.OFF) {
+				// Draw open grippers
+				g.translate(0, 55, 0);
+
+			} else if(activeEE.getState() == Fields.ON) {
+				// Draw closed grippers
+				g.translate(0, 25, 0);
 			}
 			
-			g.popMatrix();
+			g.rotateY(-PConstants.HALF_PI);
+			g.rotateZ(PConstants.HALF_PI);
+			g.shape(EE_LIST[2].MODEL_SET[1]);
+			g.rotateZ(-PConstants.HALF_PI);
+			g.rotateY(PConstants.HALF_PI);
+			
+		} else if (activeEEIdx == 3) {
+			// Pointer
+			g.rotateY(-PConstants.HALF_PI);
+			EE_LIST[3].draw(g, drawOBBs);
+
+		} else if (activeEEIdx == 4) {
+			// Glue Gun
+			g.rotateY(-PConstants.HALF_PI);
+			EE_LIST[4].draw(g, drawOBBs);
+
+		} else if (activeEEIdx == 5) {
+			// Wielder
+			g.rotateY(-PConstants.HALF_PI);
+			EE_LIST[5].draw(g, drawOBBs);
 		}
+		
+		g.popMatrix();
 		
 		/* DRAW TOOL TIP */
 		
@@ -918,7 +920,7 @@ public class RoboticArm {
 		if (curCoordFrame == CoordFrame.JOINT) {
 			// Jog in the Joint Frame
 			for(int i = 0; i < 6; i += 1) {
-				RSegWithJoint seg = getJointSegment(i);
+				RSegWithJoint seg = SEGMENT[i];
 
 				if (seg.isJointInMotion()) {
 					float trialAngle = RMath.mod2PI(
@@ -1015,11 +1017,7 @@ public class RoboticArm {
 	 * 			active
 	 */
 	private EndEffector getActiveEE() {
-		if (activeEEIdx != -1) {
-			return EE_LIST[activeEEIdx];
-		}
-		
-		return null;
+		return EE_LIST[activeEEIdx];
 	}
 	
 	/**
@@ -1146,8 +1144,7 @@ public class RoboticArm {
 	 * @return	The state of the robot's current end effector
 	 */
 	public int getEEState() {
-		EndEffector activeEE = getActiveEE();
-		return (activeEE == null) ? Fields.OFF : activeEE.getState();
+		return this.getActiveEE().getState();
 	}
 	
 	/**
@@ -1214,17 +1211,15 @@ public class RoboticArm {
 	}
 
 	/**
-	 * Returns the I/O register, associated with the given index, of the Robot,
-	 * or null if the given index is invalid. A Robot has a total of 5 I/O
-	 * registers, which are zero-indexed: one for each different end effector.
+	 * TODO comment this
 	 * 
-	 * @param rdx	A integer value between 0 and 4, inclusive
-	 * @return		The I/O register associated with the given index, or null
-	 * 				if no end effector is active
+	 * @param rdx
+	 * @return
 	 */
 	public IORegister getIOReg(int rdx) {
-		if (rdx >= 0 && rdx < EE_LIST.length) {
-			return EE_LIST[rdx].reg;
+		// Disclude the faceplate
+		if (rdx >= 0 && rdx < (EE_LIST.length - 1)) {
+			return EE_LIST[rdx + 1].reg;
 		}
 		
 		return null;
@@ -1235,28 +1230,13 @@ public class RoboticArm {
 	 */
 	public float[] getJointAngles() {
 		return new float[] {
-			getJointSegment(0).getJointRotation(),
-			getJointSegment(1).getJointRotation(),
-			getJointSegment(2).getJointRotation(),
-			getJointSegment(3).getJointRotation(),
-			getJointSegment(4).getJointRotation(),
-			getJointSegment(5).getJointRotation()
+			SEGMENT[0].getJointRotation(),
+			SEGMENT[1].getJointRotation(),
+			SEGMENT[2].getJointRotation(),
+			SEGMENT[3].getJointRotation(),
+			SEGMENT[4].getJointRotation(),
+			SEGMENT[5].getJointRotation()
 		};
-	}
-	
-	/**
-	 * The robot's joint segment corresponding to the given joint index.
-	 * 
-	 * @param jdx	An integer between 0 and 5 inclusive
-	 * @return		The joint segment corresponding to the given index
-	 */
-	private RSegWithJoint getJointSegment(int jdx) {
-		
-		if (jdx >= 0 && jdx < 6) {
-			return (RSegWithJoint) SEGMENTS[jdx + 1];
-		}
-		// Invalid joint index
-		return null;
 	}
 
 	public RMatrix getLastTipTMatrix() {
@@ -1473,7 +1453,7 @@ public class RoboticArm {
 	 */
 	public void halt() {
 		for (int jdx = 0; jdx < 6; ++jdx) {
-			getJointSegment(jdx).setJointMotion(0);
+			SEGMENT[jdx].setJointMotion(0);
 		}
 
 		for(int idx = 0; idx < jogLinear.length; ++idx) {
@@ -1508,7 +1488,7 @@ public class RoboticArm {
 		boolean done = true;
 
 		for(int jdx = 0; jdx < 6; ++jdx) {
-			RSegWithJoint seg = getJointSegment(jdx);
+			RSegWithJoint seg = SEGMENT[jdx];
 			
 			if (seg.isJointInMotion()) {
 				float distToDest = PApplet.abs(seg.getJointRotation() - TGT_JOINTS[jdx]);
@@ -1552,7 +1532,7 @@ public class RoboticArm {
 	public boolean jointMotion() {
 		for(int jdx = 0; jdx < 6; ++jdx) {
 			// Check each joint segment
-			if (this.getJointSegment(jdx).isJointInMotion()) {
+			if (this.SEGMENT[jdx].isJointInMotion()) {
 				return true;
 			}
 		}
@@ -1580,7 +1560,7 @@ public class RoboticArm {
 
 		// Check the destination joint angles with each joint's range of valid joint angles
 		for(int joint = 0; !(destAngles == null) && joint < 6; joint += 1) {
-			RSegWithJoint seg = getJointSegment(joint);
+			RSegWithJoint seg = SEGMENT[joint];
 			
 			if (!seg.anglePermitted(destAngles[joint])) {
 				invalidAngle = true;
@@ -1657,7 +1637,7 @@ public class RoboticArm {
 	 * @return	The number of end effectors associated with this robot
 	 */
 	public int numOfEndEffectors() {
-		return EE_LIST.length;
+		return EE_LIST.length - 1;
 	}
 
 	/**
@@ -1778,15 +1758,7 @@ public class RoboticArm {
 	 * Then, update the Robot's End Effector status and IO Registers.
 	 */
 	public void releaseHeldObject() {
-		if (heldPart != null) {
-			EndEffector activeEE = getActiveEE();
-			
-			if (activeEE != null) {
-				activeEE.setState(Fields.OFF);
-			}
-			
-			heldPart = null;
-		}
+		heldPart = null;
 	}
 
 	/**
@@ -1852,15 +1824,11 @@ public class RoboticArm {
 	 * box colors to the default color.
 	 */
 	public void resetOBBColors() {
-		for(RSegment seg : SEGMENTS) {
+		for(RSegment seg : SEGMENT) {
 			seg.resetOBBColors();
 		}
 		
-		EndEffector activeEE = getActiveEE();
-		
-		if (activeEE != null) {
-			activeEE.resetOBBColors();
-		}
+		getActiveEE().resetOBBColors();
 	}
 	
 	/**
@@ -1948,13 +1916,13 @@ public class RoboticArm {
 	
 	/**
 	 * Set the index of the robot's active end effector to the given index. The
-	 * given index must be within the range [-1, EE_LIST.length). -1 implies
+	 * given index must be within the range [0, EE_LIST.length). -1 implies
 	 * that no end effector is active. 
 	 * 
 	 * @param ee	The index of the end effector to set as active
 	 */
 	public void setActiveEE(int eeIdx) {
-		if (eeIdx >= -1 & eeIdx < EE_LIST.length) {
+		if (eeIdx >= 0 & eeIdx < EE_LIST.length) {
 			activeEEIdx = eeIdx;
 			releaseHeldObject();
 		}
@@ -2056,7 +2024,7 @@ public class RoboticArm {
 	 * @param newState	The new state of the I/O register
 	 */
 	public void setEEState(int rdx, int newState) {
-		IORegister ioReg = this.getIOReg(rdx);
+		IORegister ioReg = getIOReg(rdx);
 		
 		if (ioReg != null) {
 			ioReg.state = newState;
@@ -2073,7 +2041,7 @@ public class RoboticArm {
 	public void setJointAngles(float[] newJointAngles) {
 		
 		for (int jdx = 0; jdx < 6; ++jdx) {
-			getJointSegment(jdx).setJointRotation(newJointAngles[jdx]);
+			SEGMENT[jdx].setJointRotation(newJointAngles[jdx]);
 		}
 	}
 
@@ -2087,7 +2055,7 @@ public class RoboticArm {
 	 * @return		The old direction of motion for the given joint
 	 */
 	public int setJointMotion(int jdx, int dir) {
-		RSegWithJoint seg = getJointSegment(jdx);
+		RSegWithJoint seg = SEGMENT[jdx];
 		
 		if (seg != null) {
 			if (seg.isJointInMotion()) {
@@ -2131,7 +2099,7 @@ public class RoboticArm {
 			// Set the target angle for rotational interpolation
 			TGT_JOINTS[jdx] = tgtAngles[jdx];
 			
-			RSegWithJoint seg = getJointSegment(jdx);
+			RSegWithJoint seg = SEGMENT[jdx];
 			// The minimum distance between the current and target joint angles
 			float dist_t = RMath.minimumDistance(seg.getJointRotation(), TGT_JOINTS[jdx]);
 			
@@ -2205,10 +2173,10 @@ public class RoboticArm {
 		app.rotateY(PConstants.HALF_PI);
 		app.translate(200, 50, 200);
 		// Segment 0
-		app.getCoordFromMatrix(SEGMENTS[0].OBBS[0]);
+		app.getCoordFromMatrix(SEGMENT[0].OBBS[0]);
 
 		app.translate(0, 100, 0);
-		app.getCoordFromMatrix(SEGMENTS[1].OBBS[0]);
+		app.getCoordFromMatrix(SEGMENT[1].OBBS[0]);
 
 		app.translate(-200, -150, -200);
 
@@ -2219,12 +2187,12 @@ public class RoboticArm {
 		app.rotateZ(PConstants.PI);
 		app.translate(150, 0, 150);
 		app.rotateX(PConstants.PI);
-		app.rotateY(getJointSegment(0).getJointRotation());
+		app.rotateY(SEGMENT[0].getJointRotation());
 		app.rotateX(-PConstants.PI);
 		app.translate(10, 95, 0);
 		app.rotateZ(-0.1f * PConstants.PI);
 		// Segment 1
-		app.getCoordFromMatrix(SEGMENTS[1].OBBS[1]);
+		app.getCoordFromMatrix(SEGMENT[1].OBBS[1]);
 
 		app.rotateZ(0.1f * PConstants.PI);
 		app.translate(-160, -95, -150);
@@ -2234,10 +2202,10 @@ public class RoboticArm {
 		app.rotateZ(PConstants.PI);
 		app.rotateY(PConstants.HALF_PI);
 		app.translate(0, 62, 62);
-		app.rotateX(getJointSegment(1).getJointRotation());
+		app.rotateX(SEGMENT[1].getJointRotation());
 		app.translate(30, 240, 0);
 		// Segment 2
-		app.getCoordFromMatrix(SEGMENTS[2].OBBS[0]);
+		app.getCoordFromMatrix(SEGMENT[2].OBBS[0]);
 
 		app.translate(-30, -302, -62);
 		app.rotateY(-PConstants.HALF_PI);
@@ -2248,11 +2216,11 @@ public class RoboticArm {
 		app.rotateY(PConstants.HALF_PI);
 		app.translate(0, 75, 75);
 		app.rotateZ(PConstants.PI);
-		app.rotateX(getJointSegment(2).getJointRotation());
+		app.rotateX(SEGMENT[2].getJointRotation());
 		app.rotateZ(-PConstants.PI);
 		app.translate(75, 0, 0);
 		// Segment 3
-		app.getCoordFromMatrix(SEGMENTS[3].OBBS[0]);
+		app.getCoordFromMatrix(SEGMENT[3].OBBS[0]);
 
 		app.translate(-75, -75, -75);
 		app.rotateY(PConstants.HALF_PI);
@@ -2262,14 +2230,14 @@ public class RoboticArm {
 		app.rotateZ(PConstants.HALF_PI);
 		app.rotateY(PConstants.HALF_PI);
 		app.translate(70, 0, 70);
-		app.rotateY(getJointSegment(3).getJointRotation());
+		app.rotateY(SEGMENT[3].getJointRotation());
 		app.translate(5, 75, 5);
 		// Segment 4;
-		app.getCoordFromMatrix(SEGMENTS[4].OBBS[0]);
+		app.getCoordFromMatrix(SEGMENT[4].OBBS[0]);
 		
 
 		app.translate(0, 295, 0);
-		app.getCoordFromMatrix(SEGMENTS[4].OBBS[1]);
+		app.getCoordFromMatrix(SEGMENT[4].OBBS[1]);
 
 		app.translate(-75, -370, -75);
 
@@ -2280,7 +2248,7 @@ public class RoboticArm {
 		app.rotateZ(PConstants.PI);
 		app.rotateY(-PConstants.HALF_PI);
 		app.translate(0, 50, 50);
-		app.rotateX(getJointSegment(4).getJointRotation());
+		app.rotateX(SEGMENT[4].getJointRotation());
 		app.translate(0, -50, -50);
 		// Segment 5
 		app.rotateY(PConstants.HALF_PI);
@@ -2290,7 +2258,7 @@ public class RoboticArm {
 		app.rotateY(-PConstants.HALF_PI);
 		app.rotateZ(PConstants.PI);
 		app.translate(45, 45, 0);
-		app.rotateZ(getJointSegment(5).getJointRotation());
+		app.rotateZ(SEGMENT[5].getJointRotation());
 		app.rotateX(PConstants.PI);
 		app.rotateY(PConstants.HALF_PI);
 		
@@ -2417,7 +2385,7 @@ public class RoboticArm {
 
 		app.pushMatrix();
 		
-		if (activeEEIdx == 0) {
+		if (activeEEIdx == 1) {
 			// Suction EE
 			app.translate(0, 0, 3);
 			app.getCoordFromMatrix( activeEE.OBBS[0] );
@@ -2438,7 +2406,7 @@ public class RoboticArm {
 			app.getCoordFromMatrix( activeEE.PICKUP_OBBS[1] );
 			app.translate(45, dist - 50, 2);
 			
-		} else if (activeEEIdx == 1) {
+		} else if (activeEEIdx == 2) {
 			// Claw Gripper EE
 			app.translate(3, 0, 0);
 			app.getCoordFromMatrix( activeEE.OBBS[0] );
