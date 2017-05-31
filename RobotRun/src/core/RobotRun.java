@@ -8213,7 +8213,7 @@ public class RobotRun extends PApplet {
 		
 		RSegWithJoint base = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_BASE.STL", color(200, 200, 0)),
-				new BoundingBox[] { new BoundingBox(420, 115, 420) },
+				new BoundingBox[] { new BoundingBox(405, 105, 405) },
 				limbo, jointVariable, 0.0436f, 0f, TWO_PI
 		);
 		
@@ -8225,8 +8225,8 @@ public class RobotRun extends PApplet {
 		RSegWithJoint seg1 = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_SEGMENT_1.STL", color(40, 40, 40)),
 				new BoundingBox[] {
-						new BoundingBox(317, 85, 317),
-						new BoundingBox(130, 185, 170)
+						new BoundingBox(305, 80, 305),
+						new BoundingBox(114, 98, 160)
 				},
 				limbo, jointVariable, 0.0436f, 4.34f, 2.01f
 		);
@@ -8238,7 +8238,11 @@ public class RobotRun extends PApplet {
 		
 		RSegWithJoint seg2 = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_SEGMENT_2.STL", color(200, 200, 0)),
-				new BoundingBox[] { new BoundingBox(74, 610, 135) },
+				new BoundingBox[] {
+						new BoundingBox(130, 120, 160),
+						new BoundingBox(130, 316, 64),
+						new BoundingBox(110, 163, 48)
+				},
 				limbo, jointVariable, 0.0582f, 1.955f, 1.134f
 		);
 		
@@ -8249,7 +8253,11 @@ public class RobotRun extends PApplet {
 		
 		RSegWithJoint seg3 = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_SEGMENT_3.STL", color(40, 40, 40)),
-				new BoundingBox[] { new BoundingBox(165, 165, 165) },
+				new BoundingBox[] {
+						new BoundingBox(154, 154, 154),
+						new BoundingBox(420, 126, 126),
+						new BoundingBox(148, 154, 154),
+				},
 				limbo, jointVariable, 0.0727f, 0f, TWO_PI
 		);
 		
@@ -8313,9 +8321,9 @@ public class RobotRun extends PApplet {
 			new EndEffector(
 					loadSTLModel("robot/EE/SUCTION.stl", color(108, 206, 214)),
 					new BoundingBox[] {
-							new BoundingBox(54, 96, 96),
-							new BoundingBox(82, 37, 37),
-							new BoundingBox(37, 62, 37)
+							new BoundingBox(26, 92, 92),
+							new BoundingBox(84, 33, 33),
+							new BoundingBox(32, 66, 32)
 					},
 					new DrawAction[0], // TODO define this
 					new BoundingBox[] {
@@ -8331,9 +8339,9 @@ public class RobotRun extends PApplet {
 							loadSTLModel("robot/EE/PINCER.stl", color(200, 200, 0))
 					},
 					new BoundingBox[] {
-							new BoundingBox(54, 96, 96),
-							new BoundingBox(31, 21, 89),
-							new BoundingBox(31, 21, 89)
+							new BoundingBox(26, 92, 92),
+							new BoundingBox(29, 18, 83),
+							new BoundingBox(29, 18, 83)
 					},
 					new DrawAction[0], // TODO define this
 					new BoundingBox[] { new BoundingBox(15, 3, 55) },
