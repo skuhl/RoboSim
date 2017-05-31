@@ -283,7 +283,7 @@ public abstract class RMath {
 			float dist = PVector.dist(cPoint.position, tgtPosition);
 			float rDist = rDelta.magnitude();
 			// check whether our current position is within tolerance
-			if (dist < RobotRun.getActiveRobot().getLiveSpeed() / 100f && rDist < 0.00005f * RobotRun.getActiveRobot().getLiveSpeed()) {
+			if (dist < RobotRun.getInstanceRobot().getLiveSpeed() / 100f && rDist < 0.00005f * RobotRun.getInstanceRobot().getLiveSpeed()) {
 				break;
 			}
 
@@ -331,7 +331,7 @@ public abstract class RMath {
 	 * courses/cs248-98-fall/Final/q4.html
 	 */
 	public static RMatrix invertHCMatrix(RMatrix mat) {
-		float[][] d = mat.getFloatData();
+		float[][] d = mat.getDataF();
 		if (d.length != 4 || d[0].length != 4) {
 			return null;
 		}
@@ -395,7 +395,7 @@ public abstract class RMath {
 
 	// calculates euler angles from rotation matrix
 	public static PVector matrixToEuler(RMatrix m) {
-		float[][] r = m.getFloatData();
+		float[][] r = m.getDataF();
 		float x, y, z;
 		PVector wpr;
 
@@ -427,7 +427,7 @@ public abstract class RMath {
 	
 	// calculates quaternion from rotation matrix
 	public static RQuaternion matrixToQuat(RMatrix m) {
-		float[][] d = m.getFloatData();
+		float[][] d = m.getDataF();
 		float[] qVals = new float[4];
 		float diag = d[0][0] + d[1][1] + d[2][2];
 
@@ -625,7 +625,7 @@ public abstract class RMath {
 	}
 
 	public static void printMat(RMatrix mat) {
-		float[][] d = mat.getFloatData();
+		float[][] d = mat.getDataF();
 		
 		for (int i = 0; i < d.length; i += 1) {
 			System.out.print("[");
@@ -744,7 +744,7 @@ public abstract class RMath {
 	 *            the given origin and axes offset
 	 */
 	public static RMatrix transformationMatrix(PVector origin, RMatrix axes) {
-		float[][] d = axes.getFloatData();
+		float[][] d = axes.getDataF();
 		float[][] mat = new float[4][4];
 		
 		mat[0][0] = d[0][0];
@@ -778,7 +778,7 @@ public abstract class RMath {
 	 * @return	A vector containing the product of v and t
 	 */
 	public static PVector vectorMatrixMult(PVector v, RMatrix mat) {
-		float[][] d = mat.getFloatData();
+		float[][] d = mat.getDataF();
 		
 		if (d.length != 4 || d[0].length != 4) {
 			return null;

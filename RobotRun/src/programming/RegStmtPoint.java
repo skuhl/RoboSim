@@ -132,7 +132,7 @@ public class RegStmtPoint {
 			return new Point(position, orientation);
 		} else {
 			// Use forward kinematics to find the position and orientation of the joint angles
-			return RobotRun.nativeRobotEEPoint(RobotRun.getActiveRobot(), getValues());
+			return RobotRun.nativeRobotEEPoint(RobotRun.getInstanceRobot(), getValues());
 		}
 	}
 

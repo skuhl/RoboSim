@@ -40,6 +40,12 @@ public class Point  {
 		position = pos;
 		orientation = orient;
 	}
+	
+	public Point(PVector pos, RMatrix orient) {
+		angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+		position = pos;
+		orientation = RMath.matrixToQuat(orient);
+	}
 
 	public Point(PVector pos, RQuaternion orient, float[] jointAngles) {
 		position = pos;

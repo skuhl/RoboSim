@@ -26,7 +26,7 @@ public class CamSelectArea {
 	
 	@SuppressWarnings("unused")
 	public CamSelectView getView(RMatrix m) {
-		float[][] data = m.getFloatData();
+		float[][] data = m.getDataF();
 		PVector look = new PVector(data[2][0], data[2][1], data[2][2]);
 		
 		float dotX = new PVector(1, 0, 0).dot(look);

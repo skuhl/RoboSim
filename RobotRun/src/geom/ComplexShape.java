@@ -216,7 +216,7 @@ public class ComplexShape extends RShape {
 	public PGraphics getModelPreview(RMatrix m) {
 		if(preview == null) {
 			PGraphics img = RobotRun.getInstance().createGraphics(150, 200, RobotRun.P3D);
-			float[][] rMat = m.getFloatData();
+			float[][] rMat = m.getDataF();
 			img.beginDraw();
 			img.ortho();
 			img.lights();
