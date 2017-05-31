@@ -578,17 +578,34 @@ public class RoboticArm {
 		
 		g.rotateZ(PConstants.PI);
 		g.rotateY(PConstants.HALF_PI);
+		
 		// Base segment
 		SEGMENT[0].draw(g, drawOBBs);
 		g.rotateY(-PConstants.HALF_PI);
 		g.rotateZ(-PConstants.PI);
 		
-		g.translate(-50, -163, -50);
+		g.translate(-50f, -163f, -350f);
 		
-		g.translate(-150, 0, -150);
+		g.translate(-150f, 112f, 150f);
+		// Base OBB
+		SEGMENT[0].OBBS[0].getFrame().draw(g);
+		g.translate(150f, -112f, -150f);
+		
+		g.translate(-150f, 18f, 150f);
+		// First joint segment OBB
+		SEGMENT[1].OBBS[0].getFrame().draw(g);
+		g.translate(150f, -18f, -150f);
+		
+		g.translate(-150f, 0f, 150f);
+		Fields.drawAxes(g, 1000f, Fields.PURPLE);
 		// First joint axis
 		g.rotateY(jointAngles[0]);
-		g.translate(150, 0, -150);
+		g.translate(150f, 0f, -150f);
+		
+		g.translate(-150f, -73f, 150f);
+		// First joint segment OBB
+		SEGMENT[1].OBBS[1].getFrame().draw(g);
+		g.translate(150f, 73f, -150f);
 		
 		g.rotateX(PConstants.PI);
 		g.rotateY(PConstants.PI);
@@ -597,11 +614,27 @@ public class RoboticArm {
 		g.rotateY(-PConstants.PI);
 		g.rotateX(-PConstants.PI);
 		
-		g.translate(-125, -75, 180);
-		g.translate(-62, -62, 0);
+		g.translate(-125f, -75f, 180f);
+		
+		g.translate(-62f, -62f, 0f);
 		// Second joint axis
 		g.rotateZ(-jointAngles[1]);
-		g.translate(62, 62, 0);
+		
+		g.translate(0f, 3f, -30f);
+		// Second joint segment OBB
+		SEGMENT[2].OBBS[0].getFrame().draw(g);
+		
+		g.translate(0f, -220f, 0f);
+		// Second joint segment OBB
+		SEGMENT[2].OBBS[1].getFrame().draw(g);
+		
+		g.translate(0f, -241f, 8f);
+		// Second joint segment OBB
+		SEGMENT[2].OBBS[2].getFrame().draw(g);
+		g.translate(0f, 241f, -8f);
+		g.translate(0f, 220f, 0f);
+		g.translate(0f, -3f, 30f);
+		g.translate(62f, 62f, 0f);		
 		
 		g.rotateZ(PConstants.PI);
 		g.rotateY(PConstants.HALF_PI);
@@ -610,24 +643,39 @@ public class RoboticArm {
 		g.rotateY(-PConstants.HALF_PI);
 		g.rotateZ(-PConstants.PI);
 		
-		g.translate(10, -605, -200);
+		g.translate(10f, -605f, -200f);
 		
-		g.translate(-75, 45, 0);
+		g.translate(-75f, 45f, 0f);
 		// Third joint axis
 		g.rotateZ(-jointAngles[2]);
-		g.translate(75, -45, 0);
+		
+		g.translate(0f, 30f, 75f);
+		// Third joint segment OBB
+		SEGMENT[3].OBBS[0].getFrame().draw(g);
+		g.translate(0f, -30f, -75f);
+		
+		g.translate(75f, -45f, 0f);
 		
 		g.rotateY(-PConstants.HALF_PI);
 		// Third joint segment
 		SEGMENT[3].draw(g, drawOBBs);
 		g.rotateY(PConstants.HALF_PI);
 		
-		g.translate(-725, 0, 0);
+		g.translate(-725f, 0f, 0f);
 				
-		g.translate(0, 75, 75);
+		g.translate(0f, 75f, 75f);
 		// Fourth joint axis
 		g.rotateX(jointAngles[3]);
-		g.translate(0, -75, -75);
+		
+		g.translate(361f, 0f, 0f);
+		SEGMENT[3].OBBS[1].getFrame().draw(g);
+		g.translate(-361f, 0f, 0f);
+		
+		g.translate(75f, 0f, 0f);
+		SEGMENT[3].OBBS[2].getFrame().draw(g);
+		g.translate(-75f, 0f, 0f);
+		
+		g.translate(0f, -75f, -75f);
 		
 		g.rotateZ(-PConstants.HALF_PI);
 		g.rotateY(-PConstants.HALF_PI);
@@ -636,24 +684,24 @@ public class RoboticArm {
 		g.rotateY(PConstants.HALF_PI);
 		g.rotateZ(PConstants.HALF_PI);
 		
-		g.translate(120, 20, 25);
+		g.translate(120f, 20f, 25f);
 		
-		g.translate(-55, 55, 50);
+		g.translate(-55f, 55f, 50f);
 		// Fifth joint axis
 		g.rotateZ(-jointAngles[4]);
-		g.translate(55, -55, -50);
+		g.translate(55f, -55f, -50f);
 
 		g.rotateY(-PConstants.HALF_PI);
 		// Fifth joint segment
 		SEGMENT[5].draw(g, drawOBBs);
 		g.rotateY(PConstants.HALF_PI);
 		
-		g.translate(-150, 10, 95);
+		g.translate(-150f, 10f, 95f);
 		
-		g.translate(0, 45, -45);
+		g.translate(0f, 45f, -45f);
 		// Sixth joint axis
 		g.rotateX(-jointAngles[5]);
-		g.translate(0, -45, 45);
+		g.translate(0f, -45f, 45f);
 		
 		/* DRAW END EFFECTOR MODEL */
 		g.pushMatrix();
@@ -668,17 +716,67 @@ public class RoboticArm {
 		} else if (activeEEIdx == 1) {
 			// Suction
 			g.translate(25, -37.5f, -90);
+			
 			g.rotateY(-PConstants.HALF_PI);
 			EE_LIST[1].draw(g, drawOBBs);
-
+			g.rotateY(PConstants.HALF_PI);
+			// Normal OBBs
+			g.translate(-8f, 82.5f, 45f);
+			EE_LIST[1].OBBS[0].getFrame().draw(g);
+			g.translate(8f, -82.5f, -45f);
+			
+			g.translate(-64f, 82.5f, 45f);
+			EE_LIST[1].OBBS[1].getFrame().draw(g);
+			g.translate(64f, -82.5f, -45f);
+			
+			g.translate(-45f, 32f, 45f);
+			EE_LIST[1].OBBS[2].getFrame().draw(g);
+			g.translate(45f, -32f, -45f);
+			// Pickup OBBs
+			g.translate(-106.5f, 82.5f, 45f);
+			EE_LIST[1].PICKUP_OBBS[0].getFrame().draw(g);
+			g.translate(106.5f, -82.5f, -45f);
+			
+			g.translate(-45f, -2f, 45f);
+			EE_LIST[1].PICKUP_OBBS[1].getFrame().draw(g);
+			g.translate(45f, 2f, -45f);
+			
 		} else if(activeEEIdx == 2) {
 			// Gripper
 			g.translate(25, 0, -90);
+			
 			g.rotateY(-PConstants.HALF_PI);
 			EE_LIST[2].draw(g, drawOBBs);
 			g.rotateY(PConstants.HALF_PI);
 			
-			g.translate(-32.5f, 10, 85);
+			g.translate(-8f, 45f, 45f);
+			EE_LIST[2].OBBS[0].getFrame().draw(g);
+			g.translate(8f, -45f, -45f);
+			
+			float firstGripper, secondGripper;
+			
+			if(activeEE.getState() == Fields.ON) {
+				// Draw closed grippers
+				firstGripper = 22.5f;
+				secondGripper = 25f;
+
+			} else {
+				// Draw open grippers
+				firstGripper = 10f;
+				secondGripper = 55f;
+			}
+			
+			g.translate(-32.5f, firstGripper, 85);
+			
+			g.translate(-24f, 8f, -40f);
+			// Normal OBB
+			EE_LIST[2].OBBS[1].getFrame().draw(g);
+			g.translate(24f, -8f, 40f);
+			
+			g.translate(-24f, 35f, -40f);
+			// Pickup OBB
+			EE_LIST[2].PICKUP_OBBS[0].getFrame().draw(g);
+			g.translate(24f, -35f, 40f);
 			
 			g.rotateY(-PConstants.HALF_PI);
 			g.rotateZ(PConstants.HALF_PI);
@@ -686,14 +784,12 @@ public class RoboticArm {
 			g.rotateZ(-PConstants.HALF_PI);
 			g.rotateY(PConstants.HALF_PI);
 			
-			if(activeEE.getState() == Fields.OFF) {
-				// Draw open grippers
-				g.translate(0, 55, 0);
-
-			} else if(activeEE.getState() == Fields.ON) {
-				// Draw closed grippers
-				g.translate(0, 25, 0);
-			}
+			g.translate(0, secondGripper, 0);
+			
+			g.translate(-24f, 8f, -40f);
+			// Normal OBB
+			EE_LIST[2].OBBS[2].getFrame().draw(g);
+			g.translate(24f, -8f, 40f);
 			
 			g.rotateY(-PConstants.HALF_PI);
 			g.rotateZ(PConstants.HALF_PI);
@@ -703,16 +799,19 @@ public class RoboticArm {
 			
 		} else if (activeEEIdx == 3) {
 			// Pointer
+			g.translate(20, 45, -45);
 			g.rotateY(-PConstants.HALF_PI);
 			EE_LIST[3].draw(g, drawOBBs);
 
 		} else if (activeEEIdx == 4) {
 			// Glue Gun
-			g.rotateY(-PConstants.HALF_PI);
+			g.translate(20, 45, -45);
+			g.rotateY(PConstants.HALF_PI);
 			EE_LIST[4].draw(g, drawOBBs);
 
 		} else if (activeEEIdx == 5) {
 			// Wielder
+			g.translate(20, 45, -45);
 			g.rotateY(-PConstants.HALF_PI);
 			EE_LIST[5].draw(g, drawOBBs);
 		}
@@ -727,38 +826,6 @@ public class RoboticArm {
 
 		g.popMatrix();
 		g.popStyle();
-		
-		/* DRAW BOUNDING BOXES */
-		
-		if (drawOBBs) {
-			/* Draw hit boxes of the body portion of the Robot Arm *
-			for(BoundingBox b : ARM_OBBS) {
-				g.pushMatrix();
-				Fields.transform(g, b.getCenter(), b.getOrientationAxes());
-				b.getFrame().draw(g);
-				g.popMatrix();
-			}
-
-			ArrayList<BoundingBox> curEEHitBoxes = EE_TO_OBBS.get(activeEndEffector);
-
-			// Draw End Effector hit boxes
-			for(BoundingBox b : curEEHitBoxes) {
-				g.pushMatrix();
-				Fields.transform(g, b.getCenter(), b.getOrientationAxes());
-				b.getFrame().draw(g);
-				g.popMatrix();
-			}
-
-			curEEHitBoxes = EE_TO_PICK_OBBS.get(activeEndEffector);
-			// Draw Pickup hit boxes
-			for (BoundingBox b : curEEHitBoxes) {
-				g.pushMatrix();
-				Fields.transform(g, b.getCenter(), b.getOrientationAxes());
-				b.getFrame().draw(g);
-				g.popMatrix();
-			}
-			/**/
-		}
 		
 		if (modelInMotion() && trace) {
 			Point tipPosNative = getToolTipNative();
