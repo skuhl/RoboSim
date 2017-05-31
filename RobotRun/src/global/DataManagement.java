@@ -1919,7 +1919,7 @@ public abstract class DataManagement {
 			saveShape(wldObj.getForm(), out);
 			// Save the local orientation of the object
 			savePVector(wldObj.getLocalCenter(), out);
-			saveFloatArray2D(wldObj.getLocalOrientation().getFloatData(), out);
+			saveFloatArray2D(wldObj.getLocalOrientation().getDataF(), out);
 			
 			if (wldObj instanceof Part) {
 				Part part = (Part)wldObj;
@@ -1927,7 +1927,7 @@ public abstract class DataManagement {
 				
 				// Save the default orientation of the part
 				savePVector(part.getDefaultCenter(), out);
-				saveFloatArray2D(part.getDefaultOrientation().getFloatData(), out);
+				saveFloatArray2D(part.getDefaultOrientation().getDataF(), out);
 				
 				savePVector(part.getOBBDims(), out);
 

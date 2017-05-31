@@ -1311,7 +1311,7 @@ public class RoboticArm {
 		RMatrix B = new RMatrix(frame);
 		RMatrix AB = A.multiply(B);
 
-		return AB.getFloatData();
+		return AB.getDataF();
 	}
 	
 	/**
@@ -2067,7 +2067,7 @@ public class RoboticArm {
 		if (state == Fields.ON || state == Fields.OFF) {
 			endEffectorState = state;
 			updateIORegister();
-			checkPickupCollision(RobotRun.getInstance().getActiveScenario());
+			checkPickupCollision(RobotRun.getInstanceScenario());
 		}
 	}
 	
@@ -2154,7 +2154,7 @@ public class RoboticArm {
 
 		// Calculate whether it's faster to turn CW or CCW
 		for(int joint = 0; joint < 6; ++joint) {
-			Model a = RobotRun.getActiveRobot().SEGMENTS.get(joint);
+			Model a = RobotRun.getInstanceRobot().SEGMENTS.get(joint);
 
 			for(int r = 0; r < 3; r++) {
 				if(a.rotations[r]) {

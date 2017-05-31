@@ -47,7 +47,7 @@ public abstract class WorldObject implements Cloneable {
 	 */
 	public PVector collision(RRay ray) {
 		PVector origin = localOrientation.getOrigin();
-		float[][] axes = localOrientation.getAxes().getFloatData();
+		float[][] axes = localOrientation.getAxes().getDataF();
 		// Transform ray into the coordinate frame of the bounding box
 		PVector rayOrigin = RMath.rotateVector(PVector.sub(ray.getOrigin(), origin), axes);
 		PVector rayDirect = RMath.rotateVector(ray.getDirection(), axes);

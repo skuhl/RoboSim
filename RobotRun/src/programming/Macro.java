@@ -26,8 +26,8 @@ public class Macro {
 		app.hold();
 		// Safeguard against editing a program while it is running
 		app.getContentsMenu().setColumnIdx(0);
-		RobotRun.getActiveRobot().setActiveProgIdx(progIdx);
-		RobotRun.getActiveRobot().setActiveInstIdx(0);
+		RobotRun.getInstanceRobot().setActiveProgIdx(progIdx);
+		RobotRun.getInstanceRobot().setActiveInstIdx(0);
 
 		app.setExecutingInstruction(false);
 		// Run single instruction when step is set
@@ -61,7 +61,7 @@ public class Macro {
 
 	public String[] toStringArray() {
 		String[] ret = new String[3];
-		String name = RobotRun.getActiveRobot().getProgram(progIdx).getName();
+		String name = RobotRun.getInstanceRobot().getProgram(progIdx).getName();
 		int name_pad = Math.max(16 - name.length(), 0);
 
 		ret[0] = String.format("[%-"+name_pad+"s]", name);
