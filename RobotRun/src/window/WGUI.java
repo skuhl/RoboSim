@@ -281,21 +281,21 @@ public class WGUI implements ControlListener {
 
 		relPos = getAbsPosFrom(getButton("edit"), Alignment.BOTTOM_LEFT,
 				smLrDiff / 2, 11);
-		c2 = addButton("arrow_up", pendant, buttonImages[2], relPos[0],
+		c2 = addButton("arrow_up", pendant, buttonImages[0], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("arrow_dn", pendant, buttonImages[3], relPos[0],
+		c2 = addButton("arrow_dn", pendant, buttonImages[1], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 
 		relPos = getAbsPosFrom(getButton("select"), Alignment.BOTTOM_LEFT,
 				smLrDiff / 2, smLrDiff + 16);
-		addButton("arrow_lt", pendant, buttonImages[4], relPos[0],
+		addButton("arrow_lt", pendant, buttonImages[2], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 
 		relPos = getAbsPosFrom(getButton("data"), Alignment.BOTTOM_LEFT,
 				smLrDiff / 2, smLrDiff + 16);
-		addButton("arrow_rt", pendant, buttonImages[5], relPos[0],
+		addButton("arrow_rt", pendant, buttonImages[3], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 
 
