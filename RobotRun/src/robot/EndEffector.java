@@ -3,6 +3,7 @@ package robot;
 import geom.BoundingBox;
 import geom.MyPShape;
 import geom.Part;
+import global.Fields;
 import regs.IORegister;
 
 /**
@@ -28,19 +29,22 @@ public class EndEffector extends RSegment {
 	 * 
 	 * @param model
 	 * @param obbs
-	 * @param drawActions
 	 * @param pickupOBBs
 	 * @param idx
 	 * @param name
 	 */
 	public EndEffector(MyPShape model, BoundingBox[] obbs,
-			DrawAction[] drawActions, BoundingBox[] pickupOBBs,	int idx,
-			String name) {
+			BoundingBox[] pickupOBBs, int idx, String name) {
 		
-		super(model, obbs, drawActions);
+		super(model, obbs);
 		
 		PICKUP_OBBS = pickupOBBs;
 		reg = new IORegister(idx, name);
+		
+		// Set pickup OBB colors
+		for (BoundingBox obb : PICKUP_OBBS) {
+			obb.setColor(Fields.OBB_HELD);
+		}
 	}
 	
 	/**
@@ -48,19 +52,22 @@ public class EndEffector extends RSegment {
 	 * 
 	 * @param modelSet
 	 * @param obbs
-	 * @param drawActions
 	 * @param pickupOBBs
 	 * @param idx
 	 * @param name
 	 */
 	public EndEffector(MyPShape[] modelSet, BoundingBox[] obbs,
-			DrawAction[] drawActions, BoundingBox[] pickupOBBs,	int idx,
-			String name) {
+			BoundingBox[] pickupOBBs, int idx, String name) {
 		
-		super(modelSet, obbs, drawActions);
+		super(modelSet, obbs);
 		
 		PICKUP_OBBS = pickupOBBs;
 		reg = new IORegister(idx, name);
+		
+		// Set pickup OBB colors
+		for (BoundingBox obb : PICKUP_OBBS) {
+			obb.setColor(Fields.OBB_HELD);
+		}
 	}
 	
 	/**

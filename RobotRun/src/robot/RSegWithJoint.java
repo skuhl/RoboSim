@@ -4,6 +4,7 @@ package robot;
 import geom.BoundingBox;
 import geom.MyPShape;
 import global.RMath;
+import processing.core.PVector;
 
 /**
  * TODO comment this
@@ -28,6 +29,17 @@ public class RSegWithJoint extends RSegment {
 	public final float SPEED_MODIFIER;
 	
 	/**
+	 * The translation applied to move from the previous segment to this
+	 * segment's position.
+	 */
+	protected final PVector TRANSLATION;
+	
+	/**
+	 * The axis of rotation for this segment's joint
+	 */
+	protected final PVector AXIS;
+	
+	/**
 	 * The direction of the joint's motion.
 	 */
 	private int jointMotion;
@@ -35,28 +47,31 @@ public class RSegWithJoint extends RSegment {
 	/**
 	 * The rotation of this segment's joint.
 	 */
-	private final FloatWrapper JOINT;
+	private float jointRotation;
 	
 	/**
 	 * TODO comment this
 	 * 
 	 * @param model
 	 * @param obbs
-	 * @param drawActions
+	 * @param speed
 	 * @param lb
 	 * @param ub
+	 * @param translation
+	 * @param axis
 	 */
-	public RSegWithJoint(MyPShape model, BoundingBox[] obbs,
-			DrawAction[] drawActions, FloatWrapper jointVar, float speed,
-			float lb, float ub) {
+	public RSegWithJoint(MyPShape model, BoundingBox[] obbs, float speed,
+		float lb, float ub, PVector translation, PVector axis) {
 		
-		super(model, obbs, drawActions);
+		super(model, obbs);
 		
 		LOW_BOUND = lb;
 		UP_BOUND = ub;
 		SPEED_MODIFIER = speed;
+		TRANSLATION = translation;
+		AXIS = axis;
 		jointMotion = 0;
-		JOINT = jointVar;
+		jointRotation = 0f;
 	}
 	
 	/**
@@ -76,7 +91,7 @@ public class RSegWithJoint extends RSegment {
 	}
 	
 	public float getJointRotation() {
-		return JOINT.value;
+		return jointRotation;
 	}
 	
 	public float getMotionSpeed() {
@@ -94,7 +109,7 @@ public class RSegWithJoint extends RSegment {
 	public boolean setJointRotation(float newRotation) {
 		// Validate the given rotation
 		if (anglePermitted(newRotation)) {
-			JOINT.value = newRotation;
+			jointRotation = newRotation;
 			return true;
 		}
 		

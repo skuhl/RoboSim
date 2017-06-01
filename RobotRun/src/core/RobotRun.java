@@ -62,11 +62,6 @@ import regs.Register;
 import robot.CallFrame;
 import robot.DrawAction;
 import robot.EndEffector;
-import robot.FloatWrapper;
-import robot.GRotateX;
-import robot.GRotateY;
-import robot.GRotateZ;
-import robot.GTranslate;
 import robot.RSegWithJoint;
 import robot.RSegment;
 import robot.RoboticArm;
@@ -268,7 +263,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void applyCoord(PVector origin, RMatrix axesVectors) {
 		// Transpose the rotation portion, because Processing
-		this.applyMatrix(RMath.transformationMatrix(origin, axesVectors));
+		this.applyMatrix(RMath.formTMat(origin, axesVectors));
 	}
 	
 	/**
@@ -4370,7 +4365,7 @@ public class RobotRun extends PApplet {
 		transform[1][2] = zAxis.y;
 		transform[2][2] = zAxis.z;
 
-		return RMath.transformationMatrix(origin, new RMatrix(transform));
+		return RMath.formTMat(origin, new RMatrix(transform));
 	}
 
 	public WGUI getUI() {
@@ -4658,6 +4653,7 @@ public class RobotRun extends PApplet {
 				
 			} else if (keyCode == KeyEvent.VK_T) {
 				// Restore default Robot joint angles
+				hold();
 				float[] rot = { 0, 0, 0, 0, 0, 0 };
 				activeRobot.releaseHeldObject();
 				activeRobot.setJointAngles(rot);
@@ -8206,35 +8202,22 @@ public class RobotRun extends PApplet {
 	private RoboticArm createRobot(int rid, PVector basePosition) {
 		
 		// Define the robot's segments
-		FloatWrapper jointVariable = new FloatWrapper(0f);
-		DrawAction[] limbo = new DrawAction[] {
-				
-		};
-		
 		RSegWithJoint base = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_BASE.STL", color(200, 200, 0)),
-				new BoundingBox[] { new BoundingBox(405, 105, 405) },
-				limbo, jointVariable, 0.0436f, 0f, TWO_PI
+			loadSTLModel("robot/ROBOT_BASE.STL", color(200, 200, 0)),
+			new BoundingBox[] { new BoundingBox(405, 105, 405) },
+			0.0436f, 0f, TWO_PI, new PVector(-200f, -163f, -200f),
+			new PVector(0f, 1f, 0f)
 		);
-		
-		jointVariable = new FloatWrapper(0f);
-		limbo = new DrawAction[] {
-				
-		};
 		
 		RSegWithJoint seg1 = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_SEGMENT_1.STL", color(40, 40, 40)),
-				new BoundingBox[] {
-						new BoundingBox(305, 80, 305),
-						new BoundingBox(114, 98, 160)
-				},
-				limbo, jointVariable, 0.0436f, 4.34f, 2.01f
+			loadSTLModel("robot/ROBOT_SEGMENT_1.STL", color(40, 40, 40)),
+			new BoundingBox[] {
+					new BoundingBox(305, 80, 305),
+					new BoundingBox(114, 98, 160)
+			},
+			0.0436f, 4.34f, 2.01f, new PVector(-37f, -137f, 30f),
+			new PVector(0f, 0f, -1f)
 		);
-		
-		jointVariable = new FloatWrapper(0f);
-		limbo = new DrawAction[] {
-				
-		};
 		
 		RSegWithJoint seg2 = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_SEGMENT_2.STL", color(200, 200, 0)),
@@ -8243,13 +8226,9 @@ public class RobotRun extends PApplet {
 						new BoundingBox(130, 316, 64),
 						new BoundingBox(110, 163, 48)
 				},
-				limbo, jointVariable, 0.0582f, 1.955f, 1.134f
+				0.0582f, 1.955f, 1.134f, new PVector(-3f, -498f, -200f),
+				new PVector(0f, 0f, -1f)
 		);
-		
-		jointVariable = new FloatWrapper(0f);
-		limbo = new DrawAction[] {
-				
-		};
 		
 		RSegWithJoint seg3 = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_SEGMENT_3.STL", color(40, 40, 40)),
@@ -8258,46 +8237,30 @@ public class RobotRun extends PApplet {
 						new BoundingBox(420, 126, 126),
 						new BoundingBox(148, 154, 154),
 				},
-				limbo, jointVariable, 0.0727f, 0f, TWO_PI
+				0.0727f, 0f, TWO_PI, new PVector(-650f, 30f, 75f),
+				new PVector(1f, 0f, 0f)
 		);
-		
-		jointVariable = new FloatWrapper(0f);
-		limbo = new DrawAction[] {
-				
-		};
 		
 		RSegWithJoint seg4 = new RSegWithJoint(
 				loadSTLModel("robot/ROBOT_SEGMENT_4.STL", color(40, 40, 40)),
-				new BoundingBox[] {
-						new BoundingBox(160, 160, 160),
-						new BoundingBox(128, 430, 128)
-				},
-				limbo, jointVariable, 0.0727f, 4.189f, 2.269f
+				new BoundingBox[0],
+				0.0727f, 4.189f, 2.269f, new PVector(65f, 0f, 0f),
+				new PVector(0f, 0f, -1f)
 		);
-		
-		jointVariable = new FloatWrapper(0f);
-		limbo = new DrawAction[] {
-				
-		};
 		
 		RSegWithJoint seg5 = new RSegWithJoint(
-				loadSTLModel("robot/ROBOT_SEGMENT_5.STL", color(200, 200, 0)),
+				loadSTLModel("robot/ROBOT_SEGMENT_5.STL", color(200, 200, 0)), 
 				new BoundingBox[0],
-				limbo, jointVariable, 0.1222f, 0f, TWO_PI
+				0.1222f, 0f, TWO_PI, new PVector(-95f, 0f, 0f),
+				new PVector(-1f, 0f, 0f)
 		);
 		
-		jointVariable = new FloatWrapper(0f);
-		limbo = new DrawAction[] {
-				
-		};
-		
 		EndEffector[] eeList = loadRobotEndEffectors();
-		ArrayList<RMatrix> segTransforms = loadRobotModelTransforms();
 		
 		// TODO add selfCollision definition
 		
 		return new RoboticArm(rid, basePosition, base, seg1, seg2, seg3, seg4,
-				seg5, eeList, segTransforms);
+				seg5, eeList);
 	}
 	
 	/**
@@ -8312,7 +8275,6 @@ public class RobotRun extends PApplet {
 			new EndEffector(
 					loadSTLModel("robot/EE/FACEPLATE.STL", color(40, 40, 40)),
 					new BoundingBox[0],
-					new DrawAction[0], // TODO define this
 					new BoundingBox[0],
 					0,
 					"FACEPLATE"
@@ -8325,7 +8287,6 @@ public class RobotRun extends PApplet {
 							new BoundingBox(84, 33, 33),
 							new BoundingBox(32, 66, 32)
 					},
-					new DrawAction[0], // TODO define this
 					new BoundingBox[] {
 							new BoundingBox(3, 25, 25),
 							new BoundingBox(25, 3, 25)
@@ -8343,7 +8304,6 @@ public class RobotRun extends PApplet {
 							new BoundingBox(29, 18, 83),
 							new BoundingBox(29, 18, 83)
 					},
-					new DrawAction[0], // TODO define this
 					new BoundingBox[] { new BoundingBox(15, 3, 55) },
 					2, "GRIPPER"
 			),
@@ -8351,7 +8311,6 @@ public class RobotRun extends PApplet {
 			new EndEffector(
 					loadSTLModel("robot/EE/POINTER.stl", color(108, 206, 214)),
 					new BoundingBox[0],
-					new DrawAction[0], // TODO define this
 					new BoundingBox[0],
 					3, "POINTER"
 			),
@@ -8359,7 +8318,6 @@ public class RobotRun extends PApplet {
 			new EndEffector(
 					loadSTLModel("robot/EE/GLUE_GUN.stl", color(108, 206, 214)),
 					new BoundingBox[0],
-					new DrawAction[0], // TODO define this
 					new BoundingBox[0],
 					4, "GLUE GUN"
 			),
@@ -8367,7 +8325,6 @@ public class RobotRun extends PApplet {
 			new EndEffector(
 					loadSTLModel("robot/EE/WIELDER.stl", color(108, 206, 214)),
 					new BoundingBox[0],
-					new DrawAction[0], // TODO define this
 					new BoundingBox[0],
 					5, "WIELDER"
 			)
@@ -8376,11 +8333,7 @@ public class RobotRun extends PApplet {
 		return eeList;
 	}
 	
-	/**
-	 * TODO comment this
-	 * 
-	 * @return
-	 */
+	@Deprecated
 	private ArrayList<RMatrix> loadRobotModelTransforms() {
 		
 		ArrayList<RMatrix> modelTransformations = new ArrayList<>();

@@ -310,7 +310,7 @@ public class Part extends WorldObject {
 		}
 		
 		RMatrix orientation = localOrientation.getAxes();
-		RMatrix rotation = RMath.matFromAxisAndAngle(axis, angle);
+		RMatrix rotation = RMath.formRMat(axis, angle);
 		
 		localOrientation.setAxes( rotation.multiply(orientation) );
 		updateAbsoluteOrientation();
