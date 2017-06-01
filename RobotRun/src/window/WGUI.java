@@ -594,7 +594,6 @@ public class WGUI implements ControlListener {
 		addDropdown("CamObjects", camera, ldropItemWidth, dropItemHeight, 0, Fields.small);
 		addButton("CamObjPreview", "ObjPreview", camera, 150, 200, Fields.small);
 		addButton("TeachCamObj", "Teach Object", camera, fieldWidthMed, sButtonHeight, Fields.small);
-		//TODO
 		
 		// Initialize the miscellaneous window elements
 		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
@@ -1294,9 +1293,12 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * TODO comment this
+	 * Updates the edit window's position and orientation input fields with
+	 * that of the given world object. The outputted values are with respect
+	 * to the world frame.
 	 * 
-	 * @param selected
+	 * @param selected	The world object of which to display the coordinate
+	 * 					frame
 	 */
 	public void fillCurWithCur(WorldObject selected) {
 		// Get the part's default position and orientation
@@ -1313,9 +1315,12 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * TODO comment this
+	 * Updates the window's default position and orientation text labels with
+	 * that of the current position and orientation of the given part. The
+	 * outputted values are with respect to the world frame.
 	 * 
-	 * @param selected
+	 * @param selected	The part, whose current position and orientation will
+	 * 					be displayed
 	 */
 	public void fillCurWithDef(Part selected) {
 		// Get the part's current position and orientation
@@ -1332,9 +1337,12 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * TODO comment this
+	 * Updates the window's default position and orientation text labels with
+	 * that of the default position and orientation of the given part. The
+	 * outputted values are with respect to the world frame.
 	 * 
-	 * @param selected
+	 * @param selected	The part, whose default position and orientation will
+	 * 					be displayed
 	 */
 	private void fillDefWithDef(Part selected) {
 		// Get the part's current position and orientation
@@ -2450,14 +2458,19 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * TODO comment this
+	 * Updates the edit window's dimension, position, and orientation input
+	 * fields with that of the given world object and also updates the
+	 * fixture reference dropdown, if the given world object is a part. The
+	 * position and orientation values are outputted with respect to the world
+	 * frame.
 	 * 
-	 * @param selected
+	 * @param selected	The world object, whose fields will be displayed in the
+	 * 					edit window
 	 */
 	public void updateEditWindowFields(WorldObject selected) {
 		RShape form = selected.getForm();
 		
-		// Set the dimension fields
+		// Update the dimension fields
 		if (form instanceof RBox) {
 			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.LENGTH)) );
 			getTextField("Dim1").setText( String.format("%4.3f", form.getDim(DimType.HEIGHT)) );
@@ -2471,13 +2484,14 @@ public class WGUI implements ControlListener {
 		} else if (form instanceof ComplexShape) {
 			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.SCALE)) );
 		}
-
+		
+		// Update the position and orientation fields
 		fillCurWithCur(selected);
-
-		// Set the reference dropdown
+		
 		MyDropdownList ddl = getDropdown("Fixture");
 
 		if (selected instanceof Part) {
+			// Set the reference dropdown for a part
 			Part p = (Part)selected;
 			fillDefWithDef(p);
 			
