@@ -73,7 +73,7 @@ public class RoboticArm {
 	/**
 	 * The list of programs associated with this robot.
 	 */
-	private final ArrayList<Program> PROGRAMS;
+	private final ArrayList<Program> PROGRAM;
 	
 	/**
 	 * A program execution call stack for previously active programs associated
@@ -99,17 +99,17 @@ public class RoboticArm {
 	/**
 	 * A set of user-defined frames associated with this robot. 
 	 */
-	private final ToolFrame[] TOOL_FRAMES;
+	private final ToolFrame[] TOOL_FRAME;
 	
 	/**
 	 * A set of user-defined frames associated with this robot.
 	 */
-	private final UserFrame[] USER_FRAMES;
+	private final UserFrame[] USER_FRAME;
 	
 	/**
 	 * The initial position and orientation of the robot.
 	 */
-	private final Point DEFAULT_POINT;
+	private final Point DEFAULT_PT;
 	
 	/**
 	 * The index corresponding to the active end effector in EE_LIST.
@@ -167,13 +167,15 @@ public class RoboticArm {
 	private ArrayList<PVector> tracePts;
 	
 	/**
-	 * TODO comment this
-	 * TODO add selfCollision definition
+	 * Creates a robotic arm with the given ID, segment models, and end
+	 * effector models. It is expected that there are 6 segment models
+	 * and 7 end effector models.
 	 * 
-	 * @param rid
-	 * @param basePos
-	 * @param segmentModels
-	 * @param endEffectorModels
+	 * @param rid				The ID of this robot, which must be unique
+	 * 							amongst all robots
+	 * @param basePos			The position of the robot's base segment
+	 * @param segmentModels		The list of models for the robot's segment
+	 * @param endEffectorModels	The list of models for the robot's end effectors
 	 */
 	public RoboticArm(int rid, PVector basePos, MyPShape[] segmentModels,
 			MyPShape[] endEffectorModels) {
@@ -292,7 +294,7 @@ public class RoboticArm {
 		activeEEIdx = 0;
 		
 		// Initialize program fields
-		PROGRAMS = new ArrayList<>();
+		PROGRAM = new ArrayList<>();
 		CALL_STACK = new Stack<>();
 		PROG_UNDO = new Stack<>();
 		
@@ -301,12 +303,12 @@ public class RoboticArm {
 		
 		// Initializes the frames
 		
-		TOOL_FRAMES = new ToolFrame[Fields.FRAME_NUM];
-		USER_FRAMES = new UserFrame[Fields.FRAME_NUM];
+		TOOL_FRAME = new ToolFrame[Fields.FRAME_NUM];
+		USER_FRAME = new UserFrame[Fields.FRAME_NUM];
 		
-		for (int idx = 0; idx < TOOL_FRAMES.length; ++idx) {
-			TOOL_FRAMES[idx] = new ToolFrame();
-			USER_FRAMES[idx] = new UserFrame();
+		for (int idx = 0; idx < TOOL_FRAME.length; ++idx) {
+			TOOL_FRAME[idx] = new ToolFrame();
+			USER_FRAME[idx] = new UserFrame();
 		}
 		
 		motionType = RobotMotion.HALTED;
@@ -326,12 +328,12 @@ public class RoboticArm {
 
 		heldPart = null;
 		
-		DEFAULT_POINT = getFacePlatePoint(
+		DEFAULT_PT = getFacePlatePoint(
 				new float[] { 0f, 0f, 0f, 0f, 0f, 0f }
 		);
 		
 		// Initializes the old transformation matrix for the arm model
-		lastTipTMatrix = getRobotTransform( getJointAngles() );
+		lastTipTMatrix = getFaceplateTMat( getJointAngles() );
 		
 		trace = false;
 		tracePts = new ArrayList<PVector>();
@@ -404,12 +406,12 @@ public class RoboticArm {
 		} else {
 			int idx = 0;
 
-			if(PROGRAMS.size() < 1) {
-				PROGRAMS.add(p);
+			if(PROGRAM.size() < 1) {
+				PROGRAM.add(p);
 				
 			}  else {
-				while(idx < PROGRAMS.size() && PROGRAMS.get(idx).getName().compareTo(p.getName()) < 0) { ++idx; }
-				PROGRAMS.add(idx, p);
+				while(idx < PROGRAM.size() && PROGRAM.get(idx).getName().compareTo(p.getName()) < 0) { ++idx; }
+				PROGRAM.add(idx, p);
 			}
 
 			return idx;
@@ -456,20 +458,24 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Checks for any collisions between the robot's bounding boxes and that of
+	 * the given part. If a collision is detected between the given part and a
+	 * bounding box of the robot, then the color of the robot's bounding box is
+	 * updated accordingly.
 	 * 
-	 * @param p
-	 * @return
+	 * @param p	The part with which to check collision with this robot
+	 * @return	If at least one collision is detected between the given part
+	 * 			and one of the robot's bounding boxes
 	 */
 	public boolean checkCollision(Part p) {
 		boolean collision = false;
-		
+		// Check each segments OBBs
 		for (RSegment seg : SEGMENT) {
 			if (seg.checkCollision(p) == 1) {
 				collision = true;
 			}
 		}
-		
+		// Check active end effector OBBs
 		if (getActiveEE().checkCollision(p) == 1) {
 			collision = true;
 		}
@@ -658,7 +664,11 @@ public class RoboticArm {
 					Fields.drawAxes(g, activeUser.getOrigin(), userAxes, 10000f, Fields.ORANGE);
 					
 				} else if (axesType == AxesDisplay.GRID) {
+					g.pushMatrix();
+					// Draw the gridlines at the base of the robot
+					g.translate(0f, BASE_POSITION.y, 0f);
 					drawGridlines(g, userAxes, activeUser.getOrigin(), 35, 100);
+					g.popMatrix();
 				}
 			}
 		}
@@ -889,10 +899,15 @@ public class RoboticArm {
 	
 	
 	/**
-	 * TODO comment this
+	 * Draws the position of the robot's tool tip with respect to the
+	 * coordinate system of the given graphics object. If the robot has an
+	 * active tool frame, then its axes will be drawn at the position of the
+	 * tool tip. Otherwise only a pink sphere will be drawn at the tool tip
+	 * position.
 	 * 
 	 * @param g			The graphics object used to render the tool tip position
-	 * @param axesType
+	 * @param axesType	What is the current axes render method (none, axes, or
+	 * 					grid)
 	 */
 	private void drawToolTip(PGraphics g, AxesDisplay axesType) {
 		
@@ -927,13 +942,17 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Draws gridlines, centered around the coordinate frame defined by the
+	 * given axes and origin position, mapped to the y-axis of the graphics
+	 * coordinate frame.
 	 * 
-	 * @param g
-	 * @param axesVectors
-	 * @param origin
-	 * @param halfNumOfLines
-	 * @param distBwtLines
+	 * @param g					The graphics object used to render the gridlines
+	 * @param axesVectors		The axes of the coordinate frame to draw
+	 * @param origin			The origin of the coordinate frame to draw
+	 * @param halfNumOfLines	Half the number of lines drawn for the each
+	 * 							mapped axis
+	 * @param distBwtLines		The spacing between between lines drawn for an
+	 * 							axis
 	 */
 	public void drawGridlines(PGraphics g, RMatrix axesVectors, PVector origin,
 			int halfNumOfLines, float distBwtLines) {
@@ -965,7 +984,7 @@ public class RoboticArm {
 		// the Robot's base
 		g.applyMatrix(
 				axesDat[0][vectorPX], 0, axesDat[0][vectorPZ], origin.x,
-				0, 1, 0, BASE_POSITION.y,
+				0, 1, 0, 0,
 				axesDat[2][vectorPX], 0, axesDat[2][vectorPZ], origin.z,
 				0, 0, 0, 1
 		);
@@ -990,9 +1009,10 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Draws the points stored for this robot's trace function with respect to
+	 * the given graphics object's coordinate frame.
 	 * 
-	 * @param g	
+	 * @param g	The graphics object used to drawn the trace
 	 */
 	private void drawTrace(PGraphics g) {		
 		if (tracePts.size() > 1) {
@@ -1052,7 +1072,7 @@ public class RoboticArm {
 				ToolFrame activeTool = getActiveTool();
 				
 				if (activeTool != null) {
-					RQuaternion diff = curPoint.orientation.transformQuaternion(DEFAULT_POINT.orientation.conjugate());
+					RQuaternion diff = curPoint.orientation.transformQuaternion(DEFAULT_PT.orientation.conjugate());
 					invFrameOrientation = diff.transformQuaternion(activeTool.getOrientationOffset().clone()).conjugate();
 				}
 				
@@ -1150,12 +1170,12 @@ public class RoboticArm {
 	 * @return	The active for this Robot, or null if no program is active
 	 */
 	public Program getActiveProg() {
-		if (activeProgIdx < 0 || activeProgIdx >= PROGRAMS.size()) {
+		if (activeProgIdx < 0 || activeProgIdx >= PROGRAM.size()) {
 			// Invalid program index
 			return null;
 		}
 		
-		return PROGRAMS.get(activeProgIdx);
+		return PROGRAM.get(activeProgIdx);
 	}
 
 	/**
@@ -1174,7 +1194,7 @@ public class RoboticArm {
 			return null;
 		}
 		
-		return TOOL_FRAMES[activeToolIdx];
+		return TOOL_FRAME[activeToolIdx];
 	}
 	
 	/**
@@ -1193,7 +1213,7 @@ public class RoboticArm {
 			return null;
 		}
 		
-		return USER_FRAMES[activeUserIdx];
+		return USER_FRAME[activeUserIdx];
 	}
 	
 	/**
@@ -1222,7 +1242,7 @@ public class RoboticArm {
 	 * @return	A copy of the Robot's default position and orientation
 	 */
 	public Point getDefaultPoint() {
-		return DEFAULT_POINT.clone();
+		return DEFAULT_PT.clone();
 	}
 	
 	/**
@@ -1252,7 +1272,7 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * @return	A point representing the robot's current faceplate position
+	 * @return	A point representing the robot's current face plate position
 	 * 			and orientation
 	 */
 	public Point getFacePlatePoint() {
@@ -1260,15 +1280,15 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Calculates the position and orientation of the robot's faceplate based
+	 * Calculates the position and orientation of the robot's face plate based
 	 * on the native coordinate system and the given joint angles.
 	 * 
-	 * @jointAngles	The angles used to calculate the robot's faceplate point
+	 * @jointAngles	The angles used to calculate the robot's face plate point
 	 * @return		A point representing the robot faceplate's position and
 	 * 				orientation
 	 */
 	public Point getFacePlatePoint(float[] jointAngles) {
-		RMatrix tipOrien = getRobotTransform(jointAngles);
+		RMatrix tipOrien = getFaceplateTMat(jointAngles);
 		
 		// Convert the orientation into the correct format for a Point
 		PVector position = new PVector(
@@ -1280,6 +1300,28 @@ public class RoboticArm {
 		RQuaternion orientation = RMath.matrixToQuat(tipOrien);
 		
 		return new Point(position, orientation, jointAngles);
+	}
+	
+	/**
+	 * Computes the transformation matrix, which represents the position and
+	 * orientation of the robot's face plate for the given set of joint angles.
+	 * 
+	 * @param jointAngles	The joint angles used to calculate the robot face
+	 * 						plate's position and orientation
+	 * @return				The robot face plate's transformation matrix
+	 */
+	public RMatrix getFaceplateTMat(float[] jointAngles) {
+		RMatrix limbo = RMath.formTMat(BASE_POSITION);
+		
+		for (int jdx = 0; jdx < 6; ++jdx) {
+			// Apply each set of joint translations and rotations
+			RMath.translateTMat(limbo, SEGMENT[jdx].TRANSLATION);
+			
+			RMatrix jointOrien = RMath.formRMat(SEGMENT[jdx].AXIS, jointAngles[jdx]);
+			limbo = limbo.multiply( RMath.fromTMat(jointOrien) );
+		}
+		
+		return limbo;
 	}
 	
 	/**
@@ -1315,10 +1357,10 @@ public class RoboticArm {
 	}
 
 	/**
-	 * TODO comment this
+	 * Returns the end effector's I/O register associated with the given index.
 	 * 
-	 * @param rdx
-	 * @return
+	 * @param rdx	The index of the I/O register [0, EE_LISTlengt)
+	 * @return		The associated I/O register or null if index is invalid
 	 */
 	public IORegister getIOReg(int rdx) {
 		// Disclude the faceplate
@@ -1381,8 +1423,8 @@ public class RoboticArm {
 	 * 				index is invalid.
 	 */
 	public Program getProgram(int pdx) {
-		if (pdx >= 0 && pdx < PROGRAMS.size()) {
-			return PROGRAMS.get(pdx);
+		if (pdx >= 0 && pdx < PROGRAM.size()) {
+			return PROGRAM.get(pdx);
 			
 		} else {
 			// Invalid index
@@ -1391,13 +1433,15 @@ public class RoboticArm {
 	}
 
 	/**
-	 * TODO comment
+	 * Searches for the program with the given name, in this robot's list of
+	 * programs. If no program with the given name exists, null is returned.
 	 * 
-	 * @param name
-	 * @return
+	 * @param name	The name of the target program
+	 * @return		The program with the given name, or null if no such program
+	 * 				exists
 	 */
 	public Program getProgram(String name) {
-		for (Program p : PROGRAMS) {
+		for (Program p : PROGRAM) {
 			if (p.getName().equals(name)) {
 				return p;
 			}
@@ -1406,26 +1450,6 @@ public class RoboticArm {
 		
 		// No such program exists
 		return null;
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param jointAngles
-	 * @return
-	 */
-	public RMatrix getRobotTransform(float[] jointAngles) {
-		RMatrix limbo = RMath.formTMat(BASE_POSITION);
-		
-		for (int jdx = 0; jdx < 6; ++jdx) {
-			// Apply each set of joint translations and rotations
-			RMath.translateTMat(limbo, SEGMENT[jdx].TRANSLATION);
-			
-			RMatrix jointOrien = RMath.formRMat(SEGMENT[jdx].AXIS, jointAngles[jdx]);
-			limbo = limbo.multiply( RMath.fromTMat(jointOrien) );
-		}
-		
-		return limbo;
 	}
 	
 	/**
@@ -1438,8 +1462,8 @@ public class RoboticArm {
 	 * 				the given index is invalid.
 	 */
 	public ToolFrame getToolFrame(int fdx) {
-		if (fdx >= 0 && fdx < TOOL_FRAMES.length) {
-			return TOOL_FRAMES[fdx];
+		if (fdx >= 0 && fdx < TOOL_FRAME.length) {
+			return TOOL_FRAME[fdx];
 			
 		} else {
 			// Invalid index
@@ -1478,14 +1502,25 @@ public class RoboticArm {
 	}
 		
 	/**
-	 * TODO comment this
+	 * Computes the position and orientation of the robot's tool tip based on
+	 * the given joint angles, tool and user frame. The position offset of the
+	 * tool frame defines the robot's tool tip offset, while the user frame
+	 * defines the coordinate frame, for which the tool tip's position and
+	 * orientation are defined. If the tool frame is null, then the tool tip
+	 * offset will be (0, 0, 0) or the position of the face plate. If the user
+	 * frame is null, then the position and orientation of the tool tip will be
+	 * with respect to the world frame. 
 	 * 
-	 * @param jointAngles
-	 * @param tFrame
-	 * @param uFrame
+	 * @param jointAngles	The joint angles used to compute the robot's face
+	 * 						plate position and orientatton
+	 * @param tFrame		The frame, which defines the tool tip offset
+	 * @param uFrame		The coordinate frame, with which the robot's tool
+	 * 						tip position and orientation are defined 
 	 * @return
 	 */
-	private Point getToolTipPoint(float[] jointAngles, ToolFrame tFrame, UserFrame uFrame) {
+	private Point getToolTipPoint(float[] jointAngles, ToolFrame tFrame,
+			UserFrame uFrame) {
+		
 		Point toolTip = getFacePlatePoint(jointAngles);
 		
 		if (tFrame != null) {
@@ -1517,8 +1552,8 @@ public class RoboticArm {
 	 * 				the given index is invalid.
 	 */
 	public UserFrame getUserFrame(int fdx) {
-		if (fdx >= 0 && fdx < USER_FRAMES.length) {
-			return USER_FRAMES[fdx];
+		if (fdx >= 0 && fdx < USER_FRAME.length) {
+			return USER_FRAME[fdx];
 			
 		} else {
 			// Invalid index
@@ -1722,7 +1757,7 @@ public class RoboticArm {
 	 * Returns the number of programs associated with the Robot.
 	 */
 	public int numOfPrograms() {
-		return PROGRAMS.size();
+		return PROGRAM.size();
 	}
 	
 	/**
@@ -1788,7 +1823,7 @@ public class RoboticArm {
 
 		ArrayList<DisplayLine> progList = new ArrayList<>();
 		for(int i = 0; i < size; i += 1) {
-			progList.add(new DisplayLine(i, 0, PROGRAMS.get(i).getName()));
+			progList.add(new DisplayLine(i, 0, PROGRAM.get(i).getName()));
 		}
 		
 		return progList;
@@ -1846,25 +1881,25 @@ public class RoboticArm {
 	@SuppressWarnings("unchecked")
 	public void reorderPrograms() {
 		// Move programs to a temporary list
-		ArrayList<Program> limboList = (ArrayList<Program>) PROGRAMS.clone();
-		PROGRAMS.clear();
+		ArrayList<Program> limboList = (ArrayList<Program>) PROGRAM.clone();
+		PROGRAM.clear();
 		
 		for (int pdx = 0; pdx < limboList.size(); ++pdx) {
-			int insertIdx = PROGRAMS.size() - 1;
+			int insertIdx = PROGRAM.size() - 1;
 			Program toInsert = limboList.get(pdx);
 			
-			if (PROGRAMS.size() > 0) {
-				Program predecessor = PROGRAMS.get(insertIdx);
+			if (PROGRAM.size() > 0) {
+				Program predecessor = PROGRAM.get(insertIdx);
 				/* Search to new list from back to front to find where to
 				 * insert the program */
 				while (predecessor.getName().compareTo(toInsert.getName()) > 0 ) {
 					
 					if (--insertIdx < 0) { break; }
-					predecessor = PROGRAMS.get(insertIdx);
+					predecessor = PROGRAM.get(insertIdx);
 				}
 			}
 			
-			PROGRAMS.add(insertIdx + 1, toInsert);
+			PROGRAM.add(insertIdx + 1, toInsert);
 		}
 		
 	}
@@ -1972,8 +2007,8 @@ public class RoboticArm {
 	 * 				is invalid
 	 */
 	public Program rmProgAt(int pdx) {
-		if (pdx >= 0 && pdx < PROGRAMS.size()) {
-			Program removed = PROGRAMS.remove(pdx);
+		if (pdx >= 0 && pdx < PROGRAM.size()) {
+			Program removed = PROGRAM.remove(pdx);
 			setActiveProgIdx(-1);
 			// Return the removed program
 			return removed;
@@ -2029,14 +2064,16 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO  comment
+	 * Sets the given program as the robot's active program if the program
+	 * exists in the robot's list of programs. Otherwise, the robot's active
+	 * program remains unchanged.
 	 * 
-	 * @param active
-	 * @return
+	 * @param active	The program to set as active
+	 * @return			If the program exists in the robot's list of programs
 	 */
 	public boolean setActiveProg(Program active) {
-		for (int idx = 0; idx < PROGRAMS.size(); ++idx) {
-			if (PROGRAMS.get(idx) == active) {
+		for (int idx = 0; idx < PROGRAM.size(); ++idx) {
+			if (PROGRAM.get(idx) == active) {
 				activeProgIdx = idx;
 				return true;
 			}
@@ -2054,7 +2091,7 @@ public class RoboticArm {
 	 * @return			Whether the given index is valid
 	 */
 	public boolean setActiveProgIdx(int progIdx) {
-		if (progIdx >= 0 && progIdx < PROGRAMS.size()) {
+		if (progIdx >= 0 && progIdx < PROGRAM.size()) {
 			
 			if (activeProgIdx != progIdx) {
 				PROG_UNDO.clear();
@@ -2095,8 +2132,8 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Set the set of the robot's current end effector and update the part held
-	 * by the robot.
+	 * Updates the state of the robot's end effector associated with the given
+	 * index.
 	 * 
 	 * @param rdx		The index of the I/O register
 	 * @param newState	The new state of the I/O register
@@ -2106,8 +2143,6 @@ public class RoboticArm {
 		
 		if (ioReg != null) {
 			ioReg.state = newState;
-			// TODO REFACTOR THIS
-			checkPickupCollision(RobotRun.getInstance().getActiveScenario());
 		}
 	}
 	
@@ -2240,7 +2275,7 @@ public class RoboticArm {
 	 * orientation, which is used to move the object held by the Robot.
 	 */
 	public void updateLastTipTMatrix() {
-		lastTipTMatrix = getRobotTransform(getJointAngles());
+		lastTipTMatrix = getFaceplateTMat(getJointAngles());
 	}
 	
 	/**
@@ -2352,9 +2387,10 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Updates the program execution for this robot and the position of the
+	 * robot for linear or rotation interpolation.
 	 * 
-	 * @param app
+	 * @param app	A reference to the RobotRun application
 	 */
 	public void updateRobot(RobotRun app) {
 		
