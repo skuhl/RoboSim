@@ -840,7 +840,7 @@ public class RoboticArm {
 	public void drawGridlines(PGraphics g, RMatrix axesVectors, PVector origin,
 			int halfNumOfLines, float distBwtLines) {
 		
-		float[][] axesDat = axesVectors.getFloatData();
+		float[][] axesDat = axesVectors.getDataF();
 		int vectorPX = -1, vectorPZ = -1;
 
 		// Find the two vectors with the minimum y values
@@ -2074,7 +2074,6 @@ public class RoboticArm {
 	 * rotation directions of each of the joint segments.
 	 */
 	public void setupRotationInterpolation(float[] tgtAngles) {
-		
 		for(int jdx = 0; jdx < 6; jdx++) {
 			// Set the target angle for rotational interpolation
 			TGT_JOINTS[jdx] = tgtAngles[jdx];

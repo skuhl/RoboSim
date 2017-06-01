@@ -60,10 +60,8 @@ import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
 import robot.CallFrame;
-import robot.DrawAction;
 import robot.EndEffector;
 import robot.RSegWithJoint;
-import robot.RSegment;
 import robot.RoboticArm;
 import screen.DisplayLine;
 import screen.MenuScroll;
@@ -105,8 +103,12 @@ public class RobotRun extends PApplet {
 		instance = null;
 	}
 	
-	public static RoboticArm getActiveRobot() {
+	public static RoboticArm getInstanceRobot() {
 		return instance.activeRobot;
+	}
+	
+	public static Scenario getInstanceScenario() {
+		return instance.activeScenario;
 	}
 
 	/**
@@ -273,7 +275,7 @@ public class RobotRun extends PApplet {
 	 * @param tMatrix	A 4x4 row major transformation matrix
 	 */
 	public void applyMatrix(RMatrix mat) {
-		float[][] tMatrix = mat.getFloatData();
+		float[][] tMatrix = mat.getDataF();
 		super.applyMatrix(
 				tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], tMatrix[0][3],
 				tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], tMatrix[1][3],
@@ -960,9 +962,6 @@ public class RobotRun extends PApplet {
 		} else {
 			// NOTE orientation is in Native Coordinates!
 			currentPoint = activeRobot.getToolTipNative();
-			/* REMOVE AFTER REFACTOR *
-			currentPoint = nativeRobotEEPoint(activeRobot, activeRobot.getJointAngles());
-			/**/
 		}
 
 		for (int n = transitionPoint; n < numberOfPoints; n++) {
@@ -1062,13 +1061,11 @@ public class RobotRun extends PApplet {
 	 * @return		The closest object, with which the ray collided
 	 */
 	private WorldObject checkForCollisionsInScene(RRay ray) {
-		Scenario active = getActiveScenario();
-		
 		if (UI.getRobotButtonState()) {
-			return checkForRayCollisions(ray, active, ROBOTS.get(0));
+			return checkForRayCollisions(ray, activeScenario, ROBOTS.get(0));
 			
 		} else {
-			return checkForRayCollisions(ray, active, ROBOTS.get(0),
+			return checkForRayCollisions(ray, activeScenario, ROBOTS.get(0),
 					ROBOTS.get(1));
 		}
 		
@@ -1280,12 +1277,11 @@ public class RobotRun extends PApplet {
 			if (frame instanceof ToolFrame) {
 				// Update the current frame of the Robot Arm
 				activeRobot.setActiveToolFrame(curFrameIdx);
-
 				DataManagement.saveRobotData(activeRobot, 2);
+				
 			} else {
 				// Update the current frame of the Robot Arm
 				activeRobot.setActiveUserFrame(curFrameIdx);
-
 				DataManagement.saveRobotData(activeRobot, 2);
 			}
 
@@ -2752,7 +2748,6 @@ public class RobotRun extends PApplet {
 				
 				dest.point = src.point.clone();
 				dest.isCartesian = src.isCartesian;
-				
 				DataManagement.saveRobotData(activeRobot, 3);
 
 			} catch (NumberFormatException MFEx) {
@@ -3634,10 +3629,6 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public Scenario getActiveScenario() {
-		return activeScenario;
-	}
-
 	/**
 	 * @return the active axes display state
 	 */
@@ -4196,7 +4187,7 @@ public class RobotRun extends PApplet {
 			header = String.format("%s: VALUE COPY", reg.getLabel());
 			break;
 		case EDIT_PREG:
-			reg = activeRobot.getPReg(active_index);	
+			reg = activeRobot.getPReg(active_index);
 			header = String.format("%s: POSITION EDIT", reg.getLabel());
 			break;
 		case EDIT_PREG_COM:
@@ -4301,6 +4292,10 @@ public class RobotRun extends PApplet {
 	 */
 	public RoboticArm getRobot(int rid) {
 		return ROBOTS.get(rid);
+	}
+	
+	public Scenario getActiveScenario() {
+		return activeScenario;
 	}
 
 	public RobotCamera getRobotCamera() {
@@ -5651,7 +5646,7 @@ public class RobotRun extends PApplet {
 			rotateY(camOrien.y);
 			rotateZ(camOrien.z);
 			
-			float[][] camRMat = getOrientation().getFloatData();
+			float[][] camRMat = getOrientation().getDataF();
 			
 			popMatrix();
 			
@@ -5799,14 +5794,6 @@ public class RobotRun extends PApplet {
 		} else if (wheelCount < 0) {
 			camera.scale(0.95f);
 		}
-		
-		/**
-		if (e != 0) {
-			float newScale = camera.getScale() + wheelCount * 0.1f;
-			camera.setScale(newScale);
-		}
-		
-		/**/
 	}
 
 	/**
@@ -5932,7 +5919,7 @@ public class RobotRun extends PApplet {
 		Program p = r.getActiveProg();
 		IfStatement stmt = new IfStatement(Operator.EQUAL, null);
 		opEdit = stmt.getExpr();
-
+		
 		if (activeRobot.getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(activeRobot.getActiveInstIdx(), stmt);
 		} else {
@@ -5970,7 +5957,7 @@ public class RobotRun extends PApplet {
 		Program p = r.getActiveProg();
 
 		LabelInstruction l = new LabelInstruction(-1);
-
+		
 		if (activeRobot.getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(activeRobot.getActiveInstIdx(), l);
 		} else {
@@ -6022,7 +6009,7 @@ public class RobotRun extends PApplet {
 		if (coord == CoordFrame.JOINT) {
 			mInst.setMotionType(Fields.MTYPE_JOINT);
 			mInst.setSpeed(0.5f);
-
+			
 		} else {
 			/*
 			 * Keep circular motion instructions as circular motion
@@ -6031,7 +6018,7 @@ public class RobotRun extends PApplet {
 			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
 				mInst.setMotionType(Fields.MTYPE_LINEAR);
 			}
-
+			
 			mInst.setSpeed(50f * activeRobot.motorSpeed / 100f);
 		}
 		
@@ -6333,7 +6320,7 @@ public class RobotRun extends PApplet {
 			} else {
 				instr = pasteList.get(i);
 			}
-
+			
 			p.addInstAt(activeRobot.getActiveInstIdx() + i, instr);
 		}
 	}
@@ -6695,7 +6682,7 @@ public class RobotRun extends PApplet {
 		} else {
 			coordFrame = "Coordinate Frame: " + coord.toString();
 		}
-
+		
 		Point RP = activeRobot.getToolTipNative();
 
 		String[] cartesian = RP.toLineStringArray(true), joints = RP.toLineStringArray(false);
@@ -7401,7 +7388,6 @@ public class RobotRun extends PApplet {
 	 */
 	public void triggerFault() {
 		hold();
-
 		RoboticArm r = activeRobot;
 
 		if (r != null) {

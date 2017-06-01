@@ -29,11 +29,11 @@ public class RMatrix extends Array2DRowRealMatrix {
 	public PVector multiply(PVector v) {
 		RMatrix m = new RMatrix(new float[][] {{v.x}, {v.y}, {v.z}, {1}});
 		RMatrix result = this.multiply(m);
-		float[][] data = result.getFloatData();
+		float[][] data = result.getDataF();
 		return new PVector(data[0][0], data[1][0], data[2][0]).div(data[3][0]);
 	}
 	
-	public float[][] getFloatData() {
+	public float[][] getDataF() {
 		return RMath.doubleToFloat(getData());
 	}
 	
@@ -67,8 +67,12 @@ public class RMatrix extends Array2DRowRealMatrix {
 		return new RMatrix(super.transpose());
 	}
 	
+	public float getEntryF(int row, int column) {
+		return (float)getEntry(row, column);
+	}
+	
 	public RMatrix normalize() {
-		float[][] d = getFloatData();
+		float[][] d = getDataF();
 		float mag = 0;
 		
 		for (int i = 0; i < d.length; i += 1) {

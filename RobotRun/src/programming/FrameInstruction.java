@@ -28,10 +28,10 @@ public class FrameInstruction extends Instruction {
 	@Override
 	public int execute() {    
 		if (frameType == Fields.FTYPE_TOOL) {
-			RobotRun.getActiveRobot().setActiveToolFrame(getFrameIdx());
+			RobotRun.getInstanceRobot().setActiveToolFrame(getFrameIdx());
 			
 		} else if (frameType == Fields.FTYPE_USER) {
-			RobotRun.getActiveRobot().setActiveUserFrame(getFrameIdx());
+			RobotRun.getInstanceRobot().setActiveUserFrame(getFrameIdx());
 		}
 		return 0;
 	}

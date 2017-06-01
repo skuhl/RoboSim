@@ -43,7 +43,7 @@ public class CallInstruction extends Instruction {
 
 	@Override
 	public int execute() {
-		RoboticArm r = RobotRun.getActiveRobot();
+		RoboticArm r = RobotRun.getInstanceRobot();
 		
 		// Save the current program state on tgt robot
 		tgtDevice.pushActiveProg(r);
@@ -74,7 +74,7 @@ public class CallInstruction extends Instruction {
 
 	@Override
 	public String toString() {
-		if(tgtDevice == RobotRun.getActiveRobot()) {
+		if(tgtDevice == RobotRun.getInstanceRobot()) {
 			return "Call " + getProgName();
 			
 		} else {
@@ -85,7 +85,7 @@ public class CallInstruction extends Instruction {
 	@Override
 	public String[] toStringArray() {
 		String[] ret = new String[2];
-		ret[0] = (tgtDevice == RobotRun.getActiveRobot()) ? "Call" : "RCall";
+		ret[0] = (tgtDevice == RobotRun.getInstanceRobot()) ? "Call" : "RCall";
 		ret[1] = getProgName();
 
 		return ret;

@@ -136,7 +136,7 @@ public class RobotCamera {
 		PVector ltVect = lookVect.cross(upVect);
 		
 		//Generate object axes and produce the diagonal vector of the object
-		float[][] objCoord = o.getLocalOrientation().getFloatData();
+		float[][] objCoord = o.getLocalOrientation().getDataF();
 		PVector objAxisX = new PVector(objCoord[0][0], objCoord[1][0], objCoord[2][0]);
 		PVector objAxisY = new PVector(objCoord[0][1], objCoord[1][1], objCoord[2][1]);
 		PVector objAxisZ = new PVector(objCoord[0][2], objCoord[1][2], objCoord[2][2]);
@@ -323,7 +323,7 @@ public class RobotCamera {
 	}
 	
 	public RMatrix getViewMat() {
-		float[][] rot = getOrientationMat().getFloatData();
+		float[][] rot = getOrientationMat().getDataF();
 		
 		float tPosX = -camPos.x*rot[0][0] - camPos.y*rot[1][0] - camPos.z*rot[2][0];
 		float tPosY = -camPos.x*rot[0][1] - camPos.y*rot[1][1] - camPos.z*rot[2][1];
@@ -358,7 +358,7 @@ public class RobotCamera {
 				RMatrix objOrient = o.getLocalOrientation();
 				RMatrix viewOrient = objOrient.transpose().multiply(camOrient.toMatrix());
 				RMatrix oDiff = objProtoOrient.transpose().multiply(viewOrient);
-				float[][] axes = oDiff.getFloatData();
+				float[][] axes = oDiff.getDataF();
 				PVector zDiff = new PVector(axes[0][2], axes[1][2], axes[2][2]);
 				
 				if(Math.pow(zDiff.dot(new PVector(0, 0, 1)), 2) > 0.9) {
