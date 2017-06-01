@@ -16,7 +16,7 @@ public class ScreenProgs extends Screen {
 	
 	@Override
 	void loadContents() {
-		contents.setLines(RobotRun.getActiveRobot().printProgList());
+		contents.setLines(RobotRun.getInstanceRobot().printProgList());
 	}
 	
 	@Override
@@ -24,7 +24,7 @@ public class ScreenProgs extends Screen {
 	
 	@Override
 	void loadLabels() {
-		if(RobotRun.getActiveRobot().numOfPrograms() > 0) {
+		if(RobotRun.getInstanceRobot().numOfPrograms() > 0) {
 			labels[1] = "[Rename]";
 			labels[2] = "[Delete]";
 			labels[3] = "[Copy]";
@@ -40,9 +40,9 @@ public class ScreenProgs extends Screen {
 	@Override
 	public void loadVars() {
 		robotRun.hold();
-		contents.setLineIdx(RobotRun.getActiveRobot().getActiveProgIdx());
+		contents.setLineIdx(RobotRun.getInstanceRobot().getActiveProgIdx());
 		contents.setColumnIdx(0);
-		RobotRun.getActiveRobot().setActiveInstIdx(0);
+		RobotRun.getInstanceRobot().setActiveInstIdx(0);
 	}
 
 	@Override
@@ -52,12 +52,12 @@ public class ScreenProgs extends Screen {
 
 	@Override
 	public void actionUp() {
-		RobotRun.getActiveRobot().setActiveProgIdx(contents.moveUp(robotRun.isShift()));
+		RobotRun.getInstanceRobot().setActiveProgIdx(contents.moveUp(robotRun.isShift()));
 	}
 
 	@Override
 	public void actionDn() {
-		RobotRun.getActiveRobot().setActiveProgIdx(contents.moveDown(robotRun.isShift()));
+		RobotRun.getInstanceRobot().setActiveProgIdx(contents.moveDown(robotRun.isShift()));
 	}
 
 	@Override
@@ -68,8 +68,8 @@ public class ScreenProgs extends Screen {
 
 	@Override
 	public void actionEntr() {
-		if(RobotRun.getActiveRobot().numOfPrograms() != 0) {
-			RobotRun.getActiveRobot().setActiveInstIdx(0);
+		if(RobotRun.getInstanceRobot().numOfPrograms() != 0) {
+			RobotRun.getInstanceRobot().setActiveInstIdx(0);
 			contents.reset();
 			robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
 		}
@@ -82,21 +82,21 @@ public class ScreenProgs extends Screen {
 
 	@Override
 	public void actionF2() {
-		if(RobotRun.getActiveRobot().numOfPrograms() > 0) {
+		if(RobotRun.getInstanceRobot().numOfPrograms() > 0) {
 			robotRun.nextScreen(ScreenMode.PROG_RENAME);
 		}
 	}
 
 	@Override
 	public void actionF3() {
-		if(RobotRun.getActiveRobot().numOfPrograms() > 0) {
+		if(RobotRun.getInstanceRobot().numOfPrograms() > 0) {
 			robotRun.nextScreen(ScreenMode.CONFIRM_PROG_DELETE);
 		}
 	}
 
 	@Override
 	public void actionF4() {
-		if(RobotRun.getActiveRobot().numOfPrograms() > 0) {
+		if(RobotRun.getInstanceRobot().numOfPrograms() > 0) {
 			robotRun.nextScreen(ScreenMode.PROG_COPY);
 		}
 	}

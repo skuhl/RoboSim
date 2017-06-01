@@ -30,7 +30,7 @@ public class RoboBlaster {
 	}
 	
 	public PVector getAimVect() {
-		float[][] m = orient.toMatrix().getFloatData();
+		float[][] m = orient.toMatrix().getDataF();
 		return new PVector(m[0][0], m[1][0], m[2][0]);
 	}
 	

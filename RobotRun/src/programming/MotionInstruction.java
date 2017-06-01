@@ -76,8 +76,10 @@ public class MotionInstruction extends Instruction  {
 
 		return copy;
 	}
+	
 	public int getMotionType() { return motionType; }
 	public int getOffset() { return offsetRegNum; }  
+	
 	/**
 	 * Returns the unmodified point that is associate
 	 * with this motion instruction.
@@ -89,7 +91,7 @@ public class MotionInstruction extends Instruction  {
 		Point pt = null;
 
 		if (isGPosReg) {
-			pt = RobotRun.getActiveRobot().getPReg(positionNum).point;   
+			pt = RobotRun.getInstanceRobot().getPReg(positionNum).point;   
 
 		} else if(positionNum != -1) {
 			pt = parent.getPosition(positionNum);
@@ -101,6 +103,7 @@ public class MotionInstruction extends Instruction  {
 
 		return null;
 	}
+	
 	public int getPositionNum() { return positionNum; }
 	public MotionInstruction getSecondaryPoint() { return circSubInstr; }
 	public float getSpeed() { return speed; }
@@ -108,6 +111,7 @@ public class MotionInstruction extends Instruction  {
 		if(motionType == Fields.MTYPE_JOINT) return speed;
 		else return (speed / model.motorSpeed);
 	}
+	
 	public int getTermination() { return termination; }
 	public int getToolFrame() { return toolFrame; }
 	public int getUserFrame() { return userFrame; }
@@ -127,12 +131,12 @@ public class MotionInstruction extends Instruction  {
 		
 		if(userFrame != -1) {
 			// Convert point into the Native Coordinate System
-			RoboticArm model = RobotRun.getActiveRobot();
+			RoboticArm model = RobotRun.getInstanceRobot();
 			UserFrame active = model.getUserFrame(userFrame);
 			pt = RMath.removeFrame(model, pt, active.getOrigin(), active.getOrientation());
 			
 			if(offsetRegNum != -1) {
-				offset = RobotRun.getActiveRobot().getPReg(offsetRegNum).point;
+				offset = RobotRun.getInstanceRobot().getPReg(offsetRegNum).point;
 			}
 		}
 				
