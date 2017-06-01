@@ -60,8 +60,6 @@ import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
 import robot.CallFrame;
-import robot.EndEffector;
-import robot.RSegWithJoint;
 import robot.RoboticArm;
 import screen.DisplayLine;
 import screen.MenuScroll;
@@ -6425,7 +6423,7 @@ public class RobotRun extends PApplet {
 						     P  - current part local orientation
 						 ***********************************************/
 						
-						RMatrix curTip = active.getRobotTransform(active.getJointAngles());
+						RMatrix curTip = active.getFaceplateTMat(active.getJointAngles());
 						RMatrix invMat = active.getLastTipTMatrix().getInverse();
 						Fixture refFixture = p.getFixtureRef();
 						
@@ -8010,6 +8008,41 @@ public class RobotRun extends PApplet {
 	public void UpdateCam() {
 		if (rCamera != null) {
 			UI.updateCameraCurrent();
+		}
+	}
+	
+	/**
+	 * Updates the end effector state of the active robot's end effector
+	 * associated with the given index and checks for pickup collisions
+	 * in the active scenario.
+	 * 
+	 * @param edx		The index of the end effector, of which to change the
+	 * 					state
+	 * @param newState	The new state of the end effector
+	 */
+	public void updateRobotEEState(int edx, int newState) {
+		activeRobot.setEEState(edx, newState);
+		
+		if (activeScenario != null) {
+			activeRobot.checkPickupCollision(activeScenario);
+		}
+	}
+	
+	/**
+	 * Updates the end effector state of the given robot's end effector
+	 * associated with the given index and checks for pickup collisions
+	 * in the active scenario.
+	 * 
+	 * @param r			The robot with which the end effector is associated
+	 * @param edx		The index of the end effector, of which to change the
+	 * 					state
+	 * @param newState	The new state of the end effector
+	 */
+	public void updateRobotEEState(RoboticArm r, int edx, int newState) {
+		r.setEEState(edx, newState);
+		
+		if (activeScenario != null) {
+			r.checkPickupCollision(activeScenario);
 		}
 	}
 	

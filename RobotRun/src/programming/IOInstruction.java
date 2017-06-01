@@ -27,7 +27,7 @@ public class IOInstruction extends Instruction {
 	}
 	@Override
 	public int execute() {
-		RobotRun.getInstanceRobot().setEEState(reg, state);
+		RobotRun.getInstance().updateRobotEEState(reg, state);
 		return 0;
 	}
 	public int getReg(){ return reg; }
