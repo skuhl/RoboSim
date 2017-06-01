@@ -70,12 +70,6 @@ public class RoboticArm {
 	private final EndEffector[] EE_LIST;
 	
 	/**
-	 * A set of matrices used for calculations the robot's end effector
-	 * position and draw the robot's segments.
-	 */
-	private final ArrayList<RMatrix> SEGMENT_TMATS;
-	
-	/**
 	 * The list of programs associated with this robot.
 	 */
 	private final ArrayList<Program> PROGRAMS;
@@ -173,8 +167,7 @@ public class RoboticArm {
 	
 	public RoboticArm(int rid, PVector basePos, RSegWithJoint base,
 			RSegWithJoint seg1, RSegWithJoint seg2, RSegWithJoint seg3,
-			RSegWithJoint seg4, RSegWithJoint seg5, EndEffector[] endEffectors,
-			ArrayList<RMatrix> segTMats) {
+			RSegWithJoint seg4, RSegWithJoint seg5, EndEffector[] endEffectors) {
 		
 		jogLinear = new float[] { 0f, 0f, 0f };
 		jogRot = new float[] { 0f, 0f, 0f };
@@ -187,7 +180,6 @@ public class RoboticArm {
 		TGT_JOINTS = new float[6];
 		
 		BASE_POSITION = basePos;
-		SEGMENT_TMATS = segTMats;
 		
 		SEGMENT = new RSegWithJoint[] {
 				base,
@@ -578,112 +570,70 @@ public class RoboticArm {
 		
 		g.rotateZ(PConstants.PI);
 		g.rotateY(PConstants.HALF_PI);
-		
 		// Base segment
-		SEGMENT[0].draw(g, drawOBBs);
+		g.shape(SEGMENT[0].MODEL_SET[0]);
 		g.rotateY(-PConstants.HALF_PI);
 		g.rotateZ(-PConstants.PI);
 		
+		// Translate for the first joint segment
 		g.translate(-50f, -163f, -350f);
 		
-		g.translate(-150f, 112f, 150f);
-		// Base OBB
-		SEGMENT[0].OBBS[0].getFrame().draw(g);
-		g.translate(150f, -112f, -150f);
-		
-		g.translate(-150f, 18f, 150f);
-		// First joint segment OBB
-		SEGMENT[1].OBBS[0].getFrame().draw(g);
-		g.translate(150f, -18f, -150f);
-		
 		g.translate(-150f, 0f, 150f);
-		Fields.drawAxes(g, 1000f, Fields.PURPLE);
 		// First joint axis
 		g.rotateY(jointAngles[0]);
 		g.translate(150f, 0f, -150f);
 		
-		g.translate(-150f, -73f, 150f);
-		// First joint segment OBB
-		SEGMENT[1].OBBS[1].getFrame().draw(g);
-		g.translate(150f, 73f, -150f);
-		
 		g.rotateX(PConstants.PI);
 		g.rotateY(PConstants.PI);
 		// First joint segment
-		SEGMENT[1].draw(g, drawOBBs);
+		g.shape(SEGMENT[1].MODEL_SET[0]);
 		g.rotateY(-PConstants.PI);
 		g.rotateX(-PConstants.PI);
 		
+		// Translate for the second joint segment
 		g.translate(-125f, -75f, 180f);
 		
 		g.translate(-62f, -62f, 0f);
 		// Second joint axis
 		g.rotateZ(-jointAngles[1]);
-		
-		g.translate(0f, 3f, -30f);
-		// Second joint segment OBB
-		SEGMENT[2].OBBS[0].getFrame().draw(g);
-		
-		g.translate(0f, -220f, 0f);
-		// Second joint segment OBB
-		SEGMENT[2].OBBS[1].getFrame().draw(g);
-		
-		g.translate(0f, -241f, 8f);
-		// Second joint segment OBB
-		SEGMENT[2].OBBS[2].getFrame().draw(g);
-		g.translate(0f, 241f, -8f);
-		g.translate(0f, 220f, 0f);
-		g.translate(0f, -3f, 30f);
-		g.translate(62f, 62f, 0f);		
+		g.translate(62f, 62f, 0f);
 		
 		g.rotateZ(PConstants.PI);
 		g.rotateY(PConstants.HALF_PI);
 		// Second joint segment
-		SEGMENT[2].draw(g, drawOBBs);
+		g.shape(SEGMENT[2].MODEL_SET[0]);
 		g.rotateY(-PConstants.HALF_PI);
 		g.rotateZ(-PConstants.PI);
 		
+		// Translate for the third joint segment
 		g.translate(10f, -605f, -200f);
 		
 		g.translate(-75f, 45f, 0f);
 		// Third joint axis
 		g.rotateZ(-jointAngles[2]);
-		
-		g.translate(0f, 30f, 75f);
-		// Third joint segment OBB
-		SEGMENT[3].OBBS[0].getFrame().draw(g);
-		g.translate(0f, -30f, -75f);
-		
 		g.translate(75f, -45f, 0f);
 		
 		g.rotateY(-PConstants.HALF_PI);
 		// Third joint segment
-		SEGMENT[3].draw(g, drawOBBs);
+		g.shape(SEGMENT[3].MODEL_SET[0]);
 		g.rotateY(PConstants.HALF_PI);
 		
+		// Translate for the fourth joint segment
 		g.translate(-725f, 0f, 0f);
 				
 		g.translate(0f, 75f, 75f);
 		// Fourth joint axis
 		g.rotateX(jointAngles[3]);
-		
-		g.translate(361f, 0f, 0f);
-		SEGMENT[3].OBBS[1].getFrame().draw(g);
-		g.translate(-361f, 0f, 0f);
-		
-		g.translate(75f, 0f, 0f);
-		SEGMENT[3].OBBS[2].getFrame().draw(g);
-		g.translate(-75f, 0f, 0f);
-		
 		g.translate(0f, -75f, -75f);
 		
 		g.rotateZ(-PConstants.HALF_PI);
 		g.rotateY(-PConstants.HALF_PI);
 		// Fourth joint segment
-		SEGMENT[4].draw(g, drawOBBs);
+		g.shape(SEGMENT[4].MODEL_SET[0]);
 		g.rotateY(PConstants.HALF_PI);
 		g.rotateZ(PConstants.HALF_PI);
 		
+		// Translation for the fifth joint segment
 		g.translate(120f, 20f, 25f);
 		
 		g.translate(-55f, 55f, 50f);
@@ -693,65 +643,42 @@ public class RoboticArm {
 
 		g.rotateY(-PConstants.HALF_PI);
 		// Fifth joint segment
-		SEGMENT[5].draw(g, drawOBBs);
+		g.shape(SEGMENT[5].MODEL_SET[0]);
 		g.rotateY(PConstants.HALF_PI);
 		
+		// Translation for the sixth joint segment
 		g.translate(-150f, 10f, 95f);
 		
 		g.translate(0f, 45f, -45f);
 		// Sixth joint axis
 		g.rotateX(-jointAngles[5]);
-		g.translate(0f, -45f, 45f);
 		
 		/* DRAW END EFFECTOR MODEL */
 		g.pushMatrix();
+		g.translate(0f, -45f, 45f);
 		
 		EndEffector activeEE = getActiveEE();
 		
 		if (activeEEIdx == 0) {
 			// Faceplate
 			g.rotateY(PConstants.HALF_PI);
-			EE_LIST[0].draw(g, drawOBBs);
+			g.shape(EE_LIST[0].MODEL_SET[0]);
 			
 		} else if (activeEEIdx == 1) {
 			// Suction
 			g.translate(25, -37.5f, -90);
 			
 			g.rotateY(-PConstants.HALF_PI);
-			EE_LIST[1].draw(g, drawOBBs);
+			g.shape(EE_LIST[1].MODEL_SET[0]);
 			g.rotateY(PConstants.HALF_PI);
-			// Normal OBBs
-			g.translate(-8f, 82.5f, 45f);
-			EE_LIST[1].OBBS[0].getFrame().draw(g);
-			g.translate(8f, -82.5f, -45f);
-			
-			g.translate(-64f, 82.5f, 45f);
-			EE_LIST[1].OBBS[1].getFrame().draw(g);
-			g.translate(64f, -82.5f, -45f);
-			
-			g.translate(-45f, 32f, 45f);
-			EE_LIST[1].OBBS[2].getFrame().draw(g);
-			g.translate(45f, -32f, -45f);
-			// Pickup OBBs
-			g.translate(-106.5f, 82.5f, 45f);
-			EE_LIST[1].PICKUP_OBBS[0].getFrame().draw(g);
-			g.translate(106.5f, -82.5f, -45f);
-			
-			g.translate(-45f, -2f, 45f);
-			EE_LIST[1].PICKUP_OBBS[1].getFrame().draw(g);
-			g.translate(45f, 2f, -45f);
 			
 		} else if(activeEEIdx == 2) {
 			// Gripper
 			g.translate(25, 0, -90);
 			
 			g.rotateY(-PConstants.HALF_PI);
-			EE_LIST[2].draw(g, drawOBBs);
+			g.shape(EE_LIST[2].MODEL_SET[0]);
 			g.rotateY(PConstants.HALF_PI);
-			
-			g.translate(-8f, 45f, 45f);
-			EE_LIST[2].OBBS[0].getFrame().draw(g);
-			g.translate(8f, -45f, -45f);
 			
 			float firstGripper, secondGripper;
 			
@@ -768,16 +695,6 @@ public class RoboticArm {
 			
 			g.translate(-32.5f, firstGripper, 85);
 			
-			g.translate(-24f, 8f, -40f);
-			// Normal OBB
-			EE_LIST[2].OBBS[1].getFrame().draw(g);
-			g.translate(24f, -8f, 40f);
-			
-			g.translate(-24f, 35f, -40f);
-			// Pickup OBB
-			EE_LIST[2].PICKUP_OBBS[0].getFrame().draw(g);
-			g.translate(24f, -35f, 40f);
-			
 			g.rotateY(-PConstants.HALF_PI);
 			g.rotateZ(PConstants.HALF_PI);
 			g.shape(EE_LIST[2].MODEL_SET[1]);
@@ -785,11 +702,6 @@ public class RoboticArm {
 			g.rotateY(PConstants.HALF_PI);
 			
 			g.translate(0, secondGripper, 0);
-			
-			g.translate(-24f, 8f, -40f);
-			// Normal OBB
-			EE_LIST[2].OBBS[2].getFrame().draw(g);
-			g.translate(24f, -8f, 40f);
 			
 			g.rotateY(-PConstants.HALF_PI);
 			g.rotateZ(PConstants.HALF_PI);
@@ -801,31 +713,58 @@ public class RoboticArm {
 			// Pointer
 			g.translate(20, 45, -45);
 			g.rotateY(-PConstants.HALF_PI);
-			EE_LIST[3].draw(g, drawOBBs);
+			g.shape(EE_LIST[3].MODEL_SET[0]);
 
 		} else if (activeEEIdx == 4) {
 			// Glue Gun
 			g.translate(20, 45, -45);
 			g.rotateY(PConstants.HALF_PI);
-			EE_LIST[4].draw(g, drawOBBs);
+			g.shape(EE_LIST[4].MODEL_SET[0]);
 
 		} else if (activeEEIdx == 5) {
 			// Wielder
 			g.translate(20, 45, -45);
 			g.rotateY(-PConstants.HALF_PI);
-			EE_LIST[5].draw(g, drawOBBs);
+			g.shape(EE_LIST[5].MODEL_SET[0]);
 		}
 		
 		g.popMatrix();
 		
 		/* DRAW TOOL TIP */
 		
-		g.translate(0, 45, -45);
 		drawToolTip(g, axesType);
-		g.translate(0, -45, 45);
 
 		g.popMatrix();
 		g.popStyle();
+		
+		if (drawOBBs) {
+			for (RSegWithJoint seg : SEGMENT) {
+				// Draw each segment's OBBs
+				for (BoundingBox obb : seg.OBBS) {
+					g.pushMatrix();
+					Fields.transform(g, obb.getCenter(), obb.getOrientationAxes());
+					obb.getFrame().draw(g);
+					g.popMatrix();
+				}
+				
+			}
+			
+			// Draw the active End Effector's OBBs
+			
+			for (BoundingBox obb : activeEE.OBBS) {
+				g.pushMatrix();
+				Fields.transform(g, obb.getCenter(), obb.getOrientationAxes());
+				obb.getFrame().draw(g);
+				g.popMatrix();
+			}
+			
+			for (BoundingBox obb : activeEE.PICKUP_OBBS) {
+				g.pushMatrix();
+				Fields.transform(g, obb.getCenter(), obb.getOrientationAxes());
+				obb.getFrame().draw(g);
+				g.popMatrix();
+			}
+		}
 		
 		if (modelInMotion() && trace) {
 			Point tipPosNative = getToolTipNative();
@@ -997,7 +936,7 @@ public class RoboticArm {
 					);
 					
 					if(!seg.setJointRotation(trialAngle)) {
-						Fields.debug("A[i%d, n=%d]: %f\n", i, trialAngle);
+						Fields.debug("A[i%d]: %f\n", i, trialAngle);
 						seg.setJointMotion(0);
 						// TODO REFACTOR THESE
 						RobotRun.getInstance().updateRobotJogMotion(i, 0);
@@ -1378,43 +1317,17 @@ public class RoboticArm {
 	 * @return
 	 */
 	public RMatrix getRobotTransform(float[] jointAngles) {
-		/* Calculate the rotation matrices for the robot's joint angles */
-		RMatrix joint0Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 1f, 0f),
-				jointAngles[0]);
-		RMatrix joint1Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 0f, -1f),
-				jointAngles[1]);
-		RMatrix joint2Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 0f, -1f),
-				jointAngles[2]);
-		RMatrix joint3Orien = RMath.tMatFromAxisAndAngle(new PVector(1f, 0f, 0f),
-				jointAngles[3]);
-		RMatrix joint4Orien = RMath.tMatFromAxisAndAngle(new PVector(0f, 0f, -1f),
-				jointAngles[4]);
-		RMatrix joint5Orien = RMath.tMatFromAxisAndAngle(new PVector(-1f, 0f, 0f),
-				jointAngles[5]);
+		RMatrix limbo = RMath.formTMat(BASE_POSITION);
 		
-		// Apply all the orientations of the robot's segments and joints
-		return new RMatrix(
-				
-				new float[][] {
-					{1f, 0f, 0f, BASE_POSITION.x},
-					{0f, 1f, 0f, BASE_POSITION.y},
-					{0f, 0f, 1f, BASE_POSITION.z},
-					{0f, 0f, 0f, 1f}
-				}
-				
-			)
-			.multiply(SEGMENT_TMATS.get(0))
-			.multiply(joint0Orien)
-			.multiply(SEGMENT_TMATS.get(1))
-			.multiply(joint1Orien)
-			.multiply(SEGMENT_TMATS.get(2))
-			.multiply(joint2Orien)
-			.multiply(SEGMENT_TMATS.get(3))
-			.multiply(joint3Orien)
-			.multiply(SEGMENT_TMATS.get(4))
-			.multiply(joint4Orien)
-			.multiply(SEGMENT_TMATS.get(5))
-			.multiply(joint5Orien);
+		for (int jdx = 0; jdx < 6; ++jdx) {
+			// Apply each set of joint translations and rotations
+			RMath.translateTMat(limbo, SEGMENT[jdx].TRANSLATION);
+			
+			RMatrix jointOrien = RMath.formRMat(SEGMENT[jdx].AXIS, jointAngles[jdx]);
+			limbo = limbo.multiply( RMath.fromTMat(jointOrien) );
+		}
+		
+		return limbo;
 	}
 	
 	/**
@@ -2224,115 +2137,13 @@ public class RoboticArm {
 	public boolean translationalMotion() {
 		return jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0;
 	}
-
+	
 	/**
-	 * Updates the position and orientation of the hit
-	 * boxes related to the Robot Arm.
+	 * Updates the reference to the Robot's last tool tip position and
+	 * orientation, which is used to move the object held by the Robot.
 	 */
-	private void updateCollisionOBBs(RobotRun app) {
-		app.pushMatrix();
-		app.resetMatrix();
-
-		app.translate(BASE_POSITION.x, BASE_POSITION.y,
-				BASE_POSITION.z);
-
-		app.rotateZ(PConstants.PI);
-		app.rotateY(PConstants.HALF_PI);
-		app.translate(200, 50, 200);
-		// Segment 0
-		app.getCoordFromMatrix(SEGMENT[0].OBBS[0]);
-
-		app.translate(0, 100, 0);
-		app.getCoordFromMatrix(SEGMENT[1].OBBS[0]);
-
-		app.translate(-200, -150, -200);
-
-		app.rotateY(-PConstants.HALF_PI);
-		app.rotateZ(-PConstants.PI);
-
-		app.translate(-50, -166, -358);
-		app.rotateZ(PConstants.PI);
-		app.translate(150, 0, 150);
-		app.rotateX(PConstants.PI);
-		app.rotateY(SEGMENT[0].getJointRotation());
-		app.rotateX(-PConstants.PI);
-		app.translate(10, 95, 0);
-		app.rotateZ(-0.1f * PConstants.PI);
-		// Segment 1
-		app.getCoordFromMatrix(SEGMENT[1].OBBS[1]);
-
-		app.rotateZ(0.1f * PConstants.PI);
-		app.translate(-160, -95, -150);
-		app.rotateZ(-PConstants.PI);
-
-		app.translate(-115, -85, 180);
-		app.rotateZ(PConstants.PI);
-		app.rotateY(PConstants.HALF_PI);
-		app.translate(0, 62, 62);
-		app.rotateX(SEGMENT[1].getJointRotation());
-		app.translate(30, 240, 0);
-		// Segment 2
-		app.getCoordFromMatrix(SEGMENT[2].OBBS[0]);
-
-		app.translate(-30, -302, -62);
-		app.rotateY(-PConstants.HALF_PI);
-		app.rotateZ(-PConstants.PI);
-
-		app.translate(0, -500, -50);
-		app.rotateZ(PConstants.PI);
-		app.rotateY(PConstants.HALF_PI);
-		app.translate(0, 75, 75);
-		app.rotateZ(PConstants.PI);
-		app.rotateX(SEGMENT[2].getJointRotation());
-		app.rotateZ(-PConstants.PI);
-		app.translate(75, 0, 0);
-		// Segment 3
-		app.getCoordFromMatrix(SEGMENT[3].OBBS[0]);
-
-		app.translate(-75, -75, -75);
-		app.rotateY(PConstants.HALF_PI);
-		app.rotateZ(-PConstants.PI);
-
-		app.translate(745, -150, 150);
-		app.rotateZ(PConstants.HALF_PI);
-		app.rotateY(PConstants.HALF_PI);
-		app.translate(70, 0, 70);
-		app.rotateY(SEGMENT[3].getJointRotation());
-		app.translate(5, 75, 5);
-		// Segment 4;
-		app.getCoordFromMatrix(SEGMENT[4].OBBS[0]);
-		
-
-		app.translate(0, 295, 0);
-		app.getCoordFromMatrix(SEGMENT[4].OBBS[1]);
-
-		app.translate(-75, -370, -75);
-
-		app.rotateY(-PConstants.HALF_PI);
-		app.rotateZ(-PConstants.HALF_PI);
-
-		app.translate(-115, 130, -124);
-		app.rotateZ(PConstants.PI);
-		app.rotateY(-PConstants.HALF_PI);
-		app.translate(0, 50, 50);
-		app.rotateX(SEGMENT[4].getJointRotation());
-		app.translate(0, -50, -50);
-		// Segment 5
-		app.rotateY(PConstants.HALF_PI);
-		app.rotateZ(-PConstants.PI);
-
-		app.translate(150, -10, 95);
-		app.rotateY(-PConstants.HALF_PI);
-		app.rotateZ(PConstants.PI);
-		app.translate(45, 45, 0);
-		app.rotateZ(SEGMENT[5].getJointRotation());
-		app.rotateX(PConstants.PI);
-		app.rotateY(PConstants.HALF_PI);
-		
-		// End Effector
-		updateOBBBoxesForEE(app);
-		
-		app.popMatrix();
+	public void updateLastTipTMatrix() {
+		lastTipTMatrix = getRobotTransform(getJointAngles());
 	}
 	
 	/**
@@ -2442,76 +2253,12 @@ public class RoboticArm {
 		
 		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
 	}
-
-	/**
-	 * Updates position and orientation of the hit boxes associated
-	 * with the given End Effector.
-	 */
-	private void updateOBBBoxesForEE(RobotRun app) {
-		EndEffector activeEE = getActiveEE();
-
-		app.pushMatrix();
-		
-		if (activeEEIdx == 1) {
-			// Suction EE
-			app.translate(0, 0, 3);
-			app.getCoordFromMatrix( activeEE.OBBS[0] );
-
-			app.translate(-67, 0, -2);
-			BoundingBox limbo = activeEE.OBBS[1];
-			app.getCoordFromMatrix( limbo );
-
-			float dist = -43;
-			app.translate(dist, 0, 0);
-			app.getCoordFromMatrix( activeEE.PICKUP_OBBS[0] );
-			app.translate(19 - dist, 50, 0);
-			limbo = activeEE.OBBS[2];
-			app.getCoordFromMatrix( limbo );
-
-			dist = -33;
-			app.translate(0, -dist, 0);
-			app.getCoordFromMatrix( activeEE.PICKUP_OBBS[1] );
-			app.translate(45, dist - 50, 2);
-			
-		} else if (activeEEIdx == 2) {
-			// Claw Gripper EE
-			app.translate(3, 0, 0);
-			app.getCoordFromMatrix( activeEE.OBBS[0] );
-
-			app.translate(-57, 0, -2);
-			app.getCoordFromMatrix( activeEE.PICKUP_OBBS[0] );
-
-			if (activeEE.getState() == Fields.OFF) {
-				// When claw is open
-				app.translate(0, -27, 0);
-				app.getCoordFromMatrix( activeEE.OBBS[1] );
-				app.translate(0, 54, 0);
-				app.getCoordFromMatrix( activeEE.OBBS[2] );
-				app.translate(0, -27, 0);
-
-			} else if (activeEE.getState() == Fields.ON) {
-				// When claw is closed
-				app.translate(0, -10, 0);
-				app.getCoordFromMatrix( activeEE.OBBS[1] );
-				app.translate(0, 20, 0);
-				app.getCoordFromMatrix( activeEE.OBBS[2] );
-				app.translate(0, -10, 0);
-			}
-
-			app.translate(54, 0, 2);
-		}
-
-		app.popMatrix();
-	}
 	
 	/**
-	 * Updates the reference to the Robot's last tool tip position and
-	 * orientation, which is used to move the object held by the Robot.
+	 * TODO comment this
+	 * 
+	 * @param app
 	 */
-	public void updateLastTipTMatrix() {
-		lastTipTMatrix = getRobotTransform(getJointAngles());
-	}
-	
 	public void updateRobot(RobotRun app) {
 		
 		if (!hasMotionFault()) {
@@ -2547,6 +2294,167 @@ public class RoboticArm {
 			}
 		}
 
-		updateCollisionOBBs(app);
+		updateOBBs();
+	}
+	
+	/**
+	 * Updates the position and orientation of the robot's OBBs based off its
+	 * current joint angles.
+	 */
+	private void updateOBBs() {
+		/* Segment OBBs */
+		
+		RMatrix base = RMath.formTMat(BASE_POSITION);
+		
+		RMath.translateTMat(base, -50.0, -163.0, -350.0);
+		
+		RMatrix obbTMat = base.copy();
+		RMath.translateTMat(obbTMat, -150.0, 112.0, 150.0);
+		SEGMENT[0].OBBS[0].setCoordinateSystem(obbTMat);
+		
+		obbTMat = base.copy();
+		RMath.translateTMat(obbTMat, -150.0, 18.0, 150.0);
+		SEGMENT[1].OBBS[0].setCoordinateSystem(obbTMat);
+		
+		// First joint rotation
+		RMath.translateTMat(base, -150.0, 0.0, 150.0);
+		RMatrix jointTMat = RMath.formTMat(SEGMENT[0].AXIS, SEGMENT[0].getJointRotation());
+		base = base.multiply(jointTMat);
+		RMath.translateTMat(base, 150.0, 0.0, -150.0);
+		
+		obbTMat = base.copy();
+		RMath.translateTMat(obbTMat, -150.0, -73.0, 150.0);
+		SEGMENT[1].OBBS[1].setCoordinateSystem(obbTMat);
+		
+		RMath.translateTMat(base, -125.0, -75.0, 180.0);
+		
+		// Second joint rotation
+		RMath.translateTMat(base, -62.0, -62.0, 0.0);
+		jointTMat = RMath.formTMat(SEGMENT[1].AXIS, SEGMENT[1].getJointRotation());
+		base = base.multiply(jointTMat);
+		RMath.translateTMat(base, 62.0, 62.0, 0.0);
+		
+		obbTMat = base.copy();
+		RMath.translateTMat(obbTMat, -62.0, -59.0, -30.0);
+		SEGMENT[2].OBBS[0].setCoordinateSystem(obbTMat);
+		
+		obbTMat = base.copy();
+		RMath.translateTMat(obbTMat, -62.0, -279.0, -30.0);
+		SEGMENT[2].OBBS[1].setCoordinateSystem(obbTMat);
+		
+		obbTMat = base.copy();
+		RMath.translateTMat(obbTMat, -62.0, -520.0, -22.0);
+		SEGMENT[2].OBBS[2].setCoordinateSystem(obbTMat);
+		
+		RMath.translateTMat(base, 10.0, -605.0, -200.0);
+		
+		// Third joint rotation
+		RMath.translateTMat(base, -75.0, 45.0, 0.0);
+		jointTMat = RMath.formTMat(SEGMENT[2].AXIS, SEGMENT[2].getJointRotation());
+		base = base.multiply(jointTMat);
+		RMath.translateTMat(base, 75.0, -45.0, 0.0);
+		
+		obbTMat = base.copy();
+		RMath.translateTMat(obbTMat, -75.0, 75.0, 75.0);
+		SEGMENT[3].OBBS[0].setCoordinateSystem(obbTMat);
+		
+		RMath.translateTMat(base, -725.0, 0.0, 0.0);
+		
+		// Fourth joint rotation
+		RMath.translateTMat(base, 0.0, 75.0, 75.0);
+		jointTMat = RMath.formTMat(SEGMENT[3].AXIS, SEGMENT[3].getJointRotation());
+		base = base.multiply(jointTMat);
+		RMath.translateTMat(base, 0.0, -75.0, -75.0);
+		
+		obbTMat = base.copy();
+		RMath.translateTMat(obbTMat, 361.0, 75.0, 75.0);
+		SEGMENT[3].OBBS[1].setCoordinateSystem(obbTMat);
+		
+		obbTMat = base.copy();
+		RMath.translateTMat(obbTMat, 75.0, 75.0, 75.0);
+		SEGMENT[3].OBBS[2].setCoordinateSystem(obbTMat);
+		
+		RMath.translateTMat(base, 120.0, 20.0, 25.0);
+		
+		// Fifth joint rotation
+		RMath.translateTMat(base, -55.0, 55.0, 50.0);
+		jointTMat = RMath.formTMat(SEGMENT[4].AXIS, SEGMENT[4].getJointRotation());
+		base = base.multiply(jointTMat);
+		RMath.translateTMat(base, 55.0, -55.0, -50.0);
+		
+		RMath.translateTMat(base, -150.0, 10.0, 95.0);
+		
+		// Sixth joint rotation
+		RMath.translateTMat(base, 0.0, 45.0, -45.0);
+		jointTMat = RMath.formTMat(SEGMENT[5].AXIS, SEGMENT[5].getJointRotation());
+		base = base.multiply(jointTMat);
+		RMath.translateTMat(base, 0.0, -45.0, 45.0);
+		
+		/* End Effector OBBs */
+		EndEffector activeEE = getActiveEE();
+		
+		if (activeEEIdx == 1) {
+			// Suction EE OBBs
+			RMath.translateTMat(base, 25.0, -37.5, -90.0);
+			
+			obbTMat = base.copy();
+			RMath.translateTMat(obbTMat, -8.0, 82.5, 45.0);
+			activeEE.OBBS[0].setCoordinateSystem(obbTMat);
+			
+			obbTMat = base.copy();
+			RMath.translateTMat(obbTMat, -64.0, 82.5, 45.0);
+			activeEE.OBBS[1].setCoordinateSystem(obbTMat);
+			
+			obbTMat = base.copy();
+			RMath.translateTMat(obbTMat, -45.0, 32.0, 45.0);
+			activeEE.OBBS[2].setCoordinateSystem(obbTMat);
+			
+			obbTMat = base.copy();
+			RMath.translateTMat(obbTMat, -106.5, 82.5, 45.0);
+			activeEE.PICKUP_OBBS[0].setCoordinateSystem(obbTMat);
+			
+			obbTMat = base.copy();
+			RMath.translateTMat(obbTMat, -45.0, -2.0, 45.0);
+			activeEE.PICKUP_OBBS[1].setCoordinateSystem(obbTMat);
+			
+		} else if (activeEEIdx == 2) {
+			// Gripper EE OBBs
+			RMath.translateTMat(base, 25.0, 0.0, -90.0);
+			
+			obbTMat = base.copy();
+			RMath.translateTMat(obbTMat, -8.0, 45.0, 45.0);
+			activeEE.OBBS[0].setCoordinateSystem(obbTMat);
+			
+			float firstGripper, secondGripper;
+			
+			if(activeEE.getState() == Fields.ON) {
+				// Closed grippers
+				firstGripper = 22.5f;
+				secondGripper = 25f;
+
+			} else {
+				// Open grippers
+				firstGripper = 10f;
+				secondGripper = 55f;
+			}
+			
+			RMath.translateTMat(base, -32.5, 0.0, 85.0);
+			
+			obbTMat = base.copy();
+			RMath.translateTMat(obbTMat, -24.0, 45.0, -40.0);
+			activeEE.PICKUP_OBBS[0].setCoordinateSystem(obbTMat);
+			
+			RMath.translateTMat(base, 0.0, firstGripper, 0.0);
+			
+			obbTMat = base.copy();
+			RMath.translateTMat(obbTMat, -24.0, 8.0, -40.0);
+			activeEE.OBBS[1].setCoordinateSystem(obbTMat);
+			
+			RMath.translateTMat(base, 0, secondGripper, 0);
+			
+			obbTMat = base.copy();
+			RMath.translateTMat(obbTMat, -24.0, 8.0, -40.0);
+			activeEE.OBBS[2].setCoordinateSystem(obbTMat);
+		}
 	}
 }

@@ -211,7 +211,7 @@ public abstract class WorldObject implements Cloneable {
 	 */
 	public void rotateAroundAxis(PVector axis, float angle) {
 		
-		RMatrix rotation = RMath.matFromAxisAndAngle(axis, angle);
+		RMatrix rotation = RMath.formRMat(axis, angle);
 		RMatrix orientation = localOrientation.getAxes();
 		
 		localOrientation.setAxes( rotation.multiply(orientation) );

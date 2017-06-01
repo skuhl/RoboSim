@@ -14,16 +14,8 @@ public class RMatrix extends Array2DRowRealMatrix {
 		super(RMath.floatToDouble(f));
 	}
 	
-	public RMatrix(float m00, float m01, float m02, float m10, float m11,
-			float m12, float m20, float m21, float m22) {
-		
-		super(
-			new double[][] {
-				{ (double)m00, (double)m01, (double)m02 },
-				{ (double)m10, (double)m11, (double)m12 },
-				{ (double)m20, (double)m21, (double)m22 }
-			}
-		);
+	public RMatrix(double[][] data) {
+		super(data);
 	}
 	
 	public RMatrix(RealMatrix m) {
@@ -31,7 +23,7 @@ public class RMatrix extends Array2DRowRealMatrix {
 	}
 	
 	public RMatrix multiply(RMatrix m) {
-		return new RMatrix(this.multiply((Array2DRowRealMatrix)m));
+		return new RMatrix( super.multiply(m) );
 	}
 	
 	public PVector multiply(PVector v) {
@@ -48,6 +40,26 @@ public class RMatrix extends Array2DRowRealMatrix {
 	public RMatrix getInverse() {
 		SingularValueDecomposition s = new SingularValueDecomposition(this);
 		return new RMatrix(s.getSolver().getInverse());
+	}
+	
+	@Override
+	public String toString() {
+		String str = new String();
+		
+		for (int row = 0; row < getRowDimension(); ++row) {
+			str += "[ ";
+			
+			for (int column = 0; column < getColumnDimension(); ++column) {
+				String val = String.format("%4.3f", this.getEntry(row, column));
+				// Add padding
+				str += String.format("%9s ", val);
+			}
+			
+			str += "]\n";
+		}
+		
+		
+		return str;
 	}
 	
 	@Override
@@ -78,6 +90,6 @@ public class RMatrix extends Array2DRowRealMatrix {
 	}
 	
 	public RMatrix copy() {
-		return new RMatrix(this.getFloatData());
+		return new RMatrix(getData());
 	}
 }

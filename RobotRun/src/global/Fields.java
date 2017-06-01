@@ -17,7 +17,7 @@ public abstract class Fields {
 	/**
 	 * A flag used for displaying current debug output to standard out.
 	 */
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	
 	/**
 	 * The off state of an end effector

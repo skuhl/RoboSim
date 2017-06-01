@@ -1088,7 +1088,8 @@ public class WGUI implements ControlListener {
 				}
 
 			} else if (arg0.isFrom("RobotEE")) {
-				RoboticArm r = RobotRun.getActiveRobot();
+				@SuppressWarnings("static-access")
+				RoboticArm r = app.getActiveRobot();
 
 				if (r != null) {
 					/* Link the active robot's end effector to the selected
@@ -2886,7 +2887,8 @@ public class WGUI implements ControlListener {
 			dropdown.addItem(s.getName(), s);
 		}
 
-		RoboticArm r = RobotRun.getActiveRobot();
+		@SuppressWarnings("static-access")
+		RoboticArm r = app.getActiveRobot();
 
 		if (r != null) {
 			// Link the active robot's end effector to the dropdown list
