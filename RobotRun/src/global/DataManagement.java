@@ -63,23 +63,9 @@ import robot.RoboticArm;
  */
 public abstract class DataManagement {
 	
-	/**
-	 * Flag for loading in matrices, which use float 2D arrays, which
-	 * have since been changed to double arrays.
-	 */
-	private static final int FLOAT_DATA;
-	
-	/**
-	 * Used to load data with old save versions. A value of 0 implies using the
-	 * most recent version.
-	 */
-	private static int LOAD_VERSION;
-	
 	private static String dataDirPath, errDirPath, tmpDirPath, scenarioDirPath;
 	
 	static {
-		FLOAT_DATA = 1;
-		
 		dataDirPath = null;
 		errDirPath = null;
 		tmpDirPath = null;
@@ -88,7 +74,6 @@ public abstract class DataManagement {
 	
 	// Must be called when RobotRun starts!!!!
 	public static void initialize(RobotRun process) {
-		LOAD_VERSION = 0;
 		dataDirPath = process.sketchPath("data\\");
 		errDirPath = process.sketchPath("err\\");
 		tmpDirPath = process.sketchPath("tmp\\");
@@ -286,28 +271,6 @@ public abstract class DataManagement {
 		// Read each value of the list
 		for (int idx = 0; idx < list.length; ++idx) {
 			list[idx] = in.readFloat();
-		}
-
-		return list;
-	}
-	
-	private static float[][] load2DFloatArray(DataInputStream in) throws IOException {
-		// Read byte flag
-		byte flag = in.readByte();
-
-		if (flag == 0) {
-			return null;
-		}
-		
-		// Read the length of the list
-		int numOfRows = in.readInt(),
-				numOfCols = in.readInt();
-		float[][] list = new float[numOfRows][numOfCols];
-		// Read each value of the list
-		for (int row = 0; row < list.length; ++row) {
-			for (int col = 0; col < list[0].length; ++col) {
-				list[row][col] = in.readFloat();
-			}
 		}
 
 		return list;
@@ -869,34 +832,12 @@ public abstract class DataManagement {
 		
 		// Load each scenario from their respective files
 		for (File scenarioFile : scenarioFiles) {
-			Scenario s = null;
-			FileInputStream in;
-			DataInputStream dataIn;
-			
 			try {
 				activeFile = scenarioFile;
-				in = new FileInputStream(activeFile);
-				dataIn = new DataInputStream(in);
+				FileInputStream in = new FileInputStream(activeFile);
+				DataInputStream dataIn = new DataInputStream(in);
 				
-				
-				try {
-					s = loadScenario(dataIn, process);
-					
-				} catch (IOException IOEx1) {
-					// Try older load version
-					try {
-						LOAD_VERSION = FLOAT_DATA;
-						s = loadScenario(dataIn, process);
-						LOAD_VERSION = 0;
-						// Remove the old file
-						activeFile.delete();
-						
-					} catch (IOException IOEx2) {
-						System.err.printf("File, %s, in \\tmp\\scenarios is corrupt!\n",
-								activeFile.getName());
-						IOEx2.printStackTrace();
-					}
-				}
+				Scenario s = loadScenario(dataIn, process);
 				
 				if (s != null) {
 					scenarioList.add(s);
@@ -1119,26 +1060,13 @@ public abstract class DataManagement {
 			RShape form = loadShape(in, app);
 			// Load the object's local orientation
 			PVector center = loadPVector(in);
-			RMatrix orientationAxes;
-			
-			if (LOAD_VERSION == FLOAT_DATA) {
-				orientationAxes = new RMatrix( load2DFloatArray(in) );
-				
-			} else {
-				orientationAxes = new RMatrix( load2DDoubleArray(in) );
-			}
+			RMatrix orientationAxes = new RMatrix( load2DDoubleArray(in) );
 			
 			CoordinateSystem localOrientation = new CoordinateSystem(center, orientationAxes);
 
 			if (flag == 1) {
 				center = loadPVector(in);
-				
-				if (LOAD_VERSION == FLOAT_DATA) {
-					orientationAxes = new RMatrix( load2DFloatArray(in) );
-					
-				} else {
-					orientationAxes = new RMatrix( load2DDoubleArray(in) );
-				}
+				orientationAxes = new RMatrix( load2DDoubleArray(in) );
 				
 				CoordinateSystem defaultOrientation = new CoordinateSystem(center, orientationAxes);
 				
