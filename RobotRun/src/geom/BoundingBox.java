@@ -59,13 +59,10 @@ public class BoundingBox {
 	 */
 	public static void main(String[] args) {
 		
-		RMatrix m0 = new RMatrix( new float[][] {
-			
-			{  0,  0,  1},
-			{ -1,  0,  0},
-			{  0,  1,  0}
-			
-			}	
+		RMatrix m0 = RMath.formRMat(
+			 0, 0, 1,
+			 -1, 0, 0,
+			 0, 1, 0	
 		);
 		
 		PVector e0 = RMath.matrixToEuler(m0);

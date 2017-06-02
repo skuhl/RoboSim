@@ -1,4 +1,6 @@
 package geom;
+import java.util.Arrays;
+
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
@@ -7,15 +9,14 @@ import global.RMath;
 import processing.core.PVector;
 
 public class RMatrix extends Array2DRowRealMatrix {
-	
 	private static final long serialVersionUID = -7714758888094250418L;
 	
 	public RMatrix(float[][] f) {
-		super(RMath.floatToDouble(f));
+		this(RMath.floatToDouble(f));
 	}
 	
 	public RMatrix(double[][] data) {
-		super(data);
+		super(data, false);
 	}
 	
 	public RMatrix(RealMatrix m) {
@@ -27,10 +28,18 @@ public class RMatrix extends Array2DRowRealMatrix {
 	}
 	
 	public PVector multiply(PVector v) {
-		RMatrix m = new RMatrix(new float[][] {{v.x}, {v.y}, {v.z}, {1}});
+		RMatrix m = new RMatrix(new double[][] {{v.x}, {v.y}, {v.z}, {1}});
 		RMatrix result = this.multiply(m);
-		float[][] data = result.getDataF();
-		return new PVector(data[0][0], data[1][0], data[2][0]).div(data[3][0]);
+		
+		float w = getEntryF(3, 0);
+		
+		PVector u = new PVector(
+				getEntryF(0, 0),
+				getEntryF(1, 0),
+				getEntryF(2, 0)
+		);
+		
+		return u.div(w);
 	}
 	
 	public float[][] getDataF() {
@@ -72,28 +81,26 @@ public class RMatrix extends Array2DRowRealMatrix {
 	}
 	
 	public RMatrix normalize() {
-		float[][] d = getDataF();
-		float mag = 0;
-		
-		for (int i = 0; i < d.length; i += 1) {
+		for (int col = 0; col < getColumnDimension(); col += 1) {
+			double mag = 0;
 			// Find the magnitude of each axis vector
-			for (int j = 0; j < d[0].length; j += 1) {
-				mag += Math.pow(d[j][i], 2);
+			for (int row = 0; row < getRowDimension(); row += 1) {
+				double val = getEntry(row, col);
+				mag += Math.pow(val, 2);
 			}
 
-			mag = (float) Math.sqrt(mag);
+			mag = Math.sqrt(mag);
 			// Normalize each vector
-			for (int j = 0; j < d.length; j += 1) {
-				this.setEntry(j, i, d[j][i] /= mag);
+			for (int row = 0; row < getRowDimension(); row += 1) {
+				double val = getEntry(row, col);
+				setEntry(row, col, val / mag);
 			}
-			
-			mag = 0;
 		}
 		
 		return this;
 	}
 	
 	public RMatrix copy() {
-		return new RMatrix(getData());
+		return new RMatrix( getData().clone() );
 	}
 }
