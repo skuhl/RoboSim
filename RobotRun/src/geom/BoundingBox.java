@@ -77,7 +77,6 @@ public class BoundingBox {
 		PVector e3 = RMath.matrixToEuler(m3);
 		
 		System.out.printf("%s\n%s\n%s\n%s\n%s\n\n", e1, m2, e2, m3, e3);
-		
 	}
 
 	/**
