@@ -174,10 +174,14 @@ public class AtomicExpression extends ExprOperand {
 
 			switch(getOp()) {
 			case ADDTN:
-				result = new ExprOperand(p1.add(p2));
+				/* TODO need register reference to know if the position is
+				 * Cartesian or joint */
+				result = new ExprOperand(/*p1.add(p2)*/);
 				break;
 			case SUBTR:
-				result = new ExprOperand(p1.add(p2.negate()));
+				/* TODO need a register reference to know if the position is
+				 * Cartiesian or joint */
+				result = new ExprOperand(/*p1.add(p2.negate())*/);
 				break;
 			default:
 				result = null;

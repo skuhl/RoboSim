@@ -2071,12 +2071,15 @@ public class RobotRun extends PApplet {
 				line = getSelectedLine();
 				m = line == 0 ? m : m.getSecondaryPoint();
 
+				global.Fields.debug("Offset: %d\n", tempRegister);
+				
 				if (tempRegister < 0 || tempRegister > 999) {
 					// Invalid register index
 					err = "Only registers 1 - 1000 are legal!";
 					System.out.println(err);
 					lastScreen();
 					return;
+					
 				} else if ((activeRobot.getPReg(tempRegister)).point == null) {
 					// Invalid register index
 					err = "This register is uninitailized!";
@@ -2086,8 +2089,8 @@ public class RobotRun extends PApplet {
 				}
 
 				m.setOffset(tempRegister);
-			} catch (NumberFormatException NFEx) {
-			/* Ignore invalid numbers */ }
+				
+			} catch (NumberFormatException NFEx) {/* Ignore invalid numbers */ }
 
 			lastScreen();
 			break;
@@ -5967,6 +5970,7 @@ public class RobotRun extends PApplet {
 		Program prog = activeRobot.getActiveProg();
 		
 		Point pt = activeRobot.getToolTipUser();
+		
 		Instruction activeInst = activeRobot.getActiveInstruction();
 		MotionInstruction mInst;
 		int regNum = prog.getNextPosition();
@@ -6232,9 +6236,17 @@ public class RobotRun extends PApplet {
 
 				// Use default the Robot's joint angles for computing inverse
 				// kinematics
-				float[] jointAngles = RMath.inverseKinematics(activeRobot, new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, position,
+				float[] defJointAngles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+				float[] jointAngles = RMath.inverseKinematics(activeRobot, defJointAngles, position,
 						orientation);
-				return new Point(position, orientation, jointAngles);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failed
+					return new Point(position, orientation, defJointAngles);
+					
+				} else {
+					return new Point(position, orientation, jointAngles);
+				}
 
 			} else {
 				// Bring angles within range: (0, TWO_PI)

@@ -7,6 +7,7 @@ import global.MyFloatFormat;
 import global.RMath;
 import processing.core.PConstants;
 import processing.core.PVector;
+import robot.RoboticArm;
 
 public class Point  {
 	// X, Y, Z
@@ -52,27 +53,39 @@ public class Point  {
 		orientation = orient;
 		angles = jointAngles;
 	}
-
+	
 	/**
-	 * Computes and returns the result of the addition of this point with
-	 * another point, 'p.' Does not alter the original values of this point.
+	 * TODO comment this
+	 * 
+	 * @param pos
+	 * @param orien
+	 * @return
 	 */
-	public Point add(Point p) {
-		Point p3 = new Point();
-
-		PVector p3Pos = PVector.add(position, p.position);
-		RQuaternion p3Orient = RQuaternion.mult(orientation, p.orientation);
-		float[] p3Joints = new float[6];
-
-		for(int i = 0; i < 6; i += 1) {
-			p3Joints[i] = (angles[i] + p.angles[i]) % RobotRun.TWO_PI;
+	public Point add(PVector pos, RQuaternion orien) {
+		PVector resPos = PVector.add(position, pos);
+		RQuaternion resOrien = orientation.mult(orien);
+		// TODO inverse kinematics?
+		float[] jointAngles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+		
+		return new Point(resPos, resOrien, jointAngles);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param jointAngles
+	 * @return
+	 */
+	public Point add(float[] jointAngles) {
+		float[] resJointAngles = new float[6];
+		
+		for (int jdx = 0; jdx < 6; ++jdx) {
+			resJointAngles[jdx] = RMath.mod2PI(this.angles[jdx] + jointAngles[jdx]);
 		}
-
-		p3.position = p3Pos;
-		p3.orientation = p3Orient;
-		p3.angles = p3Joints;
-
-		return p3;
+		
+		// TODO REFACTOR THIS
+		RoboticArm robot = RobotRun.getInstanceRobot();
+		return robot.getToolTipNative();
 	}
 
 	@Override

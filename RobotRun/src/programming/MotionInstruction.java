@@ -125,22 +125,32 @@ public class MotionInstruction extends Instruction  {
 	 */
 	public Point getVector(Program parent) {
 		Point pt = getPoint(parent);
-		Point offset = new Point();
 		
 		if(pt == null) return null;
 		
-		if(userFrame != -1) {
-			// Convert point into the Native Coordinate System
-			RoboticArm model = RobotRun.getInstanceRobot();
-			UserFrame active = model.getUserFrame(userFrame);
-			pt = RMath.removeFrame(model, pt, active.getOrigin(), active.getOrientation());
+		RoboticArm robot = RobotRun.getInstanceRobot();
+		
+		if(offsetRegNum != -1) {
+			// Apply offset register
+			Point offset = robot.getPReg(offsetRegNum).point;
 			
-			if(offsetRegNum != -1) {
-				offset = RobotRun.getInstanceRobot().getPReg(offsetRegNum).point;
+			if (motionType == Fields.MTYPE_JOINT) {
+				// Combine joint angles
+				pt = pt.add(offset.angles);
+				
+			} else {
+				// Combine offset and point position and orientation
+				pt = pt.add(offset.position, offset.orientation);
 			}
 		}
+		
+		if(userFrame != -1) {	
+			// Convert point into the Native Coordinate System
+			UserFrame active = robot.getUserFrame(userFrame);
+			pt = RMath.removeFrame(robot, pt, active.getOrigin(), active.getOrientation());
+		}
 				
-		return pt.add(offset);
+		return pt;
 	} // end getVector()
 	
 	public void setGlobalPosRegUse(boolean in) { isGPosReg = in; }
