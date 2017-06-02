@@ -57,13 +57,13 @@ public abstract class Frame {
 			RealMatrix Ar = null, Br = null, Cr = null;
 			PVector vt = null;
 
-			if (counter == 0) {
-				/* Case 3: C = point 1 */
-				Ar = ori2;
-				Br = ori3;
-				Cr = ori1;
+			if (counter == 2) {
+				/* Case 1: C = point 3 */
+				Ar = ori1;
+				Br = ori2;
+				Cr = ori3;
 				/* 2Ct - At - Bt */
-				vt = PVector.sub(PVector.mult(pos1, 2), PVector.add(pos2, pos3));
+				vt = PVector.sub(PVector.mult(pos3, 2), PVector.add(pos1, pos2));
 
 			} else if (counter == 1) {
 				/* Case 2: C = point 2 */
@@ -73,14 +73,34 @@ public abstract class Frame {
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos2, 2), PVector.add(pos3, pos1));
 
-			} else if (counter == 2) {
-				/* Case 1: C = point 3 */
-				Ar = ori1;
-				Br = ori2;
-				Cr = ori3;
+			} else if (counter == 0) {
+				/* Case 3: C = point 1 */
+				Ar = ori2;
+				Br = ori3;
+				Cr = ori1;
 				/* 2Ct - At - Bt */
-				vt = PVector.sub(PVector.mult(pos3, 2), PVector.add(pos1, pos2));
+				vt = PVector.sub(PVector.mult(pos1, 2), PVector.add(pos2, pos3));
 
+			} else {
+				Ar = RMath.formRMat(
+					1.0, 0.0, 0.0,
+					0.0, 1.0, 0.0,
+					0.0, 0.0, 1.0
+				);
+				
+				Br = RMath.formRMat(
+					1.0, 0.0, 0.0,
+					0.0, 1.0, 0.0,
+					0.0, 0.0, 1.0
+				);
+				
+				Cr = RMath.formRMat(
+					1.0, 0.0, 0.0,
+					0.0, 1.0, 0.0,
+					0.0, 0.0, 1.0
+				);
+				
+				vt = new PVector(0, 0, 0);
 			}
 
 			/****************************************************************
@@ -150,7 +170,7 @@ public abstract class Frame {
 	 *                major order)
 	 */
 	public RMatrix createAxesFromThreePoints(PVector p1, PVector p2, PVector p3) {
-		float[][] axesRefWorld = new float[3][3];
+		double[][] axesRefWorld = new double[3][3];
 		PVector xAxis = PVector.sub(p2, p1);
 		PVector yAxis = PVector.sub(p3, p1);
 		xAxis.normalize();

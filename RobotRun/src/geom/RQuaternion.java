@@ -346,7 +346,7 @@ public class RQuaternion implements Cloneable {
 	 * to this [quaternion].
 	 */
 	public RMatrix toMatrix() {
-		float[][] r = new float[3][3];
+		double[][] r = new double[3][3];
 
 		r[0][0] = 1 - 2 * (y*y + z*z);
 		r[1][0] = 2 * (x*y - w*z);

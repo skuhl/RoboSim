@@ -63,9 +63,23 @@ import robot.RoboticArm;
  */
 public abstract class DataManagement {
 	
+	/**
+	 * Flag for loading in matrices, which use float 2D arrays, which
+	 * have since been changed to double arrays.
+	 */
+	private static final int FLOAT_DATA;
+	
+	/**
+	 * Used to load data with old save versions. A value of 0 implies using the
+	 * most recent version.
+	 */
+	private static int LOAD_VERSION;
+	
 	private static String dataDirPath, errDirPath, tmpDirPath, scenarioDirPath;
 	
 	static {
+		FLOAT_DATA = 1;
+		
 		dataDirPath = null;
 		errDirPath = null;
 		tmpDirPath = null;
@@ -74,6 +88,7 @@ public abstract class DataManagement {
 	
 	// Must be called when RobotRun starts!!!!
 	public static void initialize(RobotRun process) {
+		LOAD_VERSION = 0;
 		dataDirPath = process.sketchPath("data\\");
 		errDirPath = process.sketchPath("err\\");
 		tmpDirPath = process.sketchPath("tmp\\");
@@ -143,6 +158,28 @@ public abstract class DataManagement {
 		}
 		
 		return fileNames;
+	}
+	
+	private static double[][] load2DDoubleArray(DataInputStream in) throws IOException {
+		// Read byte flag
+		byte flag = in.readByte();
+
+		if (flag == 0) {
+			return null;
+		}
+		
+		// Read the length of the list
+		int numOfRows = in.readInt(),
+				numOfCols = in.readInt();
+		double[][] list = new double[numOfRows][numOfCols];
+		// Read each value of the list
+		for (int row = 0; row < list.length; ++row) {
+			for (int col = 0; col < list[0].length; ++col) {
+				list[row][col] = in.readDouble();
+			}
+		}
+
+		return list;
 	}
 	
 	private static ExpressionElement loadExpressionElement(RoboticArm robot,
@@ -241,41 +278,39 @@ public abstract class DataManagement {
 
 		if (flag == 0) {
 			return null;
-
-		} else {
-			// Read the length of the list
-			int len = in.readInt();
-			float[] list = new float[len];
-			// Read each value of the list
-			for (int idx = 0; idx < list.length; ++idx) {
-				list[idx] = in.readFloat();
-			}
-
-			return list;
 		}
+		
+		// Read the length of the list
+		int len = in.readInt();
+		float[] list = new float[len];
+		// Read each value of the list
+		for (int idx = 0; idx < list.length; ++idx) {
+			list[idx] = in.readFloat();
+		}
+
+		return list;
 	}
 	
-	private static float[][] loadFloatArray2D(DataInputStream in) throws IOException {
+	private static float[][] load2DFloatArray(DataInputStream in) throws IOException {
 		// Read byte flag
 		byte flag = in.readByte();
 
 		if (flag == 0) {
 			return null;
-
-		} else {
-			// Read the length of the list
-			int numOfRows = in.readInt(),
-					numOfCols = in.readInt();
-			float[][] list = new float[numOfRows][numOfCols];
-			// Read each value of the list
-			for (int row = 0; row < list.length; ++row) {
-				for (int col = 0; col < list[0].length; ++col) {
-					list[row][col] = in.readFloat();
-				}
-			}
-
-			return list;
 		}
+		
+		// Read the length of the list
+		int numOfRows = in.readInt(),
+				numOfCols = in.readInt();
+		float[][] list = new float[numOfRows][numOfCols];
+		// Read each value of the list
+		for (int row = 0; row < list.length; ++row) {
+			for (int col = 0; col < list[0].length; ++col) {
+				list[row][col] = in.readFloat();
+			}
+		}
+
+		return list;
 	}
 	
 	private static void loadFrame(Frame ref, DataInputStream in) throws IOException {
@@ -510,11 +545,10 @@ public abstract class DataManagement {
 
 		if (flag == 0) {
 			return null;
-
-		} else {
-			// Read integer value
-			return in.readInt();
 		}
+		
+		// Read integer value
+		return in.readInt();
 	}
 	
 	private static Point loadPoint(DataInputStream in) throws IOException {
@@ -523,17 +557,16 @@ public abstract class DataManagement {
 
 		if (val == 0) {
 			return null;
-
-		} else {
-			// Read the point's position
-			PVector position = loadPVector(in);
-			// Read the point's orientation
-			RQuaternion orientation = loadRQuaternion(in);
-			// Read the joint angles for the joint's position
-			float[] angles = loadFloatArray(in);
-
-			return new Point(position, orientation, angles);
 		}
+		
+		// Read the point's position
+		PVector position = loadPVector(in);
+		// Read the point's orientation
+		RQuaternion orientation = loadRQuaternion(in);
+		// Read the joint angles for the joint's position
+		float[] angles = loadFloatArray(in);
+
+		return new Point(position, orientation, angles);
 	}
 
 	private static Program loadProgram(RoboticArm robot, DataInputStream in) throws IOException {
@@ -542,38 +575,37 @@ public abstract class DataManagement {
 
 		if (flag == 0) {
 			return null;
+		}
+		
+		// Read program name
+		String name = in.readUTF();
+		Program prog = new Program(name, robot);
+		int nReg;
 
-		} else {
-			// Read program name
-			String name = in.readUTF();
-			Program prog = new Program(name, robot);
-			int nReg;
+		// Read in all the positions saved for the program
+		do {
+			nReg = in.readInt();
 
-			// Read in all the positions saved for the program
-			do {
-				nReg = in.readInt();
-
-				if (nReg == -1) {
-					break;  
-				}
-
-				// Load the saved point
-				Point pt = loadPoint(in);
-				prog.setPosition(nReg, pt);
-
-			} while (true);
-
-			// Read the number of instructions stored for this program
-			int numOfInst = Math.max(0, Math.min(in.readInt(), 500));
-
-			while(numOfInst-- > 0) {
-				// Read in each instruction
-				Instruction inst = loadInstruction(robot, in);
-				prog.addInstAtEnd(inst);
+			if (nReg == -1) {
+				break;  
 			}
 
-			return prog;
+			// Load the saved point
+			Point pt = loadPoint(in);
+			prog.setPosition(nReg, pt);
+
+		} while (true);
+
+		// Read the number of instructions stored for this program
+		int numOfInst = Math.max(0, Math.min(in.readInt(), 500));
+
+		while(numOfInst-- > 0) {
+			// Read in each instruction
+			Instruction inst = loadInstruction(robot, in);
+			prog.addInstAtEnd(inst);
 		}
+
+		return prog;
 	}
 	
 	private static int loadProgramBytes(RoboticArm robot, String srcPath) {
@@ -635,14 +667,14 @@ public abstract class DataManagement {
 		if (val == 0) {
 			return null;
 
-		} else {
-			// Read vector data
-			PVector v = new PVector();
-			v.x = in.readFloat();
-			v.y = in.readFloat();
-			v.z = in.readFloat();
-			return v;
 		}
+		
+		// Read vector data
+		PVector v = new PVector();
+		v.x = in.readFloat();
+		v.y = in.readFloat();
+		v.z = in.readFloat();
+		return v;
 	}
 	
 	private static int loadRegisterBytes(RoboticArm robot, String srcPath) {
@@ -743,16 +775,15 @@ public abstract class DataManagement {
 
 		if (flag == 0) {
 			return null;
-
-		} else {
-			// Read values of the quaternion
-			float w = in.readFloat(),
-					x = in.readFloat(),
-					y = in.readFloat(),
-					z = in.readFloat();
-
-			return new RQuaternion(w, x, y, z);
 		}
+		
+		// Read values of the quaternion
+		float w = in.readFloat(),
+				x = in.readFloat(),
+				y = in.readFloat(),
+				z = in.readFloat();
+
+		return new RQuaternion(w, x, y, z);
 	}
 
 	private static Scenario loadScenario(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
@@ -761,67 +792,66 @@ public abstract class DataManagement {
 
 		if (flag == 0) {
 			return null;
-
-		} else {
-			// Read the name of the scenario
-			String name = in.readUTF();
-			Scenario s = new Scenario(name);
-			// An extra set of only the loaded fixtures
-			ArrayList<Fixture> fixtures = new ArrayList<>();
-			// A list of parts which have a fixture reference defined
-			ArrayList<LoadedPart> partsWithReferences = new ArrayList<>();
-
-			// Read the number of objects in the scenario
-			int size = in.readInt();
-			// Read all the world objects contained in the scenario
-			while (size-- > 0) {
-				try {
-					Object loadedObject = loadWorldObject(in, app);
-	
-					if (loadedObject instanceof WorldObject) {
-						// Add all normal world objects to the scenario
-						s.addWorldObject( (WorldObject)loadedObject );
-	
-						if (loadedObject instanceof Fixture) {
-							// Save an extra reference of each fixture
-							fixtures.add( (Fixture)loadedObject );
-						}
-	
-					} else if (loadedObject instanceof LoadedPart) {
-						LoadedPart lPart = (LoadedPart)loadedObject;
-	
-						if (lPart.part != null) {
-							// Save the part in the scenario
-							s.addWorldObject(lPart.part);
-	
-							if (lPart.referenceName != null) {
-								// Save any part with a defined reference
-								partsWithReferences.add(lPart);
-							}
-						}
-					}
-					
-				} catch (NullPointerException NPEx) {
-					/* Invalid model source file name */
-					System.err.println( NPEx.getMessage() );
-					
-				} catch (RuntimeException REx) {
-					/* Invalid model source file name */
-					System.err.println( REx.getMessage() );
-				}
-			}
-			
-			// Set all the Part's references
-			for (LoadedPart lPart : partsWithReferences) {
-				for (Fixture f : fixtures) {
-					if (lPart.referenceName.equals(f.getName())) {
-						lPart.part.setFixtureRef(f);
-					}
-				}
-			}
-
-			return s;
 		}
+		
+		// Read the name of the scenario
+		String name = in.readUTF();
+		Scenario s = new Scenario(name);
+		// An extra set of only the loaded fixtures
+		ArrayList<Fixture> fixtures = new ArrayList<>();
+		// A list of parts which have a fixture reference defined
+		ArrayList<LoadedPart> partsWithReferences = new ArrayList<>();
+
+		// Read the number of objects in the scenario
+		int size = in.readInt();
+		// Read all the world objects contained in the scenario
+		while (size-- > 0) {
+			try {
+				Object loadedObject = loadWorldObject(in, app);
+
+				if (loadedObject instanceof WorldObject) {
+					// Add all normal world objects to the scenario
+					s.addWorldObject( (WorldObject)loadedObject );
+
+					if (loadedObject instanceof Fixture) {
+						// Save an extra reference of each fixture
+						fixtures.add( (Fixture)loadedObject );
+					}
+
+				} else if (loadedObject instanceof LoadedPart) {
+					LoadedPart lPart = (LoadedPart)loadedObject;
+
+					if (lPart.part != null) {
+						// Save the part in the scenario
+						s.addWorldObject(lPart.part);
+
+						if (lPart.referenceName != null) {
+							// Save any part with a defined reference
+							partsWithReferences.add(lPart);
+						}
+					}
+				}
+				
+			} catch (NullPointerException NPEx) {
+				/* Invalid model source file name */
+				System.err.println( NPEx.getMessage() );
+				
+			} catch (RuntimeException REx) {
+				/* Invalid model source file name */
+				System.err.println( REx.getMessage() );
+			}
+		}
+		
+		// Set all the Part's references
+		for (LoadedPart lPart : partsWithReferences) {
+			for (Fixture f : fixtures) {
+				if (lPart.referenceName.equals(f.getName())) {
+					lPart.part.setFixtureRef(f);
+				}
+			}
+		}
+
+		return s;
 	}
 
 	private static int loadScenarioBytes(RobotRun process, String srcPath) {
@@ -840,13 +870,31 @@ public abstract class DataManagement {
 		// Load each scenario from their respective files
 		for (File scenarioFile : scenarioFiles) {
 			Scenario s = null;
+			FileInputStream in;
+			DataInputStream dataIn;
 			
 			try {
 				activeFile = scenarioFile;
-				FileInputStream in = new FileInputStream(activeFile);
-				DataInputStream dataIn = new DataInputStream(in);
+				in = new FileInputStream(activeFile);
+				dataIn = new DataInputStream(in);
 				
-				s = loadScenario(dataIn, process);
+				
+				try {
+					s = loadScenario(dataIn, process);
+					
+				} catch (IOException IOEx1) {
+					// Try older load version
+					try {
+						LOAD_VERSION = FLOAT_DATA;
+						s = loadScenario(dataIn, process);
+						LOAD_VERSION = 0;
+						
+					} catch (IOException IOEx2) {
+						System.err.printf("File, %s, in \\tmp\\scenarios is corrupt!\n",
+								activeFile.getName());
+						IOEx2.printStackTrace();
+					}
+				}
 				
 				if (s != null) {
 					scenarioList.add(s);
@@ -856,16 +904,18 @@ public abstract class DataManagement {
 				in.close();
 			
 			} catch (FileNotFoundException FNFEx) {
-				System.err.printf("File %s does not exist in \\tmp\\scenarios.\n", activeFile.getName());
+				System.err.printf("File %s does not exist in \\tmp\\scenarios.\n",
+						activeFile.getName());
 				FNFEx.printStackTrace();
 				
 			} catch (IOException IOEx) {
-				System.err.printf("File, %s, in \\tmp\\scenarios is corrupt!\n", activeFile.getName());
+				System.err.printf("File, %s, in \\tmp\\scenarios is corrupt!\n",
+						activeFile.getName());
 				IOEx.printStackTrace();
 			}
 		}
 		
-		activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");;
+		activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");
 		
 		try {
 			
@@ -1067,14 +1117,29 @@ public abstract class DataManagement {
 			RShape form = loadShape(in, app);
 			// Load the object's local orientation
 			PVector center = loadPVector(in);
-			RMatrix orientationAxes = new RMatrix( loadFloatArray2D(in) );
+			RMatrix orientationAxes;
+			
+			if (LOAD_VERSION == FLOAT_DATA) {
+				orientationAxes = new RMatrix( load2DFloatArray(in) );
+				
+			} else {
+				orientationAxes = new RMatrix( load2DDoubleArray(in) );
+			}
+			
 			CoordinateSystem localOrientation = new CoordinateSystem(center, orientationAxes);
 			localOrientation.setOrigin(center);
 			localOrientation.setAxes(new RMatrix(orientationAxes));
 
 			if (flag == 1) {
 				center = loadPVector(in);
-				orientationAxes = new RMatrix( loadFloatArray2D(in) );
+				
+				if (LOAD_VERSION == FLOAT_DATA) {
+					orientationAxes = new RMatrix( load2DFloatArray(in) );
+					
+				} else {
+					orientationAxes = new RMatrix( load2DDoubleArray(in) );
+				}
+				
 				CoordinateSystem defaultOrientation = new CoordinateSystem(center, orientationAxes);
 				defaultOrientation.setOrigin(center);
 				defaultOrientation.setAxes(new RMatrix(orientationAxes));
@@ -1117,6 +1182,26 @@ public abstract class DataManagement {
 		} catch (SecurityException SEx) {
 			// Issue with file permissions
 			SEx.printStackTrace();
+		}
+	}
+	
+	private static void save2DDoubleArray(double[][] list, DataOutputStream out) throws IOException {
+		if (list == null) {
+			// Write flag value
+			out.writeByte(0);
+
+		} else {
+			// Write flag value
+			out.writeByte(1);
+			// Write the dimensions of the list
+			out.writeInt(list.length);
+			out.writeInt(list[0].length);
+			// Write each value in the list
+			for (int row = 0; row < list.length; ++row) {
+				for (int col = 0; col < list[0].length; ++col) {
+					out.writeDouble(list[row][col]);
+				}
+			}
 		}
 	}
 
@@ -1209,26 +1294,6 @@ public abstract class DataManagement {
 			// Write each value in the list
 			for (int idx = 0; idx < list.length; ++idx) {
 				out.writeFloat(list[idx]);
-			}
-		}
-	}
-	
-	private static void saveFloatArray2D(float[][] list, DataOutputStream out) throws IOException {
-		if (list == null) {
-			// Write flag value
-			out.writeByte(0);
-
-		} else {
-			// Write flag value
-			out.writeByte(1);
-			// Write the dimensions of the list
-			out.writeInt(list.length);
-			out.writeInt(list[0].length);
-			// Write each value in the list
-			for (int row = 0; row < list.length; ++row) {
-				for (int col = 0; col < list[0].length; ++col) {
-					out.writeFloat(list[row][col]);
-				}
 			}
 		}
 	}
@@ -1486,7 +1551,7 @@ public abstract class DataManagement {
 			}
 			
 		}/* Add other instructions here! */
-		else if (inst instanceof Instruction) {
+		else if (inst != null) {
 			/// A blank instruction
 			out.writeByte(1);
 			out.writeBoolean(inst.isCommented());
@@ -1791,11 +1856,11 @@ public abstract class DataManagement {
 		
 		File scenarioFile = null;
 		
-		try {
-			if (ASName != null) {
-				// Save the name of the active scenario
-				scenarioFile = new File(dest.getAbsolutePath() + "/activeScenario.bin");
-				
+		if (ASName != null) {
+			// Save the name of the active scenario
+			scenarioFile = new File(dest.getAbsolutePath() + "/activeScenario.bin");
+			
+			try {
 				if (!scenarioFile.exists()) {
 					scenarioFile.createNewFile();
 				}
@@ -1807,9 +1872,17 @@ public abstract class DataManagement {
 				
 				dataOut.close();
 				out.close();
+				
+			} catch (IOException IOEx) {
+				// Issue with writing or opening a file
+				System.err.printf("Error with file %s.\n", scenarioFile.getName());
+				IOEx.printStackTrace();
+				return 2;
 			}
-			
-			for (Scenario s : scenarios) {
+		}
+		
+		for (Scenario s : scenarios) {
+			try {
 				// Save each scenario in a separate file
 				scenarioFile = new File(dest.getAbsolutePath() + "/" + s.getName() + ".bin");
 				
@@ -1824,19 +1897,18 @@ public abstract class DataManagement {
 				
 				dataOut.close();
 				out.close();
-			}
-			
-			return 0;
-			
-		} catch (IOException IOEx) {
-			// Issue with writing or opening a file
-			if (scenarioFile != null) {
+				
+			} catch (IOException IOEx) {
+				// Issue with writing or opening a file
 				System.err.printf("Error with file %s.\n", scenarioFile.getName());
+				IOEx.printStackTrace();
+				return 2;
 			}
-			
-			IOEx.printStackTrace();
-			return 2;
 		}
+		
+		return 0;
+			
+		
 	}
 	
 	public static void saveScenarios(RobotRun process) {
@@ -1920,7 +1992,7 @@ public abstract class DataManagement {
 			saveShape(wldObj.getForm(), out);
 			// Save the local orientation of the object
 			savePVector(wldObj.getLocalCenter(), out);
-			saveFloatArray2D(wldObj.getLocalOrientation().getDataF(), out);
+			save2DDoubleArray(wldObj.getLocalOrientation().getData(), out);
 			
 			if (wldObj instanceof Part) {
 				Part part = (Part)wldObj;
@@ -1928,7 +2000,7 @@ public abstract class DataManagement {
 				
 				// Save the default orientation of the part
 				savePVector(part.getDefaultCenter(), out);
-				saveFloatArray2D(part.getDefaultOrientation().getDataF(), out);
+				save2DDoubleArray(part.getDefaultOrientation().getData(), out);
 				
 				savePVector(part.getOBBDims(), out);
 
