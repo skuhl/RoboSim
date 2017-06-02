@@ -3550,6 +3550,7 @@ public class RobotRun extends PApplet {
 				
 				if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT) {
 					pt = activeRobot.getToolTipNative();
+					
 				} else {
 					pt = activeRobot.getFacePlatePoint();
 				}
@@ -3575,8 +3576,7 @@ public class RobotRun extends PApplet {
 
 			if (isShift() && pReg != null) {
 				// Save the Robot's current position and joint angles
-				
-				pReg.point = activeRobot.getToolTipUser();
+				pReg.point = activeRobot.getToolTipNative();
 				pReg.isCartesian = true;
 				DataManagement.saveRobotData(r, 3);
 			}
@@ -7106,6 +7106,14 @@ public class RobotRun extends PApplet {
 			DataManagement.errLog(NPEx);
 			throw NPEx;
 		}
+		
+		/**
+		RMatrix rx = RMath.formRMat(new PVector(1f, 0f, 0f), 135f * DEG_TO_RAD);
+		RMatrix ry = RMath.formRMat(new PVector(0f, 1f, 0f), 135f * DEG_TO_RAD);
+		RMatrix rz = RMath.formRMat(new PVector(0f, 0f, 1f), 135f * DEG_TO_RAD);
+		
+		System.out.printf("%s\n%s\n%s\n", rx, ry, rz);
+		/**/
 	}
 
 	/**
