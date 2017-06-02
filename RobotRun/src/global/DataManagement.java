@@ -888,6 +888,8 @@ public abstract class DataManagement {
 						LOAD_VERSION = FLOAT_DATA;
 						s = loadScenario(dataIn, process);
 						LOAD_VERSION = 0;
+						// Remove the old file
+						activeFile.delete();
 						
 					} catch (IOException IOEx2) {
 						System.err.printf("File, %s, in \\tmp\\scenarios is corrupt!\n",
@@ -1127,8 +1129,6 @@ public abstract class DataManagement {
 			}
 			
 			CoordinateSystem localOrientation = new CoordinateSystem(center, orientationAxes);
-			localOrientation.setOrigin(center);
-			localOrientation.setAxes(new RMatrix(orientationAxes));
 
 			if (flag == 1) {
 				center = loadPVector(in);
@@ -1141,8 +1141,6 @@ public abstract class DataManagement {
 				}
 				
 				CoordinateSystem defaultOrientation = new CoordinateSystem(center, orientationAxes);
-				defaultOrientation.setOrigin(center);
-				defaultOrientation.setAxes(new RMatrix(orientationAxes));
 				
 				// Load the part's bounding-box and fixture reference name
 				PVector OBBDims = loadPVector(in);
