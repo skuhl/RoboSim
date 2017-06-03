@@ -14,8 +14,12 @@ public class CamMoveToObject extends MotionInstruction {
 		
 	}
 	
-	@Override
-	public Point getVector(Program parent) {
+	/**
+	 * TODO comment this
+	 * 
+	 * @return
+	 */
+	public Point getVector() {
 		PVector pos = tgtObj.getLocalCenter();
 		RMatrix rot = tgtObj.getLocalOrientation();
 		
@@ -25,5 +29,4 @@ public class CamMoveToObject extends MotionInstruction {
 		
 		return new Point(pos, rot);
 	}
-	
 }

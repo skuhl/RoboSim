@@ -78,31 +78,7 @@ public class MotionInstruction extends Instruction  {
 	}
 	
 	public int getMotionType() { return motionType; }
-	public int getOffset() { return offsetRegNum; }  
-	
-	/**
-	 * Returns the unmodified point that is associate
-	 * with this motion instruction.
-	 *
-	 * @param parent  The program to which this
-	 *                instruction belongs
-	 */
-	public Point getPoint(Program parent) {
-		Point pt = null;
-
-		if (isGPosReg) {
-			pt = RobotRun.getInstanceRobot().getPReg(positionNum).point;   
-
-		} else if(positionNum != -1) {
-			pt = parent.getPosition(positionNum);
-		}
-
-		if (pt != null) {
-			return pt.clone();
-		}
-
-		return null;
-	}
+	public int getOffset() { return offsetRegNum; } 
 	
 	public int getPositionNum() { return positionNum; }
 	public MotionInstruction getSecondaryPoint() { return circSubInstr; }
@@ -115,43 +91,6 @@ public class MotionInstruction extends Instruction  {
 	public int getTermination() { return termination; }
 	public int getToolFrame() { return toolFrame; }
 	public int getUserFrame() { return userFrame; }
-	/**
-	 * Returns the point associated with this motion instruction
-	 * (can be either a position in the program or a global position
-	 * register value) in Native Coordinates.
-	 * 
-	 * @param parent  The program, to which this instruction belongs
-	 * @returning     The point associated with this instruction
-	 */
-	public Point getVector(Program parent) {
-		Point pt = getPoint(parent);
-		
-		if(pt == null) return null;
-		
-		RoboticArm robot = RobotRun.getInstanceRobot();
-		
-		if(offsetRegNum != -1) {
-			// Apply offset register
-			Point offset = robot.getPReg(offsetRegNum).point;
-			
-			if (motionType == Fields.MTYPE_JOINT) {
-				// Combine joint angles
-				pt = pt.add(offset.angles);
-				
-			} else {
-				// Combine offset and point position and orientation
-				pt = pt.add(offset.position, offset.orientation);
-			}
-		}
-		
-		if(userFrame != -1) {	
-			// Convert point into the Native Coordinate System
-			UserFrame active = robot.getUserFrame(userFrame);
-			pt = RMath.removeFrame(robot, pt, active.getOrigin(), active.getOrientation());
-		}
-				
-		return pt;
-	} // end getVector()
 	
 	public void setGlobalPosRegUse(boolean in) { isGPosReg = in; }
 	public void setMotionType(int in) { motionType = in; }
