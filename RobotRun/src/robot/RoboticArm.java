@@ -12,6 +12,7 @@ import enums.RobotMotion;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
+import geom.DimType;
 import geom.MyPShape;
 import geom.Part;
 import geom.Point;
@@ -25,6 +26,7 @@ import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
+import programming.CamMoveToObject;
 import programming.Instruction;
 import programming.MotionInstruction;
 import programming.Program;
@@ -436,15 +438,9 @@ public class RoboticArm {
 	public Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
 		PVector position = RMath.vToFrame(pt.position, origin, axes);
 		RQuaternion orientation = axes.transformQuaternion(pt.orientation);
-		// Update joint angles associated with the point
-		float[] newJointAngles = RMath.inverseKinematics(this, pt.angles, position, orientation);
-
-		if (newJointAngles != null) {
-			return new Point(position, orientation, newJointAngles);
-		} else {
-			// If inverse kinematics fails use the old angles
-			return new Point(position, orientation, pt.angles);
-		}
+		
+		// If inverse kinematics fails use the old angles
+		return new Point(position, orientation, pt.angles);
 	}
 	
 	/**
@@ -1394,6 +1390,29 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param mInst
+	 * @param parent
+	 * @return			A copy of the point associated with the given motion
+	 * 					instruction
+	 */
+	public Point getPosition(MotionInstruction mInst, Program parent) {
+		int posNum = mInst.getPositionNum();
+		
+		if (mInst.usesGPosReg()) {
+			// The instruction references a global position register
+			if (posNum == -1) {
+				return null;	
+			}
+			
+			return PREG[posNum].point.clone();
+		}
+		
+		return parent.getPosition(posNum).clone();
+	}
+	
+	/**
 	 * Returns the position register, associated with the given index, of the
 	 * Robot, or null if the given index is invalid. A Robot has a total of 100
 	 * position registers, which are zero-indexed.
@@ -1559,6 +1578,38 @@ public class RoboticArm {
 			// Invalid index
 			return null;
 		}
+	}
+	
+	/**
+	 * 
+	 * @param mInst
+	 * @param parent	
+	 * @return			The modified position associated with the given motion
+	 * 					instruction
+	 */
+	public Point getVector(MotionInstruction mInst, Program parent) {
+		Point pt = getPosition(mInst, parent);
+		
+		if (mInst.getOffset() != -1) {
+			// Apply the position offset
+			Point offset = PREG[mInst.getOffset()].point;
+			
+			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
+				pt = pt.add(offset.angles);
+				
+			} else {
+				// TODO do circular instructions differ?
+				pt = pt.add(offset.position, offset.orientation);
+			}
+		}
+		
+		if (mInst.getUserFrame() != -1) {
+			// Remove the associated user frame
+			UserFrame uFrame = getUserFrame(mInst.getUserFrame());
+			pt = removeFrame(pt, uFrame.getOrigin(), uFrame.getOrientation());
+		}
+		
+		return pt;
 	}
 	
 	/**
@@ -1946,9 +1997,7 @@ public class RoboticArm {
 	
 	/**
 	 * Converts the given point, pt, from the Coordinate System defined by the
-	 * given origin vector and rotation quaternion axes. The joint angles
-	 * associated with the point will be transformed as well, though, if inverse
-	 * kinematics fails, then the original joint angles are used instead.
+	 * given origin vector and rotation quaternion axes.
 	 * 
 	 * @param pt
 	 *            A point with initialized position and orientation
@@ -1962,17 +2011,8 @@ public class RoboticArm {
 	public Point removeFrame(Point pt, PVector origin, RQuaternion axes) {
 		PVector position = RMath.vFromFrame(pt.position, origin, axes);
 		RQuaternion orientation = RQuaternion.mult(pt.orientation, axes);
-
-		// Update joint angles associated with the point
-		float[] newJointAngles = RMath.inverseKinematics(this, pt.angles,
-				position, orientation);
-
-		if (newJointAngles != null) {
-			return new Point(position, orientation, newJointAngles);
-		} else {
-			// If inverse kinematics fails use the old angles
-			return new Point(position, orientation, pt.angles);
-		}
+		
+		return new Point(position, orientation, pt.angles);
 	}
 	
 	/**

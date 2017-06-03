@@ -4933,6 +4933,7 @@ public class RobotRun extends PApplet {
 		int tokenOffset = Fields.TXT_PAD - Fields.PAD_OFFSET;
 		
 		int size = p.getNumOfInst();
+		Point tipPos = activeRobot.getToolTipNative();
 		
 		for (int i = 0; i < size; i += 1) {
 			DisplayLine line = new DisplayLine(i);
@@ -4956,8 +4957,7 @@ public class RobotRun extends PApplet {
 				// Show '@' at the an instrution, if the Robot's position is
 				// close to that position stored in the instruction's register
 				MotionInstruction a = (MotionInstruction) instr;
-				Point tipPos = activeRobot.getToolTipNative();
-				Point instPt = a.getVector(p);
+				Point instPt = activeRobot.getVector(a, p);
 
 				if (instPt != null && tipPos.position.dist(instPt.position) < (activeRobot.getLiveSpeed() / 100f)) {
 					line.add("@");
@@ -5415,7 +5415,7 @@ public class RobotRun extends PApplet {
 			// instruction
 			mInst = (MotionInstruction) activeRobot.getActiveInstruction();
 			Program p = activeRobot.getActiveProg();
-			Point pt = mInst.getPoint(p);
+			Point pt = activeRobot.getPosition(mInst, p);
 			
 			// Initialize the point if it is null
 			if (pt == null) {
@@ -6243,19 +6243,17 @@ public class RobotRun extends PApplet {
 				if (jointAngles == null) {
 					// Inverse kinematics failed
 					return new Point(position, orientation, defJointAngles);
-					
-				} else {
-					return new Point(position, orientation, jointAngles);
-				}
-
-			} else {
-				// Bring angles within range: (0, TWO_PI)
-				for (int idx = 0; idx < inputs.length; ++idx) {
-					inputs[idx] = RMath.mod2PI(inputs[idx] * DEG_TO_RAD);
 				}
 				
-				return activeRobot.getToolTipNative();
+				return new Point(position, orientation, jointAngles);
 			}
+			
+			// Bring angles within range: (0, TWO_PI)
+			for (int idx = 0; idx < inputs.length; ++idx) {
+				inputs[idx] = RMath.mod2PI(inputs[idx] * DEG_TO_RAD);
+			}
+			
+			return activeRobot.getToolTipNative(inputs);
 
 		} catch (NumberFormatException NFEx) {
 			// Invalid input
@@ -7152,6 +7150,7 @@ public class RobotRun extends PApplet {
 	 */
 	public boolean setUpInstruction(Program program, RoboticArm model, MotionInstruction instruction) {
 		Point start = model.getToolTipNative();
+		Point instPt = model.getVector(instruction, program);
 		
 		if (!instruction.checkFrames(activeRobot.getActiveToolIdx(), activeRobot.getActiveUserIdx())) {
 			// Current Frames must match the instruction's frames
@@ -7159,40 +7158,44 @@ public class RobotRun extends PApplet {
 					activeRobot.getActiveToolIdx(), instruction.getUserFrame(),
 					activeRobot.getActiveUserIdx());
 			return false;
-		} else if (instruction.getVector(program) == null) {
+		} else if (instPt == null) {
 			return false;
 		}
 
 		if (instruction.getMotionType() == Fields.MTYPE_JOINT) {
-			activeRobot.setupRotationInterpolation(instruction.getVector(program).angles);
+			activeRobot.setupRotationInterpolation(instPt.angles);
 		} // end joint movement setup
 		else if (instruction.getMotionType() == Fields.MTYPE_LINEAR) {
 
 			if (instruction.getTermination() == 0 || execSingleInst) {
-				beginNewLinearMotion(start, instruction.getVector(program));
+				beginNewLinearMotion(start, instPt);
+				
 			} else {
-				Point nextPoint = null;
+				Point limboPt = null;
+				
 				for (int n = activeRobot.getActiveInstIdx() + 1; n < program.getNumOfInst(); n++) {
 					Instruction nextIns = program.getInstAt(n);
 					if (nextIns instanceof MotionInstruction) {
 						MotionInstruction castIns = (MotionInstruction) nextIns;
-						nextPoint = castIns.getVector(program);
+						limboPt = activeRobot.getVector(castIns, program);
 						break;
 					}
 				}
-				if (nextPoint == null) {
-					beginNewLinearMotion(start, instruction.getVector(program));
+				
+				if (limboPt == null) {
+					beginNewLinearMotion(start, instPt);
+					
 				} else {
-					beginNewContinuousMotion(start, instruction.getVector(program), nextPoint,
+					beginNewContinuousMotion(start, instPt, limboPt,
 							instruction.getTermination() / 100f);
 				}
 			} // end if termination type is continuous
 		} // end linear movement setup
 		else if (instruction.getMotionType() == Fields.MTYPE_CIRCULAR) {
 			MotionInstruction nextIns = instruction.getSecondaryPoint();
-			Point nextPoint = nextIns.getVector(program);
+			Point nextPoint = activeRobot.getVector(nextIns, program);
 
-			beginNewCircularMotion(start, instruction.getVector(program), nextPoint);
+			beginNewCircularMotion(start, instPt, nextPoint);
 		} // end circular movement setup
 
 		return true;
@@ -7618,7 +7621,7 @@ public class RobotRun extends PApplet {
 				// Show the position associated with the active motion
 				// instruction
 				MotionInstruction mInst = (MotionInstruction) inst;
-				Point pt = mInst.getPoint(p);
+				Point pt = activeRobot.getPosition(mInst, p);
 
 				if (pt != null) {
 					boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
