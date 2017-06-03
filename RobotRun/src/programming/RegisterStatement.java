@@ -74,7 +74,7 @@ public class RegisterStatement extends Instruction {
 		} 
 		else {
 			if(result.getDataVal() == null) return 1;
-			((PositionRegister)reg).setPointValue(posIdx, result.getDataVal());
+			((PositionRegister)reg).setWorldPtVal(posIdx, result.getDataVal());
 		}
 
 		return 0;

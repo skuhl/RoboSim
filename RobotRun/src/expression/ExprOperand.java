@@ -96,7 +96,7 @@ public class ExprOperand implements ExpressionElement {
 		} else if(type == ExpressionElement.DREG) {
 			return ((DataRegister)regVal).value;
 		} else if(type == ExpressionElement.PREG_IDX) {
-			return ((PositionRegister)regVal).getPointValue(posIdx);
+			return ((PositionRegister)regVal).getWorldPtVal(posIdx);
 		} else {
 			return null;
 		}
