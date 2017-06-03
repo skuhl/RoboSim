@@ -20,7 +20,7 @@ public abstract class Register {
 	}
 	
 	/**
-	 * Returns the characters that distinguish one register's string form from
+	 * Returns the characters that distinguish one register's string form
 	 * another.
 	 * 
 	 * @return	Data -> 'R'
