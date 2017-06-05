@@ -41,8 +41,8 @@ public class RoboticArm {
 	public final int RID;
 	
 	// Indicates the direction of motion of the Robot when jogging
-	public final float[] jogLinear;
-	public final float[] jogRot;
+	private final int[] jogLinear;
+	private final int[] jogRot;
 	
 	public RQuaternion tgtOrientation;
 	public PVector tgtPosition;
@@ -194,8 +194,8 @@ public class RoboticArm {
 	public RoboticArm(int rid, PVector basePos, MyPShape[] segmentModels,
 			MyPShape[] endEffectorModels) {
 		
-		jogLinear = new float[] { 0f, 0f, 0f };
-		jogRot = new float[] { 0f, 0f, 0f };
+		jogLinear = new int[] { 0, 0, 0 };
+		jogRot = new int[] { 0, 0, 0 };
 		
 		motorSpeed = 1000f; // speed in mm/sec
 		liveSpeed = 10;
