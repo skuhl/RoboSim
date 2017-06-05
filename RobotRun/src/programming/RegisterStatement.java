@@ -3,6 +3,8 @@ package programming;
 import expression.ExprOperand;
 import expression.Expression;
 import global.Fields;
+import global.RMath;
+import processing.core.PVector;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
@@ -74,7 +76,40 @@ public class RegisterStatement extends Instruction {
 		} 
 		else {
 			if(result.getDataVal() == null) return 1;
-			((PositionRegister)reg).setWorldPtVal(posIdx, result.getDataVal());
+			
+			PositionRegister pReg = (PositionRegister)reg;
+			// Update position value
+			if (posIdx >= 0 && posIdx < 3) {
+				PVector wPos = RMath.vToWorld(pReg.point.position);
+				
+				if (posIdx == 0) {
+					wPos.x = result.getDataVal();
+					
+				} else if (posIdx == 1) {
+					wPos.y = result.getDataVal();
+					
+				} else if (posIdx == 2) {
+					wPos.z = result.getDataVal();
+				}
+				
+				pReg.point.position = RMath.vFromWorld(wPos);
+			
+			// Update orientation value
+			} else if (posIdx >= 3 && posIdx < 6) {
+				PVector wpr = RMath.nQuatToWEuler(pReg.point.orientation);
+				
+				if (posIdx == 0) {
+					wpr.x = result.getDataVal();
+					
+				} else if (posIdx == 1) {
+					wpr.y = result.getDataVal();
+					
+				} else if (posIdx == 2) {
+					wpr.z = result.getDataVal();
+				}
+				
+				pReg.point.orientation = RMath.wEulerToNQuat(wpr);
+			}
 		}
 
 		return 0;

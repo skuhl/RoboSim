@@ -71,33 +71,33 @@ public class ScreenProgs extends Screen {
 		if(RobotRun.getInstanceRobot().numOfPrograms() != 0) {
 			RobotRun.getInstanceRobot().setActiveInstIdx(0);
 			contents.reset();
-			robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
+			// TODO robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
 		}
 	}
 
 	@Override
 	public void actionF1() {
-		robotRun.nextScreen(ScreenMode.PROG_CREATE);
+		// TODO robotRun.nextScreen(ScreenMode.PROG_CREATE);
 	}
 
 	@Override
 	public void actionF2() {
 		if(RobotRun.getInstanceRobot().numOfPrograms() > 0) {
-			robotRun.nextScreen(ScreenMode.PROG_RENAME);
+			// TODO robotRun.nextScreen(ScreenMode.PROG_RENAME);
 		}
 	}
 
 	@Override
 	public void actionF3() {
 		if(RobotRun.getInstanceRobot().numOfPrograms() > 0) {
-			robotRun.nextScreen(ScreenMode.CONFIRM_PROG_DELETE);
+			// TODO robotRun.nextScreen(ScreenMode.CONFIRM_PROG_DELETE);
 		}
 	}
 
 	@Override
 	public void actionF4() {
 		if(RobotRun.getInstanceRobot().numOfPrograms() > 0) {
-			robotRun.nextScreen(ScreenMode.PROG_COPY);
+			// TODO robotRun.nextScreen(ScreenMode.PROG_COPY);
 		}
 	}
 

@@ -2,6 +2,8 @@ package expression;
 
 import geom.Point;
 import global.Fields;
+import global.RMath;
+import processing.core.PVector;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
@@ -93,18 +95,63 @@ public class ExprOperand implements ExpressionElement {
 	public Float getDataVal() {
 		if(type == ExpressionElement.FLOAT) {
 			return dataVal;
+			
 		} else if(type == ExpressionElement.DREG) {
 			return ((DataRegister)regVal).value;
+			
 		} else if(type == ExpressionElement.PREG_IDX) {
-			return ((PositionRegister)regVal).getWorldPtVal(posIdx);
-		} else {
-			return null;
+			PositionRegister pReg = (PositionRegister)regVal;
+			// Convert position into world frame reference
+			if (posIdx >= 0 && posIdx < 3) {
+				PVector wPos = RMath.vToWorld(pReg.point.position);
+				
+				if (posIdx == 0) {
+					return wPos.x;
+					
+				} else if (posIdx == 1) {
+					return wPos.y;
+					
+				} else if (posIdx == 2) {
+					return wPos.z;
+				}
+				
+			// Convert orientation into euler angles in the world frame
+			} else if (posIdx >= 3 && posIdx < 6) {
+				PVector wpr = RMath.nQuatToWEuler(pReg.point.orientation);
+				
+				if (posIdx == 3) {
+					return wpr.x;
+					
+				} else if (posIdx == 4) {
+					return wpr.y;
+					
+				} else if (posIdx == 5) {
+					return wpr.z;
+				}
+			}
 		}
+		
+		return null;
 	}
 
 	@Override
 	public int getLength() {
 		return (type == PREG_IDX) ? 2 : 1;
+	}
+	
+	/**
+	 * Determines if the position register operand represents a Cartesian point
+	 * or not. If this expression operand is not a position register value,
+	 * then null is returned.
+	 * 
+	 * @return	The type of position register, or null
+	 */
+	public Boolean isCart() {
+		if (type == ExpressionElement.PREG) {
+			return ((PositionRegister)regVal).isCartesian;
+		}
+		// Not a position register
+		return null;
 	}
 
 	public Point getPointVal() {

@@ -55,11 +55,11 @@ public class ScreenMainMenu extends Screen {
 	@Override
 	public void actionEntr() {
 		if(options.getLineIdx() == 0) { // Frames
-			robotRun.nextScreen(ScreenMode.SELECT_FRAME_MODE);
+			// TODO robotRun.nextScreen(ScreenMode.SELECT_FRAME_MODE);
 		} else if(options.getLineIdx() == 1) { // Macros
-			robotRun.nextScreen(ScreenMode.NAV_MACROS);
+			// TODO robotRun.nextScreen(ScreenMode.NAV_MACROS);
 		} else { // Manual Functions
-			robotRun.nextScreen(ScreenMode.NAV_MF_MACROS);
+			// TODO robotRun.nextScreen(ScreenMode.NAV_MF_MACROS);
 		}
 	}
 

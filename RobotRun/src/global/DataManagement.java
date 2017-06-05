@@ -229,7 +229,7 @@ public abstract class DataManagement {
 
 				} else if (opType == ExpressionElement.PREG) {
 					// Position register
-					ee = new ExprOperand(robot.getPReg(rdx), rdx);
+					ee = new ExprOperand(robot.getPReg(rdx));
 
 				} else if (opType == ExpressionElement.PREG_IDX) {
 					// Specific portion of a point
