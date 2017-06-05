@@ -3,6 +3,7 @@ package core;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -4598,8 +4599,7 @@ public class RobotRun extends PApplet {
 				/* Debug output *
 				updatePendantScreen();
 				/**/
-				Fields.debug("%s\n", screenStates.peek());
-				Fields.debug("line=%d\n", contents.getLineIdx());
+				Fields.debug("Screen state: %s\n", screenStates.peek());
 				/* Display the User and Tool frames associated with the current
 				 * motion instruction */
 				if (mode == ScreenMode.NAV_PROG_INSTR && (contents.getColumnIdx() == 3
