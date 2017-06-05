@@ -218,15 +218,6 @@ public class RobotRun extends PApplet {
 	
 	private WorldObject mouseOverWO;
 	
-	/** Defines the mouse's position mapped from the screen into the active
-	 * scenario. */
-	private RRay mouseRay;
-	
-	/**
-	 * Stores points of collision between the mouse ray and world objects.
-	 */
-	private ArrayList<PVector> collisions;
-	
 	/**
 	 * Applies the active camera to the matrix stack.
 	 * 
@@ -1086,11 +1077,10 @@ public class RobotRun extends PApplet {
 		
 		PVector closestCollPt = null;
 		WorldObject collidedWith = null;
-		collisions.clear();
 		
 		// Check collision with the robots
 		for (RoboticArm r : robots) {
-			PVector collPt = r.closestCollision(mouseRay);
+			PVector collPt = r.closestCollision(ray);
 			
 			if (collPt != null && (closestCollPt == null ||
 					PVector.dist(ray.getOrigin(), collPt) <
@@ -1103,7 +1093,7 @@ public class RobotRun extends PApplet {
 		// Check collision with world objects
 		
 		for (WorldObject wo : scenario) {
-			PVector collPt = wo.collision(mouseRay);
+			PVector collPt = wo.collision(ray);
 			
 			if (collPt != null && (closestCollPt == null ||
 					PVector.dist(ray.getOrigin(), collPt) <
@@ -1135,10 +1125,6 @@ public class RobotRun extends PApplet {
 					closestCollPt = collPt;
 				}
 			}
-		}
-		
-		if (closestCollPt != null) {
-			collisions.add(closestCollPt);
 		}
 		
 		return collidedWith;
@@ -4654,7 +4640,7 @@ public class RobotRun extends PApplet {
 				
 			} else if (keyCode == KeyEvent.VK_R) {
 				
-				if (keyCodeMap.isKeyDown(KeyEvent.VK_SHIFT)) {
+				if (keyCodeMap.isKeyDown(KeyEvent.VK_ALT)) {
 					// Toggle record state
 					setRecord( !getRecord() );
 					
@@ -5757,16 +5743,8 @@ public class RobotRun extends PApplet {
 			
 			popMatrix();
 			// Set the mouse ray origin and direction
-			if (mouseRay == null) {
-				mouseRay = new RRay(mWorldPos, ptOnMRay, 10000f, Fields.BLACK);
-				
-			} else {
-				PVector mDirect = PVector.sub(ptOnMRay, mWorldPos);
-				mDirect.normalize();
-				
-				mouseRay.setOrigin(mWorldPos);
-				mouseRay.setDirection(mDirect);
-			}
+			RRay mouseRay = new RRay(mWorldPos, ptOnMRay, 10000f, Fields.BLACK);
+			
 			// Check for collisions with objects in the scene
 			WorldObject collision = checkForCollisionsInScene(mouseRay);
 			
@@ -6574,33 +6552,6 @@ public class RobotRun extends PApplet {
 			Fields.drawAxes(getGraphics(), origin, RMath.rMatToWorld(orientation),
 					500f, Fields.BLACK);
 		}
-		
-		/* TEST OUTPUT */
-
-		active.updateLastTipTMatrix();
-		
-		if (Fields.DEBUG) {
-			if (mouseRay != null) {
-				// Draw the ray representing a mouse click in the scene
-				mouseRay.draw(getGraphics());
-			}
-			
-			pushStyle();
-			fill(Fields.RED);
-			stroke(Fields.RED);
-			/* Draw all points of collision between world objects and the mouse
-			 * ray */
-			for (PVector pt : collisions) {
-				pushMatrix();
-				translate(pt.x, pt.y, pt.z);
-				sphere(3);
-				popMatrix();
-			}
-			
-			popStyle();
-		}
-		
-		/**/
 	}
 	
 	/**
@@ -6812,7 +6763,7 @@ public class RobotRun extends PApplet {
 		lastTextPositionY += 20;
 		
 		if (record) {
-			text("Recording (press Ctrl + Shift + r)",
+			text("Recording (press Ctrl + Alt + r)",
 					lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 		}
@@ -6879,11 +6830,7 @@ public class RobotRun extends PApplet {
 		if (isShift()) {
 			hold();
 			// Reset motion fault for the active robot
-			RoboticArm r = activeRobot;
-
-			if (r != null) {
-				r.setMotionFault(false);
-			}
+			activeRobot.setMotionFault(false);
 		}
 	}
 	
@@ -7068,8 +7015,6 @@ public class RobotRun extends PApplet {
 		super.setup();
 		
 		mouseOverWO = null;
-		mouseRay = null;
-		collisions = new ArrayList<>();
 		
 		PImage[][] buttonImages = new PImage[][] {
 			
@@ -7412,12 +7357,8 @@ public class RobotRun extends PApplet {
 	 * execution.
 	 */
 	public void triggerFault() {
+		activeRobot.setMotionFault(true);
 		hold();
-		RoboticArm r = activeRobot;
-
-		if (r != null) {
-			r.setMotionFault(true);
-		}
 	}
 
 	/**

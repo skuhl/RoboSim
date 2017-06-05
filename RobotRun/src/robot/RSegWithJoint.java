@@ -4,6 +4,7 @@ package robot;
 import geom.BoundingBox;
 import geom.MyPShape;
 import global.RMath;
+import processing.core.PConstants;
 import processing.core.PVector;
 
 /**
@@ -24,11 +25,6 @@ public class RSegWithJoint extends RSegment {
 	public final float LOW_BOUND;
 	
 	/**
-	 * The speed modifier for this segment's joint.
-	 */
-	public final float SPEED_MODIFIER;
-	
-	/**
 	 * The translation applied to move from the previous segment to this
 	 * segment's position.
 	 */
@@ -38,6 +34,11 @@ public class RSegWithJoint extends RSegment {
 	 * The axis of rotation for this segment's joint
 	 */
 	protected final PVector AXIS;
+	
+	/**
+	 * The speed modifier for this segment's joint.
+	 */
+	private float speedModifier;
 	
 	/**
 	 * The direction of the joint's motion.
@@ -54,24 +55,37 @@ public class RSegWithJoint extends RSegment {
 	 * 
 	 * @param model
 	 * @param obbs
-	 * @param speed
 	 * @param lb
 	 * @param ub
 	 * @param translation
 	 * @param axis
 	 */
-	public RSegWithJoint(MyPShape model, BoundingBox[] obbs, float speed,
-		float lb, float ub, PVector translation, PVector axis) {
+	public RSegWithJoint(MyPShape model, BoundingBox[] obbs, float lb,
+			float ub, PVector translation, PVector axis) {
 		
 		super(model, obbs);
 		
 		LOW_BOUND = lb;
 		UP_BOUND = ub;
-		SPEED_MODIFIER = speed;
+		speedModifier = 1f;
 		TRANSLATION = translation;
 		AXIS = axis;
 		jointMotion = 0;
 		jointRotation = 0f;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param model
+	 * @param obbs
+	 * @param translation
+	 * @param axis
+	 */
+	public RSegWithJoint(MyPShape model, BoundingBox[] obbs,
+			PVector translation, PVector axis) {
+		
+		this(model, obbs, 0f, PConstants.TWO_PI, translation, axis);
 	}
 	
 	/**
@@ -98,12 +112,20 @@ public class RSegWithJoint extends RSegment {
 		return Math.abs(jointMotion);
 	}
 	
+	public float getSpeedModifier() {
+		return speedModifier;
+	}
+	
 	public boolean isJointInMotion() {
 		return jointMotion != 0;
 	}
 	
 	public void setJointMotion(int dir) {
 		jointMotion = dir;
+	}
+	
+	public void setSpdMod(float speedMod) {
+		speedModifier = speedMod;
 	}
 	
 	public boolean setJointRotation(float newRotation) {

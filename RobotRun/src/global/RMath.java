@@ -490,7 +490,6 @@ public abstract class RMath {
 
 		while (count < limit) {
 			Point cPoint = model.getToolTipNative(angles);
-			float cumulativeOffset = 0;
 
 			if (tgtOrientation.dot(cPoint.orientation) < 0f) {
 				// Use -q instead of q
@@ -514,8 +513,10 @@ public abstract class RMath {
 			float dist = PVector.dist(cPoint.position, tgtPosition);
 			float rDist = rDelta.magnitude();
 			// check whether our current position is within tolerance
-			if (dist < model.getLiveSpeed() / 100f && rDist < 0.00005f * model.getLiveSpeed()) {
-				break;
+			if (dist <= (0.001f * model.getLiveSpeed()) &&
+					rDist <= (0.00005f * model.getLiveSpeed())) {
+				
+				return angles;
 			}
 
 			// calculate jacobian, 'J', and its inverse
@@ -528,30 +529,18 @@ public abstract class RMath {
 				for (int j = 0; j < 7; j += 1) {
 					dAngle[i] += JInverse.getEntry(i, j) * delta[j];
 				}
-
-				// update joint angles
-				cumulativeOffset += dAngle[i];
-				// prevents IK algorithm from producing unrealistic motion
-				if (Math.abs(cumulativeOffset) > PConstants.PI) {
-					// System.out.println("Optimal solution not found.");
-					// return null;
-				}
-				angles[i] += dAngle[i];
-				angles[i] += TWO_PI;
-				angles[i] %= TWO_PI;
+				
+				angles[i] = RMath.mod2PI(angles[i] + dAngle[i]);
 			}
-
-			// System.out.println(String.format("IK result for cycle %d: [%f,
-			// %f, %f, %f, %f, %f]", count, angles[0], angles[1], angles[2],
-			// angles[3], angles[4], angles[5]));
-			count += 1;
+			
+			++count;
+			
 			if (count == limit) {
 				//Fields.debug("IK\n%s\n", J.toString());
-				return null;
 			}
 		}
 
-		return angles;
+		return null;
 	}
 
 	/**
@@ -675,7 +664,7 @@ public abstract class RMath {
 	 *            The destination angle in radians
 	 * @returning The minimum distance between src and dest
 	 */
-	public static float minimumDistance(float src, float dest) {
+	public static float minDist(float src, float dest) {
 		// Bring angles within range [0, TWO_PI)
 		float difference = mod2PI(dest) - mod2PI(src);
 
