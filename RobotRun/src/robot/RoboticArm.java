@@ -12,7 +12,6 @@ import enums.RobotMotion;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
-import geom.DimType;
 import geom.MyPShape;
 import geom.Part;
 import geom.Point;
@@ -26,7 +25,6 @@ import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
-import programming.CamMoveToObject;
 import programming.Instruction;
 import programming.MotionInstruction;
 import programming.Program;
@@ -61,6 +59,20 @@ public class RoboticArm {
 	 * The position of the center of the robot's base segment.
 	 */
 	private final PVector BASE_POSITION;
+	
+	/**
+	 * Defines sets of indices which map to pairs of bounding boxes between
+	 * two of the robot's segments. This is used for checking self-collisions
+	 * of the robot's bounding boxes.
+	 */
+	private final int[] SEG_OBB_CHECKS;
+	
+	/**
+	 * Defines sets of indices, which map to the robot's segment bounding
+	 * boxes. This is used to check for collisions between the robot's end 
+	 * effector and its segments.
+	 */
+	private final int[] EE_SEG_OBB_CHECKS;
 	
 	/**
 	 * A list of the robot's arm segment models.
@@ -194,13 +206,29 @@ public class RoboticArm {
 		
 		BASE_POSITION = basePos;
 		
+		SEG_OBB_CHECKS = new int[] {
+			0, 0, 2, 1,
+			0, 0, 2, 2,
+			0, 0, 3, 1,
+			0, 0, 3, 2,
+			1, 0, 2, 1,
+			1, 0, 3, 2,
+			1, 1, 3, 2,
+			2, 0, 3, 1,
+			2, 0, 3, 2
+		};
+		
+		EE_SEG_OBB_CHECKS = new int[] {
+				0, 0, 1, 0, 1, 1, 2, 0, 2, 1, 3, 1	
+		};
+		
 		// Define the robot's segments
 		SEGMENT = new RSegWithJoint[6];
 		
 		SEGMENT[0] = new RSegWithJoint(
 			segmentModels[0],
 			new BoundingBox[] { new BoundingBox(405, 105, 405) },
-			0.0436f, 0f, PConstants.TWO_PI, new PVector(-200f, -163f, -200f),
+			/*0.0436f,*/ new PVector(-200f, -163f, -200f),
 			new PVector(0f, 1f, 0f)
 		);
 		
@@ -210,7 +238,7 @@ public class RoboticArm {
 					new BoundingBox(305, 80, 305),
 					new BoundingBox(114, 98, 160)
 			},
-			0.0436f, 4.34f, 2.01f, new PVector(-37f, -137f, 30f),
+			/*0.0436f,*/ 4.34f, 2.01f, new PVector(-37f, -137f, 30f),
 			new PVector(0f, 0f, -1f)
 		);
 		
@@ -221,7 +249,7 @@ public class RoboticArm {
 					new BoundingBox(130, 316, 64),
 					new BoundingBox(110, 163, 48)
 			},
-			0.0582f, 1.955f, 1.134f, new PVector(-3f, -498f, -200f),
+			/*0.0582f,*/ 1.955f, 1.134f, new PVector(-3f, -498f, -200f),
 			new PVector(0f, 0f, -1f)
 		);
 		
@@ -232,23 +260,31 @@ public class RoboticArm {
 					new BoundingBox(420, 126, 126),
 					new BoundingBox(148, 154, 154),
 			},
-			0.0727f, 0f, PConstants.TWO_PI, new PVector(-650f, 30f, 75f),
+			/*0.0727f,*/ new PVector(-650f, 30f, 75f),
 			new PVector(1f, 0f, 0f)
 		);
 		
 		SEGMENT[4] = new RSegWithJoint(
 			segmentModels[4],
 			new BoundingBox[0],
-			0.0727f, 4.189f, 2.269f, new PVector(65f, 0f, 0f),
+			/*0.0727f,*/ 4.189f, 2.269f, new PVector(65f, 0f, 0f),
 			new PVector(0f, 0f, -1f)
 		);
 		
 		SEGMENT[5] = new RSegWithJoint(
 			segmentModels[5],
 			new BoundingBox[0],
-			0.1222f, 0f, PConstants.TWO_PI, new PVector(-95f, 0f, 0f),
+			/*0.1222f,*/ new PVector(-95f, 0f, 0f),
 			new PVector(-1f, 0f, 0f)
 		);
+		
+		// Set default speed modifiers
+		SEGMENT[0].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
+		SEGMENT[1].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
+		SEGMENT[2].setSpdMod(200f * PConstants.DEG_TO_RAD / 60f);
+		SEGMENT[3].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
+		SEGMENT[4].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
+		SEGMENT[5].setSpdMod(420f * PConstants.DEG_TO_RAD / 60f);
 		
 		//Define the robot's end effectors
 		EE_LIST = new EndEffector[6];
@@ -521,60 +557,60 @@ public class RoboticArm {
 		return 2;
 	}
 	
+
 	/**
-	 * Determine if select pairs of hit boxes of the robot are colliding.
+	 * Checks collisions between the bounding boxes of the robot's segments and
+	 * end effectors. The colors of the robot's bounding boxes are updated
+	 * based on the results of the collision detection as well.
 	 * 
-	 * The bounding box collisions checked between the body segments of the Arm:
-	 * The base segment and the four upper arm segments
-	 * The base rotating segment and lower long arm segment as well as the upper long arm and
-	 *   upper rotating end segment
-	 * The second base rotating hit box and the upper long arm segment as well as the upper
-	 *   rotating end segment
-	 * The lower long arm segment and the upper rotating end segment
+	 * NOTE: due to the lack of fit of some bounding boxes to parts of the
+	 * robot, not all bounding box pairs are checked for collisions. Only
+	 * bounding box pairs specified in the SEG_OBB_CHECK and EE_SEG_OBB_CHECK
+	 * arrays are checked.
 	 * 
-	 * @return	A self-collision has occurred with the robot
+	 * @return	If at least one collision occurred between two of the robot's
+	 * 			bounding boxes
 	 */
 	public boolean checkSelfCollisions() {
-		/* TODO *
-		boolean collision = false;
-
-		// Pairs of indices corresponding to two of the Arm body hit boxes, for which to check collisions
-		int[] check_pairs = new int[] { 0, 3, 0, 4, 0, 5, 0, 6, 1, 5, 1, 6, 2, 5, 2, 6, 3, 5 };
-
-		/**
-		 * Check select collisions between the body segments of the Arm:
-		 * The base segment and the four upper arm segments
-		 * The base rotating segment and lower long arm segment as well as the upper long arm and
-		 *   upper rotating end segment
-		 * The second base rotating hit box and the upper long arm segment as well as the upper
-		 *   rotating end segment
-		 * The lower long arm segment and the upper rotating end segment
-		 *
-		for(int idx = 0; idx < check_pairs.length - 1; idx += 2) {
-			if( Part.collision3D(ARM_OBBS[ check_pairs[idx] ], ARM_OBBS[ check_pairs[idx + 1] ]) ) {
-				ARM_OBBS[ check_pairs[idx] ].setColor(Fields.OBB_COLLISION);
-				ARM_OBBS[ check_pairs[idx + 1] ].setColor(Fields.OBB_COLLISION);
-				collision = true;
+		boolean selfCollision = false;
+		
+		// Check each specified pair of segment bounding boxes
+		for (int cdx = 3; cdx < SEG_OBB_CHECKS.length; cdx += 4) {
+			BoundingBox oob0 = SEGMENT[SEG_OBB_CHECKS[cdx - 3]]
+					.OBBS[SEG_OBB_CHECKS[cdx - 2]];
+			BoundingBox oob1 = SEGMENT[SEG_OBB_CHECKS[cdx - 1]]
+					.OBBS[SEG_OBB_CHECKS[cdx]];
+			
+			if (Part.collision3D(oob0, oob1)) {
+				// Update OBB colors
+				oob0.setColor(Fields.OBB_COLLISION);
+				oob1.setColor(Fields.OBB_COLLISION);
+				
+				selfCollision = true;
 			}
 		}
-
-		ArrayList<BoundingBox> eeHB = EE_TO_OBBS.get(activeEndEffector);
-
-		// Check collisions between all EE hit boxes and base as well as the first long arm hit boxes
-		for(BoundingBox hb : eeHB) {
-			for(int idx = 0; idx < 4; ++idx) {
-				if(Part.collision3D(hb, ARM_OBBS[idx]) ) {
-					hb.setColor(Fields.OBB_COLLISION);
-					ARM_OBBS[idx].setColor(Fields.OBB_COLLISION);
-					collision = true;
+		
+		EndEffector activeEE = getActiveEE();
+		/* Check collisions between the active EE's OBBs and a specified set of
+		 * the robot segment OBBs. */
+		for (BoundingBox obb : activeEE.OBBS) {
+			// Check the specific segment OBB with EE OBB
+			for (int cdx = 1; cdx < EE_SEG_OBB_CHECKS.length; cdx += 2) {
+				BoundingBox segOBB = SEGMENT[EE_SEG_OBB_CHECKS[cdx - 1]]
+						.OBBS[EE_SEG_OBB_CHECKS[cdx]];
+				
+				if (Part.collision3D(obb, segOBB)) {
+					// Update OBB colors
+					obb.setColor(Fields.OBB_COLLISION);
+					segOBB.setColor(Fields.OBB_COLLISION);
+					
+					selfCollision = true;
 				}
 			}
+			
 		}
-
-		return collision;
-		/**/
 		
-		return false;
+		return selfCollision;
 	}
 	
 	/**
@@ -1043,18 +1079,16 @@ public class RoboticArm {
 				RSegWithJoint seg = SEGMENT[i];
 
 				if (seg.isJointInMotion()) {
-					float trialAngle = RMath.mod2PI(
-							seg.getJointRotation() +
-							seg.getJointMotion() * seg.SPEED_MODIFIER *
-							liveSpeed / 100f
-					);
+					float dist = seg.getJointMotion() * seg.getSpeedModifier() * liveSpeed / 100f;
+					float trialAngle = RMath.mod2PI(seg.getJointRotation() +
+							dist);
 					
 					if(!seg.setJointRotation(trialAngle)) {
 						Fields.debug("A[i%d]: %f\n", i, trialAngle);
 						seg.setJointMotion(0);
 						// TODO REFACTOR THESE
 						RobotRun.getInstance().updateRobotJogMotion(i, 0);
-						RobotRun.getInstance().hold();
+						//RobotRun.getInstance().hold();
 					}
 				}
 			}
@@ -1619,6 +1653,13 @@ public class RoboticArm {
 		for (int jdx = 0; jdx < 6; ++jdx) {
 			SEGMENT[jdx].setJointMotion(0);
 		}
+		// Set default speed modifiers
+		SEGMENT[0].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
+		SEGMENT[1].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
+		SEGMENT[2].setSpdMod(200f * PConstants.DEG_TO_RAD / 60f);
+		SEGMENT[3].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
+		SEGMENT[4].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
+		SEGMENT[5].setSpdMod(420f * PConstants.DEG_TO_RAD / 60f);
 
 		for(int idx = 0; idx < jogLinear.length; ++idx) {
 			jogLinear[idx] = 0;
@@ -1628,7 +1669,9 @@ public class RoboticArm {
 			jogRot[idx] = 0;
 		}
 		
-		motionType = RobotMotion.HALTED;
+		if (!hasMotionFault()) {
+			motionType = RobotMotion.HALTED;
+		}
 	}
 
 	/**
@@ -1657,21 +1700,17 @@ public class RoboticArm {
 			if (seg.isJointInMotion()) {
 				float distToDest = PApplet.abs(seg.getJointRotation() - TGT_JOINTS[jdx]);
 
-				if (distToDest <= 0.0001f) {
-					// Destination (basically) met
-					continue;
-
-				} else if (distToDest >= (seg.SPEED_MODIFIER * speed)) {
+				if (distToDest >= (seg.getSpeedModifier() * speed)) {
 					done = false;
 					float newRotation = RMath.mod2PI(seg.getJointRotation()
-							+ seg.getJointMotion() * seg.SPEED_MODIFIER
+							+ seg.getJointMotion() * seg.getSpeedModifier()
 							* speed);
 					
 					seg.setJointRotation(newRotation);
 
-				} else if (distToDest > 0.0001f) {
+				} else if (distToDest > 0.00009f) {
 					// Destination too close to move at current speed
-					seg.setJointRotation( RMath.mod2PI(TGT_JOINTS[jdx]) );
+					seg.setJointRotation(TGT_JOINTS[jdx]);
 				}
 			}
 		}
@@ -1738,7 +1777,7 @@ public class RoboticArm {
 
 		// Did we successfully find the desired angles?
 		if ((destAngles == null) || invalidAngle) {
-			if (Fields.DEBUG) {
+			if (Fields.DEBUG && destAngles == null) {
 				Point RP = getToolTipNative();
 				Fields.debug("IK Failure ...\n%s -> %s\n%s -> %s\n\n",
 						RP.position, destPosition, RP.orientation,
@@ -2243,48 +2282,74 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Sets the Model's target joint angles to the given set of angles and updates the
-	 * rotation directions of each of the joint segments.
+	 * Updates the target angles, and joint motion fields of each segment to
+	 * prepare for joint interpolation.
+	 * 
+	 * @param tgtAngles	The target angles set for the rotational interpolation
 	 */
 	public void setupRotationInterpolation(float[] tgtAngles) {
+		float[] minDist = new float[6];
+		float maxMinDist = Float.MIN_VALUE;
+		
+		for (int jdx = 0; jdx < 6; ++jdx) {
+			// Set the target angle for the joint index
+			TGT_JOINTS[jdx] = RMath.mod2PI(tgtAngles[jdx]);
+			// Calculate the minimum distance to the target angle
+			minDist[jdx] = RMath.minDist(SEGMENT[jdx].getJointRotation(),
+					TGT_JOINTS[jdx]);
+			
+			if (Math.abs(minDist[jdx]) > maxMinDist) {
+				/* Update the maximum distance necessary for one of the joints
+				 * to reach its target angle. */
+				maxMinDist = Math.abs(minDist[jdx]);
+			}
+		}
+		
 		for(int jdx = 0; jdx < 6; jdx++) {
-			// Set the target angle for rotational interpolation
-			TGT_JOINTS[jdx] = tgtAngles[jdx];
-			
 			RSegWithJoint seg = SEGMENT[jdx];
-			// The minimum distance between the current and target joint angles
-			float dist_t = RMath.minimumDistance(seg.getJointRotation(), TGT_JOINTS[jdx]);
+			/* Update the speed modifier for the joint based off the ratio
+			 * between the distance necessary for this joint to travel and that
+			 * of the joint with the longest distance to travel */
+			seg.setSpdMod(Math.abs(minDist[jdx]) / maxMinDist * (PConstants.PI / 60f));
 			
-			// check joint movement range
-			if(seg.LOW_BOUND == 0f && seg.UP_BOUND == PConstants.TWO_PI) {
-				seg.setJointMotion((dist_t < 0) ? -1 : 1);
+			// Check joint motion range
+			if (seg.LOW_BOUND == 0f && seg.UP_BOUND == PConstants.TWO_PI) {
+				seg.setJointMotion((minDist[jdx] < 0) ? -1 : 1);
 				
 			} else {  
-				/* Determine if at least one bound lies within the range of the shortest angle
-				 * between the current joint angle and the target angle. If so, then take the
-				 * longer angle, otherwise choose the shortest angle path. */
+				/* Determine if at least one bound lies within the range of the
+				 * shortest angle between the current joint angle and the
+				 * target angle. If so, then take the longer angle, otherwise
+				 * choose the shortest angle path. */
 
-				// The minimum distance from the current joint angle to the lower bound of the joint's range
-				float dist_lb = RMath.minimumDistance(seg.getJointRotation(), seg.LOW_BOUND);
+				/* The minimum distance from the current joint angle to the
+				 * lower bound of the joint's range */
+				float dist_lb = RMath.minDist(seg.getJointRotation(),
+						seg.LOW_BOUND);
 
-				// The minimum distance from the current joint angle to the upper bound of the joint's range
-				float dist_ub = RMath.minimumDistance(seg.getJointRotation(), seg.UP_BOUND);
+				/* The minimum distance from the current joint angle to the
+				 * upper bound of the joint's range */
+				float dist_ub = RMath.minDist(seg.getJointRotation(),
+						seg.UP_BOUND);
 
-				if(dist_t < 0) {
-					if( (dist_lb < 0 && dist_lb > dist_t) || (dist_ub < 0 && dist_ub > dist_t) ) {
+				if (minDist[jdx] < 0) {
+					if( (dist_lb < 0 && dist_lb > minDist[jdx]) ||
+							(dist_ub < 0 && dist_ub > minDist[jdx]) ) {
+						
 						// One or both bounds lie within the shortest path
 						seg.setJointMotion(1);
-					} 
-					else {
+						
+					} else {
 						seg.setJointMotion(-1);
 					}
-				} 
-				else if(dist_t > 0) {
-					if( (dist_lb > 0 && dist_lb < dist_t) || (dist_ub > 0 && dist_ub < dist_t) ) {  
+					
+				} else if(minDist[jdx] > 0) {
+					if( (dist_lb > 0 && dist_lb < minDist[jdx]) ||
+							(dist_ub > 0 && dist_ub < minDist[jdx]) ) {  
 						// One or both bounds lie within the shortest path
 						seg.setJointMotion(-1);
-					} 
-					else {
+						
+					} else {
 						seg.setJointMotion(1);
 					}
 				}

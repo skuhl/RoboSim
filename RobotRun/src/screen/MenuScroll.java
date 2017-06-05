@@ -267,19 +267,6 @@ public class MenuScroll {
 
 	public void setLineIdx(int i) {
 		lineIdx = i;
-		
-		/* Test code *
-		if (i == 1) {
-			
-			try {
-				throw new RuntimeException("Line index set to 1!");
-				
-			} catch (RuntimeException REx) {
-				REx.printStackTrace();
-			}
-			
-		}
-		/**/
 	}
 	
 	public void setRenderStart(int renStart) {
