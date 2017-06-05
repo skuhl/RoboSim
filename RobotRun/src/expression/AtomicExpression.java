@@ -42,6 +42,7 @@ public class AtomicExpression extends ExprOperand {
 		int opType = -1;
 		Float o1 = null, o2 = null; //floating point operand values
 		Boolean b1 = null, b2 = null; //boolean operand values
+		Boolean ptCart = null;
 		Point p1 = null, p2 = null; //point operand values
 
 		//evaluate any sub-expressions
@@ -88,11 +89,19 @@ public class AtomicExpression extends ExprOperand {
 		}
 		else if(t1 == ExpressionElement.PREG || t1 == ExpressionElement.POSTN) {
 			opType = 2;
+			Boolean p1Cart = arg1.isCart();
 			p1 = arg1.getPointVal();
 
 			switch(t2) {
 			case ExpressionElement.PREG:
 			case ExpressionElement.POSTN:
+				Boolean p2Cart = arg2.isCart();	
+				
+				if (p1Cart && p2Cart || (!p1Cart & !p2Cart)) {
+					// Must be the same type of register
+					ptCart = p1Cart;
+				}
+				
 				p2 = arg2.getPointVal();
 				break;
 			default:
@@ -170,18 +179,33 @@ public class AtomicExpression extends ExprOperand {
 			}
 		}
 		else if(opType == 2) {
-			if(p1 == null || p2 == null) return null;
+			if(p1 == null || p2 == null || ptCart == null) {
+				return null;
+			}
 
 			switch(getOp()) {
 			case ADDTN:
-				/* TODO need register reference to know if the position is
-				 * Cartesian or joint */
-				result = new ExprOperand(/*p1.add(p2)*/);
+				if (ptCart) {
+					// Add Cartesian values
+					result = new ExprOperand( p1.add(p2.position, p2.orientation) );
+					
+				} else {
+					// Add joint values
+					result = new ExprOperand( p1.add(p2.angles) );
+				}
+				
 				break;
 			case SUBTR:
-				/* TODO need a register reference to know if the position is
-				 * Cartiesian or joint */
-				result = new ExprOperand(/*p1.add(p2.negate())*/);
+				if (ptCart) {
+					// Add Cartesian values
+					Point nP2 = p2.negateCartesian();
+					result = new ExprOperand( p1.add(nP2.position, nP2.orientation) );
+					
+				} else {
+					// Add joint values
+					Point nP2 = p2.negateJoint();
+					result = new ExprOperand( p1.add(nP2.angles) );
+				}
 				break;
 			default:
 				result = null;

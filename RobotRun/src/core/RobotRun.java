@@ -4612,7 +4612,8 @@ public class RobotRun extends PApplet {
 				/* Debug output *
 				updatePendantScreen();
 				/**/
-				Fields.debug(mode.toString());
+				Fields.debug("%s\n", screenStates.peek());
+				Fields.debug("line=%d\n", contents.getLineIdx());
 				/* Display the User and Tool frames associated with the current
 				 * motion instruction */
 				if (mode == ScreenMode.NAV_PROG_INSTR && (contents.getColumnIdx() == 3
@@ -4730,7 +4731,7 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @return	If a previous screen exists
 	 */
-	public boolean lastScreen() {
+	private boolean lastScreen() {
 		ScreenState cur = screenStates.peek();
 		
 		if (cur.mode != ScreenMode.DEFAULT) {
@@ -4753,6 +4754,14 @@ public class RobotRun extends PApplet {
 			options.setRenderStart(cur.optRenIdx);
 			
 			switch (mode) {
+			case NAV_PROG_INSTR:
+				DisplayLine active = contents.getActiveLine();
+				// Update the active robot's active instruction index
+				if (active != null && active.getItemIdx() < activeRobot.getActiveProg().size()) {
+					activeRobot.setActiveInstIdx(active.getItemIdx());
+				}
+				
+				break;
 			case ACTIVE_FRAMES:
 				String idxTxt;
 				
@@ -5233,7 +5242,7 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @param m	The new active screen mode
 	 */
-	public void loadScreen(ScreenMode m) {
+	private void loadScreen(ScreenMode m) {
 		loadScreen(m, screenStates.peek());
 	}
 
@@ -5247,7 +5256,7 @@ public class RobotRun extends PApplet {
 	 * @param m			The new active screen
 	 * @param current	The current active screen state
 	 */
-	public void loadScreen(ScreenMode m, ScreenState current) {
+	private void loadScreen(ScreenMode m, ScreenState current) {
 		Fields.debug("\n%s => %s\n", current.mode, m);
 			
 		mode = m;
@@ -5280,6 +5289,10 @@ public class RobotRun extends PApplet {
 			}
 			
 			contents.setLineIdx( activeRobot.getActiveProgIdx() );
+			break;
+		case NAV_PROG_INSTR:
+			activeRobot.setActiveInstIdx(0);
+			
 			break;
 		case PROG_CREATE:
 			contents.setLineIdx(1);
@@ -6084,7 +6097,7 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @param nextScreen	The new screen mode
 	 */
-	public void nextScreen(ScreenMode nextScreen) {
+	private void nextScreen(ScreenMode nextScreen) {
 		if (!screenStates.isEmpty()) {
 			ScreenState cur = screenStates.peek();
 			// Update the current screen state
@@ -7293,7 +7306,7 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @param nextScreen	The new screen mode
 	 */
-	public void switchScreen(ScreenMode nextScreen) {
+	private void switchScreen(ScreenMode nextScreen) {
 		screenStates.pop();
 		// Load the new screen
 		loadScreen(nextScreen);

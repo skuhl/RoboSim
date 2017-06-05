@@ -55,45 +55,6 @@ public class PositionRegister extends Register {
 		point = pt;
 		isCartesian = isCart;
 	}
-
-	/**
-	 * Returns the value of the point stored in this register which corresponds
-	 * to the register mode (joint or cartesian) and the given index 'idx.'
-	 * Note that 'idx' should be in the range of 0 to 5 inclusive, as this value
-	 * is meant to represent either 1 of 6 joint angles for a joint type point,
-	 * or 1 of 6 cartesian points (x, y, z, w, p, r) for a cartesian type point.
-	 */
-	public Float getWorldPtVal(int idx) {
-		if(point == null) {
-			return null;
-		}
-
-		if(!isCartesian) {
-			return point.getWorldValue(idx);
-		}
-		else {
-			return point.getWorldValue(idx + 6);
-		}
-	}
-	
-	/**
-	 * TODO comment
-	 * 
-	 * @param idx
-	 * @param value
-	 */
-	public void setWorldPtVal(int idx, float value) {
-		if(point == null) {
-			point = new Point();
-		}
-
-		if(!isCartesian) {
-			point.setWorldValue(idx, value);
-		}
-		else {
-			point.setWorldValue(idx + 6, value);
-		}
-	}
 	
 	@Override
 	protected String regPrefix() {

@@ -100,7 +100,7 @@ public class Point  {
 	 */
 	public Point add(PVector pos, RQuaternion orien) {
 		PVector resPos = PVector.add(position, pos);
-		RQuaternion resOrien = orientation.mult(orien);
+		RQuaternion resOrien = RQuaternion.mult(orientation, orien);
 		
 		return new Point(resPos, resOrien, angles.clone());
 	}
@@ -130,73 +130,32 @@ public class Point  {
 	}
 	
 	/**
-	 * Returns the value of the point defined by the given index, with respect
-	 * to the world frame.
+	 * Returns a point, with Cartesian values, which are the negation of this
+	 * point's Cartesian values.
 	 * 
-	 * @param idx	The index corresponding to a value of the point
-	 * @return		The world frame value corresponding to the given index
+	 * @return	A point with negated Cartesian values
 	 */
-	public Float getWorldValue(int idx) {
-		switch(idx) {
-		// Joint angles
-		case 0:
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-		case 5:   return angles[idx];
-		// Position
-		case 6:   return -position.x;
-		case 7:   return position.z;
-		case 8:   return -position.y;
-		// Orientation
-		case 9:   return -PConstants.RAD_TO_DEG*RMath.quatToEuler(orientation).array()[0];
-		case 10:  return -PConstants.RAD_TO_DEG*RMath.quatToEuler(orientation).array()[2];
-		case 11:  return PConstants.RAD_TO_DEG*RMath.quatToEuler(orientation).array()[1];
-		default:
-		}
-
-		return null;
+	public Point negateCartesian() {
+		PVector nPos = PVector.mult(position, -1f);
+		RQuaternion nOrien = orientation.conjugate();
+		
+		return new Point(nPos, nOrien, angles.clone());
 	}
 	
 	/**
-	 * Sets the value of the point associated with the given index to the given
-	 * value, assuming the given value is with respect to the world frame.
+	 * Computes a point with joint values, which are the negation of this
+	 * point's joint values.
 	 * 
-	 * @param idx	The index of a value of the point
-	 * @param value	The new value of the point, with respect to the world frame
+	 * @return	A point with negated joint values
 	 */
-	public void setWorldValue(int idx, float value) {
-		PVector vec = RMath.quatToEuler(orientation);
-
-		switch(idx) {
-		// Joint angles
-		case 0:
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-		case 5:   angles[idx] = value;
-		break;
-		// Position
-		case 6:   position.x = -value;
-		break;
-		case 7:   position.z = value;
-		break;
-		case 8:   position.y = -value;
-		break;
-		// Orientation
-		case 9:   vec.x = -value;
-		orientation = RMath.eulerToQuat(vec);
-		break;
-		case 10:  vec.z = value;
-		orientation = RMath.eulerToQuat(vec);
-		break;
-		case 11:  vec.y = -value;
-		orientation = RMath.eulerToQuat(vec);
-		break;
-		default:
+	public Point negateJoint() {
+		float[] nAngles = new float[6];
+		
+		for (int jdx = 0; jdx < 6; ++jdx) {
+			nAngles[jdx] = -angles[jdx];
 		}
+		
+		return new Point(position.copy(), orientation.clone(), nAngles);
 	}
 
 	/**
