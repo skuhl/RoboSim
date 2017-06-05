@@ -40,13 +40,6 @@ public class RoboticArm {
 	 */
 	public final int RID;
 	
-	// Indicates the direction of motion of the Robot when jogging
-	private final int[] jogLinear;
-	private final int[] jogRot;
-	
-	public RQuaternion tgtOrientation;
-	public PVector tgtPosition;
-	
 	public int liveSpeed;
 	public float motorSpeed;
 	
@@ -169,6 +162,13 @@ public class RoboticArm {
 	 */
 	private RMatrix lastTipTMatrix;
 	
+	// Indicates the direction of motion of the Robot when jogging
+	private final int[] jogLinear;
+	private final int[] jogRot;
+	
+	private RQuaternion tgtOrientation;
+	private PVector tgtPosition;
+	
 	/**
 	 * Determines if the robot's tool tip position with be tracked and drawn.
 	 */
@@ -193,9 +193,6 @@ public class RoboticArm {
 	 */
 	public RoboticArm(int rid, PVector basePos, MyPShape[] segmentModels,
 			MyPShape[] endEffectorModels) {
-		
-		jogLinear = new int[] { 0, 0, 0 };
-		jogRot = new int[] { 0, 0, 0 };
 		
 		motorSpeed = 1000f; // speed in mm/sec
 		liveSpeed = 10;
@@ -373,28 +370,29 @@ public class RoboticArm {
 		// Initializes the old transformation matrix for the arm model
 		lastTipTMatrix = getFaceplateTMat( getJointAngles() );
 		
+		jogLinear = new int[] { 0, 0, 0 };
+		jogRot = new int[] { 0, 0, 0 };
+		
 		trace = false;
 		tracePts = new ArrayList<PVector>();
 	}
 	
 	/**
 	 * Updates the motion of the Robot with respect to one of the World axes for
-	 * either linear or rotational motion around the axis. Similiar to the
+	 * either linear or rotational motion around the axis. Similar to the
 	 * activateLiveJointMotion() method, calling this method for an axis, in which
 	 * the Robot is already moving, will result in the termination of the Robot's
 	 * motion in that axis. Rotational and linear motion for an axis are mutually
 	 * independent in this regard.
 	 * 
-	 * @param axis        The axis of movement for the robotic arm:
-                  x - 0, y - 1, z - 2, w - 3, p - 4, r - 5
-	 * @pararm dir        +1 or -1: indicating the direction of motion
-	 * @returning         The new direction of motion in the given axis
+	 * @param axis	The axis of movement for the robotic arm:
+                  	x - 0, y - 1, z - 2, w - 3, p - 4, r - 5
+	 * @param dir	+1 or -1: indicating the direction of motion
+	 * @returning	The new direction of motion in the given axis
 	 *
 	 */
 	public float activateLiveWorldMotion(int axis, int dir) {
-		RobotRun app = RobotRun.getInstance();
-		
-		if (!app.isShift() || hasMotionFault()) {
+		if (hasMotionFault()) {
 			// Only move when shift is set and there is no error
 			return 0f;
 		}
@@ -469,7 +467,7 @@ public class RoboticArm {
 	 * @param axes
 	 *            The axes of the Coordinate System representing as a rotation
 	 *            quanternion
-	 * @returning The point, pt, interms of the given coordinate system
+	 * @returning The point, pt, in terms of the given coordinate system
 	 */
 	public Point applyFrame(Point pt, PVector origin, RQuaternion axes) {
 		PVector position = RMath.vToFrame(pt.position, origin, axes);
