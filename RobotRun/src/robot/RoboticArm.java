@@ -2690,6 +2690,11 @@ public class RoboticArm {
 		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param jointAngles
+	 */
 	public void updateMotion(float[] jointAngles) {
 		if (motion instanceof JointInterpolation) {
 			((JointInterpolation)motion).setupRotationalInterpolation(this, jointAngles);
@@ -2699,6 +2704,11 @@ public class RoboticArm {
 		}
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param tgt
+	 */
 	public void updateMotion(Point tgt) {
 		Point start = getToolTipNative();
 		float ptDist = calculateDistanceBetweenPoints();
@@ -2710,6 +2720,13 @@ public class RoboticArm {
 		((LinearInterpolation) motion).beginNewLinearMotion(start, tgt, ptDist, liveSpeed / 100f);
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param tgt
+	 * @param next
+	 * @param p
+	 */
 	public void updateMotion(Point tgt, Point next, float p) {
 		Point start = getToolTipNative();
 		float ptDist = calculateDistanceBetweenPoints();
@@ -2721,6 +2738,12 @@ public class RoboticArm {
 		((LinearInterpolation) motion).beginNewContinuousMotion(start, tgt, next, p, ptDist, liveSpeed / 100f);
 	}
 	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param tgt
+	 * @param inter
+	 */
 	public void updateMotion(Point tgt, Point inter) {
 		Point start = getToolTipNative();
 		float ptDist = calculateDistanceBetweenPoints();
