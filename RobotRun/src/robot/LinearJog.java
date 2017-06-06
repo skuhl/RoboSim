@@ -14,7 +14,7 @@ import processing.core.PVector;
  * 
  * @author Joshua Hooker
  */
-public class LinearJog implements RobotMotion {
+public class LinearJog extends LinearMotion {
 	
 	/**
 	 * The robot's translation motion along the frame axes.
@@ -27,18 +27,12 @@ public class LinearJog implements RobotMotion {
 	private PVector rotation;
 	
 	/**
-	 * Has the motion incurred a fault by some means (i.e. inverse kinematics
-	 * failure).
-	 */
-	private boolean motionFault;
-	
-	/**
 	 * Initialize motion vectors to all zeros and motion fault to false.
 	 */
 	public LinearJog() {
+		super();
 		translation = new PVector();
 		rotation = new PVector();
-		motionFault = false;
 	}
 	
 	@Override
@@ -115,7 +109,7 @@ public class LinearJog implements RobotMotion {
 		int ret = robot.jumpTo(tgtPosition, tgtOrientation);
 		
 		if (ret == 1) {
-			// An issue occured with inverse kinematics
+			// An issue occurred with inverse kinematics
 			setFault(true);
 		}
 		
@@ -139,6 +133,30 @@ public class LinearJog implements RobotMotion {
 			(int)rotation.z,
 		};
 	}
+	
+	public int getMotion(int mdx) {
+		if (mdx == 0) {
+			return (int)translation.x;
+			
+		} else if (mdx == 1) {
+			return (int)translation.y;
+			
+		} else if (mdx == 2) {
+			return (int)translation.z;
+			
+		} else if (mdx == 3) {
+			return (int)rotation.x;
+			
+		} else if (mdx == 4) {
+			return (int)rotation.y;
+			
+		} else if (mdx == 5) {
+			return (int)rotation.z;
+			
+		} else {
+			return 0;
+		}
+	}
 
 	@Override
 	public void halt() {
@@ -151,23 +169,39 @@ public class LinearJog implements RobotMotion {
 		rotation.z = 0f;
 	}
 	
-	public boolean hasFault() {
-		return motionFault;
-	}
-	
 	@Override
-	public boolean inMotion() {
+	public boolean hasMotion() {
 		return !hasFault() && translation.x == 0f && translation.y == 0f
 				&& translation.z == 0f && rotation.x == 0f
 				&& rotation.y == 0f && rotation.z == 0f;
 	}
 	
-	public void setFault(boolean newState) {
-		motionFault = newState;
+	public int setMotion(int mdx, int newDir) {
+		int curDir = getMotion(mdx);
 		
-		if (newState) {
-			// Stop motion on fault
-			halt();
+		if (curDir == newDir) {
+			newDir = 0;
 		}
+		
+		if (mdx == 0) {
+			translation.x = newDir;
+			
+		} else if (mdx == 1) {
+			translation.y = newDir;
+			
+		} else if (mdx == 2) {
+			translation.z = newDir;
+			
+		} else if (mdx == 3) {
+			rotation.x = newDir;
+			
+		} else if (mdx == 4) {
+			rotation.y = newDir;
+			
+		} else if (mdx == 5) {
+			rotation.z = newDir;	
+		}
+		
+		return newDir;
 	}
 }

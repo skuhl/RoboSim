@@ -8,7 +8,7 @@ import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;
 import enums.InstOp;
-import enums.RobotMotion;
+import enums.ScreenMode;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
@@ -25,14 +25,19 @@ import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
+import programming.CallInstruction;
+import programming.IfStatement;
 import programming.Instruction;
+import programming.JumpInstruction;
 import programming.MotionInstruction;
 import programming.Program;
+import programming.SelectStatement;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import screen.DisplayLine;
 import screen.InstState;
+import screen.ScreenState;
 
 public class RoboticArm {
 	/**
@@ -136,11 +141,9 @@ public class RoboticArm {
 	private int activeInstIdx;
 	
 	/**
-	 * The robot's current motion state. This indicates whether the robot is
-	 * moving in the joint coordinate frame, a Cartesian coordinate frame, or
-	 * is not moving.
+	 * The rogot's current motion state.
 	 */
-	private RobotMotion motionType;
+	private RobotMotion motion;
 	
 	/**
 	 * The current coordinate frame of the robot.
@@ -333,6 +336,8 @@ public class RoboticArm {
 		CALL_STACK = new Stack<>();
 		PROG_UNDO = new Stack<>();
 		
+		motion = null;
+		
 		activeProgIdx = -1;
 		activeInstIdx = -1;
 		
@@ -346,7 +351,6 @@ public class RoboticArm {
 			USER_FRAME[idx] = new UserFrame();
 		}
 		
-		motionType = RobotMotion.HALTED;
 		curCoordFrame = CoordFrame.JOINT;
 		activeUserIdx = -1;
 		activeToolIdx = -1;
@@ -397,7 +401,7 @@ public class RoboticArm {
 			return 0f;
 		}
 
-		// Initiaize the Robot's destination
+		// Initialize the Robot's destination
 		Point RP = getToolTipNative();
 		tgtPosition = RP.position;
 		tgtOrientation = RP.orientation;
@@ -482,7 +486,7 @@ public class RoboticArm {
 	 * to be based on current speed
 	 */
 	protected float calculateDistanceBetweenPoints() {
-		float distBtwPts = 0f;
+		float distBtwPts = 5f;
 		Instruction inst = getActiveInstruction();
 
 		if (inst instanceof MotionInstruction) {
@@ -494,6 +498,9 @@ public class RoboticArm {
 				distBtwPts = motorSpeed * liveSpeed / 6000f;
 			else
 				distBtwPts = 5.0f;
+			
+		} else {
+			distBtwPts = 5f;
 		}
 		
 		return distBtwPts;
@@ -926,7 +933,7 @@ public class RoboticArm {
 			}
 		}
 		
-		if (modelInMotion() && trace) {
+		if (inMotion() && trace) {
 			Point tipPosNative = getToolTipNative();
 			// Update the robots trace points
 			if(tracePts.isEmpty()) {
@@ -1177,6 +1184,77 @@ public class RoboticArm {
 
 			jumpTo(tgtPosition, tgtOrientation);
 		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param singleExec
+	 * @return
+	 */
+	@SuppressWarnings("static-access")
+	public int executeProgram(RobotRun app) {
+		Program program = getActiveProg();
+		Instruction activeInstr = getActiveInstruction();
+		int nextInstr = getActiveInstIdx() + 1;
+
+		// stop executing if no valid program is selected or we reach the end of
+		// the program
+		if (hasMotionFault() || activeInstr == null) {
+			return 1;
+			
+		} else if (!activeInstr.isCommented()) {
+			if (activeInstr instanceof MotionInstruction) {
+				MotionInstruction motInstr = (MotionInstruction) activeInstr;
+				int ret = setupMInstMotion(program, motInstr, nextInstr, app.execSingleInst);
+				
+				if (ret != 0) {
+					// Issue occurred with setting up the motion instruction
+					nextInstr = -1;
+				}
+				
+			} else if (activeInstr instanceof JumpInstruction) {
+				nextInstr = activeInstr.execute();
+
+			} else if (activeInstr instanceof CallInstruction) {
+
+				if (((CallInstruction) activeInstr).getTgtDevice() != app.getInstanceRobot()) {
+					// Call an inactive Robot's program
+					if (app.getUI().getRobotButtonState()) {
+						nextInstr = activeInstr.execute();
+					} else {
+						// No second robot in application
+						nextInstr = -1;
+					}
+				} else {
+					nextInstr = activeInstr.execute();
+				}
+
+			} else if (activeInstr instanceof IfStatement ||
+					activeInstr instanceof SelectStatement) {
+				
+				int ret = activeInstr.execute();
+
+				if (ret != -2) {
+					nextInstr = ret;
+				}
+
+			} else if (activeInstr.execute() != 0) {
+				nextInstr = -1;
+			}
+		}
+
+		if (nextInstr == -1) {
+			// If a command fails
+			app.triggerFault();
+			return 1;
+
+		}
+		
+		++activeInstIdx;
+		app.updatePendantScreen();
+
+		return 0;
 	}
 	
 	/**
@@ -1690,6 +1768,16 @@ public class RoboticArm {
 	 * Stops all movement of this robot.
 	 */
 	public void halt() {
+		/* TODO TEST CODE *
+		try {
+			
+			throw new RuntimeException("HALT!");
+			
+		} catch (RuntimeException REx) {
+			REx.printStackTrace();
+		}
+		/**/
+		
 		for (int jdx = 0; jdx < 6; ++jdx) {
 			SEGMENT[jdx].setJointMotion(0);
 		}
@@ -1709,8 +1797,8 @@ public class RoboticArm {
 			jogRot[idx] = 0;
 		}
 		
-		if (!hasMotionFault()) {
-			motionType = RobotMotion.HALTED;
+		if (motion != null) {
+			motion.halt();
 		}
 	}
 
@@ -1721,7 +1809,11 @@ public class RoboticArm {
 	 * @return	Whether the robot has a motion fault
 	 */
 	public boolean hasMotionFault() {
-		return motionType == RobotMotion.MT_FAULT;
+		if (motion instanceof LinearMotion) {
+			return ((LinearMotion) motion).hasFault();
+		}
+		
+		return false;
 	}
 
 	/**
@@ -1837,43 +1929,8 @@ public class RoboticArm {
 	 * 
 	 * @return	Whether the robot is moving in some way
 	 */
-	public boolean modelInMotion() {
-		// TODO REFACTOR THIS
-		return RobotRun.getInstance().isProgramRunning() ||
-				(motionType != RobotMotion.HALTED &&
-				motionType != RobotMotion.MT_FAULT) || jointMotion() ||
-				translationalMotion() || rotationalMotion();
-	}
-
-	/**
-	 * Initializing rotational interpolation between this robot's current joint
-	 * angles and the given set of joint angles.
-	 */
-	public void moveTo(float[] jointAngles) {
-		
-		if (!hasMotionFault()) {
-			setupRotationInterpolation(jointAngles);
-			motionType = RobotMotion.MT_JOINT;
-		}
-	}
-
-	/**
-	 * Initializes the linear interpolation between this robot end effector's
-	 * current position and orientation and the given target position and
-	 * orientation.
-	 */
-	public void moveTo(PVector position, RQuaternion orientation) {
-		
-		if (!hasMotionFault()) {
-			Point start = getToolTipNative();
-			Point end = new Point(position.copy(), (RQuaternion)orientation.clone(), start.angles.clone());
-			RobotRun.getInstance().beginNewLinearMotion(start, end);
-			motionType = RobotMotion.MT_LINEAR;
-		}
-	}
-	
-	public void moveTo(Point p) {
-		moveTo(p.position, p.orientation);
+	public boolean inMotion() {
+		return motion != null && motion.hasMotion();
 	}
 	
 	/**
@@ -2318,7 +2375,66 @@ public class RoboticArm {
 	 * @param flag	Whether the robot has a motion fault
 	 */
 	public void setMotionFault(boolean flag) {
-		motionType = (flag) ? RobotMotion.MT_FAULT : RobotMotion.HALTED;
+		
+		if (motion instanceof LinearMotion) {
+			((LinearMotion) motion).setFault(flag);
+		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param prog
+	 * @param mInst
+	 * @param nextIdx
+	 * @param singleExec
+	 * @return
+	 */
+	public int setupMInstMotion(Program prog, MotionInstruction mInst,
+			int nextIdx, boolean singleExec) {
+		
+		Point instPt = getVector(mInst, prog);
+		
+		if (!mInst.checkFrames(activeToolIdx, activeUserIdx)) {
+			// Incorrect active frames for this motion instruction
+			return 1;
+			
+		} else if (instPt == null) {
+			// No point defined for given motion instruction
+			return 2;
+		}
+		
+		if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
+			// Setup joint motion instruction
+			updateMotion(instPt.angles);
+			
+		} else if (mInst.getMotionType() == Fields.MTYPE_LINEAR) {
+			// Setup linear motion instruction
+			Instruction nextInst = prog.getInstAt(nextIdx);
+			
+			if (mInst.getTermination() > 0 && nextInst instanceof MotionInstruction
+					&& !singleExec) {
+				// Non-fine termination motion
+				Point nextPt = getVector((MotionInstruction)nextInst, prog);
+				updateMotion(instPt, nextPt, mInst.getTermination() / 100f);
+				
+			} else {
+				// Fine termination motion
+				updateMotion(instPt);
+			}
+			
+		} else if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
+			// Setup circular motion instruction
+			MotionInstruction sndPt = mInst.getSecondaryPoint();
+			Point interPt = getVector(sndPt, prog);
+			updateMotion(instPt, interPt);
+			
+		} else {
+			// Invalid motion type
+			return 3;
+		}
+		
+		return 0;
 	}
 	
 	/**
@@ -2413,6 +2529,49 @@ public class RoboticArm {
 	 */
 	public boolean translationalMotion() {
 		return jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param mdx
+	 * @param newDir
+	 * @return
+	 */
+	public int updateJogMotion(int mdx, int newDir) {
+		int oldDir;
+		
+		if (curCoordFrame == CoordFrame.JOINT) {
+			// Update/set joint jog motion
+			JointJog jogMotion;
+			
+			if (motion instanceof JointJog) {
+				jogMotion = (JointJog)motion;
+				
+			} else {
+				jogMotion = new JointJog();
+				motion = jogMotion;
+				
+			}
+			
+			oldDir = jogMotion.setMotion(mdx, newDir);
+			
+		} else {
+			// Update/set linear jog motion
+			LinearJog jogMotion;
+			
+			if (motion instanceof LinearJog) {
+				jogMotion = (LinearJog)motion;
+				
+			} else {
+				jogMotion = new LinearJog();
+				motion = jogMotion;
+			}
+			
+			oldDir = jogMotion.setMotion(mdx, newDir);
+		}
+		
+		return oldDir;
 	}
 	
 	/**
@@ -2531,6 +2690,48 @@ public class RoboticArm {
 		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
 	}
 	
+	public void updateMotion(float[] jointAngles) {
+		if (motion instanceof JointInterpolation) {
+			((JointInterpolation)motion).setupRotationalInterpolation(this, jointAngles);
+			
+		} else {
+			motion = new JointInterpolation(this, jointAngles);
+		}
+	}
+	
+	public void updateMotion(Point tgt) {
+		Point start = getToolTipNative();
+		float ptDist = calculateDistanceBetweenPoints();
+		
+		if (!(motion instanceof LinearInterpolation)) {
+			motion = new LinearInterpolation();
+		}
+		
+		((LinearInterpolation) motion).beginNewLinearMotion(start, tgt, ptDist, liveSpeed / 100f);
+	}
+	
+	public void updateMotion(Point tgt, Point next, float p) {
+		Point start = getToolTipNative();
+		float ptDist = calculateDistanceBetweenPoints();
+		
+		if (!(motion instanceof LinearInterpolation)) {
+			motion = new LinearInterpolation();
+		}
+		
+		((LinearInterpolation) motion).beginNewContinuousMotion(start, tgt, next, p, ptDist, liveSpeed / 100f);
+	}
+	
+	public void updateMotion(Point tgt, Point inter) {
+		Point start = getToolTipNative();
+		float ptDist = calculateDistanceBetweenPoints();
+		
+		if (!(motion instanceof LinearInterpolation)) {
+			motion = new LinearInterpolation();
+		}
+		
+		((LinearInterpolation) motion).beginNewCircularMotion(start, inter, tgt, ptDist, liveSpeed / 100f);
+	}
+	
 	/**
 	 * Updates the program execution for this robot and the position of the
 	 * robot for linear or rotation interpolation.
@@ -2541,42 +2742,22 @@ public class RoboticArm {
 		
 		if (!hasMotionFault()) {
 			// Execute arm movement
-			if(app.isProgramRunning()) {
+			if (motion != null && motion.hasMotion()) {
+				motion.executeMotion(this);
+				
+			} else if (app.isProgramRunning()) {
 				// Run active program
-				boolean done = app.executeProgram(this, app.execSingleInst);
+				int ret = executeProgram(app);
+				boolean done = (ret != 0);
 				
 				if (done) {
 					app.hold();
 				}
 				
 				app.setProgramRunning(!done);
-
-			} else if (motionType != RobotMotion.HALTED) {
-				// Move the Robot progressively to a point
-				boolean doneMoving = true;
-
-				switch (motionType) {
-				case MT_JOINT:
-					doneMoving = interpolateRotation(liveSpeed / 100.0f);
-					break;
-				case MT_LINEAR:
-					doneMoving = app.executeMotion(this, liveSpeed / 100.0f);
-					break;
-				default:
-					break;
-				}
-
-				if (doneMoving) {
-					app.hold();
-				}
-
-			} else if (modelInMotion()) {
-				// Jog the Robot
-				app.getIntermediatePositions().clear();
-				executeLiveMotion();
 			}
 		}
-
+	
 		updateOBBs();
 	}
 	

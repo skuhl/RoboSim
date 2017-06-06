@@ -213,7 +213,7 @@ public class RobotRun extends PApplet {
 
 	int motionFrameCounter = 0;
 
-	float distanceBetweenPoints = 5.0f;
+	public float distanceBetweenPoints = 5.0f;
 
 	int interMotionIdx = -1;
 	
@@ -2885,7 +2885,7 @@ public class RobotRun extends PApplet {
 		} else if (!activeInstr.isCommented()) {
 			if (activeInstr instanceof MotionInstruction) {
 				MotionInstruction motInstr = (MotionInstruction) activeInstr;
-
+				/* TODO REMOVE AFTER REFACTOR *
 				// start a new instruction
 				if (!isExecutingInstruction()) {
 					setExecutingInstruction(setUpInstruction(program, model, motInstr));
@@ -2903,6 +2903,10 @@ public class RobotRun extends PApplet {
 						setExecutingInstruction(!(executeMotion(model, motInstr.getSpeedForExec(model))));
 					}
 				}
+				/**/
+				setExecutingInstruction(false);
+				model.setupMInstMotion(program, motInstr, nextInstr, execSingleInst);
+				
 			} else if (activeInstr instanceof JumpInstruction) {
 				setExecutingInstruction(false);
 				nextInstr = activeInstr.execute();
@@ -2965,7 +2969,7 @@ public class RobotRun extends PApplet {
 		updatePendantScreen();
 
 		return !isExecutingInstruction() && this.execSingleInst;
-	}// end executeProgram
+	}
 	
 	/**
 	 * Pendant F1 button
@@ -3432,10 +3436,10 @@ public class RobotRun extends PApplet {
 							Fields.debug("pt: %s\n", pt.position.toString());
 						}
 
-						r.moveTo(pt.position, pt.orientation);
+						r.updateMotion(pt);
 
 					} else {
-						r.moveTo(pt.angles);
+						r.updateMotion(pt.angles);
 					}
 				} else {
 					println("Position register is uninitialized!");
@@ -3452,12 +3456,12 @@ public class RobotRun extends PApplet {
 					if (mode == ScreenMode.TEACH_3PT_USER || mode == ScreenMode.TEACH_4PT) {
 						if (tgt != null && tgt.position != null && tgt.orientation != null) {
 							// Move to the point's position and orientation
-							activeRobot.moveTo(tgt.position, tgt.orientation);
+							activeRobot.updateMotion(tgt);
 						}
 					} else {
 						if (tgt != null && tgt.angles != null) {
 							// Move to the point's joint angles
-							activeRobot.moveTo(tgt.angles);
+							activeRobot.updateMotion(tgt.angles);
 						}
 					}
 				}
@@ -6403,7 +6407,7 @@ public class RobotRun extends PApplet {
 					Part p = (Part)wldObj;
 
 					/* Update the transformation matrix of an object held by the Robotic Arm */
-					if(active != null && active.isHeld(p) && active.modelInMotion()) {
+					if(active != null && active.isHeld(p) && active.inMotion()) {
 						
 						/***********************************************
 						     Moving a part with the Robot:
@@ -6777,7 +6781,7 @@ public class RobotRun extends PApplet {
 		}
 
 		// Display a message if the Robot is in motion
-		if (r.modelInMotion()) {
+		if (r.inMotion()) {
 			text("Robot is moving", lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 		}
@@ -7476,6 +7480,7 @@ public class RobotRun extends PApplet {
 		case SET_JUMP_TGT:
 		case SET_CALL_PROG:
 			contents.setLines( loadInstructions(r.getActiveProg()) );
+			contents.setLineIdx( activeRobot.getActiveInstIdx() );
 			break;
 		case NAV_DATA:
 			contents.addLine("1. Data Registers");
@@ -8019,7 +8024,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	public void updateRobotJogMotion(int set, int direction) {
-		// Only six jog button pairs exist
+		/* Only six jog button pairs exist *
 		if (isShift() && !activeRobot.hasMotionFault() && set >= 0 && set < 6) {
 			float newDir;
 
@@ -8032,6 +8037,12 @@ public class RobotRun extends PApplet {
 				newDir = activeRobot.activateLiveWorldMotion(set, direction);
 			}
 			
+			UI.updateJogButtons(set, newDir);
+		}
+		/**/
+		
+		if (isShift()) {
+			int newDir = activeRobot.updateJogMotion(set, direction);
 			UI.updateJogButtons(set, newDir);
 		}
 	}

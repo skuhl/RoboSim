@@ -62,9 +62,14 @@ public class JointJog extends JointMotion {
 	
 	public int setMotion(int mdx, int newDir) {
 		if (mdx >= 0 && mdx < JOINT_MOTION.length) {
-			int oldDir = JOINT_MOTION[mdx];
-			JOINT_MOTION[mdx] = newDir;
-			return oldDir;
+			if (JOINT_MOTION[mdx] == newDir) {
+				JOINT_MOTION[mdx] = 0;
+				
+			} else {
+				JOINT_MOTION[mdx] = newDir;
+			}
+			
+			return JOINT_MOTION[mdx];
 		}
 		// Invalid motion index
 		return 0;

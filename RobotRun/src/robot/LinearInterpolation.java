@@ -16,7 +16,7 @@ import processing.core.PVector;
  * 
  * @author Joshua Hooker
  */
-public class LinearInterpolation implements RobotMotion {
+public class LinearInterpolation extends LinearMotion {
 	
 	/**
 	 * Defines the set of points, through which to interpolate.
@@ -33,6 +33,7 @@ public class LinearInterpolation implements RobotMotion {
 	 * Initializes intermediate positions.
 	 */
 	public LinearInterpolation() {
+		super();
 		intermediatePositions = new ArrayList<>();
 		distBtwPts = 0f;
 		speed = 0f;
@@ -55,7 +56,7 @@ public class LinearInterpolation implements RobotMotion {
 		calculateIntermediatePositions(start, end);
 	}
 	
-	public void calculateArc(Point start, Point inter, Point end) {
+	private void calculateArc(Point start, Point inter, Point end) {
 		PVector a = start.position;
 		PVector b = inter.position;
 		PVector c = end.position;
@@ -102,7 +103,7 @@ public class LinearInterpolation implements RobotMotion {
 		}
 	}
 
-	public void calculateContinuousPositions(Point start, Point end, Point next, float percentage) {
+	private void calculateContinuousPositions(Point start, Point end, Point next, float percentage) {
 		// percentage /= 2;
 		percentage /= 1.5f;
 		percentage = 1 - percentage;
@@ -171,7 +172,7 @@ public class LinearInterpolation implements RobotMotion {
 	}
 
 	// TODO: Add error check for colinear case (denominator is zero)
-	public float calculateH(float x1, float y1, float x2, float y2, float x3, float y3) {
+	private float calculateH(float x1, float y1, float x2, float y2, float x3, float y3) {
 		float numerator = (x2 * x2 + y2 * y2) * y3 - (x3 * x3 + y3 * y3) * y2
 				- ((x1 * x1 + y1 * y1) * y3 - (x3 * x3 + y3 * y3) * y1) + (x1 * x1 + y1 * y1) * y2
 				- (x2 * x2 + y2 * y2) * y1;
@@ -180,7 +181,7 @@ public class LinearInterpolation implements RobotMotion {
 		return numerator / denominator;
 	}
 
-	public void calculateIntermediatePositions(Point start, Point end) {
+	private void calculateIntermediatePositions(Point start, Point end) {
 		PVector p1 = start.position;
 		PVector p2 = end.position;
 		RQuaternion q1 = start.orientation;
@@ -203,7 +204,7 @@ public class LinearInterpolation implements RobotMotion {
 		interMotionIdx = 0;
 	} // end calculate intermediate positions
 
-	public float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
+	private float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
 		float numerator = x2 * (x3 * x3 + y3 * y3) - x3 * (x2 * x2 + y2 * y2)
 				- (x1 * (x3 * x3 + y3 * y3) - x3 * (x1 * x1 + y1 * y1)) + x1 * (x2 * x2 + y2 * y2)
 				- x2 * (x1 * x1 + y1 * y1);
@@ -212,13 +213,13 @@ public class LinearInterpolation implements RobotMotion {
 		return numerator / denominator;
 	}
 	
-	public PVector circleCenter(PVector a, PVector b, PVector c) {
+	private PVector circleCenter(PVector a, PVector b, PVector c) {
 		float h = calculateH(a.x, a.y, b.x, b.y, c.x, c.y);
 		float k = calculateK(a.x, a.y, b.x, b.y, c.x, c.y);
 		return new PVector(h, k, a.z);
 	}
 	
-	public PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {
+	private PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {
 		PVector n1 = new PVector(a.x - b.x, a.y - b.y, a.z - b.z);
 		n1.normalize();
 		PVector n2 = new PVector(a.x - c.x, a.y - c.y, a.z - c.z);
@@ -246,7 +247,7 @@ public class LinearInterpolation implements RobotMotion {
 			interMotionIdx++;
 			motionFrameCounter = 0;
 			if (interMotionIdx >= intermediatePositions.size()) {
-				interMotionIdx = -1;
+				reset(distBtwPts, speed);
 				return 0;
 			}
 
@@ -257,12 +258,12 @@ public class LinearInterpolation implements RobotMotion {
 			}
 
 			if (ret == 1) {
-				// TODO trigger fault
-				return -1;
+				setFault(true);
+				return 1;
 			}
 		}
 
-		return 1;
+		return 2;
 	}
 
 	@Override
@@ -271,12 +272,13 @@ public class LinearInterpolation implements RobotMotion {
 	}
 
 	@Override
-	public boolean inMotion() {
+	public boolean hasMotion() {
 		// TODO greater than 1 or 0?
-		return intermediatePositions.size() > 0;
+		return !hasFault() && intermediatePositions.size() > 0;
 	}
 	
 	private void reset(float distBtwPts, float speed) {
+		motionFault = false;
 		intermediatePositions.clear();
 		this.distBtwPts = distBtwPts;
 		this.speed = speed;
@@ -284,7 +286,7 @@ public class LinearInterpolation implements RobotMotion {
 		motionFrameCounter = 0;
 	}
 	
-	public PVector vectorConvertFrom(PVector point, PVector xAxis, PVector yAxis, PVector zAxis) {
+	private PVector vectorConvertFrom(PVector point, PVector xAxis, PVector yAxis, PVector zAxis) {
 		PMatrix3D matrix = new PMatrix3D(xAxis.x, yAxis.x, zAxis.x, 0, xAxis.y, yAxis.y, zAxis.y, 0, xAxis.z, yAxis.z,
 				zAxis.z, 0, 0, 0, 0, 1);
 		PVector result = new PVector();
@@ -292,7 +294,7 @@ public class LinearInterpolation implements RobotMotion {
 		return result;
 	}
 
-	public PVector vectorConvertTo(PVector point, PVector xAxis, PVector yAxis, PVector zAxis) {
+	private PVector vectorConvertTo(PVector point, PVector xAxis, PVector yAxis, PVector zAxis) {
 		PMatrix3D matrix = new PMatrix3D(xAxis.x, xAxis.y, xAxis.z, 0, yAxis.x, yAxis.y, yAxis.z, 0, zAxis.x, zAxis.y,
 				zAxis.z, 0, 0, 0, 0, 1);
 		PVector result = new PVector();
