@@ -478,6 +478,28 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * Determine how close together intermediate points between two points need
+	 * to be based on current speed
+	 */
+	protected float calculateDistanceBetweenPoints() {
+		float distBtwPts = 0f;
+		Instruction inst = getActiveInstruction();
+
+		if (inst instanceof MotionInstruction) {
+			MotionInstruction mInst = (MotionInstruction) inst;
+
+			if (mInst != null && mInst.getMotionType() != Fields.MTYPE_JOINT)
+				distBtwPts = mInst.getSpeed() / 60.0f;
+			else if (curCoordFrame != CoordFrame.JOINT)
+				distBtwPts = motorSpeed * liveSpeed / 6000f;
+			else
+				distBtwPts = 5.0f;
+		}
+		
+		return distBtwPts;
+	}
+	
+	/**
 	 * Checks if the robot's active end effector can pickup up the given part.
 	 * 
 	 * @param p	The part with which to check for a pickup collision
@@ -1082,7 +1104,7 @@ public class RoboticArm {
 							dist);
 					
 					if(!seg.setJointRotation(trialAngle)) {
-						Fields.debug("A[i%d]: %f\n", i, trialAngle);
+						Fields.debug("A[%d]: %f\n", i, trialAngle);
 						seg.setJointMotion(0);
 						// TODO REFACTOR THESE
 						RobotRun.getInstance().updateRobotJogMotion(i, 0);
@@ -1421,6 +1443,10 @@ public class RoboticArm {
 		return liveSpeed;
 	}
 	
+	public float getMotorSpeed() {
+		return motorSpeed;
+	}
+	
 	/**
 	 * TODO comment this
 	 * 
@@ -1500,6 +1526,22 @@ public class RoboticArm {
 		}
 		
 		// No such program exists
+		return null;
+	}
+	
+	/**
+	 * Returns the robot segment with the specified index, in the robot's set
+	 * of segments.
+	 * 
+	 * @param sdx	The index of a segment [0, 6)
+	 * @return		The segment associated with the given index, or null, if no
+	 * 				such segment exists
+	 */
+	protected RSegWithJoint getSegment(int sdx) {
+		if (sdx >= 0 && sdx < SEGMENT.length) {
+			return SEGMENT[sdx];
+		}
+		// Invalid segment index
 		return null;
 	}
 	
@@ -2501,8 +2543,13 @@ public class RoboticArm {
 			// Execute arm movement
 			if(app.isProgramRunning()) {
 				// Run active program
-				app.setProgramRunning(!app.executeProgram(this,
-						app.execSingleInst));
+				boolean done = app.executeProgram(this, app.execSingleInst);
+				
+				if (done) {
+					app.hold();
+				}
+				
+				app.setProgramRunning(!done);
 
 			} else if (motionType != RobotMotion.HALTED) {
 				// Move the Robot progressively to a point

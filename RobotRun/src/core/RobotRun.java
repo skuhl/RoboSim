@@ -2881,6 +2881,7 @@ public class RobotRun extends PApplet {
 		// the program
 		if (activeRobot.hasMotionFault() || activeInstr == null) {
 			return true;
+			
 		} else if (!activeInstr.isCommented()) {
 			if (activeInstr instanceof MotionInstruction) {
 				MotionInstruction motInstr = (MotionInstruction) activeInstr;
@@ -7122,6 +7123,7 @@ public class RobotRun extends PApplet {
 
 		if (instruction.getMotionType() == Fields.MTYPE_JOINT) {
 			activeRobot.setupRotationInterpolation(instPt.angles);
+			
 		} // end joint movement setup
 		else if (instruction.getMotionType() == Fields.MTYPE_LINEAR) {
 
