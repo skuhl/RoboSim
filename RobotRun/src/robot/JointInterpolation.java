@@ -43,7 +43,7 @@ public class JointInterpolation extends JointMotion {
 			if (JOINT_MOTION[jdx] != 0) {
 				float distToDest = PApplet.abs(seg.getJointRotation()
 						- TGT_ANGLES[jdx]);
-
+				
 				if (distToDest >= (seg.getSpeedModifier() * speed)) {
 					++ret;
 					/* Move the joint based on the roobt's liveSpeed, the
@@ -54,9 +54,13 @@ public class JointInterpolation extends JointMotion {
 					
 					seg.setJointRotation(newRotation);
 
-				} else if (distToDest > 0.00009f) {
-					// Destination too close to move at current speed
-					seg.setJointRotation(TGT_ANGLES[jdx]);
+				} else {
+					if (distToDest > 0.00009f) {
+						// Destination too close to move at current speed
+						seg.setJointRotation(TGT_ANGLES[jdx]);
+					}
+					
+					JOINT_MOTION[jdx] = 0;
 				}
 			}
 		}

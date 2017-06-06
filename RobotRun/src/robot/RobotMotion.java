@@ -25,5 +25,5 @@ public interface RobotMotion {
 	 * 
 	 * @return	If there is motion
 	 */
-	public abstract boolean inMotion();
+	public abstract boolean hasMotion();
 }

@@ -30,7 +30,7 @@ public abstract class JointMotion implements RobotMotion {
 	}
 	
 	@Override
-	public boolean inMotion() {
+	public boolean hasMotion() {
 		for (int mdx = 0; mdx < JOINT_MOTION.length; ++mdx) {
 			if (JOINT_MOTION[mdx] != 0) {
 				// At least one joint is in motion
