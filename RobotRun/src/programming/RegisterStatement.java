@@ -1,6 +1,6 @@
 package programming;
 
-import expression.ExprOperand;
+import expression.Operand;
 import expression.Expression;
 import global.Fields;
 import global.RMath;
@@ -58,7 +58,7 @@ public class RegisterStatement extends Instruction {
 	
 	@Override
 	public int execute() {
-		ExprOperand result = expr.evaluate();
+		Operand result = expr.evaluate();
 
 		if(result == null) return 1;
 

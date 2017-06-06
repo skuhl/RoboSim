@@ -1,6 +1,8 @@
 package expression;
 
+import core.RobotRun;
 import geom.Point;
+import geom.WorldObject;
 import global.Fields;
 import global.RMath;
 import processing.core.PVector;
@@ -9,75 +11,82 @@ import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
 
-public class ExprOperand implements ExpressionElement {
+public class Operand implements ExpressionElement {
 	public int type;
 
-	Float dataVal = null;
+	private WorldObject objProto = null;
+	private Float dataVal = null;
 	private Boolean boolVal = null;
-	int posIdx = 0;
-	Register regVal = null;
-	Point pointVal = null;
+	private int posIdx = 0;
+	private Register regVal = null;
+	private Point pointVal = null;
 
 	//default constructor
-	public ExprOperand() {
+	public Operand() {
 		type = ExpressionElement.UNINIT;
 	}
 
 	//create boolean operand
-	public ExprOperand(boolean b) {
+	public Operand(boolean b) {
 		type = ExpressionElement.BOOL;
 		setBoolVal(b);
 	}
 
 	//create data register operand
-	public ExprOperand(DataRegister dReg) {
+	public Operand(DataRegister dReg) {
 		type = ExpressionElement.DREG;
 		regVal = dReg;
 	}
 
 	//create floating point operand
-	public ExprOperand(float d) {
+	public Operand(float d) {
 		type = ExpressionElement.FLOAT;
 		dataVal = d;
 	}
 
 	//create IO register operand
-	public ExprOperand(IORegister ioReg) {
+	public Operand(IORegister ioReg) {
 		type = ExpressionElement.IOREG;
 		regVal = ioReg;
 	}
 
 	//create point operand (used during evaulation only) 
-	public ExprOperand(Point p) {
+	public Operand(Point p) {
 		type = ExpressionElement.POSTN;
 		pointVal = p;
 	}
 
 	//create position register operand
-	public ExprOperand(PositionRegister pReg){
+	public Operand(PositionRegister pReg){
 		type = ExpressionElement.PREG;
 		regVal = pReg;
 	}
 
 	//create position register operand on a given value of the register's position
-	public ExprOperand(PositionRegister pReg, int j) {
+	public Operand(PositionRegister pReg, int j) {
 		type = ExpressionElement.PREG_IDX;
 		posIdx = j;
 		regVal = pReg;
 	}
+	
+	public Operand(WorldObject o) {
+		type = ExpressionElement.CAM_MATCH;
+		
+	}
 
 	@Override
-	public ExprOperand clone() {
+	public Operand clone() {
 		switch(type) {
-		case ExpressionElement.UNINIT: return new ExprOperand();
+		case ExpressionElement.UNINIT: return new Operand();
 		case ExpressionElement.SUBEXP: return ((Expression)this).clone();
-		case ExpressionElement.FLOAT:  return new ExprOperand(dataVal);
-		case ExpressionElement.BOOL:   return new ExprOperand(getBoolVal());
-		case ExpressionElement.DREG:   return new ExprOperand((DataRegister)regVal);
-		case ExpressionElement.IOREG:  return new ExprOperand((IORegister)regVal);
-		case ExpressionElement.PREG:   return new ExprOperand((PositionRegister)regVal);
-		case ExpressionElement.PREG_IDX: return new ExprOperand((PositionRegister)regVal, posIdx);
-		case ExpressionElement.POSTN:  return new ExprOperand(pointVal);
+		case ExpressionElement.FLOAT:  return new Operand(dataVal);
+		case ExpressionElement.BOOL:   return new Operand(getBoolVal());
+		case ExpressionElement.DREG:   return new Operand((DataRegister)regVal);
+		case ExpressionElement.IOREG:  return new Operand((IORegister)regVal);
+		case ExpressionElement.PREG:   return new Operand((PositionRegister)regVal);
+		case ExpressionElement.PREG_IDX: return new Operand((PositionRegister)regVal, posIdx);
+		case ExpressionElement.POSTN:  return new Operand(pointVal);
+		case ExpressionElement.CAM_MATCH: return new Operand(objProto);
 		default:                       return null;
 		}
 	}
@@ -87,6 +96,8 @@ public class ExprOperand implements ExpressionElement {
 			return boolVal;
 		} else if(type == ExpressionElement.IOREG) {
 			return (((IORegister)regVal).state == Fields.ON);
+		} else if(type == ExpressionElement.CAM_MATCH) {
+			return RobotRun.getInstance().getRobotCamera().taughtObjectInFrame(posIdx, RobotRun.getInstance().getActiveScenario());
 		} else {
 			return null;
 		}
@@ -180,56 +191,56 @@ public class ExprOperand implements ExpressionElement {
 		return regVal.idx;
 	}
 
-	public ExprOperand reset() {
+	public Operand reset() {
 		type = ExpressionElement.UNINIT;
 		regVal = null;
 		pointVal = null;
 		return this;
 	}
 
-	public ExprOperand set(boolean b) {
+	public Operand set(boolean b) {
 		type = ExpressionElement.BOOL;
 		setBoolVal(b);
 		return this;
 	}
 
-	public ExprOperand set(DataRegister dReg) {
+	public Operand set(DataRegister dReg) {
 		type = ExpressionElement.DREG;
 		regVal = dReg;
 		return this;
 	}
 
-	public ExprOperand set(float d) {
+	public Operand set(float d) {
 		type = ExpressionElement.FLOAT;
 		dataVal = d;
 		return this;
 	}
 
-	public ExprOperand set(IORegister ioReg) {
+	public Operand set(IORegister ioReg) {
 		type = ExpressionElement.IOREG;
 		regVal = ioReg;
 		return this;
 	}
 
-	public ExprOperand set(Point p) {
+	public Operand set(Point p) {
 		type = ExpressionElement.POSTN;
 		pointVal = p;
 		return this;
 	}
 
-	public ExprOperand set(PositionRegister pReg) {
+	public Operand set(PositionRegister pReg) {
 		regVal = pReg;
 		return this;
 	}
 
-	public ExprOperand set(PositionRegister pReg, int pdx) {
+	public Operand set(PositionRegister pReg, int pdx) {
 		type = ExpressionElement.PREG_IDX;
 		posIdx = pdx;
 		regVal = pReg;
 		return this;
 	}
 	
-	public ExprOperand set(int pdx) {
+	public Operand set(int pdx) {
 		posIdx = pdx;
 		return this;
 	}
