@@ -1,19 +1,19 @@
 package expression;
 import geom.Point;
 
-public class AtomicExpression extends ExprOperand {
-	protected ExprOperand arg1;
-	protected ExprOperand arg2;
+public class AtomicExpression extends Operand {
+	protected Operand arg1;
+	protected Operand arg2;
 	private Operator op;
 
 	public AtomicExpression(){
 		type = ExpressionElement.SUBEXP;
 		setOp(Operator.UNINIT);
-		arg1 = new ExprOperand();
-		arg2 = new ExprOperand();
+		arg1 = new Operand();
+		arg2 = new Operand();
 	}
 
-	public AtomicExpression(ExprOperand a1, ExprOperand a2, Operator o) {
+	public AtomicExpression(Operand a1, Operand a2, Operator o) {
 		type = ExpressionElement.SUBEXP;
 		setOp(o);
 		arg1 = a1;
@@ -23,8 +23,8 @@ public class AtomicExpression extends ExprOperand {
 	public AtomicExpression(Operator o){
 		type = ExpressionElement.SUBEXP;
 		setOp(o);
-		arg1 = new ExprOperand();
-		arg2 = new ExprOperand();
+		arg1 = new Operand();
+		arg2 = new Operand();
 	}
 
 	@Override
@@ -32,8 +32,8 @@ public class AtomicExpression extends ExprOperand {
 		return new AtomicExpression(arg1.clone(), arg2.clone(), getOp());
 	}
 	
-	public ExprOperand evaluate() {
-		ExprOperand result;
+	public Operand evaluate() {
+		Operand result;
 		int t1 = arg1.type;
 		int t2 = arg2.type;
 		//operation return type:
@@ -118,41 +118,41 @@ public class AtomicExpression extends ExprOperand {
 
 			switch(getOp()) {
 			case ADDTN:
-				result = new ExprOperand(o1 + o2);
+				result = new Operand(o1 + o2);
 				break;
 			case SUBTR:
-				result = new ExprOperand(o1 - o2);
+				result = new Operand(o1 - o2);
 				break;
 			case MULT:
-				result = new ExprOperand(o1 * o2);
+				result = new Operand(o1 * o2);
 				break;
 			case DIV:
-				result = new ExprOperand(o1 / o2);
+				result = new Operand(o1 / o2);
 				break;
 			case MOD:
-				result = new ExprOperand(o1 % o2);
+				result = new Operand(o1 % o2);
 				break;
 			case INTDIV:
-				result = new ExprOperand(intop1 / intop2);
+				result = new Operand(intop1 / intop2);
 				break;
 			case EQUAL:
 				// Do not use == or != with ANY Objects!
-				result = new ExprOperand(o1.floatValue() == o2.floatValue());
+				result = new Operand(o1.floatValue() == o2.floatValue());
 				break;
 			case NEQUAL:
-				result = new ExprOperand(o1.floatValue() != o2.floatValue());
+				result = new Operand(o1.floatValue() != o2.floatValue());
 				break;
 			case GRTR:
-				result = new ExprOperand(o1 > o2);
+				result = new Operand(o1 > o2);
 				break;
 			case LESS:
-				result = new ExprOperand(o1 < o2);
+				result = new Operand(o1 < o2);
 				break;
 			case GREQ:
-				result = new ExprOperand(o1 >= o2);
+				result = new Operand(o1 >= o2);
 				break;
 			case LSEQ:
-				result = new ExprOperand(o1 <= o2);
+				result = new Operand(o1 <= o2);
 				break;
 			default:
 				result = null;
@@ -164,15 +164,15 @@ public class AtomicExpression extends ExprOperand {
 
 			switch(getOp()) {
 			case EQUAL:
-				result = new ExprOperand(b1 == b2);
+				result = new Operand(b1 == b2);
 				break;
 			case NEQUAL:
-				result = new ExprOperand(b1 != b2);
+				result = new Operand(b1 != b2);
 				break;
 			case AND:
-				result = new ExprOperand(b1 && b2);
+				result = new Operand(b1 && b2);
 			case OR:
-				result = new ExprOperand(b1 || b2);
+				result = new Operand(b1 || b2);
 			default:
 				result = null;
 				break;
@@ -187,11 +187,11 @@ public class AtomicExpression extends ExprOperand {
 			case ADDTN:
 				if (ptCart) {
 					// Add Cartesian values
-					result = new ExprOperand( p1.add(p2.position, p2.orientation) );
+					result = new Operand( p1.add(p2.position, p2.orientation) );
 					
 				} else {
 					// Add joint values
-					result = new ExprOperand( p1.add(p2.angles) );
+					result = new Operand( p1.add(p2.angles) );
 				}
 				
 				break;
@@ -199,12 +199,12 @@ public class AtomicExpression extends ExprOperand {
 				if (ptCart) {
 					// Add Cartesian values
 					Point nP2 = p2.negateCartesian();
-					result = new ExprOperand( p1.add(nP2.position, nP2.orientation) );
+					result = new Operand( p1.add(nP2.position, nP2.orientation) );
 					
 				} else {
 					// Add joint values
 					Point nP2 = p2.negateJoint();
-					result = new ExprOperand( p1.add(nP2.angles) );
+					result = new Operand( p1.add(nP2.angles) );
 				}
 				break;
 			default:
@@ -219,8 +219,8 @@ public class AtomicExpression extends ExprOperand {
 		return result;
 	}
 
-	public ExprOperand getArg1() { return arg1; }
-	public ExprOperand getArg2() { return arg2; }
+	public Operand getArg1() { return arg1; }
+	public Operand getArg2() { return arg2; }
 
 	@Override
 	public int getLength() {
@@ -241,7 +241,7 @@ public class AtomicExpression extends ExprOperand {
 	}
 	public Operator getOperator() { return getOp(); }
 
-	public ExprOperand setArg(ExprOperand a, int argNo) {
+	public Operand setArg(Operand a, int argNo) {
 		if(argNo == 1) {
 			return setArg1(a);
 		} else {
@@ -249,12 +249,12 @@ public class AtomicExpression extends ExprOperand {
 		}
 	}
 
-	public ExprOperand setArg1(ExprOperand a) { 
+	public Operand setArg1(Operand a) { 
 		arg1 = a;
 		return arg1;
 	}
 
-	public ExprOperand setArg2(ExprOperand a) { 
+	public Operand setArg2(Operand a) { 
 		arg2 = a;
 		return arg2;
 	}

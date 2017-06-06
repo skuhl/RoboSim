@@ -16,6 +16,7 @@ public interface ExpressionElement {
 	public static final int PREG = 4;
 	public static final int PREG_IDX = 5;
 	public static final int POSTN = 6;
+	public static final int CAM_MATCH = 7;
 
 	public abstract int getLength();
 	@Override

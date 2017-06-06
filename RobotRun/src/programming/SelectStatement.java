@@ -1,51 +1,51 @@
 package programming;
 import java.util.ArrayList;
 
-import expression.ExprOperand;
+import expression.Operand;
 import expression.ExpressionElement;
 
 public class SelectStatement extends Instruction {
-	private ExprOperand arg;
-	private ArrayList<ExprOperand> cases;
+	private Operand arg;
+	private ArrayList<Operand> cases;
 	private ArrayList<Instruction> instrs;
 
 	public SelectStatement() {
-		setArg(new ExprOperand());
-		setCases(new ArrayList<ExprOperand>());
+		setArg(new Operand());
+		setCases(new ArrayList<Operand>());
 		setInstrs(new ArrayList<Instruction>());
 		addCase();
 	}
 
-	public SelectStatement(ExprOperand a) {
+	public SelectStatement(Operand a) {
 		setArg(a);
-		setCases(new ArrayList<ExprOperand>());
+		setCases(new ArrayList<Operand>());
 		setInstrs(new ArrayList<Instruction>());
 		addCase();
 	}
 
-	public SelectStatement(ExprOperand a, ArrayList<ExprOperand> cList, ArrayList<Instruction> iList) {
+	public SelectStatement(Operand a, ArrayList<Operand> cList, ArrayList<Instruction> iList) {
 		setArg(a);
 		setCases(cList);
 		setInstrs(iList);
 	}
 
 	public void addCase() {
-		getCases().add(new ExprOperand());
+		getCases().add(new Operand());
 		getInstrs().add(new Instruction());
 	}
 
-	public void addCase(ExprOperand e, Instruction i) {
+	public void addCase(Operand e, Instruction i) {
 		getCases().add(e);
 		getInstrs().add(i);
 	}
 
 	@Override
 	public Instruction clone() {   
-		ExprOperand newArg = getArg().clone();
-		ArrayList<ExprOperand> cList = new ArrayList<>();
+		Operand newArg = getArg().clone();
+		ArrayList<Operand> cList = new ArrayList<>();
 		ArrayList<Instruction> iList = new ArrayList<>();
 
-		for(ExprOperand o : getCases()) {
+		for(Operand o : getCases()) {
 			cList.add(o.clone());
 		}
 
@@ -72,7 +72,7 @@ public class SelectStatement extends Instruction {
 	@Override
 	public int execute() {
 		for(int i = 0; i < getCases().size(); i += 1) {
-			ExprOperand c = getCases().get(i);
+			Operand c = getCases().get(i);
 			if(c == null) return -1;
 
 			//println("testing case " + i + " = " + cases.get(i).getDataVal() + " against " + arg.getDataVal());
@@ -94,11 +94,11 @@ public class SelectStatement extends Instruction {
 		return -1;
 	}
 
-	public ExprOperand getArg() {
+	public Operand getArg() {
 		return arg;
 	}
 
-	public ArrayList<ExprOperand> getCases() {
+	public ArrayList<Operand> getCases() {
 		return cases;
 	}
 
@@ -106,11 +106,11 @@ public class SelectStatement extends Instruction {
 		return instrs;
 	}
 
-	public void setArg(ExprOperand arg) {
+	public void setArg(Operand arg) {
 		this.arg = arg;
 	}
 
-	public void setCases(ArrayList<ExprOperand> cases) {
+	public void setCases(ArrayList<Operand> cases) {
 		this.cases = cases;
 	}
 

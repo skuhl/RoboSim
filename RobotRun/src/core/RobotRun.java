@@ -12,7 +12,7 @@ import enums.CoordFrame;
 import enums.ScreenMode;
 import enums.ScreenType;
 import expression.AtomicExpression;
-import expression.ExprOperand;
+import expression.Operand;
 import expression.Expression;
 import expression.ExpressionElement;
 import expression.Operator;
@@ -185,7 +185,7 @@ public class RobotRun extends PApplet {
 	private Frame teachFrame = null;
 
 	// Expression operand currently being edited
-	public ExprOperand opEdit = null;
+	public Operand opEdit = null;
 
 	public int editIdx = -1;
 
@@ -1538,8 +1538,8 @@ public class RobotRun extends PApplet {
 				int startIdx = expr.getStartingIdx(elements[selectIdx]);
 				editExpression((Expression) e, selectIdx - startIdx - 1);
 			}
-		} else if (e instanceof ExprOperand) {
-			editOperand((ExprOperand) e, elements[selectIdx]);
+		} else if (e instanceof Operand) {
+			editOperand((Operand) e, elements[selectIdx]);
 		} else {
 			editIdx = elements[selectIdx];
 			nextScreen(ScreenMode.SET_EXPR_OP);
@@ -1556,7 +1556,7 @@ public class RobotRun extends PApplet {
 	 *          into which this operand is stored.
 	 *
 	 */
-	public void editOperand(ExprOperand o, int ins_idx) {
+	public void editOperand(Operand o, int ins_idx) {
 		switch (o.type) {
 		case -2: // Uninit
 			editIdx = ins_idx;
@@ -2088,20 +2088,20 @@ public class RobotRun extends PApplet {
 
 			if (options.getLineIdx() == 0) {
 				// set arg to new data reg
-				ExprOperand operand = new ExprOperand(new DataRegister());
+				Operand operand = new Operand(new DataRegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(ScreenMode.INPUT_DREG_IDX);
 			} else if (options.getLineIdx() == 1) {
 				// set arg to new io reg
-				ExprOperand operand = new ExprOperand(new IORegister());
+				Operand operand = new Operand(new IORegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(ScreenMode.INPUT_IOREG_IDX);
 			} else if (options.getLineIdx() == 2) {
-				ExprOperand operand = new ExprOperand(new PositionRegister());
+				Operand operand = new Operand(new PositionRegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(ScreenMode.INPUT_PREG_IDX1);
 			} else if (options.getLineIdx() == 3) {
-				ExprOperand operand = new ExprOperand(new PositionRegister(), 0);
+				Operand operand = new Operand(new PositionRegister(), 0);
 				opEdit = expr.setOperand(editIdx, operand);
 				screenStates.pop();
 				pushScreen(ScreenMode.INPUT_PREG_IDX2, contents.getLineIdx(),
