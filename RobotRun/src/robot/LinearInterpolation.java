@@ -90,6 +90,7 @@ public class LinearInterpolation extends LinearMotion {
 		// vector around our normal vector
 		float angle = 0, mu = 0;
 		int numPoints = (int) (r * theta / distBtwPts);
+		System.out.printf("Points: %d\n", numPoints);
 		float inc = 1 / (float) numPoints;
 		float angleInc = (theta) / numPoints;
 		for (int i = 0; i < numPoints; i += 1) {

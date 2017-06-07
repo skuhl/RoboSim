@@ -1584,13 +1584,14 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_MV_INSTR_SPD:
 			m = (MotionInstruction) r.getInstToEdit( r.getActiveInstIdx() );
+			int motionType = m.getMotionType();
 			line = getSelectedLine();
 			m = line == 0 ? m : m.getSecondaryPoint();
 
 			float tempSpeed = Float.parseFloat(workingText.toString());
 			
-			if (m.getMotionType() == Fields.MTYPE_LINEAR ||
-					m.getMotionType() == Fields.MTYPE_CIRCULAR) {
+			if (motionType == Fields.MTYPE_LINEAR ||
+					motionType == Fields.MTYPE_CIRCULAR) {
 				
 				tempSpeed /= RoboticArm.motorSpeed;
 				
@@ -4799,7 +4800,7 @@ public class RobotRun extends PApplet {
 
 			break;
 		case SET_MV_INSTR_SPD:
-			mInst = (MotionInstruction) activeRobot.getActiveInstruction();
+			mInst = (MotionInstruction) activeRobot.getActiveInstruction();	
 			float instSpd = mInst.getSpeed();
 			
 			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
