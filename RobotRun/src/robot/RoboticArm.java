@@ -376,7 +376,7 @@ public class RoboticArm {
 		
 		// Initializes the old transformation matrix for the arm model
 		lastTipTMatrix = getFaceplateTMat( getJointAngles() );
-		trace = false;
+		trace = true;
 		tracePts = new ArrayList<PVector>();
 	}
 	
@@ -1522,6 +1522,7 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
 	 * 
 	 * @param mInst
 	 * @param parent	
