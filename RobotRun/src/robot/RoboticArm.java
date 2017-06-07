@@ -2201,8 +2201,8 @@ public class RoboticArm {
 		} else if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
 			// Setup circular motion instruction
 			MotionInstruction sndPt = mInst.getSecondaryPoint();
-			Point interPt = getVector(sndPt, prog);
-			updateMotion(instPt, interPt, mInst.getSpeed());
+			Point endPt = getVector(sndPt, prog);
+			updateMotion(endPt, instPt, mInst.getSpeed());
 			
 		} else {
 			// Invalid motion type
@@ -2421,7 +2421,7 @@ public class RoboticArm {
 		}
 		
 		((LinearInterpolation) motion).beginNewContinuousMotion(start, tgt, next, p,
-				speed * motorSpeed / 100f);
+				speed * motorSpeed);
 	}
 	
 	public void updateMotion(Point tgt, Point inter, float speed) {
@@ -2433,7 +2433,7 @@ public class RoboticArm {
 		}
 		
 		((LinearInterpolation) motion).beginNewCircularMotion(start, inter, tgt,
-				speed * motorSpeed / 100f);
+				speed * motorSpeed);
 	}
 	
 	/**
