@@ -4,7 +4,7 @@ import enums.ExecState;
 import enums.ExecType;
 
 /**
- * Defines the current state of a robot's program execution.
+ * Defines the state of a program's execution.
  * 
  * @author Joshua Hooker
  */
@@ -29,11 +29,11 @@ public class ProgExecution {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Initializes fields for beginning of program execution.
 	 * 
-	 * @param type
-	 * @param prog
-	 * @param curIdx
+	 * @param type		The type of program execution (i.e. single, all, etc.)
+	 * @param prog		The program to execute
+	 * @param curIdx	The index of the instruction to begin execution
 	 */
 	public ProgExecution(ExecType type, Program prog, int curIdx) {
 		setExec(type, prog, curIdx);

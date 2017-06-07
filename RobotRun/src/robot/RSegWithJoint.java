@@ -41,11 +41,6 @@ public class RSegWithJoint extends RSegment {
 	private float speedModifier;
 	
 	/**
-	 * The direction of the joint's motion.
-	 */
-	private int jointMotion;
-	
-	/**
 	 * The rotation of this segment's joint.
 	 */
 	private float jointRotation;
@@ -70,7 +65,6 @@ public class RSegWithJoint extends RSegment {
 		speedModifier = 1f;
 		TRANSLATION = translation;
 		AXIS = axis;
-		jointMotion = 0;
 		jointRotation = 0f;
 	}
 	
@@ -100,28 +94,16 @@ public class RSegWithJoint extends RSegment {
 		return RMath.angleWithinBounds(angle, LOW_BOUND, UP_BOUND);
 	}
 	
-	public int getJointMotion() {
-		return jointMotion;
-	}
-	
 	public float getJointRotation() {
 		return jointRotation;
 	}
 	
 	public float getMotionSpeed() {
-		return Math.abs(jointMotion);
+		return Math.abs(speedModifier);
 	}
 	
 	public float getSpeedModifier() {
 		return speedModifier;
-	}
-	
-	public boolean isJointInMotion() {
-		return jointMotion != 0;
-	}
-	
-	public void setJointMotion(int dir) {
-		jointMotion = dir;
 	}
 	
 	public void setSpdMod(float speedMod) {

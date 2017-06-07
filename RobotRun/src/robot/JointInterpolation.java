@@ -1,5 +1,7 @@
 package robot;
 
+import java.util.Arrays;
+
 import global.RMath;
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -47,14 +49,14 @@ public class JointInterpolation extends JointMotion {
 			if (JOINT_MOTION[jdx] != 0) {
 				float distToDest = PApplet.abs(seg.getJointRotation()
 						- TGT_ANGLES[jdx]);
+				float deltaAngle = seg.getSpeedModifier() * speed;
 				
-				if (distToDest >= (seg.getSpeedModifier() * speed)) {
+				if (deltaAngle > 0.000009f && distToDest >= deltaAngle) {
 					++ret;
 					/* Move the joint based on the roobt's liveSpeed, the
 					 * direction of motion and the segment's speed modifier */
 					float newRotation = RMath.mod2PI(seg.getJointRotation()
-							+ JOINT_MOTION[jdx] * seg.getSpeedModifier()
-							* speed);
+							+ JOINT_MOTION[jdx] * deltaAngle);
 					
 					seg.setJointRotation(newRotation);
 
@@ -81,7 +83,9 @@ public class JointInterpolation extends JointMotion {
 	 * @param robot		The robot. for which this motion is defined
 	 * @param tgtAngles	The target joint angles, to which to interpolate
 	 */
-	public void setupRotationalInterpolation(RoboticArm robot, float[] tgtAngles, float speed) {
+	public void setupRotationalInterpolation(RoboticArm robot,
+			float[] tgtAngles, float speed) {
+		
 		this.speed = speed;
 		
 		float[] minDist = new float[6];
