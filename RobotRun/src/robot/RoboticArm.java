@@ -54,11 +54,6 @@ public class RoboticArm {
 	public final int RID;
 	
 	/**
-	 * Defines the speed multiplier for the robot's jog and move to motion.
-	 */
-	private int liveSpeed;
-	
-	/**
 	 * The position of the center of the robot's base segment.
 	 */
 	private final PVector BASE_POSITION;
@@ -127,6 +122,11 @@ public class RoboticArm {
 	 * The initial position and orientation of the robot.
 	 */
 	private final Point DEFAULT_PT;
+	
+	/**
+	 * Defines the speed multiplier for the robot's jog and move to motion.
+	 */
+	private int liveSpeed;
 	
 	/**
 	 * The index corresponding to the active end effector in EE_LIST.
@@ -1269,6 +1269,28 @@ public class RoboticArm {
 			SEGMENT[5].getJointRotation()
 		};
 	}
+	
+	/**
+	 * Returns the directions of the robot's current jog motion, or null if the
+	 * robot is not jogging.
+	 * 
+	 * @return	A 6 element array where each entry is one of the robot's jog
+	 * 			motion directions
+	 */
+	public int[] getJogMotion() {
+		
+		if (motion instanceof JointJog) {
+			// Joint jog motion
+			return ((JointJog) motion).getJogMotion();
+			
+		} else if (motion instanceof LinearJog) {
+			// Linear jog motion
+			return ((LinearJog) motion).getJogMotion();
+		}
+		
+		// No jog motion
+		return null;
+	}
 
 	public RMatrix getLastTipTMatrix() {
 		return lastTipTMatrix;
@@ -1545,9 +1567,6 @@ public class RoboticArm {
 		}
 		/**/
 		
-		for (int jdx = 0; jdx < 6; ++jdx) {
-			SEGMENT[jdx].setJointMotion(0);
-		}
 		// Set default speed modifiers
 		SEGMENT[0].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
 		SEGMENT[1].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
@@ -1588,25 +1607,11 @@ public class RoboticArm {
 	 * @return	Is the robot executing its active program?
 	 */
 	public boolean isProgExec() {
-		return progExecState != null && !progExecState.isDone();
+		return !progExecState.isDone();
 	}
 	
 	public boolean isTrace() {
 		return trace;
-	}
-
-	/**
-	 * @return	True if at least one joint of the Robot is in motion.
-	 */
-	public boolean jointMotion() {
-		for(int jdx = 0; jdx < 6; ++jdx) {
-			// Check each joint segment
-			if (this.SEGMENT[jdx].isJointInMotion()) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	/**
@@ -2127,32 +2132,6 @@ public class RoboticArm {
 		for (int jdx = 0; jdx < 6; ++jdx) {
 			SEGMENT[jdx].setJointRotation(newJointAngles[jdx]);
 		}
-	}
-
-	/**
-	 * Updates the motion direction of the joint at the given joint index to
-	 * the given direction value, if the index is valid.
-	 * 
-	 * @param jdx	An index between 0 and 6, inclusive, which corresponds
-	 * 				to one of the Robot's joints
-	 * @param dir	The new direction of that joint's motion
-	 * @return		The old direction of motion for the given joint
-	 */
-	public int setJointMotion(int jdx, int dir) {
-		RSegWithJoint seg = SEGMENT[jdx];
-		
-		if (seg != null) {
-			if (seg.isJointInMotion()) {
-				seg.setJointMotion(0);
-				
-			} else {
-				seg.setJointMotion(dir);
-			}
-			
-			return seg.getJointMotion();
-		}
-		
-		return 0;
 	}
 
 	/**

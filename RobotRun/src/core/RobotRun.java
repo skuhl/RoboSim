@@ -3,6 +3,7 @@ package core;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -1592,6 +1593,9 @@ public class RobotRun extends PApplet {
 					m.getMotionType() == Fields.MTYPE_CIRCULAR) {
 				
 				tempSpeed /= RoboticArm.motorSpeed;
+				
+			} else {
+				tempSpeed /= 100f;
 			}
 			
 			m.setSpeed(RMath.clamp(tempSpeed, 0.01f, 1f));
@@ -4032,9 +4036,16 @@ public class RobotRun extends PApplet {
 				updatePendantScreen();
 				
 			} else if (keyCode == KeyEvent.VK_D) {
-				/* Debug output *
+				
+				
+				/* Debug output */
+				if (activeRobot.inMotion()) {
+					System.err.printf("Motion: %s\n",
+							Arrays.toString(activeRobot.getJogMotion()));
+				}
+				/**
 				updatePendantScreen();
-				/**/
+				/**
 				Fields.debug("Screen state: %s\n", screenStates.peek());
 				/* Display the User and Tool frames associated with the current
 				 * motion instruction */
@@ -4792,13 +4803,13 @@ public class RobotRun extends PApplet {
 			float instSpd = mInst.getSpeed();
 			
 			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
-				instSpd *= 100;
+				instSpd *= 100f;
 				
 			} else {
 				instSpd *= RoboticArm.motorSpeed;
 			}
 			
-			workingText = new StringBuilder(Float.toString(instSpd));
+			workingText = new StringBuilder(Integer.toString((int)instSpd));
 			
 			contents.setLineIdx( current.conLnIdx );
 			contents.setColumnIdx( current.conColIdx );
