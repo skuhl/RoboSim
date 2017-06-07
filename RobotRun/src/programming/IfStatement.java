@@ -1,6 +1,6 @@
 package programming;
 import expression.AtomicExpression;
-import expression.ExprOperand;
+import expression.Operand;
 import expression.Expression;
 import expression.Operator;
 
@@ -59,7 +59,7 @@ public class IfStatement extends Instruction {
 
 	@Override
 	public int execute() {
-		ExprOperand result = expr.evaluate();
+		Operand result = expr.evaluate();
 
 		if(result == null || result.getBoolVal() == null) {
 			return -1;
