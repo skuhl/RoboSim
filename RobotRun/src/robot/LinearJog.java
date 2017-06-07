@@ -171,9 +171,9 @@ public class LinearJog extends LinearMotion {
 	
 	@Override
 	public boolean hasMotion() {
-		return !hasFault() && translation.x == 0f && translation.y == 0f
-				&& translation.z == 0f && rotation.x == 0f
-				&& rotation.y == 0f && rotation.z == 0f;
+		return !hasFault() && (translation.x != 0f || translation.y != 0f
+				|| translation.z != 0f && rotation.x != 0f
+				|| rotation.y != 0f || rotation.z != 0f);
 	}
 	
 	public int setMotion(int mdx, int newDir) {
