@@ -37,7 +37,6 @@ import global.RMath;
 import global.RegisteredModels;
 import processing.core.PApplet;
 import processing.core.PImage;
-import processing.core.PMatrix3D;
 import processing.core.PShape;
 import processing.core.PVector;
 import processing.event.MouseEvent;
@@ -151,8 +150,6 @@ public class RobotRun extends PApplet {
 	private boolean step = false; // Is step button pressed or not?
 	private boolean camEnable = false;
 
-	int temp_select = 0;
-
 	private boolean record;
 	
 	/**
@@ -182,14 +179,8 @@ public class RobotRun extends PApplet {
 
 	public int editIdx = -1;
 
-	// store numbers pressed by the user
-	ArrayList<Integer> nums = new ArrayList<>();
-
 	// container for instructions being coppied/ cut and pasted
 	ArrayList<Instruction> clipBoard = new ArrayList<>();
-
-	// string for displaying error message to user
-	String err = null;
 
 	private int active_index = 0;
 
@@ -201,14 +192,6 @@ public class RobotRun extends PApplet {
 	 * _, @, *, .
 	 */
 	private int[] letterStates;
-
-	ArrayList<Point> intermediatePositions;
-
-	int motionFrameCounter = 0;
-
-	public float distanceBetweenPoints = 5.0f;
-
-	int interMotionIdx = -1;
 	
 	private WorldObject mouseOverWO;
 	
@@ -833,34 +816,6 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Takes a vector and a (probably not quite orthogonal) second vector and
-	 * computes a vector that's truly orthogonal to the first one and pointing
-	 * in the direction closest to the imperfect second vector
-	 * 
-	 * @param in
-	 *            First vector
-	 * @param second
-	 *            Second vector
-	 * @return A vector perpendicular to the first one and on the same side from
-	 *         first as the second one.
-	 */
-	public PVector computePerpendicular(PVector in, PVector second) {
-		PVector[] plane = createPlaneFrom3Points(in, second, new PVector(in.x * 2, in.y * 2, in.z * 2));
-		PVector v1 = vectorConvertTo(in, plane[0], plane[1], plane[2]);
-		PVector v2 = vectorConvertTo(second, plane[0], plane[1], plane[2]);
-		PVector perp1 = new PVector(v1.y, -v1.x, v1.z);
-		PVector perp2 = new PVector(-v1.y, v1.x, v1.z);
-		PVector orig = new PVector(v2.x * 5, v2.y * 5, v2.z);
-		PVector p1 = new PVector(perp1.x * 5, perp1.y * 5, perp1.z);
-		PVector p2 = new PVector(perp2.x * 5, perp2.y * 5, perp2.z);
-
-		if (dist(orig.x, orig.y, orig.z, p1.x, p1.y, p1.z) < dist(orig.x, orig.y, orig.z, p2.x, p2.y, p2.z))
-			return vectorConvertFrom(perp1, plane[0], plane[1], plane[2]);
-		else
-			return vectorConvertFrom(perp2, plane[0], plane[1], plane[2]);
-	}
-
-	/**
 	 * Pendant COORD button
 	 * 
 	 * If shift is off, then this button will change the coordinate frame of
@@ -989,34 +944,6 @@ public class RobotRun extends PApplet {
 		}
 		
 		DataManagement.saveRobotData(activeRobot, 2);
-	}
-
-	/**
-	 * Create a plane (2D coordinate system) out of 3 input points.
-	 * 
-	 * @param a
-	 *            First point
-	 * @param b
-	 *            Second point
-	 * @param c
-	 *            Third point
-	 * @return New coordinate system defined by 3 orthonormal vectors
-	 */
-	public PVector[] createPlaneFrom3Points(PVector a, PVector b, PVector c) {
-		PVector n1 = new PVector(a.x - b.x, a.y - b.y, a.z - b.z);
-		n1.normalize();
-		PVector n2 = new PVector(a.x - c.x, a.y - c.y, a.z - c.z);
-		n2.normalize();
-		PVector x = n1.copy();
-		PVector z = n1.cross(n2);
-		PVector y = x.cross(z);
-		y.normalize();
-		z.normalize();
-		PVector[] coordinateSystem = new PVector[3];
-		coordinateSystem[0] = x;
-		coordinateSystem[1] = y;
-		coordinateSystem[2] = z;
-		return coordinateSystem;
 	}
 
 	/**
@@ -1696,7 +1623,8 @@ public class RobotRun extends PApplet {
 
 				if (tempRegister < lbound || tempRegister > ubound) {
 					// Invalid register index
-					err = String.format("Only registers %d-%d are valid!", lbound, ubound);
+					String err = String.format("Only registers %d-%d are valid!", lbound, ubound);
+					System.err.println(err);
 					lastScreen();
 					return;
 				}
@@ -1733,14 +1661,14 @@ public class RobotRun extends PApplet {
 				
 				if (tempRegister < 0 || tempRegister > 999) {
 					// Invalid register index
-					err = "Only registers 1 - 1000 are legal!";
+					String err = "Only registers 1 - 1000 are legal!";
 					System.out.println(err);
 					lastScreen();
 					return;
 					
 				} else if ((activeRobot.getPReg(tempRegister)).point == null) {
 					// Invalid register index
-					err = "This register is uninitailized!";
+					String err = "This register is uninitailized!";
 					System.out.println(err);
 					lastScreen();
 					return;
@@ -2192,7 +2120,7 @@ public class RobotRun extends PApplet {
 						JumpInstruction jmp = (JumpInstruction) inst;
 						jmp.setTgtLblNum(lblNum);
 					} else {
-						err = "Invalid label number.";
+						System.err.println("Invalid label number.");
 					}
 				}
 			} catch (NumberFormatException NFEx) {
@@ -2497,44 +2425,7 @@ public class RobotRun extends PApplet {
 		default:
 			break;
 		}
-	}// End enter
-
-	/**
-	 * Move the arm model between two points according to its current speed.
-	 * 
-	 * @param model
-	 *            The arm model
-	 * @param speedMult
-	 *            Speed multiplier
-	 */
-	public boolean executeMotion(RoboticArm model, float speedMult) {
-		motionFrameCounter++;
-		// speed is in pixels per frame, multiply that by the current speed
-		// setting
-		// which is contained in the motion instruction
-		float currentSpeed = model.motorSpeed * speedMult;
-		if (currentSpeed * motionFrameCounter > distanceBetweenPoints) {
-			interMotionIdx++;
-			motionFrameCounter = 0;
-			if (interMotionIdx >= intermediatePositions.size()) {
-				interMotionIdx = -1;
-				return true;
-			}
-
-			int ret = 0;
-			if (intermediatePositions.size() > 0) {
-				Point tgtPoint = intermediatePositions.get(interMotionIdx);
-				ret = activeRobot.jumpTo(tgtPoint.position, tgtPoint.orientation);
-			}
-
-			if (ret == 1) {
-				triggerFault();
-				return true;
-			}
-		}
-
-		return false;
-	} // end execute linear motion
+	}
 	
 	/**
 	 * Pendant F1 button
@@ -3792,10 +3683,6 @@ public class RobotRun extends PApplet {
 
 		return row;
 	}
-	
-	public ArrayList<Point> getIntermediatePositions() {
-		return intermediatePositions;
-	}
 
 	public KeyCodeMap getKeyCodeMap() {
 		return keyCodeMap;
@@ -4192,7 +4079,6 @@ public class RobotRun extends PApplet {
 				float[] rot = { 0, 0, 0, 0, 0, 0 };
 				activeRobot.releaseHeldObject();
 				activeRobot.setJointAngles(rot);
-				intermediatePositions.clear();
 				
 			} else if (keyCode == KeyEvent.VK_R) {
 				
@@ -6598,8 +6484,7 @@ public class RobotRun extends PApplet {
 
 			activeRobot = ROBOTS.get(0);
 			rCamera = new RobotCamera();
-
-			intermediatePositions = new ArrayList<>();
+			
 			activeScenario = null;
 			
 			DataManagement.loadState(this);
@@ -7554,50 +7439,6 @@ public class RobotRun extends PApplet {
 				updateScenarioUndo(saveState);
 			}
 		}
-	}
-	
-	/**
-	 * Convert a point based on a coordinate system defined as 3 orthonormal
-	 * vectors. Reverse operation of vectorConvertTo.
-	 * 
-	 * @param point
-	 *            Point to convert
-	 * @param xAxis
-	 *            X axis of target coordinate system
-	 * @param yAxis
-	 *            Y axis of target coordinate system
-	 * @param zAxis
-	 *            Z axis of target coordinate system
-	 * @return Coordinates of point after conversion
-	 */
-	public PVector vectorConvertFrom(PVector point, PVector xAxis, PVector yAxis, PVector zAxis) {
-		PMatrix3D matrix = new PMatrix3D(xAxis.x, yAxis.x, zAxis.x, 0, xAxis.y, yAxis.y, zAxis.y, 0, xAxis.z, yAxis.z,
-				zAxis.z, 0, 0, 0, 0, 1);
-		PVector result = new PVector();
-		matrix.mult(point, result);
-		return result;
-	}
-
-	/**
-	 * Convert a point based on a coordinate system defined as 3 orthonormal
-	 * vectors.
-	 * 
-	 * @param point
-	 *            Point to convert
-	 * @param xAxis
-	 *            X axis of target coordinate system
-	 * @param yAxis
-	 *            Y axis of target coordinate system
-	 * @param zAxis
-	 *            Z axis of target coordinate system
-	 * @return Coordinates of point after conversion
-	 */
-	public PVector vectorConvertTo(PVector point, PVector xAxis, PVector yAxis, PVector zAxis) {
-		PMatrix3D matrix = new PMatrix3D(xAxis.x, xAxis.y, xAxis.z, 0, yAxis.x, yAxis.y, yAxis.z, 0, zAxis.x, zAxis.y,
-				zAxis.z, 0, 0, 0, 0, 1);
-		PVector result = new PVector();
-		matrix.mult(point, result);
-		return result;
 	}
 
 	/**

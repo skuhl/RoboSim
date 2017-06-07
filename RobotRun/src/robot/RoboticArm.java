@@ -21,7 +21,6 @@ import geom.RRay;
 import geom.WorldObject;
 import global.Fields;
 import global.RMath;
-import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
@@ -46,11 +45,6 @@ public class RoboticArm {
 	
 	public int liveSpeed;
 	public float motorSpeed;
-	
-	/**
-	 * Defines the target joint rotations for jog motion interpolation.
-	 */
-	private final float[] TGT_JOINTS;
 	
 	/**
 	 * The position of the center of the robot's base segment.
@@ -169,13 +163,6 @@ public class RoboticArm {
 	 */
 	private RMatrix lastTipTMatrix;
 	
-	// Indicates the direction of motion of the Robot when jogging
-	private final int[] jogLinear;
-	private final int[] jogRot;
-	
-	private RQuaternion tgtOrientation;
-	private PVector tgtPosition;
-	
 	/**
 	 * Determines if the robot's tool tip position with be tracked and drawn.
 	 */
@@ -205,8 +192,6 @@ public class RoboticArm {
 		liveSpeed = 10;
 		
 		RID = rid;
-		
-		TGT_JOINTS = new float[6];
 		
 		BASE_POSITION = basePos;
 		
@@ -377,65 +362,8 @@ public class RoboticArm {
 		
 		// Initializes the old transformation matrix for the arm model
 		lastTipTMatrix = getFaceplateTMat( getJointAngles() );
-		
-		jogLinear = new int[] { 0, 0, 0 };
-		jogRot = new int[] { 0, 0, 0 };
-		
 		trace = false;
 		tracePts = new ArrayList<PVector>();
-	}
-	
-	/**
-	 * Updates the motion of the Robot with respect to one of the World axes for
-	 * either linear or rotational motion around the axis. Similar to the
-	 * activateLiveJointMotion() method, calling this method for an axis, in which
-	 * the Robot is already moving, will result in the termination of the Robot's
-	 * motion in that axis. Rotational and linear motion for an axis are mutually
-	 * independent in this regard.
-	 * 
-	 * @param axis	The axis of movement for the robotic arm:
-                  	x - 0, y - 1, z - 2, w - 3, p - 4, r - 5
-	 * @param dir	+1 or -1: indicating the direction of motion
-	 * @returning	The new direction of motion in the given axis
-	 *
-	 */
-	public float activateLiveWorldMotion(int axis, int dir) {
-		if (hasMotionFault()) {
-			// Only move when shift is set and there is no error
-			return 0f;
-		}
-
-		// Initialize the Robot's destination
-		Point RP = getToolTipNative();
-		tgtPosition = RP.position;
-		tgtOrientation = RP.orientation;
-
-		if(axis >= 0 && axis < 3) {
-			if(jogLinear[axis] == 0) {
-				// Begin movement on the given axis in the given direction
-				jogLinear[axis] = dir;
-			} else {
-				// Halt movement
-				jogLinear[axis] = 0;
-			}
-
-			return jogLinear[axis];
-		}
-		else if(axis >= 3 && axis < 6) {
-			axis %= 3;
-			if(jogRot[axis] == 0) {
-				// Begin movement on the given axis in the given direction
-				jogRot[axis] = dir;
-			}
-			else {
-				// Halt movement
-				jogRot[axis] = 0;
-			}
-
-			return jogRot[axis];
-		}
-
-		return 0f;
 	}
 	
 	/**
@@ -1098,99 +1026,6 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Move the Robot, based on the current Coordinate Frame and the current values
-	 * of the each segments jointsMoving array or the values in the Robot's jogLinear
-	 * and jogRot arrays.
-	 */
-	public void executeLiveMotion() {
-
-		if (curCoordFrame == CoordFrame.JOINT) {
-			// Jog in the Joint Frame
-			for(int i = 0; i < 6; i += 1) {
-				RSegWithJoint seg = SEGMENT[i];
-
-				if (seg.isJointInMotion()) {
-					float dist = seg.getJointMotion() * seg.getSpeedModifier() * liveSpeed / 100f;
-					float trialAngle = RMath.mod2PI(seg.getJointRotation() +
-							dist);
-					
-					if(!seg.setJointRotation(trialAngle)) {
-						Fields.debug("A[%d]: %f\n", i, trialAngle);
-						seg.setJointMotion(0);
-						// TODO REFACTOR THESE
-						RobotRun.getInstance().updateRobotJogMotion(i, 0);
-						//RobotRun.getInstance().hold();
-					}
-				}
-			}
-
-		} else {
-			// Jog in the World, Tool or User Frame
-			Point curPoint = getToolTipNative();
-			RQuaternion invFrameOrientation = null;
-			
-			if (curCoordFrame == CoordFrame.TOOL) {
-				ToolFrame activeTool = getActiveTool();
-				
-				if (activeTool != null) {
-					RQuaternion diff = curPoint.orientation.transformQuaternion(DEFAULT_PT.orientation.conjugate());
-					invFrameOrientation = diff.transformQuaternion(activeTool.getOrientationOffset().clone()).conjugate();
-				}
-				
-			} else if (curCoordFrame == CoordFrame.USER) {
-				UserFrame activeUser = getActiveUser();
-				
-				if (activeUser != null) {
-					invFrameOrientation = activeUser.getOrientation().conjugate();
-				}
-			}
-
-			// Apply translational motion vector
-			if (translationalMotion()) {
-				// Respond to user defined movement
-				float distance = motorSpeed / 6000f * liveSpeed;
-				PVector translation = new PVector(-jogLinear[0], -jogLinear[2], jogLinear[1]);
-				translation.mult(distance);
-
-				if (invFrameOrientation != null) {
-					// Convert the movement vector into the current reference frame
-					translation = invFrameOrientation.rotateVector(translation);
-				}
-
-				tgtPosition.add(translation);
-			} else {
-				// No translational motion
-				tgtPosition = curPoint.position;
-			}
-
-			// Apply rotational motion vector
-			if (rotationalMotion()) {
-				// Respond to user defined movement
-				float theta = PConstants.DEG_TO_RAD * 0.025f * liveSpeed;
-				PVector rotation = new PVector(-jogRot[0], -jogRot[2], jogRot[1]);
-
-				if (invFrameOrientation != null) {
-					// Convert the movement vector into the current reference frame
-					rotation = invFrameOrientation.rotateVector(rotation);
-				}
-				rotation.normalize();
-
-				tgtOrientation.rotateAroundAxis(rotation, theta);
-
-				if (tgtOrientation.dot(curPoint.orientation) < 0f) {
-					// Use -q instead of q
-					tgtOrientation.scalarMult(-1);
-				}
-			} else {
-				// No rotational motion
-				tgtOrientation = curPoint.orientation;
-			}
-
-			jumpTo(tgtPosition, tgtOrientation);
-		}
-	}
-	
-	/**
 	 * @return	The index of the active end effector
 	 */
 	public int getActiveEEIdx() {
@@ -1721,14 +1556,6 @@ public class RoboticArm {
 		SEGMENT[3].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
 		SEGMENT[4].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
 		SEGMENT[5].setSpdMod(420f * PConstants.DEG_TO_RAD / 60f);
-
-		for(int idx = 0; idx < jogLinear.length; ++idx) {
-			jogLinear[idx] = 0;
-		}
-
-		for(int idx = 0; idx < jogRot.length; ++idx) {
-			jogRot[idx] = 0;
-		}
 		
 		if (motion != null) {
 			motion.halt();
@@ -1749,40 +1576,6 @@ public class RoboticArm {
 		}
 		
 		return false;
-	}
-
-	/**
-	 * Updates the robot's joint angles, for the current target rotation, based on
-	 * the given speed value.
-	 * 
-	 * @param speed	The speed of the robot's joint motion
-	 * @return		If the robot has reached its target joint angles
-	 */
-	public boolean interpolateRotation(float speed) {
-		boolean done = true;
-
-		for(int jdx = 0; jdx < 6; ++jdx) {
-			RSegWithJoint seg = SEGMENT[jdx];
-			
-			if (seg.isJointInMotion()) {
-				float distToDest = PApplet.abs(seg.getJointRotation() - TGT_JOINTS[jdx]);
-
-				if (distToDest >= (seg.getSpeedModifier() * speed)) {
-					done = false;
-					float newRotation = RMath.mod2PI(seg.getJointRotation()
-							+ seg.getJointMotion() * seg.getSpeedModifier()
-							* speed);
-					
-					seg.setJointRotation(newRotation);
-
-				} else if (distToDest > 0.00009f) {
-					// Destination too close to move at current speed
-					seg.setJointRotation(TGT_JOINTS[jdx]);
-				}
-			}
-		}
-		
-		return done;
 	}
 	
 	/**
@@ -2211,14 +2004,6 @@ public class RoboticArm {
 			return null;
 		}
 	}
-
-	/**
-	 * @return	Whether the robot is rotating around at least one axis in the
-	 * 			WORLD, TOOL, or USER frames.
-	 */
-	public boolean rotationalMotion() {
-		return jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0;
-	}
 	
 	/**
 	 * Set the index of the robot's active end effector to the given index. The
@@ -2454,82 +2239,6 @@ public class RoboticArm {
 		return 0;
 	}
 	
-	/**
-	 * Updates the target angles, and joint motion fields of each segment to
-	 * prepare for joint interpolation.
-	 * 
-	 * @param tgtAngles	The target angles set for the rotational interpolation
-	 */
-	public void setupRotationInterpolation(float[] tgtAngles) {
-		float[] minDist = new float[6];
-		float maxMinDist = Float.MIN_VALUE;
-		
-		for (int jdx = 0; jdx < 6; ++jdx) {
-			// Set the target angle for the joint index
-			TGT_JOINTS[jdx] = RMath.mod2PI(tgtAngles[jdx]);
-			// Calculate the minimum distance to the target angle
-			minDist[jdx] = RMath.minDist(SEGMENT[jdx].getJointRotation(),
-					TGT_JOINTS[jdx]);
-			
-			if (Math.abs(minDist[jdx]) > maxMinDist) {
-				/* Update the maximum distance necessary for one of the joints
-				 * to reach its target angle. */
-				maxMinDist = Math.abs(minDist[jdx]);
-			}
-		}
-		
-		for(int jdx = 0; jdx < 6; jdx++) {
-			RSegWithJoint seg = SEGMENT[jdx];
-			/* Update the speed modifier for the joint based off the ratio
-			 * between the distance necessary for this joint to travel and that
-			 * of the joint with the longest distance to travel */
-			seg.setSpdMod(Math.abs(minDist[jdx]) / maxMinDist * (PConstants.PI / 60f));
-			
-			// Check joint motion range
-			if (seg.LOW_BOUND == 0f && seg.UP_BOUND == PConstants.TWO_PI) {
-				seg.setJointMotion((minDist[jdx] < 0) ? -1 : 1);
-				
-			} else {  
-				/* Determine if at least one bound lies within the range of the
-				 * shortest angle between the current joint angle and the
-				 * target angle. If so, then take the longer angle, otherwise
-				 * choose the shortest angle path. */
-
-				/* The minimum distance from the current joint angle to the
-				 * lower bound of the joint's range */
-				float dist_lb = RMath.minDist(seg.getJointRotation(),
-						seg.LOW_BOUND);
-
-				/* The minimum distance from the current joint angle to the
-				 * upper bound of the joint's range */
-				float dist_ub = RMath.minDist(seg.getJointRotation(),
-						seg.UP_BOUND);
-
-				if (minDist[jdx] < 0) {
-					if( (dist_lb < 0 && dist_lb > minDist[jdx]) ||
-							(dist_ub < 0 && dist_ub > minDist[jdx]) ) {
-						
-						// One or both bounds lie within the shortest path
-						seg.setJointMotion(1);
-						
-					} else {
-						seg.setJointMotion(-1);
-					}
-					
-				} else if(minDist[jdx] > 0) {
-					if( (dist_lb > 0 && dist_lb < minDist[jdx]) ||
-							(dist_ub > 0 && dist_ub < minDist[jdx]) ) {  
-						// One or both bounds lie within the shortest path
-						seg.setJointMotion(-1);
-						
-					} else {
-						seg.setJointMotion(1);
-					}
-				}
-			}
-		}
-	}
-	
 	public boolean toggleTrace() {
 		trace = !trace;
 		clearTrace();
@@ -2539,13 +2248,6 @@ public class RoboticArm {
 	@Override
 	public String toString() {
 		return String.format("R%d", RID);
-	}
-	
-	/**
-	 * Returns true if the Robot is jogging translationally.
-	 */
-	public boolean translationalMotion() {
-		return jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0;
 	}
 	
 	/**
