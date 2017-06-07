@@ -8,7 +8,7 @@ import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;
 import enums.InstOp;
-import enums.ScreenMode;
+import enums.ExecState;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
@@ -37,7 +37,6 @@ import regs.IORegister;
 import regs.PositionRegister;
 import screen.DisplayLine;
 import screen.InstState;
-import screen.ScreenState;
 
 public class RoboticArm {
 	/**
@@ -127,6 +126,11 @@ public class RoboticArm {
 	 * The index corresponding to the active end effector in EE_LIST.
 	 */
 	private int activeEEIdx;
+	
+	/**
+	 * The execution state of the active program.
+	 */
+	private ExecState progExecState;
 	
 	/**
 	 * The index of the active program, in the robot's list of programs. A
@@ -337,7 +341,7 @@ public class RoboticArm {
 		PROG_UNDO = new Stack<>();
 		
 		motion = null;
-		
+		progExecState = ExecState.EXEC_NONE;
 		activeProgIdx = -1;
 		activeInstIdx = -1;
 		
@@ -1187,77 +1191,6 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
-	 * 
-	 * @param singleExec
-	 * @return
-	 */
-	@SuppressWarnings("static-access")
-	public int executeProgram(RobotRun app) {
-		Program program = getActiveProg();
-		Instruction activeInstr = getActiveInstruction();
-		int nextInstr = getActiveInstIdx() + 1;
-
-		// stop executing if no valid program is selected or we reach the end of
-		// the program
-		if (hasMotionFault() || activeInstr == null) {
-			return 1;
-			
-		} else if (!activeInstr.isCommented()) {
-			if (activeInstr instanceof MotionInstruction) {
-				MotionInstruction motInstr = (MotionInstruction) activeInstr;
-				int ret = setupMInstMotion(program, motInstr, nextInstr, app.execSingleInst);
-				
-				if (ret != 0) {
-					// Issue occurred with setting up the motion instruction
-					nextInstr = -1;
-				}
-				
-			} else if (activeInstr instanceof JumpInstruction) {
-				nextInstr = activeInstr.execute();
-
-			} else if (activeInstr instanceof CallInstruction) {
-
-				if (((CallInstruction) activeInstr).getTgtDevice() != app.getInstanceRobot()) {
-					// Call an inactive Robot's program
-					if (app.getUI().getRobotButtonState()) {
-						nextInstr = activeInstr.execute();
-					} else {
-						// No second robot in application
-						nextInstr = -1;
-					}
-				} else {
-					nextInstr = activeInstr.execute();
-				}
-
-			} else if (activeInstr instanceof IfStatement ||
-					activeInstr instanceof SelectStatement) {
-				
-				int ret = activeInstr.execute();
-
-				if (ret != -2) {
-					nextInstr = ret;
-				}
-
-			} else if (activeInstr.execute() != 0) {
-				nextInstr = -1;
-			}
-		}
-
-		if (nextInstr == -1) {
-			// If a command fails
-			app.triggerFault();
-			return 1;
-
-		}
-		
-		++activeInstIdx;
-		app.updatePendantScreen();
-
-		return 0;
-	}
-	
-	/**
 	 * @return	The index of the active end effector
 	 */
 	public int getActiveEEIdx() {
@@ -1800,6 +1733,8 @@ public class RoboticArm {
 		if (motion != null) {
 			motion.halt();
 		}
+		
+		progExecState = ExecState.EXEC_NONE;
 	}
 
 	/**
@@ -1851,10 +1786,25 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * @return	Is program execution only running a single instruction?
+	 */
+	public boolean isSingleExec() {
+		return progExecState == ExecState.EXEC_SINGLE
+				|| progExecState == ExecState.EXEC_BWD;
+	}
+	
+	/**
 	 * @return	Is the given part being held by the robot
 	 */
 	public boolean isHeld(Part p) {
 		return p == heldPart;
+	}
+	
+	/**
+	 * @return	Is the robot executing its active program?
+	 */
+	public boolean isProgExec() {
+		return progExecState != ExecState.EXEC_NONE;
 	}
 	
 	public boolean isTrace() {
@@ -2015,6 +1965,73 @@ public class RoboticArm {
 		
 		return progList;
 	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param singleExec
+	 */
+	public void progExec(boolean singleExec) {
+		progExec(activeProgIdx, activeInstIdx, singleExec);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param instIdx
+	 * @param singleExec
+	 */
+	public void progExec(int instIdx, boolean singleExec) {
+		progExec(activeProgIdx, instIdx, singleExec);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param progIdx
+	 * @param instIdx
+	 * @param singleExec
+	 */
+	public void progExec(int progIdx, int instIdx, boolean singleExec) {
+		Program p = getProgram(progIdx);
+		// Validate active indices
+		if (p != null && instIdx >= 0 && instIdx < p.size()) {
+			ExecState pExec = (singleExec) ? ExecState.EXEC_FULL
+					: ExecState.EXEC_SINGLE;
+			
+			progExec(progIdx, instIdx, pExec);
+		}
+	}
+	
+	/**
+	 * TODO comment this
+	 */
+	public void progExecBwd() {
+		Program p = getProgram(activeProgIdx);
+		
+		if (p != null && activeInstIdx >= 1 && activeInstIdx < p.size()) {
+			/* The program must have a motion instruction prior to the active
+			 * instruction for backwards execution to be valid. */
+			Instruction prevInst = p.getInstAt(activeInstIdx - 1);
+			
+			if (prevInst instanceof MotionInstruction) {
+				progExec(activeProgIdx, activeInstIdx - 1, ExecState.EXEC_BWD);
+			}
+		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param progIdx
+	 * @param instIdx
+	 * @param exec
+	 */
+	private void progExec(int progIdx, int instIdx, ExecState exec) {
+		activeProgIdx = progIdx;
+		activeInstIdx = instIdx;
+		progExecState = exec;
+	}
 			
 	/**
 	 * Pushes the active program onto the call stack and resets the active
@@ -2024,7 +2041,7 @@ public class RoboticArm {
 	 */
 	public void pushActiveProg(RoboticArm r) {
 		
-		if (r.RID == RID && RobotRun.getInstance().isProgramRunning()) {
+		if (r.RID == RID && isProgExec()) {
 			// Save call frame to return to the currently executing program
 			CALL_STACK.push(new CallFrame(RID, activeProgIdx, activeInstIdx + 1));
 		} else {
@@ -2768,16 +2785,13 @@ public class RoboticArm {
 			if (motion != null && motion.hasMotion()) {
 				motion.executeMotion(this);
 				
-			} else if (app.isProgramRunning()) {
-				// Run active program
-				int ret = executeProgram(app);
-				boolean done = (ret != 0);
+			} else if (isProgExec()) {
+				// Continue active program execution
+				updateProgExec(app);
 				
-				if (done) {
+				if (progExecState == ExecState.EXEC_END) {
 					app.hold();
 				}
-				
-				app.setProgramRunning(!done);
 			}
 		}
 	
@@ -2943,5 +2957,81 @@ public class RoboticArm {
 			RMath.translateTMat(obbTMat, -24.0, 8.0, -40.0);
 			activeEE.OBBS[2].setCoordinateSystem(obbTMat);
 		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param app
+	 * @return
+	 */
+	@SuppressWarnings("static-access")
+	private void updateProgExec(RobotRun app) {
+		Program program = getActiveProg();
+		Instruction activeInstr = getActiveInstruction();
+		int nextInstr = getActiveInstIdx() + 1;
+
+		// stop executing if no valid program is selected or we reach the end of
+		// the program
+		if (hasMotionFault() || progExecState == ExecState.EXEC_END
+				|| activeInstr == null) {
+			
+			return;
+			
+		} else if (!activeInstr.isCommented()) {
+			if (activeInstr instanceof MotionInstruction) {
+				MotionInstruction motInstr = (MotionInstruction) activeInstr;
+				int ret = setupMInstMotion(program, motInstr, nextInstr, isSingleExec());
+				
+				if (ret != 0) {
+					// Issue occurred with setting up the motion instruction
+					nextInstr = -1;
+				}
+				
+			} else if (activeInstr instanceof JumpInstruction) {
+				nextInstr = activeInstr.execute();
+
+			} else if (activeInstr instanceof CallInstruction) {
+				// TODO REFACTOR THIS
+				if (((CallInstruction) activeInstr).getTgtDevice() != app.getInstanceRobot()) {
+					// Call an inactive Robot's program
+					if (app.getUI().getRobotButtonState()) {
+						nextInstr = activeInstr.execute();
+						
+					} else {
+						// No second robot in application
+						nextInstr = -1;
+					}
+				} else {
+					nextInstr = activeInstr.execute();
+				}
+
+			} else if (activeInstr instanceof IfStatement ||
+					activeInstr instanceof SelectStatement) {
+				
+				int ret = activeInstr.execute();
+
+				if (ret != -2) {
+					nextInstr = ret;
+				}
+
+			} else if (activeInstr.execute() != 0) {
+				nextInstr = -1;
+			}
+		}
+
+		if (nextInstr == -1) {
+			// If a command fails
+			app.triggerFault();
+			return;
+		}
+		
+		++activeInstIdx;
+		
+		if (isSingleExec() || activeInstIdx == program.size()) {
+			progExecState = ExecState.EXEC_END;
+		}
+
+		return;
 	}
 }
