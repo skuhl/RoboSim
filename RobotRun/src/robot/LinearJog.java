@@ -68,7 +68,7 @@ public class LinearJog extends LinearMotion {
 		// Apply translational motion vector
 		if (translation.mag() > 0f) {
 			// Respond to user defined movement
-			float distance = robot.motorSpeed / 6000f * robot.getLiveSpeed();
+			float distance = robot.getLiveSpeed() / 6f;
 			PVector translation = RMath.vFromWorld(this.translation);
 			translation.mult(distance);
 

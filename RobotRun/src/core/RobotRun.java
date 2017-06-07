@@ -1555,16 +1555,12 @@ public class RobotRun extends PApplet {
 			MotionInstruction m = (MotionInstruction) r.getInstToEdit( r.getActiveInstIdx() );
 			
 			if (options.getLineIdx() == 0) {
-				if (m.getMotionType() != Fields.MTYPE_JOINT)
-					m.setSpeed(m.getSpeed() / activeRobot.motorSpeed);
 				m.setMotionType(Fields.MTYPE_JOINT);
+				
 			} else if (options.getLineIdx() == 1) {
-				if (m.getMotionType() == Fields.MTYPE_JOINT)
-					m.setSpeed(activeRobot.motorSpeed * m.getSpeed());
 				m.setMotionType(Fields.MTYPE_LINEAR);
+				
 			} else if (options.getLineIdx() == 2) {
-				if (m.getMotionType() == Fields.MTYPE_JOINT)
-					m.setSpeed(activeRobot.motorSpeed * m.getSpeed());
 				m.setMotionType(Fields.MTYPE_CIRCULAR);
 			}
 			
@@ -1591,17 +1587,14 @@ public class RobotRun extends PApplet {
 			m = line == 0 ? m : m.getSecondaryPoint();
 
 			float tempSpeed = Float.parseFloat(workingText.toString());
-			if (tempSpeed >= 5.0f) {
-				if (speedInPercentage) {
-					if (tempSpeed > 100)
-						tempSpeed = 10;
-					tempSpeed /= 100.0f;
-				} else if (tempSpeed > activeRobot.motorSpeed) {
-					tempSpeed = activeRobot.motorSpeed;
-				}
-
-				m.setSpeed(tempSpeed);
+			
+			if (m.getMotionType() == Fields.MTYPE_LINEAR ||
+					m.getMotionType() == Fields.MTYPE_CIRCULAR) {
+				
+				tempSpeed /= RoboticArm.motorSpeed;
 			}
+			
+			m.setSpeed(RMath.clamp(tempSpeed, 0.01f, 1f));
 
 			lastScreen();
 			break;
@@ -2624,7 +2617,6 @@ public class RobotRun extends PApplet {
 
 				if (coord == CoordFrame.JOINT) {
 					mInst.setMotionType(Fields.MTYPE_JOINT);
-					mInst.setSpeed(0.5f);
 
 				} else {
 					/*
@@ -2635,9 +2627,10 @@ public class RobotRun extends PApplet {
 						mInst.setMotionType(Fields.MTYPE_LINEAR);
 					}
 
-					mInst.setSpeed(50f * activeRobot.motorSpeed / 100f);
+					
 				}
-
+				
+				mInst.setSpeed(0.5f);
 				mInst.setToolFrame(activeRobot.getActiveToolIdx());
 				mInst.setUserFrame(activeRobot.getActiveUserIdx());
 
@@ -2682,7 +2675,7 @@ public class RobotRun extends PApplet {
 			for (int i = 0; i < size; i += 1) {
 				
 				if (contents.isSelected(i)) {
-					clipBoard.add(p.getInstAt(remIdx));
+					clipBoard.add(p.get(remIdx));
 					p.rmInstAt(remIdx);
 					
 				} else {
@@ -2788,7 +2781,7 @@ public class RobotRun extends PApplet {
 
 			for (int i = 0; i < p.getNumOfInst(); i += 1) {
 				if (contents.isSelected(i))
-					clipBoard.add(p.getInstAt(i).clone());
+					clipBoard.add(p.get(i).clone());
 			}
 
 			break;
@@ -2827,7 +2820,7 @@ public class RobotRun extends PApplet {
 
 			// rearrange positions
 			for (int i = 0; i < p.getNumOfInst(); i += 1) {
-				Instruction instr = p.getInstAt(i);
+				Instruction instr = p.get(i);
 
 				if (instr instanceof MotionInstruction) {
 					// Update the primary position
@@ -4374,7 +4367,7 @@ public class RobotRun extends PApplet {
 		
 		for (int i = 0; i < size; i += 1) {
 			DisplayLine line = new DisplayLine(i);
-			Instruction instr = p.getInstAt(i);
+			Instruction instr = p.get(i);
 			int xPos = 10;
 
 			// Add line number
@@ -4800,6 +4793,9 @@ public class RobotRun extends PApplet {
 			
 			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
 				instSpd *= 100;
+				
+			} else {
+				instSpd *= RoboticArm.motorSpeed;
 			}
 			
 			workingText = new StringBuilder(Float.toString(instSpd));
@@ -5436,7 +5432,6 @@ public class RobotRun extends PApplet {
 		
 		if (coord == CoordFrame.JOINT) {
 			mInst.setMotionType(Fields.MTYPE_JOINT);
-			mInst.setSpeed(0.5f);
 			
 		} else {
 			/*
@@ -5446,8 +5441,6 @@ public class RobotRun extends PApplet {
 			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
 				mInst.setMotionType(Fields.MTYPE_LINEAR);
 			}
-			
-			mInst.setSpeed(50f * activeRobot.motorSpeed / 100f);
 		}
 		
 		if (mInst.usesGPosReg()) {
@@ -5459,6 +5452,7 @@ public class RobotRun extends PApplet {
 			mInst.setPositionNum(regNum);
 		}
 		
+		mInst.setSpeed(0.5f);
 		mInst.setToolFrame(activeRobot.getActiveToolIdx());
 		mInst.setUserFrame(activeRobot.getActiveUserIdx());
 	}
@@ -6838,7 +6832,6 @@ public class RobotRun extends PApplet {
 		case SET_JUMP_TGT:
 		case SET_CALL_PROG:
 			contents.setLines( loadInstructions(r.getActiveProg()) );
-			contents.setLineIdx( activeRobot.getActiveInstIdx() );
 			break;
 		case NAV_DATA:
 			contents.addLine("1. Data Registers");

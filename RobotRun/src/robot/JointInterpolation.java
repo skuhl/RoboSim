@@ -18,6 +18,11 @@ public class JointInterpolation extends JointMotion {
 	private final float[] TGT_ANGLES;
 	
 	/**
+	 *  The overall speed modifier for the rotational interpolation.
+	 */
+	private float speed;
+	
+	/**
 	 * Sets the target joint angles and joint motion directions for the
 	 * rotational interpolation. In addition, the speed modifiers for each of
 	 * the roobt's segments is updated in such a way, that each joint will
@@ -26,16 +31,15 @@ public class JointInterpolation extends JointMotion {
 	 * @param robot		The robot. for which this motion is defined
 	 * @param tgtAngles	The target joint angles, to which to interpolate
 	 */
-	public JointInterpolation(RoboticArm robot, float[] tgtAngles) {
+	public JointInterpolation(RoboticArm robot, float[] tgtAngles, float speed) {
 		TGT_ANGLES = new float[6];
-		setupRotationalInterpolation(robot, tgtAngles);
+		setupRotationalInterpolation(robot, tgtAngles, speed);
 	}
 	
 	@Override
 	public int executeMotion(RoboticArm robot) {
 		// Count how many joints are still in motion
 		int ret = 0;
-		float speed = robot.getLiveSpeed() / 100f;
 		
 		for(int jdx = 0; jdx < 6; ++jdx) {
 			RSegWithJoint seg = robot.getSegment(jdx);
@@ -77,7 +81,9 @@ public class JointInterpolation extends JointMotion {
 	 * @param robot		The robot. for which this motion is defined
 	 * @param tgtAngles	The target joint angles, to which to interpolate
 	 */
-	public void setupRotationalInterpolation(RoboticArm robot, float[] tgtAngles) {
+	public void setupRotationalInterpolation(RoboticArm robot, float[] tgtAngles, float speed) {
+		this.speed = speed;
+		
 		float[] minDist = new float[6];
 		float maxMinDist = Float.MIN_VALUE;
 		

@@ -82,7 +82,7 @@ public abstract class DataManagement {
 	
 	/**
 	 * Prints the given error's stack trace to a log file in the err sub
-	 * directory. The file's name is the day-month-year-hour-minute the
+	 * directory. The file's name is the month-day-year-hour-minute the
 	 * error occured.
 	 * 
 	 * @param Ex	the error for which to print the stack trace
@@ -96,9 +96,9 @@ public abstract class DataManagement {
 			}
 			
 			LocalDateTime now = LocalDateTime.now();
-			// Use current day, month, year, hour, and minute as file name
+			// Use current month, day, year, hour, and minute as file name
 			String time = String.format("%s%02d-%02d-%d-%02d-%02d.log", errDirPath,
-					now.getDayOfMonth(), now.getMonthValue(), now.getYear(),
+					now.getMonthValue(), now.getDayOfMonth(), now.getYear(),
 					now.getHour(), now.getMinute());
 			
 			File errLog = new File(time);
@@ -947,7 +947,7 @@ public abstract class DataManagement {
 			Program p = r.getProgram(pdx);
 			
 			for (int idx = 0; idx < p.size(); ++idx) {
-				Instruction inst = p.getInstAt(idx);
+				Instruction inst = p.get(idx);
 				
 				if (inst instanceof CallInstruction) {
 					// Update a top call instruction
@@ -1002,7 +1002,7 @@ public abstract class DataManagement {
 			Program p = r.getProgram(pdx);
 			
 			for (int idx = 0; idx < p.size(); ++idx) {
-				Instruction inst = p.getInstAt(idx);
+				Instruction inst = p.get(idx);
 				
 				if (inst instanceof CallInstruction) {
 					// Update a top call instruction

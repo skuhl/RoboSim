@@ -41,18 +41,18 @@ public class LinearInterpolation extends LinearMotion {
 		interMotionIdx = 0;
 	}
 	
-	public void beginNewCircularMotion(Point start, Point inter, Point end, float distBtwPts, float speed) {
-		reset(distBtwPts, speed);
+	public void beginNewCircularMotion(Point start, Point inter, Point end, float speed) {
+		reset(speed);
 		calculateArc(start, inter, end);
 	}
 
-	public void beginNewContinuousMotion(Point start, Point end, Point next, float p, float distBtwPts, float speed) {
-		reset(distBtwPts, speed);
+	public void beginNewContinuousMotion(Point start, Point end, Point next, float p, float speed) {
+		reset(speed);
 		calculateContinuousPositions(start, end, next, p);
 	}
 
-	public void beginNewLinearMotion(Point start, Point end, float distBtwPts, float speed) {
-		reset(distBtwPts, speed);
+	public void beginNewLinearMotion(Point start, Point end, float speed) {
+		reset(speed);
 		calculateIntermediatePositions(start, end);
 	}
 	
@@ -242,12 +242,12 @@ public class LinearInterpolation extends LinearMotion {
 		// speed is in pixels per frame, multiply that by the current speed
 		// setting
 		// which is contained in the motion instruction
-		float currentSpeed = robot.getMotorSpeed() * speed;
-		if (currentSpeed * motionFrameCounter > robot.calculateDistanceBetweenPoints()) {
+		float currentSpeed = RoboticArm.motorSpeed * speed;
+		if (currentSpeed * motionFrameCounter > distBtwPts) {
 			interMotionIdx++;
 			motionFrameCounter = 0;
 			if (interMotionIdx >= intermediatePositions.size()) {
-				reset(distBtwPts, speed);
+				reset(speed);
 				return 0;
 			}
 
@@ -268,7 +268,7 @@ public class LinearInterpolation extends LinearMotion {
 
 	@Override
 	public void halt() {
-		reset(0f, 0f);
+		reset(0f);
 	}
 
 	@Override
@@ -276,10 +276,10 @@ public class LinearInterpolation extends LinearMotion {
 		return !hasFault() && intermediatePositions.size() > 0;
 	}
 	
-	private void reset(float distBtwPts, float speed) {
+	private void reset(float speed) {
 		motionFault = false;
 		intermediatePositions.clear();
-		this.distBtwPts = distBtwPts;
+		this.distBtwPts = speed / 60f;
 		this.speed = speed;
 		interMotionIdx = 0;
 		motionFrameCounter = 0;

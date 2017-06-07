@@ -97,8 +97,17 @@ public class Program implements Iterable<Instruction> {
 		return -1;
 	}
 
-	public Instruction getInstAt(int i){
+	public Instruction get(int i){
 		return instructions.get(i);
+	}
+	
+	public Instruction getInstAt(int idx) {
+		
+		if (idx >= 0 && idx < size()) {
+			return get(idx);
+		}
+		
+		return null;
 	}
 	
 	public int getNumOfInst() {
