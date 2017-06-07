@@ -27,7 +27,7 @@ public class JointJog extends JointMotion {
 				/* Move the joint based on the roobt's liveSpeed, the direction
 				 * of motion and the segment's speed modifier */
 				float delta = JOINT_MOTION[jdx] * seg.getSpeedModifier() *
-						robot.getLiveSpeed() / 100f;
+						robot.getSpeedForCoord();
 				float trialAngle = RMath.mod2PI(seg.getJointRotation() + delta);
 				
 				if(!seg.setJointRotation(trialAngle)) {

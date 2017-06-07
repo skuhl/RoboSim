@@ -83,10 +83,6 @@ public class MotionInstruction extends Instruction  {
 	public int getPositionNum() { return positionNum; }
 	public MotionInstruction getSecondaryPoint() { return circSubInstr; }
 	public float getSpeed() { return speed; }
-	public float getSpeedForExec(RoboticArm model) {
-		if(motionType == Fields.MTYPE_JOINT) return speed;
-		else return (speed / model.motorSpeed);
-	}
 	
 	public int getTermination() { return termination; }
 	public int getToolFrame() { return toolFrame; }
@@ -112,7 +108,7 @@ public class MotionInstruction extends Instruction  {
 		String[] fields;
 		int instrLen, subInstrLen;
 
-		if(motionType == Fields.MTYPE_CIRCULAR) {
+		if(motionType == Fields.MTYPE_CIRCULAR && circSubInstr != null) {
 			instrLen = offsetActive ? 7 : 6;
 			subInstrLen = circSubInstr.offsetActive ? 5 : 4;      
 			fields = new String[instrLen + subInstrLen];
@@ -153,9 +149,9 @@ public class MotionInstruction extends Instruction  {
 
 		// Speed
 		if (motionType == Fields.MTYPE_JOINT) {
-			fields[3] = String.format("%d%%", Math.round(speed * 100));
+			fields[3] = String.format("%d%%", Math.round(speed * 100f));
 		} else {
-			fields[3] = String.format("%dmm/s", (int)(speed));
+			fields[3] = String.format("%dmm/s", Math.round(RoboticArm.motorSpeed * speed));
 		}
 
 		// Termination percent

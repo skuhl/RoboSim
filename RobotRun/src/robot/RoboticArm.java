@@ -7,8 +7,9 @@ import core.RobotRun;
 import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;
-import enums.InstOp;
 import enums.ExecState;
+import enums.InstOp;
+import enums.ExecType;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
@@ -29,6 +30,7 @@ import programming.IfStatement;
 import programming.Instruction;
 import programming.JumpInstruction;
 import programming.MotionInstruction;
+import programming.ProgExecution;
 import programming.Program;
 import programming.SelectStatement;
 import regs.DataRegister;
@@ -36,15 +38,25 @@ import regs.IORegister;
 import regs.PositionRegister;
 import screen.DisplayLine;
 import screen.InstState;
+import screen.MenuScroll;
 
 public class RoboticArm {
+	
+	/**
+	 * Defines the conversion between the robot's maximum rotation speed and
+	 * its maximum linear motion speed.
+	 */
+	public static final int motorSpeed;
+	
 	/**
 	 * The unique ID of this robot.
 	 */
 	public final int RID;
 	
-	public int liveSpeed;
-	public float motorSpeed;
+	/**
+	 * Defines the speed multiplier for the robot's jog and move to motion.
+	 */
+	private int liveSpeed;
 	
 	/**
 	 * The position of the center of the robot's base segment.
@@ -124,7 +136,7 @@ public class RoboticArm {
 	/**
 	 * The execution state of the active program.
 	 */
-	private ExecState progExecState;
+	private ProgExecution progExecState;
 	
 	/**
 	 * The index of the active program, in the robot's list of programs. A
@@ -174,6 +186,10 @@ public class RoboticArm {
 	 */
 	private ArrayList<PVector> tracePts;
 	
+	static {
+		motorSpeed = 1000; // speed in mm/sec
+	}
+	
 	/**
 	 * Creates a robotic arm with the given ID, segment models, and end
 	 * effector models. It is expected that there are 6 segment models
@@ -188,11 +204,9 @@ public class RoboticArm {
 	public RoboticArm(int rid, PVector basePos, MyPShape[] segmentModels,
 			MyPShape[] endEffectorModels) {
 		
-		motorSpeed = 1000f; // speed in mm/sec
-		liveSpeed = 10;
 		
 		RID = rid;
-		
+		liveSpeed = 10;
 		BASE_POSITION = basePos;
 		
 		SEG_OBB_CHECKS = new int[] {
@@ -326,7 +340,7 @@ public class RoboticArm {
 		PROG_UNDO = new Stack<>();
 		
 		motion = null;
-		progExecState = ExecState.EXEC_NONE;
+		progExecState = new ProgExecution();
 		activeProgIdx = -1;
 		activeInstIdx = -1;
 		
@@ -411,31 +425,6 @@ public class RoboticArm {
 		
 		// If inverse kinematics fails use the old angles
 		return new Point(position, orientation, pt.angles);
-	}
-	
-	/**
-	 * Determine how close together intermediate points between two points need
-	 * to be based on current speed
-	 */
-	protected float calculateDistanceBetweenPoints() {
-		float distBtwPts = 5f;
-		Instruction inst = getActiveInstruction();
-
-		if (inst instanceof MotionInstruction) {
-			MotionInstruction mInst = (MotionInstruction) inst;
-
-			if (mInst != null && mInst.getMotionType() != Fields.MTYPE_JOINT)
-				distBtwPts = mInst.getSpeed() / 60.0f;
-			else if (curCoordFrame != CoordFrame.JOINT)
-				distBtwPts = motorSpeed * liveSpeed / 6000f;
-			else
-				distBtwPts = 5.0f;
-			
-		} else {
-			distBtwPts = 5f;
-		}
-		
-		return distBtwPts;
 	}
 	
 	/**
@@ -1059,7 +1048,7 @@ public class RoboticArm {
 			return null;
 		}
 		
-		return prog.getInstAt(activeInstIdx);
+		return prog.get(activeInstIdx);
 	}
 	
 	/**
@@ -1238,7 +1227,7 @@ public class RoboticArm {
 		
 		// Valid active program and instruction index
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
-			Instruction inst = p.getInstAt(idx);
+			Instruction inst = p.get(idx);
 			
 			pushInstState(InstOp.REPLACED, idx, inst.clone());
 			
@@ -1287,10 +1276,6 @@ public class RoboticArm {
 
 	public int getLiveSpeed() {
 		return liveSpeed;
-	}
-	
-	public float getMotorSpeed() {
-		return motorSpeed;
 	}
 	
 	/**
@@ -1389,6 +1374,20 @@ public class RoboticArm {
 		}
 		// Invalid segment index
 		return null;
+	}
+	
+	/**
+	 * Returns the speed multiplier for the robot's motion based on its active
+	 * coordinate frame state.
+	 * 
+	 * @return	The speed modifier for the robot's motion
+	 */
+	public float getSpeedForCoord() {
+		if (curCoordFrame == CoordFrame.JOINT) {
+			return liveSpeed / 100f;
+		}
+		
+		return motorSpeed * liveSpeed / 100f;
 	}
 	
 	/**
@@ -1561,7 +1560,7 @@ public class RoboticArm {
 			motion.halt();
 		}
 		
-		progExecState = ExecState.EXEC_NONE;
+		progExecState.halt();
 	}
 
 	/**
@@ -1579,14 +1578,6 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * @return	Is program execution only running a single instruction?
-	 */
-	public boolean isSingleExec() {
-		return progExecState == ExecState.EXEC_SINGLE
-				|| progExecState == ExecState.EXEC_BWD;
-	}
-	
-	/**
 	 * @return	Is the given part being held by the robot
 	 */
 	public boolean isHeld(Part p) {
@@ -1597,7 +1588,7 @@ public class RoboticArm {
 	 * @return	Is the robot executing its active program?
 	 */
 	public boolean isProgExec() {
-		return progExecState != ExecState.EXEC_NONE;
+		return progExecState != null && !progExecState.isDone();
 	}
 	
 	public boolean isTrace() {
@@ -1789,8 +1780,8 @@ public class RoboticArm {
 		Program p = getProgram(progIdx);
 		// Validate active indices
 		if (p != null && instIdx >= 0 && instIdx < p.size()) {
-			ExecState pExec = (singleExec) ? ExecState.EXEC_FULL
-					: ExecState.EXEC_SINGLE;
+			ExecType pExec = (singleExec) ? ExecType.EXEC_SINGLE
+					: ExecType.EXEC_FULL;
 			
 			progExec(progIdx, instIdx, pExec);
 		}
@@ -1805,10 +1796,10 @@ public class RoboticArm {
 		if (p != null && activeInstIdx >= 1 && activeInstIdx < p.size()) {
 			/* The program must have a motion instruction prior to the active
 			 * instruction for backwards execution to be valid. */
-			Instruction prevInst = p.getInstAt(activeInstIdx - 1);
+			Instruction prevInst = p.get(activeInstIdx - 1);
 			
 			if (prevInst instanceof MotionInstruction) {
-				progExec(activeProgIdx, activeInstIdx - 1, ExecState.EXEC_BWD);
+				progExec(activeProgIdx, activeInstIdx - 1, ExecType.EXEC_BWD);
 			}
 		}
 	}
@@ -1820,10 +1811,12 @@ public class RoboticArm {
 	 * @param instIdx
 	 * @param exec
 	 */
-	private void progExec(int progIdx, int instIdx, ExecState exec) {
+	private void progExec(int progIdx, int instIdx, ExecType exec) {
 		activeProgIdx = progIdx;
-		activeInstIdx = instIdx;
-		progExecState = exec;
+		setActiveInstIdx(instIdx);
+		
+		Program prog = PROGRAM.get(progIdx);
+		progExecState.setExec(exec, prog, instIdx);
 	}
 			
 	/**
@@ -2208,7 +2201,7 @@ public class RoboticArm {
 		
 		if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
 			// Setup joint motion instruction
-			updateMotion(instPt.angles);
+			updateMotion(instPt.angles, mInst.getSpeed());
 			
 		} else if (mInst.getMotionType() == Fields.MTYPE_LINEAR) {
 			// Setup linear motion instruction
@@ -2218,18 +2211,18 @@ public class RoboticArm {
 					&& !singleExec) {
 				// Non-fine termination motion
 				Point nextPt = getVector((MotionInstruction)nextInst, prog);
-				updateMotion(instPt, nextPt, mInst.getTermination() / 100f);
+				updateMotion(instPt, nextPt, mInst.getSpeed(), mInst.getTermination() / 100f);
 				
 			} else {
 				// Fine termination motion
-				updateMotion(instPt);
+				updateMotion(instPt, mInst.getSpeed());
 			}
-			
+		
 		} else if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
 			// Setup circular motion instruction
 			MotionInstruction sndPt = mInst.getSecondaryPoint();
 			Point interPt = getVector(sndPt, prog);
-			updateMotion(instPt, interPt);
+			updateMotion(instPt, interPt, mInst.getSpeed());
 			
 		} else {
 			// Invalid motion type
@@ -2321,7 +2314,7 @@ public class RoboticArm {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			MotionInstruction mInst = (MotionInstruction) p.getInstAt(instIdx);
+			MotionInstruction mInst = (MotionInstruction) p.get(instIdx);
 			MotionInstruction sndMInst = mInst.getSecondaryPoint();
 			
 			if (mInst.getMotionType() != Fields.MTYPE_CIRCULAR || sndMInst == null) {
@@ -2379,7 +2372,7 @@ public class RoboticArm {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			MotionInstruction mInst = (MotionInstruction)p.getInstAt(instIdx);
+			MotionInstruction mInst = (MotionInstruction)p.get(instIdx);
 			int posNum = mInst.getPositionNum();
 			
 			if (mInst.usesGPosReg()) {
@@ -2409,69 +2402,58 @@ public class RoboticArm {
 		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
 	}
 	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param jointAngles
-	 */
 	public void updateMotion(float[] jointAngles) {
+		updateMotion(jointAngles, liveSpeed / 100f);
+	}
+
+	public void updateMotion(Point tgt) {
+		updateMotion(tgt, liveSpeed / 100f);
+	}
+	
+	public void updateMotion(float[] jointAngles, float speed) {
 		if (motion instanceof JointInterpolation) {
-			((JointInterpolation)motion).setupRotationalInterpolation(this, jointAngles);
+			((JointInterpolation)motion).setupRotationalInterpolation(this,
+					jointAngles, speed);
 			
 		} else {
-			motion = new JointInterpolation(this, jointAngles);
+			motion = new JointInterpolation(this, jointAngles, speed);
 		}
 	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param tgt
-	 */
-	public void updateMotion(Point tgt) {
+
+	public void updateMotion(Point tgt, float speed) {
 		Point start = getToolTipNative();
-		float ptDist = calculateDistanceBetweenPoints();
+		//float ptDist = calculateDistanceBetweenPoints();
 		
 		if (!(motion instanceof LinearInterpolation)) {
 			motion = new LinearInterpolation();
 		}
 		
-		((LinearInterpolation) motion).beginNewLinearMotion(start, tgt, ptDist, liveSpeed / 100f);
+		((LinearInterpolation) motion).beginNewLinearMotion(start, tgt,
+				speed * motorSpeed);
 	}
 	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param tgt
-	 * @param next
-	 * @param p
-	 */
-	public void updateMotion(Point tgt, Point next, float p) {
+	public void updateMotion(Point tgt, Point next, float speed, float p) {
 		Point start = getToolTipNative();
-		float ptDist = calculateDistanceBetweenPoints();
+		//float ptDist = calculateDistanceBetweenPoints();
 		
 		if (!(motion instanceof LinearInterpolation)) {
 			motion = new LinearInterpolation();
 		}
 		
-		((LinearInterpolation) motion).beginNewContinuousMotion(start, tgt, next, p, ptDist, liveSpeed / 100f);
+		((LinearInterpolation) motion).beginNewContinuousMotion(start, tgt, next, p,
+				speed * motorSpeed / 100f);
 	}
 	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param tgt
-	 * @param inter
-	 */
-	public void updateMotion(Point tgt, Point inter) {
+	public void updateMotion(Point tgt, Point inter, float speed) {
 		Point start = getToolTipNative();
-		float ptDist = calculateDistanceBetweenPoints();
+		//float ptDist = calculateDistanceBetweenPoints();
 		
 		if (!(motion instanceof LinearInterpolation)) {
 			motion = new LinearInterpolation();
 		}
 		
-		((LinearInterpolation) motion).beginNewCircularMotion(start, inter, tgt, ptDist, liveSpeed / 100f);
+		((LinearInterpolation) motion).beginNewCircularMotion(start, inter, tgt,
+				speed * motorSpeed / 100f);
 	}
 	
 	/**
@@ -2483,21 +2465,31 @@ public class RoboticArm {
 	public void updateRobot(RobotRun app) {
 		
 		if (!hasMotionFault()) {
-			// Execute arm movement
-			if (motion != null && motion.hasMotion()) {
-				motion.executeMotion(this);
-				
-			} else if (isProgExec()) {
-				// Continue active program execution
+			if (!inMotion() && isProgExec()) {
 				updateProgExec(app);
-				
-				if (progExecState == ExecState.EXEC_END) {
-					app.hold();
-				}
+			}
+		
+			if (inMotion()) {
+				motion.executeMotion(this);
+			}
+			
+			if (!inMotion() && progExecState.getState() == ExecState.EXEC_MINST) {
+				// Motion instruction has completed
+				progExecState.setState(ExecState.EXEC_MEND);
+				updateExecInstIdx();
 			}
 		}
 	
 		updateOBBs();
+	}
+	
+	private void updateExecInstIdx() {
+		progExecState.updateCurIdx();
+		setActiveInstIdx(progExecState.getCurIdx());
+		// TODO REFACTOR THIS
+		RobotRun app = RobotRun.getInstance();
+		app.getContentsMenu().setLineIdx( app.getInstrLine(activeInstIdx) );
+		RobotRun.getInstance().updatePendantScreen();
 	}
 	
 	/**
@@ -2668,44 +2660,40 @@ public class RoboticArm {
 	 * @return
 	 */
 	@SuppressWarnings("static-access")
-	private void updateProgExec(RobotRun app) {
-		Program program = getActiveProg();
-		Instruction activeInstr = getActiveInstruction();
-		int nextInstr = getActiveInstIdx() + 1;
-
-		// stop executing if no valid program is selected or we reach the end of
-		// the program
-		if (hasMotionFault() || progExecState == ExecState.EXEC_END
-				|| activeInstr == null) {
-			
-			return;
-			
-		} else if (!activeInstr.isCommented()) {
+	private void updateProgExec(RobotRun app) {	
+		Instruction activeInstr = progExecState.prog.get(progExecState.getCurIdx());
+		int nextIdx = progExecState.getCurIdx() + 1;
+		
+		if (!activeInstr.isCommented()) {
 			if (activeInstr instanceof MotionInstruction) {
 				MotionInstruction motInstr = (MotionInstruction) activeInstr;
-				int ret = setupMInstMotion(program, motInstr, nextInstr, isSingleExec());
+				int ret = setupMInstMotion(progExecState.prog, motInstr,
+						nextIdx, progExecState.isSingleExec());
 				
-				if (ret != 0) {
+				if (ret == 0) {
+					progExecState.setState(ExecState.EXEC_MINST);
+					
+				} else {
 					// Issue occurred with setting up the motion instruction
-					nextInstr = -1;
+					nextIdx = -1;
 				}
 				
 			} else if (activeInstr instanceof JumpInstruction) {
-				nextInstr = activeInstr.execute();
+				nextIdx = activeInstr.execute();
 
 			} else if (activeInstr instanceof CallInstruction) {
 				// TODO REFACTOR THIS
 				if (((CallInstruction) activeInstr).getTgtDevice() != app.getInstanceRobot()) {
 					// Call an inactive Robot's program
 					if (app.getUI().getRobotButtonState()) {
-						nextInstr = activeInstr.execute();
+						nextIdx = activeInstr.execute();
 						
 					} else {
 						// No second robot in application
-						nextInstr = -1;
+						nextIdx = -1;
 					}
 				} else {
-					nextInstr = activeInstr.execute();
+					progExecState.setNextIdx(activeInstr.execute());
 				}
 
 			} else if (activeInstr instanceof IfStatement ||
@@ -2714,26 +2702,15 @@ public class RoboticArm {
 				int ret = activeInstr.execute();
 
 				if (ret != -2) {
-					nextInstr = ret;
+					nextIdx = ret;
 				}
 
 			} else if (activeInstr.execute() != 0) {
-				nextInstr = -1;
+				nextIdx = -1;
 			}
 		}
-
-		if (nextInstr == -1) {
-			// If a command fails
-			app.triggerFault();
-			return;
-		}
 		
-		++activeInstIdx;
-		
-		if (isSingleExec() || activeInstIdx == program.size()) {
-			progExecState = ExecState.EXEC_END;
-		}
-
-		return;
+		progExecState.setNextIdx(nextIdx);
+		updateExecInstIdx();
 	}
 }
