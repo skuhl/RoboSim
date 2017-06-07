@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import core.RobotRun;
 import core.Scenario;
 import expression.AtomicExpression;
-import expression.ExprOperand;
+import expression.Operand;
 import expression.Expression;
 import expression.ExpressionElement;
 import expression.Operator;
@@ -194,8 +194,8 @@ public abstract class DataManagement {
 			
 		} else if (nullFlag == 3) {
 			// Read in an atomic expression operand
-			ExprOperand a0 = (ExprOperand)loadExpressionElement(robot, in);
-			ExprOperand a1 = (ExprOperand)loadExpressionElement(robot, in);
+			Operand a0 = (Operand)loadExpressionElement(robot, in);
+			Operand a1 = (Operand)loadExpressionElement(robot, in);
 			Operator op = (Operator)loadExpressionElement(robot, in);
 
 			ee = new AtomicExpression(a0, a1, op);
@@ -207,12 +207,12 @@ public abstract class DataManagement {
 			if (opType == ExpressionElement.FLOAT) {
 				// Constant float
 				Float val = in.readFloat();
-				ee = new ExprOperand(val);
+				ee = new Operand(val);
 
 			} else if (opType == ExpressionElement.BOOL) {
 				// Constant boolean
 				Boolean val = in.readBoolean();
-				ee = new ExprOperand(val);
+				ee = new Operand(val);
 
 			} else if (opType == ExpressionElement.DREG ||
 					opType == ExpressionElement.IOREG ||
@@ -225,32 +225,32 @@ public abstract class DataManagement {
 
 				if (opType == ExpressionElement.DREG) {
 					// Data register
-					ee = new ExprOperand(robot.getDReg(rdx));
+					ee = new Operand(robot.getDReg(rdx));
 
 				} else if (opType == ExpressionElement.PREG) {
 					// Position register
-					ee = new ExprOperand(robot.getPReg(rdx));
+					ee = new Operand(robot.getPReg(rdx));
 
 				} else if (opType == ExpressionElement.PREG_IDX) {
 					// Specific portion of a point
 					Integer pdx = in.readInt();
-					ee = new ExprOperand(robot.getPReg(rdx), pdx);
+					ee = new Operand(robot.getPReg(rdx), pdx);
 
 				} else if (opType == ExpressionElement.IOREG) {
 					// I/O register
-					ee = new ExprOperand(robot.getIOReg(rdx));
+					ee = new Operand(robot.getIOReg(rdx));
 
 				} else {
-					ee = new ExprOperand();
+					ee = new Operand();
 				}
 
 			} else if (opType == ExpressionElement.POSTN) {
 				// Robot position
 				Point pt = loadPoint(in);
-				ee = new ExprOperand(pt);
+				ee = new Operand(pt);
 
 			} else {
-				ee = new ExprOperand();
+				ee = new Operand();
 			}
 		}
 
@@ -470,13 +470,13 @@ public abstract class DataManagement {
 		} else if (instType == 10) {
 			// Load data associated with a select statement
 			boolean isCommented = in.readBoolean();
-			ExprOperand arg = (ExprOperand)loadExpressionElement(robot, in);
+			Operand arg = (Operand)loadExpressionElement(robot, in);
 			
-			ArrayList<ExprOperand> cases = new ArrayList<>();
+			ArrayList<Operand> cases = new ArrayList<>();
 			int size = in.readInt();
 			
 			while (size-- > 0) {
-				cases.add( (ExprOperand)loadExpressionElement(robot, in) );
+				cases.add( (Operand)loadExpressionElement(robot, in) );
 			}
 			
 			ArrayList<Instruction> insts = new ArrayList<>();
@@ -1170,8 +1170,8 @@ public abstract class DataManagement {
 				saveExpressionElement(ae.getArg2(), out);
 				saveExpressionElement(ae.getOp(), out);
 
-			} else if (ee instanceof ExprOperand) {
-				ExprOperand eo = (ExprOperand)ee;
+			} else if (ee instanceof Operand) {
+				Operand eo = (Operand)ee;
 
 				out.writeByte(4);
 				// Indicate that the object is non-null
@@ -1458,7 +1458,7 @@ public abstract class DataManagement {
 			
 		} else if (inst instanceof SelectStatement) {
 			SelectStatement sStmt = (SelectStatement)inst;
-			ArrayList<ExprOperand> cases = sStmt.getCases();
+			ArrayList<Operand> cases = sStmt.getCases();
 			ArrayList<Instruction> insts = sStmt.getInstrs();
 			// Save data associated with the select statement instruction
 			out.writeByte(10);
@@ -1467,7 +1467,7 @@ public abstract class DataManagement {
 			saveExpressionElement(sStmt.getArg(), out);
 			// Save list of cases
 			out.writeInt(cases.size());
-			for (ExprOperand opr : cases) {
+			for (Operand opr : cases) {
 				saveExpressionElement(opr, out);
 			}
 			// Save list of instructions
