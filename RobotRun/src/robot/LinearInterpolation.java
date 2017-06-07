@@ -273,7 +273,6 @@ public class LinearInterpolation extends LinearMotion {
 
 	@Override
 	public boolean hasMotion() {
-		// TODO greater than 1 or 0?
 		return !hasFault() && intermediatePositions.size() > 0;
 	}
 	

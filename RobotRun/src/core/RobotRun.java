@@ -3,7 +3,6 @@ package core;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -37,7 +36,6 @@ import global.Fields;
 import global.RMath;
 import global.RegisteredModels;
 import processing.core.PApplet;
-import processing.core.PConstants;
 import processing.core.PImage;
 import processing.core.PMatrix3D;
 import processing.core.PShape;
@@ -152,11 +150,6 @@ public class RobotRun extends PApplet {
 	private boolean shift = false; // Is shift button pressed or not?
 	private boolean step = false; // Is step button pressed or not?
 	private boolean camEnable = false;
-
-	// Indicates whether a program is currently running
-	private boolean programRunning = false;
-	private boolean executingInstruction = false;
-	public boolean execSingleInst = false;
 
 	int temp_select = 0;
 
@@ -300,7 +293,7 @@ public class RobotRun extends PApplet {
 		case SELECT_COMMENT:
 		case SELECT_CUT_COPY:
 		case SELECT_INSTR_DELETE:
-			if (!isProgramRunning()) {
+			if (!activeRobot.isProgExec()) {
 				// Lock movement when a program is running
 				Instruction i = activeRobot.getActiveInstruction();
 				int prevIdx = getSelectedIdx();
@@ -404,7 +397,7 @@ public class RobotRun extends PApplet {
 	public void arrow_lt() {
 		switch (mode) {
 		case NAV_PROG_INSTR:
-			if (!isProgramRunning()) {
+			if (!activeRobot.isProgExec()) {
 				// Lock movement when a program is running
 				contents.moveLeft();
 			}
@@ -449,7 +442,7 @@ public class RobotRun extends PApplet {
 	public void arrow_rt() {
 		switch (mode) {
 		case NAV_PROG_INSTR:
-			if (!isProgramRunning()) {
+			if (!activeRobot.isProgExec()) {
 				// Lock movement when a program is running
 				contents.moveRight();
 			}
@@ -546,7 +539,7 @@ public class RobotRun extends PApplet {
 		case SELECT_COMMENT:
 		case SELECT_CUT_COPY:
 		case SELECT_INSTR_DELETE:
-			if (!isProgramRunning()) {
+			if (!activeRobot.isProgExec()) {
 				try {
 					// Lock movement when a program is running
 					Instruction i = activeRobot.getActiveInstruction();
@@ -654,67 +647,6 @@ public class RobotRun extends PApplet {
 		camera.reset();
 		camera.setRotation(0f, PI, 0f);
 	}
-	
-	/**
-	 * Initiate a new circular motion instruction according to FANUC
-	 * methodology.
-	 * 
-	 * @param p1
-	 *            Point 1
-	 * @param p2
-	 *            Point 2
-	 * @param p3
-	 *            Point 3
-	 */
-	public void beginNewCircularMotion(Point start, Point inter, Point end) {
-		calculateArc(start, inter, end);
-		interMotionIdx = 0;
-		motionFrameCounter = 0;
-		if (intermediatePositions.size() > 0) {
-			Point tgtPoint = intermediatePositions.get(interMotionIdx);
-			activeRobot.jumpTo(tgtPoint.position, tgtPoint.orientation);
-		}
-	}
-
-	/**
-	 * Initiate a new continuous (curved) motion instruction.
-	 * 
-	 * @param model
-	 *            Arm model to use
-	 * @param start
-	 *            Start point
-	 * @param end
-	 *            Destination point
-	 * @param next
-	 *            Point after the destination
-	 * @param percentage
-	 *            Intensity of the curve
-	 */
-	public void beginNewContinuousMotion(Point start, Point end, Point next, float p) {
-		calculateContinuousPositions(start, end, next, p);
-		motionFrameCounter = 0;
-		if (intermediatePositions.size() > 0) {
-			Point tgtPoint = intermediatePositions.get(interMotionIdx);
-			activeRobot.jumpTo(tgtPoint.position, tgtPoint.orientation);
-		}
-	}
-
-	/**
-	 * Initiate a new fine (linear) motion instruction.
-	 * 
-	 * @param start
-	 *            Start point
-	 * @param end
-	 *            Destination point
-	 */
-	public void beginNewLinearMotion(Point start, Point end) {
-		calculateIntermediatePositions(start, end);
-		motionFrameCounter = 0;
-		if (intermediatePositions.size() > 0) {
-			Point tgtPoint = intermediatePositions.get(interMotionIdx);
-			activeRobot.jumpTo(tgtPoint.position, tgtPoint.orientation);
-		}
-	}
 
 	/**
 	 * Pendant BKSPC button
@@ -793,251 +725,10 @@ public class RobotRun extends PApplet {
 		// Backwards is only functional when executing a program one instruction
 		// at a time
 		if (mode == ScreenMode.NAV_PROG_INSTR && isShift() && isStep()) {
-			Program p = activeRobot.getActiveProg();
-			int instrIdx = activeRobot.getActiveInstIdx();
-
-			// Execute the previous motion instruction
-			if (p != null && instrIdx > 1 && p.getInstAt(instrIdx - 2) instanceof MotionInstruction) {
-				// Stop robot motion and normal program execution
-				hold();
-				setProgramRunning(false);
-
-				activeRobot.setActiveInstIdx(instrIdx - 2);
-				execSingleInst = true;
-
-				// Safeguard against editing a program while it is running
-				contents.setColumnIdx(0);
-
-				contents.moveUp(false);
-				contents.moveUp(false);
-
-				setProgramRunning(true);
-			}
+			// Safeguard against editing a program while it is running
+			contents.setColumnIdx(0);
+			activeRobot.progExecBwd();
 		}
-	}
-	
-	/**
-	 * Creates an arc from 'start' to 'end' that passes through the point
-	 * specified by 'inter.'
-	 * 
-	 * @param start
-	 *            First point
-	 * @param inter
-	 *            Second point
-	 * @param end
-	 *            Third point
-	 */
-	public void calculateArc(Point start, Point inter, Point end) {
-		calculateDistanceBetweenPoints();
-		intermediatePositions.clear();
-
-		PVector a = start.position;
-		PVector b = inter.position;
-		PVector c = end.position;
-		RQuaternion q1 = start.orientation;
-		RQuaternion q2 = end.orientation;
-		RQuaternion qi = new RQuaternion();
-
-		// Calculate arc center point
-		PVector[] plane = new PVector[3];
-		plane = createPlaneFrom3Points(a, b, c);
-		PVector center = circleCenter(vectorConvertTo(a, plane[0], plane[1], plane[2]),
-				vectorConvertTo(b, plane[0], plane[1], plane[2]), vectorConvertTo(c, plane[0], plane[1], plane[2]));
-		center = vectorConvertFrom(center, plane[0], plane[1], plane[2]);
-		// Now get the radius (easy)
-		float r = dist(center.x, center.y, center.z, a.x, a.y, a.z);
-		// Calculate a vector from the center to point a
-		PVector u = new PVector(a.x - center.x, a.y - center.y, a.z - center.z);
-		u.normalize();
-		// get the normal of the plane created by the 3 input points
-		PVector tmp1 = new PVector(a.x - b.x, a.y - b.y, a.z - b.z);
-		PVector tmp2 = new PVector(a.x - c.x, a.y - c.y, a.z - c.z);
-		PVector n = tmp1.cross(tmp2);
-		n.normalize();
-		// calculate the angle between the start and end points
-		PVector vec1 = new PVector(a.x - center.x, a.y - center.y, a.z - center.z);
-		PVector vec2 = new PVector(c.x - center.x, c.y - center.y, c.z - center.z);
-		float theta = atan2(vec1.cross(vec2).dot(n), vec1.dot(vec2));
-		if (theta < 0)
-			theta += PConstants.TWO_PI;
-		// finally, draw an arc through all 3 points by rotating the u
-		// vector around our normal vector
-		float angle = 0, mu = 0;
-		int numPoints = (int) (r * theta / distanceBetweenPoints);
-		float inc = 1 / (float) numPoints;
-		float angleInc = (theta) / numPoints;
-		for (int i = 0; i < numPoints; i += 1) {
-			PVector pos = RQuaternion.rotateVectorAroundAxis(u, n, angle).mult(r).add(center);
-			if (i == numPoints - 1)
-				pos = end.position;
-			qi = RQuaternion.SLERP(q1, q2, mu);
-			// println(pos + ", " + end.position);
-			intermediatePositions.add(new Point(pos, qi));
-			angle += angleInc;
-			mu += inc;
-		}
-	}
-
-	/**
-	 * Calculate a "path" (series of intermediate positions) between two points
-	 * in a a curved line. Need a third point as well, or a curved line doesn't
-	 * make sense. Here's how this works: Assuming our current point is P1, and
-	 * we're moving to P2 and then P3: 1 Do linear interpolation between points
-	 * P2 and P3 FIRST. 2 Begin interpolation between P1 and P2. 3 When you're
-	 * (cont% / 1.5)% away from P2, begin interpolating not towards P2, but
-	 * towards the points defined between P2 and P3 in step 1. The mu for this
-	 * is from 0 to 0.5 instead of 0 to 1.0.
-	 *
-	 * @param p1
-	 *            Start point
-	 * @param p2
-	 *            Destination point
-	 * @param p3
-	 *            Third point, needed to figure out how to curve the path
-	 * @param percentage
-	 *            Intensity of the curve
-	 */
-	public void calculateContinuousPositions(Point start, Point end, Point next, float percentage) {
-		// percentage /= 2;
-		calculateDistanceBetweenPoints();
-		percentage /= 1.5f;
-		percentage = 1 - percentage;
-		percentage = constrain(percentage, 0, 1);
-		intermediatePositions.clear();
-
-		PVector p1 = start.position;
-		PVector p2 = end.position;
-		PVector p3 = next.position;
-		RQuaternion q1 = start.orientation;
-		RQuaternion q2 = end.orientation;
-		RQuaternion q3 = next.orientation;
-		RQuaternion qi = new RQuaternion();
-
-		ArrayList<Point> secondaryTargets = new ArrayList<>();
-		float d1 = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
-		float d2 = dist(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
-		int numberOfPoints = 0;
-		if (d1 > d2) {
-			numberOfPoints = (int) (d1 / distanceBetweenPoints);
-		} else {
-			numberOfPoints = (int) (d2 / distanceBetweenPoints);
-		}
-
-		float mu = 0;
-		float increment = 1.0f / numberOfPoints;
-		for (int n = 0; n < numberOfPoints; n++) {
-			mu += increment;
-			qi = RQuaternion.SLERP(q2, q3, mu);
-			secondaryTargets.add(new Point(new PVector(p2.x * (1 - mu) + (p3.x * mu), p2.y * (1 - mu) + (p3.y * mu),
-					p2.z * (1 - mu) + (p3.z * mu)), qi));
-		}
-
-		mu = 0;
-		int transitionPoint = (int) (numberOfPoints * percentage);
-		for (int n = 0; n < transitionPoint; n++) {
-			mu += increment;
-			qi = RQuaternion.SLERP(q1, q2, mu);
-			intermediatePositions.add(new Point(new PVector(p1.x * (1 - mu) + (p2.x * mu),
-					p1.y * (1 - mu) + (p2.y * mu), p1.z * (1 - mu) + (p2.z * mu)), qi));
-		}
-
-		int secondaryIdx = 0; // accessor for secondary targets
-
-		mu = 0;
-		increment /= 2.0f;
-
-		Point currentPoint;
-		if (intermediatePositions.size() > 0) {
-			currentPoint = intermediatePositions.get(intermediatePositions.size() - 1);
-		} else {
-			// NOTE orientation is in Native Coordinates!
-			currentPoint = activeRobot.getToolTipNative();
-		}
-
-		for (int n = transitionPoint; n < numberOfPoints; n++) {
-			mu += increment;
-			Point tgt = secondaryTargets.get(secondaryIdx);
-			qi = RQuaternion.SLERP(currentPoint.orientation, tgt.orientation, mu);
-			intermediatePositions.add(new Point(new PVector(currentPoint.position.x * (1 - mu) + (tgt.position.x * mu),
-					currentPoint.position.y * (1 - mu) + (tgt.position.y * mu),
-					currentPoint.position.z * (1 - mu) + (tgt.position.z * mu)), qi));
-			currentPoint = intermediatePositions.get(intermediatePositions.size() - 1);
-			secondaryIdx++;
-		}
-		interMotionIdx = 0;
-	} // end calculate continuous positions
-
-	/**
-	 * Determine how close together intermediate points between two points need
-	 * to be based on current speed
-	 */
-	public void calculateDistanceBetweenPoints() {
-		Instruction inst = activeRobot.getActiveInstruction();
-
-		if (inst instanceof MotionInstruction) {
-			MotionInstruction mInst = (MotionInstruction) inst;
-
-			if (mInst != null && mInst.getMotionType() != Fields.MTYPE_JOINT)
-				distanceBetweenPoints = mInst.getSpeed() / 60.0f;
-			else if (activeRobot.getCurCoordFrame() != CoordFrame.JOINT)
-				distanceBetweenPoints = activeRobot.motorSpeed * activeRobot.getLiveSpeed() / 6000f;
-			else
-				distanceBetweenPoints = 5.0f;
-		}
-	}
-
-	// TODO: Add error check for colinear case (denominator is zero)
-	public float calculateH(float x1, float y1, float x2, float y2, float x3, float y3) {
-		float numerator = (x2 * x2 + y2 * y2) * y3 - (x3 * x3 + y3 * y3) * y2
-				- ((x1 * x1 + y1 * y1) * y3 - (x3 * x3 + y3 * y3) * y1) + (x1 * x1 + y1 * y1) * y2
-				- (x2 * x2 + y2 * y2) * y1;
-		float denominator = (x2 * y3 - x3 * y2) - (x1 * y3 - x3 * y1) + (x1 * y2 - x2 * y1);
-		denominator *= 2;
-		return numerator / denominator;
-	}
-
-	/**
-	 * Calculate a "path" (series of intermediate positions) between two points
-	 * in a straight line.
-	 * 
-	 * @param start
-	 *            Start point
-	 * @param end
-	 *            Destination point
-	 */
-	public void calculateIntermediatePositions(Point start, Point end) {
-		calculateDistanceBetweenPoints();
-		intermediatePositions.clear();
-
-		PVector p1 = start.position;
-		PVector p2 = end.position;
-		RQuaternion q1 = start.orientation;
-		RQuaternion q2 = end.orientation;
-		RQuaternion qi = new RQuaternion();
-
-		float mu = 0;
-		float dist = dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) + 100f * q1.dist(q2);
-		int numberOfPoints = (int) (dist / distanceBetweenPoints);
-
-		float increment = 1.0f / numberOfPoints;
-		for (int n = 0; n < numberOfPoints; n++) {
-			mu += increment;
-
-			qi = RQuaternion.SLERP(q1, q2, mu);
-			intermediatePositions.add(new Point(new PVector(p1.x * (1 - mu) + (p2.x * mu),
-					p1.y * (1 - mu) + (p2.y * mu), p1.z * (1 - mu) + (p2.z * mu)), qi));
-		}
-
-		interMotionIdx = 0;
-	} // end calculate intermediate positions
-
-	public float calculateK(float x1, float y1, float x2, float y2, float x3, float y3) {
-		float numerator = x2 * (x3 * x3 + y3 * y3) - x3 * (x2 * x2 + y2 * y2)
-				- (x1 * (x3 * x3 + y3 * y3) - x3 * (x1 * x1 + y1 * y1)) + x1 * (x2 * x2 + y2 * y2)
-				- x2 * (x1 * x1 + y1 * y1);
-		float denominator = (x2 * y3 - x3 * y2) - (x1 * y3 - x3 * y1) + (x1 * y2 - x2 * y1);
-		denominator *= 2;
-		return numerator / denominator;
 	}
 	
 	/**
@@ -1130,27 +821,7 @@ public class RobotRun extends PApplet {
 		
 		return collidedWith;
 	}
-
-	/**
-	 * Finds the circle center of 3 points. (That is, find the center of a
-	 * circle whose circumference intersects all 3 points.) The points must all
-	 * lie on the same plane (all have the same Z value). Should have a check
-	 * for colinear case, currently doesn't.
-	 * 
-	 * @param a
-	 *            First point
-	 * @param b
-	 *            Second point
-	 * @param c
-	 *            Third point
-	 * @return Position of circle center
-	 */
-	public PVector circleCenter(PVector a, PVector b, PVector c) {
-		float h = calculateH(a.x, a.y, b.x, b.y, c.x, c.y);
-		float k = calculateK(a.x, a.y, b.x, b.y, c.x, c.y);
-		return new PVector(h, k, a.z);
-	}
-
+	
 	/**
 	 * Clear button shared between the Create and Edit windows
 	 * 
@@ -2864,112 +2535,6 @@ public class RobotRun extends PApplet {
 
 		return false;
 	} // end execute linear motion
-
-	/**
-	 * Executes a program. Returns true when done.
-	 * 
-	 * @param model
-	 *            - Arm model to use
-	 * @return - True if done executing, false if otherwise.
-	 */
-	public boolean executeProgram(RoboticArm model, boolean singleInstr) {
-		Program program = model.getActiveProg();
-		Instruction activeInstr = model.getActiveInstruction();
-		int nextInstr = activeRobot.getActiveInstIdx() + 1;
-
-		// stop executing if no valid program is selected or we reach the end of
-		// the program
-		if (activeRobot.hasMotionFault() || activeInstr == null) {
-			return true;
-			
-		} else if (!activeInstr.isCommented()) {
-			if (activeInstr instanceof MotionInstruction) {
-				MotionInstruction motInstr = (MotionInstruction) activeInstr;
-				/* TODO REMOVE AFTER REFACTOR *
-				// start a new instruction
-				if (!isExecutingInstruction()) {
-					setExecutingInstruction(setUpInstruction(program, model, motInstr));
-
-					if (!isExecutingInstruction()) {
-						// Motion Instruction failed
-						nextInstr = -1;
-					}
-				}
-				// continue current motion instruction
-				else {
-					if (motInstr.getMotionType() == Fields.MTYPE_JOINT) {
-						setExecutingInstruction(!(model.interpolateRotation(motInstr.getSpeedForExec(model))));
-					} else {
-						setExecutingInstruction(!(executeMotion(model, motInstr.getSpeedForExec(model))));
-					}
-				}
-				/**/
-				setExecutingInstruction(false);
-				model.setupMInstMotion(program, motInstr, nextInstr, execSingleInst);
-				
-			} else if (activeInstr instanceof JumpInstruction) {
-				setExecutingInstruction(false);
-				nextInstr = activeInstr.execute();
-
-			} else if (activeInstr instanceof CallInstruction) {
-				setExecutingInstruction(false);
-
-				if (((CallInstruction) activeInstr).getTgtDevice() != activeRobot) {
-					// Call an inactive Robot's program
-					if (UI.getRobotButtonState()) {
-						nextInstr = activeInstr.execute();
-					} else {
-						// No second robot in application
-						nextInstr = -1;
-					}
-				} else {
-					nextInstr = activeInstr.execute();
-				}
-
-			} else if (activeInstr instanceof IfStatement || activeInstr instanceof SelectStatement) {
-				setExecutingInstruction(false);
-				int ret = activeInstr.execute();
-
-				if (ret != -2) {
-					nextInstr = ret;
-				}
-
-			} else {
-				setExecutingInstruction(false);
-
-				if (activeInstr.execute() != 0) {
-					nextInstr = -1;
-				}
-			} // end of instruction type check
-		} // skip commented instructions
-
-		if (nextInstr == -1) {
-			// If a command fails
-			triggerFault();
-			updatePendantScreen();
-			return true;
-
-		} else if (!isExecutingInstruction()) {
-			RoboticArm r = activeRobot;
-			// Move to next instruction after current is finished
-			int size = program.getNumOfInst() + 1;
-			r.setActiveInstIdx(max(0, min(nextInstr, size - 1)));
-			
-			if (!screenStates.isEmpty()) {
-				ScreenState prev = screenStates.peek();
-				
-				if (prev.mode == ScreenMode.NAV_PROG_INSTR) {
-					int activeInst = r.getActiveInstIdx();
-					contents.setLineIdx( getInstrLine(activeInst) );
-				}
-			}
-				
-		}
-
-		updatePendantScreen();
-
-		return !isExecutingInstruction() && this.execSingleInst;
-	}
 	
 	/**
 	 * Pendant F1 button
@@ -3416,7 +2981,7 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case NAV_PREGS:
-			if (isShift() && !isProgramRunning()) {
+			if (isShift() && !activeRobot.isProgExec()) {
 				// Stop any prior jogging motion
 				hold();
 
@@ -3604,17 +3169,12 @@ public class RobotRun extends PApplet {
 	 * otherwise the entire program is executed.
 	 */
 	public void fwd() {
-		if (mode == ScreenMode.NAV_PROG_INSTR && !isProgramRunning() && isShift()) {
+		if (mode == ScreenMode.NAV_PROG_INSTR && !activeRobot.isProgExec() && isShift()) {
 			// Stop any prior Robot movement
 			hold();
 			// Safeguard against editing a program while it is running
 			contents.setColumnIdx(0);
-
-			setExecutingInstruction(false);
-			// Run single instruction when step is set
-			execSingleInst = isStep();
-
-			setProgramRunning(true);
+			activeRobot.progExec(isStep());
 		}
 	}
 
@@ -4365,7 +3925,6 @@ public class RobotRun extends PApplet {
 		// Stop all robot motion and program execution
 		UI.resetJogButtons();
 		activeRobot.halt();
-		setProgramRunning(false);
 	}
 
 	/**
@@ -4382,19 +3941,11 @@ public class RobotRun extends PApplet {
 			}
 
 		} else {
-			if (!isProgramRunning()) {
+			if (!activeRobot.isProgExec()) {
 				// Map I/O to the robot's end effector state, if shift is off
 				toggleEEState(activeRobot);
 			}
 		}
-	}
-	
-	public boolean isExecutingInstruction() {
-		return executingInstruction;
-	}
-
-	public boolean isProgramRunning() {
-		return programRunning;
 	}
 
 	/**
@@ -4624,14 +4175,14 @@ public class RobotRun extends PApplet {
 				
 			} else if (keyCode == KeyEvent.VK_E) {
 				// Cycle End Effectors
-				if (!isProgramRunning()) {
+				if (!activeRobot.isProgExec()) {
 					activeRobot.cycleEndEffector();
 					UI.updateListContents();
 				}
 				
 			} else if (keyCode == KeyEvent.VK_P) {
 				// Toggle the Robot's End Effector state
-				if (!isProgramRunning()) {
+				if (!activeRobot.isProgExec()) {
 					toggleEEState(activeRobot);
 				}
 				
@@ -5714,7 +5265,7 @@ public class RobotRun extends PApplet {
 	public void mousePressed() {
 			
 		/* Check if the mouse position is colliding with a world object */
-		if (!isProgramRunning() && !UI.isFocus() && activeRobot != null &&
+		if (!activeRobot.isProgExec() && !UI.isFocus() && activeRobot != null &&
 				activeScenario != null) {
 			
 			// Scale the camera and mouse positions
@@ -5794,7 +5345,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void MoveToCur() {
 		// Only allow world object editing when no program is executing
-		if (!isProgramRunning()) {
+		if (!activeRobot.isProgExec()) {
 			RoboticArm r = activeRobot;
 			WorldObject selectedWO = UI.getSelectedWO();
 			
@@ -5839,7 +5390,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void MoveToDef() {
 		// Only allow world object editing when no program is executing
-		if (!isProgramRunning()) {
+		if (!activeRobot.isProgExec()) {
 			RoboticArm r = activeRobot;
 			WorldObject selectedWO = UI.getSelectedWO();
 			
@@ -6368,7 +5919,7 @@ public class RobotRun extends PApplet {
 	public void renderScene(Scenario s, RoboticArm active) {
 		active.updateRobot(this);
 		
-		if (isProgramRunning()) {
+		if (activeRobot.isProgExec()) {
 			Program ap = active.getActiveProg();
 
 			// Check the call stack for any waiting processes
@@ -6786,7 +6337,7 @@ public class RobotRun extends PApplet {
 			lastTextPositionY += 20;
 		}
 
-		if (isProgramRunning()) {
+		if (activeRobot.isProgExec()) {
 			text("Program executing", lastTextPositionX, lastTextPositionY);
 			lastTextPositionY += 20;
 		}
@@ -6845,7 +6396,6 @@ public class RobotRun extends PApplet {
 	 */
 	public void resetStack() {
 		// Stop a program from executing when transition screens
-		setProgramRunning(false);
 		screenStates.clear();
 
 		mode = ScreenMode.DEFAULT;
@@ -6945,18 +6495,6 @@ public class RobotRun extends PApplet {
 
 		return false;
 
-	}
-	
-	public void setExecutingInstruction(boolean executingInstruction) {
-		this.executingInstruction = executingInstruction;
-	}
-
-	public void setProgramRunning(boolean programRunning) {
-		this.programRunning = programRunning;
-
-		if (programRunning == false) {
-			setExecutingInstruction(false);
-		}
 	}
 
 	public void setRecord(boolean state) {
@@ -7099,71 +6637,6 @@ public class RobotRun extends PApplet {
 			getSU_macro_bindings()[3].execute();
 		}
 	}
-
-	/**
-	 * Sets up an instruction for execution.
-	 *
-	 * @param program
-	 *            Program that the instruction belongs to
-	 * @param model
-	 *            Arm model to use
-	 * @param instruction
-	 *            The instruction to execute
-	 * @return Returns false on failure (invalid instruction), true on success
-	 */
-	public boolean setUpInstruction(Program program, RoboticArm model, MotionInstruction instruction) {
-		Point start = model.getToolTipNative();
-		Point instPt = model.getVector(instruction, program);
-		
-		if (!instruction.checkFrames(activeRobot.getActiveToolIdx(), activeRobot.getActiveUserIdx())) {
-			// Current Frames must match the instruction's frames
-			Fields.debug("Tool frame: %d : %d\nUser frame: %d : %d\n\n", instruction.getToolFrame(),
-					activeRobot.getActiveToolIdx(), instruction.getUserFrame(),
-					activeRobot.getActiveUserIdx());
-			return false;
-		} else if (instPt == null) {
-			return false;
-		}
-
-		if (instruction.getMotionType() == Fields.MTYPE_JOINT) {
-			activeRobot.setupRotationInterpolation(instPt.angles);
-			
-		} // end joint movement setup
-		else if (instruction.getMotionType() == Fields.MTYPE_LINEAR) {
-
-			if (instruction.getTermination() == 0 || execSingleInst) {
-				beginNewLinearMotion(start, instPt);
-				
-			} else {
-				Point limboPt = null;
-				
-				for (int n = activeRobot.getActiveInstIdx() + 1; n < program.getNumOfInst(); n++) {
-					Instruction nextIns = program.getInstAt(n);
-					if (nextIns instanceof MotionInstruction) {
-						MotionInstruction castIns = (MotionInstruction) nextIns;
-						limboPt = activeRobot.getVector(castIns, program);
-						break;
-					}
-				}
-				
-				if (limboPt == null) {
-					beginNewLinearMotion(start, instPt);
-					
-				} else {
-					beginNewContinuousMotion(start, instPt, limboPt,
-							instruction.getTermination() / 100f);
-				}
-			} // end if termination type is continuous
-		} // end linear movement setup
-		else if (instruction.getMotionType() == Fields.MTYPE_CIRCULAR) {
-			MotionInstruction nextIns = instruction.getSecondaryPoint();
-			Point nextPoint = activeRobot.getVector(nextIns, program);
-
-			beginNewCircularMotion(start, instPt, nextPoint);
-		} // end circular movement setup
-
-		return true;
-	} // end setUpInstruction
 
 	/**
 	 * Pendant SHIFT button

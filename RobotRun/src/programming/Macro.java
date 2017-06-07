@@ -1,5 +1,6 @@
 package programming;
 import core.RobotRun;
+import robot.RoboticArm;
 
 public class Macro {
 	boolean manual;
@@ -21,19 +22,13 @@ public class Macro {
 
 	public void execute() {
 		RobotRun app = RobotRun.getInstance();
+		RoboticArm robot = RobotRun.getInstanceRobot();
 		
 		// Stop any prior Robot movement
 		app.hold();
 		// Safeguard against editing a program while it is running
 		app.getContentsMenu().setColumnIdx(0);
-		RobotRun.getInstanceRobot().setActiveProgIdx(progIdx);
-		RobotRun.getInstanceRobot().setActiveInstIdx(0);
-
-		app.setExecutingInstruction(false);
-		// Run single instruction when step is set
-		app.execSingleInst = app.isStep();
-
-		app.setProgramRunning(true);
+		robot.progExec(progIdx, 0, app.isStep());
 	}
 	
 	public boolean isManual() { return manual; }
