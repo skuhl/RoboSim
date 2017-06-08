@@ -4019,6 +4019,11 @@ public class RobotRun extends PApplet {
 			
 			// Pendant button shortcuts
 			switch(keyCode) {
+				case KeyEvent.VK_1:				f1(); break;
+				case KeyEvent.VK_2:				f2(); break;
+				case KeyEvent.VK_3:				f3(); break;
+				case KeyEvent.VK_4:				f4(); break;
+				case KeyEvent.VK_5:				f5(); break;
 				case KeyEvent.VK_ENTER:			enter(); break;
 				case KeyEvent.VK_BACK_SPACE:	bkspc(); break;
 				case KeyEvent.VK_DOWN:			arrow_dn(); break;
