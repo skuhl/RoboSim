@@ -6,5 +6,6 @@ package enums;
  * @author Joshua Hooker
  */
 public enum ExecState {
-	EXEC_INST, EXEC_MINST, EXEC_MEND, EXEC_DONE, EXEC_FAULT;
+	EXEC_START, EXEC_INST, EXEC_MINST, EXEC_NEXT, EXEC_CALL, EXEC_DONE,
+	EXEC_FAULT;
 }

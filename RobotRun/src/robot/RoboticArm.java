@@ -38,7 +38,6 @@ import regs.IORegister;
 import regs.PositionRegister;
 import screen.DisplayLine;
 import screen.InstState;
-import screen.MenuScroll;
 
 public class RoboticArm {
 	
@@ -88,12 +87,6 @@ public class RoboticArm {
 	private final ArrayList<Program> PROGRAM;
 	
 	/**
-	 * A program execution call stack for previously active programs associated
-	 * with this robot.
-	 */
-	private final Stack<CallFrame> CALL_STACK;
-	
-	/**
 	 * A stack of previous states of instructions that the user has since edited.
 	 */
 	private final Stack<InstState> PROG_UNDO;
@@ -132,23 +125,6 @@ public class RoboticArm {
 	 * The index corresponding to the active end effector in EE_LIST.
 	 */
 	private int activeEEIdx;
-	
-	/**
-	 * The execution state of the active program.
-	 */
-	private ProgExecution progExecState;
-	
-	/**
-	 * The index of the active program, in the robot's list of programs. A
-	 * value of -1 indicates that no program is active.
-	 */
-	private int activeProgIdx;
-	
-	/**
-	 * The index of the active instruction in the active program's list of
-	 * instructions. A value of -1 indicates that no instruction is active.
-	 */
-	private int activeInstIdx;
 	
 	/**
 	 * The rogot's current motion state.
@@ -336,13 +312,9 @@ public class RoboticArm {
 		
 		// Initialize program fields
 		PROGRAM = new ArrayList<>();
-		CALL_STACK = new Stack<>();
 		PROG_UNDO = new Stack<>();
 		
 		motion = null;
-		progExecState = new ProgExecution();
-		activeProgIdx = -1;
-		activeInstIdx = -1;
 		
 		// Initializes the frames
 		
@@ -559,13 +531,6 @@ public class RoboticArm {
 		}
 		
 		return selfCollision;
-	}
-	
-	/**
-	 * Removes all saved program states from the call stack of this robot.
-	 */
-	public void clearCallStack() {
-		CALL_STACK.clear();
 	}
 	
 	/**
@@ -1030,47 +995,6 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * @return	The index of the active program's active instruction
-	 */
-	public int getActiveInstIdx() {
-		return activeInstIdx;
-	}
-
-	/**
-	 * @return	The active instruction of the active program, or null if no
-	 * 			program is active
-	 */
-	public Instruction getActiveInstruction() {
-		Program prog = getActiveProg();
-		
-		if (prog == null || activeInstIdx < 0 || activeInstIdx >= prog.size()) {
-			// Invalid instruction or program index
-			return null;
-		}
-		
-		return prog.get(activeInstIdx);
-	}
-	
-	/**
-	 * @return	The active for this Robot, or null if no program is active
-	 */
-	public Program getActiveProg() {
-		if (activeProgIdx < 0 || activeProgIdx >= PROGRAM.size()) {
-			// Invalid program index
-			return null;
-		}
-		
-		return PROGRAM.get(activeProgIdx);
-	}
-
-	/**
-	 * @return	The index of the active program
-	 */
-	public int getActiveProgIdx() {
-		return activeProgIdx;
-	}
-	
-	/**
 	 * @return	The active tool frame or null if no tool frame is active
 	 */
 	public ToolFrame getActiveTool() {
@@ -1222,9 +1146,7 @@ public class RoboticArm {
 	 * @return		The instruction at the given index, in the active program's
 	 * 				list of instructions
 	 */
-	public Instruction getInstToEdit(int idx) {
-		Program p = getActiveProg();
-		
+	public Instruction getInstToEdit(Program p, int idx) {
 		// Valid active program and instruction index
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
 			Instruction inst = p.get(idx);
@@ -1343,6 +1265,24 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public int getProgIdx(String name) {
+		for (int idx = 0; idx < PROGRAM.size(); ++idx) {
+			if (PROGRAM.get(idx).getName().equals(name)) {
+				// Return the index of the program with the match
+				return idx;
+			}
+			
+		}
+		// No program with the given name exists
+		return -1;
+	}
+	
+	/**
 	 * Returns the program, which belongs to this Robot, associated with the
 	 * given index value. IF the index value is invalid null is returned
 	 * 
@@ -1371,15 +1311,7 @@ public class RoboticArm {
 	 * 				exists
 	 */
 	public Program getProgram(String name) {
-		for (Program p : PROGRAM) {
-			if (p.getName().equals(name)) {
-				return p;
-			}
-			
-		}
-		
-		// No such program exists
-		return null;
+		return getProgram( getProgIdx(name) );
 	}
 	
 	/**
@@ -1579,8 +1511,6 @@ public class RoboticArm {
 		if (motion != null) {
 			motion.halt();
 		}
-		
-		progExecState.halt();
 	}
 
 	/**
@@ -1602,13 +1532,6 @@ public class RoboticArm {
 	 */
 	public boolean isHeld(Part p) {
 		return p == heldPart;
-	}
-	
-	/**
-	 * @return	Is the robot executing its active program?
-	 */
-	public boolean isProgExec() {
-		return !progExecState.isDone();
 	}
 	
 	public boolean isTrace() {
@@ -1688,32 +1611,15 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Pops the program state that has been previously pushed onto the call
-	 * stack. If the state points to a program on the active Robot, then the
-	 * active program state is overridden with the popped one. In the other
-	 * case, where an inactive Robot called the active Robot, then the active
-	 * Robot then returns control to the caller Robot. 
-	 * 
-	 * @return	Whether or not a program state has been saved on the call stack
-	 */
-	public CallFrame popCallStack() {
-		if (!CALL_STACK.isEmpty()) {
-			CallFrame savedProgState = CALL_STACK.pop();
-			return savedProgState;
-		}
-		
-		return null;
-	}
-	
-	/**
 	 * If the robot's program undo stack is not empty, then the top
 	 * modification is popped off the stack and reverted in the active program.
+	 * 
+	 * @param the program associated with the undo functionality
 	 */
-	public void popInstructionUndo() {
+	public void popInstructionUndo(Program p) {
 		
 		if (!PROG_UNDO.isEmpty()) {
 			InstState state = PROG_UNDO.pop();
-			Program p = getActiveProg();
 			
 			if (p != null) {
 				
@@ -1756,95 +1662,6 @@ public class RoboticArm {
 		return progList;
 	}
 	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param singleExec
-	 */
-	public void progExec(boolean singleExec) {
-		progExec(activeProgIdx, activeInstIdx, singleExec);
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param instIdx
-	 * @param singleExec
-	 */
-	public void progExec(int instIdx, boolean singleExec) {
-		progExec(activeProgIdx, instIdx, singleExec);
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param progIdx
-	 * @param instIdx
-	 * @param singleExec
-	 */
-	public void progExec(int progIdx, int instIdx, boolean singleExec) {
-		Program p = getProgram(progIdx);
-		// Validate active indices
-		if (p != null && instIdx >= 0 && instIdx < p.size()) {
-			ExecType pExec = (singleExec) ? ExecType.EXEC_SINGLE
-					: ExecType.EXEC_FULL;
-			
-			progExec(progIdx, instIdx, pExec);
-		}
-	}
-	
-	/**
-	 * TODO comment this
-	 */
-	public void progExecBwd() {
-		Program p = getProgram(activeProgIdx);
-		
-		if (p != null && activeInstIdx >= 1 && activeInstIdx < p.size()) {
-			/* The program must have a motion instruction prior to the active
-			 * instruction for backwards execution to be valid. */
-			Instruction prevInst = p.get(activeInstIdx - 1);
-			
-			if (prevInst instanceof MotionInstruction) {
-				progExec(activeProgIdx, activeInstIdx - 1, ExecType.EXEC_BWD);
-			}
-		}
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param progIdx
-	 * @param instIdx
-	 * @param exec
-	 */
-	private void progExec(int progIdx, int instIdx, ExecType exec) {
-		activeProgIdx = progIdx;
-		setActiveInstIdx(instIdx);
-		
-		Program prog = PROGRAM.get(progIdx);
-		progExecState.setExec(exec, prog, instIdx);
-	}
-			
-	/**
-	 * Pushes the active program onto the call stack and resets the active
-	 * program and instruction indices.
-	 * 
-	 * @param r	The active robot
-	 */
-	public void pushActiveProg(RoboticArm r) {
-		
-		if (r.RID == RID && isProgExec()) {
-			// Save call frame to return to the currently executing program
-			CALL_STACK.push(new CallFrame(RID, activeProgIdx, activeInstIdx + 1));
-		} else {
-			// Save call frame to return to the caller robot's current program
-			CALL_STACK.push(new CallFrame(r.RID, r.getActiveProgIdx(), r.getActiveInstIdx() + 1));
-		}
-		
-		activeProgIdx = -1;
-		activeInstIdx = -1;		
-	}
-
 	/**
 	 * Pushes the given instruction and instruction index onto the robot's
 	 * program undo stack. If the stack size exceeds the maximum undo size,
@@ -1905,13 +1722,13 @@ public class RoboticArm {
 	 * this robot. The replacement is added onto the program undo stack for the
 	 * active program.
 	 * 
+	 * @param p		The program to edit
 	 * @param idx	The index of the instruction to replace
 	 * @param inst	The new instruction to add into the active program
 	 * @return		The instruction, which was replaced by the given
 	 * 				instruction
 	 */
-	public Instruction replaceInstAt(int idx, Instruction inst) {
-		Program p = getActiveProg();
+	public Instruction replaceInstAt(Program p, int idx, Instruction inst) {
 		Instruction replaced = null;
 		
 		// Valid active program and instruction index
@@ -1965,11 +1782,11 @@ public class RoboticArm {
 	 * this robot. The removal is added onto the program undo stack for the
 	 * active program.
 	 * 
+	 * @param p		The program to edit
 	 * @param idx	The index of the instruction to remove
 	 * @return		The instruction, which was removed
 	 */
-	public Instruction rmInstAt(int idx) {
-		Program p = getActiveProg();
+	public Instruction rmInstAt(Program p, int idx) {
 		Instruction removed = null;
 		
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
@@ -1994,7 +1811,6 @@ public class RoboticArm {
 	public Program rmProgAt(int pdx) {
 		if (pdx >= 0 && pdx < PROGRAM.size()) {
 			Program removed = PROGRAM.remove(pdx);
-			setActiveProgIdx(-1);
 			// Return the removed program
 			return removed;
 			
@@ -2016,70 +1832,6 @@ public class RoboticArm {
 			activeEEIdx = eeIdx;
 			releaseHeldObject();
 		}
-	}
-
-	/**
-	 * Sets the active instruction of the active program corresponding to the
-	 * index given.
-	 * 
-	 * @param instIdx	The index of the instruction to set as active
-	 * @return			Whether an active program exists and the given index is
-	 * 					valid for the active program
-	 */
-	public boolean setActiveInstIdx(int instIdx) {
-		Program prog = getActiveProg();
-		
-		if (prog != null && instIdx >= 0 && instIdx <= prog.getNumOfInst()) {
-			// Set the active instruction
-			activeInstIdx = instIdx;
-			return true;
-		}
-		else {
-			activeInstIdx = -1;
-			return false;
-		}
-	}
-	
-	/**
-	 * Sets the given program as the robot's active program if the program
-	 * exists in the robot's list of programs. Otherwise, the robot's active
-	 * program remains unchanged.
-	 * 
-	 * @param active	The program to set as active
-	 * @return			If the program exists in the robot's list of programs
-	 */
-	public boolean setActiveProg(Program active) {
-		for (int idx = 0; idx < PROGRAM.size(); ++idx) {
-			if (PROGRAM.get(idx) == active) {
-				activeProgIdx = idx;
-				return true;
-			}
-		}
-		
-		// Not a valid program for this robot
-		return false;
-	}
-	
-	/**
-	 * Sets the active program of this Robot corresponding to the index value
-	 * given.
-	 * 
-	 * @param progIdx	The index of the program to set as active
-	 * @return			Whether the given index is valid
-	 */
-	public boolean setActiveProgIdx(int progIdx) {
-		if (progIdx >= 0 && progIdx < PROGRAM.size()) {
-			
-			if (activeProgIdx != progIdx) {
-				PROG_UNDO.clear();
-			}
-			
-			// Set the active program
-			activeProgIdx = progIdx;
-			return true;
-		}
-		
-		return false;
 	}
 	
 	/**
@@ -2439,37 +2191,13 @@ public class RoboticArm {
 	/**
 	 * Updates the program execution for this robot and the position of the
 	 * robot for linear or rotation interpolation.
-	 * 
-	 * @param app	A reference to the RobotRun application
 	 */
-	public void updateRobot(RobotRun app) {
-		
-		if (!hasMotionFault()) {
-			if (!inMotion() && isProgExec()) {
-				updateProgExec(app);
-			}
-		
-			if (inMotion()) {
-				motion.executeMotion(this);
-			}
-			
-			if (!inMotion() && progExecState.getState() == ExecState.EXEC_MINST) {
-				// Motion instruction has completed
-				progExecState.setState(ExecState.EXEC_MEND);
-				updateExecInstIdx();
-			}
+	public void updateRobot() {	
+		if (inMotion()) {
+			motion.executeMotion(this);
 		}
-	
+		
 		updateOBBs();
-	}
-	
-	private void updateExecInstIdx() {
-		progExecState.updateCurIdx();
-		setActiveInstIdx(progExecState.getCurIdx());
-		// TODO REFACTOR THIS
-		RobotRun app = RobotRun.getInstance();
-		app.getContentsMenu().setLineIdx( app.getInstrLine(activeInstIdx) );
-		RobotRun.getInstance().updatePendantScreen();
 	}
 	
 	/**
@@ -2631,66 +2359,6 @@ public class RoboticArm {
 			RMath.translateTMat(obbTMat, -24.0, 8.0, -40.0);
 			activeEE.OBBS[2].setCoordinateSystem(obbTMat);
 		}
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param app
-	 * @return
-	 */
-	@SuppressWarnings("static-access")
-	private void updateProgExec(RobotRun app) {	
-		Instruction activeInstr = progExecState.prog.get(progExecState.getCurIdx());
-		int nextIdx = progExecState.getCurIdx() + 1;
-		
-		if (!activeInstr.isCommented()) {
-			if (activeInstr instanceof MotionInstruction) {
-				MotionInstruction motInstr = (MotionInstruction) activeInstr;
-				int ret = setupMInstMotion(progExecState.prog, motInstr,
-						nextIdx, progExecState.isSingleExec());
-				
-				if (ret == 0) {
-					progExecState.setState(ExecState.EXEC_MINST);
-					
-				} else {
-					// Issue occurred with setting up the motion instruction
-					nextIdx = -1;
-				}
-				
-			} else if (activeInstr instanceof JumpInstruction) {
-				nextIdx = activeInstr.execute();
-
-			} else if (activeInstr instanceof CallInstruction) {
-				// TODO REFACTOR THIS
-				if (((CallInstruction) activeInstr).getTgtDevice() != app.getInstanceRobot()) {
-					// Call an inactive Robot's program
-					if (app.getUI().getRobotButtonState()) {
-						nextIdx = activeInstr.execute();
-						
-					} else {
-						// No second robot in application
-						nextIdx = -1;
-					}
-				} else {
-					progExecState.setNextIdx(activeInstr.execute());
-				}
-
-			} else if (activeInstr instanceof IfStatement ||
-					activeInstr instanceof SelectStatement) {
-				
-				int ret = activeInstr.execute();
-
-				if (ret != -2) {
-					nextIdx = ret;
-				}
-
-			} else if (activeInstr.execute() != 0) {
-				nextIdx = -1;
-			}
-		}
-		
-		progExecState.setNextIdx(nextIdx);
-		updateExecInstIdx();
-	}
+	}	
 }
+

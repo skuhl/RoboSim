@@ -8,10 +8,10 @@ import enums.ExecType;
  * 
  * @author Joshua Hooker
  */
-public class ProgExecution {
+public class ProgExecution implements Cloneable {
 	
-	public Program prog;
-	
+	private int rid;
+	private int progIdx;
 	private ExecType type;
 	private ExecState state;
 	private int curIdx;
@@ -21,30 +21,57 @@ public class ProgExecution {
 	 * Initializes all the fields. Not a valid execution state!
 	 */
 	public ProgExecution() {
+		rid = -1;
+		progIdx = -1;
 		type = ExecType.EXEC_FULL;
 		state = ExecState.EXEC_DONE;
-		prog = null;
 		curIdx = 0;
 		nextIdx = -1;
 	}
 	
-	/**
-	 * Initializes fields for beginning of program execution.
-	 * 
-	 * @param type		The type of program execution (i.e. single, all, etc.)
-	 * @param prog		The program to execute
-	 * @param curIdx	The index of the instruction to begin execution
-	 */
-	public ProgExecution(ExecType type, Program prog, int curIdx) {
-		setExec(type, prog, curIdx);
+	public ProgExecution(int rid, int progIdx, ExecType type, int curIdx) {
+		
 	}
+	
+	/**
+	 * Define a program execution with all its fields. Used for cloning.
+	 * 
+	 * @param rid
+	 * @param progIdx
+	 * @param type
+	 * @param state
+	 * @param curIdx
+	 * @param nextIdx
+	 */
+	private ProgExecution(int rid, int progIdx, ExecType type, ExecState state,
+			int curIdx, int nextIdx) {
+		
+		this.progIdx = progIdx;
+		this.type = type;
+		this.state = state;
+		this.curIdx = curIdx;
+		this.nextIdx = nextIdx;
+	}
+	
+	@Override
+	public ProgExecution clone() {
+		return new ProgExecution(rid, progIdx, type, state, curIdx, nextIdx);
+	}	
 	
 	public int getCurIdx() {
 		return curIdx;
 	}
 	
+	public int getProgIdx() {
+		return progIdx;
+	}
+	
 	public int getNextIdx() {
 		return nextIdx;
+	}
+	
+	public int getRID() {
+		return rid;
 	}
 	
 	public ExecState getState() {
@@ -76,54 +103,33 @@ public class ProgExecution {
 		return type == ExecType.EXEC_SINGLE || type == ExecType.EXEC_BWD;
 	}
 	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param type
-	 * @param prog
-	 * @param curIdx
-	 */
-	public void setExec(ExecType type, Program prog, int curIdx) {
+	public void setCurIdx(int idx) {
+		curIdx = idx;
+	}
+	
+	public void setExec(ExecType type) {
 		this.type = type;
-		this.prog = prog;
+		this.state = ExecState.EXEC_START;
+	}
+	
+	public void setExec(int rid, ExecType type, int progIdx, int curIdx) {
+		this.rid = rid;
+		this.type = type;
+		this.state = ExecState.EXEC_START;
+		this.progIdx = progIdx;
 		this.curIdx = curIdx;
-		
-		if (curIdx < 0 || curIdx >= prog.size()) {
-			this.state = ExecState.EXEC_FAULT;
-			nextIdx = -1;
-			
-		} else {
-			this.state = ExecState.EXEC_INST;
-			nextIdx = curIdx + 1;
-		}
+		nextIdx = curIdx + 1;
 	}
 	
 	public void setNextIdx(int idx) {
 		nextIdx = idx;
 	}
 	
-	public void setState(ExecState newState) {
-		state = newState;
+	public void setProgIdx(int idx) {
+		progIdx = idx;
 	}
 	
-	public void updateCurIdx() {
-		// Wait until the motion instruction is complete
-		if (state != ExecState.EXEC_DONE && state != ExecState.EXEC_FAULT &&
-				state != ExecState.EXEC_MINST) {
-			
-			 if (nextIdx < 0 || nextIdx > prog.size()) {
-				// Encountered a fault in program execution
-				state = ExecState.EXEC_FAULT;
-				
-			} else {
-				curIdx = nextIdx;
-				
-				if (isSingleExec() || nextIdx == prog.size()) {
-					// Reached the end of execution
-					state = ExecState.EXEC_DONE;
-					
-				}
-			}
-		}
+	public void setState(ExecState newState) {
+		state = newState;
 	}
 }
