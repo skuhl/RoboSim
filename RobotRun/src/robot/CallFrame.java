@@ -1,25 +1,13 @@
 package robot;
 
+import programming.ProgExecution;
+
 public class CallFrame {
-	private int tgtRID;
-	private int tgtProgID;
-	private int tgtInstID;
+	public int tgtRID;
+	public ProgExecution tgtExec; 
 	
-	public CallFrame(int rid, int pid, int inst) {
+	public CallFrame(int rid, ProgExecution exec) {
 		tgtRID = rid;
-		tgtProgID = pid;
-		tgtInstID = inst;
-	}
-	
-	public int getTgtRID() {
-		return tgtRID;
-	}
-
-	public int getTgtProgID() {
-		return tgtProgID;
-	}
-
-	public int getTgtInstID() {
-		return tgtInstID;
+		tgtExec = exec;
 	}
 }

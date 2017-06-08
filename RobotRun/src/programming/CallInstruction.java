@@ -40,21 +40,18 @@ public class CallInstruction extends Instruction {
 	}
 
 	// Getters and setters for a call instruction's program id field
-
+	
 	@Override
+	@SuppressWarnings("static-access")
 	public int execute() {
-		RoboticArm r = RobotRun.getInstanceRobot();
+		// TODO Refactor THIS
+		RobotRun app = RobotRun.getInstance();
 		
-		// Save the current program state on tgt robot
-		tgtDevice.pushActiveProg(r);
-		// Set the new program state
-		tgtDevice.setActiveProg(tgt);
-		tgtDevice.setActiveInstIdx(0);
-		RobotRun.getInstance().setRobot(tgtDevice.RID);
-		// Update the screen
-		RobotRun.getInstance().getContentsMenu().reset();
-		RobotRun.getInstance().updatePendantScreen();
-
+		if (tgtDevice != app.getInstanceRobot() && !app.isSecondRobotUsed()) {
+			// Cannot use robot call, when second robot is not active
+			return -1;
+		}
+		
 		return 0;
 	}
 	
