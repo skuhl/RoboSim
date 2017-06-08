@@ -101,6 +101,8 @@ public class LinearInterpolation extends LinearMotion {
 			angle += angleInc;
 			mu += inc;
 		}
+		
+		int i = 0;
 	}
 
 	private void calculateContinuousPositions(Point start, Point end, Point next, float percentage) {

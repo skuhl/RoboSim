@@ -21,14 +21,14 @@ public class Macro {
 	}
 
 	public void execute() {
+		// TODO refactor
 		RobotRun app = RobotRun.getInstance();
-		RoboticArm robot = RobotRun.getInstanceRobot();
 		
 		// Stop any prior Robot movement
 		app.hold();
 		// Safeguard against editing a program while it is running
 		app.getContentsMenu().setColumnIdx(0);
-		robot.progExec(progIdx, 0, app.isStep());
+		app.progExec(progIdx, 0, app.isStep());
 	}
 	
 	public boolean isManual() { return manual; }
