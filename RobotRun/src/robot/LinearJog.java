@@ -64,46 +64,41 @@ public class LinearJog extends LinearMotion {
 				invFrameOrientation = activeUser.getOrientation().conjugate();
 			}
 		}
-
+		
 		// Apply translational motion vector
-		if (translation.mag() > 0f) {
+		if (hasTransMotion()) {
 			// Respond to user defined movement
 			float distance = robot.getLiveSpeed() / 6f;
-			PVector translation = RMath.vFromWorld(this.translation);
-			translation.mult(distance);
+			PVector deltaPos = RMath.vFromWorld(translation);
+			deltaPos.mult(distance);
 
 			if (invFrameOrientation != null) {
 				// Convert the movement vector into the current reference frame
-				translation = invFrameOrientation.rotateVector(translation);
+				deltaPos = invFrameOrientation.rotateVector(deltaPos);
 			}
 
-			tgtPosition.add(translation);
-		} else {
-			// No translational motion
-			tgtPosition = curPoint.position;
+			tgtPosition.add(deltaPos);
+			
 		}
-
+		
 		// Apply rotational motion vector
-		if (rotation.mag() > 0f) {
+		if (hasRotMotion()) {
 			// Respond to user defined movement
 			float theta = PConstants.DEG_TO_RAD * 0.025f * robot.getLiveSpeed();
-			PVector rotation = RMath.vFromWorld(this.rotation);
+			PVector deltaOrien = RMath.vFromWorld(rotation);
 
 			if (invFrameOrientation != null) {
 				// Convert the movement vector into the current reference frame
-				rotation = invFrameOrientation.rotateVector(rotation);
+				deltaOrien = invFrameOrientation.rotateVector(deltaOrien);
 			}
-			rotation.normalize();
+			deltaOrien.normalize();
 
-			tgtOrientation.rotateAroundAxis(rotation, theta);
+			tgtOrientation.rotateAroundAxis(deltaOrien, theta);
 
 			if (tgtOrientation.dot(curPoint.orientation) < 0f) {
 				// Use -q instead of q
 				tgtOrientation.scalarMult(-1);
 			}
-		} else {
-			// No rotational motion
-			tgtOrientation = curPoint.orientation;
 		}
 
 		int ret = robot.jumpTo(tgtPosition, tgtOrientation);
@@ -169,11 +164,24 @@ public class LinearJog extends LinearMotion {
 		rotation.z = 0f;
 	}
 	
+	/**
+	 * @return	Does the motion include translational motion
+	 */
+	protected boolean hasTransMotion() {
+		return translation.x != 0f || translation.y != 0f
+				|| translation.z != 0f;
+	}
+	
 	@Override
 	public boolean hasMotion() {
-		return !hasFault() && (translation.x != 0f || translation.y != 0f
-				|| translation.z != 0f && rotation.x != 0f
-				|| rotation.y != 0f || rotation.z != 0f);
+		return !hasFault() && (hasTransMotion() || hasRotMotion());
+	}
+	
+	/**
+	 * @return	Does the motion include rotational motion
+	 */
+	protected boolean hasRotMotion() {
+		return rotation.x != 0f || rotation.y != 0f	|| rotation.z != 0f;
 	}
 	
 	public int setMotion(int mdx, int newDir) {
