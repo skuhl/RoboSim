@@ -7,8 +7,9 @@ import core.RobotRun;
 import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;
+import enums.ExecState;
 import enums.InstOp;
-import enums.RobotMotion;
+import enums.ExecType;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
@@ -21,13 +22,17 @@ import geom.RRay;
 import geom.WorldObject;
 import global.Fields;
 import global.RMath;
-import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
+import programming.CallInstruction;
+import programming.IfStatement;
 import programming.Instruction;
+import programming.JumpInstruction;
 import programming.MotionInstruction;
+import programming.ProgExecution;
 import programming.Program;
+import programming.SelectStatement;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
@@ -35,18 +40,17 @@ import screen.DisplayLine;
 import screen.InstState;
 
 public class RoboticArm {
+	
+	/**
+	 * Defines the conversion between the robot's maximum rotation speed and
+	 * its maximum linear motion speed.
+	 */
+	public static final int motorSpeed;
+	
 	/**
 	 * The unique ID of this robot.
 	 */
 	public final int RID;
-	
-	public int liveSpeed;
-	public float motorSpeed;
-	
-	/**
-	 * Defines the target joint rotations for jog motion interpolation.
-	 */
-	private final float[] TGT_JOINTS;
 	
 	/**
 	 * The position of the center of the robot's base segment.
@@ -83,12 +87,6 @@ public class RoboticArm {
 	private final ArrayList<Program> PROGRAM;
 	
 	/**
-	 * A program execution call stack for previously active programs associated
-	 * with this robot.
-	 */
-	private final Stack<CallFrame> CALL_STACK;
-	
-	/**
 	 * A stack of previous states of instructions that the user has since edited.
 	 */
 	private final Stack<InstState> PROG_UNDO;
@@ -119,28 +117,19 @@ public class RoboticArm {
 	private final Point DEFAULT_PT;
 	
 	/**
+	 * Defines the speed multiplier for the robot's jog and move to motion.
+	 */
+	private int liveSpeed;
+	
+	/**
 	 * The index corresponding to the active end effector in EE_LIST.
 	 */
 	private int activeEEIdx;
 	
 	/**
-	 * The index of the active program, in the robot's list of programs. A
-	 * value of -1 indicates that no program is active.
+	 * The rogot's current motion state.
 	 */
-	private int activeProgIdx;
-	
-	/**
-	 * The index of the active instruction in the active program's list of
-	 * instructions. A value of -1 indicates that no instruction is active.
-	 */
-	private int activeInstIdx;
-	
-	/**
-	 * The robot's current motion state. This indicates whether the robot is
-	 * moving in the joint coordinate frame, a Cartesian coordinate frame, or
-	 * is not moving.
-	 */
-	private RobotMotion motionType;
+	private RobotMotion motion;
 	
 	/**
 	 * The current coordinate frame of the robot.
@@ -162,13 +151,6 @@ public class RoboticArm {
 	 */
 	private RMatrix lastTipTMatrix;
 	
-	// Indicates the direction of motion of the Robot when jogging
-	private final int[] jogLinear;
-	private final int[] jogRot;
-	
-	private RQuaternion tgtOrientation;
-	private PVector tgtPosition;
-	
 	/**
 	 * Determines if the robot's tool tip position with be tracked and drawn.
 	 */
@@ -179,6 +161,10 @@ public class RoboticArm {
 	 * the robot's motion overtime.
 	 */
 	private ArrayList<PVector> tracePts;
+	
+	static {
+		motorSpeed = 1000; // speed in mm/sec
+	}
 	
 	/**
 	 * Creates a robotic arm with the given ID, segment models, and end
@@ -194,13 +180,9 @@ public class RoboticArm {
 	public RoboticArm(int rid, PVector basePos, MyPShape[] segmentModels,
 			MyPShape[] endEffectorModels) {
 		
-		motorSpeed = 1000f; // speed in mm/sec
-		liveSpeed = 10;
 		
 		RID = rid;
-		
-		TGT_JOINTS = new float[6];
-		
+		liveSpeed = 10;
 		BASE_POSITION = basePos;
 		
 		SEG_OBB_CHECKS = new int[] {
@@ -330,11 +312,9 @@ public class RoboticArm {
 		
 		// Initialize program fields
 		PROGRAM = new ArrayList<>();
-		CALL_STACK = new Stack<>();
 		PROG_UNDO = new Stack<>();
 		
-		activeProgIdx = -1;
-		activeInstIdx = -1;
+		motion = null;
 		
 		// Initializes the frames
 		
@@ -346,7 +326,6 @@ public class RoboticArm {
 			USER_FRAME[idx] = new UserFrame();
 		}
 		
-		motionType = RobotMotion.HALTED;
 		curCoordFrame = CoordFrame.JOINT;
 		activeUserIdx = -1;
 		activeToolIdx = -1;
@@ -369,65 +348,8 @@ public class RoboticArm {
 		
 		// Initializes the old transformation matrix for the arm model
 		lastTipTMatrix = getFaceplateTMat( getJointAngles() );
-		
-		jogLinear = new int[] { 0, 0, 0 };
-		jogRot = new int[] { 0, 0, 0 };
-		
 		trace = false;
 		tracePts = new ArrayList<PVector>();
-	}
-	
-	/**
-	 * Updates the motion of the Robot with respect to one of the World axes for
-	 * either linear or rotational motion around the axis. Similar to the
-	 * activateLiveJointMotion() method, calling this method for an axis, in which
-	 * the Robot is already moving, will result in the termination of the Robot's
-	 * motion in that axis. Rotational and linear motion for an axis are mutually
-	 * independent in this regard.
-	 * 
-	 * @param axis	The axis of movement for the robotic arm:
-                  	x - 0, y - 1, z - 2, w - 3, p - 4, r - 5
-	 * @param dir	+1 or -1: indicating the direction of motion
-	 * @returning	The new direction of motion in the given axis
-	 *
-	 */
-	public float activateLiveWorldMotion(int axis, int dir) {
-		if (hasMotionFault()) {
-			// Only move when shift is set and there is no error
-			return 0f;
-		}
-
-		// Initiaize the Robot's destination
-		Point RP = getToolTipNative();
-		tgtPosition = RP.position;
-		tgtOrientation = RP.orientation;
-
-		if(axis >= 0 && axis < 3) {
-			if(jogLinear[axis] == 0) {
-				// Begin movement on the given axis in the given direction
-				jogLinear[axis] = dir;
-			} else {
-				// Halt movement
-				jogLinear[axis] = 0;
-			}
-
-			return jogLinear[axis];
-		}
-		else if(axis >= 3 && axis < 6) {
-			axis %= 3;
-			if(jogRot[axis] == 0) {
-				// Begin movement on the given axis in the given direction
-				jogRot[axis] = dir;
-			}
-			else {
-				// Halt movement
-				jogRot[axis] = 0;
-			}
-
-			return jogRot[axis];
-		}
-
-		return 0f;
 	}
 	
 	/**
@@ -609,13 +531,6 @@ public class RoboticArm {
 		}
 		
 		return selfCollision;
-	}
-	
-	/**
-	 * Removes all saved program states from the call stack of this robot.
-	 */
-	public void clearCallStack() {
-		CALL_STACK.clear();
 	}
 	
 	/**
@@ -904,7 +819,7 @@ public class RoboticArm {
 			}
 		}
 		
-		if (modelInMotion() && trace) {
+		if (inMotion() && trace) {
 			Point tipPosNative = getToolTipNative();
 			// Update the robots trace points
 			if(tracePts.isEmpty()) {
@@ -1065,99 +980,6 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Move the Robot, based on the current Coordinate Frame and the current values
-	 * of the each segments jointsMoving array or the values in the Robot's jogLinear
-	 * and jogRot arrays.
-	 */
-	public void executeLiveMotion() {
-
-		if (curCoordFrame == CoordFrame.JOINT) {
-			// Jog in the Joint Frame
-			for(int i = 0; i < 6; i += 1) {
-				RSegWithJoint seg = SEGMENT[i];
-
-				if (seg.isJointInMotion()) {
-					float dist = seg.getJointMotion() * seg.getSpeedModifier() * liveSpeed / 100f;
-					float trialAngle = RMath.mod2PI(seg.getJointRotation() +
-							dist);
-					
-					if(!seg.setJointRotation(trialAngle)) {
-						Fields.debug("A[i%d]: %f\n", i, trialAngle);
-						seg.setJointMotion(0);
-						// TODO REFACTOR THESE
-						RobotRun.getInstance().updateRobotJogMotion(i, 0);
-						//RobotRun.getInstance().hold();
-					}
-				}
-			}
-
-		} else {
-			// Jog in the World, Tool or User Frame
-			Point curPoint = getToolTipNative();
-			RQuaternion invFrameOrientation = null;
-			
-			if (curCoordFrame == CoordFrame.TOOL) {
-				ToolFrame activeTool = getActiveTool();
-				
-				if (activeTool != null) {
-					RQuaternion diff = curPoint.orientation.transformQuaternion(DEFAULT_PT.orientation.conjugate());
-					invFrameOrientation = diff.transformQuaternion(activeTool.getOrientationOffset().clone()).conjugate();
-				}
-				
-			} else if (curCoordFrame == CoordFrame.USER) {
-				UserFrame activeUser = getActiveUser();
-				
-				if (activeUser != null) {
-					invFrameOrientation = activeUser.getOrientation().conjugate();
-				}
-			}
-
-			// Apply translational motion vector
-			if (translationalMotion()) {
-				// Respond to user defined movement
-				float distance = motorSpeed / 6000f * liveSpeed;
-				PVector translation = new PVector(-jogLinear[0], -jogLinear[2], jogLinear[1]);
-				translation.mult(distance);
-
-				if (invFrameOrientation != null) {
-					// Convert the movement vector into the current reference frame
-					translation = invFrameOrientation.rotateVector(translation);
-				}
-
-				tgtPosition.add(translation);
-			} else {
-				// No translational motion
-				tgtPosition = curPoint.position;
-			}
-
-			// Apply rotational motion vector
-			if (rotationalMotion()) {
-				// Respond to user defined movement
-				float theta = PConstants.DEG_TO_RAD * 0.025f * liveSpeed;
-				PVector rotation = new PVector(-jogRot[0], -jogRot[2], jogRot[1]);
-
-				if (invFrameOrientation != null) {
-					// Convert the movement vector into the current reference frame
-					rotation = invFrameOrientation.rotateVector(rotation);
-				}
-				rotation.normalize();
-
-				tgtOrientation.rotateAroundAxis(rotation, theta);
-
-				if (tgtOrientation.dot(curPoint.orientation) < 0f) {
-					// Use -q instead of q
-					tgtOrientation.scalarMult(-1);
-				}
-			} else {
-				// No rotational motion
-				tgtOrientation = curPoint.orientation;
-			}
-
-			jumpTo(tgtPosition, tgtOrientation);
-		}
-	}
-	
-	/**
 	 * @return	The index of the active end effector
 	 */
 	public int getActiveEEIdx() {
@@ -1170,47 +992,6 @@ public class RoboticArm {
 	 */
 	private EndEffector getActiveEE() {
 		return EE_LIST[activeEEIdx];
-	}
-	
-	/**
-	 * @return	The index of the active program's active instruction
-	 */
-	public int getActiveInstIdx() {
-		return activeInstIdx;
-	}
-
-	/**
-	 * @return	The active instruction of the active program, or null if no
-	 * 			program is active
-	 */
-	public Instruction getActiveInstruction() {
-		Program prog = getActiveProg();
-		
-		if (prog == null || activeInstIdx < 0 || activeInstIdx >= prog.size()) {
-			// Invalid instruction or program index
-			return null;
-		}
-		
-		return prog.getInstAt(activeInstIdx);
-	}
-	
-	/**
-	 * @return	The active for this Robot, or null if no program is active
-	 */
-	public Program getActiveProg() {
-		if (activeProgIdx < 0 || activeProgIdx >= PROGRAM.size()) {
-			// Invalid program index
-			return null;
-		}
-		
-		return PROGRAM.get(activeProgIdx);
-	}
-
-	/**
-	 * @return	The index of the active program
-	 */
-	public int getActiveProgIdx() {
-		return activeProgIdx;
 	}
 	
 	/**
@@ -1365,12 +1146,10 @@ public class RoboticArm {
 	 * @return		The instruction at the given index, in the active program's
 	 * 				list of instructions
 	 */
-	public Instruction getInstToEdit(int idx) {
-		Program p = getActiveProg();
-		
+	public Instruction getInstToEdit(Program p, int idx) {
 		// Valid active program and instruction index
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
-			Instruction inst = p.getInstAt(idx);
+			Instruction inst = p.get(idx);
 			
 			pushInstState(InstOp.REPLACED, idx, inst.clone());
 			
@@ -1411,6 +1190,28 @@ public class RoboticArm {
 			SEGMENT[4].getJointRotation(),
 			SEGMENT[5].getJointRotation()
 		};
+	}
+	
+	/**
+	 * Returns the directions of the robot's current jog motion, or null if the
+	 * robot is not jogging.
+	 * 
+	 * @return	A 6 element array where each entry is one of the robot's jog
+	 * 			motion directions
+	 */
+	public int[] getJogMotion() {
+		
+		if (motion instanceof JointJog) {
+			// Joint jog motion
+			return ((JointJog) motion).getJogMotion();
+			
+		} else if (motion instanceof LinearJog) {
+			// Linear jog motion
+			return ((LinearJog) motion).getJogMotion();
+		}
+		
+		// No jog motion
+		return null;
 	}
 
 	public RMatrix getLastTipTMatrix() {
@@ -1464,6 +1265,24 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public int getProgIdx(String name) {
+		for (int idx = 0; idx < PROGRAM.size(); ++idx) {
+			if (PROGRAM.get(idx).getName().equals(name)) {
+				// Return the index of the program with the match
+				return idx;
+			}
+			
+		}
+		// No program with the given name exists
+		return -1;
+	}
+	
+	/**
 	 * Returns the program, which belongs to this Robot, associated with the
 	 * given index value. IF the index value is invalid null is returned
 	 * 
@@ -1492,15 +1311,37 @@ public class RoboticArm {
 	 * 				exists
 	 */
 	public Program getProgram(String name) {
-		for (Program p : PROGRAM) {
-			if (p.getName().equals(name)) {
-				return p;
-			}
-			
+		return getProgram( getProgIdx(name) );
+	}
+	
+	/**
+	 * Returns the robot segment with the specified index, in the robot's set
+	 * of segments.
+	 * 
+	 * @param sdx	The index of a segment [0, 6)
+	 * @return		The segment associated with the given index, or null, if no
+	 * 				such segment exists
+	 */
+	protected RSegWithJoint getSegment(int sdx) {
+		if (sdx >= 0 && sdx < SEGMENT.length) {
+			return SEGMENT[sdx];
+		}
+		// Invalid segment index
+		return null;
+	}
+	
+	/**
+	 * Returns the speed multiplier for the robot's motion based on its active
+	 * coordinate frame state.
+	 * 
+	 * @return	The speed modifier for the robot's motion
+	 */
+	public float getSpeedForCoord() {
+		if (curCoordFrame == CoordFrame.JOINT) {
+			return liveSpeed / 100f;
 		}
 		
-		// No such program exists
-		return null;
+		return motorSpeed * liveSpeed / 100f;
 	}
 	
 	/**
@@ -1613,6 +1454,7 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
 	 * 
 	 * @param mInst
 	 * @param parent	
@@ -1648,9 +1490,16 @@ public class RoboticArm {
 	 * Stops all movement of this robot.
 	 */
 	public void halt() {
-		for (int jdx = 0; jdx < 6; ++jdx) {
-			SEGMENT[jdx].setJointMotion(0);
+		/* TODO TEST CODE *
+		try {
+			
+			throw new RuntimeException("HALT!");
+			
+		} catch (RuntimeException REx) {
+			REx.printStackTrace();
 		}
+		/**/
+		
 		// Set default speed modifiers
 		SEGMENT[0].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
 		SEGMENT[1].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
@@ -1658,17 +1507,9 @@ public class RoboticArm {
 		SEGMENT[3].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
 		SEGMENT[4].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
 		SEGMENT[5].setSpdMod(420f * PConstants.DEG_TO_RAD / 60f);
-
-		for(int idx = 0; idx < jogLinear.length; ++idx) {
-			jogLinear[idx] = 0;
-		}
-
-		for(int idx = 0; idx < jogRot.length; ++idx) {
-			jogRot[idx] = 0;
-		}
 		
-		if (!hasMotionFault()) {
-			motionType = RobotMotion.HALTED;
+		if (motion != null) {
+			motion.halt();
 		}
 	}
 
@@ -1679,41 +1520,11 @@ public class RoboticArm {
 	 * @return	Whether the robot has a motion fault
 	 */
 	public boolean hasMotionFault() {
-		return motionType == RobotMotion.MT_FAULT;
-	}
-
-	/**
-	 * Updates the robot's joint angles, for the current target rotation, based on
-	 * the given speed value.
-	 * 
-	 * @param speed	The speed of the robot's joint motion
-	 * @return		If the robot has reached its target joint angles
-	 */
-	public boolean interpolateRotation(float speed) {
-		boolean done = true;
-
-		for(int jdx = 0; jdx < 6; ++jdx) {
-			RSegWithJoint seg = SEGMENT[jdx];
-			
-			if (seg.isJointInMotion()) {
-				float distToDest = PApplet.abs(seg.getJointRotation() - TGT_JOINTS[jdx]);
-
-				if (distToDest >= (seg.getSpeedModifier() * speed)) {
-					done = false;
-					float newRotation = RMath.mod2PI(seg.getJointRotation()
-							+ seg.getJointMotion() * seg.getSpeedModifier()
-							* speed);
-					
-					seg.setJointRotation(newRotation);
-
-				} else if (distToDest > 0.00009f) {
-					// Destination too close to move at current speed
-					seg.setJointRotation(TGT_JOINTS[jdx]);
-				}
-			}
+		if (motion instanceof LinearMotion) {
+			return ((LinearMotion) motion).hasFault();
 		}
 		
-		return done;
+		return false;
 	}
 	
 	/**
@@ -1725,20 +1536,6 @@ public class RoboticArm {
 	
 	public boolean isTrace() {
 		return trace;
-	}
-
-	/**
-	 * @return	True if at least one joint of the Robot is in motion.
-	 */
-	public boolean jointMotion() {
-		for(int jdx = 0; jdx < 6; ++jdx) {
-			// Check each joint segment
-			if (this.SEGMENT[jdx].isJointInMotion()) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	/**
@@ -1795,43 +1592,8 @@ public class RoboticArm {
 	 * 
 	 * @return	Whether the robot is moving in some way
 	 */
-	public boolean modelInMotion() {
-		// TODO REFACTOR THIS
-		return RobotRun.getInstance().isProgramRunning() ||
-				(motionType != RobotMotion.HALTED &&
-				motionType != RobotMotion.MT_FAULT) || jointMotion() ||
-				translationalMotion() || rotationalMotion();
-	}
-
-	/**
-	 * Initializing rotational interpolation between this robot's current joint
-	 * angles and the given set of joint angles.
-	 */
-	public void moveTo(float[] jointAngles) {
-		
-		if (!hasMotionFault()) {
-			setupRotationInterpolation(jointAngles);
-			motionType = RobotMotion.MT_JOINT;
-		}
-	}
-
-	/**
-	 * Initializes the linear interpolation between this robot end effector's
-	 * current position and orientation and the given target position and
-	 * orientation.
-	 */
-	public void moveTo(PVector position, RQuaternion orientation) {
-		
-		if (!hasMotionFault()) {
-			Point start = getToolTipNative();
-			Point end = new Point(position.copy(), (RQuaternion)orientation.clone(), start.angles.clone());
-			RobotRun.getInstance().beginNewLinearMotion(start, end);
-			motionType = RobotMotion.MT_LINEAR;
-		}
-	}
-	
-	public void moveTo(Point p) {
-		moveTo(p.position, p.orientation);
+	public boolean inMotion() {
+		return motion != null && motion.hasMotion();
 	}
 	
 	/**
@@ -1849,32 +1611,15 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Pops the program state that has been previously pushed onto the call
-	 * stack. If the state points to a program on the active Robot, then the
-	 * active program state is overridden with the popped one. In the other
-	 * case, where an inactive Robot called the active Robot, then the active
-	 * Robot then returns control to the caller Robot. 
-	 * 
-	 * @return	Whether or not a program state has been saved on the call stack
-	 */
-	public CallFrame popCallStack() {
-		if (!CALL_STACK.isEmpty()) {
-			CallFrame savedProgState = CALL_STACK.pop();
-			return savedProgState;
-		}
-		
-		return null;
-	}
-	
-	/**
 	 * If the robot's program undo stack is not empty, then the top
 	 * modification is popped off the stack and reverted in the active program.
+	 * 
+	 * @param the program associated with the undo functionality
 	 */
-	public void popInstructionUndo() {
+	public void popInstructionUndo(Program p) {
 		
 		if (!PROG_UNDO.isEmpty()) {
 			InstState state = PROG_UNDO.pop();
-			Program p = getActiveProg();
 			
 			if (p != null) {
 				
@@ -1916,27 +1661,7 @@ public class RoboticArm {
 		
 		return progList;
 	}
-			
-	/**
-	 * Pushes the active program onto the call stack and resets the active
-	 * program and instruction indices.
-	 * 
-	 * @param r	The active robot
-	 */
-	public void pushActiveProg(RoboticArm r) {
-		
-		if (r.RID == RID && RobotRun.getInstance().isProgramRunning()) {
-			// Save call frame to return to the currently executing program
-			CALL_STACK.push(new CallFrame(RID, activeProgIdx, activeInstIdx + 1));
-		} else {
-			// Save call frame to return to the caller robot's current program
-			CALL_STACK.push(new CallFrame(r.RID, r.getActiveProgIdx(), r.getActiveInstIdx() + 1));
-		}
-		
-		activeProgIdx = -1;
-		activeInstIdx = -1;		
-	}
-
+	
 	/**
 	 * Pushes the given instruction and instruction index onto the robot's
 	 * program undo stack. If the stack size exceeds the maximum undo size,
@@ -1997,13 +1722,13 @@ public class RoboticArm {
 	 * this robot. The replacement is added onto the program undo stack for the
 	 * active program.
 	 * 
+	 * @param p		The program to edit
 	 * @param idx	The index of the instruction to replace
 	 * @param inst	The new instruction to add into the active program
 	 * @return		The instruction, which was replaced by the given
 	 * 				instruction
 	 */
-	public Instruction replaceInstAt(int idx, Instruction inst) {
-		Program p = getActiveProg();
+	public Instruction replaceInstAt(Program p, int idx, Instruction inst) {
 		Instruction replaced = null;
 		
 		// Valid active program and instruction index
@@ -2057,11 +1782,11 @@ public class RoboticArm {
 	 * this robot. The removal is added onto the program undo stack for the
 	 * active program.
 	 * 
+	 * @param p		The program to edit
 	 * @param idx	The index of the instruction to remove
 	 * @return		The instruction, which was removed
 	 */
-	public Instruction rmInstAt(int idx) {
-		Program p = getActiveProg();
+	public Instruction rmInstAt(Program p, int idx) {
 		Instruction removed = null;
 		
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {
@@ -2086,7 +1811,6 @@ public class RoboticArm {
 	public Program rmProgAt(int pdx) {
 		if (pdx >= 0 && pdx < PROGRAM.size()) {
 			Program removed = PROGRAM.remove(pdx);
-			setActiveProgIdx(-1);
 			// Return the removed program
 			return removed;
 			
@@ -2094,14 +1818,6 @@ public class RoboticArm {
 			// Invalid index
 			return null;
 		}
-	}
-
-	/**
-	 * @return	Whether the robot is rotating around at least one axis in the
-	 * 			WORLD, TOOL, or USER frames.
-	 */
-	public boolean rotationalMotion() {
-		return jogRot[0] != 0 || jogRot[1] != 0 || jogRot[2] != 0;
 	}
 	
 	/**
@@ -2116,70 +1832,6 @@ public class RoboticArm {
 			activeEEIdx = eeIdx;
 			releaseHeldObject();
 		}
-	}
-
-	/**
-	 * Sets the active instruction of the active program corresponding to the
-	 * index given.
-	 * 
-	 * @param instIdx	The index of the instruction to set as active
-	 * @return			Whether an active program exists and the given index is
-	 * 					valid for the active program
-	 */
-	public boolean setActiveInstIdx(int instIdx) {
-		Program prog = getActiveProg();
-		
-		if (prog != null && instIdx >= 0 && instIdx <= prog.getNumOfInst()) {
-			// Set the active instruction
-			activeInstIdx = instIdx;
-			return true;
-		}
-		else {
-			activeInstIdx = -1;
-			return false;
-		}
-	}
-	
-	/**
-	 * Sets the given program as the robot's active program if the program
-	 * exists in the robot's list of programs. Otherwise, the robot's active
-	 * program remains unchanged.
-	 * 
-	 * @param active	The program to set as active
-	 * @return			If the program exists in the robot's list of programs
-	 */
-	public boolean setActiveProg(Program active) {
-		for (int idx = 0; idx < PROGRAM.size(); ++idx) {
-			if (PROGRAM.get(idx) == active) {
-				activeProgIdx = idx;
-				return true;
-			}
-		}
-		
-		// Not a valid program for this robot
-		return false;
-	}
-	
-	/**
-	 * Sets the active program of this Robot corresponding to the index value
-	 * given.
-	 * 
-	 * @param progIdx	The index of the program to set as active
-	 * @return			Whether the given index is valid
-	 */
-	public boolean setActiveProgIdx(int progIdx) {
-		if (progIdx >= 0 && progIdx < PROGRAM.size()) {
-			
-			if (activeProgIdx != progIdx) {
-				PROG_UNDO.clear();
-			}
-			
-			// Set the active program
-			activeProgIdx = progIdx;
-			return true;
-		}
-		
-		return false;
 	}
 	
 	/**
@@ -2236,32 +1888,6 @@ public class RoboticArm {
 	}
 
 	/**
-	 * Updates the motion direction of the joint at the given joint index to
-	 * the given direction value, if the index is valid.
-	 * 
-	 * @param jdx	An index between 0 and 6, inclusive, which corresponds
-	 * 				to one of the Robot's joints
-	 * @param dir	The new direction of that joint's motion
-	 * @return		The old direction of motion for the given joint
-	 */
-	public int setJointMotion(int jdx, int dir) {
-		RSegWithJoint seg = SEGMENT[jdx];
-		
-		if (seg != null) {
-			if (seg.isJointInMotion()) {
-				seg.setJointMotion(0);
-				
-			} else {
-				seg.setJointMotion(dir);
-			}
-			
-			return seg.getJointMotion();
-		}
-		
-		return 0;
-	}
-
-	/**
 	 * Sets the robot's jog speed field to the given value.
 	 * 
 	 * @param liveSpeed	The robot's new jog speed
@@ -2276,83 +1902,66 @@ public class RoboticArm {
 	 * @param flag	Whether the robot has a motion fault
 	 */
 	public void setMotionFault(boolean flag) {
-		motionType = (flag) ? RobotMotion.MT_FAULT : RobotMotion.HALTED;
+		
+		if (motion instanceof LinearMotion) {
+			((LinearMotion) motion).setFault(flag);
+		}
 	}
 	
 	/**
-	 * Updates the target angles, and joint motion fields of each segment to
-	 * prepare for joint interpolation.
+	 * TODO comment this
 	 * 
-	 * @param tgtAngles	The target angles set for the rotational interpolation
+	 * @param prog
+	 * @param mInst
+	 * @param nextIdx
+	 * @param singleExec
+	 * @return
 	 */
-	public void setupRotationInterpolation(float[] tgtAngles) {
-		float[] minDist = new float[6];
-		float maxMinDist = Float.MIN_VALUE;
+	public int setupMInstMotion(Program prog, MotionInstruction mInst,
+			int nextIdx, boolean singleExec) {
 		
-		for (int jdx = 0; jdx < 6; ++jdx) {
-			// Set the target angle for the joint index
-			TGT_JOINTS[jdx] = RMath.mod2PI(tgtAngles[jdx]);
-			// Calculate the minimum distance to the target angle
-			minDist[jdx] = RMath.minDist(SEGMENT[jdx].getJointRotation(),
-					TGT_JOINTS[jdx]);
+		Point instPt = getVector(mInst, prog);
+		
+		if (!mInst.checkFrames(activeToolIdx, activeUserIdx)) {
+			// Incorrect active frames for this motion instruction
+			return 1;
 			
-			if (Math.abs(minDist[jdx]) > maxMinDist) {
-				/* Update the maximum distance necessary for one of the joints
-				 * to reach its target angle. */
-				maxMinDist = Math.abs(minDist[jdx]);
-			}
+		} else if (instPt == null) {
+			// No point defined for given motion instruction
+			return 2;
 		}
 		
-		for(int jdx = 0; jdx < 6; jdx++) {
-			RSegWithJoint seg = SEGMENT[jdx];
-			/* Update the speed modifier for the joint based off the ratio
-			 * between the distance necessary for this joint to travel and that
-			 * of the joint with the longest distance to travel */
-			seg.setSpdMod(Math.abs(minDist[jdx]) / maxMinDist * (PConstants.PI / 60f));
+		if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
+			// Setup joint motion instruction
+			updateMotion(instPt.angles, mInst.getSpeed());
 			
-			// Check joint motion range
-			if (seg.LOW_BOUND == 0f && seg.UP_BOUND == PConstants.TWO_PI) {
-				seg.setJointMotion((minDist[jdx] < 0) ? -1 : 1);
+		} else if (mInst.getMotionType() == Fields.MTYPE_LINEAR) {
+			// Setup linear motion instruction
+			Instruction nextInst = prog.getInstAt(nextIdx);
+			
+			if (mInst.getTermination() > 0 && nextInst instanceof MotionInstruction
+					&& !singleExec) {
+				// Non-fine termination motion
+				Point nextPt = getVector((MotionInstruction)nextInst, prog);
+				updateMotion(instPt, nextPt, mInst.getSpeed(), mInst.getTermination() / 100f);
 				
-			} else {  
-				/* Determine if at least one bound lies within the range of the
-				 * shortest angle between the current joint angle and the
-				 * target angle. If so, then take the longer angle, otherwise
-				 * choose the shortest angle path. */
-
-				/* The minimum distance from the current joint angle to the
-				 * lower bound of the joint's range */
-				float dist_lb = RMath.minDist(seg.getJointRotation(),
-						seg.LOW_BOUND);
-
-				/* The minimum distance from the current joint angle to the
-				 * upper bound of the joint's range */
-				float dist_ub = RMath.minDist(seg.getJointRotation(),
-						seg.UP_BOUND);
-
-				if (minDist[jdx] < 0) {
-					if( (dist_lb < 0 && dist_lb > minDist[jdx]) ||
-							(dist_ub < 0 && dist_ub > minDist[jdx]) ) {
-						
-						// One or both bounds lie within the shortest path
-						seg.setJointMotion(1);
-						
-					} else {
-						seg.setJointMotion(-1);
-					}
-					
-				} else if(minDist[jdx] > 0) {
-					if( (dist_lb > 0 && dist_lb < minDist[jdx]) ||
-							(dist_ub > 0 && dist_ub < minDist[jdx]) ) {  
-						// One or both bounds lie within the shortest path
-						seg.setJointMotion(-1);
-						
-					} else {
-						seg.setJointMotion(1);
-					}
-				}
+			} else {
+				// Fine termination motion
+				updateMotion(instPt, mInst.getSpeed());
 			}
+		
+		} else if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
+			// Setup circular motion instruction
+			MotionInstruction sndPt = mInst.getSecondaryPoint();
+			Point endPt = getVector(sndPt, prog);
+			updateMotion(endPt, instPt, mInst.getSpeed());
+			
+		} else {
+			// Invalid motion type
+			return 3;
 		}
+		
+		return 0;
 	}
 	
 	public boolean toggleTrace() {
@@ -2367,10 +1976,46 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * Returns true if the Robot is jogging translationally.
+	 * TODO comment this
+	 * 
+	 * @param mdx
+	 * @param newDir
+	 * @return
 	 */
-	public boolean translationalMotion() {
-		return jogLinear[0] != 0 || jogLinear[1] != 0 || jogLinear[2] != 0;
+	public int updateJogMotion(int mdx, int newDir) {
+		int oldDir;
+		
+		if (curCoordFrame == CoordFrame.JOINT) {
+			// Update/set joint jog motion
+			JointJog jogMotion;
+			
+			if (motion instanceof JointJog) {
+				jogMotion = (JointJog)motion;
+				
+			} else {
+				jogMotion = new JointJog();
+				motion = jogMotion;
+				
+			}
+			
+			oldDir = jogMotion.setMotion(mdx, newDir);
+			
+		} else {
+			// Update/set linear jog motion
+			LinearJog jogMotion;
+			
+			if (motion instanceof LinearJog) {
+				jogMotion = (LinearJog)motion;
+				
+			} else {
+				jogMotion = new LinearJog();
+				motion = jogMotion;
+			}
+			
+			oldDir = jogMotion.setMotion(mdx, newDir);
+		}
+		
+		return oldDir;
 	}
 	
 	/**
@@ -2401,7 +2046,7 @@ public class RoboticArm {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			MotionInstruction mInst = (MotionInstruction) p.getInstAt(instIdx);
+			MotionInstruction mInst = (MotionInstruction) p.get(instIdx);
 			MotionInstruction sndMInst = mInst.getSecondaryPoint();
 			
 			if (mInst.getMotionType() != Fields.MTYPE_CIRCULAR || sndMInst == null) {
@@ -2459,7 +2104,7 @@ public class RoboticArm {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			MotionInstruction mInst = (MotionInstruction)p.getInstAt(instIdx);
+			MotionInstruction mInst = (MotionInstruction)p.get(instIdx);
 			int posNum = mInst.getPositionNum();
 			
 			if (mInst.usesGPosReg()) {
@@ -2489,47 +2134,69 @@ public class RoboticArm {
 		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
 	}
 	
+	public void updateMotion(float[] jointAngles) {
+		updateMotion(jointAngles, liveSpeed / 100f);
+	}
+
+	public void updateMotion(Point tgt) {
+		updateMotion(tgt, liveSpeed / 100f);
+	}
+	
+	public void updateMotion(float[] jointAngles, float speed) {
+		if (motion instanceof JointInterpolation) {
+			((JointInterpolation)motion).setupRotationalInterpolation(this,
+					jointAngles, speed);
+			
+		} else {
+			motion = new JointInterpolation(this, jointAngles, speed);
+		}
+	}
+
+	public void updateMotion(Point tgt, float speed) {
+		Point start = getToolTipNative();
+		//float ptDist = calculateDistanceBetweenPoints();
+		
+		if (!(motion instanceof LinearInterpolation)) {
+			motion = new LinearInterpolation();
+		}
+		
+		((LinearInterpolation) motion).beginNewLinearMotion(start, tgt,
+				speed * motorSpeed);
+	}
+	
+	public void updateMotion(Point tgt, Point next, float speed, float p) {
+		Point start = getToolTipNative();
+		//float ptDist = calculateDistanceBetweenPoints();
+		
+		if (!(motion instanceof LinearInterpolation)) {
+			motion = new LinearInterpolation();
+		}
+		
+		((LinearInterpolation) motion).beginNewContinuousMotion(start, tgt, next, p,
+				speed * motorSpeed);
+	}
+	
+	public void updateMotion(Point tgt, Point inter, float speed) {
+		Point start = getToolTipNative();
+		//float ptDist = calculateDistanceBetweenPoints();
+		
+		if (!(motion instanceof LinearInterpolation)) {
+			motion = new LinearInterpolation();
+		}
+		
+		((LinearInterpolation) motion).beginNewCircularMotion(start, inter, tgt,
+				speed * motorSpeed);
+	}
+	
 	/**
 	 * Updates the program execution for this robot and the position of the
 	 * robot for linear or rotation interpolation.
-	 * 
-	 * @param app	A reference to the RobotRun application
 	 */
-	public void updateRobot(RobotRun app) {
-		
-		if (!hasMotionFault()) {
-			// Execute arm movement
-			if(app.isProgramRunning()) {
-				// Run active program
-				app.setProgramRunning(!app.executeProgram(this,
-						app.execSingleInst));
-
-			} else if (motionType != RobotMotion.HALTED) {
-				// Move the Robot progressively to a point
-				boolean doneMoving = true;
-
-				switch (motionType) {
-				case MT_JOINT:
-					doneMoving = interpolateRotation(liveSpeed / 100.0f);
-					break;
-				case MT_LINEAR:
-					doneMoving = app.executeMotion(this, liveSpeed / 100.0f);
-					break;
-				default:
-					break;
-				}
-
-				if (doneMoving) {
-					app.hold();
-				}
-
-			} else if (modelInMotion()) {
-				// Jog the Robot
-				app.getIntermediatePositions().clear();
-				executeLiveMotion();
-			}
+	public void updateRobot() {	
+		if (inMotion()) {
+			motion.executeMotion(this);
 		}
-
+		
 		updateOBBs();
 	}
 	
@@ -2692,5 +2359,6 @@ public class RoboticArm {
 			RMath.translateTMat(obbTMat, -24.0, 8.0, -40.0);
 			activeEE.OBBS[2].setCoordinateSystem(obbTMat);
 		}
-	}
+	}	
 }
+

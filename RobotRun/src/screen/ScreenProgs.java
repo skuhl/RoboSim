@@ -40,9 +40,9 @@ public class ScreenProgs extends Screen {
 	@Override
 	public void loadVars() {
 		robotRun.hold();
-		contents.setLineIdx(RobotRun.getInstanceRobot().getActiveProgIdx());
+		contents.setLineIdx(RobotRun.getInstance().getActiveProgIdx());
 		contents.setColumnIdx(0);
-		RobotRun.getInstanceRobot().setActiveInstIdx(0);
+		RobotRun.getInstance().setActiveInstIdx(0);
 	}
 
 	@Override
@@ -52,12 +52,12 @@ public class ScreenProgs extends Screen {
 
 	@Override
 	public void actionUp() {
-		RobotRun.getInstanceRobot().setActiveProgIdx(contents.moveUp(robotRun.isShift()));
+		RobotRun.getInstance().setActiveProgIdx(contents.moveUp(robotRun.isShift()));
 	}
 
 	@Override
 	public void actionDn() {
-		RobotRun.getInstanceRobot().setActiveProgIdx(contents.moveDown(robotRun.isShift()));
+		RobotRun.getInstance().setActiveProgIdx(contents.moveDown(robotRun.isShift()));
 	}
 
 	@Override
@@ -69,7 +69,7 @@ public class ScreenProgs extends Screen {
 	@Override
 	public void actionEntr() {
 		if(RobotRun.getInstanceRobot().numOfPrograms() != 0) {
-			RobotRun.getInstanceRobot().setActiveInstIdx(0);
+			RobotRun.getInstance().setActiveInstIdx(0);
 			contents.reset();
 			// TODO robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
 		}
