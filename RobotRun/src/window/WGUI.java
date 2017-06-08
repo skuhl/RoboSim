@@ -2812,6 +2812,17 @@ public class WGUI implements ControlListener {
 		.setHeight(relPos[1])
 		.show();
 	}
+	
+	/**
+	 * Update the jog buttons based on the set of jog motion values.
+	 * 
+	 * @param jogMotion	A 6-element array defining the direction of jog motion
+	 */
+	public void updateJogButtons(int[] jogMotion) {
+		for (int mdx = 0; mdx < jogMotion.length; ++mdx) {
+			updateJogButtons(mdx, jogMotion[mdx]);
+		}
+	}
 
 	/**
 	 * Updates the background color of the robot jog buttons corresponding to
@@ -2845,7 +2856,7 @@ public class WGUI implements ControlListener {
 	 * @param pair		The index of a jog button pair
 	 * @param newDir	The new motion direction
 	 */
-	public void updateJogButtons(int pair, float newDir) {
+	private void updateJogButtons(int pair, int newDir) {
 		// Positive jog button is active when the direction is positive
 		updateButtonBgColor(String.format("joint%d_pos", pair + 1), newDir > 0);
 		// Negative jog button is active when the direction is negative
@@ -3142,6 +3153,8 @@ public class WGUI implements ControlListener {
 		.setHeight(relPos[1])
 		.show();
 	}
+	
+
 
 	/**
 	 * Updates the current menu of the UI and communicates with the PApplet to

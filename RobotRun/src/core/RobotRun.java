@@ -1046,6 +1046,15 @@ public class RobotRun extends PApplet {
 			// Apply the camera for drawing objects
 			applyCamera(camera);
 			renderScene();
+			// Update jog buttons
+			int[] jogMotion = activeRobot.getJogMotion();
+			
+			if (jogMotion == null) {
+				UI.updateJogButtons(new int[] {0, 0, 0, 0, 0, 0});
+				
+			} else {
+				UI.updateJogButtons(jogMotion);
+			}
 			
 			if (teachFrame != null && mode.getType() == ScreenType.TYPE_TEACH_POINTS) {
 				renderTeachPoints(teachFrame);
@@ -3875,7 +3884,6 @@ public class RobotRun extends PApplet {
 	 */
 	public void hold() {
 		// Stop all robot motion and program execution
-		UI.resetJogButtons();
 		activeRobot.halt();
 		progExecState.halt();
 	}
@@ -6072,13 +6080,16 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
+	/**
+	 * Update the state of the shift and robot motion based on the new state of
+	 * shift.
+	 * 
+	 * @param flag	The new shift state
+	 */
 	public void setShift(boolean flag) {
-		
 		if (!flag) {
-			// Stop Robot jog movement when shift is off
 			// Stop all robot motion and program execution
-			UI.resetJogButtons();
 			activeRobot.halt();
 			progExecState.halt();
 		}
@@ -7047,26 +7058,8 @@ public class RobotRun extends PApplet {
 	}
 	
 	public void updateRobotJogMotion(int set, int direction) {
-		/* Only six jog button pairs exist *
-		if (isShift() && !activeRobot.hasMotionFault() && set >= 0 && set < 6) {
-			float newDir;
-
-			if (activeRobot.getCurCoordFrame() == CoordFrame.JOINT) {
-				// Move single joint
-				newDir = activeRobot.setJointMotion(set, direction);
-				
-			} else {
-				// Move entire robot in a single axis plane
-				newDir = activeRobot.activateLiveWorldMotion(set, direction);
-			}
-			
-			UI.updateJogButtons(set, newDir);
-		}
-		/**/
-		
 		if (isShift()) {
-			int newDir = activeRobot.updateJogMotion(set, direction);
-			UI.updateJogButtons(set, newDir);
+			activeRobot.updateJogMotion(set, direction);
 		}
 	}
 
