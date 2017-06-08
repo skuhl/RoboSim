@@ -15,23 +15,34 @@ import java.util.ArrayList;
 import core.RobotRun;
 import core.Scenario;
 import expression.AtomicExpression;
-import expression.Operand;
+import expression.BoolMath;
 import expression.Expression;
 import expression.ExpressionElement;
+import expression.FloatMath;
+import expression.Operand;
+import expression.OperandBool;
+import expression.OperandDReg;
+import expression.OperandFloat;
+import expression.OperandGeneric;
+import expression.OperandIOReg;
+import expression.OperandPReg;
+import expression.OperandPRegIdx;
+import expression.OperandPoint;
+import expression.OperandRegister;
 import expression.Operator;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
-import geom.RBox;
+import geom.ComplexShape;
 import geom.CoordinateSystem;
-import geom.RCylinder;
 import geom.DimType;
 import geom.Fixture;
 import geom.LoadedPart;
-import geom.ComplexShape;
 import geom.MyPShape;
 import geom.Part;
 import geom.Point;
+import geom.RBox;
+import geom.RCylinder;
 import geom.RMatrix;
 import geom.RQuaternion;
 import geom.RShape;
@@ -186,16 +197,16 @@ public abstract class DataManagement {
 			
 			for (int idx = 0; idx < len; ++idx) {
 				// Read in each element of the expression
-				ExpressionElement limbo = loadExpressionElement(robot, in);
-				exprElements.add(limbo);
+				Operand<?> temp = (Operand<?>)loadExpressionElement(robot, in);
+				exprElements.add(temp);
 			}
 	
 			ee = new Expression(exprElements);
 			
 		} else if (nullFlag == 3) {
 			// Read in an atomic expression operand
-			Operand a0 = (Operand)loadExpressionElement(robot, in);
-			Operand a1 = (Operand)loadExpressionElement(robot, in);
+			Operand<?> a0 = (Operand<?>)loadExpressionElement(robot, in);
+			Operand<?> a1 = (Operand<?>)loadExpressionElement(robot, in);
 			Operator op = (Operator)loadExpressionElement(robot, in);
 
 			ee = new AtomicExpression(a0, a1, op);
@@ -204,53 +215,53 @@ public abstract class DataManagement {
 			// Read in a normal operand
 			int opType = in.readInt();
 
-			if (opType == ExpressionElement.FLOAT) {
+			if (opType == Operand.FLOAT) {
 				// Constant float
 				Float val = in.readFloat();
-				ee = new Operand(val);
+				ee = new OperandFloat(val);
 
-			} else if (opType == ExpressionElement.BOOL) {
+			} else if (opType == Operand.BOOL) {
 				// Constant boolean
 				Boolean val = in.readBoolean();
-				ee = new Operand(val);
+				ee = new OperandBool(val);
 
-			} else if (opType == ExpressionElement.DREG ||
-					opType == ExpressionElement.IOREG ||
-					opType == ExpressionElement.PREG ||
-					opType == ExpressionElement.PREG_IDX) {
+			} else if (opType == Operand.DREG ||
+					opType == Operand.IOREG ||
+					opType == Operand.PREG ||
+					opType == Operand.PREG_IDX) {
 				// Note: the register value of the operand is set to null!
 
 				// Data, Position, or IO register
 				Integer rdx = in.readInt();
 
-				if (opType == ExpressionElement.DREG) {
+				if (opType == Operand.DREG) {
 					// Data register
-					ee = new Operand(robot.getDReg(rdx));
+					ee = new OperandDReg(robot.getDReg(rdx));
 
-				} else if (opType == ExpressionElement.PREG) {
+				} else if (opType == Operand.PREG) {
 					// Position register
-					ee = new Operand(robot.getPReg(rdx));
+					ee = new OperandPReg(robot.getPReg(rdx));
 
-				} else if (opType == ExpressionElement.PREG_IDX) {
+				} else if (opType == Operand.PREG_IDX) {
 					// Specific portion of a point
 					Integer pdx = in.readInt();
-					ee = new Operand(robot.getPReg(rdx), pdx);
+					ee = new OperandPRegIdx(robot.getPReg(rdx), pdx);
 
-				} else if (opType == ExpressionElement.IOREG) {
+				} else if (opType == Operand.IOREG) {
 					// I/O register
-					ee = new Operand(robot.getIOReg(rdx));
+					ee = new OperandIOReg(robot.getIOReg(rdx));
 
 				} else {
-					ee = new Operand();
+					ee = new OperandGeneric();
 				}
 
-			} else if (opType == ExpressionElement.POSTN) {
+			} else if (opType == Operand.POSTN) {
 				// Robot position
 				Point pt = loadPoint(in);
-				ee = new Operand(pt);
+				ee = new OperandPoint(pt);
 
 			} else {
-				ee = new Operand();
+				ee = new OperandGeneric();
 			}
 		}
 
@@ -470,13 +481,13 @@ public abstract class DataManagement {
 		} else if (instType == 10) {
 			// Load data associated with a select statement
 			boolean isCommented = in.readBoolean();
-			Operand arg = (Operand)loadExpressionElement(robot, in);
+			Operand<?> arg = (Operand<?>)loadExpressionElement(robot, in);
 			
-			ArrayList<Operand> cases = new ArrayList<>();
+			ArrayList<Operand<?>> cases = new ArrayList<>();
 			int size = in.readInt();
 			
 			while (size-- > 0) {
-				cases.add( (Operand)loadExpressionElement(robot, in) );
+				cases.add( (Operand<?>)loadExpressionElement(robot, in) );
 			}
 			
 			ArrayList<Instruction> insts = new ArrayList<>();
@@ -1170,37 +1181,34 @@ public abstract class DataManagement {
 				saveExpressionElement(ae.getArg2(), out);
 				saveExpressionElement(ae.getOp(), out);
 
-			} else if (ee instanceof Operand) {
-				Operand eo = (Operand)ee;
+			} else if (ee instanceof Operand<?>) {
+				Operand<?> eo = (Operand<?>)ee;
 
 				out.writeByte(4);
 				// Indicate that the object is non-null
-				out.writeInt(eo.type);
+				out.writeInt(eo.getType());
 
-				if (eo.type == ExpressionElement.FLOAT) {
+				if (eo instanceof FloatMath) {
 					// Constant float
-					out.writeFloat( eo.getDataVal() );
+					out.writeFloat( ((FloatMath)eo).getArithValue() );
 
-				} else if (eo.type == ExpressionElement.BOOL) {
+				} else if (eo instanceof BoolMath) {
 					// Constant boolean
-					out.writeBoolean( eo.getBoolVal() );
+					out.writeBoolean( ((BoolMath)eo).getBoolValue() );
 
-				} else if (eo.type == ExpressionElement.DREG ||
-						eo.type == ExpressionElement.IOREG ||
-						eo.type == ExpressionElement.PREG ||
-						eo.type == ExpressionElement.PREG_IDX) {
+				} else if (eo instanceof OperandRegister) {
 
 					// Data, Position, or IO register
-					out.writeInt( eo.getRegIdx() );
+					out.writeInt( ((OperandRegister<?>)eo).getRegIdx() );
 
-					if (eo.type == ExpressionElement.PREG_IDX) {
+					if (eo instanceof OperandPRegIdx) {
 						// Specific portion of a point
-						out.writeInt( eo.getPosIdx() );
+						out.writeInt( ((OperandPRegIdx)eo).getSubIdx() );
 					}
 
-				} else if (eo.type == ExpressionElement.POSTN) {
+				} else if (eo instanceof OperandPoint) {
 					// Robot position
-					savePoint(eo.getPointVal(), out);
+					savePoint(((OperandPoint)eo).getPointValue(), out);
 
 				}// Otherwise it is uninitialized
 			}
@@ -1458,7 +1466,7 @@ public abstract class DataManagement {
 			
 		} else if (inst instanceof SelectStatement) {
 			SelectStatement sStmt = (SelectStatement)inst;
-			ArrayList<Operand> cases = sStmt.getCases();
+			ArrayList<Operand<?>> cases = sStmt.getCases();
 			ArrayList<Instruction> insts = sStmt.getInstrs();
 			// Save data associated with the select statement instruction
 			out.writeByte(10);
@@ -1467,7 +1475,7 @@ public abstract class DataManagement {
 			saveExpressionElement(sStmt.getArg(), out);
 			// Save list of cases
 			out.writeInt(cases.size());
-			for (Operand opr : cases) {
+			for (Operand<?> opr : cases) {
 				saveExpressionElement(opr, out);
 			}
 			// Save list of instructions

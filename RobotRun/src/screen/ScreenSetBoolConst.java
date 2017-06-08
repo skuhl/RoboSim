@@ -61,12 +61,6 @@ public class ScreenSetBoolConst extends Screen {
 
 	@Override
 	public void actionEntr() {
-		if(options.getLineIdx() == 0) {
-			robotRun.opEdit.set(true);
-		} else {
-			robotRun.opEdit.set(false);
-		}
-
 		// TODO robotRun.lastScreen();
 	}
 
