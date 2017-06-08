@@ -1,7 +1,11 @@
 package programming;
 
-import expression.Operand;
 import expression.Expression;
+import expression.Operand;
+import expression.OperandBool;
+import expression.OperandFloat;
+import expression.OperandPoint;
+import geom.Point;
 import global.Fields;
 import global.RMath;
 import processing.core.PVector;
@@ -58,57 +62,47 @@ public class RegisterStatement extends Instruction {
 	
 	@Override
 	public int execute() {
-		Operand result = expr.evaluate();
-
-		if(result == null) return 1;
-
-		if(reg instanceof DataRegister) {
-			if(result.getDataVal() == null) return 1;
-			((DataRegister)reg).value = result.getDataVal();
-		} 
-		else if(reg instanceof IORegister) {
-			if(result.getBoolVal() == null) return 1;
-			((IORegister)reg).state = result.getBoolVal() ? Fields.ON : Fields.OFF;
-		} 
-		else if(reg instanceof PositionRegister && posIdx == -1) {
-			if(result.getPointVal() == null) return 1;
-			((PositionRegister)reg).point = result.getPointVal();
-		} 
-		else {
-			if(result.getDataVal() == null) return 1;
-			
-			PositionRegister pReg = (PositionRegister)reg;
-			// Update position value
-			if (posIdx >= 0 && posIdx < 3) {
+		Operand<?> result = expr.evaluate();
+		
+		if(result instanceof OperandFloat) {
+			float fl = ((OperandFloat)result).getArithValue();
+			if(reg instanceof DataRegister) {
+				((DataRegister)reg).value = fl;
+				return 1;
+			}
+			else if(reg instanceof PositionRegister) {
+				PositionRegister pReg = (PositionRegister)reg;
 				PVector wPos = RMath.vToWorld(pReg.point.position);
+				PVector wpr = RMath.nQuatToWEuler(pReg.point.orientation);
+				// Update position value
 				
-				if (posIdx == 0) {
-					wPos.x = result.getDataVal();
-					
-				} else if (posIdx == 1) {
-					wPos.y = result.getDataVal();
-					
-				} else if (posIdx == 2) {
-					wPos.z = result.getDataVal();
+				switch(posIdx) {
+				case 0:	wPos.x = fl; break;
+				case 1: wPos.y = fl; break;
+				case 2: wPos.z = fl; break;
+				case 3: wpr.x = fl; break;
+				case 4: wpr.y = fl; break;
+				case 5: wpr.z = fl; break;
+				default: return 0;
 				}
 				
 				pReg.point.position = RMath.vFromWorld(wPos);
-			
-			// Update orientation value
-			} else if (posIdx >= 3 && posIdx < 6) {
-				PVector wpr = RMath.nQuatToWEuler(pReg.point.orientation);
-				
-				if (posIdx == 0) {
-					wpr.x = result.getDataVal();
-					
-				} else if (posIdx == 1) {
-					wpr.y = result.getDataVal();
-					
-				} else if (posIdx == 2) {
-					wpr.z = result.getDataVal();
-				}
-				
 				pReg.point.orientation = RMath.wEulerToNQuat(wpr);
+				return 1;
+			}
+		}
+		else if(result instanceof OperandBool) {
+			boolean b = ((OperandBool)result).getBoolValue();
+			if(reg instanceof IORegister) {
+				((IORegister)reg).state = b ? Fields.ON : Fields.OFF;
+				return 1;
+			}
+		}
+		else if(result instanceof OperandPoint) {
+			Point p = ((OperandPoint)result).getPointValue();
+			if(reg instanceof PositionRegister) {
+				((PositionRegister)reg).point = p;
+				return 1;
 			}
 		}
 

@@ -4,7 +4,6 @@ import core.RobotRun;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
-import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import robot.RoboticArm;

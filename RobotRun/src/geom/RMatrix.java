@@ -1,6 +1,4 @@
 package geom;
-import java.util.Arrays;
-
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
@@ -28,8 +26,8 @@ public class RMatrix extends Array2DRowRealMatrix {
 	}
 	
 	public PVector multiply(PVector v) {
-		RMatrix m = new RMatrix(new double[][] {{v.x}, {v.y}, {v.z}, {1}});
-		RMatrix result = this.multiply(m);
+		//RMatrix m = new RMatrix(new double[][] {{v.x}, {v.y}, {v.z}, {1}});
+		//RMatrix result = this.multiply(m);
 		
 		float w = getEntryF(3, 0);
 		

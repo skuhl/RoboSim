@@ -123,6 +123,30 @@ public class Point  {
 		
 		return new Point(position.copy(), orientation.clone(), resJointAngles);
 	}
+	
+	public Point add(Point p) {
+		Point jointSum = add(p.angles);
+		Point cartSum = add(p.position, p.orientation);
+		
+		return new Point(cartSum.position, cartSum.orientation, jointSum.angles);
+	}
+	
+	public Point sub(Point p) {
+		return add(p.negate());
+	}
+	
+	public Point negate() {
+		PVector negPos = new PVector().sub(position);
+		RQuaternion negOrient = orientation.conjugate();
+		float[] negJointAngles = new float[6];
+		
+		
+		for(int i = 0; i < 6; i += 1) {
+			negJointAngles[i] = -angles[i];
+		}
+		
+		return new Point(negPos, negOrient, negJointAngles);
+	}
 
 	@Override
 	public Point clone() {

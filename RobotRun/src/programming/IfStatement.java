@@ -1,7 +1,8 @@
 package programming;
 import expression.AtomicExpression;
-import expression.Operand;
 import expression.Expression;
+import expression.Operand;
+import expression.OperandBool;
 import expression.Operator;
 
 /**
@@ -59,12 +60,12 @@ public class IfStatement extends Instruction {
 
 	@Override
 	public int execute() {
-		Operand result = expr.evaluate();
+		Operand<?> result = expr.evaluate();
 
-		if(result == null || result.getBoolVal() == null) {
+		if(result == null || result.getType() != Operand.BOOL) {
 			return -1;
 			
-		} else if (expr.evaluate().getBoolVal()) {
+		} else if(((OperandBool)result).getBoolValue()) {
 			return instr.execute();
 		}
 

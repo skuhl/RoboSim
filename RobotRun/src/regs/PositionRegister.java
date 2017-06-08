@@ -72,7 +72,7 @@ public class PositionRegister extends Register {
 		if (pdx >= 0 && pdx < 5) {
 			String idxStr = (idx < 0) ? "..." : Integer.toString(idx + 1);
 			
-			return String.format("P[%s, %d]", idxStr, pdx + 1);
+			return String.format("%s[%s, %d]", regPrefix(), idxStr, pdx + 1);
 		}
 		// Invalid index
 		return null;

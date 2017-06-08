@@ -3,7 +3,6 @@ package core;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -12,9 +11,16 @@ import enums.CoordFrame;
 import enums.ScreenMode;
 import enums.ScreenType;
 import expression.AtomicExpression;
-import expression.Operand;
 import expression.Expression;
 import expression.ExpressionElement;
+import expression.Operand;
+import expression.OperandBool;
+import expression.OperandDReg;
+import expression.OperandFloat;
+import expression.OperandGeneric;
+import expression.OperandIOReg;
+import expression.OperandPReg;
+import expression.OperandPRegIdx;
 import expression.Operator;
 import frame.Frame;
 import frame.ToolFrame;
@@ -185,7 +191,7 @@ public class RobotRun extends PApplet {
 	private Frame teachFrame = null;
 
 	// Expression operand currently being edited
-	public Operand opEdit = null;
+	public Operand<?> opEdit = null;
 
 	public int editIdx = -1;
 
@@ -1539,7 +1545,7 @@ public class RobotRun extends PApplet {
 				editExpression((Expression) e, selectIdx - startIdx - 1);
 			}
 		} else if (e instanceof Operand) {
-			editOperand((Operand) e, elements[selectIdx]);
+			editOperand((Operand<?>) e, elements[selectIdx]);
 		} else {
 			editIdx = elements[selectIdx];
 			nextScreen(ScreenMode.SET_EXPR_OP);
@@ -1556,8 +1562,8 @@ public class RobotRun extends PApplet {
 	 *          into which this operand is stored.
 	 *
 	 */
-	public void editOperand(Operand o, int ins_idx) {
-		switch (o.type) {
+	public void editOperand(Operand<?> o, int ins_idx) {
+		switch (o.getType()) {
 		case -2: // Uninit
 			editIdx = ins_idx;
 			nextScreen(ScreenMode.SET_EXPR_ARG);
@@ -2085,23 +2091,24 @@ public class RobotRun extends PApplet {
 			// Expression edit
 		case SET_EXPR_ARG:
 			Expression expr = (Expression) opEdit;
-
+			Operand<?> operand;
+			
 			if (options.getLineIdx() == 0) {
 				// set arg to new data reg
-				Operand operand = new Operand(new DataRegister());
+				operand = new OperandDReg(new DataRegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(ScreenMode.INPUT_DREG_IDX);
 			} else if (options.getLineIdx() == 1) {
 				// set arg to new io reg
-				Operand operand = new Operand(new IORegister());
+				operand = new OperandIOReg(new IORegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(ScreenMode.INPUT_IOREG_IDX);
 			} else if (options.getLineIdx() == 2) {
-				Operand operand = new Operand(new PositionRegister());
+				operand = new OperandPReg(new PositionRegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(ScreenMode.INPUT_PREG_IDX1);
 			} else if (options.getLineIdx() == 3) {
-				Operand operand = new Operand(new PositionRegister(), 0);
+				operand = new OperandPRegIdx(new PositionRegister(), 0);
 				opEdit = expr.setOperand(editIdx, operand);
 				screenStates.pop();
 				pushScreen(ScreenMode.INPUT_PREG_IDX2, contents.getLineIdx(),
@@ -2115,7 +2122,7 @@ public class RobotRun extends PApplet {
 				lastScreen();
 			} else {
 				// set arg to new constant
-				opEdit = expr.getOperand(editIdx).reset();
+				opEdit = expr.setOperand(editIdx, new OperandGeneric());
 				switchScreen(ScreenMode.INPUT_CONST);
 			}
 
@@ -2123,15 +2130,15 @@ public class RobotRun extends PApplet {
 		case SET_BOOL_EXPR_ARG:
 			if (options.getLineIdx() == 0) {
 				// set arg to new data reg
-				opEdit.set(new DataRegister());
+				opEdit = new OperandDReg(new DataRegister());
 				switchScreen(ScreenMode.INPUT_DREG_IDX);
 			} else if (options.getLineIdx() == 1) {
 				// set arg to new io reg
-				opEdit.set(new IORegister());
+				opEdit = new OperandIOReg(new IORegister());
 				switchScreen(ScreenMode.INPUT_IOREG_IDX);
 			} else {
 				// set arg to new constant
-				opEdit.reset();
+				opEdit = new OperandGeneric();
 				switchScreen(ScreenMode.INPUT_CONST);
 			}
 			break;
@@ -2165,10 +2172,10 @@ public class RobotRun extends PApplet {
 				
 				switch (options.getLineIdx()) {
 				case 0:
-					expr.setOperator(editIdx, Operator.ADDTN);
+					expr.setOperator(editIdx, Operator.ADD);
 					break;
 				case 1:
-					expr.setOperator(editIdx, Operator.SUBTR);
+					expr.setOperator(editIdx, Operator.SUB);
 					break;
 				case 2:
 					expr.setOperator(editIdx, Operator.MULT);
@@ -2177,7 +2184,7 @@ public class RobotRun extends PApplet {
 					expr.setOperator(editIdx, Operator.DIV);
 					break;
 				case 4:
-					expr.setOperator(editIdx, Operator.INTDIV);
+					expr.setOperator(editIdx, Operator.IDIV);
 					break;
 				case 5:
 					expr.setOperator(editIdx, Operator.MOD);
@@ -2252,7 +2259,7 @@ public class RobotRun extends PApplet {
 
 					} else {
 						r.getInstToEdit( r.getActiveInstIdx() );
-						opEdit.set(activeRobot.getDReg(idx - 1));
+						opEdit = new OperandDReg((activeRobot.getDReg(idx - 1)));
 					}
 
 				} else if (mode == ScreenMode.INPUT_PREG_IDX1) {
@@ -2262,7 +2269,7 @@ public class RobotRun extends PApplet {
 
 					} else {
 						r.getInstToEdit( r.getActiveInstIdx() );
-						opEdit.set(activeRobot.getPReg(idx - 1));
+						opEdit = new OperandPReg((activeRobot.getPReg(idx - 1)));
 					}
 
 				} else if (mode == ScreenMode.INPUT_PREG_IDX2) {
@@ -2272,7 +2279,7 @@ public class RobotRun extends PApplet {
 
 					} else {
 						r.getInstToEdit( r.getActiveInstIdx() );
-						opEdit.set(idx - 1);
+						((OperandPRegIdx)opEdit).setSubIdx(idx - 1);
 					}
 
 				} else if (mode == ScreenMode.INPUT_IOREG_IDX) {
@@ -2282,7 +2289,7 @@ public class RobotRun extends PApplet {
 
 					} else {
 						r.getInstToEdit( r.getActiveInstIdx() );
-						opEdit.set(activeRobot.getIOReg(idx - 1));
+						opEdit = new OperandIOReg(activeRobot.getIOReg(idx - 1));
 					}
 				}
 
@@ -2295,7 +2302,7 @@ public class RobotRun extends PApplet {
 			try {
 				float data = Float.parseFloat(workingText.toString());
 				r.getInstToEdit( r.getActiveInstIdx() );
-				opEdit.set(data);
+				opEdit = new OperandFloat(data);
 			} catch (NumberFormatException e) {
 			}
 
@@ -2305,9 +2312,9 @@ public class RobotRun extends PApplet {
 			r.getInstToEdit( r.getActiveInstIdx() );
 			
 			if (options.getLineIdx() == 0) {
-				opEdit.set(true);
+				opEdit = new OperandBool(true);
 			} else {
-				opEdit.set(false);
+				opEdit = new OperandBool(true);
 			}
 
 			lastScreen();
@@ -2330,9 +2337,9 @@ public class RobotRun extends PApplet {
 			break;
 		case SET_SELECT_STMT_ARG:
 			if (options.getLineIdx() == 0) {
-				opEdit.set(new DataRegister());
+				opEdit = new OperandDReg(new DataRegister());
 			} else {
-				opEdit.reset();
+				opEdit = new OperandGeneric();
 			}
 
 			nextScreen(ScreenMode.SET_SELECT_ARGVAL);
@@ -2342,11 +2349,11 @@ public class RobotRun extends PApplet {
 				s = (SelectStatement) r.getInstToEdit( r.getActiveInstIdx() );
 				float f = Float.parseFloat(workingText.toString());
 
-				if (opEdit.type == ExpressionElement.UNINIT) {
-					opEdit.set(f);
-				} else if (opEdit.type == ExpressionElement.DREG) {
+				if (opEdit.getType() == Operand.UNINIT) {
+					opEdit = new OperandFloat(f);
+				} else if (opEdit.getType() == Operand.DREG) {
 					// println(regFile.DAT_REG[(int)f - 1].value);
-					opEdit.set(activeRobot.getDReg((int) f - 1));
+					opEdit = new OperandDReg(activeRobot.getDReg((int) f - 1));
 				}
 			} catch (NumberFormatException ex) {
 			}
