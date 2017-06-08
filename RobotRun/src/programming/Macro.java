@@ -1,6 +1,5 @@
 package programming;
 import core.RobotRun;
-import robot.RoboticArm;
 
 public class Macro {
 	boolean manual;
@@ -19,16 +18,9 @@ public class Macro {
 			num = -1;
 		}
 	}
-
-	public void execute() {
-		// TODO refactor
-		RobotRun app = RobotRun.getInstance();
-		
-		// Stop any prior Robot movement
-		app.hold();
-		// Safeguard against editing a program while it is running
-		app.getContentsMenu().setColumnIdx(0);
-		app.progExec(progIdx, 0, app.isStep());
+	
+	public int getProgIdx() {
+		return progIdx;
 	}
 	
 	public boolean isManual() { return manual; }

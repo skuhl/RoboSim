@@ -68,7 +68,6 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
-import robot.CallFrame;
 import robot.RoboticArm;
 import screen.DisplayLine;
 import screen.MenuScroll;
@@ -1046,7 +1045,7 @@ public class RobotRun extends PApplet {
 			pushMatrix();
 			// Apply the camera for drawing objects
 			applyCamera(camera);
-			renderScene(getActiveScenario(), activeRobot);
+			renderScene();
 			
 			if (teachFrame != null && mode.getType() == ScreenType.TYPE_TEACH_POINTS) {
 				renderTeachPoints(teachFrame);
@@ -1176,7 +1175,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void editOperand(Operand<?> o, int ins_idx) {
 		switch (o.getType()) {
-		case -2: // Uninit
+		case -1: // Uninit
 			editIdx = ins_idx;
 			nextScreen(ScreenMode.SET_EXPR_ARG);
 			break;
@@ -2195,7 +2194,7 @@ public class RobotRun extends PApplet {
 
 		case NAV_MF_MACROS:
 			int macro_idx = contents.get(active_index).getItemIdx();
-			macros.get(macro_idx).execute();
+			execute(macros.get(macro_idx));
 			break;
 
 			// Program instruction editing and navigation
@@ -3891,7 +3890,7 @@ public class RobotRun extends PApplet {
 	public void io() {
 		if (isShift()) {
 			if (getSU_macro_bindings()[6] != null) {
-				getSU_macro_bindings()[6].execute();
+				execute(getSU_macro_bindings()[6]);
 			}
 
 		} else {
@@ -5391,7 +5390,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void mvmu() {
 		if (getSU_macro_bindings()[2] != null && isShift()) {
-			getSU_macro_bindings()[2].execute();
+			execute(getSU_macro_bindings()[2]);
 		}
 	}
 
@@ -5864,7 +5863,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void posn() {
 		if (getSU_macro_bindings()[5] != null && isShift()) {
-			getSU_macro_bindings()[5].execute();
+			execute(getSU_macro_bindings()[5]);
 		}
 	}
 	
@@ -5875,451 +5874,6 @@ public class RobotRun extends PApplet {
 	 */
 	public void prev() {
 		lastScreen();
-	}
-	
-	
-	
-	/**
-	 * Updates the position and orientation of the Robot as well as all the
-	 * World Objects associated with the current scenario. Updates the bounding
-	 * box color, position and orientation of the Robot and all World Objects as
-	 * well. Finally, all the World Objects and the Robot are drawn.
-	 * 
-	 * @param s
-	 *            The currently active scenario
-	 * @param active
-	 *            The currently selected program
-	 * @param active
-	 *            The Robot Arm model
-	 */
-	public void renderScene(Scenario s, RoboticArm active) {
-		
-		if (isProgExec()) {
-			updateProgExec();
-		}
-		
-		active.updateRobot();
-		
-		if (isProgExec()) {
-			updateCurIdx();
-		}
-
-		if (s != null) {
-			s.resetObjectHitBoxColors();
-		}
-
-		active.resetOBBColors();
-		active.checkSelfCollisions();
-
-		if (s != null) {
-			WorldObject selected = UI.getSelectedWO();
-			int numOfObjects = s.size();
-
-			for (int idx = 0; idx < numOfObjects; ++idx) {
-				WorldObject wldObj = s.getWorldObject(idx);
-
-				if (wldObj instanceof Part) {
-					Part p = (Part)wldObj;
-
-					/* Update the transformation matrix of an object held by the Robotic Arm */
-					if(active != null && active.isHeld(p) && active.inMotion()) {
-						
-						/***********************************************
-						     Moving a part with the Robot:
-						
-						     P' = R^-1 x E' x E^-1 x P
-						
-						     where:
-						     P' - new part local orientation
-						     R  - part fixture reference orientation
-						     E' - current Robot end effector orientation
-						     E  - previous Robot end effector orientation
-						     P  - current part local orientation
-						 ***********************************************/
-						
-						RMatrix curTip = active.getFaceplateTMat(active.getJointAngles());
-						RMatrix invMat = active.getLastTipTMatrix().getInverse();
-						Fixture refFixture = p.getFixtureRef();
-						
-						pushMatrix();
-						resetMatrix();
-						
-						if (refFixture != null) {
-							refFixture.removeCoordinateSystem();
-						}
-						
-						applyMatrix(curTip);
-						applyMatrix(invMat);
-						applyCoord(p.getCenter(), p.getOrientation());
-						
-						// Update the world object's position and orientation
-						p.setLocalCenter( getPosFromMatrix(0f, 0f, 0f) );
-						p.setLocalOrientation( getOrientation() );
-						
-						popMatrix();
-					}
-					
-					
-					if (s.isGravity() && active.isHeld(p) && p != selected &&
-							p.getFixtureRef() == null &&
-							p.getLocalCenter().y < Fields.FLOOR_Y) {
-						
-						// Apply gravity
-						PVector c = wldObj.getLocalCenter();
-						wldObj.updateLocalCenter(null, c.y + 10, null);
-					}
-
-					/* Collision Detection */
-					if(areOBBsDisplayed()) {
-						if( active != null && active.checkCollision(p) ) {
-							p.setBBColor(Fields.OBB_COLLISION);
-						}
-
-						// Detect collision with other objects
-						for(int cdx = idx + 1; cdx < s.size(); ++cdx) {
-
-							if (s.getWorldObject(cdx) instanceof Part) {
-								Part p2 = (Part)s.getWorldObject(cdx);
-
-								if(p.collision(p2)) {
-									// Change hit box color to indicate Object collision
-									p.setBBColor(Fields.OBB_COLLISION);
-									p2.setBBColor(Fields.OBB_COLLISION);
-									break;
-								}
-							}
-						}
-
-						if (active != null && !active.isHeld(p) && active.canPickup(p)) {
-							// Change hit box color to indicate tool tip collision
-							p.setBBColor(Fields.OBB_HELD);
-						}
-					}
-
-					if (p == selected) {
-						p.setBBColor(Fields.OBB_SELECTED);
-					}
-				}
-				
-				// Draw the object
-				if (wldObj instanceof Part) {
-					((Part)wldObj).draw(getGraphics(), UI.getOBBButtonState());
-					
-				} else {
-					wldObj.draw(getGraphics());
-				}
-			}
-		}
-		
-		AxesDisplay axesType = getAxesState();
-		
-		if (axesType != AxesDisplay.NONE &&
-			(active.getCurCoordFrame() == CoordFrame.WORLD
-				|| active.getCurCoordFrame() == CoordFrame.TOOL
-				|| (active.getCurCoordFrame() == CoordFrame.USER
-					&& active.getActiveUser() == null))) {
-			
-			// Render the world frame
-			PVector origin = new PVector(0f, 0f, 0f);
-			
-			if (axesType == AxesDisplay.AXES) {
-				Fields.drawAxes(getGraphics(), origin, Fields.WORLD_AXES_MAT,
-						10000f, Fields.BLACK);
-				
-			} else if (axesType == AxesDisplay.GRID) {
-				active.drawGridlines(getGraphics(), Fields.WORLD_AXES_MAT,
-						origin, 35, 100f);
-			}
-		}
-		
-
-		if (UI.getRobotButtonState()) {
-			// Draw all robots
-			for (RoboticArm r : ROBOTS.values()) {
-				
-				if (r == active) {
-					// active robot
-					r.draw(getGraphics(), true, axesType);
-					
-				} else {
-					r.draw(getGraphics(), false, AxesDisplay.NONE);
-				}
-				
-			}
-
-		} else {
-			// Draw only the active robot
-			active.draw(getGraphics(), true, axesType);
-		}
-		
-		/* Render the axes of the selected World Object */
-		
-		WorldObject wldObj = UI.getSelectedWO();
-		
-		if (wldObj != null) {
-			PVector origin;
-			RMatrix orientation;
-			
-			if (wldObj instanceof Part) {
-				origin = ((Part) wldObj).getCenter();
-				orientation = ((Part) wldObj).getOrientation();
-				
-			} else {
-				origin = wldObj.getLocalCenter();
-				orientation = wldObj.getLocalOrientation();
-			}
-
-			Fields.drawAxes(getGraphics(), origin, RMath.rMatToWorld(orientation),
-					500f, Fields.BLACK);
-		}
-	}
-	
-	/**
-	 * TODO comment this
-	 * 
-	 * @param frame
-	 */
-	public void renderTeachPoints(Frame frame) {
-		int size = 3;
-
-		if (mode == ScreenMode.TEACH_6PT && teachFrame instanceof ToolFrame) {
-			size = 6;
-		} else if (mode == ScreenMode.TEACH_4PT && teachFrame instanceof UserFrame) {
-			size = 4;
-		}
-
-		for (int idx = 0; idx < size; ++idx) {
-			Point pt = teachFrame.getPoint(idx);
-			
-			if (pt != null) {
-				pushMatrix();
-				// Applies the point's position
-				translate(pt.position.x, pt.position.y, pt.position.z);
-
-				// Draw color-coded sphere for the point
-				noFill();
-				int pointColor = Fields.color(255, 0, 255);
-
-				if (teachFrame instanceof ToolFrame) {
-
-					if (idx < 3) {
-						// TCP teach points
-						pointColor = Fields.color(130, 130, 130);
-					} else if (idx == 3) {
-						// Orient origin point
-						pointColor = Fields.color(255, 130, 0);
-					} else if (idx == 4) {
-						// Axes X-Direction point
-						pointColor = Fields.color(255, 0, 0);
-					} else if (idx == 5) {
-						// Axes Y-Diretion point
-						pointColor = Fields.color(0, 255, 0);
-					}
-				} else if (teachFrame instanceof UserFrame) {
-
-					if (idx == 0) {
-						// Orient origin point
-						pointColor = Fields.color(255, 130, 0);
-					} else if (idx == 1) {
-						// Axes X-Diretion point
-						pointColor = Fields.color(255, 0, 0);
-					} else if (idx == 2) {
-						// Axes Y-Diretion point
-						pointColor = Fields.color(0, 255, 0);
-					} else if (idx == 3) {
-						// Axes Origin point
-						pointColor = Fields.color(0, 0, 255);
-					}
-				}
-
-				stroke(pointColor);
-				sphere(3);
-
-				popMatrix();
-			}
-		}
-	}
-
-	/**
-	 * Displays all the windows and the right-hand text display.
-	 */
-	public void renderUI() {
-		hint(DISABLE_DEPTH_TEST);
-		noLights();
-		
-		pushMatrix();
-		ortho();
-		
-		pushStyle();
-		textFont(Fields.medium, 14);
-		fill(0);
-		textAlign(RIGHT, TOP);
-		
-		int lastTextPositionX = width - 20, lastTextPositionY = 20;
-		CoordFrame coord = activeRobot.getCurCoordFrame();
-		String coordFrame;
-		
-		if (coord == null) {
-			// Invalid state for coordinate frame
-			coordFrame = "Coordinate Frame: N/A";
-			
-		} else {
-			coordFrame = "Coordinate Frame: " + coord.toString();
-		}
-		
-		Point RP = activeRobot.getToolTipNative();
-
-		String[] cartesian = RP.toLineStringArray(true), joints = RP.toLineStringArray(false);
-		// Display the current Coordinate Frame name
-		text(coordFrame, lastTextPositionX, lastTextPositionY);
-		lastTextPositionY += 20;
-		// Display the Robot's speed value as a percent
-		text(String.format("Jog Speed: %d%%", activeRobot.getLiveSpeed()),
-				lastTextPositionX, lastTextPositionY);
-		lastTextPositionY += 20;
-
-		if (activeScenario != null) {
-			text(activeScenario.getName(), lastTextPositionX, lastTextPositionY);
-			
-		} else {
-			text("No active scenario", lastTextPositionX, lastTextPositionY);
-		}
-		lastTextPositionY += 40;
-		
-		// Display the Robot's current position and orientation in the World
-		// frame
-		text("Robot Position and Orientation", lastTextPositionX, lastTextPositionY);
-		lastTextPositionY += 20;
-		text("World", lastTextPositionX, lastTextPositionY);
-		lastTextPositionY += 20;
-
-		for (String line : cartesian) {
-			text(line, lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-
-		UserFrame active = activeRobot.getActiveUser();
-
-		if (active != null) {
-			// Display Robot's current position and orientation in the currently
-			// active User frame
-			RP.position = RMath.vToFrame(RP.position, active.getOrigin(), active.getOrientation());
-			RP.orientation = active.getOrientation().transformQuaternion(RP.orientation);
-			cartesian = RP.toLineStringArray(true);
-
-			lastTextPositionY += 20;
-			text(String.format("User: %d", activeRobot.getActiveUserIdx() + 1), lastTextPositionX,
-					lastTextPositionY);
-			lastTextPositionY += 20;
-
-			for (String line : cartesian) {
-				text(line, lastTextPositionX, lastTextPositionY);
-				lastTextPositionY += 20;
-			}
-		}
-
-		lastTextPositionY += 20;
-		// Display the Robot's current joint angle values
-		text("Joint", lastTextPositionX, lastTextPositionY);
-		lastTextPositionY += 20;
-		for (String line : joints) {
-			text(line, lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-
-		WorldObject selectedWO = UI.getSelectedWO();
-		// Display the position and orientation of the active world object
-		if (selectedWO != null) {
-			String[] dimFields = selectedWO.dimFieldsToStringArray();
-			// Convert the values into the World Coordinate System
-			PVector position = RMath.vToWorld(selectedWO.getLocalCenter());
-			PVector wpr = RMath.nRMatToWEuler( selectedWO.getLocalOrientation() );
-			
-
-			lastTextPositionY += 20;
-			text(selectedWO.getName(), lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-			String dimDisplay = "";
-			// Display the dimensions of the world object (if any)
-			for (int idx = 0; idx < dimFields.length; ++idx) {
-				if ((idx + 1) < dimFields.length) {
-					dimDisplay += String.format("%-12s", dimFields[idx]);
-
-				} else {
-					dimDisplay += String.format("%s", dimFields[idx]);
-				}
-			}
-			
-			// Create a set of uniform Strings
-			String[] lines = Fields.toLineStringArray(position, wpr);
-
-			text(dimDisplay, lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-			text(lines[0], lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-			text(lines[1], lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-
-			if (selectedWO instanceof Part) {
-				Part p = (Part) selectedWO;
-				// Convert the values into the World Coordinate System
-				position = RMath.vToWorld( p.getDefaultCenter() );
-				wpr = RMath.nRMatToWEuler( p.getDefaultOrientation() );
-				
-				// Create a set of uniform Strings
-				lines = Fields.toLineStringArray(position, wpr);
-				
-				lastTextPositionY += 20;
-				text(lines[0], lastTextPositionX, lastTextPositionY);
-				lastTextPositionY += 20;
-				text(lines[1], lastTextPositionX, lastTextPositionY);
-				lastTextPositionY += 20;
-			}
-		}
-		
-		pushStyle();
-		fill(215, 0, 0);
-		lastTextPositionY += 20;
-		
-		if (record) {
-			text("Recording (press Ctrl + Alt + r)",
-					lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-
-		// Display a message when there is an error with the Robot's
-		// movement
-		if (activeRobot.hasMotionFault()) {
-			text("Motion Fault (press SHIFT + RESET)", lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-
-		// Display a message if the Robot is in motion
-		if (activeRobot.inMotion()) {
-			text("Robot is moving", lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-		
-		if (isProgExec()) {
-			text("Program executing", lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-
-		// Display a message while the robot is carrying an object
-		if (!activeRobot.isHeld(null)) {
-			text("Object held", lastTextPositionX, lastTextPositionY);
-			lastTextPositionY += 20;
-		}
-		
-		popStyle();
-
-		// Display the current axes display state
-		text(String.format("Axes Display: %s", getAxesState().name()), lastTextPositionX, height - 50);
-		
-		UI.updateAndDrawUI();
-		
-		popStyle();
-		popMatrix();
 	}
 
 	/**
@@ -6668,7 +6222,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void SETUP() {
 		if (getSU_macro_bindings()[3] != null && isShift()) {
-			getSU_macro_bindings()[3].execute();
+			execute(getSU_macro_bindings()[3]);
 		}
 	}
 
@@ -6743,7 +6297,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void status() {
 		if (getSU_macro_bindings()[4] != null && isShift()) {
-			getSU_macro_bindings()[4].execute();
+			execute(getSU_macro_bindings()[4]);
 		}
 	}
 
@@ -6838,7 +6392,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void tool1() {
 		if (getSU_macro_bindings()[0] != null && isShift()) {
-			getSU_macro_bindings()[0].execute();
+			execute(getSU_macro_bindings()[0]);
 		}
 	}
 
@@ -6849,7 +6403,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void tool2() {
 		if (getSU_macro_bindings()[1] != null && isShift()) {
-			getSU_macro_bindings()[1].execute();
+			execute(getSU_macro_bindings()[1]);
 		}
 	}
 
@@ -7686,6 +7240,19 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
+	 * Execute the given macro
+	 * 
+	 * @param m
+	 */
+	private void execute(Macro m) {
+		// Stop any prior Robot movement
+		hold();
+		// Safeguard against editing a program while it is running
+		contents.setColumnIdx(0);
+		progExec(m.getProgIdx(), 0, isStep());
+	}
+	
+	/**
 	 * TODO comment this
 	 * 
 	 * @param singleExec
@@ -7713,7 +7280,7 @@ public class RobotRun extends PApplet {
 	 * @param instIdx
 	 * @param singleExec
 	 */
-	public void progExec(int progIdx, int instIdx, boolean singleExec) {
+	private void progExec(int progIdx, int instIdx, boolean singleExec) {
 		Program p = activeRobot.getProgram(progIdx);
 		// Validate active indices
 		if (p != null && instIdx >= 0 && instIdx < p.size()) {
@@ -7797,6 +7364,444 @@ public class RobotRun extends PApplet {
 		screenStates.push(curState);
 		
 	}
+	
+	/**
+	 * Updates the position and orientation of the Robot as well as all the
+	 * World Objects associated with the current scenario. Updates the bounding
+	 * box color, position and orientation of the Robot and all World Objects as
+	 * well. Finally, all the World Objects and the Robot are drawn.
+	 */
+	private void renderScene() {
+		
+		if (isProgExec()) {
+			updateProgExec();
+		}
+		
+		activeRobot.updateRobot();
+		
+		if (isProgExec()) {
+			updateCurIdx();
+		}
+
+		if (activeScenario != null) {
+			activeScenario.resetObjectHitBoxColors();
+		}
+
+		activeRobot.resetOBBColors();
+		activeRobot.checkSelfCollisions();
+
+		if (activeScenario != null) {
+			WorldObject selected = UI.getSelectedWO();
+			int numOfObjects = activeScenario.size();
+
+			for (int idx = 0; idx < numOfObjects; ++idx) {
+				WorldObject wldObj = activeScenario.getWorldObject(idx);
+
+				if (wldObj instanceof Part) {
+					Part p = (Part)wldObj;
+
+					/* Update the transformation matrix of an object held by the Robotic Arm */
+					if(activeRobot != null && activeRobot.isHeld(p) && activeRobot.inMotion()) {
+						
+						/***********************************************
+						     Moving a part with the Robot:
+						
+						     P' = R^-1 x E' x E^-1 x P
+						
+						     where:
+						     P' - new part local orientation
+						     R  - part fixture reference orientation
+						     E' - current Robot end effector orientation
+						     E  - previous Robot end effector orientation
+						     P  - current part local orientation
+						 ***********************************************/
+						
+						RMatrix curTip = activeRobot.getFaceplateTMat(activeRobot.getJointAngles());
+						RMatrix invMat = activeRobot.getLastTipTMatrix().getInverse();
+						Fixture refFixture = p.getFixtureRef();
+						
+						pushMatrix();
+						resetMatrix();
+						
+						if (refFixture != null) {
+							refFixture.removeCoordinateSystem();
+						}
+						
+						applyMatrix(curTip);
+						applyMatrix(invMat);
+						applyCoord(p.getCenter(), p.getOrientation());
+						
+						// Update the world object's position and orientation
+						p.setLocalCenter( getPosFromMatrix(0f, 0f, 0f) );
+						p.setLocalOrientation( getOrientation() );
+						
+						popMatrix();
+					}
+					
+					
+					if (activeScenario.isGravity() && activeRobot.isHeld(p) &&
+							p != selected && p.getFixtureRef() == null &&
+							p.getLocalCenter().y < Fields.FLOOR_Y) {
+						
+						// Apply gravity
+						PVector c = wldObj.getLocalCenter();
+						wldObj.updateLocalCenter(null, c.y + 10, null);
+					}
+
+					/* Collision Detection */
+					if(areOBBsDisplayed()) {
+						if( activeRobot != null && activeRobot.checkCollision(p) ) {
+							p.setBBColor(Fields.OBB_COLLISION);
+						}
+
+						// Detect collision with other objects
+						for(int cdx = idx + 1; cdx < activeScenario.size(); ++cdx) {
+
+							if (activeScenario.getWorldObject(cdx) instanceof Part) {
+								Part p2 = (Part)activeScenario.getWorldObject(cdx);
+
+								if(p.collision(p2)) {
+									// Change hit box color to indicate Object collision
+									p.setBBColor(Fields.OBB_COLLISION);
+									p2.setBBColor(Fields.OBB_COLLISION);
+									break;
+								}
+							}
+						}
+
+						if (activeRobot != null && !activeRobot.isHeld(p) &&
+								activeRobot.canPickup(p)) {
+							
+							// Change hit box color to indicate tool tip collision
+							p.setBBColor(Fields.OBB_HELD);
+						}
+					}
+
+					if (p == selected) {
+						p.setBBColor(Fields.OBB_SELECTED);
+					}
+				}
+				
+				// Draw the object
+				if (wldObj instanceof Part) {
+					((Part)wldObj).draw(getGraphics(), UI.getOBBButtonState());
+					
+				} else {
+					wldObj.draw(getGraphics());
+				}
+			}
+		}
+		
+		AxesDisplay axesType = getAxesState();
+		
+		if (axesType != AxesDisplay.NONE &&
+			(activeRobot.getCurCoordFrame() == CoordFrame.WORLD
+				|| activeRobot.getCurCoordFrame() == CoordFrame.TOOL
+				|| (activeRobot.getCurCoordFrame() == CoordFrame.USER
+					&& activeRobot.getActiveUser() == null))) {
+			
+			// Render the world frame
+			PVector origin = new PVector(0f, 0f, 0f);
+			
+			if (axesType == AxesDisplay.AXES) {
+				Fields.drawAxes(getGraphics(), origin, Fields.WORLD_AXES_MAT,
+						10000f, Fields.BLACK);
+				
+			} else if (axesType == AxesDisplay.GRID) {
+				activeRobot.drawGridlines(getGraphics(), Fields.WORLD_AXES_MAT,
+						origin, 35, 100f);
+			}
+		}
+		
+
+		if (UI.getRobotButtonState()) {
+			// Draw all robots
+			for (RoboticArm r : ROBOTS.values()) {
+				
+				if (r == activeRobot) {
+					// active robot
+					r.draw(getGraphics(), true, axesType);
+					
+				} else {
+					r.draw(getGraphics(), false, AxesDisplay.NONE);
+				}
+				
+			}
+
+		} else {
+			// Draw only the active robot
+			activeRobot.draw(getGraphics(), true, axesType);
+		}
+		
+		/* Render the axes of the selected World Object */
+		
+		WorldObject wldObj = UI.getSelectedWO();
+		
+		if (wldObj != null) {
+			PVector origin;
+			RMatrix orientation;
+			
+			if (wldObj instanceof Part) {
+				origin = ((Part) wldObj).getCenter();
+				orientation = ((Part) wldObj).getOrientation();
+				
+			} else {
+				origin = wldObj.getLocalCenter();
+				orientation = wldObj.getLocalOrientation();
+			}
+
+			Fields.drawAxes(getGraphics(), origin, RMath.rMatToWorld(orientation),
+					500f, Fields.BLACK);
+		}
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param frame
+	 */
+	private void renderTeachPoints(Frame frame) {
+		int size = 3;
+
+		if (mode == ScreenMode.TEACH_6PT && teachFrame instanceof ToolFrame) {
+			size = 6;
+		} else if (mode == ScreenMode.TEACH_4PT && teachFrame instanceof UserFrame) {
+			size = 4;
+		}
+
+		for (int idx = 0; idx < size; ++idx) {
+			Point pt = teachFrame.getPoint(idx);
+			
+			if (pt != null) {
+				pushMatrix();
+				// Applies the point's position
+				translate(pt.position.x, pt.position.y, pt.position.z);
+
+				// Draw color-coded sphere for the point
+				noFill();
+				int pointColor = Fields.color(255, 0, 255);
+
+				if (teachFrame instanceof ToolFrame) {
+
+					if (idx < 3) {
+						// TCP teach points
+						pointColor = Fields.color(130, 130, 130);
+					} else if (idx == 3) {
+						// Orient origin point
+						pointColor = Fields.color(255, 130, 0);
+					} else if (idx == 4) {
+						// Axes X-Direction point
+						pointColor = Fields.color(255, 0, 0);
+					} else if (idx == 5) {
+						// Axes Y-Diretion point
+						pointColor = Fields.color(0, 255, 0);
+					}
+				} else if (teachFrame instanceof UserFrame) {
+
+					if (idx == 0) {
+						// Orient origin point
+						pointColor = Fields.color(255, 130, 0);
+					} else if (idx == 1) {
+						// Axes X-Diretion point
+						pointColor = Fields.color(255, 0, 0);
+					} else if (idx == 2) {
+						// Axes Y-Diretion point
+						pointColor = Fields.color(0, 255, 0);
+					} else if (idx == 3) {
+						// Axes Origin point
+						pointColor = Fields.color(0, 0, 255);
+					}
+				}
+
+				stroke(pointColor);
+				sphere(3);
+
+				popMatrix();
+			}
+		}
+	}
+
+	/**
+	 * Displays all the windows and the right-hand text display.
+	 */
+	private void renderUI() {
+		hint(DISABLE_DEPTH_TEST);
+		noLights();
+		
+		pushMatrix();
+		ortho();
+		
+		pushStyle();
+		textFont(Fields.medium, 14);
+		fill(0);
+		textAlign(RIGHT, TOP);
+		
+		int lastTextPositionX = width - 20, lastTextPositionY = 20;
+		CoordFrame coord = activeRobot.getCurCoordFrame();
+		String coordFrame;
+		
+		if (coord == null) {
+			// Invalid state for coordinate frame
+			coordFrame = "Coordinate Frame: N/A";
+			
+		} else {
+			coordFrame = "Coordinate Frame: " + coord.toString();
+		}
+		
+		Point RP = activeRobot.getToolTipNative();
+
+		String[] cartesian = RP.toLineStringArray(true), joints = RP.toLineStringArray(false);
+		// Display the current Coordinate Frame name
+		text(coordFrame, lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+		// Display the Robot's speed value as a percent
+		text(String.format("Jog Speed: %d%%", activeRobot.getLiveSpeed()),
+				lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+
+		if (activeScenario != null) {
+			text(activeScenario.getName(), lastTextPositionX, lastTextPositionY);
+			
+		} else {
+			text("No active scenario", lastTextPositionX, lastTextPositionY);
+		}
+		lastTextPositionY += 40;
+		
+		// Display the Robot's current position and orientation in the World
+		// frame
+		text("Robot Position and Orientation", lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+		text("World", lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+
+		for (String line : cartesian) {
+			text(line, lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		UserFrame active = activeRobot.getActiveUser();
+
+		if (active != null) {
+			// Display Robot's current position and orientation in the currently
+			// active User frame
+			RP.position = RMath.vToFrame(RP.position, active.getOrigin(), active.getOrientation());
+			RP.orientation = active.getOrientation().transformQuaternion(RP.orientation);
+			cartesian = RP.toLineStringArray(true);
+
+			lastTextPositionY += 20;
+			text(String.format("User: %d", activeRobot.getActiveUserIdx() + 1), lastTextPositionX,
+					lastTextPositionY);
+			lastTextPositionY += 20;
+
+			for (String line : cartesian) {
+				text(line, lastTextPositionX, lastTextPositionY);
+				lastTextPositionY += 20;
+			}
+		}
+
+		lastTextPositionY += 20;
+		// Display the Robot's current joint angle values
+		text("Joint", lastTextPositionX, lastTextPositionY);
+		lastTextPositionY += 20;
+		for (String line : joints) {
+			text(line, lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		WorldObject selectedWO = UI.getSelectedWO();
+		// Display the position and orientation of the active world object
+		if (selectedWO != null) {
+			String[] dimFields = selectedWO.dimFieldsToStringArray();
+			// Convert the values into the World Coordinate System
+			PVector position = RMath.vToWorld(selectedWO.getLocalCenter());
+			PVector wpr = RMath.nRMatToWEuler( selectedWO.getLocalOrientation() );
+			
+
+			lastTextPositionY += 20;
+			text(selectedWO.getName(), lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+			String dimDisplay = "";
+			// Display the dimensions of the world object (if any)
+			for (int idx = 0; idx < dimFields.length; ++idx) {
+				if ((idx + 1) < dimFields.length) {
+					dimDisplay += String.format("%-12s", dimFields[idx]);
+
+				} else {
+					dimDisplay += String.format("%s", dimFields[idx]);
+				}
+			}
+			
+			// Create a set of uniform Strings
+			String[] lines = Fields.toLineStringArray(position, wpr);
+
+			text(dimDisplay, lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+			text(lines[0], lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+			text(lines[1], lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+
+			if (selectedWO instanceof Part) {
+				Part p = (Part) selectedWO;
+				// Convert the values into the World Coordinate System
+				position = RMath.vToWorld( p.getDefaultCenter() );
+				wpr = RMath.nRMatToWEuler( p.getDefaultOrientation() );
+				
+				// Create a set of uniform Strings
+				lines = Fields.toLineStringArray(position, wpr);
+				
+				lastTextPositionY += 20;
+				text(lines[0], lastTextPositionX, lastTextPositionY);
+				lastTextPositionY += 20;
+				text(lines[1], lastTextPositionX, lastTextPositionY);
+				lastTextPositionY += 20;
+			}
+		}
+		
+		pushStyle();
+		fill(215, 0, 0);
+		lastTextPositionY += 20;
+		
+		if (record) {
+			text("Recording (press Ctrl + Alt + r)",
+					lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		// Display a message when there is an error with the Robot's
+		// movement
+		if (activeRobot.hasMotionFault()) {
+			text("Motion Fault (press SHIFT + RESET)", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		// Display a message if the Robot is in motion
+		if (activeRobot.inMotion()) {
+			text("Robot is moving", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+		
+		if (isProgExec()) {
+			text("Program executing", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+
+		// Display a message while the robot is carrying an object
+		if (!activeRobot.isHeld(null)) {
+			text("Object held", lastTextPositionX, lastTextPositionY);
+			lastTextPositionY += 20;
+		}
+		
+		popStyle();
+
+		// Display the current axes display state
+		text(String.format("Axes Display: %s", getAxesState().name()), lastTextPositionX, height - 50);
+		
+		UI.updateAndDrawUI();
+		
+		popStyle();
+		popMatrix();
+	}
 
 	private void setManager(WGUI ui) {
 		this.UI = ui;
@@ -7836,6 +7841,8 @@ public class RobotRun extends PApplet {
 							setActiveRobot(progExecState.getRID());
 							contents.setColumnIdx(0);
 						}
+						
+						progExecState.setCurIdx( progExecState.getNextIdx() );
 					}
 					
 				} else if (progExecState.isSingleExec()) {

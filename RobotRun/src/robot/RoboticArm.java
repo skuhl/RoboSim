@@ -7,9 +7,7 @@ import core.RobotRun;
 import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;
-import enums.ExecState;
 import enums.InstOp;
-import enums.ExecType;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
@@ -25,14 +23,9 @@ import global.RMath;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
-import programming.CallInstruction;
-import programming.IfStatement;
 import programming.Instruction;
-import programming.JumpInstruction;
 import programming.MotionInstruction;
-import programming.ProgExecution;
 import programming.Program;
-import programming.SelectStatement;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
@@ -1232,17 +1225,25 @@ public class RoboticArm {
 	 */
 	public Point getPosition(MotionInstruction mInst, Program parent) {
 		int posNum = mInst.getPositionNum();
+		Point pt = null;
 		
 		if (mInst.usesGPosReg()) {
 			// The instruction references a global position register
-			if (posNum == -1) {
-				return null;	
+			PositionRegister pReg = getPReg(posNum);
+			
+			if (pReg != null) {
+				pt = pReg.point;
 			}
 			
-			return PREG[posNum].point.clone();
+		} else {
+			pt = parent.getPosition(posNum);;
 		}
 		
-		return parent.getPosition(posNum).clone();
+		if (pt != null) {
+			return pt.clone();
+		}
+		// Unintialized position or invalid position index
+		return null;
 	}
 	
 	/**
@@ -1465,6 +1466,7 @@ public class RoboticArm {
 		Point pt = getPosition(mInst, parent);
 		
 		if (mInst.getOffset() != -1) {
+			System.err.println("OFFSET!");
 			// Apply the position offset
 			Point offset = PREG[mInst.getOffset()].point;
 			

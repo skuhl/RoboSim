@@ -197,7 +197,7 @@ public abstract class DataManagement {
 			
 			for (int idx = 0; idx < len; ++idx) {
 				// Read in each element of the expression
-				Operand<?> temp = (Operand<?>)loadExpressionElement(robot, in);
+				ExpressionElement temp = loadExpressionElement(robot, in);
 				exprElements.add(temp);
 			}
 	

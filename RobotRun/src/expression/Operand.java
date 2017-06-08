@@ -51,6 +51,11 @@ public abstract class Operand<T> implements ExpressionElement {
 	
 	@Override
 	public String[] toStringArray() {
+		
+		if (value == null) {
+			return new String[] { "..." };
+		}
+		
 		return new String[] { value.toString() };
 	}
 	
