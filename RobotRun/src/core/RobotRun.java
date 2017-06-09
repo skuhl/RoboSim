@@ -2310,7 +2310,7 @@ public class RobotRun extends PApplet {
 
 			updatePendantScreen();
 			break;
-		case EDIT_MINST_POS:
+		case EDIT_PROG_POS:
 			MotionInstruction mInst = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 			Point pt = parsePosFromContents(mInst.getMotionType() != Fields.MTYPE_JOINT);
 
@@ -3026,12 +3026,11 @@ public class RobotRun extends PApplet {
 				nextScreen(ScreenMode.NAV_INSTR_MENU);
 				
 			} else if (inst instanceof MotionInstruction) {
-				MotionInstruction mInst = (MotionInstruction)inst;
-				int sdx = getSelectedIdx();
+				int regState = selectedMInstRegState();
 				
-				if (sdx == 3 && !mInst.usePReg()) {
-					// Only allow editing of local position registers
-					nextScreen(ScreenMode.EDIT_MINST_POS);	
+				if (regState == 1) {
+					// Only allow editing of primary position of motion instruction
+					nextScreen(ScreenMode.EDIT_PROG_POS);	
 				}
 				
 			} else if (inst instanceof IfStatement) {
@@ -3429,9 +3428,9 @@ public class RobotRun extends PApplet {
 				funct[2] = "[Ovr Pt]";
 				
 				int regState = selectedMInstRegState();
-				/* Only display edit function for a motion instruction
-				 * referencing a position */
-				if (regState > 0 && regState % 2 == 1) {
+				/* Only display edit function for a motion instruction's
+				 * primary position referencing a position */
+				if (regState == 1) {
 					funct[4] = "[Reg]";
 				}
 			} 
@@ -3469,7 +3468,7 @@ public class RobotRun extends PApplet {
 				}
 			}
 			break;
-		case EDIT_MINST_POS:
+		case EDIT_PROG_POS:
 			funct[0] = "";
 			funct[1] = "";
 			funct[2] = "";
@@ -3660,7 +3659,7 @@ public class RobotRun extends PApplet {
 		case SELECT_INSTR_DELETE:
 			header = getActiveProg().getName();
 			break;
-		case EDIT_MINST_POS:
+		case EDIT_PROG_POS:
 			Program p = getActiveProg();
 			header = String.format("EDIT %s POSITION", p.getName());
 			break;
@@ -5002,27 +5001,18 @@ public class RobotRun extends PApplet {
 			contents.setColumnIdx( current.conColIdx );
 			contents.setRenderStart(  current.conRenIdx );
 			break;
-		case EDIT_MINST_POS:
+		case EDIT_PROG_POS:
 			contents.setLineIdx( current.conLnIdx );
 			contents.setColumnIdx( current.conColIdx );
 			contents.setRenderStart(  current.conRenIdx );
-			// Load in the position associated with the active motion
-			// instruction
+			Program prog = getActiveProg();
 			mInst = (MotionInstruction) getActiveInstruction();
-			Program p = getActiveProg();
-			Point pt = activeRobot.getPosition(mInst, p);
+			Point pt = prog.getPosition(mInst.getPosIdx());
 			
 			// Initialize the point if it is null
 			if (pt == null) {
 				pt = new Point();
-				
-				if (mInst.usePReg()) {
-					PositionRegister pReg = activeRobot.getPReg(mInst.getPosIdx());
-					pReg.point = pt;
-					
-				} else {
-					p.setPosition(mInst.getPosIdx(), pt);
-				}
+				prog.setPosition(mInst.getPosIdx(), pt);
 			}
 			
 			boolean isCartesian = mInst.getMotionType() != Fields.MTYPE_JOINT;
@@ -5031,8 +5021,8 @@ public class RobotRun extends PApplet {
 		case SELECT_INSTR_DELETE:
 		case SELECT_COMMENT:
 		case SELECT_CUT_COPY:
-			p = getActiveProg();
-			int size = p.getNumOfInst() - 1;
+			prog = getActiveProg();
+			int size = prog.getNumOfInst() - 1;
 			setActiveInstIdx(max(0, min(getActiveInstIdx(), size)));
 			break;
 
@@ -6657,7 +6647,7 @@ public class RobotRun extends PApplet {
 			contents.setLines( loadIORegNav(activeRobot) );
 			break;
 		// Position entry menus
-		case EDIT_MINST_POS:
+		case EDIT_PROG_POS:
 		case EDIT_PREG:
 		case DIRECT_ENTRY_TOOL:
 		case DIRECT_ENTRY_USER:
