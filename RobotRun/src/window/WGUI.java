@@ -87,7 +87,7 @@ public class WGUI implements ControlListener {
 			DIM_TXT = 3,
 			DIM_DDL = 1;
 	
-	public static final String[] tabs = { "Hide", "Robot1", "Robot2", "Create", 
+	private static final String[] tabs = { "Hide", "Robot1", "Robot2", "Create", 
 										  "Edit", "Scenario", "Camera", "Misc" };
 	
 	/** The manager object, which contains all the UI elements. */
@@ -599,10 +599,11 @@ public class WGUI implements ControlListener {
 		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("ActiveAxesDisplay", "Axes Display:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 
-		addButton("ToggleOBBs", "Hide OBBs", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
-		addButton("ToggleRobot", "Add Robot", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
-		addButton("ToggleCamera", "Enable RCam", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
-
+		addButton("ToggleOBBs", "Hide OBBs", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addButton("ToggleRobot", "Add Robot", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addButton("ToggleCamera", "Enable RCam", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addButton("ToggleTrace", "Enable Trace", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		
 		/* Initialize dropdown list elements
 		 * 
 		 * NOTE: the order in which the dropdown lists matters!
@@ -1525,6 +1526,21 @@ public class WGUI implements ControlListener {
 	private MyButton getButton(String name) throws ClassCastException {
 		return (MyButton) manager.get(name);
 	}
+	
+	/**
+	 * Attempts to find a button with the given name and returns its state.
+	 * 
+	 * @param name	The name of the button, of which to find the state
+	 */
+	public boolean getButtonState(String name) {
+		ControllerInterface<?> controller = manager.get(name);
+		
+		if (controller instanceof MyButton) {
+			return ((MyButton) controller).isOn();
+		}
+		// No button exists with the given name
+		return false;
+	}
 
 	/**
 	 * Parses a six-element float array from the six orientation input
@@ -1776,13 +1792,6 @@ public class WGUI implements ControlListener {
 			PApplet.println("Missing parameter!");
 			return null;
 		}
-	}
-
-	/**
-	 * @return	Whether or not the OBB Display button is off
-	 */
-	public boolean getOBBButtonState() {
-		return !getButton("ToggleOBBs").isOn();
 	}
 
 	/**
@@ -2203,7 +2212,7 @@ public class WGUI implements ControlListener {
 			windowTabs.setLabel("Hide");
 		}
 
-		// Remove or add the second Robot based on the HideRobot button
+		// Remove or add the robot2 tab based on the robot toggle button
 		Button tr = getButton("ToggleRobot");
 		if(tr.isOn()) {
 			tr.setLabel("Remove Robot");
@@ -2222,7 +2231,7 @@ public class WGUI implements ControlListener {
 			windowTabs.setLabel("Hide");
 		}
 
-		// Remove or add the second Robot based on the HideRobot button
+		// Remove or add the camera tab based on the camera toggle button
 		Button tc = getButton("ToggleCamera");
 		if(tc.isOn()) {
 			tc.setLabel("Disable RCam");
@@ -2812,6 +2821,17 @@ public class WGUI implements ControlListener {
 		.setHeight(relPos[1])
 		.show();
 	}
+	
+	/**
+	 * Update the jog buttons based on the set of jog motion values.
+	 * 
+	 * @param jogMotion	A 6-element array defining the direction of jog motion
+	 */
+	public void updateJogButtons(int[] jogMotion) {
+		for (int mdx = 0; mdx < jogMotion.length; ++mdx) {
+			updateJogButtons(mdx, jogMotion[mdx]);
+		}
+	}
 
 	/**
 	 * Updates the background color of the robot jog buttons corresponding to
@@ -2845,7 +2865,7 @@ public class WGUI implements ControlListener {
 	 * @param pair		The index of a jog button pair
 	 * @param newDir	The new motion direction
 	 */
-	public void updateJogButtons(int pair, float newDir) {
+	private void updateJogButtons(int pair, int newDir) {
 		// Positive jog button is active when the direction is positive
 		updateButtonBgColor(String.format("joint%d_pos", pair + 1), newDir > 0);
 		// Negative jog button is active when the direction is negative
@@ -3113,7 +3133,8 @@ public class WGUI implements ControlListener {
 		// Bounding box display toggle button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		Button b = getButton("ToggleOBBs").setPosition(relPos[0], relPos[1]);
-
+		c = b;
+		
 		// Update button color based on the state of the button
 		if (b.isOn()) {
 			b.setLabel("Show OBBs");
@@ -3121,27 +3142,41 @@ public class WGUI implements ControlListener {
 		} else {
 			b.setLabel("Hide OBBs");
 		}
+		
+		updateButtonBgColor(b.getName(), b.isOn());
+		
+		// Robot Camera toggle button
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		b = getButton("ToggleCamera").setPosition(relPos[0], relPos[1]);
 		updateButtonBgColor(b.getName(), b.isOn());
 
 		// Second robot toggle button
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("ToggleRobot").setPosition(relPos[0], relPos[1]);
-		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = b = getButton("ToggleRobot").setPosition(relPos[0], relPos[1]);
 		updateButtonBgColor(b.getName(), b.isOn());
 		
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("ToggleCamera").setPosition(relPos[0], relPos[1]);
-
-		// Update button color based on the state of the button
+		// Trace Robot Tool Tip button
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		c = b = getButton("ToggleTrace").setPosition(relPos[0], relPos[1]);
+		
+		if (b.isOn()) {
+			b.setLabel("Disable Trace");
+			
+		} else {
+			b.setLabel("Enable Trace");
+		}
+		
 		updateButtonBgColor(b.getName(), b.isOn());
 
 		// Update window background display
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		background.setPosition(miscellaneous.getPosition())
 		.setBackgroundHeight(relPos[1])
 		.setHeight(relPos[1])
 		.show();
 	}
+	
+
 
 	/**
 	 * Updates the current menu of the UI and communicates with the PApplet to
