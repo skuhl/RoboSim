@@ -422,6 +422,10 @@ public class RobotCamera {
 		
 		return objMatches;
 	}
+	
+	public boolean isObjectInScene(WorldObject proto, Scenario s) {
+		return matchTaughtObject(proto, s).size() != 0;
+	}
 
 	public RobotCamera setOrientation(PVector o) {
 		camOrient = RMath.eulerToQuat(o);
