@@ -971,6 +971,18 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param mInst
+	 * @param parent
+	 * @return			A copy of the position associated with the secondary
+	 * 					position of the given circular motion instruction
+	 */
+	public Point getCPosition(MotionInstruction mInst, Program parent) {
+		return getPosition(mInst.getCircPosIdx(), mInst.circUsePReg(), parent);
+	}
+	
+	/**
 	 * @return	The current coordinate frame of the Robot
 	 */
 	public CoordFrame getCurCoordFrame() {
@@ -1161,25 +1173,36 @@ public class RoboticArm {
 	 * 					instruction
 	 */
 	public Point getPosition(MotionInstruction mInst, Program parent) {
-		int posNum = mInst.getPositionNum();
+		return getPosition(mInst.getPosIdx(), mInst.usePReg(), parent);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param posIdx
+	 * @param usePReg
+	 * @param parent
+	 * @return
+	 */
+	private Point getPosition(int posIdx, boolean usePReg, Program parent) {
 		Point pt = null;
 		
-		if (mInst.usesGPosReg()) {
+		if (usePReg) {
 			// The instruction references a global position register
-			PositionRegister pReg = getPReg(posNum);
+			PositionRegister pReg = getPReg(posIdx);
 			
 			if (pReg != null) {
 				pt = pReg.point;
 			}
 			
 		} else {
-			pt = parent.getPosition(posNum);;
+			pt = parent.getPosition(posIdx);;
 		}
 		
 		if (pt != null) {
 			return pt.clone();
 		}
-		// Unintialized position or invalid position index
+		// Uninitialized position or invalid position index
 		return null;
 	}
 	
@@ -1392,39 +1415,130 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the native position and orientation and robot joint angles
+	 * resulting from the given motion instruction based on the position
+	 * associated with the motion instruction, as well as its user frame,
+	 * tool frame, and offset. Depending on the offset, the resulting point may
+	 * be null.
 	 * 
-	 * @param mInst
-	 * @param parent	
-	 * @return			The modified position associated with the given motion
-	 * 					instruction
+	 * @param mInst			The motion instruction defining the position index,
+	 * 						position type, user frame, tool frame, and offset
+	 * 						for the resulting point
+	 * @param parent		The program, to which mInst belongs
+	 * @param useCircPos	Whether to get the primary or secondary position of
+	 * 						the motion instruction
+	 * @return				The position and orientation of the point in the
+	 * 						native coordinate system as well as the associated
+	 * 						joint angles for that position
 	 */
-	public Point getVector(MotionInstruction mInst, Program parent) {
-		Point pt = getPosition(mInst, parent);
+	public Point getVector(MotionInstruction mInst, Program parent, boolean getCircPos) {
+		Point pt;
 		
-		if (mInst.getOffset() != -1) {
-			System.err.println("OFFSET!");
-			// Apply the position offset
-			Point offset = PREG[mInst.getOffset()].point;
+		if (getCircPos) {
+			pt = getCPosition(mInst, parent);
 			
-			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
-				pt = pt.add(offset.angles);
-				
-			} else {
-				// TODO do circular instructions differ?
-				pt = pt.add(offset.position, offset.orientation);
-			}
+		} else {
+			pt = getPosition(mInst, parent);
 		}
 		
-		if (mInst.getUserFrame() != -1) {
+		UserFrame instUFrame = getUserFrame(mInst.getUFrameIdx());
+		PositionRegister offReg = getPReg(mInst.getOffsetIdx());
+		
+		// Check if offset can be applied
+		if (mInst.getOffsetType() != Fields.OFFSET_NONE) {
+			
+			if (offReg == null || offReg.point == null) {
+				// Invalid offset
+				return null;
+			}
+			
+			Point offset = offReg.point;
+			boolean offIsCart = offReg.isCartesian;
+			boolean posIsCart = mInst.getMotionType() != Fields.MTYPE_JOINT;
+			
+			if (posIsCart && offIsCart) {
+				// Add a Cartesian offset to a linear motion instruction
+				pt = pt.add(offset.position, offset.orientation);
+				
+				if (instUFrame != null) {
+					// Remove the associated user frame
+					pt = removeFrame(pt, instUFrame.getOrigin(),
+							instUFrame.getOrientation());
+				}
+				// Find the resulting joint angles
+				float[] jointAngles = RMath.inverseKinematics(this, pt.angles,
+						pt.position, pt.orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failure
+					return null;
+					
+				} else {
+					pt.angles = jointAngles;
+				}
+				
+			} else if (posIsCart) {
+				// Add a joint offset to a linear motion instruction
+				if (instUFrame != null) {
+					// Remove the associated user frame
+					pt = removeFrame(pt, instUFrame.getOrigin(),
+							instUFrame.getOrientation());
+				}
+				
+				float[] jointAngles = RMath.inverseKinematics(this, pt.angles,
+						pt.position, pt.orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failure
+					return null;
+				}
+				// Apply the offset
+				for (int jdx = 0; jdx < 6; ++jdx) {
+					jointAngles[jdx] = RMath.mod2PI(jointAngles[jdx]
+							+ offset.angles[jdx]);
+				}
+				
+				// Calculate the new Cartesian position and orientation
+				pt = getToolTipNative(jointAngles);
+				
+			} else if (offIsCart) {
+				// Add a Cartesian offset to a joint motion instruction
+				pt = getToolTipPoint(pt.angles, getActiveTool(), instUFrame);
+				// Apply offset
+				pt = pt.add(offset.position, offset.orientation);
+				
+				// Find the resulting joint angles
+				float[] jointAngles = RMath.inverseKinematics(this, pt.angles,
+						pt.position, pt.orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failure
+					return null;
+					
+				} else {
+					pt.angles = jointAngles;
+				}
+				
+			} else {
+				// Add joint offset to a joint motion instruction
+				for (int jdx = 0; jdx < 6; ++jdx) {
+					pt.angles[jdx] = RMath.mod2PI(pt.angles[jdx]
+							+ offset.angles[jdx]);
+				}
+				
+				pt = getToolTipNative(pt.angles);
+			}
+		
+		// No offset to apply
+		} else if (instUFrame != null) {
 			// Remove the associated user frame
-			UserFrame uFrame = getUserFrame(mInst.getUserFrame());
-			pt = removeFrame(pt, uFrame.getOrigin(), uFrame.getOrientation());
+			pt = removeFrame(pt, instUFrame.getOrigin(),
+					instUFrame.getOrientation());
 		}
 		
 		return pt;
 	}
-	
+
 	/**
 	 * Stops all movement of this robot.
 	 */
@@ -1855,9 +1969,11 @@ public class RoboticArm {
 	public int setupMInstMotion(Program prog, MotionInstruction mInst,
 			int nextIdx, boolean singleExec) {
 		
-		Point instPt = getVector(mInst, prog);
+		Point instPt = getVector(mInst, prog, false);
 		
-		if (!mInst.checkFrames(activeToolIdx, activeUserIdx)) {
+		if (mInst.getTFrameIdx() != activeToolIdx ||
+				mInst.getUFrameIdx() != activeUserIdx) {
+			
 			// Incorrect active frames for this motion instruction
 			return 1;
 			
@@ -1868,7 +1984,7 @@ public class RoboticArm {
 		
 		if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
 			// Setup joint motion instruction
-			updateMotion(instPt.angles, mInst.getSpeed());
+			updateMotion(instPt.angles, mInst.getSpdMod());
 			
 		} else if (mInst.getMotionType() == Fields.MTYPE_LINEAR) {
 			// Setup linear motion instruction
@@ -1877,19 +1993,18 @@ public class RoboticArm {
 			if (mInst.getTermination() > 0 && nextInst instanceof MotionInstruction
 					&& !singleExec) {
 				// Non-fine termination motion
-				Point nextPt = getVector((MotionInstruction)nextInst, prog);
-				updateMotion(instPt, nextPt, mInst.getSpeed(), mInst.getTermination() / 100f);
+				Point nextPt = getVector((MotionInstruction)nextInst, prog, false);
+				updateMotion(instPt, nextPt, mInst.getSpdMod(), mInst.getTermination() / 100f);
 				
 			} else {
 				// Fine termination motion
-				updateMotion(instPt, mInst.getSpeed());
+				updateMotion(instPt, mInst.getSpdMod());
 			}
 		
 		} else if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
 			// Setup circular motion instruction
-			MotionInstruction sndPt = mInst.getSecondaryPoint();
-			Point endPt = getVector(sndPt, prog);
-			updateMotion(endPt, instPt, mInst.getSpeed());
+			Point endPt = getVector(mInst, prog, true);
+			updateMotion(endPt, instPt, mInst.getSpdMod());
 			
 		} else {
 			// Invalid motion type
@@ -1976,18 +2091,9 @@ public class RoboticArm {
 		
 		if (newPt != null) {
 			MotionInstruction mInst = (MotionInstruction) p.get(instIdx);
-			MotionInstruction sndMInst = mInst.getSecondaryPoint();
+			int posNum = mInst.getCircPosIdx();
 			
-			if (mInst.getMotionType() != Fields.MTYPE_CIRCULAR || sndMInst == null) {
-				throw new NullPointerException(
-					String.format("Instruction at %d is not a circular motion instruction!",
-					instIdx)
-				);	
-			}
-			
-			int posNum = sndMInst.getPositionNum();
-			
-			if (mInst.usesGPosReg()) {
+			if (mInst.circUsePReg()) {
 				// Update a position register on the robot
 				PositionRegister pReg = getPReg(posNum);
 				
@@ -2004,7 +2110,7 @@ public class RoboticArm {
 				if (posNum == -1) {
 					// In the case of an uninitialized position
 					posNum = p.getNextPosition();
-					sndMInst.setPositionNum(posNum);
+					mInst.setCircPosIdx(posNum);
 				}
 				
 				return p.setPosition(posNum, newPt);
@@ -2034,9 +2140,9 @@ public class RoboticArm {
 		
 		if (newPt != null) {
 			MotionInstruction mInst = (MotionInstruction)p.get(instIdx);
-			int posNum = mInst.getPositionNum();
+			int posNum = mInst.getPosIdx();
 			
-			if (mInst.usesGPosReg()) {
+			if (mInst.usePReg()) {
 				// Update a position register on the robot
 				PositionRegister pReg = getPReg(posNum);
 				
@@ -2053,7 +2159,7 @@ public class RoboticArm {
 				if (posNum == -1) {
 					// In the case of an uninitialized position
 					posNum = p.getNextPosition();
-					mInst.setPositionNum(posNum);
+					mInst.setPosIdx(posNum);
 				}
 				
 				return p.setPosition(posNum, newPt);

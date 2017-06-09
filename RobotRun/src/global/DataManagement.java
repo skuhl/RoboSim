@@ -385,25 +385,53 @@ public abstract class DataManagement {
 			// Read data for a MotionInstruction object
 			boolean isCommented = in.readBoolean();
 			int mType = in.readInt();
+			boolean usePReg = in.readBoolean();
+			int posIdx = in.readInt();
+			boolean circUsePReg = in.readBoolean();
+			int circPosIdx = in.readInt();
+			float spdMod = in.readFloat();
+			int term = in.readInt();
+			int tFrameIdx = in.readInt();
+			int uFrameIdx = in.readInt();
+			int offType = in.readInt();
+			int offIdx = in.readInt();
+			
+			inst = new MotionInstruction(isCommented, mType, usePReg, posIdx,
+					circUsePReg, circPosIdx, spdMod, term, tFrameIdx, uFrameIdx,
+					offType, offIdx);
+			
+			/* Old save version *
+			boolean isCommented = in.readBoolean();
+			int mType = in.readInt();
 			int reg = in.readInt();
 			boolean isGlobal = in.readBoolean();
 			float spd = in.readFloat();
 			int term = in.readInt();
 			int uFrame = in.readInt();
 			int tFrame = in.readInt();
-
-			inst = new MotionInstruction(mType, reg, isGlobal, spd, term,
-					uFrame, tFrame);
-			inst.setIsCommented(isCommented);
+			
+			inst = new MotionInstruction(isCommented, mType, isGlobal, reg,
+					false, -1, spd, term, uFrame, tFrame, Fields.OFFSET_NONE,
+					-1);
 
 			byte flag = in.readByte();
 
 			if (flag == 1) {
-				/* Load the second point associated with a circular type motion
-				 * instruction */
-				((MotionInstruction)inst).setSecondaryPoint(
-						(MotionInstruction)loadInstruction(robot, in));
+				flag = in.readByte();
+				
+				if (flag == 2) {
+					isCommented = in.readBoolean();
+					mType = in.readInt();
+					reg = in.readInt();
+					isGlobal = in.readBoolean();
+					spd = in.readFloat();
+					term = in.readInt();
+					uFrame = in.readInt();
+					tFrame = in.readInt();
+					flag = in.readByte();
+				}
 			}
+			/**/
 
 		} else if(instType == 3) {
 			// Read data for a FrameInstruction object
@@ -1348,24 +1376,16 @@ public abstract class DataManagement {
 			// Write data associated with the MotionIntruction object
 			out.writeBoolean(m_inst.isCommented());
 			out.writeInt(m_inst.getMotionType());
-			out.writeInt(m_inst.getPositionNum());
-			out.writeBoolean(m_inst.usesGPosReg());
-			out.writeFloat(m_inst.getSpeed());
+			out.writeBoolean(m_inst.usePReg());
+			out.writeInt(m_inst.getPosIdx());
+			out.writeBoolean(m_inst.circUsePReg());
+			out.writeInt(m_inst.getCircPosIdx());
+			out.writeFloat(m_inst.getSpdMod());
 			out.writeInt(m_inst.getTermination());
-			out.writeInt(m_inst.getUserFrame());
-			out.writeInt(m_inst.getToolFrame());
-
-			MotionInstruction subInst = m_inst.getSecondaryPoint();
-
-			if (subInst != null) {
-				// Save secondary point for circular instructions
-				out.writeByte(1);
-				saveInstruction(subInst, out);
-
-			} else {
-				// No secondary point
-				out.writeByte(0);
-			}
+			out.writeInt(m_inst.getTFrameIdx());
+			out.writeInt(m_inst.getUFrameIdx());
+			out.writeInt(m_inst.getOffsetType());
+			out.writeInt(m_inst.getOffsetIdx());
 
 		} else if(inst instanceof FrameInstruction) {
 			FrameInstruction f_inst = (FrameInstruction)inst;

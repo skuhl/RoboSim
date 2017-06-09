@@ -55,6 +55,16 @@ public abstract class Fields {
 	public static final int MTYPE_CIRCULAR = 2;
 	
 	/**
+	 * Defines a state of a motion instruction's offset.
+	 */
+	public static final int OFFSET_NONE = 0;
+	
+	/**
+	 * Defines the state of a motion instruction's offset.
+	 */
+	public static final int OFFSET_PREG = 1;
+	
+	/**
 	 * The tool frame type of a motion instruction
 	 */
 	public static final int FTYPE_TOOL = 0;
