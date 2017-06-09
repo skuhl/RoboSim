@@ -369,6 +369,7 @@ public class RobotRun extends PApplet {
 		case SET_EXPR_OP:
 		case SET_IO_INSTR_STATE:
 		case SET_CALL_PROG:
+		case SET_DEF_TOOLTIP:
 			options.moveDown(false);
 			break;
 		case ACTIVE_FRAMES:
@@ -621,6 +622,7 @@ public class RobotRun extends PApplet {
 		case SET_EXPR_OP:
 		case SET_IO_INSTR_STATE:
 		case SET_CALL_PROG:
+		case SET_DEF_TOOLTIP:
 			options.moveUp(false);
 			break;
 		case ACTIVE_FRAMES:
@@ -1347,6 +1349,12 @@ public class RobotRun extends PApplet {
 				nextScreen(ScreenMode.DIRECT_ENTRY_TOOL);
 			}
 			break;
+		case SET_DEF_TOOLTIP:
+			activeRobot.setDefToolTip(curFrameIdx, options.getLineIdx());
+			activeRobot.setActiveToolFrame(curFrameIdx);
+			DataManagement.saveRobotData(activeRobot, 1);
+			lastScreen();
+			break;
 		case TEACH_3PT_TOOL:
 		case TEACH_3PT_USER:
 			createFrame(teachFrame, 0);
@@ -1466,7 +1474,7 @@ public class RobotRun extends PApplet {
 				lastScreen();
 			}
 			break;
-		case NAME_TFRAME:
+		case TFRAME_RENAME:
 			// Update frame name
 			if (workingText.length() > 0 && !workingText.equals("\0")) {
 				if (workingText.charAt(workingText.length() - 1) == '\0') {
@@ -1481,7 +1489,7 @@ public class RobotRun extends PApplet {
 			DataManagement.saveRobotData(activeRobot, 1);
 			lastScreen();
 			break;
-		case NAME_UFRAME:
+		case UFRAME_RENAME:
 			// Update frame name
 			if (workingText.length() > 0 && !workingText.equals("\0")) {
 				if (workingText.charAt(workingText.length() - 1) == '\0') {
@@ -2602,10 +2610,10 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case TFRAME_DETAIL:
-			nextScreen(ScreenMode.NAME_TFRAME);
+			nextScreen(ScreenMode.TFRAME_RENAME);
 			break;
 		case UFRAME_DETAIL:
-			nextScreen(ScreenMode.NAME_UFRAME);
+			nextScreen(ScreenMode.UFRAME_RENAME);
 			break;
 		case NAV_MACROS:
 			edit_macro = null;
@@ -3122,6 +3130,10 @@ public class RobotRun extends PApplet {
 			screenStates.pop();
 			updateInstructions();
 			break;
+		case TFRAME_DETAIL:
+			// Set a default tool tip for the selected tool frame
+			nextScreen(ScreenMode.SET_DEF_TOOLTIP);
+			break;
 		case NAV_PREGS:
 			PositionRegister pReg = r.getPReg( contents.getActiveIndex() );
 
@@ -3543,8 +3555,15 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case TFRAME_DETAIL:
+			// F1, F2, F5
+			funct[0] = "[Rename]";
+			funct[1] = "[Method]";
+			funct[2] = "";
+			funct[3] = "";
+			funct[4] = "[Default]";
+			break;
 		case UFRAME_DETAIL:
-			// F2
+			// F1, F2
 			funct[0] = "[Rename]";
 			funct[1] = "[Method]";
 			funct[2] = "";
@@ -3727,14 +3746,17 @@ public class RobotRun extends PApplet {
 		case NAV_USER_FRAMES:
 			header = "USER FRAMES";
 			break;
-		case NAME_TFRAME:
+		case TFRAME_RENAME:
 			header = String.format("TOOL %d: RENAME", curFrameIdx + 1);
 			break;
-		case NAME_UFRAME:
+		case UFRAME_RENAME:
 			header = String.format("USER %d: RENAME", curFrameIdx + 1);
 			break;
 		case TFRAME_DETAIL:
 			header = String.format("TOOL %d: DETAIL", curFrameIdx + 1);
+			break;
+		case SET_DEF_TOOLTIP:
+			header = "DEFAULT TOOL TIPS";
 			break;
 		case UFRAME_DETAIL:
 			header = String.format("USER %d: DETAIL", curFrameIdx + 1);
@@ -4221,8 +4243,6 @@ public class RobotRun extends PApplet {
 				updatePendantScreen();
 				
 			} else if (keyCode == KeyEvent.VK_D) {
-				
-				
 				/* Debug output */
 				Fields.debug("li=%d si=%d\n", contents.getLineIdx(), getSelectedIdx());
 				/**
@@ -4446,6 +4466,27 @@ public class RobotRun extends PApplet {
 			}
 
 			lines.add(new DisplayLine(idx, 0 , regLbl, regEntry));
+		}
+		
+		return lines;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param robot
+	 * @return
+	 */
+	private ArrayList<DisplayLine> loadEEToolTipDefaults(RoboticArm robot) {
+		ArrayList<DisplayLine> lines = new ArrayList<>();
+		
+		for (int idx = 0; idx < activeRobot.numOfEndEffectors(); ++idx) {
+			IORegister ioReg = activeRobot.getIOReg(idx);
+			PVector defToolTip = activeRobot.getToolTipDefault(idx);
+			String lineStr = String.format("%s = (%4.3f, %4.3f, %4.3f)",
+					ioReg.comment, defToolTip.x, defToolTip.y, defToolTip.z); 
+			
+			lines.add(new DisplayLine(idx, 0, lineStr));
 		}
 		
 		return lines;
@@ -4923,13 +4964,13 @@ public class RobotRun extends PApplet {
 			contents.setLineIdx(1);
 			workingText = new StringBuilder(getActiveProg().getName());
 			break;
-		case NAME_TFRAME:
+		case TFRAME_RENAME:
 			contents.setLineIdx(1);
 			workingText = new StringBuilder(
 					activeRobot.getToolFrame(curFrameIdx).getName()
 			);
 			break;
-		case NAME_UFRAME:
+		case UFRAME_RENAME:
 			contents.setLineIdx(1);
 			workingText = new StringBuilder(
 					activeRobot.getUserFrame(curFrameIdx).getName()
@@ -5090,6 +5131,9 @@ public class RobotRun extends PApplet {
 			break;
 		case NAV_PREGS:
 			options.setLineIdx(-1);
+			break;
+		case SET_DEF_TOOLTIP:
+			contents.setLineIdx(-1);
 			break;
 		case DIRECT_ENTRY_TOOL:
 			contents.setColumnIdx(1);
@@ -6604,8 +6648,8 @@ public class RobotRun extends PApplet {
 		case PROG_CREATE:
 		case PROG_RENAME:
 		case PROG_COPY:
-		case NAME_TFRAME:
-		case NAME_UFRAME:
+		case TFRAME_RENAME:
+		case UFRAME_RENAME:
 			DisplayLine line = loadTextInput(workingText.toString());
 			contents.addLine(line);
 			break;
@@ -6677,6 +6721,7 @@ public class RobotRun extends PApplet {
 			contents.setLines( loadFrames(activeRobot, CoordFrame.USER) );
 			break;
 			// View frame details
+		case SET_DEF_TOOLTIP:
 		case TFRAME_DETAIL:
 		case TEACH_3PT_TOOL:
 		case TEACH_6PT:
@@ -7070,6 +7115,9 @@ public class RobotRun extends PApplet {
 			options.addLine("1. Three Point Method");
 			options.addLine("2. Six Point Method");
 			options.addLine("3. Direct Entry Method");
+			break;
+		case SET_DEF_TOOLTIP:
+			options.setLines( loadEEToolTipDefaults(activeRobot) );
 			break;
 		case UFRAME_DETAIL:
 			options.addLine("1. Three Point Method");

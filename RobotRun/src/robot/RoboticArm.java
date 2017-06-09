@@ -41,6 +41,23 @@ public class RoboticArm {
 	public static final int motorSpeed;
 	
 	/**
+	 * Defines a set of tool tip default offsets associated with each end
+	 * effector.
+	 */
+	private static final PVector[] EE_TOOLTIP_DEFAULTS;
+	
+	static {
+		motorSpeed = 1000; // speed in mm/sec
+		
+		EE_TOOLTIP_DEFAULTS = new PVector[5];
+		EE_TOOLTIP_DEFAULTS[0] = new PVector(-81f, 0f, 0f);
+		EE_TOOLTIP_DEFAULTS[1] = new PVector(-32f, 0f, 0f);
+		EE_TOOLTIP_DEFAULTS[2] = new PVector(-180f, 55f, 0f);
+		EE_TOOLTIP_DEFAULTS[3] = new PVector(-120f, -150f, 0f);
+		EE_TOOLTIP_DEFAULTS[4] = new PVector(-295f, 0f, 53.5f);
+	}
+	
+	/**
 	 * The unique ID of this robot.
 	 */
 	public final int RID;
@@ -143,10 +160,6 @@ public class RoboticArm {
 	 * Defines the last orientation and position of the robot's tool tip.
 	 */
 	private RMatrix lastTipTMatrix;
-	
-	static {
-		motorSpeed = 1000; // speed in mm/sec
-	}
 	
 	/**
 	 * Creates a robotic arm with the given ID, segment models, and end
@@ -1325,6 +1338,20 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 * @return
+	 */
+	public PVector getToolTipDefault(int idx) {
+		if (idx >= 0 && idx < EE_TOOLTIP_DEFAULTS.length) {
+			return EE_TOOLTIP_DEFAULTS[idx];
+		}
+		// invalid index
+		return null;
+	}
+	
+	/**
 	 * @return	The robot's tooltip position and orientatio with respect to the
 	 * 			active user frame
 	 */
@@ -1907,6 +1934,25 @@ public class RoboticArm {
 	 */
 	public void setCoordFrame(CoordFrame newFrame) {
 		curCoordFrame = newFrame;
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param frameIdx	The index of the tool frame
+	 * @param defTipIdx	The index of a default tool tip offset
+	 */
+	public void setDefToolTip(int frameIdx, int defTipIdx) {
+		
+		ToolFrame frame = getToolFrame(frameIdx);
+		
+		if (frame != null && defTipIdx >=0 && defTipIdx <
+				EE_TOOLTIP_DEFAULTS.length) {
+			
+			// Set the offset of the frame to the specified default tool tip
+			PVector defToolTip = EE_TOOLTIP_DEFAULTS[defTipIdx];
+			frame.setTCPOffset(defToolTip.copy());
+		}
 	}
 	
 	/**
