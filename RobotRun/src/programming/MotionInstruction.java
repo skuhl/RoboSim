@@ -3,182 +3,260 @@ package programming;
 import global.Fields;
 import robot.RoboticArm;
 
+/**
+ * TODO general comments
+ * 
+ * @author Joshua Hooker
+ */
 public class MotionInstruction extends Instruction  {
+
 	private int motionType;
-	private int positionNum;
-	private int offsetRegNum;
-	private boolean offsetActive;
-	private boolean isGPosReg;
-	private float speed;
+	private boolean usePReg;
+	private int posIdx;
+	private boolean circUsePReg;
+	private int circPosIdx;
+	private float spdModifier;
 	private int termination;
-	private int userFrame;
-	private int toolFrame;
-	private MotionInstruction circSubInstr;
+	private int tFrameIdx;
+	private int uFrameIdx;
+	private int offsetType;
+	private int offRegIdx;
 	
-	/**
-	 * Default constructor
-	 */
 	public MotionInstruction() {
+		super(false);
 		// Doesn't do much ...
 	}
-
-	public MotionInstruction(int type, int pos, boolean globl, float spd, int term) {
-		motionType = type;
-		positionNum = pos;
-		offsetRegNum = -1;
-		offsetActive = false;
-		isGPosReg = globl;
-		speed = spd;
-		termination = term;
-		userFrame = -1;
-		toolFrame = -1;
-		if(motionType != -1) {
-			circSubInstr = new MotionInstruction(-1, -1, false, 100, 0);
-		} else {
-			circSubInstr = null;
-		}
-	}
-
-	public MotionInstruction(int type, int pos, boolean globl, float spd, int term, int uf,
-			int tf) {
+	
+	public MotionInstruction(int mType, boolean usePReg, int posIdx,
+			float spdMod, int term) {
 		
-		motionType = type;
-		positionNum = pos;
-		offsetRegNum = -1;
-		offsetActive = false;
-		isGPosReg = globl;
-		speed = spd;
+		this(false, mType, usePReg, posIdx, false, -1, spdMod, term, -1, -1,
+				Fields.OFFSET_NONE, -1);
+	}
+	
+	public MotionInstruction(int mType, int posIdx, float spdMod, int term,
+			int toolIdx, int userIdx) {
+		
+		this(false, mType, false, posIdx, false, -1, spdMod, term, toolIdx,
+				userIdx, Fields.OFFSET_NONE, -1);
+	}
+	
+	public MotionInstruction(boolean isComm, int mType, boolean usePReg,
+			int posIdx, boolean circUsePreg, int circPosIdx, float spdMod,
+			int term, int toolIdx, int userIdx, int offType, int offRegIdx) {
+		
+		super(isComm);
+		motionType = mType;
+		this.usePReg = usePReg;
+		this.posIdx = posIdx;
+		this.circPosIdx = circPosIdx;
+		spdModifier = spdMod;
+		tFrameIdx = toolIdx;
+		uFrameIdx = userIdx;
 		termination = term;
-		userFrame = uf;
-		toolFrame = tf;
-		if(motionType != -1) {
-			circSubInstr = new MotionInstruction(-1, -1, false, 100, 0, uf, tf);
-		} else {
-			circSubInstr = null;
-		}
+		offsetType = offType;
+		this.offRegIdx = offRegIdx;
 	}
-
-	/**
-	 * Verify that the given frame indices match those of the
-	 * instructions frame indices.
-	 */
-	public boolean checkFrames(int activeToolIdx, int activeFrameIdx) {
-		return (toolFrame == activeToolIdx) && (userFrame == activeFrameIdx);
+	
+	public boolean circUsePReg() {
+		return circUsePReg;
 	}
+	
 	@Override
-	public Instruction clone() {
-		Instruction copy = new MotionInstruction(motionType, positionNum, isGPosReg, speed, termination, userFrame, toolFrame);
-		copy.setIsCommented( isCommented() );
-
-		return copy;
+	public MotionInstruction clone() {
+		return new MotionInstruction(com, motionType, usePReg, posIdx,
+				circUsePReg, circPosIdx, spdModifier, termination, tFrameIdx,
+				uFrameIdx, offsetType, offRegIdx);
 	}
 	
-	public int getMotionType() { return motionType; }
-	public int getOffset() { return offsetRegNum; } 
+	public int getCircPosIdx() {
+		return circPosIdx;
+	}
 	
-	public int getPositionNum() { return positionNum; }
-	public MotionInstruction getSecondaryPoint() { return circSubInstr; }
-	public float getSpeed() { return speed; }
+	public int getMotionType() {
+		return motionType;
+	}
 	
-	public int getTermination() { return termination; }
-	public int getToolFrame() { return toolFrame; }
-	public int getUserFrame() { return userFrame; }
+	public int getOffsetIdx() {
+		return offRegIdx;
+	}
 	
-	public void setGlobalPosRegUse(boolean in) { isGPosReg = in; }
-	public void setMotionType(int in) { motionType = in; }
-	public void setOffset(int in) { offsetRegNum = in; }
-	public void setPositionNum(int in) { positionNum = in; }
-	public void setSecondaryPoint(MotionInstruction p) { circSubInstr = p; }
-	public void setSpeed(float in) { speed = in; }
-
-	public void setTermination(int in) { termination = in; }
-
-	public void setToolFrame(int in) { toolFrame = in; }
-
-	public void setUserFrame(int in) { userFrame = in; }
-
-	public boolean toggleOffsetActive() { return (offsetActive = !offsetActive); }
-
+	public int getOffsetType() {
+		return offsetType;
+	}
+	
+	public int getPosIdx() {
+		return posIdx;
+	}
+	
+	public float getSpdMod() {
+		return spdModifier;
+	}
+	
+	public int getTermination() {
+		return termination;
+	}
+	
+	public int getTFrameIdx() {
+		return tFrameIdx;
+	}
+	
+	public int getUFrameIdx() {
+		return uFrameIdx;
+	}
+	
+	public void setCircPosIdx(int idx) {
+		circPosIdx = idx;
+	}
+	
+	public void setCircRegType(boolean usePReg) {
+		circUsePReg = usePReg;
+	}
+	
+	public void setMotionType(int mType) {
+		motionType = mType;
+	}
+	
+	public void setOffsetIdx(int idx) {
+		offRegIdx = idx;
+	}
+	
+	public void setOffsetType(int type) {
+		offsetType = type;
+	}
+	
+	public void setPosIdx(int idx) {
+		posIdx = idx;
+	}
+	
+	public void setRegType(boolean usePReg) {
+		this.usePReg = usePReg;
+	}
+	
+	public void setSpdMod(float spdMod) {
+		spdModifier = spdMod;
+	}
+	
+	public void setTermination(int term) {
+		termination = term;
+	}
+	
+	public void setTFrameIdx(int idx) {
+		tFrameIdx = idx;
+	}
+	
+	public void setUFrameIdx(int idx) {
+		uFrameIdx = idx;
+	}
+	
 	@Override
 	public String[] toStringArray() {
-		String[] fields;
-		int instrLen, subInstrLen;
-
-		if(motionType == Fields.MTYPE_CIRCULAR && circSubInstr != null) {
-			instrLen = offsetActive ? 7 : 6;
-			subInstrLen = circSubInstr.offsetActive ? 5 : 4;      
-			fields = new String[instrLen + subInstrLen];
+		int fieldLen = 6;
+		
+		if (motionType == Fields.MTYPE_CIRCULAR) {
+			fieldLen += 3;
+		}
+		
+		if (offsetType == Fields.OFFSET_PREG) {
+			fieldLen += 1;	
+		}
+		
+		String[] fields = new String[fieldLen];
+		
+		// Motion type symbol
+		int idx = 0;
+		if (motionType == Fields.MTYPE_CIRCULAR) {
+			fields[idx] = "C";
+			
+		} else if (motionType == Fields.MTYPE_LINEAR) {
+			fields[idx] = "L";
+			
 		} else {
-			instrLen = offsetActive ? 6 : 5;
-			subInstrLen = 0;
-			fields = new String[instrLen];
+			fields[idx] = "J";
 		}
-
-		// Motion type
-		switch(motionType) {
-		case Fields.MTYPE_JOINT:
-			fields[0] = "J";
-			break;
-		case Fields.MTYPE_LINEAR:
-			fields[0] = "L";
-			break;
-		case Fields.MTYPE_CIRCULAR:
-			fields[0] = "C";
-			break;
-		default:
-			fields[0] = "\0";
-		}
-
-		// Regster type
-		if (isGPosReg) {
-			fields[1] = "PR[";
+		
+		// Position type
+		++idx;
+		if (usePReg()) {
+			fields[idx] = "PR[";
+			
 		} else {
-			fields[1] = "P[";
+			fields[idx] = " P[";
 		}
-
-		// Register index
-		if(positionNum == -1) {
-			fields[2] = "...]";
+		
+		// Position index
+		++idx;
+		if (posIdx == -1) {
+			fields[idx] = "...]";
+			
 		} else {
-			fields[2] = String.format("%d]", positionNum + 1);
+			fields[idx] = String.format("%d]", posIdx + 1);
 		}
-
-		// Speed
+		
+		// Motion speed modifier
+		++idx;
 		if (motionType == Fields.MTYPE_JOINT) {
-			fields[3] = String.format("%d%%", Math.round(speed * 100f));
+			fields[idx] = String.format("%d%%", Math.round(spdModifier * 100f));
+			
 		} else {
-			fields[3] = String.format("%dmm/s", Math.round(RoboticArm.motorSpeed * speed));
+			fields[idx] = String.format("%dmm/s",
+					Math.round(RoboticArm.motorSpeed * spdModifier));
 		}
-
+		
 		// Termination percent
+		++idx;
 		if (termination == 0) {
-			fields[4] = "FINE";
+			fields[idx] = "FINE";
+			
 		} else {
-			fields[4] = String.format("CONT%d", termination);
+			fields[idx] = String.format("CONT%d", termination);
 		}
-
-		if(offsetActive) {
-			if(offsetRegNum == -1) {
-				fields[5] = "OFST PR[...]";
+		
+		// Offset
+		++idx;
+		if(offsetType == Fields.OFFSET_PREG) {
+			fields[idx] = "OFST PR[";
+			++idx;
+			
+			if (offRegIdx == -1) {
+				fields[idx] = "...]";
+				
 			} else {
-				fields[5] = String.format("OFST PR[%d]", offsetRegNum + 1);
+				fields[idx] = String.format("%d]", offRegIdx + 1);
 			}
+			
+		} else {
+			fields[idx] = "\0";
 		}
-
-		if(motionType == Fields.MTYPE_CIRCULAR) {
-			String[] secondary = circSubInstr.toStringArray();
-			fields[instrLen - 1] = "\n";
-			fields[instrLen] = ":" + secondary[1];
-			fields[instrLen + 1] = secondary[2];
-			fields[instrLen + 2] = secondary[3];
-			fields[instrLen + 3] = secondary[4];
-			if(subInstrLen > 4) {
-				fields[instrLen + 4] = secondary[5];
+		
+		// Circular motion fields
+		++idx;
+		if (motionType == Fields.MTYPE_CIRCULAR) {
+			fields[idx] = "\n";
+			
+			// Circular position type
+			++idx;
+			if (circUsePReg()) {
+				fields[idx] = ":PR[";
+				
+			} else {
+				fields[idx] = ": P[";
 			}
+			
+			// Circular position index
+			++idx;
+			if (circPosIdx == -1) {
+				fields[idx] = "...]";
+				
+			} else {
+				fields[idx] = String.format("%d]", circPosIdx + 1);
+			}	
 		}
-
+		
 		return fields;
 	}
-
-	public boolean usesGPosReg() { return isGPosReg; }
+	
+	public boolean usePReg() {
+		return usePReg;
+	}
 }

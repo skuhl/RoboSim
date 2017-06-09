@@ -10,7 +10,7 @@ public class CamMoveToObject extends MotionInstruction {
 	WorldObject tgtObj;	
 	
 	public CamMoveToObject(int type, int pos, boolean globl, float spd, int term) {
-		super(type, pos, globl, spd, term);
+		super(type, globl, pos, spd, term);
 		
 	}
 	
