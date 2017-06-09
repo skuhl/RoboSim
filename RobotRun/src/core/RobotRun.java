@@ -1750,7 +1750,7 @@ public class RobotRun extends PApplet {
 
 				global.Fields.debug("Offset: %d\n", tempRegister);
 				
-				if (tempRegister < 0 || tempRegister > 999) {
+				if (tempRegister < 0 || tempRegister > 99) {
 					// Invalid register index
 					String err = "Only registers 1 - 1000 are legal!";
 					System.out.println(err);
@@ -6828,7 +6828,7 @@ public class RobotRun extends PApplet {
 			options.addLine("PR[...]");
 			break;
 		case SET_MINST_OFFIDX:
-			options.addLine("Enter desired offset register (1-1000):");
+			options.addLine("Enter desired offset register (1-100):");
 			options.addLine("\0" + workingText);
 			break;
 		case SET_IO_INSTR_STATE:
