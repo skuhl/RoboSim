@@ -96,6 +96,8 @@ public enum ScreenMode implements DisplayMode {
 	PROG_COPY(ScreenType.TYPE_TEXT_ENTRY),
 	PROG_CREATE(ScreenType.TYPE_TEXT_ENTRY),
 	PROG_RENAME(ScreenType.TYPE_TEXT_ENTRY),
+	NAME_UFRAME(ScreenType.TYPE_TEXT_ENTRY),
+	NAME_TFRAME(ScreenType.TYPE_TEXT_ENTRY),
 
 	/*
 	 * Screens involving the entry of numeric values via either a physical numpad or
