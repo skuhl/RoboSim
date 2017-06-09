@@ -46,6 +46,7 @@ import global.Fields;
 import global.RMath;
 import global.RegisteredModels;
 import processing.core.PApplet;
+import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PShape;
 import processing.core.PVector;
@@ -207,6 +208,12 @@ public class RobotRun extends PApplet {
 	 */
 	private int[] letterStates;
 	
+	/**
+	 * Defines a set of tool tip positions that are drawn to form a trace of
+	 * the robot's motion overtime.
+	 */
+	private ArrayList<PVector> tracePts;
+	
 	private WorldObject mouseOverWO;
 	
 	/**
@@ -267,8 +274,8 @@ public class RobotRun extends PApplet {
 	/**
 	 * @return Whether or not bounding boxes are displayed
 	 */
-	public boolean areOBBsDisplayed() {
-		return UI.getOBBButtonState();
+	public boolean areOBBsRendered() {
+		return !UI.getButtonState("ToggleOBB");
 	}
 
 	/**
@@ -888,8 +895,6 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	/* Arrow keys */
-
 	/**
 	 * This method attempts to modify the Frame based on the given value of
 	 * method. If method is even, then the frame is taught via the 3-Point
@@ -1124,6 +1129,32 @@ public class RobotRun extends PApplet {
 			throw Ex;
 		}
 	}
+	
+	/**
+	 * Draws the points stored for this robot's trace function with respect to
+	 * the given graphics object's coordinate frame.
+	 * 
+	 * @param g	The graphics object used to drawn the trace
+	 */
+	private void drawTrace(PGraphics g) {		
+		if (tracePts.size() > 1) {
+			PVector lastPt = tracePts.get(0);
+			
+			g.pushStyle();
+			g.stroke(0);
+			g.strokeWeight(3);
+			
+			for(int i = 1; i < tracePts.size(); i += 1) {
+				PVector curPt = tracePts.get(i);
+				
+				g.line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y, curPt.z);
+				
+				lastPt = curPt;
+			}
+			
+			g.popStyle();
+		}
+	}
 
 	/**
 	 * Pendant EDIT button
@@ -1184,31 +1215,31 @@ public class RobotRun extends PApplet {
 	 */
 	public void editOperand(Operand<?> o, int ins_idx) {
 		switch (o.getType()) {
-		case -1: // Uninit
+		case Operand.UNINIT: // Uninit
 			editIdx = ins_idx;
 			nextScreen(ScreenMode.SET_EXPR_ARG);
 			break;
-		case 0: // Float const
+		case Operand.FLOAT: // Float const
 			opEdit = o;
 			nextScreen(ScreenMode.INPUT_CONST);
 			break;
-		case 1: // Bool const
+		case Operand.BOOL: // Bool const
 			opEdit = o;
 			nextScreen(ScreenMode.SET_BOOL_CONST);
 			break;
-		case 2: // Data reg
+		case Operand.DREG: // Data reg
 			opEdit = o;
 			nextScreen(ScreenMode.INPUT_DREG_IDX);
 			break;
-		case 3: // IO reg
+		case Operand.IOREG: // IO reg
 			opEdit = o;
 			nextScreen(ScreenMode.INPUT_IOREG_IDX);
 			break;
-		case 4: // Pos reg
+		case Operand.PREG: // Pos reg
 			opEdit = o;
 			nextScreen(ScreenMode.INPUT_PREG_IDX1);
 			break;
-		case 5: // Pos reg at index
+		case Operand.PREG_IDX: // Pos reg at index
 			opEdit = o;
 			nextScreen(ScreenMode.INPUT_PREG_IDX2);
 			nextScreen(ScreenMode.INPUT_PREG_IDX1);
@@ -6173,6 +6204,8 @@ public class RobotRun extends PApplet {
 			progExecState = new ProgExecution();
 			progCallStack = new Stack<>();
 			
+			tracePts = new ArrayList<PVector>();
+			
 			setManager(new WGUI(this, buttonImages));
 
 		} catch (NullPointerException NPEx) {
@@ -6360,6 +6393,20 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
+	 * ENABLE/DISABLE TRACE button in miscellaneous window
+	 * 
+	 * Toggles the robot tool tip trace function on or off.
+	 */
+	public void ToggleTrace() {
+		UI.updateUIContentPositions();
+		
+		if (!traceEnabled()) {
+			// Empty trace when it is disabled
+			tracePts.clear();
+		}
+	}
+	
+	/**
 	 * Pendant TOOl1 button
 	 * 
 	 * A button used for binding marcos.
@@ -6391,6 +6438,16 @@ public class RobotRun extends PApplet {
 		// Top view
 		camera.reset();
 		camera.setRotation(3f * HALF_PI, 0f, 0f);
+	}
+	
+	/**
+	 * Is the trace function enabled. The user can enable/disable this function
+	 * with a button in the miscellaneous window.
+	 * 
+	 * @return	If the trace functionality is enabled
+	 */
+	public boolean traceEnabled() {
+		return UI.getButtonState("ToggleTrace");
 	}
 
 	/**
@@ -7405,7 +7462,7 @@ public class RobotRun extends PApplet {
 					}
 
 					/* Collision Detection */
-					if(areOBBsDisplayed()) {
+					if(areOBBsRendered()) {
 						if( activeRobot != null && activeRobot.checkCollision(p) ) {
 							p.setBBColor(Fields.OBB_COLLISION);
 						}
@@ -7440,7 +7497,7 @@ public class RobotRun extends PApplet {
 				
 				// Draw the object
 				if (wldObj instanceof Part) {
-					((Part)wldObj).draw(getGraphics(), UI.getOBBButtonState());
+					((Part)wldObj).draw(getGraphics(), areOBBsRendered());
 					
 				} else {
 					wldObj.draw(getGraphics());
@@ -7476,7 +7533,7 @@ public class RobotRun extends PApplet {
 				
 				if (r == activeRobot) {
 					// active robot
-					r.draw(getGraphics(), true, axesType);
+					r.draw(getGraphics(), areOBBsRendered(), axesType);
 					
 				} else {
 					r.draw(getGraphics(), false, AxesDisplay.NONE);
@@ -7486,7 +7543,28 @@ public class RobotRun extends PApplet {
 
 		} else {
 			// Draw only the active robot
-			activeRobot.draw(getGraphics(), true, axesType);
+			activeRobot.draw(getGraphics(), areOBBsRendered(), axesType);
+		}
+		
+		if (activeRobot.inMotion() && traceEnabled()) {
+			Point tipPosNative = activeRobot.getToolTipNative();
+			// Update the robots trace points
+			if(tracePts.isEmpty()) {
+				tracePts.add(tipPosNative.position);
+				
+			} else {
+				PVector lastTracePt = tracePts.get(tracePts.size() - 1);
+				
+				if (PVector.sub(tipPosNative.position, lastTracePt).mag()
+						> 0.5f) {
+					
+					tracePts.add(tipPosNative.position);
+				}
+			}
+		}
+		
+		if (traceEnabled()) {
+			drawTrace(g);
 		}
 		
 		/* Render the axes of the selected World Object */

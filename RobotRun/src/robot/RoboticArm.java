@@ -144,17 +144,6 @@ public class RoboticArm {
 	 */
 	private RMatrix lastTipTMatrix;
 	
-	/**
-	 * Determines if the robot's tool tip position with be tracked and drawn.
-	 */
-	private boolean trace;
-	
-	/**
-	 * Defines a set of tool tip positions that are drawn to form a trace of
-	 * the robot's motion overtime.
-	 */
-	private ArrayList<PVector> tracePts;
-	
 	static {
 		motorSpeed = 1000; // speed in mm/sec
 	}
@@ -341,8 +330,7 @@ public class RoboticArm {
 		
 		// Initializes the old transformation matrix for the arm model
 		lastTipTMatrix = getFaceplateTMat( getJointAngles() );
-		trace = false;
-		tracePts = new ArrayList<PVector>();
+		
 	}
 	
 	/**
@@ -565,10 +553,6 @@ public class RoboticArm {
 		// Cycle through range [0, EE_LIST.length - 1]
 		activeEEIdx = (activeEEIdx + 1) % (EE_LIST.length);
 		setActiveEE(activeEEIdx);
-	}
-	
-	public void clearTrace() {
-		tracePts.clear();
 	}
 	
 	/**
@@ -811,27 +795,6 @@ public class RoboticArm {
 				g.popMatrix();
 			}
 		}
-		
-		if (inMotion() && trace) {
-			Point tipPosNative = getToolTipNative();
-			// Update the robots trace points
-			if(tracePts.isEmpty()) {
-				tracePts.add(tipPosNative.position);
-				
-			} else {
-				PVector lastTracePt = tracePts.get(tracePts.size() - 1);
-				
-				if (PVector.sub(tipPosNative.position, lastTracePt).mag()
-						> 0.5f) {
-					
-					tracePts.add(tipPosNative.position);
-				}
-			}
-		}
-		
-		if (trace) {
-			drawTrace(g);
-		}
 	}
 	
 	
@@ -944,32 +907,6 @@ public class RoboticArm {
 		}
 
 		g.popMatrix();
-	}
-	
-	/**
-	 * Draws the points stored for this robot's trace function with respect to
-	 * the given graphics object's coordinate frame.
-	 * 
-	 * @param g	The graphics object used to drawn the trace
-	 */
-	private void drawTrace(PGraphics g) {		
-		if (tracePts.size() > 1) {
-			PVector lastPt = tracePts.get(0);
-			
-			g.pushStyle();
-			g.stroke(0);
-			g.strokeWeight(3);
-			
-			for(int i = 1; i < tracePts.size(); i += 1) {
-				PVector curPt = tracePts.get(i);
-				
-				g.line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y, curPt.z);
-				
-				lastPt = curPt;
-			}
-			
-			g.popStyle();
-		}
 	}
 	
 	/**
@@ -1535,10 +1472,6 @@ public class RoboticArm {
 	public boolean isHeld(Part p) {
 		return p == heldPart;
 	}
-	
-	public boolean isTrace() {
-		return trace;
-	}
 
 	/**
 	 * Attempts to move the Robot to the given position and orientation from its current
@@ -1964,12 +1897,6 @@ public class RoboticArm {
 		}
 		
 		return 0;
-	}
-	
-	public boolean toggleTrace() {
-		trace = !trace;
-		clearTrace();
-		return trace;
 	}
 	
 	@Override
