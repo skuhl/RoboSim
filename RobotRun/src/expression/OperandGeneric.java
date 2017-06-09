@@ -9,4 +9,14 @@ public class OperandGeneric extends Operand<Object> {
 	public OperandGeneric clone() {
 		return new OperandGeneric();
 	}
+	
+	@Override
+	public String toString() {
+		return "...";
+	}
+	
+	@Override
+	public String[] toStringArray() { 
+		return new String[] { "..." };
+	}
 }

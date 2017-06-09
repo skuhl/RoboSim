@@ -1564,31 +1564,31 @@ public class RobotRun extends PApplet {
 	 */
 	public void editOperand(Operand<?> o, int ins_idx) {
 		switch (o.getType()) {
-		case -2: // Uninit
+		case Operand.UNINIT: // Uninit
 			editIdx = ins_idx;
 			nextScreen(ScreenMode.SET_EXPR_ARG);
 			break;
-		case 0: // Float const
+		case Operand.FLOAT: // Float const
 			opEdit = o;
 			nextScreen(ScreenMode.INPUT_CONST);
 			break;
-		case 1: // Bool const
+		case Operand.BOOL: // Bool const
 			opEdit = o;
 			nextScreen(ScreenMode.SET_BOOL_CONST);
 			break;
-		case 2: // Data reg
+		case Operand.DREG: // Data reg
 			opEdit = o;
 			nextScreen(ScreenMode.INPUT_DREG_IDX);
 			break;
-		case 3: // IO reg
+		case Operand.IOREG: // IO reg
 			opEdit = o;
 			nextScreen(ScreenMode.INPUT_IOREG_IDX);
 			break;
-		case 4: // Pos reg
+		case Operand.PREG: // Pos reg
 			opEdit = o;
 			nextScreen(ScreenMode.INPUT_PREG_IDX1);
 			break;
-		case 5: // Pos reg at index
+		case Operand.PREG_IDX: // Pos reg at index
 			opEdit = o;
 			nextScreen(ScreenMode.INPUT_PREG_IDX2);
 			nextScreen(ScreenMode.INPUT_PREG_IDX1);
@@ -2122,7 +2122,6 @@ public class RobotRun extends PApplet {
 				lastScreen();
 			} else {
 				// set arg to new constant
-				opEdit = expr.setOperand(editIdx, new OperandGeneric());
 				switchScreen(ScreenMode.INPUT_CONST);
 			}
 
@@ -2301,15 +2300,19 @@ public class RobotRun extends PApplet {
 		case INPUT_CONST:
 			try {
 				float data = Float.parseFloat(workingText.toString());
-				r.getInstToEdit( r.getActiveInstIdx() );
-				opEdit = new OperandFloat(data);
+				Instruction i = r.getInstToEdit(r.getActiveInstIdx());
+				if(i instanceof RegisterStatement) {
+					((RegisterStatement)i).getExpr().setOperand(editIdx, new OperandFloat(data));
+				}
+				
 			} catch (NumberFormatException e) {
+				e.printStackTrace(); //TODO report error to user
 			}
 
 			lastScreen();
 			break;
 		case SET_BOOL_CONST:
-			r.getInstToEdit( r.getActiveInstIdx() );
+			r.getInstToEdit(r.getActiveInstIdx());
 			
 			if (options.getLineIdx() == 0) {
 				opEdit = new OperandBool(true);
@@ -3813,7 +3816,7 @@ public class RobotRun extends PApplet {
 			RegisterStatement stmt = (RegisterStatement) ins;
 			int len = stmt.getExpr().getLength();
 			int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
-
+			
 			if (selectIdx == 1) {
 				nextScreen(ScreenMode.SET_REG_EXPR_TYPE);
 			} else if (selectIdx == 2) {
