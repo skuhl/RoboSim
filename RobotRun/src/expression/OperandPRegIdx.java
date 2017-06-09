@@ -10,6 +10,7 @@ public class OperandPRegIdx extends OperandRegister<PositionRegister> implements
 	public OperandPRegIdx(PositionRegister v, int idx) {		
 		super(v, Operand.PREG_IDX);
 		regIdx = v.idx;
+		subIdx = idx;
 		value = v;
 	}
 	
@@ -41,6 +42,18 @@ public class OperandPRegIdx extends OperandRegister<PositionRegister> implements
 		}
 		
 		return null;
+	}
+	
+	@Override
+	public String toString() {
+		return value.toString(subIdx);
+	}
+	
+	@Override
+	public String[] toStringArray() {
+		String idxStr = value.toString();
+		String subStr = (subIdx >= 0 && subIdx < 6) ? "" + subIdx : "..."; 
+		return new String[] { idxStr.substring(0, idxStr.length()-2) + ", ", subStr + "]" };
 	}
 	
 	public int getSubIdx() {
