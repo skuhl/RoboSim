@@ -16,5 +16,4 @@ public class OperandDReg extends OperandRegister<DataRegister> implements FloatM
 	public Float getArithValue() {
 		return value.value;
 	}
-
 }

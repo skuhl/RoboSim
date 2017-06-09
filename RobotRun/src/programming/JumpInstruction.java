@@ -26,7 +26,7 @@ public class JumpInstruction extends Instruction {
 	 */
 	@Override
 	public int execute() {
-		Program p = RobotRun.getInstanceRobot().getActiveProg();
+		Program p = RobotRun.getInstance().getActiveProg();
 
 		if (p != null) {
 			int lblIdx = p.findLabelIdx(getTgtLblNum());

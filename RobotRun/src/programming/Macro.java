@@ -18,22 +18,9 @@ public class Macro {
 			num = -1;
 		}
 	}
-
-	public void execute() {
-		RobotRun app = RobotRun.getInstance();
-		
-		// Stop any prior Robot movement
-		app.hold();
-		// Safeguard against editing a program while it is running
-		app.getContentsMenu().setColumnIdx(0);
-		RobotRun.getInstanceRobot().setActiveProgIdx(progIdx);
-		RobotRun.getInstanceRobot().setActiveInstIdx(0);
-
-		app.setExecutingInstruction(false);
-		// Run single instruction when step is set
-		app.execSingleInst = app.isStep();
-
-		app.setProgramRunning(true);
+	
+	public int getProgIdx() {
+		return progIdx;
 	}
 	
 	public boolean isManual() { return manual; }
