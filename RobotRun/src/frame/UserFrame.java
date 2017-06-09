@@ -15,7 +15,7 @@ public class UserFrame extends Frame {
 	 * Initialize all fields
 	 */
 	public UserFrame() {
-		super();
+		super("");
 		origin = new PVector(0f, 0f, 0f);
 		setOrientOrigin(null);
 	}

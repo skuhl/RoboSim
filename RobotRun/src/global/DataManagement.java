@@ -295,7 +295,10 @@ public abstract class DataManagement {
 			// Types do not match
 			throw new IOException("Invalid Frame type!");
 		}
-
+		// Read the frame's name
+		String name = in.readUTF();
+		ref.setName(name);
+		
 		PVector v = loadPVector(in);
 		int len;
 		
@@ -1276,6 +1279,8 @@ public abstract class DataManagement {
 		} else {
 			throw new IOException("Invalid Frame!");
 		}
+		// Write the name of the string
+		out.writeUTF(f.getName());
 		
 		int len;
 		

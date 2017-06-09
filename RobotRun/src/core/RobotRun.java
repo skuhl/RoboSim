@@ -1466,6 +1466,36 @@ public class RobotRun extends PApplet {
 				lastScreen();
 			}
 			break;
+		case NAME_TFRAME:
+			// Update frame name
+			if (workingText.length() > 0 && !workingText.equals("\0")) {
+				if (workingText.charAt(workingText.length() - 1) == '\0') {
+					// Remove insert character
+					workingText.deleteCharAt(workingText.length() - 1);
+				}
+			}
+			
+			ToolFrame tFrame = activeRobot.getToolFrame(curFrameIdx);
+			tFrame.setName(workingText.toString());
+			
+			DataManagement.saveRobotData(activeRobot, 1);
+			lastScreen();
+			break;
+		case NAME_UFRAME:
+			// Update frame name
+			if (workingText.length() > 0 && !workingText.equals("\0")) {
+				if (workingText.charAt(workingText.length() - 1) == '\0') {
+					// Remove insert character
+					workingText.deleteCharAt(workingText.length() - 1);
+				}
+			}
+			
+			UserFrame uFrame = activeRobot.getUserFrame(curFrameIdx);
+			uFrame.setName(workingText.toString());
+			
+			DataManagement.saveRobotData(activeRobot, 1);
+			lastScreen();
+			break;
 		case NAV_PROGRAMS:
 			r = activeRobot;
 			if (r.numOfPrograms() != 0) {
@@ -2571,6 +2601,12 @@ public class RobotRun extends PApplet {
 				nextScreen(ScreenMode.NAV_USER_FRAMES);
 			}
 			break;
+		case TFRAME_DETAIL:
+			nextScreen(ScreenMode.NAME_TFRAME);
+			break;
+		case UFRAME_DETAIL:
+			nextScreen(ScreenMode.NAME_UFRAME);
+			break;
 		case NAV_MACROS:
 			edit_macro = null;
 			nextScreen(ScreenMode.SET_MACRO_PROG);
@@ -3509,7 +3545,7 @@ public class RobotRun extends PApplet {
 		case TFRAME_DETAIL:
 		case UFRAME_DETAIL:
 			// F2
-			funct[0] = "";
+			funct[0] = "[Rename]";
 			funct[1] = "[Method]";
 			funct[2] = "";
 			funct[3] = "";
@@ -3690,6 +3726,12 @@ public class RobotRun extends PApplet {
 			break;
 		case NAV_USER_FRAMES:
 			header = "USER FRAMES";
+			break;
+		case NAME_TFRAME:
+			header = String.format("TOOL %d: RENAME", curFrameIdx + 1);
+			break;
+		case NAME_UFRAME:
+			header = String.format("USER %d: RENAME", curFrameIdx + 1);
 			break;
 		case TFRAME_DETAIL:
 			header = String.format("TOOL %d: DETAIL", curFrameIdx + 1);
@@ -4135,8 +4177,10 @@ public class RobotRun extends PApplet {
 			// Disable the window exiting function of the 'esc' key
 			key = 0;
 			
-		} else if (UI != null && UI.isATextFieldActive()) {
-			// Disable key events when typing in a text field
+		} else if ((UI != null && UI.isATextFieldActive())) {
+			
+			/* Disable key events when typing in a text field or entering text
+			 * on the pendant */
 			return;
 			
 		}  else if (UI != null && UI.isPendantActive()) {
@@ -4250,7 +4294,7 @@ public class RobotRun extends PApplet {
 				}	
 			}
 			
-		} else {
+		} else if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) {
 			
 			// Pendant button shortcuts
 			switch(keyCode) {
@@ -4279,7 +4323,9 @@ public class RobotRun extends PApplet {
 	public void keyReleased() {
 		keyCodeMap.keyReleased(keyCode, key);
 		
-		if (!keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL)) {
+		if (!keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL) &&
+				mode.getType() != ScreenType.TYPE_TEXT_ENTRY) {
+			
 			switch(keyCode) {
 			case KeyEvent.VK_SHIFT: 	if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
 											setShift(false); break;
@@ -4876,6 +4922,18 @@ public class RobotRun extends PApplet {
 			setActiveProgIdx(current.conLnIdx);
 			contents.setLineIdx(1);
 			workingText = new StringBuilder(getActiveProg().getName());
+			break;
+		case NAME_TFRAME:
+			contents.setLineIdx(1);
+			workingText = new StringBuilder(
+					activeRobot.getToolFrame(curFrameIdx).getName()
+			);
+			break;
+		case NAME_UFRAME:
+			contents.setLineIdx(1);
+			workingText = new StringBuilder(
+					activeRobot.getUserFrame(curFrameIdx).getName()
+			);
 			break;
 		case PROG_COPY:
 			setActiveProgIdx(current.conLnIdx);
@@ -6546,6 +6604,8 @@ public class RobotRun extends PApplet {
 		case PROG_CREATE:
 		case PROG_RENAME:
 		case PROG_COPY:
+		case NAME_TFRAME:
+		case NAME_UFRAME:
 			DisplayLine line = loadTextInput(workingText.toString());
 			contents.addLine(line);
 			break;
