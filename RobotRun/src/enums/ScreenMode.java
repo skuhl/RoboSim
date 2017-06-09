@@ -86,6 +86,7 @@ public enum ScreenMode implements DisplayMode {
 	SWAP_PT_TYPE(ScreenType.TYPE_OPT_MENU),
 	UFRAME_DETAIL(ScreenType.TYPE_OPT_MENU),
 	TFRAME_DETAIL(ScreenType.TYPE_OPT_MENU),
+	SET_DEF_TOOLTIP(ScreenType.TYPE_OPT_MENU),
 
 	/*
 	 * Screens involving the entry of text, either via keyboard input or function buttons
@@ -96,8 +97,8 @@ public enum ScreenMode implements DisplayMode {
 	PROG_COPY(ScreenType.TYPE_TEXT_ENTRY),
 	PROG_CREATE(ScreenType.TYPE_TEXT_ENTRY),
 	PROG_RENAME(ScreenType.TYPE_TEXT_ENTRY),
-	NAME_UFRAME(ScreenType.TYPE_TEXT_ENTRY),
-	NAME_TFRAME(ScreenType.TYPE_TEXT_ENTRY),
+	UFRAME_RENAME(ScreenType.TYPE_TEXT_ENTRY),
+	TFRAME_RENAME(ScreenType.TYPE_TEXT_ENTRY),
 
 	/*
 	 * Screens involving the entry of numeric values via either a physical numpad or
