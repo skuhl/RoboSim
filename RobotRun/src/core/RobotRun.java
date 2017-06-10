@@ -1632,11 +1632,14 @@ public class RobotRun extends PApplet {
 			m = line == 0 ? m : m.getSecondaryPoint();
 
 			if (options.getLineIdx() == 0) {
-				m.setGlobalPosRegUse(false);
-
+				m.setRegisterType(Fields.MREGTYPE_POS);
 			} else if (options.getLineIdx() == 1) {
-				m.setGlobalPosRegUse(true);
+				m.setRegisterType(Fields.MREGTYPE_GPOS);
+			} else if (options.getLineIdx() == 2) {
+				m.setRegisterType(Fields.MREGTYPE_OBJ);
 			}
+			
+			m.setRegisterType(options.getLineIdx());
 
 			lastScreen();
 			break;
@@ -1730,7 +1733,7 @@ public class RobotRun extends PApplet {
 					return;
 				}
 
-				m.setOffset(tempRegister);
+				m.setOffsetNum(tempRegister);
 				
 			} catch (NumberFormatException NFEx) {/* Ignore invalid numbers */ }
 
@@ -5548,14 +5551,15 @@ public class RobotRun extends PApplet {
 				mInst = mInst.getSecondaryPoint();
 			}
 			
-		} else {
+		} 
+		else {
 			mInst = new MotionInstruction();
 			
 			if (getActiveInstIdx() != prog.getNumOfInst()) {
 				// Overwrite an existing non-motion instruction
 				activeRobot.replaceInstAt(prog, getActiveInstIdx(), mInst);
-
-			} else {
+			} 
+			else {
 				// Insert the new motion instruction
 				getActiveProg().addInstAt(prog.getNumOfInst(), mInst);
 			}
@@ -5568,7 +5572,8 @@ public class RobotRun extends PApplet {
 		if (coord == CoordFrame.JOINT) {
 			mInst.setMotionType(Fields.MTYPE_JOINT);
 			
-		} else {
+		} 
+		else {
 			/*
 			 * Keep circular motion instructions as circular motion
 			 * instructions in world, tool, or user frame modes
@@ -5581,8 +5586,8 @@ public class RobotRun extends PApplet {
 		if (mInst.usesGPosReg()) {
 			PositionRegister pReg = activeRobot.getPReg(regNum);
 			pReg.point = pt;
-			
-		} else {
+		} 
+		else {
 			prog.setPosition(regNum, pt);
 			mInst.setPositionNum(regNum);
 		}
@@ -6745,6 +6750,9 @@ public class RobotRun extends PApplet {
 		case SET_MV_INSTR_REG_TYPE:
 			options.addLine("1.LOCAL(P)");
 			options.addLine("2.GLOBAL(PR)");
+			if(getActiveScenario() == null) {
+				options.addLine("3.CAM OBJECT(OBJ)");
+			}
 			break;
 		case SET_MV_INSTR_IDX:
 			options.addLine("Enter desired position/ register:");
