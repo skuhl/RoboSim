@@ -1,19 +1,23 @@
 package programming;
 
+import core.Scenario;
 import global.Fields;
 import robot.RoboticArm;
 
 public class MotionInstruction extends Instruction  {
 	private int motionType;
+	private int registerType;
 	private int positionNum;
-	private int offsetRegNum;
-	private boolean offsetActive;
-	private boolean isGPosReg;
 	private float speed;
 	private int termination;
+	private boolean offsetActive;
+	private int offsetRegNum;
+	
 	private int userFrame;
 	private int toolFrame;
+	
 	private MotionInstruction circSubInstr;
+	private Scenario scene;
 	
 	/**
 	 * Default constructor
@@ -22,16 +26,20 @@ public class MotionInstruction extends Instruction  {
 		// Doesn't do much ...
 	}
 
-	public MotionInstruction(int type, int pos, boolean globl, float spd, int term) {
+	public MotionInstruction(int type, int pos, boolean isGlobl, float spd, int term) {
 		motionType = type;
+		registerType = isGlobl ? Fields.MREGTYPE_GPOS : Fields.MREGTYPE_POS;
 		positionNum = pos;
-		offsetRegNum = -1;
-		offsetActive = false;
-		isGPosReg = globl;
 		speed = spd;
 		termination = term;
+		offsetActive = false;
+		offsetRegNum = -1;
+		
 		userFrame = -1;
 		toolFrame = -1;
+		
+		scene = null;
+		
 		if(motionType != -1) {
 			circSubInstr = new MotionInstruction(-1, -1, false, 100, 0);
 		} else {
@@ -39,18 +47,62 @@ public class MotionInstruction extends Instruction  {
 		}
 	}
 
-	public MotionInstruction(int type, int pos, boolean globl, float spd, int term, int uf,
-			int tf) {
-		
+	public MotionInstruction(int type, int pos, boolean isGlobl, float spd, int term, int uf, int tf) {
 		motionType = type;
+		registerType = isGlobl ? Fields.MREGTYPE_GPOS : Fields.MREGTYPE_POS;
 		positionNum = pos;
-		offsetRegNum = -1;
-		offsetActive = false;
-		isGPosReg = globl;
 		speed = spd;
 		termination = term;
+		offsetActive = false;
+		offsetRegNum = -1;
+		
 		userFrame = uf;
 		toolFrame = tf;
+		
+		scene = null;
+		
+		if(motionType != -1) {
+			circSubInstr = new MotionInstruction(-1, -1, false, 100, 0, uf, tf);
+		} else {
+			circSubInstr = null;
+		}
+	}
+	
+	public MotionInstruction(int type, int pos, float spd, int term, Scenario s) {
+		motionType = type;
+		registerType = Fields.MREGTYPE_OBJ;
+		positionNum = pos;
+		speed = spd;
+		termination = term;
+		offsetActive = false;
+		offsetRegNum = -1;
+		
+		userFrame = -1;
+		toolFrame = -1;
+		
+		scene = s;
+		
+		if(motionType != -1) {
+			circSubInstr = new MotionInstruction(-1, -1, false, 100, 0);
+		} else {
+			circSubInstr = null;
+		}
+	}
+	
+	private MotionInstruction(int type, int rType, int pos, float spd, int term, int uf, int tf, Scenario s) {
+		motionType = type;
+		registerType = rType;
+		positionNum = pos;
+		speed = spd;
+		termination = term;
+		offsetActive = false;
+		offsetRegNum = -1;
+		
+		userFrame = uf;
+		toolFrame = tf;
+		
+		scene = s;
+		
 		if(motionType != -1) {
 			circSubInstr = new MotionInstruction(-1, -1, false, 100, 0, uf, tf);
 		} else {
@@ -67,35 +119,31 @@ public class MotionInstruction extends Instruction  {
 	}
 	@Override
 	public Instruction clone() {
-		Instruction copy = new MotionInstruction(motionType, positionNum, isGPosReg, speed, termination, userFrame, toolFrame);
+		Instruction copy = new MotionInstruction(motionType, registerType, positionNum, speed, termination, userFrame, toolFrame, scene);
 		copy.setIsCommented( isCommented() );
 
 		return copy;
 	}
 	
 	public int getMotionType() { return motionType; }
-	public int getOffset() { return offsetRegNum; } 
-	
+	public int getRegisterType() { return registerType; }
+	public int getOffset() { return offsetRegNum; }
 	public int getPositionNum() { return positionNum; }
 	public MotionInstruction getSecondaryPoint() { return circSubInstr; }
 	public float getSpeed() { return speed; }
-	
 	public int getTermination() { return termination; }
 	public int getToolFrame() { return toolFrame; }
 	public int getUserFrame() { return userFrame; }
 	
-	public void setGlobalPosRegUse(boolean in) { isGPosReg = in; }
-	public void setMotionType(int in) { motionType = in; }
-	public void setOffset(int in) { offsetRegNum = in; }
-	public void setPositionNum(int in) { positionNum = in; }
+	public void setRegisterType(int regType) { registerType = regType; }
+	public void setMotionType(int type) { motionType = type; }
+	public void setOffsetNum(int ofst) { offsetRegNum = ofst; }
+	public void setPositionNum(int pos) { positionNum = pos; }
 	public void setSecondaryPoint(MotionInstruction p) { circSubInstr = p; }
-	public void setSpeed(float in) { speed = in; }
-
-	public void setTermination(int in) { termination = in; }
-
-	public void setToolFrame(int in) { toolFrame = in; }
-
-	public void setUserFrame(int in) { userFrame = in; }
+	public void setSpeed(float spd) { speed = spd; }
+	public void setTermination(int term) { termination = term; }
+	public void setToolFrame(int tf) { toolFrame = tf; }
+	public void setUserFrame(int uf) { userFrame = uf; }
 
 	public boolean toggleOffsetActive() { return (offsetActive = !offsetActive); }
 
@@ -127,18 +175,29 @@ public class MotionInstruction extends Instruction  {
 			break;
 		default:
 			fields[0] = "\0";
+			break;
 		}
 
 		// Regster type
-		if (isGPosReg) {
-			fields[1] = "PR[";
-		} else {
-			fields[1] = "P[";
+		switch(registerType) {
+		case Fields.MREGTYPE_POS: 
+			fields[1] = "PR["; 
+			break;
+		case Fields.MREGTYPE_GPOS: 
+			fields[1] = "P["; 
+			break;
+		case Fields.MREGTYPE_OBJ: 
+			fields[1] = "OBJ["; 
+			break;
+		default:
+			fields[1] = "\0";
 		}
 
 		// Register index
 		if(positionNum == -1) {
 			fields[2] = "...]";
+		} else if(registerType == 2) {
+			fields[2] = scene.getWorldObject(positionNum).getName();
 		} else {
 			fields[2] = String.format("%d]", positionNum + 1);
 		}
@@ -180,5 +239,5 @@ public class MotionInstruction extends Instruction  {
 		return fields;
 	}
 
-	public boolean usesGPosReg() { return isGPosReg; }
+	public boolean usesGPosReg() { return registerType == Fields.MREGTYPE_GPOS; }
 }

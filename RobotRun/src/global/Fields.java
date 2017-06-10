@@ -49,6 +49,10 @@ public abstract class Fields {
 	 */
 	public static final int MTYPE_LINEAR = 1;
 	
+	public static final int MREGTYPE_POS = 0;
+	public static final int MREGTYPE_GPOS = 1;
+	public static final int MREGTYPE_OBJ = 2;
+	
 	/**
 	 * The circular motion type of a motion instruction.
 	 */
