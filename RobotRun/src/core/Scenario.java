@@ -27,7 +27,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 	 */
 	public Scenario(String n) {
 		name = n;
-		objList = new ArrayList<>();
+		objList = new ArrayList<WorldObject>();
 		gravity = false;
 	}
 

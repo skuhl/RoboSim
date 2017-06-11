@@ -25,17 +25,7 @@ public class RobotCamera {
 	private ArrayList<WorldObject> taughtObjects;
 	
 	public RobotCamera() {
-		camPos = new PVector(-500, 0, 500);
-		camOrient = new RQuaternion();
-		camFOV = 75;
-		camAspectRatio = 1.5f;
-		camClipNear = 0.5f;
-		camClipFar = 1000;
-		sensitivity = 0.75f;
-		brightness = 10.0f;
-		exposure = 0.1f;
-		taughtObjects = new ArrayList<WorldObject>();
-		
+		this(-500, 0, 500, new RQuaternion(), 75, 1.5f, 0.5f, 1000);
 	}
 	
 	public RobotCamera(float posX, float posY, float posZ, RQuaternion q, 
@@ -67,13 +57,14 @@ public class RobotCamera {
 	}
 	
 	/**
-	 * Examines a given WorldObject to determine whether it falls fully or
-	 * partially in the camera view frustum.
+	 * Examines a given WorldObject to determine whether it is recognized by the
+	 * camera based on how much of the object is in view, the camera's brightness
+	 * and exposure values, and the current sensitivity of the camera.
 	 * 
 	 * @param o The WorldObject to be tested
-	 * @return A float between 0 and 1 representing how far in frame the object is
+	 * @return Whether or not the object is recognized.
 	 */
-	public float checkObjectInFrame(WorldObject o) {
+	public boolean isObjectVisible(WorldObject o) {
 		PVector objCenter = o.getLocalCenter();
 		float[] dims = o.getForm().getDimArray();
 		float len = dims[0];
@@ -86,17 +77,17 @@ public class RobotCamera {
 			for(int j = 0; j < RES; j += 1) {
 				for(int k = 0; k < RES; k += 1) {
 					PVector test = new PVector(s.x + i*(len/(RES-1)), s.y + j*(hgt/(RES-1)), s.z + k*(wid/(RES-1)));
-					if(checkPointInFrame(test)) {
+					if(isPointInFrame(test)) {
 						inView += 1;
 					}
 				}
 			}
 		}
 		
-		return (inView / (float)(RES*RES*RES)) * brightness * exposure;
+		return (inView / (float)(RES*RES*RES)) * brightness * exposure >= sensitivity;
 	}
 	
-	public boolean checkPointInFrame(PVector p) {
+	public boolean isPointInFrame(PVector p) {
 		RMatrix vMat = getViewMat();
 		RMatrix pMat = getPerspProjMat();
 		
@@ -211,7 +202,7 @@ public class RobotCamera {
 		if(scene == null) return objList;
 		
 		for(WorldObject o : scene.getObjectList()) {
-			if(checkPointInFrame(o.getLocalCenter()) && checkObjectInFrame(o) >= sensitivity) {
+			if(isPointInFrame(o.getLocalCenter()) && isObjectVisible(o)) {
 				objList.add(o);
 			}
 		}

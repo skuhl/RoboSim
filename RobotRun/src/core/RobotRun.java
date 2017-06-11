@@ -355,6 +355,7 @@ public class RobotRun extends PApplet {
 		case SWAP_PT_TYPE:
 		case SET_MV_INSTR_TYPE:
 		case SET_MV_INSTR_REG_TYPE:
+		case SET_MV_INSTR_OBJ:
 		case SET_MACRO_TYPE:
 		case SET_MACRO_BINDING:
 		case SET_FRM_INSTR_TYPE:
@@ -605,6 +606,7 @@ public class RobotRun extends PApplet {
 		case SWAP_PT_TYPE:
 		case SET_MV_INSTR_TYPE:
 		case SET_MV_INSTR_REG_TYPE:
+		case SET_MV_INSTR_OBJ:
 		case SET_MACRO_TYPE:
 		case SET_MACRO_BINDING:
 		case SET_FRM_INSTR_TYPE:
@@ -1633,15 +1635,15 @@ public class RobotRun extends PApplet {
 
 			if (options.getLineIdx() == 0) {
 				m.setRegisterType(Fields.MREGTYPE_POS);
+				lastScreen();
 			} else if (options.getLineIdx() == 1) {
 				m.setRegisterType(Fields.MREGTYPE_GPOS);
+				lastScreen();
 			} else if (options.getLineIdx() == 2) {
 				m.setRegisterType(Fields.MREGTYPE_OBJ);
+				m.setScene(getActiveScenario());
+				switchScreen(ScreenMode.SET_MV_INSTR_OBJ);
 			}
-			
-			m.setRegisterType(options.getLineIdx());
-
-			lastScreen();
 			break;
 		case SET_MV_INSTR_SPD:
 			m = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
@@ -1665,8 +1667,9 @@ public class RobotRun extends PApplet {
 			lastScreen();
 			break;
 		case SET_MV_INSTR_IDX:
+			m = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
+			
 			try {
-				m = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 				int tempRegister = Integer.parseInt(workingText.toString());
 				int lbound = 1, ubound;
 
@@ -1684,14 +1687,19 @@ public class RobotRun extends PApplet {
 					// Invalid register index
 					String err = String.format("Only registers %d-%d are valid!", lbound, ubound);
 					System.err.println(err);
-					lastScreen();
-					return;
+				} else {
+					m.setPositionNum(tempRegister - 1);
 				}
-
-				m.setPositionNum(tempRegister - 1);
 			} catch (NumberFormatException NFEx) {
-			/* Ignore invalid numbers */ }
-
+				String err = "Invalid entry!";
+				System.err.println(err);
+			}
+			
+			lastScreen();
+			break;
+		case SET_MV_INSTR_OBJ:
+			m = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
+			m.setPositionNum(options.getLineIdx() - 1);
 			lastScreen();
 			break;
 		case SET_MV_INSTR_TERM:
@@ -3243,7 +3251,11 @@ public class RobotRun extends PApplet {
 					nextScreen(ScreenMode.SET_MV_INSTR_REG_TYPE);
 					break;
 				case 4: // register
-					nextScreen(ScreenMode.SET_MV_INSTR_IDX);
+					if(((MotionInstruction)ins).getRegisterType() == Fields.MREGTYPE_OBJ) {
+						nextScreen(ScreenMode.SET_MV_INSTR_OBJ); 
+					} else {
+						nextScreen(ScreenMode.SET_MV_INSTR_IDX);
+					}
 					break;
 				case 5: // speed
 					nextScreen(ScreenMode.SET_MV_INSTR_SPD);
@@ -6553,6 +6565,7 @@ public class RobotRun extends PApplet {
 		case SET_MV_INSTR_TYPE:
 		case SET_MV_INSTR_REG_TYPE:
 		case SET_MV_INSTR_IDX:
+		case SET_MV_INSTR_OBJ:
 		case SET_MV_INSTR_SPD:
 		case SET_MV_INSTR_TERM:
 		case SET_MV_INSTR_OFFSET:
@@ -6670,11 +6683,12 @@ public class RobotRun extends PApplet {
 
 	public void updateOptions() {
 		options.clear();
+		
+		Instruction inst = getActiveInstruction();
 
 		switch (mode) {
 		case NAV_PROG_INSTR:
 			Program p = getActiveProg();
-			Instruction inst = getActiveInstruction();
 			int colIdx = contents.getColumnIdx();
 			
 			if (inst instanceof MotionInstruction && (colIdx == 3 || colIdx == 4)) {
@@ -6750,7 +6764,7 @@ public class RobotRun extends PApplet {
 		case SET_MV_INSTR_REG_TYPE:
 			options.addLine("1.LOCAL(P)");
 			options.addLine("2.GLOBAL(PR)");
-			if(getActiveScenario() == null) {
+			if(getActiveScenario() != null) {
 				options.addLine("3.CAM OBJECT(OBJ)");
 			}
 			break;
@@ -6758,11 +6772,20 @@ public class RobotRun extends PApplet {
 			options.addLine("Enter desired position/ register:");
 			options.addLine("\0" + workingText);
 			break;
+		case SET_MV_INSTR_OBJ:
+			MotionInstruction castIns = (MotionInstruction)inst;
+			options.addLine("Enter target object:");
+			for(WorldObject o : castIns.getScene().getObjectList()) {
+				//if(rCamera.isObjectVisible(o)) {
+				options.addLine(o.getName());
+				//}
+			}
+			break;
 		case SET_MV_INSTR_SPD:
 			inst = getActiveInstruction();
 
 			if (inst instanceof MotionInstruction) {
-				MotionInstruction castIns = (MotionInstruction) inst;
+				castIns = (MotionInstruction)inst;
 				
 				if (castIns.getMotionType() == Fields.MTYPE_JOINT) {
 					speedInPercentage = true;
