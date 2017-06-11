@@ -1173,12 +1173,13 @@ public class RoboticArm {
 			}
 			
 		} else {
-			pt = parent.getPosition(posNum);;
+			pt = parent.getPosition(posNum);
 		}
 		
 		if (pt != null) {
 			return pt.clone();
 		}
+		
 		// Unintialized position or invalid position index
 		return null;
 	}
@@ -1402,12 +1403,13 @@ public class RoboticArm {
 	public Point getVector(MotionInstruction mInst, Program parent) {
 		Point pt = getPosition(mInst, parent);
 		
-		if (mInst.getOffset() != -1) {
+		if (mInst.getOffset() != -1 && mInst.isOffsetActive()) {
 			System.err.println("OFFSET!");
 			// Apply the position offset
 			Point offset = PREG[mInst.getOffset()].point;
 			
 			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
+
 				pt = pt.add(offset.angles);
 				
 			} else {
