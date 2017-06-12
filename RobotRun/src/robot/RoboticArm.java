@@ -11,6 +11,7 @@ import enums.InstOp;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
+import geom.DimType;
 import geom.MyPShape;
 import geom.Part;
 import geom.Point;
@@ -1172,6 +1173,15 @@ public class RoboticArm {
 				pt = pReg.point;
 			}
 			
+		} else if(mInst.getRegisterType() == Fields.MREGTYPE_OBJ) {
+			WorldObject tgt = mInst.getTgtObject();
+			RMatrix tgtOri = tgt.getLocalOrientation();
+			PVector vecX = new PVector(tgtOri.getEntryF(0, 0), tgtOri.getEntryF(1, 0), tgtOri.getEntryF(2, 0));
+			PVector offset = vecX.mult(tgt.getForm().getDimArray()[0] / 2f + 5);
+						
+			pt = new Point(PVector.add(tgt.getLocalCenter(), offset), tgt.getLocalOrientation());
+			//float[] angles = RMath.inverseKinematics(this, getJointAngles(), pt.position, pt.orientation);
+			//pt.angles = angles;
 		} else {
 			pt = parent.getPosition(posNum);
 		}
