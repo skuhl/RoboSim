@@ -1904,6 +1904,8 @@ public class RobotRun extends PApplet {
 
 			break;
 		case SET_BOOL_EXPR_ARG:
+			System.out.println(opEdit instanceof AtomicExpression);
+			
 			if (options.getLineIdx() == 0) {
 				// set arg to new data reg
 				opEdit = new OperandDReg(new DataRegister());
@@ -2070,6 +2072,7 @@ public class RobotRun extends PApplet {
 				}
 
 			} catch (NumberFormatException e) {
+				//TODO display error to user
 			}
 
 			lastScreen();
@@ -2094,7 +2097,7 @@ public class RobotRun extends PApplet {
 			if (options.getLineIdx() == 0) {
 				opEdit = new OperandBool(true);
 			} else {
-				opEdit = new OperandBool(true);
+				opEdit = new OperandBool(false);
 			}
 
 			lastScreen();
@@ -2116,12 +2119,15 @@ public class RobotRun extends PApplet {
 			lastScreen();
 			break;
 		case SET_SELECT_STMT_ARG:
+			s = (SelectStatement) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
+			
 			if (options.getLineIdx() == 0) {
 				opEdit = new OperandDReg(new DataRegister());
 			} else {
 				opEdit = new OperandGeneric();
 			}
 
+			s.setArg(opEdit);
 			nextScreen(ScreenMode.SET_SELECT_ARGVAL);
 			break;
 		case SET_SELECT_ARGVAL:
@@ -2135,7 +2141,10 @@ public class RobotRun extends PApplet {
 					// println(regFile.DAT_REG[(int)f - 1].value);
 					opEdit = new OperandDReg(activeRobot.getDReg((int) f - 1));
 				}
+				
+				s.setArg(opEdit);
 			} catch (NumberFormatException ex) {
+				//TODO display error to user
 			}
 
 			screenStates.pop();
