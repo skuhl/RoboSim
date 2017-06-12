@@ -7,6 +7,10 @@ public class Instruction {
 		com = false;
 	}
 	
+	public Instruction(boolean isComm) {
+		com = isComm;
+	}
+	
 	/**
 	 * Create an independent replica of this instruction.
 	 */

@@ -11,7 +11,6 @@ import enums.InstOp;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
-import geom.DimType;
 import geom.MyPShape;
 import geom.Part;
 import geom.Point;
@@ -24,8 +23,10 @@ import global.RMath;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
+import programming.CamMoveToObject;
 import programming.Instruction;
 import programming.MotionInstruction;
+import programming.PosMotionInst;
 import programming.Program;
 import regs.DataRegister;
 import regs.IORegister;
@@ -40,6 +41,23 @@ public class RoboticArm {
 	 * its maximum linear motion speed.
 	 */
 	public static final int motorSpeed;
+	
+	/**
+	 * Defines a set of tool tip default offsets associated with each end
+	 * effector.
+	 */
+	private static final PVector[] EE_TOOLTIP_DEFAULTS;
+	
+	static {
+		motorSpeed = 1000; // speed in mm/sec
+		
+		EE_TOOLTIP_DEFAULTS = new PVector[5];
+		EE_TOOLTIP_DEFAULTS[0] = new PVector(-81f, 0f, 0f);
+		EE_TOOLTIP_DEFAULTS[1] = new PVector(-32f, 0f, 0f);
+		EE_TOOLTIP_DEFAULTS[2] = new PVector(-180f, 55f, 0f);
+		EE_TOOLTIP_DEFAULTS[3] = new PVector(-120f, -150f, 0f);
+		EE_TOOLTIP_DEFAULTS[4] = new PVector(-295f, 0f, 53.5f);
+	}
 	
 	/**
 	 * The unique ID of this robot.
@@ -144,10 +162,6 @@ public class RoboticArm {
 	 * Defines the last orientation and position of the robot's tool tip.
 	 */
 	private RMatrix lastTipTMatrix;
-	
-	static {
-		motorSpeed = 1000; // speed in mm/sec
-	}
 	
 	/**
 	 * Creates a robotic arm with the given ID, segment models, and end
@@ -972,6 +986,18 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param mInst
+	 * @param parent
+	 * @return			A copy of the position associated with the secondary
+	 * 					position of the given circular motion instruction
+	 */
+	public Point getCPosition(PosMotionInst mInst, Program parent) {
+		return getPosition(mInst.getCircPosIdx(), mInst.getCircPosType(), parent);
+	}
+	
+	/**
 	 * @return	The current coordinate frame of the Robot
 	 */
 	public CoordFrame getCurCoordFrame() {
@@ -1161,36 +1187,38 @@ public class RoboticArm {
 	 * @return			A copy of the point associated with the given motion
 	 * 					instruction
 	 */
-	public Point getPosition(MotionInstruction mInst, Program parent) {
-		int posNum = mInst.getPositionNum();
+	public Point getPosition(PosMotionInst mInst, Program parent) {
+		return getPosition(mInst.getPosIdx(), mInst.getPosType(), parent);
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param posIdx
+	 * @param usePReg
+	 * @param parent
+	 * @return
+	 */
+	private Point getPosition(int posIdx, int pType, Program parent) {
 		Point pt = null;
 		
-		if (mInst.usesGPosReg()) {
+		if (pType == Fields.PTYPE_PREG) {
 			// The instruction references a global position register
-			PositionRegister pReg = getPReg(posNum);
+			PositionRegister pReg = getPReg(posIdx);
 			
 			if (pReg != null) {
 				pt = pReg.point;
 			}
 			
-		} else if(mInst.getRegisterType() == Fields.MREGTYPE_OBJ) {
-			WorldObject tgt = mInst.getTgtObject();
-			RMatrix tgtOri = tgt.getLocalOrientation();
-			PVector vecX = new PVector(tgtOri.getEntryF(0, 0), tgtOri.getEntryF(1, 0), tgtOri.getEntryF(2, 0));
-			PVector offset = vecX.mult(tgt.getForm().getDimArray()[0] / 2f + 5);
-						
-			pt = new Point(PVector.add(tgt.getLocalCenter(), offset), tgt.getLocalOrientation());
-			//float[] angles = RMath.inverseKinematics(this, getJointAngles(), pt.position, pt.orientation);
-			//pt.angles = angles;
-		} else {
-			pt = parent.getPosition(posNum);
+		} else if (pType == Fields.PTYPE_PROG) {
+			pt = parent.getPosition(posIdx);
 		}
 		
 		if (pt != null) {
 			return pt.clone();
 		}
 		
-		// Unintialized position or invalid position index
+		// Uninitialized position or invalid position index
 		return null;
 	}
 	
@@ -1313,6 +1341,20 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param idx
+	 * @return
+	 */
+	public PVector getToolTipDefault(int idx) {
+		if (idx >= 0 && idx < EE_TOOLTIP_DEFAULTS.length) {
+			return EE_TOOLTIP_DEFAULTS[idx];
+		}
+		// invalid index
+		return null;
+	}
+	
+	/**
 	 * @return	The robot's tooltip position and orientatio with respect to the
 	 * 			active user frame
 	 */
@@ -1403,40 +1445,130 @@ public class RoboticArm {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Returns the native position and orientation and robot joint angles
+	 * resulting from the given motion instruction based on the position
+	 * associated with the motion instruction, as well as its user frame,
+	 * tool frame, and offset. Depending on the offset, the resulting point may
+	 * be null.
 	 * 
-	 * @param mInst
-	 * @param parent	
-	 * @return			The modified position associated with the given motion
-	 * 					instruction
+	 * @param mInst			The motion instruction defining the position index,
+	 * 						position type, user frame, tool frame, and offset
+	 * 						for the resulting point
+	 * @param parent		The program, to which mInst belongs
+	 * @param useCircPos	Whether to get the primary or secondary position of
+	 * 						the motion instruction
+	 * @return				The position and orientation of the point in the
+	 * 						native coordinate system as well as the associated
+	 * 						joint angles for that position
 	 */
-	public Point getVector(MotionInstruction mInst, Program parent) {
-		Point pt = getPosition(mInst, parent);
+	public Point getVector(PosMotionInst mInst, Program parent, boolean getCircPos) {
+		Point pt;
 		
-		if (mInst.getOffset() != -1 && mInst.isOffsetActive()) {
-			System.err.println("OFFSET!");
-			// Apply the position offset
-			Point offset = PREG[mInst.getOffset()].point;
+		if (getCircPos) {
+			pt = getCPosition(mInst, parent);
 			
-			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
-
-				pt = pt.add(offset.angles);
-				
-			} else {
-				// TODO do circular instructions differ?
-				pt = pt.add(offset.position, offset.orientation);
-			}
+		} else {
+			pt = getPosition(mInst, parent);
 		}
 		
-		if (mInst.getUserFrame() != -1) {
+		UserFrame instUFrame = getUserFrame(mInst.getUFrameIdx());
+		PositionRegister offReg = getPReg(mInst.getOffsetIdx());
+		
+		// Check if offset can be applied
+		if (mInst.getOffsetType() != Fields.OFFSET_NONE) {
+			
+			if (offReg == null || offReg.point == null) {
+				// Invalid offset
+				return null;
+			}
+			
+			Point offset = offReg.point;
+			boolean offIsCart = offReg.isCartesian;
+			boolean posIsCart = mInst.getMotionType() != Fields.MTYPE_JOINT;
+			
+			if (posIsCart && offIsCart) {
+				// Add a Cartesian offset to a linear motion instruction
+				pt = pt.add(offset.position, offset.orientation);
+				
+				if (instUFrame != null) {
+					// Remove the associated user frame
+					pt = removeFrame(pt, instUFrame.getOrigin(),
+							instUFrame.getOrientation());
+				}
+				// Find the resulting joint angles
+				float[] jointAngles = RMath.inverseKinematics(this, pt.angles,
+						pt.position, pt.orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failure
+					return null;
+					
+				} else {
+					pt.angles = jointAngles;
+				}
+				
+			} else if (posIsCart) {
+				// Add a joint offset to a linear motion instruction
+				if (instUFrame != null) {
+					// Remove the associated user frame
+					pt = removeFrame(pt, instUFrame.getOrigin(),
+							instUFrame.getOrientation());
+				}
+				
+				float[] jointAngles = RMath.inverseKinematics(this, pt.angles,
+						pt.position, pt.orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failure
+					return null;
+				}
+				// Apply the offset
+				for (int jdx = 0; jdx < 6; ++jdx) {
+					jointAngles[jdx] = RMath.mod2PI(jointAngles[jdx]
+							+ offset.angles[jdx]);
+				}
+				
+				// Calculate the new Cartesian position and orientation
+				pt = getToolTipNative(jointAngles);
+				
+			} else if (offIsCart) {
+				// Add a Cartesian offset to a joint motion instruction
+				pt = getToolTipPoint(pt.angles, getActiveTool(), instUFrame);
+				// Apply offset
+				pt = pt.add(offset.position, offset.orientation);
+				
+				// Find the resulting joint angles
+				float[] jointAngles = RMath.inverseKinematics(this, pt.angles,
+						pt.position, pt.orientation);
+				
+				if (jointAngles == null) {
+					// Inverse kinematics failure
+					return null;
+					
+				} else {
+					pt.angles = jointAngles;
+				}
+				
+			} else {
+				// Add joint offset to a joint motion instruction
+				for (int jdx = 0; jdx < 6; ++jdx) {
+					pt.angles[jdx] = RMath.mod2PI(pt.angles[jdx]
+							+ offset.angles[jdx]);
+				}
+				
+				pt = getToolTipNative(pt.angles);
+			}
+		
+		// No offset to apply
+		} else if (instUFrame != null) {
 			// Remove the associated user frame
-			UserFrame uFrame = getUserFrame(mInst.getUserFrame());
-			pt = removeFrame(pt, uFrame.getOrigin(), uFrame.getOrientation());
+			pt = removeFrame(pt, instUFrame.getOrigin(),
+					instUFrame.getOrientation());
 		}
 		
 		return pt;
 	}
-	
+
 	/**
 	 * Stops all movement of this robot.
 	 */
@@ -1808,6 +1940,25 @@ public class RoboticArm {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param frameIdx	The index of the tool frame
+	 * @param defTipIdx	The index of a default tool tip offset
+	 */
+	public void setDefToolTip(int frameIdx, int defTipIdx) {
+		
+		ToolFrame frame = getToolFrame(frameIdx);
+		
+		if (frame != null && defTipIdx >=0 && defTipIdx <
+				EE_TOOLTIP_DEFAULTS.length) {
+			
+			// Set the offset of the frame to the specified default tool tip
+			PVector defToolTip = EE_TOOLTIP_DEFAULTS[defTipIdx];
+			frame.setTCPOffset(defToolTip.copy());
+		}
+	}
+	
+	/**
 	 * Updates the state of the robot's end effector associated with the given
 	 * index.
 	 * 
@@ -1867,45 +2018,93 @@ public class RoboticArm {
 	public int setupMInstMotion(Program prog, MotionInstruction mInst,
 			int nextIdx, boolean singleExec) {
 		
-		Point instPt = getVector(mInst, prog);
-		
-		if (!mInst.checkFrames(activeToolIdx, activeUserIdx)) {
-			// Incorrect active frames for this motion instruction
-			return 1;
+		if (mInst instanceof PosMotionInst) {
+			PosMotionInst pMInst = (PosMotionInst)mInst;
+			Point instPt = getVector(pMInst, prog, false);
 			
-		} else if (instPt == null) {
-			// No point defined for given motion instruction
-			return 2;
-		}
-		
-		if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
-			// Setup joint motion instruction
-			updateMotion(instPt.angles, mInst.getSpeed());
+			if (pMInst.getTFrameIdx() != activeToolIdx ||
+					pMInst.getUFrameIdx() != activeUserIdx) {
+				
+				// Incorrect active frames for this motion instruction
+				return 1;
+				
+			} else if (instPt == null) {
+				// No point defined for given motion instruction
+				return 2;
+			}
 			
-		} else if (mInst.getMotionType() == Fields.MTYPE_LINEAR) {
-			// Setup linear motion instruction
-			Instruction nextInst = prog.getInstAt(nextIdx);
+			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
+				// Setup joint motion instruction
+				updateMotion(instPt.angles, mInst.getSpdMod());
+				
+			} else if (mInst.getMotionType() == Fields.MTYPE_LINEAR) {
+				// Setup linear motion instruction
+				Instruction nextInst = prog.getInstAt(nextIdx);
+				
+				if (mInst.getTermination() > 0 && nextInst instanceof MotionInstruction
+						&& !singleExec) {
+					// Non-fine termination motion
+					Point nextPt;
+					
+					if (nextInst instanceof PosMotionInst) {
+						nextPt = getVector((PosMotionInst)nextInst, prog, false);
+						
+					} else if (nextInst instanceof CamMoveToObject) {
+						nextPt = ((CamMoveToObject) nextInst).getWOPosition();
+						
+					} else {
+						// Invalid motion instruction
+						nextPt = null;
+					}
+					
+					updateMotion(instPt, nextPt, mInst.getSpdMod(),
+							mInst.getTermination() / 100f);
+					
+				} else {
+					// Fine termination motion
+					updateMotion(instPt, mInst.getSpdMod());
+				}
 			
-			if (mInst.getTermination() > 0 && nextInst instanceof MotionInstruction
-					&& !singleExec) {
-				// Non-fine termination motion
-				Point nextPt = getVector((MotionInstruction)nextInst, prog);
-				updateMotion(instPt, nextPt, mInst.getSpeed(), mInst.getTermination() / 100f);
+			} else if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
+				// Setup circular motion instruction
+				Point endPt = getVector(pMInst, prog, true);
+				updateMotion(endPt, instPt, mInst.getSpdMod());
 				
 			} else {
-				// Fine termination motion
-				updateMotion(instPt, mInst.getSpeed());
+				// Invalid motion type
+				return 3;
 			}
-		
-		} else if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
-			// Setup circular motion instruction
-			MotionInstruction sndPt = mInst.getSecondaryPoint();
-			Point endPt = getVector(sndPt, prog);
-			updateMotion(endPt, instPt, mInst.getSpeed());
 			
-		} else {
-			// Invalid motion type
-			return 3;
+		} else if (mInst instanceof CamMoveToObject) {
+			// Setup camera move to instruction
+			Instruction nextInst = prog.getInstAt(nextIdx);
+			Point tgt = ((CamMoveToObject) mInst).getWOPosition();
+			
+			if (tgt != null) {
+				if (mInst.getTermination() > 0 && nextInst instanceof MotionInstruction
+						&& !singleExec) {
+					// Non-fine termination motion
+					Point nextPt;
+					
+					if (nextInst instanceof PosMotionInst) {
+						nextPt = getVector((PosMotionInst)nextInst, prog, false);
+						
+					} else if (nextInst instanceof CamMoveToObject) {
+						nextPt = ((CamMoveToObject) nextInst).getWOPosition();
+						
+					} else {
+						// Invalid motion instruction
+						nextPt = null;
+					}
+					
+					updateMotion(tgt, nextPt, mInst.getSpdMod(),
+							mInst.getTermination() / 100f);
+					
+				} else {
+					// Fine termination motion
+					updateMotion(tgt, mInst.getSpdMod());
+				}
+			}
 		}
 		
 		return 0;
@@ -1987,19 +2186,10 @@ public class RoboticArm {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			MotionInstruction mInst = (MotionInstruction) p.get(instIdx);
-			MotionInstruction sndMInst = mInst.getSecondaryPoint();
+			PosMotionInst mInst = (PosMotionInst) p.get(instIdx);
+			int posNum = mInst.getCircPosIdx();
 			
-			if (mInst.getMotionType() != Fields.MTYPE_CIRCULAR || sndMInst == null) {
-				throw new NullPointerException(
-					String.format("Instruction at %d is not a circular motion instruction!",
-					instIdx)
-				);	
-			}
-			
-			int posNum = sndMInst.getPositionNum();
-			
-			if (mInst.usesGPosReg()) {
+			if (mInst.getCircPosType() == Fields.PTYPE_PREG) {
 				// Update a position register on the robot
 				PositionRegister pReg = getPReg(posNum);
 				
@@ -2011,12 +2201,12 @@ public class RoboticArm {
 				// Uninitialized position register
 				return null;
 				
-			} else {
+			} else if (mInst.getCircPosIdx() == Fields.PTYPE_PROG) {
 				// Update a position in the program
 				if (posNum == -1) {
 					// In the case of an uninitialized position
 					posNum = p.getNextPosition();
-					sndMInst.setPositionNum(posNum);
+					mInst.setCircPosIdx(posNum);
 				}
 				
 				return p.setPosition(posNum, newPt);
@@ -2045,10 +2235,10 @@ public class RoboticArm {
 		ClassCastException, NullPointerException {
 		
 		if (newPt != null) {
-			MotionInstruction mInst = (MotionInstruction)p.get(instIdx);
-			int posNum = mInst.getPositionNum();
+			PosMotionInst mInst = (PosMotionInst)p.get(instIdx);
+			int posNum = mInst.getPosIdx();
 			
-			if (mInst.usesGPosReg()) {
+			if (mInst.getPosType() == Fields.PTYPE_PREG) {
 				// Update a position register on the robot
 				PositionRegister pReg = getPReg(posNum);
 				
@@ -2060,12 +2250,12 @@ public class RoboticArm {
 				// Uninitialized position register
 				return null;
 				
-			} else {
+			} else if (mInst.getPosType() == Fields.PTYPE_PROG) {
 				// Update a position in the program
 				if (posNum == -1) {
 					// In the case of an uninitialized position
 					posNum = p.getNextPosition();
-					mInst.setPositionNum(posNum);
+					mInst.setPosIdx(posNum);
 				}
 				
 				return p.setPosition(posNum, newPt);

@@ -40,6 +40,21 @@ public abstract class Fields {
 	public static final int DPREG_NUM = 100;
 	
 	/**
+	 * The program position type for motion instructions
+	 */
+	public static final int PTYPE_PROG = 0;
+	
+	/**
+	 * The position register position type for motion instructions.
+	 */
+	public static final int PTYPE_PREG = 1;
+	
+	/**
+	 * The world object position type for motion instructions
+	 */
+	public static final int PTYPE_WO = 2;
+	
+	/**
 	 * The joint motion type of a motion instruction.
 	 */
 	public static final int MTYPE_JOINT = 0;
@@ -49,14 +64,20 @@ public abstract class Fields {
 	 */
 	public static final int MTYPE_LINEAR = 1;
 	
-	public static final int MREGTYPE_POS = 0;
-	public static final int MREGTYPE_GPOS = 1;
-	public static final int MREGTYPE_OBJ = 2;
-	
 	/**
 	 * The circular motion type of a motion instruction.
 	 */
 	public static final int MTYPE_CIRCULAR = 2;
+	
+	/**
+	 * Defines a state of a motion instruction's offset.
+	 */
+	public static final int OFFSET_NONE = 0;
+	
+	/**
+	 * Defines the state of a motion instruction's offset.
+	 */
+	public static final int OFFSET_PREG = 1;
 	
 	/**
 	 * The tool frame type of a motion instruction

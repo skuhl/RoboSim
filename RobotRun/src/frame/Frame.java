@@ -14,6 +14,8 @@ import processing.core.PApplet;
 import processing.core.PVector;
 
 public abstract class Frame {
+	
+	private String name;
 	// The orientation of the frame in the form of a unit quaternion
 	protected RQuaternion orientationOffset;
 	/* The three points used to define a coordinate axis for 6-Point Method
@@ -23,7 +25,8 @@ public abstract class Frame {
 	private PVector DEOrigin;
 	private RQuaternion DEOrientationOffset;
 
-	public Frame() {
+	public Frame(String name) {
+		this.name = name;
 		orientationOffset = new RQuaternion();
 		axesTeachPoints = new Point[] { null, null, null };
 		DEOrigin = null;
@@ -260,6 +263,10 @@ public abstract class Frame {
 	public PVector getDEOrigin() {
 		return DEOrigin;
 	}
+	
+	public String getName() {
+		return name;
+	}
 
 	/* Returns a set of axes unit vectors representing the axes
 	 * of the frame in reference to the Native Coordinate System. */
@@ -367,6 +374,10 @@ public abstract class Frame {
 	
 			default:
 		}
+	}
+	
+	public void setName(String newName) {
+		name = newName;
 	}
 
 	/**

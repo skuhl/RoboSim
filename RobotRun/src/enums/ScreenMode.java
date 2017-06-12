@@ -21,8 +21,10 @@ public enum ScreenMode implements DisplayMode {
 	SET_FRM_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_IF_STMT_ACT(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
-	SET_MV_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
-	SET_MV_INSTR_REG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
+	SET_MINST_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
+	SET_MINST_REG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
+	SET_MINST_CREG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
+	SET_MINST_OFF_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_REG_EXPR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_SELECT_STMT_ARG(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_SELECT_STMT_ACT(ScreenType.TYPE_INSTRUCT_EDIT),
@@ -81,10 +83,11 @@ public enum ScreenMode implements DisplayMode {
 	SET_MACRO_TYPE(ScreenType.TYPE_OPT_MENU),
 	SET_MACRO_BINDING(ScreenType.TYPE_OPT_MENU),
 	SET_CALL_PROG(ScreenType.TYPE_OPT_MENU),
-	SET_MV_INSTR_OBJ(ScreenType.TYPE_OPT_MENU),
+	SET_MINST_WO(ScreenType.TYPE_OPT_MENU),
 	SWAP_PT_TYPE(ScreenType.TYPE_OPT_MENU),
 	UFRAME_DETAIL(ScreenType.TYPE_OPT_MENU),
 	TFRAME_DETAIL(ScreenType.TYPE_OPT_MENU),
+	SET_DEF_TOOLTIP(ScreenType.TYPE_OPT_MENU),
 
 	/*
 	 * Screens involving the entry of text, either via keyboard input or function buttons
@@ -95,6 +98,8 @@ public enum ScreenMode implements DisplayMode {
 	PROG_COPY(ScreenType.TYPE_TEXT_ENTRY),
 	PROG_CREATE(ScreenType.TYPE_TEXT_ENTRY),
 	PROG_RENAME(ScreenType.TYPE_TEXT_ENTRY),
+	UFRAME_RENAME(ScreenType.TYPE_TEXT_ENTRY),
+	TFRAME_RENAME(ScreenType.TYPE_TEXT_ENTRY),
 
 	/*
 	 * Screens involving the entry of numeric values via either a physical numpad or
@@ -116,10 +121,11 @@ public enum ScreenMode implements DisplayMode {
 	SET_REG_EXPR_IDX1(ScreenType.TYPE_NUM_ENTRY),
 	SET_REG_EXPR_IDX2(ScreenType.TYPE_NUM_ENTRY),
 	SET_SELECT_ARGVAL(ScreenType.TYPE_NUM_ENTRY),
-	SET_MV_INSTR_IDX(ScreenType.TYPE_NUM_ENTRY),
-	SET_MV_INSTR_OFFSET(ScreenType.TYPE_NUM_ENTRY),
-	SET_MV_INSTR_SPD(ScreenType.TYPE_NUM_ENTRY),
-	SET_MV_INSTR_TERM(ScreenType.TYPE_NUM_ENTRY),
+	SET_MINST_IDX(ScreenType.TYPE_NUM_ENTRY),
+	SET_MINST_CIDX(ScreenType.TYPE_NUM_ENTRY),
+	SET_MINST_OFFIDX(ScreenType.TYPE_NUM_ENTRY),
+	SET_MINST_SPD(ScreenType.TYPE_NUM_ENTRY),
+	SET_MINST_TERM(ScreenType.TYPE_NUM_ENTRY),
 	CP_DREG_COM(ScreenType.TYPE_NUM_ENTRY),
 	CP_DREG_VAL(ScreenType.TYPE_NUM_ENTRY),
 	CP_PREG_COM(ScreenType.TYPE_NUM_ENTRY),
@@ -139,7 +145,7 @@ public enum ScreenMode implements DisplayMode {
 	DIRECT_ENTRY_TOOL(ScreenType.TYPE_POINT_ENTRY),
 	DIRECT_ENTRY_USER(ScreenType.TYPE_POINT_ENTRY),
 	EDIT_PREG(ScreenType.TYPE_POINT_ENTRY),
-	EDIT_MINST_POS(ScreenType.TYPE_POINT_ENTRY), 
+	EDIT_PROG_POS(ScreenType.TYPE_POINT_ENTRY),
 	;
 
 	final ScreenType type;
