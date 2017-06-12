@@ -1767,7 +1767,7 @@ public class RobotRun extends PApplet {
 			cMInst.setWO(options.getLineIdx() - 1);
 			lastScreen();
 			break;
-		case SET_MVINST_TERM:
+		case SET_MINST_TERM:
 			try {
 				m = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 				int tempTerm = Integer.parseInt(workingText.toString());
@@ -3318,7 +3318,7 @@ public class RobotRun extends PApplet {
 				
 			} else if (sdx == 6) {
 				// Termination
-				nextScreen(ScreenMode.SET_MVINST_TERM);
+				nextScreen(ScreenMode.SET_MINST_TERM);
 				
 			} else if (sdx == 7) {
 				// Offset type
@@ -3353,6 +3353,12 @@ public class RobotRun extends PApplet {
 						nextScreen(ScreenMode.SET_MINST_CIDX);
 					}
 				}
+				
+			} else if (mInst instanceof CamMoveToObject) {
+				
+				// TODO
+				System.err.println("Not Implmented in RobotRun.getEditScreen()");
+				
 			}
 			
 		} else if (ins instanceof FrameInstruction) {
@@ -3718,7 +3724,7 @@ public class RobotRun extends PApplet {
 		case NAV_INSTR_MENU:
 		case SET_MINST_SPD:
 		case SET_MINST_IDX:
-		case SET_MVINST_TERM:
+		case SET_MINST_TERM:
 		case SET_MINST_OFF_TYPE:
 		case SET_MINST_OFFIDX:
 		case SELECT_INSTR_INSERT:
@@ -5094,7 +5100,7 @@ public class RobotRun extends PApplet {
 			contents.setColumnIdx( current.conColIdx );
 			contents.setRenderStart(  current.conRenIdx );
 			break;
-		case SET_MVINST_TERM:
+		case SET_MINST_TERM:
 			mInst = (MotionInstruction) getActiveInstruction();
 			int term = mInst.getTermination();
 			
@@ -5728,10 +5734,10 @@ public class RobotRun extends PApplet {
 		mInst.setUFrameIdx(activeRobot.getActiveUserIdx());
 	}
 	
-	public void CameraMoveToObjectInst() {
+	public void newCameraMoveToObjectInst() {
 		
 		// TODO
-		
+		System.err.println("Not implemented in RobotRun.newCameraMoveToObject()");
 	}
 
 	public void newRegisterStatement(Register reg) {
@@ -6695,7 +6701,7 @@ public class RobotRun extends PApplet {
 		case SET_MINST_IDX:
 		case SET_MINST_CIDX:
 		case SET_MINST_SPD:
-		case SET_MVINST_TERM:
+		case SET_MINST_TERM:
 		case SET_MINST_OFF_TYPE:
 		case SET_MINST_OFFIDX:
 		case SET_MV_INSTR_OBJ:
@@ -6932,10 +6938,10 @@ public class RobotRun extends PApplet {
 		case SET_MINST_SPD:
 			inst = getActiveInstruction();
 
-			if (inst instanceof PosMotionInst) {
-				castIns = (CamMoveToObject)inst;
+			if (inst instanceof MotionInstruction) {
+				MotionInstruction mInst = (MotionInstruction)inst;
 				
-				if (castIns.getMotionType() == Fields.MTYPE_JOINT) {
+				if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
 					speedInPercentage = true;
 					workingTextSuffix = "%";
 				} else {
@@ -6952,7 +6958,7 @@ public class RobotRun extends PApplet {
 			}
 			
 			break;
-		case SET_MVINST_TERM:
+		case SET_MINST_TERM:
 			options.addLine("Enter desired termination %(0-100):");
 			options.addLine("\0" + workingText);
 			break;
