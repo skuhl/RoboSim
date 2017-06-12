@@ -39,8 +39,19 @@ public abstract class Fields {
 	 */
 	public static final int DPREG_NUM = 100;
 	
+	/**
+	 * The program position type for motion instructions
+	 */
 	public static final int PTYPE_PROG = 0;
+	
+	/**
+	 * The position register position type for motion instructions.
+	 */
 	public static final int PTYPE_PREG = 1;
+	
+	/**
+	 * The world object position type for motion instructions
+	 */
 	public static final int PTYPE_WO = 2;
 	
 	/**
