@@ -3416,11 +3416,6 @@ public class RobotRun extends PApplet {
 					}
 				}
 				
-			} else if (mInst instanceof CamMoveToObject) {
-				
-				// TODO
-				System.err.println("Not Implmented in RobotRun.getEditScreen()");
-				
 			}
 			
 		} else if (ins instanceof FrameInstruction) {
@@ -5812,12 +5807,6 @@ public class RobotRun extends PApplet {
 		mInst.setTFrameIdx(activeRobot.getActiveToolIdx());
 		mInst.setUFrameIdx(activeRobot.getActiveUserIdx());
 	}
-	
-	public void newCameraMoveToObjectInst() {
-		
-		// TODO
-		System.err.println("Not implemented in RobotRun.newCameraMoveToObject()");
-	}
 
 	public void newRegisterStatement(Register reg) {
 		RoboticArm r = activeRobot;
@@ -7208,13 +7197,15 @@ public class RobotRun extends PApplet {
 			options.addLine("4. IF/SELECT");
 			options.addLine("5. JMP/LBL");
 			options.addLine("6. CALL");
+			
 			/*
 			 * Only allow the user to add robot call instructions when the
 			 * second robot is in the application
 			 */
 			if (UI.getRobotButtonState()) {
-				options.addLine("6. RCALL");
+				options.addLine("7. RCALL");
 			}
+			
 			break;
 		case SELECT_IO_INSTR_REG:
 			options.setLines( loadIORegInst(activeRobot) );
