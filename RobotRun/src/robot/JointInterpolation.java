@@ -1,7 +1,5 @@
 package robot;
 
-import java.util.Arrays;
-
 import global.RMath;
 import processing.core.PApplet;
 import processing.core.PConstants;
