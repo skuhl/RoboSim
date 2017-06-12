@@ -508,8 +508,18 @@ public abstract class DataManagement {
 			float spdMod = in.readFloat();
 			int term = in.readInt();
 			
-			inst = new CamMoveToObject(isCommented, mType, pdx, spdMod, term,
-					null);
+			byte flag = in.readByte();
+			String loadedName;
+			
+			if (flag == 0) {
+				loadedName = null;
+				
+			} else {
+				loadedName = in.readUTF();
+			}
+			
+			inst = new CamMoveToObject(isCommented, mType, Fields.PTYPE_WO,
+					pdx, spdMod, term, loadedName);
 			
 		}/* Add other instructions here! */
 		else if (instType == 1) {
@@ -960,68 +970,20 @@ public abstract class DataManagement {
 		loadRobotData(process.getRobot(0));
 		loadRobotData(process.getRobot(1));
 		
-		RoboticArm r = process.getRobot(0);
-		/**
-		 * Loop through all programs and update call instructions, so that they
-		 * reference the correct target program.
-		 */
-		for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
-			Program p = r.getProgram(pdx);
-			
-			for (int idx = 0; idx < p.size(); ++idx) {
-				Instruction inst = p.get(idx);
-				
-				if (inst instanceof CallInstruction) {
-					// Update a top call instruction
-					CallInstruction cInst = (CallInstruction)inst;
-					
-					if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-						Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
-						cInst.setProg(tgt);
-					}
-					
-				} else if (inst instanceof SelectStatement) {
-					// Update call instructions in a select statement
-					SelectStatement stmt = (SelectStatement)inst;
-					ArrayList<Instruction> instList = stmt.getInstrs();
-					
-					for (Instruction caseInst : instList) {
-						
-						if (caseInst instanceof CallInstruction) {
-							CallInstruction cInst = (CallInstruction)caseInst;
-							
-							if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-								Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
-								cInst.setProg(tgt);
-							}
-						}
-						
-					}
-					
-				} else if (inst instanceof IfStatement) {
-					// Update a call instruction in a if statement
-					IfStatement stmt = (IfStatement)inst;
-					Instruction subInst = stmt.getInstr();
-					
-					if (subInst instanceof CallInstruction) {
-						CallInstruction cInst = (CallInstruction)subInst;
-						
-						if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-							Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
-							cInst.setProg(tgt);
-						}
-					}
-				}
-			}
+		for (int rdx = 0; rdx < 2; ++rdx) {
+			robotPostProcessing(process.getRobot(rdx), process);
 		}
+	}
+	
+	private static void robotPostProcessing(RoboticArm robot, RobotRun process) {
+		ArrayList<Scenario> scenes = process.getScenarios();
 		
-		r = process.getRobot(1);
 		/**
 		 * Loop through all programs and update call instructions, so that they
 		 * reference the correct target program.
 		 */
-		for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
-			Program p = r.getProgram(pdx);
+		for (int pdx = 0; pdx < robot.numOfPrograms(); ++pdx) {
+			Program p = robot.getProgram(pdx);
 			
 			for (int idx = 0; idx < p.size(); ++idx) {
 				Instruction inst = p.get(idx);
@@ -1064,6 +1026,18 @@ public abstract class DataManagement {
 						if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
 							Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
 							cInst.setProg(tgt);
+						}
+					}
+					
+				} else if (inst instanceof CamMoveToObject) {
+					// Update a camera motion instruction
+					CamMoveToObject cMInst = (CamMoveToObject)inst;
+					System.err.printf("tgt: %s\n", cMInst.getLoadedSceneName());
+					
+					for (Scenario s : scenes) {
+						System.err.printf("%s\n", s.getName());
+						if (s.getName().equals(cMInst.getLoadedSceneName())) {
+							cMInst.setScene(s);
 						}
 					}
 				}
@@ -1498,9 +1472,16 @@ public abstract class DataManagement {
 			out.writeInt(cMInst.getPosIdx());
 			out.writeFloat(cMInst.getSpdMod());
 			out.writeInt(cMInst.getTermination());
+			// Save the name of the reference scene, if it is not null
+			Scenario scene = cMInst.getScene();
 			
-			// TODO save scene name or index?
-			// TODO save world object name or index?
+			if (scene == null) {
+				out.writeByte(0);
+				
+			} else {
+				out.writeByte(1);
+				out.writeUTF(scene.getName());
+			}
 			
 		}/* Add other instructions here! */
 		else if (inst != null) {
