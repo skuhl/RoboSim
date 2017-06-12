@@ -1,6 +1,7 @@
 package programming;
 
 import core.Scenario;
+import geom.WorldObject;
 import global.Fields;
 import global.RMath;
 import robot.RoboticArm;
@@ -113,6 +114,15 @@ public class MotionInstruction extends Instruction  {
 	public int getRegisterType() { return registerType; }
 	public int getOffset() { return offsetRegNum; }
 	public int getPositionNum() { return positionNum; }
+	
+	public WorldObject getTgtObject() {
+		if(scene != null && registerType == Fields.MREGTYPE_OBJ) {
+			return scene.getWorldObject(positionNum);
+		} else {
+			return null;
+		}
+	}
+	
 	public MotionInstruction getSecondaryPoint() { return circSubInstr; }
 	public Scenario getScene() { return scene; }
 	public float getSpeed() { return speed; }

@@ -472,20 +472,20 @@ public abstract class RMath {
 	 * 
 	 * @param model
 	 *            The Robot model of which to base the inverse kinematics off
-	 * @param srcAngles
+	 * @param startAngles
 	 *            The initial position of the Robot
 	 * @param tgtPosition
 	 *            The desired position of the Robot
 	 * @param tgtOrientation
 	 *            The desired orientation of the Robot
 	 */
-	public static float[] inverseKinematics(RoboticArm model, float[] srcAngles, PVector tgtPosition,
+	public static float[] inverseKinematics(RoboticArm model, float[] startAngles, PVector tgtPosition,
 			RQuaternion tgtOrientation) {
 
 		final int limit = 1000; // Max number of times to loop
 		int count = 0;
 
-		float[] angles = srcAngles.clone();
+		float[] angles = startAngles.clone();
 
 		while (count < limit) {
 			Point cPoint = model.getToolTipNative(angles);
