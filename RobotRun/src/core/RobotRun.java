@@ -5507,7 +5507,7 @@ public class RobotRun extends PApplet {
 			WorldObject selectedWO = UI.getSelectedWO();
 			
 			if (selectedWO instanceof Fixture || (selectedWO instanceof Part &&
-					(r == null || r.isHeld((Part)selectedWO)))) {
+					(r == null || !r.isHeld((Part)selectedWO)))) {
 				
 				WorldObject savedState = selectedWO.clone();
 	
@@ -5551,7 +5551,7 @@ public class RobotRun extends PApplet {
 			RoboticArm r = activeRobot;
 			WorldObject selectedWO = UI.getSelectedWO();
 			
-			if (selectedWO instanceof Part && (r == null || r.isHeld((Part)selectedWO))) {
+			if (selectedWO instanceof Part && (r == null || !r.isHeld((Part)selectedWO))) {
 				WorldObject savedState = (WorldObject) selectedWO.clone();
 				UI.fillCurWithDef( (Part)selectedWO );
 
