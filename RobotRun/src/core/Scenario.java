@@ -118,7 +118,7 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 		String originName = newObject.getName();
 
 		if (originName.length() > 16) {
-			// Base name length caps at 16 charcters
+			// Base name length caps at 16 characters
 			newObject.setName( originName.substring(0, 16) );
 			originName = newObject.getName();
 		}
@@ -130,7 +130,6 @@ public class Scenario implements Iterable<WorldObject>, Cloneable {
 				newObject.setName( addSuffixForDuplicateName(originName, objList) );
 			}
 
-			// TODO add in alphabetical order
 			objList.add(newObject);
 			return true;
 		}

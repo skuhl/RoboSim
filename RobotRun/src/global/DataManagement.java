@@ -49,6 +49,7 @@ import geom.RShape;
 import geom.WorldObject;
 import processing.core.PVector;
 import programming.CallInstruction;
+import programming.CamMoveToObject;
 import programming.FrameInstruction;
 import programming.IOInstruction;
 import programming.IfStatement;
@@ -56,6 +57,7 @@ import programming.Instruction;
 import programming.JumpInstruction;
 import programming.LabelInstruction;
 import programming.MotionInstruction;
+import programming.PosMotionInst;
 import programming.Program;
 import programming.RegisterStatement;
 import programming.SelectStatement;
@@ -295,7 +297,10 @@ public abstract class DataManagement {
 			// Types do not match
 			throw new IOException("Invalid Frame type!");
 		}
-
+		// Read the frame's name
+		String name = in.readUTF();
+		ref.setName(name);
+		
 		PVector v = loadPVector(in);
 		int len;
 		
@@ -385,25 +390,20 @@ public abstract class DataManagement {
 			// Read data for a MotionInstruction object
 			boolean isCommented = in.readBoolean();
 			int mType = in.readInt();
-			int reg = in.readInt();
-			boolean isGlobal = in.readBoolean();
-			float spd = in.readFloat();
+			int pType = in.readInt();
+			int posIdx = in.readInt();
+			int circPType = in.readInt();
+			int circPosIdx = in.readInt();
+			float spdMod = in.readFloat();
 			int term = in.readInt();
-			int uFrame = in.readInt();
-			int tFrame = in.readInt();
-
-			inst = new MotionInstruction(mType, reg, isGlobal, spd, term,
-					uFrame, tFrame);
-			inst.setIsCommented(isCommented);
-
-			byte flag = in.readByte();
-
-			if (flag == 1) {
-				/* Load the second point associated with a circular type motion
-				 * instruction */
-				((MotionInstruction)inst).setSecondaryPoint(
-						(MotionInstruction)loadInstruction(robot, in));
-			}
+			int tFrameIdx = in.readInt();
+			int uFrameIdx = in.readInt();
+			int offType = in.readInt();
+			int offIdx = in.readInt();
+			
+			inst = new PosMotionInst(isCommented, mType, pType, posIdx,
+					circPType, circPosIdx, spdMod, term, tFrameIdx, uFrameIdx,
+					offType, offIdx);
 
 		} else if(instType == 3) {
 			// Read data for a FrameInstruction object
@@ -499,6 +499,27 @@ public abstract class DataManagement {
 			
 			inst = new SelectStatement(arg, cases, insts);
 			inst.setIsCommented(isCommented);
+			
+		} else if (instType == 11) {
+			
+			boolean isCommented = in.readBoolean();
+			int mType = in.readInt();
+			int pdx = in.readInt();
+			float spdMod = in.readFloat();
+			int term = in.readInt();
+			
+			byte flag = in.readByte();
+			String loadedName;
+			
+			if (flag == 0) {
+				loadedName = null;
+				
+			} else {
+				loadedName = in.readUTF();
+			}
+			
+			inst = new CamMoveToObject(isCommented, mType, Fields.PTYPE_WO,
+					pdx, spdMod, term, loadedName);
 			
 		}/* Add other instructions here! */
 		else if (instType == 1) {
@@ -949,68 +970,20 @@ public abstract class DataManagement {
 		loadRobotData(process.getRobot(0));
 		loadRobotData(process.getRobot(1));
 		
-		RoboticArm r = process.getRobot(0);
-		/**
-		 * Loop through all programs and update call instructions, so that they
-		 * reference the correct target program.
-		 */
-		for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
-			Program p = r.getProgram(pdx);
-			
-			for (int idx = 0; idx < p.size(); ++idx) {
-				Instruction inst = p.get(idx);
-				
-				if (inst instanceof CallInstruction) {
-					// Update a top call instruction
-					CallInstruction cInst = (CallInstruction)inst;
-					
-					if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-						Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
-						cInst.setProg(tgt);
-					}
-					
-				} else if (inst instanceof SelectStatement) {
-					// Update call instructions in a select statement
-					SelectStatement stmt = (SelectStatement)inst;
-					ArrayList<Instruction> instList = stmt.getInstrs();
-					
-					for (Instruction caseInst : instList) {
-						
-						if (caseInst instanceof CallInstruction) {
-							CallInstruction cInst = (CallInstruction)caseInst;
-							
-							if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-								Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
-								cInst.setProg(tgt);
-							}
-						}
-						
-					}
-					
-				} else if (inst instanceof IfStatement) {
-					// Update a call instruction in a if statement
-					IfStatement stmt = (IfStatement)inst;
-					Instruction subInst = stmt.getInstr();
-					
-					if (subInst instanceof CallInstruction) {
-						CallInstruction cInst = (CallInstruction)subInst;
-						
-						if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-							Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
-							cInst.setProg(tgt);
-						}
-					}
-				}
-			}
+		for (int rdx = 0; rdx < 2; ++rdx) {
+			robotPostProcessing(process.getRobot(rdx), process);
 		}
+	}
+	
+	private static void robotPostProcessing(RoboticArm robot, RobotRun process) {
+		ArrayList<Scenario> scenes = process.getScenarios();
 		
-		r = process.getRobot(1);
 		/**
 		 * Loop through all programs and update call instructions, so that they
 		 * reference the correct target program.
 		 */
-		for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
-			Program p = r.getProgram(pdx);
+		for (int pdx = 0; pdx < robot.numOfPrograms(); ++pdx) {
+			Program p = robot.getProgram(pdx);
 			
 			for (int idx = 0; idx < p.size(); ++idx) {
 				Instruction inst = p.get(idx);
@@ -1053,6 +1026,18 @@ public abstract class DataManagement {
 						if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
 							Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
 							cInst.setProg(tgt);
+						}
+					}
+					
+				} else if (inst instanceof CamMoveToObject) {
+					// Update a camera motion instruction
+					CamMoveToObject cMInst = (CamMoveToObject)inst;
+					System.err.printf("tgt: %s\n", cMInst.getLoadedSceneName());
+					
+					for (Scenario s : scenes) {
+						System.err.printf("%s\n", s.getName());
+						if (s.getName().equals(cMInst.getLoadedSceneName())) {
+							cMInst.setScene(s);
 						}
 					}
 				}
@@ -1248,6 +1233,8 @@ public abstract class DataManagement {
 		} else {
 			throw new IOException("Invalid Frame!");
 		}
+		// Write the name of the string
+		out.writeUTF(f.getName());
 		
 		int len;
 		
@@ -1341,31 +1328,23 @@ public abstract class DataManagement {
 
 		/* Each Instruction subclass MUST have its own saving code block
 		 * associated with its unique data fields */
-		if (inst instanceof MotionInstruction) {
-			MotionInstruction m_inst = (MotionInstruction)inst;
+		if (inst instanceof PosMotionInst) {
+			PosMotionInst m_inst = (PosMotionInst)inst;
 			
 			out.writeByte(2);
 			// Write data associated with the MotionIntruction object
 			out.writeBoolean(m_inst.isCommented());
 			out.writeInt(m_inst.getMotionType());
-			out.writeInt(m_inst.getPositionNum());
-			out.writeBoolean(m_inst.usesGPosReg());
-			out.writeFloat(m_inst.getSpeed());
+			out.writeInt(m_inst.getPosType());
+			out.writeInt(m_inst.getPosIdx());
+			out.writeInt(m_inst.getCircPosType());
+			out.writeInt(m_inst.getCircPosIdx());
+			out.writeFloat(m_inst.getSpdMod());
 			out.writeInt(m_inst.getTermination());
-			out.writeInt(m_inst.getUserFrame());
-			out.writeInt(m_inst.getToolFrame());
-
-			MotionInstruction subInst = m_inst.getSecondaryPoint();
-
-			if (subInst != null) {
-				// Save secondary point for circular instructions
-				out.writeByte(1);
-				saveInstruction(subInst, out);
-
-			} else {
-				// No secondary point
-				out.writeByte(0);
-			}
+			out.writeInt(m_inst.getTFrameIdx());
+			out.writeInt(m_inst.getUFrameIdx());
+			out.writeInt(m_inst.getOffsetType());
+			out.writeInt(m_inst.getOffsetIdx());
 
 		} else if(inst instanceof FrameInstruction) {
 			FrameInstruction f_inst = (FrameInstruction)inst;
@@ -1482,6 +1461,26 @@ public abstract class DataManagement {
 			out.writeInt(insts.size());
 			for (Instruction i : insts) {
 				saveInstruction(i, out);
+			}
+			
+		} else if (inst instanceof CamMoveToObject) {
+			CamMoveToObject cMInst = (CamMoveToObject)inst;
+			
+			out.writeByte(11);
+			out.writeBoolean(cMInst.isCommented());
+			out.writeInt(cMInst.getMotionType());
+			out.writeInt(cMInst.getPosIdx());
+			out.writeFloat(cMInst.getSpdMod());
+			out.writeInt(cMInst.getTermination());
+			// Save the name of the reference scene, if it is not null
+			Scenario scene = cMInst.getScene();
+			
+			if (scene == null) {
+				out.writeByte(0);
+				
+			} else {
+				out.writeByte(1);
+				out.writeUTF(scene.getName());
 			}
 			
 		}/* Add other instructions here! */

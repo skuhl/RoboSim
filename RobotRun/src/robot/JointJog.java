@@ -34,8 +34,6 @@ public class JointJog extends JointMotion {
 					// Invalid joint rotation
 					Fields.debug("A[%d]: %f\n", jdx, trialAngle);
 					JOINT_MOTION[jdx] = 0;
-					// TODO REFACTOR THIS
-					// RobotRun.getInstance().updateRobotJogMotion(i, 0);
 				}
 			}
 		}

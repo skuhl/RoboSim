@@ -17,7 +17,7 @@ public class ToolFrame extends Frame {
 	 * Initialize all fields
 	 */
 	public ToolFrame() {
-		super();
+		super("");
 		TCPOffset = new PVector(0f, 0f, 0f);
 		TCPTeachPoints = new Point[] { null, null, null };
 	}
