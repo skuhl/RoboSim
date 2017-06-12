@@ -17,7 +17,7 @@ import expression.Operator;
  * @param o - the operator to use for this if statement's expression.
  * @param i - the instruction to be executed if the statement expression evaluates to true.
  */
-public class IfStatement extends Instruction {
+public class IfStatement extends Instruction implements ExpressionEvaluation {
 	AtomicExpression expr;
 	Instruction instr;
 
@@ -36,7 +36,7 @@ public class IfStatement extends Instruction {
 		instr = i;
 	}
 
-	public IfStatement(Operator o, Instruction i){
+	public IfStatement(Operator o, Instruction i) {
 		expr = new AtomicExpression(o);
 		instr = i;
 	}
@@ -118,5 +118,34 @@ public class IfStatement extends Instruction {
 		ret[exprArray.length] += " :";
 
 		return ret;
+	}
+
+	@Override
+	public Operand<?> setOperand(int idx, Operand<?> o) {
+		Operand<?> ret;
+		if(expr instanceof Expression) {
+			ret = ((Expression)expr).setOperand(idx, o);
+		} else {
+			ret = expr.setArg(o, idx);
+		}
+		return ret;
+	}
+
+	@Override
+	public Operator setOperator(int idx, Operator o) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Operand<?> getOperand(int idx) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Operator getOperator(int idx) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
