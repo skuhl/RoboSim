@@ -31,6 +31,7 @@ public class CamMoveToObject extends MotionInstruction {
 	
 	public CamMoveToObject clone() {
 		// TODO
+		System.err.println("Not implemented in CamMoveToObject.clone()");
 		return null;
 	}
 	

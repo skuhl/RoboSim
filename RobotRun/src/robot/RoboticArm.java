@@ -11,7 +11,6 @@ import enums.InstOp;
 import frame.ToolFrame;
 import frame.UserFrame;
 import geom.BoundingBox;
-import geom.DimType;
 import geom.MyPShape;
 import geom.Part;
 import geom.Point;
@@ -2045,8 +2044,21 @@ public class RoboticArm {
 				if (mInst.getTermination() > 0 && nextInst instanceof MotionInstruction
 						&& !singleExec) {
 					// Non-fine termination motion
-					Point nextPt = getVector((PosMotionInst)nextInst, prog, false);
-					updateMotion(instPt, nextPt, mInst.getSpdMod(), mInst.getTermination() / 100f);
+					Point nextPt;
+					
+					if (nextInst instanceof PosMotionInst) {
+						nextPt = getVector((PosMotionInst)nextInst, prog, false);
+						
+					} else if (nextInst instanceof CamMoveToObject) {
+						nextPt = ((CamMoveToObject) nextInst).getWOPosition();
+						
+					} else {
+						// Invalid motion instruction
+						nextPt = null;
+					}
+					
+					updateMotion(instPt, nextPt, mInst.getSpdMod(),
+							mInst.getTermination() / 100f);
 					
 				} else {
 					// Fine termination motion
@@ -2064,9 +2076,33 @@ public class RoboticArm {
 			}
 			
 		} else if (mInst instanceof CamMoveToObject) {
+			// Setup camera move to instruction
+			Instruction nextInst = prog.getInstAt(nextIdx);
+			Point tgt = ((CamMoveToObject) mInst).getWOPosition();
 			
-			// TODO
-			
+			if (mInst.getTermination() > 0 && nextInst instanceof MotionInstruction
+					&& !singleExec) {
+				// Non-fine termination motion
+				Point nextPt;
+				
+				if (nextInst instanceof PosMotionInst) {
+					nextPt = getVector((PosMotionInst)nextInst, prog, false);
+					
+				} else if (nextInst instanceof CamMoveToObject) {
+					nextPt = ((CamMoveToObject) nextInst).getWOPosition();
+					
+				} else {
+					// Invalid motion instruction
+					nextPt = null;
+				}
+				
+				updateMotion(tgt, nextPt, mInst.getSpdMod(),
+						mInst.getTermination() / 100f);
+				
+			} else {
+				// Fine termination motion
+				updateMotion(tgt, mInst.getSpdMod());
+			}
 		}
 		
 		return 0;
