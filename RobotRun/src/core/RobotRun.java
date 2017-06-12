@@ -3,7 +3,6 @@ package core;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -359,7 +358,7 @@ public class RobotRun extends PApplet {
 		case SET_MINST_REG_TYPE:
 		case SET_MINST_CREG_TYPE:
 		case SET_MINST_OFF_TYPE:
-		case SET_MV_INSTR_OBJ:
+		case SET_MINST_WO:
 		case SET_MACRO_TYPE:
 		case SET_MACRO_BINDING:
 		case SET_FRM_INSTR_TYPE:
@@ -613,7 +612,7 @@ public class RobotRun extends PApplet {
 		case SET_MINST_REG_TYPE:
 		case SET_MINST_CREG_TYPE:
 		case SET_MINST_OFF_TYPE:
-		case SET_MV_INSTR_OBJ:
+		case SET_MINST_WO:
 		case SET_MACRO_TYPE:
 		case SET_MACRO_BINDING:
 		case SET_FRM_INSTR_TYPE:
@@ -1669,22 +1668,60 @@ public class RobotRun extends PApplet {
 				m.setMotionType(Fields.MTYPE_CIRCULAR);
 				
 			}
-					
-			// TODO deal with Cam move to object
 			
 			lastScreen();
 			break;
 		case SET_MINST_REG_TYPE:
-			PosMotionInst pMInst = (PosMotionInst) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			boolean usePReg = options.getLineIdx() == 1;
-			pMInst.setRegType(usePReg);
+			MotionInstruction mInst = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
+			
+			if (options.getLineIdx() == 2) {
+				if (!(mInst instanceof CamMoveToObject)) {
+					// Change to a camera motion instruction
+					MotionInstruction mCInst = new CamMoveToObject(
+							mInst.getMotionType(), 0,
+							mInst.getSpdMod(), mInst.getTermination(),
+							getActiveScenario()
+					);
+					
+					getActiveProg().replaceInstAt(getActiveInstIdx(), mCInst);
+				}
+				
+			} else {
+				int posType;
+				
+				if (options.getLineIdx() == 1) {
+					posType = Fields.PTYPE_PREG;
+					
+				} else {
+					posType = Fields.PTYPE_PROG;
+				}
+				
+				if (mInst instanceof CamMoveToObject) {
+					// Change to a position motion instruction
+					MotionInstruction mPInst = new PosMotionInst(
+							mInst.getMotionType(), posType, -1,
+							mInst.getSpdMod(), mInst.getTermination()
+					);
+					
+					getActiveProg().replaceInstAt(getActiveInstIdx(), mPInst);
+					
+				} else if (mInst instanceof PosMotionInst) {
+					// Update motion type of the position motion instruction
+					mInst.setPosType(posType);
+				}
+			}
 			
 			lastScreen();
 			break;
 		case SET_MINST_CREG_TYPE:
-			pMInst = (PosMotionInst) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			usePReg = options.getLineIdx() == 1;
-			pMInst.setCircRegType(usePReg);
+			PosMotionInst pMInst = (PosMotionInst) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
+			
+			if (options.getLineIdx() == 0) {
+				pMInst.setCircPosType(Fields.PTYPE_PROG);
+			
+			} else if (options.getLineIdx() == 1) {
+				pMInst.setCircPosType(Fields.PTYPE_PREG);
+			}
 
 			lastScreen();
 			break;
@@ -1707,16 +1744,25 @@ public class RobotRun extends PApplet {
 			lastScreen();
 			break;
 		case SET_MINST_IDX:
-			pMInst = (PosMotionInst) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
+			mInst = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
+			
 			try {
 				int tempRegister = Integer.parseInt(workingText.toString());
-				int lbound = 1, ubound;
+				int lbound = 1, ubound = 0;
 				
-				if (pMInst.usePReg()) {
+				if (mInst.getPosType() == Fields.PTYPE_PREG) {
 					ubound = 100;
 
-				} else {
+				} else if (mInst.getPosType() == Fields.PTYPE_PROG) {
 					ubound = 1000;
+					
+				} else if (mInst instanceof CamMoveToObject) {
+					Scenario s = ((CamMoveToObject) mInst).getScene();
+					
+					if (s != null) {
+						ubound = s.size();
+						
+					}	
 				}
 
 				if (tempRegister < lbound || tempRegister > ubound) {
@@ -1725,7 +1771,7 @@ public class RobotRun extends PApplet {
 					System.err.println(err);
 				}
 				
-				pMInst.setPosIdx(tempRegister - 1);
+				mInst.setPosIdx(tempRegister - 1);
 				
 			} catch (NumberFormatException NFEx) {
 			/* Ignore invalid numbers */ }
@@ -1738,11 +1784,14 @@ public class RobotRun extends PApplet {
 				int tempRegister = Integer.parseInt(workingText.toString());
 				int lbound = 1, ubound;
 				
-				if (pMInst.circUsePReg()) {
+				if (pMInst.getPosType() == Fields.PTYPE_PREG) {
 					ubound = 100;
 
-				} else {
+				} else if (pMInst.getPosType() == Fields.PTYPE_PROG) {
 					ubound = 1000;
+					
+				} else {
+					ubound = 0;
 				}
 
 				if (tempRegister < lbound || tempRegister > ubound) {
@@ -1762,9 +1811,10 @@ public class RobotRun extends PApplet {
 			
 			lastScreen();
 			break;
-		case SET_MV_INSTR_OBJ:
+		case SET_MINST_WO:
 			CamMoveToObject cMInst = (CamMoveToObject) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			cMInst.setWO(options.getLineIdx() - 1);
+			cMInst.setPosIdx(options.getLineIdx() - 1);
+			
 			lastScreen();
 			break;
 		case SET_MINST_TERM:
@@ -2364,12 +2414,12 @@ public class RobotRun extends PApplet {
 			updatePendantScreen();
 			break;
 		case EDIT_PROG_POS:
-			PosMotionInst mInst = (PosMotionInst) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			Point pt = parsePosFromContents(mInst.getMotionType() != Fields.MTYPE_JOINT);
+			pMInst = (PosMotionInst) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
+			Point pt = parsePosFromContents(pMInst.getMotionType() != Fields.MTYPE_JOINT);
 
 			if (pt != null) {
 				// Update the position of the active motion instruction
-				getActiveProg().setPosition(mInst.getPosIdx(), pt);
+				getActiveProg().setPosition(pMInst.getPosIdx(), pt);
 				DataManagement.saveRobotData(activeRobot, 1);
 			}
 
@@ -3309,8 +3359,14 @@ public class RobotRun extends PApplet {
 				nextScreen(ScreenMode.SET_MINST_REG_TYPE);
 				
 			} else if (sdx == 4) {
-				// Position index
-				nextScreen(ScreenMode.SET_MINST_IDX);
+				
+				if (mInst instanceof CamMoveToObject) {
+					// Set World Object reference
+					nextScreen(ScreenMode.SET_MINST_WO);
+				} else {
+					// Position index
+					nextScreen(ScreenMode.SET_MINST_IDX);
+				}
 				
 			} else if (sdx == 5) {
 				// Speed modifier
@@ -3882,10 +3938,10 @@ public class RobotRun extends PApplet {
 	 * instruction matching the given index appears on.
 	 */
 	public int getInstrLine(int instrIdx) {
-		try {
-			ArrayList<DisplayLine> instr = loadInstructions(getActiveProg());
-			int row = instrIdx;
-			
+		ArrayList<DisplayLine> instr = loadInstructions(getActiveProg());
+		int row = instrIdx;
+		
+		try {	
 			while (instr.get(row).getItemIdx() != instrIdx) {
 				row += 1;
 				if (contents.getLineIdx() >= contents.size() - 1)
@@ -3896,6 +3952,10 @@ public class RobotRun extends PApplet {
 			
 		} catch (NullPointerException NPEx) {
 			return 0;
+			
+		} catch (IndexOutOfBoundsException IOOBEx) {
+			//System.err.printf("inst=%d row=%d size=%d\n", instrIdx, row, instr.size());
+			return row;
 		}
 	}
 
@@ -4648,14 +4708,26 @@ public class RobotRun extends PApplet {
 			int numWdth = line.get(line.size() - 1).length();
 			xPos += numWdth * Fields.CHAR_WDTH + tokenOffset;
 
-			if (instr instanceof PosMotionInst) {
+			if (instr instanceof MotionInstruction) {
 				// Show '@' at the an instrution, if the Robot's position is
 				// close to that position stored in the instruction's register
-				PosMotionInst a = (PosMotionInst) instr;
-				Point instPt = activeRobot.getVector(a, p, false);
+				Point pt;
+				
+				if (instr instanceof PosMotionInst) {
+					pt = activeRobot.getVector((PosMotionInst)instr, p, false);
+					
+				} else if (instr instanceof CamMoveToObject) {
+					pt = ((CamMoveToObject) instr).getWOPosition();
+					
+				} else {
+					pt = null;
+				}
 
-				if (instPt != null && tipPos.position.dist(instPt.position) < (activeRobot.getLiveSpeed() / 100f)) {
+				if (pt != null && tipPos.position.dist(pt.position)
+						< (activeRobot.getLiveSpeed() / 100f)) {
+					
 					line.add("@");
+					
 				} else {
 					line.add("\0");
 				}
@@ -5714,11 +5786,11 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
-		if (mInst.usePReg()) {
+		if (mInst.getPosType() == Fields.PTYPE_PREG) {
 			PositionRegister pReg = activeRobot.getPReg(regNum);
 			pReg.point = pt;
-		} 
-		else {
+			
+		}  else if (mInst.getPosType() == Fields.PTYPE_PROG) {
 			prog.setPosition(regNum, pt);
 			
 			if (getSelectedLine() > 0) {
@@ -6704,7 +6776,7 @@ public class RobotRun extends PApplet {
 		case SET_MINST_TERM:
 		case SET_MINST_OFF_TYPE:
 		case SET_MINST_OFFIDX:
-		case SET_MV_INSTR_OBJ:
+		case SET_MINST_WO:
 		case SET_IO_INSTR_STATE:
 		case SET_IO_INSTR_IDX:
 		case SET_FRM_INSTR_TYPE:
@@ -6843,7 +6915,7 @@ public class RobotRun extends PApplet {
 						pt = pReg.point;
 					}
 					
-				} else if (selectedReg == 4 || selectedReg == 5) {
+				} else if (selectedReg == 4 || selectedReg == 3) {
 					isCart = true;
 					pt = activeRobot.getCPosition(mInst, p);
 					
@@ -6914,9 +6986,12 @@ public class RobotRun extends PApplet {
 			options.addLine("1.JOINT");
 			options.addLine("2.LINEAR");
 			options.addLine("3.CIRCULAR");
-			options.addLine("4.CAM OBJECT(OBJ)");
 			break;
 		case SET_MINST_REG_TYPE:
+			options.addLine("1.LOCAL(P)");
+			options.addLine("2.GLOBAL(PR)");
+			options.addLine("3.CAM OBJECT(OBJ)");
+			break;
 		case SET_MINST_CREG_TYPE:
 			options.addLine("1.LOCAL(P)");
 			options.addLine("2.GLOBAL(PR)");
@@ -6926,14 +7001,18 @@ public class RobotRun extends PApplet {
 			options.addLine("Enter desired position/ register:");
 			options.addLine("\0" + workingText);
 			break;
-		case SET_MV_INSTR_OBJ:
+		case SET_MINST_WO:
 			CamMoveToObject castIns = (CamMoveToObject)inst;
-			options.addLine("Enter target object:");
-			for(WorldObject o : castIns.getScene().getObjectList()) {
-				//if(rCamera.isObjectVisible(o)) {
-				options.addLine(o.getName());
-				//}
+			Scenario s = castIns.getScene();
+			
+			if (s != null) {
+				options.addLine("Enter target object:");
+				
+				for (WorldObject wo : s) {
+					options.addLine(wo.getName());
+				}
 			}
+			
 			break;
 		case SET_MINST_SPD:
 			inst = getActiveInstruction();
@@ -7477,6 +7556,7 @@ public class RobotRun extends PApplet {
 	 * @param instIdx
 	 * @param singleExec
 	 */
+	@SuppressWarnings("unused")
 	private void progExec(int instIdx, boolean singleExec) {
 		progExec(progExecState.getProgIdx(), instIdx, singleExec);
 	}
@@ -8057,12 +8137,23 @@ public class RobotRun extends PApplet {
 				
 				if (sdx == 3 || sdx == 4) {
 					// Primary register is selected
-					return (mInst.usePReg()) ? 2 : 1;
+					
+					if (mInst.getPosType() == Fields.PTYPE_PREG) {
+						return 2;
+						
+					} else if (mInst.getPosType() == Fields.PTYPE_PROG) {
+						return 1;
+					}
 					
 				} else if (mInst.getOffsetType() == Fields.OFFSET_NONE) {
 					if (sdx == 8 || sdx == 9) {
 						// Secondary register is selected
-						return (mInst.circUsePReg()) ? 4 : 3;
+						if (mInst.getCircPosType() == Fields.PTYPE_PREG) {
+							return 4;
+							
+						} else if (mInst.getCircPosType() == Fields.PTYPE_PROG) {
+							return 3;
+						}
 					}
 					
 				} else if (mInst.getOffsetType() == Fields.OFFSET_PREG) {
@@ -8073,7 +8164,12 @@ public class RobotRun extends PApplet {
 						
 					} else if (sdx == 9 || sdx == 10) {
 						// Secondary register is selected
-						return (mInst.circUsePReg()) ? 4 : 3;
+						if (mInst.getCircPosType() == Fields.PTYPE_PREG) {
+							return 4;
+							
+						} else if (mInst.getCircPosType() == Fields.PTYPE_PROG) {
+							return 3;
+						}
 					}
 				}
 			}

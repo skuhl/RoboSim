@@ -3,11 +3,14 @@ package programming;
 import global.Fields;
 import robot.RoboticArm;
 
+/**
+ * TODO general comments
+ * 
+ * @author Joshua Hooker
+ */
 public class PosMotionInst extends MotionInstruction {
 	
-	private boolean usePReg;
-	private int posIdx;
-	private boolean circUsePReg;
+	private int circPosType;
 	private int circPosIdx;
 	private int tFrameIdx;
 	private int uFrameIdx;
@@ -19,27 +22,26 @@ public class PosMotionInst extends MotionInstruction {
 		// Doesn't do much ...
 	}
 	
-	public PosMotionInst(int mType, boolean usePReg, int posIdx,
-			float spdMod, int term) {
+	public PosMotionInst(int mType, int posType, int posIdx, float spdMod,
+			int term) {
 		
-		this(false, mType, usePReg, posIdx, false, -1, spdMod, term, -1, -1,
-				Fields.OFFSET_NONE, -1);
+		this(false, mType, posType, posIdx, Fields.PTYPE_PROG, -1,
+				spdMod, term, -1, -1, Fields.OFFSET_NONE, -1);
 	}
 	
 	public PosMotionInst(int mType, int posIdx, float spdMod, int term,
 			int toolIdx, int userIdx) {
 		
-		this(false, mType, false, posIdx, false, -1, spdMod, term, toolIdx,
-				userIdx, Fields.OFFSET_NONE, -1);
+		this(false, mType, Fields.PTYPE_PROG, posIdx, Fields.PTYPE_PROG, -1,
+				spdMod, term, toolIdx, userIdx, Fields.OFFSET_NONE, -1);
 	}
 	
-	public PosMotionInst(boolean isComm, int mType, boolean usePReg,
-			int posIdx, boolean circUsePreg, int circPosIdx, float spdMod,
-			int term, int toolIdx, int userIdx, int offType, int offRegIdx) {
+	public PosMotionInst(boolean isComm, int mType, int posType, int posIdx,
+			int circPosType, int circPosIdx, float spdMod, int term,
+			int toolIdx, int userIdx, int offType, int offRegIdx) {
 		
-		super(isComm, mType, spdMod, term);
-		this.usePReg = usePReg;
-		this.posIdx = posIdx;
+		super(isComm, mType, posType, posIdx, spdMod, term);
+		this.circPosType = circPosType;
 		this.circPosIdx = circPosIdx;
 		tFrameIdx = toolIdx;
 		uFrameIdx = userIdx;
@@ -47,13 +49,9 @@ public class PosMotionInst extends MotionInstruction {
 		this.offRegIdx = offRegIdx;
 	}
 	
-	public boolean circUsePReg() {
-		return circUsePReg;
-	}
-	
 	@Override
 	public PosMotionInst clone() {
-		return new PosMotionInst(com, motionType, usePReg, posIdx, circUsePReg,
+		return new PosMotionInst(com, motionType, posType, posIdx, circPosType,
 				circPosIdx, spdModifier, termination, tFrameIdx, uFrameIdx,
 				offsetType, offRegIdx);
 	}
@@ -62,16 +60,16 @@ public class PosMotionInst extends MotionInstruction {
 		return circPosIdx;
 	}
 	
+	public int getCircPosType() {
+		return circPosType;
+	}
+	
 	public int getOffsetIdx() {
 		return offRegIdx;
 	}
 	
 	public int getOffsetType() {
 		return offsetType;
-	}
-	
-	public int getPosIdx() {
-		return posIdx;
 	}
 	
 	public int getTFrameIdx() {
@@ -86,8 +84,8 @@ public class PosMotionInst extends MotionInstruction {
 		circPosIdx = idx;
 	}
 	
-	public void setCircRegType(boolean usePReg) {
-		circUsePReg = usePReg;
+	public void setCircPosType(int type) {
+		circPosType = type;
 	}
 	
 	public void setOffsetIdx(int idx) {
@@ -96,14 +94,6 @@ public class PosMotionInst extends MotionInstruction {
 	
 	public void setOffsetType(int type) {
 		offsetType = type;
-	}
-	
-	public void setPosIdx(int idx) {
-		posIdx = idx;
-	}
-	
-	public void setRegType(boolean usePReg) {
-		this.usePReg = usePReg;
 	}
 	
 	public void setTFrameIdx(int idx) {
@@ -142,11 +132,14 @@ public class PosMotionInst extends MotionInstruction {
 		
 		// Position type
 		++idx;
-		if (usePReg()) {
+		if (posType == Fields.PTYPE_PREG) {
 			fields[idx] = "PR[";
 			
-		} else {
+		} else if (posType == Fields.PTYPE_PROG) {
 			fields[idx] = " P[";
+			
+		} else {
+			fields[idx] = "  [";
 		}
 		
 		// Position index
@@ -201,11 +194,14 @@ public class PosMotionInst extends MotionInstruction {
 			
 			// Circular position type
 			++idx;
-			if (circUsePReg()) {
+			if (circPosType == Fields.PTYPE_PREG) {
 				fields[idx] = ":PR[";
 				
-			} else {
+			} else if (circPosType == Fields.PTYPE_PROG) {
 				fields[idx] = ": P[";
+				
+			} else {
+				fields[idx] = ":  [";
 			}
 			
 			// Circular position index
@@ -219,9 +215,5 @@ public class PosMotionInst extends MotionInstruction {
 		}
 		
 		return fields;
-	}
-	
-	public boolean usePReg() {
-		return usePReg;
 	}
 }

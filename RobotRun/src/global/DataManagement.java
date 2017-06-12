@@ -390,9 +390,9 @@ public abstract class DataManagement {
 			// Read data for a MotionInstruction object
 			boolean isCommented = in.readBoolean();
 			int mType = in.readInt();
-			boolean usePReg = in.readBoolean();
+			int pType = in.readInt();
 			int posIdx = in.readInt();
-			boolean circUsePReg = in.readBoolean();
+			int circPType = in.readInt();
 			int circPosIdx = in.readInt();
 			float spdMod = in.readFloat();
 			int term = in.readInt();
@@ -401,42 +401,9 @@ public abstract class DataManagement {
 			int offType = in.readInt();
 			int offIdx = in.readInt();
 			
-			inst = new PosMotionInst(isCommented, mType, usePReg, posIdx,
-					circUsePReg, circPosIdx, spdMod, term, tFrameIdx, uFrameIdx,
+			inst = new PosMotionInst(isCommented, mType, pType, posIdx,
+					circPType, circPosIdx, spdMod, term, tFrameIdx, uFrameIdx,
 					offType, offIdx);
-			
-			/* Old save version *
-			boolean isCommented = in.readBoolean();
-			int mType = in.readInt();
-			int reg = in.readInt();
-			boolean isGlobal = in.readBoolean();
-			float spd = in.readFloat();
-			int term = in.readInt();
-			int uFrame = in.readInt();
-			int tFrame = in.readInt();
-			
-			inst = new MotionInstruction(isCommented, mType, isGlobal, reg,
-					false, -1, spd, term, uFrame, tFrame, Fields.OFFSET_NONE,
-					-1);
-
-			byte flag = in.readByte();
-
-			if (flag == 1) {
-				flag = in.readByte();
-				
-				if (flag == 2) {
-					isCommented = in.readBoolean();
-					mType = in.readInt();
-					reg = in.readInt();
-					isGlobal = in.readBoolean();
-					spd = in.readFloat();
-					term = in.readInt();
-					uFrame = in.readInt();
-					tFrame = in.readInt();
-					flag = in.readByte();
-				}
-			}
-			/**/
 
 		} else if(instType == 3) {
 			// Read data for a FrameInstruction object
@@ -537,12 +504,12 @@ public abstract class DataManagement {
 			
 			boolean isCommented = in.readBoolean();
 			int mType = in.readInt();
+			int pdx = in.readInt();
 			float spdMod = in.readFloat();
 			int term = in.readInt();
 			
-			// TODO load WO and scene
-			
-			inst = new CamMoveToObject(isCommented, -1, mType, spdMod, term, null);
+			inst = new CamMoveToObject(isCommented, mType, pdx, spdMod, term,
+					null);
 			
 		}/* Add other instructions here! */
 		else if (instType == 1) {
@@ -1394,9 +1361,9 @@ public abstract class DataManagement {
 			// Write data associated with the MotionIntruction object
 			out.writeBoolean(m_inst.isCommented());
 			out.writeInt(m_inst.getMotionType());
-			out.writeBoolean(m_inst.usePReg());
+			out.writeInt(m_inst.getPosType());
 			out.writeInt(m_inst.getPosIdx());
-			out.writeBoolean(m_inst.circUsePReg());
+			out.writeInt(m_inst.getCircPosType());
 			out.writeInt(m_inst.getCircPosIdx());
 			out.writeFloat(m_inst.getSpdMod());
 			out.writeInt(m_inst.getTermination());
@@ -1526,7 +1493,9 @@ public abstract class DataManagement {
 			CamMoveToObject cMInst = (CamMoveToObject)inst;
 			
 			out.writeByte(11);
+			out.writeBoolean(cMInst.isCommented());
 			out.writeInt(cMInst.getMotionType());
+			out.writeInt(cMInst.getPosIdx());
 			out.writeFloat(cMInst.getSpdMod());
 			out.writeInt(cMInst.getTermination());
 			

@@ -994,7 +994,7 @@ public class RoboticArm {
 	 * 					position of the given circular motion instruction
 	 */
 	public Point getCPosition(PosMotionInst mInst, Program parent) {
-		return getPosition(mInst.getCircPosIdx(), mInst.circUsePReg(), parent);
+		return getPosition(mInst.getCircPosIdx(), mInst.getCircPosType(), parent);
 	}
 	
 	/**
@@ -1188,7 +1188,7 @@ public class RoboticArm {
 	 * 					instruction
 	 */
 	public Point getPosition(PosMotionInst mInst, Program parent) {
-		return getPosition(mInst.getPosIdx(), mInst.usePReg(), parent);
+		return getPosition(mInst.getPosIdx(), mInst.getPosType(), parent);
 	}
 	
 	/**
@@ -1199,10 +1199,10 @@ public class RoboticArm {
 	 * @param parent
 	 * @return
 	 */
-	private Point getPosition(int posIdx, boolean usePReg, Program parent) {
+	private Point getPosition(int posIdx, int pType, Program parent) {
 		Point pt = null;
 		
-		if (usePReg) {
+		if (pType == Fields.PTYPE_PREG) {
 			// The instruction references a global position register
 			PositionRegister pReg = getPReg(posIdx);
 			
@@ -1210,7 +1210,7 @@ public class RoboticArm {
 				pt = pReg.point;
 			}
 			
-		} else {
+		} else if (pType == Fields.PTYPE_PROG) {
 			pt = parent.getPosition(posIdx);
 		}
 		
@@ -2080,28 +2080,30 @@ public class RoboticArm {
 			Instruction nextInst = prog.getInstAt(nextIdx);
 			Point tgt = ((CamMoveToObject) mInst).getWOPosition();
 			
-			if (mInst.getTermination() > 0 && nextInst instanceof MotionInstruction
-					&& !singleExec) {
-				// Non-fine termination motion
-				Point nextPt;
-				
-				if (nextInst instanceof PosMotionInst) {
-					nextPt = getVector((PosMotionInst)nextInst, prog, false);
+			if (tgt != null) {
+				if (mInst.getTermination() > 0 && nextInst instanceof MotionInstruction
+						&& !singleExec) {
+					// Non-fine termination motion
+					Point nextPt;
 					
-				} else if (nextInst instanceof CamMoveToObject) {
-					nextPt = ((CamMoveToObject) nextInst).getWOPosition();
+					if (nextInst instanceof PosMotionInst) {
+						nextPt = getVector((PosMotionInst)nextInst, prog, false);
+						
+					} else if (nextInst instanceof CamMoveToObject) {
+						nextPt = ((CamMoveToObject) nextInst).getWOPosition();
+						
+					} else {
+						// Invalid motion instruction
+						nextPt = null;
+					}
+					
+					updateMotion(tgt, nextPt, mInst.getSpdMod(),
+							mInst.getTermination() / 100f);
 					
 				} else {
-					// Invalid motion instruction
-					nextPt = null;
+					// Fine termination motion
+					updateMotion(tgt, mInst.getSpdMod());
 				}
-				
-				updateMotion(tgt, nextPt, mInst.getSpdMod(),
-						mInst.getTermination() / 100f);
-				
-			} else {
-				// Fine termination motion
-				updateMotion(tgt, mInst.getSpdMod());
 			}
 		}
 		
@@ -2187,7 +2189,7 @@ public class RoboticArm {
 			PosMotionInst mInst = (PosMotionInst) p.get(instIdx);
 			int posNum = mInst.getCircPosIdx();
 			
-			if (mInst.circUsePReg()) {
+			if (mInst.getCircPosType() == Fields.PTYPE_PREG) {
 				// Update a position register on the robot
 				PositionRegister pReg = getPReg(posNum);
 				
@@ -2199,7 +2201,7 @@ public class RoboticArm {
 				// Uninitialized position register
 				return null;
 				
-			} else {
+			} else if (mInst.getCircPosIdx() == Fields.PTYPE_PROG) {
 				// Update a position in the program
 				if (posNum == -1) {
 					// In the case of an uninitialized position
@@ -2236,7 +2238,7 @@ public class RoboticArm {
 			PosMotionInst mInst = (PosMotionInst)p.get(instIdx);
 			int posNum = mInst.getPosIdx();
 			
-			if (mInst.usePReg()) {
+			if (mInst.getPosType() == Fields.PTYPE_PREG) {
 				// Update a position register on the robot
 				PositionRegister pReg = getPReg(posNum);
 				
@@ -2248,7 +2250,7 @@ public class RoboticArm {
 				// Uninitialized position register
 				return null;
 				
-			} else {
+			} else if (mInst.getPosType() == Fields.PTYPE_PROG) {
 				// Update a position in the program
 				if (posNum == -1) {
 					// In the case of an uninitialized position
