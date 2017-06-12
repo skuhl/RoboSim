@@ -50,6 +50,11 @@ public abstract class Fields {
 	public static final int MTYPE_LINEAR = 1;
 	
 	/**
+	 * The move to object motion instruction type
+	 */
+	public static final int MTYE_TGTWO = 2;
+	
+	/**
 	 * The circular motion type of a motion instruction.
 	 */
 	public static final int MTYPE_CIRCULAR = 2;
