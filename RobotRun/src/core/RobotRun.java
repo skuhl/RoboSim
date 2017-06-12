@@ -3361,6 +3361,12 @@ public class RobotRun extends PApplet {
 			} else if (sdx == 4) {
 				
 				if (mInst instanceof CamMoveToObject) {
+					CamMoveToObject cMInst = (CamMoveToObject)mInst;
+					
+					if (cMInst.getScene() == null) {
+						cMInst.setScene(activeScenario);
+					}
+					
 					// Set World Object reference
 					nextScreen(ScreenMode.SET_MINST_WO);
 				} else {
@@ -3793,6 +3799,7 @@ public class RobotRun extends PApplet {
 		case SET_LBL_NUM:
 		case SELECT_CUT_COPY:
 		case SELECT_INSTR_DELETE:
+		case SET_MINST_WO:
 			header = getActiveProg().getName();
 			break;
 		case EDIT_PROG_POS:
@@ -7005,12 +7012,15 @@ public class RobotRun extends PApplet {
 			CamMoveToObject castIns = (CamMoveToObject)inst;
 			Scenario s = castIns.getScene();
 			
-			if (s != null) {
+			if (s != null && s.size() > 0) {
 				options.addLine("Enter target object:");
 				
 				for (WorldObject wo : s) {
 					options.addLine(wo.getName());
 				}
+				
+			} else {
+				options.addLine("No objects to select");
 			}
 			
 			break;

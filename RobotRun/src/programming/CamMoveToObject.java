@@ -19,6 +19,12 @@ public class CamMoveToObject extends MotionInstruction {
 	private Scenario scene;
 	private WorldObject tgtObj;
 	
+	/**
+	 * The name saved in the program save file, which is used to initialize a
+	 * camera motion instruction loaded from a save file.
+	 */
+	private final String loadedSceneName;
+	
 	public CamMoveToObject(int type, int WOdx, float spd, int term,
 			Scenario scene) {
 		
@@ -37,19 +43,70 @@ public class CamMoveToObject extends MotionInstruction {
 		} else {
 			this.tgtObj = null;
 		}
+		
+		if (scene != null) {
+			loadedSceneName = scene.getName();
+			
+		} else {
+			loadedSceneName = null;
+		}
 	}
 	
+	/**
+	 * Used for initializing a loaded camera motion instruction
+	 * 
+	 * @param isComm
+	 * @param mType
+	 * @param pType
+	 * @param WOdx
+	 * @param spd
+	 * @param term
+	 * @param sceneName
+	 */
+	public CamMoveToObject(boolean isComm, int mType, int pType, int WOdx,
+			float spd, int term, String sceneName) {
+		
+		super(isComm, mType, Fields.PTYPE_WO, WOdx, spd, term);
+		
+		tgtObj = null;
+		scene = null;
+		loadedSceneName = sceneName;
+	}
+	
+	/**
+	 * Used for cloning a camera motion instruction
+	 * 
+	 * @param isComm
+	 * @param mType
+	 * @param pType
+	 * @param pdx
+	 * @param spd
+	 * @param term
+	 * @param tgtWO
+	 * @param scene
+	 */
 	private CamMoveToObject(boolean isComm, int mType, int pType, int pdx,
 			float spd, int term, WorldObject tgtWO, Scenario scene) {
 		
 		super(isComm, mType, pType, pdx, spd, term);
 		this.scene = scene;
 		this.tgtObj = tgtWO;
+		
+		if (scene != null) {
+			loadedSceneName = scene.getName();
+			
+		} else {
+			loadedSceneName = null;
+		}
 	}
 	
 	public CamMoveToObject clone() {
 		return new CamMoveToObject(isCommented(), motionType, posType, posIdx,
 				spdModifier, termination, tgtObj, scene);
+	}
+	
+	public String getLoadedSceneName() {
+		return loadedSceneName;
 	}
 	
 	public Scenario getScene() {
@@ -85,6 +142,21 @@ public class CamMoveToObject extends MotionInstruction {
 		}
 	}
 	
+	/**
+	 * Updates this motion instructions scene reference as well as its object
+	 * reference.
+	 * 
+	 * @param s	The new scene reference for this instruction
+	 */
+	public void setScene(Scenario s) {
+		scene = s;
+		
+		if (s != null) {
+			// Update target object reference
+			tgtObj = s.getWorldObject(posIdx);
+		}
+	}
+	
 	@Override
 	public String[] toStringArray() {
 		int fieldLen = 5;
@@ -110,7 +182,7 @@ public class CamMoveToObject extends MotionInstruction {
 			fields[idx] = "...]";
 			
 		} else {
-			fields[idx] = String.format("%16s]", tgtObj.getName());
+			fields[idx] = String.format("%s]", tgtObj.getName());
 		}
 		
 		// Motion speed modifier
