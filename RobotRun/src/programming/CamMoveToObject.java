@@ -1,7 +1,6 @@
 package programming;
 
 import core.Scenario;
-import geom.DimType;
 import geom.Point;
 import geom.RMatrix;
 import geom.WorldObject;
@@ -25,14 +24,24 @@ public class CamMoveToObject extends MotionInstruction {
 		this.scene = scene;
 		
 		if (scene != null) {
-			tgtObj = scene.getWorldObject(WOdx);
+			this.tgtObj = scene.getWorldObject(WOdx);
+			
+		} else {
+			this.tgtObj = null;
 		}
 	}
 	
+	private CamMoveToObject(boolean isComm, int mType, float spd, int term,
+			WorldObject tgtWO, Scenario scene) {
+		
+		super(isComm, mType, spd, term);
+		this.scene = scene;
+		this.tgtObj = tgtWO;
+	}
+	
 	public CamMoveToObject clone() {
-		// TODO
-		System.err.println("Not implemented in CamMoveToObject.clone()");
-		return null;
+		return new CamMoveToObject(isCommented(), motionType, spdModifier,
+				termination, tgtObj, scene);
 	}
 	
 	public Scenario getScene() {
