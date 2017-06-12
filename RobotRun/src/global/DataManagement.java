@@ -49,6 +49,7 @@ import geom.RShape;
 import geom.WorldObject;
 import processing.core.PVector;
 import programming.CallInstruction;
+import programming.CamMoveToObject;
 import programming.FrameInstruction;
 import programming.IOInstruction;
 import programming.IfStatement;
@@ -56,6 +57,7 @@ import programming.Instruction;
 import programming.JumpInstruction;
 import programming.LabelInstruction;
 import programming.MotionInstruction;
+import programming.PosMotionInst;
 import programming.Program;
 import programming.RegisterStatement;
 import programming.SelectStatement;
@@ -399,7 +401,7 @@ public abstract class DataManagement {
 			int offType = in.readInt();
 			int offIdx = in.readInt();
 			
-			inst = new MotionInstruction(isCommented, mType, usePReg, posIdx,
+			inst = new PosMotionInst(isCommented, mType, usePReg, posIdx,
 					circUsePReg, circPosIdx, spdMod, term, tFrameIdx, uFrameIdx,
 					offType, offIdx);
 			
@@ -530,6 +532,17 @@ public abstract class DataManagement {
 			
 			inst = new SelectStatement(arg, cases, insts);
 			inst.setIsCommented(isCommented);
+			
+		} else if (instType == 11) {
+			
+			boolean isCommented = in.readBoolean();
+			int mType = in.readInt();
+			float spdMod = in.readFloat();
+			int term = in.readInt();
+			
+			// TODO load WO and scene
+			
+			inst = new CamMoveToObject(isCommented, -1, mType, spdMod, term, null);
 			
 		}/* Add other instructions here! */
 		else if (instType == 1) {
@@ -1374,8 +1387,8 @@ public abstract class DataManagement {
 
 		/* Each Instruction subclass MUST have its own saving code block
 		 * associated with its unique data fields */
-		if (inst instanceof MotionInstruction) {
-			MotionInstruction m_inst = (MotionInstruction)inst;
+		if (inst instanceof PosMotionInst) {
+			PosMotionInst m_inst = (PosMotionInst)inst;
 			
 			out.writeByte(2);
 			// Write data associated with the MotionIntruction object
@@ -1508,6 +1521,17 @@ public abstract class DataManagement {
 			for (Instruction i : insts) {
 				saveInstruction(i, out);
 			}
+			
+		} else if (inst instanceof CamMoveToObject) {
+			CamMoveToObject cMInst = (CamMoveToObject)inst;
+			
+			out.writeByte(11);
+			out.writeInt(cMInst.getMotionType());
+			out.writeFloat(cMInst.getSpdMod());
+			out.writeInt(cMInst.getTermination());
+			
+			// TODO save scene name or index?
+			// TODO save world object name or index?
 			
 		}/* Add other instructions here! */
 		else if (inst != null) {

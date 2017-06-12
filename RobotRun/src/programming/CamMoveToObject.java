@@ -1,5 +1,6 @@
 package programming;
 
+import core.Scenario;
 import geom.DimType;
 import geom.Point;
 import geom.RMatrix;
@@ -7,26 +8,61 @@ import geom.WorldObject;
 import processing.core.PVector;
 
 public class CamMoveToObject extends MotionInstruction {
-	WorldObject tgtObj;	
 	
-	public CamMoveToObject(int type, int pos, boolean globl, float spd, int term) {
-		super(type, globl, pos, spd, term);
+	private Scenario scene;
+	private WorldObject tgtObj;
+	
+	public CamMoveToObject(int type, int WOdx, float spd, int term,
+			Scenario scene) {
 		
+		this(false, type, WOdx, spd, term, scene);
 	}
 	
-	/**
-	 * TODO comment this
-	 * 
-	 * @return
-	 */
-	public Point getVector() {
-		PVector pos = tgtObj.getLocalCenter();
-		RMatrix rot = tgtObj.getLocalOrientation();
+	public CamMoveToObject(boolean isComm, int type, int WOdx, float spd,
+			int term, Scenario scene) {
 		
-		PVector zAxis = new PVector(rot.getEntryF(2, 0), rot.getEntryF(2, 1), rot.getEntryF(2, 2));
-		float height = tgtObj.getForm().getDim(DimType.HEIGHT);
-		pos.add(zAxis.mult(height));
+		super(isComm, type, spd, term);
+		this.scene = scene;
 		
-		return new Point(pos, rot);
+		if (scene != null) {
+			tgtObj = scene.getWorldObject(WOdx);
+		}
+	}
+	
+	public CamMoveToObject clone() {
+		// TODO
+		return null;
+	}
+	
+	public Scenario getScene() {
+		return scene;
+	}
+	
+	public WorldObject getTgtObject() {
+		return tgtObj;
+	}
+	
+	public Point getWOPosition() {
+		WorldObject tgt = getTgtObject();
+		RMatrix tgtOri = tgt.getLocalOrientation();
+		PVector vecX = new PVector(tgtOri.getEntryF(0, 0), tgtOri.getEntryF(1, 0), tgtOri.getEntryF(2, 0));
+		PVector offset = vecX.mult(tgt.getForm().getDimArray()[0] / 2f + 5);
+					
+		Point pt = new Point(PVector.add(tgt.getLocalCenter(), offset), tgt.getLocalOrientation());
+		//float[] angles = RMath.inverseKinematics(this, getJointAngles(), pt.position, pt.orientation);
+		//pt.angles = angles;
+		
+		return pt;
+	}
+	
+	public void setWO(int WOdx) {
+		if (scene != null) {
+			tgtObj = scene.getWorldObject(WOdx);
+		}
+	}
+	
+	public String[] toStringArray() {
+		// TODO
+		return new String[] { "TODO" };
 	}
 }

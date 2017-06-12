@@ -26,18 +26,19 @@ public class RMatrix extends Array2DRowRealMatrix {
 	}
 	
 	public PVector multiply(PVector v) {
-		//RMatrix m = new RMatrix(new double[][] {{v.x}, {v.y}, {v.z}, {1}});
-		//RMatrix result = this.multiply(m);
+		//Incorrect size for pvector multiplication
+		if(this.getColumnDimension() != 4)
+			return null;
 		
-		float w = getEntryF(3, 0);
+		RMatrix m = new RMatrix(new double[][] {{v.x}, {v.y}, {v.z}, {1}});
+		RMatrix result = this.multiply(m);
 		
-		PVector u = new PVector(
-				getEntryF(0, 0),
-				getEntryF(1, 0),
-				getEntryF(2, 0)
-		);
+		float x = result.getEntryF(0, 0);
+		float y = result.getEntryF(0, 1);
+		float z = result.getEntryF(0, 2);
+		float w = result.getEntryF(0, 3);
 		
-		return u.div(w);
+		return new PVector(x/w, y/w, z/w);
 	}
 	
 	public float[][] getDataF() {
