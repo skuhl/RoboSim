@@ -1128,7 +1128,7 @@ public class RoboticArm {
 	 */
 	public IORegister getIOReg(int rdx) {
 		// Exclude the faceplate
-		if (rdx > 0 && rdx < EE_LIST.length) {
+		if (rdx >= 0 && rdx < EE_LIST.length) {
 			return EE_LIST[rdx].reg;
 		}
 		
