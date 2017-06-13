@@ -59,13 +59,10 @@ public class BoundingBox {
 	 */
 	public static void main(String[] args) {
 		
-		RMatrix m0 = new RMatrix( new float[][] {
-			
-			{  0,  0,  1},
-			{ -1,  0,  0},
-			{  0,  1,  0}
-			
-			}	
+		RMatrix m0 = RMath.formRMat(
+			 0, 0, 1,
+			 -1, 0, 0,
+			 0, 1, 0	
 		);
 		
 		PVector e0 = RMath.matrixToEuler(m0);
@@ -80,7 +77,6 @@ public class BoundingBox {
 		PVector e3 = RMath.matrixToEuler(m3);
 		
 		System.out.printf("%s\n%s\n%s\n%s\n%s\n\n", e1, m2, e2, m3, e3);
-		
 	}
 
 	/**
@@ -107,7 +103,7 @@ public class BoundingBox {
 	 */
 	public PVector collision(RRay ray) {
 		PVector origin = localOrientation.getOrigin();
-		float[][] axes = localOrientation.getAxes().getFloatData();
+		float[][] axes = localOrientation.getAxes().getDataF();
 		// Transform ray into the coordinate frame of the bounding box
 		PVector rayOrigin = RMath.rotateVector(PVector.sub(ray.getOrigin(), origin), axes);
 		PVector rayDirect = RMath.rotateVector(ray.getDirection(), axes);
@@ -218,6 +214,22 @@ public class BoundingBox {
 	 */
 	public void setColor(int newColor) {
 		boxFrame.setStrokeValue(newColor);
+	}
+	
+	/**
+	 * Sets the coordinate system of the bounding box based off the given
+	 * transformation matrix.
+	 * 
+	 * @param tMat	A transformation matrix containing only rotations and
+	 * 				translations
+	 */
+	public void setCoordinateSystem(RMatrix tMat) {
+		PVector origin = localOrientation.getOrigin();
+		origin.x = (float)tMat.getEntry(0, 3);
+		origin.y = (float)tMat.getEntry(1, 3);
+		origin.z = (float)tMat.getEntry(2, 3);
+		
+		localOrientation.setAxes( RMath.formRMat(tMat) );
 	}
 
 	/**

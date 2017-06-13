@@ -10,6 +10,11 @@ public class IORegister extends Register {
 		super();
 		state = Fields.OFF;
 	}
+	
+	public IORegister(int idx, String name) {
+		super(idx, name);
+		state = Fields.OFF;
+	}
 
 	public IORegister(int i, String comm, int iniState) {
 		super(i, comm);
@@ -19,5 +24,12 @@ public class IORegister extends Register {
 	@Override
 	protected String regPrefix() {
 		return "IO";
+	}
+	
+	@Override
+	public String toString() {
+		String idxStr = (idx < 0) ? "..." : Integer.toString(idx);
+		// Include the register's prefix and index
+		return String.format("%s[%s]", regPrefix(), idxStr);
 	}
 }

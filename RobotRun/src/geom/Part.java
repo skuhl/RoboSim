@@ -33,8 +33,8 @@ public class Part extends WorldObject {
 	 */
 	public static boolean collision3D(BoundingBox A, BoundingBox B) {
 		// Rows are x, y, z axis vectors for A and B: Ax, Ay, Az, Bx, By, and Bz
-		float[][] axes_A = A.getOrientationAxes().getFloatData();
-		float[][] axes_B = B.getOrientationAxes().getFloatData();
+		float[][] axes_A = A.getOrientationAxes().getDataF();
+		float[][] axes_B = B.getOrientationAxes().getDataF();
 
 		// Rotation matrices to convert B into A's coordinate system
 		float[][] rotMatrix = new float[3][3];
@@ -306,11 +306,11 @@ public class Part extends WorldObject {
 		if (reference != null) {
 			// rotate with respect to the part's fixture reference
 			RMatrix refRMat = reference.getLocalOrientation();
-			axis = RMath.rotateVector(axis, refRMat.getFloatData());
+			axis = RMath.rotateVector(axis, refRMat.getDataF());
 		}
 		
 		RMatrix orientation = localOrientation.getAxes();
-		RMatrix rotation = RMath.matFromAxisAndAngle(axis, angle);
+		RMatrix rotation = RMath.formRMat(axis, angle);
 		
 		localOrientation.setAxes( rotation.multiply(orientation) );
 		updateAbsoluteOrientation();
@@ -374,7 +374,7 @@ public class Part extends WorldObject {
 		if (reference != null) {
 			// translate with respect to the part's fixture reference
 			RMatrix refRMat = reference.getLocalOrientation();
-			delta = RMath.rotateVector(delta, refRMat.getFloatData());
+			delta = RMath.rotateVector(delta, refRMat.getDataF());
 		}
 		
 		super.translate(delta.x, delta.y, delta.z);
@@ -394,7 +394,7 @@ public class Part extends WorldObject {
 			PVector RefOrigin = reference.getLocalCenter();
 			RMatrix refRMat = reference.getLocalOrientation();
 			
-			origin = RMath.rotateVector(origin, refRMat.getInverse().getFloatData());
+			origin = RMath.rotateVector(origin, refRMat.getInverse().getDataF());
 			origin.add(RefOrigin);
 			
 			rMat = refRMat.multiply(rMat);

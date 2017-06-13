@@ -1,51 +1,57 @@
 package programming;
 import java.util.ArrayList;
 
-import expression.ExprOperand;
-import expression.ExpressionElement;
+import expression.Operand;
+import expression.OperandDReg;
+import expression.OperandFloat;
+import expression.OperandGeneric;
+import expression.Operator;
+import global.Fields;
 
-public class SelectStatement extends Instruction {
-	private ExprOperand arg;
-	private ArrayList<ExprOperand> cases;
+//TODO fix value comparison, it definitely doesn't work
+
+public class SelectStatement extends Instruction implements ExpressionEvaluation {
+	private Operand<?> arg;
+	private ArrayList<Operand<?>> cases;
 	private ArrayList<Instruction> instrs;
 
 	public SelectStatement() {
-		setArg(new ExprOperand());
-		setCases(new ArrayList<ExprOperand>());
+		setArg(new OperandGeneric());
+		setCases(new ArrayList<Operand<?>>());
 		setInstrs(new ArrayList<Instruction>());
 		addCase();
 	}
 
-	public SelectStatement(ExprOperand a) {
+	public SelectStatement(Operand<?> a) {
 		setArg(a);
-		setCases(new ArrayList<ExprOperand>());
+		setCases(new ArrayList<Operand<?>>());
 		setInstrs(new ArrayList<Instruction>());
 		addCase();
 	}
 
-	public SelectStatement(ExprOperand a, ArrayList<ExprOperand> cList, ArrayList<Instruction> iList) {
+	public SelectStatement(Operand<?> a, ArrayList<Operand<?>> cList, ArrayList<Instruction> iList) {
 		setArg(a);
 		setCases(cList);
 		setInstrs(iList);
 	}
 
 	public void addCase() {
-		getCases().add(new ExprOperand());
+		getCases().add(new OperandGeneric());
 		getInstrs().add(new Instruction());
 	}
 
-	public void addCase(ExprOperand e, Instruction i) {
+	public void addCase(Operand<?> e, Instruction i) {
 		getCases().add(e);
 		getInstrs().add(i);
 	}
 
 	@Override
 	public Instruction clone() {   
-		ExprOperand newArg = getArg().clone();
-		ArrayList<ExprOperand> cList = new ArrayList<>();
+		Operand<?> newArg = getArg().clone();
+		ArrayList<Operand<?>> cList = new ArrayList<>();
 		ArrayList<Instruction> iList = new ArrayList<>();
 
-		for(ExprOperand o : getCases()) {
+		for(Operand<?> o : getCases()) {
 			cList.add(o.clone());
 		}
 
@@ -68,37 +74,65 @@ public class SelectStatement extends Instruction {
 			getInstrs().remove(idx);
 		}
 	}
-
-	@Override
-	public int execute() {
-		for(int i = 0; i < getCases().size(); i += 1) {
-			ExprOperand c = getCases().get(i);
-			if(c == null) return -1;
-
-			//println("testing case " + i + " = " + cases.get(i).getDataVal() + " against " + arg.getDataVal());
+	
+	/**
+	 * Evaluates the cases of the select statement one at a time. If a case
+	 * evaluates to true, then its index is returned.
+	 * 
+	 * @return	>= 0	the index of the case, which evaluated to true,
+	 * 			-1		no case evaluated to true,
+	 * 			-2		an error occurred while evaluating a case
+	 */
+	public int evalCases() {
+		Float argVal = null;
+		// Get argument value
+		if (arg instanceof OperandFloat) {
+			argVal = ((OperandFloat) arg).getArithValue();
 			
-			//TODO test select statements
-			if(c.type != ExpressionElement.UNINIT && getArg().getDataVal() == c.getDataVal()) {
-				Instruction instr = getInstrs().get(i);
-
-				if(instr instanceof JumpInstruction || instr instanceof CallInstruction) {
-					//println("executing " + instrs.get(i).toString());
-					return instr.execute();
-					
+		} else if (arg instanceof OperandDReg) {
+			argVal = ((OperandDReg) arg).getArithValue();
+			
+		} else {
+			// Uninitialized argument
+			return -2;
+		}
+		
+		for(int cdx = 0; cdx < cases.size(); cdx += 1) {
+			Operand<?> c = cases.get(cdx);
+			// Compare argument value to the case value
+			if (c instanceof OperandFloat) {
+				Float caseVal = ((OperandFloat) c).getArithValue();
+				
+				if (argVal.floatValue() == caseVal.floatValue()) {
+					return cdx;
 				}
 				
-				break;
+			} else if (c instanceof OperandDReg) {
+				Float caseVal = ((OperandDReg) c).getArithValue();
+				
+				if (argVal.floatValue() == caseVal.floatValue()) {
+					return cdx;
+				}
+				
+			} else {
+				// Uninitialized case value
+				return -2;
 			}
 		}
-
+		
+		// No case match
 		return -1;
 	}
 
-	public ExprOperand getArg() {
+	public Operand<?> getArg() {
 		return arg;
 	}
+	
+	public Instruction getCaseInst(int cdx) {
+		return instrs.get(cdx);
+	}
 
-	public ArrayList<ExprOperand> getCases() {
+	public ArrayList<Operand<?>> getCases() {
 		return cases;
 	}
 
@@ -106,11 +140,11 @@ public class SelectStatement extends Instruction {
 		return instrs;
 	}
 
-	public void setArg(ExprOperand arg) {
+	public void setArg(Operand<?> arg) {
 		this.arg = arg;
 	}
 
-	public void setCases(ArrayList<ExprOperand> cases) {
+	public void setCases(ArrayList<Operand<?>> cases) {
 		this.cases = cases;
 	}
 
@@ -139,5 +173,33 @@ public class SelectStatement extends Instruction {
 		}
 
 		return ret;
+	}
+
+	@Override
+	public Operand<?> setOperand(int idx, Operand<?> o) {
+		if(idx == -1) {
+			return arg = o;
+		} else {
+			return cases.set(idx, o);
+		}
+	}
+
+	@Override
+	public Operator setOperator(int idx, Operator o) {
+		return null;
+	}
+
+	@Override
+	public Operand<?> getOperand(int idx) {
+		if(idx == 0) {
+			return arg;
+		} else {
+			return cases.get(idx - 1);
+		}
+	}
+
+	@Override
+	public Operator getOperator(int idx) {
+		return null;
 	}
 }

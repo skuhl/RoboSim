@@ -1,7 +1,8 @@
 package programming;
 import expression.AtomicExpression;
-import expression.ExprOperand;
 import expression.Expression;
+import expression.Operand;
+import expression.OperandBool;
 import expression.Operator;
 
 /**
@@ -16,7 +17,7 @@ import expression.Operator;
  * @param o - the operator to use for this if statement's expression.
  * @param i - the instruction to be executed if the statement expression evaluates to true.
  */
-public class IfStatement extends Instruction {
+public class IfStatement extends Instruction implements ExpressionEvaluation {
 	AtomicExpression expr;
 	Instruction instr;
 
@@ -35,7 +36,7 @@ public class IfStatement extends Instruction {
 		instr = i;
 	}
 
-	public IfStatement(Operator o, Instruction i){
+	public IfStatement(Operator o, Instruction i) {
 		expr = new AtomicExpression(o);
 		instr = i;
 	}
@@ -56,19 +57,26 @@ public class IfStatement extends Instruction {
 		
 		return copy;
 	}
+	
+	/**
+	 * Evaluates the expression associated with this if statement.
+	 * 
+	 * @return	0	the expression evaluates to true,
+	 * 			1	the expression evaluates to false,
+	 * 			2	an error occurred during expression evaluation
+	 */
+	public int evalExpression() {
+		Operand<?> result = expr.evaluate();
 
-	@Override
-	public int execute() {
-		ExprOperand result = expr.evaluate();
-
-		if(result == null || result.getBoolVal() == null) {
-			return -1;
+		if (result instanceof OperandBool) {
+			if (((OperandBool) result).getBoolValue()) {
+				return 0;
+			}
 			
-		} else if (expr.evaluate().getBoolVal()) {
-			return instr.execute();
+			return 1;
 		}
 
-		return -2;
+		return 2;
 	}
 
 	public AtomicExpression getExpr() {
@@ -117,5 +125,58 @@ public class IfStatement extends Instruction {
 		ret[exprArray.length] += " :";
 
 		return ret;
+	}
+
+	@Override
+	public Operand<?> setOperand(int idx, Operand<?> o) {
+		Operand<?> ret;
+		
+		if(expr instanceof Expression) {
+			ret = ((Expression)expr).setOperand(idx, o);
+		} else if(idx == 0) {
+			ret = expr.setArg1(o);
+		} else if(idx == 2) {
+			ret = expr.setArg2(o);
+		} else {
+			ret = null;
+		}
+		
+		return ret;
+	}
+
+	@Override
+	public Operator setOperator(int idx, Operator o) {
+		Operator ret;
+		
+		if(expr instanceof Expression) {
+			ret = ((Expression)expr).setOperator(idx, o);
+		} else {
+			expr.setOp(o);
+			ret = expr.getOp();
+		}
+		
+		return ret;
+	}
+
+	@Override
+	public Operand<?> getOperand(int idx) {
+		if(expr instanceof Expression) {
+			return ((Expression)expr).getOperand(idx);
+		} else if(idx == 0) {
+			return expr.getArg1();
+		} else if(idx == 2) {
+			return expr.getArg2();
+		} else {
+			return null;
+		}
+	}
+
+	@Override
+	public Operator getOperator(int idx) {
+		if(expr instanceof Expression) {
+			return ((Expression)expr).getOperator(idx);
+		} else {
+			return expr.getOp();
+		}
 	}
 }

@@ -1,14 +1,12 @@
 package programming;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
 import geom.Point;
-import global.Fields;
-import robot.RobotRun;
 import robot.RoboticArm;
-import screen.DisplayLine;
 
 public class Program implements Iterable<Instruction> {
 	/**
@@ -99,8 +97,17 @@ public class Program implements Iterable<Instruction> {
 		return -1;
 	}
 
-	public Instruction getInstAt(int i){
+	public Instruction get(int i){
 		return instructions.get(i);
+	}
+	
+	public Instruction getInstAt(int idx) {
+		
+		if (idx >= 0 && idx < size()) {
+			return get(idx);
+		}
+		
+		return null;
 	}
 	
 	public int getNumOfInst() {
@@ -163,83 +170,6 @@ public class Program implements Iterable<Instruction> {
 		return instructions.set(idx, i);
 	}
 	
-	public ArrayList<DisplayLine> printInstrList() {
-		ArrayList<DisplayLine> instruct_list = new ArrayList<>();
-		int tokenOffset = Fields.TXT_PAD - Fields.PAD_OFFSET;
-
-		Program p = this;
-		int size = p.getNumOfInst();
-
-		for(int i = 0; i < size; i+= 1) {
-			DisplayLine line = new DisplayLine(i);
-			Instruction instr = p.getInstAt(i);
-			int xPos = 10;
-
-			// Add line number
-			if (instr == null) {
-				line.add( String.format("%d) ...", i+1) );
-				continue;
-			} else if(instr.isCommented()) {
-				line.add("//"+Integer.toString(i+1) + ")");
-			} else {
-				line.add(Integer.toString(i+1) + ")");
-			}
-
-			int numWdth = line.get(line.size() - 1).length();
-			xPos += numWdth*Fields.CHAR_WDTH + tokenOffset;
-
-			if(instr instanceof MotionInstruction) {
-				// Show '@' at the an instrution, if the Robot's position is close to that position stored in the instruction's register
-				MotionInstruction a = (MotionInstruction)instr;
-				Point ee_point = RobotRun.nativeRobotEEPoint(robot, robot.getJointAngles());
-				Point instPt = a.getVector(p);
-
-				if(instPt != null && ee_point.position.dist(instPt.position) < (robot.getLiveSpeed() / 100f)) {
-					line.add("@");
-				}
-				else {
-					line.add("\0");
-				}
-
-				xPos += Fields.CHAR_WDTH + tokenOffset;
-			}
-
-			String[] fields = instr.toStringArray();
-
-			for (int j = 0; j < fields.length; j += 1) {
-				String field = fields[j];
-				xPos += field.length()*Fields.CHAR_WDTH + tokenOffset;
-
-				if(field.equals("\n") && j != fields.length - 1) {
-					instruct_list.add(line);
-					if(instr instanceof SelectStatement) {
-						xPos = 11*Fields.CHAR_WDTH + 3*tokenOffset;
-					} else {
-						xPos = 3*Fields.CHAR_WDTH + 3*tokenOffset;
-					}
-
-					line = new DisplayLine(i, xPos);
-					xPos += field.length()*Fields.CHAR_WDTH + tokenOffset;
-				} else if(xPos > Fields.PENDANT_SCREEN_WIDTH - 10) {
-					instruct_list.add(line);
-					xPos = 2*Fields.CHAR_WDTH + tokenOffset;
-
-					line = new DisplayLine(i, xPos);
-					field = ": " + field;
-					xPos += field.length()*Fields.CHAR_WDTH + tokenOffset;
-				}
-
-				if(!field.equals("\n")) {
-					line.add(field);
-				}
-			}
-
-			instruct_list.add(line);
-		}
-
-		return instruct_list;
-	}
-	
 	public Instruction rmInstAt(int idx) {
 		return instructions.remove(idx);
 	}
@@ -263,91 +193,15 @@ public class Program implements Iterable<Instruction> {
 				// update the next position index if necessary
 				updateNextPosition();
 			}
-
+			
 			return prevPt;
 		}
-
+		
 		return null;
 	}
 
 	public int size() {
 		return instructions.size();
-	}
-	
-	/**
-	 * Updates the position associated with the motion instruction's secondary
-	 * position index. The old point associated with the position is returned.
-	 * 
-	 * @param instIdx	The index of a motion instruction in this program
-	 * @param newPt		The new point to store at the motion instruction's
-	 * 					associated position
-	 * @return			The previous point stored at the position associated
-	 * 					with the instruction
-	 * @throws ClassCastException	If the instruction indexed at instIdx is
-	 * 								not a motion instruction
-	 * @throws NullPointerException	If the given point is null or the instruction
-	 * 								indexed at instIdx is not a motion type
-	 * 								instruction
-	 */
-	public Point updateMCInstPosition(int instIdx, Point newPt) throws
-		ClassCastException, NullPointerException {
-		
-		MotionInstruction mInst = (MotionInstruction) getInstAt(instIdx);
-		MotionInstruction sndMInst = mInst.getSecondaryPoint();
-		
-		if (mInst.getMotionType() != Fields.MTYPE_CIRCULAR || sndMInst == null) {
-			throw new NullPointerException(
-					String.format("Instruction at %d is not a circular motion instruction!",
-					instIdx)
-				);	
-		}
-		
-		if (newPt != null) {
-			int posNum = sndMInst.getPositionNum();
-			
-			if (posNum == -1) {
-				// In the case of an uninitialized position
-				posNum = nextPosition;
-				sndMInst.setPositionNum(posNum);
-			}
-			
-			return setPosition(posNum, newPt);
-		}
-		
-		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
-	}
-	
-	/**
-	 * Updates the position associated with the motion instruction at the given
-	 * instruction index to the given point. The old point associated with the
-	 * position is returned.
-	 * 
-	 * @param instIdx	The index of a motion instruction in this program
-	 * @param newPt		The new point to store at the motion instruction's
-	 * 					associated position
-	 * @return			The previous point stored at the position associated
-	 * 					with the instruction
-	 * @throws ClassCastException	If the instruction indexed at instIdx is
-	 * 								not a motion instruction
-	 * @throws NullPointerException	If the given point is null
-	 */
-	public Point updateMInstPosition(int instIdx, Point newPt) throws
-		ClassCastException, NullPointerException {
-		
-		if (newPt != null) {
-			MotionInstruction mInst = (MotionInstruction)getInstAt(instIdx);
-			int posNum = mInst.getPositionNum();
-			
-			if (posNum == -1) {
-				// In the case the instruction's position is unintialized
-				posNum = nextPosition;
-				mInst.setPositionNum(posNum);
-			}
-			
-			return setPosition(posNum, newPt);
-		}
-		
-		throw new NullPointerException("arg, newPt, cannot be null for updateMInstPosition()!");
 	}
 
 	/**

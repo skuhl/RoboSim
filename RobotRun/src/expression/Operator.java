@@ -1,24 +1,30 @@
 package expression;
 /* These are used to store the operators used in register statement expressions in the ExpressionSet Object */
 public enum Operator implements ExpressionElement {
-	ADDTN("+", ARITH_OP), 
-	SUBTR("-", ARITH_OP), 
+	ADD("+", ARITH_OP), 
+	SUB("-", ARITH_OP), 
 	MULT("*", ARITH_OP), 
 	DIV("/", ARITH_OP), 
 	MOD("%", ARITH_OP), 
-	INTDIV("|", ARITH_OP),
-	PAR_OPEN("(", -1),
-	PAR_CLOSE(")", -1),
-	EQUAL("=", BOOL_OP),
-	NEQUAL("<>", BOOL_OP),
+	IDIV("|", ARITH_OP),
+	
+	PT_ADD("+", POINT_OP),
+	PT_SUB("-", POINT_OP),
+		
+	AND("&&", LOGIC_OP),
+	OR("||", LOGIC_OP),
+	NOT("!", LOGIC_OP),
+	
 	GRTR(">", BOOL_OP),
 	LESS("<", BOOL_OP),
 	GREQ(">=", BOOL_OP),
 	LSEQ("<=", BOOL_OP),
-	AND("&&", BOOL_OP),
-	OR("||", BOOL_OP),
-	NOT("!", BOOL_OP),
-	UNINIT("_", -1);
+	EQUAL("=", BOOL_OP),
+	NEQUAL("<>", BOOL_OP),
+	
+	PAR_OPEN("(", NO_OP),
+	PAR_CLOSE(")", NO_OP),
+	UNINIT("_", NO_OP);
 
 	/**
 	 * Returns a specific operator based on the id value given. Integers 0 through
@@ -27,12 +33,12 @@ public enum Operator implements ExpressionElement {
 	 */
 	public static Operator getOpFromID(int id) {
 		switch(id) {
-		case 0:   return Operator.ADDTN;
-		case 1:   return Operator.SUBTR;
+		case 0:   return Operator.ADD;
+		case 1:   return Operator.SUB;
 		case 2:   return Operator.MULT;
 		case 3:   return Operator.DIV;
 		case 4:   return Operator.MOD;
-		case 5:   return Operator.INTDIV;
+		case 5:   return Operator.IDIV;
 		case 6:   return Operator.PAR_OPEN;
 		case 7:   return Operator.PAR_CLOSE;
 		case 8:   return Operator.EQUAL;
@@ -47,9 +53,9 @@ public enum Operator implements ExpressionElement {
 		default:  return Operator.UNINIT;
 		}
 	}
-	public final String symbol;
-
-	public final int type;
+	
+	private String symbol;
+	private int type;
 
 	private Operator(String s, int t) {
 		symbol = s;
@@ -67,16 +73,16 @@ public enum Operator implements ExpressionElement {
 	 */
 	public int getOpID() {
 		switch(this) {
-		case ADDTN:     return 0;
-		case SUBTR:     return 1;
+		case ADD:		return 0;
+		case SUB:		return 1;
 		case MULT:      return 2;
 		case DIV:       return 3;
 		case MOD:       return 4;
-		case INTDIV:    return 5;
+		case IDIV:		return 5;
 		case PAR_OPEN:  return 6;
 		case PAR_CLOSE: return 7;
-		case EQUAL:     return 8;
-		case NEQUAL:    return 9;
+		case EQUAL:		return 8;
+		case NEQUAL:	return 9;
 		case GRTR:      return 10;
 		case LESS:      return 11;
 		case GREQ:      return 12;
@@ -88,6 +94,15 @@ public enum Operator implements ExpressionElement {
 		}
 	}
 
+	public String getSymbol() {
+		return symbol;
+	}
+
+	@Override
+	public int getType() {
+		return type;
+	}
+	
 	@Override
 	public String toString() {
 		return symbol;
@@ -95,6 +110,6 @@ public enum Operator implements ExpressionElement {
 
 	@Override
 	public String[] toStringArray() {
-		return new String[] { toString() };
+		return new String[] { symbol };
 	}
 }

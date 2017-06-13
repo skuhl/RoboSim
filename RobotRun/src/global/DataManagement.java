@@ -12,37 +12,52 @@ import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+import core.RobotRun;
+import core.Scenario;
 import expression.AtomicExpression;
-import expression.ExprOperand;
+import expression.BoolMath;
 import expression.Expression;
 import expression.ExpressionElement;
+import expression.FloatMath;
+import expression.Operand;
+import expression.OperandBool;
+import expression.OperandDReg;
+import expression.OperandFloat;
+import expression.OperandGeneric;
+import expression.OperandIOReg;
+import expression.OperandPReg;
+import expression.OperandPRegIdx;
+import expression.OperandPoint;
+import expression.OperandRegister;
 import expression.Operator;
+import expression.PointMath;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
-import geom.RBox;
+import geom.ComplexShape;
 import geom.CoordinateSystem;
-import geom.RCylinder;
 import geom.DimType;
 import geom.Fixture;
 import geom.LoadedPart;
-import geom.ComplexShape;
 import geom.MyPShape;
 import geom.Part;
 import geom.Point;
+import geom.RBox;
+import geom.RCylinder;
 import geom.RMatrix;
 import geom.RQuaternion;
 import geom.RShape;
 import geom.WorldObject;
 import processing.core.PVector;
 import programming.CallInstruction;
+import programming.CamMoveToObject;
 import programming.FrameInstruction;
 import programming.IOInstruction;
 import programming.IfStatement;
 import programming.Instruction;
 import programming.JumpInstruction;
 import programming.LabelInstruction;
-import programming.MotionInstruction;
+import programming.PosMotionInst;
 import programming.Program;
 import programming.RegisterStatement;
 import programming.SelectStatement;
@@ -50,9 +65,7 @@ import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
-import robot.RobotRun;
 import robot.RoboticArm;
-import robot.Scenario;
 
 /**
  * Manages all the saving and loading of the program data to and from files.
@@ -82,7 +95,7 @@ public abstract class DataManagement {
 	
 	/**
 	 * Prints the given error's stack trace to a log file in the err sub
-	 * directory. The file's name is the day-month-year-hour-minute the
+	 * directory. The file's name is the month-day-year-hour-minute the
 	 * error occured.
 	 * 
 	 * @param Ex	the error for which to print the stack trace
@@ -96,9 +109,9 @@ public abstract class DataManagement {
 			}
 			
 			LocalDateTime now = LocalDateTime.now();
-			// Use current day, month, year, hour, and minute as file name
+			// Use current month, day, year, hour, and minute as file name
 			String time = String.format("%s%02d-%02d-%d-%02d-%02d.log", errDirPath,
-					now.getDayOfMonth(), now.getMonthValue(), now.getYear(),
+					now.getMonthValue(), now.getDayOfMonth(), now.getYear(),
 					now.getHour(), now.getMinute());
 			
 			File errLog = new File(time);
@@ -145,6 +158,28 @@ public abstract class DataManagement {
 		return fileNames;
 	}
 	
+	private static double[][] load2DDoubleArray(DataInputStream in) throws IOException {
+		// Read byte flag
+		byte flag = in.readByte();
+
+		if (flag == 0) {
+			return null;
+		}
+		
+		// Read the length of the list
+		int numOfRows = in.readInt(),
+				numOfCols = in.readInt();
+		double[][] list = new double[numOfRows][numOfCols];
+		// Read each value of the list
+		for (int row = 0; row < list.length; ++row) {
+			for (int col = 0; col < list[0].length; ++col) {
+				list[row][col] = in.readDouble();
+			}
+		}
+
+		return list;
+	}
+	
 	private static ExpressionElement loadExpressionElement(RoboticArm robot,
 			DataInputStream in) throws IOException, ClassCastException {
 		ExpressionElement ee = null;
@@ -164,16 +199,16 @@ public abstract class DataManagement {
 			
 			for (int idx = 0; idx < len; ++idx) {
 				// Read in each element of the expression
-				ExpressionElement limbo = loadExpressionElement(robot, in);
-				exprElements.add(limbo);
+				ExpressionElement temp = loadExpressionElement(robot, in);
+				exprElements.add(temp);
 			}
 	
 			ee = new Expression(exprElements);
 			
 		} else if (nullFlag == 3) {
 			// Read in an atomic expression operand
-			ExprOperand a0 = (ExprOperand)loadExpressionElement(robot, in);
-			ExprOperand a1 = (ExprOperand)loadExpressionElement(robot, in);
+			Operand<?> a0 = (Operand<?>)loadExpressionElement(robot, in);
+			Operand<?> a1 = (Operand<?>)loadExpressionElement(robot, in);
 			Operator op = (Operator)loadExpressionElement(robot, in);
 
 			ee = new AtomicExpression(a0, a1, op);
@@ -182,53 +217,65 @@ public abstract class DataManagement {
 			// Read in a normal operand
 			int opType = in.readInt();
 
-			if (opType == ExpressionElement.FLOAT) {
+			if (opType == Operand.FLOAT) {
 				// Constant float
 				Float val = in.readFloat();
-				ee = new ExprOperand(val);
+				ee = new OperandFloat(val);
 
-			} else if (opType == ExpressionElement.BOOL) {
+			} else if (opType == Operand.BOOL) {
 				// Constant boolean
 				Boolean val = in.readBoolean();
-				ee = new ExprOperand(val);
+				ee = new OperandBool(val);
 
-			} else if (opType == ExpressionElement.DREG ||
-					opType == ExpressionElement.IOREG ||
-					opType == ExpressionElement.PREG ||
-					opType == ExpressionElement.PREG_IDX) {
+			} else if (opType == Operand.DREG ||
+					opType == Operand.IOREG ||
+					opType == Operand.PREG ||
+					opType == Operand.PREG_IDX) {
 				// Note: the register value of the operand is set to null!
 
 				// Data, Position, or IO register
 				Integer rdx = in.readInt();
 
-				if (opType == ExpressionElement.DREG) {
+				if (opType == Operand.DREG) {
 					// Data register
-					ee = new ExprOperand(robot.getDReg(rdx));
-
-				} else if (opType == ExpressionElement.PREG) {
+					if(rdx == -1) {
+						ee = new OperandDReg();
+					} else {
+						ee = new OperandDReg(robot.getDReg(rdx));
+					}
+				} else if (opType == Operand.PREG) {
 					// Position register
-					ee = new ExprOperand(robot.getPReg(rdx), rdx);
-
-				} else if (opType == ExpressionElement.PREG_IDX) {
+					if(rdx == -1) {
+						ee = new OperandPReg();
+					} else {
+						ee = new OperandPReg(robot.getPReg(rdx));
+					}
+				} else if (opType == Operand.PREG_IDX) {
 					// Specific portion of a point
 					Integer pdx = in.readInt();
-					ee = new ExprOperand(robot.getPReg(rdx), pdx);
-
-				} else if (opType == ExpressionElement.IOREG) {
+					if(rdx == -1) {
+						ee = new OperandPRegIdx();
+					} else {
+						ee = new OperandPRegIdx(robot.getPReg(rdx), pdx);
+					}
+				} else if (opType == Operand.IOREG) {
 					// I/O register
-					ee = new ExprOperand(robot.getIOReg(rdx));
-
+					if(rdx == -1) {
+						ee = new OperandIOReg();
+					} else {
+						ee = new OperandIOReg(robot.getIOReg(rdx)); 
+					}
 				} else {
-					ee = new ExprOperand();
+					ee = new OperandGeneric();
 				}
 
-			} else if (opType == ExpressionElement.POSTN) {
+			} else if (opType == Operand.POSTN) {
 				// Robot position
 				Point pt = loadPoint(in);
-				ee = new ExprOperand(pt);
+				ee = new OperandPoint(pt);
 
 			} else {
-				ee = new ExprOperand();
+				ee = new OperandGeneric();
 			}
 		}
 
@@ -241,41 +288,17 @@ public abstract class DataManagement {
 
 		if (flag == 0) {
 			return null;
-
-		} else {
-			// Read the length of the list
-			int len = in.readInt();
-			float[] list = new float[len];
-			// Read each value of the list
-			for (int idx = 0; idx < list.length; ++idx) {
-				list[idx] = in.readFloat();
-			}
-
-			return list;
 		}
-	}
-	
-	private static float[][] loadFloatArray2D(DataInputStream in) throws IOException {
-		// Read byte flag
-		byte flag = in.readByte();
-
-		if (flag == 0) {
-			return null;
-
-		} else {
-			// Read the length of the list
-			int numOfRows = in.readInt(),
-					numOfCols = in.readInt();
-			float[][] list = new float[numOfRows][numOfCols];
-			// Read each value of the list
-			for (int row = 0; row < list.length; ++row) {
-				for (int col = 0; col < list[0].length; ++col) {
-					list[row][col] = in.readFloat();
-				}
-			}
-
-			return list;
+		
+		// Read the length of the list
+		int len = in.readInt();
+		float[] list = new float[len];
+		// Read each value of the list
+		for (int idx = 0; idx < list.length; ++idx) {
+			list[idx] = in.readFloat();
 		}
+
+		return list;
 	}
 	
 	private static void loadFrame(Frame ref, DataInputStream in) throws IOException {
@@ -286,7 +309,10 @@ public abstract class DataManagement {
 			// Types do not match
 			throw new IOException("Invalid Frame type!");
 		}
-
+		// Read the frame's name
+		String name = in.readUTF();
+		ref.setName(name);
+		
 		PVector v = loadPVector(in);
 		int len;
 		
@@ -322,7 +348,7 @@ public abstract class DataManagement {
 	private static int loadFrameBytes(RoboticArm robot, String srcPath) {
 		int idx = -1;
 		File src = new File(srcPath);
-
+		
 		try {
 			FileInputStream in = new FileInputStream(src);
 			DataInputStream dataIn = new DataInputStream(in);
@@ -376,25 +402,20 @@ public abstract class DataManagement {
 			// Read data for a MotionInstruction object
 			boolean isCommented = in.readBoolean();
 			int mType = in.readInt();
-			int reg = in.readInt();
-			boolean isGlobal = in.readBoolean();
-			float spd = in.readFloat();
+			int pType = in.readInt();
+			int posIdx = in.readInt();
+			int circPType = in.readInt();
+			int circPosIdx = in.readInt();
+			float spdMod = in.readFloat();
 			int term = in.readInt();
-			int uFrame = in.readInt();
-			int tFrame = in.readInt();
-
-			inst = new MotionInstruction(mType, reg, isGlobal, spd, term,
-					uFrame, tFrame);
-			inst.setIsCommented(isCommented);
-
-			byte flag = in.readByte();
-
-			if (flag == 1) {
-				/* Load the second point associated with a circular type motion
-				 * instruction */
-				((MotionInstruction)inst).setSecondaryPoint(
-						(MotionInstruction)loadInstruction(robot, in));
-			}
+			int tFrameIdx = in.readInt();
+			int uFrameIdx = in.readInt();
+			int offType = in.readInt();
+			int offIdx = in.readInt();
+			
+			inst = new PosMotionInst(isCommented, mType, pType, posIdx,
+					circPType, circPosIdx, spdMod, term, tFrameIdx, uFrameIdx,
+					offType, offIdx);
 
 		} else if(instType == 3) {
 			// Read data for a FrameInstruction object
@@ -429,7 +450,7 @@ public abstract class DataManagement {
 			boolean isCommented = in.readBoolean();
 			int tgtRID = in.readInt();
 			String pName = in.readUTF();
-			
+			// TODO Refactor THIS
 			RoboticArm tgt = RobotRun.getInstance().getRobot(tgtRID);
 			
 			inst = new CallInstruction(tgt, pName);
@@ -472,13 +493,13 @@ public abstract class DataManagement {
 		} else if (instType == 10) {
 			// Load data associated with a select statement
 			boolean isCommented = in.readBoolean();
-			ExprOperand arg = (ExprOperand)loadExpressionElement(robot, in);
+			Operand<?> arg = (Operand<?>)loadExpressionElement(robot, in);
 			
-			ArrayList<ExprOperand> cases = new ArrayList<>();
+			ArrayList<Operand<?>> cases = new ArrayList<>();
 			int size = in.readInt();
 			
 			while (size-- > 0) {
-				cases.add( (ExprOperand)loadExpressionElement(robot, in) );
+				cases.add( (Operand<?>)loadExpressionElement(robot, in) );
 			}
 			
 			ArrayList<Instruction> insts = new ArrayList<>();
@@ -490,6 +511,27 @@ public abstract class DataManagement {
 			
 			inst = new SelectStatement(arg, cases, insts);
 			inst.setIsCommented(isCommented);
+			
+		} else if (instType == 11) {
+			
+			boolean isCommented = in.readBoolean();
+			int mType = in.readInt();
+			int pdx = in.readInt();
+			float spdMod = in.readFloat();
+			int term = in.readInt();
+			
+			byte flag = in.readByte();
+			String loadedName;
+			
+			if (flag == 0) {
+				loadedName = null;
+				
+			} else {
+				loadedName = in.readUTF();
+			}
+			
+			inst = new CamMoveToObject(isCommented, mType, Fields.PTYPE_WO,
+					pdx, spdMod, term, loadedName);
 			
 		}/* Add other instructions here! */
 		else if (instType == 1) {
@@ -510,11 +552,10 @@ public abstract class DataManagement {
 
 		if (flag == 0) {
 			return null;
-
-		} else {
-			// Read integer value
-			return in.readInt();
 		}
+		
+		// Read integer value
+		return in.readInt();
 	}
 	
 	private static Point loadPoint(DataInputStream in) throws IOException {
@@ -523,17 +564,16 @@ public abstract class DataManagement {
 
 		if (val == 0) {
 			return null;
-
-		} else {
-			// Read the point's position
-			PVector position = loadPVector(in);
-			// Read the point's orientation
-			RQuaternion orientation = loadRQuaternion(in);
-			// Read the joint angles for the joint's position
-			float[] angles = loadFloatArray(in);
-
-			return new Point(position, orientation, angles);
 		}
+		
+		// Read the point's position
+		PVector position = loadPVector(in);
+		// Read the point's orientation
+		RQuaternion orientation = loadRQuaternion(in);
+		// Read the joint angles for the joint's position
+		float[] angles = loadFloatArray(in);
+
+		return new Point(position, orientation, angles);
 	}
 
 	private static Program loadProgram(RoboticArm robot, DataInputStream in) throws IOException {
@@ -542,38 +582,37 @@ public abstract class DataManagement {
 
 		if (flag == 0) {
 			return null;
+		}
+		
+		// Read program name
+		String name = in.readUTF();
+		Program prog = new Program(name, robot);
+		int nReg;
 
-		} else {
-			// Read program name
-			String name = in.readUTF();
-			Program prog = new Program(name, robot);
-			int nReg;
+		// Read in all the positions saved for the program
+		do {
+			nReg = in.readInt();
 
-			// Read in all the positions saved for the program
-			do {
-				nReg = in.readInt();
-
-				if (nReg == -1) {
-					break;  
-				}
-
-				// Load the saved point
-				Point pt = loadPoint(in);
-				prog.setPosition(nReg, pt);
-
-			} while (true);
-
-			// Read the number of instructions stored for this program
-			int numOfInst = Math.max(0, Math.min(in.readInt(), 500));
-
-			while(numOfInst-- > 0) {
-				// Read in each instruction
-				Instruction inst = loadInstruction(robot, in);
-				prog.addInstAtEnd(inst);
+			if (nReg == -1) {
+				break;  
 			}
 
-			return prog;
+			// Load the saved point
+			Point pt = loadPoint(in);
+			prog.setPosition(nReg, pt);
+
+		} while (true);
+
+		// Read the number of instructions stored for this program
+		int numOfInst = Math.max(0, Math.min(in.readInt(), 500));
+
+		while(numOfInst-- > 0) {
+			// Read in each instruction
+			Instruction inst = loadInstruction(robot, in);
+			prog.addInstAtEnd(inst);
 		}
+
+		return prog;
 	}
 	
 	private static int loadProgramBytes(RoboticArm robot, String srcPath) {
@@ -635,14 +674,14 @@ public abstract class DataManagement {
 		if (val == 0) {
 			return null;
 
-		} else {
-			// Read vector data
-			PVector v = new PVector();
-			v.x = in.readFloat();
-			v.y = in.readFloat();
-			v.z = in.readFloat();
-			return v;
 		}
+		
+		// Read vector data
+		PVector v = new PVector();
+		v.x = in.readFloat();
+		v.y = in.readFloat();
+		v.z = in.readFloat();
+		return v;
 	}
 	
 	private static int loadRegisterBytes(RoboticArm robot, String srcPath) {
@@ -743,16 +782,15 @@ public abstract class DataManagement {
 
 		if (flag == 0) {
 			return null;
-
-		} else {
-			// Read values of the quaternion
-			float w = in.readFloat(),
-					x = in.readFloat(),
-					y = in.readFloat(),
-					z = in.readFloat();
-
-			return new RQuaternion(w, x, y, z);
 		}
+		
+		// Read values of the quaternion
+		float w = in.readFloat(),
+				x = in.readFloat(),
+				y = in.readFloat(),
+				z = in.readFloat();
+
+		return new RQuaternion(w, x, y, z);
 	}
 
 	private static Scenario loadScenario(DataInputStream in, RobotRun app) throws IOException, NullPointerException {
@@ -761,67 +799,66 @@ public abstract class DataManagement {
 
 		if (flag == 0) {
 			return null;
-
-		} else {
-			// Read the name of the scenario
-			String name = in.readUTF();
-			Scenario s = new Scenario(name);
-			// An extra set of only the loaded fixtures
-			ArrayList<Fixture> fixtures = new ArrayList<>();
-			// A list of parts which have a fixture reference defined
-			ArrayList<LoadedPart> partsWithReferences = new ArrayList<>();
-
-			// Read the number of objects in the scenario
-			int size = in.readInt();
-			// Read all the world objects contained in the scenario
-			while (size-- > 0) {
-				try {
-					Object loadedObject = loadWorldObject(in, app);
-	
-					if (loadedObject instanceof WorldObject) {
-						// Add all normal world objects to the scenario
-						s.addWorldObject( (WorldObject)loadedObject );
-	
-						if (loadedObject instanceof Fixture) {
-							// Save an extra reference of each fixture
-							fixtures.add( (Fixture)loadedObject );
-						}
-	
-					} else if (loadedObject instanceof LoadedPart) {
-						LoadedPart lPart = (LoadedPart)loadedObject;
-	
-						if (lPart.part != null) {
-							// Save the part in the scenario
-							s.addWorldObject(lPart.part);
-	
-							if (lPart.referenceName != null) {
-								// Save any part with a defined reference
-								partsWithReferences.add(lPart);
-							}
-						}
-					}
-					
-				} catch (NullPointerException NPEx) {
-					/* Invalid model source file name */
-					System.err.println( NPEx.getMessage() );
-					
-				} catch (RuntimeException REx) {
-					/* Invalid model source file name */
-					System.err.println( REx.getMessage() );
-				}
-			}
-			
-			// Set all the Part's references
-			for (LoadedPart lPart : partsWithReferences) {
-				for (Fixture f : fixtures) {
-					if (lPart.referenceName.equals(f.getName())) {
-						lPart.part.setFixtureRef(f);
-					}
-				}
-			}
-
-			return s;
 		}
+		
+		// Read the name of the scenario
+		String name = in.readUTF();
+		Scenario s = new Scenario(name);
+		// An extra set of only the loaded fixtures
+		ArrayList<Fixture> fixtures = new ArrayList<>();
+		// A list of parts which have a fixture reference defined
+		ArrayList<LoadedPart> partsWithReferences = new ArrayList<>();
+
+		// Read the number of objects in the scenario
+		int size = in.readInt();
+		// Read all the world objects contained in the scenario
+		while (size-- > 0) {
+			try {
+				Object loadedObject = loadWorldObject(in, app);
+
+				if (loadedObject instanceof WorldObject) {
+					// Add all normal world objects to the scenario
+					s.addWorldObject( (WorldObject)loadedObject );
+
+					if (loadedObject instanceof Fixture) {
+						// Save an extra reference of each fixture
+						fixtures.add( (Fixture)loadedObject );
+					}
+
+				} else if (loadedObject instanceof LoadedPart) {
+					LoadedPart lPart = (LoadedPart)loadedObject;
+
+					if (lPart.part != null) {
+						// Save the part in the scenario
+						s.addWorldObject(lPart.part);
+
+						if (lPart.referenceName != null) {
+							// Save any part with a defined reference
+							partsWithReferences.add(lPart);
+						}
+					}
+				}
+				
+			} catch (NullPointerException NPEx) {
+				/* Invalid model source file name */
+				System.err.println( NPEx.getMessage() );
+				
+			} catch (RuntimeException REx) {
+				/* Invalid model source file name */
+				System.err.println( REx.getMessage() );
+			}
+		}
+		
+		// Set all the Part's references
+		for (LoadedPart lPart : partsWithReferences) {
+			for (Fixture f : fixtures) {
+				if (lPart.referenceName.equals(f.getName())) {
+					lPart.part.setFixtureRef(f);
+				}
+			}
+		}
+
+		return s;
 	}
 
 	private static int loadScenarioBytes(RobotRun process, String srcPath) {
@@ -839,14 +876,12 @@ public abstract class DataManagement {
 		
 		// Load each scenario from their respective files
 		for (File scenarioFile : scenarioFiles) {
-			Scenario s = null;
-			
 			try {
 				activeFile = scenarioFile;
 				FileInputStream in = new FileInputStream(activeFile);
 				DataInputStream dataIn = new DataInputStream(in);
 				
-				s = loadScenario(dataIn, process);
+				Scenario s = loadScenario(dataIn, process);
 				
 				if (s != null) {
 					scenarioList.add(s);
@@ -856,16 +891,18 @@ public abstract class DataManagement {
 				in.close();
 			
 			} catch (FileNotFoundException FNFEx) {
-				System.err.printf("File %s does not exist in \\tmp\\scenarios.\n", activeFile.getName());
+				System.err.printf("File %s does not exist in \\tmp\\scenarios.\n",
+						activeFile.getName());
 				FNFEx.printStackTrace();
 				
 			} catch (IOException IOEx) {
-				System.err.printf("File, %s, in \\tmp\\scenarios is corrupt!\n", activeFile.getName());
+				System.err.printf("File, %s, in \\tmp\\scenarios is corrupt!\n",
+						activeFile.getName());
 				IOEx.printStackTrace();
 			}
 		}
 		
-		activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");;
+		activeFile = new File(src.getAbsolutePath() + "/activeScenario.bin");
 		
 		try {
 			
@@ -945,71 +982,23 @@ public abstract class DataManagement {
 		loadRobotData(process.getRobot(0));
 		loadRobotData(process.getRobot(1));
 		
-		RoboticArm r = process.getRobot(0);
-		/**
-		 * Loop through all programs and update call instructions, so that they
-		 * reference the correct target program.
-		 */
-		for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
-			Program p = r.getProgram(pdx);
-			
-			for (int idx = 0; idx < p.size(); ++idx) {
-				Instruction inst = p.getInstAt(idx);
-				
-				if (inst instanceof CallInstruction) {
-					// Update a top call instruction
-					CallInstruction cInst = (CallInstruction)inst;
-					
-					if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-						Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
-						cInst.setProg(tgt);
-					}
-					
-				} else if (inst instanceof SelectStatement) {
-					// Update call instructions in a select statement
-					SelectStatement stmt = (SelectStatement)inst;
-					ArrayList<Instruction> instList = stmt.getInstrs();
-					
-					for (Instruction caseInst : instList) {
-						
-						if (caseInst instanceof CallInstruction) {
-							CallInstruction cInst = (CallInstruction)caseInst;
-							
-							if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-								Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
-								cInst.setProg(tgt);
-							}
-						}
-						
-					}
-					
-				} else if (inst instanceof IfStatement) {
-					// Update a call instruction in a if statement
-					IfStatement stmt = (IfStatement)inst;
-					Instruction subInst = stmt.getInstr();
-					
-					if (subInst instanceof CallInstruction) {
-						CallInstruction cInst = (CallInstruction)subInst;
-						
-						if (cInst.getTgtDevice() != null && cInst.getLoadedName() != null) {
-							Program tgt = cInst.getTgtDevice().getProgram(cInst.getLoadedName());
-							cInst.setProg(tgt);
-						}
-					}
-				}
-			}
+		for (int rdx = 0; rdx < 2; ++rdx) {
+			robotPostProcessing(process.getRobot(rdx), process);
 		}
+	}
+	
+	private static void robotPostProcessing(RoboticArm robot, RobotRun process) {
+		ArrayList<Scenario> scenes = process.getScenarios();
 		
-		r = process.getRobot(1);
 		/**
 		 * Loop through all programs and update call instructions, so that they
 		 * reference the correct target program.
 		 */
-		for (int pdx = 0; pdx < r.numOfPrograms(); ++pdx) {
-			Program p = r.getProgram(pdx);
+		for (int pdx = 0; pdx < robot.numOfPrograms(); ++pdx) {
+			Program p = robot.getProgram(pdx);
 			
 			for (int idx = 0; idx < p.size(); ++idx) {
-				Instruction inst = p.getInstAt(idx);
+				Instruction inst = p.get(idx);
 				
 				if (inst instanceof CallInstruction) {
 					// Update a top call instruction
@@ -1051,6 +1040,16 @@ public abstract class DataManagement {
 							cInst.setProg(tgt);
 						}
 					}
+					
+				} else if (inst instanceof CamMoveToObject) {
+					// Update a camera motion instruction
+					CamMoveToObject cMInst = (CamMoveToObject)inst;
+					
+					for (Scenario s : scenes) {
+						if (s.getName().equals(cMInst.getLoadedSceneName())) {
+							cMInst.setScene(s);
+						}
+					}
 				}
 			}
 		}
@@ -1067,17 +1066,15 @@ public abstract class DataManagement {
 			RShape form = loadShape(in, app);
 			// Load the object's local orientation
 			PVector center = loadPVector(in);
-			RMatrix orientationAxes = new RMatrix( loadFloatArray2D(in) );
+			RMatrix orientationAxes = new RMatrix( load2DDoubleArray(in) );
+			
 			CoordinateSystem localOrientation = new CoordinateSystem(center, orientationAxes);
-			localOrientation.setOrigin(center);
-			localOrientation.setAxes(new RMatrix(orientationAxes));
 
 			if (flag == 1) {
 				center = loadPVector(in);
-				orientationAxes = new RMatrix( loadFloatArray2D(in) );
+				orientationAxes = new RMatrix( load2DDoubleArray(in) );
+				
 				CoordinateSystem defaultOrientation = new CoordinateSystem(center, orientationAxes);
-				defaultOrientation.setOrigin(center);
-				defaultOrientation.setAxes(new RMatrix(orientationAxes));
 				
 				// Load the part's bounding-box and fixture reference name
 				PVector OBBDims = loadPVector(in);
@@ -1117,6 +1114,26 @@ public abstract class DataManagement {
 		} catch (SecurityException SEx) {
 			// Issue with file permissions
 			SEx.printStackTrace();
+		}
+	}
+	
+	private static void save2DDoubleArray(double[][] list, DataOutputStream out) throws IOException {
+		if (list == null) {
+			// Write flag value
+			out.writeByte(0);
+
+		} else {
+			// Write flag value
+			out.writeByte(1);
+			// Write the dimensions of the list
+			out.writeInt(list.length);
+			out.writeInt(list[0].length);
+			// Write each value in the list
+			for (int row = 0; row < list.length; ++row) {
+				for (int col = 0; col < list[0].length; ++col) {
+					out.writeDouble(list[row][col]);
+				}
+			}
 		}
 	}
 
@@ -1159,38 +1176,30 @@ public abstract class DataManagement {
 				saveExpressionElement(ae.getArg2(), out);
 				saveExpressionElement(ae.getOp(), out);
 
-			} else if (ee instanceof ExprOperand) {
-				ExprOperand eo = (ExprOperand)ee;
+			} else if (ee instanceof Operand<?>) {
+				Operand<?> eo = (Operand<?>)ee;
 
 				out.writeByte(4);
 				// Indicate that the object is non-null
-				out.writeInt(eo.type);
+				out.writeInt(eo.getType());
 
-				if (eo.type == ExpressionElement.FLOAT) {
-					// Constant float
-					out.writeFloat( eo.getDataVal() );
-
-				} else if (eo.type == ExpressionElement.BOOL) {
-					// Constant boolean
-					out.writeBoolean( eo.getBoolVal() );
-
-				} else if (eo.type == ExpressionElement.DREG ||
-						eo.type == ExpressionElement.IOREG ||
-						eo.type == ExpressionElement.PREG ||
-						eo.type == ExpressionElement.PREG_IDX) {
-
+				if (eo instanceof OperandRegister) {
 					// Data, Position, or IO register
-					out.writeInt( eo.getRegIdx() );
+					out.writeInt( ((OperandRegister<?>)eo).getRegIdx() );
 
-					if (eo.type == ExpressionElement.PREG_IDX) {
+					if (eo instanceof OperandPRegIdx) {
 						// Specific portion of a point
-						out.writeInt( eo.getPosIdx() );
+						out.writeInt( ((OperandPRegIdx)eo).getSubIdx() );
 					}
-
-				} else if (eo.type == ExpressionElement.POSTN) {
+				} else if (eo instanceof FloatMath) {
+					// Constant float
+					out.writeFloat( ((FloatMath)eo).getArithValue() );
+				} else if (eo instanceof BoolMath) {
+					// Constant boolean
+					out.writeBoolean( ((BoolMath)eo).getBoolValue() );					
+				} else if (eo instanceof PointMath) {
 					// Robot position
-					savePoint(eo.getPointVal(), out);
-
+					savePoint(((PointMath)eo).getPointValue(), out);
 				}// Otherwise it is uninitialized
 			}
 		}
@@ -1213,26 +1222,6 @@ public abstract class DataManagement {
 		}
 	}
 	
-	private static void saveFloatArray2D(float[][] list, DataOutputStream out) throws IOException {
-		if (list == null) {
-			// Write flag value
-			out.writeByte(0);
-
-		} else {
-			// Write flag value
-			out.writeByte(1);
-			// Write the dimensions of the list
-			out.writeInt(list.length);
-			out.writeInt(list[0].length);
-			// Write each value in the list
-			for (int row = 0; row < list.length; ++row) {
-				for (int col = 0; col < list[0].length; ++col) {
-					out.writeFloat(list[row][col]);
-				}
-			}
-		}
-	}
-	
 	private static void saveFrame(Frame f, DataOutputStream out) throws IOException {
 
 		// Save a flag to indicate what kind of frame was saved
@@ -1249,16 +1238,19 @@ public abstract class DataManagement {
 		} else {
 			throw new IOException("Invalid Frame!");
 		}
+		// Write the name of the string
+		out.writeUTF(f.getName());
 		
 		int len;
 		
 		if (f instanceof UserFrame) {
+			UserFrame uFrame = (UserFrame)f;
 			// Write User frame origin
-			savePVector(f.getOrigin(), out);
+			savePVector(uFrame.getOrigin(), out);
 			len = 3;
 			
 			// Write frame axes
-			saveRQuaternion(f.getOrientation(), out);
+			saveRQuaternion(uFrame.getOrientation(), out);
 
 		} else {
 			ToolFrame tf = (ToolFrame)f;
@@ -1341,31 +1333,23 @@ public abstract class DataManagement {
 
 		/* Each Instruction subclass MUST have its own saving code block
 		 * associated with its unique data fields */
-		if (inst instanceof MotionInstruction) {
-			MotionInstruction m_inst = (MotionInstruction)inst;
+		if (inst instanceof PosMotionInst) {
+			PosMotionInst m_inst = (PosMotionInst)inst;
 			
 			out.writeByte(2);
 			// Write data associated with the MotionIntruction object
 			out.writeBoolean(m_inst.isCommented());
 			out.writeInt(m_inst.getMotionType());
-			out.writeInt(m_inst.getPositionNum());
-			out.writeBoolean(m_inst.usesGPosReg());
-			out.writeFloat(m_inst.getSpeed());
+			out.writeInt(m_inst.getPosType());
+			out.writeInt(m_inst.getPosIdx());
+			out.writeInt(m_inst.getCircPosType());
+			out.writeInt(m_inst.getCircPosIdx());
+			out.writeFloat(m_inst.getSpdMod());
 			out.writeInt(m_inst.getTermination());
-			out.writeInt(m_inst.getUserFrame());
-			out.writeInt(m_inst.getToolFrame());
-
-			MotionInstruction subInst = m_inst.getSecondaryPoint();
-
-			if (subInst != null) {
-				// Save secondary point for circular instructions
-				out.writeByte(1);
-				saveInstruction(subInst, out);
-
-			} else {
-				// No secondary point
-				out.writeByte(0);
-			}
+			out.writeInt(m_inst.getTFrameIdx());
+			out.writeInt(m_inst.getUFrameIdx());
+			out.writeInt(m_inst.getOffsetType());
+			out.writeInt(m_inst.getOffsetIdx());
 
 		} else if(inst instanceof FrameInstruction) {
 			FrameInstruction f_inst = (FrameInstruction)inst;
@@ -1466,7 +1450,7 @@ public abstract class DataManagement {
 			
 		} else if (inst instanceof SelectStatement) {
 			SelectStatement sStmt = (SelectStatement)inst;
-			ArrayList<ExprOperand> cases = sStmt.getCases();
+			ArrayList<Operand<?>> cases = sStmt.getCases();
 			ArrayList<Instruction> insts = sStmt.getInstrs();
 			// Save data associated with the select statement instruction
 			out.writeByte(10);
@@ -1475,7 +1459,7 @@ public abstract class DataManagement {
 			saveExpressionElement(sStmt.getArg(), out);
 			// Save list of cases
 			out.writeInt(cases.size());
-			for (ExprOperand opr : cases) {
+			for (Operand<?> opr : cases) {
 				saveExpressionElement(opr, out);
 			}
 			// Save list of instructions
@@ -1484,8 +1468,28 @@ public abstract class DataManagement {
 				saveInstruction(i, out);
 			}
 			
+		} else if (inst instanceof CamMoveToObject) {
+			CamMoveToObject cMInst = (CamMoveToObject)inst;
+			
+			out.writeByte(11);
+			out.writeBoolean(cMInst.isCommented());
+			out.writeInt(cMInst.getMotionType());
+			out.writeInt(cMInst.getPosIdx());
+			out.writeFloat(cMInst.getSpdMod());
+			out.writeInt(cMInst.getTermination());
+			// Save the name of the reference scene, if it is not null
+			Scenario scene = cMInst.getScene();
+			
+			if (scene == null) {
+				out.writeByte(0);
+				
+			} else {
+				out.writeByte(1);
+				out.writeUTF(scene.getName());
+			}
+			
 		}/* Add other instructions here! */
-		else if (inst instanceof Instruction) {
+		else if (inst != null) {
 			/// A blank instruction
 			out.writeByte(1);
 			out.writeBoolean(inst.isCommented());
@@ -1790,11 +1794,11 @@ public abstract class DataManagement {
 		
 		File scenarioFile = null;
 		
-		try {
-			if (ASName != null) {
-				// Save the name of the active scenario
-				scenarioFile = new File(dest.getAbsolutePath() + "/activeScenario.bin");
-				
+		if (ASName != null) {
+			// Save the name of the active scenario
+			scenarioFile = new File(dest.getAbsolutePath() + "/activeScenario.bin");
+			
+			try {
 				if (!scenarioFile.exists()) {
 					scenarioFile.createNewFile();
 				}
@@ -1806,9 +1810,17 @@ public abstract class DataManagement {
 				
 				dataOut.close();
 				out.close();
+				
+			} catch (IOException IOEx) {
+				// Issue with writing or opening a file
+				System.err.printf("Error with file %s.\n", scenarioFile.getName());
+				IOEx.printStackTrace();
+				return 2;
 			}
-			
-			for (Scenario s : scenarios) {
+		}
+		
+		for (Scenario s : scenarios) {
+			try {
 				// Save each scenario in a separate file
 				scenarioFile = new File(dest.getAbsolutePath() + "/" + s.getName() + ".bin");
 				
@@ -1823,19 +1835,18 @@ public abstract class DataManagement {
 				
 				dataOut.close();
 				out.close();
-			}
-			
-			return 0;
-			
-		} catch (IOException IOEx) {
-			// Issue with writing or opening a file
-			if (scenarioFile != null) {
+				
+			} catch (IOException IOEx) {
+				// Issue with writing or opening a file
 				System.err.printf("Error with file %s.\n", scenarioFile.getName());
+				IOEx.printStackTrace();
+				return 2;
 			}
-			
-			IOEx.printStackTrace();
-			return 2;
 		}
+		
+		return 0;
+			
+		
 	}
 	
 	public static void saveScenarios(RobotRun process) {
@@ -1919,7 +1930,7 @@ public abstract class DataManagement {
 			saveShape(wldObj.getForm(), out);
 			// Save the local orientation of the object
 			savePVector(wldObj.getLocalCenter(), out);
-			saveFloatArray2D(wldObj.getLocalOrientation().getFloatData(), out);
+			save2DDoubleArray(wldObj.getLocalOrientation().getData(), out);
 			
 			if (wldObj instanceof Part) {
 				Part part = (Part)wldObj;
@@ -1927,7 +1938,7 @@ public abstract class DataManagement {
 				
 				// Save the default orientation of the part
 				savePVector(part.getDefaultCenter(), out);
-				saveFloatArray2D(part.getDefaultOrientation().getFloatData(), out);
+				save2DDoubleArray(part.getDefaultOrientation().getData(), out);
 				
 				savePVector(part.getOBBDims(), out);
 

@@ -1,6 +1,6 @@
 package programming;
+import core.RobotRun;
 import processing.core.PApplet;
-import robot.RobotRun;
 
 public class JumpInstruction extends Instruction {
 	private int tgtLblNum;
@@ -19,29 +19,6 @@ public class JumpInstruction extends Instruction {
 		copy.setIsCommented( isCommented() );
 
 		return copy;
-	}
-
-	/**
-	 * Returns the index of the instruction to which to jump.
-	 */
-	@Override
-	public int execute() {
-		Program p = RobotRun.getActiveRobot().getActiveProg();
-
-		if (p != null) {
-			int lblIdx = p.findLabelIdx(getTgtLblNum());
-
-			if (lblIdx != -1) {
-				// Return destination instruction index
-				return lblIdx;
-			} else {
-				PApplet.println("Invalid jump instruction!");
-				return -1;
-			}
-		} else {
-			PApplet.println("No active program!");
-			return -1;
-		}
 	}
 
 	public int getTgtLblNum() {

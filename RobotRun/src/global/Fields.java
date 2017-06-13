@@ -2,6 +2,7 @@ package global;
 
 import geom.CoordinateSystem;
 import geom.RMatrix;
+import processing.core.PConstants;
 import processing.core.PFont;
 import processing.core.PGraphics;
 import processing.core.PVector;
@@ -16,7 +17,7 @@ public abstract class Fields {
 	/**
 	 * A flag used for displaying current debug output to standard out.
 	 */
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	
 	/**
 	 * The off state of an end effector
@@ -39,9 +40,19 @@ public abstract class Fields {
 	public static final int DPREG_NUM = 100;
 	
 	/**
-	 * The maximum number of I/O registers associated with a robot.
+	 * The program position type for motion instructions
 	 */
-	public static final int IOREG_NUM = 5;
+	public static final int PTYPE_PROG = 0;
+	
+	/**
+	 * The position register position type for motion instructions.
+	 */
+	public static final int PTYPE_PREG = 1;
+	
+	/**
+	 * The world object position type for motion instructions
+	 */
+	public static final int PTYPE_WO = 2;
 	
 	/**
 	 * The joint motion type of a motion instruction.
@@ -57,6 +68,16 @@ public abstract class Fields {
 	 * The circular motion type of a motion instruction.
 	 */
 	public static final int MTYPE_CIRCULAR = 2;
+	
+	/**
+	 * Defines a state of a motion instruction's offset.
+	 */
+	public static final int OFFSET_NONE = 0;
+	
+	/**
+	 * Defines the state of a motion instruction's offset.
+	 */
+	public static final int OFFSET_PREG = 1;
 	
 	/**
 	 * The tool frame type of a motion instruction
@@ -242,6 +263,23 @@ public abstract class Fields {
 	}
 	
 	/**
+	 * TODO comment this
+	 * 
+	 * @param g
+	 * @param tMat
+	 */
+	public static void transform(PGraphics g, RMatrix tMat) {
+		
+		g.applyMatrix(
+				(float)tMat.getEntry(0, 0), (float)tMat.getEntry(0, 1), (float)tMat.getEntry(0, 2), (float)tMat.getEntry(0, 3),
+				(float)tMat.getEntry(1, 0), (float)tMat.getEntry(1, 1), (float)tMat.getEntry(1, 2), (float)tMat.getEntry(1, 3),
+				(float)tMat.getEntry(2, 0), (float)tMat.getEntry(2, 1), (float)tMat.getEntry(2, 2), (float)tMat.getEntry(2, 3),
+				(float)tMat.getEntry(3, 0), (float)tMat.getEntry(3, 1), (float)tMat.getEntry(3, 2), (float)tMat.getEntry(3, 3)
+		);
+		
+	}
+	
+	/**
 	 * Applies the given rotation to the graphics object.
 	 * 
 	 * @param g			The graphics object to rotate
@@ -319,6 +357,86 @@ public abstract class Fields {
 		int[] diffs = rgbaDiffs(c0,  c1);
 		// Compute the square root of the sum of the rgba differences
 		return (float) Math.sqrt(diffs[0] + diffs[1] + diffs[2] + diffs[3]);
+	}
+	
+	/**
+	 * TODO comments this
+	 * 
+	 * @param g
+	 * @param origin
+	 * @param axesVectors
+	 * @param axesLength
+	 * @param originColor
+	 */
+	public static void drawAxes(PGraphics g, PVector origin,
+			RMatrix axesVectors, float axesLength, int originColor) {
+		
+		g.pushMatrix();
+		// Transform to the reference frame defined by the axes vectors		
+		Fields.transform(g, origin, axesVectors);
+		drawAxes(g, axesLength, originColor);
+		g.popMatrix();
+	}
+	
+	/**
+	 * TODO comment this
+	 * 
+	 * @param axesLength	The length of the rendered axes
+	 * @param originColor	The color of the point of origin of the axes
+	 */
+	public static void drawAxes(PGraphics g, float axesLength, int originColor) {
+		g.pushStyle();
+		
+		// X axis
+		g.stroke(255, 0, 0);
+		g.line(-axesLength, 0, 0, axesLength, 0, 0);
+		// Y axis
+		g.stroke(0, 255, 0);
+		g.line(0, -axesLength, 0, 0, axesLength, 0);
+		// Z axis
+		g.stroke(0, 0, 255);
+		g.line(0, 0, -axesLength, 0, 0, axesLength);
+
+		// Draw a sphere on the positive direction for each axis
+		float dotPos = RMath.clamp(axesLength, 100f, 500f);
+		g.textFont(Fields.bond, 18);
+
+		g.stroke(originColor);
+		g.fill(Fields.BLACK);
+		
+		g.pushMatrix();
+		
+		g.sphere(4);
+		g.stroke(0);
+		g.translate(dotPos, 0, 0);
+		g.sphere(4);
+
+		g.pushMatrix();
+		g.rotateX(-PConstants.PI / 2f);
+		g.rotateY(-PConstants.PI);
+		g.text("X-axis", 0, 0, 0);
+		g.popMatrix();
+
+		g.translate(-dotPos, dotPos, 0);
+		g.sphere(4);
+
+		g.pushMatrix();
+		g.rotateX(-PConstants.PI / 2f);
+		g.rotateY(-PConstants.PI);
+		g.text("Y-axis", 0, 0, 0);
+		g.popMatrix();
+
+		g.translate(0, -dotPos, dotPos);
+		g.sphere(4);
+
+		g.pushMatrix();
+		g.rotateX(-PConstants.PI / 2f);
+		g.rotateY(-PConstants.PI);
+		g.text("Z-axis", 0, 0, 0);
+		g.popMatrix();
+
+		g.popMatrix();
+		g.popStyle();
 	}
 	
 	/**

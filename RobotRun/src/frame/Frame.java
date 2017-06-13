@@ -14,6 +14,8 @@ import processing.core.PApplet;
 import processing.core.PVector;
 
 public abstract class Frame {
+	
+	private String name;
 	// The orientation of the frame in the form of a unit quaternion
 	protected RQuaternion orientationOffset;
 	/* The three points used to define a coordinate axis for 6-Point Method
@@ -23,7 +25,8 @@ public abstract class Frame {
 	private PVector DEOrigin;
 	private RQuaternion DEOrientationOffset;
 
-	public Frame() {
+	public Frame(String name) {
+		this.name = name;
 		orientationOffset = new RQuaternion();
 		axesTeachPoints = new Point[] { null, null, null };
 		DEOrigin = null;
@@ -57,13 +60,13 @@ public abstract class Frame {
 			RealMatrix Ar = null, Br = null, Cr = null;
 			PVector vt = null;
 
-			if (counter == 0) {
-				/* Case 3: C = point 1 */
-				Ar = ori2;
-				Br = ori3;
-				Cr = ori1;
+			if (counter == 2) {
+				/* Case 1: C = point 3 */
+				Ar = ori1;
+				Br = ori2;
+				Cr = ori3;
 				/* 2Ct - At - Bt */
-				vt = PVector.sub(PVector.mult(pos1, 2), PVector.add(pos2, pos3));
+				vt = PVector.sub(PVector.mult(pos3, 2), PVector.add(pos1, pos2));
 
 			} else if (counter == 1) {
 				/* Case 2: C = point 2 */
@@ -73,14 +76,34 @@ public abstract class Frame {
 				/* 2Ct - At - Bt */
 				vt = PVector.sub(PVector.mult(pos2, 2), PVector.add(pos3, pos1));
 
-			} else if (counter == 2) {
-				/* Case 1: C = point 3 */
-				Ar = ori1;
-				Br = ori2;
-				Cr = ori3;
+			} else if (counter == 0) {
+				/* Case 3: C = point 1 */
+				Ar = ori2;
+				Br = ori3;
+				Cr = ori1;
 				/* 2Ct - At - Bt */
-				vt = PVector.sub(PVector.mult(pos3, 2), PVector.add(pos1, pos2));
+				vt = PVector.sub(PVector.mult(pos1, 2), PVector.add(pos2, pos3));
 
+			} else {
+				Ar = RMath.formRMat(
+					1.0, 0.0, 0.0,
+					0.0, 1.0, 0.0,
+					0.0, 0.0, 1.0
+				);
+				
+				Br = RMath.formRMat(
+					1.0, 0.0, 0.0,
+					0.0, 1.0, 0.0,
+					0.0, 0.0, 1.0
+				);
+				
+				Cr = RMath.formRMat(
+					1.0, 0.0, 0.0,
+					0.0, 1.0, 0.0,
+					0.0, 0.0, 1.0
+				);
+				
+				vt = new PVector(0, 0, 0);
 			}
 
 			/****************************************************************
@@ -114,7 +137,7 @@ public abstract class Frame {
 			avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
 
 			float[][] m = RMath.doubleToFloat( R.getData() );
-			Fields.debug("\n%s\n\n", RMath.matrixToString(m));
+			Fields.debug("\n%s\n\n", m.toString());
 		}
 
 		/* Take the average of the three cases: where C = the first point, the second point, and the third point */
@@ -150,7 +173,7 @@ public abstract class Frame {
 	 *                major order)
 	 */
 	public RMatrix createAxesFromThreePoints(PVector p1, PVector p2, PVector p3) {
-		float[][] axesRefWorld = new float[3][3];
+		double[][] axesRefWorld = new double[3][3];
 		PVector xAxis = PVector.sub(p2, p1);
 		PVector yAxis = PVector.sub(p3, p1);
 		xAxis.normalize();
@@ -240,20 +263,14 @@ public abstract class Frame {
 	public PVector getDEOrigin() {
 		return DEOrigin;
 	}
+	
+	public String getName() {
+		return name;
+	}
 
 	/* Returns a set of axes unit vectors representing the axes
 	 * of the frame in reference to the Native Coordinate System. */
-	public RMatrix getNativeAxisVectors() { return getOrientation().toMatrix(); }
-
-	/**
-	 * Returns the orientation of the axes for this frame.
-	 */
-	public abstract RQuaternion getOrientation();
-
-	/**
-	 * Return the origin of this Frame's coordinate System.
-	 */
-	public abstract PVector getOrigin();
+	public RMatrix getNativeAxisVectors() { return orientationOffset.toMatrix(); }
 
 	/**
 	 * Returns the position of the teach point at the given index in the Frame's list
@@ -357,6 +374,10 @@ public abstract class Frame {
 	
 			default:
 		}
+	}
+	
+	public void setName(String newName) {
+		name = newName;
 	}
 
 	/**

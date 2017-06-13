@@ -1,6 +1,6 @@
 package programming;
+import core.RobotRun;
 import global.Fields;
-import robot.RobotRun;
 
 public class FrameInstruction extends Instruction {
 	int frameType;
@@ -25,20 +25,7 @@ public class FrameInstruction extends Instruction {
 
 		return copy;
 	}
-	@Override
-	public int execute() {    
-		if (frameType == Fields.FTYPE_TOOL) {
-			RobotRun.getActiveRobot().setActiveToolFrame(getFrameIdx());
-			
-		} else if (frameType == Fields.FTYPE_USER) {
-			RobotRun.getActiveRobot().setActiveUserFrame(getFrameIdx());
-		}
-		
-		// Update the current active frames
-		RobotRun.getInstance().updateCoordFrame();
-
-		return 0;
-	}
+	
 	public int getFrameIdx() {
 		return frameIdx;
 	}

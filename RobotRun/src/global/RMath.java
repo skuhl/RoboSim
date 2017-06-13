@@ -1,13 +1,11 @@
 package global;
 
-import org.apache.commons.math3.linear.RealMatrix;
-
+import core.RobotRun;
 import geom.Point;
 import geom.RMatrix;
 import geom.RQuaternion;
-import processing.core.PConstants;
+import processing.core.PGraphics;
 import processing.core.PVector;
-import robot.RobotRun;
 import robot.RoboticArm;
 
 /**
@@ -116,15 +114,15 @@ public abstract class RMath {
 		}
 
 		float[][] J = new float[7][6];
-		// get current ee position
-		Point curRP = RobotRun.nativeRobotEEPoint(model, angles);
-
+		// get current tooltip position
+		Point curRP = model.getToolTipNative(angles);
+		
 		// examine each segment of the arm
 		for (int i = 0; i < 6; i += 1) {
 			// test angular offset
 			angles[i] += dAngle;
-			// get updated ee position
-			Point newRP = RobotRun.nativeRobotEEPoint(model, angles);
+			// get updated tooltip position
+			Point newRP = model.getToolTipNative(angles);
 
 			if (curRP.orientation.dot(newRP.orientation) < 0f) {
 				// Use -q instead of q
@@ -229,6 +227,238 @@ public abstract class RMath {
 
 		return r;
 	}
+	
+	/**
+	 * Returns a rotation matrix representing the rotation of the given
+	 * transformation matrix.
+	 * 
+	 * @param tMat	A transformation matrix
+	 */
+	public static RMatrix formRMat(RMatrix tMat) {
+		
+		return formRMat(
+			tMat.getEntry(0, 0), tMat.getEntry(0, 1), tMat.getEntry(0, 2),
+			tMat.getEntry(1, 0), tMat.getEntry(1, 1), tMat.getEntry(1, 2),
+			tMat.getEntry(2, 0), tMat.getEntry(2, 1), tMat.getEntry(2, 2)
+		);
+	}
+	
+	/**
+	 * Forms a rotation matrix from the given unit vector, axis, and angle of
+	 * rotation, theta, about axis.
+	 * 
+	 * @param axis		A unit vector representing the axis of rotation
+	 * @param theta	The angle of rotaiton around axis
+	 * @return		The rotation matrix representing the rotation of theta
+	 * 				around axis.
+	 */
+	public static RMatrix formRMat(PVector axis, float theta) {
+		double[][] rMat = new double[3][3];
+		
+		double ct = Math.cos(theta);
+		double st = Math.sin(theta);
+		double one_ct = 1f - ct;
+		
+		rMat[0][0] = ct + axis.x * axis.x * one_ct;
+		rMat[0][1] = axis.x * axis.y * one_ct - axis.z * st;
+		rMat[0][2] = axis.x * axis.z * one_ct + axis.y * st;
+		rMat[1][0] = axis.y * axis.x * one_ct + axis.z * st;
+		rMat[1][1] = ct + axis.y * axis.y * one_ct;
+		rMat[1][2] = axis.y * axis.z * one_ct - axis.x * st;
+		rMat[2][0] = axis.z * axis.x * one_ct - axis.y * st;
+		rMat[2][1] = axis.z * axis.y * one_ct + axis.x * st;
+		rMat[2][2] = ct + axis.z * axis.z * one_ct;
+		
+		return new RMatrix(rMat);
+	}
+	
+	/**
+	 * Define a rotation matrix from the given rotation entries. (For mxy, x is
+	 * the row index and y is the column index in the rotation matrix).
+	 */
+	public static RMatrix formRMat(double m00, double m01, double m02,
+			double m10, double m11, double m12,
+			double m20, double m21, double m22) {
+		
+		return new RMatrix(
+			new double[][] {
+				{ m00, m01, m02 },
+				{ m10, m11, m12 },
+				{ m20, m21, m22 }
+			}
+		);
+	}
+	
+	/**
+	 * Forms the 4x4 transformation matrix (row major order) form the given
+	 * origin offset and axes offset (row major order) of the Native Coordinate
+	 * system.
+	 * 
+	 * @param origin
+	 *            the X, Y, Z, offset of the origin for the Coordinate frame
+	 * @param axes
+	 *            a 3x3 rotatin matrix (row major order) representing the unit
+	 *            vector axes offset of the new Coordinate Frame from the Native
+	 *            Coordinate Frame
+	 * @returning the 4x4 transformation matrix (row major order) formed from
+	 *            the given origin and axes offset
+	 */
+	public static RMatrix formTMat(PVector origin, RMatrix axes) {		
+		return formTMat(
+			axes.getEntry(0, 0), axes.getEntry(0, 1), axes.getEntry(0, 2), (double)origin.x,
+			axes.getEntry(1, 0), axes.getEntry(1, 1), axes.getEntry(1, 2), (double)origin.y,
+			axes.getEntry(2, 0), axes.getEntry(2, 1), axes.getEntry(2, 2), (double)origin.z
+		);
+	}
+	
+	/**
+	 * Forms a transformation matrix from the given rotation matrix.
+	 * 
+	 * @param axes	The rotation matrix
+	 * @return		A transformation matrix with the given rotation: no
+	 * 				translation or scaling
+	 */
+	public static RMatrix fromTMat(RMatrix axes) {		
+		return formTMat(
+			axes.getEntry(0, 0), axes.getEntry(0, 1), axes.getEntry(0, 2), 0.0,
+			axes.getEntry(1, 0), axes.getEntry(1, 1), axes.getEntry(1, 2), 0.0,
+			axes.getEntry(2, 0), axes.getEntry(2, 1), axes.getEntry(2, 2), 0.0
+		);
+	}
+	
+	/**
+	 * Forms a transformation matrix with the rotation defined by the given
+	 * axis and rotation about the axis.
+	 */
+	public static RMatrix formTMat(PVector axis, float theta) {
+		double[][] tMat = new double[4][4];
+		
+		double ct = Math.cos(theta);
+		double st = Math.sin(theta);
+		double one_ct = 1f - ct;
+		
+		tMat[0][0] = ct + axis.x * axis.x * one_ct;
+		tMat[0][1] = axis.x * axis.y * one_ct - axis.z * st;
+		tMat[0][2] = axis.x * axis.z * one_ct + axis.y * st;
+		tMat[0][3] = 0f;
+		tMat[1][0] = axis.y * axis.x * one_ct + axis.z * st;
+		tMat[1][1] = ct + axis.y * axis.y * one_ct;
+		tMat[1][2] = axis.y * axis.z * one_ct - axis.x * st;
+		tMat[1][3] = 0f;
+		tMat[2][0] = axis.z * axis.x * one_ct - axis.y * st;
+		tMat[2][1] = axis.z * axis.y * one_ct + axis.x * st;
+		tMat[2][2] = ct + axis.z * axis.z * one_ct;
+		tMat[2][3] = 0f;
+		tMat[3][0] = 0f;
+		tMat[3][1] = 0f;
+		tMat[3][2] = 0f;
+		tMat[3][3] = 1f;
+		
+		return new RMatrix(tMat);
+	}
+	
+	/**
+	 * Define a transformation matrix from the given translation vector.
+	 * 
+	 * @param translation	The translation portion of the matrix
+	 */
+	public static RMatrix formTMat(final PVector translation) {
+		return formTMat(translation.x, translation.y, translation.z);
+	}
+	
+	/**
+	 * Define a transformation matrix from the given translation entries. (For
+	 * mxy, x is the row index and y is the column index in the transformation
+	 * matrix).
+	 * 
+	 * @param m03	The x translation
+	 * @param m13	The y translation
+	 * @param m23	The z translation
+	 */
+	public static RMatrix formTMat(double m03, double m13, double m23) {
+		return formTMat(
+			1.0, 0.0, 0.0, m03,
+			0.0, 1.0, 0.0, m13,
+			0.0, 0.0, 1.0, m23,
+			0.0, 0.0, 0.0, 1.0
+		);
+	}
+	
+	/**
+	 * Define a transformation matrix from the given rotation and translation
+	 * entries. (For mxy, x is the row index and y is the column index in the
+	 * transformation matrix).
+	 */
+	public static RMatrix formTMat(double m00, double m01, double m02,
+			double m03, double m10, double m11, double m12, double m13,
+			double m20, double m21, double m22, double m23) {
+		
+		return formTMat(
+			m00, m01, m02, m03,
+			m10, m11, m12, m13,
+			m20, m21, m22, m23,
+			0.0, 0.0, 0.0, 1.0
+		);
+	}
+	
+	/**
+	 * Define a transformation matrix from the given entries (For mxy, x is the
+	 * row index and y is the column index in the transformation matrix).
+	 */
+	public static RMatrix formTMat(double m00, double m01, double m02,
+			double m03, double m10, double m11, double m12, double m13,
+			double m20, double m21, double m22, double m23, double m30,
+			double m31, double m32, double m33) {
+		
+		return new RMatrix(
+				new double[][] {
+					{ m00, m01, m02, m03 },
+					{ m10, m11, m12, m13 },
+					{ m20, m21, m22, m23 },
+					{ m30, m31, m32, m33 }
+				}
+		);
+	}
+	
+	/**
+	 * Returns the position defined by x, y, and z in g's coordinate frame in
+	 * terms of the native coordinate frame.
+	 * 
+	 * @param g	A graphics object
+	 * @param x	The x position in terms of g's coordinate frame
+	 * @param y	The y position in terms of g's coordinate frame
+	 * @param z The z position in terms of g's coordinate frame
+	 * @return	The native coordinate frame position
+	 */
+	public static PVector getPosition(PGraphics g, float x, float y, float z) {
+		PVector position = new PVector();
+		position.x = g.modelX(x, y, z);
+		position.y = g.modelY(x, y, z);
+		position.z = g.modelZ(x, y, z);
+		
+		return position;
+	}
+	
+	/**
+	 * Returns the current orientation of the given graphics object in the form
+	 * of a 3x3 rotation matrix.
+	 * 
+	 * @param g	A graphics object
+	 * @return	The orientation axes of g
+	 */
+	public static RMatrix getOrientationAxes(PGraphics g) {
+		// Pull the origin and axes vectors from the g's orientation
+		PVector origin = getPosition(g, 0f, 0f, 0f),
+				vx = getPosition(g, 1f, 0f, 0f).sub(origin),
+				vy = getPosition(g, 0f, 1f, 0f).sub(origin),
+				vz = getPosition(g, 0f, 0f, 1f).sub(origin);
+		
+		return formRMat(
+			vx.x, vy.x, vz.x,
+			vx.y, vy.y, vz.y,
+			vx.z, vy.z, vz.z	
+		);
+	}
 
 	/**
 	 * Attempts to calculate the joint angles that would place the Robot in the
@@ -242,24 +472,23 @@ public abstract class RMath {
 	 * 
 	 * @param model
 	 *            The Robot model of which to base the inverse kinematics off
-	 * @param srcAngles
+	 * @param startAngles
 	 *            The initial position of the Robot
 	 * @param tgtPosition
 	 *            The desired position of the Robot
 	 * @param tgtOrientation
 	 *            The desired orientation of the Robot
 	 */
-	public static float[] inverseKinematics(RoboticArm model, float[] srcAngles, PVector tgtPosition,
+	public static float[] inverseKinematics(RoboticArm model, float[] startAngles, PVector tgtPosition,
 			RQuaternion tgtOrientation) {
 
 		final int limit = 1000; // Max number of times to loop
 		int count = 0;
 
-		float[] angles = srcAngles.clone();
+		float[] angles = startAngles.clone();
 
 		while (count < limit) {
-			Point cPoint = RobotRun.nativeRobotEEPoint(model, angles);
-			float cumulativeOffset = 0;
+			Point cPoint = model.getToolTipNative(angles);
 
 			if (tgtOrientation.dot(cPoint.orientation) < 0f) {
 				// Use -q instead of q
@@ -283,8 +512,10 @@ public abstract class RMath {
 			float dist = PVector.dist(cPoint.position, tgtPosition);
 			float rDist = rDelta.magnitude();
 			// check whether our current position is within tolerance
-			if (dist < RobotRun.getActiveRobot().getLiveSpeed() / 100f && rDist < 0.00005f * RobotRun.getActiveRobot().getLiveSpeed()) {
-				break;
+			if (dist <= (0.001f * model.getLiveSpeed()) &&
+					rDist <= (0.00005f * model.getLiveSpeed())) {
+				
+				return angles;
 			}
 
 			// calculate jacobian, 'J', and its inverse
@@ -297,30 +528,18 @@ public abstract class RMath {
 				for (int j = 0; j < 7; j += 1) {
 					dAngle[i] += JInverse.getEntry(i, j) * delta[j];
 				}
-
-				// update joint angles
-				cumulativeOffset += dAngle[i];
-				// prevents IK algorithm from producing unrealistic motion
-				if (Math.abs(cumulativeOffset) > PConstants.PI) {
-					// System.out.println("Optimal solution not found.");
-					// return null;
-				}
-				angles[i] += dAngle[i];
-				angles[i] += TWO_PI;
-				angles[i] %= TWO_PI;
+				
+				angles[i] = RMath.mod2PI(angles[i] + dAngle[i]);
 			}
-
-			// System.out.println(String.format("IK result for cycle %d: [%f,
-			// %f, %f, %f, %f, %f]", count, angles[0], angles[1], angles[2],
-			// angles[3], angles[4], angles[5]));
-			count += 1;
+			
+			++count;
+			
 			if (count == limit) {
-				Fields.debug("%s\n", J.toString());
-				return null;
+				//Fields.debug("IK\n%s\n", J.toString());
 			}
 		}
 
-		return angles;
+		return null;
 	}
 
 	/**
@@ -331,7 +550,7 @@ public abstract class RMath {
 	 * courses/cs248-98-fall/Final/q4.html
 	 */
 	public static RMatrix invertHCMatrix(RMatrix mat) {
-		float[][] d = mat.getFloatData();
+		float[][] d = mat.getDataF();
 		if (d.length != 4 || d[0].length != 4) {
 			return null;
 		}
@@ -363,39 +582,10 @@ public abstract class RMath {
 
 		return new RMatrix(inv);
 	}
-	
-	/**
-	 * Forms a rotation matrix from the given unit vector, u, and angle of
-	 * rotation. theta, about u.
-	 * 
-	 * @param u		A unit vector representing the axis of rotation
-	 * @param theta	The angle of rotaiton around u
-	 * @return		The rotation matrix representing the rotation of theta
-	 * 				around u.
-	 */
-	public static RMatrix matFromAxisAndAngle(PVector u, float theta) {
-		float[][] rMat = new float[3][3];
-		
-		float ct = (float)Math.cos(theta);
-		float st = (float)Math.sin(theta);
-		float one_ct = 1f - ct;
-		
-		rMat[0][0] = ct + u.x * u.x * one_ct;
-		rMat[0][1] = u.x * u.y * one_ct - u.z * st;
-		rMat[0][2] = u.x * u.z * one_ct + u.y * st;
-		rMat[1][0] = u.y * u.x * one_ct + u.z * st;
-		rMat[1][1] = ct + u.y * u.y * one_ct;
-		rMat[1][2] = u.y * u.z * one_ct - u.x * st;
-		rMat[2][0] = u.z * u.x * one_ct - u.y * st;
-		rMat[2][1] = u.z * u.y * one_ct + u.x * st;
-		rMat[2][2] = ct + u.z * u.z * one_ct;
-		
-		return new RMatrix(rMat);
-	}
 
 	// calculates euler angles from rotation matrix
 	public static PVector matrixToEuler(RMatrix m) {
-		float[][] r = m.getFloatData();
+		float[][] r = m.getDataF();
 		float x, y, z;
 		PVector wpr;
 
@@ -427,7 +617,7 @@ public abstract class RMath {
 	
 	// calculates quaternion from rotation matrix
 	public static RQuaternion matrixToQuat(RMatrix m) {
-		float[][] d = m.getFloatData();
+		float[][] d = m.getDataF();
 		float[] qVals = new float[4];
 		float diag = d[0][0] + d[1][1] + d[2][2];
 
@@ -464,81 +654,6 @@ public abstract class RMath {
 	}
 
 	/**
-	 * Returns a string that represents the given floating-point matrix in the
-	 * format:
-	 * 
-	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
-	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
-	 *   .
-	 *   .
-	 *   .
-	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
-	 * 
-	 * The precision of each element is 4 digits before and 3 digits after the
-	 * decimal point. In addition, space padding is applied for non-negative
-	 * values.
-	 * 
-	 * @param matrix	A floating-point matrix
-	 * @return			The string representation of the given matrix
-	 */
-	public static String matrixToString(float[][] matrix) {
-		String str = new String();
-		
-		for (int row = 0; row < matrix.length; ++row) {
-			str += "[ ";
-			
-			for (int column = 0; column < matrix[row].length; ++column) {
-				String val = String.format("%4.3f", matrix[row][column]);
-				// Add padding
-				str += String.format("%9s ", val);
-			}
-			
-			str += "]\n";
-		}
-		
-		
-		return str;
-	}
-	
-	/**
-	 * Returns a string that represents the given floating-point matrix in the
-	 * format:
-	 * 
-	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
-	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
-	 *   .
-	 *   .
-	 *   .
-	 * [ XXXXX.XXX XXXXX.XXX ... XXXXX.XXX ]
-	 * 
-	 * The precision of each element is 4 digits before and 3 digits after the
-	 * decimal point. In addition, space padding is applied for non-negative
-	 * values.
-	 * 
-	 * @param matrix	A floating-point matrix
-	 * @return			The string representation of the given matrix
-	 */
-	public static String matrixToString(RealMatrix m) {
-		double[][] data = m.getData();
-		String str = new String();
-		
-		for (int row = 0; row < data.length; ++row) {
-			str += "[ ";
-			
-			for (int column = 0; column < data[row].length; ++column) {
-				String val = String.format("%4.3f", data[row][column]);
-				// Add padding
-				str += String.format("%9s ", val);
-			}
-			
-			str += "]\n";
-		}
-		
-		
-		return str;
-	}
-
-	/**
 	 * Computes the minimum rotational magnitude to move from src to dest,
 	 * around the unit circle.
 	 * 
@@ -548,7 +663,7 @@ public abstract class RMath {
 	 *            The destination angle in radians
 	 * @returning The minimum distance between src and dest
 	 */
-	public static float minimumDistance(float src, float dest) {
+	public static float minDist(float src, float dest) {
 		// Bring angles within range [0, TWO_PI)
 		float difference = mod2PI(dest) - mod2PI(src);
 
@@ -625,7 +740,7 @@ public abstract class RMath {
 	}
 
 	public static void printMat(RMatrix mat) {
-		float[][] d = mat.getFloatData();
+		float[][] d = mat.getDataF();
 		
 		for (int i = 0; i < d.length; i += 1) {
 			System.out.print("[");
@@ -730,44 +845,62 @@ public abstract class RMath {
 	}
 	
 	/**
-	 * Forms the 4x4 transformation matrix (row major order) form the given
-	 * origin offset and axes offset (row major order) of the Native Coordinate
-	 * system.
+	 * Applies the orientation represented by the given rotation matrix, rMat,
+	 * to the given position vector, v.
 	 * 
-	 * @param origin
-	 *            the X, Y, Z, offset of the origin for the Coordinate frame
-	 * @param axes
-	 *            a 3x3 rotatin matrix (row major order) representing the unit
-	 *            vector axes offset of the new Coordinate Frame from the Native
-	 *            Coordinate Frame
-	 * @returning the 4x4 transformation matrix (row major order) formed from
-	 *            the given origin and axes offset
+	 * @param v	A 3D position vector
+	 * @param r	A 3x3 rotation matrix
+	 * @return	v rotated by rMat
 	 */
-	public static RMatrix transformationMatrix(PVector origin, RMatrix axes) {
-		float[][] d = axes.getFloatData();
-		float[][] mat = new float[4][4];
+	public static PVector rotateVector(final PVector v, final RMatrix rMat) {
 		
-		mat[0][0] = d[0][0];
-		mat[0][1] = d[0][1];
-		mat[0][2] = d[0][2];
-		mat[0][3] = origin.x;
+		PVector u = new PVector();
+		// Apply the rotation matrix to the given vector
+		u.x = (float)(rMat.getEntry(0, 0) * v.x + rMat.getEntry(1, 0) * v.y +
+						rMat.getEntry(2, 0) * v.z);
+		u.y = (float)(rMat.getEntry(0, 1) * v.x + rMat.getEntry(1, 1) * v.y +
+						rMat.getEntry(2, 1) * v.z);
+		u.z = (float)(rMat.getEntry(0, 2) * v.x + rMat.getEntry(1, 2) * v.y +
+						rMat.getEntry(2, 2) * v.z);
 		
-		mat[1][0] = d[1][0];
-		mat[1][1] = d[1][1];
-		mat[1][2] = d[1][2];
-		mat[1][3] = origin.y;
+		return u;
+	}
+	
+	/**
+	 * Applies the given translation, delta, to the given transformation
+	 * matrix, tMat.
+	 * 
+	 * @param tMat	A transformation matrix
+	 * @param delta	The translation to apply to tMat
+	 */
+	public static void translateTMat(RMatrix tMat, final PVector delta) {
+		translateTMat(tMat, delta.x, delta.y, delta.z);
+	}
+	
+	/**
+	 * Applies the given translations to the given transformation
+	 * matrix, tMat.
+	 * 
+	 * @param tMat	A transformation matrix
+	 * @param tx	The x translation
+	 * @param ty	The y translation
+	 * @param tz	The z translation
+	 */
+	public static void translateTMat(RMatrix tMat, double tx, double ty,
+			double tz) {
+		// Calculate the new translations for the transformation matrix
+		double newX = tMat.getEntry(0, 0) * tx + tMat.getEntry(0, 1) * ty +
+						tMat.getEntry(0, 2) * tz;
 		
-		mat[2][0] = d[2][0];
-		mat[2][1] = d[2][1];
-		mat[2][2] = d[2][2];
-		mat[2][3] = origin.z;
+		double newY = tMat.getEntry(1, 0) * tx + tMat.getEntry(1, 1) * ty +
+						tMat.getEntry(1, 2) * tz;
 		
-		mat[3][0] = 0;
-		mat[3][1] = 0;
-		mat[3][2] = 0;
-		mat[3][3] = 1;
+		double newZ = tMat.getEntry(2, 0) * tx + tMat.getEntry(2, 1) * ty +
+						tMat.getEntry(2, 2) * tz;
 		
-		return new RMatrix(mat);
+		tMat.setEntry(0, 3, tMat.getEntry(0, 3) + newX);
+		tMat.setEntry(1, 3, tMat.getEntry(1, 3) + newY);
+		tMat.setEntry(2, 3, tMat.getEntry(2, 3) + newZ);
 	}
 
 	/**
@@ -778,7 +911,7 @@ public abstract class RMath {
 	 * @return	A vector containing the product of v and t
 	 */
 	public static PVector vectorMatrixMult(PVector v, RMatrix mat) {
-		float[][] d = mat.getFloatData();
+		float[][] d = mat.getDataF();
 		
 		if (d.length != 4 || d[0].length != 4) {
 			return null;

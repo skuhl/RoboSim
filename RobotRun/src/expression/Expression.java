@@ -8,7 +8,7 @@ public class Expression extends AtomicExpression {
 
 	public Expression() {
 		elementList = new ArrayList<>();
-		elementList.add(new ExprOperand());
+		elementList.add(new OperandGeneric());
 	}
 
 	public Expression(ArrayList<ExpressionElement> e) {
@@ -19,8 +19,8 @@ public class Expression extends AtomicExpression {
 	public Expression clone() {
 		ArrayList<ExpressionElement> newList = new ArrayList<>();
 		for(ExpressionElement e : elementList) {
-			if(e instanceof ExprOperand) {
-				newList.add(((ExprOperand)e).clone());
+			if(e instanceof Operand<?>){
+				newList.add(((Operand<?>)e).clone());
 			} else {
 				newList.add(e);
 			}
@@ -30,28 +30,45 @@ public class Expression extends AtomicExpression {
 	}
 
 	@Override
-	public ExprOperand evaluate() {
-		if(elementList.get(0) instanceof Operator || elementList.size() % 2 != 1) { 
+	public Operand<?> evaluate() {
+		ExpressionElement e = elementList.get(0);
+		
+		if(e == null || e instanceof Operator || elementList.size() % 2 != 1) { 
 			PApplet.println("Expression formatting error");
 			return null;
 		}
 
-		ExprOperand result = (ExprOperand)elementList.get(0);    
+		Operand<?> result = (Operand<?>)elementList.get(0);    
+		
 		for(int i = 1; i < elementList.size(); i += 2) {
-			if(!(elementList.get(i) instanceof Operator) || !(elementList.get(i + 1) instanceof ExprOperand)) {
+			if(!(elementList.get(i) instanceof Operator) || !(elementList.get(i + 1) instanceof Operand<?>)) {
 				PApplet.println("Expression formatting error");
 				return null;
 			} 
 			else {
 				Operator op = (Operator) elementList.get(i);
-				ExprOperand nextOperand = (ExprOperand) elementList.get(i + 1);
+				Operand<?> nextOperand = (Operand<?>) elementList.get(i + 1);
 				AtomicExpression expr = new AtomicExpression(result, nextOperand, op);
 
 				//println(result.getDataVal() + op.toString() + nextOperand.getDataVal() + " = " + expr.evaluate().dataVal);
 				result = expr.evaluate();
 			}
 		}
-
+		
+		// Map register operands to their respective values
+		if (result instanceof OperandIOReg) {
+			result = new OperandBool(((OperandIOReg) result).getBoolValue());
+			
+		} else if (result instanceof OperandDReg) {
+			result = new OperandFloat(((OperandDReg) result).getArithValue());
+			
+		} else if (result instanceof OperandPReg) {
+			result = new OperandPoint(((OperandPReg) result).getPointValue());
+			
+		} else if (result instanceof OperandPRegIdx) {
+			result = new OperandFloat(((OperandPRegIdx) result).getArithValue());	
+		}
+		
 		return result;
 	}
 
@@ -69,9 +86,9 @@ public class Expression extends AtomicExpression {
 		return len;
 	}
 
-	public ExprOperand getOperand(int idx) {
-		if(elementList.get(idx) instanceof ExprOperand)
-			return (ExprOperand)elementList.get(idx);
+	public Operand<?> getOperand(int idx) {
+		if(elementList.get(idx) instanceof Operand<?>)
+			return (Operand<?>)elementList.get(idx);
 		else
 			return null;
 	}
@@ -109,10 +126,10 @@ public class Expression extends AtomicExpression {
 		else if(edit_idx >= getLength() - 2) return;
 
 		if(edit_idx == -1) {
-			if(elementList.get(0) instanceof ExprOperand) {
+			if(elementList.get(0) instanceof Operand<?>) {
 				elementList.add(0, Operator.UNINIT);
 			} else {
-				elementList.add(0, new ExprOperand());
+				elementList.add(0, new OperandGeneric());
 			}
 		}
 		else {
@@ -125,10 +142,10 @@ public class Expression extends AtomicExpression {
 				((Expression)e).insertElement(edit_idx);
 			} 
 			else {
-				if(e instanceof ExprOperand) {
+				if(e instanceof Operand<?>) {
 					elementList.add(elements[edit_idx] + 1, Operator.UNINIT);
 				} else {
-					elementList.add(elements[edit_idx] + 1, new ExprOperand());
+					elementList.add(elements[edit_idx] + 1, new OperandGeneric());
 				}
 			}
 		}
@@ -175,10 +192,10 @@ public class Expression extends AtomicExpression {
 		}
 	}
 
-	public ExprOperand setOperand(int idx, ExprOperand o) {
-		if(elementList.get(idx) instanceof ExprOperand) {
+	public Operand<?> setOperand(int idx, Operand<?> o) {
+		if(elementList.get(idx) instanceof Operand<?>) {
 			elementList.set(idx, o);
-			return (ExprOperand)elementList.get(idx);
+			return (Operand<?>)elementList.get(idx);
 		}
 		else {
 			return null;

@@ -19,21 +19,23 @@ import controlP5.RadioButton;
 import controlP5.Slider;
 import controlP5.Textarea;
 import controlP5.Toggle;
-import enums.AxesDisplay;
-import enums.EEMapping;
-import enums.EEType;
+import core.CamSelectArea;
+import core.RobotCamera;
+import core.RobotRun;
+import core.Scenario;
 import enums.Alignment;
+import enums.AxesDisplay;
 import enums.ScreenMode;
 import enums.ScreenType;
 import enums.ShapeType;
 import enums.WindowTab;
-import geom.RBox;
-import geom.RCylinder;
+import geom.ComplexShape;
 import geom.DimType;
 import geom.Fixture;
-import geom.ComplexShape;
 import geom.MyPShape;
 import geom.Part;
+import geom.RBox;
+import geom.RCylinder;
 import geom.RMatrix;
 import geom.RShape;
 import geom.WorldObject;
@@ -45,16 +47,12 @@ import processing.core.PFont;
 import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
-import robot.CamSelectArea;
-import robot.RobotCamera;
-import robot.RobotRun;
 import robot.RoboticArm;
-import robot.Scenario;
 import screen.DisplayLine;
 import screen.MenuScroll;
+import ui.KeyCodeMap;
 import ui.KeyDownBehavior;
 import ui.KeyDownMgmt;
-import ui.KeyCodeMap;
 import ui.MyButton;
 import ui.MyButtonBar;
 import ui.MyDropdownList;
@@ -89,7 +87,7 @@ public class WGUI implements ControlListener {
 			DIM_TXT = 3,
 			DIM_DDL = 1;
 	
-	public static final String[] tabs = { "Hide", "Robot1", "Robot2", "Create", 
+	private static final String[] tabs = { "Hide", "Robot1", "Robot2", "Create", 
 										  "Edit", "Scenario", "Camera", "Misc" };
 	
 	/** The manager object, which contains all the UI elements. */
@@ -283,21 +281,21 @@ public class WGUI implements ControlListener {
 
 		relPos = getAbsPosFrom(getButton("edit"), Alignment.BOTTOM_LEFT,
 				smLrDiff / 2, 11);
-		c2 = addButton("arrow_up", pendant, buttonImages[2], relPos[0],
+		c2 = addButton("arrow_up", pendant, buttonImages[0], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 
 		relPos = getAbsPosFrom(c2, Alignment.BOTTOM_LEFT, 0, 1);
-		c2 = addButton("arrow_dn", pendant, buttonImages[3], relPos[0],
+		c2 = addButton("arrow_dn", pendant, buttonImages[1], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 
 		relPos = getAbsPosFrom(getButton("select"), Alignment.BOTTOM_LEFT,
 				smLrDiff / 2, smLrDiff + 16);
-		addButton("arrow_lt", pendant, buttonImages[4], relPos[0],
+		addButton("arrow_lt", pendant, buttonImages[2], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 
 		relPos = getAbsPosFrom(getButton("data"), Alignment.BOTTOM_LEFT,
 				smLrDiff / 2, smLrDiff + 16);
-		addButton("arrow_rt", pendant, buttonImages[5], relPos[0],
+		addButton("arrow_rt", pendant, buttonImages[3], relPos[0],
 				relPos[1], Fields.SMALL_BUTTON, Fields.SMALL_BUTTON);
 
 
@@ -596,30 +594,22 @@ public class WGUI implements ControlListener {
 		addDropdown("CamObjects", camera, ldropItemWidth, dropItemHeight, 0, Fields.small);
 		addButton("CamObjPreview", "ObjPreview", camera, 150, 200, Fields.small);
 		addButton("TeachCamObj", "Teach Object", camera, fieldWidthMed, sButtonHeight, Fields.small);
-		//TODO
 		
 		// Initialize the miscellaneous window elements
 		addTextarea("ActiveRobotEE", "EE:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("ActiveAxesDisplay", "Axes Display:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
-		addTextarea("ActiveEEDisplay", "EE Display:", miscellaneous, lLblWidth, sButtonHeight, Fields.medium);
 
-		addButton("ToggleOBBs", "Hide OBBs", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
-		addButton("ToggleRobot", "Add Robot", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
-		addButton("ToggleCamera", "Enable RCam", miscellaneous, lButtonWidth, sButtonHeight, Fields.small);
-
+		addButton("ToggleOBBs", "Hide OBBs", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addButton("ToggleRobot", "Add Robot", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addButton("ToggleCamera", "Enable RCam", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		addButton("ToggleTrace", "Enable Trace", miscellaneous, mdropItemWidth, sButtonHeight, Fields.small);
+		
 		/* Initialize dropdown list elements
 		 * 
 		 * NOTE: the order in which the dropdown lists matters!
 		 * 		(Adding the dropdown lists last places them in front of the
 		 * other UI elements, which is important, when the list is open) */
-		MyDropdownList ddlLimbo = addDropdown("EEDisplay", miscellaneous,
-				ldropItemWidth, dropItemHeight, 3, Fields.small);
-		ddlLimbo.addItem(EEMapping.DOT.name(), EEMapping.DOT)
-		.addItem(EEMapping.LINE.name(), EEMapping.LINE)
-		.addItem(EEMapping.NONE.name(), EEMapping.NONE)
-		.setValue(0f);
-
-		ddlLimbo = addDropdown("AxesDisplay", miscellaneous, ldropItemWidth,
+		MyDropdownList ddlLimbo = addDropdown("AxesDisplay", miscellaneous, ldropItemWidth,
 				dropItemHeight, 3,
 				Fields.small);
 		ddlLimbo.addItem(AxesDisplay.AXES.name(), AxesDisplay.AXES)
@@ -629,12 +619,12 @@ public class WGUI implements ControlListener {
 
 		ddlLimbo = addDropdown("RobotEE", miscellaneous, ldropItemWidth,
 				dropItemHeight, 4, Fields.small);
-		ddlLimbo.addItem("Faceplate", EEType.NONE)
-		.addItem(EEType.SUCTION.name(), EEType.SUCTION)
-		.addItem(EEType.CLAW.name(), EEType.CLAW)
-		.addItem(EEType.POINTER.name(), EEType.POINTER)
-		.addItem(EEType.GLUE_GUN.name(), EEType.GLUE_GUN)
-		.addItem(EEType.WIELDER.name(), EEType.WIELDER)
+		ddlLimbo.addItem("FACEPLATE", 0)
+		.addItem("SUCTION", 1)
+		.addItem("GRIPPER", 2)
+		.addItem("POINTER", 3)
+		.addItem("GLUE GUN", 4)
+		.addItem("WIELDER", 5)
 		.setValue(0f);
 		
 		addDropdown("Scenario", scenario, ldropItemWidth, dropItemHeight, 4, Fields.small);
@@ -1098,13 +1088,14 @@ public class WGUI implements ControlListener {
 				}
 
 			} else if (arg0.isFrom("RobotEE")) {
-				RoboticArm r = RobotRun.getActiveRobot();
+				@SuppressWarnings("static-access")
+				RoboticArm r = app.getInstanceRobot();
 
 				if (r != null) {
 					/* Link the active robot's end effector to the selected
 					 * item */
 					MyDropdownList ddl = (MyDropdownList)arg0.getController();
-					r.setActiveEE( (EEType)ddl.getSelectedItem() );
+					r.setActiveEE( (Integer)ddl.getSelectedItem() );
 				}
 			} else if (arg0.isFrom("CamObjPreview")) {
 				WorldObject o = (WorldObject) getDropdown("CamObjects").getSelectedItem();	
@@ -1303,9 +1294,12 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * TODO comment this
+	 * Updates the edit window's position and orientation input fields with
+	 * that of the given world object. The outputted values are with respect
+	 * to the world frame.
 	 * 
-	 * @param selected
+	 * @param selected	The world object of which to display the coordinate
+	 * 					frame
 	 */
 	public void fillCurWithCur(WorldObject selected) {
 		// Get the part's default position and orientation
@@ -1322,9 +1316,12 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * TODO comment this
+	 * Updates the window's default position and orientation text labels with
+	 * that of the current position and orientation of the given part. The
+	 * outputted values are with respect to the world frame.
 	 * 
-	 * @param selected
+	 * @param selected	The part, whose current position and orientation will
+	 * 					be displayed
 	 */
 	public void fillCurWithDef(Part selected) {
 		// Get the part's current position and orientation
@@ -1341,9 +1338,12 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * TODO comment this
+	 * Updates the window's default position and orientation text labels with
+	 * that of the default position and orientation of the given part. The
+	 * outputted values are with respect to the world frame.
 	 * 
-	 * @param selected
+	 * @param selected	The part, whose default position and orientation will
+	 * 					be displayed
 	 */
 	private void fillDefWithDef(Part selected) {
 		// Get the part's current position and orientation
@@ -1525,6 +1525,21 @@ public class WGUI implements ControlListener {
 	 */
 	private MyButton getButton(String name) throws ClassCastException {
 		return (MyButton) manager.get(name);
+	}
+	
+	/**
+	 * Attempts to find a button with the given name and returns its state.
+	 * 
+	 * @param name	The name of the button, of which to find the state
+	 */
+	public boolean getButtonState(String name) {
+		ControllerInterface<?> controller = manager.get(name);
+		
+		if (controller instanceof MyButton) {
+			return ((MyButton) controller).isOn();
+		}
+		// No button exists with the given name
+		return false;
 	}
 
 	/**
@@ -1725,16 +1740,6 @@ public class WGUI implements ControlListener {
 	private MyDropdownList getDropdown(String name) throws ClassCastException {
 		return (MyDropdownList) manager.get(name);
 	}
-
-	/**
-	 * Returns the end effector mapping associated with the ee mapping
-	 * dropdown list.
-	 * 
-	 * @return	The active EEE Mapping state
-	 */
-	public EEMapping getEEMapping() {
-		return (EEMapping)getDropdown("EEDisplay").getSelectedItem();
-	}
 	
 	/**
 	 * @return	The active window
@@ -1787,13 +1792,6 @@ public class WGUI implements ControlListener {
 			PApplet.println("Missing parameter!");
 			return null;
 		}
-	}
-
-	/**
-	 * @return	Whether or not the OBB Display button is off
-	 */
-	public boolean getOBBButtonState() {
-		return !getButton("ToggleOBBs").isOn();
 	}
 
 	/**
@@ -2198,8 +2196,8 @@ public class WGUI implements ControlListener {
 	public void setSelectedWO(WorldObject wo) {
 		
 		if (wo != null && (menu == null || menu == WindowTab.EDIT)) {
-			getDropdown("Object").setItem(wo);
 			updateView(WindowTab.EDIT);
+			getDropdown("Object").setItem(wo);
 		}
 	}
 
@@ -2214,7 +2212,7 @@ public class WGUI implements ControlListener {
 			windowTabs.setLabel("Hide");
 		}
 
-		// Remove or add the second Robot based on the HideRobot button
+		// Remove or add the robot2 tab based on the robot toggle button
 		Button tr = getButton("ToggleRobot");
 		if(tr.isOn()) {
 			tr.setLabel("Remove Robot");
@@ -2233,7 +2231,7 @@ public class WGUI implements ControlListener {
 			windowTabs.setLabel("Hide");
 		}
 
-		// Remove or add the second Robot based on the HideRobot button
+		// Remove or add the camera tab based on the camera toggle button
 		Button tc = getButton("ToggleCamera");
 		if(tc.isOn()) {
 			tc.setLabel("Disable RCam");
@@ -2469,14 +2467,19 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * TODO comment this
+	 * Updates the edit window's dimension, position, and orientation input
+	 * fields with that of the given world object and also updates the
+	 * fixture reference dropdown, if the given world object is a part. The
+	 * position and orientation values are outputted with respect to the world
+	 * frame.
 	 * 
-	 * @param selected
+	 * @param selected	The world object, whose fields will be displayed in the
+	 * 					edit window
 	 */
 	public void updateEditWindowFields(WorldObject selected) {
 		RShape form = selected.getForm();
 		
-		// Set the dimension fields
+		// Update the dimension fields
 		if (form instanceof RBox) {
 			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.LENGTH)) );
 			getTextField("Dim1").setText( String.format("%4.3f", form.getDim(DimType.HEIGHT)) );
@@ -2490,13 +2493,14 @@ public class WGUI implements ControlListener {
 		} else if (form instanceof ComplexShape) {
 			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.SCALE)) );
 		}
-
+		
+		// Update the position and orientation fields
 		fillCurWithCur(selected);
-
-		// Set the reference dropdown
+		
 		MyDropdownList ddl = getDropdown("Fixture");
 
 		if (selected instanceof Part) {
+			// Set the reference dropdown for a part
 			Part p = (Part)selected;
 			fillDefWithDef(p);
 			
@@ -2817,6 +2821,17 @@ public class WGUI implements ControlListener {
 		.setHeight(relPos[1])
 		.show();
 	}
+	
+	/**
+	 * Update the jog buttons based on the set of jog motion values.
+	 * 
+	 * @param jogMotion	A 6-element array defining the direction of jog motion
+	 */
+	public void updateJogButtons(int[] jogMotion) {
+		for (int mdx = 0; mdx < jogMotion.length; ++mdx) {
+			updateJogButtons(mdx, jogMotion[mdx]);
+		}
+	}
 
 	/**
 	 * Updates the background color of the robot jog buttons corresponding to
@@ -2850,7 +2865,7 @@ public class WGUI implements ControlListener {
 	 * @param pair		The index of a jog button pair
 	 * @param newDir	The new motion direction
 	 */
-	public void updateJogButtons(int pair, float newDir) {
+	private void updateJogButtons(int pair, int newDir) {
 		// Positive jog button is active when the direction is positive
 		updateButtonBgColor(String.format("joint%d_pos", pair + 1), newDir > 0);
 		// Negative jog button is active when the direction is negative
@@ -2905,12 +2920,13 @@ public class WGUI implements ControlListener {
 			Scenario s = scenarios.get(idx);
 			dropdown.addItem(s.getName(), s);
 		}
-
-		RoboticArm r = RobotRun.getActiveRobot();
+		
+		@SuppressWarnings("static-access")
+		RoboticArm r = app.getInstanceRobot();
 
 		if (r != null) {
 			// Link the active robot's end effector to the dropdown list
-			int activeEE = r.getActiveEE().ordinal();
+			int activeEE = r.getActiveEEIdx();
 			getDropdown("RobotEE").setValue(activeEE);
 		}
 	}
@@ -3114,17 +3130,11 @@ public class WGUI implements ControlListener {
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getDropdown("AxesDisplay").setPosition(relPos[0], relPos[1]);
 
-		// Axes Display label
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getTextArea("ActiveEEDisplay").setPosition(relPos[0], relPos[1]);
-		// Axes Display dropdown
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getDropdown("EEDisplay").setPosition(relPos[0], relPos[1]);
-
 		// Bounding box display toggle button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		Button b = getButton("ToggleOBBs").setPosition(relPos[0], relPos[1]);
-
+		c = b;
+		
 		// Update button color based on the state of the button
 		if (b.isOn()) {
 			b.setLabel("Show OBBs");
@@ -3132,27 +3142,41 @@ public class WGUI implements ControlListener {
 		} else {
 			b.setLabel("Hide OBBs");
 		}
+		
+		updateButtonBgColor(b.getName(), b.isOn());
+		
+		// Robot Camera toggle button
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		b = getButton("ToggleCamera").setPosition(relPos[0], relPos[1]);
 		updateButtonBgColor(b.getName(), b.isOn());
 
 		// Second robot toggle button
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("ToggleRobot").setPosition(relPos[0], relPos[1]);
-		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = b = getButton("ToggleRobot").setPosition(relPos[0], relPos[1]);
 		updateButtonBgColor(b.getName(), b.isOn());
 		
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		b = getButton("ToggleCamera").setPosition(relPos[0], relPos[1]);
-
-		// Update button color based on the state of the button
+		// Trace Robot Tool Tip button
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		c = b = getButton("ToggleTrace").setPosition(relPos[0], relPos[1]);
+		
+		if (b.isOn()) {
+			b.setLabel("Disable Trace");
+			
+		} else {
+			b.setLabel("Enable Trace");
+		}
+		
 		updateButtonBgColor(b.getName(), b.isOn());
 
 		// Update window background display
-		relPos = getAbsPosFrom(b, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		background.setPosition(miscellaneous.getPosition())
 		.setBackgroundHeight(relPos[1])
 		.setHeight(relPos[1])
 		.show();
 	}
+	
+
 
 	/**
 	 * Updates the current menu of the UI and communicates with the PApplet to
