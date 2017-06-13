@@ -1,5 +1,6 @@
 package expression;
 import geom.Point;
+import global.Fields;
 
 public class AtomicExpression extends Operand<Object> {
 	protected Operand<?> arg1;
@@ -63,11 +64,11 @@ public class AtomicExpression extends Operand<Object> {
 			return new OperandFloat(value);
 		}
 		else if(opType == Operator.LOGIC_OP) {
-			Boolean value = evaluateBoolean((BoolMath)arg1, (BoolMath)arg2);
+			Boolean value = evaluateLogic((BoolMath)arg1, (BoolMath)arg2);
 			return new OperandBool(value);
 		}
 		else if(opType == Operator.BOOL_OP) {
-			Boolean value = evaluateArithBool((FloatMath)arg1, (FloatMath)arg2);
+			Boolean value = evaluateBool((FloatMath)arg1, (FloatMath)arg2);
 			return new OperandBool(value);
 		}
 		else if(opType == Operator.POINT_OP) {
@@ -78,9 +79,14 @@ public class AtomicExpression extends Operand<Object> {
 		return null;
 	}
 	
-	private Boolean evaluateArithBool(FloatMath o1, FloatMath o2) {
+	private Boolean evaluateBool(FloatMath o1, FloatMath o2) {
 		float v1 = o1.getArithValue();
 		float v2 = o1.getArithValue();
+		
+		if(Fields.DEBUG) {
+			System.out.println("Evaluating bool expression: ");
+			System.out.println("\t" + v1 + op.toString() + v2);
+		}
 		
 		switch(op) {
 		case GRTR:	return v1 > v2;
@@ -93,9 +99,14 @@ public class AtomicExpression extends Operand<Object> {
 		}
 	}
 	
-	private Boolean evaluateBoolean(BoolMath o1, BoolMath o2) {
+	private Boolean evaluateLogic(BoolMath o1, BoolMath o2) {
 		boolean b1 = o1.getBoolValue();
 		boolean b2 = o2.getBoolValue();
+		
+		if(Fields.DEBUG) {
+			System.out.println("Evaluating logic expression: ");
+			System.out.println("\t" + b1 + op.toString() + b2);
+		}
 		
 		switch(op) {
 		case AND:	return b1 && b2;

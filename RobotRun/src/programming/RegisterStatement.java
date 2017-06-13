@@ -69,7 +69,7 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 			float fl = ((OperandFloat)result).getArithValue();
 			if(reg instanceof DataRegister) {
 				((DataRegister)reg).value = fl;
-				return 1;
+				return 0;
 			}
 			else if(reg instanceof PositionRegister) {
 				PositionRegister pReg = (PositionRegister)reg;
@@ -84,30 +84,30 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 				case 3: wpr.x = fl; break;
 				case 4: wpr.y = fl; break;
 				case 5: wpr.z = fl; break;
-				default: return 0;
+				default: return 1;
 				}
 				
 				pReg.point.position = RMath.vFromWorld(wPos);
 				pReg.point.orientation = RMath.wEulerToNQuat(wpr);
-				return 1;
+				return 0;
 			}
 		}
 		else if(result instanceof OperandBool) {
 			boolean b = ((OperandBool)result).getBoolValue();
 			if(reg instanceof IORegister) {
 				((IORegister)reg).state = b ? Fields.ON : Fields.OFF;
-				return 1;
+				return 0;
 			}
 		}
 		else if(result instanceof OperandPoint) {
 			Point p = ((OperandPoint)result).getPointValue();
 			if(reg instanceof PositionRegister) {
 				((PositionRegister)reg).point = p;
-				return 1;
+				return 0;
 			}
 		}
 
-		return 0;
+		return 1;
 	}
 	
 	public Expression getExpr() {

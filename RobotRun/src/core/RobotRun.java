@@ -7702,7 +7702,7 @@ public class RobotRun extends PApplet {
 
 			for (int idx = 0; idx < numOfObjects; ++idx) {
 				WorldObject wldObj = activeScenario.getWorldObject(idx);
-
+				
 				if (wldObj instanceof Part) {
 					Part p = (Part)wldObj;
 
