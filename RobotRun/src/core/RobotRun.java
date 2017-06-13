@@ -3057,15 +3057,17 @@ public class RobotRun extends PApplet {
 			updateInstructions();
 			break;
 		case NAV_MACROS:
-			edit_macro = macros.get(contents.getLineIdx());
-
-			if (contents.getColumnIdx() == 1) {
-				nextScreen(ScreenMode.SET_MACRO_PROG);
-			} else if (contents.getColumnIdx() == 2) {
-				nextScreen(ScreenMode.SET_MACRO_TYPE);
-			} else {
-				if (!macros.get(contents.getLineIdx()).isManual())
-					nextScreen(ScreenMode.SET_MACRO_BINDING);
+			if(macros.size() > 0) {
+				edit_macro = macros.get(contents.getLineIdx());
+				
+				if (contents.getColumnIdx() == 1) {
+					nextScreen(ScreenMode.SET_MACRO_PROG);
+				} else if (contents.getColumnIdx() == 2) {
+					nextScreen(ScreenMode.SET_MACRO_TYPE);
+				} else if (contents.getColumnIdx() == 3){
+					if (!macros.get(contents.getLineIdx()).isManual())
+						nextScreen(ScreenMode.SET_MACRO_BINDING);
+				}
 			}
 			break;
 		case NAV_PREGS:
