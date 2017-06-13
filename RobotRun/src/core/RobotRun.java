@@ -4821,10 +4821,9 @@ public class RobotRun extends PApplet {
 	public ArrayList<DisplayLine> loadIORegNav(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
-		for (int idx = 0; idx < r.numOfEndEffectors(); ++idx) {
+		for (int idx = 1; idx < r.numOfEndEffectors() + 1; idx += 1) {
 			IORegister ioReg = r.getIOReg(idx);
-			
-			String col0 = String.format("IO[%2d:%-10s] = ", idx + 1,
+			String col0 = String.format("IO[%2d:%-10s] = ", idx,
 					ioReg.comment);
 			lines.add(new DisplayLine(idx, 0, col0, (ioReg.state == 0) ?
 					"OFF" : "ON") );
