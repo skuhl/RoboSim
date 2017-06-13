@@ -1,6 +1,10 @@
 package expression;
 
-public class OperandFloat extends Operand<Float> implements FloatMath {	
+public class OperandFloat extends Operand<Float> implements FloatMath {
+	public OperandFloat() {
+		super(Float.NaN, Operand.FLOAT);
+	}
+		
 	public OperandFloat(float v) {
 		super(v, Operand.FLOAT);
 	}

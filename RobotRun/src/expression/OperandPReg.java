@@ -4,6 +4,9 @@ import geom.Point;
 import regs.PositionRegister;
 
 public class OperandPReg extends OperandRegister<PositionRegister> implements PointMath {
+	public OperandPReg() {
+		super(new PositionRegister(), Operand.PREG);
+	}
 	
 	public OperandPReg(PositionRegister v) {
 		super(v, Operand.PREG);

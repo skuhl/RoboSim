@@ -146,10 +146,10 @@ public class SelectStatement extends Instruction implements ExpressionEvaluation
 
 	@Override
 	public Operand<?> setOperand(int idx, Operand<?> o) {
-		if(idx == 0) {
+		if(idx == -1) {
 			return arg = o;
 		} else {
-			return cases.get(idx - 1);
+			return cases.set(idx, o);
 		}
 	}
 
