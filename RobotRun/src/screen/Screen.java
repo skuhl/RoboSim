@@ -2,6 +2,7 @@ package screen;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import ui.MenuScroll;
 
 public abstract class Screen {
 	public final ScreenMode mode;
