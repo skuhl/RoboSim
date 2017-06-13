@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import core.RobotRun;
 import geom.Point;
 import geom.RQuaternion;
+import global.RMath;
 import processing.core.PConstants;
 import processing.core.PMatrix3D;
 import processing.core.PVector;
@@ -84,8 +85,10 @@ public class LinearInterpolation extends LinearMotion {
 		PVector vec1 = new PVector(a.x - center.x, a.y - center.y, a.z - center.z);
 		PVector vec2 = new PVector(c.x - center.x, c.y - center.y, c.z - center.z);
 		float theta = RobotRun.atan2(vec1.cross(vec2).dot(n), vec1.dot(vec2));
-		if (theta < 0)
-			theta += PConstants.TWO_PI;
+		if (theta < 0) {
+			theta = RMath.mod2PI(theta);
+			//theta += PConstants.TWO_PI;
+		}
 		// finally, draw an arc through all 3 points by rotating the u
 		// vector around our normal vector
 		float angle = 0, mu = 0;
@@ -101,8 +104,6 @@ public class LinearInterpolation extends LinearMotion {
 			angle += angleInc;
 			mu += inc;
 		}
-		
-		int i = 0;
 	}
 
 	private void calculateContinuousPositions(Point start, Point end, Point next, float percentage) {

@@ -1814,10 +1814,12 @@ public class RoboticArm {
 		if (p != null && idx >= 0 && idx < p.getNumOfInst()) {	
 			replaced = p.replaceInstAt(idx, inst);
 			
-			pushInstState(InstOp.REPLACED, idx, replaced.clone());
-			
-			if (Fields.DEBUG) {
-				//System.out.printf("\nREPLACE %d %s\n\n", idx, inst.getClass());
+			if (replaced != null) {
+				pushInstState(InstOp.REPLACED, idx, replaced.clone());
+				
+				if (Fields.DEBUG) {
+					//System.out.printf("\nREPLACE %d %s\n\n", idx, inst.getClass());
+				}
 			}
 		}
 		
@@ -2285,7 +2287,6 @@ public class RoboticArm {
 
 	public void updateMotion(Point tgt, float speed) {
 		Point start = getToolTipNative();
-		//float ptDist = calculateDistanceBetweenPoints();
 		
 		if (!(motion instanceof LinearInterpolation)) {
 			motion = new LinearInterpolation();
@@ -2297,7 +2298,6 @@ public class RoboticArm {
 	
 	public void updateMotion(Point tgt, Point next, float speed, float p) {
 		Point start = getToolTipNative();
-		//float ptDist = calculateDistanceBetweenPoints();
 		
 		if (!(motion instanceof LinearInterpolation)) {
 			motion = new LinearInterpolation();
@@ -2309,7 +2309,6 @@ public class RoboticArm {
 	
 	public void updateMotion(Point tgt, Point inter, float speed) {
 		Point start = getToolTipNative();
-		//float ptDist = calculateDistanceBetweenPoints();
 		
 		if (!(motion instanceof LinearInterpolation)) {
 			motion = new LinearInterpolation();
