@@ -64,7 +64,6 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 
 		if(result == null || result.getType() != Operand.BOOL) {
 			return -1;
-			
 		} else if(((OperandBool)result).getBoolValue()) {
 			return instr.execute();
 		}

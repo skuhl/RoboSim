@@ -3359,7 +3359,6 @@ public class RobotRun extends PApplet {
 	}
 
 	public void getEditScreen(Instruction ins, int selectIdx) {
-		System.out.println(selectIdx);
 		if (ins instanceof MotionInstruction) {
 			MotionInstruction mInst = (MotionInstruction)ins;
 			int sdx = getSelectedIdx();

@@ -54,7 +54,7 @@ public class AtomicExpression extends Operand<Object> {
 		if(arg2.type == Operand.SUBEXP) {
 			arg2 = ((AtomicExpression)arg2).evaluate();
 		}
-
+		
 		//check for type compatability
 		if(!checkTypeCompatable(op, arg1, arg2)) {
 			return null;
@@ -81,7 +81,7 @@ public class AtomicExpression extends Operand<Object> {
 	
 	private Boolean evaluateBool(FloatMath o1, FloatMath o2) {
 		float v1 = o1.getArithValue();
-		float v2 = o1.getArithValue();
+		float v2 = o2.getArithValue();
 		
 		if(Fields.DEBUG) {
 			System.out.println("Evaluating bool expression: ");
