@@ -53,6 +53,7 @@ import processing.event.MouseEvent;
 import processing.opengl.PGraphicsOpenGL;
 import programming.CallInstruction;
 import programming.CamMoveToObject;
+import programming.ExpressionEvaluation;
 import programming.FrameInstruction;
 import programming.IOInstruction;
 import programming.IfStatement;
@@ -1223,9 +1224,10 @@ public class RobotRun extends PApplet {
 	 *
 	 */
 	public void editOperand(Operand<?> o, int ins_idx) {
+		editIdx = ins_idx;
+		
 		switch (o.getType()) {
 		case Operand.UNINIT: // Uninit
-			editIdx = ins_idx;
 			nextScreen(ScreenMode.SET_EXPR_ARG);
 			break;
 		case Operand.FLOAT: // Float const
@@ -2027,6 +2029,9 @@ public class RobotRun extends PApplet {
 		case INPUT_IOREG_IDX:
 		case INPUT_PREG_IDX1:
 		case INPUT_PREG_IDX2:
+			ExpressionEvaluation ex = (ExpressionEvaluation)r.getInstToEdit(getActiveProg(), getActiveInstIdx());
+			opEdit = null;
+			
 			try {
 				int idx = Integer.parseInt(workingText.toString());
 
@@ -2036,7 +2041,6 @@ public class RobotRun extends PApplet {
 						System.err.println("Invalid index!");
 
 					} else {
-						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 						opEdit = new OperandDReg((activeRobot.getDReg(idx - 1)));
 					}
 
@@ -2046,7 +2050,6 @@ public class RobotRun extends PApplet {
 						System.err.println("Invalid index!");
 
 					} else {
-						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 						opEdit = new OperandPReg((activeRobot.getPReg(idx - 1)));
 					}
 
@@ -2056,7 +2059,6 @@ public class RobotRun extends PApplet {
 						System.err.println("Invalid index!");
 
 					} else {
-						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 						((OperandPRegIdx)opEdit).setSubIdx(idx - 1);
 					}
 
@@ -2066,9 +2068,13 @@ public class RobotRun extends PApplet {
 						System.err.println("Invalid index!");
 
 					} else {
-						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-						opEdit = new OperandIOReg(activeRobot.getIOReg(idx - 1));
+						opEdit = new OperandIOReg(activeRobot.getIOReg(idx));
 					}
+				}
+				
+				if(opEdit != null) {
+					System.out.println(editIdx);
+					ex.setOperand(editIdx, opEdit);
 				}
 
 			} catch (NumberFormatException e) {
@@ -2143,7 +2149,7 @@ public class RobotRun extends PApplet {
 				}
 				
 				s.setArg(opEdit);
-			} catch (NumberFormatException ex) {
+			} catch (NumberFormatException NFex) {
 				//TODO display error to user
 			}
 

@@ -25,4 +25,11 @@ public class IORegister extends Register {
 	protected String regPrefix() {
 		return "IO";
 	}
+	
+	@Override
+	public String toString() {
+		String idxStr = (idx < 0) ? "..." : Integer.toString(idx);
+		// Include the register's prefix and index
+		return String.format("%s[%s]", regPrefix(), idxStr);
+	}
 }

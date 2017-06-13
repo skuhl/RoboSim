@@ -30,6 +30,7 @@ import expression.OperandPRegIdx;
 import expression.OperandPoint;
 import expression.OperandRegister;
 import expression.Operator;
+import expression.PointMath;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
@@ -239,7 +240,7 @@ public abstract class DataManagement {
 				if (opType == Operand.DREG) {
 					// Data register
 					ee = new OperandDReg(robot.getDReg(rdx));
-
+					
 				} else if (opType == Operand.PREG) {
 					// Position register
 					ee = new OperandPReg(robot.getPReg(rdx));
@@ -1173,28 +1174,24 @@ public abstract class DataManagement {
 				// Indicate that the object is non-null
 				out.writeInt(eo.getType());
 
-				if (eo instanceof FloatMath) {
-					// Constant float
-					out.writeFloat( ((FloatMath)eo).getArithValue() );
-
-				} else if (eo instanceof BoolMath) {
-					// Constant boolean
-					out.writeBoolean( ((BoolMath)eo).getBoolValue() );
-
-				} else if (eo instanceof OperandRegister) {
-
+				if (eo instanceof OperandRegister) {
 					// Data, Position, or IO register
+					System.out.println(((OperandRegister<?>)eo).getRegIdx());
 					out.writeInt( ((OperandRegister<?>)eo).getRegIdx() );
 
 					if (eo instanceof OperandPRegIdx) {
 						// Specific portion of a point
 						out.writeInt( ((OperandPRegIdx)eo).getSubIdx() );
 					}
-
-				} else if (eo instanceof OperandPoint) {
+				} else if (eo instanceof FloatMath) {
+					// Constant float
+					out.writeFloat( ((FloatMath)eo).getArithValue() );
+				} else if (eo instanceof BoolMath) {
+					// Constant boolean
+					out.writeBoolean( ((BoolMath)eo).getBoolValue() );					
+				} else if (eo instanceof PointMath) {
 					// Robot position
-					savePoint(((OperandPoint)eo).getPointValue(), out);
-
+					savePoint(((PointMath)eo).getPointValue(), out);
 				}// Otherwise it is uninitialized
 			}
 		}

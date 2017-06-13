@@ -5,6 +5,7 @@ import expression.Operand;
 import expression.OperandBool;
 import expression.OperandFloat;
 import expression.OperandPoint;
+import expression.Operator;
 import geom.Point;
 import global.Fields;
 import global.RMath;
@@ -14,7 +15,7 @@ import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
 
-public class RegisterStatement extends Instruction {
+public class RegisterStatement extends Instruction implements ExpressionEvaluation {
 
 	private Register reg;  //the register to be modified by this instruction
 	private int posIdx;  //used if editing a single value in a position register
@@ -177,5 +178,58 @@ public class RegisterStatement extends Instruction {
 		}
 
 		return ret;
+	}
+
+	@Override
+	public Operand<?> setOperand(int idx, Operand<?> o) {
+		Operand<?> ret;
+		
+		if(expr instanceof Expression) {
+			ret = ((Expression)expr).setOperand(idx, o);
+		} else if(idx == 0) {
+			ret = expr.setArg1(o);
+		} else if(idx == 2) {
+			ret = expr.setArg2(o);
+		} else {
+			ret = null;
+		}
+		
+		return ret;
+	}
+
+	@Override
+	public Operator setOperator(int idx, Operator o) {
+		Operator ret;
+		
+		if(expr instanceof Expression) {
+			ret = ((Expression)expr).setOperator(idx, o);
+		} else {
+			expr.setOp(o);
+			ret = expr.getOp();
+		}
+		
+		return ret;
+	}
+
+	@Override
+	public Operand<?> getOperand(int idx) {
+		if(expr instanceof Expression) {
+			return ((Expression)expr).getOperand(idx);
+		} else if(idx == 0) {
+			return expr.getArg1();
+		} else if(idx == 2) {
+			return expr.getArg2();
+		} else {
+			return null;
+		}
+	}
+
+	@Override
+	public Operator getOperator(int idx) {
+		if(expr instanceof Expression) {
+			return ((Expression)expr).getOperator(idx);
+		} else {
+			return expr.getOp();
+		}
 	}
 }
