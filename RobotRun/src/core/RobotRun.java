@@ -1594,7 +1594,9 @@ public class RobotRun extends PApplet {
 
 			break;
 		case SELECT_IO_INSTR_REG:
-			newIOInstruction(options.getColumnIdx());
+			// IO registers are 1 indexed!
+			int state = (options.getColumnIdx() == 1) ? Fields.ON : Fields.OFF;
+			newIOInstruction(options.getLineIdx() + 1, state);
 			screenStates.pop();
 			lastScreen();
 			break;
@@ -2172,7 +2174,7 @@ public class RobotRun extends PApplet {
 
 				} else {
 					ioInst = (IOInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-					ioInst.setReg(tempReg - 1);
+					ioInst.setReg(tempReg);
 				}
 			} catch (NumberFormatException NFEx) {
 			/* Ignore invalid input */ }
@@ -4578,7 +4580,7 @@ public class RobotRun extends PApplet {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
 		for (int idx = 0; idx < activeRobot.numOfEndEffectors(); ++idx) {
-			IORegister ioReg = activeRobot.getIOReg(idx);
+			IORegister ioReg = activeRobot.getIOReg(idx + 1);
 			PVector defToolTip = activeRobot.getToolTipDefault(idx);
 			String lineStr = String.format("%s = (%4.3f, %4.3f, %4.3f)",
 					ioReg.comment, defToolTip.x, defToolTip.y, defToolTip.z); 
@@ -4798,10 +4800,10 @@ public class RobotRun extends PApplet {
 	public ArrayList<DisplayLine> loadIORegInst(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
-		for (int idx = 0; idx < r.numOfEndEffectors(); idx += 1) {
+		for (int idx = 1; idx <= r.numOfEndEffectors(); idx += 1) {
 			IORegister ioReg = r.getIOReg(idx);
 			
-			String col0 = String.format("IO[%2d:%-10s] = ", idx + 1,
+			String col0 = String.format("IO[%2d:%-10s] = ", idx,
 					ioReg.comment);
 			lines.add(new DisplayLine(idx, 0, col0, "ON", "OFF"));
 		}
@@ -4818,10 +4820,10 @@ public class RobotRun extends PApplet {
 	public ArrayList<DisplayLine> loadIORegNav(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
-		for (int idx = 0; idx < r.numOfEndEffectors(); ++idx) {
+		for (int idx = 1; idx <= r.numOfEndEffectors(); ++idx) {
 			IORegister ioReg = r.getIOReg(idx);
 			
-			String col0 = String.format("IO[%2d:%-10s] = ", idx + 1,
+			String col0 = String.format("IO[%2d:%-10s] = ", idx,
 					ioReg.comment);
 			lines.add(new DisplayLine(idx, 0, col0, (ioReg.state == 0) ?
 					"OFF" : "ON") );
@@ -5710,10 +5712,10 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void newIOInstruction(int columnIdx) {
+	public void newIOInstruction(int ioIdx, int state) {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
-		IOInstruction io = new IOInstruction(options.getLineIdx(), (columnIdx == 1) ? Fields.ON : Fields.OFF);
+		IOInstruction io = new IOInstruction(ioIdx, state);
 
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), io);
@@ -7375,11 +7377,7 @@ public class RobotRun extends PApplet {
 	 * @param newState	The new state of the end effector
 	 */
 	public void updateRobotEEState(int edx, int newState) {
-		activeRobot.setEEState(edx, newState);
-		
-		if (activeScenario != null) {
-			activeRobot.checkPickupCollision(activeScenario);
-		}
+		updateRobotEEState(activeRobot, edx, newState);
 	}
 	
 	/**

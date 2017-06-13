@@ -65,11 +65,13 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 	public int execute() {
 		Operand<?> result = expr.evaluate();
 		
+		Fields.debug("Reg Stmt %s\n", result.getClass());
+		
 		if(result instanceof OperandFloat) {
 			float fl = ((OperandFloat)result).getArithValue();
 			if(reg instanceof DataRegister) {
 				((DataRegister)reg).value = fl;
-				return 1;
+				return 0;
 			}
 			else if(reg instanceof PositionRegister) {
 				PositionRegister pReg = (PositionRegister)reg;
@@ -84,30 +86,30 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 				case 3: wpr.x = fl; break;
 				case 4: wpr.y = fl; break;
 				case 5: wpr.z = fl; break;
-				default: return 0;
+				default: return 1;
 				}
 				
 				pReg.point.position = RMath.vFromWorld(wPos);
 				pReg.point.orientation = RMath.wEulerToNQuat(wpr);
-				return 1;
+				return 0;
 			}
 		}
 		else if(result instanceof OperandBool) {
 			boolean b = ((OperandBool)result).getBoolValue();
 			if(reg instanceof IORegister) {
 				((IORegister)reg).state = b ? Fields.ON : Fields.OFF;
-				return 1;
+				return 0;
 			}
 		}
 		else if(result instanceof OperandPoint) {
 			Point p = ((OperandPoint)result).getPointValue();
 			if(reg instanceof PositionRegister) {
 				((PositionRegister)reg).point = p;
-				return 1;
+				return 0;
 			}
 		}
 
-		return 0;
+		return 1;
 	}
 	
 	public Expression getExpr() {
@@ -162,7 +164,18 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 			ret = new String[2 + expr.getLength()];
 
 			ret[0] = rString;
-			ret[1] = (reg == null || reg.idx == -1) ? "...] =" : (reg.idx + 1) + "] =";
+			
+			if (reg == null || reg.idx == -1) {
+				ret[1] = "...]=";
+				
+			} else if (reg instanceof IORegister) {
+				// IO registers are 1-indexed
+				ret[1] = String.format("%d] =", reg.idx);
+				
+			} else {
+				ret[1] = String.format("%d] =", reg.idx + 1);
+			}
+			
 			rLen = 2;
 		} else {
 			ret = new String[3 + expr.getLength()];

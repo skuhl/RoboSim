@@ -62,14 +62,16 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 	public int execute() {
 		Operand<?> result = expr.evaluate();
 
-		if(result == null || result.getType() != Operand.BOOL) {
-			return -1;
+		if (result instanceof OperandBool) {
 			
-		} else if(((OperandBool)result).getBoolValue()) {
-			return instr.execute();
+			if (((OperandBool) result).getBoolValue()) {
+				return instr.execute();
+			}
+			
+			return -2;	
 		}
 
-		return -2;
+		return -1;
 	}
 
 	public AtomicExpression getExpr() {
