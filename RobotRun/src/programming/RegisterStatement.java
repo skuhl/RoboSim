@@ -9,6 +9,7 @@ import expression.Operator;
 import geom.Point;
 import global.Fields;
 import global.RMath;
+import processing.core.PConstants;
 import processing.core.PVector;
 import regs.DataRegister;
 import regs.IORegister;
@@ -65,32 +66,49 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 	public int execute() {
 		Operand<?> result = expr.evaluate();
 		
-		Fields.debug("Reg Stmt %s\n", result.getClass());
-		
 		if(result instanceof OperandFloat) {
 			float fl = ((OperandFloat)result).getArithValue();
+			
 			if(reg instanceof DataRegister) {
 				((DataRegister)reg).value = fl;
 				return 0;
 			}
 			else if(reg instanceof PositionRegister) {
 				PositionRegister pReg = (PositionRegister)reg;
-				PVector wPos = RMath.vToWorld(pReg.point.position);
-				PVector wpr = RMath.nQuatToWEuler(pReg.point.orientation);
-				// Update position value
+				Point pt = pReg.point;
 				
-				switch(posIdx) {
-				case 0:	wPos.x = fl; break;
-				case 1: wPos.y = fl; break;
-				case 2: wPos.z = fl; break;
-				case 3: wpr.x = fl; break;
-				case 4: wpr.y = fl; break;
-				case 5: wpr.z = fl; break;
-				default: return 1;
+				System.out.printf("%s\n", fl);
+				
+				if (posIdx >= 0 && posIdx < 6) {
+					if (pReg.isCartesian) {
+						// Update Cartesian value
+						PVector wPos = RMath.vToWorld(pt.position);
+						PVector wpr = RMath.nQuatToWEuler(pt.orientation);
+						
+						switch(posIdx) {
+						case 0:	wPos.x = fl; break;
+						case 1: wPos.y = fl; break;
+						case 2: wPos.z = fl; break;
+						case 3: wpr.x = fl; break;
+						case 4: wpr.y = fl; break;
+						case 5: wpr.z = fl; break;
+						}
+						
+						pt.position = RMath.vFromWorld(wPos);
+						pt.orientation = RMath.wEulerToNQuat(wpr);
+						
+					} else {
+						// Update a joint angle value
+						pt.angles[posIdx] = RMath.mod2PI(fl * PConstants.DEG_TO_RAD);
+					}
+					
+				} else {
+					// Invalid position index
+					return 1;
 				}
 				
-				pReg.point.position = RMath.vFromWorld(wPos);
-				pReg.point.orientation = RMath.wEulerToNQuat(wpr);
+				System.out.printf("%s\n", pt);
+				
 				return 0;
 			}
 		}
