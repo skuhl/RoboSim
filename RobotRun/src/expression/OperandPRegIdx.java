@@ -7,11 +7,14 @@ import regs.PositionRegister;
 public class OperandPRegIdx extends OperandRegister<PositionRegister> implements FloatMath {
 	private int subIdx;
 	
+	public OperandPRegIdx() {		
+		super(new PositionRegister(), Operand.PREG_IDX);
+		subIdx = -1;
+	}
+	
 	public OperandPRegIdx(PositionRegister v, int idx) {		
 		super(v, Operand.PREG_IDX);
-		regIdx = v.idx;
 		subIdx = idx;
-		value = v;
 	}
 	
 	@Override
@@ -51,16 +54,17 @@ public class OperandPRegIdx extends OperandRegister<PositionRegister> implements
 	
 	@Override
 	public String[] toStringArray() {
-		String idxStr = value.toString();
-		String subStr = (subIdx >= 0 && subIdx < 6) ? "" + subIdx : "..."; 
-		return new String[] { idxStr.substring(0, idxStr.length()-2) + ", ", subStr + "]" };
+		String idxStr = value.toString().substring(0, 4);
+		String subStr = (subIdx >= 0 && subIdx < 6) ? "" + (subIdx + 1) : "..."; 
+		return new String[] { idxStr + ", ", subStr + "]" };
 	}
 	
 	public int getSubIdx() {
 		return subIdx;
 	}
 
-	public void setSubIdx(int idx) {
+	public OperandPRegIdx setSubIdx(int idx) {
 		subIdx = idx;
+		return this;
 	}
 }

@@ -238,21 +238,33 @@ public abstract class DataManagement {
 
 				if (opType == Operand.DREG) {
 					// Data register
-					ee = new OperandDReg(robot.getDReg(rdx));
-					
+					if(rdx == -1) {
+						ee = new OperandDReg();
+					} else {
+						ee = new OperandDReg(robot.getDReg(rdx));
+					}
 				} else if (opType == Operand.PREG) {
 					// Position register
-					ee = new OperandPReg(robot.getPReg(rdx));
-
+					if(rdx == -1) {
+						ee = new OperandPReg();
+					} else {
+						ee = new OperandPReg(robot.getPReg(rdx));
+					}
 				} else if (opType == Operand.PREG_IDX) {
 					// Specific portion of a point
 					Integer pdx = in.readInt();
-					ee = new OperandPRegIdx(robot.getPReg(rdx), pdx);
-
+					if(rdx == -1) {
+						ee = new OperandPRegIdx();
+					} else {
+						ee = new OperandPRegIdx(robot.getPReg(rdx), pdx);
+					}
 				} else if (opType == Operand.IOREG) {
 					// I/O register
-					ee = new OperandIOReg(robot.getIOReg(rdx));
-
+					if(rdx == -1) {
+						ee = new OperandIOReg();
+					} else {
+						ee = new OperandIOReg(robot.getIOReg(rdx)); 
+					}
 				} else {
 					ee = new OperandGeneric();
 				}
@@ -336,7 +348,7 @@ public abstract class DataManagement {
 	private static int loadFrameBytes(RoboticArm robot, String srcPath) {
 		int idx = -1;
 		File src = new File(srcPath);
-
+		
 		try {
 			FileInputStream in = new FileInputStream(src);
 			DataInputStream dataIn = new DataInputStream(in);
@@ -1173,7 +1185,6 @@ public abstract class DataManagement {
 
 				if (eo instanceof OperandRegister) {
 					// Data, Position, or IO register
-					System.out.println(((OperandRegister<?>)eo).getRegIdx());
 					out.writeInt( ((OperandRegister<?>)eo).getRegIdx() );
 
 					if (eo instanceof OperandPRegIdx) {

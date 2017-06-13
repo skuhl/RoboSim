@@ -23,6 +23,7 @@ import expression.OperandGeneric;
 import expression.OperandIOReg;
 import expression.OperandPReg;
 import expression.OperandPRegIdx;
+import expression.OperandRegister;
 import expression.Operator;
 import frame.Frame;
 import frame.ToolFrame;
@@ -1867,9 +1868,9 @@ public class RobotRun extends PApplet {
 			lastScreen();
 			break;
 
-			// Expression edit
+		// Expression edit
 		case SET_EXPR_ARG:
-			Expression expr = (Expression) opEdit;
+			Expression expr = (Expression)opEdit;
 			Operand<?> operand;
 			
 			if (options.getLineIdx() == 0) {
@@ -1896,18 +1897,18 @@ public class RobotRun extends PApplet {
 				loadScreen(ScreenMode.INPUT_PREG_IDX1);
 			} else if (options.getLineIdx() == 4) {
 				// set arg to new expression
-				Expression oper = new Expression();
-				expr.setOperand(editIdx, oper);
+				operand = new Expression();
+				opEdit = expr.setOperand(editIdx, operand);
 				lastScreen();
 			} else {
 				// set arg to new constant
+				operand = new OperandFloat();
+				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(ScreenMode.INPUT_CONST);
 			}
 
 			break;
 		case SET_BOOL_EXPR_ARG:
-			System.out.println(opEdit instanceof AtomicExpression);
-			
 			if (options.getLineIdx() == 0) {
 				// set arg to new data reg
 				opEdit = new OperandDReg(new DataRegister());
@@ -2029,9 +2030,6 @@ public class RobotRun extends PApplet {
 		case INPUT_IOREG_IDX:
 		case INPUT_PREG_IDX1:
 		case INPUT_PREG_IDX2:
-			ExpressionEvaluation ex = (ExpressionEvaluation)r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			opEdit = null;
-			
 			try {
 				int idx = Integer.parseInt(workingText.toString());
 
@@ -2041,7 +2039,7 @@ public class RobotRun extends PApplet {
 						System.err.println("Invalid index!");
 
 					} else {
-						opEdit = new OperandDReg((activeRobot.getDReg(idx - 1)));
+						((OperandDReg)opEdit).setValue(activeRobot.getDReg(idx - 1));
 					}
 
 				} else if (mode == ScreenMode.INPUT_PREG_IDX1) {
@@ -2049,10 +2047,12 @@ public class RobotRun extends PApplet {
 					if (idx < 1 || idx > 100) {
 						System.err.println("Invalid index!");
 
-					} else {
-						opEdit = new OperandPReg((activeRobot.getPReg(idx - 1)));
+					} else if(opEdit instanceof OperandPReg) {
+						((OperandPReg)opEdit).setValue(activeRobot.getPReg(idx - 1));
+					} else if(opEdit instanceof OperandPRegIdx) {
+						((OperandPRegIdx)opEdit).setValue(activeRobot.getPReg(idx - 1));
 					}
-
+					
 				} else if (mode == ScreenMode.INPUT_PREG_IDX2) {
 
 					if (idx < 1 || idx > 6) {
@@ -2068,15 +2068,9 @@ public class RobotRun extends PApplet {
 						System.err.println("Invalid index!");
 
 					} else {
-						opEdit = new OperandIOReg(activeRobot.getIOReg(idx));
+						((OperandIOReg)opEdit).setValue(activeRobot.getIOReg(idx));
 					}
 				}
-				
-				if(opEdit != null) {
-					System.out.println(editIdx);
-					ex.setOperand(editIdx, opEdit);
-				}
-
 			} catch (NumberFormatException e) {
 				//TODO display error to user
 			}
@@ -2086,10 +2080,12 @@ public class RobotRun extends PApplet {
 		case INPUT_CONST:
 			try {
 				float data = Float.parseFloat(workingText.toString());
-				Instruction i = r.getInstToEdit(getActiveProg(), getActiveInstIdx());
+				/*Instruction i = r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 				if(i instanceof RegisterStatement) {
 					((RegisterStatement)i).getExpr().setOperand(editIdx, new OperandFloat(data));
-				}
+				}*/
+				
+				((OperandFloat)opEdit).setValue(data);
 				
 			} catch (NumberFormatException e) {
 				e.printStackTrace(); //TODO report error to user
@@ -2098,12 +2094,10 @@ public class RobotRun extends PApplet {
 			lastScreen();
 			break;
 		case SET_BOOL_CONST:
-			r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-			
 			if (options.getLineIdx() == 0) {
-				opEdit = new OperandBool(true);
+				((OperandBool)opEdit).setValue(true);
 			} else {
-				opEdit = new OperandBool(false);
+				((OperandBool)opEdit).setValue(false);
 			}
 
 			lastScreen();
@@ -2132,8 +2126,8 @@ public class RobotRun extends PApplet {
 			} else {
 				opEdit = new OperandGeneric();
 			}
-
-			s.setArg(opEdit);
+			
+			s.setOperand(editIdx, opEdit);
 			nextScreen(ScreenMode.SET_SELECT_ARGVAL);
 			break;
 		case SET_SELECT_ARGVAL:
@@ -2148,7 +2142,7 @@ public class RobotRun extends PApplet {
 					opEdit = new OperandDReg(activeRobot.getDReg((int) f - 1));
 				}
 				
-				s.setArg(opEdit);
+				s.setOperand(editIdx, opEdit);
 			} catch (NumberFormatException NFex) {
 				//TODO display error to user
 			}
@@ -3361,6 +3355,7 @@ public class RobotRun extends PApplet {
 	}
 
 	public void getEditScreen(Instruction ins, int selectIdx) {
+		System.out.println(selectIdx);
 		if (ins instanceof MotionInstruction) {
 			MotionInstruction mInst = (MotionInstruction)ins;
 			int sdx = getSelectedIdx();
@@ -3466,7 +3461,7 @@ public class RobotRun extends PApplet {
 			nextScreen(ScreenMode.SET_CALL_PROG);
 		} else if (ins instanceof IfStatement) {
 			IfStatement stmt = (IfStatement) ins;
-
+			
 			if (stmt.getExpr() instanceof Expression) {
 				int len = stmt.getExpr().getLength();
 
@@ -3482,18 +3477,18 @@ public class RobotRun extends PApplet {
 					}
 				}
 			} else if (stmt.getExpr() instanceof AtomicExpression) {
-				if (selectIdx == 2) {
+				if (selectIdx == 3) {
 					opEdit = stmt.getExpr().getArg1();
 					nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
-				} else if (selectIdx == 3) {
+				} else if (selectIdx == 5) {
 					opEdit = stmt.getExpr();
 					nextScreen(ScreenMode.SET_EXPR_OP);
-				} else if (selectIdx == 4) {
+				} else if (selectIdx == 7) {
 					opEdit = stmt.getExpr().getArg2();
 					nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
-				} else if (selectIdx == 5) {
+				} else if (selectIdx == 9) {
 					nextScreen(ScreenMode.SET_IF_STMT_ACT);
-				} else {
+				} else if (selectIdx == 10) {
 					if (stmt.getInstr() instanceof JumpInstruction) {
 						nextScreen(ScreenMode.SET_JUMP_TGT);
 					} else if (stmt.getInstr() instanceof CallInstruction) {
@@ -3503,18 +3498,18 @@ public class RobotRun extends PApplet {
 			}
 		} else if (ins instanceof SelectStatement) {
 			SelectStatement stmt = (SelectStatement) ins;
-
+			editIdx = (selectIdx - 3) / 3;
+			
 			if (selectIdx == 2) {
 				opEdit = stmt.getArg();
+				editIdx = -1;
 				nextScreen(ScreenMode.SET_SELECT_STMT_ARG);
 			} else if ((selectIdx - 3) % 3 == 0 && selectIdx > 2) {
 				opEdit = stmt.getCases().get((selectIdx - 3) / 3);
 				nextScreen(ScreenMode.SET_SELECT_STMT_ARG);
 			} else if ((selectIdx - 3) % 3 == 1) {
-				editIdx = (selectIdx - 3) / 3;
 				nextScreen(ScreenMode.SET_SELECT_STMT_ACT);
 			} else if ((selectIdx - 3) % 3 == 2) {
-				editIdx = (selectIdx - 3) / 3;
 				Instruction toExec = stmt.getInstrs().get(editIdx);
 				if (toExec instanceof JumpInstruction) {
 					nextScreen(ScreenMode.SET_JUMP_TGT);
