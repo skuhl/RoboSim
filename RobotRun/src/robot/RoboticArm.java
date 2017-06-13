@@ -1951,7 +1951,7 @@ public class RoboticArm {
 		
 		ToolFrame frame = getToolFrame(frameIdx);
 		
-		if (frame != null && defTipIdx >=0 && defTipIdx <
+		if (frame != null && defTipIdx >= 0 && defTipIdx <
 				EE_TOOLTIP_DEFAULTS.length) {
 			
 			// Set the offset of the frame to the specified default tool tip

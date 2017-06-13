@@ -31,12 +31,15 @@ public class Expression extends AtomicExpression {
 
 	@Override
 	public Operand<?> evaluate() {
-		if(elementList.get(0) instanceof Operator || elementList.size() % 2 != 1) { 
+		ExpressionElement e = elementList.get(0);
+		
+		if(e == null || e instanceof Operator || elementList.size() % 2 != 1) { 
 			PApplet.println("Expression formatting error");
 			return null;
 		}
 
 		Operand<?> result = (Operand<?>)elementList.get(0);    
+		
 		for(int i = 1; i < elementList.size(); i += 2) {
 			if(!(elementList.get(i) instanceof Operator) || !(elementList.get(i + 1) instanceof Operand<?>)) {
 				PApplet.println("Expression formatting error");
@@ -51,7 +54,21 @@ public class Expression extends AtomicExpression {
 				result = expr.evaluate();
 			}
 		}
-
+		
+		// Map register operands to their respective values
+		if (result instanceof OperandIOReg) {
+			result = new OperandBool(((OperandIOReg) result).getBoolValue());
+			
+		} else if (result instanceof OperandDReg) {
+			result = new OperandFloat(((OperandDReg) result).getArithValue());
+			
+		} else if (result instanceof OperandPReg) {
+			result = new OperandPoint(((OperandPReg) result).getPointValue());
+			
+		} else if (result instanceof OperandPRegIdx) {
+			result = new OperandFloat(((OperandPRegIdx) result).getArithValue());	
+		}
+		
 		return result;
 	}
 

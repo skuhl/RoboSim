@@ -44,7 +44,7 @@ public class IOInstruction extends Instruction {
 		if (reg == -1) {
 			fields[0] = "IO[...] =";
 		} else {
-			fields[0] = String.format("IO[%d] =", reg + 1);
+			fields[0] = String.format("IO[%d] =", reg);
 		}
 		// Register value
 		if (state == Fields.ON) {
