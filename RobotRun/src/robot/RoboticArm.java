@@ -2038,6 +2038,7 @@ public class RoboticArm {
 			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
 				// Setup joint motion instruction
 				updateMotion(instPt.angles, mInst.getSpdMod());
+				return 0;
 				
 			} else if (mInst.getMotionType() == Fields.MTYPE_LINEAR) {
 				// Setup linear motion instruction
@@ -2057,20 +2058,24 @@ public class RoboticArm {
 					} else {
 						// Invalid motion instruction
 						nextPt = null;
+						return 1;
 					}
 					
 					updateMotion(instPt, nextPt, mInst.getSpdMod(),
 							mInst.getTermination() / 100f);
+					return 0;
 					
 				} else {
 					// Fine termination motion
 					updateMotion(instPt, mInst.getSpdMod());
+					return 0;
 				}
 			
 			} else if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
 				// Setup circular motion instruction
 				Point endPt = getVector(pMInst, prog, true);
 				updateMotion(endPt, instPt, mInst.getSpdMod());
+				return 0;
 				
 			} else {
 				// Invalid motion type
@@ -2097,19 +2102,22 @@ public class RoboticArm {
 					} else {
 						// Invalid motion instruction
 						nextPt = null;
+						return 1;
 					}
 					
 					updateMotion(tgt, nextPt, mInst.getSpdMod(),
 							mInst.getTermination() / 100f);
+					return 0;
 					
 				} else {
 					// Fine termination motion
 					updateMotion(tgt, mInst.getSpdMod());
+					return 0;
 				}
 			}
 		}
 		
-		return 0;
+		return 1;
 	}
 	
 	@Override

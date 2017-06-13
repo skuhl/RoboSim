@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import core.RobotRun;
 import geom.Point;
 import geom.RQuaternion;
+import global.Fields;
 import global.RMath;
 import processing.core.PConstants;
 import processing.core.PMatrix3D;
@@ -194,7 +195,8 @@ public class LinearInterpolation extends LinearMotion {
 		float mu = 0;
 		float dist = RobotRun.dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) + 100f * q1.dist(q2);
 		int numberOfPoints = (int) (dist / distBtwPts);
-
+		Fields.debug("%f / %f = %d points\n", dist, distBtwPts, numberOfPoints);
+		
 		float increment = 1.0f / numberOfPoints;
 		for (int n = 0; n < numberOfPoints; n++) {
 			mu += increment;
