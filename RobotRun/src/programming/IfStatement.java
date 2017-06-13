@@ -58,11 +58,17 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 		return copy;
 	}
 	
-	public int execute() {
+	/**
+	 * Evaluates the expression associated with this if statement.
+	 * 
+	 * @return	0	the expression evaluates to true,
+	 * 			1	the expression evaluates to false,
+	 * 			2	an error occurred during expression evaluation
+	 */
+	public int evalExpression() {
 		Operand<?> result = expr.evaluate();
 
 		if (result instanceof OperandBool) {
-			
 			if (((OperandBool) result).getBoolValue()) {
 				return 0;
 			}

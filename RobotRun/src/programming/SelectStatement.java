@@ -75,7 +75,15 @@ public class SelectStatement extends Instruction implements ExpressionEvaluation
 		}
 	}
 	
-	public int execute() {
+	/**
+	 * Evaluates the cases of the select statement one at a time. If a case
+	 * evaluates to true, then its index is returned.
+	 * 
+	 * @return	>= 0	the index of the case, which evaluated to true,
+	 * 			-1		no case evaluated to true,
+	 * 			-2		an error occurred while evaluating a case
+	 */
+	public int evalCases() {
 		Float argVal = null;
 		// Get argument value
 		if (arg instanceof OperandFloat) {

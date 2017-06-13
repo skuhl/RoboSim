@@ -8324,8 +8324,7 @@ public class RobotRun extends PApplet {
 				} else if (activeInstr instanceof IfStatement) {
 					IfStatement ifStmt = (IfStatement)activeInstr;
 					
-					int ret = ifStmt.execute();
-					Fields.debug("IfStmt: %d\n", ret);
+					int ret = ifStmt.evalExpression();
 					
 					if (ret == 0) {
 						// Execute sub instruction
@@ -8374,7 +8373,7 @@ public class RobotRun extends PApplet {
 	
 				} else if (activeInstr instanceof SelectStatement) {
 					SelectStatement selStmt = (SelectStatement)activeInstr;
-					int caseIdx = selStmt.execute();
+					int caseIdx = selStmt.evalCases();
 					Fields.debug("selStmt: %d\n", caseIdx);
 					if (caseIdx == -2) {
 						nextIdx = -1;
@@ -8423,7 +8422,7 @@ public class RobotRun extends PApplet {
 				} else if (activeInstr instanceof RegisterStatement) {
 					RegisterStatement regStmt = (RegisterStatement)activeInstr;
 					
-					int ret = regStmt.execute();
+					int ret = regStmt.evalExpression();
 					
 					if (ret != 0) {
 						// Register expression evaluation failed
