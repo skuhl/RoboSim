@@ -71,11 +71,11 @@ import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
-import screen.DisplayLine;
-import screen.MenuScroll;
 import screen.ScreenState;
 import ui.Camera;
+import ui.DisplayLine;
 import ui.KeyCodeMap;
+import ui.MenuScroll;
 import window.WGUI;
 
 /**
