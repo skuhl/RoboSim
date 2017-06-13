@@ -4715,6 +4715,7 @@ public class RobotRun extends PApplet {
 			// Add line number
 			if (instr == null) {
 				line.add(String.format("%d) ...", i + 1));
+				instruct_list.add(line);
 				continue;
 			} else if (instr.isCommented()) {
 				line.add("//" + Integer.toString(i + 1) + ")");

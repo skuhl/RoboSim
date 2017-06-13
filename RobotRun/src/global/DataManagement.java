@@ -57,7 +57,6 @@ import programming.IfStatement;
 import programming.Instruction;
 import programming.JumpInstruction;
 import programming.LabelInstruction;
-import programming.MotionInstruction;
 import programming.PosMotionInst;
 import programming.Program;
 import programming.RegisterStatement;
@@ -1033,10 +1032,8 @@ public abstract class DataManagement {
 				} else if (inst instanceof CamMoveToObject) {
 					// Update a camera motion instruction
 					CamMoveToObject cMInst = (CamMoveToObject)inst;
-					System.err.printf("tgt: %s\n", cMInst.getLoadedSceneName());
 					
 					for (Scenario s : scenes) {
-						System.err.printf("%s\n", s.getName());
 						if (s.getName().equals(cMInst.getLoadedSceneName())) {
 							cMInst.setScene(s);
 						}
