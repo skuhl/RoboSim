@@ -2143,12 +2143,15 @@ public class RobotRun extends PApplet {
 
 				if (opEdit.getType() == Operand.UNINIT) {
 					opEdit = new OperandFloat(f);
+					s.setOperand(editIdx, opEdit);
+					
 				} else if (opEdit.getType() == Operand.DREG) {
-					// println(regFile.DAT_REG[(int)f - 1].value);
-					opEdit = new OperandDReg(activeRobot.getDReg((int) f - 1));
-				}
+					if (f >= 1f && f <= 100f) {
+						opEdit = new OperandDReg(activeRobot.getDReg((int) f - 1));
+						s.setOperand(editIdx, opEdit);
+					}
+				}	
 				
-				s.setOperand(editIdx, opEdit);
 			} catch (NumberFormatException NFex) {
 				//TODO display error to user
 			}
@@ -8272,13 +8275,30 @@ public class RobotRun extends PApplet {
 						nextIdx = -1;
 					}
 					
+				} else if (activeInstr instanceof FrameInstruction) {
+					FrameInstruction fInst = (FrameInstruction)activeInstr;
+					
+					if (fInst.getFrameType() == Fields.FTYPE_TOOL) {
+						activeRobot.setActiveToolFrame(fInst.getFrameIdx());
+						
+					} else if (fInst.getFrameType() == Fields.FTYPE_USER) {
+						activeRobot.setActiveUserFrame(fInst.getFrameIdx());
+					}
+					
+				} else if (activeInstr instanceof IOInstruction) {
+					IOInstruction ioInst = (IOInstruction)activeInstr;
+					updateRobotEEState(ioInst.getReg(), ioInst.getState());
+					
 				} else if (activeInstr instanceof JumpInstruction) {
-					nextIdx = activeInstr.execute();
+					JumpInstruction jInst = (JumpInstruction)activeInstr;
+					nextIdx = prog.findLabelIdx(jInst.getTgtLblNum());
 	
 				} else if (activeInstr instanceof CallInstruction) {
 					CallInstruction cInst = (CallInstruction)activeInstr;
 					
-					if (activeInstr.execute() == -1) {
+					if (cInst.getTgtDevice() != activeRobot &&
+							!isSecondRobotUsed()) {
+						// Cannot use robot call, when second robot is not active
 						nextIdx = -1;
 						
 					} else {
@@ -8289,31 +8309,126 @@ public class RobotRun extends PApplet {
 							// Normal call instruction
 							int progIdx = activeRobot.getProgIdx(cInst.getProg().getName());
 							progExecState.setExec(activeRobot.RID, progExecState.getType(), progIdx, 0);
-							
-							
+														
 						} else {
 							// Robot call instruction
 							RoboticArm r = getInactiveRobot();
 							activeRobot = r;
 							int progIdx = r.getProgIdx(cInst.getProg().getName());
 							progExecState.setExec(r.RID, progExecState.getType(), progIdx, 0);
-							
 						}
 						
 						nextIdx = 0;
 					}
 	
-				} else if (activeInstr instanceof IfStatement ||
-						activeInstr instanceof SelectStatement) {
+				} else if (activeInstr instanceof IfStatement) {
+					IfStatement ifStmt = (IfStatement)activeInstr;
 					
-					int ret = activeInstr.execute();
-	
-					if (ret != -2) {
-						nextIdx = ret;
+					int ret = ifStmt.execute();
+					Fields.debug("IfStmt: %d\n", ret);
+					
+					if (ret == 0) {
+						// Execute sub instruction
+						Instruction subInst = ifStmt.getInstr();
+						
+						if (subInst instanceof JumpInstruction) {
+							int lblId = ((JumpInstruction) subInst).getTgtLblNum();
+							nextIdx = prog.findLabelIdx(lblId);
+							
+						} else if (subInst instanceof CallInstruction) {
+							CallInstruction cInst = (CallInstruction)subInst;
+							
+							if (cInst.getTgtDevice() != activeRobot &&
+									!isSecondRobotUsed()) {
+								// Cannot use robot call, when second robot is not active
+								nextIdx = -1;
+								
+							} else {
+								progExecState.setNextIdx(nextIdx);
+								pushActiveProg();
+								
+								if (cInst.getTgtDevice() == activeRobot) {
+									// Normal call instruction
+									int progIdx = activeRobot.getProgIdx(cInst.getProg().getName());
+									progExecState.setExec(activeRobot.RID, progExecState.getType(), progIdx, 0);
+																
+								} else {
+									// Robot call instruction
+									RoboticArm r = getInactiveRobot();
+									activeRobot = r;
+									int progIdx = r.getProgIdx(cInst.getProg().getName());
+									progExecState.setExec(r.RID, progExecState.getType(), progIdx, 0);
+								}
+								
+								nextIdx = 0;
+							}
+							
+						} else {
+							nextIdx = -1;
+						}
+						
+					} else if (ret == 2) {
+						// Evaluation failed
+						nextIdx = -1;
 					}
 	
-				} else if (activeInstr.execute() != 0) {
-					nextIdx = -1;
+				} else if (activeInstr instanceof SelectStatement) {
+					SelectStatement selStmt = (SelectStatement)activeInstr;
+					int caseIdx = selStmt.execute();
+					Fields.debug("selStmt: %d\n", caseIdx);
+					if (caseIdx == -2) {
+						nextIdx = -1;
+						
+					} else if (caseIdx >= 0) {
+						// Execute sub instruction
+						Instruction subInst = selStmt.getCaseInst(caseIdx);
+						
+						if (subInst instanceof JumpInstruction) {
+							int lblId = ((JumpInstruction) subInst).getTgtLblNum();
+							nextIdx = prog.findLabelIdx(lblId);
+							
+						} else if (subInst instanceof CallInstruction) {
+							CallInstruction cInst = (CallInstruction)subInst;
+							
+							if (cInst.getTgtDevice() != activeRobot &&
+									!isSecondRobotUsed()) {
+								// Cannot use robot call, when second robot is not active
+								nextIdx = -1;
+								
+							} else {
+								progExecState.setNextIdx(nextIdx);
+								pushActiveProg();
+								
+								if (cInst.getTgtDevice() == activeRobot) {
+									// Normal call instruction
+									int progIdx = activeRobot.getProgIdx(cInst.getProg().getName());
+									progExecState.setExec(activeRobot.RID, progExecState.getType(), progIdx, 0);
+																
+								} else {
+									// Robot call instruction
+									RoboticArm r = getInactiveRobot();
+									activeRobot = r;
+									int progIdx = r.getProgIdx(cInst.getProg().getName());
+									progExecState.setExec(r.RID, progExecState.getType(), progIdx, 0);
+								}
+								
+								nextIdx = 0;
+							}
+							
+						} else {
+							nextIdx = -1;
+						}
+					}
+					
+				} else if (activeInstr instanceof RegisterStatement) {
+					RegisterStatement regStmt = (RegisterStatement)activeInstr;
+					
+					int ret = regStmt.execute();
+					
+					if (ret != 0) {
+						// Register expression evaluation failed
+						nextIdx = -1;
+					}
 				}
 			}
 		}

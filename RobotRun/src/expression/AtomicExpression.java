@@ -80,7 +80,7 @@ public class AtomicExpression extends Operand<Object> {
 	
 	private Boolean evaluateArithBool(FloatMath o1, FloatMath o2) {
 		float v1 = o1.getArithValue();
-		float v2 = o1.getArithValue();
+		float v2 = o2.getArithValue();
 		
 		switch(op) {
 		case GRTR:	return v1 > v2;

@@ -57,21 +57,20 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 		
 		return copy;
 	}
-
-	@Override
+	
 	public int execute() {
 		Operand<?> result = expr.evaluate();
 
 		if (result instanceof OperandBool) {
 			
 			if (((OperandBool) result).getBoolValue()) {
-				return instr.execute();
+				return 0;
 			}
 			
-			return -2;	
+			return 1;
 		}
 
-		return -1;
+		return 2;
 	}
 
 	public AtomicExpression getExpr() {

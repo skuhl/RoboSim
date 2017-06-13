@@ -62,7 +62,6 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 		return copy;
 	}
 	
-	@Override
 	public int execute() {
 		Operand<?> result = expr.evaluate();
 		
@@ -76,8 +75,6 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 			else if(reg instanceof PositionRegister) {
 				PositionRegister pReg = (PositionRegister)reg;
 				Point pt = pReg.point;
-				
-				System.out.printf("%s\n", fl);
 				
 				if (posIdx >= 0 && posIdx < 6) {
 					if (pReg.isCartesian) {
@@ -106,8 +103,6 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 					// Invalid position index
 					return 1;
 				}
-				
-				System.out.printf("%s\n", pt);
 				
 				return 0;
 			}

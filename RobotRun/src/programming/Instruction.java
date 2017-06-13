@@ -22,8 +22,6 @@ public class Instruction {
 		return copy;
 	}
 	
-	public int execute() { return 0; }
-	
 	public boolean isCommented(){ return com; }
 
 	public void setIsCommented(boolean comFlag) { com = comFlag; }
