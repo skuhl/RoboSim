@@ -2074,6 +2074,12 @@ public class RoboticArm {
 			} else if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
 				// Setup circular motion instruction
 				Point endPt = getVector(pMInst, prog, true);
+				
+				RobotRun.getInstance().renderCircPts = true;
+				RobotRun.getInstance().start = getToolTipNative().position.copy();
+				RobotRun.getInstance().inter = instPt.position.copy();
+				RobotRun.getInstance().end = endPt.position.copy();
+				
 				updateMotion(endPt, instPt, mInst.getSpdMod());
 				return 0;
 				
