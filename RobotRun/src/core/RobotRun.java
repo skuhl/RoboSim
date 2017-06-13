@@ -1911,22 +1911,26 @@ public class RobotRun extends PApplet {
 
 			break;
 		case SET_BOOL_EXPR_ARG:
+			IfStatement stmt = (IfStatement) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 			if (options.getLineIdx() == 0) {
 				// set arg to new data reg
-				opEdit = new OperandDReg(new DataRegister());
+				opEdit = new OperandDReg();
+				stmt.setOperand(editIdx, opEdit);
 				switchScreen(ScreenMode.INPUT_DREG_IDX);
 			} else if (options.getLineIdx() == 1) {
 				// set arg to new io reg
-				opEdit = new OperandIOReg(new IORegister());
+				opEdit = new OperandIOReg();
+				stmt.setOperand(editIdx, opEdit);
 				switchScreen(ScreenMode.INPUT_IOREG_IDX);
 			} else {
 				// set arg to new constant
-				opEdit = new OperandGeneric();
+				opEdit = new OperandFloat();
+				stmt.setOperand(editIdx, opEdit);
 				switchScreen(ScreenMode.INPUT_CONST);
 			}
 			break;
 		case SET_IF_STMT_ACT:
-			IfStatement stmt = (IfStatement) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
+			stmt = (IfStatement) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 			if (options.getLineIdx() == 0) {
 				stmt.setInstr(new JumpInstruction());
 				switchScreen(ScreenMode.SET_JUMP_TGT);
@@ -3479,18 +3483,20 @@ public class RobotRun extends PApplet {
 					}
 				}
 			} else if (stmt.getExpr() instanceof AtomicExpression) {
-				if (selectIdx == 3) {
+				if (selectIdx == 2) {
 					opEdit = stmt.getExpr().getArg1();
+					editIdx = 0;
 					nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
-				} else if (selectIdx == 5) {
+				} else if (selectIdx == 3) {
 					opEdit = stmt.getExpr();
 					nextScreen(ScreenMode.SET_EXPR_OP);
-				} else if (selectIdx == 7) {
+				} else if (selectIdx == 4) {
 					opEdit = stmt.getExpr().getArg2();
+					editIdx = 2;
 					nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
-				} else if (selectIdx == 9) {
+				} else if (selectIdx == 5) {
 					nextScreen(ScreenMode.SET_IF_STMT_ACT);
-				} else if (selectIdx == 10) {
+				} else if (selectIdx == 6) {
 					if (stmt.getInstr() instanceof JumpInstruction) {
 						nextScreen(ScreenMode.SET_JUMP_TGT);
 					} else if (stmt.getInstr() instanceof CallInstruction) {
