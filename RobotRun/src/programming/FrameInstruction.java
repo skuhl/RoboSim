@@ -25,16 +25,7 @@ public class FrameInstruction extends Instruction {
 
 		return copy;
 	}
-	@Override
-	public int execute() {    
-		if (frameType == Fields.FTYPE_TOOL) {
-			RobotRun.getInstanceRobot().setActiveToolFrame(getFrameIdx());
-			
-		} else if (frameType == Fields.FTYPE_USER) {
-			RobotRun.getInstanceRobot().setActiveUserFrame(getFrameIdx());
-		}
-		return 0;
-	}
+	
 	public int getFrameIdx() {
 		return frameIdx;
 	}

@@ -2,8 +2,11 @@ package programming;
 import java.util.ArrayList;
 
 import expression.Operand;
+import expression.OperandDReg;
+import expression.OperandFloat;
 import expression.OperandGeneric;
 import expression.Operator;
+import global.Fields;
 
 //TODO fix value comparison, it definitely doesn't work
 
@@ -71,34 +74,54 @@ public class SelectStatement extends Instruction implements ExpressionEvaluation
 			getInstrs().remove(idx);
 		}
 	}
-
-	@Override
+	
 	public int execute() {
-		for(int i = 0; i < getCases().size(); i += 1) {
-			Operand<?> c = getCases().get(i);
-			if(c == null) return -1;
-
-			//println("testing case " + i + " = " + cases.get(i).getDataVal() + " against " + arg.getDataVal());
+		Float argVal = null;
+		// Get argument value
+		if (arg instanceof OperandFloat) {
+			argVal = ((OperandFloat) arg).getArithValue();
 			
-			//TODO test select statements
-			if(c.getType() != Operand.UNINIT && getArg().getValue() == c.getValue()) {
-				Instruction instr = getInstrs().get(i);
-
-				if(instr instanceof JumpInstruction || instr instanceof CallInstruction) {
-					//println("executing " + instrs.get(i).toString());
-					return instr.execute();
-					
+		} else if (arg instanceof OperandDReg) {
+			argVal = ((OperandDReg) arg).getArithValue();
+			
+		} else {
+			// Uninitialized argument
+			return -2;
+		}
+		
+		for(int cdx = 0; cdx < cases.size(); cdx += 1) {
+			Operand<?> c = cases.get(cdx);
+			// Compare argument value to the case value
+			if (c instanceof OperandFloat) {
+				Float caseVal = ((OperandFloat) c).getArithValue();
+				
+				if (argVal.floatValue() == caseVal.floatValue()) {
+					return cdx;
 				}
 				
-				break;
+			} else if (c instanceof OperandDReg) {
+				Float caseVal = ((OperandDReg) c).getArithValue();
+				
+				if (argVal.floatValue() == caseVal.floatValue()) {
+					return cdx;
+				}
+				
+			} else {
+				// Uninitialized case value
+				return -2;
 			}
 		}
-
+		
+		// No case match
 		return -1;
 	}
 
 	public Operand<?> getArg() {
 		return arg;
+	}
+	
+	public Instruction getCaseInst(int cdx) {
+		return instrs.get(cdx);
 	}
 
 	public ArrayList<Operand<?>> getCases() {
