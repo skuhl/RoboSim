@@ -1127,9 +1127,9 @@ public class RoboticArm {
 	 * @return		The associated I/O register or null if index is invalid
 	 */
 	public IORegister getIOReg(int rdx) {
-		// Disclude the faceplate
-		if (rdx >= 0 && rdx < (EE_LIST.length - 1)) {
-			return EE_LIST[rdx + 1].reg;
+		// Exclude the faceplate
+		if (rdx > 0 && rdx < EE_LIST.length) {
+			return EE_LIST[rdx].reg;
 		}
 		
 		return null;

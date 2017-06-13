@@ -14,6 +14,10 @@ public class OperandDReg extends OperandRegister<DataRegister> implements FloatM
 
 	@Override
 	public Float getArithValue() {
-		return value.value;
+		if(value.value != null) {
+			return value.value;
+		} else {
+			return Float.NaN;
+		}
 	}
 }

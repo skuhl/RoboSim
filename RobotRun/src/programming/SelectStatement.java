@@ -3,10 +3,11 @@ import java.util.ArrayList;
 
 import expression.Operand;
 import expression.OperandGeneric;
+import expression.Operator;
 
 //TODO fix value comparison, it definitely doesn't work
 
-public class SelectStatement extends Instruction {
+public class SelectStatement extends Instruction implements ExpressionEvaluation {
 	private Operand<?> arg;
 	private ArrayList<Operand<?>> cases;
 	private ArrayList<Instruction> instrs;
@@ -141,5 +142,33 @@ public class SelectStatement extends Instruction {
 		}
 
 		return ret;
+	}
+
+	@Override
+	public Operand<?> setOperand(int idx, Operand<?> o) {
+		if(idx == 0) {
+			return arg = o;
+		} else {
+			return cases.get(idx - 1);
+		}
+	}
+
+	@Override
+	public Operator setOperator(int idx, Operator o) {
+		return null;
+	}
+
+	@Override
+	public Operand<?> getOperand(int idx) {
+		if(idx == 0) {
+			return arg;
+		} else {
+			return cases.get(idx - 1);
+		}
+	}
+
+	@Override
+	public Operator getOperator(int idx) {
+		return null;
 	}
 }

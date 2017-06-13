@@ -153,14 +153,6 @@ public class AtomicExpression extends Operand<Object> {
 	}
 	public Operator getOperator() { return getOp(); }
 
-	public Operand<?> setArg(Operand<?> a, int argNo) {
-		if(argNo == 1) {
-			return setArg1(a);
-		} else {
-			return setArg2(a);
-		}
-	}
-
 	public Operand<?> setArg1(Operand<?> a) { 
 		arg1 = a;
 		return arg1;
