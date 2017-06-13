@@ -207,8 +207,8 @@ public class AtomicExpression extends Operand<Object> {
 		opString += " " + getOp().getSymbol() + " ";
 		s2 = arg2.toStringArray();
 
-		int lm1 = (arg1 != null && arg1.type == -1) ? 2 : 0;
-		int lm2 = (arg2 != null && arg2.type == -1) ? 2 : 0;
+		int lm1 = (arg1 != null && arg1.type == Operand.SUBEXP) ? 2 : 0;
+		int lm2 = (arg2 != null && arg2.type == Operand.SUBEXP) ? 2 : 0;
 		ret = new String[s1.length + s2.length + 1 + lm1 + lm2];
 
 		if(lm1 != 0) {
