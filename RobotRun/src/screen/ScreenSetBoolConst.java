@@ -1,7 +1,7 @@
 package screen;
 
+import core.RobotRun;
 import enums.ScreenMode;
-import robot.RobotRun;
 
 public class ScreenSetBoolConst extends Screen {
 
@@ -16,7 +16,7 @@ public class ScreenSetBoolConst extends Screen {
 
 	@Override
 	void loadContents() {
-		contents.setLines(robotRun.loadInstructions(RobotRun.getActiveRobot().getActiveProg()));
+		contents.setLines(robotRun.loadInstructions(RobotRun.getInstance().getActiveProg()));
 	}
 
 	@Override
@@ -61,13 +61,7 @@ public class ScreenSetBoolConst extends Screen {
 
 	@Override
 	public void actionEntr() {
-		if(options.getLineIdx() == 0) {
-			robotRun.opEdit.set(true);
-		} else {
-			robotRun.opEdit.set(false);
-		}
-
-		robotRun.lastScreen();
+		// TODO robotRun.lastScreen();
 	}
 
 	@Override

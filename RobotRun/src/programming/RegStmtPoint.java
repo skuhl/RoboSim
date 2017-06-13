@@ -1,11 +1,11 @@
 package programming;
 import java.util.Arrays;
 
+import core.RobotRun;
 import geom.Point;
 import geom.RQuaternion;
 import global.RMath;
 import processing.core.PVector;
-import robot.RobotRun;
 
 /**
  * This class defines a Point, which stores a position and orientation
@@ -130,9 +130,10 @@ public class RegStmtPoint {
 			RQuaternion orientation = RMath.eulerToQuat(wpr);
 			// TODO initialize angles?
 			return new Point(position, orientation);
+			
 		} else {
 			// Use forward kinematics to find the position and orientation of the joint angles
-			return RobotRun.nativeRobotEEPoint(RobotRun.getActiveRobot(), getValues());
+			return RobotRun.getInstanceRobot().getToolTipNative(getValues());
 		}
 	}
 

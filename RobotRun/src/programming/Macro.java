@@ -1,5 +1,5 @@
 package programming;
-import robot.RobotRun;
+import core.RobotRun;
 
 public class Macro {
 	boolean manual;
@@ -18,22 +18,9 @@ public class Macro {
 			num = -1;
 		}
 	}
-
-	public void execute() {
-		RobotRun app = RobotRun.getInstance();
-		
-		// Stop any prior Robot movement
-		app.hold();
-		// Safeguard against editing a program while it is running
-		app.getContentsMenu().setColumnIdx(0);
-		RobotRun.getActiveRobot().setActiveProgIdx(progIdx);
-		RobotRun.getActiveRobot().setActiveInstIdx(0);
-
-		app.setExecutingInstruction(false);
-		// Run single instruction when step is set
-		app.execSingleInst = app.isStep();
-
-		app.setProgramRunning(true);
+	
+	public int getProgIdx() {
+		return progIdx;
 	}
 	
 	public boolean isManual() { return manual; }
@@ -61,7 +48,7 @@ public class Macro {
 
 	public String[] toStringArray() {
 		String[] ret = new String[3];
-		String name = RobotRun.getActiveRobot().getProgram(progIdx).getName();
+		String name = RobotRun.getInstanceRobot().getProgram(progIdx).getName();
 		int name_pad = Math.max(16 - name.length(), 0);
 
 		ret[0] = String.format("[%-"+name_pad+"s]", name);

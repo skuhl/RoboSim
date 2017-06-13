@@ -3,11 +3,11 @@ package global;
 import java.io.File;
 import java.util.HashMap;
 
+import core.CamSelectArea;
+import core.CamSelectView;
+import core.RobotRun;
 import processing.data.JSONArray;
 import processing.data.JSONObject;
-import robot.CamSelectArea;
-import robot.CamSelectView;
-import robot.RobotRun;
 
 public class RegisteredModels {
 	public static final HashMap<String, Integer> modelIDList = new HashMap<String, Integer>();

@@ -6,143 +6,190 @@ import global.MyFloatFormat;
 import global.RMath;
 import processing.core.PConstants;
 import processing.core.PVector;
-import robot.RobotRun;
 
+/**
+ * A class defining a position and orientation of the robot's tool tip as well
+ * as a set of joint angles, which define a position and orientation of the
+ * robot.
+ * 
+ * NOTE: due to the relationship between the robot's tool tip Cartesian values
+ * and its joint angles, the angles defined by a Point do NOT necessarily
+ * correspond to the position and orientation defined by the point.
+ * 
+ * @author Joshua Hooker and Vincent Druckte
+ */
 public class Point  {
-	// X, Y, Z
+	
+	/**
+	 * A position of the robot's tool tip defined with respect to some frame
+	 * (the world or a user frame).
+	 */
 	public PVector position;
-	// Q1 - Q4
+	
+	/**
+	 * An orientation of the robot's tool tip defined with respect to some
+	 * frame (either the world frame or a user frame)
+	 */
 	public RQuaternion orientation;
-	// J1 - J6
+	
+	/**
+	 * A set of joint angles representation an orientation of the robot. This
+	 * does not necessary correlate with the defined position and orientation.
+	 */
 	public float[] angles;
-
+	
+	/**
+	 * Initializes the position, orientation and angles associated with this
+	 * point.
+	 */
 	public Point() {
-		angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
 		position = new PVector(0f, 0f, 0f);
 		orientation = new RQuaternion();
-	}
-
-	public Point(float x, float y, float z, float r, float i, float j, float k,
-			float j1, float j2, float j3, float j4, float j5, float j6) {
-		angles = new float[6];
-		position = new PVector(x,y,z);
-		orientation = new RQuaternion(r, i, j, k);
-		angles[0] = j1;
-		angles[1] = j2;
-		angles[2] = j3;
-		angles[3] = j4;
-		angles[4] = j5;
-		angles[5] = j6;
-	}
-
-	public Point(PVector pos, RQuaternion orient) {
 		angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+	}
+
+	/**
+	 * Defines a point with the given position and orientation. The angles are
+	 * assumed to be zero.
+	 * 
+	 * @param pos		The position of the robot's tool tip
+	 * @param orient	The orientation of the robot's tool tip
+	 */
+	public Point(PVector pos, RQuaternion orient) {
 		position = pos;
 		orientation = orient;
+		angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
 	}
-
+	
+	/**
+	 * Defines a point with the given position and orientation. The angles are
+	 * assumed to be zero.
+	 * 
+	 * @param pos	The position of the robot's tool tip
+	 * @param rMat	The orientation of the robot's tool tip
+	 */
+	public Point(PVector pos, RMatrix rMat) {
+		angles = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+		position = pos;
+		orientation = RMath.matrixToQuat(rMat);
+	}
+	
+	/**
+	 * Defines a point with the given position and orientation as well as a
+	 * point with the given joint angles.
+	 * 
+	 * @param pos			The position of the robot's tool tip
+	 * @param orient		The orientation of the robot's tool tip
+	 * @param jointAngles	The set of joint angles defining a position and
+	 * 						orientation of the robot
+	 */
 	public Point(PVector pos, RQuaternion orient, float[] jointAngles) {
 		position = pos;
 		orientation = orient;
 		angles = jointAngles;
 	}
-
+	
 	/**
-	 * Computes and returns the result of the addition of this point with
-	 * another point, 'p.' Does not alter the original values of this point.
+	 * Defines a point, whose position and orientation are the combination of
+	 * the given position and orientation with that of this position. The joint
+	 * angles of the defined point are that of this point. 
+	 * 
+	 * @param pos		The position to add with this point's position
+	 * @param orien		The combine to merge with this point's orientation
+	 * @return			A point with the modified position and orientation
 	 */
-	public Point add(Point p) {
-		Point p3 = new Point();
-
-		PVector p3Pos = PVector.add(position, p.position);
-		RQuaternion p3Orient = RQuaternion.mult(orientation, p.orientation);
-		float[] p3Joints = new float[6];
-
-		for(int i = 0; i < 6; i += 1) {
-			p3Joints[i] = (angles[i] + p.angles[i]) % RobotRun.TWO_PI;
+	public Point add(PVector pos, RQuaternion orien) {
+		PVector resPos = PVector.add(position, pos);
+		resPos.x = RMath.clamp(resPos.x, -9999f, 9999f);
+		resPos.y = RMath.clamp(resPos.y, -9999f, 9999f);
+		resPos.z = RMath.clamp(resPos.z, -9999f, 9999f);
+		RQuaternion resOrien = RQuaternion.mult(orientation, orien).normalize();
+		
+		return new Point(resPos, resOrien, angles.clone());
+	}
+	
+	/**
+	 * Defines a point, whose joint angles are the sum of the given joint angle
+	 * set and that of this point. The position and orientation of the defined
+	 * point are that of this point.
+	 * 
+	 * @param jointAngles	The joint angles to add to this point's joint angles
+	 * @return				A point with the modified joint angles
+	 */
+	public Point add(float[] jointAngles) {
+		float[] resJointAngles = new float[6];
+		
+		for (int jdx = 0; jdx < 6; ++jdx) {
+			// Keep angles within the range [0, TWO_PI)
+			resJointAngles[jdx] = RMath.mod2PI(this.angles[jdx] + jointAngles[jdx]);
 		}
-
-		p3.position = p3Pos;
-		p3.orientation = p3Orient;
-		p3.angles = p3Joints;
-
-		return p3;
+		
+		return new Point(position.copy(), orientation.clone(), resJointAngles);
+	}
+	
+	public Point add(Point p) {
+		Point jointSum = add(p.angles);
+		Point cartSum = add(p.position, p.orientation);
+		
+		return new Point(cartSum.position, cartSum.orientation, jointSum.angles);
+	}
+	
+	public Point sub(Point p) {
+		return add(p.negate());
+	}
+	
+	public Point negate() {
+		PVector negPos = new PVector().sub(position);
+		RQuaternion negOrient = orientation.conjugate();
+		float[] negJointAngles = new float[6];
+		
+		
+		for(int i = 0; i < 6; i += 1) {
+			negJointAngles[i] = -angles[i];
+		}
+		
+		return new Point(negPos, negOrient, negJointAngles);
 	}
 
 	@Override
 	public Point clone() {
-		return new Point(position.copy(), (RQuaternion)orientation.clone(), angles.clone());
+		return new Point(position.copy(), orientation.clone(), angles.clone());
 	}
-
-	public Float getValue(int idx) {
-		switch(idx) {
-		// Joint angles
-		case 0:
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-		case 5:   return angles[idx];
-		// Position
-		case 6:   return -position.x;
-		case 7:   return position.z;
-		case 8:   return -position.y;
-		// Orientation
-		case 9:   return -PConstants.RAD_TO_DEG*RMath.quatToEuler(orientation).array()[0];
-		case 10:  return -PConstants.RAD_TO_DEG*RMath.quatToEuler(orientation).array()[2];
-		case 11:  return PConstants.RAD_TO_DEG*RMath.quatToEuler(orientation).array()[1];
-		default:
-		}
-
-		return null;
-	}
-
+	
 	/**
-	 * Negates the current values of the point.
+	 * Returns a point, with Cartesian values, which are the negation of this
+	 * point's Cartesian values.
+	 * 
+	 * @return	A point with negated Cartesian values
 	 */
-	public Point negate() {
-		position = position.mult(-1);
-		orientation = RQuaternion.scalarMult(-1, orientation);
-		angles = RMath.vectorScalarMult(angles, -1);
-		return this;
+	public Point negateCartesian() {
+		PVector nPos = PVector.mult(position, -1f);
+		RQuaternion nOrien = orientation.conjugate();
+		
+		return new Point(nPos, nOrien, angles.clone());
 	}
-
-	public void setValue(int idx, float value) {
-		PVector vec = RMath.quatToEuler(orientation);
-
-		switch(idx) {
-		// Joint angles
-		case 0:
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-		case 5:   angles[idx] = value;
-		break;
-		// Position
-		case 6:   position.x = -value;
-		break;
-		case 7:   position.z = value;
-		break;
-		case 8:   position.y = -value;
-		break;
-		// Orientation
-		case 9:   vec.x = -value;
-		orientation = RMath.eulerToQuat(vec);
-		break;
-		case 10:  vec.z = value;
-		orientation = RMath.eulerToQuat(vec);
-		break;
-		case 11:  vec.y = -value;
-		orientation = RMath.eulerToQuat(vec);
-		break;
-		default:
+	
+	/**
+	 * Computes a point with joint values, which are the negation of this
+	 * point's joint values.
+	 * 
+	 * @return	A point with negated joint values
+	 */
+	public Point negateJoint() {
+		float[] nAngles = new float[6];
+		
+		for (int jdx = 0; jdx < 6; ++jdx) {
+			nAngles[jdx] = -angles[jdx];
 		}
+		
+		return new Point(position.copy(), orientation.clone(), nAngles);
 	}
 
 	/**
-	 * Returns a string array, where each entry is one of the values of the Cartiesian
-	 * represent of the Point: (X, Y, Z, W, P, and R) and their respective labels.
+	 * Returns a string array, where each entry is one of the values of the
+	 * Cartesian represent of the point: (X, Y, Z, W, P, and R) and their
+	 * respective labels. The first column is the label associated with the
+	 * Cartesian value entry, in the second column.
 	 * 
 	 * @return  A 6x2-element String array
 	 */
@@ -169,8 +216,9 @@ public class Point  {
 	}
 
 	/**
-	 * Returns a String array, whose entries are the joint values of the
-	 * Point with their respective labels (J1-J6).
+	 * Returns a String array, whose entries are the joint values of the point
+	 * with their respective labels (J1-J6). The first column is the label
+	 * associated with the joint value in the second column.
 	 * 
 	 * @return  A 6x2-element String array
 	 */
@@ -192,19 +240,20 @@ public class Point  {
 	}
 
 	/**
-	 * Converts the original toStringArray into a 2x1 String array, where the origin
-	 * values are in the first element and the W, P, R values are in the second
-	 * element (or in the case of a joint angles, J1-J3 on the first and J4-J6 on
-	 * the second), where each element has space buffers.
+	 * Converts the original toStringArray into a 2x1 String array, where the
+	 * position values are in the first entry and the orientation values are in
+	 * the second entry (or in the case of a joint angles, J1-J3 on the first
+	 * and J4-J6 on the second). Each entry has space buffers between the
+	 * values represented in the String.
 	 * 
-	 * @param displayCartesian  whether to display the joint angles or the cartesian
-	 *                          values associated with the point
-	 * @returning               A 2-element String array
+	 * @param catersian		whether to use the angle values or the Cartesian
+	 * 						values associated with the point
+	 * @return				A 2-element String array
 	 */
-	public String[] toLineStringArray(boolean displayCartesian) {
+	public String[] toLineStringArray(boolean catersian) {
 		String str0, str1, str2, str3, str4, str5;
 		
-		if (displayCartesian) {
+		if (catersian) {
 			PVector limbo = worldFramePosition();
 			str0 = "X: " + MyFloatFormat.format(limbo.x);
 			str1 = "Y: " + MyFloatFormat.format(limbo.y);
@@ -231,9 +280,9 @@ public class Point  {
 		}
 		
 		return new String[] {
-			// X, Y, Z with space buffers
+			// position with space buffers
 			String.format("%-13s %-13s %s", str0, str1, str2),
-			// W, P, R with space buffers
+			// orientaiton with space buffers
 			String.format("%-13s %-13s %s",  str3, str4, str5)
 		};
 	}

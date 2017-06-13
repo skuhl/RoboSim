@@ -1,198 +1,138 @@
 package expression;
 import geom.Point;
 
-public class AtomicExpression extends ExprOperand {
-	protected ExprOperand arg1;
-	protected ExprOperand arg2;
+public class AtomicExpression extends Operand<Object> {
+	protected Operand<?> arg1;
+	protected Operand<?> arg2;
 	private Operator op;
 
 	public AtomicExpression(){
-		type = ExpressionElement.SUBEXP;
-		setOp(Operator.UNINIT);
-		arg1 = new ExprOperand();
-		arg2 = new ExprOperand();
+		super(null, Operand.SUBEXP);
+		op = Operator.UNINIT;
+		arg1 = new OperandGeneric();
+		arg2 = new OperandGeneric();
 	}
 
-	public AtomicExpression(ExprOperand a1, ExprOperand a2, Operator o) {
-		type = ExpressionElement.SUBEXP;
-		setOp(o);
+	public AtomicExpression(Operand<?> a1, Operand<?> a2, Operator o) {
+		super(null, Operand.SUBEXP);
+		op = o;
 		arg1 = a1;
 		arg2 = a2;
 	}
 
 	public AtomicExpression(Operator o){
-		type = ExpressionElement.SUBEXP;
-		setOp(o);
-		arg1 = new ExprOperand();
-		arg2 = new ExprOperand();
+		super(null, Operand.SUBEXP);
+		op = o;
+		arg1 = new OperandGeneric();
+		arg2 = new OperandGeneric();
 	}
 
-	@Override
-	public AtomicExpression clone() {
-		return new AtomicExpression(arg1.clone(), arg2.clone(), getOp());
+	private boolean checkTypeCompatable(Operator op, Operand<?> o1, Operand<?> o2) {
+		switch(op.getType()) {
+		case Operator.ARITH_OP:
+		case Operator.BOOL_OP: 	return o1 instanceof FloatMath && o2 instanceof FloatMath;
+		case Operator.LOGIC_OP:	return o1 instanceof BoolMath && o2 instanceof BoolMath;
+		case Operator.POINT_OP: return o1 instanceof PointMath && o2 instanceof PointMath;
+		default:				return false;
+		}
 	}
 	
-	public ExprOperand evaluate() {
-		ExprOperand result;
-		int t1 = arg1.type;
-		int t2 = arg2.type;
-		//operation return type:
-		// -1 = uninit, 0 = float,
-		// 1 = boolean, 2 = point
-		int opType = -1;
-		Float o1 = null, o2 = null; //floating point operand values
-		Boolean b1 = null, b2 = null; //boolean operand values
-		Point p1 = null, p2 = null; //point operand values
-
+	@Override
+	public AtomicExpression clone() {
+		return new AtomicExpression(arg1.clone(), arg2.clone(), op);
+	}
+	
+	public Operand<?> evaluate() {
+		int opType = op.getType();
+		
 		//evaluate any sub-expressions
-		if(t1 == -1) {
+		if(arg1.type == Operand.SUBEXP) {
 			arg1 = ((AtomicExpression)arg1).evaluate();
-			t1 = arg1.type;
 		}
 
-		if(t2 == -1) {
+		if(arg2.type == Operand.SUBEXP) {
 			arg2 = ((AtomicExpression)arg2).evaluate();
-			t2 = arg2.type;
 		}
 
 		//check for type compatability
-		if(t1 == ExpressionElement.UNINIT || t2 == ExpressionElement.UNINIT) {
+		if(!checkTypeCompatable(op, arg1, arg2)) {
 			return null;
-		} 
-		else if(t1 == ExpressionElement.FLOAT || t1 == ExpressionElement.DREG || t1 == ExpressionElement.PREG_IDX) {
-			opType = 0;
-			o1 = arg1.getDataVal();
-
-			switch(t2) {
-			case ExpressionElement.FLOAT:
-			case ExpressionElement.DREG:
-			case ExpressionElement.PREG_IDX:
-				o2 = arg2.getDataVal();
-				break;
-			default:
-				return null;
-			}
 		}
-		else if(t1 == ExpressionElement.BOOL || t1 == ExpressionElement.IOREG) {
-			opType = 1;
-			b1 = arg1.getBoolVal();
-
-			switch(t2) {
-			case ExpressionElement.BOOL:
-			case ExpressionElement.IOREG:
-				b2 = arg2.getBoolVal();
-				break;
-			default:
-				return null;
-			}
+		else if(opType == Operator.ARITH_OP) {
+			Float value = evaluateFloat((FloatMath)arg1, (FloatMath)arg2);
+			return new OperandFloat(value);
 		}
-		else if(t1 == ExpressionElement.PREG || t1 == ExpressionElement.POSTN) {
-			opType = 2;
-			p1 = arg1.getPointVal();
-
-			switch(t2) {
-			case ExpressionElement.PREG:
-			case ExpressionElement.POSTN:
-				p2 = arg2.getPointVal();
-				break;
-			default:
-				return null;
-			}
+		else if(opType == Operator.LOGIC_OP) {
+			Boolean value = evaluateBoolean((BoolMath)arg1, (BoolMath)arg2);
+			return new OperandBool(value);
 		}
-
-		if(opType == 0) {
-			if(o1 == null || o2 == null) return null;
-
-			//integer operands for integer operations
-			int intop1 = Math.round(o1);
-			int intop2 = Math.round(o2);
-
-			switch(getOp()) {
-			case ADDTN:
-				result = new ExprOperand(o1 + o2);
-				break;
-			case SUBTR:
-				result = new ExprOperand(o1 - o2);
-				break;
-			case MULT:
-				result = new ExprOperand(o1 * o2);
-				break;
-			case DIV:
-				result = new ExprOperand(o1 / o2);
-				break;
-			case MOD:
-				result = new ExprOperand(o1 % o2);
-				break;
-			case INTDIV:
-				result = new ExprOperand(intop1 / intop2);
-				break;
-			case EQUAL:
-				// Do not use == or != with ANY Objects!
-				result = new ExprOperand(o1.floatValue() == o2.floatValue());
-				break;
-			case NEQUAL:
-				result = new ExprOperand(o1.floatValue() != o2.floatValue());
-				break;
-			case GRTR:
-				result = new ExprOperand(o1 > o2);
-				break;
-			case LESS:
-				result = new ExprOperand(o1 < o2);
-				break;
-			case GREQ:
-				result = new ExprOperand(o1 >= o2);
-				break;
-			case LSEQ:
-				result = new ExprOperand(o1 <= o2);
-				break;
-			default:
-				result = null;
-				break;
-			}
+		else if(opType == Operator.BOOL_OP) {
+			Boolean value = evaluateArithBool((FloatMath)arg1, (FloatMath)arg2);
+			return new OperandBool(value);
 		}
-		else if(opType == 1) {
-			if(b1 == null || b2 == null) return null;
-
-			switch(getOp()) {
-			case EQUAL:
-				result = new ExprOperand(b1 == b2);
-				break;
-			case NEQUAL:
-				result = new ExprOperand(b1 != b2);
-				break;
-			case AND:
-				result = new ExprOperand(b1 && b2);
-			case OR:
-				result = new ExprOperand(b1 || b2);
-			default:
-				result = null;
-				break;
-			}
+		else if(opType == Operator.POINT_OP) {
+			Point value = evaluatePosition((PointMath)arg1, (PointMath)arg2);
+			return new OperandPoint(value);
 		}
-		else if(opType == 2) {
-			if(p1 == null || p2 == null) return null;
-
-			switch(getOp()) {
-			case ADDTN:
-				result = new ExprOperand(p1.add(p2));
-				break;
-			case SUBTR:
-				result = new ExprOperand(p1.add(p2.negate()));
-				break;
-			default:
-				result = null;
-				break;
-			}
+		
+		return null;
+	}
+	
+	private Boolean evaluateArithBool(FloatMath o1, FloatMath o2) {
+		float v1 = o1.getArithValue();
+		float v2 = o2.getArithValue();
+		
+		switch(op) {
+		case GRTR:	return v1 > v2;
+		case LESS:	return v1 < v2;
+		case EQUAL:	return v1 == v2;
+		case NEQUAL:return v1 != v2;
+		case GREQ:	return v1 >= v2;
+		case LSEQ:	return v1 <= v2;
+		default:	return null;
 		}
-		else {
-			result = null;
+	}
+	
+	private Boolean evaluateBoolean(BoolMath o1, BoolMath o2) {
+		boolean b1 = o1.getBoolValue();
+		boolean b2 = o2.getBoolValue();
+		
+		switch(op) {
+		case AND:	return b1 && b2;
+		case OR:	return b1 || b2;
+		case NOT:	return !b1;
+		default:	return null;
 		}
-
-		return result;
+	}
+	
+	private Float evaluateFloat(FloatMath o1, FloatMath o2) {
+		float v1 = o1.getArithValue();
+		float v2 = o2.getArithValue();
+		
+		switch(op) {
+		case ADD:	return v1 + v2;
+		case SUB:	return v1 - v2;
+		case MULT:	return v1 * v2;
+		case DIV:	return v1 / v2;
+		case MOD:	return v1 % v2;
+		case IDIV:	return (float)((int)v1 / (int)v2);
+		default:	return null;
+		}
+	}
+	
+	private Point evaluatePosition(PointMath o1, PointMath o2) {
+		Point p1 = o1.getPointValue();
+		Point p2 = o2.getPointValue();
+		
+		switch(op) {
+		case PT_ADD:	return p1.add(p2);
+		case PT_SUB:	return p1.sub(p2);
+		default:		return null;
+		}
 	}
 
-	public ExprOperand getArg1() { return arg1; }
-	public ExprOperand getArg2() { return arg2; }
+	public Operand<?> getArg1() { return arg1; }
+	public Operand<?> getArg2() { return arg2; }
 
 	@Override
 	public int getLength() {
@@ -213,20 +153,12 @@ public class AtomicExpression extends ExprOperand {
 	}
 	public Operator getOperator() { return getOp(); }
 
-	public ExprOperand setArg(ExprOperand a, int argNo) {
-		if(argNo == 1) {
-			return setArg1(a);
-		} else {
-			return setArg2(a);
-		}
-	}
-
-	public ExprOperand setArg1(ExprOperand a) { 
+	public Operand<?> setArg1(Operand<?> a) { 
 		arg1 = a;
 		return arg1;
 	}
 
-	public ExprOperand setArg2(ExprOperand a) { 
+	public Operand<?> setArg2(Operand<?> a) { 
 		arg2 = a;
 		return arg2;
 	}
@@ -252,7 +184,7 @@ public class AtomicExpression extends ExprOperand {
 		else 
 			s += arg1.toString();
 
-		s += " " + getOp().symbol + " ";
+		s += " " + getOp().getSymbol() + " ";
 
 		if(arg2 instanceof AtomicExpression)
 			s += "(" + arg2.toString() + ")";
@@ -272,11 +204,11 @@ public class AtomicExpression extends ExprOperand {
 		}
 
 		s1 = arg1.toStringArray();
-		opString += " " + getOp().symbol + " ";
+		opString += " " + getOp().getSymbol() + " ";
 		s2 = arg2.toStringArray();
 
-		int lm1 = (arg1 != null && arg1.type == -1) ? 2 : 0;
-		int lm2 = (arg2 != null && arg2.type == -1) ? 2 : 0;
+		int lm1 = (arg1 != null && arg1.type == Operand.SUBEXP) ? 2 : 0;
+		int lm2 = (arg2 != null && arg2.type == Operand.SUBEXP) ? 2 : 0;
 		ret = new String[s1.length + s2.length + 1 + lm1 + lm2];
 
 		if(lm1 != 0) {

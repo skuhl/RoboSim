@@ -9,8 +9,6 @@ import processing.core.PVector;
  */
 public class RQuaternion implements Cloneable {
 	
-	private float w, x, y, z;
-	
 	/**
 	 * Returns the sum q1 + q2 + q3 + ... + qn, where n is number
 	 * of quaternions given. None of the given quaternions are
@@ -27,21 +25,6 @@ public class RQuaternion implements Cloneable {
 	}
 	
 	/**
-	 * Returns the distance between this quaternion (q) and the given
-	 * quaternion (p) based on the distance formula:
-	 * 		( (q_w - p_w)^2 + (q_x - p_x)^2 + (q_y - p_y)^2 + (q_z - p_z)^2 )^(1/2)
-	 * 
-	 * @param q	A non-null quaternion
-	 * @return	The distance between the two quaternions
-	 */
-	public float dist(RQuaternion q) {
-		return (float)Math.sqrt(	Math.pow(w - q.w, 2.0) +
-									Math.pow(x - q.x, 2.0) +
-									Math.pow(y - q.y, 2.0) +
-									Math.pow(z - q.z, 2.0)	);
-	}
-
-	/**
 	 * Returns the product q1 * q2 * q3 * ... * qn, where n is
 	 * number of quaternions given. No quaternion is modified in
 	 * the process.
@@ -55,7 +38,7 @@ public class RQuaternion implements Cloneable {
 		
 		return product;
 	}
-
+	
 	/**
 	 * Returns the unit quaternion form of q, without
 	 * changing q.
@@ -65,7 +48,7 @@ public class RQuaternion implements Cloneable {
 		q.normalize();
 		return copy;
 	}
-	
+
 	/**
 	 * Rotates q around u by theta and returns the result, without modifying q. It is
 	 * assumed that axis is a unit vector.
@@ -83,7 +66,7 @@ public class RQuaternion implements Cloneable {
 		RQuaternion q = new RQuaternion(axis, theta);
 		return q.rotateVector(v);
 	}
-
+	
 	/**
 	 * Returns q, scaled by scalar, without modifying q.
 	 */
@@ -133,6 +116,8 @@ public class RQuaternion implements Cloneable {
 		return q4;
 	}
 
+	private float w, x, y, z;
+
 	/**
 	 * Creates the identity quaternion
 	 */
@@ -142,7 +127,7 @@ public class RQuaternion implements Cloneable {
 		y = 0f;
 		z = 0f;
 	}
-	
+
 	/**
 	 * Creates a quaternion with the given w, x, y, z values.
 	 */
@@ -166,7 +151,7 @@ public class RQuaternion implements Cloneable {
 		y = v.y * sinTheta;
 		z = v.z * sinTheta;
 	}
-
+	
 	/**
 	 * Adds each value (w, x, y, z) of q to this
 	 * [quaternion's] corresponding value.
@@ -177,7 +162,7 @@ public class RQuaternion implements Cloneable {
 		y += q.y;
 		z += q.z;
 	}
-	
+
 	@Override
 	public RQuaternion clone() {
 		return new RQuaternion(w, x, y, z);
@@ -188,6 +173,21 @@ public class RQuaternion implements Cloneable {
 	 */	
 	public RQuaternion conjugate() {
 		return new RQuaternion(w, -x, -y, -z);
+	}
+	
+	/**
+	 * Returns the distance between this quaternion (q) and the given
+	 * quaternion (p) based on the distance formula:
+	 * 		( (q_w - p_w)^2 + (q_x - p_x)^2 + (q_y - p_y)^2 + (q_z - p_z)^2 )^(1/2)
+	 * 
+	 * @param q	A non-null quaternion
+	 * @return	The distance between the two quaternions
+	 */
+	public float dist(RQuaternion q) {
+		return (float)Math.sqrt(	Math.pow(w - q.w, 2.0) +
+									Math.pow(x - q.x, 2.0) +
+									Math.pow(y - q.y, 2.0) +
+									Math.pow(z - q.z, 2.0)	);
 	}
 
 	/**
@@ -236,11 +236,6 @@ public class RQuaternion implements Cloneable {
 		return null;
 	}
 	
-	public float x() { return x; }
-	public float y() { return y; }
-	public float z() { return z; }
-	public float w() { return w; }
-	
 	/**
 	 * Transforms this into its conjugate.
 	 */
@@ -249,14 +244,12 @@ public class RQuaternion implements Cloneable {
 		y = -y;
 		z = -z;
 	}
-	
 	/**
 	 * Returns the magnitude of the quaternion.
 	 */
 	public float magnitude() {
 		return (float)Math.sqrt( Math.pow(w, 2f) + Math.pow(x, 2f) + Math.pow(y, 2f) + Math.pow(z, 2f) );
 	}
-	
 	/**
 	 * Rotates this by q.
 	 */
@@ -270,7 +263,6 @@ public class RQuaternion implements Cloneable {
 		
 		return this;
 	}
-	
 	/**
 	 * Converts this into its unit quaternion form.
 	 */
@@ -304,7 +296,7 @@ public class RQuaternion implements Cloneable {
 		// u = q * v * q'
 		return new PVector(quatV.x, quatV.y, quatV.z);	
 	}
-
+	
 	/**
 	 * Scales this by the given scalar value.
 	 */
@@ -314,7 +306,7 @@ public class RQuaternion implements Cloneable {
 		y *= scalar;
 		z *= scalar;
 	}
-
+	
 	/**
 	 * Sets a value of this based on the following
 	 * map:
@@ -340,13 +332,13 @@ public class RQuaternion implements Cloneable {
 
 		}
 	}
-
+	
 	/**
 	 * Returns the 3x3 rotation matrix corresponding
 	 * to this [quaternion].
 	 */
 	public RMatrix toMatrix() {
-		float[][] r = new float[3][3];
+		double[][] r = new double[3][3];
 
 		r[0][0] = 1 - 2 * (y*y + z*z);
 		r[1][0] = 2 * (x*y - w*z);
@@ -360,7 +352,7 @@ public class RQuaternion implements Cloneable {
 
 		return new RMatrix(r).normalize();
 	}
-
+	
 	/**
 	 * Returns a String representing the w, x, y, z values
 	 * of this, inside nested brackets.
@@ -370,6 +362,19 @@ public class RQuaternion implements Cloneable {
 		return String.format("{ %4.3f, (%4.3f, %4.3f, %4.3f) }", w, x, y, z);
 	}
 
+	public PVector toVector() {
+		float[][] r = toMatrix().getDataF();
+		float x, y, z;
+		PVector wpr;
+		
+		x = (float) Math.atan2(-r[2][1], r[2][2]);
+		y = (float) Math.atan2(r[2][0], Math.sqrt(r[2][1]*r[2][1] + r[2][2]*r[2][2]));
+		z = (float) Math.atan2(-r[1][0], r[0][0]);
+
+		wpr = new PVector(x, y, z);
+		return wpr;
+	}
+
 	/**
 	 * Returns q in reference to this [quaternion's] orientation.
 	 */
@@ -377,4 +382,12 @@ public class RQuaternion implements Cloneable {
 		RQuaternion conj = conjugate();
 		return RQuaternion.mult(q, conj);
 	}
+
+	public float w() { return w; }
+
+	public float x() { return x; }
+
+	public float y() { return y; }
+
+	public float z() { return z; }
 }

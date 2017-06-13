@@ -1,5 +1,5 @@
 package programming;
-import robot.RobotRun;
+import core.RobotRun;
 import robot.RoboticArm;
 
 public class CallInstruction extends Instruction {
@@ -40,23 +40,6 @@ public class CallInstruction extends Instruction {
 	}
 
 	// Getters and setters for a call instruction's program id field
-
-	@Override
-	public int execute() {
-		RoboticArm r = RobotRun.getActiveRobot();
-		
-		// Save the current program state on tgt robot
-		tgtDevice.pushActiveProg(r);
-		// Set the new program state
-		tgtDevice.setActiveProg(tgt);
-		tgtDevice.setActiveInstIdx(0);
-		RobotRun.getInstance().setRobot(tgtDevice.RID);
-		// Update the screen
-		RobotRun.getInstance().getContentsMenu().reset();
-		RobotRun.getInstance().updatePendantScreen();
-
-		return 0;
-	}
 	
 	public Program getProg() { return tgt; }
 	
@@ -74,7 +57,7 @@ public class CallInstruction extends Instruction {
 
 	@Override
 	public String toString() {
-		if(tgtDevice == RobotRun.getActiveRobot()) {
+		if(tgtDevice == RobotRun.getInstanceRobot()) {
 			return "Call " + getProgName();
 			
 		} else {
@@ -85,7 +68,7 @@ public class CallInstruction extends Instruction {
 	@Override
 	public String[] toStringArray() {
 		String[] ret = new String[2];
-		ret[0] = (tgtDevice == RobotRun.getActiveRobot()) ? "Call" : "RCall";
+		ret[0] = (tgtDevice == RobotRun.getInstanceRobot()) ? "Call" : "RCall";
 		ret[1] = getProgName();
 
 		return ret;

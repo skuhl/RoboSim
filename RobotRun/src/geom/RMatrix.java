@@ -7,11 +7,14 @@ import global.RMath;
 import processing.core.PVector;
 
 public class RMatrix extends Array2DRowRealMatrix {
-	
 	private static final long serialVersionUID = -7714758888094250418L;
 	
 	public RMatrix(float[][] f) {
-		super(RMath.floatToDouble(f));
+		this(RMath.floatToDouble(f));
+	}
+	
+	public RMatrix(double[][] data) {
+		super(data, false);
 	}
 	
 	public RMatrix(RealMatrix m) {
@@ -19,17 +22,26 @@ public class RMatrix extends Array2DRowRealMatrix {
 	}
 	
 	public RMatrix multiply(RMatrix m) {
-		return new RMatrix(this.multiply((Array2DRowRealMatrix)m));
+		return new RMatrix( super.multiply(m) );
 	}
 	
 	public PVector multiply(PVector v) {
-		RMatrix m = new RMatrix(new float[][] {{v.x}, {v.y}, {v.z}, {1}});
+		//Incorrect size for pvector multiplication
+		if(this.getColumnDimension() != 4)
+			return null;
+		
+		RMatrix m = new RMatrix(new double[][] {{v.x}, {v.y}, {v.z}, {1}});
 		RMatrix result = this.multiply(m);
-		float[][] data = result.getFloatData();
-		return new PVector(data[0][0], data[1][0], data[2][0]).div(data[3][0]);
+		
+		float x = result.getEntryF(0, 0);
+		float y = result.getEntryF(0, 1);
+		float z = result.getEntryF(0, 2);
+		float w = result.getEntryF(0, 3);
+		
+		return new PVector(x/w, y/w, z/w);
 	}
 	
-	public float[][] getFloatData() {
+	public float[][] getDataF() {
 		return RMath.doubleToFloat(getData());
 	}
 	
@@ -39,33 +51,55 @@ public class RMatrix extends Array2DRowRealMatrix {
 	}
 	
 	@Override
+	public String toString() {
+		String str = new String();
+		
+		for (int row = 0; row < getRowDimension(); ++row) {
+			str += "[ ";
+			
+			for (int column = 0; column < getColumnDimension(); ++column) {
+				String val = String.format("%4.3f", this.getEntry(row, column));
+				// Add padding
+				str += String.format("%9s ", val);
+			}
+			
+			str += "]\n";
+		}
+		
+		
+		return str;
+	}
+	
+	@Override
 	public RMatrix transpose() {
 		return new RMatrix(super.transpose());
 	}
 	
+	public float getEntryF(int row, int column) {
+		return (float)getEntry(row, column);
+	}
+	
 	public RMatrix normalize() {
-		float[][] d = getFloatData();
-		float mag = 0;
-		
-		for (int i = 0; i < d.length; i += 1) {
+		for (int col = 0; col < getColumnDimension(); col += 1) {
+			double mag = 0;
 			// Find the magnitude of each axis vector
-			for (int j = 0; j < d[0].length; j += 1) {
-				mag += Math.pow(d[j][i], 2);
+			for (int row = 0; row < getRowDimension(); row += 1) {
+				double val = getEntry(row, col);
+				mag += Math.pow(val, 2);
 			}
 
-			mag = (float) Math.sqrt(mag);
+			mag = Math.sqrt(mag);
 			// Normalize each vector
-			for (int j = 0; j < d.length; j += 1) {
-				this.setEntry(j, i, d[j][i] /= mag);
+			for (int row = 0; row < getRowDimension(); row += 1) {
+				double val = getEntry(row, col);
+				setEntry(row, col, val / mag);
 			}
-			
-			mag = 0;
 		}
 		
 		return this;
 	}
 	
 	public RMatrix copy() {
-		return new RMatrix(this.getFloatData());
+		return new RMatrix( getData().clone() );
 	}
 }

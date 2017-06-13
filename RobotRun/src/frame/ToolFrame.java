@@ -6,8 +6,6 @@ import global.Fields;
 import global.MyFloatFormat;
 import global.RMath;
 import processing.core.PVector;
-import robot.RobotRun;
-import robot.RoboticArm;
 
 public class ToolFrame extends Frame {
 	// The TCP offset associated with this frame
@@ -19,25 +17,13 @@ public class ToolFrame extends Frame {
 	 * Initialize all fields
 	 */
 	public ToolFrame() {
-		super();
+		super("");
 		TCPOffset = new PVector(0f, 0f, 0f);
 		TCPTeachPoints = new Point[] { null, null, null };
 	}
 	
-	/* NOTE: do not use getOrientation when saving a Tool Frame! */
-	
-	@Override
-	public RQuaternion getOrientation() {
-		RoboticArm model = RobotRun.getActiveRobot();
-		Point cur = RobotRun.nativeRobotPoint(model, model.getJointAngles());
-		Point def = model.getDefaultPoint();
-		RQuaternion diff = cur.orientation.transformQuaternion(def.orientation.conjugate());
-		
-		return diff.transformQuaternion(((RQuaternion)orientationOffset.clone()));
-	}
-	
 	/**
-	 * Simply returns the value of the frame's orientation offset.
+	 * Returns the value of the frame's orientation offset.
 	 * 
 	 * @return	The offset of the Robot's orientation associated with the tool
 	 * 			frame
@@ -45,12 +31,6 @@ public class ToolFrame extends Frame {
 	public RQuaternion getOrientationOffset() {
 		return orientationOffset;
 	}
-
-	/**
-	 * Tool Frames have no origin offset.
-	 */
-	@Override
-	public PVector getOrigin() { return new PVector(0f, 0f, 0f); }
 
 	@Override
 	public Point getPoint(int idx) {
@@ -102,9 +82,10 @@ public class ToolFrame extends Frame {
 				return false;
 			}
 
-			setTCPOffset(getDEOrigin());
-			setOrientation( (RQuaternion)getDEOrientationOffset().clone() );
+			setTCPOffset(getDEOrigin().copy());
+			setOrientation(getDEOrientationOffset().clone());
 			return true;
+			
 		} else if (method >= 0 && method < 2 && TCPTeachPoints[0] != null && TCPTeachPoints[1] != null && TCPTeachPoints[2] != null) {
 			// 3-Point or 6-Point Method
 
@@ -161,7 +142,9 @@ public class ToolFrame extends Frame {
 		}
 	}
 
-	public void setTCPOffset(PVector newOffset) { TCPOffset = newOffset; }
+	public void setTCPOffset(PVector newOffset) {
+		TCPOffset = newOffset;
+	}
 	
 	/**
 	 * Returns a string array, where each entry is one of

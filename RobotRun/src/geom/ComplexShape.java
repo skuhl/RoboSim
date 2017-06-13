@@ -2,13 +2,13 @@ package geom;
 
 import java.util.ArrayList;
 
+import core.CamSelectArea;
+import core.CamSelectView;
+import core.RobotRun;
 import global.RegisteredModels;
 import processing.core.PGraphics;
 import processing.core.PShape;
 import processing.core.PVector;
-import robot.CamSelectArea;
-import robot.CamSelectView;
-import robot.RobotRun;
 
 /**
  * A complex shape formed from a .stl source file.
@@ -44,10 +44,10 @@ public class ComplexShape extends RShape {
 		mdlScale = 1f;
 		model = mdl;
 		model.setFill(fill);
-		selectAreas = new ArrayList<CamSelectArea>();
-		
-		loadCamSelectAreas();
 		iniDimensions();
+		
+		selectAreas = new ArrayList<CamSelectArea>();
+		loadCamSelectAreas();
 	}
 
 	/**
@@ -64,13 +64,15 @@ public class ComplexShape extends RShape {
 		model_family_id = RegisteredModels.modelFamilyList.get(model_id);
 		srcFilePath = filename;
 		
+		// The initial scale MUST be one in order for scaling to work properly!
 		mdlScale = 1f;
 		model = mdl;
-		selectAreas = new ArrayList<CamSelectArea>();
-		
-		loadCamSelectAreas();
 		iniDimensions();
+		// This sets the scale!
 		setDim(scale, DimType.SCALE);
+		
+		selectAreas = new ArrayList<CamSelectArea>();
+		loadCamSelectAreas();
 	}
 	
 	private void loadCamSelectAreas() {
@@ -216,7 +218,7 @@ public class ComplexShape extends RShape {
 	public PGraphics getModelPreview(RMatrix m) {
 		if(preview == null) {
 			PGraphics img = RobotRun.getInstance().createGraphics(150, 200, RobotRun.P3D);
-			float[][] rMat = m.getFloatData();
+			float[][] rMat = m.getDataF();
 			img.beginDraw();
 			img.ortho();
 			img.lights();

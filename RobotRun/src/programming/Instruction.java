@@ -7,6 +7,10 @@ public class Instruction {
 		com = false;
 	}
 	
+	public Instruction(boolean isComm) {
+		com = isComm;
+	}
+	
 	/**
 	 * Create an independent replica of this instruction.
 	 */
@@ -17,8 +21,6 @@ public class Instruction {
 
 		return copy;
 	}
-	
-	public int execute() { return 0; }
 	
 	public boolean isCommented(){ return com; }
 
