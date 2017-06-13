@@ -63,7 +63,8 @@ public class LinearInterpolation extends LinearMotion {
 		PVector b = inter.position;
 		PVector c = end.position;
 		RQuaternion q1 = start.orientation;
-		RQuaternion q2 = end.orientation;
+		RQuaternion q2 = inter.orientation;
+		RQuaternion q3 = end.orientation;
 		RQuaternion qi = new RQuaternion();
 
 		// Calculate arc center point
@@ -82,29 +83,56 @@ public class LinearInterpolation extends LinearMotion {
 		PVector tmp2 = new PVector(a.x - c.x, a.y - c.y, a.z - c.z);
 		PVector n = tmp1.cross(tmp2);
 		n.normalize();
-		// calculate the angle between the start and end points
+		// calculate the angle between the start and intermediate points
 		PVector vec1 = new PVector(a.x - center.x, a.y - center.y, a.z - center.z);
-		PVector vec2 = new PVector(c.x - center.x, c.y - center.y, c.z - center.z);
+		PVector vec2 = new PVector(b.x - center.x, b.y - center.y, b.z - center.z);
 		float theta = RobotRun.atan2(vec1.cross(vec2).dot(n), vec1.dot(vec2));
+		
 		if (theta < 0) {
 			theta = RMath.mod2PI(theta);
-			//theta += PConstants.TWO_PI;
 		}
-		// finally, draw an arc through all 3 points by rotating the u
-		// vector around our normal vector
+		
 		float angle = 0, mu = 0;
 		int numPoints = (int) (r * theta / distBtwPts);
 		float inc = 1 / (float) numPoints;
 		float angleInc = (theta) / numPoints;
-		for (int i = 0; i < numPoints; i += 1) {
+		
+		Fields.debug("r=%f theta=%f dist/pt=%f points=%d\n", r, theta * PConstants.RAD_TO_DEG, distBtwPts, numPoints);
+		int i = 0;
+		for (i = 0; i < numPoints; i += 1) {
 			PVector pos = RQuaternion.rotateVectorAroundAxis(u, n, angle).mult(r).add(center);
-			if (i == numPoints - 1)
-				pos = end.position;
 			qi = RQuaternion.SLERP(q1, q2, mu);
 			intermediatePositions.add(new Point(pos, qi));
 			angle += angleInc;
 			mu += inc;
 		}
+		
+		// calculate the angle between the intermediate and end points
+		vec1 = new PVector(b.x - center.x, b.y - center.y, b.z - center.z);
+		vec2 = new PVector(c.x - center.x, c.y - center.y, c.z - center.z);
+		theta = RobotRun.atan2(vec1.cross(vec2).dot(n), vec1.dot(vec2));
+		
+		if (theta < 0) {
+			theta = RMath.mod2PI(theta);
+		}
+		
+		angle = 0;
+		mu = 0;
+		numPoints += (int) (r * theta / distBtwPts);
+		inc = 1 / (float) numPoints;
+		angleInc = (theta) / numPoints;
+		
+		Fields.debug("r=%f theta=%f dist/pt=%f points=%d\n", r, theta * PConstants.RAD_TO_DEG, distBtwPts, numPoints);
+		for (; i < numPoints; i += 1) {
+			PVector pos = RQuaternion.rotateVectorAroundAxis(u, n, angle).mult(r).add(center);
+			qi = RQuaternion.SLERP(q2, q3, mu);
+			intermediatePositions.add(new Point(pos, qi));
+			angle += angleInc;
+			mu += inc;
+		}
+		
+		int lastIdx = intermediatePositions.size() - 1;
+		Fields.debug("IP[%d] = %s\n", lastIdx, intermediatePositions.get(lastIdx));
 	}
 
 	private void calculateContinuousPositions(Point start, Point end, Point next, float percentage) {
