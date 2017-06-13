@@ -29,6 +29,7 @@ public abstract class MotionInstruction extends Instruction  {
 		termination = term;
 	}
 	
+	@Override
 	public abstract MotionInstruction clone();
 	
 	public int getMotionType() {
@@ -71,6 +72,7 @@ public abstract class MotionInstruction extends Instruction  {
 		termination = term;
 	}
 	
+	@Override
 	public abstract String[] toStringArray();
 }
 
