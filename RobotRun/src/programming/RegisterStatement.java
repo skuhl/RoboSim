@@ -62,7 +62,13 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 		return copy;
 	}
 	
-	public int execute() {
+	/**
+	 * Evaluates the expression associated with this register statement.
+	 * 
+	 * @return	0	the expressions evaluation is successful,
+	 * 			1	an error occurs when executing the register statement
+	 */
+	public int evalExpression() {
 		Operand<?> result = expr.evaluate();
 		
 		if(result instanceof OperandFloat) {
