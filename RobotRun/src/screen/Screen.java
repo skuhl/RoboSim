@@ -7,9 +7,10 @@ import ui.MenuScroll;
 public abstract class Screen {
 	public final ScreenMode mode;
 	protected final RobotRun robotRun;
+	
+	protected String header;
 	protected MenuScroll contents;
 	protected MenuScroll options;
-	protected String header;
 	protected String[] labels;
 	
 	public Screen(ScreenMode m, RobotRun r) {

@@ -3,7 +3,7 @@ package screen;
 import core.RobotRun;
 import enums.ScreenMode;
 
-public class ScreenMainMenu extends Screen {
+public class ScreenMainMenu extends ST_ScreenListContents {
 
 	public ScreenMainMenu(ScreenMode m, RobotRun r) {
 		super(ScreenMode.NAV_MAIN_MENU, r);
