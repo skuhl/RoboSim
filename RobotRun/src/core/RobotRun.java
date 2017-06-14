@@ -1276,6 +1276,10 @@ public class RobotRun extends PApplet {
 		}
 	}
 	
+	public RoboticArm getActiveRobot() {
+		return activeRobot;
+	}
+	
 	/**
 	 * Pendant ENTER button
 	 * 
@@ -5877,7 +5881,7 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @param nextScreen	The new screen mode
 	 */
-	private void nextScreen(ScreenMode nextScreen) {
+	public void nextScreen(ScreenMode nextScreen) {
 		if (!screenStates.isEmpty()) {
 			ScreenState cur = screenStates.peek();
 			// Update the current screen state
