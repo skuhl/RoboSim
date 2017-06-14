@@ -90,40 +90,79 @@ public class LinearInterpolation extends LinearMotion {
 		vecCircNorm.normalize();
 		
 		// Calculate the angle between the start and intermediate points
-		float x = vecACenter.cross(vecBCenter).dot(vecCircNorm);
-		float y = vecACenter.dot(vecBCenter);
-		final float thetaAB = RMath.mod2PI( RobotRun.atan2(x, y) );
+		float x = vecACenter.dot(vecBCenter);
+		float y = vecACenter.cross(vecBCenter).dot(vecCircNorm);
+		float thetaAB = RobotRun.atan2(y, x);
+		int dirAB;
 		// Calculate the angle between the intermediate and end points
-		x = vecBCenter.cross(vecCCenter).dot(vecCircNorm);
-		y = vecBCenter.dot(vecCCenter);
-		final float thetaBC = RMath.mod2PI( RobotRun.atan2(x, y) );
+		x = vecBCenter.dot(vecCCenter);
+		y = vecBCenter.cross(vecCCenter).dot(vecCircNorm);
+		float thetaBC = RobotRun.atan2(y, x);
+		int dirBC;
+		// Calculate the angle between the start and end points
+		x = vecACenter.dot(vecCCenter);
+		y = vecACenter.cross(vecCCenter).dot(vecCircNorm);
+		float thetaAC = RobotRun.atan2(y, x);
+		
+		if (Float.isNaN(thetaAB) || Float.isNaN(thetaBC)) {
+			// Invalid positions for circular motion
+			return;
+		}
+		
+		Fields.debug("thetaAB=%f thetaBC=%f thetaAC=%f\n", PConstants.RAD_TO_DEG * thetaAB,
+				PConstants.RAD_TO_DEG * thetaBC, PConstants.RAD_TO_DEG * thetaAC);
+		
+		if (thetaAB < 0f) {
+			thetaAB = RMath.mod2PI(thetaAB);
+			dirAB = -1;
+			
+		} else {
+			dirAB = 1;
+		}
+		
+		if (thetaBC < 0f) {
+			thetaBC = RMath.mod2PI(thetaBC);
+			dirBC = -1;
+			
+		} else {
+			dirBC = 1;
+		}
 		
 		final float angleInc = distBtwPts / radius;
 		final int transIdx = (int)(thetaAB / angleInc);
 		final int numOfPts = (int)((thetaAB + thetaBC) / angleInc);
-		final PVector initialPos = PVector.mult(vecACenter, radius).add(center);
-		RQuaternion qi = null;
+		RQuaternion qi = (transIdx == 0) ? qa : null;
+		
+		Fields.debug("dist/pt=%f rad/pt=%f points=%d transIdx=%d\n",
+				distBtwPts, angleInc, numOfPts, transIdx);
 		
 		// Interpolate between the start and end points
 		for (int pdx = 0; pdx < numOfPts; pdx += 1) {
 			float angle = angleInc * pdx;
-			PVector pos = RQuaternion.rotateVectorAroundAxis(initialPos,
-					vecCircNorm, angle);
+			PVector pos = RQuaternion.rotateVectorAroundAxis(vecACenter,
+					vecCircNorm, angle).mult(radius).add(center);
 			RQuaternion q;
 			
 			if (pdx >= transIdx) {
 				/* Perform SLERP from the intermediate orientation to the end
 				 * orientation */
-				float mu = angleInc / thetaBC * (pdx - transIdx + 1);
-				q = RQuaternion.SLERP(qi, qc, mu);
+				float mu = (thetaBC == 0) ? 1f :
+					dirBC * angleInc / thetaBC * (pdx - transIdx + 1);
+				q = RQuaternion.signedSLERP(qi, qc, mu);
+				
+				if (pdx == (numOfPts - 1)) {
+					Fields.debug("BC: angle=%f mu=%f\n", angle, mu);
+				}
 				
 			} else {
 				/* Perform SLERP from the start orientation to the intermediate
 				 * orientation */
-				float mu = angleInc / thetaAB * pdx;
-				q = RQuaternion.SLERP(qa, qb, mu);
+				float mu = (thetaAB == 0) ? 1f :
+					dirAB * angleInc / thetaAB * pdx;
+				q = RQuaternion.signedSLERP(qa, qb, mu);
 				
 				if (pdx == (transIdx - 1)) {
+					Fields.debug("AB: angle=%f mu=%f\n", angle, mu);
 					qi = q.clone();
 				}
 			}
@@ -162,7 +201,7 @@ public class LinearInterpolation extends LinearMotion {
 		float increment = 1.0f / numberOfPoints;
 		for (int n = 0; n < numberOfPoints; n++) {
 			mu += increment;
-			qi = RQuaternion.SLERP(q2, q3, mu);
+			qi = RQuaternion.minSLERP(q2, q3, mu);
 			secondaryTargets.add(new Point(new PVector(p2.x * (1 - mu) + (p3.x * mu), p2.y * (1 - mu) + (p3.y * mu),
 					p2.z * (1 - mu) + (p3.z * mu)), qi));
 		}
@@ -171,7 +210,7 @@ public class LinearInterpolation extends LinearMotion {
 		int transitionPoint = (int) (numberOfPoints * percentage);
 		for (int n = 0; n < transitionPoint; n++) {
 			mu += increment;
-			qi = RQuaternion.SLERP(q1, q2, mu);
+			qi = RQuaternion.minSLERP(q1, q2, mu);
 			interpolatePts.add(new Point(new PVector(p1.x * (1 - mu) + (p2.x * mu),
 					p1.y * (1 - mu) + (p2.y * mu), p1.z * (1 - mu) + (p2.z * mu)), qi));
 		}
@@ -192,7 +231,7 @@ public class LinearInterpolation extends LinearMotion {
 		for (int n = transitionPoint; n < numberOfPoints; n++) {
 			mu += increment;
 			Point tgt = secondaryTargets.get(secondaryIdx);
-			qi = RQuaternion.SLERP(currentPoint.orientation, tgt.orientation, mu);
+			qi = RQuaternion.minSLERP(currentPoint.orientation, tgt.orientation, mu);
 			interpolatePts.add(new Point(new PVector(currentPoint.position.x * (1 - mu) + (tgt.position.x * mu),
 					currentPoint.position.y * (1 - mu) + (tgt.position.y * mu),
 					currentPoint.position.z * (1 - mu) + (tgt.position.z * mu)), qi));
@@ -228,7 +267,7 @@ public class LinearInterpolation extends LinearMotion {
 		for (int n = 0; n < numberOfPoints; n++) {
 			mu += increment;
 
-			qi = RQuaternion.SLERP(q1, q2, mu);
+			qi = RQuaternion.minSLERP(q1, q2, mu);
 			interpolatePts.add(new Point(new PVector(p1.x * (1 - mu) + (p2.x * mu),
 					p1.y * (1 - mu) + (p2.y * mu), p1.z * (1 - mu) + (p2.z * mu)), qi));
 		}
