@@ -54,7 +54,7 @@ public class AtomicExpression extends Operand<Object> {
 		if(arg2.type == Operand.SUBEXP) {
 			arg2 = ((AtomicExpression)arg2).evaluate();
 		}
-
+		
 		//check for type compatability
 		if(!checkTypeCompatable(op, arg1, arg2)) {
 			return null;

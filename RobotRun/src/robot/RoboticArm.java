@@ -24,6 +24,7 @@ import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import programming.CamMoveToObject;
+import programming.InstState;
 import programming.Instruction;
 import programming.MotionInstruction;
 import programming.PosMotionInst;
@@ -31,8 +32,7 @@ import programming.Program;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
-import screen.DisplayLine;
-import screen.InstState;
+import ui.DisplayLine;
 
 public class RoboticArm {
 	
@@ -1679,6 +1679,7 @@ public class RoboticArm {
 	 * @return	The number of end effectors associated with this robot
 	 */
 	public int numOfEndEffectors() {
+		// Exclude Faceplate IO Register
 		return EE_LIST.length - 1;
 	}
 

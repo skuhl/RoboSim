@@ -23,7 +23,6 @@ import expression.OperandGeneric;
 import expression.OperandIOReg;
 import expression.OperandPReg;
 import expression.OperandPRegIdx;
-import expression.OperandRegister;
 import expression.Operator;
 import frame.Frame;
 import frame.ToolFrame;
@@ -54,7 +53,6 @@ import processing.event.MouseEvent;
 import processing.opengl.PGraphicsOpenGL;
 import programming.CallInstruction;
 import programming.CamMoveToObject;
-import programming.ExpressionEvaluation;
 import programming.FrameInstruction;
 import programming.IOInstruction;
 import programming.IfStatement;
@@ -73,11 +71,11 @@ import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
-import screen.DisplayLine;
-import screen.MenuScroll;
 import screen.ScreenState;
 import ui.Camera;
+import ui.DisplayLine;
 import ui.KeyCodeMap;
+import ui.MenuScroll;
 import window.WGUI;
 
 /**
@@ -1286,6 +1284,10 @@ public class RobotRun extends PApplet {
 				letterStates[idx] = 0;
 			}
 		}
+	}
+	
+	public RoboticArm getActiveRobot() {
+		return activeRobot;
 	}
 	
 	/**
@@ -3074,15 +3076,17 @@ public class RobotRun extends PApplet {
 			updateInstructions();
 			break;
 		case NAV_MACROS:
-			edit_macro = macros.get(contents.getLineIdx());
-
-			if (contents.getColumnIdx() == 1) {
-				nextScreen(ScreenMode.SET_MACRO_PROG);
-			} else if (contents.getColumnIdx() == 2) {
-				nextScreen(ScreenMode.SET_MACRO_TYPE);
-			} else {
-				if (!macros.get(contents.getLineIdx()).isManual())
-					nextScreen(ScreenMode.SET_MACRO_BINDING);
+			if(macros.size() > 0) {
+				edit_macro = macros.get(contents.getLineIdx());
+				
+				if (contents.getColumnIdx() == 1) {
+					nextScreen(ScreenMode.SET_MACRO_PROG);
+				} else if (contents.getColumnIdx() == 2) {
+					nextScreen(ScreenMode.SET_MACRO_TYPE);
+				} else if (contents.getColumnIdx() == 3){
+					if (!macros.get(contents.getLineIdx()).isManual())
+						nextScreen(ScreenMode.SET_MACRO_BINDING);
+				}
 			}
 			break;
 		case NAV_PREGS:
@@ -3374,7 +3378,6 @@ public class RobotRun extends PApplet {
 	}
 
 	public void getEditScreen(Instruction ins, int selectIdx) {
-		System.out.println(selectIdx);
 		if (ins instanceof MotionInstruction) {
 			MotionInstruction mInst = (MotionInstruction)ins;
 			int sdx = getSelectedIdx();
@@ -4841,7 +4844,6 @@ public class RobotRun extends PApplet {
 		
 		for (int idx = 1; idx <= r.numOfEndEffectors(); ++idx) {
 			IORegister ioReg = r.getIOReg(idx);
-			
 			String col0 = String.format("IO[%2d:%-10s] = ", idx,
 					ioReg.comment);
 			lines.add(new DisplayLine(idx, 0, col0, (ioReg.state == 0) ?
@@ -5894,7 +5896,7 @@ public class RobotRun extends PApplet {
 	 * 
 	 * @param nextScreen	The new screen mode
 	 */
-	private void nextScreen(ScreenMode nextScreen) {
+	public void nextScreen(ScreenMode nextScreen) {
 		if (!screenStates.isEmpty()) {
 			ScreenState cur = screenStates.peek();
 			// Update the current screen state
