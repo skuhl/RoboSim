@@ -82,17 +82,17 @@ public class RQuaternion implements Cloneable {
 	 * complete transformation 'q1' to 'q2', denoted by 0 <= 'mu' <= 1. 
 	 */
 	public static RQuaternion SLERP(RQuaternion q1, RQuaternion q2, float mu) {
-		if (mu == 0) {
+		if (mu == 0f) {
 			return q1;
 			
-		} else if (mu == 1) {
+		} else if (mu == 1f) {
 			return q2;
 		}
 		
 		float cOmega = q1.dot(q2);
 		RQuaternion q3 = q2.clone(), q4;
 		
-		if (cOmega < 0) {
+		if (cOmega < 0f) {
 			cOmega *= -1;
 			q3.scalarMult(-1);		
 		}

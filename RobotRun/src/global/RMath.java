@@ -867,6 +867,53 @@ public abstract class RMath {
 	}
 	
 	/**
+	 * Returns a -1 or 1 depending on the sign of the given double value.
+	 * Although, if the given value is NaN, then 0 is returned.
+	 * 
+	 * @param val	A double value
+	 * @return		-1 for negative values, 1 for positive values, or 0 for
+	 * 				NaN
+	 */
+	public static int sign(double val) {
+		
+		if (Double.isNaN(val)) {
+			// No sign for NaN
+			return 0;
+		}
+		
+		return (val < 0.0) ? -1 : 1;
+	}
+	
+	/**
+	 * Returns a -1 or 1 depending on the sign of the given float value.
+	 * Although, if the given value is NaN, then 0 is returned.
+	 * 
+	 * @param val	A floating-point value
+	 * @return		-1 for negative values, 1 for positive values, or 0 for
+	 * 				NaN
+	 */
+	public static int sign(float val) {
+		
+		if (Float.isNaN(val)) {
+			// No sign for NaN
+			return 0;
+		}
+		
+		return (val < 0f) ? -1 : 1;
+	}
+	
+	/**
+	 * Returns the sign of the given integer value. Zero is assumed to be
+	 * positive.
+	 * 
+	 * @param val	An integer value
+	 * @return		-1 for negative values, or 1 for positive values and zero
+	 */
+	public static int sign(int val) {
+		return (val < 0f) ? -1 : 1;
+	}
+	
+	/**
 	 * Applies the given translation, delta, to the given transformation
 	 * matrix, tMat.
 	 * 
