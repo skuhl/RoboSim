@@ -99,20 +99,16 @@ public class LinearInterpolation extends LinearMotion {
 		y = vecBCenter.cross(vecCCenter).dot(vecCircNorm);
 		float thetaBC = RobotRun.atan2(y, x);
 		int dirBC;
-		// Calculate the angle between the start and end points
-		x = vecACenter.dot(vecCCenter);
-		y = vecACenter.cross(vecCCenter).dot(vecCircNorm);
-		float thetaAC = RobotRun.atan2(y, x);
 		
 		if (Float.isNaN(thetaAB) || Float.isNaN(thetaBC)) {
 			// Invalid positions for circular motion
+			System.err.printf("Invalid angle: thetaAB=%f thetaBC=%f\n",
+					thetaAB, thetaBC);
 			return;
 		}
 		
-		Fields.debug("thetaAB=%f thetaBC=%f thetaAC=%f\n", PConstants.RAD_TO_DEG * thetaAB,
-				PConstants.RAD_TO_DEG * thetaBC, PConstants.RAD_TO_DEG * thetaAC);
-		
 		if (thetaAB < 0f) {
+			// Perform SLERP in the opposite direction
 			thetaAB = RMath.mod2PI(thetaAB);
 			dirAB = -1;
 			
@@ -121,6 +117,7 @@ public class LinearInterpolation extends LinearMotion {
 		}
 		
 		if (thetaBC < 0f) {
+			// Perform SLERP in the opposite direction
 			thetaBC = RMath.mod2PI(thetaBC);
 			dirBC = -1;
 			
@@ -131,6 +128,13 @@ public class LinearInterpolation extends LinearMotion {
 		final float angleInc = distBtwPts / radius;
 		final int transIdx = (int)(thetaAB / angleInc);
 		final int numOfPts = (int)((thetaAB + thetaBC) / angleInc);
+		
+		if (numOfPts > 50000) {
+			System.err.printf("%d points is way too much for circular interpolation!\n",
+					numOfPts);
+			return;
+		}
+		
 		RQuaternion qi = (transIdx == 0) ? qa : null;
 		
 		Fields.debug("dist/pt=%f rad/pt=%f points=%d transIdx=%d\n",
@@ -150,10 +154,6 @@ public class LinearInterpolation extends LinearMotion {
 					dirBC * angleInc / thetaBC * (pdx - transIdx + 1);
 				q = RQuaternion.signedSLERP(qi, qc, mu);
 				
-				if (pdx == (numOfPts - 1)) {
-					Fields.debug("BC: angle=%f mu=%f\n", angle, mu);
-				}
-				
 			} else {
 				/* Perform SLERP from the start orientation to the intermediate
 				 * orientation */
@@ -162,7 +162,6 @@ public class LinearInterpolation extends LinearMotion {
 				q = RQuaternion.signedSLERP(qa, qb, mu);
 				
 				if (pdx == (transIdx - 1)) {
-					Fields.debug("AB: angle=%f mu=%f\n", angle, mu);
 					qi = q.clone();
 				}
 			}
