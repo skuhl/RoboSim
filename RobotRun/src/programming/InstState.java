@@ -1,7 +1,6 @@
-package screen;
+package programming;
 
 import enums.InstOp;
-import programming.Instruction;
 
 /**
  * A data class for storing states of a instructions to accommodate the undo
