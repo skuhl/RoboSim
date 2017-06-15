@@ -57,18 +57,26 @@ public class IfStatement extends Instruction implements ExpressionEvaluation {
 		
 		return copy;
 	}
-
-	@Override
-	public int execute() {
+	
+	/**
+	 * Evaluates the expression associated with this if statement.
+	 * 
+	 * @return	0	the expression evaluates to true,
+	 * 			1	the expression evaluates to false,
+	 * 			2	an error occurred during expression evaluation
+	 */
+	public int evalExpression() {
 		Operand<?> result = expr.evaluate();
 
-		if(result == null || result.getType() != Operand.BOOL) {
-			return -1;
-		} else if(((OperandBool)result).getBoolValue()) {
-			return instr.execute();
+		if (result instanceof OperandBool) {
+			if (((OperandBool) result).getBoolValue()) {
+				return 0;
+			}
+			
+			return 1;
 		}
 
-		return -2;
+		return 2;
 	}
 
 	public AtomicExpression getExpr() {

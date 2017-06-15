@@ -21,29 +21,6 @@ public class JumpInstruction extends Instruction {
 		return copy;
 	}
 
-	/**
-	 * Returns the index of the instruction to which to jump.
-	 */
-	@Override
-	public int execute() {
-		Program p = RobotRun.getInstance().getActiveProg();
-
-		if (p != null) {
-			int lblIdx = p.findLabelIdx(getTgtLblNum());
-
-			if (lblIdx != -1) {
-				// Return destination instruction index
-				return lblIdx;
-			} else {
-				PApplet.println("Invalid jump instruction!");
-				return -1;
-			}
-		} else {
-			PApplet.println("No active program!");
-			return -1;
-		}
-	}
-
 	public int getTgtLblNum() {
 		return tgtLblNum;
 	}

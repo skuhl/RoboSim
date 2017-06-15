@@ -41,20 +41,6 @@ public class CallInstruction extends Instruction {
 
 	// Getters and setters for a call instruction's program id field
 	
-	@Override
-	@SuppressWarnings("static-access")
-	public int execute() {
-		// TODO Refactor THIS
-		RobotRun app = RobotRun.getInstance();
-		
-		if (tgtDevice != app.getInstanceRobot() && !app.isSecondRobotUsed()) {
-			// Cannot use robot call, when second robot is not active
-			return -1;
-		}
-		
-		return 0;
-	}
-	
 	public Program getProg() { return tgt; }
 	
 	public String getLoadedName() { return loadedName; }
