@@ -189,8 +189,7 @@ public class Point  {
 		for (int jdx = 0; jdx < 6; ++jdx) {
 			float diff = Math.abs(pt.angles[jdx] - angles[jdx]);
 			
-			// Difference is greater than ~0.005 degrees
-			if (diff > 0.000009f) {
+			if (diff > 0.00009f) {
 				return false;
 			}
 		}

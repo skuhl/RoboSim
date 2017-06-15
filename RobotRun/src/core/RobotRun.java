@@ -1743,19 +1743,25 @@ public class RobotRun extends PApplet {
 		case SET_MINST_SPD:
 			m = (MotionInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 			int motionType = m.getMotionType();
-			float tempSpeed = Float.parseFloat(workingText.toString());
 			
-			if (motionType == Fields.MTYPE_LINEAR ||
-					motionType == Fields.MTYPE_CIRCULAR) {
+			try {
+				float tempSpeed = Float.parseFloat(workingText.toString());
 				
-				tempSpeed /= RoboticArm.motorSpeed;
+				if (motionType == Fields.MTYPE_LINEAR ||
+						motionType == Fields.MTYPE_CIRCULAR) {
+					
+					tempSpeed /= RoboticArm.motorSpeed;
+					
+				} else {
+					tempSpeed /= 100f;
+				}
 				
-			} else {
-				tempSpeed /= 100f;
+				m.setSpdMod(RMath.clamp(tempSpeed, 0.01f, 1f));
+				
+			} catch (NumberFormatException NFEx) {
+				// Invalid input
 			}
 			
-			m.setSpdMod(RMath.clamp(tempSpeed, 0.01f, 1f));
-
 			lastScreen();
 			break;
 		case SET_MINST_IDX:
