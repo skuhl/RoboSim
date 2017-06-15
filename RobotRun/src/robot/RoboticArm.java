@@ -3,7 +3,6 @@ package robot;
 import java.util.ArrayList;
 import java.util.Stack;
 
-import core.RobotRun;
 import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;
@@ -1633,9 +1632,9 @@ public class RoboticArm {
 
 		// Did we successfully find the desired angles?
 		if ((destAngles == null) || invalidAngle) {
-			if (Fields.DEBUG && destAngles == null) {
+			if (destAngles == null) {
 				Point RP = getToolTipNative();
-				Fields.debug("IK Failure ...\n%s -> %s\n%s -> %s\n\n",
+				System.err.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n",
 						RP.position, destPosition, RP.orientation,
 						destOrientation);
 			}
@@ -1693,7 +1692,7 @@ public class RoboticArm {
 					p.addInstAt(state.originIdx, state.inst);
 					
 				} else {
-					System.err.printf("Invalid program state!\n", state);
+					Fields.debug("Invalid program state!\n", state);
 				}
 			}
 			
@@ -1930,7 +1929,6 @@ public class RoboticArm {
 	 * @param defTipIdx	The index of a default tool tip offset
 	 */
 	public void setDefToolTip(int frameIdx, int defTipIdx) {
-		
 		ToolFrame frame = getToolFrame(frameIdx);
 		
 		if (frame != null && defTipIdx >= 0 && defTipIdx <
@@ -1963,7 +1961,6 @@ public class RoboticArm {
 	 * @param newJointAngles	The robot's new set of joint angles
 	 */
 	public void setJointAngles(float[] newJointAngles) {
-		
 		for (int jdx = 0; jdx < 6; ++jdx) {
 			SEGMENT[jdx].setJointRotation(newJointAngles[jdx]);
 		}
@@ -2055,12 +2052,6 @@ public class RoboticArm {
 			} else if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
 				// Setup circular motion instruction
 				Point endPt = getVector(pMInst, prog, true);
-				
-				RobotRun.getInstance().renderCircPts = true;
-				RobotRun.getInstance().start = getToolTipNative().position.copy();
-				RobotRun.getInstance().inter = instPt.position.copy();
-				RobotRun.getInstance().end = endPt.position.copy();
-				
 				updateMotion(endPt, instPt, mInst.getSpdMod());
 				return 0;
 				

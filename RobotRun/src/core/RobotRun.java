@@ -218,16 +218,6 @@ public class RobotRun extends PApplet {
 	private WorldObject mouseOverWO;
 	
 	/**
-	 * Debug flag for testing circular motion instrucitons.
-	 */
-	public boolean renderCircPts;
-	
-	/**
-	 * Debug positions for testing circular motion instructions.
-	 */
-	public PVector start, inter, end;
-	
-	/**
 	 * Applies the active camera to the matrix stack.
 	 * 
 	 * @param	The camera to apply
@@ -6460,12 +6450,6 @@ public class RobotRun extends PApplet {
 			tracePts = new ArrayList<PVector>();
 			
 			setManager(new WGUI(this, buttonImages));
-			
-			renderCircPts = false;
-			
-			start = null;
-			inter = null;
-			end = null;
 
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);
@@ -7890,46 +7874,6 @@ public class RobotRun extends PApplet {
 			Fields.drawAxes(getGraphics(), origin, RMath.rMatToWorld(orientation),
 					500f, Fields.BLACK);
 		}
-		
-		// Circular motion debug
-		if (renderCircPts) {
-			pushStyle();
-			
-			if (start != null) {
-				noFill();
-				stroke(Fields.BLACK);
-				
-				pushMatrix();
-				translate(start.x, start.y, start.z);
-				sphere(15);
-				popMatrix();
-			}
-			
-			if (inter != null) {
-				noFill();
-				stroke(Fields.RED);
-				
-				pushMatrix();
-				translate(inter.x, inter.y, inter.z);
-				sphere(15);
-				popMatrix();
-			}
-			
-			if (end != null) {
-				noFill();
-				stroke(Fields.ORANGE);
-				
-				pushMatrix();
-				translate(end.x, end.y, end.z);
-				sphere(15);
-				popMatrix();
-			}
-			
-			popStyle();
-		}
-		
-		
-		
 	}
 	
 	/**
