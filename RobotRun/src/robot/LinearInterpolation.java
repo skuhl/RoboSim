@@ -132,7 +132,7 @@ public class LinearInterpolation extends LinearMotion {
 		if (numOfPts > 50000) {
 			System.err.printf("%d points is way too much (thetaAB=%f thetaBC=%f dist/pt=%f rad/pt=%f)!\n",
 					numOfPts, thetaAB, thetaBC, distBtwPts, angleInc);
-			setFault(false);
+			setFault(true);
 			return;
 			
 		} else {
@@ -202,7 +202,7 @@ public class LinearInterpolation extends LinearMotion {
 		if (numberOfPoints > 15000) {
 			System.err.printf("%d points is way too much (d1=%f d2=%f dist/pt=%f)!",
 					numberOfPoints, d1, d2, distBtwPts);
-			setFault(false);
+			setFault(true);
 			return;
 			
 		} else {
@@ -278,7 +278,7 @@ public class LinearInterpolation extends LinearMotion {
 		if (numberOfPoints > 15000) {
 			System.err.printf("%d points is way too much (dist=%f dist/pt=%f)!",
 					numberOfPoints, dist, distBtwPts);
-			setFault(false);
+			setFault(true);
 			return;
 			
 		} else {
