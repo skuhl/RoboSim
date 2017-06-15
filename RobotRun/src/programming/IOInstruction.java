@@ -25,11 +25,6 @@ public class IOInstruction extends Instruction {
 
 		return copy;
 	}
-	@Override
-	public int execute() {
-		RobotRun.getInstance().updateRobotEEState(reg, state);
-		return 0;
-	}
 	public int getReg(){ return reg; }
 	public int getState(){ return state; }
 
@@ -44,7 +39,7 @@ public class IOInstruction extends Instruction {
 		if (reg == -1) {
 			fields[0] = "IO[...] =";
 		} else {
-			fields[0] = String.format("IO[%d] =", reg + 1);
+			fields[0] = String.format("IO[%d] =", reg);
 		}
 		// Register value
 		if (state == Fields.ON) {

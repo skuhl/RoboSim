@@ -220,6 +220,16 @@ public class RobotRun extends PApplet {
 	private WorldObject mouseOverWO;
 	
 	/**
+	 * Debug flag for testing circular motion instrucitons.
+	 */
+	public boolean renderCircPts;
+	
+	/**
+	 * Debug positions for testing circular motion instructions.
+	 */
+	public PVector start, inter, end;
+	
+	/**
 	 * Applies the active camera to the matrix stack.
 	 * 
 	 * @param	The camera to apply
@@ -1625,7 +1635,9 @@ public class RobotRun extends PApplet {
 
 			break;
 		case SELECT_IO_INSTR_REG:
-			newIOInstruction(options.getColumnIdx());
+			// IO registers are 1 indexed!
+			int state = (options.getColumnIdx() == 1) ? Fields.ON : Fields.OFF;
+			newIOInstruction(options.getLineIdx() + 1, state);
 			screenStates.pop();
 			lastScreen();
 			break;
@@ -2172,12 +2184,15 @@ public class RobotRun extends PApplet {
 
 				if (opEdit.getType() == Operand.UNINIT) {
 					opEdit = new OperandFloat(f);
+					s.setOperand(editIdx, opEdit);
+					
 				} else if (opEdit.getType() == Operand.DREG) {
-					// println(regFile.DAT_REG[(int)f - 1].value);
-					opEdit = new OperandDReg(activeRobot.getDReg((int) f - 1));
-				}
+					if (f >= 1f && f <= 100f) {
+						opEdit = new OperandDReg(activeRobot.getDReg((int) f - 1));
+						s.setOperand(editIdx, opEdit);
+					}
+				}	
 				
-				s.setOperand(editIdx, opEdit);
 			} catch (NumberFormatException NFex) {
 				//TODO display error to user
 			}
@@ -2207,7 +2222,7 @@ public class RobotRun extends PApplet {
 
 				} else {
 					ioInst = (IOInstruction) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-					ioInst.setReg(tempReg - 1);
+					ioInst.setReg(tempReg);
 				}
 			} catch (NumberFormatException NFEx) {
 			/* Ignore invalid input */ }
@@ -4641,7 +4656,7 @@ public class RobotRun extends PApplet {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
 		for (int idx = 0; idx < activeRobot.numOfEndEffectors(); ++idx) {
-			IORegister ioReg = activeRobot.getIOReg(idx);
+			IORegister ioReg = activeRobot.getIOReg(idx + 1);
 			PVector defToolTip = activeRobot.getToolTipDefault(idx);
 			String lineStr = String.format("%s = (%4.3f, %4.3f, %4.3f)",
 					ioReg.comment, defToolTip.x, defToolTip.y, defToolTip.z); 
@@ -4861,10 +4876,10 @@ public class RobotRun extends PApplet {
 	public ArrayList<DisplayLine> loadIORegInst(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
-		for (int idx = 0; idx < r.numOfEndEffectors(); idx += 1) {
+		for (int idx = 1; idx <= r.numOfEndEffectors(); idx += 1) {
 			IORegister ioReg = r.getIOReg(idx);
 			
-			String col0 = String.format("IO[%2d:%-10s] = ", idx + 1,
+			String col0 = String.format("IO[%2d:%-10s] = ", idx,
 					ioReg.comment);
 			lines.add(new DisplayLine(idx, 0, col0, "ON", "OFF"));
 		}
@@ -4881,7 +4896,7 @@ public class RobotRun extends PApplet {
 	public ArrayList<DisplayLine> loadIORegNav(RoboticArm r) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
-		for (int idx = 1; idx < r.numOfEndEffectors() + 1; idx += 1) {
+		for (int idx = 1; idx <= r.numOfEndEffectors(); ++idx) {
 			IORegister ioReg = r.getIOReg(idx);
 			String col0 = String.format("IO[%2d:%-10s] = ", idx,
 					ioReg.comment);
@@ -5772,10 +5787,10 @@ public class RobotRun extends PApplet {
 		}
 	}
 
-	public void newIOInstruction(int columnIdx) {
+	public void newIOInstruction(int ioIdx, int state) {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
-		IOInstruction io = new IOInstruction(options.getLineIdx(), (columnIdx == 1) ? Fields.ON : Fields.OFF);
+		IOInstruction io = new IOInstruction(ioIdx, state);
 
 		if (getActiveInstIdx() != p.getNumOfInst()) {
 			r.replaceInstAt(p, getActiveInstIdx(), io);
@@ -6499,6 +6514,12 @@ public class RobotRun extends PApplet {
 			tracePts = new ArrayList<PVector>();
 			
 			setManager(new WGUI(this, buttonImages));
+			
+			renderCircPts = false;
+			
+			start = null;
+			inter = null;
+			end = null;
 
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);
@@ -6740,15 +6761,6 @@ public class RobotRun extends PApplet {
 	 */
 	public boolean traceEnabled() {
 		return UI.getButtonState("ToggleTrace");
-	}
-
-	/**
-	 * Trigger a motion fault. This stops robot motion as well as program
-	 * execution.
-	 */
-	public void triggerFault() {
-		activeRobot.setMotionFault(true);
-		hold();
 	}
 
 	/**
@@ -7442,11 +7454,7 @@ public class RobotRun extends PApplet {
 	 * @param newState	The new state of the end effector
 	 */
 	public void updateRobotEEState(int edx, int newState) {
-		activeRobot.setEEState(edx, newState);
-		
-		if (activeScenario != null) {
-			activeRobot.checkPickupCollision(activeScenario);
-		}
+		updateRobotEEState(activeRobot, edx, newState);
 	}
 	
 	/**
@@ -7947,6 +7955,46 @@ public class RobotRun extends PApplet {
 			Fields.drawAxes(getGraphics(), origin, RMath.rMatToWorld(orientation),
 					500f, Fields.BLACK);
 		}
+		
+		// Circular motion debug
+		if (renderCircPts) {
+			pushStyle();
+			
+			if (start != null) {
+				noFill();
+				stroke(Fields.BLACK);
+				
+				pushMatrix();
+				translate(start.x, start.y, start.z);
+				sphere(15);
+				popMatrix();
+			}
+			
+			if (inter != null) {
+				noFill();
+				stroke(Fields.RED);
+				
+				pushMatrix();
+				translate(inter.x, inter.y, inter.z);
+				sphere(15);
+				popMatrix();
+			}
+			
+			if (end != null) {
+				noFill();
+				stroke(Fields.ORANGE);
+				
+				pushMatrix();
+				translate(end.x, end.y, end.z);
+				sphere(15);
+				popMatrix();
+			}
+			
+			popStyle();
+		}
+		
+		
+		
 	}
 	
 	/**
@@ -8165,7 +8213,8 @@ public class RobotRun extends PApplet {
 		// Display a message when there is an error with the Robot's
 		// movement
 		if (activeRobot.hasMotionFault()) {
-			text("Motion Fault (press SHIFT + RESET)", lastTextPositionX, lastTextPositionY);
+			text("Motion Fault (press SHIFT + RESET)", lastTextPositionX,
+					lastTextPositionY);
 			lastTextPositionY += 20;
 		}
 
@@ -8266,8 +8315,16 @@ public class RobotRun extends PApplet {
 	private void updateCurIdx() {
 		if (progExecState.getState() == ExecState.EXEC_MINST &&
 				!activeRobot.inMotion()) {
-			// Motion instruction has finished execution
-			progExecState.setState(ExecState.EXEC_NEXT);
+			
+			if (activeRobot.hasMotionFault()) {
+				// An issue occurred when running a motion instruction
+				progExecState.setState(ExecState.EXEC_FAULT);
+				
+			} else {
+				// Motion instruction has finished execution
+				progExecState.setState(ExecState.EXEC_NEXT);
+			}
+			
 		}
 		
 		Program prog = getActiveProg();
@@ -8341,13 +8398,30 @@ public class RobotRun extends PApplet {
 						nextIdx = -1;
 					}
 					
+				} else if (activeInstr instanceof FrameInstruction) {
+					FrameInstruction fInst = (FrameInstruction)activeInstr;
+					
+					if (fInst.getFrameType() == Fields.FTYPE_TOOL) {
+						activeRobot.setActiveToolFrame(fInst.getFrameIdx());
+						
+					} else if (fInst.getFrameType() == Fields.FTYPE_USER) {
+						activeRobot.setActiveUserFrame(fInst.getFrameIdx());
+					}
+					
+				} else if (activeInstr instanceof IOInstruction) {
+					IOInstruction ioInst = (IOInstruction)activeInstr;
+					updateRobotEEState(ioInst.getReg(), ioInst.getState());
+					
 				} else if (activeInstr instanceof JumpInstruction) {
-					nextIdx = activeInstr.execute();
+					JumpInstruction jInst = (JumpInstruction)activeInstr;
+					nextIdx = prog.findLabelIdx(jInst.getTgtLblNum());
 	
 				} else if (activeInstr instanceof CallInstruction) {
 					CallInstruction cInst = (CallInstruction)activeInstr;
 					
-					if (activeInstr.execute() == -1) {
+					if (cInst.getTgtDevice() != activeRobot &&
+							!isSecondRobotUsed()) {
+						// Cannot use robot call, when second robot is not active
 						nextIdx = -1;
 						
 					} else {
@@ -8358,31 +8432,125 @@ public class RobotRun extends PApplet {
 							// Normal call instruction
 							int progIdx = activeRobot.getProgIdx(cInst.getProg().getName());
 							progExecState.setExec(activeRobot.RID, progExecState.getType(), progIdx, 0);
-							
-							
+														
 						} else {
 							// Robot call instruction
 							RoboticArm r = getInactiveRobot();
 							activeRobot = r;
 							int progIdx = r.getProgIdx(cInst.getProg().getName());
 							progExecState.setExec(r.RID, progExecState.getType(), progIdx, 0);
-							
 						}
 						
 						nextIdx = 0;
 					}
 	
-				} else if (activeInstr instanceof IfStatement ||
-						activeInstr instanceof SelectStatement) {
+				} else if (activeInstr instanceof IfStatement) {
+					IfStatement ifStmt = (IfStatement)activeInstr;
 					
-					int ret = activeInstr.execute();
-	
-					if (ret != -2) {
-						nextIdx = ret;
+					int ret = ifStmt.evalExpression();
+					
+					if (ret == 0) {
+						// Execute sub instruction
+						Instruction subInst = ifStmt.getInstr();
+						
+						if (subInst instanceof JumpInstruction) {
+							int lblId = ((JumpInstruction) subInst).getTgtLblNum();
+							nextIdx = prog.findLabelIdx(lblId);
+							
+						} else if (subInst instanceof CallInstruction) {
+							CallInstruction cInst = (CallInstruction)subInst;
+							
+							if (cInst.getTgtDevice() != activeRobot &&
+									!isSecondRobotUsed()) {
+								// Cannot use robot call, when second robot is not active
+								nextIdx = -1;
+								
+							} else {
+								progExecState.setNextIdx(nextIdx);
+								pushActiveProg();
+								
+								if (cInst.getTgtDevice() == activeRobot) {
+									// Normal call instruction
+									int progIdx = activeRobot.getProgIdx(cInst.getProg().getName());
+									progExecState.setExec(activeRobot.RID, progExecState.getType(), progIdx, 0);
+																
+								} else {
+									// Robot call instruction
+									RoboticArm r = getInactiveRobot();
+									activeRobot = r;
+									int progIdx = r.getProgIdx(cInst.getProg().getName());
+									progExecState.setExec(r.RID, progExecState.getType(), progIdx, 0);
+								}
+								
+								nextIdx = 0;
+							}
+							
+						} else {
+							nextIdx = -1;
+						}
+						
+					} else if (ret == 2) {
+						// Evaluation failed
+						nextIdx = -1;
 					}
 	
-				} else if (activeInstr.execute() != 0) {
-					nextIdx = -1;
+				} else if (activeInstr instanceof SelectStatement) {
+					SelectStatement selStmt = (SelectStatement)activeInstr;
+					int caseIdx = selStmt.evalCases();
+					Fields.debug("selStmt: %d\n", caseIdx);
+					if (caseIdx == -2) {
+						nextIdx = -1;
+						
+					} else if (caseIdx >= 0) {
+						// Execute sub instruction
+						Instruction subInst = selStmt.getCaseInst(caseIdx);
+						
+						if (subInst instanceof JumpInstruction) {
+							int lblId = ((JumpInstruction) subInst).getTgtLblNum();
+							nextIdx = prog.findLabelIdx(lblId);
+							
+						} else if (subInst instanceof CallInstruction) {
+							CallInstruction cInst = (CallInstruction)subInst;
+							
+							if (cInst.getTgtDevice() != activeRobot &&
+									!isSecondRobotUsed()) {
+								// Cannot use robot call, when second robot is not active
+								nextIdx = -1;
+								
+							} else {
+								progExecState.setNextIdx(nextIdx);
+								pushActiveProg();
+								
+								if (cInst.getTgtDevice() == activeRobot) {
+									// Normal call instruction
+									int progIdx = activeRobot.getProgIdx(cInst.getProg().getName());
+									progExecState.setExec(activeRobot.RID, progExecState.getType(), progIdx, 0);
+																
+								} else {
+									// Robot call instruction
+									RoboticArm r = getInactiveRobot();
+									activeRobot = r;
+									int progIdx = r.getProgIdx(cInst.getProg().getName());
+									progExecState.setExec(r.RID, progExecState.getType(), progIdx, 0);
+								}
+								
+								nextIdx = 0;
+							}
+							
+						} else {
+							nextIdx = -1;
+						}
+					}
+					
+				} else if (activeInstr instanceof RegisterStatement) {
+					RegisterStatement regStmt = (RegisterStatement)activeInstr;
+					
+					int ret = regStmt.evalExpression();
+					
+					if (ret != 0) {
+						// Register expression evaluation failed
+						nextIdx = -1;
+					}
 				}
 			}
 		}

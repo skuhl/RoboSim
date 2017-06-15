@@ -100,7 +100,10 @@ public class Point  {
 	 */
 	public Point add(PVector pos, RQuaternion orien) {
 		PVector resPos = PVector.add(position, pos);
-		RQuaternion resOrien = RQuaternion.mult(orientation, orien);
+		resPos.x = RMath.clamp(resPos.x, -9999f, 9999f);
+		resPos.y = RMath.clamp(resPos.y, -9999f, 9999f);
+		resPos.z = RMath.clamp(resPos.z, -9999f, 9999f);
+		RQuaternion resOrien = RQuaternion.mult(orientation, orien).normalize();
 		
 		return new Point(resPos, resOrien, angles.clone());
 	}

@@ -20,6 +20,7 @@ public class OperandDReg extends OperandRegister<DataRegister> implements FloatM
 	public Float getArithValue() {
 		if(value.value != null) {
 			return value.value;
+			
 		} else {
 			return Float.NaN;
 		}
