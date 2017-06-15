@@ -2,31 +2,40 @@ package screen;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import ui.MenuScroll;
 
 public class ScreenMainMenu extends ST_ScreenListContents {
 
-	public ScreenMainMenu(ScreenMode m, RobotRun r) {
+	public ScreenMainMenu(RobotRun r) {
 		super(ScreenMode.NAV_MAIN_MENU, r);
 	}
 
 	@Override
-	void loadHeader() {
-		header = "MAIN MENU";
+	String loadHeader() {
+		return "MAIN MENU";
 	}
 
 	@Override
-	void loadContents() {
+	MenuScroll loadContents() {
 		contents.addLine("1 Frames"           );
 		contents.addLine("2 Macros"           );
 		contents.addLine("3 Manual Fncts"     );
+		
+		return contents;
+	}
+	
+	@Override
+	MenuScroll loadOptions() {
+		// TODO Auto-generated method stub
+		return options;
 	}
 
 	@Override
-	void loadOptions() {}
-
-	@Override
-	void loadLabels() {}
-
+	String[] loadLabels() {
+		// TODO Auto-generated method stub
+		return new String[] { "", "", "", "", "" };
+	}
+	
 	@Override
 	public void loadVars() {
 		contents.reset();
@@ -77,5 +86,5 @@ public class ScreenMainMenu extends ST_ScreenListContents {
 
 	@Override
 	public void actionF5() {}
-
+	
 }

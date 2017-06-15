@@ -7,12 +7,36 @@ import programming.Instruction;
 import programming.MotionInstruction;
 import programming.SelectStatement;
 import robot.RoboticArm;
+import ui.MenuScroll;
 
 public class ScreenProgInstructions extends ST_ScreenListContents {
 
-	public ScreenProgInstructions(ScreenMode m, RobotRun r) {
-		super(m, r);
-		// TODO Auto-generated constructor stub
+	public ScreenProgInstructions(RobotRun r) {
+		super(ScreenMode.NAV_PROG_INSTR, r);
+	}
+	
+	@Override
+	String loadHeader() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	MenuScroll loadContents() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	MenuScroll loadOptions() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	String[] loadLabels() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	@Override
@@ -82,30 +106,6 @@ public class ScreenProgInstructions extends ST_ScreenListContents {
 			// Lock movement when a program is running
 			contents.moveRight();
 		}
-	}
-	
-	@Override
-	void loadHeader() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	void loadContents() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	void loadOptions() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	void loadLabels() {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override

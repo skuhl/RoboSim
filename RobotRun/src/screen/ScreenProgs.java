@@ -2,6 +2,7 @@ package screen;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import ui.MenuScroll;
 
 public class ScreenProgs extends ST_ScreenListContents {
 
@@ -10,33 +11,40 @@ public class ScreenProgs extends ST_ScreenListContents {
 	}
 	
 	@Override
-	void loadHeader() {
-		header = "PROGRAMS";
+	String loadHeader() {
+		return "PROGRAMS";
 	}
 	
 	@Override
-	void loadContents() {
+	MenuScroll loadContents() {
 		contents.setLines(robotRun.getActiveRobot().printProgList());
+		return contents;
 	}
 	
 	@Override
-	void loadOptions() {}
+	MenuScroll loadOptions() {
+		return options;
+	}
 	
 	@Override
-	void loadLabels() {
+	String[] loadLabels() {
+		String[] lbls = new String[5];
+		
 		// F2, F3
-		labels[0] = "[Create]";
+		lbls[0] = "[Create]";
 		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
-			labels[1] = "[Rename]";
-			labels[2] = "[Delete]";
-			labels[3] = "[Copy]";
-			labels[4] = "";
+			lbls[1] = "[Rename]";
+			lbls[2] = "[Delete]";
+			lbls[3] = "[Copy]";
+			lbls[4] = "";
 		} else {
-			labels[1] = "";
-			labels[2] = "";
-			labels[3] = "";
-			labels[4] = "";
+			lbls[1] = "";
+			lbls[2] = "";
+			lbls[3] = "";
+			lbls[4] = "";
 		}
+		
+		return lbls;
 	}
 	
 	@Override
