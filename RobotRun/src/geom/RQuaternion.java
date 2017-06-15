@@ -1,5 +1,6 @@
 package geom;
 
+import global.Fields;
 import processing.core.PVector;
 
 /**
@@ -155,6 +156,10 @@ public class RQuaternion implements Cloneable {
 			mu *= -1f;
 			cOmega *= -1;
 			q3.scalarMult(-1f);
+		}
+		
+		if (q1.dot(q3) < 0f) {
+			Fields.debug("Q1 dot Q2: %f\n", q1.dot(q3));
 		}
 		
 		if (cOmega > 0.99999995f) {
