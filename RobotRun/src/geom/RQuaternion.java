@@ -1,6 +1,5 @@
 package geom;
 
-import global.Fields;
 import processing.core.PVector;
 
 /**
