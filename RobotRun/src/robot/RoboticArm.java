@@ -1533,7 +1533,8 @@ public class RoboticArm {
 				
 			} else if (offIsCart) {
 				// Add a Cartesian offset to a joint motion instruction
-				pt = getToolTipPoint(pt.angles, getActiveTool(), instUFrame);
+				offset = removeFrame(offset, new PVector(), instUFrame.getOrientation());
+				pt = getToolTipNative(pt.angles);
 				// Apply offset
 				pt = pt.add(offset.position, offset.orientation);
 				
