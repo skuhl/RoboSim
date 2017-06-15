@@ -6450,7 +6450,7 @@ public class RobotRun extends PApplet {
 			tracePts = new ArrayList<PVector>();
 			
 			setManager(new WGUI(this, buttonImages));
-
+			
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);
 			throw NPEx;

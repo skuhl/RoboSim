@@ -3,6 +3,7 @@ package robot;
 import java.util.ArrayList;
 import java.util.Stack;
 
+import core.RobotRun;
 import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;
@@ -2052,6 +2053,7 @@ public class RoboticArm {
 			} else if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
 				// Setup circular motion instruction
 				Point endPt = getVector(pMInst, prog, true);
+				
 				updateMotion(endPt, instPt, mInst.getSpdMod());
 				return 0;
 				
@@ -2196,7 +2198,7 @@ public class RoboticArm {
 				// Uninitialized position register
 				return null;
 				
-			} else if (mInst.getCircPosIdx() == Fields.PTYPE_PROG) {
+			} else if (mInst.getCircPosType() == Fields.PTYPE_PROG) {
 				// Update a position in the program
 				if (posNum == -1) {
 					// In the case of an uninitialized position
@@ -2318,10 +2320,6 @@ public class RoboticArm {
 	public void updateRobot() {	
 		if (inMotion()) {
 			motion.executeMotion(this);
-			
-			if (hasMotionFault()) {
-				Fields.debug("HERE!");
-			}
 		}
 		
 		updateOBBs();
