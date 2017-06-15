@@ -157,6 +157,48 @@ public class Point  {
 	}
 	
 	/**
+	 * Compares the Cartesian values of this point and pt to see if they are
+	 * close enough to be considered the same position and orientation.
+	 * 
+	 * @param pt	The point to compare to this
+	 * @return		If the Cartesian values of pt and this are close enough
+	 * 				together to be considered the same
+	 */
+	public boolean compareCartesian(Point pt) {
+		float posDist = PVector.dist(pt.position, position);
+		
+		if (posDist > 0.01f) {
+			return false;
+			
+		} else {
+			// TODO quaternion difference
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Compares the joint angle values of this point and pt to see if they are
+	 * close enough to be considered the same.
+	 * 
+	 * @param pt	The point to compare to this
+	 * @return		If the joint values of this and pt are close enough to be
+	 * 				considered the same
+	 */
+	public boolean compareJoint(Point pt) {
+		for (int jdx = 0; jdx < 6; ++jdx) {
+			float diff = Math.abs(pt.angles[jdx] - angles[jdx]);
+			
+			// Difference is greater than ~0.005 degrees
+			if (diff > 0.000009f) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
 	 * Returns a point, with Cartesian values, which are the negation of this
 	 * point's Cartesian values.
 	 * 

@@ -4,6 +4,7 @@ import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Stack;
 
 import enums.AxesDisplay;
@@ -195,9 +196,16 @@ public class RobotRun extends PApplet {
 
 	public int editIdx = -1;
 
-	// container for instructions being coppied/ cut and pasted
+	// container for instructions being copied/ cut and pasted
 	ArrayList<Instruction> clipBoard = new ArrayList<>();
-
+	
+	/**
+	 * A list of instruction indexes for the active program, which point to
+	 * motion instructions, whose position and orientation (or joint angles)
+	 * are close enough to the robot's current position.
+	 */
+	private HashMap<Integer, Boolean> mInstRobotAt;
+	
 	private int active_index = 0;
 
 	/**
@@ -1854,8 +1862,6 @@ public class RobotRun extends PApplet {
 			try {
 				pMInst = (PosMotionInst) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 				int tempRegister = Integer.parseInt(workingText.toString()) - 1;
-
-				global.Fields.debug("Offset: %d\n", tempRegister);
 				
 				if (tempRegister < 0 || tempRegister > 99) {
 					// Invalid register index
@@ -4110,9 +4116,15 @@ public class RobotRun extends PApplet {
 	 * Stops all robot motion and program execution.
 	 */
 	public void hold() {
+		boolean robotInMotion = activeRobot.inMotion();
 		// Stop all robot motion and program execution
 		activeRobot.halt();
 		progExecState.halt();
+		
+		if (robotInMotion && !activeRobot.inMotion()) {
+			// Robot has stopped moving
+			updateInstList();
+		}
 	}
 
 	/**
@@ -4714,7 +4726,6 @@ public class RobotRun extends PApplet {
 		int tokenOffset = Fields.TXT_PAD - Fields.PAD_OFFSET;
 		
 		int size = p.getNumOfInst();
-		Point tipPos = activeRobot.getToolTipNative();
 		
 		for (int i = 0; i < size; i += 1) {
 			DisplayLine line = new DisplayLine(i);
@@ -4734,34 +4745,21 @@ public class RobotRun extends PApplet {
 
 			int numWdth = line.get(line.size() - 1).length();
 			xPos += numWdth * Fields.CHAR_WDTH + tokenOffset;
-
+			
 			if (instr instanceof MotionInstruction) {
-				// Show '@' at the an instrution, if the Robot's position is
-				// close to that position stored in the instruction's register
-				Point pt;
+				Boolean isRobotAt = mInstRobotAt.get(new Integer(i));
 				
-				if (instr instanceof PosMotionInst) {
-					pt = activeRobot.getVector((PosMotionInst)instr, p, false);
-					
-				} else if (instr instanceof CamMoveToObject) {
-					pt = ((CamMoveToObject) instr).getWOPosition();
-					
-				} else {
-					pt = null;
-				}
-
-				if (pt != null && tipPos.position.dist(pt.position)
-						< (activeRobot.getLiveSpeed() / 100f)) {
-					
+				if (isRobotAt != null && isRobotAt) {
 					line.add("@");
 					
 				} else {
+					// Add a placeholder for the '@' symbol
 					line.add("\0");
 				}
-
+				
 				xPos += Fields.CHAR_WDTH + tokenOffset;
 			}
-
+			
 			String[] fields = instr.toStringArray();
 
 			for (int j = 0; j < fields.length; j += 1) {
@@ -5077,6 +5075,8 @@ public class RobotRun extends PApplet {
 		case NAV_PROG_INSTR:
 			progCallStack.clear();
 			setActiveInstIdx(0);
+			// Reinitialize the map of motion instructions
+			updateInstList();
 			
 			break;
 		case PROG_CREATE:
@@ -6451,6 +6451,8 @@ public class RobotRun extends PApplet {
 			
 			setManager(new WGUI(this, buttonImages));
 			
+			mInstRobotAt = new HashMap<Integer, Boolean>();
+			
 		} catch (NullPointerException NPEx) {
 			DataManagement.errLog(NPEx);
 			throw NPEx;
@@ -7402,7 +7404,14 @@ public class RobotRun extends PApplet {
 	
 	public void updateRobotJogMotion(int set, int direction) {
 		if (isShift()) {
+			boolean robotInMotion = activeRobot.inMotion();
+			
 			activeRobot.updateJogMotion(set, direction);
+			
+			if (robotInMotion && !activeRobot.inMotion()) {
+				// Robot has stopped moving
+				updateInstList();
+			}
 		}
 	}
 
@@ -7677,7 +7686,14 @@ public class RobotRun extends PApplet {
 			updateProgExec();
 		}
 		
+		boolean robotInMotion = activeRobot.inMotion();
+		
 		activeRobot.updateRobot();
+		
+		if (robotInMotion && !activeRobot.inMotion()) {
+			// Robot has stopped moving
+			updateInstList();
+		}
 		
 		if (isProgExec()) {
 			updateCurIdx();
@@ -8256,6 +8272,55 @@ public class RobotRun extends PApplet {
 		// Update the display
 		contents.setLineIdx( getInstrLine(getActiveInstIdx()) );
 		updatePendantScreen();
+	}
+	
+	/**
+	 * Updates program instruction list display based on the active robot's
+	 * current position and orientation. If the position defined by a motion
+	 * instruction in the active program display is equal to the robot's
+	 * position and orientation, then an '@' is displayed next to the motion
+	 * instruction.
+	 */
+	private void updateInstList() {
+		if (mode == ScreenMode.NAV_PROG_INSTR) {
+			Program prog = getActiveProg();
+			Set<Integer> instIndexes = mInstRobotAt.keySet();
+			Point robotPos = activeRobot.getToolTipNative();
+			boolean updatedLines = false;
+			
+			// Check each instruction in the active program
+			for (int idx = 0; idx < prog.getNumOfInst(); ++idx) {
+				Instruction inst = prog.getInstAt(idx);
+				Integer keyInt = new Integer(idx);
+				
+				if (inst instanceof PosMotionInst) { 
+					PosMotionInst mInst = (PosMotionInst)prog.getInstAt(idx);
+					Point instPt = activeRobot.getVector(mInst, prog, false);
+					
+					if (instPt != null) {
+						boolean closeEnough = (mInst.getMotionType() == Fields.MTYPE_JOINT
+								&& instPt.compareJoint(robotPos) ||
+								mInst.getMotionType() != Fields.MTYPE_JOINT
+								&& instPt.compareCartesian(robotPos));
+						
+						Boolean prevState = mInstRobotAt.put(keyInt, closeEnough);
+						
+						if (prevState == null || prevState.booleanValue() != closeEnough) {
+							updatedLines = true;
+						}
+					}
+						
+				} else if (mInstRobotAt.get(keyInt) != null) {
+					// Remove previous motion instructions
+					mInstRobotAt.remove(keyInt);
+				}
+			}
+			
+			if (updatedLines) {
+				updatePendantScreen();
+			}
+		}
+		
 	}
 	
 	private int updateProgExec() {
