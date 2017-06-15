@@ -2,6 +2,7 @@ package screen;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import ui.MenuScroll;
 
 public class ScreenDefault extends Screen {
 	public ScreenDefault(RobotRun r) {
@@ -9,27 +10,33 @@ public class ScreenDefault extends Screen {
 	}
 
 	@Override
-	void loadHeader() {
-		header = "";
+	String loadHeader() {
+		return "";
 	}
 
 	@Override
-	void loadContents() {
+	MenuScroll loadContents() {
 		contents.clear();
+		return contents;
 	}
 
 	@Override
-	void loadOptions() {
+	MenuScroll loadOptions() {
 		options.clear();
+		return options;
 	}
 
 	@Override
-	void loadLabels() {
-		labels[0] = "";
-		labels[1] = "";
-		labels[2] = "";
-		labels[3] = "";
-		labels[4] = "";
+	String[] loadLabels() {
+		String[] lbls = new String[5];
+		
+		lbls[0] = "";
+		lbls[1] = "";
+		lbls[2] = "";
+		lbls[3] = "";
+		lbls[4] = "";
+		
+		return lbls;
 	}
 	
 	@Override

@@ -71,6 +71,7 @@ import regs.IORegister;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
+import screen.Screen;
 import screen.ScreenState;
 import ui.Camera;
 import ui.DisplayLine;
@@ -156,6 +157,7 @@ public class RobotRun extends PApplet {
 	private ScreenMode mode;
 	private MenuScroll contents;
 	private MenuScroll options;
+	private Screen curScreen;
 
 	private Stack<ScreenState> screenStates;
 	private ArrayList<Macro> macros = new ArrayList<>();
@@ -287,6 +289,11 @@ public class RobotRun extends PApplet {
 	 * in either the content or options menu.
 	 */
 	public void arrow_dn() {
+		if(curScreen != null) {
+			curScreen.actionDn();
+			return;
+		}
+		
 		switch (mode) {
 		case NAV_PROGRAMS:
 			contents.moveDown(isShift());
@@ -390,6 +397,8 @@ public class RobotRun extends PApplet {
 
 			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
 				contents.moveDown(false);
+			} else {
+				
 			}
 		}
 
@@ -404,6 +413,11 @@ public class RobotRun extends PApplet {
 	 * either the content or options menu.
 	 */
 	public void arrow_lt() {
+		if(curScreen != null) {
+			curScreen.actionLt();
+			return;
+		}
+		
 		switch (mode) {
 		case NAV_PROG_INSTR:
 			if (!isProgExec()) {
@@ -449,6 +463,11 @@ public class RobotRun extends PApplet {
 	 * text, and point entry menus.
 	 */
 	public void arrow_rt() {
+		if(curScreen != null) {
+			curScreen.actionRt();
+			return;
+		}
+		
 		switch (mode) {
 		case NAV_PROG_INSTR:
 			if (!isProgExec()) {
@@ -537,6 +556,11 @@ public class RobotRun extends PApplet {
 	 * in either the content or options menu.
 	 */
 	public void arrow_up() {
+		if(curScreen != null) {
+			curScreen.actionUp();
+			return;
+		}
+		
 		switch (mode) {
 		case NAV_PROGRAMS:
 			contents.moveUp(isShift());
@@ -1288,6 +1312,11 @@ public class RobotRun extends PApplet {
 	public void enter() {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
+		
+		if(curScreen != null) {
+			curScreen.actionDn();
+			return;
+		}
 
 		switch (mode) {
 		// Main menu
@@ -2638,6 +2667,11 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void f1() {
+		if(curScreen != null) {
+			curScreen.actionDn();
+			return;
+		}
+		
 		switch (mode) {
 		case NAV_PROGRAMS:
 			nextScreen(ScreenMode.PROG_CREATE);
@@ -2736,6 +2770,11 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void f2() {
+		if(curScreen != null) {
+			curScreen.actionDn();
+			return;
+		}
+		
 		switch (mode) {
 		case NAV_PROGRAMS:
 			if (activeRobot.numOfPrograms() > 0) {
@@ -2790,6 +2829,11 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void f3() {
+		if(curScreen != null) {
+			curScreen.actionDn();
+			return;
+		}
+		
 		RoboticArm r = activeRobot;
 		
 		switch (mode) {
@@ -2929,6 +2973,11 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void f4() {
+		if(curScreen != null) {
+			curScreen.actionDn();
+			return;
+		}
+		
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
 
@@ -3141,6 +3190,11 @@ public class RobotRun extends PApplet {
 	 * menu.
 	 */
 	public void f5() {
+		if(curScreen != null) {
+			curScreen.actionDn();
+			return;
+		}
+		
 		RoboticArm r = activeRobot;
 		Instruction inst = getActiveInstruction();
 		
@@ -5037,7 +5091,7 @@ public class RobotRun extends PApplet {
 	 */
 	private void loadScreen(ScreenMode m, ScreenState current) {
 		Fields.debug("\n%s => %s\n", current.mode, m);
-			
+
 		mode = m;
 		workingText = new StringBuilder();
 		contents.reset();
@@ -7360,11 +7414,16 @@ public class RobotRun extends PApplet {
 	 * pendant.
 	 */
 	public void updatePendantScreen() {
-		updateContents();
-		updateOptions();
-		
-		UI.renderPendantScreen(getHeader(mode), getContentsMenu(),
-				getOptionsMenu(), getFunctionLabels(mode));
+		if(curScreen != null) {
+			UI.renderPendantScreen(curScreen.getHeader(), curScreen.getContents(),
+					curScreen.getOptions(), curScreen.getLabels());
+		} else {
+			updateContents();
+			updateOptions();
+			
+			UI.renderPendantScreen(getHeader(mode), getContentsMenu(),
+					getOptionsMenu(), getFunctionLabels(mode));
+		}
 	}
 
 	public void UpdateCam() {
@@ -7644,9 +7703,15 @@ public class RobotRun extends PApplet {
 	 * onto the screen state stack.
 	 */
 	private void pushActiveScreen() {
-		pushScreen(mode, contents.getLineIdx(), contents.getColumnIdx(),
-				contents.getRenderStart(), options.getLineIdx(),
-				options.getRenderStart());
+		if(curScreen != null) {
+			pushScreen(curScreen.mode, curScreen.getContentIdx(), curScreen.getContentColIdx(),
+					curScreen.getContentStart(), curScreen.getOptionIdx(),
+					curScreen.getOptionStart());
+		} else {
+			pushScreen(mode, contents.getLineIdx(), contents.getColumnIdx(),
+					contents.getRenderStart(), options.getLineIdx(),
+					options.getRenderStart());
+		}
 	}
 
 	/**
