@@ -7,7 +7,6 @@ import geom.Point;
 import geom.RQuaternion;
 import global.Fields;
 import global.RMath;
-import processing.core.PConstants;
 import processing.core.PMatrix3D;
 import processing.core.PVector;
 
@@ -328,6 +327,7 @@ public class LinearInterpolation extends LinearMotion {
 			}
 
 			if (ret == 1) {
+				// An issue occurred with inverse kinematics
 				setFault(true);
 				return 1;
 			}
@@ -338,7 +338,11 @@ public class LinearInterpolation extends LinearMotion {
 
 	@Override
 	public void halt() {
-		reset(0f);
+		interpolatePts.clear();
+		distBtwPts = 5f;
+		speed = 0f;
+		interMotionIdx = 0;
+		motionFrameCounter = 0;
 	}
 
 	@Override

@@ -6710,15 +6710,6 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Trigger a motion fault. This stops robot motion as well as program
-	 * execution.
-	 */
-	public void triggerFault() {
-		activeRobot.setMotionFault(true);
-		hold();
-	}
-
-	/**
 	 * Revert the most recent change to the active scenario
 	 */
 	public void undoScenarioEdit() {
@@ -8157,7 +8148,8 @@ public class RobotRun extends PApplet {
 		// Display a message when there is an error with the Robot's
 		// movement
 		if (activeRobot.hasMotionFault()) {
-			text("Motion Fault (press SHIFT + RESET)", lastTextPositionX, lastTextPositionY);
+			text("Motion Fault (press SHIFT + RESET)", lastTextPositionX,
+					lastTextPositionY);
 			lastTextPositionY += 20;
 		}
 
@@ -8258,8 +8250,16 @@ public class RobotRun extends PApplet {
 	private void updateCurIdx() {
 		if (progExecState.getState() == ExecState.EXEC_MINST &&
 				!activeRobot.inMotion()) {
-			// Motion instruction has finished execution
-			progExecState.setState(ExecState.EXEC_NEXT);
+			
+			if (activeRobot.hasMotionFault()) {
+				// An issue occurred when running a motion instruction
+				progExecState.setState(ExecState.EXEC_FAULT);
+				
+			} else {
+				// Motion instruction has finished execution
+				progExecState.setState(ExecState.EXEC_NEXT);
+			}
+			
 		}
 		
 		Program prog = getActiveProg();

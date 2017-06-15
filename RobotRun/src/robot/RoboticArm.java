@@ -1573,24 +1573,6 @@ public class RoboticArm {
 	 * Stops all movement of this robot.
 	 */
 	public void halt() {
-		/* TODO TEST CODE *
-		try {
-			
-			throw new RuntimeException("HALT!");
-			
-		} catch (RuntimeException REx) {
-			REx.printStackTrace();
-		}
-		/**/
-		
-		// Set default speed modifiers
-		SEGMENT[0].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
-		SEGMENT[1].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
-		SEGMENT[2].setSpdMod(200f * PConstants.DEG_TO_RAD / 60f);
-		SEGMENT[3].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
-		SEGMENT[4].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
-		SEGMENT[5].setSpdMod(420f * PConstants.DEG_TO_RAD / 60f);
-		
 		if (motion != null) {
 			motion.halt();
 		}
@@ -1657,8 +1639,7 @@ public class RoboticArm {
 						RP.position, destPosition, RP.orientation,
 						destOrientation);
 			}
-
-			RobotRun.getInstance().triggerFault();
+			
 			return 1;
 		}
 
@@ -2003,7 +1984,6 @@ public class RoboticArm {
 	 * @param flag	Whether the robot has a motion fault
 	 */
 	public void setMotionFault(boolean flag) {
-		
 		if (motion instanceof LinearMotion) {
 			((LinearMotion) motion).setFault(flag);
 		}
@@ -2059,7 +2039,7 @@ public class RoboticArm {
 					} else {
 						// Invalid motion instruction
 						nextPt = null;
-						return 1;
+						return 3;
 					}
 					
 					updateMotion(instPt, nextPt, mInst.getSpdMod(),
@@ -2086,7 +2066,7 @@ public class RoboticArm {
 				
 			} else {
 				// Invalid motion type
-				return 3;
+				return 4;
 			}
 			
 		} else if (mInst instanceof CamMoveToObject) {
@@ -2109,7 +2089,7 @@ public class RoboticArm {
 					} else {
 						// Invalid motion instruction
 						nextPt = null;
-						return 1;
+						return 3;
 					}
 					
 					updateMotion(tgt, nextPt, mInst.getSpdMod(),
@@ -2153,6 +2133,13 @@ public class RoboticArm {
 				jogMotion = new JointJog();
 				motion = jogMotion;
 				
+				// Set default speed modifiers
+				SEGMENT[0].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
+				SEGMENT[1].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
+				SEGMENT[2].setSpdMod(200f * PConstants.DEG_TO_RAD / 60f);
+				SEGMENT[3].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
+				SEGMENT[4].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
+				SEGMENT[5].setSpdMod(420f * PConstants.DEG_TO_RAD / 60f);
 			}
 			
 			oldDir = jogMotion.setMotion(mdx, newDir);
@@ -2340,6 +2327,10 @@ public class RoboticArm {
 	public void updateRobot() {	
 		if (inMotion()) {
 			motion.executeMotion(this);
+			
+			if (hasMotionFault()) {
+				Fields.debug("HERE!");
+			}
 		}
 		
 		updateOBBs();
