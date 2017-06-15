@@ -4,6 +4,7 @@ import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.Stack;
 
@@ -221,7 +222,12 @@ public class RobotRun extends PApplet {
 	 * Defines a set of tool tip positions that are drawn to form a trace of
 	 * the robot's motion overtime.
 	 */
-	private ArrayList<PVector> tracePts;
+	private LinkedList<PVector> tracePts;
+	
+	/**
+	 * Value used for debuggin trace points.
+	 */
+	private int tracePtSizeTracker;
 	
 	private WorldObject mouseOverWO;
 	
@@ -1155,14 +1161,13 @@ public class RobotRun extends PApplet {
 	 */
 	private void drawTrace(PGraphics g) {		
 		if (tracePts.size() > 1) {
-			PVector lastPt = tracePts.get(0);
+			PVector lastPt = tracePts.getFirst();
 			
 			g.pushStyle();
 			g.stroke(0);
 			g.strokeWeight(3);
 			
-			for(int i = 1; i < tracePts.size(); i += 1) {
-				PVector curPt = tracePts.get(i);
+			for(PVector curPt : tracePts) {
 				
 				g.line(lastPt.x, lastPt.y, lastPt.z, curPt.x, curPt.y, curPt.z);
 				
@@ -4525,6 +4530,7 @@ public class RobotRun extends PApplet {
 			switch (mode) {
 			case NAV_PROG_INSTR:
 				DisplayLine active = contents.getActiveLine();
+				updateInstList();
 				// Update the active robot's active instruction index
 				if (active != null && active.getItemIdx() < getActiveProg().size()) {
 					setActiveInstIdx(active.getItemIdx());
@@ -6453,7 +6459,8 @@ public class RobotRun extends PApplet {
 			progExecState = new ProgExecution();
 			progCallStack = new Stack<>();
 			
-			tracePts = new ArrayList<PVector>();
+			tracePts = new LinkedList<PVector>();
+			tracePtSizeTracker = 0;
 			
 			setManager(new WGUI(this, buttonImages));
 			
@@ -6654,6 +6661,7 @@ public class RobotRun extends PApplet {
 		if (!traceEnabled()) {
 			// Empty trace when it is disabled
 			tracePts.clear();
+			tracePtSizeTracker = 0;
 		}
 	}
 	
@@ -7409,7 +7417,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	public void updateRobotJogMotion(int set, int direction) {
-		if (isShift()) {
+		if (isShift() && !isProgExec()) {
 			boolean robotInMotion = activeRobot.inMotion();
 			
 			activeRobot.updateJogMotion(set, direction);
@@ -7860,15 +7868,26 @@ public class RobotRun extends PApplet {
 			// Update the robots trace points
 			if(tracePts.isEmpty()) {
 				tracePts.add(tipPosNative.position);
+				++tracePtSizeTracker;
 				
 			} else {
-				PVector lastTracePt = tracePts.get(tracePts.size() - 1);
+				PVector lastTracePt = tracePts.getLast();
 				
 				if (PVector.sub(tipPosNative.position, lastTracePt).mag()
 						> 0.5f) {
 					
-					tracePts.add(tipPosNative.position);
+					tracePts.addLast(tipPosNative.position);
 				}
+			}
+			
+			if (tracePts.size() == 2 * tracePtSizeTracker) {
+				System.err.printf("Trace Pt size: %d\n", tracePts.size());
+				tracePtSizeTracker *= 2;
+			}
+			
+			if (tracePts.size() > 10000f) {
+				// Begin to remove points after the limit is reached
+				tracePts.removeFirst();
 			}
 		}
 		
@@ -8003,7 +8022,8 @@ public class RobotRun extends PApplet {
 		lastTextPositionY += 20;
 
 		if (activeScenario != null) {
-			text(activeScenario.getName(), lastTextPositionX, lastTextPositionY);
+			String out = String.format("Active scenario: %s", activeScenario.getName());
+			text(out, lastTextPositionX, lastTextPositionY);
 			
 		} else {
 			text("No active scenario", lastTextPositionX, lastTextPositionY);
