@@ -14,9 +14,7 @@ import controlP5.ControlP5;
 import controlP5.ControllerInterface;
 import controlP5.DropdownList;
 import controlP5.Group;
-import controlP5.Label;
 import controlP5.Pointer;
-import controlP5.RadioButton;
 import controlP5.Slider;
 import controlP5.Textarea;
 import controlP5.Toggle;
@@ -939,10 +937,13 @@ public class WGUI implements ControlListener {
 		return s;
 	}
 	
-	private Slider addSlider(String name, String lbl, Group parent, int wdh, int hgt, float min, float max, int percision, float def, int valColor, int actColor, int bgColor, int fgColor, PFont lblFont) {
+	private Slider addSlider(String name, String lbl, Group parent, int wdh,
+			int hgt, float min, float max, int percision, float def,
+			int valColor, int actColor, int bgColor, int fgColor,
+			PFont lblFont) {
 		
 		Slider s = new Slider(manager, name);
-		s.getCaptionLabel().set(lbl);
+		s.getCaptionLabel().set(lbl).setFont(lblFont);
 		
 		s.setColorValue(valColor)
 		.setColorLabel(Fields.F_TEXT_C)
@@ -2527,11 +2528,11 @@ public class WGUI implements ControlListener {
 
 			// Define the label text and the number of dimensionos fields to display
 			if (selectedShape == ShapeType.BOX) {
-				lblNames = new String[] { "Length:", "Height:", "Width" };
+				lblNames = new String[] { "Length:", "Height:", "Width:" };
 				txtFields = 3;
 
 			} else if (selectedShape == ShapeType.CYLINDER) {
-				lblNames = new String[] { "Radius", "Height" };
+				lblNames = new String[] { "Radius:", "Height:" };
 				txtFields = 2;
 
 			} else if (selectedShape == ShapeType.MODEL) {
@@ -2547,11 +2548,11 @@ public class WGUI implements ControlListener {
 				RShape s = ((WorldObject)val).getForm();
 
 				if (s instanceof RBox) {
-					lblNames = new String[] { "Length:", "Height:", "Width" };
+					lblNames = new String[] { "Length:", "Height:", "Width:" };
 					txtFields = 3;
 
 				} else if (s instanceof RCylinder) {
-					lblNames = new String[] { "Radius", "Height" };
+					lblNames = new String[] { "Radius:", "Height:" };
 					txtFields = 2;
 
 				} else if (s instanceof ComplexShape) {
