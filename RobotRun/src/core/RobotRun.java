@@ -301,6 +301,7 @@ public class RobotRun extends PApplet {
 	public void arrow_dn() {
 		if(curScreen != null) {
 			curScreen.actionDn();
+			updatePendantScreen();
 			return;
 		}
 		
@@ -568,6 +569,7 @@ public class RobotRun extends PApplet {
 	public void arrow_up() {
 		if(curScreen != null) {
 			curScreen.actionUp();
+			updatePendantScreen();
 			return;
 		}
 		
@@ -5106,304 +5108,311 @@ public class RobotRun extends PApplet {
 	 */
 	private void loadScreen(ScreenMode m, ScreenState current) {
 		Fields.debug("\n%s => %s\n", current.mode, m);
-
-		mode = m;
-		workingText = new StringBuilder();
-		contents.reset();
-		options.reset();
 		
-		switch (mode) {
-		case NAV_IOREG:
-			contents.setColumnIdx(1);
-			break;
-			// Frames
-		case ACTIVE_FRAMES:
-			contents.setColumnIdx(1);
-			workingText = new StringBuilder(Integer.toString(activeRobot.getActiveToolIdx() + 1));
-			break;
-		case TEACH_3PT_USER:
-		case TEACH_4PT:
-		case TEACH_3PT_TOOL:
-		case TEACH_6PT:
-		case TFRAME_DETAIL:
-		case UFRAME_DETAIL:
-			contents.setLineIdx(-1);
-			contents.setColumnIdx(-1);
-			break;
-		case NAV_PROGRAMS:
-			if (getActiveProg() == null) {
-				setActiveProgIdx(0);
+		curScreen = Screen.getScreen(m, this);
+		
+		if(curScreen != null) {
+			System.out.println("Loaded screen " + m.name());
+			curScreen.loadVars();
+		} else {
+			mode = m;
+			workingText = new StringBuilder();
+			contents.reset();
+			options.reset();
+			
+			switch (mode) {
+			case NAV_IOREG:
+				contents.setColumnIdx(1);
+				break;
+				// Frames
+			case ACTIVE_FRAMES:
+				contents.setColumnIdx(1);
+				workingText = new StringBuilder(Integer.toString(activeRobot.getActiveToolIdx() + 1));
+				break;
+			case TEACH_3PT_USER:
+			case TEACH_4PT:
+			case TEACH_3PT_TOOL:
+			case TEACH_6PT:
+			case TFRAME_DETAIL:
+			case UFRAME_DETAIL:
+				contents.setLineIdx(-1);
+				contents.setColumnIdx(-1);
+				break;
+			case NAV_PROGRAMS:
+				if (getActiveProg() == null) {
+					setActiveProgIdx(0);
+					setActiveInstIdx(0);
+				}
+				
+				contents.setLineIdx( getActiveProgIdx() );
+				break;
+			case NAV_PROG_INSTR:
+				progCallStack.clear();
 				setActiveInstIdx(0);
-			}
-			
-			contents.setLineIdx( getActiveProgIdx() );
-			break;
-		case NAV_PROG_INSTR:
-			progCallStack.clear();
-			setActiveInstIdx(0);
-			
-			break;
-		case PROG_CREATE:
-			contents.setLineIdx(1);
-			break;
-		case PROG_RENAME:
-			setActiveProgIdx(current.conLnIdx);
-			contents.setLineIdx(1);
-			workingText = new StringBuilder(getActiveProg().getName());
-			break;
-		case TFRAME_RENAME:
-			contents.setLineIdx(1);
-			workingText = new StringBuilder(
-					activeRobot.getToolFrame(curFrameIdx).getName()
-			);
-			break;
-		case UFRAME_RENAME:
-			contents.setLineIdx(1);
-			workingText = new StringBuilder(
-					activeRobot.getUserFrame(curFrameIdx).getName()
-			);
-			break;
-		case PROG_COPY:
-			setActiveProgIdx(current.conLnIdx);
-			contents.setLineIdx(1);
-			break;
-		case SET_CALL_PROG:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setRenderStart( current.conRenIdx );
-			contents.setColumnIdx( current.conColIdx );
-			break;
-		case SELECT_INSTR_INSERT:
-		case SELECT_JMP_LBL:
-		case SELECT_REG_STMT:
-		case SELECT_COND_STMT:
-		case SELECT_PASTE_OPT:
-		case SET_IF_STMT_ACT:
-		case SET_SELECT_STMT_ACT:
-		case SET_SELECT_STMT_ARG:
-		case SET_EXPR_ARG:
-		case SET_BOOL_EXPR_ARG:
-		case SET_EXPR_OP:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			break;
-		case SELECT_IO_INSTR_REG:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			options.setColumnIdx(1);
-			break;
-		case SET_MINST_OFF_TYPE:
-		case SET_MINST_OFFIDX:
-		case INPUT_DREG_IDX:
-		case INPUT_IOREG_IDX:
-		case INPUT_PREG_IDX1:
-		case INPUT_PREG_IDX2:
-		case INPUT_CONST:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			break;
-		case SET_IO_INSTR_IDX:
-		case SET_JUMP_TGT:
-		case SET_LBL_NUM:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			break;
-		case SET_MINST_TYPE:
-			MotionInstruction mInst = (MotionInstruction) getActiveInstruction();
-			
-			int motionType = mInst.getMotionType();
-			
-			if (motionType == Fields.MTYPE_LINEAR) {
+				
+				break;
+			case PROG_CREATE:
+				contents.setLineIdx(1);
+				break;
+			case PROG_RENAME:
+				setActiveProgIdx(current.conLnIdx);
+				contents.setLineIdx(1);
+				workingText = new StringBuilder(getActiveProg().getName());
+				break;
+			case TFRAME_RENAME:
+				contents.setLineIdx(1);
+				workingText = new StringBuilder(
+						activeRobot.getToolFrame(curFrameIdx).getName()
+				);
+				break;
+			case UFRAME_RENAME:
+				contents.setLineIdx(1);
+				workingText = new StringBuilder(
+						activeRobot.getUserFrame(curFrameIdx).getName()
+				);
+				break;
+			case PROG_COPY:
+				setActiveProgIdx(current.conLnIdx);
+				contents.setLineIdx(1);
+				break;
+			case SET_CALL_PROG:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setRenderStart( current.conRenIdx );
+				contents.setColumnIdx( current.conColIdx );
+				break;
+			case SELECT_INSTR_INSERT:
+			case SELECT_JMP_LBL:
+			case SELECT_REG_STMT:
+			case SELECT_COND_STMT:
+			case SELECT_PASTE_OPT:
+			case SET_IF_STMT_ACT:
+			case SET_SELECT_STMT_ACT:
+			case SET_SELECT_STMT_ARG:
+			case SET_EXPR_ARG:
+			case SET_BOOL_EXPR_ARG:
+			case SET_EXPR_OP:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				break;
+			case SELECT_IO_INSTR_REG:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				options.setColumnIdx(1);
+				break;
+			case SET_MINST_OFF_TYPE:
+			case SET_MINST_OFFIDX:
+			case INPUT_DREG_IDX:
+			case INPUT_IOREG_IDX:
+			case INPUT_PREG_IDX1:
+			case INPUT_PREG_IDX2:
+			case INPUT_CONST:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				break;
+			case SET_IO_INSTR_IDX:
+			case SET_JUMP_TGT:
+			case SET_LBL_NUM:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				break;
+			case SET_MINST_TYPE:
+				MotionInstruction mInst = (MotionInstruction) getActiveInstruction();
+				
+				int motionType = mInst.getMotionType();
+				
+				if (motionType == Fields.MTYPE_LINEAR) {
+					options.setLineIdx(1);
+					
+				} else if (motionType == Fields.MTYPE_CIRCULAR) {
+					options.setLineIdx(2);
+				}
+				
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+	
+				break;
+			case SET_MINST_SPD:
+				mInst = (MotionInstruction) getActiveInstruction();	
+				float instSpd = mInst.getSpdMod();
+				
+				if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
+					instSpd *= 100f;
+					
+				} else {
+					instSpd *= RoboticArm.motorSpeed;
+				}
+				
+				workingText = new StringBuilder(Integer.toString((int)instSpd));
+				
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				break;
+			case SET_MINST_REG_TYPE:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				break;
+			case SET_MINST_CREG_TYPE:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				break;
+			case SET_MINST_IDX:
+				workingText = new StringBuilder("");
+				
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				break;
+			case SET_MINST_TERM:
+				mInst = (MotionInstruction) getActiveInstruction();
+				int term = mInst.getTermination();
+				
+				workingText = new StringBuilder(Integer.toString(term));
+				
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				break;
+			case SET_FRAME_INSTR_IDX:
+			case SET_SELECT_ARGVAL:
+			case SET_REG_EXPR_IDX1:
+			case SET_REG_EXPR_IDX2:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				break;
+			case SET_IO_INSTR_STATE:
+			case SET_FRM_INSTR_TYPE:
+			case SET_REG_EXPR_TYPE:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				break;
+			case EDIT_PROG_POS:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				Program prog = getActiveProg();
+				PosMotionInst pMInst = (PosMotionInst) getActiveInstruction();
+				Point pt = prog.getPosition(pMInst.getPosIdx());
+				
+				// Initialize the point if it is null
+				if (pt == null) {
+					pt = new Point();
+					prog.setPosition(pMInst.getPosIdx(), pt);
+				}
+				
+				boolean isCartesian = pMInst.getMotionType() != Fields.MTYPE_JOINT;
+				contents.setLines( loadPosition(pt, isCartesian));
+				break;
+			case SELECT_INSTR_DELETE:
+			case SELECT_COMMENT:
+			case SELECT_CUT_COPY:
+				prog = getActiveProg();
+				int size = prog.getNumOfInst() - 1;
+				setActiveInstIdx(max(0, min(getActiveInstIdx(), size)));
+				break;
+	
+				// Macros
+			case NAV_MACROS:
+				contents.setLineIdx( current.conLnIdx );
+				break;
+			case NAV_PREGS:
+				options.setLineIdx(-1);
+				break;
+			case SET_DEF_TOOLTIP:
+				contents.setLineIdx(-1);
+				break;
+			case DIRECT_ENTRY_TOOL:
+				contents.setColumnIdx(1);
+				Frame tool = activeRobot.getToolFrame(curFrameIdx);
+				contents.setLines( loadFrameDirectEntry(tool) );
+				break;
+			case DIRECT_ENTRY_USER:
+				contents.setColumnIdx(1);
+				Frame user = activeRobot.getUserFrame(curFrameIdx);
+				contents.setLines( loadFrameDirectEntry(user) );
+				break;
+			case SWAP_PT_TYPE:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				break;
+			case CP_DREG_COM:
+			case CP_DREG_VAL:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
 				options.setLineIdx(1);
+				workingText = new StringBuilder((active_index + 1));
+				break;
+			case CP_PREG_COM:
+			case CP_PREG_PT:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				options.setLineIdx(1);
+				workingText = new StringBuilder((active_index + 1));
+				break;
+			case EDIT_DREG_COM:
+				contents.setLineIdx(1);
+	
+				String c = activeRobot.getDReg(active_index).comment;
+				if (c != null && c.length() > 0) {
+					workingText = new StringBuilder(c);
+				} else {
+					workingText = new StringBuilder("\0");
+				}
+	
+				break;
+			case EDIT_PREG_COM:
+				contents.setLineIdx(1);
+	
+				c = activeRobot.getPReg(active_index).comment;
+				if (c != null && c.length() > 0) {
+					workingText = new StringBuilder(c);
+				} else {
+					workingText = new StringBuilder("\0");
+				}
+	
+				println(workingText.length());
+				break;
+			case EDIT_DREG_VAL:
+				contents.setLineIdx( current.conLnIdx );
+				contents.setColumnIdx( current.conColIdx );
+				contents.setRenderStart(  current.conRenIdx );
+				// Bring up float input menu
+				Float val = activeRobot.getDReg(active_index).value;
+				if (val != null) {
+					workingText = new StringBuilder(val.toString());
+	
+				}
+				break;
+			case EDIT_PREG:
+				ArrayList<DisplayLine> limbo;
+				PositionRegister pReg = activeRobot.getPReg(active_index);
+				// Load the position associated with active position register
+				if (pReg.point == null) {
+					// Initialize an empty position register
+					limbo = loadPosition(activeRobot.getDefaultPoint(), pReg.isCartesian);
+	
+				} else {
+					limbo = loadPosition(pReg.point, pReg.isCartesian);
+				}
 				
-			} else if (motionType == Fields.MTYPE_CIRCULAR) {
-				options.setLineIdx(2);
+				contents.setLines(limbo);
+				contents.setColumnIdx(1);
+				break;
+			default:
+				break;
 			}
-			
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-
-			break;
-		case SET_MINST_SPD:
-			mInst = (MotionInstruction) getActiveInstruction();	
-			float instSpd = mInst.getSpdMod();
-			
-			if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
-				instSpd *= 100f;
-				
-			} else {
-				instSpd *= RoboticArm.motorSpeed;
-			}
-			
-			workingText = new StringBuilder(Integer.toString((int)instSpd));
-			
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			break;
-		case SET_MINST_REG_TYPE:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			break;
-		case SET_MINST_CREG_TYPE:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			break;
-		case SET_MINST_IDX:
-			workingText = new StringBuilder("");
-			
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			break;
-		case SET_MINST_TERM:
-			mInst = (MotionInstruction) getActiveInstruction();
-			int term = mInst.getTermination();
-			
-			workingText = new StringBuilder(Integer.toString(term));
-			
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			break;
-		case SET_FRAME_INSTR_IDX:
-		case SET_SELECT_ARGVAL:
-		case SET_REG_EXPR_IDX1:
-		case SET_REG_EXPR_IDX2:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			break;
-		case SET_IO_INSTR_STATE:
-		case SET_FRM_INSTR_TYPE:
-		case SET_REG_EXPR_TYPE:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			break;
-		case EDIT_PROG_POS:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			Program prog = getActiveProg();
-			PosMotionInst pMInst = (PosMotionInst) getActiveInstruction();
-			Point pt = prog.getPosition(pMInst.getPosIdx());
-			
-			// Initialize the point if it is null
-			if (pt == null) {
-				pt = new Point();
-				prog.setPosition(pMInst.getPosIdx(), pt);
-			}
-			
-			boolean isCartesian = pMInst.getMotionType() != Fields.MTYPE_JOINT;
-			contents.setLines( loadPosition(pt, isCartesian));
-			break;
-		case SELECT_INSTR_DELETE:
-		case SELECT_COMMENT:
-		case SELECT_CUT_COPY:
-			prog = getActiveProg();
-			int size = prog.getNumOfInst() - 1;
-			setActiveInstIdx(max(0, min(getActiveInstIdx(), size)));
-			break;
-
-			// Macros
-		case NAV_MACROS:
-			contents.setLineIdx( current.conLnIdx );
-			break;
-		case NAV_PREGS:
-			options.setLineIdx(-1);
-			break;
-		case SET_DEF_TOOLTIP:
-			contents.setLineIdx(-1);
-			break;
-		case DIRECT_ENTRY_TOOL:
-			contents.setColumnIdx(1);
-			Frame tool = activeRobot.getToolFrame(curFrameIdx);
-			contents.setLines( loadFrameDirectEntry(tool) );
-			break;
-		case DIRECT_ENTRY_USER:
-			contents.setColumnIdx(1);
-			Frame user = activeRobot.getUserFrame(curFrameIdx);
-			contents.setLines( loadFrameDirectEntry(user) );
-			break;
-		case SWAP_PT_TYPE:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			break;
-		case CP_DREG_COM:
-		case CP_DREG_VAL:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			options.setLineIdx(1);
-			workingText = new StringBuilder((active_index + 1));
-			break;
-		case CP_PREG_COM:
-		case CP_PREG_PT:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			options.setLineIdx(1);
-			workingText = new StringBuilder((active_index + 1));
-			break;
-		case EDIT_DREG_COM:
-			contents.setLineIdx(1);
-
-			String c = activeRobot.getDReg(active_index).comment;
-			if (c != null && c.length() > 0) {
-				workingText = new StringBuilder(c);
-			} else {
-				workingText = new StringBuilder("\0");
-			}
-
-			break;
-		case EDIT_PREG_COM:
-			contents.setLineIdx(1);
-
-			c = activeRobot.getPReg(active_index).comment;
-			if (c != null && c.length() > 0) {
-				workingText = new StringBuilder(c);
-			} else {
-				workingText = new StringBuilder("\0");
-			}
-
-			println(workingText.length());
-			break;
-		case EDIT_DREG_VAL:
-			contents.setLineIdx( current.conLnIdx );
-			contents.setColumnIdx( current.conColIdx );
-			contents.setRenderStart(  current.conRenIdx );
-			// Bring up float input menu
-			Float val = activeRobot.getDReg(active_index).value;
-			if (val != null) {
-				workingText = new StringBuilder(val.toString());
-
-			}
-			break;
-		case EDIT_PREG:
-			ArrayList<DisplayLine> limbo;
-			PositionRegister pReg = activeRobot.getPReg(active_index);
-			// Load the position associated with active position register
-			if (pReg.point == null) {
-				// Initialize an empty position register
-				limbo = loadPosition(activeRobot.getDefaultPoint(), pReg.isCartesian);
-
-			} else {
-				limbo = loadPosition(pReg.point, pReg.isCartesian);
-			}
-			
-			contents.setLines(limbo);
-			contents.setColumnIdx(1);
-			break;
-		default:
-			break;
 		}
 		
 		pushActiveScreen();
@@ -7427,6 +7436,7 @@ public class RobotRun extends PApplet {
 	 */
 	public void updatePendantScreen() {
 		if(curScreen != null) {
+			System.out.println("Text loaded from screen");
 			UI.renderPendantScreen(curScreen.getHeader(), curScreen.getContents(),
 					curScreen.getOptions(), curScreen.getLabels());
 		} else {

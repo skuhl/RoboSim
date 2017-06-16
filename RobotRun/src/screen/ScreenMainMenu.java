@@ -17,16 +17,17 @@ public class ScreenMainMenu extends ST_ScreenListContents {
 
 	@Override
 	MenuScroll loadContents() {
-		contents.addLine("1 Frames"           );
-		contents.addLine("2 Macros"           );
-		contents.addLine("3 Manual Fncts"     );
+		contents.addLine("1 Frames");
+		contents.addLine("2 Macros");
+		contents.addLine("3 Manual Fncts");
+		contents.addLine("4 I/O Registers");
 		
 		return contents;
 	}
 	
 	@Override
 	MenuScroll loadOptions() {
-		// TODO Auto-generated method stub
+		options.clear();
 		return options;
 	}
 
@@ -38,7 +39,6 @@ public class ScreenMainMenu extends ST_ScreenListContents {
 	
 	@Override
 	public void loadVars() {
-		contents.reset();
 		contents.setColumnIdx(0);
 	}
 
@@ -47,11 +47,13 @@ public class ScreenMainMenu extends ST_ScreenListContents {
 
 	@Override
 	public void actionUp() {
+		System.out.println("up");
 		contents.moveUp(false);
 	}
 
 	@Override
 	public void actionDn() {
+		System.out.println("dn");
 		contents.moveDown(false);
 	}
 
