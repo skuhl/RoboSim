@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Set;
 import java.util.Stack;
 
 import enums.AxesDisplay;
@@ -225,11 +224,16 @@ public class RobotRun extends PApplet {
 	private LinkedList<PVector> tracePts;
 	
 	/**
-	 * Value used for debuggin trace points.
+	 * Keeps track of the world object that the mouse was over, when the mouse
+	 * was first pressed down.
 	 */
-	private int tracePtSizeTracker;
-	
 	private WorldObject mouseOverWO;
+	
+	/**
+	 * Keeps track of the mouse drag event is updating the orientation of a
+	 * world object.
+	 */
+	private boolean mouseDragWO;
 	
 	/**
 	 * Applies the active camera to the matrix stack.
@@ -1047,12 +1051,18 @@ public class RobotRun extends PApplet {
 	public void DeleteWldObj() {
 		// Delete focused world object and add to the scenario undo stack
 		WorldObject selected = UI.getSelectedWO();
-		
-		updateScenarioUndo( selected );
-		int ret = getActiveScenario().removeWorldObject( selected );
-		Fields.debug("World Object removed: %d\n", ret);
-		
-		DataManagement.saveScenarios(this);
+		if (selected != null) {
+			updateScenarioUndo( selected );
+			int ret = getActiveScenario().removeWorldObject( selected );
+			
+			if (ret == 0) {
+				UI.setSelectedWO(null);
+			}
+			
+			Fields.debug("World Object removed: %d\n", ret);
+			
+			DataManagement.saveScenarios(this);
+		}
 	}
 	
 	@Override
@@ -5466,6 +5476,13 @@ public class RobotRun extends PApplet {
 			
 			popMatrix();
 			
+			if (!mouseDragWO && (mouseButton == CENTER || mouseButton == RIGHT)) {
+				// Save the selected world object's current state
+				SCENARIO_UNDO.push(selectedWO.clone());
+			}
+			
+			mouseDragWO = true;
+			
 			if (mouseButton == CENTER) {
 				// Drag the center mouse button to move the object
 				PVector translation = new PVector(
@@ -5585,6 +5602,7 @@ public class RobotRun extends PApplet {
 	@Override
 	public void mouseReleased() {
 		mouseOverWO = null;
+		mouseDragWO = false;
 	}
 
 	@Override
@@ -6404,6 +6422,7 @@ public class RobotRun extends PApplet {
 		super.setup();
 		
 		mouseOverWO = null;
+		mouseDragWO = false;
 		
 		PImage[][] buttonImages = new PImage[][] {
 			
@@ -6460,7 +6479,6 @@ public class RobotRun extends PApplet {
 			progCallStack = new Stack<>();
 			
 			tracePts = new LinkedList<PVector>();
-			tracePtSizeTracker = 0;
 			
 			setManager(new WGUI(this, buttonImages));
 			
@@ -6633,9 +6651,9 @@ public class RobotRun extends PApplet {
 	 * Toggles the second Robot on or off.
 	 */
 	public void ToggleRobot() {
-		boolean robotRemoved = UI.toggleSecondRobot();
+		UI.toggleSecondRobot();
 		// Reset the active robot to the first if the second robot is removed
-		if (robotRemoved && activeRobot != ROBOTS.get(0)) {
+		if (activeRobot != ROBOTS.get(0)) {
 			activeRobot = ROBOTS.get(0);
 		}
 
@@ -6661,7 +6679,6 @@ public class RobotRun extends PApplet {
 		if (!traceEnabled()) {
 			// Empty trace when it is disabled
 			tracePts.clear();
-			tracePtSizeTracker = 0;
 		}
 	}
 	
@@ -6715,12 +6732,16 @@ public class RobotRun extends PApplet {
 	public void undoScenarioEdit() {
 		if (!SCENARIO_UNDO.empty()) {
 			activeScenario.put( SCENARIO_UNDO.pop() );
+			UI.updateListContents();
+			WorldObject wo = UI.getSelectedWO();
+			
+			if (wo != null) {
+				UI.updateEditWindowFields(wo);
+			}
+			
 			/* Since objects are copied onto the undo stack, the robot may be
 			 * reference the wrong copy of an undone object. */
 			activeRobot.releaseHeldObject();
-			
-			UI.updateListContents();
-			UI.updateEditWindowFields( UI.getSelectedWO() );
 		}
 	}
 	
@@ -7436,8 +7457,7 @@ public class RobotRun extends PApplet {
 	 *            The world object to save
 	 */
 	public void updateScenarioUndo(WorldObject saveState) {
-
-		// Only the latest 10 world object save states can be undone
+		// Only the latest 40 world object save states can be undone
 		if (SCENARIO_UNDO.size() >= 40) {
 			// Not sure if size - 1 should be used instead
 			SCENARIO_UNDO.remove(0);
@@ -7582,7 +7602,7 @@ public class RobotRun extends PApplet {
 	private void progExec(boolean singleExec) {
 		ExecType pExec = (singleExec) ? ExecType.EXEC_SINGLE
 				: ExecType.EXEC_FULL;
-		progExecState.setExec(pExec);
+		progExecState.setType(pExec);
 	}
 	
 	/**
@@ -7868,7 +7888,6 @@ public class RobotRun extends PApplet {
 			// Update the robots trace points
 			if(tracePts.isEmpty()) {
 				tracePts.add(tipPosNative.position);
-				++tracePtSizeTracker;
 				
 			} else {
 				PVector lastTracePt = tracePts.getLast();
@@ -7878,11 +7897,6 @@ public class RobotRun extends PApplet {
 					
 					tracePts.addLast(tipPosNative.position);
 				}
-			}
-			
-			if (tracePts.size() == 2 * tracePtSizeTracker) {
-				System.err.printf("Trace Pt size: %d\n", tracePts.size());
-				tracePtSizeTracker *= 2;
 			}
 			
 			if (tracePts.size() > 10000f) {
@@ -8310,7 +8324,6 @@ public class RobotRun extends PApplet {
 	private void updateInstList() {
 		if (mode == ScreenMode.NAV_PROG_INSTR) {
 			Program prog = getActiveProg();
-			Set<Integer> instIndexes = mInstRobotAt.keySet();
 			Point robotPos = activeRobot.getToolTipNative();
 			boolean updatedLines = false;
 			
@@ -8352,7 +8365,19 @@ public class RobotRun extends PApplet {
 	private int updateProgExec() {
 		Program prog = getActiveProg();
 		Instruction activeInstr = prog.getInstAt(progExecState.getCurIdx());
-		int nextIdx = progExecState.getCurIdx() + 1;
+		int nextIdx;
+		
+		if (progExecState.getType() == ExecType.EXEC_BWD) {
+			// Backward program execution only works for motion instructions
+			nextIdx = progExecState.getCurIdx() - 1;
+			
+			if (!(prog.getInstAt(nextIdx) instanceof MotionInstruction)) {
+				nextIdx = progExecState.getCurIdx();
+			}
+			
+		} else {
+			nextIdx = progExecState.getCurIdx() + 1;
+		}
 		
 		if (progExecState.getState() == ExecState.EXEC_INST ||
 				progExecState.getState() == ExecState.EXEC_START) {

@@ -2195,7 +2195,11 @@ public class WGUI implements ControlListener {
 	 */
 	public void setSelectedWO(WorldObject wo) {
 		
-		if (wo != null && (menu == null || menu == WindowTab.EDIT)) {
+		if (wo == null) {
+			MyDropdownList objList = getDropdown("Object");
+			objList.setValue(-1f);
+			
+		} else if ((menu == null || menu == WindowTab.EDIT)) {
 			updateView(WindowTab.EDIT);
 			getDropdown("Object").setItem(wo);
 		}
