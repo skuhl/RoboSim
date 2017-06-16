@@ -3,7 +3,6 @@ package robot;
 import java.util.ArrayList;
 import java.util.Stack;
 
-import core.RobotRun;
 import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;

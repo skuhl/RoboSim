@@ -998,30 +998,6 @@ public class RobotRun extends PApplet {
 		
 		DataManagement.saveRobotData(activeRobot, 2);
 	}
-
-	/**
-	 * Create button in the Create window
-	 * 
-	 * Pulls the user's input from the input fields (name, shape type,
-	 * dimensions, colors, etc.) in the Create window and attempts to create a
-	 * new world object from the user's input. If creation of a world object
-	 * was successful, then the new object is added to the active scenario and
-	 * all data is saved.
-	 */
-	public void CreateWldObj() {
-		if (activeScenario != null) {
-			WorldObject newObject = UI.createWorldObject();
-
-			if (newObject != null) {
-				newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
-				activeScenario.addWorldObject(newObject);
-				DataManagement.saveScenarios(this);
-			}
-		}
-		else {
-			System.err.println("No active scenario!");
-		}
-	}
 	
 	/**
 	 * Pendant - button
@@ -1041,28 +1017,6 @@ public class RobotRun extends PApplet {
 	 */
 	public void data() {
 		nextScreen(ScreenMode.NAV_DATA);
-	}
-
-	/**
-	 * Delete button in the edit window
-	 * 
-	 * Removes the selected world object from the active scenario.
-	 */
-	public void DeleteWldObj() {
-		// Delete focused world object and add to the scenario undo stack
-		WorldObject selected = UI.getSelectedWO();
-		if (selected != null) {
-			updateScenarioUndo( selected );
-			int ret = getActiveScenario().removeWorldObject( selected );
-			
-			if (ret == 0) {
-				UI.setSelectedWO(null);
-			}
-			
-			Fields.debug("World Object removed: %d\n", ret);
-			
-			DataManagement.saveScenarios(this);
-		}
 	}
 	
 	@Override
@@ -1383,7 +1337,7 @@ public class RobotRun extends PApplet {
 		case SET_DEF_TOOLTIP:
 			activeRobot.setDefToolTip(curFrameIdx, options.getLineIdx());
 			activeRobot.setActiveToolFrame(curFrameIdx);
-			DataManagement.saveRobotData(activeRobot, 1);
+			DataManagement.saveRobotData(activeRobot, 2);
 			lastScreen();
 			break;
 		case TEACH_3PT_TOOL:
@@ -7482,6 +7436,52 @@ public class RobotRun extends PApplet {
 				// If the part was modified, then save its previous state
 				updateScenarioUndo(saveState);
 			}
+		}
+	}
+	
+	/**
+	 * Create button in the Create window
+	 * 
+	 * Pulls the user's input from the input fields (name, shape type,
+	 * dimensions, colors, etc.) in the Create window and attempts to create a
+	 * new world object from the user's input. If creation of a world object
+	 * was successful, then the new object is added to the active scenario and
+	 * all data is saved.
+	 */
+	public void WOCreateBtn() {
+		if (activeScenario != null) {
+			WorldObject newObject = UI.createWorldObject();
+
+			if (newObject != null) {
+				newObject.setLocalCenter(new PVector(-500f, 0f, 0f));
+				activeScenario.addWorldObject(newObject);
+				DataManagement.saveScenarios(this);
+			}
+		}
+		else {
+			System.err.println("No active scenario!");
+		}
+	}
+	
+	/**
+	 * Delete button in the edit window
+	 * 
+	 * Removes the selected world object from the active scenario.
+	 */
+	public void WODelBtn() {
+		// Delete focused world object and add to the scenario undo stack
+		WorldObject selected = UI.getSelectedWO();
+		if (selected != null) {
+			updateScenarioUndo( selected );
+			int ret = getActiveScenario().removeWorldObject( selected );
+			
+			if (ret == 0) {
+				UI.setSelectedWO(null);
+			}
+			
+			Fields.debug("World Object removed: %d\n", ret);
+			
+			DataManagement.saveScenarios(this);
 		}
 	}
 
