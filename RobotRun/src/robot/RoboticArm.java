@@ -791,7 +791,6 @@ public class RoboticArm {
 					obb.getFrame().draw(g);
 					g.popMatrix();
 				}
-				
 			}
 			
 			// Draw the active End Effector's OBBs
@@ -1533,7 +1532,10 @@ public class RoboticArm {
 				
 			} else if (offIsCart) {
 				// Add a Cartesian offset to a joint motion instruction
-				offset = removeFrame(offset, new PVector(), instUFrame.getOrientation());
+				if (instUFrame != null) {
+					offset = removeFrame(offset, new PVector(), instUFrame.getOrientation());
+				}
+				
 				pt = getToolTipNative(pt.angles);
 				// Apply offset
 				pt = pt.add(offset.position, offset.orientation);
