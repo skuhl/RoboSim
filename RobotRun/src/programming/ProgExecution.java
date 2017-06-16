@@ -107,7 +107,7 @@ public class ProgExecution implements Cloneable {
 		curIdx = idx;
 	}
 	
-	public void setExec(ExecType type) {
+	public void setType(ExecType type) {
 		this.type = type;
 		this.state = ExecState.EXEC_START;
 	}
@@ -118,7 +118,13 @@ public class ProgExecution implements Cloneable {
 		this.state = ExecState.EXEC_START;
 		this.progIdx = progIdx;
 		this.curIdx = curIdx;
-		nextIdx = curIdx + 1;
+		
+		if (type == ExecType.EXEC_BWD) {
+			nextIdx = curIdx;
+			
+		} else {
+			nextIdx = curIdx + 1;
+		}
 	}
 	
 	public void setNextIdx(int idx) {

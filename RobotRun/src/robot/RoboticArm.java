@@ -56,7 +56,7 @@ public class RoboticArm {
 		EE_TOOLTIP_DEFAULTS[1] = new PVector(-32f, 0f, 0f);
 		EE_TOOLTIP_DEFAULTS[2] = new PVector(-180f, 55f, 0f);
 		EE_TOOLTIP_DEFAULTS[3] = new PVector(-120f, -150f, 0f);
-		EE_TOOLTIP_DEFAULTS[4] = new PVector(-295f, 0f, 53.5f);
+		EE_TOOLTIP_DEFAULTS[4] = new PVector(-295f, 53.5f, 0f);
 	}
 	
 	/**
