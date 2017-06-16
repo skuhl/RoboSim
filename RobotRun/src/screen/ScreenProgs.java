@@ -2,7 +2,6 @@ package screen;
 
 import core.RobotRun;
 import enums.ScreenMode;
-import ui.MenuScroll;
 
 public class ScreenProgs extends ST_ScreenListContents {
 
@@ -16,35 +15,30 @@ public class ScreenProgs extends ST_ScreenListContents {
 	}
 	
 	@Override
-	MenuScroll loadContents() {
+	void loadContents() {
 		contents.setLines(robotRun.getActiveRobot().printProgList());
-		return contents;
 	}
 	
 	@Override
-	MenuScroll loadOptions() {
-		return options;
+	void loadOptions() {
+		options.clear();
 	}
 	
 	@Override
-	String[] loadLabels() {
-		String[] lbls = new String[5];
-		
+	void loadLabels() {
 		// F2, F3
-		lbls[0] = "[Create]";
+		labels[0] = "[Create]";
 		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
-			lbls[1] = "[Rename]";
-			lbls[2] = "[Delete]";
-			lbls[3] = "[Copy]";
-			lbls[4] = "";
+			labels[1] = "[Rename]";
+			labels[2] = "[Delete]";
+			labels[3] = "[Copy]";
+			labels[4] = "";
 		} else {
-			lbls[1] = "";
-			lbls[2] = "";
-			lbls[3] = "";
-			lbls[4] = "";
+			labels[1] = "";
+			labels[2] = "";
+			labels[3] = "";
+			labels[4] = "";
 		}
-		
-		return lbls;
 	}
 	
 	@Override
@@ -54,20 +48,14 @@ public class ScreenProgs extends ST_ScreenListContents {
 			robotRun.setActiveInstIdx(0);
 		}
 		
-		contents.setLineIdx( robotRun.getActiveProgIdx() );
-	}
-
-	@Override
-	public void loadPrev() {
-		
+		contents.setLineIdx(robotRun.getActiveProgIdx());
 	}
 
 	@Override
 	public void actionEntr() {
 		if(RobotRun.getInstanceRobot().numOfPrograms() != 0) {
-			RobotRun.getInstance().setActiveInstIdx(0);
-			contents.reset();
-			// TODO robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
+			robotRun.setActiveInstIdx(0);
+			robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
 		}
 	}
 	
@@ -104,7 +92,7 @@ public class ScreenProgs extends ST_ScreenListContents {
 	@Override
 	public void actionF3() {
 		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
-			robotRun.setActiveProgIdx( contents.getActiveIndex() );
+			robotRun.setActiveProgIdx(contents.getActiveIndex());
 			robotRun.nextScreen(ScreenMode.CONFIRM_PROG_DELETE);
 		}
 	}

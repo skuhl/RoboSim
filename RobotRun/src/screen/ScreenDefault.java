@@ -2,9 +2,9 @@ package screen;
 
 import core.RobotRun;
 import enums.ScreenMode;
-import ui.MenuScroll;
 
 public class ScreenDefault extends Screen {
+	
 	public ScreenDefault(RobotRun r) {
 		super(ScreenMode.DEFAULT, r);
 	}
@@ -15,35 +15,26 @@ public class ScreenDefault extends Screen {
 	}
 
 	@Override
-	MenuScroll loadContents() {
+	void loadContents() {
 		contents.clear();
-		return contents;
 	}
 
 	@Override
-	MenuScroll loadOptions() {
-		options.clear();
-		return options;
+	void loadOptions() {
+		contents.clear();
 	}
 
 	@Override
-	String[] loadLabels() {
-		String[] lbls = new String[5];
-		
-		lbls[0] = "";
-		lbls[1] = "";
-		lbls[2] = "";
-		lbls[3] = "";
-		lbls[4] = "";
-		
-		return lbls;
+	void loadLabels() {
+		labels[0] = "";
+		labels[1] = "";
+		labels[2] = "";
+		labels[3] = "";
+		labels[4] = "";
 	}
 	
 	@Override
-	public void loadVars() {}
-
-	@Override
-	public void loadPrev() {}
+	void loadVars() {}
 
 	@Override
 	public void actionUp() {}
@@ -74,4 +65,5 @@ public class ScreenDefault extends Screen {
 
 	@Override
 	public void actionF5() {}
+	
 }
