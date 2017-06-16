@@ -13,7 +13,13 @@ public abstract class Screen {
 	protected MenuScroll options;
 	protected String[] labels;
 	
+	public static boolean useScreen = true;
+	
 	public static Screen getScreen(ScreenMode m, RobotRun r) {
+		if(!useScreen) {
+			return null;
+		}
+		
 		switch(m) {
 		case DEFAULT: return new ScreenDefault(r);
 
