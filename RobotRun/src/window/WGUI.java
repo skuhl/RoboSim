@@ -14,6 +14,7 @@ import controlP5.ControlP5;
 import controlP5.ControllerInterface;
 import controlP5.DropdownList;
 import controlP5.Group;
+import controlP5.Label;
 import controlP5.Pointer;
 import controlP5.RadioButton;
 import controlP5.Slider;
@@ -484,19 +485,70 @@ public class WGUI implements ControlListener {
 		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
 
 		// Initialize the world object creation window elements
-		addTextarea("ObjTypeLbl", "Type:", createWO, mLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("WOTypeLbl", "Type:", createWO, mLblWidth, sButtonHeight, Fields.medium);
+		
+		HashMap<Float, String> toggles = new HashMap<>();
+		toggles.put(0f, "PartOpt");
+		toggles.put(1f, "FixtureOpt");
+		
+		MyRadioButton rb = addRadioButtons("WOType", createWO, radioDim, radioDim, Fields.medium, toggles, 0f);
+		Toggle t = rb.getItem(0);
+		t.setLabel("Part");
+		t = rb.getItem(1);
+		t.setLabel("Fixture");
 
-		addTextarea("ObjNameLbl", "Name:", createWO, sLblWidth, fieldHeight, Fields.medium);
-		addTextfield("ObjName", createWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		rb.setItemsPerRow(2);
+		rb.setSpacingColumnOffset(distFieldToFieldX);
+		
+		addTextarea("WONameLbl", "Name:", createWO, sLblWidth, fieldHeight, Fields.medium);
+		addTextfield("WOName", createWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
 
-		addTextarea("ShapeLbl", "Shape:", createWO, mLblWidth, sButtonHeight, Fields.medium);
-		addTextarea("FillLbl", "Fill:", createWO, mLblWidth, sButtonHeight, Fields.medium);
-		addTextarea("OutlineLbl", "Outline:", createWO, mLblWidth, sButtonHeight, Fields.medium);
-
-		addButton("CreateWldObj", "Create", createWO, mButtonWidth, sButtonHeight, Fields.small);
+		addTextarea("WOShapeLbl", "Shape:", createWO, mLblWidth, sButtonHeight, Fields.medium);
+		
+		toggles = new HashMap<>();
+		toggles.put(0f, "BoxOpt");
+		toggles.put(1f, "CylinderOpt");
+		toggles.put(2f, "ImportOpt");
+		
+		rb = addRadioButtons("Shape", createWO, radioDim, radioDim, Fields.medium, toggles, 0f);
+		t = rb.getItem(0);
+		t.setLabel("Box");
+		t = rb.getItem(1);
+		t.setLabel("Cylinder");
+		t = rb.getItem(2);
+		t.setLabel("Import");
+		
+		rb.setItemsPerRow(3);
+		rb.setSpacingColumnOffset(distFieldToFieldX);
+		
+		addSlider("WOFillR", "Red", createWO, fieldWidthMed, fieldHeight, 0f,
+				255f, 0, 0f, Fields.BLACK, Fields.color(200, 0, 0),
+				Fields.color(75), Fields.color(255, 0, 0), Fields.medium);
+		addSlider("WOFillG", "Green", createWO, fieldWidthMed, fieldHeight, 0f,
+				255f, 0, 0f, Fields.BLACK, Fields.color(0, 200, 0),
+				Fields.color(75), Fields.color(0, 255, 0), Fields.medium);
+		addSlider("WOFillB", "Blue", createWO, fieldWidthMed, fieldHeight, 0f,
+				255f, 0, 0f, Fields.BLACK, Fields.color(0, 0, 200),
+				Fields.color(75), Fields.color(0, 0, 255), Fields.medium);
+		addTextarea("WOFillLbl", "Fill:", createWO, mLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("WOFillSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
+		
+		addSlider("WOOutlineR", "Red", createWO, fieldWidthMed, fieldHeight,
+				0f, 255f, 0, 0f, Fields.BLACK, Fields.color(200, 0, 0),
+				Fields.color(75), Fields.color(255, 0, 0), Fields.medium);
+		addSlider("WOOutlineG", "Green", createWO, fieldWidthMed, fieldHeight,
+				0f, 255f, 0, 0f, Fields.BLACK, Fields.color(0, 200, 0),
+				Fields.color(75), Fields.color(0, 255, 0), Fields.medium);
+		addSlider("WOOutlineB", "Blue", createWO, fieldWidthMed, fieldHeight,
+				0f, 255f, 0, 0f, Fields.BLACK, Fields.color(0, 0, 200),
+				Fields.color(75), Fields.color(0, 0, 255), Fields.medium);
+		addTextarea("WOOutlineLbl", "Outline:", createWO, mLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("WOOutlineSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
+		
+		addButton("WOCreateBtn", "Create", createWO, mButtonWidth, sButtonHeight, Fields.small);
 
 		// Initialize the world object edit window elements
-		addTextarea("ObjLabel", "Object:", editWO, mLblWidth, fieldHeight, Fields.medium);
+		addTextarea("WOEditLbl", "Object:", editWO, mLblWidth, fieldHeight, Fields.medium);
 
 		addTextarea("Blank", "Inputs", editWO, lLblWidth, fieldHeight, Fields.medium);
 		addTextarea("Current", "Current", editWO, fieldWidthMed, fieldHeight, Fields.medium);
@@ -534,21 +586,26 @@ public class WGUI implements ControlListener {
 
 		addButton("ResDefs", "Restore Defaults", editWO, lLblWidth, sButtonHeight, Fields.small);
 
-		addButton("DeleteWldObj", "Delete", editWO, mButtonWidth, sButtonHeight, Fields.small);
+		addButton("WODelBtn", "Delete", editWO, mButtonWidth, sButtonHeight, Fields.small);
 
 		// Initialize the scenario window elements
 		addTextarea("SOptLbl", "Options:", scenario, mLblWidth, fieldHeight, Fields.medium);
 
-		HashMap<Float, String> toggles = new HashMap<>();
-		toggles.put(0f, "New");
-		toggles.put(1f, "Load");
-		toggles.put(2f, "Rename");
+		toggles = new HashMap<>();
+		toggles.put(0f, "NewOpt");
+		toggles.put(1f, "LoadOpt");
+		toggles.put(2f, "RenameOpt");
 
-		RadioButton rb = addRadioButtons("ScenarioOpt", scenario, radioDim, radioDim, Fields.medium, toggles, 0f);
-		Toggle t = rb.getItem(0);
+		rb = addRadioButtons("ScenarioOpt", scenario, radioDim, radioDim, Fields.medium, toggles, 0f);
+		t = rb.getItem(0);
+		t.setLabel("New");
+		t = rb.getItem(1);
+		t.setLabel("Load");
+		t = rb.getItem(2);
+		t.setLabel("Rename");
 
 		rb.setItemsPerRow(3);
-		rb.setSpacingColumn( (windowTabs.getWidth() - 2 * winMargin - 3 * t.getWidth()) / 3 );
+		rb.setSpacingColumnOffset(distFieldToFieldX);
 
 		addTextarea("SInstructions", "N/A", scenario, windowTabs.getWidth() - (2 * winMargin),
 				54, Fields.small).hideScrollbar();
@@ -610,8 +667,7 @@ public class WGUI implements ControlListener {
 		 * 		(Adding the dropdown lists last places them in front of the
 		 * other UI elements, which is important, when the list is open) */
 		MyDropdownList ddlLimbo = addDropdown("AxesDisplay", miscellaneous, ldropItemWidth,
-				dropItemHeight, 3,
-				Fields.small);
+				dropItemHeight, 3, Fields.small);
 		ddlLimbo.addItem(AxesDisplay.AXES.name(), AxesDisplay.AXES)
 		.addItem(AxesDisplay.GRID.name(), AxesDisplay.GRID)
 		.addItem(AxesDisplay.NONE.name(), AxesDisplay.NONE)
@@ -636,44 +692,7 @@ public class WGUI implements ControlListener {
 					dropItemHeight, 4, Fields.small);
 		}
 
-		addDropdown("Object", editWO, ldropItemWidth, dropItemHeight, 4, Fields.small);
-
-		ddlLimbo = addDropdown("Outline", createWO, sdropItemWidth, dropItemHeight,
-				4, Fields.small);
-		ddlLimbo.addItem("black", Fields.BLACK)
-		.addItem("red", Fields.RED)
-		.addItem("green", Fields.GREEN)
-		.addItem("blue", Fields.BLUE)
-		.addItem("orange", Fields.ORANGE)
-		.addItem("yellow", Fields.YELLOW)
-		.addItem("pink", Fields.PINK)
-		.addItem("purple", Fields.PURPLE);
-
-		ddlLimbo = addDropdown("Fill", createWO, mdropItemWidth, dropItemHeight,
-				4, Fields.small);
-		ddlLimbo.addItem("white", Fields.WHITE)
-		.addItem("black", Fields.BLACK)
-		.addItem("red", Fields.RED)
-		.addItem("green", Fields.GREEN)
-		.addItem("blue", Fields.BLUE)
-		.addItem("orange", Fields.ORANGE)
-		.addItem("yellow", Fields.YELLOW)
-		.addItem("pink", Fields.PINK)
-		.addItem("purple", Fields.PURPLE)
-		.addItem("light blue", Fields.LT_BLUE)
-		.addItem("dark green", Fields.DK_GREEN);
-
-		ddlLimbo = addDropdown("Shape", createWO, sdropItemWidth, dropItemHeight,
-				4, Fields.small);
-		ddlLimbo.addItem("Box", ShapeType.BOX)
-		.addItem("Cylinder", ShapeType.CYLINDER)
-		.addItem("Import", ShapeType.MODEL);
-
-		ddlLimbo = addDropdown("ObjType", createWO, sdropItemWidth, dropItemHeight,
-				3, Fields.small);
-
-		ddlLimbo.addItem("Parts", 0.0f)
-		.addItem("Fixtures", 1.0f);
+		addDropdown("WO", editWO, ldropItemWidth, dropItemHeight, 4, Fields.small);
 	}
 
 	/**
@@ -920,6 +939,26 @@ public class WGUI implements ControlListener {
 		return s;
 	}
 	
+	private Slider addSlider(String name, String lbl, Group parent, int wdh, int hgt, float min, float max, int percision, float def, int valColor, int actColor, int bgColor, int fgColor, PFont lblFont) {
+		
+		Slider s = new Slider(manager, name);
+		s.getCaptionLabel().set(lbl);
+		
+		s.setColorValue(valColor)
+		.setColorLabel(Fields.F_TEXT_C)
+		.setColorActive(actColor)
+		.setColorBackground(bgColor)
+		.setColorForeground(fgColor)
+		.setMax(max)
+		.setMin(min)
+		.setDecimalPrecision(percision)
+		.setDefaultValue(def)
+		.setSize(wdh, hgt)
+		.moveTo(parent);
+		
+		return s;
+	}
+	
 	/**
 	 * Adds a text area to the UI with the given name, text, parent,
 	 * width, height, and label font. A text area cannot be directly
@@ -1000,12 +1039,13 @@ public class WGUI implements ControlListener {
 		t.setColor(Fields.F_TEXT_C)
 		.setColorCursor(Fields.F_CURSOR_C)
 		.setColorActive(Fields.F_CURSOR_C)
-		.setColorLabel(Fields.BG_C)
 		.setColorBackground(Fields.F_BG_C)
 		.setColorForeground(Fields.F_FG_C)
 		.moveTo(parent)
 		.setBehavior(new KeyDownBehavior(keys));
-
+		
+		t.getCaptionLabel().hide();
+		
 		return t;
 	}
 
@@ -1049,14 +1089,14 @@ public class WGUI implements ControlListener {
 			}
 
 		} else {
-			if (arg0.isFrom("Object") || arg0.isFrom("Shape") ||
+			if (arg0.isFrom("WO") || arg0.isFrom("Shape") ||
 					arg0.isFrom("ScenarioOpt") || arg0.isFrom("CamObjects")) {
 				/* The selected item in these lists influence the layout of
 				 * the menu */
 				updateUIContentPositions();
 			}
 
-			if (arg0.isFrom("Object")) {
+			if (arg0.isFrom("WO")) {
 				WorldObject selectedWO = getSelectedWO();
 				
 				if (selectedWO != null) {
@@ -1119,6 +1159,24 @@ public class WGUI implements ControlListener {
 				
 				((ComplexShape)o.getForm()).updateModelPreview(mdlOrient);
 				updateUIContentPositions();
+				
+			} else if (arg0.isFrom("WOFillR") || arg0.isFrom("WOFillG") ||
+					arg0.isFrom("WOFillB")) {
+				// Update the sample fill color text area
+				Textarea txa = getTextArea("WOFillSmp");
+				
+				if (txa != null) {
+					txa.setColorBackground( getFillColor() );
+				}
+				
+			} else if (arg0.isFrom("WOOutlineR") || arg0.isFrom("WOOutlineG") ||
+					arg0.isFrom("WOOutlineB")) {
+				// Update the sample fill color text area
+				Textarea txa = getTextArea("WOOutlineSmp");
+				
+				if (txa != null) {
+					txa.setColorBackground( getStrokeColor() );
+				}
 			}
 		}
 	}
@@ -1154,6 +1212,13 @@ public class WGUI implements ControlListener {
 						dropdown.setValue(-1);
 						dropdown.close();
 					}
+					
+				} else if (controller instanceof Slider) {
+					Slider s = (Slider)controller;
+					
+					if (s.getParent().equals(createWO)) {
+						s.setValue(0f);
+					}
 				}
 			}
 		}
@@ -1163,14 +1228,8 @@ public class WGUI implements ControlListener {
 	 * Creates a world object form the input fields in the Create window.
 	 */
 	public WorldObject createWorldObject() {
-		// Check the object type dropdown list
-		Object val = getDropdown("ObjType").getSelectedItem();
 		// Determine if the object to be create is a Fixture or a Part
-		Float objectType = 0.0f;
-
-		if (val instanceof Float) {
-			objectType = (Float)val;
-		}
+		float typeVal = getRadioButton("WOType").getValue();
 
 		app.pushMatrix();
 		app.resetMatrix();
@@ -1178,17 +1237,18 @@ public class WGUI implements ControlListener {
 
 		try {
 
-			if (objectType == 0.0f) {
+			if (typeVal == 0.0f) {
 				// Create a Part
-				String name = getTextField("ObjName").getText();
+				String name = getTextField("WOName").getText();
 
-				ShapeType type = (ShapeType)getDropdown("Shape").getSelectedItem();
+				int typeID = (int)getRadioButton("Shape").getValue();
+				ShapeType type = ShapeType.values()[typeID];
 
-				int fill = (Integer)getDropdown("Fill").getSelectedItem();
+				int fill = getFillColor();
 
 				switch(type) {
 				case BOX:
-					int strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
+					int strokeVal = getStrokeColor();
 					Float[] shapeDims = getBoxDimensions();
 					// Construct a box shape
 					if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
@@ -1197,7 +1257,7 @@ public class WGUI implements ControlListener {
 					break;
 
 				case CYLINDER:
-					strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
+					strokeVal = getStrokeColor();
 					shapeDims = getCylinderDimensions();
 					// Construct a cylinder
 					if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
@@ -1226,16 +1286,17 @@ public class WGUI implements ControlListener {
 				default:
 				}
 
-			} else if (objectType == 1.0f) {
+			} else if (typeVal == 1.0f) {
 				// Create a fixture
-				String name = getTextField("ObjName").getText();
-				ShapeType type = (ShapeType)getDropdown("Shape").getSelectedItem();
+				String name = getTextField("WOName").getText();
+				int typeID = (int)getRadioButton("Shape").getValue();
+				ShapeType type = ShapeType.values()[typeID];
 
-				int fill = (Integer)getDropdown("Fill").getSelectedItem();
+				int fill = getFillColor();
 
 				switch(type) {
 				case BOX:
-					int strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
+					int strokeVal = getStrokeColor();
 					Float[] shapeDims = getBoxDimensions();
 					// Construct a box shape
 					if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null && shapeDims[2] != null) {
@@ -1244,7 +1305,7 @@ public class WGUI implements ControlListener {
 					break;
 
 				case CYLINDER:
-					strokeVal = (Integer)getDropdown("Outline").getSelectedItem();
+					strokeVal = getStrokeColor();
 					shapeDims = getCylinderDimensions();
 					// Construct a cylinder
 					if (shapeDims != null && shapeDims[0] != null && shapeDims[1] != null) {
@@ -1742,6 +1803,26 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
+	 * Returns a 32-bit color value based on the values of the world object
+	 * fill color sliders.
+	 * 
+	 * @return	a 32-bit color value
+	 */
+	private int getFillColor() {
+		// Pull color components from the color sliders
+		Slider limbo = getSlider("WOFillR");
+		int r = (limbo == null) ? 255 : (int)limbo.getValue();
+		
+		limbo = getSlider("WOFillG");
+		int g = (limbo == null) ? 255 : (int)limbo.getValue();
+		
+		limbo = getSlider("WOFillB");
+		int b = (limbo == null) ? 255 : (int)limbo.getValue();
+		
+		return Fields.color(r, g, b);
+	}
+	
+	/**
 	 * @return	The active window
 	 */
 	public WindowTab getMenu() {
@@ -1876,7 +1957,7 @@ public class WGUI implements ControlListener {
 	 * @return	The world object currently selected in the Object dropdown list
 	 */
 	public WorldObject getSelectedWO() {
-		Object wldObj = getDropdown("Object").getSelectedItem();
+		Object wldObj = getDropdown("WO").getSelectedItem();
 
 		if (wldObj instanceof WorldObject) {
 			return (WorldObject)wldObj;
@@ -1921,6 +2002,26 @@ public class WGUI implements ControlListener {
 	
 	private Slider getSlider(String name) {
 		return (Slider) manager.get(name);
+	}
+	
+	/**
+	 * Returns a 32-bit color value based on the values of the world object
+	 * outline color sliders.
+	 * 
+	 * @return	a 32-bit color value
+	 */
+	private int getStrokeColor() {
+		// Pull color components from the color sliders
+		Slider limbo = getSlider("WOOutlineR");
+		int r = (limbo == null) ? 255 : (int)limbo.getValue();
+		
+		limbo = getSlider("WOOutlineG");
+		int g = (limbo == null) ? 255 : (int)limbo.getValue();
+		
+		limbo = getSlider("WOOutlineB");
+		int b = (limbo == null) ? 255 : (int)limbo.getValue();
+		
+		return Fields.color(r, g, b);
 	}
 
 	/**
@@ -2188,7 +2289,7 @@ public class WGUI implements ControlListener {
 	}
 	
 	/**
-	 * Sets selected object in the "Object" drop down menu to the
+	 * Sets selected object in the "WO" drop down menu to the
 	 * given WorldObject, 'wo.'
 	 * 
 	 * @param wo The world object to be set.
@@ -2196,12 +2297,12 @@ public class WGUI implements ControlListener {
 	public void setSelectedWO(WorldObject wo) {
 		
 		if (wo == null) {
-			MyDropdownList objList = getDropdown("Object");
+			MyDropdownList objList = getDropdown("WO");
 			objList.setValue(-1f);
 			
 		} else if ((menu == null || menu == WindowTab.EDIT)) {
 			updateView(WindowTab.EDIT);
-			getDropdown("Object").setItem(wo);
+			getDropdown("WO").setItem(wo);
 		}
 	}
 
@@ -2287,52 +2388,72 @@ public class WGUI implements ControlListener {
 
 		// Object Type dropdown list and label
 		int[] relPos = new int[] { winMargin, winMargin };
-		ControllerInterface<?> c = getTextArea("ObjTypeLbl").setPosition(relPos[0], relPos[1]);
+		ControllerInterface<?> c = getTextArea("WOTypeLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getDropdown("ObjType").setPosition(relPos[0], relPos[1]);
+		getRadioButton("WOType").setPosition(relPos[0], relPos[1]);
 		// Name label and field
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getTextArea("ObjNameLbl").setPosition(relPos[0], relPos[1]);
+		c = getTextArea("WONameLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getTextField("ObjName").setPosition(relPos[0], relPos[1]);
+		getTextField("WOName").setPosition(relPos[0], relPos[1]);
 		// Shape type label and dropdown
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getTextArea("ShapeLbl").setPosition(relPos[0], relPos[1]);
+		c = getTextArea("WOShapeLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
-		getDropdown("Shape").setPosition(relPos[0], relPos[1]);
+		getRadioButton("Shape").setPosition(relPos[0], relPos[1]);
 		// Dimension label and fields
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
 
 		// Fill color label and dropdown
-		c = getTextArea("FillLbl").setPosition(relPos[0], relPos[1]);
+		ControllerInterface<?> c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1]);
 
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
-		getDropdown("Fill").setPosition(relPos[0], relPos[1]);
-
+		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getSlider("WOFillR").setPosition(relPos[0], relPos[1]);
+		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		Object val = getDropdown("Shape").getSelectedItem();
+		c = getSlider("WOFillG").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getSlider("WOFillB").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+		c0 = getTextArea("WOFillSmp").setPosition(relPos[0], relPos[1]);
+		
+		float val = getRadioButton("Shape").getValue();
 
-		if (val == ShapeType.MODEL) {
+		if (val == 2f) {
 			// No stroke color for Model Shapes
-			getTextArea("OutlineLbl").hide();
-			getDropdown("Outline").hide();
-			c = getDropdown("Fill");
+			getTextArea("WOOutlineLbl").hide();
+			getTextArea("WOOutlineSmp").hide();
+			getSlider("WOOutlineR").hide();
+			getSlider("WOOutlineG").hide();
+			getSlider("WOOutlineB").hide();
 
 		} else {
-			// Outline color label and dropdown
-			c = getTextArea("OutlineLbl").setPosition(relPos[0], relPos[1]).show();
-
-			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
-			c = getDropdown("Outline").setPosition(relPos[0], relPos[1]).show();
+			// Outline color labels and sliders
+			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX + 40, 0);
+			c0 = getTextArea("WOOutlineLbl").setPosition(relPos[0], relPos[1]).show();
+			
+			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+			getTextArea("WOOutlineSmp").setPosition(relPos[0], relPos[1]).show();
+			
+			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			c0 = getSlider("WOOutlineR").setPosition(relPos[0], relPos[1]).show();
+			
+			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			c0 = getSlider("WOOutlineG").setPosition(relPos[0], relPos[1]).show();
+			
+			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			getSlider("WOOutlineB").setPosition(relPos[0], relPos[1]).show();
 		} 
 
 		// Create button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getButton("CreateWldObj").setPosition(relPos[0], relPos[1]);
+		c = getButton("WOCreateBtn").setPosition(relPos[0], relPos[1]);
 		// Clear button
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, winMargin, 0);
 		c = getButton("ClearFields").setPosition(relPos[0], relPos[1]);
@@ -2401,7 +2522,8 @@ public class WGUI implements ControlListener {
 		int txtFields = 0, ddlFields = 0;
 
 		if (menu == WindowTab.CREATE) {
-			ShapeType selectedShape = (ShapeType)getDropdown("Shape").getSelectedItem();
+			int val = (int)getRadioButton("Shape").getValue();
+			ShapeType selectedShape = ShapeType.values()[val];
 
 			// Define the label text and the number of dimensionos fields to display
 			if (selectedShape == ShapeType.BOX) {
@@ -2419,7 +2541,7 @@ public class WGUI implements ControlListener {
 			}
 
 		} else if (menu == WindowTab.EDIT) {
-			Object val = getDropdown("Object").getSelectedItem();
+			Object val = getDropdown("WO").getSelectedItem();
 
 			if (val instanceof WorldObject) {
 				RShape s = ((WorldObject)val).getForm();
@@ -2550,12 +2672,12 @@ public class WGUI implements ControlListener {
 
 		// Object list dropdown and label
 		int[] relPos = new int[] { winMargin, winMargin };
-		ControllerInterface<?> c = getTextArea("ObjLabel").setPosition(relPos[0], relPos[1]),
+		ControllerInterface<?> c = getTextArea("WOEditLbl").setPosition(relPos[0], relPos[1]),
 				c0 = null;
 		boolean isPart = getSelectedWO() instanceof Part;
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getDropdown("Object").setPosition(relPos[0], relPos[1]);
+		getDropdown("WO").setPosition(relPos[0], relPos[1]);
 		// Dimension label and fields
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
@@ -2703,7 +2825,7 @@ public class WGUI implements ControlListener {
 
 		// Delete button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getButton("DeleteWldObj").setPosition(relPos[0], relPos[1]);
+		c = getButton("WODelBtn").setPosition(relPos[0], relPos[1]);
 
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
@@ -2897,7 +3019,7 @@ public class WGUI implements ControlListener {
 		}
 
 		if (app.getActiveScenario() != null) {
-			dropdown = getDropdown("Object");
+			dropdown = getDropdown("WO");
 			dropdown.clear();
 
 			MyDropdownList limbo = getDropdown("Fixture");
@@ -3173,7 +3295,7 @@ public class WGUI implements ControlListener {
 		updateButtonBgColor(b.getName(), b.isOn());
 
 		// Update window background display
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY + 60);
 		background.setPosition(miscellaneous.getPosition())
 		.setBackgroundHeight(relPos[1])
 		.setHeight(relPos[1])
