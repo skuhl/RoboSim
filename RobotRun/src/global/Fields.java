@@ -304,7 +304,7 @@ public abstract class Fields {
 	 * @return		A 32-bit color value
 	 */
 	public static int color(int rgb) {
-		return color(255, rgb, rgb, rgb);
+		return color(rgb, rgb, rgb, 255);
 	}
 	
 	/**
