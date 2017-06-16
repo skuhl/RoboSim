@@ -7,6 +7,7 @@ import geom.Point;
 import geom.RQuaternion;
 import global.Fields;
 import global.RMath;
+import processing.core.PConstants;
 import processing.core.PMatrix3D;
 import processing.core.PVector;
 
@@ -127,17 +128,19 @@ public class LinearInterpolation extends LinearMotion {
 		final float angleInc = distBtwPts / radius;
 		final int transIdx = (int)(thetaAB / angleInc);
 		final int numOfPts = (int)((thetaAB + thetaBC) / angleInc);
-		
+		// Define an upper bound for circular motion interpolation point count
 		if (numOfPts > 50000) {
-			System.err.printf("%d points is way too much for circular interpolation!\n",
-					numOfPts);
+			System.err.printf("%d points is way too much (thetaAB=%f thetaBC=%f dist/pt=%f rad/pt=%f)!\n",
+					numOfPts, thetaAB, thetaBC, distBtwPts, angleInc);
+			setFault(true);
 			return;
+			
+		} else {
+			Fields.debug("dist/pt=%f rad/pt=%f points=%d transIdx=%d\n",
+					distBtwPts, angleInc, numOfPts, transIdx);
 		}
 		
 		RQuaternion qi = (transIdx == 0) ? qa : null;
-		
-		Fields.debug("dist/pt=%f rad/pt=%f points=%d transIdx=%d\n",
-				distBtwPts, angleInc, numOfPts, transIdx);
 		
 		// Interpolate between the start and end points
 		for (int pdx = 0; pdx < numOfPts; pdx += 1) {
@@ -193,6 +196,18 @@ public class LinearInterpolation extends LinearMotion {
 			numberOfPoints = (int) (d1 / distBtwPts);
 		} else {
 			numberOfPoints = (int) (d2 / distBtwPts);
+		}
+		
+		// Define an upper bound for continuous interpolation point count
+		if (numberOfPoints > 15000) {
+			System.err.printf("%d points is way too much (d1=%f d2=%f dist/pt=%f)!",
+					numberOfPoints, d1, d2, distBtwPts);
+			setFault(true);
+			return;
+			
+		} else {
+			Fields.debug("d1=%f d2=%f dist/pt=%f points=%d\n", d1, d2,
+					distBtwPts, numberOfPoints);
 		}
 
 		float mu = 0;
@@ -259,7 +274,17 @@ public class LinearInterpolation extends LinearMotion {
 		float mu = 0;
 		float dist = RobotRun.dist(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) + 100f * q1.dist(q2);
 		int numberOfPoints = (int) (dist / distBtwPts);
-		Fields.debug("%f / %f = %d points\n", dist, distBtwPts, numberOfPoints);
+		// Define an upper bound for linear interpolation point count
+		if (numberOfPoints > 15000) {
+			System.err.printf("%d points is way too much (dist=%f dist/pt=%f)!",
+					numberOfPoints, dist, distBtwPts);
+			setFault(true);
+			return;
+			
+		} else {
+			Fields.debug("dist=%f dist/pt=%f points=%d\n", dist, distBtwPts,
+					numberOfPoints);
+		}
 		
 		float increment = 1.0f / numberOfPoints;
 		for (int n = 0; n < numberOfPoints; n++) {
