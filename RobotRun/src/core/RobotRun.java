@@ -294,7 +294,7 @@ public class RobotRun extends PApplet {
 	 * @return Whether or not bounding boxes are displayed
 	 */
 	public boolean areOBBsRendered() {
-		return !UI.getButtonState("ToggleOBB");
+		return !UI.getButtonState("ToggleOBBs");
 	}
 
 	/**
