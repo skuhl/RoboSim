@@ -2,7 +2,6 @@ package screen;
 
 import core.RobotRun;
 import enums.ScreenMode;
-import ui.MenuScroll;
 
 public class ScreenMainMenu extends ST_ScreenListContents {
 
@@ -16,44 +15,38 @@ public class ScreenMainMenu extends ST_ScreenListContents {
 	}
 
 	@Override
-	MenuScroll loadContents() {
+	void loadContents() {
 		contents.addLine("1 Frames");
 		contents.addLine("2 Macros");
 		contents.addLine("3 Manual Fncts");
 		contents.addLine("4 I/O Registers");
-		
-		return contents;
 	}
 	
 	@Override
-	MenuScroll loadOptions() {
+	void loadOptions() {
 		options.clear();
-		return options;
 	}
 
 	@Override
-	String[] loadLabels() {
-		// TODO Auto-generated method stub
-		return new String[] { "", "", "", "", "" };
+	void loadLabels() {
+		labels[0] = "";
+		labels[1] = "";
+		labels[2] = "";
+		labels[3] = "";
+		labels[4] = "";
 	}
 	
-	@Override
-	public void loadVars() {
-		contents.setColumnIdx(0);
-	}
 
 	@Override
-	public void loadPrev() {}
-
+	void loadVars() {}
+	
 	@Override
 	public void actionUp() {
-		System.out.println("up");
 		contents.moveUp(false);
 	}
 
 	@Override
 	public void actionDn() {
-		System.out.println("dn");
 		contents.moveDown(false);
 	}
 
@@ -65,12 +58,14 @@ public class ScreenMainMenu extends ST_ScreenListContents {
 
 	@Override
 	public void actionEntr() {
-		if(options.getLineIdx() == 0) { // Frames
-			// TODO robotRun.nextScreen(ScreenMode.SELECT_FRAME_MODE);
-		} else if(options.getLineIdx() == 1) { // Macros
-			// TODO robotRun.nextScreen(ScreenMode.NAV_MACROS);
-		} else { // Manual Functions
-			// TODO robotRun.nextScreen(ScreenMode.NAV_MF_MACROS);
+		if (contents.getLineIdx() == 0) { // Frames
+			robotRun.nextScreen(ScreenMode.SELECT_FRAME_MODE);
+		} else if (contents.getLineIdx() == 1) { // Macros
+			robotRun.nextScreen(ScreenMode.NAV_MACROS);
+		} else if (contents.getLineIdx() == 2) { // Manual Functions
+			robotRun.nextScreen(ScreenMode.NAV_MF_MACROS);
+		} else if (contents.getLineIdx() == 3) { // IO Registers
+			robotRun.nextScreen(ScreenMode.NAV_IOREG);
 		}
 	}
 
