@@ -3,6 +3,7 @@ package ui;
 import controlP5.ControlP5;
 import controlP5.RadioButton;
 import controlP5.Toggle;
+import global.Fields;
 
 /**
  * An extension of controlP5's RadioButton class, which has some necessary
@@ -68,4 +69,29 @@ public class MyRadioButton extends RadioButton {
 	}
 	
 	/* My rant ends here */
+	
+	/**
+	 * Sets the column spacing of this radio button. The maximum width among
+	 * all toggle labels is added to the given spacing value, in order to avoid
+	 * toggle overlap.
+	 * 
+	 * @param spacing	The spacing to place between the columns of radio
+	 * 					buttons
+	 * @return			A reference to this
+	 */
+	public MyRadioButton setSpacingColumnOffset(int spacing) {
+		int maxWidth = 0;
+		// Find the maximum width among all toggle labels
+		for (Toggle t : _myRadioToggles) {
+			int width = t.getLabel().length() * Fields.CHAR_WDTH;
+			
+			if (width > maxWidth) {
+				maxWidth = width;
+			}
+		}
+		
+		setSpacingColumn(spacing + maxWidth);
+		
+		return this;
+	}
 }

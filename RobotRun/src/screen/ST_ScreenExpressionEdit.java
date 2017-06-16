@@ -3,53 +3,43 @@ package screen;
 import core.RobotRun;
 import enums.ScreenMode;
 
-public class ScreenDefault extends Screen {
-	
-	public ScreenDefault(RobotRun r) {
-		super(ScreenMode.DEFAULT, r);
-	}
+public abstract class ST_ScreenExpressionEdit extends Screen {
 
+	public ST_ScreenExpressionEdit(ScreenMode m, RobotRun r) {
+		super(m, r);
+	}
+	
 	@Override
 	String loadHeader() {
-		return "";
-	}
-
-	@Override
-	void loadContents() {
-		contents.clear();
-	}
-
-	@Override
-	void loadOptions() {
-		contents.clear();
-	}
-
-	@Override
-	void loadLabels() {
-		labels[0] = "";
-		labels[1] = "";
-		labels[2] = "";
-		labels[3] = "";
-		labels[4] = "";
+		return robotRun.getActiveProg().getName();
 	}
 	
+	@Override
+	void loadContents() {
+		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg()));
+	}
+	
+	@Override
+	void loadLabels() {}
+
 	@Override
 	void loadVars() {}
 
 	@Override
-	public void actionUp() {}
+	public void actionUp() {
+		options.moveUp(false);
+	}
 
 	@Override
-	public void actionDn() {}
+	public void actionDn() {
+		options.moveDown(false);
+	}
 
 	@Override
 	public void actionLt() {}
 
 	@Override
 	public void actionRt() {}
-	
-	@Override
-	public void actionEntr() {}
 
 	@Override
 	public void actionF1() {}
@@ -65,5 +55,4 @@ public class ScreenDefault extends Screen {
 
 	@Override
 	public void actionF5() {}
-	
 }

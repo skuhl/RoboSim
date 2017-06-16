@@ -59,7 +59,7 @@ public class JointInterpolation extends JointMotion {
 					seg.setJointRotation(newRotation);
 
 				} else {
-					if (distToDest > 0.00009f) {
+					if (distToDest > 0.000009f) {
 						// Destination too close to move at current speed
 						seg.setJointRotation(TGT_ANGLES[jdx]);
 					}

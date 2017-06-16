@@ -2,94 +2,28 @@ package screen;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import expression.OperandBool;
 
-public class ScreenSetBoolConst extends Screen {
+public class ScreenSetBoolConst extends ST_ScreenInstructionEdit {
 
-	public ScreenSetBoolConst(ScreenMode m, RobotRun r) {
+	public ScreenSetBoolConst(RobotRun r) {
 		super(ScreenMode.SET_BOOL_CONST, r);
 	}
-
-	@Override
-	void loadHeader() {
-		
-	}
-
-	@Override
-	void loadContents() {
-		contents.setLines(robotRun.loadInstructions(RobotRun.getInstance().getActiveProg()));
-	}
-
+	
 	@Override
 	void loadOptions() {
-		
-	}
-
-	@Override
-	void loadLabels() {
-		
-	}
-
-	@Override
-	public void loadVars() {
-		
-	}
-
-	@Override
-	public void loadPrev() {
-		
-	}
-
-	@Override
-	public void actionUp() {
-		
-	}
-
-	@Override
-	public void actionDn() {
-		
-	}
-
-	@Override
-	public void actionLt() {
-		
-	}
-
-	@Override
-	public void actionRt() {
-		
+		options.addLine("1. False");
+		options.addLine("2. True");
 	}
 
 	@Override
 	public void actionEntr() {
-		// TODO robotRun.lastScreen();
-	}
+		if (options.getLineIdx() == 0) {
+			((OperandBool)robotRun.opEdit).setValue(true);
+		} else {
+			((OperandBool)robotRun.opEdit).setValue(false);
+		}
 
-	@Override
-	public void actionF1() {
-		
+		robotRun.lastScreen();
 	}
-
-	@Override
-	public void actionF2() {
-		
-	}
-
-	@Override
-	public void actionF3() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void actionF4() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void actionF5() {
-		// TODO Auto-generated method stub
-		
-	}
-
 }
