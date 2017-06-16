@@ -3,28 +3,32 @@ package screen;
 import core.RobotRun;
 import enums.ScreenMode;
 
-public class ScreenProgs extends Screen {
+public class ScreenProgs extends ST_ScreenListContents {
 
 	public ScreenProgs(RobotRun r) {
 		super(ScreenMode.NAV_PROGRAMS, r);
 	}
 	
 	@Override
-	void loadHeader() {
-		header = "PROGRAMS";
+	String loadHeader() {
+		return "PROGRAMS";
 	}
 	
 	@Override
 	void loadContents() {
-		contents.setLines(RobotRun.getInstanceRobot().printProgList());
+		contents.setLines(robotRun.getActiveRobot().printProgList());
 	}
 	
 	@Override
-	void loadOptions() {}
+	void loadOptions() {
+		options.clear();
+	}
 	
 	@Override
 	void loadLabels() {
-		if(RobotRun.getInstanceRobot().numOfPrograms() > 0) {
+		// F2, F3
+		labels[0] = "[Create]";
+		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
 			labels[1] = "[Rename]";
 			labels[2] = "[Delete]";
 			labels[3] = "[Copy]";
@@ -39,65 +43,64 @@ public class ScreenProgs extends Screen {
 	
 	@Override
 	public void loadVars() {
-		robotRun.hold();
-		contents.setLineIdx(RobotRun.getInstance().getActiveProgIdx());
-		contents.setColumnIdx(0);
-		RobotRun.getInstance().setActiveInstIdx(0);
-	}
-
-	@Override
-	public void loadPrev() {
+		if (robotRun.getActiveProg() == null) {
+			robotRun.setActiveProgIdx(0);
+			robotRun.setActiveInstIdx(0);
+		}
 		
+		contents.setLineIdx(robotRun.getActiveProgIdx());
 	}
-
-	@Override
-	public void actionUp() {
-		RobotRun.getInstance().setActiveProgIdx(contents.moveUp(robotRun.isShift()));
-	}
-
-	@Override
-	public void actionDn() {
-		RobotRun.getInstance().setActiveProgIdx(contents.moveDown(robotRun.isShift()));
-	}
-
-	@Override
-	public void actionLt() {}
-
-	@Override
-	public void actionRt() {}
 
 	@Override
 	public void actionEntr() {
 		if(RobotRun.getInstanceRobot().numOfPrograms() != 0) {
-			RobotRun.getInstance().setActiveInstIdx(0);
-			contents.reset();
-			// TODO robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
+			robotRun.setActiveInstIdx(0);
+			robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
+		}
+	}
+	
+	public void actionEdit() {
+		if (mode == ScreenMode.NAV_PROGRAMS) {
+			// Load the selected program
+			robotRun.setActiveProgIdx( contents.getActiveIndex() );
+			robotRun.setActiveInstIdx(0);
+			robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
+			
+		} else if (robotRun.getActiveProg() != null) {
+			// Load the current active program
+			robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
+			
+		} else {
+			// Load the program navigation menu
+			robotRun.resetStack();
+			robotRun.nextScreen(ScreenMode.NAV_PROGRAMS);
 		}
 	}
 
 	@Override
 	public void actionF1() {
-		// TODO robotRun.nextScreen(ScreenMode.PROG_CREATE);
+		robotRun.nextScreen(ScreenMode.PROG_CREATE);
 	}
 
 	@Override
 	public void actionF2() {
-		if(RobotRun.getInstanceRobot().numOfPrograms() > 0) {
-			// TODO robotRun.nextScreen(ScreenMode.PROG_RENAME);
+		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
+			robotRun.nextScreen(ScreenMode.PROG_RENAME);
 		}
 	}
 
 	@Override
 	public void actionF3() {
-		if(RobotRun.getInstanceRobot().numOfPrograms() > 0) {
-			// TODO robotRun.nextScreen(ScreenMode.CONFIRM_PROG_DELETE);
+		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
+			robotRun.setActiveProgIdx(contents.getActiveIndex());
+			robotRun.nextScreen(ScreenMode.CONFIRM_PROG_DELETE);
 		}
 	}
 
 	@Override
 	public void actionF4() {
-		if(RobotRun.getInstanceRobot().numOfPrograms() > 0) {
-			// TODO robotRun.nextScreen(ScreenMode.PROG_COPY);
+		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
+			robotRun.nextScreen(ScreenMode.PROG_COPY);
 		}
 	}
 

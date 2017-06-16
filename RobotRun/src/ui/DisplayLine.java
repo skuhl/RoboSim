@@ -1,4 +1,4 @@
-package screen;
+package ui;
 import java.util.ArrayList;
 
 public class DisplayLine {

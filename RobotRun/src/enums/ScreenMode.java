@@ -1,13 +1,11 @@
 package enums;
 
-import screen.DisplayMode;
-
 /**
  * Defines the set of screen modes available for the pendant menu system.
  * 
  * @author Vincent Druckte and Joshua Hooker
  */
-public enum ScreenMode implements DisplayMode {
+public enum ScreenMode {
 
 	/* 
 	 * The "Home" screen, default root screen state displayed on startup
