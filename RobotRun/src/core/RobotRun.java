@@ -199,7 +199,7 @@ public class RobotRun extends PApplet {
 	public int editIdx = -1;
 
 	// container for instructions being copied/ cut and pasted
-	ArrayList<Instruction> clipBoard = new ArrayList<>();
+	public ArrayList<Instruction> clipBoard = new ArrayList<>();
 	
 	/**
 	 * A list of instruction indexes for the active program, which point to

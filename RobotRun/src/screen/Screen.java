@@ -66,16 +66,16 @@ public abstract class Screen {
 		 * Screens used to perform arbitrary line-wise selection on a list of
 		 * elements displayed on a screen of type 'TYPE_LIST_CONTENTS'
 		 */
-		case SELECT_COMMENT: return null;
-		case SELECT_CUT_COPY: return null;
-		case SELECT_INSTR_DELETE: return null;
+		case SELECT_COMMENT: return new ScreenSelectComment(r);
+		case SELECT_CUT_COPY: return new ScreenSelectCutCopy(r);
+		case SELECT_INSTR_DELETE: return new ScreenSelectInstrDelete(r);
 
 		/*
 		 * Screens used to confirm or cancel the execution of a selected function
 		 */
-		case CONFIRM_PROG_DELETE: return null;
-		case CONFIRM_RENUM: return null;
-		case CONFIRM_UNDO: return null;
+		case CONFIRM_PROG_DELETE: return null; //new ScreenConfirmProgramDelete(r);
+		case CONFIRM_RENUM: return null; //new ScreenConfirmRenumber(r);
+		case CONFIRM_UNDO: return null; //new ScreenConfirmUndo(r);
 
 		/*
 		 * Screens used to display a context-based list of options to the user
