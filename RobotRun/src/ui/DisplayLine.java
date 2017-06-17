@@ -17,6 +17,16 @@ public class DisplayLine {
 		setItemIdx(idx);
 		setxAlign(0);
 	}
+	
+	public DisplayLine(int idx, String... strings) {
+		fields = new ArrayList<>();
+		for(String col : strings) {
+			fields.add(col);
+		}
+		
+		setItemIdx(idx);
+		setxAlign(0);
+	}
 
 	public DisplayLine(int idx, int align) {
 		fields = new ArrayList<>();

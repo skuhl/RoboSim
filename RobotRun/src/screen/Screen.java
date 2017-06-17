@@ -50,17 +50,17 @@ public abstract class Screen {
 		 * examine and interact with
 		 */
 		case NAV_MAIN_MENU: return new ScreenMainMenu(r);
-		case NAV_MACROS: return null;
-		case NAV_MF_MACROS: return null;
+		case NAV_MACROS: return new ScreenNavMacros(r);
+		case NAV_MF_MACROS: return new ScreenNavMFMacros(r);
 		case NAV_PROG_INSTR: return new ScreenProgInstructions(r);
-		case NAV_TOOL_FRAMES: return null;
-		case NAV_USER_FRAMES: return null;
+		case NAV_TOOL_FRAMES: return new ScreenNavToolFrames(r);
+		case NAV_USER_FRAMES: return new ScreenNavUserFrames(r);
 		case NAV_PROGRAMS: return new ScreenProgs(r);
-		case NAV_DATA: return null;
-		case NAV_PREGS: return null;
-		case NAV_DREGS: return null;
-		case NAV_IOREG: return null;
-		case SET_MACRO_PROG: return null;
+		case NAV_DATA: return new ScreenNavData(r);
+		case NAV_PREGS: return new ScreenNavPosRegs(r);
+		case NAV_DREGS: return new ScreenNavDataRegs(r);
+		case NAV_IOREG: return new ScreenNavIORegs(r);
+		case SET_MACRO_PROG: return new ScreenSetMacroProg(r);
 
 		/*
 		 * Screens used to perform arbitrary line-wise selection on a list of
