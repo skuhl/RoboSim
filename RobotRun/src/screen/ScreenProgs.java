@@ -20,11 +20,6 @@ public class ScreenProgs extends ST_ScreenListContents {
 	}
 	
 	@Override
-	void loadOptions() {
-		options.clear();
-	}
-	
-	@Override
 	void loadLabels() {
 		// F2, F3
 		labels[0] = "[Create]";
@@ -103,7 +98,4 @@ public class ScreenProgs extends ST_ScreenListContents {
 			robotRun.nextScreen(ScreenMode.PROG_COPY);
 		}
 	}
-
-	@Override
-	public void actionF5() {}
 }
