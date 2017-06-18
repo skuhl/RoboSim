@@ -3,6 +3,7 @@ package screen;
 import core.RobotRun;
 import enums.ScreenMode;
 import expression.OperandBool;
+import robot.RoboticArm;
 
 public class ScreenSetBoolConst extends ST_ScreenInstructionEdit {
 
@@ -18,6 +19,9 @@ public class ScreenSetBoolConst extends ST_ScreenInstructionEdit {
 
 	@Override
 	public void actionEntr() {
+		RoboticArm r = robotRun.getActiveRobot();
+		r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx());
+		
 		if (options.getLineIdx() == 0) {
 			((OperandBool)robotRun.opEdit).setValue(true);
 		} else {

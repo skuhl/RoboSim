@@ -1933,6 +1933,7 @@ public class RobotRun extends PApplet {
 						System.err.println("Invalid index!");
 
 					} else {
+						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 						((OperandDReg)opEdit).setValue(activeRobot.getDReg(idx - 1));
 					}
 
@@ -1942,8 +1943,10 @@ public class RobotRun extends PApplet {
 						System.err.println("Invalid index!");
 
 					} else if(opEdit instanceof OperandPReg) {
+						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 						((OperandPReg)opEdit).setValue(activeRobot.getPReg(idx - 1));
 					} else if(opEdit instanceof OperandPRegIdx) {
+						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 						((OperandPRegIdx)opEdit).setValue(activeRobot.getPReg(idx - 1));
 					}
 					
@@ -1953,6 +1956,7 @@ public class RobotRun extends PApplet {
 						System.err.println("Invalid index!");
 
 					} else {
+						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 						((OperandPRegIdx)opEdit).setSubIdx(idx - 1);
 					}
 
@@ -1962,6 +1966,7 @@ public class RobotRun extends PApplet {
 						System.err.println("Invalid index!");
 
 					} else {
+						r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 						((OperandIOReg)opEdit).setValue(activeRobot.getIOReg(idx));
 					}
 				}
@@ -1974,11 +1979,13 @@ public class RobotRun extends PApplet {
 		case INPUT_CONST:
 			try {
 				float data = Float.parseFloat(workingText.toString());
+				//TODO remove unused code?				
 				/*Instruction i = r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 				if(i instanceof RegisterStatement) {
 					((RegisterStatement)i).getExpr().setOperand(editIdx, new OperandFloat(data));
 				}*/
 				
+				r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 				((OperandFloat)opEdit).setValue(data);
 				
 			} catch (NumberFormatException e) {
@@ -1988,6 +1995,8 @@ public class RobotRun extends PApplet {
 			lastScreen();
 			break;
 		case SET_BOOL_CONST:
+			r.getInstToEdit(getActiveProg(), getActiveInstIdx());
+			
 			if (options.getLineIdx() == 0) {
 				((OperandBool)opEdit).setValue(true);
 			} else {
