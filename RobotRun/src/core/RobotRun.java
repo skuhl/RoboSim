@@ -356,7 +356,7 @@ public class RobotRun extends PApplet {
 		case NAV_IOREG:
 			contents.moveDown(shift);
 			
-			Fields.debug("line=%d col=%d adx=%d TRS=%d\n",
+			Fields.debug("line=%d col=%d TRS=%d\n",
 					contents.getLineIdx(), contents.getColumnIdx(),
 					contents.getRenderStart());
 			break;
@@ -626,7 +626,7 @@ public class RobotRun extends PApplet {
 		case NAV_IOREG:
 			contents.moveUp(shift);
 			
-			Fields.debug("line=%d col=%d adx=%d TRS=%d\n",
+			Fields.debug("line=%d col=%d TRS=%d\n",
 					contents.getLineIdx(), contents.getColumnIdx(),
 					contents.getRenderStart());
 			break;
@@ -2494,7 +2494,7 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case EDIT_PREG:
-			PositionRegister pReg = activeRobot.getPReg(contents.getItemIdx());
+			PositionRegister pReg = activeRobot.getPReg(screenStates.get(screenStates.size() - 2).conLnIdx);
 			pt = parsePosFromContents(pReg.isCartesian);
 
 			if (pt != null) {
@@ -2511,7 +2511,8 @@ public class RobotRun extends PApplet {
 					workingText.deleteCharAt(workingText.length() - 1);
 				}
 				// Save the inputed comment to the selected register
-				activeRobot.getPReg(contents.getItemIdx()).comment = workingText.toString();
+				activeRobot.getPReg(screenStates.get(screenStates.size() - 2).conLnIdx).comment = 
+						workingText.toString();
 				DataManagement.saveRobotData(activeRobot, 3);
 				workingText = new StringBuilder();
 				lastScreen();
@@ -2523,7 +2524,8 @@ public class RobotRun extends PApplet {
 					workingText.deleteCharAt(workingText.length() - 1);
 				}
 				// Save the inputed comment to the selected register
-				activeRobot.getDReg(contents.getItemIdx()).comment = workingText.toString();
+				activeRobot.getDReg(screenStates.get(screenStates.size() - 2).conLnIdx).comment = 
+						workingText.toString();
 				DataManagement.saveRobotData(activeRobot, 3);
 				workingText = new StringBuilder();
 				lastScreen();
@@ -3842,18 +3844,21 @@ public class RobotRun extends PApplet {
 			header = String.format("%s: VALUE EDIT", reg.getLabel());
 			break;
 		case EDIT_DREG_COM:
-			header = String.format("R[%d]: COMMENT EDIT", contents.getItemIdx() + 1);
+			header = String.format("R[%d]: COMMENT EDIT", screenStates.get(screenStates.size() - 2)
+					.conLnIdx + 1);
 			break;
 		case CP_DREG_VAL:
 			reg = activeRobot.getDReg(contents.getItemIdx());
 			header = String.format("%s: VALUE COPY", reg.getLabel());
 			break;
 		case EDIT_PREG:
-			reg = activeRobot.getPReg(contents.getItemIdx());
+			reg = activeRobot.getPReg(screenStates.get(screenStates.size() - 2)
+					.conLnIdx);
 			header = String.format("%s: POSITION EDIT", reg.getLabel());
 			break;
 		case EDIT_PREG_COM:
-			header = String.format("PR[%d]: COMMENT EDIT", contents.getItemIdx() + 1);
+			header = String.format("PR[%d]: COMMENT EDIT", screenStates.get(screenStates.size() - 2)
+					.conLnIdx + 1);
 			break;
 		case CP_PREG_PT:
 			reg = activeRobot.getPReg(contents.getItemIdx());
@@ -7722,7 +7727,7 @@ public class RobotRun extends PApplet {
 			case EDIT_DREG_COM:
 				contents.setLineIdx(1);
 	
-				String c = activeRobot.getDReg(contents.getItemIdx()).comment;
+				String c = activeRobot.getDReg(screenStates.peek().conLnIdx).comment;
 				if (c != null && c.length() > 0) {
 					workingText = new StringBuilder(c);
 				} else {
@@ -7733,7 +7738,7 @@ public class RobotRun extends PApplet {
 			case EDIT_PREG_COM:
 				contents.setLineIdx(1);
 	
-				c = activeRobot.getPReg(contents.getItemIdx()).comment;
+				c = activeRobot.getPReg(screenStates.peek().conLnIdx).comment;
 				if (c != null && c.length() > 0) {
 					workingText = new StringBuilder(c);
 				} else {
@@ -7747,7 +7752,7 @@ public class RobotRun extends PApplet {
 				contents.setColumnIdx( current.conColIdx );
 				contents.setRenderStart(  current.conRenIdx );
 				// Bring up float input menu
-				Float val = activeRobot.getDReg(contents.getItemIdx()).value;
+				Float val = activeRobot.getDReg(screenStates.peek().conLnIdx).value;
 				if (val != null) {
 					workingText = new StringBuilder(val.toString());
 	
@@ -7755,7 +7760,7 @@ public class RobotRun extends PApplet {
 				break;
 			case EDIT_PREG:
 				ArrayList<DisplayLine> limbo;
-				PositionRegister pReg = activeRobot.getPReg(contents.getItemIdx());
+				PositionRegister pReg = activeRobot.getPReg(screenStates.peek().conLnIdx);
 				// Load the position associated with active position register
 				if (pReg.point == null) {
 					// Initialize an empty position register
