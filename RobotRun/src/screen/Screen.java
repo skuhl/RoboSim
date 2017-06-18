@@ -13,7 +13,7 @@ public abstract class Screen {
 	protected MenuScroll options;
 	protected String[] labels;
 	
-	public static boolean useScreen = true;
+	public static boolean useScreen = false;
 	
 	public static Screen getScreen(ScreenMode m, RobotRun r) {
 		if(!useScreen) {
@@ -73,9 +73,9 @@ public abstract class Screen {
 		/*
 		 * Screens used to confirm or cancel the execution of a selected function
 		 */
-		case CONFIRM_PROG_DELETE: return null; //new ScreenConfirmProgramDelete(r);
-		case CONFIRM_RENUM: return null; //new ScreenConfirmRenumber(r);
-		case CONFIRM_UNDO: return null; //new ScreenConfirmUndo(r);
+		case CONFIRM_PROG_DELETE: return new ScreenConfirmProgramDelete(r);
+		case CONFIRM_RENUM: return new ScreenConfirmRenumber(r);
+		case CONFIRM_UNDO: return new ScreenConfirmUndo(r);
 
 		/*
 		 * Screens used to display a context-based list of options to the user
