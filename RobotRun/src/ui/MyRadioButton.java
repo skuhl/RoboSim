@@ -62,9 +62,6 @@ public class MyRadioButton extends RadioButton {
 	 * 			the radio button set
 	 */
 	public int getItemsPerRow() {
-		
-		(new Toggle(null, "name")).onClick(null);
-		
 		return itemsPerRow;
 	}
 	
