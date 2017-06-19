@@ -101,7 +101,7 @@ public class WGUI implements ControlListener {
 	
 	/** A group, which defines a set of elements belonging to a window tab, or
 	 *  shared amongst the window tabs. */
-	public final Group pendant, createWO, editWO, sharedElements, scenario,
+	private final Group pendant, createWO, editWO, sharedElements, scenario,
 			camera, miscellaneous;
 	
 	/** The button bar controlling the window tab selection. */
@@ -520,26 +520,26 @@ public class WGUI implements ControlListener {
 		rb.setSpacingColumnOffset(distFieldToFieldX);
 		
 		addSlider("WOFillR", "Red", createWO, fieldWidthMed, fieldHeight, 0f,
-				255f, 0, 0f, Fields.BLACK, Fields.color(200, 0, 0),
-				Fields.color(75), Fields.color(255, 0, 0), Fields.medium);
+				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
+				Fields.B_DEFAULT_C, Fields.color(200, 0, 0), Fields.medium);
 		addSlider("WOFillG", "Green", createWO, fieldWidthMed, fieldHeight, 0f,
-				255f, 0, 0f, Fields.BLACK, Fields.color(0, 200, 0),
-				Fields.color(75), Fields.color(0, 255, 0), Fields.medium);
+				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(0, 255, 0),
+				Fields.B_DEFAULT_C, Fields.color(0, 200, 0), Fields.medium);
 		addSlider("WOFillB", "Blue", createWO, fieldWidthMed, fieldHeight, 0f,
-				255f, 0, 0f, Fields.BLACK, Fields.color(0, 0, 200),
-				Fields.color(75), Fields.color(0, 0, 255), Fields.medium);
+				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(0, 0, 255),
+				Fields.B_DEFAULT_C, Fields.color(0, 0, 200), Fields.medium);
 		addTextarea("WOFillLbl", "Fill:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("WOFillSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
 		
 		addSlider("WOOutlineR", "Red", createWO, fieldWidthMed, fieldHeight,
-				0f, 255f, 0, 0f, Fields.BLACK, Fields.color(200, 0, 0),
-				Fields.color(75), Fields.color(255, 0, 0), Fields.medium);
+				0f, 255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
+				Fields.B_DEFAULT_C, Fields.color(200, 0, 0), Fields.medium);
 		addSlider("WOOutlineG", "Green", createWO, fieldWidthMed, fieldHeight,
-				0f, 255f, 0, 0f, Fields.BLACK, Fields.color(0, 200, 0),
-				Fields.color(75), Fields.color(0, 255, 0), Fields.medium);
+				0f, 255f, 0, 10f / 256f, 0f, Fields.BLACK, Fields.color(0, 255, 0),
+				Fields.B_DEFAULT_C, Fields.color(0, 200, 0), Fields.medium);
 		addSlider("WOOutlineB", "Blue", createWO, fieldWidthMed, fieldHeight,
-				0f, 255f, 0, 0f, Fields.BLACK, Fields.color(0, 0, 200),
-				Fields.color(75), Fields.color(0, 0, 255), Fields.medium);
+				0f, 255f, 0, 10f / 256f, 0f, Fields.BLACK, Fields.color(0, 0, 255),
+				Fields.B_DEFAULT_C, Fields.color(0, 0, 200), Fields.medium);
 		addTextarea("WOOutlineLbl", "Outline:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("WOOutlineSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
 		
@@ -922,14 +922,14 @@ public class WGUI implements ControlListener {
 		return rb;
 	}
 
-	private Slider addSlider(String name, Group parent, int wdh, int hgt, float min, float max,
-			float def, PFont lblFont) {
+	private Slider addSlider(String name, Group parent, int wdh, int hgt,
+			float min, float max, float def, PFont lblFont) {
+		
 		Slider s = new Slider(manager, name);
 		s.setColorValue(Fields.B_DEFAULT_C)
 		.setColorLabel(Fields.F_TEXT_C)
 		.setColorActive(Fields.B_ACTIVE_C)
-		.setMin(min)
-		.setMax(max)
+		.setRange(min, max)
 		.setDefaultValue(def)
 		.moveTo(parent)
 		.setSize(wdh, hgt);
@@ -937,7 +937,10 @@ public class WGUI implements ControlListener {
 		return s;
 	}
 	
-	private Slider addSlider(String name, String lbl, Group parent, int wdh, int hgt, float min, float max, int percision, float def, int valColor, int actColor, int bgColor, int fgColor, PFont lblFont) {
+	private Slider addSlider(String name, String lbl, Group parent, int wdh,
+			int hgt, float min, float max, int percision,
+			float scrollSensitivity, float def, int valColor, int actColor,
+			int bgColor, int fgColor, PFont lblFont) {
 		
 		Slider s = new Slider(manager, name);
 		s.getCaptionLabel().set(lbl);
@@ -947,11 +950,11 @@ public class WGUI implements ControlListener {
 		.setColorActive(actColor)
 		.setColorBackground(bgColor)
 		.setColorForeground(fgColor)
-		.setMax(max)
-		.setMin(min)
+		.setRange(min, max)
 		.setDecimalPrecision(percision)
 		.setDefaultValue(def)
 		.setSize(wdh, hgt)
+		.setScrollSensitivity(scrollSensitivity)
 		.moveTo(parent);
 		
 		return s;
@@ -2086,13 +2089,15 @@ public class WGUI implements ControlListener {
 	}
 
 	/**
-	 * Determines whether the mouse is over a dropdown list.
+	 * Determines whether the mouse is over certain UI elements.
 	 */
-	public boolean isMouseOverADropdownList() {
+	public boolean isMouseOverUIElement() {
 		List<ControllerInterface<?>> controllers = manager.getAll();
 
 		for (ControllerInterface<?> c : controllers) {
-			if (c instanceof MyDropdownList && c.isMouseOver()) {
+			if ((c instanceof DropdownList || c instanceof Slider)
+					&& c.isMouseOver()) {
+				
 				return true;
 			}
 		}
