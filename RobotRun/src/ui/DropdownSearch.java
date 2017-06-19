@@ -168,7 +168,7 @@ public class DropdownSearch extends MyDropdownList {
 		}
 		 
 		for (int cdx = 0; cdx < searchBuffer.length(); ++cdx) {
-			
+			// TODO compare without case
 			if (name.charAt(cdx) != searchBuffer.charAt(cdx)) {
 				// character difference
 				return -1;

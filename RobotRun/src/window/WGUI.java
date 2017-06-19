@@ -115,10 +115,6 @@ public class WGUI implements ControlListener {
 	 *  options output. */
 	private final ArrayList<Textarea> displayLines;
 	
-	/** Determine which input to use for importing a shape for a world object
-	 *  when it is created. */
-	private String lastModImport;
-	
 	/** Creates a new window with the given ControlP5 object as the parent
 	 *  and the given fonts which will be applied to the text in the window. */
 	public WGUI(RobotRun appRef, PImage[][] buttonImages) {
@@ -130,7 +126,6 @@ public class WGUI implements ControlListener {
 		manager.addListener(this);
 
 		menu = null;
-		lastModImport = null;
 		displayLines = new ArrayList<>();
 
 		/* A local reference to a position in the UI [x, y] used to position UI
@@ -1154,13 +1149,6 @@ public class WGUI implements ControlListener {
 					}
 				}
 
-			} else if (arg0.isFrom("DimDdl0") || arg0.isFrom("Dim0")) {
-
-				if (menu == WindowTab.CREATE) {
-					// Update source input field focus
-					lastModImport = arg0.getName();
-				}
-
 			} else if (arg0.isFrom("RobotEE")) {
 				@SuppressWarnings("static-access")
 				RoboticArm r = app.getInstanceRobot();
@@ -2010,28 +1998,12 @@ public class WGUI implements ControlListener {
 	 * @return	The name of the .stl file to use as a model for a world object
 	 */
 	private String getShapeSourceFile() {
-		String filename = null;
-
 		if (menu == WindowTab.CREATE) {
-			/* Determine which method of the source file input was edited last
-			 * and use that input method as the source file */
-			ControllerInterface<?> c = manager.get(lastModImport);
-
-			if (c instanceof MyTextfield) {
-				filename = ((MyTextfield)c).getText();
-
-			} else if (c instanceof MyDropdownList) {
-				try {
-					filename = (String) ((MyDropdownList)c).getSelectedItem();
-
-				} catch (ClassCastException CCEx) {
-					// Should not happen!
-					CCEx.printStackTrace();;
-				}
-			}
+			MyDropdownList ddl = getDropdown("DimDdl0");
+			return (String)ddl.getSelectedItem();
 		}
 
-		return filename;
+		return null;
 	}
 	
 	private Slider getSlider(String name) {
@@ -2573,8 +2545,8 @@ public class WGUI implements ControlListener {
 				txtFields = 2;
 
 			} else if (selectedShape == ShapeType.MODEL) {
-				lblNames = new String[] { "Source (1):", "Source (2):", "Scale:", };
-				txtFields = 2;
+				lblNames = new String[] { "Source:", "Scale:", };
+				txtFields = 1;
 				ddlFields = 1;
 			}
 
