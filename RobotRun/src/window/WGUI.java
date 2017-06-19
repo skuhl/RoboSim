@@ -48,6 +48,7 @@ import processing.core.PImage;
 import processing.core.PVector;
 import robot.RoboticArm;
 import ui.DisplayLine;
+import ui.DropdownSearch;
 import ui.KeyCodeMap;
 import ui.KeyDownBehavior;
 import ui.KeyDownMgmt;
@@ -681,7 +682,7 @@ public class WGUI implements ControlListener {
 
 		for (int idx = 0; idx < 1; ++idx) {
 			// dimension field dropdown lists
-			addDropdown(String.format("DimDdl%d", idx), sharedElements, ldropItemWidth,
+			addDropdownSearch(String.format("DimDdl%d", idx), sharedElements, ldropItemWidth,
 					dropItemHeight, 4, Fields.small);
 		}
 
@@ -831,6 +832,41 @@ public class WGUI implements ControlListener {
 			int lblHgt, int listLen, PFont lblFont) {
 
 		MyDropdownList dropdown = new MyDropdownList(manager, name);
+
+		dropdown.setSize(lblWdh, lblHgt * listLen)
+		.setBarHeight(lblHgt)
+		.setItemHeight(lblHgt)
+		.setColorValue(Fields.B_TEXT_C)
+		.setColorBackground(Fields.B_DEFAULT_C)
+		.setColorActive(Fields.B_ACTIVE_C)
+		.moveTo(parent)
+		.close()
+		.getCaptionLabel().setFont(lblFont);
+
+		return dropdown;
+	}
+	
+	/**
+	 * Adds an empty dropdown list with the given name, parent, label
+	 * dimensions, list display length, and label font to the UI. The UI's
+	 * color scheme is applied to the new dropdown list.
+	 * 
+	 * @param name		The name (or ID) of the UI element, which must unique
+	 * 					amongst all other UI elements!
+	 * @param parent	The window group, to which this dropdown list belongs
+	 * @param lblWdh	The width of the dropdown list's label (as well as the
+	 * 					label for a single element)
+	 * @param lblHgt	The height of the dropdown list's label (as well as a
+	 * 					the label for single element in the list)
+	 * @param listLen	The maximum number of list elements to display at once
+	 * 					(the display is scrollable)
+	 * @param lblFont	The dropdown list's label font
+	 * @return			A reference to the new dropdown list
+	 */
+	private MyDropdownList addDropdownSearch(String name, Group parent, int lblWdh,
+			int lblHgt, int listLen, PFont lblFont) {
+
+		MyDropdownList dropdown = new DropdownSearch(manager, name);
 
 		dropdown.setSize(lblWdh, lblHgt * listLen)
 		.setBarHeight(lblHgt)
