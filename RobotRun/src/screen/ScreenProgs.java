@@ -10,17 +10,14 @@ public class ScreenProgs extends ST_ScreenListContents {
 	}
 	
 	@Override
-	void loadHeader() {
-		header = "PROGRAMS";
+	String loadHeader() {
+		return "PROGRAMS";
 	}
 	
 	@Override
 	void loadContents() {
 		contents.setLines(robotRun.getActiveRobot().printProgList());
 	}
-	
-	@Override
-	void loadOptions() {}
 	
 	@Override
 	void loadLabels() {
@@ -46,20 +43,14 @@ public class ScreenProgs extends ST_ScreenListContents {
 			robotRun.setActiveInstIdx(0);
 		}
 		
-		contents.setLineIdx( robotRun.getActiveProgIdx() );
-	}
-
-	@Override
-	public void loadPrev() {
-		
+		contents.setLineIdx(robotRun.getActiveProgIdx());
 	}
 
 	@Override
 	public void actionEntr() {
 		if(RobotRun.getInstanceRobot().numOfPrograms() != 0) {
-			RobotRun.getInstance().setActiveInstIdx(0);
-			contents.reset();
-			// TODO robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
+			robotRun.setActiveInstIdx(0);
+			robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
 		}
 	}
 	
@@ -96,7 +87,7 @@ public class ScreenProgs extends ST_ScreenListContents {
 	@Override
 	public void actionF3() {
 		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
-			robotRun.setActiveProgIdx( contents.getActiveIndex() );
+			robotRun.setActiveProgIdx(contents.getActiveIndex());
 			robotRun.nextScreen(ScreenMode.CONFIRM_PROG_DELETE);
 		}
 	}
@@ -107,7 +98,4 @@ public class ScreenProgs extends ST_ScreenListContents {
 			robotRun.nextScreen(ScreenMode.PROG_COPY);
 		}
 	}
-
-	@Override
-	public void actionF5() {}
 }

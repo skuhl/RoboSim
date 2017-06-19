@@ -4,13 +4,14 @@ import core.RobotRun;
 import enums.ScreenMode;
 
 public class ScreenDefault extends Screen {
+	
 	public ScreenDefault(RobotRun r) {
 		super(ScreenMode.DEFAULT, r);
 	}
 
 	@Override
-	void loadHeader() {
-		header = "";
+	String loadHeader() {
+		return "";
 	}
 
 	@Override
@@ -20,7 +21,7 @@ public class ScreenDefault extends Screen {
 
 	@Override
 	void loadOptions() {
-		options.clear();
+		contents.clear();
 	}
 
 	@Override
@@ -33,10 +34,7 @@ public class ScreenDefault extends Screen {
 	}
 	
 	@Override
-	public void loadVars() {}
-
-	@Override
-	public void loadPrev() {}
+	void loadVars() {}
 
 	@Override
 	public void actionUp() {}
@@ -67,4 +65,5 @@ public class ScreenDefault extends Screen {
 
 	@Override
 	public void actionF5() {}
+	
 }
