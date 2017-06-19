@@ -13,6 +13,7 @@ import enums.ExecState;
 import enums.ExecType;
 import enums.ScreenMode;
 import enums.ScreenType;
+import enums.WindowTab;
 import expression.AtomicExpression;
 import expression.Expression;
 import expression.ExpressionElement;
@@ -230,8 +231,8 @@ public class RobotRun extends PApplet {
 	private WorldObject mouseOverWO;
 	
 	/**
-	 * Keeps track of the mouse drag event is updating the orientation of a
-	 * world object.
+	 * Keeps track of when the mouse is being dragged to update the position or
+	 * orientation of a world object.
 	 */
 	private boolean mouseDragWO;
 	
@@ -4378,7 +4379,7 @@ public class RobotRun extends PApplet {
 				}	
 			}
 			
-		} else if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) {
+		} else if (!UIKeyboardUse()) {
 			
 			// Pendant button shortcuts
 			switch(keyCode) {
@@ -4408,7 +4409,7 @@ public class RobotRun extends PApplet {
 		keyCodeMap.keyReleased(keyCode, key);
 		
 		if (!keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL) &&
-				mode.getType() != ScreenType.TYPE_TEXT_ENTRY) {
+				!UIKeyboardUse()) {
 			
 			switch(keyCode) {
 			case KeyEvent.VK_SHIFT: 	if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
@@ -5195,7 +5196,7 @@ public class RobotRun extends PApplet {
 
 	@Override
 	public void mouseWheel(MouseEvent event) {
-		if (UI != null && UI.isMouseOverADropdownList()) {
+		if (UI != null && UI.isMouseOverUIElement()) {
 			// Disable zooming when selecting an element from a dropdown list
 			return;
 		}
@@ -7139,7 +7140,6 @@ public class RobotRun extends PApplet {
 	public void updateScenarioUndo(WorldObject saveState) {
 		// Only the latest 40 world object save states can be undone
 		if (SCENARIO_UNDO.size() >= 40) {
-			// Not sure if size - 1 should be used instead
 			SCENARIO_UNDO.remove(0);
 		}
 
@@ -7212,7 +7212,7 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Updates the appropiate user input buffer based on the active pendant
+	 * Updates the appropriate user input buffer based on the active pendant
 	 * screen.
 	 * 
 	 * @param c	The character input by the user
@@ -7434,6 +7434,23 @@ public class RobotRun extends PApplet {
 		// Safeguard against editing a program while it is running
 		contents.setColumnIdx(0);
 		progExec(m.getProgIdx(), 0, isStep());
+	}
+	
+	/**
+	 * Detemines if the active menu uses keyboard input.
+	 * 
+	 * @return
+	 */
+	private boolean UIKeyboardUse() {
+		
+		if (UI.isPendantActive() && mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
+			return true;
+			
+		} else if (UI.getMenu() == WindowTab.CREATE || UI.getMenu() == WindowTab.EDIT) {
+			return true;
+		}
+		
+		return false;
 	}
 	
 	/**
@@ -8404,6 +8421,7 @@ public class RobotRun extends PApplet {
 						}
 						
 					} else {
+						// Reached the end of execution
 						progExecState.setState(ExecState.EXEC_DONE);
 					}
 					
@@ -8412,6 +8430,7 @@ public class RobotRun extends PApplet {
 					progExecState.setState(ExecState.EXEC_DONE);
 					
 				} else {
+					// Excute the next instruction
 					progExecState.setState(ExecState.EXEC_INST);
 				}
 			}
