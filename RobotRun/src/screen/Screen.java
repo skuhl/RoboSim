@@ -75,7 +75,6 @@ public abstract class Screen {
 		 */
 		case CONFIRM_PROG_DELETE: return new ScreenConfirmProgramDelete(r);
 		case CONFIRM_RENUM: return new ScreenConfirmRenumber(r);
-		case CONFIRM_UNDO: return new ScreenConfirmUndo(r);
 
 		/*
 		 * Screens used to display a context-based list of options to the user
@@ -143,7 +142,7 @@ public abstract class Screen {
 		/*
 		 * Frame input methods
 		 */
-		case TEACH_3PT_TOOL: return new ScreenTeach3PtTool(r);
+		/*case TEACH_3PT_TOOL: return new ScreenTeach3PtTool(r);
 		case TEACH_3PT_USER: return new ScreenTeach3PtUser(r);
 		case TEACH_4PT: return new ScreenTeach4Pt(r);
 		case TEACH_6PT: return new ScreenTeach6Pt(r);
@@ -151,10 +150,10 @@ public abstract class Screen {
 		/*
 		 * Screens involving direct entry of point values
 		 */
-		case DIRECT_ENTRY_TOOL: return new ScreenDirectEntryTool(r);
+		/*case DIRECT_ENTRY_TOOL: return new ScreenDirectEntryTool(r);
 		case DIRECT_ENTRY_USER: return new ScreenDirectEntryUser(r);
 		case EDIT_PREG: return new ScreenEditPosReg(r);
-		case EDIT_PROG_POS: return ScreenEditProgramPos(r);
+		case EDIT_PROG_POS: return ScreenEditProgramPos(r);*/
 		
 		default: return null;
 		}
