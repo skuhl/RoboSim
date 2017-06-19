@@ -64,7 +64,6 @@ public enum ScreenMode {
 	 */
 	CONFIRM_PROG_DELETE(ScreenType.TYPE_CONFIRM_CANCEL),
 	CONFIRM_RENUM(ScreenType.TYPE_CONFIRM_CANCEL),
-	CONFIRM_UNDO(ScreenType.TYPE_CONFIRM_CANCEL),
 
 	/*
 	 * Screens used to display a context-based list of options to the user
