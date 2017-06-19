@@ -481,8 +481,12 @@ public class WGUI implements ControlListener {
 		}
 
 		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
-
+		
+		
+		
 		// Initialize the world object creation window elements
+		addTextarea("WONameLbl", "Name:", createWO, mLblWidth, fieldHeight, Fields.medium);
+		addTextfield("WOName", createWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		addTextarea("WOTypeLbl", "Type:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		
 		HashMap<Float, String> toggles = new HashMap<>();
@@ -494,13 +498,7 @@ public class WGUI implements ControlListener {
 		t.setLabel("Part");
 		t = rb.getItem(1);
 		t.setLabel("Fixture");
-
-		rb.setItemsPerRow(2);
-		rb.setSpacingColumnOffset(distFieldToFieldX);
 		
-		addTextarea("WONameLbl", "Name:", createWO, sLblWidth, fieldHeight, Fields.medium);
-		addTextfield("WOName", createWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
-
 		addTextarea("WOShapeLbl", "Shape:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		
 		toggles = new HashMap<>();
@@ -515,9 +513,6 @@ public class WGUI implements ControlListener {
 		t.setLabel("Cylinder");
 		t = rb.getItem(2);
 		t.setLabel("Import");
-		
-		rb.setItemsPerRow(3);
-		rb.setSpacingColumnOffset(distFieldToFieldX);
 		
 		addSlider("WOFillR", "Red", createWO, fieldWidthMed, fieldHeight, 0f,
 				255f, 0, 0f, Fields.BLACK, Fields.color(200, 0, 0),
@@ -909,6 +904,8 @@ public class WGUI implements ControlListener {
 				}
 			}
 		}
+		
+		rb.setItemsPerRow(1);
 
 		// Set label fonts
 		List<Toggle> items = rb.getItems();
@@ -2386,31 +2383,33 @@ public class WGUI implements ControlListener {
 	 */
 	private void updateCreateWindowContentPositions() {
 		updateDimLblsAndFields();
-
-		// Object Type dropdown list and label
-		int[] relPos = new int[] { winMargin, winMargin };
-		ControllerInterface<?> c = getTextArea("WOTypeLbl").setPosition(relPos[0], relPos[1]);
-
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getRadioButton("WOType").setPosition(relPos[0], relPos[1]);
+		
 		// Name label and field
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getTextArea("WONameLbl").setPosition(relPos[0], relPos[1]);
+		int[] relPos = new int[] { winMargin, winMargin };
+		ControllerInterface<?> c = getTextArea("WONameLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getTextField("WOName").setPosition(relPos[0], relPos[1]);
-		// Shape type label and dropdown
+		// Object Type dropdown list and label
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getTextArea("WOTypeLbl").setPosition(relPos[0], relPos[1]);
+
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		ControllerInterface<?> c0 = getRadioButton("WOType").setPosition(relPos[0], relPos[1]);
+		// Shape type label and dropdown
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, c0,
+				Alignment.BOTTOM_LEFT, distBtwFieldsY);
 		c = getTextArea("WOShapeLbl").setPosition(relPos[0], relPos[1]);
 
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
-		getRadioButton("Shape").setPosition(relPos[0], relPos[1]);
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		c0 = getRadioButton("Shape").setPosition(relPos[0], relPos[1]);
 		// Dimension label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, c0,
+				Alignment.BOTTOM_LEFT, distBtwFieldsY);
 		relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
 
 		// Fill color label and dropdown
-		ControllerInterface<?> c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1]);
+		c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getSlider("WOFillR").setPosition(relPos[0], relPos[1]);
