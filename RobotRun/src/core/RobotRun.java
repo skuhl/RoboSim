@@ -408,8 +408,6 @@ public class RobotRun extends PApplet {
 
 			} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
 				contents.moveDown(false);
-			} else {
-				
 			}
 		}
 
@@ -2604,7 +2602,6 @@ public class RobotRun extends PApplet {
 		case ACTIVE_FRAMES:
 			if (contents.getLineIdx() == 0) {
 				nextScreen(ScreenMode.NAV_TOOL_FRAMES);
-
 			} else if (contents.getLineIdx() == 1) {
 				nextScreen(ScreenMode.NAV_USER_FRAMES);
 			}

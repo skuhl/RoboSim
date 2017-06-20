@@ -6,6 +6,7 @@ import screen.Screen;
 import ui.DisplayLine;
 
 public abstract class ST_ScreenPointEntry extends Screen {
+	static final int NUM_ENTRY_LEN = 9;
 
 	public ST_ScreenPointEntry(ScreenMode m, RobotRun r) {
 		super(m, r);
@@ -22,6 +23,23 @@ public abstract class ST_ScreenPointEntry extends Screen {
 	@Override
 	protected void loadVars() {}
 
+	public void actionKeyPressed(char key) {
+		if ((key >= '0' && key <= '9') || key == '-' || key == '.') {
+			DisplayLine entry = contents.getActiveLine();
+			int idx = contents.getColumnIdx();
+			
+			if (entry.get(idx) == "\0") {
+				entry.set(idx, Character.toString(key));
+				actionRt();
+				
+			// Include prefix in length	
+			} else if (entry.size() < (NUM_ENTRY_LEN + 1)) {
+				entry.add(idx, Character.toString(key));
+				actionRt();
+			}
+		}
+	}
+	
 	@Override
 	public void actionUp() {
 		contents.moveUp(false);
@@ -57,6 +75,21 @@ public abstract class ST_ScreenPointEntry extends Screen {
 			}
 
 			contents.moveRight();
+		}
+	}
+	
+	public void actionBkspc() {
+		DisplayLine entry = contents.getActiveLine();
+		int idx = contents.getColumnIdx();
+
+		if (entry.size() > 2) {
+			if (idx > 1) {
+				contents.setColumnIdx(--idx);
+			}
+
+			entry.remove(idx);
+		} else {
+			entry.set(idx, "\0");
 		}
 	}
 
