@@ -6588,7 +6588,7 @@ public class RobotRun extends PApplet {
 	 * @param robot	The robot for which to change the end effector state
 	 */
 	public void toggleEEState(RoboticArm robot) {
-		int edx = robot.getActiveEEIdx() - 1;
+		int edx = robot.getActiveEEIdx();
 		int curState = robot.getEEState();
 		
 		if (curState == Fields.ON) {
@@ -7798,6 +7798,8 @@ public class RobotRun extends PApplet {
 				}
 			}
 		}
+		
+		activeRobot.updateLastTipTMatrix();
 		
 		AxesDisplay axesType = getAxesState();
 		
