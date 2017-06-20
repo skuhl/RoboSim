@@ -4284,7 +4284,7 @@ public class RobotRun extends PApplet {
 			int ret = characterInput(key);
 			
 			if (ret != 0) {
-				/* Only supress key events when input is used for a pendant
+				/* Only suppress key events when input is used for a pendant
 				 * screen mode */
 				return;
 			}
