@@ -5141,7 +5141,6 @@ public class RobotRun extends PApplet {
 
 	@Override
 	public void mousePressed() {
-			
 		/* Check if the mouse position is colliding with a world object */
 		if (!isProgExec() && !UI.isFocus() && activeRobot != null &&
 				activeScenario != null) {
@@ -7432,7 +7431,7 @@ public class RobotRun extends PApplet {
 	 * @param robot
 	 * @return
 	 */
-	private ArrayList<DisplayLine> loadEEToolTipDefaults(RoboticArm robot) {
+	public ArrayList<DisplayLine> loadEEToolTipDefaults(RoboticArm robot) {
 		ArrayList<DisplayLine> lines = new ArrayList<>();
 		
 		for (int idx = 0; idx < activeRobot.numOfEndEffectors(); ++idx) {

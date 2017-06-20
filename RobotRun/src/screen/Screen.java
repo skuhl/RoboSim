@@ -79,7 +79,7 @@ public abstract class Screen {
 		/*
 		 * Screens used to display a context-based list of options to the user
 		 */
-		/*case NAV_INSTR_MENU: return new ScreenNavInstrMenu(r);
+		case NAV_INSTR_MENU: return new ScreenNavInstrMenu(r);
 		case SELECT_COND_STMT: return new ScreenSelectContStmt(r);
 		case SELECT_FRAME_INSTR_TYPE: return new ScreenSelectFrameInstrType(r);
 		case SELECT_FRAME_MODE: return new ScreenSelectFrameMode(r);
