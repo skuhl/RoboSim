@@ -8292,7 +8292,7 @@ public class RobotRun extends PApplet {
 			// Display the dimensions of the world object (if any)
 			for (int idx = 0; idx < dimFields.length; ++idx) {
 				if ((idx + 1) < dimFields.length) {
-					dimDisplay += String.format("%-12s", dimFields[idx]);
+					dimDisplay += String.format("%-13s", dimFields[idx]);
 
 				} else {
 					dimDisplay += String.format("%s", dimFields[idx]);

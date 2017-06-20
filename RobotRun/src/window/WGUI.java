@@ -2636,6 +2636,7 @@ public class WGUI implements ControlListener {
 			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.SCALE)) );
 		}
 		
+		// Update color sliders
 		int fillColor = form.getFillValue();
 		int[] rgb = Fields.rgba(fillColor);
 		getSlider("WOFillR").setValue(rgb[0]);
