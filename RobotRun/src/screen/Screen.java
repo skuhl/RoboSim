@@ -35,6 +35,10 @@ import screen.instr_edit.ScreenSetMotionInstrType;
 import screen.instr_edit.ScreenSetRegExpressionType;
 import screen.instr_edit.ScreenSetSelectStmtAction;
 import screen.instr_edit.ScreenSetSelectStmtArg;
+import screen.num_entry.ScreenConfirmInsert;
+import screen.num_entry.ScreenEditDataRegValue;
+import screen.num_entry.ScreenInputDataRegIdx;
+import screen.num_entry.ScreenShowActiveFrames;
 import screen.opt_menu.ScreenNavInstrMenu;
 import screen.opt_menu.ScreenSelectContStmt;
 import screen.opt_menu.ScreenSelectFrameInstrType;
@@ -178,14 +182,14 @@ public abstract class Screen {
 		 * Screens involving the entry of numeric values via either a physical numpad or
 		 * the virtual numpad included in the simulator UI
 		 */
-		/*case ACTIVE_FRAMES: return new ScreenShowActiveFrames(r);
+		case ACTIVE_FRAMES: return new ScreenShowActiveFrames(r);
 		case CONFIRM_INSERT: return new ScreenConfirmInsert(r);
 		case EDIT_DREG_VAL: return new ScreenEditDataRegValue(r);
 		case INPUT_DREG_IDX: return new ScreenInputDataRegIdx(r);
 		case INPUT_IOREG_IDX: return new ScreenInputIORegIdx(r);
-		case INPUT_PREG_IDX1: return new ScreenInputPosRegIdx();
+		case INPUT_PREG_IDX1: return new ScreenInputPosRegIdx(r);
 		case INPUT_PREG_IDX2: return new ScreenInputPosRegSubIdx(r);
-		case INPUT_CONST: return new ScreenInputConst(r);
+		/*case INPUT_CONST: return new ScreenInputConst(r);
 		case JUMP_TO_LINE: return new ScreenJumpToLine(r);
 		case SET_FRAME_INSTR_IDX: return new ScreenSetFramInstrIdx(r);
 		case SET_IO_INSTR_IDX: return new ScreenSetIOInstrIdx(r);
