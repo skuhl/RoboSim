@@ -8033,6 +8033,8 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
+		activeRobot.updateLastTipTMatrix();
+		
 		AxesDisplay axesType = getAxesState();
 		
 		if (axesType != AxesDisplay.NONE &&
