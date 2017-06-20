@@ -1,56 +1,47 @@
-package screen;
+package screen.instr_edit;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import screen.Screen;
 
-public class ScreenDefault extends Screen {
-	
-	public ScreenDefault(RobotRun r) {
-		super(ScreenMode.DEFAULT, r);
+public abstract class ST_ScreenInstructionEdit extends Screen {
+
+	public ST_ScreenInstructionEdit(ScreenMode m, RobotRun r) {
+		super(m, r);
 	}
-
+	
 	@Override
 	protected String loadHeader() {
-		return "";
-	}
-
-	@Override
-	protected void loadContents() {
-		contents.clear();
-	}
-
-	@Override
-	protected void loadOptions() {
-		contents.clear();
-	}
-
-	@Override
-	protected void loadLabels() {
-		labels[0] = "";
-		labels[1] = "";
-		labels[2] = "";
-		labels[3] = "";
-		labels[4] = "";
+		return robotRun.getActiveProg().getName();
 	}
 	
 	@Override
+	protected void loadContents() {
+		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg()));
+	}
+	
+	@Override
+	protected void loadLabels() {}
+
+	@Override
 	protected void loadVars() {}
-
+	
 	@Override
-	public void actionUp() {}
-
+	public void actionUp() {
+		options.moveUp(false);
+	}
+	
 	@Override
-	public void actionDn() {}
-
+	public void actionDn() {
+		options.moveDown(false);
+	}
+	
 	@Override
 	public void actionLt() {}
-
+	
 	@Override
 	public void actionRt() {}
 	
-	@Override
-	public void actionEntr() {}
-
 	@Override
 	public void actionF1() {}
 
@@ -65,5 +56,4 @@ public class ScreenDefault extends Screen {
 
 	@Override
 	public void actionF5() {}
-	
 }

@@ -349,7 +349,7 @@ public class RobotRun extends PApplet {
 		case NAV_MAIN_MENU:
 		case NAV_DATA:
 		case SET_MACRO_PROG:
-		case NAV_IOREG:
+		case NAV_IOREGS:
 			contents.moveDown(shift);
 			
 			Fields.debug("line=%d col=%d TRS=%d\n",
@@ -376,7 +376,7 @@ public class RobotRun extends PApplet {
 		case SET_MINST_REG_TYPE:
 		case SET_MINST_CREG_TYPE:
 		case SET_MINST_OFF_TYPE:
-		case SET_MINST_WO:
+		case SET_MINST_OBJ:
 		case SET_MACRO_TYPE:
 		case SET_MACRO_BINDING:
 		case SET_FRM_INSTR_TYPE:
@@ -619,7 +619,7 @@ public class RobotRun extends PApplet {
 		case NAV_MAIN_MENU:
 		case NAV_DATA:
 		case SET_MACRO_PROG:
-		case NAV_IOREG:
+		case NAV_IOREGS:
 			contents.moveUp(shift);
 			
 			Fields.debug("line=%d col=%d TRS=%d\n",
@@ -646,7 +646,7 @@ public class RobotRun extends PApplet {
 		case SET_MINST_REG_TYPE:
 		case SET_MINST_CREG_TYPE:
 		case SET_MINST_OFF_TYPE:
-		case SET_MINST_WO:
+		case SET_MINST_OBJ:
 		case SET_MACRO_TYPE:
 		case SET_MACRO_BINDING:
 		case SET_FRM_INSTR_TYPE:
@@ -1180,11 +1180,11 @@ public class RobotRun extends PApplet {
 				nextScreen(ScreenMode.NAV_MF_MACROS);
 
 			} else if (contents.getLineIdx() == 3) {
-				nextScreen(ScreenMode.NAV_IOREG);
+				nextScreen(ScreenMode.NAV_IOREGS);
 			}
 
 			break;
-		case NAV_IOREG:
+		case NAV_IOREGS:
 			int ioIdx = contents.getActiveIndex();
 			IORegister ioReg = r.getIOReg(ioIdx);
 			
@@ -1702,7 +1702,7 @@ public class RobotRun extends PApplet {
 			
 			lastScreen();
 			break;
-		case SET_MINST_WO:
+		case SET_MINST_OBJ:
 			CamMoveToObject cMInst = (CamMoveToObject) r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 			cMInst.setPosIdx(options.getLineIdx() - 1);
 			
@@ -3331,7 +3331,7 @@ public class RobotRun extends PApplet {
 					}
 					
 					// Set World Object reference
-					nextScreen(ScreenMode.SET_MINST_WO);
+					nextScreen(ScreenMode.SET_MINST_OBJ);
 				} else {
 					// Position index
 					nextScreen(ScreenMode.SET_MINST_IDX);
@@ -3759,7 +3759,7 @@ public class RobotRun extends PApplet {
 		case SET_LBL_NUM:
 		case SELECT_CUT_COPY:
 		case SELECT_INSTR_DELETE:
-		case SET_MINST_WO:
+		case SET_MINST_OBJ:
 			header = getActiveProg().getName();
 			break;
 		case EDIT_PROG_POS:
@@ -3880,7 +3880,7 @@ public class RobotRun extends PApplet {
 			header = String.format("%s: COMMENT COPY", reg.getLabel());
 			break;
 
-		case NAV_IOREG:
+		case NAV_IOREGS:
 			header = "I/O REGISTERS";
 			break;
 
@@ -6510,7 +6510,7 @@ public class RobotRun extends PApplet {
 		case SET_MINST_TERM:
 		case SET_MINST_OFF_TYPE:
 		case SET_MINST_OFFIDX:
-		case SET_MINST_WO:
+		case SET_MINST_OBJ:
 		case SET_IO_INSTR_STATE:
 		case SET_IO_INSTR_IDX:
 		case SET_FRM_INSTR_TYPE:
@@ -6587,7 +6587,7 @@ public class RobotRun extends PApplet {
 		case SWAP_PT_TYPE:
 			contents.setLines( loadPositionRegisters(r) );
 			break;
-		case NAV_IOREG:
+		case NAV_IOREGS:
 			contents.setLines( loadIORegNav(activeRobot) );
 			break;
 		// Position entry menus
@@ -6735,7 +6735,7 @@ public class RobotRun extends PApplet {
 			options.addLine("Enter desired position/ register:");
 			options.addLine("\0" + workingText);
 			break;
-		case SET_MINST_WO:
+		case SET_MINST_OBJ:
 			CamMoveToObject castIns = (CamMoveToObject)inst;
 			Scenario s = castIns.getScene();
 			
@@ -7502,7 +7502,7 @@ public class RobotRun extends PApplet {
 			options.reset();
 			
 			switch (mode) {
-			case NAV_IOREG:
+			case NAV_IOREGS:
 				contents.setColumnIdx(1);
 				break;
 				// Frames

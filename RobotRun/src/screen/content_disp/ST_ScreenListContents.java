@@ -1,29 +1,18 @@
-package screen;
+package screen.content_disp;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import screen.Screen;
 
-public class ScreenDefault extends Screen {
+public abstract class ST_ScreenListContents extends Screen {
+
+	public ST_ScreenListContents(ScreenMode m, RobotRun r) {
+		super(m, r);
+	}
 	
-	public ScreenDefault(RobotRun r) {
-		super(ScreenMode.DEFAULT, r);
-	}
-
 	@Override
-	protected String loadHeader() {
-		return "";
-	}
-
-	@Override
-	protected void loadContents() {
-		contents.clear();
-	}
-
-	@Override
-	protected void loadOptions() {
-		contents.clear();
-	}
-
+	protected void loadOptions() {}
+	
 	@Override
 	protected void loadLabels() {
 		labels[0] = "";
@@ -37,20 +26,25 @@ public class ScreenDefault extends Screen {
 	protected void loadVars() {}
 
 	@Override
-	public void actionUp() {}
+	public void actionUp() {
+		contents.moveUp(robotRun.isShift());
+	}
 
 	@Override
-	public void actionDn() {}
+	public void actionDn() {
+		contents.moveDown(robotRun.isShift());
+	}
 
 	@Override
-	public void actionLt() {}
+	public void actionLt() {
+		contents.moveLeft();
+	}
 
 	@Override
-	public void actionRt() {}
+	public void actionRt() {
+		contents.moveRight();
+	}
 	
-	@Override
-	public void actionEntr() {}
-
 	@Override
 	public void actionF1() {}
 
@@ -65,5 +59,4 @@ public class ScreenDefault extends Screen {
 
 	@Override
 	public void actionF5() {}
-	
 }
