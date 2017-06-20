@@ -1,29 +1,18 @@
-package screen;
+package screen.opt_menu;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import screen.Screen;
 
-public class ScreenDefault extends Screen {
+public abstract class ST_ScreenOptionsMenu extends Screen {
+
+	public ST_ScreenOptionsMenu(ScreenMode m, RobotRun r) {
+		super(m, r);
+	}
 	
-	public ScreenDefault(RobotRun r) {
-		super(ScreenMode.DEFAULT, r);
-	}
-
 	@Override
-	protected String loadHeader() {
-		return "";
-	}
-
-	@Override
-	protected void loadContents() {
-		contents.clear();
-	}
-
-	@Override
-	protected void loadOptions() {
-		contents.clear();
-	}
-
+	protected void loadContents() {}
+	
 	@Override
 	protected void loadLabels() {
 		labels[0] = "";
@@ -32,24 +21,25 @@ public class ScreenDefault extends Screen {
 		labels[3] = "";
 		labels[4] = "";
 	}
-	
+
 	@Override
 	protected void loadVars() {}
 
 	@Override
-	public void actionUp() {}
+	public void actionUp() {
+		options.moveUp(false);
+	}
 
 	@Override
-	public void actionDn() {}
+	public void actionDn() {
+		options.moveDown(false);
+	}
 
 	@Override
 	public void actionLt() {}
 
 	@Override
 	public void actionRt() {}
-	
-	@Override
-	public void actionEntr() {}
 
 	@Override
 	public void actionF1() {}
@@ -65,5 +55,4 @@ public class ScreenDefault extends Screen {
 
 	@Override
 	public void actionF5() {}
-	
 }

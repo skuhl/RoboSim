@@ -2,6 +2,70 @@ package screen;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import screen.content_disp.ScreenNavMainMenu;
+import screen.cnfrm_cncl.ScreenConfirmProgramDelete;
+import screen.cnfrm_cncl.ScreenConfirmRenumber;
+import screen.content_disp.ScreenNavData;
+import screen.content_disp.ScreenNavDataRegs;
+import screen.content_disp.ScreenNavIORegs;
+import screen.content_disp.ScreenNavMFMacros;
+import screen.content_disp.ScreenNavMacros;
+import screen.content_disp.ScreenNavPosRegs;
+import screen.content_disp.ScreenNavToolFrames;
+import screen.content_disp.ScreenNavUserFrames;
+import screen.content_disp.ScreenNavProgInstructions;
+import screen.content_disp.ScreenNavPrograms;
+import screen.content_disp.ScreenSetMacroProg;
+import screen.edit_point.ScreenDirectEntryTool;
+import screen.edit_point.ScreenDirectEntryUser;
+import screen.edit_point.ScreenEditPosReg;
+import screen.edit_point.ScreenEditProgramPos;
+import screen.expr_edit.ScreenSetBoolExpressionArg;
+import screen.expr_edit.ScreenSetExpressionArg;
+import screen.expr_edit.ScreenSetExpressionOp;
+import screen.instr_edit.ScreenSetBoolConst;
+import screen.instr_edit.ScreenSetFrameInstrType;
+import screen.instr_edit.ScreenSetIOInstrState;
+import screen.instr_edit.ScreenSetIfStmtAction;
+import screen.instr_edit.ScreenSetMostionInstrRegType;
+import screen.instr_edit.ScreenSetMotionInstrCircRegType;
+import screen.instr_edit.ScreenSetMotionInstrObj;
+import screen.instr_edit.ScreenSetMotionInstrOffsetType;
+import screen.instr_edit.ScreenSetMotionInstrType;
+import screen.instr_edit.ScreenSetRegExpressionType;
+import screen.instr_edit.ScreenSetSelectStmtAction;
+import screen.instr_edit.ScreenSetSelectStmtArg;
+import screen.opt_menu.ScreenNavInstrMenu;
+import screen.opt_menu.ScreenSelectContStmt;
+import screen.opt_menu.ScreenSelectFrameInstrType;
+import screen.opt_menu.ScreenSelectFrameMode;
+import screen.opt_menu.ScreenSelectIOInstrReg;
+import screen.opt_menu.ScreenSelectInstrInsert;
+import screen.opt_menu.ScreenSelectJumpLabel;
+import screen.opt_menu.ScreenSelectPasteOpt;
+import screen.opt_menu.ScreenSelectRegStmt;
+import screen.opt_menu.ScreenSetCallProg;
+import screen.opt_menu.ScreenSetDefaultTooltip;
+import screen.opt_menu.ScreenSetMacroBinding;
+import screen.opt_menu.ScreenSetMacroType;
+import screen.opt_menu.ScreenSwapPointType;
+import screen.opt_menu.ScreenToolFrameDetail;
+import screen.opt_menu.ScreenUserFrameDetail;
+import screen.select_lines.ScreenSelectComment;
+import screen.select_lines.ScreenSelectCutCopy;
+import screen.select_lines.ScreenSelectInstrDelete;
+import screen.teach_frame.ScreenTeach3PtTool;
+import screen.teach_frame.ScreenTeach3PtUser;
+import screen.teach_frame.ScreenTeach4Pt;
+import screen.teach_frame.ScreenTeach6Pt;
+import screen.text_entry.ScreenEditDataRegComment;
+import screen.text_entry.ScreenEditPosRegComment;
+import screen.text_entry.ScreenFindReplace;
+import screen.text_entry.ScreenProgramCopy;
+import screen.text_entry.ScreenProgramRename;
+import screen.text_entry.ScreenToolFrameRename;
+import screen.text_entry.ScreenUserFrameRename;
+import screen.text_entry.ScreenProgramCreate;
 import ui.MenuScroll;
 
 public abstract class Screen {
@@ -30,13 +94,14 @@ public abstract class Screen {
 		case SET_FRM_INSTR_TYPE: return new ScreenSetFrameInstrType(r);
 		case SET_IF_STMT_ACT: return new ScreenSetIfStmtAction(r);
 		case SET_IO_INSTR_STATE: return new ScreenSetIOInstrState(r);
-		case SET_MINST_TYPE: return new ScreenSetMotionInstrType(r);
 		case SET_MINST_REG_TYPE: return new ScreenSetMostionInstrRegType(r);
 		case SET_MINST_CREG_TYPE: return new ScreenSetMotionInstrCircRegType(r);
+		case SET_MINST_OBJ: return new ScreenSetMotionInstrObj(r);
 		case SET_MINST_OFF_TYPE: return new ScreenSetMotionInstrOffsetType(r);
+		case SET_MINST_TYPE: return new ScreenSetMotionInstrType(r);
 		case SET_REG_EXPR_TYPE: return new ScreenSetRegExpressionType(r);
-		case SET_SELECT_STMT_ARG: return new ScreenSelectStmtArg(r);
-		case SET_SELECT_STMT_ACT: return new ScreenSelectStmtAction(r);
+		case SET_SELECT_STMT_ARG: return new ScreenSetSelectStmtArg(r);
+		case SET_SELECT_STMT_ACT: return new ScreenSetSelectStmtAction(r);
 
 		/*
 		 * Set of screens used to edit expression elements
@@ -49,17 +114,17 @@ public abstract class Screen {
 		 * Screens used to display a several list of contents for the user to
 		 * examine and interact with
 		 */
-		case NAV_MAIN_MENU: return new ScreenMainMenu(r);
+		case NAV_DATA: return new ScreenNavData(r);
+		case NAV_DREGS: return new ScreenNavDataRegs(r);
+		case NAV_IOREGS: return new ScreenNavIORegs(r);
 		case NAV_MACROS: return new ScreenNavMacros(r);
+		case NAV_MAIN_MENU: return new ScreenNavMainMenu(r);
 		case NAV_MF_MACROS: return new ScreenNavMFMacros(r);
-		case NAV_PROG_INSTR: return new ScreenProgInstructions(r);
+		case NAV_PREGS: return new ScreenNavPosRegs(r);
+		case NAV_PROG_INSTR: return new ScreenNavProgInstructions(r);
+		case NAV_PROGRAMS: return new ScreenNavPrograms(r);
 		case NAV_TOOL_FRAMES: return new ScreenNavToolFrames(r);
 		case NAV_USER_FRAMES: return new ScreenNavUserFrames(r);
-		case NAV_PROGRAMS: return new ScreenProgs(r);
-		case NAV_DATA: return new ScreenNavData(r);
-		case NAV_PREGS: return new ScreenNavPosRegs(r);
-		case NAV_DREGS: return new ScreenNavDataRegs(r);
-		case NAV_IOREG: return new ScreenNavIORegs(r);
 		case SET_MACRO_PROG: return new ScreenSetMacroProg(r);
 
 		/*
@@ -88,26 +153,26 @@ public abstract class Screen {
 		case SELECT_JMP_LBL: return new ScreenSelectJumpLabel(r);
 		case SELECT_PASTE_OPT: return new ScreenSelectPasteOpt(r);
 		case SELECT_REG_STMT: return new ScreenSelectRegStmt(r);
-		case SET_MACRO_TYPE: return new ScreenSetMacroType(r);
-		case SET_MACRO_BINDING: return new ScreenSetMacroBinding(r);
 		case SET_CALL_PROG: return new ScreenSetCallProg(r);
-		case SET_MINST_WO: return new ScreenSetMotionInstrObj(r);
-		case SWAP_PT_TYPE: return new ScreenSwapPointType(r);
-		case UFRAME_DETAIL: return new ScreenUserFrameDetail(r);
-		case TFRAME_DETAIL: return new ScreenToolFrameDetail(r);
 		case SET_DEF_TOOLTIP: return new ScreenSetDefaultTooltip(r);
+		case SET_MACRO_BINDING: return new ScreenSetMacroBinding(r);
+		case SET_MACRO_TYPE: return new ScreenSetMacroType(r);
+		case SWAP_PT_TYPE: return new ScreenSwapPointType(r);
+		case TFRAME_DETAIL: return new ScreenToolFrameDetail(r);
+		case UFRAME_DETAIL: return new ScreenUserFrameDetail(r);
+		
 
 		/*
 		 * Screens involving the entry of text, either via keyboard input or function buttons
 		 */
-		case FIND_REPL: return new ScreenFindReplace(r);
 		case EDIT_DREG_COM: return new ScreenEditDataRegComment(r);
 		case EDIT_PREG_COM: return new ScreenEditPosRegComment(r);
+		case FIND_REPL: return new ScreenFindReplace(r);
 		case PROG_COPY: return new ScreenProgramCopy(r);
-		case PROG_CREATE: return new ScrenProgramCreate(r);
+		case PROG_CREATE: return new ScreenProgramCreate(r);
 		case PROG_RENAME: return new ScreenProgramRename(r);
-		case UFRAME_RENAME: return new ScreenUserFrameRename(r);
 		case TFRAME_RENAME: return new ScreenToolFrameRename(r);
+		case UFRAME_RENAME: return new ScreenUserFrameRename(r);
 
 		/*
 		 * Screens involving the entry of numeric values via either a physical numpad or
@@ -210,11 +275,11 @@ public abstract class Screen {
 	}
 	
 	//Sets text for each screen
-	abstract String loadHeader();
-	abstract void loadContents();
-	abstract void loadOptions();
-	abstract void loadLabels();
-	abstract void loadVars();
+	protected abstract String loadHeader();
+	protected abstract void loadContents();
+	protected abstract void loadOptions();
+	protected abstract void loadLabels();
+	protected abstract void loadVars();
 		
 	//Button actions
 	public abstract void actionUp();
