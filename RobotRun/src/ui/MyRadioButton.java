@@ -12,10 +12,19 @@ import global.Fields;
  * 
  * @author Joshua Hooker
  */
-public class MyRadioButton extends RadioButton {
+public class MyRadioButton extends RadioButton implements UIInputElement {
 	
-	public MyRadioButton(ControlP5 controller, String name) {
+	private int inputType;
+	
+	public MyRadioButton(ControlP5 controller, String name, int inputType) {
 		super(controller, name);
+		
+		this.inputType = inputType;
+	}
+	
+	@Override
+	public void clearInput() {
+		activate(0);
 	}
 	
 	/**
@@ -48,6 +57,11 @@ public class MyRadioButton extends RadioButton {
 	 */
 	public int getColumnSpacing() {
 		return spacingColumn;
+	}
+
+	@Override
+	public int getInputType() {
+		return inputType;
 	}
 	
 	/**

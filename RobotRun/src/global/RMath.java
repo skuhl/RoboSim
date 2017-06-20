@@ -652,6 +652,36 @@ public abstract class RMath {
 
 		return q;
 	}
+	
+	/**
+	 * Find the minimum value amongst all given integer values.
+	 * 
+	 * @param args	A set of integer values
+	 * @return		The minimum amongst all values of args
+	 */
+	public static int min(int... args) {
+		
+		if (args == null || args.length == 0) {
+			// Because why not
+			return Integer.MIN_VALUE;
+			
+		} else if (args.length == 1) {
+			// No comparison needed
+			return args[0];
+			
+		}
+		
+		// Find the minimum amongst all given values
+		int min = Integer.MAX_VALUE;
+		
+		for (int val : args) {
+			if (val < min) {
+				min = val;
+			}
+		}
+		
+		return min;
+	}
 
 	/**
 	 * Computes the minimum rotational magnitude to move from src to dest,
