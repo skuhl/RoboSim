@@ -26,7 +26,7 @@ public class MyRadioButton extends RadioButton {
 	 * 			column of toggles of the radio button
 	 */
 	public int getTotalHeight() {
-		return (_myRadioToggles.size() / itemsPerRow) * (_myHeight + spacingRow) - spacingRow;
+		return (_myRadioToggles.size() / itemsPerRow) * (itemHeight + spacingRow) - spacingRow;
 	}
 	
 	/**
@@ -38,7 +38,7 @@ public class MyRadioButton extends RadioButton {
 	 * 			the radio button
 	 */
 	public int getTotalWidth() {
-		return Math.min(_myRadioToggles.size(), itemsPerRow) * (_myWidth + spacingColumn) - spacingColumn;
+		return Math.min(_myRadioToggles.size(), itemsPerRow) * (itemWidth + spacingColumn) - spacingColumn;
 	}
 	
 	/* Why don't you have these methods contolP5!?!?!? */
@@ -62,9 +62,6 @@ public class MyRadioButton extends RadioButton {
 	 * 			the radio button set
 	 */
 	public int getItemsPerRow() {
-		
-		(new Toggle(null, "name")).onClick(null);
-		
 		return itemsPerRow;
 	}
 	

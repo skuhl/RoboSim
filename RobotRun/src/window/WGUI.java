@@ -48,6 +48,7 @@ import processing.core.PImage;
 import processing.core.PVector;
 import robot.RoboticArm;
 import ui.DisplayLine;
+import ui.DropdownSearch;
 import ui.KeyCodeMap;
 import ui.KeyDownBehavior;
 import ui.KeyDownMgmt;
@@ -114,10 +115,6 @@ public class WGUI implements ControlListener {
 	 *  options output. */
 	private final ArrayList<Textarea> displayLines;
 	
-	/** Determine which input to use for importing a shape for a world object
-	 *  when it is created. */
-	private String lastModImport;
-	
 	/** Creates a new window with the given ControlP5 object as the parent
 	 *  and the given fonts which will be applied to the text in the window. */
 	public WGUI(RobotRun appRef, PImage[][] buttonImages) {
@@ -129,7 +126,6 @@ public class WGUI implements ControlListener {
 		manager.addListener(this);
 
 		menu = null;
-		lastModImport = null;
 		displayLines = new ArrayList<>();
 
 		/* A local reference to a position in the UI [x, y] used to position UI
@@ -481,8 +477,12 @@ public class WGUI implements ControlListener {
 		}
 
 		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
-
+		
+		
+		
 		// Initialize the world object creation window elements
+		addTextarea("WONameLbl", "Name:", createWO, mLblWidth, fieldHeight, Fields.medium);
+		addTextfield("WOName", createWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
 		addTextarea("WOTypeLbl", "Type:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		
 		HashMap<Float, String> toggles = new HashMap<>();
@@ -494,13 +494,7 @@ public class WGUI implements ControlListener {
 		t.setLabel("Part");
 		t = rb.getItem(1);
 		t.setLabel("Fixture");
-
-		rb.setItemsPerRow(2);
-		rb.setSpacingColumnOffset(distFieldToFieldX);
 		
-		addTextarea("WONameLbl", "Name:", createWO, sLblWidth, fieldHeight, Fields.medium);
-		addTextfield("WOName", createWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
-
 		addTextarea("WOShapeLbl", "Shape:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		
 		toggles = new HashMap<>();
@@ -515,9 +509,6 @@ public class WGUI implements ControlListener {
 		t.setLabel("Cylinder");
 		t = rb.getItem(2);
 		t.setLabel("Import");
-		
-		rb.setItemsPerRow(3);
-		rb.setSpacingColumnOffset(distFieldToFieldX);
 		
 		addSlider("WOFillR", "Red", createWO, fieldWidthMed, fieldHeight, 0f,
 				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
@@ -686,7 +677,7 @@ public class WGUI implements ControlListener {
 
 		for (int idx = 0; idx < 1; ++idx) {
 			// dimension field dropdown lists
-			addDropdown(String.format("DimDdl%d", idx), sharedElements, ldropItemWidth,
+			addDropdownSearch(String.format("DimDdl%d", idx), sharedElements, ldropItemWidth,
 					dropItemHeight, 4, Fields.small);
 		}
 
@@ -849,6 +840,41 @@ public class WGUI implements ControlListener {
 
 		return dropdown;
 	}
+	
+	/**
+	 * Adds an empty dropdown list with the given name, parent, label
+	 * dimensions, list display length, and label font to the UI. The UI's
+	 * color scheme is applied to the new dropdown list.
+	 * 
+	 * @param name		The name (or ID) of the UI element, which must unique
+	 * 					amongst all other UI elements!
+	 * @param parent	The window group, to which this dropdown list belongs
+	 * @param lblWdh	The width of the dropdown list's label (as well as the
+	 * 					label for a single element)
+	 * @param lblHgt	The height of the dropdown list's label (as well as a
+	 * 					the label for single element in the list)
+	 * @param listLen	The maximum number of list elements to display at once
+	 * 					(the display is scrollable)
+	 * @param lblFont	The dropdown list's label font
+	 * @return			A reference to the new dropdown list
+	 */
+	private MyDropdownList addDropdownSearch(String name, Group parent, int lblWdh,
+			int lblHgt, int listLen, PFont lblFont) {
+
+		MyDropdownList dropdown = new DropdownSearch(manager, name);
+
+		dropdown.setSize(lblWdh, lblHgt * listLen)
+		.setBarHeight(lblHgt)
+		.setItemHeight(lblHgt)
+		.setColorValue(Fields.B_TEXT_C)
+		.setColorBackground(Fields.B_DEFAULT_C)
+		.setColorActive(Fields.B_ACTIVE_C)
+		.moveTo(parent)
+		.close()
+		.getCaptionLabel().setFont(lblFont);
+
+		return dropdown;
+	}
 
 	/**
 	 * Adds a new group to the UI. In this UI, a group defines a list of
@@ -909,6 +935,8 @@ public class WGUI implements ControlListener {
 				}
 			}
 		}
+		
+		rb.setItemsPerRow(1);
 
 		// Set label fonts
 		List<Toggle> items = rb.getItems();
@@ -943,7 +971,7 @@ public class WGUI implements ControlListener {
 			int bgColor, int fgColor, PFont lblFont) {
 		
 		Slider s = new Slider(manager, name);
-		s.getCaptionLabel().set(lbl);
+		s.getCaptionLabel().set(lbl).setFont(lblFont);
 		
 		s.setColorValue(valColor)
 		.setColorLabel(Fields.F_TEXT_C)
@@ -1119,13 +1147,6 @@ public class WGUI implements ControlListener {
 						app.updateScenarioUndo( (WorldObject)p.clone() );
 						p.setFixtureRef(refFixture);
 					}
-				}
-
-			} else if (arg0.isFrom("DimDdl0") || arg0.isFrom("Dim0")) {
-
-				if (menu == WindowTab.CREATE) {
-					// Update source input field focus
-					lastModImport = arg0.getName();
 				}
 
 			} else if (arg0.isFrom("RobotEE")) {
@@ -1977,28 +1998,12 @@ public class WGUI implements ControlListener {
 	 * @return	The name of the .stl file to use as a model for a world object
 	 */
 	private String getShapeSourceFile() {
-		String filename = null;
-
 		if (menu == WindowTab.CREATE) {
-			/* Determine which method of the source file input was edited last
-			 * and use that input method as the source file */
-			ControllerInterface<?> c = manager.get(lastModImport);
-
-			if (c instanceof MyTextfield) {
-				filename = ((MyTextfield)c).getText();
-
-			} else if (c instanceof MyDropdownList) {
-				try {
-					filename = (String) ((MyDropdownList)c).getSelectedItem();
-
-				} catch (ClassCastException CCEx) {
-					// Should not happen!
-					CCEx.printStackTrace();;
-				}
-			}
+			MyDropdownList ddl = getDropdown("DimDdl0");
+			return (String)ddl.getSelectedItem();
 		}
 
-		return filename;
+		return null;
 	}
 	
 	private Slider getSlider(String name) {
@@ -2388,31 +2393,33 @@ public class WGUI implements ControlListener {
 	 */
 	private void updateCreateWindowContentPositions() {
 		updateDimLblsAndFields();
-
-		// Object Type dropdown list and label
-		int[] relPos = new int[] { winMargin, winMargin };
-		ControllerInterface<?> c = getTextArea("WOTypeLbl").setPosition(relPos[0], relPos[1]);
-
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		getRadioButton("WOType").setPosition(relPos[0], relPos[1]);
+		
 		// Name label and field
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getTextArea("WONameLbl").setPosition(relPos[0], relPos[1]);
+		int[] relPos = new int[] { winMargin, winMargin };
+		ControllerInterface<?> c = getTextArea("WONameLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getTextField("WOName").setPosition(relPos[0], relPos[1]);
-		// Shape type label and dropdown
+		// Object Type dropdown list and label
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		c = getTextArea("WOTypeLbl").setPosition(relPos[0], relPos[1]);
+
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		ControllerInterface<?> c0 = getRadioButton("WOType").setPosition(relPos[0], relPos[1]);
+		// Shape type label and dropdown
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, c0,
+				Alignment.BOTTOM_LEFT, distBtwFieldsY);
 		c = getTextArea("WOShapeLbl").setPosition(relPos[0], relPos[1]);
 
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, PApplet.abs(fieldHeight - dropItemHeight) / 2);
-		getRadioButton("Shape").setPosition(relPos[0], relPos[1]);
+		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+		c0 = getRadioButton("Shape").setPosition(relPos[0], relPos[1]);
 		// Dimension label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, c0,
+				Alignment.BOTTOM_LEFT, distBtwFieldsY);
 		relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
 
 		// Fill color label and dropdown
-		ControllerInterface<?> c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1]);
+		c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getSlider("WOFillR").setPosition(relPos[0], relPos[1]);
@@ -2530,16 +2537,16 @@ public class WGUI implements ControlListener {
 
 			// Define the label text and the number of dimensionos fields to display
 			if (selectedShape == ShapeType.BOX) {
-				lblNames = new String[] { "Length:", "Height:", "Width" };
+				lblNames = new String[] { "Length:", "Height:", "Width:" };
 				txtFields = 3;
 
 			} else if (selectedShape == ShapeType.CYLINDER) {
-				lblNames = new String[] { "Radius", "Height" };
+				lblNames = new String[] { "Radius:", "Height:" };
 				txtFields = 2;
 
 			} else if (selectedShape == ShapeType.MODEL) {
-				lblNames = new String[] { "Source (1):", "Source (2):", "Scale:", };
-				txtFields = 2;
+				lblNames = new String[] { "Source:", "Scale:", };
+				txtFields = 1;
 				ddlFields = 1;
 			}
 
@@ -2550,11 +2557,11 @@ public class WGUI implements ControlListener {
 				RShape s = ((WorldObject)val).getForm();
 
 				if (s instanceof RBox) {
-					lblNames = new String[] { "Length:", "Height:", "Width" };
+					lblNames = new String[] { "Length:", "Height:", "Width:" };
 					txtFields = 3;
 
 				} else if (s instanceof RCylinder) {
-					lblNames = new String[] { "Radius", "Height" };
+					lblNames = new String[] { "Radius:", "Height:" };
 					txtFields = 2;
 
 				} else if (s instanceof ComplexShape) {
