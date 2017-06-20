@@ -13,6 +13,7 @@ import enums.ExecState;
 import enums.ExecType;
 import enums.ScreenMode;
 import enums.ScreenType;
+import enums.WindowTab;
 import expression.AtomicExpression;
 import expression.Expression;
 import expression.ExpressionElement;
@@ -225,8 +226,8 @@ public class RobotRun extends PApplet {
 	private WorldObject mouseOverWO;
 	
 	/**
-	 * Keeps track of the mouse drag event is updating the orientation of a
-	 * world object.
+	 * Keeps track of when the mouse is being dragged to update the position or
+	 * orientation of a world object.
 	 */
 	private boolean mouseDragWO;
 	
@@ -4279,12 +4280,12 @@ public class RobotRun extends PApplet {
 			return;
 			
 		}  else if (UI != null && UI.isPendantActive()) {
-			if (mode.getType() == ScreenType.TYPE_NUM_ENTRY 
-					|| mode.getType() == ScreenType.TYPE_POINT_ENTRY
-					|| mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				
-				// Suppress other key events when entering text for the pendant
-				characterInput(key);
+			// Suppress other key events when entering text for the pendant
+			int ret = characterInput(key);
+			
+			if (ret != 0) {
+				/* Only suppress key events when input is used for a pendant
+				 * screen mode */
 				return;
 			}
 			
@@ -4384,7 +4385,7 @@ public class RobotRun extends PApplet {
 				}	
 			}
 			
-		} else if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) {
+		} else if (!UIKeyboardUse()) {
 			
 			// Pendant button shortcuts
 			switch(keyCode) {
@@ -4414,7 +4415,7 @@ public class RobotRun extends PApplet {
 		keyCodeMap.keyReleased(keyCode, key);
 		
 		if (!keyCodeMap.isKeyDown(KeyEvent.VK_CONTROL) &&
-				mode.getType() != ScreenType.TYPE_TEXT_ENTRY) {
+				!UIKeyboardUse()) {
 			
 			switch(keyCode) {
 			case KeyEvent.VK_SHIFT: 	if (mode.getType() != ScreenType.TYPE_TEXT_ENTRY) 
@@ -5200,7 +5201,7 @@ public class RobotRun extends PApplet {
 
 	@Override
 	public void mouseWheel(MouseEvent event) {
-		if (UI != null && UI.isMouseOverADropdownList()) {
+		if (UI != null && UI.isMouseOverUIElement()) {
 			// Disable zooming when selecting an element from a dropdown list
 			return;
 		}
@@ -7142,7 +7143,6 @@ public class RobotRun extends PApplet {
 	public void updateScenarioUndo(WorldObject saveState) {
 		// Only the latest 40 world object save states can be undone
 		if (SCENARIO_UNDO.size() >= 40) {
-			// Not sure if size - 1 should be used instead
 			SCENARIO_UNDO.remove(0);
 		}
 
@@ -7215,12 +7215,16 @@ public class RobotRun extends PApplet {
 	}
 
 	/**
-	 * Updates the appropiate user input buffer based on the active pendant
+	 * Updates the appropriate user input buffer based on the active pendant
 	 * screen.
 	 * 
 	 * @param c	The character input by the user
+	 * @return	A signal based on what screen mode used the character input
+	 * 			(if any)
 	 */
-	private void characterInput(char c) {
+	private int characterInput(char c) {
+		int ret = 0;
+		
 		if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY && workingText.length() < TEXT_ENTRY_LEN
 				&& ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
 						|| c == '.' || c == '@' || c == '*' || c == '_')) {
@@ -7229,14 +7233,17 @@ public class RobotRun extends PApplet {
 
 			if (workingText.length() == 0 || columnIdx >= workingText.length()) {
 				workingText.append(c);
+				ret = 1;
 
 			} else {
 				workingText.insert(columnIdx, c);
+				ret = 1;
 			}
 			// Edge case of adding a character to an empty text entry
 			if (workingText.length() == 1 && workingText.charAt(0) != '\0') {
 				workingText.append('\0');
 				++columnIdx;
+				ret = 1;
 			}
 
 			contents.setColumnIdx(min(columnIdx + 1, workingText.length() - 1));
@@ -7247,11 +7254,13 @@ public class RobotRun extends PApplet {
 				// Special case for motion instruction speed number entry
 				if ((c >= '0' && c <= '9') && workingText.length() < 4) {
 					workingText.append(c);
+					ret = 2;
 				}
 				
 			} else if ((c >= '0' && c <= '9') || c == '.' || c == '-') {
 				// Append the character
 				workingText.append(c);
+				ret = 2;
 			}
 
 		} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
@@ -7263,18 +7272,24 @@ public class RobotRun extends PApplet {
 				if (entry.get(idx) == "\0") {
 					entry.set(idx, Character.toString(c));
 					arrow_rt();
+					ret = 3;
 					
 				// Include prefix in length	
 				} else if (entry.size() < (NUM_ENTRY_LEN + 1)) {
 					entry.add(idx, Character.toString(c));
 					arrow_rt();
+					ret = 3;
 				}
 			}
 			
 		}
 		
-		// Update the screen after a character insertion
-		updatePendantScreen();
+		if (ret != 0) {
+			// Update the screen after a character insertion
+			updatePendantScreen();
+		}
+		
+		return ret;
 	}
 	
 	/**
@@ -7425,6 +7440,22 @@ public class RobotRun extends PApplet {
 		}
 	}
 	
+	/**
+	 * Detemines if the active menu uses keyboard input.
+	 * 
+	 * @return
+	 */
+	private boolean UIKeyboardUse() {
+		
+		if (UI.isPendantActive() && mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
+			return true;
+			
+		} else if (UI.getMenu() == WindowTab.CREATE || UI.getMenu() == WindowTab.EDIT) {
+			return true;
+		}
+		
+		return false;
+	}
 	/**
 	 * TODO comment this
 	 * 
@@ -8393,6 +8424,7 @@ public class RobotRun extends PApplet {
 						}
 						
 					} else {
+						// Reached the end of execution
 						progExecState.setState(ExecState.EXEC_DONE);
 					}
 					
@@ -8401,6 +8433,7 @@ public class RobotRun extends PApplet {
 					progExecState.setState(ExecState.EXEC_DONE);
 					
 				} else {
+					// Excute the next instruction
 					progExecState.setState(ExecState.EXEC_INST);
 				}
 			}
