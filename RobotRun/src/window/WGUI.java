@@ -2450,7 +2450,7 @@ public class WGUI implements ControlListener {
 		c = getButton("WOCreateBtn").setPosition(relPos[0], relPos[1]);
 		// Clear button
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, winMargin, 0);
-		c = getButton("ClearFields").setPosition(relPos[0], relPos[1]);
+		c = getButton("ClearFields").setPosition(relPos[0], relPos[1]).show();
 
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
