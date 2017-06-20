@@ -75,86 +75,85 @@ public abstract class Screen {
 		 */
 		case CONFIRM_PROG_DELETE: return new ScreenConfirmProgramDelete(r);
 		case CONFIRM_RENUM: return new ScreenConfirmRenumber(r);
-		case CONFIRM_UNDO: return new ScreenConfirmUndo(r);
 
 		/*
 		 * Screens used to display a context-based list of options to the user
 		 */
-		case NAV_INSTR_MENU: return null;
-		case SELECT_COND_STMT: return null;
-		case SELECT_FRAME_INSTR_TYPE: return null;
-		case SELECT_FRAME_MODE: return null;
-		case SELECT_INSTR_INSERT: return null;
-		case SELECT_IO_INSTR_REG: return null;
-		case SELECT_JMP_LBL: return null;
-		case SELECT_PASTE_OPT: return null;
-		case SELECT_REG_STMT: return null;
-		case SET_MACRO_TYPE: return null;
-		case SET_MACRO_BINDING: return null;
-		case SET_CALL_PROG: return null;
-		case SET_MINST_WO: return null;
-		case SWAP_PT_TYPE: return null;
-		case UFRAME_DETAIL: return null;
-		case TFRAME_DETAIL: return null;
-		case SET_DEF_TOOLTIP: return null;
+		/*case NAV_INSTR_MENU: return new ScreenNavInstrMenu(r);
+		case SELECT_COND_STMT: return new ScreenSelectContStmt(r);
+		case SELECT_FRAME_INSTR_TYPE: return new ScreenSelectFrameInstrType(r);
+		case SELECT_FRAME_MODE: return new ScreenSelectFrameMode(r);
+		case SELECT_INSTR_INSERT: return new ScreenSelectInstrInsert(r);
+		case SELECT_IO_INSTR_REG: return new ScreenSelectIOInstrReg(r);
+		case SELECT_JMP_LBL: return new ScreenSelectJumpLabel(r);
+		case SELECT_PASTE_OPT: return new ScreenSelectPasteOpt(r);
+		case SELECT_REG_STMT: return new ScreenSelectRegStmt(r);
+		case SET_MACRO_TYPE: return new ScreenSetMacroType(r);
+		case SET_MACRO_BINDING: return new ScreenSetMacroBinding(r);
+		case SET_CALL_PROG: return new ScreenSetCallProg(r);
+		case SET_MINST_WO: return new ScreenSetMotionInstrObj(r);
+		case SWAP_PT_TYPE: return new ScreenSwapPointType(r);
+		case UFRAME_DETAIL: return new ScreenUserFrameDetail(r);
+		case TFRAME_DETAIL: return new ScreenToolFrameDetail(r);
+		case SET_DEF_TOOLTIP: return new ScreenSetDefaultTooltip(r);
 
 		/*
 		 * Screens involving the entry of text, either via keyboard input or function buttons
 		 */
-		case FIND_REPL: return null;
-		case EDIT_DREG_COM: return null;
-		case EDIT_PREG_COM: return null;
-		case PROG_COPY: return null;
-		case PROG_CREATE: return null;
-		case PROG_RENAME: return null;
-		case UFRAME_RENAME: return null;
-		case TFRAME_RENAME: return null;
+		case FIND_REPL: return new ScreenFindReplace(r);
+		case EDIT_DREG_COM: return new ScreenEditDataRegComment(r);
+		case EDIT_PREG_COM: return new ScreenEditPosRegComment(r);
+		case PROG_COPY: return new ScreenProgramCopy(r);
+		case PROG_CREATE: return new ScrenProgramCreate(r);
+		case PROG_RENAME: return new ScreenProgramRename(r);
+		case UFRAME_RENAME: return new ScreenUserFrameRename(r);
+		case TFRAME_RENAME: return new ScreenToolFrameRename(r);
 
 		/*
 		 * Screens involving the entry of numeric values via either a physical numpad or
 		 * the virtual numpad included in the simulator UI
 		 */
-		case ACTIVE_FRAMES: return null;
-		case CONFIRM_INSERT: return null;
-		case EDIT_DREG_VAL: return null;
-		case INPUT_DREG_IDX: return null;
-		case INPUT_IOREG_IDX: return null;
-		case INPUT_PREG_IDX1: return null;
-		case INPUT_PREG_IDX2: return null;
-		case INPUT_CONST: return null;
-		case JUMP_TO_LINE: return null;
-		case SET_FRAME_INSTR_IDX: return null;
-		case SET_IO_INSTR_IDX: return null;
-		case SET_JUMP_TGT: return null;
-		case SET_LBL_NUM: return null;
-		case SET_REG_EXPR_IDX1: return null;
-		case SET_REG_EXPR_IDX2: return null;
-		case SET_SELECT_ARGVAL: return null;
-		case SET_MINST_IDX: return null;
-		case SET_MINST_CIDX: return null;
-		case SET_MINST_OFFIDX: return null;
-		case SET_MINST_SPD: return null;
-		case SET_MINST_TERM: return null;
-		case CP_DREG_COM: return null;
-		case CP_DREG_VAL: return null;
-		case CP_PREG_COM: return null;
-		case CP_PREG_PT: return null;
+		/*case ACTIVE_FRAMES: return new ScreenShowActiveFrames(r);
+		case CONFIRM_INSERT: return new ScreenConfirmInsert(r);
+		case EDIT_DREG_VAL: return new ScreenEditDataRegValue(r);
+		case INPUT_DREG_IDX: return new ScreenInputDataRegIdx(r);
+		case INPUT_IOREG_IDX: return new ScreenInputIORegIdx(r);
+		case INPUT_PREG_IDX1: return new ScreenInputPosRegIdx();
+		case INPUT_PREG_IDX2: return new ScreenInputPosRegSubIdx(r);
+		case INPUT_CONST: return new ScreenInputConst(r);
+		case JUMP_TO_LINE: return new ScreenJumpToLine(r);
+		case SET_FRAME_INSTR_IDX: return new ScreenSetFramInstrIdx(r);
+		case SET_IO_INSTR_IDX: return new ScreenSetIOInstrIdx(r);
+		case SET_JUMP_TGT: return new ScreenSetJumpTgt(r);
+		case SET_LBL_NUM: return new ScreenSetLabelNum(r);
+		case SET_REG_EXPR_IDX1: return new ScreenSetRegExprIdx1(r);
+		case SET_REG_EXPR_IDX2: return new ScreenSetRegExprIdx2(r);
+		case SET_SELECT_ARGVAL: return new ScreenSetSelectArgValue(r);
+		case SET_MINST_IDX: return new ScreenSetMotionInstrIdx(r);
+		case SET_MINST_CIDX: return new ScreenSetMotionInstrCIdx(r);
+		case SET_MINST_OFFIDX: return new ScreenSetMotionInstrOffsetIdx(r);
+		case SET_MINST_SPD: return new ScreenSetMotionInstrSpeed(r);
+		case SET_MINST_TERM: return new ScreenSetMotionInstrTerm(r);
+		case CP_DREG_COM: return new ScreenCopyDataRegComment(r);
+		case CP_DREG_VAL: return new ScreenCopyDataRegValue(r);
+		case CP_PREG_COM: return new ScreenCopyPosRegComment(r);
+		case CP_PREG_PT: return new ScreenCopyPosRegPoint(r);
 
 		/*
 		 * Frame input methods
 		 */
-		case TEACH_3PT_TOOL: return null;
-		case TEACH_3PT_USER: return null;
-		case TEACH_4PT: return null;
-		case TEACH_6PT: return null;
+		case TEACH_3PT_TOOL: return new ScreenTeach3PtTool(r);
+		case TEACH_3PT_USER: return new ScreenTeach3PtUser(r);
+		case TEACH_4PT: return new ScreenTeach4Pt(r);
+		case TEACH_6PT: return new ScreenTeach6Pt(r);
 
 		/*
 		 * Screens involving direct entry of point values
 		 */
-		case DIRECT_ENTRY_TOOL: return null;
-		case DIRECT_ENTRY_USER: return null;
-		case EDIT_PREG: return null;
-		case EDIT_PROG_POS: return null;
+		case DIRECT_ENTRY_TOOL: return new ScreenDirectEntryTool(r);
+		case DIRECT_ENTRY_USER: return new ScreenDirectEntryUser(r);
+		case EDIT_PREG: return new ScreenEditPosReg(r);
+		case EDIT_PROG_POS: return new ScreenEditProgramPos(r);
 		
 		default: return null;
 		}
