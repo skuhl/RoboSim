@@ -13,7 +13,6 @@ import controlP5.ControllerInterface;
 import controlP5.DropdownList;
 import controlP5.Group;
 import controlP5.Pointer;
-import controlP5.Slider;
 import controlP5.Textarea;
 import controlP5.Toggle;
 import core.CamSelectArea;
@@ -469,15 +468,41 @@ public class WGUI implements ControlListener {
 		// Initialize the elements shared amongst the create and edit windows
 		for (int idx = 0; idx < 3; ++idx) {
 			addTextarea(String.format("DimLbl%d", idx), String.format("Dim(%d):", idx),
-					sharedElements, fieldWidthMed, sButtonHeight, Fields.medium);
+					sharedElements, mLblWidth, sButtonHeight, Fields.medium);
 
 			addTextfield(String.format("Dim%d", idx), sharedElements, fieldWidthMed,
 					fieldHeight, Fields.medium, app.getKeyCodeMap());
 		}
+		
+		addSlider("WOFillR", "Red", sharedElements, fieldWidthMed, fieldHeight, 0f,
+				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
+				Fields.B_DEFAULT_C, Fields.color(200, 0, 0), Fields.medium,
+				Fields.ITYPE_TRANSIENT);
+		addSlider("WOFillG", "Green", sharedElements, fieldWidthMed, fieldHeight, 0f,
+				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(0, 255, 0),
+				Fields.B_DEFAULT_C, Fields.color(0, 200, 0), Fields.medium,
+				Fields.ITYPE_TRANSIENT);
+		addSlider("WOFillB", "Blue", sharedElements, fieldWidthMed, fieldHeight, 0f,
+				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(0, 0, 255),
+				Fields.B_DEFAULT_C, Fields.color(0, 0, 200), Fields.medium,
+				Fields.ITYPE_TRANSIENT);
+		addTextarea("WOFillLbl", "Fill:", sharedElements, mLblWidth, sButtonHeight, Fields.medium);
+		
+		addSlider("WOOutlineR", "Red", sharedElements, fieldWidthMed, fieldHeight,
+				0f, 255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
+				Fields.B_DEFAULT_C, Fields.color(200, 0, 0), Fields.medium,
+				Fields.ITYPE_TRANSIENT);
+		addSlider("WOOutlineG", "Green", sharedElements, fieldWidthMed, fieldHeight,
+				0f, 255f, 0, 10f / 256f, 0f, Fields.BLACK, Fields.color(0, 255, 0),
+				Fields.B_DEFAULT_C, Fields.color(0, 200, 0), Fields.medium,
+				Fields.ITYPE_TRANSIENT);
+		addSlider("WOOutlineB", "Blue", sharedElements, fieldWidthMed, fieldHeight,
+				0f, 255f, 0, 10f / 256f, 0f, Fields.BLACK, Fields.color(0, 0, 255),
+				Fields.B_DEFAULT_C, Fields.color(0, 0, 200), Fields.medium,
+				Fields.ITYPE_TRANSIENT);
+		addTextarea("WOOutlineLbl", "Outline:", sharedElements, mLblWidth, sButtonHeight, Fields.medium);
 
 		addButton("ClearFields", "Clear", sharedElements, mButtonWidth, sButtonHeight, Fields.small);
-		
-		
 		
 		// Initialize the world object creation window elements
 		addTextarea("WONameLbl", "Name:", createWO, mLblWidth, fieldHeight, Fields.medium);
@@ -501,36 +526,8 @@ public class WGUI implements ControlListener {
 		rb = addRadioButton("Shape", createWO, radioDim, radioDim, Fields.medium,
 				togValues, togNames, togLbls, 0f, Fields.ITYPE_TRANSIENT);
 		
-		addSlider("WOFillR", "Red", createWO, fieldWidthMed, fieldHeight, 0f,
-				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
-				Fields.B_DEFAULT_C, Fields.color(200, 0, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
-		addSlider("WOFillG", "Green", createWO, fieldWidthMed, fieldHeight, 0f,
-				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(0, 255, 0),
-				Fields.B_DEFAULT_C, Fields.color(0, 200, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
-		addSlider("WOFillB", "Blue", createWO, fieldWidthMed, fieldHeight, 0f,
-				255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(0, 0, 255),
-				Fields.B_DEFAULT_C, Fields.color(0, 0, 200), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
-		addTextarea("WOFillLbl", "Fill:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("WOFillSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
-		
-		addSlider("WOOutlineR", "Red", createWO, fieldWidthMed, fieldHeight,
-				0f, 255f, 0, 10f / 255f, 0f, Fields.BLACK, Fields.color(255, 0, 0),
-				Fields.B_DEFAULT_C, Fields.color(200, 0, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
-		addSlider("WOOutlineG", "Green", createWO, fieldWidthMed, fieldHeight,
-				0f, 255f, 0, 10f / 256f, 0f, Fields.BLACK, Fields.color(0, 255, 0),
-				Fields.B_DEFAULT_C, Fields.color(0, 200, 0), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
-		addSlider("WOOutlineB", "Blue", createWO, fieldWidthMed, fieldHeight,
-				0f, 255f, 0, 10f / 256f, 0f, Fields.BLACK, Fields.color(0, 0, 255),
-				Fields.B_DEFAULT_C, Fields.color(0, 0, 200), Fields.medium,
-				Fields.ITYPE_TRANSIENT);
-		addTextarea("WOOutlineLbl", "Outline:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		addTextarea("WOOutlineSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
-		
 		addButton("WOCreateBtn", "Create", createWO, mButtonWidth, sButtonHeight, Fields.small);
 
 		// Initialize the world object edit window elements
@@ -1181,20 +1178,46 @@ public class WGUI implements ControlListener {
 				
 			} else if (arg0.isFrom("WOFillR") || arg0.isFrom("WOFillG") ||
 					arg0.isFrom("WOFillB")) {
-				// Update the sample fill color text area
-				Textarea txa = getTextArea("WOFillSmp");
 				
-				if (txa != null) {
-					txa.setColorBackground( getFillColor() );
+				if (menu == WindowTab.CREATE) {
+					// Update the sample fill color text area
+					Textarea txa = getTextArea("WOFillSmp");
+					
+					if (txa != null) {
+						txa.setColorBackground( getFillColor() );
+					}
+					
+				} else if (menu == WindowTab.EDIT) {
+					WorldObject wo = getSelectedWO();
+					
+					if (wo != null) {
+						/* Update the fill color of the selected world object
+						 * based on the fill color slider values */
+						int newFill = getFillColor();
+						wo.getForm().setFillValue(newFill);
+					}
 				}
 				
 			} else if (arg0.isFrom("WOOutlineR") || arg0.isFrom("WOOutlineG") ||
 					arg0.isFrom("WOOutlineB")) {
-				// Update the sample fill color text area
-				Textarea txa = getTextArea("WOOutlineSmp");
 				
-				if (txa != null) {
-					txa.setColorBackground( getStrokeColor() );
+				if (menu == WindowTab.CREATE) {
+					// Update the sample fill color text area
+					Textarea txa = getTextArea("WOOutlineSmp");
+					
+					if (txa != null) {
+						txa.setColorBackground( getStrokeColor() );
+					}
+					
+				} else if (menu == WindowTab.EDIT) {
+					WorldObject wo = getSelectedWO();
+					// Complex shapes have no stroke color
+					if (wo != null && !(wo.getForm() instanceof ComplexShape)) {
+						/* Update the stroke color of the selected world object
+						 * based on the stroke color slider values */
+						int newStroke = getStrokeColor();
+						wo.getForm().setStrokeValue(newStroke);
+					}
 				}
 			}
 		}
@@ -2443,7 +2466,7 @@ public class WGUI implements ControlListener {
 			
 			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			getSlider("WOOutlineB").setPosition(relPos[0], relPos[1]).show();
-		} 
+		}
 
 		// Create button
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
@@ -2486,7 +2509,7 @@ public class WGUI implements ControlListener {
 			relPos = getAbsPosFrom(dimLbl, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 			dimDdl.setPosition(relPos[0], relPos[1]);
 
-			relPos = getAbsPosFrom(dimLbl, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = getAbsPosFrom(dimLbl, Alignment.BOTTOM_LEFT, 0, winMargin);
 		}
 
 		// Update the dimension text fields
@@ -2501,7 +2524,7 @@ public class WGUI implements ControlListener {
 			relPos = getAbsPosFrom(dimLbl, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 			dimTxt.setPosition(relPos[0], relPos[1]);
 
-			relPos = getAbsPosFrom(dimLbl, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = getAbsPosFrom(dimLbl, Alignment.BOTTOM_LEFT, 0, winMargin);
 		}
 
 		return relPos;
@@ -2613,6 +2636,20 @@ public class WGUI implements ControlListener {
 			getTextField("Dim0").setText( String.format("%4.3f", form.getDim(DimType.SCALE)) );
 		}
 		
+		int fillColor = form.getFillValue();
+		int[] rgb = Fields.rgba(fillColor);
+		getSlider("WOFillR").setValue(rgb[0]);
+		getSlider("WOFillG").setValue(rgb[1]);
+		getSlider("WOFillB").setValue(rgb[2]);
+		
+		if (!(form instanceof ComplexShape)) {
+			int strokeColor = form.getStrokeValue();
+			rgb = Fields.rgba(strokeColor);
+			getSlider("WOOutlineR").setValue(rgb[0]);
+			getSlider("WOOutlineG").setValue(rgb[1]);
+			getSlider("WOOutlineB").setValue(rgb[2]);
+		}
+		
 		// Update the position and orientation fields
 		fillCurWithCur(selected);
 		
@@ -2667,14 +2704,54 @@ public class WGUI implements ControlListener {
 		int[] relPos = new int[] { winMargin, winMargin };
 		ControllerInterface<?> c = getTextArea("WOEditLbl").setPosition(relPos[0], relPos[1]),
 				c0 = null;
-		boolean isPart = getSelectedWO() instanceof Part;
+		WorldObject wo = getSelectedWO();
+		boolean isPart = wo instanceof Part;
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getDropdown("WO").setPosition(relPos[0], relPos[1]);
 		// Dimension label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 		relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
+		
+		// Fill color label and dropdown
+		c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1]);
+
+		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
+		c = getSlider("WOFillR").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+		c = getSlider("WOFillG").setPosition(relPos[0], relPos[1]);
+		
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+		c = getSlider("WOFillB").setPosition(relPos[0], relPos[1]);
+
+		if (wo != null && wo.getForm() instanceof ComplexShape) {
+			// No stroke color for Model Shapes
+			getTextArea("WOOutlineLbl").hide();
+			getSlider("WOOutlineR").hide();
+			getSlider("WOOutlineG").hide();
+			getSlider("WOOutlineB").hide();
+
+		} else {
+			// Outline color labels and sliders
+			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, 2 * distFieldToFieldX + sButtonWidth + 40, 0);
+			c0 = getTextArea("WOOutlineLbl").setPosition(relPos[0], relPos[1]).show();
+			
+			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+			getTextArea("WOOutlineSmp").setPosition(relPos[0], relPos[1]).show();
+			
+			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
+			c0 = getSlider("WOOutlineR").setPosition(relPos[0], relPos[1]).show();
+			
+			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
+			c0 = getSlider("WOOutlineG").setPosition(relPos[0], relPos[1]).show();
+			
+			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
+			getSlider("WOOutlineB").setPosition(relPos[0], relPos[1]).show();
+		}
+		
 		// Orientation column labels
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("Blank").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
@@ -2690,7 +2767,7 @@ public class WGUI implements ControlListener {
 		}
 
 		// X label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 		c = getTextArea("XLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
@@ -2735,7 +2812,7 @@ public class WGUI implements ControlListener {
 		}
 
 		// W label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 		c = getTextArea("WLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
@@ -2750,7 +2827,7 @@ public class WGUI implements ControlListener {
 		}
 
 		// P label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 		c = getTextArea("PLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
@@ -2765,7 +2842,7 @@ public class WGUI implements ControlListener {
 		}
 
 		// R label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 		c = getTextArea("RLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
@@ -2780,7 +2857,7 @@ public class WGUI implements ControlListener {
 		}
 
 		// Move to current button
-		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
 		c = getButton("MoveToCur").setPosition(relPos[0], relPos[1]);
 
 		if (isPart) {
@@ -2821,7 +2898,7 @@ public class WGUI implements ControlListener {
 		c = getButton("WODelBtn").setPosition(relPos[0], relPos[1]);
 
 		// Update window background display
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 		background.setPosition(editWO.getPosition())
 		.setBackgroundHeight(relPos[1])
 		.setHeight(relPos[1])

@@ -577,13 +577,13 @@ public abstract class Fields {
 		int[] portions = new int[4];
 		
 		// alpha
-		portions[0] = 0xff & (color >> 24);
+		portions[0] = 0xff & (color >> 16);
 		// red
-		portions[1] = 0xff & (color >> 16);
+		portions[1] = 0xff & (color >> 8);
 		// green
-		portions[2] = 0xff & (color >> 8);
+		portions[2] = 0xff & color;
 		// blue
-		portions[3] = 0xff & color;
+		portions[3] = 0xff & (color >> 24);
 		
 		return portions;
 	}
