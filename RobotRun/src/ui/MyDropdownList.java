@@ -6,6 +6,7 @@ import java.util.Map;
 import controlP5.ControlP5;
 import controlP5.ControllerGroup;
 import controlP5.DropdownList;
+import processing.event.KeyEvent;
 
 /**
  * An extension of the DropdownList class in ControlP5 that allows easier access
