@@ -161,15 +161,14 @@ public class RobotRun extends PApplet {
 	private MenuScroll options;
 	private Screen curScreen;
 
-	private Stack<ScreenState> screenStates;
-	private ArrayList<Macro> macros = new ArrayList<>();
-	private Macro[] macroKeyBinds = new Macro[7];
+	public Stack<ScreenState> screenStates;
+	public ArrayList<Macro> macros = new ArrayList<>();
+	public Macro[] macroKeyBinds = new Macro[7];
 	public Macro macroEdit;
 
 	private boolean shift = false; // Is shift button pressed or not?
 	private boolean step = false; // Is step button pressed or not?
 	private boolean camEnable = false;
-
 	private boolean record;
 	
 	/**
@@ -181,7 +180,6 @@ public class RobotRun extends PApplet {
 	 * Used with rendering of workingText.
 	 */
 	private String workingTextSuffix;
-	boolean speedInPercentage;
 
 	/**
 	 * Index of the current frame (Tool or User) selecting when in the Frame
@@ -192,11 +190,8 @@ public class RobotRun extends PApplet {
 	/**
 	 * The Frame being taught, during a frame teaching process
 	 */
-	private Frame teachFrame = null;
-
-	// Expression operand currently being edited
+	public Frame teachFrame = null;
 	public Operand<?> opEdit = null;
-
 	public int editIdx = -1;
 
 	// container for instructions being copied/ cut and pasted
@@ -297,7 +292,7 @@ public class RobotRun extends PApplet {
 	public boolean areOBBsRendered() {
 		return !UI.getButtonState("ToggleOBBs");
 	}
-
+	
 	/**
 	 * Pendant DOWN button
 	 * 
@@ -420,7 +415,7 @@ public class RobotRun extends PApplet {
 
 		updatePendantScreen();
 	}
-	
+
 	/**
 	 * Pendant LEFT button
 	 * 
@@ -468,7 +463,7 @@ public class RobotRun extends PApplet {
 
 		updatePendantScreen();
 	}
-
+	
 	/**
 	 * Pendant RIGHT button
 	 * 
@@ -563,7 +558,7 @@ public class RobotRun extends PApplet {
 
 		updatePendantScreen();
 	}
-	
+
 	/**
 	 * Pendant UP button
 	 * 
@@ -699,7 +694,7 @@ public class RobotRun extends PApplet {
 		camera.reset();
 		camera.setRotation(0f, PI, 0f);
 	}
-
+	
 	/**
 	 * Pendant BKSPC button
 	 * 
@@ -754,7 +749,7 @@ public class RobotRun extends PApplet {
 
 		updatePendantScreen();
 	}
-	
+
 	/**
 	 * Camera Bt button
 	 * 
@@ -851,7 +846,7 @@ public class RobotRun extends PApplet {
 			break;
 		}
 	}
-
+	
 	/**
 	 * This method attempts to modify the Frame based on the given value of
 	 * method. If method is even, then the frame is taught via the 3-Point
@@ -883,7 +878,7 @@ public class RobotRun extends PApplet {
 			println("Invalid input points");
 		}
 	}
-	
+
 	/**
 	 * This method takes the current values stored in contents (assuming that
 	 * they corresond to the six direct entry values X, Y, Z, W, P, R), parses
@@ -928,7 +923,7 @@ public class RobotRun extends PApplet {
 		
 		DataManagement.saveRobotData(activeRobot, 2);
 	}
-
+	
 	/**
 	 * Pendant - button
 	 * 
@@ -948,7 +943,7 @@ public class RobotRun extends PApplet {
 	public void data() {
 		nextScreen(ScreenMode.NAV_DATA);
 	}
-	
+
 	@Override
 	public void dispose() {
 		// Save data before exiting
@@ -1071,7 +1066,7 @@ public class RobotRun extends PApplet {
 			nextScreen(ScreenMode.NAV_PROGRAMS);
 		}
 	}
-
+	
 	public void editExpression(Expression expr, int selectIdx) {
 		int[] elements = expr.mapToEdit();
 		opEdit = expr;
@@ -1093,7 +1088,7 @@ public class RobotRun extends PApplet {
 			nextScreen(ScreenMode.SET_EXPR_OP);
 		}
 	}
-	
+
 	/**
 	 * Accepts an ExpressionOperand object and forwards the UI to the
 	 * appropriate menu to edit said object based on the operand type.
@@ -1138,7 +1133,7 @@ public class RobotRun extends PApplet {
 			break;
 		}
 	}
-
+	
 	public void editTextEntry(int fIdx) {
 		char newChar = LETTERS[fIdx][letterStates[fIdx]];
 		if (options.getLineIdx() == 0 && !(fIdx == 4 && letterStates[fIdx] > 1)) {
@@ -2495,7 +2490,7 @@ public class RobotRun extends PApplet {
 			}
 			break;
 		case EDIT_PREG:
-			PositionRegister pReg = activeRobot.getPReg(screenStates.get(screenStates.size() - 2).conLnIdx);
+			PositionRegister pReg = activeRobot.getPReg(getLastScreenState().conLnIdx);
 			pt = parsePosFromContents(pReg.isCartesian);
 
 			if (pt != null) {
@@ -2512,7 +2507,7 @@ public class RobotRun extends PApplet {
 					workingText.deleteCharAt(workingText.length() - 1);
 				}
 				// Save the inputed comment to the selected register
-				activeRobot.getPReg(screenStates.get(screenStates.size() - 2).conLnIdx).comment = 
+				activeRobot.getPReg(getLastScreenState().conLnIdx).comment = 
 						workingText.toString();
 				DataManagement.saveRobotData(activeRobot, 3);
 				workingText = new StringBuilder();
@@ -2525,7 +2520,7 @@ public class RobotRun extends PApplet {
 					workingText.deleteCharAt(workingText.length() - 1);
 				}
 				// Save the inputed comment to the selected register
-				activeRobot.getDReg(screenStates.get(screenStates.size() - 2).conLnIdx).comment = 
+				activeRobot.getDReg(getLastScreenState().conLnIdx).comment = 
 						workingText.toString();
 				DataManagement.saveRobotData(activeRobot, 3);
 				workingText = new StringBuilder();
@@ -2535,6 +2530,19 @@ public class RobotRun extends PApplet {
 		default:
 			break;
 		}
+	}
+
+	/**
+	 * Execute the given macro
+	 * 
+	 * @param m
+	 */
+	public void execute(Macro m) {
+		// Stop any prior Robot movement
+		hold();
+		// Safeguard against editing a program while it is running
+		contents.setColumnIdx(0);
+		progExec(m.getProgIdx(), 0, isStep());
 	}
 
 	/**
@@ -3845,21 +3853,18 @@ public class RobotRun extends PApplet {
 			header = String.format("%s: VALUE EDIT", reg.getLabel());
 			break;
 		case EDIT_DREG_COM:
-			header = String.format("R[%d]: COMMENT EDIT", screenStates.get(screenStates.size() - 2)
-					.conLnIdx + 1);
+			header = String.format("R[%d]: COMMENT EDIT", getLastScreenState().conLnIdx + 1);
 			break;
 		case CP_DREG_VAL:
 			reg = activeRobot.getDReg(contents.getItemIdx());
 			header = String.format("%s: VALUE COPY", reg.getLabel());
 			break;
 		case EDIT_PREG:
-			reg = activeRobot.getPReg(screenStates.get(screenStates.size() - 2)
-					.conLnIdx);
+			reg = activeRobot.getPReg(getLastScreenState().conLnIdx);
 			header = String.format("%s: POSITION EDIT", reg.getLabel());
 			break;
 		case EDIT_PREG_COM:
-			header = String.format("PR[%d]: COMMENT EDIT", screenStates.get(screenStates.size() - 2)
-					.conLnIdx + 1);
+			header = String.format("PR[%d]: COMMENT EDIT", getLastScreenState().conLnIdx + 1);
 			break;
 		case CP_PREG_PT:
 			reg = activeRobot.getPReg(contents.getItemIdx());
@@ -3925,6 +3930,10 @@ public class RobotRun extends PApplet {
 		return keyCodeMap;
 	}
 
+	public ScreenState getLastScreenState() {
+		return screenStates.get(screenStates.size() - 2);
+	}
+
 	public Macro getMacro(int idx) {
 		return macros.get(idx);
 	}
@@ -3936,7 +3945,7 @@ public class RobotRun extends PApplet {
 	public ScreenMode getMode() {
 		return mode;
 	}
-
+	
 	public MenuScroll getOptionsMenu() {
 		return options;
 	}
@@ -3966,7 +3975,7 @@ public class RobotRun extends PApplet {
 	public boolean getRecord() {
 		return record;
 	}
-	
+
 	/**
 	 * Returns the robot with the associated ID, or null if no such robot
 	 * exists.
@@ -3978,11 +3987,11 @@ public class RobotRun extends PApplet {
 	public RoboticArm getRobot(int rid) {
 		return ROBOTS.get(rid);
 	}
-
+	
 	public RobotCamera getRobotCamera() {
 		return rCamera;
 	}
-	
+
 	public ArrayList<Scenario> getScenarios() {
 		return SCENARIOS;
 	}
@@ -4051,7 +4060,7 @@ public class RobotRun extends PApplet {
 	public WGUI getUI() {
 		return UI;
 	}
-
+	
 	/**
 	 * Pendant HOLD button
 	 * 
@@ -4068,7 +4077,7 @@ public class RobotRun extends PApplet {
 			updateInstList();
 		}
 	}
-	
+
 	/**
 	 * Pendant I/O button
 	 * 
@@ -4089,14 +4098,14 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
 	/**
 	 * @return	Is the active robot executing a program?
 	 */
 	public boolean isProgExec() {
 		return !progExecState.isDone();
 	}
-	
+
 	/**
 	 * @return Whether or not the second robot is used in the application
 	 */
@@ -4122,7 +4131,7 @@ public class RobotRun extends PApplet {
 			nextScreen(ScreenMode.JUMP_TO_LINE);
 		}
 	}
-
+	
 	/**
 	 * Pendant -X/(J1) button
 	 * 
@@ -4133,7 +4142,7 @@ public class RobotRun extends PApplet {
 	public void joint1_neg() {
 		updateRobotJogMotion(0, -1);
 	}
-	
+
 	/**
 	 * Pendant +X/(J1) button
 	 * 
@@ -4155,7 +4164,7 @@ public class RobotRun extends PApplet {
 	public void joint2_neg() {
 		updateRobotJogMotion(1, -1);
 	}
-
+	
 	/**
 	 * Pendant +Y/(J2) button
 	 * 
@@ -4166,7 +4175,7 @@ public class RobotRun extends PApplet {
 	public void joint2_pos() {
 		updateRobotJogMotion(1, 1);
 	}
-	
+
 	/**
 	 * Pendant -Z/(J3) button
 	 * 
@@ -4177,7 +4186,7 @@ public class RobotRun extends PApplet {
 	public void joint3_neg() {
 		updateRobotJogMotion(2, -1);
 	}
-
+	
 	/**
 	 * Pendant +Z/(J3) button
 	 * 
@@ -4271,16 +4280,13 @@ public class RobotRun extends PApplet {
 			return;
 			
 		}  else if (UI != null && UI.isPendantActive()) {
-			if (mode.getType() == ScreenType.TYPE_NUM_ENTRY 
-					|| mode.getType() == ScreenType.TYPE_POINT_ENTRY
-					|| mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-				
-				if (((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9')
-						|| key == '-' || key == '.' || key == '@' || key == '*' || key == '_')) {
-					// Suppress other key events when entering text for the pendant
-					characterInput(key);
-					return;	
-				}
+			// Suppress other key events when entering text for the pendant
+			int ret = characterInput(key);
+			
+			if (ret != 0) {
+				/* Only supress key events when input is used for a pendant
+				 * screen mode */
+				return;
 			}
 			
 			// Pendant button shortcuts
@@ -4404,7 +4410,7 @@ public class RobotRun extends PApplet {
 			
 		}
 	}
-	
+
 	public void keyReleased() {
 		keyCodeMap.keyReleased(keyCode, key);
 		
@@ -4502,7 +4508,7 @@ public class RobotRun extends PApplet {
 		camera.reset();
 		camera.setRotation(0f, HALF_PI, 0f);
 	}
-
+	
 	/**
 	 * Loads the data registers of the given robotic arm into a list of display
 	 * lines, which can be rendered onto the pendant screen.
@@ -4572,7 +4578,7 @@ public class RobotRun extends PApplet {
 		
 		return lines;
 	}
-	
+
 	/**
 	 * TODO
 	 * 
@@ -4912,7 +4918,7 @@ public class RobotRun extends PApplet {
 		
 		return lines;
 	}
-
+	
 	/**
 	 * TODO comment
 	 * 
@@ -4921,7 +4927,7 @@ public class RobotRun extends PApplet {
 	public ArrayList<DisplayLine> loadPrograms() {
 		return loadPrograms( activeRobot );
 	}
-	
+
 	/**
 	 * TODO comment
 	 * 
@@ -4944,7 +4950,7 @@ public class RobotRun extends PApplet {
 		
 		return progList;
 	}
-
+	
 	/**
 	 * Sets the given screen mode as the active mode. In the process thereof,
 	 * the contents and options menus are updated and redrawn based on the new
@@ -4956,7 +4962,7 @@ public class RobotRun extends PApplet {
 	public void loadScreen(ScreenMode m) {
 		loadScreen(m, screenStates.peek());
 	}
-	
+
 	/**
 	 * Build a PShape object from the contents of the given .stl source file
 	 * stored in /RobotRun/data/.
@@ -5038,7 +5044,7 @@ public class RobotRun extends PApplet {
 
 		return line;
 	}
-
+	
 	/**
 	 * Pendant MENU button
 	 * 
@@ -5133,7 +5139,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-	
+
 	@Override
 	public void mousePressed() {
 			
@@ -5210,7 +5216,7 @@ public class RobotRun extends PApplet {
 			camera.scale(0.95f);
 		}
 	}
-
+	
 	/**
 	 * Move to Current button in the edit window
 	 * 
@@ -5255,7 +5261,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-	
+
 	/**
 	 * Move to Default button in the edit window
 	 * 
@@ -5292,7 +5298,7 @@ public class RobotRun extends PApplet {
 			execute(getSU_macro_bindings()[2]);
 		}
 	}
-
+	
 	public void newCallInstruction() {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -5304,7 +5310,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(call);
 		}
 	}
-	
+
 	public void newFrameInstruction(int fType) {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -5328,7 +5334,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(stmt);
 		}
 	}
-
+	
 	public void newIfStatement() {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -5341,7 +5347,7 @@ public class RobotRun extends PApplet {
 			p.addInstAtEnd(stmt);
 		}
 	}
-	
+
 	public void newIOInstruction(int ioIdx, int state) {
 		RoboticArm r = activeRobot;
 		Program p = getActiveProg();
@@ -5559,7 +5565,7 @@ public class RobotRun extends PApplet {
 	public void num3() {
 		characterInput('3');
 	}
-
+	
 	/**
 	 * Pendant '4' button
 	 * 
@@ -5756,7 +5762,7 @@ public class RobotRun extends PApplet {
 	public void period() {
 		characterInput('.');
 	}
-	
+
 	/**
 	 * Pendant POSN button
 	 * 
@@ -5800,7 +5806,7 @@ public class RobotRun extends PApplet {
 		screenStates.push(curState);
 		
 	}
-
+	
 	/**
 	 * Restores all parts in the current scenario to their default position and
 	 * orientation.
@@ -5817,7 +5823,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-	
+
 	/**
 	 * Pendant RESET button
 	 * 
@@ -5843,7 +5849,7 @@ public class RobotRun extends PApplet {
 		mode = ScreenMode.DEFAULT;
 		pushScreen(mode, -1, -1, 0, -1, 0);
 	}
-
+	
 	/**
 	 * Camera R button
 	 * 
@@ -5855,7 +5861,7 @@ public class RobotRun extends PApplet {
 		camera.reset();
 		camera.setRotation(0, 3f * HALF_PI, 0f);
 	}
-	
+
 	/**
 	 * The scenario window confirmation button
 	 * 
@@ -5876,7 +5882,7 @@ public class RobotRun extends PApplet {
 		
 		Fields.debug(String.format("SConfirm: %d\n", ret));
 	}
-
+	
 	/**
 	 * Pendant SELECT button
 	 * 
@@ -6005,7 +6011,7 @@ public class RobotRun extends PApplet {
 		
 		return exists;
 	}
-	
+
 	/**
 	 * Sets the scenario with the given name as the active scenario in the
 	 * application, if a scenario with the given name exists.
@@ -6059,7 +6065,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
 	/**
 	 * Update the state of the shift and robot motion based on the new state of
 	 * shift.
@@ -6077,7 +6083,7 @@ public class RobotRun extends PApplet {
 		UI.updateShiftButton(shift);
 		updatePendantScreen();
 	}
-	
+
 	public void setStep(boolean step) {
 		this.step = step;
 		UI.updateStepButton(this.step);
@@ -6247,7 +6253,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
 	/**
 	 * Pendant STATUS button
 	 * 
@@ -6258,7 +6264,7 @@ public class RobotRun extends PApplet {
 			execute(getSU_macro_bindings()[4]);
 		}
 	}
-	
+
 	/**
 	 * Pendant STEP button
 	 * 
@@ -6268,6 +6274,7 @@ public class RobotRun extends PApplet {
 	public void step() {
 		setStep(!isStep());
 	}
+
 
 	/**
 	 * Removes the current screen from the screen state stack and loads the
@@ -6280,8 +6287,7 @@ public class RobotRun extends PApplet {
 		// Load the new screen
 		loadScreen(nextScreen);
 	}
-
-
+	
 	public void TeachCamObj() {
 		if(activeScenario != null) {
 			rCamera.teachObjectToCamera(activeScenario);
@@ -6367,7 +6373,7 @@ public class RobotRun extends PApplet {
 			execute(getSU_macro_bindings()[0]);
 		}
 	}
-	
+
 	/**
 	 * Pendant TOOl2 button
 	 * 
@@ -6390,7 +6396,7 @@ public class RobotRun extends PApplet {
 		camera.reset();
 		camera.setRotation(3f * HALF_PI, 0f, 0f);
 	}
-
+	
 	/**
 	 * Is the trace function enabled. The user can enable/disable this function
 	 * with a button in the miscellaneous window.
@@ -6400,7 +6406,7 @@ public class RobotRun extends PApplet {
 	public boolean traceEnabled() {
 		return UI.getButtonState("ToggleTrace");
 	}
-	
+
 	/**
 	 * Revert the most recent change to the active scenario
 	 */
@@ -6419,7 +6425,7 @@ public class RobotRun extends PApplet {
 			activeRobot.releaseHeldObject();
 		}
 	}
-
+	
 	/**
 	 * Updates the index display in the Active Frames menu based on the current
 	 * value of workingText
@@ -6458,7 +6464,7 @@ public class RobotRun extends PApplet {
 			UI.updateCameraCurrent();
 		}
 	}
-	
+
 	public void updateContents() {
 		RoboticArm r = activeRobot;
 		ArrayList<DisplayLine> prevContents = contents.copyContents();
@@ -6753,11 +6759,9 @@ public class RobotRun extends PApplet {
 				MotionInstruction mInst = (MotionInstruction)inst;
 				
 				if (mInst.getMotionType() == Fields.MTYPE_JOINT) {
-					speedInPercentage = true;
 					workingTextSuffix = "%";
 				} else {
 					workingTextSuffix = "mm/s";
-					speedInPercentage = false;
 				}
 				
 				options.addLine("Enter desired speed:");
@@ -7086,7 +7090,7 @@ public class RobotRun extends PApplet {
 					getOptionsMenu(), getFunctionLabels(mode));
 		}
 	}
-
+	
 	/**
 	 * Updates the end effector state of the active robot's end effector
 	 * associated with the given index and checks for pickup collisions
@@ -7130,7 +7134,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-	
+
 	/**
 	 * Push a world object onto the undo stack for world objects.
 	 * 
@@ -7164,7 +7168,7 @@ public class RobotRun extends PApplet {
 			}
 		}
 	}
-
+	
 	/**
 	 * Create button in the Create window
 	 * 
@@ -7210,14 +7214,18 @@ public class RobotRun extends PApplet {
 			DataManagement.saveScenarios(this);
 		}
 	}
-	
+
 	/**
 	 * Updates the appropriate user input buffer based on the active pendant
 	 * screen.
 	 * 
 	 * @param c	The character input by the user
+	 * @return	A signal based on what screen mode used the character input
+	 * 			(if any)
 	 */
-	private void characterInput(char c) {
+	private int characterInput(char c) {
+		int ret = 0;
+		
 		if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY && workingText.length() < TEXT_ENTRY_LEN
 				&& ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
 						|| c == '.' || c == '@' || c == '*' || c == '_')) {
@@ -7226,14 +7234,17 @@ public class RobotRun extends PApplet {
 
 			if (workingText.length() == 0 || columnIdx >= workingText.length()) {
 				workingText.append(c);
+				ret = 1;
 
 			} else {
 				workingText.insert(columnIdx, c);
+				ret = 1;
 			}
 			// Edge case of adding a character to an empty text entry
 			if (workingText.length() == 1 && workingText.charAt(0) != '\0') {
 				workingText.append('\0');
 				++columnIdx;
+				ret = 1;
 			}
 
 			contents.setColumnIdx(min(columnIdx + 1, workingText.length() - 1));
@@ -7244,11 +7255,13 @@ public class RobotRun extends PApplet {
 				// Special case for motion instruction speed number entry
 				if ((c >= '0' && c <= '9') && workingText.length() < 4) {
 					workingText.append(c);
+					ret = 2;
 				}
 				
 			} else if ((c >= '0' && c <= '9') || c == '.' || c == '-') {
 				// Append the character
 				workingText.append(c);
+				ret = 2;
 			}
 
 		} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
@@ -7260,20 +7273,26 @@ public class RobotRun extends PApplet {
 				if (entry.get(idx) == "\0") {
 					entry.set(idx, Character.toString(c));
 					arrow_rt();
+					ret = 3;
 					
 				// Include prefix in length	
 				} else if (entry.size() < (NUM_ENTRY_LEN + 1)) {
 					entry.add(idx, Character.toString(c));
 					arrow_rt();
+					ret = 3;
 				}
 			}
 			
 		}
 		
-		// Update the screen after a character insertion
-		updatePendantScreen();
+		if (ret != 0) {
+			// Update the screen after a character insertion
+			updatePendantScreen();
+		}
+		
+		return ret;
 	}
-
+	
 	/**
 	 * Checks for collisions between the given ray and objects in the scene
 	 * (parts and fixtures in the active scenario as well as visible robots).
@@ -7375,7 +7394,6 @@ public class RobotRun extends PApplet {
 	 * @return				The initialized robot
 	 */
 	private RoboticArm createRobot(int rid, PVector basePosition) {
-		
 		MyPShape[] segModels = new MyPShape[6];
 		MyPShape[] eeModels = new MyPShape[7];
 		
@@ -7424,19 +7442,6 @@ public class RobotRun extends PApplet {
 	}
 	
 	/**
-	 * Execute the given macro
-	 * 
-	 * @param m
-	 */
-	public void execute(Macro m) {
-		// Stop any prior Robot movement
-		hold();
-		// Safeguard against editing a program while it is running
-		contents.setColumnIdx(0);
-		progExec(m.getProgIdx(), 0, isStep());
-	}
-	
-	/**
 	 * Detemines if the active menu uses keyboard input.
 	 * 
 	 * @return
@@ -7452,7 +7457,6 @@ public class RobotRun extends PApplet {
 		
 		return false;
 	}
-	
 	/**
 	 * TODO comment this
 	 * 
