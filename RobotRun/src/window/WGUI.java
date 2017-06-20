@@ -2428,13 +2428,13 @@ public class WGUI implements ControlListener {
 		// Fill color label and dropdown
 		c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1]);
 
-		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
 		c = getSlider("WOFillR").setPosition(relPos[0], relPos[1]);
 		
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 		c = getSlider("WOFillG").setPosition(relPos[0], relPos[1]);
 		
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 		c = getSlider("WOFillB").setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
@@ -2458,13 +2458,13 @@ public class WGUI implements ControlListener {
 			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
 			getTextArea("WOOutlineSmp").setPosition(relPos[0], relPos[1]).show();
 			
-			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
 			c0 = getSlider("WOOutlineR").setPosition(relPos[0], relPos[1]).show();
 			
-			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
 			c0 = getSlider("WOOutlineG").setPosition(relPos[0], relPos[1]).show();
 			
-			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
 			getSlider("WOOutlineB").setPosition(relPos[0], relPos[1]).show();
 		}
 
@@ -2711,11 +2711,11 @@ public class WGUI implements ControlListener {
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getDropdown("WO").setPosition(relPos[0], relPos[1]);
 		// Dimension label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
 		
 		// Fill color label and dropdown
-		c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1]);
+		c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1] + 5);
 
 		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
 		c = getSlider("WOFillR").setPosition(relPos[0], relPos[1]);
@@ -2751,6 +2751,19 @@ public class WGUI implements ControlListener {
 			getSlider("WOOutlineB").setPosition(relPos[0], relPos[1]).show();
 		}
 		
+		if (isPart) {
+			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
+	
+			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX,
+					PApplet.abs(fieldHeight - dropItemHeight) / 2);
+			getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
+		
+		} else {
+			getTextArea("RefLbl").hide();
+			getDropdown("Fixture").hide();
+		}
+		
 		// Orientation column labels
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getTextArea("Blank").setPosition(relPos[0], relPos[1]);
@@ -2783,7 +2796,7 @@ public class WGUI implements ControlListener {
 		}
 
 		// Y label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 		c = getTextArea("YLbl").setPosition(relPos[0], relPos[1]);
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
@@ -2798,7 +2811,7 @@ public class WGUI implements ControlListener {
 		}
 
 		// Z label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
 		c = getTextArea("ZLbl").setPosition(relPos[0], relPos[1]);;
 
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
@@ -2858,12 +2871,10 @@ public class WGUI implements ControlListener {
 		}
 
 		// Move to current button
-		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
+		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 		c = getButton("MoveToCur").setPosition(relPos[0], relPos[1]);
 
 		if (isPart) {
-			/* Default values and fixture references are only relevant for parts */
-
 			// Update default button
 			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 			getButton("UpdateWODef").setPosition(relPos[0], relPos[1]).show();
@@ -2875,28 +2886,22 @@ public class WGUI implements ControlListener {
 			// Restore Defaults button
 			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c0 = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
-
-			relPos =  new int[] { winMargin, ((int)c0.getPosition()[1]) + c0.getHeight() + distBtwFieldsY };
-			c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
-
-			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX,
-					PApplet.abs(fieldHeight - dropItemHeight) / 2);
-			getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
+			
+			relPos = getAbsPosFrom(c0, Alignment.TOP_LEFT, 0, 0);
 
 		} else {
 			getButton("UpdateWODef").hide();
 			getButton("MoveToDef").hide();
-			getTextArea("RefLbl").hide();
-			getDropdown("Fixture").hide();
 
 			// Restore Defaults button
 			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
 			c = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
+			
+			relPos = getAbsPosFrom(c, Alignment.TOP_LEFT, 0, 0);
 		}
 
 		// Delete button
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getButton("WODelBtn").setPosition(relPos[0], relPos[1]);
+		c = getButton("WODelBtn").setPosition(winMargin, relPos[1]);
 
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
