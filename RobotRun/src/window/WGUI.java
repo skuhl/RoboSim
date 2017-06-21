@@ -100,8 +100,8 @@ public class WGUI implements ControlListener {
 	
 	/** A group, which defines a set of elements belonging to a window tab, or
 	 *  shared amongst the window tabs. */
-	private final Group pendant, createWO, editWO, sharedElements, scenario,
-			camera, miscellaneous;
+	private final Group pendant, createWO, editWO, editWOPos, editWOOther,
+		sharedElements, scenario, camera, miscellaneous;
 	
 	/** The button bar controlling the window tab selection. */
 	private final MyButtonBar windowTabs;
@@ -159,6 +159,8 @@ public class WGUI implements ControlListener {
 		sharedElements = addGroup("SHARED", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		createWO = addGroup("CREATEWO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		editWO = addGroup("EDITWO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
+		editWOPos = addGroup("EDITWOPOS", editWO, 0, 0, windowTabs.getWidth(), 0);
+		editWOOther = addGroup("EDITWOOTHER", editWO, 0, 0, windowTabs.getWidth(), 0);
 		scenario = addGroup("SCENARIO", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		camera = addGroup("CAMERA", relPos[0], relPos[1], windowTabs.getWidth(), 0);
 		miscellaneous = addGroup("MISC", relPos[0], relPos[1], windowTabs.getWidth(), 0);
@@ -513,9 +515,8 @@ public class WGUI implements ControlListener {
 		String[] togNames = new String[] { "PartOpt", "FixtureOpt" };
 		String[] togLbls = new String[] { "Part", "Fixture" };
 		
-		MyRadioButton rb = addRadioButton("WOType", createWO, radioDim, radioDim,
-				Fields.medium, togValues, togNames, togLbls, 0f,
-				Fields.ITYPE_TRANSIENT);
+		addRadioButton("WOType", createWO, radioDim, radioDim, Fields.medium,
+				togValues, togNames, togLbls, 0f, Fields.ITYPE_TRANSIENT);
 		
 		addTextarea("WOShapeLbl", "Shape:", createWO, mLblWidth, sButtonHeight, Fields.medium);
 		
@@ -523,7 +524,7 @@ public class WGUI implements ControlListener {
 		togNames = new String[] { "BoxOpt", "CylinderOpt", "ImportOpt" };
 		togLbls = new String[] { "Box", "Cylinder", "Import" };
 		
-		rb = addRadioButton("Shape", createWO, radioDim, radioDim, Fields.medium,
+		addRadioButton("Shape", createWO, radioDim, radioDim, Fields.medium,
 				togValues, togNames, togLbls, 0f, Fields.ITYPE_TRANSIENT);
 		
 		addTextarea("WOFillSmp", "\0", createWO, sButtonHeight, sButtonHeight, Fields.medium);
@@ -533,43 +534,55 @@ public class WGUI implements ControlListener {
 		// Initialize the world object edit window elements
 		addTextarea("WOEditLbl", "Object:", editWO, mLblWidth, fieldHeight, Fields.medium);
 
-		addTextarea("Blank", "Inputs", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextarea("Current", "Current", editWO, fieldWidthMed, fieldHeight, Fields.medium);
-		addTextarea("Default", "Default", editWO, fieldWidthMed, fieldHeight, Fields.medium);
+		togValues = new float[] { 0f, 1f };
+		togNames = new String[] { "PositionOpt", "OtherOpt" };
+		togLbls = new String[] { "Position", "Other" };
+		
+		addTextarea("EditTabLbl", "Options:", editWO, mLblWidth, fieldHeight,
+				Fields.medium);
+		MyRadioButton rb = addRadioButton("EditTab", editWO, radioDim, radioDim,
+				Fields.medium, togValues, togNames, togLbls, 0f,
+				Fields.ITYPE_PERMENANT);
+		rb.setItemsPerRow(2);
+		rb.setSpacingColumnOffset(distFieldToFieldX);
+		
+		addTextarea("Blank", "Inputs", editWOPos, lLblWidth, fieldHeight, Fields.medium);
+		addTextarea("Current", "Current", editWOPos, fieldWidthMed, fieldHeight, Fields.medium);
+		addTextarea("Default", "Default", editWOPos, fieldWidthMed, fieldHeight, Fields.medium);
 
-		addTextarea("XLbl", "X Position:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("XCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("XDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
+		addTextarea("XLbl", "X Position:", editWOPos, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("XCur", editWOPos, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("XDef", "N/A", editWOPos, fieldWidthMed, fieldHeight, Fields.medium);
 
-		addTextarea("YLbl", "Y Position:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("YCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("YDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
+		addTextarea("YLbl", "Y Position:", editWOPos, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("YCur", editWOPos, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("YDef", "N/A", editWOPos, fieldWidthMed, fieldHeight, Fields.medium);
 
-		addTextarea("ZLbl", "Z Position:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("ZCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("ZDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
+		addTextarea("ZLbl", "Z Position:", editWOPos, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("ZCur", editWOPos, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("ZDef", "N/A", editWOPos, fieldWidthMed, fieldHeight, Fields.medium);
 
-		addTextarea("WLbl", "X Rotation:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("WCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("WDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
+		addTextarea("WLbl", "X Rotation:", editWOPos, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("WCur", editWOPos, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("WDef", "N/A", editWOPos, fieldWidthMed, fieldHeight, Fields.medium);
 
-		addTextarea("PLbl", "Y Rotation:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("PCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("PDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
+		addTextarea("PLbl", "Y Rotation:", editWOPos, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("PCur", editWOPos, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("PDef", "N/A", editWOPos, fieldWidthMed, fieldHeight, Fields.medium);
 
-		addTextarea("RLbl", "Z Rotation:", editWO, lLblWidth, fieldHeight, Fields.medium);
-		addTextfield("RCur", editWO, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
-		addTextarea("RDef", "N/A", editWO, fieldWidthMed, fieldHeight, Fields.medium);
+		addTextarea("RLbl", "Z Rotation:", editWOPos, lLblWidth, fieldHeight, Fields.medium);
+		addTextfield("RCur", editWOPos, fieldWidthMed, fieldHeight, Fields.medium, app.getKeyCodeMap());
+		addTextarea("RDef", "N/A", editWOPos, fieldWidthMed, fieldHeight, Fields.medium);
 
-		addTextarea("RefLbl", "Reference:", editWO, lLblWidth, sButtonHeight, Fields.medium);
+		addTextarea("RefLbl", "Reference:", editWOPos, lLblWidth, sButtonHeight, Fields.medium);
 
-		addButton("MoveToCur", "Move to Current", editWO, fieldWidthMed, sButtonHeight, Fields.small);
-		addButton("UpdateWODef", "Update Default", editWO, fieldWidthMed, sButtonHeight, Fields.small);
-		addButton("MoveToDef", "Move to Default", editWO, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton("MoveToCur", "Move to Current", editWOPos, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton("UpdateWODef", "Update Default", editWOPos, fieldWidthMed, sButtonHeight, Fields.small);
+		addButton("MoveToDef", "Move to Default", editWOPos, fieldWidthMed, sButtonHeight, Fields.small);
 
-		addButton("ResDefs", "Restore Defaults", editWO, lLblWidth, sButtonHeight, Fields.small);
+		addButton("ResDefs", "Restore Defaults", editWOPos, lLblWidth, sButtonHeight, Fields.small);
 
-		addButton("WODelBtn", "Delete", editWO, mButtonWidth, sButtonHeight, Fields.small);
+		addButton("WODelBtn", "Delete", editWOOther, mButtonWidth, sButtonHeight, Fields.small);
 
 		// Initialize the scenario window elements
 		addTextarea("SOptLbl", "Options:", scenario, mLblWidth, fieldHeight, Fields.medium);
@@ -578,8 +591,9 @@ public class WGUI implements ControlListener {
 		togNames = new String[] { "NewOpt", "LoadOpt", "RenameOpt" };
 		togLbls = new String[] { "New", "Load", "Rename" };
 
-		rb = addRadioButton("ScenarioOpt", scenario, radioDim, radioDim, Fields.medium,
-				togValues, togNames, togLbls, 0f, Fields.ITYPE_PERMENANT);
+		rb = addRadioButton("ScenarioOpt", scenario, radioDim,
+				radioDim, Fields.medium, togValues, togNames, togLbls, 0f,
+				Fields.ITYPE_PERMENANT);
 		rb.setItemsPerRow(3);
 		rb.setSpacingColumnOffset(distFieldToFieldX);
 
@@ -664,7 +678,7 @@ public class WGUI implements ControlListener {
 		
 		addDropdown("Scenario", scenario, ldropItemWidth, dropItemHeight, 4,
 				Fields.small, Fields.ITYPE_TRANSIENT);
-		addDropdown("Fixture", editWO, ldropItemWidth, dropItemHeight, 4,
+		addDropdown("Fixture", editWOPos, ldropItemWidth, dropItemHeight, 4,
 				Fields.small, Fields.ITYPE_TRANSIENT);
 
 		for (int idx = 0; idx < 1; ++idx) {
@@ -882,10 +896,18 @@ public class WGUI implements ControlListener {
 	 * @param hgt	The height of the group element
 	 * @return		A reference to the new group
 	 */
-	private Group addGroup(String name, float posX, float posY, int wdh, int hgt) {
+	private Group addGroup(String name, int posX, int posY, int wdh, int hgt) {
 		return manager.addGroup(name).setPosition(posX, posY)
 				.setBackgroundColor(Fields.BG_C)
 				.setSize(wdh, hgt)
+				.hideBar();
+	}
+	
+	private Group addGroup(String name, Group parent, int posX, int posY, int wdh, int hgt) {
+		return manager.addGroup(name).setPosition(posX, posY)
+				.setBackgroundColor(Fields.BG_C)
+				.setSize(wdh, hgt)
+				.moveTo(parent)
 				.hideBar();
 	}
 
@@ -1113,7 +1135,8 @@ public class WGUI implements ControlListener {
 
 		} else {
 			if (arg0.isFrom("WO") || arg0.isFrom("Shape") ||
-					arg0.isFrom("ScenarioOpt") || arg0.isFrom("CamObjects")) {
+					arg0.isFrom("EditTab") || arg0.isFrom("ScenarioOpt") ||
+					arg0.isFrom("CamObjects")) {
 				/* The selected item in these lists influence the layout of
 				 * the menu */
 				updateUIContentPositions();
@@ -1946,7 +1969,7 @@ public class WGUI implements ControlListener {
 	 * @throws ClassCastException	If a non-radio button UI element with the
 	 * 							given name exists in the UI
 	 */
-	public MyRadioButton getRadioButton(String name) throws ClassCastException {
+	private MyRadioButton getRadioButton(String name) throws ClassCastException {
 		return (MyRadioButton) manager.get(name);
 	}
 
@@ -2700,208 +2723,225 @@ public class WGUI implements ControlListener {
 	private void updateEditWindowContentPositions() {
 		updateDimLblsAndFields();
 		getButton("ClearFields").hide();
-
+		
+		WorldObject wo = getSelectedWO();
+		boolean isPart = wo instanceof Part;
+		
 		// Object list dropdown and label
 		int[] relPos = new int[] { winMargin, winMargin };
 		ControllerInterface<?> c = getTextArea("WOEditLbl").setPosition(relPos[0], relPos[1]),
 				c0 = null;
-		WorldObject wo = getSelectedWO();
-		boolean isPart = wo instanceof Part;
-
 		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
 		getDropdown("WO").setPosition(relPos[0], relPos[1]);
-		// Dimension label and fields
+		// Edit tab label and radio buttons
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
-		
-		// Fill color label and dropdown
-		c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1] + 5);
-
-		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
-		c = getSlider("WOFillR").setPosition(relPos[0], relPos[1]);
+		c = getTextArea("EditTabLbl").setPosition(relPos[0], relPos[1]);
 		
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-		c = getSlider("WOFillG").setPosition(relPos[0], relPos[1]);
+		MyRadioButton rb = getRadioButton("EditTab");
+		c = rb.setPosition(relPos[0], relPos[1]);
 		
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-		c = getSlider("WOFillB").setPosition(relPos[0], relPos[1]);
-
-		if (wo != null && wo.getForm() instanceof ComplexShape) {
-			// No stroke color for Model Shapes
-			getTextArea("WOOutlineLbl").hide();
-			getSlider("WOOutlineR").hide();
-			getSlider("WOOutlineG").hide();
-			getSlider("WOOutlineB").hide();
-
-		} else {
-			// Outline color labels and sliders
-			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, 2 * distFieldToFieldX + sButtonWidth + 40, 0);
-			c0 = getTextArea("WOOutlineLbl").setPosition(relPos[0], relPos[1]).show();
-			
-			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-			getTextArea("WOOutlineSmp").setPosition(relPos[0], relPos[1]).show();
-			
-			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
-			c0 = getSlider("WOOutlineR").setPosition(relPos[0], relPos[1]).show();
-			
-			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
-			c0 = getSlider("WOOutlineG").setPosition(relPos[0], relPos[1]).show();
-			
-			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
-			getSlider("WOOutlineB").setPosition(relPos[0], relPos[1]).show();
-		}
+		float val = rb.getValue();
 		
-		if (isPart) {
+		if (val == 0f) {
+			sharedElements.hide();
+			editWOPos.show();
+			editWOOther.hide();
+			
+			if (isPart) {
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+				c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
+		
+				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+				getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
+			
+			} else {
+				getTextArea("RefLbl").hide();
+				getDropdown("Fixture").hide();
+			}
+			
+			// Orientation column labels
 			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c = getTextArea("RefLbl").setPosition(relPos[0], relPos[1]).show();
-	
-			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX,
-					PApplet.abs(fieldHeight - dropItemHeight) / 2);
-			getDropdown("Fixture").setPosition(relPos[0], relPos[1]).show();
-		
-		} else {
-			getTextArea("RefLbl").hide();
-			getDropdown("Fixture").hide();
-		}
-		
-		// Orientation column labels
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getTextArea("Blank").setPosition(relPos[0], relPos[1]);
+			c = getTextArea("Blank").setPosition(relPos[0], relPos[1]);
 
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextArea("Current").setPosition(relPos[0], relPos[1]);
-
-		if (isPart) {
-			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-			getTextArea("Default").setPosition(relPos[0], relPos[1]).show();
-
-		} else {
-			// Only show them for parts
-			getTextArea("Default").hide();
-		}
-
-		// X label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-		c = getTextArea("XLbl").setPosition(relPos[0], relPos[1]);
-
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextField("XCur").setPosition(relPos[0], relPos[1]);
-
-		if (isPart) {
-			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-			getTextArea("XDef").setPosition(relPos[0], relPos[1]).show();
-
-		} else {
-			getTextArea("XDef").hide();
-		}
-
-		// Y label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-		c = getTextArea("YLbl").setPosition(relPos[0], relPos[1]);
-
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextField("YCur").setPosition(relPos[0], relPos[1]);
-
-		if (isPart) {
-			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-			getTextArea("YDef").setPosition(relPos[0], relPos[1]).show();
-
-		} else {
-			getTextArea("YDef").hide();
-		}
-
-		// Z label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-		c = getTextArea("ZLbl").setPosition(relPos[0], relPos[1]);;
-
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextField("ZCur").setPosition(relPos[0], relPos[1]);
-
-		if (isPart) {
-			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-			getTextArea("ZDef").setPosition(relPos[0], relPos[1]).show();
-
-		} else {
-			getTextArea("ZDef").hide();
-		}
-
-		// W label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-		c = getTextArea("WLbl").setPosition(relPos[0], relPos[1]);
-
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextField("WCur").setPosition(relPos[0], relPos[1]);
-
-		if (isPart) {
-			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-			getTextArea("WDef").setPosition(relPos[0], relPos[1]).show();
-
-		} else {
-			getTextArea("WDef").hide();
-		}
-
-		// P label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-		c = getTextArea("PLbl").setPosition(relPos[0], relPos[1]);
-
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextField("PCur").setPosition(relPos[0], relPos[1]);
-
-		if (isPart) {
-			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-			getTextArea("PDef").setPosition(relPos[0], relPos[1]).show();
-
-		} else {
-			getTextArea("PDef").hide();
-		}
-
-		// R label and fields
-		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
-		c = getTextArea("RLbl").setPosition(relPos[0], relPos[1]);
-
-		relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-		c0 = getTextField("RCur").setPosition(relPos[0], relPos[1]);
-
-		if (isPart) {
-			relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
-			getTextArea("RDef").setPosition(relPos[0], relPos[1]).show();
-
-		} else {
-			getTextArea("RDef").hide();
-		}
-
-		// Move to current button
-		relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-		c = getButton("MoveToCur").setPosition(relPos[0], relPos[1]);
-
-		if (isPart) {
-			// Update default button
 			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
-			getButton("UpdateWODef").setPosition(relPos[0], relPos[1]).show();
+			c0 = getTextArea("Current").setPosition(relPos[0], relPos[1]);
 
-			// Move to default button
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c0 = getButton("MoveToDef").setPosition(relPos[0], relPos[1]).show();
+			if (isPart) {
+				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+				getTextArea("Default").setPosition(relPos[0], relPos[1]).show();
 
-			// Restore Defaults button
+			} else {
+				// Only show them for parts
+				getTextArea("Default").hide();
+			}
+
+			// X label and fields
+			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+			c = getTextArea("XLbl").setPosition(relPos[0], relPos[1]);
+
+			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+			c0 = getTextField("XCur").setPosition(relPos[0], relPos[1]);
+
+			if (isPart) {
+				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+				getTextArea("XDef").setPosition(relPos[0], relPos[1]).show();
+
+			} else {
+				getTextArea("XDef").hide();
+			}
+
+			// Y label and fields
+			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+			c = getTextArea("YLbl").setPosition(relPos[0], relPos[1]);
+
+			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+			c0 = getTextField("YCur").setPosition(relPos[0], relPos[1]);
+
+			if (isPart) {
+				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+				getTextArea("YDef").setPosition(relPos[0], relPos[1]).show();
+
+			} else {
+				getTextArea("YDef").hide();
+			}
+
+			// Z label and fields
+			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+			c = getTextArea("ZLbl").setPosition(relPos[0], relPos[1]);;
+
+			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+			c0 = getTextField("ZCur").setPosition(relPos[0], relPos[1]);
+
+			if (isPart) {
+				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+				getTextArea("ZDef").setPosition(relPos[0], relPos[1]).show();
+
+			} else {
+				getTextArea("ZDef").hide();
+			}
+
+			// W label and fields
+			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+			c = getTextArea("WLbl").setPosition(relPos[0], relPos[1]);
+
+			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+			c0 = getTextField("WCur").setPosition(relPos[0], relPos[1]);
+
+			if (isPart) {
+				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+				getTextArea("WDef").setPosition(relPos[0], relPos[1]).show();
+
+			} else {
+				getTextArea("WDef").hide();
+			}
+
+			// P label and fields
+			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+			c = getTextArea("PLbl").setPosition(relPos[0], relPos[1]);
+
+			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+			c0 = getTextField("PCur").setPosition(relPos[0], relPos[1]);
+
+			if (isPart) {
+				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+				getTextArea("PDef").setPosition(relPos[0], relPos[1]).show();
+
+			} else {
+				getTextArea("PDef").hide();
+			}
+
+			// R label and fields
+			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+			c = getTextArea("RLbl").setPosition(relPos[0], relPos[1]);
+
+			relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+			c0 = getTextField("RCur").setPosition(relPos[0], relPos[1]);
+
+			if (isPart) {
+				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+				getTextArea("RDef").setPosition(relPos[0], relPos[1]).show();
+
+			} else {
+				getTextArea("RDef").hide();
+			}
+
+			// Move to current button
 			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c0 = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
-			
-			relPos = getAbsPosFrom(c0, Alignment.TOP_LEFT, 0, 0);
+			c = getButton("MoveToCur").setPosition(relPos[0], relPos[1]);
 
+			if (isPart) {
+				// Update default button
+				relPos = getAbsPosFrom(c, Alignment.TOP_RIGHT, distLblToFieldX, 0);
+				getButton("UpdateWODef").setPosition(relPos[0], relPos[1]).show();
+
+				// Move to default button
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+				c0 = getButton("MoveToDef").setPosition(relPos[0], relPos[1]).show();
+
+				// Restore Defaults button
+				relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+				c = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
+
+			} else {
+				getButton("UpdateWODef").hide();
+				getButton("MoveToDef").hide();
+
+				// Restore Defaults button
+				relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+				c = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
+			}
+			
 		} else {
-			getButton("UpdateWODef").hide();
-			getButton("MoveToDef").hide();
-
-			// Restore Defaults button
-			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
-			c = getButton("ResDefs").setPosition(relPos[0], relPos[1]).show();
+			sharedElements.show();
+			editWOPos.hide();
+			editWOOther.show();
 			
-			relPos = getAbsPosFrom(c, Alignment.TOP_LEFT, 0, 0);
-		}
+			// Dimension label and fields
+			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			relPos = updateDimLblAndFieldPositions(relPos[0], relPos[1]);
+			
+			// Fill color label and dropdown
+			c0 = getTextArea("WOFillLbl").setPosition(relPos[0], relPos[1] + 5);
 
-		// Delete button
-		c = getButton("WODelBtn").setPosition(winMargin, relPos[1]);
+			relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
+			c = getSlider("WOFillR").setPosition(relPos[0], relPos[1]);
+			
+			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+			c = getSlider("WOFillG").setPosition(relPos[0], relPos[1]);
+			
+			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
+			c = getSlider("WOFillB").setPosition(relPos[0], relPos[1]);
+
+			if (wo != null && wo.getForm() instanceof ComplexShape) {
+				// No stroke color for Model Shapes
+				getTextArea("WOOutlineLbl").hide();
+				getSlider("WOOutlineR").hide();
+				getSlider("WOOutlineG").hide();
+				getSlider("WOOutlineB").hide();
+
+			} else {
+				// Outline color labels and sliders
+				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, 2 * distFieldToFieldX + sButtonWidth + 40, 0);
+				c0 = getTextArea("WOOutlineLbl").setPosition(relPos[0], relPos[1]).show();
+				
+				relPos = getAbsPosFrom(c0, Alignment.TOP_RIGHT, distFieldToFieldX, 0);
+				getTextArea("WOOutlineSmp").setPosition(relPos[0], relPos[1]).show();
+				
+				relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
+				c0 = getSlider("WOOutlineR").setPosition(relPos[0], relPos[1]).show();
+				
+				relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
+				c0 = getSlider("WOOutlineG").setPosition(relPos[0], relPos[1]).show();
+				
+				relPos = getAbsPosFrom(c0, Alignment.BOTTOM_LEFT, 0, winMargin);
+				getSlider("WOOutlineB").setPosition(relPos[0], relPos[1]).show();
+			}
+			
+			// Delete button
+			relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, distBtwFieldsY);
+			c = getButton("WODelBtn").setPosition(winMargin, relPos[1]);
+		}
 
 		// Update window background display
 		relPos = getAbsPosFrom(c, Alignment.BOTTOM_LEFT, 0, winMargin);
