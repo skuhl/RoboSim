@@ -12,11 +12,6 @@ public class ScreenInputDataRegIdx extends ST_ScreenNumEntry {
 	}
 
 	@Override
-	protected String loadHeader() {
-		return robotRun.getActiveProg().getName();
-	}
-	
-	@Override
 	protected void loadOptions() {
 		options.addLine("Input register index:");
 		options.addLine("\0" + workingText);

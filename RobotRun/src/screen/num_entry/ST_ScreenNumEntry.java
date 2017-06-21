@@ -14,12 +14,14 @@ public abstract class ST_ScreenNumEntry extends Screen {
 	}
 	
 	@Override
+	protected String loadHeader() {
+		return robotRun.getActiveProg().getName();
+	}
+	
+	@Override
 	protected void loadContents() {
 		contents.setLines(robotRun.loadInstructions(robotRun.getActiveProg()));
 	}
-
-	@Override
-	protected void loadOptions() {}
 	
 	@Override
 	protected void loadLabels() {
@@ -64,9 +66,6 @@ public abstract class ST_ScreenNumEntry extends Screen {
 			workingText.deleteCharAt(workingText.length() - 1);
 		}
 	}
-
-	@Override
-	public void actionEntr() {}
 	
 	@Override
 	public void actionF1() {}
