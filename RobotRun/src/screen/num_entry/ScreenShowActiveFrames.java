@@ -30,6 +30,9 @@ public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 	}
 	
 	@Override
+	protected void loadOptions() {}
+	
+	@Override
 	protected void loadLabels() {
 		// F1, F2
 		labels[0] = "[List]";

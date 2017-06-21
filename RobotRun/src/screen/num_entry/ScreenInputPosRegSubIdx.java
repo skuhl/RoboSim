@@ -1,20 +1,14 @@
-package screen;
+package screen.num_entry;
 
 import core.RobotRun;
 import enums.ScreenMode;
 import expression.OperandPRegIdx;
 import robot.RoboticArm;
-import screen.num_entry.ST_ScreenNumEntry;
 
 public class ScreenInputPosRegSubIdx extends ST_ScreenNumEntry {
 
 	public ScreenInputPosRegSubIdx(RobotRun r) {
 		super(ScreenMode.INPUT_PREG_IDX2, r);
-	}
-
-	@Override
-	protected String loadHeader() {
-		return robotRun.getActiveProg().getName();
 	}
 	
 	@Override
