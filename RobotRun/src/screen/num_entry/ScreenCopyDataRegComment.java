@@ -2,6 +2,9 @@ package screen.num_entry;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import global.DataManagement;
+import regs.Register;
+import robot.RoboticArm;
 
 public class ScreenCopyDataRegComment extends ST_ScreenNumEntry {
 
@@ -11,22 +14,41 @@ public class ScreenCopyDataRegComment extends ST_ScreenNumEntry {
 	
 	@Override
 	protected String loadHeader() {
-		return null;
+		Register reg = robotRun.getActiveRobot().getDReg(contents.getItemIdx());
+		return String.format("%s: COMMENT COPY", reg.getLabel());
 	}
 	
 	@Override
 	protected void loadContents() {
-		
+		RoboticArm r = robotRun.getActiveRobot();
+		contents.setLines(robotRun.loadDataRegisters(r));
 	}
 
 	@Override
 	protected void loadOptions() {
-		
+		options.addLine(String.format("Move R[%d]'s comment to:", contents.getItemIdx() + 1));
+		options.addLine(String.format("R[%s]", workingText));
 	}
 
 	@Override
 	public void actionEntr() {
-		
+		int regIdx = -1;
+		int itemIdx = contents.getItemIdx();
+
+		try {
+			// Copy the comment of the curent Data register to the Data
+			// register at the specified index
+			regIdx = Integer.parseInt(workingText.toString()) - 1;
+			robotRun.getActiveRobot().getDReg(regIdx).comment = robotRun.getActiveRobot().getDReg(itemIdx).comment;
+			DataManagement.saveRobotData(robotRun.getActiveRobot(), 3);
+
+		} catch (NumberFormatException MFEx) {
+			System.err.println("Only real numbers are valid!");
+		} catch (IndexOutOfBoundsException IOOBEx) {
+			System.err.println("Only positve integers between 1 and 100 are valid!");
+		}
+
+		robotRun.lastScreen();
 	}
 
 }
