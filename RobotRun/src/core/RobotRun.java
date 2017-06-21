@@ -266,8 +266,12 @@ public class RobotRun extends PApplet {
 	 * 						respect to the native coordinate system
 	 */
 	public void applyCoord(PVector origin, RMatrix axesVectors) {
-		// Transpose the rotation portion, because Processing
-		this.applyMatrix(RMath.formTMat(origin, axesVectors));
+		super.applyMatrix(
+				axesVectors.getEntryF(0, 0), axesVectors.getEntryF(0, 1), axesVectors.getEntryF(0, 2), origin.x,
+				axesVectors.getEntryF(1, 0), axesVectors.getEntryF(1, 1), axesVectors.getEntryF(1, 2), origin.y,
+				axesVectors.getEntryF(2, 0), axesVectors.getEntryF(2, 1), axesVectors.getEntryF(2, 2), origin.z,
+				0f, 0f, 0f, 1f
+		);
 	}
 	
 	/**
@@ -277,12 +281,11 @@ public class RobotRun extends PApplet {
 	 * @param tMatrix	A 4x4 row major transformation matrix
 	 */
 	public void applyMatrix(RMatrix mat) {
-		float[][] tMatrix = mat.getDataF();
 		super.applyMatrix(
-				tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], tMatrix[0][3],
-				tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], tMatrix[1][3],
-				tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], tMatrix[2][3],
-				tMatrix[3][0], tMatrix[3][1], tMatrix[3][2], tMatrix[3][3]
+				mat.getEntryF(0, 0), mat.getEntryF(0, 1), mat.getEntryF(0, 2), mat.getEntryF(0, 3),
+				mat.getEntryF(1, 0), mat.getEntryF(1, 1), mat.getEntryF(1, 2), mat.getEntryF(1, 3),
+				mat.getEntryF(2, 0), mat.getEntryF(2, 1), mat.getEntryF(2, 2), mat.getEntryF(2, 3),
+				mat.getEntryF(3, 0), mat.getEntryF(3, 1), mat.getEntryF(3, 2), mat.getEntryF(3, 3)
 		);
 	}
 	
@@ -4034,24 +4037,16 @@ public class RobotRun extends PApplet {
 	 * @return	A 4x4 row major transformation matrix
 	 */
 	public RMatrix getTransformationMatrix() {
-		float[][] transform = new float[3][3];
-
 		PVector origin = getPosFromMatrix(0, 0, 0);
 		PVector xAxis = getPosFromMatrix(1, 0, 0).sub(origin);
 		PVector yAxis = getPosFromMatrix(0, 1, 0).sub(origin);
 		PVector zAxis = getPosFromMatrix(0, 0, 1).sub(origin);
 
-		transform[0][0] = xAxis.x;
-		transform[1][0] = xAxis.y;
-		transform[2][0] = xAxis.z;
-		transform[0][1] = yAxis.x;
-		transform[1][1] = yAxis.y;
-		transform[2][1] = yAxis.z;
-		transform[0][2] = zAxis.x;
-		transform[1][2] = zAxis.y;
-		transform[2][2] = zAxis.z;
-
-		return RMath.formTMat(origin, new RMatrix(transform));
+		return RMath.formTMat(
+				xAxis.x, yAxis.x, zAxis.x, origin.x,
+				xAxis.y, yAxis.y, zAxis.y, origin.y,
+				xAxis.z, yAxis.z, zAxis.z, origin.z
+		);
 	}
 
 	public WGUI getUI() {
@@ -5064,7 +5059,7 @@ public class RobotRun extends PApplet {
 			rotateY(camOrien.y);
 			rotateZ(camOrien.z);
 			
-			float[][] camRMat = getOrientation().getDataF();
+			RMatrix camRMat = getOrientation();
 			
 			popMatrix();
 			

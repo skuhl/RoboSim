@@ -171,24 +171,25 @@ public abstract class RMath {
 
 	// calculates rotation matrix from euler angles
 	public static RMatrix eulerToMatrix(PVector wpr) {
-		float[][] r = new float[3][3];
-		float xRot = wpr.x;
-		float yRot = wpr.y;
-		float zRot = wpr.z;
+		double xRot = wpr.x;
+		double yRot = wpr.y;
+		double zRot = wpr.z;
 		
-		float c1 = (float)Math.cos(xRot);
-		float c2 = (float)Math.cos(yRot);
-		float c3 = (float)Math.cos(zRot);
+		double c1 = Math.cos(xRot);
+		double c2 = Math.cos(yRot);
+		double c3 = Math.cos(zRot);
 		
-		float s1 = (float)Math.sin(xRot);
-		float s2 = (float)Math.sin(yRot);
-		float s3 = (float)Math.sin(zRot);
-				
-		r[0][0] = c2 * c3;	r[0][1] = c1 * s3 + c3 * s1 * s2;	r[0][2] = s1 * s3 - c1 * c3 * s2;	
-		r[1][0] = -c2 * s3;	r[1][1] = c1 * c3 - s1 * s2 * s3;	r[1][2] = c3 * s1 + c1 * s2 * s3;
-		r[2][0] = s2;		r[2][1] = -c2 * s1;					r[2][2] = c1 * c2;
-
-		return new RMatrix(r).normalize();
+		double s1 = Math.sin(xRot);
+		double s2 = Math.sin(yRot);
+		double s3 = Math.sin(zRot);
+		
+		RMatrix rMat = RMath.formRMat(
+			c2 * c3,	c1 * s3 + c3 * s1 * s2,		s1 * s3 - c1 * c3 * s2,
+			-c2 * s3,	c1 * c3 - s1 * s2 * s3,		c3 * s1 + c1 * s2 * s3,
+			s2,			-c2 * s1,					c1 * c2
+		);
+		
+		return rMat.normalize();
 	}
 
 	/**
@@ -770,20 +771,7 @@ public abstract class RMath {
 	}
 
 	public static void printMat(RMatrix mat) {
-		float[][] d = mat.getDataF();
-		
-		for (int i = 0; i < d.length; i += 1) {
-			System.out.print("[");
-			for (int j = 0; j < d[0].length; j += 1) {
-				if (j < d[0].length - 1) {
-					System.out.print(String.format("%12f, ", d[i][j]));
-				} else {
-					System.out.print(String.format("%12f", d[i][j]));
-				}
-			}
-			System.out.println("]");
-		}
-		System.out.println();
+		System.out.println( mat.toString() );
 	}
 
 	// calculates euler angles from quaternion
@@ -794,7 +782,7 @@ public abstract class RMath {
 	
 	// calculates rotation matrix from quaternion
 	public static RMatrix quatToMatrix(RQuaternion q) {
-		float[][] r = new float[3][3];
+		double[][] r = new double[3][3];
 
 		r[0][0] = 1 - 2 * (q.getValue(2) * q.getValue(2) + q.getValue(3) * q.getValue(3));
 		r[1][0] = 2 * (q.getValue(1) * q.getValue(2) - q.getValue(0) * q.getValue(3));
@@ -1047,7 +1035,7 @@ public abstract class RMath {
 	 * @return	v transformed by the inverse world coordinate system
 	 */
 	public static PVector vFromWorld(PVector v) {
-		return RMath.rotateVector(v, Fields.NATIVE_AXES);
+		return RMath.rotateVector(v, Fields.NATIVE_AXES_MAT);
 	}
 	
 	/**
@@ -1075,7 +1063,7 @@ public abstract class RMath {
 	 * @return	v transformed by the world coordinate frame
 	 */
 	public static PVector vToWorld(PVector v) {
-		return RMath.rotateVector(v, Fields.WORLD_AXES);
+		return RMath.rotateVector(v, Fields.WORLD_AXES_MAT);
 	}
 	
 
