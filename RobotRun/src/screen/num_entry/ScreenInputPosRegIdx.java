@@ -1,11 +1,10 @@
-package screen;
+package screen.num_entry;
 
 import core.RobotRun;
 import enums.ScreenMode;
 import expression.OperandPReg;
 import expression.OperandPRegIdx;
 import robot.RoboticArm;
-import screen.num_entry.ST_ScreenNumEntry;
 
 public class ScreenInputPosRegIdx extends ST_ScreenNumEntry {
 
@@ -13,11 +12,6 @@ public class ScreenInputPosRegIdx extends ST_ScreenNumEntry {
 		super(ScreenMode.INPUT_PREG_IDX1, r);
 	}
 
-	@Override
-	protected String loadHeader() {
-		return robotRun.getActiveProg().getName();
-	}
-	
 	@Override
 	protected void loadOptions() {
 		options.addLine("Input register index:");
