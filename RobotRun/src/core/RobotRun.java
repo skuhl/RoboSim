@@ -1977,12 +1977,6 @@ public class RobotRun extends PApplet {
 		case INPUT_CONST:
 			try {
 				float data = Float.parseFloat(workingText.toString());
-				//TODO remove unused code?				
-				/*Instruction i = r.getInstToEdit(getActiveProg(), getActiveInstIdx());
-				if(i instanceof RegisterStatement) {
-					((RegisterStatement)i).getExpr().setOperand(editIdx, new OperandFloat(data));
-				}*/
-				
 				r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 				((OperandFloat)opEdit).setValue(data);
 				
@@ -2079,7 +2073,8 @@ public class RobotRun extends PApplet {
 					ioInst.setReg(tempReg);
 				}
 			} catch (NumberFormatException NFEx) {
-			/* Ignore invalid input */ }
+				/* Ignore invalid input */ 
+			}
 
 			lastScreen();
 			break;
