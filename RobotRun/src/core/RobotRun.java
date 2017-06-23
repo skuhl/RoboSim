@@ -2275,7 +2275,7 @@ public class RobotRun extends PApplet {
 			break;
 
 		case NAV_MF_MACROS:
-			int macro_idx = contents.get(contents.getItemIdx()).getItemIdx();
+			int macro_idx = contents.getCurrentItemIdx();
 			execute(macros.get(macro_idx));
 			break;
 
