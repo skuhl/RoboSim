@@ -1,4 +1,4 @@
-package screen;
+package ui;
 import java.util.ArrayList;
 
 public class DisplayLine {
@@ -14,6 +14,16 @@ public class DisplayLine {
 
 	public DisplayLine(int idx) {
 		fields = new ArrayList<>();
+		setItemIdx(idx);
+		setxAlign(0);
+	}
+	
+	public DisplayLine(int idx, String... strings) {
+		fields = new ArrayList<>();
+		for(String col : strings) {
+			fields.add(col);
+		}
+		
 		setItemIdx(idx);
 		setxAlign(0);
 	}

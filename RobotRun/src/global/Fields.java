@@ -90,6 +90,18 @@ public abstract class Fields {
 	public static final int FTYPE_USER = 1;
 	
 	/**
+	 * A UI input element type. Defines the element as short lasting (i.e.
+	 * cleared every time a window is loaded).
+	 */
+	public static final int ITYPE_TRANSIENT = 0;
+	
+	/**
+	 * A UI input element type. Defines the element as everlasting (i.e.
+	 * never cleared).
+	 */
+	public static final int ITYPE_PERMENANT = 1;
+	
+	/**
 	 * The y position of the floor of the world.
 	 */
 	public static final float FLOOR_Y;
@@ -235,6 +247,57 @@ public abstract class Fields {
 	}
 	
 	/**
+	 * Tests various methods of the Fields class.
+	 * 
+	 * @param args	Unused
+	 */
+	public static void main(String[] args) {
+		
+		/* editDistance() tests */
+		
+		String s1, s2;
+		int dist;
+		
+		s1 = "";
+		s2 = "";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		s1 = "";
+		s2 = "sunrise";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		s1 = "light";
+		s2 = "";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		s1 = "string";
+		s2 = "string";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		s1 = "mint";
+		s2 = "wing";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		s1 = "decorate";
+		s2 = "carriage";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		s1 = "whip";
+		s2 = "drum";
+		dist = editDistance(s1, s2);
+		System.out.printf("editDist(\"%s\", \"%s\") = %d\n", s1, s2, dist);
+		
+		/**/
+		
+	}
+	
+	/**
 	 * Applies the given coordinate system to the given graphics object.
 	 * 
 	 * @param g		The graphics object to transform
@@ -304,7 +367,7 @@ public abstract class Fields {
 	 * @return		A 32-bit color value
 	 */
 	public static int color(int rgb) {
-		return color(255, rgb, rgb, rgb);
+		return color(rgb, rgb, rgb, 255);
 	}
 	
 	/**
@@ -357,6 +420,46 @@ public abstract class Fields {
 		int[] diffs = rgbaDiffs(c0,  c1);
 		// Compute the square root of the sum of the rgba differences
 		return (float) Math.sqrt(diffs[0] + diffs[1] + diffs[2] + diffs[3]);
+	}
+	
+	/**
+	 * Calculates the minimum edit distance (inserts, deletions, replacements)
+	 * to convert s1 into s2. This method is based off the one described on
+	 * this webiste:
+	 * 
+	 * http://www.geeksforgeeks.org/dynamic-programming-set-5-edit-distance/
+	 * 
+	 * @param s1	A non-null string
+	 * @param s2	Another non-null string
+	 * @return		The edit distance between s1 and s2
+	 */
+	public static int editDistance(String s1, String s2) {
+		int[][] distSubprobs = new int[s1.length() + 1][s2.length() + 1];
+		
+		for (int idx1 = 0; idx1 <= s1.length(); ++idx1) {
+			
+			for (int idx2 = 0; idx2 <= s2.length(); ++idx2) {
+				
+				if (idx1 == 0) {
+					distSubprobs[idx1][idx2] = idx2;
+					
+				} else if (idx2 == 0) {
+					distSubprobs[idx1][idx2] = idx1;
+					
+				} else if (s1.charAt(idx1 - 1) == s2.charAt(idx2 - 1)) {
+					distSubprobs[idx1][idx2] = distSubprobs[idx1 - 1][idx2 - 1];
+					
+				} else {
+					distSubprobs[idx1][idx2] = 1 +
+							RMath.min(distSubprobs[idx1][idx2 - 1],
+								distSubprobs[idx1 - 1][idx2],
+								distSubprobs[idx1 - 1][idx2 - 1]);
+				}
+			}
+			
+		}
+		
+		return distSubprobs[s1.length()][s2.length()];
 	}
 	
 	/**
@@ -474,13 +577,13 @@ public abstract class Fields {
 		int[] portions = new int[4];
 		
 		// alpha
-		portions[0] = 0xff & (color >> 24);
+		portions[0] = 0xff & (color >> 16);
 		// red
-		portions[1] = 0xff & (color >> 16);
+		portions[1] = 0xff & (color >> 8);
 		// green
-		portions[2] = 0xff & (color >> 8);
+		portions[2] = 0xff & color;
 		// blue
-		portions[3] = 0xff & color;
+		portions[3] = 0xff & (color >> 24);
 		
 		return portions;
 	}

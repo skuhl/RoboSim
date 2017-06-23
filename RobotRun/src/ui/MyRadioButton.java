@@ -3,6 +3,7 @@ package ui;
 import controlP5.ControlP5;
 import controlP5.RadioButton;
 import controlP5.Toggle;
+import global.Fields;
 
 /**
  * An extension of controlP5's RadioButton class, which has some necessary
@@ -11,10 +12,19 @@ import controlP5.Toggle;
  * 
  * @author Joshua Hooker
  */
-public class MyRadioButton extends RadioButton {
+public class MyRadioButton extends RadioButton implements UIInputElement {
 	
-	public MyRadioButton(ControlP5 controller, String name) {
+	private int inputType;
+	
+	public MyRadioButton(ControlP5 controller, String name, int inputType) {
 		super(controller, name);
+		
+		this.inputType = inputType;
+	}
+	
+	@Override
+	public void clearInput() {
+		activate(0);
 	}
 	
 	/**
@@ -25,7 +35,7 @@ public class MyRadioButton extends RadioButton {
 	 * 			column of toggles of the radio button
 	 */
 	public int getTotalHeight() {
-		return (_myRadioToggles.size() / itemsPerRow) * (_myHeight + spacingRow) - spacingRow;
+		return (_myRadioToggles.size() / itemsPerRow) * (itemHeight + spacingRow) - spacingRow;
 	}
 	
 	/**
@@ -37,7 +47,7 @@ public class MyRadioButton extends RadioButton {
 	 * 			the radio button
 	 */
 	public int getTotalWidth() {
-		return Math.min(_myRadioToggles.size(), itemsPerRow) * (_myWidth + spacingColumn) - spacingColumn;
+		return Math.min(_myRadioToggles.size(), itemsPerRow) * (itemWidth + spacingColumn) - spacingColumn;
 	}
 	
 	/* Why don't you have these methods contolP5!?!?!? */
@@ -47,6 +57,11 @@ public class MyRadioButton extends RadioButton {
 	 */
 	public int getColumnSpacing() {
 		return spacingColumn;
+	}
+
+	@Override
+	public int getInputType() {
+		return inputType;
 	}
 	
 	/**
@@ -61,11 +76,33 @@ public class MyRadioButton extends RadioButton {
 	 * 			the radio button set
 	 */
 	public int getItemsPerRow() {
-		
-		(new Toggle(null, "name")).onClick(null);
-		
 		return itemsPerRow;
 	}
 	
 	/* My rant ends here */
+	
+	/**
+	 * Sets the column spacing of this radio button. The maximum width among
+	 * all toggle labels is added to the given spacing value, in order to avoid
+	 * toggle overlap.
+	 * 
+	 * @param spacing	The spacing to place between the columns of radio
+	 * 					buttons
+	 * @return			A reference to this
+	 */
+	public MyRadioButton setSpacingColumnOffset(int spacing) {
+		int maxWidth = 0;
+		// Find the maximum width among all toggle labels
+		for (Toggle t : _myRadioToggles) {
+			int width = t.getLabel().length() * Fields.CHAR_WDTH;
+			
+			if (width > maxWidth) {
+				maxWidth = width;
+			}
+		}
+		
+		setSpacingColumn(spacing + maxWidth);
+		
+		return this;
+	}
 }

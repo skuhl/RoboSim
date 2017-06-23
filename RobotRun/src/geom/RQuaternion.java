@@ -81,20 +81,80 @@ public class RQuaternion implements Cloneable {
 	 * linear interpolation from 'q1' to 'q2' for a given fraction of the
 	 * complete transformation 'q1' to 'q2', denoted by 0 <= 'mu' <= 1. 
 	 */
-	public static RQuaternion SLERP(RQuaternion q1, RQuaternion q2, float mu) {
-		if (mu == 0) {
+	public static RQuaternion minSLERP(RQuaternion q1, RQuaternion q2, float mu) {
+		if (mu == 0f) {
 			return q1;
 			
-		} else if (mu == 1) {
+		} else if (mu == 1f) {
 			return q2;
 		}
 		
 		float cOmega = q1.dot(q2);
 		RQuaternion q3 = q2.clone(), q4;
 		
-		if (cOmega < 0) {
+		// If we would go the long way around, take the short way around instead.
+		if (cOmega < 0f) {
 			cOmega *= -1;
 			q3.scalarMult(-1);		
+		}
+		
+		// Now that we are going the short way around, if the long way was requested, take that.
+		
+		if (cOmega > 0.99999995f) {
+			q4 = RQuaternion.scalarMult(1f - mu, q1);
+			q3.scalarMult(mu);
+			
+		} else {
+			double omega = Math.acos(cOmega);
+			double sinOmega = Math.sin(omega);			
+			float scaleQ1 = (float)( Math.sin(omega * (1 - mu)) / sinOmega );
+			float scaleQ3 = (float)( Math.sin(omega * mu) / sinOmega );
+			
+			q4 = RQuaternion.scalarMult(scaleQ1, q1);
+			q3.scalarMult(scaleQ3);
+		}
+		
+		q4.addValues(q3);
+		q4.normalize();
+		return q4;
+	}
+	
+	/**
+	 * Performs SLERP from q1 to q2 by the percent defined by mu. For 0 < mu <= 1,
+	 * the shortest path from q1 to q2 is taken. For 0 > mu >= -1, the longer
+	 * path from q1 to q2 is taken.
+	 * 
+	 * @param q1	The initial orientation
+	 * @param q2	The end orientation
+	 * @param mu	The percent of interpolation from q1 to q2 (sign denotes
+	 * 				direction)
+	 * @return		The spherical interpolation from q1 to q2 to the percent
+	 * 				defined by mu
+	 */
+	public static RQuaternion signedSLERP(RQuaternion q1, RQuaternion q2,
+			float mu) {
+		
+		if (mu == 0f) {
+			return q1;
+			
+		} else if (mu == 1f) {
+			return q2;
+		}
+		
+		float cOmega = q1.dot(q2);
+		RQuaternion q3 = q2.clone(), q4;
+		
+		if (cOmega < 0f) {
+			// Enforce the shortest path from q1 to q2
+			cOmega *= -1;
+			q3.scalarMult(-1);		
+		}
+		
+		if (mu < 0f) {
+			// Take the longer path if specified by mu's sign
+			mu *= -1f;
+			cOmega *= -1;
+			q3.scalarMult(-1f);
 		}
 		
 		if (cOmega > 0.99999995f) {
