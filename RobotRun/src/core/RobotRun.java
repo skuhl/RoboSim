@@ -26,6 +26,7 @@ import expression.OperandIOReg;
 import expression.OperandPReg;
 import expression.OperandPRegIdx;
 import expression.Operator;
+import expression.RobotPoint;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
@@ -1132,6 +1133,10 @@ public class RobotRun extends PApplet {
 			nextScreen(ScreenMode.INPUT_PREG_IDX2);
 			nextScreen(ScreenMode.INPUT_PREG_IDX1);
 			break;
+		case Operand.ROBOT: // Robot point
+			RobotPoint rp = (RobotPoint)o;
+			rp.setType(!rp.isCartesian());
+			break;
 		}
 	}
 	
@@ -1774,7 +1779,20 @@ public class RobotRun extends PApplet {
 				operand = new OperandPReg(new PositionRegister());
 				opEdit = expr.setOperand(editIdx, operand);
 				switchScreen(ScreenMode.INPUT_PREG_IDX1);
+				
 			} else if (options.getLineIdx() == 3) {
+				// JPos operand
+				operand = new RobotPoint(activeRobot, false);
+				opEdit = expr.setOperand(editIdx, operand);
+				lastScreen();
+				
+			} else if (options.getLineIdx() == 4) {
+				// LPos operand
+				operand = new RobotPoint(activeRobot, true);
+				opEdit = expr.setOperand(editIdx, operand);
+				lastScreen();
+				
+			} else if (options.getLineIdx() == 5) {
 				operand = new OperandPRegIdx(new PositionRegister(), 0);
 				opEdit = expr.setOperand(editIdx, operand);
 				screenStates.pop();
@@ -1782,7 +1800,7 @@ public class RobotRun extends PApplet {
 						contents.getColumnIdx(), contents.getRenderStart(), 0,
 						0);
 				loadScreen(ScreenMode.INPUT_PREG_IDX1);
-			} else if (options.getLineIdx() == 4) {
+			} else if (options.getLineIdx() == 6) {
 				// set arg to new expression
 				operand = new Expression();
 				opEdit = expr.setOperand(editIdx, operand);
@@ -6848,6 +6866,8 @@ public class RobotRun extends PApplet {
 			options.addLine("IO[x]");
 			if (opEdit instanceof Expression) {
 				options.addLine("PR[x]");
+				options.addLine("JPos");
+				options.addLine("LPos");
 				options.addLine("PR[x, y]");
 				options.addLine("(...)");
 			}
