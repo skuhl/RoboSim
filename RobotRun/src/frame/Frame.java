@@ -135,9 +135,8 @@ public abstract class Frame {
 
 			/* (R ^ -1) * b */
 			avg_TCP = avg_TCP.add( (new SingularValueDecomposition(R)).getSolver().getInverse().operate(b) );
-
-			float[][] m = RMath.doubleToFloat( R.getData() );
-			Fields.debug("\n%s\n\n", m.toString());
+			
+			Fields.debug("\n%s\n\n", R.toString());
 		}
 
 		/* Take the average of the three cases: where C = the first point, the second point, and the third point */
