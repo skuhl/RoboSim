@@ -2,8 +2,7 @@ package screen.edit_point;
 
 import core.RobotRun;
 import enums.ScreenMode;
-import frame.Frame;
-import frame.UserFrame;
+import frame.ToolFrame;
 import ui.DisplayLine;
 
 public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
@@ -16,12 +15,6 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 	protected String loadHeader() {
 		return String.format("TOOL %d: DIRECT ENTRY", robotRun.curFrameIdx + 1);
 	}
-	
-	@Override
-	protected void loadContents() {
-		Frame tool = robotRun.getActiveRobot().getToolFrame(robotRun.curFrameIdx);
-		contents.setLines(robotRun.loadFrameDirectEntry(tool));
-	}
 
 	@Override
 	protected void loadLabels() {
@@ -33,9 +26,25 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 	}
 	
 	@Override
+	protected StringBuilder[] loadWorkingText() {
+		ToolFrame tool = robotRun.getActiveRobot().getToolFrame(robotRun.curFrameIdx);
+		String[][] entries = tool.directEntryStringArray();
+		StringBuilder[] text = new StringBuilder[6];
+		
+		for(int i = 0; i < entries.length; i += 1) {
+			text[i] = new StringBuilder();
+			for(String s: entries[i]) {
+				text[i].append(s);
+			}
+		}
+		
+		return text;
+	}
+	
+	@Override
 	public void actionEntr() {
 		// User defined x, y, z, w, p, and r values
-		float[] inputs = new float[] { 0f, 0f, 0f, 0f, 0f, 0f };
+		float[] inputs = new float[6];
 
 		try {
 			// Parse each input value
@@ -71,18 +80,11 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 			}
 
 			robotRun.createFrameDirectEntry(robotRun.teachFrame, inputs);
-			
+			robotRun.nextScreen(ScreenMode.TFRAME_DETAIL);
 		} catch (NumberFormatException NFEx) {
 			// Invalid number
 			System.err.println("Entries must be real numbers!");
 			return;
-		}
-
-		if (robotRun.teachFrame instanceof UserFrame) {
-			robotRun.nextScreen(ScreenMode.UFRAME_DETAIL);
-			
-		} else {
-			robotRun.nextScreen(ScreenMode.TFRAME_DETAIL);
 		}
 	}
 	

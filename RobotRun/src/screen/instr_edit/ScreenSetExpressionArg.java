@@ -53,11 +53,9 @@ public class ScreenSetExpressionArg extends ST_ScreenInstructionEdit {
 		} else if (options.getLineIdx() == 3) {
 			operand = new OperandPRegIdx(new PositionRegister(), 0);
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
-			robotRun.getScreenStates().pop();
-			robotRun.pushScreen(ScreenMode.INPUT_PREG_IDX2, contents.getLineIdx(),
-					contents.getColumnIdx(), contents.getRenderStart(), 0,
-					0);
-			robotRun.loadScreen(ScreenMode.INPUT_PREG_IDX1);
+			robotRun.getScreenStack().pop();
+			robotRun.nextScreen(ScreenMode.INPUT_PREG_IDX2);
+			robotRun.nextScreen(ScreenMode.INPUT_PREG_IDX1);
 		} else if (options.getLineIdx() == 4) {
 			// set arg to new expression
 			operand = new Expression();

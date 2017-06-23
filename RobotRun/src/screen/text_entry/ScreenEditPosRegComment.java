@@ -13,7 +13,7 @@ public class ScreenEditPosRegComment extends ST_ScreenTextEntry {
 
 	@Override
 	protected String loadHeader() {
-		return String.format("PR[%d]: COMMENT EDIT", robotRun.getLastScreenState().conLnIdx + 1);
+		return String.format("PR[%d]: COMMENT EDIT", robotRun.getLastScreen().getContentIdx() + 1);
 	}
 
 	@Override
@@ -24,7 +24,7 @@ public class ScreenEditPosRegComment extends ST_ScreenTextEntry {
 				workingText.deleteCharAt(workingText.length() - 1);
 			}
 			// Save the inputed comment to the selected register
-			r.getPReg(robotRun.getLastScreenState().conLnIdx).comment = workingText.toString();
+			r.getPReg(robotRun.getLastScreen().getContentIdx()).comment = workingText.toString();
 			DataManagement.saveRobotData(r, 3);
 			workingText = new StringBuilder();
 			robotRun.lastScreen();

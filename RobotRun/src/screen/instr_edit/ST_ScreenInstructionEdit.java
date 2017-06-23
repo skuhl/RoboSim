@@ -36,6 +36,9 @@ public abstract class ST_ScreenInstructionEdit extends Screen {
 	}
 	
 	@Override
+	public void actionKeyPress(char key) {}
+	
+	@Override
 	public void actionUp() {
 		options.moveUp(false);
 	}
@@ -50,6 +53,9 @@ public abstract class ST_ScreenInstructionEdit extends Screen {
 	
 	@Override
 	public void actionRt() {}
+	
+	@Override
+	public void actionBkspc() {}
 	
 	@Override
 	public void actionF1() {}

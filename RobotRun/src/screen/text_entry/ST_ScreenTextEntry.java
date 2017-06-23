@@ -79,6 +79,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 		setScreenIndices(1, 0, 0, 0, 0);
 	}
 	
+	@Override
 	public void actionKeyPress(char key) {
 		if (((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9')
 				|| key == '-' || key == '.' || key == '@' || key == '*' || key == '_')) {
@@ -98,6 +99,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 			}
 
 			contents.setSelectedColumnIdx(Math.min(columnIdx + 1, workingText.length() - 1));
+			robotRun.updatePendantScreen();
 		}
 	}
 
@@ -163,6 +165,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 		resetStates();
 	}
 	
+	@Override
 	public void actionBkspc() { 
 		// Delete/Backspace function
 		if (workingText.length() >= 1) {
@@ -227,6 +230,27 @@ public abstract class ST_ScreenTextEntry extends Screen {
 				letterStates[idx] = 0;
 			}
 		}
+	}
+	
+	/**
+	 * This method loads text to screen in such a way as to allow the user to
+	 * input an arbitrary character string consisting of letters (a-z upper and
+	 * lower case) and/ or special characters (_, @, *, .) via the function row,
+	 * as well as numbers via the number pad. Strings are limited to 16
+	 * characters and can be used to name new routines, as well as set remark
+	 * fields for frames and instructions.
+	 */
+	@SuppressWarnings("unused")
+	private DisplayLine loadTextInput(String txt) {
+		contents.addLine("\0");
+
+		DisplayLine line = new DisplayLine();
+		// Give each letter in the name a separate column
+		for (int idx = 0; idx < txt.length() && idx < TEXT_ENTRY_LEN; idx += 1) {
+			line.add( Character.toString(txt.charAt(idx)) );
+		}
+
+		return line;
 	}
 	
 	private void resetStates() {

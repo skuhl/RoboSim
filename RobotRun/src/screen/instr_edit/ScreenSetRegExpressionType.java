@@ -31,11 +31,9 @@ public class ScreenSetRegExpressionType extends ST_ScreenInstructionEdit {
 		if (options.getLineIdx() == 3) {
 			regStmt.setRegister(new PositionRegister(), 0);
 			
-			robotRun.getScreenStates().pop();
-			robotRun.pushScreen(ScreenMode.SET_REG_EXPR_IDX2, contents.getLineIdx(),
-					contents.getColumnIdx(), contents.getRenderStart(), 0,
-					0);
-			robotRun.loadScreen(ScreenMode.SET_REG_EXPR_IDX1);
+			robotRun.getScreenStack().pop();
+			robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX2);
+			robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX1);
 			
 		} else {
 			if (options.getLineIdx() == 0) {
