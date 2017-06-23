@@ -2205,7 +2205,6 @@ public class RobotRun extends PApplet {
 		case SET_JUMP_TGT:
 			try {
 				int lblNum = Integer.parseInt(workingText.toString());
-				int lblIdx = p.findLabelIdx(lblNum);
 				Instruction inst = r.getInstToEdit(getActiveProg(), getActiveInstIdx());
 				
 				if (inst instanceof IfStatement) {
@@ -2215,7 +2214,7 @@ public class RobotRun extends PApplet {
 					SelectStatement sStmt = (SelectStatement) inst;
 					((JumpInstruction) sStmt.getInstrs().get(editIdx)).setTgtLblNum(lblNum);
 				} else {
-					if (lblIdx != -1) {
+					if (lblNum >= 0) {
 						JumpInstruction jmp = (JumpInstruction) inst;
 						jmp.setTgtLblNum(lblNum);
 					} else {
@@ -5172,7 +5171,7 @@ public class RobotRun extends PApplet {
 			PVector mScreenPos = new PVector(mouseX, mouseY, camPos.z + 1500f);
 			mScreenPos.x *= camera.getScale();
 			mScreenPos.y *= camera.getScale();
-
+			
 			PVector mWorldPos, ptOnMRay;
 			
 			pushMatrix();
@@ -6169,7 +6168,7 @@ public class RobotRun extends PApplet {
 			
 			screenStates = new Stack<>();
 			mode = ScreenMode.DEFAULT;
-			pushScreen(ScreenMode.DEFAULT, -1, -1, 0, -1, 0);
+			pushScreen(ScreenMode.DEFAULT, 0, 0, 0, 0, 0);
 			
 			contents = new MenuScroll("cont", ITEMS_TO_SHOW, 10, 20);
 			options = new MenuScroll("opt", 3, 10, 180);
