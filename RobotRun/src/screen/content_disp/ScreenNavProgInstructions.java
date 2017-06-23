@@ -99,7 +99,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 		} 
 		else if (inst instanceof IfStatement) {
 			IfStatement stmt = (IfStatement) inst;
-			int selectIdx = robotRun.getSelectedIdx();
+			int selectIdx = contents.getItemColumnIdx();
 
 			if (stmt.getExpr() instanceof Expression) {
 				if (selectIdx > 1 && selectIdx < stmt.getExpr().getLength() + 1) {
@@ -111,7 +111,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			}
 		} 
 		else if (inst instanceof SelectStatement) {
-			int selectIdx = robotRun.getSelectedIdx();
+			int selectIdx = contents.getItemColumnIdx();
 
 			if (selectIdx >= 3) {
 				labels[2] = "[Insert]";
@@ -121,7 +121,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 		else if (inst instanceof RegisterStatement) {
 			RegisterStatement stmt = (RegisterStatement) inst;
 			int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
-			int selectIdx = robotRun.getSelectedIdx();
+			int selectIdx = contents.getItemColumnIdx();
 
 			if (selectIdx > rLen && selectIdx < stmt.getExpr().getLength() + rLen) {
 				labels[2] = "[Insert]";
@@ -133,11 +133,11 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 	}
 	
 	public void actionFwd() {
-		contents.setColumnIdx(0);
+		contents.setSelectedColumnIdx(0);
 	}
 	
 	public void actionBwd() {
-		contents.setColumnIdx(0);
+		contents.setSelectedColumnIdx(0);
 	}
 	
 	public void actionItem() {
@@ -150,14 +150,14 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			try {
 				// Lock movement when a program is running
 				Instruction i = robotRun.getActiveInstruction();
-				int prevLine = robotRun.getSelectedLine();
+				int prevLine = contents.getItemLineIdx();
 				robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
-				int curLine = robotRun.getSelectedLine();
+				int curLine = contents.getItemLineIdx();
 
 				// special case for select statement column navigation
 				if ((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 0) {
 					if (prevLine == 1) {
-						contents.setColumnIdx(contents.getColumnIdx() + 3);
+						contents.setSelectedColumnIdx(contents.getColumnIdx() + 3);
 					}
 				}
 
@@ -178,16 +178,16 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 		if (!robotRun.isProgExec()) {
 			// Lock movement when a program is running
 			Instruction i = robotRun.getActiveInstruction();
-			int prevIdx = robotRun.getSelectedIdx();
+			int prevIdx = contents.getItemColumnIdx();
 			robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
-			int curLine = robotRun.getSelectedLine();
+			int curLine = contents.getItemLineIdx();
 
 			// special case for select statement column navigation
 			if ((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 1) {
 				if (prevIdx >= 3) {
-					contents.setColumnIdx(prevIdx - 3);
+					contents.setSelectedColumnIdx(prevIdx - 3);
 				} else {
-					contents.setColumnIdx(0);
+					contents.setSelectedColumnIdx(0);
 				}
 			}
 
@@ -220,12 +220,12 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 	public void actionF1() {
 		if (robotRun.isShift()) {
 			robotRun.newPosMotionInst();
-			contents.setColumnIdx(0);
+			contents.setSelectedColumnIdx(0);
 
-			if (robotRun.getSelectedLine() == 0) {
-				contents.setLineIdx(contents.getLineIdx() + 1);
+			if (contents.getItemLineIdx() == 0) {
+				contents.setSelectedLineIdx(contents.getLineIdx() + 1);
 				robotRun.updatePendantScreen();
-				if (robotRun.getSelectedLine() == 0) {
+				if (contents.getItemLineIdx() == 0) {
 					robotRun.setActiveInstIdx(robotRun.getActiveInstIdx() + 1);
 				}
 			}
@@ -241,7 +241,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 	public void actionF3() {
 		RoboticArm r = robotRun.getActiveRobot();
 		Instruction inst = robotRun.getActiveInstruction();
-		int selectIdx = robotRun.getSelectedIdx();
+		int selectIdx = contents.getItemColumnIdx();
 
 		if (inst instanceof PosMotionInst) {
 			r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx());
@@ -250,7 +250,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			Program p = robotRun.getActiveProg();
 			int actInst = robotRun.getActiveInstIdx();
 
-			if (robotRun.getSelectedLine() == 1) {
+			if (contents.getItemLineIdx() == 1) {
 				// Update the secondary position in a circular motion
 				// instruction
 				r.updateMCInstPosition(p, actInst, pt);
@@ -321,7 +321,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 		Instruction ins = robotRun.getActiveInstruction();
 
 		if (ins != null) {
-			int selectIdx = robotRun.getSelectedIdx();
+			int selectIdx = contents.getItemColumnIdx();
 			robotRun.getEditScreen(ins, selectIdx);
 		}
 	}
@@ -330,7 +330,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 	public void actionF5() {
 		RoboticArm r = robotRun.getActiveRobot();
 		Instruction inst = robotRun.getActiveInstruction();
-		int selectIdx = robotRun.getSelectedIdx();	
+		int selectIdx = contents.getItemColumnIdx();	
 
 		if (selectIdx == 0) {
 			robotRun.nextScreen(ScreenMode.NAV_INSTR_MENU);

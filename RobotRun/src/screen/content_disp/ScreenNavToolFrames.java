@@ -40,13 +40,13 @@ public class ScreenNavToolFrames extends ST_ScreenListContents {
 
 	@Override
 	public void actionEntr() {
-		robotRun.curFrameIdx = contents.getActiveIndex();
+		robotRun.curFrameIdx = contents.getCurrentItemIdx();
 		robotRun.nextScreen(ScreenMode.TFRAME_DETAIL);
 	}
 
 	@Override
 	public void actionF1() {
-		int frame = contents.getActiveLine().getItemIdx();
+		int frame = contents.getCurrentItem().getItemIdx();
 		
 		if (robotRun.isShift()) {
 			// Reset the highlighted frame in the tool frame list

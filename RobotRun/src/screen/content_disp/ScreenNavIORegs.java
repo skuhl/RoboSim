@@ -23,12 +23,9 @@ public class ScreenNavIORegs extends ST_ScreenListContents {
 	}
 
 	@Override
-	protected void loadVars() {}
-
-	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();
-		int ioIdx = contents.getActiveIndex();
+		int ioIdx = contents.getCurrentItemIdx();
 		IORegister ioReg = r.getIOReg(ioIdx);
 		
 		if (ioReg != null) {

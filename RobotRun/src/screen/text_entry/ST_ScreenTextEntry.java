@@ -4,6 +4,7 @@ import core.RobotRun;
 import enums.ScreenMode;
 import enums.ScreenType;
 import screen.Screen;
+import screen.ScreenState;
 import ui.DisplayLine;
 
 public abstract class ST_ScreenTextEntry extends Screen {
@@ -29,7 +30,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 	public ST_ScreenTextEntry(ScreenMode m, RobotRun r) {
 		super(m, r);
 		letterStates = new int[5];
-		workingText = new StringBuilder();
+		workingText = new StringBuilder("\0");
 	}
 	
 	public String getWorkingText() {
@@ -39,11 +40,11 @@ public abstract class ST_ScreenTextEntry extends Screen {
 	@Override
 	protected void loadContents() {
 		contents.addLine("\0");
-
 		DisplayLine line = new DisplayLine();
+		
 		// Give each letter in the name a separate column
 		for (int idx = 0; idx < workingText.length() && idx < TEXT_ENTRY_LEN; idx += 1) {
-			line.add( Character.toString(workingText.charAt(idx)) );
+			line.add(Character.toString(workingText.charAt(idx)));
 		}
 
 		contents.addLine(line);
@@ -74,7 +75,9 @@ public abstract class ST_ScreenTextEntry extends Screen {
 	}
 
 	@Override
-	protected void loadVars() {}
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(1, 0, 0, 0, 0);
+	}
 	
 	public void actionKeyPress(char key) {
 		if (((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9')
@@ -94,7 +97,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 				++columnIdx;
 			}
 
-			contents.setColumnIdx(Math.min(columnIdx + 1, workingText.length() - 1));
+			contents.setSelectedColumnIdx(Math.min(columnIdx + 1, workingText.length() - 1));
 		}
 	}
 
@@ -113,17 +116,17 @@ public abstract class ST_ScreenTextEntry extends Screen {
 	@Override
 	public void actionLt() {
 		if (mode.getType() == ScreenType.TYPE_TEXT_ENTRY) {
-			contents.setColumnIdx(Math.max(0, contents.getColumnIdx() - 1));
+			contents.setSelectedColumnIdx(Math.max(0, contents.getColumnIdx() - 1));
 			// Reset function key states
 			for (int idx = 0; idx < letterStates.length; ++idx) {
 				letterStates[idx] = 0;
 			}
 
 		} else if (mode.getType() == ScreenType.TYPE_POINT_ENTRY) {
-			contents.setColumnIdx(Math.max(1, contents.getColumnIdx() - 1));
+			contents.setSelectedColumnIdx(Math.max(1, contents.getColumnIdx() - 1));
 
 		} else if (mode.getType() == ScreenType.TYPE_EXPR_EDIT) {
-			contents.setColumnIdx(
+			contents.setSelectedColumnIdx(
 					contents.getColumnIdx() - ((contents.getColumnIdx() - 4 >= options.size()) ? 4 : 0));
 		}
 	}
@@ -134,11 +137,11 @@ public abstract class ST_ScreenTextEntry extends Screen {
 			// Delete key function
 			if (workingText.length() >= 1) {
 				workingText.deleteCharAt(contents.getColumnIdx());
-				contents.setColumnIdx(Math.max(0, Math.min(contents.getColumnIdx(), workingText.length() - 1)));
+				contents.setSelectedColumnIdx(Math.max(0, Math.min(contents.getColumnIdx(), workingText.length() - 1)));
 			}
 
 		} else if (mode.getType() == ScreenType.TYPE_EXPR_EDIT) {
-			contents.setColumnIdx(
+			contents.setSelectedColumnIdx(
 					contents.getColumnIdx() + ((contents.getColumnIdx() + 4 < options.size()) ? 4 : 0));
 
 		} else {
@@ -153,7 +156,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 				workingText.append('\0');
 			}
 
-			contents.setColumnIdx(Math.min(columnIdx + 1,  workingText.length() - 1));
+			contents.setSelectedColumnIdx(Math.min(columnIdx + 1,  workingText.length() - 1));
 			robotRun.updatePendantScreen();
 		}
 		
@@ -174,7 +177,7 @@ public abstract class ST_ScreenTextEntry extends Screen {
 				workingText.deleteCharAt(colIdx - 1);
 			}
 
-			contents.setColumnIdx(Math.max(0, Math.min(colIdx - 1, workingText.length() - 1)));
+			contents.setSelectedColumnIdx(Math.max(0, Math.min(colIdx - 1, workingText.length() - 1)));
 		}
 
 		for (int idx = 0; idx < letterStates.length; ++idx) {

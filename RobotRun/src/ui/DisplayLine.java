@@ -18,6 +18,22 @@ public class DisplayLine {
 		setxAlign(0);
 	}
 	
+	public DisplayLine(int idx, int align) {
+		fields = new ArrayList<>();
+		setItemIdx(idx);
+		setxAlign(align);
+	}
+
+	public DisplayLine(int idx, int align, String... strings) {
+		fields = new ArrayList<>();
+		for(String col : strings) {
+			fields.add(col);
+		}
+		
+		setItemIdx(idx);
+		setxAlign(align);
+	}
+	
 	public DisplayLine(int idx, String... strings) {
 		fields = new ArrayList<>();
 		for(String col : strings) {
@@ -28,28 +44,21 @@ public class DisplayLine {
 		setxAlign(0);
 	}
 
-	public DisplayLine(int idx, int align) {
-		fields = new ArrayList<>();
-		setItemIdx(idx);
-		setxAlign(align);
-	}
-	
-	public DisplayLine(int idx, int align, String... strings) {
-		fields = new ArrayList<>();
-		for(String col : strings) {
-			fields.add(col);
-		}
-		
-		setItemIdx(idx);
-		setxAlign(align);
-	}
-
 	public void add(int i, String s) {
 		fields.add(i, s);
 	}
 
 	public boolean add(String s) {
 		return fields.add(s);
+	}
+
+	public DisplayLine clone() {
+		DisplayLine clone = new DisplayLine(itemIdx, xAlign);
+		for(String s: fields) {
+			clone.add(s);
+		}
+		
+		return clone;
 	}
 
 	public String get(int idx) {

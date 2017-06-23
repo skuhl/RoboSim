@@ -63,7 +63,7 @@ public class ScreenSetCallProg extends ST_ScreenOptionsMenu {
 		}
 		
 		// Set the program of the call instruction
-		Program tgt = cInst.getTgtDevice().getProgram(options.getActiveIndex());
+		Program tgt = cInst.getTgtDevice().getProgram(options.getCurrentItemIdx());
 		cInst.setProg(tgt);
 
 		robotRun.lastScreen();
