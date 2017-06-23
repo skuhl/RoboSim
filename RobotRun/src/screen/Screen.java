@@ -255,24 +255,18 @@ public abstract class Screen {
 	}
 	
 	public void updateScreen() {
-		ScreenState s = new ScreenState(mode, 
-				contents.getLineIdx(), 
-				contents.getColumnIdx(), 
-				contents.getRenderStart(), 
-				options.getLineIdx(), 
-				options.getRenderStart());
-		
-		updateScreen(s);
-	}
-	
-	public void updateScreen(ScreenState s) {
 		contents.clear();
 		options.clear();
 		
 		loadContents();
 		loadOptions();
 		loadLabels();
+	}
+	
+	public void updateScreen(ScreenState s) {
+		updateScreen();
 		loadVars(s);
+		
 		printScreenInfo();
 	}
 	
@@ -288,6 +282,13 @@ public abstract class Screen {
 
 	public int getOptionIdx() { return options.getLineIdx(); }
 	public int getOptionStart() { return options.getRenderStart(); }
+	
+	public ScreenState getScreenState() {
+		ScreenState s = new ScreenState(mode, contents.getLineIdx(), contents.getColumnIdx(),
+				contents.getRenderStart(), options.getLineIdx(), options.getRenderStart());
+		
+		return s;
+	}
 		
 	//Loads given set of screen state variables 
 	public void setScreenIndices(int contLine, int col, int contRS, int optLine, int optRS) {
@@ -315,11 +316,13 @@ public abstract class Screen {
 	protected abstract void loadVars(ScreenState s);
 		
 	//Button actions
+	public abstract void actionKeyPress(char key);
 	public abstract void actionUp();
 	public abstract void actionDn();
 	public abstract void actionLt();
 	public abstract void actionRt();
 	public abstract void actionEntr();
+	public abstract void actionBkspc();
 	public abstract void actionF1();
 	public abstract void actionF2();
 	public abstract void actionF3();

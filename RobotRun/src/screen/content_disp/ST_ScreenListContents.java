@@ -25,8 +25,11 @@ public abstract class ST_ScreenListContents extends Screen {
 	
 	@Override
 	protected void loadVars(ScreenState s) {
-		setScreenIndices(s.conLnIdx, s.conColIdx, s.conRenIdx, -1, 0);
+		setScreenIndices(0, 0, 0, -1, 0);
 	}
+	
+	@Override
+	public void actionKeyPress(char key) {}
 
 	@Override
 	public void actionUp() {
@@ -47,6 +50,9 @@ public abstract class ST_ScreenListContents extends Screen {
 	public void actionRt() {
 		contents.moveRight();
 	}
+	
+	@Override
+	public void actionBkspc() {}
 	
 	@Override
 	public void actionF1() {}

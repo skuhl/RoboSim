@@ -67,13 +67,13 @@ public class ScreenConfirmRenumber extends ST_ScreenConfirmCancel {
 			}
 		}
 
-		robotRun.getScreenStates().pop();
+		robotRun.getScreenStack().pop();
 		robotRun.updateInstructions();
 	}
 	
 	@Override
 	public void actionF5() {
-		robotRun.getScreenStates().pop();
+		robotRun.getScreenStack().pop();
 		robotRun.updateInstructions();
 	}
 }
