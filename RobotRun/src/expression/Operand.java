@@ -58,7 +58,7 @@ public abstract class Operand<T> implements ExpressionElement {
 		if(value != null)
 			return new String[] { value.toString() };
 		else
-			return null;
+			return new String[] {"..."};
 	}
 	
 }
