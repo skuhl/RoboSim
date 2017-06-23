@@ -27,16 +27,6 @@ public class AtomicExpression extends Operand<Object> {
 		arg1 = new OperandGeneric();
 		arg2 = new OperandGeneric();
 	}
-
-	private boolean checkTypeCompatable(Operator op, Operand<?> o1, Operand<?> o2) {
-		switch(op.getType()) {
-		case Operator.ARITH_OP:
-		case Operator.BOOL_OP: 	return o1 instanceof FloatMath && o2 instanceof FloatMath;
-		case Operator.LOGIC_OP:	return o1 instanceof BoolMath && o2 instanceof BoolMath;
-		case Operator.POINT_OP: return o1 instanceof PointMath && o2 instanceof PointMath;
-		default:				return false;
-		}
-	}
 	
 	@Override
 	public AtomicExpression clone() {
@@ -44,100 +34,93 @@ public class AtomicExpression extends Operand<Object> {
 	}
 	
 	public Operand<?> evaluate() {
-		int opType = op.getType();
 		
-		//evaluate any sub-expressions
-		if(arg1.type == Operand.SUBEXP) {
+		if (arg1 instanceof AtomicExpression) {
 			arg1 = ((AtomicExpression)arg1).evaluate();
-		}
-
-		if(arg2.type == Operand.SUBEXP) {
+			
+		} else if (arg2 instanceof AtomicExpression) {
 			arg2 = ((AtomicExpression)arg2).evaluate();
 		}
 		
-		//check for type compatability
-		if(!checkTypeCompatable(op, arg1, arg2)) {
-			return null;
-		}
-		else if(opType == Operator.ARITH_OP) {
-			Float value = evaluateFloat((FloatMath)arg1, (FloatMath)arg2);
-			return new OperandFloat(value);
-		}
-		else if(opType == Operator.LOGIC_OP) {
-			Boolean value = evaluateLogic((BoolMath)arg1, (BoolMath)arg2);
-			return new OperandBool(value);
-		}
-		else if(opType == Operator.BOOL_OP) {
-			Boolean value = evaluateBool((FloatMath)arg1, (FloatMath)arg2);
-			return new OperandBool(value);
-		}
-		else if(opType == Operator.POINT_OP) {
-			Point value = evaluatePosition((PointMath)arg1, (PointMath)arg2);
-			return new OperandPoint(value);
+		if (arg1 instanceof FloatMath && arg2 instanceof FloatMath) {
+			// Arithmetic operands
+			return evaluateFloat((FloatMath)arg1, (FloatMath)arg2, op);
+			
+		} else if (arg1 instanceof PointMath && arg2 instanceof PointMath) {
+			// Point operands
+			return evaluatePoint((PointMath)arg1, (PointMath)arg2, op);
+			
+		} else if (arg1 instanceof BoolMath && arg2 instanceof BoolMath) {
+			// Boolean operands
+			return evaluateBoolean((BoolMath)arg1, (BoolMath)arg2, op);
+			
+		} else {
+			// Input combination is invalid
 		}
 		
 		return null;
 	}
 	
-	private Boolean evaluateBool(FloatMath o1, FloatMath o2) {
-		float v1 = o1.getArithValue();
-		float v2 = o2.getArithValue();
+	private Operand<?> evaluateFloat(FloatMath o1, FloatMath o2, Operator op) {
 		
-		if(Fields.DEBUG) {
-			System.out.println("Evaluating bool expression: ");
-			System.out.println("\t" + v1 + op.toString() + v2);
+		if (op.getType() == Operator.ARITH_OP) {
+			// Arithmetic evaluation
+			Float v1 = o1.getArithValue();
+			Float v2 = o2.getArithValue();
+			
+			switch (op) {
+			case ADD:	return new OperandFloat(v1 + v2);
+			case SUB:	return new OperandFloat(v1 - v2);
+			case MULT:	return new OperandFloat(v1 * v2);
+			case DIV:	return new OperandFloat(v1 / v2);
+			case MOD:	return new OperandFloat(v1 % v2);
+			case IDIV:
+				Integer val = v1.intValue() / v2.intValue();
+				return new OperandFloat(val.floatValue());
+			default:
+			}
+			
+		} else if (op.getType() == Operator.BOOL_OP) {
+			// Logic evaluation
+			float v1 = o1.getArithValue().floatValue();
+			float v2 = o2.getArithValue().floatValue();
+			
+			switch (op) {
+			case GRTR:		return new OperandBool(v1 > v2);
+			case LESS:		return new OperandBool(v1 < v2);
+			case EQUAL:		return new OperandBool(v1 == v2);
+			case NEQUAL:	return new OperandBool(v1 != v2);
+			case GREQ:		return new OperandBool(v1 >= v2);
+			case LSEQ:		return new OperandBool(v1 <= v2);
+			default:
+			}
+			
+		} else {
+			// Invalid operation
 		}
 		
-		switch(op) {
-		case GRTR:	return v1 > v2;
-		case LESS:	return v1 < v2;
-		case EQUAL:	return v1 == v2;
-		case NEQUAL:return v1 != v2;
-		case GREQ:	return v1 >= v2;
-		case LSEQ:	return v1 <= v2;
-		default:	return null;
-		}
+		return null;
 	}
 	
-	private Boolean evaluateLogic(BoolMath o1, BoolMath o2) {
+	private Operand<?> evaluateBoolean(BoolMath o1, BoolMath o2, Operator op) {
 		boolean b1 = o1.getBoolValue();
 		boolean b2 = o2.getBoolValue();
 		
-		if(Fields.DEBUG) {
-			System.out.println("Evaluating logic expression: ");
-			System.out.println("\t" + b1 + op.toString() + b2);
-		}
-		
 		switch(op) {
-		case AND:	return b1 && b2;
-		case OR:	return b1 || b2;
-		case NOT:	return !b1;
+		case AND:	return new OperandBool(b1 && b2);
+		case OR:	return new OperandBool(b1 || b2);
+		case NOT:	return new OperandBool(!b1);
 		default:	return null;
 		}
 	}
 	
-	private Float evaluateFloat(FloatMath o1, FloatMath o2) {
-		float v1 = o1.getArithValue();
-		float v2 = o2.getArithValue();
-		
-		switch(op) {
-		case ADD:	return v1 + v2;
-		case SUB:	return v1 - v2;
-		case MULT:	return v1 * v2;
-		case DIV:	return v1 / v2;
-		case MOD:	return v1 % v2;
-		case IDIV:	return (float)((int)v1 / (int)v2);
-		default:	return null;
-		}
-	}
-	
-	private Point evaluatePosition(PointMath o1, PointMath o2) {
+	private Operand<?> evaluatePoint(PointMath o1, PointMath o2, Operator op) {
 		Point p1 = o1.getPointValue();
 		Point p2 = o2.getPointValue();
 		
 		switch(op) {
-		case PT_ADD:	return p1.add(p2);
-		case PT_SUB:	return p1.sub(p2);
+		case ADD:	return new OperandPoint(p1.add(p2));
+		case SUB:	return new OperandPoint(p1.sub(p2));
 		default:		return null;
 		}
 	}
