@@ -72,45 +72,47 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 		Operand<?> result = expr.evaluate();
 		
 		if(result instanceof OperandFloat) {
-			float fl = ((OperandFloat)result).getArithValue();
+			Float fl = ((OperandFloat)result).getArithValue();
 			
-			if(reg instanceof DataRegister) {
-				((DataRegister)reg).value = fl;
-				return 0;
-			}
-			else if(reg instanceof PositionRegister) {
-				PositionRegister pReg = (PositionRegister)reg;
-				Point pt = pReg.point;
-				
-				if (posIdx >= 0 && posIdx < 6) {
-					if (pReg.isCartesian) {
-						// Update Cartesian value
-						PVector wPos = RMath.vToWorld(pt.position);
-						PVector wpr = RMath.nQuatToWEuler(pt.orientation);
-						
-						switch(posIdx) {
-						case 0:	wPos.x = fl; break;
-						case 1: wPos.y = fl; break;
-						case 2: wPos.z = fl; break;
-						case 3: wpr.x = fl; break;
-						case 4: wpr.y = fl; break;
-						case 5: wpr.z = fl; break;
+			if (fl != null) {
+				if(reg instanceof DataRegister) {
+					((DataRegister)reg).value = fl;
+					return 0;
+				}
+				else if(reg instanceof PositionRegister) {
+					PositionRegister pReg = (PositionRegister)reg;
+					Point pt = pReg.point;
+					
+					if (pt != null && posIdx >= 0 && posIdx < 6) {
+						if (pReg.isCartesian) {
+							// Update Cartesian value
+							PVector wPos = RMath.vToWorld(pt.position);
+							PVector wpr = RMath.nQuatToWEuler(pt.orientation);
+							
+							switch(posIdx) {
+							case 0:	wPos.x = fl; break;
+							case 1: wPos.y = fl; break;
+							case 2: wPos.z = fl; break;
+							case 3: wpr.x = fl; break;
+							case 4: wpr.y = fl; break;
+							case 5: wpr.z = fl; break;
+							}
+							
+							pt.position = RMath.vFromWorld(wPos);
+							pt.orientation = RMath.wEulerToNQuat(wpr);
+							
+						} else {
+							// Update a joint angle value
+							pt.angles[posIdx] = RMath.mod2PI(fl * PConstants.DEG_TO_RAD);
 						}
 						
-						pt.position = RMath.vFromWorld(wPos);
-						pt.orientation = RMath.wEulerToNQuat(wpr);
-						
 					} else {
-						// Update a joint angle value
-						pt.angles[posIdx] = RMath.mod2PI(fl * PConstants.DEG_TO_RAD);
+						// Invalid position index or unintialized point
+						return 1;
 					}
 					
-				} else {
-					// Invalid position index
-					return 1;
+					return 0;
 				}
-				
-				return 0;
 			}
 		}
 		else if(result instanceof OperandBool) {
@@ -126,7 +128,7 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 				((PositionRegister)reg).point = p;
 				return 0;
 			}
-		}
+			}
 
 		return 1;
 	}
