@@ -2,6 +2,7 @@ package screen.edit_point;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import frame.Frame;
 import frame.UserFrame;
 import ui.DisplayLine;
 
@@ -14,6 +15,12 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 	@Override
 	protected String loadHeader() {
 		return String.format("TOOL %d: DIRECT ENTRY", robotRun.curFrameIdx + 1);
+	}
+	
+	@Override
+	protected void loadContents() {
+		Frame tool = robotRun.getActiveRobot().getToolFrame(robotRun.curFrameIdx);
+		contents.setLines(robotRun.loadFrameDirectEntry(tool));
 	}
 
 	@Override

@@ -34,7 +34,9 @@ public class ScreenDefault extends Screen {
 	}
 	
 	@Override
-	protected void loadVars() {}
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(-1, -1, -1, -1, -1);
+	}
 
 	@Override
 	public void actionUp() {}

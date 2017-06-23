@@ -3,6 +3,7 @@ package screen.content_disp;
 import core.RobotRun;
 import enums.ScreenMode;
 import screen.Screen;
+import screen.ScreenState;
 
 public abstract class ST_ScreenListContents extends Screen {
 
@@ -23,7 +24,9 @@ public abstract class ST_ScreenListContents extends Screen {
 	}
 	
 	@Override
-	protected void loadVars() {}
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(s.conLnIdx, s.conColIdx, s.conRenIdx, -1, 0);
+	}
 
 	@Override
 	public void actionUp() {

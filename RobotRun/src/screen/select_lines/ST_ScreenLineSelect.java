@@ -7,6 +7,7 @@ import programming.Instruction;
 import programming.MotionInstruction;
 import programming.SelectStatement;
 import screen.Screen;
+import screen.ScreenState;
 
 public abstract class ST_ScreenLineSelect extends Screen {
 
@@ -25,7 +26,9 @@ public abstract class ST_ScreenLineSelect extends Screen {
 	}
 	
 	@Override
-	protected void loadVars() {}
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(s.conLnIdx, 0, s.conRenIdx, -1, -1);
+	}
 
 	@Override
 	public void actionUp() {
@@ -33,14 +36,14 @@ public abstract class ST_ScreenLineSelect extends Screen {
 			try {
 				// Lock movement when a program is running
 				Instruction i = robotRun.getActiveInstruction();
-				int prevLine = robotRun.getSelectedLine();
+				int prevLine = contents.getItemLineIdx();
 				robotRun.setActiveInstIdx(contents.moveUp(robotRun.isShift()));
-				int curLine = robotRun.getSelectedLine();
+				int curLine = contents.getItemLineIdx();
 
 				// special case for select statement column navigation
 				if ((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 0) {
 					if (prevLine == 1) {
-						contents.setColumnIdx(contents.getColumnIdx() + 3);
+						contents.setSelectedColumnIdx(contents.getColumnIdx() + 3);
 					}
 				}
 
@@ -61,16 +64,16 @@ public abstract class ST_ScreenLineSelect extends Screen {
 		if (!robotRun.isProgExec()) {
 			// Lock movement when a program is running
 			Instruction i = robotRun.getActiveInstruction();
-			int prevIdx = robotRun.getSelectedIdx();
+			int prevIdx = contents.getItemColumnIdx();
 			robotRun.setActiveInstIdx(contents.moveDown(robotRun.isShift()));
-			int curLine = robotRun.getSelectedLine();
+			int curLine = contents.getItemLineIdx();
 
 			// special case for select statement column navigation
 			if ((i instanceof SelectStatement || i instanceof MotionInstruction) && curLine == 1) {
 				if (prevIdx >= 3) {
-					contents.setColumnIdx(prevIdx - 3);
+					contents.setSelectedColumnIdx(prevIdx - 3);
 				} else {
-					contents.setColumnIdx(0);
+					contents.setSelectedColumnIdx(0);
 				}
 			}
 

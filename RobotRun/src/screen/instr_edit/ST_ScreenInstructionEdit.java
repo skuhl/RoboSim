@@ -3,6 +3,7 @@ package screen.instr_edit;
 import core.RobotRun;
 import enums.ScreenMode;
 import screen.Screen;
+import screen.ScreenState;
 
 public abstract class ST_ScreenInstructionEdit extends Screen {
 
@@ -21,10 +22,18 @@ public abstract class ST_ScreenInstructionEdit extends Screen {
 	}
 	
 	@Override
-	protected void loadLabels() {}
+	protected void loadLabels() {
+		labels[0] = "";
+		labels[1] = "";
+		labels[2] = "";
+		labels[3] = "";
+		labels[4] = "";
+	}
 
 	@Override
-	protected void loadVars() {}
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(s.conLnIdx, s.conColIdx, s.conRenIdx, 0, 0);
+	}
 	
 	@Override
 	public void actionUp() {

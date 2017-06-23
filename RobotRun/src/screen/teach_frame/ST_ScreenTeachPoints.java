@@ -6,6 +6,7 @@ import geom.Point;
 import global.DataManagement;
 import robot.RoboticArm;
 import screen.Screen;
+import screen.ScreenState;
 
 public abstract class ST_ScreenTeachPoints extends Screen {
 
@@ -24,7 +25,9 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 	}
 
 	@Override
-	protected void loadVars() {}
+	protected void loadVars(ScreenState s) {
+		
+	}
 
 	@Override
 	public void actionUp() {
