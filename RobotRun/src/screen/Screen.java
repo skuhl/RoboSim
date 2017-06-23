@@ -20,10 +20,10 @@ import screen.edit_point.ScreenDirectEntryTool;
 import screen.edit_point.ScreenDirectEntryUser;
 import screen.edit_point.ScreenEditPosReg;
 import screen.edit_point.ScreenEditProgramPos;
-import screen.expr_edit.ScreenSetBoolExpressionArg;
-import screen.expr_edit.ScreenSetExpressionArg;
-import screen.expr_edit.ScreenSetExpressionOp;
 import screen.instr_edit.ScreenSetBoolConst;
+import screen.instr_edit.ScreenSetBoolExpressionArg;
+import screen.instr_edit.ScreenSetExpressionArg;
+import screen.instr_edit.ScreenSetExpressionOp;
 import screen.instr_edit.ScreenSetFrameInstrType;
 import screen.instr_edit.ScreenSetIOInstrState;
 import screen.instr_edit.ScreenSetIfStmtAction;
@@ -102,7 +102,7 @@ public abstract class Screen {
 	protected MenuScroll options;
 	protected String[] labels;
 	
-	public static boolean useScreen = false;
+	public static boolean useScreen = true;
 	
 	public static Screen getScreen(ScreenMode m, RobotRun r) {
 		if(!useScreen) {
@@ -116,7 +116,10 @@ public abstract class Screen {
 		 * Set of screens used to manipulate instruction parameters with a finite number of states
 		 */
 		case SET_BOOL_CONST: return new ScreenSetBoolConst(r);
-		case SET_FRM_INSTR_TYPE: return new ScreenSetFrameInstrType(r);
+		case SET_BOOL_EXPR_ARG: return new ScreenSetBoolExpressionArg(r);
+		case SET_EXPR_ARG: return new ScreenSetExpressionArg(r);
+		case SET_EXPR_OP: return new ScreenSetExpressionOp(r);
+		case SET_FRAME_INSTR_TYPE: return new ScreenSetFrameInstrType(r);
 		case SET_IF_STMT_ACT: return new ScreenSetIfStmtAction(r);
 		case SET_IO_INSTR_STATE: return new ScreenSetIOInstrState(r);
 		case SET_MINST_REG_TYPE: return new ScreenSetMostionInstrRegType(r);
@@ -127,13 +130,6 @@ public abstract class Screen {
 		case SET_REG_EXPR_TYPE: return new ScreenSetRegExpressionType(r);
 		case SET_SELECT_STMT_ARG: return new ScreenSetSelectStmtArg(r);
 		case SET_SELECT_STMT_ACT: return new ScreenSetSelectStmtAction(r);
-
-		/*
-		 * Set of screens used to edit expression elements
-		 */
-		case SET_BOOL_EXPR_ARG: return new ScreenSetBoolExpressionArg(r);
-		case SET_EXPR_ARG: return new ScreenSetExpressionArg(r);
-		case SET_EXPR_OP: return new ScreenSetExpressionOp(r);
 
 		/*
 		 * Screens used to display a several list of contents for the user to
@@ -256,19 +252,28 @@ public abstract class Screen {
 		contents = new MenuScroll("cont", 8, 10, 20);
 		options = new MenuScroll("opt", 3, 10, 180);
 		labels = new String[5];
-		
-		updateScreen();
 	}
 	
 	public void updateScreen() {
+		ScreenState s = new ScreenState(mode, 
+				contents.getLineIdx(), 
+				contents.getColumnIdx(), 
+				contents.getRenderStart(), 
+				options.getLineIdx(), 
+				options.getRenderStart());
+		
+		updateScreen(s);
+	}
+	
+	public void updateScreen(ScreenState s) {
 		contents.clear();
 		options.clear();
 		
 		loadContents();
 		loadOptions();
 		loadLabels();
-		loadScreenIdx();
-		loadVars();
+		loadVars(s);
+		printScreenInfo();
 	}
 	
 	//Used for displaying screen text
@@ -283,20 +288,23 @@ public abstract class Screen {
 
 	public int getOptionIdx() { return options.getLineIdx(); }
 	public int getOptionStart() { return options.getRenderStart(); }
-	
-	//Loads default screen state variables
-	public void loadScreenIdx() {
-		loadScreenIdx(0, 0, 0, 0, 0);
-	}
-	
-	//Loads given set of screen state variables
-	public void loadScreenIdx(int contLine, int col, int contRS, int optLine, int optRS) {
-		contents.setLineIdx(contLine);
-		contents.setColumnIdx(col);
+		
+	//Loads given set of screen state variables 
+	public void setScreenIndices(int contLine, int col, int contRS, int optLine, int optRS) {
+		contents.setSelectedLineIdx(contLine);
+		contents.setSelectedColumnIdx(col);
 		contents.setRenderStart(contRS);
 		
-		options.setLineIdx(optLine);
+		options.setSelectedLineIdx(optLine);
 		options.setRenderStart(optRS);
+	}
+	
+	public void printScreenInfo() {
+		System.out.println("Current screen: ");
+		System.out.println("\tMode: " + mode.name());
+		System.out.println("\tRow: " + contents.getLineIdx() + ", col: " + contents.getColumnIdx() +
+				", RS: " + contents.getRenderStart());
+		System.out.println("\tOpt row: " + options.getLineIdx() + ", opt RS: " + options.getRenderStart());
 	}
 	
 	//Sets text for each screen
@@ -304,7 +312,7 @@ public abstract class Screen {
 	protected abstract void loadContents();
 	protected abstract void loadOptions();
 	protected abstract void loadLabels();
-	protected abstract void loadVars();
+	protected abstract void loadVars(ScreenState s);
 		
 	//Button actions
 	public abstract void actionUp();

@@ -23,9 +23,6 @@ public class ScreenSetMacroProg extends ST_ScreenListContents {
 	}
 
 	@Override
-	protected void loadVars() {}
-
-	@Override
 	public void actionEntr() {
 		if (robotRun.macroEdit == null) {
 			robotRun.macroEdit = new Macro(contents.getLineIdx());

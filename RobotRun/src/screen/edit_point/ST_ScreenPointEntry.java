@@ -3,6 +3,7 @@ package screen.edit_point;
 import core.RobotRun;
 import enums.ScreenMode;
 import screen.Screen;
+import screen.ScreenState;
 import ui.DisplayLine;
 
 public abstract class ST_ScreenPointEntry extends Screen {
@@ -11,21 +12,27 @@ public abstract class ST_ScreenPointEntry extends Screen {
 	public ST_ScreenPointEntry(ScreenMode m, RobotRun r) {
 		super(m, r);
 	}
-
-	@Override
-	protected void loadContents() {
-		//TODO
-	}
 	
 	@Override
 	protected void loadOptions() {}
 	
 	@Override
-	protected void loadVars() {}
+	protected void loadLabels() {
+		labels[0] = "";
+		labels[1] = "";
+		labels[2] = "";
+		labels[3] = "";
+		labels[4] = "";
+	}
+	
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(0, 1, 0, -1, -1);
+	}
 
 	public void actionKeyPressed(char key) {
 		if ((key >= '0' && key <= '9') || key == '-' || key == '.') {
-			DisplayLine entry = contents.getActiveLine();
+			DisplayLine entry = contents.getCurrentItem();
 			int idx = contents.getColumnIdx();
 			
 			if (entry.get(idx) == "\0") {
@@ -57,7 +64,7 @@ public abstract class ST_ScreenPointEntry extends Screen {
 
 	@Override
 	public void actionRt() {
-		DisplayLine entry = contents.getActiveLine();
+		DisplayLine entry = contents.getCurrentItem();
 		int idx = contents.getColumnIdx();
 		int size = entry.size();
 
@@ -79,12 +86,12 @@ public abstract class ST_ScreenPointEntry extends Screen {
 	}
 	
 	public void actionBkspc() {
-		DisplayLine entry = contents.getActiveLine();
+		DisplayLine entry = contents.getCurrentItem();
 		int idx = contents.getColumnIdx();
 
 		if (entry.size() > 2) {
 			if (idx > 1) {
-				contents.setColumnIdx(--idx);
+				contents.setSelectedColumnIdx(--idx);
 			}
 
 			entry.remove(idx);

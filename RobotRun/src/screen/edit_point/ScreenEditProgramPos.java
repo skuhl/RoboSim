@@ -6,6 +6,7 @@ import geom.Point;
 import global.DataManagement;
 import global.Fields;
 import programming.PosMotionInst;
+import programming.Program;
 import robot.RoboticArm;
 
 public class ScreenEditProgramPos extends ST_ScreenPointEntry {
@@ -20,14 +21,21 @@ public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 	}
 
 	@Override
-	protected void loadLabels() {
-		labels[0] = "";
-		labels[1] = "";
-		labels[2] = "";
-		labels[3] = "";
-		labels[4] = "";
+	protected void loadContents() {
+		Program prog = robotRun.getActiveProg();
+		PosMotionInst pMInst = (PosMotionInst)robotRun.getActiveInstruction();
+		Point pt = prog.getPosition(pMInst.getPosIdx());
+		
+		// Initialize the point if it is null
+		if (pt == null) {
+			pt = new Point();
+			prog.setPosition(pMInst.getPosIdx(), pt);
+		}
+		
+		boolean isCartesian = pMInst.getMotionType() != Fields.MTYPE_JOINT;
+		contents.setLines(robotRun.loadPosition(pt, isCartesian));
 	}
-
+	
 	@Override
 	public void actionEntr() {
 		RoboticArm r = robotRun.getActiveRobot();

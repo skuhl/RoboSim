@@ -30,9 +30,9 @@ public class MenuScroll {
 		columnIdx = 0;
 	}
 	
-	public DisplayLine addLine(String... lineTxt) {
-		lines.add(newLine(lines.size(), lineTxt));
-		return lines.get(lines.size() - 1);
+	public DisplayLine addLine(DisplayLine d) {
+		lines.add(d);
+		return d;
 	}
 	
 	public DisplayLine addLine(int idx, String... lineTxt) {
@@ -41,17 +41,33 @@ public class MenuScroll {
 		return newLine;
 	}
 	
-	public DisplayLine addLine(DisplayLine d) {
-		lines.add(d);
-		return d;
+	public DisplayLine addLine(String... lineTxt) {
+		lines.add(newLine(lines.size(), lineTxt));
+		return lines.get(lines.size() - 1);
 	}
 	
 	public void clear() {
 		lines.clear();
 	}
 	
+	/**
+	 * @return	A copy of the current contents of the display line
+	 */
+	public ArrayList<DisplayLine> copyContents() {
+		ArrayList<DisplayLine> copy = new ArrayList<DisplayLine>();
+		for(DisplayLine d: lines) {
+			copy.add(d.clone());
+		}
+		
+		return copy;
+	}
+	
 	public DisplayLine get(int i) {
 		return lines.get(i);
+	}
+	
+	public int getColumnIdx() {
+		return columnIdx;
 	}
 	
 	/**
@@ -59,12 +75,11 @@ public class MenuScroll {
 	 * 
 	 * @return
 	 */
-	public DisplayLine getActiveLine() {
+	public DisplayLine getCurrentItem() {
 		if (lineIdx >= 0 && lineIdx < lines.size()) {
 			return lines.get(lineIdx);
 		}
 		
-		// No active line
 		return null;
 	}
 	
@@ -73,9 +88,8 @@ public class MenuScroll {
 	 * 
 	 * @return
 	 */
-	public int getActiveIndex() {
-		
-		DisplayLine active = getActiveLine();
+	public int getCurrentItemIdx() {
+		DisplayLine active = getCurrentItem();
 		
 		if (active != null) {
 			return active.getItemIdx();
@@ -84,8 +98,14 @@ public class MenuScroll {
 		return -1;
 	}
 	
-	public int getColumnIdx() {
-		return columnIdx;
+	public int getItemColumnIdx() {
+		int idx = columnIdx;
+		for(int i = lineIdx - 1; i >= 0; i -= 1) {
+			if(lines.get(i).getItemIdx() != lines.get(i + 1).getItemIdx()) break;
+			idx += lines.get(i).size();
+		}
+
+		return idx;
 	}
 	
 	public int getItemIdx() {
@@ -93,6 +113,16 @@ public class MenuScroll {
 			return lines.get(lineIdx).getItemIdx();
 		else
 			return -1;
+	}
+	
+	public int getItemLineIdx() {
+		int row = 0;
+		DisplayLine currRow = getCurrentItem();
+		while (lineIdx - row >= 0 && currRow.getItemIdx() == lines.get(lineIdx - row).getItemIdx()) {
+			row += 1;
+		}
+
+		return row - 1;
 	}
 	
 	public int getLineIdx() {
@@ -111,16 +141,6 @@ public class MenuScroll {
 		return renderStart;
 	}
 	
-	public int getSelectedIdx() {
-		int idx = columnIdx;
-		for(int i = lineIdx - 1; i >= 0; i -= 1) {
-			if(lines.get(i).getItemIdx() != lines.get(i + 1).getItemIdx()) break;
-			idx += lines.get(i).size();
-		}
-
-		return idx;
-	}
-	
 	public boolean[] getSelection() {
 		return lineSelect;
 	}
@@ -132,12 +152,12 @@ public class MenuScroll {
 	public int getYPos() {
 		return yPos;
 	}
-	
+
 	public boolean isSelected(int idx) {
 		return lineSelect != null && idx >= 0 && idx < lineSelect.length
 				&& lineSelect[idx];
 	}
-	
+
 	public int moveDown(boolean page) {
 		int size = lines.size();  
 
@@ -168,9 +188,9 @@ public class MenuScroll {
 			columnIdx = (Math.max(0, columnIdx - 1));
 		}
 		
-		return getSelectedIdx();
+		return getItemColumnIdx();
 	}
-
+	
 	public int moveRight() {
 		if(lineIdx < lines.size() - 1 && lines.get(lineIdx + 1).getItemIdx() == lines.get(lineIdx).getItemIdx()) {
 			columnIdx = (columnIdx + 1);
@@ -182,9 +202,9 @@ public class MenuScroll {
 			columnIdx = (Math.min(lines.get(lineIdx).size() - 1, columnIdx + 1));
 		}
 		
-		return getSelectedIdx();
+		return getItemColumnIdx();
 	}
-
+	
 	public int moveUp(boolean page) {
 		if (page) {
 			// Move display frame up an entire screen's display length
@@ -201,24 +221,6 @@ public class MenuScroll {
 		}
 
 		return getItemIdx();
-	}
-	
-	private DisplayLine newLine(int itemIdx, String... columns) {
-		DisplayLine line =  new DisplayLine(itemIdx);
-
-		for(String col : columns) {
-			line.add(col);
-		}
-
-		return line;
-	}
-	
-	/**
-	 * @return	A copy of the current contents of the display line
-	 */
-	@SuppressWarnings("unchecked")
-	public ArrayList<DisplayLine> copyContents() {
-		return (ArrayList<DisplayLine>)lines.clone();
 	}
 	
 	public void reset() {
@@ -261,16 +263,16 @@ public class MenuScroll {
 		return this;
 	}
 	
-	public void setColumnIdx(int i) {
-		columnIdx = i;
-	}
-
-	public void setLineIdx(int i) {
-		lineIdx = i;
-	}
-	
 	public void setRenderStart(int renStart) {
 		renderStart = renStart;
+	}
+
+	public void setSelectedColumnIdx(int i) {
+		columnIdx = i;
+	}
+	
+	public void setSelectedLineIdx(int i) {
+		lineIdx = i;
 	}
 	
 	public int size() {
@@ -299,9 +301,6 @@ public class MenuScroll {
 		return out;
 	}
 	
-	/**
-	 * 
-	 */
 	public void updateRenderIndices() {
 		if(lines.size() > 0) {
 			lineIdx = RMath.clamp(lineIdx, -1, lines.size() - 1);
@@ -314,5 +313,15 @@ public class MenuScroll {
 			columnIdx = -1;
 			renderStart = 0;
 		}	
+	}
+	
+	private DisplayLine newLine(int itemIdx, String... columns) {
+		DisplayLine line =  new DisplayLine(itemIdx);
+
+		for(String col : columns) {
+			line.add(col);
+		}
+
+		return line;
 	}
 }
