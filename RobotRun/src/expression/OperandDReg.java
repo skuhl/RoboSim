@@ -22,7 +22,7 @@ public class OperandDReg extends OperandRegister<DataRegister> implements FloatM
 			return value.value;
 			
 		} else {
-			return Float.NaN;
+			return null;
 		}
 	}
 }
