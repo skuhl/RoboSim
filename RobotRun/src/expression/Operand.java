@@ -12,6 +12,7 @@ public abstract class Operand<T> implements ExpressionElement {
 	public static final int PREG_IDX = 6;
 	public static final int POSTN = 7;
 	public static final int CAM_MATCH = 8;
+	public static final int ROBOT = 9;
 	
 	protected final int type;
 	protected T value;

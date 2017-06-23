@@ -66,7 +66,10 @@ public class Expression extends AtomicExpression {
 			result = new OperandPoint(((OperandPReg) result).getPointValue());
 			
 		} else if (result instanceof OperandPRegIdx) {
-			result = new OperandFloat(((OperandPRegIdx) result).getArithValue());	
+			result = new OperandFloat(((OperandPRegIdx) result).getArithValue());
+			
+		} else if (result instanceof RobotPoint) {
+			result = new OperandPoint(((RobotPoint) result).getPointValue());
 		}
 		
 		return result;
