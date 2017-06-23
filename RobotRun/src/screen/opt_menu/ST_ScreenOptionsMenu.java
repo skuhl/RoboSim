@@ -3,6 +3,7 @@ package screen.opt_menu;
 import core.RobotRun;
 import enums.ScreenMode;
 import screen.Screen;
+import screen.ScreenState;
 
 public abstract class ST_ScreenOptionsMenu extends Screen {
 
@@ -23,7 +24,9 @@ public abstract class ST_ScreenOptionsMenu extends Screen {
 	}
 
 	@Override
-	protected void loadVars() {}
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(-1, -1, -1, 0, 0);
+	}
 
 	@Override
 	public void actionUp() {

@@ -2,6 +2,7 @@ package screen.content_disp;
 
 import core.RobotRun;
 import enums.ScreenMode;
+import robot.RoboticArm;
 
 public class ScreenNavPrograms extends ST_ScreenListContents {
 
@@ -38,8 +39,9 @@ public class ScreenNavPrograms extends ST_ScreenListContents {
 
 	@Override
 	public void actionEntr() {
-		if(RobotRun.getInstanceRobot().numOfPrograms() != 0) {
-			robotRun.setActiveInstIdx(0);
+		RoboticArm r = robotRun.getActiveRobot();
+		if (r.numOfPrograms() != 0) {
+			robotRun.setActiveProgIdx(contents.getCurrentItemIdx());
 			robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
 		}
 	}
@@ -47,7 +49,7 @@ public class ScreenNavPrograms extends ST_ScreenListContents {
 	public void actionEdit() {
 		if (mode == ScreenMode.NAV_PROGRAMS) {
 			// Load the selected program
-			robotRun.setActiveProgIdx( contents.getActiveIndex() );
+			robotRun.setActiveProgIdx( contents.getCurrentItemIdx() );
 			robotRun.setActiveInstIdx(0);
 			robotRun.nextScreen(ScreenMode.NAV_PROG_INSTR);
 			
@@ -77,7 +79,7 @@ public class ScreenNavPrograms extends ST_ScreenListContents {
 	@Override
 	public void actionF3() {
 		if (robotRun.getActiveRobot().numOfPrograms() > 0) {
-			robotRun.setActiveProgIdx(contents.getActiveIndex());
+			robotRun.setActiveProgIdx(contents.getCurrentItemIdx());
 			robotRun.nextScreen(ScreenMode.CONFIRM_PROG_DELETE);
 		}
 	}

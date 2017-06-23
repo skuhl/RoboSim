@@ -16,7 +16,7 @@ public enum ScreenMode {
 	 * Set of screens used to manipulate instruction parameters with a finite number of states
 	 */
 	SET_BOOL_CONST(ScreenType.TYPE_INSTRUCT_EDIT),
-	SET_FRM_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
+	SET_FRAME_INSTR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_IF_STMT_ACT(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_MINST_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),

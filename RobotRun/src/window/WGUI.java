@@ -2211,7 +2211,7 @@ public class WGUI implements ControlListener {
 		if(m.getType() == ScreenType.TYPE_LINE_SELECT) { selectMode = true; } 
 
 		menu.updateRenderIndices();
-		active = menu.getActiveLine();
+		active = menu.getCurrentItem();
 
 		int lineNo = 0;
 		int bg, txt, selectInd = -1;

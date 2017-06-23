@@ -111,7 +111,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 
 			// Move To function
 			RoboticArm r = robotRun.getActiveRobot();
-			PositionRegister pReg = r.getPReg( contents.getActiveIndex() );
+			PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
 
 			if (pReg.point != null) {
 				Point pt = pReg.point.clone();
@@ -138,7 +138,7 @@ public class ScreenNavPosRegs extends ST_ScreenListContents {
 	@Override
 	public void actionF5() {
 		RoboticArm r = robotRun.getActiveRobot();
-		PositionRegister pReg = r.getPReg( contents.getActiveIndex() );
+		PositionRegister pReg = r.getPReg( contents.getCurrentItemIdx() );
 
 		if (robotRun.isShift() && pReg != null) {
 			// Save the Robot's current position and joint angles

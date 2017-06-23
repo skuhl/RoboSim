@@ -28,7 +28,7 @@ public class ScreenSetSelectStmtAction extends ST_ScreenInstructionEdit {
 		RoboticArm r = robotRun.getActiveRobot();
 		SelectStatement s = (SelectStatement) r.getInstToEdit(robotRun.getActiveProg(), 
 				robotRun.getActiveInstIdx());
-		int i = (robotRun.getSelectedIdx() - 3) / 3;
+		int i = (contents.getItemColumnIdx() - 3) / 3;
 
 		if (options.getLineIdx() == 0) {
 			s.getInstrs().set(i, new JumpInstruction());
