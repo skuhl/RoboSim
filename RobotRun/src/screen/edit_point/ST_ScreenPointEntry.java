@@ -13,10 +13,13 @@ import ui.DisplayLine;
 public abstract class ST_ScreenPointEntry extends Screen {
 	static final int NUM_ENTRY_LEN = 9;
 	protected StringBuilder[] workingText;
+	protected String[] prefixes;
 
 	public ST_ScreenPointEntry(ScreenMode m, RobotRun r) {
 		super(m, r);
-		workingText = loadWorkingText();
+		workingText = new StringBuilder[6];
+		prefixes = new String[6];
+		loadWorkingText();
 	}
 	
 	@Override
@@ -25,14 +28,13 @@ public abstract class ST_ScreenPointEntry extends Screen {
 
 		for (int idx = 0; idx < workingText.length; idx += 1) {
 			line = new String[workingText[idx].length() + 1];
-			line[0] = Character.toString(workingText[idx].charAt(0));
+			line[0] = prefixes[idx];
 			// Give each character in the value String it own column
-			for (int sdx = 0; sdx < workingText[idx].length(); sdx += 1) {
-				line[sdx + 1] = Character.toString(workingText[idx].charAt(sdx));
+			for (int sdx = 1; sdx < line.length; sdx += 1) {
+				line[sdx] = Character.toString(workingText[idx].charAt(sdx - 1));
 			}
-		
-			
-			contents.addLine(idx, line);
+
+			contents.addLine(line);
 		}
 	}
 	
@@ -53,7 +55,7 @@ public abstract class ST_ScreenPointEntry extends Screen {
 		setScreenIndices(0, 1, 0, -1, 0);
 	}
 	
-	protected abstract StringBuilder[] loadWorkingText();
+	protected abstract void loadWorkingText();
 	
 	protected Point parsePosFromContents(boolean isCartesian) {
 		// Obtain point inputs from UI display text
@@ -120,7 +122,7 @@ public abstract class ST_ScreenPointEntry extends Screen {
 	@Override
 	public void actionKeyPress(char key) {
 		if ((key >= '0' && key <= '9') || key == '-' || key == '.') {
-			workingText[contents.getLineIdx()].insert(contents.getColumnIdx(), key);
+			workingText[contents.getLineIdx()].insert(contents.getColumnIdx() - 1, key);
 		}
 		
 		robotRun.updatePendantScreen();
@@ -138,7 +140,9 @@ public abstract class ST_ScreenPointEntry extends Screen {
 
 	@Override
 	public void actionLt() {
-		contents.moveLeft();
+		if(contents.getColumnIdx() > 1) {
+			contents.moveLeft();
+		}
 	}
 
 	@Override

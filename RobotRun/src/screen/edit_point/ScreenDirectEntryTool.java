@@ -26,19 +26,14 @@ public class ScreenDirectEntryTool extends ST_ScreenPointEntry {
 	}
 	
 	@Override
-	protected StringBuilder[] loadWorkingText() {
+	protected void loadWorkingText() {
 		ToolFrame tool = robotRun.getActiveRobot().getToolFrame(robotRun.curFrameIdx);
 		String[][] entries = tool.directEntryStringArray();
-		StringBuilder[] text = new StringBuilder[6];
 		
 		for(int i = 0; i < entries.length; i += 1) {
-			text[i] = new StringBuilder();
-			for(String s: entries[i]) {
-				text[i].append(s);
-			}
+			prefixes[i] = entries[i][0];
+			workingText[i] = new StringBuilder(entries[i][1]);
 		}
-		
-		return text;
 	}
 	
 	@Override

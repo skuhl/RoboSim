@@ -16,15 +16,14 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 
 	@Override
 	protected String loadHeader() {
-		Register reg = robotRun.getActiveRobot().getPReg(robotRun.getLastScreen().getContentIdx());
+		Register reg = robotRun.getActiveRobot().getPReg(robotRun.getScreenStack().peek().getContentIdx());
 		return String.format("%s: POSITION EDIT", reg.getLabel());
 	}
 	
 	@Override
-	protected StringBuilder[] loadWorkingText() {
+	protected void loadWorkingText() {
 		RoboticArm r = robotRun.getActiveRobot();
-		PositionRegister pReg = r.getPReg(robotRun.getLastScreen().getContentIdx());
-		StringBuilder[] text = new StringBuilder[6];
+		PositionRegister pReg = r.getPReg(robotRun.getScreenStack().peek().getContentIdx());
 		
 		// Initialize the point if it is null
 		if (pReg.point == null) {
@@ -42,13 +41,9 @@ public class ScreenEditPosReg extends ST_ScreenPointEntry {
 		}
 		
 		for(int i = 0; i < entries.length; i += 1) {
-			text[i] = new StringBuilder();
-			for(String s: entries[i]) {
-				text[i].append(s);
-			}
+			prefixes[i] = entries[i][0];
+			workingText[i] = new StringBuilder(entries[i][1]);
 		}
-		
-		return text;
 	}
 	
 	@Override
