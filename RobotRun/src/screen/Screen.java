@@ -73,7 +73,6 @@ import screen.opt_menu.ScreenSetCallProg;
 import screen.opt_menu.ScreenSetDefaultTooltip;
 import screen.opt_menu.ScreenSetMacroBinding;
 import screen.opt_menu.ScreenSetMacroType;
-import screen.opt_menu.ScreenSwapPointType;
 import screen.opt_menu.ScreenToolFrameDetail;
 import screen.opt_menu.ScreenUserFrameDetail;
 import screen.select_lines.ScreenSelectComment;
@@ -178,7 +177,6 @@ public abstract class Screen {
 		case SET_DEF_TOOLTIP: return new ScreenSetDefaultTooltip(r);
 		case SET_MACRO_BINDING: return new ScreenSetMacroBinding(r);
 		case SET_MACRO_TYPE: return new ScreenSetMacroType(r);
-		case SWAP_PT_TYPE: return new ScreenSwapPointType(r);
 		case TFRAME_DETAIL: return new ScreenToolFrameDetail(r);
 		case UFRAME_DETAIL: return new ScreenUserFrameDetail(r);
 		

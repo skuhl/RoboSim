@@ -21,11 +21,10 @@ public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 	}
 	
 	@Override
-	protected StringBuilder[] loadWorkingText() {
+	protected void loadWorkingText() {
 		Program prog = robotRun.getActiveProg();
 		PosMotionInst pMInst = (PosMotionInst)robotRun.getActiveInstruction();
 		Point pt = prog.getPosition(pMInst.getPosIdx());
-		StringBuilder[] text = new StringBuilder[6];
 		
 		// Initialize the point if it is null
 		if (pt == null) {
@@ -45,13 +44,9 @@ public class ScreenEditProgramPos extends ST_ScreenPointEntry {
 		}
 		
 		for(int i = 0; i < entries.length; i += 1) {
-			text[i] = new StringBuilder();
-			for(String s: entries[i]) {
-				text[i].append(s);
-			}
+			prefixes[i] = entries[i][0];
+			workingText[i] = new StringBuilder(entries[i][1]);
 		}
-		
-		return text;
 	}
 	
 	@Override
