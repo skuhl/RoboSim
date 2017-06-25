@@ -1471,6 +1471,10 @@ public class RoboticArm {
 			pt = getPosition(mInst, parent);
 		}
 		
+		if (pt == null) {
+			return null;
+		}
+		
 		UserFrame instUFrame = getUserFrame(mInst.getUFrameIdx());
 		PositionRegister offReg = getPReg(mInst.getOffsetIdx());
 		
