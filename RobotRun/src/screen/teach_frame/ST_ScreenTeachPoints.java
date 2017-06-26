@@ -26,8 +26,11 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 
 	@Override
 	protected void loadVars(ScreenState s) {
-		
+		setScreenIndices(0, 0, 0, -1, 0);
 	}
+	
+	@Override
+	public void actionKeyPress(char key) {}
 
 	@Override
 	public void actionUp() {
@@ -44,6 +47,9 @@ public abstract class ST_ScreenTeachPoints extends Screen {
 
 	@Override
 	public void actionRt() {}
+	
+	@Override
+	public void actionBkspc() {}
 
 	@Override
 	public void actionF1() {}

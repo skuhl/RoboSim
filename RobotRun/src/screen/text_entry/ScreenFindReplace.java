@@ -67,14 +67,14 @@ public class ScreenFindReplace extends ST_ScreenTextEntry {
 			lineIdx += 1;
 		}
 
-		robotRun.getScreenStates().pop();
+		robotRun.getScreenStack().pop();
 		robotRun.setActiveInstIdx(lineIdx);
 		robotRun.updateInstructions();
 	}
 	
 	@Override
 	public void actionF5() {
-		robotRun.getScreenStates().pop();
+		robotRun.getScreenStack().pop();
 		robotRun.updateInstructions();
 	}
 }

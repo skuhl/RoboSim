@@ -40,13 +40,13 @@ public class ScreenSelectInstrDelete extends ST_ScreenLineSelect {
 			}
 		}
 
-		robotRun.getScreenStates().pop();
+		robotRun.getScreenStack().pop();
 		robotRun.updateInstructions();
 	}
 	
 	@Override
 	public void actionF5() {
-		robotRun.getScreenStates().pop();
+		robotRun.getScreenStack().pop();
 		robotRun.updateInstructions();
 	}
 }

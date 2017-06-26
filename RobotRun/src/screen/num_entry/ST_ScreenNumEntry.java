@@ -35,10 +35,11 @@ public abstract class ST_ScreenNumEntry extends Screen {
 
 	@Override
 	protected void loadVars(ScreenState s) {
-		setScreenIndices(s.conLnIdx, s.conColIdx, s.conRenIdx, -1, 0);
+		setScreenIndices(s.conLnIdx, s.conColIdx, s.conRenIdx, 0, 0);
 	}
 	
-	public void actionKeyPressed(char key) {
+	@Override
+	public void actionKeyPress(char key) {
 		if (mode == ScreenMode.SET_MINST_SPD) {
 			// Special case for motion instruction speed number entry
 			if ((key >= '0' && key <= '9') && workingText.length() < 4) {
@@ -49,6 +50,8 @@ public abstract class ST_ScreenNumEntry extends Screen {
 			// Append the character
 			workingText.append(key);
 		}
+		
+		robotRun.updatePendantScreen();
 	}
 
 	@Override
@@ -63,6 +66,7 @@ public abstract class ST_ScreenNumEntry extends Screen {
 	@Override
 	public void actionRt() {}
 	
+	@Override
 	public void actionBkspc() {
 		// Functions as a backspace key
 		if (workingText.length() > 0) {

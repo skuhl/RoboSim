@@ -25,7 +25,7 @@ public class ScreenSetFrameInstrType extends ST_ScreenInstructionEdit {
 			robotRun.newFrameInstruction(Fields.FTYPE_USER);
 		}
 
-		robotRun.getScreenStates().pop();
+		robotRun.getScreenStack().pop();
 		robotRun.switchScreen(ScreenMode.SET_FRAME_INSTR_IDX);
 	}
 }

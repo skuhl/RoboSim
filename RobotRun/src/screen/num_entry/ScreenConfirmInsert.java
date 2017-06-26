@@ -23,8 +23,8 @@ public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 		labels[0] = "";
 		labels[1] = "";
 		labels[2] = "";
-		labels[3] = "[Confirm]";
-		labels[4] = "[Cancel]";
+		labels[3] = "";
+		labels[4] = "";
 	}
 	
 	@Override
@@ -43,31 +43,5 @@ public class ScreenConfirmInsert extends ST_ScreenNumEntry {
 		}
 
 		robotRun.lastScreen();
-	}
-	
-	
-	//TODO remove unnecessary function operations?
-	@Override
-	public void actionF4() {
-		Program p = robotRun.getActiveProg();
-		
-		try {
-			int lines_to_insert = Integer.parseInt(workingText.toString());
-			for (int i = 0; i < lines_to_insert; i += 1) {
-				p.addInstAt(robotRun.getActiveInstIdx(), new Instruction());
-			}
-			
-			robotRun.updateInstructions();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		robotRun.lastScreen();
-	}
-	
-	@Override
-	public void actionF5() {
-		robotRun.screenStates.pop();
-		robotRun.updateInstructions();
 	}
 }

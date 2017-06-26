@@ -3,11 +3,18 @@ package screen.content_disp;
 import core.RobotRun;
 import enums.CoordFrame;
 import enums.ScreenMode;
+import expression.AtomicExpression;
 import expression.Expression;
 import geom.Point;
 import global.Fields;
+import programming.CallInstruction;
+import programming.CamMoveToObject;
+import programming.FrameInstruction;
+import programming.IOInstruction;
 import programming.IfStatement;
 import programming.Instruction;
+import programming.JumpInstruction;
+import programming.LabelInstruction;
 import programming.MotionInstruction;
 import programming.PosMotionInst;
 import programming.Program;
@@ -322,7 +329,7 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 
 		if (ins != null) {
 			int selectIdx = contents.getItemColumnIdx();
-			robotRun.getEditScreen(ins, selectIdx);
+			getEditScreen(ins, selectIdx);
 		}
 	}
 	
@@ -362,6 +369,187 @@ public class ScreenNavProgInstructions extends ST_ScreenListContents {
 			if (selectIdx > (rLen + 1) && selectIdx < stmt.getExpr().getLength() + rLen) {
 				r.getInstToEdit(robotRun.getActiveProg(), robotRun.getActiveInstIdx());
 				stmt.getExpr().removeElement(selectIdx - (rLen + 2));
+			}
+		}
+	}
+	
+	private void getEditScreen(Instruction ins, int selectIdx) {
+		if (ins instanceof MotionInstruction) {
+			MotionInstruction mInst = (MotionInstruction)ins;
+			int sdx = contents.getItemColumnIdx();
+			
+			if (sdx == 2) {
+				// Motion type
+				robotRun.nextScreen(ScreenMode.SET_MINST_TYPE);
+				
+			} else if (sdx == 3) {
+				// Position type
+				robotRun.nextScreen(ScreenMode.SET_MINST_REG_TYPE);
+				
+			} else if (sdx == 4) {
+				
+				if (mInst instanceof CamMoveToObject) {
+					CamMoveToObject cMInst = (CamMoveToObject)mInst;
+					
+					if (cMInst.getScene() == null) {
+						cMInst.setScene(robotRun.getActiveScenario());
+					}
+					
+					// Set World Object reference
+					robotRun.nextScreen(ScreenMode.SET_MINST_OBJ);
+				} else {
+					// Position index
+					robotRun.nextScreen(ScreenMode.SET_MINST_IDX);
+				}
+				
+			} else if (sdx == 5) {
+				// Speed modifier
+				robotRun.nextScreen(ScreenMode.SET_MINST_SPD);
+				
+			} else if (sdx == 6) {
+				// Termination
+				robotRun.nextScreen(ScreenMode.SET_MINST_TERM);
+				
+			} else if (sdx == 7) {
+				// Offset type
+				robotRun.nextScreen(ScreenMode.SET_MINST_OFF_TYPE);
+				
+			} else if (mInst instanceof PosMotionInst) {
+				PosMotionInst pMInst = (PosMotionInst)mInst;
+				
+				if (pMInst.getOffsetType() == Fields.OFFSET_PREG) {
+					
+					if (sdx == 8) {
+						// Offset index
+						robotRun.nextScreen(ScreenMode.SET_MINST_OFFIDX);
+						
+					} else if (sdx == 9) {
+						// Circular position type
+						robotRun.nextScreen(ScreenMode.SET_MINST_CREG_TYPE);
+						
+					} else if (sdx == 10) {
+						// Circular position index
+						robotRun.nextScreen(ScreenMode.SET_MINST_CIDX);
+					}
+					
+				} else if (pMInst.getOffsetType() == Fields.OFFSET_NONE) {
+					
+					if (sdx == 8) {
+						// Circular position type
+						robotRun.nextScreen(ScreenMode.SET_MINST_CREG_TYPE);
+						
+					} else if (sdx == 9) {
+						// Circular position index
+						robotRun.nextScreen(ScreenMode.SET_MINST_CIDX);
+					}
+				}
+				
+			}
+			
+		} else if (ins instanceof FrameInstruction) {
+			switch (selectIdx) {
+			case 1:
+				robotRun.nextScreen(ScreenMode.SET_FRAME_INSTR_TYPE);
+				break;
+			case 2:
+				robotRun.nextScreen(ScreenMode.SET_FRAME_INSTR_IDX);
+				break;
+			}
+		} else if (ins instanceof IOInstruction) {
+			switch (selectIdx) {
+			case 1:
+				robotRun.nextScreen(ScreenMode.SET_IO_INSTR_IDX);
+				break;
+			case 2:
+				robotRun.nextScreen(ScreenMode.SET_IO_INSTR_STATE);
+				break;
+			}
+		} else if (ins instanceof LabelInstruction) {
+			robotRun.nextScreen(ScreenMode.SET_LBL_NUM);
+		} else if (ins instanceof JumpInstruction) {
+			robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
+		} else if (ins instanceof CallInstruction) {
+			if (((CallInstruction) ins).getTgtDevice() != null) {
+				robotRun.editIdx = ((CallInstruction) ins).getTgtDevice().RID;
+
+			} else {
+				robotRun.editIdx = -1;
+			}
+
+			robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
+		} else if (ins instanceof IfStatement) {
+			IfStatement stmt = (IfStatement) ins;
+			
+			if (stmt.getExpr() instanceof Expression) {
+				int len = stmt.getExpr().getLength();
+
+				if (selectIdx >= 3 && selectIdx < len + 1) {
+					robotRun.editExpression((Expression) stmt.getExpr(), selectIdx - 3);
+				} else if (selectIdx == len + 2) {
+					robotRun.nextScreen(ScreenMode.SET_IF_STMT_ACT);
+				} else if (selectIdx == len + 3) {
+					if (stmt.getInstr() instanceof JumpInstruction) {
+						robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
+					} else if (stmt.getInstr() instanceof CallInstruction) {
+						robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
+					}
+				}
+			} else if (stmt.getExpr() instanceof AtomicExpression) {
+				if (selectIdx == 2) {
+					robotRun.opEdit = stmt.getExpr().getArg1();
+					robotRun.editIdx = 0;
+					robotRun.nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
+				} else if (selectIdx == 3) {
+					robotRun.opEdit = stmt.getExpr();
+					robotRun.nextScreen(ScreenMode.SET_EXPR_OP);
+				} else if (selectIdx == 4) {
+					robotRun.opEdit = stmt.getExpr().getArg2();
+					robotRun.editIdx = 2;
+					robotRun.nextScreen(ScreenMode.SET_BOOL_EXPR_ARG);
+				} else if (selectIdx == 5) {
+					robotRun.nextScreen(ScreenMode.SET_IF_STMT_ACT);
+				} else if (selectIdx == 6) {
+					if (stmt.getInstr() instanceof JumpInstruction) {
+						robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
+					} else if (stmt.getInstr() instanceof CallInstruction) {
+						robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
+					}
+				}
+			}
+		} else if (ins instanceof SelectStatement) {
+			SelectStatement stmt = (SelectStatement) ins;
+			robotRun.editIdx = (selectIdx - 3) / 3;
+			
+			if (selectIdx == 2) {
+				robotRun.opEdit = stmt.getArg();
+				robotRun.editIdx = -1;
+				robotRun.nextScreen(ScreenMode.SET_SELECT_STMT_ARG);
+			} else if ((selectIdx - 3) % 3 == 0 && selectIdx > 2) {
+				robotRun.opEdit = stmt.getCases().get((selectIdx - 3) / 3);
+				robotRun.nextScreen(ScreenMode.SET_SELECT_STMT_ARG);
+			} else if ((selectIdx - 3) % 3 == 1) {
+				robotRun.nextScreen(ScreenMode.SET_SELECT_STMT_ACT);
+			} else if ((selectIdx - 3) % 3 == 2) {
+				Instruction toExec = stmt.getInstrs().get(robotRun.editIdx);
+				if (toExec instanceof JumpInstruction) {
+					robotRun.nextScreen(ScreenMode.SET_JUMP_TGT);
+				} else if (toExec instanceof CallInstruction) {
+					robotRun.nextScreen(ScreenMode.SET_CALL_PROG);
+				}
+			}
+		} else if (ins instanceof RegisterStatement) {
+			RegisterStatement stmt = (RegisterStatement) ins;
+			int len = stmt.getExpr().getLength();
+			int rLen = (stmt.getPosIdx() == -1) ? 2 : 3;
+			
+			if (selectIdx == 1) {
+				robotRun.nextScreen(ScreenMode.SET_REG_EXPR_TYPE);
+			} else if (selectIdx == 2) {
+				robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX1);
+			} else if (selectIdx == 3 && stmt.getPosIdx() != -1) {
+				robotRun.nextScreen(ScreenMode.SET_REG_EXPR_IDX2);
+			} else if (selectIdx >= rLen + 1 && selectIdx <= len + rLen) {
+				robotRun.editExpression(stmt.getExpr(), selectIdx - (rLen + 2));
 			}
 		}
 	}
