@@ -3,7 +3,6 @@ package robot;
 import java.util.ArrayList;
 import java.util.Stack;
 
-import core.RobotRun;
 import core.Scenario;
 import enums.AxesDisplay;
 import enums.CoordFrame;
@@ -24,6 +23,7 @@ import processing.core.PConstants;
 import processing.core.PGraphics;
 import processing.core.PVector;
 import programming.CamMoveToObject;
+import programming.InstState;
 import programming.Instruction;
 import programming.MotionInstruction;
 import programming.PosMotionInst;
@@ -31,8 +31,7 @@ import programming.Program;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
-import screen.DisplayLine;
-import screen.InstState;
+import ui.DisplayLine;
 
 public class RoboticArm {
 	
@@ -56,7 +55,7 @@ public class RoboticArm {
 		EE_TOOLTIP_DEFAULTS[1] = new PVector(-32f, 0f, 0f);
 		EE_TOOLTIP_DEFAULTS[2] = new PVector(-180f, 55f, 0f);
 		EE_TOOLTIP_DEFAULTS[3] = new PVector(-120f, -150f, 0f);
-		EE_TOOLTIP_DEFAULTS[4] = new PVector(-295f, 0f, 53.5f);
+		EE_TOOLTIP_DEFAULTS[4] = new PVector(-295f, 53.5f, 0f);
 	}
 	
 	/**
@@ -791,7 +790,6 @@ public class RoboticArm {
 					obb.getFrame().draw(g);
 					g.popMatrix();
 				}
-				
 			}
 			
 			// Draw the active End Effector's OBBs
@@ -1543,7 +1541,11 @@ public class RoboticArm {
 				
 			} else if (offIsCart) {
 				// Add a Cartesian offset to a joint motion instruction
-				pt = getToolTipPoint(pt.angles, getActiveTool(), instUFrame);
+				if (instUFrame != null) {
+					offset = removeFrame(offset, new PVector(), instUFrame.getOrientation());
+				}
+				
+				pt = getToolTipNative(pt.angles);
 				// Apply offset
 				pt = pt.add(offset.position, offset.orientation);
 				
@@ -1584,24 +1586,6 @@ public class RoboticArm {
 	 * Stops all movement of this robot.
 	 */
 	public void halt() {
-		/* TODO TEST CODE *
-		try {
-			
-			throw new RuntimeException("HALT!");
-			
-		} catch (RuntimeException REx) {
-			REx.printStackTrace();
-		}
-		/**/
-		
-		// Set default speed modifiers
-		SEGMENT[0].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
-		SEGMENT[1].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
-		SEGMENT[2].setSpdMod(200f * PConstants.DEG_TO_RAD / 60f);
-		SEGMENT[3].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
-		SEGMENT[4].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
-		SEGMENT[5].setSpdMod(420f * PConstants.DEG_TO_RAD / 60f);
-		
 		if (motion != null) {
 			motion.halt();
 		}
@@ -1662,14 +1646,13 @@ public class RoboticArm {
 
 		// Did we successfully find the desired angles?
 		if ((destAngles == null) || invalidAngle) {
-			if (Fields.DEBUG && destAngles == null) {
+			if (destAngles == null) {
 				Point RP = getToolTipNative();
-				Fields.debug("IK Failure ...\n%s -> %s\n%s -> %s\n\n",
+				System.err.printf("IK Failure ...\n%s -> %s\n%s -> %s\n\n",
 						RP.position, destPosition, RP.orientation,
 						destOrientation);
 			}
-
-			RobotRun.getInstance().triggerFault();
+			
 			return 1;
 		}
 
@@ -1690,6 +1673,7 @@ public class RoboticArm {
 	 * @return	The number of end effectors associated with this robot
 	 */
 	public int numOfEndEffectors() {
+		// Exclude Faceplate IO Register
 		return EE_LIST.length - 1;
 	}
 
@@ -1722,7 +1706,7 @@ public class RoboticArm {
 					p.addInstAt(state.originIdx, state.inst);
 					
 				} else {
-					System.err.printf("Invalid program state!\n", state);
+					Fields.debug("Invalid program state!\n", state);
 				}
 			}
 			
@@ -1959,7 +1943,6 @@ public class RoboticArm {
 	 * @param defTipIdx	The index of a default tool tip offset
 	 */
 	public void setDefToolTip(int frameIdx, int defTipIdx) {
-		
 		ToolFrame frame = getToolFrame(frameIdx);
 		
 		if (frame != null && defTipIdx >= 0 && defTipIdx <
@@ -1992,7 +1975,6 @@ public class RoboticArm {
 	 * @param newJointAngles	The robot's new set of joint angles
 	 */
 	public void setJointAngles(float[] newJointAngles) {
-		
 		for (int jdx = 0; jdx < 6; ++jdx) {
 			SEGMENT[jdx].setJointRotation(newJointAngles[jdx]);
 		}
@@ -2013,7 +1995,6 @@ public class RoboticArm {
 	 * @param flag	Whether the robot has a motion fault
 	 */
 	public void setMotionFault(boolean flag) {
-		
 		if (motion instanceof LinearMotion) {
 			((LinearMotion) motion).setFault(flag);
 		}
@@ -2078,7 +2059,7 @@ public class RoboticArm {
 						LinearInterpolation liMotion = new LinearInterpolation();
 						liMotion.setFault(true);
 						motion = liMotion;
-						return 1;
+						return 3;
 					}
 					
 					updateMotion(instPt, nextPt, mInst.getSpdMod(),
@@ -2094,6 +2075,7 @@ public class RoboticArm {
 			} else if (mInst.getMotionType() == Fields.MTYPE_CIRCULAR) {
 				// Setup circular motion instruction
 				Point endPt = getVector(pMInst, prog, true);
+				
 				updateMotion(endPt, instPt, mInst.getSpdMod());
 				return 0;
 				
@@ -2102,7 +2084,7 @@ public class RoboticArm {
 				LinearInterpolation liMotion = new LinearInterpolation();
 				liMotion.setFault(true);
 				motion = liMotion;
-				return 3;
+				return 4;
 			}
 			
 		} else if (mInst instanceof CamMoveToObject) {
@@ -2128,7 +2110,7 @@ public class RoboticArm {
 						LinearInterpolation liMotion = new LinearInterpolation();
 						liMotion.setFault(true);
 						motion = liMotion;
-						return 1;
+						return 3;
 					}
 					
 					updateMotion(tgt, nextPt, mInst.getSpdMod(),
@@ -2172,6 +2154,13 @@ public class RoboticArm {
 				jogMotion = new JointJog();
 				motion = jogMotion;
 				
+				// Set default speed modifiers
+				SEGMENT[0].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
+				SEGMENT[1].setSpdMod(150f * PConstants.DEG_TO_RAD / 60f);
+				SEGMENT[2].setSpdMod(200f * PConstants.DEG_TO_RAD / 60f);
+				SEGMENT[3].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
+				SEGMENT[4].setSpdMod(250f * PConstants.DEG_TO_RAD / 60f);
+				SEGMENT[5].setSpdMod(420f * PConstants.DEG_TO_RAD / 60f);
 			}
 			
 			oldDir = jogMotion.setMotion(mdx, newDir);
@@ -2237,7 +2226,7 @@ public class RoboticArm {
 				// Uninitialized position register
 				return null;
 				
-			} else if (mInst.getCircPosIdx() == Fields.PTYPE_PROG) {
+			} else if (mInst.getCircPosType() == Fields.PTYPE_PROG) {
 				// Update a position in the program
 				if (posNum == -1) {
 					// In the case of an uninitialized position

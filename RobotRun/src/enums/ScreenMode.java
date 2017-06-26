@@ -1,13 +1,11 @@
 package enums;
 
-import screen.DisplayMode;
-
 /**
  * Defines the set of screen modes available for the pendant menu system.
  * 
  * @author Vincent Druckte and Joshua Hooker
  */
-public enum ScreenMode implements DisplayMode {
+public enum ScreenMode {
 
 	/* 
 	 * The "Home" screen, default root screen state displayed on startup
@@ -23,6 +21,7 @@ public enum ScreenMode implements DisplayMode {
 	SET_IO_INSTR_STATE(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_MINST_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_MINST_REG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
+	SET_MINST_OBJ(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_MINST_CREG_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_MINST_OFF_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
 	SET_REG_EXPR_TYPE(ScreenType.TYPE_INSTRUCT_EDIT),
@@ -50,7 +49,7 @@ public enum ScreenMode implements DisplayMode {
 	NAV_DATA(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_PREGS(ScreenType.TYPE_LIST_CONTENTS),
 	NAV_DREGS(ScreenType.TYPE_LIST_CONTENTS),
-	NAV_IOREG(ScreenType.TYPE_LIST_CONTENTS),
+	NAV_IOREGS(ScreenType.TYPE_LIST_CONTENTS),
 	SET_MACRO_PROG(ScreenType.TYPE_LIST_CONTENTS),
 
 	/*
@@ -66,7 +65,6 @@ public enum ScreenMode implements DisplayMode {
 	 */
 	CONFIRM_PROG_DELETE(ScreenType.TYPE_CONFIRM_CANCEL),
 	CONFIRM_RENUM(ScreenType.TYPE_CONFIRM_CANCEL),
-	CONFIRM_UNDO(ScreenType.TYPE_CONFIRM_CANCEL),
 
 	/*
 	 * Screens used to display a context-based list of options to the user
@@ -80,10 +78,9 @@ public enum ScreenMode implements DisplayMode {
 	SELECT_JMP_LBL(ScreenType.TYPE_OPT_MENU),
 	SELECT_PASTE_OPT(ScreenType.TYPE_OPT_MENU),
 	SELECT_REG_STMT(ScreenType.TYPE_OPT_MENU),
+	SET_CALL_PROG(ScreenType.TYPE_OPT_MENU),
 	SET_MACRO_TYPE(ScreenType.TYPE_OPT_MENU),
 	SET_MACRO_BINDING(ScreenType.TYPE_OPT_MENU),
-	SET_CALL_PROG(ScreenType.TYPE_OPT_MENU),
-	SET_MINST_WO(ScreenType.TYPE_OPT_MENU),
 	SWAP_PT_TYPE(ScreenType.TYPE_OPT_MENU),
 	UFRAME_DETAIL(ScreenType.TYPE_OPT_MENU),
 	TFRAME_DETAIL(ScreenType.TYPE_OPT_MENU),

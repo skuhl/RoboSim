@@ -285,4 +285,11 @@ public class ComplexShape extends RShape {
 		default:
 		}
 	}
+	
+	@Override
+	public void setFillValue(Integer newVal) {
+		if (newVal != null) {
+			model.setFill((int)newVal);
+		}
+	}
 }

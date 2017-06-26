@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import controlP5.ControlP5;
-import controlP5.ControllerGroup;
 import controlP5.DropdownList;
 
 /**
@@ -14,16 +13,25 @@ import controlP5.DropdownList;
  * 
  * @author Joshua Hooker
  */
-public class MyDropdownList extends DropdownList {
+public class MyDropdownList extends DropdownList implements UIInputElement {
 	
-	public MyDropdownList(ControlP5 theControlP5, String theName) {
+	private int inputType;
+	
+	public MyDropdownList(ControlP5 theControlP5, String theName, int inputType) {
 		super(theControlP5, theName);
+		
+		this.inputType = inputType;
 	}
 	
-	protected MyDropdownList(ControlP5 theControlP5, ControllerGroup<?> theGroup,
-			String theName, int theX, int theY, int theW, int theH) {
-		
-		super(theControlP5, theGroup, theName, theX, theY, theW, theH);
+	@Override
+	public void clearInput() {
+		setValue(-1);
+		close();
+	}
+
+	@Override
+	public int getInputType() {
+		return inputType;
 	}
 	
 	/**
