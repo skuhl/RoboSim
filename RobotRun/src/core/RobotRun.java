@@ -1286,7 +1286,7 @@ public class RobotRun extends PApplet {
 			
 			// Pendant button shortcuts
 			if (!(curScreen instanceof ST_ScreenTextEntry) &&
-					(curScreen instanceof ST_ScreenNumEntry)) {
+					!(curScreen instanceof ST_ScreenNumEntry)) {
 				// Disable function shortcuts when entering in text or number input
 				if (keyCode == KeyEvent.VK_1) {
 					f1();
@@ -1304,7 +1304,9 @@ public class RobotRun extends PApplet {
 					f5();
 				}
 				
-			} else if (keyCode == KeyEvent.VK_ENTER) {
+			}
+			
+			if (keyCode == KeyEvent.VK_ENTER) {
 				enter();
 				
 			} else if (keyCode == KeyEvent.VK_BACK_SPACE) {

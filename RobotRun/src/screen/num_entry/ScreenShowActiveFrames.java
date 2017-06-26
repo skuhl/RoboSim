@@ -3,6 +3,7 @@ package screen.num_entry;
 import core.RobotRun;
 import enums.ScreenMode;
 import robot.RoboticArm;
+import screen.ScreenState;
 import ui.DisplayLine;
 
 public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
@@ -46,6 +47,12 @@ public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 		labels[2] = "";
 		labels[3] = "";
 		labels[4] = "";
+	}
+	
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(contents.getCurrentItemIdx(), contents.getItemColumnIdx(),
+				contents.getRenderStart(), 0, 0);
 	}
 	
 	@Override
