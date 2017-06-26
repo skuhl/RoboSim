@@ -1,6 +1,5 @@
 package expression;
 import geom.Point;
-import global.Fields;
 
 public class AtomicExpression extends Operand<Object> {
 	protected Operand<?> arg1;
