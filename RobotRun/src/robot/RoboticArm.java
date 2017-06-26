@@ -1470,6 +1470,7 @@ public class RoboticArm {
 		}
 		
 		if (pt == null) {
+			System.err.printf("Null position for %s\n", mInst);
 			return null;
 		}
 		
@@ -1481,6 +1482,9 @@ public class RoboticArm {
 			
 			if (offReg == null || offReg.point == null) {
 				// Invalid offset
+				System.err.printf("Null offset PR[%d] for %s\n",
+						mInst.getOffsetIdx(), mInst);
+				
 				return null;
 			}
 			
@@ -1503,6 +1507,7 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
+					System.err.printf("IK failure for %s\n", mInst);
 					return null;
 					
 				} else {
@@ -1522,6 +1527,7 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
+					System.err.printf("IK failure for %s\n", mInst);
 					return null;
 				}
 				// Apply the offset
@@ -1549,6 +1555,7 @@ public class RoboticArm {
 				
 				if (jointAngles == null) {
 					// Inverse kinematics failure
+					System.err.printf("IK failure for %s\n", mInst);
 					return null;
 					
 				} else {
@@ -2013,10 +2020,16 @@ public class RoboticArm {
 					pMInst.getUFrameIdx() != activeUserIdx) {
 				
 				// Incorrect active frames for this motion instruction
+				LinearInterpolation liMotion = new LinearInterpolation();
+				liMotion.setFault(true);
+				motion = liMotion;
 				return 1;
 				
 			} else if (instPt == null) {
 				// No point defined for given motion instruction
+				LinearInterpolation liMotion = new LinearInterpolation();
+				liMotion.setFault(true);
+				motion = liMotion;
 				return 2;
 			}
 			
@@ -2043,6 +2056,9 @@ public class RoboticArm {
 					} else {
 						// Invalid motion instruction
 						nextPt = null;
+						LinearInterpolation liMotion = new LinearInterpolation();
+						liMotion.setFault(true);
+						motion = liMotion;
 						return 3;
 					}
 					
@@ -2065,6 +2081,9 @@ public class RoboticArm {
 				
 			} else {
 				// Invalid motion type
+				LinearInterpolation liMotion = new LinearInterpolation();
+				liMotion.setFault(true);
+				motion = liMotion;
 				return 4;
 			}
 			
@@ -2088,6 +2107,9 @@ public class RoboticArm {
 					} else {
 						// Invalid motion instruction
 						nextPt = null;
+						LinearInterpolation liMotion = new LinearInterpolation();
+						liMotion.setFault(true);
+						motion = liMotion;
 						return 3;
 					}
 					
