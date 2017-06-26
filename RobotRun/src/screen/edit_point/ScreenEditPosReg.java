@@ -7,17 +7,38 @@ import global.DataManagement;
 import regs.PositionRegister;
 import regs.Register;
 import robot.RoboticArm;
+import ui.DisplayLine;
 
 public class ScreenEditPosReg extends ST_ScreenPointEntry {
 
 	public ScreenEditPosReg(RobotRun r) {
 		super(ScreenMode.EDIT_PREG, r);
+		
+	}
+	
+	@Override
+	public void actionF3() {
+		// Reset input values
+		for (int idx = 0; idx < workingText.length; ++idx) {
+			workingText[idx] = new StringBuilder("0.000");
+		}
+		
+		updateScreen();
 	}
 
 	@Override
 	protected String loadHeader() {
 		Register reg = robotRun.getActiveRobot().getPReg(robotRun.getScreenStack().peek().getContentIdx());
 		return String.format("%s: POSITION EDIT", reg.getLabel());
+	}
+	
+	@Override
+	protected void loadLabels() {
+		labels[0] = "";
+		labels[1] = "";
+		labels[2] = "[Reset]";
+		labels[3] = "";
+		labels[4] = "";
 	}
 	
 	@Override
