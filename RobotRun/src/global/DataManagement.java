@@ -31,6 +31,7 @@ import expression.OperandPoint;
 import expression.OperandRegister;
 import expression.Operator;
 import expression.PointMath;
+import expression.RobotPoint;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
@@ -265,6 +266,7 @@ public abstract class DataManagement {
 					} else {
 						ee = new OperandIOReg(robot.getIOReg(rdx)); 
 					}
+					
 				} else {
 					ee = new OperandGeneric();
 				}
@@ -274,6 +276,11 @@ public abstract class DataManagement {
 				Point pt = loadPoint(in);
 				ee = new OperandPoint(pt);
 
+			} else if (opType == Operand.ROBOT) {
+				boolean isCart = in.readBoolean();
+				// Robot point (LPos/JPos)
+				ee = new RobotPoint(robot, isCart);
+				
 			} else {
 				ee = new OperandGeneric();
 			}
@@ -1199,8 +1206,14 @@ public abstract class DataManagement {
 					out.writeBoolean( ((BoolMath)eo).getBoolValue() );					
 				} else if (eo instanceof PointMath) {
 					// Robot position
-					savePoint(((PointMath)eo).getPointValue(), out);
-				}// Otherwise it is uninitialized
+					if (eo instanceof RobotPoint) {
+						out.writeBoolean(((RobotPoint) eo).isCartesian());
+						
+					} else {
+						savePoint(((PointMath)eo).getPointValue(), out);
+					}
+					
+				} // Otherwise it is uninitialized
 			}
 		}
 	}
