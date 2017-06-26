@@ -3,11 +3,17 @@ package screen.num_entry;
 import core.RobotRun;
 import enums.ScreenMode;
 import robot.RoboticArm;
+import ui.DisplayLine;
 
 public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 
 	public ScreenShowActiveFrames(RobotRun r) {
 		super(ScreenMode.ACTIVE_FRAMES, r);
+		
+		contents.setSelectedLineIdx(0);
+		contents.setSelectedColumnIdx(1);
+		String initialText = Integer.toString(robotRun.getActiveRobot().getActiveToolIdx() + 1);
+		workingText = new StringBuilder(initialText);
 	}
 
 	@Override
@@ -44,14 +50,14 @@ public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 	
 	@Override
 	public void actionUp() {
-		robotRun.updateActiveFramesDisplay();
+		updateActiveFramesDisplay();
 		workingText = new StringBuilder(Integer.toString(robotRun.getActiveRobot().getActiveToolIdx() + 1));
 		contents.moveUp(false);
 	}
 	
 	@Override
 	public void actionDn() {
-		robotRun.updateActiveFramesDisplay();
+		updateActiveFramesDisplay();
 		workingText = new StringBuilder(Integer.toString(robotRun.getActiveRobot().getActiveUserIdx() + 1));
 
 		contents.moveDown(false);
@@ -59,7 +65,47 @@ public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 
 	@Override
 	public void actionEntr() {
-		robotRun.updateActiveFramesDisplay();
+		updateActiveFramesDisplay();
+		robotRun.updatePendantScreen();
+	}
+	
+	/**
+	 * Updates the index display in the Active Frames menu based on the current
+	 * value of workingText
+	 */
+	private void updateActiveFramesDisplay() {
+		RoboticArm robot = robotRun.getActiveRobot();
+		
+		// Attempt to parse the inputed integer value
+		try {
+			int frameIdx = Integer.parseInt(workingText.toString()) - 1;
+
+			if (frameIdx >= -1 && frameIdx < 10) {
+				// Update the appropriate active Frame index
+				if (getContentIdx() == 0) {
+					robot.setActiveToolFrame(frameIdx);
+				} else {
+					robot.setActiveUserFrame(frameIdx);
+        }
+			}
+
+		} catch (NumberFormatException NFEx) {
+			// Non-integer value
+		}
+		// Update display
+		if (getContentIdx() == 0) {
+			workingText = new StringBuilder(Integer.toString(robot.getActiveToolIdx() + 1));
+
+		} else {
+			workingText = new StringBuilder(Integer.toString(robot.getActiveUserIdx() + 1));
+		}
+		
+		int colIdx = getContentIdx();
+		DisplayLine activeLn = getContents().getCurrentItem();
+		
+		if (activeLn != null) {
+			activeLn.set(colIdx, workingText.toString());
+		}
 	}
 	
 	@Override
