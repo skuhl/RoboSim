@@ -50,7 +50,6 @@ public class Expression extends AtomicExpression {
 				Operand<?> nextOperand = (Operand<?>) elementList.get(i + 1);
 				AtomicExpression expr = new AtomicExpression(result, nextOperand, op);
 
-				//println(result.getDataVal() + op.toString() + nextOperand.getDataVal() + " = " + expr.evaluate().dataVal);
 				result = expr.evaluate();
 			}
 		}
@@ -66,7 +65,16 @@ public class Expression extends AtomicExpression {
 			result = new OperandPoint(((OperandPReg) result).getPointValue());
 			
 		} else if (result instanceof OperandPRegIdx) {
-			result = new OperandFloat(((OperandPRegIdx) result).getArithValue());	
+			result = new OperandFloat(((OperandPRegIdx) result).getArithValue());
+			
+		} else if (result instanceof RobotPoint) {
+			result = new OperandPoint(((RobotPoint) result).getPointValue());
+		}
+		
+		if (result.getValue() == null) {
+			// Return a null operator, not an uninitialized operator
+			PApplet.println("Expression formatting error");
+			return null;
 		}
 		
 		return result;
