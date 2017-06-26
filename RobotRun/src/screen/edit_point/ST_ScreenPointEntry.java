@@ -121,8 +121,17 @@ public abstract class ST_ScreenPointEntry extends Screen {
 
 	@Override
 	public void actionKeyPress(char key) {
-		if ((key >= '0' && key <= '9') || key == '-' || key == '.') {
-			workingText[contents.getLineIdx()].insert(contents.getColumnIdx() - 1, key);
+		StringBuilder line = workingText[contents.getLineIdx()];
+		int idx = contents.getColumnIdx() - 1;
+		
+		if (idx >= 0 && ((key >= '0' && key <= '9') || key == '-' || key == '.')) {
+			if(line.charAt(idx) != '\0') {
+				line.insert(idx, key);
+			} else {
+				line.setCharAt(idx, key);
+			}
+			
+			actionRt();
 		}
 		
 		robotRun.updatePendantScreen();
@@ -170,17 +179,13 @@ public abstract class ST_ScreenPointEntry extends Screen {
 	
 	@Override
 	public void actionBkspc() {
-		DisplayLine entry = contents.getCurrentItem();
-		int idx = contents.getColumnIdx();
+		StringBuilder entry = workingText[contents.getLineIdx()]; 
+		int idx = contents.getColumnIdx() - 1;
 
-		if (entry.size() > 2) {
-			if (idx > 1) {
-				contents.setSelectedColumnIdx(--idx);
-			}
-
-			entry.remove(idx);
+		if (entry.length() > 1) {
+			entry.deleteCharAt(idx);
 		} else {
-			entry.set(idx, "\0");
+			entry.setCharAt(idx, '\0');
 		}
 	}
 
