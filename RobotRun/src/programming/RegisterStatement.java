@@ -75,10 +75,12 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 			float fl = ((OperandFloat)result).getArithValue();
 			
 			if(reg instanceof DataRegister) {
+				// Update a data register value
 				((DataRegister)reg).value = fl;
 				return 0;
 			}
 			else if(reg instanceof PositionRegister) {
+				// Update a value of a position register's point
 				PositionRegister pReg = (PositionRegister)reg;
 				Point pt = pReg.point;
 				
@@ -114,6 +116,7 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 			}
 		}
 		else if(result instanceof OperandBool) {
+			// Update an I/O register
 			boolean b = ((OperandBool)result).getBoolValue();
 			if(reg instanceof IORegister) {
 				((IORegister)reg).state = b ? Fields.ON : Fields.OFF;
@@ -121,6 +124,7 @@ public class RegisterStatement extends Instruction implements ExpressionEvaluati
 			}
 		}
 		else if(result instanceof OperandPoint) {
+			// Update a position register point
 			Point p = ((OperandPoint)result).getPointValue();
 			if(reg instanceof PositionRegister) {
 				((PositionRegister)reg).point = p;

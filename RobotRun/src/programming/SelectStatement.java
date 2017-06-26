@@ -6,7 +6,6 @@ import expression.OperandDReg;
 import expression.OperandFloat;
 import expression.OperandGeneric;
 import expression.Operator;
-import global.Fields;
 
 //TODO fix value comparison, it definitely doesn't work
 

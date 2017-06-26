@@ -13,22 +13,23 @@ import processing.core.PGraphics;
  * 
  * @author Joshua Hooker
  */
-public class MyTextfield extends Textfield {
+public class MyTextfield extends Textfield implements UIInputElement {
 	
+	private int inputType;
 	private PGraphics buffer;
 	
-	public MyTextfield(ControlP5 theControlP5, String theName) {
-		super( theControlP5, theControlP5.getDefaultTab(), theName, "", 0, 0,
-				199, 19);
+	public MyTextfield(ControlP5 theControlP5, String theName, int inputType) {
+		this(theControlP5, theName, 0, 0, 199, 19, inputType);
 	}
 	
 	public MyTextfield(ControlP5 theControlP5, String theName, int theX,
-			int theY, int theWidth, int theHeight) {
+			int theY, int theWidth, int theHeight, int inputType) {
 		
 		super( theControlP5, theControlP5.getDefaultTab(), theName, "", theX,
 				theY, theWidth, theHeight);
 		
 		theControlP5.register(theControlP5.papplet, theName, this);
+		this.inputType = inputType;
 	}
 	
 	/**
@@ -48,6 +49,11 @@ public class MyTextfield extends Textfield {
 		if (_myTextBuffer.length() > 0 && _myTextBufferIndex > 0) {
 			_myTextBuffer.deleteCharAt( --_myTextBufferIndex );
 		}
+	}
+	
+	@Override
+	public void clearInput() {
+		setText("");
 	}
 	
 	/**
@@ -83,6 +89,11 @@ public class MyTextfield extends Textfield {
 				_myTextBuffer.deleteCharAt( --_myTextBufferIndex );
 			}
 		}
+	}
+	
+	@Override
+	public int getInputType() {
+		return inputType;
 	}
 	
 	/**
