@@ -66,6 +66,7 @@ import robot.RoboticArm;
 import screen.Screen;
 import screen.content_disp.ScreenNavProgInstructions;
 import screen.content_disp.ScreenNavPrograms;
+import screen.edit_point.ST_ScreenPointEntry;
 import screen.num_entry.ST_ScreenNumEntry;
 import screen.teach_frame.ST_ScreenTeachPoints;
 import screen.teach_frame.ScreenTeach4Pt;
@@ -1285,7 +1286,8 @@ public class RobotRun extends PApplet {
 			
 			// Pendant button shortcuts
 			if (!(curScreen instanceof ST_ScreenTextEntry) &&
-					!(curScreen instanceof ST_ScreenNumEntry)) {
+					!(curScreen instanceof ST_ScreenNumEntry) &&
+					!(curScreen instanceof ST_ScreenPointEntry)) {
 				// Disable function shortcuts when entering in text or number input
 				if (keyCode == KeyEvent.VK_1) {
 					f1();
@@ -4065,7 +4067,10 @@ public class RobotRun extends PApplet {
 	 */
 	private boolean UIKeyboardUse() {
 		
-		if (UI.isPendantActive() && curScreen instanceof ST_ScreenTextEntry) {
+		if (UI.isPendantActive() && (curScreen instanceof ST_ScreenTextEntry ||
+				curScreen instanceof ST_ScreenPointEntry ||
+				curScreen instanceof ST_ScreenNumEntry)) {
+			
 			return true;
 			
 		} else if (UI.getMenu() == WindowTab.CREATE || UI.getMenu() == WindowTab.EDIT) {
