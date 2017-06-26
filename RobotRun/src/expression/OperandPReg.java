@@ -19,7 +19,11 @@ public class OperandPReg extends OperandRegister<PositionRegister> implements Po
 	
 	@Override
 	public Point getPointValue() {
-		return value.point;
+		if (value != null && value.point != null) {
+			return value.point.clone();
+		}
+		
+		return null;
 	}
 
 	public Boolean isCart() {
