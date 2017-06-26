@@ -9,6 +9,7 @@ import expression.OperandFloat;
 import expression.OperandIOReg;
 import expression.OperandPReg;
 import expression.OperandPRegIdx;
+import expression.RobotPoint;
 import regs.DataRegister;
 import regs.IORegister;
 import regs.PositionRegister;
@@ -26,6 +27,8 @@ public class ScreenSetExpressionArg extends ST_ScreenInstructionEdit {
 		if (robotRun.opEdit instanceof Expression) {
 			options.addLine("PR[x]");
 			options.addLine("PR[x, y]");
+			options.addLine("JPos");
+			options.addLine("LPos");
 			options.addLine("(...)");
 		}
 		options.addLine("Const");
@@ -56,7 +59,20 @@ public class ScreenSetExpressionArg extends ST_ScreenInstructionEdit {
 			robotRun.getScreenStack().pop();
 			robotRun.nextScreen(ScreenMode.INPUT_PREG_IDX2);
 			robotRun.nextScreen(ScreenMode.INPUT_PREG_IDX1);
+			
 		} else if (options.getLineIdx() == 4) {
+			// JPos operand
+			operand = new RobotPoint(robotRun.getActiveRobot(), false);
+			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
+			robotRun.lastScreen();
+			
+		} else if (options.getLineIdx() == 5) {
+			// LPos operand
+			operand = new RobotPoint(robotRun.getActiveRobot(), true);
+			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);
+			robotRun.lastScreen();
+			
+		} else if (options.getLineIdx() == 6) {
 			// set arg to new expression
 			operand = new Expression();
 			robotRun.opEdit = expr.setOperand(robotRun.editIdx, operand);

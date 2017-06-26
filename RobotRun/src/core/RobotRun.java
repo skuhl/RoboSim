@@ -639,7 +639,7 @@ public class RobotRun extends PApplet {
 	public void editExpression(Expression expr, int selectIdx) {
 		int[] elements = expr.mapToEdit();
 		
-		if (selectIdx >= 0 && selectIdx < elements.length) {
+		try {
 			opEdit = expr;
 			ExpressionElement e = expr.get(elements[selectIdx]);
 	
@@ -658,6 +658,9 @@ public class RobotRun extends PApplet {
 				editIdx = elements[selectIdx];
 				nextScreen(ScreenMode.SET_EXPR_OP);
 			}
+			
+		} catch (ArrayIndexOutOfBoundsException AIOOBEx) {
+			System.err.printf("Invalid expression index: %d!\n", selectIdx);
 		}
 	}
 
