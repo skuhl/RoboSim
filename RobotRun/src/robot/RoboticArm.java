@@ -343,8 +343,7 @@ public class RoboticArm {
 		);
 		
 		// Initializes the old transformation matrix for the arm model
-		lastTipTMatrix = getFaceplateTMat( getJointAngles() );
-		
+		lastTipTMatrix = getFaceplateTMat( getJointAngles() );	
 	}
 	
 	/**

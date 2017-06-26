@@ -93,7 +93,7 @@ public class ScreenShowActiveFrames extends ST_ScreenNumEntry {
 					robot.setActiveToolFrame(frameIdx);
 				} else {
 					robot.setActiveUserFrame(frameIdx);
-        }
+				}
 			}
 
 		} catch (NumberFormatException NFEx) {
