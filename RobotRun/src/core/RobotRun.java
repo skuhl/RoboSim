@@ -1074,23 +1074,26 @@ public class RobotRun extends PApplet {
 	
 	public void editExpression(Expression expr, int selectIdx) {
 		int[] elements = expr.mapToEdit();
-		opEdit = expr;
-		ExpressionElement e = expr.get(elements[selectIdx]);
-
-		if (e instanceof Expression) {
-			// if selecting the open or close paren
-			if (selectIdx == 0 || selectIdx == e.getLength() || elements[selectIdx - 1] != elements[selectIdx]
-					|| elements[selectIdx + 1] != elements[selectIdx]) {
-				nextScreen(ScreenMode.SET_EXPR_ARG);
+		
+		if (selectIdx >= 0 && selectIdx < elements.length) {
+			opEdit = expr;
+			ExpressionElement e = expr.get(elements[selectIdx]);
+	
+			if (e instanceof Expression) {
+				// if selecting the open or close paren
+				if (selectIdx == 0 || selectIdx == e.getLength() || elements[selectIdx - 1] != elements[selectIdx]
+						|| elements[selectIdx + 1] != elements[selectIdx]) {
+					nextScreen(ScreenMode.SET_EXPR_ARG);
+				} else {
+					int startIdx = expr.getStartingIdx(elements[selectIdx]);
+					editExpression((Expression) e, selectIdx - startIdx - 1);
+				}
+			} else if (e instanceof Operand) {
+				editOperand((Operand<?>) e, elements[selectIdx]);
 			} else {
-				int startIdx = expr.getStartingIdx(elements[selectIdx]);
-				editExpression((Expression) e, selectIdx - startIdx - 1);
+				editIdx = elements[selectIdx];
+				nextScreen(ScreenMode.SET_EXPR_OP);
 			}
-		} else if (e instanceof Operand) {
-			editOperand((Operand<?>) e, elements[selectIdx]);
-		} else {
-			editIdx = elements[selectIdx];
-			nextScreen(ScreenMode.SET_EXPR_OP);
 		}
 	}
 
