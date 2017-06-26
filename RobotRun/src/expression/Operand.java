@@ -12,6 +12,7 @@ public abstract class Operand<T> implements ExpressionElement {
 	public static final int PREG_IDX = 6;
 	public static final int POSTN = 7;
 	public static final int CAM_MATCH = 8;
+	public static final int ROBOT = 9;
 	
 	protected final int type;
 	protected T value;
@@ -57,7 +58,7 @@ public abstract class Operand<T> implements ExpressionElement {
 		if(value != null)
 			return new String[] { value.toString() };
 		else
-			return null;
+			return new String[] {"..."};
 	}
 	
 }

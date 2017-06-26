@@ -1,5 +1,6 @@
 package core;
 
+import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import expression.Expression;
 import expression.ExpressionElement;
 import expression.Operand;
 import expression.Operator;
+import expression.RobotPoint;
 import frame.Frame;
 import frame.ToolFrame;
 import frame.UserFrame;
@@ -216,8 +218,12 @@ public class RobotRun extends PApplet {
 	 * 						respect to the native coordinate system
 	 */
 	public void applyCoord(PVector origin, RMatrix axesVectors) {
-		// Transpose the rotation portion, because Processing
-		this.applyMatrix(RMath.formTMat(origin, axesVectors));
+		super.applyMatrix(
+				axesVectors.getEntryF(0, 0), axesVectors.getEntryF(0, 1), axesVectors.getEntryF(0, 2), origin.x,
+				axesVectors.getEntryF(1, 0), axesVectors.getEntryF(1, 1), axesVectors.getEntryF(1, 2), origin.y,
+				axesVectors.getEntryF(2, 0), axesVectors.getEntryF(2, 1), axesVectors.getEntryF(2, 2), origin.z,
+				0f, 0f, 0f, 1f
+		);
 	}
 	
 	/**
@@ -227,12 +233,11 @@ public class RobotRun extends PApplet {
 	 * @param tMatrix	A 4x4 row major transformation matrix
 	 */
 	public void applyMatrix(RMatrix mat) {
-		float[][] tMatrix = mat.getDataF();
 		super.applyMatrix(
-				tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], tMatrix[0][3],
-				tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], tMatrix[1][3],
-				tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], tMatrix[2][3],
-				tMatrix[3][0], tMatrix[3][1], tMatrix[3][2], tMatrix[3][3]
+				mat.getEntryF(0, 0), mat.getEntryF(0, 1), mat.getEntryF(0, 2), mat.getEntryF(0, 3),
+				mat.getEntryF(1, 0), mat.getEntryF(1, 1), mat.getEntryF(1, 2), mat.getEntryF(1, 3),
+				mat.getEntryF(2, 0), mat.getEntryF(2, 1), mat.getEntryF(2, 2), mat.getEntryF(2, 3),
+				mat.getEntryF(3, 0), mat.getEntryF(3, 1), mat.getEntryF(3, 2), mat.getEntryF(3, 3)
 		);
 	}
 	
@@ -633,23 +638,26 @@ public class RobotRun extends PApplet {
 	
 	public void editExpression(Expression expr, int selectIdx) {
 		int[] elements = expr.mapToEdit();
-		opEdit = expr;
-		ExpressionElement e = expr.get(elements[selectIdx]);
-
-		if (e instanceof Expression) {
-			// if selecting the open or close paren
-			if (selectIdx == 0 || selectIdx == e.getLength() || elements[selectIdx - 1] != elements[selectIdx]
-					|| elements[selectIdx + 1] != elements[selectIdx]) {
-				nextScreen(ScreenMode.SET_EXPR_ARG);
+		
+		if (selectIdx >= 0 && selectIdx < elements.length) {
+			opEdit = expr;
+			ExpressionElement e = expr.get(elements[selectIdx]);
+	
+			if (e instanceof Expression) {
+				// if selecting the open or close paren
+				if (selectIdx == 0 || selectIdx == e.getLength() || elements[selectIdx - 1] != elements[selectIdx]
+						|| elements[selectIdx + 1] != elements[selectIdx]) {
+					nextScreen(ScreenMode.SET_EXPR_ARG);
+				} else {
+					int startIdx = expr.getStartingIdx(elements[selectIdx]);
+					editExpression((Expression) e, selectIdx - startIdx - 1);
+				}
+			} else if (e instanceof Operand) {
+				editOperand((Operand<?>) e, elements[selectIdx]);
 			} else {
-				int startIdx = expr.getStartingIdx(elements[selectIdx]);
-				editExpression((Expression) e, selectIdx - startIdx - 1);
+				editIdx = elements[selectIdx];
+				nextScreen(ScreenMode.SET_EXPR_OP);
 			}
-		} else if (e instanceof Operand) {
-			editOperand((Operand<?>) e, elements[selectIdx]);
-		} else {
-			editIdx = elements[selectIdx];
-			nextScreen(ScreenMode.SET_EXPR_OP);
 		}
 	}
 
@@ -695,6 +703,10 @@ public class RobotRun extends PApplet {
 			nextScreen(ScreenMode.INPUT_PREG_IDX2);
 			nextScreen(ScreenMode.INPUT_PREG_IDX1);
 			break;
+		case Operand.ROBOT: // Robot point
+			RobotPoint rp = (RobotPoint)o;
+			rp.setType(!rp.isCartesian());
+			break;
 		}
 	}
 
@@ -720,7 +732,7 @@ public class RobotRun extends PApplet {
 		curScreen.getContents().setSelectedColumnIdx(0);
 		progExec(m.getProgIdx(), 0, isStep());
 	}
-
+  
 	/**
 	 * Pendant F1 button
 	 * 
@@ -1029,24 +1041,16 @@ public class RobotRun extends PApplet {
 	 * @return	A 4x4 row major transformation matrix
 	 */
 	public RMatrix getTransformationMatrix() {
-		float[][] transform = new float[3][3];
-
 		PVector origin = getPosFromMatrix(0, 0, 0);
 		PVector xAxis = getPosFromMatrix(1, 0, 0).sub(origin);
 		PVector yAxis = getPosFromMatrix(0, 1, 0).sub(origin);
 		PVector zAxis = getPosFromMatrix(0, 0, 1).sub(origin);
 
-		transform[0][0] = xAxis.x;
-		transform[1][0] = xAxis.y;
-		transform[2][0] = xAxis.z;
-		transform[0][1] = yAxis.x;
-		transform[1][1] = yAxis.y;
-		transform[2][1] = yAxis.z;
-		transform[0][2] = zAxis.x;
-		transform[1][2] = zAxis.y;
-		transform[2][2] = zAxis.z;
-
-		return RMath.formTMat(origin, new RMatrix(transform));
+		return RMath.formTMat(
+				xAxis.x, yAxis.x, zAxis.x, origin.x,
+				xAxis.y, yAxis.y, zAxis.y, origin.y,
+				xAxis.z, yAxis.z, zAxis.z, origin.z
+		);
 	}
 	
 	public WGUI getUI() {
@@ -1894,7 +1898,7 @@ public class RobotRun extends PApplet {
 			rotateY(camOrien.y);
 			rotateZ(camOrien.z);
 			
-			float[][] camRMat = getOrientation().getDataF();
+			RMatrix camRMat = getOrientation();
 			
 			popMatrix();
 			
@@ -1984,7 +1988,7 @@ public class RobotRun extends PApplet {
 			PVector mScreenPos = new PVector(mouseX, mouseY, camPos.z + 1500f);
 			mScreenPos.x *= camera.getScale();
 			mScreenPos.y *= camera.getScale();
-
+			
 			PVector mWorldPos, ptOnMRay;
 			
 			pushMatrix();
@@ -3047,7 +3051,7 @@ public class RobotRun extends PApplet {
 	 * @param robot	The robot for which to change the end effector state
 	 */
 	public void toggleEEState(RoboticArm robot) {
-		int edx = robot.getActiveEEIdx() - 1;
+		int edx = robot.getActiveEEIdx();
 		int curState = robot.getEEState();
 		
 		if (curState == Fields.ON) {
@@ -3177,7 +3181,7 @@ public class RobotRun extends PApplet {
 					activeRobot.setActiveToolFrame(frameIdx);
 				} else {
 					activeRobot.setActiveUserFrame(frameIdx);
-				}
+        }
 			}
 
 		} catch (NumberFormatException NFEx) {
@@ -3713,6 +3717,8 @@ public class RobotRun extends PApplet {
 			}
 		}
 		
+		activeRobot.updateLastTipTMatrix();
+		
 		AxesDisplay axesType = getAxesState();
 		
 		if (axesType != AxesDisplay.NONE &&
@@ -3972,7 +3978,7 @@ public class RobotRun extends PApplet {
 			// Display the dimensions of the world object (if any)
 			for (int idx = 0; idx < dimFields.length; ++idx) {
 				if ((idx + 1) < dimFields.length) {
-					dimDisplay += String.format("%-12s", dimFields[idx]);
+					dimDisplay += String.format("%-13s", dimFields[idx]);
 
 				} else {
 					dimDisplay += String.format("%s", dimFields[idx]);
