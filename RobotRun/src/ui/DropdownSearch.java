@@ -1,10 +1,10 @@
 package ui;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 import controlP5.ControlP5;
+import global.Fields;
 import processing.core.PConstants;
 import processing.event.KeyEvent;
 
@@ -17,40 +17,29 @@ import processing.event.KeyEvent;
 public class DropdownSearch extends MyDropdownList {
 	
 	/**
-	 * The items that do not match the search buffer.
-	 */
-	protected List<Map<String, Object>> filteredItems;
-	
-	/**
 	 * The string used to filter the items in the dropdown list by there name.
 	 */
 	protected StringBuilder searchBuffer;
 	
-	public DropdownSearch(ControlP5 theControlP5, String name) {
-		super(theControlP5, name);
-		
-		filteredItems = new ArrayList<Map<String, Object>>();
+	public DropdownSearch(ControlP5 theControlP5, String name, int inputType) {
+		super(theControlP5, name, inputType);
 		searchBuffer = new StringBuilder("");
 	}
 	
 	@Override
 	public DropdownSearch setValue(float newValue) {
-		super.setValue(newValue);
 		// Reset the search buffer
 		searchBuffer = new StringBuilder("");
-		updateItemLists();
+		reorderItems();
+		
+		super.setValue(newValue);
+		
 		return this;
 	}
 	
 	@Override
 	public DropdownSearch clear() {
 		super.clear();
-		// Clear filtered list
-		for (int idx = filteredItems.size( ) - 1 ; idx >= 0 ; idx--) {
-			filteredItems.remove(idx);
-		}
-		
-		filteredItems.clear();
 		searchBuffer = new StringBuilder("");
 		return this;
 	}
@@ -61,7 +50,7 @@ public class DropdownSearch extends MyDropdownList {
 		if (e.getKeyCode() == ControlP5.UP || e.getKeyCode() == ControlP5.DOWN
 				|| e.getKeyCode() == ControlP5.LEFT ||
 				e.getKeyCode() == ControlP5.RIGHT) {
-			
+			// Allow arrow key navigation of the list
 			super.keyEvent(e);
 			
 		} else if (isInside && e.getAction() == KeyEvent.PRESS) {
@@ -69,9 +58,8 @@ public class DropdownSearch extends MyDropdownList {
 			if (e.getKey() >= 32 && e.getKey() <= 126) {
 				if (searchBuffer.length() < 16) {
 					// Append a character to the end of the search buffer
-					System.out.printf("%s + %c\n", searchBuffer, e.getKey());
 					searchBuffer.append(e.getKey());
-					updateItemLists();
+					reorderItems();
 					open();
 				}
 				
@@ -79,14 +67,10 @@ public class DropdownSearch extends MyDropdownList {
 				int lastIdx = searchBuffer.length() - 1;
 				if (lastIdx >= 0) {
 					// Delete the last character in the search buffer
-					System.out.printf("%s - %c\n", searchBuffer, searchBuffer.charAt(lastIdx));
 					searchBuffer.deleteCharAt(lastIdx);
-					updateItemLists();
+					reorderItems();
 					open();
 				}
-				
-			} else if (e.getKeyCode() == 147) {
-				// TODO do I really need delete?
 				
 			} else if (e.getKeyCode() == ControlP5.ENTER) {
 				// Set the item at index 0 as active
@@ -98,50 +82,48 @@ public class DropdownSearch extends MyDropdownList {
 	}
 	
 	/**
-	 * Updates the filtered and unfiltered item lists for this dropdown.
+	 * Orders the items in the dropdown list based on the edit distance between
+	 * the search buffer and the names of each item.
 	 */
-	protected void updateItemLists() {
-		List<Map<String, Object>> limbo = new ArrayList<Map<String, Object>>();
-		int idx = 0;
+	protected void reorderItems() {
+		// Hold all elements in a temporary list
+		HashMap<String, Integer> nameToED = new HashMap<>();
 		
-		while (filteredItems != null && idx < filteredItems.size()) {
-			Map<String, Object> item = filteredItems.get(idx);
-			
-			if (item != null) {
-				String name = (String)item.get("name");
-				
-				if (compareToSearch(name) == 0) {
-					// Move to limbo list
-					filteredItems.remove(idx);
-					limbo.add(item);
-					continue;
-				}		
-			}
-			
-			++idx;
-		}
-		
-		idx = 0;
-		while (idx < items.size()) {
+		/* Compute the edit distances between each item, with respect to its
+		 * name, and the search buffer */
+		for (int idx = 0; idx < items.size(); ++idx) {
 			Map<String, Object> item = items.get(idx);
+			String name = (String)item.get("name");
+			Integer editDist = compareToSearch(name);
 			
-			if (item != null) {
-				String name = (String)item.get("name");
-				
-				if (compareToSearch(name) != 0) {
-					// Move to filtered list
-					items.remove(idx);
-					filteredItems.add(item);
-					continue;
-				}
-			}
-			
-			++idx;
+			nameToED.put(name, editDist);
 		}
 		
-		// Re-add items from filtered items
-		for (Map<String, Object> item : limbo) {
-			items.add(item);
+		// Sort items based off their edit distances
+		for (int cdx = 1; cdx < items.size(); ++cdx) {
+			Map<String, Object> curItem = items.get(cdx);
+			int curED = nameToED.get((String)curItem.get("name"));
+			
+			int insertIdx = cdx;
+			
+			for (int idx = insertIdx - 1; idx >= 0; --idx) {
+				Map<String, Object> compareItem = items.get(idx);
+				int insertED = nameToED.get((String)compareItem.get("name"));
+				
+				if (insertED < curED) {
+					break;
+				}
+				
+				insertIdx = idx;
+			}
+			
+			Map<String, Object> insertItem = items.get(insertIdx);
+			
+			if (insertIdx != cdx) {
+				// Swap the items
+				items.set(cdx, insertItem);
+				items.set(insertIdx, curItem);
+			}
 		}
 		
 		// Update the dropdown label
@@ -149,32 +131,56 @@ public class DropdownSearch extends MyDropdownList {
 	}
 	
 	/**
-	 * TODO comment this
+	 * Compares the given name to the dropdown's search buffer and returns an
+	 * integer weight describing the difference between the search buffer and
+	 * the given name. The lower the value is the closer of a match the given
+	 * name is to the current search buffer.
 	 * 
-	 * @param name
-	 * @return
+	 * @param name	The name of an item in this dropdown list
+	 * @return		The integer weight computed after comparing the given name
+	 * 				to the search buffer
 	 */
 	private int compareToSearch(String name) {
-		
 		if (searchBuffer.length() == 0) {
-			// filter is undefined
+			// buffer is undefined
 			return 0;
 		}
 		
-		// TODO develop a better matching algorithm
-		if (name.length() < searchBuffer.length()) {
-			// length difference
-			return name.length() - searchBuffer.length();
-		}
-		 
-		for (int cdx = 0; cdx < searchBuffer.length(); ++cdx) {
-			// TODO compare without case
-			if (name.charAt(cdx) != searchBuffer.charAt(cdx)) {
-				// character difference
-				return -1;
-			}			
-		}
+		String normName = name.toLowerCase();
+		String normBuf = searchBuffer.toString().toLowerCase();
+		
+		boolean isPrefix = normName.startsWith(normBuf);
+		boolean isSubString;
+		
+		if (!isPrefix) {
+			isSubString = normName.contains(normBuf);
 			
-		return 0;
+		} else {
+			isSubString = isPrefix;
+		}
+		
+		/* Compute the edit distance between the search buffer and the given
+		 * string without regard to letter case */
+		int ED = Fields.editDistance(normName, normBuf);
+		
+		if (isPrefix) {
+			return ED;
+			
+		} else {
+			int diff = name.length() - searchBuffer.length();
+			
+			if (isSubString) {
+				/* Add more to name, where the search buffer is non-prefix
+				 * substring to give names, in order to give names, where the
+				 * search buffer is a prefix, a higher priority. */
+				return ED + diff / 2;
+				
+			} else {
+				/* Add even more to a name, where the search buffer is not a
+				 * substring, in order to give names, where the search buffer
+				 * is a substring a higher priority. */
+				return ED + diff * diff;
+			}
+		}
 	}
 }

@@ -25,7 +25,6 @@ public class ScreenSetJumpTgt extends ST_ScreenNumEntry {
 		try {
 			RoboticArm r = robotRun.getActiveRobot();
 			int lblNum = Integer.parseInt(workingText.toString());
-			int lblIdx = robotRun.getActiveProg().findLabelIdx(lblNum);
 			Instruction inst = r.getInstToEdit(robotRun.getActiveProg(), 
 					robotRun.getActiveInstIdx());
 			
@@ -36,7 +35,7 @@ public class ScreenSetJumpTgt extends ST_ScreenNumEntry {
 				SelectStatement sStmt = (SelectStatement) inst;
 				((JumpInstruction) sStmt.getInstrs().get(robotRun.editIdx)).setTgtLblNum(lblNum);
 			} else {
-				if (lblIdx != -1) {
+				if (lblNum >= 0) {
 					JumpInstruction jmp = (JumpInstruction) inst;
 					jmp.setTgtLblNum(lblNum);
 				} else {

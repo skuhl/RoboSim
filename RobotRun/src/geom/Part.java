@@ -306,7 +306,7 @@ public class Part extends WorldObject {
 		if (reference != null) {
 			// rotate with respect to the part's fixture reference
 			RMatrix refRMat = reference.getLocalOrientation();
-			axis = RMath.rotateVector(axis, refRMat.getDataF());
+			axis = RMath.rotateVector(axis, refRMat);
 		}
 		
 		RMatrix orientation = localOrientation.getAxes();
@@ -374,7 +374,7 @@ public class Part extends WorldObject {
 		if (reference != null) {
 			// translate with respect to the part's fixture reference
 			RMatrix refRMat = reference.getLocalOrientation();
-			delta = RMath.rotateVector(delta, refRMat.getDataF());
+			delta = RMath.rotateVector(delta, refRMat);
 		}
 		
 		super.translate(delta.x, delta.y, delta.z);
@@ -394,7 +394,7 @@ public class Part extends WorldObject {
 			PVector RefOrigin = reference.getLocalCenter();
 			RMatrix refRMat = reference.getLocalOrientation();
 			
-			origin = RMath.rotateVector(origin, refRMat.getInverse().getDataF());
+			origin = RMath.rotateVector(origin, refRMat.getInverse());
 			origin.add(RefOrigin);
 			
 			rMat = refRMat.multiply(rMat);
