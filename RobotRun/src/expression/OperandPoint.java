@@ -10,7 +10,7 @@ public class OperandPoint extends Operand<Point> implements PointMath {
 	
 	@Override
 	public Operand<Point> clone() {
-		return new OperandPoint(value);
+		return new OperandPoint(value.clone());
 	}
 	
 	@Override
