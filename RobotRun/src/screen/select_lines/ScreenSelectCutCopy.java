@@ -3,6 +3,7 @@ package screen.select_lines;
 import core.RobotRun;
 import enums.ScreenMode;
 import programming.Program;
+import screen.ScreenState;
 
 public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 
@@ -22,6 +23,11 @@ public class ScreenSelectCutCopy extends ST_ScreenLineSelect {
 		labels[2] = "[Cut]";
 		labels[3] = "[Copy]";
 		labels[4] = "[Cancel]";
+	}
+	
+	@Override
+	protected void loadVars(ScreenState s) {
+		setScreenIndices(s.conLnIdx, s.conColIdx, s.conRenIdx, -1, 0);
 	}
 	
 	@Override
